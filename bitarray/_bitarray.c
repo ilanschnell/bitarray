@@ -90,7 +90,7 @@ resize(bitarrayobject *self, idx_t nbits)
     if (check_overflow(nbits) < 0)
         return -1;
 
-    newsize = BYTES(nbits);
+    newsize = (Py_ssize_t) BYTES(nbits);
 
     /* Bypass realloc() when a previous overallocation is large enough
        to accommodate the newsize.  If the newsize is 16 smaller than the
@@ -147,7 +147,7 @@ newbitarrayobject(PyTypeObject *type, idx_t nbits, int endian)
     if (obj == NULL)
         return NULL;
 
-    nbytes = BYTES(nbits);
+    nbytes = (Py_ssize_t) BYTES(nbits);
     obj->ob_size = nbytes;
     obj->nbits = nbits;
     obj->endian = endian;
@@ -337,6 +337,9 @@ bytereverse(bitarrayobject *self)
 {
     static char trans[256];
     static int setup = 0;
+    Py_ssize_t i;
+    int c;
+
     if (!setup) {
         /* Setup a translation table, which maps each byte to it's
            reversed: trans = {0, 128, 64, 192, 32, 160, ..., 255}
@@ -350,8 +353,6 @@ bytereverse(bitarrayobject *self)
         }
         setup = 1;
     }
-    Py_ssize_t i;
-    int c;
 
     setunused(self);
     for (i = 0; i < self->ob_size; i++) {
@@ -377,6 +378,10 @@ count(bitarrayobject *self)
 {
     static int bitcount[256];
     static int setup = 0;
+    Py_ssize_t i;
+    idx_t res = 0;
+    int c;
+
     if (!setup) {
         /* Setup a translation table, which maps each byte to it's
            bit count: trans = {0, 1, 1, 2, 1, 2, 2, 3, 1, ..., 8}
@@ -389,9 +394,6 @@ count(bitarrayobject *self)
         }
         setup = 1;
     }
-    idx_t res = 0;
-    Py_ssize_t i;
-    int c;
 
     setunused(self);
     for (i = 0; i < self->ob_size; i++) {
@@ -473,7 +475,7 @@ unpack(bitarrayobject *self, char zero, char one)
     for (i = 0; i < self->nbits; i++) {
         *(str + i) = GETBIT(self, i) ? one : zero;
     }
-    res = PyString_FromStringAndSize(str, self->nbits);
+    res = PyString_FromStringAndSize(str, (Py_ssize_t) self->nbits);
     PyMem_Free((void *) str);
     return res;
 }
@@ -806,6 +808,8 @@ It is an error when x does not occur in the bitarray");
 static PyObject *
 bitarray_extend(bitarrayobject *self, PyObject *obj)
 {
+    PyObject *iter;
+
     /* dispatch on type */
     if (bitarray_Check(obj)) {                            /* bitarray */
         if (extend_bitarray(self, (bitarrayobject *) obj) < 0)
@@ -832,9 +836,8 @@ bitarray_extend(bitarrayobject *self, PyObject *obj)
             return NULL;
         Py_RETURN_NONE;
     }
-    /* finally, try to get the iterator of the object */
-    PyObject *iter;
 
+    /* finally, try to get the iterator of the object */
     if ((iter = PyObject_GetIter(obj)) == NULL) {
         PyErr_SetString(PyExc_TypeError, "could not extend bitarray");
         return NULL;
@@ -1189,8 +1192,10 @@ static PyObject *
 bitarray_fromfile(bitarrayobject *self, PyObject *args)
 {
     PyObject *f;
-    Py_ssize_t nbytes = -1;
     FILE *fp;
+    Py_ssize_t newsize, nbytes = -1;
+    size_t nread;
+    idx_t t, p;
     long cur;
 
     if (!PyArg_ParseTuple(args, "O|n:fromfile", &f, &nbytes))
@@ -1222,10 +1227,6 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         Py_RETURN_NONE;
 
     /* File exists and there are more than zero bytes to read */
-    Py_ssize_t newsize;
-    size_t nread;
-    idx_t t, p;
-
     t = self->nbits;
     p = setunused(self);
     self->nbits += p;
@@ -1235,7 +1236,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         return NULL;
 
     nread = fread(self->ob_item + (self->ob_size - nbytes), 1, nbytes, fp);
-    if (nread < nbytes) {
+    if (nread < (size_t) nbytes) {
         newsize -= nbytes - nread;
         if (resize(self, BITS(newsize)) < 0)
             return NULL;
@@ -1292,12 +1293,12 @@ bitarray_tolist(bitarrayobject *self)
     PyObject *list;
     idx_t i;
 
-    if ((list = PyList_New(self->nbits)) == NULL)
+    if ((list = PyList_New((Py_ssize_t) self->nbits)) == NULL)
         return NULL;
 
     for (i = 0; i < self->nbits; i++)
-        PyList_SetItem(list, i, PyBool_FromLong(GETBIT(self, i)));
-
+        PyList_SetItem(list, (Py_ssize_t) i,
+                       PyBool_FromLong(GETBIT(self, i)));
     return list;
 }
 
@@ -2091,6 +2092,7 @@ bitarray_methods[] = {
 static PyObject *
 bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
+    PyObject *a;  /* to be returned in some cases */
     PyObject *initial = NULL;
     char *endianStr = "<NOT_PROVIDED>";
     int endian = DEFAULT_ENDIAN;
@@ -2131,7 +2133,6 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         }
         return newbitarrayobject(type, nbits, endian);
     }
-    PyObject *a;  /* to be returned */
 
     /* from bitarray itself */
     if (bitarray_Check(initial)) {
