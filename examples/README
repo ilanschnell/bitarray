@@ -1,0 +1,45 @@
+
+decoding.py
+    Bitarray's decode method is implemented in C.  Since the C code
+    might be hard to read, we have implemented exactly the same
+    algorithm in Python.  It is about 20 times slower than it's
+    C counterpart, since (recursive) function calls are more expensive
+    in Python than in C.
+
+
+huffman.py
+    Demonstrates building a Huffman tree.  Given an input file,
+    calculates the number of occurrences for each character;
+    from those frequencies, a Huffman tree is build; and by traversing
+    the tree, the Huffman code is evaluated.
+    Also allows encoding and decoding of a file, see -h option.
+
+
+mandel.py
+    Generates a .ppm image file of size 8000x6000 of the Mandelbrot set.
+    Despite it's size, the output image file has only a size of slightly
+    over 6 Million bytes (uncompressed) because each pixel is stored in
+    one bit.
+    Requires numpy and scipy (see http://scipy.org/).
+
+
+ndarray.py
+    Demonstrates how to efficiently convert boolean data from a bitarray
+    to a numpy.ndarray of dtype bool.
+    Requires numpy.
+
+
+pbm.py
+    Defines a simple class called PBM (Portable Bit Map) which allows:
+    - addressing pixels by their coordinates
+    - storing and loading .ppm (P4), which is the same as .pbm, files
+
+
+smallints.py
+    A class is defined which allows efficiently storing an array of
+    integers represented by a specified number of bits (1 through 8).
+    For example, an array with 1000 5 bit integers can be created,
+    allowing each element in the array to take values form 0 to 31,
+    while the size of the object is 625 (5000/8) bytes.
+    Thanks to David Kammeyer for the idea to apply a bitarray in this way.
+

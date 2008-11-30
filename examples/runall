@@ -1,0 +1,11 @@
+#!/bin/bash
+
+python huffman.py test README || exit 1
+
+for x in *.py
+do
+    echo Running: $x
+    python $x || exit 1
+done
+
+rm *.ppm *.pyc

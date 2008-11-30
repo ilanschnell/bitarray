@@ -1,0 +1,71 @@
+#!/usr/bin/env python
+import sys, os, doctest, shutil
+sys.path.reverse()
+
+import bitarray
+
+bitarray.test()
+
+print 'Backup README'
+shutil.copyfile('README', 'README.bak')
+
+print 'Writing new README'
+fo = open('README', 'w')
+
+for line in open('README.bak'):
+    if line == 'Reference\n': break
+    fo.write(line)
+
+def writedoc(name):
+    print name,
+    doc = eval('bitarray.%s.__doc__' % name)
+    lines = doc.splitlines()
+    fo.write('``%s``\n' % lines[0])
+    assert lines[1] == ''
+    for line in lines[2:]:
+        fo.write('   %s\n' % line)
+    fo.write('\n\n')
+
+fo.write("""\
+Reference
+---------
+
+**The bitarray class:**
+
+""")
+
+writedoc('bitarray')
+
+fo.write("""\
+**A bitarray object supports the following methods:**
+
+""")
+
+for method in sorted(dir(bitarray.bitarray)):
+    if method.startswith('_'):
+        continue
+    writedoc('bitarray.%s' % method)
+
+fo.write("""\
+**Functions defined in the module:**
+
+""")
+
+writedoc('test')
+
+writedoc('bits2bytes')
+
+fo.close()
+print
+
+print 'doctest'
+doctest.testfile('README')
+
+# --------- html
+
+print 'Writing html'
+os.system('rst2html.py README >README.html')
+
+# Local Variables:
+# mode: python
+# End:
