@@ -7,8 +7,8 @@
 
 
 _bitarray.so: _bitarray.c
-	gcc -Wall -shared -fPIC -I/usr/local/include/python2.5 -o _bitarray.so _bitarray.c
-#	cd .. && python setup.py build_ext --inplace
+#	gcc -Wall -shared -fPIC -I/usr/local/include/python2.5 -o _bitarray.so _bitarray.c
+	cd .. && python setup.py build_ext --inplace
 
 
 clean:

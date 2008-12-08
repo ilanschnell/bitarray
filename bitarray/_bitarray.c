@@ -181,8 +181,8 @@ bitarray_dealloc(bitarrayobject *self)
 
 /* copy n bits from other (starting at b) onto self (starting at a) */
 static void
-bitcopy(bitarrayobject *self, idx_t a,
-        bitarrayobject *other, idx_t b, idx_t n)
+copy_n(bitarrayobject *self, idx_t a,
+       bitarrayobject *other, idx_t b, idx_t n)
 {
     /* XXX: This function could be highly optimized using memcpy for some
        cases when self and other have same endianness, and other != self.
@@ -207,14 +207,14 @@ bitcopy(bitarrayobject *self, idx_t a,
 
 /* starting at start, delete n bits from self */
 static int
-delete(bitarrayobject *self, idx_t start, idx_t n)
+delete_n(bitarrayobject *self, idx_t start, idx_t n)
 {
     assert (start >= 0 && start <= self->nbits);
     assert (n >= 0 && start + n <= self->nbits);
     if (n == 0)
         return 0;
 
-    bitcopy(self, start, self, start + n, self->nbits - start);
+    copy_n(self, start, self, start + n, self->nbits - start);
     if (resize(self, self->nbits - n) < 0)
         return -1;
 
@@ -225,7 +225,7 @@ delete(bitarrayobject *self, idx_t start, idx_t n)
    The vaules of the inserted bits are unspecified.
 */
 static int
-insert(bitarrayobject *self, idx_t start, idx_t n)
+insert_n(bitarrayobject *self, idx_t start, idx_t n)
 {
     assert (start >= 0 && start <= self->nbits);
     assert (n >= 0);
@@ -235,7 +235,7 @@ insert(bitarrayobject *self, idx_t start, idx_t n)
     if (resize(self, self->nbits + n) < 0)
         return -1;
 
-    bitcopy(self, start + n, self, start, self->nbits - start);
+    copy_n(self, start + n, self, start, self->nbits - start);
     return 0;
 }
 
@@ -271,7 +271,7 @@ repeat(bitarrayobject *self, idx_t n)
             return -1;
 
         for (i = 1; i < n; i++)
-            bitcopy(self, i * nbits, self, 0, nbits);
+            copy_n(self, i * nbits, self, 0, nbits);
     }
     return 0;
 }
@@ -492,7 +492,7 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
     if (resize(self, sumbits) < 0)
         return -1;
 
-    bitcopy(self, sumbits - other->nbits, other, 0, other->nbits);
+    copy_n(self, sumbits - other->nbits, other, 0, other->nbits);
     return 0;
 }
 
@@ -1244,7 +1244,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         return NULL;
     }
 
-    delete(self, t, p);
+    delete_n(self, t, p);
     Py_RETURN_NONE;
 }
 
@@ -1326,7 +1326,7 @@ bitarray_fromstring(bitarrayobject *self, PyObject *string)
     if (extend_rawstring(self, string) < 0)
         return NULL;
 
-    delete(self, t, p);
+    delete_n(self, t, p);
     Py_RETURN_NONE;
 }
 
@@ -1444,7 +1444,7 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
     if (i >= self->nbits)
         i = self->nbits;
 
-    if (insert(self, i, 1) < 0)
+    if (insert_n(self, i, 1) < 0)
         return NULL;
 
     set_item(self, i, v);
@@ -1479,7 +1479,7 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
         return NULL;
     }
     tmp = GETBIT(self, i);
-    if (delete(self, i, 1) < 0)
+    if (delete_n(self, i, 1) < 0)
         return NULL;
     return PyBool_FromLong(tmp);
 }
@@ -1505,7 +1505,7 @@ bitarray_remove(bitarrayobject *self, PyObject *v)
         PyErr_SetString(PyExc_ValueError, "remove(x): x not in bitarray");
         return NULL;
     }
-    if (delete(self, i, 1) < 0)
+    if (delete_n(self, i, 1) < 0)
         return NULL;
     Py_RETURN_NONE;
 }
@@ -1603,15 +1603,15 @@ bitarray_setitem(bitarrayobject *self, PyObject *args)
         }
         /* make self bigger or smaller */
         if (vv->nbits > slicelength) {
-            if (insert(self, start, vv->nbits - slicelength) < 0)
+            if (insert_n(self, start, vv->nbits - slicelength) < 0)
                 return NULL;
         }
         else {
-            if (delete(self, start, slicelength - vv->nbits) < 0)
+            if (delete_n(self, start, slicelength - vv->nbits) < 0)
                 return NULL;
         }
         /* copy the new values into self */
-        bitcopy(self, start, vv, 0, vv->nbits);
+        copy_n(self, start, vv, 0, vv->nbits);
         Py_RETURN_NONE;
 #undef vv
     }
@@ -1635,7 +1635,7 @@ bitarray_delitem(bitarrayobject *self, PyObject *a)
                             "bitarray assignment index out of range");
             return NULL;
         }
-        if (delete(self, i, 1) < 0)
+        if (delete_n(self, i, 1) < 0)
             return NULL;
         Py_RETURN_NONE;
     }
@@ -1654,7 +1654,7 @@ bitarray_delitem(bitarrayobject *self, PyObject *a)
         }
         if (step == 1) {
             assert (stop - start == slicelength);
-            if (delete(self, start, slicelength) < 0)
+            if (delete_n(self, start, slicelength) < 0)
                 return NULL;
             Py_RETURN_NONE;
         }
@@ -1921,7 +1921,7 @@ btree_insert(PyObject *tree, PyObject *symbol, PyObject *b)
         /* a = b[1:] */
         if ((a = bitarray_copy(bb)) == NULL)
             return -1;
-        delete((bitarrayobject *) a, 0, 1);
+        delete_n((bitarrayobject *) a, 0, 1);
         /* insert symbol */
         ret = btree_insert(PyList_GetItem(tree, vi), symbol, a);
         Py_DECREF(a);
