@@ -1,5 +1,6 @@
 
-2008-          0.3.3
+2008-          0.3.3    Made changes to the C code to allow complation with
+	       		more compilers.
 
 2008-10-19     0.3.2    Added sequential search method.
                         The special method __contains__ now also takes
