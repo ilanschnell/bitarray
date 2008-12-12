@@ -1522,7 +1522,7 @@ static PyObject *
 bitarray_getitem(bitarrayobject *self, PyObject *a)
 {
     PyObject *res;
-    idx_t start, stop, step, slicelength, i, j;
+    idx_t start, stop, step, slicelength, j, i = 0;
 
     if (ISINDEX(a)) {
         getIndex(a, &i);
@@ -1558,7 +1558,7 @@ static PyObject *
 bitarray_setitem(bitarrayobject *self, PyObject *args)
 {
     PyObject *a, *v;
-    idx_t start, stop, step, slicelength, i, j;
+    idx_t start, stop, step, slicelength, j, i = 0;
 
     if (!PyArg_ParseTuple(args, "OO:__setitem__", &a, &v))
         return NULL;
@@ -1622,7 +1622,7 @@ bitarray_setitem(bitarrayobject *self, PyObject *args)
 static PyObject *
 bitarray_delitem(bitarrayobject *self, PyObject *a)
 {
-    idx_t start, stop, step, slicelength, i, j;
+    idx_t start, stop, step, slicelength, j, i = 0;
 
     if (ISINDEX(a)) {
         getIndex(a, &i);
@@ -1698,7 +1698,7 @@ static PyObject *
 bitarray_mul(bitarrayobject *self, PyObject *v)
 {
     PyObject *res;
-    idx_t vi;
+    idx_t vi = 0;
 
     if (!ISINDEX(v)) {
         PyErr_SetString(PyExc_TypeError,
@@ -1716,7 +1716,7 @@ bitarray_mul(bitarrayobject *self, PyObject *v)
 static PyObject *
 bitarray_imul(bitarrayobject *self, PyObject *v)
 {
-    idx_t vi;
+    idx_t vi = 0;
 
     if (!ISINDEX(v)) {
         PyErr_SetString(PyExc_TypeError,
@@ -2094,6 +2094,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PyObject *a;  /* to be returned in some cases */
     PyObject *initial = NULL;
+    idx_t nbits = 0;
     char *endianStr = "<NOT_PROVIDED>";
     int endian = DEFAULT_ENDIAN;
     static char* kwlist[] = {"initial", "endian", NULL};
@@ -2123,7 +2124,6 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* int, long */
     if (ISINDEX(initial)) {
-        idx_t nbits;
         getIndex(initial, &nbits);
 
         if (nbits < 0) {
@@ -2371,7 +2371,7 @@ static PyTypeObject Bitarraytype = {
 static PyObject *
 bits2bytes(PyObject *self, PyObject *v)
 {
-    idx_t n;
+    idx_t n = 0;
 
     if (ISINDEX(v)) {
         getIndex(v, &n);

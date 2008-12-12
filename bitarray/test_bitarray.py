@@ -1439,12 +1439,12 @@ class FileTests(unittest.TestCase, Util):
 
 
     def test_shelve(self):
-        import shelve, md5
+        import shelve, hashlib
 
         d = shelve.open(self.tmpfname)
         stored = []
         for a in self.randombitarrays():
-            key = md5.md5(repr(a) + a.endian()).hexdigest()
+            key = hashlib.md5(repr(a) + a.endian()).hexdigest()
             d[key] = a
             stored.append((key, a))
         d.close()
