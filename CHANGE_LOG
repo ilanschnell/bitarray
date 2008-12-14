@@ -1,12 +1,13 @@
 
-2008-          0.3.3    Made changes to the C code to allow complation with
-	       		more compilers.
+2008-12-14     0.3.3    Made changes to the C code to allow compilation with
+                        more compilers.  Compiles on Visual Studio, although
+                        there are still a few tests (mysteriously) failing.
 
 2008-10-19     0.3.2    Added sequential search method.
                         The special method __contains__ now also takes
                         advantage of the sequential search.
 
-2008-10-12     0.3.1    Simplyfied state information for pickling.
+2008-10-12     0.3.1    Simplified state information for pickling.
                         Argument for count is now optional, defaults
                         to True.  Fixed typos.
 
@@ -46,5 +47,5 @@
                         http://pypi.python.org/pypi/bitarray/
 
 May 2008                Wrote the initial code, and put it on my
-                        personal website:
+                        personal web-site:
                         http://ilan.schnell-web.net/prog/
