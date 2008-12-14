@@ -48,8 +48,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-0.3.3.tar.gz
-   $ cd bitarray-0.3.3
+   $ tar xzf bitarray-0.3.4.tar.gz
+   $ cd bitarray-0.3.4
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -60,7 +60,7 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.5/site-packages/bitarray
-   bitarray version: 0.3.3
+   bitarray version: 0.3.4
    2.5.2 (r252:60911, Jul 17 2008, 10:38:24) 
    [GCC 4.2.1 (SUSE Linux)]
    .........................................................................

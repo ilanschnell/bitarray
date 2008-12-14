@@ -1,4 +1,6 @@
 
+               0.3.4    
+
 2008-12-14     0.3.3    Made changes to the C code to allow compilation with
                         more compilers.  Compiles on Visual Studio, although
                         there are still a few tests (mysteriously) failing.

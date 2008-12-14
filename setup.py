@@ -13,7 +13,7 @@ f.close()
 
 setup(
     name = "bitarray",
-    version = "0.3.3",
+    version = "0.3.4",
     author = "Ilan Schnell",
     author_email = "ilanschnell@gmail.com",
     url = "http://pypi.python.org/pypi/bitarray/",

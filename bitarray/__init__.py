@@ -8,7 +8,7 @@ Please find a description of this package at:
 
 Author: Ilan Schnell
 """
-__version__ = '0.3.3'
+__version__ = '0.3.4'
 
 try:
     from _bitarray import _bitarray, bits2bytes, _sysinfo
