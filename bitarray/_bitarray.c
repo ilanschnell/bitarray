@@ -1210,14 +1210,14 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
 
     /* find number of bytes till EOF */
     if (nbytes < 0) {
-        if ((cur = ftell (fp)) < 0)
+        if ((cur = ftell(fp)) < 0)
             goto EOFerror;
 
-        if (fseek (fp, 0L, SEEK_END) || (nbytes = ftell (fp)) < 0)
+        if (fseek(fp, 0L, SEEK_END) || (nbytes = ftell(fp)) < 0)
             goto EOFerror;
 
         nbytes -= cur;
-        if (fseek (fp, cur, SEEK_SET)) {
+        if (fseek(fp, cur, SEEK_SET)) {
         EOFerror:
             PyErr_SetString(PyExc_EOFError, "could not find EOF");
             return NULL;
@@ -1271,7 +1271,8 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
 
     setunused(self);
     if (fwrite(self->ob_item, 1, self->ob_size, fp) !=
-        (size_t) self->ob_size) {
+        (size_t) self->ob_size)
+    {
         PyErr_SetFromErrno(PyExc_IOError);
         clearerr(fp);
         return NULL;

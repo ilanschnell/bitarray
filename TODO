@@ -4,6 +4,4 @@
 
 * fix memory leaks
 
-* Test against Python 2.6
-
 * Test on Windows
