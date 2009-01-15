@@ -1,4 +1,6 @@
-import os, sys
+import sys
+import re
+from os.path import abspath, join
 from distutils.core import setup, Extension
 
 if sys.version_info[:2] < (2, 5):
@@ -7,13 +9,20 @@ if sys.version_info[:2] < (2, 5):
 kwds = {}
 
 # Read the long description from README
-f = open(os.path.abspath('README'))
-kwds['long_description'] = f.read()
-f.close()
+kwds['long_description'] = open(abspath('README')).read()
+
+# Read version from bitarray/__init__.py
+pat = re.compile(r'__version__\s*=\s*(.+)')
+for line in open(abspath(join('bitarray', '__init__.py'))):
+    match = pat.match(line)
+    if match:
+        kwds['version'] = eval(match.group(1))
+        break
+assert 'version' in kwds
+
 
 setup(
     name = "bitarray",
-    version = "0.3.5",
     author = "Ilan Schnell",
     author_email = "ilanschnell@gmail.com",
     url = "http://pypi.python.org/pypi/bitarray/",

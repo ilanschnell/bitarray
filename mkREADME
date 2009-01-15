@@ -1,7 +1,11 @@
 #!/usr/bin/env python
-import sys, os, doctest, shutil
-sys.path.reverse()
+import sys
+import os
+import re
+import doctest
+import shutil
 
+sys.path.insert(0, os.getcwd())
 import bitarray
 
 bitarray.test()
@@ -12,9 +16,12 @@ shutil.copyfile('README', 'README.bak')
 print 'Writing new README'
 fo = open('README', 'w')
 
+# Copy the everything before 'Reference' while substituting the version number
+pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
 for line in open('README.bak'):
-    if line == 'Reference\n': break
-    fo.write(line)
+    if line == 'Reference\n':
+        break
+    fo.write(pat.sub(lambda m: m.group(1) + bitarray.__version__, line))
 
 def writedoc(name):
     print name,
