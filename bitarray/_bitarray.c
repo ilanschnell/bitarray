@@ -2265,10 +2265,14 @@ bitarray_iter(bitarrayobject *self)
 static PyObject *
 bitarrayiter_next(bitarrayiterobject *it)
 {
-    assert (BitarrayIter_Check(it));
-    if (it->index < it->bao->nbits)
-        return PyBool_FromLong(GETBIT(it->bao, it->index++));
+    long vi;
 
+    assert (BitarrayIter_Check(it));
+    if (it->index < it->bao->nbits) {
+        vi = GETBIT(it->bao, it->index);
+	it->index++;
+        return PyBool_FromLong(vi);
+    }
     return NULL;
 }
 
