@@ -9,7 +9,6 @@ Author: Ilan Schnell
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
-#include "structmember.h"
 
 #ifdef STDC_HEADERS
 #include <stddef.h>
@@ -1067,7 +1066,7 @@ bitarray_reverse(bitarrayobject *self)
         return NULL;
 
 #define tt  ((bitarrayobject *) t)
-    /* copy first half of array into tmp array */
+    /* copy first half of array into temporary array */
     memcpy(tt->ob_item, self->ob_item, tt->ob_size);
 
     m = self->nbits - 1;
@@ -1462,7 +1461,7 @@ static PyObject *
 bitarray_pop(bitarrayobject *self, PyObject *args)
 {
     idx_t i = -1;
-    long tmp;
+    long vi;
 
     if (!PyArg_ParseTuple(args, "|L:pop", &i))
         return NULL;
@@ -1479,10 +1478,11 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
         PyErr_SetString(PyExc_IndexError, "pop index out of range");
         return NULL;
     }
-    tmp = GETBIT(self, i);
+    vi = GETBIT(self, i);
     if (delete_n(self, i, 1) < 0)
         return NULL;
-    return PyBool_FromLong(tmp);
+
+    return PyBool_FromLong(vi);
 }
 
 PyDoc_STRVAR(pop_doc,
@@ -1661,8 +1661,10 @@ bitarray_delitem(bitarrayobject *self, PyObject *a)
         }
         /* This is the only complicated part when step > 1 */
         for (i = j = start; i < self->nbits; i++)
-            if ((i - start) % step != 0 || i >= stop)
-                setbit(self, j++, GETBIT(self, i));
+            if ((i - start) % step != 0 || i >= stop) {
+                setbit(self, j, GETBIT(self, i));
+                j++;
+            }
         if (resize(self, self->nbits - slicelength) < 0)
             return NULL;
         Py_RETURN_NONE;
@@ -2270,7 +2272,7 @@ bitarrayiter_next(bitarrayiterobject *it)
     assert (BitarrayIter_Check(it));
     if (it->index < it->bao->nbits) {
         vi = GETBIT(it->bao, it->index);
-	it->index++;
+        it->index += 1;
         return PyBool_FromLong(vi);
     }
     return NULL;
