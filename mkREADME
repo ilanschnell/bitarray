@@ -4,7 +4,10 @@ import os
 import re
 import doctest
 import shutil
+import subprocess
 
+subprocess.call([sys.executable, 'setup.py', 'build_ext', '--inplace'],
+                cwd=os.getcwd())
 sys.path.insert(0, os.getcwd())
 import bitarray
 
