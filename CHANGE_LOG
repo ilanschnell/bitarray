@@ -1,5 +1,8 @@
 
-               0.3.4    
+               0.3.5
+
+2009-01-15     0.3.4    Made C code less ambiguous, such that the package
+                        compiles on Visual Studio, will all tests passing.
 
 2008-12-14     0.3.3    Made changes to the C code to allow compilation with
                         more compilers.  Compiles on Visual Studio, although
