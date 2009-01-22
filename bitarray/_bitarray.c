@@ -865,7 +865,6 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     bitarrayobject *xa;
     Py_ssize_t limit = -1;
     idx_t p, n;
-    int match;
 
     if (!PyArg_ParseTuple(args, "O|n:search", &x, &limit))
         return NULL;
@@ -889,23 +888,23 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     }
 
     list = PyList_New(0);
-    if (xa->nbits > self->nbits)
+    if (xa->nbits > self->nbits || limit == 0)
         return list;
 
     for (p = 0; p < self->nbits - xa->nbits + 1; p++) {
-        match = 1;
-        for (n = 0; n < xa->nbits; n++) {
-            if (GETBIT(self, p + n) != GETBIT(xa, n)) {
-                match = 0;
-                break;
-            }
-        }
-        if (match && PyList_Append(list, PyLong_FromLongLong(p)) < 0) {
+        for (n = 0; n < xa->nbits; n++)
+            if (GETBIT(self, p + n) != GETBIT(xa, n))
+		goto next;
+
+	/* We have a match, append the position to the list */
+        if (PyList_Append(list, PyLong_FromLongLong(p)) < 0) {
             Py_DECREF(list);
             return NULL;
         }
-        if (limit >= 0 && PyList_Size(list) >= limit)
+        if (limit > 0 && PyList_Size(list) >= limit)
             break;
+    next:
+	; /* Do nothing */
     }
     return list;
 }
