@@ -1690,7 +1690,7 @@ class PrefixCodeTests(unittest.TestCase):
         a = bitarray()
         self.assertEqual(a.decode(d), [])
         self.assertEqual(d, {'a':bitarray('1')})
-        
+
     def test_decode_buggybitarray(self):
         d = {'a':bitarray('0')}
         a = bitarray('1')
@@ -1778,12 +1778,13 @@ def pages():
 
 def check_memory_leaks(verbosity):
     suite = unittest.TestSuite()
-    for cls in tests[:-1]:  # [ CreateObjectTests ]:
+    for cls in tests:
         suite.addTest(unittest.makeSuite(cls))
-    
+
     logfile = 'pages.log'
-    try: os.unlink(logfile)
-    except: pass
+    if os.path.isfile(logfile):
+        os.unlink(logfile)
+
     i = 0
     runner = unittest.TextTestRunner(verbosity=verbosity)
     while True:
@@ -1796,22 +1797,22 @@ def check_memory_leaks(verbosity):
         i += 1
 
 
-def run(verbosity, chk_mem_leaks=False):
-    if chk_mem_leaks:
-        check_memory_leaks(verbosity)
-    
+def run(verbosity, chk_mem_leaks=False):    
     suite = unittest.TestSuite()
     for cls in tests:
         suite.addTest(unittest.makeSuite(cls))
     
     runner = unittest.TextTestRunner(verbosity=verbosity)
-    
+
     return runner.run(suite)
 
 
 if __name__ == '__main__':
-    run(verbosity     = 2 if 'v' in sys.argv else 1,
-        chk_mem_leaks = bool('m' in sys.argv))
+    verbosity = 2 if 'v' in sys.argv else 1
+    if 'm' in sys.argv:
+        check_memory_leaks(verbosity)
+    else:
+        run(verbosity)
 
 else:
     from bitarray import __version__

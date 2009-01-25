@@ -3,5 +3,3 @@
   exceeds 2**31 bits
 
 * fix memory leaks
-
-* Test on Windows
