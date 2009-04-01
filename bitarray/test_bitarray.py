@@ -433,6 +433,20 @@ class SliceTests(unittest.TestCase, Util):
                         self.assertEqual(c, bitarray(cc))
 
 
+    def test_setslice_to_bool(self):
+        a = bitarray('11111111')
+        a[::2] = False
+        self.assertEqual(a, bitarray('01010101'))
+        a[4::] = True
+        self.assertEqual(a, bitarray('01011111'))
+        a[-2:] = False
+        self.assertEqual(a, bitarray('01011100'))
+        a[:2:] = True
+        self.assertEqual(a, bitarray('11011100'))
+        a[:] = True
+        self.assertEqual(a, bitarray('11111111'))
+
+
     def test_delitem(self):
         a = bitarray('100110')
         del a[1]

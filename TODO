@@ -2,7 +2,3 @@
 * Write special tests for really large bitarrays, for which the length
   exceeds 2**31 bits
 
-* Implement slice assignment to 0 and 1, i.e. it should be possible to say
-  a[3:] = 1  or  a[:2:] = 0  without the need to create another bitarray
-  object first.
-

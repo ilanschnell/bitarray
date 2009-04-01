@@ -346,7 +346,7 @@ bytereverse(bitarrayobject *self)
         int j, k;
         for (k = 0; k < 256; k++) {
             trans[k] = '\0';
-            for(j = 0; j < 8; j++)
+            for (j = 0; j < 8; j++)
                 if (1 << (7 - j) & k)
                     trans[k] |= 1 << j;
         }
@@ -388,7 +388,7 @@ count(bitarrayobject *self)
         int j, k;
         for (k = 0; k < 256; k++) {
             bitcount[k] = 0;
-            for(j = 0; j < 8; j++)
+            for (j = 0; j < 8; j++)
                 bitcount[k] += (k >> j) & 1;
         }
         setup = 1;
@@ -1502,8 +1502,8 @@ bitarray_getitem(bitarrayobject *self, PyObject *a)
         return PyBool_FromLong(GETBIT(self, i));
     }
     if (PySlice_Check(a)) {
-        if(slice_GetIndicesEx((PySliceObject *) a, self->nbits,
-                              &start, &stop, &step, &slicelength) < 0) {
+        if (slice_GetIndicesEx((PySliceObject *) a, self->nbits,
+                               &start, &stop, &step, &slicelength) < 0) {
             return NULL;
         }
         res = newbitarrayobject(self->ob_type, slicelength, self->endian);
@@ -1519,11 +1519,64 @@ bitarray_getitem(bitarrayobject *self, PyObject *a)
     return NULL;
 }
 
+static int
+setslice(bitarrayobject *self, PySliceObject *slice, PyObject *v)
+{
+    idx_t start, stop, step, slicelength, j, i = 0;
+    long vi;
+
+    if (slice_GetIndicesEx(slice, self->nbits,
+			   &start, &stop, &step, &slicelength) < 0)
+	return -1;
+
+    if (bitarray_Check(v)) {
+#define vv  ((bitarrayobject *) v)
+	if (vv->nbits == slicelength) {
+	    for (i = 0, j = start; i < slicelength; i++, j += step)
+		setbit(self, j, GETBIT(vv, i));
+	    return 0;
+	}
+	if (step != 1) {
+	    char buff[256];
+	    sprintf(buff, "attempt to assign sequence of size %lld "
+		          "to extended slice of size %lld",
+		    vv->nbits, (idx_t) slicelength);
+	    PyErr_SetString(PyExc_ValueError, buff);
+	    return -1;
+	}
+	/* make self bigger or smaller */
+	if (vv->nbits > slicelength) {
+	    if (insert_n(self, start, vv->nbits - slicelength) < 0)
+		return -1;
+	}
+	else {
+	    if (delete_n(self, start, slicelength - vv->nbits) < 0)
+		return -1;
+	}
+	/* copy the new values into self */
+	copy_n(self, start, vv, 0, vv->nbits);
+#undef vv
+	return 0;
+    }
+    else if (PyBool_Check(v)) {
+	if ((vi = PyObject_IsTrue(v)) < 0)
+	    return -1;
+
+	for (i = 0, j = start; i < slicelength; i++, j += step)
+	    setbit(self, j, vi);
+
+	return 0;
+    }
+    PyErr_SetString(PyExc_IndexError,
+		    "bitarray or bool expected for slice assignment");
+    return -1;
+}
+
 static PyObject *
 bitarray_setitem(bitarrayobject *self, PyObject *args)
 {
     PyObject *a, *v;
-    idx_t start, stop, step, slicelength, j, i = 0;
+    idx_t i = 0;
 
     if (!PyArg_ParseTuple(args, "OO:__setitem__", &a, &v))
         return NULL;
@@ -1539,49 +1592,16 @@ bitarray_setitem(bitarrayobject *self, PyObject *args)
             return NULL;
         }
         set_item(self, i, v);
-        Py_RETURN_NONE;
     }
-    if (PySlice_Check(a)) {
-        if(slice_GetIndicesEx((PySliceObject *) a, self->nbits,
-                              &start, &stop, &step, &slicelength) < 0) {
-            return NULL;
-        }
-        if (!bitarray_Check(v)) {
-            PyErr_SetString(PyExc_IndexError,
-                            "bitarray expected in slice assignment");
-            return NULL;
-        }
-#define vv  ((bitarrayobject *) v)
-        if (vv->nbits == slicelength) {
-            for (i = 0, j = start; i < slicelength; i++, j += step)
-                setbit(self, j, GETBIT(vv, i));
-            Py_RETURN_NONE;
-        }
-        if (step != 1) {
-            char buff[256];
-            sprintf(buff,
-                    "attempt to assign sequence of size %lld "
-                    "to extended slice of size %lld",
-                    vv->nbits, (idx_t) slicelength);
-            PyErr_SetString(PyExc_ValueError, buff);
-            return NULL;
-        }
-        /* make self bigger or smaller */
-        if (vv->nbits > slicelength) {
-            if (insert_n(self, start, vv->nbits - slicelength) < 0)
-                return NULL;
-        }
-        else {
-            if (delete_n(self, start, slicelength - vv->nbits) < 0)
-                return NULL;
-        }
-        /* copy the new values into self */
-        copy_n(self, start, vv, 0, vv->nbits);
-        Py_RETURN_NONE;
-#undef vv
+    else if (PySlice_Check(a)) {
+	if (setslice(self, (PySliceObject *) a, v) < 0)
+	    return NULL;
     }
-    PyErr_SetString(PyExc_TypeError, "index or slice expected");
-    return NULL;
+    else {
+	PyErr_SetString(PyExc_TypeError, "index or slice expected");
+	return NULL;
+    }
+    Py_RETURN_NONE;
 }
 
 static PyObject *
@@ -1605,8 +1625,8 @@ bitarray_delitem(bitarrayobject *self, PyObject *a)
         Py_RETURN_NONE;
     }
     if (PySlice_Check(a)) {
-        if(slice_GetIndicesEx((PySliceObject *) a, self->nbits,
-                              &start, &stop, &step, &slicelength) < 0) {
+        if (slice_GetIndicesEx((PySliceObject *) a, self->nbits,
+                               &start, &stop, &step, &slicelength) < 0) {
             return NULL;
         }
         if (slicelength == 0)

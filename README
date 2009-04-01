@@ -363,7 +363,7 @@ Reference
 
 
 ``index(x)``
-   Return index of first occurrence of x in the bitarray.
+   Return index of the first occurrence of x in the bitarray.
    It is an error when x does not occur in the bitarray
 
 

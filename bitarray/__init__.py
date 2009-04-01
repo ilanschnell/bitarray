@@ -94,8 +94,7 @@ with the corresponding bitarray for each symbols."""
         return self._encode(codedict, iterable)
 
     def search(self, x, limit=-1):
-        """
-        search(x[, limit])
+        """search(x[, limit])
 
 Given a bitarray x (or an object which can be converted to a bitarray),
 returns the start positions of x matching self as a list.

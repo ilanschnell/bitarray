@@ -1,56 +1,86 @@
 
-               0.3.5    Fixed reference counts bugs.
+2009-        0.3.5:
+-------------------
+Fixed reference counts bugs.  Added possibility to slice assign to True
+or False, e.g. a[::3] = True will set every third element to True
 
-2009-01-15     0.3.4    Made C code less ambiguous, such that the package
-                        compiles on Visual Studio, will all tests passing.
 
-2008-12-14     0.3.3    Made changes to the C code to allow compilation with
-                        more compilers.  Compiles on Visual Studio, although
-                        there are still a few tests (mysteriously) failing.
+2009-01-15   0.3.4:
+-------------------
+Made C code less ambiguous, such that the package
+compiles on Visual Studio, will all tests passing.
 
-2008-10-19     0.3.2    Added sequential search method.
-                        The special method __contains__ now also takes
-                        advantage of the sequential search.
 
-2008-10-12     0.3.1    Simplified state information for pickling.
-                        Argument for count is now optional, defaults
-                        to True.  Fixed typos.
+2008-12-14   0.3.3:
+-------------------
+Made changes to the C code to allow compilation with more compilers.
+Compiles on Visual Studio, although there are still a few tests failing.
 
-2008-09-30     0.3.0    Fixed a severe bug for 64bit machines.
-                        Implemented all methods in C, improved tests.
-                        Removed deprecated methods from01 and fromlist.
 
-2008-09-23     0.2.5    Added section in README about prefix codes.
-                        Implemented _multiply method for faster
-                        __mul__ and __imul__.  Fixed some typos.
+2008-10-19   0.3.2:
+-------------------
+Added sequential search method.  The special method __contains__ now
+also takes advantage of the sequential search.
 
-2008-09-22     0.2.4    Implemented encode and decode method (in C) for
-                        variable-length prefix codes.  Added more
-                        examples, wrote README for the examples.
-                        Added more tests, fixed some typos.
 
-2008-09-16     0.2.3    Fixed a memory leak, implemented a number of
-                        methods in C.  These include __getitem__,
-                        __setitem__, __delitem__, pop, remove, insert.
-                        The methods implemented on the Python level is
-                        very limit now.  Implemented bitwise operations.
+2008-10-12   0.3.1:
+-------------------
+Simplified state information for pickling.  Argument for count is now
+optional, defaults to True.  Fixed typos.
 
-2008-09-09     0.2.2    Rewrote parts of the README, implemented
-                        memory efficient algorithm for the reverse
-                        method.  Fixed typos, added a few tests,
-                        more C refactoring.
 
-2008-09-07     0.2.1    Improved tests, in particular added checking
-                        for memory leaks.  Refactored many things on
-                        the C level.  Implemented a few more methods.
+2008-09-30   0.3.0:
+-------------------
+Fixed a severe bug for 64bit machines.  Implemented all methods in C,
+improved tests.  Removed deprecated methods from01 and fromlist.
 
-2008-09-02     0.2.0    Added bit endianness property to the
-                        bitarray object, also added the examples
-                        to the release package.
 
-2008-08-17     0.1.0    First official release; put project to
-                        http://pypi.python.org/pypi/bitarray/
+2008-09-23   0.2.5:
+-------------------
+Added section in README about prefix codes.  Implemented _multiply method
+for faster __mul__ and __imul__.  Fixed some typos.
 
-May 2008                Wrote the initial code, and put it on my
-                        personal web-site:
-                        http://ilan.schnell-web.net/prog/
+
+2008-09-22   0.2.4:
+-------------------
+Implemented encode and decode method (in C) for variable-length prefix
+codes.  Added more examples, wrote README for the examples.
+Added more tests, fixed some typos.
+
+
+2008-09-16   0.2.3:
+-------------------
+Fixed a memory leak, implemented a number of methods in C.  These include
+__getitem__, __setitem__, __delitem__, pop, remove, insert.  The methods
+implemented on the Python level is very limit now.  Implemented bitwise
+operations.
+
+
+2008-09-09   0.2.2:
+-------------------
+Rewrote parts of the README, implemented memory efficient algorithm for the
+reverse method.  Fixed typos, added a few tests, more C refactoring.
+
+
+2008-09-07   0.2.1:
+-------------------
+Improved tests, in particular added checking for memory leaks.  Refactored
+many things on the C level.  Implemented a few more methods.
+
+
+2008-09-02   0.2.0:
+-------------------
+Added bit endianness property to the bitarray object, also added the
+examples to the release package.
+
+
+2008-08-17   0.1.0:
+-------------------
+First official release; put project to
+http://pypi.python.org/pypi/bitarray/
+
+
+May 2008:
+---------
+Wrote the initial code, and put it on my personal web-site:
+http://ilan.schnell-web.net/prog/
