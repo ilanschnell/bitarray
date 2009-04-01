@@ -24,7 +24,7 @@ tests = []
 
 
 class Util(object):
-    
+
     def randombitarrays(self):
         for n in range(25) + [randint(1000, 2000)]:
             yield bitarray([randint(0, 1) for d in xrange(n)],
@@ -64,17 +64,17 @@ def getIndicesEx(r, length):
     else:
         if step == 0:
             raise ValueError("slice step cannot be zero")
-    
+
     defstart = length-1 if step < 0 else 0
     defstop  = -1 if step < 0 else length
-    
+
     if r.start is None:
         start = defstart
     else:
         if start < 0: start += length
         if start < 0: start = -1 if step < 0 else 0
         if start >= length: start = length-1 if step < 0 else length
-    
+
     if r.stop is None:
         stop = defstop
     else:
@@ -101,17 +101,17 @@ class TestsModuleFunctions(unittest.TestCase, Util):
     def test_bits2bytes(self):
         for arg in ['foo', [], None, {}]:
             self.assertRaises(TypeError, bits2bytes, arg)
-        
+
         self.assertRaises(TypeError, bits2bytes)
         self.assertRaises(TypeError, bits2bytes, 1, 2)
-        
+
         self.assertRaises(ValueError, bits2bytes, -1)
         self.assertRaises(ValueError, bits2bytes, -924L)
-        
+
         for n in xrange(1000):
             self.assertEqual(bits2bytes(n),
                              0 if n==0 else ((n - 1) / 8 + 1));
-        
+
         for n, m in [(0, 0), (1, 1), (2, 1), (7, 1), (8, 1), (9, 2),
                      (10, 2), (15, 2), (16, 2), (64, 8), (65, 9),
                      (0L, 0), (1L, 1), (65L, 9), (2**29, 2**26),
@@ -124,7 +124,7 @@ class TestsModuleFunctions(unittest.TestCase, Util):
 tests.append(TestsModuleFunctions)
 
 # ---------------------------------------------------------------------------
-    
+
 class CreateObjectTests(unittest.TestCase, Util):
 
     def test_noInitializer(self):
@@ -145,7 +145,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.check_obj(b)
 
         self.assertEqual(a.tostring(), b.tostring())
-        
+
         a = bitarray(endian=u'little')
         a.fromstring(' ')
         self.assertEqual(a.endian(), 'little')
@@ -155,9 +155,9 @@ class CreateObjectTests(unittest.TestCase, Util):
         b.fromstring(' ')
         self.assertEqual(b.endian(), 'big')
         self.check_obj(b)
-        
+
         self.assertEqual(a.tostring(), b.tostring())
-        
+
         self.assertRaises(TypeError, bitarray.__new__, bitarray, endian=0)
         self.assertRaises(ValueError, bitarray.__new__, bitarray, endian='')
 
@@ -170,7 +170,7 @@ class CreateObjectTests(unittest.TestCase, Util):
             a = bitarray(long(n))
             self.assertEqual(len(a), n)
             self.check_obj(a)
-        
+
         self.assertRaises(ValueError, bitarray.__new__, bitarray, -1)
         self.assertRaises(ValueError, bitarray.__new__, bitarray, -924L)
 
@@ -179,7 +179,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray(lst)
         self.assertEqual(a.tolist(), [True, False, True, False])
         self.check_obj(a)
-        
+
         for n in xrange(50):
             lst = [bool(randint(0, 1)) for d in xrange(n)]
             a = bitarray(lst)
@@ -191,13 +191,13 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray(tup)
         self.assertEqual(a.tolist(), [False, True, False, True])
         self.check_obj(a)
-        
+
         for n in xrange(50):
             lst = [bool(randint(0, 1)) for d in xrange(n)]
             a = bitarray(tuple(lst))
             self.assertEqual(a.tolist(), lst)
             self.check_obj(a)
-        
+
     def test_iter(self):
         for n in xrange(50):
             lst = [bool(randint(0, 1)) for d in xrange(n)]
@@ -218,14 +218,14 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray('0010111')
         self.assertEqual(a.tolist(), [0, 0, 1, 0, 1, 1, 1])
         self.check_obj(a)
-        
+
         for n in xrange(50):
             lst = [bool(randint(0, 1)) for d in xrange(n)]
             s = ''.join('1' if x else '0' for x in lst)
             a = bitarray(s)
             self.assertEqual(a.tolist(), lst)
             self.check_obj(a)
-            
+
         self.assertRaises(ValueError, bitarray.__new__, bitarray, '01012100')
 
 
@@ -244,7 +244,7 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(c.endian(), 'little')
             c = bitarray(a, endian='big')
             self.assertEqual(c.endian(), 'big')
-    
+
 
     def test_None(self):
         self.assertEQUAL(bitarray(), bitarray(0))
@@ -263,39 +263,39 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, bitarray.__new__, bitarray, '', 0, 42)
         self.assertRaises(ValueError, bitarray.__new__, bitarray, 0, 'foo')
 
-        
+
 tests.append(CreateObjectTests)
 
 # ---------------------------------------------------------------------------
 
 class MetaDataTests(unittest.TestCase):
-    
+
     def test_buffer_info(self):
         a = bitarray('0000111100001', endian='little')
         self.assertEqual(a.buffer_info()[1:4], (2, 'little', 3))
-        
+
         a = bitarray()
         self.assertRaises(TypeError, a.buffer_info, 42)
-        
+
         bi = a.buffer_info()
         self.assert_(isinstance(bi, tuple))
         self.assertEqual(len(bi), 5)
-        
+
         self.assert_(isinstance(bi[0], (int, long)))
         self.assert_(isinstance(bi[1], (int, long)))
         self.assert_(isinstance(bi[2], str))
         self.assert_(isinstance(bi[3], int))
         self.assert_(isinstance(bi[4], (int, long)))
-        
+
         for n in xrange(50):
             bi = bitarray(n).buffer_info()
             self.assertEqual(bi[1], bits2bytes(n))
             self.assertEqual(bi[3] + n, 8 * bi[1])
             self.assert_(bi[4] >= bi[1])
-        
+
         a = bitarray(endian='little')
         self.assertEqual(a.buffer_info()[2], 'little')
-        
+
         a = bitarray(endian='big')
         self.assertEqual(a.buffer_info()[2], 'big')
 
@@ -303,7 +303,7 @@ class MetaDataTests(unittest.TestCase):
     def test_endian(self):
         a = bitarray(endian='little')
         self.assertEqual(a.endian(), 'little')
-        
+
         a = bitarray(endian='big')
         self.assertEqual(a.endian(), 'big')
 
@@ -320,7 +320,7 @@ tests.append(MetaDataTests)
 # ---------------------------------------------------------------------------
 
 class SliceTests(unittest.TestCase, Util):
-    
+
     def test_getitem(self):
         a = bitarray()
         self.assertRaises(IndexError, a.__getitem__,  0)
@@ -328,29 +328,29 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a[0], True)
         self.assertRaises(IndexError, a.__getitem__,  1)
         self.assertRaises(IndexError, a.__getitem__, -2)
-        
+
         a.append(False)
         self.assertEqual(a[1], False)
         self.assertRaises(IndexError, a.__getitem__,  2)
         self.assertRaises(IndexError, a.__getitem__, -3)
-        
+
         a = bitarray('1100010')
         for i, b in enumerate([True, True, False, False, False, True, False]):
             self.assertEqual(a[i], b)
             self.assertEqual(a[i-7], b)
         self.assertRaises(IndexError, a.__getitem__,  7)
         self.assertRaises(IndexError, a.__getitem__, -8)
-        
+
         a = bitarray('0100000100001')
         self.assertEQUAL(a[:], a)
         self.assert_(a[:] is not a)
         aa = a.tolist()
         self.assertEQUAL(a[11:2:-3], bitarray(aa[11:2:-3]))
         self.check_obj(a[:])
-        
+
         self.assertRaises(ValueError, a.__getitem__, slice(None, None, 0))
         self.assertRaises(TypeError, a.__getitem__, (1, 2))
-        
+
         for a in self.randombitarrays():
             aa = a.tolist()
             la = len(a)
@@ -361,12 +361,12 @@ class SliceTests(unittest.TestCase, Util):
                 s = slice(self.rndsliceidx(la),
                           self.rndsliceidx(la), step)
                 self.assertEQUAL(a[s], bitarray(aa[s], endian=a.endian()))
-        
+
     def test_setitem(self):
         a = bitarray([False])
         a[0] = 1
         self.assertEqual(a.tolist(), [True])
-        
+
         a = bitarray(2)
         a[0] = 0
         a[1] = 1
@@ -374,10 +374,10 @@ class SliceTests(unittest.TestCase, Util):
         a[-1] = 0
         a[-2] = 1
         self.assertEqual(a.tolist(), [True, False])
-        
+
         self.assertRaises(IndexError, a.__setitem__,  2, True)
         self.assertRaises(IndexError, a.__setitem__, -3, False)
-        
+
         for a in self.randombitarrays():
             la = len(a)
             if la == 0:
@@ -412,7 +412,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('10010'))
         self.assertRaises(IndexError, a.__setitem__,  5, 'foo')
         self.assertRaises(IndexError, a.__setitem__, -6, 'bar')
-        
+
         for a in self.randombitarrays():
             la = len(a)
             if la == 0: continue
@@ -431,7 +431,7 @@ class SliceTests(unittest.TestCase, Util):
                         cc = a.tolist()
                         cc[s] = b.tolist()
                         self.assertEqual(c, bitarray(cc))
-        
+
 
     def test_delitem(self):
         a = bitarray('100110')
@@ -442,7 +442,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('100'))
         self.assertRaises(IndexError, a.__delitem__,  3)
         self.assertRaises(IndexError, a.__delitem__, -4)
-        
+
         for a in self.randombitarrays():
             la = len(a)
             if la == 0: continue
@@ -485,7 +485,7 @@ class MiscTests(unittest.TestCase, Util):
         self.assertEqual(a.next(), True)
         self.assertEqual(a.next(), True)
         self.assertRaises(StopIteration, a.next)
-        
+
     def test_assignment(self):
         a = bitarray('00110111001')
         a[1:3] = a[7:9]
@@ -496,7 +496,7 @@ class MiscTests(unittest.TestCase, Util):
     def test_compare(self):
         for a in self.randombitarrays():
             aa = a.tolist()
-            
+
             for b in self.randombitarrays():
                 bb = b.tolist()
                 self.assertEqual(a == b, aa == bb)
@@ -508,16 +508,16 @@ class MiscTests(unittest.TestCase, Util):
 
     def test_subclassing(self):
         class ExaggeratingBitarray(bitarray):
-            
+
             def __new__(cls, data, offset):
                 return bitarray.__new__(cls, data)
-            
+
             def __init__(self, data, offset):
                 self.offset = offset
 
             def __getitem__(self, i):
                 return bitarray.__getitem__(self, i - self.offset)
-            
+
         for a in self.randombitarrays():
             if len(a) == 0:
                 continue
@@ -529,7 +529,7 @@ class MiscTests(unittest.TestCase, Util):
         a = bitarray(endian='little')
         a.fromstring('\x01')
         self.assertEqual(a.to01(), '10000000')
-        
+
         b = bitarray(endian='little')
         b.fromstring('\x80')
         self.assertEqual(b.to01(), '00000001')
@@ -537,7 +537,7 @@ class MiscTests(unittest.TestCase, Util):
         c = bitarray(endian='big')
         c.fromstring('\x80')
         self.assertEqual(c.to01(), '10000000')
-        
+
         d = bitarray(endian='big')
         d.fromstring('\x01')
         self.assertEqual(d.to01(), '00000001')
@@ -554,7 +554,7 @@ class MiscTests(unittest.TestCase, Util):
         a.fromstring(' ')
         self.assertEqual(a.tostring(), '\x03 ')
         self.assertEqual(a.to01(), '1100000000000100')
-        
+
         a = bitarray(8, endian='big')
         a.setall(False)
         a[7] = True
@@ -564,10 +564,10 @@ class MiscTests(unittest.TestCase, Util):
         a.fromstring(' ')
         self.assertEqual(a.tostring(), '\x03 ')
         self.assertEqual(a.to01(), '0000001100100000')
-        
+
         a = bitarray('00100000', endian='big')
         self.assertEqual(a.tostring(), ' ')
-        
+
         b = bitarray('00000100', endian='little')
         self.assertEqual(b.tostring(), ' ')
 
@@ -603,7 +603,7 @@ class MiscTests(unittest.TestCase, Util):
 
         a = bitarray(10**6)
         self.assertRaises(OverflowError, a.__imul__, 17180)
-        
+
 
 tests.append(MiscTests)
 
@@ -614,16 +614,16 @@ class SpecialMethodTests(unittest.TestCase, Util):
     def test_all(self):
         a = bitarray()
         self.assertTrue(a.all())
-        
+
         for a in self.randombitarrays():
             self.assertEqual(all(a),          a.all())
             self.assertEqual(all(a.tolist()), a.all())
 
-            
+
     def test_any(self):
         a = bitarray()
         self.assertFalse(a.any())
-        
+
         for a in self.randombitarrays():
             self.assertEqual(any(a),          a.any())
             self.assertEqual(any(a.tolist()), a.any())
@@ -632,10 +632,10 @@ class SpecialMethodTests(unittest.TestCase, Util):
     def test_repr(self):
         a = bitarray()
         self.assertEqual(repr(a), "bitarray()")
-        
+
         a = bitarray('10111')
         self.assertEqual(repr(a), "bitarray('10111')")
-        
+
         for a in self.randombitarrays():
             b = eval(repr(a))
             self.assert_(b is not a)
@@ -649,11 +649,11 @@ class SpecialMethodTests(unittest.TestCase, Util):
             b = a.copy()
             self.assert_(b is not a)
             self.assertEQUAL(a, b)
-            
+
             b = copy.copy(a)
             self.assert_(b is not a)
             self.assertEQUAL(a, b)
-            
+
             b = copy.deepcopy(a)
             self.assert_(b is not a)
             self.assertEQUAL(a, b)
@@ -668,7 +668,7 @@ class NumberTests(unittest.TestCase, Util):
     def test_add(self):
         c = bitarray('001') + bitarray('110')
         self.assertEQUAL(c, bitarray('001110'))
-        
+
         for a in self.randombitarrays():
             aa = a.copy()
             for b in self.randombitarrays():
@@ -677,10 +677,10 @@ class NumberTests(unittest.TestCase, Util):
                 self.assertEqual(c, bitarray(a.tolist() + b.tolist()))
                 self.assertEqual(c.endian(), a.endian())
                 self.check_obj(c)
-                
+
                 self.assertEQUAL(a, aa)
                 self.assertEQUAL(b, bb)
-                
+
         a = bitarray()
         self.assertRaises(TypeError, a.__add__, 42)
 
@@ -689,7 +689,7 @@ class NumberTests(unittest.TestCase, Util):
         c = bitarray('001')
         c += bitarray('110')
         self.assertEQUAL(c, bitarray('001110'))
-        
+
         for a in self.randombitarrays():
             for b in self.randombitarrays():
                 c = bitarray(a)
@@ -700,7 +700,7 @@ class NumberTests(unittest.TestCase, Util):
                 self.assertEQUAL(c, d)
                 self.assertEqual(d.endian(), a.endian())
                 self.check_obj(d)
-                
+
         a = bitarray()
         self.assertRaises(TypeError, a.__iadd__, 42)
 
@@ -708,13 +708,13 @@ class NumberTests(unittest.TestCase, Util):
     def test_mul(self):
         c = 0 * bitarray('1001111')
         self.assertEQUAL(c, bitarray())
-        
+
         c = 3 * bitarray('001')
         self.assertEQUAL(c, bitarray('001001001'))
 
         c = bitarray('110') * 3
         self.assertEQUAL(c, bitarray('110110110'))
-        
+
         for a in self.randombitarrays():
             b = a.copy()
             for n in xrange(-10, 20):
@@ -726,11 +726,11 @@ class NumberTests(unittest.TestCase, Util):
                                              endian=a.endian()))
 
                 self.assertEQUAL(a, b)
-                
+
 
         a = bitarray()
         self.assertRaises(TypeError, a.__mul__, None)
-    
+
 
     def test_imul(self):
         c = bitarray('1101110011')
@@ -738,11 +738,11 @@ class NumberTests(unittest.TestCase, Util):
         c *= 0
         self.assertEQUAL(c, bitarray())
         self.assertEqual(idc, id(c))
-        
+
         c = bitarray('110')
         c *= 3
         self.assertEQUAL(c, bitarray('110110110'))
-        
+
         for a in self.randombitarrays():
             for n in xrange(-10, 10):
                 b = a.copy()
@@ -751,7 +751,7 @@ class NumberTests(unittest.TestCase, Util):
                 self.assertEQUAL(b, bitarray(n * a.tolist(),
                                              endian=a.endian()))
                 self.assertEqual(idb, id(b))
-        
+
         a = bitarray()
         self.assertRaises(TypeError, a.__imul__, None)
 
@@ -772,7 +772,7 @@ class BitwiseTests(unittest.TestCase, Util):
             self.assertEqual(d.all(), True)
             b &= d
             self.assertEqual(~b, a)
-    
+
     def test_and(self):
         a = bitarray('11001')
         b = bitarray('10011')
@@ -783,7 +783,7 @@ class BitwiseTests(unittest.TestCase, Util):
 
         self.assertRaises(TypeError, a.__and__, 42)
 
-        
+
     def test_iand(self):
         a =  bitarray('110010110')
         ida = id(a)
@@ -795,7 +795,7 @@ class BitwiseTests(unittest.TestCase, Util):
         a = bitarray('11001')
         b = bitarray('10011')
         self.assertEQUAL(a | b, bitarray('11011'))
-        
+
     def test_iand(self):
         a =  bitarray('110010110')
         a |= bitarray('100110011')
@@ -805,7 +805,7 @@ class BitwiseTests(unittest.TestCase, Util):
         a = bitarray('11001')
         b = bitarray('10011')
         self.assertEQUAL(a ^ b, bitarray('01010'))
-        
+
     def test_ixor(self):
         a =  bitarray('110010110')
         a ^= bitarray('100110011')
@@ -815,7 +815,7 @@ class BitwiseTests(unittest.TestCase, Util):
         a = bitarray()
         a.invert()
         self.assertEQUAL(a, bitarray())
-        
+
         a = bitarray('11011')
         a.invert()
         self.assertEQUAL(a, bitarray('00100'))
@@ -825,7 +825,7 @@ class BitwiseTests(unittest.TestCase, Util):
         self.assertEQUAL(b, bitarray('00100'))
         self.assertEQUAL(a, bitarray('11011'))
         self.assert_(a is not b)
-        
+
         for a in self.randombitarrays():
             aa = a.tolist()
             b = bitarray(a)
@@ -833,14 +833,14 @@ class BitwiseTests(unittest.TestCase, Util):
             for i in xrange(len(a)):
                 self.assertEqual(b[i], not aa[i])
             self.check_obj(b)
-            
+
             c = ~a
             self.assert_(c is not a)
             self.assertEQUAL(a, bitarray(aa, endian=a.endian()))
-            
+
             for i in xrange(len(a)):
                 self.assertEqual(c[i], not aa[i])
-            
+
             self.check_obj(b)
 
 
@@ -901,7 +901,7 @@ class ExtendTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.extend, True)
         self.assertRaises(TypeError, a.extend, 24)
         self.assertRaises(ValueError, a.extend, '0011201')
-    
+
     def test_bitarray(self):
         a = bitarray()
         a.extend(bitarray())
@@ -914,7 +914,7 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray('00001111', endian='little')
         a.extend(bitarray('00111100', endian='big'))
         self.assertEqual(a, bitarray('0000111100111100'))
-        
+
         for a in self.randombitarrays():
             for b in self.randombitarrays():
                 c = bitarray(a)
@@ -929,7 +929,7 @@ class ExtendTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('01100'))
         a.extend([True, False])
         self.assertEqual(a, bitarray('0110010'))
-        
+
         for a in self.randomlists():
             for b in self.randomlists():
                 c = bitarray(a)
@@ -946,7 +946,7 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray()
         a.extend(bar())
         self.assertEqual(a, bitarray('01010'))
- 
+
         for a in self.randomlists():
             for b in self.randomlists():
                 def foo():
@@ -963,7 +963,7 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray()
         a.extend((0, 1, 2, 0, 3))
         self.assertEqual(a, bitarray('01101'))
- 
+
         for a in self.randomlists():
             for b in self.randomlists():
                 c = bitarray(a)
@@ -977,7 +977,7 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray()
         a.extend(iter([3, 9, 0, 1, -2]))
         self.assertEqual(a, bitarray('11011'))
- 
+
         for a in self.randomlists():
             for b in self.randomlists():
                 c = bitarray(a)
@@ -991,7 +991,7 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray()
         a.extend('0110111')
         self.assertEqual(a, bitarray('0110111'))
-        
+
         for a in self.randomlists():
             for b in self.randomlists():
                 c = bitarray(a)
@@ -1014,7 +1014,7 @@ class MethodTests(unittest.TestCase, Util):
         a.append(False)
         a.append(False)
         self.assertEQUAL(a, bitarray('100'))
-        
+
         for a in self.randombitarrays():
             aa = a.tolist()
             b = a
@@ -1043,19 +1043,19 @@ class MethodTests(unittest.TestCase, Util):
             aa.insert(pos, item)
             self.assertEqual(a.tolist(), aa)
             self.check_obj(a)
-            
+
 
     def test_index(self):
         a = bitarray()
         for i in (True, False, 1, 0):
             self.assertRaises(ValueError, a.index, i)
-        
+
         a = bitarray(100*[False])
         self.assertRaises(ValueError, a.index, True)
         a[20] = a[27] = 54
         self.assertEqual(a.index(42), 20)
         self.assertEqual(a.index(0), 0)
-        
+
         a = bitarray(200*[True])
         self.assertRaises(ValueError, a.index, False)
         a[173] = a[187] = 0
@@ -1127,13 +1127,13 @@ class MethodTests(unittest.TestCase, Util):
         a = bitarray('')
         self.assertEqual(a.fill(), 0)
         self.assertEqual(len(a), 0)
-        
+
         a = bitarray('101')
         self.assertEqual(a.fill(), 5)
         self.assertEQUAL(a, bitarray('10100000'))
         self.assertEqual(a.fill(), 0)
         self.assertEQUAL(a, bitarray('10100000'))
-        
+
         for a in self.randombitarrays():
             aa = a.tolist()
             la = len(a)
@@ -1153,13 +1153,13 @@ class MethodTests(unittest.TestCase, Util):
                 self.assertEqual(bb[:la], aa)
                 self.assertEqual(b[la:], (lb-la)*bitarray('0'))
                 self.assert_(0 < lb-la < 8)
-        
+
 
     def test_sort(self):
         a = bitarray('1101000')
         a.sort()
         self.assertEqual(a, bitarray('0000111'))
-        
+
         a = bitarray('1101000')
         a.sort(reverse=True)
         self.assertEqual(a, bitarray('1110000'))
@@ -1169,7 +1169,7 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('1110000'))
 
         self.assertRaises(TypeError, a.sort, 'A')
-        
+
         for a in self.randombitarrays():
             ida = id(a)
             rev = randint(0, 1)
@@ -1192,7 +1192,7 @@ class MethodTests(unittest.TestCase, Util):
         a = bitarray('11111000011')
         a.reverse()
         self.assertEQUAL(a, bitarray('11000011111'))
-        
+
         for a in self.randombitarrays():
             aa = a.tolist()
             ida = id(a)
@@ -1204,14 +1204,14 @@ class MethodTests(unittest.TestCase, Util):
     def test_tolist(self):
         a = bitarray()
         self.assertEqual(a.tolist(), [])
-        
+
         a = bitarray('110')
         self.assertEqual(a.tolist(), [True, True, False])
-        
+
         for lst in self.randomlists():
             a = bitarray(lst)
             self.assertEqual(a.tolist(), lst)
-       
+
 
     def test_remove(self):
         a = bitarray()
@@ -1229,7 +1229,7 @@ class MethodTests(unittest.TestCase, Util):
         a.remove(True);         self.assertEqual(a, bitarray('10110'))
         a.remove(1);            self.assertEqual(a, bitarray('0110'))
         a.remove(0);            self.assertEqual(a, bitarray('110'))
-        
+
         a = bitarray('0010011')
         b = a
         b.remove('1')
@@ -1240,8 +1240,8 @@ class MethodTests(unittest.TestCase, Util):
     def test_pop(self):
         a = bitarray()
         self.assertRaises(IndexError, a.pop)
-        
-        for a in self.randombitarrays():        
+
+        for a in self.randombitarrays():
             self.assertRaises(IndexError, a.pop, len(a))
             self.assertRaises(IndexError, a.pop, -len(a)-1)
             if len(a) == 0:
@@ -1251,7 +1251,7 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a.pop(), aa[-1])
             self.check_obj(a)
             self.assertEqual(a.endian(), enda)
-            
+
         for a in self.randombitarrays():
             if len(a) == 0:
                 continue
@@ -1259,13 +1259,13 @@ class MethodTests(unittest.TestCase, Util):
             aa = a.tolist()
             self.assertEqual(a.pop(n), aa[n])
             self.check_obj(a)
-            
+
 
     def test_setall(self):
         a = bitarray(5)
         a.setall(True)
         self.assertEQUAL(a, bitarray('11111'))
-        
+
         for a in self.randombitarrays():
             val = randint(0, 1)
             b = a
@@ -1279,22 +1279,22 @@ class MethodTests(unittest.TestCase, Util):
         a = bitarray()
         a.bytereverse()
         self.assertEqual(a, bitarray())
-        
+
         a = bitarray('1011')
         a.bytereverse()
         self.assertEqual(a, bitarray('0000'))
-        
+
         a = bitarray('111011')
         a.bytereverse()
         self.assertEqual(a, bitarray('001101'))
-        
+
         a = bitarray('11101101')
         a.bytereverse()
         self.assertEqual(a, bitarray('10110111'))
-        
+
         for i in xrange(256):
             a = bitarray()
-            a.fromstring(chr(i)) 
+            a.fromstring(chr(i))
             aa = a.tolist()
             b = a
             b.bytereverse()
@@ -1308,7 +1308,7 @@ tests.append(MethodTests)
 # ---------------------------------------------------------------------------
 
 class StringTests(unittest.TestCase, Util):
-    
+
     def randomstrings(self):
         for n in xrange(1, 20):
             yield ''.join(chr(randint(0, 255)) for x in xrange(n))
@@ -1318,17 +1318,17 @@ class StringTests(unittest.TestCase, Util):
         a = bitarray(endian='big')
         a.fromstring('A')
         self.assertEqual(a, bitarray('01000001'))
-        
+
         b = a
         b.fromstring('BC')
         self.assertEQUAL(b, bitarray('01000001' '01000010' '01000011'))
         self.assert_(b is a)
-        
+
         for b in self.randombitarrays():
             c = b.__copy__()
             b.fromstring('')
             self.assertEQUAL(b, c)
-        
+
         for b in self.randombitarrays():
             for s in self.randomstrings():
                 a = bitarray(endian=b.endian())
@@ -1338,12 +1338,12 @@ class StringTests(unittest.TestCase, Util):
                 self.assertEQUAL(b[-len(a):], a)
                 self.assertEQUAL(b[:-len(a)], c)
                 self.assertEQUAL(c + a, b)
- 
+
 
     def test_tostring(self):
         a = bitarray()
         self.assertEqual(a.tostring(), '')
-        
+
         for end in ('big', 'little'):
             a = bitarray(endian=end)
             a.fromstring('foo')
@@ -1376,14 +1376,14 @@ class StringTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.unpack, 'a', zero='b')
         self.assertRaises(TypeError, a.unpack, foo='b')
         self.assertRaises(TypeError, a.unpack, 'a', 'b', 'c')
-        
+
         for a in self.randombitarrays():
             self.assertEqual(a.unpack('0', '1'), a.to01())
-            
+
             b = bitarray()
             b.pack(a.unpack())
             self.assertEqual(b, a)
-            
+
             b = bitarray()
             b.pack(a.unpack('\x01', '\x00'))
             b.invert()
@@ -1403,13 +1403,13 @@ class StringTests(unittest.TestCase, Util):
         for n in xrange(256):
             a.pack(chr(n))
         self.assertEqual(a, bitarray('0' + 255 * '1'))
-        
+
         self.assertRaises(TypeError, a.pack, 0)
         self.assertRaises(TypeError, a.pack, u'1')
         self.assertRaises(TypeError, a.pack, [1, 3])
         self.assertRaises(TypeError, a.pack, bitarray())
 
-        
+
 tests.append(StringTests)
 
 # ---------------------------------------------------------------------------
@@ -1431,9 +1431,9 @@ class FileTests(unittest.TestCase, Util):
             fo = open(self.tmpfname, 'wb')
             dump(a, fo)
             fo.close()
-            
+
             b = load(open(self.tmpfname, 'rb'))
-            
+
             self.assert_(b is not a)
             self.assertEQUAL(a, b)
 
@@ -1520,7 +1520,7 @@ class FileTests(unittest.TestCase, Util):
         fo = open(self.tmpfname, 'wb')
         a.tofile(fo)
         fo.close()
-        
+
         b = bitarray()
         f = open(self.tmpfname, 'rb')
         b.fromfile(f, 1);     self.assertEqual(b.tostring(), 'A')
@@ -1532,14 +1532,14 @@ class FileTests(unittest.TestCase, Util):
         b.fromfile(f);        self.assertEqual(b.tostring(), 'CDEFGHIJ')
         b.fromfile(f);        self.assertEqual(b.tostring(), 'CDEFGHIJ')
         f.close()
-        
+
         b = bitarray()
         f = open(self.tmpfname, 'rb')
         f.read(1);
         self.assertRaises(EOFError, b.fromfile, f, 10)
         f.close()
         self.assertEqual(b.tostring(), 'BCDEFGHIJ')
-        
+
         b = bitarray()
         f = open(self.tmpfname, 'rb')
         b.fromfile(f);
@@ -1547,7 +1547,7 @@ class FileTests(unittest.TestCase, Util):
         self.assertRaises(EOFError, b.fromfile, f, 1)
         f.close()
 
-        
+
     def test_tofile(self):
         a = bitarray()
         f = open(self.tmpfname, 'wb')
@@ -1572,7 +1572,7 @@ class FileTests(unittest.TestCase, Util):
             fo = open(self.tmpfname, 'wb')
             b.tofile(fo)
             fo.close()
-            
+
             s = open(self.tmpfname, 'rb').read()
             self.assertEqual(len(s), a.buffer_info()[1])
 
@@ -1580,7 +1580,7 @@ class FileTests(unittest.TestCase, Util):
             a.fromstring(n * 'A')
             self.assertRaises(TypeError, a.tofile)
             self.assertRaises(TypeError, a.tofile, StringIO())
-            
+
             f = open(self.tmpfname, 'wb')
             a.tofile(f)
             f.close()
@@ -1591,10 +1591,10 @@ class FileTests(unittest.TestCase, Util):
             fo = open(self.tmpfname, 'wb')
             a.tofile(fo)
             fo.close()
-            
+
             s = open(self.tmpfname, 'rb').read()
             self.assertEqual(len(s), a.buffer_info()[1])
-            
+
             b = a.__copy__()
             b.fill()
 
@@ -1618,7 +1618,7 @@ class PrefixCodeTests(unittest.TestCase):
         # 42 not iterable
         self.assertRaises(TypeError, a.encode, {'a':bitarray('0')}, 42)
         self.assertEqual(len(a), 0)
-        
+
     def test_encode_string(self):
         a = bitarray()
         d = {'a':bitarray('0')}
@@ -1627,7 +1627,7 @@ class PrefixCodeTests(unittest.TestCase):
         a.encode(d, 'a')
         self.assertEqual(a, bitarray('0'))
         self.assertEqual(d, {'a':bitarray('0')})
-        
+
     def test_encode_list(self):
         a = bitarray()
         d = {'a':bitarray('0')}
@@ -1636,17 +1636,17 @@ class PrefixCodeTests(unittest.TestCase):
         a.encode(d, ['a'])
         self.assertEqual(a, bitarray('0'))
         self.assertEqual(d, {'a':bitarray('0')})
-        
+
     def test_encode_iter(self):
         a = bitarray()
         d = {'a':bitarray('0'), 'b':bitarray('1')}
         a.encode(d, iter('abba'))
         self.assertEqual(a, bitarray('0110'))
-        
+
         def foo():
             for c in 'bbaabb':
                 yield c
-                
+
         a.encode(d, foo())
         self.assertEqual(a, bitarray('0110110011'))
         self.assertEqual(d, {'a':bitarray('0'), 'b':bitarray('1')})
@@ -1771,7 +1771,7 @@ tests.append(PrefixCodeTests)
 def pages():
     if sys.platform != 'linux2':
         return 0
-    
+
     dat = open('/proc/%i/statm' % os.getpid()).read()
     return int(dat.split()[0])
 
@@ -1797,11 +1797,11 @@ def check_memory_leaks(verbosity):
         i += 1
 
 
-def run(verbosity, chk_mem_leaks=False):    
+def run(verbosity, chk_mem_leaks=False):
     suite = unittest.TestSuite()
     for cls in tests:
         suite.addTest(unittest.makeSuite(cls))
-    
+
     runner = unittest.TextTestRunner(verbosity=verbosity)
 
     return runner.run(suite)
