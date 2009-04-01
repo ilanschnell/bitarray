@@ -10,15 +10,40 @@ Author: Ilan Schnell
 """
 __version__ = '0.3.5'
 
-try:
-    from _bitarray import _bitarray, bits2bytes, _sysinfo
-except ImportError:
-    raise ImportError("""No module named _bitarray
+from _bitarray import _bitarray, bits2bytes, _sysinfo
 
-Are you running python from the root of the bitarray source tree?
-If so, python is trying to import bitarray/_bitarray.so.
-To resolve this problem, change to another directory.
-""")
+
+def _btree_insert(tree, sym, ba):
+    """
+    Insert symbol which is mapped to bitarray into tree
+    """
+    v = ba[0]
+    if len(ba) > 1:
+        if tree[v] == []:
+            tree[v] = [[], []]
+        _btree_insert(tree[v], sym, ba[1:])
+    else:
+        if tree[v] != []:
+            raise ValueError("prefix code ambiguous")
+        tree[v] = sym
+
+def _mk_tree(codedict):
+    # Generate tree from codedict
+    tree = [[], []]
+    for sym, ba in codedict.iteritems():
+        _btree_insert(tree, sym, ba)
+    return tree
+
+def _check_codedict(codedict):
+    if not isinstance(codedict, dict):
+        raise TypeError("dictionary expected")
+    if len(codedict) == 0:
+        raise ValueError("prefix code empty")
+    for k, v in codedict.iteritems():
+        if not isinstance(v, bitarray):
+            raise TypeError("bitarray expected for dictionary value")
+        if v.length() == 0:
+            raise ValueError("non-empty bitarray expected")
 
 class bitarray(_bitarray):
     """bitarray([initial][endian=string])
@@ -50,7 +75,51 @@ Allowed values are 'big' and 'little' (default is 'big').
 Note that setting the bit endianness only has an effect when accessing the
 machine representation of the bitarray, i.e. when using the methods: tofile,
 fromfile, tostring, fromstring."""
-    pass
+
+    def decode(self, codedict):
+        """decode(code)
+
+Given a prefix code (a dict mapping symbols to bitarrays),
+decode the content of the bitarray and return the list of symbols."""
+        _check_codedict(codedict)
+        return self._decode(_mk_tree(codedict))
+
+    def encode(self, codedict, iterable):
+        """encode(code, iterable)
+
+Given a prefix code (a dict mapping symbols to bitarrays),
+iterates over iterable object with symbols, and extends the bitarray
+with the corresponding bitarray for each symbols."""
+        _check_codedict(codedict)
+        return self._encode(codedict, iterable)
+
+    def search(self, x, limit=-1):
+        """
+        search(x[, limit])
+
+Given a bitarray x (or an object which can be converted to a bitarray),
+returns the start positions of x matching self as a list.
+The optional argument limits the number of search results to the integer
+specified.  By default, all search results are returned."""
+        return self._search(bitarray(x), limit)
+
+    def __contains__(self, other):
+        """__contains__(x)
+
+Return True if bitarray contains x, False otherwise.
+If x is an integer (which includes booleans), it is determined
+whether or not the corresponding bit is contained in the bitarray.
+If x is an object which can be cast into a bitarray, such as e.g.
+the string '0110', a list, or a bitarray itself, a sequential search
+will be performed to determine return value."""
+        if isinstance(other, int):
+            try:
+                self.index(other)
+                return True
+            except ValueError:
+                return False
+        else:
+            return bool(self._search(bitarray(other), 1))
 
 
 def test(verbosity=1):
