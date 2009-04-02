@@ -5,10 +5,12 @@
 #	make bitarraymodule.so
 #	make test
 
+PYTHON=python2.6
+
 
 _bitarray.so: _bitarray.c
 #	gcc -Wall -shared -fPIC -I/usr/local/include/python2.5 -o _bitarray.so _bitarray.c
-	cd .. && python setup.py build_ext --inplace
+	cd .. && ${PYTHON} setup.py build_ext --inplace
 
 
 clean:
@@ -17,7 +19,7 @@ clean:
 
 
 test:
-	python test_bitarray.py
+	${PYTHON} test_bitarray.py
 
 
 cleanup:
