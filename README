@@ -132,6 +132,24 @@ Like lists, bitarray objects support slice assignment and deletion:
    >>> a[9:]
    bitarray('001010101010101010100010011000111')
 
+In addition, slices can be assigned to booleans, which is easier (and
+faster) than assigning to a bitarray in which all values are the same:
+
+   >>> a = 20 * bitarray('0')
+   >>> a[1:15:3] = True
+   >>> a
+   bitarray('01001001001001000000')
+
+This is easier and faster than:
+
+   >>> a = 20 * bitarray('0')
+   >>> a[1:15:3] = 5 * bitarray('1')
+   >>> a
+   bitarray('01001001001001000000')
+
+Note that in the latter we have to create a temporary bitarray whose length
+must be known or calculated.
+
 
 Bit endianness
 --------------

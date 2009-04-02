@@ -1,30 +1,45 @@
 # Exmaple from  stevech1097@yahoo.com.au
+import time
+
+import numpy
+import bitarray
 
 def primesToN1(n):
-    import numpy
     # use numpy: 8-bit array of boolean flags
     if n < 2:
         return []
+    print 'init numpy'
     A = numpy.ones(n+1, numpy.bool) # set to 1 == True
-    A[2*2::2] = 0
+    A[:2] = A[2*2::2] = 0
+    print 'sieve'
     for i in xrange(3, int(n**.5)+1, 2): # odd numbers
         if A[i]:  # i is prime
             A[i*i::i*2] = 0
-    return numpy.flatnonzero(A)[2:] # 0 and 1 are not prime
+    print 'counting'
+    print numpy.sum(A)
 
 
 def primesToN2(n):
-    import bitarray
     # use bitarray: 1-bit boolean flags
     if n < 2:
         return []
+    print 'init bitarray'
     A = bitarray.bitarray(n+1)
     A.setall(1)
     A[:2] = A[2*2::2] = False
+    print 'sieve'
     for i in xrange(3, int(n**.5)+1, 2): # odd numbers
         if A[i]:  # i is prime
             A[i*i::i*2] = False
-    return A.search('1')
+    print 'counting'
+    print A.count()
 
+N = 2 * 1000 * 1000 * 1000
 
-print primesToN2(10000000)[:10]
+def run(func):
+    start_time = time.time()
+    func(N)
+    print 'time: %.6f sec\n' % (time.time() - start_time)
+
+run(primesToN1)
+run(primesToN2)
