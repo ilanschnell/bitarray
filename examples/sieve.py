@@ -34,7 +34,7 @@ def primesToN2(n):
     print 'counting'
     print A.count()
 
-N = 2 * 1000 * 1000 * 1000
+N = 100 * 1000 * 1000
 
 def run(func):
     start_time = time.time()
