@@ -12,13 +12,9 @@ kwds = {}
 kwds['long_description'] = open(abspath('README')).read()
 
 # Read version from bitarray/__init__.py
-pat = re.compile(r'__version__\s*=\s*(.+)')
-for line in open(abspath(join('bitarray', '__init__.py'))):
-    match = pat.match(line)
-    if match:
-        kwds['version'] = eval(match.group(1))
-        break
-assert 'version' in kwds
+pat = re.compile(r'__version__\s*=\s*(.+)', re.M)
+data = open(abspath('bitarray/__init__.py')).read()
+kwds['version'] = eval(pat.search(data).group(1))
 
 
 setup(
