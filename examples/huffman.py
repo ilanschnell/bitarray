@@ -14,7 +14,7 @@ from bitarray import bitarray
 def huffCode(freq):
     """
     Given a dictionary mapping symbols to thier frequency,
-    return the Huffman code in the form of 
+    return the Huffman code in the form of
     a dictionary mapping the symbols to bitarrays.
     """
     lst = [(freq[s], s) for s in freq]
@@ -108,12 +108,12 @@ def usage():
     sys.exit(0)
 
 
-if __name__ == '__main__':    
+if __name__ == '__main__':
     if len(sys.argv) != 3:
         usage()
 
     cmd, filename = sys.argv[1:3]
-    
+
     if cmd == 'print':
         print_code(filename)
 
@@ -123,7 +123,7 @@ if __name__ == '__main__':
     elif cmd == 'decode':
         if filename.endswith('.huff'):
             decode(filename)
-        else:    
+        else:
             print 'Filename has no .huff extension'
 
     elif cmd == 'test':

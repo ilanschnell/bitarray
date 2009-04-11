@@ -33,11 +33,11 @@ class SmallIntArray(object):
 
 if __name__ == '__main__':
     from random import randint
-    
+
     # define array with 1000 integers, each represented by 5 bits
     a = SmallIntArray(1000, 5)
 
-    b = [] # store values, for assertion below 
+    b = [] # store values, for assertion below
     for i in xrange(1000):
         v = randint(0, 31)
         b.append(v)

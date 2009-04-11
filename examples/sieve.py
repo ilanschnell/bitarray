@@ -1,4 +1,3 @@
-# Exmaple from  stevech1097@yahoo.com.au
 import time
 
 import numpy
@@ -33,6 +32,7 @@ def primesToN2(n):
             A[i*i::i*2] = False
     print 'counting'
     print A.count()
+
 
 N = 100 * 1000 * 1000
 

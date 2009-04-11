@@ -13,12 +13,12 @@ def traverse(it, tree):
         subtree = tree[it.next()]
     except StopIteration:
         return False
-    
+
     if isinstance(subtree, list) and len(subtree)==2:
         return traverse(it, subtree)
     else: # leave node
         return subtree
-            
+
 
 def insert(tree, sym, ba):
     """
@@ -44,7 +44,7 @@ def decode(codedict, bitsequence):
     tree = [[], []]
     for sym, ba in codedict.iteritems():
         insert(tree, sym, ba)
-    
+
     # actual decoding by traversing until StopIteration
     res = []
     it = iter(bitsequence)

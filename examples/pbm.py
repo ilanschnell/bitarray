@@ -21,7 +21,7 @@ class PBM: # Portable Bitmap
 
     def clear(self):
         self.data.setall(0)
-    
+
     def save(self, filename):
         fo = open(filename, 'wb')
         fo.write('P4\n')
@@ -29,7 +29,7 @@ class PBM: # Portable Bitmap
         fo.write('%i %i\n' % (self.size))
         self.data.tofile(fo)
         fo.close()
-    
+
     def load(self, filename):
         fi = open(filename, 'rb')
         assert fi.readline().strip() == 'P4'
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     for x in xrange(10, 391):
         a[x, x] = True
     a.save('pic1.ppm')
-    
+
     # copy the picture
     b = PBM()
     b.load('pic1.ppm')

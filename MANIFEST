@@ -15,4 +15,5 @@ examples/huffman.py
 examples/mandel.py
 examples/ndarray.py
 examples/pbm.py
+examples/sieve.py
 examples/smallints.py
