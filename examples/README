@@ -35,6 +35,13 @@ pbm.py
     - storing and loading .ppm (P4), which is the same as .pbm, files
 
 
+sieve.py
+    Sieve of Eratosthenes is a simple, ancient algorithm for finding all
+    prime numbers up to a specified integer.  In this exmaple, the algorithm
+    is implemented using the numpy ndarray as well as the bitarray object.
+    Thanks Steve for emailing this example.
+
+
 smallints.py
     A class is defined which allows efficiently storing an array of
     integers represented by a specified number of bits (1 through 8).
