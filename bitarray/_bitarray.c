@@ -1086,7 +1086,7 @@ bitarray_invert(bitarrayobject *self)
 }
 
 PyDoc_STRVAR(invert_doc,
-"invert(x)\n\
+"invert()\n\
 \n\
 Invert all bits in the array (in-place),\n\
 i.e. convert each 1-bit into a 0-bit and vice versa.");
