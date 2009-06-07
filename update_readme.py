@@ -11,7 +11,7 @@ subprocess.call([sys.executable, 'setup.py', 'build_ext', '--inplace'],
 sys.path.insert(0, os.getcwd())
 import bitarray
 
-bitarray.test()
+assert bitarray.test().wasSuccessful()
 
 print 'Backup README'
 shutil.copyfile('README', 'README.bak')

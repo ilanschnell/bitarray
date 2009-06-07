@@ -1,10 +1,8 @@
+/* Bitarray object implementation */
+
 /*
-Bitarray object implementation
-This file is part of the bitarray module.
-
-    http://pypi.python.org/pypi/bitarray/
-
-Author: Ilan Schnell
+   This file is part of the bitarray module.
+   Author: Ilan Schnell
 */
 
 #define PY_SSIZE_T_CLEAN

@@ -1,14 +1,13 @@
 """
 This module defines an object type which can efficiently represent
 a bitarray.  Bitarrays are sequence types and behave very much like lists.
-
 Please find a description of this package at:
 
     http://pypi.python.org/pypi/bitarray/
 
 Author: Ilan Schnell
 """
-__version__ = '0.3.6'
+__version__ = '0.9.0'
 
 from _bitarray import _bitarray, bits2bytes, _sysinfo
 
@@ -27,12 +26,14 @@ def _btree_insert(tree, sym, ba):
             raise ValueError("prefix code ambiguous")
         tree[v] = sym
 
+
 def _mk_tree(codedict):
     # Generate tree from codedict
     tree = [[], []]
     for sym, ba in codedict.iteritems():
         _btree_insert(tree, sym, ba)
     return tree
+
 
 def _check_codedict(codedict):
     if not isinstance(codedict, dict):
@@ -44,6 +45,7 @@ def _check_codedict(codedict):
             raise TypeError("bitarray expected for dictionary value")
         if v.length() == 0:
             raise ValueError("non-empty bitarray expected")
+
 
 class bitarray(_bitarray):
     """bitarray([initial][endian=string])

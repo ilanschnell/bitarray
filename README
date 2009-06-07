@@ -23,7 +23,7 @@ Key features
  * On 32bit machines, a bitarray object can contain up to 2^34 elements,
    that is 16 Gbits (on 64bit machines up to 2^63 elements in theory).
 
- * All functionality implemented in C.
+ * All crutial functionality implemented in C.
 
  * Bitarray objects behave very much like a list object, in particular
    slicing (including slice assignment and deletion) is supported.
@@ -48,8 +48,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-0.3.6.tar.gz
-   $ cd bitarray-0.3.6
+   $ tar xzf bitarray-0.9.0.tar.gz
+   $ cd bitarray-0.9.0
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -60,13 +60,13 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.5/site-packages/bitarray
-   bitarray version: 0.3.6
-   2.5.2 (r252:60911, Jul 17 2008, 10:38:24) 
+   bitarray version: 0.9.0
+   2.5.2 (r252:60911, Jul 17 2008, 10:38:24)
    [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
-   ..........
+   ...........
    ----------------------------------------------------------------------
-   Ran 90 tests in 2.420s
+   Ran 91 tests in 2.420s
    
    OK
 
@@ -389,7 +389,7 @@ Reference
    Insert a new item x into the bitarray before position i.
 
 
-``invert(x)``
+``invert()``
    Invert all bits in the array (in-place),
    i.e. convert each 1-bit into a 0-bit and vice versa.
 
