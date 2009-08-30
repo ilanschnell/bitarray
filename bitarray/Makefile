@@ -9,8 +9,8 @@ PYTHON=python2.6
 
 
 _bitarray.so: _bitarray.c
-#	gcc -Wall -shared -fPIC -I/usr/local/include/python2.5 -o _bitarray.so _bitarray.c
-	cd .. && ${PYTHON} setup.py build_ext --inplace
+	gcc -W -Wall -Wextra -shared -fPIC -I/usr/local/include/python2.5 -o _bitarray.so _bitarray.c
+#	cd .. && ${PYTHON} setup.py build_ext --inplace
 
 
 clean:
