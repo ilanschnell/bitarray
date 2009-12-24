@@ -1,4 +1,3 @@
-import sys
 import time
 from bitarray import bitarray
 from huffman import freq_string, huffCode
