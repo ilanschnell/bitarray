@@ -408,7 +408,7 @@ count(bitarrayobject *self)
     return res;
 }
 
-/* Return index of first occurrence of bit, -1 when x is not in found. */
+/* Return index of first occurrence of vi, -1 when x is not in found. */
 static idx_t
 findfirst(bitarrayobject *self, int vi)
 {
@@ -429,7 +429,7 @@ findfirst(bitarrayobject *self, int vi)
     if (j == Py_SIZE(self))
         j--;
 
-    /* fine graded search within byte */
+    /* fine grained search within byte */
     for (i = BITS(j); i < self->nbits; i++)
         if (GETBIT(self, i) == vi)
             return i;
