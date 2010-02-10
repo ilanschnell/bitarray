@@ -1890,7 +1890,7 @@ bitarray_methods[] = {
      count_doc},
     {"_decode",      (PyCFunction) bitarray_decode,      METH_O,
      decode_doc},
-    {"_encode",       (PyCFunction) bitarray_encode,     METH_VARARGS,
+    {"_encode",      (PyCFunction) bitarray_encode,      METH_VARARGS,
      encode_doc},
     {"endian",       (PyCFunction) bitarray_endian,      METH_NOARGS,
      endian_doc},
@@ -1920,7 +1920,7 @@ bitarray_methods[] = {
      reverse_doc},
     {"setall",       (PyCFunction) bitarray_setall,      METH_O,
      setall_doc},
-    {"_search",       (PyCFunction) bitarray_search,     METH_VARARGS,
+    {"_search",      (PyCFunction) bitarray_search,      METH_VARARGS,
      search_doc},
     {"sort",         (PyCFunction) bitarray_sort,        METH_VARARGS |
                                                          METH_KEYWORDS,
