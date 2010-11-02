@@ -672,6 +672,39 @@ class SpecialMethodTests(unittest.TestCase, Util):
             self.assert_(b is not a)
             self.assertEQUAL(a, b)
 
+    def assertReallyEqual(self, a, b):
+        # assertEqual first, because it will have a good message if the
+        # assertion fails.
+        self.assertEqual(a, b)
+        self.assertEqual(b, a)
+        self.assertTrue(a == b)
+        self.assertTrue(b == a)
+        self.assertFalse(a != b)
+        self.assertFalse(b != a)
+        self.assertEqual(0, cmp(a, b))
+        self.assertEqual(0, cmp(b, a))
+
+    def assertReallyNotEqual(self, a, b):
+        # assertNotEqual first, because it will have a good message if the
+        # assertion fails.
+        self.assertNotEqual(a, b)
+        self.assertNotEqual(b, a)
+        self.assertFalse(a == b)
+        self.assertFalse(b == a)
+        self.assertTrue(a != b)
+        self.assertTrue(b != a)
+        self.assertNotEqual(0, cmp(a, b))
+        self.assertNotEqual(0, cmp(b, a))
+
+    def test_equality(self):
+        self.assertReallyEqual(bitarray(''), bitarray(''))
+        self.assertReallyEqual(bitarray('0'), bitarray('0'))
+        self.assertReallyEqual(bitarray('1'), bitarray('1'))
+
+    def test_not_equality(self):
+        self.assertReallyNotEqual(bitarray(''), bitarray('1'))
+        self.assertReallyNotEqual(bitarray(''), bitarray('0'))
+        self.assertReallyNotEqual(bitarray('0'), bitarray('1'))
 
 tests.append(SpecialMethodTests)
 
