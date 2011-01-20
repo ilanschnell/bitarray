@@ -1,0 +1,6 @@
+*~
+*.pyc
+*.egg-info
+build
+dist
+bitarray/_bitarray.so
