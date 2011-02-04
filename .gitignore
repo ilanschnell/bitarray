@@ -1,6 +1,8 @@
 *~
 *.pyc
 *.egg-info
-build
-dist
-bitarray/_bitarray.so
+*.so
+README.bak
+README.html
+build/
+dist/
