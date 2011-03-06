@@ -6,8 +6,7 @@ import doctest
 import shutil
 import subprocess
 
-subprocess.call([sys.executable, 'setup.py', 'build_ext', '--inplace'],
-                cwd=os.getcwd())
+subprocess.call([sys.executable, 'setup.py', 'build_ext', '--inplace'])
 sys.path.insert(0, os.getcwd())
 import bitarray
 
@@ -75,7 +74,3 @@ doctest.testfile('README')
 
 print 'Writing html'
 os.system('rst2html.py README >README.html')
-
-# Local Variables:
-# mode: python
-# End:
