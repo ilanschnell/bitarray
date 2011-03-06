@@ -1,6 +1,6 @@
-import sys
 import re
-from os.path import abspath, join
+import sys
+from os.path import join
 from distutils.core import setup, Extension
 
 if sys.version_info[:2] < (2, 5):
@@ -8,12 +8,11 @@ if sys.version_info[:2] < (2, 5):
 
 kwds = {}
 
-# Read the long description from README
-kwds['long_description'] = open(abspath('README')).read()
+kwds['long_description'] = open('README').read()
 
 # Read version from bitarray/__init__.py
 pat = re.compile(r'__version__\s*=\s*(.+)', re.M)
-data = open(abspath('bitarray/__init__.py')).read()
+data = open(join('bitarray', '__init__.py')).read()
 kwds['version'] = eval(pat.search(data).group(1))
 
 
