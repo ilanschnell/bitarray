@@ -12,13 +12,13 @@ import bitarray
 
 assert bitarray.test().wasSuccessful()
 
-print 'Backup README'
-shutil.copyfile('README', 'README.bak')
+print 'Backup README.rst'
+shutil.copyfile('README.rst', 'README.bak')
 
-print 'Writing new README'
-fo = open('README', 'w')
+print 'Writing new README.rst'
+fo = open('README.rst', 'w')
 
-# Copy the everything before 'Reference' while substituting the version number
+# Copy everything before 'Reference' while substituting the version number
 pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
 for line in open('README.bak'):
     if line == 'Reference\n':
@@ -68,9 +68,9 @@ fo.close()
 print
 
 print 'doctest'
-doctest.testfile('README')
+doctest.testfile('README.rst')
 
 # --------- html
 
 print 'Writing html'
-os.system('rst2html.py README >README.html')
+os.system('rst2html.py README.rst >README.html')

@@ -8,7 +8,7 @@ if sys.version_info[:2] < (2, 5):
 
 kwds = {}
 
-kwds['long_description'] = open('README').read()
+kwds['long_description'] = open('README.rst').read()
 
 # Read version from bitarray/__init__.py
 pat = re.compile(r'__version__\s*=\s*(.+)', re.M)
