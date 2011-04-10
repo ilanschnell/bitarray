@@ -2,15 +2,15 @@
 
 #all:
 #	make clean
-#	make bitarraymodule.so
+#	make _bitarray.so
 #	make test
 
-PYTHON=python2.6
+PYTHON=python2.7
 
 
 _bitarray.so: _bitarray.c
-	gcc -W -Wall -Wextra -shared -fPIC -I/usr/local/include/python2.5 -o _bitarray.so _bitarray.c
-#	cd .. && ${PYTHON} setup.py build_ext --inplace
+#	gcc -W -Wall -Wextra -shared -fPIC -I/usr/local/include/python2.5 -o _bitarray.so _bitarray.c
+	cd .. && ${PYTHON} setup.py build_ext --inplace
 
 
 clean:
@@ -20,8 +20,3 @@ clean:
 
 test:
 	${PYTHON} test_bitarray.py
-
-
-cleanup:
-	expand _bitarray.c | sed -e 's:[ ]*$$::' >tmp.c
-	mv tmp.c _bitarray.c
