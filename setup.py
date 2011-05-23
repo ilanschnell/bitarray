@@ -20,7 +20,7 @@ setup(
     name = "bitarray",
     author = "Ilan Schnell",
     author_email = "ilanschnell@gmail.com",
-    url = "http://pypi.python.org/pypi/bitarray/",
+    url = "https://github.com/ilanschnell/bitarray",
     license = "PSF",
     classifiers = [
         "License :: OSI Approved :: Python Software Foundation License",
