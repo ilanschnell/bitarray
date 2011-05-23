@@ -2272,7 +2272,6 @@ bits2bytes(PyObject *self, PyObject *v)
     return NULL;
 }
 
-
 PyDoc_STRVAR(bits2bytes_doc,
 "bits2bytes(n)\n\
 \n\
