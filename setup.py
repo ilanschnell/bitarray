@@ -11,7 +11,7 @@ kwds = {}
 kwds['long_description'] = open('README.rst').read()
 
 # Read version from bitarray/__init__.py
-pat = re.compile(r'__version__\s*=\s*(.\S)', re.M)
+pat = re.compile(r'__version__\s*=\s*(\S+)', re.M)
 data = open(join('bitarray', '__init__.py')).read()
 kwds['version'] = eval(pat.search(data).group(1))
 
