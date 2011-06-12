@@ -1,6 +1,6 @@
-===============
-Bitarray module
-===============
+======================================
+bitarray: efficient arrays of booleans
+======================================
 
 This module provides an object type which efficiently represents an array
 of booleans.  Bitarrays are sequence types and behave very much like usual
