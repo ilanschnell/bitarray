@@ -6,19 +6,19 @@
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
 
-#if PY_MAJOR_VERSION >= 3 
-#define IS_PY3K 
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K
 #endif
 
 #ifdef IS_PY3K
 #include "bytesobject.h"
-#define PyString_FromStringAndSize PyBytes_FromStringAndSize
-#define PyString_FromString PyBytes_FromString
-#define PyString_Check PyBytes_Check
-#define PyString_Size PyBytes_Size
-#define PyString_AsString PyBytes_AsString
-#define PyString_ConcatAndDel PyBytes_ConcatAndDel
-#define Py_TPFLAGS_HAVE_WEAKREFS 0
+#define PyString_FromStringAndSize  PyBytes_FromStringAndSize
+#define PyString_FromString  PyBytes_FromString
+#define PyString_Check  PyBytes_Check
+#define PyString_Size  PyBytes_Size
+#define PyString_AsString  PyBytes_AsString
+#define PyString_ConcatAndDel  PyBytes_ConcatAndDel
+#define Py_TPFLAGS_HAVE_WEAKREFS  0
 #endif
 
 #if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 6
@@ -662,9 +662,8 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         return extend_string(self, obj, STR_01);
 
 #ifdef IS_PY3K
-    if (PyUnicode_Check(obj))                                 /* str01 */
-    {
-        iter=PyUnicode_AsEncodedString(obj,NULL,NULL);
+    if (PyUnicode_Check(obj)) {                               /* str01 */
+        iter = PyUnicode_AsEncodedString(obj, NULL, NULL);
         ret = extend_string(self, iter, STR_01);
         Py_DECREF(iter);
         return ret;
@@ -709,7 +708,7 @@ getIndex(PyObject *v, idx_t *i)
     if (PyInt_Check(v)) {
         x = PyInt_AS_LONG(v);
     }
-    else 
+    else
 #endif
     if (PyLong_Check(v)) {
         x = PyLong_AsLongLong(v);
@@ -1222,10 +1221,8 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         return NULL;
     }
     result = PyEval_CallObject(reader, rargs);
-    if (result != NULL)
-    {
-        if (!PyBytes_Check(result))
-        {
+    if (result != NULL) {
+        if (!PyBytes_Check(result)) {
             PyErr_SetString(PyExc_TypeError,
                             "first argument must be an open file");
             Py_DECREF(result);
@@ -1246,14 +1243,16 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
             Py_DECREF(result);
             Py_DECREF(rargs);
             Py_DECREF(reader);
-            return NULL; }
+            return NULL;
+        }
 
-        memcpy(self->ob_item + (Py_SIZE(self) - nread), PyBytes_AS_STRING(result), nread);
+        memcpy(self->ob_item + (Py_SIZE(self) - nread),
+               PyBytes_AS_STRING(result), nread);
 
         if (nbytes > 0 && nread < (size_t) nbytes) {
             PyErr_SetString(PyExc_EOFError, "not enough items read");
-            return NULL; }
-
+            return NULL;
+        }
         delete_n(self, t, p);
         Py_DECREF(result);
     }
@@ -1546,16 +1545,16 @@ bitarray_repr(bitarrayobject *self)
 
     if (self->nbits == 0)
         string = PyString_FromString("bitarray()");
-    else 
+    else
     {
         string = PyString_FromString("bitarray(\'");
         PyString_ConcatAndDel(&string, unpack(self, '0', '1'));
         PyString_ConcatAndDel(&string, PyString_FromString("\')"));
     }
 #ifdef IS_PY3K
-    decoded=PyUnicode_FromEncodedObject(string, NULL, NULL);
+    decoded = PyUnicode_FromEncodedObject(string, NULL, NULL);
     Py_DECREF(string);
-    string=decoded;
+    string = decoded;
 #endif
     return string;
 }
