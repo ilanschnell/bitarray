@@ -2491,13 +2491,17 @@ init_bitarray(void)
     Py_TYPE(&BitarrayIter_Type) = &PyType_Type;
 #ifdef IS_PY3K
     m = PyModule_Create(&moduledef);
-#else
-    m = Py_InitModule3("_bitarray", module_functions, 0);
-#endif
     if (m == NULL)
         return NULL;
+#else
+    m = Py_InitModule3("_bitarray", module_functions, 0);
+    if (m == NULL)
+        return;
+#endif
 
     Py_INCREF((PyObject *) &Bitarraytype);
     PyModule_AddObject(m, "_bitarray", (PyObject *) &Bitarraytype);
+#ifdef IS_PY3K
     return m;
+#endif
 }
