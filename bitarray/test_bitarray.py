@@ -1368,10 +1368,7 @@ class MethodTests(unittest.TestCase, Util):
 
         for i in range(256):
             a = bitarray()
-            if is_py3k:
-                a.frombytes(chr(i).encode('latin1'))
-            else:
-                a.frombytes(chr(i))
+            a.frombytes(to_bytes(chr(i)))
             aa = a.tolist()
             b = a
             b.bytereverse()
@@ -1388,11 +1385,8 @@ class StringTests(unittest.TestCase, Util):
 
     def randombytes(self):
         for n in range(1, 20):
-            if is_py3k:
-                yield ''.join(chr(randint(0, 255))
-                              for x in range(n)).encode('latin1')
-            else:
-                yield ''.join(chr(randint(0, 255)) for x in xrange(n))
+            yield to_bytes(''.join(chr(randint(0, 255))
+                                   for x in range(n)))
 
     def test_frombytes(self):
         a = bitarray(endian='big')
@@ -1453,8 +1447,8 @@ class StringTests(unittest.TestCase, Util):
                          to_bytes('\x00\x01'))
         self.assertEqual(a.unpack(zero=to_bytes('A')),
                          to_bytes('A\xff'))
-        self.assertEqual(a.unpack(one=to_bytes('t'),
-                                  zero=to_bytes('f')), to_bytes('ft'))
+        self.assertEqual(a.unpack(one=to_bytes('t'), zero=to_bytes('f')),
+                         to_bytes('ft'))
 
         self.assertRaises(TypeError, a.unpack,
                           to_bytes('a'), zero=to_bytes('b'))
@@ -1485,10 +1479,7 @@ class StringTests(unittest.TestCase, Util):
 
         a = bitarray()
         for n in range(256):
-            if is_py3k:
-                a.pack(chr(n).encode('latin1'))
-            else:
-                a.pack(chr(n))
+            a.pack(to_bytes(chr(n)))
         self.assertEqual(a, bitarray('0' + 255 * '1'))
 
         self.assertRaises(TypeError, a.pack, 0)
@@ -1532,7 +1523,8 @@ class FileTests(unittest.TestCase, Util):
         d = shelve.open(self.tmpfname)
         stored = []
         for a in self.randombitarrays():
-            key = hashlib.md5(repr(a).encode() + a.endian().encode()).hexdigest()
+            key = hashlib.md5(repr(a).encode() +
+                              a.endian().encode()).hexdigest()
             d[key] = a
             stored.append((key, a))
         d.close()
