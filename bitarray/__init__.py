@@ -1,16 +1,16 @@
 """
 This module defines an object type which can efficiently represent
 a bitarray.  Bitarrays are sequence types and behave very much like lists.
+
 Please find a description of this package at:
 
     http://pypi.python.org/pypi/bitarray/
 
 Author: Ilan Schnell
 """
-__version__ = '0.9.0'
+__version__ = '0.4.0'
 
 from _bitarray import _bitarray, bits2bytes, _sysinfo
-
 
 def _btree_insert(tree, sym, ba):
     """
@@ -26,26 +26,23 @@ def _btree_insert(tree, sym, ba):
             raise ValueError("prefix code ambiguous")
         tree[v] = sym
 
-
 def _mk_tree(codedict):
     # Generate tree from codedict
     tree = [[], []]
-    for sym, ba in codedict.iteritems():
+    for sym, ba in codedict.items():
         _btree_insert(tree, sym, ba)
     return tree
-
 
 def _check_codedict(codedict):
     if not isinstance(codedict, dict):
         raise TypeError("dictionary expected")
     if len(codedict) == 0:
         raise ValueError("prefix code empty")
-    for k, v in codedict.iteritems():
+    for k, v in codedict.items():
         if not isinstance(v, bitarray):
             raise TypeError("bitarray expected for dictionary value")
         if v.length() == 0:
             raise ValueError("non-empty bitarray expected")
-
 
 class bitarray(_bitarray):
     """bitarray([initial][endian=string])
@@ -76,7 +73,21 @@ Allowed values are 'big' and 'little' (default is 'big').
 
 Note that setting the bit endianness only has an effect when accessing the
 machine representation of the bitarray, i.e. when using the methods: tofile,
-fromfile, tostring, fromstring."""
+fromfile, tostring, fromstring, tobytes, frombytes."""
+
+    def fromstring(self,string):
+        """fromstring(string)
+
+Append from a string, interpreting the string as machine values."""
+        return self.frombytes(string.encode())
+
+    def tostring(self):
+        """tostring(string)
+
+Return the string representing (machine values) of the bitarray.\n\
+When the length of the bitarray is not a multiple of 8, the few remaining\n\
+bits (1..7) are set to 0."""
+        return self.tobytes().decode()
 
     def decode(self, codedict):
         """decode(code)
@@ -127,5 +138,5 @@ def test(verbosity=1):
     """test(verbosity=1)
 
 Run self-test."""
-    import test_bitarray
+    from . import test_bitarray
     return test_bitarray.run(verbosity=verbosity)
