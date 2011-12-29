@@ -1376,7 +1376,8 @@ class StringTests(unittest.TestCase, Util):
     def randombytes(self):
         for n in range(1, 20):
             if is_py3k:
-                yield ''.join(chr(randint(0, 255)) for x in range(n)).encode('latin1')
+                yield ''.join(chr(randint(0, 255))
+                              for x in range(n)).encode('latin1')
             else:
                 yield ''.join(chr(randint(0, 255)) for x in xrange(n))
 
