@@ -10,7 +10,8 @@ Author: Ilan Schnell
 """
 __version__ = '0.4.0'
 
-from _bitarray import _bitarray, bits2bytes, _sysinfo
+from ._bitarray import _bitarray, bits2bytes, _sysinfo
+
 
 def _btree_insert(tree, sym, ba):
     """

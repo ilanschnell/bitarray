@@ -1471,15 +1471,14 @@ static PyObject *
 bitarray_to01(bitarrayobject *self)
 {
     PyObject *string, *unpacked;
-    unpacked = unpack(self, '0', '1');
 
+    unpacked = unpack(self, '0', '1');
 #ifdef IS_PY3K
-    string=PyUnicode_FromEncodedObject(unpacked, NULL, NULL);
+    string = PyUnicode_FromEncodedObject(unpacked, NULL, NULL);
     Py_DECREF(unpacked);
 #else
     string = unpacked;
 #endif
-
     return string;
 }
 
