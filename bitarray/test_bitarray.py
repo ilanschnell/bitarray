@@ -28,10 +28,16 @@ else:
 
 tests = []
 
+if sys.version_info[:2] < (2, 6):
+    def next(x):
+        return x.next()
+
 
 def to_bytes(s):
     if is_py3k:
-        return s.encode('latin1')
+        return bytes(s.encode('latin1'))
+    elif sys.version_info[:2] >= (2, 6):
+        return bytes(s)
     else:
         return s
 
@@ -509,10 +515,6 @@ class MiscTests(unittest.TestCase, Util):
             self.assertEqual(acc, lst)
 
     def test_iterable(self):
-        if sys.version_info[:2] < (2, 6):
-            def next(x):
-                return x.next()
-
         a = iter(bitarray('011'))
         self.assertEqual(next(a), False)
         self.assertEqual(next(a), True)
