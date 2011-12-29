@@ -1446,20 +1446,23 @@ class StringTests(unittest.TestCase, Util):
     def test_unpack(self):
         a = bitarray('01')
         self.assertEqual(a.unpack(), to_bytes('\x00\xff'))
-#        self.assertEqual(a.unpack(b'A'), b'A\xff')
-#        self.assertEqual(a.unpack(b'0', b'1'), b'01')
-#        self.assertEqual(a.unpack(one=b'\x01'), b'\x00\x01')
-#        self.assertEqual(a.unpack(zero=b'A'), b'A\xff')
-#        self.assertEqual(a.unpack(one=b't', zero=b'f'), b'ft')
-#        self.assertEqual(a.unpack(b'a', one=b'b'), b'ab')
+        self.assertEqual(a.unpack(to_bytes('A')), to_bytes('A\xff'))
+        self.assertEqual(a.unpack(to_bytes('0'), to_bytes('1')),
+                         to_bytes('01'))
+        self.assertEqual(a.unpack(one=to_bytes('\x01')),
+                         to_bytes('\x00\x01'))
+        self.assertEqual(a.unpack(zero=to_bytes('A')),
+                         to_bytes('A\xff'))
+        self.assertEqual(a.unpack(one=to_bytes('t'),
+                                  zero=to_bytes('f')), to_bytes('ft'))
 
-#        self.assertRaises(TypeError, a.unpack, b'a', zero=b'b')
-#        self.assertRaises(TypeError, a.unpack, foo=b'b')
-#        self.assertRaises(TypeError, a.unpack, b'a', b'b', b'c')
+        self.assertRaises(TypeError, a.unpack,
+                          to_bytes('a'), zero=to_bytes('b'))
+        self.assertRaises(TypeError, a.unpack, foo=to_bytes('b'))
 
         for a in self.randombitarrays():
-            self.assertEqual(a.unpack(to_bytes('0'),
-                                      to_bytes('1')).decode(), a.to01())
+            self.assertEqual(a.unpack(to_bytes('0'), to_bytes('1')).decode(),
+                             a.to01())
 
             b = bitarray()
             b.pack(a.unpack())
