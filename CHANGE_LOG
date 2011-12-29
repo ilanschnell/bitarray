@@ -1,6 +1,8 @@
 
-2009-??-??   0.9.0:
+2009-??-??   0.4.0:
 -------------------
+Porting to Python 3.x (Roland Puntaier)
+tobytes, frombytes introduced
 Updated development status
 Added sieve prime number example
 
