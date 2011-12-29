@@ -2476,15 +2476,24 @@ static PyMethodDef module_functions[] = {
 
 #ifdef IS_PY3K
 static PyModuleDef moduledef = {
-    PyModuleDef_HEAD_INIT, "_bitarray", 0, -1, module_functions, };
+    PyModuleDef_HEAD_INIT, "_bitarray", 0, -1, module_functions,
+};
 PyMODINIT_FUNC
 PyInit__bitarray(void)
+#else
+PyMODINIT_FUNC
+init_bitarray(void)
+#endif
 {
     PyObject *m;
 
     Py_TYPE(&Bitarraytype) = &PyType_Type;
     Py_TYPE(&BitarrayIter_Type) = &PyType_Type;
+#ifdef IS_PY3K
     m = PyModule_Create(&moduledef);
+#else
+    m = Py_InitModule3("_bitarray", module_functions, 0);
+#endif
     if (m == NULL)
         return NULL;
 
@@ -2492,19 +2501,3 @@ PyInit__bitarray(void)
     PyModule_AddObject(m, "_bitarray", (PyObject *) &Bitarraytype);
     return m;
 }
-#else
-PyMODINIT_FUNC
-init_bitarray(void)
-{
-    PyObject *m;
-
-    Py_TYPE(&Bitarraytype) = &PyType_Type;
-    Py_TYPE(&BitarrayIter_Type) = &PyType_Type;
-    m = Py_InitModule3("_bitarray", module_functions, 0);
-    if (m == NULL)
-        return;
-
-    Py_INCREF((PyObject *) &Bitarraytype);
-    PyModule_AddObject(m, "_bitarray", (PyObject *) &Bitarraytype);
-}
-#endif
