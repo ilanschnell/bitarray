@@ -1,5 +1,3 @@
-/* Bitarray object implementation */
-
 /*
    This file is part of the bitarray module.
    Author: Ilan Schnell
@@ -7,6 +5,21 @@
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
+
+#if PY_MAJOR_VERSION >= 3 
+#define IS_PY3K 
+#endif
+
+#ifdef IS_PY3K
+#include "bytesobject.h"
+#define PyString_FromStringAndSize PyBytes_FromStringAndSize
+#define PyString_FromString PyBytes_FromString
+#define PyString_Check PyBytes_Check
+#define PyString_Size PyBytes_Size
+#define PyString_AsString PyBytes_AsString
+#define PyString_ConcatAndDel PyBytes_ConcatAndDel
+#define Py_TPFLAGS_HAVE_WEAKREFS 0
+#endif
 
 #if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 6
 /* Backward compatibility with Python 2.5 */
@@ -648,6 +661,16 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     if (PyString_Check(obj))                                 /* str01 */
         return extend_string(self, obj, STR_01);
 
+#ifdef IS_PY3K
+    if (PyUnicode_Check(obj))                                 /* str01 */
+    {
+        iter=PyUnicode_AsEncodedString(obj,NULL,NULL);
+        ret = extend_string(self, iter, STR_01);
+        Py_DECREF(iter);
+        return ret;
+    }
+#endif
+
     if (PyIter_Check(obj))                                    /* iter */
         return extend_iter(self, obj);
 
@@ -666,7 +689,11 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 
 #define ENDIANSTR(x)  ((x) ? "big" : "little")
 
+#ifdef IS_PY3K
+#define ISINDEX(x)  (PyLong_Check(x) || PyIndex_Check(x))
+#else
 #define ISINDEX(x)  (PyInt_Check(x) || PyLong_Check(x) || PyIndex_Check(x))
+#endif
 
 /* Extract a slice index from a PyInt or PyLong or an object with the
    nb_index slot defined, and store in *i.  Return 0 on error, 1 on success.
@@ -678,10 +705,13 @@ getIndex(PyObject *v, idx_t *i)
 {
     idx_t x;
 
+#ifndef IS_PY3K
     if (PyInt_Check(v)) {
         x = PyInt_AS_LONG(v);
     }
-    else if (PyLong_Check(v)) {
+    else 
+#endif
+    if (PyLong_Check(v)) {
         x = PyLong_AsLongLong(v);
     }
     else if (PyIndex_Check(v)) {
@@ -937,7 +967,11 @@ contents, the bit endianness as a string, the number of unused bits\n\
 static PyObject *
 bitarray_endian(bitarrayobject *self)
 {
+#ifdef IS_PY3K
+    return PyUnicode_FromString(ENDIANSTR(self->endian));
+#else
     return PyString_FromString(ENDIANSTR(self->endian));
+#endif
 }
 
 PyDoc_STRVAR(endian_doc,
@@ -1064,7 +1098,11 @@ bitarray_fill(bitarrayobject *self)
 
     p = setunused(self);
     self->nbits += p;
+#ifdef IS_PY3K
+    return PyLong_FromLong(p);
+#else
     return PyInt_FromLong(p);
+#endif
 }
 
 PyDoc_STRVAR(fill_doc,
@@ -1155,6 +1193,77 @@ PyDoc_STRVAR(sort_doc,
 Sort the bits in the array (in-place).");
 
 
+#ifdef IS_PY3K
+static PyObject *
+bitarray_fromfile(bitarrayobject *self, PyObject *args)
+{
+    PyObject *f;
+    Py_ssize_t newsize, nbytes = -1;
+    PyObject *reader, *rargs, *result;
+    size_t nread;
+    idx_t t, p;
+
+    if (!PyArg_ParseTuple(args, "O|n:fromfile", &f, &nbytes))
+        return NULL;
+
+    if (nbytes == 0)
+        Py_RETURN_NONE;
+
+    reader = PyObject_GetAttrString(f, "read");
+    if (reader == NULL)
+    {
+        PyErr_SetString(PyExc_TypeError,
+                        "first argument must be an open file");
+        return NULL;
+    }
+    rargs = Py_BuildValue("(n)", nbytes);
+    if (rargs == NULL) {
+        Py_DECREF(reader);
+        return NULL;
+    }
+    result = PyEval_CallObject(reader, rargs);
+    if (result != NULL)
+    {
+        if (!PyBytes_Check(result))
+        {
+            PyErr_SetString(PyExc_TypeError,
+                            "first argument must be an open file");
+            Py_DECREF(result);
+            Py_DECREF(rargs);
+            Py_DECREF(reader);
+            return NULL;
+        }
+
+        nread=PyBytes_Size(result);
+
+        t = self->nbits;
+        p = setunused(self);
+        self->nbits += p;
+
+        newsize = Py_SIZE(self) + nread;
+
+        if (resize(self, BITS(newsize)) < 0) {
+            Py_DECREF(result);
+            Py_DECREF(rargs);
+            Py_DECREF(reader);
+            return NULL; }
+
+        memcpy(self->ob_item + (Py_SIZE(self) - nread), PyBytes_AS_STRING(result), nread);
+
+        if (nbytes > 0 && nread < (size_t) nbytes) {
+            PyErr_SetString(PyExc_EOFError, "not enough items read");
+            return NULL; }
+
+        delete_n(self, t, p);
+        Py_DECREF(result);
+    }
+
+    Py_DECREF(rargs);
+    Py_DECREF(reader);
+
+    Py_RETURN_NONE;
+}
+#else
 static PyObject *
 bitarray_fromfile(bitarrayobject *self, PyObject *args)
 {
@@ -1214,6 +1323,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
     delete_n(self, t, p);
     Py_RETURN_NONE;
 }
+#endif
 
 PyDoc_STRVAR(fromfile_doc,
 "fromfile(f [, n])\n\
@@ -1223,6 +1333,43 @@ interpreted as machine values.  When n is omitted, as many bytes are\n\
 read until EOF is reached.");
 
 
+#ifdef IS_PY3K
+static PyObject *
+bitarray_tofile(bitarrayobject *self, PyObject *f)
+{
+    PyObject *writer, *value, *args, *result;
+    if (f == NULL) {
+        PyErr_SetString(PyExc_TypeError, "writeobject with NULL file");
+        return NULL;
+    }
+    writer = PyObject_GetAttrString(f, "write");
+    if (writer == NULL)
+        return NULL;
+    setunused(self);
+    value = PyBytes_FromStringAndSize(self->ob_item, Py_SIZE(self));
+    if (value == NULL) {
+        Py_DECREF(writer);
+        return NULL;
+    }
+    args = PyTuple_Pack(1, value);
+    if (args == NULL) {
+        Py_DECREF(value);
+        Py_DECREF(writer);
+        return NULL;
+    }
+    result = PyEval_CallObject(writer, args);
+    Py_DECREF(args);
+    Py_DECREF(value);
+    Py_DECREF(writer);
+    if (result == NULL)
+    {
+        PyErr_SetString(PyExc_TypeError, "open file expected");
+        return NULL;
+    }
+    Py_DECREF(result);
+    Py_RETURN_NONE;
+}
+#else
 static PyObject *
 bitarray_tofile(bitarrayobject *self, PyObject *f)
 {
@@ -1246,6 +1393,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
     }
     Py_RETURN_NONE;
 }
+#endif
 
 PyDoc_STRVAR(tofile_doc,
 "tofile(f)\n\
@@ -1279,12 +1427,12 @@ use the extend method.");
 
 
 static PyObject *
-bitarray_fromstring(bitarrayobject *self, PyObject *string)
+bitarray_frombytes(bitarrayobject *self, PyObject *string)
 {
     idx_t t, p;
 
     if (!PyString_Check(string)) {
-        PyErr_SetString(PyExc_TypeError, "string expected");
+        PyErr_SetString(PyExc_TypeError, "byte string expected");
         return NULL;
     }
     t = self->nbits;
@@ -1298,23 +1446,23 @@ bitarray_fromstring(bitarrayobject *self, PyObject *string)
     Py_RETURN_NONE;
 }
 
-PyDoc_STRVAR(fromstring_doc,
-"fromstring(string)\n\
+PyDoc_STRVAR(frombytes_doc,
+"frombytes(bytes)\n\
 \n\
-Append from a string, interpreting the string as machine values.");
+Append from a byte string, interpreting the string as machine values.");
 
 
 static PyObject *
-bitarray_tostring(bitarrayobject *self)
+bitarray_tobytes(bitarrayobject *self)
 {
     setunused(self);
     return PyString_FromStringAndSize(self->ob_item, Py_SIZE(self));
 }
 
-PyDoc_STRVAR(tostring_doc,
-"tostring()\n\
+PyDoc_STRVAR(tobytes_doc,
+"tobytes()\n\
 \n\
-Return the string representing (machine values) of the bitarray.\n\
+Return the byte representation of the bitarray.\n\
 When the length of the bitarray is not a multiple of 8, the few remaining\n\
 bits (1..7) are set to 0.");
 
@@ -1322,7 +1470,17 @@ bits (1..7) are set to 0.");
 static PyObject *
 bitarray_to01(bitarrayobject *self)
 {
-    return unpack(self, '0', '1');
+    PyObject *string, *unpacked;
+    unpacked = unpack(self, '0', '1');
+
+#ifdef IS_PY3K
+    string=PyUnicode_FromEncodedObject(unpacked, NULL, NULL);
+    Py_DECREF(unpacked);
+#else
+    string = unpacked;
+#endif
+
+    return string;
 }
 
 PyDoc_STRVAR(to01_doc,
@@ -1348,11 +1506,10 @@ bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
 }
 
 PyDoc_STRVAR(unpack_doc,
-"unpack(zero='\\x00', one='\\xff')\n\
+"unpack(zero=b'\\x00', one=b'\\xff')\n\
 \n\
-Return a string containing one character for each bit in the bitarray,\n\
+Return a byte string containing one character for each bit in the bitarray,\n\
 using the specified mapping.\n\
-Note that unpack('0', '1') has the same effect as to01().\n\
 See also the pack method.");
 
 
@@ -1360,7 +1517,7 @@ static PyObject *
 bitarray_pack(bitarrayobject *self, PyObject *string)
 {
     if (!PyString_Check(string)) {
-        PyErr_SetString(PyExc_TypeError, "string expected");
+        PyErr_SetString(PyExc_TypeError, "byte string expected");
         return NULL;
     }
     if (extend_string(self, string, STR_RAW) < 0)
@@ -1370,10 +1527,10 @@ bitarray_pack(bitarrayobject *self, PyObject *string)
 }
 
 PyDoc_STRVAR(pack_doc,
-"pack(string)\n\
+"pack(bytes)\n\
 \n\
-Extend the bitarray from a string, where each characters corresponds to\n\
-a single bit.  The character '\\x00' maps to bit 0 and all other characters\n\
+Extend the bitarray from a byte string, where each characters corresponds to\n\
+a single bit.  The character b'\\x00' maps to bit 0 and all other characters\n\
 map to bit 1.\n\
 This method, as well as the unpack method, are meant for efficient\n\
 transfer of data between bitarray objects to other python objects\n\
@@ -1384,13 +1541,23 @@ static PyObject *
 bitarray_repr(bitarrayobject *self)
 {
     PyObject *string;
+#ifdef IS_PY3K
+    PyObject *decoded;
+#endif
 
     if (self->nbits == 0)
-        return PyString_FromString("bitarray()");
-
-    string = PyString_FromString("bitarray(\'");
-    PyString_ConcatAndDel(&string, unpack(self, '0', '1'));
-    PyString_ConcatAndDel(&string, PyString_FromString("\')"));
+        string = PyString_FromString("bitarray()");
+    else 
+    {
+        string = PyString_FromString("bitarray(\'");
+        PyString_ConcatAndDel(&string, unpack(self, '0', '1'));
+        PyString_ConcatAndDel(&string, PyString_FromString("\')"));
+    }
+#ifdef IS_PY3K
+    decoded=PyUnicode_FromEncodedObject(string, NULL, NULL);
+    Py_DECREF(string);
+    string=decoded;
+#endif
     return string;
 }
 
@@ -1900,8 +2067,8 @@ bitarray_methods[] = {
      fill_doc},
     {"fromfile",     (PyCFunction) bitarray_fromfile,    METH_VARARGS,
      fromfile_doc},
-    {"fromstring",   (PyCFunction) bitarray_fromstring,  METH_O,
-     fromstring_doc},
+    {"frombytes",    (PyCFunction) bitarray_frombytes,   METH_O,
+     frombytes_doc},
     {"index",        (PyCFunction) bitarray_index,       METH_O,
      index_doc},
     {"insert",       (PyCFunction) bitarray_insert,      METH_VARARGS,
@@ -1929,8 +2096,8 @@ bitarray_methods[] = {
      tofile_doc},
     {"tolist",       (PyCFunction) bitarray_tolist,      METH_NOARGS,
      tolist_doc},
-    {"tostring",     (PyCFunction) bitarray_tostring,    METH_NOARGS,
-     tostring_doc},
+    {"tobytes",      (PyCFunction) bitarray_tobytes,     METH_NOARGS,
+     tobytes_doc},
     {"to01",         (PyCFunction) bitarray_to01,        METH_NOARGS,
      to01_doc},
     {"unpack",       (PyCFunction) bitarray_unpack,      METH_VARARGS |
@@ -2174,8 +2341,12 @@ bitarrayiter_traverse(bitarrayiterobject *it, visitproc visit, void *arg)
 }
 
 static PyTypeObject BitarrayIter_Type = {
+#ifdef IS_PY3K
+    PyVarObject_HEAD_INIT(&BitarrayIter_Type, 0)
+#else
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
+#endif
     "bitarrayiterator",                       /* tp_name */
     sizeof(bitarrayiterobject),               /* tp_basicsize */
     0,                                        /* tp_itemsize */
@@ -2209,8 +2380,12 @@ static PyTypeObject BitarrayIter_Type = {
 /************************** Bitarray Type *******************************/
 
 static PyTypeObject Bitarraytype = {
+#ifdef IS_PY3K
+    PyVarObject_HEAD_INIT(&Bitarraytype, 0)
+#else
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
+#endif
     "bitarray._bitarray",                     /* tp_name */
     sizeof(bitarrayobject),                   /* tp_basicsize */
     0,                                        /* tp_itemsize */
@@ -2272,6 +2447,7 @@ bits2bytes(PyObject *self, PyObject *v)
     return NULL;
 }
 
+
 PyDoc_STRVAR(bits2bytes_doc,
 "bits2bytes(n)\n\
 \n\
@@ -2300,13 +2476,32 @@ static PyMethodDef module_functions[] = {
 
 /*********************** Install Module **************************/
 
+#ifdef IS_PY3K
+static PyModuleDef moduledef = {
+    PyModuleDef_HEAD_INIT, "_bitarray", 0, -1, module_functions, };
+PyMODINIT_FUNC
+PyInit__bitarray(void)
+{
+    PyObject *m;
+
+    Py_TYPE(&Bitarraytype) = &PyType_Type;
+    Py_TYPE(&BitarrayIter_Type) = &PyType_Type;
+    m = PyModule_Create(&moduledef);
+    if (m == NULL)
+        return NULL;
+
+    Py_INCREF((PyObject *) &Bitarraytype);
+    PyModule_AddObject(m, "_bitarray", (PyObject *) &Bitarraytype);
+    return m;
+}
+#else
 PyMODINIT_FUNC
 init_bitarray(void)
 {
     PyObject *m;
 
-    Bitarraytype.ob_type = &PyType_Type;
-    BitarrayIter_Type.ob_type = &PyType_Type;
+    Py_TYPE(&Bitarraytype) = &PyType_Type;
+    Py_TYPE(&BitarrayIter_Type) = &PyType_Type;
     m = Py_InitModule3("_bitarray", module_functions, 0);
     if (m == NULL)
         return;
@@ -2314,3 +2509,4 @@ init_bitarray(void)
     Py_INCREF((PyObject *) &Bitarraytype);
     PyModule_AddObject(m, "_bitarray", (PyObject *) &Bitarraytype);
 }
+#endif
