@@ -1195,6 +1195,8 @@ class MethodTests(unittest.TestCase, Util):
         for limit in range(10):
             self.assertEqual(a.search('011', limit),
                              [6, 11, 20][:limit])
+        # search is overlapping
+        self.assertEqual(a.search('111'), [7, 12, 13, 14])
 
 
     def test_fill(self):
