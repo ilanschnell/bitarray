@@ -13,7 +13,7 @@ such as portable bitmap image files (.pbm).  Also, when dealing with
 compressed data which uses variable bit length encoding, you may find
 this module useful.
 
-Requires Python 2.5 or greater,
+Requires Python 2.5 or greater (including Py3k),
 see `PEP 353 <http://www.python.org/dev/peps/pep-0353/>`_.
 
 
