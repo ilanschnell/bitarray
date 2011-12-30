@@ -85,8 +85,8 @@ Append from a string, interpreting the string as machine values."""
     def tostring(self):
         """tostring(string)
 
-Return the string representing (machine values) of the bitarray.\n\
-When the length of the bitarray is not a multiple of 8, the few remaining\n\
+Return the string representing (machine values) of the bitarray.
+When the length of the bitarray is not a multiple of 8, the few remaining
 bits (1..7) are set to 0."""
         return self.tobytes().decode()
 
