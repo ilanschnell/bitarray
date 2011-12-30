@@ -77,7 +77,7 @@ machine representation of the bitarray, i.e. when using the methods: tofile,
 fromfile, tostring, fromstring, tobytes, frombytes."""
 
     def fromstring(self, string):
-        """fromstring()
+        """fromstring(string)
 
 Append from a string, interpreting the string as machine values."""
         return self.frombytes(string.encode())

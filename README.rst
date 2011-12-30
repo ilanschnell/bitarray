@@ -466,7 +466,7 @@ Reference
    use the extend method.
 
 
-``tostring(string)``
+``tostring()``
    Return the string representing (machine values) of the bitarray.
    When the length of the bitarray is not a multiple of 8, the few remaining
    bits (1..7) are set to 0.
