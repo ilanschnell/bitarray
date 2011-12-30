@@ -54,7 +54,7 @@ bitarray can be installed from source::
 
 On Unix systems, the latter command may have to be executed with root
 privileges.
-If you have `setuptools <http://pypi.python.org/pypi/setuptools/>`_
+If you have `distribute <http://pypi.python.org/pypi/distribute/>`_
 installed, you can easy_install bitarray.
 Once you have installed the package, you may want to test it::
 
