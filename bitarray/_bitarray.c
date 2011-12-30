@@ -60,7 +60,7 @@ static PyTypeObject Bitarraytype;
 
 #define BITMASK(endian, i)  (((char) 1) << ((endian) ? (7 - (i)%8) : (i)%8))
 
-/* ------------ Low level access to bits in bitarrayobject ------------- */
+/* ------------ low level access to bits in bitarrayobject ------------- */
 
 #define GETBIT(self, i)  \
     ((self)->ob_item[(i) / 8] & BITMASK((self)->endian, i) ? 1 : 0)
@@ -149,7 +149,7 @@ resize(bitarrayobject *self, idx_t nbits)
     return 0;
 }
 
-/* Create new bitarray object without initialization of buffer */
+/* create new bitarray object without initialization of buffer */
 static PyObject *
 newbitarrayobject(PyTypeObject *type, idx_t nbits, int endian)
 {
@@ -207,8 +207,11 @@ copy_n(bitarrayobject *self, idx_t a,
 
     assert (a >= 0 && b >= 0 && n >= 0);
     /* clip n, such that only memory with ob_size is accessed */
-    if (a + n > BITS(Py_SIZE(self)))  n = BITS(Py_SIZE(self)) - a;
-    if (b + n > BITS(Py_SIZE(other))) n = BITS(Py_SIZE(other)) - b;
+    if (a + n > BITS(Py_SIZE(self)))
+        n = BITS(Py_SIZE(self)) - a;
+
+    if (b + n > BITS(Py_SIZE(other)))
+        n = BITS(Py_SIZE(other)) - b;
 
     /* the different type of looping is only relevant when other is self */
     if (a < b) {
@@ -357,7 +360,7 @@ bytereverse(bitarrayobject *self)
     int c;
 
     if (!setup) {
-        /* Setup a translation table, which maps each byte to it's
+        /* setup a translation table, which maps each byte to it's
            reversed: trans = {0, 128, 64, 192, 32, 160, ..., 255}
         */
         int j, k;
@@ -399,7 +402,7 @@ count(bitarrayobject *self)
     int c;
 
     if (!setup) {
-        /* Setup a translation table, which maps each byte to it's
+        /* setup a translation table, which maps each byte to it's
            bit count: trans = {0, 1, 1, 2, 1, 2, 2, 3, 1, ..., 8}
         */
         int j, k;
@@ -421,7 +424,7 @@ count(bitarrayobject *self)
     return res;
 }
 
-/* Return index of first occurrence of vi, -1 when x is not in found. */
+/* return index of first occurrence of vi, -1 when x is not in found. */
 static idx_t
 findfirst(bitarrayobject *self, int vi)
 {
@@ -727,7 +730,7 @@ getIndex(PyObject *v, idx_t *i)
     return 1;
 }
 
-/* This is PySlice_GetIndicesEx() with Py_ssize_t replaced by idx_t */
+/* this is PySlice_GetIndicesEx() with Py_ssize_t replaced by idx_t */
 static int
 slice_GetIndicesEx(PySliceObject *r, idx_t length,
                    idx_t *start, idx_t *stop, idx_t *step, idx_t *slicelength)
@@ -782,9 +785,9 @@ slice_GetIndicesEx(PySliceObject *r, idx_t length,
     return 0;
 }
 
-/****************************************************************************
+/**************************************************************************
                          Implementation of API methods
-****************************************************************************/
+ **************************************************************************/
 
 static PyObject *
 bitarray_length(bitarrayobject *self)
@@ -914,7 +917,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
             if (GETBIT(self, p + n) != GETBIT(xa, n))
                 goto next;
 
-        /* We have a match, append the position to the list */
+        /* we have a match, append the position to the list */
         item = PyLong_FromLongLong(p);
         if (item == NULL || PyList_Append(list, item) < 0)
             goto error;
@@ -923,7 +926,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
         if (limit > 0 && PyList_Size(list) >= limit)
             break;
     next:
-        ; /* Do nothing */
+        ; /* do nothing */
     }
     return list;
 error:
@@ -1072,11 +1075,11 @@ bitarray_reverse(bitarrayobject *self)
 
     m = self->nbits - 1;
 
-    /* Reverse the upper half onto the lower half. */
+    /* reverse the upper half onto the lower half. */
     for (i = 0; i < tt->nbits; i++)
         setbit(self, i, GETBIT(self, m - i));
 
-    /* Revert the stored away lower half onto the upper half. */
+    /* revert the stored away lower half onto the upper half. */
     for (i = 0; i < tt->nbits; i++)
         setbit(self, m - i, GETBIT(tt, i));
 #undef tt
@@ -1301,7 +1304,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
     if (nbytes == 0)
         Py_RETURN_NONE;
 
-    /* File exists and there are more than zero bytes to read */
+    /* file exists and there are more than zero bytes to read */
     t = self->nbits;
     p = setunused(self);
     self->nbits += p;
@@ -1815,7 +1818,7 @@ bitarray_delitem(bitarrayobject *self, PyObject *a)
                 return NULL;
             Py_RETURN_NONE;
         }
-        /* This is the only complicated part when step > 1 */
+        /* this is the only complicated part when step > 1 */
         for (i = j = start; i < self->nbits; i++)
             if ((i - start) % step != 0 || i >= stop) {
                 setbit(self, j, GETBIT(self, i));
@@ -1951,7 +1954,7 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
         PyErr_SetString(PyExc_TypeError, "iterable object expected");
         return NULL;
     }
-    /* Extend self with the bitarrays from codedict */
+    /* extend self with the bitarrays from codedict */
     while ((symbol = PyIter_Next(iter)) != NULL) {
         bits = PyDict_GetItem(codedict, symbol);
         if (bits == NULL) {
@@ -1977,7 +1980,7 @@ PyDoc_STRVAR(encode_doc,
 "_encode(code, iterable) is like the encode method without code checking");
 
 
-/* Return the leave node resulting from traversing the binary tree,
+/* return the leave node resulting from traversing the binary tree,
    or, when the iteration is finished, NULL
 */
 static PyObject *
@@ -2220,7 +2223,7 @@ richcompare(PyObject *v, PyObject *w, int op)
 #define va  ((bitarrayobject *) v)
 #define wa  ((bitarrayobject *) w)
     if (va->nbits != wa->nbits && (op == Py_EQ || op == Py_NE)) {
-        /* Shortcut: if the lengths differ, the bitarrays differ */
+        /* shortcut: if the lengths differ, the bitarrays differ */
         if (op == Py_EQ)
             Py_RETURN_FALSE;
 
@@ -2228,7 +2231,7 @@ richcompare(PyObject *v, PyObject *w, int op)
     }
     /* to avoid uninitialized warning for some compilers */
     vi = wi = 0;
-    /* Search for the first index where items are different */
+    /* search for the first index where items are different */
     k = 1;
     for (i = 0; i < va->nbits && i < wa->nbits; i++) {
         vi = GETBIT(va, i);
@@ -2238,7 +2241,7 @@ richcompare(PyObject *v, PyObject *w, int op)
             break;
     }
     if (k) {
-        /* No more items to compare -- compare sizes */
+        /* no more items to compare -- compare sizes */
         idx_t vs = va->nbits;
         idx_t ws = wa->nbits;
 #undef va
@@ -2264,7 +2267,7 @@ richcompare(PyObject *v, PyObject *w, int op)
     if (op == Py_NE)
         Py_RETURN_TRUE;
 
-    /* Compare the final item using the proper operator */
+    /* compare the final item using the proper operator */
     switch (op) {
     case Py_LT: cmp = vi <  wi; break;
     case Py_LE: cmp = vi <= wi; break;
