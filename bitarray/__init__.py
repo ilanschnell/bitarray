@@ -1,5 +1,5 @@
 """
-This module defines an object type which can efficiently represent
+This package defines an object type which can efficiently represent
 a bitarray.  Bitarrays are sequence types and behave very much like lists.
 
 Please find a description of this package at:
@@ -8,7 +8,7 @@ Please find a description of this package at:
 
 Author: Ilan Schnell
 """
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 
 from ._bitarray import _bitarray, bits2bytes, _sysinfo
 
