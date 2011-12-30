@@ -48,8 +48,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-0.9.0.tar.gz
-   $ cd bitarray-0.9.0
+   $ tar xzf bitarray-0.4.0.tar.gz
+   $ cd bitarray-0.4.0
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -59,14 +59,13 @@ installed, you can easy_install bitarray.
 Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
-   bitarray is installed in: /usr/local/lib/python2.5/site-packages/bitarray
-   bitarray version: 0.9.0
-   2.5.2 (r252:60911, Jul 17 2008, 10:38:24)
-   [GCC 4.2.1 (SUSE Linux)]
+   bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
+   bitarray version: 0.4.0
+   2.7.2 (r271:86832, Nove 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
    ...........
    ----------------------------------------------------------------------
-   Ran 91 tests in 2.420s
+   Ran 93 tests in 2.102s
    
    OK
 
@@ -166,7 +165,7 @@ specified explicitly:
    bitarray('10000010')
    >>> b = bitarray('11000010', endian='little')
    >>> b.tostring()
-   'C'
+   u'C'
 
 Here the low-bit comes first because little-endian means that increasing
 numeric significance corresponds to an increasing address (or index).
@@ -179,7 +178,7 @@ and most significant bit.
    bitarray('01000001')
    >>> a[6] = 1
    >>> a.tostring()
-   'C'
+   u'C'
 
 Here the high-bit comes first because big-endian
 means "most-significant first".
@@ -200,20 +199,20 @@ machine representation of the bitarray objects.  Therefore, one has to be
 cautious when applying the operation to bitarrays with different endianness.
 
 When converting to and from machine representation, using
-the ``tostring``, ``fromstring``, ``tofile`` and ``fromfile`` methods,
-the endianness matters:
+the ``tobytes``, ``frombytes``, ``tostring``, ``fromstring``, ``tofile``
+and ``fromfile`` methods, the endianness matters:
 
    >>> a = bitarray(endian='little')
-   >>> a.fromstring('\x01')
+   >>> a.frombytes(b'\x01')
    >>> a
    bitarray('10000000')
    >>> b = bitarray(endian='big')
-   >>> b.fromstring('\x80')
+   >>> b.frombytes(b'\x80')
    >>> b
    bitarray('10000000')
    >>> a == b
    True
-   >>> a.tostring() == b.tostring()
+   >>> a.tobytes() == b.tobytes()
    False
 
 The endianness can not be changed once an object is created.
@@ -303,7 +302,7 @@ Reference
    
    Note that setting the bit endianness only has an effect when accessing the
    machine representation of the bitarray, i.e. when using the methods: tofile,
-   fromfile, tostring, fromstring.
+   fromfile, tostring, fromstring, tobytes, frombytes.
 
 
 **A bitarray object supports the following methods:**
@@ -370,6 +369,10 @@ Reference
    bits to False.
 
 
+``frombytes(bytes)``
+   Append from a byte string, interpreting the string as machine values.
+
+
 ``fromfile(f [, n])``
    Read n bytes from the file object f and append them to the bitarray
    interpreted as machine values.  When n is omitted, as many bytes are
@@ -402,9 +405,9 @@ Reference
    on 32bit and 64bit machines.
 
 
-``pack(string)``
-   Extend the bitarray from a string, where each characters corresponds to
-   a single bit.  The character '\x00' maps to bit 0 and all other characters
+``pack(bytes)``
+   Extend the bitarray from a byte string, where each characters corresponds to
+   a single bit.  The character b'\x00' maps to bit 0 and all other characters
    map to bit 1.
    This method, as well as the unpack method, are meant for efficient
    transfer of data between bitarray objects to other python objects
@@ -445,6 +448,12 @@ Reference
    use the extend method.
 
 
+``tobytes()``
+   Return the byte representation of the bitarray.
+   When the length of the bitarray is not a multiple of 8, the few remaining
+   bits (1..7) are set to 0.
+
+
 ``tofile(f)``
    Write all bits (as machine values) to the file object f.
    When the length of the bitarray is not a multiple of 8,
@@ -457,16 +466,15 @@ Reference
    use the extend method.
 
 
-``tostring()``
+``tostring(string)``
    Return the string representing (machine values) of the bitarray.
    When the length of the bitarray is not a multiple of 8, the few remaining
    bits (1..7) are set to 0.
 
 
-``unpack(zero='\x00', one='\xff')``
-   Return a string containing one character for each bit in the bitarray,
+``unpack(zero=b'\x00', one=b'\xff')``
+   Return a byte string containing one character for each bit in the bitarray,
    using the specified mapping.
-   Note that unpack('0', '1') has the same effect as to01().
    See also the pack method.
 
 
