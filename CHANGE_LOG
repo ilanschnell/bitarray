@@ -1,4 +1,9 @@
 
+2012-??-??   0.4.1:
+-------------------
+minor fixes in docstrings
+
+
 2011-12-29   0.4.0:
 -------------------
 Porting to Python 3.x (Roland Puntaier)
