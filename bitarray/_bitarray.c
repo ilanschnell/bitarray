@@ -1446,7 +1446,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *string)
 }
 
 PyDoc_STRVAR(frombytes_doc,
-"frombytes(bytes)\n\
+"frombytes()\n\
 \n\
 Append from a byte string, interpreting the string as machine values.");
 

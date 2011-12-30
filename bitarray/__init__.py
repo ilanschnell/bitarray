@@ -77,13 +77,13 @@ machine representation of the bitarray, i.e. when using the methods: tofile,
 fromfile, tostring, fromstring, tobytes, frombytes."""
 
     def fromstring(self, string):
-        """fromstring(string)
+        """fromstring()
 
 Append from a string, interpreting the string as machine values."""
         return self.frombytes(string.encode())
 
     def tostring(self):
-        """tostring(string)
+        """tostring()
 
 Return the string representing (machine values) of the bitarray.
 When the length of the bitarray is not a multiple of 8, the few remaining
