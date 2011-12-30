@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+# does not work with Python 3, because weave is not yet supported
+
 import hashlib
 
 from bitarray import bitarray

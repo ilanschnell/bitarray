@@ -21,6 +21,7 @@ mandel.py
     over 6 Million bytes (uncompressed) because each pixel is stored in
     one bit.
     Requires numpy and scipy (see http://scipy.org/).
+    Not supported by Python 3.x.
 
 
 ndarray.py

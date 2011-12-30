@@ -9,7 +9,7 @@ def traverse(it, tree):
     or the leave node resulting from traversing the tree
     """
     try:
-        subtree = tree[it.next()]
+        subtree = tree[next(it)]
     except StopIteration:
         return False
 
@@ -41,7 +41,7 @@ def decode(codedict, bitsequence):
     """
     # Generate tree from codedict
     tree = [[], []]
-    for sym, ba in codedict.iteritems():
+    for sym, ba in codedict.items():
         insert(tree, sym, ba)
 
     # actual decoding by traversing until StopIteration
@@ -72,13 +72,13 @@ start_time = time.time()
 res = decode(code, a)
 Py_time = time.time() - start_time
 assert ''.join(res) == sample
-print 'Py_time: %.6f sec' % Py_time
+print('Py_time: %.6f sec' % Py_time)
 
 # Time the decode method which is implemented in C
 start_time = time.time()
 res = a.decode(code)
 C_time = time.time() - start_time
 assert ''.join(res) == sample
-print 'C_time: %.6f sec' % C_time
+print('C_time: %.6f sec' % C_time)
 
-print 'Ratio:', Py_time / C_time
+print('Ratio: %f' % (Py_time / C_time))

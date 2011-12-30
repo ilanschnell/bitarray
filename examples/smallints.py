@@ -38,14 +38,14 @@ if __name__ == '__main__':
     a = SmallIntArray(1000, 5)
 
     b = [] # store values, for assertion below
-    for i in xrange(1000):
+    for i in range(1000):
         v = randint(0, 31)
         b.append(v)
         a[i] = v
 
-    print b[:5]
-    print a.data.buffer_info()
-    print a.data[:25]
+    print(b[:5])
+    print(a.data.buffer_info())
+    print(a.data[:25])
 
-    for i in xrange(1000):
+    for i in range(1000):
         assert a[i] == b[i]

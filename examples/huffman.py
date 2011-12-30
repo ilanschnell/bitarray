@@ -17,12 +17,16 @@ def huffCode(freq):
     return the Huffman code in the form of
     a dictionary mapping the symbols to bitarrays.
     """
-    lst = [(freq[s], s) for s in freq]
+    class cmpList(list):
+        def __lt__(self,other):
+            return self[0] < other[0]
+
+    lst = [cmpList([freq[s], s]) for s in freq]
     lst.sort()
 
     while len(lst) > 1:
         childL, childR = lst.pop(1), lst.pop(0)
-        parent = (childL[0] + childR[0], childL, childR)
+        parent = cmpList([childL[0] + childR[0], childL, childR])
         insort(lst, parent)
 
     # Now lst[0] is the root node of the Huffman tree
@@ -31,7 +35,7 @@ def huffCode(freq):
         if len(tree) == 2:
             result[tree[1]] = prefix
         else:
-            for i in xrange(2):
+            for i in range(2):
                 traverse(tree[i+1], prefix + bitarray([i]))
 
     result = {}
@@ -53,10 +57,10 @@ def freq_string(s):
 def print_code(filename):
     freq = freq_string(open(filename).read())
     code = huffCode(freq)
-    print '   char    frequency    Huffman code'
-    print 70*'-'
+    print('   char    frequency    Huffman code')
+    print(70*'-')
     for c in sorted(code):
-        print '%7r %8i        %s' % (c, freq[c], code[c].to01())
+        print('%7r %8i        %s' % (c, freq[c], code[c].to01()))
 
 
 def encode(filename):
@@ -69,7 +73,7 @@ def encode(filename):
     fo.write(str(a.buffer_info()[3])) # write unused bits as one char string
     a.tofile(fo)
     fo.close()
-    print 'Ratio =%6.2f%%' % (100.0 * a.buffer_info()[1] / len(s))
+    print('Ratio =%6.2f%%' % (100.0 * a.buffer_info()[1] / len(s)))
 
 
 def decode(filename):
@@ -88,7 +92,7 @@ def decode(filename):
 
 
 def usage():
-    print """Usage: %s command FILE
+    print("""Usage: %s command FILE
 
   print  --  calculate and display the Huffman code for the frequency
              of characters in FILE.
@@ -104,7 +108,7 @@ def usage():
 
   test   --  encode FILE, decode FILE.huff, compare FILE with FILE.out,
              and unlink created files.
-""" % sys.argv[0]
+""" % sys.argv[0])
     sys.exit(0)
 
 
@@ -124,7 +128,7 @@ if __name__ == '__main__':
         if filename.endswith('.huff'):
             decode(filename)
         else:
-            print 'Filename has no .huff extension'
+            print('Filename has no .huff extension')
 
     elif cmd == 'test':
         huff = filename + '.huff'
@@ -137,5 +141,5 @@ if __name__ == '__main__':
         os.unlink(out)
 
     else:
-        print 'Unknown command %r' % cmd
+        print('Unknown command %r' % cmd)
         usage()

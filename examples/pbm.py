@@ -14,28 +14,28 @@ class PBM: # Portable Bitmap
         self.bits = 8 * self.bytes
 
     def info(self):
-        print 'size:', self.size
-        print 'bytes per row:', self.bytes_per_row
-        print 'bits per row:', self.bits_per_row
-        print 'bitarray:', self.data.buffer_info()
+        print('size: %s x %s' % self.size)
+        print('bytes per row: %s' % self.bytes_per_row)
+        print('bits per row: %s' % self.bits_per_row)
+        print('bitarray: ' + repr(self.data.buffer_info()))
 
     def clear(self):
         self.data.setall(0)
 
     def save(self, filename):
         fo = open(filename, 'wb')
-        fo.write('P4\n')
-        fo.write('# This is a partable bitmap (pbm) file.\n')
-        fo.write('%i %i\n' % (self.size))
+        fo.write(b'P4\n')
+        fo.write(b'# This is a partable bitmap (pbm) file.\n')
+        fo.write(('%i %i\n' % (self.size)).encode())
         self.data.tofile(fo)
         fo.close()
 
     def load(self, filename):
         fi = open(filename, 'rb')
-        assert fi.readline().strip() == 'P4'
+        assert fi.readline().strip() == b'P4'
         while True:
             line = fi.readline()
-            if not line.startswith('#'):
+            if not line.startswith(b'#'):
                 self.size = tuple(map(int, line.split()))
                 break
         self.update()
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     a = PBM(500, 400)
     a.info()
     a.clear()
-    for x in xrange(10, 391):
+    for x in range(10, 391):
         a[x, x] = True
     a.save('pic1.ppm')
 
@@ -71,6 +71,6 @@ if __name__ == '__main__':
     b.save('pic2.ppm')
 
     # draw a straight line from (490, 10) to (110, 390) on top
-    for i in xrange(381):
+    for i in range(381):
         b[490-i, 10+i] = 1
     b.save('pic3.ppm')
