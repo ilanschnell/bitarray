@@ -1234,7 +1234,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
             return NULL;
         }
 
-        nread=PyBytes_Size(result);
+        nread = PyBytes_Size(result);
 
         t = self->nbits;
         p = setunused(self);
