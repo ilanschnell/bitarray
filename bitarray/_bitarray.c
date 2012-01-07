@@ -2146,7 +2146,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     PyObject *initial = NULL;
     idx_t nbits = 0;
     char *endianStr = "<NOT_PROVIDED>";
-    int endian = DEFAULT_ENDIAN;
+    int endian;
     static char* kwlist[] = {"initial", "endian", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds,
@@ -2161,13 +2161,14 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         endian = 1;
     }
     else if (strcmp(endianStr, "<NOT_PROVIDED>") == 0) {
-        /* do nothing, keep the default value */
+        endian = DEFAULT_ENDIAN;  /* use default value */
     }
     else {
         PyErr_SetString(PyExc_ValueError,
                         "endian must be 'little' or 'big'");
         return NULL;
     }
+
     /* no arg or None */
     if (initial == NULL || initial == Py_None)
         return newbitarrayobject(type, 0, endian);
