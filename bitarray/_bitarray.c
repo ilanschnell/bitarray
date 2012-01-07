@@ -130,7 +130,7 @@ resize(bitarrayobject *self, idx_t nbits)
            enough to give linear-time amortized behavior over a long
            sequence of appends() in the presence of a poorly-performing
            system realloc().
-           The growth pattern is:  0, 4, 8, 16, 25, 34, 46, 56, 67, 79, ...
+           The growth pattern is:  0, 4, 8, 16, 25, 34, 44, 54, 65, 77, ...
            Note, the pattern starts out the same as for lists but then
            grows at a smaller rate so that larger bitarrays only overallocate
            by about 1/16th -- this is done because bitarrays are assumed
