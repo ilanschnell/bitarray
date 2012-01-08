@@ -13,7 +13,7 @@ __version__ = '0.4.1'
 from ._bitarray import _bitarray, bits2bytes, _sysinfo
 
 
-def _btree_insert(tree, sym, ba):
+def _tree_insert(tree, sym, ba):
     """
     Insert symbol which is mapped to bitarray into tree
     """
@@ -21,7 +21,7 @@ def _btree_insert(tree, sym, ba):
     if len(ba) > 1:
         if tree[v] == []:
             tree[v] = [[], []]
-        _btree_insert(tree[v], sym, ba[1:])
+        _tree_insert(tree[v], sym, ba[1:])
     else:
         if tree[v] != []:
             raise ValueError("prefix code ambiguous")
@@ -31,7 +31,7 @@ def _mk_tree(codedict):
     # Generate tree from codedict
     tree = [[], []]
     for sym, ba in codedict.items():
-        _btree_insert(tree, sym, ba)
+        _tree_insert(tree, sym, ba)
     return tree
 
 def _check_codedict(codedict):

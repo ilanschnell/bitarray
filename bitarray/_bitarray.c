@@ -1980,11 +1980,11 @@ PyDoc_STRVAR(encode_doc,
 "_encode(code, iterable) is like the encode method without code checking");
 
 
-/* return the leave node resulting from traversing the binary tree,
+/* return the leave node resulting from traversing the (binary) tree,
    or, when the iteration is finished, NULL
 */
 static PyObject *
-btree_traverse(PyObject *iter, PyObject *tree)
+tree_traverse(PyObject *iter, PyObject *tree)
 {
     PyObject *subtree, *v;
     long vi;
@@ -1998,7 +1998,7 @@ btree_traverse(PyObject *iter, PyObject *tree)
     subtree = PyList_GetItem(tree, vi);
 
     if (PyList_Check(subtree) && PyList_Size(subtree) == 2)
-        return btree_traverse(iter, subtree);
+        return tree_traverse(iter, subtree);
     else
         return subtree;
 }
@@ -2016,7 +2016,7 @@ bitarray_decode(bitarrayobject *self, PyObject *tree)
 
     /* traverse binary tree and append symbols to the result list */
     res = PyList_New(0);
-    while ((symbol = btree_traverse(iter, tree)) != NULL) {
+    while ((symbol = tree_traverse(iter, tree)) != NULL) {
         if (IS_EMPTY_LIST(symbol)) {
             PyErr_SetString(PyExc_ValueError,
                             "prefix code does not match data in bitarray");
