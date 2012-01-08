@@ -1471,16 +1471,16 @@ bits (1..7) are set to 0.");
 static PyObject *
 bitarray_to01(bitarrayobject *self)
 {
+#ifdef IS_PY3K
     PyObject *string, *unpacked;
 
     unpacked = unpack(self, '0', '1');
-#ifdef IS_PY3K
     string = PyUnicode_FromEncodedObject(unpacked, NULL, NULL);
     Py_DECREF(unpacked);
-#else
-    string = unpacked;
-#endif
     return string;
+#else
+    return unpack(self, '0', '1');
+#endif
 }
 
 PyDoc_STRVAR(to01_doc,
