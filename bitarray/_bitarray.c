@@ -240,9 +240,7 @@ delete_n(bitarrayobject *self, idx_t start, idx_t n)
     return 0;
 }
 
-/* at start, insert n bits into self.
-   The vaules of the inserted bits are unspecified.
-*/
+/* starting at start, insert n (uninitialized) bits into self */
 static int
 insert_n(bitarrayobject *self, idx_t start, idx_t n)
 {
@@ -339,7 +337,7 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
     return 0;
 }
 
-/* set the bits from start to stop (excluded) in self to val */
+/* set the bits from start to stop (excluding) in self to val */
 static void
 setrange(bitarrayobject *self, idx_t start, idx_t stop, int val)
 {
@@ -1340,6 +1338,7 @@ static PyObject *
 bitarray_tofile(bitarrayobject *self, PyObject *f)
 {
     PyObject *writer, *value, *args, *result;
+
     if (f == NULL) {
         PyErr_SetString(PyExc_TypeError, "writeobject with NULL file");
         return NULL;
