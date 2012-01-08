@@ -1457,8 +1457,8 @@ class StringTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.unpack, foo=to_bytes('b'))
 
         for a in self.randombitarrays():
-            self.assertEqual(a.unpack(to_bytes('0'), to_bytes('1')).decode(),
-                             a.to01())
+            self.assertEqual(a.unpack(to_bytes('0'), to_bytes('1')),
+                             to_bytes(a.to01()))
 
             b = bitarray()
             b.pack(a.unpack())
