@@ -2436,16 +2436,16 @@ bits2bytes(PyObject *self, PyObject *v)
 {
     idx_t n = 0;
 
-    if (ISINDEX(v)) {
-        getIndex(v, &n);
-        if (n >= 0)
-            return PyLong_FromLongLong(BYTES(n));
-
+    if (!ISINDEX(v)) {
+        PyErr_SetString(PyExc_TypeError, "integer expected");
+        return NULL;
+    }
+    getIndex(v, &n);
+    if (n < 0) {
         PyErr_SetString(PyExc_ValueError, "positive value expected");
         return NULL;
     }
-    PyErr_SetString(PyExc_TypeError, "integer expected");
-    return NULL;
+    return PyLong_FromLongLong(BYTES(n));
 }
 
 
