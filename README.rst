@@ -48,8 +48,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-0.4.1.tar.gz
-   $ cd bitarray-0.4.1
+   $ tar xzf bitarray-0.5.0.tar.gz
+   $ cd bitarray-0.5.0
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -60,7 +60,7 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-   bitarray version: 0.4.1
+   bitarray version: 0.5.0
    2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
    .............
@@ -395,6 +395,11 @@ Reference
 ``invert()``
    Invert all bits in the array (in-place),
    i.e. convert each 1-bit into a 0-bit and vice versa.
+
+
+``itersearch(x)``
+   Given a bitarray x (or an object which can be converted to a bitarray),
+   returns an iterator over the start positions of x matching self.
 
 
 ``length()``
