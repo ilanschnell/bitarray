@@ -1198,6 +1198,8 @@ class MethodTests(unittest.TestCase, Util):
         # search is overlapping
         self.assertEqual(a.search('111'), [7, 12, 13, 14])
 
+        self.assertRaises(ValueError, a.search, '')
+
 
     def test_search_next(self):
         a = bitarray('')
@@ -1208,6 +1210,8 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a._search_next(bitarray('0'), 0), None)
         self.assertEqual(a._search_next(bitarray('1'), 0), 0)
         self.assertEqual(a._search_next(bitarray('11'), 0), None)
+        self.assertRaises(ValueError, a._search_next, bitarray(), 0)
+        self.assertRaises(ValueError, a._search_next, bitarray('0'), -1)
 
         a = bitarray('10011')
         for s, start, res in [('0',  0, 1),    ('01',  0, 2),
@@ -1223,6 +1227,7 @@ class MethodTests(unittest.TestCase, Util):
         a = bitarray('10010101110011111001011')
         self.assertEqual(list(a.itersearch('011')), [6, 11, 20])
         self.assertEqual(list(a.itersearch('111')), [7, 12, 13, 14])
+        self.assertEqual(list(a.itersearch('1011')), [5, 19])
 
         res = []
         for p in a.itersearch('011'):
@@ -1237,6 +1242,8 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(it.next(), 3)
         self.assertEqual(it.next(), 4)
         self.assertRaises(StopIteration, it.next)
+        it = a.itersearch('')
+        self.assertRaises(ValueError, it.next)
 
 
     def test_fill(self):
