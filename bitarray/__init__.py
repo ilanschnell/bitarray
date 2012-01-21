@@ -116,6 +116,20 @@ The optional argument limits the number of search results to the integer
 specified.  By default, all search results are returned."""
         return self._search(bitarray(x), limit)
 
+    def itersearch(self, x):
+        """itersearch(x)
+
+Given a bitarray x (or an object which can be converted to a bitarray),
+returns an iterator over the start positions of x matching self."""
+        x = bitarray(x)
+        p = 0
+        while 1:
+            p = self._search_next(x, p)
+            if p is None:
+                break
+            yield p
+            p += 1
+
     def __contains__(self, other):
         """__contains__(x)
 

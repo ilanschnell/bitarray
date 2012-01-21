@@ -1219,6 +1219,26 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a._search_next(bitarray(s), start), res)
 
 
+    def test_itersearch(self):
+        a = bitarray('10010101110011111001011')
+        self.assertEqual(list(a.itersearch('011')), [6, 11, 20])
+        self.assertEqual(list(a.itersearch('111')), [7, 12, 13, 14])
+
+        res = []
+        for p in a.itersearch('011'):
+            res.append(p)
+        self.assertEqual(res, [6, 11, 20])
+
+        if is_py3k:
+            return
+        a = bitarray('10011')
+        it = a.itersearch('1')
+        self.assertEqual(it.next(), 0)
+        self.assertEqual(it.next(), 3)
+        self.assertEqual(it.next(), 4)
+        self.assertRaises(StopIteration, it.next)
+
+
     def test_fill(self):
         a = bitarray('')
         self.assertEqual(a.fill(), 0)
