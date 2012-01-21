@@ -120,13 +120,13 @@ specified.  By default, all search results are returned."""
         """itersearch(x)
 
 Given a bitarray x (or an object which can be converted to a bitarray),
-returns an iterator over the start positions of x matching self."""
+iterates over the start positions of x matching self."""
         x = bitarray(x)
         p = 0
         while 1:
             p = self._search_at(x, p)
             if p is None:
-                break
+                return
             yield p
             p += 1
 

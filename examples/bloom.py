@@ -17,13 +17,10 @@ class BloomFilter(object):
             self.array[self._hash(key, j)] = 1
 
     def contains(self, key):
-        for j in xrange(self.k):
-            if not self.array[self._hash(key, j)]:
-                return False
-        return True
+        return all(self.array[self._hash(key, j)] for j in xrange(self.k))
 
-    def _hash(self, s, i):
-        return long(hashlib.md5(str(s) + str(i)).hexdigest(), 16) % self.m
+    def _hash(self, key, i):
+        return long(hashlib.sha1('%s:%s' % (key, i)).hexdigest(), 16) % self.m
 
 
 
@@ -31,8 +28,6 @@ def test_bloom(m, k, n):
     b = BloomFilter(m, k)
     for i in xrange(n):
         b.add(i)
-    #print b.array
-    for i in xrange(n):
         assert b.contains(i)
 
     p = (1.0 - exp(-k * (n + 0.5) / (m - 1))) ** k
@@ -44,4 +39,4 @@ def test_bloom(m, k, n):
 
 
 if __name__ == '__main__':
-    test_bloom(1000, 7, 100)
+    test_bloom(10000, 9, 800)
