@@ -1,4 +1,9 @@
 
+bloom.py:
+    Demonstrates the implementation of a Bloom filter, see:
+    http://en.wikipedia.org/wiki/Bloom_filter
+
+
 decoding.py
     Bitarray's decode method is implemented in C.  Since the C code
     might be hard to read, we have implemented exactly the same

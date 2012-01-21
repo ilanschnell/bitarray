@@ -1,6 +1,7 @@
 2012-01-??   0.5.0:
 -------------------
 Added itersearch method
+Added Bloom filter example
 minor fixes in docstrings
 
 
