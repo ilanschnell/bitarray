@@ -903,7 +903,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     xa = (bitarrayobject *) x;
 
     if (xa->nbits == 0) {
-        PyErr_SetString(PyExc_TypeError, "can't search for empty bitarray");
+        PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
         goto error;
     }
     list = PyList_New(0);
@@ -935,6 +935,49 @@ error:
 
 PyDoc_STRVAR(search_doc,
 "_search(x, limit)  like search but x has to be a bitarray.");
+
+
+static PyObject *
+bitarray_search_next(bitarrayobject *self, PyObject *args)
+{
+    PyObject *x;
+    bitarrayobject *xa;
+    idx_t p, n;
+
+    if (!PyArg_ParseTuple(args, "OL:_search_next", &x, &p))
+        return NULL;
+
+    assert(bitarray_Check(x));
+    xa = (bitarrayobject *) x;
+
+    if (xa->nbits == 0) {
+        PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
+        return NULL;
+    }
+    if (xa->nbits > self->nbits)
+        Py_RETURN_NONE;
+
+    if (p < 0) {
+        PyErr_SetString(PyExc_ValueError, "positive start value expected");
+        return NULL;
+    }
+
+    for (; p < self->nbits - xa->nbits + 1; p++) {
+        for (n = 0; n < xa->nbits; n++)
+            if (GETBIT(self, p + n) != GETBIT(xa, n))
+                goto next;
+
+        /* we have a match, return the position */
+        return PyLong_FromLongLong(p);
+    next:
+        ; /* do nothing */
+    }
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(search_next_doc,
+"_search_next(x, start)  return the index of occurrence bitarray x,\n\
+starting the search at start (or None if x is not found).");
 
 
 static PyObject *
@@ -2089,6 +2132,8 @@ bitarray_methods[] = {
      setall_doc},
     {"_search",      (PyCFunction) bitarray_search,      METH_VARARGS,
      search_doc},
+    {"_search_next", (PyCFunction) bitarray_search_next, METH_VARARGS,
+     search_next_doc},
     {"sort",         (PyCFunction) bitarray_sort,        METH_VARARGS |
                                                          METH_KEYWORDS,
      sort_doc},
