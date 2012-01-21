@@ -1210,11 +1210,12 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a._search_next(bitarray('11'), 0), None)
 
         a = bitarray('10011')
-        for s, start, res in [('0',     0, 1),    ('01',    0, 2),
-                              ('11',    1, 3),    ('000',   0, None),
-                              ('1',     0, 0),    ('1',     1, 3),
-                              ('1',     3, 3),    ('1',     4, 4),
-                              ('1',     5, None), ('11',    4, None)]:
+        for s, start, res in [('0',  0, 1),    ('01',  0, 2),
+                              ('11', 1, 3),    ('000', 0, None),
+                              ('1',  0, 0),    ('1',   1, 3),
+                              ('1',  3, 3),    ('1',   4, 4),
+                              ('1',  5, None), ('11',  4, None),
+                              ('10011', 0, 0), ('100110', 0, None)]:
             self.assertEqual(a._search_next(bitarray(s), start), res)
 
 
