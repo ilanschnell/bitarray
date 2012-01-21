@@ -1228,6 +1228,7 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(list(a.itersearch('011')), [6, 11, 20])
         self.assertEqual(list(a.itersearch('111')), [7, 12, 13, 14])
         self.assertEqual(list(a.itersearch('1011')), [5, 19])
+        self.assertEqual(list(a.itersearch('100')), [0, 9, 16])
 
         res = []
         for p in a.itersearch('011'):
