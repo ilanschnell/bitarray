@@ -124,7 +124,7 @@ returns an iterator over the start positions of x matching self."""
         x = bitarray(x)
         p = 0
         while 1:
-            p = self._search_next(x, p)
+            p = self._search_at(x, p)
             if p is None:
                 break
             yield p

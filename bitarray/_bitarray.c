@@ -938,13 +938,13 @@ PyDoc_STRVAR(search_doc,
 
 
 static PyObject *
-bitarray_search_next(bitarrayobject *self, PyObject *args)
+bitarray_search_at(bitarrayobject *self, PyObject *args)
 {
     PyObject *x;
     bitarrayobject *xa;
     idx_t p, n;
 
-    if (!PyArg_ParseTuple(args, "OL:_search_next", &x, &p))
+    if (!PyArg_ParseTuple(args, "OL:_search_at", &x, &p))
         return NULL;
 
     assert(bitarray_Check(x));
@@ -975,9 +975,9 @@ bitarray_search_next(bitarrayobject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-PyDoc_STRVAR(search_next_doc,
-"_search_next(x, start)  return the index of occurrence bitarray x,\n\
-starting the search at start (or None if x is not found).");
+PyDoc_STRVAR(search_at_doc,
+"_search_at(x, start)  search for bitarray x starting at start, and return\n\
+the index where the bitarray x is found (or None if x is not found).");
 
 
 static PyObject *
@@ -2132,8 +2132,8 @@ bitarray_methods[] = {
      setall_doc},
     {"_search",      (PyCFunction) bitarray_search,      METH_VARARGS,
      search_doc},
-    {"_search_next", (PyCFunction) bitarray_search_next, METH_VARARGS,
-     search_next_doc},
+    {"_search_at",   (PyCFunction) bitarray_search_at,   METH_VARARGS,
+     search_at_doc},
     {"sort",         (PyCFunction) bitarray_sort,        METH_VARARGS |
                                                          METH_KEYWORDS,
      sort_doc},

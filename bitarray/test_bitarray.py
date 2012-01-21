@@ -1201,17 +1201,17 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.search, '')
 
 
-    def test_search_next(self):
+    def test_search_at(self):
         a = bitarray('')
-        self.assertEqual(a._search_next(bitarray('0'), 0), None)
-        self.assertEqual(a._search_next(bitarray('1'), 0), None)
+        self.assertEqual(a._search_at(bitarray('0'), 0), None)
+        self.assertEqual(a._search_at(bitarray('1'), 0), None)
 
         a = bitarray('1')
-        self.assertEqual(a._search_next(bitarray('0'), 0), None)
-        self.assertEqual(a._search_next(bitarray('1'), 0), 0)
-        self.assertEqual(a._search_next(bitarray('11'), 0), None)
-        self.assertRaises(ValueError, a._search_next, bitarray(), 0)
-        self.assertRaises(ValueError, a._search_next, bitarray('0'), -1)
+        self.assertEqual(a._search_at(bitarray('0'), 0), None)
+        self.assertEqual(a._search_at(bitarray('1'), 0), 0)
+        self.assertEqual(a._search_at(bitarray('11'), 0), None)
+        self.assertRaises(ValueError, a._search_at, bitarray(), 0)
+        self.assertRaises(ValueError, a._search_at, bitarray('0'), -1)
 
         a = bitarray('10011')
         for s, start, res in [('0',  0, 1),    ('01',  0, 2),
@@ -1220,7 +1220,7 @@ class MethodTests(unittest.TestCase, Util):
                               ('1',  3, 3),    ('1',   4, 4),
                               ('1',  5, None), ('11',  4, None),
                               ('10011', 0, 0), ('100110', 0, None)]:
-            self.assertEqual(a._search_next(bitarray(s), start), res)
+            self.assertEqual(a._search_at(bitarray(s), start), res)
 
 
     def test_itersearch(self):
