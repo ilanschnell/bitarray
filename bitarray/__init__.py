@@ -146,7 +146,7 @@ will be performed to determine return value."""
             except ValueError:
                 return False
         else:
-            return bool(self._search(bitarray(other), 1))
+            return self._search_at(bitarray(other), 0) is not None
 
 
 def test(verbosity=1):
