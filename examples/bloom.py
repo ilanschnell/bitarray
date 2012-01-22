@@ -17,20 +17,20 @@ class BloomFilter(object):
         self.array.setall(0)
 
     def add(self, key):
-        for j in xrange(self.k):
-            self.array[self._hash(key, j)] = 1
+        for i in self._hashes(key):
+            self.array[i] = 1
 
     def contains(self, key):
-        return all(self.array[self._hash(key, j)] for j in xrange(self.k))
+        return all(self.array[i] for i in self._hashes(key))
 
-    def _hash(self, key, i):
+    def _hashes(self, key):
         """
-        return an index (in the range 0 to m) based on the key.
-        i is used to choose between k "different" hash functions.
+        generate k different hashes (in the range 0 to m) based on the key
         """
-        h = hashlib.sha1('%s:%s' % (key, i))
-        return long(h.hexdigest(), 16) % self.m
-
+        x = long(hashlib.sha512(str(key)).hexdigest(), 16)
+        for _ in xrange(self.k):
+            x, y = divmod(x, self.m)
+            yield y
 
 
 def test_bloom(m, k, n):
