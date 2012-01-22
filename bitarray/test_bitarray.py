@@ -180,6 +180,8 @@ class CreateObjectTests(unittest.TestCase, Util):
 
         self.assertRaises(TypeError, bitarray.__new__, bitarray, endian=0)
         self.assertRaises(ValueError, bitarray.__new__, bitarray, endian='')
+        self.assertRaises(ValueError, bitarray.__new__,
+                          bitarray, endian='foo')
 
     def test_integers(self):
         for n in range(50):
@@ -218,7 +220,7 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist(), lst)
             self.check_obj(a)
 
-    def test_iter(self):
+    def test_iter1(self):
         for n in range(50):
             lst = [bool(randint(0, 1)) for d in range(n)]
             a = bitarray(iter(lst))
@@ -651,7 +653,7 @@ class MiscTests(unittest.TestCase, Util):
         self.assertRaises(OverflowError, bitarray.__new__,
                           bitarray, 2**34 + 1)
 
-        a = bitarray(10**6)
+        a = bitarray(10 ** 6)
         self.assertRaises(OverflowError, a.__imul__, 17180)
 
 
@@ -810,9 +812,7 @@ class NumberTests(unittest.TestCase, Util):
                 c = n * a
                 self.assertEqual(c, bitarray(n * a.tolist(),
                                              endian=a.endian()))
-
                 self.assertEQUAL(a, b)
-
 
         a = bitarray()
         self.assertRaises(TypeError, a.__mul__, None)
@@ -1309,10 +1309,12 @@ class MethodTests(unittest.TestCase, Util):
         a = bitarray('1101000')
         a.sort(reverse=True)
         self.assertEqual(a, bitarray('1110000'))
-
-        a = bitarray('1101000')
+        a.sort(reverse=False)
+        self.assertEqual(a, bitarray('0000111'))
         a.sort(True)
         self.assertEqual(a, bitarray('1110000'))
+        a.sort(False)
+        self.assertEqual(a, bitarray('0000111'))
 
         self.assertRaises(TypeError, a.sort, 'A')
 
@@ -1416,27 +1418,23 @@ class MethodTests(unittest.TestCase, Util):
             val = randint(0, 1)
             b = a
             b.setall(val)
-            self.assertEqual(b, bitarray(len(b)*[val]))
+            self.assertEqual(b, bitarray(len(b) * [val]))
             self.assert_(a is b)
             self.check_obj(b)
 
 
     def test_bytereverse(self):
-        a = bitarray()
-        a.bytereverse()
-        self.assertEqual(a, bitarray())
-
-        a = bitarray('1011')
-        a.bytereverse()
-        self.assertEqual(a, bitarray('0000'))
-
-        a = bitarray('111011')
-        a.bytereverse()
-        self.assertEqual(a, bitarray('001101'))
-
-        a = bitarray('11101101')
-        a.bytereverse()
-        self.assertEqual(a, bitarray('10110111'))
+        for x, y in [('', ''),
+                     ('1', '0'),
+                     ('1011', '0000'),
+                     ('111011', '001101'),
+                     ('11101101', '10110111'),
+                     ('000000011', '100000000'),
+                     ('11011111' '00100000' '000111',
+                      '11111011' '00000100' '001110')]:
+            a = bitarray(x)
+            a.bytereverse()
+            self.assertEqual(a, bitarray(y))
 
         for i in range(256):
             a = bitarray()
