@@ -25,7 +25,8 @@ class BloomFilter(object):
 
     def _hashes(self, key):
         """
-        generate k different hashes (in the range 0 to m) based on the key
+        generate k different hashes, each of which maps a key to one of
+        the m array positions with a uniform random distribution
         """
         x = long(hashlib.sha512(str(key)).hexdigest(), 16)
         for _ in xrange(self.k):
