@@ -457,7 +457,8 @@ set_item(bitarrayobject *self, idx_t i, PyObject *v)
     long vi;
 
     assert (i >= 0 && i < self->nbits);
-    if ((vi = PyObject_IsTrue(v)) < 0)
+    vi = PyObject_IsTrue(v);
+    if (vi < 0)
         return -1;
 
     setbit(self, i, vi);
@@ -594,7 +595,8 @@ extend_string(bitarrayobject *self, PyObject *string, enum conv_tp conv)
     int vi = 0;
 
     assert (PyString_Check(string));
-    if ((strlen = PyString_Size(string)) == 0)
+    strlen = PyString_Size(string);
+    if (strlen == 0)
         return 0;
 
     if (resize(self, self->nbits + strlen) < 0)
@@ -632,7 +634,8 @@ extend_rawstring(bitarrayobject *self, PyObject *string)
     char *str;
 
     assert (PyString_Check(string) && self->nbits % 8 == 0);
-    if ((strlen = PyString_Size(string)) == 0)
+    strlen = PyString_Size(string);
+    if (strlen == 0)
         return 0;
 
     if (resize(self, self->nbits + BITS(strlen)) < 0)
@@ -854,10 +857,12 @@ bitarray_index(bitarrayobject *self, PyObject *v)
     idx_t i;
     long vi;
 
-    if ((vi = PyObject_IsTrue(v)) < 0)
+    vi = PyObject_IsTrue(v);
+    if (vi < 0)
         return NULL;
 
-    if ((i = findfirst(self, vi)) < 0) {
+    i = findfirst(self, vi);
+    if (i < 0) {
         PyErr_SetString(PyExc_ValueError, "index(x): x not in bitarray");
         return NULL;
     }
@@ -1329,7 +1334,8 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
 
     /* find number of bytes till EOF */
     if (nbytes < 0) {
-        if ((cur = ftell(fp)) < 0)
+        cur = ftell(fp);
+        if (cur < 0)
             goto EOFerror;
 
         if (fseek(fp, 0L, SEEK_END) || (nbytes = ftell(fp)) < 0)
@@ -1453,7 +1459,8 @@ bitarray_tolist(bitarrayobject *self)
     PyObject *list;
     idx_t i;
 
-    if ((list = PyList_New((Py_ssize_t) self->nbits)) == NULL)
+    list = PyList_New((Py_ssize_t) self->nbits);
+    if (list == NULL)
         return NULL;
 
     for (i = 0; i < self->nbits; i++)
@@ -1776,7 +1783,8 @@ setslice(bitarrayobject *self, PySliceObject *slice, PyObject *v)
         return 0;
     }
     else if (PyBool_Check(v)) {
-        if ((vi = PyObject_IsTrue(v)) < 0)
+        vi = PyObject_IsTrue(v);
+        if (vi < 0)
             return -1;
 
         for (i = 0, j = start; i < slicelength; i++, j += step)
@@ -2031,7 +2039,8 @@ tree_traverse(PyObject *iter, PyObject *tree)
     PyObject *subtree, *v;
     long vi;
 
-    if ((v = PyIter_Next(iter)) == NULL)  /* stop iterator */
+    v = PyIter_Next(iter);
+    if (v == NULL)  /* stop iterator */
         return NULL;
 
     vi = PyObject_IsTrue(v);
