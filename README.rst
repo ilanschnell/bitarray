@@ -399,7 +399,7 @@ Reference
 
 ``itersearch(x)``
    Given a bitarray x (or an object which can be converted to a bitarray),
-   returns an iterator over the start positions of x matching self.
+   iterates over the start positions of x matching self.
 
 
 ``length()``
