@@ -1,3 +1,7 @@
+"""
+Demonstrates the implementation of a Bloom filter, see:
+http://en.wikipedia.org/wiki/Bloom_filter
+"""
 import hashlib
 from math import exp, log
 
@@ -20,7 +24,12 @@ class BloomFilter(object):
         return all(self.array[self._hash(key, j)] for j in xrange(self.k))
 
     def _hash(self, key, i):
-        return long(hashlib.sha1('%s:%s' % (key, i)).hexdigest(), 16) % self.m
+        """
+        return an index (in the range 0 to m) based on the key.
+        i is used to choose between k "different" hash functions.
+        """
+        h = hashlib.sha1('%s:%s' % (key, i))
+        return long(h.hexdigest(), 16) % self.m
 
 
 
@@ -39,4 +48,4 @@ def test_bloom(m, k, n):
 
 
 if __name__ == '__main__':
-    test_bloom(10000, 9, 800)
+    test_bloom(10000, 6, 1000)
