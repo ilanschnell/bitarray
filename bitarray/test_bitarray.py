@@ -152,7 +152,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertEqual(a.tolist(), [])
         self.check_obj(a)
 
-    def test_endian(self):
+    def test_endian1(self):
         a = bitarray(endian='little')
         a.fromstring('A')
         self.assertEqual(a.endian(), 'little')
@@ -165,6 +165,7 @@ class CreateObjectTests(unittest.TestCase, Util):
 
         self.assertEqual(a.tostring(), b.tostring())
 
+    def test_endian2(self):
         a = bitarray(endian='little')
         a.fromstring(' ')
         self.assertEqual(a.endian(), 'little')
@@ -289,7 +290,7 @@ tests.append(CreateObjectTests)
 
 class MetaDataTests(unittest.TestCase):
 
-    def test_buffer_info(self):
+    def test_buffer_info1(self):
         a = bitarray('0000111100001', endian='little')
         self.assertEqual(a.buffer_info()[1:4], (2, 'little', 3))
 
@@ -308,12 +309,14 @@ class MetaDataTests(unittest.TestCase):
         if is_py3k:
             self.assert_(isinstance(bi[4], int))
 
+    def test_buffer_info2(self):
         for n in range(50):
             bi = bitarray(n).buffer_info()
             self.assertEqual(bi[1], bits2bytes(n))
             self.assertEqual(bi[3] + n, 8 * bi[1])
             self.assert_(bi[4] >= bi[1])
 
+    def test_buffer_info3(self):
         a = bitarray(endian='little')
         self.assertEqual(a.buffer_info()[2], 'little')
 
@@ -342,7 +345,7 @@ tests.append(MetaDataTests)
 
 class SliceTests(unittest.TestCase, Util):
 
-    def test_getitem(self):
+    def test_getitem1(self):
         a = bitarray()
         self.assertRaises(IndexError, a.__getitem__,  0)
         a.append(True)
@@ -355,6 +358,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__getitem__,  2)
         self.assertRaises(IndexError, a.__getitem__, -3)
 
+    def test_getitem2(self):
         a = bitarray('1100010')
         for i, b in enumerate([True, True, False, False, False, True, False]):
             self.assertEqual(a[i], b)
@@ -362,6 +366,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__getitem__,  7)
         self.assertRaises(IndexError, a.__getitem__, -8)
 
+    def test_getitem3(self):
         a = bitarray('0100000100001')
         self.assertEQUAL(a[:], a)
         self.assert_(a[:] is not a)
@@ -372,6 +377,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.__getitem__, slice(None, None, 0))
         self.assertRaises(TypeError, a.__getitem__, (1, 2))
 
+    def test_getitem4(self):
         for a in self.randombitarrays():
             aa = a.tolist()
             la = len(a)
@@ -383,7 +389,7 @@ class SliceTests(unittest.TestCase, Util):
                           self.rndsliceidx(la), step)
                 self.assertEQUAL(a[s], bitarray(aa[s], endian=a.endian()))
 
-    def test_setitem(self):
+    def test_setitem1(self):
         a = bitarray([False])
         a[0] = 1
         self.assertEqual(a.tolist(), [True])
@@ -399,6 +405,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__setitem__,  2, True)
         self.assertRaises(IndexError, a.__setitem__, -3, False)
 
+    def test_setitem2(self):
         for a in self.randombitarrays():
             la = len(a)
             if la == 0:
@@ -427,6 +434,7 @@ class SliceTests(unittest.TestCase, Util):
             b[::-1] = bitarray(a)
             self.assertEqual(a.tolist()[::-1], b.tolist())
 
+    def test_setitem3(self):
         a = bitarray(5*[False])
         a[0] = 1
         a[-2] = 1
@@ -434,6 +442,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__setitem__,  5, 'foo')
         self.assertRaises(IndexError, a.__setitem__, -6, 'bar')
 
+    def test_setitem4(self):
         for a in self.randombitarrays():
             la = len(a)
             if la == 0: continue
@@ -563,7 +572,7 @@ class MiscTests(unittest.TestCase, Util):
             for i in range(len(a)):
                 self.assertEqual(a[i], b[i+1234])
 
-    def test_endianness(self):
+    def test_endianness1(self):
         a = bitarray(endian='little')
         a.frombytes(to_bytes('\x01'))
         self.assertEqual(a.to01(), '10000000')
@@ -583,6 +592,7 @@ class MiscTests(unittest.TestCase, Util):
         self.assertEqual(a, c)
         self.assertEqual(b, d)
 
+    def test_endianness2(self):
         a = bitarray(8, endian='little')
         a.setall(False)
         a[0] = True
@@ -593,6 +603,7 @@ class MiscTests(unittest.TestCase, Util):
         self.assertEqual(a.tobytes(), to_bytes('\x03 '))
         self.assertEqual(a.to01(), '1100000000000100')
 
+    def test_endianness3(self):
         a = bitarray(8, endian='big')
         a.setall(False)
         a[7] = True
@@ -603,14 +614,14 @@ class MiscTests(unittest.TestCase, Util):
         self.assertEqual(a.tobytes(), to_bytes('\x03 '))
         self.assertEqual(a.to01(), '0000001100100000')
 
+    def test_endianness4(self):
         a = bitarray('00100000', endian='big')
         self.assertEqual(a.tobytes(), to_bytes(' '))
-
         b = bitarray('00000100', endian='little')
         self.assertEqual(b.tobytes(), to_bytes(' '))
-
         self.assertNotEqual(a, b)
 
+    def test_endianness5(self):
         a = bitarray('11100000', endian='little')
         b = bitarray(a, endian='big')
         self.assertNotEqual(a, b)
@@ -857,7 +868,6 @@ class BitwiseTests(unittest.TestCase, Util):
 
         self.assertRaises(TypeError, a.__and__, 42)
 
-
     def test_iand(self):
         a =  bitarray('110010110')
         ida = id(a)
@@ -870,7 +880,7 @@ class BitwiseTests(unittest.TestCase, Util):
         b = bitarray('10011')
         self.assertEQUAL(a | b, bitarray('11011'))
 
-    def test_iand(self):
+    def test_ior(self):
         a =  bitarray('110010110')
         a |= bitarray('100110011')
         self.assertEQUAL(a, bitarray('110110111'))
