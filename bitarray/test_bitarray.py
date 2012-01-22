@@ -410,7 +410,7 @@ class SliceTests(unittest.TestCase, Util):
             la = len(a)
             if la == 0:
                 continue
-            i = randint(0, la-1)
+            i = randint(0, la - 1)
             aa = a.tolist()
             ida = id(a)
             val = bool(randint(0, 1))
@@ -435,7 +435,7 @@ class SliceTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist()[::-1], b.tolist())
 
     def test_setitem3(self):
-        a = bitarray(5*[False])
+        a = bitarray(5 * [False])
         a[0] = 1
         a[-2] = 1
         self.assertEqual(a, bitarray('10010'))
@@ -477,7 +477,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('11111111'))
 
 
-    def test_delitem(self):
+    def test_delitem1(self):
         a = bitarray('100110')
         del a[1]
         self.assertEqual(len(a), 5)
@@ -487,6 +487,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__delitem__,  3)
         self.assertRaises(IndexError, a.__delitem__, -4)
 
+    def test_delitem2(self):
         for a in self.randombitarrays():
             la = len(a)
             if la == 0: continue
