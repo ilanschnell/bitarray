@@ -206,12 +206,8 @@ copy_n(bitarrayobject *self, idx_t a,
     idx_t i;
 
     assert (a >= 0 && b >= 0 && n >= 0);
-    /* clip n, such that only memory with ob_size is accessed */
-    if (a + n > BITS(Py_SIZE(self)))
-        n = BITS(Py_SIZE(self)) - a;
-
-    if (b + n > BITS(Py_SIZE(other)))
-        n = BITS(Py_SIZE(other)) - b;
+    assert (a + n <= self->nbits);
+    assert (b + n <= other->nbits);
 
     /* the different type of looping is only relevant when other and self
        are the same object, i.e. when copying a piece of an bitarrayobject
@@ -235,10 +231,9 @@ delete_n(bitarrayobject *self, idx_t start, idx_t n)
     if (n == 0)
         return 0;
 
-    copy_n(self, start, self, start + n, self->nbits - start);
+    copy_n(self, start, self, start + n, self->nbits - start - n);
     if (resize(self, self->nbits - n) < 0)
         return -1;
-
     return 0;
 }
 
@@ -253,8 +248,7 @@ insert_n(bitarrayobject *self, idx_t start, idx_t n)
 
     if (resize(self, self->nbits + n) < 0)
         return -1;
-
-    copy_n(self, start + n, self, start, self->nbits - start);
+    copy_n(self, start + n, self, start, self->nbits - start - n);
     return 0;
 }
 
