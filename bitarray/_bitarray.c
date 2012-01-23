@@ -209,15 +209,15 @@ copy_n(bitarrayobject *self, idx_t a,
     assert (b + n <= other->nbits);
 
     /*
-    if (self != other && self->endian == other->endian &&
-        a % 8 == 0 && b == 0 && n >= 8)
+    if (self->endian == other->endian && a % 8 == 0 && b % 8 == 0 && n >= 8)
     {
         Py_ssize_t bytes;
+        idx_t bits;
 
         bytes = n / 8;
-        memcpy(self->ob_item + a / 8, other->ob_item, bytes);
-        for (i = 8 * bytes; i < n; i++)
-            setbit(self, i + a, GETBIT(other, i + b));
+        bits = 8 * bytes;
+        copy_n(self, bits + a, other, bits + b, n - bits);
+        memmove(self->ob_item + a / 8, other->ob_item + b / 8, bytes);
         return;
     }
     */
