@@ -213,7 +213,9 @@ copy_n(bitarrayobject *self, idx_t a,
     if (b + n > BITS(Py_SIZE(other)))
         n = BITS(Py_SIZE(other)) - b;
 
-    /* the different type of looping is only relevant when other is self */
+    /* the different type of looping is only relevant when other and self
+       are the same object, i.e. when copying a piece of an bitarrayobject
+       onto itself */
     if (a < b) {
         for (i = 0; i < n; i++)             /* loop forward (delete) */
             setbit(self, i + a, GETBIT(other, i + b));

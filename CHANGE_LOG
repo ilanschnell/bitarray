@@ -2,7 +2,7 @@
 -------------------
 Added itersearch method
 Added Bloom filter example
-minor fixes in docstrings
+minor fixes in docstrings, added more tests
 
 
 2011-12-29   0.4.0:
