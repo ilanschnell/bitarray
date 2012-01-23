@@ -1,5 +1,7 @@
 /*
-   This file is part of the bitarray module.
+   This file is the C part of the bitarray package.  Almost all
+   functionality is implemented here.
+
    Author: Ilan Schnell
 */
 
@@ -1329,8 +1331,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
 
     /* find number of bytes till EOF */
     if (nbytes < 0) {
-        cur = ftell(fp);
-        if (cur < 0)
+        if ((cur = ftell(fp)) < 0)
             goto EOFerror;
 
         if (fseek(fp, 0L, SEEK_END) || (nbytes = ftell(fp)) < 0)
