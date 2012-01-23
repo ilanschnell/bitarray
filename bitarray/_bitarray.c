@@ -232,9 +232,7 @@ delete_n(bitarrayobject *self, idx_t start, idx_t n)
         return 0;
 
     copy_n(self, start, self, start + n, self->nbits - start - n);
-    if (resize(self, self->nbits - n) < 0)
-        return -1;
-    return 0;
+    return resize(self, self->nbits - n);
 }
 
 /* starting at start, insert n (uninitialized) bits into self */
@@ -1298,7 +1296,8 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
             PyErr_SetString(PyExc_EOFError, "not enough items read");
             return NULL;
         }
-        delete_n(self, t, p);
+        if (delete_n(self, t, p) < 0)
+            return NULL;
         Py_DECREF(result);
     }
 
@@ -1365,7 +1364,8 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         return NULL;
     }
 
-    delete_n(self, t, p);
+    if (delete_n(self, t, p) < 0)
+        return NULL;
     Py_RETURN_NONE;
 }
 #endif
@@ -1489,7 +1489,8 @@ bitarray_frombytes(bitarrayobject *self, PyObject *string)
     if (extend_rawstring(self, string) < 0)
         return NULL;
 
-    delete_n(self, t, p);
+    if (delete_n(self, t, p) < 0)
+        return NULL;
     Py_RETURN_NONE;
 }
 
@@ -1662,7 +1663,6 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
     vi = GETBIT(self, i);
     if (delete_n(self, i, 1) < 0)
         return NULL;
-
     return PyBool_FromLong(vi);
 }
 
