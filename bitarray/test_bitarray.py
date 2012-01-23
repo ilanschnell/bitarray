@@ -1921,7 +1921,6 @@ tests.append(PrefixCodeTests)
 def pages():
     if sys.platform != 'linux2':
         return 0
-
     dat = open('/proc/%i/statm' % os.getpid()).read()
     return int(dat.split()[0])
 
@@ -1938,7 +1937,7 @@ def check_memory_leaks(verbosity):
     i = 0
     runner = unittest.TextTestRunner(verbosity=verbosity)
     while True:
-        print('Run', i)
+        print('Run: %d' % i)
         r = runner.run(suite)
         if i % 1 == 0:
             fo = open(logfile, 'a')

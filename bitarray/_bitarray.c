@@ -208,7 +208,7 @@ copy_n(bitarrayobject *self, idx_t a,
     assert (a + n <= self->nbits);
     assert (b + n <= other->nbits);
 
-    /*
+    /* XXX
     if (self->endian == other->endian && a % 8 == 0 && b % 8 == 0 && n >= 8)
     {
         Py_ssize_t bytes;
