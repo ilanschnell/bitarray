@@ -1966,6 +1966,6 @@ if __name__ == '__main__':
 
 else:
     from bitarray import __version__
-    print('bitarray is installed in:', os.path.dirname(__file__))
-    print('bitarray version:', __version__)
+    print('bitarray is installed in: ' + os.path.dirname(__file__))
+    print('bitarray version: ' + __version__)
     print(sys.version)

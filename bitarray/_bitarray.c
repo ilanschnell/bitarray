@@ -202,14 +202,25 @@ static void
 copy_n(bitarrayobject *self, idx_t a,
        bitarrayobject *other, idx_t b, idx_t n)
 {
-    /* XXX: This function could be highly optimized using memcpy for some
-       cases when self and other have same endianness, and other != self.
-    */
     idx_t i;
 
     assert (a >= 0 && b >= 0 && n >= 0);
     assert (a + n <= self->nbits);
     assert (b + n <= other->nbits);
+
+    /*
+    if (self != other && self->endian == other->endian &&
+        a % 8 == 0 && b == 0 && n >= 8)
+    {
+        Py_ssize_t bytes;
+
+        bytes = n / 8;
+        memcpy(self->ob_item + a / 8, other->ob_item, bytes);
+        for (i = 8 * bytes; i < n; i++)
+            setbit(self, i + a, GETBIT(other, i + b));
+        return;
+    }
+    */
 
     /* the different type of looping is only relevant when other and self
        are the same object, i.e. when copying a piece of an bitarrayobject
