@@ -160,12 +160,12 @@ When creating a new bitarray object, the endianness can always be
 specified explicitly:
 
    >>> a = bitarray(endian='little')
-   >>> a.fromstring('A')
+   >>> a.frombytes(b'A')
    >>> a
    bitarray('10000010')
    >>> b = bitarray('11000010', endian='little')
-   >>> b.tostring()
-   u'C'
+   >>> b.tobytes()
+   'C'
 
 Here the low-bit comes first because little-endian means that increasing
 numeric significance corresponds to an increasing address (or index).
@@ -173,12 +173,12 @@ So a[0] is the lowest and least significant bit, and a[7] is the highest
 and most significant bit.
 
    >>> a = bitarray(endian='big')
-   >>> a.fromstring('A')
+   >>> a.frombytes(b'A')
    >>> a
    bitarray('01000001')
    >>> a[6] = 1
-   >>> a.tostring()
-   u'C'
+   >>> a.tobytes()
+   'C'
 
 Here the high-bit comes first because big-endian
 means "most-significant first".
@@ -199,8 +199,8 @@ machine representation of the bitarray objects.  Therefore, one has to be
 cautious when applying the operation to bitarrays with different endianness.
 
 When converting to and from machine representation, using
-the ``tobytes``, ``frombytes``, ``tostring``, ``fromstring``, ``tofile``
-and ``fromfile`` methods, the endianness matters:
+the ``tobytes``, ``frombytes``, ``tofile`` and ``fromfile`` methods,
+the endianness matters:
 
    >>> a = bitarray(endian='little')
    >>> a.frombytes(b'\x01')
@@ -228,7 +228,7 @@ endianness:
    bitarray('00000111')
    >>> a == b
    False
-   >>> a.tostring() == b.tostring()
+   >>> a.tobytes() == b.tobytes()
    True
 
 The default bit endianness is currently big-endian, however this may change
@@ -236,7 +236,7 @@ in the future, and when dealing with the machine representation of bitarray
 objects, it is recommended to always explicitly specify the endianness.
 
 Unless, explicitly converting to machine representation, using
-the ``tostring``, ``fromstring``, ``tofile`` and ``fromfile`` methods,
+the ``tobytes``, ``frombytes``, ``tofile`` and ``fromfile`` methods,
 the bit endianness will have no effect on any computation, and you
 can safely ignore setting the endianness, and other details of this section.
 
