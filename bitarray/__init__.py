@@ -79,7 +79,8 @@ fromfile, tostring, fromstring, tobytes, frombytes."""
     def fromstring(self, string):
         """fromstring(string)
 
-Append from a string, interpreting the string as machine values."""
+Append from a string, interpreting the string as machine values.
+Deprecated since version 0.4.0, use ``frombytes()`` instead."""
         return self.frombytes(string.encode())
 
     def tostring(self):
@@ -87,7 +88,8 @@ Append from a string, interpreting the string as machine values."""
 
 Return the string representing (machine values) of the bitarray.
 When the length of the bitarray is not a multiple of 8, the few remaining
-bits (1..7) are set to 0."""
+bits (1..7) are set to 0.
+Deprecated since version 0.4.0, use ``tobytes()`` instead."""
         return self.tobytes().decode()
 
     def decode(self, codedict):
