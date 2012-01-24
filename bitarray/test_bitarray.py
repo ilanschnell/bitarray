@@ -18,12 +18,7 @@ else:
     from cStringIO import StringIO
 
 
-if __name__ == '__main__':
-    from __init__ import bitarray, bits2bytes
-    repr_type = "<class '__init__.bitarray'>"
-else:
-    from bitarray import bitarray, bits2bytes
-    repr_type = "<class 'bitarray.bitarray'>"
+from bitarray import bitarray, bits2bytes, __version__
 
 
 tests = []
@@ -60,7 +55,7 @@ class Util(object):
         return getIndicesEx(r, length)[-1]
 
     def check_obj(self, a):
-        self.assertEqual(repr(type(a)), repr_type)
+        self.assertEqual(repr(type(a)), "<class 'bitarray.bitarray'>")
         unused = 8 * a.buffer_info()[1] - len(a)
         self.assert_(0 <= unused < 8)
         self.assertEqual(unused, a.buffer_info()[3])
@@ -1918,53 +1913,19 @@ tests.append(PrefixCodeTests)
 
 # ---------------------------------------------------------------------------
 
-def pages():
-    if sys.platform != 'linux2':
-        return 0
-    dat = open('/proc/%i/statm' % os.getpid()).read()
-    return int(dat.split()[0])
+def run(verbosity=1, repeat=1):
+    print('bitarray is installed in: ' + os.path.dirname(__file__))
+    print('bitarray version: ' + __version__)
+    print(sys.version)
 
-
-def check_memory_leaks(verbosity):
     suite = unittest.TestSuite()
     for cls in tests:
-        suite.addTest(unittest.makeSuite(cls))
-
-    logfile = 'pages.log'
-    if os.path.isfile(logfile):
-        os.unlink(logfile)
-
-    i = 0
-    runner = unittest.TextTestRunner(verbosity=verbosity)
-    while True:
-        print('Run: %d' % i)
-        r = runner.run(suite)
-        if i % 1 == 0:
-            fo = open(logfile, 'a')
-            fo.write('%10i %r %10i\n' % (i, r.wasSuccessful(), pages()))
-            fo.close()
-        i += 1
-
-
-def run(verbosity, chk_mem_leaks=False):
-    suite = unittest.TestSuite()
-    for cls in tests:
-        suite.addTest(unittest.makeSuite(cls))
+        for _ in range(repeat):
+            suite.addTest(unittest.makeSuite(cls))
 
     runner = unittest.TextTestRunner(verbosity=verbosity)
-
     return runner.run(suite)
 
 
 if __name__ == '__main__':
-    verbosity = 2 if 'v' in sys.argv else 1
-    if 'm' in sys.argv:
-        check_memory_leaks(verbosity)
-    else:
-        run(verbosity)
-
-else:
-    from bitarray import __version__
-    print('bitarray is installed in: ' + os.path.dirname(__file__))
-    print('bitarray version: ' + __version__)
-    print(sys.version)
+    run()

@@ -151,9 +151,9 @@ will be performed to determine return value."""
             return self._search_at(bitarray(other), 0) is not None
 
 
-def test(verbosity=1):
-    """test(verbosity=1)
+def test(verbosity=1, repeat=1):
+    """test(verbosity=1, repeat=1)
 
 Run self-test."""
     from . import test_bitarray
-    return test_bitarray.run(verbosity=verbosity)
+    return test_bitarray.run(verbosity=verbosity, repeat=repeat)
