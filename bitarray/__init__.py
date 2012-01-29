@@ -45,6 +45,7 @@ def _check_codedict(codedict):
         if v.length() == 0:
             raise ValueError("non-empty bitarray expected")
 
+
 class bitarray(_bitarray):
     """bitarray([initial][endian=string])
 
@@ -113,7 +114,7 @@ with the corresponding bitarray for each symbols."""
         """search(x[, limit])
 
 Given a bitarray x (or an object which can be converted to a bitarray),
-returns the start positions of x matching self as a list.
+returns the start positions where x matches self as a list.
 The optional argument limits the number of search results to the integer
 specified.  By default, all search results are returned."""
         return self._search(bitarray(x), limit)
@@ -122,7 +123,7 @@ specified.  By default, all search results are returned."""
         """itersearch(x)
 
 Given a bitarray x (or an object which can be converted to a bitarray),
-iterates over the start positions of x matching self."""
+iterates over the start positions where x matches self."""
         x = bitarray(x)
         p = 0
         while 1:
