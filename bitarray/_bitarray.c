@@ -1055,8 +1055,8 @@ bitarray_all(bitarrayobject *self)
 {
     if (findfirst(self, 0) >= 0)
         Py_RETURN_FALSE;
-
-    Py_RETURN_TRUE;
+    else
+        Py_RETURN_TRUE;
 }
 
 PyDoc_STRVAR(all_doc,
@@ -1070,8 +1070,8 @@ bitarray_any(bitarrayobject *self)
 {
     if (findfirst(self, 1) >= 0)
         Py_RETURN_TRUE;
-
-    Py_RETURN_FALSE;
+    else
+        Py_RETURN_FALSE;
 }
 
 PyDoc_STRVAR(any_doc,
@@ -2275,8 +2275,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static PyObject *
 richcompare(PyObject *v, PyObject *w, int op)
 {
-    int cmp, k, vi, wi;
-    idx_t i;
+    int cmp, vi, wi;
+    idx_t i, vs, ws;
 
     if (!bitarray_Check(v) || !bitarray_Check(w)) {
         Py_INCREF(Py_NotImplemented);
@@ -2284,65 +2284,55 @@ richcompare(PyObject *v, PyObject *w, int op)
     }
 #define va  ((bitarrayobject *) v)
 #define wa  ((bitarrayobject *) w)
-    if (va->nbits != wa->nbits && (op == Py_EQ || op == Py_NE)) {
+    vs = va->nbits;
+    ws = wa->nbits;
+    if (vs != ws && (op == Py_EQ || op == Py_NE)) {
         /* shortcut: if the lengths differ, the bitarrays differ */
         if (op == Py_EQ)
             Py_RETURN_FALSE;
-
-        Py_RETURN_TRUE;
+        else
+            Py_RETURN_TRUE;
     }
+
     /* to avoid uninitialized warning for some compilers */
     vi = wi = 0;
     /* search for the first index where items are different */
-    k = 1;
-    for (i = 0; i < va->nbits && i < wa->nbits; i++) {
+    for (i = 0; i < vs && i < ws; i++) {
         vi = GETBIT(va, i);
         wi = GETBIT(wa, i);
-        k = (vi == wi);
-        if (k == 0)
-            break;
+        if (vi != wi) {
+            /* We have an item that differs.  First, shortcuts for EQ/NE */
+            if (op == Py_EQ)
+                Py_RETURN_FALSE;
+            if (op == Py_NE)
+                Py_RETURN_TRUE;
+            /* compare the final item using the proper operator */
+            switch (op) {
+            case Py_LT: cmp = vi <  wi; break;
+            case Py_LE: cmp = vi <= wi; break;
+            case Py_EQ: cmp = vi == wi; break;
+            case Py_NE: cmp = vi != wi; break;
+            case Py_GT: cmp = vi >  wi; break;
+            case Py_GE: cmp = vi >= wi; break;
+            default: return NULL;  /* cannot happen */
+            }
+            return PyBool_FromLong((long) cmp);
+        }
     }
-    if (k) {
-        /* no more items to compare -- compare sizes */
-        idx_t vs = va->nbits;
-        idx_t ws = wa->nbits;
 #undef va
 #undef wa
-        switch (op) {
-        case Py_LT: cmp = vs <  ws; break;
-        case Py_LE: cmp = vs <= ws; break;
-        case Py_EQ: cmp = vs == ws; break;
-        case Py_NE: cmp = vs != ws; break;
-        case Py_GT: cmp = vs >  ws; break;
-        case Py_GE: cmp = vs >= ws; break;
-        default: return NULL; /* cannot happen */
-        }
-        if (cmp)
-            Py_RETURN_TRUE;
 
-        Py_RETURN_FALSE;
-    }
-    /* We have an item that differs.  First, shortcuts for EQ/NE */
-    if (op == Py_EQ)
-        Py_RETURN_FALSE;
-
-    if (op == Py_NE)
-        Py_RETURN_TRUE;
-
-    /* compare the final item using the proper operator */
+    /* no more items to compare -- compare sizes */
     switch (op) {
-    case Py_LT: cmp = vi <  wi; break;
-    case Py_LE: cmp = vi <= wi; break;
-    case Py_EQ: cmp = vi == wi; break;
-    case Py_NE: cmp = vi != wi; break;
-    case Py_GT: cmp = vi >  wi; break;
-    case Py_GE: cmp = vi >= wi; break;
-    default: return NULL; /* cannot happen */
+    case Py_LT: cmp = vs <  ws; break;
+    case Py_LE: cmp = vs <= ws; break;
+    case Py_EQ: cmp = vs == ws; break;
+    case Py_NE: cmp = vs != ws; break;
+    case Py_GT: cmp = vs >  ws; break;
+    case Py_GE: cmp = vs >= ws; break;
+    default: return NULL;  /* cannot happen */
     }
-    if (cmp)
-        Py_RETURN_TRUE;
-
-    Py_RETURN_FALSE;
+    return PyBool_FromLong((long) cmp);
 }
 
 /************************** Bitarray Iterator **************************/
