@@ -379,7 +379,7 @@ bytereverse(bitarrayobject *self)
            trans = {0, 128, 64, 192, 32, 160, ..., 255} */
         int j, k;
         for (k = 0; k < 256; k++) {
-            trans[k] = '\0';
+            trans[k] = 0x00;
             for (j = 0; j < 8; j++)
                 if (1 << (7 - j) & k)
                     trans[k] |= 1 << j;
