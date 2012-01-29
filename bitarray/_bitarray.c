@@ -356,6 +356,15 @@ setrange(bitarrayobject *self, idx_t start, idx_t stop, int val)
         setbit(self, i, val);
 }
 
+static void
+invert(bitarrayobject *self)
+{
+    Py_ssize_t i;
+
+    for (i = 0; i < Py_SIZE(self); i++)
+        self->ob_item[i] = ~self->ob_item[i];
+}
+
 /* reverse the order of bits in each byte of the buffer */
 static void
 bytereverse(bitarrayobject *self)
@@ -363,7 +372,7 @@ bytereverse(bitarrayobject *self)
     static char trans[256];
     static int setup = 0;
     Py_ssize_t i;
-    int c;
+    unsigned char c;
 
     if (!setup) {
         /* setup a translation table, which maps each byte to it's
@@ -382,19 +391,8 @@ bytereverse(bitarrayobject *self)
     setunused(self);
     for (i = 0; i < Py_SIZE(self); i++) {
         c = self->ob_item[i];
-        /* in case conversion to int puts a sign in */
-        if (c < 0) c += 256;
         self->ob_item[i] = trans[c];
     }
-}
-
-static void
-invert(bitarrayobject *self)
-{
-    Py_ssize_t i;
-
-    for (i = 0; i < Py_SIZE(self); i++)
-        self->ob_item[i] = ~self->ob_item[i];
 }
 
 /* returns number of 1 bits */
@@ -405,7 +403,7 @@ count(bitarrayobject *self)
     static int setup = 0;
     Py_ssize_t i;
     idx_t res = 0;
-    int c;
+    unsigned char c;
 
     if (!setup) {
         /* setup a translation table, which maps each byte to it's
@@ -423,8 +421,6 @@ count(bitarrayobject *self)
     setunused(self);
     for (i = 0; i < Py_SIZE(self); i++) {
         c = self->ob_item[i];
-        /* in case conversion to int puts a sign in */
-        if (c < 0) c += 256;
         res += bitcount[c];
     }
     return res;
