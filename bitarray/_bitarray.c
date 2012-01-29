@@ -375,9 +375,8 @@ bytereverse(bitarrayobject *self)
     unsigned char c;
 
     if (!setup) {
-        /* setup a translation table, which maps each byte to it's
-           reversed: trans = {0, 128, 64, 192, 32, 160, ..., 255}
-        */
+        /* setup translation table, which maps each byte to it's reversed:
+           trans = {0, 128, 64, 192, 32, 160, ..., 255} */
         int j, k;
         for (k = 0; k < 256; k++) {
             trans[k] = '\0';
@@ -406,9 +405,8 @@ count(bitarrayobject *self)
     unsigned char c;
 
     if (!setup) {
-        /* setup a translation table, which maps each byte to it's
-           bit count: trans = {0, 1, 1, 2, 1, 2, 2, 3, 1, ..., 8}
-        */
+        /* setup lookup table, which maps each byte to it's bit count:
+           bitcount = {0, 1, 1, 2, 1, 2, 2, 3, 1, ..., 8} */
         int j, k;
         for (k = 0; k < 256; k++) {
             bitcount[k] = 0;
