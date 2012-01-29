@@ -2519,7 +2519,12 @@ sysinfo(void)
 }
 
 PyDoc_STRVAR(sysinfo_doc,
-"_sysinfo()");
+"_sysinfo()\n\
+\n\
+tuple(sizeof(void *),\n\
+      sizeof(size_t),\n\
+      sizeof(Py_ssize_t),\n\
+      PY_SSIZE_T_MAX)");
 
 
 static PyMethodDef module_functions[] = {
