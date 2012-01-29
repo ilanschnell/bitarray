@@ -28,11 +28,13 @@ class BloomFilter(object):
         generate k different hashes, each of which maps a key to one of
         the m array positions with a uniform random distribution
         """
+        h = hashlib.new('md5')
+        h.update(str(key))
         x = 0
-        for i in xrange(self.k):
+        for _ in xrange(self.k):
             if x < self.m:
-                s = str(key) + ':' + str(i)
-                x += long(hashlib.md5(s).hexdigest(), 16)
+                h.update('.')
+                x = long(h.hexdigest(), 16)
             x, y = divmod(x, self.m)
             yield y
 
@@ -52,4 +54,4 @@ def test_bloom(m, k, n):
 
 
 if __name__ == '__main__':
-    test_bloom(10000, 6, 1000)
+    test_bloom(50000, 6, 5000)
