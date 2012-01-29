@@ -263,7 +263,8 @@ insert_n(bitarrayobject *self, idx_t start, idx_t n)
     return 0;
 }
 
-/* set ususet bits to 0, without changing self->nbits, return # bits set */
+/* sets ususet bits to 0, i.e. the ones in the last byte (if any),
+   and return the number of bits set -- self->nbits is unchanged */
 static int
 setunused(bitarrayobject *self)
 {
@@ -757,7 +758,7 @@ slice_GetIndicesEx(PySliceObject *r, idx_t length,
             return -1;
         }
     }
-    defstart = *step < 0 ? length-1 : 0;
+    defstart = *step < 0 ? length - 1 : 0;
     defstop = *step < 0 ? -1 : length;
 
     if (r->start == Py_None) {
