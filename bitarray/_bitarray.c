@@ -2286,11 +2286,11 @@ richcompare(PyObject *v, PyObject *w, int op)
 #define wa  ((bitarrayobject *) w)
     vs = va->nbits;
     ws = wa->nbits;
-    if (vs != ws && (op == Py_EQ || op == Py_NE)) {
-        /* shortcut: if the lengths differ, the bitarrays differ */
+    if (vs != ws) {
+        /* shortcut for EQ/NE: if sizes differ, the bitarrays differ */
         if (op == Py_EQ)
             Py_RETURN_FALSE;
-        else
+        if (op == Py_NE)
             Py_RETURN_TRUE;
     }
 
@@ -2301,7 +2301,7 @@ richcompare(PyObject *v, PyObject *w, int op)
         vi = GETBIT(va, i);
         wi = GETBIT(wa, i);
         if (vi != wi) {
-            /* We have an item that differs.  First, shortcuts for EQ/NE */
+            /* we have an item that differs -- first, shortcut for EQ/NE */
             if (op == Py_EQ)
                 Py_RETURN_FALSE;
             if (op == Py_NE)
