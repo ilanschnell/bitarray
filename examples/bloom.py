@@ -30,7 +30,7 @@ class BloomFilter(object):
         """
         h = hashlib.new('md5')
         h.update(str(key))
-        x = 0
+        x = long(h.hexdigest(), 16)
         for _ in xrange(self.k):
             if x < self.m:
                 h.update('.')
@@ -48,7 +48,7 @@ def test_bloom(m, k, n):
     p = (1.0 - exp(-k * (n + 0.5) / (m - 1))) ** k
     print 100.0 * p, '%'
 
-    N = 10000
+    N = 100000
     false_pos = sum(b.contains(i) for i in xrange(n, n + N))
     print 100.0 * false_pos / N, '%'
 
