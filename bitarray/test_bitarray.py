@@ -509,6 +509,11 @@ tests.append(SliceTests)
 
 class MiscTests(unittest.TestCase, Util):
 
+    def test_instancecheck(self):
+        a = bitarray('011')
+        self.assertTrue(isinstance(a, bitarray))
+        self.assertFalse(isinstance(a, str))
+
     def test_booleanness(self):
         self.assertEqual(bool(bitarray('')), False)
         self.assertEqual(bool(bitarray('0')), True)
