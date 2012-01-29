@@ -1,4 +1,3 @@
-#!/usr/bin/env pyhton
 """
 The non-trivial part of the code is derived from:
 http://en.literateprograms.org/Huffman_coding_(Python)

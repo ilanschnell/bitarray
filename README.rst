@@ -63,14 +63,14 @@ Once you have installed the package, you may want to test it::
    bitarray version: 0.5.1
    2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
-   .............................
+   ..............................
    ----------------------------------------------------------------------
-   Ran 115 tests in 2.102s
+   Ran 116 tests in 2.102s
    
    OK
 
 You can always import the function test,
-and ``test().wasSuccessful()`` will return True when the test went OK.
+and ``test().wasSuccessful()`` will return True when the test went well.
 
 
 
@@ -400,7 +400,7 @@ Reference
 
 ``itersearch(x)``
    Given a bitarray x (or an object which can be converted to a bitarray),
-   iterates over the start positions of x matching self.
+   iterates over the start positions where x matches self.
 
 
 ``length()``
@@ -434,7 +434,7 @@ Reference
 
 ``search(x[, limit])``
    Given a bitarray x (or an object which can be converted to a bitarray),
-   returns the start positions of x matching self as a list.
+   returns the start positions where x matches self as a list.
    The optional argument limits the number of search results to the integer
    specified.  By default, all search results are returned.
 
@@ -487,7 +487,7 @@ Reference
 
 **Functions defined in the module:**
 
-``test(verbosity=1)``
+``test(verbosity=1, repeat=1)``
    Run self-test.
 
 
