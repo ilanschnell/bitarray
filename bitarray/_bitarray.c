@@ -586,7 +586,7 @@ extend_tuple(bitarrayobject *self, PyObject *tuple)
 */
 enum conv_tp {
     STR_01,    /*  '0' -> 0    '1'  -> 1   no other characters allowed */
-    STR_RAW,   /*  '\0' -> 0   other -> 1                              */
+    STR_RAW,   /*  0x00 -> 0   other -> 1                              */
 };
 
 static int
@@ -668,10 +668,11 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         return extend_string(self, obj, STR_01);
 
 #ifdef IS_PY3K
+    PyObject *string;
     if (PyUnicode_Check(obj)) {                               /* str01 */
-        iter = PyUnicode_AsEncodedString(obj, NULL, NULL);
-        ret = extend_string(self, iter, STR_01);
-        Py_DECREF(iter);
+        string = PyUnicode_AsEncodedString(obj, NULL, NULL);
+        ret = extend_string(self, string, STR_01);
+        Py_DECREF(string);
         return ret;
     }
 #endif
