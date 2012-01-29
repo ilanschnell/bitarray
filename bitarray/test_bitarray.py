@@ -1182,6 +1182,11 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a.count(0), 2)
         self.assertRaises(TypeError, a.count, 'A')
 
+        for i in range(0, 256):
+            a = bitarray()
+            a.frombytes(to_bytes(chr(i)))
+            self.assertEqual(a.count(), a.to01().count('1'))
+
         for a in self.randombitarrays():
             self.assertEqual(a.count(), a.count(1))
             self.assertEqual(a.count(1), a.to01().count('1'))
