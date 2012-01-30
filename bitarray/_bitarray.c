@@ -1119,7 +1119,7 @@ bitarray_reverse(bitarrayobject *self)
         return NULL;
 
 #define tt  ((bitarrayobject *) t)
-    /* copy first half of array into temporary array */
+    /* copy lower half of array into temporary array */
     memcpy(tt->ob_item, self->ob_item, Py_SIZE(tt));
 
     m = self->nbits - 1;

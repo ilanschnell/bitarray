@@ -1334,17 +1334,16 @@ class MethodTests(unittest.TestCase, Util):
     def test_reverse(self):
         self.assertRaises(TypeError, bitarray().reverse, 42)
 
-        a = bitarray()
-        a.reverse()
-        self.assertEQUAL(a, bitarray())
-
-        a = bitarray('1001111')
-        a.reverse()
-        self.assertEQUAL(a, bitarray('1111001'))
-
-        a = bitarray('11111000011')
-        a.reverse()
-        self.assertEQUAL(a, bitarray('11000011111'))
+        for x, y in [('', ''), ('1', '1'), ('10', '01'), ('001', '100'),
+                     ('1110', '0111'), ('11100', '00111'),
+                     ('011000', '000110'), ('1101100', '0011011'),
+                     ('11110000', '00001111'),
+                     ('11111000011', '11000011111'),
+                     ('11011111' '00100000' '000111',
+                      '111000' '00000100' '11111011')]:
+            a = bitarray(x)
+            a.reverse()
+            self.assertEQUAL(a, bitarray(y))
 
         for a in self.randombitarrays():
             aa = a.tolist()
