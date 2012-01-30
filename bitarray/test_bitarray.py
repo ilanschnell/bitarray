@@ -1377,10 +1377,11 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.remove, 0)
 
         a = bitarray('1010110')
-        a.remove(False);        self.assertEqual(a, bitarray('110110'))
-        a.remove(True);         self.assertEqual(a, bitarray('10110'))
-        a.remove(1);            self.assertEqual(a, bitarray('0110'))
-        a.remove(0);            self.assertEqual(a, bitarray('110'))
+        for val, res in [(False, '110110'), (True, '10110'),
+                         (1, '0110'), (1, '010'), (0, '10'),
+                         (0, '1'), (1, '')]:
+            a.remove(val)
+            self.assertEQUAL(a, bitarray(res))
 
         a = bitarray('0010011')
         b = a
