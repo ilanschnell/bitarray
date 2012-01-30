@@ -1390,7 +1390,16 @@ class MethodTests(unittest.TestCase, Util):
 
 
     def test_pop(self):
-        a = bitarray()
+        for x, n, r, y in [('1', 0, True, ''),
+                           ('0', -1, False, ''),
+                           ('0011100', 3, True, '001100')]:
+            a = bitarray(x)
+            self.assertEqual(a.pop(n), r)
+            self.assertEqual(a, bitarray(y))
+
+        a = bitarray('01')
+        self.assertEqual(a.pop(), True)
+        self.assertEqual(a.pop(), False)
         self.assertRaises(IndexError, a.pop)
 
         for a in self.randombitarrays():
@@ -1410,6 +1419,8 @@ class MethodTests(unittest.TestCase, Util):
             n = randint(-len(a), len(a)-1)
             aa = a.tolist()
             self.assertEqual(a.pop(n), aa[n])
+            aa.pop(n)
+            self.assertEqual(a, bitarray(aa))
             self.check_obj(a)
 
 
