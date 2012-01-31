@@ -1716,10 +1716,8 @@ bitarray_getitem(bitarrayobject *self, PyObject *a)
 
     if (ISINDEX(a)) {
         getIndex(a, &i);
-
         if (i < 0)
             i += self->nbits;
-
         if (i < 0 || i >= self->nbits) {
             PyErr_SetString(PyExc_IndexError, "bitarray index out of range");
             return NULL;
@@ -1786,14 +1784,13 @@ setslice(bitarrayobject *self, PySliceObject *slice, PyObject *v)
 #undef vv
         return 0;
     }
-    else if (PyBool_Check(v)) {
+    if (PyBool_Check(v)) {
         vi = PyObject_IsTrue(v);
         if (vi < 0)
             return -1;
 
         for (i = 0, j = start; i < slicelength; i++, j += step)
             setbit(self, j, vi);
-
         return 0;
     }
     PyErr_SetString(PyExc_IndexError,
@@ -1812,25 +1809,22 @@ bitarray_setitem(bitarrayobject *self, PyObject *args)
 
     if (ISINDEX(a)) {
         getIndex(a, &i);
-
         if (i < 0)
             i += self->nbits;
-
         if (i < 0 || i >= self->nbits) {
             PyErr_SetString(PyExc_IndexError, "bitarray index out of range");
             return NULL;
         }
         set_item(self, i, v);
+        Py_RETURN_NONE;
     }
-    else if (PySlice_Check(a)) {
+    if (PySlice_Check(a)) {
         if (setslice(self, (PySliceObject *) a, v) < 0)
             return NULL;
+        Py_RETURN_NONE;
     }
-    else {
-        PyErr_SetString(PyExc_TypeError, "index or slice expected");
-        return NULL;
-    }
-    Py_RETURN_NONE;
+    PyErr_SetString(PyExc_TypeError, "index or slice expected");
+    return NULL;
 }
 
 static PyObject *
@@ -1840,13 +1834,10 @@ bitarray_delitem(bitarrayobject *self, PyObject *a)
 
     if (ISINDEX(a)) {
         getIndex(a, &i);
-
         if (i < 0)
             i += self->nbits;
-
         if (i < 0 || i >= self->nbits) {
-            PyErr_SetString(PyExc_IndexError,
-                            "bitarray assignment index out of range");
+            PyErr_SetString(PyExc_IndexError, "bitarray index out of range");
             return NULL;
         }
         if (delete_n(self, i, 1) < 0)
