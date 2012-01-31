@@ -1147,13 +1147,13 @@ class MethodTests(unittest.TestCase, Util):
         for i in (True, False, 1, 0):
             self.assertRaises(ValueError, a.index, i)
 
-        a = bitarray(100*[False])
+        a = bitarray(100 * [False])
         self.assertRaises(ValueError, a.index, True)
-        a[20] = a[27] = 54
+        a[20] = a[27] = 1
         self.assertEqual(a.index(42), 20)
         self.assertEqual(a.index(0), 0)
 
-        a = bitarray(200*[True])
+        a = bitarray(200 * [True])
         self.assertRaises(ValueError, a.index, False)
         a[173] = a[187] = 0
         self.assertEqual(a.index(False), 173)

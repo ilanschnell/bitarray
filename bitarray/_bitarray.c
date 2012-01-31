@@ -435,7 +435,9 @@ findfirst(bitarrayobject *self, int vi)
     if (Py_SIZE(self) == 0)
         return -1;
 
-    c = vi ? 0x00 : 0xff;  /* inverse */
+    /* seraching for 1 means: break when byte is not 0x00
+       searching for 0 means: break when byte is not 0xff */
+    c = vi ? 0x00 : 0xff;
 
     /* skip ahead by checking whole bytes */
     for (j = 0; j < Py_SIZE(self); j++)
