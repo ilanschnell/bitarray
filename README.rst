@@ -23,7 +23,7 @@ Key features
  * On 32bit machines, a bitarray object can contain up to 2^34 elements,
    that is 16 Gbits (on 64bit machines up to 2^63 elements in theory).
 
- * All crutial functionality implemented in C.
+ * All crucial functionality implemented in C.
 
  * Bitarray objects behave very much like a list object, in particular
    slicing (including slice assignment and deletion) is supported.
@@ -48,8 +48,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-0.5.1.tar.gz
-   $ cd bitarray-0.5.1
+   $ tar xzf bitarray-0.5.2.tar.gz
+   $ cd bitarray-0.5.2
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -60,7 +60,7 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-   bitarray version: 0.5.1
+   bitarray version: 0.5.2
    2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
    ..............................
