@@ -1,6 +1,7 @@
 2012-??-??   0.5.2:
 -------------------
-  * Fixed MSVC compile error on Python 3 (thanks to Chris Gohlke)
+  * fixed MSVC compile error on Python 3 (thanks to Chris Gohlke)
+  * add examples/compress.py
 
 
 

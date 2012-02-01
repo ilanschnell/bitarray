@@ -1,7 +1,11 @@
-
 bloom.py:
     Demonstrates the implementation of a Bloom filter, see:
     http://en.wikipedia.org/wiki/Bloom_filter
+
+
+compress.py:
+    Demonstrates how the bz2 module may be used to create a compressed
+    object which represents a bitarray
 
 
 decoding.py
@@ -55,4 +59,3 @@ smallints.py
     allowing each element in the array to take values form 0 to 31,
     while the size of the object is 625 (5000/8) bytes.
     Thanks to David Kammeyer for the idea to apply a bitarray in this way.
-
