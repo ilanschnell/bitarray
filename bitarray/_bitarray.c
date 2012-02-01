@@ -670,8 +670,8 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         return extend_string(self, obj, STR_01);
 
 #ifdef IS_PY3K
-    PyObject *string;
     if (PyUnicode_Check(obj)) {                               /* str01 */
+        PyObject *string;
         string = PyUnicode_AsEncodedString(obj, NULL, NULL);
         ret = extend_string(self, string, STR_01);
         Py_DECREF(string);
