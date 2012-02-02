@@ -872,11 +872,10 @@ static PyObject *
 bitarray_index(bitarrayobject *self, PyObject *args)
 {
     PyObject *x;
-    Py_ssize_t start = 0, stop = -1;
-    idx_t i;
+    idx_t i, start = 0, stop = -1;
     long vi;
 
-    if (!PyArg_ParseTuple(args, "O|nn:index", &x, &start, &stop))
+    if (!PyArg_ParseTuple(args, "O|LL:index", &x, &start, &stop))
         return NULL;
 
     vi = PyObject_IsTrue(x);
