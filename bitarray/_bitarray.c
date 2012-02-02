@@ -426,7 +426,7 @@ count(bitarrayobject *self)
 
 /* return index of first occurrence of vi, -1 when x is not in found. */
 static idx_t
-findfirst(bitarrayobject *self, int vi)
+findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
 {
     Py_ssize_t j;
     idx_t i;
@@ -435,20 +435,33 @@ findfirst(bitarrayobject *self, int vi)
     if (Py_SIZE(self) == 0)
         return -1;
 
+    if (start < 0 || start > self->nbits)
+        start = 0;
+
+    if (stop < 0 || stop > self->nbits)
+        stop = self->nbits;
+
+    if (start >= stop)
+        return -1;
+
     /* seraching for 1 means: break when byte is not 0x00
        searching for 0 means: break when byte is not 0xff */
     c = vi ? 0x00 : 0xff;
 
     /* skip ahead by checking whole bytes */
-    for (j = 0; j < Py_SIZE(self); j++)
+    for (j = start / 8; j < BYTES(stop); j++)
         if (c ^ self->ob_item[j])
             break;
 
     if (j == Py_SIZE(self))
         j--;
+    assert (j >= 0 && j < Py_SIZE(self));
+
+    if (start < BITS(j))
+        start = BITS(j);
 
     /* fine grained search within byte */
-    for (i = BITS(j); i < self->nbits; i++)
+    for (i = start; i < stop; i++)
         if (GETBIT(self, i) == vi)
             return i;
 
@@ -857,16 +870,21 @@ Return number of occurrences of x in the bitarray.  x defaults to True.");
 
 
 static PyObject *
-bitarray_index(bitarrayobject *self, PyObject *v)
+bitarray_index(bitarrayobject *self, PyObject *args)
 {
+    PyObject *x;
+    Py_ssize_t start = 0, stop = -1;
     idx_t i;
     long vi;
 
-    vi = PyObject_IsTrue(v);
+    if (!PyArg_ParseTuple(args, "O|nn:index", &x, &start, &stop))
+        return NULL;
+
+    vi = PyObject_IsTrue(x);
     if (vi < 0)
         return NULL;
 
-    i = findfirst(self, vi);
+    i = findfirst(self, vi, start, stop);
     if (i < 0) {
         PyErr_SetString(PyExc_ValueError, "index(x): x not in bitarray");
         return NULL;
@@ -875,7 +893,7 @@ bitarray_index(bitarrayobject *self, PyObject *v)
 }
 
 PyDoc_STRVAR(index_doc,
-"index(x)\n\
+"index(x, [start, [stop]])\n\
 \n\
 Return index of the first occurrence of x in the bitarray.\n\
 It is an error when x does not occur in the bitarray");
@@ -1051,7 +1069,7 @@ Append the value bool(x) to the end of the bitarray.");
 static PyObject *
 bitarray_all(bitarrayobject *self)
 {
-    if (findfirst(self, 0) >= 0)
+    if (findfirst(self, 0, 0, -1) >= 0)
         Py_RETURN_FALSE;
     else
         Py_RETURN_TRUE;
@@ -1066,7 +1084,7 @@ Returns True when all bits in the array are True.");
 static PyObject *
 bitarray_any(bitarrayobject *self)
 {
-    if (findfirst(self, 1) >= 0)
+    if (findfirst(self, 1, 0, -1) >= 0)
         Py_RETURN_TRUE;
     else
         Py_RETURN_FALSE;
@@ -1692,7 +1710,7 @@ bitarray_remove(bitarrayobject *self, PyObject *v)
     if (vi < 0)
         return NULL;
 
-    i = findfirst(self, vi);
+    i = findfirst(self, vi, 0, -1);
     if (i < 0) {
         PyErr_SetString(PyExc_ValueError, "remove(x): x not in bitarray");
         return NULL;
@@ -2118,7 +2136,7 @@ bitarray_methods[] = {
      fromfile_doc},
     {"frombytes",    (PyCFunction) bitarray_frombytes,   METH_O,
      frombytes_doc},
-    {"index",        (PyCFunction) bitarray_index,       METH_O,
+    {"index",        (PyCFunction) bitarray_index,       METH_VARARGS,
      index_doc},
     {"insert",       (PyCFunction) bitarray_insert,      METH_VARARGS,
      insert_doc},

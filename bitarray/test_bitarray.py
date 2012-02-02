@@ -1172,6 +1172,34 @@ class MethodTests(unittest.TestCase, Util):
                 a[m] = 0
                 self.assertEqual(a.index(0), m)
 
+    def test_index2(self):
+        a = bitarray('00001000' '00000000' '0010000')
+        self.assertEqual(a.index(1), 4)
+        self.assertEqual(a.index(1, 1), 4)
+        self.assertEqual(a.index(0, 4), 5)
+        self.assertEqual(a.index(1, 5), 18)
+        self.assertRaises(ValueError, a.index, 1, 5, 18)
+        self.assertRaises(ValueError, a.index, 1, 19)
+
+    def test_index3(self):
+        a = bitarray(2000)
+        a.setall(0)
+        for _ in range(3):
+            a[randint(0, 1999)] = 1
+        aa = a.tolist()
+        for _ in range(100):
+            start = randint(0, 2000)
+            stop = randint(0, 2000)
+            try:
+                res1 = a.index(1, start, stop)
+            except ValueError:
+                res1 = None
+            try:
+                res2 = aa.index(1, start, stop)
+            except ValueError:
+                res2 = None
+            self.assertEqual(res1, res2)
+
 
     def test_count(self):
         a = bitarray('10011')
