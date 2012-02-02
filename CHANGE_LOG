@@ -1,4 +1,4 @@
-2012-??-??   0.5.2:
+2012-02-02   0.5.2:
 -------------------
   * fixed MSVC compile error on Python 3 (thanks to Chris Gohlke)
   * add missing start and stop optional parameters to index() method
