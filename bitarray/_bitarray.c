@@ -434,33 +434,32 @@ findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
 
     if (Py_SIZE(self) == 0)
         return -1;
-
     if (start < 0 || start > self->nbits)
         start = 0;
-
     if (stop < 0 || stop > self->nbits)
         stop = self->nbits;
-
     if (start >= stop)
         return -1;
 
-    /* seraching for 1 means: break when byte is not 0x00
-       searching for 0 means: break when byte is not 0xff */
-    c = vi ? 0x00 : 0xff;
+    if (stop > start + 8) {
+        /* seraching for 1 means: break when byte is not 0x00
+           searching for 0 means: break when byte is not 0xff */
+        c = vi ? 0x00 : 0xff;
 
-    /* skip ahead by checking whole bytes */
-    for (j = start / 8; j < BYTES(stop); j++)
-        if (c ^ self->ob_item[j])
-            break;
+        /* skip ahead by checking whole bytes */
+        for (j = start / 8; j < BYTES(stop); j++)
+            if (c ^ self->ob_item[j])
+                break;
 
-    if (j == Py_SIZE(self))
-        j--;
-    assert (j >= 0 && j < Py_SIZE(self));
+        if (j == Py_SIZE(self))
+            j--;
+        assert (j >= 0 && j < Py_SIZE(self));
 
-    if (start < BITS(j))
-        start = BITS(j);
+        if (start < BITS(j))
+            start = BITS(j);
+    }
 
-    /* fine grained search within byte */
+    /* fine grained search */
     for (i = start; i < stop; i++)
         if (GETBIT(self, i) == vi)
             return i;
