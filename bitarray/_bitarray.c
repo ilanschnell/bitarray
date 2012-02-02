@@ -447,7 +447,7 @@ findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
         c = vi ? 0x00 : 0xff;
 
         /* skip ahead by checking whole bytes */
-        for (j = start / 8; j < BYTES(stop); j++)
+        for (j = (Py_ssize_t) (start / 8); j < BYTES(stop); j++)
             if (c ^ self->ob_item[j])
                 break;
 
