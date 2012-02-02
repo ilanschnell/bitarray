@@ -373,7 +373,7 @@ Reference
    Append from a byte string, interpreted as machine values.
 
 
-``fromfile(f [, n])``
+``fromfile(f, [n])``
    Read n bytes from the file object f and append them to the bitarray
    interpreted as machine values.  When n is omitted, as many bytes are
    read until EOF is reached.
@@ -421,7 +421,7 @@ Reference
 
 
 ``pop([i])``
-   Return the i-th element and delete it from the bitarray. i defaults to -1.
+   Return the i-th (default last) element and delete it from the bitarray.
 
 
 ``remove(x)``

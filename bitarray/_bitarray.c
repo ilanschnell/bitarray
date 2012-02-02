@@ -1397,7 +1397,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
 #endif
 
 PyDoc_STRVAR(fromfile_doc,
-"fromfile(f [, n])\n\
+"fromfile(f, [n])\n\
 \n\
 Read n bytes from the file object f and append them to the bitarray\n\
 interpreted as machine values.  When n is omitted, as many bytes are\n\
@@ -1695,7 +1695,7 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(pop_doc,
 "pop([i])\n\
 \n\
-Return the i-th element and delete it from the bitarray. i defaults to -1.");
+Return the i-th (default last) element and delete it from the bitarray.");
 
 
 static PyObject *
