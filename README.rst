@@ -17,6 +17,13 @@ Requires Python 2.5 or greater (including Py3k),
 see `PEP 353 <http://www.python.org/dev/peps/pep-0353/>`_.
 
 
+Change Log
+----------
+
+Please find the change log on
+`github <https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG>`_.
+
+
 Key features
 ------------
 
