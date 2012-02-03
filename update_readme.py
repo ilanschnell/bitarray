@@ -18,17 +18,24 @@ print 'Writing new README.rst'
 fo = open('README.rst', 'w')
 
 # Copy everything before 'Reference' while substituting the version number
-pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
+_ver_pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
 for line in open('README.bak'):
     if line == 'Reference\n':
         break
-    fo.write(pat.sub(lambda m: m.group(1) + bitarray.__version__, line))
+    fo.write(_ver_pat.sub(lambda m: m.group(1) + bitarray.__version__, line))
 
+sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
 def writedoc(name):
     print name,
     doc = eval('bitarray.%s.__doc__' % name)
     lines = doc.splitlines()
-    fo.write('``%s``\n' % lines[0])
+    m = sig_pat.match(lines[0])
+    if m is None:
+        raise Exception("signature line invalid: %r" % lines[0])
+    s = '``%s``' %  m.group(1)
+    if m.group(3):
+        s += ' -> %s' % m.group(3)
+    fo.write(s + '\n')
     assert lines[1] == ''
     for line in lines[2:]:
         fo.write('   %s\n' % line)
