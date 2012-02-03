@@ -1,6 +1,8 @@
 2012-XX-XX   0.5.3:
 -------------------
+  * use a priority queue for Huffman tree example (thanks to Ushma Bhatt)
   * improve docstrings
+
 
 
 2012-02-02   0.5.2:
