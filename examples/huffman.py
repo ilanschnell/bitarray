@@ -5,9 +5,9 @@ http://en.literateprograms.org/Huffman_coding_(Python)
 The link also contains a good description of the algorithm.
 """
 import os, sys
-from bisect import insort
 from collections import defaultdict
 from bitarray import bitarray
+from heapq import heappush, heappop
 
 
 def huffCode(freq):
@@ -16,19 +16,16 @@ def huffCode(freq):
     return the Huffman code in the form of
     a dictionary mapping the symbols to bitarrays.
     """
-    class cmpList(list):
-        def __lt__(self,other):
-            return self[0] < other[0]
+    minheap = []
+    for s in freq:
+	heappush(minheap, (freq[s], s))
 
-    lst = [cmpList([freq[s], s]) for s in freq]
-    lst.sort()
+    while len(minheap) > 1:
+	childR, childL = heappop(minheap), heappop(minheap)
+	parent = (childL[0] + childR[0], childL, childR)
+	heappush(minheap, parent)
 
-    while len(lst) > 1:
-        childL, childR = lst.pop(1), lst.pop(0)
-        parent = cmpList([childL[0] + childR[0], childL, childR])
-        insort(lst, parent)
-
-    # Now lst[0] is the root node of the Huffman tree
+    # Now minheap[0] is the root node of the Huffman tree
 
     def traverse(tree, prefix=bitarray()):
         if len(tree) == 2:
@@ -38,7 +35,7 @@ def huffCode(freq):
                 traverse(tree[i+1], prefix + bitarray([i]))
 
     result = {}
-    traverse(lst[0])
+    traverse(minheap[0])
     return result
 
 
