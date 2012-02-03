@@ -1,17 +1,15 @@
-import sys
 import os
 import re
 import doctest
-import shutil
-import subprocess
 
 import bitarray
 
-assert bitarray.test().wasSuccessful()
+
+fo = None
 
 
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
-def write_doc(fo, name):
+def write_doc(name):
     doc = eval('bitarray.%s.__doc__' % name)
     lines = doc.splitlines()
     m = sig_pat.match(lines[0])
@@ -27,7 +25,7 @@ def write_doc(fo, name):
     fo.write('\n\n')
 
 
-def write_reference(fo):
+def write_reference():
     fo.write("""\
 Reference
 ---------
@@ -35,7 +33,7 @@ Reference
 **The bitarray class:**
 
 """)
-    write_doc(fo, 'bitarray')
+    write_doc('bitarray')
 
     fo.write("""\
 **A bitarray object supports the following methods:**
@@ -44,32 +42,34 @@ Reference
     for method in sorted(dir(bitarray.bitarray)):
         if method.startswith('_'):
             continue
-        write_doc(fo, 'bitarray.%s' % method)
+        write_doc('bitarray.%s' % method)
 
     fo.write("""\
 **Functions defined in the module:**
 
 """)
-    write_doc(fo, 'test')
-    write_doc(fo, 'bits2bytes')
+    write_doc('test')
+    write_doc('bits2bytes')
 
 
 
 ver_pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
-def write_all(fo, data):
+def write_all(data):
     for line in data.splitlines():
         if line == 'Reference':
             break
         line = ver_pat.sub(lambda m: m.group(1) + bitarray.__version__, line)
         fo.write(line + '\n')
 
-    write_reference(fo)
+    write_reference()
 
 
 def main():
+    global fo
+
     data = open('README.rst').read()
     fo = open('README.rst', 'w')
-    write_all(fo, data)
+    write_all(data)
     fo.close()
 
     doctest.testfile('README.rst')
