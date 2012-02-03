@@ -153,8 +153,9 @@ will be performed to determine return value."""
 
 
 def test(verbosity=1, repeat=1):
-    """test(verbosity=1, repeat=1)
+    """test(verbosity=1, repeat=1) -> TextTestResult
 
-Run self-test."""
+Run self-test, and return unittest.runner.TextTestResult object.
+"""
     from . import test_bitarray
     return test_bitarray.run(verbosity=verbosity, repeat=repeat)
