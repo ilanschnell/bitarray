@@ -17,7 +17,7 @@ Requires Python 2.5 or greater (including Py3k),
 see `PEP 353 <http://www.python.org/dev/peps/pep-0353/>`_.
 
 
-Change Log
+Change log
 ----------
 
 Please find the complete change log on

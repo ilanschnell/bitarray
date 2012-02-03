@@ -8,6 +8,13 @@ import bitarray
 fo = None
 
 
+def write_changelog():
+    fo.write("""Change log
+----------
+
+""")
+
+
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
 def write_doc(name):
     doc = eval('bitarray.%s.__doc__' % name)
@@ -52,12 +59,21 @@ Reference
     write_doc('bits2bytes')
 
 
-
-ver_pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
 def write_all(data):
+    ver_pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
+    suppress = False
     for line in data.splitlines():
+        if line == 'Change log':
+            write_changelog()
+            suppress = True
+            continue
+        if line == 'Please find the complete change log on':
+            suppress = False
+
         if line == 'Reference':
             break
+        if suppress:
+            continue
         line = ver_pat.sub(lambda m: m.group(1) + bitarray.__version__, line)
         fo.write(line + '\n')
 
