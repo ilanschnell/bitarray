@@ -6,17 +6,17 @@ feedback, suggestions, and discussions:
   - Roland Puntaier (Porting to Python 3.x)
   - Daniel Stutzbach (for help with reference counts)
 
-As well as (in arbitrary order):
-Kris Kennaway
-Travis Oliphant
-Gael Varoquaux
-David Ormsbee
-David Kammeyer
-Bryce Hendrix
-Judah De Paula
-Corran Webster
-Chris Mueller
-Koen van de Sande
-Paul McGuire
-Chris Gohlke
-Ushma Bhatt
+As well as:
+  - Kris Kennaway
+  - Travis Oliphant
+  - Gael Varoquaux
+  - David Ormsbee
+  - David Kammeyer
+  - Bryce Hendrix
+  - Judah De Paula
+  - Corran Webster
+  - Chris Mueller
+  - Koen van de Sande
+  - Paul McGuire
+  - Chris Gohlke
+  - Ushma Bhatt
