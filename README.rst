@@ -302,16 +302,16 @@ Reference
    
    Note that setting the bit endianness only has an effect when accessing the
    machine representation of the bitarray, i.e. when using the methods: tofile,
-   fromfile, tostring, fromstring, tobytes, frombytes.
+   fromfile, tobytes, frombytes.
 
 
 **A bitarray object supports the following methods:**
 
-``all()``
+``all() -> bool``
    Returns True when all bits in the array are True.
 
 
-``any()``
+``any() -> bool``
    Returns True when any bit in the array is True.
 
 
@@ -319,7 +319,7 @@ Reference
    Append the value bool(x) to the end of the bitarray.
 
 
-``buffer_info()``
+``buffer_info() -> tuple``
    Return a tuple (address, size, endianness, unused, allocated) giving the
    current memory address, the size (in bytes) used to hold the bitarray's
    contents, the bit endianness as a string, the number of unused bits
@@ -333,15 +333,15 @@ Reference
    bitarray; it does not change the endianness of the bitarray object.
 
 
-``copy()``
+``copy() -> bitarray``
    Return a copy of the bitarray.
 
 
-``count([x])``
+``count([x]) -> int``
    Return number of occurrences of x in the bitarray.  x defaults to True.
 
 
-``decode(code)``
+``decode(code) -> list``
    Given a prefix code (a dict mapping symbols to bitarrays),
    decode the content of the bitarray and return the list of symbols.
 
@@ -352,7 +352,7 @@ Reference
    with the corresponding bitarray for each symbols.
 
 
-``endian()``
+``endian() -> string``
    Return the bit endianness as a string (either 'little' or 'big').
 
 
@@ -362,11 +362,9 @@ Reference
    object upon initialization.
 
 
-``fill()``
-   Returns the number of bits added (0..7) at the end of the array.
-   When the length of the bitarray is not a multiple of 8, increase the length
-   slightly such that the new length is a multiple of 8, and set the few new
-   bits to False.
+``fill() -> int``
+   Adds zeros to the end of the bitarray, such that the length of the bitarray
+   is not a multiple of 8.  Returns the number of bits added (0..7).
 
 
 ``frombytes(bytes)``
@@ -384,7 +382,7 @@ Reference
    Deprecated since version 0.4.0, use ``frombytes()`` instead.
 
 
-``index(x, [start, [stop]])``
+``index(x, [start, [stop]]) -> int``
    Return index of the first occurrence of x in the bitarray.
    It is an error when x does not occur in the bitarray
 
@@ -398,14 +396,14 @@ Reference
    i.e. convert each 1-bit into a 0-bit and vice versa.
 
 
-``itersearch(x)``
+``itersearch(x) -> iterator``
    Given a bitarray x (or an object which can be converted to a bitarray),
    iterates over the start positions where x matches self.
 
 
-``length()``
+``length() -> int``
    Return the length, i.e. number of bits stored in the bitarray.
-   This method is preferred over __len__, [used when typing ``len(a)``],
+   This method is preferred over __len__ (used when typing ``len(a)``),
    since __len__ will fail for a bitarray object with 2^31 or more elements
    on a 32bit machine, whereas this method will return the correct value,
    on 32bit and 64bit machines.
@@ -420,7 +418,7 @@ Reference
    (for example NumPy's ndarray object) which have a different view of memory.
 
 
-``pop([i])``
+``pop([i]) -> item``
    Return the i-th (default last) element and delete it from the bitarray.
 
 
@@ -432,7 +430,7 @@ Reference
    Reverse the order of bits in the array (in-place).
 
 
-``search(x[, limit])``
+``search(x, [limit]) -> list``
    Given a bitarray x (or an object which can be converted to a bitarray),
    returns the start positions where x matches self as a list.
    The optional argument limits the number of search results to the integer
@@ -447,14 +445,14 @@ Reference
    Sort the bits in the array (in-place).
 
 
-``to01()``
+``to01() -> string``
    Return a string containing '0's and '1's, representing the bits in the
    bitarray object.
    Note: To extend a bitarray from a string containing '0's and '1's,
    use the extend method.
 
 
-``tobytes()``
+``tobytes() -> bytes``
    Return the byte representation of the bitarray.
    When the length of the bitarray is not a multiple of 8, the few remaining
    bits (1..7) are set to 0.
@@ -466,20 +464,20 @@ Reference
    the remaining bits (1..7) are set to 0.
 
 
-``tolist()``
+``tolist() -> list``
    Return an ordinary list with the items in the bitarray.
    Note: To extend a bitarray with elements from a list,
    use the extend method.
 
 
-``tostring()``
+``tostring() -> string``
    Return the string representing (machine values) of the bitarray.
    When the length of the bitarray is not a multiple of 8, the few remaining
    bits (1..7) are set to 0.
    Deprecated since version 0.4.0, use ``tobytes()`` instead.
 
 
-``unpack(zero=b'\x00', one=b'\xff')``
+``unpack(zero=b'\x00', one=b'\xff') -> bytes``
    Return a byte string containing one character for each bit in the bitarray,
    using the specified mapping.
    See also the pack method.
@@ -491,7 +489,7 @@ Reference
    Run self-test.
 
 
-``bits2bytes(n)``
+``bits2bytes(n) -> int``
    Return the number of bytes necessary to store n bits.
 
 

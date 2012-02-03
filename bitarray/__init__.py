@@ -85,7 +85,7 @@ Deprecated since version 0.4.0, use ``frombytes()`` instead."""
         return self.frombytes(string.encode())
 
     def tostring(self):
-        """tostring()
+        """tostring() -> string
 
 Return the string representing (machine values) of the bitarray.
 When the length of the bitarray is not a multiple of 8, the few remaining
@@ -94,7 +94,7 @@ Deprecated since version 0.4.0, use ``tobytes()`` instead."""
         return self.tobytes().decode()
 
     def decode(self, codedict):
-        """decode(code)
+        """decode(code) -> list
 
 Given a prefix code (a dict mapping symbols to bitarrays),
 decode the content of the bitarray and return the list of symbols."""
@@ -108,10 +108,10 @@ Given a prefix code (a dict mapping symbols to bitarrays),
 iterates over iterable object with symbols, and extends the bitarray
 with the corresponding bitarray for each symbols."""
         _check_codedict(codedict)
-        return self._encode(codedict, iterable)
+        self._encode(codedict, iterable)
 
     def search(self, x, limit=-1):
-        """search(x[, limit])
+        """search(x, [limit]) -> list
 
 Given a bitarray x (or an object which can be converted to a bitarray),
 returns the start positions where x matches self as a list.
@@ -120,7 +120,7 @@ specified.  By default, all search results are returned."""
         return self._search(bitarray(x), limit)
 
     def itersearch(self, x):
-        """itersearch(x)
+        """itersearch(x) -> iterator
 
 Given a bitarray x (or an object which can be converted to a bitarray),
 iterates over the start positions where x matches self."""
@@ -134,7 +134,7 @@ iterates over the start positions where x matches self."""
             p += 1
 
     def __contains__(self, other):
-        """__contains__(x)
+        """__contains__(x) -> bool
 
 Return True if bitarray contains x, False otherwise.
 If x is an integer (which includes booleans), it is determined

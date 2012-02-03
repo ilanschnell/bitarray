@@ -814,16 +814,16 @@ bitarray_length(bitarrayobject *self)
 }
 
 PyDoc_STRVAR(length_doc,
-"length()\n\
+"length() -> int\n\
 \n\
 Return the length, i.e. number of bits stored in the bitarray.\n\
-This method is preferred over __len__, [used when typing ``len(a)``],\n\
+This method is preferred over __len__ (used when typing ``len(a)``),\n\
 since __len__ will fail for a bitarray object with 2^31 or more elements\n\
 on a 32bit machine, whereas this method will return the correct value,\n\
 on 32bit and 64bit machines.");
 
 PyDoc_STRVAR(len_doc,
-"__len__()\n\
+"__len__() -> int\n\
 \n\
 Return the length, i.e. number of bits stored in the bitarray.\n\
 This method will fail for a bitarray object with 2^31 or more elements\n\
@@ -844,7 +844,7 @@ bitarray_copy(bitarrayobject *self)
 }
 
 PyDoc_STRVAR(copy_doc,
-"copy()\n\
+"copy() -> bitarray\n\
 \n\
 Return a copy of the bitarray.");
 
@@ -863,7 +863,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(count_doc,
-"count([x])\n\
+"count([x]) -> int\n\
 \n\
 Return number of occurrences of x in the bitarray.  x defaults to True.");
 
@@ -891,7 +891,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(index_doc,
-"index(x, [start, [stop]])\n\
+"index(x, [start, [stop]]) -> int\n\
 \n\
 Return index of the first occurrence of x in the bitarray.\n\
 It is an error when x does not occur in the bitarray");
@@ -960,7 +960,9 @@ error:
 }
 
 PyDoc_STRVAR(search_doc,
-"_search(x, limit)  like search but x has to be a bitarray.");
+"_search(x, limit) -> list\n\
+\n\
+like search but x has to be a bitarray.");
 
 
 static PyObject *
@@ -1002,8 +1004,10 @@ bitarray_search_at(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(search_at_doc,
-"_search_at(x, start)  search for bitarray x starting at start, and return\n\
-the index where the bitarray x is found (or None if x is not found).");
+"_search_at(x, start) -> int or None\n\
+\n\
+search for bitarray x starting at start, and return the index where the\n\
+bitarray x is found (or None if x is not found).");
 
 
 static PyObject *
@@ -1024,7 +1028,7 @@ bitarray_buffer_info(bitarrayobject *self)
 }
 
 PyDoc_STRVAR(buffer_info_doc,
-"buffer_info()\n\
+"buffer_info() -> tuple\n\
 \n\
 Return a tuple (address, size, endianness, unused, allocated) giving the\n\
 current memory address, the size (in bytes) used to hold the bitarray's\n\
@@ -1044,7 +1048,7 @@ bitarray_endian(bitarrayobject *self)
 }
 
 PyDoc_STRVAR(endian_doc,
-"endian()\n\
+"endian() -> string\n\
 \n\
 Return the bit endianness as a string (either 'little' or 'big').");
 
@@ -1074,7 +1078,7 @@ bitarray_all(bitarrayobject *self)
 }
 
 PyDoc_STRVAR(all_doc,
-"all()\n\
+"all() -> bool\n\
 \n\
 Returns True when all bits in the array are True.");
 
@@ -1089,7 +1093,7 @@ bitarray_any(bitarrayobject *self)
 }
 
 PyDoc_STRVAR(any_doc,
-"any()\n\
+"any() -> bool\n\
 \n\
 Returns True when any bit in the array is True.");
 
@@ -1120,7 +1124,7 @@ error:
     return result;
 }
 
-PyDoc_STRVAR(reduce_doc, "Return state information for pickling.");
+PyDoc_STRVAR(reduce_doc, "state information for pickling");
 
 
 static PyObject *
@@ -1175,12 +1179,10 @@ bitarray_fill(bitarrayobject *self)
 }
 
 PyDoc_STRVAR(fill_doc,
-"fill()\n\
+"fill() -> int\n\
 \n\
-Returns the number of bits added (0..7) at the end of the array.\n\
-When the length of the bitarray is not a multiple of 8, increase the length\n\
-slightly such that the new length is a multiple of 8, and set the few new\n\
-bits to False.");
+Adds zeros to the end of the bitarray, such that the length of the bitarray\n\
+is not a multiple of 8.  Returns the number of bits added (0..7).");
 
 
 static PyObject *
@@ -1492,7 +1494,7 @@ bitarray_tolist(bitarrayobject *self)
 }
 
 PyDoc_STRVAR(tolist_doc,
-"tolist()\n\
+"tolist() -> list\n\
 \n\
 Return an ordinary list with the items in the bitarray.\n\
 Note: To extend a bitarray with elements from a list,\n\
@@ -1534,7 +1536,7 @@ bitarray_tobytes(bitarrayobject *self)
 }
 
 PyDoc_STRVAR(tobytes_doc,
-"tobytes()\n\
+"tobytes() -> bytes\n\
 \n\
 Return the byte representation of the bitarray.\n\
 When the length of the bitarray is not a multiple of 8, the few remaining\n\
@@ -1557,7 +1559,7 @@ bitarray_to01(bitarrayobject *self)
 }
 
 PyDoc_STRVAR(to01_doc,
-"to01()\n\
+"to01() -> string\n\
 \n\
 Return a string containing '0's and '1's, representing the bits in the\n\
 bitarray object.\n\
@@ -1579,7 +1581,7 @@ bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
 }
 
 PyDoc_STRVAR(unpack_doc,
-"unpack(zero=b'\\x00', one=b'\\xff')\n\
+"unpack(zero=b'\\x00', one=b'\\xff') -> bytes\n\
 \n\
 Return a byte string containing one character for each bit in the bitarray,\n\
 using the specified mapping.\n\
@@ -1693,7 +1695,7 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(pop_doc,
-"pop([i])\n\
+"pop([i]) -> item\n\
 \n\
 Return the i-th (default last) element and delete it from the bitarray.");
 
@@ -2040,7 +2042,9 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(encode_doc,
-"_encode(code, iterable) is like the encode method without code checking");
+"_encode(code, iterable)\n\
+\n\
+like the encode method without code checking");
 
 
 /* return the leave node resulting from traversing the (binary) tree,
@@ -2098,8 +2102,10 @@ error:
 }
 
 PyDoc_STRVAR(decode_doc,
-"_decode(tree)  Given a tree, decode the content of the bitarray and return\n\
-the symbols as a list.");
+"_decode(tree) -> list\n\
+\n\
+Given a tree, decode the content of the bitarray and return the list of\n\
+symbols.");
 
 
 /*************************** Method definitions *************************/
@@ -2507,7 +2513,7 @@ bits2bytes(PyObject *self, PyObject *v)
 
 
 PyDoc_STRVAR(bits2bytes_doc,
-"bits2bytes(n)\n\
+"bits2bytes(n) -> int\n\
 \n\
 Return the number of bytes necessary to store n bits.");
 
@@ -2523,7 +2529,7 @@ sysinfo(void)
 }
 
 PyDoc_STRVAR(sysinfo_doc,
-"_sysinfo()\n\
+"_sysinfo() -> tuple\n\
 \n\
 tuple(sizeof(void *),\n\
       sizeof(size_t),\n\
