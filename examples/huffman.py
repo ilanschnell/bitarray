@@ -55,7 +55,7 @@ def print_code(filename):
     code = huffCode(freq)
     print('   char    frequency    Huffman code')
     print(70*'-')
-    for c in sorted(code):
+    for c in sorted(code, key=lambda c: freq[c], reverse=True):
         print('%7r %8i        %s' % (c, freq[c], code[c].to01()))
 
 
