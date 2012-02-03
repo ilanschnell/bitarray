@@ -75,7 +75,7 @@ Allowed values are 'big' and 'little' (default is 'big').
 
 Note that setting the bit endianness only has an effect when accessing the
 machine representation of the bitarray, i.e. when using the methods: tofile,
-fromfile, tostring, fromstring, tobytes, frombytes."""
+fromfile, tobytes, frombytes."""
 
     def fromstring(self, string):
         """fromstring(string)
