@@ -2198,7 +2198,6 @@ bitarray_methods[] = {
     {"__mul__",      (PyCFunction) bitarray_mul,         METH_O,       0},
     {"__rmul__",     (PyCFunction) bitarray_mul,         METH_O,       0},
     {"__imul__",     (PyCFunction) bitarray_imul,        METH_O,       0},
-
     {"__and__",      (PyCFunction) bitarray_and,         METH_O,       0},
     {"__or__",       (PyCFunction) bitarray_or,          METH_O,       0},
     {"__xor__",      (PyCFunction) bitarray_xor,         METH_O,       0},
