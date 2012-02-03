@@ -13,6 +13,19 @@ def write_changelog():
 ----------
 
 """)
+    ver_pat = re.compile(r'(\d{4}-\d{2}-\d{2})\s+(\d+\.\d+\.\d+)')
+    count = 0
+    for line in open('CHANGE_LOG'):
+        m = ver_pat.match(line)
+        if m:
+            count += 1
+            if count == 3:
+                break
+            fo.write(m.expand(r'**\2** (\1):\n'))
+        elif line.startswith('---'):
+            fo.write('\n')
+        else:
+            fo.write(line)
 
 
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
@@ -69,7 +82,6 @@ def write_all(data):
             continue
         if line == 'Please find the complete change log on':
             suppress = False
-
         if line == 'Reference':
             break
         if suppress:
