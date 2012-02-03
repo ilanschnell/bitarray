@@ -18,12 +18,12 @@ def huffCode(freq):
     """
     minheap = []
     for s in freq:
-	heappush(minheap, (freq[s], s))
+        heappush(minheap, (freq[s], s))
 
     while len(minheap) > 1:
-	childR, childL = heappop(minheap), heappop(minheap)
-	parent = (childL[0] + childR[0], childL, childR)
-	heappush(minheap, parent)
+        childR, childL = heappop(minheap), heappop(minheap)
+        parent = (childL[0] + childR[0], childL, childR)
+        heappush(minheap, parent)
 
     # Now minheap[0] is the root node of the Huffman tree
 
