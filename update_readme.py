@@ -7,24 +7,11 @@ import subprocess
 
 import bitarray
 
-assert bitarray.test().wasSuccessful()
+#assert bitarray.test().wasSuccessful()
 
-print 'Backup README.rst'
-shutil.copyfile('README.rst', 'README.bak')
-
-print 'Writing new README.rst'
-fo = open('README.rst', 'w')
-
-# Copy everything before 'Reference' while substituting the version number
-_ver_pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
-for line in open('README.bak'):
-    if line == 'Reference\n':
-        break
-    fo.write(_ver_pat.sub(lambda m: m.group(1) + bitarray.__version__, line))
 
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
-def writedoc(name):
-    print name,
+def writedoc(fo, name):
     doc = eval('bitarray.%s.__doc__' % name)
     lines = doc.splitlines()
     m = sig_pat.match(lines[0])
@@ -39,6 +26,21 @@ def writedoc(name):
         fo.write('   %s\n' % line)
     fo.write('\n\n')
 
+
+print 'Backup README.rst'
+shutil.copyfile('README.rst', 'README.bak')
+
+print 'Writing new README.rst'
+fo = open('README.rst', 'w')
+
+# Copy everything before 'Reference' while substituting the version number
+_ver_pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
+for line in open('README.bak'):
+    if line == 'Reference\n':
+        break
+    fo.write(_ver_pat.sub(lambda m: m.group(1) + bitarray.__version__, line))
+
+
 fo.write("""\
 Reference
 ---------
@@ -47,7 +49,7 @@ Reference
 
 """)
 
-writedoc('bitarray')
+writedoc(fo, 'bitarray')
 
 fo.write("""\
 **A bitarray object supports the following methods:**
@@ -57,16 +59,16 @@ fo.write("""\
 for method in sorted(dir(bitarray.bitarray)):
     if method.startswith('_'):
         continue
-    writedoc('bitarray.%s' % method)
+    writedoc(fo, 'bitarray.%s' % method)
 
 fo.write("""\
 **Functions defined in the module:**
 
 """)
 
-writedoc('test')
+writedoc(fo, 'test')
 
-writedoc('bits2bytes')
+writedoc(fo, 'bits2bytes')
 
 fo.close()
 print
