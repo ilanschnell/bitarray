@@ -1497,7 +1497,10 @@ PyDoc_STRVAR(tolist_doc,
 "tolist() -> list\n\
 \n\
 Return an ordinary list with the items in the bitarray.\n\
-Note: To extend a bitarray with elements from a list,\n\
+Note that the list object being created will require 32 or 64 times more\n\
+memory than the bitarray object, which may cause a memory error if the\n\
+bitarray is very large.\n\
+Also note that to extend a bitarray with elements from a list,\n\
 use the extend method.");
 
 
