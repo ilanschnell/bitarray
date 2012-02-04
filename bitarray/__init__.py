@@ -128,13 +128,7 @@ Given a bitarray (or an object which can be converted to a bitarray),
 iterates over the start positions where bitarray matches self."""
         if not isinstance(x, bitarray):
             x = bitarray(x)
-        p = 0
-        while 1:
-            p = self._search_at(x, p)
-            if p is None:
-                return
-            yield p
-            p += 1
+        return self._itersearch(x)
 
     def __contains__(self, other):
         """__contains__(x) -> bool

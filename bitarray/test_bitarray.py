@@ -1275,8 +1275,7 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(it.next(), 3)
         self.assertEqual(it.next(), 4)
         self.assertRaises(StopIteration, it.next)
-        it = a.itersearch('')
-        self.assertRaises(ValueError, it.next)
+        self.assertRaises(ValueError, a.itersearch, '')
 
     def test_search2(self):
         a = bitarray('10011')
