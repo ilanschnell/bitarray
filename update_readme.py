@@ -25,6 +25,10 @@ def write_changelog():
         else:
             fo.write(line)
 
+    url = "https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG"
+    fo.write("Please find the complete change log\n"
+             "`here <%s>`_.\n" % url)
+
 
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
 def write_doc(name):
@@ -62,22 +66,14 @@ def write_reference():
 
 def write_all(data):
     ver_pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
-    suppress = False
     for line in data.splitlines():
-        if line == 'Change log':
-            write_changelog()
-            suppress = True
-            continue
-        if line == 'Please find the complete change log on':
-            suppress = False
         if line == 'Reference':
             break
-        if suppress:
-            continue
         line = ver_pat.sub(lambda m: m.group(1) + bitarray.__version__, line)
         fo.write(line + '\n')
 
     write_reference()
+    write_changelog()
 
 
 def main():

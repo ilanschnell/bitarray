@@ -17,36 +17,6 @@ Requires Python 2.5 or greater (including Py3k),
 see `PEP 353 <http://www.python.org/dev/peps/pep-0353/>`_.
 
 
-Change log
-----------
-
-2012-XX-XX   0.5.3:
-
-  * use a priority queue for Huffman tree example (thanks to Ushma Bhatt)
-  * improve docstrings
-
-
-
-**0.5.2** (2012-02-02):
-
-  * fixed MSVC compile error on Python 3 (thanks to Chris Gohlke)
-  * add missing start and stop optional parameters to index() method
-  * add examples/compress.py
-
-
-
-**0.5.1** (2012-01-31):
-
-  * update documentation to use tobytes and frombytes, rather than tostring
-    and fromstring (which are now deprecated)
-  * simplified how tests are run
-
-
-
-Please find the complete change log on
-`github <https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG>`_.
-
-
 Key features
 ------------
 
@@ -523,3 +493,31 @@ Reference
    Return the number of bytes necessary to store n bits.
 
 
+Change log
+----------
+
+2012-XX-XX   0.5.3:
+
+  * use a priority queue for Huffman tree example (thanks to Ushma Bhatt)
+  * improve docstrings
+
+
+
+**0.5.2** (2012-02-02):
+
+  * fixed MSVC compile error on Python 3 (thanks to Chris Gohlke)
+  * add missing start and stop optional parameters to index() method
+  * add examples/compress.py
+
+
+
+**0.5.1** (2012-01-31):
+
+  * update documentation to use tobytes and frombytes, rather than tostring
+    and fromstring (which are now deprecated)
+  * simplified how tests are run
+
+
+
+Please find the complete change log
+`here <https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG>`_.
