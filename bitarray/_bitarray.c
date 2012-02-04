@@ -931,6 +931,33 @@ object upon initialization.");
 
 
 static PyObject *
+bitarray_contains(bitarrayobject *self, PyObject *x)
+{
+    idx_t i;
+
+    if (PyIndex_Check(x)) {
+        long vi;
+
+        vi = PyObject_IsTrue(x);
+        if (vi < 0)
+            return NULL;
+        if (findfirst(self, vi, 0, -1) >= 0)
+            Py_RETURN_TRUE;
+        else
+            Py_RETURN_FALSE;
+    }
+    assert (bitarray_Check(x));
+    if (search(self, (bitarrayobject *) x, 0) >= 0)
+        Py_RETURN_TRUE;
+    else
+        Py_RETURN_FALSE;
+}
+
+PyDoc_STRVAR(contains_doc,
+"_contains(object) -> bool -- object has to be int or bitarray");
+
+
+static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
     PyObject *list = NULL;   /* list of matching positions to be returned */
@@ -2134,8 +2161,8 @@ bitarraysearchiter_next(bitarraysearchiterobject *it)
     idx_t n;
 
     it->p = search(it->bao, it->xa, it->p);
-    if (it->p < 0)
-        return NULL;  /* stop iteration */
+    if (it->p < 0)  /* no more positions -- stop iteration */
+        return NULL;
     return PyLong_FromLongLong(it->p++);
 }
 
@@ -2208,6 +2235,8 @@ bitarray_methods[] = {
      buffer_info_doc},
     {"bytereverse",  (PyCFunction) bitarray_bytereverse, METH_NOARGS,
      bytereverse_doc},
+    {"_contains",    (PyCFunction) bitarray_contains,    METH_O,
+     contains_doc},
     {"copy",         (PyCFunction) bitarray_copy,        METH_NOARGS,
      copy_doc},
     {"count",        (PyCFunction) bitarray_count,       METH_VARARGS,
