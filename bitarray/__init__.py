@@ -117,14 +117,17 @@ Given a bitarray (or an object which can be converted to a bitarray),
 returns the start positions where bitarray matches self as a list.
 The optional argument limits the number of search results to the integer
 specified.  By default, all search results are returned."""
-        return self._search(bitarray(x), limit)
+        if not isinstance(x, bitarray):
+            x = bitarray(x)
+        return self._search(x, limit)
 
     def itersearch(self, x):
         """itersearch(bitarray) -> iterator
 
 Given a bitarray (or an object which can be converted to a bitarray),
 iterates over the start positions where bitarray matches self."""
-        x = bitarray(x)
+        if not isinstance(x, bitarray):
+            x = bitarray(x)
         p = 0
         while 1:
             p = self._search_at(x, p)
@@ -148,6 +151,8 @@ will be performed to determine return value."""
                 return True
             except ValueError:
                 return False
+        elif isinstance(other, bitarray):
+            return self._search_at(other, 0) is not None
         else:
             return self._search_at(bitarray(other), 0) is not None
 
