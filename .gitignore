@@ -2,7 +2,6 @@
 *.pyc
 *.egg-info
 *.so
-README.bak
 README.html
 build/
 dist/
