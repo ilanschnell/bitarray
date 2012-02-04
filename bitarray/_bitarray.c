@@ -925,7 +925,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "On:_search", &x, &limit))
         return NULL;
 
-    assert(bitarray_Check(x));
+    assert (bitarray_Check(x));
     xa = (bitarrayobject *) x;
 
     if (xa->nbits == 0) {
@@ -975,7 +975,7 @@ bitarray_search_at(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "OL:_search_at", &x, &p))
         return NULL;
 
-    assert(bitarray_Check(x));
+    assert (bitarray_Check(x));
     xa = (bitarrayobject *) x;
 
     if (xa->nbits == 0) {
@@ -2384,8 +2384,7 @@ bitarrayiter_next(bitarrayiterobject *it)
     assert (BitarrayIter_Check(it));
     if (it->index < it->bao->nbits)
         return PyBool_FromLong(GETBIT(it->bao, it->index++));
-    else
-        return NULL;  /* stop iteration */
+    return NULL;  /* stop iteration */
 }
 
 static void
