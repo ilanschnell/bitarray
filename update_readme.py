@@ -9,10 +9,8 @@ fo = None
 
 
 def write_changelog():
-    fo.write("""Change log
-----------
-
-""")
+    fo.write("Change log\n"
+             "----------\n\n")
     ver_pat = re.compile(r'(\d{4}-\d{2}-\d{2})\s+(\d+\.\d+\.\d+)')
     count = 0
     for line in open('CHANGE_LOG'):
@@ -46,28 +44,18 @@ def write_doc(name):
 
 
 def write_reference():
-    fo.write("""\
-Reference
----------
-
-**The bitarray class:**
-
-""")
+    fo.write("Reference\n"
+             "---------\n\n"
+             "**The bitarray class:**\n\n")
     write_doc('bitarray')
 
-    fo.write("""\
-**A bitarray object supports the following methods:**
-
-""")
+    fo.write("**A bitarray object supports the following methods:**\n\n")
     for method in sorted(dir(bitarray.bitarray)):
         if method.startswith('_'):
             continue
         write_doc('bitarray.%s' % method)
 
-    fo.write("""\
-**Functions defined in the module:**
-
-""")
+    fo.write("**Functions defined in the module:**\n\n")
     write_doc('test')
     write_doc('bits2bytes')
 
