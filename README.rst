@@ -420,10 +420,12 @@ Reference
 
 ``pop([i])`` -> item
    Return the i-th (default last) element and delete it from the bitarray.
+   Raises IndexError if bitarray is empty or index is out of range.
 
 
 ``remove(x)``
    Remove the first occurrence of x in the bitarray.
+   Raises ValueError if x is not present.
 
 
 ``reverse()``

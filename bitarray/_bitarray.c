@@ -1659,7 +1659,6 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
 
     if (insert_n(self, i, 1) < 0)
         return NULL;
-
     set_item(self, i, v);
     Py_RETURN_NONE;
 }
@@ -1700,7 +1699,8 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(pop_doc,
 "pop([i]) -> item\n\
 \n\
-Return the i-th (default last) element and delete it from the bitarray.");
+Return the i-th (default last) element and delete it from the bitarray.\n\
+Raises IndexError if bitarray is empty or index is out of range.");
 
 
 static PyObject *
@@ -1726,7 +1726,8 @@ bitarray_remove(bitarrayobject *self, PyObject *v)
 PyDoc_STRVAR(remove_doc,
 "remove(x)\n\
 \n\
-Remove the first occurrence of x in the bitarray.");
+Remove the first occurrence of x in the bitarray.\n\
+Raises ValueError if x is not present.");
 
 
 /* --------- special methods ----------- */
