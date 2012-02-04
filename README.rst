@@ -4,7 +4,7 @@ bitarray: efficient arrays of booleans
 
 This module provides an object type which efficiently represents an array
 of booleans.  Bitarrays are sequence types and behave very much like usual
-lists.  Eight bits are represented by one byte in contiguous block of
+lists.  Eight bits are represented by one byte in a contiguous block of
 memory.  The user can select between two representations; little-endian
 and big-endian.  Most of the functionality is implemented in C.
 Methods for accessing the machine representation are provided.
@@ -167,8 +167,8 @@ specified explicitly:
    >>> b.tobytes()
    'C'
 
-Here the low-bit comes first because little-endian means that increasing
-numeric significance corresponds to an increasing address (or index).
+Here, the low-bit comes first because little-endian means that increasing
+numeric significance corresponds to an increasing address (index).
 So a[0] is the lowest and least significant bit, and a[7] is the highest
 and most significant bit.
 
@@ -180,7 +180,7 @@ and most significant bit.
    >>> a.tobytes()
    'C'
 
-Here the high-bit comes first because big-endian
+Here, the high-bit comes first because big-endian
 means "most-significant first".
 So a[0] is now the lowest and most significant bit, and a[7] is the highest
 and least significant bit.
@@ -237,7 +237,7 @@ objects, it is recommended to always explicitly specify the endianness.
 
 Unless, explicitly converting to machine representation, using
 the ``tobytes``, ``frombytes``, ``tofile`` and ``fromfile`` methods,
-the bit endianness will have no effect on any computation, and you
+the bit endianness will have no effect on any computation, and one
 can safely ignore setting the endianness, and other details of this section.
 
 
@@ -499,7 +499,7 @@ Change log
 2012-XX-XX   0.5.3:
 
   * use a priority queue for Huffman tree example (thanks to Ushma Bhatt)
-  * improve docstrings
+  * improve documentation
 
 
 
