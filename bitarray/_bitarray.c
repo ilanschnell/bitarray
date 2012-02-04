@@ -863,9 +863,9 @@ bitarray_count(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(count_doc,
-"count([x]) -> int\n\
+"count([value]) -> int\n\
 \n\
-Return number of occurrences of x in the bitarray.  x defaults to True.");
+Return number of occurrences of value (defaults to True) in the bitarray.");
 
 
 static PyObject *
@@ -891,10 +891,10 @@ bitarray_index(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(index_doc,
-"index(x, [start, [stop]]) -> int\n\
+"index(value, [start, [stop]]) -> int\n\
 \n\
-Return index of the first occurrence of x in the bitarray.\n\
-It is an error when x does not occur in the bitarray");
+Return index of the first occurrence of bool(value) in the bitarray.\n\
+It is an error when the value does not occur in the bitarray");
 
 
 static PyObject *
@@ -960,9 +960,9 @@ error:
 }
 
 PyDoc_STRVAR(search_doc,
-"_search(x, limit) -> list\n\
+"_search(bitarray, limit) -> list\n\
 \n\
-like search but x has to be a bitarray.");
+like search but first argument has to be a bitarray.");
 
 
 static PyObject *
@@ -1004,10 +1004,10 @@ bitarray_search_at(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(search_at_doc,
-"_search_at(x, start) -> int or None\n\
+"_search_at(bitarray, start) -> int or None\n\
 \n\
-search for bitarray x starting at start, and return the index where the\n\
-bitarray x is found (or None if x is not found).");
+search for bitarray starting at start, and return the index where the\n\
+bitarray is found (or None if bitarray is not found).");
 
 
 static PyObject *
@@ -1063,9 +1063,9 @@ bitarray_append(bitarrayobject *self, PyObject *v)
 }
 
 PyDoc_STRVAR(append_doc,
-"append(x)\n\
+"append(item)\n\
 \n\
-Append the value bool(x) to the end of the bitarray.");
+Append the value bool(item) to the end of the bitarray.");
 
 
 static PyObject *
@@ -1228,9 +1228,9 @@ bitarray_setall(bitarrayobject *self, PyObject *v)
 }
 
 PyDoc_STRVAR(setall_doc,
-"setall(x)\n\
+"setall(value)\n\
 \n\
-Set all bits in the bitarray to bool(x).");
+Set all bits in the bitarray to bool(value).");
 
 
 static PyObject *
@@ -1664,9 +1664,9 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(insert_doc,
-"insert(i, x)\n\
+"insert(i, item)\n\
 \n\
-Insert a new item x into the bitarray before position i.");
+Insert bool(item) into the bitarray before position i.");
 
 
 static PyObject *
@@ -1724,10 +1724,10 @@ bitarray_remove(bitarrayobject *self, PyObject *v)
 }
 
 PyDoc_STRVAR(remove_doc,
-"remove(x)\n\
+"remove(item)\n\
 \n\
-Remove the first occurrence of x in the bitarray.\n\
-Raises ValueError if x is not present.");
+Remove the first occurrence of bool(item) in the bitarray.\n\
+Raises ValueError if item is not present.");
 
 
 /* --------- special methods ----------- */

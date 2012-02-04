@@ -315,8 +315,8 @@ Reference
    Returns True when any bit in the array is True.
 
 
-``append(x)``
-   Append the value bool(x) to the end of the bitarray.
+``append(item)``
+   Append the value bool(item) to the end of the bitarray.
 
 
 ``buffer_info()`` -> tuple
@@ -337,8 +337,8 @@ Reference
    Return a copy of the bitarray.
 
 
-``count([x])`` -> int
-   Return number of occurrences of x in the bitarray.  x defaults to True.
+``count([value])`` -> int
+   Return number of occurrences of value (defaults to True) in the bitarray.
 
 
 ``decode(code)`` -> list
@@ -382,13 +382,13 @@ Reference
    Deprecated since version 0.4.0, use ``frombytes()`` instead.
 
 
-``index(x, [start, [stop]])`` -> int
-   Return index of the first occurrence of x in the bitarray.
-   It is an error when x does not occur in the bitarray
+``index(value, [start, [stop]])`` -> int
+   Return index of the first occurrence of bool(value) in the bitarray.
+   It is an error when the value does not occur in the bitarray
 
 
-``insert(i, x)``
-   Insert a new item x into the bitarray before position i.
+``insert(i, item)``
+   Insert bool(item) into the bitarray before position i.
 
 
 ``invert()``
@@ -396,9 +396,9 @@ Reference
    i.e. convert each 1-bit into a 0-bit and vice versa.
 
 
-``itersearch(x)`` -> iterator
-   Given a bitarray x (or an object which can be converted to a bitarray),
-   iterates over the start positions where x matches self.
+``itersearch(bitarray)`` -> iterator
+   Given a bitarray (or an object which can be converted to a bitarray),
+   iterates over the start positions where bitarray matches self.
 
 
 ``length()`` -> int
@@ -423,24 +423,24 @@ Reference
    Raises IndexError if bitarray is empty or index is out of range.
 
 
-``remove(x)``
-   Remove the first occurrence of x in the bitarray.
-   Raises ValueError if x is not present.
+``remove(item)``
+   Remove the first occurrence of bool(item) in the bitarray.
+   Raises ValueError if item is not present.
 
 
 ``reverse()``
    Reverse the order of bits in the array (in-place).
 
 
-``search(x, [limit])`` -> list
-   Given a bitarray x (or an object which can be converted to a bitarray),
-   returns the start positions where x matches self as a list.
+``search(bitarray, [limit])`` -> list
+   Given a bitarray (or an object which can be converted to a bitarray),
+   returns the start positions where bitarray matches self as a list.
    The optional argument limits the number of search results to the integer
    specified.  By default, all search results are returned.
 
 
-``setall(x)``
-   Set all bits in the bitarray to bool(x).
+``setall(value)``
+   Set all bits in the bitarray to bool(value).
 
 
 ``sort(reverse=False)``

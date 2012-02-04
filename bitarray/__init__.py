@@ -111,19 +111,19 @@ with the corresponding bitarray for each symbols."""
         self._encode(codedict, iterable)
 
     def search(self, x, limit=-1):
-        """search(x, [limit]) -> list
+        """search(bitarray, [limit]) -> list
 
-Given a bitarray x (or an object which can be converted to a bitarray),
-returns the start positions where x matches self as a list.
+Given a bitarray (or an object which can be converted to a bitarray),
+returns the start positions where bitarray matches self as a list.
 The optional argument limits the number of search results to the integer
 specified.  By default, all search results are returned."""
         return self._search(bitarray(x), limit)
 
     def itersearch(self, x):
-        """itersearch(x) -> iterator
+        """itersearch(bitarray) -> iterator
 
-Given a bitarray x (or an object which can be converted to a bitarray),
-iterates over the start positions where x matches self."""
+Given a bitarray (or an object which can be converted to a bitarray),
+iterates over the start positions where bitarray matches self."""
         x = bitarray(x)
         p = 0
         while 1:
