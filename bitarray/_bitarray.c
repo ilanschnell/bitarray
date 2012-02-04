@@ -467,6 +467,23 @@ findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
     return -1;
 }
 
+static idx_t
+search(bitarrayobject *self, bitarrayobject *xa, idx_t p)
+{
+    idx_t n;
+
+    while (p < self->nbits - xa->nbits + 1) {
+        for (n = 0; n < xa->nbits; n++)
+            if (GETBIT(self, p + n) != GETBIT(xa, n))
+                goto next;
+
+        return p;
+    next:
+        p++;
+    }
+    return -1;
+}
+
 static int
 set_item(bitarrayobject *self, idx_t i, PyObject *v)
 {
@@ -920,7 +937,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     PyObject *x, *item = NULL;
     Py_ssize_t limit;
     bitarrayobject *xa;
-    idx_t p, n;
+    idx_t p;
 
     if (!PyArg_ParseTuple(args, "On:_search", &x, &limit))
         return NULL;
@@ -936,21 +953,17 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     if (xa->nbits > self->nbits || limit == 0)
         return list;
 
-    for (p = 0; p < self->nbits - xa->nbits + 1; p++) {
-        for (n = 0; n < xa->nbits; n++)
-            if (GETBIT(self, p + n) != GETBIT(xa, n))
-                goto next;
-
-        /* we have a match, append the position to the list */
-        item = PyLong_FromLongLong(p);
+    p = 0;
+    while (1) {
+        p = search(self, xa, p);
+        if (p < 0)
+            break;
+        item = PyLong_FromLongLong(p++);
         if (item == NULL || PyList_Append(list, item) < 0)
             goto error;
-
         Py_DECREF(item);
         if (limit > 0 && PyList_Size(list) >= limit)
             break;
-    next:
-        ; /* do nothing */
     }
     return list;
 error:
@@ -963,51 +976,6 @@ PyDoc_STRVAR(search_doc,
 "_search(bitarray, limit) -> list\n\
 \n\
 like search but first argument has to be a bitarray.");
-
-
-static PyObject *
-bitarray_search_at(bitarrayobject *self, PyObject *args)
-{
-    PyObject *x;
-    bitarrayobject *xa;
-    idx_t p, n;
-
-    if (!PyArg_ParseTuple(args, "OL:_search_at", &x, &p))
-        return NULL;
-
-    assert (bitarray_Check(x));
-    xa = (bitarrayobject *) x;
-
-    if (xa->nbits == 0) {
-        PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
-        return NULL;
-    }
-    if (xa->nbits > self->nbits)
-        Py_RETURN_NONE;
-
-    if (p < 0) {
-        PyErr_SetString(PyExc_ValueError, "positive start value expected");
-        return NULL;
-    }
-
-    for (; p < self->nbits - xa->nbits + 1; p++) {
-        for (n = 0; n < xa->nbits; n++)
-            if (GETBIT(self, p + n) != GETBIT(xa, n))
-                goto next;
-
-        /* we have a match, return the position */
-        return PyLong_FromLongLong(p);
-    next:
-        ; /* do nothing */
-    }
-    Py_RETURN_NONE;
-}
-
-PyDoc_STRVAR(search_at_doc,
-"_search_at(bitarray, start) -> int or None\n\
-\n\
-search for bitarray starting at start, and return the index where the\n\
-bitarray is found (or None if bitarray is not found).");
 
 
 static PyObject *
@@ -2165,19 +2133,10 @@ bitarraysearchiter_next(bitarraysearchiterobject *it)
 {
     idx_t n;
 
-    if (it->xa->nbits > it->bao->nbits)
-        return NULL;
-
-    while (it->p < it->bao->nbits - it->xa->nbits + 1) {
-        for (n = 0; n < it->xa->nbits; n++)
-            if (GETBIT(it->bao, it->p + n) != GETBIT(it->xa, n))
-                goto next;
-
-        return PyLong_FromLongLong(it->p++);
-    next:
-        it->p++;
-    }
-    return NULL;  /* stop iteration */
+    it->p = search(it->bao, it->xa, it->p);
+    if (it->p < 0)
+        return NULL;  /* stop iteration */
+    return PyLong_FromLongLong(it->p++);
 }
 
 static void
@@ -2287,8 +2246,6 @@ bitarray_methods[] = {
      setall_doc},
     {"_search",      (PyCFunction) bitarray_search,      METH_VARARGS,
      search_doc},
-    {"_search_at",   (PyCFunction) bitarray_search_at,   METH_VARARGS,
-     search_at_doc},
     {"_itersearch",  (PyCFunction) bitarray_itersearch,  METH_O,
      itersearch_doc},
     {"sort",         (PyCFunction) bitarray_sort,        METH_VARARGS |

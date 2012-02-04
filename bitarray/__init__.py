@@ -145,10 +145,17 @@ will be performed to determine return value."""
                 return True
             except ValueError:
                 return False
-        elif isinstance(other, bitarray):
-            return self._search_at(other, 0) is not None
         else:
-            return self._search_at(bitarray(other), 0) is not None
+            if len(other) == 0:
+                return True
+            if not isinstance(other, bitarray):
+                other = bitarray(other)
+            it = self._itersearch(other)
+            try:
+                it.next()
+                return True
+            except StopIteration:
+                return False
 
 
 def test(verbosity=1, repeat=1):
