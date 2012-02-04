@@ -47,7 +47,7 @@ def _check_codedict(codedict):
 
 
 class bitarray(_bitarray):
-    """bitarray([initial][endian=string])
+    """bitarray([initial], [endian=string])
 
 Return a new bitarray object whose items are bits initialized from
 the optional initial, and endianness.

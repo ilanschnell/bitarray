@@ -275,7 +275,7 @@ Reference
 
 **The bitarray class:**
 
-``bitarray([initial][endian=string])``
+``bitarray([initial], [endian=string])``
    Return a new bitarray object whose items are bits initialized from
    the optional initial, and endianness.
    If no object is provided, the bitarray is initialized to have length zero.
