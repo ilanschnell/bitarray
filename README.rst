@@ -466,7 +466,10 @@ Reference
 
 ``tolist()`` -> list
    Return an ordinary list with the items in the bitarray.
-   Note: To extend a bitarray with elements from a list,
+   Note that the list object being created will require 32 or 64 times more
+   memory than the bitarray object, which may cause a memory error if the
+   bitarray is very large.
+   Also note that to extend a bitarray with elements from a list,
    use the extend method.
 
 

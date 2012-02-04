@@ -16,4 +16,4 @@ clean:
 	rm -f bitarray/_bitarray.so
 	rm -f bitarray/*.pyc
 	rm -rf bitarray/__pycache__ *.egg-info
-	rm -f README.html README.bak
+	rm -f README.html
