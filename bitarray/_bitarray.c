@@ -1654,7 +1654,7 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
         if (i < 0)
             i = 0;
     }
-    if (i >= self->nbits)
+    if (i > self->nbits)
         i = self->nbits;
 
     if (insert_n(self, i, 1) < 0)

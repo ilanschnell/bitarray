@@ -1134,12 +1134,13 @@ class MethodTests(unittest.TestCase, Util):
 
         for a in self.randombitarrays():
             aa = a.tolist()
-            item = bool(randint(0, 1))
-            pos = randint(-len(a), len(a))
-            a.insert(pos, item)
-            aa.insert(pos, item)
-            self.assertEqual(a.tolist(), aa)
-            self.check_obj(a)
+            for _ in range(50):
+                item = bool(randint(0, 1))
+                pos = randint(-len(a) - 2, len(a) + 2)
+                a.insert(pos, item)
+                aa.insert(pos, item)
+                self.assertEqual(a.tolist(), aa)
+                self.check_obj(a)
 
 
     def test_index(self):
