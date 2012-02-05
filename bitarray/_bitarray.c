@@ -817,7 +817,6 @@ slice_GetIndicesEx(PySliceObject *r, idx_t length,
     else {
         if (getIndex(r->step, step) < 0)
             return -1;
-
         if (*step == 0) {
             PyErr_SetString(PyExc_ValueError, "slice step cannot be zero");
             return -1;
@@ -1792,7 +1791,8 @@ bitarray_getitem(bitarrayobject *self, PyObject *a)
     idx_t start, stop, step, slicelength, j, i = 0;
 
     if (IS_INDEX(a)) {
-        getIndex(a, &i);
+        if (getIndex(a, &i) < 0)
+            return NULL;
         if (i < 0)
             i += self->nbits;
         if (i < 0 || i >= self->nbits) {
@@ -1884,7 +1884,8 @@ bitarray_setitem(bitarrayobject *self, PyObject *args)
         return NULL;
 
     if (IS_INDEX(a)) {
-        getIndex(a, &i);
+        if (getIndex(a, &i) < 0)
+            return NULL;
         if (i < 0)
             i += self->nbits;
         if (i < 0 || i >= self->nbits) {
@@ -1910,7 +1911,8 @@ bitarray_delitem(bitarrayobject *self, PyObject *a)
     idx_t start, stop, step, slicelength, j, i = 0;
 
     if (IS_INDEX(a)) {
-        getIndex(a, &i);
+        if (getIndex(a, &i) < 0)
+            return NULL;
         if (i < 0)
             i += self->nbits;
         if (i < 0 || i >= self->nbits) {
@@ -1990,7 +1992,8 @@ bitarray_mul(bitarrayobject *self, PyObject *v)
                         "integer value expected for bitarray repetition");
         return NULL;
     }
-    getIndex(v, &vi);
+    if (getIndex(v, &vi) < 0)
+        return NULL;
     res = bitarray_copy(self);
     if (repeat((bitarrayobject *) res, vi) < 0) {
         Py_DECREF(res);
@@ -2009,7 +2012,8 @@ bitarray_imul(bitarrayobject *self, PyObject *v)
             "integer value expected for in-place bitarray repetition");
         return NULL;
     }
-    getIndex(v, &vi);
+    if (getIndex(v, &vi) < 0)
+        return NULL;
     if (repeat(self, vi) < 0)
         return NULL;
 
@@ -2416,8 +2420,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* int, long */
     if (IS_INDEX(initial)) {
-        getIndex(initial, &nbits);
-
+        if (getIndex(initial, &nbits) < 0)
+            return NULL;
         if (nbits < 0) {
             PyErr_SetString(PyExc_ValueError,
                             "cannot create bitarray with negative length");
@@ -2668,7 +2672,8 @@ bits2bytes(PyObject *self, PyObject *v)
         PyErr_SetString(PyExc_TypeError, "integer expected");
         return NULL;
     }
-    getIndex(v, &n);
+    if (getIndex(v, &n) < 0)
+        return NULL;
     if (n < 0) {
         PyErr_SetString(PyExc_ValueError, "positive value expected");
         return NULL;
