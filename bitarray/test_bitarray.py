@@ -973,9 +973,9 @@ class SequenceTests(unittest.TestCase, Util):
         a.append(1)
         self.assertEqual(a.__contains__(1), True)
         a = bitarray('0011')
-        self.assertEqual(a.__contains__('01'), True)
-        self.assertEqual(a.__contains__('10'), False)
-        self.assertRaises(ValueError, a.__contains__, 'asdf')
+        self.assertEqual(a.__contains__(bitarray('01')), True)
+        self.assertEqual(a.__contains__(bitarray('10')), False)
+        self.assertRaises(TypeError, a.__contains__, 'asdf')
         self.assertRaises(ValueError, a.__contains__, 2)
         self.assertRaises(ValueError, a.__contains__, -1)
         if not is_py3k:
@@ -999,14 +999,9 @@ class SequenceTests(unittest.TestCase, Util):
 
     def test_contains4(self):
         a = bitarray('011010000001')
-        self.assert_('' in a)
-        self.assert_('1' in a)
-        self.assert_('11' in a)
-        self.assert_('111' not in a)
-        self.assert_(bitarray('00') in a)
-        self.assert_([0, 0, 0, 1] in a)
-        self.assert_((0, 0, 0, 1, 1) not in a)
-        self.assert_((0, 0, 0, 0, 2) in a)
+        for s, r in [('', True), ('1', True), ('11', True), ('111', False),
+                     ('011', True), ('0001', True), ('00011', False)]:
+            self.assertEqual(bitarray(s) in a, r)
 
 
 tests.append(SequenceTests)
@@ -1262,20 +1257,22 @@ class MethodTests(unittest.TestCase, Util):
 
         a = bitarray('10010101110011111001011')
         for limit in range(10):
-            self.assertEqual(a.search('011', limit),
+            self.assertEqual(a.search(bitarray('011'), limit),
                              [6, 11, 20][:limit])
-        self.assertRaises(ValueError, a.search, '')
+        self.assertRaises(ValueError, a.search, bitarray())
+        self.assertRaises(TypeError, a.search, '010')
 
     def test_itersearch(self):
         if is_py3k:
             return
         a = bitarray('10011')
-        it = a.itersearch('1')
+        it = a.itersearch(bitarray('1'))
         self.assertEqual(it.next(), 0)
         self.assertEqual(it.next(), 3)
         self.assertEqual(it.next(), 4)
         self.assertRaises(StopIteration, it.next)
-        self.assertRaises(ValueError, a.itersearch, '')
+        self.assertRaises(ValueError, a.itersearch, bitarray())
+        self.assertRaises(TypeError, a.itersearch, '')
 
     def test_search2(self):
         a = bitarray('10011')
@@ -1284,12 +1281,9 @@ class MethodTests(unittest.TestCase, Util):
                        ('000',   []),      ('1001', [0]),
                        ('011',   [2]),     ('0011', [1]),
                        ('10011', [0]),     ('100111', [])]:
-            self.assertEqual(a.search(s), res)
-            self.assertEqual([p for p in a.itersearch(s)], res)
             b = bitarray(s)
             self.assertEqual(a.search(b), res)
-            self.assertEqual(a.search(list(b)), res)
-            self.assertEqual(a.search(tuple(b)), res)
+            self.assertEqual([p for p in a.itersearch(b)], res)
 
     def test_search3(self):
         a = bitarray('10010101110011111001011')
@@ -1297,9 +1291,10 @@ class MethodTests(unittest.TestCase, Util):
                        ('111', [7, 12, 13, 14]), # note the overlap
                        ('1011', [5, 19]),
                        ('100', [0, 9, 16])]:
-            self.assertEqual(a.search(s), res)
-            self.assertEqual(list(a.itersearch(s)), res)
-            self.assertEqual([p for p in a.itersearch(s)], res)
+            b = bitarray(s)
+            self.assertEqual(a.search(b), res)
+            self.assertEqual(list(a.itersearch(b)), res)
+            self.assertEqual([p for p in a.itersearch(b)], res)
 
 
     def test_fill(self):

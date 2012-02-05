@@ -48,8 +48,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-0.5.3.tar.gz
-   $ cd bitarray-0.5.3
+   $ tar xzf bitarray-0.6.0.tar.gz
+   $ cd bitarray-0.6.0
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -60,7 +60,7 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-   bitarray version: 0.5.3
+   bitarray version: 0.6.0
    2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
    ................................
@@ -397,8 +397,8 @@ Reference
 
 
 ``itersearch(bitarray)`` -> iterator
-   Given a bitarray (or an object which can be converted to a bitarray),
-   iterates over the start positions where bitarray matches self.
+   Searches for the given a bitarray in self, and return an iterator over
+   the start positions where bitarray matches self.
 
 
 ``length()`` -> int
@@ -433,8 +433,8 @@ Reference
 
 
 ``search(bitarray, [limit])`` -> list
-   Given a bitarray (or an object which can be converted to a bitarray),
-   returns the start positions where bitarray matches self as a list.
+   Searches for the given a bitarray in self, and returns the start positions
+   where bitarray matches self as a list.
    The optional argument limits the number of search results to the integer
    specified.  By default, all search results are returned.
 
@@ -501,11 +501,13 @@ Reference
 Change log
 ----------
 
-2012-XX-XX   0.5.3:
+2012-XX-XX   0.6.0:
 
   * allow slice assignment to 0 or 1, e.g. a[::3] = 0  (in addition to
     booleans)
   * moved implementation of itersearch method to C level (Lluis Pamies)
+  * search, itersearch now only except bitarray objects,
+    whereas __contains__ excepts either booleans or bitarrays
   * use a priority queue for Huffman tree example (thanks to Ushma Bhatt)
   * improve documentation
 

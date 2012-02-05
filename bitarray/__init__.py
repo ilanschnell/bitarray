@@ -8,7 +8,7 @@ Please find a description of this package at:
 
 Author: Ilan Schnell
 """
-__version__ = '0.5.3'
+__version__ = '0.6.0'
 
 from ._bitarray import _bitarray, bits2bytes, _sysinfo
 
@@ -109,26 +109,6 @@ iterates over iterable object with symbols, and extends the bitarray
 with the corresponding bitarray for each symbols."""
         _check_codedict(codedict)
         self._encode(codedict, iterable)
-
-    def search(self, x, limit=-1):
-        """search(bitarray, [limit]) -> list
-
-Given a bitarray (or an object which can be converted to a bitarray),
-returns the start positions where bitarray matches self as a list.
-The optional argument limits the number of search results to the integer
-specified.  By default, all search results are returned."""
-        if not isinstance(x, bitarray):
-            x = bitarray(x)
-        return self._search(x, limit)
-
-    def itersearch(self, x):
-        """itersearch(bitarray) -> iterator
-
-Given a bitarray (or an object which can be converted to a bitarray),
-iterates over the start positions where bitarray matches self."""
-        if not isinstance(x, bitarray):
-            x = bitarray(x)
-        return self._itersearch(x)
 
 
 def test(verbosity=1, repeat=1):

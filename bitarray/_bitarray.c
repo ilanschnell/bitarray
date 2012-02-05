@@ -317,7 +317,7 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
 
     if (!bitarray_Check(arg)) {
         PyErr_SetString(PyExc_TypeError,
-                        "bitarray objects expected for bitwise operation");
+                        "bitarray object expected for bitwise operation");
         return -1;
     }
     other = (bitarrayobject *) arg;
@@ -987,17 +987,8 @@ bitarray_contains(bitarrayobject *self, PyObject *x)
         res = search(self, (bitarrayobject *) x, 0) >= 0;
     }
     else {
-        PyObject *t;
-
-        t = newbitarrayobject(Py_TYPE(self), 0, self->endian);
-        if (t == NULL)
-            return NULL;
-        if (extend_dispatch((bitarrayobject *) t, x) < 0) {
-            Py_DECREF(t);
-            return NULL;
-        }
-        res = search(self, (bitarrayobject *) t, 0) >= 0;
-        Py_DECREF(t);
+        PyErr_SetString(PyExc_TypeError, "bitarray or bool expected");
+        return NULL;
     }
     return PyBool_FromLong(res);
 }
@@ -1006,11 +997,7 @@ PyDoc_STRVAR(contains_doc,
 "__contains__(x) -> bool\n\
 \n\
 Return True if bitarray contains x, False otherwise.\n\
-If x is an integer or a boolean, determine whether or not the\n\
-corresponding bit is contained in the bitarray.\n\
-If x is an object which can be cast into a bitarray, such as e.g.\n\
-the string '0110', a list, or a bitarray itself, a sequential search\n\
-will be performed to determine return value.");
+The value x may be a boolean (or integer between 0 and 1), or a bitarray.");
 
 
 static PyObject *
@@ -1026,7 +1013,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
         return NULL;
 
     if (!bitarray_Check(x)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray expected");
+        PyErr_SetString(PyExc_TypeError, "bitarray expected for search");
         return NULL;
     }
     xa = (bitarrayobject *) x;
@@ -1057,9 +1044,12 @@ bitarray_search(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(search_doc,
-"_search(bitarray, limit) -> list\n\
+"search(bitarray, [limit]) -> list\n\
 \n\
-like search but first argument has to be a bitarray.");
+Searches for the given a bitarray in self, and returns the start positions\n\
+where bitarray matches self as a list.\n\
+The optional argument limits the number of search results to the integer\n\
+specified.  By default, all search results are returned.");
 
 
 static PyObject *
@@ -1571,7 +1561,6 @@ bitarray_frombytes(bitarrayobject *self, PyObject *string)
 
     if (extend_rawstring(self, string) < 0)
         return NULL;
-
     if (delete_n(self, t, p) < 0)
         return NULL;
     Py_RETURN_NONE;
@@ -2191,9 +2180,11 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
     bitarraysearchiterobject *it;  /* positions to be returned */
     bitarrayobject *xa;
 
-    assert (bitarray_Check(x));
+    if (!bitarray_Check(x)) {
+        PyErr_SetString(PyExc_TypeError, "bitarray expected for itersearch");
+        return NULL;
+    }
     xa = (bitarrayobject *) x;
-
     if (xa->nbits == 0) {
         PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
         return NULL;
@@ -2213,9 +2204,10 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
 }
 
 PyDoc_STRVAR(itersearch_doc,
-"_itersearch(bitarray) -> iterator\n\
+"itersearch(bitarray) -> iterator\n\
 \n\
-like itersearch but requires bitarray");
+Searches for the given a bitarray in self, and return an iterator over\n\
+the start positions where bitarray matches self.");
 
 
 static PyObject *
@@ -2332,9 +2324,9 @@ bitarray_methods[] = {
      reverse_doc},
     {"setall",       (PyCFunction) bitarray_setall,      METH_O,
      setall_doc},
-    {"_search",      (PyCFunction) bitarray_search,      METH_VARARGS,
+    {"search",       (PyCFunction) bitarray_search,      METH_VARARGS,
      search_doc},
-    {"_itersearch",  (PyCFunction) bitarray_itersearch,  METH_O,
+    {"itersearch",   (PyCFunction) bitarray_itersearch,  METH_O,
      itersearch_doc},
     {"sort",         (PyCFunction) bitarray_sort,        METH_VARARGS |
                                                          METH_KEYWORDS,
