@@ -952,7 +952,6 @@ class SequenceTests(unittest.TestCase, Util):
         if not is_py3k:
             self.assert_(long(0) in a)
             self.assert_(long(1) in a)
-            self.assert_(long(10) in a)
 
     def test_contains2(self):
         a = bitarray()
@@ -963,6 +962,10 @@ class SequenceTests(unittest.TestCase, Util):
         self.assertEqual(a.__contains__('01'), True)
         self.assertEqual(a.__contains__('10'), False)
         self.assertRaises(ValueError, a.__contains__, 'asdf')
+#        self.assertRaises(ValueError, a.__contains__, 2)
+#        self.assertRaises(ValueError, a.__contains__, -1)
+#        if not is_py3k:
+#            self.assertRaises(ValueError, a.__contains__, long(2))
 
     def test_contains3(self):
         for n in range(2, 100):

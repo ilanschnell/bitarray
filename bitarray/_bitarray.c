@@ -725,14 +725,17 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     return ret;
 }
 
-/* --------- helper functions not involving bitarrayobjects ------------ */
+/* --------- helper functions NOT involving bitarrayobjects ------------ */
 
 #define ENDIANSTR(x)  ((x) ? "big" : "little")
 
 #ifdef IS_PY3K
 #define ISINDEX(x)  (PyLong_Check(x) || PyIndex_Check(x))
+#define IS_INT_OR_BOOL(x)  (PyBool_Check(x) || PyLong_Check(x))
 #else
 #define ISINDEX(x)  (PyInt_Check(x) || PyLong_Check(x) || PyIndex_Check(x))
+#define IS_INT_OR_BOOL(x)  (PyBool_Check(x) || PyInt_Check(x) || \
+                                               PyLong_Check(x))
 #endif
 
 /* Extract a slice index from a PyInt or PyLong or an object with the
@@ -938,11 +941,7 @@ bitarray_contains(bitarrayobject *self, PyObject *x)
 {
     long res;
 
-#ifdef IS_PY3K
-    if (PyLong_Check(x)) {
-#else
-    if (PyInt_Check(x) || PyLong_Check(x)) {
-#endif
+    if (IS_INT_OR_BOOL(x)) {
         long vi;
 
         vi = PyObject_IsTrue(x);
