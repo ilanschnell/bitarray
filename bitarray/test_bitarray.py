@@ -473,6 +473,17 @@ class SliceTests(unittest.TestCase, Util):
         a[:] = True
         self.assertEqual(a, bitarray('11111111'))
 
+    def test_setslice_to_int(self):
+        a = bitarray('11111111')
+        a[::2] = 0
+        self.assertEqual(a, bitarray('01010101'))
+        a[4::] = 1
+        self.assertEqual(a, bitarray('01011111'))
+        try:
+            a[::2] = 3
+        except ValueError:
+            pass
+
 
     def test_delitem1(self):
         a = bitarray('100110')

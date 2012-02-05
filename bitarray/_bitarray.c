@@ -1858,8 +1858,8 @@ setslice(bitarrayobject *self, PySliceObject *slice, PyObject *v)
 #undef vv
         return 0;
     }
-    if (PyBool_Check(v)) {
-        vi = PyObject_IsTrue(v);
+    if (IS_INT_OR_BOOL(v)) {
+        vi = getInt_or_Bool(v);
         if (vi < 0)
             return -1;
 
