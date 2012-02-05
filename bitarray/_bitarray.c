@@ -467,6 +467,23 @@ findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
     return -1;
 }
 
+static idx_t
+search(bitarrayobject *self, bitarrayobject *xa, idx_t p)
+{
+    idx_t n;
+
+    while (p < self->nbits - xa->nbits + 1) {
+        for (n = 0; n < xa->nbits; n++)
+            if (GETBIT(self, p + n) != GETBIT(xa, n))
+                goto next;
+
+        return p;
+    next:
+        p++;
+    }
+    return -1;
+}
+
 static int
 set_item(bitarrayobject *self, idx_t i, PyObject *v)
 {
@@ -912,13 +929,60 @@ object upon initialization.");
 
 
 static PyObject *
+bitarray_contains(bitarrayobject *self, PyObject *x)
+{
+    long res;
+
+#ifdef IS_PY3K
+    if (PyLong_Check(x)) {
+#else
+    if (PyInt_Check(x) || PyLong_Check(x)) {
+#endif
+        long vi;
+
+        vi = PyObject_IsTrue(x);
+        if (vi < 0)
+            return NULL;
+        res = findfirst(self, vi, 0, -1) >= 0;
+    }
+    else if (bitarray_Check(x)) {
+        res = search(self, (bitarrayobject *) x, 0) >= 0;
+    }
+    else {
+        PyObject *t;
+
+        t = newbitarrayobject(Py_TYPE(self), 0, self->endian);
+        if (t == NULL)
+            return NULL;
+        if (extend_dispatch((bitarrayobject *) t, x) < 0) {
+            Py_DECREF(t);
+            return NULL;
+        }
+        res = search(self, (bitarrayobject *) t, 0) >= 0;
+        Py_DECREF(t);
+    }
+    return PyBool_FromLong(res);
+}
+
+PyDoc_STRVAR(contains_doc,
+"__contains__(x) -> bool\n\
+\n\
+Return True if bitarray contains x, False otherwise.\n\
+If x is an integer (which includes booleans), it is determined\n\
+whether or not the corresponding bit is contained in the bitarray.\n\
+If x is an object which can be cast into a bitarray, such as e.g.\n\
+the string '0110', a list, or a bitarray itself, a sequential search\n\
+will be performed to determine return value.");
+
+
+static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
     PyObject *list = NULL;   /* list of matching positions to be returned */
     PyObject *x, *item = NULL;
     Py_ssize_t limit;
     bitarrayobject *xa;
-    idx_t p, n;
+    idx_t p;
 
     if (!PyArg_ParseTuple(args, "On:_search", &x, &limit))
         return NULL;
@@ -934,21 +998,17 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     if (xa->nbits > self->nbits || limit == 0)
         return list;
 
-    for (p = 0; p < self->nbits - xa->nbits + 1; p++) {
-        for (n = 0; n < xa->nbits; n++)
-            if (GETBIT(self, p + n) != GETBIT(xa, n))
-                goto next;
-
-        /* we have a match, append the position to the list */
-        item = PyLong_FromLongLong(p);
+    p = 0;
+    while (1) {
+        p = search(self, xa, p);
+        if (p < 0)
+            break;
+        item = PyLong_FromLongLong(p++);
         if (item == NULL || PyList_Append(list, item) < 0)
             goto error;
-
         Py_DECREF(item);
         if (limit > 0 && PyList_Size(list) >= limit)
             break;
-    next:
-        ; /* do nothing */
     }
     return list;
 error:
@@ -961,51 +1021,6 @@ PyDoc_STRVAR(search_doc,
 "_search(bitarray, limit) -> list\n\
 \n\
 like search but first argument has to be a bitarray.");
-
-
-static PyObject *
-bitarray_search_at(bitarrayobject *self, PyObject *args)
-{
-    PyObject *x;
-    bitarrayobject *xa;
-    idx_t p, n;
-
-    if (!PyArg_ParseTuple(args, "OL:_search_at", &x, &p))
-        return NULL;
-
-    assert (bitarray_Check(x));
-    xa = (bitarrayobject *) x;
-
-    if (xa->nbits == 0) {
-        PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
-        return NULL;
-    }
-    if (xa->nbits > self->nbits)
-        Py_RETURN_NONE;
-
-    if (p < 0) {
-        PyErr_SetString(PyExc_ValueError, "positive start value expected");
-        return NULL;
-    }
-
-    for (; p < self->nbits - xa->nbits + 1; p++) {
-        for (n = 0; n < xa->nbits; n++)
-            if (GETBIT(self, p + n) != GETBIT(xa, n))
-                goto next;
-
-        /* we have a match, return the position */
-        return PyLong_FromLongLong(p);
-    next:
-        ; /* do nothing */
-    }
-    Py_RETURN_NONE;
-}
-
-PyDoc_STRVAR(search_at_doc,
-"_search_at(bitarray, start) -> int or None\n\
-\n\
-search for bitarray starting at start, and return the index where the\n\
-bitarray is found (or None if bitarray is not found).");
 
 
 static PyObject *
@@ -2110,6 +2125,117 @@ Given a tree, decode the content of the bitarray and return the list of\n\
 symbols.");
 
 
+/*********************** Bitarray Search Iterator ***********************/
+
+typedef struct {
+    PyObject_HEAD
+    idx_t p;
+    bitarrayobject *bao;  /* bitarray we're searching in */
+    bitarrayobject *xa;   /* bitarray being searched for */
+} bitarraysearchiterobject;
+
+static PyTypeObject BitarraySearchIter_Type;
+
+#define BitarraySearchIter_Check(op)  \
+                  PyObject_TypeCheck(op, &BitarraSearchyIter_Type)
+
+static PyObject *
+bitarray_itersearch(bitarrayobject *self, PyObject *x)
+{
+    bitarraysearchiterobject *it;  /* positions to be returned */
+    bitarrayobject *xa;
+
+    assert (bitarray_Check(x));
+    xa = (bitarrayobject *) x;
+
+    if (xa->nbits == 0) {
+        PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
+        return NULL;
+    }
+
+    it = PyObject_GC_New(bitarraysearchiterobject, &BitarraySearchIter_Type);
+    if (it == NULL)
+        return NULL;
+
+    Py_INCREF(self);
+    it->bao = self;
+    Py_INCREF(xa);
+    it->xa = xa;
+    it->p = 0;
+    PyObject_GC_Track(it);
+    return (PyObject *) it;
+}
+
+PyDoc_STRVAR(itersearch_doc,
+"_itersearch(bitarray) -> iterator\n\
+\n\
+like itersearch but requires bitarray");
+
+
+static PyObject *
+bitarraysearchiter_next(bitarraysearchiterobject *it)
+{
+    it->p = search(it->bao, it->xa, it->p);
+    if (it->p < 0)  /* no more positions -- stop iteration */
+        return NULL;
+    return PyLong_FromLongLong(it->p++);
+}
+
+static void
+bitarraysearchiter_dealloc(bitarraysearchiterobject *it)
+{
+    PyObject_GC_UnTrack(it);
+    Py_XDECREF(it->bao);
+    Py_XDECREF(it->xa);
+    PyObject_GC_Del(it);
+}
+
+static int
+bitarraysearchiter_traverse(bitarraysearchiterobject *it,
+                            visitproc visit, void *arg)
+{
+    Py_VISIT(it->bao);
+    return 0;
+}
+
+static PyTypeObject BitarraySearchIter_Type = {
+#ifdef IS_PY3K
+    PyVarObject_HEAD_INIT(&BitarraySearchIter_Type, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                                        /* ob_size */
+#endif
+    "bitarraysearchiterator",                 /* tp_name */
+    sizeof(bitarraysearchiterobject),         /* tp_basicsize */
+    0,                                        /* tp_itemsize */
+    /* methods */
+    (destructor) bitarraysearchiter_dealloc,  /* tp_dealloc */
+    0,                                        /* tp_print */
+    0,                                        /* tp_getattr */
+    0,                                        /* tp_setattr */
+    0,                                        /* tp_compare */
+    0,                                        /* tp_repr */
+    0,                                        /* tp_as_number */
+    0,                                        /* tp_as_sequence */
+    0,                                        /* tp_as_mapping */
+    0,                                        /* tp_hash */
+    0,                                        /* tp_call */
+    0,                                        /* tp_str */
+    PyObject_GenericGetAttr,                  /* tp_getattro */
+    0,                                        /* tp_setattro */
+    0,                                        /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,  /* tp_flags */
+    0,                                        /* tp_doc */
+    (traverseproc) bitarraysearchiter_traverse,  /* tp_traverse */
+    0,                                        /* tp_clear */
+    0,                                        /* tp_richcompare */
+    0,                                        /* tp_weaklistoffset */
+    PyObject_SelfIter,                        /* tp_iter */
+    (iternextfunc) bitarraysearchiter_next,   /* tp_iternext */
+    0,                                        /* tp_methods */
+};
+
+
 /*************************** Method definitions *************************/
 
 static PyMethodDef
@@ -2162,8 +2288,8 @@ bitarray_methods[] = {
      setall_doc},
     {"_search",      (PyCFunction) bitarray_search,      METH_VARARGS,
      search_doc},
-    {"_search_at",   (PyCFunction) bitarray_search_at,   METH_VARARGS,
-     search_at_doc},
+    {"_itersearch",  (PyCFunction) bitarray_itersearch,  METH_O,
+     itersearch_doc},
     {"sort",         (PyCFunction) bitarray_sort,        METH_VARARGS |
                                                          METH_KEYWORDS,
      sort_doc},
@@ -2186,6 +2312,8 @@ bitarray_methods[] = {
      copy_doc},
     {"__len__",      (PyCFunction) bitarray_length,      METH_NOARGS,
      len_doc},
+    {"__contains__", (PyCFunction) bitarray_contains,    METH_O,
+     contains_doc},
     {"__reduce__",   (PyCFunction) bitarray_reduce,      METH_NOARGS,
      reduce_doc},
 
@@ -2436,6 +2564,7 @@ static PyTypeObject BitarrayIter_Type = {
     (iternextfunc) bitarrayiter_next,         /* tp_iternext */
     0,                                        /* tp_methods */
 };
+
 
 /************************** Bitarray Type *******************************/
 

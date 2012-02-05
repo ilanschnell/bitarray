@@ -128,33 +128,7 @@ Given a bitarray (or an object which can be converted to a bitarray),
 iterates over the start positions where bitarray matches self."""
         if not isinstance(x, bitarray):
             x = bitarray(x)
-        p = 0
-        while 1:
-            p = self._search_at(x, p)
-            if p is None:
-                return
-            yield p
-            p += 1
-
-    def __contains__(self, other):
-        """__contains__(x) -> bool
-
-Return True if bitarray contains x, False otherwise.
-If x is an integer (which includes booleans), it is determined
-whether or not the corresponding bit is contained in the bitarray.
-If x is an object which can be cast into a bitarray, such as e.g.
-the string '0110', a list, or a bitarray itself, a sequential search
-will be performed to determine return value."""
-        if isinstance(other, int):
-            try:
-                self.index(other)
-                return True
-            except ValueError:
-                return False
-        elif isinstance(other, bitarray):
-            return self._search_at(other, 0) is not None
-        else:
-            return self._search_at(bitarray(other), 0) is not None
+        return self._itersearch(x)
 
 
 def test(verbosity=1, repeat=1):
