@@ -771,7 +771,8 @@ getInt_or_Bool(PyObject *v)
 }
 
 /* Extract a slice index from a PyInt or PyLong or an object with the
-   nb_index slot defined, and store in *i.  Return 0 on error, 1 on success.
+   nb_index slot defined, and store in *i.
+   However, this function returns -1 on error and 0 on success.
 
    This is almost _PyEval_SliceIndex() with Py_ssize_t replaced by idx_t
 */
@@ -792,15 +793,15 @@ getIndex(PyObject *v, idx_t *i)
     else if (PyIndex_Check(v)) {
         x = PyNumber_AsSsize_t(v, NULL);
         if (x == -1 && PyErr_Occurred())
-            return 0;
+            return -1;
     }
     else {
         PyErr_SetString(PyExc_TypeError, "slice indices must be integers or "
                                          "None or have an __index__ method");
-        return 0;
+        return -1;
     }
     *i = x;
-    return 1;
+    return 0;
 }
 
 /* this is PySlice_GetIndicesEx() with Py_ssize_t replaced by idx_t */
@@ -814,7 +815,7 @@ slice_GetIndicesEx(PySliceObject *r, idx_t length,
         *step = 1;
     }
     else {
-        if (!getIndex(r->step, step))
+        if (getIndex(r->step, step) < 0)
             return -1;
 
         if (*step == 0) {
@@ -829,7 +830,8 @@ slice_GetIndicesEx(PySliceObject *r, idx_t length,
         *start = defstart;
     }
     else {
-        if (!getIndex(r->start, start)) return -1;
+        if (getIndex(r->start, start) < 0)
+            return -1;
         if (*start < 0) *start += length;
         if (*start < 0) *start = (*step < 0) ? -1 : 0;
         if (*start >= length) *start = (*step < 0) ? length - 1 : length;
@@ -839,7 +841,8 @@ slice_GetIndicesEx(PySliceObject *r, idx_t length,
         *stop = defstop;
     }
     else {
-        if (!getIndex(r->stop, stop)) return -1;
+        if (getIndex(r->stop, stop) < 0)
+            return -1;
         if (*stop < 0) *stop += length;
         if (*stop < 0) *stop = -1;
         if (*stop > length) *stop = length;
@@ -1862,7 +1865,6 @@ setslice(bitarrayobject *self, PySliceObject *slice, PyObject *v)
         vi = getInt_or_Bool(v);
         if (vi < 0)
             return -1;
-
         for (i = 0, j = start; i < slicelength; i++, j += step)
             setbit(self, j, vi);
         return 0;
