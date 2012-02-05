@@ -934,6 +934,7 @@ static PyObject *
 bitarray_contains(bitarrayobject *self, PyObject *x)
 {
     idx_t i;
+    long res;
 
 #ifdef IS_PY3K
     if (PyLong_Check(x)) {
@@ -945,20 +946,13 @@ bitarray_contains(bitarrayobject *self, PyObject *x)
         vi = PyObject_IsTrue(x);
         if (vi < 0)
             return NULL;
-        if (findfirst(self, vi, 0, -1) >= 0)
-            Py_RETURN_TRUE;
-        else
-            Py_RETURN_FALSE;
+        res = findfirst(self, vi, 0, -1) >= 0;
     }
     else if (bitarray_Check(x)) {
-        if (search(self, (bitarrayobject *) x, 0) >= 0)
-            Py_RETURN_TRUE;
-        else
-            Py_RETURN_FALSE;
+        res = search(self, (bitarrayobject *) x, 0) >= 0;
     }
     else {
         PyObject *t;
-        long res;
 
         t = newbitarrayobject(Py_TYPE(self), 0, self->endian);
         if (t == NULL)
@@ -969,8 +963,8 @@ bitarray_contains(bitarrayobject *self, PyObject *x)
         }
         res = search(self, (bitarrayobject *) t, 0) >= 0;
         Py_DECREF(t);
-        return PyBool_FromLong(res);
     }
+    return PyBool_FromLong(res);
 }
 
 PyDoc_STRVAR(contains_doc,
