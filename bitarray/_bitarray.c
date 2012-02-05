@@ -738,6 +738,38 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
                                                PyLong_Check(x))
 #endif
 
+/* given an PyLong (which must be 0 or 1), or a PyBool, return 0 or 1,
+   or -1 on error */
+static int
+getInt_or_Bool(PyObject *v)
+{
+    long x;
+
+    if (PyBool_Check(v))
+        return PyObject_IsTrue(v);
+
+#ifndef IS_PY3K
+    if (PyInt_Check(v)) {
+        x = PyInt_AsLong(v);
+    }
+    else
+#endif
+    if (PyLong_Check(v)) {
+        x = PyLong_AsLong(v);
+    }
+    else {
+        PyErr_SetString(PyExc_TypeError, "integer or bool expected");
+        return -1;
+    }
+
+    if (x < 0 || x > 1) {
+        PyErr_SetString(PyExc_ValueError,
+                        "integer value between 0 and 1 expected");
+        return -1;
+    }
+    return x;
+}
+
 /* Extract a slice index from a PyInt or PyLong or an object with the
    nb_index slot defined, and store in *i.  Return 0 on error, 1 on success.
 
@@ -944,7 +976,7 @@ bitarray_contains(bitarrayobject *self, PyObject *x)
     if (IS_INT_OR_BOOL(x)) {
         long vi;
 
-        vi = PyObject_IsTrue(x);
+        vi = getInt_or_Bool(x);
         if (vi < 0)
             return NULL;
         res = findfirst(self, vi, 0, -1) >= 0;
