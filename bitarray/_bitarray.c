@@ -935,7 +935,11 @@ bitarray_contains(bitarrayobject *self, PyObject *x)
 {
     idx_t i;
 
-    if (PyIndex_Check(x)) {
+#ifdef IS_PY3K
+    if (PyLong_Check(x)) {
+#else
+    if (PyInt_Check(x) || PyLong_Check(x)) {
+#endif
         long vi;
 
         vi = PyObject_IsTrue(x);
@@ -946,15 +950,38 @@ bitarray_contains(bitarrayobject *self, PyObject *x)
         else
             Py_RETURN_FALSE;
     }
-    assert (bitarray_Check(x));
-    if (search(self, (bitarrayobject *) x, 0) >= 0)
-        Py_RETURN_TRUE;
-    else
-        Py_RETURN_FALSE;
+    else if (bitarray_Check(x)) {
+        if (search(self, (bitarrayobject *) x, 0) >= 0)
+            Py_RETURN_TRUE;
+        else
+            Py_RETURN_FALSE;
+    }
+    else {
+        PyObject *t;
+        long res;
+
+        t = newbitarrayobject(Py_TYPE(self), 0, self->endian);
+        if (t == NULL)
+            return NULL;
+        if (extend_dispatch((bitarrayobject *) t, x) < 0) {
+            Py_DECREF(t);
+            return NULL;
+        }
+        res = search(self, (bitarrayobject *) t, 0) >= 0;
+        Py_DECREF(t);
+        return PyBool_FromLong(res);
+    }
 }
 
 PyDoc_STRVAR(contains_doc,
-"_contains(object) -> bool -- object has to be int or bitarray");
+"__contains__(x) -> bool\n\
+\n\
+Return True if bitarray contains x, False otherwise.\n\
+If x is an integer (which includes booleans), it is determined\n\
+whether or not the corresponding bit is contained in the bitarray.\n\
+If x is an object which can be cast into a bitarray, such as e.g.\n\
+the string '0110', a list, or a bitarray itself, a sequential search\n\
+will be performed to determine return value.");
 
 
 static PyObject *
@@ -2235,8 +2262,6 @@ bitarray_methods[] = {
      buffer_info_doc},
     {"bytereverse",  (PyCFunction) bitarray_bytereverse, METH_NOARGS,
      bytereverse_doc},
-    {"_contains",    (PyCFunction) bitarray_contains,    METH_O,
-     contains_doc},
     {"copy",         (PyCFunction) bitarray_copy,        METH_NOARGS,
      copy_doc},
     {"count",        (PyCFunction) bitarray_count,       METH_VARARGS,
@@ -2299,6 +2324,8 @@ bitarray_methods[] = {
      copy_doc},
     {"__len__",      (PyCFunction) bitarray_length,      METH_NOARGS,
      len_doc},
+    {"__contains__", (PyCFunction) bitarray_contains,    METH_O,
+     contains_doc},
     {"__reduce__",   (PyCFunction) bitarray_reduce,      METH_NOARGS,
      reduce_doc},
 

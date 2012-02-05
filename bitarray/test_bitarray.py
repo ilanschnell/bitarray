@@ -950,6 +950,10 @@ class SequenceTests(unittest.TestCase, Util):
         a.append(True)
         self.assert_(0 in a)
         self.assert_(1 in a)
+        if not is_py3k:
+            self.assert_(long(0) in a)
+            self.assert_(long(1) in a)
+            self.assert_(long(10) in a)
 
     def test_contains2(self):
         a = bitarray()

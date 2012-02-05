@@ -130,19 +130,6 @@ iterates over the start positions where bitarray matches self."""
             x = bitarray(x)
         return self._itersearch(x)
 
-    def __contains__(self, x):
-        """__contains__(x) -> bool
-
-Return True if bitarray contains x, False otherwise.
-If x is an integer (which includes booleans), it is determined
-whether or not the corresponding bit is contained in the bitarray.
-If x is an object which can be cast into a bitarray, such as e.g.
-the string '0110', a list, or a bitarray itself, a sequential search
-will be performed to determine return value."""
-        if not isinstance(x, (int, bitarray)):
-            x = bitarray(x)
-        return self._contains(x)
-
 
 def test(verbosity=1, repeat=1):
     """test(verbosity=1, repeat=1) -> TextTestResult
