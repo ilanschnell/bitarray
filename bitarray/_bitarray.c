@@ -730,10 +730,10 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 #define ENDIANSTR(x)  ((x) ? "big" : "little")
 
 #ifdef IS_PY3K
-#define ISINDEX(x)  (PyLong_Check(x) || PyIndex_Check(x))
+#define IS_INDEX(x)  (PyLong_Check(x) || PyIndex_Check(x))
 #define IS_INT_OR_BOOL(x)  (PyBool_Check(x) || PyLong_Check(x))
 #else
-#define ISINDEX(x)  (PyInt_Check(x) || PyLong_Check(x) || PyIndex_Check(x))
+#define IS_INDEX(x)  (PyInt_Check(x) || PyLong_Check(x) || PyIndex_Check(x))
 #define IS_INT_OR_BOOL(x)  (PyBool_Check(x) || PyInt_Check(x) || \
                                                PyLong_Check(x))
 #endif
@@ -1756,7 +1756,7 @@ bitarray_getitem(bitarrayobject *self, PyObject *a)
     PyObject *res;
     idx_t start, stop, step, slicelength, j, i = 0;
 
-    if (ISINDEX(a)) {
+    if (IS_INDEX(a)) {
         getIndex(a, &i);
         if (i < 0)
             i += self->nbits;
@@ -1849,7 +1849,7 @@ bitarray_setitem(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "OO:__setitem__", &a, &v))
         return NULL;
 
-    if (ISINDEX(a)) {
+    if (IS_INDEX(a)) {
         getIndex(a, &i);
         if (i < 0)
             i += self->nbits;
@@ -1875,7 +1875,7 @@ bitarray_delitem(bitarrayobject *self, PyObject *a)
 {
     idx_t start, stop, step, slicelength, j, i = 0;
 
-    if (ISINDEX(a)) {
+    if (IS_INDEX(a)) {
         getIndex(a, &i);
         if (i < 0)
             i += self->nbits;
@@ -1951,7 +1951,7 @@ bitarray_mul(bitarrayobject *self, PyObject *v)
     PyObject *res;
     idx_t vi = 0;
 
-    if (!ISINDEX(v)) {
+    if (!IS_INDEX(v)) {
         PyErr_SetString(PyExc_TypeError,
                         "integer value expected for bitarray repetition");
         return NULL;
@@ -1970,7 +1970,7 @@ bitarray_imul(bitarrayobject *self, PyObject *v)
 {
     idx_t vi = 0;
 
-    if (!ISINDEX(v)) {
+    if (!IS_INDEX(v)) {
         PyErr_SetString(PyExc_TypeError,
             "integer value expected for in-place bitarray repetition");
         return NULL;
@@ -2381,7 +2381,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return newbitarrayobject(type, 0, endian);
 
     /* int, long */
-    if (ISINDEX(initial)) {
+    if (IS_INDEX(initial)) {
         getIndex(initial, &nbits);
 
         if (nbits < 0) {
@@ -2630,7 +2630,7 @@ bits2bytes(PyObject *self, PyObject *v)
 {
     idx_t n = 0;
 
-    if (!ISINDEX(v)) {
+    if (!IS_INDEX(v)) {
         PyErr_SetString(PyExc_TypeError, "integer expected");
         return NULL;
     }
