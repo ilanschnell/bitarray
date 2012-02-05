@@ -943,7 +943,6 @@ class SequenceTests(unittest.TestCase, Util):
         a.append(True)
         self.assert_(True in a)
         self.assert_(False not in a)
-        self.assert_('' in a)
         a = bitarray([False])
         self.assert_(False in a)
         self.assert_(True not in a)
@@ -963,6 +962,7 @@ class SequenceTests(unittest.TestCase, Util):
         a = bitarray('0011')
         self.assertEqual(a.__contains__('01'), True)
         self.assertEqual(a.__contains__('10'), False)
+        self.assertRaises(ValueError, a.__contains__, 'asdf')
 
     def test_contains3(self):
         for n in range(2, 100):
@@ -982,6 +982,7 @@ class SequenceTests(unittest.TestCase, Util):
 
     def test_contains4(self):
         a = bitarray('011010000001')
+        self.assert_('' in a)
         self.assert_('1' in a)
         self.assert_('11' in a)
         self.assert_('111' not in a)
