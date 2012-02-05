@@ -1247,32 +1247,7 @@ class MethodTests(unittest.TestCase, Util):
         for limit in range(10):
             self.assertEqual(a.search('011', limit),
                              [6, 11, 20][:limit])
-        # search is overlapping
-        self.assertEqual(a.search('111'), [7, 12, 13, 14])
-
         self.assertRaises(ValueError, a.search, '')
-
-    def test_search_at(self):
-        return
-        a = bitarray('')
-        self.assertEqual(a._search_at(bitarray('0'), 0), None)
-        self.assertEqual(a._search_at(bitarray('1'), 0), None)
-
-        a = bitarray('1')
-        self.assertEqual(a._search_at(bitarray('0'), 0), None)
-        self.assertEqual(a._search_at(bitarray('1'), 0), 0)
-        self.assertEqual(a._search_at(bitarray('11'), 0), None)
-        self.assertRaises(ValueError, a._search_at, bitarray(), 0)
-        self.assertRaises(ValueError, a._search_at, bitarray('0'), -1)
-
-        a = bitarray('10011')
-        for s, start, res in [('0',  0, 1),    ('01',  0, 2),
-                              ('11', 1, 3),    ('000', 0, None),
-                              ('1',  0, 0),    ('1',   1, 3),
-                              ('1',  3, 3),    ('1',   4, 4),
-                              ('1',  5, None), ('11',  4, None),
-                              ('10011', 0, 0), ('100110', 0, None)]:
-            self.assertEqual(a._search_at(bitarray(s), start), res)
 
     def test_itersearch(self):
         if is_py3k:
@@ -1302,7 +1277,7 @@ class MethodTests(unittest.TestCase, Util):
     def test_search3(self):
         a = bitarray('10010101110011111001011')
         for s, res in [('011', [6, 11, 20]),
-                       ('111', [7, 12, 13, 14]),
+                       ('111', [7, 12, 13, 14]), # note the overlap
                        ('1011', [5, 19]),
                        ('100', [0, 9, 16])]:
             self.assertEqual(a.search(s), res)
