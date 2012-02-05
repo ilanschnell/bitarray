@@ -741,7 +741,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 /* given an PyLong (which must be 0 or 1), or a PyBool, return 0 or 1,
    or -1 on error */
 static int
-getInt_or_Bool(PyObject *v)
+IntBool_AsInt(PyObject *v)
 {
     long x;
 
@@ -767,7 +767,7 @@ getInt_or_Bool(PyObject *v)
                         "integer value between 0 and 1 expected");
         return -1;
     }
-    return x;
+    return (int) x;
 }
 
 /* Extract a slice index from a PyInt or PyLong or an object with the
@@ -976,9 +976,9 @@ bitarray_contains(bitarrayobject *self, PyObject *x)
     long res;
 
     if (IS_INT_OR_BOOL(x)) {
-        long vi;
+        int vi;
 
-        vi = getInt_or_Bool(x);
+        vi = IntBool_AsInt(x);
         if (vi < 0)
             return NULL;
         res = findfirst(self, vi, 0, -1) >= 0;
@@ -1826,7 +1826,6 @@ static int
 setslice(bitarrayobject *self, PySliceObject *slice, PyObject *v)
 {
     idx_t start, stop, step, slicelength, j, i = 0;
-    long vi;
 
     if (slice_GetIndicesEx(slice, self->nbits,
                            &start, &stop, &step, &slicelength) < 0)
@@ -1862,7 +1861,9 @@ setslice(bitarrayobject *self, PySliceObject *slice, PyObject *v)
         return 0;
     }
     if (IS_INT_OR_BOOL(v)) {
-        vi = getInt_or_Bool(v);
+        int vi;
+
+        vi = IntBool_AsInt(v);
         if (vi < 0)
             return -1;
         for (i = 0, j = start; i < slicelength; i++, j += step)

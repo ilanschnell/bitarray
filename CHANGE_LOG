@@ -1,5 +1,7 @@
 2012-XX-XX   0.5.3:
 -------------------
+  * allow slice assignment to 0 or 1, e.g. a[::3] = 0  (in addition to
+    booleans)
   * moved implementation of itersearch method to C level
   * use a priority queue for Huffman tree example (thanks to Ushma Bhatt)
   * improve documentation
