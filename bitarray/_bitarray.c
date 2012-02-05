@@ -467,6 +467,9 @@ findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
     return -1;
 }
 
+/* search for the first occurrence bitarray xa (in self), starting at p,
+   and return its position (-1 when not found)
+*/
 static idx_t
 search(bitarrayobject *self, bitarrayobject *xa, idx_t p)
 {
@@ -582,7 +585,8 @@ extend_list(bitarrayobject *self, PyObject *list)
         item = PyList_GetItem(list, i);
         if (item == NULL)
             return -1;
-        set_item(self, self->nbits - addbits + i, item);
+        if (set_item(self, self->nbits - addbits + i, item) < 0)
+            return -1;
     }
     return 0;
 }
@@ -605,7 +609,8 @@ extend_tuple(bitarrayobject *self, PyObject *tuple)
         item = PyTuple_GetItem(tuple, i);
         if (item == NULL)
             return -1;
-        set_item(self, self->nbits - addbits + i, item);
+        if (set_item(self, self->nbits - addbits + i, item) < 0)
+            return -1;
     }
     return 0;
 }
@@ -1672,7 +1677,8 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
 
     if (insert_n(self, i, 1) < 0)
         return NULL;
-    set_item(self, i, v);
+    if (set_item(self, i, v) < 0)
+        return NULL;
     Py_RETURN_NONE;
 }
 
@@ -1852,7 +1858,8 @@ bitarray_setitem(bitarrayobject *self, PyObject *args)
             PyErr_SetString(PyExc_IndexError, "bitarray index out of range");
             return NULL;
         }
-        set_item(self, i, v);
+        if (set_item(self, i, v) < 0)
+            return NULL;
         Py_RETURN_NONE;
     }
     if (PySlice_Check(a)) {
