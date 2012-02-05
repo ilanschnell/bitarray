@@ -36,7 +36,7 @@ Key features
 
  * Fast methods for encoding and decoding variable bit length prefix codes
 
- * Sequential search
+ * Sequential search (as list or iterator)
 
  * Bitwise operations: ``&, |, ^, &=, |=, ^=, ~``
 
@@ -503,6 +503,7 @@ Change log
 
 2012-XX-XX   0.5.3:
 
+  * moved implementation of itersearch method to C level
   * use a priority queue for Huffman tree example (thanks to Ushma Bhatt)
   * improve documentation
 
