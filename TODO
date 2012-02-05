@@ -7,6 +7,13 @@
 
 --------------------------- RANDOM NOTES ---------------------------------
 
+gcc -Wall -fno-strict-aliasing -fno-common -dynamic -g -O3 -arch x86_64 \
+    -I/Library/Frameworks/EPD64.framework/Versions/7.2/include/python2.7 \
+    -c bitarray/_bitarray.c -o bitarray/_bitarray.o
+
+gcc -bundle -undefined dynamic_lookup -g -arch x86_64 -arch x86_64 \
+    bitarray/_bitarray.o -o bitarray/_bitarray.so
+
 
 #!/bin/bash
 for PY in 2.5 2.6 2.7 3.2

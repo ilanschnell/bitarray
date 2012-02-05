@@ -1018,19 +1018,21 @@ bitarray_search(bitarrayobject *self, PyObject *args)
 {
     PyObject *list = NULL;   /* list of matching positions to be returned */
     PyObject *x, *item = NULL;
-    Py_ssize_t limit;
+    Py_ssize_t limit = -1;
     bitarrayobject *xa;
     idx_t p;
 
-    if (!PyArg_ParseTuple(args, "On:_search", &x, &limit))
+    if (!PyArg_ParseTuple(args, "O|n:_search", &x, &limit))
         return NULL;
 
-    assert (bitarray_Check(x));
+    if (!bitarray_Check(x)) {
+        PyErr_SetString(PyExc_TypeError, "bitarray expected");
+        return NULL;
+    }
     xa = (bitarrayobject *) x;
-
     if (xa->nbits == 0) {
         PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
-        goto error;
+        return NULL;
     }
     list = PyList_New(0);
     if (xa->nbits > self->nbits || limit == 0)
@@ -1042,17 +1044,16 @@ bitarray_search(bitarrayobject *self, PyObject *args)
         if (p < 0)
             break;
         item = PyLong_FromLongLong(p++);
-        if (item == NULL || PyList_Append(list, item) < 0)
-            goto error;
+        if (item == NULL || PyList_Append(list, item) < 0) {
+            Py_XDECREF(item);
+            Py_XDECREF(list);
+            return NULL;
+        }
         Py_DECREF(item);
         if (limit > 0 && PyList_Size(list) >= limit)
             break;
     }
     return list;
-error:
-    Py_XDECREF(item);
-    Py_XDECREF(list);
-    return NULL;
 }
 
 PyDoc_STRVAR(search_doc,
