@@ -1,6 +1,7 @@
 import os
 import re
 import doctest
+from cStringIO import StringIO
 
 import bitarray
 
@@ -80,9 +81,16 @@ def main():
     global fo
 
     data = open('README.rst').read()
-    fo = open('README.rst', 'w')
+    fo = StringIO()
     write_all(data)
+    new_data = fo.getvalue()
     fo.close()
+
+    if new_data == data:
+        print "already up-to-date"
+    else:
+        with open('README.rst', 'w') as f:
+            f.write(new_data)
 
     doctest.testfile('README.rst')
     os.system('rst2html.py README.rst >README.html')
