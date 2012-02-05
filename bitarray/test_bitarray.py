@@ -479,10 +479,13 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('01010101'))
         a[4::] = 1
         self.assertEqual(a, bitarray('01011111'))
-        try:
-            a[::2] = 3
-        except ValueError:
-            pass
+        a.__setitem__(slice(-2, None, None), 0)
+        self.assertEqual(a, bitarray('01011100'))
+
+        self.assertRaises(ValueError, a.__setitem__,
+                          slice(None, None, 2), 3)
+        self.assertRaises(ValueError, a.__setitem__,
+                          slice(None, 2, None), -1)
 
 
     def test_delitem1(self):

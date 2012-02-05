@@ -25,11 +25,11 @@ def primesToN2(n):
     print 'init bitarray'
     A = bitarray.bitarray(n+1)
     A.setall(1)
-    A[:2] = A[2*2::2] = False
+    A[:2] = A[2*2::2] = 0
     print 'sieve'
     for i in xrange(3, int(n**.5)+1, 2): # odd numbers
         if A[i]:  # i is prime
-            A[i*i::i*2] = False
+            A[i*i::i*2] = 0
     print 'counting'
     print A.count()
 
