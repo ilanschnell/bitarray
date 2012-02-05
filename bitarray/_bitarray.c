@@ -1006,8 +1006,8 @@ PyDoc_STRVAR(contains_doc,
 "__contains__(x) -> bool\n\
 \n\
 Return True if bitarray contains x, False otherwise.\n\
-If x is an integer (which includes booleans), it is determined\n\
-whether or not the corresponding bit is contained in the bitarray.\n\
+If x is an integer or a boolean, determine whether or not the\n\
+corresponding bit is contained in the bitarray.\n\
 If x is an object which can be cast into a bitarray, such as e.g.\n\
 the string '0110', a list, or a bitarray itself, a sequential search\n\
 will be performed to determine return value.");
