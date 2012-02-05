@@ -476,7 +476,6 @@ set_item(bitarrayobject *self, idx_t i, PyObject *v)
     vi = PyObject_IsTrue(v);
     if (vi < 0)
         return -1;
-
     setbit(self, i, vi);
     return 0;
 }
@@ -486,7 +485,6 @@ append_item(bitarrayobject *self, PyObject *item)
 {
     if (resize(self, self->nbits + 1) < 0)
         return -1;
-
     return set_item(self, self->nbits - 1, item);
 }
 
