@@ -933,7 +933,6 @@ object upon initialization.");
 static PyObject *
 bitarray_contains(bitarrayobject *self, PyObject *x)
 {
-    idx_t i;
     long res;
 
 #ifdef IS_PY3K
@@ -2146,7 +2145,6 @@ static PyObject *
 bitarray_itersearch(bitarrayobject *self, PyObject *x)
 {
     bitarraysearchiterobject *it;  /* positions to be returned */
-    PyObject *item = NULL;
     bitarrayobject *xa;
 
     assert (bitarray_Check(x));
@@ -2179,8 +2177,6 @@ like itersearch but requires bitarray");
 static PyObject *
 bitarraysearchiter_next(bitarraysearchiterobject *it)
 {
-    idx_t n;
-
     it->p = search(it->bao, it->xa, it->p);
     if (it->p < 0)  /* no more positions -- stop iteration */
         return NULL;
