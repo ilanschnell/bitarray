@@ -42,6 +42,8 @@ Key features
 
  * Pickling and unpickling of bitarray objects possible.
 
+ * Bitarray objects support the buffer protocol (Python 2.7 only)
+
 
 Installation
 ------------
@@ -63,9 +65,9 @@ Once you have installed the package, you may want to test it::
    bitarray version: 0.6.0
    2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
-   ................................
+   ....................................
    ----------------------------------------------------------------------
-   Ran 118 tests in 2.102s
+   Ran 122 tests in 2.102s
    
    OK
 
@@ -239,6 +241,29 @@ Unless, explicitly converting to machine representation, using
 the ``tobytes``, ``frombytes``, ``tofile`` and ``fromfile`` methods,
 the bit endianness will have no effect on any computation, and one
 can safely ignore setting the endianness, and other details of this section.
+
+
+Buffer protocol
+---------------
+
+Python 2.7 provides memoryview objects, which allow Python code to access
+the internal data of an object that supports the buffer protocol without
+copying.  Bitarray objects support this protocol, with the memory being
+interpreted as simple bytes.
+
+   >>> a = bitarray('01000001' '01000010' '01000011', endian='big')
+   >>> v = memoryview(a)
+   >>> len(v)
+   3
+   >>> v[-1]
+   'C'
+   >>> v[:2].tobytes()
+   'AB'
+   >>> v.readonly  # changing the bitarray's data is also possible
+   False
+   >>> v[1] = 'o'
+   >>> a
+   bitarray('010000010110111101000011')
 
 
 Variable bit length prefix codes
@@ -503,7 +528,7 @@ Change log
 
 2012-XX-XX   0.6.0:
 
-  * add buffer interface to bitarray objects (Python 2.7 only)
+  * add buffer protocol to bitarray objects (Python 2.7 only)
   * allow slice assignment to 0 or 1, e.g. a[::3] = 0  (in addition to
     booleans)
   * moved implementation of itersearch method to C level (Lluis Pamies)
