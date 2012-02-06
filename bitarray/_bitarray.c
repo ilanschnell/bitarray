@@ -2685,10 +2685,11 @@ Return the number of bytes necessary to store n bits.");
 static PyObject *
 sysinfo(void)
 {
-    return Py_BuildValue("iiiL",
+    return Py_BuildValue("iiiiL",
                          (int) sizeof(void *),
                          (int) sizeof(size_t),
                          (int) sizeof(Py_ssize_t),
+                         (int) sizeof(idx_t),
                          (idx_t) PY_SSIZE_T_MAX);
 }
 
@@ -2698,13 +2699,14 @@ PyDoc_STRVAR(sysinfo_doc,
 tuple(sizeof(void *),\n\
       sizeof(size_t),\n\
       sizeof(Py_ssize_t),\n\
+      sizeof(idx_t),\n\
       PY_SSIZE_T_MAX)");
 
 
 static PyMethodDef module_functions[] = {
-    {"bits2bytes",  (PyCFunction) bits2bytes,  METH_O,       bits2bytes_doc},
-    {"_sysinfo",    (PyCFunction) sysinfo,     METH_NOARGS,  sysinfo_doc   },
-    {NULL,          NULL}  /* sentinel */
+    {"bits2bytes", (PyCFunction) bits2bytes, METH_O,      bits2bytes_doc},
+    {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS, sysinfo_doc   },
+    {NULL,         NULL}  /* sentinel */
 };
 
 /*********************** Install Module **************************/
