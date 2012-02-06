@@ -29,6 +29,10 @@
 #define Py_SIZE(ob)   (((PyVarObject *) (ob))->ob_size)
 #endif
 
+#if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 7
+#define WITH_BUFFER
+#endif
+
 #ifdef STDC_HEADERS
 #include <stddef.h>
 #else  /* !STDC_HEADERS */
@@ -45,11 +49,14 @@ typedef long long int idx_t;
 
 typedef struct {
     PyObject_VAR_HEAD
+#ifdef WITH_BUFFER
+    int ob_exports;  /* how many buffer exports */
+#endif
     char *ob_item;
-    Py_ssize_t allocated;
+    Py_ssize_t allocated;  /* how many bytes allocated */
     idx_t nbits;
     int endian;
-    PyObject *weakreflist;   /* List of weak references */
+    PyObject *weakreflist;  /* list of weak references */
 } bitarrayobject;
 
 static PyTypeObject Bitarraytype;
@@ -2603,7 +2610,86 @@ static PyTypeObject BitarrayIter_Type = {
     0,                                        /* tp_methods */
 };
 
+/********************* Bitarray Buffer Interface ************************/
+#ifdef WITH_BUFFER
+static Py_ssize_t
+bitarray_buffer_getreadbuf(bitarrayobject *self,
+                           Py_ssize_t index, const void **ptr)
+{
+    if (index != 0) {
+        PyErr_SetString(PyExc_SystemError, "accessing non-existent segment");
+        return -1;
+    }
+    *ptr = (void *) self->ob_item;
+    return Py_SIZE(self);
+}
 
+static Py_ssize_t
+bitarray_buffer_getwritebuf(bitarrayobject *self,
+                            Py_ssize_t index, const void **ptr)
+{
+    if (index != 0) {
+        PyErr_SetString(PyExc_SystemError, "accessing non-existent segment");
+        return -1;
+    }
+    *ptr = (void *) self->ob_item;
+    return Py_SIZE(self);
+}
+
+static Py_ssize_t
+bitarray_buffer_getsegcount(bitarrayobject *self, Py_ssize_t *lenp)
+{
+    if (lenp)
+        *lenp = Py_SIZE(self);
+    return 1;
+}
+
+static Py_ssize_t
+bitarray_buffer_getcharbuf(bitarrayobject *self,
+                           Py_ssize_t index, const char **ptr)
+{
+    if (index != 0) {
+        PyErr_SetString(PyExc_SystemError, "accessing non-existent segment");
+        return -1;
+    }
+    *ptr = self->ob_item;
+    return Py_SIZE(self);
+}
+
+static int
+bitarray_getbuffer(bitarrayobject *self, Py_buffer *view, int flags)
+{
+    int ret;
+    void *ptr;
+
+    if (view == NULL) {
+        self->ob_exports++;
+        return 0;
+    }
+    ptr = (void *) self->ob_item;
+    ret = PyBuffer_FillInfo(view, (PyObject *) self, ptr,
+                            Py_SIZE(self), 0, flags);
+    if (ret >= 0) {
+        self->ob_exports++;
+    }
+    return ret;
+}
+
+static void
+bitarray_releasebuffer(bitarrayobject *self, Py_buffer *view)
+{
+    self->ob_exports--;
+}
+
+static PyBufferProcs bitarray_as_buffer = {
+    (readbufferproc) bitarray_buffer_getreadbuf,
+    (writebufferproc) bitarray_buffer_getwritebuf,
+    (segcountproc) bitarray_buffer_getsegcount,
+    (charbufferproc) bitarray_buffer_getcharbuf,
+    (getbufferproc) bitarray_getbuffer,
+    (releasebufferproc) bitarray_releasebuffer,
+};
+#endif  /* WITH_BUFFER */
 /************************** Bitarray Type *******************************/
 
 static PyTypeObject Bitarraytype = {
@@ -2631,9 +2717,16 @@ static PyTypeObject Bitarraytype = {
     0,                                        /* tp_str */
     PyObject_GenericGetAttr,                  /* tp_getattro */
     0,                                        /* tp_setattro */
+#ifdef WITH_BUFFER
+    &bitarray_as_buffer,                      /* tp_as_buffer */
+#else
     0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_WEAKREFS,
-                                              /* tp_flags */
+#endif
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_WEAKREFS
+#ifdef WITH_BUFFER
+    | Py_TPFLAGS_HAVE_NEWBUFFER
+#endif
+    ,                                         /* tp_flags */
     0,                                        /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */

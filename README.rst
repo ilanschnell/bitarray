@@ -503,6 +503,7 @@ Change log
 
 2012-XX-XX   0.6.0:
 
+  * add buffer interface to bitarray objects (Python 2.7 only)
   * allow slice assignment to 0 or 1, e.g. a[::3] = 0  (in addition to
     booleans)
   * moved implementation of itersearch method to C level (Lluis Pamies)

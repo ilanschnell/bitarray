@@ -1965,6 +1965,38 @@ class PrefixCodeTests(unittest.TestCase):
 
 tests.append(PrefixCodeTests)
 
+# -------------- Buffer Interface (Python 2.7 only for now) ----------------
+
+class BufferInterfaceTests(unittest.TestCase):
+
+    def test_read1(self):
+        a = bitarray('01000001' '01000010' '01000011', endian='big')
+        v = memoryview(a)
+        self.assertEqual(len(v), 3)
+        self.assertEqual(v[0], 'A')
+        self.assertEqual(v[:].tobytes(), 'ABC')
+
+    def test_read2(self):
+        a = bitarray([randint(0, 1) for d in range(8000)])
+        v = memoryview(a)
+        self.assertEqual(len(v), 1000)
+        b = a[345 * 8 : 657 * 8]
+        self.assertEqual(v[345:657].tobytes(), b.tobytes())
+        self.assertEqual(v[:].tobytes(), a.tobytes())
+
+    def test_write(self):
+        a = bitarray(800000)
+        a.setall(0)
+        v = memoryview(a)
+        self.assertFalse(v.readonly)
+        v[50000] = '\xff'
+        self.assertEqual(a[399999:400009], bitarray('0111111110'))
+        v[30001:30004] = 'ABC'
+        self.assertEqual(a[240000:240040].tobytes(), '\x00ABC\x00')
+
+if sys.version_info[:2] == (2, 7):
+    tests.append(BufferInterfaceTests)
+
 # ---------------------------------------------------------------------------
 
 def run(verbosity=1, repeat=1):
