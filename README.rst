@@ -259,7 +259,7 @@ interpreted as simple bytes.
    'C'
    >>> v[:2].tobytes()
    'AB'
-   >>> v.readonly  # changing the bitarray's data is also possible
+   >>> v.readonly  # changing a bitarray's memory is also possible
    False
    >>> v[1] = 'o'
    >>> a
