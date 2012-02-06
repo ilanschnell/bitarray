@@ -304,7 +304,7 @@ repeat(bitarrayobject *self, idx_t n)
 enum op_type {
     OP_and,
     OP_or,
-    OP_xor
+    OP_xor,
 };
 
 /* perform bitwise operation */
@@ -473,11 +473,11 @@ findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
 static idx_t
 search(bitarrayobject *self, bitarrayobject *xa, idx_t p)
 {
-    idx_t n;
+    idx_t i;
 
     while (p < self->nbits - xa->nbits + 1) {
-        for (n = 0; n < xa->nbits; n++)
-            if (GETBIT(self, p + n) != GETBIT(xa, n))
+        for (i = 0; i < xa->nbits; i++)
+            if (GETBIT(self, p + i) != GETBIT(xa, i))
                 goto next;
 
         return p;
@@ -535,16 +535,16 @@ unpack(bitarrayobject *self, char zero, char one)
 static int
 extend_bitarray(bitarrayobject *self, bitarrayobject *other)
 {
-    idx_t sumbits;
+    idx_t n_sum;
 
     if (other->nbits == 0)
         return 0;
 
-    sumbits = self->nbits + other->nbits;
-    if (resize(self, sumbits) < 0)
+    n_sum = self->nbits + other->nbits;
+    if (resize(self, n_sum) < 0)
         return -1;
 
-    copy_n(self, sumbits - other->nbits, other, 0, other->nbits);
+    copy_n(self, n_sum - other->nbits, other, 0, other->nbits);
     return 0;
 }
 
@@ -571,21 +571,21 @@ static int
 extend_list(bitarrayobject *self, PyObject *list)
 {
     PyObject *item;
-    Py_ssize_t addbits, i;
+    Py_ssize_t n, i;
 
     assert(PyList_Check(list));
-    addbits = PyList_Size(list);
-    if (addbits == 0)
+    n = PyList_Size(list);
+    if (n == 0)
         return 0;
 
-    if (resize(self, self->nbits + addbits) < 0)
+    if (resize(self, self->nbits + n) < 0)
         return -1;
 
-    for (i = 0; i < addbits; i++) {
+    for (i = 0; i < n; i++) {
         item = PyList_GetItem(list, i);
         if (item == NULL)
             return -1;
-        if (set_item(self, self->nbits - addbits + i, item) < 0)
+        if (set_item(self, self->nbits - n + i, item) < 0)
             return -1;
     }
     return 0;
@@ -595,21 +595,21 @@ static int
 extend_tuple(bitarrayobject *self, PyObject *tuple)
 {
     PyObject *item;
-    Py_ssize_t addbits, i;
+    Py_ssize_t n, i;
 
     assert(PyTuple_Check(tuple));
-    addbits = PyTuple_Size(tuple);
-    if (addbits == 0)
+    n = PyTuple_Size(tuple);
+    if (n == 0)
         return 0;
 
-    if (resize(self, self->nbits + addbits) < 0)
+    if (resize(self, self->nbits + n) < 0)
         return -1;
 
-    for (i = 0; i < addbits; i++) {
+    for (i = 0; i < n; i++) {
         item = PyTuple_GetItem(tuple, i);
         if (item == NULL)
             return -1;
-        if (set_item(self, self->nbits - addbits + i, item) < 0)
+        if (set_item(self, self->nbits - n + i, item) < 0)
             return -1;
     }
     return 0;
