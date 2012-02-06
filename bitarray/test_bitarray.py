@@ -1055,7 +1055,21 @@ class ExtendTests(unittest.TestCase, Util):
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
 
-    def test_iterable(self):
+    def test_tuple(self):
+        a = bitarray()
+        a.extend((0, 1, 2, 0, 3))
+        self.assertEqual(a, bitarray('01101'))
+
+        for a in self.randomlists():
+            for b in self.randomlists():
+                c = bitarray(a)
+                idc = id(c)
+                c.extend(tuple(b))
+                self.assertEqual(id(c), idc)
+                self.assertEqual(c.tolist(), a + b)
+                self.check_obj(c)
+
+    def test_generator(self):
         def bar():
             for x in ('', '1', None, True, []):
                 yield x
@@ -1075,21 +1089,7 @@ class ExtendTests(unittest.TestCase, Util):
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
 
-    def test_tuple(self):
-        a = bitarray()
-        a.extend((0, 1, 2, 0, 3))
-        self.assertEqual(a, bitarray('01101'))
-
-        for a in self.randomlists():
-            for b in self.randomlists():
-                c = bitarray(a)
-                idc = id(c)
-                c.extend(tuple(b))
-                self.assertEqual(id(c), idc)
-                self.assertEqual(c.tolist(), a + b)
-                self.check_obj(c)
-
-    def test_iter(self):
+    def test_iterator1(self):
         a = bitarray()
         a.extend(iter([3, 9, 0, 1, -2]))
         self.assertEqual(a, bitarray('11011'))
@@ -1102,6 +1102,15 @@ class ExtendTests(unittest.TestCase, Util):
                 self.assertEqual(id(c), idc)
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
+
+    def test_iterator2(self):
+        try:
+            import itertools
+        except ImportError:
+            return
+        a = bitarray()
+        a.extend(itertools.repeat(True, 23))
+        self.assertEqual(a, bitarray(23 * '1'))
 
     def test_string01(self):
         a = bitarray()
@@ -1504,7 +1513,8 @@ class StringTests(unittest.TestCase, Util):
 
         b = a
         b.frombytes(to_bytes('BC'))
-        self.assertEQUAL(b, bitarray('01000001' '01000010' '01000011'))
+        self.assertEQUAL(b, bitarray('01000001' '01000010' '01000011',
+                                     endian='big'))
         self.assert_(b is a)
 
         for b in self.randombitarrays():
