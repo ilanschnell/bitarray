@@ -1263,16 +1263,16 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.search, '010')
 
     def test_itersearch(self):
+        a = bitarray('10011')
+        self.assertRaises(ValueError, a.itersearch, bitarray())
+        self.assertRaises(TypeError, a.itersearch, '')
         if is_py3k:
             return
-        a = bitarray('10011')
         it = a.itersearch(bitarray('1'))
         self.assertEqual(it.next(), 0)
         self.assertEqual(it.next(), 3)
         self.assertEqual(it.next(), 4)
         self.assertRaises(StopIteration, it.next)
-        self.assertRaises(ValueError, a.itersearch, bitarray())
-        self.assertRaises(TypeError, a.itersearch, '')
 
     def test_search2(self):
         a = bitarray('10011')

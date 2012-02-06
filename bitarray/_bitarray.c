@@ -85,7 +85,7 @@ check_overflow(idx_t nbits)
 {
     idx_t max_bits;
 
-    assert (nbits >= 0);
+    assert(nbits >= 0);
     if (sizeof(void *) == 4) {  /* 32bit machine */
         max_bits = ((idx_t) 1) << 34;  /* 2^34 = 16 Gbits*/
         if (nbits > max_bits) {
@@ -204,9 +204,9 @@ copy_n(bitarrayobject *self, idx_t a,
 {
     idx_t i;
 
-    assert (a >= 0 && b >= 0 && n >= 0);
-    assert (a + n <= self->nbits);
-    assert (b + n <= other->nbits);
+    assert(0 <= n && n <= self->nbits && n <= other->nbits);
+    assert(0 <= a && a <= self->nbits - n);
+    assert(0 <= b && b <= other->nbits - n);
 
     /* XXX
     if (self->endian == other->endian && a % 8 == 0 && b % 8 == 0 && n >= 8)
@@ -239,8 +239,8 @@ copy_n(bitarrayobject *self, idx_t a,
 static int
 delete_n(bitarrayobject *self, idx_t start, idx_t n)
 {
-    assert (start >= 0 && start <= self->nbits);
-    assert (n >= 0 && start + n <= self->nbits);
+    assert(0 <= start && start <= self->nbits);
+    assert(0 <= n && n <= self->nbits - start);
     if (n == 0)
         return 0;
 
@@ -252,8 +252,8 @@ delete_n(bitarrayobject *self, idx_t start, idx_t n)
 static int
 insert_n(bitarrayobject *self, idx_t start, idx_t n)
 {
-    assert (start >= 0 && start <= self->nbits);
-    assert (n >= 0);
+    assert(0 <= start && start <= self->nbits);
+    assert(n >= 0);
     if (n == 0)
         return 0;
 
@@ -276,7 +276,7 @@ setunused(bitarrayobject *self)
         setbit(self, i, 0);
         res++;
     }
-    assert (res < 8);
+    assert(res < 8);
     return res;
 }
 
@@ -294,7 +294,6 @@ repeat(bitarrayobject *self, idx_t n)
         nbits = self->nbits;
         if (resize(self, nbits * n) < 0)
             return -1;
-
         for (i = 1; i < n; i++)
             copy_n(self, i * nbits, self, 0, nbits);
     }
@@ -351,7 +350,8 @@ setrange(bitarrayobject *self, idx_t start, idx_t stop, int val)
 {
     idx_t i;
 
-    assert (start <= self->nbits && stop <= self->nbits);
+    assert(0 <= start && start <= self->nbits);
+    assert(0 <= stop && stop <= self->nbits);
     for (i = start; i < stop; i++)
         setbit(self, i, val);
 }
@@ -453,7 +453,7 @@ findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
 
         if (j == Py_SIZE(self))
             j--;
-        assert (j >= 0 && j < Py_SIZE(self));
+        assert(0 <= j && j < Py_SIZE(self));
 
         if (start < BITS(j))
             start = BITS(j);
@@ -492,7 +492,7 @@ set_item(bitarrayobject *self, idx_t i, PyObject *v)
 {
     long vi;
 
-    assert (i >= 0 && i < self->nbits);
+    assert(0 <= i && i < self->nbits);
     vi = PyObject_IsTrue(v);
     if (vi < 0)
         return -1;
@@ -553,7 +553,7 @@ extend_iter(bitarrayobject *self, PyObject *iter)
 {
     PyObject *item;
 
-    assert (PyIter_Check(iter));
+    assert(PyIter_Check(iter));
     while ((item = PyIter_Next(iter)) != NULL) {
         if (append_item(self, item) < 0) {
             Py_DECREF(item);
@@ -573,7 +573,7 @@ extend_list(bitarrayobject *self, PyObject *list)
     PyObject *item;
     Py_ssize_t addbits, i;
 
-    assert (PyList_Check(list));
+    assert(PyList_Check(list));
     addbits = PyList_Size(list);
     if (addbits == 0)
         return 0;
@@ -597,7 +597,7 @@ extend_tuple(bitarrayobject *self, PyObject *tuple)
     PyObject *item;
     Py_ssize_t addbits, i;
 
-    assert (PyTuple_Check(tuple));
+    assert(PyTuple_Check(tuple));
     addbits = PyTuple_Size(tuple);
     if (addbits == 0)
         return 0;
@@ -630,7 +630,7 @@ extend_string(bitarrayobject *self, PyObject *string, enum conv_tp conv)
     char c, *str;
     int vi = 0;
 
-    assert (PyString_Check(string));
+    assert(PyString_Check(string));
     strlen = PyString_Size(string);
     if (strlen == 0)
         return 0;
@@ -669,7 +669,7 @@ extend_rawstring(bitarrayobject *self, PyObject *string)
     Py_ssize_t strlen;
     char *str;
 
-    assert (PyString_Check(string) && self->nbits % 8 == 0);
+    assert(PyString_Check(string) && self->nbits % 8 == 0);
     strlen = PyString_Size(string);
     if (strlen == 0)
         return 0;
@@ -1928,7 +1928,7 @@ bitarray_delitem(bitarrayobject *self, PyObject *a)
             step = -step;
         }
         if (step == 1) {
-            assert (stop - start == slicelength);
+            assert(stop - start == slicelength);
             if (delete_n(self, start, slicelength) < 0)
                 return NULL;
             Py_RETURN_NONE;
@@ -2530,7 +2530,7 @@ bitarray_iter(bitarrayobject *self)
 {
     bitarrayiterobject *it;
 
-    assert (bitarray_Check(self));
+    assert(bitarray_Check(self));
     it = PyObject_GC_New(bitarrayiterobject, &BitarrayIter_Type);
     if (it == NULL)
         return NULL;
@@ -2545,7 +2545,7 @@ bitarray_iter(bitarrayobject *self)
 static PyObject *
 bitarrayiter_next(bitarrayiterobject *it)
 {
-    assert (BitarrayIter_Check(it));
+    assert(BitarrayIter_Check(it));
     if (it->index < it->bao->nbits)
         return PyBool_FromLong(GETBIT(it->bao, it->index++));
     return NULL;  /* stop iteration */
