@@ -2172,7 +2172,7 @@ symbols.");
 
 typedef struct {
     PyObject_HEAD
-    idx_t p;
+    idx_t p;  /* current search position */
     bitarrayobject *bao;  /* bitarray we're searching in */
     bitarrayobject *xa;   /* bitarray being searched for */
 } bitarraysearchiterobject;
@@ -2206,7 +2206,7 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
     it->bao = self;
     Py_INCREF(xa);
     it->xa = xa;
-    it->p = 0;
+    it->p = 0;  /* start search at position 0 */
     PyObject_GC_Track(it);
     return (PyObject *) it;
 }
@@ -2226,7 +2226,7 @@ bitarraysearchiter_next(bitarraysearchiterobject *it)
     p = search(it->bao, it->xa, it->p);
     if (p < 0)  /* no more positions -- stop iteration */
         return NULL;
-    it->p = p + 1;
+    it->p = p + 1;  /* next search position */
     return PyLong_FromLongLong(p);
 }
 
