@@ -1037,7 +1037,8 @@ bitarray_search(bitarrayobject *self, PyObject *args)
         p = search(self, xa, p);
         if (p < 0)
             break;
-        item = PyLong_FromLongLong(p++);
+        item = PyLong_FromLongLong(p);
+        p++;
         if (item == NULL || PyList_Append(list, item) < 0) {
             Py_XDECREF(item);
             Py_XDECREF(list);
@@ -2220,10 +2221,13 @@ the start positions where bitarray matches self.");
 static PyObject *
 bitarraysearchiter_next(bitarraysearchiterobject *it)
 {
-    it->p = search(it->bao, it->xa, it->p);
-    if (it->p < 0)  /* no more positions -- stop iteration */
+    idx_t p;
+
+    p = search(it->bao, it->xa, it->p);
+    if (p < 0)  /* no more positions -- stop iteration */
         return NULL;
-    return PyLong_FromLongLong(it->p++);
+    it->p = p + 1;
+    return PyLong_FromLongLong(p);
 }
 
 static void
