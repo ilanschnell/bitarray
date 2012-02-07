@@ -1981,6 +1981,8 @@ class BufferInterfaceTests(unittest.TestCase):
         self.assertEqual(len(v), 3)
         self.assertEqual(v[0], 'A')
         self.assertEqual(v[:].tobytes(), 'ABC')
+        a[13] = 1
+        self.assertEqual(v[:].tobytes(), 'AFC')
 
     def test_read2(self):
         a = bitarray([randint(0, 1) for d in range(8000)])
@@ -1997,6 +1999,8 @@ class BufferInterfaceTests(unittest.TestCase):
         self.assertFalse(v.readonly)
         v[50000] = '\xff'
         self.assertEqual(a[399999:400009], bitarray('0111111110'))
+        a[400003] = 0
+        self.assertEqual(a[399999:400009], bitarray('0111011110'))
         v[30001:30004] = 'ABC'
         self.assertEqual(a[240000:240040].tobytes(), '\x00ABC\x00')
 
