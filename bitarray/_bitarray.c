@@ -2169,24 +2169,24 @@ Given a tree, decode the content of the bitarray and return the list of\n\
 symbols.");
 
 
-/*********************** Bitarray Search Iterator ***********************/
+/*********************** (Bitarray) Search Iterator *********************/
 
 typedef struct {
     PyObject_HEAD
     idx_t p;  /* current search position */
     bitarrayobject *bao;  /* bitarray we're searching in */
     bitarrayobject *xa;   /* bitarray being searched for */
-} bitarraysearchiterobject;
+} searchiterobject;
 
-static PyTypeObject BitarraySearchIter_Type;
+static PyTypeObject SearchIter_Type;
 
-#define BitarraySearchIter_Check(op)  \
-                  PyObject_TypeCheck(op, &BitarraSearchyIter_Type)
+#define SearchIter_Check(op)  PyObject_TypeCheck(op, &SearchIter_Type)
 
+/* create a new initialized bitarray search iterator object */
 static PyObject *
 bitarray_itersearch(bitarrayobject *self, PyObject *x)
 {
-    bitarraysearchiterobject *it;  /* positions to be returned */
+    searchiterobject *it;  /* positions to be returned */
     bitarrayobject *xa;
 
     if (!bitarray_Check(x)) {
@@ -2199,7 +2199,7 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
         return NULL;
     }
 
-    it = PyObject_GC_New(bitarraysearchiterobject, &BitarraySearchIter_Type);
+    it = PyObject_GC_New(searchiterobject, &SearchIter_Type);
     if (it == NULL)
         return NULL;
 
@@ -2220,10 +2220,11 @@ the start positions where bitarray matches self.");
 
 
 static PyObject *
-bitarraysearchiter_next(bitarraysearchiterobject *it)
+searchiter_next(searchiterobject *it)
 {
     idx_t p;
 
+    assert(SearchIter_Check(it));
     p = search(it->bao, it->xa, it->p);
     if (p < 0)  /* no more positions -- stop iteration */
         return NULL;
@@ -2232,7 +2233,7 @@ bitarraysearchiter_next(bitarraysearchiterobject *it)
 }
 
 static void
-bitarraysearchiter_dealloc(bitarraysearchiterobject *it)
+searchiter_dealloc(searchiterobject *it)
 {
     PyObject_GC_UnTrack(it);
     Py_XDECREF(it->bao);
@@ -2241,25 +2242,24 @@ bitarraysearchiter_dealloc(bitarraysearchiterobject *it)
 }
 
 static int
-bitarraysearchiter_traverse(bitarraysearchiterobject *it,
-                            visitproc visit, void *arg)
+searchiter_traverse(searchiterobject *it, visitproc visit, void *arg)
 {
     Py_VISIT(it->bao);
     return 0;
 }
 
-static PyTypeObject BitarraySearchIter_Type = {
+static PyTypeObject SearchIter_Type = {
 #ifdef IS_PY3K
-    PyVarObject_HEAD_INIT(&BitarraySearchIter_Type, 0)
+    PyVarObject_HEAD_INIT(&SearchIter_Type, 0)
 #else
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
 #endif
     "bitarraysearchiterator",                 /* tp_name */
-    sizeof(bitarraysearchiterobject),         /* tp_basicsize */
+    sizeof(searchiterobject),                 /* tp_basicsize */
     0,                                        /* tp_itemsize */
     /* methods */
-    (destructor) bitarraysearchiter_dealloc,  /* tp_dealloc */
+    (destructor) searchiter_dealloc,          /* tp_dealloc */
     0,                                        /* tp_print */
     0,                                        /* tp_getattr */
     0,                                        /* tp_setattr */
@@ -2276,12 +2276,12 @@ static PyTypeObject BitarraySearchIter_Type = {
     0,                                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,  /* tp_flags */
     0,                                        /* tp_doc */
-    (traverseproc) bitarraysearchiter_traverse,  /* tp_traverse */
+    (traverseproc) searchiter_traverse,       /* tp_traverse */
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
     PyObject_SelfIter,                        /* tp_iter */
-    (iternextfunc) bitarraysearchiter_next,   /* tp_iternext */
+    (iternextfunc) searchiter_next,           /* tp_iternext */
     0,                                        /* tp_methods */
 };
 
@@ -2537,6 +2537,8 @@ static PyTypeObject BitarrayIter_Type;
 
 #define BitarrayIter_Check(op)  PyObject_TypeCheck(op, &BitarrayIter_Type)
 
+/* create a new initialized bitarray iterator object, this object is
+   returned when calling item(a) */
 static PyObject *
 bitarray_iter(bitarrayobject *self)
 {
