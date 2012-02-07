@@ -482,6 +482,7 @@ search(bitarrayobject *self, bitarrayobject *xa, idx_t p)
 {
     idx_t i;
 
+    assert(p >= 0);
     while (p < self->nbits - xa->nbits + 1) {
         for (i = 0; i < xa->nbits; i++)
             if (GETBIT(self, p + i) != GETBIT(xa, i))
