@@ -409,7 +409,7 @@ Reference
 
 ``index(value, [start, [stop]])`` -> int
    Return index of the first occurrence of bool(value) in the bitarray.
-   It is an error when the value does not occur in the bitarray
+   Raises ValueError if the value is not present.
 
 
 ``insert(i, item)``

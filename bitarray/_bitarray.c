@@ -959,7 +959,7 @@ PyDoc_STRVAR(index_doc,
 "index(value, [start, [stop]]) -> int\n\
 \n\
 Return index of the first occurrence of bool(value) in the bitarray.\n\
-It is an error when the value does not occur in the bitarray");
+Raises ValueError if the value is not present.");
 
 
 static PyObject *
