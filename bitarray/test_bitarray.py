@@ -540,7 +540,7 @@ class MiscTests(unittest.TestCase, Util):
                 acc.append(b)
             self.assertEqual(acc, lst)
 
-    def test_iterable(self):
+    def test_iter1(self):
         a = iter(bitarray('011'))
         self.assertEqual(next(a), False)
         self.assertEqual(next(a), True)
@@ -549,6 +549,12 @@ class MiscTests(unittest.TestCase, Util):
             self.assertRaises(StopIteration, a.__next__)
         else:
             self.assertRaises(StopIteration, a.next)
+
+    def test_iter2(self):
+        for a in self.randombitarrays():
+            aa = a.tolist()
+            self.assertEqual(list(a), aa)
+            self.assertEqual(list(iter(a)), aa)
 
     def test_assignment(self):
         a = bitarray('00110111001')
