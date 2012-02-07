@@ -17,9 +17,9 @@ def write_changelog():
     for line in open('CHANGE_LOG'):
         m = ver_pat.match(line)
         if m:
-            count += 1
             if count == 3:
                 break
+            count += 1
             fo.write(m.expand(r'**\2** (\1):\n'))
         elif line.startswith('---'):
             fo.write('\n')

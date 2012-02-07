@@ -526,7 +526,7 @@ Reference
 Change log
 ----------
 
-2012-XX-XX   0.6.0:
+**0.6.0** (2012-02-06):
 
   * add buffer protocol to bitarray objects (Python 2.7 only)
   * allow slice assignment to 0 or 1, e.g. a[::3] = 0  (in addition to
