@@ -2165,9 +2165,9 @@ symbols.");
 
 typedef struct {
     PyObject_HEAD
-    idx_t p;  /* current search position */
     bitarrayobject *bao;  /* bitarray we're searching in */
-    bitarrayobject *xa;   /* bitarray being searched for */
+    PyObject *tree;
+    idx_t index;  /* current index in bitarray */
 } decodeiterobject;
 
 static PyTypeObject DecodeIter_Type;
@@ -2176,20 +2176,9 @@ static PyTypeObject DecodeIter_Type;
 
 /* create a new initialized bitarray search iterator object */
 static PyObject *
-bitarray_iterdecode(bitarrayobject *self, PyObject *x)
+bitarray_iterdecode(bitarrayobject *self, PyObject *tree)
 {
-    decodeiterobject *it;  /* positions to be returned */
-    bitarrayobject *xa;
-
-    if (!bitarray_Check(x)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray expected for itersearch");
-        return NULL;
-    }
-    xa = (bitarrayobject *) x;
-    if (xa->nbits == 0) {
-        PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
-        return NULL;
-    }
+    decodeiterobject *it;  /* iterator to be returned */
 
     it = PyObject_GC_New(decodeiterobject, &DecodeIter_Type);
     if (it == NULL)
@@ -2197,30 +2186,28 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *x)
 
     Py_INCREF(self);
     it->bao = self;
-    Py_INCREF(xa);
-    it->xa = xa;
-    it->p = 0;  /* start search at position 0 */
+    Py_INCREF(tree);
+    it->tree = tree;
+    it->index = 0;
     PyObject_GC_Track(it);
     return (PyObject *) it;
 }
 
 PyDoc_STRVAR(iterdecode_doc,
-"iterdecode(bitarray) -> iterator\n\
+"_iterdecode(bitarray) -> iterator\n\
 \n\
 ");
-
 
 static PyObject *
 decodeiter_next(decodeiterobject *it)
 {
-    idx_t p;
+    PyObject *symbol;
 
     assert(DecodeIter_Check(it));
-    p = search(it->bao, it->xa, it->p);
-    if (p < 0)  /* no more positions -- stop iteration */
+    symbol = tree_traverse(it->bao, &(it->index), it->tree);
+    if (symbol == NULL)  /* stop iteration */
         return NULL;
-    it->p = p + 1;  /* next search position */
-    return PyLong_FromLongLong(p);
+    return symbol;
 }
 
 static void
@@ -2228,7 +2215,7 @@ decodeiter_dealloc(decodeiterobject *it)
 {
     PyObject_GC_UnTrack(it);
     Py_XDECREF(it->bao);
-    Py_XDECREF(it->xa);
+    Py_XDECREF(it->tree);
     PyObject_GC_Del(it);
 }
 
