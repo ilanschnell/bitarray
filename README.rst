@@ -65,9 +65,9 @@ Once you have installed the package, you may want to test it::
    bitarray version: 0.6.1
    2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
-   .....................................
+   ........................................
    ----------------------------------------------------------------------
-   Ran 123 tests in 2.102s
+   Ran 126 tests in 2.307s
    
    OK
 
@@ -421,6 +421,11 @@ Reference
    i.e. convert each 1-bit into a 0-bit and vice versa.
 
 
+``iterdecode(code)`` -> iterator
+   Given a prefix code (a dict mapping symbols to bitarrays),
+   decode the content of the bitarray and iterate over the symbols.
+
+
 ``itersearch(bitarray)`` -> iterator
    Searches for the given a bitarray in self, and return an iterator over
    the start positions where bitarray matches self.
@@ -526,8 +531,10 @@ Reference
 Change log
 ----------
 
-2012-XX-XX   0.6.1:
+2012-XX-XX   0.7.0:
 
+  * add iterdecode method (implemented in C), which returns an iterator
+    but it otherwise is like the decode method
 
 
 
