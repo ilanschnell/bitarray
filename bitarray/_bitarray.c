@@ -1978,7 +1978,6 @@ bitarray_iadd(bitarrayobject *self, PyObject *other)
 {
     if (extend_dispatch(self, other) < 0)
         return NULL;
-
     Py_INCREF(self);
     return (PyObject *) self;
 }
@@ -2018,7 +2017,6 @@ bitarray_imul(bitarrayobject *self, PyObject *v)
         return NULL;
     if (repeat(self, vi) < 0)
         return NULL;
-
     Py_INCREF(self);
     return (PyObject *) self;
 }
@@ -2058,7 +2056,6 @@ bitarray_i ## oper (bitarrayobject *self, PyObject *other)   \
 {                                                            \
     if (bitwise(self, other, OP_ ## oper) < 0)               \
         return NULL;                                         \
-                                                             \
     Py_INCREF(self);                                         \
     return (PyObject *) self;                                \
 }
@@ -2085,23 +2082,21 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
     /* extend self with the bitarrays from codedict */
     while ((symbol = PyIter_Next(iter)) != NULL) {
         bits = PyDict_GetItem(codedict, symbol);
+        Py_DECREF(symbol);
         if (bits == NULL) {
             PyErr_SetString(PyExc_ValueError, "symbol not in prefix code");
-            Py_DECREF(symbol);
-            Py_DECREF(iter);
-            return NULL;
+            goto error;
         }
-        Py_DECREF(symbol);
-        if (extend_bitarray(self, (bitarrayobject *) bits) < 0) {
-            Py_DECREF(iter);
-            return NULL;
-        }
+        if (extend_bitarray(self, (bitarrayobject *) bits) < 0)
+            goto error;
     }
     Py_DECREF(iter);
     if (PyErr_Occurred())
         return NULL;
-
     Py_RETURN_NONE;
+error:
+    Py_DECREF(iter);
+    return NULL;
 }
 
 PyDoc_STRVAR(encode_doc,
