@@ -2168,6 +2168,120 @@ PyDoc_STRVAR(decode_doc,
 Given a tree, decode the content of the bitarray and return the list of\n\
 symbols.");
 
+/*********************** (Bitarray) Decode Iterator *********************/
+
+typedef struct {
+    PyObject_HEAD
+    idx_t p;  /* current search position */
+    bitarrayobject *bao;  /* bitarray we're searching in */
+    bitarrayobject *xa;   /* bitarray being searched for */
+} decodeiterobject;
+
+static PyTypeObject DecodeIter_Type;
+
+#define DecodeIter_Check(op)  PyObject_TypeCheck(op, &DecodeIter_Type)
+
+/* create a new initialized bitarray search iterator object */
+static PyObject *
+bitarray_iterdecode(bitarrayobject *self, PyObject *x)
+{
+    decodeiterobject *it;  /* positions to be returned */
+    bitarrayobject *xa;
+
+    if (!bitarray_Check(x)) {
+        PyErr_SetString(PyExc_TypeError, "bitarray expected for itersearch");
+        return NULL;
+    }
+    xa = (bitarrayobject *) x;
+    if (xa->nbits == 0) {
+        PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
+        return NULL;
+    }
+
+    it = PyObject_GC_New(decodeiterobject, &DecodeIter_Type);
+    if (it == NULL)
+        return NULL;
+
+    Py_INCREF(self);
+    it->bao = self;
+    Py_INCREF(xa);
+    it->xa = xa;
+    it->p = 0;  /* start search at position 0 */
+    PyObject_GC_Track(it);
+    return (PyObject *) it;
+}
+
+PyDoc_STRVAR(iterdecode_doc,
+"iterdecode(bitarray) -> iterator\n\
+\n\
+");
+
+
+static PyObject *
+decodeiter_next(decodeiterobject *it)
+{
+    idx_t p;
+
+    assert(DecodeIter_Check(it));
+    p = search(it->bao, it->xa, it->p);
+    if (p < 0)  /* no more positions -- stop iteration */
+        return NULL;
+    it->p = p + 1;  /* next search position */
+    return PyLong_FromLongLong(p);
+}
+
+static void
+decodeiter_dealloc(decodeiterobject *it)
+{
+    PyObject_GC_UnTrack(it);
+    Py_XDECREF(it->bao);
+    Py_XDECREF(it->xa);
+    PyObject_GC_Del(it);
+}
+
+static int
+decodeiter_traverse(decodeiterobject *it, visitproc visit, void *arg)
+{
+    Py_VISIT(it->bao);
+    return 0;
+}
+
+static PyTypeObject DecodeIter_Type = {
+#ifdef IS_PY3K
+    PyVarObject_HEAD_INIT(&DecodeIter_Type, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                                        /* ob_size */
+#endif
+    "bitarraydecodeiterator",                 /* tp_name */
+    sizeof(decodeiterobject),                 /* tp_basicsize */
+    0,                                        /* tp_itemsize */
+    /* methods */
+    (destructor) decodeiter_dealloc,          /* tp_dealloc */
+    0,                                        /* tp_print */
+    0,                                        /* tp_getattr */
+    0,                                        /* tp_setattr */
+    0,                                        /* tp_compare */
+    0,                                        /* tp_repr */
+    0,                                        /* tp_as_number */
+    0,                                        /* tp_as_sequence */
+    0,                                        /* tp_as_mapping */
+    0,                                        /* tp_hash */
+    0,                                        /* tp_call */
+    0,                                        /* tp_str */
+    PyObject_GenericGetAttr,                  /* tp_getattro */
+    0,                                        /* tp_setattro */
+    0,                                        /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,  /* tp_flags */
+    0,                                        /* tp_doc */
+    (traverseproc) decodeiter_traverse,       /* tp_traverse */
+    0,                                        /* tp_clear */
+    0,                                        /* tp_richcompare */
+    0,                                        /* tp_weaklistoffset */
+    PyObject_SelfIter,                        /* tp_iter */
+    (iternextfunc) decodeiter_next,           /* tp_iternext */
+    0,                                        /* tp_methods */
+};
 
 /*********************** (Bitarray) Search Iterator *********************/
 
@@ -2306,6 +2420,8 @@ bitarray_methods[] = {
      count_doc},
     {"_decode",      (PyCFunction) bitarray_decode,      METH_O,
      decode_doc},
+    {"_iterdecode",  (PyCFunction) bitarray_iterdecode,  METH_O,
+     iterdecode_doc},
     {"_encode",      (PyCFunction) bitarray_encode,      METH_VARARGS,
      encode_doc},
     {"endian",       (PyCFunction) bitarray_endian,      METH_NOARGS,
