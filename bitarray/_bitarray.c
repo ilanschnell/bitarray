@@ -2112,22 +2112,20 @@ like the encode method without code checking");
    or, when the iteration is finished, NULL
 */
 static PyObject *
-tree_traverse(PyObject *iter, PyObject *tree)
+tree_traverse(bitarrayobject *self, idx_t *indexp, PyObject *tree)
 {
-    PyObject *subtree, *v;
+    PyObject *subtree;
     long vi;
 
-    v = PyIter_Next(iter);
-    if (v == NULL)  /* stop iterator */
+    if (*indexp == self->nbits)  /* stop iterator */
         return NULL;
 
-    vi = PyObject_IsTrue(v);
-    Py_DECREF(v);
-
+    vi = GETBIT(self, *indexp);
+    (*indexp)++;
     subtree = PyList_GetItem(tree, vi);
 
     if (PyList_Check(subtree) && PyList_Size(subtree) == 2)
-        return tree_traverse(iter, subtree);
+        return tree_traverse(self, indexp, subtree);
     else
         return subtree;
 }
@@ -2137,28 +2135,23 @@ tree_traverse(PyObject *iter, PyObject *tree)
 static PyObject *
 bitarray_decode(bitarrayobject *self, PyObject *tree)
 {
-    PyObject *iter = NULL, *symbol, *res;
-
-    iter = PyObject_GetIter((PyObject *) self);
-    if (iter == NULL)
-        goto error;
+    PyObject *symbol, *res = NULL;
+    idx_t index = 0;
 
     /* traverse binary tree and append symbols to the result list */
     res = PyList_New(0);
-    while ((symbol = tree_traverse(iter, tree)) != NULL) {
+    while ((symbol = tree_traverse(self, &index, tree)) != NULL) {
         if (IS_EMPTY_LIST(symbol)) {
             PyErr_SetString(PyExc_ValueError,
                             "prefix code does not match data in bitarray");
-            Py_DECREF(res);
             goto error;
         }
         if (PyList_Append(res, symbol) < 0)
             goto error;
     }
-    Py_XDECREF(iter);
     return res;
 error:
-    Py_XDECREF(iter);
+    Py_XDECREF(res);
     return NULL;
 }
 
