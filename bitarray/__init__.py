@@ -101,6 +101,14 @@ decode the content of the bitarray and return the list of symbols."""
         _check_codedict(codedict)
         return self._decode(_mk_tree(codedict))
 
+    def iterdecode(self, codedict):
+        """iterdecode(code) -> iterator
+
+Given a prefix code (a dict mapping symbols to bitarrays),
+decode the content of the bitarray and iterate over the symbols."""
+        _check_codedict(codedict)
+        return self._iterdecode(_mk_tree(codedict))
+
     def encode(self, codedict, iterable):
         """encode(code, iterable)
 

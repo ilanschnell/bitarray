@@ -2135,7 +2135,7 @@ tree_traverse(bitarrayobject *self, idx_t *indexp, PyObject *tree)
 static PyObject *
 bitarray_decode(bitarrayobject *self, PyObject *tree)
 {
-    PyObject *symbol, *res = NULL;
+    PyObject *symbol, *res;
     idx_t index = 0;
 
     /* traverse binary tree and append symbols to the result list */
@@ -2151,7 +2151,7 @@ bitarray_decode(bitarrayobject *self, PyObject *tree)
     }
     return res;
 error:
-    Py_XDECREF(res);
+    Py_DECREF(res);
     return NULL;
 }
 
@@ -2194,9 +2194,10 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *tree)
 }
 
 PyDoc_STRVAR(iterdecode_doc,
-"_iterdecode(bitarray) -> iterator\n\
+"_iterdecode(tree) -> iterator\n\
 \n\
-");
+Given a tree, decode the content of the bitarray and iterate over the\n\
+symbols.");
 
 static PyObject *
 decodeiter_next(decodeiterobject *it)
@@ -2207,6 +2208,12 @@ decodeiter_next(decodeiterobject *it)
     symbol = tree_traverse(it->bao, &(it->index), it->tree);
     if (symbol == NULL)  /* stop iteration */
         return NULL;
+    if (IS_EMPTY_LIST(symbol)) {
+        PyErr_SetString(PyExc_ValueError,
+                        "prefix code does not match data in bitarray");
+        return NULL;
+    }
+    Py_INCREF(symbol);
     return symbol;
 }
 

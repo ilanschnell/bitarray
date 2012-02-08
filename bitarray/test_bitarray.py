@@ -66,6 +66,14 @@ class Util(object):
         self.check_obj(a)
         self.check_obj(b)
 
+    def assertNextEqual(self, it, value):
+        self.assertEqual(next(it), value)
+
+    def assertStopIteration(self, it):
+        if is_py3k:
+            return
+        self.assertRaises(StopIteration, it.next)
+
 
 def getIndicesEx(r, length):
     if not isinstance(r, slice):
@@ -541,14 +549,11 @@ class MiscTests(unittest.TestCase, Util):
             self.assertEqual(acc, lst)
 
     def test_iter1(self):
-        a = iter(bitarray('011'))
-        self.assertEqual(next(a), False)
-        self.assertEqual(next(a), True)
-        self.assertEqual(next(a), True)
-        if is_py3k:
-            self.assertRaises(StopIteration, a.__next__)
-        else:
-            self.assertRaises(StopIteration, a.next)
+        it = iter(bitarray('011'))
+        self.assertEqual(next(it), False)
+        self.assertEqual(next(it), True)
+        self.assertEqual(next(it), True)
+        self.assertStopIteration(it)
 
     def test_iter2(self):
         for a in self.randombitarrays():
@@ -1281,13 +1286,11 @@ class MethodTests(unittest.TestCase, Util):
         a = bitarray('10011')
         self.assertRaises(ValueError, a.itersearch, bitarray())
         self.assertRaises(TypeError, a.itersearch, '')
-        if is_py3k:
-            return
         it = a.itersearch(bitarray('1'))
-        self.assertEqual(it.next(), 0)
-        self.assertEqual(it.next(), 3)
-        self.assertEqual(it.next(), 4)
-        self.assertRaises(StopIteration, it.next)
+        self.assertNextEqual(it, 0)
+        self.assertNextEqual(it, 3)
+        self.assertNextEqual(it, 4)
+        self.assertStopIteration(it)
 
     def test_search2(self):
         a = bitarray('10011')
@@ -1812,7 +1815,7 @@ tests.append(FileTests)
 
 # ---------------------------------------------------------------------------
 
-class PrefixCodeTests(unittest.TestCase):
+class PrefixCodeTests(unittest.TestCase, Util):
 
     def test_encode_check_codedict(self):
         a = bitarray()
@@ -1880,56 +1883,99 @@ class PrefixCodeTests(unittest.TestCase):
         self.assertRaises(ValueError, a.decode, {'a':bitarray()})
 
     def test_decode_simple(self):
-        d = {'I':bitarray('1'),
-             'l':bitarray('01'),
-             'a':bitarray('001'),
-             'n':bitarray('000')}
+        d = {'I': bitarray('1'),
+             'l': bitarray('01'),
+             'a': bitarray('001'),
+             'n': bitarray('000')}
+        dcopy = dict(d)
         a = bitarray('101001000')
         self.assertEqual(a.decode(d), ['I', 'l', 'a', 'n'])
-        self.assertEqual(d, {'I':bitarray('1'), 'l':bitarray('01'),
-                             'a':bitarray('001'), 'n':bitarray('000')})
+        self.assertEqual(d, dcopy)
+        self.assertEqual(a, bitarray('101001000'))
+
+    def test_iterdecode_simple(self):
+        d = {'I': bitarray('1'),
+             'l': bitarray('01'),
+             'a': bitarray('001'),
+             'n': bitarray('000')}
+        dcopy = dict(d)
+        a = bitarray('101001000')
+        self.assertEqual(list(a.iterdecode(d)), ['I', 'l', 'a', 'n'])
+        self.assertEqual(d, dcopy)
         self.assertEqual(a, bitarray('101001000'))
 
     def test_decode_empty(self):
-        d = {'a':bitarray('1')}
+        d = {'a': bitarray('1')}
         a = bitarray()
         self.assertEqual(a.decode(d), [])
-        self.assertEqual(d, {'a':bitarray('1')})
+        self.assertEqual(d, {'a': bitarray('1')})
+        # test decode iterator
+        self.assertEqual(list(a.iterdecode(d)), [])
+        self.assertEqual(d, {'a': bitarray('1')})
+        self.assertEqual(len(a), 0)
 
     def test_decode_buggybitarray(self):
-        d = {'a':bitarray('0')}
+        d = {'a': bitarray('0')}
         a = bitarray('1')
         self.assertRaises(ValueError, a.decode, d)
         self.assertEqual(a, bitarray('1'))
-        self.assertEqual(d, {'a':bitarray('0')})
+        self.assertEqual(d, {'a': bitarray('0')})
+
+    def test_iterdecode_buggybitarray(self):
+        d = {'a': bitarray('0')}
+        a = bitarray('1')
+        it = a.iterdecode(d)
+        if not is_py3k:
+            self.assertRaises(ValueError, it.next)
+        self.assertEqual(a, bitarray('1'))
+        self.assertEqual(d, {'a': bitarray('0')})
 
     def test_decode_buggybitarray2(self):
-        d = {'a':bitarray('00'), 'b':bitarray('01')}
+        d = {'a': bitarray('00'), 'b': bitarray('01')}
         a = bitarray('1')
         self.assertRaises(ValueError, a.decode, d)
+        self.assertEqual(a, bitarray('1'))
+
+    def test_iterdecode_buggybitarray2(self):
+        d = {'a': bitarray('00'), 'b': bitarray('01')}
+        a = bitarray('1')
+        it = a.iterdecode(d)
+        if is_py3k:
+            pass # XXX self.assertRaises(ValueError, it.__next__)
+        else:
+            self.assertRaises(ValueError, it.next)
         self.assertEqual(a, bitarray('1'))
 
     def test_decode_ambiguous_code(self):
-        d = {'a':bitarray('0'), 'b':bitarray('0'), 'c':bitarray('1')}
+        d = {'a': bitarray('0'), 'b': bitarray('0'), 'c': bitarray('1')}
         a = bitarray()
         self.assertRaises(ValueError, a.decode, d)
+        self.assertRaises(ValueError, a.iterdecode, d)
 
     def test_decode_ambiguous2(self):
-        d = {'a':bitarray('01'), 'b':bitarray('01'), 'c':bitarray('1')}
+        d = {'a': bitarray('01'), 'b': bitarray('01'), 'c': bitarray('1')}
         a = bitarray()
         self.assertRaises(ValueError, a.decode, d)
-
+        self.assertRaises(ValueError, a.iterdecode, d)
 
     def test_miscitems(self):
-        d = {None :bitarray('00'),
-             0    :bitarray('110'),
-             1    :bitarray('111'),
-             ''   :bitarray('010'),
-             2    :bitarray('011')}
+        d = {None : bitarray('00'),
+             0    : bitarray('110'),
+             1    : bitarray('111'),
+             ''   : bitarray('010'),
+             2    : bitarray('011')}
         a = bitarray()
         a.encode(d, [None, 0, 1, '', 2])
         self.assertEqual(a, bitarray('00110111010011'))
         self.assertEqual(a.decode(d), [None, 0, 1, '', 2])
+        # iterator
+        it = a.iterdecode(d)
+        self.assertNextEqual(it, None)
+        self.assertNextEqual(it, 0)
+        self.assertNextEqual(it, 1)
+        self.assertNextEqual(it, '')
+        self.assertNextEqual(it, 2)
+        self.assertStopIteration(it)
 
     def test_real_example(self):
         code = {' '  : bitarray('001'),
@@ -1961,13 +2007,15 @@ class PrefixCodeTests(unittest.TestCase):
                 'y'  : bitarray('101010'),
                 'z'  : bitarray('00011011110')}
         a = bitarray()
-        a.encode(code, 'the quick brown fox jumps over the lazy dog.')
+        message = 'the quick brown fox jumps over the lazy dog.'
+        a.encode(code, message)
         self.assertEqual(a, bitarray('01000000011100100001001101000100101100'
           '00110001101000100011001101100001111110010010101001000000010001100'
           '10111101111000100000111101001110000110000111100111110100101000000'
           '0111001011100110000110111101010100010101110001010000101010'))
-        self.assertEqual(''.join(a.decode(code)),
-                         'the quick brown fox jumps over the lazy dog.')
+        self.assertEqual(''.join(a.decode(code)), message)
+        self.assertEqual(''.join(a.iterdecode(code)), message)
+
 
 tests.append(PrefixCodeTests)
 
