@@ -1075,7 +1075,6 @@ bitarray_buffer_info(bitarrayobject *self)
                         ENDIANSTR(self->endian),
                         (int) (BITS(Py_SIZE(self)) - self->nbits),
                         (idx_t) self->allocated);
-
     Py_DECREF(ptr);
     return res;
 }
