@@ -59,26 +59,31 @@ def decode(codedict, bitsequence):
     return res
 
 
-txt = open('README').read()
-code = huffCode(freq_string(txt))
+def main():
+    txt = open('README').read()
+    code = huffCode(freq_string(txt))
 
-sample = 1000*txt
+    sample = 2000 * txt
 
-a = bitarray()
-a.encode(code, sample)
+    a = bitarray()
+    a.encode(code, sample)
 
-# Time the decode function above
-start_time = time.time()
-res = decode(code, a)
-Py_time = time.time() - start_time
-assert ''.join(res) == sample
-print('Py_time: %.6f sec' % Py_time)
+    # Time the decode function above
+    start_time = time.time()
+    res = decode(code, a)
+    Py_time = time.time() - start_time
+    assert ''.join(res) == sample
+    print('Py_time: %.6f sec' % Py_time)
 
-# Time the decode method which is implemented in C
-start_time = time.time()
-res = a.decode(code)
-C_time = time.time() - start_time
-assert ''.join(res) == sample
-print('C_time: %.6f sec' % C_time)
+    # Time the decode method which is implemented in C
+    start_time = time.time()
+    res = a.decode(code)
+    C_time = time.time() - start_time
+    assert ''.join(res) == sample
+    print('C_time: %.6f sec' % C_time)
 
-print('Ratio: %f' % (Py_time / C_time))
+    print('Ratio: %f' % (Py_time / C_time))
+
+
+if __name__ == '__main__':
+    main()
