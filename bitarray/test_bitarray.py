@@ -66,9 +66,6 @@ class Util(object):
         self.check_obj(a)
         self.check_obj(b)
 
-    def assertNextEqual(self, it, value):
-        self.assertEqual(next(it), value)
-
     def assertStopIteration(self, it):
         if is_py3k:
             return
@@ -1287,9 +1284,9 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.itersearch, bitarray())
         self.assertRaises(TypeError, a.itersearch, '')
         it = a.itersearch(bitarray('1'))
-        self.assertNextEqual(it, 0)
-        self.assertNextEqual(it, 3)
-        self.assertNextEqual(it, 4)
+        self.assertEqual(next(it), 0)
+        self.assertEqual(next(it), 3)
+        self.assertEqual(next(it), 4)
         self.assertStopIteration(it)
 
     def test_search2(self):
@@ -1940,9 +1937,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
         d = {'a': bitarray('00'), 'b': bitarray('01')}
         a = bitarray('1')
         it = a.iterdecode(d)
-        if is_py3k:
-            pass # XXX self.assertRaises(ValueError, it.__next__)
-        else:
+        if not is_py3k:
             self.assertRaises(ValueError, it.next)
         self.assertEqual(a, bitarray('1'))
 
@@ -1970,11 +1965,11 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(a.decode(d), [None, 0, 1, '', 2])
         # iterator
         it = a.iterdecode(d)
-        self.assertNextEqual(it, None)
-        self.assertNextEqual(it, 0)
-        self.assertNextEqual(it, 1)
-        self.assertNextEqual(it, '')
-        self.assertNextEqual(it, 2)
+        self.assertEqual(next(it), None)
+        self.assertEqual(next(it), 0)
+        self.assertEqual(next(it), 1)
+        self.assertEqual(next(it), '')
+        self.assertEqual(next(it), 2)
         self.assertStopIteration(it)
 
     def test_real_example(self):

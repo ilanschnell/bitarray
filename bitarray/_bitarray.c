@@ -2319,7 +2319,6 @@ PyDoc_STRVAR(itersearch_doc,
 Searches for the given a bitarray in self, and return an iterator over\n\
 the start positions where bitarray matches self.");
 
-
 static PyObject *
 searchiter_next(searchiterobject *it)
 {
