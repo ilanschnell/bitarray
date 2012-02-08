@@ -1,5 +1,7 @@
-2012-XX-XX   0.6.1:
+2012-XX-XX   0.7.0:
 -------------------
+  * add iterdecode method (implemented in C), which returns an iterator
+    but it otherwise is like the decode method
 
 
 
