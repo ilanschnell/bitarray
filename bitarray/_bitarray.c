@@ -2287,7 +2287,7 @@ static PyTypeObject SearchIter_Type;
 static PyObject *
 bitarray_itersearch(bitarrayobject *self, PyObject *x)
 {
-    searchiterobject *it;  /* positions to be returned */
+    searchiterobject *it;  /* iterator to be returned */
     bitarrayobject *xa;
 
     if (!bitarray_Check(x)) {
