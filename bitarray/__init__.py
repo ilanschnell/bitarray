@@ -8,9 +8,9 @@ Please find a description of this package at:
 
 Author: Ilan Schnell
 """
-__version__ = '0.6.1'
-
 from ._bitarray import _bitarray, bits2bytes, _sysinfo
+
+__version__ = '0.7.0'
 
 
 def _tree_insert(tree, sym, ba):
