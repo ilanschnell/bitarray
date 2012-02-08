@@ -50,13 +50,13 @@ typedef long long int idx_t;
 typedef struct {
     PyObject_VAR_HEAD
 #ifdef WITH_BUFFER
-    int ob_exports;  /* how many buffer exports */
+    int ob_exports;             /* how many buffer exports */
 #endif
     char *ob_item;
-    Py_ssize_t allocated;  /* how many bytes allocated */
-    idx_t nbits;
-    int endian;
-    PyObject *weakreflist;  /* list of weak references */
+    Py_ssize_t allocated;       /* how many bytes allocated */
+    idx_t nbits;                /* length og bitarray */
+    int endian;                 /* bit endianness of bitarray */
+    PyObject *weakreflist;      /* list of weak references */
 } bitarrayobject;
 
 static PyTypeObject Bitarraytype;
@@ -2163,9 +2163,9 @@ symbols.");
 
 typedef struct {
     PyObject_HEAD
-    bitarrayobject *bao;  /* bitarray we're searching in */
-    PyObject *tree;
-    idx_t index;  /* current index in bitarray */
+    bitarrayobject *bao;        /* bitarray we're searching in */
+    PyObject *tree;             /* prefix tree containing symbols */
+    idx_t index;                /* current index in bitarray */
 } decodeiterobject;
 
 static PyTypeObject DecodeIter_Type;
@@ -2272,9 +2272,9 @@ static PyTypeObject DecodeIter_Type = {
 
 typedef struct {
     PyObject_HEAD
-    idx_t p;  /* current search position */
-    bitarrayobject *bao;  /* bitarray we're searching in */
-    bitarrayobject *xa;   /* bitarray being searched for */
+    bitarrayobject *bao;        /* bitarray we're searching in */
+    bitarrayobject *xa;         /* bitarray being searched for */
+    idx_t p;                    /* current search position */
 } searchiterobject;
 
 static PyTypeObject SearchIter_Type;
@@ -2382,7 +2382,6 @@ static PyTypeObject SearchIter_Type = {
     (iternextfunc) searchiter_next,           /* tp_iternext */
     0,                                        /* tp_methods */
 };
-
 
 /*************************** Method definitions *************************/
 
@@ -2629,8 +2628,8 @@ richcompare(PyObject *v, PyObject *w, int op)
 
 typedef struct {
     PyObject_HEAD
-    idx_t index;
-    bitarrayobject *bao;
+    bitarrayobject *bao;        /* bitarray we're iterating over */
+    idx_t index;                /* current index in bitarray */
 } bitarrayiterobject;
 
 static PyTypeObject BitarrayIter_Type;

@@ -5,8 +5,8 @@ from huffman import freq_string, huffCode
 
 def traverse(it, tree):
     """
-    Return False, when it has no more elements,
-    or the leave node resulting from traversing the tree
+    return False, when it has no more elements, or the leave node
+    resulting from traversing the tree
     """
     try:
         subtree = tree[next(it)]
@@ -21,7 +21,7 @@ def traverse(it, tree):
 
 def insert(tree, sym, ba):
     """
-    Insert symbol which is mapped to bitarray into tree
+    insert symbol which is mapped to bitarray into tree
     """
     v = ba[0]
     if len(ba) > 1:
@@ -31,15 +31,14 @@ def insert(tree, sym, ba):
     else:
         if tree[v] != []:
             raise ValueError("prefix code ambiguous")
-
         tree[v] = sym
 
 
 def decode(codedict, bitsequence):
     """
-    This function does the same thing as the bitarray decode method
+    this function does the same thing as the bitarray decode method
     """
-    # Generate tree from codedict
+    # generate tree from codedict
     tree = [[], []]
     for sym, ba in codedict.items():
         insert(tree, sym, ba)
@@ -55,7 +54,6 @@ def decode(codedict, bitsequence):
             if r == []:
                 raise ValueError("prefix code does not match data")
             res.append(r)
-
     return res
 
 
