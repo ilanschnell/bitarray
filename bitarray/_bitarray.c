@@ -1030,6 +1030,8 @@ bitarray_search(bitarrayobject *self, PyObject *args)
         return NULL;
     }
     list = PyList_New(0);
+    if (list == NULL)
+        return NULL;
     if (xa->nbits > self->nbits || limit == 0)
         return list;
 
@@ -2135,23 +2137,25 @@ tree_traverse(bitarrayobject *self, idx_t *indexp, PyObject *tree)
 static PyObject *
 bitarray_decode(bitarrayobject *self, PyObject *tree)
 {
-    PyObject *symbol, *res;
+    PyObject *symbol, *list;
     idx_t index = 0;
 
+    list = PyList_New(0);
+    if (list == NULL)
+        return NULL;
     /* traverse binary tree and append symbols to the result list */
-    res = PyList_New(0);
     while ((symbol = tree_traverse(self, &index, tree)) != NULL) {
         if (IS_EMPTY_LIST(symbol)) {
             PyErr_SetString(PyExc_ValueError,
                             "prefix code does not match data in bitarray");
             goto error;
         }
-        if (PyList_Append(res, symbol) < 0)
+        if (PyList_Append(list, symbol) < 0)
             goto error;
     }
-    return res;
+    return list;
 error:
-    Py_DECREF(res);
+    Py_DECREF(list);
     return NULL;
 }
 
