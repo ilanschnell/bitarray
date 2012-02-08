@@ -533,8 +533,8 @@ Change log
 
 2012-XX-XX   0.7.0:
 
-  * add iterdecode method (implemented in C), which returns an iterator
-    but it otherwise is like the decode method
+  * add iterdecode method (C level), which returns an iterator but is
+    otherwise like the decode method
 
 
 
