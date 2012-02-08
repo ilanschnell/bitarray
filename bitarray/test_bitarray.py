@@ -1814,24 +1814,24 @@ tests.append(FileTests)
 
 class PrefixCodeTests(unittest.TestCase, Util):
 
-    def test_encode_check_codedict(self):
+    def test_encode_errors(self):
         a = bitarray()
         self.assertRaises(TypeError, a.encode, 0, '')
         self.assertRaises(ValueError, a.encode, {}, '')
         self.assertRaises(TypeError, a.encode, {'a':42}, '')
-        self.assertRaises(ValueError, a.encode, {'a':bitarray()}, '')
+        self.assertRaises(ValueError, a.encode, {'a': bitarray()}, '')
         # 42 not iterable
-        self.assertRaises(TypeError, a.encode, {'a':bitarray('0')}, 42)
+        self.assertRaises(TypeError, a.encode, {'a': bitarray('0')}, 42)
         self.assertEqual(len(a), 0)
 
     def test_encode_string(self):
         a = bitarray()
-        d = {'a':bitarray('0')}
+        d = {'a': bitarray('0')}
         a.encode(d, '')
         self.assertEqual(a, bitarray())
         a.encode(d, 'a')
         self.assertEqual(a, bitarray('0'))
-        self.assertEqual(d, {'a':bitarray('0')})
+        self.assertEqual(d, {'a': bitarray('0')})
 
     def test_encode_list(self):
         a = bitarray()
@@ -1840,11 +1840,11 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray())
         a.encode(d, ['a'])
         self.assertEqual(a, bitarray('0'))
-        self.assertEqual(d, {'a':bitarray('0')})
+        self.assertEqual(d, {'a': bitarray('0')})
 
     def test_encode_iter(self):
         a = bitarray()
-        d = {'a':bitarray('0'), 'b':bitarray('1')}
+        d = {'a': bitarray('0'), 'b': bitarray('1')}
         a.encode(d, iter('abba'))
         self.assertEqual(a, bitarray('0110'))
 
@@ -1854,20 +1854,20 @@ class PrefixCodeTests(unittest.TestCase, Util):
 
         a.encode(d, foo())
         self.assertEqual(a, bitarray('0110110011'))
-        self.assertEqual(d, {'a':bitarray('0'), 'b':bitarray('1')})
+        self.assertEqual(d, {'a': bitarray('0'), 'b': bitarray('1')})
 
     def test_encode(self):
-        d = {'I':bitarray('1'),
-             'l':bitarray('01'),
-             'a':bitarray('001'),
-             'n':bitarray('000')}
+        d = {'I': bitarray('1'),
+             'l': bitarray('01'),
+             'a': bitarray('001'),
+             'n': bitarray('000')}
         a = bitarray()
         a.encode(d, 'Ilan')
         self.assertEqual(a, bitarray('101001000'))
         a.encode(d, 'a')
         self.assertEqual(a, bitarray('101001000001'))
-        self.assertEqual(d, {'I':bitarray('1'), 'l':bitarray('01'),
-                             'a':bitarray('001'), 'n':bitarray('000')})
+        self.assertEqual(d, {'I': bitarray('1'), 'l': bitarray('01'),
+                             'a': bitarray('001'), 'n': bitarray('000')})
         self.assertRaises(ValueError, a.encode, d, 'arvin')
 
 
