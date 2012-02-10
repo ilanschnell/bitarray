@@ -24,12 +24,13 @@
 #endif
 
 #if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 6
-/* Backward compatibility with Python 2.5 */
+/* backward compatibility with Python 2.5 */
 #define Py_TYPE(ob)   (((PyObject *) (ob))->ob_type)
 #define Py_SIZE(ob)   (((PyVarObject *) (ob))->ob_size)
 #endif
 
 #if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 7
+/* (new) buffer protocol */
 #define WITH_BUFFER
 #endif
 
