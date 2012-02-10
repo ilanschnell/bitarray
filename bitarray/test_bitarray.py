@@ -41,8 +41,10 @@ class Util(object):
 
     def randombitarrays(self):
         for n in list(range(25)) + [randint(1000, 2000)]:
-            yield bitarray([randint(0, 1) for d in range(n)],
-                           endian='big' if randint(0, 1) else 'little')
+            a = bitarray(endian='big' if randint(0, 1) else 'little')
+            a.frombytes(os.urandom(bits2bytes(n)))
+            del a[n:]
+            yield a
 
     def randomlists(self):
         for n in list(range(25)) + [randint(1000, 2000)]:
