@@ -1162,7 +1162,7 @@ bitarray_reduce(bitarrayobject *self)
         dict = Py_None;
         Py_INCREF(dict);
     }
-    if (self->nbits < 3) {
+    if (self->nbits <= 2) {
         repr = unpack(self, '0', '1');
         if (repr == NULL)
             goto error;
@@ -2569,7 +2569,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         Py_ssize_t strlen;
 
         strlen = PyString_Size(initial);
-        if (strlen > 0) {
+        if (strlen >= 2) {
             char *str;
 
             str = PyString_AsString(initial);
