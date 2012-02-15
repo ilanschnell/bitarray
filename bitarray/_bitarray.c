@@ -2509,7 +2509,6 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PyObject *a;  /* to be returned in some cases */
     PyObject *initial = NULL;
-    idx_t nbits = 0;
     char *endianStr = "<NOT_PROVIDED>";
     int endian;
     static char* kwlist[] = {"initial", "endian", NULL};
@@ -2540,6 +2539,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* int, long */
     if (IS_INDEX(initial)) {
+        idx_t nbits = 0;
+
         if (getIndex(initial, &nbits) < 0)
             return NULL;
         if (nbits < 0) {
