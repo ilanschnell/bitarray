@@ -1163,7 +1163,8 @@ bitarray_reduce(bitarrayobject *self)
         dict = Py_None;
         Py_INCREF(dict);
     }
-
+    /* the first byte indicates the number of unused bits at the end, and
+       the rest of the bytes consist of the raw binary data */
     str = PyMem_Malloc(Py_SIZE(self) + 1);
     if (str == NULL) {
         PyErr_NoMemory();
@@ -2556,24 +2557,26 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return a;
     }
 
+    /* string */
     if (PyString_Check(initial)) {
         Py_ssize_t strlen;
         char *str;
 
         strlen = PyString_Size(initial);
-        if (strlen == 0)
+        if (strlen == 0)        /* empty string */
             return newbitarrayobject(type, 0, endian);
 
         str = PyString_AsString(initial);
         if (0 <= str[0] && str[0] < 8) {
-            /* inverse of __reduce__ */
+            /* when the first character is smaller than 8, it indicates the
+               number of unused bits at the end, and rest of the bytes
+               consist of the raw binary data, this is used for pickling */
             if (strlen == 1 && str[0] > 0) {
                 PyErr_Format(PyExc_ValueError,
                              "did not expect 0x0%d", (int) str[0]);
                 return NULL;
             }
-            a = newbitarrayobject(type,
-                                  BITS(strlen - 1) - ((idx_t) str[0]),
+            a = newbitarrayobject(type, BITS(strlen - 1) - ((idx_t) str[0]),
                                   endian);
             if (a == NULL)
                 return NULL;
