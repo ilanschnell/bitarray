@@ -1168,7 +1168,7 @@ bitarray_reduce(bitarrayobject *self)
     str = PyMem_Malloc(Py_SIZE(self) + 1);
     if (str == NULL) {
         PyErr_NoMemory();
-        return NULL;
+        goto error;
     }
     str[0] = (char) setunused(self);
     memcpy(str + 1, self->ob_item, Py_SIZE(self));
