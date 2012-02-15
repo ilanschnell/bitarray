@@ -1183,7 +1183,7 @@ bitarray_reduce(bitarrayobject *self)
             goto error;
         PyMem_Free((void *) str);
     }
-    result = Py_BuildValue("O(Os)O", Py_TYPE(self), 
+    result = Py_BuildValue("O(Os)O", Py_TYPE(self),
                            repr, ENDIANSTR(self->endian), dict);
 error:
     Py_DECREF(dict);
@@ -2561,6 +2561,27 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         memcpy(((bitarrayobject *) a)->ob_item, np->ob_item, Py_SIZE(np));
 #undef np
         return a;
+    }
+
+    /* inverse of __reduce__ */
+    if (PyString_Check(initial)) {
+        Py_ssize_t strlen;
+
+        strlen = PyString_Size(initial);
+        if (strlen > 0) {
+            unsigned char unused;
+            char *str;
+
+            str = PyString_AsString(initial);
+            unused = str[0];
+            if (unused < 8) {
+                a = newbitarrayobject(type, BITS(strlen - 1) - unused, endian);
+                if (a == NULL)
+                    return NULL;
+                memcpy(((bitarrayobject *) a)->ob_item, str + 1, strlen - 1);
+                return a;
+            }
+        }
     }
 
     /* leave remaining type dispatch to the extend method */
