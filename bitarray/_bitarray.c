@@ -2563,29 +2563,29 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return a;
     }
 
-    /* inverse of __reduce__ */
     if (PyString_Check(initial)) {
         Py_ssize_t strlen;
+        char *str;
 
         strlen = PyString_Size(initial);
-        if (strlen >= 1) {
-            char *str;
+        if (strlen == 0)
+            return newbitarrayobject(type, 0, endian);
 
-            str = PyString_AsString(initial);
-            if (0 <= str[0] && str[0] < 8) {
-                if (strlen == 1 && str[0] > 0) {
-                    PyErr_Format(PyExc_ValueError,
-                                 "did not expect 0x0%d", (int) str[0]);
-                    return NULL;
-                }
-                a = newbitarrayobject(type,
-                                      BITS(strlen - 1) - ((idx_t) str[0]),
-                                      endian);
-                if (a == NULL)
-                    return NULL;
-                memcpy(((bitarrayobject *) a)->ob_item, str + 1, strlen - 1);
-                return a;
+        str = PyString_AsString(initial);
+        if (0 <= str[0] && str[0] < 8) {
+            /* inverse of __reduce__ */
+            if (strlen == 1 && str[0] > 0) {
+                PyErr_Format(PyExc_ValueError,
+                             "did not expect 0x0%d", (int) str[0]);
+                return NULL;
             }
+            a = newbitarrayobject(type,
+                                  BITS(strlen - 1) - ((idx_t) str[0]),
+                                  endian);
+            if (a == NULL)
+                return NULL;
+            memcpy(((bitarrayobject *) a)->ob_item, str + 1, strlen - 1);
+            return a;
         }
     }
 
