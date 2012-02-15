@@ -2593,7 +2593,6 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     a = newbitarrayobject(type, 0, endian);
     if (a == NULL)
         return NULL;
-
     if (extend_dispatch((bitarrayobject *) a, initial) < 0) {
         Py_DECREF(a);
         return NULL;
