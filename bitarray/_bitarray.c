@@ -2568,11 +2568,16 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         Py_ssize_t strlen;
 
         strlen = PyString_Size(initial);
-        if (strlen >= 2) {
+        if (strlen >= 1) {
             char *str;
 
             str = PyString_AsString(initial);
             if (0 <= str[0] && str[0] < 8) {
+                if (strlen == 1 && str[0] > 0) {
+                    PyErr_Format(PyExc_ValueError,
+                                 "did not expect 0x0%d", (int) str[0]);
+                    return NULL;
+                }
                 a = newbitarrayobject(type,
                                       BITS(strlen - 1) - ((idx_t) str[0]),
                                       endian);
