@@ -1155,6 +1155,7 @@ static PyObject *
 bitarray_reduce(bitarrayobject *self)
 {
     PyObject *dict, *repr = NULL, *result = NULL;
+    char *str;
 
     dict = PyObject_GetAttrString((PyObject *) self, "__dict__");
     if (dict == NULL) {
@@ -1162,26 +1163,18 @@ bitarray_reduce(bitarrayobject *self)
         dict = Py_None;
         Py_INCREF(dict);
     }
-    if (self->nbits <= 2) {
-        repr = unpack(self, '0', '1');
-        if (repr == NULL)
-            goto error;
-    }
-    else {
-        char *str;
 
-        str = PyMem_Malloc(Py_SIZE(self) + 1);
-        if (str == NULL) {
-            PyErr_NoMemory();
-            return NULL;
-        }
-        str[0] = (char) setunused(self);
-        memcpy(str + 1, self->ob_item, Py_SIZE(self));
-        repr = PyString_FromStringAndSize(str, Py_SIZE(self) + 1);
-        if (repr == NULL)
-            goto error;
-        PyMem_Free((void *) str);
+    str = PyMem_Malloc(Py_SIZE(self) + 1);
+    if (str == NULL) {
+        PyErr_NoMemory();
+        return NULL;
     }
+    str[0] = (char) setunused(self);
+    memcpy(str + 1, self->ob_item, Py_SIZE(self));
+    repr = PyString_FromStringAndSize(str, Py_SIZE(self) + 1);
+    if (repr == NULL)
+        goto error;
+    PyMem_Free((void *) str);
     result = Py_BuildValue("O(Os)O", Py_TYPE(self),
                            repr, ENDIANSTR(self->endian), dict);
 error:
