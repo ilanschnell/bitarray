@@ -252,6 +252,13 @@ class CreateObjectTests(unittest.TestCase, Util):
 
         self.assertRaises(ValueError, bitarray.__new__, bitarray, '01012100')
 
+    def test_rawbytes(self): # this representation is used for pickling
+        for s, r in [('\x00', ''), ('\x07\xff', '1'), ('\x03\xff', '11111'),
+                     ('\x01\x87\xda', '10000111' '1101101')]:
+            self.assertEqual(bitarray(s, endian='big'), bitarray(r))
+
+        for i in range(1, 8):
+            self.assertRaises(ValueError, bitarray.__new__, bitarray, chr(i))
 
     def test_bitarray(self):
         for n in range(50):
