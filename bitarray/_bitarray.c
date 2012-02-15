@@ -1675,11 +1675,15 @@ bitarray_repr(bitarrayobject *self)
     PyObject *decoded;
 #endif
 
-    if (self->nbits == 0)
+    if (self->nbits == 0) {
         string = PyString_FromString("bitarray()");
-    else
-    {
+        if (string == NULL)
+            return NULL;
+    }
+    else {
         string = PyString_FromString("bitarray(\'");
+        if (string == NULL)
+            return NULL;
         PyString_ConcatAndDel(&string, unpack(self, '0', '1'));
         PyString_ConcatAndDel(&string, PyString_FromString("\')"));
     }
