@@ -3,6 +3,8 @@
   * add iterdecode method (C level), which returns an iterator but is
     otherwise like the decode method
 
+  * improve memory efficiency and speed for pickling large bitarray objects
+
 
 
 2012-02-06   0.6.0:

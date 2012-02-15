@@ -252,6 +252,15 @@ class CreateObjectTests(unittest.TestCase, Util):
 
         self.assertRaises(ValueError, bitarray.__new__, bitarray, '01012100')
 
+    def test_rawbytes(self): # this representation is used for pickling
+        for s, r in [('\x00', ''), ('\x07\xff', '1'), ('\x03\xff', '11111'),
+                     ('\x01\x87\xda', '10000111' '1101101')]:
+            self.assertEqual(bitarray(to_bytes(s), endian='big'),
+                             bitarray(r))
+
+        for i in range(1, 8):
+            self.assertRaises(ValueError, bitarray.__new__,
+                              bitarray, to_bytes(chr(i)))
 
     def test_bitarray(self):
         for n in range(50):
@@ -662,7 +671,9 @@ class MiscTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
 
     def test_cPickle(self):
-        from pickle import loads, dumps
+        if is_py3k:
+            return
+        from cPickle import loads, dumps
         for a in self.randombitarrays():
             b = loads(dumps(a))
             self.assert_(b is not a)
@@ -1630,16 +1641,27 @@ class FileTests(unittest.TestCase, Util):
         shutil.rmtree(self.tmpdir)
 
 
-    def test_cPickle(self):
+    def test_pickle(self):
         from pickle import load, dump
 
         for a in self.randombitarrays():
             fo = open(self.tmpfname, 'wb')
             dump(a, fo)
             fo.close()
-
             b = load(open(self.tmpfname, 'rb'))
+            self.assert_(b is not a)
+            self.assertEQUAL(a, b)
 
+    def test_cPickle(self):
+        if is_py3k:
+            return
+        from cPickle import load, dump
+
+        for a in self.randombitarrays():
+            fo = open(self.tmpfname, 'wb')
+            dump(a, fo)
+            fo.close()
+            b = load(open(self.tmpfname, 'rb'))
             self.assert_(b is not a)
             self.assertEQUAL(a, b)
 

@@ -1154,7 +1154,8 @@ Returns True when any bit in the array is True.");
 static PyObject *
 bitarray_reduce(bitarrayobject *self)
 {
-    PyObject *dict, *unpacked, *result = NULL;
+    PyObject *dict, *repr = NULL, *result = NULL;
+    char *str;
 
     dict = PyObject_GetAttrString((PyObject *) self, "__dict__");
     if (dict == NULL) {
@@ -1162,18 +1163,24 @@ bitarray_reduce(bitarrayobject *self)
         dict = Py_None;
         Py_INCREF(dict);
     }
-    unpacked = unpack(self, '0', '1');
-    if (unpacked == NULL)
+    /* the first byte indicates the number of unused bits at the end, and
+       the rest of the bytes consist of the raw binary data */
+    str = PyMem_Malloc(Py_SIZE(self) + 1);
+    if (str == NULL) {
+        PyErr_NoMemory();
         goto error;
-
-    result = Py_BuildValue("O(Os)O",
-                           Py_TYPE(self),
-                           unpacked,
-                           ENDIANSTR(self->endian),
-                           dict);
+    }
+    str[0] = (char) setunused(self);
+    memcpy(str + 1, self->ob_item, Py_SIZE(self));
+    repr = PyString_FromStringAndSize(str, Py_SIZE(self) + 1);
+    if (repr == NULL)
+        goto error;
+    PyMem_Free((void *) str);
+    result = Py_BuildValue("O(Os)O", Py_TYPE(self),
+                           repr, ENDIANSTR(self->endian), dict);
 error:
     Py_DECREF(dict);
-    Py_XDECREF(unpacked);
+    Py_XDECREF(repr);
     return result;
 }
 
@@ -2499,7 +2506,6 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PyObject *a;  /* to be returned in some cases */
     PyObject *initial = NULL;
-    idx_t nbits = 0;
     char *endianStr = "<NOT_PROVIDED>";
     int endian;
     static char* kwlist[] = {"initial", "endian", NULL};
@@ -2530,6 +2536,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* int, long */
     if (IS_INDEX(initial)) {
+        idx_t nbits = 0;
+
         if (getIndex(initial, &nbits) < 0)
             return NULL;
         if (nbits < 0) {
@@ -2551,6 +2559,34 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         memcpy(((bitarrayobject *) a)->ob_item, np->ob_item, Py_SIZE(np));
 #undef np
         return a;
+    }
+
+    /* string */
+    if (PyString_Check(initial)) {
+        Py_ssize_t strlen;
+        char *str;
+
+        strlen = PyString_Size(initial);
+        if (strlen == 0)        /* empty string */
+            return newbitarrayobject(type, 0, endian);
+
+        str = PyString_AsString(initial);
+        if (0 <= str[0] && str[0] < 8) {
+            /* when the first character is smaller than 8, it indicates the
+               number of unused bits at the end, and rest of the bytes
+               consist of the raw binary data, this is used for pickling */
+            if (strlen == 1 && str[0] > 0) {
+                PyErr_Format(PyExc_ValueError,
+                             "did not expect 0x0%d", (int) str[0]);
+                return NULL;
+            }
+            a = newbitarrayobject(type, BITS(strlen - 1) - ((idx_t) str[0]),
+                                  endian);
+            if (a == NULL)
+                return NULL;
+            memcpy(((bitarrayobject *) a)->ob_item, str + 1, strlen - 1);
+            return a;
+        }
     }
 
     /* leave remaining type dispatch to the extend method */
