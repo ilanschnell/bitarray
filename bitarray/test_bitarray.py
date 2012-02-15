@@ -662,7 +662,9 @@ class MiscTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
 
     def test_cPickle(self):
-        from pickle import loads, dumps
+        if is_py3k:
+            return
+        from cPickle import loads, dumps
         for a in self.randombitarrays():
             b = loads(dumps(a))
             self.assert_(b is not a)
@@ -1630,16 +1632,27 @@ class FileTests(unittest.TestCase, Util):
         shutil.rmtree(self.tmpdir)
 
 
-    def test_cPickle(self):
+    def test_pickle(self):
         from pickle import load, dump
 
         for a in self.randombitarrays():
             fo = open(self.tmpfname, 'wb')
             dump(a, fo)
             fo.close()
-
             b = load(open(self.tmpfname, 'rb'))
+            self.assert_(b is not a)
+            self.assertEQUAL(a, b)
 
+    def test_cPickle(self):
+        if is_py3k:
+            return
+        from cPickle import load, dump
+
+        for a in self.randombitarrays():
+            fo = open(self.tmpfname, 'wb')
+            dump(a, fo)
+            fo.close()
+            b = load(open(self.tmpfname, 'rb'))
             self.assert_(b is not a)
             self.assertEQUAL(a, b)
 
