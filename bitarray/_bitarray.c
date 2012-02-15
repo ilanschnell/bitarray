@@ -2570,13 +2570,13 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
         strlen = PyString_Size(initial);
         if (strlen > 0) {
-            unsigned char unused;
             char *str;
 
             str = PyString_AsString(initial);
-            unused = str[0];
-            if (unused < 8) {
-                a = newbitarrayobject(type, BITS(strlen - 1) - unused, endian);
+            if (0 <= str[0] && str[0] < 8) {
+                a = newbitarrayobject(type,
+                                      BITS(strlen - 1) - ((idx_t) str[0]),
+                                      endian);
                 if (a == NULL)
                     return NULL;
                 memcpy(((bitarrayobject *) a)->ob_item, str + 1, strlen - 1);
