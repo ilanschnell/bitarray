@@ -531,7 +531,7 @@ Reference
 Change log
 ----------
 
-2012-XX-XX   0.7.0:
+**0.7.0** (2012-02-15):
 
   * add iterdecode method (C level), which returns an iterator but is
     otherwise like the decode method
@@ -558,14 +558,6 @@ Change log
   * fixed MSVC compile error on Python 3 (thanks to Chris Gohlke)
   * add missing start and stop optional parameters to index() method
   * add examples/compress.py
-
-
-
-**0.5.1** (2012-01-31):
-
-  * update documentation to use tobytes and frombytes, rather than tostring
-    and fromstring (which are now deprecated)
-  * simplified how tests are run
 
 
 
