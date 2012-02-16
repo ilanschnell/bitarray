@@ -1,3 +1,9 @@
+2012-XX-XX   0.7.1:
+-------------------
+
+
+
+
 2012-02-15   0.7.0:
 -------------------
   * add iterdecode method (C level), which returns an iterator but is

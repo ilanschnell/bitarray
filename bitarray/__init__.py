@@ -10,7 +10,7 @@ Author: Ilan Schnell
 """
 from ._bitarray import _bitarray, bits2bytes, _sysinfo
 
-__version__ = '0.7.0'
+__version__ = '0.7.1'
 
 
 def _tree_insert(tree, sym, ba):
