@@ -2506,7 +2506,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PyObject *a;  /* to be returned in some cases */
     PyObject *initial = NULL;
-    char *endianStr = "<NOT_PROVIDED>";
+    char *endianStr = NULL;
     int endian;
     static char* kwlist[] = {"initial", "endian", NULL};
 
@@ -2515,14 +2515,15 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
                                      &initial, &endianStr)) {
         return NULL;
     }
-    if (strcmp(endianStr, "little") == 0) {
+
+    if (endianStr == NULL) {
+        endian = DEFAULT_ENDIAN;  /* use default value */
+    }
+    else if (strcmp(endianStr, "little") == 0) {
         endian = 0;
     }
     else if (strcmp(endianStr, "big") == 0) {
         endian = 1;
-    }
-    else if (strcmp(endianStr, "<NOT_PROVIDED>") == 0) {
-        endian = DEFAULT_ENDIAN;  /* use default value */
     }
     else {
         PyErr_SetString(PyExc_ValueError,
@@ -2552,8 +2553,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (bitarray_Check(initial)) {
 #define np  ((bitarrayobject *) initial)
         a = newbitarrayobject(type, np->nbits,
-                              (strcmp(endianStr, "<NOT_PROVIDED>") == 0  ?
-                               np->endian : endian));
+                              endianStr == NULL ? np->endian : endian);
         if (a == NULL)
             return NULL;
         memcpy(((bitarrayobject *) a)->ob_item, np->ob_item, Py_SIZE(np));
