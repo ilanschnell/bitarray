@@ -736,7 +736,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 
 /* --------- helper functions NOT involving bitarrayobjects ------------ */
 
-#define ENDIANSTR(x)  ((x) ? "big" : "little")
+#define ENDIAN_STR(ba)  (((ba)->endian) ? "big" : "little")
 
 #ifdef IS_PY3K
 #define IS_INDEX(x)  (PyLong_Check(x) || PyIndex_Check(x))
@@ -1073,7 +1073,7 @@ bitarray_buffer_info(bitarrayobject *self)
     res = Py_BuildValue("OLsiL",
                         ptr,
                         (idx_t) Py_SIZE(self),
-                        ENDIANSTR(self->endian),
+                        ENDIAN_STR(self),
                         (int) (BITS(Py_SIZE(self)) - self->nbits),
                         (idx_t) self->allocated);
     Py_DECREF(ptr);
@@ -1094,9 +1094,9 @@ static PyObject *
 bitarray_endian(bitarrayobject *self)
 {
 #ifdef IS_PY3K
-    return PyUnicode_FromString(ENDIANSTR(self->endian));
+    return PyUnicode_FromString(ENDIAN_STR(self));
 #else
-    return PyString_FromString(ENDIANSTR(self->endian));
+    return PyString_FromString(ENDIAN_STR(self));
 #endif
 }
 
@@ -1177,7 +1177,7 @@ bitarray_reduce(bitarrayobject *self)
         goto error;
     PyMem_Free((void *) str);
     result = Py_BuildValue("O(Os)O", Py_TYPE(self),
-                           repr, ENDIANSTR(self->endian), dict);
+                           repr, ENDIAN_STR(self), dict);
 error:
     Py_DECREF(dict);
     Py_XDECREF(repr);
