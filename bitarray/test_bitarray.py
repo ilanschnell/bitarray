@@ -665,19 +665,21 @@ class MiscTests(unittest.TestCase, Util):
 
     def test_pickle(self):
         from pickle import loads, dumps
-        for a in self.randombitarrays():
-            b = loads(dumps(a))
-            self.assert_(b is not a)
-            self.assertEQUAL(a, b)
+        for v in range(3):
+            for a in self.randombitarrays():
+                b = loads(dumps(a, v))
+                self.assert_(b is not a)
+                self.assertEQUAL(a, b)
 
     def test_cPickle(self):
         if is_py3k:
             return
-        from cPickle import loads, dumps
-        for a in self.randombitarrays():
-            b = loads(dumps(a))
-            self.assert_(b is not a)
-            self.assertEQUAL(a, b)
+        for v in range(3):
+            from cPickle import loads, dumps
+            for a in self.randombitarrays():
+                b = loads(dumps(a, v))
+                self.assert_(b is not a)
+                self.assertEQUAL(a, b)
 
     def test_overflow(self):
         from platform import architecture
@@ -1644,27 +1646,28 @@ class FileTests(unittest.TestCase, Util):
     def test_pickle(self):
         from pickle import load, dump
 
-        for a in self.randombitarrays():
-            fo = open(self.tmpfname, 'wb')
-            dump(a, fo)
-            fo.close()
-            b = load(open(self.tmpfname, 'rb'))
-            self.assert_(b is not a)
-            self.assertEQUAL(a, b)
+        for v in range(3):
+            for a in self.randombitarrays():
+                fo = open(self.tmpfname, 'wb')
+                dump(a, fo, v)
+                fo.close()
+                b = load(open(self.tmpfname, 'rb'))
+                self.assert_(b is not a)
+                self.assertEQUAL(a, b)
 
     def test_cPickle(self):
         if is_py3k:
             return
         from cPickle import load, dump
 
-        for a in self.randombitarrays():
-            fo = open(self.tmpfname, 'wb')
-            dump(a, fo)
-            fo.close()
-            b = load(open(self.tmpfname, 'rb'))
-            self.assert_(b is not a)
-            self.assertEQUAL(a, b)
-
+        for v in range(3):
+            for a in self.randombitarrays():
+                fo = open(self.tmpfname, 'wb')
+                dump(a, fo, v)
+                fo.close()
+                b = load(open(self.tmpfname, 'rb'))
+                self.assert_(b is not a)
+                self.assertEQUAL(a, b)
 
     def test_shelve(self):
         import shelve, hashlib
