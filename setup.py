@@ -1,13 +1,9 @@
 import re
-import sys
 from os.path import join
 from distutils.core import setup, Extension
 
-if sys.version_info[:2] < (2, 5):
-    raise Exception('bitarray requires Python 2.5 or greater.')
 
 kwds = {}
-
 kwds['long_description'] = open('README.rst').read()
 
 # Read version from bitarray/__init__.py
