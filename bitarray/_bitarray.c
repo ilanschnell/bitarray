@@ -2506,21 +2506,21 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PyObject *a;  /* to be returned in some cases */
     PyObject *initial = NULL;
-    char *endianStr = NULL;
+    char *endian_str = NULL;
     int endian;
     static char* kwlist[] = {"initial", "endian", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds,
-                        "|Os:bitarray", kwlist, &initial, &endianStr))
+                        "|Os:bitarray", kwlist, &initial, &endian_str))
         return NULL;
 
-    if (endianStr == NULL) {
+    if (endian_str == NULL) {
         endian = DEFAULT_ENDIAN;  /* use default value */
     }
-    else if (strcmp(endianStr, "little") == 0) {
+    else if (strcmp(endian_str, "little") == 0) {
         endian = 0;
     }
-    else if (strcmp(endianStr, "big") == 0) {
+    else if (strcmp(endian_str, "big") == 0) {
         endian = 1;
     }
     else {
@@ -2551,7 +2551,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (bitarray_Check(initial)) {
 #define np  ((bitarrayobject *) initial)
         a = newbitarrayobject(type, np->nbits,
-                              endianStr == NULL ? np->endian : endian);
+                              endian_str == NULL ? np->endian : endian);
         if (a == NULL)
             return NULL;
         memcpy(((bitarrayobject *) a)->ob_item, np->ob_item, Py_SIZE(np));
