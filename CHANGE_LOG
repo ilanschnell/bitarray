@@ -1,6 +1,7 @@
-2012-XX-XX   0.7.1:
+2012-XX-XX   0.8.0:
 -------------------
-
+  * add (module level) function bitdiff for calculating the difference
+    between two bitarrays
 
 
 
@@ -8,7 +9,6 @@
 -------------------
   * add iterdecode method (C level), which returns an iterator but is
     otherwise like the decode method
-
   * improve memory efficiency and speed of pickling large bitarray objects
 
 
