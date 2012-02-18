@@ -18,7 +18,7 @@ else:
     from cStringIO import StringIO
 
 
-from bitarray import bitarray, bits2bytes, __version__
+from bitarray import bitarray, bitdiff, bits2bytes, __version__
 
 
 tests = []
@@ -118,6 +118,26 @@ def getIndicesEx(r, length):
 # ---------------------------------------------------------------------------
 
 class TestsModuleFunctions(unittest.TestCase, Util):
+
+    def test_bitdiff(self):
+        a = bitarray('0011')
+        b = bitarray('0101')
+        self.assertEqual(bitdiff(a, b), 2)
+        self.assertRaises(TypeError, bitdiff, a, '')
+        self.assertRaises(TypeError, bitdiff, '1', b)
+        self.assertRaises(TypeError, bitdiff, a, 4)
+        b.append(1)
+        self.assertRaises(ValueError, bitdiff, a, b)
+
+        for n in list(range(50)) + [randint(1000, 2000)]:
+            a = bitarray()
+            a.frombytes(os.urandom(bits2bytes(n)))
+            del a[n:]
+            b = bitarray()
+            b.frombytes(os.urandom(bits2bytes(n)))
+            del b[n:]
+            diff = sum(a[i] ^ b[i] for i in range(n))
+            self.assertEqual(bitdiff(a, b), diff)
 
     def test_bits2bytes(self):
         for arg in ['foo', [], None, {}]:

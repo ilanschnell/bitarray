@@ -402,32 +402,38 @@ bytereverse(bitarrayobject *self)
     }
 }
 
+
+static int bitcount_lookup[256] = {
+    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
+    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
+    4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
+};
+
 /* returns number of 1 bits */
 static idx_t
 count(bitarrayobject *self)
 {
-    static int bitcount[256];
-    static int setup = 0;
     Py_ssize_t i;
     idx_t res = 0;
     unsigned char c;
 
-    if (!setup) {
-        /* setup lookup table, which maps each byte to it's bit count:
-           bitcount = {0, 1, 1, 2, 1, 2, 2, 3, 1, ..., 8} */
-        int j, k;
-        for (k = 0; k < 256; k++) {
-            bitcount[k] = 0;
-            for (j = 0; j < 8; j++)
-                bitcount[k] += (k >> j) & 1;
-        }
-        setup = 1;
-    }
-
     setunused(self);
     for (i = 0; i < Py_SIZE(self); i++) {
         c = self->ob_item[i];
-        res += bitcount[c];
+        res += bitcount_lookup[c];
     }
     return res;
 }
@@ -2900,6 +2906,47 @@ static PyTypeObject Bitarraytype = {
 /*************************** Module functions **********************/
 
 static PyObject *
+bitdiff(PyObject *self, PyObject *args)
+{
+    PyObject *a, *b;
+    Py_ssize_t i;
+    idx_t res = 0;
+    unsigned char c;
+
+    if (!PyArg_ParseTuple(args, "OO:bitdiff", &a, &b))
+        return NULL;
+    if (!(bitarray_Check(a) && bitarray_Check(b))) {
+        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+        return NULL;
+    }
+
+#define aa  ((bitarrayobject *) a)
+#define bb  ((bitarrayobject *) b)
+    if (aa->nbits != bb->nbits) {
+        PyErr_SetString(PyExc_ValueError,
+                        "bitarrays of equal length expected");
+        return NULL;
+    }
+    setunused(aa);
+    setunused(bb);
+    for (i = 0; i < Py_SIZE(aa); i++) {
+        c = aa->ob_item[i] ^ bb->ob_item[i];
+        res += bitcount_lookup[c];
+    }
+#undef aa
+#undef bb
+    return PyLong_FromLongLong(res);
+}
+
+PyDoc_STRVAR(bitdiff_doc,
+"bitdiff(a, b) -> int\n\
+\n\
+Return the difference between two bitarrays a and b.\n\
+This is function does the same as (a ^ b).count(), but is more memory\n\
+efficient, as not intermediate bitarray object gets created");
+
+
+static PyObject *
 bits2bytes(PyObject *self, PyObject *v)
 {
     idx_t n = 0;
@@ -2916,7 +2963,6 @@ bits2bytes(PyObject *self, PyObject *v)
     }
     return PyLong_FromLongLong(BYTES(n));
 }
-
 
 PyDoc_STRVAR(bits2bytes_doc,
 "bits2bytes(n) -> int\n\
@@ -2946,8 +2992,9 @@ tuple(sizeof(void *),\n\
 
 
 static PyMethodDef module_functions[] = {
-    {"bits2bytes", (PyCFunction) bits2bytes, METH_O,      bits2bytes_doc},
-    {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS, sysinfo_doc   },
+    {"bitdiff",    (PyCFunction) bitdiff,    METH_VARARGS, bitdiff_doc   },
+    {"bits2bytes", (PyCFunction) bits2bytes, METH_O,       bits2bytes_doc},
+    {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS,  sysinfo_doc   },
     {NULL,         NULL}  /* sentinel */
 };
 
