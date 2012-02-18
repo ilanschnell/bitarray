@@ -4,13 +4,11 @@
     between two bitarrays
 
 
-
 2012-02-15   0.7.0:
 -------------------
   * add iterdecode method (C level), which returns an iterator but is
     otherwise like the decode method
   * improve memory efficiency and speed of pickling large bitarray objects
-
 
 
 2012-02-06   0.6.0:
@@ -25,7 +23,6 @@
   * improve documentation
 
 
-
 2012-02-02   0.5.2:
 -------------------
   * fixed MSVC compile error on Python 3 (thanks to Chris Gohlke)
@@ -33,13 +30,11 @@
   * add examples/compress.py
 
 
-
 2012-01-31   0.5.1:
 -------------------
   * update documentation to use tobytes and frombytes, rather than tostring
     and fromstring (which are now deprecated)
   * simplified how tests are run
-
 
 
 2012-01-23   0.5.0:

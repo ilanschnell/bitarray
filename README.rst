@@ -50,8 +50,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-0.7.1.tar.gz
-   $ cd bitarray-0.7.1
+   $ tar xzf bitarray-0.8.0.tar.gz
+   $ cd bitarray-0.8.0
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -62,12 +62,12 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-   bitarray version: 0.7.1
+   bitarray version: 0.8.0
    2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
-   ........................................
+   ...........................................
    ----------------------------------------------------------------------
-   Ran 126 tests in 2.307s
+   Ran 129 tests in 2.307s
    
    OK
 
@@ -537,19 +537,17 @@ Reference
 Change log
 ----------
 
-2012-XX-XX   0.7.1:
+2012-XX-XX   0.8.0:
 
-
-
+  * add (module level) function bitdiff for calculating the difference
+    between two bitarrays
 
 
 **0.7.0** (2012-02-15):
 
   * add iterdecode method (C level), which returns an iterator but is
     otherwise like the decode method
-
   * improve memory efficiency and speed of pickling large bitarray objects
-
 
 
 **0.6.0** (2012-02-06):
@@ -564,13 +562,11 @@ Change log
   * improve documentation
 
 
-
 **0.5.2** (2012-02-02):
 
   * fixed MSVC compile error on Python 3 (thanks to Chris Gohlke)
   * add missing start and stop optional parameters to index() method
   * add examples/compress.py
-
 
 
 Please find the complete change log
