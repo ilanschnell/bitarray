@@ -17,7 +17,7 @@ this module useful.
 Key features
 ------------
 
- * On 32bit machines, a bitarray object can contain up to 2^34 elements,
+ * On 32bit systems, a bitarray object can contain up to 2^34 elements,
    that is 16 Gbits (on 64bit machines up to 2^63 elements in theory --
    on Python 2.4 only 2^31 elements,
    see `PEP 353 <http://www.python.org/dev/peps/pep-0353/>`_
