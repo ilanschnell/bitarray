@@ -537,6 +537,10 @@ Reference
 Change log
 ----------
 
+2012-XX-XX   0.8.1:
+
+
+
 **0.8.0** (2012-04-04):
 
   * add Python 2.4 support
