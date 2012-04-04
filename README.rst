@@ -67,7 +67,7 @@ Once you have installed the package, you may want to test it::
    .........................................................................
    ...........................................
    ----------------------------------------------------------------------
-   Ran 129 tests in 2.307s
+   Ran 129 tests in 1.387s
    
    OK
 
@@ -537,7 +537,7 @@ Reference
 Change log
 ----------
 
-2012-XX-XX   0.8.0:
+**0.8.0** (2012-04-04):
 
   * add Python 2.4 support
   * add (module level) function bitdiff for calculating the difference
@@ -561,13 +561,6 @@ Change log
     whereas __contains__ excepts either booleans or bitarrays
   * use a priority queue for Huffman tree example (thanks to Ushma Bhatt)
   * improve documentation
-
-
-**0.5.2** (2012-02-02):
-
-  * fixed MSVC compile error on Python 3 (thanks to Chris Gohlke)
-  * add missing start and stop optional parameters to index() method
-  * add examples/compress.py
 
 
 Please find the complete change log
