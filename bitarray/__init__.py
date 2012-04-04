@@ -8,7 +8,7 @@ Please find a description of this package at:
 
 Author: Ilan Schnell
 """
-from ._bitarray import _bitarray, bitdiff, bits2bytes, _sysinfo
+from bitarray._bitarray import _bitarray, bitdiff, bits2bytes, _sysinfo
 
 __version__ = '0.8.0'
 
@@ -124,5 +124,5 @@ def test(verbosity=1, repeat=1):
 
 Run self-test, and return unittest.runner.TextTestResult object.
 """
-    from . import test_bitarray
+    from bitarray import test_bitarray
     return test_bitarray.run(verbosity=verbosity, repeat=repeat)

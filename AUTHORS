@@ -6,6 +6,7 @@ suggestions, and discussions:
   - Roland Puntaier (Porting to Python 3.x)
   - Daniel Stutzbach (for help with reference counts)
   - Lluís Pàmies (C level itersearch)
+  - Vangelis Koukis (Python 2.4 support)
   - Kris Kennaway
   - Travis Oliphant
   - Gael Varoquaux

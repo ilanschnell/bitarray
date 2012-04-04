@@ -1,5 +1,6 @@
 2012-XX-XX   0.8.0:
 -------------------
+  * add Python 2.4 support
   * add (module level) function bitdiff for calculating the difference
     between two bitarrays
 
