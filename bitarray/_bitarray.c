@@ -30,7 +30,7 @@ typedef long Py_ssize_t;
 #define PY_SSIZE_T_MIN  LONG_MIN
 Py_ssize_t PyNumber_AsSsize_t(PyObject *o, PyObject *exc)
 {
-    return PyLong_AsLong(o);  /* FIXME please */
+    return PyLong_AsLong(o);
 }
 int PyIndex_Check(PyObject *o)
 {

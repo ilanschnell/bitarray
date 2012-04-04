@@ -13,15 +13,15 @@ such as portable bitmap image files (.pbm).  Also, when dealing with
 compressed data which uses variable bit length encoding, you may find
 this module useful.
 
-Requires Python 2.5 or greater (including Py3k),
-see `PEP 353 <http://www.python.org/dev/peps/pep-0353/>`_.
-
 
 Key features
 ------------
 
  * On 32bit machines, a bitarray object can contain up to 2^34 elements,
-   that is 16 Gbits (on 64bit machines up to 2^63 elements in theory).
+   that is 16 Gbits (on 64bit machines up to 2^63 elements in theory --
+   on Python 2.4 only 2^31 elements,
+   see `PEP 353 <http://www.python.org/dev/peps/pep-0353/>`_
+   (added in Python 2.5)).
 
  * All crucial functionality implemented in C.
 
@@ -539,6 +539,7 @@ Change log
 
 2012-XX-XX   0.8.0:
 
+  * add Python 2.4 support
   * add (module level) function bitdiff for calculating the difference
     between two bitarrays
 
