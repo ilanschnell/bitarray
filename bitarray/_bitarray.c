@@ -24,7 +24,7 @@
 #endif
 
 #if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 5
-/* Python 2.4 does not support Py_Ssize_t, substitute long for it */
+/* Py_ssize_t was introduced in Python 2.5, substitute long for it */
 typedef long Py_ssize_t;
 #define PY_SSIZE_T_MAX  LONG_MAX
 #define PY_SSIZE_T_MIN  LONG_MIN
@@ -38,7 +38,7 @@ int PyIndex_Check(PyObject *o)
 }
 #define PY_SSIZE_T_FMT  "l"
 #else
-/* Python 2.5 and up uses 'n' as the format char for Py_Ssize_t */
+/* Python 2.5 and up uses 'n' as the format char for Py_ssize_t */
 #define PY_SSIZE_T_FMT  "n"
 #endif
 
