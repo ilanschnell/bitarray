@@ -41,7 +41,7 @@ class Util(object):
 
     def randombitarrays(self):
         for n in list(range(25)) + [randint(1000, 2000)]:
-            a = bitarray(endian='big' if randint(0, 1) else 'little')
+            a = bitarray(endian=['little', 'big'][randint(0, 1)])
             a.frombytes(os.urandom(bits2bytes(n)))
             del a[n:]
             yield a
@@ -51,7 +51,10 @@ class Util(object):
             yield [bool(randint(0, 1)) for d in range(n)]
 
     def rndsliceidx(self, length):
-        return randint(-2*length, 2*length-1) if randint(0, 1) == 1 else None
+        if randint(0, 1):
+            return None
+        else:
+            return randint(-2 * length, 2 * length - 1)
 
     def slicelen(self, r, length):
         return getIndicesEx(r, length)[-1]
@@ -86,15 +89,19 @@ def getIndicesEx(r, length):
         if step == 0:
             raise ValueError("slice step cannot be zero")
 
-    defstart = length-1 if step < 0 else 0
-    defstop  = -1 if step < 0 else length
+    if step < 0:
+        defstart = length - 1
+        defstop = -1
+    else:
+        defstart = 0
+        defstop = length
 
     if r.start is None:
         start = defstart
     else:
         if start < 0: start += length
-        if start < 0: start = -1 if step < 0 else 0
-        if start >= length: start = length-1 if step < 0 else length
+        if start < 0: start = [0, -1][step < 0]
+        if start >= length: start = [length, length - 1][step < 0]
 
     if r.stop is None:
         stop = defstop
@@ -106,9 +113,9 @@ def getIndicesEx(r, length):
     if (step < 0 and stop >= length) or (step > 0 and start >= stop):
         slicelength = 0
     elif step < 0:
-        slicelength = (stop-start+1) / step + 1
+        slicelength = (stop - start + 1) / step + 1
     else:
-        slicelength = (stop-start-1) / step + 1
+        slicelength = (stop - start - 1) / step + 1
 
     if slicelength < 0:
         slicelength = 0
@@ -149,9 +156,9 @@ class TestsModuleFunctions(unittest.TestCase, Util):
         self.assertRaises(ValueError, bits2bytes, -1)
         self.assertRaises(ValueError, bits2bytes, -924)
 
-        for n in range(1000):
-            self.assertEqual(bits2bytes(n),
-                             0 if n==0 else ((n - 1) // 8 + 1));
+        self.assertEqual(bits2bytes(0), 0)
+        for n in range(1, 1000):
+            self.assertEqual(bits2bytes(n), (n - 1) // 8 + 1)
 
         for n, m in [(0, 0), (1, 1), (2, 1), (7, 1), (8, 1), (9, 2),
                      (10, 2), (15, 2), (16, 2), (64, 8), (65, 9),
@@ -265,7 +272,7 @@ class CreateObjectTests(unittest.TestCase, Util):
 
         for n in range(50):
             lst = [bool(randint(0, 1)) for d in range(n)]
-            s = ''.join('1' if x else '0' for x in lst)
+            s = ''.join([['0', '1'][x] for x in lst])
             a = bitarray(s)
             self.assertEqual(a.tolist(), lst)
             self.check_obj(a)
@@ -724,6 +731,9 @@ class SpecialMethodTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertTrue(a.all())
 
+        if sys.version_info[:2] < (2, 5):
+            return
+
         for a in self.randombitarrays():
             self.assertEqual(all(a),          a.all())
             self.assertEqual(all(a.tolist()), a.all())
@@ -732,6 +742,9 @@ class SpecialMethodTests(unittest.TestCase, Util):
     def test_any(self):
         a = bitarray()
         self.assertFalse(a.any())
+
+        if sys.version_info[:2] < (2, 5):
+            return
 
         for a in self.randombitarrays():
             self.assertEqual(any(a),          a.any())
@@ -1164,7 +1177,7 @@ class ExtendTests(unittest.TestCase, Util):
             for b in self.randomlists():
                 c = bitarray(a)
                 idc = id(c)
-                c.extend(''.join(('1' if x else '0') for x in b))
+                c.extend(''.join(['0', '1'][x] for x in b))
                 self.assertEqual(id(c), idc)
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
@@ -1690,6 +1703,8 @@ class FileTests(unittest.TestCase, Util):
                 self.assertEQUAL(a, b)
 
     def test_shelve(self):
+        if sys.version_info[:2] < (2, 5):
+            return
         import shelve, hashlib
 
         d = shelve.open(self.tmpfname)
