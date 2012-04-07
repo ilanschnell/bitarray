@@ -6,7 +6,7 @@ This module provides an object type which efficiently represents an array
 of booleans.  Bitarrays are sequence types and behave very much like usual
 lists.  Eight bits are represented by one byte in a contiguous block of
 memory.  The user can select between two representations; little-endian
-and big-endian.  Most of the functionality is implemented in C.
+and big-endian.  All of the functionality is implemented in C.
 Methods for accessing the machine representation are provided.
 This can be useful when bit level access to binary files is required,
 such as portable bitmap image files (.pbm).  Also, when dealing with
@@ -17,18 +17,18 @@ this module useful.
 Key features
 ------------
 
- * On 32bit systems, a bitarray object can contain up to 2^34 elements,
-   that is 16 Gbits (on 64bit machines up to 2^63 elements in theory --
-   on Python 2.4 only 2^31 elements,
-   see `PEP 353 <http://www.python.org/dev/peps/pep-0353/>`_
-   (added in Python 2.5)).
-
- * All crucial functionality implemented in C.
+ * All functionality implemented in C.
 
  * Bitarray objects behave very much like a list object, in particular
    slicing (including slice assignment and deletion) is supported.
 
  * The bit endianness can be specified for each bitarray object, see below.
+
+ * On 32bit systems, a bitarray object can contain up to 2^34 elements,
+   that is 16 Gbits (on 64bit machines up to 2^63 elements in theory --
+   on Python 2.4 only 2^31 elements,
+   see `PEP 353 <http://www.python.org/dev/peps/pep-0353/>`_
+   (added in Python 2.5)).
 
  * Packing and unpacking to other binary data formats,
    e.g. `numpy.ndarray <http://www.scipy.org/Tentative_NumPy_Tutorial>`_,
