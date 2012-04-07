@@ -6,7 +6,7 @@ from cStringIO import StringIO
 import bitarray
 
 
-fo = None
+fo = StringIO()
 
 
 def write_changelog():
@@ -79,10 +79,7 @@ def write_all(data):
 
 
 def main():
-    global fo
-
     data = open('README.rst').read()
-    fo = StringIO()
     write_all(data)
     new_data = fo.getvalue()
     fo.close()
