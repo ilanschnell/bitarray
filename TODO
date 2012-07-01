@@ -1,8 +1,8 @@
+* compute the lexicographically next bit permutation, see
+  http://www-graphics.stanford.edu/~seander/bithacks.html#NextBitPermutation
 
 * Write special tests for really large bitarrays, for which the length
   exceeds 2**31 bits
-
-
 
 
 --------------------------- RANDOM NOTES ---------------------------------
