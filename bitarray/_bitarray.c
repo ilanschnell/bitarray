@@ -1573,8 +1573,9 @@ bitarray_tolist(bitarrayobject *self)
         return NULL;
 
     for (i = 0; i < self->nbits; i++)
-        PyList_SetItem(list, (Py_ssize_t) i,
-                       PyBool_FromLong(GETBIT(self, i)));
+        if (PyList_SetItem(list, (Py_ssize_t) i,
+                           PyBool_FromLong(GETBIT(self, i))) < 0)
+            return NULL;
     return list;
 }
 
