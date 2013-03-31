@@ -328,13 +328,21 @@ tests.append(CreateObjectTests)
 
 # ---------------------------------------------------------------------------
 
-class ToObjectsTests(unittest.TestCase):
+class ToObjectsTests(unittest.TestCase, Util):
 
     def test_int(self):
         a = bitarray()
         self.assertRaises(TypeError, int, a)
         if not is_py3k:
             self.assertRaises(TypeError, long, a)
+
+    def test_list(self):
+        for a in self.randombitarrays():
+            self.assertEqual(list(a), a.tolist())
+
+    def test_tuple(self):
+        for a in self.randombitarrays():
+            self.assertEqual(tuple(a), tuple(a.tolist()))
 
 
 tests.append(ToObjectsTests)
