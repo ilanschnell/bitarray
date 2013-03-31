@@ -336,6 +336,14 @@ class ToObjectsTests(unittest.TestCase, Util):
         if not is_py3k:
             self.assertRaises(TypeError, long, a)
 
+    def test_float(self):
+        a = bitarray()
+        self.assertRaises(TypeError, float, a)
+
+    def test_complext(self):
+        a = bitarray()
+        self.assertRaises(TypeError, complex, a)
+
     def test_list(self):
         for a in self.randombitarrays():
             self.assertEqual(list(a), a.tolist())

@@ -119,10 +119,13 @@ with the corresponding bitarray for each symbols."""
         self._encode(codedict, iterable)
 
     def __int__(self):
-        raise TypeError("cannot cast bitarray to 'int' type")
+        raise TypeError("int() argument cannot be a bitarray")
 
     def __long__(self):
-        raise TypeError("cannot cast bitarray to 'long' type")
+        raise TypeError("long() argument cannot be a bitarray")
+
+    def __float__(self):
+        raise TypeError("float() argument cannot be a bitarray")
 
 
 def test(verbosity=1, repeat=1):
