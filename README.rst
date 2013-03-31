@@ -282,7 +282,7 @@ found while iterating.  For example:
    bitarray('111011011010')
 
 Note that the string ``'Hello'`` is an iterable, but the symbols are not
-limited to characters, any hashable Python object can be a symbol.
+limited to characters, in fact any immutable Python object can be a symbol.
 Taking the same dictionary, we can apply the ``decode`` method which will
 return a list of the symbols:
 
