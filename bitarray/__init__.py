@@ -118,6 +118,12 @@ with the corresponding bitarray for each symbols."""
         _check_codedict(codedict)
         self._encode(codedict, iterable)
 
+    def __int__(self):
+        raise TypeError("cannot cast bitarray to 'int' type")
+
+    def __long__(self):
+        raise TypeError("cannot cast bitarray to 'long' type")
+
 
 def test(verbosity=1, repeat=1):
     """test(verbosity=1, repeat=1) -> TextTestResult

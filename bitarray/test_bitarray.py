@@ -328,6 +328,19 @@ tests.append(CreateObjectTests)
 
 # ---------------------------------------------------------------------------
 
+class ToObjectsTests(unittest.TestCase):
+
+    def test_int(self):
+        a = bitarray()
+        self.assertRaises(TypeError, int, a)
+        if not is_py3k:
+            self.assertRaises(TypeError, long, a)
+
+
+tests.append(ToObjectsTests)
+
+# ---------------------------------------------------------------------------
+
 class MetaDataTests(unittest.TestCase):
 
     def test_buffer_info1(self):
