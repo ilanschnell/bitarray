@@ -67,7 +67,7 @@ Once you have installed the package, you may want to test it::
    .........................................................................
    ...........................................
    ----------------------------------------------------------------------
-   Ran 129 tests in 1.387s
+   Ran 134 tests in 1.396s
    
    OK
 
@@ -537,8 +537,11 @@ Reference
 Change log
 ----------
 
-2012-XX-XX   0.8.1:
+**0.8.1** (2013-03-30):
 
+  * fix issue #10, i.e. int(bitarray()) segfault
+  * added tests for using a bitarray object as an argument to functions
+    like int, long (on Python 2), float, list, tuple, dict
 
 
 **0.8.0** (2012-04-04):
@@ -553,18 +556,6 @@ Change log
   * add iterdecode method (C level), which returns an iterator but is
     otherwise like the decode method
   * improve memory efficiency and speed of pickling large bitarray objects
-
-
-**0.6.0** (2012-02-06):
-
-  * add buffer protocol to bitarray objects (Python 2.7 only)
-  * allow slice assignment to 0 or 1, e.g. a[::3] = 0  (in addition to
-    booleans)
-  * moved implementation of itersearch method to C level (Lluis Pamies)
-  * search, itersearch now only except bitarray objects,
-    whereas __contains__ excepts either booleans or bitarrays
-  * use a priority queue for Huffman tree example (thanks to Ushma Bhatt)
-  * improve documentation
 
 
 Please find the complete change log
