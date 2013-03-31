@@ -1,14 +1,13 @@
-
 bitarray/_bitarray.so: bitarray/_bitarray.c
-	python setup.py build_ext --inplace
+	$(PYTHON) setup.py build_ext --inplace
 
 
 test: bitarray/_bitarray.so
-	python -c "import bitarray; bitarray.test()"
+	$(PYTHON) -c "import bitarray; bitarray.test()"
 
 
 doc: bitarray/_bitarray.so
-	python update_readme.py
+	$(python) update_readme.py
 
 
 clean:
