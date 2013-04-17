@@ -1,9 +1,7 @@
 import re
 from os.path import join
-try:
-    from setuptools import setup, Extension
-except ImportError:
-    from distutils.core import setup, Extension
+
+from distutils.core import setup, Extension
 
 
 kwds = {}
