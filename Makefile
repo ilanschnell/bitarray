@@ -7,7 +7,7 @@ test: bitarray/_bitarray.so
 
 
 doc: bitarray/_bitarray.so
-	$(python) update_readme.py
+	$(PYTHON) update_readme.py
 
 
 clean:
