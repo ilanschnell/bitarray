@@ -447,7 +447,10 @@ Reference
    transfer of data between bitarray objects to other python objects
    (for example NumPy's ndarray object) which have a different view of memory.
 
-
+``permute(iterable, [reverse=False])``
+   Permute the bitarray bits according to the iterable. If reverse is true
+   apply the inverse permutation.
+ 
 ``pop([i])`` -> item
    Return the i-th (default last) element and delete it from the bitarray.
    Raises IndexError if bitarray is empty or index is out of range.
