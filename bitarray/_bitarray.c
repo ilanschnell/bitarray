@@ -1819,6 +1819,74 @@ PyDoc_STRVAR(remove_doc,
 Remove the first occurrence of bool(item) in the bitarray.\n\
 Raises ValueError if item is not present.");
 
+static PyObject *
+bitarray_permute(bitarrayobject *self, PyObject *args, PyObject *keywds)
+{
+  PyObject *ba;
+  PyObject *item, *iter;
+  PyObject *perm, *reverse = Py_False;
+  idx_t i, j;
+
+  static char *kwlist[] = {"perm", "reverse", NULL};
+
+  if (!PyArg_ParseTupleAndKeywords(args, keywds,
+                                   "O|O:permute",
+                                   kwlist,
+                                   &perm, &reverse)) {
+    return NULL;
+  }
+                                   
+  iter = PyObject_GetIter(perm);
+  if (iter == NULL) {
+    PyErr_SetString(PyExc_TypeError, "iterable expected");
+    return NULL;
+  }
+
+  ba = bitarray_copy(self);
+  if (ba == NULL) {
+    Py_DECREF(iter);
+    return NULL;
+  }
+
+  for (i=0; (item = PyIter_Next(iter)) != NULL; i++) {
+    /* Check error */
+    if (!IS_INDEX(item)) {
+      PyErr_SetString(PyExc_ValueError, "index expected");
+      Py_DECREF(iter);
+      Py_DECREF(ba);
+      Py_DECREF(item);
+      return NULL;
+    }
+    if (getIndex(item, &j) < 0) {
+      Py_DECREF(iter);
+      Py_DECREF(ba);
+      Py_DECREF(item);
+      return NULL;
+    }
+    if (j < 0 || j >= self->nbits) {
+      PyErr_SetString(PyExc_IndexError, "index out of range");
+      Py_DECREF(iter);
+      Py_DECREF(ba);
+      Py_DECREF(item);
+      return NULL;
+    }
+    if (!PyObject_IsTrue(reverse)) {
+      setbit((bitarrayobject *) ba, j, GETBIT(self, i));
+    } else {
+      setbit((bitarrayobject *) ba, i, GETBIT(self, j));
+    }
+    Py_DECREF(item);
+  }
+
+  Py_DECREF(iter);
+  return ba;
+}
+
+PyDoc_STRVAR(permute_doc,
+"permute(perm)\n\
+\n\
+Permute the bits in the array according to perm.");
+
 
 /* --------- special methods ----------- */
 
@@ -2471,6 +2539,9 @@ bitarray_methods[] = {
      remove_doc},
     {"reverse",      (PyCFunction) bitarray_reverse,     METH_NOARGS,
      reverse_doc},
+    {"permute",      (PyCFunction) bitarray_permute,     METH_VARARGS |
+                                                         METH_KEYWORDS,
+     permute_doc},
     {"setall",       (PyCFunction) bitarray_setall,      METH_O,
      setall_doc},
     {"search",       (PyCFunction) bitarray_search,      METH_VARARGS,
