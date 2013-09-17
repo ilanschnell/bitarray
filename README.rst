@@ -447,9 +447,9 @@ Reference
    transfer of data between bitarray objects to other python objects
    (for example NumPy's ndarray object) which have a different view of memory.
 
-``permute(iterable, [reverse=False])``
+``permute(iterable, [reverse=False])`` -> bitarray
    Permute the bitarray bits according to the iterable. If reverse is true
-   apply the inverse permutation.
+   apply the inverse permutation.  Return a new bitarray instance.
  
 ``pop([i])`` -> item
    Return the i-th (default last) element and delete it from the bitarray.
