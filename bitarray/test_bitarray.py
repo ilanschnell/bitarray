@@ -995,6 +995,16 @@ class BitwiseTests(unittest.TestCase, Util):
         a ^= bitarray('100110011')
         self.assertEQUAL(a, bitarray('010100101'))
 
+    def test_permute(self):
+        a = bitarray("11001")
+        pa = a.permute([0, 2, 1, 3, 4])
+        self.assertEqual(pa, bitarray("10101"))
+
+    def test_permute_reverse(self):
+        a = bitarray("10101")
+        pa = a.permute([0, 2, 1, 3, 4], reverse=True)
+        self.assertEqual(pa, bitarray("11001"))
+
     def test_invert(self):
         a = bitarray()
         a.invert()
