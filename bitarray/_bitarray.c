@@ -2945,11 +2945,13 @@ bitopcount(PyObject *self, PyObject *a, PyObject *b, enum op_type oper)
     case OP_and:
         for (i = 0; i < Py_SIZE(aa); i++) {
         	c = aa->ob_item[i] & bb->ob_item[i];
+        	res += bitcount_lookup[c];
         }
         break;
     case OP_or:
         for (i = 0; i < Py_SIZE(aa); i++) {
         	c = aa->ob_item[i] | bb->ob_item[i];
+        	res += bitcount_lookup[c];
         }
         break;
     case OP_xor:
@@ -3076,8 +3078,8 @@ tuple(sizeof(void *),\n\
 
 static PyMethodDef module_functions[] = {
     {"bitdiff",    (PyCFunction) bitdiff,    METH_VARARGS, bitdiff_doc   },
-    {"bitand",     (PyCFunction) bitand,     METH_VARARGS, bitand_doc   },
-    {"bitor",      (PyCFunction) bitor,      METH_VARARGS, bitor_doc   },
+    {"bitand",     (PyCFunction) bitand,     METH_VARARGS, bitand_doc    },
+    {"bitor",      (PyCFunction) bitor,      METH_VARARGS, bitor_doc     },
     {"bits2bytes", (PyCFunction) bits2bytes, METH_O,       bits2bytes_doc},
     {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS,  sysinfo_doc   },
     {NULL,         NULL}  /* sentinel */

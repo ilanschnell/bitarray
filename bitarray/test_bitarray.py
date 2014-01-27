@@ -18,7 +18,7 @@ else:
     from cStringIO import StringIO
 
 
-from bitarray import bitarray, bitdiff, bits2bytes, __version__
+from bitarray import bitarray, bitdiff, bitand, bitor, bits2bytes, __version__
 
 
 tests = []
