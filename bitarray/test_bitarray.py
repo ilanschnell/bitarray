@@ -146,6 +146,46 @@ class TestsModuleFunctions(unittest.TestCase, Util):
             diff = sum(a[i] ^ b[i] for i in range(n))
             self.assertEqual(bitdiff(a, b), diff)
 
+    def test_bitand(self):
+        a = bitarray('0011')
+        b = bitarray('0101')
+        self.assertEqual(bitand(a, b), 1)
+        self.assertRaises(TypeError, bitand, a, '')
+        self.assertRaises(TypeError, bitand, '1', b)
+        self.assertRaises(TypeError, bitand, a, 4)
+        b.append(1)
+        self.assertRaises(ValueError, bitand, a, b)
+
+        for n in list(range(50)) + [randint(1000, 2000)]:
+            a = bitarray()
+            a.frombytes(os.urandom(bits2bytes(n)))
+            del a[n:]
+            b = bitarray()
+            b.frombytes(os.urandom(bits2bytes(n)))
+            del b[n:]
+            diff = sum(a[i] & b[i] for i in range(n))
+            self.assertEqual(bitand(a, b), diff)
+
+    def test_bitor(self):
+        a = bitarray('0011')
+        b = bitarray('0101')
+        self.assertEqual(bitor(a, b), 3)
+        self.assertRaises(TypeError, bitor, a, '')
+        self.assertRaises(TypeError, bitor, '1', b)
+        self.assertRaises(TypeError, bitor, a, 4)
+        b.append(1)
+        self.assertRaises(ValueError, bitor, a, b)
+
+        for n in list(range(50)) + [randint(1000, 2000)]:
+            a = bitarray()
+            a.frombytes(os.urandom(bits2bytes(n)))
+            del a[n:]
+            b = bitarray()
+            b.frombytes(os.urandom(bits2bytes(n)))
+            del b[n:]
+            diff = sum(a[i] | b[i] for i in range(n))
+            self.assertEqual(bitor(a, b), diff)
+
     def test_bits2bytes(self):
         for arg in ['foo', [], None, {}]:
             self.assertRaises(TypeError, bits2bytes, arg)

@@ -2926,19 +2926,11 @@ static PyTypeObject Bitarraytype = {
 /*************************** Module functions **********************/
 
 static PyObject *
-bitdiff(PyObject *self, PyObject *args)
+bitopcount(PyObject *self, PyObject *a, PyObject *b, enum op_type oper)
 {
-    PyObject *a, *b;
     Py_ssize_t i;
     idx_t res = 0;
     unsigned char c;
-
-    if (!PyArg_ParseTuple(args, "OO:bitdiff", &a, &b))
-        return NULL;
-    if (!(bitarray_Check(a) && bitarray_Check(b))) {
-        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
-        return NULL;
-    }
 
 #define aa  ((bitarrayobject *) a)
 #define bb  ((bitarrayobject *) b)
@@ -2949,14 +2941,44 @@ bitdiff(PyObject *self, PyObject *args)
     }
     setunused(aa);
     setunused(bb);
-    for (i = 0; i < Py_SIZE(aa); i++) {
-        c = aa->ob_item[i] ^ bb->ob_item[i];
-        res += bitcount_lookup[c];
+    switch (oper) {
+    case OP_and:
+        for (i = 0; i < Py_SIZE(aa); i++) {
+        	c = aa->ob_item[i] & bb->ob_item[i];
+        }
+        break;
+    case OP_or:
+        for (i = 0; i < Py_SIZE(aa); i++) {
+        	c = aa->ob_item[i] | bb->ob_item[i];
+        }
+        break;
+    case OP_xor:
+        for (i = 0; i < Py_SIZE(aa); i++) {
+            c = aa->ob_item[i] ^ bb->ob_item[i];
+            res += bitcount_lookup[c];
+        }
+        break;
     }
+
 #undef aa
 #undef bb
     return PyLong_FromLongLong(res);
 }
+
+static PyObject *
+bitdiff(PyObject *self, PyObject *args) {
+    PyObject *a, *b;
+
+    if (!PyArg_ParseTuple(args, "OO:bitdiff", &a, &b))
+        return NULL;
+    if (!(bitarray_Check(a) && bitarray_Check(b))) {
+        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+        return NULL;
+    }
+
+	return bitopcount(self, a, b, OP_xor);
+}
+
 
 PyDoc_STRVAR(bitdiff_doc,
 "bitdiff(a, b) -> int\n\
@@ -2965,6 +2987,47 @@ Return the difference between two bitarrays a and b.\n\
 This is function does the same as (a ^ b).count(), but is more memory\n\
 efficient, as no intermediate bitarray object gets created");
 
+static PyObject *
+bitand(PyObject *self, PyObject *args) {
+    PyObject *a, *b;
+
+    if (!PyArg_ParseTuple(args, "OO:bitand", &a, &b))
+        return NULL;
+    if (!(bitarray_Check(a) && bitarray_Check(b))) {
+        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+        return NULL;
+    }
+	return bitopcount(self, a, b, OP_and);
+}
+
+
+PyDoc_STRVAR(bitand_doc,
+"bitand(a, b) -> int\n\
+\n\
+Return the shared bit count between two bitarrays a and b.\n\
+This is function does the same as (a & b).count(), but is more memory\n\
+efficient, as no intermediate bitarray object gets created");
+
+static PyObject *
+bitor(PyObject *self, PyObject *args) {
+    PyObject *a, *b;
+
+    if (!PyArg_ParseTuple(args, "OO:bitor", &a, &b))
+        return NULL;
+    if (!(bitarray_Check(a) && bitarray_Check(b))) {
+        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+        return NULL;
+    }
+	return bitopcount(self, a, b, OP_or);
+}
+
+
+PyDoc_STRVAR(bitor_doc,
+"bitor(a, b) -> int\n\
+\n\
+Return the total bit count between two bitarrays a and b.\n\
+This is function does the same as (a | b).count(), but is more memory\n\
+efficient, as no intermediate bitarray object gets created");
 
 static PyObject *
 bits2bytes(PyObject *self, PyObject *v)
@@ -3013,6 +3076,8 @@ tuple(sizeof(void *),\n\
 
 static PyMethodDef module_functions[] = {
     {"bitdiff",    (PyCFunction) bitdiff,    METH_VARARGS, bitdiff_doc   },
+    {"bitand",     (PyCFunction) bitand,     METH_VARARGS, bitand_doc   },
+    {"bitor",      (PyCFunction) bitor,      METH_VARARGS, bitor_doc   },
     {"bits2bytes", (PyCFunction) bits2bytes, METH_O,       bits2bytes_doc},
     {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS,  sysinfo_doc   },
     {NULL,         NULL}  /* sentinel */

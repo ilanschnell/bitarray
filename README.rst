@@ -529,6 +529,15 @@ Reference
    This is function does the same as (a ^ b).count(), but is more memory
    efficient, as no intermediate bitarray object gets created
 
+``bitand(a, b)`` -> int
+   Return the shared bit count between two bitarrays a and b.
+   This is function does the same as (a & b).count(), but is more memory
+   efficient, as no intermediate bitarray object gets created
+
+``bitor(a, b)`` -> int
+   Return the total bit count between two bitarrays a and b.
+   This is function does the same as (a | b).count(), but is more memory
+   efficient, as no intermediate bitarray object gets created
 
 ``bits2bytes(n)`` -> int
    Return the number of bytes necessary to store n bits.

@@ -63,6 +63,8 @@ def write_reference():
     fo.write("**Functions defined in the module:**\n\n")
     write_doc('test')
     write_doc('bitdiff')
+    write_doc('bitand')
+    write_doc('bitor')
     write_doc('bits2bytes')
 
 
