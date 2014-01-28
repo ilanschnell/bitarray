@@ -18,7 +18,7 @@ else:
     from cStringIO import StringIO
 
 
-from bitarray import bitarray, bitdiff, bitand, bitor, bits2bytes, __version__
+from bitarray import bitarray, bitdiff, bitand, bitor, tanimoto, bits2bytes, __version__
 
 
 tests = []
@@ -163,8 +163,8 @@ class TestsModuleFunctions(unittest.TestCase, Util):
             b = bitarray()
             b.frombytes(os.urandom(bits2bytes(n)))
             del b[n:]
-            diff = sum(a[i] & b[i] for i in range(n))
-            self.assertEqual(bitand(a, b), diff)
+            sharedbits = sum(a[i] & b[i] for i in range(n))
+            self.assertEqual(bitand(a, b), sharedbits)
 
     def test_bitor(self):
         a = bitarray('0011')
@@ -183,8 +183,32 @@ class TestsModuleFunctions(unittest.TestCase, Util):
             b = bitarray()
             b.frombytes(os.urandom(bits2bytes(n)))
             del b[n:]
-            diff = sum(a[i] | b[i] for i in range(n))
-            self.assertEqual(bitor(a, b), diff)
+            totalbits = sum(a[i] | b[i] for i in range(n))
+            self.assertEqual(bitor(a, b), totalbits)
+
+    def test_tanimoto(self):
+        a = bitarray('0011')
+        b = bitarray('0101')
+        self.assertEqual(tanimoto(a, b), 1.0/3.0)
+        self.assertRaises(TypeError, tanimoto, a, '')
+        self.assertRaises(TypeError, tanimoto, '1', b)
+        self.assertRaises(TypeError, tanimoto, a, 4)
+        b.append(1)
+        self.assertRaises(ValueError, tanimoto, a, b)
+
+        for n in list(range(50)) + [randint(1000, 2000)]:
+            a = bitarray()
+            a.frombytes(os.urandom(bits2bytes(n)))
+            del a[n:]
+            b = bitarray()
+            b.frombytes(os.urandom(bits2bytes(n)))
+            del b[n:]
+            sharedbits = sum(a[i] & b[i] for i in range(n))
+            totalbits = sum(a[i] | b[i] for i in range(n))
+            t = 1.0
+            if totalbits > 0:
+                t = (0.0 + sharedbits) / totalbits
+            self.assertEqual(tanimoto(a, b), t)
 
     def test_bits2bytes(self):
         for arg in ['foo', [], None, {}]:

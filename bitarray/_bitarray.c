@@ -3032,6 +3032,90 @@ This is function does the same as (a | b).count(), but is more memory\n\
 efficient, as no intermediate bitarray object gets created");
 
 static PyObject *
+tanimoto(PyObject *self, PyObject *args) {
+    PyObject *a, *b;
+
+    int64_t *aptr, *bptr, *and_ptr, *or_ptr;
+    int i, j, stop;
+    unsigned char and_val[8], or_val[8], and_c, or_c;
+    int and[8], or[8];
+    and_ptr = (int64_t*) and_val;
+    or_ptr = (int64_t*) or_val;
+
+    for(i = 0; i < 8; i++) {
+    	and[i] = 0;
+    	or[i] = 0;
+    }
+
+    if (!PyArg_ParseTuple(args, "OO:tanimoto", &a, &b))
+        return NULL;
+    if (!(bitarray_Check(a) && bitarray_Check(b))) {
+        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+        return NULL;
+    }
+
+#define aa  ((bitarrayobject *) a)
+#define bb  ((bitarrayobject *) b)
+    if (aa->nbits != bb->nbits) {
+        PyErr_SetString(PyExc_ValueError,
+                        "bitarrays of equal length expected");
+        return NULL;
+    }
+    setunused(aa);
+    setunused(bb);
+
+    aptr = (int64_t*) &(aa->ob_item[0]);
+    bptr = (int64_t*) &(bb->ob_item[0]);
+    stop = (Py_SIZE(aa) / 8);
+
+    // vectorized 64-bit chunks (if any)
+    for(j = 0; j < stop; j++) {
+    	*and_ptr = ((aptr[j]) & (bptr[j]));
+    	*or_ptr  = ((aptr[j]) | (bptr[j]));
+    	for(i = 0; i < 8; i++) {
+    		and[i] += bitcount_lookup[ and_val[i] ];
+    		or[i] += bitcount_lookup[ or_val[i]  ];
+    	}
+    }
+    // remainder bytes (if any)
+    for(j = stop*8; j < Py_SIZE(aa); j++) {
+    	and_c = (aa->ob_item[j] & bb->ob_item[j]);
+    	and[0] += bitcount_lookup[ and_c ];
+    	or_c = (aa->ob_item[j] | bb->ob_item[j]);
+    	or[0]  += bitcount_lookup[ or_c ];
+    }
+
+    and[0] += and[1];
+    and[2] += and[3];
+    and[4] += and[5];
+    and[6] += and[7];
+    and[0] += and[2];
+    and[4] += and[6];
+    and[0] += and[4];
+
+    or[0] += or[1];
+    or[2] += or[3];
+    or[4] += or[5];
+    or[6] += or[7];
+    or[0] += or[2];
+    or[4] += or[6];
+    or[0] += or[4];
+
+    if (or[0] == 0)
+    	return PyFloat_FromDouble(1.0);
+    else
+    	return PyFloat_FromDouble( ((double)(and[0])) / ((double)(or[0])) );
+}
+
+PyDoc_STRVAR(tanimoto_doc,
+"tanimoto(a, b) -> float\n\
+\n\
+Return the tanimoto (Jaccard index) bitarrays a and b.\n\
+This is function does the same as (a & b).count() / (a | b).count(), but is more memory\n\
+efficient, as no intermediate bitarray object gets created");
+
+
+static PyObject *
 bits2bytes(PyObject *self, PyObject *v)
 {
     idx_t n = 0;
@@ -3080,6 +3164,7 @@ static PyMethodDef module_functions[] = {
     {"bitdiff",    (PyCFunction) bitdiff,    METH_VARARGS, bitdiff_doc   },
     {"bitand",     (PyCFunction) bitand,     METH_VARARGS, bitand_doc    },
     {"bitor",      (PyCFunction) bitor,      METH_VARARGS, bitor_doc     },
+    {"tanimoto",   (PyCFunction) tanimoto,   METH_VARARGS, tanimoto_doc  },
     {"bits2bytes", (PyCFunction) bits2bytes, METH_O,       bits2bytes_doc},
     {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS,  sysinfo_doc   },
     {NULL,         NULL}  /* sentinel */

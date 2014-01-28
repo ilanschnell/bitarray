@@ -65,6 +65,7 @@ def write_reference():
     write_doc('bitdiff')
     write_doc('bitand')
     write_doc('bitor')
+    write_doc('tanimoto')
     write_doc('bits2bytes')
 
 
