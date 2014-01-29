@@ -539,6 +539,11 @@ Reference
    This is function does the same as (a | b).count(), but is more memory
    efficient, as no intermediate bitarray object gets created
 
+``tanimoto(a, b)`` -> int
+   Return the tanimoto function (a.k.a. Jaccard index) on the bitarrays a and b.
+   This is function does the same as (a & b).count() / (a | b).count(), but is more memory
+   efficient, and highly optimized
+
 ``bits2bytes(n)`` -> int
    Return the number of bytes necessary to store n bits.
 

@@ -72,7 +72,7 @@ typedef struct {
 #ifdef WITH_BUFFER
     int ob_exports;             /* how many buffer exports */
 #endif
-    char *ob_item;
+    unsigned char *ob_item;
     Py_ssize_t allocated;       /* how many bytes allocated */
     idx_t nbits;                /* length og bitarray */
     int endian;                 /* bit endianness of bitarray */
@@ -97,7 +97,7 @@ static PyTypeObject Bitarraytype;
 static void
 setbit(bitarrayobject *self, idx_t i, int bit)
 {
-    char *cp, mask;
+    unsigned char *cp, mask;
 
     mask = BITMASK(self->endian, i);
     cp = self->ob_item + i / 8;
@@ -422,7 +422,7 @@ bytereverse(bitarrayobject *self)
 }
 
 
-static int bitcount_lookup[256] = {
+static const int8_t const bitcount_lookup[256] = {
     0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
     1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
     1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
@@ -1620,7 +1620,7 @@ static PyObject *
 bitarray_tobytes(bitarrayobject *self)
 {
     setunused(self);
-    return PyString_FromStringAndSize(self->ob_item, Py_SIZE(self));
+    return PyString_FromStringAndSize((char*) self->ob_item, Py_SIZE(self));
 }
 
 PyDoc_STRVAR(tobytes_doc,
@@ -2821,7 +2821,7 @@ bitarray_buffer_getsegcount(bitarrayobject *self, Py_ssize_t *lenp)
 
 static Py_ssize_t
 bitarray_buffer_getcharbuf(bitarrayobject *self,
-                           Py_ssize_t index, const char **ptr)
+                           Py_ssize_t index, const unsigned char **ptr)
 {
     if (index != 0) {
         PyErr_SetString(PyExc_SystemError, "accessing non-existent segment");
@@ -2928,7 +2928,7 @@ static PyTypeObject Bitarraytype = {
 static PyObject *
 bitopcount(PyObject *self, PyObject *a, PyObject *b, enum op_type oper)
 {
-    Py_ssize_t i;
+    Py_ssize_t i, size;
     idx_t res = 0;
     unsigned char c;
 
@@ -2941,21 +2941,22 @@ bitopcount(PyObject *self, PyObject *a, PyObject *b, enum op_type oper)
     }
     setunused(aa);
     setunused(bb);
+    size = Py_SIZE(aa);
     switch (oper) {
     case OP_and:
-        for (i = 0; i < Py_SIZE(aa); i++) {
+        for (i = 0; i < size; i++) {
         	c = aa->ob_item[i] & bb->ob_item[i];
         	res += bitcount_lookup[c];
         }
         break;
     case OP_or:
-        for (i = 0; i < Py_SIZE(aa); i++) {
+        for (i = 0; i < size; i++) {
         	c = aa->ob_item[i] | bb->ob_item[i];
         	res += bitcount_lookup[c];
         }
         break;
     case OP_xor:
-        for (i = 0; i < Py_SIZE(aa); i++) {
+        for (i = 0; i < size; i++) {
             c = aa->ob_item[i] ^ bb->ob_item[i];
             res += bitcount_lookup[c];
         }
@@ -3035,17 +3036,9 @@ static PyObject *
 tanimoto(PyObject *self, PyObject *args) {
     PyObject *a, *b;
 
-    int64_t *aptr, *bptr, *and_ptr, *or_ptr;
-    int i, j, stop;
-    unsigned char and_val[8], or_val[8], and_c, or_c;
-    int and[8], or[8];
-    and_ptr = (int64_t*) and_val;
-    or_ptr = (int64_t*) or_val;
-
-    for(i = 0; i < 8; i++) {
-    	and[i] = 0;
-    	or[i] = 0;
-    }
+    uint64_t and_val, or_val, *aa_ptr, *bb_ptr;
+    int j, stop, end, and = 0, or = 0;
+    unsigned char and_c, or_c;
 
     if (!PyArg_ParseTuple(args, "OO:tanimoto", &a, &b))
         return NULL;
@@ -3063,56 +3056,61 @@ tanimoto(PyObject *self, PyObject *args) {
     }
     setunused(aa);
     setunused(bb);
+    stop = 0;
+    end = Py_SIZE(aa);
+	aa_ptr = (uint64_t*) &(aa->ob_item[0]);
+	bb_ptr = (uint64_t*) &(bb->ob_item[0]);
 
-    aptr = (int64_t*) &(aa->ob_item[0]);
-    bptr = (int64_t*) &(bb->ob_item[0]);
-    stop = (Py_SIZE(aa) / 8);
+	// if data is 8-byte aligned (which it should be from initial malloc)
+	// perform 64-bit operations and pipeline operations
+    if ((((uint64_t) aa_ptr) & 7) == 0 && (((uint64_t) bb_ptr) & 7) == 0 ) {
+     	stop = end / 8;
+     	for(j = 0; j < stop ; j++) {
+     	    and_val = aa_ptr[j] & bb_ptr[j];
+     	    and = and +
+     	    		bitcount_lookup[ and_val       & 0xff ] +
+     	    		bitcount_lookup[ (and_val>>8)  & 0xff ] +
+     	    		bitcount_lookup[ (and_val>>16) & 0xff ] +
+     	    		bitcount_lookup[ (and_val>>24) & 0xff ] +
+     	    		bitcount_lookup[ (and_val>>32) & 0xff ] +
+     	    		bitcount_lookup[ (and_val>>40) & 0xff ] +
+     	    		bitcount_lookup[ (and_val>>48) & 0xff ] +
+     	    		bitcount_lookup[ (and_val>>56)        ];
 
-    // vectorized 64-bit chunks (if any)
-    for(j = 0; j < stop; j++) {
-    	*and_ptr = ((aptr[j]) & (bptr[j]));
-    	*or_ptr  = ((aptr[j]) | (bptr[j]));
-    	for(i = 0; i < 8; i++) {
-    		and[i] += bitcount_lookup[ and_val[i] ];
-    		or[i] += bitcount_lookup[ or_val[i]  ];
-    	}
+     	    or_val = aa_ptr[j] | bb_ptr[j];
+     	    or = or +
+     	    		bitcount_lookup[ or_val       & 0xff ] +
+     	    		bitcount_lookup[ (or_val>>8)  & 0xff ] +
+     	    		bitcount_lookup[ (or_val>>16) & 0xff ] +
+     	    		bitcount_lookup[ (or_val>>24) & 0xff ] +
+     	    		bitcount_lookup[ (or_val>>32) & 0xff ] +
+     	    		bitcount_lookup[ (or_val>>40) & 0xff ] +
+     	    		bitcount_lookup[ (or_val>>48) & 0xff ] +
+     	    		bitcount_lookup[ (or_val>>56)        ];
+     	}
     }
-    // remainder bytes (if any)
-    for(j = stop*8; j < Py_SIZE(aa); j++) {
+
+    // perform the same calculation on the remainder bytes (if any)
+    for(j = stop*8; j < end; j++) {
     	and_c = (aa->ob_item[j] & bb->ob_item[j]);
-    	and[0] += bitcount_lookup[ and_c ];
+    	and = and + bitcount_lookup[ and_c ];
     	or_c = (aa->ob_item[j] | bb->ob_item[j]);
-    	or[0]  += bitcount_lookup[ or_c ];
+    	or  = or  + bitcount_lookup[ or_c ];
     }
 
-    and[0] += and[1];
-    and[2] += and[3];
-    and[4] += and[5];
-    and[6] += and[7];
-    and[0] += and[2];
-    and[4] += and[6];
-    and[0] += and[4];
 
-    or[0] += or[1];
-    or[2] += or[3];
-    or[4] += or[5];
-    or[6] += or[7];
-    or[0] += or[2];
-    or[4] += or[6];
-    or[0] += or[4];
-
-    if (or[0] == 0)
+    if (or == 0)
     	return PyFloat_FromDouble(1.0);
     else
-    	return PyFloat_FromDouble( ((double)(and[0])) / ((double)(or[0])) );
+    	return PyFloat_FromDouble( ((double)(and)) / ((double)(or)) );
 }
 
 PyDoc_STRVAR(tanimoto_doc,
 "tanimoto(a, b) -> float\n\
 \n\
-Return the tanimoto (Jaccard index) bitarrays a and b.\n\
+Return the tanimoto function (a.k.a. Jaccard index) on the bitarrays a and b.\n\
 This is function does the same as (a & b).count() / (a | b).count(), but is more memory\n\
-efficient, as no intermediate bitarray object gets created");
+efficient, and highly optimized");
 
 
 static PyObject *
