@@ -3037,7 +3037,9 @@ tanimoto(PyObject *self, PyObject *args) {
     PyObject *a, *b;
 
     uint64_t and_val, or_val, *aa_ptr, *bb_ptr;
-    int j, stop, end, and = 0, or = 0;
+    const static uint64_t B1 = ~(uint64_t)0/3, B2 = ~(uint64_t)0/15*3, B3 = ~(uint64_t)0/255*15, B4 = ~(uint64_t)0/255;
+    const static int S1 = (sizeof(uint64_t) - 1) * 8;
+    int j, stop, end, and = 0, or = 0, width = 8;
     unsigned char and_c, or_c;
 
     if (!PyArg_ParseTuple(args, "OO:tanimoto", &a, &b))
@@ -3063,35 +3065,36 @@ tanimoto(PyObject *self, PyObject *args) {
 
 	// if data is 8-byte aligned (which it should be from initial malloc)
 	// perform 64-bit operations and pipeline operations
-    if ((((uint64_t) aa_ptr) & 7) == 0 && (((uint64_t) bb_ptr) & 7) == 0 ) {
-     	stop = end / 8;
+    if ((((uint64_t) aa_ptr) & (width-1)) == 0 && (((uint64_t) bb_ptr) & (width-1)) == 0 ) {
+     	stop = end / width;
      	for(j = 0; j < stop ; j++) {
      	    and_val = aa_ptr[j] & bb_ptr[j];
-     	    and = and +
-     	    		bitcount_lookup[ and_val       & 0xff ] +
-     	    		bitcount_lookup[ (and_val>>8)  & 0xff ] +
-     	    		bitcount_lookup[ (and_val>>16) & 0xff ] +
-     	    		bitcount_lookup[ (and_val>>24) & 0xff ] +
-     	    		bitcount_lookup[ (and_val>>32) & 0xff ] +
-     	    		bitcount_lookup[ (and_val>>40) & 0xff ] +
-     	    		bitcount_lookup[ (and_val>>48) & 0xff ] +
-     	    		bitcount_lookup[ (and_val>>56)        ];
-
      	    or_val = aa_ptr[j] | bb_ptr[j];
-     	    or = or +
-     	    		bitcount_lookup[ or_val       & 0xff ] +
-     	    		bitcount_lookup[ (or_val>>8)  & 0xff ] +
-     	    		bitcount_lookup[ (or_val>>16) & 0xff ] +
-     	    		bitcount_lookup[ (or_val>>24) & 0xff ] +
-     	    		bitcount_lookup[ (or_val>>32) & 0xff ] +
-     	    		bitcount_lookup[ (or_val>>40) & 0xff ] +
-     	    		bitcount_lookup[ (or_val>>48) & 0xff ] +
-     	    		bitcount_lookup[ (or_val>>56)        ];
+
+     	    // adapted code to count bits
+     	    // from http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetTable
+     	    //v = v - ((v >> 1) & (T)~(T)0/3);                           // temp
+     	    //v = (v & (T)~(T)0/15*3) + ((v >> 2) & (T)~(T)0/15*3);      // temp
+     	    //v = (v + (v >> 4)) & (T)~(T)0/255*15;                      // temp
+     	    //c = (T)(v * ((T)~(T)0/255)) >> (sizeof(T) - 1) * CHAR_BIT; // count
+
+     	    and_val = and_val - ((and_val >> 1) & B1);             // temp
+      	    or_val  = or_val  - ((or_val >> 1)  & B1);             // temp
+
+      	    and_val = (and_val & B2) + ((and_val >> 2) & B2);      // temp
+      	    or_val  = (or_val  & B2) + ((or_val >> 2)  & B2);      // temp
+
+      	    and_val = (and_val + (and_val >> 4)) & B3;             // temp
+         	or_val  = (or_val  + (or_val >> 4))  & B3;             // temp
+
+         	and = and + (((uint64_t)(and_val * B4)) >> S1);        // count
+      	    or  = or  + (((uint64_t)(or_val  * B4)) >> S1);        // count
+
      	}
     }
 
     // perform the same calculation on the remainder bytes (if any)
-    for(j = stop*8; j < end; j++) {
+    for(j = stop*width; j < end; j++) {
     	and_c = (aa->ob_item[j] & bb->ob_item[j]);
     	and = and + bitcount_lookup[ and_c ];
     	or_c = (aa->ob_item[j] | bb->ob_item[j]);
