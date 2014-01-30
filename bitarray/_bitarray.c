@@ -2945,14 +2945,14 @@ bitopcount(PyObject *self, PyObject *a, PyObject *b, enum op_type oper)
     switch (oper) {
     case OP_and:
         for (i = 0; i < size; i++) {
-        	c = aa->ob_item[i] & bb->ob_item[i];
-        	res += bitcount_lookup[c];
+            c = aa->ob_item[i] & bb->ob_item[i];
+            res += bitcount_lookup[c];
         }
         break;
     case OP_or:
         for (i = 0; i < size; i++) {
-        	c = aa->ob_item[i] | bb->ob_item[i];
-        	res += bitcount_lookup[c];
+            c = aa->ob_item[i] | bb->ob_item[i];
+            res += bitcount_lookup[c];
         }
         break;
     case OP_xor:
@@ -2979,7 +2979,7 @@ bitdiff(PyObject *self, PyObject *args) {
         return NULL;
     }
 
-	return bitopcount(self, a, b, OP_xor);
+    return bitopcount(self, a, b, OP_xor);
 }
 
 
@@ -3000,7 +3000,7 @@ bitand(PyObject *self, PyObject *args) {
         PyErr_SetString(PyExc_TypeError, "bitarray object expected");
         return NULL;
     }
-	return bitopcount(self, a, b, OP_and);
+    return bitopcount(self, a, b, OP_and);
 }
 
 
@@ -3021,7 +3021,7 @@ bitor(PyObject *self, PyObject *args) {
         PyErr_SetString(PyExc_TypeError, "bitarray object expected");
         return NULL;
     }
-	return bitopcount(self, a, b, OP_or);
+    return bitopcount(self, a, b, OP_or);
 }
 
 
@@ -3060,52 +3060,52 @@ tanimoto(PyObject *self, PyObject *args) {
     setunused(bb);
     stop = 0;
     end = Py_SIZE(aa);
-	aa_ptr = (uint64_t*) &(aa->ob_item[0]);
-	bb_ptr = (uint64_t*) &(bb->ob_item[0]);
+    aa_ptr = (uint64_t*) &(aa->ob_item[0]);
+    bb_ptr = (uint64_t*) &(bb->ob_item[0]);
 
-	// if data is 8-byte aligned (which it should be from initial malloc)
-	// perform 64-bit operations and pipeline operations
+    // if data is 8-byte aligned (which it should be from initial malloc)
+    // perform 64-bit operations and pipeline operations
     if ((((uint64_t) aa_ptr) & (width-1)) == 0 && (((uint64_t) bb_ptr) & (width-1)) == 0 ) {
-     	stop = end / width;
-     	for(j = 0; j < stop ; j++) {
-     	    and_val = aa_ptr[j] & bb_ptr[j];
-     	    or_val = aa_ptr[j] | bb_ptr[j];
+        stop = end / width;
+        for(j = 0; j < stop ; j++) {
+            and_val = aa_ptr[j] & bb_ptr[j];
+            or_val = aa_ptr[j] | bb_ptr[j];
 
-     	    // adapted code to count bits
-     	    // from http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetTable
-     	    //v = v - ((v >> 1) & (T)~(T)0/3);                           // temp
-     	    //v = (v & (T)~(T)0/15*3) + ((v >> 2) & (T)~(T)0/15*3);      // temp
-     	    //v = (v + (v >> 4)) & (T)~(T)0/255*15;                      // temp
-     	    //c = (T)(v * ((T)~(T)0/255)) >> (sizeof(T) - 1) * CHAR_BIT; // count
+            // adapted code to count bits
+            // from http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetTable
+            //v = v - ((v >> 1) & (T)~(T)0/3);                           // temp
+            //v = (v & (T)~(T)0/15*3) + ((v >> 2) & (T)~(T)0/15*3);      // temp
+            //v = (v + (v >> 4)) & (T)~(T)0/255*15;                      // temp
+            //c = (T)(v * ((T)~(T)0/255)) >> (sizeof(T) - 1) * CHAR_BIT; // count
 
-     	    and_val = and_val - ((and_val >> 1) & B1);             // temp
-      	    or_val  = or_val  - ((or_val >> 1)  & B1);             // temp
+            and_val = and_val - ((and_val >> 1) & B1);             // temp
+            or_val  = or_val  - ((or_val >> 1)  & B1);             // temp
 
-      	    and_val = (and_val & B2) + ((and_val >> 2) & B2);      // temp
-      	    or_val  = (or_val  & B2) + ((or_val >> 2)  & B2);      // temp
+            and_val = (and_val & B2) + ((and_val >> 2) & B2);      // temp
+            or_val  = (or_val  & B2) + ((or_val >> 2)  & B2);      // temp
 
-      	    and_val = (and_val + (and_val >> 4)) & B3;             // temp
-         	or_val  = (or_val  + (or_val >> 4))  & B3;             // temp
+            and_val = (and_val + (and_val >> 4)) & B3;             // temp
+            or_val  = (or_val  + (or_val >> 4))  & B3;             // temp
 
-         	and = and + (((uint64_t)(and_val * B4)) >> S1);        // count
-      	    or  = or  + (((uint64_t)(or_val  * B4)) >> S1);        // count
+            and = and + (((uint64_t)(and_val * B4)) >> S1);        // count
+            or  = or  + (((uint64_t)(or_val  * B4)) >> S1);        // count
 
-     	}
+         }
     }
 
     // perform the same calculation on the remainder bytes (if any)
     for(j = stop*width; j < end; j++) {
-    	and_c = (aa->ob_item[j] & bb->ob_item[j]);
-    	and = and + bitcount_lookup[ and_c ];
-    	or_c = (aa->ob_item[j] | bb->ob_item[j]);
-    	or  = or  + bitcount_lookup[ or_c ];
+        and_c = (aa->ob_item[j] & bb->ob_item[j]);
+        and = and + bitcount_lookup[ and_c ];
+        or_c = (aa->ob_item[j] | bb->ob_item[j]);
+        or  = or  + bitcount_lookup[ or_c ];
     }
 
 
     if (or == 0)
-    	return PyFloat_FromDouble(1.0);
+        return PyFloat_FromDouble(1.0);
     else
-    	return PyFloat_FromDouble( ((double)(and)) / ((double)(or)) );
+        return PyFloat_FromDouble( ((double)(and)) / ((double)(or)) );
 }
 
 PyDoc_STRVAR(tanimoto_doc,
