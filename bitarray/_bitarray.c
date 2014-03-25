@@ -74,7 +74,7 @@ typedef struct {
 #endif
     unsigned char *ob_item;
     Py_ssize_t allocated;       /* how many bytes allocated */
-    idx_t nbits;                /* length og bitarray */
+    idx_t nbits;                /* length of bitarray */
     int endian;                 /* bit endianness of bitarray */
     PyObject *weakreflist;      /* list of weak references */
 } bitarrayobject;
@@ -88,6 +88,75 @@ static PyTypeObject Bitarraytype;
 #define BYTES(bits)  (((bits) == 0) ? 0 : (((bits) - 1) / 8 + 1))
 
 #define BITMASK(endian, i)  (((char) 1) << ((endian) ? (7 - (i)%8) : (i)%8))
+
+#define COUNT_BITS_INTRINSIC(val) __builtin_popcountl(val)
+
+// adapted code to count bits
+// from http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetTable
+
+#define B1 (~(uint64_t)0/3)
+#define B2 (~(uint64_t)0/15*3)
+#define B3 (~(uint64_t)0/255*15)
+#define B4 (~(uint64_t)0/255)
+#define S1 ((sizeof(uint64_t) - 1) * 8)
+
+#define _CBITSa(val) \
+		val = val - ((val >> 1) & B1);
+#define _CBITSb(val) \
+		val = (val & B2) + ((val >> 2) & B2);
+#define _CBITSc(val) \
+		val = (val + (val >> 4)) & B3;
+
+#define _CBITS(val) \
+	_CBITSa(val) _CBITSb(val) _CBITSc(val)
+
+#define _CBITS2(val) (((uint64_t)(val * B4)) >> S1)
+
+#define COUNT_BITS_ON(val, sum) \
+{\
+	_CBITS(val) \
+	sum = sum + _CBITS2(val); \
+}
+
+#define COUNT_BITS_ON_2_SUMS(val1, sum1, val2, sum2) \
+{\
+	_CBITSa(val1) _CBITSa(val2) \
+    _CBITSb(val1) _CBITSb(val2) \
+    _CBITSc(val1) _CBITSc(val2) \
+    sum1 = sum1 + _CBITS2(val1); \
+    sum2 = sum2 + _CBITS2(val2); \
+}
+
+#define COUNT_BITS_ON_2_WORDS(val1, val2, sum) \
+{\
+	_CBITS(val1) \
+    _CBITS(val2) \
+    sum = sum + _CBITS2(val1) + _CBITS2(val2); \
+}
+
+#define COUNT_BITS_ON_4_WORDS(val1, val2, val3, val4, sum) \
+{\
+	_CBITS(val1) \
+	_CBITS(val2) \
+	_CBITS(val3) \
+	_CBITS(val4) \
+	sum = sum + _CBITS2(val1) + _CBITS2(val2) + _CBITS2(val3) + _CBITS2(val4); \
+}
+
+#define COUNT_BITS_ON_8_WORDS(val1, val2, val3, val4, val5, val6, val7, val8, sum) \
+{\
+	_CBITS(val1) \
+	_CBITS(val2) \
+	_CBITS(val3) \
+	_CBITS(val4) \
+	_CBITS(val5) \
+	_CBITS(val6) \
+	_CBITS(val7) \
+	_CBITS(val8) \
+	sum = sum +  _CBITS2(val1) + _CBITS2(val2) + _CBITS2(val3) + _CBITS2(val4) \
+	          +  _CBITS2(val5) + _CBITS2(val6) + _CBITS2(val7) + _CBITS2(val8); \
+}
+
 
 /* ------------ low level access to bits in bitarrayobject ------------- */
 
@@ -443,18 +512,37 @@ static const int8_t const bitcount_lookup[256] = {
 
 /* returns number of 1 bits */
 static idx_t
-count(bitarrayobject *self)
+count_range(bitarrayobject *self, Py_ssize_t start, Py_ssize_t end)
 {
     Py_ssize_t i;
     idx_t res = 0;
     unsigned char c;
 
     setunused(self);
-    for (i = 0; i < Py_SIZE(self); i++) {
+    for (i = start; i < end; i++) {
         c = self->ob_item[i];
         res += bitcount_lookup[c];
     }
     return res;
+}
+static idx_t
+count_old(bitarrayobject *self)
+{
+	setunused(self);
+	return count_range(self, 0, Py_SIZE(self));
+}
+static idx_t
+count(bitarrayobject *self)
+{
+	Py_ssize_t i, stop, end = Py_SIZE(self);
+	idx_t res = 0;
+	stop = end / 8;
+	uint64_t *ptr = (uint64_t*) self->ob_item;
+	for(i = 0; i != stop; i++) {
+		res += COUNT_BITS_INTRINSIC(*(ptr + i));
+	}
+	res += count_range(self, stop*8, end);
+	return res;
 }
 
 /* return index of first occurrence of vi, -1 when x is not in found. */
@@ -950,6 +1038,19 @@ bitarray_count(bitarrayobject *self, PyObject *args)
         return NULL;
 
     n1 = count(self);
+    return PyLong_FromLongLong(x ? n1 : (self->nbits - n1));
+}
+
+static PyObject *
+bitarray_count_old(bitarrayobject *self, PyObject *args)
+{
+    idx_t n1;
+    long x = 1;
+
+    if (!PyArg_ParseTuple(args, "|i:countOld", &x))
+        return NULL;
+
+    n1 = count_old(self);
     return PyLong_FromLongLong(x ? n1 : (self->nbits - n1));
 }
 
@@ -2439,6 +2540,8 @@ bitarray_methods[] = {
      copy_doc},
     {"count",        (PyCFunction) bitarray_count,       METH_VARARGS,
      count_doc},
+    {"countOld",     (PyCFunction) bitarray_count_old,       METH_VARARGS,
+     count_doc},
     {"_decode",      (PyCFunction) bitarray_decode,      METH_O,
      decode_doc},
     {"_iterdecode",  (PyCFunction) bitarray_iterdecode,  METH_O,
@@ -3032,13 +3135,147 @@ Return the total bit count between two bitarrays a and b.\n\
 This is function does the same as (a | b).count(), but is more memory\n\
 efficient, as no intermediate bitarray object gets created");
 
+
 static PyObject *
-tanimoto(PyObject *self, PyObject *args) {
+tanimoto_intrinsic(PyObject *self, PyObject *args) {
     PyObject *a, *b;
 
-    uint64_t and_val, or_val, *aa_ptr, *bb_ptr;
-    const static uint64_t B1 = ~(uint64_t)0/3, B2 = ~(uint64_t)0/15*3, B3 = ~(uint64_t)0/255*15, B4 = ~(uint64_t)0/255;
-    const static int S1 = (sizeof(uint64_t) - 1) * 8;
+    uint64_t * __restrict__  aa_ptr, * __restrict__  bb_ptr;
+    unsigned char and_c, or_c;
+    int j, stop = 0, end = 0, and = 0, or = 0, width = 8;
+
+    if (!PyArg_ParseTuple(args, "OO:tanimoto", &a, &b))
+        return NULL;
+    if (!(bitarray_Check(a) && bitarray_Check(b))) {
+        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+        return NULL;
+    }
+
+#define aa  ((bitarrayobject *) a)
+#define bb  ((bitarrayobject *) b)
+    if (aa->nbits != bb->nbits) {
+        PyErr_SetString(PyExc_ValueError,
+                        "bitarrays of equal length expected");
+        return NULL;
+    }
+    setunused(aa);
+    setunused(bb);
+
+    end = Py_SIZE(aa);
+    aa_ptr = (uint64_t*) &(aa->ob_item[0]);
+    bb_ptr = (uint64_t*) &(bb->ob_item[0]);
+
+    // if data is 8-byte aligned (which it should be from initial malloc)
+    // perform 64-bit operations and pipeline operations
+    if ((((uint64_t) aa_ptr) & (7)) == 0 && (((uint64_t) bb_ptr) & (7)) == 0 ) {
+    	stop = end / width;
+    	for(j=0; j < stop; j++) {
+    		uint64_t a1=  aa_ptr[j]   & bb_ptr[j];
+    		and = and + COUNT_BITS_INTRINSIC(a1);
+
+    		uint64_t o1 = aa_ptr[j]   | bb_ptr[j];
+    		or = or + COUNT_BITS_INTRINSIC(o1);
+
+    	}
+    }
+
+    // perform the same calculation on the remainder bytes (if any)
+    for(j = stop*width; j < end; j++) {
+        and_c = (aa->ob_item[j] & bb->ob_item[j]);
+        and = and + bitcount_lookup[ and_c ];
+        or_c = (aa->ob_item[j] | bb->ob_item[j]);
+        or  = or  + bitcount_lookup[ or_c ];
+    }
+
+    if (or == 0)
+        return PyFloat_FromDouble(1.0);
+    else
+        return PyFloat_FromDouble( ((double)(and)) / ((double)(or)) );
+}
+
+static PyObject *
+tanimoto_words(PyObject *self, PyObject *args) {
+    PyObject *a, *b;
+
+    uint64_t * __restrict__  aa_ptr, * __restrict__  bb_ptr;
+    unsigned char and_c, or_c;
+    int j, stop = 0, end = 0, and = 0, or = 0, words = 8;
+
+    int width = sizeof(uint64_t) * words;
+
+    if (!PyArg_ParseTuple(args, "OO:tanimoto", &a, &b))
+        return NULL;
+    if (!(bitarray_Check(a) && bitarray_Check(b))) {
+        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+        return NULL;
+    }
+
+#define aa  ((bitarrayobject *) a)
+#define bb  ((bitarrayobject *) b)
+    if (aa->nbits != bb->nbits) {
+        PyErr_SetString(PyExc_ValueError,
+                        "bitarrays of equal length expected");
+        return NULL;
+    }
+    setunused(aa);
+    setunused(bb);
+
+    end = Py_SIZE(aa);
+    aa_ptr = (uint64_t*) &(aa->ob_item[0]);
+    bb_ptr = (uint64_t*) &(bb->ob_item[0]);
+
+    // if data is 8-byte aligned (which it should be from initial malloc)
+    // perform 64-bit operations and pipeline operations
+    if ((((uint64_t) aa_ptr) & (7)) == 0 && (((uint64_t) bb_ptr) & (7)) == 0 ) {
+    	stop = end / width * words;
+    	for(j=0; j < stop; j+=words) {
+    		uint64_t a1, a2, a3, a4, a5, a6, a7, a8;
+    		uint64_t o1, o2, o3, o4, o5, o6, o7, o8;
+
+    		a1 = aa_ptr[j]   & bb_ptr[j];
+    		a2 = aa_ptr[j+1] & bb_ptr[j+1];
+    		a3 = aa_ptr[j+2] & bb_ptr[j+2];
+    		a4 = aa_ptr[j+3] & bb_ptr[j+3];
+    		a5 = aa_ptr[j+4] & bb_ptr[j+4];
+    		a6 = aa_ptr[j+5] & bb_ptr[j+5];
+    		a7 = aa_ptr[j+6] & bb_ptr[j+6];
+    		a8 = aa_ptr[j+7] & bb_ptr[j+7];
+
+    		COUNT_BITS_ON_8_WORDS(a1, a2, a3, a4, a5, a6, a7, a8, and);
+
+    		o1 = aa_ptr[j]   | bb_ptr[j];
+    		o2 = aa_ptr[j+1] | bb_ptr[j+1];
+    		o3 = aa_ptr[j+2] | bb_ptr[j+2];
+    		o4 = aa_ptr[j+3] | bb_ptr[j+3];
+    		o5 = aa_ptr[j+4] | bb_ptr[j+4];
+    		o6 = aa_ptr[j+5] | bb_ptr[j+5];
+    		o7 = aa_ptr[j+6] | bb_ptr[j+6];
+    		o8 = aa_ptr[j+7] | bb_ptr[j+7];
+    		COUNT_BITS_ON_8_WORDS(o1, o2, o3, o4, o5, o6, o7, o8, or);
+
+    	}
+    	stop /= words;
+    }
+
+    // perform the same calculation on the remainder bytes (if any)
+    for(j = stop*width; j < end; j++) {
+        and_c = (aa->ob_item[j] & bb->ob_item[j]);
+        and = and + bitcount_lookup[ and_c ];
+        or_c = (aa->ob_item[j] | bb->ob_item[j]);
+        or  = or  + bitcount_lookup[ or_c ];
+    }
+
+    if (or == 0)
+        return PyFloat_FromDouble(1.0);
+    else
+        return PyFloat_FromDouble( ((double)(and)) / ((double)(or)) );
+}
+
+static PyObject *
+tanimoto_8byte(PyObject *self, PyObject *args) {
+    PyObject *a, *b;
+
+    uint64_t *aa_ptr, *bb_ptr;
     int j, stop, end, and = 0, or = 0, width = 8;
     unsigned char and_c, or_c;
 
@@ -3065,7 +3302,61 @@ tanimoto(PyObject *self, PyObject *args) {
 
     // if data is 8-byte aligned (which it should be from initial malloc)
     // perform 64-bit operations and pipeline operations
-    if ((((uint64_t) aa_ptr) & (width-1)) == 0 && (((uint64_t) bb_ptr) & (width-1)) == 0 ) {
+    if ((((uint64_t) aa_ptr) & 7) == 0 && (((uint64_t) bb_ptr) & 7) == 0 ) {
+        stop = end / width;
+        for(j = 0; j < stop ; j++) {
+        	uint64_t a1 = aa_ptr[j] & bb_ptr[j];
+        	uint64_t o1 = aa_ptr[j] | bb_ptr[j];
+        	COUNT_BITS_ON_2_SUMS( a1, and, o1, or);
+         }
+    }
+
+    // perform the same calculation on the remainder bytes (if any)
+    for(j = stop*width; j < end; j++) {
+        and_c = (aa->ob_item[j] & bb->ob_item[j]);
+        and = and + bitcount_lookup[ and_c ];
+        or_c = (aa->ob_item[j] | bb->ob_item[j]);
+        or  = or  + bitcount_lookup[ or_c ];
+    }
+
+    if (or == 0)
+        return PyFloat_FromDouble(1.0);
+    else
+        return PyFloat_FromDouble( ((double)(and)) / ((double)(or)) );
+}
+
+static PyObject *
+tanimoto_orij(PyObject *self, PyObject *args) {
+    PyObject *a, *b;
+
+    uint64_t and_val, or_val, *aa_ptr, *bb_ptr;
+    int j, stop, end, and = 0, or = 0, width = 8;
+    unsigned char and_c, or_c;
+
+    if (!PyArg_ParseTuple(args, "OO:tanimoto", &a, &b))
+        return NULL;
+    if (!(bitarray_Check(a) && bitarray_Check(b))) {
+        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+        return NULL;
+    }
+
+#define aa  ((bitarrayobject *) a)
+#define bb  ((bitarrayobject *) b)
+    if (aa->nbits != bb->nbits) {
+        PyErr_SetString(PyExc_ValueError,
+                        "bitarrays of equal length expected");
+        return NULL;
+    }
+    setunused(aa);
+    setunused(bb);
+    stop = 0;
+    end = Py_SIZE(aa);
+    aa_ptr = (uint64_t*) &(aa->ob_item[0]);
+    bb_ptr = (uint64_t*) &(bb->ob_item[0]);
+
+    // if data is 8-byte aligned (which it should be from initial malloc)
+    // perform 64-bit operations and pipeline operations
+    if ((((uint64_t) aa_ptr) & 7) == 0 && (((uint64_t) bb_ptr) & 7) == 0 ) {
         stop = end / width;
         for(j = 0; j < stop ; j++) {
             and_val = aa_ptr[j] & bb_ptr[j];
@@ -3165,7 +3456,7 @@ static PyMethodDef module_functions[] = {
     {"bitdiff",    (PyCFunction) bitdiff,    METH_VARARGS, bitdiff_doc   },
     {"bitand",     (PyCFunction) bitand,     METH_VARARGS, bitand_doc    },
     {"bitor",      (PyCFunction) bitor,      METH_VARARGS, bitor_doc     },
-    {"tanimoto",   (PyCFunction) tanimoto,   METH_VARARGS, tanimoto_doc  },
+    {"tanimoto",   (PyCFunction) tanimoto_intrinsic,   METH_VARARGS, tanimoto_doc  },
     {"bits2bytes", (PyCFunction) bits2bytes, METH_O,       bits2bytes_doc},
     {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS,  sysinfo_doc   },
     {NULL,         NULL}  /* sentinel */

@@ -196,7 +196,7 @@ class TestsModuleFunctions(unittest.TestCase, Util):
         b.append(1)
         self.assertRaises(ValueError, tanimoto, a, b)
 
-        for n in list(range(50)) + [randint(1000, 2000)]:
+        for n in list(range(1,3096)):
             a = bitarray()
             a.frombytes(os.urandom(bits2bytes(n)))
             del a[n:]
@@ -208,7 +208,10 @@ class TestsModuleFunctions(unittest.TestCase, Util):
             t = 1.0
             if totalbits > 0:
                 t = (0.0 + sharedbits) / totalbits
-            self.assertEqual(tanimoto(a, b), t)
+            v = tanimoto(a,b);
+            if (v != t):
+            	print("not equal %f, %f.  %d / %d" % (v, t, sharedbits, totalbits))
+            self.assertEqual(v, t)
 
     def test_bits2bytes(self):
         for arg in ['foo', [], None, {}]:
