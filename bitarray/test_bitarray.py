@@ -213,7 +213,7 @@ class TestsModuleFunctions(unittest.TestCase, Util):
             	print("not equal %f, %f.  %d / %d" % (v, t, sharedbits, totalbits))
             self.assertEqual(v, t)
 
-    def _test_tanimoto_vec(self, n = 4096, istep = 1, jstep = 16):
+    def _test_tanimoto_vec(self, n = 4096, istep = 2, jstep = 32):
         al = list()
         bl = list();
         ilistsize = istep * 5
@@ -241,12 +241,13 @@ class TestsModuleFunctions(unittest.TestCase, Util):
         for i in xrange(0, ilistsize, istep):
             for j in xrange(0, jlistsize, jstep):
             	#print "%d-%d by %d-%d" % (i, i+istep, j, j+jstep) 
-                res = tanimoto_vec(al, bl, i, j, istep, jstep) 
-                for x in xrange(0, len(res)):
+                minimatrix = tanimoto_vec(al, bl, i, j, istep, jstep) 
+                self.assertEquals(istep*jstep, len(minimatrix) * len(minimatrix[0]))
+                for x in xrange(0, istep*jstep):
                     idxi = x / jstep
                     idxj = x - idxi*jstep
                     newx = (i+idxi)*jlistsize + j+idxj
-                    results2[newx] = res[x]
+                    results2[newx] = minimatrix[idxi][idxj]
         self.assertEqual(len(results), len(results2))
         for x in xrange(0, len(results)):
             # x = i*jlistsize + j

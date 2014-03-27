@@ -3166,9 +3166,9 @@ efficient, as no intermediate bitarray object gets created");
 
 static PyObject *
 tanimoto_vec(PyObject *self, PyObject *args) {
-    PyObject *a_list, *b_list, *tanimoto_list, *a, *b;
+    PyObject *a_list, *b_list, *tanimoto_matrix, *a, *b;
 
-    long idxa, idxb, na, nb, i, j, k, end, stop;
+    long idxa, idxb, na, nb, i, j, k, end = 0, stop = -1;
 
     if (!PyArg_ParseTuple(args, "OOllll:tanimoto_vec", &a_list, &b_list, &idxa, &idxb, &na, &nb))
         return NULL;
@@ -3217,21 +3217,18 @@ tanimoto_vec(PyObject *self, PyObject *args) {
     }
 
     stop = end / (WORD_SIZE*MEM_ALIGN_WORDS);
-    for(i = 0; i < na; i++) {
-    	for(j = 0; j < nb; j++) {
-    		int idx = i*nb+j;
-    		and[idx] = 0;
-    		or[idx] = 0;
-    	}
+    for(i = 0; i < na*nb; i++) {
+   		and[i] = 0;
+   		or [i] = 0;
     }
 
     // perform calculations on MEM_ALIGNED_WORDS * 64-bit integers at a time
-    for(k=0; k < stop; k++) {
-    	for(i = 0; i < na; i++) {
-    		const WORD * __restrict__ aaa  = aa_ptr[i] + k*MEM_ALIGN_WORDS;
-
-    		for(j = 0; j < nb; j++) {
-    			int idx = i*nb+j;
+    for(i = 0; i < na; i++) {
+    	int iidx = i*nb;
+    	for(j = 0; j < nb; j++) {
+			int idx = iidx+j;
+    	    for(k=0; k < stop; k++) {
+        		const WORD * __restrict__ aaa  = aa_ptr[i] + k*MEM_ALIGN_WORDS;
     			const WORD * __restrict__ bbb  = bb_ptr[j] + k*MEM_ALIGN_WORDS;
 
     			WORD andval0 = *aaa     & *bbb;
@@ -3267,21 +3264,21 @@ tanimoto_vec(PyObject *self, PyObject *args) {
 #endif
 
     			and[idx] = and[idx]
-					+ COUNT_BITS_INTRINSIC(andval0)
+    	    				+ COUNT_BITS_INTRINSIC(andval0)
 #if MEM_ALIGN_WORDS > 1
-    					+ COUNT_BITS_INTRINSIC(andval1)
+    	    				+ COUNT_BITS_INTRINSIC(andval1)
 #if MEM_ALIGN_WORDS > 2
-    					+ COUNT_BITS_INTRINSIC(andval2)
+    	    				+ COUNT_BITS_INTRINSIC(andval2)
 #if MEM_ALIGN_WORDS > 3
-    					+ COUNT_BITS_INTRINSIC(andval3)
+    	    				+ COUNT_BITS_INTRINSIC(andval3)
 #if MEM_ALIGN_WORDS > 4
-    					+ COUNT_BITS_INTRINSIC(andval4)
+    	    				+ COUNT_BITS_INTRINSIC(andval4)
 #if MEM_ALIGN_WORDS > 5
-    					+ COUNT_BITS_INTRINSIC(andval5)
+    	    				+ COUNT_BITS_INTRINSIC(andval5)
 #if MEM_ALIGN_WORDS > 6
-    					+ COUNT_BITS_INTRINSIC(andval6)
+    	    				+ COUNT_BITS_INTRINSIC(andval6)
 #if MEM_ALIGN_WORDS > 7
-    					+ COUNT_BITS_INTRINSIC(andval7)
+    	    				+ COUNT_BITS_INTRINSIC(andval7)
 #endif
 #endif
 #endif
@@ -3291,21 +3288,21 @@ tanimoto_vec(PyObject *self, PyObject *args) {
 #endif
     					;
     			or[idx]  = or[idx]
-					+ COUNT_BITS_INTRINSIC(orval0)
+    	    				+ COUNT_BITS_INTRINSIC(orval0)
 #if MEM_ALIGN_WORDS > 1
-    					+ COUNT_BITS_INTRINSIC(orval1)
+    	    				+ COUNT_BITS_INTRINSIC(orval1)
 #if MEM_ALIGN_WORDS > 2
-    					+ COUNT_BITS_INTRINSIC(orval2)
+    	    				+ COUNT_BITS_INTRINSIC(orval2)
 #if MEM_ALIGN_WORDS > 3
-    					+ COUNT_BITS_INTRINSIC(orval3)
+    	    				+ COUNT_BITS_INTRINSIC(orval3)
 #if MEM_ALIGN_WORDS > 4
     	    				+ COUNT_BITS_INTRINSIC(orval4)
 #if MEM_ALIGN_WORDS > 5
-    					+ COUNT_BITS_INTRINSIC(orval5)
+    	    				+ COUNT_BITS_INTRINSIC(orval5)
 #if MEM_ALIGN_WORDS > 6
-    					+ COUNT_BITS_INTRINSIC(orval6)
+    	    				+ COUNT_BITS_INTRINSIC(orval6)
 #if MEM_ALIGN_WORDS > 7
-    					+ COUNT_BITS_INTRINSIC(orval7)
+    	    				+ COUNT_BITS_INTRINSIC(orval7)
 #endif
 #endif
 #endif
@@ -3343,28 +3340,39 @@ tanimoto_vec(PyObject *self, PyObject *args) {
        	}
     }
 
-    tanimoto_list = PyList_New(na*nb);
+    tanimoto_matrix = PyList_New(na);
     for(i = 0; i < na; i++) {
+    	PyObject *tanimoto_row = PyList_New(nb);
+    	PyList_SetItem(tanimoto_matrix, i, tanimoto_row);
     	for(j = 0; j < nb; j++) {
     		int idx = i*nb+j;
     		double tanimoto = 1.0;
     		if (or[idx] > 0) {
     			tanimoto = ((double) and[idx] / (double) or[idx]);
     		}
-    		PyList_SetItem(tanimoto_list, i*nb+j, PyFloat_FromDouble(tanimoto) );
+    		PyList_SetItem(tanimoto_row, j, PyFloat_FromDouble(tanimoto) );
     	}
     }
 
-    return tanimoto_list;
+    return tanimoto_matrix;
 
 }
 
 PyDoc_STRVAR(tanimoto_vec_doc,
-"tanimoto_vec(a, b, a_offset, b_offset) -> float\n\
+"tanimoto_vec(a, b, a_offset, b_offset, num_a, num_b) -> matrix (list of lists)\n\
 \n\
-Return the X*Y outer product values of the tanimoto function (a.k.a. Jaccard index) on the list of bitarrays: a and b.\n\
-This is function does the same as (a & b).count() / (a | b).count(), but is more memory\n\
-efficient, and highly optimized");
+Return the num_a by num_b matrix (i.e. list of lists) which corresponds to the\n\
+outer product values of the tanimoto function (a.k.a. Jaccard index)\n\
+on the two lists of bitarrays: a and b.\n\
+This is function does the same as:\n\
+rows = list()\n\
+for i in xrange(a_offset, a_offset+num_a):\n\
+    row = list()\n\
+    rows.append(row)\n\
+    for j in xrange(b_offset, b_offset+num_b):\n\
+        row.append( bitarray.tanimoto( a[i], b[j] ))\n\
+\n\
+But is highly optimized");
 
 
 static PyObject *
