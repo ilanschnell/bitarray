@@ -18,7 +18,7 @@ else:
     from cStringIO import StringIO
 
 
-from bitarray import bitarray, bitdiff, bitand, bitor, tanimoto, bits2bytes, __version__
+from bitarray import bitarray, bitdiff, bitand, bitor, tanimoto, tanimoto_vec, bits2bytes, __version__
 
 
 tests = []
@@ -213,6 +213,55 @@ class TestsModuleFunctions(unittest.TestCase, Util):
             	print("not equal %f, %f.  %d / %d" % (v, t, sharedbits, totalbits))
             self.assertEqual(v, t)
 
+    def _test_tanimoto_vec(self, n = 4096, istep = 1, jstep = 16):
+        al = list()
+        bl = list();
+        ilistsize = istep * 5
+        jlistsize = jstep * 7
+        for i in xrange(0,ilistsize):
+            a = bitarray()
+            a.frombytes(os.urandom(bits2bytes(n)))
+            del a[n:]
+            al.append(a)
+        for j in xrange(0,jlistsize):
+            b = bitarray()
+            b.frombytes(os.urandom(bits2bytes(n)))
+            del b[n:]
+            bl.append(b)
+        results = list()
+        for i in xrange(0,ilistsize):
+            a = al[i];
+            for j in xrange(0,jlistsize):    
+                b = bl[j];
+                v = tanimoto(a,b);
+                results.append(v)
+        results2 = list()
+        for i in xrange(0, len(results)):
+            results2.append(-1.0)
+        for i in xrange(0, ilistsize, istep):
+            for j in xrange(0, jlistsize, jstep):
+            	#print "%d-%d by %d-%d" % (i, i+istep, j, j+jstep) 
+                res = tanimoto_vec(al, bl, i, j, istep, jstep) 
+                for x in xrange(0, len(res)):
+                    idxi = x / jstep
+                    idxj = x - idxi*jstep
+                    newx = (i+idxi)*jlistsize + j+idxj
+                    results2[newx] = res[x]
+        self.assertEqual(len(results), len(results2))
+        for x in xrange(0, len(results)):
+            # x = i*jlistsize + j
+            i = x / jlistsize
+            j = x - i*jlistsize
+            #print "testing %d %d = %d: %f %f" % (i,j,x,results[x],results2[x])
+            self.assertEqual(results[x], results2[x], "%d (%d,%d) [%f] != [%f] %s %s" % (x, i, j, results[x], results2[x], al[i], bl[j]))
+    
+    def test_tanimoto_vec(self):
+    	for n in (7, 8, 64, 128, 256, 512, 2048, 504, 520, 501, 523):
+    		for istep in (1, 2, 3, 7, 9, 8):
+    			for jstep in (1, 2, 4, 16, 3, 7):
+    				#print "n: %d, istep: %d, jstep: %d" % (n, istep, jstep)
+    				self._test_tanimoto_vec(n, istep, jstep)
+    
     def test_bits2bytes(self):
         for arg in ['foo', [], None, {}]:
             self.assertRaises(TypeError, bits2bytes, arg)
