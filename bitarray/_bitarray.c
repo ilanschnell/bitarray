@@ -61,6 +61,50 @@ int PyIndex_Check(PyObject *o)
 #endif /* HAVE_SYS_TYPES_H */
 #endif /* !STDC_HEADERS */
 
+#include <gsl/gsl_randist.h>
+double _getPValue(unsigned int numOn1, unsigned int numOn2, unsigned int numOnBoth, unsigned int size) {
+	// calls GNU Scientific Library
+	// double gsl_ran_multinomial_pdf (size_t K, const double p[], const unsigned int n[])
+	static const int K = 4;
+	int tmpBoth;
+	double p1, p2, both, p[K], cdf, pdf;
+	unsigned int bestBoth, meanBoth, n[K];
+	p1 = (double) numOn1 / (double) size;
+	p2 = (double) numOn2 / (double) size;
+	both = p1 * p2;
+	meanBoth = ((both * size) + 0.5);
+	if (numOnBoth <= meanBoth)
+		return 1.0;
+	p[0] = p1-both; p[1] = p2-both; p[2] = both; p[3] = 1.0 - p1 - p2 + both;
+	bestBoth = numOn1 > numOn2 ? numOn2 : numOn1;
+
+	n[0] = numOn1-meanBoth; n[1] = numOn2-meanBoth; n[2] = meanBoth ; n[3] = size - numOn1 - numOn2 + meanBoth;
+	cdf = 0.0;
+	for(tmpBoth = meanBoth ; tmpBoth <= (int) numOnBoth; tmpBoth++) {
+		assert(n[0]+n[1]+n[2]+n[3] == size);
+		pdf = gsl_ran_multinomial_pdf(K, p, n);
+		cdf += pdf;
+		//printf("%d %d %d %d: + %f == %f\n", n[0], n[1], n[2], n[3], pdf, cdf);
+		n[0]--; n[1]--; n[2]++; n[3]++;
+	}
+	cdf *= 2.0;
+	// pdf/cdf is a greater approximation, but okay when pdf << cdf.
+	// Really should be (pdf+x)/(cdf+x) where x equals the remainder of the least likely possibilities after numOnBoth
+	return pdf / cdf;
+}
+PyObject *getPValue(PyObject *self, PyObject *args) {
+
+    long numOn1, numOn2, numOnBoth, size;
+
+    if (!PyArg_ParseTuple(args, "llll:tanimoto_vec", &numOn1, &numOn2, &numOnBoth, &size))
+        return NULL;
+    double pvalue = _getPValue(numOn1, numOn2, numOnBoth, size);
+    return PyFloat_FromDouble(pvalue);
+}
+PyDoc_STRVAR(getPValue_doc,
+"double = getPValue(numOn1, numOn2, numOnBoth, size)\n\
+\treturns the probability that two bitarray bitand intersection is by chance");
+
 
 typedef long long int idx_t;
 
@@ -75,6 +119,7 @@ typedef struct {
     unsigned char *ob_item;
     Py_ssize_t allocated;       /* how many bytes allocated */
     idx_t nbits;                /* length of bitarray */
+    int nbits_set;              /* cache of number bits set on.  -1 is uncalculated */
     int endian;                 /* bit endianness of bitarray */
     PyObject *weakreflist;      /* list of weak references */
 } bitarrayobject;
@@ -178,6 +223,7 @@ setbit(bitarrayobject *self, idx_t i, int bit)
         *cp |= mask;
     else
         *cp &= ~mask;
+    self->nbits_set = -1;
 }
 
 /* sets ususet bits to 0, i.e. the ones in the last byte (if any),
@@ -239,6 +285,7 @@ resize(bitarrayobject *self, idx_t nbits)
     {
         Py_SIZE(self) = newsize;
         self->nbits = nbits;
+        self->nbits_set = -1;
         setunused(self);
         return 0;
     }
@@ -275,6 +322,7 @@ resize(bitarrayobject *self, idx_t nbits)
     Py_SIZE(self) = newsize;
     self->allocated = _new_size;
     self->nbits = nbits;
+    self->nbits_set = -1;
     setunused(self);
     return 0;
 }
@@ -298,6 +346,7 @@ newbitarrayobject(PyTypeObject *type, idx_t nbits, int endian)
     nbytes = (Py_ssize_t) BYTES(nbits);
     Py_SIZE(obj) = nbytes;
     obj->nbits = nbits;
+    obj->nbits_set = -1;
     obj->endian = endian;
     if (nbytes == 0) {
     	if (obj->ob_item != NULL)
@@ -372,6 +421,7 @@ copy_n(bitarrayobject *self, idx_t a,
         for (i = n - 1; i >= 0; i--)      /* loop backwards (insert) */
             setbit(self, i + a, GETBIT(other, i + b));
     }
+    self->nbits_set = -1;
 }
 
 /* starting at start, delete n bits from self */
@@ -463,6 +513,7 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
             self->ob_item[i] ^= other->ob_item[i];
         break;
     }
+    self->nbits_set = -1;
     return 0;
 }
 
@@ -476,6 +527,7 @@ setrange(bitarrayobject *self, idx_t start, idx_t stop, int val)
     assert(0 <= stop && stop <= self->nbits);
     for (i = start; i < stop; i++)
         setbit(self, i, val);
+    self->nbits_set = -1;
 }
 
 static void
@@ -485,6 +537,7 @@ invert(bitarrayobject *self)
 
     for (i = 0; i < Py_SIZE(self); i++)
         self->ob_item[i] = ~self->ob_item[i];
+    self->nbits_set = -1;
     setunused(self);
 }
 
@@ -515,6 +568,7 @@ bytereverse(bitarrayobject *self)
         c = self->ob_item[i];
         self->ob_item[i] = trans[c];
     }
+    self->nbits_set = -1;
 }
 
 
@@ -556,11 +610,14 @@ static idx_t
 count_old(bitarrayobject *self)
 {
 	setunused(self);
-	return count_range(self, 0, Py_SIZE(self));
+	return self->nbits_set = count_range(self, 0, Py_SIZE(self));
 }
 static idx_t
 count(bitarrayobject *self)
 {
+	// return the cached count, if it is available
+	if (self->nbits_set >= 0)
+		return self->nbits_set;
 	Py_ssize_t i, stop, end = Py_SIZE(self);
 	idx_t res = 0;
 	stop = end / 8;
@@ -569,7 +626,7 @@ count(bitarrayobject *self)
 		res += COUNT_BITS_INTRINSIC(*(ptr + i));
 	}
 	res += count_range(self, stop*8, end);
-	return res;
+	return self->nbits_set = res;
 }
 
 /* return index of first occurrence of vi, -1 when x is not in found. */
@@ -678,6 +735,7 @@ unpack(bitarrayobject *self, char zero, char one)
     }
     res = PyString_FromStringAndSize(str, (Py_ssize_t) self->nbits);
     PyMem_Free((void *) str);
+    self->nbits_set = -1;
     return res;
 }
 
@@ -1046,6 +1104,7 @@ bitarray_copy(bitarrayobject *self)
         return NULL;
 
     memcpy(((bitarrayobject *) res)->ob_item, self->ob_item, Py_SIZE(self));
+    self->nbits_set = -1;
     return res;
 }
 
@@ -3697,6 +3756,7 @@ static PyMethodDef module_functions[] = {
     {"bitor",      (PyCFunction) bitor,      METH_VARARGS, bitor_doc     },
     {"tanimoto",   (PyCFunction) tanimoto_intrinsic,   METH_VARARGS, tanimoto_doc  },
     {"tanimoto_vec",   (PyCFunction) tanimoto_vec,   METH_VARARGS, tanimoto_vec_doc  },
+    {"getPValue",   (PyCFunction) getPValue, METH_VARARGS, getPValue_doc},
     {"bits2bytes", (PyCFunction) bits2bytes, METH_O,       bits2bytes_doc},
     {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS,  sysinfo_doc   },
     {NULL,         NULL}  /* sentinel */

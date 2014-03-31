@@ -1,7 +1,7 @@
 import re
 from os.path import join
 from distutils.core import setup, Extension
-
+import os
 
 kwds = {}
 kwds['long_description'] = open('README.rst').read()
@@ -39,6 +39,9 @@ setup(
     packages = ["bitarray"],
     ext_modules = [Extension(name = "bitarray._bitarray",
                              sources = ["bitarray/_bitarray.c"],
-                             extra_compile_args = ['-march=native'])],
+                             include_dirs = [os.environ['GSL_DIR'] + "/include"],
+                             library_dirs = [os.environ['GSL_DIR'] + "/lib"],
+                             libraries = ['gsl', 'gslcblas'],
+                             extra_compile_args = ['-march=native', '-ftree-vectorizer-verbose=2'])],
     **kwds
 )
