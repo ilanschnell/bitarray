@@ -48,6 +48,9 @@ Key features
 Installation
 ------------
 
+Requirements:
+GNU Scientific Library.  Set the environmental variable GSL_DIR to the installation path. 
+
 bitarray can be installed from source::
 
    $ tar xzf bitarray-0.8.2.tar.gz
