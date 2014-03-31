@@ -3,6 +3,12 @@ from os.path import join
 from distutils.core import setup, Extension
 import os
 
+gsl_dir = '/usr';
+try:
+	gsl_dir = os.environ['GSL_DIR']
+except:
+	None
+
 kwds = {}
 kwds['long_description'] = open('README.rst').read()
 
@@ -39,8 +45,8 @@ setup(
     packages = ["bitarray"],
     ext_modules = [Extension(name = "bitarray._bitarray",
                              sources = ["bitarray/_bitarray.c"],
-                             include_dirs = [os.environ['GSL_DIR'] + "/include"],
-                             library_dirs = [os.environ['GSL_DIR'] + "/lib"],
+                             include_dirs = [gsl_dir + "/include"],
+                             library_dirs = [gsl_dir + "/lib"],
                              libraries = ['gsl', 'gslcblas'],
                              extra_compile_args = ['-march=native', '-ftree-vectorizer-verbose=2'])],
     **kwds
