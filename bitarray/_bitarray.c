@@ -62,6 +62,48 @@ int PyIndex_Check(PyObject *o)
 #endif /* !STDC_HEADERS */
 
 #include <gsl/gsl_randist.h>
+int _getMinIntersection(unsigned int numOn1, unsigned int numOn2, unsigned int size, double maxP) {
+	// calls GNU Scientific Library
+	// double gsl_ran_multinomial_pdf (size_t K, const double p[], const unsigned int n[])
+	// to find the minimum number of intersection bits for a given probability maxP
+	static const int K = 4;
+	int tmpBoth;
+	double p1, p2, both, p[K], cdf, pdf;
+	unsigned int bestBoth, meanBoth, n[K];
+	p1 = (double) numOn1 / (double) size;
+	p2 = (double) numOn2 / (double) size;
+	both = p1 * p2;
+	meanBoth = ((both * size) + 0.5);
+	if (maxP >= 0.5)
+		return meanBoth;
+	p[0] = p1-both; p[1] = p2-both; p[2] = both; p[3] = 1.0 - p1 - p2 + both;
+	bestBoth = numOn1 > numOn2 ? numOn2 : numOn1;
+	n[0] = numOn1-meanBoth; n[1] = numOn2-meanBoth; n[2] = meanBoth ; n[3] = size - numOn1 - numOn2 + meanBoth;
+	cdf = 0.0;
+	for(tmpBoth = meanBoth ; tmpBoth <= (int) bestBoth; tmpBoth++) {
+		pdf = gsl_ran_multinomial_pdf(K, p, n);
+		cdf += pdf;
+		if (pdf / (2*cdf) <= maxP)
+			break;
+		//printf("%d %d %d %d: + %f == %f\n", n[0], n[1], n[2], n[3], pdf, cdf);
+		n[0]--; n[1]--; n[2]++; n[3]++;
+	}
+	return tmpBoth;
+}
+PyObject *getMinIntersection(PyObject *self, PyObject *args) {
+
+    long numOn1, numOn2, size;
+    double maxP;
+
+    if (!PyArg_ParseTuple(args, "llld:tanimoto_vec", &numOn1, &numOn2, &size, &maxP))
+        return NULL;
+    long intersection = _getMinIntersection(numOn1, numOn2, size, maxP);
+    return PyLong_FromLong(intersection);
+}
+PyDoc_STRVAR(getMinIntersection_doc,
+"double = getMinIntersection(numOn1, numOn2, size, maxP)\n\
+\treturns the minimum bitand bits set that two bitarrays require for a maximum probability (<<0.5)");
+
 double _getPValue(unsigned int numOn1, unsigned int numOn2, unsigned int numOnBoth, unsigned int size) {
 	// calls GNU Scientific Library
 	// double gsl_ran_multinomial_pdf (size_t K, const double p[], const unsigned int n[])
@@ -3757,6 +3799,7 @@ static PyMethodDef module_functions[] = {
     {"tanimoto",   (PyCFunction) tanimoto_intrinsic,   METH_VARARGS, tanimoto_doc  },
     {"tanimoto_vec",   (PyCFunction) tanimoto_vec,   METH_VARARGS, tanimoto_vec_doc  },
     {"getPValue",   (PyCFunction) getPValue, METH_VARARGS, getPValue_doc},
+    {"getMinIntersection", (PyCFunction) getMinIntersection, METH_VARARGS, getMinIntersection_doc },
     {"bits2bytes", (PyCFunction) bits2bytes, METH_O,       bits2bytes_doc},
     {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS,  sysinfo_doc   },
     {NULL,         NULL}  /* sentinel */
