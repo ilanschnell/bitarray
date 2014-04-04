@@ -62,34 +62,75 @@ int PyIndex_Check(PyObject *o)
 #endif /* !STDC_HEADERS */
 
 #include <gsl/gsl_randist.h>
+#define MULTINOMIAL_DIM 4
+typedef struct MultinomialData {
+	double p[MULTINOMIAL_DIM],pdf, cdf;
+	unsigned int n[MULTINOMIAL_DIM], minBoth, meanBoth, maxBoth;
+} MultinomialData;
+void _setMultinomialData(unsigned int numOn1, unsigned int numOn2, unsigned int size, struct MultinomialData *m) {
+	double p1, p2, both;
+	p1 = (double) numOn1 / (double) size;
+	p2 = (double) numOn2 / (double) size;
+	both = p1 * p2;
+	m->meanBoth = ((both * size) + 0.5);
+	m->maxBoth = numOn1 > numOn2 ? numOn2 : numOn1;
+	m->minBoth = numOn1 + numOn2 - size;
+	if (m->minBoth < 0)
+		m->minBoth = 0;
+	m->p[0] = p1-both;
+	m->p[1] = p2-both;
+	m->p[2] = both;
+	m->p[3] = 1.0 - p1 - p2 + both;
+	m->pdf = 0.0;
+	m->cdf = 1.0;
+	m->n[0] = numOn1-m->meanBoth;
+	m->n[1] = numOn2-m->meanBoth;
+	m->n[2] = m->meanBoth;
+	m->n[3] = size - numOn1 - numOn2 + m->meanBoth;
+}
+unsigned int _getMultinomialCDF(struct MultinomialData *m, double cutoff) {
+	// calls GNU Scientific Library
+	// double gsl_ran_multinomial_pdf (size_t K, const double p[], const unsigned int n[])
+	// to find the minimum number of intersection bits for a given probability maxP
+	int tmpBoth;
+
+	m->pdf = gsl_ran_multinomial_pdf(MULTINOMIAL_DIM, m->p, m->n);
+	if (((m->maxBoth - m->minBoth + 1) & 0x1) == 0x0) {
+		// size of distribution is even
+		if ((m->meanBoth & 0x1) == 0x1) {
+			// meanBoth is odd, so must be split
+			m->pdf /= 2.0;
+		}
+	} else if ((m->meanBoth & 0x1) == 0x0) {
+		// distribution is odd and meanBoth is even, so must be split
+		m->pdf /= 2.0;
+	}
+	m->cdf = m->pdf;
+	for(tmpBoth = m->meanBoth + 1; tmpBoth <= m->maxBoth; tmpBoth++) {
+		m->n[0]--; m->n[1]--; m->n[2]++; m->n[3]++;
+		m->pdf = gsl_ran_multinomial_pdf(MULTINOMIAL_DIM, m->p, m->n);
+		m->cdf += m->pdf;
+		if (m->pdf / (2.0*m->cdf) < cutoff) {
+			break;
+		}
+	}
+	m->cdf *= 2.0;
+	return tmpBoth;
+}
+
 int _getMinIntersection(unsigned int numOn1, unsigned int numOn2, unsigned int size, double maxP) {
 	// calls GNU Scientific Library
 	// double gsl_ran_multinomial_pdf (size_t K, const double p[], const unsigned int n[])
 	// to find the minimum number of intersection bits for a given probability maxP
-	static const int K = 4;
-	int tmpBoth;
-	double p1, p2, both, p[K], cdf, pdf;
-	unsigned int bestBoth, meanBoth, n[K];
-	p1 = (double) numOn1 / (double) size;
-	p2 = (double) numOn2 / (double) size;
-	both = p1 * p2;
-	meanBoth = ((both * size) + 0.5);
+	struct MultinomialData data;
+	_setMultinomialData(numOn1, numOn2, size, &data);
+
 	if (maxP >= 0.5)
-		return meanBoth;
-	p[0] = p1-both; p[1] = p2-both; p[2] = both; p[3] = 1.0 - p1 - p2 + both;
-	bestBoth = numOn1 > numOn2 ? numOn2 : numOn1;
-	n[0] = numOn1-meanBoth; n[1] = numOn2-meanBoth; n[2] = meanBoth ; n[3] = size - numOn1 - numOn2 + meanBoth;
-	cdf = 0.0;
-	for(tmpBoth = meanBoth ; tmpBoth <= (int) bestBoth; tmpBoth++) {
-		pdf = gsl_ran_multinomial_pdf(K, p, n);
-		cdf += pdf;
-		if (pdf / (2*cdf) <= maxP)
-			break;
-		//printf("%d %d %d %d: + %f == %f\n", n[0], n[1], n[2], n[3], pdf, cdf);
-		n[0]--; n[1]--; n[2]++; n[3]++;
-	}
-	return tmpBoth;
+		return data.meanBoth;
+
+	return _getMultinomialCDF(&data, maxP);
 }
+
 PyObject *getMinIntersection(PyObject *self, PyObject *args) {
 
     long numOn1, numOn2, size;
@@ -107,32 +148,25 @@ PyDoc_STRVAR(getMinIntersection_doc,
 double _getPValue(unsigned int numOn1, unsigned int numOn2, unsigned int numOnBoth, unsigned int size) {
 	// calls GNU Scientific Library
 	// double gsl_ran_multinomial_pdf (size_t K, const double p[], const unsigned int n[])
-	static const int K = 4;
-	int tmpBoth;
-	double p1, p2, both, p[K], cdf, pdf;
-	unsigned int bestBoth, meanBoth, n[K];
-	p1 = (double) numOn1 / (double) size;
-	p2 = (double) numOn2 / (double) size;
-	both = p1 * p2;
-	meanBoth = ((both * size) + 0.5);
-	if (numOnBoth <= meanBoth)
-		return 1.0;
-	p[0] = p1-both; p[1] = p2-both; p[2] = both; p[3] = 1.0 - p1 - p2 + both;
-	bestBoth = numOn1 > numOn2 ? numOn2 : numOn1;
+	unsigned int n[MULTINOMIAL_DIM], i, tmpBoth;
+	double myPdf;
+	struct MultinomialData data;
+	_setMultinomialData(numOn1, numOn2, size, &data);
 
-	n[0] = numOn1-meanBoth; n[1] = numOn2-meanBoth; n[2] = meanBoth ; n[3] = size - numOn1 - numOn2 + meanBoth;
-	cdf = 0.0;
-	for(tmpBoth = meanBoth ; tmpBoth <= (int) numOnBoth; tmpBoth++) {
-		assert(n[0]+n[1]+n[2]+n[3] == size);
-		pdf = gsl_ran_multinomial_pdf(K, p, n);
-		cdf += pdf;
-		//printf("%d %d %d %d: + %f == %f\n", n[0], n[1], n[2], n[3], pdf, cdf);
-		n[0]--; n[1]--; n[2]++; n[3]++;
+	if (numOnBoth <= data.meanBoth) {
+		return 1.0;
 	}
-	cdf *= 2.0;
-	// pdf/cdf is a greater approximation, but okay when pdf << cdf.
-	// Really should be (pdf+x)/(cdf+x) where x equals the remainder of the least likely possibilities after numOnBoth
-	return pdf / cdf;
+
+	tmpBoth = numOnBoth - data.meanBoth;
+	for(i = 0; i < MULTINOMIAL_DIM/2; i++)
+		n[i] = data.n[i] + tmpBoth;
+	for(i = MULTINOMIAL_DIM/2; i < MULTINOMIAL_DIM; i++)
+		n[i] = data.n[i] - tmpBoth;
+
+	tmpBoth = _getMultinomialCDF(&data, 1e-16); // calc CDF to machine precision
+	myPdf = gsl_ran_multinomial_pdf(MULTINOMIAL_DIM, data.p, n);
+	return myPdf / data.cdf;
+
 }
 PyObject *getPValue(PyObject *self, PyObject *args) {
 
