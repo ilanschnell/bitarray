@@ -64,8 +64,9 @@ int PyIndex_Check(PyObject *o)
 #include <gsl/gsl_randist.h>
 #define MULTINOMIAL_DIM 4
 typedef struct MultinomialData {
-	double p[MULTINOMIAL_DIM],pdf, cdf;
-	unsigned int n[MULTINOMIAL_DIM], minBoth, meanBoth, maxBoth;
+	double p[MULTINOMIAL_DIM];
+	double pdf, cdf;
+	unsigned int n[MULTINOMIAL_DIM], n2[MULTINOMIAL_DIM], minBoth, meanBoth, maxBoth;
 } MultinomialData;
 void _setMultinomialData(unsigned int numOn1, unsigned int numOn2, unsigned int size, struct MultinomialData *m) {
 	double p1, p2, both;
@@ -82,39 +83,45 @@ void _setMultinomialData(unsigned int numOn1, unsigned int numOn2, unsigned int 
 	m->p[2] = both;
 	m->p[3] = 1.0 - p1 - p2 + both;
 	m->pdf = 0.0;
-	m->cdf = 1.0;
-	m->n[0] = numOn1-m->meanBoth;
-	m->n[1] = numOn2-m->meanBoth;
-	m->n[2] = m->meanBoth;
-	m->n[3] = size - numOn1 - numOn2 + m->meanBoth;
+	m->cdf = 0.0;
+	m->n[0] = m->n2[0] = numOn1-m->meanBoth;
+	m->n[1] = m->n2[1] = numOn2-m->meanBoth;
+	m->n[2] = m->n2[2] = m->meanBoth;
+	m->n[3] = m->n2[3] = size - numOn1 - numOn2 + m->meanBoth;
 }
 unsigned int _getMultinomialCDF(struct MultinomialData *m, double cutoff) {
 	// calls GNU Scientific Library
 	// double gsl_ran_multinomial_pdf (size_t K, const double p[], const unsigned int n[])
 	// to find the minimum number of intersection bits for a given probability maxP
 	int tmpBoth;
+	double tpdf;
 
+	tpdf = 0.0;
 	m->pdf = gsl_ran_multinomial_pdf(MULTINOMIAL_DIM, m->p, m->n);
-	if (((m->maxBoth - m->minBoth + 1) & 0x1) == 0x0) {
-		// size of distribution is even
-		if ((m->meanBoth & 0x1) == 0x1) {
-			// meanBoth is odd, so must be split
-			m->pdf /= 2.0;
-		}
-	} else if ((m->meanBoth & 0x1) == 0x0) {
-		// distribution is odd and meanBoth is even, so must be split
-		m->pdf /= 2.0;
-	}
 	m->cdf = m->pdf;
 	for(tmpBoth = m->meanBoth + 1; tmpBoth <= m->maxBoth; tmpBoth++) {
+		m->n2[0]++; m->n2[1]++; m->n2[2]--; m->n2[3]--;
+		if (m->n2[2] >= 0 && m->n2[3] >= 0) {
+			tpdf = gsl_ran_multinomial_pdf(MULTINOMIAL_DIM, m->p, m->n2);
+			m->cdf += tpdf;
+		} else {
+			tpdf = 0.0;
+		}
+
 		m->n[0]--; m->n[1]--; m->n[2]++; m->n[3]++;
-		m->pdf = gsl_ran_multinomial_pdf(MULTINOMIAL_DIM, m->p, m->n);
-		m->cdf += m->pdf;
-		if (m->pdf / (2.0*m->cdf) < cutoff) {
-			break;
+		assert(m->n[2] == tmpBoth);
+
+		if (m->n[0] >= 0 && m->n[1] >= 0) {
+			m->pdf = gsl_ran_multinomial_pdf(MULTINOMIAL_DIM, m->p, m->n);
+			m->cdf += m->pdf;
+		} else {
+			m->pdf = 0.0;
+		}
+
+		if ((m->pdf / m->cdf) < cutoff) {
+			break; // don't bother as precision is lost now
 		}
 	}
-	m->cdf *= 2.0;
 	return tmpBoth;
 }
 
@@ -145,11 +152,12 @@ PyDoc_STRVAR(getMinIntersection_doc,
 "double = getMinIntersection(numOn1, numOn2, size, maxP)\n\
 \treturns the minimum bitand bits set that two bitarrays require for a maximum probability (<<0.5)");
 
+
 double _getPValue(unsigned int numOn1, unsigned int numOn2, unsigned int numOnBoth, unsigned int size) {
 	// calls GNU Scientific Library
 	// double gsl_ran_multinomial_pdf (size_t K, const double p[], const unsigned int n[])
 	unsigned int n[MULTINOMIAL_DIM], i, tmpBoth;
-	double myPdf;
+	double myPdf, tmpPdf;
 	struct MultinomialData data;
 	_setMultinomialData(numOn1, numOn2, size, &data);
 
@@ -157,14 +165,24 @@ double _getPValue(unsigned int numOn1, unsigned int numOn2, unsigned int numOnBo
 		return 1.0;
 	}
 
-	tmpBoth = numOnBoth - data.meanBoth;
-	for(i = 0; i < MULTINOMIAL_DIM/2; i++)
-		n[i] = data.n[i] + tmpBoth;
-	for(i = MULTINOMIAL_DIM/2; i < MULTINOMIAL_DIM; i++)
-		n[i] = data.n[i] - tmpBoth;
+	tmpBoth = _getMultinomialCDF(&data, 1e-8); // calc CDF to float precision
 
-	tmpBoth = _getMultinomialCDF(&data, 1e-16); // calc CDF to machine precision
-	myPdf = gsl_ran_multinomial_pdf(MULTINOMIAL_DIM, data.p, n);
+	n[0] = numOn1 - numOnBoth;
+	n[1] = numOn2 - numOnBoth;
+	n[2] = numOnBoth;
+	n[3] = size - numOn1 - numOn2 + numOnBoth;
+
+	myPdf = 0.0;
+	for(tmpBoth = numOnBoth; tmpBoth <= data.maxBoth; tmpBoth++) {
+		tmpPdf = gsl_ran_multinomial_pdf(MULTINOMIAL_DIM, data.p, n);
+		myPdf += tmpPdf;
+		if (tmpPdf / myPdf < 1e-3) {
+			break; // 3 sig figs is more than enough
+		}
+		n[0]--; n[1]--; n[2]++; n[3]++;
+
+	}
+
 	return myPdf / data.cdf;
 
 }
@@ -180,7 +198,6 @@ PyObject *getPValue(PyObject *self, PyObject *args) {
 PyDoc_STRVAR(getPValue_doc,
 "double = getPValue(numOn1, numOn2, numOnBoth, size)\n\
 \treturns the probability that two bitarray bitand intersection is by chance");
-
 
 typedef long long int idx_t;
 
