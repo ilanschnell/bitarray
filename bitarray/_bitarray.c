@@ -143,20 +143,20 @@ PyObject *getMinIntersection(PyObject *self, PyObject *args) {
     long numOn1, numOn2, size;
     double maxP;
 
-    if (!PyArg_ParseTuple(args, "llld:tanimoto_vec", &numOn1, &numOn2, &size, &maxP))
+    if (!PyArg_ParseTuple(args, "llld:getMinIntersection", &numOn1, &numOn2, &size, &maxP))
         return NULL;
     long intersection = _getMinIntersection(numOn1, numOn2, size, maxP);
     return PyLong_FromLong(intersection);
 }
 PyDoc_STRVAR(getMinIntersection_doc,
 "double = getMinIntersection(numOn1, numOn2, size, maxP)\n\
-\treturns the minimum bitand bits set that two bitarrays require for a maximum probability (<<0.5)");
+\treturns the minimum bitand bits set that two bitarrays require for a maximum probability");
 
 
 double _getPValue(unsigned int numOn1, unsigned int numOn2, unsigned int numOnBoth, unsigned int size) {
 	// calls GNU Scientific Library
 	// double gsl_ran_multinomial_pdf (size_t K, const double p[], const unsigned int n[])
-	unsigned int n[MULTINOMIAL_DIM], i, tmpBoth;
+	unsigned int n[MULTINOMIAL_DIM], tmpBoth;
 	double myPdf, tmpPdf;
 	struct MultinomialData data;
 	_setMultinomialData(numOn1, numOn2, size, &data);
@@ -189,15 +189,107 @@ double _getPValue(unsigned int numOn1, unsigned int numOn2, unsigned int numOnBo
 PyObject *getPValue(PyObject *self, PyObject *args) {
 
     long numOn1, numOn2, numOnBoth, size;
+    double pvalue;
 
-    if (!PyArg_ParseTuple(args, "llll:tanimoto_vec", &numOn1, &numOn2, &numOnBoth, &size))
+    if (!PyArg_ParseTuple(args, "llll:getPValue", &numOn1, &numOn2, &numOnBoth, &size))
         return NULL;
-    double pvalue = _getPValue(numOn1, numOn2, numOnBoth, size);
+    pvalue = _getPValue(numOn1, numOn2, numOnBoth, size);
     return PyFloat_FromDouble(pvalue);
 }
 PyDoc_STRVAR(getPValue_doc,
 "double = getPValue(numOn1, numOn2, numOnBoth, size)\n\
 \treturns the probability that two bitarray bitand intersection is by chance");
+
+typedef unsigned int FunctionSampleType;
+#define FUNCTION_SAMPLE_POINTS 64
+struct FunctionSampling {
+	double maxP;
+	int size;
+	FunctionSampleType matrixStep;
+	FunctionSampleType sampleMatrix[FUNCTION_SAMPLE_POINTS+1][FUNCTION_SAMPLE_POINTS+1];
+} FunctionSampling;
+
+static struct FunctionSampling *__estimateMinIntersectionSampling = NULL;
+
+void _initEstimateMinIntersection(int size, double maxP) {
+	int i,j, step;
+	if (__estimateMinIntersectionSampling != NULL
+			&& size == __estimateMinIntersectionSampling->size
+			&& maxP == __estimateMinIntersectionSampling->maxP)
+		return;
+
+	//printf("_initEstimateMinIntersection: Building %d %f\n", size, maxP);
+
+	if (__estimateMinIntersectionSampling != NULL)
+		free(__estimateMinIntersectionSampling);
+	__estimateMinIntersectionSampling = (struct FunctionSampling*) malloc(sizeof(struct FunctionSampling));
+
+	step = __estimateMinIntersectionSampling->matrixStep = size / FUNCTION_SAMPLE_POINTS;
+	__estimateMinIntersectionSampling->size = size;
+	__estimateMinIntersectionSampling->maxP = maxP;
+
+	for(i = 0; i <= size / step ; i++) {
+		for(j = 0; j <= size / step; j++) {
+			__estimateMinIntersectionSampling->sampleMatrix[i][j] =
+				_getMinIntersection(i*step, j*step, size, maxP);
+		}
+	}
+}
+unsigned int _estimateMinIntersection(FunctionSampleType x, FunctionSampleType y, int size, double maxP) {
+	// bilinear interpolation over the matrix
+	// R1 = ((x2 - x)/(x2 - x1))*Q11 + ((x - x1)/(x2 - x1))*Q21
+	// R2 = ((x2 - x)/(x2 - x1))*Q12 + ((x - x1)/(x2 - x1))*Q22
+	// P  = ((y2 - y)/(y2 - y1))*R1 + ((y - y1)/(y2 - y1))*R2
+	FunctionSampleType Q11, Q21, Q12, Q22;
+	FunctionSampleType x1, x2, y1, y2;
+	float x2_x1, y2_y1, R1, R2, tmp1, tmp2, P;
+	_initEstimateMinIntersection(size, maxP);
+
+	x1 = x / __estimateMinIntersectionSampling->matrixStep;
+	y1 = y / __estimateMinIntersectionSampling->matrixStep;
+	x2 = x1+1;
+	y2 = y1+1;
+
+	// approximation does not hold at the edges of the matrix
+	if (x1 == 0 || y1 == 0 || x2 == FUNCTION_SAMPLE_POINTS || y2 == FUNCTION_SAMPLE_POINTS) {
+		//printf("_estimateMinIntersection: short circuit: %d %d %d %d\n", x1 , y1, x2, y2);
+		return _getMinIntersection(x, y, size, maxP);
+	}
+
+	Q11 = __estimateMinIntersectionSampling->sampleMatrix[x1][y1];
+	Q12 = __estimateMinIntersectionSampling->sampleMatrix[x1][y2];
+	Q21 = __estimateMinIntersectionSampling->sampleMatrix[x2][y1];
+	Q22 = __estimateMinIntersectionSampling->sampleMatrix[x2][y2];
+	x1 = x1 * __estimateMinIntersectionSampling->matrixStep;
+	x2 = x2 * __estimateMinIntersectionSampling->matrixStep;
+	y1 = y1 * __estimateMinIntersectionSampling->matrixStep;
+	y2 = y2 * __estimateMinIntersectionSampling->matrixStep;
+	x2_x1 = x2 - x1;
+	y2_y1 = y2 - y1;
+
+	tmp1 = (x2 - x) / x2_x1;
+	tmp2 = (x - x1) / x2_x1;
+	R1 = tmp1 * Q11 + tmp2 * Q21;
+	R2 = tmp1 * Q12 + tmp2 * Q22;
+	P = ((y2 - y) / y2_y1) * R1 + ((y - y1) / y2_y1) * R2;
+	return (FunctionSampleType) (P + 0.5);
+}
+
+PyObject *estimateMinIntersection(PyObject *self, PyObject *args) {
+
+    long numOn1, numOn2, size, minIntersection;
+    double maxP;
+
+    if (!PyArg_ParseTuple(args, "llld:estimateMinIntersection", &numOn1, &numOn2, &size, &maxP))
+        return NULL;
+    minIntersection = _estimateMinIntersection(numOn1, numOn2, size, maxP);
+    return PyLong_FromLong(minIntersection);
+}
+PyDoc_STRVAR(estimateMinIntersection_doc,
+"double = estimateMinIntersection(numOn1, numOn2, size, maxP)\n\
+\treturns a linear approximation of the minimum bitand bits set that two bitarrays require for a maximum probability\n\
+\tWhen first called it samples the possible values using getMinIntersection\n");
+
 
 typedef long long int idx_t;
 
@@ -3851,6 +3943,7 @@ static PyMethodDef module_functions[] = {
     {"tanimoto_vec",   (PyCFunction) tanimoto_vec,   METH_VARARGS, tanimoto_vec_doc  },
     {"getPValue",   (PyCFunction) getPValue, METH_VARARGS, getPValue_doc},
     {"getMinIntersection", (PyCFunction) getMinIntersection, METH_VARARGS, getMinIntersection_doc },
+    {"estimateMinIntersection", (PyCFunction) estimateMinIntersection, METH_VARARGS, estimateMinIntersection_doc },
     {"bits2bytes", (PyCFunction) bits2bytes, METH_O,       bits2bytes_doc},
     {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS,  sysinfo_doc   },
     {NULL,         NULL}  /* sentinel */

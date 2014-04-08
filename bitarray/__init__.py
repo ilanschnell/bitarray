@@ -8,7 +8,7 @@ Please find a description of this package at:
 
 Author: Ilan Schnell
 """
-from bitarray._bitarray import _bitarray, bitdiff, bitand, bitor, tanimoto, tanimoto_vec, getPValue, getMinIntersection, bits2bytes, _sysinfo
+from bitarray._bitarray import _bitarray, bitdiff, bitand, bitor, tanimoto, tanimoto_vec, getPValue, getMinIntersection, estimateMinIntersection, bits2bytes, _sysinfo
 
 __version__ = '0.8.2_b'
 
