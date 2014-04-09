@@ -290,6 +290,26 @@ PyDoc_STRVAR(estimateMinIntersection_doc,
 \treturns a linear approximation of the minimum bitand bits set that two bitarrays require for a maximum probability\n\
 \tWhen first called it samples the possible values using getMinIntersection\n");
 
+PyObject *estimateMaxPValue(PyObject *self, PyObject *args) {
+
+    long numOn1, numOn2, numOnBoth, size;
+    double maxP, pvalue;
+
+    if (!PyArg_ParseTuple(args, "lllld:estimateMaxPValue", &numOn1, &numOn2, &numOnBoth, &size, &maxP))
+        return NULL;
+    // inexpensive check to see if numOnBoth is <= expected by chance
+    if (maxP <= 0.5 && (numOn1 * numOn2) >= (numOnBoth * size)) {
+    	return PyFloat_FromDouble(0.5);
+    }
+    // slightly more expensive check to see if numOnBoth is at or below the maximum allowed probability
+    if (numOnBoth < _estimateMinIntersection(numOn1, numOn2, size, maxP))
+    	return PyFloat_FromDouble(maxP*1.0000000001); // return slightly larger maxP
+    pvalue = _getPValue(numOn1, numOn2, numOnBoth, size);
+    return PyFloat_FromDouble(pvalue);
+}
+PyDoc_STRVAR(estimateMaxPValue_doc,
+"double = estimateMaxPValue(numOn1, numOn2, numOnBoth, size, maxP)\n\
+\treturns the estimated upperbounded probability that two bitarray bitand intersection is by chance");
 
 typedef long long int idx_t;
 
@@ -3942,6 +3962,7 @@ static PyMethodDef module_functions[] = {
     {"tanimoto",   (PyCFunction) tanimoto_intrinsic,   METH_VARARGS, tanimoto_doc  },
     {"tanimoto_vec",   (PyCFunction) tanimoto_vec,   METH_VARARGS, tanimoto_vec_doc  },
     {"getPValue",   (PyCFunction) getPValue, METH_VARARGS, getPValue_doc},
+    {"estimateMaxPValue", (PyCFunction) estimateMaxPValue, METH_VARARGS, estimateMaxPValue_doc },
     {"getMinIntersection", (PyCFunction) getMinIntersection, METH_VARARGS, getMinIntersection_doc },
     {"estimateMinIntersection", (PyCFunction) estimateMinIntersection, METH_VARARGS, estimateMinIntersection_doc },
     {"bits2bytes", (PyCFunction) bits2bytes, METH_O,       bits2bytes_doc},
