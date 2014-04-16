@@ -825,12 +825,12 @@ count(bitarrayobject *self)
 		return self->nbits_set;
 	Py_ssize_t i, stop, end = Py_SIZE(self);
 	idx_t res = 0;
-	stop = end / 8;
+	stop = end / WORD_SIZE;
 	WORD *ptr = (WORD*) self->ob_item;
 	for(i = 0; i != stop; i++) {
 		res += COUNT_BITS_INTRINSIC(*(ptr + i));
 	}
-	res += count_range(self, stop*8, end);
+	res += count_range(self, stop*WORD_SIZE, end);
 	return self->nbits_set = res;
 }
 
@@ -3326,6 +3326,8 @@ bitopcount(PyObject *self, PyObject *a, PyObject *b, enum op_type oper)
     Py_ssize_t i, size;
     idx_t res = 0;
     unsigned char c;
+    WORD tmpWord, *aa_ptr, *bb_ptr;
+    int stop;
 
 #define aa  ((bitarrayobject *) a)
 #define bb  ((bitarrayobject *) b)
@@ -3337,21 +3339,36 @@ bitopcount(PyObject *self, PyObject *a, PyObject *b, enum op_type oper)
     setunused(aa);
     setunused(bb);
     size = Py_SIZE(aa);
+    aa_ptr = (WORD*) aa->ob_item;
+    bb_ptr = (WORD*) bb->ob_item;
+    stop = size / WORD_SIZE;
     switch (oper) {
     case OP_and:
-        for (i = 0; i < size; i++) {
+    	for (i = 0; i < stop; i++) {
+    		tmpWord = *(aa_ptr+i) & *(bb_ptr+i);
+    		res += COUNT_BITS_INTRINSIC(tmpWord);
+    	}
+        for (i = stop*WORD_SIZE; i < size; i++) {
             c = aa->ob_item[i] & bb->ob_item[i];
             res += bitcount_lookup[c];
         }
         break;
     case OP_or:
-        for (i = 0; i < size; i++) {
+    	for (i = 0; i < stop; i++) {
+    		tmpWord = *(aa_ptr+i) | *(bb_ptr+i);
+    		res += COUNT_BITS_INTRINSIC(tmpWord);
+    	}
+        for (i = stop*WORD_SIZE; i < size; i++) {
             c = aa->ob_item[i] | bb->ob_item[i];
             res += bitcount_lookup[c];
         }
         break;
     case OP_xor:
-        for (i = 0; i < size; i++) {
+    	for (i = 0; i < stop; i++) {
+    		tmpWord = *(aa_ptr+i) ^ *(bb_ptr+i);
+    		res += COUNT_BITS_INTRINSIC(tmpWord);
+    	}
+        for (i = stop*WORD_SIZE; i < size; i++) {
             c = aa->ob_item[i] ^ bb->ob_item[i];
             res += bitcount_lookup[c];
         }
