@@ -45,9 +45,6 @@ setup(
     packages = ["bitarray"],
     ext_modules = [Extension(name = "bitarray._bitarray",
                              sources = ["bitarray/_bitarray.c"],
-                             include_dirs = [gsl_dir + "/include"],
-                             library_dirs = [gsl_dir + "/lib"],
-                             libraries = ['gsl', 'gslcblas'],
-                             extra_compile_args = ['-march=native', '-ftree-vectorizer-verbose=2'])],
+                             extra_compile_args = ['-march=native'])],
     **kwds
 )
