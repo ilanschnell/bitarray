@@ -567,6 +567,24 @@ count_old(bitarrayobject *self)
 	setunused(self);
 	return self->nbits_set = count_range(self, 0, Py_SIZE(self));
 }
+
+static idx_t
+count_alt(bitarrayobject *self)
+{
+	// return the cached count, if it is available
+	if (self->nbits_set >= 0)
+		return self->nbits_set;
+	Py_ssize_t i, stop, end = Py_SIZE(self);
+	idx_t res = 0;
+	stop = end / WORD_SIZE;
+	WORD *ptr = (WORD*) self->ob_item;
+	for(i = 0; i != stop; i++) {
+		COUNT_BITS_ON(*(ptr + i), res);
+	}
+	res += count_range(self, stop*WORD_SIZE, end);
+	return self->nbits_set = res;
+}
+
 static idx_t
 count(bitarrayobject *self)
 {
@@ -1079,6 +1097,19 @@ bitarray_count(bitarrayobject *self, PyObject *args)
         return NULL;
 
     n1 = count(self);
+    return PyLong_FromLongLong(x ? n1 : (self->nbits - n1));
+}
+
+static PyObject *
+bitarray_count_alt(bitarrayobject *self, PyObject *args)
+{
+    idx_t n1;
+    long x = 1;
+
+    if (!PyArg_ParseTuple(args, "|i:count", &x))
+        return NULL;
+
+    n1 = count_alt(self);
     return PyLong_FromLongLong(x ? n1 : (self->nbits - n1));
 }
 
@@ -2584,6 +2615,8 @@ bitarray_methods[] = {
      count_doc},
     {"countOld",     (PyCFunction) bitarray_count_old,       METH_VARARGS,
      count_doc},
+    {"countAlt",     (PyCFunction) bitarray_count_alt,       METH_VARARGS,
+      count_doc},
     {"_decode",      (PyCFunction) bitarray_decode,      METH_O,
      decode_doc},
     {"_iterdecode",  (PyCFunction) bitarray_iterdecode,  METH_O,

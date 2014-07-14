@@ -8,6 +8,7 @@ import sys
 import unittest
 import tempfile
 import shutil
+import time
 from random import randint
 
 is_py3k = bool(sys.version_info[0] == 3)
@@ -27,6 +28,15 @@ if sys.version_info[:2] < (2, 6):
     def next(x):
         return x.next()
 
+# timing decorator
+def timing(f):
+    def wrap(*args):
+        time1 = time.time()
+        ret = f(*args)
+        time2 = time.time()
+        print "\n%s function took %0.3f ms" % (f.func_name, (time2-time1)*1000.0)
+        return ret
+    return wrap
 
 def to_bytes(s):
     if is_py3k:
@@ -285,6 +295,52 @@ class TestsModuleFunctions(unittest.TestCase, Util):
                      (2**62, 2**59), (2**63-8, 2**60-1)]:
             self.assertEqual(bits2bytes(n), m)
 
+    @timing
+    def timeCountOld(self, fp1):
+        x = None
+        for i in xrange(0, 1000):
+            x = fp1.countOld()
+        return x
+    
+    @timing
+    def timeCount(self, fp1):
+        x = None
+        for i in xrange(0, 1000):
+            x = fp1.count()
+        return x
+    
+    @timing
+    def timeBitAndOld(self, fp1, fp2):
+        x = None
+        for i in xrange(0,1000):
+            x = fp1 & fp2
+        return x
+    
+    @timing
+    def timeBitAnd(self, fp1, fp2):
+        x = None
+        for i in xrange(0,1000):
+            x = bitand(fp1, fp2)
+        return x
+    
+    def test_timings(self):
+        n = 262144
+        fp1 = bitarray()
+        fp1.frombytes(os.urandom(bits2bytes(n)))
+        x = fp1.count()
+        a = self.timeCount(fp1) 
+        b = self.timeCountOld(fp1)
+        self.assertEqual(x,a)
+        self.assertEqual(x,b)
+        
+        fp2 = bitarray()
+        fp2.frombytes(os.urandom(bits2bytes(n)))
+        x = (fp1 & fp2).count()
+        a = self.timeBitAnd(fp1, fp2)
+        b = self.timeBitAndOld(fp1, fp2).count()
+        self.assertEqual(x, a)
+        self.assertEqual(x, b)
+            
 
 tests.append(TestsModuleFunctions)
 
