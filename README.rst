@@ -5,7 +5,7 @@ bitarray: efficient arrays of booleans
 This module provides an object type which efficiently represents an array
 of booleans.  Bitarrays are sequence types and behave very much like usual
 lists.  Eight bits are represented by one byte in a contiguous block of
-memory.  The user can select between two representations; little-endian
+memory.  The user can select between two representations: little-endian
 and big-endian.  All of the functionality is implemented in C.
 Methods for accessing the machine representation are provided.
 This can be useful when bit level access to binary files is required,
@@ -80,9 +80,9 @@ Using the module
 ----------------
 
 As mentioned above, bitarray objects behave very much like lists, so
-there is not too new to learn.  The biggest difference to list objects
+there is not too much to learn.  The biggest difference from list objects
 is the ability to access the machine representation of the object.
-When doing so, the bit endianness is of importance, this issue is
+When doing so, the bit endianness is of importance; this issue is
 explained in detail in the section below.  Here, we demonstrate the
 basic usage of bitarray objects:
 
@@ -233,11 +233,11 @@ endianness:
    >>> a.tobytes() == b.tobytes()
    True
 
-The default bit endianness is currently big-endian, however this may change
+The default bit endianness is currently big-endian; however, this may change
 in the future, and when dealing with the machine representation of bitarray
 objects, it is recommended to always explicitly specify the endianness.
 
-Unless, explicitly converting to machine representation, using
+Unless explicitly converting to machine representation, using
 the ``tobytes``, ``frombytes``, ``tofile`` and ``fromfile`` methods,
 the bit endianness will have no effect on any computation, and one
 can safely ignore setting the endianness, and other details of this section.
