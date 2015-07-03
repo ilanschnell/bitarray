@@ -574,11 +574,18 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
     if (other->nbits == 0)
         return 0;
 
+    /*
+        Note: other may be self. Thus we take the size before we change the
+        size, ensuring we only copy the right parts of the array.
+    */
+
+    idx_t n_other_bits = other->nbits;
+
     n_sum = self->nbits + other->nbits;
     if (resize(self, n_sum) < 0)
         return -1;
 
-    copy_n(self, n_sum - other->nbits, other, 0, other->nbits);
+    copy_n(self, n_sum - other->nbits, other, 0, n_other_bits);
     return 0;
 }
 

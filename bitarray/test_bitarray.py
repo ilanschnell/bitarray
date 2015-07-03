@@ -1211,6 +1211,11 @@ class ExtendTests(unittest.TestCase, Util):
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
 
+    def test_extend_self(self):
+        a = bitarray('1')
+        a.extend(a)
+        self.assertEqual(a, bitarray('11'))
+
 
 tests.append(ExtendTests)
 
