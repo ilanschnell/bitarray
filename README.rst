@@ -156,8 +156,8 @@ Bit endianness
 --------------
 
 Since a bitarray allows addressing of individual bits, where the machine
-represents 8 bits in one byte, there two obvious choices for this mapping;
-little- and big-endian.
+represents 8 bits in one byte, there are two obvious choices for this
+mapping: little- and big-endian.
 When creating a new bitarray object, the endianness can always be
 specified explicitly:
 
