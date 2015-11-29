@@ -5,7 +5,7 @@ bitarray: efficient arrays of booleans
 This module provides an object type which efficiently represents an array
 of booleans.  Bitarrays are sequence types and behave very much like usual
 lists.  Eight bits are represented by one byte in a contiguous block of
-memory.  The user can select between two representations; little-endian
+memory.  The user can select between two representations: little-endian
 and big-endian.  All of the functionality is implemented in C.
 Methods for accessing the machine representation are provided.
 This can be useful when bit level access to binary files is required,
@@ -156,8 +156,8 @@ Bit endianness
 --------------
 
 Since a bitarray allows addressing of individual bits, where the machine
-represents 8 bits in one byte, there two obvious choices for this mapping;
-little- and big-endian.
+represents 8 bits in one byte, there are two obvious choices for this
+mapping: little- and big-endian.
 When creating a new bitarray object, the endianness can always be
 specified explicitly:
 
