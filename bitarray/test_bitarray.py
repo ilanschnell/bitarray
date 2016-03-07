@@ -2144,9 +2144,9 @@ if sys.version_info[:2] == (2, 7):
 # ---------------------------------------------------------------------------
 
 def run(verbosity=1, repeat=1):
-    print('bitarray is installed in: ' + os.path.dirname(__file__))
-    print('bitarray version: ' + __version__)
-    print(sys.version)
+    print('bitarray is installed in: %s' % os.path.dirname(__file__))
+    print('bitarray version: %s' % __version__)
+    print('Python version: %s' % sys.version)
 
     suite = unittest.TestSuite()
     for cls in tests:
