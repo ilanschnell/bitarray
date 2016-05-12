@@ -1390,7 +1390,7 @@ class MethodTests(unittest.TestCase, Util):
 
     def test_search4(self):
         ba = bitarray('0011001100110011')
-        pos = 0
+        pos = -1
         res = list()
         while True:
             match = ba.search(bitarray('11'), 1, pos)
@@ -1399,6 +1399,7 @@ class MethodTests(unittest.TestCase, Util):
             res.append(match[0])
             pos = match[0] + 1
         self.assertEqual([2, 6, 10, 14], res)
+        self.assertEqual([], ba.search(bitarray('11'), 1, len(ba)+1))
 
     def test_search_type(self):
         a = bitarray('10011')
