@@ -1058,12 +1058,11 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     list = PyList_New(0);
     if (list == NULL)
         return NULL;
-    if (xa->nbits > self->nbits || limit == 0)
+    if (xa->nbits > self->nbits || limit == 0 || pos > self->nbits)
         return list;
-
-    // FIXME: make sure pos is in range
-
- // pos = 0;
+    if (pos < 0)
+        pos = 0;
+    
     while (1) {
         pos = search(self, xa, pos);
         if (pos < 0)
