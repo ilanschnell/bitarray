@@ -1390,15 +1390,16 @@ class MethodTests(unittest.TestCase, Util):
 
     def test_search4(self):
         ba = bitarray('0011001100110011')
-        pos = -1
-        res = list()
-        while True:
-            match = ba.search(bitarray('11'), 1, pos)
-            if not match:
-                break
-            res.extent(match)
-            pos = match[0] + 1
-        self.assertEqual([2, 6, 10, 14], res)
+        for inc in [1, 2, 3, 4, 5, 6]:
+            pos = -1
+            res = list()
+            while True:
+                match = ba.search(bitarray('11'), inc, pos)
+                if not match:
+                    break
+                res += match
+                pos  = match[-1] + 1
+            self.assertEqual([2, 6, 10, 14], res), inc
         self.assertEqual([], ba.search(bitarray('11'), 1, len(ba)+1))
 
     def test_search_type(self):
