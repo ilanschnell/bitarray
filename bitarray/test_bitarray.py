@@ -1396,7 +1396,7 @@ class MethodTests(unittest.TestCase, Util):
             match = ba.search(bitarray('11'), 1, pos)
             if not match:
                 break
-            res.append(match[0])
+            res.extent(match)
             pos = match[0] + 1
         self.assertEqual([2, 6, 10, 14], res)
         self.assertEqual([], ba.search(bitarray('11'), 1, len(ba)+1))
