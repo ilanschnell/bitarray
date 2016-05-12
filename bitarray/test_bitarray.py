@@ -1388,6 +1388,17 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(list(a.itersearch(b)), res)
             self.assertEqual([p for p in a.itersearch(b)], res)
 
+    def test_search4(self):
+        ba = bitarray('0011001100110011')
+        pos = 0
+        res = list()
+        while True:
+            match = ba.search(bitarray('11'), 1, pos)
+            if not match:
+                break
+            res.append(match[0])
+            pos = match[0] + 1
+        self.assertEqual([2, 6, 10, 14], res)
 
     def test_fill(self):
         a = bitarray('')
