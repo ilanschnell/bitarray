@@ -1040,10 +1040,10 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     PyObject *list = NULL;   /* list of matching positions to be returned */
     PyObject *x, *item = NULL;
     Py_ssize_t limit = -1;
+    Py_ssize_t pos = 0;
     bitarrayobject *xa;
-    idx_t p;
 
-    if (!PyArg_ParseTuple(args, "O|" PY_SSIZE_T_FMT ":_search", &x, &limit))
+    if (!PyArg_ParseTuple(args, "O|" PY_SSIZE_T_FMT PY_SSIZE_T_FMT ":_search", &x, &limit, &pos))
         return NULL;
 
     if (!bitarray_Check(x)) {
@@ -1061,13 +1061,15 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     if (xa->nbits > self->nbits || limit == 0)
         return list;
 
-    p = 0;
+    // FIXME: make sure pos is in range
+
+ // pos = 0;
     while (1) {
-        p = search(self, xa, p);
-        if (p < 0)
+        pos = search(self, xa, pos);
+        if (pos < 0)
             break;
-        item = PyLong_FromLongLong(p);
-        p++;
+        item = PyLong_FromLongLong(pos);
+        pos++;
         if (item == NULL || PyList_Append(list, item) < 0) {
             Py_XDECREF(item);
             Py_XDECREF(list);
@@ -1081,12 +1083,15 @@ bitarray_search(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(search_doc,
-"search(bitarray, [limit]) -> list\n\
+"search(bitarray, [limit], [pos]) -> list\n\
 \n\
 Searches for the given a bitarray in self, and returns the start positions\n\
 where bitarray matches self as a list.\n\
-The optional argument limits the number of search results to the integer\n\
-specified.  By default, all search results are returned.");
+The optional 'limit' argument limits the number of search results to the \n\
+integer specified.  By default, all search results are returned.\n\
+The optional 'pos' argument begins the search at the position specified.\n\
+By default, search begins at position 0.\n\
+");
 
 
 static PyObject *
