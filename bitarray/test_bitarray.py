@@ -560,6 +560,21 @@ class SliceTests(unittest.TestCase, Util):
                           slice(None, 2, None), -1)
 
 
+    def test_setset_to_bool(self):
+        a = bitarray('11111111')
+        a.setset([0, 2, 4, 6], False)  
+        self.assertEqual(a, bitarray('01010101'))
+        a.setset([0, 4], True)  
+        self.assertEqual(a, bitarray('11011101'))
+
+    def test_setset_to_int(self):
+        a = bitarray('11111111')
+        a.setset([0, 2, 4, 6], 0)  
+        self.assertEqual(a, bitarray('01010101'))
+        a.setset([0, 4], 1)  
+        self.assertEqual(a, bitarray('11011101'))
+
+
     def test_delitem1(self):
         a = bitarray('100110')
         del a[1]
