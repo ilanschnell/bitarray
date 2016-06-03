@@ -1040,6 +1040,54 @@ The value x may be a boolean (or integer between 0 and 1), or a bitarray.");
 
 
 static PyObject *
+bitarray_setlist(bitarrayobject *self, PyObject *args)
+{
+    PyObject   *p    = NULL; /* positions to set (evals to true/false) */
+    PyObject   *tmp  = NULL; /* positions to set (evals to true/false) */
+    PyObject   *v    = NULL; /* value to set (evals to true/false) */
+    int         vi   =    0; /* int val to set */
+    idx_t       i    =    0; /* iteration index */
+    idx_t       npos =    0; /* loop size */
+    idx_t       pos  =    0; /* loop var */
+
+    if (!PyArg_ParseTuple(args, "OO:_setlist", &p, &v))
+        return NULL;
+
+    if (!PyList_Check(p)) {
+        PyErr_SetString(PyExc_TypeError, "position list expected");
+        return NULL;
+    }
+
+    vi = PyObject_IsTrue(v);
+
+    npos = PyList_Size(p);
+    if (npos < 0)
+        return NULL; /* Not a list */
+    
+    for (i=0; i<npos; i++) {
+    
+        tmp = PyList_GetItem(p, i);
+     /* if (!PyLong_Check(tmp)) {
+            PyErr_SetString(PyExc_TypeError, "position expected as Long");
+            return NULL;
+        } 
+      */
+        pos = PyNumber_AsSsize_t(tmp, NULL);
+        setbit(self, pos, vi);
+    }
+
+    return PyLong_FromLongLong(npos);
+}
+
+PyDoc_STRVAR(setlist_doc,
+"setlist(bitarray, list, val) -> int\n\
+\n\
+Sets the bitarray to the given value for each position given in the list,\n\
+and returns the number of bits set.\n\
+");
+
+
+static PyObject *
 bitarray_setrange(bitarrayobject *self, PyObject *args)
 {
     Py_ssize_t start =   -1; /* start of range to set */
@@ -2511,6 +2559,8 @@ bitarray_methods[] = {
      setall_doc},
     {"setrange",     (PyCFunction) bitarray_setrange,    METH_VARARGS,
      setrange_doc},
+    {"setlist",      (PyCFunction) bitarray_setlist,     METH_VARARGS,
+     setlist_doc},
     {"search",       (PyCFunction) bitarray_search,      METH_VARARGS,
      search_doc},
     {"itersearch",   (PyCFunction) bitarray_itersearch,  METH_O,
