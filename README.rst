@@ -465,15 +465,23 @@ Reference
    Reverse the order of bits in the array (in-place).
 
 
-``search(bitarray, [limit])`` -> list
+``search(bitarray, [limit], [pos])`` -> list
    Searches for the given a bitarray in self, and returns the start positions
    where bitarray matches self as a list.
-   The optional argument limits the number of search results to the integer
-   specified.  By default, all search results are returned.
+   The optional `limit` argument limits the number of search results to the 
+   integer specified.  By default, all search results are returned.
+   The optional `pos` argument begins the search at the position specified.
+   By default, search begins at position 0.  If no match is found until the end,
+   the search will wrap around until reaching the start position again.
 
 
 ``setall(value)``
    Set all bits in the bitarray to bool(value).
+
+
+``setlist(list, val) -> int``
+   Sets the bitarray to the given value for each position given in the list,
+   and returns the number of bits set.
 
 
 ``sort(reverse=False)``
