@@ -2145,22 +2145,3 @@ if sys.version_info[:2] == (2, 7):
             self.assertEqual(a[399999:400009], bitarray('0111011110'))
             v[30001:30004] = 'ABC'
             self.assertEqual(a[240000:240040].tobytes(), '\x00ABC\x00')
-
-# ---------------------------------------------------------------------------
-
-def run(verbosity=1, repeat=1):
-    print('bitarray is installed in: %s' % os.path.dirname(__file__))
-    print('bitarray version: %s' % __version__)
-    print('Python version: %s' % sys.version)
-
-    suite = unittest.TestSuite()
-    for cls in tests:
-        for _ in range(repeat):
-            suite.addTest(unittest.makeSuite(cls))
-
-    runner = unittest.TextTestRunner(verbosity=verbosity)
-    return runner.run(suite)
-
-
-if __name__ == '__main__':
-    run()
