@@ -1142,7 +1142,8 @@ where bitarray matches self as a list.\n\
 The optional 'limit' argument limits the number of search results to the \n\
 integer specified.  By default, all search results are returned.\n\
 The optional 'pos' argument begins the search at the position specified.\n\
-By default, search begins at position 0.\n\
+By default, search begins at position 0. If no match is found until the end,\n\
+the search will wrap around until reaching the start position again.\n\
 ");
 
 
