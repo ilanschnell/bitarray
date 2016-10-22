@@ -1070,33 +1070,6 @@ and returns the number of bits set.\n\
 
 
 static PyObject *
-bitarray_setrange(bitarrayobject *self, PyObject *args)
-{
-    Py_ssize_t start =   -1; /* start of range to set */
-    Py_ssize_t stop  =   -1; /* end of range to set */
-    PyObject   *v    = NULL; /* value to set (evals to true/false) */
-    int         vi   =    0; /* int val to set */
-    idx_t       ret  =    0; /* return value: number of bits set */
-
-    if (!PyArg_ParseTuple(args, PY_SSIZE_T_FMT PY_SSIZE_T_FMT "O:_setrange", &start, &stop, &v))
-        return NULL;
-
-    vi  = PyObject_IsTrue(v);
-
-    /* setrange checks for idx *<* stop, so we inc by one */
-    ret = setrange(self, start, stop+1, vi);
-    return PyLong_FromLongLong(ret);
-}
-
-PyDoc_STRVAR(setrange_doc,
-"setrange(bitarray, start, stop, val) -> int\n\
-\n\
-Sets a range in the bitarray to the given value, and returns the number\n\
-of bits set.\n\
-");
-
-
-static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
     PyObject *list = NULL;   /* list of matching positions to be returned */
@@ -2597,8 +2570,6 @@ bitarray_methods[] = {
      reverse_doc},
     {"setall",       (PyCFunction) bitarray_setall,      METH_O,
      setall_doc},
-    {"setrange",     (PyCFunction) bitarray_setrange,    METH_VARARGS,
-     setrange_doc},
     {"setlist",      (PyCFunction) bitarray_setlist,     METH_VARARGS,
      setlist_doc},
     {"search",       (PyCFunction) bitarray_search,      METH_VARARGS,
