@@ -1348,12 +1348,6 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.search, bitarray())
         self.assertRaises(TypeError, a.search, '010')
 
-    def test_setrange(self):
-        a = bitarray('11111')
-        n = a.setrange(1, 3, False)
-        self.assertEqual(n, 3)
-        self.assertEqual(a, bitarray('10001'))
-
     def test_itersearch(self):
         a = bitarray('10011')
         self.assertRaises(ValueError, a.itersearch, bitarray())
