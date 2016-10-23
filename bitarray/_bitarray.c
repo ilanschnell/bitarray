@@ -511,7 +511,7 @@ search(bitarrayobject *self, bitarrayobject *xa, idx_t p)
 static int
 set_item(bitarrayobject *self, idx_t i, PyObject *v)
 {
-    long vi;
+    int vi;
 
     assert(0 <= i && i < self->nbits);
     vi = PyObject_IsTrue(v);
@@ -951,7 +951,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
 {
     PyObject *x;
     idx_t i, start = 0, stop = -1;
-    long vi;
+    int vi;
 
     if (!PyArg_ParseTuple(args, "O|LL:index", &x, &start, &stop))
         return NULL;
@@ -1025,20 +1025,13 @@ static PyObject *
 bitarray_setlist(bitarrayobject *self, PyObject *args)
 {
     PyObject   *p    = NULL; /* positions to set (evals to true/false) */
-    PyObject   *tmp  = NULL; /* positions to set (evals to true/false) */
     PyObject   *v    = NULL; /* value to set (evals to true/false) */
     int         vi   =    0; /* int val to set */
-    idx_t       i    =    0; /* iteration index */
-    idx_t       npos =    0; /* loop size */
-    idx_t       pos  =    0; /* loop var */
+    Py_ssize_t  i    =    0; /* iteration index */
+    Py_ssize_t  npos =    0; /* loop size */
 
-    if (!PyArg_ParseTuple(args, "OO:_setlist", &p, &v))
+    if (!PyArg_ParseTuple(args, "O!O:_setlist", &PyList_Type, &p, &v))
         return NULL;
-
-    if (!PyList_Check(p)) {
-        PyErr_SetString(PyExc_TypeError, "position list expected");
-        return NULL;
-    }
 
     vi = PyObject_IsTrue(v);
 
@@ -1046,19 +1039,22 @@ bitarray_setlist(bitarrayobject *self, PyObject *args)
     if (npos < 0)
         return NULL; /* Not a list */
     
-    for (i=0; i<npos; i++) {
-    
-        tmp = PyList_GetItem(p, i);
-     /* if (!PyLong_Check(tmp)) {
-            PyErr_SetString(PyExc_TypeError, "position expected as Long");
+    for (i = 0; i < npos; i++) {
+        PyObject* elem = PyList_GetItem(p, i);
+        idx_t pos = PyLong_AsLongLong(elem);
+        if (pos == -1 && PyErr_Occurred())
             return NULL;
-        } 
-      */
-        pos = PyNumber_AsSsize_t(tmp, NULL);
+        if (pos < 0 || pos >= self->nbits)
+            return PyErr_Format(PyExc_IndexError,
+                                "bitarray index out of range");
         setbit(self, pos, vi);
     }
 
-    return PyLong_FromLongLong(npos);
+#ifdef IS_PY3K
+    return PyLong_FromSsize_t(npos);
+#else
+    return PyInt_FromSsize_t(npos);
+#endif
 }
 
 PyDoc_STRVAR(setlist_doc,
@@ -1075,10 +1071,11 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     PyObject *list = NULL;   /* list of matching positions to be returned */
     PyObject *x, *item = NULL;
     Py_ssize_t limit = -1;
-    Py_ssize_t pos = 0;
+    idx_t pos = 0;
     bitarrayobject *xa;
 
-    if (!PyArg_ParseTuple(args, "O|" PY_SSIZE_T_FMT PY_SSIZE_T_FMT ":_search", &x, &limit, &pos))
+    if (!PyArg_ParseTuple(args, "O|" PY_SSIZE_T_FMT "L:_search", &x, &limit,
+                          &pos))
         return NULL;
 
     if (!bitarray_Check(x)) {
@@ -1106,7 +1103,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
         pos++;
         if (item == NULL || PyList_Append(list, item) < 0) {
             Py_XDECREF(item);
-            Py_XDECREF(list);
+            Py_DECREF(list);
             return NULL;
         }
         Py_DECREF(item);
@@ -1837,7 +1834,7 @@ static PyObject *
 bitarray_remove(bitarrayobject *self, PyObject *v)
 {
     idx_t i;
-    long vi;
+    int vi;
 
     vi = PyObject_IsTrue(v);
     if (vi < 0)
