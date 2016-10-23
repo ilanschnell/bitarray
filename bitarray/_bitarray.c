@@ -2083,17 +2083,19 @@ bitarray_cpinvert(bitarrayobject *self)
 }
 
 #if HAS_VECTORS
-#define BITWISE_FUNC_INTERNAL(SELF, OTHER, OP, OPEQ) do {         \
-    Py_ssize_t i = 0;                                             \
-    const Py_ssize_t size = Py_SIZE(SELF);                        \
-                                                                  \
-    for (; i + sizeof(vec) < size; i += sizeof(vec)) {            \
-        vector_op((SELF)->ob_item + i, (OTHER)->ob_item + i, OP); \
-    }                                                             \
-                                                                  \
-    for (; i < size; ++i) {                                       \
-        (SELF)->ob_item[i] OPEQ (OTHER)->ob_item[i];              \
-    }                                                             \
+#define BITWISE_FUNC_INTERNAL(SELF, OTHER, OP, OPEQ) do {   \
+    Py_ssize_t i = 0;                                       \
+    const Py_ssize_t size = Py_SIZE(SELF);                  \
+    char* self_ob_item = (SELF)->ob_item;                   \
+    const char* other_ob_item = (OTHER)->ob_item;           \
+                                                            \
+    for (; i + sizeof(vec) < size; i += sizeof(vec)) {      \
+        vector_op(self_ob_item + i, other_ob_item + i, OP); \
+    }                                                       \
+                                                            \
+    for (; i < size; ++i) {                                 \
+        self_ob_item[i] OPEQ other_ob_item[i];              \
+    }                                                       \
 } while(0);
 #else
 #define BITWISE_FUNC_INTERNAL(SELF, OTHER, OP, OPEQ) do { \
