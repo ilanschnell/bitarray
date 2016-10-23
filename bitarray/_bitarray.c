@@ -4,6 +4,11 @@
 
    Author: Ilan Schnell
 */
+#define HAS_VECTORS (defined(__GNUC__) || defined(__clang__))
+
+#if HAS_VECTORS
+typedef char vec __attribute__((vector_size(16)));
+#endif
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
@@ -94,22 +99,16 @@ static PyTypeObject Bitarraytype;
 #define GETBIT(self, i)  \
     ((self)->ob_item[(i) / 8] & BITMASK((self)->endian, i) ? 1 : 0)
 
-#define V16C_SIZE 16
-
-#define IS_GCC defined(__GNUC__)
-
-#if IS_GCC
-typedef char v16c __attribute__ ((vector_size (V16C_SIZE)));
-
+#if HAS_VECTORS
 /*
  * Perform bitwise operation OP on 16 bytes of memory at a time.
  */
-#define simd_v16uc_op(A, B, OP) do { \
-    v16c __a, __b;                   \
-    memcpy(&__a, A, V16C_SIZE);      \
-    memcpy(&__b, B, V16C_SIZE);      \
-    v16c __r = __a OP __b;           \
-    memcpy(A, &__r, V16C_SIZE);      \
+#define vector_op(A, B, OP) do {  \
+    vec __a, __b, __r;            \
+    memcpy(&__a, A, sizeof(vec)); \
+    memcpy(&__b, B, sizeof(vec)); \
+    __r = __a OP __b;             \
+    memcpy(A, &__r, sizeof(vec)); \
 } while(0);
 #endif
 
@@ -2090,22 +2089,25 @@ bitarray_cpinvert(bitarrayobject *self)
     return res;
 }
 
-#if IS_GCC
-#define BITWISE_FUNC_INTERNAL(SELF, OTHER, OP, OPEQ) do {             \
-    Py_ssize_t i = 0;                                                 \
-                                                                      \
-    for (; i + V16C_SIZE < Py_SIZE(SELF); i += V16C_SIZE) {           \
-        simd_v16uc_op((SELF)->ob_item + i, (OTHER)->ob_item + i, OP); \
-    }                                                                 \
-                                                                      \
-    for (; i < Py_SIZE(SELF); ++i) {                                  \
-        (SELF)->ob_item[i] OPEQ (OTHER)->ob_item[i];                  \
-    }                                                                 \
+#if HAS_VECTORS
+#define BITWISE_FUNC_INTERNAL(SELF, OTHER, OP, OPEQ) do {         \
+    Py_ssize_t i = 0;                                             \
+    const Py_ssize_t size = Py_SIZE(SELF);                        \
+                                                                  \
+    for (; i + sizeof(vec) < size; i += sizeof(vec)) {            \
+        vector_op((SELF)->ob_item + i, (OTHER)->ob_item + i, OP); \
+    }                                                             \
+                                                                  \
+    for (; i < size; ++i) {                                       \
+        (SELF)->ob_item[i] OPEQ (OTHER)->ob_item[i];              \
+    }                                                             \
 } while(0);
 #else
 #define BITWISE_FUNC_INTERNAL(SELF, OTHER, OP, OPEQ) do { \
     Py_ssize_t i;                                         \
-    for (i = 0; i < Py_SIZE(SELF); ++i) {                 \
+    const Py_ssize_t size = Py_SIZE(SELF);                \
+                                                          \
+    for (i = 0; i < size; ++i) {                          \
         (SELF)->ob_item[i] OPEQ (OTHER)->ob_item[i];      \
     }                                                     \
 } while(0);
