@@ -964,7 +964,7 @@ class BitwiseTests(unittest.TestCase, Util):
         b = bitarray('1001')
         self.assertRaises(ValueError, a.__and__, b) # not same length
 
-        self.assertRaises(TypeError, a.__and__, 42)
+        self.assertRaises(TypeError, lambda: a & 42)
 
     def test_iand(self):
         a =  bitarray('110010110')

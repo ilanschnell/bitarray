@@ -24,8 +24,28 @@ def bench_sequence():
             print('%-24s %.8f\t%s' % (op + ' took:', t, b))
         print('')
 
+def bench_number():
+    print('Benchmarking number methods')
+    baseline = []
+    for name, setup in [('int', 'n = 0x12341234'),
+                        ('bitarray', 'from bitarray import bitarray;' +
+                                     'n = bitarray([0, 1])')]:
+        print('=== Testing ' + name)
+        for i, op in enumerate(['~n', 'not n',
+                                'n & n', 'n | n', 'n ^ n',
+                                'n &= n', 'n |= n', 'n ^= n']):
+            t = min(timeit.repeat(op, setup))
+            if i < len(baseline):
+                b = t / baseline[i]
+            else:
+                b = ''
+                baseline.append(t)
+            print('%-24s %.8f\t%s' % (op + ' took:', t, b))
+        print('')
+
 def run():
     bench_sequence()
+    bench_number()
 
 if __name__ == '__main__':
     run()

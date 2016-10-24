@@ -118,15 +118,6 @@ with the corresponding bitarray for each symbols."""
         _check_codedict(codedict)
         self._encode(codedict, iterable)
 
-    def __int__(self):
-        raise TypeError("int() argument cannot be a bitarray")
-
-    def __long__(self):
-        raise TypeError("long() argument cannot be a bitarray")
-
-    def __float__(self):
-        raise TypeError("float() argument cannot be a bitarray")
-
 
 def test(verbosity=1, repeat=1):
     """test(verbosity=1, repeat=1) -> TextTestResult
