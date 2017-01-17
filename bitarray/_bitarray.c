@@ -234,6 +234,9 @@ copy_n(bitarrayobject *self, idx_t a,
     assert(0 <= n && n <= self->nbits && n <= other->nbits);
     assert(0 <= a && a <= self->nbits - n);
     assert(0 <= b && b <= other->nbits - n);
+    if (n == 0){
+        return;
+    }
 
     if (self->endian == other->endian && a % 8 == 0 && b % 8 == 0 && n >= 8)
     {
