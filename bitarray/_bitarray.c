@@ -23,6 +23,17 @@
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
 #endif
 
+#if PY_MAJOR_VERSION == 2
+/* define types (new types in Python3) for the hash function */
+typedef long Py_hash_t;
+typedef unsigned long Py_uhash_t;
+#define PyLong_SHIFT 30
+#define PyLong_BASE	((uint32_t)1 << PyLong_SHIFT)
+#define PyLong_MASK	((uint32_t)(PyLong_BASE - 1))
+#define _PyHASH_BITS 61
+#define _PyHASH_MODULUS (((size_t)1 << _PyHASH_BITS) - 1)
+#endif
+
 #if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 5
 /* Py_ssize_t was introduced in Python 2.5, substitute long for it */
 typedef long Py_ssize_t;
@@ -897,6 +908,40 @@ slice_GetIndicesEx(PySliceObject *r, idx_t length,
 /**************************************************************************
                          Implementation of API methods
  **************************************************************************/
+
+static Py_hash_t
+bitarray_hash(bitarrayobject *self)
+{
+    // hash value in the range [0, _PyHASH_MODULUS)
+    Py_uhash_t x;
+    Py_ssize_t i;
+    uint32_t *raw_digits;
+    size_t raw_digit_len;
+
+    x = 0;
+
+    if (self->nbits == 0) {
+
+        return 0;
+
+    } else {
+        raw_digit_len = Py_SIZE(self) / sizeof(uint32_t) + 1;
+        raw_digits= (uint32_t *) malloc(raw_digit_len * sizeof(uint32_t));
+        memset(raw_digits, 0x00, raw_digit_len * sizeof(uint32_t));
+        memcpy(raw_digits, self->ob_item, Py_SIZE(self));
+
+        for (i=0; i<raw_digit_len; ++i) {
+            x = ((x << PyLong_SHIFT) & _PyHASH_MODULUS) |
+                (x >> (_PyHASH_BITS - PyLong_SHIFT));
+            x += raw_digits[i];
+            if (x >= _PyHASH_MODULUS)
+                x -= _PyHASH_MODULUS;
+        }
+
+        free(raw_digits);
+        return (Py_hash_t) x;
+    }
+}
 
 static PyObject *
 bitarray_length(bitarrayobject *self)
@@ -2887,7 +2932,7 @@ static PyTypeObject Bitarraytype = {
     0,                                        /* tp_as_number*/
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash */
+    (hashfunc) bitarray_hash,                 /* tp_hash */
     0,                                        /* tp_call */
     0,                                        /* tp_str */
     PyObject_GenericGetAttr,                  /* tp_getattro */
