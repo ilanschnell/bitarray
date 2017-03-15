@@ -21,8 +21,6 @@ else:
 from bitarray import bitarray, bitdiff, bits2bytes, __version__
 
 
-tests = []
-
 if sys.version_info[:2] < (2, 6):
     def next(x):
         return x.next()
@@ -169,7 +167,6 @@ class TestsModuleFunctions(unittest.TestCase, Util):
             self.assertEqual(bits2bytes(n), m)
 
 
-tests.append(TestsModuleFunctions)
 
 # ---------------------------------------------------------------------------
 
@@ -324,8 +321,6 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, bitarray.__new__, bitarray, 0, 'foo')
 
 
-tests.append(CreateObjectTests)
-
 # ---------------------------------------------------------------------------
 
 class ToObjectsTests(unittest.TestCase, Util):
@@ -352,8 +347,6 @@ class ToObjectsTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             self.assertEqual(tuple(a), tuple(a.tolist()))
 
-
-tests.append(ToObjectsTests)
 
 # ---------------------------------------------------------------------------
 
@@ -407,8 +400,6 @@ class MetaDataTests(unittest.TestCase):
             self.assertEqual(len(a), n)
             self.assertEqual(a.length(), n)
 
-
-tests.append(MetaDataTests)
 
 # ---------------------------------------------------------------------------
 
@@ -560,6 +551,21 @@ class SliceTests(unittest.TestCase, Util):
                           slice(None, 2, None), -1)
 
 
+    def test_setlist_to_bool(self):
+        a = bitarray('11111111')
+        a.setlist([0, 2, 4, 6], False)  
+        self.assertEqual(a, bitarray('01010101'))
+        a.setlist([0, 4], True)  
+        self.assertEqual(a, bitarray('11011101'))
+
+    def test_setlist_to_int(self):
+        a = bitarray('11111111')
+        a.setlist([0, 2, 4, 6], 0)  
+        self.assertEqual(a, bitarray('01010101'))
+        a.setlist([0, 4], 1)  
+        self.assertEqual(a, bitarray('11011101'))
+
+
     def test_delitem1(self):
         a = bitarray('100110')
         del a[1]
@@ -588,8 +594,6 @@ class SliceTests(unittest.TestCase, Util):
                 del cc[s]
                 self.assertEQUAL(c, bitarray(cc, endian=c.endian()))
 
-
-tests.append(SliceTests)
 
 # ---------------------------------------------------------------------------
 
@@ -750,8 +754,6 @@ class MiscTests(unittest.TestCase, Util):
         self.assertRaises(OverflowError, a.__imul__, 17180)
 
 
-tests.append(MiscTests)
-
 # ---------------------------------------------------------------------------
 
 class SpecialMethodTests(unittest.TestCase, Util):
@@ -846,8 +848,6 @@ class SpecialMethodTests(unittest.TestCase, Util):
         self.assertReallyNotEqual(bitarray(''), bitarray('0'))
         self.assertReallyNotEqual(bitarray('0'), bitarray('1'))
 
-tests.append(SpecialMethodTests)
-
 # ---------------------------------------------------------------------------
 
 class NumberTests(unittest.TestCase, Util):
@@ -941,8 +941,6 @@ class NumberTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.__imul__, None)
 
 
-tests.append(NumberTests)
-
 # ---------------------------------------------------------------------------
 
 class BitwiseTests(unittest.TestCase, Util):
@@ -1028,8 +1026,6 @@ class BitwiseTests(unittest.TestCase, Util):
             self.check_obj(b)
 
 
-tests.append(BitwiseTests)
-
 # ---------------------------------------------------------------------------
 
 class SequenceTests(unittest.TestCase, Util):
@@ -1088,8 +1084,6 @@ class SequenceTests(unittest.TestCase, Util):
                      ('011', True), ('0001', True), ('00011', False)]:
             self.assertEqual(bitarray(s) in a, r)
 
-
-tests.append(SequenceTests)
 
 # ---------------------------------------------------------------------------
 
@@ -1211,8 +1205,6 @@ class ExtendTests(unittest.TestCase, Util):
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
 
-
-tests.append(ExtendTests)
 
 # ---------------------------------------------------------------------------
 
@@ -1388,6 +1380,19 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(list(a.itersearch(b)), res)
             self.assertEqual([p for p in a.itersearch(b)], res)
 
+    def test_search4(self):
+        ba = bitarray('0011001100110011')
+        for inc in [1, 2, 3, 4, 5, 6]:
+            pos = -1
+            res = list()
+            while True:
+                match = ba.search(bitarray('11'), inc, pos)
+                if not match:
+                    break
+                res += match
+                pos  = match[-1] + 1
+            self.assertEqual([2, 6, 10, 14], res), inc
+        self.assertEqual([], ba.search(bitarray('11'), 1, len(ba)+1))
 
     def test_fill(self):
         a = bitarray('')
@@ -1578,8 +1583,6 @@ class MethodTests(unittest.TestCase, Util):
             self.check_obj(b)
 
 
-tests.append(MethodTests)
-
 # ---------------------------------------------------------------------------
 
 class StringTests(unittest.TestCase, Util):
@@ -1690,8 +1693,6 @@ class StringTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.pack, [1, 3])
         self.assertRaises(TypeError, a.pack, bitarray())
 
-
-tests.append(StringTests)
 
 # ---------------------------------------------------------------------------
 
@@ -1899,8 +1900,6 @@ class FileTests(unittest.TestCase, Util):
             self.assertEqual(c, b)
 
 
-tests.append(FileTests)
-
 # ---------------------------------------------------------------------------
 
 class PrefixCodeTests(unittest.TestCase, Util):
@@ -2103,43 +2102,38 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(''.join(a.iterdecode(code)), message)
 
 
-tests.append(PrefixCodeTests)
-
 # -------------- Buffer Interface (Python 2.7 only for now) ----------------
-
-class BufferInterfaceTests(unittest.TestCase):
-
-    def test_read1(self):
-        a = bitarray('01000001' '01000010' '01000011', endian='big')
-        v = memoryview(a)
-        self.assertEqual(len(v), 3)
-        self.assertEqual(v[0], 'A')
-        self.assertEqual(v[:].tobytes(), 'ABC')
-        a[13] = 1
-        self.assertEqual(v[:].tobytes(), 'AFC')
-
-    def test_read2(self):
-        a = bitarray([randint(0, 1) for d in range(8000)])
-        v = memoryview(a)
-        self.assertEqual(len(v), 1000)
-        b = a[345 * 8 : 657 * 8]
-        self.assertEqual(v[345:657].tobytes(), b.tobytes())
-        self.assertEqual(v[:].tobytes(), a.tobytes())
-
-    def test_write(self):
-        a = bitarray(800000)
-        a.setall(0)
-        v = memoryview(a)
-        self.assertFalse(v.readonly)
-        v[50000] = '\xff'
-        self.assertEqual(a[399999:400009], bitarray('0111111110'))
-        a[400003] = 0
-        self.assertEqual(a[399999:400009], bitarray('0111011110'))
-        v[30001:30004] = 'ABC'
-        self.assertEqual(a[240000:240040].tobytes(), '\x00ABC\x00')
-
 if sys.version_info[:2] == (2, 7):
-    tests.append(BufferInterfaceTests)
+    class BufferInterfaceTests(unittest.TestCase):
+
+        def test_read1(self):
+            a = bitarray('01000001' '01000010' '01000011', endian='big')
+            v = memoryview(a)
+            self.assertEqual(len(v), 3)
+            self.assertEqual(v[0], 'A')
+            self.assertEqual(v[:].tobytes(), 'ABC')
+            a[13] = 1
+            self.assertEqual(v[:].tobytes(), 'AFC')
+
+        def test_read2(self):
+            a = bitarray([randint(0, 1) for d in range(8000)])
+            v = memoryview(a)
+            self.assertEqual(len(v), 1000)
+            b = a[345 * 8 : 657 * 8]
+            self.assertEqual(v[345:657].tobytes(), b.tobytes())
+            self.assertEqual(v[:].tobytes(), a.tobytes())
+
+        def test_write(self):
+            a = bitarray(800000)
+            a.setall(0)
+            v = memoryview(a)
+            self.assertFalse(v.readonly)
+            v[50000] = '\xff'
+            self.assertEqual(a[399999:400009], bitarray('0111111110'))
+            a[400003] = 0
+            self.assertEqual(a[399999:400009], bitarray('0111011110'))
+            v[30001:30004] = 'ABC'
+            self.assertEqual(a[240000:240040].tobytes(), '\x00ABC\x00')
 
 # ---------------------------------------------------------------------------
 

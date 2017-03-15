@@ -372,15 +372,20 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
 }
 
 /* set the bits from start to stop (excluding) in self to val */
-static void
+idx_t
 setrange(bitarrayobject *self, idx_t start, idx_t stop, int val)
 {
     idx_t i;
+    idx_t ret = 0;
 
     assert(0 <= start && start <= self->nbits);
-    assert(0 <= stop && stop <= self->nbits);
+    assert(0 <= stop  && stop  <= self->nbits);
     for (i = start; i < stop; i++)
+    {
+        ret++;
         setbit(self, i, val);
+    }
+    return ret;
 }
 
 static void
@@ -1035,15 +1040,63 @@ The value x may be a boolean (or integer between 0 and 1), or a bitarray.");
 
 
 static PyObject *
+bitarray_setlist(bitarrayobject *self, PyObject *args)
+{
+    PyObject   *p    = NULL; /* positions to set (evals to true/false) */
+    PyObject   *tmp  = NULL; /* positions to set (evals to true/false) */
+    PyObject   *v    = NULL; /* value to set (evals to true/false) */
+    int         vi   =    0; /* int val to set */
+    idx_t       i    =    0; /* iteration index */
+    idx_t       npos =    0; /* loop size */
+    idx_t       pos  =    0; /* loop var */
+
+    if (!PyArg_ParseTuple(args, "OO:_setlist", &p, &v))
+        return NULL;
+
+    if (!PyList_Check(p)) {
+        PyErr_SetString(PyExc_TypeError, "position list expected");
+        return NULL;
+    }
+
+    vi = PyObject_IsTrue(v);
+
+    npos = PyList_Size(p);
+    if (npos < 0)
+        return NULL; /* Not a list */
+    
+    for (i=0; i<npos; i++) {
+    
+        tmp = PyList_GetItem(p, i);
+     /* if (!PyLong_Check(tmp)) {
+            PyErr_SetString(PyExc_TypeError, "position expected as Long");
+            return NULL;
+        } 
+      */
+        pos = PyNumber_AsSsize_t(tmp, NULL);
+        setbit(self, pos, vi);
+    }
+
+    return PyLong_FromLongLong(npos);
+}
+
+PyDoc_STRVAR(setlist_doc,
+"setlist(bitarray, list, val) -> int\n\
+\n\
+Sets the bitarray to the given value for each position given in the list,\n\
+and returns the number of bits set.\n\
+");
+
+
+static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
     PyObject *list = NULL;   /* list of matching positions to be returned */
     PyObject *x, *item = NULL;
     Py_ssize_t limit = -1;
+    Py_ssize_t pos = 0;
     bitarrayobject *xa;
-    idx_t p;
 
-    if (!PyArg_ParseTuple(args, "O|" PY_SSIZE_T_FMT ":_search", &x, &limit))
+    if (!PyArg_ParseTuple(args, "O|" PY_SSIZE_T_FMT PY_SSIZE_T_FMT ":_search", &x, &limit, &pos))
         return NULL;
 
     if (!bitarray_Check(x)) {
@@ -1058,16 +1111,17 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     list = PyList_New(0);
     if (list == NULL)
         return NULL;
-    if (xa->nbits > self->nbits || limit == 0)
+    if (xa->nbits > self->nbits || limit == 0 || pos > self->nbits)
         return list;
-
-    p = 0;
+    if (pos < 0)
+        pos = 0;
+    
     while (1) {
-        p = search(self, xa, p);
-        if (p < 0)
+        pos = search(self, xa, pos);
+        if (pos < 0)
             break;
-        item = PyLong_FromLongLong(p);
-        p++;
+        item = PyLong_FromLongLong(pos);
+        pos++;
         if (item == NULL || PyList_Append(list, item) < 0) {
             Py_XDECREF(item);
             Py_XDECREF(list);
@@ -1081,12 +1135,16 @@ bitarray_search(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(search_doc,
-"search(bitarray, [limit]) -> list\n\
+"search(bitarray, [limit], [pos]) -> list\n\
 \n\
 Searches for the given a bitarray in self, and returns the start positions\n\
 where bitarray matches self as a list.\n\
-The optional argument limits the number of search results to the integer\n\
-specified.  By default, all search results are returned.");
+The optional 'limit' argument limits the number of search results to the \n\
+integer specified.  By default, all search results are returned.\n\
+The optional 'pos' argument begins the search at the position specified.\n\
+By default, search begins at position 0. If no match is found until the end,\n\
+the search will wrap around until reaching the start position again.\n\
+");
 
 
 static PyObject *
@@ -2473,6 +2531,8 @@ bitarray_methods[] = {
      reverse_doc},
     {"setall",       (PyCFunction) bitarray_setall,      METH_O,
      setall_doc},
+    {"setlist",      (PyCFunction) bitarray_setlist,     METH_VARARGS,
+     setlist_doc},
     {"search",       (PyCFunction) bitarray_search,      METH_VARARGS,
      search_doc},
     {"itersearch",   (PyCFunction) bitarray_itersearch,  METH_O,
