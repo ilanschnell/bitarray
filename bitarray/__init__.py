@@ -8,6 +8,7 @@ Please find a description of this package at:
 
 Author: Ilan Schnell
 """
+from collections import Sequence as _Sequence
 from bitarray._bitarray import _bitarray, bitdiff, bits2bytes, _sysinfo
 
 __version__ = '0.8.2'
@@ -46,6 +47,7 @@ def _check_codedict(codedict):
             raise ValueError("non-empty bitarray expected")
 
 
+@_Sequence.register
 class bitarray(_bitarray):
     """bitarray([initial], [endian=string])
 
