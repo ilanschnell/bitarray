@@ -13,27 +13,6 @@ from bitarray._bitarray import _bitarray, bitdiff, bits2bytes, _sysinfo
 __version__ = '0.8.2'
 
 
-def _tree_insert(tree, sym, ba):
-    """
-    Insert symbol which is mapped to bitarray into tree
-    """
-    v = ba[0]
-    if len(ba) > 1:
-        if tree[v] == []:
-            tree[v] = [[], []]
-        _tree_insert(tree[v], sym, ba[1:])
-    else:
-        if tree[v] != []:
-            raise ValueError("prefix code ambiguous")
-        tree[v] = sym
-
-def _mk_tree(codedict):
-    # Generate tree from codedict
-    tree = [[], []]
-    for sym, ba in codedict.items():
-        _tree_insert(tree, sym, ba)
-    return tree
-
 def _check_codedict(codedict):
     if not isinstance(codedict, dict):
         raise TypeError("dictionary expected")
@@ -99,7 +78,7 @@ Deprecated since version 0.4.0, use ``tobytes()`` instead."""
 Given a prefix code (a dict mapping symbols to bitarrays),
 decode the content of the bitarray and return the list of symbols."""
         _check_codedict(codedict)
-        return self._decode(_mk_tree(codedict))
+        return self._decode(codedict)
 
     def iterdecode(self, codedict):
         """iterdecode(code) -> iterator
@@ -107,7 +86,7 @@ decode the content of the bitarray and return the list of symbols."""
 Given a prefix code (a dict mapping symbols to bitarrays),
 decode the content of the bitarray and iterate over the symbols."""
         _check_codedict(codedict)
-        return self._iterdecode(_mk_tree(codedict))
+        return self._iterdecode(codedict)
 
     def encode(self, codedict, iterable):
         """encode(code, iterable)
