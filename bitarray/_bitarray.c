@@ -48,7 +48,7 @@ int PyIndex_Check(PyObject *o)
 #define Py_SIZE(ob)   (((PyVarObject *) (ob))->ob_size)
 #endif
 
-#if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 7
+#if PY_MAJOR_VERSION == 3 || (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 7)
 /* (new) buffer protocol */
 #define WITH_BUFFER
 #endif
@@ -2787,6 +2787,8 @@ static PyTypeObject BitarrayIter_Type = {
 
 /********************* Bitarray Buffer Interface ************************/
 #ifdef WITH_BUFFER
+
+#if PY_MAJOR_VERSION == 2
 static Py_ssize_t
 bitarray_buffer_getreadbuf(bitarrayobject *self,
                            Py_ssize_t index, const void **ptr)
@@ -2831,6 +2833,8 @@ bitarray_buffer_getcharbuf(bitarrayobject *self,
     return Py_SIZE(self);
 }
 
+#endif
+
 static int
 bitarray_getbuffer(bitarrayobject *self, Py_buffer *view, int flags)
 {
@@ -2857,14 +2861,18 @@ bitarray_releasebuffer(bitarrayobject *self, Py_buffer *view)
 }
 
 static PyBufferProcs bitarray_as_buffer = {
+#if PY_MAJOR_VERSION == 2   // old buffer protocol
     (readbufferproc) bitarray_buffer_getreadbuf,
     (writebufferproc) bitarray_buffer_getwritebuf,
     (segcountproc) bitarray_buffer_getsegcount,
     (charbufferproc) bitarray_buffer_getcharbuf,
+#endif
     (getbufferproc) bitarray_getbuffer,
     (releasebufferproc) bitarray_releasebuffer,
 };
+
 #endif  /* WITH_BUFFER */
+
 /************************** Bitarray Type *******************************/
 
 static PyTypeObject Bitarraytype = {
@@ -2898,7 +2906,7 @@ static PyTypeObject Bitarraytype = {
     0,                                        /* tp_as_buffer */
 #endif
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_WEAKREFS
-#ifdef WITH_BUFFER
+#if defined(WITH_BUFFER) && PY_MAJOR_VERSION == 2
     | Py_TPFLAGS_HAVE_NEWBUFFER
 #endif
     ,                                         /* tp_flags */
