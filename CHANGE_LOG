@@ -1,6 +1,7 @@
-2017-XX-XX   0.8.2:
+2018-XX-XX   0.8.2:
 -------------------
   * add official Python 3.6 support (although it was already working)
+  * fix description of fill(), #52
 
 
 2013-03-30   0.8.1:
