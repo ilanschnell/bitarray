@@ -537,8 +537,13 @@ Reference
 Change log
 ----------
 
-2013-XX-XX   0.8.2:
+2018-XX-XX   0.8.2:
 
+  * add official Python 3.6 support (although it was already working)
+  * fix description of fill(), #52
+  * handle extending self correctly, #28
+  * copy_n: fast copy with memmove fixed, #43
+  * minor clarity/wording changes to README, #23
 
 
 **0.8.1** (2013-03-30):

@@ -4,6 +4,7 @@
   * fix description of fill(), #52
   * handle extending self correctly, #28
   * copy_n: fast copy with memmove fixed, #43
+  * minor clarity/wording changes to README, #23
 
 
 2013-03-30   0.8.1:
