@@ -1212,9 +1212,17 @@ class ExtendTests(unittest.TestCase, Util):
                 self.check_obj(c)
 
     def test_extend_self(self):
+        a = bitarray('')
+        a.extend(a)
+        self.assertEqual(a, bitarray(''))
+
         a = bitarray('1')
         a.extend(a)
         self.assertEqual(a, bitarray('11'))
+
+        a = bitarray('110')
+        a.extend(a)
+        self.assertEqual(a, bitarray('110110'))
 
 
 tests.append(ExtendTests)
