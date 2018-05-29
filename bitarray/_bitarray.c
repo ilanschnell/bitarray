@@ -243,18 +243,15 @@ copy_n(bitarrayobject *self, idx_t a,
         const Py_ssize_t bytes = (Py_ssize_t) n / 8;
         const idx_t bits = bytes * 8;
 
-        if (a <= b){
+        if (a <= b) {
             memmove(self->ob_item + a / 8, other->ob_item + b / 8, bytes);
         }
-
         if (n != bits) {
             copy_n(self, bits + a, other, bits + b, n - bits);
         }
-
-        if (a > b){
+        if (a > b) {
             memmove(self->ob_item + a / 8, other->ob_item + b / 8, bytes);
         }
-
         return;
     }
 
