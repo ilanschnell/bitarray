@@ -234,7 +234,7 @@ copy_n(bitarrayobject *self, idx_t a,
     assert(0 <= n && n <= self->nbits && n <= other->nbits);
     assert(0 <= a && a <= self->nbits - n);
     assert(0 <= b && b <= other->nbits - n);
-    if (n == 0){
+    if (n == 0) {
         return;
     }
 
@@ -581,15 +581,16 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
     if (other->nbits == 0)
         return 0;
 
+    /*
+        Note: other may be self. Thus we take the size before we resize,
+        ensuring we only copy the right parts of the array.
+    */
+    n_other_bits = other->nbits;
     n_sum = self->nbits + other->nbits;
+
     if (resize(self, n_sum) < 0)
         return -1;
 
-    /*
-        Note: other may be self. Thus we take the size before we change the
-        size, ensuring we only copy the right parts of the array.
-    */
-    n_other_bits = other->nbits;
     copy_n(self, n_sum - n_other_bits, other, 0, n_other_bits);
     return 0;
 }
