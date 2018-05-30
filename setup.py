@@ -6,7 +6,7 @@ from distutils.core import setup, Extension
 kwds = {}
 try:
     kwds['long_description'] = open('README.rst').read()
-except FileNotFoundError:
+except IOError:
     pass
 
 # Read version from bitarray/__init__.py
