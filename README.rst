@@ -537,7 +537,7 @@ Reference
 Change log
 ----------
 
-2018-XX-XX   0.8.2:
+**0.8.2** (2018-05-30):
 
   * add official Python 3.6 support (although it was already working)
   * fix description of fill(), #52
@@ -558,13 +558,6 @@ Change log
   * add Python 2.4 support
   * add (module level) function bitdiff for calculating the difference
     between two bitarrays
-
-
-**0.7.0** (2012-02-15):
-
-  * add iterdecode method (C level), which returns an iterator but is
-    otherwise like the decode method
-  * improve memory efficiency and speed of pickling large bitarray objects
 
 
 Please find the complete change log
