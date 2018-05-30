@@ -1224,6 +1224,11 @@ class ExtendTests(unittest.TestCase, Util):
         a.extend(a)
         self.assertEqual(a, bitarray('110110'))
 
+        for a in self.randombitarrays():
+            b = bitarray(a)
+            a.extend(a)
+            self.assertEqual(a, b + b)
+
 
 tests.append(ExtendTests)
 
