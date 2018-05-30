@@ -4,7 +4,10 @@ from distutils.core import setup, Extension
 
 
 kwds = {}
-kwds['long_description'] = open('README.rst').read()
+try:
+    kwds['long_description'] = open('README.rst').read()
+except FileNotFoundError:
+    pass
 
 # Read version from bitarray/__init__.py
 pat = re.compile(r'__version__\s*=\s*(\S+)', re.M)
