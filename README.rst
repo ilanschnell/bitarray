@@ -50,8 +50,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-0.8.2.tar.gz
-   $ cd bitarray-0.8.2
+   $ tar xzf bitarray-0.8.3.tar.gz
+   $ cd bitarray-0.8.3
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -62,7 +62,7 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-   bitarray version: 0.8.2
+   bitarray version: 0.8.3
    2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
    ...........................................
@@ -537,6 +537,11 @@ Reference
 Change log
 ----------
 
+**0.8.3** (2018-07-06):
+
+  * add exception to setup.py when README.rst cannot be opened
+
+
 **0.8.2** (2018-05-30):
 
   * add official Python 3.6 support (although it was already working)
@@ -551,13 +556,6 @@ Change log
   * fix issue #10, i.e. int(bitarray()) segfault
   * added tests for using a bitarray object as an argument to functions
     like int, long (on Python 2), float, list, tuple, dict
-
-
-**0.8.0** (2012-04-04):
-
-  * add Python 2.4 support
-  * add (module level) function bitdiff for calculating the difference
-    between two bitarrays
 
 
 Please find the complete change log
