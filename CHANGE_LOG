@@ -1,6 +1,6 @@
-2018-XX-XX   0.8.3:
+2018-07-06   0.8.3:
 -------------------
-  *
+  * add exception to setup.py when README.rst cannot be opened
 
 
 2018-05-30   0.8.2:
