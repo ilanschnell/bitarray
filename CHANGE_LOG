@@ -1,3 +1,8 @@
+2018-XX-XX   0.8.4:
+-------------------
+  * add official Python 3.7 support (drop Python 3.1 and 3.2 support)
+
+
 2018-07-06   0.8.3:
 -------------------
   * add exception to setup.py when README.rst cannot be opened
