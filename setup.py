@@ -1,9 +1,13 @@
 import re
 from os.path import join
-from distutils.core import setup, Extension
 
+try:
+    from setuptools import setup, Extension
+    kwds = {'zip_safe': False}
+except ImportError:
+    from distutils.core import setup, Extension
+    kwds = {}
 
-kwds = {}
 try:
     kwds['long_description'] = open('README.rst').read()
 except IOError:
