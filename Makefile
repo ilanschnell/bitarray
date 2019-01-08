@@ -1,4 +1,5 @@
 PYTHON?=python3
+TEST_PYTHONS?=python2.7 python3.6 python3.7
 
 bitarray/_bitarray.so: bitarray/_bitarray.c
 	$(PYTHON) setup.py build_ext --inplace
@@ -6,6 +7,10 @@ bitarray/_bitarray.so: bitarray/_bitarray.c
 
 test: bitarray/_bitarray.so
 	$(PYTHON) -c "import bitarray; bitarray.test()"
+
+test_allpythons:
+	$(foreach PYTHON, $(TEST_PYTHONS), $(MAKE) clean; \
+		$(MAKE) PYTHON=$(PYTHON) test;)
 
 
 doc: bitarray/_bitarray.so
