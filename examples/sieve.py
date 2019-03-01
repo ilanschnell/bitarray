@@ -1,3 +1,7 @@
+"""
+Demonstrates the implementation of "Sieve of Eratosthenes" algorithm for
+finding all prime numbers up to any given limit.
+"""
 import time
 
 import numpy

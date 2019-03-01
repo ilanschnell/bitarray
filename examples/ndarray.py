@@ -17,4 +17,3 @@ c = bitarray.bitarray()
 c.pack(b.tostring())
 
 assert a == c
-
