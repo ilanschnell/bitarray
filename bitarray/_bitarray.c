@@ -2262,7 +2262,7 @@ tree_traverse(bitarrayobject *self, idx_t *indexp, binode *tree)
 }
 
 static PyObject *
-bitarray_decode(bitarrayobject *self, PyObject * codedict)
+bitarray_decode(bitarrayobject *self, PyObject *codedict)
 {
     binode *tree, *nd;
     PyObject *list;
