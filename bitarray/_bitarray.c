@@ -2158,101 +2158,97 @@ like the encode method without code checking");
 /* Binary Tree definition */
 typedef struct _bin_node
 {
-    PyObject * symbol;
-    struct _bin_node * child[2];
+    PyObject *symbol;
+    struct _bin_node *child[2];
 } binode;
 
 
-static binode * 
+static binode *
 new_binode(void)
 {
-    binode * nd = malloc(sizeof *nd);
+    binode *nd = malloc(sizeof *nd);
+
     nd->symbol = NULL;
     nd->child[0] = NULL;
     nd->child[1] = NULL;
     return nd;
 }
 
-static void 
-delete_binode_tree(binode * root)
+static void
+delete_binode_tree(binode *root)
 {
-    if (!root) return;
+    if (root == NULL)
+        return;
+
     delete_binode_tree(root->child[0]);
     delete_binode_tree(root->child[1]);
     free(root);
 }
 
 static int
-insert_symbol(binode * root, bitarrayobject * self, PyObject * symbol)
+insert_symbol(binode *root, bitarrayobject *self, PyObject *symbol)
 {
-    binode * nd = root, * prev = NULL;
-    for (Py_ssize_t i=0; i < self->nbits; ++i)
+    binode *nd = root, *prev = NULL;
+    unsigned char k;
+
+    for (Py_ssize_t i = 0; i < self->nbits; i++)
     {
-        unsigned char k = GETBIT(self, i);
-        prev = nd, nd = nd->child[k];
+        k = GETBIT(self, i);
+        prev = nd;
+        nd = nd->child[k];
         if (!nd)
-        {
             nd = prev->child[k] = new_binode();
-        }
     }
 
     if (nd->symbol)
     {
-        PyErr_SetString(PyExc_ValueError,
-                        "prefix code ambiguous");
+        PyErr_SetString(PyExc_ValueError, "prefix code ambiguous");
         return -1;
     }
     nd->symbol = symbol;
     return 0;
 }
 
-static binode * 
-make_tree (PyObject * codedict)
+static binode *
+make_tree (PyObject *codedict)
 {
-    binode * root = new_binode();
-
-    PyObject *symbol;
-    PyObject * array;
+    binode *root;
+    PyObject *symbol, *array;
     Py_ssize_t pos = 0;
 
+    root = new_binode();
     while (PyDict_Next(codedict, &pos, &symbol, &array)) {
-        int ok = insert_symbol(root, (bitarrayobject*) array, symbol);
-        /* if an error occured */
-        if (ok < 0) {
+        if (insert_symbol(root, (bitarrayobject*) array, symbol) < 0) {
             delete_binode_tree(root);
             return NULL;
         }
     }
-    
     return root;
 }
 
 static PyObject *
 tree_traverse(bitarrayobject *self, idx_t *indexp, binode *tree)
 {
+    binode *nd = tree;
+    unsigned char k;
+
     if (*indexp == self->nbits)  /* stop iterator */
         return NULL;
 
-    binode * nd = tree;
-
-    while (1)
-    {
-        unsigned char k = GETBIT(self, *indexp);
+    while (1) {
+        k = GETBIT(self, *indexp);
         (*indexp)++;
- 
+
         nd = nd->child[k];
 
-        if (!nd)
-        {
+        if (!nd) {
             PyErr_SetString(PyExc_ValueError,
                             "prefix code does not match data in bitarray");
             return NULL;
         }
 
         if (nd->symbol)  // leaf
-        {
             return nd->symbol;
-        }
     }
 }
 
@@ -2260,31 +2256,28 @@ tree_traverse(bitarrayobject *self, idx_t *indexp, binode *tree)
 static PyObject *
 bitarray_decode(bitarrayobject *self, PyObject * codedict)
 {
-    binode * tree = make_tree(codedict);
-    if (PyErr_Occurred())
-    {
-        return NULL;
-    }
-    
-    binode * nd = tree;
-
+    binode *tree, *nd;
     PyObject *list;
+    Py_ssize_t i;
+    unsigned char k;
 
+    tree = make_tree(codedict);
+    if (PyErr_Occurred())
+        return NULL;
+
+    nd = tree;
     list = PyList_New(0);
     if (list == NULL)
         return NULL;
 
-    for (Py_ssize_t i=0; i < self->nbits; ++i) {
-        unsigned char k = GETBIT(self, i);
-
+    for (i = 0; i < self->nbits; i++) {
+        k = GETBIT(self, i);
         nd = nd->child[k];
-
         if (!nd) {
             PyErr_SetString(PyExc_ValueError,
                             "prefix code does not match data in bitarray");
             goto error;
         }
-
         if (nd->symbol) {
             if (PyList_Append(list, nd->symbol) < 0)
                 goto error;
@@ -2331,15 +2324,14 @@ static PyTypeObject DecodeIter_Type;
 
 /* create a new initialized bitarray search iterator object */
 static PyObject *
-bitarray_iterdecode(bitarrayobject *self, PyObject * codedict)
+bitarray_iterdecode(bitarrayobject *self, PyObject *codedict)
 {
     decodeiterobject *it;  /* iterator to be returned */
-    
-    binode *tree = make_tree(codedict);
+    binode *tree;
+
+    tree = make_tree(codedict);
     if (PyErr_Occurred())
-    {
         return NULL;
-    }
 
     it = PyObject_GC_New(decodeiterobject, &DecodeIter_Type);
     if (it == NULL)
