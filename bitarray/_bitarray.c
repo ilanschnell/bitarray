@@ -2166,8 +2166,13 @@ typedef struct _bin_node
 static binode *
 new_binode(void)
 {
-    binode *nd = malloc(sizeof *nd);
+    binode *nd;
 
+    nd = PyMem_Malloc(sizeof *nd);
+    if (nd == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
     nd->symbol = NULL;
     nd->child[0] = NULL;
     nd->child[1] = NULL;
@@ -2182,7 +2187,7 @@ delete_binode_tree(binode *root)
 
     delete_binode_tree(root->child[0]);
     delete_binode_tree(root->child[1]);
-    free(root);
+    PyMem_Free(root);
 }
 
 static int
@@ -2192,17 +2197,19 @@ insert_symbol(binode *root, bitarrayobject *self, PyObject *symbol)
     Py_ssize_t i;
     int k;
 
-    for (i = 0; i < self->nbits; i++)
-    {
+    for (i = 0; i < self->nbits; i++) {
         k = GETBIT(self, i);
         prev = nd;
         nd = nd->child[k];
-        if (!nd)
-            nd = prev->child[k] = new_binode();
+        if (!nd) {
+            nd = new_binode();
+            if (nd == NULL)
+                return -1;
+            prev->child[k] = nd;
+        }
     }
 
-    if (nd->symbol)
-    {
+    if (nd->symbol) {
         PyErr_SetString(PyExc_ValueError, "prefix code ambiguous");
         return -1;
     }
@@ -2218,6 +2225,9 @@ make_tree (PyObject *codedict)
     Py_ssize_t pos = 0;
 
     root = new_binode();
+    if (root == NULL)
+        return NULL;
+
     while (PyDict_Next(codedict, &pos, &symbol, &array)) {
         if (insert_symbol(root, (bitarrayobject *) array, symbol) < 0) {
             delete_binode_tree(root);
