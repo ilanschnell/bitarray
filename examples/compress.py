@@ -2,6 +2,8 @@
 Demonstrates how the bz2 module may be used to create a compressed object
 which represents a bitarray.
 """
+from __future__ import print_function
+
 import bz2
 
 from bitarray import bitarray
@@ -35,6 +37,6 @@ if __name__ == '__main__':
     a.setall(0)
     a[::10] = True
     c = compress(a)
-    print c
+    print(c)
     b = decompress(c)
     assert a == b, a.endian() == b.endian()
