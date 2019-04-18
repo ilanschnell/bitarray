@@ -2155,51 +2155,154 @@ PyDoc_STRVAR(encode_doc,
 like the encode method without code checking");
 
 
-/* return the leave node resulting from traversing the (binary) tree,
-   or, when the iteration is finished, NULL
-*/
-static PyObject *
-tree_traverse(bitarrayobject *self, idx_t *indexp, PyObject *tree)
+/* Binary Tree definition */
+typedef struct _bin_node
 {
-    PyObject *subtree;
-    long vi;
+    PyObject * symbol;
+    struct _bin_node * child[2];
+} binode;
 
+
+static binode * 
+new_binode(void)
+{
+    binode * nd = malloc(sizeof *nd);
+    nd->symbol = NULL;
+    nd->child[0] = NULL;
+    nd->child[1] = NULL;
+    return nd;
+}
+
+static void 
+delete_binode_tree(binode * root)
+{
+    if (!root) return;
+    delete_binode_tree(root->child[0]);
+    delete_binode_tree(root->child[1]);
+    free(root);
+}
+
+static int
+insert_symbol(binode * root, bitarrayobject * self, PyObject * symbol)
+{
+    binode * nd = root, * prev = NULL;
+    for (Py_ssize_t i=0; i < self->nbits; ++i)
+    {
+        unsigned char k = GETBIT(self, i);
+        prev = nd, nd = nd->child[k];
+        if (!nd)
+        {
+            nd = prev->child[k] = new_binode();
+        }
+    }
+
+    if (nd->symbol)
+    {
+        PyErr_SetString(PyExc_ValueError,
+                        "prefix code ambiguous");
+        return -1;
+    }
+    nd->symbol = symbol;
+    return 0;
+}
+
+static binode * 
+make_tree (PyObject * codedict)
+{
+    binode * root = new_binode();
+
+    PyObject *symbol;
+    PyObject * array;
+    Py_ssize_t pos = 0;
+
+    while (PyDict_Next(codedict, &pos, &symbol, &array)) {
+        int ok = insert_symbol(root, (bitarrayobject*) array, symbol);
+        /* if an error occured */
+        if (ok < 0) {
+            delete_binode_tree(root);
+            return NULL;
+        }
+    }
+    
+    return root;
+}
+
+static PyObject *
+tree_traverse(bitarrayobject *self, idx_t *indexp, binode *tree)
+{
     if (*indexp == self->nbits)  /* stop iterator */
         return NULL;
 
-    vi = GETBIT(self, *indexp);
-    (*indexp)++;
-    subtree = PyList_GetItem(tree, vi);
+    binode * nd = tree;
 
-    if (PyList_Check(subtree) && PyList_Size(subtree) == 2)
-        return tree_traverse(self, indexp, subtree);
-    else
-        return subtree;
+    while (1)
+    {
+        unsigned char k = GETBIT(self, *indexp);
+        (*indexp)++;
+ 
+        nd = nd->child[k];
+
+        if (!nd)
+        {
+            PyErr_SetString(PyExc_ValueError,
+                            "prefix code does not match data in bitarray");
+            return NULL;
+        }
+
+        if (nd->symbol)  // leaf
+        {
+            return nd->symbol;
+        }
+    }
 }
 
-#define IS_EMPTY_LIST(x)  (PyList_Check(x) && PyList_Size(x) == 0)
 
 static PyObject *
-bitarray_decode(bitarrayobject *self, PyObject *tree)
+bitarray_decode(bitarrayobject *self, PyObject * codedict)
 {
-    PyObject *symbol, *list;
-    idx_t index = 0;
+    binode * tree = make_tree(codedict);
+    if (PyErr_Occurred())
+    {
+        return NULL;
+    }
+    
+    binode * nd = tree;
+
+    PyObject *list;
 
     list = PyList_New(0);
     if (list == NULL)
         return NULL;
-    /* traverse binary tree and append symbols to the result list */
-    while ((symbol = tree_traverse(self, &index, tree)) != NULL) {
-        if (IS_EMPTY_LIST(symbol)) {
+
+    for (Py_ssize_t i=0; i < self->nbits; ++i) {
+        unsigned char k = GETBIT(self, i);
+
+        nd = nd->child[k];
+
+        if (!nd) {
             PyErr_SetString(PyExc_ValueError,
                             "prefix code does not match data in bitarray");
             goto error;
         }
-        if (PyList_Append(list, symbol) < 0)
-            goto error;
+
+        if (nd->symbol) {
+            if (PyList_Append(list, nd->symbol) < 0)
+                goto error;
+            nd = tree;
+        }
     }
+
+    if (nd != tree) {
+        PyErr_SetString(PyExc_ValueError,
+                        "decoding not terminated");
+        goto error;
+    }
+
+    delete_binode_tree(tree);
     return list;
+
 error:
+    delete_binode_tree(tree);
     Py_DECREF(list);
     return NULL;
 }
@@ -2212,10 +2315,11 @@ symbols.");
 
 /*********************** (Bitarray) Decode Iterator *********************/
 
+
 typedef struct {
     PyObject_HEAD
     bitarrayobject *bao;        /* bitarray we're searching in */
-    PyObject *tree;             /* prefix tree containing symbols */
+    binode *tree;               /* prefix tree containing symbols */
     idx_t index;                /* current index in bitarray */
 } decodeiterobject;
 
@@ -2223,20 +2327,28 @@ static PyTypeObject DecodeIter_Type;
 
 #define DecodeIter_Check(op)  PyObject_TypeCheck(op, &DecodeIter_Type)
 
+
+
 /* create a new initialized bitarray search iterator object */
 static PyObject *
-bitarray_iterdecode(bitarrayobject *self, PyObject *tree)
+bitarray_iterdecode(bitarrayobject *self, PyObject * codedict)
 {
     decodeiterobject *it;  /* iterator to be returned */
+    
+    binode *tree = make_tree(codedict);
+    if (PyErr_Occurred())
+    {
+        return NULL;
+    }
 
     it = PyObject_GC_New(decodeiterobject, &DecodeIter_Type);
     if (it == NULL)
         return NULL;
 
+    it->tree = tree;
+
     Py_INCREF(self);
     it->bao = self;
-    Py_INCREF(tree);
-    it->tree = tree;
     it->index = 0;
     PyObject_GC_Track(it);
     return (PyObject *) it;
@@ -2255,13 +2367,8 @@ decodeiter_next(decodeiterobject *it)
 
     assert(DecodeIter_Check(it));
     symbol = tree_traverse(it->bao, &(it->index), it->tree);
-    if (symbol == NULL)  /* stop iteration */
+    if (symbol == NULL)  /* stop iteration OR error occured */
         return NULL;
-    if (IS_EMPTY_LIST(symbol)) {
-        PyErr_SetString(PyExc_ValueError,
-                        "prefix code does not match data in bitarray");
-        return NULL;
-    }
     Py_INCREF(symbol);
     return symbol;
 }
@@ -2269,9 +2376,9 @@ decodeiter_next(decodeiterobject *it)
 static void
 decodeiter_dealloc(decodeiterobject *it)
 {
+    delete_binode_tree(it->tree);
     PyObject_GC_UnTrack(it);
     Py_XDECREF(it->bao);
-    Py_XDECREF(it->tree);
     PyObject_GC_Del(it);
 }
 
