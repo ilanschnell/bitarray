@@ -13,7 +13,7 @@ def traverse(it, tree):
     except StopIteration:
         return False
 
-    if isinstance(subtree, list) and len(subtree)==2:
+    if isinstance(subtree, list) and len(subtree) == 2:
         return traverse(it, subtree)
     else: # leave node
         return subtree

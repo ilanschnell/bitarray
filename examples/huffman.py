@@ -23,6 +23,7 @@ def huffCode(freq):
     while len(minheap) > 1:
         childR, childL = heappop(minheap), heappop(minheap)
         parent = (childL[0] + childR[0], childL, childR)
+        #print(minheap, parent)
         heappush(minheap, parent)
 
     # Now minheap[0] is the root node of the Huffman tree
@@ -54,37 +55,36 @@ def print_code(filename):
     freq = freq_string(open(filename).read())
     code = huffCode(freq)
     print('   char    frequency    Huffman code')
-    print(70*'-')
+    print(70 * '-')
     for c in sorted(code, key=lambda c: freq[c], reverse=True):
         print('%7r %8i        %s' % (c, freq[c], code[c].to01()))
 
 
 def encode(filename):
-    s = open(filename, 'rb').read()
+    with open(filename, 'rb') as fi:
+        s = fi.read()
     code = huffCode(freq_string(s))
-    fo = open(filename + '.huff', 'wb')
-    fo.write(repr(code) + '\n')
-    a = bitarray(endian='little')
-    a.encode(code, s)
-    fo.write(str(a.buffer_info()[3])) # write unused bits as one char string
-    a.tofile(fo)
-    fo.close()
+    with open(filename + '.huff', 'wb') as fo:
+        fo.write(repr(code) + '\n')
+        a = bitarray(endian='little')
+        a.encode(code, s)
+        fo.write(str(a.buffer_info()[3])) # write unused bits as one char string
+        a.tofile(fo)
     print('Ratio =%6.2f%%' % (100.0 * a.buffer_info()[1] / len(s)))
 
 
 def decode(filename):
-    fi = open(filename, 'rb')
-    code = eval(fi.readline())
-    u = int(fi.read(1)) # number of unused bits in last byte stored in file
-    a = bitarray(endian='little')
-    a.fromfile(fi)
-    fi.close()
+    with open(filename, 'rb') as fi:
+        code = eval(fi.readline())
+        u = int(fi.read(1)) # number of unused bits in last byte stored in file
+        a = bitarray(endian='little')
+        a.fromfile(fi)
+
     if u: del a[-u:]
 
     assert filename.endswith('.huff')
-    fo = open(filename[:-5] + '.out', 'wb')
-    fo.write(''.join(a.decode(code)))
-    fo.close()
+    with open(filename[:-5] + '.out', 'wb') as fo:
+        fo.write(''.join(a.decode(code)))
 
 
 def usage():
