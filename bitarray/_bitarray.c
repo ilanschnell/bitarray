@@ -2193,7 +2193,7 @@ delete_binode_tree(binode *root)
 static int
 insert_symbol(binode *root, bitarrayobject *self, PyObject *symbol)
 {
-    binode *nd = root, *prev = NULL;
+    binode *nd = root, *prev;
     Py_ssize_t i;
     int k;
 
@@ -2249,7 +2249,6 @@ tree_traverse(bitarrayobject *self, idx_t *indexp, binode *tree)
     while (1) {
         k = GETBIT(self, *indexp);
         (*indexp)++;
-
         nd = nd->child[k];
 
         if (!nd) {
@@ -2257,7 +2256,6 @@ tree_traverse(bitarrayobject *self, idx_t *indexp, binode *tree)
                             "prefix code does not match data in bitarray");
             return NULL;
         }
-
         if (nd->symbol)  // leaf
             return nd->symbol;
     }
