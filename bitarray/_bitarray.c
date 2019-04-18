@@ -2189,9 +2189,10 @@ static int
 insert_symbol(binode *root, bitarrayobject *self, PyObject *symbol)
 {
     binode *nd = root, *prev = NULL;
-    unsigned char k;
+    Py_ssize_t i;
+    int k;
 
-    for (Py_ssize_t i = 0; i < self->nbits; i++)
+    for (i = 0; i < self->nbits; i++)
     {
         k = GETBIT(self, i);
         prev = nd;
@@ -2218,7 +2219,7 @@ make_tree (PyObject *codedict)
 
     root = new_binode();
     while (PyDict_Next(codedict, &pos, &symbol, &array)) {
-        if (insert_symbol(root, (bitarrayobject*) array, symbol) < 0) {
+        if (insert_symbol(root, (bitarrayobject *) array, symbol) < 0) {
             delete_binode_tree(root);
             return NULL;
         }
@@ -2230,7 +2231,7 @@ static PyObject *
 tree_traverse(bitarrayobject *self, idx_t *indexp, binode *tree)
 {
     binode *nd = tree;
-    unsigned char k;
+    int k;
 
     if (*indexp == self->nbits)  /* stop iterator */
         return NULL;
@@ -2252,14 +2253,13 @@ tree_traverse(bitarrayobject *self, idx_t *indexp, binode *tree)
     }
 }
 
-
 static PyObject *
 bitarray_decode(bitarrayobject *self, PyObject * codedict)
 {
     binode *tree, *nd;
     PyObject *list;
     Py_ssize_t i;
-    unsigned char k;
+    int k;
 
     tree = make_tree(codedict);
     if (PyErr_Occurred())
