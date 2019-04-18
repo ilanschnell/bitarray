@@ -9,7 +9,7 @@ from bitarray import bitarray
 
 trans = {
     "A": bitarray("00"),
-    "T": bitarray("01"), 
+    "T": bitarray("01"),
     "G": bitarray("10"),
     "C": bitarray("11")
 }

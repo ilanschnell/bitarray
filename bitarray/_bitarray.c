@@ -2218,7 +2218,7 @@ insert_symbol(binode *root, bitarrayobject *self, PyObject *symbol)
 }
 
 static binode *
-make_tree (PyObject *codedict)
+make_tree(PyObject *codedict)
 {
     binode *root;
     PyObject *symbol, *array;
@@ -2272,7 +2272,7 @@ bitarray_decode(bitarrayobject *self, PyObject * codedict)
     int k;
 
     tree = make_tree(codedict);
-    if (PyErr_Occurred())
+    if (tree == NULL || PyErr_Occurred())
         return NULL;
 
     nd = tree;
@@ -2340,7 +2340,7 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *codedict)
     binode *tree;
 
     tree = make_tree(codedict);
-    if (PyErr_Occurred())
+    if (tree == NULL || PyErr_Occurred())
         return NULL;
 
     it = PyObject_GC_New(decodeiterobject, &DecodeIter_Type);
