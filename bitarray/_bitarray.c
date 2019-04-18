@@ -2309,10 +2309,10 @@ error:
 }
 
 PyDoc_STRVAR(decode_doc,
-"_decode(tree) -> list\n\
+"_decode(codedict) -> list\n\
 \n\
-Given a tree, decode the content of the bitarray and return the list of\n\
-symbols.");
+Given a code dictionary, decode the content of the bitarray and return\n\
+the list of symbols.");
 
 /*********************** (Bitarray) Decode Iterator *********************/
 
@@ -2355,10 +2355,10 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *codedict)
 }
 
 PyDoc_STRVAR(iterdecode_doc,
-"_iterdecode(tree) -> iterator\n\
+"_iterdecode(codedict) -> iterator\n\
 \n\
-Given a tree, decode the content of the bitarray and iterate over the\n\
-symbols.");
+Given a code dictionary, decode the content of the bitarray and iterate\n\
+over the represented symbols.");
 
 static PyObject *
 decodeiter_next(decodeiterobject *it)
