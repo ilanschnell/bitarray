@@ -2,8 +2,15 @@
 Demonstrates the implementation of a Bloom filter, see:
 http://en.wikipedia.org/wiki/Bloom_filter
 """
+from __future__ import print_function
+import sys
+
+if sys.version_info > (3,):
+    long = int
+    xrange = range
+
 import hashlib
-from math import exp, log
+from math import exp
 
 from bitarray import bitarray
 
@@ -29,9 +36,9 @@ class BloomFilter(object):
         the m array positions with a uniform random distribution
         """
         h = hashlib.new('md5')
-        h.update(str(key))
+        h.update(str(key).encode())
         x = long(h.hexdigest(), 16)
-        for _ in xrange(self.k):
+        for _unused in xrange(self.k):
             if x < self.m:
                 h.update('.')
                 x = long(h.hexdigest(), 16)
@@ -46,11 +53,11 @@ def test_bloom(m, k, n):
         assert b.contains(i)
 
     p = (1.0 - exp(-k * (n + 0.5) / (m - 1))) ** k
-    print 100.0 * p, '%'
+    print(100.0 * p, '%')
 
     N = 100000
     false_pos = sum(b.contains(i) for i in xrange(n, n + N))
-    print 100.0 * false_pos / N, '%'
+    print(100.0 * false_pos / N, '%')
 
 
 if __name__ == '__main__':
