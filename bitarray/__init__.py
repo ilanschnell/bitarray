@@ -92,7 +92,7 @@ decode the content of the bitarray and iterate over the symbols."""
         """encode(code, iterable)
 
 Given a prefix code (a dict mapping symbols to bitarrays),
-iterates over iterable object with symbols, and extends the bitarray
+iterate over the iterable object with symbols, and extend the bitarray
 with the corresponding bitarray for each symbols."""
         _check_codedict(codedict)
         self._encode(codedict, iterable)
