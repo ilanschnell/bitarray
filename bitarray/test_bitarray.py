@@ -2131,7 +2131,7 @@ class BufferInterfaceTests(unittest.TestCase):
         a = bitarray('01000001' '01000010' '01000011', endian='big')
         v = memoryview(a)
         self.assertEqual(len(v), 3)
-        #self.assertEqual(v[0], 'A')
+        self.assertEqual(v[0], 65 if is_py3k else 'A')
         self.assertEqual(v[:].tobytes(), b'ABC')
         a[13] = 1
         self.assertEqual(v[:].tobytes(), b'AFC')
