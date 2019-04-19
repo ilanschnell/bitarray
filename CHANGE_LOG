@@ -2,6 +2,8 @@
 -------------------
   * more efficient decode and iterdecode by using C-level binary tree
     instead of a python one, #54
+  * added buffer protocol support for Python 3, #55
+  * fixed invalid pointer exceptions in pypy, #47
   * made all examples Py3k compatible
   * add gene sequence example
   * add official Python 3.7 support (drop Python 3.1 and 3.2 support)
