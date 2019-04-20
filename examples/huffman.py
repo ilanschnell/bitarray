@@ -4,10 +4,15 @@ http://en.literateprograms.org/Huffman_coding_(Python)
 
 The link also contains a good description of the algorithm.
 """
-import os, sys
+from __future__ import print_function
+
+import os
+import sys
+import heapq
 from collections import defaultdict
 from bitarray import bitarray
-from heapq import heappush, heappop
+
+is_py3k = bool(sys.version_info[0] == 3)
 
 
 def huffCode(freq):
@@ -17,14 +22,14 @@ def huffCode(freq):
     a dictionary mapping the symbols to bitarrays.
     """
     minheap = []
-    for s in freq:
-        heappush(minheap, (freq[s], s))
+    for i, c in enumerate(freq):
+        heapq.heappush(minheap, (freq[c] + 1E-5 * i, c))
 
     while len(minheap) > 1:
-        childR, childL = heappop(minheap), heappop(minheap)
+        childR = heapq.heappop(minheap)
+        childL = heapq.heappop(minheap)
         parent = (childL[0] + childR[0], childL, childR)
-        #print(minheap, parent)
-        heappush(minheap, parent)
+        heapq.heappush(minheap, parent)
 
     # Now minheap[0] is the root node of the Huffman tree
 
@@ -51,40 +56,49 @@ def freq_string(s):
     return res
 
 
+def read_file(filename):
+    with open(filename, 'rb') as fi:
+        res = fi.read()
+    return res
+
+
 def print_code(filename):
-    freq = freq_string(open(filename).read())
+    freq = freq_string(read_file(filename))
     code = huffCode(freq)
     print('   char    frequency    Huffman code')
     print(70 * '-')
-    for c in sorted(code, key=lambda c: freq[c], reverse=True):
+    for c in sorted(code, key=lambda c: (freq[c], c), reverse=True):
         print('%7r %8i        %s' % (c, freq[c], code[c].to01()))
 
 
 def encode(filename):
-    with open(filename, 'rb') as fi:
-        s = fi.read()
+    s = read_file(filename)
     code = huffCode(freq_string(s))
     with open(filename + '.huff', 'wb') as fo:
-        fo.write(repr(code) + '\n')
+        fo.write(repr(code).encode() + b'\n')
         a = bitarray(endian='little')
         a.encode(code, s)
-        fo.write(str(a.buffer_info()[3])) # write unused bits as one char string
+        # write unused bits as one char string
+        fo.write(str(a.buffer_info()[3]).encode())
         a.tofile(fo)
     print('Ratio =%6.2f%%' % (100.0 * a.buffer_info()[1] / len(s)))
 
 
 def decode(filename):
+    assert filename.endswith('.huff')
+
     with open(filename, 'rb') as fi:
         code = eval(fi.readline())
         u = int(fi.read(1)) # number of unused bits in last byte stored in file
         a = bitarray(endian='little')
         a.fromfile(fi)
 
-    if u: del a[-u:]
+    if u:
+        del a[-u:]
 
-    assert filename.endswith('.huff')
     with open(filename[:-5] + '.out', 'wb') as fo:
-        fo.write(''.join(a.decode(code)))
+        for c in a.iterdecode(code):
+            fo.write(chr(c).encode() if is_py3k else c)
 
 
 def usage():
