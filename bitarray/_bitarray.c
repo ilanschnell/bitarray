@@ -23,25 +23,6 @@
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
 #endif
 
-#if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 5
-/* Py_ssize_t was introduced in Python 2.5, substitute long for it */
-typedef long Py_ssize_t;
-#define PY_SSIZE_T_MAX  LONG_MAX
-#define PY_SSIZE_T_MIN  LONG_MIN
-Py_ssize_t PyNumber_AsSsize_t(PyObject *o, PyObject *exc)
-{
-    return PyLong_AsLong(o);
-}
-int PyIndex_Check(PyObject *o)
-{
-    return 0;
-}
-#define PY_SSIZE_T_FMT  "l"
-#else
-/* Python 2.5 and up uses 'n' as the format char for Py_ssize_t */
-#define PY_SSIZE_T_FMT  "n"
-#endif
-
 #if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 6
 /* backward compatibility with Python 2.5 */
 #define Py_TYPE(ob)   (((PyObject *) (ob))->ob_type)
@@ -1056,7 +1037,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     bitarrayobject *xa;
     idx_t p;
 
-    if (!PyArg_ParseTuple(args, "O|" PY_SSIZE_T_FMT ":_search", &x, &limit))
+    if (!PyArg_ParseTuple(args, "O|n:_search", &x, &limit))
         return NULL;
 
     if (!bitarray_Check(x)) {
@@ -1444,7 +1425,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
     idx_t t, p;
     long cur;
 
-    if (!PyArg_ParseTuple(args, "O|" PY_SSIZE_T_FMT ":fromfile", &f, &nbytes))
+    if (!PyArg_ParseTuple(args, "O|n:fromfile", &f, &nbytes))
         return NULL;
 
     fp = PyFile_AsFile(f);

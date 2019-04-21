@@ -6,7 +6,8 @@
   * fixed invalid pointer exceptions in pypy, #47
   * made all examples Py3k compatible
   * add gene sequence example
-  * add official Python 3.7 support (drop Python 3.1 and 3.2 support)
+  * add official Python 3.7 support
+  * drop Python 2.4, 3.1 and 3.2 support
 
 
 2018-07-06   0.8.3:
