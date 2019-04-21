@@ -2252,13 +2252,12 @@ tree_traverse(bitarrayobject *self, idx_t *indexp, binode *tree)
         k = GETBIT(self, *indexp);
         (*indexp)++;
         nd = nd->child[k];
-
-        if (!nd) {
+        if (nd == NULL) {
             PyErr_SetString(PyExc_ValueError,
                             "prefix code does not match data in bitarray");
             return NULL;
         }
-        if (nd->symbol)  // leaf
+        if (nd->symbol)  /* leaf */
             return nd->symbol;
     }
 }
@@ -2983,7 +2982,7 @@ bitarray_releasebuffer(bitarrayobject *self, Py_buffer *view)
 }
 
 static PyBufferProcs bitarray_as_buffer = {
-#if PY_MAJOR_VERSION == 2   // old buffer protocol
+#if PY_MAJOR_VERSION == 2   /* old buffer protocol */
     (readbufferproc) bitarray_buffer_getreadbuf,
     (writebufferproc) bitarray_buffer_getwritebuf,
     (segcountproc) bitarray_buffer_getsegcount,
