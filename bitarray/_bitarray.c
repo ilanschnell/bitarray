@@ -2224,15 +2224,7 @@ tree_traverse(bitarrayobject *self, idx_t *indexp, binode *tree)
     binode *nd = tree;
     int k;
 
-    while (1) {
-        /* stop iterator - we need to check constantly, as the encoded
-           bitarray may be terminated */
-        if (*indexp >= self->nbits) {
-	    if (nd != tree)
-		PyErr_SetString(PyExc_ValueError, "decoding not terminated");
-	    return NULL;
-	}
-
+    while (*indexp < self->nbits) {
         k = GETBIT(self, *indexp);
         (*indexp)++;
         nd = nd->child[k];
@@ -2244,6 +2236,10 @@ tree_traverse(bitarrayobject *self, idx_t *indexp, binode *tree)
         if (nd->symbol)  /* leaf */
             return nd->symbol;
     }
+    if (nd != tree)
+        PyErr_SetString(PyExc_ValueError, "decoding not terminated");
+
+    return NULL;
 }
 
 static PyObject *
