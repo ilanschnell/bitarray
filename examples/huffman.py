@@ -22,10 +22,10 @@ def huffCode(freq):
     a dictionary mapping the symbols to bitarrays.
     """
     minheap = []
-    for i, c in enumerate(freq):
+    for i, c in enumerate(sorted(freq)):
         # having the exact same frequency for different symbols causes
         # problems with heapq in Python 3, so we simply add a small float
-        heapq.heappush(minheap, (freq[c] + 1E-5 * i, c))
+        heapq.heappush(minheap, (freq[c] + 1E-3 * i, c))
 
     while len(minheap) > 1:
         childR = heapq.heappop(minheap)
@@ -60,8 +60,7 @@ def freq_string(s):
 
 def read_file(filename):
     with open(filename, 'rb') as fi:
-        res = fi.read()
-    return res
+        return fi.read()
 
 
 def print_code(filename):
