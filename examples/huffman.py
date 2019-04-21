@@ -120,55 +120,54 @@ def decode(filename):
             fo.write(chr(c).encode('ISO-8859-1') if is_py3k else c)
 
 
-def usage():
-    print("""Usage: %s command FILE
+def main():
+    from optparse import OptionParser
 
-  print  --  calculate and display the Huffman code for the frequency
-             of characters in FILE.
+    p = OptionParser("usage: %prog [options] FILE")
+    p.add_option(
+        '-p', '--print',
+        action="store_true",
+        help="calculate and print the Huffman code for the "
+             "frequency of characters in FILE")
+    p.add_option(
+        '-e', '--encode',
+        action="store_true",
+        help="encode FILE using the Huffman code calculated for the "
+             "frequency of characters in FILE itself. "
+             "The output is FILE.huff which contains both the Huffman "
+             "code and the bitarray resulting from the encoding.")
+    p.add_option(
+        '-d', '--decode',
+        action="store_true",
+        help="decode FILE.huff and write the output to FILE.out")
+    p.add_option(
+        '-t', '--test',
+        action="store_true",
+        help="encode FILE, decode FILE.huff, compare FILE with FILE.out, "
+             "and unlink created files.")
+    opts, args = p.parse_args()
+    if len(args) != 1:
+        p.error('exactly one argument required')
+    filename = args[0]
 
-  encode --  encode FILE using the Huffman code calculated for the
-             frequency of characters in FILE itself.
-             The output is FILE.huff which contains both the Huffman
-             code and the bitarray resulting from the encoding.
-
-  decode --  decode FILE, which has .huff extension generated with the
-             encode command.  The output is written in a filename
-             where .huff is replaced by .out
-
-  test   --  encode FILE, decode FILE.huff, compare FILE with FILE.out,
-             and unlink created files.
-""" % sys.argv[0])
-    sys.exit(0)
-
-
-if __name__ == '__main__':
-    if len(sys.argv) != 3:
-        usage()
-
-    cmd, filename = sys.argv[1:3]
-
-    if cmd == 'print':
+    if opts.print:
         print_code(filename)
 
-    elif cmd == 'encode':
+    if opts.encode:
         encode(filename)
 
-    elif cmd == 'decode':
-        if filename.endswith('.huff'):
-            decode(filename)
-        else:
-            print('Filename has no .huff extension')
+    if opts.decode:
+        decode(filename + '.huff')
 
-    elif cmd == 'test':
+    if opts.test:
         huff = filename + '.huff'
         out = filename + '.out'
-
         encode(filename)
         decode(huff)
         assert open(filename, 'rb').read() == open(out, 'rb').read()
         os.unlink(huff)
         os.unlink(out)
 
-    else:
-        print('Unknown command %r' % cmd)
-        usage()
+
+if __name__ == '__main__':
+    main()
