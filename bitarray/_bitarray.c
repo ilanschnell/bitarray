@@ -2243,10 +2243,12 @@ tree_traverse(bitarrayobject *self, idx_t *indexp, binode *tree)
     binode *nd = tree;
     int k;
 
-    if (*indexp == self->nbits)  /* stop iterator */
-        return NULL;
-
     while (1) {
+        /* stop iterator - we need to check constantly, as the encoded
+           bitarray may be invalid */
+        if (*indexp >= self->nbits)
+            return NULL;
+
         k = GETBIT(self, *indexp);
         (*indexp)++;
         nd = nd->child[k];
