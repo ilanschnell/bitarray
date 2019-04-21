@@ -2226,9 +2226,12 @@ tree_traverse(bitarrayobject *self, idx_t *indexp, binode *tree)
 
     while (1) {
         /* stop iterator - we need to check constantly, as the encoded
-           bitarray may be invalid */
-        if (*indexp >= self->nbits)
-            return NULL;
+           bitarray may be terminated */
+        if (*indexp >= self->nbits) {
+	    if (nd != tree)
+		PyErr_SetString(PyExc_ValueError, "decoding not terminated");
+	    return NULL;
+	}
 
         k = GETBIT(self, *indexp);
         (*indexp)++;
@@ -2263,7 +2266,7 @@ bitarray_decode(bitarrayobject *self, PyObject *codedict)
     for (i = 0; i < self->nbits; i++) {
         k = GETBIT(self, i);
         nd = nd->child[k];
-        if (!nd) {
+        if (nd == NULL) {
             PyErr_SetString(PyExc_ValueError,
                             "prefix code does not match data in bitarray");
             goto error;
@@ -2276,8 +2279,7 @@ bitarray_decode(bitarrayobject *self, PyObject *codedict)
     }
 
     if (nd != tree) {
-        PyErr_SetString(PyExc_ValueError,
-                        "decoding not terminated");
+        PyErr_SetString(PyExc_ValueError, "decoding not terminated");
         goto error;
     }
 

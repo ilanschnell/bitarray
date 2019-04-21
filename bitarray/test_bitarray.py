@@ -2020,12 +2020,29 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(d, {'a': bitarray('1')})
         self.assertEqual(len(a), 0)
 
+    def test_decode_no_term(self):
+        d = {'a': bitarray('0'), 'b': bitarray('111')}
+        a = bitarray('011')
+        self.assertRaises(ValueError, a.decode, d)
+        self.assertEqual(a, bitarray('011'))
+        self.assertEqual(d, {'a': bitarray('0'), 'b': bitarray('111')})
+
     def test_decode_buggybitarray(self):
         d = {'a': bitarray('0')}
         a = bitarray('1')
         self.assertRaises(ValueError, a.decode, d)
         self.assertEqual(a, bitarray('1'))
         self.assertEqual(d, {'a': bitarray('0')})
+
+    def test_iterdecode_no_term(self):
+        d = {'a': bitarray('0'), 'b': bitarray('111')}
+        a = bitarray('011')
+        it = a.iterdecode(d)
+        if not is_py3k:
+            self.assertEqual(it.next(), 'a')
+            self.assertRaises(ValueError, it.next)
+        self.assertEqual(a, bitarray('011'))
+        self.assertEqual(d, {'a': bitarray('0'), 'b': bitarray('111')})
 
     def test_iterdecode_buggybitarray(self):
         d = {'a': bitarray('0')}
