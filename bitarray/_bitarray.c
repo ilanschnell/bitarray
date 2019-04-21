@@ -2256,9 +2256,10 @@ bitarray_decode(bitarrayobject *self, PyObject *codedict)
 
     nd = tree;
     list = PyList_New(0);
-    if (list == NULL)
+    if (list == NULL) {
+        delete_binode_tree(tree);
         return NULL;
-
+    }
     for (i = 0; i < self->nbits; i++) {
         k = GETBIT(self, i);
         nd = nd->child[k];
@@ -2267,18 +2268,16 @@ bitarray_decode(bitarrayobject *self, PyObject *codedict)
                             "prefix code does not match data in bitarray");
             goto error;
         }
-        if (nd->symbol) {
+        if (nd->symbol) {  /* leaf */
             if (PyList_Append(list, nd->symbol) < 0)
                 goto error;
             nd = tree;
         }
     }
-
     if (nd != tree) {
         PyErr_SetString(PyExc_ValueError, "decoding not terminated");
         goto error;
     }
-
     delete_binode_tree(tree);
     return list;
 
