@@ -67,10 +67,12 @@ def read_file(filename):
 def print_code(filename):
     freq = freq_string(read_file(filename))
     code = huffCode(freq)
-    print(' symbol    frequency    Huffman code')
+    print(' symbol     char      frequency     Huffman code')
     print(70 * '-')
     for c in sorted(code, key=lambda c: (freq[c], c), reverse=True):
-        print('%7r %8i        %s' % (c, freq[c], code[c].to01()))
+        print('%7r     %-7r %8i        %s' % (
+            c, chr(c).encode('ISO-8859-1') if is_py3k else c,
+            freq[c], code[c].to01()))
 
 
 def encode(filename):
