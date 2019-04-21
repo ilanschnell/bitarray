@@ -49,8 +49,7 @@ def huffCode(freq):
 
 def freq_string(s):
     """
-    Given a string, return a dictionary
-    mapping characters to thier frequency.
+    Given a string, return a dict mapping characters to thier frequency.
     """
     res = defaultdict(int)
     for c in s:
@@ -63,36 +62,52 @@ def read_file(filename):
         return fi.read()
 
 
+special_ascii = {9: 'TAB', 10: 'LF', 13: 'CR', 127: 'DEL'}
+def disp_char(i):
+    if 32 <= i < 127:
+        return chr(i)
+    return special_ascii.get(i, '')
+
 def print_code(filename):
     freq = freq_string(read_file(filename))
     code = huffCode(freq)
-    print(' symbol     char      frequency     Huffman code')
+    print(' symbol     char   hex   frequency     Huffman code')
     print(70 * '-')
     for c in sorted(code, key=lambda c: (freq[c], c), reverse=True):
-        print('%7r     %-7r %8i        %s' % (
-            c, chr(c).encode('ISO-8859-1') if is_py3k else c,
-            freq[c], code[c].to01()))
+        i = c if is_py3k else ord(c)
+        print('%7r     %-3s    0x%02x %10i     %s' % (
+            c, disp_char(i),
+            i, freq[c], code[c].to01()))
 
 
 def encode(filename):
     s = read_file(filename)
     code = huffCode(freq_string(s))
     with open(filename + '.huff', 'wb') as fo:
-        fo.write(repr(code).encode() + b'\n')
+        for c in sorted(code):
+            fo.write(('%02x %s\n' % (c if is_py3k else ord(c),
+                                     code[c].to01())).encode())
         a = bitarray(endian='little')
         a.encode(code, s)
-        # write unused bits as one char string
-        fo.write(str(a.buffer_info()[3]).encode())
+        # write unused bits
+        fo.write(b'unused %s\n' % str(a.buffer_info()[3]).encode())
         a.tofile(fo)
     print('Ratio =%6.2f%%' % (100.0 * a.buffer_info()[1] / len(s)))
 
 
 def decode(filename):
     assert filename.endswith('.huff')
+    code = {}
 
     with open(filename, 'rb') as fi:
-        code = eval(fi.readline())
-        u = int(fi.read(1)) # number of unused bits in last byte stored in file
+        while 1:
+            line = fi.readline()
+            c, b = line.split()
+            if c == b'unused':
+                u = int(b)
+                break
+            i = int(c, 16)
+            code[i if is_py3k else chr(i)] = bitarray(b)
         a = bitarray(endian='little')
         a.fromfile(fi)
 
