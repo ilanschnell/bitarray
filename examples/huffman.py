@@ -33,16 +33,17 @@ def huffCode(freq):
         parent = (childL[0] + childR[0], childL, childR)
         heapq.heappush(minheap, parent)
 
-    # Now minheap[0] is the root node of the Huffman tree
+    # minheap[0] is now the root node of the Huffman tree
+    # now traverse the tree to create the Huffman codes
+    result = {}
 
     def traverse(tree, prefix=bitarray()):
-        if len(tree) == 2:
+        if len(tree) == 2:  # leave
             result[tree[1]] = prefix
-        else:
+        else: # parent, so traverse each of the children
             for i in range(2):
                 traverse(tree[i+1], prefix + bitarray([i]))
 
-    result = {}
     traverse(minheap[0])
     return result
 
