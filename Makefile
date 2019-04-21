@@ -14,5 +14,7 @@ clean:
 	rm -rf build dist
 	rm -f bitarray/*.o bitarray/*.so
 	rm -f bitarray/*.pyc
+	rm -f examples/*.pyc
 	rm -rf bitarray/__pycache__ *.egg-info
+	rm -rf examples/__pycache__
 	rm -f README.html
