@@ -1,3 +1,8 @@
+2019-XX-XX   0.9.1:
+-------------------
+  * fix types to actually be types, #29
+
+
 2019-04-22   0.9.0:
 -------------------
   * more efficient decode and iterdecode by using C-level binary tree
