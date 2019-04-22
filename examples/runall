@@ -1,9 +1,12 @@
 #!/bin/bash -x
 
-python huffman.py test README || exit 1
+python huffman.py --test README || exit 1
 
 for x in *.py
 do
+    if [ $x == 'huffman.py' ]; then
+        continue
+    fi
     echo Running: $x
     python $x || exit 1
 done
