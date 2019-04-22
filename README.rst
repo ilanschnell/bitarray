@@ -50,8 +50,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-0.8.3.tar.gz
-   $ cd bitarray-0.8.3
+   $ tar xzf bitarray-0.9.0.tar.gz
+   $ cd bitarray-0.9.0
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -62,7 +62,7 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-   bitarray version: 0.8.3
+   bitarray version: 0.9.0
    2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
    ...........................................
@@ -373,7 +373,7 @@ Reference
 
 ``encode(code, iterable)``
    Given a prefix code (a dict mapping symbols to bitarrays),
-   iterates over iterable object with symbols, and extends the bitarray
+   iterate over the iterable object with symbols, and extend the bitarray
    with the corresponding bitarray for each symbols.
 
 
@@ -537,6 +537,18 @@ Reference
 Change log
 ----------
 
+**0.9.0** (2019-04-22):
+
+  * more efficient decode and iterdecode by using C-level binary tree
+    instead of a python one, #54
+  * added buffer protocol support for Python 3, #55
+  * fixed invalid pointer exceptions in pypy, #47
+  * made all examples Py3k compatible
+  * add gene sequence example
+  * add official Python 3.7 support
+  * drop Python 2.4, 3.1 and 3.2 support
+
+
 **0.8.3** (2018-07-06):
 
   * add exception to setup.py when README.rst cannot be opened
@@ -549,13 +561,6 @@ Change log
   * handle extending self correctly, #28
   * copy_n: fast copy with memmove fixed, #43
   * minor clarity/wording changes to README, #23
-
-
-**0.8.1** (2013-03-30):
-
-  * fix issue #10, i.e. int(bitarray()) segfault
-  * added tests for using a bitarray object as an argument to functions
-    like int, long (on Python 2), float, list, tuple, dict
 
 
 Please find the complete change log
