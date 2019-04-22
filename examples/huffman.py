@@ -63,20 +63,20 @@ def read_file(filename):
         return fi.read()
 
 
-special_ascii = {9: 'TAB', 10: 'LF', 13: 'CR', 127: 'DEL'}
+special_ascii = {0: 'NULL', 9: 'TAB', 10: 'LF', 13: 'CR', 127: 'DEL'}
 def disp_char(i):
     if 32 <= i < 127:
-        return chr(i)
+        return repr(chr(i))
     return special_ascii.get(i, '')
 
 def print_code(filename):
     freq = freq_string(read_file(filename))
     code = huffCode(freq)
-    print(' symbol     char   hex   frequency     Huffman code')
+    print(' symbol     char    hex   frequency     Huffman code')
     print(70 * '-')
     for c in sorted(code, key=lambda c: (freq[c], c), reverse=True):
         i = c if is_py3k else ord(c)
-        print('%7r     %-3s    0x%02x %10i     %s' % (
+        print('%7r     %-4s    0x%02x %10i     %s' % (
             c, disp_char(i),
             i, freq[c], code[c].to01()))
 
