@@ -1927,16 +1927,6 @@ tests.append(FileTests)
 
 class PrefixCodeTests(unittest.TestCase, Util):
 
-    def test_encode_errors(self):
-        a = bitarray()
-        self.assertRaises(TypeError, a.encode, 0, '')
-        self.assertRaises(ValueError, a.encode, {}, '')
-        self.assertRaises(TypeError, a.encode, {'a':42}, '')
-        self.assertRaises(ValueError, a.encode, {'a': bitarray()}, '')
-        # 42 not iterable
-        self.assertRaises(TypeError, a.encode, {'a': bitarray('0')}, 42)
-        self.assertEqual(len(a), 0)
-
     def test_encode_string(self):
         a = bitarray()
         d = {'a': bitarray('0')}
@@ -1983,26 +1973,38 @@ class PrefixCodeTests(unittest.TestCase, Util):
                              'a': bitarray('001'), 'n': bitarray('000')})
         self.assertRaises(ValueError, a.encode, d, 'arvin')
 
+    def test_encode_not_iterable(self):
+        d = {'a': bitarray('0'), 'b': bitarray('1')}
+        a = bitarray()
+        a.encode(d, 'abba')
+        self.assertRaises(TypeError, a.encode, d, 42)
+        self.assertRaises(TypeError, a.encode, d, 1.3)
+        self.assertRaises(TypeError, a.encode, d, None)
+        self.assertEqual(a, bitarray('0110'))
+
     def test_check_codedict_encode(self):
         a = bitarray()
-        self.assertRaises(TypeError, a.encode, None, 'asdf')
-        self.assertRaises(ValueError, a.encode, {}, 'asdf')
-        self.assertRaises(TypeError, a.encode, {'a': 'b'}, 'asdf')
-        self.assertRaises(ValueError, a.encode, {'a': bitarray()}, 'asdf')
+        self.assertRaises(TypeError, a.encode, None, '')
+        self.assertRaises(ValueError, a.encode, {}, '')
+        self.assertRaises(TypeError, a.encode, {'a': 'b'}, '')
+        self.assertRaises(ValueError, a.encode, {'a': bitarray()}, '')
+        self.assertEqual(len(a), 0)
 
     def test_check_codedict_decode(self):
-        a = bitarray()
+        a = bitarray('101')
         self.assertRaises(TypeError, a.decode, 0)
         self.assertRaises(ValueError, a.decode, {})
         self.assertRaises(TypeError, a.decode, {'a': 42})
         self.assertRaises(ValueError, a.decode, {'a': bitarray()})
+        self.assertEqual(a, bitarray('101'))
 
     def test_check_codedict_iterdecode(self):
-        a = bitarray()
+        a = bitarray('1100101')
         self.assertRaises(TypeError, a.iterdecode, 0)
         self.assertRaises(ValueError, a.iterdecode, {})
         self.assertRaises(TypeError, a.iterdecode, {'a': []})
         self.assertRaises(ValueError, a.iterdecode, {'a': bitarray()})
+        self.assertEqual(a, bitarray('1100101'))
 
     def test_decode_simple(self):
         d = {'I': bitarray('1'),
