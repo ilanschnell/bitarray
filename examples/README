@@ -11,16 +11,19 @@ compress.py:
 decoding.py
     Bitarray's decode method is implemented in C.  Since the C code
     might be hard to read, we have implemented exactly the same
-    algorithm in Python.  It is about 20 times slower than it's
-    C counterpart, since (recursive) function calls are more expensive
-    in Python than in C.
+    algorithm in Python.  It is at least 20 times slower than it's
+    C counterpart.
+
+
+gene.py:
+    shows how gene sequences (ATGC) can be very easily and efficiently
+    represented by bitarrays.
 
 
 huffman.py
     Demonstrates building a Huffman tree.  Given an input file,
     calculates the number of occurrences for each character;
-    from those frequencies, a Huffman tree is build; and by traversing
-    the tree, the Huffman code is evaluated.
+    from those frequencies, a Huffman tree is build.
     Also allows encoding and decoding of a file, see -h option.
 
 

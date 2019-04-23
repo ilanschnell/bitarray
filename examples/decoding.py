@@ -25,16 +25,16 @@ def decode(codedict, bitsequence):
     this function does the same thing as the bitarray decode method
     """
     # generate tree from codedict
-    root = [[], []]
+    tree = [[], []]
     for sym, ba in codedict.items():
-        insert(root, ba, sym)
+        insert(tree, ba, sym)
 
     # actual decoding by traversing until StopIteration
     res = []
     it = iter(bitsequence)
     while True:
         try:
-            r = traverse(root, it)
+            r = traverse(tree, it)
         except StopIteration:
             break
         res.append(r)
