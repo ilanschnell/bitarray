@@ -2097,12 +2097,43 @@ BITWISE_IFUNC(xor)
 
 /******************* variable length encoding and decoding ***************/
 
+static int
+check_codedict(PyObject *codedict)
+{
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+
+    if (!PyDict_Check(codedict)) {
+        PyErr_SetString(PyExc_TypeError, "dict expected");
+        return -1;
+    }
+    if (PyDict_Size(codedict) == 0) {
+        PyErr_SetString(PyExc_ValueError, "prefix code dict empty");
+        return -1;
+    }
+    while (PyDict_Next(codedict, &pos, &key, &value)) {
+        if (!bitarray_Check(value)) {
+            PyErr_SetString(PyExc_TypeError,
+                            "bitarray expected for dict value");
+            return -1;
+        }
+        if (((bitarrayobject *) value)->nbits == 0) {
+            PyErr_SetString(PyExc_ValueError, "non-empty bitarray expected");
+            return -1;
+        }
+    }
+    return 0;
+}
+
 static PyObject *
 bitarray_encode(bitarrayobject *self, PyObject *args)
 {
     PyObject *codedict, *iterable, *iter, *symbol, *bits;
 
     if (!PyArg_ParseTuple(args, "OO:_encode", &codedict, &iterable))
+        return NULL;
+
+    if (check_codedict(codedict) < 0)
         return NULL;
 
     iter = PyObject_GetIter(iterable);
@@ -2115,7 +2146,8 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
         bits = PyDict_GetItem(codedict, symbol);
         Py_DECREF(symbol);
         if (bits == NULL) {
-            PyErr_SetString(PyExc_ValueError, "symbol not in prefix code");
+            PyErr_SetString(PyExc_ValueError,
+                            "symbol not defined in prefix code");
             goto error;
         }
         if (extend_bitarray(self, (bitarrayobject *) bits) < 0)
@@ -2263,6 +2295,9 @@ bitarray_decode(bitarrayobject *self, PyObject *codedict)
     Py_ssize_t i;
     int k;
 
+    if (check_codedict(codedict) < 0)
+        return NULL;
+
     tree = make_tree(codedict);
     if (tree == NULL || PyErr_Occurred())
         return NULL;
@@ -2328,6 +2363,9 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *codedict)
 {
     decodeiterobject *it;  /* iterator to be returned */
     binode *tree;
+
+    if (check_codedict(codedict) < 0)
+        return NULL;
 
     tree = make_tree(codedict);
     if (tree == NULL || PyErr_Occurred())

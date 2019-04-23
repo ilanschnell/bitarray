@@ -13,18 +13,6 @@ from bitarray._bitarray import _bitarray, bitdiff, bits2bytes, _sysinfo
 __version__ = '0.9.0'
 
 
-def _check_codedict(codedict):
-    if not isinstance(codedict, dict):
-        raise TypeError("dictionary expected")
-    if len(codedict) == 0:
-        raise ValueError("prefix code empty")
-    for k, v in codedict.items():
-        if not isinstance(v, bitarray):
-            raise TypeError("bitarray expected for dictionary value")
-        if v.length() == 0:
-            raise ValueError("non-empty bitarray expected")
-
-
 class bitarray(_bitarray):
     """bitarray([initial], [endian=string])
 
@@ -77,7 +65,6 @@ Deprecated since version 0.4.0, use ``tobytes()`` instead."""
 
 Given a prefix code (a dict mapping symbols to bitarrays),
 decode the content of the bitarray and return the list of symbols."""
-        _check_codedict(codedict)
         return self._decode(codedict)
 
     def iterdecode(self, codedict):
@@ -85,7 +72,6 @@ decode the content of the bitarray and return the list of symbols."""
 
 Given a prefix code (a dict mapping symbols to bitarrays),
 decode the content of the bitarray and iterate over the symbols."""
-        _check_codedict(codedict)
         return self._iterdecode(codedict)
 
     def encode(self, codedict, iterable):
@@ -94,7 +80,6 @@ decode the content of the bitarray and iterate over the symbols."""
 Given a prefix code (a dict mapping symbols to bitarrays),
 iterate over the iterable object with symbols, and extend the bitarray
 with the corresponding bitarray for each symbols."""
-        _check_codedict(codedict)
         self._encode(codedict, iterable)
 
     def __int__(self):

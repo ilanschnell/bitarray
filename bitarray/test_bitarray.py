@@ -1983,14 +1983,26 @@ class PrefixCodeTests(unittest.TestCase, Util):
                              'a': bitarray('001'), 'n': bitarray('000')})
         self.assertRaises(ValueError, a.encode, d, 'arvin')
 
+    def test_check_codedict_encode(self):
+        a = bitarray()
+        self.assertRaises(TypeError, a.encode, None, 'asdf')
+        self.assertRaises(ValueError, a.encode, {}, 'asdf')
+        self.assertRaises(TypeError, a.encode, {'a': 'b'}, 'asdf')
+        self.assertRaises(ValueError, a.encode, {'a': bitarray()}, 'asdf')
 
-    def test_decode_check_codedict(self):
+    def test_check_codedict_decode(self):
         a = bitarray()
         self.assertRaises(TypeError, a.decode, 0)
         self.assertRaises(ValueError, a.decode, {})
-        # 42 not iterable
-        self.assertRaises(TypeError, a.decode, {'a':42})
-        self.assertRaises(ValueError, a.decode, {'a':bitarray()})
+        self.assertRaises(TypeError, a.decode, {'a': 42})
+        self.assertRaises(ValueError, a.decode, {'a': bitarray()})
+
+    def test_check_codedict_iterdecode(self):
+        a = bitarray()
+        self.assertRaises(TypeError, a.iterdecode, 0)
+        self.assertRaises(ValueError, a.iterdecode, {})
+        self.assertRaises(TypeError, a.iterdecode, {'a': []})
+        self.assertRaises(ValueError, a.iterdecode, {'a': bitarray()})
 
     def test_decode_simple(self):
         d = {'I': bitarray('1'),
