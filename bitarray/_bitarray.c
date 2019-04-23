@@ -2182,6 +2182,8 @@ insert_symbol(binode *root, bitarrayobject *self, PyObject *symbol)
         k = GETBIT(self, i);
         prev = nd;
         nd = nd->child[k];
+        if (nd && nd->symbol)
+            goto ambiguous;
         if (!nd) {
             nd = new_binode();
             if (nd == NULL)
@@ -2189,13 +2191,15 @@ insert_symbol(binode *root, bitarrayobject *self, PyObject *symbol)
             prev->child[k] = nd;
         }
     }
+    if (nd->symbol || nd->child[0] || nd->child[1])
+        goto ambiguous;
 
-    if (nd->symbol) {
-        PyErr_SetString(PyExc_ValueError, "prefix code ambiguous");
-        return -1;
-    }
     nd->symbol = symbol;
     return 0;
+
+ ambiguous:
+    PyErr_SetString(PyExc_ValueError, "prefix code ambiguous");
+    return -1;
 }
 
 static binode *

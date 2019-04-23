@@ -2072,16 +2072,15 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('1'))
 
     def test_decode_ambiguous_code(self):
-        d = {'a': bitarray('0'), 'b': bitarray('0'), 'c': bitarray('1')}
-        a = bitarray()
-        self.assertRaises(ValueError, a.decode, d)
-        self.assertRaises(ValueError, a.iterdecode, d)
-
-    def test_decode_ambiguous2(self):
-        d = {'a': bitarray('01'), 'b': bitarray('01'), 'c': bitarray('1')}
-        a = bitarray()
-        self.assertRaises(ValueError, a.decode, d)
-        self.assertRaises(ValueError, a.iterdecode, d)
+        for d in [
+            {'a': bitarray('0'), 'b': bitarray('0'), 'c': bitarray('1')},
+            {'a': bitarray('01'), 'b': bitarray('01'), 'c': bitarray('1')},
+            {'a': bitarray('0'), 'b': bitarray('01')},
+            {'a': bitarray('0'), 'b': bitarray('11'), 'c': bitarray('111')},
+        ]:
+            a = bitarray()
+            self.assertRaises(ValueError, a.decode, d)
+            self.assertRaises(ValueError, a.iterdecode, d)
 
     def test_miscitems(self):
         d = {None : bitarray('00'),
