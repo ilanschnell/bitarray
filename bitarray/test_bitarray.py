@@ -1973,6 +1973,16 @@ class PrefixCodeTests(unittest.TestCase, Util):
                              'a': bitarray('001'), 'n': bitarray('000')})
         self.assertRaises(ValueError, a.encode, d, 'arvin')
 
+    def test_encode_symbol_not_in_code(self):
+        d = {None : bitarray('0'),
+             0    : bitarray('10'),
+             'A'  : bitarray('11')}
+        a = bitarray()
+        a.encode(d, ['A', None, 0])
+        self.assertEqual(a, bitarray('11010'))
+        self.assertRaises(ValueError, a.encode, d, [1, 2])
+        self.assertRaises(ValueError, a.encode, d, 'ABCD')
+
     def test_encode_not_iterable(self):
         d = {'a': bitarray('0'), 'b': bitarray('1')}
         a = bitarray()
