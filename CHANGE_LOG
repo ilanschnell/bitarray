@@ -1,6 +1,7 @@
 2019-XX-XX   0.9.1:
 -------------------
   * fix types to actually be types, #29
+  * improve check for ambiguous prefix codes
 
 
 2019-04-22   0.9.0:
