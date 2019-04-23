@@ -1,6 +1,9 @@
 /*
-   This file is the C part of the bitarray package.  Almost all
-   functionality is implemented here.
+   Copyright (c) 2008 - 2019, Ilan Schnell
+   bitarray is published under the PDF license.
+
+   This file is the C part of the bitarray package.
+   All functionality is implemented here.
 
    Author: Ilan Schnell
 */
