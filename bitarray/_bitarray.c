@@ -2226,8 +2226,13 @@ make_tree(PyObject *codedict)
     return root;
 }
 
+/*
+  Traverse tree using the branches corresponding to the bitarray self,
+  starting at *indexp, and return the symbol at the leaf node (or NULL
+  when the end of the bitarray has been reached).
+*/
 static PyObject *
-tree_traverse(bitarrayobject *self, idx_t *indexp, binode *tree)
+tree_traverse(binode *tree, bitarrayobject *self, idx_t *indexp)
 {
     binode *nd = tree;
     int k;
@@ -2353,7 +2358,7 @@ decodeiter_next(decodeiterobject *it)
     PyObject *symbol;
 
     assert(DecodeIter_Check(it));
-    symbol = tree_traverse(it->bao, &(it->index), it->tree);
+    symbol = tree_traverse(it->tree, it->bao, &(it->index));
     if (symbol == NULL)  /* stop iteration OR error occured */
         return NULL;
     Py_INCREF(symbol);
