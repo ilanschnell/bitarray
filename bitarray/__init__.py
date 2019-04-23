@@ -61,13 +61,13 @@ Deprecated since version 0.4.0, use ``tobytes()`` instead."""
         return self.tobytes().decode()
 
     def __int__(self):
-        raise TypeError("int() argument cannot be a bitarray")
+        raise TypeError("int() cannot take bitarray as argument")
 
     def __long__(self):
-        raise TypeError("long() argument cannot be a bitarray")
+        raise TypeError("long() cannot take bitarray as argument")
 
     def __float__(self):
-        raise TypeError("float() argument cannot be a bitarray")
+        raise TypeError("float() cannot take bitarray as argument")
 
 
 def test(verbosity=1, repeat=1):
