@@ -2,6 +2,8 @@
 -------------------
   * fix types to actually be types, #29
   * improve check for ambiguous prefix codes
+  * remove Python level methods: encode, decode, iterdecode (in favor of
+    having these implemented on the C-level along with check_codedict)
 
 
 2019-04-22   0.9.0:
