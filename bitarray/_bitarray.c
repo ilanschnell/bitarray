@@ -2161,20 +2161,20 @@ new_binode(void)
 }
 
 static void
-delete_binode_tree(binode *root)
+delete_binode_tree(binode *tree)
 {
-    if (root == NULL)
+    if (tree == NULL)
         return;
 
-    delete_binode_tree(root->child[0]);
-    delete_binode_tree(root->child[1]);
-    PyMem_Free(root);
+    delete_binode_tree(tree->child[0]);
+    delete_binode_tree(tree->child[1]);
+    PyMem_Free(tree);
 }
 
 static int
-insert_symbol(binode *root, bitarrayobject *self, PyObject *symbol)
+insert_symbol(binode *tree, bitarrayobject *self, PyObject *symbol)
 {
-    binode *nd = root, *prev;
+    binode *nd = tree, *prev;
     Py_ssize_t i;
     int k;
 
@@ -2185,7 +2185,7 @@ insert_symbol(binode *root, bitarrayobject *self, PyObject *symbol)
 
         /* we cannot have already a symbol when branching to the new leaf */
         if (nd && nd->symbol)
-            goto ambiguous;
+            goto ambiguity;
 
         if (!nd) {
             nd = new_binode();
@@ -2196,12 +2196,12 @@ insert_symbol(binode *root, bitarrayobject *self, PyObject *symbol)
     }
     /* the new leaf node cannot already have a symbol or children */
     if (nd->symbol || nd->child[0] || nd->child[1])
-        goto ambiguous;
+        goto ambiguity;
 
     nd->symbol = symbol;
     return 0;
 
- ambiguous:
+ ambiguity:
     PyErr_SetString(PyExc_ValueError, "prefix code ambiguous");
     return -1;
 }
@@ -2209,21 +2209,21 @@ insert_symbol(binode *root, bitarrayobject *self, PyObject *symbol)
 static binode *
 make_tree(PyObject *codedict)
 {
-    binode *root;
+    binode *tree;
     PyObject *symbol, *array;
     Py_ssize_t pos = 0;
 
-    root = new_binode();
-    if (root == NULL)
+    tree = new_binode();
+    if (tree == NULL)
         return NULL;
 
     while (PyDict_Next(codedict, &pos, &symbol, &array)) {
-        if (insert_symbol(root, (bitarrayobject *) array, symbol) < 0) {
-            delete_binode_tree(root);
+        if (insert_symbol(tree, (bitarrayobject *) array, symbol) < 0) {
+            delete_binode_tree(tree);
             return NULL;
         }
     }
-    return root;
+    return tree;
 }
 
 /*
