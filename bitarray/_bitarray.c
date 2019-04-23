@@ -2130,7 +2130,7 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
 {
     PyObject *codedict, *iterable, *iter, *symbol, *bits;
 
-    if (!PyArg_ParseTuple(args, "OO:_encode", &codedict, &iterable))
+    if (!PyArg_ParseTuple(args, "OO:encode", &codedict, &iterable))
         return NULL;
 
     if (check_codedict(codedict) < 0)
@@ -2163,9 +2163,11 @@ error:
 }
 
 PyDoc_STRVAR(encode_doc,
-"_encode(code, iterable)\n\
+"encode(code, iterable)\n\
 \n\
-like the encode method without code checking");
+Given a prefix code (a dict mapping symbols to bitarrays),\n\
+iterate over the iterable object with symbols, and extend the bitarray\n\
+with the corresponding bitarray for each symbols.");
 
 
 /* Binary Tree definition */
@@ -2336,10 +2338,10 @@ error:
 }
 
 PyDoc_STRVAR(decode_doc,
-"_decode(codedict) -> list\n\
+"decode(code) -> list\n\
 \n\
-Given a code dictionary, decode the content of the bitarray and return\n\
-the list of symbols.");
+Given a prefix code (a dict mapping symbols to bitarrays),\n\
+decode the content of the bitarray and return it as a list of symbols.");
 
 /*********************** (Bitarray) Decode Iterator *********************/
 
@@ -2385,10 +2387,11 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *codedict)
 }
 
 PyDoc_STRVAR(iterdecode_doc,
-"_iterdecode(codedict) -> iterator\n\
+"iterdecode(code) -> iterator\n\
 \n\
-Given a code dictionary, decode the content of the bitarray and iterate\n\
-over the represented symbols.");
+Given a prefix code (a dict mapping symbols to bitarrays),\n\
+decode the content of the bitarray and return an iterator over\n\
+the symbols.");
 
 static PyObject *
 decodeiter_next(decodeiterobject *it)
@@ -2589,11 +2592,11 @@ bitarray_methods[] = {
      copy_doc},
     {"count",        (PyCFunction) bitarray_count,       METH_VARARGS,
      count_doc},
-    {"_decode",      (PyCFunction) bitarray_decode,      METH_O,
+    {"decode",       (PyCFunction) bitarray_decode,      METH_O,
      decode_doc},
-    {"_iterdecode",  (PyCFunction) bitarray_iterdecode,  METH_O,
+    {"iterdecode",   (PyCFunction) bitarray_iterdecode,  METH_O,
      iterdecode_doc},
-    {"_encode",      (PyCFunction) bitarray_encode,      METH_VARARGS,
+    {"encode",       (PyCFunction) bitarray_encode,      METH_VARARGS,
      encode_doc},
     {"endian",       (PyCFunction) bitarray_endian,      METH_NOARGS,
      endian_doc},

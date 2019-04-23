@@ -60,28 +60,6 @@ bits (1..7) are set to 0.
 Deprecated since version 0.4.0, use ``tobytes()`` instead."""
         return self.tobytes().decode()
 
-    def decode(self, codedict):
-        """decode(code) -> list
-
-Given a prefix code (a dict mapping symbols to bitarrays),
-decode the content of the bitarray and return the list of symbols."""
-        return self._decode(codedict)
-
-    def iterdecode(self, codedict):
-        """iterdecode(code) -> iterator
-
-Given a prefix code (a dict mapping symbols to bitarrays),
-decode the content of the bitarray and iterate over the symbols."""
-        return self._iterdecode(codedict)
-
-    def encode(self, codedict, iterable):
-        """encode(code, iterable)
-
-Given a prefix code (a dict mapping symbols to bitarrays),
-iterate over the iterable object with symbols, and extend the bitarray
-with the corresponding bitarray for each symbols."""
-        self._encode(codedict, iterable)
-
     def __int__(self):
         raise TypeError("int() argument cannot be a bitarray")
 
