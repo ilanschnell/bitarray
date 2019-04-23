@@ -2182,8 +2182,11 @@ insert_symbol(binode *root, bitarrayobject *self, PyObject *symbol)
         k = GETBIT(self, i);
         prev = nd;
         nd = nd->child[k];
+
+        /* we cannot have already a symbol when branching to the new leaf */
         if (nd && nd->symbol)
             goto ambiguous;
+
         if (!nd) {
             nd = new_binode();
             if (nd == NULL)
@@ -2191,6 +2194,7 @@ insert_symbol(binode *root, bitarrayobject *self, PyObject *symbol)
             prev->child[k] = nd;
         }
     }
+    /* the new leaf node cannot already have a symbol or children */
     if (nd->symbol || nd->child[0] || nd->child[1])
         goto ambiguous;
 
