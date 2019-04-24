@@ -1,6 +1,6 @@
 /*
    Copyright (c) 2008 - 2019, Ilan Schnell
-   bitarray is published under the PDF license.
+   bitarray is published under the PSF license.
 
    This file is the C part of the bitarray package.
    All functionality is implemented here.
