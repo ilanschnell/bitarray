@@ -42,7 +42,7 @@ def traverse(tree, it):
 
 def write_dot(tree):
 
-    special_ascii = {' ': 'SPACE', '\n': 'LF', '\t': 'TAB'}
+    special_ascii = {' ': 'SPACE', '\n': 'LF', '\t': 'TAB', '"': r'\"'}
     def disp_char(c):
         res = special_ascii.get(c, c)
         assert res.strip(), repr(c)
@@ -54,7 +54,8 @@ def write_dot(tree):
                 fo.write('  %d  [label="%s"];\n' % (id(nd),
                                                     disp_char(nd.symbol)))
             else:
-                fo.write('  %d  [label=""];\n' % (id(nd),))
+                fo.write('  %d  [shape=circle, style=filled, '
+                         'fillcolor=grey, label=""];\n' % (id(nd),))
 
             if nd.child[0] and nd.child[1]:
                 for k in range(2):
@@ -65,8 +66,7 @@ def write_dot(tree):
                     write_nd(fo, nd.child[k])
 
         fo.write('digraph BT {\n')
-        fo.write('''node [shape=box, fontsize=20, fontname="Arial",
-                          fontcolor=red];\n''')
+        fo.write('node [shape=box, fontsize=20, fontname="Arial"];\n')
         write_nd(fo, tree)
         fo.write('}\n')
 
