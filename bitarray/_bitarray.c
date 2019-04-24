@@ -2173,7 +2173,7 @@ iterate over the iterable object with symbols, and extend the bitarray\n\
 with the corresponding bitarray for each symbols.");
 
 
-/* Binary Tree definition */
+/* Binary tree definition */
 typedef struct _bin_node
 {
     PyObject *symbol;
@@ -2269,7 +2269,7 @@ make_tree(PyObject *codedict)
   when the end of the bitarray has been reached).
 */
 static PyObject *
-tree_traverse(binode *tree, bitarrayobject *self, idx_t *indexp)
+traverse_tree(binode *tree, bitarrayobject *self, idx_t *indexp)
 {
     binode *nd = tree;
     int k;
@@ -2313,6 +2313,7 @@ bitarray_decode(bitarrayobject *self, PyObject *codedict)
         delete_binode_tree(tree);
         return NULL;
     }
+    /* traverse tree (just like above) */
     for (i = 0; i < self->nbits; i++) {
         k = GETBIT(self, i);
         nd = nd->child[k];
@@ -2402,7 +2403,7 @@ decodeiter_next(decodeiterobject *it)
     PyObject *symbol;
 
     assert(DecodeIter_Check(it));
-    symbol = tree_traverse(it->tree, it->bao, &(it->index));
+    symbol = traverse_tree(it->tree, it->bao, &(it->index));
     if (symbol == NULL)  /* stop iteration OR error occured */
         return NULL;
     Py_INCREF(symbol);
