@@ -2176,9 +2176,9 @@ class BufferInterfaceTests(unittest.TestCase):
         v = memoryview(a)
         self.assertEqual(len(v), 3)
         self.assertEqual(v[0], 65 if is_py3k else 'A')
-        self.assertEqual(v[:].tobytes(), b'ABC')
+        self.assertEqual(v[:].tobytes(), to_bytes('ABC'))
         a[13] = 1
-        self.assertEqual(v[:].tobytes(), b'AFC')
+        self.assertEqual(v[:].tobytes(), to_bytes('AFC'))
 
     def test_read2(self):
         a = bitarray([randint(0, 1) for d in range(8000)])
@@ -2197,8 +2197,8 @@ class BufferInterfaceTests(unittest.TestCase):
         self.assertEqual(a[399999:400009], bitarray('0111111110'))
         a[400003] = 0
         self.assertEqual(a[399999:400009], bitarray('0111011110'))
-        v[30001:30004] = b'ABC'
-        self.assertEqual(a[240000:240040].tobytes(), b'\x00ABC\x00')
+        v[30001:30004] = to_bytes('ABC')
+        self.assertEqual(a[240000:240040].tobytes(), to_bytes('\x00ABC\x00'))
 
 if sys.version_info[:2] >= (2, 7):
     tests.append(BufferInterfaceTests)
