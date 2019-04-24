@@ -40,9 +40,25 @@ for i in xrange(1000000):
 print sorted(sizes)
 
 
+/* walk the binary tree, and display information for each node */
+static void
+display_binode_tree(binode *tree)
+{
+    int k;
 
-If I should ever decide to use pre-calculated tables:
+    printf("id: %p child0: %14p child1: %14p symbol: %s\n",
+           tree,
+           tree->child[0],
+           tree->child[1],
+           tree->symbol ? PyString_AsString(tree->symbol) : "NULL");
 
+    for (k = 0; k < 2; k++)
+        if (tree->child[k])
+            display_binode_tree(tree->child[k]);
+}
+
+
+# If I should ever decide to use pre-calculated tables:
 static char bytereverse_trans[256] = {
     0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0,
     0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
