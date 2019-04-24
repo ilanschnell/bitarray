@@ -2176,8 +2176,8 @@ with the corresponding bitarray for each symbols.");
 /* Binary tree definition */
 typedef struct _bin_node
 {
-    PyObject *symbol;
     struct _bin_node *child[2];
+    PyObject *symbol;
 } binode;
 
 
