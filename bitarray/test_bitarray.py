@@ -1409,7 +1409,7 @@ class MethodTests(unittest.TestCase, Util):
     def test_search_type(self):
         a = bitarray('10011')
         it = a.itersearch(bitarray('1'))
-        self.assertIsInstance(type(it), type)
+        self.assertTrue(isinstance(type(it), type))
 
     def test_fill(self):
         a = bitarray('')
