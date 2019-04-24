@@ -1938,7 +1938,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
 
     def test_encode_list(self):
         a = bitarray()
-        d = {'a':bitarray('0')}
+        d = {'a': bitarray('0')}
         a.encode(d, [])
         self.assertEqual(a, bitarray())
         a.encode(d, ['a'])
