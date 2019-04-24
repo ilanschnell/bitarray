@@ -1,23 +1,58 @@
+from __future__ import print_function
 import time
+from pprint import pprint
 from bitarray import bitarray
 from huffman import freq_string, huffCode
 
 
-def insert(nd, ba, sym):
+CNT = 1
+
+class Node:
+    def __init__(self):
+        global CNT
+        self.symbol = None
+        self.child = [None, None]
+        self.id = CNT  # used in display_tree only
+        CNT += 1
+
+
+def insert(tree, ba, sym):
+    nd = tree
     for k in ba:
         prev = nd
-        nd = nd[k]
+        nd = nd.child[k]
+        if nd and nd.symbol:
+            print("ambiguity")
         if not nd:
-            nd = [[], []]
-            prev[k] = nd
-    nd[0] = sym
-    del nd[1]
+            nd = Node()
+            prev.child[k] = nd
+    if nd.symbol or nd.child[0] or nd.child[1]:
+        print("ambiguity")
+    nd.symbol = sym
 
 
-def traverse(nd, it):
-    while len(nd) == 2:
-        nd = nd[next(it)]
-    return nd[0]
+def traverse(tree, it):
+    nd = tree
+    while 1:
+        nd = nd.child[next(it)]
+        if not nd:
+            print("prefix code does not match data in bitarray")
+            return None
+        if nd.symbol is not None:
+            return nd.symbol
+    if nd != tree:
+        print("decoding not terminated")
+
+
+def display_tree(nd):
+    print("id: %3d child0: %3d child1: %3d symbol: %r" %
+          (nd.id,
+           nd.child[0].id if nd.child[0] else 0,
+           nd.child[1].id if nd.child[1] else 0,
+           nd.symbol))
+    for k in range(2):
+        if nd.child[k]:
+            display_tree(nd.child[k])
 
 
 def decode(codedict, bitsequence):
@@ -25,9 +60,10 @@ def decode(codedict, bitsequence):
     this function does the same thing as the bitarray decode method
     """
     # generate tree from codedict
-    tree = [[], []]
+    tree = Node()
     for sym, ba in codedict.items():
         insert(tree, ba, sym)
+    display_tree(tree)
 
     # actual decoding by traversing until StopIteration
     res = []
@@ -44,6 +80,7 @@ def decode(codedict, bitsequence):
 def main():
     txt = open('README').read()
     code = huffCode(freq_string(txt))
+    pprint(code)
 
     sample = 500 * txt
 
