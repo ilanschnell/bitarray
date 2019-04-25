@@ -2209,14 +2209,14 @@ delete_binode_tree(binode *tree)
 }
 
 static int
-insert_symbol(binode *tree, bitarrayobject *self, PyObject *symbol)
+insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
 {
     binode *nd = tree, *prev;
     Py_ssize_t i;
     int k;
 
-    for (i = 0; i < self->nbits; i++) {
-        k = GETBIT(self, i);
+    for (i = 0; i < ba->nbits; i++) {
+        k = GETBIT(ba, i);
         prev = nd;
         nd = nd->child[k];
 
@@ -2269,13 +2269,13 @@ make_tree(PyObject *codedict)
   when the end of the bitarray has been reached).
 */
 static PyObject *
-traverse_tree(binode *tree, bitarrayobject *self, idx_t *indexp)
+traverse_tree(binode *tree, bitarrayobject *ba, idx_t *indexp)
 {
     binode *nd = tree;
     int k;
 
-    while (*indexp < self->nbits) {
-        k = GETBIT(self, *indexp);
+    while (*indexp < ba->nbits) {
+        k = GETBIT(ba, *indexp);
         (*indexp)++;
         nd = nd->child[k];
         if (nd == NULL) {
