@@ -1,18 +1,10 @@
 from __future__ import print_function
 import time
-from pprint import pprint
 from bitarray import bitarray
-from huffman import freq_string, huffCode
+from huffman import freq_string, huffTree, huffCode, Node
 
 
-
-class Node:
-    def __init__(self):
-        self.child = [None, None]
-        self.symbol = None
-
-
-def insert(tree, ba, sym):
+def insert_symbol(tree, ba, sym):
     nd = tree
     for k in ba:
         prev = nd
@@ -25,6 +17,14 @@ def insert(tree, ba, sym):
     if nd.symbol or nd.child[0] or nd.child[1]:
         print("ambiguity")
     nd.symbol = sym
+
+
+def make_tree(codedict):
+    # generate tree from codedict
+    tree = Node()
+    for sym, ba in codedict.items():
+        insert_symbol(tree, ba, sym)
+    return tree
 
 
 def traverse(tree, it):
@@ -40,47 +40,7 @@ def traverse(tree, it):
         print("decoding not terminated")
 
 
-def write_dot(tree):
-
-    special_ascii = {' ': 'SPACE', '\n': 'LF', '\t': 'TAB', '"': r'\"'}
-    def disp_char(c):
-        res = special_ascii.get(c, c)
-        assert res.strip(), repr(c)
-        return res
-
-    with open('tree.dot', 'w') as fo:    # dot -Tpng tree.dot -O
-        def write_nd(fo, nd):
-            if nd.symbol:
-                fo.write('  %d  [label="%s"];\n' % (id(nd),
-                                                    disp_char(nd.symbol)))
-            else:
-                fo.write('  %d  [shape=circle, style=filled, '
-                         'fillcolor=grey, label=""];\n' % (id(nd),))
-
-            if nd.child[0] and nd.child[1]:
-                for k in range(2):
-                    fo.write('  %d->%d;\n' % (id(nd), id(nd.child[k])))
-
-            for k in range(2):
-                if nd.child[k]:
-                    write_nd(fo, nd.child[k])
-
-        fo.write('digraph BT {\n')
-        fo.write('node [shape=box, fontsize=20, fontname="Arial"];\n')
-        write_nd(fo, tree)
-        fo.write('}\n')
-
-
-def decode(codedict, bitsequence):
-    """
-    this function does the same thing as the bitarray decode method
-    """
-    # generate tree from codedict
-    tree = Node()
-    for sym, ba in codedict.items():
-        insert(tree, ba, sym)
-    write_dot(tree)
-
+def decode(tree, bitsequence):
     # actual decoding by traversing until StopIteration
     res = []
     it = iter(bitsequence)
@@ -93,10 +53,49 @@ def decode(codedict, bitsequence):
     return res
 
 
+def write_dot(tree, fn):
+    special_ascii = {' ': 'SPACE', '\n': 'LF', '\t': 'TAB', '"': r'\"'}
+    def disp_char(c):
+        res = special_ascii.get(c, c)
+        assert res.strip(), repr(c)
+        return res
+
+    def disp_freq(f):
+        if f is None:
+            return ''
+        return '%d' % f
+
+    with open(fn, 'w') as fo:    # dot -Tpng tree.dot -O
+        def write_nd(fo, nd):
+            if nd.symbol: # leaf node
+                a, b = disp_freq(nd.freq), disp_char(nd.symbol)
+                fo.write('  %d  [label="%s%s%s"];\n' %
+                         (id(nd), a, ': ' if a and b else '', b))
+            else: # parent node
+                fo.write('  %d  [shape=circle, style=filled, '
+                         'fillcolor=grey, label="%s"];\n' %
+                         (id(nd), disp_freq(nd.freq)))
+
+            if nd.child[0] and nd.child[1]:
+                for k in range(2):
+                    fo.write('  %d->%d;\n' % (id(nd), id(nd.child[k])))
+
+            for k in range(2):
+                if nd.child[k]:
+                    write_nd(fo, nd.child[k])
+
+        fo.write('digraph BT {\n')
+        fo.write('  node [shape=box, fontsize=20, fontname="Arial"];\n')
+        write_nd(fo, tree)
+        fo.write('}\n')
+
+
 def main():
     txt = open('README').read()
-    code = huffCode(freq_string(txt))
-    #pprint(code)
+    tree = huffTree(freq_string(txt))
+    write_dot(tree, 'tree1.dot')
+    code = huffCode(tree)
+    write_dot(make_tree(code), 'tree2.dot')
 
     sample = 100 * txt
 
@@ -105,7 +104,7 @@ def main():
 
     # Time the decode function above
     start_time = time.time()
-    res = decode(code, a)
+    res = decode(tree, a)
     Py_time = time.time() - start_time
     assert ''.join(res) == sample
     print('Py_time: %.6f sec' % Py_time)

@@ -15,36 +15,54 @@ from bitarray import bitarray
 is_py3k = bool(sys.version_info[0] == 3)
 
 
-def huffCode(freq):
+class Node:
+    def __init__(self):
+        self.child = [None, None]
+        self.symbol = None
+        self.freq = None
+
+    def __lt__(self, other):
+        return self.freq < other.freq
+
+
+def huffTree(freq):
     """
-    Given a dictionary mapping symbols to thier frequency,
-    return the Huffman code in the form of
-    a dictionary mapping the symbols to bitarrays.
+    Given a dictionary mapping symbols to thier frequency, construct a Huffman
+    tree and return its root node.
     """
     minheap = []
-    for i, c in enumerate(sorted(freq)):
-        # having the exact same frequency for different symbols causes
-        # problems with heapq in Python 3, so we simply add a small float
-        heapq.heappush(minheap, (freq[c] + 1E-3 * i, c))
+    for c in sorted(freq):
+        nd = Node()
+        nd.symbol = c
+        nd.freq = freq[c]
+        heapq.heappush(minheap, nd)
 
     while len(minheap) > 1:
         childR = heapq.heappop(minheap)
         childL = heapq.heappop(minheap)
-        parent = (childL[0] + childR[0], childL, childR)
+        parent = Node()
+        parent.child[0] = childL
+        parent.child[1] = childR
+        parent.freq = childL.freq + childR.freq
         heapq.heappush(minheap, parent)
 
-    # minheap[0] is now the root node of the Huffman tree
-    # now traverse the tree to create the Huffman codes
+    return minheap[0]
+
+
+def huffCode(tree):
+    """
+    Given a Huffman tree, traverse the tree and return the Huffman code.
+    """
     result = {}
 
-    def traverse(tree, prefix=bitarray()):
-        if len(tree) == 2:  # leave
-            result[tree[1]] = prefix
-        else: # parent, so traverse each of the children
+    def traverse(nd, prefix=bitarray()):
+        if nd.symbol is None: # parent, so traverse each of the children
             for i in range(2):
-                traverse(tree[i+1], prefix + bitarray([i]))
+                traverse(nd.child[i], prefix + bitarray([i]))
+        else: # leaf
+            result[nd.symbol] = prefix
 
-    traverse(minheap[0])
+    traverse(tree)
     return result
 
 
@@ -71,7 +89,7 @@ def disp_char(i):
 
 def print_code(filename):
     freq = freq_string(read_file(filename))
-    code = huffCode(freq)
+    code = huffCode(huffTree(freq))
     print(' symbol     char    hex   frequency     Huffman code')
     print(70 * '-')
     for c in sorted(code, key=lambda c: (freq[c], c), reverse=True):
@@ -83,7 +101,7 @@ def print_code(filename):
 
 def encode(filename):
     s = read_file(filename)
-    code = huffCode(freq_string(s))
+    code = huffCode(huffTree(freq_string(s)))
     with open(filename + '.huff', 'wb') as fo:
         for c in sorted(code):
             fo.write(('%02x %s\n' % (c if is_py3k else ord(c),
