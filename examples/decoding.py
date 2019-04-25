@@ -76,8 +76,8 @@ def write_dot(tree, fn):
                          'fillcolor=grey, label="%s"];\n' %
                          (id(nd), disp_freq(nd.freq)))
 
-            if nd.child[0] and nd.child[1]:
-                for k in range(2):
+            for k in range(2):
+                if nd.child[k]:
                     fo.write('  %d->%d;\n' % (id(nd), id(nd.child[k])))
 
             for k in range(2):
