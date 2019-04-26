@@ -9,15 +9,12 @@ from huffman import (freq_string, huffTree, huffCode, write_dot,
 def main():
     txt = open('README').read()
     tree = huffTree(freq_string(txt))
-    write_dot(tree, 'tree1.dot')
+    write_dot(tree, 'tree.dot')
     code = huffCode(tree)
-    write_dot(make_tree(code), 'tree2.dot')
+    # create tree from code (no frequencies)
+    write_dot(make_tree(code), 'tree_raw.dot')
 
     sample = 100 * txt
-
-    a = bitarray()
-    a.encode(code, 'Hooray')
-    print(a)
 
     a = bitarray()
     a.encode(code, sample)

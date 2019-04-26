@@ -95,6 +95,7 @@ def insert_symbol(tree, ba, sym):
 def make_tree(codedict):
     """
     Create a tree from the given code dictionary, and return its root node.
+    Unlike trees created by huffTree, all nodes will have .freq set to None.
     """
     tree = Node()
     for sym, ba in codedict.items():
@@ -105,12 +106,12 @@ def make_tree(codedict):
 def traverse(tree, it):
     """
     Traverse tree until a leaf node is reached, and return its symbol.
-    This function takes an iterator whose .next() method is called during
-    each step of traversing.
+    This function takes an iterator on which next() is called during each
+    step of traversing.
     """
     nd = tree
     while 1:
-        nd = nd.child[it.next()]
+        nd = nd.child[next(it)]
         if not nd:
             raise ValueError("prefix code does not match data in bitarray")
             return None
@@ -145,7 +146,7 @@ def write_dot(tree, fn, binary=False):
     special_ascii = {' ': 'SPACE', '\n': 'LF', '\r': 'CR', '\t': 'TAB',
                      '\\': r'\\', '"': r'\"'}
     def disp_char(c):
-        if is_py3k:
+        if is_py3k and isinstance(c, int):
             c = chr(c)
         if binary:
             return 'x%02x' % ord(c)
