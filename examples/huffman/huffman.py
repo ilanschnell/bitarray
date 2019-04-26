@@ -11,7 +11,7 @@ from bitarray import bitarray
 is_py3k = bool(sys.version_info[0] == 3)
 
 
-class Node:
+class Node(object):
     def __init__(self):
         self.child = [None, None]
         self.symbol = None
