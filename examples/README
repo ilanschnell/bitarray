@@ -20,11 +20,9 @@ gene.py:
     represented by bitarrays.
 
 
-huffman.py
-    Demonstrates building a Huffman tree.  Given an input file,
-    calculates the number of occurrences for each character;
-    from those frequencies, a Huffman tree is build.
-    Also allows encoding and decoding of a file, see -h option.
+huffman
+    Directory containing a library and examples for working with Huffman
+    trees and codes.
 
 
 mandel.py

@@ -1,0 +1,11 @@
+compress.py:
+    Demonstrates how Huffman codes can be used to efficiently
+    compress and uncompress files (text or binary).
+    Given an input file, calculates the number of occurrences for each
+    character; from those frequencies, a Huffman tree is build.
+    Also allows encoding and decoding of a file, see -h option.
+
+
+huffman.py:
+    Library containing useful functionality for working with Huffman trees
+    and codes.
