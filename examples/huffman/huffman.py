@@ -15,6 +15,7 @@ class Node(object):
     def __init__(self):
         self.child = [None, None]
         self.symbol = None
+        self.freq = None
 
     def __lt__(self, other):
         # heapq needs to be able to compare the nodes
