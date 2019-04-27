@@ -4,7 +4,7 @@ and codes.
 """
 from __future__ import print_function
 import sys
-import heapq
+from heapq import heappush, heappop
 from collections import defaultdict
 from bitarray import bitarray
 
@@ -15,9 +15,9 @@ class Node(object):
     def __init__(self):
         self.child = [None, None]
         self.symbol = None
-        self.freq = None
 
     def __lt__(self, other):
+        # heapq needs to be able to compare the nodes
         return self.freq < other.freq
 
 
@@ -27,21 +27,25 @@ def huffTree(freq):
     tree and return its root node.
     """
     minheap = []
+    # create all the leaf nodes and push them onto the queue
     for c in sorted(freq):
         nd = Node()
         nd.symbol = c
         nd.freq = freq[c]
-        heapq.heappush(minheap, nd)
+        heappush(minheap, nd)
 
+    # repeat the process until only one node remains
     while len(minheap) > 1:
-        childR = heapq.heappop(minheap)
-        childL = heapq.heappop(minheap)
+        # take the nodes with smallest frequencies from the queue
+        childR = heappop(minheap)
+        childL = heappop(minheap)
+        # construct the new internal node and push it onto the queue
         parent = Node()
-        parent.child[0] = childL
-        parent.child[1] = childR
+        parent.child = [childL, childR]
         parent.freq = childL.freq + childR.freq
-        heapq.heappush(minheap, parent)
+        heappush(minheap, parent)
 
+    # return the one remaining node, which is the root of the Huffman tree
     return minheap[0]
 
 
