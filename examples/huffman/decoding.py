@@ -11,9 +11,12 @@ def main():
 
     t0 = time()
     freq = Counter(txt)
-    print('count time: %.6f sec' % (time() - t0))
+    print('count:     %9.6f sec' % (time() - t0))
 
+    t0 = time()
     tree = huffTree(freq)
+    print('tree:      %9.6f sec' % (time() - t0))
+
     write_dot(tree, 'tree.dot')
     code = huffCode(tree)
     # create tree from code (no frequencies)
@@ -27,14 +30,14 @@ def main():
     res = decode(tree, a)
     Py_time = time() - t0
     assert ''.join(res) == txt
-    print('Py_time: %.6f sec' % Py_time)
+    print('Py decode: %9.6f sec' % Py_time)
 
     # Time the decode method which is implemented in C
     t0 = time()
     res = a.decode(code)
     assert ''.join(res) == txt
     C_time = time() - t0
-    print('C_time: %.6f sec' % C_time)
+    print('C decode:  %9.6f sec' % C_time)
 
     print('Ratio: %f' % (Py_time / C_time))
 
