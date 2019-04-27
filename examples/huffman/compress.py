@@ -4,10 +4,10 @@ compress and uncompress files (text or binary).
 """
 import os
 from optparse import OptionParser
+from collections import Counter
 from bitarray import bitarray
 
-from huffman import (is_py3k, huffCode, huffTree, freq_string,
-                     print_code, write_dot)
+from huffman import is_py3k, huffCode, huffTree, print_code, write_dot
 
 
 def is_binary(s):
@@ -19,7 +19,7 @@ def analyze(filename, printCode=False, writeDot=False):
     with open(filename, 'rb') as fi:
         s = fi.read()
 
-    freq = freq_string(s)
+    freq = Counter(s)
     tree = huffTree(freq)
     if writeDot:
         write_dot(tree, 'tree.dot', is_binary(s))
@@ -32,7 +32,7 @@ def encode(filename):
     with open(filename, 'rb') as fi:
         s = fi.read()
 
-    code = huffCode(huffTree(freq_string(s)))
+    code = huffCode(huffTree(Counter(s)))
     with open(filename + '.huff', 'wb') as fo:
         for c in sorted(code):
             fo.write(('%02x %s\n' % (c if is_py3k else ord(c),

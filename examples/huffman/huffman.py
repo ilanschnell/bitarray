@@ -5,7 +5,6 @@ and codes.
 from __future__ import print_function
 import sys
 from heapq import heappush, heappop
-from collections import defaultdict
 from bitarray import bitarray
 
 is_py3k = bool(sys.version_info[0] == 3)
@@ -66,16 +65,6 @@ def huffCode(tree):
 
     traverse(tree)
     return result
-
-
-def freq_string(s):
-    """
-    Given a string, return a dict mapping characters to thier frequency.
-    """
-    res = defaultdict(int)
-    for c in s:
-        res[c] += 1
-    return res
 
 
 def insert_symbol(tree, ba, sym):
@@ -217,9 +206,6 @@ def test():
     code = huffCode(tree)
     assert len(code['a']) == 1
     assert len(code['b']) == len(code['c']) == 2
-
-    d = freq_string('aabcbbbccca')
-    assert d['a'] == 3
 
     code = {'a': bitarray('0'),
             'b': bitarray('10'),

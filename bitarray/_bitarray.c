@@ -2191,9 +2191,9 @@ new_binode(void)
         PyErr_NoMemory();
         return NULL;
     }
-    nd->symbol = NULL;
     nd->child[0] = NULL;
     nd->child[1] = NULL;
+    nd->symbol = NULL;
     return nd;
 }
 
