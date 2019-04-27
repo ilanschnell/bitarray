@@ -2264,7 +2264,7 @@ make_tree(PyObject *codedict)
 }
 
 /*
-  Traverse tree using the branches corresponding to the bitarray self,
+  Traverse tree using the branches corresponding to the bitarray `ba`,
   starting at *indexp, and return the symbol at the leaf node (or NULL
   when the end of the bitarray has been reached).
 */
