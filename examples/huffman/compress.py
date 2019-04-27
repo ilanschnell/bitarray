@@ -42,6 +42,7 @@ def encode(filename):
         # write unused bits
         fo.write(b'unused %s\n' % str(a.buffer_info()[3]).encode())
         a.tofile(fo)
+    print('%d / %d' % (len(a), 8 * len(s)))
     print('Ratio =%6.2f%%' % (100.0 * a.buffer_info()[1] / len(s)))
 
 
