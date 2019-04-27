@@ -23,7 +23,10 @@ def main():
     write_dot(make_tree(code), 'tree_raw.dot')
 
     a = bitarray()
+
+    t0 = time()
     a.encode(code, txt)
+    print('C encode:  %9.6f sec' % (time() - t0))
 
     # Time the decode function above
     t0 = time()
