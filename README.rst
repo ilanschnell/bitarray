@@ -50,8 +50,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-0.9.0.tar.gz
-   $ cd bitarray-0.9.0
+   $ tar xzf bitarray-0.9.1.tar.gz
+   $ cd bitarray-0.9.1
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -62,12 +62,12 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-   bitarray version: 0.9.0
+   bitarray version: 0.9.1
    2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
-   ...........................................
+   .................................................
    ----------------------------------------------------------------------
-   Ran 134 tests in 1.396s
+   Ran 140 tests in 2.164s
    
    OK
 
@@ -368,7 +368,7 @@ Reference
 
 ``decode(code)`` -> list
    Given a prefix code (a dict mapping symbols to bitarrays),
-   decode the content of the bitarray and return the list of symbols.
+   decode the content of the bitarray and return it as a list of symbols.
 
 
 ``encode(code, iterable)``
@@ -423,7 +423,8 @@ Reference
 
 ``iterdecode(code)`` -> iterator
    Given a prefix code (a dict mapping symbols to bitarrays),
-   decode the content of the bitarray and iterate over the symbols.
+   decode the content of the bitarray and return an iterator over
+   the symbols.
 
 
 ``itersearch(bitarray)`` -> iterator
@@ -537,6 +538,17 @@ Reference
 Change log
 ----------
 
+**0.9.1** (2019-04-28):
+
+  * fix types to actually be types, #29
+  * check for ambiguous prefix codes when building binary tree for decoding
+  * remove Python level methods: encode, decode, iterdecode (in favor of
+    having these implemented on the C-level along with check_codedict)
+  * fix self tests for Python 2.5 and 2.6
+  * move all Huffman code related example code into examples/huffman
+  * add code to generate graphviz .dot file of Huffman tree to examples
+
+
 **0.9.0** (2019-04-22):
 
   * more efficient decode and iterdecode by using C-level binary tree
@@ -552,15 +564,6 @@ Change log
 **0.8.3** (2018-07-06):
 
   * add exception to setup.py when README.rst cannot be opened
-
-
-**0.8.2** (2018-05-30):
-
-  * add official Python 3.6 support (although it was already working)
-  * fix description of fill(), #52
-  * handle extending self correctly, #28
-  * copy_n: fast copy with memmove fixed, #43
-  * minor clarity/wording changes to README, #23
 
 
 Please find the complete change log
