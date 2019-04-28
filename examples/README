@@ -8,13 +8,6 @@ compress.py:
     object which represents a bitarray.
 
 
-decoding.py
-    Bitarray's decode method is implemented in C.  Since the C code
-    might be hard to read, we have implemented exactly the same
-    algorithm in Python.  It is at least 20 times slower than its
-    C counterpart.
-
-
 gene.py:
     shows how gene sequences (ATGC) can be very easily and efficiently
     represented by bitarrays.
