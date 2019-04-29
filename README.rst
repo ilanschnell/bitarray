@@ -50,8 +50,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-0.9.1.tar.gz
-   $ cd bitarray-0.9.1
+   $ tar xzf bitarray-0.9.2.tar.gz
+   $ cd bitarray-0.9.2
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -62,7 +62,7 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-   bitarray version: 0.9.1
+   bitarray version: 0.9.2
    2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
    .................................................
@@ -538,6 +538,11 @@ Reference
 Change log
 ----------
 
+**0.9.2** (2019-04-29):
+
+  * fix fail to compile on Windows with VS 2015, issue #72
+
+
 **0.9.1** (2019-04-28):
 
   * fix types to actually be types, #29
@@ -559,11 +564,6 @@ Change log
   * add gene sequence example
   * add official Python 3.7 support
   * drop Python 2.4, 3.1 and 3.2 support
-
-
-**0.8.3** (2018-07-06):
-
-  * add exception to setup.py when README.rst cannot be opened
 
 
 Please find the complete change log
