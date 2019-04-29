@@ -2428,7 +2428,7 @@ decodeiter_traverse(decodeiterobject *it, visitproc visit, void *arg)
 
 static PyTypeObject DecodeIter_Type = {
 #ifdef IS_PY3K
-    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
@@ -2543,7 +2543,7 @@ searchiter_traverse(searchiterobject *it, visitproc visit, void *arg)
 
 static PyTypeObject SearchIter_Type = {
 #ifdef IS_PY3K
-    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
@@ -2907,7 +2907,7 @@ bitarrayiter_traverse(bitarrayiterobject *it, visitproc visit, void *arg)
 
 static PyTypeObject BitarrayIter_Type = {
 #ifdef IS_PY3K
-    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
@@ -3034,7 +3034,7 @@ static PyBufferProcs bitarray_as_buffer = {
 
 static PyTypeObject Bitarraytype = {
 #ifdef IS_PY3K
-    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+    PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
