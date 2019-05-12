@@ -1,3 +1,8 @@
+2019-XX-XX   0.9.3:
+-------------------
+  * improve error message when trying to initialize from float or complex
+
+
 2019-04-29   0.9.2:
 -------------------
   * fix fail to compile on Windows with VS 2015, issue #72
