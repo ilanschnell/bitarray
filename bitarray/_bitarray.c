@@ -2770,15 +2770,15 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         }
     }
 
-    if (PyFloat_Check(initial)) {
-        PyErr_SetString(PyExc_TypeError, "cannot create bitarray from float");
-        return NULL;
+#define CHECK_TYPE(type)  \
+    if (Py ## type ## _Check(initial)) {                                  \
+        PyErr_SetString(PyExc_TypeError,                                  \
+                        "cannot create bitarray from " #type " object");  \
+        return NULL;                                                      \
     }
-    if (PyComplex_Check(initial)) {
-        PyErr_SetString(PyExc_TypeError,
-                        "cannot create bitarray from complex number");
-        return NULL;
-    }
+CHECK_TYPE(Float)
+CHECK_TYPE(Complex)
+#undef CHECK
 
     /* leave remaining type dispatch to the extend method */
     a = newbitarrayobject(type, 0, endian);
