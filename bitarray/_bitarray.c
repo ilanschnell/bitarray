@@ -51,6 +51,7 @@ typedef long long int idx_t;
 /* throughout:  0 = little endian   1 = big endian */
 #define DEFAULT_ENDIAN  1
 
+/* Note that ob_size is the byte count, not the number of elements */
 typedef struct {
     PyObject_VAR_HEAD
 #ifdef WITH_BUFFER
@@ -58,7 +59,7 @@ typedef struct {
 #endif
     char *ob_item;
     Py_ssize_t allocated;       /* how many bytes allocated */
-    idx_t nbits;                /* length og bitarray */
+    idx_t nbits;                /* length of bitarray */
     int endian;                 /* bit endianness of bitarray */
     PyObject *weakreflist;      /* list of weak references */
 } bitarrayobject;
@@ -125,10 +126,8 @@ resize(bitarrayobject *self, idx_t nbits)
        to accommodate the newsize.  If the newsize is 16 smaller than the
        current size, then proceed with the realloc() to shrink the list.
     */
-    if (self->allocated >= newsize &&
-        Py_SIZE(self) < newsize + 16 &&
-        self->ob_item != NULL)
-    {
+    if (self->allocated >= newsize && Py_SIZE(self) < newsize + 16) {
+        assert(self->ob_item != NULL || newsize == 0);
         Py_SIZE(self) = newsize;
         self->nbits = nbits;
         return 0;
