@@ -562,10 +562,8 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
     if (other->nbits == 0)
         return 0;
 
-    /*
-        Note: other may be self. Thus we take the size before we resize,
-        ensuring we only copy the right parts of the array.
-    */
+    /* Note that other may be self.  Thus we take the size before we resize,
+       ensuring we only copy the right parts of the array. */
     n_other_bits = other->nbits;
     n_sum = self->nbits + other->nbits;
 
