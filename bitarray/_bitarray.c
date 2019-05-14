@@ -115,48 +115,46 @@ static int
 resize(bitarrayobject *self, idx_t nbits)
 {
     Py_ssize_t newsize;
-    size_t _new_size;       /* for allocation */
+    size_t new_allocated;
+    Py_ssize_t allocated = self->allocated;
 
     if (check_overflow(nbits) < 0)
         return -1;
-
     newsize = (Py_ssize_t) BYTES(nbits);
 
     /* Bypass realloc() when a previous overallocation is large enough
-       to accommodate the newsize.  If the newsize is 16 smaller than the
-       current size, then proceed with the realloc() to shrink the list.
+       to accommodate the newsize.  If the newsize falls lower than half
+       the allocated size, then proceed with the realloc() to shrink.
     */
-    if (self->allocated >= newsize && Py_SIZE(self) < newsize + 16) {
+    if (allocated >= newsize && newsize >= (allocated >> 1)) {
         assert(self->ob_item != NULL || newsize == 0);
         Py_SIZE(self) = newsize;
         self->nbits = nbits;
         return 0;
     }
 
-    if (newsize >= Py_SIZE(self) + 65536)
-        /* Don't overallocate when the size increase is very large. */
-        _new_size = newsize;
-    else
-        /* This over-allocates proportional to the bitarray size, making
-           room for additional growth.  The over-allocation is mild, but is
-           enough to give linear-time amortized behavior over a long
-           sequence of appends() in the presence of a poorly-performing
-           system realloc().
+    new_allocated = (size_t) newsize;
+    if (newsize < Py_SIZE(self) + 65536)
+        /* Over-allocate unless the size increase is very large.
+           This over-allocates proportional to the bitarray size, making
+           room for additional growth.
            The growth pattern is:  0, 4, 8, 16, 25, 34, 44, 54, 65, 77, ...
            Note, the pattern starts out the same as for lists but then
            grows at a smaller rate so that larger bitarrays only overallocate
            by about 1/16th -- this is done because bitarrays are assumed
            to be memory critical.
         */
-        _new_size = (newsize >> 4) + (Py_SIZE(self) < 8 ? 3 : 7) + newsize;
+        new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
 
-    self->ob_item = PyMem_Realloc(self->ob_item, _new_size);
+    if (newsize == 0)
+        new_allocated = 0;
+    self->ob_item = PyMem_Realloc(self->ob_item, new_allocated);
     if (self->ob_item == NULL) {
         PyErr_NoMemory();
         return -1;
     }
     Py_SIZE(self) = newsize;
-    self->allocated = _new_size;
+    self->allocated = new_allocated;
     self->nbits = nbits;
     return 0;
 }
