@@ -2181,7 +2181,7 @@ new_binode(void)
 {
     binode *nd;
 
-    nd = PyMem_Malloc(sizeof *nd);
+    nd = PyMem_Malloc(sizeof(binode));
     if (nd == NULL) {
         PyErr_NoMemory();
         return NULL;
