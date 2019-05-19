@@ -59,7 +59,7 @@ typedef struct {
 #endif
     char *ob_item;
     Py_ssize_t allocated;       /* how many bytes allocated */
-    idx_t nbits;                /* length of bitarray */
+    idx_t nbits;                /* length of bitarray, i.e. elements */
     int endian;                 /* bit endianness of bitarray */
     PyObject *weakreflist;      /* list of weak references */
 } bitarrayobject;
