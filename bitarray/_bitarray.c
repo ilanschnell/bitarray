@@ -2773,7 +2773,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     }
 CHECK_TYPE(Float)
 CHECK_TYPE(Complex)
-#undef CHECK
+#undef CHECK_TYPE
 
     /* leave remaining type dispatch to the extend method */
     a = newbitarrayobject(type, 0, endian);
