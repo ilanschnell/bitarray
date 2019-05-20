@@ -1841,6 +1841,7 @@ class FileTests(unittest.TestCase, Util):
 
         b = bitarray()
         f = open(self.tmpfname, 'rb')
+        b.fromfile(f, 0);     self.assertEqual(b.tostring(), '')
         b.fromfile(f, 1);     self.assertEqual(b.tostring(), 'A')
         f.read(1)
         b = bitarray()
