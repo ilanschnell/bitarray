@@ -51,7 +51,10 @@ typedef long long int idx_t;
 /* throughout:  0 = little endian   1 = big endian */
 #define DEFAULT_ENDIAN  1
 
-/* Note that ob_size is the byte count, not the number of elements */
+/* Unlike the normal convention, ob_size is the byte count, not the number
+   of elements.  The reason for doing this is that we can use our own
+   special idx_t for the number of bits (which can exceed 2^32 on a 32 bit
+   machine.  */
 typedef struct {
     PyObject_VAR_HEAD
 #ifdef WITH_BUFFER
