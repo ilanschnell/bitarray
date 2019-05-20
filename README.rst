@@ -50,8 +50,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-0.9.2.tar.gz
-   $ cd bitarray-0.9.2
+   $ tar xzf bitarray-0.9.3.tar.gz
+   $ cd bitarray-0.9.3
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -62,7 +62,7 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-   bitarray version: 0.9.2
+   bitarray version: 0.9.3
    2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
    .................................................
@@ -538,6 +538,13 @@ Reference
 Change log
 ----------
 
+**0.9.3** (2019-05-20):
+
+  * refactor resize() - only shrink allocated memory if new size falls
+    lower than half the allocated size
+  * improve error message when trying to initialize from float or complex
+
+
 **0.9.2** (2019-04-29):
 
   * fix fail to compile on Windows with VS 2015, issue #72
@@ -552,18 +559,6 @@ Change log
   * fix self tests for Python 2.5 and 2.6
   * move all Huffman code related example code into examples/huffman
   * add code to generate graphviz .dot file of Huffman tree to examples
-
-
-**0.9.0** (2019-04-22):
-
-  * more efficient decode and iterdecode by using C-level binary tree
-    instead of a python one, #54
-  * added buffer protocol support for Python 3, #55
-  * fixed invalid pointer exceptions in pypy, #47
-  * made all examples Py3k compatible
-  * add gene sequence example
-  * add official Python 3.7 support
-  * drop Python 2.4, 3.1 and 3.2 support
 
 
 Please find the complete change log
