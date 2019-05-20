@@ -181,7 +181,7 @@ newbitarrayobject(PyTypeObject *type, idx_t nbits, int endian)
         obj->ob_item = NULL;
     }
     else {
-        obj->ob_item = PyMem_Malloc((size_t) nbytes);
+        obj->ob_item = (char *) PyMem_Malloc((size_t) nbytes);
         if (obj->ob_item == NULL) {
             PyObject_Del(obj);
             PyErr_NoMemory();
@@ -540,7 +540,7 @@ unpack(bitarrayobject *self, char zero, char one)
         PyErr_SetString(PyExc_OverflowError, "bitarray too large to unpack");
         return NULL;
     }
-    str = PyMem_Malloc((size_t) self->nbits);
+    str = (char *) PyMem_Malloc((size_t) self->nbits);
     if (str == NULL) {
         PyErr_NoMemory();
         return NULL;
@@ -1182,7 +1182,7 @@ bitarray_reduce(bitarrayobject *self)
     }
     /* the first byte indicates the number of unused bits at the end, and
        the rest of the bytes consist of the raw binary data */
-    str = PyMem_Malloc(Py_SIZE(self) + 1);
+    str = (char *) PyMem_Malloc(Py_SIZE(self) + 1);
     if (str == NULL) {
         PyErr_NoMemory();
         goto error;
@@ -2181,7 +2181,7 @@ new_binode(void)
 {
     binode *nd;
 
-    nd = PyMem_Malloc(sizeof(binode));
+    nd = (binode *) PyMem_Malloc(sizeof(binode));
     if (nd == NULL) {
         PyErr_NoMemory();
         return NULL;
