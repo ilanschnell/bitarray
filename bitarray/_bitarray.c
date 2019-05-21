@@ -1348,9 +1348,9 @@ Sort the bits in the array (in-place).");
    of this function, we choose to have two separate function implementation,
    even though this means some of the code is duplicated in the two versions
 */
+#ifdef IS_PY3K
 static PyObject *
 bitarray_fromfile(bitarrayobject *self, PyObject *args)
-#ifdef IS_PY3K
 {
     PyObject *f;
     Py_ssize_t newsize, nbytes = -1;
@@ -1417,6 +1417,8 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 #else  /* Python 2 */
+static PyObject *
+bitarray_fromfile(bitarrayobject *self, PyObject *args)
 {
     PyObject *f;
     FILE *fp;
@@ -1485,6 +1487,9 @@ interpreted as machine values.  When n is omitted, as many bytes are\n\
 read until EOF is reached.");
 
 
+/* since too many details differ between the Python 2 and 3 implementation
+   of this function, we choose to have two separate function implementation
+*/
 #ifdef IS_PY3K
 static PyObject *
 bitarray_tofile(bitarrayobject *self, PyObject *f)
@@ -1522,7 +1527,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
     Py_DECREF(result);
     Py_RETURN_NONE;
 }
-#else
+#else  /* Python 2 */
 static PyObject *
 bitarray_tofile(bitarrayobject *self, PyObject *f)
 {
