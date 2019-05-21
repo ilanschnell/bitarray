@@ -1344,9 +1344,13 @@ PyDoc_STRVAR(sort_doc,
 Sort the bits in the array (in-place).");
 
 
-#ifdef IS_PY3K
+/* since too many details differ between the Python 2 and 3 implementation
+   of this function, we choose to have two separate function implementation,
+   even though this means some of the code is duplicated in the two versions
+*/
 static PyObject *
 bitarray_fromfile(bitarrayobject *self, PyObject *args)
+#ifdef IS_PY3K
 {
     PyObject *f;
     Py_ssize_t newsize, nbytes = -1;
@@ -1382,7 +1386,6 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
             Py_DECREF(reader);
             return NULL;
         }
-
         nread = PyBytes_Size(result);
 
         t = self->nbits;
@@ -1397,7 +1400,6 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
             Py_DECREF(reader);
             return NULL;
         }
-
         memcpy(self->ob_item + (Py_SIZE(self) - nread),
                PyBytes_AS_STRING(result), nread);
 
@@ -1412,12 +1414,9 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
 
     Py_DECREF(rargs);
     Py_DECREF(reader);
-
     Py_RETURN_NONE;
 }
-#else
-static PyObject *
-bitarray_fromfile(bitarrayobject *self, PyObject *args)
+#else  /* Python 2 */
 {
     PyObject *f;
     FILE *fp;
