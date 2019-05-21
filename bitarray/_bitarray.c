@@ -1598,6 +1598,12 @@ bitarray_frombytes(bitarrayobject *self, PyObject *string)
         PyErr_SetString(PyExc_TypeError, "byte string expected");
         return NULL;
     }
+
+    /* Before we extend the raw bytes with the new data, we need store
+       the current size and pad the last byte, as our bitarray size might
+       not be a multiple of 8.  After extending, we remove the padding
+       bits again.  The same is done in bitarray_fromfile().
+    */
     t = self->nbits;
     p = setunused(self);
     self->nbits += p;
