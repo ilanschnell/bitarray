@@ -218,24 +218,24 @@ copy_n(bitarrayobject *self, idx_t a,
     assert(0 <= n && n <= self->nbits && n <= other->nbits);
     assert(0 <= a && a <= self->nbits - n);
     assert(0 <= b && b <= other->nbits - n);
-    if (n == 0) {
+    if (n == 0)
         return;
-    }
 
     if (self->endian == other->endian && a % 8 == 0 && b % 8 == 0 && n >= 8)
     {
         const Py_ssize_t bytes = (Py_ssize_t) n / 8;
         const idx_t bits = bytes * 8;
 
-        if (a <= b) {
+        assert(bits <= n && n < bits + 8);
+        if (a <= b)
             memmove(self->ob_item + a / 8, other->ob_item + b / 8, bytes);
-        }
-        if (n != bits) {
+
+        if (n != bits)
             copy_n(self, bits + a, other, bits + b, n - bits);
-        }
-        if (a > b) {
+
+        if (a > b)
             memmove(self->ob_item + a / 8, other->ob_item + b / 8, bytes);
-        }
+
         return;
     }
 
