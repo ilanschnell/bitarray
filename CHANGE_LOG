@@ -125,7 +125,7 @@
 2009-01-15   0.3.4:
 -------------------
   * Made C code less ambiguous, such that the package compiles on
-    Visual Studio, will all tests passing.
+    Visual Studio, with all tests passing.
 
 
 2008-12-14   0.3.3:
@@ -149,7 +149,7 @@
 
 2008-09-30   0.3.0:
 -------------------
-  * Fixed a severe bug for 64bit machines.  Implemented all methods in C,
+  * Fixed a severe bug for 64-bit machines.  Implemented all methods in C,
     improved tests.
   * Removed deprecated methods from01 and fromlist.
 
