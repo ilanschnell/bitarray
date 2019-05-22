@@ -781,11 +781,13 @@ class SpecialMethodTests(unittest.TestCase, Util):
 
 
     def test_repr(self):
-        a = bitarray()
-        self.assertEqual(repr(a), "bitarray()")
+        r = repr(bitarray())
+        self.assertEqual(r, "bitarray()")
+        self.assert_(isinstance(r, str))
 
-        a = bitarray('10111')
-        self.assertEqual(repr(a), "bitarray('10111')")
+        r = repr(bitarray('10111'))
+        self.assertEqual(r, "bitarray('10111')")
+        self.assert_(isinstance(r, str))
 
         for a in self.randombitarrays():
             b = eval(repr(a))
