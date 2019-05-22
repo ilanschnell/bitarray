@@ -15,8 +15,13 @@
 #define IS_PY3K
 #endif
 
+/* For bytes, we use PyBytes_*, treating the Py3k function names as default.
+   For strings, we use PyString_*.
+ */
 #ifdef IS_PY3K
 #include "bytesobject.h"
+#define PyString_FromString  PyUnicode_FromString
+#define PyString_FromStringAndSize  PyUnicode_FromStringAndSize
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
 #else  /* Python 2 */
 #define PyBytes_FromStringAndSize  PyString_FromStringAndSize
@@ -361,6 +366,8 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
         for (i = 0; i < Py_SIZE(self); i++)
             self->ob_item[i] ^= other->ob_item[i];
         break;
+    default:  /* should never happen */
+        return -1;
     }
     return 0;
 }
@@ -536,10 +543,15 @@ append_item(bitarrayobject *self, PyObject *item)
     return set_item(self, self->nbits - 1, item);
 }
 
+enum unpack_t {
+    UNPACK_PYSTRING,    /* PyString */
+    UNPACK_PYBYTES,     /* PyBytes */
+};
+
 static PyObject *
-unpack(bitarrayobject *self, char zero, char one)
+unpack(bitarrayobject *self, char zero, char one, enum unpack_t unpack_type)
 {
-    PyObject *res;
+    PyObject *result;
     Py_ssize_t i;
     char *str;
 
@@ -555,9 +567,18 @@ unpack(bitarrayobject *self, char zero, char one)
     for (i = 0; i < self->nbits; i++) {
         *(str + i) = GETBIT(self, i) ? one : zero;
     }
-    res = PyBytes_FromStringAndSize(str, (Py_ssize_t) self->nbits);
+    switch (unpack_type) {
+    case UNPACK_PYBYTES:
+        result = PyBytes_FromStringAndSize(str, (Py_ssize_t) self->nbits);
+        break;
+    case UNPACK_PYSTRING:
+        result = PyString_FromStringAndSize(str, (Py_ssize_t) self->nbits);
+        break;
+    default:  /* should never happen */
+        return NULL;
+    }
     PyMem_Free((void *) str);
-    return res;
+    return result;
 }
 
 static int
@@ -651,13 +672,13 @@ extend_tuple(bitarrayobject *self, PyObject *tuple)
 /* extend_bytes(): extend the bitarray from a PyBytes object (PyString in
    Python 2), where each whole characters is converted to a single bit
 */
-enum conv_tp {
+enum conv_t {
     STR_01,    /*  '0' -> 0    '1'  -> 1   no other characters allowed */
     STR_RAW,   /*  0x00 -> 0   other -> 1                              */
 };
 
 static int
-extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_tp conv)
+extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_t conv)
 {
     Py_ssize_t strlen, i;
     char c, *str;
@@ -690,6 +711,8 @@ extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_tp conv)
         case STR_RAW:
             vi = c ? 1 : 0;
             break;
+        default:  /* should never happen */
+            return -1;
         }
         setbit(self, self->nbits - strlen + i, vi);
     }
@@ -736,10 +759,10 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 
 #ifdef IS_PY3K
     if (PyUnicode_Check(obj)) {                               /* str01 */
-        PyObject *string;
-        string = PyUnicode_AsEncodedString(obj, NULL, NULL);
-        ret = extend_bytes(self, string, STR_01);
-        Py_DECREF(string);
+        PyObject *bytes;
+        bytes = PyUnicode_AsEncodedString(obj, NULL, NULL);
+        ret = extend_bytes(self, bytes, STR_01);
+        Py_DECREF(bytes);
         return ret;
     }
 #endif
@@ -1117,11 +1140,7 @@ contents, the bit endianness as a string, the number of unused bits\n\
 static PyObject *
 bitarray_endian(bitarrayobject *self)
 {
-#ifdef IS_PY3K
-    return PyUnicode_FromString(ENDIAN_STR(self));
-#else
     return PyString_FromString(ENDIAN_STR(self));
-#endif
 }
 
 PyDoc_STRVAR(endian_doc,
@@ -1643,16 +1662,7 @@ bits (1..7) are set to 0.");
 static PyObject *
 bitarray_to01(bitarrayobject *self)
 {
-#ifdef IS_PY3K
-    PyObject *string, *unpacked;
-
-    unpacked = unpack(self, '0', '1');
-    string = PyUnicode_FromEncodedObject(unpacked, NULL, NULL);
-    Py_DECREF(unpacked);
-    return string;
-#else
-    return unpack(self, '0', '1');
-#endif
+    return unpack(self, '0', '1', UNPACK_PYSTRING);
 }
 
 PyDoc_STRVAR(to01_doc,
@@ -1674,7 +1684,7 @@ bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
                                      &zero, &one))
         return NULL;
 
-    return unpack(self, zero, one);
+    return unpack(self, zero, one, UNPACK_PYBYTES);
 }
 
 PyDoc_STRVAR(unpack_doc,
@@ -1712,29 +1722,30 @@ transfer of data between bitarray objects to other python objects\n\
 static PyObject *
 bitarray_repr(bitarrayobject *self)
 {
-    PyObject *string;
+    PyObject *bytes;
+    PyObject *unpacked;
 #ifdef IS_PY3K
     PyObject *decoded;
 #endif
 
     if (self->nbits == 0) {
-        string = PyBytes_FromString("bitarray()");
-        if (string == NULL)
-            return NULL;
+        bytes = PyBytes_FromString("bitarray()");
     }
     else {
-        string = PyBytes_FromString("bitarray(\'");
-        if (string == NULL)
+        bytes = PyBytes_FromString("bitarray(\'");
+        unpacked = unpack(self, '0', '1', UNPACK_PYBYTES);
+        if (unpacked == NULL)
             return NULL;
-        PyBytes_ConcatAndDel(&string, unpack(self, '0', '1'));
-        PyBytes_ConcatAndDel(&string, PyBytes_FromString("\')"));
+        PyBytes_ConcatAndDel(&bytes, unpacked);
+        PyBytes_ConcatAndDel(&bytes, PyBytes_FromString("\')"));
     }
 #ifdef IS_PY3K
-    decoded = PyUnicode_FromEncodedObject(string, NULL, NULL);
-    Py_DECREF(string);
-    string = decoded;
+    decoded = PyUnicode_FromEncodedObject(bytes, NULL, NULL);
+    Py_DECREF(bytes);
+    return decoded;
+#else
+    return bytes;  /* really a string in Python 2 */
 #endif
-    return string;
 }
 
 
