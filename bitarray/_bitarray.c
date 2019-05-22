@@ -221,6 +221,10 @@ copy_n(bitarrayobject *self, idx_t a,
     if (n == 0)
         return;
 
+    /* When the start positions are at byte positions, we can copy whole
+       bytes using memmove, and copy the remaining few bits individually.
+       Note that the order of these two operations matters when copying
+       self to self. */
     if (self->endian == other->endian && a % 8 == 0 && b % 8 == 0 && n >= 8)
     {
         const Py_ssize_t bytes = (Py_ssize_t) n / 8;
@@ -239,9 +243,8 @@ copy_n(bitarrayobject *self, idx_t a,
         return;
     }
 
-    /* the different type of looping is only relevant when other and self
-       are the same object, i.e. when copying a piece of an bitarrayobject
-       onto itself */
+    /* The different type of looping is only relevant copying self to self,
+       i.e. when copying a piece of an bitarrayobject onto itself. */
     if (a <= b) {
         for (i = 0; i < n; i++)             /* loop forward (delete) */
             setbit(self, i + a, GETBIT(other, i + b));
