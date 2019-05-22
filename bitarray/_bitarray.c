@@ -23,17 +23,16 @@
 #define PyString_FromString  PyUnicode_FromString
 #define PyString_FromStringAndSize  PyUnicode_FromStringAndSize
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
-#else  /* Python 2 -- Hmm, really just Python 2.5? */
+#endif
+
+#if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 6
+/* backward compatibility with Python 2.5 */
 #define PyBytes_FromStringAndSize  PyString_FromStringAndSize
 #define PyBytes_FromString  PyString_FromString
 #define PyBytes_Check  PyString_Check
 #define PyBytes_Size  PyString_Size
 #define PyBytes_AsString  PyString_AsString
 #define PyBytes_ConcatAndDel  PyString_ConcatAndDel
-#endif
-
-#if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 6
-/* backward compatibility with Python 2.5 */
 #define Py_TYPE(ob)   (((PyObject *) (ob))->ob_type)
 #define Py_SIZE(ob)   (((PyVarObject *) (ob))->ob_size)
 #endif
