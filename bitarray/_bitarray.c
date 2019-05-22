@@ -17,13 +17,14 @@
 
 #ifdef IS_PY3K
 #include "bytesobject.h"
-#define PyString_FromStringAndSize  PyBytes_FromStringAndSize
-#define PyString_FromString  PyBytes_FromString
-#define PyString_Check  PyBytes_Check
-#define PyString_Size  PyBytes_Size
-#define PyString_AsString  PyBytes_AsString
-#define PyString_ConcatAndDel  PyBytes_ConcatAndDel
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
+#else  /* Python 2 */
+#define PyBytes_FromStringAndSize  PyString_FromStringAndSize
+#define PyBytes_FromString  PyString_FromString
+#define PyBytes_Check  PyString_Check
+#define PyBytes_Size  PyString_Size
+#define PyBytes_AsString  PyString_AsString
+#define PyBytes_ConcatAndDel  PyString_ConcatAndDel
 #endif
 
 #if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 6
@@ -554,7 +555,7 @@ unpack(bitarrayobject *self, char zero, char one)
     for (i = 0; i < self->nbits; i++) {
         *(str + i) = GETBIT(self, i) ? one : zero;
     }
-    res = PyString_FromStringAndSize(str, (Py_ssize_t) self->nbits);
+    res = PyBytes_FromStringAndSize(str, (Py_ssize_t) self->nbits);
     PyMem_Free((void *) str);
     return res;
 }
@@ -647,8 +648,8 @@ extend_tuple(bitarrayobject *self, PyObject *tuple)
     return 0;
 }
 
-/* extend_string(): extend the bitarray from a string, where each whole
-   characters is converted to a single bit
+/* extend_bytes(): extend the bitarray from a PyBytes object (PyString in
+   Python 2), where each whole characters is converted to a single bit
 */
 enum conv_tp {
     STR_01,    /*  '0' -> 0    '1'  -> 1   no other characters allowed */
@@ -656,21 +657,21 @@ enum conv_tp {
 };
 
 static int
-extend_string(bitarrayobject *self, PyObject *string, enum conv_tp conv)
+extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_tp conv)
 {
     Py_ssize_t strlen, i;
     char c, *str;
     int vi = 0;
 
-    assert(PyString_Check(string));
-    strlen = PyString_Size(string);
+    assert(PyBytes_Check(bytes));
+    strlen = PyBytes_Size(bytes);
     if (strlen == 0)
         return 0;
 
     if (resize(self, self->nbits + strlen) < 0)
         return -1;
 
-    str = PyString_AsString(string);
+    str = PyBytes_AsString(bytes);
 
     for (i = 0; i < strlen; i++) {
         c = *(str + i);
@@ -696,20 +697,20 @@ extend_string(bitarrayobject *self, PyObject *string, enum conv_tp conv)
 }
 
 static int
-extend_rawstring(bitarrayobject *self, PyObject *string)
+extend_rawbytes(bitarrayobject *self, PyObject *bytes)
 {
     Py_ssize_t strlen;
     char *str;
 
-    assert(PyString_Check(string) && self->nbits % 8 == 0);
-    strlen = PyString_Size(string);
+    assert(PyBytes_Check(bytes) && self->nbits % 8 == 0);
+    strlen = PyBytes_Size(bytes);
     if (strlen == 0)
         return 0;
 
     if (resize(self, self->nbits + BITS(strlen)) < 0)
         return -1;
 
-    str = PyString_AsString(string);
+    str = PyBytes_AsString(bytes);
     memcpy(self->ob_item + (Py_SIZE(self) - strlen), str, strlen);
     return 0;
 }
@@ -730,14 +731,14 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     if (PyTuple_Check(obj))                                  /* tuple */
         return extend_tuple(self, obj);
 
-    if (PyString_Check(obj))                                 /* str01 */
-        return extend_string(self, obj, STR_01);
+    if (PyBytes_Check(obj))                                  /* str01 */
+        return extend_bytes(self, obj, STR_01);
 
 #ifdef IS_PY3K
     if (PyUnicode_Check(obj)) {                               /* str01 */
         PyObject *string;
         string = PyUnicode_AsEncodedString(obj, NULL, NULL);
-        ret = extend_string(self, string, STR_01);
+        ret = extend_bytes(self, string, STR_01);
         Py_DECREF(string);
         return ret;
     }
@@ -1195,7 +1196,7 @@ bitarray_reduce(bitarrayobject *self)
     }
     str[0] = (char) setunused(self);
     memcpy(str + 1, self->ob_item, Py_SIZE(self));
-    repr = PyString_FromStringAndSize(str, Py_SIZE(self) + 1);
+    repr = PyBytes_FromStringAndSize(str, Py_SIZE(self) + 1);
     if (repr == NULL)
         goto error;
     PyMem_Free((void *) str);
@@ -1593,11 +1594,11 @@ use the extend method.");
 
 
 static PyObject *
-bitarray_frombytes(bitarrayobject *self, PyObject *string)
+bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
 {
     idx_t t, p;
 
-    if (!PyString_Check(string)) {
+    if (!PyBytes_Check(bytes)) {
         PyErr_SetString(PyExc_TypeError, "byte string expected");
         return NULL;
     }
@@ -1611,7 +1612,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *string)
     p = setunused(self);
     self->nbits += p;
 
-    if (extend_rawstring(self, string) < 0)
+    if (extend_rawbytes(self, bytes) < 0)
         return NULL;
     if (delete_n(self, t, p) < 0)
         return NULL;
@@ -1628,7 +1629,7 @@ static PyObject *
 bitarray_tobytes(bitarrayobject *self)
 {
     setunused(self);
-    return PyString_FromStringAndSize(self->ob_item, Py_SIZE(self));
+    return PyBytes_FromStringAndSize(self->ob_item, Py_SIZE(self));
 }
 
 PyDoc_STRVAR(tobytes_doc,
@@ -1655,7 +1656,7 @@ bitarray_to01(bitarrayobject *self)
 }
 
 PyDoc_STRVAR(to01_doc,
-"to01() -> string\n\
+"to01() -> str\n\
 \n\
 Return a string containing '0's and '1's, representing the bits in the\n\
 bitarray object.\n\
@@ -1685,13 +1686,13 @@ See also the pack method.");
 
 
 static PyObject *
-bitarray_pack(bitarrayobject *self, PyObject *string)
+bitarray_pack(bitarrayobject *self, PyObject *bytes)
 {
-    if (!PyString_Check(string)) {
+    if (!PyBytes_Check(bytes)) {
         PyErr_SetString(PyExc_TypeError, "byte string expected");
         return NULL;
     }
-    if (extend_string(self, string, STR_RAW) < 0)
+    if (extend_bytes(self, bytes, STR_RAW) < 0)
         return NULL;
 
     Py_RETURN_NONE;
@@ -1717,16 +1718,16 @@ bitarray_repr(bitarrayobject *self)
 #endif
 
     if (self->nbits == 0) {
-        string = PyString_FromString("bitarray()");
+        string = PyBytes_FromString("bitarray()");
         if (string == NULL)
             return NULL;
     }
     else {
-        string = PyString_FromString("bitarray(\'");
+        string = PyBytes_FromString("bitarray(\'");
         if (string == NULL)
             return NULL;
-        PyString_ConcatAndDel(&string, unpack(self, '0', '1'));
-        PyString_ConcatAndDel(&string, PyString_FromString("\')"));
+        PyBytes_ConcatAndDel(&string, unpack(self, '0', '1'));
+        PyBytes_ConcatAndDel(&string, PyBytes_FromString("\')"));
     }
 #ifdef IS_PY3K
     decoded = PyUnicode_FromEncodedObject(string, NULL, NULL);
@@ -2753,16 +2754,16 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return a;
     }
 
-    /* string */
-    if (PyString_Check(initial)) {
+    /* bytes */
+    if (PyBytes_Check(initial)) {
         Py_ssize_t strlen;
         char *str;
 
-        strlen = PyString_Size(initial);
+        strlen = PyBytes_Size(initial);
         if (strlen == 0)        /* empty string */
             return newbitarrayobject(type, 0, endian);
 
-        str = PyString_AsString(initial);
+        str = PyBytes_AsString(initial);
         if (0 <= str[0] && str[0] < 8) {
             /* when the first character is smaller than 8, it indicates the
                number of unused bits at the end, and rest of the bytes
