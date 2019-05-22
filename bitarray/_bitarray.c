@@ -23,7 +23,7 @@
 #define PyString_FromString  PyUnicode_FromString
 #define PyString_FromStringAndSize  PyUnicode_FromStringAndSize
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
-#else  /* Python 2 */
+#else  /* Python 2 -- Hmm, really just Python 2.5? */
 #define PyBytes_FromStringAndSize  PyString_FromStringAndSize
 #define PyBytes_FromString  PyString_FromString
 #define PyBytes_Check  PyString_Check
@@ -757,7 +757,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     if (PyBytes_Check(obj))                                  /* str01 */
         return extend_bytes(self, obj, STR_01);
 
-#ifdef IS_PY3K
+#if PY_MAJOR_VERSION == 3 || (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION >= 6)
     if (PyUnicode_Check(obj)) {                               /* str01 */
         PyObject *bytes;
         bytes = PyUnicode_AsEncodedString(obj, NULL, NULL);
