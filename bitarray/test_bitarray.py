@@ -37,6 +37,13 @@ def to_bytes(s):
         return s
 
 
+if is_py3k or sys.version_info[:2] < (2, 6):
+    def unicode(*args):
+        if len(args) == 0:
+            return ''
+        return args[0]
+
+
 class Util(object):
 
     def randombitarrays(self):
@@ -760,6 +767,30 @@ class MiscTests(unittest.TestCase, Util):
         a = bitarray(10 ** 6)
         self.assertRaises(OverflowError, a.__imul__, 17180)
 
+    def test_unicode1(self):
+        a = bitarray(unicode())
+        self.assertEqual(a, bitarray())
+
+        a = bitarray(unicode('111001'))
+        self.assertEqual(a, bitarray('111001'))
+
+        for a in self.randombitarrays():
+            b = bitarray(unicode(a.to01()))
+            self.assertEqual(a, b)
+
+    def test_unicode2(self):
+        a = bitarray()
+        a.extend(unicode())
+        self.assertEqual(a, bitarray())
+
+        a = bitarray()
+        a.extend(unicode('001011'))
+        self.assertEqual(a, bitarray('001011'))
+
+        for a in self.randombitarrays():
+            b = bitarray()
+            b.extend(unicode(a.to01()))
+            self.assertEqual(a, b)
 
 tests.append(MiscTests)
 
