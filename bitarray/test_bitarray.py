@@ -185,11 +185,13 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray(endian='little')
         a.fromstring('A')
         self.assertEqual(a.endian(), 'little')
+        self.assert_(isinstance(a.endian(), str))
         self.check_obj(a)
 
         b = bitarray(endian='big')
         b.fromstring('A')
         self.assertEqual(b.endian(), 'big')
+        self.assert_(isinstance(a.endian(), str))
         self.check_obj(b)
 
         self.assertEqual(a.tostring(), b.tostring())
@@ -604,6 +606,15 @@ class MiscTests(unittest.TestCase, Util):
         self.assertEqual(bool(bitarray('')), False)
         self.assertEqual(bool(bitarray('0')), True)
         self.assertEqual(bool(bitarray('1')), True)
+
+    def test_to01(self):
+        a = bitarray()
+        self.assertEqual(a.to01(), '')
+        self.assert_(isinstance(a.to01(), str))
+
+        a = bitarray('101')
+        self.assertEqual(a.to01(), '101')
+        self.assert_(isinstance(a.to01(), str))
 
     def test_iterate(self):
         for lst in self.randomlists():
@@ -1665,6 +1676,10 @@ class StringTests(unittest.TestCase, Util):
 
     def test_unpack(self):
         a = bitarray('01')
+        if is_py3k:
+            self.assert_(isinstance(a.unpack(), bytes))
+        else:
+            self.assert_(isinstance(a.unpack(), str))
         self.assertEqual(a.unpack(), to_bytes('\x00\xff'))
         self.assertEqual(a.unpack(to_bytes('A')), to_bytes('A\xff'))
         self.assertEqual(a.unpack(to_bytes('0'), to_bytes('1')),
