@@ -23,16 +23,6 @@
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
 #endif
 
-#if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 5
-#define PyBytes_FromStringAndSize  PyString_FromStringAndSize
-#define PyBytes_FromString  PyString_FromString
-#define PyBytes_Check  PyString_Check
-#define PyBytes_Size  PyString_Size
-#define PyBytes_AsString  PyString_AsString
-#define PyBytes_ConcatAndDel  PyString_ConcatAndDel
-#define Py_TYPE(ob)   (((PyObject *) (ob))->ob_type)
-#define Py_SIZE(ob)   (((PyVarObject *) (ob))->ob_size)
-#endif
 
 #if PY_MAJOR_VERSION == 3 || (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 7)
 /* (new) buffer protocol */
@@ -736,18 +726,16 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     if (PyTuple_Check(obj))                                  /* tuple */
         return extend_tuple(self, obj);
 
-    if (PyBytes_Check(obj))                                  /* str01 */
+    if (PyBytes_Check(obj))                              /* string 01 */
         return extend_bytes(self, obj, STR_01);
 
-#if PY_MAJOR_VERSION == 3 || (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION >= 6)
-    if (PyUnicode_Check(obj)) {                               /* str01 */
+    if (PyUnicode_Check(obj)) {                         /* unicode 01 */
         PyObject *bytes;
         bytes = PyUnicode_AsEncodedString(obj, NULL, NULL);
         ret = extend_bytes(self, bytes, STR_01);
         Py_DECREF(bytes);
         return ret;
     }
-#endif
 
     if (PyIter_Check(obj))                                    /* iter */
         return extend_iter(self, obj);
