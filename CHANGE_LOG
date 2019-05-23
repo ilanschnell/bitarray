@@ -3,7 +3,8 @@
   * fix bitarrays beings created from unicode in Python 2
   * use PyBytes_* in C code, treating the Py3k function names as default,
     which also removes all redefinitions of PyString_
-  * add a few comments to the C code
+  * add a more comments to the C code
+  * move imports outside tests: pickle, io, etc.
   * drop Python 2.5 support
 
 
