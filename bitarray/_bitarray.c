@@ -542,13 +542,8 @@ append_item(bitarrayobject *self, PyObject *item)
     return set_item(self, self->nbits - 1, item);
 }
 
-enum unpack_t {
-    UNPACK_PYSTRING,    /* PyString */
-    UNPACK_PYBYTES,     /* PyBytes */
-};
-
 static PyObject *
-unpack(bitarrayobject *self, char zero, char one, enum unpack_t unpack_type)
+unpack(bitarrayobject *self, char zero, char one)
 {
     PyObject *result;
     Py_ssize_t i;
@@ -566,16 +561,7 @@ unpack(bitarrayobject *self, char zero, char one, enum unpack_t unpack_type)
     for (i = 0; i < self->nbits; i++) {
         *(str + i) = GETBIT(self, i) ? one : zero;
     }
-    switch (unpack_type) {
-    case UNPACK_PYBYTES:
-        result = PyBytes_FromStringAndSize(str, (Py_ssize_t) self->nbits);
-        break;
-    case UNPACK_PYSTRING:
-        result = PyString_FromStringAndSize(str, (Py_ssize_t) self->nbits);
-        break;
-    default:  /* should never happen */
-        return NULL;
-    }
+    result = PyBytes_FromStringAndSize(str, (Py_ssize_t) self->nbits);
     PyMem_Free((void *) str);
     return result;
 }
@@ -1661,7 +1647,19 @@ bits (1..7) are set to 0.");
 static PyObject *
 bitarray_to01(bitarrayobject *self)
 {
-    return unpack(self, '0', '1', UNPACK_PYSTRING);
+#ifdef IS_PY3K
+    PyObject *string;
+    PyObject *unpacked;
+
+    unpacked = unpack(self, '0', '1');
+    if (unpacked == NULL)
+        return NULL;
+    string = PyUnicode_FromEncodedObject(unpacked, NULL, NULL);
+    Py_DECREF(unpacked);
+    return string;
+#else
+    return unpack(self, '0', '1');
+#endif
 }
 
 PyDoc_STRVAR(to01_doc,
@@ -1683,7 +1681,7 @@ bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
                                      &zero, &one))
         return NULL;
 
-    return unpack(self, zero, one, UNPACK_PYBYTES);
+    return unpack(self, zero, one);
 }
 
 PyDoc_STRVAR(unpack_doc,
@@ -1732,7 +1730,7 @@ bitarray_repr(bitarrayobject *self)
     }
     else {
         bytes = PyBytes_FromString("bitarray(\'");
-        unpacked = unpack(self, '0', '1', UNPACK_PYBYTES);
+        unpacked = unpack(self, '0', '1');
         if (unpacked == NULL)
             return NULL;
         PyBytes_ConcatAndDel(&bytes, unpacked);
