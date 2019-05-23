@@ -5,10 +5,16 @@ Author: Ilan Schnell
 """
 import os
 import sys
+import copy
 import unittest
 import tempfile
 import shutil
 from random import randint
+
+try:
+    import shelve, hashlib
+except ImportError:
+    shelve = hashlib = None
 
 is_py3k = bool(sys.version_info[0] == 3)
 
@@ -750,9 +756,7 @@ class MiscTests(unittest.TestCase, Util):
                 self.assertEQUAL(a, b)
 
     def test_overflow(self):
-        from platform import architecture
-
-        if architecture()[0] == '64bit':
+        if tuple.__itemsize__ == 8:
             return
 
         self.assertRaises(OverflowError, bitarray.__new__,
@@ -827,7 +831,6 @@ class SpecialMethodTests(unittest.TestCase, Util):
 
 
     def test_copy(self):
-        import copy
         for a in self.randombitarrays():
             b = a.copy()
             self.assert_(b is not a)
@@ -1790,7 +1793,8 @@ class FileTests(unittest.TestCase, Util):
                 self.assertEQUAL(a, b)
 
     def test_shelve(self):
-        import shelve, hashlib
+        if not shelve or hasattr(sys, 'gettotalrefcount'):
+            return
 
         d = shelve.open(self.tmpfname)
         stored = []
