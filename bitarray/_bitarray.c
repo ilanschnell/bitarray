@@ -636,8 +636,8 @@ extend_tuple(bitarrayobject *self, PyObject *tuple)
     return 0;
 }
 
-/* extend_bytes(): extend the bitarray from a PyBytes object (PyString in
-   Python 2), where each whole characters is converted to a single bit
+/* extend_bytes(): extend the bitarray from a PyBytes object, where each
+   whole character is converted to a single bit
 */
 enum conv_t {
     STR_01,    /*  '0' -> 0    '1'  -> 1   no other characters allowed */
