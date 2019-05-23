@@ -20,13 +20,10 @@
  */
 #ifdef IS_PY3K
 #include "bytesobject.h"
-#define PyString_FromString  PyUnicode_FromString
-#define PyString_FromStringAndSize  PyUnicode_FromStringAndSize
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
 #endif
 
-#if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 6
-/* backward compatibility with Python 2.5 */
+#if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 5
 #define PyBytes_FromStringAndSize  PyString_FromStringAndSize
 #define PyBytes_FromString  PyString_FromString
 #define PyBytes_Check  PyString_Check
@@ -1125,7 +1122,11 @@ contents, the bit endianness as a string, the number of unused bits\n\
 static PyObject *
 bitarray_endian(bitarrayobject *self)
 {
+#ifdef IS_PY3K
+    return PyUnicode_FromString(ENDIAN_STR(self));
+#else
     return PyString_FromString(ENDIAN_STR(self));
+#endif
 }
 
 PyDoc_STRVAR(endian_doc,
