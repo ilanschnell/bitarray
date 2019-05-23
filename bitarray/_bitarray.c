@@ -16,10 +16,8 @@
 #endif
 
 #ifdef IS_PY3K
-#include "bytesobject.h"
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
 #endif
-
 
 #if PY_MAJOR_VERSION == 3 || (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 7)
 /* (new) buffer protocol */
