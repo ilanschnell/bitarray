@@ -15,9 +15,6 @@
 #define IS_PY3K
 #endif
 
-/* For bytes, we use PyBytes_*, treating the Py3k function names as default.
-   For strings, we use PyString_*.
- */
 #ifdef IS_PY3K
 #include "bytesobject.h"
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
