@@ -45,14 +45,14 @@ machine representation of the bitarray, i.e. when using the methods: tofile,
 fromfile, tobytes, frombytes."""
 
     def fromstring(self, string):
-        """fromstring(string)
+        """fromstring(str)
 
 Append from a string, interpreting the string as machine values.
 Deprecated since version 0.4.0, use ``frombytes()`` instead."""
         return self.frombytes(string.encode())
 
     def tostring(self):
-        """tostring() -> string
+        """tostring() -> str
 
 Return the string representing (machine values) of the bitarray.
 When the length of the bitarray is not a multiple of 8, the few remaining

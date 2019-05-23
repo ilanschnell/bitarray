@@ -1113,7 +1113,7 @@ bitarray_endian(bitarrayobject *self)
 }
 
 PyDoc_STRVAR(endian_doc,
-"endian() -> string\n\
+"endian() -> str\n\
 \n\
 Return the bit endianness as a string (either 'little' or 'big').");
 
