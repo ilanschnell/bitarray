@@ -5,23 +5,28 @@ Author: Ilan Schnell
 """
 import os
 import sys
-import copy
 import unittest
 import tempfile
 import shutil
 from random import randint
+
+is_py3k = bool(sys.version_info[0] == 3)
+
+# imports needed inside tests
+import copy
+import pickle
+import itertools
 
 try:
     import shelve, hashlib
 except ImportError:
     shelve = hashlib = None
 
-is_py3k = bool(sys.version_info[0] == 3)
-
 if is_py3k:
     from io import StringIO
 else:
     from cStringIO import StringIO
+    import cPickle
 
 
 from bitarray import bitarray, bitdiff, bits2bytes, __version__
@@ -738,10 +743,9 @@ class MiscTests(unittest.TestCase, Util):
         self.assertEqual(a.tobytes(), b.tobytes())
 
     def test_pickle(self):
-        from pickle import loads, dumps
         for v in range(3):
             for a in self.randombitarrays():
-                b = loads(dumps(a, v))
+                b = pickle.loads(pickle.dumps(a, v))
                 self.assert_(b is not a)
                 self.assertEQUAL(a, b)
 
@@ -749,9 +753,8 @@ class MiscTests(unittest.TestCase, Util):
         if is_py3k:
             return
         for v in range(3):
-            from cPickle import loads, dumps
             for a in self.randombitarrays():
-                b = loads(dumps(a, v))
+                b = cPickle.loads(cPickle.dumps(a, v))
                 self.assert_(b is not a)
                 self.assertEQUAL(a, b)
 
@@ -1224,10 +1227,6 @@ class ExtendTests(unittest.TestCase, Util):
                 self.check_obj(c)
 
     def test_iterator2(self):
-        try:
-            import itertools
-        except ImportError:
-            return
         a = bitarray()
         a.extend(itertools.repeat(True, 23))
         self.assertEqual(a, bitarray(23 * '1'))
@@ -1767,28 +1766,24 @@ class FileTests(unittest.TestCase, Util):
 
 
     def test_pickle(self):
-        from pickle import load, dump
-
         for v in range(3):
             for a in self.randombitarrays():
                 fo = open(self.tmpfname, 'wb')
-                dump(a, fo, v)
+                pickle.dump(a, fo, v)
                 fo.close()
-                b = load(open(self.tmpfname, 'rb'))
+                b = pickle.load(open(self.tmpfname, 'rb'))
                 self.assert_(b is not a)
                 self.assertEQUAL(a, b)
 
     def test_cPickle(self):
         if is_py3k:
             return
-        from cPickle import load, dump
-
         for v in range(3):
             for a in self.randombitarrays():
                 fo = open(self.tmpfname, 'wb')
-                dump(a, fo, v)
+                cPickle.dump(a, fo, v)
                 fo.close()
-                b = load(open(self.tmpfname, 'rb'))
+                b = cPickle.load(open(self.tmpfname, 'rb'))
                 self.assert_(b is not a)
                 self.assertEQUAL(a, b)
 
