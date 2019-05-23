@@ -23,21 +23,15 @@ from bitarray import bitarray, bitdiff, bits2bytes, __version__
 
 tests = []
 
-if sys.version_info[:2] < (2, 6):
-    def next(x):
-        return x.next()
-
 
 def to_bytes(s):
     if is_py3k:
         return bytes(s.encode('latin1'))
-    elif sys.version_info[:2] >= (2, 6):
-        return bytes(s)
     else:
-        return s
+        return bytes(s)  # which is str for Python 2
 
 
-if is_py3k or sys.version_info[:2] < (2, 6):
+if is_py3k:
     def unicode(*args):
         if len(args) == 0:
             return ''
@@ -802,9 +796,6 @@ class SpecialMethodTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertTrue(a.all())
 
-        if sys.version_info[:2] < (2, 5):
-            return
-
         for a in self.randombitarrays():
             self.assertEqual(all(a),          a.all())
             self.assertEqual(all(a.tolist()), a.all())
@@ -813,9 +804,6 @@ class SpecialMethodTests(unittest.TestCase, Util):
     def test_any(self):
         a = bitarray()
         self.assertFalse(a.any())
-
-        if sys.version_info[:2] < (2, 5):
-            return
 
         for a in self.randombitarrays():
             self.assertEqual(any(a),          a.any())
@@ -1802,8 +1790,6 @@ class FileTests(unittest.TestCase, Util):
                 self.assertEQUAL(a, b)
 
     def test_shelve(self):
-        if sys.version_info[:2] < (2, 5):
-            return
         import shelve, hashlib
 
         d = shelve.open(self.tmpfname)
