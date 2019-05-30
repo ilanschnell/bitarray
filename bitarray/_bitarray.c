@@ -1070,8 +1070,8 @@ bitarray_search(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(search_doc,
 "search(bitarray, [limit]) -> list\n\
 \n\
-Searches for the given a bitarray in self, and returns the start positions\n\
-where bitarray matches self as a list.\n\
+Searches for the given bitarray in self, and return the list of start\n\
+positions.\n\
 The optional argument limits the number of search results to the integer\n\
 specified.  By default, all search results are returned.");
 
