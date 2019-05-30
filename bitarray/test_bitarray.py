@@ -1343,7 +1343,7 @@ class MethodTests(unittest.TestCase, Util):
                 a[m] = 0
                 self.assertEqual(a.index(0), m)
 
-    def test_index2(self):
+    def test_index2a(self):
         a = bitarray('00001000' '00000000' '0010000')
         self.assertEqual(a.index(1), 4)
         self.assertEqual(a.index(1, 1), 4)
@@ -1351,6 +1351,15 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a.index(1, 5), 18)
         self.assertRaises(ValueError, a.index, 1, 5, 18)
         self.assertRaises(ValueError, a.index, 1, 19)
+
+    def test_index2b(self):
+        a = bitarray('11110111' '11111111' '1101111')
+        self.assertEqual(a.index(0), 4)
+        self.assertEqual(a.index(0, 1), 4)
+        self.assertEqual(a.index(1, 4), 5)
+        self.assertEqual(a.index(0, 5), 18)
+        self.assertRaises(ValueError, a.index, 0, 5, 18)
+        self.assertRaises(ValueError, a.index, 0, 19)
 
     def test_index3(self):
         a = bitarray(2000)
@@ -1370,6 +1379,26 @@ class MethodTests(unittest.TestCase, Util):
             except ValueError:
                 res2 = None
             self.assertEqual(res1, res2)
+
+    def test_index4(self):
+        for n in range(1, 50):
+            a = bitarray(n)
+            a.setall(0)
+            for _ in range(3):
+                a[randint(0, n-1)] = 1
+            aa = a.tolist()
+            for unused in range(100):
+                start = randint(-50, n+50)
+                stop = randint(-50, n+50)
+                try:
+                    res1 = a.index(1, start, stop)
+                except ValueError:
+                    res1 = None
+                try:
+                    res2 = aa.index(1, start, stop)
+                except ValueError:
+                    res2 = None
+                self.assertEqual(res1, res2)
 
 
     def test_count(self):
