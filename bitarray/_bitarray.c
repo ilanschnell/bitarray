@@ -482,8 +482,8 @@ findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
     return -1;
 }
 
-/* search for the first occurrence bitarray xa (in self), starting at p,
-   and return its position (-1 when not found)
+/* search for the first occurrence of bitarray xa (in self), starting at p,
+   and return its position (or -1 when not found)
 */
 static idx_t
 search(bitarrayobject *self, bitarrayobject *xa, idx_t p)
