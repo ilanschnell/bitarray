@@ -447,16 +447,14 @@ findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
     idx_t i;
     char c;
 
-    if (Py_SIZE(self) == 0)
-        return -1;
-    if (start < 0 || start > self->nbits)
-        start = 0;
-    if (stop < 0 || stop > self->nbits)
-        stop = self->nbits;
-    if (start >= stop)
+    assert(0 <= start && start <= self->nbits);
+    assert(0 <= stop && stop <= self->nbits);
+    assert(BYTES(stop) <= Py_SIZE(self));
+
+    if (self->nbits == 0 || start >= stop)
         return -1;
 
-    if (stop > start + 8) {
+    if (stop >= start + 8) {
         /* seraching for 1 means: break when byte is not 0x00
            searching for 0 means: break when byte is not 0xff */
         c = vi ? 0x00 : 0xff;
@@ -465,10 +463,6 @@ findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
         for (j = (Py_ssize_t) (start / 8); j < BYTES(stop); j++)
             if (c ^ self->ob_item[j])
                 break;
-
-        if (j == Py_SIZE(self))
-            j--;
-        assert(0 <= j && j < Py_SIZE(self));
 
         if (start < BITS(j))
             start = BITS(j);
@@ -950,7 +944,7 @@ static PyObject *
 bitarray_index(bitarrayobject *self, PyObject *args)
 {
     PyObject *x;
-    idx_t i, start = 0, stop = -1;
+    idx_t i, start = 0, stop = self->nbits;
     long vi;
 
     if (!PyArg_ParseTuple(args, "O|LL:index", &x, &start, &stop))
@@ -959,6 +953,22 @@ bitarray_index(bitarrayobject *self, PyObject *args)
     vi = PyObject_IsTrue(x);
     if (vi < 0)
         return NULL;
+
+    if (start < 0) {
+        start += self->nbits;
+        if (start < 0)
+            start = 0;
+    }
+    if (start > self->nbits)
+        start = self->nbits;
+
+    if (stop < 0) {
+        stop += self->nbits;
+        if (stop < 0)
+            stop = 0;
+    }
+    if (stop > self->nbits)
+        stop = self->nbits;
 
     i = findfirst(self, vi, start, stop);
     if (i < 0) {
@@ -1002,7 +1012,7 @@ bitarray_contains(bitarrayobject *self, PyObject *x)
         vi = IntBool_AsInt(x);
         if (vi < 0)
             return NULL;
-        res = findfirst(self, vi, 0, -1) >= 0;
+        res = findfirst(self, vi, 0, self->nbits) >= 0;
     }
     else if (bitarray_Check(x)) {
         res = search(self, (bitarrayobject *) x, 0) >= 0;
@@ -1136,7 +1146,7 @@ Append the value bool(item) to the end of the bitarray.");
 static PyObject *
 bitarray_all(bitarrayobject *self)
 {
-    if (findfirst(self, 0, 0, -1) >= 0)
+    if (findfirst(self, 0, 0, self->nbits) >= 0)
         Py_RETURN_FALSE;
     else
         Py_RETURN_TRUE;
@@ -1151,7 +1161,7 @@ Returns True when all bits in the array are True.");
 static PyObject *
 bitarray_any(bitarrayobject *self)
 {
-    if (findfirst(self, 1, 0, -1) >= 0)
+    if (findfirst(self, 1, 0, self->nbits) >= 0)
         Py_RETURN_TRUE;
     else
         Py_RETURN_FALSE;
@@ -1804,7 +1814,7 @@ bitarray_remove(bitarrayobject *self, PyObject *v)
     if (vi < 0)
         return NULL;
 
-    i = findfirst(self, vi, 0, -1);
+    i = findfirst(self, vi, 0, self->nbits);
     if (i < 0) {
         PyErr_SetString(PyExc_ValueError, "remove(x): x not in bitarray");
         return NULL;
