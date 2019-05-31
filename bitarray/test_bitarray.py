@@ -1475,6 +1475,17 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(list(a.itersearch(b)), res)
             self.assertEqual([p for p in a.itersearch(b)], res)
 
+    def test_search4(self):
+        for a in self.randombitarrays():
+            aa = a.to01()
+            for sub in '0', '1', '01', '01', '11', '101', '1111111':
+                sr = a.search(bitarray(sub), 1)
+                try:
+                    p = sr[0]
+                except IndexError:
+                    p = -1
+                self.assertEqual(p, aa.find(sub))
+
     def test_search_type(self):
         a = bitarray('10011')
         it = a.itersearch(bitarray('1'))
