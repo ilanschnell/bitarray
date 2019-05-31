@@ -1383,19 +1383,20 @@ class MethodTests(unittest.TestCase, Util):
     def test_index4(self):
         for n in range(1, 50):
             a = bitarray(n)
-            a.setall(0)
-            for _ in range(3):
-                a[randint(0, n-1)] = 1
+            i = randint(0, 1)
+            a.setall(i)
+            for unused in range(randint(1, 4)):
+                a[randint(0, n-1)] = 1-i
             aa = a.tolist()
             for unused in range(100):
                 start = randint(-50, n+50)
                 stop = randint(-50, n+50)
                 try:
-                    res1 = a.index(1, start, stop)
+                    res1 = a.index(1-i, start, stop)
                 except ValueError:
                     res1 = None
                 try:
-                    res2 = aa.index(1, start, stop)
+                    res2 = aa.index(1-i, start, stop)
                 except ValueError:
                     res2 = None
                 self.assertEqual(res1, res2)
