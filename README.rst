@@ -47,8 +47,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-0.9.3.tar.gz
-   $ cd bitarray-0.9.3
+   $ tar xzf bitarray-1.0.0.tar.gz
+   $ cd bitarray-1.0.0
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -59,7 +59,7 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-   bitarray version: 0.9.3
+   bitarray version: 1.0.0
    2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
    .................................................
@@ -374,7 +374,7 @@ Reference
    with the corresponding bitarray for each symbols.
 
 
-``endian()`` -> string
+``endian()`` -> str
    Return the bit endianness as a string (either 'little' or 'big').
 
 
@@ -399,7 +399,7 @@ Reference
    read until EOF is reached.
 
 
-``fromstring(string)``
+``fromstring(str)``
    Append from a string, interpreting the string as machine values.
    Deprecated since version 0.4.0, use ``frombytes()`` instead.
 
@@ -461,8 +461,8 @@ Reference
 
 
 ``search(bitarray, [limit])`` -> list
-   Searches for the given a bitarray in self, and returns the start positions
-   where bitarray matches self as a list.
+   Searches for the given bitarray in self, and return the list of start
+   positions.
    The optional argument limits the number of search results to the integer
    specified.  By default, all search results are returned.
 
@@ -475,7 +475,7 @@ Reference
    Sort the bits in the array (in-place).
 
 
-``to01()`` -> string
+``to01()`` -> str
    Return a string containing '0's and '1's, representing the bits in the
    bitarray object.
    Note: To extend a bitarray from a string containing '0's and '1's,
@@ -503,7 +503,7 @@ Reference
    use the extend method.
 
 
-``tostring()`` -> string
+``tostring()`` -> str
    Return the string representing (machine values) of the bitarray.
    When the length of the bitarray is not a multiple of 8, the few remaining
    bits (1..7) are set to 0.
@@ -534,6 +534,18 @@ Reference
 
 Change log
 ----------
+
+2019-06-XX   1.0.0:
+
+  * fix bitarrays beings created from unicode in Python 2
+  * use PyBytes_* in C code, treating the Py3k function names as default,
+    which also removes all redefinitions of PyString_
+  * handle negative arguments of .index() method consistentlt with how
+    they are treated for lists
+  * add a more comments to the C code
+  * move imports outside tests: pickle, io, etc.
+  * drop Python 2.5 support
+
 
 **0.9.3** (2019-05-20):
 
