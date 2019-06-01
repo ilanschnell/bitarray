@@ -52,9 +52,7 @@ bitarray can be installed from source::
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
-privileges.
-If you have `distribute <http://pypi.python.org/pypi/distribute/>`_
-installed, you can easy_install bitarray.
+privileges.  You can also pip install bitarray.
 Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
@@ -64,12 +62,12 @@ Once you have installed the package, you may want to test it::
    .........................................................................
    .................................................
    ----------------------------------------------------------------------
-   Ran 140 tests in 2.164s
+   Ran 146 tests in 2.164s
    
    OK
 
 You can always import the function test,
-and ``test().wasSuccessful()`` will return True when the test went well.
+and ``test().wasSuccessful()`` will return ``True`` when the test went well.
 
 
 

@@ -1,4 +1,4 @@
-2019-XX-XX   1.0.0:
+2019-06-XX   1.0.0:
 -------------------
   * fix bitarrays beings created from unicode in Python 2
   * use PyBytes_* in C code, treating the Py3k function names as default,
