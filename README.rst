@@ -24,25 +24,22 @@ Key features
 
  * The bit endianness can be specified for each bitarray object, see below.
 
- * On 32bit systems, a bitarray object can contain up to 2^34 elements,
-   that is 16 Gbits (on 64bit machines up to 2^63 elements in theory --
-   on Python 2.4 only 2^31 elements,
-   see `PEP 353 <http://www.python.org/dev/peps/pep-0353/>`_
-   (added in Python 2.5)).
-
  * Packing and unpacking to other binary data formats,
    e.g. `numpy.ndarray <http://www.scipy.org/Tentative_NumPy_Tutorial>`_,
    is possible.
 
  * Fast methods for encoding and decoding variable bit length prefix codes
 
- * Sequential search (as list or iterator)
-
  * Bitwise operations: ``&, |, ^, &=, |=, ^=, ~``
+
+ * Sequential search
 
  * Pickling and unpickling of bitarray objects possible.
 
- * Bitarray objects support the buffer protocol (Python 2.7 only)
+ * Bitarray objects support the buffer protocol (Python 2.7 and above)
+
+ * On 32-bit systems, a bitarray object can contain up to 2^34 elements,
+   that is 16 Gbits (on 64-bit machines up to 2^63 elements in theory.
 
 
 Installation
