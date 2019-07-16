@@ -533,7 +533,7 @@ Reference
 Change log
 ----------
 
-2019-06-XX   1.0.0:
+**1.0.0** (2019-07-15):
 
   * fix bitarrays beings created from unicode in Python 2
   * use PyBytes_* in C code, treating the Py3k function names as default,
@@ -555,17 +555,6 @@ Change log
 **0.9.2** (2019-04-29):
 
   * fix fail to compile on Windows with VS 2015, issue #72
-
-
-**0.9.1** (2019-04-28):
-
-  * fix types to actually be types, #29
-  * check for ambiguous prefix codes when building binary tree for decoding
-  * remove Python level methods: encode, decode, iterdecode (in favor of
-    having these implemented on the C-level along with check_codedict)
-  * fix self tests for Python 2.5 and 2.6
-  * move all Huffman code related example code into examples/huffman
-  * add code to generate graphviz .dot file of Huffman tree to examples
 
 
 Please find the complete change log
