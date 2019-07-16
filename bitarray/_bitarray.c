@@ -1601,7 +1601,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
         return NULL;
     }
 
-    /* Before we extend the raw bytes with the new data, we need store
+    /* Before we extend the raw bytes with the new data, we need to store
        the current size and pad the last byte, as our bitarray size might
        not be a multiple of 8.  After extending, we remove the padding
        bits again.  The same is done in bitarray_fromfile().
