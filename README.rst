@@ -39,7 +39,7 @@ Key features
  * Bitarray objects support the buffer protocol (Python 2.7 and above)
 
  * On 32-bit systems, a bitarray object can contain up to 2^34 elements,
-   that is 16 Gbits (on 64-bit machines up to 2^63 elements in theory.
+   that is 16 Gbits (on 64-bit machines up to 2^63 elements in theory).
 
 
 Installation
