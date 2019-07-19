@@ -1,8 +1,13 @@
+2019-07-19   1.0.1:
+-------------------
+  * fix readme to pass ``twine check``
+
+
 2019-07-15   1.0.0:
 -------------------
   * fix bitarrays beings created from unicode in Python 2
-  * use PyBytes_* in C code, treating the Py3k function names as default,
-    which also removes all redefinitions of PyString_
+  * use ``PyBytes_*`` in C code, treating the Py3k function names as default,
+    which also removes all redefinitions of ``PyString_*``
   * handle negative arguments of .index() method consistently with how
     they are treated for lists
   * add a few more comments to the C code

@@ -8,6 +8,8 @@ test: bitarray/_bitarray.so
 
 doc: bitarray/_bitarray.so
 	$(PYTHON) update_readme.py
+	$(PYTHON) setup.py sdist
+	twine check dist/*
 
 
 clean:

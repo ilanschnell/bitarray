@@ -47,8 +47,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-1.0.0.tar.gz
-   $ cd bitarray-1.0.0
+   $ tar xzf bitarray-1.0.1.tar.gz
+   $ cd bitarray-1.0.1
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -57,7 +57,7 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-   bitarray version: 1.0.0
+   bitarray version: 1.0.1
    2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
    .................................................
@@ -533,11 +533,16 @@ Reference
 Change log
 ----------
 
+**1.0.1** (2019-07-19):
+
+  * fix readme to pass ``twine check``
+
+
 **1.0.0** (2019-07-15):
 
   * fix bitarrays beings created from unicode in Python 2
-  * use PyBytes_* in C code, treating the Py3k function names as default,
-    which also removes all redefinitions of PyString_
+  * use ``PyBytes_*`` in C code, treating the Py3k function names as default,
+    which also removes all redefinitions of ``PyString_*``
   * handle negative arguments of .index() method consistently with how
     they are treated for lists
   * add a few more comments to the C code
@@ -550,11 +555,6 @@ Change log
   * refactor resize() - only shrink allocated memory if new size falls
     lower than half the allocated size
   * improve error message when trying to initialize from float or complex
-
-
-**0.9.2** (2019-04-29):
-
-  * fix fail to compile on Windows with VS 2015, issue #72
 
 
 Please find the complete change log
