@@ -8,7 +8,7 @@ Please find a description of this package at:
 
 Author: Ilan Schnell
 """
-from bitarray._bitarray import _bitarray, bitdiff, bits2bytes, _sysinfo
+from bitarray._bitarray import _bitarray, subset, bitdiff, bits2bytes, _sysinfo
 
 __version__ = '1.0.1'
 

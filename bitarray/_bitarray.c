@@ -3115,6 +3115,45 @@ static PyTypeObject Bitarraytype = {
 /*************************** Module functions **********************/
 
 static PyObject *
+subset(PyObject *self, PyObject *args)
+{
+    PyObject *a, *b;
+    Py_ssize_t i;
+    unsigned char c;
+
+    if (!PyArg_ParseTuple(args, "OO:subset", &a, &b))
+        return NULL;
+    if (!(bitarray_Check(a) && bitarray_Check(b))) {
+        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+        return NULL;
+    }
+
+#define aa  ((bitarrayobject *) a)
+#define bb  ((bitarrayobject *) b)
+    if (aa->nbits != bb->nbits) {
+        PyErr_SetString(PyExc_ValueError,
+                        "bitarrays of equal length expected");
+        return NULL;
+    }
+    setunused(aa);
+    setunused(bb);
+    for (i = 0; i < Py_SIZE(aa); i++) {
+        c = aa->ob_item[i] & bb->ob_item[i];
+        if (c != aa->ob_item[i]) {
+            Py_RETURN_FALSE;
+        }
+    }
+#undef aa
+#undef bb
+    Py_RETURN_TRUE;
+}
+
+PyDoc_STRVAR(subset_doc,
+"subset(a, b) -> bool\n\
+\n\
+Return True if a is a subset of b or false otherwise");
+
+static PyObject *
 bitdiff(PyObject *self, PyObject *args)
 {
     PyObject *a, *b;
@@ -3201,6 +3240,7 @@ tuple(sizeof(void *),\n\
 
 
 static PyMethodDef module_functions[] = {
+    {"subset",     (PyCFunction) subset,     METH_VARARGS, subset_doc    },
     {"bitdiff",    (PyCFunction) bitdiff,    METH_VARARGS, bitdiff_doc   },
     {"bits2bytes", (PyCFunction) bits2bytes, METH_O,       bits2bytes_doc},
     {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS,  sysinfo_doc   },

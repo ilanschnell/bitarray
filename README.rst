@@ -519,6 +519,8 @@ Reference
 ``test(verbosity=1, repeat=1)`` -> TextTestResult
    Run self-test, and return unittest.runner.TextTestResult object.
 
+``subset(a, b)`` -> bool
+   Return True if a is a subset of b or false otherwise
 
 ``bitdiff(a, b)`` -> int
    Return the difference between two bitarrays a and b.

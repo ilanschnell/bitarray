@@ -29,7 +29,7 @@ else:
     import cPickle
 
 
-from bitarray import bitarray, bitdiff, bits2bytes, __version__
+from bitarray import bitarray, subset, bitdiff, bits2bytes, __version__
 
 
 tests = []
@@ -137,6 +137,17 @@ def getIndicesEx(r, length):
 # ---------------------------------------------------------------------------
 
 class TestsModuleFunctions(unittest.TestCase, Util):
+
+    def test_subset(self):
+        a = bitarray('0111')
+        b = bitarray('0101')
+        self.assertFalse(subset(a, b))
+        self.assertTrue(subset(b, a))
+        self.assertRaises(TypeError, subset, a, '')
+        self.assertRaises(TypeError, subset, '1', b)
+        self.assertRaises(TypeError, subset, a, 4)
+        b.append(1)
+        self.assertRaises(ValueError, subset, a, b)
 
     def test_bitdiff(self):
         a = bitarray('0011')
