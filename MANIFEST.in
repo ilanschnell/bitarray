@@ -1,0 +1,3 @@
+# Include compiled code
+global-include bitarray *.pyd
+global-include bitarray *.so

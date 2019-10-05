@@ -1,3 +1,6 @@
+.. image:: https://dev.azure.com/hardbyte/bitarray/_apis/build/status/hardbyte.bitarray?branchName=azure-pipelines
+
+
 ======================================
 bitarray: efficient arrays of booleans
 ======================================

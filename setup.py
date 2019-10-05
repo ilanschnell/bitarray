@@ -42,5 +42,6 @@ setup(
     packages = ["bitarray"],
     ext_modules = [Extension(name = "bitarray._bitarray",
                              sources = ["bitarray/_bitarray.c"])],
+    include_package_data = True,
     **kwds
 )
