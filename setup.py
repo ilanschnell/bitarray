@@ -45,5 +45,6 @@ setup(
                              sources = ["bitarray/_bitarray.c"]),
                    Extension(name = "bitarray._util",
                              sources = ["bitarray/_util.c"])],
+    include_package_data = True,
     **kwds
 )
