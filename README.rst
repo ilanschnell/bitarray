@@ -1,4 +1,4 @@
-.. image:: https://dev.azure.com/hardbyte/bitarray/_apis/build/status/hardbyte.bitarray?branchName=azure-pipelines
+.. image:: https://dev.azure.com/hardbyte/bitarray/_apis/build/status/hardbyte.bitarray?branchName=master
 
 
 ======================================
