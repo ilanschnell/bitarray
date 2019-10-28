@@ -19,8 +19,6 @@ stages:
 
         strategy:
           matrix:
-            Python26:
-              python.version: '2.6'
             Python27:
               python.version: '2.7'
             Python34:
@@ -82,8 +80,6 @@ stages:
     - job: windows
       pool: {vmImage: 'vs2017-win2016'}
       steps:
-        - {task: UsePythonVersion@0, inputs: {versionSpec: '2.6', architecture: x86}}
-        - {task: UsePythonVersion@0, inputs: {versionSpec: '2.6', architecture: x64}}
         - {task: UsePythonVersion@0, inputs: {versionSpec: '2.7', architecture: x86}}
         - {task: UsePythonVersion@0, inputs: {versionSpec: '2.7', architecture: x64}}
         - {task: UsePythonVersion@0, inputs: {versionSpec: '3.4', architecture: x86}}
