@@ -1419,9 +1419,9 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a.count(), a.to01().count('1'))
 
         for a in self.randombitarrays():
-            self.assertEqual(a.count(), a.count(1))
-            self.assertEqual(a.count(1), a.to01().count('1'))
-            self.assertEqual(a.count(0), a.to01().count('0'))
+            s = a.to01()
+            self.assertEqual(a.count(1), s.count('1'))
+            self.assertEqual(a.count(0), s.count('0'))
 
 
     def test_search(self):
