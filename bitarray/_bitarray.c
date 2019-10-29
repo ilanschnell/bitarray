@@ -425,16 +425,37 @@ static int bitcount_lookup[256] = {
 
 /* returns number of 1 bits */
 static idx_t
-count(bitarrayobject *self)
+count(bitarrayobject *self, idx_t start, idx_t stop)
 {
-    Py_ssize_t i;
-    idx_t res = 0;
+    Py_ssize_t byte_start, byte_stop, j;
+    idx_t i, res = 0;
     unsigned char c;
 
-    setunused(self);
-    for (i = 0; i < Py_SIZE(self); i++) {
-        c = self->ob_item[i];
-        res += bitcount_lookup[c];
+    assert(0 <= start && start <= self->nbits);
+    assert(0 <= stop && stop <= self->nbits);
+    assert(BYTES(stop) <= Py_SIZE(self));
+
+    if (self->nbits == 0 || start >= stop)
+        return 0;
+
+    if (stop >= start + 8) {
+        byte_start = BYTES(start);
+        byte_stop = stop / 8;
+        for (i = start; i < byte_start * 8; i++)
+            if (GETBIT(self, i))
+                res++;
+        for (j = byte_start; j < byte_stop; j++) {
+            c = self->ob_item[j];
+            res += bitcount_lookup[c];
+        }
+        for (i = byte_stop * 8; i < stop; i++)
+            if (GETBIT(self, i))
+                res++;
+    }
+    else {
+        for (i = start; i < stop; i++)
+            if (GETBIT(self, i))
+                res++;
     }
     return res;
 }
@@ -943,7 +964,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "|i:count", &x))
         return NULL;
 
-    n1 = count(self);
+    n1 = count(self, 0, self->nbits);
     return PyLong_FromLongLong(x ? n1 : (self->nbits - n1));
 }
 
@@ -1326,7 +1347,7 @@ bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
         return NULL;
 
     n = self->nbits;
-    n1 = count(self);
+    n1 = count(self, 0, self->nbits);
 
     if (reverse) {
         setrange(self, 0, n1, 1);
