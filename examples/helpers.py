@@ -21,7 +21,7 @@ def find_last(a, value=True):
 
 def count_n(a, n):
     "return the index i for which a[:i].count() == n"
-    i, j = n, a[:n].count()
+    i, j = n, a.count(1, 0, n)
     while j < n:
         if a[i]:
             j += 1
