@@ -935,7 +935,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(count_doc,
-"count([value]) -> int\n\
+"count(value=True, /) -> int\n\
 \n\
 Return number of occurrences of value (defaults to True) in the bitarray.");
 
@@ -979,7 +979,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(index_doc,
-"index(value, [start, [stop]]) -> int\n\
+"index(value, start=0, stop=<end of array>, /) -> int\n\
 \n\
 Return index of the first occurrence of bool(value) in the bitarray.\n\
 Raises ValueError if the value is not present.");
@@ -994,7 +994,7 @@ bitarray_extend(bitarrayobject *self, PyObject *obj)
 }
 
 PyDoc_STRVAR(extend_doc,
-"extend(object)\n\
+"extend(iterable, /)\n\
 \n\
 Append bits to the end of the bitarray.  The objects which can be passed\n\
 to this method are the same iterable objects which can given to a bitarray\n\
@@ -1025,10 +1025,10 @@ bitarray_contains(bitarrayobject *self, PyObject *x)
 }
 
 PyDoc_STRVAR(contains_doc,
-"__contains__(x) -> bool\n\
+"__contains__(value, /) -> bool\n\
 \n\
-Return True if bitarray contains x, False otherwise.\n\
-The value x may be a boolean (or integer between 0 and 1), or a bitarray.");
+Return True if bitarray contains value, False otherwise.\n\
+The value may be a boolean (or integer between 0 and 1), or a bitarray.");
 
 
 static PyObject *
@@ -1078,7 +1078,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(search_doc,
-"search(bitarray, [limit]) -> list\n\
+"search(bitarray, limit=<none>, /) -> list\n\
 \n\
 Searches for the given bitarray in self, and return the list of start\n\
 positions.\n\
@@ -1138,7 +1138,7 @@ bitarray_append(bitarrayobject *self, PyObject *v)
 }
 
 PyDoc_STRVAR(append_doc,
-"append(item)\n\
+"append(item, /)\n\
 \n\
 Append the value bool(item) to the end of the bitarray.");
 
@@ -1310,7 +1310,7 @@ bitarray_setall(bitarrayobject *self, PyObject *v)
 }
 
 PyDoc_STRVAR(setall_doc,
-"setall(value)\n\
+"setall(value, /)\n\
 \n\
 Set all bits in the bitarray to bool(value).");
 
@@ -1482,7 +1482,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
 #endif
 
 PyDoc_STRVAR(fromfile_doc,
-"fromfile(f, [n])\n\
+"fromfile(f, n=<till EOF>, /)\n\
 \n\
 Read n bytes from the file object f and append them to the bitarray\n\
 interpreted as machine values.  When n is omitted, as many bytes are\n\
@@ -1556,7 +1556,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
 #endif
 
 PyDoc_STRVAR(tofile_doc,
-"tofile(f)\n\
+"tofile(f, /)\n\
 \n\
 Write all bits (as machine values) to the file object f.\n\
 When the length of the bitarray is not a multiple of 8,\n\
@@ -1618,7 +1618,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
 }
 
 PyDoc_STRVAR(frombytes_doc,
-"frombytes(bytes)\n\
+"frombytes(bytes, /)\n\
 \n\
 Append from a byte string, interpreted as machine values.");
 
@@ -1700,7 +1700,7 @@ bitarray_pack(bitarrayobject *self, PyObject *bytes)
 }
 
 PyDoc_STRVAR(pack_doc,
-"pack(bytes)\n\
+"pack(bytes, /)\n\
 \n\
 Extend the bitarray from a byte string, where each characters corresponds to\n\
 a single bit.  The character b'\\x00' maps to bit 0 and all other characters\n\
@@ -1765,7 +1765,7 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(insert_doc,
-"insert(i, item)\n\
+"insert(i, item, /)\n\
 \n\
 Insert bool(item) into the bitarray before position i.");
 
@@ -1798,7 +1798,7 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(pop_doc,
-"pop([i]) -> item\n\
+"pop(index=-1, /) -> item\n\
 \n\
 Return the i-th (default last) element and delete it from the bitarray.\n\
 Raises IndexError if bitarray is empty or index is out of range.");
@@ -1825,7 +1825,7 @@ bitarray_remove(bitarrayobject *self, PyObject *v)
 }
 
 PyDoc_STRVAR(remove_doc,
-"remove(item)\n\
+"remove(item, /)\n\
 \n\
 Remove the first occurrence of bool(item) in the bitarray.\n\
 Raises ValueError if item is not present.");
@@ -2180,7 +2180,7 @@ error:
 }
 
 PyDoc_STRVAR(encode_doc,
-"encode(code, iterable)\n\
+"encode(code, iterable, /)\n\
 \n\
 Given a prefix code (a dict mapping symbols to bitarrays),\n\
 iterate over the iterable object with symbols, and extend the bitarray\n\
@@ -2356,7 +2356,7 @@ error:
 }
 
 PyDoc_STRVAR(decode_doc,
-"decode(code) -> list\n\
+"decode(code, /) -> list\n\
 \n\
 Given a prefix code (a dict mapping symbols to bitarrays),\n\
 decode the content of the bitarray and return it as a list of symbols.");
@@ -2405,7 +2405,7 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *codedict)
 }
 
 PyDoc_STRVAR(iterdecode_doc,
-"iterdecode(code) -> iterator\n\
+"iterdecode(code, /) -> iterator\n\
 \n\
 Given a prefix code (a dict mapping symbols to bitarrays),\n\
 decode the content of the bitarray and return an iterator over\n\
@@ -2521,7 +2521,7 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
 }
 
 PyDoc_STRVAR(itersearch_doc,
-"itersearch(bitarray) -> iterator\n\
+"itersearch(bitarray, /) -> iterator\n\
 \n\
 Searches for the given a bitarray in self, and return an iterator over\n\
 the start positions where bitarray matches self.");
@@ -3148,7 +3148,7 @@ bitdiff(PyObject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(bitdiff_doc,
-"bitdiff(a, b) -> int\n\
+"bitdiff(a, b, /) -> int\n\
 \n\
 Return the difference between two bitarrays a and b.\n\
 This is function does the same as (a ^ b).count(), but is more memory\n\
@@ -3174,7 +3174,7 @@ bits2bytes(PyObject *self, PyObject *v)
 }
 
 PyDoc_STRVAR(bits2bytes_doc,
-"bits2bytes(n) -> int\n\
+"bits2bytes(n, /) -> int\n\
 \n\
 Return the number of bytes necessary to store n bits.");
 

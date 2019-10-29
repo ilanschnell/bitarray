@@ -1,3 +1,9 @@
+2019-XX-XX   1.0.2:
+-------------------
+  * update documentation to use positional-only syntax in docstrings
+  * update README to pass Python 3 doctest
+
+
 2019-07-19   1.0.1:
 -------------------
   * fix readme to pass ``twine check``

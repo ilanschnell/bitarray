@@ -58,7 +58,7 @@ Once you have installed the package, you may want to test it::
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
    bitarray version: 1.0.1
-   2.7.2 (r271:86832, Nov 29 2010) [GCC 4.2.1 (SUSE Linux)]
+   3.7.4 (r271:86832, Dec 29 2019) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
    .................................................
    ----------------------------------------------------------------------
@@ -106,7 +106,7 @@ being applied, whenever casting an object:
    bitarray('101010')
    >>> a.append(a)      # note that bool(a) is True
    >>> a.count(42)      # counts occurrences of True (not 42)
-   4L
+   4
    >>> a.remove('')     # removes first occurrence of False
    >>> a
    bitarray('110101')
@@ -162,7 +162,7 @@ specified explicitly:
    bitarray('10000010')
    >>> b = bitarray('11000010', endian='little')
    >>> b.tobytes()
-   'C'
+   b'C'
 
 Here, the low-bit comes first because little-endian means that increasing
 numeric significance corresponds to an increasing address (index).
@@ -175,7 +175,7 @@ and most significant bit.
    bitarray('01000001')
    >>> a[6] = 1
    >>> a.tobytes()
-   'C'
+   b'C'
 
 Here, the high-bit comes first because big-endian
 means "most-significant first".
@@ -251,12 +251,12 @@ interpreted as simple bytes.
    >>> len(v)
    3
    >>> v[-1]
-   'C'
+   67
    >>> v[:2].tobytes()
-   'AB'
+   b'AB'
    >>> v.readonly  # changing a bitarray's memory is also possible
    False
-   >>> v[1] = 'o'
+   >>> v[1] = 111
    >>> a
    bitarray('010000010110111101000011')
 
@@ -335,7 +335,7 @@ Reference
    Returns True when any bit in the array is True.
 
 
-``append(item)``
+``append(item, /)``
    Append the value bool(item) to the end of the bitarray.
 
 
@@ -357,16 +357,16 @@ Reference
    Return a copy of the bitarray.
 
 
-``count([value])`` -> int
+``count(value=True, /)`` -> int
    Return number of occurrences of value (defaults to True) in the bitarray.
 
 
-``decode(code)`` -> list
+``decode(code, /)`` -> list
    Given a prefix code (a dict mapping symbols to bitarrays),
    decode the content of the bitarray and return it as a list of symbols.
 
 
-``encode(code, iterable)``
+``encode(code, iterable, /)``
    Given a prefix code (a dict mapping symbols to bitarrays),
    iterate over the iterable object with symbols, and extend the bitarray
    with the corresponding bitarray for each symbols.
@@ -376,7 +376,7 @@ Reference
    Return the bit endianness as a string (either 'little' or 'big').
 
 
-``extend(object)``
+``extend(iterable, /)``
    Append bits to the end of the bitarray.  The objects which can be passed
    to this method are the same iterable objects which can given to a bitarray
    object upon initialization.
@@ -387,11 +387,11 @@ Reference
    will be a multiple of 8.  Returns the number of bits added (0..7).
 
 
-``frombytes(bytes)``
+``frombytes(bytes, /)``
    Append from a byte string, interpreted as machine values.
 
 
-``fromfile(f, [n])``
+``fromfile(f, n=<till EOF>, /)``
    Read n bytes from the file object f and append them to the bitarray
    interpreted as machine values.  When n is omitted, as many bytes are
    read until EOF is reached.
@@ -402,12 +402,12 @@ Reference
    Deprecated since version 0.4.0, use ``frombytes()`` instead.
 
 
-``index(value, [start, [stop]])`` -> int
+``index(value, start=0, stop=<end of array>, /)`` -> int
    Return index of the first occurrence of bool(value) in the bitarray.
    Raises ValueError if the value is not present.
 
 
-``insert(i, item)``
+``insert(i, item, /)``
    Insert bool(item) into the bitarray before position i.
 
 
@@ -416,13 +416,13 @@ Reference
    i.e. convert each 1-bit into a 0-bit and vice versa.
 
 
-``iterdecode(code)`` -> iterator
+``iterdecode(code, /)`` -> iterator
    Given a prefix code (a dict mapping symbols to bitarrays),
    decode the content of the bitarray and return an iterator over
    the symbols.
 
 
-``itersearch(bitarray)`` -> iterator
+``itersearch(bitarray, /)`` -> iterator
    Searches for the given a bitarray in self, and return an iterator over
    the start positions where bitarray matches self.
 
@@ -435,7 +435,7 @@ Reference
    on 32bit and 64bit machines.
 
 
-``pack(bytes)``
+``pack(bytes, /)``
    Extend the bitarray from a byte string, where each characters corresponds to
    a single bit.  The character b'\x00' maps to bit 0 and all other characters
    map to bit 1.
@@ -444,12 +444,12 @@ Reference
    (for example NumPy's ndarray object) which have a different view of memory.
 
 
-``pop([i])`` -> item
+``pop(index=-1, /)`` -> item
    Return the i-th (default last) element and delete it from the bitarray.
    Raises IndexError if bitarray is empty or index is out of range.
 
 
-``remove(item)``
+``remove(item, /)``
    Remove the first occurrence of bool(item) in the bitarray.
    Raises ValueError if item is not present.
 
@@ -458,14 +458,14 @@ Reference
    Reverse the order of bits in the array (in-place).
 
 
-``search(bitarray, [limit])`` -> list
+``search(bitarray, limit=<none>, /)`` -> list
    Searches for the given bitarray in self, and return the list of start
    positions.
    The optional argument limits the number of search results to the integer
    specified.  By default, all search results are returned.
 
 
-``setall(value)``
+``setall(value, /)``
    Set all bits in the bitarray to bool(value).
 
 
@@ -486,7 +486,7 @@ Reference
    bits (1..7) are set to 0.
 
 
-``tofile(f)``
+``tofile(f, /)``
    Write all bits (as machine values) to the file object f.
    When the length of the bitarray is not a multiple of 8,
    the remaining bits (1..7) are set to 0.
@@ -520,18 +520,24 @@ Reference
    Run self-test, and return unittest.runner.TextTestResult object.
 
 
-``bitdiff(a, b)`` -> int
+``bitdiff(a, b, /)`` -> int
    Return the difference between two bitarrays a and b.
    This is function does the same as (a ^ b).count(), but is more memory
    efficient, as no intermediate bitarray object gets created
 
 
-``bits2bytes(n)`` -> int
+``bits2bytes(n, /)`` -> int
    Return the number of bytes necessary to store n bits.
 
 
 Change log
 ----------
+
+2019-XX-XX   1.0.2:
+
+  * update documentation to use positional-only syntax in docstrings
+  * update README to pass Python 3 doctest
+
 
 **1.0.1** (2019-07-19):
 
