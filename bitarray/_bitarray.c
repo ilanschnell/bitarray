@@ -958,18 +958,24 @@ Return a copy of the bitarray.");
 static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
-    idx_t n1;
+    idx_t n1, start = 0, stop = self->nbits;
     long x = 1;
 
-    if (!PyArg_ParseTuple(args, "|i:count", &x))
+    if (!PyArg_ParseTuple(args, "|iLL:count", &x, &start, &stop))
         return NULL;
 
-    n1 = count(self, 0, self->nbits);
-    return PyLong_FromLongLong(x ? n1 : (self->nbits - n1));
+    normalize_index(self->nbits, &start);
+    normalize_index(self->nbits, &stop);
+
+    if (self->nbits == 0 || start >= stop)
+        return PyLong_FromLongLong(0);
+
+    n1 = count(self, start, stop);
+    return PyLong_FromLongLong(x ? n1 : (stop - start - n1));
 }
 
 PyDoc_STRVAR(count_doc,
-"count(value=True, /) -> int\n\
+"count(value=True, start=0, stop=<end of array>, /) -> int\n\
 \n\
 Return number of occurrences of value (defaults to True) in the bitarray.");
 
@@ -3173,7 +3179,7 @@ PyDoc_STRVAR(bitdiff_doc,
 \n\
 Return the difference between two bitarrays a and b.\n\
 This is function does the same as (a ^ b).count(), but is more memory\n\
-efficient, as no intermediate bitarray object gets created");
+efficient, as no intermediate bitarray object gets created.");
 
 
 static PyObject *

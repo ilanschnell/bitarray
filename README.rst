@@ -357,7 +357,7 @@ Reference
    Return a copy of the bitarray.
 
 
-``count(value=True, /)`` -> int
+``count(value=True, start=0, stop=<end of array>, /)`` -> int
    Return number of occurrences of value (defaults to True) in the bitarray.
 
 
@@ -522,7 +522,7 @@ Reference
 
 ``bitdiff(a, b, /)`` -> int
    Return the difference between two bitarrays a and b.
-   This is function does the same as ``(a ^ b).count()``, but is more memory
+   This is function does the same as (a ^ b).count(), but is more memory
    efficient, as no intermediate bitarray object gets created.
 
 
