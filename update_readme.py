@@ -1,3 +1,7 @@
+import sys
+if not sys.version_info[0] == 3:
+    sys.exit("This program only runs with Python 3, sorry :-(")
+
 import re
 import doctest
 from io import StringIO
