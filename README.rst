@@ -47,8 +47,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-1.0.1.tar.gz
-   $ cd bitarray-1.0.1
+   $ tar xzf bitarray-1.1.0.tar.gz
+   $ cd bitarray-1.1.0
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -57,7 +57,7 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-   bitarray version: 1.0.1
+   bitarray version: 1.1.0
    3.7.4 (r271:86832, Dec 29 2019) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
    .................................................................
@@ -533,10 +533,11 @@ Reference
 Change log
 ----------
 
-2019-XX-XX   1.0.2:
+2019-XX-XX   1.1.0:
 
+  * add optional start and stop parameters to .count() method
   * update documentation to use positional-only syntax in docstrings
-  * update README to pass Python 3 doctest
+  * update readme to pass Python 3 doctest
 
 
 **1.0.1** (2019-07-19):

@@ -1,7 +1,8 @@
-2019-XX-XX   1.0.2:
+2019-XX-XX   1.1.0:
 -------------------
+  * add optional start and stop parameters to .count() method
   * update documentation to use positional-only syntax in docstrings
-  * update README to pass Python 3 doctest
+  * update readme to pass Python 3 doctest
 
 
 2019-07-19   1.0.1:
