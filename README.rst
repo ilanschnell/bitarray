@@ -522,8 +522,8 @@ Reference
 
 ``bitdiff(a, b, /)`` -> int
    Return the difference between two bitarrays a and b.
-   This is function does the same as (a ^ b).count(), but is more memory
-   efficient, as no intermediate bitarray object gets created
+   This is function does the same as ``(a ^ b).count()``, but is more memory
+   efficient, as no intermediate bitarray object gets created.
 
 
 ``bits2bytes(n, /)`` -> int
