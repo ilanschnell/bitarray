@@ -785,6 +785,19 @@ IntBool_AsInt(PyObject *v)
     return (int) x;
 }
 
+/* Normalize index (which may be negative), such that 0 <= i <= n */
+static void
+normalize_index(idx_t n, idx_t *i)
+{
+    if (*i < 0) {
+        *i += n;
+        if (*i < 0)
+            *i = 0;
+    }
+    if (*i > n)
+        *i = n;
+}
+
 /* Extract a slice index from a PyInt or PyLong or an object with the
    nb_index slot defined, and store in *i.
    However, this function returns -1 on error and 0 on success.
@@ -954,21 +967,8 @@ bitarray_index(bitarrayobject *self, PyObject *args)
     if (vi < 0)
         return NULL;
 
-    if (start < 0) {
-        start += self->nbits;
-        if (start < 0)
-            start = 0;
-    }
-    if (start > self->nbits)
-        start = self->nbits;
-
-    if (stop < 0) {
-        stop += self->nbits;
-        if (stop < 0)
-            stop = 0;
-    }
-    if (stop > self->nbits)
-        stop = self->nbits;
+    normalize_index(self->nbits, &start);
+    normalize_index(self->nbits, &stop);
 
     i = findfirst(self, vi, start, stop);
     if (i < 0) {
