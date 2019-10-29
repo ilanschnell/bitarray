@@ -1423,6 +1423,32 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a.count(1), s.count('1'))
             self.assertEqual(a.count(0), s.count('0'))
 
+    def test_count2(self):
+        N = 37
+        a = bitarray(N)
+        a.setall(1)
+        for i in range(N):
+            for j in range(i, N):
+                self.assertEqual(a.count(1, i, j), j - i)
+
+    def test_count3(self):
+        a = bitarray('01001100' '01110011' '01')
+        self.assertEqual(a.count(), 9)
+        self.assertEqual(a.count(0, 12), 3)
+        self.assertEqual(a.count(1, -5), 3)
+        self.assertEqual(a.count(1, 2, 17), 7)
+        self.assertEqual(a.count(1, 6, 11), 2)
+        self.assertEqual(a.count(0, 7, -3), 4)
+        self.assertEqual(a.count(1, 1, -1), 8)
+        self.assertEqual(a.count(1, 17, 14), 0)
+
+        for a in self.randombitarrays():
+            s = a.to01()
+            i = randint(-3, len(a)+1)
+            j = randint(-3, len(a)+1)
+            self.assertEqual(a.count(1, i, j), s[i:j].count('1'))
+            self.assertEqual(a.count(0, i, j), s[i:j].count('0'))
+
 
     def test_search(self):
         a = bitarray('')
