@@ -1367,7 +1367,7 @@ bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     idx_t n, n0, n1;
     int reverse = 0;
-    static char* kwlist[] = {"reverse", NULL};
+    static char *kwlist[] = {"reverse", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:sort", kwlist, &reverse))
         return NULL;
@@ -1716,7 +1716,7 @@ static PyObject *
 bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     char zero = 0x00, one = 0xff;
-    static char* kwlist[] = {"zero", "one", NULL};
+    static char *kwlist[] = {"zero", "one", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|cc:unpack", kwlist,
                                      &zero, &one))
@@ -2752,7 +2752,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     PyObject *initial = NULL;
     char *endian_str = NULL;
     int endian;
-    static char* kwlist[] = {"initial", "endian", NULL};
+    static char *kwlist[] = {"initial", "endian", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds,
                         "|Os:bitarray", kwlist, &initial, &endian_str))
