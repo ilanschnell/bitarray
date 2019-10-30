@@ -442,7 +442,7 @@ static int bitcount_lookup[256] = {
 
 /* returns number of 1 bits */
 static idx_t
-count(bitarrayobject *self, idx_t start, idx_t stop)
+count(bitarrayobject *self, int vi, idx_t start, idx_t stop)
 {
     Py_ssize_t byte_start, byte_stop, j;
     idx_t i, res = 0;
@@ -450,6 +450,7 @@ count(bitarrayobject *self, idx_t start, idx_t stop)
 
     assert(0 <= start && start <= self->nbits);
     assert(0 <= stop && stop <= self->nbits);
+    assert(0 <= vi && vi <= 1);
     assert(BYTES(stop) <= Py_SIZE(self));
 
     if (self->nbits == 0 || start >= stop)
@@ -474,6 +475,8 @@ count(bitarrayobject *self, idx_t start, idx_t stop)
             if (GETBIT(self, i))
                 res++;
     }
+    if (vi == 0)
+        res = stop - start - res;
     return res;
 }
 
@@ -487,6 +490,7 @@ findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
 
     assert(0 <= start && start <= self->nbits);
     assert(0 <= stop && stop <= self->nbits);
+    assert(0 <= vi && vi <= 1);
     assert(BYTES(stop) <= Py_SIZE(self));
 
     if (self->nbits == 0 || start >= stop)
@@ -976,7 +980,7 @@ static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
     PyObject *x = Py_True;
-    idx_t n1, start = 0, stop = self->nbits;
+    idx_t start = 0, stop = self->nbits;
     long vi;
 
     if (!PyArg_ParseTuple(args, "|OLL:count", &x, &start, &stop))
@@ -989,11 +993,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     normalize_index(self->nbits, &start);
     normalize_index(self->nbits, &stop);
 
-    if (self->nbits == 0 || start >= stop)
-        return PyLong_FromLongLong(0);
-
-    n1 = count(self, start, stop);
-    return PyLong_FromLongLong(vi ? n1 : (stop - start - n1));
+    return PyLong_FromLongLong(count(self, vi, start, stop));
 }
 
 PyDoc_STRVAR(count_doc,
@@ -1375,7 +1375,7 @@ bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
         return NULL;
 
     n = self->nbits;
-    n1 = count(self, 0, self->nbits);
+    n1 = count(self, 1, 0, n);
 
     if (reverse) {
         setrange(self, 0, n1, 1);
