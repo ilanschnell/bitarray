@@ -357,12 +357,29 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
 static void
 setrange(bitarrayobject *self, idx_t start, idx_t stop, int val)
 {
+    Py_ssize_t byte_start, byte_stop;
     idx_t i;
 
     assert(0 <= start && start <= self->nbits);
     assert(0 <= stop && stop <= self->nbits);
-    for (i = start; i < stop; i++)
-        setbit(self, i, val);
+
+    if (self->nbits == 0 || start >= stop)
+        return;
+
+    if (stop >= start + 8) {
+        byte_start = BYTES(start);
+        byte_stop = stop / 8;
+        for (i = start; i < byte_start * 8; i++)
+            setbit(self, i, val);
+        memset(self->ob_item + byte_start, val ? 0xff : 0x00,
+               byte_stop - byte_start);
+        for (i = byte_stop * 8; i < stop; i++)
+            setbit(self, i, val);
+    }
+    else {
+        for (i = start; i < stop; i++)
+            setbit(self, i, val);
+    }
 }
 
 static void
