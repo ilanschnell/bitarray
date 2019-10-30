@@ -1271,6 +1271,13 @@ class MethodTests(unittest.TestCase, Util):
         a.append(False)
         a.append(False)
         self.assertEQUAL(a, bitarray('100'))
+        a.append(0)
+        a.append(1)
+        a.append(2)
+        a.append(None)
+        a.append('')
+        a.append('a')
+        self.assertEQUAL(a, bitarray('100011001'))
 
         for a in self.randombitarrays():
             aa = a.tolist()
