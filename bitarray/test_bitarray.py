@@ -1563,11 +1563,20 @@ class MethodTests(unittest.TestCase, Util):
 
         self.assertRaises(TypeError, a.sort, 'A')
 
+        N = 100000
+        a = bitarray(randint(N, N + 100))
+        for dum in range(100):
+            a[randint(0, N - 1)] = randint(0, 1)
+        b = a.tolist()
+        a.sort()
+        self.assertEqual(a, bitarray(sorted(b)))
+
         for a in self.randombitarrays():
+            b = a.tolist()
             ida = id(a)
             rev = randint(0, 1)
             a.sort(rev)
-            self.assertEqual(a, bitarray(sorted(a.tolist(), reverse=rev)))
+            self.assertEqual(a, bitarray(sorted(b, reverse=rev)))
             self.assertEqual(id(a), ida)
 
 
