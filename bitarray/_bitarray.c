@@ -768,7 +768,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 #ifdef IS_PY3K
 #define IS_INDEX(x)  (PyLong_Check(x) || PyIndex_Check(x))
 #define IS_INT_OR_BOOL(x)  (PyBool_Check(x) || PyLong_Check(x))
-#else
+#else  /* Py 2 */
 #define IS_INDEX(x)  (PyInt_Check(x) || PyLong_Check(x) || PyIndex_Check(x))
 #define IS_INT_OR_BOOL(x)  (PyBool_Check(x) || PyInt_Check(x) || \
                                                PyLong_Check(x))
@@ -3194,7 +3194,7 @@ bits2bytes(PyObject *self, PyObject *v)
     if (getIndex(v, &n) < 0)
         return NULL;
     if (n < 0) {
-        PyErr_SetString(PyExc_ValueError, "positive value expected");
+        PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
         return NULL;
     }
     return PyLong_FromLongLong(BYTES(n));

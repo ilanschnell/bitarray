@@ -162,6 +162,8 @@ class TestsModuleFunctions(unittest.TestCase, Util):
         for arg in ['foo', [], None, {}]:
             self.assertRaises(TypeError, bits2bytes, arg)
 
+        self.assertRaises(TypeError, bits2bytes, 187.0)
+        self.assertRaises(TypeError, bits2bytes, -4.0)
         self.assertRaises(TypeError, bits2bytes)
         self.assertRaises(TypeError, bits2bytes, 1, 2)
 
