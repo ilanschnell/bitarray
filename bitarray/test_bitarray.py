@@ -51,8 +51,8 @@ if is_py3k:
 
 class Util(object):
 
-    def randombitarrays(self):
-        for n in list(range(25)) + [randint(1000, 2000)]:
+    def randombitarrays(self, start=1):
+        for n in list(range(start, 25)) + [randint(1000, 2000)]:
             a = bitarray(endian=['little', 'big'][randint(0, 1)])
             a.frombytes(os.urandom(bits2bytes(n)))
             del a[n:]
@@ -463,10 +463,9 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.__getitem__, (1, 2))
 
     def test_getitem4(self):
-        for a in self.randombitarrays():
+        for a in self.randombitarrays(start=1):
             aa = a.tolist()
             la = len(a)
-            if la == 0: continue
             for dum in range(10):
                 step = self.rndsliceidx(la)
                 if step == 0: step = None
@@ -491,10 +490,8 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__setitem__, -3, False)
 
     def test_setitem2(self):
-        for a in self.randombitarrays():
+        for a in self.randombitarrays(start=1):
             la = len(a)
-            if la == 0:
-                continue
             i = randint(0, la - 1)
             aa = a.tolist()
             ida = id(a)
@@ -528,9 +525,8 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__setitem__, -6, 'bar')
 
     def test_setitem4(self):
-        for a in self.randombitarrays():
+        for a in self.randombitarrays(start=1):
             la = len(a)
-            if la == 0: continue
             for dum in range(50):
                 step = self.rndsliceidx(la)
                 if step == 0: step = None
@@ -587,9 +583,8 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__delitem__, -4)
 
     def test_delitem2(self):
-        for a in self.randombitarrays():
+        for a in self.randombitarrays(start=1):
             la = len(a)
-            if la == 0: continue
             for dum in range(50):
                 step = self.rndsliceidx(la)
                 if step == 0: step = None
@@ -682,9 +677,7 @@ class MiscTests(unittest.TestCase, Util):
             def __getitem__(self, i):
                 return bitarray.__getitem__(self, i - self.offset)
 
-        for a in self.randombitarrays():
-            if len(a) == 0:
-                continue
+        for a in self.randombitarrays(start=1):
             b = ExaggeratingBitarray(a, 1234)
             for i in range(len(a)):
                 self.assertEqual(a[i], b[i+1234])
@@ -1661,9 +1654,7 @@ class MethodTests(unittest.TestCase, Util):
             self.check_obj(a)
             self.assertEqual(a.endian(), enda)
 
-        for a in self.randombitarrays():
-            if len(a) == 0:
-                continue
+        for a in self.randombitarrays(start=1):
             n = randint(-len(a), len(a)-1)
             aa = a.tolist()
             self.assertEqual(a.pop(n), aa[n])
