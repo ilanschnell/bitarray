@@ -74,7 +74,7 @@ class Util(object):
     def check_obj(self, a):
         self.assertEqual(repr(type(a)), "<class 'bitarray.bitarray'>")
         unused = 8 * a.buffer_info()[1] - len(a)
-        self.assert_(0 <= unused < 8)
+        self.assertTrue(0 <= unused < 8)
         self.assertEqual(unused, a.buffer_info()[3])
 
     def assertEQUAL(self, a, b):
@@ -88,13 +88,17 @@ class Util(object):
             return
         self.assertRaises(StopIteration, it.next)
 
+    if sys.version_info[:2] == (2, 6):
+        def assertIsInstance(self, o, t):
+            self.assertTrue(isinstance(o, t))
+
 
 def getIndicesEx(r, length):
     if not isinstance(r, slice):
         raise TypeError("slice object expected")
     start = r.start
-    stop  = r.stop
-    step  = r.step
+    stop = r.stop
+    step = r.step
     if r.step is None:
         step = 1
     else:
@@ -199,13 +203,13 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray(endian='little')
         a.fromstring('A')
         self.assertEqual(a.endian(), 'little')
-        self.assert_(isinstance(a.endian(), str))
+        self.assertIsInstance(a.endian(), str)
         self.check_obj(a)
 
         b = bitarray(endian='big')
         b.fromstring('A')
         self.assertEqual(b.endian(), 'big')
-        self.assert_(isinstance(a.endian(), str))
+        self.assertIsInstance(a.endian(), str)
         self.check_obj(b)
 
         self.assertEqual(a.tostring(), b.tostring())
@@ -306,10 +310,10 @@ class CreateObjectTests(unittest.TestCase, Util):
                               bitarray, to_bytes(chr(i)))
 
     def test_bitarray(self):
-        for n in range(50):
+        for n in range(10):
             a = bitarray(n)
             b = bitarray(a)
-            self.assert_(a is not b)
+            self.assertFalse(a is b)
             self.assertEQUAL(a, b)
 
         for end in ('little', 'big'):
@@ -373,7 +377,7 @@ tests.append(ToObjectsTests)
 
 # ---------------------------------------------------------------------------
 
-class MetaDataTests(unittest.TestCase):
+class MetaDataTests(unittest.TestCase, Util):
 
     def test_buffer_info1(self):
         a = bitarray('0000111100001', endian='little')
@@ -383,23 +387,23 @@ class MetaDataTests(unittest.TestCase):
         self.assertRaises(TypeError, a.buffer_info, 42)
 
         bi = a.buffer_info()
-        self.assert_(isinstance(bi, tuple))
+        self.assertIsInstance(bi, tuple)
         self.assertEqual(len(bi), 5)
 
-        self.assert_(isinstance(bi[0], int))
+        self.assertIsInstance(bi[0], int)
         if is_py3k:
-            self.assert_(isinstance(bi[1], int))
-        self.assert_(isinstance(bi[2], str))
-        self.assert_(isinstance(bi[3], int))
+            self.assertIsInstance(bi[1], int)
+        self.assertIsInstance(bi[2], str)
+        self.assertIsInstance(bi[3], int)
         if is_py3k:
-            self.assert_(isinstance(bi[4], int))
+            self.assertIsInstance(bi[4], int)
 
     def test_buffer_info2(self):
         for n in range(50):
             bi = bitarray(n).buffer_info()
             self.assertEqual(bi[1], bits2bytes(n))
             self.assertEqual(bi[3] + n, 8 * bi[1])
-            self.assert_(bi[4] >= bi[1])
+            self.assertTrue(bi[4] >= bi[1])
 
     def test_buffer_info3(self):
         a = bitarray(endian='little')
@@ -454,7 +458,7 @@ class SliceTests(unittest.TestCase, Util):
     def test_getitem3(self):
         a = bitarray('0100000100001')
         self.assertEQUAL(a[:], a)
-        self.assert_(a[:] is not a)
+        self.assertFalse(a[:] is a)
         aa = a.tolist()
         self.assertEQUAL(a[11:2:-3], bitarray(aa[11:2:-3]))
         self.check_obj(a[:])
@@ -537,7 +541,7 @@ class SliceTests(unittest.TestCase, Util):
                         c = bitarray(a)
                         d = c
                         c[s] = b
-                        self.assert_(c is d)
+                        self.assertTrue(c is d)
                         self.check_obj(c)
                         cc = a.tolist()
                         cc[s] = b.tolist()
@@ -593,7 +597,7 @@ class SliceTests(unittest.TestCase, Util):
                 c = bitarray(a)
                 d = c
                 del c[s]
-                self.assert_(c is d)
+                self.assertTrue(c is d)
                 self.check_obj(c)
                 cc = a.tolist()
                 del cc[s]
@@ -608,7 +612,7 @@ class MiscTests(unittest.TestCase, Util):
 
     def test_instancecheck(self):
         a = bitarray('011')
-        self.assertTrue(isinstance(a, bitarray))
+        self.assertIsInstance(a, bitarray)
         self.assertFalse(isinstance(a, str))
 
     def test_booleanness(self):
@@ -619,11 +623,11 @@ class MiscTests(unittest.TestCase, Util):
     def test_to01(self):
         a = bitarray()
         self.assertEqual(a.to01(), '')
-        self.assert_(isinstance(a.to01(), str))
+        self.assertIsInstance(a.to01(), str)
 
         a = bitarray('101')
         self.assertEqual(a.to01(), '101')
-        self.assert_(isinstance(a.to01(), str))
+        self.assertIsInstance(a.to01(), str)
 
     def test_iterate(self):
         for lst in self.randomlists():
@@ -741,7 +745,7 @@ class MiscTests(unittest.TestCase, Util):
         for v in range(3):
             for a in self.randombitarrays():
                 b = pickle.loads(pickle.dumps(a, v))
-                self.assert_(b is not a)
+                self.assertFalse(b is a)
                 self.assertEQUAL(a, b)
 
     def test_cPickle(self):
@@ -750,7 +754,7 @@ class MiscTests(unittest.TestCase, Util):
         for v in range(3):
             for a in self.randombitarrays():
                 b = cPickle.loads(cPickle.dumps(a, v))
-                self.assert_(b is not a)
+                self.assertFalse(b is a)
                 self.assertEQUAL(a, b)
 
     def test_overflow(self):
@@ -815,15 +819,15 @@ class SpecialMethodTests(unittest.TestCase, Util):
     def test_repr(self):
         r = repr(bitarray())
         self.assertEqual(r, "bitarray()")
-        self.assert_(isinstance(r, str))
+        self.assertIsInstance(r, str)
 
         r = repr(bitarray('10111'))
         self.assertEqual(r, "bitarray('10111')")
-        self.assert_(isinstance(r, str))
+        self.assertIsInstance(r, str)
 
         for a in self.randombitarrays():
             b = eval(repr(a))
-            self.assert_(b is not a)
+            self.assertFalse(b is a)
             self.assertEqual(a, b)
             self.check_obj(b)
 
@@ -831,15 +835,15 @@ class SpecialMethodTests(unittest.TestCase, Util):
     def test_copy(self):
         for a in self.randombitarrays():
             b = a.copy()
-            self.assert_(b is not a)
+            self.assertFalse(b is a)
             self.assertEQUAL(a, b)
 
             b = copy.copy(a)
-            self.assert_(b is not a)
+            self.assertFalse(b is a)
             self.assertEQUAL(a, b)
 
             b = copy.deepcopy(a)
-            self.assert_(b is not a)
+            self.assertFalse(b is a)
             self.assertEQUAL(a, b)
 
 
@@ -916,7 +920,7 @@ class NumberTests(unittest.TestCase, Util):
                 d = c
                 d += b
                 self.assertEqual(d, a + b)
-                self.assert_(c is d)
+                self.assertTrue(c is d)
                 self.assertEQUAL(c, d)
                 self.assertEqual(d.endian(), a.endian())
                 self.check_obj(d)
@@ -1041,7 +1045,7 @@ class BitwiseTests(unittest.TestCase, Util):
         b = ~a
         self.assertEQUAL(b, bitarray('00100'))
         self.assertEQUAL(a, bitarray('11011'))
-        self.assert_(a is not b)
+        self.assertFalse(a is b)
 
         for a in self.randombitarrays():
             aa = a.tolist()
@@ -1052,7 +1056,7 @@ class BitwiseTests(unittest.TestCase, Util):
             self.check_obj(b)
 
             c = ~a
-            self.assert_(c is not a)
+            self.assertFalse(c is a)
             self.assertEQUAL(a, bitarray(aa, endian=a.endian()))
 
             for i in range(len(a)):
@@ -1069,21 +1073,21 @@ class SequenceTests(unittest.TestCase, Util):
 
     def test_contains1(self):
         a = bitarray()
-        self.assert_(False not in a)
-        self.assert_(True not in a)
-        self.assert_(bitarray() in a)
+        self.assertFalse(False in a)
+        self.assertFalse(True in a)
+        self.assertTrue(bitarray() in a)
         a.append(True)
-        self.assert_(True in a)
-        self.assert_(False not in a)
+        self.assertTrue(True in a)
+        self.assertFalse(False in a)
         a = bitarray([False])
-        self.assert_(False in a)
-        self.assert_(True not in a)
+        self.assertTrue(False in a)
+        self.assertFalse(True in a)
         a.append(True)
-        self.assert_(0 in a)
-        self.assert_(1 in a)
+        self.assertTrue(0 in a)
+        self.assertTrue(1 in a)
         if not is_py3k:
-            self.assert_(long(0) in a)
-            self.assert_(long(1) in a)
+            self.assertTrue(long(0) in a)
+            self.assertTrue(long(1) in a)
 
     def test_contains2(self):
         a = bitarray()
@@ -1100,20 +1104,20 @@ class SequenceTests(unittest.TestCase, Util):
             self.assertRaises(ValueError, a.__contains__, long(2))
 
     def test_contains3(self):
-        for n in range(2, 100):
+        for n in range(2, 50):
             a = bitarray(n)
             a.setall(0)
-            self.assert_(False in a)
-            self.assert_(True not in a)
+            self.assertTrue(False in a)
+            self.assertFalse(True in a)
             a[randint(0, n - 1)] = 1
-            self.assert_(True in a)
-            self.assert_(False in a)
+            self.assertTrue(True in a)
+            self.assertTrue(False in a)
             a.setall(1)
-            self.assert_(True in a)
-            self.assert_(False not in a)
+            self.assertTrue(True in a)
+            self.assertFalse(False in a)
             a[randint(0, n - 1)] = 0
-            self.assert_(True in a)
-            self.assert_(False in a)
+            self.assertTrue(True in a)
+            self.assertTrue(False in a)
 
     def test_contains4(self):
         a = bitarray('011010000001')
@@ -1283,7 +1287,7 @@ class MethodTests(unittest.TestCase, Util):
             aa = a.tolist()
             b = a
             b.append(1)
-            self.assert_(a is b)
+            self.assertTrue(a is b)
             self.check_obj(b)
             self.assertEQUAL(b, bitarray(aa+[1], endian=a.endian()))
             b.append('')
@@ -1294,7 +1298,7 @@ class MethodTests(unittest.TestCase, Util):
         a = bitarray()
         b = a
         a.insert(0, True)
-        self.assert_(a is b)
+        self.assertTrue(a is b)
         self.assertEqual(a, bitarray('1'))
         self.assertRaises(TypeError, a.insert)
         self.assertRaises(TypeError, a.insert, None)
@@ -1527,7 +1531,7 @@ class MethodTests(unittest.TestCase, Util):
     def test_search_type(self):
         a = bitarray('10011')
         it = a.itersearch(bitarray('1'))
-        self.assertTrue(isinstance(type(it), type))
+        self.assertIsInstance(type(it), type)
 
     def test_fill(self):
         a = bitarray('')
@@ -1544,21 +1548,21 @@ class MethodTests(unittest.TestCase, Util):
             aa = a.tolist()
             la = len(a)
             b = a
-            self.assert_(0 <= b.fill() < 8)
+            self.assertTrue(0 <= b.fill() < 8)
             self.assertEqual(b.endian(), a.endian())
             bb = b.tolist()
             lb = len(b)
-            self.assert_(a is b)
+            self.assertTrue(a is b)
             self.check_obj(b)
             if la % 8 == 0:
                 self.assertEqual(bb, aa)
                 self.assertEqual(lb, la)
             else:
-                self.assert_(lb % 8 == 0)
+                self.assertTrue(lb % 8 == 0)
                 self.assertNotEqual(bb, aa)
                 self.assertEqual(bb[:la], aa)
                 self.assertEqual(b[la:], (lb-la)*bitarray('0'))
-                self.assert_(0 < lb-la < 8)
+                self.assertTrue(0 < lb-la < 8)
 
 
     def test_sort(self):
@@ -1650,7 +1654,7 @@ class MethodTests(unittest.TestCase, Util):
         a = bitarray('0010011')
         b = a
         b.remove('1')
-        self.assert_(b is a)
+        self.assertTrue(b is a)
         self.assertEQUAL(b, bitarray('000011'))
 
 
@@ -1697,7 +1701,7 @@ class MethodTests(unittest.TestCase, Util):
             b = a
             b.setall(val)
             self.assertEqual(b, bitarray(len(b) * [val]))
-            self.assert_(a is b)
+            self.assertTrue(a is b)
             self.check_obj(b)
 
 
@@ -1721,7 +1725,7 @@ class MethodTests(unittest.TestCase, Util):
             b = a
             b.bytereverse()
             self.assertEqual(b, bitarray(aa[::-1]))
-            self.assert_(a is b)
+            self.assertTrue(a is b)
             self.check_obj(b)
 
 
@@ -1745,7 +1749,7 @@ class StringTests(unittest.TestCase, Util):
         b.frombytes(to_bytes('BC'))
         self.assertEQUAL(b, bitarray('01000001' '01000010' '01000011',
                                      endian='big'))
-        self.assert_(b is a)
+        self.assertTrue(b is a)
 
         for b in self.randombitarrays():
             c = b.__copy__()
@@ -1789,9 +1793,9 @@ class StringTests(unittest.TestCase, Util):
     def test_unpack(self):
         a = bitarray('01')
         if is_py3k:
-            self.assert_(isinstance(a.unpack(), bytes))
+            self.assertIsInstance(a.unpack(), bytes)
         else:
-            self.assert_(isinstance(a.unpack(), str))
+            self.assertIsInstance(a.unpack(), str)
         self.assertEqual(a.unpack(), to_bytes('\x00\xff'))
         self.assertEqual(a.unpack(to_bytes('A')), to_bytes('A\xff'))
         self.assertEqual(a.unpack(to_bytes('0'), to_bytes('1')),
@@ -1863,7 +1867,7 @@ class FileTests(unittest.TestCase, Util):
                 pickle.dump(a, fo, v)
                 fo.close()
                 b = pickle.load(open(self.tmpfname, 'rb'))
-                self.assert_(b is not a)
+                self.assertFalse(b is a)
                 self.assertEQUAL(a, b)
 
     def test_cPickle(self):
@@ -1875,7 +1879,7 @@ class FileTests(unittest.TestCase, Util):
                 cPickle.dump(a, fo, v)
                 fo.close()
                 b = cPickle.load(open(self.tmpfname, 'rb'))
-                self.assert_(b is not a)
+                self.assertFalse(b is a)
                 self.assertEQUAL(a, b)
 
     def test_shelve(self):
