@@ -521,13 +521,13 @@ class SliceTests(unittest.TestCase, Util):
         a[0] = 1
         a[-2] = 1
         self.assertEqual(a, bitarray('10010'))
-        self.assertRaises(IndexError, a.__setitem__,  5, 'foo')
+        self.assertRaises(IndexError, a.__setitem__, 5, 'foo')
         self.assertRaises(IndexError, a.__setitem__, -6, 'bar')
 
     def test_setitem4(self):
         for a in self.randombitarrays(start=1):
             la = len(a)
-            for dum in range(50):
+            for dum in range(5):
                 step = self.rndsliceidx(la)
                 if step == 0: step = None
                 s = slice(self.rndsliceidx(la),
