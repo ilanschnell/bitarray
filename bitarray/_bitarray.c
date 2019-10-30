@@ -975,10 +975,15 @@ Return a copy of the bitarray.");
 static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
+    PyObject *x = Py_True;
     idx_t n1, start = 0, stop = self->nbits;
-    long x = 1;
+    long vi;
 
-    if (!PyArg_ParseTuple(args, "|iLL:count", &x, &start, &stop))
+    if (!PyArg_ParseTuple(args, "|OLL:count", &x, &start, &stop))
+        return NULL;
+
+    vi = PyObject_IsTrue(x);
+    if (vi < 0)
         return NULL;
 
     normalize_index(self->nbits, &start);
@@ -988,13 +993,13 @@ bitarray_count(bitarrayobject *self, PyObject *args)
         return PyLong_FromLongLong(0);
 
     n1 = count(self, start, stop);
-    return PyLong_FromLongLong(x ? n1 : (stop - start - n1));
+    return PyLong_FromLongLong(vi ? n1 : (stop - start - n1));
 }
 
 PyDoc_STRVAR(count_doc,
 "count(value=True, start=0, stop=<end of array>, /) -> int\n\
 \n\
-Return number of occurrences of value (defaults to True) in the bitarray.");
+Count the number of occurrences of bool(value) in the bitarray.");
 
 
 static PyObject *

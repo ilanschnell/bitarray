@@ -1406,7 +1406,11 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a.count(False), 2)
         self.assertEqual(a.count(1), 3)
         self.assertEqual(a.count(0), 2)
-        self.assertRaises(TypeError, a.count, 'A')
+        self.assertEqual(a.count(None), 2)
+        self.assertEqual(a.count(''), 2)
+        self.assertEqual(a.count('A'), 3)
+        self.assertRaises(TypeError, a.count, 0, 'A')
+        self.assertRaises(TypeError, a.count, 0, 0, 'A')
 
         for i in range(0, 256):
             a = bitarray()
