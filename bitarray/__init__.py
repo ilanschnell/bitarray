@@ -22,15 +22,15 @@ If no object is provided, the bitarray is initialized to have length zero.
 The initial object may be of the following types:
 
 int, long
-    Create bitarray of length given by the integer.  The initial values
-    in the array are random, because only the memory allocated.
+    Create a bitarray of given length.  The initial values are are arbitrary.
+    If you want all values to be set, use the .setall() method.
 
 string
     Create bitarray from a string of '0's and '1's.
 
 list, tuple, iterable
     Create bitarray from a sequence, each element in the sequence is
-    converted to a bit using truth value value.
+    converted to a bit using its truth value.
 
 bitarray
     Create bitarray from another bitarray.  This is done by copying the
