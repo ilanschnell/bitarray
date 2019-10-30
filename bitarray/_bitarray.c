@@ -475,9 +475,7 @@ count(bitarrayobject *self, int vi, idx_t start, idx_t stop)
             if (GETBIT(self, i))
                 res++;
     }
-    if (vi == 0)
-        res = stop - start - res;
-    return res;
+    return vi ? res : stop - start - res;
 }
 
 /* return index of first occurrence of vi, -1 when x is not in found. */
