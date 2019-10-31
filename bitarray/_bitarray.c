@@ -85,11 +85,9 @@ setbit(bitarrayobject *self, idx_t i, int bit)
 static int
 check_overflow(idx_t nbits)
 {
-    idx_t max_bits;
-
     assert(nbits >= 0);
     if (sizeof(void *) == 4) {  /* 32bit machine */
-        max_bits = ((idx_t) 1) << 34;  /* 2^34 = 16 Gbits*/
+        const idx_t max_bits = ((idx_t) 1) << 34;  /* 2^34 = 16 Gbits*/
         if (nbits > max_bits) {
             char buff[256];
             sprintf(buff, "cannot create bitarray of size %lld, "
@@ -357,7 +355,6 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
 static void
 setrange(bitarrayobject *self, idx_t start, idx_t stop, int val)
 {
-    Py_ssize_t byte_start, byte_stop;
     idx_t i;
 
     assert(0 <= start && start <= self->nbits);
@@ -367,8 +364,8 @@ setrange(bitarrayobject *self, idx_t start, idx_t stop, int val)
         return;
 
     if (stop >= start + 8) {
-        byte_start = BYTES(start);
-        byte_stop = stop / 8;
+        const Py_ssize_t byte_start = BYTES(start);
+        const Py_ssize_t byte_stop = (Py_ssize_t) stop / 8;
         for (i = start; i < byte_start * 8; i++)
             setbit(self, i, val);
         memset(self->ob_item + byte_start, val ? 0xff : 0x00,
@@ -444,7 +441,6 @@ static int bitcount_lookup[256] = {
 static idx_t
 count(bitarrayobject *self, int vi, idx_t start, idx_t stop)
 {
-    Py_ssize_t byte_start, byte_stop, j;
     idx_t i, res = 0;
     unsigned char c;
 
@@ -457,8 +453,10 @@ count(bitarrayobject *self, int vi, idx_t start, idx_t stop)
         return 0;
 
     if (stop >= start + 8) {
-        byte_start = BYTES(start);
-        byte_stop = stop / 8;
+        const Py_ssize_t byte_start = BYTES(start);
+        const Py_ssize_t byte_stop = (Py_ssize_t) stop / 8;
+        Py_ssize_t j;
+
         for (i = start; i < byte_start * 8; i++)
             if (GETBIT(self, i))
                 res++;
