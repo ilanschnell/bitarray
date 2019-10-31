@@ -302,15 +302,15 @@ Reference
    The initial object may be of the following types:
    
    int, long
-       Create bitarray of length given by the integer.  The initial values
-       in the array are random, because only the memory allocated.
+       Create a bitarray of given length.  The initial values are arbitrary.
+       If you want all values to be set, use the .setall() method.
    
    string
        Create bitarray from a string of '0's and '1's.
    
    list, tuple, iterable
        Create bitarray from a sequence, each element in the sequence is
-       converted to a bit using truth value value.
+       converted to a bit using its truth value.
    
    bitarray
        Create bitarray from another bitarray.  This is done by copying the
@@ -358,7 +358,7 @@ Reference
 
 
 ``count(value=True, start=0, stop=<end of array>, /)`` -> int
-   Return number of occurrences of value (defaults to True) in the bitarray.
+   Count the number of occurrences of bool(value) in the bitarray.
 
 
 ``decode(code, /)`` -> list
@@ -536,6 +536,9 @@ Change log
 2019-XX-XX   1.1.0:
 
   * add optional start and stop parameters to .count() method
+  * add official Python 3.8 support
+  * optimize setrange() C-function by using memset
+  * fix issue #68, unittest.TestCase.assert_ deprecated
   * update documentation to use positional-only syntax in docstrings
   * update readme to pass Python 3 doctest
 

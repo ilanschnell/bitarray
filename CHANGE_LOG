@@ -2,6 +2,8 @@
 -------------------
   * add optional start and stop parameters to .count() method
   * add official Python 3.8 support
+  * optimize setrange() C-function by using memset
+  * fix issue #68, unittest.TestCase.assert_ deprecated
   * update documentation to use positional-only syntax in docstrings
   * update readme to pass Python 3 doctest
 
