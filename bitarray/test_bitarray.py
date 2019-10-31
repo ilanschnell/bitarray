@@ -24,6 +24,7 @@ except ImportError:
 
 if is_py3k:
     from io import StringIO
+    unicode = str
 else:
     from cStringIO import StringIO
     import cPickle
@@ -40,13 +41,6 @@ def to_bytes(s):
         return bytes(s.encode('latin1'))
     else:
         return bytes(s)  # which is str for Python 2
-
-
-if is_py3k:
-    def unicode(*args):
-        if len(args) == 0:
-            return ''
-        return args[0]
 
 
 class Util(object):
