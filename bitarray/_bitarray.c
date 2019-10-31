@@ -1796,13 +1796,7 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "LO:insert", &i, &v))
         return NULL;
 
-    if (i < 0) {
-        i += self->nbits;
-        if (i < 0)
-            i = 0;
-    }
-    if (i > self->nbits)
-        i = self->nbits;
+    normalize_index(self->nbits, &i);
 
     if (insert_n(self, i, 1) < 0)
         return NULL;
