@@ -671,11 +671,10 @@ extend_tuple(bitarrayobject *self, PyObject *tuple)
 }
 
 /* extend_bytes(): extend the bitarray from a PyBytes object, where each
-   whole character is converted to a single bit
-*/
+   whole character is converted to a single bit */
 enum conv_t {
-    STR_01,    /*  '0' -> 0    '1'  -> 1   no other characters allowed */
-    STR_RAW,   /*  0x00 -> 0   other -> 1                              */
+    BYTES_01,    /*  '0' -> 0    '1'  -> 1   no other characters allowed */
+    BYTES_RAW,   /*  0x00 -> 0   other -> 1                              */
 };
 
 static int
@@ -699,7 +698,7 @@ extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_t conv)
         c = *(str + i);
         /* depending on conv, map c to bit */
         switch (conv) {
-        case STR_01:
+        case BYTES_01:
             switch (c) {
             case '0': vi = 0; break;
             case '1': vi = 1; break;
@@ -709,7 +708,7 @@ extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_t conv)
                 return -1;
             }
             break;
-        case STR_RAW:
+        case BYTES_RAW:
             vi = c ? 1 : 0;
             break;
         default:  /* should never happen */
@@ -755,13 +754,13 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     if (PyTuple_Check(obj))                                  /* tuple */
         return extend_tuple(self, obj);
 
-    if (PyBytes_Check(obj))                              /* string 01 */
-        return extend_bytes(self, obj, STR_01);
+    if (PyBytes_Check(obj))                               /* bytes 01 */
+        return extend_bytes(self, obj, BYTES_01);
 
-    if (PyUnicode_Check(obj)) {                         /* unicode 01 */
+    if (PyUnicode_Check(obj)) {                /* (unicode) string 01 */
         PyObject *bytes;
         bytes = PyUnicode_AsEncodedString(obj, NULL, NULL);
-        ret = extend_bytes(self, bytes, STR_01);
+        ret = extend_bytes(self, bytes, BYTES_01);
         Py_DECREF(bytes);
         return ret;
     }
@@ -1739,7 +1738,7 @@ bitarray_pack(bitarrayobject *self, PyObject *bytes)
         PyErr_SetString(PyExc_TypeError, "byte string expected");
         return NULL;
     }
-    if (extend_bytes(self, bytes, STR_RAW) < 0)
+    if (extend_bytes(self, bytes, BYTES_RAW) < 0)
         return NULL;
 
     Py_RETURN_NONE;
@@ -1748,12 +1747,12 @@ bitarray_pack(bitarrayobject *self, PyObject *bytes)
 PyDoc_STRVAR(pack_doc,
 "pack(bytes, /)\n\
 \n\
-Extend the bitarray from a byte string, where each characters corresponds to\n\
-a single bit.  The character b'\\x00' maps to bit 0 and all other characters\n\
-map to bit 1.\n\
+Extend the bitarray from bytes, where each byte corresponds to a single\n\
+bit.  The byte b'\\x00' maps to bit 0 and all other characters map to\n\
+bit 1.\n\
 This method, as well as the unpack method, are meant for efficient\n\
 transfer of data between bitarray objects to other python objects\n\
-(for example NumPy's ndarray object) which have a different view of memory.");
+(for example NumPy's ndarray object) which have a different memory view.");
 
 
 static PyObject *
