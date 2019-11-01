@@ -60,6 +60,7 @@ static PyTypeObject Bitarraytype;
 
 #define BITS(bytes)  (((idx_t) 8) * ((idx_t) (bytes)))
 
+/* number of bytes necessary to store given bits */
 #define BYTES(bits)  (((bits) == 0) ? 0 : (((bits) - 1) / 8 + 1))
 
 #define BITMASK(endian, i)  (((char) 1) << ((endian) ? (7 - (i)%8) : (i)%8))
@@ -86,7 +87,7 @@ static int
 check_overflow(idx_t nbits)
 {
     assert(nbits >= 0);
-    if (sizeof(void *) == 4) {  /* 32bit machine */
+    if (sizeof(void *) == 4) {  /* 32bit system */
         const idx_t max_bits = ((idx_t) 1) << 34;  /* 2^34 = 16 Gbits*/
         if (nbits > max_bits) {
             char buff[256];

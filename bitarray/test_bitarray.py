@@ -174,7 +174,6 @@ class TestsModuleFunctions(unittest.TestCase, Util):
 
         for n, m in [(0, 0), (1, 1), (2, 1), (7, 1), (8, 1), (9, 2),
                      (10, 2), (15, 2), (16, 2), (64, 8), (65, 9),
-                     (0, 0), (1, 1), (65, 9), (2**29, 2**26),
                      (2**31, 2**28), (2**32, 2**29), (2**34, 2**31),
                      (2**34+793, 2**31+100), (2**35-8, 2**32-1),
                      (2**62, 2**59), (2**63-8, 2**60-1)]:
@@ -795,18 +794,21 @@ class SpecialMethodTests(unittest.TestCase, Util):
     def test_all(self):
         a = bitarray()
         self.assertTrue(a.all())
+        for s, r in ('0', False), ('1', True), ('01', False):
+            self.assertEqual(bitarray(s).all(), r)
 
         for a in self.randombitarrays():
-            self.assertEqual(all(a),          a.all())
+            self.assertEqual(all(a), a.all())
             self.assertEqual(all(a.tolist()), a.all())
-
 
     def test_any(self):
         a = bitarray()
         self.assertFalse(a.any())
+        for s, r in ('0', False), ('1', True), ('01', True):
+            self.assertEqual(bitarray(s).any(), r)
 
         for a in self.randombitarrays():
-            self.assertEqual(any(a),          a.any())
+            self.assertEqual(any(a), a.any())
             self.assertEqual(any(a.tolist()), a.any())
 
 
@@ -1609,10 +1611,12 @@ class MethodTests(unittest.TestCase, Util):
 
         for a in self.randombitarrays():
             aa = a.tolist()
+            b = bitarray(a)
             ida = id(a)
             a.reverse()
             self.assertEqual(ida, id(a))
             self.assertEQUAL(a, bitarray(aa[::-1], endian=a.endian()))
+            self.assertEqual(a, b[::-1])
 
 
     def test_tolist(self):
