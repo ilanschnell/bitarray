@@ -428,10 +428,8 @@ class SliceTests(unittest.TestCase, Util):
             aa = a.tolist()
             la = len(a)
             for dum in range(10):
-                step = self.rndsliceidx(la)
-                if step == 0: step = None
-                s = slice(self.rndsliceidx(la),
-                          self.rndsliceidx(la), step)
+                step = self.rndsliceidx(la) or None
+                s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
                 self.assertEQUAL(a[s], bitarray(aa[s], endian=a.endian()))
 
     def test_setitem1(self):
@@ -557,6 +555,16 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.__setitem__, slice(None, None, 2), 3)
         self.assertRaises(ValueError, a.__setitem__, slice(None, 2, None), -1)
 
+    def test_sieve(self): # Sieve of Eratosthenes
+        a = bitarray(50)
+        a.setall(1)
+        for i in range(2, 8):
+            if a[i]:
+                a[i*i::i] = 0
+        primes = [i for i in range(2, 50) if a[i]]
+        self.assertEqual(primes, [2, 3, 5, 7, 11, 13, 17, 19,
+                                  23, 29, 31, 37, 41, 43, 47])
+
     def test_delitem1(self):
         a = bitarray('100110')
         del a[1]
@@ -578,7 +586,7 @@ class SliceTests(unittest.TestCase, Util):
     def test_delitem2(self):
         for a in self.randombitarrays(start=1):
             la = len(a)
-            for dum in range(50):
+            for dum in range(10):
                 step = self.rndsliceidx(la) or None
                 s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
                 c = bitarray(a)
