@@ -60,10 +60,20 @@ class Util(object):
         if randint(0, 1):
             return None
         else:
-            return randint(-2 * length, 2 * length - 1)
+            return randint(-length-5, length+5)
 
-    def slicelen(self, r, length):
-        return getIndicesEx(r, length)[-1]
+    def slicelen(self, s, length):
+            assert isinstance(s, slice)
+            start, stop, step = s.indices(length)
+            if (step < 0 and stop >= length) or (step > 0 and start >= stop):
+                slicelength = 0
+            elif step < 0:
+                slicelength = int((stop - start + 1) / step + 1)
+            else:
+                slicelength = int((stop - start - 1) / step + 1)
+            if slicelength < 0:
+                slicelength = 0
+            return slicelength
 
     def check_obj(self, a):
         self.assertEqual(repr(type(a)), "<class 'bitarray.bitarray'>")
@@ -85,52 +95,6 @@ class Util(object):
     if sys.version_info[:2] == (2, 6):
         def assertIsInstance(self, o, t):
             self.assertTrue(isinstance(o, t))
-
-
-def getIndicesEx(r, length):
-    if not isinstance(r, slice):
-        raise TypeError("slice object expected")
-    start = r.start
-    stop = r.stop
-    step = r.step
-    if r.step is None:
-        step = 1
-    else:
-        if step == 0:
-            raise ValueError("slice step cannot be zero")
-
-    if step < 0:
-        defstart = length - 1
-        defstop = -1
-    else:
-        defstart = 0
-        defstop = length
-
-    if r.start is None:
-        start = defstart
-    else:
-        if start < 0: start += length
-        if start < 0: start = [0, -1][step < 0]
-        if start >= length: start = [length, length - 1][step < 0]
-
-    if r.stop is None:
-        stop = defstop
-    else:
-        if stop < 0: stop += length
-        if stop < 0: stop = -1
-        if stop > length: stop = length
-
-    if (step < 0 and stop >= length) or (step > 0 and start >= stop):
-        slicelength = 0
-    elif step < 0:
-        slicelength = (stop - start + 1) / step + 1
-    else:
-        slicelength = (stop - start - 1) / step + 1
-
-    if slicelength < 0:
-        slicelength = 0
-
-    return start, stop, step, slicelength
 
 # ---------------------------------------------------------------------------
 
@@ -524,21 +488,21 @@ class SliceTests(unittest.TestCase, Util):
     def test_setitem4(self):
         for a in self.randombitarrays(start=1):
             la = len(a)
-            for dum in range(5):
-                step = self.rndsliceidx(la)
-                if step == 0: step = None
+            for dum in range(10):
+                step = self.rndsliceidx(la) or None
                 s = slice(self.rndsliceidx(la),
                           self.rndsliceidx(la), step)
-                for b in self.randombitarrays():
-                    if len(b) == self.slicelen(s, len(a)) or step is None:
-                        c = bitarray(a)
-                        d = c
-                        c[s] = b
-                        self.assertTrue(c is d)
-                        self.check_obj(c)
-                        cc = a.tolist()
-                        cc[s] = b.tolist()
-                        self.assertEqual(c, bitarray(cc))
+                if step is None:
+                    b = bitarray(randint(0, 10))
+                else:
+                    b = bitarray(self.slicelen(s, la))
+
+                c = bitarray(a)
+                c[s] = b
+                self.check_obj(c)
+                cc = a.tolist()
+                cc[s] = b.tolist()
+                self.assertEqual(c, bitarray(cc))
 
     def test_setslice_to_bitarray(self):
         a = bitarray('11111111' '1111')
@@ -558,6 +522,11 @@ class SliceTests(unittest.TestCase, Util):
         a.setall(0)
         a[:-6:-1] = bitarray('10111')
         self.assertEqual(a, bitarray('00000001' '1101'))
+        a = bitarray('1111')
+        a[3:3] = bitarray('000')  # insert
+        self.assertEqual(a, bitarray('1110001'))
+        a[2:5] = bitarray()  # remove
+        self.assertEqual(a, bitarray('1101'))
 
     def test_setslice_to_bool(self):
         a = bitarray('11111111')
