@@ -490,8 +490,7 @@ class SliceTests(unittest.TestCase, Util):
             la = len(a)
             for dum in range(10):
                 step = self.rndsliceidx(la) or None
-                s = slice(self.rndsliceidx(la),
-                          self.rndsliceidx(la), step)
+                s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
                 if step is None:
                     b = bitarray(randint(0, 10))
                 else:
@@ -532,35 +531,31 @@ class SliceTests(unittest.TestCase, Util):
         a = bitarray('11111111')
         a[::2] = False
         self.assertEqual(a, bitarray('01010101'))
-        a[4::] = True
+        a[4::] = True #                   ^^^^
         self.assertEqual(a, bitarray('01011111'))
-        a[-2:] = False
+        a[-2:] = False #                    ^^
         self.assertEqual(a, bitarray('01011100'))
-        a[:2:] = True
+        a[:2:] = True #               ^^
         self.assertEqual(a, bitarray('11011100'))
-        a[:] = True
+        a[:] = True #                 ^^^^^^^^
         self.assertEqual(a, bitarray('11111111'))
-        a[2:5] = False
+        a[2:5] = False #                ^^^
         self.assertEqual(a, bitarray('11000111'))
-        a[1::3] = False
+        a[1::3] = False #              ^  ^  ^
         self.assertEqual(a, bitarray('10000110'))
-        a[1:6:2] = True
+        a[1:6:2] = True #              ^ ^ ^
         self.assertEqual(a, bitarray('11010110'))
 
     def test_setslice_to_int(self):
         a = bitarray('11111111')
-        a[::2] = 0
+        a[::2] = 0 #  ^ ^ ^ ^
         self.assertEqual(a, bitarray('01010101'))
-        a[4::] = 1
+        a[4::] = 1 #                      ^^^^
         self.assertEqual(a, bitarray('01011111'))
         a.__setitem__(slice(-2, None, None), 0)
         self.assertEqual(a, bitarray('01011100'))
-
-        self.assertRaises(ValueError, a.__setitem__,
-                          slice(None, None, 2), 3)
-        self.assertRaises(ValueError, a.__setitem__,
-                          slice(None, 2, None), -1)
-
+        self.assertRaises(ValueError, a.__setitem__, slice(None, None, 2), 3)
+        self.assertRaises(ValueError, a.__setitem__, slice(None, 2, None), -1)
 
     def test_delitem1(self):
         a = bitarray('100110')
@@ -571,15 +566,21 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('100'))
         self.assertRaises(IndexError, a.__delitem__,  3)
         self.assertRaises(IndexError, a.__delitem__, -4)
+        a = bitarray('10101100' '10110')
+        del a[3:9] #     ^^^^^   ^
+        self.assertEqual(a, bitarray('1010110'))
+        del a[::3] #                  ^  ^  ^
+        self.assertEqual(a, bitarray('0111'))
+        a = bitarray('10101100' '1011011')
+        del a[:-9:-2] #          ^ ^ ^ ^
+        self.assertEqual(a, bitarray('10101100' '011'))
 
     def test_delitem2(self):
         for a in self.randombitarrays(start=1):
             la = len(a)
             for dum in range(50):
-                step = self.rndsliceidx(la)
-                if step == 0: step = None
-                s = slice(self.rndsliceidx(la),
-                          self.rndsliceidx(la), step)
+                step = self.rndsliceidx(la) or None
+                s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
                 c = bitarray(a)
                 d = c
                 del c[s]
