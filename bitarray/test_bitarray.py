@@ -27,7 +27,6 @@ if is_py3k:
     unicode = str
 else:
     from cStringIO import StringIO
-    import cPickle
 
 
 from bitarray import bitarray, bitdiff, bits2bytes, __version__
@@ -393,7 +392,6 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a[0], True)
         self.assertRaises(IndexError, a.__getitem__,  1)
         self.assertRaises(IndexError, a.__getitem__, -2)
-
         a.append(False)
         self.assertEqual(a[1], False)
         self.assertRaises(IndexError, a.__getitem__,  2)
@@ -430,15 +428,15 @@ class SliceTests(unittest.TestCase, Util):
     def test_setitem1(self):
         a = bitarray([False])
         a[0] = 1
-        self.assertEqual(a.tolist(), [True])
+        self.assertEqual(a, bitarray('1'))
 
         a = bitarray(2)
         a[0] = 0
         a[1] = 1
-        self.assertEqual(a.tolist(), [False, True])
+        self.assertEqual(a, bitarray('01'))
         a[-1] = 0
         a[-2] = 1
-        self.assertEqual(a.tolist(), [True, False])
+        self.assertEqual(a, bitarray('10'))
 
         self.assertRaises(IndexError, a.__setitem__,  2, True)
         self.assertRaises(IndexError, a.__setitem__, -3, False)
@@ -471,7 +469,7 @@ class SliceTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist()[::-1], b.tolist())
 
     def test_setitem3(self):
-        a = bitarray(5 * [False])
+        a = bitarray('00000')
         a[0] = 1
         a[-2] = 1
         self.assertEqual(a, bitarray('10010'))
@@ -516,6 +514,11 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('1110001'))
         a[2:5] = bitarray()  # remove
         self.assertEqual(a, bitarray('1101'))
+        a = bitarray('1111')
+        a[1:3] = bitarray('0000')
+        self.assertEqual(a, bitarray('100001'))
+        a[:] = bitarray('010') # replace all values
+        self.assertEqual(a, bitarray('010'))
 
     def test_setslice_to_bool(self):
         a = bitarray('11111111')
@@ -646,7 +649,6 @@ class MiscTests(unittest.TestCase, Util):
     def test_compare(self):
         for a in self.randombitarrays():
             aa = a.tolist()
-
             for b in self.randombitarrays():
                 bb = b.tolist()
                 self.assertEqual(a == b, aa == bb)
@@ -732,15 +734,6 @@ class MiscTests(unittest.TestCase, Util):
         for v in range(3):
             for a in self.randombitarrays():
                 b = pickle.loads(pickle.dumps(a, v))
-                self.assertFalse(b is a)
-                self.assertEQUAL(a, b)
-
-    def test_cPickle(self):
-        if is_py3k:
-            return
-        for v in range(3):
-            for a in self.randombitarrays():
-                b = cPickle.loads(cPickle.dumps(a, v))
                 self.assertFalse(b is a)
                 self.assertEQUAL(a, b)
 
@@ -1038,21 +1031,14 @@ class BitwiseTests(unittest.TestCase, Util):
         self.assertFalse(a is b)
 
         for a in self.randombitarrays():
-            aa = a.tolist()
             b = bitarray(a)
             b.invert()
             for i in range(len(a)):
-                self.assertEqual(b[i], not aa[i])
+                self.assertEqual(b[i], not a[i])
             self.check_obj(b)
-
             c = ~a
-            self.assertFalse(c is a)
-            self.assertEQUAL(a, bitarray(aa, endian=a.endian()))
-
-            for i in range(len(a)):
-                self.assertEqual(c[i], not aa[i])
-
-            self.check_obj(b)
+            self.assertEQUAL(c, b)
+            self.check_obj(c)
 
 
 tests.append(BitwiseTests)
@@ -1744,7 +1730,7 @@ class StringTests(unittest.TestCase, Util):
         self.assertTrue(b is a)
 
         for b in self.randombitarrays():
-            c = b.__copy__()
+            c = b.copy()
             b.frombytes(to_bytes(''))
             self.assertEQUAL(b, c)
 
@@ -1752,11 +1738,11 @@ class StringTests(unittest.TestCase, Util):
             for s in self.randombytes():
                 a = bitarray(endian=b.endian())
                 a.frombytes(s)
-                c = b.__copy__()
+                c = b.copy()
                 b.frombytes(s)
                 self.assertEQUAL(b[-len(a):], a)
                 self.assertEQUAL(b[:-len(a)], c)
-                self.assertEQUAL(c + a, b)
+                self.assertEQUAL(b, c + a)
 
 
     def test_tobytes(self):
@@ -1859,18 +1845,6 @@ class FileTests(unittest.TestCase, Util):
                 pickle.dump(a, fo, v)
                 fo.close()
                 b = pickle.load(open(self.tmpfname, 'rb'))
-                self.assertFalse(b is a)
-                self.assertEQUAL(a, b)
-
-    def test_cPickle(self):
-        if is_py3k:
-            return
-        for v in range(3):
-            for a in self.randombitarrays():
-                fo = open(self.tmpfname, 'wb')
-                cPickle.dump(a, fo, v)
-                fo.close()
-                b = cPickle.load(open(self.tmpfname, 'rb'))
                 self.assertFalse(b is a)
                 self.assertEQUAL(a, b)
 
@@ -2034,7 +2008,7 @@ class FileTests(unittest.TestCase, Util):
             s = open(self.tmpfname, 'rb').read()
             self.assertEqual(len(s), a.buffer_info()[1])
 
-            b = a.__copy__()
+            b = a.copy()
             b.fill()
 
             c = bitarray(endian='little')
