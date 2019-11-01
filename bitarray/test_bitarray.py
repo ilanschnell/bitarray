@@ -42,6 +42,14 @@ def to_bytes(s):
     else:
         return bytes(s)  # which is str for Python 2
 
+def slicelen(s, length):
+    assert isinstance(s, slice)
+    start, stop, step = s.indices(length)
+    slicelength = (stop - start + (1 if step < 0 else -1)) // step + 1
+    if slicelength < 0:
+        slicelength = 0
+    return slicelength
+
 
 class Util(object):
 
@@ -61,19 +69,6 @@ class Util(object):
             return None
         else:
             return randint(-length-5, length+5)
-
-    def slicelen(self, s, length):
-            assert isinstance(s, slice)
-            start, stop, step = s.indices(length)
-            if (step < 0 and stop >= length) or (step > 0 and start >= stop):
-                slicelength = 0
-            elif step < 0:
-                slicelength = int((stop - start + 1) / step + 1)
-            else:
-                slicelength = int((stop - start - 1) / step + 1)
-            if slicelength < 0:
-                slicelength = 0
-            return slicelength
 
     def check_obj(self, a):
         self.assertEqual(repr(type(a)), "<class 'bitarray.bitarray'>")
@@ -489,11 +484,8 @@ class SliceTests(unittest.TestCase, Util):
             for dum in range(10):
                 step = self.rndsliceidx(la) or None
                 s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
-                if step is None:
-                    b = bitarray(randint(0, 10))
-                else:
-                    b = bitarray(self.slicelen(s, la))
-
+                lb = randint(0, 10) if step is None else slicelen(s, la)
+                b = bitarray(lb)
                 c = bitarray(a)
                 c[s] = b
                 self.check_obj(c)
