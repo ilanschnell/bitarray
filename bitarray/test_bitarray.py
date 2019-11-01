@@ -540,6 +540,24 @@ class SliceTests(unittest.TestCase, Util):
                         cc[s] = b.tolist()
                         self.assertEqual(c, bitarray(cc))
 
+    def test_setslice_to_bitarray(self):
+        a = bitarray('11111111' '1111')
+        a[2:6] = bitarray('0010')
+        self.assertEqual(a, bitarray('11001011' '1111'))
+        a.setall(0)
+        a[::2] = bitarray('111001')
+        self.assertEqual(a, bitarray('10101000' '0010'))
+        a.setall(0)
+        a[3:] = bitarray('111')
+        self.assertEqual(a, bitarray('000111'))
+        a = bitarray(12)
+        a.setall(0)
+        a[1:11:2] = bitarray('11101')
+        self.assertEqual(a, bitarray('01010100' '0100'))
+        a = bitarray(12)
+        a.setall(0)
+        a[:-6:-1] = bitarray('10111')
+        self.assertEqual(a, bitarray('00000001' '1101'))
 
     def test_setslice_to_bool(self):
         a = bitarray('11111111')
@@ -553,6 +571,12 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('11011100'))
         a[:] = True
         self.assertEqual(a, bitarray('11111111'))
+        a[2:5] = False
+        self.assertEqual(a, bitarray('11000111'))
+        a[1::3] = False
+        self.assertEqual(a, bitarray('10000110'))
+        a[1:6:2] = True
+        self.assertEqual(a, bitarray('11010110'))
 
     def test_setslice_to_int(self):
         a = bitarray('11111111')
