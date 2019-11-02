@@ -772,6 +772,11 @@ class MiscTests(unittest.TestCase, Util):
             b.extend(unicode(a.to01()))
             self.assertEqual(a, b)
 
+    def test_unhashable(self):
+        a = bitarray()
+        self.assertRaises(TypeError, hash, a)
+        self.assertRaises(TypeError, dict, [(a, 'foo')])
+
 tests.append(MiscTests)
 
 # ---------------------------------------------------------------------------
