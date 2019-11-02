@@ -3,6 +3,7 @@
   * add optional start and stop parameters to .count() method
   * add official Python 3.8 support
   * optimize setrange() C-function by using memset
+  * fix issue #74, bitarray is hashable on Python 2
   * fix issue #68, unittest.TestCase.assert_ deprecated
   * improved test suite - tests should run in about 1 second now
   * update documentation to use positional-only syntax in docstrings

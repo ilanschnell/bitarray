@@ -436,12 +436,12 @@ Reference
 
 
 ``pack(bytes, /)``
-   Extend the bitarray from a byte string, where each characters corresponds to
-   a single bit.  The character b'\x00' maps to bit 0 and all other characters
-   map to bit 1.
+   Extend the bitarray from bytes, where each byte corresponds to a single
+   bit.  The byte b'\x00' maps to bit 0 and all other characters map to
+   bit 1.
    This method, as well as the unpack method, are meant for efficient
    transfer of data between bitarray objects to other python objects
-   (for example NumPy's ndarray object) which have a different view of memory.
+   (for example NumPy's ndarray object) which have a different memory view.
 
 
 ``pop(index=-1, /)`` -> item
@@ -509,9 +509,8 @@ Reference
 
 
 ``unpack(zero=b'\x00', one=b'\xff')`` -> bytes
-   Return a byte string containing one character for each bit in the bitarray,
+   Return bytes containing one character for each bit in the bitarray,
    using the specified mapping.
-   See also the pack method.
 
 
 **Functions defined in the module:**
@@ -538,7 +537,9 @@ Change log
   * add optional start and stop parameters to .count() method
   * add official Python 3.8 support
   * optimize setrange() C-function by using memset
+  * fix issue #74, bitarray is hashable on Python 2
   * fix issue #68, unittest.TestCase.assert_ deprecated
+  * improved test suite - tests should run in about 1 second now
   * update documentation to use positional-only syntax in docstrings
   * update readme to pass Python 3 doctest
 
