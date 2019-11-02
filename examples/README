@@ -23,6 +23,11 @@ huffman
     trees and codes.
 
 
+integer.py:
+    shows how to convert integers (potentially extremely large with many
+    hundred digits) to and from bitarrays.
+
+
 mandel.py
     Generates a .ppm image file of size 8000 x 6000 of the Mandelbrot set.
     Despite its size, the output image file has only a size of slightly

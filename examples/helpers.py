@@ -2,7 +2,7 @@ from bitarray import bitarray
 
 
 def trim(a):
-    "return a bitarray, with zero bits removed from beginning"
+    "return a bitarray, with zero bits removed from beginning and end"
     try:
         first = a.index(1)
     except ValueError:
