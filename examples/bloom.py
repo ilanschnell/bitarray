@@ -5,9 +5,9 @@ http://en.wikipedia.org/wiki/Bloom_filter
 from __future__ import print_function
 import sys
 
-if sys.version_info > (3,):
-    long = int
-    xrange = range
+if sys.version_info[0] == 2:
+    int = long
+    range = xrange
 
 import hashlib
 from math import exp
@@ -18,8 +18,8 @@ from bitarray import bitarray
 class BloomFilter(object):
 
     def __init__(self, m, k):
-        self.m = m
-        self.k = k
+        self.m = m  # size of array
+        self.k = k  # number of elements added for each key added
         self.array = bitarray(m)
         self.array.setall(0)
 
@@ -37,27 +37,27 @@ class BloomFilter(object):
         """
         h = hashlib.new('md5')
         h.update(str(key).encode())
-        x = long(h.hexdigest(), 16)
-        for _unused in xrange(self.k):
+        x = int(h.hexdigest(), 16)
+        for _unused in range(self.k):
             if x < self.m:
-                h.update('.')
-                x = long(h.hexdigest(), 16)
+                h.update(b'x')
+                x = int(h.hexdigest(), 16)
             x, y = divmod(x, self.m)
             yield y
 
 
-def test_bloom(m, k, n):
+def test_bloom(m, k, n): # n elements in filter
     b = BloomFilter(m, k)
-    for i in xrange(n):
+    for i in range(n):
         b.add(i)
         assert b.contains(i)
 
     p = (1.0 - exp(-k * (n + 0.5) / (m - 1))) ** k
-    print(100.0 * p, '%')
+    print("  Expected: %.7f %%" % (100.0 * p))
 
     N = 100000
-    false_pos = sum(b.contains(i) for i in xrange(n, n + N))
-    print(100.0 * false_pos / N, '%')
+    false_pos = sum(b.contains(i) for i in range(n, n + N))
+    print("Experiment: %.7f %%" % (100.0 * false_pos / N))
 
 
 if __name__ == '__main__':
