@@ -18,6 +18,11 @@ helpers.py:
     not common enough to add to the library itself.
 
 
+hexlify.py:
+    Hexadecimal representation of bitarray and vice versa.
+    Defines hexlify() and unhexlify(), similar to the ones in binascii.
+
+
 huffman
     Directory containing a library and examples for working with Huffman
     trees and codes.

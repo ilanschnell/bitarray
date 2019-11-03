@@ -9,6 +9,7 @@
   * update documentation to use positional-only syntax in docstrings
   * update readme to pass Python 3 doctest
   * add example with helper requested functions
+  * add hexlify example
   * add example which shows how to convert integers (potentially extremely
     large with many hundred digits) to and from bitarrays
 
