@@ -37,7 +37,7 @@ def ba2int(a):
     return res
 
 
-if __name__ == '__main__':
+def test_conversion():
     from random import randint
 
     def check_round_trip(i):
@@ -58,3 +58,7 @@ if __name__ == '__main__':
     assert ba2int(bitarray('100001001')) == 265
     assert ba2int(bitarray('0001001')) == 9
     assert ba2int(bitarray('0000')) == 0
+
+
+if __name__ == '__main__':
+    test_conversion()
