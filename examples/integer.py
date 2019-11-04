@@ -1,9 +1,13 @@
+import sys
+
 from bitarray import bitarray
+
+is_py3k = bool(sys.version_info[0] == 3)
 
 
 def int2ba(i):
     "convert the given integer into a bitarray (with no leading zeros)"
-    if not isinstance(i, int):
+    if not isinstance(i, int if is_py3k else (int, long)):
         raise TypeError("integer expected, got: %r" % i)
     if i < 0:
         raise ValueError("non-negative integer expected")

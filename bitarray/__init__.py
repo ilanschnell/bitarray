@@ -21,9 +21,9 @@ the optional initial, and endianness.
 If no object is provided, the bitarray is initialized to have length zero.
 The initial object may be of the following types:
 
-int, long
-    Create a bitarray of given length.  The initial values are arbitrary.
-    If you want all values to be set, use the .setall() method.
+int
+    Create a bitarray of given integer length.  The initial values are
+    arbitrary.  If you want all values to be set, use the .setall() method.
 
 string
     Create bitarray from a string of '0's and '1's.
