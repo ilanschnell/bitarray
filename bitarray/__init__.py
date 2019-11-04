@@ -14,11 +14,11 @@ __version__ = '1.1.0'
 
 
 class bitarray(_bitarray):
-    """bitarray([initial], [endian=string])
+    """bitarray(initial=0, /, endian='big')
 
 Return a new bitarray object whose items are bits initialized from
-the optional initial, and endianness.
-If no object is provided, the bitarray is initialized to have length zero.
+the optional initial object, and endianness.
+If no initial object is provided, an empty bitarray (length zero) is created.
 The initial object may be of the following types:
 
 int
