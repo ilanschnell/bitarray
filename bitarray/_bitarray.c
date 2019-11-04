@@ -1680,7 +1680,7 @@ PyDoc_STRVAR(tobytes_doc,
 \n\
 Return the byte representation of the bitarray.\n\
 When the length of the bitarray is not a multiple of 8, the few remaining\n\
-bits (1..7) are set to 0.");
+bits (1..7) are considered to be 0.");
 
 
 static PyObject *
