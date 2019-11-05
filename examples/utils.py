@@ -81,15 +81,16 @@ Strip zeros from right.
     return a[:last + 1]
 
 
-def rindex(a):
-    """rindex(bitarray, /) -> int
+def rindex(a, value=True):
+    """rindex(bitarray, value=True/) -> int
 
-Return the rightmost index of 1.  Raises ValueError is no 1 is present.
+Return the rightmost index of value.
+Raises ValueError is value is not present.
 """
-    if not a.any():
+    if value not in a:
         raise IndexError
     last = len(a) - 1
-    while not a[last]:
+    while not a[last] == bool(value):
         last -= 1
     return last
 

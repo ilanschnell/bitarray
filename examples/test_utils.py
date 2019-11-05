@@ -122,8 +122,18 @@ class TestsHelpers(unittest.TestCase, Util):
 
     def test_rindex(self):
         for endian in 'big', 'little':
-            self.assertEqual(rindex(bitarray('00010110000', endian)), 6)
-            self.assertEqual(rindex(bitarray('1111111111', endian)), 9)
+            a = bitarray('00010110000', endian)
+            self.assertEqual(rindex(a), 6)
+            self.assertEqual(rindex(a, 1), 6)
+            self.assertEqual(rindex(a, value=1), 6)
+
+            a = bitarray('00010110111', endian)
+            self.assertEqual(rindex(a, 0), 7)
+            self.assertEqual(rindex(a, value=0), 7)
+
+            self.assertRaises(IndexError, rindex, bitarray('', endian))
+            self.assertRaises(IndexError, rindex, bitarray('000', endian))
+
             self.assertRaises(IndexError, rindex, bitarray('', endian))
             self.assertRaises(IndexError, rindex, bitarray('000', endian))
 
