@@ -9,8 +9,8 @@ import binascii
 from bitarray import _bitarray, bitarray, bits2bytes
 
 
-__all__ = ['frozenbitarray', 'zeros', 'ba2hex', 'hex2ba',
-           'ba2int', 'int2ba']
+__all__ = ['frozenbitarray', 'zeros', 'lstrip', 'rstrip', 'rindex',
+           'ba2hex', 'hex2ba', 'ba2int', 'int2ba']
 
 
 is_py2 = bool(sys.version_info[0] == 2)
