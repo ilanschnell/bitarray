@@ -222,6 +222,7 @@ class TestsIntegerization(unittest.TestCase, Util):
             self.assertEqual(len(al), n)
             self.assertEqual(ab, al, bitarray(n * '0'))
             self.assertRaises(OverflowError, int2ba, 2 ** n, n)
+            self.assertRaises(OverflowError, int2ba, 2 ** n, n, 'little')
             self.assertEqual(int2ba(2 ** n - 1), bitarray(n * '1'))
 
     def test_explicit(self):

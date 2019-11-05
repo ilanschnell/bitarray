@@ -56,6 +56,32 @@ Create a bitarray of length, with all values 0.
     return a
 
 
+def lstrip(a):
+    try:
+        first = a.index(1)
+    except ValueError:
+        return bitarray(endian=a.endian())
+    return a[first:]
+
+
+def rstrip(a):
+    if not a.any():
+        return bitarray(endian=a.endian())
+    last = len(a) - 1
+    while not a[last]:
+        last -= 1
+    return a[:last + 1]
+
+
+def rindex(a):
+    if not a.any():
+        raise IndexError
+    last = len(a) - 1
+    while not a[last]:
+        last -= 1
+    return last
+
+
 def ba2hex(a):
     """ba2hex(bitarray, /) -> hexstr
 
@@ -168,36 +194,39 @@ within length bits.
         # there a special cases for 0 which we'd rather not deal with below
         return zeros(length or 1, endian=endian)
 
+    big_endian = bool(endian == 'big')
     if is_py2:
         c = bytearray()
         while i:
             i, r = divmod(i, 256)
             c.append(r)
-        c.reverse()
+        if big_endian:
+            c.reverse()
         b = bytes(c)
     else: # py3
-        b = i.to_bytes(bits2bytes(i.bit_length()), byteorder='big')
+        b = i.to_bytes(bits2bytes(i.bit_length()), byteorder=endian)
 
-    big_endian = bool(endian == 'big')
-    a = bitarray(endian='big')
+    a = bitarray(endian=endian)
     a.frombytes(b)
-    fa = a.index(1)
+    la = len(a)
+    if la == length:
+        return a
+
     if length is None:
-        if fa == 0 and big_endian:
-            return a
-        a = a[fa:]
-    else:
-        la = len(a)
-        if la - fa > length:
+        return lstrip(a) if big_endian else rstrip(a)
+
+    if la > length:
+        size = (la - a.index(1)) if big_endian else (rindex(a) + 1)
+        if size > length:
             raise OverflowError("cannot represent integer in "
                                 "%d bits" % length)
-        if la < length:
-            a = zeros(length - la) + a
-        if la > length:
-            a = a[la - length:]
-    if big_endian:
-        return a
-    else:
-        a.reverse()
-        a.bytereverse()
-        return bitarray(a, endian='little')
+        a = a[la - length:] if big_endian else a[:length - la]
+
+    if la < length:
+        if big_endian:
+            a = zeros(length - la, 'big') + a
+        else:
+            a += zeros(length - la, 'little')
+
+    assert len(a) == length
+    return a
