@@ -2267,7 +2267,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
 
 tests.append(PrefixCodeTests)
 
-# -------------- Buffer Interface (Python 2.7 only for now) ----------------
+# -------------- Buffer Interface (Python 2.7 and above) --------------------
 
 class BufferInterfaceTests(unittest.TestCase):
 
