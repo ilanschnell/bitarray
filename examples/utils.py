@@ -82,15 +82,16 @@ Strip zeros from right.
 
 
 def rindex(a, value=True):
-    """rindex(bitarray, value=True/) -> int
+    """rindex(bitarray, value=True, /) -> int
 
-Return the rightmost index of value.
+Return the rightmost index of bool(value).
 Raises ValueError is value is not present.
 """
-    if value not in a:
-        raise IndexError
+    value = bool(value)
+    if not a.count(value):
+        raise ValueError("rindex(bitarray, x): x not in bitarray")
     last = len(a) - 1
-    while not a[last] == bool(value):
+    while a[last] != value:
         last -= 1
     return last
 

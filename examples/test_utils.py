@@ -120,22 +120,46 @@ class TestsHelpers(unittest.TestCase, Util):
             self.assertEQUAL(rstrip(bitarray('', endian)),
                              bitarray('', endian))
 
+    def test_lstrip_rstrip(self):
+        for a in self.randombitarrays():
+            s = a.to01()
+            self.assertEqual(lstrip(a), bitarray(s.lstrip('0')))
+            self.assertEqual(rstrip(a), bitarray(s.rstrip('0')))
+
     def test_rindex(self):
         for endian in 'big', 'little':
             a = bitarray('00010110000', endian)
             self.assertEqual(rindex(a), 6)
             self.assertEqual(rindex(a, 1), 6)
-            self.assertEqual(rindex(a, value=1), 6)
+            self.assertEqual(rindex(a, 'A'), 6)
+            self.assertEqual(rindex(a, value=True), 6)
 
             a = bitarray('00010110111', endian)
             self.assertEqual(rindex(a, 0), 7)
-            self.assertEqual(rindex(a, value=0), 7)
+            self.assertEqual(rindex(a, None), 7)
+            self.assertEqual(rindex(a, value=False), 7)
 
-            self.assertRaises(IndexError, rindex, bitarray('', endian))
-            self.assertRaises(IndexError, rindex, bitarray('000', endian))
+            for v in 0, 1:
+                self.assertRaises(ValueError, rindex,
+                                  bitarray(0, endian), v)
+            self.assertRaises(ValueError, rindex,
+                              bitarray('000', endian), 1)
+            self.assertRaises(ValueError, rindex,
+                              bitarray('11111', endian), 0)
 
-            self.assertRaises(IndexError, rindex, bitarray('', endian))
-            self.assertRaises(IndexError, rindex, bitarray('000', endian))
+    def test_rindex2(self):
+        for a in self.randombitarrays():
+            v = randint(0, 1)
+            try:
+                i = rindex(a, v)
+            except ValueError:
+                i = None
+            s = a.to01()
+            try:
+                j = s.rindex(str(v))
+            except ValueError:
+                j = None
+            self.assertEqual(i, j)
 
 tests.append(TestsHelpers)
 
