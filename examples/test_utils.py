@@ -9,7 +9,8 @@ from random import choice, randint
 from bitarray import bitarray
 from bitarray.test_bitarray import Util
 
-from utils import frozenbitarray, zeros, ba2hex, hex2ba, ba2int, int2ba
+from utils import (frozenbitarray, zeros, lstrip, rstrip, rindex,
+                   ba2hex, hex2ba, ba2int, int2ba)
 
 
 tests = []
@@ -96,6 +97,37 @@ class TestsZeros(unittest.TestCase):
             self.assertEqual(a.endian(), endian)
 
 tests.append(TestsZeros)
+
+# ---------------------------------------------------------------------------
+
+class TestsHelpers(unittest.TestCase, Util):
+
+    def test_lstrip(self):
+        for endian in 'big', 'little':
+            self.assertEQUAL(lstrip(bitarray('00010110000', endian)),
+                             bitarray('10110000', endian))
+            self.assertEQUAL(lstrip(bitarray('000', endian)),
+                             bitarray('', endian))
+            self.assertEQUAL(lstrip(bitarray('', endian)),
+                             bitarray('', endian))
+
+    def test_rstrip(self):
+        for endian in 'big', 'little':
+            self.assertEQUAL(rstrip(bitarray('00010110000', endian)),
+                             bitarray('0001011', endian))
+            self.assertEQUAL(rstrip(bitarray('000', endian)),
+                             bitarray('', endian))
+            self.assertEQUAL(rstrip(bitarray('', endian)),
+                             bitarray('', endian))
+
+    def test_rindex(self):
+        for endian in 'big', 'little':
+            self.assertEqual(rindex(bitarray('00010110000', endian)), 6)
+            self.assertEqual(rindex(bitarray('1111111111', endian)), 9)
+            self.assertRaises(IndexError, rindex, bitarray('', endian))
+            self.assertRaises(IndexError, rindex, bitarray('000', endian))
+
+tests.append(TestsHelpers)
 
 # ---------------------------------------------------------------------------
 
@@ -220,10 +252,14 @@ class TestsIntegerization(unittest.TestCase, Util):
             al = int2ba(0, n, 'little')
             self.assertEqual(len(ab), n)
             self.assertEqual(len(al), n)
-            self.assertEqual(ab, al, bitarray(n * '0'))
-            self.assertRaises(OverflowError, int2ba, 2 ** n, n)
+            self.assertEqual(ab, bitarray(n * '0', 'big'))
+            self.assertEqual(al, bitarray(n * '0', 'little'))
+
+            self.assertRaises(OverflowError, int2ba, 2 ** n, n, 'big')
             self.assertRaises(OverflowError, int2ba, 2 ** n, n, 'little')
             self.assertEqual(int2ba(2 ** n - 1), bitarray(n * '1'))
+            self.assertEqual(int2ba(2 ** n - 1, endian='little'),
+                             bitarray(n * '1'))
 
     def test_explicit(self):
         for i, sa in [( 0,     '0'),    (1,         '1'),

@@ -57,6 +57,10 @@ Create a bitarray of length, with all values 0.
 
 
 def lstrip(a):
+    """lstrip(bitarray, /) -> bitarray
+
+Strip zeros from left.
+"""
     try:
         first = a.index(1)
     except ValueError:
@@ -65,6 +69,10 @@ def lstrip(a):
 
 
 def rstrip(a):
+    """lstrip(bitarray, /) -> bitarray
+
+Strip zeros from right.
+"""
     if not a.any():
         return bitarray(endian=a.endian())
     last = len(a) - 1
@@ -74,6 +82,10 @@ def rstrip(a):
 
 
 def rindex(a):
+    """rindex(bitarray, /) -> int
+
+Return the rightmost index of 1.  Raises ValueError is no 1 is present.
+"""
     if not a.any():
         raise IndexError
     last = len(a) - 1
