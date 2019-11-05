@@ -50,6 +50,7 @@ Create a bitarray of length, with all values 0.
         raise TypeError("integer expected")
     if length < 0:
         raise ValueError("non-negative integer expected")
+
     a = bitarray(length, endian)
     a.setall(0)
     return a
@@ -65,6 +66,7 @@ the bitarray (which has to be multiple of 4 in length).
         raise TypeError("bitarray expected")
     if a.endian() != 'big':
         raise ValueError("big endian bitarray expected")
+
     la = len(a)
     if la % 4:
         raise ValueError("bitarray length not multiple of 4")
@@ -72,6 +74,7 @@ the bitarray (which has to be multiple of 4 in length).
         # make sure we don't mutate the original argument
         a = a + bitarray(4)
     assert len(a) % 8 == 0
+
     s = binascii.hexlify(a.tobytes())
     if la % 8:
         s = s[:-1]
@@ -86,10 +89,12 @@ hexstr may contain any number of hex digits (upper or lower case).
 """
     if not isinstance(s, (str, bytes)):
         raise TypeError("string expected")
+
     ls = len(s)
     if ls % 2:
         s = s + ('0' if isinstance(s, str) else b'0')
     assert len(s) % 2 == 0
+
     a = bitarray()
     a.frombytes(binascii.unhexlify(s))
     if ls % 2:
@@ -108,11 +113,13 @@ Convert the given bitarray into an integer.
         raise ValueError("big endian bitarray expected")
     if len(a) == 0:
         raise ValueError("non-empty bitarray expected")
-    # pad with leadind zeros, such that length is multiple of 8
+
     if len(a) % 8:
+        # pad with leadind zeros, such that length is multiple of 8
         a = zeros(8 - len(a) % 8) + a
     assert len(a) % 8 == 0
     b = a.tobytes()
+
     if is_py2:
         c = bytearray(b)
         res, j = 0, len(c) - 1
@@ -141,8 +148,11 @@ within length bits.
             raise TypeError("integer expected")
         if length <= 0:
             raise ValueError("integer larger than 0 expected")
+
     if i == 0:
+        # there a special cases for 0 which we'd rather not deal with below
         return zeros(length or 1)
+
     if is_py2:
         c = bytearray()
         while i:
@@ -152,6 +162,7 @@ within length bits.
         b = bytes(c)
     else: # py3
         b = i.to_bytes(bits2bytes(i.bit_length()), byteorder='big')
+
     a = bitarray()
     a.frombytes(b)
     fa = a.index(1)
