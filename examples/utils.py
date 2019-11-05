@@ -107,7 +107,7 @@ Convert the given bitarray into an integer.
     if len(a) == 0:
         raise ValueError("non-empty bitarray expected")
     # pad with leadind zeros, such that length is multiple of 8
-    b = bitarray((8 - len(a) % 8) * '0') + a
+    b = zeros(8 - len(a) % 8) + a
     assert len(b) % 8 == 0
     res, m = 0, 1
     c = bytearray(b.tobytes())
@@ -146,18 +146,17 @@ within length bits.
     a.frombytes(bytes(b))
     fa = a.index(1)
     if length is None:
-        if fa > 0:
-            return a[fa:]
-        else:
+        if fa == 0:
             return a
+        return a[fa:]
     else:
         la = len(a)
         if la - fa > length:
             raise OverflowError("cannot represent integer in "
                                 "%d bits" % length)
-        if la == length:
-            return a
         if la < length:
             return zeros(length - la) + a
+        if la == length:
+            return a
         if la > length:
             return a[la - length:]

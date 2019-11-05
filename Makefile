@@ -4,6 +4,7 @@ bitarray/_bitarray.so: bitarray/_bitarray.c
 
 test: bitarray/_bitarray.so
 	$(PYTHON) -c "import bitarray; bitarray.test()"
+	export PYTHONPATH=.:./examples; $(PYTHON) examples/test_utils.py
 
 
 doc: bitarray/_bitarray.so
