@@ -194,11 +194,12 @@ class TestsIntegerization(unittest.TestCase, Util):
     def test_explicit(self):
         for i, sa in [( 0,     '0'),    (1,         '1'),
                       ( 2,    '10'),    (3,        '11'),
-                      (25, '11001'),  (265, '100001001')]:
+                      (25, '11001'),  (265, '100001001'),
+                      (3691038, '1110000101001000011110')]:
             a = bitarray(sa)
             self.assertEqual(int2ba(i), a)
             self.assertEqual(ba2int(a), i)
-            if i == 0:
+            if i == 0 or i >= 512:
                 continue
             for n in range(9, 32):
                 b = int2ba(i, n)
@@ -213,6 +214,8 @@ class TestsIntegerization(unittest.TestCase, Util):
         # ensure we have no leading zeros
         self.assertTrue(len(a) == 1 or a.index(1) == 0)
         self.assertEqual(ba2int(a), i)
+        if i > 0 and sys.version_info[:2] >= (2, 7):
+            self.assertEqual(i.bit_length(), len(a))
         # add a few leading zeros to bitarray
         a = bitarray(randint(0, 3) * '0') + a
         self.assertEqual(ba2int(a), i)
