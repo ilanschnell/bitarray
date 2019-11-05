@@ -6,11 +6,14 @@ Not sure if I should put this into the bitarray package itself :-/
 import sys
 import binascii
 
-from bitarray import _bitarray, bitarray
+from bitarray import _bitarray, bitarray, bits2bytes
 
 
 __all__ = ['frozenbitarray', 'zeros', 'ba2hex', 'hex2ba',
            'ba2int', 'int2ba']
+
+
+is_py2 = bool(sys.version_info[0] == 2)
 
 
 class frozenbitarray(_bitarray):
@@ -43,8 +46,7 @@ def zeros(length, endian='big'):
 
 Create a bitarray of length, with all values 0.
 """
-    if not isinstance(length,
-                      (int, long) if sys.version_info[0] == 2 else int):
+    if not isinstance(length, (int, long) if is_py2 else int):
         raise TypeError("integer expected")
     if length < 0:
         raise ValueError("non-negative integer expected")
@@ -107,15 +109,19 @@ Convert the given bitarray into an integer.
     if len(a) == 0:
         raise ValueError("non-empty bitarray expected")
     # pad with leadind zeros, such that length is multiple of 8
-    b = zeros(8 - len(a) % 8) + a
-    assert len(b) % 8 == 0
-    res, m = 0, 1
-    c = bytearray(b.tobytes())
-    c.reverse()
-    for x in c:
-        res += x * m
-        m *= 256
-    return res
+    if len(a) % 8:
+        a = zeros(8 - len(a) % 8) + a
+    assert len(a) % 8 == 0
+    b = a.tobytes()
+    if is_py2:
+        c = bytearray(b)
+        res, j = 0, len(c) - 1
+        for x in c:
+            res |= x << 8 * j
+            j -= 1
+        return res
+    else: # py3
+        return int.from_bytes(b, byteorder='big')
 
 
 def int2ba(i, length=None):
@@ -126,7 +132,7 @@ If length is provided, the result will be of this length, and an
 OverflowError will be raised, if the integer cannot be represented
 within length bits.
 """
-    if not isinstance(i, (int, long) if sys.version_info[0] == 2 else int):
+    if not isinstance(i, (int, long) if is_py2 else int):
         raise TypeError("integer expected")
     if i < 0:
         raise ValueError("non-negative integer expected")
@@ -137,13 +143,17 @@ within length bits.
             raise ValueError("integer larger than 0 expected")
     if i == 0:
         return zeros(length or 1)
-    b = bytearray()
-    while i:
-        i, r = divmod(i, 256)
-        b.append(r)
-    b.reverse()
+    if is_py2:
+        c = bytearray()
+        while i:
+            i, r = divmod(i, 256)
+            c.append(r)
+        c.reverse()
+        b = bytes(c)
+    else: # py3
+        b = i.to_bytes(bits2bytes(i.bit_length()), byteorder='big')
     a = bitarray()
-    a.frombytes(bytes(b))
+    a.frombytes(b)
     fa = a.index(1)
     if length is None:
         if fa == 0:
