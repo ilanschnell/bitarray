@@ -2362,6 +2362,14 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(d[frozenbitarray('01')], 123)
         self.assertEqual(d[frozenbitarray(b)], 345)
 
+    def test_dictkey2(self): # taken sllightly modified from issue #74
+        a1 = frozenbitarray([True, False])
+        a2 = frozenbitarray([False, False])
+        dct = {a1: "one", a2: "two"}
+        a3 = frozenbitarray([True, False])
+        self.assertEqual(a3, a1)
+        self.assertEqual(dct[a3], 'one')
+
     def test_mix(self):
         a = bitarray('110')
         b = frozenbitarray('0011')
