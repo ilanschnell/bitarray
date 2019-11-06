@@ -54,7 +54,7 @@ def write_doc(name):
 def write_reference():
     fo.write("Reference\n"
              "---------\n\n"
-             "**The bitarray class:**\n\n")
+             "**The bitarray object:**\n\n")
     write_doc('bitarray')
 
     fo.write("**A bitarray object supports the following methods:**\n\n")
@@ -62,6 +62,9 @@ def write_reference():
         if method.startswith('_'):
             continue
         write_doc('bitarray.%s' % method)
+
+    fo.write("**The frozenbitarray object:**\n\n")
+    write_doc('frozenbitarray')
 
     fo.write("**Functions defined in the module:**\n\n")
     write_doc('test')

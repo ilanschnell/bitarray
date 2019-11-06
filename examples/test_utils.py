@@ -6,63 +6,14 @@ import unittest
 from string import hexdigits
 from random import choice, randint
 
-from bitarray import bitarray
+from bitarray import bitarray, frozenbitarray
 from bitarray.test_bitarray import Util
 
-from utils import (frozenbitarray, zeros, rindex, strip,
+from utils import (zeros, rindex, strip,
                    ba2hex, hex2ba, ba2int, int2ba)
 
 
 tests = []
-
-# ---------------------------------------------------------------------------
-
-class TestsFrozenbitarray(unittest.TestCase, Util):
-
-    def test_init(self):
-        a = frozenbitarray('110')
-        self.assertEqual(a, bitarray('110'))
-        self.assertEqual(a.endian(), 'big')
-        self.assertEqual(a.to01(), '110')
-
-    def test_init_bitarray(self):
-        for a in self.randombitarrays():
-            b = frozenbitarray(a)
-            self.assertFalse(b is a)
-            self.assertEqual(b, a)
-            self.assertEqual(b.endian(), a.endian())
-            c = frozenbitarray(b)
-            self.assertEqual(c, b)
-            self.assertFalse(c is b)
-            self.assertEqual(c.endian(), a.endian())
-            self.assertEqual(hash(c), hash(b))
-
-    def test_repr(self):
-        a = frozenbitarray()
-        self.assertEqual(repr(a), "frozenbitarray()")
-        self.assertEqual(str(a), "frozenbitarray()")
-
-    def test_imutable(self):
-        a = frozenbitarray('111')
-        self.assertRaises(TypeError, a.append, True)
-        self.assertRaises(TypeError, a.__setitem__, 0, 0)
-        self.assertRaises(TypeError, a.__delitem__, 0)
-
-    def test_dictkey(self):
-        a = frozenbitarray('01')
-        b = frozenbitarray('1001')
-        d = {a: 123, b: 345}
-        self.assertEqual(d[frozenbitarray('01')], 123)
-        self.assertEqual(d[frozenbitarray(b)], 345)
-
-    def test_mix(self):
-        a = bitarray('110')
-        b = frozenbitarray('0011')
-        self.assertEqual(a + b, bitarray('1100011'))
-        a.extend(b)
-        self.assertEqual(a, bitarray('1100011'))
-
-tests.append(TestsFrozenbitarray)
 
 # ---------------------------------------------------------------------------
 

@@ -70,6 +70,31 @@ Deprecated since version 0.4.0, use ``tobytes()`` instead."""
         raise TypeError("float() cannot take bitarray as argument")
 
 
+class frozenbitarray(_bitarray):
+    """frozenbitarray(initial=0, /, endian='big')
+
+Return a frozenbitarray object, which is initialized the same way a bitarray
+object is initialized.  A frozenbitarray is immutable and hashable.
+Its contents cannot be altered after is created; however, it can be used as
+a dictionary key.
+"""
+    def __repr__(self):
+        return 'frozen' + _bitarray.__repr__(self)
+
+    def __hash__(self):
+        if getattr(self, '_hash', None) is None:
+            self._hash = hash((self.length(), self.tobytes()))
+        return self._hash
+
+    def __delitem__(self, *args, **kwargs):
+        raise TypeError("'frozenbitarray' is immutable")
+
+    append = bytereverse = extend = encode = fill = __delitem__
+    frombytes = fromfile = insert = invert = pack = pop = __delitem__
+    remove = reverse = setall = sort = __setitem__ = __delitem__
+    __iand__ = __iadd__ = __imul__ = __ior__ = __ixor__ = __delitem__
+
+
 def test(verbosity=1, repeat=1):
     """test(verbosity=1, repeat=1) -> TextTestResult
 

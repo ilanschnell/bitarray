@@ -293,17 +293,17 @@ them as elements of a list, rather than simply returning the joined string.
 Reference
 ---------
 
-**The bitarray class:**
+**The bitarray object:**
 
-``bitarray([initial], [endian=string])``
+``bitarray(initial=0, /, endian='big')``
    Return a new bitarray object whose items are bits initialized from
-   the optional initial, and endianness.
-   If no object is provided, the bitarray is initialized to have length zero.
+   the optional initial object, and endianness.
+   If no initial object is provided, an empty bitarray (length zero) is created.
    The initial object may be of the following types:
    
-   int, long
-       Create a bitarray of given length.  The initial values are arbitrary.
-       If you want all values to be set, use the .setall() method.
+   int
+       Create a bitarray of given integer length.  The initial values are
+       arbitrary.  If you want all values to be set, use the .setall() method.
    
    string
        Create bitarray from a string of '0's and '1's.
@@ -483,7 +483,7 @@ Reference
 ``tobytes()`` -> bytes
    Return the byte representation of the bitarray.
    When the length of the bitarray is not a multiple of 8, the few remaining
-   bits (1..7) are set to 0.
+   bits (1..7) are considered to be 0.
 
 
 ``tofile(f, /)``
@@ -513,6 +513,15 @@ Reference
    using the specified mapping.
 
 
+**The frozenbitarray object:**
+
+``frozenbitarray(initial=0, /, endian='big')``
+   Return a frozenbitarray object, which is initialized the same way a bitarray
+   object is initialized.  A frozenbitarray is immutable and hashable.
+   Its contents cannot be altered after is created; however, it can be used as
+   a dictionary key.
+
+
 **Functions defined in the module:**
 
 ``test(verbosity=1, repeat=1)`` -> TextTestResult
@@ -534,14 +543,16 @@ Change log
 
 2019-XX-XX   1.1.0:
 
+  * add frozenbitarray object
   * add optional start and stop parameters to .count() method
   * add official Python 3.8 support
   * optimize setrange() C-function by using memset
   * fix issue #74, bitarray is hashable on Python 2
   * fix issue #68, unittest.TestCase.assert_ deprecated
-  * improved test suite - tests should run in about 1 second now
+  * improved test suite - tests should run in about 1 second
   * update documentation to use positional-only syntax in docstrings
   * update readme to pass Python 3 doctest
+  * add utils module to examples
 
 
 **1.0.1** (2019-07-19):
