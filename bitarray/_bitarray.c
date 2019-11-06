@@ -483,7 +483,6 @@ findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
 {
     Py_ssize_t j;
     idx_t i;
-    char c;
 
     assert(0 <= start && start <= self->nbits);
     assert(0 <= stop && stop <= self->nbits);
@@ -496,7 +495,7 @@ findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
     if (stop >= start + 8) {
         /* seraching for 1 means: break when byte is not 0x00
            searching for 0 means: break when byte is not 0xff */
-        c = vi ? 0x00 : 0xff;
+        const char c = vi ? 0x00 : 0xff;
 
         /* skip ahead by checking whole bytes */
         for (j = (Py_ssize_t) (start / 8); j < BYTES(stop); j++)
