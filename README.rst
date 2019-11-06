@@ -291,10 +291,10 @@ them as elements of a list, rather than simply returning the joined string.
 
 
 Reference
----------
+=========
 
-**The bitarray object:**
-
+The bitarray object:
+--------------------
 ``bitarray(initial=0, /, endian='big')``
    Return a new bitarray object whose items are bits initialized from
    the optional initial object, and endianness.
@@ -513,8 +513,8 @@ Reference
    using the specified mapping.
 
 
-**The frozenbitarray object:**
-
+The frozenbitarray object:
+--------------------------
 ``frozenbitarray(initial=0, /, endian='big')``
    Return a frozenbitarray object, which is initialized the same way a bitarray
    object is initialized.  A frozenbitarray is immutable and hashable.
@@ -522,8 +522,8 @@ Reference
    a dictionary key.
 
 
-**Functions defined in the module:**
-
+Functions defined in the module:
+--------------------------------
 ``test(verbosity=1, repeat=1)`` -> TextTestResult
    Run self-test, and return unittest.runner.TextTestResult object.
 

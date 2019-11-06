@@ -53,8 +53,9 @@ def write_doc(name):
 
 def write_reference():
     fo.write("Reference\n"
-             "---------\n\n"
-             "**The bitarray object:**\n\n")
+             "=========\n\n"
+             "The bitarray object:\n"
+             "--------------------\n")
     write_doc('bitarray')
 
     fo.write("**A bitarray object supports the following methods:**\n\n")
@@ -63,10 +64,12 @@ def write_reference():
             continue
         write_doc('bitarray.%s' % method)
 
-    fo.write("**The frozenbitarray object:**\n\n")
+    fo.write("The frozenbitarray object:\n"
+             "--------------------------\n")
     write_doc('frozenbitarray')
 
-    fo.write("**Functions defined in the module:**\n\n")
+    fo.write("Functions defined in the module:\n"
+             "--------------------------------\n")
     write_doc('test')
     write_doc('bitdiff')
     write_doc('bits2bytes')
