@@ -139,13 +139,14 @@ class TestsHelpers(unittest.TestCase, Util):
 
     def test_rindex3(self):
         for _ in range(100):
-            n = randint(0, 100000)
+            n = randint(1, 100000)
+            v = randint(0, 1)
             a = bitarray(n)
-            a.setall(0)
+            a.setall(1 - v)
             lst = [randint(0, n - 1) for _ in range(100)]
             for i in lst:
-                a[i] = 1
-            self.assertEqual(rindex(a), max(lst))
+                a[i] = v
+            self.assertEqual(rindex(a, v), max(lst))
 
     def test_strip1(self):
         self.assertRaises(TypeError, strip, bitarray(), 123)
