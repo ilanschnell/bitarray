@@ -9,7 +9,7 @@ from random import choice, randint
 from bitarray import bitarray
 from bitarray.test_bitarray import Util
 
-from utils import (frozenbitarray, zeros, rindex, lstrip, rstrip,
+from utils import (frozenbitarray, zeros, rindex, strip,
                    ba2hex, hex2ba, ba2int, int2ba)
 
 
@@ -147,29 +147,25 @@ class TestsHelpers(unittest.TestCase, Util):
                 a[i] = 1
             self.assertEqual(rindex(a), max(lst))
 
-    def test_lstrip(self):
+    def test_strip1(self):
+        self.assertRaises(TypeError, strip, bitarray(), 123)
+        self.assertRaises(ValueError, strip, bitarray(), 'up')
         for endian in 'big', 'little':
-            self.assertEQUAL(lstrip(bitarray('00010110000', endian)),
-                             bitarray('10110000', endian))
-            self.assertEQUAL(lstrip(bitarray('000', endian)),
-                             bitarray('', endian))
-            self.assertEQUAL(lstrip(bitarray('', endian)),
-                             bitarray('', endian))
+            a = bitarray('00010110000', endian)
+            self.assertEQUAL(strip(a), bitarray('0001011', endian))
+            self.assertEQUAL(strip(a, 'left'), bitarray('10110000', endian))
+            self.assertEQUAL(strip(a, 'both'), bitarray('1011', endian))
 
-    def test_rstrip(self):
-        for endian in 'big', 'little':
-            self.assertEQUAL(rstrip(bitarray('00010110000', endian)),
-                             bitarray('0001011', endian))
-            self.assertEQUAL(rstrip(bitarray('000', endian)),
-                             bitarray('', endian))
-            self.assertEQUAL(rstrip(bitarray('', endian)),
-                             bitarray('', endian))
+        for mode in 'left', 'right', 'both':
+            self.assertEqual(strip(bitarray('000'), mode), bitarray())
+            self.assertEqual(strip(bitarray(), mode), bitarray())
 
-    def test_lstrip_rstrip(self):
+    def test_strip2(self):
         for a in self.randombitarrays():
             s = a.to01()
-            self.assertEqual(lstrip(a), bitarray(s.lstrip('0')))
-            self.assertEqual(rstrip(a), bitarray(s.rstrip('0')))
+            self.assertEqual(strip(a, 'left'), bitarray(s.lstrip('0')))
+            self.assertEqual(strip(a, 'right'), bitarray(s.rstrip('0')))
+            self.assertEqual(strip(a, 'both'), bitarray(s.strip('0')))
 
 tests.append(TestsHelpers)
 

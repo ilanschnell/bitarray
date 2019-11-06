@@ -9,7 +9,7 @@ import binascii
 from bitarray import _bitarray, bitarray, bits2bytes
 
 
-__all__ = ['frozenbitarray', 'zeros', 'rindex', 'lstrip', 'rstrip',
+__all__ = ['frozenbitarray', 'zeros', 'rindex', 'strip',
            'ba2hex', 'hex2ba', 'ba2int', 'int2ba']
 
 
@@ -82,28 +82,34 @@ Raises ValueError is value is not present.
             right = middle
 
 
-def lstrip(a):
-    """lstrip(bitarray, /) -> bitarray
+def strip(a, mode='right'):
+    """strip(bitarray, mode='right', /) -> bitarray
 
-Strip zeros from left.
+Strip zeros from left, right or both ends.
+Allowed values for mode are: 'left', 'right', 'both'
 """
-    try:
-        first = a.index(1)
-    except ValueError:
-        return bitarray(endian=a.endian())
-    return a[first:]
+    if not isinstance(a, (bitarray, frozenbitarray)):
+        raise TypeError("bitarray expected")
+    if not isinstance(mode, str):
+        raise TypeError("string expected for mode")
+    if mode not in ('left', 'right', 'both'):
+        raise ValueError("allowed values 'left', 'right', 'both', got: %r" %
+                         mode)
+    first = 0
+    if mode in ('left', 'both'):
+        try:
+            first = a.index(1)
+        except ValueError:
+            return bitarray(endian=a.endian())
 
+    last = len(a) - 1
+    if mode in ('right', 'both'):
+        try:
+            last = rindex(a)
+        except ValueError:
+            return bitarray(endian=a.endian())
 
-def rstrip(a):
-    """lstrip(bitarray, /) -> bitarray
-
-Strip zeros from right.
-"""
-    try:
-        last = rindex(a)
-    except ValueError:
-        return bitarray(endian=a.endian())
-    return a[:last + 1]
+    return a[first:last + 1]
 
 
 def ba2hex(a):
@@ -237,7 +243,7 @@ within length bits.
         return a
 
     if length is None:
-        return lstrip(a) if big_endian else rstrip(a)
+        return strip(a, 'left' if big_endian else 'right')
 
     if la > length:
         size = (la - a.index(1)) if big_endian else (rindex(a) + 1)
