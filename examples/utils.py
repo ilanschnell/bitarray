@@ -120,17 +120,14 @@ the bitarray (which has to be multiple of 4 in length).
 """
     if not isinstance(a, (bitarray, frozenbitarray)):
         raise TypeError("bitarray expected")
-
+    if a.endian() != 'big':
+        raise ValueError("big-endian bitarray expected")
     la = len(a)
     if la % 4:
         raise ValueError("bitarray length not multiple of 4")
     if la % 8:
         # make sure we don't mutate the original argument
-        if a.endian() == 'big':
-            a = a + bitarray(4, 'big')
-        else:
-            n = 8 * (len(a) // 8)
-            a = a[:n] + bitarray(4, 'little') + a[n:]
+        a = a + bitarray(4, 'big')
     assert len(a) % 8 == 0
 
     s = binascii.hexlify(a.tobytes())
@@ -139,8 +136,8 @@ the bitarray (which has to be multiple of 4 in length).
     return s
 
 
-def hex2ba(s, endian='big'):
-    """hex2ba(hexstr, /, endian='big') -> bitarray
+def hex2ba(s):
+    """hex2ba(hexstr, /) -> bitarray
 
 Bitarray of hexadecimal representation.
 hexstr may contain any number of hex digits (upper or lower case).
@@ -153,13 +150,10 @@ hexstr may contain any number of hex digits (upper or lower case).
         s = s + ('0' if isinstance(s, str) else b'0')
     assert len(s) % 2 == 0
 
-    a = bitarray(endian=endian)
+    a = bitarray(endian='big')
     a.frombytes(binascii.unhexlify(s))
     if ls % 2:
-        if endian == 'big':
-            del a[-4:]
-        else:
-            del a[-8:-4]
+        del a[-4:]
     return a
 
 
