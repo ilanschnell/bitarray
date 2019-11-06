@@ -62,7 +62,7 @@ Once you have installed the package, you may want to test it::
    .........................................................................
    .................................................................
    ----------------------------------------------------------------------
-   Ran 148 tests in 2.229s
+   Ran 155 tests in 0.936s
    
    OK
 
@@ -290,7 +290,6 @@ Since symbols are not limited to being characters, it is necessary to return
 them as elements of a list, rather than simply returning the joined string.
 
 
-=========
 =========
 Reference
 =========

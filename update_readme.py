@@ -52,8 +52,7 @@ def write_doc(name):
 
 
 def write_reference():
-    fo.write("=========\n"
-             "Reference\n"
+    fo.write("Reference\n"
              "=========\n\n"
              "The bitarray object:\n"
              "--------------------\n")
