@@ -2314,6 +2314,21 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(a.endian(), 'big')
         self.assertEqual(a.to01(), '110')
 
+    def test_methods(self):
+        # test a few methods which do not raise the TypeError
+        a = frozenbitarray('1101100')
+        self.assertEqual(a[2], 0)
+        self.assertEqual(a[:4].to01(), '1101')
+        self.assertEqual(a.count(), 4)
+        self.assertEqual(a.index(0), 2)
+        b = a.copy()
+        self.assertEqual(b, a)
+        self.assertEqual(repr(type(b)), "<class 'bitarray.frozenbitarray'>")
+        self.assertEqual(len(b), 7)
+        self.assertEqual(b.length(), 7)
+        self.assertEqual(b.all(), False)
+        self.assertEqual(b.any(), True)
+
     def test_init_bitarray(self):
         for a in self.randombitarrays():
             b = frozenbitarray(a)
@@ -2334,7 +2349,7 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(repr(a), "frozenbitarray('10111')")
         self.assertEqual(str(a), "frozenbitarray('10111')")
 
-    def test_imutable(self):
+    def test_immutable(self):
         a = frozenbitarray('111')
         self.assertRaises(TypeError, a.append, True)
         self.assertRaises(TypeError, a.__setitem__, 0, 0)
