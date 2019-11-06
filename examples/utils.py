@@ -9,7 +9,7 @@ import binascii
 from bitarray import _bitarray, bitarray, bits2bytes
 
 
-__all__ = ['frozenbitarray', 'zeros', 'lstrip', 'rstrip', 'rindex',
+__all__ = ['frozenbitarray', 'zeros', 'rindex', 'lstrip', 'rstrip',
            'ba2hex', 'hex2ba', 'ba2int', 'int2ba']
 
 
@@ -56,6 +56,32 @@ Create a bitarray of length, with all values 0.
     return a
 
 
+def rindex(a, value=True):
+    """rindex(bitarray, value=True, /) -> int
+
+Return the rightmost index of bool(value).
+Raises ValueError is value is not present.
+"""
+    # We use a simple bisection method here, which is still a lot faster
+    # than searching one-by-one from the right in Python.
+    value = bool(value)
+    if value not in a:
+        raise ValueError("rindex(bitarray, x): x not in bitarray")
+    left, right = 0, len(a)
+    while True:
+        if a[right - 1] == value:
+            return right - 1
+        middle = (left + right) // 2
+        try:
+            a.index(value, middle, right)
+            # upper half has value, so use middle as new left
+            left = middle
+        except ValueError:
+            # uppler half has no valueerror, so it must be lower
+            # use middle as new right
+            right = middle
+
+
 def lstrip(a):
     """lstrip(bitarray, /) -> bitarray
 
@@ -73,27 +99,11 @@ def rstrip(a):
 
 Strip zeros from right.
 """
-    if not a.any():
+    try:
+        last = rindex(a)
+    except ValueError:
         return bitarray(endian=a.endian())
-    last = len(a) - 1
-    while not a[last]:
-        last -= 1
     return a[:last + 1]
-
-
-def rindex(a, value=True):
-    """rindex(bitarray, value=True, /) -> int
-
-Return the rightmost index of bool(value).
-Raises ValueError is value is not present.
-"""
-    value = bool(value)
-    if not a.count(value):
-        raise ValueError("rindex(bitarray, x): x not in bitarray")
-    last = len(a) - 1
-    while a[last] != value:
-        last -= 1
-    return last
 
 
 def ba2hex(a):

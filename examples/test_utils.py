@@ -9,7 +9,7 @@ from random import choice, randint
 from bitarray import bitarray
 from bitarray.test_bitarray import Util
 
-from utils import (frozenbitarray, zeros, lstrip, rstrip, rindex,
+from utils import (frozenbitarray, zeros, rindex, lstrip, rstrip,
                    ba2hex, hex2ba, ba2int, int2ba)
 
 
@@ -102,30 +102,6 @@ tests.append(TestsZeros)
 
 class TestsHelpers(unittest.TestCase, Util):
 
-    def test_lstrip(self):
-        for endian in 'big', 'little':
-            self.assertEQUAL(lstrip(bitarray('00010110000', endian)),
-                             bitarray('10110000', endian))
-            self.assertEQUAL(lstrip(bitarray('000', endian)),
-                             bitarray('', endian))
-            self.assertEQUAL(lstrip(bitarray('', endian)),
-                             bitarray('', endian))
-
-    def test_rstrip(self):
-        for endian in 'big', 'little':
-            self.assertEQUAL(rstrip(bitarray('00010110000', endian)),
-                             bitarray('0001011', endian))
-            self.assertEQUAL(rstrip(bitarray('000', endian)),
-                             bitarray('', endian))
-            self.assertEQUAL(rstrip(bitarray('', endian)),
-                             bitarray('', endian))
-
-    def test_lstrip_rstrip(self):
-        for a in self.randombitarrays():
-            s = a.to01()
-            self.assertEqual(lstrip(a), bitarray(s.lstrip('0')))
-            self.assertEqual(rstrip(a), bitarray(s.rstrip('0')))
-
     def test_rindex(self):
         for endian in 'big', 'little':
             a = bitarray('00010110000', endian)
@@ -160,6 +136,40 @@ class TestsHelpers(unittest.TestCase, Util):
             except ValueError:
                 j = None
             self.assertEqual(i, j)
+
+    def test_rindex3(self):
+        for _ in range(100):
+            n = randint(0, 100000)
+            a = bitarray(n)
+            a.setall(0)
+            lst = [randint(0, n - 1) for _ in range(100)]
+            for i in lst:
+                a[i] = 1
+            self.assertEqual(rindex(a), max(lst))
+
+    def test_lstrip(self):
+        for endian in 'big', 'little':
+            self.assertEQUAL(lstrip(bitarray('00010110000', endian)),
+                             bitarray('10110000', endian))
+            self.assertEQUAL(lstrip(bitarray('000', endian)),
+                             bitarray('', endian))
+            self.assertEQUAL(lstrip(bitarray('', endian)),
+                             bitarray('', endian))
+
+    def test_rstrip(self):
+        for endian in 'big', 'little':
+            self.assertEQUAL(rstrip(bitarray('00010110000', endian)),
+                             bitarray('0001011', endian))
+            self.assertEQUAL(rstrip(bitarray('000', endian)),
+                             bitarray('', endian))
+            self.assertEQUAL(rstrip(bitarray('', endian)),
+                             bitarray('', endian))
+
+    def test_lstrip_rstrip(self):
+        for a in self.randombitarrays():
+            s = a.to01()
+            self.assertEqual(lstrip(a), bitarray(s.lstrip('0')))
+            self.assertEqual(rstrip(a), bitarray(s.rstrip('0')))
 
 tests.append(TestsHelpers)
 
