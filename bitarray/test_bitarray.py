@@ -1296,7 +1296,7 @@ class MethodTests(unittest.TestCase, Util):
                 self.check_obj(a)
 
 
-    def test_index(self):
+    def test_index1(self):
         a = bitarray()
         for i in (True, False, 1, 0):
             self.assertRaises(ValueError, a.index, i)
@@ -1324,6 +1324,7 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a.index(False), 173)
         self.assertEqual(a.index(True), 0)
 
+    def test_index2(self):
         for n in range(50):
             for m in range(n):
                 a = bitarray(n)
@@ -1337,7 +1338,7 @@ class MethodTests(unittest.TestCase, Util):
                 a[m] = 0
                 self.assertEqual(a.index(0), m)
 
-    def test_index2a(self):
+    def test_index3(self):
         a = bitarray('00001000' '00000000' '0010000')
         self.assertEqual(a.index(1), 4)
         self.assertEqual(a.index(1, 1), 4)
@@ -1346,7 +1347,7 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.index, 1, 5, 18)
         self.assertRaises(ValueError, a.index, 1, 19)
 
-    def test_index2b(self):
+    def test_index4(self):
         a = bitarray('11110111' '11111111' '1101111')
         self.assertEqual(a.index(0), 4)
         self.assertEqual(a.index(0, 1), 4)
@@ -1355,7 +1356,7 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.index, 0, 5, 18)
         self.assertRaises(ValueError, a.index, 0, 19)
 
-    def test_index3(self):
+    def test_index5(self):
         a = bitarray(2000)
         a.setall(0)
         for _ in range(3):
@@ -1374,7 +1375,7 @@ class MethodTests(unittest.TestCase, Util):
                 res2 = None
             self.assertEqual(res1, res2)
 
-    def test_index4(self):
+    def test_index6(self):
         for n in range(1, 50):
             a = bitarray(n)
             i = randint(0, 1)
@@ -1396,7 +1397,7 @@ class MethodTests(unittest.TestCase, Util):
                 self.assertEqual(res1, res2)
 
 
-    def test_count(self):
+    def test_count1(self):
         a = bitarray('10011')
         self.assertEqual(a.count(), 3)
         self.assertEqual(a.count(True), 3)
@@ -1409,17 +1410,19 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.count, 0, 'A')
         self.assertRaises(TypeError, a.count, 0, 0, 'A')
 
+    def test_count2(self):
         for i in range(0, 256):
             a = bitarray()
             a.frombytes(to_bytes(chr(i)))
             self.assertEqual(a.count(), a.to01().count('1'))
 
+    def test_count3(self):
         for a in self.randombitarrays():
             s = a.to01()
             self.assertEqual(a.count(1), s.count('1'))
             self.assertEqual(a.count(0), s.count('0'))
 
-    def test_count2(self):
+    def test_count4(self):
         N = 37
         a = bitarray(N)
         a.setall(1)
@@ -1427,17 +1430,19 @@ class MethodTests(unittest.TestCase, Util):
             for j in range(i, N):
                 self.assertEqual(a.count(1, i, j), j - i)
 
-    def test_count3(self):
-        a = bitarray('01001100' '01110011' '01')
-        self.assertEqual(a.count(), 9)
-        self.assertEqual(a.count(0, 12), 3)
-        self.assertEqual(a.count(1, -5), 3)
-        self.assertEqual(a.count(1, 2, 17), 7)
-        self.assertEqual(a.count(1, 6, 11), 2)
-        self.assertEqual(a.count(0, 7, -3), 4)
-        self.assertEqual(a.count(1, 1, -1), 8)
-        self.assertEqual(a.count(1, 17, 14), 0)
+    def test_count5(self):
+        for endian in 'big', 'little':
+            a = bitarray('01001100' '01110011' '01', endian)
+            self.assertEqual(a.count(), 9)
+            self.assertEqual(a.count(0, 12), 3)
+            self.assertEqual(a.count(1, -5), 3)
+            self.assertEqual(a.count(1, 2, 17), 7)
+            self.assertEqual(a.count(1, 6, 11), 2)
+            self.assertEqual(a.count(0, 7, -3), 4)
+            self.assertEqual(a.count(1, 1, -1), 8)
+            self.assertEqual(a.count(1, 17, 14), 0)
 
+    def test_count6(self):
         for a in self.randombitarrays():
             s = a.to01()
             i = randint(-3, len(a)+1)
