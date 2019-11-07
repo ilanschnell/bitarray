@@ -85,6 +85,49 @@ Allowed values for mode are: 'left', 'right', 'both'
     return a[first:last + 1]
 
 
+def count_n(a, n):
+    """count_n(bitarray, n, /) -> int
+
+Find the smallest index i for which a.count(1, 0, i) == n.
+"""
+    if not isinstance(a, (bitarray, frozenbitarray)):
+        raise TypeError("bitarray expected")
+    if not isinstance(n, (int, long) if is_py2 else int):
+        raise TypeError("integer expected")
+    if n < 0:
+        raise ValueError("non-negative integer expected")
+    if n == 0:
+        return 0
+    total_count = a.count(1)
+    if n > total_count:
+        raise ValueError("n exceeds total count of %r" % total_count)
+
+    cache = {0: 0, len(a): total_count}
+    def cached_count(m, extra=''):
+        "return count up to m"
+        try:
+            return cache[m]
+        except KeyError:
+            # find the closest cashed value
+            below = max(k for k in cache.keys() if k < m)
+            above = min(k for k in cache.keys() if k > m)
+            if m - below < above - m:
+                cache[m] = cache[below] + a.count(1, below, m)
+            else:
+                cache[m] = cache[above] - a.count(1, m, above)
+            return cache[m]
+
+    # starting values: note that the left index has to be at least n
+    left, right = n, len(a)
+    while not (cached_count(right) == n and a[right - 1]):
+        middle = (left + right) // 2
+        if cached_count(middle) < n:
+            left = middle
+        else:
+            right = middle
+    return right
+
+
 def ba2hex(a):
     """ba2hex(bitarray, /) -> hexstr
 
@@ -215,8 +258,8 @@ within length bits.
     if la > length:
         size = (la - a.index(1)) if big_endian else (rindex(a) + 1)
         if size > length:
-            raise OverflowError("cannot represent integer in "
-                                "%d bits" % length)
+            raise OverflowError("cannot represent %d bit integer in "
+                                "%d bits" % (size, length))
         a = a[la - length:] if big_endian else a[:length - la]
 
     if la < length:

@@ -9,7 +9,7 @@ from random import choice, randint
 from bitarray import bitarray, frozenbitarray
 from bitarray.test_bitarray import Util
 
-from utils import (zeros, rindex, strip,
+from utils import (zeros, rindex, strip, count_n,
                    ba2hex, hex2ba, ba2int, int2ba)
 
 
@@ -118,6 +118,49 @@ class TestsHelpers(unittest.TestCase, Util):
             self.assertEqual(strip(a, 'left'), bitarray(s.lstrip('0')))
             self.assertEqual(strip(a, 'right'), bitarray(s.rstrip('0')))
             self.assertEqual(strip(a, 'both'), bitarray(s.strip('0')))
+
+    def check_result(self, a, n, i):
+        self.assertEqual(a.count(1, 0, i), n)
+        if i:
+            self.assertTrue(a[i - 1])
+
+    def test_count_n1(self):
+        a = bitarray('111110111110111110111110011110111110111110111000')
+        b = a.copy()
+        self.assertEqual(a.count(), 37)
+        self.assertEqual(count_n(a, 0), 0)
+        self.assertEqual(count_n(a, 20), 23)
+        self.assertEqual(count_n(a, 37), 45)
+        self.assertRaises(ValueError, count_n, a, -1)
+        self.assertRaises(TypeError, count_n, a, 7.0)
+        for n in range(0, 37):
+            self.check_result(a, n, count_n(a, n))
+        self.assertEQUAL(a, b)
+
+    def test_count_n2(self):
+        for N in range(200):
+            a = bitarray(N)
+            v = randint(0, 1)
+            a.setall(v - 1)
+            for _ in range(randint(0, N)):
+                a[randint(0, N - 1)] = v
+            n = randint(0, a.count())
+            self.check_result(a, n, count_n(a, n))
+
+    def test_count_n3(self):
+        N = 10000
+        for _ in range(100):
+            a = bitarray(N)
+            a.setall(0)
+            i = randint(0, N - 1)
+            a[i] = 1
+            self.assertEqual(count_n(a, 1), i + 1)
+
+    def test_count_n4(self):
+        for a in self.randombitarrays():
+            n = a.count() // 2
+            i = count_n(a, n)
+            self.check_result(a, n, i)
 
 tests.append(TestsHelpers)
 
