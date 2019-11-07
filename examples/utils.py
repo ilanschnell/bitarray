@@ -43,9 +43,7 @@ Raises ValueError is value is not present.
     if value not in a:
         raise ValueError("rindex(bitarray, x): x not in bitarray")
     left, right = 0, len(a)
-    while True:
-        if a[right - 1] == value:
-            return right - 1
+    while a[right - 1] != value:
         middle = (left + right) // 2
         try:
             a.index(value, middle, right)
@@ -53,8 +51,8 @@ Raises ValueError is value is not present.
             left = middle
         except ValueError:
             # uppler half has no valueerror, so it must be lower
-            # use middle as new right
             right = middle
+    return right - 1
 
 
 def strip(a, mode='right'):
