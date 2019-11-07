@@ -114,10 +114,20 @@ class TestsHelpers(unittest.TestCase, Util):
 
     def test_strip2(self):
         for a in self.randombitarrays():
+            b = a.copy()
             s = a.to01()
             self.assertEqual(strip(a, 'left'), bitarray(s.lstrip('0')))
             self.assertEqual(strip(a, 'right'), bitarray(s.rstrip('0')))
             self.assertEqual(strip(a, 'both'), bitarray(s.strip('0')))
+            self.assertEQUAL(a, b)
+
+    def test_strip_both(self):
+        for _ in range(100):
+            N = randint(1, 10000)
+            a = bitarray(N)
+            a.setall(0)
+            a[randint(0, N - 1)] = 1
+            self.assertEqual(strip(a, 'both'), bitarray('1'))
 
     def check_result(self, a, n, i):
         self.assertEqual(a.count(1, 0, i), n)
