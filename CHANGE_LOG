@@ -1,11 +1,11 @@
-2019-XX-XX   1.1.0:
+2019-11-XX   1.1.0:
 -------------------
   * add frozenbitarray object
   * add optional start and stop parameters to .count() method
   * add official Python 3.8 support
   * optimize setrange() C-function by using memset
   * fix issue #74, bitarray is hashable on Python 2
-  * fix issue #68, unittest.TestCase.assert_ deprecated
+  * fix issue #68, ``unittest.TestCase.assert_`` deprecated
   * improved test suite - tests should run in about 1 second
   * update documentation to use positional-only syntax in docstrings
   * update readme to pass Python 3 doctest

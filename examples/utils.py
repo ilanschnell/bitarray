@@ -9,7 +9,7 @@ import binascii
 from bitarray import bitarray, frozenbitarray, bits2bytes
 
 
-__all__ = ['zeros', 'rindex', 'strip',
+__all__ = ['zeros', 'rindex', 'strip', 'count_n',
            'ba2hex', 'hex2ba', 'ba2int', 'int2ba']
 
 
