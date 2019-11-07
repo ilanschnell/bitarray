@@ -1,4 +1,4 @@
-2019-11-XX   1.1.0:
+2019-11-07   1.1.0:
 -------------------
   * add frozenbitarray object
   * add optional start and stop parameters to .count() method

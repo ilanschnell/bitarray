@@ -542,7 +542,7 @@ Functions defined in the module:
 Change log
 ----------
 
-2019-11-XX   1.1.0:
+**1.1.0** (2019-11-07):
 
   * add frozenbitarray object
   * add optional start and stop parameters to .count() method
@@ -571,13 +571,6 @@ Change log
   * add a few more comments to the C code
   * move imports outside tests: pickle, io, etc.
   * drop Python 2.5 support
-
-
-**0.9.3** (2019-05-20):
-
-  * refactor resize() - only shrink allocated memory if new size falls
-    lower than half the allocated size
-  * improve error message when trying to initialize from float or complex
 
 
 Please find the complete change log
