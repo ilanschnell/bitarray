@@ -169,18 +169,18 @@ tests.append(TestsHelpers)
 class TestsHexlify(unittest.TestCase, Util):
 
     def test_ba2hex(self):
-        self.assertEqual(ba2hex(bitarray()), b'')
-        self.assertEqual(ba2hex(bitarray('1110')), b'e')
-        self.assertEqual(ba2hex(bitarray('00000001')), b'01')
-        self.assertEqual(ba2hex(bitarray('10000000')), b'80')
-        self.assertEqual(ba2hex(frozenbitarray('11000111')), b'c7')
+        self.assertEqual(ba2hex(bitarray(0, 'big')), b'')
+        self.assertEqual(ba2hex(bitarray('1110', 'big')), b'e')
+        self.assertEqual(ba2hex(bitarray('00000001', 'big')), b'01')
+        self.assertEqual(ba2hex(bitarray('10000000', 'big')), b'80')
+        self.assertEqual(ba2hex(frozenbitarray('11000111', 'big')), b'c7')
         # length not multiple of 4
         self.assertRaises(ValueError, ba2hex, bitarray('10'))
         self.assertRaises(ValueError, ba2hex, bitarray(endian='little'))
         self.assertRaises(TypeError, ba2hex, '101')
 
         for n in range(7):
-            a = bitarray(n * '1111')
+            a = bitarray(n * '1111', 'big')
             b = a.copy()
             self.assertEqual(ba2hex(a), n * b'f')
             # ensure original object wasn't altered
@@ -192,7 +192,7 @@ class TestsHexlify(unittest.TestCase, Util):
             a = hex2ba(c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
-        self.assertEQUAL(hex2ba('01'), bitarray('00000001'))
+        self.assertEQUAL(hex2ba('01'), bitarray('00000001', 'big'))
         self.assertRaises(Exception, hex2ba, '01a7x89')
         self.assertRaises(TypeError, hex2ba, 0)
 
@@ -205,7 +205,7 @@ class TestsHexlify(unittest.TestCase, Util):
                       (b'2b',  '00101011'),
                       (b'4c1', '010011000001'),
                       (b'a7d', '101001111101')]:
-            a = bitarray(bs)
+            a = bitarray(bs, 'big')
             self.assertEQUAL(hex2ba(h), a)
             self.assertEqual(ba2hex(a), h)
 
@@ -232,7 +232,7 @@ class TestsIntegerization(unittest.TestCase, Util):
     def test_ba2int(self):
         self.assertEqual(ba2int(bitarray('0')), 0)
         self.assertEqual(ba2int(bitarray('1')), 1)
-        self.assertEqual(ba2int(bitarray('00101')), 5)
+        self.assertEqual(ba2int(bitarray('00101', 'big')), 5)
         self.assertEqual(ba2int(bitarray('00101', 'little')), 20)
         self.assertEqual(ba2int(frozenbitarray('11')), 3)
         self.assertRaises(ValueError, ba2int, bitarray())
@@ -248,7 +248,7 @@ class TestsIntegerization(unittest.TestCase, Util):
         self.assertEqual(int2ba(0), bitarray('0'))
         self.assertEqual(int2ba(1), bitarray('1'))
         self.assertEqual(int2ba(5), bitarray('101'))
-        self.assertEQUAL(int2ba(6), bitarray('110'))
+        self.assertEQUAL(int2ba(6), bitarray('110', 'big'))
         self.assertEQUAL(int2ba(6, endian='little'),
                          bitarray('011', 'little'))
         self.assertRaises(ValueError, int2ba, -1)
@@ -291,7 +291,7 @@ class TestsIntegerization(unittest.TestCase, Util):
                       ( 2,    '10'),    (3,        '11'),
                       (25, '11001'),  (265, '100001001'),
                       (3691038, '1110000101001000011110')]:
-            ab = bitarray(sa)
+            ab = bitarray(sa, 'big')
             al = bitarray(sa[::-1], 'little')
             self.assertEQUAL(int2ba(i), ab)
             self.assertEQUAL(int2ba(i, endian='little'), al)

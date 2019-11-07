@@ -2316,8 +2316,10 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
     def test_init(self):
         a = frozenbitarray('110')
         self.assertEqual(a, bitarray('110'))
-        self.assertEqual(a.endian(), 'big')
         self.assertEqual(a.to01(), '110')
+        for endian in 'big', 'little':
+            a = frozenbitarray(0, endian)
+            self.assertEqual(a.endian(), endian)
 
     def test_methods(self):
         # test a few methods which do not raise the TypeError
