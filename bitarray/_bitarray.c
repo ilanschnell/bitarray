@@ -67,8 +67,15 @@ static PyTypeObject Bitarraytype;
 
 /* ------------ low level access to bits in bitarrayobject ------------- */
 
+#if 0  /* for debugging */
+static int GETBIT(bitarrayobject *self, idx_t i) {
+    assert(0 <= i && i < self->nbits);
+    return ((self)->ob_item[(i) / 8] & BITMASK((self)->endian, i) ? 1 : 0);
+}
+#else
 #define GETBIT(self, i)  \
     ((self)->ob_item[(i) / 8] & BITMASK((self)->endian, i) ? 1 : 0)
+#endif
 
 static void
 setbit(bitarrayobject *self, idx_t i, int bit)
