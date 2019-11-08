@@ -75,6 +75,7 @@ setbit(bitarrayobject *self, idx_t i, int bit)
 {
     char *cp, mask;
 
+    assert(0 <= i && i < BITS(Py_SIZE(self)));
     mask = BITMASK(self->endian, i);
     cp = self->ob_item + i / 8;
     if (bit)
@@ -274,10 +275,10 @@ insert_n(bitarrayobject *self, idx_t start, idx_t n)
 static int
 setunused(bitarrayobject *self)
 {
-    idx_t i, n;
+    const idx_t n = BITS(Py_SIZE(self));
+    idx_t i;
     int res = 0;
 
-    n = BITS(Py_SIZE(self));
     for (i = self->nbits; i < n; i++) {
         setbit(self, i, 0);
         res++;
