@@ -59,12 +59,12 @@ class TestsHelpers(unittest.TestCase, Util):
             self.assertEqual(rindex(a), 6)
             self.assertEqual(rindex(a, 1), 6)
             self.assertEqual(rindex(a, 'A'), 6)
-            self.assertEqual(rindex(a, value=True), 6)
+            self.assertEqual(rindex(a, True), 6)
 
             a = bitarray('00010110111', endian)
             self.assertEqual(rindex(a, 0), 7)
             self.assertEqual(rindex(a, None), 7)
-            self.assertEqual(rindex(a, value=False), 7)
+            self.assertEqual(rindex(a, False), 7)
 
             for v in 0, 1:
                 self.assertRaises(ValueError, rindex,
@@ -150,29 +150,36 @@ class TestsHelpers(unittest.TestCase, Util):
         self.assertEqual(count_n(a, 20), 23)
         self.assertEqual(count_n(a, 37), 45)
         self.assertRaises(ValueError, count_n, a, -1)
-        self.assertRaises(TypeError, count_n, a, 7.0)
+        self.assertRaises(TypeError, count_n, a, "7")
         for n in range(0, 37):
             self.check_result(a, n, count_n(a, n))
         self.assertEQUAL(a, b)
 
     def test_count_n2(self):
-        for N in range(200):
+        for N in list(range(100)) + [1000, 100000]:
             a = bitarray(N)
             v = randint(0, 1)
             a.setall(v - 1)
-            for _ in range(randint(0, N)):
+            for _ in range(randint(0, min(N, 100))):
                 a[randint(0, N - 1)] = v
             n = randint(0, a.count())
             self.check_result(a, n, count_n(a, n))
+            # check for total count
+            tc = a.count()
+            self.assertTrue(count_n(a, tc) <= N)
+            self.assertRaises(ValueError, count_n, a, tc + 1)
 
     def test_count_n3(self):
-        N = 10000
-        for _ in range(100):
+        N = 100000
+        for _ in range(10):
             a = bitarray(N)
             a.setall(0)
+            self.assertEqual(count_n(a, 0), 0)
+            self.assertRaises(ValueError, count_n, a, 1)
             i = randint(0, N - 1)
             a[i] = 1
             self.assertEqual(count_n(a, 1), i + 1)
+            self.assertRaises(ValueError, count_n, a, 2)
 
     def test_count_n4(self):
         for a in self.randombitarrays():
