@@ -1004,12 +1004,19 @@ class BitwiseTests(unittest.TestCase, Util):
     def test_or(self):
         a = bitarray('11001')
         b = bitarray('10011')
+        aa = a.copy()
+        bb = b.copy()
         self.assertEQUAL(a | b, bitarray('11011'))
+        self.assertEQUAL(a, aa)
+        self.assertEQUAL(b, bb)
 
     def test_ior(self):
-        a =  bitarray('110010110')
-        a |= bitarray('100110011')
+        a = bitarray('110010110')
+        b = bitarray('100110011')
+        bb = b.copy()
+        a |= b
         self.assertEQUAL(a, bitarray('110110111'))
+        self.assertEQUAL(b, bb)
 
     def test_xor(self):
         a = bitarray('11001')

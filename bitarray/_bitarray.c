@@ -321,7 +321,7 @@ enum op_type {
     OP_xor,
 };
 
-/* perform bitwise operation */
+/* perform bitwise in-place operation */
 static int
 bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
 {
