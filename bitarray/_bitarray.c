@@ -945,7 +945,7 @@ PyDoc_STRVAR(length_doc,
 "length() -> int\n\
 \n\
 Return the length, i.e. number of bits stored in the bitarray.\n\
-This method is preferred over __len__ (used when typing ``len(a)``),\n\
+This method is preferred over __len__ (used when typing `len(a)`),\n\
 since __len__ will fail for a bitarray object with 2^31 or more elements\n\
 on a 32bit machine, whereas this method will return the correct value,\n\
 on 32bit and 64bit machines.");
@@ -3209,7 +3209,7 @@ PyDoc_STRVAR(bitdiff_doc,
 Return the difference between two bitarrays a and b.\n\
 This is function does the same as (a ^ b).count(), but is more memory\n\
 efficient, as no intermediate bitarray object gets created.\n\
-Deprecated since version 1.2.0, use ``bitarray.utils.count_xor()`` instead.");
+Deprecated since version 1.2.0, use `bitarray.utils.count_xor()` instead.");
 
 
 static PyObject *

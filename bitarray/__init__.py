@@ -21,18 +21,18 @@ the optional initial object, and endianness.
 If no initial object is provided, an empty bitarray (length zero) is created.
 The initial object may be of the following types:
 
-int
+int:
     Create a bitarray of given integer length.  The initial values are
     arbitrary.  If you want all values to be set, use the .setall() method.
 
-string
+string:
     Create bitarray from a string of '0's and '1's.
 
-list, tuple, iterable
+list, tuple, iterable:
     Create bitarray from a sequence, each element in the sequence is
     converted to a bit using its truth value.
 
-bitarray
+bitarray:
     Create bitarray from another bitarray.  This is done by copying the
     memory holding the bitarray data, and is hence very fast.
 
@@ -48,7 +48,7 @@ fromfile, tobytes, frombytes."""
         """fromstring(str)
 
 Append from a string, interpreting the string as machine values.
-Deprecated since version 0.4.0, use ``frombytes()`` instead."""
+Deprecated since version 0.4.0, use `.frombytes()` instead."""
         return self.frombytes(string.encode())
 
     def tostring(self):
@@ -57,7 +57,7 @@ Deprecated since version 0.4.0, use ``frombytes()`` instead."""
 Return the string representing (machine values) of the bitarray.
 When the length of the bitarray is not a multiple of 8, the few remaining
 bits (1..7) are set to 0.
-Deprecated since version 0.4.0, use ``tobytes()`` instead."""
+Deprecated since version 0.4.0, use `.tobytes()` instead."""
         return self.tobytes().decode()
 
     def __int__(self):

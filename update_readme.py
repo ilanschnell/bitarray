@@ -24,15 +24,15 @@ def write_changelog():
             if count == 3:
                 break
             count += 1
-            fo.write(m.expand(r'**\2** (\1):\n'))
+            fo.write(m.expand(r'*\2* (\1):\n'))
         elif line.startswith('---'):
             fo.write('\n')
         else:
             fo.write(line)
 
     url = "https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG"
-    fo.write("Please find the complete change log\n"
-             "`here <%s>`_.\n" % url)
+    fo.write('Please find the complete change log\n'
+             '<a href="%s">here</a>.\n' % url)
 
 
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
@@ -42,13 +42,13 @@ def write_doc(name):
     m = sig_pat.match(lines[0])
     if m is None:
         raise Exception("signature line invalid: %r" % lines[0])
-    s = '``%s``' %  m.group(1)
+    s = '`%s`' %  m.group(1)
     if m.group(3):
         s += ' -> %s' % m.group(3)
-    fo.write(s + '\n')
+    fo.write(s + '\n\n')
     assert lines[1] == ''
     for line in lines[2:]:
-        fo.write('   %s\n' % line)
+        fo.write('%s\n' % line)
     fo.write('\n\n')
 
 
@@ -56,7 +56,7 @@ def write_reference():
     fo.write("Reference\n"
              "=========\n\n"
              "The bitarray object:\n"
-             "--------------------\n")
+             "--------------------\n\n")
     write_doc('bitarray')
 
     fo.write("**A bitarray object supports the following methods:**\n\n")
@@ -66,17 +66,17 @@ def write_reference():
         write_doc('bitarray.%s' % method)
 
     fo.write("The frozenbitarray object:\n"
-             "--------------------------\n")
+             "--------------------------\n\n")
     write_doc('frozenbitarray')
 
     fo.write("Functions defined in the module:\n"
-             "--------------------------------\n")
+             "--------------------------------\n\n")
     write_doc('test')
     write_doc('bitdiff')
     write_doc('bits2bytes')
 
     fo.write("Functions defined in bitarray.utils:\n"
-             "------------------------------------\n")
+             "------------------------------------\n\n")
     for func in butils.__all__:
         write_doc('utils.%s' % func)
 
@@ -94,7 +94,7 @@ def write_all(data):
 
 
 def main():
-    data = open('README.rst').read()
+    data = open('README.md').read()
     write_all(data)
     new_data = fo.getvalue()
     fo.close()
@@ -102,10 +102,10 @@ def main():
     if new_data == data:
         print("already up-to-date")
     else:
-        with open('README.rst', 'w') as f:
+        with open('README.md', 'w') as f:
             f.write(new_data)
 
-    doctest.testfile('README.rst')
+    doctest.testfile('README.md')
 
 
 if __name__ == '__main__':
