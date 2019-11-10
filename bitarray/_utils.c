@@ -1,7 +1,8 @@
 /*
    Copyright (c) 2019, Ilan Schnell
+   bitarray is published under the PSF license.
 
-   This file contains the C implementation of some useful utility functions
+   This file contains the C implementation of some useful utility functions.
 
    Author: Ilan Schnell
 */
