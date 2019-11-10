@@ -27,7 +27,6 @@ class SmallIntArray(object):
         return ba2int(self.data[self.slice_i(i)])
 
     def __setitem__(self, i, v):
-        assert 0 <= v < 2 ** self.k
         self.data[self.slice_i(i)] = int2ba(v, self.k)
 
 
