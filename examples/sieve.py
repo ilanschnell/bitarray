@@ -13,9 +13,12 @@ from bitarray.utils import count_n
 
 N = 100 * 1000 * 1000
 
+# Each bit corresponds to whether or not a[i] is a prime
 a = bitarray(N + 1)
 a.setall(True)
+# Zero and one are not prime
 a[:2] = False
+# Perform sieve
 for i in range(2, int(N ** 0.5) + 1):
     if a[i]:  # i is prime
         a[i*i::i] = False
