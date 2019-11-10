@@ -2,6 +2,8 @@
 # Thanks to David Kammeyer for the idea to apply a bitarray in this way.
 #
 from bitarray import bitarray
+from bitarray.utils import int2ba, ba2int
+
 
 class SmallIntArray(object):
     """
@@ -15,20 +17,18 @@ class SmallIntArray(object):
         assert 0 < k <= 8
         self.N = N  # number of integers
         self.k = k  # bits for each integer
-        self.data = bitarray(N*k, endian='little')
+        self.data = bitarray(N * k)
 
     def slice_i(self, i):
         assert 0 <= i < self.N
         return slice(self.k * i, self.k * (i + 1))
 
     def __getitem__(self, i):
-        return ord(self.data[self.slice_i(i)].tostring())
+        return ba2int(self.data[self.slice_i(i)])
 
     def __setitem__(self, i, v):
         assert 0 <= v < 2 ** self.k
-        a = bitarray(endian='little')
-        a.fromstring(chr(v))
-        self.data[self.slice_i(i)] = a[:self.k]
+        self.data[self.slice_i(i)] = int2ba(v, self.k)
 
 
 if __name__ == '__main__':
