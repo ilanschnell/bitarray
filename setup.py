@@ -42,6 +42,8 @@ setup(
     description = "efficient arrays of booleans -- C extension",
     packages = ["bitarray"],
     ext_modules = [Extension(name = "bitarray._bitarray",
-                             sources = ["bitarray/_bitarray.c"])],
+                             sources = ["bitarray/_bitarray.c"]),
+                   Extension(name = "bitarray._utils",
+                             sources = ["bitarray/_utils.c"])],
     **kwds
 )

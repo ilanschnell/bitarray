@@ -47,8 +47,8 @@ Installation
 
 bitarray can be installed from source::
 
-   $ tar xzf bitarray-1.1.0.tar.gz
-   $ cd bitarray-1.1.0
+   $ tar xzf bitarray-1.2.0.tar.gz
+   $ cd bitarray-1.2.0
    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -57,7 +57,7 @@ Once you have installed the package, you may want to test it::
 
    $ python -c 'import bitarray; bitarray.test()'
    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-   bitarray version: 1.1.0
+   bitarray version: 1.2.0
    3.7.4 (r271:86832, Dec 29 2019) [GCC 4.2.1 (SUSE Linux)]
    .........................................................................
    .................................................................
@@ -539,8 +539,79 @@ Functions defined in the module:
    Return the number of bytes necessary to store n bits.
 
 
+Functions defined in bitarray.utils:
+------------------------------------
+``zeros(length, /, endian='big')`` -> bitarray
+   Create a bitarray of length, with all values 0.
+
+
+``rindex(bitarray, value=True, /)`` -> int
+   Return the rightmost index of bool(value) in bitarray.
+   Raises ValueError if the value is not present.
+
+
+``strip(bitarray, mode='right', /)`` -> bitarray
+   Strip zeros from left, right or both ends.
+   Allowed values for mode are: 'left', 'right', 'both'
+
+
+``count_n(bitarray, n, /)`` -> int
+   Find the smallest index i for which a[:i].count() == n.
+   Raises ValueError, when n exceeds the a.count().
+
+
+``count_and(a, b, /)`` -> int
+   Returns (a & b).count(), but is more memory efficient,
+   as no intermediate bitarray object gets created.
+
+
+``count_or(a, b, /)`` -> int
+   Returns (a | b).count(), but is more memory efficient,
+   as no intermediate bitarray object gets created.
+
+
+``count_xor(a, b, /)`` -> int
+   Returns (a ^ b).count(), but is more memory efficient,
+   as no intermediate bitarray object gets created.
+
+
+``subset(a, b, /)`` -> bool
+   Return True if bitarray a is a subset of bitarray b, or False otherwise.
+   subset(a, b) is equivalent to (a & b).count() == a.count() but is more
+   efficient since we can stop as soon as one mismatch is found, and no
+   intermediate bitarray object gets created.
+
+
+``ba2hex(bitarray, /)`` -> hexstr
+   Return a bytes object containing with hexadecimal representation of
+   the bitarray (which has to be multiple of 4 in length).
+
+
+``hex2ba(hexstr, /)`` -> bitarray
+   Bitarray of hexadecimal representation.
+   hexstr may contain any number of hex digits (upper or lower case).
+
+
+``ba2int(bitarray, /)`` -> int
+   Convert the given bitarray into an integer.
+   The bit-endianness of the bitarray is respected.
+
+
+``int2ba(int, /, length=None, endian='big')`` -> bitarray
+   Convert the given integer into a bitarray (with given endianness,
+   and no leading (big-endian) / trailing (little-endian) zeros).
+   If length is provided, the result will be of this length, and an
+   OverflowError will be raised, if the integer cannot be represented
+   within length bits.
+
+
 Change log
 ----------
+
+2019-XX-XX   1.2.0:
+
+  * add bitarray.utils module which provides useful utility functions
+
 
 **1.1.0** (2019-11-07):
 

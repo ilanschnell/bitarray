@@ -7,6 +7,7 @@ import doctest
 from io import StringIO
 
 import bitarray
+import bitarray.utils as butils
 
 
 fo = StringIO()
@@ -73,6 +74,11 @@ def write_reference():
     write_doc('test')
     write_doc('bitdiff')
     write_doc('bits2bytes')
+
+    fo.write("Functions defined in bitarray.utils:\n"
+             "------------------------------------\n")
+    for func in butils.__all__:
+        write_doc('utils.%s' % func)
 
 
 def write_all(data):
