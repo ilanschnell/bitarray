@@ -37,7 +37,7 @@ def strip(a, mode='right'):
     """strip(bitarray, mode='right', /) -> bitarray
 
 Strip zeros from left, right or both ends.
-Allowed values for mode are: 'left', 'right', 'both'
+Allowed values for mode are the strings: `left`, `right`, `both`
 """
     if not isinstance(a, (bitarray, frozenbitarray)):
         raise TypeError("bitarray expected")

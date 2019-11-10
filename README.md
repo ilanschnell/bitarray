@@ -327,7 +327,7 @@ The bitarray object:
 
 `append(item, /)`
 
-> Append the value bool(item) to the end of the bitarray.
+> Append the value `bool(item)` to the end of the bitarray.
 
 
 `buffer_info()` -> tuple
@@ -371,7 +371,7 @@ The bitarray object:
 
 `endian()` -> str
 
-> Return the bit endianness as a string (either 'little' or 'big').
+> Return the bit endianness as a string (either `little` or `big`).
 
 
 `extend(iterable, /)`
@@ -407,13 +407,13 @@ The bitarray object:
 
 `index(value, start=0, stop=<end of array>, /)` -> int
 
-> Return index of the first occurrence of bool(value) in the bitarray.
+> Return index of the first occurrence of `bool(value)` in the bitarray.
 > Raises ValueError if the value is not present.
 
 
-`insert(i, item, /)`
+`insert(index, value, /)`
 
-> Insert bool(item) into the bitarray before position i.
+> Insert `bool(value)` into the bitarray before index.
 
 
 `invert()`
@@ -438,8 +438,8 @@ The bitarray object:
 `length()` -> int
 
 > Return the length, i.e. number of bits stored in the bitarray.
-> This method is preferred over __len__ (used when typing `len(a)`),
-> since __len__ will fail for a bitarray object with 2^31 or more elements
+> This method is preferred over `__len__` (used when typing `len(a)`),
+> since `__len__` will fail for a bitarray object with 2^31 or more elements
 > on a 32bit machine, whereas this method will return the correct value,
 > on 32bit and 64bit machines.
 
@@ -447,7 +447,7 @@ The bitarray object:
 `pack(bytes, /)`
 
 > Extend the bitarray from bytes, where each byte corresponds to a single
-> bit.  The byte b'\x00' maps to bit 0 and all other characters map to
+> bit.  The byte `b'\x00'` maps to bit 0 and all other characters map to
 > bit 1.
 > This method, as well as the unpack method, are meant for efficient
 > transfer of data between bitarray objects to other python objects
@@ -460,9 +460,9 @@ The bitarray object:
 > Raises IndexError if bitarray is empty or index is out of range.
 
 
-`remove(item, /)`
+`remove(value, /)`
 
-> Remove the first occurrence of bool(item) in the bitarray.
+> Remove the first occurrence of `bool(value)` in the bitarray.
 > Raises ValueError if item is not present.
 
 
@@ -481,7 +481,7 @@ The bitarray object:
 
 `setall(value, /)`
 
-> Set all bits in the bitarray to bool(value).
+> Set all bits in the bitarray to `bool(value)`.
 
 
 `sort(reverse=False)`
@@ -577,44 +577,44 @@ Functions defined in bitarray.utils:
 
 `rindex(bitarray, value=True, /)` -> int
 
-> Return the rightmost index of bool(value) in bitarray.
-> Raises ValueError if the value is not present.
+> Return the rightmost index of `bool(value)` in bitarray.
+> Raises `ValueError` if the value is not present.
 
 
 `strip(bitarray, mode='right', /)` -> bitarray
 
 > Strip zeros from left, right or both ends.
-> Allowed values for mode are: 'left', 'right', 'both'
+> Allowed values for mode are the strings: `left`, `right`, `both`
 
 
 `count_n(bitarray, n, /)` -> int
 
-> Find the smallest index i for which a[:i].count() == n.
-> Raises ValueError, when n exceeds the a.count().
+> Find the smallest index `i` for which `a[:i].count() == n`.
+> Raises ValueError, when n exceeds the `a.count()`.
 
 
 `count_and(a, b, /)` -> int
 
-> Returns (a & b).count(), but is more memory efficient,
+> Returns `(a & b).count()`, but is more memory efficient,
 > as no intermediate bitarray object gets created.
 
 
 `count_or(a, b, /)` -> int
 
-> Returns (a | b).count(), but is more memory efficient,
+> Returns `(a | b).count()`, but is more memory efficient,
 > as no intermediate bitarray object gets created.
 
 
 `count_xor(a, b, /)` -> int
 
-> Returns (a ^ b).count(), but is more memory efficient,
+> Returns `(a ^ b).count()`, but is more memory efficient,
 > as no intermediate bitarray object gets created.
 
 
 `subset(a, b, /)` -> bool
 
-> Return True if bitarray a is a subset of bitarray b, or False otherwise.
-> subset(a, b) is equivalent to (a & b).count() == a.count() but is more
+> Return True if bitarray `a` is a subset of bitarray `b` (False otherwise).
+> `subset(a, b)` is equivalent to `(a & b).count() == a.count()` but is more
 > efficient since we can stop as soon as one mismatch is found, and no
 > intermediate bitarray object gets created.
 

@@ -198,8 +198,8 @@ count_n(PyObject *self, PyObject *args)
 PyDoc_STRVAR(count_n_doc,
 "count_n(bitarray, n, /) -> int\n\
 \n\
-Find the smallest index i for which a[:i].count() == n.\n\
-Raises ValueError, when n exceeds the a.count().");
+Find the smallest index `i` for which `a[:i].count() == n`.\n\
+Raises ValueError, when n exceeds the `a.count()`.");
 
 
 static PyObject *
@@ -231,8 +231,8 @@ r_index(PyObject *self, PyObject *args)
 PyDoc_STRVAR(rindex_doc,
 "rindex(bitarray, value=True, /) -> int\n\
 \n\
-Return the rightmost index of bool(value) in bitarray.\n\
-Raises ValueError if the value is not present.");
+Return the rightmost index of `bool(value)` in bitarray.\n\
+Raises `ValueError` if the value is not present.");
 
 
 enum kernel_type {
@@ -311,7 +311,7 @@ count_ ## oper (bitarrayobject *self, PyObject *args)                   \
 PyDoc_STRVAR(count_ ## oper ## _doc,                                    \
 "count_" #oper "(a, b, /) -> int\n\
 \n\
-Returns (a " ochar " b).count(), but is more memory efficient,\n\
+Returns `(a " ochar " b).count()`, but is more memory efficient,\n\
 as no intermediate bitarray object gets created.")
 
 COUNT_FUNC(and, "&");
@@ -328,8 +328,8 @@ subset(PyObject *self, PyObject *args)
 PyDoc_STRVAR(subset_doc,
 "subset(a, b, /) -> bool\n\
 \n\
-Return True if bitarray a is a subset of bitarray b, or False otherwise.\n\
-subset(a, b) is equivalent to (a & b).count() == a.count() but is more\n\
+Return True if bitarray `a` is a subset of bitarray `b` (False otherwise).\n\
+`subset(a, b)` is equivalent to `(a & b).count() == a.count()` but is more\n\
 efficient since we can stop as soon as one mismatch is found, and no\n\
 intermediate bitarray object gets created.");
 

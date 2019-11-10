@@ -945,8 +945,8 @@ PyDoc_STRVAR(length_doc,
 "length() -> int\n\
 \n\
 Return the length, i.e. number of bits stored in the bitarray.\n\
-This method is preferred over __len__ (used when typing `len(a)`),\n\
-since __len__ will fail for a bitarray object with 2^31 or more elements\n\
+This method is preferred over `__len__` (used when typing `len(a)`),\n\
+since `__len__` will fail for a bitarray object with 2^31 or more elements\n\
 on a 32bit machine, whereas this method will return the correct value,\n\
 on 32bit and 64bit machines.");
 
@@ -1031,7 +1031,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(index_doc,
 "index(value, start=0, stop=<end of array>, /) -> int\n\
 \n\
-Return index of the first occurrence of bool(value) in the bitarray.\n\
+Return index of the first occurrence of `bool(value)` in the bitarray.\n\
 Raises ValueError if the value is not present.");
 
 
@@ -1175,7 +1175,7 @@ bitarray_endian(bitarrayobject *self)
 PyDoc_STRVAR(endian_doc,
 "endian() -> str\n\
 \n\
-Return the bit endianness as a string (either 'little' or 'big').");
+Return the bit endianness as a string (either `little` or `big`).");
 
 
 static PyObject *
@@ -1190,7 +1190,7 @@ bitarray_append(bitarrayobject *self, PyObject *v)
 PyDoc_STRVAR(append_doc,
 "append(item, /)\n\
 \n\
-Append the value bool(item) to the end of the bitarray.");
+Append the value `bool(item)` to the end of the bitarray.");
 
 
 static PyObject *
@@ -1362,7 +1362,7 @@ bitarray_setall(bitarrayobject *self, PyObject *v)
 PyDoc_STRVAR(setall_doc,
 "setall(value, /)\n\
 \n\
-Set all bits in the bitarray to bool(value).");
+Set all bits in the bitarray to `bool(value)`.");
 
 
 static PyObject *
@@ -1752,7 +1752,7 @@ PyDoc_STRVAR(pack_doc,
 "pack(bytes, /)\n\
 \n\
 Extend the bitarray from bytes, where each byte corresponds to a single\n\
-bit.  The byte b'\\x00' maps to bit 0 and all other characters map to\n\
+bit.  The byte `b'\\x00'` maps to bit 0 and all other characters map to\n\
 bit 1.\n\
 This method, as well as the unpack method, are meant for efficient\n\
 transfer of data between bitarray objects to other python objects\n\
@@ -1808,9 +1808,9 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(insert_doc,
-"insert(i, item, /)\n\
+"insert(index, value, /)\n\
 \n\
-Insert bool(item) into the bitarray before position i.");
+Insert `bool(value)` into the bitarray before index.");
 
 
 static PyObject *
@@ -1868,9 +1868,9 @@ bitarray_remove(bitarrayobject *self, PyObject *v)
 }
 
 PyDoc_STRVAR(remove_doc,
-"remove(item, /)\n\
+"remove(value, /)\n\
 \n\
-Remove the first occurrence of bool(item) in the bitarray.\n\
+Remove the first occurrence of `bool(value)` in the bitarray.\n\
 Raises ValueError if item is not present.");
 
 
