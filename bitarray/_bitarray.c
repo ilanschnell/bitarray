@@ -3208,7 +3208,8 @@ PyDoc_STRVAR(bitdiff_doc,
 \n\
 Return the difference between two bitarrays a and b.\n\
 This is function does the same as (a ^ b).count(), but is more memory\n\
-efficient, as no intermediate bitarray object gets created.");
+efficient, as no intermediate bitarray object gets created.\n\
+Deprecated since version 1.2.0, use ``bitarray.utils.count_xor()`` instead.");
 
 
 static PyObject *

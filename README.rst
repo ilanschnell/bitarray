@@ -534,6 +534,7 @@ Functions defined in the module:
    Return the difference between two bitarrays a and b.
    This is function does the same as (a ^ b).count(), but is more memory
    efficient, as no intermediate bitarray object gets created.
+   Deprecated since version 1.2.0, use ``bitarray.utils.count_xor()`` instead.
 
 
 ``bits2bytes(n, /)`` -> int
@@ -612,6 +613,7 @@ Change log
 2019-XX-XX   1.2.0:
 
   * add bitarray.utils module which provides useful utility functions
+  * deprecated ``bitarray.bitdiff`` in favor of ``bitarray.utils.count_xor``.
 
 
 **1.1.0** (2019-11-07):
