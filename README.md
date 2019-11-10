@@ -296,7 +296,7 @@ The bitarray object:
 > `int`: Create a bitarray of given integer length.  The initial values are
 > arbitrary.  If you want all values to be set, use the .setall() method.
 >
-> `str`: Create bitarray from a string of '0's and '1's.
+> `str`: Create bitarray from a string of `0` and `1`.
 >
 > `list`, `tuple`, `iterable`: Create bitarray from a sequence, each
 > element in the sequence is converted to a bit using its truth value.
@@ -304,9 +304,9 @@ The bitarray object:
 > `bitarray`: Create bitarray from another bitarray.  This is done by
 > copying the memory holding the bitarray data, and is hence very fast.
 >
-> The optional keyword arguments 'endian' specifies the bit endianness of the
+> The optional keyword arguments `endian` specifies the bit endianness of the
 > created bitarray object.
-> Allowed values are `'big'` and `'little'` (default is `'big'`).
+> Allowed values are the strings `big` and `little` (default is `big`).
 >
 > Note that setting the bit endianness only has an effect when accessing the
 > machine representation of the bitarray, i.e. when using the methods: tofile,
@@ -408,7 +408,7 @@ The bitarray object:
 `index(value, start=0, stop=<end of array>, /)` -> int
 
 > Return index of the first occurrence of `bool(value)` in the bitarray.
-> Raises ValueError if the value is not present.
+> Raises `ValueError` if the value is not present.
 
 
 `insert(index, value, /)`
@@ -457,13 +457,13 @@ The bitarray object:
 `pop(index=-1, /)` -> item
 
 > Return the i-th (default last) element and delete it from the bitarray.
-> Raises IndexError if bitarray is empty or index is out of range.
+> Raises `IndexError` if bitarray is empty or index is out of range.
 
 
 `remove(value, /)`
 
 > Remove the first occurrence of `bool(value)` in the bitarray.
-> Raises ValueError if item is not present.
+> Raises `ValueError` if item is not present.
 
 
 `reverse()`
@@ -587,10 +587,10 @@ Functions defined in bitarray.utils:
 > Allowed values for mode are the strings: `left`, `right`, `both`
 
 
-`count_n(bitarray, n, /)` -> int
+`count_n(a, n, /)` -> int
 
 > Find the smallest index `i` for which `a[:i].count() == n`.
-> Raises ValueError, when n exceeds the `a.count()`.
+> Raises `ValueError`, when n exceeds the `a.count()`.
 
 
 `count_and(a, b, /)` -> int
@@ -642,7 +642,7 @@ Functions defined in bitarray.utils:
 > Convert the given integer into a bitarray (with given endianness,
 > and no leading (big-endian) / trailing (little-endian) zeros).
 > If length is provided, the result will be of this length, and an
-> OverflowError will be raised, if the integer cannot be represented
+> `OverflowError` will be raised, if the integer cannot be represented
 > within length bits.
 
 

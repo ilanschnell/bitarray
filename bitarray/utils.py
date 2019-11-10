@@ -148,7 +148,7 @@ def int2ba(i, length=None, endian='big'):
 Convert the given integer into a bitarray (with given endianness,
 and no leading (big-endian) / trailing (little-endian) zeros).
 If length is provided, the result will be of this length, and an
-OverflowError will be raised, if the integer cannot be represented
+`OverflowError` will be raised, if the integer cannot be represented
 within length bits.
 """
     if not isinstance(i, (int, long) if is_py2 else int):

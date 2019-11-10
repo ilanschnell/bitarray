@@ -1032,7 +1032,7 @@ PyDoc_STRVAR(index_doc,
 "index(value, start=0, stop=<end of array>, /) -> int\n\
 \n\
 Return index of the first occurrence of `bool(value)` in the bitarray.\n\
-Raises ValueError if the value is not present.");
+Raises `ValueError` if the value is not present.");
 
 
 static PyObject *
@@ -1844,7 +1844,7 @@ PyDoc_STRVAR(pop_doc,
 "pop(index=-1, /) -> item\n\
 \n\
 Return the i-th (default last) element and delete it from the bitarray.\n\
-Raises IndexError if bitarray is empty or index is out of range.");
+Raises `IndexError` if bitarray is empty or index is out of range.");
 
 
 static PyObject *
@@ -1871,7 +1871,7 @@ PyDoc_STRVAR(remove_doc,
 "remove(value, /)\n\
 \n\
 Remove the first occurrence of `bool(value)` in the bitarray.\n\
-Raises ValueError if item is not present.");
+Raises `ValueError` if item is not present.");
 
 
 /* --------- special methods ----------- */

@@ -196,10 +196,10 @@ count_n(PyObject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(count_n_doc,
-"count_n(bitarray, n, /) -> int\n\
+"count_n(a, n, /) -> int\n\
 \n\
 Find the smallest index `i` for which `a[:i].count() == n`.\n\
-Raises ValueError, when n exceeds the `a.count()`.");
+Raises `ValueError`, when n exceeds the `a.count()`.");
 
 
 static PyObject *
