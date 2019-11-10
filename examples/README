@@ -3,11 +3,6 @@ bloom.py:
     http://en.wikipedia.org/wiki/Bloom_filter
 
 
-compress.py:
-    Demonstrates how the bz2 module may be used to create a compressed
-    object which represents a bitarray.
-
-
 gene.py:
     shows how gene sequences (ATGC) can be very easily and efficiently
     represented by bitarrays.
@@ -45,10 +40,8 @@ pbm.py
 
 
 sieve.py
-    Sieve of Eratosthenes is a simple, ancient algorithm for finding all
-    prime numbers up to a specified integer.  In this exmaple, the algorithm
-    is implemented using the numpy ndarray as well as the bitarray object.
-    Thanks Steve for emailing this example.
+    Demonstrates the "Sieve of Eratosthenes" algorithm for finding all prime
+    numbers up to a specified integer.
 
 
 smallints.py

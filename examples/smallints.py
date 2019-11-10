@@ -14,17 +14,17 @@ class SmallIntArray(object):
     def __init__(self, N, k):
         self.N = N  # number of integers
         self.k = k  # bits for each integer
-        self.data = bitarray(N * k)
+        self.array = bitarray(N * k)
 
     def slice_i(self, i):
         assert 0 <= i < self.N
         return slice(self.k * i, self.k * (i + 1))
 
     def __getitem__(self, i):
-        return ba2int(self.data[self.slice_i(i)])
+        return ba2int(self.array[self.slice_i(i)])
 
     def __setitem__(self, i, v):
-        self.data[self.slice_i(i)] = int2ba(v, self.k)
+        self.array[self.slice_i(i)] = int2ba(v, self.k)
 
 
 if __name__ == '__main__':
@@ -40,8 +40,8 @@ if __name__ == '__main__':
         a[i] = v
 
     print(b[:5])
-    print(a.data.buffer_info())
-    print(a.data[:25])
+    print(a.array.buffer_info())
+    print(a.array[:25])
 
     for i in range(1000):
         assert a[i] == b[i]
