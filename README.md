@@ -34,11 +34,11 @@ Key features
 Installation
 ------------
 
-bitarray can be installed from source::
+bitarray can be installed from source:
 
-   $ tar xzf bitarray-1.2.0.tar.gz
-   $ cd bitarray-1.2.0
-   $ python setup.py install
+    $ tar xzf bitarray-1.2.0.tar.gz
+    $ cd bitarray-1.2.0
+    $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
 privileges.  You can also pip install bitarray.
@@ -288,255 +288,251 @@ The bitarray object:
 
 `bitarray(initial=0, /, endian='big')`
 
-Return a new bitarray object whose items are bits initialized from
-the optional initial object, and endianness.
-If no initial object is provided, an empty bitarray (length zero) is created.
-The initial object may be of the following types:
-
-int:
-    Create a bitarray of given integer length.  The initial values are
-    arbitrary.  If you want all values to be set, use the .setall() method.
-
-string:
-    Create bitarray from a string of '0's and '1's.
-
-list, tuple, iterable:
-    Create bitarray from a sequence, each element in the sequence is
-    converted to a bit using its truth value.
-
-bitarray:
-    Create bitarray from another bitarray.  This is done by copying the
-    memory holding the bitarray data, and is hence very fast.
-
-The optional keyword arguments 'endian' specifies the bit endianness of the
-created bitarray object.
-Allowed values are 'big' and 'little' (default is 'big').
-
-Note that setting the bit endianness only has an effect when accessing the
-machine representation of the bitarray, i.e. when using the methods: tofile,
-fromfile, tobytes, frombytes.
+> Return a new bitarray object whose items are bits initialized from
+> the optional initial object, and endianness.
+> If no initial object is provided, an empty bitarray (length zero) is created.
+> The initial object may be of the following types:
+> 
+> `int`: Create a bitarray of given integer length.  The initial values are
+> arbitrary.  If you want all values to be set, use the .setall() method.
+> 
+> `str`: Create bitarray from a string of '0's and '1's.
+> 
+> `list`, `tuple`, `iterable`: Create bitarray from a sequence, each
+> element in the sequence is converted to a bit using its truth value.
+> 
+> `bitarray`: Create bitarray from another bitarray.  This is done by
+> copying the memory holding the bitarray data, and is hence very fast.
+> 
+> The optional keyword arguments 'endian' specifies the bit endianness of the
+> created bitarray object.
+> Allowed values are `'big'` and `'little'` (default is `'big'`).
+> 
+> Note that setting the bit endianness only has an effect when accessing the
+> machine representation of the bitarray, i.e. when using the methods: tofile,
+> fromfile, tobytes, frombytes.
 
 
 **A bitarray object supports the following methods:**
 
 `all()` -> bool
 
-Returns True when all bits in the array are True.
+> Returns True when all bits in the array are True.
 
 
 `any()` -> bool
 
-Returns True when any bit in the array is True.
+> Returns True when any bit in the array is True.
 
 
 `append(item, /)`
 
-Append the value bool(item) to the end of the bitarray.
+> Append the value bool(item) to the end of the bitarray.
 
 
 `buffer_info()` -> tuple
 
-Return a tuple (address, size, endianness, unused, allocated) giving the
-current memory address, the size (in bytes) used to hold the bitarray's
-contents, the bit endianness as a string, the number of unused bits
-(e.g. a bitarray of length 11 will have a buffer size of 2 bytes and
-5 unused bits), and the size (in bytes) of the allocated memory.
+> Return a tuple (address, size, endianness, unused, allocated) giving the
+> current memory address, the size (in bytes) used to hold the bitarray's
+> contents, the bit endianness as a string, the number of unused bits
+> (e.g. a bitarray of length 11 will have a buffer size of 2 bytes and
+> 5 unused bits), and the size (in bytes) of the allocated memory.
 
 
 `bytereverse()`
 
-For all bytes representing the bitarray, reverse the bit order (in-place).
-Note: This method changes the actual machine values representing the
-bitarray; it does not change the endianness of the bitarray object.
+> For all bytes representing the bitarray, reverse the bit order (in-place).
+> Note: This method changes the actual machine values representing the
+> bitarray; it does not change the endianness of the bitarray object.
 
 
 `copy()` -> bitarray
 
-Return a copy of the bitarray.
+> Return a copy of the bitarray.
 
 
 `count(value=True, start=0, stop=<end of array>, /)` -> int
 
-Count the number of occurrences of bool(value) in the bitarray.
+> Count the number of occurrences of bool(value) in the bitarray.
 
 
 `decode(code, /)` -> list
 
-Given a prefix code (a dict mapping symbols to bitarrays),
-decode the content of the bitarray and return it as a list of symbols.
+> Given a prefix code (a dict mapping symbols to bitarrays),
+> decode the content of the bitarray and return it as a list of symbols.
 
 
 `encode(code, iterable, /)`
 
-Given a prefix code (a dict mapping symbols to bitarrays),
-iterate over the iterable object with symbols, and extend the bitarray
-with the corresponding bitarray for each symbols.
+> Given a prefix code (a dict mapping symbols to bitarrays),
+> iterate over the iterable object with symbols, and extend the bitarray
+> with the corresponding bitarray for each symbols.
 
 
 `endian()` -> str
 
-Return the bit endianness as a string (either 'little' or 'big').
+> Return the bit endianness as a string (either 'little' or 'big').
 
 
 `extend(iterable, /)`
 
-Append bits to the end of the bitarray.  The objects which can be passed
-to this method are the same iterable objects which can given to a bitarray
-object upon initialization.
+> Append bits to the end of the bitarray.  The objects which can be passed
+> to this method are the same iterable objects which can given to a bitarray
+> object upon initialization.
 
 
 `fill()` -> int
 
-Adds zeros to the end of the bitarray, such that the length of the bitarray
-will be a multiple of 8.  Returns the number of bits added (0..7).
+> Adds zeros to the end of the bitarray, such that the length of the bitarray
+> will be a multiple of 8.  Returns the number of bits added (0..7).
 
 
 `frombytes(bytes, /)`
 
-Append from a byte string, interpreted as machine values.
+> Append from a byte string, interpreted as machine values.
 
 
 `fromfile(f, n=<till EOF>, /)`
 
-Read n bytes from the file object f and append them to the bitarray
-interpreted as machine values.  When n is omitted, as many bytes are
-read until EOF is reached.
+> Read n bytes from the file object f and append them to the bitarray
+> interpreted as machine values.  When n is omitted, as many bytes are
+> read until EOF is reached.
 
 
 `fromstring(str)`
 
-Append from a string, interpreting the string as machine values.
-Deprecated since version 0.4.0, use `.frombytes()` instead.
+> Append from a string, interpreting the string as machine values.
+> Deprecated since version 0.4.0, use `.frombytes()` instead.
 
 
 `index(value, start=0, stop=<end of array>, /)` -> int
 
-Return index of the first occurrence of bool(value) in the bitarray.
-Raises ValueError if the value is not present.
+> Return index of the first occurrence of bool(value) in the bitarray.
+> Raises ValueError if the value is not present.
 
 
 `insert(i, item, /)`
 
-Insert bool(item) into the bitarray before position i.
+> Insert bool(item) into the bitarray before position i.
 
 
 `invert()`
 
-Invert all bits in the array (in-place),
-i.e. convert each 1-bit into a 0-bit and vice versa.
+> Invert all bits in the array (in-place),
+> i.e. convert each 1-bit into a 0-bit and vice versa.
 
 
 `iterdecode(code, /)` -> iterator
 
-Given a prefix code (a dict mapping symbols to bitarrays),
-decode the content of the bitarray and return an iterator over
-the symbols.
+> Given a prefix code (a dict mapping symbols to bitarrays),
+> decode the content of the bitarray and return an iterator over
+> the symbols.
 
 
 `itersearch(bitarray, /)` -> iterator
 
-Searches for the given a bitarray in self, and return an iterator over
-the start positions where bitarray matches self.
+> Searches for the given a bitarray in self, and return an iterator over
+> the start positions where bitarray matches self.
 
 
 `length()` -> int
 
-Return the length, i.e. number of bits stored in the bitarray.
-This method is preferred over __len__ (used when typing `len(a)`),
-since __len__ will fail for a bitarray object with 2^31 or more elements
-on a 32bit machine, whereas this method will return the correct value,
-on 32bit and 64bit machines.
+> Return the length, i.e. number of bits stored in the bitarray.
+> This method is preferred over __len__ (used when typing `len(a)`),
+> since __len__ will fail for a bitarray object with 2^31 or more elements
+> on a 32bit machine, whereas this method will return the correct value,
+> on 32bit and 64bit machines.
 
 
 `pack(bytes, /)`
 
-Extend the bitarray from bytes, where each byte corresponds to a single
-bit.  The byte b'\x00' maps to bit 0 and all other characters map to
-bit 1.
-This method, as well as the unpack method, are meant for efficient
-transfer of data between bitarray objects to other python objects
-(for example NumPy's ndarray object) which have a different memory view.
+> Extend the bitarray from bytes, where each byte corresponds to a single
+> bit.  The byte b'\x00' maps to bit 0 and all other characters map to
+> bit 1.
+> This method, as well as the unpack method, are meant for efficient
+> transfer of data between bitarray objects to other python objects
+> (for example NumPy's ndarray object) which have a different memory view.
 
 
 `pop(index=-1, /)` -> item
 
-Return the i-th (default last) element and delete it from the bitarray.
-Raises IndexError if bitarray is empty or index is out of range.
+> Return the i-th (default last) element and delete it from the bitarray.
+> Raises IndexError if bitarray is empty or index is out of range.
 
 
 `remove(item, /)`
 
-Remove the first occurrence of bool(item) in the bitarray.
-Raises ValueError if item is not present.
+> Remove the first occurrence of bool(item) in the bitarray.
+> Raises ValueError if item is not present.
 
 
 `reverse()`
 
-Reverse the order of bits in the array (in-place).
+> Reverse the order of bits in the array (in-place).
 
 
 `search(bitarray, limit=<none>, /)` -> list
 
-Searches for the given bitarray in self, and return the list of start
-positions.
-The optional argument limits the number of search results to the integer
-specified.  By default, all search results are returned.
+> Searches for the given bitarray in self, and return the list of start
+> positions.
+> The optional argument limits the number of search results to the integer
+> specified.  By default, all search results are returned.
 
 
 `setall(value, /)`
 
-Set all bits in the bitarray to bool(value).
+> Set all bits in the bitarray to bool(value).
 
 
 `sort(reverse=False)`
 
-Sort the bits in the array (in-place).
+> Sort the bits in the array (in-place).
 
 
 `to01()` -> str
 
-Return a string containing '0's and '1's, representing the bits in the
-bitarray object.
-Note: To extend a bitarray from a string containing '0's and '1's,
-use the extend method.
+> Return a string containing '0's and '1's, representing the bits in the
+> bitarray object.
+> Note: To extend a bitarray from a string containing '0's and '1's,
+> use the extend method.
 
 
 `tobytes()` -> bytes
 
-Return the byte representation of the bitarray.
-When the length of the bitarray is not a multiple of 8, the few remaining
-bits (1..7) are considered to be 0.
+> Return the byte representation of the bitarray.
+> When the length of the bitarray is not a multiple of 8, the few remaining
+> bits (1..7) are considered to be 0.
 
 
 `tofile(f, /)`
 
-Write all bits (as machine values) to the file object f.
-When the length of the bitarray is not a multiple of 8,
-the remaining bits (1..7) are set to 0.
+> Write all bits (as machine values) to the file object f.
+> When the length of the bitarray is not a multiple of 8,
+> the remaining bits (1..7) are set to 0.
 
 
 `tolist()` -> list
 
-Return an ordinary list with the items in the bitarray.
-Note that the list object being created will require 32 or 64 times more
-memory than the bitarray object, which may cause a memory error if the
-bitarray is very large.
-Also note that to extend a bitarray with elements from a list,
-use the extend method.
+> Return an ordinary list with the items in the bitarray.
+> Note that the list object being created will require 32 or 64 times more
+> memory than the bitarray object, which may cause a memory error if the
+> bitarray is very large.
+> Also note that to extend a bitarray with elements from a list,
+> use the extend method.
 
 
 `tostring()` -> str
 
-Return the string representing (machine values) of the bitarray.
-When the length of the bitarray is not a multiple of 8, the few remaining
-bits (1..7) are set to 0.
-Deprecated since version 0.4.0, use `.tobytes()` instead.
+> Return the string representing (machine values) of the bitarray.
+> When the length of the bitarray is not a multiple of 8, the few remaining
+> bits (1..7) are set to 0.
+> Deprecated since version 0.4.0, use `.tobytes()` instead.
 
 
 `unpack(zero=b'\x00', one=b'\xff')` -> bytes
 
-Return bytes containing one character for each bit in the bitarray,
-using the specified mapping.
+> Return bytes containing one character for each bit in the bitarray,
+> using the specified mapping.
 
 
 The frozenbitarray object:
@@ -544,10 +540,10 @@ The frozenbitarray object:
 
 `frozenbitarray(initial=0, /, endian='big')`
 
-Return a frozenbitarray object, which is initialized the same way a bitarray
-object is initialized.  A frozenbitarray is immutable and hashable.
-Its contents cannot be altered after is created; however, it can be used as
-a dictionary key.
+> Return a frozenbitarray object, which is initialized the same way a bitarray
+> object is initialized.  A frozenbitarray is immutable and hashable.
+> Its contents cannot be altered after is created; however, it can be used as
+> a dictionary key.
 
 
 Functions defined in the module:
@@ -555,20 +551,20 @@ Functions defined in the module:
 
 `test(verbosity=1, repeat=1)` -> TextTestResult
 
-Run self-test, and return unittest.runner.TextTestResult object.
+> Run self-test, and return unittest.runner.TextTestResult object.
 
 
 `bitdiff(a, b, /)` -> int
 
-Return the difference between two bitarrays a and b.
-This is function does the same as (a ^ b).count(), but is more memory
-efficient, as no intermediate bitarray object gets created.
-Deprecated since version 1.2.0, use `bitarray.utils.count_xor()` instead.
+> Return the difference between two bitarrays a and b.
+> This is function does the same as (a ^ b).count(), but is more memory
+> efficient, as no intermediate bitarray object gets created.
+> Deprecated since version 1.2.0, use `bitarray.utils.count_xor()` instead.
 
 
 `bits2bytes(n, /)` -> int
 
-Return the number of bytes necessary to store n bits.
+> Return the number of bytes necessary to store n bits.
 
 
 Functions defined in bitarray.utils:
@@ -576,78 +572,78 @@ Functions defined in bitarray.utils:
 
 `zeros(length, /, endian='big')` -> bitarray
 
-Create a bitarray of length, with all values 0.
+> Create a bitarray of length, with all values 0.
 
 
 `rindex(bitarray, value=True, /)` -> int
 
-Return the rightmost index of bool(value) in bitarray.
-Raises ValueError if the value is not present.
+> Return the rightmost index of bool(value) in bitarray.
+> Raises ValueError if the value is not present.
 
 
 `strip(bitarray, mode='right', /)` -> bitarray
 
-Strip zeros from left, right or both ends.
-Allowed values for mode are: 'left', 'right', 'both'
+> Strip zeros from left, right or both ends.
+> Allowed values for mode are: 'left', 'right', 'both'
 
 
 `count_n(bitarray, n, /)` -> int
 
-Find the smallest index i for which a[:i].count() == n.
-Raises ValueError, when n exceeds the a.count().
+> Find the smallest index i for which a[:i].count() == n.
+> Raises ValueError, when n exceeds the a.count().
 
 
 `count_and(a, b, /)` -> int
 
-Returns (a & b).count(), but is more memory efficient,
-as no intermediate bitarray object gets created.
+> Returns (a & b).count(), but is more memory efficient,
+> as no intermediate bitarray object gets created.
 
 
 `count_or(a, b, /)` -> int
 
-Returns (a | b).count(), but is more memory efficient,
-as no intermediate bitarray object gets created.
+> Returns (a | b).count(), but is more memory efficient,
+> as no intermediate bitarray object gets created.
 
 
 `count_xor(a, b, /)` -> int
 
-Returns (a ^ b).count(), but is more memory efficient,
-as no intermediate bitarray object gets created.
+> Returns (a ^ b).count(), but is more memory efficient,
+> as no intermediate bitarray object gets created.
 
 
 `subset(a, b, /)` -> bool
 
-Return True if bitarray a is a subset of bitarray b, or False otherwise.
-subset(a, b) is equivalent to (a & b).count() == a.count() but is more
-efficient since we can stop as soon as one mismatch is found, and no
-intermediate bitarray object gets created.
+> Return True if bitarray a is a subset of bitarray b, or False otherwise.
+> subset(a, b) is equivalent to (a & b).count() == a.count() but is more
+> efficient since we can stop as soon as one mismatch is found, and no
+> intermediate bitarray object gets created.
 
 
 `ba2hex(bitarray, /)` -> hexstr
 
-Return a bytes object containing with hexadecimal representation of
-the bitarray (which has to be multiple of 4 in length).
+> Return a bytes object containing with hexadecimal representation of
+> the bitarray (which has to be multiple of 4 in length).
 
 
 `hex2ba(hexstr, /)` -> bitarray
 
-Bitarray of hexadecimal representation.
-hexstr may contain any number of hex digits (upper or lower case).
+> Bitarray of hexadecimal representation.
+> hexstr may contain any number of hex digits (upper or lower case).
 
 
 `ba2int(bitarray, /)` -> int
 
-Convert the given bitarray into an integer.
-The bit-endianness of the bitarray is respected.
+> Convert the given bitarray into an integer.
+> The bit-endianness of the bitarray is respected.
 
 
 `int2ba(int, /, length=None, endian='big')` -> bitarray
 
-Convert the given integer into a bitarray (with given endianness,
-and no leading (big-endian) / trailing (little-endian) zeros).
-If length is provided, the result will be of this length, and an
-OverflowError will be raised, if the integer cannot be represented
-within length bits.
+> Convert the given integer into a bitarray (with given endianness,
+> and no leading (big-endian) / trailing (little-endian) zeros).
+> If length is provided, the result will be of this length, and an
+> OverflowError will be raised, if the integer cannot be represented
+> within length bits.
 
 
 Change log
