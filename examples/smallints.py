@@ -1,6 +1,4 @@
-#
 # Thanks to David Kammeyer for the idea to apply a bitarray in this way.
-#
 from bitarray import bitarray
 from bitarray.utils import int2ba, ba2int
 
@@ -8,13 +6,12 @@ from bitarray.utils import int2ba, ba2int
 class SmallIntArray(object):
     """
     A class which allows efficiently storeing an array of integers
-    represented by a specified number of bits (1..8).
+    represented by a specified number of bits.
     For example, an array with 1000 5 bit integers can be created,
     allowing each element in the array to take values form 0 to 31,
     while the size of the object is 625 (5000/8) bytes.
     """
     def __init__(self, N, k):
-        assert 0 < k <= 8
         self.N = N  # number of integers
         self.k = k  # bits for each integer
         self.data = bitarray(N * k)
