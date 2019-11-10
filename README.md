@@ -292,22 +292,22 @@ The bitarray object:
 > the optional initial object, and endianness.
 > If no initial object is provided, an empty bitarray (length zero) is created.
 > The initial object may be of the following types:
-> 
+>
 > `int`: Create a bitarray of given integer length.  The initial values are
 > arbitrary.  If you want all values to be set, use the .setall() method.
-> 
+>
 > `str`: Create bitarray from a string of '0's and '1's.
-> 
+>
 > `list`, `tuple`, `iterable`: Create bitarray from a sequence, each
 > element in the sequence is converted to a bit using its truth value.
-> 
+>
 > `bitarray`: Create bitarray from another bitarray.  This is done by
 > copying the memory holding the bitarray data, and is hence very fast.
-> 
+>
 > The optional keyword arguments 'endian' specifies the bit endianness of the
 > created bitarray object.
 > Allowed values are `'big'` and `'little'` (default is `'big'`).
-> 
+>
 > Note that setting the bit endianness only has an effect when accessing the
 > machine representation of the bitarray, i.e. when using the methods: tofile,
 > fromfile, tobytes, frombytes.

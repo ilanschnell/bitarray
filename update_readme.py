@@ -48,7 +48,7 @@ def write_doc(name):
     fo.write(s + '\n\n')
     assert lines[1] == ''
     for line in lines[2:]:
-        fo.write('> %s\n' % line)
+        fo.write(('> %s' % line).rstrip() + '\n')
     fo.write('\n\n')
 
 
