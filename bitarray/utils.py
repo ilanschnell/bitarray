@@ -1,7 +1,5 @@
 """
 Useful utilities for working with bitarrays.
-
-Not sure if I should put this into the bitarray package itself :-/
 """
 import sys
 import binascii
