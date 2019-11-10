@@ -252,9 +252,9 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, bitarray.__new__, bitarray, '01012100')
 
     def test_rawbytes(self): # this representation is used for pickling
-        for s, r in [('\x00', ''), ('\x07\xff', '1'), ('\x03\xff', '11111'),
-                     ('\x01\x87\xda', '10000111' '1101101')]:
-            self.assertEqual(bitarray(to_bytes(s), endian='big'),
+        for s, r in [(b'\x00', ''), (b'\x07\xff', '1'), (b'\x03\xff', '11111'),
+                     (b'\x01\x87\xda', '10000111' '1101101')]:
+            self.assertEqual(bitarray(s, endian='big'),
                              bitarray(r))
 
         for i in range(1, 8):
@@ -678,19 +678,19 @@ class MiscTests(unittest.TestCase, Util):
 
     def test_endianness1(self):
         a = bitarray(endian='little')
-        a.frombytes(to_bytes('\x01'))
+        a.frombytes(b'\x01')
         self.assertEqual(a.to01(), '10000000')
 
         b = bitarray(endian='little')
-        b.frombytes(to_bytes('\x80'))
+        b.frombytes(b'\x80')
         self.assertEqual(b.to01(), '00000001')
 
         c = bitarray(endian='big')
-        c.frombytes(to_bytes('\x80'))
+        c.frombytes(b'\x80')
         self.assertEqual(c.to01(), '10000000')
 
         d = bitarray(endian='big')
-        d.frombytes(to_bytes('\x01'))
+        d.frombytes(b'\x01')
         self.assertEqual(d.to01(), '00000001')
 
         self.assertEqual(a, c)
@@ -700,29 +700,29 @@ class MiscTests(unittest.TestCase, Util):
         a = bitarray(8, endian='little')
         a.setall(False)
         a[0] = True
-        self.assertEqual(a.tobytes(), to_bytes('\x01'))
+        self.assertEqual(a.tobytes(), b'\x01')
         a[1] = True
-        self.assertEqual(a.tobytes(), to_bytes('\x03'))
-        a.frombytes(to_bytes(' '))
-        self.assertEqual(a.tobytes(), to_bytes('\x03 '))
+        self.assertEqual(a.tobytes(), b'\x03')
+        a.frombytes(b' ')
+        self.assertEqual(a.tobytes(), b'\x03 ')
         self.assertEqual(a.to01(), '1100000000000100')
 
     def test_endianness3(self):
         a = bitarray(8, endian='big')
         a.setall(False)
         a[7] = True
-        self.assertEqual(a.tobytes(), to_bytes('\x01'))
+        self.assertEqual(a.tobytes(), b'\x01')
         a[6] = True
-        self.assertEqual(a.tobytes(), to_bytes('\x03'))
-        a.frombytes(to_bytes(' '))
-        self.assertEqual(a.tobytes(), to_bytes('\x03 '))
+        self.assertEqual(a.tobytes(), b'\x03')
+        a.frombytes(b' ')
+        self.assertEqual(a.tobytes(), b'\x03 ')
         self.assertEqual(a.to01(), '0000001100100000')
 
     def test_endianness4(self):
         a = bitarray('00100000', endian='big')
-        self.assertEqual(a.tobytes(), to_bytes(' '))
+        self.assertEqual(a.tobytes(), b' ')
         b = bitarray('00000100', endian='little')
-        self.assertEqual(b.tobytes(), to_bytes(' '))
+        self.assertEqual(b.tobytes(), b' ')
         self.assertNotEqual(a, b)
 
     def test_endianness5(self):
@@ -1738,18 +1738,18 @@ class StringTests(unittest.TestCase, Util):
 
     def test_frombytes(self):
         a = bitarray(endian='big')
-        a.frombytes(to_bytes('A'))
+        a.frombytes(b'A')
         self.assertEqual(a, bitarray('01000001'))
 
         b = a
-        b.frombytes(to_bytes('BC'))
+        b.frombytes(b'BC')
         self.assertEQUAL(b, bitarray('01000001' '01000010' '01000011',
                                      endian='big'))
         self.assertTrue(b is a)
 
         for b in self.randombitarrays():
             c = b.copy()
-            b.frombytes(to_bytes(''))
+            b.frombytes(b'')
             self.assertEQUAL(b, c)
 
         for b in self.randombitarrays():
@@ -1765,25 +1765,25 @@ class StringTests(unittest.TestCase, Util):
 
     def test_tobytes(self):
         a = bitarray()
-        self.assertEqual(a.tobytes(), to_bytes(''))
+        self.assertEqual(a.tobytes(), b'')
 
         for end in ('big', 'little'):
             a = bitarray(endian=end)
-            a.frombytes(to_bytes('foo'))
-            self.assertEqual(a.tobytes(), to_bytes('foo'))
+            a.frombytes(b'foo')
+            self.assertEqual(a.tobytes(), b'foo')
 
             for s in self.randombytes():
                 a = bitarray(endian=end)
                 a.frombytes(s)
                 self.assertEqual(a.tobytes(), s)
 
-        for n, s in [(1, '\x01'), (2, '\x03'), (3, '\x07'), (4, '\x0f'),
-                     (5, '\x1f'), (6, '\x3f'), (7, '\x7f'), (8, '\xff'),
-                     (12, '\xff\x0f'), (15, '\xff\x7f'), (16, '\xff\xff'),
-                     (17, '\xff\xff\x01'), (24, '\xff\xff\xff')]:
+        for n, s in [(1, b'\x01'), (2, b'\x03'), (3, b'\x07'), (4, b'\x0f'),
+                     (5, b'\x1f'), (6, b'\x3f'), (7, b'\x7f'), (8, b'\xff'),
+                     (12, b'\xff\x0f'), (15, b'\xff\x7f'), (16, b'\xff\xff'),
+                     (17, b'\xff\xff\x01'), (24, b'\xff\xff\xff')]:
             a = bitarray(n, endian='little')
             a.setall(1)
-            self.assertEqual(a.tobytes(), to_bytes(s))
+            self.assertEqual(a.tobytes(), s)
 
 
     def test_unpack(self):
@@ -1792,42 +1792,36 @@ class StringTests(unittest.TestCase, Util):
             self.assertIsInstance(a.unpack(), bytes)
         else:
             self.assertIsInstance(a.unpack(), str)
-        self.assertEqual(a.unpack(), to_bytes('\x00\xff'))
-        self.assertEqual(a.unpack(to_bytes('A')), to_bytes('A\xff'))
-        self.assertEqual(a.unpack(to_bytes('0'), to_bytes('1')),
-                         to_bytes('01'))
-        self.assertEqual(a.unpack(one=to_bytes('\x01')),
-                         to_bytes('\x00\x01'))
-        self.assertEqual(a.unpack(zero=to_bytes('A')),
-                         to_bytes('A\xff'))
-        self.assertEqual(a.unpack(one=to_bytes('t'), zero=to_bytes('f')),
-                         to_bytes('ft'))
+        self.assertEqual(a.unpack(), b'\x00\xff')
+        self.assertEqual(a.unpack(b'A'), b'A\xff')
+        self.assertEqual(a.unpack(b'0', b'1'), b'01')
+        self.assertEqual(a.unpack(one=b'\x01'), b'\x00\x01')
+        self.assertEqual(a.unpack(zero=b'A'), b'A\xff')
+        self.assertEqual(a.unpack(one=b't', zero=b'f'), b'ft')
 
-        self.assertRaises(TypeError, a.unpack,
-                          to_bytes('a'), zero=to_bytes('b'))
-        self.assertRaises(TypeError, a.unpack, foo=to_bytes('b'))
+        self.assertRaises(TypeError, a.unpack, b'a', zero=b'b')
+        self.assertRaises(TypeError, a.unpack, foo=b'b')
 
         for a in self.randombitarrays():
-            self.assertEqual(a.unpack(to_bytes('0'), to_bytes('1')),
-                             to_bytes(a.to01()))
+            self.assertEqual(a.unpack(b'0', b'1'), to_bytes(a.to01()))
 
             b = bitarray()
             b.pack(a.unpack())
             self.assertEqual(b, a)
 
             b = bitarray()
-            b.pack(a.unpack(to_bytes('\x01'), to_bytes('\x00')))
+            b.pack(a.unpack(b'\x01', b'\x00'))
             b.invert()
             self.assertEqual(b, a)
 
 
     def test_pack(self):
         a = bitarray()
-        a.pack(to_bytes('\x00'))
+        a.pack(b'\x00')
         self.assertEqual(a, bitarray('0'))
-        a.pack(to_bytes('\xff'))
+        a.pack(b'\xff')
         self.assertEqual(a, bitarray('01'))
-        a.pack(to_bytes('\x01\x00\x7a'))
+        a.pack(b'\x01\x00\x7a')
         self.assertEqual(a, bitarray('01101'))
 
         a = bitarray()
@@ -1907,7 +1901,7 @@ class FileTests(unittest.TestCase, Util):
         N = 100000
 
         fo = open(self.tmpfname, 'wb')
-        fo.write(N * to_bytes('X'))
+        fo.write(N * b'X')
         fo.close()
 
         a = bitarray()
@@ -1920,7 +1914,7 @@ class FileTests(unittest.TestCase, Util):
 
     def test_fromfile_Foo(self):
         fo = open(self.tmpfname, 'wb')
-        fo.write(to_bytes('Foo\n'))
+        fo.write(b'Foo\n')
         fo.close()
 
         a = bitarray(endian='big')
@@ -1986,7 +1980,7 @@ class FileTests(unittest.TestCase, Util):
         f.close()
 
         fi = open(self.tmpfname, 'rb')
-        self.assertEqual(fi.read(), to_bytes(''))
+        self.assertEqual(fi.read(), b'')
         fi.close()
 
         a = bitarray('01000110011011110110111100001010', endian='big')
@@ -1995,7 +1989,7 @@ class FileTests(unittest.TestCase, Util):
         f.close()
 
         fi = open(self.tmpfname, 'rb')
-        self.assertEqual(fi.read(), to_bytes('Foo\n'))
+        self.assertEqual(fi.read(), b'Foo\n')
         fi.close()
 
         for a in self.randombitarrays():
@@ -2289,9 +2283,9 @@ class BufferInterfaceTests(unittest.TestCase):
         v = memoryview(a)
         self.assertEqual(len(v), 3)
         self.assertEqual(v[0], 65 if is_py3k else 'A')
-        self.assertEqual(v[:].tobytes(), to_bytes('ABC'))
+        self.assertEqual(v[:].tobytes(), b'ABC')
         a[13] = 1
-        self.assertEqual(v[:].tobytes(), to_bytes('AFC'))
+        self.assertEqual(v[:].tobytes(), b'AFC')
 
     def test_read2(self):
         a = bitarray([randint(0, 1) for d in range(8000)])
@@ -2310,8 +2304,8 @@ class BufferInterfaceTests(unittest.TestCase):
         self.assertEqual(a[399999:400009], bitarray('0111111110'))
         a[400003] = 0
         self.assertEqual(a[399999:400009], bitarray('0111011110'))
-        v[30001:30004] = to_bytes('ABC')
-        self.assertEqual(a[240000:240040].tobytes(), to_bytes('\x00ABC\x00'))
+        v[30001:30004] = b'ABC'
+        self.assertEqual(a[240000:240040].tobytes(), b'\x00ABC\x00')
 
 if sys.version_info[:2] >= (2, 7):
     tests.append(BufferInterfaceTests)
