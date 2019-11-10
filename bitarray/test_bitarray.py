@@ -36,12 +36,6 @@ from bitarray import (bitarray, frozenbitarray,
 tests = []
 
 
-def to_bytes(s):
-    if is_py3k:
-        return bytes(s.encode('latin1'))
-    else:
-        return bytes(s)  # which is str for Python 2
-
 def slicelen(s, length):
     assert isinstance(s, slice)
     start, stop, step = s.indices(length)
@@ -259,7 +253,7 @@ class CreateObjectTests(unittest.TestCase, Util):
 
         for i in range(1, 8):
             self.assertRaises(ValueError, bitarray.__new__,
-                              bitarray, to_bytes(chr(i)))
+                              bitarray, bytes(bytearray([i])))
 
     def test_bitarray(self):
         for n in range(10):
@@ -1420,7 +1414,7 @@ class MethodTests(unittest.TestCase, Util):
     def test_count2(self):
         for i in range(0, 256):
             a = bitarray()
-            a.frombytes(to_bytes(chr(i)))
+            a.frombytes(bytes(bytearray([i])))
             self.assertEqual(a.count(), a.to01().count('1'))
 
     def test_count3(self):
@@ -1716,7 +1710,7 @@ class MethodTests(unittest.TestCase, Util):
 
         for i in range(256):
             a = bitarray()
-            a.frombytes(to_bytes(chr(i)))
+            a.frombytes(bytes(bytearray([i])))
             aa = a.tolist()
             b = a
             b.bytereverse()
@@ -1733,8 +1727,7 @@ class StringTests(unittest.TestCase, Util):
 
     def randombytes(self):
         for n in range(1, 20):
-            yield to_bytes(''.join(chr(randint(0, 255))
-                                   for x in range(n)))
+            yield os.urandom(n)
 
     def test_frombytes(self):
         a = bitarray(endian='big')
@@ -1803,7 +1796,7 @@ class StringTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.unpack, foo=b'b')
 
         for a in self.randombitarrays():
-            self.assertEqual(a.unpack(b'0', b'1'), to_bytes(a.to01()))
+            self.assertEqual(a.unpack(b'0', b'1'), a.to01().encode())
 
             b = bitarray()
             b.pack(a.unpack())
@@ -1826,7 +1819,7 @@ class StringTests(unittest.TestCase, Util):
 
         a = bitarray()
         for n in range(256):
-            a.pack(to_bytes(chr(n)))
+            a.pack(bytes(bytearray([n])))
         self.assertEqual(a, bitarray('0' + 255 * '1'))
 
         self.assertRaises(TypeError, a.pack, 0)
