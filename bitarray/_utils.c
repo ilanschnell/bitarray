@@ -13,11 +13,6 @@
 #define IS_PY3K
 #endif
 
-#if PY_MAJOR_VERSION == 3 || (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 7)
-/* (new) buffer protocol */
-#define WITH_BUFFER
-#endif
-
 #ifdef STDC_HEADERS
 #include <stddef.h>
 #else  /* !STDC_HEADERS */
@@ -29,25 +24,18 @@
 
 typedef long long int idx_t;
 
-/* Unlike the normal convention, ob_size is the byte count, not the number
-   of elements.  The reason for doing this is that we can use our own
-   special idx_t for the number of bits (which can exceed 2^32 on a 32 bit
-   machine.  */
 typedef struct {
     PyObject_VAR_HEAD
-#ifdef WITH_BUFFER
-    int ob_exports;             /* how many buffer exports */
-#endif
     char *ob_item;
     Py_ssize_t allocated;       /* how many bytes allocated */
     idx_t nbits;                /* length of bitarray, i.e. elements */
     int endian;                 /* bit endianness of bitarray */
+    int ob_exports;             /* how many buffer exports */
     PyObject *weakreflist;      /* list of weak references */
 } bitarrayobject;
 
 #define BITS(bytes)  (((idx_t) 8) * ((idx_t) (bytes)))
 
-/* number of bytes necessary to store given bits */
 #define BYTES(bits)  (((bits) == 0) ? 0 : (((bits) - 1) / 8 + 1))
 
 #define BITMASK(endian, i)  (((char) 1) << ((endian) ? (7 - (i)%8) : (i)%8))

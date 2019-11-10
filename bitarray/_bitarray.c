@@ -44,13 +44,11 @@ typedef long long int idx_t;
    machine.  */
 typedef struct {
     PyObject_VAR_HEAD
-#ifdef WITH_BUFFER
-    int ob_exports;             /* how many buffer exports */
-#endif
     char *ob_item;
     Py_ssize_t allocated;       /* how many bytes allocated */
     idx_t nbits;                /* length of bitarray, i.e. elements */
     int endian;                 /* bit endianness of bitarray */
+    int ob_exports;             /* how many buffer exports */
     PyObject *weakreflist;      /* list of weak references */
 } bitarrayobject;
 
