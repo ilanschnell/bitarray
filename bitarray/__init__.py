@@ -56,15 +56,6 @@ bits (1..7) are set to 0.
 Deprecated since version 0.4.0, use `.tobytes()` instead."""
         return self.tobytes().decode()
 
-    def __int__(self):
-        raise TypeError("int() cannot take bitarray as argument")
-
-    def __long__(self):
-        raise TypeError("long() cannot take bitarray as argument")
-
-    def __float__(self):
-        raise TypeError("float() cannot take bitarray as argument")
-
 
 class frozenbitarray(_bitarray):
     """frozenbitarray(initial=0, /, endian='big')

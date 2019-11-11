@@ -1,3 +1,7 @@
+# Copyright (c) 2019, Ilan Schnell
+# bitarray is published under the PSF license.
+#
+# Author: Ilan Schnell
 """
 Useful utilities for working with bitarrays.
 """

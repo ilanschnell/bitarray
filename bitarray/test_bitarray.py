@@ -296,19 +296,11 @@ tests.append(CreateObjectTests)
 
 class ToObjectsTests(unittest.TestCase, Util):
 
-    def test_int(self):
+    def test_numeric(self):
         a = bitarray()
-        self.assertRaises(TypeError, int, a)
-        if not is_py3k:
-            self.assertRaises(TypeError, long, a)
-
-    def test_float(self):
-        a = bitarray()
-        self.assertRaises(TypeError, float, a)
-
-    def test_complext(self):
-        a = bitarray()
-        self.assertRaises(TypeError, complex, a)
+        self.assertRaises(Exception, int, a)
+        self.assertRaises(Exception, float, a)
+        self.assertRaises(Exception, complex, a)
 
     def test_list(self):
         for a in self.randombitarrays():
