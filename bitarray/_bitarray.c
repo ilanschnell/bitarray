@@ -235,8 +235,9 @@ copy_n(bitarrayobject *self, idx_t a,
         return;
     }
 
-    /* The different type of looping is only relevant copying self to self,
-       i.e. when copying a piece of an bitarrayobject onto itself. */
+    /* The two different types of looping are only relevant when copying
+       self to self, i.e. when copying a piece of an bitarrayobject onto
+       itself. */
     if (a <= b) {
         for (i = 0; i < n; i++)             /* loop forward (delete) */
             setbit(self, i + a, GETBIT(other, i + b));
