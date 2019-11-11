@@ -341,7 +341,7 @@ static PyMethodDef module_functions[] = {
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
     {"subset",    (PyCFunction) subset,    METH_VARARGS, subset_doc},
-    {NULL,           NULL}  /* sentinel */
+    {NULL,        NULL}  /* sentinel */
 };
 
 /*********************** Install Module **************************/
