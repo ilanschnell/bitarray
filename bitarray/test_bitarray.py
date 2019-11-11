@@ -122,7 +122,7 @@ class TestsModuleFunctions(unittest.TestCase, Util):
         self.assertRaises(ValueError, bits2bytes, -924)
 
         self.assertEqual(bits2bytes(0), 0)
-        for n in range(1, 1000):
+        for n in range(1, 100):
             self.assertEqual(bits2bytes(n), (n - 1) // 8 + 1)
 
         for n, m in [(0, 0), (1, 1), (2, 1), (7, 1), (8, 1), (9, 2),
@@ -360,7 +360,7 @@ class MetaDataTests(unittest.TestCase, Util):
 
 
     def test_length(self):
-        for n in range(1000):
+        for n in range(100):
             a = bitarray(n)
             self.assertEqual(len(a), n)
             self.assertEqual(a.length(), n)
@@ -2274,24 +2274,24 @@ class BufferInterfaceTests(unittest.TestCase):
 
     def test_read2(self):
         a = bitarray()
-        a.frombytes(os.urandom(1000))
+        a.frombytes(os.urandom(100))
         v = memoryview(a)
-        self.assertEqual(len(v), 1000)
-        b = a[345 * 8 : 657 * 8]
-        self.assertEqual(v[345:657].tobytes(), b.tobytes())
+        self.assertEqual(len(v), 100)
+        b = a[34 * 8 : 67 * 8]
+        self.assertEqual(v[34:67].tobytes(), b.tobytes())
         self.assertEqual(v.tobytes(), a.tobytes())
 
     def test_write(self):
-        a = bitarray(800000)
+        a = bitarray(8000)
         a.setall(0)
         v = memoryview(a)
         self.assertFalse(v.readonly)
-        v[50000] = 255 if is_py3k else '\xff'
-        self.assertEqual(a[399999:400009], bitarray('0111111110'))
-        a[400003] = 0
-        self.assertEqual(a[399999:400009], bitarray('0111011110'))
-        v[30001:30004] = b'ABC'
-        self.assertEqual(a[240000:240040].tobytes(), b'\x00ABC\x00')
+        v[500] = 255 if is_py3k else '\xff'
+        self.assertEqual(a[3999:4009], bitarray('0111111110'))
+        a[4003] = 0
+        self.assertEqual(a[3999:4009], bitarray('0111011110'))
+        v[301:304] = b'ABC'
+        self.assertEqual(a[300 *8 : 305 * 8].tobytes(), b'\x00ABC\x00')
 
 if sys.version_info[:2] >= (2, 7):
     tests.append(BufferInterfaceTests)
