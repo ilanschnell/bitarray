@@ -2276,17 +2276,18 @@ class BufferInterfaceTests(unittest.TestCase):
         v = memoryview(a)
         self.assertEqual(len(v), 3)
         self.assertEqual(v[0], 65 if is_py3k else 'A')
-        self.assertEqual(v[:].tobytes(), b'ABC')
+        self.assertEqual(v.tobytes(), b'ABC')
         a[13] = 1
-        self.assertEqual(v[:].tobytes(), b'AFC')
+        self.assertEqual(v.tobytes(), b'AFC')
 
     def test_read2(self):
-        a = bitarray([randint(0, 1) for d in range(8000)])
+        a = bitarray()
+        a.frombytes(os.urandom(1000))
         v = memoryview(a)
         self.assertEqual(len(v), 1000)
         b = a[345 * 8 : 657 * 8]
         self.assertEqual(v[345:657].tobytes(), b.tobytes())
-        self.assertEqual(v[:].tobytes(), a.tobytes())
+        self.assertEqual(v.tobytes(), a.tobytes())
 
     def test_write(self):
         a = bitarray(800000)
