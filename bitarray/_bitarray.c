@@ -3013,7 +3013,7 @@ static PyTypeObject BitarrayIter_Type = {
 /********************* Bitarray Buffer Interface ************************/
 #ifdef WITH_BUFFER
 
-#if PY_MAJOR_VERSION == 2
+#if PY_MAJOR_VERSION == 2       /* old buffer protocol */
 static Py_ssize_t
 bitarray_buffer_getreadbuf(bitarrayobject *self,
                            Py_ssize_t index, const void **ptr)
