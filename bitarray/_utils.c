@@ -35,7 +35,7 @@ typedef struct {
     PyObject *weakreflist;      /* list of weak references */
 } bitarrayobject;
 
-#define BITS(bytes)  (((idx_t) 8) * ((idx_t) (bytes)))
+#define BITS(bytes)  ((idx_t) (bytes) << 3)
 
 #define BYTES(bits)  (((bits) == 0) ? 0 : (((bits) - 1) / 8 + 1))
 
@@ -115,7 +115,7 @@ find_last(bitarrayobject *self, int vi)
         return -1;
 
     /* search within top byte */
-    for (i = self->nbits - 1; i >= 8 * (self->nbits / 8); i--)
+    for (i = self->nbits - 1; i >= BITS(self->nbits / 8); i--)
         if (GETBIT(self, i) == vi)
             return i;
 
