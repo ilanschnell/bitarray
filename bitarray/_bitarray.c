@@ -56,7 +56,7 @@ static PyTypeObject Bitarraytype;
 
 #define bitarray_Check(obj)  PyObject_TypeCheck(obj, &Bitarraytype)
 
-#define BITS(bytes)  (((idx_t) 8) * ((idx_t) (bytes)))
+#define BITS(bytes)  ((idx_t) (bytes) << 3)
 
 /* number of bytes necessary to store given bits */
 #define BYTES(bits)  (((bits) == 0) ? 0 : (((bits) - 1) / 8 + 1))
@@ -220,7 +220,7 @@ copy_n(bitarrayobject *self, idx_t a,
     if (self->endian == other->endian && a % 8 == 0 && b % 8 == 0 && n >= 8)
     {
         const Py_ssize_t bytes = (Py_ssize_t) n / 8;
-        const idx_t bits = bytes * 8;
+        const idx_t bits = BITS(bytes);
 
         assert(bits <= n && n < bits + 8);
         if (a <= b)
@@ -374,11 +374,11 @@ setrange(bitarrayobject *self, idx_t start, idx_t stop, int val)
     if (stop >= start + 8) {
         const Py_ssize_t byte_start = BYTES(start);
         const Py_ssize_t byte_stop = (Py_ssize_t) stop / 8;
-        for (i = start; i < byte_start * 8; i++)
+        for (i = start; i < BITS(byte_start); i++)
             setbit(self, i, val);
         memset(self->ob_item + byte_start, val ? 0xff : 0x00,
                byte_stop - byte_start);
-        for (i = byte_stop * 8; i < stop; i++)
+        for (i = BITS(byte_stop); i < stop; i++)
             setbit(self, i, val);
     }
     else {
@@ -465,7 +465,7 @@ count(bitarrayobject *self, int vi, idx_t start, idx_t stop)
         const Py_ssize_t byte_stop = (Py_ssize_t) (stop / 8);
         Py_ssize_t j;
 
-        for (i = start; i < byte_start * 8; i++)
+        for (i = start; i < BITS(byte_start); i++)
             if (GETBIT(self, i))
                 res++;
         for (j = byte_start; j < byte_stop; j++) {
