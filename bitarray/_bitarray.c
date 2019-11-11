@@ -461,7 +461,7 @@ count(bitarrayobject *self, int vi, idx_t start, idx_t stop)
 
     if (stop >= start + 8) {
         const Py_ssize_t byte_start = BYTES(start);
-        const Py_ssize_t byte_stop = (Py_ssize_t) stop / 8;
+        const Py_ssize_t byte_stop = (Py_ssize_t) (stop / 8);
         Py_ssize_t j;
 
         for (i = start; i < byte_start * 8; i++)
@@ -471,7 +471,7 @@ count(bitarrayobject *self, int vi, idx_t start, idx_t stop)
             c = self->ob_item[j];
             res += bitcount_lookup[c];
         }
-        for (i = byte_stop * 8; i < stop; i++)
+        for (i = BITS(byte_stop); i < stop; i++)
             if (GETBIT(self, i))
                 res++;
     }

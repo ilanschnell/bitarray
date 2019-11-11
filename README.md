@@ -653,6 +653,9 @@ Change log
 
   * add bitarray.utils module which provides useful utility functions
   * deprecate `bitarray.bitdiff` in favor of `bitarray.utils.count_xor`.
+  * use markdown for documentation
+  * simplified tests by using bytes syntax
+  * update smallints example to use new utility module
 
 
 *1.1.0* (2019-11-07):
