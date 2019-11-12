@@ -29,8 +29,6 @@ Create a bitarray of length, with all values 0.
 """
     if not isinstance(length, (int, long) if is_py2 else int):
         raise TypeError("integer expected")
-    if length < 0:
-        raise ValueError("non-negative integer expected")
 
     a = bitarray(length, endian)
     a.setall(0)
