@@ -55,7 +55,7 @@ Allowed values for mode are the strings: `left`, `right`, `both`
         except ValueError:
             return bitarray(endian=a.endian())
 
-    last = len(a) - 1
+    last = a.length() - 1
     if mode in ('right', 'both'):
         try:
             last = rindex(a)
@@ -75,13 +75,13 @@ the bitarray (which has to be multiple of 4 in length).
         raise TypeError("bitarray expected")
     if a.endian() != 'big':
         raise ValueError("big-endian bitarray expected")
-    la = len(a)
+    la = a.length()
     if la % 4:
         raise ValueError("bitarray length not multiple of 4")
     if la % 8:
         # make sure we don't mutate the original argument
         a = a + bitarray(4, 'big')
-    assert len(a) % 8 == 0
+    assert a.length() % 8 == 0
 
     s = binascii.hexlify(a.tobytes())
     if la % 8:
@@ -123,13 +123,13 @@ The bit-endianness of the bitarray is respected.
 
     endian = a.endian()
     big_endian = bool(endian == 'big')
-    if len(a) % 8:
+    if a.length() % 8:
         # pad with leading zeros, such that length is multiple of 8
         if big_endian:
-            a = zeros(8 - len(a) % 8, 'big') + a
+            a = zeros(8 - a.length() % 8, 'big') + a
         else:
-            a = a + zeros(8 - len(a) % 8, 'little')
-    assert len(a) % 8 == 0
+            a = a + zeros(8 - a.length() % 8, 'little')
+    assert a.length() % 8 == 0
     b = a.tobytes()
 
     if is_py2:
@@ -185,7 +185,7 @@ within length bits.
 
     a = bitarray(endian=endian)
     a.frombytes(b)
-    la = len(a)
+    la = a.length()
     if la == length:
         return a
 
@@ -205,5 +205,5 @@ within length bits.
         else:
             a += zeros(length - la, 'little')
 
-    assert len(a) == length
+    assert a.length() == length
     return a
