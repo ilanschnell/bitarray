@@ -170,6 +170,7 @@ count_n(PyObject *self, PyObject *args)
         return NULL;
     }
 
+    /* by counting big blocks we save comparisons */
 #define BLOCK_SIZE  2048
     while (j + BITS(BLOCK_SIZE) < n && i + BITS(BLOCK_SIZE) < aa->nbits)
         for (k = 0; k < BLOCK_SIZE; k++) {
