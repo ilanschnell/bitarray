@@ -170,12 +170,14 @@ count_n(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    while (j + 16384 < n && i + 16384 < aa->nbits)
-        for (k = 0; k < 2048; k++) {
+#define BLOCK_SIZE  2048
+    while (j + BITS(BLOCK_SIZE) < n && i + BITS(BLOCK_SIZE) < aa->nbits)
+        for (k = 0; k < BLOCK_SIZE; k++) {
             c = aa->ob_item[(Py_ssize_t) i];
             j += bitcount_lookup[c];
             i++;
         }
+#undef BLOCK_SIZE
     while (j + 8 < n && i + 8 < aa->nbits) {
         c = aa->ob_item[(Py_ssize_t) i];
         j += bitcount_lookup[c];
