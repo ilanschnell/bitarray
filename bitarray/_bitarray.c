@@ -466,20 +466,17 @@ count(bitarrayobject *self, int vi, idx_t start, idx_t stop)
         Py_ssize_t j;
 
         for (i = start; i < BITS(byte_start); i++)
-            if (GETBIT(self, i))
-                res++;
+            res += GETBIT(self, i);
         for (j = byte_start; j < byte_stop; j++) {
             c = self->ob_item[j];
             res += bitcount_lookup[c];
         }
         for (i = BITS(byte_stop); i < stop; i++)
-            if (GETBIT(self, i))
-                res++;
+            res += GETBIT(self, i);
     }
     else {
         for (i = start; i < stop; i++)
-            if (GETBIT(self, i))
-                res++;
+            res += GETBIT(self, i);
     }
     return vi ? res : stop - start - res;
 }
