@@ -652,10 +652,12 @@ Change log
 2019-XX-XX   1.2.0:
 
   * add bitarray.utils module which provides useful utility functions
-  * deprecate `bitarray.bitdiff` in favor of `bitarray.utils.count_xor`.
+  * deprecate `bitarray.bitdiff` in favor of `bitarray.utils.count_xor`
   * use markdown for documentation
+  * fix bug in .count() on 32bit systems in special cases when array size
+    is 2^29 bits or larger
   * simplified tests by using bytes syntax
-  * update smallints example to use new utility module
+  * update smallints and sieve example to use new utility module
 
 
 *1.1.0* (2019-11-07):
