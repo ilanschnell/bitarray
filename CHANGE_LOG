@@ -7,6 +7,7 @@
     is 2^29 bits or larger
   * simplified tests by using bytes syntax
   * update smallints and sieve example to use new utility module
+  * use file context managers in tests
 
 
 2019-11-07   1.1.0:

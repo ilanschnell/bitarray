@@ -1838,9 +1838,8 @@ class FileTests(unittest.TestCase, Util):
     def test_pickle(self):
         for v in range(3):
             for a in self.randombitarrays():
-                fo = open(self.tmpfname, 'wb')
-                pickle.dump(a, fo, v)
-                fo.close()
+                with open(self.tmpfname, 'wb') as fo:
+                    pickle.dump(a, fo, v)
                 b = pickle.load(open(self.tmpfname, 'rb'))
                 self.assertFalse(b is a)
                 self.assertEQUAL(a, b)
@@ -1874,8 +1873,8 @@ class FileTests(unittest.TestCase, Util):
 
 
     def test_from_empty_file(self):
-        fo = open(self.tmpfname, 'wb')
-        fo.close()
+        with open(self.tmpfname, 'wb') as fo:
+            pass
 
         a = bitarray()
         a.fromfile(open(self.tmpfname, 'rb'))
@@ -1885,9 +1884,8 @@ class FileTests(unittest.TestCase, Util):
     def test_from_large_file(self):
         N = 100000
 
-        fo = open(self.tmpfname, 'wb')
-        fo.write(N * b'X')
-        fo.close()
+        with open(self.tmpfname, 'wb') as fo:
+            fo.write(N * b'X')
 
         a = bitarray()
         a.fromfile(open(self.tmpfname, 'rb'))
@@ -1898,9 +1896,8 @@ class FileTests(unittest.TestCase, Util):
 
 
     def test_fromfile_Foo(self):
-        fo = open(self.tmpfname, 'wb')
-        fo.write(b'Foo\n')
-        fo.close()
+        with open(self.tmpfname, 'wb') as fo:
+            fo.write(b'Foo\n')
 
         a = bitarray(endian='big')
         a.fromfile(open(self.tmpfname, 'rb'))
@@ -1926,62 +1923,54 @@ class FileTests(unittest.TestCase, Util):
     def test_fromfile_n(self):
         a = bitarray()
         a.fromstring('ABCDEFGHIJ')
-        fo = open(self.tmpfname, 'wb')
-        a.tofile(fo)
-        fo.close()
+        with open(self.tmpfname, 'wb') as fo:
+            a.tofile(fo)
 
         b = bitarray()
-        f = open(self.tmpfname, 'rb')
-        b.fromfile(f, 0);     self.assertEqual(b.tostring(), '')
-        b.fromfile(f, 1);     self.assertEqual(b.tostring(), 'A')
-        f.read(1)
-        b = bitarray()
-        b.fromfile(f, 2);     self.assertEqual(b.tostring(), 'CD')
-        b.fromfile(f, 1);     self.assertEqual(b.tostring(), 'CDE')
-        b.fromfile(f, 0);     self.assertEqual(b.tostring(), 'CDE')
-        b.fromfile(f);        self.assertEqual(b.tostring(), 'CDEFGHIJ')
-        b.fromfile(f);        self.assertEqual(b.tostring(), 'CDEFGHIJ')
-        f.close()
+        with open(self.tmpfname, 'rb') as f:
+            b.fromfile(f, 0);     self.assertEqual(b.tostring(), '')
+            b.fromfile(f, 1);     self.assertEqual(b.tostring(), 'A')
+            f.read(1)
+            b = bitarray()
+            b.fromfile(f, 2);     self.assertEqual(b.tostring(), 'CD')
+            b.fromfile(f, 1);     self.assertEqual(b.tostring(), 'CDE')
+            b.fromfile(f, 0);     self.assertEqual(b.tostring(), 'CDE')
+            b.fromfile(f);        self.assertEqual(b.tostring(), 'CDEFGHIJ')
+            b.fromfile(f);        self.assertEqual(b.tostring(), 'CDEFGHIJ')
 
         b = bitarray()
-        f = open(self.tmpfname, 'rb')
-        f.read(1);
-        self.assertRaises(EOFError, b.fromfile, f, 10)
-        f.close()
+        with open(self.tmpfname, 'rb') as f:
+            f.read(1);
+            self.assertRaises(EOFError, b.fromfile, f, 10)
+
         self.assertEqual(b.tostring(), 'BCDEFGHIJ')
 
         b = bitarray()
-        f = open(self.tmpfname, 'rb')
-        b.fromfile(f);
-        self.assertEqual(b.tostring(), 'ABCDEFGHIJ')
-        self.assertRaises(EOFError, b.fromfile, f, 1)
-        f.close()
+        with open(self.tmpfname, 'rb') as f:
+            b.fromfile(f);
+            self.assertEqual(b.tostring(), 'ABCDEFGHIJ')
+            self.assertRaises(EOFError, b.fromfile, f, 1)
 
 
     def test_tofile(self):
         a = bitarray()
-        f = open(self.tmpfname, 'wb')
-        a.tofile(f)
-        f.close()
+        with open(self.tmpfname, 'wb') as f:
+            a.tofile(f)
 
-        fi = open(self.tmpfname, 'rb')
-        self.assertEqual(fi.read(), b'')
-        fi.close()
+        with open(self.tmpfname, 'rb') as fi:
+            self.assertEqual(fi.read(), b'')
 
         a = bitarray('01000110011011110110111100001010', endian='big')
-        f = open(self.tmpfname, 'wb')
-        a.tofile(f)
-        f.close()
+        with open(self.tmpfname, 'wb') as f:
+            a.tofile(f)
 
-        fi = open(self.tmpfname, 'rb')
-        self.assertEqual(fi.read(), b'Foo\n')
-        fi.close()
+        with open(self.tmpfname, 'rb') as fi:
+            self.assertEqual(fi.read(), b'Foo\n')
 
         for a in self.randombitarrays():
             b = bitarray(a, endian='big')
-            fo = open(self.tmpfname, 'wb')
-            b.tofile(fo)
-            fo.close()
+            with open(self.tmpfname, 'wb') as fo:
+                b.tofile(fo)
 
             s = open(self.tmpfname, 'rb').read()
             self.assertEqual(len(s), a.buffer_info()[1])
@@ -1991,16 +1980,14 @@ class FileTests(unittest.TestCase, Util):
             self.assertRaises(TypeError, a.tofile)
             self.assertRaises(TypeError, a.tofile, StringIO())
 
-            f = open(self.tmpfname, 'wb')
-            a.tofile(f)
-            f.close()
+            with open(self.tmpfname, 'wb') as f:
+                a.tofile(f)
             self.assertRaises(TypeError, a.tofile, f)
 
         for n in range(20):
             a = n * bitarray('1', endian='little')
-            fo = open(self.tmpfname, 'wb')
-            a.tofile(fo)
-            fo.close()
+            with open(self.tmpfname, 'wb') as fo:
+                a.tofile(fo)
 
             s = open(self.tmpfname, 'rb').read()
             self.assertEqual(len(s), a.buffer_info()[1])
