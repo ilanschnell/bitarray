@@ -119,6 +119,7 @@ count_to_n(bitarrayobject *a, idx_t n)
     /* by counting big blocks we save comparisons */
     while (i + BLOCK_BITS < a->nbits) {
         m = 0;
+        assert(i % 8 == 0);
         block_start = (Py_ssize_t) (i / 8);
         block_stop = block_start + (BLOCK_BITS / 8);
         for (k = block_start; k < block_stop; k++) {
