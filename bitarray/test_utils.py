@@ -152,8 +152,9 @@ class TestsHelpers(unittest.TestCase, Util):
         self.assertEqual(count_n(a, 0), 0)
         self.assertEqual(count_n(a, 20), 23)
         self.assertEqual(count_n(a, 37), 45)
-        self.assertRaises(ValueError, count_n, a, -1)
-        self.assertRaises(ValueError, count_n, a, 38)
+        self.assertRaises(ValueError, count_n, a, -1) # n < 0
+        self.assertRaises(ValueError, count_n, a, 38) # n > a.count()
+        self.assertRaises(ValueError, count_n, a, 49) # n > len(a)
         self.assertRaises(TypeError, count_n, a, "7")
         for n in range(0, 37):
             i = count_n(a, n)
@@ -162,7 +163,7 @@ class TestsHelpers(unittest.TestCase, Util):
         self.assertEQUAL(a, b)
 
     def test_count_n2(self):
-        for N in list(range(100)) + [1000, 100000]:
+        for N in list(range(100)) + [1000, 10000, 100000]:
             a = bitarray(N)
             v = randint(0, 1)
             a.setall(v - 1)
