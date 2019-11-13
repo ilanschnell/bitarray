@@ -103,6 +103,57 @@ static int bitcount_lookup[256] = {
     4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
 };
 
+/* return the smallest index i for which a.count(1, 0, i) == n, or when
+   n exceeds the total count return -1  */
+static idx_t
+count_to_n(bitarrayobject *a, idx_t n)
+{
+    idx_t i = 0, j = 0, m;  /* i is the index, j the total count up to i */
+    Py_ssize_t block_start, block_stop, k;
+    unsigned char c;
+
+    if (n == 0)
+        return 0;
+
+#define BLOCK_BITS  8192
+    /* by counting big blocks we save comparisons */
+    while (i + BLOCK_BITS < a->nbits) {
+        m = 0;
+        block_start = (Py_ssize_t) (i / 8);
+        block_stop = block_start + (BLOCK_BITS / 8);
+        for (k = block_start; k < block_stop; k++) {
+            assert(k < Py_SIZE(a));
+            c = a->ob_item[k];
+            m += bitcount_lookup[c];
+        }
+        if (j + m >= n)
+            break;
+        j += m;
+        i += BLOCK_BITS;
+    }
+#undef BLOCK_SIZE
+
+    while (i + 8 < a->nbits) {
+        k = (Py_ssize_t) (i / 8);
+        assert(k < Py_SIZE(a));
+        c = a->ob_item[k];
+        m = bitcount_lookup[c];
+        if (j + m >= n)
+            break;
+        j += m;
+        i += 8;
+    }
+
+    while (j < n && i < a->nbits ) {
+        j += GETBIT(a, i);
+        i++;
+    }
+    if (j < n)
+        return -1;
+
+    return i;
+}
+
 /* return index of last occurrence of vi, -1 when x is not in found. */
 static idx_t
 find_last(bitarrayobject *self, int vi)
@@ -149,9 +200,7 @@ static PyObject *
 count_n(PyObject *self, PyObject *args)
 {
     PyObject *a;
-    idx_t n, i = 0, j = 0;
-    unsigned char c;
-    int k;
+    idx_t n, i;
 
     if (!PyArg_ParseTuple(args, "OL:count_n", &a, &n))
         return NULL;
@@ -169,32 +218,12 @@ count_n(PyObject *self, PyObject *args)
         PyErr_SetString(PyExc_ValueError, "n larger than bitarray size");
         return NULL;
     }
-
-    /* by counting big blocks we save comparisons */
-#define BLOCK_SIZE  2048
-    while (j + BITS(BLOCK_SIZE) < n && i + BITS(BLOCK_SIZE) < aa->nbits)
-        for (k = 0; k < BLOCK_SIZE; k++) {
-            c = aa->ob_item[(Py_ssize_t) i];
-            j += bitcount_lookup[c];
-            i++;
-        }
-#undef BLOCK_SIZE
-    while (j + 8 < n && i + 8 < aa->nbits) {
-        c = aa->ob_item[(Py_ssize_t) i];
-        j += bitcount_lookup[c];
-        i++;
-    }
-    i *= 8;
-    while (j < n && i < aa->nbits ) {
-        if (GETBIT(aa, i))
-            j++;
-        i++;
-    }
-    if (j < n) {
+    i = count_to_n(aa, n);        /* do actual work here */
+#undef aa
+    if (i < 0) {
         PyErr_SetString(PyExc_ValueError, "n exceeds total count");
         return NULL;
     }
-#undef aa
     return PyLong_FromLongLong(i);
 }
 
