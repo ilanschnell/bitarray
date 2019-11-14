@@ -1645,7 +1645,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     idx_t t, p;
 
     if (!PyBytes_Check(bytes)) {
-        PyErr_SetString(PyExc_TypeError, "byte string expected");
+        PyErr_SetString(PyExc_TypeError, "bytes expected");
         return NULL;
     }
 
@@ -1737,7 +1737,7 @@ static PyObject *
 bitarray_pack(bitarrayobject *self, PyObject *bytes)
 {
     if (!PyBytes_Check(bytes)) {
-        PyErr_SetString(PyExc_TypeError, "byte string expected");
+        PyErr_SetString(PyExc_TypeError, "bytes expected");
         return NULL;
     }
     if (extend_bytes(self, bytes, BYTES_RAW) < 0)
