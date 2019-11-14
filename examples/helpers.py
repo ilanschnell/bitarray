@@ -1,6 +1,7 @@
 from bitarray import bitarray
 
 
+# an optimized C version of this function can be found in bitarray.utils
 def count_n(a, n):
     "return the index i for which a[:i].count() == n"
     i, j = n, a.count(1, 0, n)
