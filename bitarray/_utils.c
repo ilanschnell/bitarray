@@ -71,6 +71,7 @@ setbit(bitarrayobject *self, idx_t i, int bit)
 static int
 bitarray_Check(PyObject *obj)
 {
+    /* there may be a better way to do this, but for now it is good enough */
     return PyObject_HasAttrString(obj, "endian");
 }
 

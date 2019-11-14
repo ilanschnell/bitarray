@@ -218,7 +218,7 @@ endianness:
     >>> a.tobytes() == b.tobytes()
     True
 
-The default bit endianness is currently big-endian; however, this may change
+The default bit endianness is currently big-endian, however this may change
 in the future, and when dealing with the machine representation of bitarray
 objects, it is recommended to always explicitly specify the endianness.
 
@@ -658,6 +658,7 @@ Change log
     is 2^29 bits or larger
   * simplified tests by using bytes syntax
   * update smallints and sieve example to use new utility module
+  * use file context managers in tests
 
 
 *1.1.0* (2019-11-07):
