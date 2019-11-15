@@ -56,6 +56,9 @@ tests.append(TestsZeros)
 class TestsHelpers(unittest.TestCase, Util):
 
     def test_rindex(self):
+        self.assertRaises(TypeError, rindex)
+        self.assertRaises(TypeError, rindex, None)
+        self.assertRaises(TypeError, rindex, bitarray(), 1, 2)
         for endian in 'big', 'little':
             a = bitarray('00010110000', endian)
             self.assertEqual(rindex(a), 6)
@@ -64,6 +67,11 @@ class TestsHelpers(unittest.TestCase, Util):
             self.assertEqual(rindex(a, True), 6)
 
             a = bitarray('00010110111', endian)
+            self.assertEqual(rindex(a, 0), 7)
+            self.assertEqual(rindex(a, None), 7)
+            self.assertEqual(rindex(a, False), 7)
+
+            a = frozenbitarray('00010110111', endian)
             self.assertEqual(rindex(a, 0), 7)
             self.assertEqual(rindex(a, None), 7)
             self.assertEqual(rindex(a, False), 7)
@@ -149,6 +157,7 @@ class TestsHelpers(unittest.TestCase, Util):
         b = a.copy()
         self.assertEqual(len(a), 48)
         self.assertEqual(a.count(), 37)
+        self.assertRaises(TypeError, count_n, '', 0)
         self.assertEqual(count_n(a, 0), 0)
         self.assertEqual(count_n(a, 20), 23)
         self.assertEqual(count_n(a, 37), 45)
@@ -161,6 +170,19 @@ class TestsHelpers(unittest.TestCase, Util):
             self.check_result(a, n, i)
             self.assertEqual(a[:i].count(), n)
         self.assertEQUAL(a, b)
+
+    def test_count_n1_frozen(self):
+        a = frozenbitarray('001111101111101111101111100111100')
+        self.assertEqual(len(a), 33)
+        self.assertEqual(a.count(), 24)
+        self.assertRaises(TypeError, count_n, '', 0)
+        self.assertEqual(count_n(a, 0), 0)
+        self.assertEqual(count_n(a, 10), 13)
+        self.assertEqual(count_n(a, 24), 31)
+        self.assertRaises(ValueError, count_n, a, -1) # n < 0
+        self.assertRaises(ValueError, count_n, a, 25) # n > a.count()
+        self.assertRaises(ValueError, count_n, a, 34) # n > len(a)
+        self.assertRaises(TypeError, count_n, a, "7")
 
     def test_count_n2(self):
         for N in list(range(100)) + [1000, 10000, 100000]:
@@ -227,6 +249,13 @@ class TestsBitwiseCount(unittest.TestCase, Util):
                               bitarray('110', 'big'),
                               bitarray('101', 'little'))
 
+    def test_bit_count_frozen(self):
+        a = frozenbitarray('001111')
+        b = frozenbitarray('010011')
+        self.assertEqual(count_and(a, b), 2)
+        self.assertEqual(count_or(a, b), 5)
+        self.assertEqual(count_xor(a, b), 3)
+
     def test_bit_count2(self):
         for n in list(range(50)) + [randint(1000, 2000)]:
             a = bitarray()
@@ -246,7 +275,7 @@ tests.append(TestsBitwiseCount)
 class TestsSubset(unittest.TestCase, Util):
 
     def test_subset(self):
-        a = bitarray('0101')
+        a = frozenbitarray('0101')
         b = bitarray('0111')
         self.assertTrue(subset(a, b))
         self.assertFalse(subset(b, a))
