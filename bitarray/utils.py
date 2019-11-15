@@ -19,7 +19,7 @@ __all__ = ['zeros', 'rindex', 'strip', 'count_n',
            'ba2hex', 'hex2ba', 'ba2int', 'int2ba']
 
 
-is_py2 = bool(sys.version_info[0] == 2)
+_is_py2 = bool(sys.version_info[0] == 2)
 
 
 def zeros(length, endian='big'):
@@ -27,7 +27,7 @@ def zeros(length, endian='big'):
 
 Create a bitarray of length, with all values 0.
 """
-    if not isinstance(length, (int, long) if is_py2 else int):
+    if not isinstance(length, (int, long) if _is_py2 else int):
         raise TypeError("integer expected")
 
     a = bitarray(length, endian)
@@ -132,7 +132,7 @@ The bit-endianness of the bitarray is respected.
     assert a.length() % 8 == 0
     b = a.tobytes()
 
-    if is_py2:
+    if _is_py2:
         c = bytearray(b)
         res = 0
         j = len(c) - 1 if big_endian else 0
@@ -153,7 +153,7 @@ If length is provided, the result will be of this length, and an
 `OverflowError` will be raised, if the integer cannot be represented
 within length bits.
 """
-    if not isinstance(i, (int, long) if is_py2 else int):
+    if not isinstance(i, (int, long) if _is_py2 else int):
         raise TypeError("integer expected")
     if i < 0:
         raise ValueError("non-negative integer expected")
@@ -172,7 +172,7 @@ within length bits.
         return zeros(length or 1, endian=endian)
 
     big_endian = bool(endian == 'big')
-    if is_py2:
+    if _is_py2:
         c = bytearray()
         while i:
             i, r = divmod(i, 256)
