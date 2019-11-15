@@ -3095,15 +3095,6 @@ static PyBufferProcs bitarray_as_buffer = {
 
 #endif  /* WITH_BUFFER */
 
-#if PY_MAJOR_VERSION == 2
-static long
-bitarray_hash(bitarrayobject *self)
-{
-    PyErr_SetString(PyExc_TypeError, "unhashable type");
-    return -1;
-}
-#endif
-
 /************************** Bitarray Type *******************************/
 
 static PyTypeObject Bitarraytype = {
@@ -3126,11 +3117,7 @@ static PyTypeObject Bitarraytype = {
     0,                                        /* tp_as_number*/
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
-#ifdef IS_PY3K
-    0,                                        /* tp_hash */
-#else
-    (hashfunc) bitarray_hash,                 /* tp_hash */
-#endif
+    PyObject_HashNotImplemented,              /* tp_hash */
     0,                                        /* tp_call */
     0,                                        /* tp_str */
     PyObject_GenericGetAttr,                  /* tp_getattro */
