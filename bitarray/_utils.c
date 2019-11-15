@@ -67,12 +67,16 @@ setbit(bitarrayobject *self, idx_t i, int bit)
         *cp &= ~mask;
 }
 
+/* set using the Python module function _set_bbt() */
+PyObject *bitarray_basetype = NULL;
+
 /* return 1 if obj is a bitarray, 0 otherwise */
 static int
 bitarray_Check(PyObject *obj)
 {
-    /* there may be a better way to do this, but for now it is good enough */
-    return PyObject_HasAttrString(obj, "endian");
+    if (bitarray_basetype == NULL) /* fallback */
+        return PyObject_HasAttrString(obj, "endian");
+    return PyObject_IsInstance(obj, bitarray_basetype);
 }
 
 static void
@@ -368,6 +372,13 @@ efficient since we can stop as soon as one mismatch is found, and no\n\
 intermediate bitarray object gets created.");
 
 
+static PyObject *
+set_bbt(PyObject *self, PyObject *obj)
+{
+    bitarray_basetype = obj;
+    Py_RETURN_NONE;
+}
+
 static PyMethodDef module_functions[] = {
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
     {"rindex",    (PyCFunction) r_index,   METH_VARARGS, rindex_doc},
@@ -375,6 +386,7 @@ static PyMethodDef module_functions[] = {
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
     {"subset",    (PyCFunction) subset,    METH_VARARGS, subset_doc},
+    {"_set_bbt",  (PyCFunction) set_bbt,   METH_O,       ""},
     {NULL,        NULL}  /* sentinel */
 };
 
