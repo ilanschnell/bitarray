@@ -1,11 +1,15 @@
 import sys
-if sys.version_info[0] == 2:
-    sys.exit("Sorry, no Python 2 support")
-
 import hashlib
-from math import ceil, expm1, log, log2
+from math import ceil, exp, log
 
 from bitarray import bitarray
+
+if sys.version_info[0] == 2:
+    int = long
+    range = xrange
+    log2 = lambda x: log(x) / log(2)
+else:
+    from math import log2
 
 
 class BloomFilter(object):
@@ -32,13 +36,16 @@ class BloomFilter(object):
         different from the given `p`, because the integer value of `k`
         is being used.
         """
-        return pow(-expm1(-self.k * self.n / self.m), self.k)
+        return pow(1.0 - exp(-float(self.k) * self.n / self.m), self.k)
 
     def approx_items(self):
         """
         Return the approximate number of items in the Bloom filter.
         """
-        return -self.m / self.k * log(1 - self.array.count() / self.m)
+        count = self.array.count()
+        if count == 0:
+            return 0.0
+        return -float(self.m) / self.k * log(1.0 - float(count) / self.m)
 
     def add(self, key):
         for i in self._hashes(key):
@@ -73,12 +80,12 @@ def test_bloom(n, p):
     for i in range(n):
         b.add(i)
         assert i in b
-    print("approx items: %.2f" % b.approx_items())
-    print("calculated   p = %.3f%%" % (100.0 * b.calculate_p()))
+    print("approx_items(): %.2f" % b.approx_items())
+    print("calculate_p(): %.3f%%" % (100.0 * b.calculate_p()))
 
     N = 100000
     false_pos = sum(i in b for i in range(n, n + N))
-    print("experiment   p = %.3f%%\n" % (100.0 * false_pos / N))
+    print("experimental : %.3f%%\n" % (100.0 * false_pos / N))
 
 
 if __name__ == '__main__':
