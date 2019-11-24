@@ -4,23 +4,28 @@ http://en.wikipedia.org/wiki/Bloom_filter
 """
 from __future__ import print_function
 import sys
+import hashlib
+from math import ceil, log
+
+from bitarray import bitarray
 
 if sys.version_info[0] == 2:
     int = long
     range = xrange
 
-import hashlib
-from math import exp
 
-from bitarray import bitarray
 
 
 class BloomFilter(object):
 
-    def __init__(self, m, k):
-        self.m = m  # size of array
-        self.k = k  # number of elements added for each key added
-        self.array = bitarray(m)
+    def __init__(self, n, p=0.01): # n: capacity   p: false positive rate
+        assert 0 < p < 1
+        # number of hash functions
+        k = -log(p) / log(2)
+        self.k = int(ceil(k))
+        # size of array
+        self.m = int(ceil(n * k / log(2)))
+        self.array = bitarray(self.m)
         self.array.setall(0)
 
     def add(self, key):
@@ -46,19 +51,23 @@ class BloomFilter(object):
             yield y
 
 
-def test_bloom(m, k, n): # n elements in filter
-    b = BloomFilter(m, k)
+def test_bloom(n, p):
+    print("Testing Bloom filter:")
+    print("capacity     n = %d" % n)
+    print("error rate   p = %.3f %%" % (100.0 * p))
+    b = BloomFilter(n, p)
+    print("hashes       k = %d" % b.k)
+    print("array size   m = %d" % b.m)
     for i in range(n):
         b.add(i)
         assert i in b
 
-    p = (1.0 - exp(-k * (n + 0.5) / (m - 1))) ** k
-    print("  Expected: %.7f %%" % (100.0 * p))
-
     N = 100000
     false_pos = sum(i in b for i in range(n, n + N))
-    print("Experiment: %.7f %%" % (100.0 * false_pos / N))
+    print("Actual error:    %.3f %%\n" % (100.0 * false_pos / N))
 
 
 if __name__ == '__main__':
-    test_bloom(50000, 6, 5000)
+    test_bloom(5000, 0.001)
+    test_bloom(10000, 0.05)
+    test_bloom(100000, 0.02)
