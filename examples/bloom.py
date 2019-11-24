@@ -39,7 +39,7 @@ class BloomFilter(object):
         h.update(str(key).encode())
         x = int(h.hexdigest(), 16)
         for _unused in range(self.k):
-            if x < self.m:
+            if x < 1024 * self.m:
                 h.update(b'x')
                 x = int(h.hexdigest(), 16)
             x, y = divmod(x, self.m)
