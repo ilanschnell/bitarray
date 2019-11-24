@@ -1,32 +1,44 @@
-"""
-Demonstrates the implementation of a Bloom filter, see:
-http://en.wikipedia.org/wiki/Bloom_filter
-"""
-from __future__ import print_function
 import sys
+if sys.version_info[0] == 2:
+    sys.exit("Sorry, no Python 2 support")
+
 import hashlib
-from math import ceil, log
+from math import ceil, expm1, log, log2
 
 from bitarray import bitarray
 
-if sys.version_info[0] == 2:
-    int = long
-    range = xrange
-
-
-
 
 class BloomFilter(object):
-
-    def __init__(self, n, p=0.01): # n: capacity   p: false positive rate
+    """
+    Implementation of a Bloom filter.  An instance is initialized by
+    it's capacity `n` and error rate `p`.  The capacity tells how many
+    elements can be stored while maintaining no more than `p` false
+    positives.
+    """
+    def __init__(self, n, p=0.01):
         assert 0 < p < 1
+        self.n = n
         # number of hash functions
-        k = -log(p) / log(2)
-        self.k = int(ceil(k))
+        self.k = int(ceil(-log2(p)))
         # size of array
-        self.m = int(ceil(n * k / log(2)))
+        self.m = int(ceil(-n * log2(p) / log(2)))
         self.array = bitarray(self.m)
         self.array.setall(0)
+
+    def calculate_p(self):
+        """
+        Calculate the actual false psitive error rate `p` from the number
+        of hashes `k` and the size if the bitarray `m`.  This is slightly
+        different from the given `p`, because the integer value of `k`
+        is being used.
+        """
+        return pow(-expm1(-self.k * self.n / self.m), self.k)
+
+    def approx_items(self):
+        """
+        Return the approximate number of items in the Bloom filter.
+        """
+        return -self.m / self.k * log(1 - self.array.count() / self.m)
 
     def add(self, key):
         for i in self._hashes(key):
@@ -54,20 +66,23 @@ class BloomFilter(object):
 def test_bloom(n, p):
     print("Testing Bloom filter:")
     print("capacity     n = %d" % n)
-    print("error rate   p = %.3f %%" % (100.0 * p))
+    print("given        p = %.3f%%" % (100.0 * p))
     b = BloomFilter(n, p)
-    print("hashes       k = %d" % b.k)
+    print("hashes       k = %d = ceil(%.3f)" % (b.k, -log2(p)))
     print("array size   m = %d" % b.m)
     for i in range(n):
         b.add(i)
         assert i in b
+    print("approx items: %.2f" % b.approx_items())
+    print("calculated   p = %.3f%%" % (100.0 * b.calculate_p()))
 
     N = 100000
     false_pos = sum(i in b for i in range(n, n + N))
-    print("Actual error:    %.3f %%\n" % (100.0 * false_pos / N))
+    print("experiment   p = %.3f%%\n" % (100.0 * false_pos / N))
 
 
 if __name__ == '__main__':
-    test_bloom(5000, 0.001)
-    test_bloom(10000, 0.05)
-    test_bloom(100000, 0.02)
+    test_bloom(5000, 0.05)
+    test_bloom(10000, 0.01)
+    test_bloom(50000, 0.005)
+    test_bloom(100000, 0.002)
