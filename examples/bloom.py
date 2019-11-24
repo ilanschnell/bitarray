@@ -27,7 +27,7 @@ class BloomFilter(object):
         for i in self._hashes(key):
             self.array[i] = 1
 
-    def contains(self, key):
+    def __contains__(self, key):
         return all(self.array[i] for i in self._hashes(key))
 
     def _hashes(self, key):
@@ -50,13 +50,13 @@ def test_bloom(m, k, n): # n elements in filter
     b = BloomFilter(m, k)
     for i in range(n):
         b.add(i)
-        assert b.contains(i)
+        assert i in b
 
     p = (1.0 - exp(-k * (n + 0.5) / (m - 1))) ** k
     print("  Expected: %.7f %%" % (100.0 * p))
 
     N = 100000
-    false_pos = sum(b.contains(i) for i in range(n, n + N))
+    false_pos = sum(i in b for i in range(n, n + N))
     print("Experiment: %.7f %%" % (100.0 * false_pos / N))
 
 
