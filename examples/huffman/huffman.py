@@ -21,7 +21,7 @@ class Node(object):
         return self.freq < other.freq
 
 
-def huffTree(freq):
+def huff_tree(freq):
     """
     Given a dictionary mapping symbols to thier frequency, construct a Huffman
     tree and return its root node.
@@ -49,7 +49,7 @@ def huffTree(freq):
     return minheap[0]
 
 
-def huffCode(tree):
+def huff_code(tree):
     """
     Given a Huffman tree, traverse the tree and return the Huffman code, i.e.
     a dictionary mapping symbol to bitarrays.
@@ -89,7 +89,7 @@ def insert_symbol(tree, ba, sym):
 def make_tree(codedict):
     """
     Create a tree from the given code dictionary, and return its root node.
-    Unlike trees created by huffTree, all nodes will have .freq set to None.
+    Unlike trees created by huff_tree, all nodes will have .freq set to None.
     """
     tree = Node()
     for sym, ba in codedict.items():
@@ -202,8 +202,8 @@ def print_code(freq, codedict):
 
 def test():
     freq = {'a': 10, 'b': 2, 'c': 1}
-    tree = huffTree(freq)
-    code = huffCode(tree)
+    tree = huff_tree(freq)
+    code = huff_code(tree)
     assert len(code['a']) == 1
     assert len(code['b']) == len(code['c']) == 2
 

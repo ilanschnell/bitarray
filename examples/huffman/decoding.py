@@ -3,7 +3,7 @@ from time import time
 from collections import Counter
 from bitarray import bitarray
 
-from huffman import huffTree, huffCode, write_dot, make_tree, decode
+from huffman import huff_tree, huff_code, write_dot, make_tree, decode
 
 
 def main():
@@ -14,11 +14,11 @@ def main():
     print('count:     %9.6f sec' % (time() - t0))
 
     t0 = time()
-    tree = huffTree(freq)
+    tree = huff_tree(freq)
     print('tree:      %9.6f sec' % (time() - t0))
 
     write_dot(tree, 'tree.dot')
-    code = huffCode(tree)
+    code = huff_code(tree)
     # create tree from code (no frequencies)
     write_dot(make_tree(code), 'tree_raw.dot')
 

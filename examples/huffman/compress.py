@@ -7,7 +7,7 @@ from optparse import OptionParser
 from collections import Counter
 from bitarray import bitarray
 
-from huffman import is_py3k, huffCode, huffTree, print_code, write_dot
+from huffman import is_py3k, huff_code, huff_tree, print_code, write_dot
 
 
 def is_binary(s):
@@ -20,10 +20,10 @@ def analyze(filename, printCode=False, writeDot=False):
         s = fi.read()
 
     freq = Counter(s)
-    tree = huffTree(freq)
+    tree = huff_tree(freq)
     if writeDot:
         write_dot(tree, 'tree.dot', is_binary(s))
-    code = huffCode(tree)
+    code = huff_code(tree)
     if printCode:
         print_code(freq, code)
 
@@ -32,7 +32,7 @@ def encode(filename):
     with open(filename, 'rb') as fi:
         s = fi.read()
 
-    code = huffCode(huffTree(Counter(s)))
+    code = huff_code(huff_tree(Counter(s)))
     with open(filename + '.huff', 'wb') as fo:
         for c in sorted(code):
             fo.write(('%02x %s\n' % (c if is_py3k else ord(c),
