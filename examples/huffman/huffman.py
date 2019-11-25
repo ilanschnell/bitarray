@@ -100,7 +100,7 @@ def make_tree(codedict):
 def traverse(tree, it):
     """
     Traverse tree until a leaf node is reached, and return its symbol.
-    This function takes an iterator on which next() is called during each
+    This function consumes an iterator on which next() is called during each
     step of traversing.
     """
     nd = tree
