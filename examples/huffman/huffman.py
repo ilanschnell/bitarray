@@ -28,10 +28,10 @@ def huff_tree(freq):
     """
     minheap = []
     # create all the leaf nodes and push them onto the queue
-    for c in sorted(freq):
+    for sym in sorted(freq):
         nd = Node()
-        nd.symbol = c
-        nd.freq = freq[c]
+        nd.symbol = sym
+        nd.freq = freq[sym]
         heappush(minheap, nd)
 
     # repeat the process until only one node remains
@@ -52,14 +52,14 @@ def huff_tree(freq):
 def huff_code(tree):
     """
     Given a Huffman tree, traverse the tree and return the Huffman code, i.e.
-    a dictionary mapping symbol to bitarrays.
+    a dictionary mapping symbols to bitarrays.
     """
     result = {}
 
     def traverse(nd, prefix=bitarray()):
         if nd.symbol is None: # parent, so traverse each of the children
-            for i in range(2):
-                traverse(nd.child[i], prefix + bitarray([i]))
+            traverse(nd.child[0], prefix + bitarray([0]))
+            traverse(nd.child[1], prefix + bitarray([1]))
         else: # leaf
             result[nd.symbol] = prefix
 
@@ -72,16 +72,18 @@ def insert_symbol(tree, ba, sym):
     Insert symbol into a tree at the position described by the bitarray,
     creating nodes as necessary.
     """
+    if sym is None:
+        raise ValueError("symbol cannot be None")
     nd = tree
     for k in ba:
         prev = nd
         nd = nd.child[k]
-        if nd and nd.symbol:
+        if nd and nd.symbol is not None:
             raise ValueError("ambiguity")
         if not nd:
             nd = Node()
             prev.child[k] = nd
-    if nd.symbol or nd.child[0] or nd.child[1]:
+    if nd.symbol is not None or nd.child[0] or nd.child[1]:
         raise ValueError("ambiguity")
     nd.symbol = sym
 
@@ -145,10 +147,9 @@ def write_dot(tree, fn, binary=False):
         if binary:
             return 'x%02x' % ord(c)
         else:
-            if special_ascii:
-                res = special_ascii.get(c, c)
-                assert res.strip(), repr(c)
-                return res
+            res = special_ascii.get(c, c)
+            assert res.strip(), repr(c)
+            return res
 
     def disp_freq(f):
         if f is None:
@@ -157,7 +158,7 @@ def write_dot(tree, fn, binary=False):
 
     with open(fn, 'w') as fo:    # dot -Tpng tree.dot -O
         def write_nd(fo, nd):
-            if nd.symbol: # leaf node
+            if nd.symbol is not None: # leaf node
                 a, b = disp_freq(nd.freq), disp_char(nd.symbol)
                 fo.write('  %d  [label="%s%s%s"];\n' %
                          (id(nd), a, ': ' if a and b else '', b))
