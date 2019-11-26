@@ -1,6 +1,5 @@
-# Thanks to David Kammeyer for the idea to apply a bitarray in this way.
 from bitarray import bitarray
-from bitarray.utils import int2ba, ba2int
+from bitarray.util import int2ba, ba2int
 
 
 class SmallIntArray(object):

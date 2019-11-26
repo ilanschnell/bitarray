@@ -10,9 +10,9 @@ import binascii
 
 from bitarray import bitarray, frozenbitarray, bits2bytes, _bitarray
 
-from bitarray._utils import (count_n, rindex,
-                             count_and, count_or, count_xor, subset,
-                             _set_babt)
+from bitarray._util import (count_n, rindex,
+                            count_and, count_or, count_xor, subset,
+                            _set_babt)
 
 
 __all__ = ['zeros', 'rindex', 'strip', 'count_n',
@@ -20,7 +20,7 @@ __all__ = ['zeros', 'rindex', 'strip', 'count_n',
            'ba2hex', 'hex2ba', 'ba2int', 'int2ba']
 
 
-# tell the _utils extension what the bitarray base type is, such that it can
+# tell the _util extension what the bitarray base type is, such that it can
 # check for instances thereof when checking for bitarray type
 _set_babt(_bitarray)
 

@@ -2364,10 +2364,10 @@ tests.append(TestsFrozenbitarray)
 
 def run(verbosity=1, repeat=1):
     try:
-        import bitarray.test_utils as btu
+        import bitarray.test_util as btu
         tests.extend(btu.tests)
     except ImportError:
-        print("WARNING: could not import bitarray.test_utils")
+        print("WARNING: could not import bitarray.test_util")
 
     print('bitarray is installed in: %s' % os.path.dirname(__file__))
     print('bitarray version: %s' % __version__)

@@ -1,5 +1,5 @@
 """
-Tests for utils module
+Tests for bitarray.util module
 """
 import os
 import sys
@@ -10,9 +10,9 @@ from random import choice, randint
 from bitarray import bitarray, frozenbitarray, bits2bytes
 from bitarray.test_bitarray import Util
 
-from bitarray.utils import (zeros, rindex, strip, count_n,
-                            count_and, count_or, count_xor, subset,
-                            ba2hex, hex2ba, ba2int, int2ba)
+from bitarray.util import (zeros, rindex, strip, count_n,
+                           count_and, count_or, count_xor, subset,
+                           ba2hex, hex2ba, ba2int, int2ba)
 
 
 tests = []

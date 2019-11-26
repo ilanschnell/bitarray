@@ -559,7 +559,7 @@ Functions defined in the module:
 > Return the difference between two bitarrays a and b.
 > This is function does the same as (a ^ b).count(), but is more memory
 > efficient, as no intermediate bitarray object gets created.
-> Deprecated since version 1.2.0, use `bitarray.utils.count_xor()` instead.
+> Deprecated since version 1.2.0, use `bitarray.util.count_xor()` instead.
 
 
 `bits2bytes(n, /)` -> int
@@ -567,8 +567,8 @@ Functions defined in the module:
 > Return the number of bytes necessary to store n bits.
 
 
-Functions defined in bitarray.utils:
-------------------------------------
+Functions defined in bitarray.util:
+-----------------------------------
 
 `zeros(length, /, endian='big')` -> bitarray
 
@@ -651,8 +651,8 @@ Change log
 
 2019-XX-XX   1.2.0:
 
-  * add bitarray.utils module which provides useful utility functions
-  * deprecate `bitarray.bitdiff` in favor of `bitarray.utils.count_xor`
+  * add bitarray.util module which provides useful utility functions
+  * deprecate `bitarray.bitdiff` in favor of `bitarray.util.count_xor`
   * use markdown for documentation
   * fix bug in .count() on 32bit systems in special cases when array size
     is 2^29 bits or larger

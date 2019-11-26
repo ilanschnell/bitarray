@@ -8,7 +8,7 @@ if sys.version_info[0] == 2:
     range = xrange
 
 from bitarray import bitarray
-from bitarray.utils import count_n
+from bitarray.util import count_n
 
 
 N = 100 * 1000 * 1000

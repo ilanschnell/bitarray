@@ -395,13 +395,13 @@ static PyMethodDef module_functions[] = {
 
 #ifdef IS_PY3K
 static PyModuleDef moduledef = {
-    PyModuleDef_HEAD_INIT, "_utils", 0, -1, module_functions,
+    PyModuleDef_HEAD_INIT, "_util", 0, -1, module_functions,
 };
 PyMODINIT_FUNC
-PyInit__utils(void)
+PyInit__util(void)
 #else
 PyMODINIT_FUNC
-init_utils(void)
+init_util(void)
 #endif
 {
     PyObject *m;
@@ -411,7 +411,7 @@ init_utils(void)
     if (m == NULL)
         return NULL;
 #else
-    m = Py_InitModule3("_utils", module_functions, 0);
+    m = Py_InitModule3("_util", module_functions, 0);
     if (m == NULL)
         return;
 #endif
