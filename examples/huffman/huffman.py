@@ -185,7 +185,7 @@ def print_code(freq, codedict):
     Given a frequency map (dictionary mapping symbols to thier frequency)
     and a codedict, print them in a readable form.
     """
-    special_ascii = {0: 'NULL', 9: 'TAB', 10: 'LF', 13: 'CR', 127: 'DEL'}
+    special_ascii = {0: 'NUL', 9: 'TAB', 10: 'LF', 13: 'CR', 127: 'DEL'}
     def disp_char(i):
         if 32 <= i < 127:
             return repr(chr(i))
