@@ -6,44 +6,24 @@ import os
 from optparse import OptionParser
 from collections import Counter
 from bitarray import bitarray
-
-from huffman import is_py3k, huff_code, huff_tree, print_code, write_dot
-
-
-def is_binary(s):
-    null = 0 if is_py3k else '\0'
-    return bool(null in s)
-
-
-def analyze(filename, printCode=False, writeDot=False):
-    with open(filename, 'rb') as fi:
-        s = fi.read()
-
-    freq = Counter(s)
-    tree = huff_tree(freq)
-    if writeDot:
-        write_dot(tree, 'tree.dot', is_binary(s))
-    code = huff_code(tree)
-    if printCode:
-        print_code(freq, code)
+from bitarray.util import huffman_code
 
 
 def encode(filename):
     with open(filename, 'rb') as fi:
-        s = fi.read()
+        plain = bytearray(fi.read())
 
-    code = huff_code(huff_tree(Counter(s)))
+    code = huffman_code(Counter(plain))
     with open(filename + '.huff', 'wb') as fo:
-        for c in sorted(code):
-            fo.write(('%02x %s\n' % (c if is_py3k else ord(c),
-                                     code[c].to01())).encode())
+        for sym in sorted(code):
+            fo.write(('%02x %s\n' % (sym, code[sym].to01())).encode())
         a = bitarray(endian='little')
-        a.encode(code, s)
+        a.encode(code, plain)
         # write unused bits
         fo.write(b'unused %s\n' % str(a.buffer_info()[3]).encode())
         a.tofile(fo)
-    print('%d / %d' % (len(a), 8 * len(s)))
-    print('Ratio =%6.2f%%' % (100.0 * a.buffer_info()[1] / len(s)))
+    print('Bits: %d / %d' % (len(a), 8 * len(plain)))
+    print('Ratio =%6.2f%%' % (100.0 * a.buffer_info()[1] / len(plain)))
 
 
 def decode(filename):
@@ -53,35 +33,27 @@ def decode(filename):
     with open(filename, 'rb') as fi:
         while 1:
             line = fi.readline()
-            c, b = line.split()
-            if c == b'unused':
+            sym, b = line.split()
+            if sym == b'unused':
                 u = int(b)
                 break
-            i = int(c, 16)
-            code[i if is_py3k else chr(i)] = bitarray(b)
+            i = int(sym, 16)
+            code[i] = bitarray(b)
         a = bitarray(endian='little')
         a.fromfile(fi)
 
     if u:
         del a[-u:]
 
+    plain = bytearray()
+    for sym in a.iterdecode(code):
+        plain.append(sym)
     with open(filename[:-5] + '.out', 'wb') as fo:
-        for c in a.iterdecode(code):
-            fo.write(chr(c).encode('ISO-8859-1') if is_py3k else c)
+        fo.write(plain)
 
 
 def main():
     p = OptionParser("usage: %prog [options] FILE")
-    p.add_option(
-        '-s', '--show',
-        action="store_true",
-        help="calculate and print the Huffman code for the "
-             "frequency of characters in FILE")
-    p.add_option(
-        '-t', '--tree',
-        action="store_true",
-        help="calculate and the Huffman tree (from the frequency of "
-             "characters in FILE) and write a .dot file")
     p.add_option(
         '-e', '--encode',
         action="store_true",
@@ -94,7 +66,7 @@ def main():
         action="store_true",
         help="decode (decompress) FILE.huff and write the output to FILE.out")
     p.add_option(
-        '--test',
+        '-t', '--test',
         action="store_true",
         help="encode FILE, decode FILE.huff, compare FILE with FILE.out, "
              "and unlink created files.")
@@ -102,9 +74,6 @@ def main():
     if len(args) != 1:
         p.error('exactly one argument required')
     filename = args[0]
-
-    if opts.show or opts.tree:
-        analyze(filename, printCode=opts.show, writeDot=opts.tree)
 
     if opts.encode:
         encode(filename)
