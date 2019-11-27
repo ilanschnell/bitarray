@@ -231,6 +231,13 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(a, bitarray(lst))
             self.check_obj(a)
 
+    def test_iter3(self):
+        a = bitarray(itertools.repeat(False, 10))
+        self.assertEqual(a, bitarray(10 * '0'))
+        # Note that the through value of '0' is True: bool('0') -> True
+        a = bitarray(itertools.repeat('0', 10))
+        self.assertEqual(a, bitarray(10 * '1'))
+
     def test_01(self):
         a = bitarray('0010111')
         self.assertEqual(a.tolist(), [0, 0, 1, 0, 1, 1, 1])
