@@ -34,7 +34,7 @@ Key features
 Installation
 ------------
 
-bitarray can be installed from source:
+Bitarray can be installed from source:
 
     $ tar xzf bitarray-1.2.0.tar.gz
     $ cd bitarray-1.2.0
@@ -47,12 +47,12 @@ Once you have installed the package, you may want to test it:
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
     bitarray version: 1.2.0
-    3.7.4 (r271:86832, Dec 29 2019) [GCC 4.2.1 (SUSE Linux)]
+    3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
     ..............................
     ----------------------------------------------------------------------
-    Ran 190 tests in 1.144s
+    Ran 199 tests in 1.144s
 
     OK
 
