@@ -3,11 +3,8 @@ This library contains useful functionality for working with Huffman trees
 and codes.
 """
 from __future__ import print_function
-import sys
 from heapq import heappush, heappop
 from bitarray import bitarray
-
-is_py3k = bool(sys.version_info[0] == 3)
 
 
 class Node(object):
@@ -141,12 +138,11 @@ def write_dot(tree, fn, binary=False):
     """
     special_ascii = {' ': 'SPACE', '\n': 'LF', '\r': 'CR', '\t': 'TAB',
                      '\\': r'\\', '"': r'\"'}
-    def disp_char(c):
-        if is_py3k and isinstance(c, int):
-            c = chr(c)
+    def disp_sym(i):
         if binary:
-            return 'x%02x' % ord(c)
+            return '0x%02x' % i
         else:
+            c = chr(i)
             res = special_ascii.get(c, c)
             assert res.strip(), repr(c)
             return res
@@ -159,7 +155,7 @@ def write_dot(tree, fn, binary=False):
     with open(fn, 'w') as fo:    # dot -Tpng tree.dot -O
         def write_nd(fo, nd):
             if nd.symbol is not None: # leaf node
-                a, b = disp_freq(nd.freq), disp_char(nd.symbol)
+                a, b = disp_freq(nd.freq), disp_sym(nd.symbol)
                 fo.write('  %d  [label="%s%s%s"];\n' %
                          (id(nd), a, ': ' if a and b else '', b))
             else: # parent node
@@ -194,11 +190,9 @@ def print_code(freq, codedict):
 
     print(' symbol     char    hex   frequency     Huffman code')
     print(70 * '-')
-    for c in sorted(codedict, key=lambda c: (freq[c], c), reverse=True):
-        i = c if is_py3k else ord(c)
+    for i in sorted(codedict, key=lambda c: (freq[c], c), reverse=True):
         print('%7r     %-4s    0x%02x %10i     %s' % (
-            c, disp_char(i),
-            i, freq[c], codedict[c].to01()))
+            i, disp_char(i), i, freq[i], codedict[i].to01()))
 
 
 def test():
