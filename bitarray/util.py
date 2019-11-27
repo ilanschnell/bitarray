@@ -6,6 +6,7 @@
 Useful utilities for working with bitarrays.
 """
 import sys
+import heapq
 import binascii
 
 from bitarray import bitarray, frozenbitarray, bits2bytes, _bitarray
@@ -17,7 +18,7 @@ from bitarray._util import (count_n, rindex,
 
 __all__ = ['zeros', 'rindex', 'strip', 'count_n',
            'count_and', 'count_or', 'count_xor', 'subset',
-           'ba2hex', 'hex2ba', 'ba2int', 'int2ba']
+           'ba2hex', 'hex2ba', 'ba2int', 'int2ba', 'huffman_code']
 
 
 # tell the _util extension what the bitarray base type is, such that it can
@@ -212,3 +213,62 @@ within length bits.
 
     assert a.length() == length
     return a
+
+
+def huffman_code(freq_map, endian='big'):
+    """huffman_code(dict, /, endian='big') -> dict
+
+Given a frequency map, a dictionary mapping symbols to thier frequency,
+calculate the Huffman code, i.e. a dict mapping those symbols to
+bitarrays (with given endianness).  Note that the symbols may be any
+hashable object (including None).
+"""
+    if not isinstance(freq_map, dict):
+        raise TypeError("dict expected")
+    if len(freq_map) == 0:
+        raise ValueError("non-empty dict expected")
+
+    class Node(object):
+        # a Node object will have either .symbol or .child set below,
+        # .freq will always be set
+        def __lt__(self, other):
+            # heapq needs to be able to compare the nodes
+            return self.freq < other.freq
+
+    def huff_tree(freq_map):
+        # given a dictionary mapping symbols to thier frequency,
+        # construct a Huffman tree and return its root node
+
+        minheap = []
+        # create all the leaf nodes and push them onto the queue
+        for sym, f in freq_map.items():
+            nd = Node()
+            nd.symbol = sym
+            nd.freq = f
+            heapq.heappush(minheap, nd)
+
+        # repeat the process until only one node remains
+        while len(minheap) > 1:
+            # take the nodes with smallest frequencies from the queue
+            child_0 = heapq.heappop(minheap)
+            child_1 = heapq.heappop(minheap)
+            # construct the new internal node and push it onto the queue
+            parent = Node()
+            parent.child = [child_0, child_1]
+            parent.freq = child_0.freq + child_1.freq
+            heapq.heappush(minheap, parent)
+
+        # the single remaining node is the root of the Huffman tree
+        return minheap[0]
+
+    result = {}
+
+    def traverse(nd, prefix=bitarray(endian=endian)):
+        if hasattr(nd, 'symbol'):  # leaf
+            result[nd.symbol] = prefix
+        else:  # parent, so traverse each of the children
+            traverse(nd.child[0], prefix + bitarray([0]))
+            traverse(nd.child[1], prefix + bitarray([1]))
+
+    traverse(huff_tree(freq_map))
+    return result

@@ -6,13 +6,17 @@ import sys
 import unittest
 from string import hexdigits
 from random import choice, randint
+try:
+    from collections import Counter
+except ImportError:
+    pass
 
 from bitarray import bitarray, frozenbitarray, bits2bytes
 from bitarray.test_bitarray import Util
 
 from bitarray.util import (zeros, rindex, strip, count_n,
                            count_and, count_or, count_xor, subset,
-                           ba2hex, hex2ba, ba2int, int2ba)
+                           ba2hex, hex2ba, ba2int, int2ba, huffman_code)
 
 
 tests = []
@@ -488,6 +492,81 @@ class TestsIntegerization(unittest.TestCase, Util):
 
 
 tests.append(TestsIntegerization)
+
+# ---------------------------------------------------------------------------
+
+class TestsHuffman(unittest.TestCase):
+
+    def test_simple(self):
+        freq = {0: 10, 'as': 2, None: 1.6}
+        code = huffman_code(freq)
+        self.assertEqual(len(code), 3)
+        self.assertEqual(len(code[0]), 1)
+        self.assertEqual(len(code['as']), 2)
+        self.assertEqual(len(code[None]), 2)
+
+    def test_tiny(self):
+        code = huffman_code({0: 0})
+        self.assertEqual(len(code), 1)
+        self.assertEqual(code, {0: bitarray()})
+
+        code = huffman_code({0: 0, 1: 0})
+        self.assertEqual(len(code), 2)
+        for i in range(2):
+            self.assertEqual(len(code[i]), 1)
+
+    def test_endianness(self):
+        freq = {'A': 10, 'B': 2, 'C': 5}
+        for endian in 'big', 'little':
+            code = huffman_code(freq, endian)
+            self.assertEqual(len(code), 3)
+            for v in code.values():
+                self.assertEqual(v.endian(), endian)
+
+    def test_wrong_arg(self):
+        self.assertRaises(TypeError, huffman_code, [('a', 1)])
+        self.assertRaises(TypeError, huffman_code, 123)
+        self.assertRaises(TypeError, huffman_code, None)
+        # cannot compare 'a' with 1
+        self.assertRaises(TypeError, huffman_code, {'A': 'a', 'B': 1})
+        self.assertRaises(ValueError, huffman_code, {})
+
+    def test_balanced(self):
+        n = 6
+        freq = {}
+        for i in range(2 ** n):
+            freq[i] = 1
+        code = huffman_code(freq)
+        self.assertEqual(len(code), 2 ** n)
+        self.assertTrue(all(len(v) == n for v in code.values()))
+
+    def test_unbalanced(self):
+        N = 27
+        freq = {}
+        for i in range(N):
+            freq[i] = 2 ** i
+        code = huffman_code(freq)
+        self.assertEqual(len(code), N)
+        for i in range(N):
+            self.assertEqual(len(code[i]), N - (1 if i <= 1 else i))
+
+    if sys.version_info[:2] >= (2, 7):
+        def test_counter(self):
+            message = 'the quick brown fox jumps over the lazy dog.'
+            code = huffman_code(Counter(message))
+            a = bitarray()
+            a.encode(code, message)
+            self.assertEqual(''.join(a.decode(code)), message)
+
+        def test_rand_list(self):
+            plain = [randint(0, 100) for _ in range(500)]
+            code = huffman_code(Counter(plain))
+            a = bitarray()
+            a.encode(code, plain)
+            self.assertEqual(a.decode(code), plain)
+
+
+tests.append(TestsHuffman)
 
 # ---------------------------------------------------------------------------
 
