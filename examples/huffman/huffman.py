@@ -1,6 +1,10 @@
 """
 This library contains useful functionality for working with Huffman trees
 and codes.
+
+Note:
+    There is function for directly creating a Huffman code from a frequency
+    map: bitarray.util.huffman_code()
 """
 from __future__ import print_function
 from heapq import heappush, heappop
@@ -34,12 +38,12 @@ def huff_tree(freq):
     # repeat the process until only one node remains
     while len(minheap) > 1:
         # take the nodes with smallest frequencies from the queue
-        childR = heappop(minheap)
-        childL = heappop(minheap)
+        child_0 = heappop(minheap)
+        child_1 = heappop(minheap)
         # construct the new internal node and push it onto the queue
         parent = Node()
-        parent.child = [childL, childR]
-        parent.freq = childL.freq + childR.freq
+        parent.child = [child_0, child_1]
+        parent.freq = child_0.freq + child_1.freq
         heappush(minheap, parent)
 
     # return the one remaining node, which is the root of the Huffman tree
@@ -117,18 +121,15 @@ def traverse(tree, it):
 
 def decode(tree, bitsequence):
     """
-    Given a tree and a bitsequence, decode the bitsequence and return a
-    list of symbols.
+    Given a tree and a bitsequence, decode the bitsequence and generate
+    the symbols.
     """
-    res = []
     it = iter(bitsequence)
     while True:
         try:
-            r = traverse(tree, it)
+            yield traverse(tree, it)
         except StopIteration:
             break
-        res.append(r)
-    return res
 
 
 def write_dot(tree, fn, binary=False):
@@ -210,7 +211,7 @@ def test():
     a = bitarray()
     a.encode(code, txt)
     assert a == bitarray('010110')
-    assert decode(tree, a) == ['a', 'b', 'c', 'a']
+    assert list(decode(tree, a)) == ['a', 'b', 'c', 'a']
 
 
 if __name__ == '__main__':

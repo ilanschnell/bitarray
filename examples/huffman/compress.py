@@ -45,11 +45,8 @@ def decode(filename):
     if u:
         del a[-u:]
 
-    plain = bytearray()
-    for sym in a.iterdecode(code):
-        plain.append(sym)
     with open(filename[:-5] + '.out', 'wb') as fo:
-        fo.write(plain)
+        fo.write(bytearray(a.iterdecode(code)))
 
 
 def main():

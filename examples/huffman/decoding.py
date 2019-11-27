@@ -57,17 +57,17 @@ def main():
 
     # Time the decode function above
     t0 = time()
-    res = decode(tree, a)
+    res = bytearray(decode(tree, a))
     Py_time = time() - t0
     print('Py decode: %9.6f sec' % Py_time)
-    assert bytearray(res) == plain
+    assert res == plain
 
     # Time the decode method which is implemented in C
     t0 = time()
-    res = a.decode(code)
+    res = bytearray(a.iterdecode(code))
     C_time = time() - t0
     print('C decode:  %9.6f sec' % C_time)
-    assert bytearray(res) == plain
+    assert res == plain
 
     print('Ratio: %f' % (Py_time / C_time))
 
