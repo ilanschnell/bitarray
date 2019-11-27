@@ -5,7 +5,7 @@ from collections import Counter
 from bitarray import bitarray
 
 from huffman import (huff_tree, huff_code, write_dot, print_code,
-                     make_tree, decode)
+                     make_tree, iterdecode)
 
 
 def main():
@@ -57,7 +57,7 @@ def main():
 
     # Time the decode function above
     t0 = time()
-    res = bytearray(decode(tree, a))
+    res = bytearray(iterdecode(tree, a))
     Py_time = time() - t0
     print('Py decode: %9.6f sec' % Py_time)
     assert res == plain

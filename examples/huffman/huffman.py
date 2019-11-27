@@ -111,15 +111,13 @@ def traverse(tree, it):
         nd = nd.child[next(it)]
         if not nd:
             raise ValueError("prefix code does not match data in bitarray")
-            return None
         if nd.symbol is not None:
             return nd.symbol
     if nd != tree:
         raise ValueError("decoding not terminated")
-        return None
 
 
-def decode(tree, bitsequence):
+def iterdecode(tree, bitsequence):
     """
     Given a tree and a bitsequence, decode the bitsequence and generate
     the symbols.
@@ -211,7 +209,7 @@ def test():
     a = bitarray()
     a.encode(code, txt)
     assert a == bitarray('010110')
-    assert list(decode(tree, a)) == ['a', 'b', 'c', 'a']
+    assert list(iterdecode(tree, a)) == ['a', 'b', 'c', 'a']
 
 
 if __name__ == '__main__':
