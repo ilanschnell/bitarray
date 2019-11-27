@@ -651,7 +651,7 @@ Functions defined in bitarray.util:
 > Given a frequency map, a dictionary mapping symbols to thier frequency,
 > calculate the Huffman code, i.e. a dict mapping those symbols to
 > bitarrays (with given endianness).  Note that the symbols may be any
-> hashable object (including None).
+> hashable object (including `None`).
 
 
 Change log
