@@ -19,12 +19,11 @@ huffman
 
 
 mandel.py
-    Generates a .ppm image file of size 8000 x 6000 of the Mandelbrot set.
+    Generates a .ppm image file of size 4000 x 3000 of the Mandelbrot set.
     Despite its size, the output image file has only a size of slightly
-    over 6 Million bytes (uncompressed) because each pixel is stored in
+    over 1.5 Million bytes (uncompressed) because each pixel is stored in
     one bit.
-    Requires numpy and scipy (see http://scipy.org/).
-    Not supported by Python 3.x.
+    Requires a working gcc compiler on Unix.
 
 
 ndarray.py
