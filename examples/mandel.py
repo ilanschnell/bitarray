@@ -1,94 +1,71 @@
-# does not work with Python 3, because weave is not yet supported
-
-import hashlib
-
+import os
+import sys
+import ctypes
+from subprocess import call
 from bitarray import bitarray
 
-import numpy
-from scipy import weave
+width, height = 4000, 3000
 
 
-support_code = '''
-#define D 501
+def compile_mandel():
+    c_file = 'tmp.c'
+    o_file = 'tmp.o'
+    so_file = 'tmp.so'
 
-int color(double cr, double ci)
+    with open(c_file, 'w') as fo:
+        fo.write('''
+#define D 1001
+int mandel(double cr, double ci)
 {
     int d = 1;
-    double zr=cr, zi=ci, zr2, zi2;
-    for(;;) {
+    double zr = cr, zi = ci, zr2, zi2;
+    while (1) {
         zr2 = zr * zr;
         zi2 = zi * zi;
-        if( zr2+zi2 > 16.0 ) goto finish;
-        if( ++d == D ) goto finish;
+        if (zr2+zi2 > 16.0)
+            break;
+        if (++d == D)
+            break;
         zi = 2.0 * zr * zi + ci;
         zr = zr2 - zi2 + cr;
     }
- finish:
-    return d % 2;
+    return d;
 }
+''')
+    call(['gcc', '-c', '-O3', '-fpic', c_file])
+    call(['gcc', '-shared', '-o', so_file, o_file])
+    os.unlink(c_file)
+    os.unlink(o_file)
 
-static void
-PyUFunc_0(char **args, npy_intp *dimensions, npy_intp *steps, void *func)
-{
-    npy_intp i, n;
-    npy_intp is0 = steps[0];
-    npy_intp is1 = steps[1];
-    npy_intp os = steps[2];
-    char *ip0 = args[0];
-    char *ip1 = args[1];
-    char *op = args[2];
-    n = dimensions[0];
+    sobj = ctypes.CDLL(so_file)
+    f = sobj.mandel
+    f.argtypes = [ctypes.c_double, ctypes.c_double]
+    f.restype = ctypes.c_int
+    os.unlink(so_file)
+    return f
 
-    for(i = 0; i < n; i++) {
-        *(long *)op = color(*(double *)ip0, *(double *)ip1);
-        ip0 += is0;
-        ip1 += is1;
-        op += os;
-    }
-}
 
-static PyUFuncGenericFunction f_functions[] = {
-    PyUFunc_0,
-};
-static char f_types[] = {
-    NPY_DOUBLE, NPY_DOUBLE, NPY_BOOL,
-};
-'''
-ufunc_info = weave.base_info.custom_info()
-ufunc_info.add_header('"numpy/ufuncobject.h"')
+def main():
+    mandel = compile_mandel()
 
-mandel = weave.inline('/* ' + hashlib.md5(support_code).hexdigest() + ''' */
-import_ufunc();
+    data = bitarray(endian='big')
 
-return_val = PyUFunc_FromFuncAndData(f_functions,
-                                     NULL,
-                                     f_types,
-                                     1,             /* ntypes */
-                                     2,             /* nin */
-                                     1,             /* nout */
-                                     PyUFunc_None,  /* identity */
-                                     "mandel",      /* name */
-                                     "doc",         /* doc */
-                                     0);
-''',
-                      support_code=support_code,
-                      verbose=0,
-                      customize=ufunc_info)
+    for j in range(height):
+        sys.stdout.write('.')
+        sys.stdout.flush()
+        y = +1.5 - 3.0 * j / height
+        for i in range(width):
+            x = -2.75 + 4.0 * i / width
+            c = mandel(x, y) % 2
+            data.append(c)
+    print("done")
 
-# ----------------------------------------------------------------------------
+    with open('mandel.ppm', 'wb') as fo:
+        fo.write(b'P4\n')
+        fo.write(b'# partable bitmap image of the Mandelbrot set\n')
+        fo.write(b'%i %i\n' % (width, height))
+        data.tofile(fo)
 
-w, h = 8000, 6000
 
-y, x = numpy.ogrid[-1.5:+1.5:h*1j, -2.75:+1.25:w*1j]
-
-data = mandel(x, y)
-
-bitdata = bitarray(endian='big')
-bitdata.pack(data.tostring())
-
-fo = open('mandel.ppm', 'wb')
-fo.write('P4\n')
-fo.write('# This is a partable bitmap image of the Mandelbrot set.\n')
-fo.write('%i %i\n' % (w, h))
-bitdata.tofile(fo)
-fo.close()
+if __name__ == '__main__':
+    main()
