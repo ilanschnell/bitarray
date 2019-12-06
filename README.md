@@ -657,7 +657,7 @@ Functions defined in bitarray.util:
 Change log
 ----------
 
-2019-XX-XX   1.2.0:
+*1.2.0* (2019-12-06):
 
   * add bitarray.util module which provides useful utility functions
   * deprecate `bitarray.bitdiff` in favor of `bitarray.util.count_xor`
@@ -666,6 +666,7 @@ Change log
     is 2^29 bits or larger
   * simplified tests by using bytes syntax
   * update smallints and sieve example to use new utility module
+  * simplified mandel example to use numba
   * use file context managers in tests
 
 
@@ -686,18 +687,6 @@ Change log
 *1.0.1* (2019-07-19):
 
   * fix readme to pass `twine check`
-
-
-*1.0.0* (2019-07-15):
-
-  * fix bitarrays beings created from unicode in Python 2
-  * use `PyBytes_*` in C code, treating the Py3k function names as default,
-    which also removes all redefinitions of `PyString_*`
-  * handle negative arguments of .index() method consistently with how
-    they are treated for lists
-  * add a few more comments to the C code
-  * move imports outside tests: pickle, io, etc.
-  * drop Python 2.5 support
 
 
 Please find the complete change log
