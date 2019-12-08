@@ -2320,8 +2320,9 @@ make_tree(PyObject *codedict)
 
 /*
   Traverse tree using the branches corresponding to the bitarray `ba`,
-  starting at *indexp, and return the symbol at the leaf node (or NULL
-  when the end of the bitarray has been reached).
+  starting at *indexp.  Return the symbol at the leaf node, or NULL
+  when the end of the bitarray has been reached, or on error (in which
+  case the appropriate PyErr_SetString is set.
 */
 static PyObject *
 traverse_tree(binode *tree, bitarrayobject *ba, idx_t *indexp)
