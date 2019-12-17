@@ -660,6 +660,8 @@ Change log
 2019-XX-XX   1.2.1:
 
   * simplify markdown of readme so PyPI renders better
+  * make tests for bitarray.util required (instead of warning when
+    they cannot be imported)
 
 
 *1.2.0* (2019-12-06):
