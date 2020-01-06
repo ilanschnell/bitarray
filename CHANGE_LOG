@@ -1,4 +1,4 @@
-2019-XX-XX   1.2.1:
+2020-01-06   1.2.1:
 -------------------
   * simplify markdown of readme so PyPI renders better
   * make tests for bitarray.util required (instead of warning when
