@@ -10,7 +10,7 @@ Author: Ilan Schnell
 """
 from bitarray._bitarray import _bitarray, bitdiff, bits2bytes, _sysinfo
 
-__version__ = '1.2.1'
+__version__ = '1.2.2'
 
 
 class bitarray(_bitarray):
