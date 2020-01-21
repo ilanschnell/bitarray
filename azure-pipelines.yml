@@ -1,0 +1,117 @@
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+stages:
+  - stage: test
+    displayName: Unit Test
+    jobs:
+      - job:
+        displayName: Linux Unit Tests
+        pool:
+          vmImage: 'ubuntu-latest'
+
+        strategy:
+          matrix:
+            Python27:
+              python.version: '2.7'
+            Python35:
+              python.version: '3.5'
+            Python36:
+              python.version: '3.6'
+            Python37:
+              python.version: '3.7'
+            Python38:
+              python.version: '3.8'
+
+        steps:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '$(python.version)'
+          displayName: 'Use Python $(python.version)'
+
+        - script: |
+            python -m pip install --upgrade pip
+            pip install -U wheel setuptools
+            pip install -U pytest pytest-azurepipelines
+          displayName: 'Install Dependencies'
+
+        - script: |
+            pip install -e .
+          displayName: 'Install Package'
+
+        - script: |
+            pytest
+          displayName: 'pytest'
+
+
+  - stage: package
+    displayName: Build Wheel Packages
+    dependsOn: []
+    variables:
+      CIBW_TEST_COMMAND: 'python -c "import bitarray; bitarray.test()"'
+    jobs:
+    - job: linux
+      pool: {vmImage: 'Ubuntu-16.04'}
+      steps:
+        - task: UsePythonVersion@0
+        - bash: |
+            python -m pip install --upgrade pip
+            pip install cibuildwheel==1.1.0
+            cibuildwheel --output-dir wheelhouse .
+        - task: PublishBuildArtifacts@1
+          inputs: {pathtoPublish: 'wheelhouse'}
+    - job: macos
+      pool: {vmImage: 'macOS-10.13'}
+      steps:
+        - task: UsePythonVersion@0
+        - bash: |
+            python -m pip install --upgrade pip
+            pip install cibuildwheel==1.1.0
+            cibuildwheel --output-dir wheelhouse .
+        - task: PublishBuildArtifacts@1
+          inputs: {pathtoPublish: 'wheelhouse'}
+    - job: windows
+      pool: {vmImage: 'vs2017-win2016'}
+      steps:
+        - {task: UsePythonVersion@0, inputs: {versionSpec: '2.7', architecture: x86}}
+        - {task: UsePythonVersion@0, inputs: {versionSpec: '2.7', architecture: x64}}
+        - {task: UsePythonVersion@0, inputs: {versionSpec: '3.5', architecture: x86}}
+        - {task: UsePythonVersion@0, inputs: {versionSpec: '3.5', architecture: x64}}
+        - {task: UsePythonVersion@0, inputs: {versionSpec: '3.6', architecture: x86}}
+        - {task: UsePythonVersion@0, inputs: {versionSpec: '3.6', architecture: x64}}
+        - {task: UsePythonVersion@0, inputs: {versionSpec: '3.7', architecture: x86}}
+        - {task: UsePythonVersion@0, inputs: {versionSpec: '3.7', architecture: x64}}
+        - {task: UsePythonVersion@0, inputs: {versionSpec: '3.8', architecture: x86}}
+        - {task: UsePythonVersion@0, inputs: {versionSpec: '3.8', architecture: x64}}
+        - script: choco install vcpython27 -f -y
+          displayName: Install Visual C++ for Python 2.7
+        - bash: |
+            python -m pip install --upgrade pip
+            pip install cibuildwheel==1.1.0
+            cibuildwheel --output-dir wheelhouse .
+        - task: PublishBuildArtifacts@1
+          inputs: {pathtoPublish: 'wheelhouse'}
+
+  - stage: publish
+    displayName: Publish to test feed
+    dependsOn: ['package']
+    jobs:
+    - job:
+      pool:
+        vmImage: 'ubuntu-latest'
+      variables:
+        # the name of an Azure artifacts feed to publish artifacts to
+        artifactFeed: bitarray
+      steps:
+        - {task: UsePythonVersion@0, inputs: {versionSpec: '3.8', architecture: x64}}
+        - script: 'pip install twine'
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            artifactName: 'drop'
+            patterns: '**/*.whl'
+            path: $(Pipeline.Workspace)/dist
+        - script: 'python setup.py sdist -d $(Pipeline.Workspace)/dist'
+
+        - task: TwineAuthenticate@1
+          inputs:
+            artifactFeed: $(artifactFeed)
+        - script: 'twine upload -r $(artifactFeed) --config-file $(PYPIRC_PATH) $(Pipeline.Workspace)/dist/* --skip-existing'

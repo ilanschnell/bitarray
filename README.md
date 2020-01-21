@@ -1,3 +1,8 @@
+[![Build Status](https://dev.azure.com/hardbyte/bitarray/_apis/build/status/hardbyte.bitarray?branchName=master)](https://dev.azure.com/hardbyte/bitarray/_build/latest?definitionId=1&branchName=master)
+
+*This is a fork of [ilanschnell/bitarray](https://github.com/ilanschnell/bitarray)
+with CI testing and pre-built wheels.*
+
 bitarray: efficient arrays of booleans
 ======================================
 
@@ -34,7 +39,12 @@ Key features
 Installation
 ------------
 
-Bitarray can be installed from source:
+`bitarray` can be installed from PyPi:
+
+    pip install bitarray-hardbyte
+
+
+Alternatively `bitarray` can be installed from source:
 
     $ tar xzf bitarray-1.2.1.tar.gz
     $ cd bitarray-1.2.1
