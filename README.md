@@ -667,7 +667,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2019-XX-XX   1.2.1:
+*1.2.1* (2020-01-06):
 
   * simplify markdown of readme so PyPI renders better
   * make tests for bitarray.util required (instead of warning when
@@ -699,11 +699,6 @@ Change log
   * update documentation to use positional-only syntax in docstrings
   * update readme to pass Python 3 doctest
   * add utils module to examples
-
-
-*1.0.1* (2019-07-19):
-
-  * fix readme to pass `twine check`
 
 
 Please find the complete change log
