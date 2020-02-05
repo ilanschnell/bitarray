@@ -48,11 +48,13 @@ stages:
     dependsOn: []
     variables:
       CIBW_TEST_COMMAND: 'python -c "import bitarray; bitarray.test()"'
+      CIBW_BUILD: '*'
     jobs:
     - job: linux
-      pool: {vmImage: 'Ubuntu-16.04'}
+      pool: {vmImage: 'ubuntu-latest'}
       steps:
-        - task: UsePythonVersion@0
+        - {task: UsePythonVersion@0, inputs: {versionSpec: '3.7', architecture: x64}}
+        - {task: UsePythonVersion@0, inputs: {versionSpec: '3.8', architecture: x64}}
         - bash: |
             python -m pip install --upgrade pip
             pip install cibuildwheel==1.1.0
