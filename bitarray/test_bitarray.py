@@ -30,7 +30,7 @@ else:
 
 
 from bitarray import (bitarray, frozenbitarray,
-                      bitdiff, bits2bytes, __version__)
+                      bitdiff, bits2bytes, _sysinfo, __version__)
 
 
 tests = []
@@ -735,7 +735,7 @@ class MiscTests(unittest.TestCase, Util):
                 self.assertEQUAL(a, b)
 
     def test_overflow(self):
-        if tuple.__itemsize__ == 8:
+        if _sysinfo()[0] == 8:
             return
 
         self.assertRaises(OverflowError, bitarray.__new__,
