@@ -7,7 +7,7 @@ from __future__ import print_function
 import bitarray
 import numpy
 
-a = bitarray.bitarray('100011001001')
+a = bitarray.bitarray("100011001001")
 print(a)
 
 # bitarray  ->  ndarray

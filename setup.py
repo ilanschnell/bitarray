@@ -5,23 +5,23 @@ from distutils.core import setup, Extension
 
 kwds = {}
 try:
-    kwds['long_description'] = open('README.md').read()
+    kwds["long_description"] = open("README.md").read()
 except IOError:
     pass
 
 # Read version from bitarray/__init__.py
-pat = re.compile(r'__version__\s*=\s*(\S+)', re.M)
-data = open(join('bitarray', '__init__.py')).read()
-kwds['version'] = eval(pat.search(data).group(1))
+pat = re.compile(r"__version__\s*=\s*(\S+)", re.M)
+data = open(join("bitarray", "__init__.py")).read()
+kwds["version"] = eval(pat.search(data).group(1))
 
 
 setup(
-    name = "bitarray",
-    author = "Ilan Schnell",
-    author_email = "ilanschnell@gmail.com",
-    url = "https://github.com/ilanschnell/bitarray",
-    license = "PSF",
-    classifiers = [
+    name="bitarray",
+    author="Ilan Schnell",
+    author_email="ilanschnell@gmail.com",
+    url="https://github.com/ilanschnell/bitarray",
+    license="PSF",
+    classifiers=[
         "License :: OSI Approved :: Python Software Foundation License",
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
@@ -39,11 +39,11 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Topic :: Utilities",
     ],
-    description = "efficient arrays of booleans -- C extension",
-    packages = ["bitarray"],
-    ext_modules = [Extension(name = "bitarray._bitarray",
-                             sources = ["bitarray/_bitarray.c"]),
-                   Extension(name = "bitarray._util",
-                             sources = ["bitarray/_util.c"])],
+    description="efficient arrays of booleans -- C extension",
+    packages=["bitarray"],
+    ext_modules=[
+        Extension(name="bitarray._bitarray", sources=["bitarray/_bitarray.c"]),
+        Extension(name="bitarray._util", sources=["bitarray/_util.c"]),
+    ],
     **kwds
 )

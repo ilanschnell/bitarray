@@ -19,6 +19,7 @@ class BloomFilter(object):
     elements can be stored while maintaining no more than `p` false
     positives.
     """
+
     def __init__(self, n, p=0.01):
         assert 0 < p < 1
         self.n = n
@@ -59,12 +60,12 @@ class BloomFilter(object):
         generate k different hashes, each of which maps a key to one of
         the m array positions with a uniform random distribution
         """
-        h = hashlib.new('md5')
+        h = hashlib.new("md5")
         h.update(str(key).encode())
         x = int(h.hexdigest(), 16)
         for _unused in range(self.k):
             if x < 1024 * self.m:
-                h.update(b'x')
+                h.update(b"x")
                 x = int(h.hexdigest(), 16)
             x, y = divmod(x, self.m)
             yield y
@@ -88,7 +89,7 @@ def test_bloom(n, p):
     print("experimental : %.3f%%\n" % (100.0 * false_pos / N))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_bloom(5000, 0.05)
     test_bloom(10000, 0.01)
     test_bloom(50000, 0.005)

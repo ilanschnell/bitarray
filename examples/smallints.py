@@ -10,6 +10,7 @@ class SmallIntArray(object):
     allowing each element in the array to take values form 0 to 31,
     while the size of the object is 625 (5000/8) bytes.
     """
+
     def __init__(self, N, k):
         self.N = N  # number of integers
         self.k = k  # bits for each integer
@@ -26,13 +27,13 @@ class SmallIntArray(object):
         self.array[self.slice_i(i)] = int2ba(v, self.k)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from random import randint
 
     # define array with 1000 integers, each represented by 5 bits
     a = SmallIntArray(1000, 5)
 
-    b = [] # store values, for assertion below
+    b = []  # store values, for assertion below
     for i in range(1000):
         v = randint(0, 31)
         b.append(v)

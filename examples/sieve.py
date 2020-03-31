@@ -4,6 +4,7 @@ finding all prime numbers up to any given limit.
 """
 from __future__ import print_function
 import sys
+
 if sys.version_info[0] == 2:
     range = xrange
 
@@ -21,15 +22,15 @@ a[:2] = False
 # Perform sieve
 for i in range(2, int(N ** 0.5) + 1):
     if a[i]:  # i is prime
-        a[i*i::i] = False
+        a[i * i :: i] = False
 
-print('the first few primes are:')
+print("the first few primes are:")
 for i in range(30):
     if a[i]:
         print(i)
 
 # There are 5,761,455 primes up to 100 million
-print('there are %d primes up to %d' % (a.count(), N))
+print("there are %d primes up to %d" % (a.count(), N))
 m = 1000 * 1000
 # The 1 millionth prime number is 15,485,863
-print('the %dth prime is %d' % (m, count_n(a, m) - 1))
+print("the %dth prime is %d" % (m, count_n(a, m) - 1))

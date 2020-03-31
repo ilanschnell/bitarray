@@ -58,10 +58,10 @@ def huff_code(tree):
     result = {}
 
     def traverse(nd, prefix=bitarray()):
-        if nd.symbol is None: # parent, so traverse each of the children
+        if nd.symbol is None:  # parent, so traverse each of the children
             traverse(nd.child[0], prefix + bitarray([0]))
             traverse(nd.child[1], prefix + bitarray([1]))
-        else: # leaf
+        else:  # leaf
             result[nd.symbol] = prefix
 
     traverse(tree)
@@ -135,11 +135,18 @@ def write_dot(tree, fn, binary=False):
     Given a tree (which may or may not contain frequencies), write
     a graphviz '.dot' file with a visual representation of the tree.
     """
-    special_ascii = {' ': 'SPACE', '\n': 'LF', '\r': 'CR', '\t': 'TAB',
-                     '\\': r'\\', '"': r'\"'}
+    special_ascii = {
+        " ": "SPACE",
+        "\n": "LF",
+        "\r": "CR",
+        "\t": "TAB",
+        "\\": r"\\",
+        '"': r"\"",
+    }
+
     def disp_sym(i):
         if binary:
-            return '0x%02x' % i
+            return "0x%02x" % i
         else:
             c = chr(i)
             res = special_ascii.get(c, c)
@@ -148,32 +155,36 @@ def write_dot(tree, fn, binary=False):
 
     def disp_freq(f):
         if f is None:
-            return ''
-        return '%d' % f
+            return ""
+        return "%d" % f
 
-    with open(fn, 'w') as fo:    # dot -Tpng tree.dot -O
+    with open(fn, "w") as fo:  # dot -Tpng tree.dot -O
+
         def write_nd(fo, nd):
-            if nd.symbol is not None: # leaf node
+            if nd.symbol is not None:  # leaf node
                 a, b = disp_freq(nd.freq), disp_sym(nd.symbol)
-                fo.write('  %d  [label="%s%s%s"];\n' %
-                         (id(nd), a, ': ' if a and b else '', b))
-            else: # parent node
-                fo.write('  %d  [shape=circle, style=filled, '
-                         'fillcolor=grey, label="%s"];\n' %
-                         (id(nd), disp_freq(nd.freq)))
+                fo.write(
+                    '  %d  [label="%s%s%s"];\n'
+                    % (id(nd), a, ": " if a and b else "", b)
+                )
+            else:  # parent node
+                fo.write(
+                    "  %d  [shape=circle, style=filled, "
+                    'fillcolor=grey, label="%s"];\n' % (id(nd), disp_freq(nd.freq))
+                )
 
             for k in range(2):
                 if nd.child[k]:
-                    fo.write('  %d->%d;\n' % (id(nd), id(nd.child[k])))
+                    fo.write("  %d->%d;\n" % (id(nd), id(nd.child[k])))
 
             for k in range(2):
                 if nd.child[k]:
                     write_nd(fo, nd.child[k])
 
-        fo.write('digraph BT {\n')
+        fo.write("digraph BT {\n")
         fo.write('  node [shape=box, fontsize=20, fontname="Arial"];\n')
         write_nd(fo, tree)
-        fo.write('}\n')
+        fo.write("}\n")
 
 
 def print_code(freq, codedict):
@@ -181,36 +192,37 @@ def print_code(freq, codedict):
     Given a frequency map (dictionary mapping symbols to thier frequency)
     and a codedict, print them in a readable form.
     """
-    special_ascii = {0: 'NUL', 9: 'TAB', 10: 'LF', 13: 'CR', 127: 'DEL'}
+    special_ascii = {0: "NUL", 9: "TAB", 10: "LF", 13: "CR", 127: "DEL"}
+
     def disp_char(i):
         if 32 <= i < 127:
             return repr(chr(i))
-        return special_ascii.get(i, '')
+        return special_ascii.get(i, "")
 
-    print(' symbol     char    hex   frequency     Huffman code')
-    print(70 * '-')
+    print(" symbol     char    hex   frequency     Huffman code")
+    print(70 * "-")
     for i in sorted(codedict, key=lambda c: (freq[c], c), reverse=True):
-        print('%7r     %-4s    0x%02x %10i     %s' % (
-            i, disp_char(i), i, freq[i], codedict[i].to01()))
+        print(
+            "%7r     %-4s    0x%02x %10i     %s"
+            % (i, disp_char(i), i, freq[i], codedict[i].to01())
+        )
 
 
 def test():
-    freq = {'a': 10, 'b': 2, 'c': 1}
+    freq = {"a": 10, "b": 2, "c": 1}
     tree = huff_tree(freq)
     code = huff_code(tree)
-    assert len(code['a']) == 1
-    assert len(code['b']) == len(code['c']) == 2
+    assert len(code["a"]) == 1
+    assert len(code["b"]) == len(code["c"]) == 2
 
-    code = {'a': bitarray('0'),
-            'b': bitarray('10'),
-            'c': bitarray('11')}
+    code = {"a": bitarray("0"), "b": bitarray("10"), "c": bitarray("11")}
     tree = make_tree(code)
-    txt = 'abca'
+    txt = "abca"
     a = bitarray()
     a.encode(code, txt)
-    assert a == bitarray('010110')
-    assert list(iterdecode(tree, a)) == ['a', 'b', 'c', 'a']
+    assert a == bitarray("010110")
+    assert list(iterdecode(tree, a)) == ["a", "b", "c", "a"]
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test()

@@ -17,10 +17,10 @@ def mandel(c):
 
 
 def main():
-    data = bitarray(endian='big')
+    data = bitarray(endian="big")
 
     for j in range(height):
-        sys.stdout.write('.')
+        sys.stdout.write(".")
         sys.stdout.flush()
         y = +1.5 - 3.0 * j / height
         for i in range(width):
@@ -29,12 +29,12 @@ def main():
             data.append(c)
     print("done")
 
-    with open('out.ppm', 'wb') as fo:
-        fo.write(b'P4\n')
-        fo.write(b'# partable bitmap image of the Mandelbrot set\n')
-        fo.write(b'%i %i\n' % (width, height))
+    with open("out.ppm", "wb") as fo:
+        fo.write(b"P4\n")
+        fo.write(b"# partable bitmap image of the Mandelbrot set\n")
+        fo.write(b"%i %i\n" % (width, height))
         data.tofile(fo)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

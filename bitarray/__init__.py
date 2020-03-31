@@ -10,7 +10,7 @@ Author: Ilan Schnell
 """
 from bitarray._bitarray import _bitarray, bitdiff, bits2bytes, _sysinfo
 
-__version__ = '1.2.2'
+__version__ = "1.2.2"
 
 
 class bitarray(_bitarray):
@@ -65,11 +65,12 @@ object is initialized.  A frozenbitarray is immutable and hashable.
 Its contents cannot be altered after is created; however, it can be used as
 a dictionary key.
 """
+
     def __repr__(self):
-        return 'frozen' + _bitarray.__repr__(self)
+        return "frozen" + _bitarray.__repr__(self)
 
     def __hash__(self):
-        if getattr(self, '_hash', None) is None:
+        if getattr(self, "_hash", None) is None:
             self._hash = hash((self.length(), self.tobytes()))
         return self._hash
 
@@ -88,4 +89,5 @@ def test(verbosity=1, repeat=1):
 Run self-test, and return unittest.runner.TextTestResult object.
 """
     from bitarray import test_bitarray
+
     return test_bitarray.run(verbosity=verbosity, repeat=repeat)

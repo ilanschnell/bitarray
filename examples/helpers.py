@@ -11,9 +11,10 @@ def count_n(a, n):
         i += 1
     return i
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # count_n
-    a = bitarray('11111011111011111011111001111011111011111011111010111010111')
+    a = bitarray("11111011111011111011111001111011111011111011111010111010111")
     for n in range(0, 48):
         i = count_n(a, n)
         assert a[:i].count() == n

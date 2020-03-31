@@ -11,7 +11,7 @@ trans = {
     "A": bitarray("00"),
     "T": bitarray("01"),
     "G": bitarray("10"),
-    "C": bitarray("11")
+    "C": bitarray("11"),
 }
 
 N = 10000
