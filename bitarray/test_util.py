@@ -18,6 +18,8 @@ from bitarray.util import (zeros, rindex, strip, count_n,
                            count_and, count_or, count_xor, subset,
                            ba2hex, hex2ba, ba2int, int2ba, huffman_code)
 
+if sys.version_info[0] == 3:
+    unicode = str
 
 tests = []
 
@@ -327,26 +329,29 @@ tests.append(TestsSubset)
 class TestsHexlify(unittest.TestCase, Util):
 
     def test_ba2hex(self):
-        self.assertEqual(ba2hex(bitarray(0, 'big')), b'')
-        self.assertEqual(ba2hex(bitarray('1110', 'big')), b'e')
-        self.assertEqual(ba2hex(bitarray('00000001', 'big')), b'01')
-        self.assertEqual(ba2hex(bitarray('10000000', 'big')), b'80')
-        self.assertEqual(ba2hex(frozenbitarray('11000111', 'big')), b'c7')
+        self.assertEqual(ba2hex(bitarray(0, 'big')), '')
+        self.assertEqual(ba2hex(bitarray('1110', 'big')), 'e')
+        self.assertEqual(ba2hex(bitarray('00000001', 'big')), '01')
+        self.assertEqual(ba2hex(bitarray('10000000', 'big')), '80')
+        self.assertEqual(ba2hex(frozenbitarray('11000111', 'big')), 'c7')
         # length not multiple of 4
         self.assertRaises(ValueError, ba2hex, bitarray('10'))
         self.assertRaises(ValueError, ba2hex, bitarray(endian='little'))
         self.assertRaises(TypeError, ba2hex, '101')
 
+        c = ba2hex(bitarray('1101'))
+        self.assertIsInstance(c, str)
+
         for n in range(7):
             a = bitarray(n * '1111', 'big')
             b = a.copy()
-            self.assertEqual(ba2hex(a), n * b'f')
+            self.assertEqual(ba2hex(a), n * 'f')
             # ensure original object wasn't altered
             self.assertEQUAL(a, b)
 
     def test_hex2ba(self):
         self.assertEqual(hex2ba(''), bitarray())
-        for c in 'e', 'E', b'e', b'E':
+        for c in 'e', 'E', b'e', b'E', unicode('e'), unicode('E'):
             a = hex2ba(c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
@@ -355,14 +360,14 @@ class TestsHexlify(unittest.TestCase, Util):
         self.assertRaises(TypeError, hex2ba, 0)
 
     def test_explicit(self):
-        for h, bs in [(b'',    ''),
-                      (b'0',   '0000'),
-                      (b'a',   '1010'),
-                      (b'f',   '1111'),
-                      (b'1a',  '00011010'),
-                      (b'2b',  '00101011'),
-                      (b'4c1', '010011000001'),
-                      (b'a7d', '101001111101')]:
+        for h, bs in [('',    ''),
+                      ('0',   '0000'),
+                      ('a',   '1010'),
+                      ('f',   '1111'),
+                      ('1a',  '00011010'),
+                      ('2b',  '00101011'),
+                      ('4c1', '010011000001'),
+                      ('a7d', '101001111101')]:
             a = bitarray(bs, 'big')
             self.assertEQUAL(hex2ba(h), a)
             self.assertEqual(ba2hex(a), h)
@@ -371,7 +376,7 @@ class TestsHexlify(unittest.TestCase, Util):
         for i in range(100):
             s = ''.join(choice(hexdigits) for _ in range(randint(0, 1000)))
             t = ba2hex(hex2ba(s))
-            self.assertEqual(t.decode(), s.lower())
+            self.assertEqual(t, s.lower())
 
     def test_round_trip2(self):
         for a in self.randombitarrays():

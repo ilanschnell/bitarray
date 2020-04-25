@@ -74,7 +74,7 @@ Allowed values for mode are the strings: `left`, `right`, `both`
 def ba2hex(a):
     """ba2hex(bitarray, /) -> hexstr
 
-Return a bytes object containing with hexadecimal representation of
+Return a string containing with hexadecimal representation of
 the bitarray (which has to be multiple of 4 in length).
 """
     if not isinstance(a, (bitarray, frozenbitarray)):
@@ -92,7 +92,7 @@ the bitarray (which has to be multiple of 4 in length).
     s = binascii.hexlify(a.tobytes())
     if la % 8:
         s = s[:-1]
-    return s
+    return s if _is_py2 else s.decode()
 
 
 def hex2ba(s):
@@ -101,8 +101,8 @@ def hex2ba(s):
 Bitarray of hexadecimal representation.
 hexstr may contain any number of hex digits (upper or lower case).
 """
-    if not isinstance(s, (str, bytes)):
-        raise TypeError("string expected")
+    if not isinstance(s, (str, unicode if _is_py2 else bytes)):
+        raise TypeError("string expected, got: %r" % s)
 
     ls = len(s)
     if ls % 2:
