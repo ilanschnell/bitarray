@@ -1,7 +1,7 @@
-2020-XX-XX   1.2.2:
+2020-05-18   1.2.2:
 -------------------
   * `util.ba2hex` now always return a string object (instead of bytes object
-    for Python 3)
+    for Python 3), see issue #94
   * `util.hex2ba` allows a unicode object as input on Python 2
   * Determine 64-bitness of interpreter in a cross-platform fashion #91,
     in order to better support PyPy

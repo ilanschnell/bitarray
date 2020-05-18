@@ -36,8 +36,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.2.1.tar.gz
-    $ cd bitarray-1.2.1
+    $ tar xzf bitarray-1.2.2.tar.gz
+    $ cd bitarray-1.2.2
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -46,7 +46,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.2.1
+    bitarray version: 1.2.2
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
@@ -621,7 +621,7 @@ intermediate bitarray object gets created.
 
 `ba2hex(bitarray, /)` -> hexstr
 
-Return a bytes object containing with hexadecimal representation of
+Return a string containing with hexadecimal representation of
 the bitarray (which has to be multiple of 4 in length).
 
 
@@ -657,6 +657,15 @@ hashable object (including `None`).
 Change log
 ----------
 
+*1.2.2* (2020-05-18):
+
+  * `util.ba2hex` now always return a string object (instead of bytes object
+    for Python 3), see issue #94
+  * `util.hex2ba` allows a unicode object as input on Python 2
+  * Determine 64-bitness of interpreter in a cross-platform fashion #91,
+    in order to better support PyPy
+
+
 *1.2.1* (2020-01-06):
 
   * simplify markdown of readme so PyPI renders better
@@ -675,20 +684,6 @@ Change log
   * update smallints and sieve example to use new utility module
   * simplified mandel example to use numba
   * use file context managers in tests
-
-
-*1.1.0* (2019-11-07):
-
-  * add frozenbitarray object
-  * add optional start and stop parameters to .count() method
-  * add official Python 3.8 support
-  * optimize setrange() C-function by using memset
-  * fix issue #74, bitarray is hashable on Python 2
-  * fix issue #68, `unittest.TestCase.assert_` deprecated
-  * improved test suite - tests should run in about 1 second
-  * update documentation to use positional-only syntax in docstrings
-  * update readme to pass Python 3 doctest
-  * add utils module to examples
 
 
 Please find the complete change log
