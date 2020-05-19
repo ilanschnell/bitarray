@@ -1,3 +1,8 @@
+2020-XX-XX   1.2.3:
+-------------------
+  * add missing long_description_content_type in setup.py
+
+
 2020-05-18   1.2.2:
 -------------------
   * `util.ba2hex` now always return a string object (instead of bytes object
