@@ -3,8 +3,8 @@ This library contains useful functionality for working with Huffman trees
 and codes.
 
 Note:
-    There is function for directly creating a Huffman code from a frequency
-    map: bitarray.util.huffman_code()
+There is a function for directly creating a Huffman code from a frequency
+map: bitarray.util.huffman_code()
 """
 from __future__ import print_function
 from heapq import heappush, heappop
