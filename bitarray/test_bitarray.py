@@ -1950,14 +1950,14 @@ class FileTests(unittest.TestCase, Util):
 
         b = bitarray()
         with open(self.tmpfname, 'rb') as f:
-            f.read(1);
+            f.read(1)
             self.assertRaises(EOFError, b.fromfile, f, 10)
 
         self.assertEqual(b.tostring(), 'BCDEFGHIJ')
 
         b = bitarray()
         with open(self.tmpfname, 'rb') as f:
-            b.fromfile(f);
+            b.fromfile(f)
             self.assertEqual(b.tostring(), 'ABCDEFGHIJ')
             self.assertRaises(EOFError, b.fromfile, f, 1)
 
