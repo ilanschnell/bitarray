@@ -255,7 +255,7 @@ class CreateObjectTests(unittest.TestCase, Util):
 
         self.assertRaises(ValueError, bitarray.__new__, bitarray, '01012100')
 
-    def test_rawbytes(self): # this representation is used for pickling
+    def test_rawbytes(self):  # this representation is used for pickling
         for s, r in [(b'\x00', ''), (b'\x07\xff', '1'), (b'\x03\xff', '11111'),
                      (b'\x01\x87\xda', '10000111' '1101101')]:
             self.assertEqual(bitarray(s, endian='big'),
@@ -514,7 +514,7 @@ class SliceTests(unittest.TestCase, Util):
         a = bitarray('1111')
         a[1:3] = bitarray('0000')
         self.assertEqual(a, bitarray('100001'))
-        a[:] = bitarray('010') # replace all values
+        a[:] = bitarray('010')  # replace all values
         self.assertEqual(a, bitarray('010'))
 
     def test_setslice_to_bool(self):
@@ -547,7 +547,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.__setitem__, slice(None, None, 2), 3)
         self.assertRaises(ValueError, a.__setitem__, slice(None, 2, None), -1)
 
-    def test_sieve(self): # Sieve of Eratosthenes
+    def test_sieve(self):  # Sieve of Eratosthenes
         a = bitarray(50)
         a.setall(1)
         for i in range(2, 8):
@@ -986,7 +986,7 @@ class BitwiseTests(unittest.TestCase, Util):
         self.assertEQUAL(a & b, bitarray('10001'))
 
         b = bitarray('1001')
-        self.assertRaises(ValueError, a.__and__, b) # not same length
+        self.assertRaises(ValueError, a.__and__, b)  # not same length
 
         self.assertRaises(TypeError, a.__and__, 42)
 
@@ -1499,7 +1499,7 @@ class MethodTests(unittest.TestCase, Util):
     def test_search3(self):
         a = bitarray('10010101110011111001011')
         for s, res in [('011', [6, 11, 20]),
-                       ('111', [7, 12, 13, 14]), # note the overlap
+                       ('111', [7, 12, 13, 14]),  # note the overlap
                        ('1011', [5, 19]),
                        ('100', [0, 9, 16])]:
             b = bitarray(s)
@@ -1877,7 +1877,7 @@ class FileTests(unittest.TestCase, Util):
     def test_fromfile_wrong_args(self):
         b = bitarray()
         self.assertRaises(TypeError, b.fromfile)
-        self.assertRaises(TypeError, b.fromfile, StringIO()) # file not open
+        self.assertRaises(TypeError, b.fromfile, StringIO())  # file not open
         self.assertRaises(TypeError, b.fromfile, 42)
         self.assertRaises(TypeError, b.fromfile, 'bar')
 
@@ -2288,7 +2288,7 @@ class BufferInterfaceTests(unittest.TestCase):
         a[4003] = 0
         self.assertEqual(a[3999:4009], bitarray('0111011110'))
         v[301:304] = b'ABC'
-        self.assertEqual(a[300 *8 : 305 * 8].tobytes(), b'\x00ABC\x00')
+        self.assertEqual(a[300 * 8 : 305 * 8].tobytes(), b'\x00ABC\x00')
 
 if sys.version_info[:2] >= (2, 7):
     tests.append(BufferInterfaceTests)
@@ -2353,7 +2353,7 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(d[frozenbitarray('01')], 123)
         self.assertEqual(d[frozenbitarray(b)], 345)
 
-    def test_dictkey2(self): # taken sllightly modified from issue #74
+    def test_dictkey2(self):  # taken slightly modified from issue #74
         a1 = frozenbitarray([True, False])
         a2 = frozenbitarray([False, False])
         dct = {a1: "one", a2: "two"}
