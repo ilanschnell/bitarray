@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2008 - 2019, Ilan Schnell
+   Copyright (c) 2008 - 2020, Ilan Schnell
    bitarray is published under the PSF license.
 
    This file is the C part of the bitarray package.
@@ -587,21 +587,20 @@ unpack(bitarrayobject *self, char zero, char one)
 static int
 extend_bitarray(bitarrayobject *self, bitarrayobject *other)
 {
-    idx_t n_sum;
-    idx_t n_other_bits;
+    idx_t self_bits, other_bits;
 
     if (other->nbits == 0)
         return 0;
 
-    /* Note that other may be self.  Thus we take the size before we resize,
-       ensuring we only copy the right parts of the array. */
-    n_other_bits = other->nbits;
-    n_sum = self->nbits + other->nbits;
+    /* Note that other may be self.  Thus we have to take the sizes
+       before we resize. */
+    self_bits = self->nbits;
+    other_bits = other->nbits;
 
-    if (resize(self, n_sum) < 0)
+    if (resize(self, self_bits + other_bits) < 0)
         return -1;
 
-    copy_n(self, n_sum - n_other_bits, other, 0, n_other_bits);
+    copy_n(self, self_bits, other, 0, other_bits);
     return 0;
 }
 
