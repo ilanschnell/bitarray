@@ -592,8 +592,8 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
     if (other->nbits == 0)
         return 0;
 
-    /* Note that other may be self.  Thus we have to take the sizes
-       before we resize. */
+    /* We have to store the sizes before we resize.
+       Since other may be self, we also need to store other->nbits. */
     self_bits = self->nbits;
     other_bits = other->nbits;
 
