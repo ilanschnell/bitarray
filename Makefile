@@ -1,3 +1,5 @@
+PYTHON=python
+
 bitarray/_bitarray.so: bitarray/_bitarray.c
 	$(PYTHON) setup.py build_ext --inplace
 

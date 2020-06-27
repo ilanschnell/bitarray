@@ -39,7 +39,7 @@ tests = []
 class Util(object):
 
     @staticmethod
-    def randombitarrays(start=1):
+    def randombitarrays(start=0):
         for n in list(range(start, 25)) + [randint(1000, 2000)]:
             a = bitarray(endian=['little', 'big'][randint(0, 1)])
             a.frombytes(os.urandom(bits2bytes(n)))
@@ -667,7 +667,7 @@ class MiscTests(unittest.TestCase, Util):
             def __getitem__(self, i):
                 return bitarray.__getitem__(self, i - self.offset)
 
-        for a in self.randombitarrays(start=1):
+        for a in self.randombitarrays(start=0):
             b = ExaggeratingBitarray(a, 1234)
             for i in range(len(a)):
                 self.assertEqual(a[i], b[i+1234])
