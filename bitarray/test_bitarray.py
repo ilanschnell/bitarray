@@ -281,6 +281,18 @@ class CreateObjectTests(unittest.TestCase, Util):
             c = bitarray(a, endian='big')
             self.assertEqual(c.endian(), 'big')
 
+    def test_bitarray_endianness(self):
+        a = bitarray('11100001', endian='little')
+        b = bitarray(a, endian='big')
+        self.assertNotEqual(a, b)
+        self.assertEqual(a.tobytes(), b.tobytes())
+
+        b.bytereverse()
+        self.assertEqual(a, b)
+        self.assertNotEqual(a.tobytes(), b.tobytes())
+
+        c = bitarray('11100001', endian='big')
+        self.assertEqual(a, c)
 
     def test_None(self):
         self.assertEQUAL(bitarray(), bitarray(0))
