@@ -400,7 +400,7 @@ class TestsIntegerization(unittest.TestCase, Util):
         self.assertEqual(ba2int(frozenbitarray('11')), 3)
         self.assertRaises(ValueError, ba2int, bitarray())
         self.assertRaises(ValueError, ba2int, frozenbitarray())
-        self.assertRaises(TypeError, ba2hex, '101')
+        self.assertRaises(TypeError, ba2int, '101')
         a = bitarray('111')
         b = a.copy()
         self.assertEqual(ba2int(a), 7)
