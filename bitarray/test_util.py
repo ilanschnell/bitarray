@@ -74,6 +74,13 @@ class TestsMakeEndian(unittest.TestCase, Util):
         self.assertRaises(TypeError, make_endian, bitarray(), 1)
         self.assertRaises(ValueError, make_endian, bitarray(), 'foo')
 
+    def test_empty(self):
+        a = bitarray(endian='little')
+        b = make_endian(a, 'big')
+        self.assertTrue(b == a)
+        self.assertEqual(len(b), 0)
+        self.assertEqual(b.endian(), 'big')
+
     def test_from_frozen(self):
         a = frozenbitarray('1101111', 'big')
         b = make_endian(a, 'big')
