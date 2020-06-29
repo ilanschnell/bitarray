@@ -668,9 +668,9 @@ hashable object (including `None`).
 Change log
 ----------
 
-2020-XX-XX   1.2.3:
+2020-XX-XX   1.3.0:
 
-  *
+  * add bitarray.util.make_endian()
 
 
 *1.2.2* (2020-05-18):
