@@ -387,7 +387,7 @@ class TestsHexlify(unittest.TestCase, Util):
         self.assertRaises(ValueError, ba2hex, bitarray(endian='little'))
         self.assertRaises(TypeError, ba2hex, '101')
 
-        c = ba2hex(bitarray('1101'))
+        c = ba2hex(bitarray('1101', 'big'))
         self.assertIsInstance(c, str)
 
         for n in range(7):
