@@ -1286,9 +1286,9 @@ class MethodTests(unittest.TestCase, Util):
             b.append(1)
             self.assertTrue(a is b)
             self.check_obj(b)
-            self.assertEQUAL(b, bitarray(aa+[1], endian=a.endian()))
+            self.assertEQUAL(b, bitarray(aa + [1], endian=a.endian()))
             b.append('')
-            self.assertEQUAL(b, bitarray(aa+[1, 0], endian=a.endian()))
+            self.assertEQUAL(b, bitarray(aa + [1, 0], endian=a.endian()))
 
 
     def test_insert(self):
@@ -1396,17 +1396,17 @@ class MethodTests(unittest.TestCase, Util):
             i = randint(0, 1)
             a.setall(i)
             for unused in range(randint(1, 4)):
-                a[randint(0, n-1)] = 1-i
+                a[randint(0, n - 1)] = 1 - i
             aa = a.tolist()
             for unused in range(100):
-                start = randint(-50, n+50)
-                stop = randint(-50, n+50)
+                start = randint(-50, n + 50)
+                stop = randint(-50, n + 50)
                 try:
-                    res1 = a.index(1-i, start, stop)
+                    res1 = a.index(1 - i, start, stop)
                 except ValueError:
                     res1 = None
                 try:
-                    res2 = aa.index(1-i, start, stop)
+                    res2 = aa.index(1 - i, start, stop)
                 except ValueError:
                     res2 = None
                 self.assertEqual(res1, res2)
@@ -1460,8 +1460,8 @@ class MethodTests(unittest.TestCase, Util):
     def test_count6(self):
         for a in self.randombitarrays():
             s = a.to01()
-            i = randint(-3, len(a)+1)
-            j = randint(-3, len(a)+1)
+            i = randint(-3, len(a) + 1)
+            j = randint(-3, len(a) + 1)
             self.assertEqual(a.count(1, i, j), s[i:j].count('1'))
             self.assertEqual(a.count(0, i, j), s[i:j].count('0'))
 
@@ -1677,7 +1677,7 @@ class MethodTests(unittest.TestCase, Util):
 
         for a in self.randombitarrays():
             self.assertRaises(IndexError, a.pop, len(a))
-            self.assertRaises(IndexError, a.pop, -len(a)-1)
+            self.assertRaises(IndexError, a.pop, -len(a) - 1)
             if len(a) == 0:
                 continue
             aa = a.tolist()
