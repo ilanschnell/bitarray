@@ -124,6 +124,7 @@ class TestsHelpers(unittest.TestCase, Util):
             self.assertEqual(rindex(a), a.index(1))
 
     def test_strip1(self):
+        self.assertRaises(TypeError, strip, '0110')
         self.assertRaises(TypeError, strip, bitarray(), 123)
         self.assertRaises(ValueError, strip, bitarray(), 'up')
         for endian in 'big', 'little':
@@ -131,6 +132,8 @@ class TestsHelpers(unittest.TestCase, Util):
             self.assertEQUAL(strip(a), bitarray('0001011', endian))
             self.assertEQUAL(strip(a, 'left'), bitarray('10110000', endian))
             self.assertEQUAL(strip(a, 'both'), bitarray('1011', endian))
+            b = frozenbitarray('00010110000', endian)
+            self.assertEqual(strip(b, 'both'), bitarray('1011', endian))
 
         for mode in 'left', 'right', 'both':
             self.assertEqual(strip(bitarray('000'), mode), bitarray())

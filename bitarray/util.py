@@ -9,7 +9,7 @@ import sys
 import heapq
 import binascii
 
-from bitarray import bitarray, frozenbitarray, bits2bytes, _bitarray
+from bitarray import bitarray, bits2bytes, _bitarray
 
 from bitarray._util import (count_n, rindex,
                             count_and, count_or, count_xor, subset,
@@ -47,7 +47,7 @@ def strip(a, mode='right'):
 Strip zeros from left, right or both ends.
 Allowed values for mode are the strings: `left`, `right`, `both`
 """
-    if not isinstance(a, (bitarray, frozenbitarray)):
+    if not isinstance(a, _bitarray):
         raise TypeError("bitarray expected")
     if not isinstance(mode, str):
         raise TypeError("string expected for mode")
@@ -77,7 +77,7 @@ def ba2hex(a):
 Return a string containing with hexadecimal representation of
 the bitarray (which has to be multiple of 4 in length).
 """
-    if not isinstance(a, (bitarray, frozenbitarray)):
+    if not isinstance(a, _bitarray):
         raise TypeError("bitarray expected")
     if a.endian() != 'big':
         raise ValueError("big-endian bitarray expected")
@@ -122,7 +122,7 @@ def ba2int(a):
 Convert the given bitarray into an integer.
 The bit-endianness of the bitarray is respected.
 """
-    if not isinstance(a, (bitarray, frozenbitarray)):
+    if not isinstance(a, _bitarray):
         raise TypeError("bitarray expected")
     if not a:
         raise ValueError("non-empty bitarray expected")
