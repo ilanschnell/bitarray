@@ -14,7 +14,7 @@ except ImportError:
 from bitarray import bitarray, frozenbitarray, bits2bytes
 from bitarray.test_bitarray import Util
 
-from bitarray.util import (zeros, rindex, strip, count_n,
+from bitarray.util import (zeros, make_endian, rindex, strip, count_n,
                            count_and, count_or, count_xor, subset,
                            ba2hex, hex2ba, ba2int, int2ba, huffman_code)
 
@@ -56,6 +56,44 @@ class TestsZeros(unittest.TestCase):
             self.assertEqual(a.endian(), endian)
 
 tests.append(TestsZeros)
+
+# ---------------------------------------------------------------------------
+
+class TestsMakeEndian(unittest.TestCase, Util):
+
+    def test_simple(self):
+        a = bitarray('1110001', endian='big')
+        b = make_endian(a, 'big')
+        self.assertTrue(b is a)
+        c = make_endian(a, 'little')
+        self.assertTrue(c == a)
+        self.assertEqual(c.endian(), 'little')
+
+        # wrong arguments
+        self.assertRaises(TypeError, make_endian, '', 'big')
+        self.assertRaises(TypeError, make_endian, bitarray(), 1)
+        self.assertRaises(ValueError, make_endian, bitarray(), 'foo')
+
+    def test_from_frozen(self):
+        a = frozenbitarray('1101111', 'big')
+        b = make_endian(a, 'big')
+        self.assertTrue(b is a)
+        c = make_endian(a, 'little')
+        self.assertTrue(c == a)
+        self.assertEqual(c.endian(), 'little')
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            aa = a.copy()
+            for endian in 'big', 'little':
+                b = make_endian(a, endian)
+                self.assertEqual(a, b)
+                self.assertEqual(b.endian(), endian)
+                if a.endian() == endian:
+                    self.assertTrue(b is a)
+            self.assertEQUAL(a, aa)
+
+tests.append(TestsMakeEndian)
 
 # ---------------------------------------------------------------------------
 

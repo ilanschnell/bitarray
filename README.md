@@ -36,8 +36,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.2.2.tar.gz
-    $ cd bitarray-1.2.2
+    $ tar xzf bitarray-1.3.0.tar.gz
+    $ cd bitarray-1.3.0
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -46,7 +46,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.2.2
+    bitarray version: 1.3.0
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
@@ -575,6 +575,17 @@ Functions defined in bitarray.util:
 Create a bitarray of length, with all values 0.
 
 
+`make_endian(bitarray, endian, /)` -> bitarray
+
+When the endianness of the given bitarray is different from `endian`,
+return a new bitarray, with endianness `endian` and the same elements
+as the original bitarray, i.e. even though the binary representation of the
+new bitarray will be different, the returned bitarray will equal the original
+one.
+Otherwise (endianness is already `endian`) the original bitarray is returned
+unchanged.
+
+
 `rindex(bitarray, value=True, /)` -> int
 
 Return the rightmost index of `bool(value)` in bitarray.
@@ -656,6 +667,11 @@ hashable object (including `None`).
 
 Change log
 ----------
+
+2020-XX-XX   1.2.3:
+
+  *
+
 
 *1.2.2* (2020-05-18):
 

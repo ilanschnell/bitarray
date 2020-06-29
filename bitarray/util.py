@@ -16,7 +16,7 @@ from bitarray._util import (count_n, rindex,
                             _set_babt)
 
 
-__all__ = ['zeros', 'rindex', 'strip', 'count_n',
+__all__ = ['zeros', 'make_endian', 'rindex', 'strip', 'count_n',
            'count_and', 'count_or', 'count_xor', 'subset',
            'ba2hex', 'hex2ba', 'ba2int', 'int2ba', 'huffman_code']
 
@@ -39,6 +39,30 @@ Create a bitarray of length, with all values 0.
     a = bitarray(length, endian)
     a.setall(0)
     return a
+
+
+def make_endian(a, endian):
+    """make_endian(bitarray, endian, /) -> bitarray
+
+When the endianness of the given bitarray is different from `endian`,
+return a new bitarray, with endianness `endian` and the same elements
+as the original bitarray, i.e. even though the binary representation of the
+new bitarray will be different, the returned bitarray will equal the original
+one.
+Otherwise (endianness is already `endian`) the original bitarray is returned
+unchanged.
+"""
+    if not isinstance(a, _bitarray):
+        raise TypeError("bitarray expected")
+
+    if a.endian() == endian:
+        return a
+
+    b = bitarray(a, endian=endian)
+    b.bytereverse()
+    p = 8 * (bits2bytes(len(a)) - 1)
+    b[p:] = a[p:]
+    return b
 
 
 def strip(a, mode='right'):
