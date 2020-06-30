@@ -59,6 +59,9 @@ unchanged.
         return a
 
     b = bitarray(a, endian=endian)
+    if len(a) == 0:
+        return b
+
     b.bytereverse()
     if len(a) % 8:
         p = 8 * (bits2bytes(len(a)) - 1)
