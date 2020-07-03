@@ -399,12 +399,6 @@ interpreted as machine values.  When n is omitted, as many bytes are
 read until EOF is reached.
 
 
-`fromstring(str)`
-
-Append from a string, interpreting the string as machine values.
-Deprecated since version 0.4.0, use `.frombytes()` instead.
-
-
 `index(value, start=0, stop=<end of array>, /)` -> int
 
 Return index of the first occurrence of `bool(value)` in the bitarray.
@@ -519,14 +513,6 @@ memory than the bitarray object, which may cause a memory error if the
 bitarray is very large.
 Also note that to extend a bitarray with elements from a list,
 use the extend method.
-
-
-`tostring()` -> str
-
-Return the string representing (machine values) of the bitarray.
-When the length of the bitarray is not a multiple of 8, the few remaining
-bits (1..7) are set to 0.
-Deprecated since version 0.4.0, use `.tobytes()` instead.
 
 
 `unpack(zero=b'\x00', one=b'\xff')` -> bytes
@@ -671,6 +657,8 @@ Change log
 2020-XX-XX   1.3.0:
 
   * add bitarray.util.make_endian()
+  * remove .fromstring() and .tostring() methods, these have been
+    deprecated since version 0.4.0
 
 
 *1.2.2* (2020-05-18):
