@@ -4,7 +4,7 @@ a bitarray.  Bitarrays are sequence types and behave very much like lists.
 
 Please find a description of this package at:
 
-    http://pypi.python.org/pypi/bitarray/
+    https://github.com/ilanschnell/bitarray
 
 Author: Ilan Schnell
 """
@@ -16,7 +16,7 @@ __all__ = ['bitarray', 'frozenbitarray']
 
 
 class bitarray(_bitarray):
-    """bitarray(initial=0, /, endian='big')
+    """bitarray(initial=0, /, endian='big') -> bitarray
 
 Return a new bitarray object whose items are bits initialized from
 the optional initial object, and endianness.
