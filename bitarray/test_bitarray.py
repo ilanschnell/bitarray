@@ -148,34 +148,22 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertEqual(a.tolist(), [])
         self.check_obj(a)
 
-    def test_endian1(self):
+    def test_endian(self):
         a = bitarray(endian='little')
-        a.fromstring('A')
+        a.frombytes(b'ABC')
         self.assertEqual(a.endian(), 'little')
         self.assertIsInstance(a.endian(), str)
         self.check_obj(a)
 
         b = bitarray(endian='big')
-        b.fromstring('A')
+        b.frombytes(b'ABC')
         self.assertEqual(b.endian(), 'big')
         self.assertIsInstance(a.endian(), str)
         self.check_obj(b)
 
-        self.assertEqual(a.tostring(), b.tostring())
+        self.assertEqual(a.tobytes(), b.tobytes())
 
-    def test_endian2(self):
-        a = bitarray(endian='little')
-        a.fromstring(' ')
-        self.assertEqual(a.endian(), 'little')
-        self.check_obj(a)
-
-        b = bitarray(endian='big')
-        b.fromstring(' ')
-        self.assertEqual(b.endian(), 'big')
-        self.check_obj(b)
-
-        self.assertEqual(a.tostring(), b.tostring())
-
+    def test_endian_wrong(self):
         self.assertRaises(TypeError, bitarray.__new__, bitarray, endian=0)
         self.assertRaises(ValueError, bitarray.__new__, bitarray, endian='')
         self.assertRaises(ValueError, bitarray.__new__,
@@ -1944,33 +1932,33 @@ class FileTests(unittest.TestCase, Util):
 
     def test_fromfile_n(self):
         a = bitarray()
-        a.fromstring('ABCDEFGHIJ')
+        a.frombytes(b'ABCDEFGHIJ')
         with open(self.tmpfname, 'wb') as fo:
             a.tofile(fo)
 
         b = bitarray()
         with open(self.tmpfname, 'rb') as f:
-            b.fromfile(f, 0);     self.assertEqual(b.tostring(), '')
-            b.fromfile(f, 1);     self.assertEqual(b.tostring(), 'A')
+            b.fromfile(f, 0);     self.assertEqual(b.tobytes(), b'')
+            b.fromfile(f, 1);     self.assertEqual(b.tobytes(), b'A')
             f.read(1)
             b = bitarray()
-            b.fromfile(f, 2);     self.assertEqual(b.tostring(), 'CD')
-            b.fromfile(f, 1);     self.assertEqual(b.tostring(), 'CDE')
-            b.fromfile(f, 0);     self.assertEqual(b.tostring(), 'CDE')
-            b.fromfile(f);        self.assertEqual(b.tostring(), 'CDEFGHIJ')
-            b.fromfile(f);        self.assertEqual(b.tostring(), 'CDEFGHIJ')
+            b.fromfile(f, 2);     self.assertEqual(b.tobytes(), b'CD')
+            b.fromfile(f, 1);     self.assertEqual(b.tobytes(), b'CDE')
+            b.fromfile(f, 0);     self.assertEqual(b.tobytes(), b'CDE')
+            b.fromfile(f);        self.assertEqual(b.tobytes(), b'CDEFGHIJ')
+            b.fromfile(f);        self.assertEqual(b.tobytes(), b'CDEFGHIJ')
 
         b = bitarray()
         with open(self.tmpfname, 'rb') as f:
             f.read(1)
             self.assertRaises(EOFError, b.fromfile, f, 10)
 
-        self.assertEqual(b.tostring(), 'BCDEFGHIJ')
+        self.assertEqual(b.tobytes(), b'BCDEFGHIJ')
 
         b = bitarray()
         with open(self.tmpfname, 'rb') as f:
             b.fromfile(f)
-            self.assertEqual(b.tostring(), 'ABCDEFGHIJ')
+            self.assertEqual(b.tobytes(), b'ABCDEFGHIJ')
             self.assertRaises(EOFError, b.fromfile, f, 1)
 
 
@@ -1998,7 +1986,7 @@ class FileTests(unittest.TestCase, Util):
             self.assertEqual(len(s), a.buffer_info()[1])
 
         for n in range(3):
-            a.fromstring(n * 'A')
+            a.frombytes(n * b'A')
             self.assertRaises(TypeError, a.tofile)
             self.assertRaises(TypeError, a.tofile, StringIO())
 

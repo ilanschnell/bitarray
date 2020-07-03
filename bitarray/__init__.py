@@ -40,22 +40,6 @@ Note that setting the bit endianness only has an effect when accessing the
 machine representation of the bitarray, i.e. when using the methods: tofile,
 fromfile, tobytes, frombytes."""
 
-    def fromstring(self, string):
-        """fromstring(str)
-
-Append from a string, interpreting the string as machine values.
-Deprecated since version 0.4.0, use `.frombytes()` instead."""
-        return self.frombytes(string.encode())
-
-    def tostring(self):
-        """tostring() -> str
-
-Return the string representing (machine values) of the bitarray.
-When the length of the bitarray is not a multiple of 8, the few remaining
-bits (1..7) are set to 0.
-Deprecated since version 0.4.0, use `.tobytes()` instead."""
-        return self.tobytes().decode()
-
 
 class frozenbitarray(_bitarray):
     """frozenbitarray(initial=0, /, endian='big')
