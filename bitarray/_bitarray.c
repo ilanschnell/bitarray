@@ -3095,6 +3095,12 @@ static PyBufferProcs bitarray_as_buffer = {
 
 #endif  /* WITH_BUFFER */
 
+PyDoc_STRVAR(bitarraytype_doc,
+"_bitarray(initializer=0, /, endian='big') -> bitarray\n\
+\n\
+Return a new bitarray object.\n\
+");
+
 /************************** Bitarray Type *******************************/
 
 static PyTypeObject Bitarraytype = {
@@ -3132,7 +3138,7 @@ static PyTypeObject Bitarraytype = {
     | Py_TPFLAGS_HAVE_NEWBUFFER
 #endif
     ,                                         /* tp_flags */
-    0,                                        /* tp_doc */
+    bitarraytype_doc,                         /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
     richcompare,                              /* tp_richcompare */
