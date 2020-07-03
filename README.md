@@ -645,11 +645,12 @@ hashable object (including `None`).
 Change log
 ----------
 
-2020-XX-XX   1.3.0:
+2020-07-XX   1.3.0:
 
   * add bitarray.util.make_endian()
   * remove .fromstring() and .tostring() methods, these have been
     deprecated since version 0.4.0
+  * add __all__ in bitarray/__init__.py
 
 
 *1.2.2* (2020-05-18):
