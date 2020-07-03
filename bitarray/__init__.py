@@ -12,6 +12,8 @@ from bitarray._bitarray import _bitarray, bitdiff, bits2bytes, _sysinfo
 
 __version__ = '1.3.0'
 
+__all__ = ['bitarray', 'frozenbitarray']
+
 
 class bitarray(_bitarray):
     """bitarray(initial=0, /, endian='big')
