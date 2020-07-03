@@ -43,7 +43,7 @@ fromfile, tobytes, frombytes."""
 
 
 class frozenbitarray(_bitarray):
-    """frozenbitarray(initial=0, /, endian='big')
+    """frozenbitarray(initial=0, /, endian='big') -> frozenbitarray
 
 Return a frozenbitarray object, which is initialized the same way a bitarray
 object is initialized.  A frozenbitarray is immutable and hashable.

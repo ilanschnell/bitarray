@@ -72,7 +72,6 @@ def write_reference():
     fo.write("Functions defined in the module:\n"
              "--------------------------------\n\n")
     write_doc('test')
-    write_doc('bitdiff')
     write_doc('bits2bytes')
 
     fo.write("Functions defined in bitarray.util:\n"

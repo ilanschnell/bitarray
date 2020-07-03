@@ -523,7 +523,7 @@ using the specified mapping.
 The frozenbitarray object:
 --------------------------
 
-`frozenbitarray(initial=0, /, endian='big')`
+`frozenbitarray(initial=0, /, endian='big')` -> frozenbitarray
 
 Return a frozenbitarray object, which is initialized the same way a bitarray
 object is initialized.  A frozenbitarray is immutable and hashable.
@@ -537,14 +537,6 @@ Functions defined in the module:
 `test(verbosity=1, repeat=1)` -> TextTestResult
 
 Run self-test, and return unittest.runner.TextTestResult object.
-
-
-`bitdiff(a, b, /)` -> int
-
-Return the difference between two bitarrays a and b.
-This is function does the same as (a ^ b).count(), but is more memory
-efficient, as no intermediate bitarray object gets created.
-Deprecated since version 1.2.0, use `bitarray.util.count_xor()` instead.
 
 
 `bits2bytes(n, /)` -> int
