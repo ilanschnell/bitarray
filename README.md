@@ -286,12 +286,11 @@ Reference
 The bitarray object:
 --------------------
 
-`bitarray(initial=0, /, endian='big')`
+`bitarray(initializer=0, /, endian='big')` -> bitarray
 
 Return a new bitarray object whose items are bits initialized from
 the optional initial object, and endianness.
-If no initial object is provided, an empty bitarray (length zero) is created.
-The initial object may be of the following types:
+The initializer may be of the following types:
 
 `int`: Create a bitarray of given integer length.  The initial values are
 arbitrary.  If you want all values to be set, use the .setall() method.
