@@ -71,6 +71,8 @@ def write_reference():
 
     fo.write("Functions defined in the module:\n"
              "--------------------------------\n\n")
+    write_doc('get_default_endian')
+    write_doc('set_default_endian')
     write_doc('test')
     write_doc('bits2bytes')
 

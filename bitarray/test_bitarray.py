@@ -94,7 +94,9 @@ class Util(object):
 class TestsModuleFunctions(unittest.TestCase, Util):
 
     def test_default_endian(self):
-        self.assertTrue(get_default_endian() in ('big', 'little'))
+        de = get_default_endian()
+        self.assertIsInstance(de, str)
+        self.assertTrue(de in ('big', 'little'))
         self.assertRaises(TypeError, get_default_endian, 0)
 
         self.assertRaises(TypeError, set_default_endian, 0)

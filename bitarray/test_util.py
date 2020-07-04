@@ -11,7 +11,8 @@ try:
 except ImportError:
     pass
 
-from bitarray import bitarray, frozenbitarray, bits2bytes
+from bitarray import (bitarray, frozenbitarray, bits2bytes,
+                      get_default_endian, set_default_endian)
 from bitarray.test_bitarray import Util
 
 from bitarray.util import (zeros, make_endian, rindex, strip, count_n,
@@ -27,33 +28,31 @@ tests = []
 
 class TestsZeros(unittest.TestCase):
 
-    def test_init(self):
-        a = zeros(0)
-        self.assertEqual(a, bitarray(''))
-        self.assertEqual(a.endian(), 'big')
-        self.assertRaises(TypeError, zeros, 1.0)
-        for n in range(100):
-            a = zeros(n)
-            self.assertEqual(a, bitarray(n * '0'))
-        self.assertRaises(TypeError, zeros) # no argument
+    def test_1(self):
+        for default_endian in 'big', 'little':
+            set_default_endian(default_endian)
+            a = zeros(0)
+            self.assertEqual(a, bitarray())
+            self.assertEqual(a.endian(), default_endian)
+            for n in range(100):
+                a = zeros(n)
+                self.assertEqual(a, bitarray(n * '0'))
 
-        # wrong arguments
+            for endian in 'big', 'little', None:
+                a = zeros(3, endian)
+                self.assertEqual(a, bitarray('000'))
+                self.assertEqual(a.endian(), endian or get_default_endian())
+
+    def test_wrong_args(self):
+        self.assertRaises(TypeError, zeros) # no argument
         self.assertRaises(TypeError, zeros, '')
         self.assertRaises(TypeError, zeros, bitarray())
         self.assertRaises(TypeError, zeros, [])
+        self.assertRaises(TypeError, zeros, 1.0)
         self.assertRaises(ValueError, zeros, -1)
 
         self.assertRaises(TypeError, zeros, 0, 1) # endian not string
         self.assertRaises(ValueError, zeros, 0, 'foo') # endian wrong string
-
-    def test_endian(self):
-        for endian in 'big', 'little':
-            a = zeros(1, endian)
-            self.assertEqual(a, bitarray('0'))
-            self.assertEqual(a.endian(), endian)
-            a = zeros(1, endian=endian)
-            self.assertEqual(a, bitarray('0'))
-            self.assertEqual(a.endian(), endian)
 
 tests.append(TestsZeros)
 
@@ -172,13 +171,14 @@ class TestsHelpers(unittest.TestCase, Util):
         self.assertRaises(TypeError, strip, '0110')
         self.assertRaises(TypeError, strip, bitarray(), 123)
         self.assertRaises(ValueError, strip, bitarray(), 'up')
-        for endian in 'big', 'little':
-            a = bitarray('00010110000', endian)
-            self.assertEQUAL(strip(a), bitarray('0001011', endian))
-            self.assertEQUAL(strip(a, 'left'), bitarray('10110000', endian))
-            self.assertEQUAL(strip(a, 'both'), bitarray('1011', endian))
-            b = frozenbitarray('00010110000', endian)
-            self.assertEqual(strip(b, 'both'), bitarray('1011', endian))
+        for default_endian in 'big', 'little':
+            set_default_endian(default_endian)
+            a = bitarray('00010110000')
+            self.assertEQUAL(strip(a), bitarray('0001011'))
+            self.assertEQUAL(strip(a, 'left'), bitarray('10110000'))
+            self.assertEQUAL(strip(a, 'both'), bitarray('1011'))
+            b = frozenbitarray('00010110000')
+            self.assertEqual(strip(b, 'both'), bitarray('1011'))
 
         for mode in 'left', 'right', 'both':
             self.assertEqual(strip(bitarray('000'), mode), bitarray())
@@ -459,7 +459,7 @@ class TestsIntegerization(unittest.TestCase, Util):
         self.assertEqual(int2ba(0), bitarray('0'))
         self.assertEqual(int2ba(1), bitarray('1'))
         self.assertEqual(int2ba(5), bitarray('101'))
-        self.assertEQUAL(int2ba(6), bitarray('110', 'big'))
+        self.assertEQUAL(int2ba(6, endian='big'), bitarray('110', 'big'))
         self.assertEQUAL(int2ba(6, endian='little'),
                          bitarray('011', 'little'))
         self.assertRaises(ValueError, int2ba, -1)
@@ -472,7 +472,8 @@ class TestsIntegerization(unittest.TestCase, Util):
     def test_int2ba_length(self):
         self.assertRaises(TypeError, int2ba, 0, 1.0)
         self.assertRaises(ValueError, int2ba, 0, 0)
-        self.assertEqual(int2ba(5, length=6), bitarray('000101'))
+        self.assertEqual(int2ba(5, length=6, endian='big'),
+                         bitarray('000101'))
         self.assertRaises(OverflowError, int2ba, 3, 1)
         for n in range(1, 100):
             ab = int2ba(1, n, 'big')
@@ -498,6 +499,7 @@ class TestsIntegerization(unittest.TestCase, Util):
                              bitarray(n * '1'))
 
     def test_explicit(self):
+        set_default_endian('big')
         for i, sa in [( 0,     '0'),    (1,         '1'),
                       ( 2,    '10'),    (3,        '11'),
                       (25, '11001'),  (265, '100001001'),
@@ -505,6 +507,7 @@ class TestsIntegerization(unittest.TestCase, Util):
             ab = bitarray(sa, 'big')
             al = bitarray(sa[::-1], 'little')
             self.assertEQUAL(int2ba(i), ab)
+            self.assertEQUAL(int2ba(i, endian='big'), ab)
             self.assertEQUAL(int2ba(i, endian='little'), al)
             self.assertEqual(ba2int(ab), ba2int(al), i)
             if i == 0 or i >= 512:
