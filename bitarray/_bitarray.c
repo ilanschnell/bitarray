@@ -3300,9 +3300,9 @@ tuple(sizeof(void *),\n\
 static PyMethodDef module_functions[] = {
     {"bitdiff",    (PyCFunction) bitdiff,    METH_VARARGS, bitdiff_doc   },
     {"bits2bytes", (PyCFunction) bits2bytes, METH_O,       bits2bytes_doc},
-    {"get_default_endian", (PyCFunction) get_default_endian, METH_O,
+    {"get_default_endian", (PyCFunction) get_default_endian, METH_NOARGS,
                                                    get_default_endian_doc},
-    {"set_default_endian", (PyCFunction) set_default_endian, METH_O,
+    {"set_default_endian", (PyCFunction) set_default_endian, METH_VARARGS,
                                                    set_default_endian_doc},
     {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS,  sysinfo_doc   },
     {NULL,         NULL}  /* sentinel */
