@@ -30,6 +30,7 @@ else:
 
 
 from bitarray import (bitarray, frozenbitarray,
+                      get_default_endian, set_default_endian,
                       bitdiff, bits2bytes, _sysinfo, __version__)
 
 
@@ -91,6 +92,23 @@ class Util(object):
 # ---------------------------------------------------------------------------
 
 class TestsModuleFunctions(unittest.TestCase, Util):
+
+    def test_default_endian(self):
+        self.assertTrue(get_default_endian() in ('big', 'little'))
+        self.assertRaises(TypeError, get_default_endian, 0)
+
+        self.assertRaises(TypeError, set_default_endian, 0)
+        self.assertRaises(TypeError, set_default_endian, 'little', 0)
+        self.assertRaises(ValueError, set_default_endian, 'foo')
+        for default_endian in 'big', 'little':
+            set_default_endian(default_endian)
+            self.assertEqual(get_default_endian(), default_endian)
+            a = bitarray('10111')
+            self.assertEqual(a.endian(), default_endian)
+
+            for endian in 'big', 'little':
+                a = bitarray('10111', endian=endian)
+                self.assertEqual(a.endian(), endian)
 
     def test_bitdiff(self):
         a = bitarray('0011')
@@ -260,7 +278,7 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertFalse(a is b)
             self.assertEQUAL(a, b)
 
-        for end in ('little', 'big'):
+        for end in 'little', 'big':
             a = bitarray(endian=end)
             c = bitarray(a)
             self.assertEqual(c.endian(), end)
@@ -1725,7 +1743,7 @@ tests.append(MethodTests)
 
 # ---------------------------------------------------------------------------
 
-class StringTests(unittest.TestCase, Util):
+class BytesTests(unittest.TestCase, Util):
 
     def randombytes(self):
         for n in range(1, 20):
@@ -1831,7 +1849,7 @@ class StringTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.pack, bitarray())
 
 
-tests.append(StringTests)
+tests.append(BytesTests)
 
 # ---------------------------------------------------------------------------
 
