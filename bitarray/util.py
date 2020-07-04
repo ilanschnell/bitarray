@@ -104,7 +104,11 @@ _swap_table = None
 def _swap(a):
     global _swap_table
     if _swap_table is None:
-        _swap_table = bytes([16 * (i % 16) + (i // 16) for i in range(256)])
+        table = [16 * (i % 16) + (i // 16) for i in range(256)]
+        if _is_py2:
+            _swap_table = bytes(''.join(chr(i) for i in table))
+        else:
+            _swap_table = bytes(table)
     assert len(a) % 8 == 0
     b = bitarray(endian=a.endian())
     b.frombytes(a.tobytes().translate(_swap_table))
