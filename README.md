@@ -660,12 +660,13 @@ Change log
 
 2020-07-XX   1.3.0:
 
-  * add get_default_endian() and set_default_endian()
-  * add bitarray.util.make_endian()
-  * util.ba2hex() and util.hex2ba() now also support little-endian
-  * remove .fromstring() and .tostring() methods, these have been
-    deprecated since version 0.4.0
-  * add __all__ in bitarray/__init__.py
+  * add `get_default_endian()` and `set_default_endian()`
+  * add `bitarray.util.make_endian()`
+  * `util.ba2hex()` and `util.hex2ba()` now also support little-endian
+  * remove `.fromstring()` and `.tostring()` methods, these have been
+    deprecated for 8 years, since version 0.4.0
+  * add `__all__` in `bitarray/__init__.py`
+  * drop Python 3.3 and 3.4 support
 
 
 *1.2.2* (2020-05-18):
