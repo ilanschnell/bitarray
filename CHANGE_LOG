@@ -2,6 +2,7 @@
 -------------------
   * add get_default_endian() and set_default_endian()
   * add bitarray.util.make_endian()
+  * util.ba2hex() and util.hex2ba() now also support little-endian
   * remove .fromstring() and .tostring() methods, these have been
     deprecated since version 0.4.0
   * add __all__ in bitarray/__init__.py

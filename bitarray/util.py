@@ -100,11 +100,14 @@ Allowed values for mode are the strings: `left`, `right`, `both`
     return a[first:last + 1]
 
 
-def _swap_le(a):
-    b = bitarray(endian='little')
-    for i in range(0, 8 * len(a), 8):
-        b.extend(a[i + 4 : i + 8])
-        b.extend(a[i + 0 : i + 4])
+_swap_table = None
+def _swap(a):
+    global _swap_table
+    if _swap_table is None:
+        _swap_table = bytes([16 * (i % 16) + (i // 16) for i in range(256)])
+    assert len(a) % 8 == 0
+    b = bitarray(endian=a.endian())
+    b.frombytes(a.tobytes().translate(_swap_table))
     return b
 
 
@@ -125,7 +128,7 @@ the bitarray (which has to be multiple of 4 in length).
         a = a + bitarray(4, endian=a.endian())
     assert a.length() % 8 == 0
     if a.endian() == 'little':
-        a = _swap_le(a)
+        a = _swap(a)
 
     s = binascii.hexlify(a.tobytes())
     if la % 8:
@@ -150,7 +153,7 @@ hexstr may contain any number of hex digits (upper or lower case).
     a = bitarray(endian=endian or get_default_endian())
     a.frombytes(binascii.unhexlify(s))
     if a.endian() == 'little':
-        a = _swap_le(a)
+        a = _swap(a)
 
     if ls % 2:
         del a[-4:]
