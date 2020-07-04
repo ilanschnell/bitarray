@@ -3239,7 +3239,11 @@ Return the number of bytes necessary to store n bits.");
 static PyObject *
 get_default_endian(PyObject *self)
 {
+#ifdef IS_PY3K
     return PyUnicode_FromString(default_endian ? "big" : "little");
+#else
+    return PyString_FromString(default_endian ? "big" : "little");
+#endif
 }
 
 PyDoc_STRVAR(get_default_endian_doc,
