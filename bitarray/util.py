@@ -60,12 +60,13 @@ unchanged.
         return a
 
     b = bitarray(a, endian=endian)
-    if len(a) == 0:
+    la = a.length()
+    if la == 0:
         return b
 
     b.bytereverse()
-    if len(a) % 8:
-        p = 8 * (bits2bytes(len(a)) - 1)
+    if la % 8:
+        p = 8 * (bits2bytes(la) - 1)
         b[p:] = a[p:]
     return b
 
@@ -109,7 +110,7 @@ def _swap(a):
             _swap_table = bytes(''.join(chr(i) for i in table))
         else:
             _swap_table = bytes(table)
-    assert len(a) % 8 == 0
+    assert a.length() % 8 == 0
     b = bitarray(endian=a.endian())
     b.frombytes(a.tobytes().translate(_swap_table))
     return b
