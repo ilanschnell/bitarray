@@ -37,6 +37,7 @@ typedef long long int idx_t;
 
 /* throughout:  0 = little endian   1 = big endian */
 #define DEFAULT_ENDIAN  1
+static int default_endian = DEFAULT_ENDIAN;
 
 /* Unlike the normal convention, ob_size is the byte count, not the number
    of elements.  The reason for doing this is that we can use our own
@@ -2738,6 +2739,26 @@ bitarray_methods[] = {
 };
 
 
+/* Given a string, return an integer representing the endianness.
+   If the string is invalid, set a Python exception and return -1. */
+static int
+endian_from_string(const char* string, int default_value)
+{
+    assert(default_value == 0 || default_value == 1);
+    if (string == NULL)
+        return default_value;
+
+    if (strcmp(string, "little") == 0)
+        return 0;
+
+    if (strcmp(string, "big") == 0)
+        return 1;
+
+    PyErr_SetString(PyExc_ValueError, "endian must be 'little' or 'big'");
+    return -1;
+}
+
+
 static PyObject *
 bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
@@ -2751,20 +2772,9 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
                         "|Os:bitarray", kwlist, &initial, &endian_str))
         return NULL;
 
-    if (endian_str == NULL) {
-        endian = DEFAULT_ENDIAN;  /* use default value */
-    }
-    else if (strcmp(endian_str, "little") == 0) {
-        endian = 0;
-    }
-    else if (strcmp(endian_str, "big") == 0) {
-        endian = 1;
-    }
-    else {
-        PyErr_SetString(PyExc_ValueError,
-                        "endian must be 'little' or 'big'");
+    endian = endian_from_string(endian_str, default_endian);
+    if (endian < 0)
         return NULL;
-    }
 
     /* no arg or None */
     if (initial == NULL || initial == Py_None)
@@ -3227,6 +3237,41 @@ Return the number of bytes necessary to store n bits.");
 
 
 static PyObject *
+get_default_endian(PyObject *self)
+{
+    return PyUnicode_FromString(default_endian ? "big" : "little");
+}
+
+PyDoc_STRVAR(get_default_endian_doc,
+"get_default_endian() -> string\n\
+\n\
+Return the default endianness for new bitarray objects being created.\n\
+When not calling set_default_endian(), the return value is `big`.");
+
+
+static PyObject *
+set_default_endian(PyObject *self, PyObject *args)
+{
+    char *endian_str = NULL;
+
+    if (!PyArg_ParseTuple(args, "s:set_default_endian", &endian_str))
+        return NULL;
+
+    default_endian = endian_from_string(endian_str, DEFAULT_ENDIAN);
+    if (default_endian < 0)
+        return NULL;
+
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(set_default_endian_doc,
+"set_default_endian(endian='big')\n\
+\n\
+Set the default bit endianness for new bitarray objects being created.\n\
+The default endianness (when not calling this function) is big-endian.");
+
+
+static PyObject *
 sysinfo(void)
 {
     return Py_BuildValue("iiiiL",
@@ -3255,6 +3300,10 @@ tuple(sizeof(void *),\n\
 static PyMethodDef module_functions[] = {
     {"bitdiff",    (PyCFunction) bitdiff,    METH_VARARGS, bitdiff_doc   },
     {"bits2bytes", (PyCFunction) bits2bytes, METH_O,       bits2bytes_doc},
+    {"get_default_endian", (PyCFunction) get_default_endian, METH_O,
+                                                   get_default_endian_doc},
+    {"set_default_endian", (PyCFunction) set_default_endian, METH_O,
+                                                   set_default_endian_doc},
     {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS,  sysinfo_doc   },
     {NULL,         NULL}  /* sentinel */
 };
