@@ -6,6 +6,7 @@
   * remove .fromstring() and .tostring() methods, these have been
     deprecated since version 0.4.0
   * add __all__ in bitarray/__init__.py
+  * drop Python 3.3 and 3.4 support
 
 
 2020-05-18   1.2.2:
