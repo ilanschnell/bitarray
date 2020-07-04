@@ -379,12 +379,14 @@ class TestsHexlify(unittest.TestCase, Util):
     def test_ba2hex(self):
         self.assertEqual(ba2hex(bitarray(0, 'big')), '')
         self.assertEqual(ba2hex(bitarray('1110', 'big')), 'e')
+        self.assertEqual(ba2hex(bitarray('1110', 'little')), '7')
         self.assertEqual(ba2hex(bitarray('00000001', 'big')), '01')
         self.assertEqual(ba2hex(bitarray('10000000', 'big')), '80')
+        self.assertEqual(ba2hex(bitarray('00000001', 'little')), '08')
+        self.assertEqual(ba2hex(bitarray('10000000', 'little')), '10')
         self.assertEqual(ba2hex(frozenbitarray('11000111', 'big')), 'c7')
         # length not multiple of 4
         self.assertRaises(ValueError, ba2hex, bitarray('10'))
-        self.assertRaises(ValueError, ba2hex, bitarray(endian='little'))
         self.assertRaises(TypeError, ba2hex, '101')
 
         c = ba2hex(bitarray('1101', 'big'))
@@ -398,41 +400,49 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
 
     def test_hex2ba(self):
+        set_default_endian('big')
         self.assertEqual(hex2ba(''), bitarray())
         for c in 'e', 'E', b'e', b'E', unicode('e'), unicode('E'):
             a = hex2ba(c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
         self.assertEQUAL(hex2ba('01'), bitarray('00000001', 'big'))
+        self.assertEQUAL(hex2ba('08', 'little'),
+                         bitarray('00000001', 'little'))
         self.assertRaises(Exception, hex2ba, '01a7x89')
         self.assertRaises(TypeError, hex2ba, 0)
 
     def test_explicit(self):
-        for h, bs in [('',    ''),
-                      ('0',   '0000'),
-                      ('a',   '1010'),
-                      ('f',   '1111'),
-                      ('1a',  '00011010'),
-                      ('2b',  '00101011'),
-                      ('4c1', '010011000001'),
-                      ('a7d', '101001111101')]:
-            a = bitarray(bs, 'big')
-            self.assertEQUAL(hex2ba(h), a)
-            self.assertEqual(ba2hex(a), h)
+        #                      big   little   bits
+        for h_be, h_le, bs in [('',    '',    ''),
+                               ('0',   '0',   '0000'),
+                               ('a',   '5',   '1010'),
+                               ('f',   'f',   '1111'),
+                               ('1a',  '85',  '00011010'),
+                               ('2b',  '4d',  '00101011'),
+                               ('4c1', '238', '010011000001'),
+                               ('a7d', '5eb', '101001111101')]:
+            b_be = bitarray(bs, 'big')
+            b_le = bitarray(bs, 'little')
+            self.assertEQUAL(hex2ba(h_be, 'big'), b_be)
+            self.assertEQUAL(hex2ba(h_le, 'little'), b_le)
+            self.assertEqual(ba2hex(b_be), h_be)
+            self.assertEqual(ba2hex(b_le), h_le)
 
     def test_round_trip(self):
         for i in range(100):
             s = ''.join(choice(hexdigits) for _ in range(randint(0, 1000)))
-            t = ba2hex(hex2ba(s))
-            self.assertEqual(t, s.lower())
-
-    def test_round_trip2(self):
-        for a in self.randombitarrays():
-            if len(a) % 4 or a.endian() != 'big':
-                self.assertRaises(ValueError, ba2hex, a)
-                continue
-            b = hex2ba(ba2hex(a))
-            self.assertEQUAL(b, a)
+            for default_endian in 'big', 'little':
+                set_default_endian(default_endian)
+                a = hex2ba(s)
+                ida = id(a)
+                self.assertEqual(len(a) % 4, 0)
+                self.assertEqual(a.endian(), default_endian)
+                t = ba2hex(a)
+                self.assertEqual(t, s.lower())
+                b = hex2ba(t, default_endian)
+                self.assertEQUAL(a, b)
+                self.assertEqual(id(a), ida)
 
 tests.append(TestsHexlify)
 

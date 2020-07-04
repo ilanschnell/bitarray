@@ -108,15 +108,20 @@ the bitarray (which has to be multiple of 4 in length).
 """
     if not isinstance(a, _bitarray):
         raise TypeError("bitarray expected")
-    if a.endian() != 'big':
-        raise ValueError("big-endian bitarray expected")
+
     la = a.length()
     if la % 4:
         raise ValueError("bitarray length not multiple of 4")
     if la % 8:
         # make sure we don't mutate the original argument
-        a = a + bitarray(4, 'big')
+        a = a + bitarray(4, endian=a.endian())
     assert a.length() % 8 == 0
+    if a.endian() == 'little':
+        b = bitarray(endian='little')
+        for i in range(0, 8 * la, 8):
+            b.extend(a[i + 4 : i + 8])
+            b.extend(a[i + 0 : i + 4])
+        a = b
 
     s = binascii.hexlify(a.tobytes())
     if la % 8:
@@ -124,22 +129,35 @@ the bitarray (which has to be multiple of 4 in length).
     return s if _is_py2 else s.decode()
 
 
-def hex2ba(s):
-    """hex2ba(hexstr, /) -> bitarray
+def hex2ba(s, endian=None):
+    """hex2ba(hexstr, /, endian=None) -> bitarray
 
 Bitarray of hexadecimal representation.
 hexstr may contain any number of hex digits (upper or lower case).
 """
     if not isinstance(s, (str, unicode if _is_py2 else bytes)):
         raise TypeError("string expected, got: %r" % s)
+    if endian is None:
+        endian = get_default_endian()
+    if not isinstance(endian, str):
+        raise TypeError("string expected for endian")
+    if endian not in ('big', 'little'):
+        raise ValueError("endian can only be 'big' or 'little'")
 
     ls = len(s)
     if ls % 2:
         s = s + ('0' if isinstance(s, str) else b'0')
     assert len(s) % 2 == 0
 
-    a = bitarray(endian='big')
+    a = bitarray(endian=endian)
     a.frombytes(binascii.unhexlify(s))
+    if endian == 'little':
+        b = bitarray(endian='little')
+        for i in range(0, 4 * ls, 8):
+            b.extend(a[i + 4 : i + 8])
+            b.extend(a[i + 0 : i + 4])
+        a = b
+
     if ls % 2:
         del a[-4:]
     return a

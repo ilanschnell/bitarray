@@ -1,5 +1,6 @@
 2020-07-XX   1.3.0:
 -------------------
+  * add get_default_endian() and set_default_endian()
   * add bitarray.util.make_endian()
   * remove .fromstring() and .tostring() methods, these have been
     deprecated since version 0.4.0
