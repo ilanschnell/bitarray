@@ -9,7 +9,7 @@ import sys
 import heapq
 import binascii
 
-from bitarray import bitarray, bits2bytes, _bitarray
+from bitarray import bitarray, bits2bytes, _bitarray, get_default_endian
 
 from bitarray._util import (count_n, rindex,
                             count_and, count_or, count_xor, subset,
@@ -28,15 +28,16 @@ _set_babt(_bitarray)
 _is_py2 = bool(sys.version_info[0] == 2)
 
 
-def zeros(length, endian='big'):
-    """zeros(length, /, endian='big') -> bitarray
+def zeros(length, endian=None):
+    """zeros(length, /, endian=None) -> bitarray
 
-Create a bitarray of length, with all values 0.
+Create a bitarray of length, with all values 0, and optional given endianness,
+ which may be 'big', 'lillte' or None (meaning default endianness).
 """
     if not isinstance(length, (int, long) if _is_py2 else int):
         raise TypeError("integer expected")
 
-    a = bitarray(length, endian)
+    a = bitarray(length, endian or get_default_endian())
     a.setall(0)
     return a
 
@@ -178,8 +179,8 @@ The bit-endianness of the bitarray is respected.
         return int.from_bytes(b, byteorder=endian)
 
 
-def int2ba(i, length=None, endian='big'):
-    """int2ba(int, /, length=None, endian='big') -> bitarray
+def int2ba(i, length=None, endian=None):
+    """int2ba(int, /, length=None, endian=None) -> bitarray
 
 Convert the given integer into a bitarray (with given endianness,
 and no leading (big-endian) / trailing (little-endian) zeros).
@@ -196,6 +197,8 @@ within length bits.
             raise TypeError("integer expected for length")
         if length <= 0:
             raise ValueError("integer larger than 0 expected for length")
+    if endian is None:
+        endian = get_default_endian()
     if not isinstance(endian, str):
         raise TypeError("string expected for endian")
     if endian not in ('big', 'little'):
@@ -243,8 +246,8 @@ within length bits.
     return a
 
 
-def huffman_code(freq_map, endian='big'):
-    """huffman_code(dict, /, endian='big') -> dict
+def huffman_code(freq_map, endian=None):
+    """huffman_code(dict, /, endian=None) -> dict
 
 Given a frequency map, a dictionary mapping symbols to thier frequency,
 calculate the Huffman code, i.e. a dict mapping those symbols to
@@ -255,6 +258,8 @@ hashable object (including `None`).
         raise TypeError("dict expected")
     if len(freq_map) == 0:
         raise ValueError("non-empty dict expected")
+    if endian is None:
+        endian = get_default_endian()
 
     class Node(object):
         # a Node object will have either .symbol or .child set below,
