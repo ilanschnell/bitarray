@@ -100,6 +100,14 @@ Allowed values for mode are the strings: `left`, `right`, `both`
     return a[first:last + 1]
 
 
+def _swap_le(a):
+    b = bitarray(endian='little')
+    for i in range(0, 8 * len(a), 8):
+        b.extend(a[i + 4 : i + 8])
+        b.extend(a[i + 0 : i + 4])
+    return b
+
+
 def ba2hex(a):
     """ba2hex(bitarray, /) -> hexstr
 
@@ -117,11 +125,7 @@ the bitarray (which has to be multiple of 4 in length).
         a = a + bitarray(4, endian=a.endian())
     assert a.length() % 8 == 0
     if a.endian() == 'little':
-        b = bitarray(endian='little')
-        for i in range(0, 8 * la, 8):
-            b.extend(a[i + 4 : i + 8])
-            b.extend(a[i + 0 : i + 4])
-        a = b
+        a = _swap_le(a)
 
     s = binascii.hexlify(a.tobytes())
     if la % 8:
@@ -137,26 +141,16 @@ hexstr may contain any number of hex digits (upper or lower case).
 """
     if not isinstance(s, (str, unicode if _is_py2 else bytes)):
         raise TypeError("string expected, got: %r" % s)
-    if endian is None:
-        endian = get_default_endian()
-    if not isinstance(endian, str):
-        raise TypeError("string expected for endian")
-    if endian not in ('big', 'little'):
-        raise ValueError("endian can only be 'big' or 'little'")
 
     ls = len(s)
     if ls % 2:
         s = s + ('0' if isinstance(s, str) else b'0')
     assert len(s) % 2 == 0
 
-    a = bitarray(endian=endian)
+    a = bitarray(endian=endian or get_default_endian())
     a.frombytes(binascii.unhexlify(s))
-    if endian == 'little':
-        b = bitarray(endian='little')
-        for i in range(0, 4 * ls, 8):
-            b.extend(a[i + 4 : i + 8])
-            b.extend(a[i + 0 : i + 4])
-        a = b
+    if a.endian() == 'little':
+        a = _swap_le(a)
 
     if ls % 2:
         del a[-4:]
