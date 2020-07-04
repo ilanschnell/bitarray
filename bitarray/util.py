@@ -101,19 +101,12 @@ Allowed values for mode are the strings: `left`, `right`, `both`
     return a[first:last + 1]
 
 
-_swap_table = None
-def _swap(a):
-    global _swap_table
-    if _swap_table is None:
-        table = [16 * (i % 16) + (i // 16) for i in range(256)]
-        if _is_py2:
-            _swap_table = bytes(''.join(chr(i) for i in table))
-        else:
-            _swap_table = bytes(table)
-    assert a.length() % 8 == 0
-    b = bitarray(endian=a.endian())
-    b.frombytes(a.tobytes().translate(_swap_table))
-    return b
+# translate table which swaps the 4 highest with the 4 lowest bits"
+_swap_hilo_list = [16 * (i % 16) + (i // 16) for i in range(256)]
+if _is_py2:
+    _swap_hilo_bytes = b''.join(chr(i) for i in _swap_hilo_list)
+else:
+    _swap_hilo_bytes = bytes(_swap_hilo_list)
 
 
 def ba2hex(a):
@@ -131,11 +124,12 @@ the bitarray (which has to be multiple of 4 in length).
     if la % 8:
         # make sure we don't mutate the original argument
         a = a + bitarray(4, endian=a.endian())
-    assert a.length() % 8 == 0
-    if a.endian() == 'little':
-        a = _swap(a)
 
-    s = binascii.hexlify(a.tobytes())
+    b = a.tobytes()
+    if a.endian() == 'little':
+        b = b.translate(_swap_hilo_bytes)
+
+    s = binascii.hexlify(b)
     if la % 8:
         s = s[:-1]
     return s if _is_py2 else s.decode()
@@ -153,12 +147,12 @@ hexstr may contain any number of hex digits (upper or lower case).
     ls = len(s)
     if ls % 2:
         s = s + ('0' if isinstance(s, str) else b'0')
-    assert len(s) % 2 == 0
 
     a = bitarray(endian=endian or get_default_endian())
-    a.frombytes(binascii.unhexlify(s))
+    b = binascii.unhexlify(s)
     if a.endian() == 'little':
-        a = _swap(a)
+        b = b.translate(_swap_hilo_bytes)
+    a.frombytes(b)
 
     if ls % 2:
         del a[-4:]
