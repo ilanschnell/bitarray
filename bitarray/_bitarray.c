@@ -3258,7 +3258,7 @@ set_default_endian(PyObject *self, PyObject *args)
 {
     char *endian_str = NULL;
 
-    if (!PyArg_ParseTuple(args, "s:set_default_endian", &endian_str))
+    if (!PyArg_ParseTuple(args, "|s:set_default_endian", &endian_str))
         return NULL;
 
     default_endian = endian_from_string(endian_str, DEFAULT_ENDIAN);
@@ -3269,7 +3269,7 @@ set_default_endian(PyObject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(set_default_endian_doc,
-"set_default_endian(endian='big')\n\
+"set_default_endian(endian='big', /)\n\
 \n\
 Set the default bit endianness for new bitarray objects being created.\n\
 The default endianness (when not calling this function) is big-endian.");

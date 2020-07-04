@@ -112,6 +112,16 @@ class TestsModuleFunctions(unittest.TestCase, Util):
                 a = bitarray('10111', endian=endian)
                 self.assertEqual(a.endian(), endian)
 
+    def test_set_default_endian_noargs(self):
+        # Test that calling set_default_endian() with no arguments always
+        # sets the default endianness to big-endian, which is the hard-coded
+        # default of the default endianness.
+        for default_endian in 'big', 'little':
+            set_default_endian(default_endian)
+            self.assertEqual(get_default_endian(), default_endian)
+            set_default_endian()
+            self.assertEqual(get_default_endian(), 'big')
+
     def test_bitdiff(self):
         a = bitarray('0011')
         b = bitarray('0101')
