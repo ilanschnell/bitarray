@@ -413,21 +413,25 @@ class TestsHexlify(unittest.TestCase, Util):
         self.assertRaises(TypeError, hex2ba, 0)
 
     def test_explicit(self):
-        #                      big   little   bits
-        for h_be, h_le, bs in [('',    '',    ''),
-                               ('0',   '0',   '0000'),
-                               ('a',   '5',   '1010'),
-                               ('f',   'f',   '1111'),
-                               ('1a',  '85',  '00011010'),
-                               ('2b',  '4d',  '00101011'),
-                               ('4c1', '238', '010011000001'),
-                               ('a7d', '5eb', '101001111101')]:
-            b_be = bitarray(bs, 'big')
-            b_le = bitarray(bs, 'little')
-            self.assertEQUAL(hex2ba(h_be, 'big'), b_be)
-            self.assertEQUAL(hex2ba(h_le, 'little'), b_le)
-            self.assertEqual(ba2hex(b_be), h_be)
-            self.assertEqual(ba2hex(b_le), h_le)
+        data = [ #           little  big
+            ('',             '',     ''),
+            ('0000',         '0',    '0'),
+            ('1000',         '1',    '8'),
+            ('0100',         '2',    '4'),
+            ('1010',         '5',    'a'),
+            ('1111',         'f',    'f'),
+            ('00011010',     '85',   '1a'),
+            ('00101011',     '4d',   '2b'),
+            ('010011000001', '238',  '4c1'),
+            ('101001111101', '5eb',  'a7d'),
+        ]
+        for bs, hex_le, hex_be in data:
+            a_be = bitarray(bs, 'big')
+            a_le = bitarray(bs, 'little')
+            self.assertEQUAL(hex2ba(hex_be, 'big'), a_be)
+            self.assertEQUAL(hex2ba(hex_le, 'little'), a_le)
+            self.assertEqual(ba2hex(a_be), hex_be)
+            self.assertEqual(ba2hex(a_le), hex_le)
 
     def test_round_trip(self):
         for i in range(100):
