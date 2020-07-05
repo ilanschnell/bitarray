@@ -3256,7 +3256,7 @@ set_default_endian(PyObject *self, PyObject *args)
 {
     char *endian_str = NULL;
 
-    if (!PyArg_ParseTuple(args, "s:set_default_endian", &endian_str))
+    if (!PyArg_ParseTuple(args, "s:_set_default_endian", &endian_str))
         return NULL;
 
     default_endian = endian_from_string(endian_str);

@@ -11,8 +11,7 @@ try:
 except ImportError:
     pass
 
-from bitarray import bitarray, frozenbitarray, bits2bytes
-from bitarray._bitarray import _set_default_endian
+from bitarray import bitarray, frozenbitarray, bits2bytes, _set_default_endian
 from bitarray.test_bitarray import Util
 
 from bitarray.util import (zeros, make_endian, rindex, strip, count_n,

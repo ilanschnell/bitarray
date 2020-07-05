@@ -523,7 +523,7 @@ using the specified mapping.
 The frozenbitarray object:
 --------------------------
 
-`frozenbitarray(initial=0, /, endian='big')` -> frozenbitarray
+`frozenbitarray(initializer=0, /, endian='big')` -> frozenbitarray
 
 Return a frozenbitarray object, which is initialized the same way a bitarray
 object is initialized.  A frozenbitarray is immutable and hashable.
@@ -657,6 +657,7 @@ Change log
   * add `bitarray.util.make_endian()`
   * `util.ba2hex()` and `util.hex2ba()` now also support little-endian
   * add `bitarray.get_default_endian()`
+  * made first argument of initializer a positional-only parameter
   * remove `.fromstring()` and `.tostring()` methods, these have been
     deprecated 8 years ago, since version 0.4.0
   * add `__all__` in `bitarray/__init__.py`

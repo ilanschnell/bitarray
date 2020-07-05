@@ -30,8 +30,8 @@ else:
 
 
 from bitarray import (bitarray, frozenbitarray, bitdiff, bits2bytes,
-                      _sysinfo, get_default_endian, __version__)
-from bitarray._bitarray import _set_default_endian
+                      get_default_endian, _sysinfo, _set_default_endian,
+                      __version__)
 
 tests = []
 
