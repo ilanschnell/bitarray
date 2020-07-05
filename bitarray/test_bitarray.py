@@ -29,9 +29,8 @@ else:
     from cStringIO import StringIO
 
 
-from bitarray import (bitarray, frozenbitarray,
-                      get_default_endian, set_default_endian,
-                      bitdiff, bits2bytes, _sysinfo, __version__)
+from bitarray import (bitarray, frozenbitarray, bitdiff, bits2bytes,
+                      _sysinfo, _set_default_endian, __version__)
 
 
 tests = []
@@ -94,33 +93,23 @@ class Util(object):
 class TestsModuleFunctions(unittest.TestCase, Util):
 
     def test_default_endian(self):
-        de = get_default_endian()
-        self.assertIsInstance(de, str)
-        self.assertTrue(de in ('big', 'little'))
-        self.assertRaises(TypeError, get_default_endian, 0)
-
-        self.assertRaises(TypeError, set_default_endian, 0)
-        self.assertRaises(TypeError, set_default_endian, 'little', 0)
-        self.assertRaises(ValueError, set_default_endian, 'foo')
-        for default_endian in 'big', 'little':
-            set_default_endian(default_endian)
-            self.assertEqual(get_default_endian(), default_endian)
+        self.assertRaises(TypeError, _set_default_endian, 0)
+        self.assertRaises(TypeError, _set_default_endian, 'little', 0)
+        self.assertRaises(ValueError, _set_default_endian, 'foo')
+        for default_endian in 'big', 'little', u'big', u'little':
+            res = _set_default_endian(default_endian)
+            self.assertEqual(res, default_endian)
+            a = bitarray()
+            self.assertEqual(a.endian(), default_endian)
             a = bitarray('10111')
             self.assertEqual(a.endian(), default_endian)
 
             for endian in 'big', 'little':
-                a = bitarray('10111', endian=endian)
+                a = bitarray(endian=endian)
                 self.assertEqual(a.endian(), endian)
 
-    def test_set_default_endian_noargs(self):
-        # Test that calling set_default_endian() with no arguments always
-        # sets the default endianness to big-endian, which is the hard-coded
-        # default of the default endianness.
-        for default_endian in 'big', 'little':
-            set_default_endian(default_endian)
-            self.assertEqual(get_default_endian(), default_endian)
-            set_default_endian()
-            self.assertEqual(get_default_endian(), 'big')
+            # note that we call _set_default_endian() with no argument
+            self.assertEqual(_set_default_endian(), default_endian)
 
     def test_bitdiff(self):
         a = bitarray('0011')

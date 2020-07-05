@@ -9,7 +9,7 @@ Please find a description of this package at:
 Author: Ilan Schnell
 """
 from bitarray._bitarray import (_bitarray, bitdiff, bits2bytes, _sysinfo,
-                                get_default_endian, set_default_endian)
+                                _set_default_endian)
 
 __version__ = '1.3.0'
 

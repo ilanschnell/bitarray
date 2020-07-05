@@ -12,7 +12,7 @@ except ImportError:
     pass
 
 from bitarray import (bitarray, frozenbitarray, bits2bytes,
-                      get_default_endian, set_default_endian)
+                      _set_default_endian)
 from bitarray.test_bitarray import Util
 
 from bitarray.util import (zeros, make_endian, rindex, strip, count_n,
@@ -30,18 +30,22 @@ class TestsZeros(unittest.TestCase):
 
     def test_1(self):
         for default_endian in 'big', 'little':
-            set_default_endian(default_endian)
+            _set_default_endian(default_endian)
             a = zeros(0)
             self.assertEqual(a, bitarray())
             self.assertEqual(a.endian(), default_endian)
+
+            b  = zeros(0, endian=None)
+            self.assertEqual(b.endian(), default_endian)
+
             for n in range(100):
                 a = zeros(n)
                 self.assertEqual(a, bitarray(n * '0'))
 
-            for endian in 'big', 'little', None:
+            for endian in 'big', 'little':
                 a = zeros(3, endian)
                 self.assertEqual(a, bitarray('000'))
-                self.assertEqual(a.endian(), endian or get_default_endian())
+                self.assertEqual(a.endian(), endian)
 
     def test_wrong_args(self):
         self.assertRaises(TypeError, zeros) # no argument
@@ -172,7 +176,7 @@ class TestsHelpers(unittest.TestCase, Util):
         self.assertRaises(TypeError, strip, bitarray(), 123)
         self.assertRaises(ValueError, strip, bitarray(), 'up')
         for default_endian in 'big', 'little':
-            set_default_endian(default_endian)
+            _set_default_endian(default_endian)
             a = bitarray('00010110000')
             self.assertEQUAL(strip(a), bitarray('0001011'))
             self.assertEQUAL(strip(a, 'left'), bitarray('10110000'))
@@ -400,7 +404,7 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
 
     def test_hex2ba(self):
-        set_default_endian('big')
+        _set_default_endian('big')
         self.assertEqual(hex2ba(''), bitarray())
         for c in 'e', 'E', b'e', b'E', unicode('e'), unicode('E'):
             a = hex2ba(c)
@@ -440,7 +444,7 @@ class TestsHexlify(unittest.TestCase, Util):
         for i in range(100):
             s = ''.join(choice(hexdigits) for _ in range(randint(0, 1000)))
             for default_endian in 'big', 'little':
-                set_default_endian(default_endian)
+                _set_default_endian(default_endian)
                 a = hex2ba(s)
                 ida = id(a)
                 self.assertEqual(len(a) % 4, 0)
@@ -516,7 +520,7 @@ class TestsIntegerization(unittest.TestCase, Util):
                              bitarray(n * '1'))
 
     def test_explicit(self):
-        set_default_endian('big')
+        _set_default_endian('big')
         for i, sa in [( 0,     '0'),    (1,         '1'),
                       ( 2,    '10'),    (3,        '11'),
                       (25, '11001'),  (265, '100001001'),

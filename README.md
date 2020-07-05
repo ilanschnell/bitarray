@@ -534,18 +534,6 @@ a dictionary key.
 Functions defined in the module:
 --------------------------------
 
-`get_default_endian()` -> string
-
-Return the default endianness for new bitarray objects being created.
-When not calling set_default_endian(), the return value is `big`.
-
-
-`set_default_endian(endian='big', /)`
-
-Set the default bit endianness for new bitarray objects being created.
-The default endianness (when not calling this function) is big-endian.
-
-
 `test(verbosity=1, repeat=1)` -> TextTestResult
 
 Run self-test, and return unittest.runner.TextTestResult object.
@@ -561,8 +549,8 @@ Functions defined in bitarray.util:
 
 `zeros(length, /, endian=None)` -> bitarray
 
-Create a bitarray of length, with all values 0, and optional given endianness,
- which may be 'big', 'lillte' or None (meaning default endianness).
+Create a bitarray of length, with all values 0, and optional
+endianness, which may be 'big', 'lillte'.
 
 
 `make_endian(bitarray, endian, /)` -> bitarray

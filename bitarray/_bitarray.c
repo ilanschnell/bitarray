@@ -3237,23 +3237,6 @@ Return the number of bytes necessary to store n bits.");
 
 
 static PyObject *
-get_default_endian(PyObject *self)
-{
-#ifdef IS_PY3K
-    return PyUnicode_FromString(default_endian ? "big" : "little");
-#else
-    return PyString_FromString(default_endian ? "big" : "little");
-#endif
-}
-
-PyDoc_STRVAR(get_default_endian_doc,
-"get_default_endian() -> string\n\
-\n\
-Return the default endianness for new bitarray objects being created.\n\
-When not calling set_default_endian(), the return value is `big`.");
-
-
-static PyObject *
 set_default_endian(PyObject *self, PyObject *args)
 {
     char *endian_str = NULL;
@@ -3261,18 +3244,24 @@ set_default_endian(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "|s:set_default_endian", &endian_str))
         return NULL;
 
-    default_endian = endian_from_string(endian_str, DEFAULT_ENDIAN);
-    if (default_endian < 0)
-        return NULL;
-
-    Py_RETURN_NONE;
+    if (endian_str) {
+        default_endian = endian_from_string(endian_str, DEFAULT_ENDIAN);
+        if (default_endian < 0)
+            return NULL;
+    }
+#ifdef IS_PY3K
+    return PyUnicode_FromString(default_endian ? "big" : "little");
+#else
+    return PyString_FromString(default_endian ? "big" : "little");
+#endif
 }
 
 PyDoc_STRVAR(set_default_endian_doc,
-"set_default_endian(endian='big', /)\n\
+"_set_default_endian(endian='big', /)\n\
 \n\
 Set the default bit endianness for new bitarray objects being created.\n\
-The default endianness (when not calling this function) is big-endian.");
+The default endianness is always returned, such that calling this\n\
+function with no argument will only return the default endianness.");
 
 
 static PyObject *
@@ -3304,9 +3293,7 @@ tuple(sizeof(void *),\n\
 static PyMethodDef module_functions[] = {
     {"bitdiff",    (PyCFunction) bitdiff,    METH_VARARGS, bitdiff_doc   },
     {"bits2bytes", (PyCFunction) bits2bytes, METH_O,       bits2bytes_doc},
-    {"get_default_endian", (PyCFunction) get_default_endian, METH_NOARGS,
-                                                   get_default_endian_doc},
-    {"set_default_endian", (PyCFunction) set_default_endian, METH_VARARGS,
+    {"_set_default_endian", (PyCFunction) set_default_endian, METH_VARARGS,
                                                    set_default_endian_doc},
     {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS,  sysinfo_doc   },
     {NULL,         NULL}  /* sentinel */
