@@ -786,10 +786,12 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 #ifdef IS_PY3K
 #define IS_INDEX(x)  (PyLong_Check(x) || PyIndex_Check(x))
 #define IS_INT_OR_BOOL(x)  (PyBool_Check(x) || PyLong_Check(x))
+#define Py_CSTRING  PyUnicode_FromString
 #else  /* Py 2 */
 #define IS_INDEX(x)  (PyInt_Check(x) || PyLong_Check(x) || PyIndex_Check(x))
 #define IS_INT_OR_BOOL(x)  (PyBool_Check(x) || PyInt_Check(x) || \
                                                PyLong_Check(x))
+#define Py_CSTRING  PyString_FromString
 #endif
 
 /* given an PyLong (which must be 0 or 1), or a PyBool, return 0 or 1,
@@ -1161,11 +1163,7 @@ contents, the bit endianness as a string, the number of unused bits\n\
 static PyObject *
 bitarray_endian(bitarrayobject *self)
 {
-#ifdef IS_PY3K
-    return PyUnicode_FromString(ENDIAN_STR(self));
-#else
-    return PyString_FromString(ENDIAN_STR(self));
-#endif
+    return Py_CSTRING(ENDIAN_STR(self));
 }
 
 PyDoc_STRVAR(endian_doc,
@@ -3237,11 +3235,7 @@ Return the number of bytes necessary to store n bits.");
 static PyObject *
 get_default_endian(PyObject *self)
 {
-#ifdef IS_PY3K
-    return PyUnicode_FromString(default_endian ? "big" : "little");
-#else
-    return PyString_FromString(default_endian ? "big" : "little");
-#endif
+    return Py_CSTRING(default_endian ? "big" : "little");
 }
 
 PyDoc_STRVAR(get_default_endian_doc,
