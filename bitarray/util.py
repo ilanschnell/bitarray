@@ -9,7 +9,7 @@ import sys
 import heapq
 import binascii
 
-from bitarray import bitarray, bits2bytes, _bitarray, _set_default_endian
+from bitarray import bitarray, bits2bytes, _bitarray, get_default_endian
 
 from bitarray._util import (count_n, rindex,
                             count_and, count_or, count_xor, subset,
@@ -37,7 +37,7 @@ endianness, which may be 'big', 'lillte'.
     if not isinstance(length, (int, long) if _is_py2 else int):
         raise TypeError("integer expected")
 
-    a = bitarray(length, endian or _set_default_endian())
+    a = bitarray(length, endian or get_default_endian())
     a.setall(0)
     return a
 
@@ -148,7 +148,7 @@ hexstr may contain any number of hex digits (upper or lower case).
     if ls % 2:
         s = s + ('0' if isinstance(s, str) else b'0')
 
-    a = bitarray(endian=endian or _set_default_endian())
+    a = bitarray(endian=endian or get_default_endian())
     b = binascii.unhexlify(s)
     if a.endian() == 'little':
         b = b.translate(_swap_hilo_bytes)
@@ -212,7 +212,7 @@ within length bits.
         if length <= 0:
             raise ValueError("integer larger than 0 expected for length")
     if endian is None:
-        endian = _set_default_endian()
+        endian = get_default_endian()
     if not isinstance(endian, str):
         raise TypeError("string expected for endian")
     if endian not in ('big', 'little'):
@@ -309,7 +309,7 @@ hashable object (including `None`).
     result = {}
 
     def traverse(nd, prefix=bitarray(
-                             endian=endian or _set_default_endian())):
+                             endian=endian or get_default_endian())):
         if hasattr(nd, 'symbol'):  # leaf
             result[nd.symbol] = prefix
         else:  # parent, so traverse each of the children

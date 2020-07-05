@@ -30,8 +30,8 @@ else:
 
 
 from bitarray import (bitarray, frozenbitarray, bitdiff, bits2bytes,
-                      _sysinfo, _set_default_endian, __version__)
-
+                      _sysinfo, get_default_endian, __version__)
+from bitarray._bitarray import _set_default_endian
 
 tests = []
 
@@ -97,8 +97,7 @@ class TestsModuleFunctions(unittest.TestCase, Util):
         self.assertRaises(TypeError, _set_default_endian, 'little', 0)
         self.assertRaises(ValueError, _set_default_endian, 'foo')
         for default_endian in 'big', 'little', u'big', u'little':
-            res = _set_default_endian(default_endian)
-            self.assertEqual(res, default_endian)
+            _set_default_endian(default_endian)
             a = bitarray()
             self.assertEqual(a.endian(), default_endian)
             a = bitarray('10111')
@@ -108,8 +107,8 @@ class TestsModuleFunctions(unittest.TestCase, Util):
                 a = bitarray(endian=endian)
                 self.assertEqual(a.endian(), endian)
 
-            # note that we call _set_default_endian() with no argument
-            self.assertEqual(_set_default_endian(), default_endian)
+            # test get_default_endian()
+            self.assertEqual(get_default_endian(), default_endian)
 
     def test_bitdiff(self):
         a = bitarray('0011')

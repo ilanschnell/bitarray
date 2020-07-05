@@ -73,6 +73,7 @@ def write_reference():
              "--------------------------------\n\n")
     write_doc('test')
     write_doc('bits2bytes')
+    write_doc('get_default_endian')
 
     fo.write("Functions defined in bitarray.util:\n"
              "-----------------------------------\n\n")
