@@ -59,6 +59,12 @@ class Util(object):
             return randint(-length-5, length+5)
 
     @staticmethod
+    def other_endian(endian):
+        t = {'little': 'big',
+             'big': 'little'}
+        return t[endian]
+
+    @staticmethod
     def slicelen(s, length):
         assert isinstance(s, slice)
         start, stop, step = s.indices(length)
@@ -179,6 +185,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertIsInstance(a.endian(), str)
         self.check_obj(b)
 
+        self.assertNotEqual(a, b)
         self.assertEqual(a.tobytes(), b.tobytes())
 
     def test_endian_wrong(self):
@@ -271,21 +278,34 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertRaises(ValueError, bitarray.__new__,
                               bitarray, bytes(bytearray([i])))
 
-    def test_bitarray(self):
+    def test_bitarray_simple(self):
         for n in range(10):
             a = bitarray(n)
             b = bitarray(a)
             self.assertFalse(a is b)
             self.assertEQUAL(a, b)
 
-        for end in 'little', 'big':
-            a = bitarray(endian=end)
-            c = bitarray(a)
-            self.assertEqual(c.endian(), end)
-            c = bitarray(a, endian='little')
-            self.assertEqual(c.endian(), 'little')
-            c = bitarray(a, endian='big')
-            self.assertEqual(c.endian(), 'big')
+    def test_bitarray_endian(self):
+        # Test creating a new bitarray with different endianness from an
+        # existing bitarray.
+        for endian in 'little', 'big':
+            a = bitarray(endian=endian)
+            b = bitarray(a)
+            self.assertFalse(a is b)
+            self.assertEQUAL(a, b)
+
+            endian2 = self.other_endian(endian)
+            c = bitarray(a, endian2)
+            self.assertEqual(c.endian(), endian2)
+            self.assertEqual(a, c)  # but only because they are empty
+
+            # Even though the byte representation will be the same,
+            # the bitarrays are not equal.
+            a = bitarray('11001000', endian)
+            c = bitarray(a, endian2)
+            self.assertEqual(a.tobytes(), c.tobytes())
+            self.assertNotEqual(a.endian(), c.endian())
+            self.assertNotEqual(a, c)
 
     def test_bitarray_endianness(self):
         a = bitarray('11100001', endian='little')
