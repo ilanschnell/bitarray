@@ -301,8 +301,12 @@ class CreateObjectTests(unittest.TestCase, Util):
 
             # Even though the byte representation will be the same,
             # the bitarrays are not equal.
-            a = bitarray('11001000', endian)
+            a = bitarray('11001000' '11110000', endian)
+            self.assertEqual(len(a) % 8, 0)
             c = bitarray(a, endian2)
+            # This is only equal because the size of the bitarray is a
+            # multiple of 8, and unused bits are not set (which changes
+            # the byte representation).
             self.assertEqual(a.tobytes(), c.tobytes())
             self.assertNotEqual(a.endian(), c.endian())
             self.assertNotEqual(a, c)
