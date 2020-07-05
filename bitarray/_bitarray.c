@@ -2764,7 +2764,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     PyObject *initial = NULL;
     char *endian_str = NULL;
     int endian;
-    static char *kwlist[] = {"initial", "endian", NULL};
+    static char *kwlist[] = {"", "endian", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds,
                         "|Os:bitarray", kwlist, &initial, &endian_str))
