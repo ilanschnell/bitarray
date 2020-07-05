@@ -59,7 +59,7 @@ unchanged.
     if a.endian() == endian:
         return a
 
-    b = bitarray(a, endian=endian)
+    b = bitarray(a, endian)
     la = a.length()
     if la == 0:
         return b
@@ -123,7 +123,7 @@ the bitarray (which has to be multiple of 4 in length).
         raise ValueError("bitarray length not multiple of 4")
     if la % 8:
         # make sure we don't mutate the original argument
-        a = a + bitarray(4, endian=a.endian())
+        a = a + bitarray(4, a.endian())
 
     b = a.tobytes()
     if a.endian() == 'little':
@@ -148,7 +148,7 @@ hexstr may contain any number of hex digits (upper or lower case).
     if ls % 2:
         s = s + ('0' if isinstance(s, str) else b'0')
 
-    a = bitarray(endian=endian or get_default_endian())
+    a = bitarray(0, endian or get_default_endian())
     b = binascii.unhexlify(s)
     if a.endian() == 'little':
         b = b.translate(_swap_hilo_bytes)
@@ -220,7 +220,7 @@ within length bits.
 
     if i == 0:
         # there a special cases for 0 which we'd rather not deal with below
-        return zeros(length or 1, endian=endian)
+        return zeros(length or 1, endian)
 
     big_endian = bool(endian == 'big')
     if _is_py2:
@@ -234,7 +234,7 @@ within length bits.
     else: # py3
         b = i.to_bytes(bits2bytes(i.bit_length()), byteorder=endian)
 
-    a = bitarray(endian=endian)
+    a = bitarray(0, endian)
     a.frombytes(b)
     la = a.length()
     if la == length:
@@ -308,8 +308,7 @@ hashable object (including `None`).
 
     result = {}
 
-    def traverse(nd, prefix=bitarray(
-                             endian=endian or get_default_endian())):
+    def traverse(nd, prefix=bitarray(0, endian or get_default_endian())):
         if hasattr(nd, 'symbol'):  # leaf
             result[nd.symbol] = prefix
         else:  # parent, so traverse each of the children
