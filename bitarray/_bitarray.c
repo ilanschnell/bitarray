@@ -54,7 +54,9 @@ typedef struct {
 
 static PyTypeObject Bitarraytype;
 
-#define bitarray_Check(obj)  PyObject_TypeCheck(obj, &Bitarraytype)
+#define ENDIAN_STR(ba)  (((ba)->endian) ? "big" : "little")
+
+#define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarraytype)
 
 #define BITS(bytes)  ((idx_t) (bytes) << 3)
 
@@ -779,9 +781,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     return ret;
 }
 
-/* --------- helper functions NOT involving bitarrayobjects ------------ */
-
-#define ENDIAN_STR(ba)  (((ba)->endian) ? "big" : "little")
+/* --------- helper functions not involving bitarrayobjects ------------ */
 
 #ifdef IS_PY3K
 #define IS_INDEX(x)  (PyLong_Check(x) || PyIndex_Check(x))
