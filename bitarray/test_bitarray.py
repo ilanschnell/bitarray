@@ -304,7 +304,6 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertEQUAL(bitarray(), bitarray(0))
         self.assertEQUAL(bitarray(), bitarray(None))
 
-
     def test_WrongArgs(self):
         self.assertRaises(TypeError, bitarray.__new__, bitarray, 'A', 42, 69)
 
@@ -315,6 +314,9 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, bitarray.__new__, bitarray, 4+3j)
 
         self.assertRaises(TypeError, bitarray.__new__, bitarray, '', 0, 42)
+        # test second (endian) argument
+        self.assertRaises(TypeError, bitarray.__new__, bitarray, 0, None)
+        self.assertRaises(TypeError, bitarray.__new__, bitarray, 0, 0)
         self.assertRaises(ValueError, bitarray.__new__, bitarray, 0, 'foo')
 
 
