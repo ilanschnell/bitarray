@@ -2742,11 +2742,11 @@ bitarray_methods[] = {
 /* Given a string, return an integer representing the endianness.
    If the string is invalid, set a Python exception and return -1. */
 static int
-endian_from_string(const char* string, int default_value)
+endian_from_string(const char* string)
 {
     assert(default_value == 0 || default_value == 1);
     if (string == NULL)
-        return default_value;
+        return default_endian;
 
     if (strcmp(string, "little") == 0)
         return 0;
@@ -2772,7 +2772,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
                         "|Os:bitarray", kwlist, &initial, &endian_str))
         return NULL;
 
-    endian = endian_from_string(endian_str, default_endian);
+    endian = endian_from_string(endian_str);
     if (endian < 0)
         return NULL;
 
@@ -3245,7 +3245,7 @@ set_default_endian(PyObject *self, PyObject *args)
         return NULL;
 
     if (endian_str) {
-        default_endian = endian_from_string(endian_str, DEFAULT_ENDIAN);
+        default_endian = endian_from_string(endian_str);
         if (default_endian < 0)
             return NULL;
     }
