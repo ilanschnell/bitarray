@@ -681,22 +681,22 @@ enum conv_t {
 static int
 extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_t conv)
 {
-    Py_ssize_t strlen, i;
-    char c, *str;
+    Py_ssize_t size, i;
+    char c, *data;
     int vi = 0;
 
     assert(PyBytes_Check(bytes));
-    strlen = PyBytes_Size(bytes);
-    if (strlen == 0)
+    size = PyBytes_Size(bytes);
+    if (size == 0)
         return 0;
 
-    if (resize(self, self->nbits + strlen) < 0)
+    if (resize(self, self->nbits + size) < 0)
         return -1;
 
-    str = PyBytes_AsString(bytes);
+    data = PyBytes_AsString(bytes);
 
-    for (i = 0; i < strlen; i++) {
-        c = *(str + i);
+    for (i = 0; i < size; i++) {
+        c = data[i];
         /* depending on conv, map c to bit */
         switch (conv) {
         case BYTES_01:
@@ -715,7 +715,7 @@ extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_t conv)
         default:  /* should never happen */
             return -1;
         }
-        setbit(self, self->nbits - strlen + i, vi);
+        setbit(self, self->nbits - size + i, vi);
     }
     return 0;
 }
@@ -723,19 +723,19 @@ extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_t conv)
 static int
 extend_rawbytes(bitarrayobject *self, PyObject *bytes)
 {
-    Py_ssize_t strlen;
-    char *str;
+    Py_ssize_t size;
+    char *data;
 
     assert(PyBytes_Check(bytes) && self->nbits % 8 == 0);
-    strlen = PyBytes_Size(bytes);
-    if (strlen == 0)
+    size = PyBytes_Size(bytes);
+    if (size == 0)
         return 0;
 
-    if (resize(self, self->nbits + BITS(strlen)) < 0)
+    if (resize(self, self->nbits + BITS(size)) < 0)
         return -1;
 
-    str = PyBytes_AsString(bytes);
-    memcpy(self->ob_item + (Py_SIZE(self) - strlen), str, strlen);
+    data = PyBytes_AsString(bytes);
+    memcpy(self->ob_item + (Py_SIZE(self) - size), data, size);
     return 0;
 }
 
