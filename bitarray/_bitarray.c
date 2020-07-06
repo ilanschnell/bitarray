@@ -292,6 +292,7 @@ setunused(bitarrayobject *self)
         res++;
     }
     assert(res < 8);
+    assert(n == self->nbits + res);
     return res;
 }
 
@@ -2741,6 +2742,8 @@ bitarray_methods[] = {
 static int
 endian_from_string(const char* string)
 {
+    assert(default_endian == 0 || default_endian == 1);
+
     if (string == NULL)
         return default_endian;
 
@@ -3249,13 +3252,17 @@ static PyObject *
 set_default_endian(PyObject *self, PyObject *args)
 {
     char *endian_str = NULL;
+    int tmp;
 
     if (!PyArg_ParseTuple(args, "s:_set_default_endian", &endian_str))
         return NULL;
 
-    default_endian = endian_from_string(endian_str);
-    if (default_endian < 0)
+    /* As endian_from_string might return -1, we have to store its value
+       in a temporary variable before setting default_endian. */
+    tmp = endian_from_string(endian_str);
+    if (tmp < 0)
         return NULL;
+    default_endian = tmp;
 
     Py_RETURN_NONE;
 }

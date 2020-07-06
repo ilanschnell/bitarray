@@ -115,6 +115,10 @@ class TestsModuleFunctions(unittest.TestCase, Util):
 
             # test get_default_endian()
             self.assertEqual(get_default_endian(), default_endian)
+            # make sure that calling _set_default_endian wrong does not
+            # change the default endianness
+            self.assertRaises(ValueError, _set_default_endian, 'foobar')
+            self.assertEqual(get_default_endian(), default_endian)
 
     def test_bitdiff(self):
         a = bitarray('0011')
