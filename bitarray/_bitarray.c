@@ -1153,10 +1153,9 @@ PyDoc_STRVAR(buffer_info_doc,
 "buffer_info() -> tuple\n\
 \n\
 Return a tuple (address, size, endianness, unused, allocated) giving the\n\
-current memory address, the size (in bytes) used to hold the bitarray's\n\
-contents, the bit endianness as a string, the number of unused bits\n\
-(e.g. a bitarray of length 11 will have a buffer size of 2 bytes and\n\
-5 unused bits), and the size (in bytes) of the allocated memory.");
+memory address of the bitarray's data, the size (in bytes) used to hold the\n\
+bitarray's contents, the bit endianness as a string, the number of unused\n\
+bits in the last bytes, and the size (in bytes) of the allocated memory.");
 
 
 static PyObject *

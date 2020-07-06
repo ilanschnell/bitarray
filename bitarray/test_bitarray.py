@@ -376,7 +376,7 @@ tests.append(ToObjectsTests)
 class MetaDataTests(unittest.TestCase, Util):
 
     def test_buffer_info1(self):
-        a = bitarray('0000111100001', endian='little')
+        a = bitarray(13, endian='little')
         self.assertEqual(a.buffer_info()[1:4], (2, 'little', 3))
 
         a = bitarray()
@@ -385,37 +385,24 @@ class MetaDataTests(unittest.TestCase, Util):
         bi = a.buffer_info()
         self.assertIsInstance(bi, tuple)
         self.assertEqual(len(bi), 5)
-
         self.assertIsInstance(bi[0], int)
-        if is_py3k:
-            self.assertIsInstance(bi[1], int)
-        self.assertIsInstance(bi[2], str)
-        self.assertIsInstance(bi[3], int)
-        if is_py3k:
-            self.assertIsInstance(bi[4], int)
 
     def test_buffer_info2(self):
-        for n in range(50):
-            bi = bitarray(n).buffer_info()
-            self.assertEqual(bi[1], bits2bytes(n))
-            self.assertEqual(bi[3] + n, 8 * bi[1])
-            self.assertTrue(bi[4] >= bi[1])
-
-    def test_buffer_info3(self):
-        a = bitarray(endian='little')
-        self.assertEqual(a.buffer_info()[2], 'little')
-
-        a = bitarray(endian='big')
-        self.assertEqual(a.buffer_info()[2], 'big')
-
+        for endian in 'big', 'little':
+            for n in range(50):
+                bi = bitarray(n, endian).buffer_info()
+                self.assertEqual(bi[1], bits2bytes(n))  # bytes
+                self.assertEqual(bi[2], endian)         # endianness
+                self.assertEqual(bi[3], 8 * bi[1] - n)  # unused
+                self.assertTrue(bi[4] >= bi[1])         # allocated
 
     def test_endian(self):
-        a = bitarray(endian='little')
-        self.assertEqual(a.endian(), 'little')
+        for endian in 'big', 'little':
+            a = bitarray(endian=endian)
+            self.assertEqual(a.endian(), endian)
 
         a = bitarray(endian='big')
         self.assertEqual(a.endian(), 'big')
-
 
     def test_length(self):
         for n in range(100):
