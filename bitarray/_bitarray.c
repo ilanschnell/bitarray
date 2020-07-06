@@ -2779,7 +2779,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* int, long */
     if (IS_INDEX(initial)) {
-        idx_t nbits = 0;
+        idx_t nbits;
 
         if (getIndex(initial, &nbits) < 0)
             return NULL;
