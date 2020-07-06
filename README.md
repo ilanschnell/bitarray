@@ -36,8 +36,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.3.0.tar.gz
-    $ cd bitarray-1.3.0
+    $ tar xzf bitarray-1.3.1.tar.gz
+    $ cd bitarray-1.3.1
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -46,7 +46,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.3.0
+    bitarray version: 1.3.1
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
@@ -332,10 +332,9 @@ Append the value `bool(item)` to the end of the bitarray.
 `buffer_info()` -> tuple
 
 Return a tuple (address, size, endianness, unused, allocated) giving the
-current memory address, the size (in bytes) used to hold the bitarray's
-contents, the bit endianness as a string, the number of unused bits
-(e.g. a bitarray of length 11 will have a buffer size of 2 bytes and
-5 unused bits), and the size (in bytes) of the allocated memory.
+memory address of the bitarray's data, the size (in bytes) used to hold the
+bitarray's contents, the bit endianness as a string, the number of unused
+bits in the last bytes, and the size (in bytes) of the allocated memory.
 
 
 `bytereverse()`
@@ -343,6 +342,11 @@ contents, the bit endianness as a string, the number of unused bits
 For all bytes representing the bitarray, reverse the bit order (in-place).
 Note: This method changes the actual machine values representing the
 bitarray; it does not change the endianness of the bitarray object.
+
+
+`clear()`
+
+Remove all items from the bitarray.
 
 
 `copy()` -> bitarray
@@ -651,6 +655,11 @@ hashable object (including `None`).
 
 Change log
 ----------
+
+2020-XX-XX   1.3.1:
+
+  * add `.clear()` method (Python 3.3 added this method to lists)
+
 
 *1.3.0* (2020-07-06):
 
