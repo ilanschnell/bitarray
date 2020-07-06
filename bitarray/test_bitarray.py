@@ -30,8 +30,8 @@ else:
 
 
 from bitarray import (bitarray, frozenbitarray, bitdiff, bits2bytes,
-                      get_default_endian, _sysinfo, _set_default_endian,
-                      __version__)
+                      get_default_endian, _set_default_endian,
+                      _sysinfo, __version__)
 
 tests = []
 
@@ -2426,8 +2426,9 @@ def run(verbosity=1, repeat=1):
 
     print('bitarray is installed in: %s' % os.path.dirname(__file__))
     print('bitarray version: %s' % __version__)
-    print('Python version: %s' % sys.version)
-
+    print('sys.version: %s' % sys.version)
+    print('sys.prefix: %s' % sys.prefix)
+    print('pointer size: %d bit' % (8 * _sysinfo()[0]))
     suite = unittest.TestSuite()
     for cls in tests:
         for _ in range(repeat):
