@@ -589,15 +589,13 @@ unpack(bitarrayobject *self, char zero, char one)
 static int
 extend_bitarray(bitarrayobject *self, bitarrayobject *other)
 {
-    idx_t self_bits, other_bits;
+    /* We have to store the sizes before we resize, and since
+       other may be self, we also need to store other->nbits. */
+    idx_t self_bits = self->nbits;
+    idx_t other_bits = other->nbits;
 
-    if (other->nbits == 0)
+    if (other_bits == 0)
         return 0;
-
-    /* We have to store the sizes before we resize.
-       Since other may be self, we also need to store other->nbits. */
-    self_bits = self->nbits;
-    other_bits = other->nbits;
 
     if (resize(self, self_bits + other_bits) < 0)
         return -1;
