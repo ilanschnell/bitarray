@@ -2809,7 +2809,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         char *data;
 
         size = PyBytes_Size(initial);
-        if (size == 0)        /* empty string */
+        if (size == 0)          /* no bytes */
             return newbitarrayobject(type, 0, endian);
 
         data = PyBytes_AsString(initial);
