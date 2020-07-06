@@ -328,7 +328,7 @@ static int
 bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
 {
     bitarrayobject *other;
-    Py_ssize_t i;
+    Py_ssize_t n = Py_SIZE(self), i;
 
     if (!bitarray_Check(arg)) {
         PyErr_SetString(PyExc_TypeError,
@@ -345,15 +345,15 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
     setunused(other);
     switch (oper) {
     case OP_and:
-        for (i = 0; i < Py_SIZE(self); i++)
+        for (i = 0; i < n; i++)
             self->ob_item[i] &= other->ob_item[i];
         break;
     case OP_or:
-        for (i = 0; i < Py_SIZE(self); i++)
+        for (i = 0; i < n; i++)
             self->ob_item[i] |= other->ob_item[i];
         break;
     case OP_xor:
-        for (i = 0; i < Py_SIZE(self); i++)
+        for (i = 0; i < n; i++)
             self->ob_item[i] ^= other->ob_item[i];
         break;
     default:  /* should never happen */
@@ -591,16 +591,16 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
 {
     /* We have to store the sizes before we resize, and since
        other may be self, we also need to store other->nbits. */
-    idx_t self_bits = self->nbits;
-    idx_t other_bits = other->nbits;
+    idx_t self_nbits = self->nbits;
+    idx_t other_nbits = other->nbits;
 
-    if (other_bits == 0)
+    if (other_nbits == 0)
         return 0;
 
-    if (resize(self, self_bits + other_bits) < 0)
+    if (resize(self, self_nbits + other_nbits) < 0)
         return -1;
 
-    copy_n(self, self_bits, other, 0, other_bits);
+    copy_n(self, self_nbits, other, 0, other_nbits);
     return 0;
 }
 
@@ -681,21 +681,21 @@ enum conv_t {
 static int
 extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_t conv)
 {
-    Py_ssize_t size, i;
+    Py_ssize_t nbytes, i;
     char c, *data;
     int vi = 0;
 
     assert(PyBytes_Check(bytes));
-    size = PyBytes_Size(bytes);
-    if (size == 0)
+    nbytes = PyBytes_Size(bytes);
+    if (nbytes == 0)
         return 0;
 
-    if (resize(self, self->nbits + size) < 0)
+    if (resize(self, self->nbits + nbytes) < 0)
         return -1;
 
     data = PyBytes_AsString(bytes);
 
-    for (i = 0; i < size; i++) {
+    for (i = 0; i < nbytes; i++) {
         c = data[i];
         /* depending on conv, map c to bit */
         switch (conv) {
@@ -715,7 +715,7 @@ extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_t conv)
         default:  /* should never happen */
             return -1;
         }
-        setbit(self, self->nbits - size + i, vi);
+        setbit(self, self->nbits - nbytes + i, vi);
     }
     return 0;
 }
@@ -723,19 +723,19 @@ extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_t conv)
 static int
 extend_rawbytes(bitarrayobject *self, PyObject *bytes)
 {
-    Py_ssize_t size;
+    Py_ssize_t nbytes;
     char *data;
 
     assert(PyBytes_Check(bytes) && self->nbits % 8 == 0);
-    size = PyBytes_Size(bytes);
-    if (size == 0)
+    nbytes = PyBytes_Size(bytes);
+    if (nbytes == 0)
         return 0;
 
-    if (resize(self, self->nbits + BITS(size)) < 0)
+    if (resize(self, self->nbits + BITS(nbytes)) < 0)
         return -1;
 
     data = PyBytes_AsString(bytes);
-    memcpy(self->ob_item + (Py_SIZE(self) - size), data, size);
+    memcpy(self->ob_item + (Py_SIZE(self) - nbytes), data, nbytes);
     return 0;
 }
 
@@ -1220,6 +1220,7 @@ static PyObject *
 bitarray_reduce(bitarrayobject *self)
 {
     PyObject *dict, *repr = NULL, *result = NULL;
+    Py_ssize_t nbytes = Py_SIZE(self);
     char *data;
 
     dict = PyObject_GetAttrString((PyObject *) self, "__dict__");
@@ -1230,14 +1231,14 @@ bitarray_reduce(bitarrayobject *self)
     }
     /* the first byte indicates the number of unused bits at the end, and
        the rest of the bytes consist of the raw binary data */
-    data = (char *) PyMem_Malloc(Py_SIZE(self) + 1);
+    data = (char *) PyMem_Malloc(nbytes + 1);
     if (data == NULL) {
         PyErr_NoMemory();
         goto error;
     }
     data[0] = (char) setunused(self);
-    memcpy(data + 1, self->ob_item, Py_SIZE(self));
-    repr = PyBytes_FromStringAndSize(data, Py_SIZE(self) + 1);
+    memcpy(data + 1, self->ob_item, nbytes);
+    repr = PyBytes_FromStringAndSize(data, nbytes + 1);
     if (repr == NULL)
         goto error;
     PyMem_Free((void *) data);
@@ -2805,11 +2806,11 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* bytes (for pickling) */
     if (PyBytes_Check(initial)) {
-        Py_ssize_t size;
+        Py_ssize_t nbytes;
         char *data;
 
-        size = PyBytes_Size(initial);
-        if (size == 0)          /* no bytes */
+        nbytes = PyBytes_Size(initial);
+        if (nbytes == 0)        /* no bytes */
             return newbitarrayobject(type, 0, endian);
 
         data = PyBytes_AsString(initial);
@@ -2817,16 +2818,16 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
             /* when the first character is smaller than 8, it indicates the
                number of unused bits at the end, and rest of the bytes
                consist of the raw binary data */
-            if (size == 1 && data[0] > 0) {
+            if (nbytes == 1 && data[0] > 0) {
                 PyErr_Format(PyExc_ValueError,
                              "did not expect 0x0%d", (int) data[0]);
                 return NULL;
             }
-            a = newbitarrayobject(type, BITS(size - 1) - ((idx_t) data[0]),
+            a = newbitarrayobject(type, BITS(nbytes - 1) - ((idx_t) data[0]),
                                   endian);
             if (a == NULL)
                 return NULL;
-            memcpy(((bitarrayobject *) a)->ob_item, data + 1, size - 1);
+            memcpy(((bitarrayobject *) a)->ob_item, data + 1, nbytes - 1);
             return a;
         }
     }
