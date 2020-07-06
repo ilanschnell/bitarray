@@ -1259,7 +1259,7 @@ bitarray_reverse(bitarrayobject *self)
     PyObject *t;    /* temp bitarray to store lower half of self */
     idx_t i, m;
 
-    if (self->nbits < 2)
+    if (self->nbits < 2)        /* nothing needs to be done */
         Py_RETURN_NONE;
 
     t = newbitarrayobject(Py_TYPE(self), self->nbits / 2, self->endian);
