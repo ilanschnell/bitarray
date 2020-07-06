@@ -7,6 +7,12 @@
 
 --------------------------- RANDOM NOTES ---------------------------------
 
+#define setbit(self, i, bit) \
+    ((self)->ob_item[(i) / 8] = (bit) ?                          \
+     ((self)->ob_item[(i) / 8] | BITMASK((self)->endian, (i))) : \
+     ((self)->ob_item[(i) / 8] & ~BITMASK((self)->endian, (i))))
+
+
 #!/bin/bash
 for PY in py26 py26d py27 py32 py33
 do
