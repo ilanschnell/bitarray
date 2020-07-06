@@ -652,7 +652,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2020-07-XX   1.3.0:
+*1.3.0* (2020-07-06):
 
   * add `bitarray.util.make_endian()`
   * `util.ba2hex()` and `util.hex2ba()` now also support little-endian
@@ -678,19 +678,6 @@ Change log
   * simplify markdown of readme so PyPI renders better
   * make tests for bitarray.util required (instead of warning when
     they cannot be imported)
-
-
-*1.2.0* (2019-12-06):
-
-  * add bitarray.util module which provides useful utility functions
-  * deprecate `bitarray.bitdiff` in favor of `bitarray.util.count_xor`
-  * use markdown for documentation
-  * fix bug in .count() on 32bit systems in special cases when array size
-    is 2^29 bits or larger
-  * simplified tests by using bytes syntax
-  * update smallints and sieve example to use new utility module
-  * simplified mandel example to use numba
-  * use file context managers in tests
 
 
 Please find the complete change log
