@@ -284,7 +284,7 @@ static PyObject *
 two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
 {
     PyObject *a, *b;
-    Py_ssize_t i;
+    Py_ssize_t n, i;
     idx_t res = 0;
     unsigned char c;
 
@@ -308,27 +308,30 @@ two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
     }
     setunused(aa);
     setunused(bb);
+    n = Py_SIZE(a);
+    assert(n == Py_SIZE(b));
+
     switch (kern) {
     case KERN_cand:
-        for (i = 0; i < Py_SIZE(aa); i++) {
+        for (i = 0; i < n; i++) {
             c = aa->ob_item[i] & bb->ob_item[i];
             res += bitcount_lookup[c];
         }
         break;
     case KERN_cor:
-        for (i = 0; i < Py_SIZE(aa); i++) {
+        for (i = 0; i < n; i++) {
             c = aa->ob_item[i] | bb->ob_item[i];
             res += bitcount_lookup[c];
         }
         break;
     case KERN_cxor:
-        for (i = 0; i < Py_SIZE(aa); i++) {
+        for (i = 0; i < n; i++) {
             c = aa->ob_item[i] ^ bb->ob_item[i];
             res += bitcount_lookup[c];
         }
         break;
     case KERN_subset:
-        for (i = 0; i < Py_SIZE(aa); i++)
+        for (i = 0; i < n; i++)
             if ((aa->ob_item[i] & bb->ob_item[i]) != aa->ob_item[i])
                 Py_RETURN_FALSE;
         Py_RETURN_TRUE;
