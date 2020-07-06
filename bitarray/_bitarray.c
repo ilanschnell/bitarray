@@ -3251,7 +3251,7 @@ Under normal circumstances, the return value is `big`.");
 static PyObject *
 set_default_endian(PyObject *self, PyObject *args)
 {
-    char *endian_str = NULL;
+    char *endian_str;
     int tmp;
 
     if (!PyArg_ParseTuple(args, "s:_set_default_endian", &endian_str))
