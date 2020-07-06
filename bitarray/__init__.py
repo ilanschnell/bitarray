@@ -12,7 +12,7 @@ from bitarray._bitarray import (_bitarray, bitdiff, bits2bytes, _sysinfo,
                                 get_default_endian, _set_default_endian)
 
 
-__version__ = '1.3.0'
+__version__ = '1.3.1'
 
 __all__ = ['bitarray', 'frozenbitarray']
 
