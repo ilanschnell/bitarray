@@ -1867,6 +1867,20 @@ Remove the first occurrence of `bool(value)` in the bitarray.\n\
 Raises `ValueError` if item is not present.");
 
 
+static PyObject *
+bitarray_clear(bitarrayobject *self)
+{
+    if (resize(self, 0) < 0)
+        return NULL;
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(clear_doc,
+"clear()\n\
+\n\
+Remove all items from the bitarray.");
+
+
 /* --------- special methods ----------- */
 
 static PyObject *
@@ -2643,6 +2657,8 @@ bitarray_methods[] = {
      buffer_info_doc},
     {"bytereverse",  (PyCFunction) bitarray_bytereverse, METH_NOARGS,
      bytereverse_doc},
+    {"clear",        (PyCFunction) bitarray_clear,       METH_NOARGS,
+     clear_doc},
     {"copy",         (PyCFunction) bitarray_copy,        METH_NOARGS,
      copy_doc},
     {"count",        (PyCFunction) bitarray_count,       METH_VARARGS,

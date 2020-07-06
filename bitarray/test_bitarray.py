@@ -1718,6 +1718,17 @@ class MethodTests(unittest.TestCase, Util):
             self.check_obj(a)
 
 
+    def test_clear(self):
+        for a in self.randombitarrays():
+            ida = id(a)
+            endian = a.endian()
+            a.clear()
+            self.assertEqual(a, bitarray())
+            self.assertEqual(id(a), ida)
+            self.assertEqual(a.endian(), endian)
+            self.assertEqual(len(a), 0)
+
+
     def test_setall(self):
         a = bitarray(5)
         a.setall(True)
