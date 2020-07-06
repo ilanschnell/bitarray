@@ -1220,7 +1220,7 @@ static PyObject *
 bitarray_reduce(bitarrayobject *self)
 {
     PyObject *dict, *repr = NULL, *result = NULL;
-    char *str;
+    char *data;
 
     dict = PyObject_GetAttrString((PyObject *) self, "__dict__");
     if (dict == NULL) {
@@ -1230,17 +1230,17 @@ bitarray_reduce(bitarrayobject *self)
     }
     /* the first byte indicates the number of unused bits at the end, and
        the rest of the bytes consist of the raw binary data */
-    str = (char *) PyMem_Malloc(Py_SIZE(self) + 1);
-    if (str == NULL) {
+    data = (char *) PyMem_Malloc(Py_SIZE(self) + 1);
+    if (data == NULL) {
         PyErr_NoMemory();
         goto error;
     }
-    str[0] = (char) setunused(self);
-    memcpy(str + 1, self->ob_item, Py_SIZE(self));
-    repr = PyBytes_FromStringAndSize(str, Py_SIZE(self) + 1);
+    data[0] = (char) setunused(self);
+    memcpy(data + 1, self->ob_item, Py_SIZE(self));
+    repr = PyBytes_FromStringAndSize(data, Py_SIZE(self) + 1);
     if (repr == NULL)
         goto error;
-    PyMem_Free((void *) str);
+    PyMem_Free((void *) data);
     result = Py_BuildValue("O(Os)O", Py_TYPE(self),
                            repr, ENDIAN_STR(self), dict);
 error:
