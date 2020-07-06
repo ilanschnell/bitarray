@@ -2803,30 +2803,30 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return a;
     }
 
-    /* bytes */
+    /* bytes (for pickling) */
     if (PyBytes_Check(initial)) {
-        Py_ssize_t strlen;
-        char *str;
+        Py_ssize_t size;
+        char *data;
 
-        strlen = PyBytes_Size(initial);
-        if (strlen == 0)        /* empty string */
+        size = PyBytes_Size(initial);
+        if (size == 0)        /* empty string */
             return newbitarrayobject(type, 0, endian);
 
-        str = PyBytes_AsString(initial);
-        if (0 <= str[0] && str[0] < 8) {
+        data = PyBytes_AsString(initial);
+        if (0 <= data[0] && data[0] < 8) {
             /* when the first character is smaller than 8, it indicates the
                number of unused bits at the end, and rest of the bytes
-               consist of the raw binary data, this is used for pickling */
-            if (strlen == 1 && str[0] > 0) {
+               consist of the raw binary data */
+            if (size == 1 && data[0] > 0) {
                 PyErr_Format(PyExc_ValueError,
-                             "did not expect 0x0%d", (int) str[0]);
+                             "did not expect 0x0%d", (int) data[0]);
                 return NULL;
             }
-            a = newbitarrayobject(type, BITS(strlen - 1) - ((idx_t) str[0]),
+            a = newbitarrayobject(type, BITS(size - 1) - ((idx_t) data[0]),
                                   endian);
             if (a == NULL)
                 return NULL;
-            memcpy(((bitarrayobject *) a)->ob_item, str + 1, strlen - 1);
+            memcpy(((bitarrayobject *) a)->ob_item, data + 1, size - 1);
             return a;
         }
     }
