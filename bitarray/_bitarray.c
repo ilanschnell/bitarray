@@ -111,40 +111,62 @@ check_overflow(idx_t nbits)
 static int
 resize(bitarrayobject *self, idx_t nbits)
 {
+    const Py_ssize_t allocated = self->allocated, size = Py_SIZE(self);
     Py_ssize_t newsize;
     size_t new_allocated;
-    Py_ssize_t allocated = self->allocated;
+
+    /* ob_item == NULL implies ob_size == allocated == 0 */
+    assert(self->ob_item != NULL || (size == 0 && allocated == 0));
+    /* allocated ==0 implies size == 0 */
+    assert(allocated != 0 || size == 0);
 
     if (check_overflow(nbits) < 0)
         return -1;
     newsize = (Py_ssize_t) BYTES(nbits);
 
-    /* Bypass realloc() when a previous overallocation is large enough
-       to accommodate the newsize.  If the newsize falls lower than half
-       the allocated size, then proceed with the realloc() to shrink.
+    /* Bypass realloc() when a previous overallocation is large enough to
+       accommodate the newsize.  If the newsize falls 32 smaller than the
+       allocated size, then proceed with the realloc() to shrink the array.
     */
-    if (allocated >= newsize && newsize >= (allocated >> 1)) {
+    if (allocated >= newsize && newsize + 32 >= allocated) {
         assert(self->ob_item != NULL || newsize == 0);
         Py_SIZE(self) = newsize;
         self->nbits = nbits;
         return 0;
     }
 
+    if (newsize == 0) {
+        PyMem_FREE(self->ob_item);
+        self->ob_item = NULL;
+        Py_SIZE(self) = 0;
+        self->allocated = 0;
+        self->nbits = 0;
+        return 0;
+    }
+
     new_allocated = (size_t) newsize;
-    if (newsize < Py_SIZE(self) + 65536)
-        /* Over-allocate unless the size increase is very large.
+    if (size == 0 && newsize <= 4)
+        /* When resizing an empty bitarray, we want at least 4 bytes */
+        new_allocated = 4;
+
+    else if (size != 0 && newsize < size + 65536 && newsize > size)
+        /* Over-allocate unless:
+             - the allocated size is zero, as we often extend an empty
+               bitarray upon creation
+             - the size increase is very large
+             - the size is decreasing
+           Do not over-allocate on size decrease
            This over-allocates proportional to the bitarray size, making
            room for additional growth.
            The growth pattern is:  0, 4, 8, 16, 25, 34, 44, 54, 65, 77, ...
-           Note, the pattern starts out the same as for lists but then
+           The pattern starts out the same as for lists but then
            grows at a smaller rate so that larger bitarrays only overallocate
            by about 1/16th -- this is done because bitarrays are assumed
            to be memory critical.
         */
         new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
 
-    if (newsize == 0)
-        new_allocated = 0;
+    assert(new_allocated >= (size_t) newsize);
     self->ob_item = PyMem_Realloc(self->ob_item, new_allocated);
     if (self->ob_item == NULL) {
         PyErr_NoMemory();
