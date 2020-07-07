@@ -149,7 +149,7 @@ resize(bitarrayobject *self, idx_t nbits)
         /* When resizing an empty bitarray, we want at least 4 bytes */
         new_allocated = 4;
 
-    else if (size != 0 && newsize < size + 65536 && newsize > size)
+    else if (size != 0 && newsize < size + 65536 && newsize >= size)
         /* Over-allocate unless:
              - the allocated size is zero, as we often extend an empty
                bitarray upon creation
