@@ -2324,6 +2324,13 @@ class BufferInterfaceTests(unittest.TestCase):
         self.assertEqual(v[34:67].tobytes(), b.tobytes())
         self.assertEqual(v.tobytes(), a.tobytes())
 
+    def test_resize(self):
+        a = bitarray('01000001' '01000010' '01000011', endian='big')
+        v = memoryview(a)
+        self.assertRaises(BufferError, a.append, 1)
+        self.assertRaises(BufferError, a.clear)
+        self.assertRaises(BufferError, a.__delitem__, slice(0, 8))
+
     def test_write(self):
         a = bitarray(8000)
         a.setall(0)
