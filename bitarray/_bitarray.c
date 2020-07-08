@@ -115,6 +115,7 @@ resize(bitarrayobject *self, idx_t nbits)
     Py_ssize_t newsize;
     size_t new_allocated;
 
+    assert(allocated >= size);
     /* ob_item == NULL implies ob_size == allocated == 0 */
     assert(self->ob_item != NULL || (size == 0 && allocated == 0));
     /* allocated ==0 implies size == 0 */
@@ -124,11 +125,11 @@ resize(bitarrayobject *self, idx_t nbits)
         return -1;
     newsize = (Py_ssize_t) BYTES(nbits);
 
-    /* Bypass realloc() when a previous overallocation is large enough to
-       accommodate the newsize.  If the newsize falls 32 smaller than the
-       allocated size, then proceed with the realloc() to shrink the array.
-    */
-    if (allocated >= newsize && newsize + 32 >= allocated) {
+    /* Bypass reallocation unless:
+         - The newsize is too large for the allocation.
+         - The newsize falls 32 smaller than the allocation, then
+           proceed with the reallocation to shrink. */
+    if (!(newsize > allocated || newsize + 32 < allocated)) {
         assert(self->ob_item != NULL || newsize == 0);
         Py_SIZE(self) = newsize;
         self->nbits = nbits;
@@ -146,24 +147,22 @@ resize(bitarrayobject *self, idx_t nbits)
 
     new_allocated = (size_t) newsize;
     if (size == 0 && newsize <= 4)
-        /* When resizing an empty bitarray, we want at least 4 bytes */
+        /* When resizing an empty bitarray, we want at least 4 bytes. */
         new_allocated = 4;
 
-    else if (size != 0 && newsize < size + 65536 && newsize >= size)
-        /* Over-allocate unless:
-             - the allocated size is zero, as we often extend an empty
-               bitarray upon creation
-             - the size increase is very large
-             - the size is decreasing
-           Do not over-allocate on size decrease
-           This over-allocates proportional to the bitarray size, making
+    /* Over-allocate unless:
+         - The (previous) size is zero, as we often
+           extend an empty array on creation.
+         - The size increase is very large.
+         - The size is decreasing. */
+    else if (!(size == 0 || newsize > size + 65536 || newsize < size))
+        /* This over-allocates proportional to the bitarray size, making
            room for additional growth.
            The growth pattern is:  0, 4, 8, 16, 25, 34, 44, 54, 65, 77, ...
            The pattern starts out the same as for lists but then
            grows at a smaller rate so that larger bitarrays only overallocate
            by about 1/16th -- this is done because bitarrays are assumed
-           to be memory critical.
-        */
+           to be memory critical. */
         new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
 
     assert(new_allocated >= (size_t) newsize);
