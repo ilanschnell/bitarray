@@ -18,9 +18,8 @@ while len(a) < 1_000_000:
 
 # ensure that when we start from a large array and delete part, we always
 # get a decreasing allocation
-n = 10_000_000
 a = bitarray(10_000_000)
-prev = n / 8
+prev = a.buffer_info()[4]
 for _ in range(100):
     del a[-100_000:]
     alloc = a.buffer_info()[4]
