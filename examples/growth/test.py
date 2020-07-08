@@ -44,3 +44,6 @@ alloc = a.buffer_info()[4]
 for _ in range(1000):
     a.extend(bitarray(8))
     assert a.buffer_info()[4] == alloc
+
+
+print("OK")
