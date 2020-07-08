@@ -125,11 +125,22 @@ resize(bitarrayobject *self, idx_t nbits)
         return -1;
     newsize = (Py_ssize_t) BYTES(nbits);
 
-    /* Bypass reallocation unless:
-         - The newsize is too large for the allocation.
-         - The newsize falls 32 smaller than the allocation, then
-           proceed with the reallocation to shrink. */
-    if (!(newsize > allocated || newsize + 32 < allocated)) {
+    if (newsize == size) {
+        self->nbits = nbits;
+        return 0;
+    }
+
+    if (self->ob_exports > 0) { /* XXX needs testing */
+        PyErr_SetString(PyExc_BufferError,
+            "cannot resize an array that is exporting buffers");
+        return -1;
+    }
+
+    /* Bypass reallocation when a allocation is large enough to accommodate
+       the newsize.  If the newsize falls lower than half the allocated size,
+       then proceed with the reallocation to shrink the bitarray.
+    */
+    if (allocated >= newsize && newsize >= (allocated >> 1)) {
         assert(self->ob_item != NULL || newsize == 0);
         Py_SIZE(self) = newsize;
         self->nbits = nbits;
@@ -150,7 +161,7 @@ resize(bitarrayobject *self, idx_t nbits)
         /* When resizing an empty bitarray, we want at least 4 bytes. */
         new_allocated = 4;
 
-    /* Over-allocate unless:
+    /* Over-allocate unless (one of the following):
          - The (previous) size is zero, as we often
            extend an empty array on creation.
          - The size increase is very large.
