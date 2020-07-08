@@ -126,6 +126,7 @@ resize(bitarrayobject *self, idx_t nbits)
     newsize = (Py_ssize_t) BYTES(nbits);
 
     if (newsize == size) {
+        /* the memory size hasn't changed - bypass almost everything */
         self->nbits = nbits;
         return 0;
     }
