@@ -36,8 +36,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.3.1.tar.gz
-    $ cd bitarray-1.3.1
+    $ tar xzf bitarray-1.4.0.tar.gz
+    $ cd bitarray-1.4.0
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -46,7 +46,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.3.1
+    bitarray version: 1.4.0
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
@@ -656,9 +656,12 @@ hashable object (including `None`).
 Change log
 ----------
 
-2020-XX-XX   1.3.1:
+2020-XX-XX   1.4.0:
 
   * add `.clear()` method (Python 3.3 added this method to lists)
+  * avoid overallocation when bitarray objects are initially created
+  * raise BufferError when resizing bitarrays which is exporting buffers
+  * add example to study the resize() function
 
 
 *1.3.0* (2020-07-06):
