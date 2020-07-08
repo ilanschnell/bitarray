@@ -612,7 +612,7 @@ unpack(bitarrayobject *self, char zero, char one)
         return NULL;
     }
     for (i = 0; i < self->nbits; i++) {
-        *(str + i) = GETBIT(self, i) ? one : zero;
+        str[i] = GETBIT(self, i) ? one : zero;
     }
     result = PyBytes_FromStringAndSize(str, (Py_ssize_t) self->nbits);
     PyMem_Free((void *) str);
