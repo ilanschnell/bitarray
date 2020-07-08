@@ -132,7 +132,7 @@ resize(bitarrayobject *self, idx_t nbits)
 
     if (self->ob_exports > 0) { /* XXX needs testing */
         PyErr_SetString(PyExc_BufferError,
-            "cannot resize an array that is exporting buffers");
+            "cannot resize an bitarray that is exporting buffers");
         return -1;
     }
 
