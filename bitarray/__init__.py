@@ -63,7 +63,7 @@ a dictionary key.
     def __delitem__(self, *args, **kwargs):
         raise TypeError("'frozenbitarray' is immutable")
 
-    append = bytereverse = extend = encode = fill = __delitem__
+    append = bytereverse = clear = extend = encode = fill = __delitem__
     frombytes = fromfile = insert = invert = pack = pop = __delitem__
     remove = reverse = setall = sort = __setitem__ = __delitem__
     __iand__ = __iadd__ = __imul__ = __ior__ = __ixor__ = __delitem__

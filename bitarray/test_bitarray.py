@@ -2396,8 +2396,9 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
     def test_immutable(self):
         a = frozenbitarray('111')
         self.assertRaises(TypeError, a.append, True)
-        self.assertRaises(TypeError, a.__setitem__, 0, 0)
+        self.assertRaises(TypeError, a.clear)
         self.assertRaises(TypeError, a.__delitem__, 0)
+        self.assertRaises(TypeError, a.__setitem__, 0, 0)
 
     def test_dictkey(self):
         a = frozenbitarray('01')
