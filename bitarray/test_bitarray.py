@@ -106,8 +106,9 @@ class TestsModuleFunctions(unittest.TestCase, Util):
             _set_default_endian(default_endian)
             a = bitarray()
             self.assertEqual(a.endian(), default_endian)
-            a = bitarray('10111')
-            self.assertEqual(a.endian(), default_endian)
+            for x in None, 0, 64, '10111', [1, 0]:
+                a = bitarray(x)
+                self.assertEqual(a.endian(), default_endian)
 
             for endian in 'big', 'little':
                 a = bitarray(endian=endian)
@@ -196,6 +197,16 @@ class CreateObjectTests(unittest.TestCase, Util):
 
         self.assertNotEqual(a, b)
         self.assertEqual(a.tobytes(), b.tobytes())
+
+    def test_endian_default(self):
+        _set_default_endian('big')
+        a_big = bitarray()
+        _set_default_endian('little')
+        a_little = bitarray()
+        _set_default_endian('big')
+
+        self.assertEqual(a_big.endian(), 'big')
+        self.assertEqual(a_little.endian(), 'little')
 
     def test_endian_wrong(self):
         self.assertRaises(TypeError, bitarray.__new__, bitarray, endian=0)
