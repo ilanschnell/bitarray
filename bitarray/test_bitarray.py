@@ -98,7 +98,7 @@ class Util(object):
 
 class TestsModuleFunctions(unittest.TestCase, Util):
 
-    def test_default_endian(self):
+    def test_set_default_endian(self):
         self.assertRaises(TypeError, _set_default_endian, 0)
         self.assertRaises(TypeError, _set_default_endian, 'little', 0)
         self.assertRaises(ValueError, _set_default_endian, 'foo')
@@ -113,11 +113,16 @@ class TestsModuleFunctions(unittest.TestCase, Util):
                 a = bitarray(endian=endian)
                 self.assertEqual(a.endian(), endian)
 
-            # test get_default_endian()
-            self.assertEqual(get_default_endian(), default_endian)
             # make sure that calling _set_default_endian wrong does not
             # change the default endianness
             self.assertRaises(ValueError, _set_default_endian, 'foobar')
+            self.assertEqual(bitarray().endian(), default_endian)
+
+    def test_get_default_endian(self):
+        # takes no arguments
+        self.assertRaises(TypeError, get_default_endian, 'big')
+        for default_endian in 'big', 'little':
+            _set_default_endian(default_endian)
             self.assertEqual(get_default_endian(), default_endian)
 
     def test_bitdiff(self):
