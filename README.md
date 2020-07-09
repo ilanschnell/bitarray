@@ -173,8 +173,6 @@ So `a[0]` is now the lowest and most significant bit, and `a[7]` is the
 highest and least significant bit.
 
 The bit endianness is a property attached to each bitarray object.
-This property is set during the initialization of each bitarray object,
-and can not be changed thereafter.
 When comparing bitarray objects, the endianness (and hence the machine
 representation) is irrelevant; what matters is the mapping from indices
 to bits:
