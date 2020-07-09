@@ -54,7 +54,7 @@ typedef struct {
 
 static PyTypeObject Bitarraytype;
 
-#define ENDIAN_STR(ba)  (((ba)->endian) ? "big" : "little")
+#define ENDIAN_STR(a)  (((a)->endian) ? "big" : "little")
 
 #define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarraytype)
 
@@ -3218,7 +3218,7 @@ static PyTypeObject Bitarraytype = {
 /*************************** Module functions **********************/
 
 static PyObject *
-bitdiff(PyObject *self, PyObject *args)
+bitdiff(PyObject *module, PyObject *args)
 {
     PyObject *a, *b;
     Py_ssize_t i;
@@ -3260,7 +3260,7 @@ Deprecated since version 1.2.0, use `bitarray.util.count_xor()` instead.");
 
 
 static PyObject *
-bits2bytes(PyObject *self, PyObject *v)
+bits2bytes(PyObject *module, PyObject *v)
 {
     idx_t n = 0;
 
@@ -3284,7 +3284,7 @@ Return the number of bytes necessary to store n bits.");
 
 
 static PyObject *
-get_default_endian(PyObject *self)
+get_default_endian(PyObject *module)
 {
     return Py_CSTRING(default_endian ? "big" : "little");
 }
@@ -3297,7 +3297,7 @@ Under normal circumstances, the return value is `big`.");
 
 
 static PyObject *
-set_default_endian(PyObject *self, PyObject *args)
+set_default_endian(PyObject *module, PyObject *args)
 {
     char *endian_str;
     int tmp;
