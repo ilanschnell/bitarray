@@ -40,7 +40,7 @@ static int default_endian = 1;
 
 /* Unlike the normal convention, ob_size is the byte count, not the number
    of elements.  The reason for doing this is that we can use our own
-   special idx_t for the number of bits (which can exceed 2^32 on a 32 bit
+   special idx_t for the number of bits, which may exceed 2^32 on a 32 bit
    machine.  */
 typedef struct {
     PyObject_VAR_HEAD
