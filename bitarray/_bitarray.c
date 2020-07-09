@@ -810,8 +810,8 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         Py_DECREF(iter);
         return ret;
     }
-
-    PyErr_SetString(PyExc_TypeError, "could not extend bitarray");
+    PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
+                 Py_TYPE(obj)->tp_name);
     return -1;
 }
 
@@ -2881,16 +2881,6 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
             return a;
         }
     }
-
-#define CHECK_TYPE(type)  \
-    if (Py ## type ## _Check(initial)) {                                  \
-        PyErr_SetString(PyExc_TypeError,                                  \
-                        "cannot create bitarray from " #type " object");  \
-        return NULL;                                                      \
-    }
-CHECK_TYPE(Float)
-CHECK_TYPE(Complex)
-#undef CHECK_TYPE
 
     /* leave remaining type dispatch to the extend method */
     a = newbitarrayobject(type, 0, endian);
