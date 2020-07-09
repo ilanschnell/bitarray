@@ -98,10 +98,9 @@ check_overflow(idx_t nbits)
     if (sizeof(void *) == 4) {  /* 32bit system */
         const idx_t max_bits = ((idx_t) 1) << 34;  /* 2^34 = 16 Gbits*/
         if (nbits > max_bits) {
-            char buff[256];
-            sprintf(buff, "cannot create bitarray of size %lld, "
-                          "max size is %lld", nbits, max_bits);
-            PyErr_SetString(PyExc_OverflowError, buff);
+            PyErr_Format(PyExc_OverflowError,
+                         "cannot create bitarray of size %lld, "
+                         "max size is %lld", nbits, max_bits);
             return -1;
         }
     }
