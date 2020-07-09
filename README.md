@@ -64,8 +64,9 @@ Using the module
 ----------------
 
 As mentioned above, bitarray objects behave very much like lists, so
-there is not too much to learn.  The biggest difference from list objects
-is the ability to access the machine representation of the object.
+there is not too much to learn.  The biggest difference from list
+objects (except that bitarray are obviously homogeneous) is the ability
+to access the machine representation of the object.
 When doing so, the bit endianness is of importance; this issue is
 explained in detail in the section below.  Here, we demonstrate the
 basic usage of bitarray objects:
@@ -155,8 +156,8 @@ specified explicitly:
 
 Here, the low-bit comes first because little-endian means that increasing
 numeric significance corresponds to an increasing address (index).
-So a[0] is the lowest and least significant bit, and a[7] is the highest
-and most significant bit.
+So `a[0]` is the lowest and least significant bit, and `a[7]` is the
+highest and most significant bit.
 
     >>> a = bitarray(endian='big')
     >>> a.frombytes(b'A')
@@ -168,10 +169,12 @@ and most significant bit.
 
 Here, the high-bit comes first because big-endian
 means "most-significant first".
-So a[0] is now the lowest and most significant bit, and a[7] is the highest
-and least significant bit.
+So `a[0]` is now the lowest and most significant bit, and `a[7]` is the
+highest and least significant bit.
 
 The bit endianness is a property attached to each bitarray object.
+This property is set during the initialization of each bitarray object,
+and can not be changed thereafter.
 When comparing bitarray objects, the endianness (and hence the machine
 representation) is irrelevant; what matters is the mapping from indices
 to bits:
