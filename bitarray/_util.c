@@ -212,7 +212,7 @@ count_n(PyObject *module, PyObject *args)
         return NULL;
 
     if (!bitarray_Check(a)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+        PyErr_SetString(PyExc_TypeError, "bitarray expected");
         return NULL;
     }
     if (n < 0) {
@@ -245,13 +245,13 @@ r_index(PyObject *module, PyObject *args)
 {
     PyObject *a, *x = Py_True;
     idx_t i;
-    long vi;
+    int vi;
 
     if (!PyArg_ParseTuple(args, "O|O:rindex", &a, &x))
         return NULL;
 
     if (!bitarray_Check(a)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+        PyErr_SetString(PyExc_TypeError, "bitarray expected");
         return NULL;
     }
     vi = PyObject_IsTrue(x);
@@ -260,7 +260,7 @@ r_index(PyObject *module, PyObject *args)
 
     i = find_last((bitarrayobject *) a, vi);
     if (i < 0) {
-        PyErr_SetString(PyExc_ValueError, "index(x): x not in bitarray");
+        PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
         return NULL;
     }
     return PyLong_FromLongLong(i);
@@ -291,7 +291,7 @@ two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
     if (!PyArg_ParseTuple(args, format, &a, &b))
         return NULL;
     if (!(bitarray_Check(a) && bitarray_Check(b))) {
-        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+        PyErr_SetString(PyExc_TypeError, "bitarray expected");
         return NULL;
     }
 #define aa  ((bitarrayobject *) a)

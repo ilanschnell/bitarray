@@ -365,7 +365,7 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
 
     if (!bitarray_Check(arg)) {
         PyErr_SetString(PyExc_TypeError,
-                        "bitarray object expected for bitwise operation");
+                        "bitarray expected for bitwise operation");
         return -1;
     }
     other = (bitarrayobject *) arg;
