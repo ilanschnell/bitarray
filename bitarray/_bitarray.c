@@ -132,7 +132,7 @@ resize(bitarrayobject *self, idx_t nbits)
 
     if (self->ob_exports > 0) {
         PyErr_SetString(PyExc_BufferError,
-            "cannot resize bitarray that is exporting buffers");
+                        "cannot resize bitarray that is exporting buffers");
         return -1;
     }
 
@@ -577,7 +577,7 @@ search(bitarrayobject *self, bitarrayobject *xa, idx_t p)
 static int
 set_item(bitarrayobject *self, idx_t i, PyObject *v)
 {
-    long vi;
+    int vi;
 
     assert(0 <= i && i < self->nbits);
     vi = PyObject_IsTrue(v);
@@ -1013,7 +1013,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
 {
     PyObject *x = Py_True;
     idx_t start = 0, stop = self->nbits;
-    long vi;
+    int vi;
 
     if (!PyArg_ParseTuple(args, "|OLL:count", &x, &start, &stop))
         return NULL;
@@ -1039,7 +1039,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
 {
     PyObject *x;
     idx_t i, start = 0, stop = self->nbits;
-    long vi;
+    int vi;
 
     if (!PyArg_ParseTuple(args, "O|LL:index", &x, &start, &stop))
         return NULL;
@@ -1053,7 +1053,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
 
     i = findfirst(self, vi, start, stop);
     if (i < 0) {
-        PyErr_SetString(PyExc_ValueError, "index(x): x not in bitarray");
+        PyErr_Format(PyExc_ValueError, "%d is not in bitarray", vi);
         return NULL;
     }
     return PyLong_FromLongLong(i);
@@ -1376,7 +1376,7 @@ bitarray; it does not change the endianness of the bitarray object.");
 static PyObject *
 bitarray_setall(bitarrayobject *self, PyObject *v)
 {
-    long vi;
+    int vi;
 
     vi = PyObject_IsTrue(v);
     if (vi < 0)
@@ -1878,7 +1878,7 @@ static PyObject *
 bitarray_remove(bitarrayobject *self, PyObject *v)
 {
     idx_t i;
-    long vi;
+    int vi;
 
     vi = PyObject_IsTrue(v);
     if (vi < 0)
@@ -1886,7 +1886,7 @@ bitarray_remove(bitarrayobject *self, PyObject *v)
 
     i = findfirst(self, vi, 0, self->nbits);
     if (i < 0) {
-        PyErr_SetString(PyExc_ValueError, "remove(x): x not in bitarray");
+        PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
         return NULL;
     }
     if (delete_n(self, i, 1) < 0)
@@ -2801,7 +2801,7 @@ endian_from_string(const char* string)
     if (strcmp(string, "big") == 0)
         return 1;
 
-    PyErr_SetString(PyExc_ValueError, "endian must be 'little' or 'big'");
+    PyErr_SetString(PyExc_ValueError, "'little' or 'big' expected");
     return -1;
 }
 
