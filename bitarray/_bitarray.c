@@ -205,8 +205,6 @@ newbitarrayobject(PyTypeObject *type, idx_t nbits, int endian)
 
     nbytes = (Py_ssize_t) BYTES(nbits);
     Py_SIZE(obj) = nbytes;
-    obj->nbits = nbits;
-    obj->endian = endian;
     if (nbytes == 0) {
         obj->ob_item = NULL;
     }
@@ -219,6 +217,9 @@ newbitarrayobject(PyTypeObject *type, idx_t nbits, int endian)
         }
     }
     obj->allocated = nbytes;
+    obj->nbits = nbits;
+    obj->endian = endian;
+    obj->ob_exports = 0;
     obj->weakreflist = NULL;
     return (PyObject *) obj;
 }
