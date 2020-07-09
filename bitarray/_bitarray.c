@@ -805,13 +805,14 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 
     /* finally, try to get the iterator of the object */
     iter = PyObject_GetIter(obj);
-    if (iter == NULL) {
-        PyErr_SetString(PyExc_TypeError, "could not extend bitarray");
-        return -1;
+    if (iter) {
+        ret = extend_iter(self, iter);
+        Py_DECREF(iter);
+        return ret;
     }
-    ret = extend_iter(self, iter);
-    Py_DECREF(iter);
-    return ret;
+
+    PyErr_SetString(PyExc_TypeError, "could not extend bitarray");
+    return -1;
 }
 
 /* --------- helper functions not involving bitarrayobjects ------------ */
