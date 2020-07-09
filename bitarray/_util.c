@@ -44,23 +44,23 @@ typedef struct {
 /* ------------ low level access to bits in bitarrayobject ------------- */
 
 #ifndef NDEBUG
-static int GETBIT(bitarrayobject *a, idx_t i) {
-    assert(0 <= i && i < a->nbits);
-    return ((a)->ob_item[(i) / 8] & BITMASK((a)->endian, i) ? 1 : 0);
+static int GETBIT(bitarrayobject *self, idx_t i) {
+    assert(0 <= i && i < self->nbits);
+    return ((self)->ob_item[(i) / 8] & BITMASK((self)->endian, i) ? 1 : 0);
 }
 #else
-#define GETBIT(a, i)  \
-    ((a)->ob_item[(i) / 8] & BITMASK((a)->endian, i) ? 1 : 0)
+#define GETBIT(self, i)  \
+    ((self)->ob_item[(i) / 8] & BITMASK((self)->endian, i) ? 1 : 0)
 #endif
 
 static void
-setbit(bitarrayobject *a, idx_t i, int bit)
+setbit(bitarrayobject *self, idx_t i, int bit)
 {
     char *cp, mask;
 
-    assert(0 <= i && i < BITS(Py_SIZE(a)));
-    mask = BITMASK(a->endian, i);
-    cp = a->ob_item + i / 8;
+    assert(0 <= i && i < BITS(Py_SIZE(self)));
+    mask = BITMASK(self->endian, i);
+    cp = self->ob_item + i / 8;
     if (bit)
         *cp |= mask;
     else
