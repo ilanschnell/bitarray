@@ -287,7 +287,7 @@ class TestsBitwiseCount(unittest.TestCase, Util):
         for i in range(0, 256):
             a = bitarray()
             a.frombytes(bytes(bytearray([i])))
-            cnt = a.to01().count('1')
+            cnt = a.count()
             self.assertEqual(count_and(a, zeros), 0)
             self.assertEqual(count_and(a, ones), cnt)
             self.assertEqual(count_and(a, a), cnt)
