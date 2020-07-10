@@ -2448,7 +2448,6 @@ decode the content of the bitarray and return it as a list of symbols.");
 
 /*********************** (Bitarray) Decode Iterator *********************/
 
-
 typedef struct {
     PyObject_HEAD
     bitarrayobject *bao;        /* bitarray we're searching in */
@@ -2461,12 +2460,11 @@ static PyTypeObject DecodeIter_Type;
 #define DecodeIter_Check(op)  PyObject_TypeCheck(op, &DecodeIter_Type)
 
 
-
-/* create a new initialized bitarray search iterator object */
+/* create a new initialized bitarray decode iterator object */
 static PyObject *
 bitarray_iterdecode(bitarrayobject *self, PyObject *codedict)
 {
-    decodeiterobject *it;  /* iterator to be returned */
+    decodeiterobject *it;       /* iterator to be returned */
     binode *tree;
 
     if (check_codedict(codedict) < 0)
