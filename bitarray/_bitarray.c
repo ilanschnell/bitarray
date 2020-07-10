@@ -1945,8 +1945,7 @@ bitarray_getitem(bitarrayobject *self, PyObject *a)
 }
 
 /* Sets the elements, specified by slice, in self to the value(s) given by v
-   which is either a bitarray or a boolean.
-*/
+   which is either a bitarray or a boolean. */
 static int
 setslice(bitarrayobject *self, PySliceObject *slice, PyObject *v)
 {
@@ -1964,11 +1963,10 @@ setslice(bitarrayobject *self, PySliceObject *slice, PyObject *v)
             return 0;
         }
         if (step != 1) {
-            char buff[256];
-            sprintf(buff, "attempt to assign sequence of size %lld "
-                          "to extended slice of size %lld",
-                    vv->nbits, (idx_t) slicelength);
-            PyErr_SetString(PyExc_ValueError, buff);
+            PyErr_Format(PyExc_ValueError,
+                         "attempt to assign sequence of size %lld "
+                         "to extended slice of size %lld",
+                         vv->nbits, (idx_t) slicelength);
             return -1;
         }
         /* make self bigger or smaller */
