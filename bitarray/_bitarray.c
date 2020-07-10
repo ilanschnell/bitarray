@@ -1281,31 +1281,31 @@ PyDoc_STRVAR(reduce_doc, "state information for pickling");
 static PyObject *
 bitarray_reverse(bitarrayobject *self)
 {
-    PyObject *t;    /* temp bitarray to store lower half of self */
+    bitarrayobject *t;    /* temp bitarray to store lower half of self */
     idx_t i, m;
 
     if (self->nbits < 2)        /* nothing needs to be done */
         Py_RETURN_NONE;
 
-    t = newbitarrayobject(Py_TYPE(self), self->nbits / 2, self->endian);
+    t = (bitarrayobject *) newbitarrayobject(Py_TYPE(self),
+                                             self->nbits / 2, self->endian);
     if (t == NULL)
         return NULL;
 
-#define tt  ((bitarrayobject *) t)
     /* copy lower half of array into temporary array */
-    memcpy(tt->ob_item, self->ob_item, Py_SIZE(tt));
+    memcpy(t->ob_item, self->ob_item, Py_SIZE(t));
 
     m = self->nbits - 1;
 
     /* reverse the upper half onto the lower half. */
-    for (i = 0; i < tt->nbits; i++)
+    for (i = 0; i < t->nbits; i++)
         setbit(self, i, GETBIT(self, m - i));
 
     /* revert the stored away lower half onto the upper half. */
-    for (i = 0; i < tt->nbits; i++)
-        setbit(self, m - i, GETBIT(tt, i));
-#undef tt
-    Py_DECREF(t);
+    for (i = 0; i < t->nbits; i++)
+        setbit(self, m - i, GETBIT(t, i));
+
+    bitarray_dealloc(t);
     Py_RETURN_NONE;
 }
 
