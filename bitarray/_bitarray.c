@@ -1280,8 +1280,9 @@ PyDoc_STRVAR(reduce_doc, "state information for pickling");
 static PyObject *
 bitarray_reverse(bitarrayobject *self)
 {
+    const idx_t m = self->nbits - 1;   /* index of max item of self */
     bitarrayobject *t;    /* temp bitarray to store lower half of self */
-    idx_t i, m;
+    idx_t i;
 
     if (self->nbits < 2)        /* nothing needs to be done */
         Py_RETURN_NONE;
@@ -1293,8 +1294,6 @@ bitarray_reverse(bitarrayobject *self)
 
     /* copy lower half of array into temporary array */
     memcpy(t->ob_item, self->ob_item, Py_SIZE(t));
-
-    m = self->nbits - 1;
 
     /* reverse the upper half onto the lower half. */
     for (i = 0; i < t->nbits; i++)
