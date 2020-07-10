@@ -1200,7 +1200,6 @@ bitarray_append(bitarrayobject *self, PyObject *v)
 {
     if (append_item(self, v) < 0)
         return NULL;
-
     Py_RETURN_NONE;
 }
 
@@ -1213,10 +1212,7 @@ Append the value `bool(item)` to the end of the bitarray.");
 static PyObject *
 bitarray_all(bitarrayobject *self)
 {
-    if (findfirst(self, 0, 0, self->nbits) >= 0)
-        Py_RETURN_FALSE;
-    else
-        Py_RETURN_TRUE;
+    return PyBool_FromLong(findfirst(self, 0, 0, self->nbits) == -1);
 }
 
 PyDoc_STRVAR(all_doc,
@@ -1228,10 +1224,7 @@ Returns True when all bits in the array are True.");
 static PyObject *
 bitarray_any(bitarrayobject *self)
 {
-    if (findfirst(self, 1, 0, self->nbits) >= 0)
-        Py_RETURN_TRUE;
-    else
-        Py_RETURN_FALSE;
+    return PyBool_FromLong(findfirst(self, 1, 0, self->nbits) >= 0);
 }
 
 PyDoc_STRVAR(any_doc,
@@ -1320,11 +1313,7 @@ bitarray_fill(bitarrayobject *self)
 
     p = setunused(self);
     self->nbits += p;
-#ifdef IS_PY3K
     return PyLong_FromLong(p);
-#else
-    return PyInt_FromLong(p);
-#endif
 }
 
 PyDoc_STRVAR(fill_doc,
