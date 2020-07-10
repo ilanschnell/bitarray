@@ -2945,7 +2945,7 @@ static PyTypeObject BitarrayIter_Type;
 #define BitarrayIter_Check(op)  PyObject_TypeCheck(op, &BitarrayIter_Type)
 
 /* create a new initialized bitarray iterator object, this object is
-   returned when calling item(a) */
+   returned when calling iter(a) */
 static PyObject *
 bitarray_iter(bitarrayobject *self)
 {
