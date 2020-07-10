@@ -27,6 +27,7 @@ if is_py3k:
     unicode = str
 else:
     from cStringIO import StringIO
+    range = xrange
 
 
 from bitarray import (bitarray, frozenbitarray, bitdiff, bits2bytes,
@@ -279,6 +280,10 @@ class CreateObjectTests(unittest.TestCase, Util):
         # Note that the through value of '0' is True: bool('0') -> True
         a = bitarray(itertools.repeat('0', 10))
         self.assertEqual(a, bitarray(10 * '1'))
+
+    def test_range(self):
+        a = bitarray(range(-3, 3))
+        self.assertEqual(a, bitarray('111011'))
 
     def test_01(self):
         a = bitarray('0010111')
