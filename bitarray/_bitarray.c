@@ -809,8 +809,8 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         Py_DECREF(iter);
         return ret;
     }
-    PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
-                 Py_TYPE(obj)->tp_name);
+    PyErr_Format(PyExc_TypeError,
+                 "'%s' object is not iterable", Py_TYPE(obj)->tp_name);
     return -1;
 }
 
