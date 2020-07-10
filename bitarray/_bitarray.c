@@ -2283,6 +2283,7 @@ delete_binode_tree(binode *tree)
     PyMem_Free(tree);
 }
 
+/* insert symbol (mapping to ba) into the tree */
 static int
 insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
 {
@@ -2318,6 +2319,8 @@ insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
     return -1;
 }
 
+/* return a binary tree from a codedict, which is created by inserting
+   all symbols mapping to bitarrays */
 static binode *
 make_tree(PyObject *codedict)
 {
@@ -2338,11 +2341,10 @@ make_tree(PyObject *codedict)
     return tree;
 }
 
-/*
-  Traverse tree using the branches corresponding to the bitarray `ba`,
-  starting at *indexp.  Return the symbol at the leaf node, or NULL
-  when the end of the bitarray has been reached, or on error (in which
-  case the appropriate PyErr_SetString is set.
+/* Traverse tree using the branches corresponding to the bitarray `ba`,
+   starting at *indexp.  Return the symbol at the leaf node, or NULL
+   when the end of the bitarray has been reached, or on error (in which
+   case the appropriate PyErr_SetString is set.
 */
 static PyObject *
 traverse_tree(binode *tree, bitarrayobject *ba, idx_t *indexp)
@@ -2372,7 +2374,7 @@ static PyObject *
 bitarray_decode(bitarrayobject *self, PyObject *codedict)
 {
     binode *tree, *nd;
-    PyObject *list;
+    PyObject *list = NULL;
     Py_ssize_t i;
     int k;
 
@@ -2381,14 +2383,13 @@ bitarray_decode(bitarrayobject *self, PyObject *codedict)
 
     tree = make_tree(codedict);
     if (tree == NULL || PyErr_Occurred())
-        return NULL;
+        goto error;
 
     nd = tree;
     list = PyList_New(0);
-    if (list == NULL) {
-        delete_binode_tree(tree);
-        return NULL;
-    }
+    if (list == NULL)
+        goto error;
+
     /* traverse tree (just like above) */
     for (i = 0; i < self->nbits; i++) {
         k = GETBIT(self, i);
@@ -2413,7 +2414,7 @@ bitarray_decode(bitarrayobject *self, PyObject *codedict)
 
 error:
     delete_binode_tree(tree);
-    Py_DECREF(list);
+    Py_XDECREF(list);
     return NULL;
 }
 
