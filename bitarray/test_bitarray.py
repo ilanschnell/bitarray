@@ -211,8 +211,14 @@ class CreateObjectTests(unittest.TestCase, Util):
     def test_endian_wrong(self):
         self.assertRaises(TypeError, bitarray.__new__, bitarray, endian=0)
         self.assertRaises(ValueError, bitarray.__new__, bitarray, endian='')
-        self.assertRaises(ValueError, bitarray.__new__,
-                          bitarray, endian='foo')
+        self.assertRaises(ValueError,
+                          bitarray.__new__, bitarray, endian='foo')
+        try:
+            bitarray(Ellipsis)
+        except TypeError as e:
+            self.assertTrue('ellipsis' in str(e))
+        else:
+            raise SystemError("error got raised - we shouldn'e get here")
 
     def test_integers(self):
         for n in range(50):
