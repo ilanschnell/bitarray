@@ -439,12 +439,12 @@ bytereverse(bitarrayobject *self)
     static char trans[256];
     static int setup = 0;
     Py_ssize_t i;
-    unsigned char c;
 
     if (!setup) {
         /* setup translation table, which maps each byte to it's reversed:
            trans = {0, 128, 64, 192, 32, 160, ..., 255} */
         int j, k;
+
         for (k = 0; k < 256; k++) {
             trans[k] = 0x00;
             for (j = 0; j < 8; j++)
@@ -455,10 +455,8 @@ bytereverse(bitarrayobject *self)
     }
 
     setunused(self);
-    for (i = 0; i < Py_SIZE(self); i++) {
-        c = self->ob_item[i];
-        self->ob_item[i] = trans[c];
-    }
+    for (i = 0; i < Py_SIZE(self); i++)
+        self->ob_item[i] = trans[(unsigned char) self->ob_item[i]];
 }
 
 static unsigned char bitcount_lookup[256] = {
@@ -472,7 +470,7 @@ static unsigned char bitcount_lookup[256] = {
     3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8,
 };
 
-/* returns number of 1 bits */
+/* Return number of 1 bits.  This function never fails. */
 static idx_t
 count(bitarrayobject *self, int vi, idx_t start, idx_t stop)
 {
@@ -508,7 +506,8 @@ count(bitarrayobject *self, int vi, idx_t start, idx_t stop)
     return vi ? res : stop - start - res;
 }
 
-/* return index of first occurrence of vi, -1 when x is not in found. */
+/* Return index of first occurrence of vi, -1 when x is not in found.
+   This function never fails. */
 static idx_t
 findfirst(bitarrayobject *self, int vi, idx_t start, idx_t stop)
 {
