@@ -279,6 +279,25 @@ tests.append(TestsHelpers)
 
 class TestsBitwiseCount(unittest.TestCase, Util):
 
+    def test_count_byte(self):
+        ones = bitarray(8)
+        ones.setall(1)
+        zeros = bitarray(8)
+        zeros.setall(0)
+        for i in range(0, 256):
+            a = bitarray()
+            a.frombytes(bytes(bytearray([i])))
+            cnt = a.to01().count('1')
+            self.assertEqual(count_and(a, zeros), 0)
+            self.assertEqual(count_and(a, ones), cnt)
+            self.assertEqual(count_and(a, a), cnt)
+            self.assertEqual(count_or(a, zeros), cnt)
+            self.assertEqual(count_or(a, ones), 8)
+            self.assertEqual(count_or(a, a), cnt)
+            self.assertEqual(count_xor(a, zeros), cnt)
+            self.assertEqual(count_xor(a, ones), 8 - cnt)
+            self.assertEqual(count_xor(a, a), 0)
+
     def test_bit_count1(self):
         a = bitarray('001111')
         aa = a.copy()
