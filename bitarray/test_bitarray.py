@@ -2109,17 +2109,18 @@ class PrefixCodeTests(unittest.TestCase, Util):
 
     def test_encode_iter(self):
         a = bitarray()
-        d = {'a': bitarray('0'), 'b': bitarray('1')}
-        a.encode(d, iter('abba'))
+        d = {0: bitarray('0'), 1: bitarray('1')}
+        a.encode(d, iter([0, 1, 1, 0]))
         self.assertEqual(a, bitarray('0110'))
 
         def foo():
-            for c in 'bbaabb':
+            for c in 1, 1, 0, 0, 1, 1:
                 yield c
 
         a.encode(d, foo())
-        self.assertEqual(a, bitarray('0110110011'))
-        self.assertEqual(d, {'a': bitarray('0'), 'b': bitarray('1')})
+        a.encode(d, range(2))
+        self.assertEqual(a, bitarray('011011001101'))
+        self.assertEqual(d, {0: bitarray('0'), 1: bitarray('1')})
 
     def test_encode(self):
         d = {'I': bitarray('1'),
