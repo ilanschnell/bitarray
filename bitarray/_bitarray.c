@@ -2245,7 +2245,7 @@ PyDoc_STRVAR(encode_doc,
 \n\
 Given a prefix code (a dict mapping symbols to bitarrays),\n\
 iterate over the iterable object with symbols, and extend the bitarray\n\
-with the corresponding bitarray for each symbols.");
+with the corresponding bitarray for each symbol.");
 
 
 /* Binary tree definition */
@@ -3116,13 +3116,13 @@ static PyBufferProcs bitarray_as_buffer = {
 
 #endif  /* WITH_BUFFER */
 
+/************************** Bitarray Type *******************************/
+
 PyDoc_STRVAR(bitarraytype_doc,
 "_bitarray(initializer=0, /, endian='big') -> bitarray\n\
 \n\
 Return a new bitarray object.\n\
 ");
-
-/************************** Bitarray Type *******************************/
 
 static PyTypeObject Bitarraytype = {
 #ifdef IS_PY3K
