@@ -1468,7 +1468,7 @@ class MethodTests(unittest.TestCase, Util):
                 self.assertEqual(res1, res2)
 
 
-    def test_count1(self):
+    def test_count_basic(self):
         a = bitarray('10011')
         self.assertEqual(a.count(), 3)
         self.assertEqual(a.count(True), 3)
@@ -1481,19 +1481,19 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.count, 0, 'A')
         self.assertRaises(TypeError, a.count, 0, 0, 'A')
 
-    def test_count2(self):
-        for i in range(0, 256):
+    def test_count_byte(self):
+        for i in range(256):
             a = bitarray()
             a.frombytes(bytes(bytearray([i])))
             self.assertEqual(a.count(), a.to01().count('1'))
 
-    def test_count3(self):
+    def test_count_whole_range(self):
         for a in self.randombitarrays():
             s = a.to01()
             self.assertEqual(a.count(1), s.count('1'))
             self.assertEqual(a.count(0), s.count('0'))
 
-    def test_count4(self):
+    def test_count_allones(self):
         N = 37
         a = bitarray(N)
         a.setall(1)
@@ -1501,7 +1501,7 @@ class MethodTests(unittest.TestCase, Util):
             for j in range(i, N):
                 self.assertEqual(a.count(1, i, j), j - i)
 
-    def test_count5(self):
+    def test_count_explicit(self):
         for endian in 'big', 'little':
             a = bitarray('01001100' '01110011' '01', endian)
             self.assertEqual(a.count(), 9)
@@ -1513,7 +1513,7 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a.count(1, 1, -1), 8)
             self.assertEqual(a.count(1, 17, 14), 0)
 
-    def test_count6(self):
+    def test_count_random(self):
         for a in self.randombitarrays():
             s = a.to01()
             i = randint(-3, len(a) + 1)
