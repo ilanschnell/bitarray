@@ -208,7 +208,7 @@ make_swap_hilo_bytes(void)
     int i;
 
     for (i = 0; i < 256; i++)
-        bytes[i] = (char) (16 * (i % 16) + (i / 16));
+        bytes[i] = (char) (((i & 0x0f) << 4) ^ (i >> 4));
 
     return PyBytes_FromStringAndSize(bytes, 256);
 }
