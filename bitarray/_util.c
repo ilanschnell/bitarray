@@ -322,8 +322,8 @@ two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
     }
     setunused(aa);
     setunused(bb);
+    assert(Py_SIZE(a) == Py_SIZE(b));
     n = Py_SIZE(a);
-    assert(n == Py_SIZE(b));
 
     switch (kern) {
     case KERN_cand:

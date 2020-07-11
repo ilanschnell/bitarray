@@ -322,15 +322,11 @@ setunused(bitarrayobject *self)
 {
     const idx_t n = BITS(Py_SIZE(self));
     idx_t i;
-    int res = 0;
 
-    for (i = self->nbits; i < n; i++) {
+    for (i = self->nbits; i < n; i++)
         setbit(self, i, 0);
-        res++;
-    }
-    assert(res < 8);
-    assert(n == self->nbits + res);
-    return res;
+    assert(n - self->nbits < 8);
+    return n - self->nbits;
 }
 
 /* repeat self n times */
