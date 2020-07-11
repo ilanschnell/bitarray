@@ -194,7 +194,7 @@ find_last(bitarrayobject *a, int vi)
 
 /* translate table which swaps the 4 highest with the 4 lowest bits */
 static PyObject *
-make_swap_hilo_bytes()
+make_swap_hilo_bytes(void)
 {
     char bytes[256];
     int i;
