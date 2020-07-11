@@ -9,10 +9,10 @@ try:
 except IOError:
     pass
 
-# Read version from bitarray/__init__.py
-pat = re.compile(r'__version__\s*=\s*(\S+)', re.M)
-data = open(join('bitarray', '__init__.py')).read()
-kwds['version'] = eval(pat.search(data).group(1))
+# Read version from bitarray/_bitarray.c
+pat = re.compile(r'#define\s+BITARRAY_VERSION\s+"(\S+)"', re.M)
+data = open(join('bitarray', '_bitarray.c')).read()
+kwds['version'] = pat.search(data).group(1)
 
 
 setup(

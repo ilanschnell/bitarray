@@ -99,6 +99,10 @@ class Util(object):
 
 class TestsModuleFunctions(unittest.TestCase, Util):
 
+    def test_version_string(self):
+        # the version string is not a function, but test it here anyway
+        self.assertIsInstance(__version__, str)
+
     def test_set_default_endian(self):
         self.assertRaises(TypeError, _set_default_endian, 0)
         self.assertRaises(TypeError, _set_default_endian, 'little', 0)
@@ -125,7 +129,9 @@ class TestsModuleFunctions(unittest.TestCase, Util):
         self.assertRaises(TypeError, get_default_endian, 'big')
         for default_endian in 'big', 'little':
             _set_default_endian(default_endian)
-            self.assertEqual(get_default_endian(), default_endian)
+            endian = get_default_endian()
+            self.assertEqual(endian, default_endian)
+            self.assertIsInstance(endian, str)
 
     def test_bitdiff(self):
         a = bitarray('0011')

@@ -370,7 +370,7 @@ decode the content of the bitarray and return it as a list of symbols.
 
 Given a prefix code (a dict mapping symbols to bitarrays),
 iterate over the iterable object with symbols, and extend the bitarray
-with the corresponding bitarray for each symbols.
+with the corresponding bitarray for each symbol.
 
 
 `endian()` -> str

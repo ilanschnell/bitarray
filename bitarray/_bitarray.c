@@ -7,6 +7,7 @@
 
    Author: Ilan Schnell
 */
+#define BITARRAY_VERSION  "1.4.0"
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
@@ -3358,6 +3359,7 @@ init_bitarray(void)
 
     Py_INCREF((PyObject *) &Bitarraytype);
     PyModule_AddObject(m, "_bitarray", (PyObject *) &Bitarraytype);
+    PyModule_AddObject(m, "__version__", Py_CSTRING(BITARRAY_VERSION));
 #ifdef IS_PY3K
     return m;
 #endif

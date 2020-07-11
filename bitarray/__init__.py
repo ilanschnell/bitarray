@@ -9,12 +9,11 @@ Please find a description of this package at:
 Author: Ilan Schnell
 """
 from bitarray._bitarray import (_bitarray, bitdiff, bits2bytes, _sysinfo,
-                                get_default_endian, _set_default_endian)
+                                get_default_endian, _set_default_endian,
+                                __version__)
 
 
-__version__ = '1.4.0'
-
-__all__ = ['bitarray', 'frozenbitarray']
+__all__ = ['bitarray', 'frozenbitarray', '__version__']
 
 
 class bitarray(_bitarray):
