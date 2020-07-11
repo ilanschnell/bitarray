@@ -1482,10 +1482,19 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.count, 0, 0, 'A')
 
     def test_count_byte(self):
+
+        def count(n):  # count 1 bits in number
+            cnt = 0
+            while n:
+                cnt += n & 1
+                n >>= 1
+            return cnt
+
         for i in range(256):
             a = bitarray()
             a.frombytes(bytes(bytearray([i])))
-            self.assertEqual(a.count(), a.to01().count('1'))
+            self.assertEqual(len(a), 8)
+            self.assertEqual(a.count(), count(i))
 
     def test_count_whole_range(self):
         for a in self.randombitarrays():
