@@ -98,7 +98,10 @@ static PyObject *bitarray_basetype = NULL;
 static int
 bitarray_Check(PyObject *obj)
 {
-    assert(bitarray_basetype != NULL);
+    if (bitarray_basetype == NULL) {
+        fprintf(stderr, "FATAL: bitarray_basetype missing\n");
+        exit(1);
+    }
     return PyObject_IsInstance(obj, bitarray_basetype);
 }
 
