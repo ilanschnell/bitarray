@@ -57,7 +57,8 @@ typedef struct {
 
 static PyTypeObject Bitarraytype;
 
-#define ENDIAN_STR(a)  (((a)->endian == ENDIAN_LITTLE) ? "little" : "big")
+#define ENDIAN_INT(i)  ((i) == ENDIAN_LITTLE ? "little" : "big")
+#define ENDIAN_OBJ(o)  ENDIAN_INT(((bitarrayobject *) o)->endian)
 
 #define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarraytype)
 
@@ -1162,7 +1163,7 @@ bitarray_buffer_info(bitarrayobject *self)
     res = Py_BuildValue("OLsiL",
                         ptr,
                         (idx_t) Py_SIZE(self),
-                        ENDIAN_STR(self),
+                        ENDIAN_OBJ(self),
                         (int) (BITS(Py_SIZE(self)) - self->nbits),
                         (idx_t) self->allocated);
     Py_DECREF(ptr);
@@ -1181,7 +1182,7 @@ bits in the last bytes, and the size (in bytes) of the allocated memory.");
 static PyObject *
 bitarray_endian(bitarrayobject *self)
 {
-    return Py_BuildValue("s", ENDIAN_STR(self));
+    return Py_BuildValue("s", ENDIAN_OBJ(self));
 }
 
 PyDoc_STRVAR(endian_doc,
@@ -1255,7 +1256,7 @@ bitarray_reduce(bitarrayobject *self)
         goto error;
     PyMem_Free((void *) data);
     result = Py_BuildValue("O(Os)O", Py_TYPE(self),
-                           repr, ENDIAN_STR(self), dict);
+                           repr, ENDIAN_OBJ(self), dict);
 error:
     Py_DECREF(dict);
     Py_XDECREF(repr);
@@ -2761,8 +2762,7 @@ bitarray_methods[] = {
 static int
 endian_from_string(const char* string)
 {
-    assert(default_endian == ENDIAN_LITTLE ||
-           default_endian == ENDIAN_BIG);
+    assert(default_endian == ENDIAN_LITTLE || default_endian == ENDIAN_BIG);
 
     if (string == NULL)
         return default_endian;
@@ -3249,8 +3249,7 @@ Return the number of bytes necessary to store n bits.");
 static PyObject *
 get_default_endian(PyObject *module)
 {
-    return Py_BuildValue("s",
-                      default_endian == ENDIAN_LITTLE ? "little" : "big");
+    return Py_BuildValue("s", ENDIAN_INT(default_endian));
 }
 
 PyDoc_STRVAR(get_default_endian_doc,
