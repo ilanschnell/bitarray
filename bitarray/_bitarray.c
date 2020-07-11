@@ -475,7 +475,6 @@ static idx_t
 count(bitarrayobject *self, int vi, idx_t start, idx_t stop)
 {
     idx_t i, res = 0;
-    unsigned char c;
 
     assert(0 <= start && start <= self->nbits);
     assert(0 <= stop && stop <= self->nbits);
@@ -492,10 +491,8 @@ count(bitarrayobject *self, int vi, idx_t start, idx_t stop)
 
         for (i = start; i < BITS(byte_start); i++)
             res += GETBIT(self, i);
-        for (j = byte_start; j < byte_stop; j++) {
-            c = self->ob_item[j];
-            res += bitcount_lookup[c];
-        }
+        for (j = byte_start; j < byte_stop; j++)
+            res += bitcount_lookup[(unsigned char) self->ob_item[j]];
         for (i = BITS(byte_stop); i < stop; i++)
             res += GETBIT(self, i);
     }
