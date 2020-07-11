@@ -425,33 +425,6 @@ setrange(bitarrayobject *self, idx_t start, idx_t stop, int val)
     }
 }
 
-/* reverse the order of bits in each byte of the buffer */
-static void
-bytereverse(bitarrayobject *self)
-{
-    static char trans[256];
-    static int setup = 0;
-    Py_ssize_t i;
-
-    if (!setup) {
-        /* setup translation table, which maps each byte to it's reversed:
-           trans = {0, 128, 64, 192, 32, 160, ..., 255} */
-        int j, k;
-
-        for (k = 0; k < 256; k++) {
-            trans[k] = 0x00;
-            for (j = 0; j < 8; j++)
-                if (1 << (7 - j) & k)
-                    trans[k] |= 1 << j;
-        }
-        setup = 1;
-    }
-
-    setunused(self);
-    for (i = 0; i < Py_SIZE(self); i++)
-        self->ob_item[i] = trans[(unsigned char) self->ob_item[i]];
-}
-
 static unsigned char bitcount_lookup[256] = {
     0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
     1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
@@ -1331,7 +1304,28 @@ i.e. convert each 1-bit into a 0-bit and vice versa.");
 static PyObject *
 bitarray_bytereverse(bitarrayobject *self)
 {
-    bytereverse(self);
+    static char trans[256];
+    static int setup = 0;
+    Py_ssize_t i;
+
+    if (!setup) {
+        /* setup translation table, which maps each byte to it's reversed:
+           trans = {0, 128, 64, 192, 32, 160, ..., 255} */
+        int j, k;
+
+        for (k = 0; k < 256; k++) {
+            trans[k] = 0x00;
+            for (j = 0; j < 8; j++)
+                if (1 << (7 - j) & k)
+                    trans[k] |= 1 << j;
+        }
+        setup = 1;
+    }
+
+    setunused(self);
+    for (i = 0; i < Py_SIZE(self); i++)
+        self->ob_item[i] = trans[(unsigned char) self->ob_item[i]];
+
     Py_RETURN_NONE;
 }
 
