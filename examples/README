@@ -8,12 +8,17 @@ gene.py:
     represented by bitarrays.
 
 
+growth/
+    Things to study the bitarray growth pattern, including tests for the
+    current implementation.
+
+
 helpers.py:
     some useful helper function which people have requested, but which are
     not common enough to add to the library itself.
 
 
-huffman
+huffman/
     Directory containing a library and examples for working with Huffman
     trees and codes.
 

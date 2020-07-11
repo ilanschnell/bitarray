@@ -4,7 +4,7 @@ and codes.
 
 Note:
 There is a function for directly creating a Huffman code from a frequency
-map: bitarray.util.huffman_code()
+map in the bitarray library itself: bitarray.util.huffman_code()
 """
 from __future__ import print_function
 from heapq import heappush, heappop
