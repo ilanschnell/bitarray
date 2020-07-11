@@ -663,6 +663,11 @@ Change log
   * avoid overallocation when bitarray objects are initially created
   * raise BufferError when resizing bitarrays which is exporting buffers
   * add example to study the resize() function
+  * improve some error messages
+  * add more tests
+  * raise `NotImplementedError` with (useful message) when trying to call
+    the `.fromstring()` or `.tostring()` methods, which have been removed
+    in the last release
 
 
 *1.3.0* (2020-07-06):

@@ -42,6 +42,15 @@ Note that setting the bit endianness only has an effect when accessing the
 machine representation of the bitarray, i.e. when using the methods: tofile,
 fromfile, tobytes, frombytes."""
 
+    def tostring(self, string):
+        "NO DOC"
+        raise NotImplementedError("""
+The .tostring() / .fromstring() methods been deprecated since bitarray 0.4.0,
+and have been removed in bitarray version 1.3.0.
+Please use .tobytes() / .frombytes() instead.""")
+
+    fromstring = tostring
+
 
 class frozenbitarray(_bitarray):
     """frozenbitarray(initializer=0, /, endian='big') -> frozenbitarray
