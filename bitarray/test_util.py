@@ -398,6 +398,19 @@ tests.append(TestsSubset)
 
 class TestsHexlify(unittest.TestCase, Util):
 
+    def test_swap_hilo_bytes(self):
+        from bitarray._util import _swap_hilo_bytes
+
+        for i in range(256):
+            byte = bytes(bytearray([i]))
+            a = bitarray()
+            a.frombytes(byte)
+            self.assertEqual(len(a), 8)
+
+            b = a[4:8] + a[0:4]
+            self.assertEqual(b.tobytes(),
+                             byte.translate(_swap_hilo_bytes))
+
     def test_ba2hex(self):
         self.assertEqual(ba2hex(bitarray(0, 'big')), '')
         self.assertEqual(ba2hex(bitarray('1110', 'big')), 'e')
