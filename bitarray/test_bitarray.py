@@ -225,7 +225,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         except TypeError as e:
             self.assertTrue('ellipsis' in str(e))
         else:
-            raise SystemError("error got raised - we shouldn'e get here")
+            raise SystemError("we shouldn'e get here")
 
     def test_integers(self):
         for n in range(50):
