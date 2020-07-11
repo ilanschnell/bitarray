@@ -425,15 +425,6 @@ setrange(bitarrayobject *self, idx_t start, idx_t stop, int val)
     }
 }
 
-static void
-invert(bitarrayobject *self)
-{
-    Py_ssize_t i;
-
-    for (i = 0; i < Py_SIZE(self); i++)
-        self->ob_item[i] = ~self->ob_item[i];
-}
-
 /* reverse the order of bits in each byte of the buffer */
 static void
 bytereverse(bitarrayobject *self)
@@ -1323,7 +1314,10 @@ will be a multiple of 8.  Returns the number of bits added (0..7).");
 static PyObject *
 bitarray_invert(bitarrayobject *self)
 {
-    invert(self);
+    Py_ssize_t n = Py_SIZE(self), i;
+
+    for (i = 0; i < n; i++)
+        self->ob_item[i] = ~self->ob_item[i];
     Py_RETURN_NONE;
 }
 
@@ -2133,7 +2127,7 @@ bitarray_cpinvert(bitarrayobject *self)
     PyObject *res;
 
     res = bitarray_copy(self);
-    invert((bitarrayobject *) res);
+    bitarray_invert((bitarrayobject *) res);
     return res;
 }
 
