@@ -1495,6 +1495,7 @@ class MethodTests(unittest.TestCase, Util):
             a.frombytes(bytes(bytearray([i])))
             self.assertEqual(len(a), 8)
             self.assertEqual(a.count(), count(i))
+            self.assertEqual(a.count(), bin(i)[2:].count('1'))
 
     def test_count_whole_range(self):
         for a in self.randombitarrays():
