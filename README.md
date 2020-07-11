@@ -52,7 +52,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ..............................
     ----------------------------------------------------------------------
-    Ran 199 tests in 1.144s
+    Ran 212 tests in 0.876s
 
     OK
 
@@ -657,7 +657,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2020-XX-XX   1.4.0:
+*1.4.0* (2020-07-11):
 
   * add `.clear()` method (Python 3.3 added this method to lists)
   * avoid overallocation when bitarray objects are initially created
@@ -689,13 +689,6 @@ Change log
   * `util.hex2ba` allows a unicode object as input on Python 2
   * Determine 64-bitness of interpreter in a cross-platform fashion #91,
     in order to better support PyPy
-
-
-*1.2.1* (2020-01-06):
-
-  * simplify markdown of readme so PyPI renders better
-  * make tests for bitarray.util required (instead of warning when
-    they cannot be imported)
 
 
 Please find the complete change log
