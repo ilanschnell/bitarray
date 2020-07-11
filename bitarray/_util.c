@@ -39,6 +39,7 @@ typedef struct {
 
 #define BYTES(bits)  (((bits) == 0) ? 0 : (((bits) - 1) / 8 + 1))
 
+/* we assume that ENDIAN_LITTLE=0 and ENDIAN_BIG=1 */
 #define BITMASK(endian, i)  (((char) 1) << ((endian) ? (7 - (i)%8) : (i)%8))
 
 /* ------------ low level access to bits in bitarrayobject ------------- */
