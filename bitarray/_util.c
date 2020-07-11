@@ -192,6 +192,19 @@ find_last(bitarrayobject *a, int vi)
     return -1;
 }
 
+/* translate table which swaps the 4 highest with the 4 lowest bits */
+static PyObject *
+make_swap_hilo_bytes()
+{
+    char bytes[256];
+    int i;
+
+    for (i = 0; i < 256; i++)
+        bytes[i] = (char) (16 * (i % 16) + (i / 16));
+
+    return PyBytes_FromStringAndSize(bytes, 256);
+}
+
 /*************************** Module functions **********************/
 
 static PyObject *
@@ -411,6 +424,7 @@ init_util(void)
         return;
 #endif
 
+    PyModule_AddObject(m, "_swap_hilo_bytes", make_swap_hilo_bytes());
 #ifdef IS_PY3K
     return m;
 #endif

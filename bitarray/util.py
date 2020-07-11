@@ -13,7 +13,7 @@ from bitarray import bitarray, bits2bytes, _bitarray, get_default_endian
 
 from bitarray._util import (count_n, rindex,
                             count_and, count_or, count_xor, subset,
-                            _set_babt)
+                            _swap_hilo_bytes, _set_babt)
 
 
 __all__ = ['zeros', 'make_endian', 'rindex', 'strip', 'count_n',
@@ -99,14 +99,6 @@ Allowed values for mode are the strings: `left`, `right`, `both`
             return bitarray(endian=a.endian())
 
     return a[first:last + 1]
-
-
-# translate table which swaps the 4 highest with the 4 lowest bits"
-_swap_hilo_list = [16 * (i % 16) + (i // 16) for i in range(256)]
-if _is_py2:
-    _swap_hilo_bytes = b''.join(chr(i) for i in _swap_hilo_list)
-else:
-    _swap_hilo_bytes = bytes(_swap_hilo_list)
 
 
 def ba2hex(a):
