@@ -67,17 +67,6 @@ setbit(bitarrayobject *self, idx_t i, int bit)
         *cp &= ~mask;
 }
 
-/* set using the Python module function _set_babt() */
-static PyObject *bitarray_basetype = NULL;
-
-/* return 1 if obj is a bitarray, 0 otherwise */
-static int
-bitarray_Check(PyObject *obj)
-{
-    assert(bitarray_basetype != NULL);
-    return PyObject_IsInstance(obj, bitarray_basetype);
-}
-
 static void
 setunused(bitarrayobject *a)
 {
@@ -98,6 +87,22 @@ static unsigned char bitcount_lookup[256] = {
     2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
     3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8,
 };
+
+/*********** end of code basically copied from _bitarray.c *************/
+
+/* set using the Python module function _set_babt() */
+static PyObject *bitarray_basetype = NULL;
+
+/* Return 1 if obj is a bitarray, 0 otherwise.
+   Note that this is implemented differently in _bitarray.c */
+static int
+bitarray_Check(PyObject *obj)
+{
+    assert(bitarray_basetype != NULL);
+    return PyObject_IsInstance(obj, bitarray_basetype);
+}
+
+/************ start of actual functionality in this module *************/
 
 /* return the smallest index i for which a.count(1, 0, i) == n, or when
    n exceeds the total count return -1  */
