@@ -811,12 +811,10 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 #ifdef IS_PY3K
 #define IS_INDEX(x)  (PyLong_Check(x) || PyIndex_Check(x))
 #define IS_INT_OR_BOOL(x)  (PyBool_Check(x) || PyLong_Check(x))
-#define Py_CSTRING  PyUnicode_FromString
 #else  /* Py 2 */
 #define IS_INDEX(x)  (PyInt_Check(x) || PyLong_Check(x) || PyIndex_Check(x))
 #define IS_INT_OR_BOOL(x)  (PyBool_Check(x) || PyInt_Check(x) || \
                                                PyLong_Check(x))
-#define Py_CSTRING  PyString_FromString
 #endif
 
 /* given an PyLong (which must be 0 or 1), or a PyBool, return 0 or 1,
@@ -1187,7 +1185,7 @@ bits in the last bytes, and the size (in bytes) of the allocated memory.");
 static PyObject *
 bitarray_endian(bitarrayobject *self)
 {
-    return Py_CSTRING(ENDIAN_STR(self));
+    return Py_BuildValue("s", ENDIAN_STR(self));
 }
 
 PyDoc_STRVAR(endian_doc,
@@ -3255,7 +3253,8 @@ Return the number of bytes necessary to store n bits.");
 static PyObject *
 get_default_endian(PyObject *module)
 {
-    return Py_CSTRING(default_endian == ENDIAN_LITTLE ? "little" : "big");
+    return Py_BuildValue("s",
+                      default_endian == ENDIAN_LITTLE ? "little" : "big");
 }
 
 PyDoc_STRVAR(get_default_endian_doc,
@@ -3361,7 +3360,8 @@ init_bitarray(void)
 
     Py_INCREF((PyObject *) &Bitarraytype);
     PyModule_AddObject(m, "_bitarray", (PyObject *) &Bitarraytype);
-    PyModule_AddObject(m, "__version__", Py_CSTRING(BITARRAY_VERSION));
+    PyModule_AddObject(m, "__version__",
+                       Py_BuildValue("s", BITARRAY_VERSION));
 #ifdef IS_PY3K
     return m;
 #endif
