@@ -35,12 +35,15 @@ typedef struct {
     PyObject *weakreflist;      /* list of weak references */
 } bitarrayobject;
 
+#define ENDIAN_LITTLE  0
+#define ENDIAN_BIG     1
+
 #define BITS(bytes)  ((idx_t) (bytes) << 3)
 
 #define BYTES(bits)  (((bits) == 0) ? 0 : (((bits) - 1) / 8 + 1))
 
-/* we assume that ENDIAN_LITTLE=0 and ENDIAN_BIG=1 */
-#define BITMASK(endian, i)  (((char) 1) << ((endian) ? (7 - (i)%8) : (i)%8))
+#define BITMASK(endian, i)  \
+    (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) % 8) : (7 - (i) % 8)))
 
 /* ------------ low level access to bits in bitarrayobject ------------- */
 

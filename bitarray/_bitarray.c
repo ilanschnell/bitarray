@@ -34,12 +34,9 @@
 #endif /* !STDC_HEADERS */
 
 
+/* instead of Py_ssize_t, we use this type indices, as Py_ssize_t is
+   only 4 bytes on 32bit machines, but bitarray indices can exceed this */
 typedef long long int idx_t;
-
-/* bit endianness */
-#define ENDIAN_LITTLE  0
-#define ENDIAN_BIG     1
-static int default_endian = ENDIAN_BIG;
 
 /* Unlike the normal convention, ob_size is the byte count, not the number
    of elements.  The reason for doing this is that we can use our own
@@ -57,8 +54,12 @@ typedef struct {
 
 static PyTypeObject Bitarraytype;
 
+/* --- bit endianness --- */
+#define ENDIAN_LITTLE  0
+#define ENDIAN_BIG     1
 #define ENDIAN_INT(i)  ((i) == ENDIAN_LITTLE ? "little" : "big")
 #define ENDIAN_OBJ(o)  ENDIAN_INT(((bitarrayobject *) o)->endian)
+static int default_endian = ENDIAN_BIG;
 
 #define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarraytype)
 
