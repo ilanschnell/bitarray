@@ -2778,7 +2778,8 @@ endian_from_string(const char* string)
     if (strcmp(string, "big") == 0)
         return ENDIAN_BIG;
 
-    PyErr_SetString(PyExc_ValueError, "'little' or 'big' expected");
+    PyErr_SetString(PyExc_ValueError,
+                    "bit endianness must be either 'little' or 'big'");
     return -1;
 }
 
