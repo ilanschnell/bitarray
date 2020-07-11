@@ -35,8 +35,10 @@
 
 typedef long long int idx_t;
 
-/* throughout:  0 = little endian   1 = big endian */
-static int default_endian = 1;
+/* bit endianness */
+#define ENDIAN_LITTLE  0
+#define ENDIAN_BIG     1
+static int default_endian = ENDIAN_BIG;
 
 /* Unlike the normal convention, ob_size is the byte count, not the number
    of elements.  The reason for doing this is that we can use our own
@@ -54,7 +56,7 @@ typedef struct {
 
 static PyTypeObject Bitarraytype;
 
-#define ENDIAN_STR(a)  (((a)->endian) ? "big" : "little")
+#define ENDIAN_STR(a)  (((a)->endian == ENDIAN_LITTLE) ? "little" : "big")
 
 #define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarraytype)
 
@@ -63,7 +65,8 @@ static PyTypeObject Bitarraytype;
 /* number of bytes necessary to store given bits */
 #define BYTES(bits)  (((bits) == 0) ? 0 : (((bits) - 1) / 8 + 1))
 
-#define BITMASK(endian, i)  (((char) 1) << ((endian) ? (7 - (i)%8) : (i)%8))
+#define BITMASK(endian, i)  \
+    (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) % 8) : (7 - (i) % 8)))
 
 /* ------------ low level access to bits in bitarrayobject ------------- */
 
@@ -2763,16 +2766,17 @@ bitarray_methods[] = {
 static int
 endian_from_string(const char* string)
 {
-    assert(default_endian == 0 || default_endian == 1);
+    assert(default_endian == ENDIAN_LITTLE ||
+           default_endian == ENDIAN_BIG);
 
     if (string == NULL)
         return default_endian;
 
     if (strcmp(string, "little") == 0)
-        return 0;
+        return ENDIAN_LITTLE;
 
     if (strcmp(string, "big") == 0)
-        return 1;
+        return ENDIAN_BIG;
 
     PyErr_SetString(PyExc_ValueError, "'little' or 'big' expected");
     return -1;
@@ -3249,7 +3253,7 @@ Return the number of bytes necessary to store n bits.");
 static PyObject *
 get_default_endian(PyObject *module)
 {
-    return Py_CSTRING(default_endian ? "big" : "little");
+    return Py_CSTRING(default_endian == ENDIAN_LITTLE ? "little" : "big");
 }
 
 PyDoc_STRVAR(get_default_endian_doc,
