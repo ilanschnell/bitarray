@@ -196,8 +196,8 @@ find_last(bitarrayobject *a, int vi)
     return -1;
 }
 
-/* translate table which swaps the 4 highest with the 4 lowest bits in
-   each byte - can be used as argument of bytes.translate() */
+/* translation table which swaps the 4 highest with the 4 lowest bits in
+   each byte - to be used as argument of bytes.translate() */
 static PyObject *
 make_swap_hilo_bytes(void)
 {
