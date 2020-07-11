@@ -413,10 +413,12 @@ static PyMethodDef module_functions[] = {
 static PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT, "_util", 0, -1, module_functions,
 };
+#endif
+
 PyMODINIT_FUNC
+#ifdef IS_PY3K
 PyInit__util(void)
 #else
-PyMODINIT_FUNC
 init_util(void)
 #endif
 {
