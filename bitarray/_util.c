@@ -74,8 +74,7 @@ static PyObject *bitarray_basetype = NULL;
 static int
 bitarray_Check(PyObject *obj)
 {
-    if (bitarray_basetype == NULL) /* fallback */
-        return PyObject_HasAttrString(obj, "endian");
+    assert(bitarray_basetype != NULL);
     return PyObject_IsInstance(obj, bitarray_basetype);
 }
 
