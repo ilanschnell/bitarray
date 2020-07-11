@@ -1,5 +1,4 @@
 import re
-from os.path import join
 from distutils.core import setup, Extension
 
 
@@ -11,7 +10,7 @@ except IOError:
 
 # Read version from bitarray/_bitarray.c
 pat = re.compile(r'#define\s+BITARRAY_VERSION\s+"(\S+)"', re.M)
-data = open(join('bitarray', '_bitarray.c')).read()
+data = open('bitarray/_bitarray.c').read()
 kwds['version'] = pat.search(data).group(1)
 
 
