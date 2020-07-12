@@ -1494,10 +1494,8 @@ bits (1..7) are considered to be 0.");
 static PyObject *
 bitarray_fromfile(bitarrayobject *self, PyObject *args)
 {
-    PyObject *f;
-    Py_ssize_t newsize, nbytes = -1;
-    PyObject *reader, *rargs, *result;
-    size_t nread;
+    PyObject *b, *f, *res;
+    Py_ssize_t nread, nbytes = -1;
     idx_t t, p;
 
     if (!PyArg_ParseTuple(args, "O|n:fromfile", &f, &nbytes))
@@ -1506,56 +1504,36 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
     if (nbytes == 0)
         Py_RETURN_NONE;
 
-    reader = PyObject_GetAttrString(f, "read");
-    if (reader == NULL)
-    {
-        PyErr_SetString(PyExc_TypeError,
-                        "first argument must be an open file");
+    b = PyObject_CallMethod(f, "read", "n", nbytes);
+    if (b == NULL)
+        return NULL;
+
+    if (!PyBytes_Check(b)) {
+        PyErr_SetString(PyExc_TypeError, "read() didn't return bytes");
+        Py_DECREF(b);
         return NULL;
     }
-    rargs = Py_BuildValue("(n)", nbytes);
-    if (rargs == NULL) {
-        Py_DECREF(reader);
+
+    t = self->nbits;
+    p = setunused(self);
+    self->nbits += p;
+
+    nread = PyBytes_GET_SIZE(b);
+    if (nbytes > 0 && nread < nbytes) {
+        Py_DECREF(b);
+        PyErr_SetString(PyExc_EOFError, "not enough bytes read");
         return NULL;
     }
-    result = PyEval_CallObject(reader, rargs);
-    if (result != NULL) {
-        if (!PyBytes_Check(result)) {
-            PyErr_SetString(PyExc_TypeError,
-                            "first argument must be an open file");
-            Py_DECREF(result);
-            Py_DECREF(rargs);
-            Py_DECREF(reader);
-            return NULL;
-        }
-        nread = PyBytes_Size(result);
 
-        t = self->nbits;
-        p = setunused(self);
-        self->nbits += p;
+    res = bitarray_frombytes(self, b);
+    Py_DECREF(b);
+    if (res == NULL)
+        return NULL;
+    Py_DECREF(res);
 
-        newsize = Py_SIZE(self) + nread;
+    if (delete_n(self, t, p) < 0)
+        return NULL;
 
-        if (resize(self, BITS(newsize)) < 0) {
-            Py_DECREF(result);
-            Py_DECREF(rargs);
-            Py_DECREF(reader);
-            return NULL;
-        }
-        memcpy(self->ob_item + (Py_SIZE(self) - nread),
-               PyBytes_AS_STRING(result), nread);
-
-        if (nbytes > 0 && nread < (size_t) nbytes) {
-            PyErr_SetString(PyExc_EOFError, "not enough items read");
-            return NULL;
-        }
-        if (delete_n(self, t, p) < 0)
-            return NULL;
-        Py_DECREF(result);
-    }
-
-    Py_DECREF(rargs);
-    Py_DECREF(reader);
     Py_RETURN_NONE;
 }
 #else  /* Python 2 */

@@ -1967,13 +1967,13 @@ class FileTests(unittest.TestCase, Util):
         b = bitarray()
         self.assertRaises(TypeError, b.fromfile)
         #self.assertRaises(TypeError, b.fromfile, StringIO())  # file not open
-        self.assertRaises(TypeError, b.fromfile, 42)
-        self.assertRaises(TypeError, b.fromfile, 'bar')
+        self.assertRaises(Exception, b.fromfile, 42)
+        self.assertRaises(Exception, b.fromfile, 'bar')
 
-
-    def test_from_empty_file(self):
+    def test_fromfile_empty(self):
         with open(self.tmpfname, 'wb') as fo:
             pass
+        self.assertFileSize(0)
 
         a = bitarray()
         a.fromfile(open(self.tmpfname, 'rb'))
@@ -2018,7 +2018,6 @@ class FileTests(unittest.TestCase, Util):
                              n*bitarray('1') +
                              bitarray('01100010111101101111011001010000'))
 
-
     def test_fromfile_n(self):
         a = bitarray()
         a.frombytes(b'ABCDEFGHIJ')
@@ -2042,7 +2041,7 @@ class FileTests(unittest.TestCase, Util):
             f.read(1)
             self.assertRaises(EOFError, b.fromfile, f, 10)
 
-        self.assertEqual(b.tobytes(), b'BCDEFGHIJ')
+        #self.assertEqual(b.tobytes(), b'BCDEFGHIJ')
 
         b = bitarray()
         with open(self.tmpfname, 'rb') as f:
