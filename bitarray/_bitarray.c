@@ -692,7 +692,6 @@ static int
 extend_rawbytes(bitarrayobject *self, PyObject *bytes)
 {
     Py_ssize_t nbytes;
-    char *data;
 
     assert(PyBytes_Check(bytes) && self->nbits % 8 == 0);
     nbytes = PyBytes_Size(bytes);
@@ -702,8 +701,8 @@ extend_rawbytes(bitarrayobject *self, PyObject *bytes)
     if (resize(self, self->nbits + BITS(nbytes)) < 0)
         return -1;
 
-    data = PyBytes_AsString(bytes);
-    memcpy(self->ob_item + (Py_SIZE(self) - nbytes), data, nbytes);
+    memcpy(self->ob_item + (Py_SIZE(self) - nbytes),
+           PyBytes_AsString(bytes), nbytes);
     return 0;
 }
 
@@ -1625,7 +1624,6 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
     for (i = 0; i < nblocks; i++) {
         Py_ssize_t offset = i * BLOCKSIZE;
         Py_ssize_t size = BLOCKSIZE;
-        char *ptr = self->ob_item + offset;
         PyObject *res;
 
         if (offset + size > nbytes)
@@ -1634,7 +1632,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
         assert(offset + size <= nbytes);
         res = PyObject_CallMethod(f, "write",
                                   PY_MAJOR_VERSION == 2 ? "s#" : "y#",
-                                  ptr, size);
+                                  self->ob_item + offset, size);
         if (res == NULL)
             return NULL;
         Py_DECREF(res);  /* drop write result */
