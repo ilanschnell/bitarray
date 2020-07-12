@@ -2090,6 +2090,13 @@ class FileTests(unittest.TestCase, Util):
         # write to closed file
         self.assertRaises(ValueError, a.tofile, f)
 
+        if is_py3k:
+            with open(self.tmpfname, 'w') as f:
+                self.assertRaises(TypeError, a.tofile, f)
+
+        with open(self.tmpfname, 'rb') as f:
+            self.assertRaises(Exception, a.tofile, f)
+
     def test_tofile_large(self):
         n = 100 * 1000
         a = bitarray(8 * n)
