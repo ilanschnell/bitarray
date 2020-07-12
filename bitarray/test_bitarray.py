@@ -1872,10 +1872,7 @@ class BytesTests(unittest.TestCase, Util):
 
     def test_unpack(self):
         a = bitarray('01')
-        if is_py3k:
-            self.assertIsInstance(a.unpack(), bytes)
-        else:
-            self.assertIsInstance(a.unpack(), str)
+        self.assertIsInstance(a.unpack(), bytes if is_py3k else str)
         self.assertEqual(a.unpack(), b'\x00\xff')
         self.assertEqual(a.unpack(b'A'), b'A\xff')
         self.assertEqual(a.unpack(b'0', b'1'), b'01')
