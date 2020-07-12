@@ -23,10 +23,10 @@ except ImportError:
     shelve = hashlib = None
 
 if is_py3k:
-    from io import StringIO
+    from io import BytesIO
     unicode = str
 else:
-    from cStringIO import StringIO
+    from cStringIO import StringIO as BytesIO
     range = xrange
 
 
@@ -1966,7 +1966,7 @@ class FileTests(unittest.TestCase, Util):
     def test_fromfile_wrong_args(self):
         b = bitarray()
         self.assertRaises(TypeError, b.fromfile)
-        self.assertRaises(TypeError, b.fromfile, StringIO())  # file not open
+        #self.assertRaises(TypeError, b.fromfile, StringIO())  # file not open
         self.assertRaises(TypeError, b.fromfile, 42)
         self.assertRaises(TypeError, b.fromfile, 'bar')
 
@@ -2083,7 +2083,6 @@ class FileTests(unittest.TestCase, Util):
         n = 100
         a = bitarray(8 * n)
         self.assertRaises(TypeError, a.tofile)
-            #self.assertRaises(TypeError, a.tofile, StringIO())
 
         with open(self.tmpfname, 'wb') as f:
             a.tofile(f)
@@ -2117,6 +2116,16 @@ class FileTests(unittest.TestCase, Util):
             b = bitarray(endian='little')
             b.frombytes(raw)
             self.assertEqual(a, b)
+
+    def test_tofile_BytesIO(self):
+        for n in list(range(10)) + list(range(65534, 65538)):
+            data = os.urandom(n)
+            a = bitarray(0, 'big')
+            a.frombytes(data)
+            self.assertEqual(len(a), 8 * n)
+            f = BytesIO()
+            a.tofile(f)
+            self.assertEqual(f.getvalue(), data)
 
 
 tests.append(FileTests)

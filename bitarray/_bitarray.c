@@ -1559,7 +1559,7 @@ read until EOF is reached.");
 static PyObject *
 bitarray_tofile(bitarrayobject *self, PyObject *f)
 {
-#define BLOCKSIZE  (64 * 1024)    /* write 64K blocks at a time */
+#define BLOCKSIZE  65536    /* write 64K blocks at a time */
 #define FMT  (PY_MAJOR_VERSION == 2 ? "s#" : "y#")
     Py_ssize_t nbytes = Py_SIZE(self), nblocks, i;
 
@@ -1569,13 +1569,15 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
     nblocks = (nbytes - 1) / BLOCKSIZE + 1;
     setunused(self);
     for (i = 0; i < nblocks; i++) {
-        char *ptr = self->ob_item + i * BLOCKSIZE;
+        Py_ssize_t offset = i * BLOCKSIZE;
         Py_ssize_t size = BLOCKSIZE;
+        char *ptr = self->ob_item + offset;
         PyObject *res;
 
-        if (i * BLOCKSIZE + size > nbytes)
-            size = nbytes - i * BLOCKSIZE;
+        if (offset + size > nbytes)
+            size = nbytes - offset;
 
+        assert(offset + size <= nbytes);
         res = PyObject_CallMethod(f, "write", FMT, ptr, size);
         if (res == NULL)
             return NULL;
@@ -1585,7 +1587,6 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
 #undef FMT
     Py_RETURN_NONE;
 }
-
 
 PyDoc_STRVAR(tofile_doc,
 "tofile(f, /)\n\
