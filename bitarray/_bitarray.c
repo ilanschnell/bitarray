@@ -748,14 +748,16 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
    on the parameter 'out' (and the Python version).  The function is meant
    to be called in bitarray_unpack(), bitarray_to01() and bitarray_repr().
 
-   out   used in              returns (Python 3)    return (Python 2)
-   --------------------------------------------------------------------
-   0     bitarray_unpack()    PyBytes               PyString
-   1     bitarray_to01()      PyString              PyString
-   2     bitarray_repr()      PyString              PyString
-*/
+    name              used in            returns Py3    returns Py2
+    ---------------------------------------------------------------- */
+enum output_t {
+    OUT_unpack,  /*   bitarray_unpack()  PyBytes        PyString     */
+    OUT_to01,    /*   bitarray_to01()    PyString       PyString     */
+    OUT_repr,    /*   bitarray_repr()    PyString       PyString     */
+};
+
 static PyObject *
-unpack(bitarrayobject *self, char zero, char one, int out)
+unpack(bitarrayobject *self, char zero, char one, enum output_t out)
 {
     PyObject *result;
     Py_ssize_t i;
@@ -767,26 +769,26 @@ unpack(bitarrayobject *self, char zero, char one, int out)
         PyErr_SetString(PyExc_OverflowError, "bitarray too large to unpack");
         return NULL;
     }
-    assert(out >= 0 && out <=2);
 
-    strsize = self->nbits + (out == 2 ? 12 : 0);
+    /* note that 12 is the length of "bitarray('')" */
+    strsize = self->nbits + (out == OUT_repr ? 12 : 0);
     str = (char *) PyMem_Malloc(strsize);
     if (str == NULL) {
         PyErr_NoMemory();
         return NULL;
     }
-    if (out == 2) {
-        strcpy(str, "bitarray('");
+    if (out == OUT_repr) {
+        strcpy(str, "bitarray('"); /* has length 10 */
         offset = 10;
     }
     for (i = 0; i < self->nbits; i++)
         str[i + offset] = GETBIT(self, i) ? one : zero;
-    if (out == 2) {             /* add the closing "')" */
+    if (out == OUT_repr) {      /* add the closing "')" */
         str[strsize - 2] = '\'';
         str[strsize - 1] = ')';
     }
     result = Py_BuildValue(
-               (out == 0 && PY_MAJOR_VERSION == 3) ? "y#" : "s#",
+               (out == OUT_unpack && PY_MAJOR_VERSION == 3) ? "y#" : "s#",
                str, (Py_ssize_t) strsize);
     PyMem_Free((void *) str);
     return result;
@@ -1706,7 +1708,7 @@ bits (1..7) are considered to be 0.");
 static PyObject *
 bitarray_to01(bitarrayobject *self)
 {
-    return unpack(self, '0', '1', 1);
+    return unpack(self, '0', '1', OUT_to01);
 }
 
 PyDoc_STRVAR(to01_doc,
@@ -1728,7 +1730,7 @@ bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
                                      &zero, &one))
         return NULL;
 
-    return unpack(self, zero, one, 0);
+    return unpack(self, zero, one, OUT_unpack);
 }
 
 PyDoc_STRVAR(unpack_doc,
@@ -1768,7 +1770,7 @@ bitarray_repr(bitarrayobject *self)
     if (self->nbits == 0)
         return Py_BuildValue("s", "bitarray()");
 
-    return unpack(self, '0', '1', 2);
+    return unpack(self, '0', '1', OUT_repr);
 }
 
 
