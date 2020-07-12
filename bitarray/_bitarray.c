@@ -549,10 +549,15 @@ append_item(bitarrayobject *self, PyObject *item)
     return set_item(self, self->nbits - 1, item);
 }
 
-/*
-   out=0  unpack  bytes
-   out=1  to01    string
-   out=2  repr    string
+/* This function returns either a PyString or PyBytes object depending
+   on the parameter 'out' (and the Python version).  The function is meant
+   to be called in bitarray_unpack(), bitarray_to01() and bitarray_repr().
+
+   out   used in              returns (Python 3)    return (Python 2)
+   --------------------------------------------------------------------
+   0     bitarray_unpack()    PyBytes               PyString
+   1     bitarray_to01()      PyString              PyString
+   2     bitarray_repr()      PyString              PyString
 */
 static PyObject *
 unpack(bitarrayobject *self, char zero, char one, int out)
@@ -561,23 +566,15 @@ unpack(bitarrayobject *self, char zero, char one, int out)
     Py_ssize_t i;
     char *str;
     size_t strsize;
-    int fmt = 0;                /* fmt=0 -> "s#"   fmt=1 -> "y#" */
     int offset = 0;
 
     if (self->nbits > PY_SSIZE_T_MAX) {
         PyErr_SetString(PyExc_OverflowError, "bitarray too large to unpack");
         return NULL;
     }
-
     assert(out >= 0 && out <=2);
-#ifdef IS_PY3K
-    if (out == 0)
-        fmt = 1;
-#endif
-    strsize = self->nbits;
-    if (out == 2)
-        strsize += 12;
 
+    strsize = self->nbits + (out == 2 ? 12 : 0);
     str = (char *) PyMem_Malloc(strsize);
     if (str == NULL) {
         PyErr_NoMemory();
@@ -589,11 +586,13 @@ unpack(bitarrayobject *self, char zero, char one, int out)
     }
     for (i = 0; i < self->nbits; i++)
         str[i + offset] = GETBIT(self, i) ? one : zero;
-    if (out == 2) {             /* add the closing string "')" */
+    if (out == 2) {             /* add the closing "')" */
         str[strsize - 2] = '\'';
         str[strsize - 1] = ')';
     }
-    result = Py_BuildValue(fmt ? "y#" : "s#", str, (Py_ssize_t) strsize);
+    result = Py_BuildValue(
+               (out == 0 && PY_MAJOR_VERSION == 3) ? "y#" : "s#",
+               str, (Py_ssize_t) strsize);
     PyMem_Free((void *) str);
     return result;
 }
