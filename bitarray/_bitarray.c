@@ -71,6 +71,11 @@ static int default_endian = ENDIAN_BIG;
 #define BITMASK(endian, i)  \
     (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) % 8) : (7 - (i) % 8)))
 
+/* This block size is used when reading/writing blocks of bytes from files.
+   It is also used in resize() for not overallocating when size increase
+   is larger than the block size.  */
+#define BLOCKSIZE  65536
+
 /* ------------ low level access to bits in bitarrayobject ------------- */
 
 #ifndef NDEBUG
@@ -172,7 +177,7 @@ resize(bitarrayobject *self, idx_t nbits)
            extend an empty array on creation.
          - The size increase is very large.
          - The size is decreasing. */
-    else if (!(size == 0 || newsize > size + 65536 || newsize < size))
+    else if (!(size == 0 || newsize > size + BLOCKSIZE || newsize < size))
         /* This over-allocates proportional to the bitarray size, making
            room for additional growth.
            The growth pattern is:  0, 4, 8, 16, 25, 34, 44, 54, 65, 77, ...
@@ -1610,8 +1615,6 @@ read until EOF is reached.");
 static PyObject *
 bitarray_tofile(bitarrayobject *self, PyObject *f)
 {
-#define BLOCKSIZE  65536    /* write 64K blocks at a time */
-#define FMT  (PY_MAJOR_VERSION == 2 ? "s#" : "y#")
     Py_ssize_t nbytes = Py_SIZE(self), nblocks, i;
 
     if (nbytes == 0)
@@ -1629,13 +1632,13 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
             size = nbytes - offset;
 
         assert(offset + size <= nbytes);
-        res = PyObject_CallMethod(f, "write", FMT, ptr, size);
+        res = PyObject_CallMethod(f, "write",
+                                  PY_MAJOR_VERSION == 2 ? "s#" : "y#",
+                                  ptr, size);
         if (res == NULL)
             return NULL;
         Py_DECREF(res);  /* drop write result */
     }
-#undef BLOCKSIZE
-#undef FMT
     Py_RETURN_NONE;
 }
 
