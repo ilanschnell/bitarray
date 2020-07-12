@@ -1413,6 +1413,81 @@ PyDoc_STRVAR(sort_doc,
 Sort the bits in the array (in-place).");
 
 
+static PyObject *
+bitarray_tolist(bitarrayobject *self)
+{
+    PyObject *list;
+    idx_t i;
+
+    list = PyList_New((Py_ssize_t) self->nbits);
+    if (list == NULL)
+        return NULL;
+
+    for (i = 0; i < self->nbits; i++)
+        if (PyList_SetItem(list, (Py_ssize_t) i,
+                           PyBool_FromLong(GETBIT(self, i))) < 0)
+            return NULL;
+    return list;
+}
+
+PyDoc_STRVAR(tolist_doc,
+"tolist() -> list\n\
+\n\
+Return an ordinary list with the items in the bitarray.\n\
+Note that the list object being created will require 32 or 64 times more\n\
+memory than the bitarray object, which may cause a memory error if the\n\
+bitarray is very large.\n\
+Also note that to extend a bitarray with elements from a list,\n\
+use the extend method.");
+
+
+static PyObject *
+bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
+{
+    idx_t t, p;
+
+    if (!PyBytes_Check(bytes)) {
+        PyErr_SetString(PyExc_TypeError, "bytes expected");
+        return NULL;
+    }
+
+    /* Before we extend the raw bytes with the new data, we need to store
+       the current size and pad the last byte, as our bitarray size might
+       not be a multiple of 8.  After extending, we remove the padding
+       bits again.  The same is done in bitarray_fromfile().
+    */
+    t = self->nbits;
+    p = setunused(self);
+    self->nbits += p;
+
+    if (extend_rawbytes(self, bytes) < 0)
+        return NULL;
+    if (delete_n(self, t, p) < 0)
+        return NULL;
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(frombytes_doc,
+"frombytes(bytes, /)\n\
+\n\
+Append from a byte string, interpreted as machine values.");
+
+
+static PyObject *
+bitarray_tobytes(bitarrayobject *self)
+{
+    setunused(self);
+    return PyBytes_FromStringAndSize(self->ob_item, Py_SIZE(self));
+}
+
+PyDoc_STRVAR(tobytes_doc,
+"tobytes() -> bytes\n\
+\n\
+Return the byte representation of the bitarray.\n\
+When the length of the bitarray is not a multiple of 8, the few remaining\n\
+bits (1..7) are considered to be 0.");
+
+
 /* since too many details differ between the Python 2 and 3 implementation
    of this function, we choose to have two separate function implementation,
    even though this means some of the code is duplicated in the two versions
@@ -1594,81 +1669,6 @@ PyDoc_STRVAR(tofile_doc,
 Write all bits (as machine values) to the file object f.\n\
 When the length of the bitarray is not a multiple of 8,\n\
 the remaining bits (1..7) are set to 0.");
-
-
-static PyObject *
-bitarray_tolist(bitarrayobject *self)
-{
-    PyObject *list;
-    idx_t i;
-
-    list = PyList_New((Py_ssize_t) self->nbits);
-    if (list == NULL)
-        return NULL;
-
-    for (i = 0; i < self->nbits; i++)
-        if (PyList_SetItem(list, (Py_ssize_t) i,
-                           PyBool_FromLong(GETBIT(self, i))) < 0)
-            return NULL;
-    return list;
-}
-
-PyDoc_STRVAR(tolist_doc,
-"tolist() -> list\n\
-\n\
-Return an ordinary list with the items in the bitarray.\n\
-Note that the list object being created will require 32 or 64 times more\n\
-memory than the bitarray object, which may cause a memory error if the\n\
-bitarray is very large.\n\
-Also note that to extend a bitarray with elements from a list,\n\
-use the extend method.");
-
-
-static PyObject *
-bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
-{
-    idx_t t, p;
-
-    if (!PyBytes_Check(bytes)) {
-        PyErr_SetString(PyExc_TypeError, "bytes expected");
-        return NULL;
-    }
-
-    /* Before we extend the raw bytes with the new data, we need to store
-       the current size and pad the last byte, as our bitarray size might
-       not be a multiple of 8.  After extending, we remove the padding
-       bits again.  The same is done in bitarray_fromfile().
-    */
-    t = self->nbits;
-    p = setunused(self);
-    self->nbits += p;
-
-    if (extend_rawbytes(self, bytes) < 0)
-        return NULL;
-    if (delete_n(self, t, p) < 0)
-        return NULL;
-    Py_RETURN_NONE;
-}
-
-PyDoc_STRVAR(frombytes_doc,
-"frombytes(bytes, /)\n\
-\n\
-Append from a byte string, interpreted as machine values.");
-
-
-static PyObject *
-bitarray_tobytes(bitarrayobject *self)
-{
-    setunused(self);
-    return PyBytes_FromStringAndSize(self->ob_item, Py_SIZE(self));
-}
-
-PyDoc_STRVAR(tobytes_doc,
-"tobytes() -> bytes\n\
-\n\
-Return the byte representation of the bitarray.\n\
-When the length of the bitarray is not a multiple of 8, the few remaining\n\
-bits (1..7) are considered to be 0.");
 
 
 static PyObject *
