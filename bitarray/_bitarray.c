@@ -549,54 +549,6 @@ append_item(bitarrayobject *self, PyObject *item)
     return set_item(self, self->nbits - 1, item);
 }
 
-/* This function returns either a PyString or PyBytes object depending
-   on the parameter 'out' (and the Python version).  The function is meant
-   to be called in bitarray_unpack(), bitarray_to01() and bitarray_repr().
-
-   out   used in              returns (Python 3)    return (Python 2)
-   --------------------------------------------------------------------
-   0     bitarray_unpack()    PyBytes               PyString
-   1     bitarray_to01()      PyString              PyString
-   2     bitarray_repr()      PyString              PyString
-*/
-static PyObject *
-unpack(bitarrayobject *self, char zero, char one, int out)
-{
-    PyObject *result;
-    Py_ssize_t i;
-    char *str;
-    size_t strsize;
-    int offset = 0;
-
-    if (self->nbits > PY_SSIZE_T_MAX) {
-        PyErr_SetString(PyExc_OverflowError, "bitarray too large to unpack");
-        return NULL;
-    }
-    assert(out >= 0 && out <=2);
-
-    strsize = self->nbits + (out == 2 ? 12 : 0);
-    str = (char *) PyMem_Malloc(strsize);
-    if (str == NULL) {
-        PyErr_NoMemory();
-        return NULL;
-    }
-    if (out == 2) {
-        strcpy(str, "bitarray('");
-        offset = 10;
-    }
-    for (i = 0; i < self->nbits; i++)
-        str[i + offset] = GETBIT(self, i) ? one : zero;
-    if (out == 2) {             /* add the closing "')" */
-        str[strsize - 2] = '\'';
-        str[strsize - 1] = ')';
-    }
-    result = Py_BuildValue(
-               (out == 0 && PY_MAJOR_VERSION == 3) ? "y#" : "s#",
-               str, (Py_ssize_t) strsize);
-    PyMem_Free((void *) str);
-    return result;
-}
-
 static int
 extend_bitarray(bitarrayobject *self, bitarrayobject *other)
 {
@@ -790,6 +742,54 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     PyErr_Format(PyExc_TypeError,
                  "'%s' object is not iterable", Py_TYPE(obj)->tp_name);
     return -1;
+}
+
+/* This function returns either a PyString or PyBytes object depending
+   on the parameter 'out' (and the Python version).  The function is meant
+   to be called in bitarray_unpack(), bitarray_to01() and bitarray_repr().
+
+   out   used in              returns (Python 3)    return (Python 2)
+   --------------------------------------------------------------------
+   0     bitarray_unpack()    PyBytes               PyString
+   1     bitarray_to01()      PyString              PyString
+   2     bitarray_repr()      PyString              PyString
+*/
+static PyObject *
+unpack(bitarrayobject *self, char zero, char one, int out)
+{
+    PyObject *result;
+    Py_ssize_t i;
+    char *str;
+    size_t strsize;
+    int offset = 0;
+
+    if (self->nbits > PY_SSIZE_T_MAX) {
+        PyErr_SetString(PyExc_OverflowError, "bitarray too large to unpack");
+        return NULL;
+    }
+    assert(out >= 0 && out <=2);
+
+    strsize = self->nbits + (out == 2 ? 12 : 0);
+    str = (char *) PyMem_Malloc(strsize);
+    if (str == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+    if (out == 2) {
+        strcpy(str, "bitarray('");
+        offset = 10;
+    }
+    for (i = 0; i < self->nbits; i++)
+        str[i + offset] = GETBIT(self, i) ? one : zero;
+    if (out == 2) {             /* add the closing "')" */
+        str[strsize - 2] = '\'';
+        str[strsize - 1] = ')';
+    }
+    result = Py_BuildValue(
+               (out == 0 && PY_MAJOR_VERSION == 3) ? "y#" : "s#",
+               str, (Py_ssize_t) strsize);
+    PyMem_Free((void *) str);
+    return result;
 }
 
 /* --------- helper functions not involving bitarrayobjects ------------ */
