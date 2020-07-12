@@ -1930,6 +1930,9 @@ class FileTests(unittest.TestCase, Util):
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
+    def assertFileSize(self, size):
+        self.assertEqual(os.path.getsize(self.tmpfname), size)
+
 
     def test_pickle(self):
         for v in range(3):
@@ -2048,52 +2051,73 @@ class FileTests(unittest.TestCase, Util):
             self.assertRaises(EOFError, b.fromfile, f, 1)
 
 
-    def test_tofile(self):
+    def test_tofile_empty(self):
         a = bitarray()
         with open(self.tmpfname, 'wb') as f:
             a.tofile(f)
 
-        with open(self.tmpfname, 'rb') as fi:
-            self.assertEqual(fi.read(), b'')
+        self.assertFileSize(0)
 
-        a = bitarray('01000110011011110110111100001010', endian='big')
+    def test_tofile_Foo(self):
+        a = bitarray('0100011' '001101111' '01101111', endian='big')
+        b = a.copy()
         with open(self.tmpfname, 'wb') as f:
             a.tofile(f)
+        self.assertEQUAL(a, b)
 
+        self.assertFileSize(3)
         with open(self.tmpfname, 'rb') as fi:
-            self.assertEqual(fi.read(), b'Foo\n')
+            self.assertEqual(fi.read(), b'Foo')
 
+    def test_tofile_random(self):
         for a in self.randombitarrays():
-            b = bitarray(a, endian='big')
             with open(self.tmpfname, 'wb') as fo:
-                b.tofile(fo)
+                a.tofile(fo)
+            n = bits2bytes(len(a))
+            self.assertFileSize(n)
+            raw = open(self.tmpfname, 'rb').read()
+            self.assertEqual(len(raw), n)
+            self.assertEqual(raw, a.tobytes())
 
-            s = open(self.tmpfname, 'rb').read()
-            self.assertEqual(len(s), a.buffer_info()[1])
+    def test_tofile_errors(self):
+        n = 100
+        a = bitarray(8 * n)
+        self.assertRaises(TypeError, a.tofile)
+            #self.assertRaises(TypeError, a.tofile, StringIO())
 
-        for n in range(3):
-            a.frombytes(n * b'A')
-            self.assertRaises(TypeError, a.tofile)
-            self.assertRaises(TypeError, a.tofile, StringIO())
+        with open(self.tmpfname, 'wb') as f:
+            a.tofile(f)
+        self.assertFileSize(n)
+        # write to closed file
+        self.assertRaises(ValueError if is_py3k else TypeError,
+                          a.tofile, f)
 
-            with open(self.tmpfname, 'wb') as f:
-                a.tofile(f)
-            self.assertRaises(TypeError, a.tofile, f)
+    def test_tofile_large(self):
+        n = 100 * 1000
+        a = bitarray(8 * n)
+        a.setall(0)
+        a[2::37] = 1
+        with open(self.tmpfname, 'wb') as f:
+            a.tofile(f)
+        self.assertFileSize(n)
 
+        raw = open(self.tmpfname, 'rb').read()
+        self.assertEqual(len(raw), n)
+        self.assertEqual(raw, a.tobytes())
+
+    def test_tofile_ones(self):
         for n in range(20):
             a = n * bitarray('1', endian='little')
             with open(self.tmpfname, 'wb') as fo:
                 a.tofile(fo)
 
-            s = open(self.tmpfname, 'rb').read()
-            self.assertEqual(len(s), a.buffer_info()[1])
-
-            b = a.copy()
-            b.fill()
-
-            c = bitarray(endian='little')
-            c.frombytes(s)
-            self.assertEqual(c, b)
+            raw = open(self.tmpfname, 'rb').read()
+            self.assertEqual(len(raw), bits2bytes(len(a)))
+            # when we the the unused bits in a, we can compare
+            a.fill()
+            b = bitarray(endian='little')
+            b.frombytes(raw)
+            self.assertEqual(a, b)
 
 
 tests.append(FileTests)
