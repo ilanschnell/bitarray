@@ -1556,14 +1556,11 @@ interpreted as machine values.  When n is omitted, as many bytes are\n\
 read until EOF is reached.");
 
 
-/* since too many details differ between the Python 2 and 3 implementation
-   of this function, we choose to have two separate function implementation
-*/
-#ifdef IS_PY3K
 static PyObject *
 bitarray_tofile(bitarrayobject *self, PyObject *f)
 {
 #define BLOCKSIZE  (64 * 1024)    /* write 64K blocks at a time */
+#define FMT  (PY_MAJOR_VERSION == 2 ? "s#" : "y#")
     Py_ssize_t nbytes = Py_SIZE(self), nblocks, i;
 
     if (nbytes == 0)
@@ -1579,39 +1576,16 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
         if (i * BLOCKSIZE + size > nbytes)
             size = nbytes - i * BLOCKSIZE;
 
-        res = PyObject_CallMethod(f, "write", "y#", ptr, size);
+        res = PyObject_CallMethod(f, "write", FMT, ptr, size);
         if (res == NULL)
             return NULL;
-        Py_DECREF(res); /* drop write result */
+        Py_DECREF(res);  /* drop write result */
     }
 #undef BLOCKSIZE
+#undef FMT
     Py_RETURN_NONE;
 }
-#else  /* Python 2 */
-static PyObject *
-bitarray_tofile(bitarrayobject *self, PyObject *f)
-{
-    FILE *fp;
 
-    fp = PyFile_AsFile(f);
-    if (fp == NULL) {
-        PyErr_SetString(PyExc_TypeError, "open file expected");
-        return NULL;
-    }
-    if (Py_SIZE(self) == 0)
-        Py_RETURN_NONE;
-
-    setunused(self);
-    if (fwrite(self->ob_item, 1, Py_SIZE(self), fp) !=
-        (size_t) Py_SIZE(self))
-    {
-        PyErr_SetFromErrno(PyExc_IOError);
-        clearerr(fp);
-        return NULL;
-    }
-    Py_RETURN_NONE;
-}
-#endif
 
 PyDoc_STRVAR(tofile_doc,
 "tofile(f, /)\n\

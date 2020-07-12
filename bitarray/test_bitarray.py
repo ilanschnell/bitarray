@@ -2089,8 +2089,7 @@ class FileTests(unittest.TestCase, Util):
             a.tofile(f)
         self.assertFileSize(n)
         # write to closed file
-        self.assertRaises(ValueError if is_py3k else TypeError,
-                          a.tofile, f)
+        self.assertRaises(ValueError, a.tofile, f)
 
     def test_tofile_large(self):
         n = 100 * 1000
