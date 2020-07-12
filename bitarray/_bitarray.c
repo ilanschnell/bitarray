@@ -328,7 +328,7 @@ setunused(bitarrayobject *self)
     for (i = self->nbits; i < n; i++)
         setbit(self, i, 0);
     assert(n - self->nbits < 8);
-    return n - self->nbits;
+    return (int) (n - self->nbits);
 }
 
 /* repeat self n times */
