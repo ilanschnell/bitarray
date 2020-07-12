@@ -1518,7 +1518,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
     p = setunused(self);
     self->nbits += p;
 
-    nread = PyBytes_GET_SIZE(b);
+    nread = PyBytes_Size(b);
     if (nbytes > 0 && nread < nbytes) {
         Py_DECREF(b);
         PyErr_SetString(PyExc_EOFError, "not enough bytes read");
