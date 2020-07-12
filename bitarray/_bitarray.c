@@ -1436,9 +1436,7 @@ PyDoc_STRVAR(tolist_doc,
 Return an ordinary list with the items in the bitarray.\n\
 Note that the list object being created will require 32 or 64 times more\n\
 memory than the bitarray object, which may cause a memory error if the\n\
-bitarray is very large.\n\
-Also note that to extend a bitarray with elements from a list,\n\
-use the extend method.");
+bitarray is very large.");
 
 
 static PyObject *
