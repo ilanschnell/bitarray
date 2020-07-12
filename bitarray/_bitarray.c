@@ -763,7 +763,7 @@ unpack(bitarrayobject *self, char zero, char one, enum output_t out)
     Py_ssize_t i;
     char *str;
     size_t strsize;
-    int offset = 0;
+    int offset = 0;     /* this is used when copying bytes into str */
 
     if (self->nbits > PY_SSIZE_T_MAX) {
         PyErr_SetString(PyExc_OverflowError, "bitarray too large to unpack");
@@ -778,15 +778,15 @@ unpack(bitarrayobject *self, char zero, char one, enum output_t out)
         return NULL;
     }
     if (out == OUT_repr) {
+        /* add "bitarray('......')" to str */
         strcpy(str, "bitarray('"); /* has length 10 */
+        str[strsize - 2] = '\'';
+        str[strsize - 1] = ')';
         offset = 10;
     }
     for (i = 0; i < self->nbits; i++)
         str[i + offset] = GETBIT(self, i) ? one : zero;
-    if (out == OUT_repr) {      /* add the closing "')" */
-        str[strsize - 2] = '\'';
-        str[strsize - 1] = ')';
-    }
+
     result = Py_BuildValue(
                (out == OUT_unpack && PY_MAJOR_VERSION == 3) ? "y#" : "s#",
                str, (Py_ssize_t) strsize);
@@ -941,7 +941,7 @@ slice_GetIndicesEx(PySliceObject *r, idx_t length,
 }
 
 /**************************************************************************
-                         Implementation of API methods
+                     Implementation of bitarray methods
  **************************************************************************/
 
 static PyObject *
