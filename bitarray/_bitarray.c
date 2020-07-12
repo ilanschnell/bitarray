@@ -549,26 +549,51 @@ append_item(bitarrayobject *self, PyObject *item)
     return set_item(self, self->nbits - 1, item);
 }
 
+/*
+   out=0  unpack  bytes
+   out=1  to01    string
+   out=2  repr    string
+*/
 static PyObject *
-unpack(bitarrayobject *self, char zero, char one)
+unpack(bitarrayobject *self, char zero, char one, int out)
 {
     PyObject *result;
     Py_ssize_t i;
     char *str;
+    size_t strsize;
+    int fmt = 0;                /* fmt=0 -> "s#"   fmt=1 -> "y#" */
+    int offset = 0;
 
     if (self->nbits > PY_SSIZE_T_MAX) {
         PyErr_SetString(PyExc_OverflowError, "bitarray too large to unpack");
         return NULL;
     }
-    str = (char *) PyMem_Malloc((size_t) self->nbits);
+
+    assert(out >= 0 && out <=2);
+#ifdef IS_PY3K
+    if (out == 0)
+        fmt = 1;
+#endif
+    strsize = self->nbits;
+    if (out == 2)
+        strsize += 12;
+
+    str = (char *) PyMem_Malloc(strsize);
     if (str == NULL) {
         PyErr_NoMemory();
         return NULL;
     }
-    for (i = 0; i < self->nbits; i++) {
-        str[i] = GETBIT(self, i) ? one : zero;
+    if (out == 2) {
+        strcpy(str, "bitarray('");
+        offset = 10;
     }
-    result = PyBytes_FromStringAndSize(str, (Py_ssize_t) self->nbits);
+    for (i = 0; i < self->nbits; i++)
+        str[i + offset] = GETBIT(self, i) ? one : zero;
+    if (out == 2) {             /* add the closing string "')" */
+        str[strsize - 2] = '\'';
+        str[strsize - 1] = ')';
+    }
+    result = Py_BuildValue(fmt ? "y#" : "s#", str, (Py_ssize_t) strsize);
     PyMem_Free((void *) str);
     return result;
 }
@@ -1682,19 +1707,7 @@ bits (1..7) are considered to be 0.");
 static PyObject *
 bitarray_to01(bitarrayobject *self)
 {
-#ifdef IS_PY3K
-    PyObject *string;
-    PyObject *unpacked;
-
-    unpacked = unpack(self, '0', '1');
-    if (unpacked == NULL)
-        return NULL;
-    string = PyUnicode_FromEncodedObject(unpacked, NULL, NULL);
-    Py_DECREF(unpacked);
-    return string;
-#else
-    return unpack(self, '0', '1');
-#endif
+    return unpack(self, '0', '1', 1);
 }
 
 PyDoc_STRVAR(to01_doc,
@@ -1716,7 +1729,7 @@ bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
                                      &zero, &one))
         return NULL;
 
-    return unpack(self, zero, one);
+    return unpack(self, zero, one, 0);
 }
 
 PyDoc_STRVAR(unpack_doc,
@@ -1753,30 +1766,10 @@ transfer of data between bitarray objects to other python objects\n\
 static PyObject *
 bitarray_repr(bitarrayobject *self)
 {
-    PyObject *bytes;
-    PyObject *unpacked;
-#ifdef IS_PY3K
-    PyObject *decoded;
-#endif
+    if (self->nbits == 0)
+        return Py_BuildValue("s", "bitarray()");
 
-    if (self->nbits == 0) {
-        bytes = PyBytes_FromString("bitarray()");
-    }
-    else {
-        bytes = PyBytes_FromString("bitarray(\'");
-        unpacked = unpack(self, '0', '1');
-        if (unpacked == NULL)
-            return NULL;
-        PyBytes_ConcatAndDel(&bytes, unpacked);
-        PyBytes_ConcatAndDel(&bytes, PyBytes_FromString("\')"));
-    }
-#ifdef IS_PY3K
-    decoded = PyUnicode_FromEncodedObject(bytes, NULL, NULL);
-    Py_DECREF(bytes);
-    return decoded;
-#else
-    return bytes;  /* really a string in Python 2 */
-#endif
+    return unpack(self, '0', '1', 2);
 }
 
 
