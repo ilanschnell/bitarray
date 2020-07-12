@@ -1563,37 +1563,28 @@ read until EOF is reached.");
 static PyObject *
 bitarray_tofile(bitarrayobject *self, PyObject *f)
 {
-    PyObject *writer, *value, *args, *result;
+#define BLOCKSIZE  (64 * 1024)    /* write 64K blocks at a time */
+    Py_ssize_t nbytes = Py_SIZE(self), nblocks, i;
 
-    if (f == NULL) {
-        PyErr_SetString(PyExc_TypeError, "writeobject with NULL file");
-        return NULL;
-    }
-    writer = PyObject_GetAttrString(f, "write");
-    if (writer == NULL)
-        return NULL;
+    if (nbytes == 0)
+        Py_RETURN_NONE;
+
+    nblocks = (nbytes - 1) / BLOCKSIZE + 1;
     setunused(self);
-    value = PyBytes_FromStringAndSize(self->ob_item, Py_SIZE(self));
-    if (value == NULL) {
-        Py_DECREF(writer);
-        return NULL;
+    for (i = 0; i < nblocks; i++) {
+        char *ptr = self->ob_item + i * BLOCKSIZE;
+        Py_ssize_t size = BLOCKSIZE;
+        PyObject *res;
+
+        if (i * BLOCKSIZE + size > nbytes)
+            size = nbytes - i * BLOCKSIZE;
+
+        res = PyObject_CallMethod(f, "write", "y#", ptr, size);
+        if (res == NULL)
+            return NULL;
+        Py_DECREF(res); /* drop write result */
     }
-    args = PyTuple_Pack(1, value);
-    if (args == NULL) {
-        Py_DECREF(value);
-        Py_DECREF(writer);
-        return NULL;
-    }
-    result = PyEval_CallObject(writer, args);
-    Py_DECREF(args);
-    Py_DECREF(value);
-    Py_DECREF(writer);
-    if (result == NULL)
-    {
-        PyErr_SetString(PyExc_TypeError, "open file expected");
-        return NULL;
-    }
-    Py_DECREF(result);
+#undef BLOCKSIZE
     Py_RETURN_NONE;
 }
 #else  /* Python 2 */
