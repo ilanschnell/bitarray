@@ -74,9 +74,8 @@ static int default_endian = ENDIAN_BIG;
 #define BITMASK(endian, i)  \
     (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) % 8) : (7 - (i) % 8)))
 
-/* This block size (bytes) is used when reading/writing blocks of bytes from
-   files.  It is also used in resize() for not overallocating when size
-   increase is larger than the block size.  */
+/* This (bytes) block size is used when reading/writing blocks of bytes
+   from files. */
 #define BLOCKSIZE  65536
 
 /* ------------ low level access to bits in bitarrayobject ------------- */
