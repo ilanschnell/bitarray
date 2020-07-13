@@ -175,12 +175,10 @@ resize(bitarrayobject *self, idx_t nbits)
         /* When resizing an empty bitarray, we want at least 4 bytes. */
         new_allocated = 4;
 
-    /* Over-allocate unless (one of the following):
-         - The (previous) size is zero, as we often
-           extend an empty array on creation.
-         - The size increase is very large.
-         - The size is decreasing. */
-    else if (!(size == 0 || newsize > size + BLOCKSIZE || newsize < size))
+    /* Over-allocate when the (previous) size is non-zero (as we often
+       extend an empty array on creation) and the size is actually
+       increasing. */
+    else if (size != 0 && newsize > size)
         /* This over-allocates proportional to the bitarray size, making
            room for additional growth.
            The growth pattern is:  0, 4, 8, 16, 25, 34, 44, 54, 65, 77, ...

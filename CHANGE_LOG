@@ -3,7 +3,9 @@
   * add official Python 3.9 support
   * C-level:
       - rewrote `.fromfile()` and `.tofile()` implementation,
-        such that now the same code is used for Python 2 and 3
+        such that now the same code is used for Python 2 and 3.
+        The new implementation is more memoery efficient on
+        Python 3.
       - simplify how unpacking is handled
 
 

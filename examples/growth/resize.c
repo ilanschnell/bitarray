@@ -45,7 +45,7 @@ int resize(bitarrayobject *self, int nbits)
         /* When resizing an empty bitarray, we want at least 4 bytes. */
         new_allocated = 4;
 
-    else if (!(size == 0 || newsize > size + 65536 || newsize < size))
+    else if (size != 0 && newsize > size)
         new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
 
     /* realloc(self->ob_item) */

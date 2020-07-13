@@ -38,6 +38,7 @@ for n in 0, 4, 10, 100, 1000, 10_000:
 # starting from a large bitarray, make we sure we don't realloc each time
 # we extend
 a = bitarray(1_000_000)  # no overallocation
+assert a.buffer_info()[4] == 125_000
 a.extend(bitarray(8))  # overallocation happens here
 alloc = a.buffer_info()[4]
 for _ in range(1000):
