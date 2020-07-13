@@ -18,6 +18,9 @@
 
 #ifdef IS_PY3K
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
+#else
+/* This macro was introduced in Python 3.3 */
+#define Py_MIN(x, y)  (((x) > (y)) ? (y) : (x))
 #endif
 
 #if PY_MAJOR_VERSION == 3 || (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 7)
@@ -33,7 +36,6 @@
 #endif /* HAVE_SYS_TYPES_H */
 #endif /* !STDC_HEADERS */
 
-#define My_MIN(a, b)  (((a) < (b)) ? (a) : (b))
 
 /* instead of Py_ssize_t, we use this type indices, as Py_ssize_t is
    only 4 bytes on 32bit machines, but bitarray indices can exceed this */
@@ -1499,7 +1501,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         nbytes = PY_SSIZE_T_MAX;
 
     while (nread < nbytes) {
-        nblock = My_MIN(nbytes - nread, BLOCKSIZE);
+        nblock = Py_MIN(nbytes - nread, BLOCKSIZE);
         bytes = PyObject_CallMethod(f, "read", "n", nblock);
         if (bytes == NULL)
             return NULL;
@@ -1516,7 +1518,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         Py_DECREF(bytes);
         if (res == NULL)
             return NULL;
-        Py_DECREF(res);
+        Py_DECREF(res);  /* drop frombytes result */
 
         if (not_enough_bytes) {
             if (nbytes == PY_SSIZE_T_MAX)  /* read till EOF */
@@ -1548,7 +1550,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
 
     setunused(self);
     for (offset = 0; offset < nbytes; offset += BLOCKSIZE) {
-        size = My_MIN(nbytes - offset, BLOCKSIZE);
+        size = Py_MIN(nbytes - offset, BLOCKSIZE);
         assert(size >=0 && offset + size <= nbytes);
         res = PyObject_CallMethod(f, "write",
                                   PY_MAJOR_VERSION == 2 ? "s#" : "y#",
