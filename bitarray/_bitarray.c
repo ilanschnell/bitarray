@@ -689,24 +689,6 @@ extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_t conv)
 }
 
 static int
-extend_rawbytes(bitarrayobject *self, PyObject *bytes)
-{
-    Py_ssize_t nbytes;
-
-    assert(PyBytes_Check(bytes) && self->nbits % 8 == 0);
-    nbytes = PyBytes_Size(bytes);
-    if (nbytes == 0)
-        return 0;
-
-    if (resize(self, self->nbits + BITS(nbytes)) < 0)
-        return -1;
-
-    memcpy(self->ob_item + (Py_SIZE(self) - nbytes),
-           PyBytes_AsString(bytes), nbytes);
-    return 0;
-}
-
-static int
 extend_dispatch(bitarrayobject *self, PyObject *obj)
 {
     PyObject *iter;
@@ -1446,12 +1428,16 @@ bitarray is very large.");
 static PyObject *
 bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
 {
+    Py_ssize_t nbytes;
     idx_t t, p;
 
     if (!PyBytes_Check(bytes)) {
         PyErr_SetString(PyExc_TypeError, "bytes expected");
         return NULL;
     }
+    nbytes = PyBytes_GET_SIZE(bytes);
+    if (nbytes == 0)
+        Py_RETURN_NONE;
 
     /* Before we extend the raw bytes with the new data, we need to store
        the current size and pad the last byte, as our bitarray size might
@@ -1461,9 +1447,14 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     t = self->nbits;
     p = setunused(self);
     self->nbits += p;
+    assert(self->nbits % 8 == 0);
 
-    if (extend_rawbytes(self, bytes) < 0)
+    if (resize(self, self->nbits + BITS(nbytes)) < 0)
         return NULL;
+
+    memcpy(self->ob_item + (Py_SIZE(self) - nbytes),
+           PyBytes_AsString(bytes), nbytes);
+
     if (delete_n(self, t, p) < 0)
         return NULL;
     Py_RETURN_NONE;
