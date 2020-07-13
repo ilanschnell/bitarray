@@ -2030,10 +2030,8 @@ class FileTests(unittest.TestCase, Util):
             self.assertEqual(len(a), 8 * N)
             self.assertEqual(a.buffer_info()[1], N)
             self.assertEqual(a.tobytes(), data)
-            # make sure there is no over-allocation
-            #self.assertEqual(a.buffer_info()[4], N)
 
-    def test_fromfile_not8(self):
+    def test_fromfile_extend_exsiting(self):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(b'Foo')
 
@@ -2080,6 +2078,16 @@ class FileTests(unittest.TestCase, Util):
             a.fromfile(f)
             self.assertEqual(a.tobytes(), b'ABCDEFGHIJ')
             self.assertRaises(EOFError, a.fromfile, f, 1)
+
+    def test_fromfile_BytesIO(self):
+        f = BytesIO(b'somedata')
+        a = bitarray()
+        a.fromfile(f, 4)
+        self.assertEqual(len(a), 32)
+        self.assertEqual(a.tobytes(), b'some')
+        a.fromfile(f)
+        self.assertEqual(len(a), 64)
+        self.assertEqual(a.tobytes(), b'somedata')
 
     def test_tofile_empty(self):
         a = bitarray()
@@ -2440,6 +2448,7 @@ class BufferInterfaceTests(unittest.TestCase):
         self.assertRaises(BufferError, a.append, 1)
         self.assertRaises(BufferError, a.clear)
         self.assertRaises(BufferError, a.__delitem__, slice(0, 8))
+        self.assertEqual(v.tobytes(), a.tobytes())
 
     def test_write(self):
         a = bitarray(8000)
