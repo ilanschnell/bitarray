@@ -71,9 +71,9 @@ static int default_endian = ENDIAN_BIG;
 #define BITMASK(endian, i)  \
     (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) % 8) : (7 - (i) % 8)))
 
-/* This block size is used when reading/writing blocks of bytes from files.
-   It is also used in resize() for not overallocating when size increase
-   is larger than the block size.  */
+/* This block size (bytes) is used when reading/writing blocks of bytes from
+   files.  It is also used in resize() for not overallocating when size
+   increase is larger than the block size.  */
 #define BLOCKSIZE  65536
 
 /* ------------ low level access to bits in bitarrayobject ------------- */
@@ -1456,7 +1456,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     /* Before we extend the raw bytes with the new data, we need to store
        the current size and pad the last byte, as our bitarray size might
        not be a multiple of 8.  After extending, we remove the padding
-       bits again.  The same is done in bitarray_fromfile().
+       bits again.
     */
     t = self->nbits;
     p = setunused(self);
@@ -1490,6 +1490,7 @@ When the length of the bitarray is not a multiple of 8, the few remaining\n\
 bits (1..7) are considered to be 0.");
 
 
+#define My_MIN(a, b)  (((a) < (b)) ? (a) : (b))
 /* since too many details differ between the Python 2 and 3 implementation
    of this function, we choose to have two separate function implementation,
    even though this means some of the code is duplicated in the two versions
@@ -1499,8 +1500,8 @@ static PyObject *
 bitarray_fromfile(bitarrayobject *self, PyObject *args)
 {
     PyObject *b, *f, *res;
-    Py_ssize_t nread, nbytes = -1;
-    idx_t t, p;
+    Py_ssize_t nblock, nread = 0, nbytes = -1;
+    int not_enough_bytes;
 
     if (!PyArg_ParseTuple(args, "O|n:fromfile", &f, &nbytes))
         return NULL;
@@ -1508,36 +1509,37 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
     if (nbytes == 0)
         Py_RETURN_NONE;
 
-    b = PyObject_CallMethod(f, "read", "n", nbytes);
-    if (b == NULL)
-        return NULL;
+    if (nbytes < 0)
+        nbytes = PY_SSIZE_T_MAX;
 
-    if (!PyBytes_Check(b)) {
-        PyErr_SetString(PyExc_TypeError, "read() didn't return bytes");
+    while (nread < nbytes) {
+        nblock = My_MIN(nbytes - nread, BLOCKSIZE);
+        b = PyObject_CallMethod(f, "read", "n", nblock);
+        if (b == NULL)
+            return NULL;
+        if (!PyBytes_Check(b)) {
+            Py_DECREF(b);
+            PyErr_SetString(PyExc_TypeError, "read() didn't return bytes");
+            return NULL;
+        }
+        not_enough_bytes = (PyBytes_GET_SIZE(b) < nblock);
+        nread += PyBytes_GET_SIZE(b);
+        assert(nread >= 0 && nread <= nbytes);
+
+        res = bitarray_frombytes(self, b);
         Py_DECREF(b);
-        return NULL;
-    }
+        if (res == NULL)
+            return NULL;
+        Py_DECREF(res);
 
-    t = self->nbits;
-    p = setunused(self);
-    self->nbits += p;
-
-    nread = PyBytes_Size(b);
-    if (nbytes > 0 && nread < nbytes) {
-        Py_DECREF(b);
-        PyErr_SetString(PyExc_EOFError, "not enough bytes read");
-        return NULL;
-    }
-
-    res = bitarray_frombytes(self, b);
-    Py_DECREF(b);
-    if (res == NULL)
-        return NULL;
-    Py_DECREF(res);
-
-    if (delete_n(self, t, p) < 0)
-        return NULL;
-
+        if (not_enough_bytes) {
+            if (nbytes < PY_SSIZE_T_MAX ) { /* nbytes provided by user */
+                PyErr_SetString(PyExc_EOFError, "not enough bytes to read");
+                return NULL;
+            }
+            break;
+        }
+    } /* while */
     Py_RETURN_NONE;
 }
 #else  /* Python 2 */

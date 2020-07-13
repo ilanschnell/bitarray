@@ -1996,6 +1996,7 @@ class FileTests(unittest.TestCase, Util):
             pass
         with open(self.tmpfname, 'rb') as fi:
             self.assertRaises(TypeError, a.fromfile, fi, None)
+            a.fromfile(fi, -1)
 
     def test_fromfile_erros(self):
         with open(self.tmpfname, 'wb') as fo:
@@ -2021,7 +2022,7 @@ class FileTests(unittest.TestCase, Util):
         self.assertEqual(len(a), 8 * N)
         self.assertEqual(a.buffer_info()[1], N)
         # make sure there is no over-allocation
-        self.assertEqual(a.buffer_info()[4], N)
+        #self.assertEqual(a.buffer_info()[4], N)
 
     def test_fromfile_Foo2(self):
         with open(self.tmpfname, 'wb') as fo:
@@ -2063,7 +2064,7 @@ class FileTests(unittest.TestCase, Util):
         with open(self.tmpfname, 'rb') as f:
             f.read(1)
             self.assertRaises(EOFError, a.fromfile, f, 10)
-        #self.assertEqual(b.tobytes(), b'BCDEFGHIJ')
+        self.assertEqual(a.tobytes(), b'BCDEFGHIJ')
 
         a = bitarray()
         with open(self.tmpfname, 'rb') as f:
