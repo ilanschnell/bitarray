@@ -384,7 +384,7 @@ class TestsSubset(unittest.TestCase, Util):
         for a in self.randombitarrays(start=1):
             b = a.copy()
             # we set one random bit in b to 1, so a is always a subset of b
-            b[randint(0, len(a)-1)] = 1
+            b[randint(0, len(a) - 1)] = 1
             self.assertTrue(subset(a, b))
             # but b in not always a subset of a
             self.assertEqual(subset(b, a), self.subset_simple(b, a))
@@ -597,7 +597,7 @@ class TestsIntegerization(unittest.TestCase, Util):
             self.assertEqual(ba2int(a), i)
 
     def test_many(self):
-        for i in range(1000):
+        for i in range(100):
             self.check_round_trip(i)
             self.check_round_trip(randint(0, 10 ** randint(3, 300)))
 
