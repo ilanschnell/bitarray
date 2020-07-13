@@ -2004,7 +2004,6 @@ class FileTests(unittest.TestCase, Util):
             pass
         with open(self.tmpfname, 'rb') as fi:
             self.assertRaises(TypeError, a.fromfile, fi, None)
-            a.fromfile(fi, -1)
 
     def test_fromfile_erros(self):
         with open(self.tmpfname, 'wb') as fo:
@@ -2075,7 +2074,8 @@ class FileTests(unittest.TestCase, Util):
 
         a = bitarray()
         with open(self.tmpfname, 'rb') as f:
-            a.fromfile(f)
+            # negative values - like ommiting the argument
+            a.fromfile(f, -1)
             self.assertEqual(a.tobytes(), b'ABCDEFGHIJ')
             self.assertRaises(EOFError, a.fromfile, f, 1)
 
