@@ -1,6 +1,7 @@
 2020-07-XX   1.4.1:
 -------------------
   * add official Python 3.9 support
+  * improve many docstrings
   * C-level:
       - rewrote `.fromfile()` and `.tofile()` implementation,
         such that now the same code is used for Python 2 and 3.

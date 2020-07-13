@@ -1039,11 +1039,11 @@ bitarray_extend(bitarrayobject *self, PyObject *obj)
 }
 
 PyDoc_STRVAR(extend_doc,
-"extend(iterable, /)\n\
+"extend(iterable or string, /)\n\
 \n\
-Append bits to the end of the bitarray.  The objects which can be passed\n\
-to this method are the same iterable objects which can given to a bitarray\n\
-object upon initialization.");
+Extend bitarray by appending the truth value of each element given\n\
+by iterable.  If a string is provided, each `0` and `1` are appended\n\
+as bits.");
 
 
 static PyObject *
@@ -1179,7 +1179,7 @@ bitarray_append(bitarrayobject *self, PyObject *v)
 PyDoc_STRVAR(append_doc,
 "append(item, /)\n\
 \n\
-Append the value `bool(item)` to the end of the bitarray.");
+Append the truth value `bool(item)` to the end of the bitarray.");
 
 
 static PyObject *
@@ -1419,10 +1419,10 @@ bitarray_tolist(bitarrayobject *self)
 PyDoc_STRVAR(tolist_doc,
 "tolist() -> list\n\
 \n\
-Return an ordinary list with the items in the bitarray.\n\
+Return a list with the items (False or True) in the bitarray.\n\
 Note that the list object being created will require 32 or 64 times more\n\
-memory than the bitarray object, which may cause a memory error if the\n\
-bitarray is very large.");
+memory (depending on the machine architecture) than the bitarray object,\n\
+which may cause a memory error if the bitarray is very large.");
 
 
 static PyObject *
@@ -1463,7 +1463,8 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
 PyDoc_STRVAR(frombytes_doc,
 "frombytes(bytes, /)\n\
 \n\
-Append from a byte string, interpreted as machine values.");
+Extend bitarray with raw bytes.  That is, each append byte will add eight\n\
+bits to the bitarray.");
 
 
 static PyObject *
@@ -1528,11 +1529,12 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(fromfile_doc,
-"fromfile(f, n=<till EOF>, /)\n\
+"fromfile(f, n=-1, /)\n\
 \n\
-Read n bytes from the file object f and append them to the bitarray\n\
-interpreted as machine values.  When n is omitted, as many bytes are\n\
-read until EOF is reached.");
+Extend bitarray with up to n bytes read from the file object f.\n\
+When n is omitted or negative, reads all data until EOF.\n\
+When n is provided and positions but exceeds the data available,\n\
+EOFError is raised (but the available data is still read and appended.");
 
 
 static PyObject *
@@ -1562,7 +1564,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
 PyDoc_STRVAR(tofile_doc,
 "tofile(f, /)\n\
 \n\
-Write all bits (as machine values) to the file object f.\n\
+Write the byte representation of the bitarray to the file object f.\n\
 When the length of the bitarray is not a multiple of 8,\n\
 the remaining bits (1..7) are set to 0.");
 
@@ -1576,10 +1578,8 @@ bitarray_to01(bitarrayobject *self)
 PyDoc_STRVAR(to01_doc,
 "to01() -> str\n\
 \n\
-Return a string containing '0's and '1's, representing the bits in the\n\
-bitarray object.\n\
-Note: To extend a bitarray from a string containing '0's and '1's,\n\
-use the extend method.");
+Return a string containing `0`s and `1`s, representing the bits in the\n\
+bitarray object.");
 
 
 static PyObject *
