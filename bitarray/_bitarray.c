@@ -19,7 +19,7 @@
 #ifdef IS_PY3K
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
 #else
-/* This macro was introduced in Python 3.3 */
+/* this macro was introduced in Python 3.3 */
 #define Py_MIN(x, y)  (((x) > (y)) ? (y) : (x))
 #endif
 
