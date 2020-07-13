@@ -1820,7 +1820,7 @@ class BytesTests(unittest.TestCase, Util):
         for n in range(1, 20):
             yield os.urandom(n)
 
-    def test_frombytes(self):
+    def test_frombytes_simple(self):
         a = bitarray(endian='big')
         a.frombytes(b'A')
         self.assertEqual(a, bitarray('01000001'))
@@ -1831,11 +1831,19 @@ class BytesTests(unittest.TestCase, Util):
                                      endian='big'))
         self.assertTrue(b is a)
 
-        for b in self.randombitarrays():
-            c = b.copy()
-            b.frombytes(b'')
-            self.assertEQUAL(b, c)
+    def test_frombytes_empty(self):
+        for a in self.randombitarrays():
+            b = a.copy()
+            a.frombytes(b'')
+            self.assertEQUAL(a, b)
 
+    def test_frombytes_errors(self):
+        a = bitarray()
+        self.assertRaises(TypeError, a.frombytes)
+        self.assertRaises(TypeError, a.frombytes, b'', b'')
+        self.assertRaises(TypeError, a.frombytes, 1)
+
+    def test_frombytes_random(self):
         for b in self.randombitarrays():
             for s in self.randombytes():
                 a = bitarray(endian=b.endian())
@@ -2024,21 +2032,20 @@ class FileTests(unittest.TestCase, Util):
         # make sure there is no over-allocation
         #self.assertEqual(a.buffer_info()[4], N)
 
-    def test_fromfile_Foo2(self):
+    def test_fromfile_not8(self):
         with open(self.tmpfname, 'wb') as fo:
-            fo.write(b'Foo\n')
+            fo.write(b'Foo')
 
+        foo_le = '011000101111011011110110'
         a = bitarray('1', endian='little')
         a.fromfile(open(self.tmpfname, 'rb'))
-        self.assertEqual(a, bitarray('101100010111101101111011001010000'))
+        self.assertEqual(a, bitarray('1' + foo_le))
 
         for n in range(20):
             a = bitarray(n, endian='little')
             a.setall(1)
             a.fromfile(open(self.tmpfname, 'rb'))
-            self.assertEqual(a,
-                             n*bitarray('1') +
-                             bitarray('01100010111101101111011001010000'))
+            self.assertEqual(a, bitarray(n * '1' + foo_le))
 
     def test_fromfile_n(self):
         a = bitarray()
@@ -2064,6 +2071,7 @@ class FileTests(unittest.TestCase, Util):
         with open(self.tmpfname, 'rb') as f:
             f.read(1)
             self.assertRaises(EOFError, a.fromfile, f, 10)
+        # check that although we received an EOFError, the bytes were read
         self.assertEqual(a.tobytes(), b'BCDEFGHIJ')
 
         a = bitarray()
