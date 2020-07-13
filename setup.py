@@ -5,6 +5,7 @@ from distutils.core import setup, Extension
 kwds = {}
 try:
     kwds['long_description'] = open('README.md').read()
+    kwds['long_description_content_type'] = 'text/markdown'
 except IOError:
     pass
 

@@ -327,7 +327,7 @@ Returns True when any bit in the array is True.
 
 `append(item, /)`
 
-Append the value `bool(item)` to the end of the bitarray.
+Append the truth value `bool(item)` to the end of the bitarray.
 
 
 `buffer_info()` -> tuple
@@ -378,11 +378,11 @@ with the corresponding bitarray for each symbol.
 Return the bit endianness as a string (either `little` or `big`).
 
 
-`extend(iterable, /)`
+`extend(iterable or string, /)`
 
-Append bits to the end of the bitarray.  The objects which can be passed
-to this method are the same iterable objects which can given to a bitarray
-object upon initialization.
+Extend bitarray by appending the truth value of each element given
+by iterable.  If a string is provided, each `0` and `1` are appended
+as bits.
 
 
 `fill()` -> int
@@ -393,14 +393,16 @@ will be a multiple of 8.  Returns the number of bits added (0..7).
 
 `frombytes(bytes, /)`
 
-Append from a byte string, interpreted as machine values.
+Extend bitarray with raw bytes.  That is, each append byte will add eight
+bits to the bitarray.
 
 
-`fromfile(f, n=<till EOF>, /)`
+`fromfile(f, n=-1, /)`
 
-Read n bytes from the file object f and append them to the bitarray
-interpreted as machine values.  When n is omitted, as many bytes are
-read until EOF is reached.
+Extend bitarray with up to n bytes read from the file object f.
+When n is omitted or negative, reads all data until EOF.
+When n is provided and positions but exceeds the data available,
+EOFError is raised (but the available data is still read and appended.
 
 
 `index(value, start=0, stop=<end of array>, /)` -> int
@@ -491,8 +493,6 @@ Sort the bits in the array (in-place).
 
 Return a string containing '0's and '1's, representing the bits in the
 bitarray object.
-Note: To extend a bitarray from a string containing '0's and '1's,
-use the extend method.
 
 
 `tobytes()` -> bytes
@@ -504,17 +504,17 @@ bits (1..7) are considered to be 0.
 
 `tofile(f, /)`
 
-Write all bits (as machine values) to the file object f.
+Write the byte representation of the bitarray to the file object f.
 When the length of the bitarray is not a multiple of 8,
 the remaining bits (1..7) are set to 0.
 
 
 `tolist()` -> list
 
-Return an ordinary list with the items in the bitarray.
+Return a list with the items (False or True) in the bitarray.
 Note that the list object being created will require 32 or 64 times more
-memory than the bitarray object, which may cause a memory error if the
-bitarray is very large.
+memory (depending on the machine architecture) than the bitarray object,
+which may cause a memory error if the bitarray is very large.
 
 
 `unpack(zero=b'\x00', one=b'\xff')` -> bytes
@@ -658,10 +658,14 @@ Change log
 2020-07-XX   1.4.1:
 
   * add official Python 3.9 support
+  * improve many docstrings
   * C-level:
-      - rewrote `.fromfile()` and `.tofile()` implemented,
-        such that now the same code is used for Python 2 and 3
+      - rewrote `.fromfile()` and `.tofile()` implementation,
+        such that now the same code is used for Python 2 and 3.
+        The new implementation is more memoery efficient on
+        Python 3.
       - simplify how unpacking is handled
+  * add more tests
 
 
 *1.4.0* (2020-07-11):
