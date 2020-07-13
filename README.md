@@ -36,8 +36,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.4.0.tar.gz
-    $ cd bitarray-1.4.0
+    $ tar xzf bitarray-1.4.1.tar.gz
+    $ cd bitarray-1.4.1
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -46,7 +46,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.4.0
+    bitarray version: 1.4.1
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
@@ -515,8 +515,6 @@ Return an ordinary list with the items in the bitarray.
 Note that the list object being created will require 32 or 64 times more
 memory than the bitarray object, which may cause a memory error if the
 bitarray is very large.
-Also note that to extend a bitarray with elements from a list,
-use the extend method.
 
 
 `unpack(zero=b'\x00', one=b'\xff')` -> bytes
@@ -656,6 +654,15 @@ hashable object (including `None`).
 
 Change log
 ----------
+
+2020-07-XX   1.4.1:
+
+  * add official Python 3.9 support
+  * C-level:
+      - rewrote `.fromfile()` and `.tofile()` implemented,
+        such that now the same code is used for Python 2 and 3
+      - simplify how unpacking is handled
+
 
 *1.4.0* (2020-07-11):
 

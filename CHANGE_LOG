@@ -1,7 +1,10 @@
 2020-07-XX   1.4.1:
 -------------------
-  * simplify how unpacking is handled on the C-level
   * add official Python 3.9 support
+  * C-level:
+      - rewrote `.fromfile()` and `.tofile()` implementation,
+        such that now the same code is used for Python 2 and 3
+      - simplify how unpacking is handled
 
 
 2020-07-11   1.4.0:
