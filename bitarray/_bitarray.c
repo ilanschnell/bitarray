@@ -1539,22 +1539,17 @@ read until EOF is reached.");
 static PyObject *
 bitarray_tofile(bitarrayobject *self, PyObject *f)
 {
-    Py_ssize_t nbytes = Py_SIZE(self), nblocks, i;
+    Py_ssize_t size, nbytes = Py_SIZE(self);
+    Py_ssize_t offset;
+    PyObject *res;
 
     if (nbytes == 0)
         Py_RETURN_NONE;
 
-    nblocks = (nbytes - 1) / BLOCKSIZE + 1;
     setunused(self);
-    for (i = 0; i < nblocks; i++) {
-        Py_ssize_t offset = i * BLOCKSIZE;
-        Py_ssize_t size = BLOCKSIZE;
-        PyObject *res;
-
-        if (offset + size > nbytes)
-            size = nbytes - offset;
-
-        assert(offset + size <= nbytes);
+    for (offset = 0; offset < nbytes; offset += BLOCKSIZE) {
+        size = My_MIN(nbytes - offset, BLOCKSIZE);
+        assert(size >=0 && offset + size <= nbytes);
         res = PyObject_CallMethod(f, "write",
                                   PY_MAJOR_VERSION == 2 ? "s#" : "y#",
                                   self->ob_item + offset, size);
