@@ -327,12 +327,15 @@ insert_n(bitarrayobject *self, idx_t start, idx_t n)
 static int
 setunused(bitarrayobject *self)
 {
-    const idx_t n = BITS(Py_SIZE(self));
-    idx_t i;
+    idx_t n, i;
 
+    if (self->nbits % 8 == 0)
+        return 0;
+
+    n = BITS(Py_SIZE(self));
     for (i = self->nbits; i < n; i++)
         setbit(self, i, 0);
-    assert(n - self->nbits < 8);
+    assert(0 < n - self->nbits && n - self->nbits < 8);
     return (int) (n - self->nbits);
 }
 
@@ -2744,7 +2747,7 @@ richcompare(PyObject *v, PyObject *w, int op)
             setunused(va);
             setunused(wa);
             cmp = memcmp(va->ob_item, wa->ob_item, (size_t) Py_SIZE(v));
-            return PyBool_FromLong((long) (((cmp) ? 0 : 1) ^
+            return PyBool_FromLong((long) ((cmp ? 0 : 1) ^
                                            ((op == Py_EQ) ? 0 : 1)));
         }
     }

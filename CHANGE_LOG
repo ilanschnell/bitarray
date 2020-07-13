@@ -7,6 +7,7 @@
         such that now the same code is used for Python 2 and 3.
         The new implementation is more memoery efficient on
         Python 3.
+      - use memcmp() in richcompare to shortcut EQ/NE
       - simplify how unpacking is handled
   * add more tests
 
