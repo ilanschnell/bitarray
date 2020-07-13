@@ -1499,7 +1499,7 @@ bits (1..7) are considered to be 0.");
 static PyObject *
 bitarray_fromfile(bitarrayobject *self, PyObject *args)
 {
-    PyObject *b, *f, *res;
+    PyObject *bytes, *f, *res;
     Py_ssize_t nblock, nread = 0, nbytes = -1;
     int not_enough_bytes;
 
@@ -1514,20 +1514,20 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
 
     while (nread < nbytes) {
         nblock = My_MIN(nbytes - nread, BLOCKSIZE);
-        b = PyObject_CallMethod(f, "read", "n", nblock);
-        if (b == NULL)
+        bytes = PyObject_CallMethod(f, "read", "n", nblock);
+        if (bytes == NULL)
             return NULL;
-        if (!PyBytes_Check(b)) {
-            Py_DECREF(b);
+        if (!PyBytes_Check(bytes)) {
+            Py_DECREF(bytes);
             PyErr_SetString(PyExc_TypeError, "read() didn't return bytes");
             return NULL;
         }
-        not_enough_bytes = (PyBytes_GET_SIZE(b) < nblock);
-        nread += PyBytes_GET_SIZE(b);
+        not_enough_bytes = (PyBytes_GET_SIZE(bytes) < nblock);
+        nread += PyBytes_GET_SIZE(bytes);
         assert(nread >= 0 && nread <= nbytes);
 
-        res = bitarray_frombytes(self, b);
-        Py_DECREF(b);
+        res = bitarray_frombytes(self, bytes);
+        Py_DECREF(bytes);
         if (res == NULL)
             return NULL;
         Py_DECREF(res);
@@ -1539,7 +1539,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
             }
             break;
         }
-    } /* while */
+    }
     Py_RETURN_NONE;
 }
 #else  /* Python 2 */
