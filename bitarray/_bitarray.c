@@ -1509,7 +1509,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
     if (nbytes == 0)
         Py_RETURN_NONE;
 
-    if (nbytes < 0)
+    if (nbytes < 0)  /* read till EOF */
         nbytes = PY_SSIZE_T_MAX;
 
     while (nread < nbytes) {
@@ -1533,11 +1533,10 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         Py_DECREF(res);
 
         if (not_enough_bytes) {
-            if (nbytes < PY_SSIZE_T_MAX ) { /* nbytes provided by user */
-                PyErr_SetString(PyExc_EOFError, "not enough bytes to read");
-                return NULL;
-            }
-            break;
+            if (nbytes == PY_SSIZE_T_MAX)  /* read till EOF */
+                break;
+            PyErr_SetString(PyExc_EOFError, "not enough bytes to read");
+            return NULL;
         }
     }
     Py_RETURN_NONE;
