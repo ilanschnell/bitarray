@@ -2019,18 +2019,19 @@ class FileTests(unittest.TestCase, Util):
             with open(self.tmpfname, 'r') as fi:
                 self.assertRaises(TypeError, a.fromfile, fi)
 
-    def test_from_large_file(self):
-        N = 100000
+    def test_from_large_files(self):
+        for N in range(65534, 65538):
+            data = os.urandom(N)
+            with open(self.tmpfname, 'wb') as fo:
+                fo.write(data)
 
-        with open(self.tmpfname, 'wb') as fo:
-            fo.write(N * b'X')
-
-        a = bitarray()
-        a.fromfile(open(self.tmpfname, 'rb'))
-        self.assertEqual(len(a), 8 * N)
-        self.assertEqual(a.buffer_info()[1], N)
-        # make sure there is no over-allocation
-        #self.assertEqual(a.buffer_info()[4], N)
+            a = bitarray()
+            a.fromfile(open(self.tmpfname, 'rb'))
+            self.assertEqual(len(a), 8 * N)
+            self.assertEqual(a.buffer_info()[1], N)
+            self.assertEqual(a.tobytes(), data)
+            # make sure there is no over-allocation
+            #self.assertEqual(a.buffer_info()[4], N)
 
     def test_fromfile_not8(self):
         with open(self.tmpfname, 'wb') as fo:

@@ -33,6 +33,7 @@
 #endif /* HAVE_SYS_TYPES_H */
 #endif /* !STDC_HEADERS */
 
+#define My_MIN(a, b)  (((a) < (b)) ? (a) : (b))
 
 /* instead of Py_ssize_t, we use this type indices, as Py_ssize_t is
    only 4 bytes on 32bit machines, but bitarray indices can exceed this */
@@ -1481,12 +1482,6 @@ When the length of the bitarray is not a multiple of 8, the few remaining\n\
 bits (1..7) are considered to be 0.");
 
 
-#define My_MIN(a, b)  (((a) < (b)) ? (a) : (b))
-/* since too many details differ between the Python 2 and 3 implementation
-   of this function, we choose to have two separate function implementation,
-   even though this means some of the code is duplicated in the two versions
-*/
-#ifdef IS_PY3K
 static PyObject *
 bitarray_fromfile(bitarrayobject *self, PyObject *args)
 {
@@ -1532,68 +1527,6 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
     }
     Py_RETURN_NONE;
 }
-#else  /* Python 2 */
-static PyObject *
-bitarray_fromfile(bitarrayobject *self, PyObject *args)
-{
-    PyObject *f;
-    FILE *fp;
-    Py_ssize_t newsize, nbytes = -1;
-    size_t nread;
-    idx_t t, p;
-    long cur;
-
-    if (!PyArg_ParseTuple(args, "O|n:fromfile", &f, &nbytes))
-        return NULL;
-
-    fp = PyFile_AsFile(f);
-    if (fp == NULL) {
-        PyErr_SetString(PyExc_TypeError,
-                        "first argument must be an open file");
-        return NULL;
-    }
-
-    /* find number of bytes till EOF */
-    if (nbytes < 0) {
-        if ((cur = ftell(fp)) < 0)
-            goto EOFerror;
-
-        if (fseek(fp, 0L, SEEK_END) || (nbytes = ftell(fp)) < 0)
-            goto EOFerror;
-
-        nbytes -= cur;
-        if (fseek(fp, cur, SEEK_SET)) {
-        EOFerror:
-            PyErr_SetString(PyExc_EOFError, "could not find EOF");
-            return NULL;
-        }
-    }
-    if (nbytes == 0)
-        Py_RETURN_NONE;
-
-    /* file exists and there are more than zero bytes to read */
-    t = self->nbits;
-    p = setunused(self);
-    self->nbits += p;
-
-    newsize = Py_SIZE(self) + nbytes;
-    if (resize(self, BITS(newsize)) < 0)
-        return NULL;
-
-    nread = fread(self->ob_item + (Py_SIZE(self) - nbytes), 1, nbytes, fp);
-    if (nread < (size_t) nbytes) {
-        newsize -= nbytes - nread;
-        if (resize(self, BITS(newsize)) < 0)
-            return NULL;
-        PyErr_SetString(PyExc_EOFError, "not enough items in file");
-        return NULL;
-    }
-
-    if (delete_n(self, t, p) < 0)
-        return NULL;
-    Py_RETURN_NONE;
-}
-#endif
 
 PyDoc_STRVAR(fromfile_doc,
 "fromfile(f, n=<till EOF>, /)\n\
