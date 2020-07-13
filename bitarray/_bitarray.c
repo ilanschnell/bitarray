@@ -265,7 +265,7 @@ copy_n(bitarrayobject *self, idx_t a,
        self to self. */
     if (self->endian == other->endian && a % 8 == 0 && b % 8 == 0 && n >= 8)
     {
-        const Py_ssize_t bytes = (Py_ssize_t) n / 8;
+        const size_t bytes = n / 8;
         const idx_t bits = BITS(bytes);
 
         assert(bits <= n && n < bits + 8);
@@ -420,7 +420,7 @@ setrange(bitarrayobject *self, idx_t start, idx_t stop, int val)
         for (i = start; i < BITS(byte_start); i++)
             setbit(self, i, val);
         memset(self->ob_item + byte_start, val ? 0xff : 0x00,
-               byte_stop - byte_start);
+               (size_t) (byte_stop - byte_start));
         for (i = BITS(byte_stop); i < stop; i++)
             setbit(self, i, val);
     }
@@ -962,7 +962,8 @@ bitarray_copy(bitarrayobject *self)
     if (res == NULL)
         return NULL;
 
-    memcpy(((bitarrayobject *) res)->ob_item, self->ob_item, Py_SIZE(self));
+    memcpy(((bitarrayobject *) res)->ob_item, self->ob_item,
+           (size_t) Py_SIZE(self));
     return res;
 }
 
@@ -1227,7 +1228,7 @@ bitarray_reduce(bitarrayobject *self)
         goto error;
     }
     data[0] = (char) setunused(self);
-    memcpy(data + 1, self->ob_item, nbytes);
+    memcpy(data + 1, self->ob_item, (size_t) nbytes);
     repr = PyBytes_FromStringAndSize(data, nbytes + 1);
     if (repr == NULL)
         goto error;
@@ -1259,7 +1260,7 @@ bitarray_reverse(bitarrayobject *self)
         return NULL;
 
     /* copy lower half of array into temporary array */
-    memcpy(t->ob_item, self->ob_item, Py_SIZE(t));
+    memcpy(t->ob_item, self->ob_item, (size_t) Py_SIZE(t));
 
     /* reverse the upper half onto the lower half. */
     for (i = 0; i < t->nbits; i++)
@@ -1358,7 +1359,7 @@ bitarray_setall(bitarrayobject *self, PyObject *v)
     if (vi < 0)
         return NULL;
 
-    memset(self->ob_item, vi ? 0xff : 0x00, Py_SIZE(self));
+    memset(self->ob_item, vi ? 0xff : 0x00, (size_t) Py_SIZE(self));
     Py_RETURN_NONE;
 }
 
@@ -1453,7 +1454,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
         return NULL;
 
     memcpy(self->ob_item + (Py_SIZE(self) - nbytes),
-           PyBytes_AsString(bytes), nbytes);
+           PyBytes_AsString(bytes), (size_t) nbytes);
 
     if (delete_n(self, t, p) < 0)
         return NULL;
@@ -1551,6 +1552,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
     for (offset = 0; offset < nbytes; offset += BLOCKSIZE) {
         size = Py_MIN(nbytes - offset, BLOCKSIZE);
         assert(size >=0 && offset + size <= nbytes);
+        /* basically: f.write(memoryview(self)[offset:offset+size] */
         res = PyObject_CallMethod(f, "write",
                                   PY_MAJOR_VERSION == 2 ? "s#" : "y#",
                                   self->ob_item + offset, size);
@@ -2666,7 +2668,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
                               endian_str == NULL ? np->endian : endian);
         if (a == NULL)
             return NULL;
-        memcpy(((bitarrayobject *) a)->ob_item, np->ob_item, Py_SIZE(np));
+        memcpy(((bitarrayobject *) a)->ob_item, np->ob_item,
+               (size_t) Py_SIZE(np));
 #undef np
         return a;
     }
@@ -2694,7 +2697,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
                                   endian);
             if (a == NULL)
                 return NULL;
-            memcpy(((bitarrayobject *) a)->ob_item, data + 1, nbytes - 1);
+            memcpy(((bitarrayobject *) a)->ob_item, data + 1,
+                   (size_t) nbytes - 1);
             return a;
         }
     }
@@ -2731,6 +2735,18 @@ richcompare(PyObject *v, PyObject *w, int op)
             Py_RETURN_FALSE;
         if (op == Py_NE)
             Py_RETURN_TRUE;
+    }
+
+    if (op == Py_EQ || op == Py_NE) {
+        /* shortcut for EQ/NE: if endianness is the same use memcmp() */
+        assert(vs == ws);
+        if (vs >= 8 && va->endian == wa->endian) {
+            setunused(va);
+            setunused(wa);
+            cmp = memcmp(va->ob_item, wa->ob_item, (size_t) Py_SIZE(v));
+            return PyBool_FromLong((long) (((cmp) ? 0 : 1) ^
+                                           ((op == Py_EQ) ? 0 : 1)));
+        }
     }
 
     /* to avoid uninitialized warning for some compilers */
