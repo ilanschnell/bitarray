@@ -339,23 +339,19 @@ setunused(bitarrayobject *self)
     return (int) (n - self->nbits);
 }
 
-/* repeat self n times */
+/* repeat self n times (negative n is treated as 0) */
 static int
 repeat(bitarrayobject *self, idx_t n)
 {
     idx_t nbits, i;
 
-    if (n <= 0) {
-        if (resize(self, 0) < 0)
-            return -1;
-    }
-    if (n > 1) {
-        nbits = self->nbits;
-        if (resize(self, nbits * n) < 0)
-            return -1;
-        for (i = 1; i < n; i++)
-            copy_n(self, i * nbits, self, 0, nbits);
-    }
+    if (n <= 0)
+        n = 0;
+    nbits = self->nbits;
+    if (resize(self, n * nbits) < 0)
+        return -1;
+    for (i = 1; i < n; i++)
+        copy_n(self, i * nbits, self, 0, nbits);
     return 0;
 }
 
@@ -1496,9 +1492,6 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O|n:fromfile", &f, &nbytes))
         return NULL;
 
-    if (nbytes == 0)
-        Py_RETURN_NONE;
-
     if (nbytes < 0)  /* read till EOF */
         nbytes = PY_SSIZE_T_MAX;
 
@@ -1547,9 +1540,6 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
     Py_ssize_t size, nbytes = Py_SIZE(self);
     Py_ssize_t offset;
     PyObject *res;
-
-    if (nbytes == 0)
-        Py_RETURN_NONE;
 
     setunused(self);
     for (offset = 0; offset < nbytes; offset += BLOCKSIZE) {
