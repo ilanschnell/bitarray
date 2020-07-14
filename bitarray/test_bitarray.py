@@ -991,8 +991,11 @@ class NumberTests(unittest.TestCase, Util):
 
 
     def test_mul(self):
-        c = 0 * bitarray('1001111')
-        self.assertEQUAL(c, bitarray())
+        for c in [0 * bitarray(),
+                  0 * bitarray('1001111'),
+                  -1 * bitarray('100110'),
+                  11 * bitarray()]:
+            self.assertEQUAL(c, bitarray())
 
         c = 3 * bitarray('001')
         self.assertEQUAL(c, bitarray('001001001'))
@@ -1002,7 +1005,7 @@ class NumberTests(unittest.TestCase, Util):
 
         for a in self.randombitarrays():
             b = a.copy()
-            for n in range(-10, 20):
+            for n in range(-3, 5):
                 c = a * n
                 self.assertEQUAL(c, bitarray(n * a.tolist(),
                                              endian=a.endian()))
@@ -1615,30 +1618,28 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(len(a), 0)
 
         a = bitarray('101')
+        b = a
         self.assertEqual(a.fill(), 5)
         self.assertEQUAL(a, bitarray('10100000'))
         self.assertEqual(a.fill(), 0)
         self.assertEQUAL(a, bitarray('10100000'))
+        self.assertTrue(a is b)
 
+    def test_random(self):
         for a in self.randombitarrays():
-            aa = a.tolist()
-            la = len(a)
-            b = a
-            self.assertTrue(0 <= b.fill() < 8)
+            b = a.copy()
+            res = b.fill()
+            self.assertTrue(0 <= res < 8)
             self.assertEqual(b.endian(), a.endian())
-            bb = b.tolist()
-            lb = len(b)
-            self.assertTrue(a is b)
             self.check_obj(b)
-            if la % 8 == 0:
-                self.assertEqual(bb, aa)
-                self.assertEqual(lb, la)
+            if len(a) % 8 == 0:
+                self.assertEqual(b, a)
             else:
-                self.assertTrue(lb % 8 == 0)
-                self.assertNotEqual(bb, aa)
-                self.assertEqual(bb[:la], aa)
-                self.assertEqual(b[la:], (lb-la)*bitarray('0'))
-                self.assertTrue(0 < lb-la < 8)
+                self.assertTrue(len(b) % 8 == 0)
+                self.assertNotEqual(b, a)
+                self.assertEqual(b[:len(a)], a)
+                self.assertEqual(b[len(a):],
+                                 (len(b) - len(a)) * bitarray('0'))
 
 
     def test_sort(self):
@@ -1844,6 +1845,7 @@ class BytesTests(unittest.TestCase, Util):
             b = a.copy()
             a.frombytes(b'')
             self.assertEQUAL(a, b)
+            self.assertFalse(a is b)
 
     def test_frombytes_errors(self):
         a = bitarray()
@@ -1863,10 +1865,11 @@ class BytesTests(unittest.TestCase, Util):
                 self.assertEQUAL(b, c + a)
 
 
-    def test_tobytes(self):
+    def test_tobytes_empty(self):
         a = bitarray()
         self.assertEqual(a.tobytes(), b'')
 
+    def test_tobytes_endian(self):
         for end in ('big', 'little'):
             a = bitarray(endian=end)
             a.frombytes(b'foo')
@@ -1877,6 +1880,7 @@ class BytesTests(unittest.TestCase, Util):
                 a.frombytes(s)
                 self.assertEqual(a.tobytes(), s)
 
+    def test_tobytes_explicit_ones(self):
         for n, s in [(1, b'\x01'), (2, b'\x03'), (3, b'\x07'), (4, b'\x0f'),
                      (5, b'\x1f'), (6, b'\x3f'), (7, b'\x7f'), (8, b'\xff'),
                      (12, b'\xff\x0f'), (15, b'\xff\x7f'), (16, b'\xff\xff'),
