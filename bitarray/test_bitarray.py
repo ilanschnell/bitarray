@@ -1780,12 +1780,20 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a.endian(), endian)
             self.assertEqual(len(a), 0)
 
-
     def test_setall(self):
         a = bitarray(5)
         a.setall(True)
         self.assertEQUAL(a, bitarray('11111'))
+        a.setall(False)
+        self.assertEQUAL(a, bitarray('00000'))
 
+    def test_setall_empty(self):
+        a = bitarray()
+        for v in 0, 1:
+            a.setall(v)
+            self.assertEQUAL(a, bitarray())
+
+    def test_setall_random(self):
         for a in self.randombitarrays():
             val = randint(0, 1)
             b = a
