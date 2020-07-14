@@ -2741,8 +2741,10 @@ richcompare(PyObject *v, PyObject *w, int op)
     }
 
     if (op == Py_EQ || op == Py_NE) {
-        /* shortcut for EQ/NE: if endianness is the same use memcmp() */
         assert(vs == ws);
+        /* shortcut for EQ/NE: if endianness is the same use memcmp()
+           We could use this shortcut for all sizes, but as we need to set
+           the unused bits, we shortcut only if we have at least one byte. */
         if (vs >= 8 && va->endian == wa->endian) {
             setunused(va);
             setunused(wa);
