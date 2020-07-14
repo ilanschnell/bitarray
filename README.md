@@ -52,7 +52,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ..............................
     ----------------------------------------------------------------------
-    Ran 212 tests in 0.876s
+    Ran 230 tests in 0.889s
 
     OK
 
@@ -664,6 +664,9 @@ Change log
         such that now the same code is used for Python 2 and 3.
         The new implementation is more memoery efficient on
         Python 3.
+      - use memcmp() in richcompare to shortcut EQ/NE, when
+        comparing two very large bitarrays for equality the
+        speedup can easily be 100x
       - simplify how unpacking is handled
   * add more tests
 
