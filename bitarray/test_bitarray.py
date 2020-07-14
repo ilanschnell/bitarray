@@ -940,12 +940,11 @@ class SpecialMethodTests(unittest.TestCase, Util):
         n = 999
         a = bitarray(n)
         a.setall(1)
+        a[n - 1] = 0
         b = a.copy()
-        self.assertTrue(a == b)
-        self.assertFalse(a != b)
-        b[n - 1] = 0
-        self.assertTrue(a != b)
-        self.assertFalse(a == b)
+        self.assertReallyEqual(a, b)
+        b[n - 2] = 0
+        self.assertReallyNotEqual(a, b)
 
 tests.append(SpecialMethodTests)
 
