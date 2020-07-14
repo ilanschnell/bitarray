@@ -138,7 +138,7 @@ resize(bitarrayobject *self, idx_t nbits)
     newsize = (Py_ssize_t) BYTES(nbits);
 
     if (newsize == size) {
-        /* the memory size hasn't changed - bypass almost everything */
+        /* the memory size hasn't changed - bypass everything */
         self->nbits = nbits;
         return 0;
     }
@@ -332,7 +332,7 @@ setunused(bitarrayobject *self)
     if (self->nbits % 8 == 0)
         return 0;
 
-    n = BITS(Py_SIZE(self));
+    n = BITS(Py_SIZE(self));    /* number of bits in buffer */
     for (i = self->nbits; i < n; i++)
         setbit(self, i, 0);
     assert(0 < n - self->nbits && n - self->nbits < 8);

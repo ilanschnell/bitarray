@@ -2444,7 +2444,7 @@ tests.append(PrefixCodeTests)
 
 class BufferInterfaceTests(unittest.TestCase):
 
-    def test_read1(self):
+    def test_read_simple(self):
         a = bitarray('01000001' '01000010' '01000011', endian='big')
         v = memoryview(a)
         self.assertEqual(len(v), 3)
@@ -2453,7 +2453,7 @@ class BufferInterfaceTests(unittest.TestCase):
         a[13] = 1
         self.assertEqual(v.tobytes(), b'AFC')
 
-    def test_read2(self):
+    def test_read_random(self):
         a = bitarray()
         a.frombytes(os.urandom(100))
         v = memoryview(a)
