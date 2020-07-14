@@ -936,6 +936,17 @@ class SpecialMethodTests(unittest.TestCase, Util):
         self.assertReallyNotEqual(bitarray(''), bitarray('0'))
         self.assertReallyNotEqual(bitarray('0'), bitarray('1'))
 
+    def test_large_equality(self):
+        n = 999
+        a = bitarray(n)
+        a.setall(1)
+        b = a.copy()
+        self.assertTrue(a == b)
+        self.assertFalse(a != b)
+        b[n - 1] = 0
+        self.assertTrue(a != b)
+        self.assertFalse(a == b)
+
 tests.append(SpecialMethodTests)
 
 # ---------------------------------------------------------------------------
