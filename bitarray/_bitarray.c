@@ -322,8 +322,8 @@ insert_n(bitarrayobject *self, idx_t start, idx_t n)
     return 0;
 }
 
-/* sets ususet bits to 0, i.e. the ones in the last byte (if any),
-   and return the number of bits set -- self->nbits is unchanged */
+/* sets unused padding bits (within last byte of buffer) to 0,
+   and return the number of padding bits -- self->nbits is unchanged */
 static int
 setunused(bitarrayobject *self)
 {
