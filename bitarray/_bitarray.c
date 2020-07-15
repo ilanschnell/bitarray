@@ -3174,13 +3174,7 @@ tuple(sizeof(void *),\n\
       sizeof(idx_t),\n\
       PY_SSIZE_T_MAX)");
 
-/*
-   In retrospect, I wish I had never added any modules functions (other
-   than get_default_endian() and _set_default_endian()) here.
-   These, and possibly many others should be part of a separate utility
-   module.  Anyway, at this point (2019) it is too late to remove them,
-   so I will just leave them here, but not any new ones.
-*/
+
 static PyMethodDef module_functions[] = {
     {"bitdiff",    (PyCFunction) bitdiff,    METH_VARARGS, bitdiff_doc   },
     {"bits2bytes", (PyCFunction) bits2bytes, METH_O,       bits2bytes_doc},
