@@ -1240,11 +1240,11 @@ bitarray_reverse(bitarrayobject *self)
     /* copy lower half of array into temporary array */
     memcpy(tt->ob_item, self->ob_item, (size_t) Py_SIZE(tt));
 
-    /* reverse the upper half onto the lower half. */
+    /* reverse upper half onto the lower half. */
     for (i = 0; i < tt->nbits; i++)
         setbit(self, i, GETBIT(self, m - i));
 
-    /* revert the stored away lower half onto the upper half. */
+    /* reverse the stored away lower half onto the upper half of self. */
     for (i = 0; i < tt->nbits; i++)
         setbit(self, m - i, GETBIT(tt, i));
 #undef tt
