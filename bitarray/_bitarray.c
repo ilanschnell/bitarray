@@ -1977,11 +1977,14 @@ bitarray_imul(bitarrayobject *self, PyObject *v)
 static PyObject *
 bitarray_cpinvert(bitarrayobject *self)
 {
-    PyObject *res;
+    PyObject *result, *t;
 
-    res = bitarray_copy(self);
-    bitarray_invert((bitarrayobject *) res);
-    return res;
+    result = bitarray_copy(self);
+    t = bitarray_invert((bitarrayobject *) result);
+    if (t == NULL)  /* bitarray_invert will actually always return None */
+        return NULL;
+    Py_DECREF(t);
+    return result;
 }
 
 #define BITWISE_FUNC(oper)  \
