@@ -1,10 +1,10 @@
-2020-07-XX   1.4.1:
+2020-07-14   1.4.1:
 -------------------
   * add official Python 3.9 support
+  * improve many docstrings
+  * add DeprecationWarning for bitdiff()
   * add DeprecationWarning when trying to extend bitarrays
     from bytes on Python 3
-  * add DeprecationWarning for bitdiff()
-  * improve many docstrings
   * C-level:
       - rewrote `.fromfile()` and `.tofile()` implementation,
         such that now the same code is used for Python 2 and 3.
