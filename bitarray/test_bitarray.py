@@ -1878,9 +1878,9 @@ class BytesTests(unittest.TestCase, Util):
             self.assertEqual(a.tobytes(), s)
 
 
-    def test_unpack(self):
+    def test_unpack_simple(self):
         a = bitarray('01')
-        self.assertIsInstance(a.unpack(), bytes if is_py3k else str)
+        self.assertIsInstance(a.unpack(), bytes)
         self.assertEqual(a.unpack(), b'\x00\xff')
         self.assertEqual(a.unpack(b'A'), b'A\xff')
         self.assertEqual(a.unpack(b'0', b'1'), b'01')
@@ -1888,36 +1888,47 @@ class BytesTests(unittest.TestCase, Util):
         self.assertEqual(a.unpack(zero=b'A'), b'A\xff')
         self.assertEqual(a.unpack(one=b't', zero=b'f'), b'ft')
 
-        self.assertRaises(TypeError, a.unpack, b'a', zero=b'b')
-        self.assertRaises(TypeError, a.unpack, foo=b'b')
-
+    def test_unpack_random(self):
         for a in self.randombitarrays():
-            self.assertEqual(a.unpack(b'0', b'1'), a.to01().encode())
-
+            self.assertEqual(a.unpack(b'0', b'1'),
+                             a.to01().encode())
+            # round trip
             b = bitarray()
             b.pack(a.unpack())
             self.assertEqual(b, a)
-
+            # round trip with invert
             b = bitarray()
             b.pack(a.unpack(b'\x01', b'\x00'))
             b.invert()
             self.assertEqual(b, a)
 
+    def test_unpack_errors(self):
+        a = bitarray('01')
+        self.assertRaises(TypeError, a.unpack, b'a', zero=b'b')
+        self.assertRaises(TypeError, a.unpack, foo=b'b')
+        self.assertRaises(TypeError, a.unpack, one=b'aa', zero=b'b')
+        if is_py3k:
+            self.assertRaises(TypeError, a.unpack, one='a')
 
-    def test_pack(self):
-        a = bitarray()
-        a.pack(b'\x00')
-        self.assertEqual(a, bitarray('0'))
-        a.pack(b'\xff')
-        self.assertEqual(a, bitarray('01'))
-        a.pack(b'\x01\x00\x7a')
-        self.assertEqual(a, bitarray('01101'))
+    def test_pack_simple(self):
+        for endian in 'little', 'big':
+            _set_default_endian(endian)
+            a = bitarray()
+            a.pack(b'\x00')
+            self.assertEqual(a, bitarray('0'))
+            a.pack(b'\xff')
+            self.assertEqual(a, bitarray('01'))
+            a.pack(b'\x01\x00\x7a')
+            self.assertEqual(a, bitarray('01101'))
 
+    def test_pack_random(self):
         a = bitarray()
         for n in range(256):
             a.pack(bytes(bytearray([n])))
         self.assertEqual(a, bitarray('0' + 255 * '1'))
 
+    def test_pack_errors(self):
+        a = bitarray()
         self.assertRaises(TypeError, a.pack, 0)
         if is_py3k:
             self.assertRaises(TypeError, a.pack, '1')
