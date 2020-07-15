@@ -792,7 +792,7 @@ class MiscTests(unittest.TestCase, Util):
         a = bitarray(10 ** 6)
         self.assertRaises(OverflowError, a.__imul__, 17180)
 
-    def test_unicode1(self):
+    def test_unicode_create(self):
         a = bitarray(unicode())
         self.assertEqual(a, bitarray())
 
@@ -803,7 +803,7 @@ class MiscTests(unittest.TestCase, Util):
             b = bitarray(unicode(a.to01()))
             self.assertEqual(a, b)
 
-    def test_unicode2(self):
+    def test_unicode_extend(self):
         a = bitarray()
         a.extend(unicode())
         self.assertEqual(a, bitarray())
@@ -2021,11 +2021,11 @@ class FileTests(unittest.TestCase, Util):
             fo.write(b'0123456789')
         self.assertFileSize(10)
 
-        if is_py3k:
-            a = bitarray()
-            with open(self.tmpfname, 'wb') as fi:
-                self.assertRaises(Exception, a.fromfile, fi)
+        a = bitarray()
+        with open(self.tmpfname, 'wb') as fi:
+            self.assertRaises(Exception, a.fromfile, fi)
 
+        if is_py3k:
             with open(self.tmpfname, 'r') as fi:
                 self.assertRaises(TypeError, a.fromfile, fi)
 
