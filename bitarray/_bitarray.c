@@ -685,9 +685,9 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     if (PyTuple_Check(obj))                                  /* tuple */
         return extend_tuple(self, obj);
 
-    /* This case is used on Python 2.  However, it should have never been
-       here for Python 3, as it allows bitarray(b'01101011')  */
     if (PyBytes_Check(obj)) {                             /* bytes 01 */
+        /* This case is used on Python 2.  However, it should have never
+           been here for Python 3, as it allows bitarray(b'01101011') */
 #ifdef IS_PY3K
         if (PyErr_WarnEx(PyExc_DeprecationWarning,
                          "cannot extend from 'bytes', "
