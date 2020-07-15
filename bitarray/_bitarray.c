@@ -638,15 +638,8 @@ extend_tuple(bitarrayobject *self, PyObject *tuple)
     return 0;
 }
 
-/* extend_bytes(): extend the bitarray from a PyBytes object, where each
-   whole character is converted to a single bit */
-enum conv_t {
-    BYTES_01,    /*  '0' -> 0    '1'  -> 1   no other characters allowed */
-    BYTES_RAW,   /*  0x00 -> 0   other -> 1                              */
-};
-
 static int
-extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_t conv)
+extend_bytes(bitarrayobject *self, PyObject *bytes)
 {
     Py_ssize_t nbytes, i;
     char c, *data;
@@ -661,25 +654,14 @@ extend_bytes(bitarrayobject *self, PyObject *bytes, enum conv_t conv)
         return -1;
 
     data = PyBytes_AsString(bytes);
-
     for (i = 0; i < nbytes; i++) {
         c = data[i];
-        /* depending on conv, map c to bit */
-        switch (conv) {
-        case BYTES_01:
-            switch (c) {
-            case '0': vi = 0; break;
-            case '1': vi = 1; break;
-            default:
-                PyErr_Format(PyExc_ValueError,
-                             "character must be '0' or '1', found '%c'", c);
-                return -1;
-            }
-            break;
-        case BYTES_RAW:
-            vi = c ? 1 : 0;
-            break;
-        default:  /* should never happen */
+        switch (c) {
+        case '0': vi = 0; break;
+        case '1': vi = 1; break;
+        default:
+            PyErr_Format(PyExc_ValueError,
+                         "character must be '0' or '1', found '%c'", c);
             return -1;
         }
         setbit(self, self->nbits - nbytes + i, vi);
@@ -712,7 +694,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
                          "use .frombytes() instead", 1) < 0)
             return -1;
 #endif
-        return extend_bytes(self, obj, BYTES_01);
+        return extend_bytes(self, obj);
     }
 
     if (PyUnicode_Check(obj)) {                /* (unicode) string 01 */
@@ -722,7 +704,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         if (bytes == NULL)
             return -1;
         assert(PyBytes_Check(bytes));
-        ret = extend_bytes(self, bytes, BYTES_01);
+        ret = extend_bytes(self, bytes);
         Py_DECREF(bytes);
         return ret;
     }
@@ -742,7 +724,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     return -1;
 }
 
-/* This function returns either a PyString or PyBytes object depending
+/* This function returns either a PyUnicode or PyBytes object depending
    on the parameter 'out' (and the Python version).  The function is meant
    to be called in bitarray_unpack(), bitarray_to01() and bitarray_repr().
 
@@ -750,8 +732,8 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     ---------------------------------------------------------------- */
 enum output_t {
     OUT_unpack,  /*   bitarray_unpack()  PyBytes        PyString     */
-    OUT_to01,    /*   bitarray_to01()    PyString       PyString     */
-    OUT_repr,    /*   bitarray_repr()    PyString       PyString     */
+    OUT_to01,    /*   bitarray_to01()    PyUnicode      PyString     */
+    OUT_repr,    /*   bitarray_repr()    PyUnicode      PyString     */
 };
 
 static PyObject *
@@ -1613,12 +1595,23 @@ using the specified mapping.");
 static PyObject *
 bitarray_pack(bitarrayobject *self, PyObject *bytes)
 {
+    Py_ssize_t nbytes, i;
+    char *data;
+
     if (!PyBytes_Check(bytes)) {
         PyErr_SetString(PyExc_TypeError, "bytes expected");
         return NULL;
     }
-    if (extend_bytes(self, bytes, BYTES_RAW) < 0)
+    nbytes = PyBytes_Size(bytes);
+    if (nbytes == 0)
+        Py_RETURN_NONE;
+
+    if (resize(self, self->nbits + nbytes) < 0)
         return NULL;
+
+    data = PyBytes_AsString(bytes);
+    for (i = 0; i < nbytes; i++)
+        setbit(self, self->nbits - nbytes + i, data[i] ? 1 : 0);
 
     Py_RETURN_NONE;
 }
