@@ -660,16 +660,16 @@ Change log
   * add more tests
   * C-level:
       - simplify pack/unpack code
-      - fix memory leak in '~' operation (bitarray_cpinvert)
+      - fix memory leak in `~` operation (bitarray_cpinvert)
 
 
 *1.4.1* (2020-07-14):
 
   * add official Python 3.9 support
   * improve many docstrings
-  * add DeprecationWarning for bitdiff()
+  * add DeprecationWarning for `bitdiff()`
   * add DeprecationWarning when trying to extend bitarrays
-    from bytes on Python 3 (like `bitarrays(b'011')`)
+    from bytes on Python 3 (`bitarrays(b'011')` and `.extend(b'110')`)
   * C-level:
       - rewrote `.fromfile()` and `.tofile()` implementation,
         such that now the same code is used for Python 2 and 3.
