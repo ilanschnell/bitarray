@@ -1904,11 +1904,15 @@ class BytesTests(unittest.TestCase, Util):
 
     def test_unpack_errors(self):
         a = bitarray('01')
+        self.assertRaises(TypeError, a.unpack, b'')
+        self.assertRaises(TypeError, a.unpack, b'0', b'')
         self.assertRaises(TypeError, a.unpack, b'a', zero=b'b')
         self.assertRaises(TypeError, a.unpack, foo=b'b')
         self.assertRaises(TypeError, a.unpack, one=b'aa', zero=b'b')
         if is_py3k:
+            self.assertRaises(TypeError, a.unpack, '0')
             self.assertRaises(TypeError, a.unpack, one='a')
+            self.assertRaises(TypeError, a.unpack, b'0', '1')
 
     def test_pack_simple(self):
         for endian in 'little', 'big':
