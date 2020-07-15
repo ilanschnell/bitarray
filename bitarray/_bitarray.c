@@ -705,7 +705,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
             return -1;
         assert(PyBytes_Check(bytes));
         ret = extend_01(self, bytes);
-        Py_DECREF(bytes);
+        Py_DECREF(bytes);  /* drop bytes */
         return ret;
     }
 
@@ -1217,29 +1217,29 @@ static PyObject *
 bitarray_reverse(bitarrayobject *self)
 {
     const idx_t m = self->nbits - 1;   /* index of max item of self */
-    bitarrayobject *t;    /* temp bitarray to store lower half of self */
+    PyObject *t;       /* temp bitarray to store lower half of self */
     idx_t i;
 
     if (self->nbits < 2)        /* nothing needs to be done */
         Py_RETURN_NONE;
 
-    t = (bitarrayobject *) newbitarrayobject(Py_TYPE(self),
-                                             self->nbits / 2, self->endian);
+    t = newbitarrayobject(Py_TYPE(self), self->nbits / 2, self->endian);
     if (t == NULL)
         return NULL;
 
+#define tt  ((bitarrayobject *) t)
     /* copy lower half of array into temporary array */
-    memcpy(t->ob_item, self->ob_item, (size_t) Py_SIZE(t));
+    memcpy(tt->ob_item, self->ob_item, (size_t) Py_SIZE(tt));
 
     /* reverse the upper half onto the lower half. */
-    for (i = 0; i < t->nbits; i++)
+    for (i = 0; i < tt->nbits; i++)
         setbit(self, i, GETBIT(self, m - i));
 
     /* revert the stored away lower half onto the upper half. */
-    for (i = 0; i < t->nbits; i++)
-        setbit(self, m - i, GETBIT(t, i));
-
-    bitarray_dealloc(t);
+    for (i = 0; i < tt->nbits; i++)
+        setbit(self, m - i, GETBIT(tt, i));
+#undef tt
+    Py_DECREF(t);
     Py_RETURN_NONE;
 }
 
