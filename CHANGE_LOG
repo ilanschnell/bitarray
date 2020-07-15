@@ -3,6 +3,7 @@
   * add more tests
   * C-level:
       - simplify pack/unpack code
+      - fix memory leak in '~' operation (bitarray_cpinvert)
 
 
 2020-07-14   1.4.1:
