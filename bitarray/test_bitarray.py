@@ -2462,6 +2462,16 @@ class BufferInterfaceTests(unittest.TestCase):
         self.assertEqual(v.tobytes(), a.tobytes())
 
     def test_write(self):
+        a = bitarray(40)
+        a.setall(0)
+        m = memoryview(a)
+        v = m[1:4]
+        v[0] = 65
+        v[1] = 66
+        v[2] = 67
+        self.assertEqual(a.tobytes(), b'\x00ABC\x00')
+
+    def test_write_2(self):
         a = bitarray(8000)
         a.setall(0)
         v = memoryview(a)
