@@ -2,7 +2,7 @@
 -------------------
   * add more tests
   * C-level:
-      - simplify some pack/unpack code
+      - simplify pack/unpack code
 
 
 2020-07-14   1.4.1:

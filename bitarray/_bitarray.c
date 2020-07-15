@@ -395,7 +395,7 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
         for (i = 0; i < n; i++)
             self->ob_item[i] ^= other->ob_item[i];
         break;
-    default:  /* should never happen */
+    default:  /* cannot happen */
         return -1;
     }
     return 0;
