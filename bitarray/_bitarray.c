@@ -703,8 +703,17 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     if (PyTuple_Check(obj))                                  /* tuple */
         return extend_tuple(self, obj);
 
-    if (PyBytes_Check(obj))                               /* bytes 01 */
+    /* This case is used on Python 2.  However, it should have never been
+       here for Python 3, as it allows bitarray(b'01101011')  */
+    if (PyBytes_Check(obj)) {                             /* bytes 01 */
+#ifdef IS_PY3K
+        if (PyErr_WarnEx(PyExc_DeprecationWarning,
+                         "cannot extend from 'bytes', "
+                         "use .frombytes() instead", 1) < 0)
+            return -1;
+#endif
         return extend_bytes(self, obj, BYTES_01);
+    }
 
     if (PyUnicode_Check(obj)) {                /* (unicode) string 01 */
         PyObject *bytes;
@@ -3050,6 +3059,11 @@ bitdiff(PyObject *module, PyObject *args)
         PyErr_SetString(PyExc_TypeError, "bitarray object expected");
         return NULL;
     }
+
+    if (PyErr_WarnEx(PyExc_DeprecationWarning,
+                     "bitarray.bitdiff() has been deprecated since 1.2.0, "
+                     "use bitarray.util.count_xor() instead", 1) < 0)
+        return NULL;
 
 #define aa  ((bitarrayobject *) a)
 #define bb  ((bitarrayobject *) b)
