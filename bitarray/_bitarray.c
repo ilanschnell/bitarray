@@ -691,7 +691,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 #ifdef IS_PY3K
         if (PyErr_WarnEx(PyExc_DeprecationWarning,
                          "cannot extend from 'bytes', "
-                         "use .frombytes() instead", 1) < 0)
+                         "use .pack() or .frombytes() instead", 1) < 0)
             return -1;
 #endif
         return extend_bytes(self, obj);
