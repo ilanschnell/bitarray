@@ -639,7 +639,7 @@ extend_tuple(bitarrayobject *self, PyObject *tuple)
 }
 
 static int
-extend_bytes(bitarrayobject *self, PyObject *bytes)
+extend_01(bitarrayobject *self, PyObject *bytes)
 {
     Py_ssize_t nbytes, i;
     char c, *data;
@@ -694,7 +694,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
                          "use .pack() or .frombytes() instead", 1) < 0)
             return -1;
 #endif
-        return extend_bytes(self, obj);
+        return extend_01(self, obj);
     }
 
     if (PyUnicode_Check(obj)) {                /* (unicode) string 01 */
@@ -704,7 +704,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         if (bytes == NULL)
             return -1;
         assert(PyBytes_Check(bytes));
-        ret = extend_bytes(self, bytes);
+        ret = extend_01(self, bytes);
         Py_DECREF(bytes);
         return ret;
     }
@@ -724,52 +724,27 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     return -1;
 }
 
-/* This function returns either a PyUnicode or PyBytes object depending
-   on the parameter 'out' (and the Python version).  The function is meant
-   to be called in bitarray_unpack(), bitarray_to01() and bitarray_repr().
-
-    name              used in            returns Py3    returns Py2
-    ---------------------------------------------------------------- */
-enum output_t {
-    OUT_unpack,  /*   bitarray_unpack()  PyBytes        PyString     */
-    OUT_to01,    /*   bitarray_to01()    PyUnicode      PyString     */
-    OUT_repr,    /*   bitarray_repr()    PyUnicode      PyString     */
-};
-
 static PyObject *
-unpack(bitarrayobject *self, char zero, char one, enum output_t out)
+unpack(bitarrayobject *self, char zero, char one, const char *fmt)
 {
     PyObject *result;
     Py_ssize_t i;
     char *str;
-    size_t strsize;
-    int offset = 0;     /* this is used when copying bytes into str */
 
     if (self->nbits > PY_SSIZE_T_MAX) {
         PyErr_SetString(PyExc_OverflowError, "bitarray too large to unpack");
         return NULL;
     }
 
-    /* note that 12 is the length of "bitarray('')" */
-    strsize = self->nbits + (out == OUT_repr ? 12 : 0);
-    str = (char *) PyMem_Malloc(strsize);
+    str = (char *) PyMem_Malloc((size_t) self->nbits);
     if (str == NULL) {
         PyErr_NoMemory();
         return NULL;
     }
-    if (out == OUT_repr) {
-        /* add "bitarray('......')" to str */
-        strcpy(str, "bitarray('"); /* has length 10 */
-        str[strsize - 2] = '\'';
-        str[strsize - 1] = ')';
-        offset = 10;
-    }
     for (i = 0; i < self->nbits; i++)
-        str[i + offset] = GETBIT(self, i) ? one : zero;
+        str[i] = GETBIT(self, i) ? one : zero;
 
-    result = Py_BuildValue(
-               (out == OUT_unpack && PY_MAJOR_VERSION == 3) ? "y#" : "s#",
-               str, (Py_ssize_t) strsize);
+    result = Py_BuildValue(fmt, str, (Py_ssize_t) self->nbits);
     PyMem_Free((void *) str);
     return result;
 }
@@ -1562,7 +1537,7 @@ the remaining bits (1..7) are set to 0.");
 static PyObject *
 bitarray_to01(bitarrayobject *self)
 {
-    return unpack(self, '0', '1', OUT_to01);
+    return unpack(self, '0', '1', "s#");
 }
 
 PyDoc_STRVAR(to01_doc,
@@ -1582,7 +1557,7 @@ bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
                                      &zero, &one))
         return NULL;
 
-    return unpack(self, zero, one, OUT_unpack);
+    return unpack(self, zero, one, PY_MAJOR_VERSION == 3 ? "y#" : "s#");
 }
 
 PyDoc_STRVAR(unpack_doc,
@@ -1630,10 +1605,37 @@ transfer of data between bitarray objects to other python objects\n\
 static PyObject *
 bitarray_repr(bitarrayobject *self)
 {
+    PyObject *result;
+    Py_ssize_t i;
+    char *str;
+    size_t strsize;
+
     if (self->nbits == 0)
         return Py_BuildValue("s", "bitarray()");
 
-    return unpack(self, '0', '1', OUT_repr);
+    strsize = self->nbits + 12;  /* 12 is the length of "bitarray('')" */
+    if (strsize > PY_SSIZE_T_MAX) {
+        PyErr_SetString(PyExc_OverflowError,
+                        "bitarray too large to represent");
+        return NULL;
+    }
+
+    str = (char *) PyMem_Malloc(strsize);
+    if (str == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+    /* add "bitarray('......')" to str */
+    strcpy(str, "bitarray('"); /* has length 10 */
+    str[strsize - 2] = '\'';
+    str[strsize - 1] = ')';
+
+    for (i = 0; i < self->nbits; i++)
+        str[i + 10] = GETBIT(self, i) ? '1' : '0';
+
+    result = Py_BuildValue("s#", str, (Py_ssize_t) strsize);
+    PyMem_Free((void *) str);
+    return result;
 }
 
 
