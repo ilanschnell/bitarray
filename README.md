@@ -36,8 +36,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.4.1.tar.gz
-    $ cd bitarray-1.4.1
+    $ tar xzf bitarray-1.4.2.tar.gz
+    $ cd bitarray-1.4.2
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -46,7 +46,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.4.1
+    bitarray version: 1.4.2
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
@@ -655,10 +655,21 @@ hashable object (including `None`).
 Change log
 ----------
 
-2020-07-XX   1.4.1:
+2020-XX-XX   1.4.2:
+
+  * add more tests
+  * C-level:
+      - simplify pack/unpack code
+      - fix memory leak in '~' operation (bitarray_cpinvert)
+
+
+*1.4.1* (2020-07-14):
 
   * add official Python 3.9 support
   * improve many docstrings
+  * add DeprecationWarning for bitdiff()
+  * add DeprecationWarning when trying to extend bitarrays
+    from bytes on Python 3 (like `bitarrays(b'011')`)
   * C-level:
       - rewrote `.fromfile()` and `.tofile()` implementation,
         such that now the same code is used for Python 2 and 3.
@@ -694,15 +705,6 @@ Change log
     deprecated 8 years ago, since version 0.4.0
   * add `__all__` in `bitarray/__init__.py`
   * drop Python 3.3 and 3.4 support
-
-
-*1.2.2* (2020-05-18):
-
-  * `util.ba2hex` now always return a string object (instead of bytes object
-    for Python 3), see issue #94
-  * `util.hex2ba` allows a unicode object as input on Python 2
-  * Determine 64-bitness of interpreter in a cross-platform fashion #91,
-    in order to better support PyPy
 
 
 Please find the complete change log
