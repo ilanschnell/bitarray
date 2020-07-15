@@ -339,6 +339,15 @@ setunused(bitarrayobject *self)
     return (int) (n - self->nbits);
 }
 
+static void
+invert(bitarrayobject *self)
+{
+    Py_ssize_t nbytes = Py_SIZE(self), i;
+
+    for (i = 0; i < nbytes; i++)
+        self->ob_item[i] = ~self->ob_item[i];
+}
+
 /* repeat self n times (negative n is treated as 0) */
 static int
 repeat(bitarrayobject *self, idx_t n)
@@ -1269,10 +1278,7 @@ will be a multiple of 8.  Returns the number of bits added (0..7).");
 static PyObject *
 bitarray_invert(bitarrayobject *self)
 {
-    Py_ssize_t n = Py_SIZE(self), i;
-
-    for (i = 0; i < n; i++)
-        self->ob_item[i] = ~self->ob_item[i];
+    invert(self);
     Py_RETURN_NONE;
 }
 
@@ -1977,13 +1983,10 @@ bitarray_imul(bitarrayobject *self, PyObject *v)
 static PyObject *
 bitarray_cpinvert(bitarrayobject *self)
 {
-    PyObject *result, *t;
+    PyObject *result;
 
     result = bitarray_copy(self);
-    t = bitarray_invert((bitarrayobject *) result);
-    if (t == NULL)  /* bitarray_invert will actually always return None */
-        return NULL;
-    Py_DECREF(t);
+    invert((bitarrayobject *) result);
     return result;
 }
 
