@@ -2741,7 +2741,7 @@ richcompare(PyObject *v, PyObject *w, int op)
         /* shortcuts for EQ/NE */
         if (vs != ws) {
             /* if sizes differ, the bitarrays differ */
-            return PyBool_FromLong((op == Py_NE));
+            return PyBool_FromLong((long) (op == Py_NE));
         }
         else if (vs >= 8 && va->endian == wa->endian) {
             /* if endianness is the same use memcmp() - we could use this
