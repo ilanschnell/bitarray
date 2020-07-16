@@ -1634,6 +1634,7 @@ bitarray_repr(bitarrayobject *self)
     }
     /* add "bitarray('......')" to str */
     strcpy(str, "bitarray('"); /* has length 10 */
+    /* don't use strcpy here, as this would add an extra null byte */
     str[strsize - 2] = '\'';
     str[strsize - 1] = ')';
 
