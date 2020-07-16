@@ -2737,25 +2737,20 @@ richcompare(PyObject *v, PyObject *w, int op)
 #define wa  ((bitarrayobject *) w)
     vs = va->nbits;
     ws = wa->nbits;
-    if (vs != ws) {
-        /* shortcut for EQ/NE: if sizes differ, the bitarrays differ */
-        if (op == Py_EQ)
-            Py_RETURN_FALSE;
-        if (op == Py_NE)
-            Py_RETURN_TRUE;
-    }
-
     if (op == Py_EQ || op == Py_NE) {
-        assert(vs == ws);
-        /* shortcut for EQ/NE: if endianness is the same use memcmp()
-           We could use this shortcut for all sizes, but as we need to set
-           the unused bits, we shortcut only if we have at least one byte. */
-        if (vs >= 8 && va->endian == wa->endian) {
+        /* shortcuts for EQ/NE */
+        if (vs != ws) {
+            /* if sizes differ, the bitarrays differ */
+            return PyBool_FromLong((op == Py_NE));
+        }
+        else if (vs >= 8 && va->endian == wa->endian) {
+            /* if endianness is the same use memcmp() - we could use this
+               shortcut for all sizes, but as we need to set the unused bits,
+               we shortcut only if we have at least one byte. */
             setunused(va);
             setunused(wa);
             cmp = memcmp(va->ob_item, wa->ob_item, (size_t) Py_SIZE(v));
-            return PyBool_FromLong((long) ((cmp ? 0 : 1) ^
-                                           ((op == Py_EQ) ? 0 : 1)));
+            return PyBool_FromLong((long) ((cmp == 0) ^ (op == Py_NE)));
         }
     }
 
