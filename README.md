@@ -655,7 +655,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2020-XX-XX   1.4.2:
+*1.4.2* (2020-07-15):
 
   * add more tests
   * C-level:
@@ -693,18 +693,6 @@ Change log
   * raise `NotImplementedError` with (useful message) when trying to call
     the `.fromstring()` or `.tostring()` methods, which have been removed
     in the last release
-
-
-*1.3.0* (2020-07-06):
-
-  * add `bitarray.util.make_endian()`
-  * `util.ba2hex()` and `util.hex2ba()` now also support little-endian
-  * add `bitarray.get_default_endian()`
-  * made first argument of initializer a positional-only parameter
-  * remove `.fromstring()` and `.tostring()` methods, these have been
-    deprecated 8 years ago, since version 0.4.0
-  * add `__all__` in `bitarray/__init__.py`
-  * drop Python 3.3 and 3.4 support
 
 
 Please find the complete change log
