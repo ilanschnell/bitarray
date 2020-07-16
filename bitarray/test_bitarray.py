@@ -1953,6 +1953,10 @@ class FileTests(unittest.TestCase, Util):
     def tearDown(self):
         shutil.rmtree(self.tmpdir)
 
+    def read_file(self):
+        with open(self.tmpfname, 'rb') as fi:
+            return fi.read()
+
     def assertFileSize(self, size):
         self.assertEqual(os.path.getsize(self.tmpfname), size)
 
@@ -1992,7 +1996,8 @@ class FileTests(unittest.TestCase, Util):
         self.assertFileSize(0)
 
         a = bitarray()
-        a.fromfile(open(self.tmpfname, 'rb'))
+        with open(self.tmpfname, 'rb') as fi:
+            a.fromfile(fi)
         self.assertEqual(a, bitarray())
 
     def test_fromfile_Foo(self):
@@ -2001,11 +2006,13 @@ class FileTests(unittest.TestCase, Util):
         self.assertFileSize(3)
 
         a = bitarray(endian='big')
-        a.fromfile(open(self.tmpfname, 'rb'))
+        with open(self.tmpfname, 'rb') as fi:
+            a.fromfile(fi)
         self.assertEqual(a, bitarray('01000110' '01101111' '01101111'))
 
         a = bitarray(endian='little')
-        a.fromfile(open(self.tmpfname, 'rb'))
+        with open(self.tmpfname, 'rb') as fi:
+            a.fromfile(fi)
         self.assertEqual(a, bitarray('01100010' '11110110' '11110110'))
 
     def test_fromfile_wrong_args(self):
@@ -2040,24 +2047,28 @@ class FileTests(unittest.TestCase, Util):
                 fo.write(data)
 
             a = bitarray()
-            a.fromfile(open(self.tmpfname, 'rb'))
+            with open(self.tmpfname, 'rb') as fi:
+                a.fromfile(fi)
             self.assertEqual(len(a), 8 * N)
             self.assertEqual(a.buffer_info()[1], N)
             self.assertEqual(a.tobytes(), data)
 
-    def test_fromfile_extend_exsiting(self):
+    def test_fromfile_extend_existing(self):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(b'Foo')
 
         foo_le = '011000101111011011110110'
         a = bitarray('1', endian='little')
-        a.fromfile(open(self.tmpfname, 'rb'))
+        with open(self.tmpfname, 'rb') as fi:
+            a.fromfile(fi)
+
         self.assertEqual(a, bitarray('1' + foo_le))
 
         for n in range(20):
             a = bitarray(n, endian='little')
             a.setall(1)
-            a.fromfile(open(self.tmpfname, 'rb'))
+            with open(self.tmpfname, 'rb') as fi:
+                a.fromfile(fi)
             self.assertEqual(a, bitarray(n * '1' + foo_le))
 
     def test_fromfile_n(self):
@@ -2119,8 +2130,7 @@ class FileTests(unittest.TestCase, Util):
         self.assertEQUAL(a, b)
 
         self.assertFileSize(3)
-        with open(self.tmpfname, 'rb') as fi:
-            self.assertEqual(fi.read(), b'Foo')
+        self.assertEqual(self.read_file(), b'Foo')
 
     def test_tofile_random(self):
         for a in self.randombitarrays():
@@ -2128,7 +2138,7 @@ class FileTests(unittest.TestCase, Util):
                 a.tofile(fo)
             n = bits2bytes(len(a))
             self.assertFileSize(n)
-            raw = open(self.tmpfname, 'rb').read()
+            raw = self.read_file()
             self.assertEqual(len(raw), n)
             self.assertEqual(raw, a.tobytes())
 
@@ -2159,7 +2169,7 @@ class FileTests(unittest.TestCase, Util):
             a.tofile(f)
         self.assertFileSize(n)
 
-        raw = open(self.tmpfname, 'rb').read()
+        raw = self.read_file()
         self.assertEqual(len(raw), n)
         self.assertEqual(raw, a.tobytes())
 
@@ -2169,7 +2179,7 @@ class FileTests(unittest.TestCase, Util):
             with open(self.tmpfname, 'wb') as fo:
                 a.tofile(fo)
 
-            raw = open(self.tmpfname, 'rb').read()
+            raw = self.read_file()
             self.assertEqual(len(raw), bits2bytes(len(a)))
             # when we the the unused bits in a, we can compare
             a.fill()
