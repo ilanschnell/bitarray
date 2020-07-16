@@ -1966,7 +1966,8 @@ class FileTests(unittest.TestCase, Util):
             for a in self.randombitarrays():
                 with open(self.tmpfname, 'wb') as fo:
                     pickle.dump(a, fo, v)
-                b = pickle.load(open(self.tmpfname, 'rb'))
+                with open(self.tmpfname, 'rb') as fi:
+                    b = pickle.load(fi)
                 self.assertFalse(b is a)
                 self.assertEQUAL(a, b)
 
