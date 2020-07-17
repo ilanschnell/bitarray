@@ -2006,9 +2006,9 @@ bitarray_ ## oper (bitarrayobject *self, PyObject *other)           \
     return res;                                                     \
 }
 
-BITWISE_FUNC(and)
-BITWISE_FUNC(or)
-BITWISE_FUNC(xor)
+BITWISE_FUNC(and)               /* bitarray_and */
+BITWISE_FUNC(or)                /* bitarray_or  */
+BITWISE_FUNC(xor)               /* bitarray_xor */
 
 
 #define BITWISE_IFUNC(oper)  \
@@ -2021,9 +2021,9 @@ bitarray_i ## oper (bitarrayobject *self, PyObject *other)   \
     return (PyObject *) self;                                \
 }
 
-BITWISE_IFUNC(and)
-BITWISE_IFUNC(or)
-BITWISE_IFUNC(xor)
+BITWISE_IFUNC(and)              /* bitarray_iand */
+BITWISE_IFUNC(or)               /* bitarray_ior  */
+BITWISE_IFUNC(xor)              /* bitarray_ixor */
 
 /******************* variable length encoding and decoding ***************/
 
