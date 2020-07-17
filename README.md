@@ -695,5 +695,4 @@ Change log
     in the last release
 
 
-Please find the complete change log
-<a href="https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG">here</a>.
+Please find the complete change log [here](https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG).
