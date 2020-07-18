@@ -111,14 +111,14 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     assert(allocated >= size && size == BYTES(self->nbits));
     /* ob_item == NULL implies ob_size == allocated == 0 */
     assert(self->ob_item != NULL || (size == 0 && allocated == 0));
-    /* allocated ==0 implies size == 0 */
+    /* allocated == 0 implies size == 0 */
     assert(allocated != 0 || size == 0);
 
-    if (nbits < 0) {
+    newsize = BYTES(nbits);
+    if (nbits < 0 || BITS(newsize) < 0) {
         PyErr_SetString(PyExc_OverflowError, "bitarray resize");
         return -1;
     }
-    newsize = BYTES(nbits);
 
     if (newsize == size) {
         /* the memory size hasn't changed - bypass everything */
