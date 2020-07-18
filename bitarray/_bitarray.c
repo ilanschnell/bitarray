@@ -876,7 +876,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     bitarrayobject *xa;
     Py_ssize_t p;
 
-    if (!PyArg_ParseTuple(args, "O|n:_search", &x, &limit))
+    if (!PyArg_ParseTuple(args, "O|n:search", &x, &limit))
         return NULL;
 
     if (!bitarray_Check(x)) {
@@ -928,7 +928,7 @@ bitarray_buffer_info(bitarrayobject *self)
     PyObject *res, *ptr;
 
     ptr = PyLong_FromVoidPtr(self->ob_item),
-    res = Py_BuildValue("OnsiL",
+    res = Py_BuildValue("Onsin",
                         ptr,
                         (Py_ssize_t) Py_SIZE(self),
                         ENDIAN_OBJ(self),
@@ -1465,7 +1465,7 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
     Py_ssize_t i;
     PyObject *v;
 
-    if (!PyArg_ParseTuple(args, "LO:insert", &i, &v))
+    if (!PyArg_ParseTuple(args, "nO:insert", &i, &v))
         return NULL;
 
     normalize_index(self->nbits, &i);
@@ -1489,7 +1489,7 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
     Py_ssize_t i = -1;
     long vi;
 
-    if (!PyArg_ParseTuple(args, "|L:pop", &i))
+    if (!PyArg_ParseTuple(args, "|n:pop", &i))
         return NULL;
 
     if (self->nbits == 0) {
@@ -3121,7 +3121,7 @@ Set the default bit endianness for new bitarray objects being created.");
 static PyObject *
 sysinfo(void)
 {
-    return Py_BuildValue("iiiiL",
+    return Py_BuildValue("iiiin",
                          (int) sizeof(void *),
                          (int) sizeof(size_t),
                          (int) sizeof(Py_ssize_t),
