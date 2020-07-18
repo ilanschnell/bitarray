@@ -446,7 +446,7 @@ class SliceTests(unittest.TestCase, Util):
         a = bitarray('1100010')
         for i, b in enumerate([True, True, False, False, False, True, False]):
             self.assertEqual(a[i], b)
-            self.assertEqual(a[i-7], b)
+            self.assertEqual(a[i - 7], b)
         self.assertRaises(IndexError, a.__getitem__,  7)
         self.assertRaises(IndexError, a.__getitem__, -8)
 
@@ -1079,7 +1079,7 @@ tests.append(SequenceMethodsTests)
 
 # ---------------------------------------------------------------------------
 
-class BitwiseTests(unittest.TestCase, Util):
+class NumberMethodsTests(unittest.TestCase, Util):
 
     def test_misc(self):
         for a in self.randombitarrays():
@@ -1099,7 +1099,6 @@ class BitwiseTests(unittest.TestCase, Util):
 
         b = bitarray('1001')
         self.assertRaises(ValueError, a.__and__, b)  # not same length
-
         self.assertRaises(TypeError, a.__and__, 42)
 
     def test_iand(self):
@@ -1162,7 +1161,7 @@ class BitwiseTests(unittest.TestCase, Util):
             self.check_obj(c)
 
 
-tests.append(BitwiseTests)
+tests.append(NumberMethodsTests)
 
 # ---------------------------------------------------------------------------
 
