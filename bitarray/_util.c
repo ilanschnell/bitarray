@@ -23,13 +23,11 @@
 #endif /* !STDC_HEADERS */
 
 
-#define idx_t  Py_ssize_t    /* was: typedef long long int idx_t; */
-
 typedef struct {
     PyObject_VAR_HEAD
     char *ob_item;
     Py_ssize_t allocated;       /* how many bytes allocated */
-    idx_t nbits;                /* length of bitarray, i.e. elements */
+    Py_ssize_t nbits;           /* length of bitarray, i.e. elements */
     int endian;                 /* bit endianness of bitarray */
     int ob_exports;             /* how many buffer exports */
     PyObject *weakreflist;      /* list of weak references */
@@ -38,7 +36,7 @@ typedef struct {
 #define ENDIAN_LITTLE  0
 #define ENDIAN_BIG     1
 
-#define BITS(bytes)  ((idx_t) (bytes) << 3)
+#define BITS(bytes)  ((Py_ssize_t) (bytes) << 3)
 
 #define BYTES(bits)  (((bits) == 0) ? 0 : (((bits) - 1) / 8 + 1))
 
@@ -48,7 +46,7 @@ typedef struct {
 /* ------------ low level access to bits in bitarrayobject ------------- */
 
 #ifndef NDEBUG
-static int GETBIT(bitarrayobject *self, idx_t i) {
+static int GETBIT(bitarrayobject *self, Py_ssize_t i) {
     assert(0 <= i && i < self->nbits);
     return ((self)->ob_item[(i) / 8] & BITMASK((self)->endian, i) ? 1 : 0);
 }
@@ -58,7 +56,7 @@ static int GETBIT(bitarrayobject *self, idx_t i) {
 #endif
 
 static void
-setbit(bitarrayobject *self, idx_t i, int bit)
+setbit(bitarrayobject *self, Py_ssize_t i, int bit)
 {
     char *cp, mask;
 
@@ -74,8 +72,8 @@ setbit(bitarrayobject *self, idx_t i, int bit)
 static void
 setunused(bitarrayobject *a)
 {
-    const idx_t n = BITS(Py_SIZE(a));
-    idx_t i;
+    const Py_ssize_t n = BITS(Py_SIZE(a));
+    Py_ssize_t i;
 
     for (i = a->nbits; i < n; i++)
         setbit(a, i, 0);
@@ -113,11 +111,12 @@ bitarray_Check(PyObject *obj)
 
 /* return the smallest index i for which a.count(1, 0, i) == n, or when
    n exceeds the total count return -1  */
-static idx_t
-count_to_n(bitarrayobject *a, idx_t n)
+static Py_ssize_t
+count_to_n(bitarrayobject *a, Py_ssize_t n)
 {
-    idx_t i = 0, j = 0, m;  /* i is the index, j the total count up to i */
-    Py_ssize_t block_start, block_stop, k;
+    Py_ssize_t i = 0;        /* index */
+    Py_ssize_t j = 0;        /* total count up to index */
+    Py_ssize_t block_start, block_stop, k, m;
     unsigned char c;
 
     if (n == 0)
@@ -164,11 +163,10 @@ count_to_n(bitarrayobject *a, idx_t n)
 }
 
 /* return index of last occurrence of vi, -1 when x is not in found. */
-static idx_t
+static Py_ssize_t
 find_last(bitarrayobject *a, int vi)
 {
-    Py_ssize_t j;
-    idx_t i;
+    Py_ssize_t i, j;
     char c;
 
     if (a->nbits == 0)
@@ -223,7 +221,7 @@ static PyObject *
 count_n(PyObject *module, PyObject *args)
 {
     PyObject *a;
-    idx_t n, i;
+    Py_ssize_t n, i;
 
     if (!PyArg_ParseTuple(args, "OL:count_n", &a, &n))
         return NULL;
@@ -261,7 +259,7 @@ static PyObject *
 r_index(PyObject *module, PyObject *args)
 {
     PyObject *a, *x = Py_True;
-    idx_t i;
+    Py_ssize_t i;
     int vi;
 
     if (!PyArg_ParseTuple(args, "O|O:rindex", &a, &x))
@@ -301,8 +299,7 @@ static PyObject *
 two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
 {
     PyObject *a, *b;
-    Py_ssize_t n, i;
-    idx_t res = 0;
+    Py_ssize_t res = 0, nbytes, i;
     unsigned char c;
 
     if (!PyArg_ParseTuple(args, format, &a, &b))
@@ -326,29 +323,29 @@ two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
     setunused(aa);
     setunused(bb);
     assert(Py_SIZE(a) == Py_SIZE(b));
-    n = Py_SIZE(a);
+    nbytes = Py_SIZE(a);
 
     switch (kern) {
     case KERN_cand:
-        for (i = 0; i < n; i++) {
+        for (i = 0; i < nbytes; i++) {
             c = aa->ob_item[i] & bb->ob_item[i];
             res += bitcount_lookup[c];
         }
         break;
     case KERN_cor:
-        for (i = 0; i < n; i++) {
+        for (i = 0; i < nbytes; i++) {
             c = aa->ob_item[i] | bb->ob_item[i];
             res += bitcount_lookup[c];
         }
         break;
     case KERN_cxor:
-        for (i = 0; i < n; i++) {
+        for (i = 0; i < nbytes; i++) {
             c = aa->ob_item[i] ^ bb->ob_item[i];
             res += bitcount_lookup[c];
         }
         break;
     case KERN_subset:
-        for (i = 0; i < n; i++)
+        for (i = 0; i < nbytes; i++)
             if ((aa->ob_item[i] & bb->ob_item[i]) != aa->ob_item[i])
                 Py_RETURN_FALSE;
         Py_RETURN_TRUE;
