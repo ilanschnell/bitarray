@@ -697,7 +697,7 @@ unpack(bitarrayobject *self, char zero, char one, const char *fmt)
     for (i = 0; i < self->nbits; i++)
         str[i] = GETBIT(self, i) ? one : zero;
 
-    result = Py_BuildValue(fmt, str, (Py_ssize_t) self->nbits);
+    result = Py_BuildValue(fmt, str, self->nbits);
     PyMem_Free((void *) str);
     return result;
 }
@@ -929,10 +929,10 @@ bitarray_buffer_info(bitarrayobject *self)
     ptr = PyLong_FromVoidPtr(self->ob_item),
     res = Py_BuildValue("Onsin",
                         ptr,
-                        (Py_ssize_t) Py_SIZE(self),
+                        Py_SIZE(self),
                         ENDIAN_OBJ(self),
                         (int) (BITS(Py_SIZE(self)) - self->nbits),
-                        (Py_ssize_t) self->allocated);
+                        self->allocated);
     Py_DECREF(ptr);
     return res;
 }
@@ -1197,8 +1197,7 @@ bitarray_tolist(bitarrayobject *self)
         return NULL;
 
     for (i = 0; i < self->nbits; i++) {
-        if (PyList_SetItem(list, (Py_ssize_t) i,
-                           PyBool_FromLong(GETBIT(self, i))) < 0)
+        if (PyList_SetItem(list, i, PyBool_FromLong(GETBIT(self, i))) < 0)
             return NULL;
     }
     return list;
@@ -1725,7 +1724,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
 static int
 setslice(bitarrayobject *self, PyObject *slice, PyObject *value)
 {
-    Py_ssize_t start, stop, step, slicelength, j, i;
+    Py_ssize_t start, stop, step, slicelength, i, j;
 
     assert(PySlice_Check(slice));
     if (PySlice_GetIndicesEx(slice, self->nbits,
@@ -1788,7 +1787,7 @@ setslice(bitarrayobject *self, PyObject *slice, PyObject *value)
 static int
 delslice(bitarrayobject *self, PyObject *slice)
 {
-    Py_ssize_t start, stop, step, slicelength, j, i;
+    Py_ssize_t start, stop, step, slicelength, i, j;
 
     assert(PySlice_Check(slice));
     if (PySlice_GetIndicesEx(slice, self->nbits,
@@ -3036,8 +3035,7 @@ static PyObject *
 bitdiff(PyObject *module, PyObject *args)
 {
     PyObject *a, *b;
-    Py_ssize_t i;
-    Py_ssize_t res = 0;
+    Py_ssize_t res = 0, i;
     unsigned char c;
 
     if (!PyArg_ParseTuple(args, "OO:bitdiff", &a, &b))
