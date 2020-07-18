@@ -30,7 +30,7 @@ else:
     range = xrange
 
 
-from bitarray import (bitarray, frozenbitarray, bitdiff, bits2bytes,
+from bitarray import (bitarray, frozenbitarray, bits2bytes,
                       get_default_endian, _set_default_endian,
                       _sysinfo, __version__)
 
@@ -2482,7 +2482,7 @@ class BufferInterfaceTests(unittest.TestCase):
         v[301:304] = b'ABC'
         self.assertEqual(a[300 * 8 : 305 * 8].tobytes(), b'\x00ABC\x00')
 
-    def test_write(self):
+    def test_write_py3(self):
         if not is_py3k:
             return
         a = bitarray(40)
