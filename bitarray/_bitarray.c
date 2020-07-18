@@ -341,10 +341,15 @@ repeat(bitarrayobject *self, Py_ssize_t n)
     if (n <= 0)
         n = 0;
     nbits = self->nbits;
+
     if (resize(self, n * nbits) < 0)
         return -1;
+
     if (n < 2 || nbits == 0)
+        /* the main reason we return here is because when nbits == 0
+           the overflow check below will fail */
         return 0;
+
     for (i = 1; i < n; i++) {
         if (i * nbits < 0 || i * nbits >= self->nbits) {
             PyErr_Format(PyExc_OverflowError, "bitarray repeat");
