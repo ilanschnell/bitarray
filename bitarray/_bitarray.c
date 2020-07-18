@@ -63,7 +63,7 @@ static int default_endian = ENDIAN_BIG;
 
 #define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarraytype)
 
-#define BITS(bytes)  ((Py_ssize_t) (bytes) << 3)
+#define BITS(bytes)  ((bytes) << 3)
 
 /* number of bytes necessary to store given bits */
 #define BYTES(bits)  (((bits) == 0) ? 0 : (((bits) - 1) / 8 + 1))
@@ -116,7 +116,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
 
     newsize = BYTES(nbits);
     if (nbits < 0 || BITS(newsize) < 0) {
-        PyErr_SetString(PyExc_OverflowError, "bitarray resize");
+        PyErr_Format(PyExc_OverflowError, "bitarray resize %zd", nbits);
         return -1;
     }
 
@@ -1755,9 +1755,9 @@ setslice(bitarrayobject *self, PyObject *slice, PyObject *value)
         else {  /* step != 1 */
             if (vv->nbits != slicelength) {
                 PyErr_Format(PyExc_ValueError,
-                             "attempt to assign sequence of size %lld "
-                             "to extended slice of size %lld",
-                             (long long) vv->nbits, (long long) slicelength);
+                             "attempt to assign sequence of size %zd "
+                             "to extended slice of size %zd",
+                             vv->nbits, slicelength);
                 return -1;
             }
             for (i = 0, j = start; i < slicelength; i++, j += step)

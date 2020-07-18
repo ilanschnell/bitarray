@@ -36,7 +36,7 @@ typedef struct {
 #define ENDIAN_LITTLE  0
 #define ENDIAN_BIG     1
 
-#define BITS(bytes)  ((Py_ssize_t) (bytes) << 3)
+#define BITS(bytes)  ((bytes) << 3)
 
 #define BYTES(bits)  (((bits) == 0) ? 0 : (((bits) - 1) / 8 + 1))
 
