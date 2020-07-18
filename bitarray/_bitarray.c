@@ -118,7 +118,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
         PyErr_SetString(PyExc_OverflowError, "bitarray resize");
         return -1;
     }
-    newsize = (Py_ssize_t) BYTES(nbits);
+    newsize = BYTES(nbits);
 
     if (newsize == size) {
         /* the memory size hasn't changed - bypass everything */
@@ -197,7 +197,7 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
     if (obj == NULL)
         return NULL;
 
-    nbytes = (Py_ssize_t) BYTES(nbits);
+    nbytes = BYTES(nbits);
     Py_SIZE(obj) = nbytes;
     if (nbytes == 0) {
         obj->ob_item = NULL;
@@ -369,7 +369,7 @@ setrange(bitarrayobject *self, Py_ssize_t start, Py_ssize_t stop, int val)
 
     if (stop >= start + 8) {
         const Py_ssize_t byte_start = BYTES(start);
-        const Py_ssize_t byte_stop = (Py_ssize_t) stop / 8;
+        const Py_ssize_t byte_stop = stop / 8;
         for (i = start; i < BITS(byte_start); i++)
             setbit(self, i, val);
         memset(self->ob_item + byte_start, val ? 0xff : 0x00,
@@ -410,7 +410,7 @@ count(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
 
     if (stop >= start + 8) {
         const Py_ssize_t byte_start = BYTES(start);
-        const Py_ssize_t byte_stop = (Py_ssize_t) (stop / 8);
+        const Py_ssize_t byte_stop = stop / 8;
         Py_ssize_t j;
 
         for (i = start; i < BITS(byte_start); i++)
@@ -1192,7 +1192,7 @@ bitarray_tolist(bitarrayobject *self)
     PyObject *list;
     Py_ssize_t i;
 
-    list = PyList_New((Py_ssize_t) self->nbits);
+    list = PyList_New(self->nbits);
     if (list == NULL)
         return NULL;
 
@@ -3123,7 +3123,7 @@ sysinfo(void)
                          (int) sizeof(size_t),
                          (int) sizeof(Py_ssize_t),
                          (int) sizeof(Py_ssize_t),
-                         (Py_ssize_t) PY_SSIZE_T_MAX);
+                         PY_SSIZE_T_MAX);
 }
 
 PyDoc_STRVAR(sysinfo_doc,
