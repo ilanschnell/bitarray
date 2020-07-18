@@ -22,11 +22,11 @@
 /* this macro was introduced in Python 3.3 */
 #define Py_MIN(x, y)  (((x) > (y)) ? (y) : (x))
 #define PySlice_GetIndicesEx(slice, len, start, stop, step, slicelength) \
-    PySlice_GetIndicesEx(((PySliceObject *) slice),                    \
+    PySlice_GetIndicesEx(((PySliceObject *) slice),                      \
                          (len), (start), (stop), (step), (slicelength))
 #endif
 
-#if PY_MAJOR_VERSION == 3 || (PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION == 7)
+#if PY_VERSION_HEX >= 0x02070000
 /* (new) buffer protocol */
 #define WITH_BUFFER
 #endif
