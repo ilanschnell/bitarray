@@ -36,8 +36,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.4.2.tar.gz
-    $ cd bitarray-1.4.2
+    $ tar xzf bitarray-1.4.3.tar.gz
+    $ cd bitarray-1.4.3
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -46,7 +46,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.4.2
+    bitarray version: 1.4.3
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
@@ -437,11 +437,7 @@ the start positions where bitarray matches self.
 
 `length()` -> int
 
-Return the length, i.e. number of bits stored in the bitarray.
-This method is preferred over `__len__` (used when typing `len(a)`),
-since `__len__` will fail for a bitarray object with 2^31 or more elements
-on a 32bit machine, whereas this method will return the correct value,
-on 32bit and 64bit machines.
+Return the length - a.length() is the same as len(a).
 
 
 `pack(bytes, /)`
@@ -655,6 +651,17 @@ hashable object (including `None`).
 Change log
 ----------
 
+2020-XX-XX   1.5.0:
+
+  * Use `Py_ssize_t` for as bitarray index, this means that on 32bit
+    systems, the maximun number of elements in a bitarray is 2 GBits,
+    which is 128 MBytes.  We used to have a special 64bit index type
+    for all architectures, but this prevented us from using Python's
+    sequence, mapping and number methods.
+  * speedup item assignment to slice objects when the step size
+    is one (when alignment allows `memmove()`)
+
+
 *1.4.2* (2020-07-15):
 
   * add more tests
@@ -695,4 +702,5 @@ Change log
     in the last release
 
 
-Please find the complete change log [here](https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG).
+Please find the complete change log
+<a href="https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG">here</a>.
