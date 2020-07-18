@@ -432,7 +432,6 @@ count(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
 static Py_ssize_t
 findfirst(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
 {
-    Py_ssize_t j;
     Py_ssize_t i;
 
     assert(0 <= start && start <= self->nbits);
@@ -449,12 +448,12 @@ findfirst(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
         const char c = vi ? 0x00 : 0xff;
 
         /* skip ahead by checking whole bytes */
-        for (j = (Py_ssize_t) (start / 8); j < BYTES(stop); j++)
-            if (c ^ self->ob_item[j])
+        for (i = start / 8; i < BYTES(stop); i++)
+            if (c ^ self->ob_item[i])
                 break;
 
-        if (start < BITS(j))
-            start = BITS(j);
+        if (start < BITS(i))
+            start = BITS(i);
     }
 
     /* fine grained search */
