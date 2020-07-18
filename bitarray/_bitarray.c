@@ -332,30 +332,25 @@ invert(bitarrayobject *self)
         self->ob_item[i] = ~self->ob_item[i];
 }
 
-/* repeat self n times (negative n is treated as 0) */
+/* repeat self count times (negative n is treated as 0) */
 static int
-repeat(bitarrayobject *self, Py_ssize_t n)
+repeat(bitarrayobject *self, Py_ssize_t count)
 {
     Py_ssize_t nbits, i;
 
-    if (n <= 0)
-        n = 0;
+    if (count < 0)
+        count = 0;
     nbits = self->nbits;
 
-    if (sizeof(void *) == 4) {
-        /* On 32-bit systems we explictly check for overflow before resizing.
-           There are many things that can go wrong otherwise.  */
-        long long tmp = ((long long) n) * ((long long) nbits);
-        if (tmp > PY_SSIZE_T_MAX) {
-            PyErr_Format(PyExc_OverflowError, "bitarray repeat %llu", tmp);
-            return -1;
-        }
+    if (count > 0 && nbits > PY_SSIZE_T_MAX / count) {
+        PyErr_SetString(PyExc_OverflowError, "bitarray repeat");
+        return -1;
     }
 
-    if (resize(self, n * nbits) < 0)
+    if (resize(self, count * nbits) < 0)
         return -1;
 
-    for (i = 1; i < n; i++)
+    for (i = 1; i < count; i++)
         copy_n(self, i * nbits, self, 0, nbits);
 
     return 0;
