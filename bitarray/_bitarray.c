@@ -342,21 +342,22 @@ repeat(bitarrayobject *self, Py_ssize_t n)
         n = 0;
     nbits = self->nbits;
 
+    if (sizeof(void *) == 4) {
+        /* On 32-bit systems we explictly check for overflow before resizing.
+           There are many things that can go wrong otherwise.  */
+        long long tmp = ((long long) n) * ((long long) nbits);
+        if (tmp > PY_SSIZE_T_MAX) {
+            PyErr_Format(PyExc_OverflowError, "bitarray repeat %llu", tmp);
+            return -1;
+        }
+    }
+
     if (resize(self, n * nbits) < 0)
         return -1;
 
-    if (n < 2 || nbits == 0)
-        /* the main reason we return here is because when nbits == 0
-           the overflow check below will fail */
-        return 0;
-
-    for (i = 1; i < n; i++) {
-        if (i * nbits < 0 || i * nbits >= self->nbits) {
-            PyErr_Format(PyExc_OverflowError, "bitarray repeat");
-            return -1;
-        }
+    for (i = 1; i < n; i++)
         copy_n(self, i * nbits, self, 0, nbits);
-    }
+
     return 0;
 }
 
@@ -689,7 +690,7 @@ unpack(bitarrayobject *self, char zero, char one, const char *fmt)
     Py_ssize_t i;
     char *str;
 
-    if (self->nbits > PY_SSIZE_T_MAX) {
+    if (self->nbits > PY_SSIZE_T_MAX) { /* XXX cannot happen */
         PyErr_SetString(PyExc_OverflowError, "bitarray too large to unpack");
         return NULL;
     }
