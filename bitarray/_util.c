@@ -23,7 +23,7 @@
 #endif /* !STDC_HEADERS */
 
 
-typedef long long int idx_t;
+#define idx_t  Py_ssize_t    /* was: typedef long long int idx_t; */
 
 typedef struct {
     PyObject_VAR_HEAD
