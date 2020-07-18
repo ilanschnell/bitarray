@@ -738,7 +738,7 @@ IntBool_AsInt(PyObject *v)
 
     if (x < 0 || x > 1) {
         PyErr_SetString(PyExc_ValueError,
-                        "integer value between 0 and 1 expected");
+                        "integer 0 and 1 expected");
         return -1;
     }
     return (int) x;
@@ -1806,12 +1806,15 @@ delslice(bitarrayobject *self, PyObject *slice)
             return -1;
         return 0;
     }
+
+    assert(step > 1);
     /* this is the only complicated part when step > 1 */
-    for (i = j = start; i < self->nbits; i++)
+    for (i = j = start; i < self->nbits; i++) {
         if ((i - start) % step != 0 || i >= stop) {
             setbit(self, j, GETBIT(self, i));
             j++;
         }
+    }
     if (resize(self, self->nbits - slicelength) < 0)
         return -1;
     return 0;
