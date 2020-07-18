@@ -928,9 +928,9 @@ tests.append(SpecialMethodTests)
 
 # ---------------------------------------------------------------------------
 
-class NumberTests(unittest.TestCase, Util):
+class SequenceMethodsTests(unittest.TestCase, Util):
 
-    def test_add(self):
+    def test_concat(self):
         c = bitarray('001') + bitarray('110')
         self.assertEQUAL(c, bitarray('001110'))
 
@@ -949,11 +949,12 @@ class NumberTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertRaises(TypeError, a.__add__, 42)
 
-
-    def test_iadd(self):
+    def test_inplace_concat(self):
         c = bitarray('001')
         c += bitarray('110')
-        self.assertEQUAL(c, bitarray('001110'))
+        self.assertEqual(c, bitarray('001110'))
+        c += '111'
+        self.assertEqual(c, bitarray('001110111'))
 
         for a in self.randombitarrays():
             for b in self.randombitarrays():
@@ -969,8 +970,7 @@ class NumberTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertRaises(TypeError, a.__iadd__, 42)
 
-
-    def test_mul(self):
+    def test_repeat(self):
         for c in [0 * bitarray(),
                   0 * bitarray('1001111'),
                   -1 * bitarray('100110'),
@@ -997,8 +997,7 @@ class NumberTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertRaises(TypeError, a.__mul__, None)
 
-
-    def test_imul(self):
+    def test_inplace_repeat(self):
         c = bitarray('1101110011')
         idc = id(c)
         c *= 0
@@ -1021,8 +1020,62 @@ class NumberTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertRaises(TypeError, a.__imul__, None)
 
+    def test_contains_simple(self):
+        a = bitarray()
+        self.assertFalse(False in a)
+        self.assertFalse(True in a)
+        self.assertTrue(bitarray() in a)
+        a.append(True)
+        self.assertTrue(True in a)
+        self.assertFalse(False in a)
+        a = bitarray([False])
+        self.assertTrue(False in a)
+        self.assertFalse(True in a)
+        a.append(True)
+        self.assertTrue(0 in a)
+        self.assertTrue(1 in a)
+        if not is_py3k:
+            self.assertTrue(long(0) in a)
+            self.assertTrue(long(1) in a)
 
-tests.append(NumberTests)
+    def test_contains_errors(self):
+        a = bitarray()
+        self.assertEqual(a.__contains__(1), False)
+        a.append(1)
+        self.assertEqual(a.__contains__(1), True)
+        a = bitarray('0011')
+        self.assertEqual(a.__contains__(bitarray('01')), True)
+        self.assertEqual(a.__contains__(bitarray('10')), False)
+        self.assertRaises(TypeError, a.__contains__, 'asdf')
+        self.assertRaises(ValueError, a.__contains__, 2)
+        self.assertRaises(ValueError, a.__contains__, -1)
+        if not is_py3k:
+            self.assertRaises(ValueError, a.__contains__, long(2))
+
+    def test_contains_range(self):
+        for n in range(2, 50):
+            a = bitarray(n)
+            a.setall(0)
+            self.assertTrue(False in a)
+            self.assertFalse(True in a)
+            a[randint(0, n - 1)] = 1
+            self.assertTrue(True in a)
+            self.assertTrue(False in a)
+            a.setall(1)
+            self.assertTrue(True in a)
+            self.assertFalse(False in a)
+            a[randint(0, n - 1)] = 0
+            self.assertTrue(True in a)
+            self.assertTrue(False in a)
+
+    def test_contains_explicit(self):
+        a = bitarray('011010000001')
+        for s, r in [('', True), ('1', True), ('11', True), ('111', False),
+                     ('011', True), ('0001', True), ('00011', False)]:
+            self.assertEqual(bitarray(s) in a, r)
+
+
+tests.append(SequenceMethodsTests)
 
 # ---------------------------------------------------------------------------
 
@@ -1110,67 +1163,6 @@ class BitwiseTests(unittest.TestCase, Util):
 
 
 tests.append(BitwiseTests)
-
-# ---------------------------------------------------------------------------
-
-class SequenceTests(unittest.TestCase, Util):
-
-    def test_contains1(self):
-        a = bitarray()
-        self.assertFalse(False in a)
-        self.assertFalse(True in a)
-        self.assertTrue(bitarray() in a)
-        a.append(True)
-        self.assertTrue(True in a)
-        self.assertFalse(False in a)
-        a = bitarray([False])
-        self.assertTrue(False in a)
-        self.assertFalse(True in a)
-        a.append(True)
-        self.assertTrue(0 in a)
-        self.assertTrue(1 in a)
-        if not is_py3k:
-            self.assertTrue(long(0) in a)
-            self.assertTrue(long(1) in a)
-
-    def test_contains2(self):
-        a = bitarray()
-        self.assertEqual(a.__contains__(1), False)
-        a.append(1)
-        self.assertEqual(a.__contains__(1), True)
-        a = bitarray('0011')
-        self.assertEqual(a.__contains__(bitarray('01')), True)
-        self.assertEqual(a.__contains__(bitarray('10')), False)
-        self.assertRaises(TypeError, a.__contains__, 'asdf')
-        self.assertRaises(ValueError, a.__contains__, 2)
-        self.assertRaises(ValueError, a.__contains__, -1)
-        if not is_py3k:
-            self.assertRaises(ValueError, a.__contains__, long(2))
-
-    def test_contains3(self):
-        for n in range(2, 50):
-            a = bitarray(n)
-            a.setall(0)
-            self.assertTrue(False in a)
-            self.assertFalse(True in a)
-            a[randint(0, n - 1)] = 1
-            self.assertTrue(True in a)
-            self.assertTrue(False in a)
-            a.setall(1)
-            self.assertTrue(True in a)
-            self.assertFalse(False in a)
-            a[randint(0, n - 1)] = 0
-            self.assertTrue(True in a)
-            self.assertTrue(False in a)
-
-    def test_contains4(self):
-        a = bitarray('011010000001')
-        for s, r in [('', True), ('1', True), ('11', True), ('111', False),
-                     ('011', True), ('0001', True), ('00011', False)]:
-            self.assertEqual(bitarray(s) in a, r)
-
-
-tests.append(SequenceTests)
 
 # ---------------------------------------------------------------------------
 
