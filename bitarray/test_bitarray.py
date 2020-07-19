@@ -620,6 +620,9 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('1010110'))
         del a[::3] #                  ^  ^  ^
         self.assertEqual(a, bitarray('0111'))
+        a = bitarray('10101100' '101101111')
+        del a[5:-3:3] #    ^     ^  ^
+        self.assertEqual(a, bitarray('1010100' '0101111'))
         a = bitarray('10101100' '1011011')
         del a[:-9:-2] #          ^ ^ ^ ^
         self.assertEqual(a, bitarray('10101100' '011'))
