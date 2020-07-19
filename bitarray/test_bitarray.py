@@ -137,11 +137,9 @@ class TestsModuleFunctions(unittest.TestCase, Util):
             self.assertIsInstance(endian, str)
 
     def test_bits2bytes(self):
-        for arg in ['foo', [], None, {}]:
+        for arg in 'foo', [], None, {}, 187.0, -4.0:
             self.assertRaises(TypeError, bits2bytes, arg)
 
-        self.assertRaises(TypeError, bits2bytes, 187.0)
-        self.assertRaises(TypeError, bits2bytes, -4.0)
         self.assertRaises(TypeError, bits2bytes)
         self.assertRaises(TypeError, bits2bytes, 1, 2)
 
