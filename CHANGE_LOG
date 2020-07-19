@@ -5,8 +5,8 @@
     We used to have a special 64bit index type for all architectures, but
     this prevented us from using Python's sequence, mapping and number
     methods, and made those method lookups slow.
-  * speedup item assignment to slice object when step size = 1 (when
-    alignment allows `memmove()`)
+  * speedup slice operations when step size = 1 (if alignment allows
+    copying whole bytes)
 
 
 2020-07-15   1.4.2:
