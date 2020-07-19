@@ -1646,7 +1646,6 @@ bitarray_inplace_concat(bitarrayobject *self, PyObject *other)
     return (PyObject *) self;
 }
 
-
 static PyObject *
 bitarray_inplace_repeat(bitarrayobject *self, Py_ssize_t n)
 {
@@ -1766,7 +1765,7 @@ setslice(bitarrayobject *self, PyObject *slice, PyObject *value)
         if (step == 1) {
             setrange(self, start, start + slicelength, vi);
         }
-        else {
+        else {  /* step != 1 */
             for (i = 0, j = start; i < slicelength; i++, j += step)
                 setbit(self, j, vi);
         }
