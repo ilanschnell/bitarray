@@ -328,7 +328,7 @@ invert(bitarrayobject *self)
         self->ob_item[i] = ~self->ob_item[i];
 }
 
-/* repeat self count times (negative n is treated as 0) */
+/* repeat self 'count' times (negative 'count' is treated as 0) */
 static int
 repeat(bitarrayobject *self, Py_ssize_t count)
 {
@@ -445,19 +445,19 @@ findfirst(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
         const char c = vi ? 0x00 : 0xff;
 
         /* skip ahead by checking whole bytes */
-        for (i = start / 8; i < BYTES(stop); i++)
+        for (i = start / 8; i < BYTES(stop); i++) {
             if (c ^ self->ob_item[i])
                 break;
-
+        }
         if (start < BITS(i))
             start = BITS(i);
     }
 
     /* fine grained search */
-    for (i = start; i < stop; i++)
+    for (i = start; i < stop; i++) {
         if (GETBIT(self, i) == vi)
             return i;
-
+    }
     return -1;
 }
 
