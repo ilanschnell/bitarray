@@ -186,18 +186,14 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
 static PyObject *
 newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
 {
+    const Py_ssize_t nbytes = BYTES(nbits);
     bitarrayobject *obj;
-    Py_ssize_t nbytes;
 
-    if (nbits < 0) {
-        PyErr_SetString(PyExc_OverflowError, "newbitarrayobject");
-        return NULL;
-    }
+    assert(nbits >= 0);
     obj = (bitarrayobject *) type->tp_alloc(type, 0);
     if (obj == NULL)
         return NULL;
 
-    nbytes = BYTES(nbits);
     Py_SIZE(obj) = nbytes;
     if (nbytes == 0) {
         obj->ob_item = NULL;
@@ -685,7 +681,7 @@ unpack(bitarrayobject *self, char zero, char one, const char *fmt)
     Py_ssize_t i;
     char *str;
 
-    if (self->nbits > PY_SSIZE_T_MAX) { /* XXX cannot happen */
+    if (self->nbits > PY_SSIZE_T_MAX / 8) {
         PyErr_SetString(PyExc_OverflowError, "bitarray too large to unpack");
         return NULL;
     }
@@ -1432,7 +1428,7 @@ bitarray_repr(bitarrayobject *self)
         return Py_BuildValue("s", "bitarray()");
 
     strsize = self->nbits + 12;  /* 12 is the length of "bitarray('')" */
-    if (strsize > PY_SSIZE_T_MAX) {
+    if (strsize > PY_SSIZE_T_MAX / 8) {
         PyErr_SetString(PyExc_OverflowError,
                         "bitarray too large to represent");
         return NULL;
