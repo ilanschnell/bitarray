@@ -5,8 +5,8 @@
     which is 256 MBytes.  We used to have a special 64bit index type
     for all architectures, but this prevented us from using Python's
     sequence, mapping and number methods.
-  * speedup item assignment to slice objects when the step size
-    is one (when alignment allows `memmove()`)
+  * speedup item assignment to slice object when step size = 1 (when
+    alignment allows `memmove()`)
 
 
 2020-07-15   1.4.2:
