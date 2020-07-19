@@ -652,13 +652,13 @@ Change log
 
 2020-XX-XX   1.5.0:
 
-  * Use `Py_ssize_t` for as bitarray index, this means that on 32bit
-    systems, the maximun number of elements in a bitarray is 2 GBits,
-    which is 256 MBytes.  We used to have a special 64bit index type
-    for all architectures, but this prevented us from using Python's
-    sequence, mapping and number methods.
-  * speedup item assignment to slice objects when the step size
-    is one (when alignment allows `memmove()`)
+  * Use `Py_ssize_t` for as bitarray index.  This means that on 32bit
+    systems, the maximun number of elements in a bitarray is 2 GBits.
+    We used to have a special 64bit index type for all architectures, but
+    this prevented us from using Python's sequence, mapping and number
+    methods, and made those method lookups slow.
+  * speedup item assignment to slice object when step size = 1 (when
+    alignment allows `memmove()`)
 
 
 *1.4.2* (2020-07-15):
