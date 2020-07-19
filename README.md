@@ -27,8 +27,7 @@ Key features
  * Sequential search
  * Pickling and unpickling of bitarray objects.
  * Bitarray objects support the buffer protocol (Python 2.7 and above)
- * On 32-bit systems, a bitarray object can contain up to 2^34 elements,
-   that is 16 Gbits (on 64-bit machines up to 2^63 elements in theory).
+ * On 32-bit systems, a bitarray object can contain up to 2 Gbits.
 
 
 Installation
@@ -36,8 +35,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.4.3.tar.gz
-    $ cd bitarray-1.4.3
+    $ tar xzf bitarray-1.5.0.tar.gz
+    $ cd bitarray-1.5.0
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -46,7 +45,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.4.3
+    bitarray version: 1.5.0
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
@@ -655,7 +654,7 @@ Change log
 
   * Use `Py_ssize_t` for as bitarray index, this means that on 32bit
     systems, the maximun number of elements in a bitarray is 2 GBits,
-    which is 128 MBytes.  We used to have a special 64bit index type
+    which is 256 MBytes.  We used to have a special 64bit index type
     for all architectures, but this prevented us from using Python's
     sequence, mapping and number methods.
   * speedup item assignment to slice objects when the step size
