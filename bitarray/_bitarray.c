@@ -1682,11 +1682,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
             return NULL;
         if (i < 0)
             i += self->nbits;
-        if (i < 0 || i >= self->nbits) {
-            PyErr_SetString(PyExc_IndexError, "bitarray index out of range");
-            return NULL;
-        }
-        return PyBool_FromLong(GETBIT(self, i));
+        return bitarray_item(self, i);
     }
 
     if (PySlice_Check(item)) {
@@ -1833,15 +1829,7 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
             return -1;
         if (i < 0)
             i += self->nbits;
-        if (i < 0 || i >= self->nbits) {
-            PyErr_SetString(PyExc_IndexError,
-                            "bitarray assignment index out of range");
-            return -1;
-        }
-        if (value == NULL)
-            return delete_n(self, i, 1);
-        else
-            return set_item(self, i, value);
+        return bitarray_ass_item(self, i, value);
     }
 
     if (PySlice_Check(item)) {
