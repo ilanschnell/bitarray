@@ -1836,24 +1836,17 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
                             "bitarray assignment index out of range");
             return -1;
         }
-        if (value == NULL) {
-            if (delete_n(self, i, 1) < 0)
-                return -1;
-        }
-        else {
+        if (value == NULL)
+            return delete_n(self, i, 1);
+        else
             return set_item(self, i, value);
-        }
     }
 
     if (PySlice_Check(item)) {
-        if (value == NULL) {
-            if (delslice(self, item) < 0)
-                return -1;
-        }
-        else {
-            if (setslice(self, item, value) < 0)
-                return -1;
-        }
+        if (value == NULL)
+            return delslice(self, item);
+        else
+            return setslice(self, item, value);
     }
     return 0;
 }
