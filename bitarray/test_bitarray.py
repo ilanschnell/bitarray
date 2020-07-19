@@ -633,14 +633,12 @@ class SliceTests(unittest.TestCase, Util):
             for dum in range(10):
                 step = self.rndsliceidx(la) or None
                 s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
-                c = bitarray(a)
-                d = c
+                c = a.copy()
                 del c[s]
-                self.assertTrue(c is d)
                 self.check_obj(c)
-                cc = a.tolist()
-                del cc[s]
-                self.assertEQUAL(c, bitarray(cc, endian=c.endian()))
+                c_lst = a.tolist()
+                del c_lst[s]
+                self.assertEQUAL(c, bitarray(c_lst, endian=c.endian()))
 
 
 tests.append(SliceTests)
