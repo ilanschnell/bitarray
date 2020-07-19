@@ -1799,6 +1799,10 @@ delslice(bitarrayobject *self, PyObject *slice)
         start = stop + step * (slicelength - 1) - 1;
         step = -step;
     }
+    assert(step > 0 && start <= stop && slicelength > 0);
+    assert(start >= 0 && start < self->nbits);
+    assert(stop >= 0 && stop <= self->nbits);
+
     if (step == 1) {
         assert(stop - start == slicelength);
         if (delete_n(self, start, slicelength) < 0)
@@ -1806,7 +1810,6 @@ delslice(bitarrayobject *self, PyObject *slice)
         return 0;
     }
 
-    assert(step > 1);
     /* this is the only complicated part when step > 1 */
     for (i = j = start; i < self->nbits; i++) {
         if ((i - start) % step != 0 || i >= stop) {
