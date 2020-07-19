@@ -3,6 +3,8 @@ Tests for bitarray
 
 Author: Ilan Schnell
 """
+from __future__ import absolute_import
+
 import os
 import sys
 import unittest

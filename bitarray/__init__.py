@@ -8,6 +8,8 @@ Please find a description of this package at:
 
 Author: Ilan Schnell
 """
+from __future__ import absolute_import
+
 from bitarray._bitarray import (bitarray, bitdiff, _sysinfo,
                                 get_default_endian, _set_default_endian,
                                 __version__)

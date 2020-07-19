@@ -5,6 +5,8 @@
 """
 Useful utilities for working with bitarrays.
 """
+from __future__ import absolute_import
+
 import sys
 import heapq
 import binascii
