@@ -1612,21 +1612,23 @@ bitarray_ass_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
         return set_item(self, i, value);
 }
 
+/* return 1 if 'item' (which can be an int or bitarray) is in self,
+   0 otherwise, and -1 on error */
 static int
-bitarray_contains(bitarrayobject *self, PyObject *x)
+bitarray_contains(bitarrayobject *self, PyObject *item)
 {
     int res;
 
-    if (IS_INT_OR_BOOL(x)) {
+    if (IS_INT_OR_BOOL(item)) {
         int vi;
 
-        vi = IntBool_AsInt(x);
+        vi = IntBool_AsInt(item);
         if (vi < 0)
             return -1;
         res = findfirst(self, vi, 0, self->nbits) >= 0;
     }
-    else if (bitarray_Check(x)) {
-        res = search(self, (bitarrayobject *) x, 0) >= 0;
+    else if (bitarray_Check(item)) {
+        res = search(self, (bitarrayobject *) item, 0) >= 0;
     }
     else {
         PyErr_SetString(PyExc_TypeError, "bitarray or bool expected");
