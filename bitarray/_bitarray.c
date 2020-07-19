@@ -1784,7 +1784,7 @@ setslice(bitarrayobject *self, PyObject *slice, PyObject *value)
 static int
 delslice(bitarrayobject *self, PyObject *slice)
 {
-    Py_ssize_t start, stop, step, slicelength, i, j;
+    Py_ssize_t start, stop, step, slicelength;
 
     assert(PySlice_Check(slice));
     if (PySlice_GetIndicesEx(slice, self->nbits,
@@ -1805,21 +1805,19 @@ delslice(bitarrayobject *self, PyObject *slice)
 
     if (step == 1) {
         assert(stop - start == slicelength);
-        if (delete_n(self, start, slicelength) < 0)
-            return -1;
-        return 0;
+        return delete_n(self, start, slicelength);
     }
-
-    /* this is the only complicated part when step > 1 */
-    for (i = j = start; i < self->nbits; i++) {
-        if ((i - start) % step != 0 || i >= stop) {
-            setbit(self, j, GETBIT(self, i));
-            j++;
+    else {
+        Py_ssize_t i, j;
+        /* Now step > 1.  We set the items not to be removed. */
+        for (i = j = start; i < self->nbits; i++) {
+            if ((i - start) % step != 0 || i >= stop) {
+                setbit(self, j, GETBIT(self, i));
+                j++;
+            }
         }
+        return resize(self, self->nbits - slicelength);
     }
-    if (resize(self, self->nbits - slicelength) < 0)
-        return -1;
-    return 0;
 }
 
 static int
