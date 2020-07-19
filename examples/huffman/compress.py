@@ -5,6 +5,7 @@ compress and uncompress files (text or binary).
 import os
 from optparse import OptionParser
 from collections import Counter
+
 from bitarray import bitarray
 from bitarray.util import huffman_code
 
@@ -38,7 +39,7 @@ def decode(filename):
                 u = int(b)
                 break
             i = int(sym, 16)
-            code[i] = bitarray(b)
+            code[i] = bitarray(b.decode())
         a = bitarray(endian='little')
         a.fromfile(fi)
 
