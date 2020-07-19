@@ -258,7 +258,7 @@ Raises `ValueError`, when n exceeds the `a.count()`.");
 static PyObject *
 r_index(PyObject *module, PyObject *args)
 {
-    PyObject *a, *x = Py_True;
+    PyObject *x = Py_True, *a;
     Py_ssize_t i;
     int vi;
 
@@ -298,8 +298,8 @@ enum kernel_type {
 static PyObject *
 two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
 {
-    PyObject *a, *b;
     Py_ssize_t res = 0, nbytes, i;
+    PyObject *a, *b;
     unsigned char c;
 
     if (!PyArg_ParseTuple(args, format, &a, &b))

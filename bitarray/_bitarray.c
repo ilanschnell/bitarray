@@ -322,7 +322,8 @@ setunused(bitarrayobject *self)
 static void
 invert(bitarrayobject *self)
 {
-    Py_ssize_t nbytes = Py_SIZE(self), i;
+    const Py_ssize_t nbytes = Py_SIZE(self);
+    Py_ssize_t i;
 
     for (i = 0; i < nbytes; i++)
         self->ob_item[i] = ~self->ob_item[i];
@@ -332,11 +333,11 @@ invert(bitarrayobject *self)
 static int
 repeat(bitarrayobject *self, Py_ssize_t count)
 {
-    Py_ssize_t nbits, i;
+    const Py_ssize_t nbits = self->nbits;
+    Py_ssize_t i;
 
     if (count < 0)
         count = 0;
-    nbits = self->nbits;
 
     if (count > 0 && nbits > PY_SSIZE_T_MAX / count) {
         PyErr_SetString(PyExc_OverflowError, "bitarray repeat");
@@ -367,6 +368,7 @@ setrange(bitarrayobject *self, Py_ssize_t start, Py_ssize_t stop, int val)
     if (stop >= start + 8) {
         const Py_ssize_t byte_start = BYTES(start);
         const Py_ssize_t byte_stop = stop / 8;
+
         for (i = start; i < BITS(byte_start); i++)
             setbit(self, i, val);
         memset(self->ob_item + byte_start, val ? 0xff : 0x00,
@@ -395,7 +397,7 @@ static unsigned char bitcount_lookup[256] = {
 static Py_ssize_t
 count(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
 {
-    Py_ssize_t i, res = 0;
+    Py_ssize_t res = 0, i;
 
     assert(0 <= start && start <= self->nbits);
     assert(0 <= stop && stop <= self->nbits);
@@ -508,8 +510,8 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
 {
     /* We have to store the sizes before we resize, and since
        other may be self, we also need to store other->nbits. */
-    Py_ssize_t self_nbits = self->nbits;
-    Py_ssize_t other_nbits = other->nbits;
+    const Py_ssize_t self_nbits = self->nbits;
+    const Py_ssize_t other_nbits = other->nbits;
 
     if (other_nbits == 0)
         return 0;
@@ -547,7 +549,7 @@ extend_list(bitarrayobject *self, PyObject *list)
     Py_ssize_t n, i;
 
     assert(PyList_Check(list));
-    n = PyList_Size(list);
+    n = PyList_GET_SIZE(list);
     if (n == 0)
         return 0;
 
@@ -555,7 +557,7 @@ extend_list(bitarrayobject *self, PyObject *list)
         return -1;
 
     for (i = 0; i < n; i++) {
-        item = PyList_GetItem(list, i);
+        item = PyList_GET_ITEM(list, i);
         if (item == NULL)
             return -1;
         if (set_item(self, self->nbits - n + i, item) < 0)
@@ -571,7 +573,7 @@ extend_tuple(bitarrayobject *self, PyObject *tuple)
     Py_ssize_t n, i;
 
     assert(PyTuple_Check(tuple));
-    n = PyTuple_Size(tuple);
+    n = PyTuple_GET_SIZE(tuple);
     if (n == 0)
         return 0;
 
@@ -579,7 +581,7 @@ extend_tuple(bitarrayobject *self, PyObject *tuple)
         return -1;
 
     for (i = 0; i < n; i++) {
-        item = PyTuple_GetItem(tuple, i);
+        item = PyTuple_GET_ITEM(tuple, i);
         if (item == NULL)
             return -1;
         if (set_item(self, self->nbits - n + i, item) < 0)
@@ -596,7 +598,7 @@ extend_01(bitarrayobject *self, PyObject *bytes)
     int vi = 0;
 
     assert(PyBytes_Check(bytes));
-    nbytes = PyBytes_Size(bytes);
+    nbytes = PyBytes_GET_SIZE(bytes);
     if (nbytes == 0)
         return 0;
 
@@ -819,7 +821,7 @@ static PyObject *
 bitarray_index(bitarrayobject *self, PyObject *args)
 {
     PyObject *x;
-    Py_ssize_t i, start = 0, stop = self->nbits;
+    Py_ssize_t start = 0, stop = self->nbits, i;
     int vi;
 
     if (!PyArg_ParseTuple(args, "O|nn:index", &x, &start, &stop))
@@ -867,7 +869,7 @@ static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
     PyObject *list = NULL;   /* list of matching positions to be returned */
-    PyObject *x, *item = NULL;
+    PyObject *item = NULL, *x;
     Py_ssize_t limit = -1;
     bitarrayobject *xa;
     Py_ssize_t p;
@@ -996,8 +998,8 @@ Returns True when any bit in the array is True.");
 static PyObject *
 bitarray_reduce(bitarrayobject *self)
 {
+    const Py_ssize_t nbytes = Py_SIZE(self);
     PyObject *dict, *repr = NULL, *result = NULL;
-    Py_ssize_t nbytes = Py_SIZE(self);
     char *data;
 
     dict = PyObject_GetAttrString((PyObject *) self, "__dict__");
@@ -1155,14 +1157,14 @@ Set all bits in the bitarray to `bool(value)`.");
 static PyObject *
 bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
-    Py_ssize_t n, n0, n1;
-    int reverse = 0;
     static char *kwlist[] = {"reverse", NULL};
+    const Py_ssize_t n = self->nbits;
+    Py_ssize_t n0, n1;
+    int reverse = 0;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:sort", kwlist, &reverse))
         return NULL;
 
-    n = self->nbits;
     n1 = count(self, 1, 0, n);
 
     if (reverse) {
@@ -1321,8 +1323,8 @@ EOFError is raised (but the available data is still read and appended.");
 static PyObject *
 bitarray_tofile(bitarrayobject *self, PyObject *f)
 {
-    Py_ssize_t size, nbytes = Py_SIZE(self);
-    Py_ssize_t offset;
+    const Py_ssize_t nbytes = Py_SIZE(self);
+    Py_ssize_t size, offset;
     PyObject *res;
 
     setunused(self);
@@ -1364,8 +1366,8 @@ bitarray object.");
 static PyObject *
 bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
-    char zero = 0x00, one = 0xff;
     static char *kwlist[] = {"zero", "one", NULL};
+    char zero = 0x00, one = 0xff;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|cc:unpack", kwlist,
                                      &zero, &one))
@@ -1391,7 +1393,7 @@ bitarray_pack(bitarrayobject *self, PyObject *bytes)
         PyErr_SetString(PyExc_TypeError, "bytes expected");
         return NULL;
     }
-    nbytes = PyBytes_Size(bytes);
+    nbytes = PyBytes_GET_SIZE(bytes);
     if (nbytes == 0)
         Py_RETURN_NONE;
 
@@ -1671,9 +1673,9 @@ static PySequenceMethods bitarray_as_sequence = {
 static PyObject *
 bitarray_subscr(bitarrayobject *self, PyObject *item)
 {
-    Py_ssize_t i;
-
     if (PyIndex_Check(item)) {
+        Py_ssize_t i;
+
         i = PyNumber_AsSsize_t(item, PyExc_IndexError);
         if (i == -1 && PyErr_Occurred())
             return NULL;
@@ -1687,8 +1689,8 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
     }
 
     if (PySlice_Check(item)) {
+        Py_ssize_t start, stop, step, slicelength, i, j;
         PyObject *res;
-        Py_ssize_t start, stop, step, slicelength, j;
 
         if (PySlice_GetIndicesEx(item, self->nbits,
                                  &start, &stop, &step, &slicelength) < 0) {
@@ -1822,9 +1824,9 @@ delslice(bitarrayobject *self, PyObject *slice)
 static int
 bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
 {
-    Py_ssize_t i;
-
     if (PyIndex_Check(item)) {
+        Py_ssize_t i;
+
         i = PyNumber_AsSsize_t(item, PyExc_IndexError);
         if (i == -1 && PyErr_Occurred())
             return -1;
@@ -1885,8 +1887,9 @@ enum op_type {
 static int
 bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
 {
+    const Py_ssize_t nbytes = Py_SIZE(self);
     bitarrayobject *other;
-    Py_ssize_t n = Py_SIZE(self), i;
+    Py_ssize_t i;
 
     if (!bitarray_Check(arg)) {
         PyErr_SetString(PyExc_TypeError,
@@ -1903,15 +1906,15 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
     setunused(other);
     switch (oper) {
     case OP_and:
-        for (i = 0; i < n; i++)
+        for (i = 0; i < nbytes; i++)
             self->ob_item[i] &= other->ob_item[i];
         break;
     case OP_or:
-        for (i = 0; i < n; i++)
+        for (i = 0; i < nbytes; i++)
             self->ob_item[i] |= other->ob_item[i];
         break;
     case OP_xor:
-        for (i = 0; i < n; i++)
+        for (i = 0; i < nbytes; i++)
             self->ob_item[i] ^= other->ob_item[i];
         break;
     default:                    /* cannot happen */
@@ -2011,8 +2014,8 @@ static PyNumberMethods bitarray_as_number = {
 static int
 check_codedict(PyObject *codedict)
 {
-    PyObject *key, *value;
-    Py_ssize_t pos = 0;
+    PyObject *unused_key, *value;
+    Py_ssize_t unused_pos = 0;
 
     if (!PyDict_Check(codedict)) {
         PyErr_SetString(PyExc_TypeError, "dict expected");
@@ -2022,7 +2025,7 @@ check_codedict(PyObject *codedict)
         PyErr_SetString(PyExc_ValueError, "prefix code dict empty");
         return -1;
     }
-    while (PyDict_Next(codedict, &pos, &key, &value)) {
+    while (PyDict_Next(codedict, &unused_pos, &unused_key, &value)) {
         if (!bitarray_Check(value)) {
             PyErr_SetString(PyExc_TypeError,
                             "bitarray expected for dict value");
@@ -2596,7 +2599,7 @@ endian_from_string(const char* string)
 static PyObject *
 bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    PyObject *a;  /* to be returned in some cases */
+    PyObject *res;  /* to be returned in some cases */
     PyObject *initial = NULL;
     char *endian_str = NULL;
     int endian;
@@ -2633,14 +2636,14 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     /* from bitarray itself */
     if (bitarray_Check(initial)) {
 #define np  ((bitarrayobject *) initial)
-        a = newbitarrayobject(type, np->nbits,
-                              endian_str == NULL ? np->endian : endian);
-        if (a == NULL)
+        res = newbitarrayobject(type, np->nbits,
+                                endian_str == NULL ? np->endian : endian);
+        if (res == NULL)
             return NULL;
-        memcpy(((bitarrayobject *) a)->ob_item, np->ob_item,
+        memcpy(((bitarrayobject *) res)->ob_item, np->ob_item,
                (size_t) Py_SIZE(np));
 #undef np
-        return a;
+        return res;
     }
 
     /* bytes (for pickling) */
@@ -2662,26 +2665,26 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
                              "did not expect 0x0%d", (int) data[0]);
                 return NULL;
             }
-            a = newbitarrayobject(type,
+            res = newbitarrayobject(type,
                                   BITS(nbytes - 1) - ((Py_ssize_t) data[0]),
                                   endian);
-            if (a == NULL)
+            if (res == NULL)
                 return NULL;
-            memcpy(((bitarrayobject *) a)->ob_item, data + 1,
+            memcpy(((bitarrayobject *) res)->ob_item, data + 1,
                    (size_t) nbytes - 1);
-            return a;
+            return res;
         }
     }
 
     /* leave remaining type dispatch to the extend method */
-    a = newbitarrayobject(type, 0, endian);
-    if (a == NULL)
+    res = newbitarrayobject(type, 0, endian);
+    if (res == NULL)
         return NULL;
-    if (extend_dispatch((bitarrayobject *) a, initial) < 0) {
-        Py_DECREF(a);
+    if (extend_dispatch((bitarrayobject *) res, initial) < 0) {
+        Py_DECREF(res);
         return NULL;
     }
-    return a;
+    return res;
 }
 
 static PyObject *
