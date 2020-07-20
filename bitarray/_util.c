@@ -93,16 +93,16 @@ static unsigned char bitcount_lookup[256] = {
 /*********** end of code basically copied from _bitarray.c *************/
 
 /* set using the Python module function _set_babt() */
-static PyObject *bitarray_type = NULL;
+static PyObject *bitarray_type_obj = NULL;
 
 /* Return 1 if obj is a bitarray, 0 otherwise.
    Note that this is implemented differently in _bitarray.c */
 static int
 bitarray_Check(PyObject *obj)
 {
-    if (bitarray_type == NULL)
-        Py_FatalError("bitarray_type missing");
-    return PyObject_IsInstance(obj, bitarray_type);
+    if (bitarray_type_obj == NULL)
+        Py_FatalError("bitarray_type_obj missing");
+    return PyObject_IsInstance(obj, bitarray_type_obj);
 }
 
 /************ start of actual functionality in this module *************/
@@ -387,13 +387,16 @@ efficient since we can stop as soon as one mismatch is found, and no\n\
 intermediate bitarray object gets created.");
 
 
-/* set bitarray_type (bat) */
+/* set bitarray_type_obj (bato) */
 static PyObject *
-set_bat(PyObject *module, PyObject *obj)
+set_bato(PyObject *module, PyObject *obj)
 {
-    bitarray_type = obj;
+    bitarray_type_obj = obj;
     Py_RETURN_NONE;
 }
+
+PyDoc_STRVAR(set_bato_doc, "_set_babt(obj, /)");
+
 
 static PyMethodDef module_functions[] = {
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
@@ -402,7 +405,7 @@ static PyMethodDef module_functions[] = {
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
     {"subset",    (PyCFunction) subset,    METH_VARARGS, subset_doc},
-    {"_set_bat",  (PyCFunction) set_bat,   METH_O,       ""},
+    {"_set_bato", (PyCFunction) set_bato,  METH_O,       set_bato_doc},
     {NULL,        NULL}  /* sentinel */
 };
 
