@@ -221,7 +221,7 @@ count_n(PyObject *module, PyObject *args)
     PyObject *a;
     Py_ssize_t n, i;
 
-    if (!PyArg_ParseTuple(args, "OL:count_n", &a, &n))
+    if (!PyArg_ParseTuple(args, "On:count_n", &a, &n))
         return NULL;
 
     if (!bitarray_Check(a)) {
