@@ -19,7 +19,7 @@
 #ifdef IS_PY3K
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
 #else
-/* this macro was introduced in Python 3.3 */
+/* the Py_MIN macro was introduced in Python 3.3 */
 #define Py_MIN(x, y)  (((x) > (y)) ? (y) : (x))
 #define PySlice_GetIndicesEx(slice, len, start, stop, step, slicelength) \
     PySlice_GetIndicesEx(((PySliceObject *) slice),                      \
@@ -719,7 +719,7 @@ IntBool_AsInt(PyObject *v)
     if (PyBool_Check(v))
         return PyObject_IsTrue(v);
 
-#ifndef IS_PY3K
+#if PY_MAJOR_VERSION == 2
     if (PyInt_Check(v)) {
         x = PyInt_AsLong(v);
     }
@@ -1942,7 +1942,7 @@ static PyNumberMethods bitarray_as_number = {
     0,                          /* nb_add */
     0,                          /* nb_subtract */
     0,                          /* nb_multiply */
-#ifndef IS_PY3K
+#if PY_MAJOR_VERSION == 2
     0,                          /* nb_divide */
 #endif
     0,                          /* nb_remainder */
@@ -1958,20 +1958,20 @@ static PyNumberMethods bitarray_as_number = {
     (binaryfunc) bitarray_and,  /* nb_and */
     (binaryfunc) bitarray_xor,  /* nb_xor */
     (binaryfunc) bitarray_or,   /* nb_or */
-#ifndef IS_PY3K
+#if PY_MAJOR_VERSION == 2
     0,                          /* nb_coerce */
 #endif
     0,                          /* nb_int */
     0,                          /* nb_reserved (was nb_long) */
     0,                          /* nb_float */
-#ifndef IS_PY3K
+#if PY_MAJOR_VERSION == 2
     0,                          /* nb_oct */
     0,                          /* nb_hex */
 #endif
     0,                          /* nb_inplace_add */
     0,                          /* nb_inplace_subtract */
     0,                          /* nb_inplace_multiply */
-#ifndef IS_PY3K
+#if PY_MAJOR_VERSION == 2
     0,                          /* nb_inplace_divide */
 #endif
     0,                          /* nb_inplace_remainder */
@@ -1985,7 +1985,7 @@ static PyNumberMethods bitarray_as_number = {
     0,                          /* nb_true_divide */
     0,                          /* nb_inplace_floor_divide */
     0,                          /* nb_inplace_true_divide */
-#ifdef IS_PY3K
+#if PY_MAJOR_VERSION == 3
     0,                          /* nb_index */
 #endif
 };
