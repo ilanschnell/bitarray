@@ -23,8 +23,8 @@ __all__ = ['zeros', 'make_endian', 'rindex', 'strip', 'count_n',
            'ba2hex', 'hex2ba', 'ba2int', 'int2ba', 'huffman_code']
 
 
-# tell the _util extension what the bitarray base type is, such that it can
-# check for instances thereof when checking for bitarray type
+# tell the _util extension what the bitarray type object is, such that it
+# can check for instances thereof
 _set_bato(bitarray)
 
 _is_py2 = bool(sys.version_info[0] == 2)
