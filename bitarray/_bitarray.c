@@ -1808,10 +1808,8 @@ delslice(bitarrayobject *self, PyObject *slice)
         Py_ssize_t i, j;
         /* Now step > 1.  We set the items not to be removed. */
         for (i = j = start; i < self->nbits; i++) {
-            if ((i - start) % step != 0 || i >= stop) {
-                setbit(self, j, GETBIT(self, i));
-                j++;
-            }
+            if ((i - start) % step != 0 || i >= stop)
+                setbit(self, j++, GETBIT(self, i));
         }
         return resize(self, self->nbits - slicelength);
     }
