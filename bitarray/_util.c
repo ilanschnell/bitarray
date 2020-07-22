@@ -395,9 +395,6 @@ set_bato(PyObject *module, PyObject *obj)
     Py_RETURN_NONE;
 }
 
-PyDoc_STRVAR(set_bato_doc, "_set_babt(obj, /)");
-
-
 static PyMethodDef module_functions[] = {
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
     {"rindex",    (PyCFunction) r_index,   METH_VARARGS, rindex_doc},
@@ -405,7 +402,7 @@ static PyMethodDef module_functions[] = {
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
     {"subset",    (PyCFunction) subset,    METH_VARARGS, subset_doc},
-    {"_set_bato", (PyCFunction) set_bato,  METH_O,       set_bato_doc},
+    {"_set_bato", (PyCFunction) set_bato,  METH_O,       },
     {NULL,        NULL}  /* sentinel */
 };
 
