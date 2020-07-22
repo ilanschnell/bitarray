@@ -339,7 +339,9 @@ repeat(bitarrayobject *self, Py_ssize_t count)
         count = 0;
 
     if (count > 0 && nbits > PY_SSIZE_T_MAX / count) {
-        PyErr_SetString(PyExc_OverflowError, "bitarray repeat");
+        PyErr_Format(PyExc_OverflowError,
+                     "cannot repeat bitarray (of size %zd) %zd times",
+                     nbits, count);
         return -1;
     }
 
@@ -1709,9 +1711,9 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
     return NULL;
 }
 
-/* The two following functions (setslice and delslice) are used in
+/* The two following functions (setslice and delslice) are called from
    bitarray_ass_subscr.  Having this functionality inside bitarray_ass_subscr
-   would make the function too long and incomprehensible. */
+   would make the function incomprehensibly long. */
 
 /* set the elements in self, specified by slice, to value,
    which is either a bitarray or a boolean */
