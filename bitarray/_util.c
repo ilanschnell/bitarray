@@ -92,7 +92,7 @@ static unsigned char bitcount_lookup[256] = {
 
 /*********** end of code basically copied from _bitarray.c *************/
 
-/* set using the Python module function _set_babt() */
+/* set using the Python module function _set_bato() */
 static PyObject *bitarray_type_obj = NULL;
 
 /* Return 1 if obj is a bitarray, 0 otherwise.
