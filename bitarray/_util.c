@@ -95,14 +95,22 @@ static unsigned char bitcount_lookup[256] = {
 /* set using the Python module function _set_bato() */
 static PyObject *bitarray_type_obj = NULL;
 
-/* Return 1 if obj is a bitarray, 0 otherwise.
-   Note that this is implemented differently in _bitarray.c */
+/* Return 0 if obj is bitarray.  If not, returns -1 and sets an exception. */
 static int
-bitarray_Check(PyObject *obj)
+ensure_bitarray(PyObject *obj)
 {
+    int t;
+
     if (bitarray_type_obj == NULL)
         Py_FatalError("bitarray_type_obj missing");
-    return PyObject_IsInstance(obj, bitarray_type_obj);
+    t = PyObject_IsInstance(obj, bitarray_type_obj);
+    if (t < 0)
+        return -1;
+    if (t == 0) {
+        PyErr_SetString(PyExc_TypeError, "bitarray expected");
+        return -1;
+    }
+    return 0;
 }
 
 /************ start of actual functionality in this module *************/
@@ -224,10 +232,9 @@ count_n(PyObject *module, PyObject *args)
     if (!PyArg_ParseTuple(args, "On:count_n", &a, &n))
         return NULL;
 
-    if (!bitarray_Check(a)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray expected");
+    if (ensure_bitarray(a) < 0)
         return NULL;
-    }
+
     if (n < 0) {
         PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
         return NULL;
@@ -263,10 +270,9 @@ r_index(PyObject *module, PyObject *args)
     if (!PyArg_ParseTuple(args, "O|O:rindex", &a, &x))
         return NULL;
 
-    if (!bitarray_Check(a)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray expected");
+    if (ensure_bitarray(a) < 0)
         return NULL;
-    }
+
     vi = PyObject_IsTrue(x);
     if (vi < 0)
         return NULL;
@@ -302,10 +308,9 @@ two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
 
     if (!PyArg_ParseTuple(args, format, &a, &b))
         return NULL;
-    if (!(bitarray_Check(a) && bitarray_Check(b))) {
-        PyErr_SetString(PyExc_TypeError, "bitarray expected");
+    if (ensure_bitarray(a) < 0 || ensure_bitarray(b) < 0)
         return NULL;
-    }
+
 #define aa  ((bitarrayobject *) a)
 #define bb  ((bitarrayobject *) b)
     if (aa->nbits != bb->nbits) {
