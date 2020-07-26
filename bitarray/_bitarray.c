@@ -100,6 +100,23 @@ setbit(bitarrayobject *self, Py_ssize_t i, int bit)
         *cp &= ~mask;
 }
 
+/* sets unused padding bits (within last byte of buffer) to 0,
+   and return the number of padding bits -- self->nbits is unchanged */
+static int
+setunused(bitarrayobject *self)
+{
+    Py_ssize_t n, i;
+
+    if (self->nbits % 8 == 0)
+        return 0;
+
+    n = BITS(Py_SIZE(self));    /* number of bits in buffer */
+    for (i = self->nbits; i < n; i++)
+        setbit(self, i, 0);
+    assert(0 < n - self->nbits && n - self->nbits < 8);
+    return (int) (n - self->nbits);
+}
+
 static int
 resize(bitarrayobject *self, Py_ssize_t nbits)
 {
@@ -299,23 +316,6 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
         return -1;
     copy_n(self, start + n, self, start, self->nbits - start - n);
     return 0;
-}
-
-/* sets unused padding bits (within last byte of buffer) to 0,
-   and return the number of padding bits -- self->nbits is unchanged */
-static int
-setunused(bitarrayobject *self)
-{
-    Py_ssize_t n, i;
-
-    if (self->nbits % 8 == 0)
-        return 0;
-
-    n = BITS(Py_SIZE(self));    /* number of bits in buffer */
-    for (i = self->nbits; i < n; i++)
-        setbit(self, i, 0);
-    assert(0 < n - self->nbits && n - self->nbits < 8);
-    return (int) (n - self->nbits);
 }
 
 static void
