@@ -1095,6 +1095,18 @@ class NumberMethodsTests(unittest.TestCase, Util):
             b &= d
             self.assertEqual(~b, a)
 
+    def test_size_and_endianness(self):
+        a = bitarray('11001')
+        b = bitarray('100111')
+        self.assertRaises(ValueError, a.__and__, b)
+        for x in a.__or__, a.__xor__, a.__iand__, a.__ior__, a.__ixor__:
+            self.assertRaises(ValueError, x, b)
+        a = bitarray('11001', 'big')
+        b = bitarray('10011', 'little')
+        self.assertRaises(ValueError, a.__and__, b)
+        for x in a.__or__, a.__xor__, a.__iand__, a.__ior__, a.__ixor__:
+            self.assertRaises(ValueError, x, b)
+
     def test_and(self):
         a = bitarray('11001')
         b = bitarray('10011')

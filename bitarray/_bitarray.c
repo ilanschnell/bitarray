@@ -1878,9 +1878,9 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
         return -1;
     }
     other = (bitarrayobject *) arg;
-    if (self->nbits != other->nbits) {
+    if (self->nbits != other->nbits || self->endian != other->endian) {
         PyErr_SetString(PyExc_ValueError,
-               "bitarrays of equal length expected for bitwise operation");
+               "bitarrays of equal length and endianness expected");
         return -1;
     }
     setunused(self);
