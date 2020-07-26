@@ -7,6 +7,8 @@
     methods, and made those method lookups slow.
   * speedup slice operations when step size = 1 (if alignment allows
     copying whole bytes)
+  * For the sake of writing readable code, we now require equal endianness
+    for operations: `&`, `|`, `^`, `&=`, `|=`, `^=`
 
 
 2020-07-15   1.4.2:
