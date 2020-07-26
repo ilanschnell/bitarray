@@ -348,21 +348,19 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(len(a), 0)
             self.assertEQUAL(a, bitarray())
 
-    def test_WrongArgs(self):
-        self.assertRaises(TypeError, bitarray.__new__, bitarray, 'A', 42, 69)
-
-        self.assertRaises(TypeError, bitarray.__new__, bitarray, Ellipsis)
-        self.assertRaises(TypeError, bitarray.__new__, bitarray, slice(0))
-
-        self.assertRaises(TypeError, bitarray.__new__, bitarray, 2.345)
-        self.assertRaises(TypeError, bitarray.__new__, bitarray, 4+3j)
-
-        self.assertRaises(TypeError, bitarray.__new__, bitarray, '', 0, 42)
+    def test_wrong_args(self):
+        # wrong types
+        for x in False, True, Ellipsis, slice(0), 0.0, 0 + 0j:
+            self.assertRaises(TypeError, bitarray.__new__, bitarray, x)
+        # wrong values
+        for x in -1, 'A':
+            self.assertRaises(ValueError, bitarray.__new__, bitarray, x)
         # test second (endian) argument
         self.assertRaises(TypeError, bitarray.__new__, bitarray, 0, None)
         self.assertRaises(TypeError, bitarray.__new__, bitarray, 0, 0)
         self.assertRaises(ValueError, bitarray.__new__, bitarray, 0, 'foo')
-
+        # too many args
+        self.assertRaises(TypeError, bitarray.__new__, bitarray, 0, 'big', 0)
 
 tests.append(CreateObjectTests)
 

@@ -2605,6 +2605,13 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (initial == NULL || initial == Py_None)
         return newbitarrayobject(type, 0, endian);
 
+    /* boolean */
+    if (PyBool_Check(initial)) {
+        PyErr_SetString(PyExc_TypeError,
+                        "cannot create bitarray from boolean");
+        return NULL;
+    }
+
     /* index (a number) */
     if (PyIndex_Check(initial)) {
         Py_ssize_t nbits;
