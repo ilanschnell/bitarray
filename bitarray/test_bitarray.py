@@ -342,9 +342,11 @@ class CreateObjectTests(unittest.TestCase, Util):
         c = bitarray('11100001', endian='big')
         self.assertEqual(a, c)
 
-    def test_None(self):
-        self.assertEQUAL(bitarray(), bitarray(0))
-        self.assertEQUAL(bitarray(), bitarray(None))
+    def test_create_empty(self):
+        for x in None, 0, '', list(), tuple(), set(), dict():
+            a = bitarray(x)
+            self.assertEqual(len(a), 0)
+            self.assertEQUAL(a, bitarray())
 
     def test_WrongArgs(self):
         self.assertRaises(TypeError, bitarray.__new__, bitarray, 'A', 42, 69)
