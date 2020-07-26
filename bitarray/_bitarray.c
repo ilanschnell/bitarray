@@ -105,16 +105,22 @@ setbit(bitarrayobject *self, Py_ssize_t i, int bit)
 static int
 setunused(bitarrayobject *self)
 {
-    Py_ssize_t n, i;
+    const char mask[16] = {
+        0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, /* little endian */
+        0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, /* big endian */
+    };
+    int res;
 
     if (self->nbits % 8 == 0)
         return 0;
 
-    n = BITS(Py_SIZE(self));    /* number of bits in buffer */
-    for (i = self->nbits; i < n; i++)
-        setbit(self, i, 0);
-    assert(0 < n - self->nbits && n - self->nbits < 8);
-    return (int) (n - self->nbits);
+    res = (int) (BITS(Py_SIZE(self)) - self->nbits);
+    assert(0 < res && res < 8);
+    /* apply the mask to the last byte in buffer */
+    self->ob_item[Py_SIZE(self) - 1] &=
+        mask[self->nbits % 8 + ((self->endian == ENDIAN_LITTLE) ? 0 : 8)];
+
+    return res;
 }
 
 static int
