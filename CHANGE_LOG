@@ -9,6 +9,7 @@
     copying whole bytes)
   * Require equal endianness for operations: `&`, `|`, `^`, `&=`, `|=`, `^=`.
     This should have always been the case but was overlooked in the past.
+  * raise TypeError when tring to create bitarray from boolean
   * This will be last release to still support Python 2.6 (which was retired
     in 2013).  We do NOT plan to stop support for Python 2.7 anytime soon.
 
