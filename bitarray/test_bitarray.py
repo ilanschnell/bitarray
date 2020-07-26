@@ -1615,20 +1615,19 @@ class MethodTests(unittest.TestCase, Util):
         it = a.itersearch(bitarray('1'))
         self.assertIsInstance(type(it), type)
 
-    def test_fill(self):
-        a = bitarray('')
-        self.assertEqual(a.fill(), 0)
-        self.assertEqual(len(a), 0)
+    def test_fill_simple(self):
+        for endian in 'little', 'big':
+            a = bitarray(endian=endian)
+            self.assertEqual(a.fill(), 0)
+            self.assertEqual(len(a), 0)
 
-        a = bitarray('101')
-        b = a
-        self.assertEqual(a.fill(), 5)
-        self.assertEQUAL(a, bitarray('10100000'))
-        self.assertEqual(a.fill(), 0)
-        self.assertEQUAL(a, bitarray('10100000'))
-        self.assertTrue(a is b)
+            a = bitarray('101', endian)
+            self.assertEqual(a.fill(), 5)
+            self.assertEqual(a, bitarray('10100000'))
+            self.assertEqual(a.fill(), 0)
+            self.assertEqual(a, bitarray('10100000'))
 
-    def test_random(self):
+    def test_fill_random(self):
         for a in self.randombitarrays():
             b = a.copy()
             res = b.fill()
