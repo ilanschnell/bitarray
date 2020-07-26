@@ -661,6 +661,8 @@ Change log
     copying whole bytes)
   * For the sake of writing readable code, we now require equal endianness
     for operations: `&`, `|`, `^`, `&=`, `|=`, `^=`
+  * This will be last release to still support Python 2.6 (which was retired
+    in 2013).  We do NOT plan to stop support for Python 2.7 anytime soon.
 
 
 *1.4.2* (2020-07-15):
