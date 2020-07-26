@@ -659,8 +659,8 @@ Change log
     methods, and made those method lookups slow.
   * speedup slice operations when step size = 1 (if alignment allows
     copying whole bytes)
-  * For the sake of writing readable code, we now require equal endianness
-    for operations: `&`, `|`, `^`, `&=`, `|=`, `^=`
+  * Require equal endianness for operations: `&`, `|`, `^`, `&=`, `|=`, `^=`.
+    This should have always been the case but was overlooked in the past.
   * This will be last release to still support Python 2.6 (which was retired
     in 2013).  We do NOT plan to stop support for Python 2.7 anytime soon.
 
@@ -681,7 +681,7 @@ Change log
   * add DeprecationWarning when trying to extend bitarrays
     from bytes on Python 3 (`bitarrays(b'011')` and `.extend(b'110')`)
   * C-level:
-      - rewrote `.fromfile()` and `.tofile()` implementation,
+      - Rewrote `.fromfile()` and `.tofile()` implementation,
         such that now the same code is used for Python 2 and 3.
         The new implementation is more memoery efficient on
         Python 3.
