@@ -633,7 +633,7 @@ static int
 extend_dispatch(bitarrayobject *self, PyObject *obj)
 {
     PyObject *iter;
-    int ret;
+    int res;
 
     /* dispatch on type */
     if (bitarray_Check(obj))                              /* bitarray */
@@ -664,9 +664,9 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         if (bytes == NULL)
             return -1;
         assert(PyBytes_Check(bytes));
-        ret = extend_01(self, bytes);
+        res = extend_01(self, bytes);
         Py_DECREF(bytes);  /* drop bytes */
-        return ret;
+        return res;
     }
 
     if (PyIter_Check(obj))                                    /* iter */
@@ -675,9 +675,9 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     /* finally, try to get the iterator of the object */
     iter = PyObject_GetIter(obj);
     if (iter) {
-        ret = extend_iter(self, iter);
+        res = extend_iter(self, iter);
         Py_DECREF(iter);
-        return ret;
+        return res;
     }
     PyErr_Format(PyExc_TypeError,
                  "'%s' object is not iterable", Py_TYPE(obj)->tp_name);
