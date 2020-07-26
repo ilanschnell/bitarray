@@ -693,8 +693,10 @@ class MiscTests(unittest.TestCase, Util):
         b = bitarray('01010111000')
         self.assertEqual(a, b)
 
-    def test_compare_eq(self):
+    def test_compare_eq_ne(self):
         self.assertTrue(bitarray(0, 'big') == bitarray(0, 'little'))
+        self.assertFalse(bitarray(0, 'big') != bitarray(0, 'little'))
+
         for n in range(1, 20):
             a = bitarray(n, 'little')
             a.setall(1)
@@ -702,8 +704,10 @@ class MiscTests(unittest.TestCase, Util):
                 b = bitarray(n, endian)
                 b.setall(1)
                 self.assertTrue(a == b)
-                b[n - 1] = not b[n - 1]  # flip bit n - 1
+                self.assertFalse(a != b)
+                b[n - 1] = not b[n - 1]  # flip last bit
                 self.assertTrue(a != b)
+                self.assertFalse(a == b)
 
     def test_compare_random(self):
         for a in self.randombitarrays():
