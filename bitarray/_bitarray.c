@@ -2694,10 +2694,8 @@ richcompare(PyObject *v, PyObject *w, int op)
             /* if sizes differ, the bitarrays differ */
             return PyBool_FromLong((long) (op == Py_NE));
         }
-        else if (vs >= 8 && va->endian == wa->endian) {
-            /* if endianness is the same use memcmp() - we could use this
-               shortcut for all sizes, but as we need to set the unused bits,
-               we shortcut only if we have at least one byte. */
+        else if (va->endian == wa->endian) {
+            /* if endianness is the same use memcmp() */
             setunused(va);
             setunused(wa);
             cmp = memcmp(va->ob_item, wa->ob_item, (size_t) Py_SIZE(v));
