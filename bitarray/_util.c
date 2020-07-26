@@ -56,27 +56,17 @@ static int GETBIT(bitarrayobject *self, Py_ssize_t i) {
 #endif
 
 static void
-setbit(bitarrayobject *self, Py_ssize_t i, int bit)
+setunused(bitarrayobject *self)
 {
-    char *cp, mask;
+    const char mask[16] = {
+        0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, /* little endian */
+        0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, /* big endian */
+    };
 
-    assert(0 <= i && i < BITS(Py_SIZE(self)));
-    mask = BITMASK(self->endian, i);
-    cp = self->ob_item + i / 8;
-    if (bit)
-        *cp |= mask;
-    else
-        *cp &= ~mask;
-}
-
-static void
-setunused(bitarrayobject *a)
-{
-    const Py_ssize_t n = BITS(Py_SIZE(a));
-    Py_ssize_t i;
-
-    for (i = a->nbits; i < n; i++)
-        setbit(a, i, 0);
+    if (self->nbits % 8 == 0)
+        return;
+    self->ob_item[Py_SIZE(self) - 1] &=
+        mask[self->nbits % 8 + ((self->endian == ENDIAN_LITTLE) ? 0 : 8)];
 }
 
 static unsigned char bitcount_lookup[256] = {
