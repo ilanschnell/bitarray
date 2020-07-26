@@ -313,14 +313,9 @@ two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
 
 #define aa  ((bitarrayobject *) a)
 #define bb  ((bitarrayobject *) b)
-    if (aa->nbits != bb->nbits) {
+    if (aa->nbits != bb->nbits || aa->endian != bb->endian) {
         PyErr_SetString(PyExc_ValueError,
-                        "bitarrays of equal length expected");
-        return NULL;
-    }
-    if (aa->endian != bb->endian) {
-        PyErr_SetString(PyExc_ValueError,
-                        "bitarrays of equal endianness expected");
+                        "bitarrays of equal length and endianness expected");
         return NULL;
     }
     setunused(aa);
