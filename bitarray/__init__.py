@@ -30,17 +30,19 @@ a dictionary key.
         return 'frozen' + bitarray.__repr__(self)
 
     def __hash__(self):
+        "Return hash(self)."
         if getattr(self, '_hash', None) is None:
             self._hash = hash((self.length(), self.tobytes()))
         return self._hash
 
     def __delitem__(self, *args, **kwargs):
+        ""  # no docstring
         raise TypeError("'frozenbitarray' is immutable")
 
     append = bytereverse = clear = extend = encode = fill = __delitem__
     frombytes = fromfile = insert = invert = pack = pop = __delitem__
     remove = reverse = setall = sort = __setitem__ = __delitem__
-    __iand__ = __iadd__ = __imul__ = __ior__ = __ixor__ = __delitem__
+    __iadd__ = __iand__ = __imul__ = __ior__ = __ixor__ = __delitem__
 
 
 def bits2bytes(_n):
