@@ -2595,8 +2595,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     int endian;
     static char *kwlist[] = {"", "endian", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds,
-                        "|Os:bitarray", kwlist, &initial, &endian_str))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Os:bitarray",
+                                     kwlist, &initial, &endian_str))
         return NULL;
 
     endian = endian_from_string(endian_str);
@@ -2663,8 +2663,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
                 return NULL;
             }
             res = newbitarrayobject(type,
-                                  BITS(nbytes - 1) - ((Py_ssize_t) data[0]),
-                                  endian);
+                                    BITS(nbytes - 1) - ((Py_ssize_t) data[0]),
+                                    endian);
             if (res == NULL)
                 return NULL;
             memcpy(((bitarrayobject *) res)->ob_item, data + 1,
@@ -3075,8 +3075,8 @@ Deprecated since version 1.2.0, use `bitarray.util.count_xor()` instead.");
 static PyObject *
 get_default_endian(PyObject *module)
 {
-    return Py_BuildValue("s", (default_endian ==
-                               ENDIAN_LITTLE) ? "little" : "big");
+    return Py_BuildValue("s",
+                         default_endian == ENDIAN_LITTLE ? "little" : "big");
 }
 
 PyDoc_STRVAR(get_default_endian_doc,
