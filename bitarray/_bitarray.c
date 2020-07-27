@@ -54,14 +54,19 @@ typedef struct {
 
 static PyTypeObject Bitarraytype;
 
+#define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarraytype)
+
 /* --- bit endianness --- */
 #define ENDIAN_LITTLE  0
 #define ENDIAN_BIG     1
-#define ENDIAN_INT(i)  ((i) == ENDIAN_LITTLE ? "little" : "big")
-#define ENDIAN_OBJ(o)  ENDIAN_INT(((bitarrayobject *) o)->endian)
 static int default_endian = ENDIAN_BIG;
 
-#define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarraytype)
+/* returns the endianness as string from its numerical value */
+#define ENDIAN_INT(i)  ((i) == ENDIAN_LITTLE ? "little" : "big")
+
+/* returns the endianness as string from an object */
+#define ENDIAN_OBJ(o)  ENDIAN_INT(((bitarrayobject *) o)->endian)
+
 
 #define BITS(bytes)  ((bytes) << 3)
 
