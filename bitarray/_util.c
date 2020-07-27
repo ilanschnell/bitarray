@@ -66,7 +66,7 @@ setunused(bitarrayobject *self)
     if (self->nbits % 8 == 0)
         return;
     self->ob_item[Py_SIZE(self) - 1] &=
-        mask[self->nbits % 8 + ((self->endian == ENDIAN_LITTLE) ? 0 : 8)];
+        mask[self->nbits % 8 + (self->endian == ENDIAN_LITTLE ? 0 : 8)];
 }
 
 static unsigned char bitcount_lookup[256] = {
