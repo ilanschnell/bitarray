@@ -61,11 +61,8 @@ static PyTypeObject Bitarraytype;
 #define ENDIAN_BIG     1
 static int default_endian = ENDIAN_BIG;
 
-/* returns the endianness as string from its numerical value */
-#define ENDIAN_INT(i)  ((i) == ENDIAN_LITTLE ? "little" : "big")
-
-/* returns the endianness as string from an object */
-#define ENDIAN_OBJ(o)  ENDIAN_INT(((bitarrayobject *) o)->endian)
+/* returns the endianness string from bitarrayobject */
+#define ENDIAN_STR(o)  (((o)->endian == ENDIAN_LITTLE) ? "little" : "big")
 
 
 #define BITS(bytes)  ((bytes) << 3)
@@ -942,7 +939,7 @@ bitarray_buffer_info(bitarrayobject *self)
     res = Py_BuildValue("Onsin",
                         ptr,
                         Py_SIZE(self),
-                        ENDIAN_OBJ(self),
+                        ENDIAN_STR(self),
                         (int) (BITS(Py_SIZE(self)) - self->nbits),
                         self->allocated);
     Py_DECREF(ptr);
@@ -961,7 +958,7 @@ bits in the last bytes, and the size (in bytes) of the allocated memory.");
 static PyObject *
 bitarray_endian(bitarrayobject *self)
 {
-    return Py_BuildValue("s", ENDIAN_OBJ(self));
+    return Py_BuildValue("s", ENDIAN_STR(self));
 }
 
 PyDoc_STRVAR(endian_doc,
@@ -1035,7 +1032,7 @@ bitarray_reduce(bitarrayobject *self)
         goto error;
     PyMem_Free((void *) data);
     result = Py_BuildValue("O(Os)O", Py_TYPE(self),
-                           repr, ENDIAN_OBJ(self), dict);
+                           repr, ENDIAN_STR(self), dict);
 error:
     Py_DECREF(dict);
     Py_XDECREF(repr);
@@ -3078,7 +3075,8 @@ Deprecated since version 1.2.0, use `bitarray.util.count_xor()` instead.");
 static PyObject *
 get_default_endian(PyObject *module)
 {
-    return Py_BuildValue("s", ENDIAN_INT(default_endian));
+    return Py_BuildValue("s", ((default_endian ==
+                                ENDIAN_LITTLE) ? "little" : "big"));
 }
 
 PyDoc_STRVAR(get_default_endian_doc,
