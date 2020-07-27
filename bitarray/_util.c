@@ -333,9 +333,10 @@ two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
         }
         break;
     case KERN_subset:
-        for (i = 0; i < nbytes; i++)
+        for (i = 0; i < nbytes; i++) {
             if ((aa->ob_item[i] & bb->ob_item[i]) != aa->ob_item[i])
                 Py_RETURN_FALSE;
+        }
         Py_RETURN_TRUE;
     default:  /* should never happen */
         return NULL;
