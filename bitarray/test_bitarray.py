@@ -2552,7 +2552,7 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(b.all(), False)
         self.assertEqual(b.any(), True)
 
-    def test_init_bitarray(self):
+    def test_init_from_bitarray(self):
         for a in self.randombitarrays():
             b = frozenbitarray(a)
             self.assertFalse(b is a)
