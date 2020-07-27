@@ -62,7 +62,7 @@ static PyTypeObject Bitarraytype;
 static int default_endian = ENDIAN_BIG;
 
 /* returns the endianness string from bitarrayobject */
-#define ENDIAN_STR(o)  (((o)->endian == ENDIAN_LITTLE) ? "little" : "big")
+#define ENDIAN_STR(o)  ((o)->endian == ENDIAN_LITTLE ? "little" : "big")
 
 
 #define BITS(bytes)  ((bytes) << 3)
@@ -121,7 +121,7 @@ setunused(bitarrayobject *self)
     assert(0 < res && res < 8);
     /* apply the mask to the last byte in buffer */
     self->ob_item[Py_SIZE(self) - 1] &=
-        mask[self->nbits % 8 + ((self->endian == ENDIAN_LITTLE) ? 0 : 8)];
+        mask[self->nbits % 8 + (self->endian == ENDIAN_LITTLE ? 0 : 8)];
 
     return res;
 }
@@ -3075,8 +3075,8 @@ Deprecated since version 1.2.0, use `bitarray.util.count_xor()` instead.");
 static PyObject *
 get_default_endian(PyObject *module)
 {
-    return Py_BuildValue("s", ((default_endian ==
-                                ENDIAN_LITTLE) ? "little" : "big"));
+    return Py_BuildValue("s", (default_endian ==
+                               ENDIAN_LITTLE) ? "little" : "big");
 }
 
 PyDoc_STRVAR(get_default_endian_doc,
