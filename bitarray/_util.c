@@ -231,14 +231,13 @@ count_n(PyObject *module, PyObject *args)
     }
 #define aa  ((bitarrayobject *) a)
     if (n > aa->nbits)  {
-        PyErr_Format(PyExc_ValueError,
-                     "%zd larger than bitarray size %zd", n, aa->nbits);
+        PyErr_SetString(PyExc_ValueError, "n larger than bitarray size %zd");
         return NULL;
     }
     i = count_to_n(aa, n);        /* do actual work here */
 #undef aa
     if (i < 0) {
-        PyErr_Format(PyExc_ValueError, "%zd exceeds total count", n);
+        PyErr_SetString(PyExc_ValueError, "n exceeds total count");
         return NULL;
     }
     return PyLong_FromLongLong(i);
