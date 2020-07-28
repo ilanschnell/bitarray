@@ -231,7 +231,7 @@ count_n(PyObject *module, PyObject *args)
     }
 #define aa  ((bitarrayobject *) a)
     if (n > aa->nbits)  {
-        PyErr_SetString(PyExc_ValueError, "n larger than bitarray size %zd");
+        PyErr_SetString(PyExc_ValueError, "n larger than bitarray size");
         return NULL;
     }
     i = count_to_n(aa, n);        /* do actual work here */

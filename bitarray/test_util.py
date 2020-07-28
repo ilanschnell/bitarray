@@ -221,8 +221,10 @@ class TestsHelpers(unittest.TestCase, Util):
         self.assertEqual(count_n(a, 20), 23)
         self.assertEqual(count_n(a, 37), 45)
         self.assertRaises(ValueError, count_n, a, -1) # n < 0
-        self.assertRaises(ValueError, count_n, a, 38) # n > a.count()
-        self.assertRaises(ValueError, count_n, a, 49) # n > len(a)
+        self.assertRaisesMessage(ValueError, "n larger than bitarray size",
+                                 count_n, a, 49) # n > len(a)
+        self.assertRaisesMessage(ValueError, "n exceeds total count",
+                          count_n, a, 38) # n > a.count()
         self.assertRaises(TypeError, count_n, a, "7")
         for n in range(0, 37):
             i = count_n(a, n)
