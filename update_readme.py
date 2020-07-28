@@ -1,6 +1,6 @@
 import sys
-if not sys.version_info[0] == 3:
-    sys.exit("This program only runs with Python 3, sorry :-(")
+if sys.version_info[0] != 3:
+    sys.exit("This program requires Python 3")
 
 import re
 import doctest
@@ -10,7 +10,7 @@ import bitarray
 import bitarray.util
 
 
-fo = StringIO()
+fo = None
 
 
 def write_changelog():
@@ -115,10 +115,17 @@ def write_all(data):
 
 
 def main():
-    data = open('README.md').read()
-    write_all(data)
-    new_data = fo.getvalue()
-    fo.close()
+    if len(sys.argv) > 1:
+        sys.exit("no arguments expected")
+
+    with open('README.md', 'r') as fi:
+        data = fi.read()
+
+    global fo
+    with StringIO() as fo:
+        write_all(data)
+        new_data = fo.getvalue()
+        fo.close()
 
     if new_data == data:
         print("already up-to-date")
