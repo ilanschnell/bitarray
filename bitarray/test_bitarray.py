@@ -98,6 +98,13 @@ class Util(object):
         def assertIsInstance(self, o, t):
             self.assertTrue(isinstance(o, t))
 
+    def assertRaisesMessage(self, excClass, inmsg, callable, *args, **kwargs):
+        try:
+            callable(*args, **kwargs)
+        except excClass as e:
+            if inmsg not in str(e):
+                raise AssertionError("%s not in %r" % (inmsg, e))
+
 # ---------------------------------------------------------------------------
 
 class TestsModuleFunctions(unittest.TestCase, Util):
@@ -201,12 +208,8 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, bitarray.__new__, bitarray, endian='')
         self.assertRaises(ValueError,
                           bitarray.__new__, bitarray, endian='foo')
-        try:
-            bitarray(Ellipsis)
-        except TypeError as e:
-            self.assertTrue('ellipsis' in str(e))
-        else:
-            raise SystemError("we shouldn'e get here")
+        self.assertRaisesMessage(TypeError, "'ellipsis'",
+                                 bitarray.__new__, bitarray, Ellipsis)
 
     def test_integers(self):
         for n in range(50):
