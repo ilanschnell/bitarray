@@ -231,13 +231,14 @@ count_n(PyObject *module, PyObject *args)
     }
 #define aa  ((bitarrayobject *) a)
     if (n > aa->nbits)  {
-        PyErr_SetString(PyExc_ValueError, "n larger than bitarray size");
+        PyErr_Format(PyExc_ValueError,
+                     "%zd larger than bitarray size %zd", n, aa->nbits);
         return NULL;
     }
     i = count_to_n(aa, n);        /* do actual work here */
 #undef aa
     if (i < 0) {
-        PyErr_SetString(PyExc_ValueError, "n exceeds total count");
+        PyErr_Format(PyExc_ValueError, "%zd exceeds total count", n);
         return NULL;
     }
     return PyLong_FromLongLong(i);
@@ -247,7 +248,7 @@ PyDoc_STRVAR(count_n_doc,
 "count_n(a, n, /) -> int\n\
 \n\
 Find the smallest index `i` for which `a[:i].count() == n`.\n\
-Raises `ValueError`, when n exceeds the `a.count()`.");
+Raises `ValueError`, when n exceeds total count (`a.count()`).");
 
 
 static PyObject *
