@@ -521,16 +521,30 @@ using the specified mapping.
 The frozenbitarray object:
 --------------------------
 
+This object is very similar to the bitarray object.  The difference is that
+this a frozenbitarray is immutable, and hashable:
+
+    >>> from bitarray import frozenbitarray
+    >>> a = frozenbitarray('1100011')
+    >>> a[3] = 1
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+      File "bitarray/__init__.py", line 40, in __delitem__
+        raise TypeError("'frozenbitarray' is immutable")
+    TypeError: 'frozenbitarray' is immutable
+    >>> {a: 'some value'}
+    {frozenbitarray('1100011'): 'some value'}
+
 `frozenbitarray(initializer=0, /, endian='big')` -> frozenbitarray
 
 Return a frozenbitarray object, which is initialized the same way a bitarray
 object is initialized.  A frozenbitarray is immutable and hashable.
-Its contents cannot be altered after is created; however, it can be used as
-a dictionary key.
+Its contents cannot be altered after it is created; however, it can be used
+as a dictionary key.
 
 
-Functions defined in the module:
---------------------------------
+Functions defined in the `bitarray` package:
+--------------------------------------------
 
 `test(verbosity=1, repeat=1)` -> TextTestResult
 
@@ -548,8 +562,8 @@ Return the default endianness for new bitarray objects being created.
 Under normal circumstances, the return value is `big`.
 
 
-Functions defined in bitarray.util:
------------------------------------
+Functions defined in `bitarray.util` module:
+--------------------------------------------
 
 `zeros(length, /, endian=None)` -> bitarray
 

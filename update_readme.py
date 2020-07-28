@@ -69,18 +69,35 @@ def write_reference():
             continue
         write_doc('bitarray.%s' % method)
 
-    fo.write("The frozenbitarray object:\n"
-             "--------------------------\n\n")
+    fo.write("""\
+The frozenbitarray object:
+--------------------------
+
+This object is very similar to the bitarray object.  The difference is that
+this a frozenbitarray is immutable, and hashable:
+
+    >>> from bitarray import frozenbitarray
+    >>> a = frozenbitarray('1100011')
+    >>> a[3] = 1
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+      File "bitarray/__init__.py", line 40, in __delitem__
+        raise TypeError("'frozenbitarray' is immutable")
+    TypeError: 'frozenbitarray' is immutable
+    >>> {a: 'some value'}
+    {frozenbitarray('1100011'): 'some value'}
+
+""")
     write_doc('frozenbitarray')
 
-    fo.write("Functions defined in the module:\n"
-             "--------------------------------\n\n")
+    fo.write("Functions defined in the `bitarray` package:\n"
+             "--------------------------------------------\n\n")
     write_doc('test')
     write_doc('bits2bytes')
     write_doc('get_default_endian')
 
-    fo.write("Functions defined in bitarray.util:\n"
-             "-----------------------------------\n\n")
+    fo.write("Functions defined in `bitarray.util` module:\n"
+             "--------------------------------------------\n\n")
     for func in bitarray.util.__all__:
         write_doc('util.%s' % func)
 

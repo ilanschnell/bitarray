@@ -23,8 +23,8 @@ class frozenbitarray(bitarray):
 
 Return a frozenbitarray object, which is initialized the same way a bitarray
 object is initialized.  A frozenbitarray is immutable and hashable.
-Its contents cannot be altered after is created; however, it can be used as
-a dictionary key.
+Its contents cannot be altered after it is created; however, it can be used
+as a dictionary key.
 """
     def __repr__(self):
         return 'frozen' + bitarray.__repr__(self)
