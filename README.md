@@ -374,7 +374,7 @@ with the corresponding bitarray for each symbol.
 
 `endian()` -> str
 
-Return the bit endianness as a string (either `little` or `big`).
+Return the bit endianness of the bitarray as a string (`little` or `big`).
 
 
 `extend(iterable or string, /)`

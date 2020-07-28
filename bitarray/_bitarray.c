@@ -964,7 +964,7 @@ bitarray_endian(bitarrayobject *self)
 PyDoc_STRVAR(endian_doc,
 "endian() -> str\n\
 \n\
-Return the bit endianness as a string (either `little` or `big`).");
+Return the bit endianness of the bitarray as a string (`little` or `big`).");
 
 
 static PyObject *
@@ -2580,8 +2580,8 @@ endian_from_string(const char* string)
     if (strcmp(string, "big") == 0)
         return ENDIAN_BIG;
 
-    PyErr_SetString(PyExc_ValueError,
-                    "bit endianness must be either 'little' or 'big'");
+    PyErr_Format(PyExc_ValueError,
+                 "bit endianness not 'little' or 'big', got: '%s'", string);
     return -1;
 }
 
