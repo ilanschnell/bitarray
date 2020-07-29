@@ -64,7 +64,7 @@ static int default_endian = ENDIAN_BIG;
 /* returns the endianness string from bitarrayobject */
 #define ENDIAN_STR(o)  ((o)->endian == ENDIAN_LITTLE ? "little" : "big")
 
-
+/* number of bits that can be stored in given bytes */
 #define BITS(bytes)  ((bytes) << 3)
 
 /* number of bytes necessary to store given bits */
