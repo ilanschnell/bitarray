@@ -90,9 +90,7 @@ class Util(object):
         self.check_obj(b)
 
     def assertStopIteration(self, it):
-        if is_py3k:
-            return
-        self.assertRaises(StopIteration, it.next)
+        self.assertRaises(StopIteration, next, it)
 
     if sys.version_info[:2] == (2, 6):
         def assertIsInstance(self, o, t):
@@ -2373,18 +2371,16 @@ class PrefixCodeTests(unittest.TestCase, Util):
         d = {'a': bitarray('0'), 'b': bitarray('111')}
         a = bitarray('011')
         it = a.iterdecode(d)
-        if not is_py3k:
-            self.assertEqual(it.next(), 'a')
-            self.assertRaises(ValueError, it.next)
+        self.assertEqual(next(it), 'a')
+        self.assertRaisesMessage(ValueError, "decoding not terminated",
+                                 next, it)
         self.assertEqual(a, bitarray('011'))
-        self.assertEqual(d, {'a': bitarray('0'), 'b': bitarray('111')})
 
     def test_iterdecode_buggybitarray(self):
         d = {'a': bitarray('0')}
         a = bitarray('1')
         it = a.iterdecode(d)
-        if not is_py3k:
-            self.assertRaises(ValueError, it.next)
+        self.assertRaises(ValueError, next, it)
         self.assertEqual(a, bitarray('1'))
         self.assertEqual(d, {'a': bitarray('0')})
 
@@ -2398,8 +2394,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
         d = {'a': bitarray('00'), 'b': bitarray('01')}
         a = bitarray('1')
         it = a.iterdecode(d)
-        if not is_py3k:
-            self.assertRaises(ValueError, it.next)
+        self.assertRaises(ValueError, next, it)
         self.assertEqual(a, bitarray('1'))
 
     def test_decode_ambiguous_code(self):
@@ -2410,8 +2405,10 @@ class PrefixCodeTests(unittest.TestCase, Util):
             {'a': bitarray('0'), 'b': bitarray('11'), 'c': bitarray('111')},
         ]:
             a = bitarray()
-            self.assertRaises(ValueError, a.decode, d)
-            self.assertRaises(ValueError, a.iterdecode, d)
+            self.assertRaisesMessage(ValueError, "prefix code ambiguous",
+                                     a.decode, d)
+            self.assertRaisesMessage(ValueError, "prefix code ambiguous",
+                                     a.iterdecode, d)
 
     def test_miscitems(self):
         d = {None : bitarray('00'),
