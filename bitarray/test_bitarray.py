@@ -98,12 +98,12 @@ class Util(object):
         def assertIsInstance(self, o, t):
             self.assertTrue(isinstance(o, t))
 
-    def assertRaisesMessage(self, excClass, inmsg, callable, *args, **kwargs):
+    def assertRaisesMessage(self, excClass, msg, callable, *args, **kwargs):
         try:
             callable(*args, **kwargs)
         except excClass as e:
-            if inmsg not in str(e):
-                raise AssertionError("%s not in %r" % (inmsg, e))
+            if msg != str(e):
+                raise AssertionError("message: %s\n got: %s" % (msg, e))
 
 # ---------------------------------------------------------------------------
 
@@ -206,9 +206,12 @@ class CreateObjectTests(unittest.TestCase, Util):
     def test_endian_wrong(self):
         self.assertRaises(TypeError, bitarray.__new__, bitarray, endian=0)
         self.assertRaises(ValueError, bitarray.__new__, bitarray, endian='')
-        self.assertRaises(ValueError,
-                          bitarray.__new__, bitarray, endian='foo')
-        self.assertRaisesMessage(TypeError, "'ellipsis'",
+        self.assertRaisesMessage(
+            ValueError,
+            "bit endianness must be either 'little' or 'big', got: 'foo'",
+            bitarray.__new__, bitarray, endian='foo')
+        self.assertRaisesMessage(TypeError,
+                                 "'ellipsis' object is not iterable",
                                  bitarray.__new__, bitarray, Ellipsis)
 
     def test_integers(self):
