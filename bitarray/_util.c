@@ -14,18 +14,10 @@
 #define IS_PY3K
 #endif
 
-#ifdef STDC_HEADERS
-#include <stddef.h>
-#else  /* !STDC_HEADERS */
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>      /* For size_t */
-#endif /* HAVE_SYS_TYPES_H */
-#endif /* !STDC_HEADERS */
-
 
 typedef struct {
     PyObject_VAR_HEAD
-    char *ob_item;
+    char *ob_item;              /* buffer */
     Py_ssize_t allocated;       /* how many bytes allocated */
     Py_ssize_t nbits;           /* length of bitarray, i.e. elements */
     int endian;                 /* bit endianness of bitarray */

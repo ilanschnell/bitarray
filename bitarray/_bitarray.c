@@ -44,7 +44,7 @@
    The number of elements (bits) is nbits. */
 typedef struct {
     PyObject_VAR_HEAD
-    char *ob_item;
+    char *ob_item;              /* buffer */
     Py_ssize_t allocated;       /* how many bytes allocated */
     Py_ssize_t nbits;           /* length of bitarray, i.e. elements */
     int endian;                 /* bit endianness of bitarray */
