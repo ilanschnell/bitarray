@@ -22,3 +22,6 @@ C extensions to work with the bitarray type, it is important that the
         int ob_exports;             /* how many buffer exports */
         PyObject *weakreflist;      /* list of weak references */
     } bitarrayobject;
+
+    #define ENDIAN_LITTLE  0
+    #define ENDIAN_BIG     1
