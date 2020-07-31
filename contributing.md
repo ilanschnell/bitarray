@@ -23,5 +23,6 @@ C extensions to work with the bitarray type, it is important that the
         PyObject *weakreflist;      /* list of weak references */
     } bitarrayobject;
 
+    /* member endian may have these values */
     #define ENDIAN_LITTLE  0
     #define ENDIAN_BIG     1
