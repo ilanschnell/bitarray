@@ -39,9 +39,6 @@ sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
 def write_doc(name):
     doc = eval('bitarray.%s.__doc__' % name)
     assert doc, name
-    if doc.strip() == "NO DOC":
-        return
-
     lines = doc.splitlines()
     m = sig_pat.match(lines[0])
     if m is None:

@@ -597,7 +597,7 @@ Allowed values for mode are the strings: `left`, `right`, `both`
 `count_n(a, n, /)` -> int
 
 Find the smallest index `i` for which `a[:i].count() == n`.
-Raises `ValueError`, when n exceeds the `a.count()`.
+Raises `ValueError`, when n exceeds total count (`a.count()`).
 
 
 `count_and(a, b, /)` -> int
