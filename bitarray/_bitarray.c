@@ -26,6 +26,9 @@
                          (len), (start), (stop), (step), (slicelength))
 #endif
 
+/* block size used when reading / writing blocks of bytes from files */
+#define BLOCKSIZE  65536
+
 #if PY_VERSION_HEX >= 0x02070000
 /* (new) buffer protocol */
 #define WITH_BUFFER
@@ -72,9 +75,6 @@ static int default_endian = ENDIAN_BIG;
 
 #define BITMASK(endian, i)  \
     (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) % 8) : (7 - (i) % 8)))
-
-/* block size used when reading / writing blocks of bytes from files */
-#define BLOCKSIZE  65536
 
 /* ------------ low level access to bits in bitarrayobject ------------- */
 
