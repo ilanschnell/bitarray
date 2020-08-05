@@ -664,7 +664,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2020-XX-XX   1.5.0:
+*1.5.0* (2020-08-05):
 
   * Use `Py_ssize_t` for bitarray index.  This means that on 32bit
     systems, the maximun number of elements in a bitarray is 2 GBits.
