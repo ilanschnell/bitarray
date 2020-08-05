@@ -717,7 +717,7 @@ unpack(bitarrayobject *self, char zero, char one, const char *fmt)
 #define IS_INT_OR_BOOL(x)  (PyBool_Check(x) || PyLong_Check(x))
 #else  /* Py 2 */
 #define IS_INT_OR_BOOL(x)  (PyBool_Check(x) || PyInt_Check(x) || \
-                                               PyLong_Check(x))
+                            PyLong_Check(x))
 #endif
 
 /* given an PyLong (which must be 0 or 1), or a PyBool, return 0 or 1,
