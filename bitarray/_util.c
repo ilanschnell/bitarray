@@ -330,7 +330,7 @@ two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
                 Py_RETURN_FALSE;
         }
         Py_RETURN_TRUE;
-    default:  /* should never happen */
+    default:  /* cannot happen */
         return NULL;
     }
 #undef aa
