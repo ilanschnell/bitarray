@@ -1032,7 +1032,7 @@ class SequenceMethodsTests(unittest.TestCase, Util):
         self.assertEQUAL(c, bitarray('110110110'))
 
         for a in self.randombitarrays():
-            for n in range(-10, 10):
+            for n in range(-3, 5):
                 b = a.copy()
                 idb = id(b)
                 b *= n

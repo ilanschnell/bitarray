@@ -344,7 +344,10 @@ repeat(bitarrayobject *self, Py_ssize_t n)
     const Py_ssize_t nbits = self->nbits;
     Py_ssize_t i;
 
-    if (n <= 0 || nbits == 0)
+    if (nbits == 0 || n == 1)   /* nothing to do */
+        return 0;
+
+    if (n <= 0)                 /* clear */
         return resize(self, 0);
 
     if (nbits > PY_SSIZE_T_MAX / n) {
