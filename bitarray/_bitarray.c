@@ -337,27 +337,27 @@ invert(bitarrayobject *self)
         self->ob_item[i] = ~self->ob_item[i];
 }
 
-/* repeat self 'count' times (negative 'count' is treated as 0) */
+/* repeat self n times (negative n is treated as 0) */
 static int
-repeat(bitarrayobject *self, Py_ssize_t count)
+repeat(bitarrayobject *self, Py_ssize_t n)
 {
     const Py_ssize_t nbits = self->nbits;
     Py_ssize_t i;
 
-    if (count < 0)
-        count = 0;
+    if (n <= 0 || nbits == 0)
+        return resize(self, 0);
 
-    if (count > 0 && nbits > PY_SSIZE_T_MAX / count) {
+    if (nbits > PY_SSIZE_T_MAX / n) {
         PyErr_Format(PyExc_OverflowError,
                      "cannot repeat bitarray (of size %zd) %zd times",
-                     nbits, count);
+                     nbits, n);
         return -1;
     }
 
-    if (resize(self, count * nbits) < 0)
+    if (resize(self, n * nbits) < 0)
         return -1;
 
-    for (i = 1; i < count; i++)
+    for (i = 1; i < n; i++)
         copy_n(self, i * nbits, self, 0, nbits);
 
     return 0;
