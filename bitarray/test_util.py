@@ -523,12 +523,13 @@ class TestsIntegerization(unittest.TestCase, Util):
         self.assertEQUAL(int2ba(6, endian='big'), bitarray('110', 'big'))
         self.assertEQUAL(int2ba(6, endian='little'),
                          bitarray('011', 'little'))
-        self.assertRaises(ValueError, int2ba, -1)
         self.assertRaises(TypeError, int2ba, 1.0)
         self.assertRaises(TypeError, int2ba, 1, 3.0)
         self.assertRaises(ValueError, int2ba, 1, 0)
         self.assertRaises(TypeError, int2ba, 1, 10, 123)
         self.assertRaises(ValueError, int2ba, 1, 10, 'asd')
+        # signed integer requires length
+        self.assertRaises(TypeError, int2ba, 100, signed=True)
 
     def test_signed(self):
         for s, i in [('0',  0),
@@ -554,9 +555,13 @@ class TestsIntegerization(unittest.TestCase, Util):
                              bitarray(s[::-1], 'big'))
 
     def test_int2ba_overflow(self):
+        self.assertRaises(OverflowError, int2ba, -1)
+        self.assertRaises(OverflowError, int2ba, -1, 4)
+
         self.assertRaises(OverflowError, int2ba, 128, 7)
         self.assertRaises(OverflowError, int2ba, 64, 7, signed=1)
         self.assertRaises(OverflowError, int2ba, -65, 7, signed=1)
+
         for n in range(1, 20):
             self.assertRaises(OverflowError, int2ba, 2 ** n, n)
             self.assertRaises(OverflowError, int2ba, 2 ** (n - 1), n,
@@ -589,6 +594,9 @@ class TestsIntegerization(unittest.TestCase, Util):
             self.assertEqual(int2ba(2 ** n - 1), bitarray(n * '1'))
             self.assertEqual(int2ba(2 ** n - 1, endian='little'),
                              bitarray(n * '1'))
+            for endian in 'big', 'little':
+                self.assertEqual(int2ba(-1, n, endian, signed=True),
+                                 bitarray(n * '1'))
 
     def test_explicit(self):
         _set_default_endian('big')

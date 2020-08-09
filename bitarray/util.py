@@ -158,6 +158,7 @@ def ba2int(a, signed=False):
 
 Convert the given bitarray into an integer.
 The bit-endianness of the bitarray is respected.
+`signed` indicates whether two's complement is used to represent the integer.
 """
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
@@ -194,15 +195,17 @@ def int2ba(i, length=None, endian=None, signed=False):
     """int2ba(int, /, length=None, endian=None, signed=False) -> bitarray
 
 Convert the given integer into a bitarray (with given endianness,
-and no leading (big-endian) / trailing (little-endian) zeros).
-If length is provided, the result will be of this length, and an
-`OverflowError` will be raised, if the integer cannot be represented
-within length bits.
+and no leading (big-endian) / trailing (little-endian) zeros), unless
+the `length` of the bitarray is provided.  An `OverflowError` is raised
+if the integer is not representable with the given number of bits.
+`signed` determines whether two's complement is used to represent the integer.
+If signed is False and a negative integer is given, an OverflowError
+is raised.
 """
     if not isinstance(i, (int, long) if _is_py2 else int):
         raise TypeError("integer expected")
     if not signed and i < 0:
-        raise ValueError("non-negative integer expected")
+        raise OverflowError("can't convert negative int to unsigned")
     if length is not None:
         if not isinstance(length, int):
             raise TypeError("integer expected for length")
