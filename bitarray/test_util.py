@@ -626,17 +626,6 @@ class TestsIntegerization(unittest.TestCase, Util):
             self.assertEQUAL(int2ba(i, endian='big'), ab)
             self.assertEQUAL(int2ba(i, endian='little'), al)
             self.assertEqual(ba2int(ab), ba2int(al), i)
-            if i == 0 or i >= 512:
-                continue
-            for n in range(9, 32):
-                for endian in 'big', 'little':
-                    a = int2ba(i, length=n, endian=endian)
-                    self.assertEqual(a.endian(), endian)
-                    self.assertEqual(len(a), n)
-                    if endian == 'big':
-                        f = a.index(1)
-                        self.assertEqual(a[:f], bitarray(f * '0'))
-                        self.assertEqual(a[f:], ab)
 
     def check_round_trip(self, i):
         for endian in 'big', 'little':
@@ -649,7 +638,7 @@ class TestsIntegerization(unittest.TestCase, Util):
             self.assertEqual(ba2int(a), i)
             if i > 0 and sys.version_info[:2] >= (2, 7):
                 self.assertEqual(i.bit_length(), len(a))
-            # add a few / trailing leading zeros to bitarray
+            # add a few trailing / leading zeros to bitarray
             if endian == 'big':
                 a = zeros(randint(0, 3), endian) + a
             else:
@@ -674,7 +663,7 @@ class TestsIntegerization(unittest.TestCase, Util):
             b = int2ba(i, len(a), a.endian(), signed=True)
             self.assertEQUAL(a, b)
 
-            j = self.twos_complement(ba2int(a), len(a))
+            j = self.twos_complement(ba2int(a, signed=False), len(a))
             self.assertEqual(i, j)
 
 
