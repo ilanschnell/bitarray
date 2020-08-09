@@ -167,8 +167,7 @@ The bit-endianness of the bitarray is respected.
     endian = a.endian()
     big_endian = bool(endian == 'big')
     la = len(a)
-    if la % 8:
-        # pad with leading zeros, such that length is multiple of 8
+    if la % 8:  # pad with leading / trailing zeros
         if big_endian:
             a = zeros(8 - la % 8, 'big') + a
         else:
