@@ -532,33 +532,36 @@ class TestsIntegerization(unittest.TestCase, Util):
         self.assertRaises(TypeError, int2ba, 100, signed=True)
 
     def test_signed(self):
-        for s, i in [('0',  0),
-                     ('1', -1),
-                     ('00',  0),
-                     ('10',  1),
-                     ('01', -2),
-                     ('11', -1),
-                     ('000',  0),
-                     ('100',  1),
-                     ('010',  2),
-                     ('110',  3),
-                     ('001', -4),
-                     ('101', -3),
-                     ('011', -2),
-                     ('111', -1),
-                     ('00000',   0),
-                     ('11110',  15),
-                     ('00001', -16),
-                     ('11111',  -1),
-                     ('000000000',    0),
-                     ('111111110',  255),
-                     ('000000001', -256),
-                     ('111111111',   -1),
-                     ('0000000000000000000000', 0),
-                     ('1001000011000000100010', 9 + 3 * 256 + 17 * (1 << 16)),
-                     ('1111111111111111111110', 2 ** 21 -1),
-                     ('0000000000000000000001', -2 ** 21),
-                     ('1111111111111111111111', -1)]:
+        for s, i in [
+                ('0',  0),
+                ('1', -1),
+                ('00',  0),
+                ('10',  1),
+                ('01', -2),
+                ('11', -1),
+                ('000',  0),
+                ('100',  1),
+                ('010',  2),
+                ('110',  3),
+                ('001', -4),
+                ('101', -3),
+                ('011', -2),
+                ('111', -1),
+                ('00000',   0),
+                ('11110',  15),
+                ('00001', -16),
+                ('11111',  -1),
+                ('000000000',    0),
+                ('111111110',  255),
+                ('000000001', -256),
+                ('111111111',   -1),
+                ('0000000000000000000000', 0),
+                ('1001000011000000100010', 9 + 3 * 256 + 17 * 2 ** 16),
+                ('1111111111111111111110', 2 ** 21 -1),
+                ('0000000000000000000001', -2 ** 21),
+                ('0110111100111111011101', -(9 + 3 * 256 + 17 * 2 ** 16 + 1)),
+                ('1111111111111111111111', -1),
+        ]:
             self.assertEqual(ba2int(bitarray(s, 'little'), signed=1), i)
             self.assertEqual(ba2int(bitarray(s[::-1], 'big'), signed=1), i)
 
@@ -659,11 +662,20 @@ class TestsIntegerization(unittest.TestCase, Util):
             self.check_round_trip(i)
             self.check_round_trip(randint(0, 10 ** randint(3, 300)))
 
+    @staticmethod
+    def twos_complement(i, num_bits):
+        # https://en.wikipedia.org/wiki/Two%27s_complement
+        mask = 2 ** (num_bits - 1)
+        return -(i & mask) + (i & ~mask)
+
     def test_random_signed(self):
         for a in self.randombitarrays(start=1):
             i = ba2int(a, signed=True)
             b = int2ba(i, len(a), a.endian(), signed=True)
             self.assertEQUAL(a, b)
+
+            j = self.twos_complement(ba2int(a), len(a))
+            self.assertEqual(i, j)
 
 
 tests.append(TestsIntegerization)
