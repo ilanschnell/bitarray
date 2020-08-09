@@ -205,7 +205,7 @@ is raised.
     if not isinstance(i, (int, long) if _is_py2 else int):
         raise TypeError("integer expected")
     if not signed and i < 0:
-        raise OverflowError("can't convert negative int to unsigned")
+        raise OverflowError("unsigned integer expected")
     if length is not None:
         if not isinstance(length, int):
             raise TypeError("integer expected for length")
