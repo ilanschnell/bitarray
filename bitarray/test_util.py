@@ -553,12 +553,22 @@ class TestsIntegerization(unittest.TestCase, Util):
             self.assertEQUAL(int2ba(i, len(s), 'big', signed=1),
                              bitarray(s[::-1], 'big'))
 
+    def test_int2ba_overflow(self):
+        self.assertRaises(OverflowError, int2ba, 128, 7)
+        self.assertRaises(OverflowError, int2ba, 64, 7, signed=1)
+        self.assertRaises(OverflowError, int2ba, -65, 7, signed=1)
+        for n in range(1, 20):
+            self.assertRaises(OverflowError, int2ba, 2 ** n, n)
+            self.assertRaises(OverflowError, int2ba, 2 ** (n - 1), n,
+                              signed=1)
+            self.assertRaises(OverflowError, int2ba, -2 ** (n - 1) - 1, n,
+                              signed=1)
+
     def test_int2ba_length(self):
         self.assertRaises(TypeError, int2ba, 0, 1.0)
         self.assertRaises(ValueError, int2ba, 0, 0)
         self.assertEqual(int2ba(5, length=6, endian='big'),
                          bitarray('000101'))
-        self.assertRaises(OverflowError, int2ba, 3, 1)
         for n in range(1, 100):
             ab = int2ba(1, n, 'big')
             al = int2ba(1, n, 'little')
@@ -576,8 +586,6 @@ class TestsIntegerization(unittest.TestCase, Util):
             self.assertEqual(ab, bitarray(n * '0', 'big'))
             self.assertEqual(al, bitarray(n * '0', 'little'))
 
-            self.assertRaises(OverflowError, int2ba, 2 ** n, n, 'big')
-            self.assertRaises(OverflowError, int2ba, 2 ** n, n, 'little')
             self.assertEqual(int2ba(2 ** n - 1), bitarray(n * '1'))
             self.assertEqual(int2ba(2 ** n - 1, endian='little'),
                              bitarray(n * '1'))
