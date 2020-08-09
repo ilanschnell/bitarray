@@ -62,7 +62,7 @@ unchanged.
         return a
 
     b = bitarray(a, endian)
-    la = a.length()
+    la = len(a)
     if la == 0:
         return b
 
@@ -93,7 +93,7 @@ Allowed values for mode are the strings: `left`, `right`, `both`
         except ValueError:
             return bitarray(endian=a.endian())
 
-    last = a.length() - 1
+    last = len(a) - 1
     if mode in ('right', 'both'):
         try:
             last = rindex(a)
@@ -112,7 +112,7 @@ the bitarray (which has to be multiple of 4 in length).
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
 
-    la = a.length()
+    la = len(a)
     if la % 4:
         raise ValueError("bitarray length not multiple of 4")
     if la % 8:
@@ -153,8 +153,8 @@ hexstr may contain any number of hex digits (upper or lower case).
     return a
 
 
-def ba2int(a):
-    """ba2int(bitarray, /) -> int
+def ba2int(a, signed=False):
+    """ba2int(bitarray, /, signed=False) -> int
 
 Convert the given bitarray into an integer.
 The bit-endianness of the bitarray is respected.
@@ -166,13 +166,14 @@ The bit-endianness of the bitarray is respected.
 
     endian = a.endian()
     big_endian = bool(endian == 'big')
-    if a.length() % 8:
+    la = len(a)
+    if la % 8:
         # pad with leading zeros, such that length is multiple of 8
         if big_endian:
-            a = zeros(8 - a.length() % 8, 'big') + a
+            a = zeros(8 - la % 8, 'big') + a
         else:
-            a = a + zeros(8 - a.length() % 8, 'little')
-    assert a.length() % 8 == 0
+            a = a + zeros(8 - la % 8, 'little')
+    assert len(a) % 8 == 0
     b = a.tobytes()
 
     if _is_py2:
@@ -182,13 +183,16 @@ The bit-endianness of the bitarray is respected.
         for x in c:
             res |= x << 8 * j
             j += -1 if big_endian else 1
-        return res
     else: # py3
-        return int.from_bytes(b, byteorder=endian)
+        res = int.from_bytes(b, byteorder=endian)
+
+    if signed and res >= 1 << (la - 1):
+        res -= 1 << la
+    return res
 
 
-def int2ba(i, length=None, endian=None):
-    """int2ba(int, /, length=None, endian=None) -> bitarray
+def int2ba(i, length=None, endian=None, signed=False):
+    """int2ba(int, /, length=None, endian=None, signed=False) -> bitarray
 
 Convert the given integer into a bitarray (with given endianness,
 and no leading (big-endian) / trailing (little-endian) zeros).
@@ -198,7 +202,7 @@ within length bits.
 """
     if not isinstance(i, (int, long) if _is_py2 else int):
         raise TypeError("integer expected")
-    if i < 0:
+    if not signed and i < 0:
         raise ValueError("non-negative integer expected")
     if length is not None:
         if not isinstance(length, int):
@@ -208,13 +212,24 @@ within length bits.
     if endian is None:
         endian = get_default_endian()
     if not isinstance(endian, str):
-        raise TypeError("string expected for endian")
+        raise TypeError("string expected for bit endianness")
     if endian not in ('big', 'little'):
-        raise ValueError("endian can only be 'big' or 'little'")
+        raise ValueError("bit endianness must be either 'little' or 'big'")
+    if signed and length is None:
+        raise TypeError("signed requires length")
 
     if i == 0:
         # there a special cases for 0 which we'd rather not deal with below
         return zeros(length or 1, endian)
+
+    if signed:
+        if i >= 1 << (length - 1) or i < -(1 << (length - 1)):
+            raise OverflowError("signed integer out of range")
+        if i < 0:
+            i += 1 << length
+    elif length:
+        if i >= 1 << length:
+            raise OverflowError("unsigned integer out of range")
 
     big_endian = bool(endian == 'big')
     if _is_py2:
@@ -230,7 +245,7 @@ within length bits.
 
     a = bitarray(0, endian)
     a.frombytes(b)
-    la = a.length()
+    la = len(a)
     if la == length:
         return a
 
@@ -238,10 +253,6 @@ within length bits.
         return strip(a, 'left' if big_endian else 'right')
 
     if la > length:
-        size = (la - a.index(1)) if big_endian else (rindex(a) + 1)
-        if size > length:
-            raise OverflowError("cannot represent %d bit integer in "
-                                "%d bits" % (size, length))
         a = a[la - length:] if big_endian else a[:length - la]
 
     if la < length:
@@ -250,7 +261,7 @@ within length bits.
         else:
             a += zeros(length - la, 'little')
 
-    assert a.length() == length
+    assert len(a) == length
     return a
 
 

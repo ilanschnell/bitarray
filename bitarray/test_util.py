@@ -530,6 +530,29 @@ class TestsIntegerization(unittest.TestCase, Util):
         self.assertRaises(TypeError, int2ba, 1, 10, 123)
         self.assertRaises(ValueError, int2ba, 1, 10, 'asd')
 
+    def test_signed(self):
+        for s, i in [('0',  0),
+                     ('1', -1),
+                     ('00',  0),
+                     ('10',  1),
+                     ('01', -2),
+                     ('11', -1),
+                     ('00000',   0),
+                     ('11110',  15),
+                     ('00001', -16),
+                     ('11111',  -1),
+                     ('000000000',    0),
+                     ('111111110',  255),
+                     ('000000001', -256),
+                     ('111111111',   -1)]:
+            self.assertEqual(ba2int(bitarray(s, 'little'), signed=1), i)
+            self.assertEqual(ba2int(bitarray(s[::-1], 'big'), signed=1), i)
+
+            self.assertEQUAL(int2ba(i, len(s), 'little', signed=1),
+                             bitarray(s, 'little'))
+            self.assertEQUAL(int2ba(i, len(s), 'big', signed=1),
+                             bitarray(s[::-1], 'big'))
+
     def test_int2ba_length(self):
         self.assertRaises(TypeError, int2ba, 0, 1.0)
         self.assertRaises(ValueError, int2ba, 0, 0)
