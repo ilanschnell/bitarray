@@ -112,9 +112,6 @@ the bitarray (which has to be multiple of 4 in length).
     la = len(a)
     if la % 4:
         raise ValueError("bitarray length not multiple of 4")
-    if la % 8:
-        # make sure we don't mutate the original argument
-        a = a + bitarray(4, a.endian())
 
     b = a.tobytes()
     if a.endian() == 'little':
@@ -164,10 +161,8 @@ The bit-endianness of the bitarray is respected.
 
     big_endian = bool(a.endian() == 'big')
     length = len(a)
-    if length % 8:  # pad with leading / trailing zeros
-        pad = zeros(8 - length % 8, a.endian())
-        a = pad + a if big_endian else a + pad
-    assert len(a) % 8 == 0
+    if big_endian and length % 8:  # pad with leading zeros
+        a = zeros(8 - length % 8, a.endian()) + a
     b = a.tobytes()
 
     if _is_py2:
