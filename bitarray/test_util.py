@@ -414,6 +414,21 @@ tests.append(TestsSubset)
 
 # ---------------------------------------------------------------------------
 
+CODEDICT_BE = {
+    '0': bitarray('0000'),    '1': bitarray('0001'),
+    '2': bitarray('0010'),    '3': bitarray('0011'),
+    '4': bitarray('0100'),    '5': bitarray('0101'),
+    '6': bitarray('0110'),    '7': bitarray('0111'),
+    '8': bitarray('1000'),    '9': bitarray('1001'),
+    'a': bitarray('1010'),    'b': bitarray('1011'),
+    'c': bitarray('1100'),    'd': bitarray('1101'),
+    'e': bitarray('1110'),    'f': bitarray('1111'),
+}
+CODEDICT_LE = {}
+for k, v in CODEDICT_BE.items():
+    CODEDICT_LE[k] = v[::-1]
+
+
 class TestsHexlify(unittest.TestCase, Util):
 
     def test_swap_hilo_bytes(self):
@@ -468,6 +483,17 @@ class TestsHexlify(unittest.TestCase, Util):
         self.assertRaises(Exception, hex2ba, '01a7x89')
         self.assertRaises(TypeError, hex2ba, 0)
 
+    @staticmethod
+    def hex2ba(s, endian):
+        a = bitarray(0, endian)
+        a.encode(CODEDICT_BE if endian == 'big' else CODEDICT_LE, s)
+        return a
+
+    @staticmethod
+    def ba2hex(a):
+        return ''.join(a.decode(CODEDICT_BE if a.endian() == 'big' else
+                                CODEDICT_LE))
+
     def test_explicit(self):
         data = [ #     little  big                  little  big
             ('',       '',     ''),
@@ -491,6 +517,11 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertEQUAL(hex2ba(hex_le, 'little'), a_le)
             self.assertEqual(ba2hex(a_be), hex_be)
             self.assertEqual(ba2hex(a_le), hex_le)
+            # test simple encode / decode implementation
+            self.assertEqual(self.hex2ba(hex_be, 'big'), a_be)
+            self.assertEqual(self.hex2ba(hex_le, 'little'), a_le)
+            self.assertEqual(self.ba2hex(a_be), hex_be)
+            self.assertEqual(self.ba2hex(a_le), hex_le)
 
     def test_round_trip(self):
         for i in range(100):
