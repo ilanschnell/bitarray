@@ -109,8 +109,7 @@ the bitarray (which has to be multiple of 4 in length).
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
 
-    la = len(a)
-    if la % 4:
+    if len(a) % 4:
         raise ValueError("bitarray length not multiple of 4")
 
     b = a.tobytes()
@@ -118,7 +117,7 @@ the bitarray (which has to be multiple of 4 in length).
         b = b.translate(_swap_hilo_bytes)
 
     s = binascii.hexlify(b)
-    if la % 8:
+    if len(a) % 8:
         s = s[:-1]
     return s if _is_py2 else s.decode()
 
@@ -132,8 +131,8 @@ hexstr may contain any number of hex digits (upper or lower case).
     if not isinstance(s, (str, unicode if _is_py2 else bytes)):
         raise TypeError("string expected, got: %r" % s)
 
-    ls = len(s)
-    if ls % 2:
+    strlen = len(s)
+    if strlen % 2:
         s = s + ('0' if isinstance(s, str) else b'0')
 
     a = bitarray(0, endian or get_default_endian())
@@ -142,7 +141,7 @@ hexstr may contain any number of hex digits (upper or lower case).
         b = b.translate(_swap_hilo_bytes)
     a.frombytes(b)
 
-    if ls % 2:
+    if strlen % 2:
         del a[-4:]
     return a
 
@@ -156,11 +155,11 @@ The bit-endianness of the bitarray is respected.
 """
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
-    if not a:
+    length = len(a)
+    if length == 0:
         raise ValueError("non-empty bitarray expected")
 
     big_endian = bool(a.endian() == 'big')
-    length = len(a)
     if big_endian and length % 8:  # pad with leading zeros
         a = zeros(8 - length % 8, a.endian()) + a
     b = a.tobytes()
