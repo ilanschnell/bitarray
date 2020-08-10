@@ -108,9 +108,9 @@ tests.append(TestsMakeEndian)
 
 # ---------------------------------------------------------------------------
 
-class TestsHelpers(unittest.TestCase, Util):
+class TestsRindex(unittest.TestCase, Util):
 
-    def test_rindex(self):
+    def test_simple(self):
         self.assertRaises(TypeError, rindex)
         self.assertRaises(TypeError, rindex, None)
         self.assertRaises(TypeError, rindex, bitarray(), 1, 2)
@@ -139,7 +139,7 @@ class TestsHelpers(unittest.TestCase, Util):
             self.assertRaises(ValueError, rindex,
                               bitarray('11111', endian), 0)
 
-    def test_rindex2(self):
+    def test_random(self):
         for a in self.randombitarrays():
             v = randint(0, 1)
             try:
@@ -153,7 +153,7 @@ class TestsHelpers(unittest.TestCase, Util):
                 j = None
             self.assertEqual(i, j)
 
-    def test_rindex3(self):
+    def test_3(self):
         for _ in range(100):
             n = randint(1, 100000)
             v = randint(0, 1)
@@ -164,7 +164,7 @@ class TestsHelpers(unittest.TestCase, Util):
                 a[i] = v
             self.assertEqual(rindex(a, v), max(lst))
 
-    def test_rindex4(self):
+    def test_one_set(self):
         for _ in range(100):
             N = randint(1, 10000)
             a = bitarray(N)
@@ -172,7 +172,13 @@ class TestsHelpers(unittest.TestCase, Util):
             a[randint(0, N - 1)] = 1
             self.assertEqual(rindex(a), a.index(1))
 
-    def test_strip1(self):
+tests.append(TestsRindex)
+
+# ---------------------------------------------------------------------------
+
+class TestsStrip(unittest.TestCase, Util):
+
+    def test_simple(self):
         self.assertRaises(TypeError, strip, '0110')
         self.assertRaises(TypeError, strip, bitarray(), 123)
         self.assertRaises(ValueError, strip, bitarray(), 'up')
@@ -189,7 +195,7 @@ class TestsHelpers(unittest.TestCase, Util):
             self.assertEqual(strip(bitarray('000'), mode), bitarray())
             self.assertEqual(strip(bitarray(), mode), bitarray())
 
-    def test_strip2(self):
+    def test_random(self):
         for a in self.randombitarrays():
             b = a.copy()
             s = a.to01()
@@ -198,7 +204,7 @@ class TestsHelpers(unittest.TestCase, Util):
             self.assertEqual(strip(a, 'both'), bitarray(s.strip('0')))
             self.assertEQUAL(a, b)
 
-    def test_strip_both(self):
+    def test_one_set(self):
         for _ in range(100):
             N = randint(1, 10000)
             a = bitarray(N)
@@ -206,12 +212,18 @@ class TestsHelpers(unittest.TestCase, Util):
             a[randint(0, N - 1)] = 1
             self.assertEqual(strip(a, 'both'), bitarray('1'))
 
+tests.append(TestsStrip)
+
+# ---------------------------------------------------------------------------
+
+class TestsCount_N(unittest.TestCase, Util):
+
     def check_result(self, a, n, i):
         self.assertEqual(a.count(1, 0, i), n)
         if i:
             self.assertTrue(a[i - 1])
 
-    def test_count_n1(self):
+    def test_simple(self):
         a = bitarray('111110111110111110111110011110111110111110111000')
         b = a.copy()
         self.assertEqual(len(a), 48)
@@ -234,7 +246,7 @@ class TestsHelpers(unittest.TestCase, Util):
             self.assertEqual(a[:i].count(), n)
         self.assertEQUAL(a, b)
 
-    def test_count_n1_frozen(self):
+    def test_frozen(self):
         a = frozenbitarray('001111101111101111101111100111100')
         self.assertEqual(len(a), 33)
         self.assertEqual(a.count(), 24)
@@ -247,7 +259,7 @@ class TestsHelpers(unittest.TestCase, Util):
         self.assertRaises(ValueError, count_n, a, 34) # n > len(a)
         self.assertRaises(TypeError, count_n, a, "7")
 
-    def test_count_n2(self):
+    def test_large(self):
         for N in list(range(100)) + [1000, 10000, 100000]:
             a = bitarray(N)
             v = randint(0, 1)
@@ -261,7 +273,7 @@ class TestsHelpers(unittest.TestCase, Util):
             self.assertTrue(count_n(a, tc) <= N)
             self.assertRaises(ValueError, count_n, a, tc + 1)
 
-    def test_count_n3(self):
+    def test_one_set(self):
         N = 100000
         for _ in range(10):
             a = bitarray(N)
@@ -273,13 +285,13 @@ class TestsHelpers(unittest.TestCase, Util):
             self.assertEqual(count_n(a, 1), i + 1)
             self.assertRaises(ValueError, count_n, a, 2)
 
-    def test_count_n4(self):
+    def test_random(self):
         for a in self.randombitarrays():
             n = a.count() // 2
             i = count_n(a, n)
             self.check_result(a, n, i)
 
-tests.append(TestsHelpers)
+tests.append(TestsCount_N)
 
 # ---------------------------------------------------------------------------
 
