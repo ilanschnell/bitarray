@@ -208,12 +208,6 @@ is raised.
             raise TypeError("integer expected for length")
         if length <= 0:
             raise ValueError("integer larger than 0 expected for length")
-    if endian is None:
-        endian = get_default_endian()
-    if not isinstance(endian, str):
-        raise TypeError("string expected for bit endianness")
-    if endian not in ('big', 'little'):
-        raise ValueError("bit endianness must be either 'little' or 'big'")
     if signed and length is None:
         raise TypeError("signed requires length")
 
@@ -229,7 +223,8 @@ is raised.
     elif i < 0 or (length and i >= 1 << length):
         raise OverflowError("unsigned integer out of range")
 
-    big_endian = bool(endian == 'big')
+    a = bitarray(0, endian or get_default_endian())
+    big_endian = bool(a.endian() == 'big')
     if _is_py2:
         c = bytearray()
         while i:
@@ -239,9 +234,8 @@ is raised.
             c.reverse()
         b = bytes(c)
     else: # py3
-        b = i.to_bytes(bits2bytes(i.bit_length()), byteorder=endian)
+        b = i.to_bytes(bits2bytes(i.bit_length()), byteorder=a.endian())
 
-    a = bitarray(0, endian)
     a.frombytes(b)
     if length is None:
         return strip(a, 'left' if big_endian else 'right')
