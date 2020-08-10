@@ -437,6 +437,7 @@ the start positions where bitarray matches self.
 `length()` -> int
 
 Return the length - a.length() is the same as len(a).
+Deprecated since 1.5.1, use len().
 
 
 `pack(bytes, /)`
@@ -638,19 +639,22 @@ Bitarray of hexadecimal representation.
 hexstr may contain any number of hex digits (upper or lower case).
 
 
-`ba2int(bitarray, /)` -> int
+`ba2int(bitarray, /, signed=False)` -> int
 
 Convert the given bitarray into an integer.
 The bit-endianness of the bitarray is respected.
+`signed` indicates whether two's complement is used to represent the integer.
 
 
-`int2ba(int, /, length=None, endian=None)` -> bitarray
+`int2ba(int, /, length=None, endian=None, signed=False)` -> bitarray
 
 Convert the given integer into a bitarray (with given endianness,
-and no leading (big-endian) / trailing (little-endian) zeros).
-If length is provided, the result will be of this length, and an
-`OverflowError` will be raised, if the integer cannot be represented
-within length bits.
+and no leading (big-endian) / trailing (little-endian) zeros), unless
+the `length` of the bitarray is provided.  An `OverflowError` is raised
+if the integer is not representable with the given number of bits.
+`signed` determines whether two's complement is used to represent the integer.
+If signed is False and a negative integer is given, an OverflowError
+is raised.
 
 
 `huffman_code(dict, /, endian=None)` -> dict
@@ -666,6 +670,9 @@ Change log
 
 2020-XX-XX   1.5.1:
 
+  * support signed integers in `util.ba2int()` and `util.int2ba()`,
+    see issue #85
+  * deprecate `.length()` in favor of `len()`
 
 
 *1.5.0* (2020-08-05):
