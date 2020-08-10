@@ -62,13 +62,10 @@ unchanged.
         return a
 
     b = bitarray(a, endian)
-    la = len(a)
-    if la == 0:
-        return b
-
     b.bytereverse()
-    if la % 8:
-        p = 8 * (bits2bytes(la) - 1)
+    if len(a) % 8:
+        # copy last few bits directly
+        p = 8 * (bits2bytes(len(a)) - 1)
         b[p:] = a[p:]
     return b
 
@@ -91,14 +88,14 @@ Allowed values for mode are the strings: `left`, `right`, `both`
         try:
             first = a.index(1)
         except ValueError:
-            return bitarray(endian=a.endian())
+            return bitarray(0, a.endian())
 
     last = len(a) - 1
     if mode in ('right', 'both'):
         try:
             last = rindex(a)
         except ValueError:
-            return bitarray(endian=a.endian())
+            return bitarray(0, a.endian())
 
     return a[first:last + 1]
 
@@ -166,9 +163,9 @@ The bit-endianness of the bitarray is respected.
         raise ValueError("non-empty bitarray expected")
 
     big_endian = bool(a.endian() == 'big')
-    la = len(a)
-    if la % 8:  # pad with leading / trailing zeros
-        pad = zeros(8 - la % 8, a.endian())
+    length = len(a)
+    if length % 8:  # pad with leading / trailing zeros
+        pad = zeros(8 - length % 8, a.endian())
         a = pad + a if big_endian else a + pad
     assert len(a) % 8 == 0
     b = a.tobytes()
@@ -183,8 +180,8 @@ The bit-endianness of the bitarray is respected.
     else: # py3
         res = int.from_bytes(b, byteorder=a.endian())
 
-    if signed and res >= 1 << (la - 1):
-        res -= 1 << la
+    if signed and res >= 1 << (length - 1):
+        res -= 1 << length
     return res
 
 
