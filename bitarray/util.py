@@ -165,8 +165,7 @@ The bit-endianness of the bitarray is respected.
     if not a:
         raise ValueError("non-empty bitarray expected")
 
-    endian = a.endian()
-    big_endian = bool(endian == 'big')
+    big_endian = bool(a.endian() == 'big')
     la = len(a)
     if la % 8:  # pad with leading / trailing zeros
         if big_endian:
@@ -184,7 +183,7 @@ The bit-endianness of the bitarray is respected.
             res |= x << 8 * j
             j += -1 if big_endian else 1
     else: # py3
-        res = int.from_bytes(b, byteorder=endian)
+        res = int.from_bytes(b, byteorder=a.endian())
 
     if signed and res >= 1 << (la - 1):
         res -= 1 << la
@@ -204,8 +203,6 @@ is raised.
 """
     if not isinstance(i, (int, long) if _is_py2 else int):
         raise TypeError("integer expected")
-    if not signed and i < 0:
-        raise OverflowError("unsigned integer expected")
     if length is not None:
         if not isinstance(length, int):
             raise TypeError("integer expected for length")
@@ -229,7 +226,7 @@ is raised.
             raise OverflowError("signed integer out of range")
         if i < 0:
             i += 1 << length
-    elif length and i >= 1 << length:
+    elif i < 0 or (length and i >= 1 << length):
         raise OverflowError("unsigned integer out of range")
 
     big_endian = bool(endian == 'big')
