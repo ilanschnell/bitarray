@@ -663,8 +663,11 @@ class TestsIntegerization(unittest.TestCase, Util):
             b = int2ba(i, len(a), a.endian(), signed=True)
             self.assertEQUAL(a, b)
 
-            j = self.twos_complement(ba2int(a, signed=False), len(a))
-            self.assertEqual(i, j)
+            j = ba2int(a, signed=False)  # unsigned
+            if i >= 0:
+                self.assertEqual(i, j)
+
+            self.assertEqual(i, self.twos_complement(j, len(a)))
 
 
 tests.append(TestsIntegerization)
