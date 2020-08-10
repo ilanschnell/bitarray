@@ -193,11 +193,12 @@ The bit-endianness of the bitarray is respected.
 def int2ba(i, length=None, endian=None, signed=False):
     """int2ba(int, /, length=None, endian=None, signed=False) -> bitarray
 
-Convert the given integer into a bitarray (with given endianness,
+Convert the given integer to a bitarray (with given endianness,
 and no leading (big-endian) / trailing (little-endian) zeros), unless
 the `length` of the bitarray is provided.  An `OverflowError` is raised
 if the integer is not representable with the given number of bits.
-`signed` determines whether two's complement is used to represent the integer.
+`signed` determines whether two's complement is used to represent the integer,
+and requires `length` to be provided.
 If signed is False and a negative integer is given, an OverflowError
 is raised.
 """
