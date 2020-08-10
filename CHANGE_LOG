@@ -2,6 +2,7 @@
 -------------------
   * support signed integers in `util.ba2int()` and `util.int2ba()`,
     see issue #85
+  * deprecate `.length()` in favor of `len()`
 
 
 2020-08-05   1.5.0:

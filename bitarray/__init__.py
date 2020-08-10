@@ -32,7 +32,7 @@ as a dictionary key.
     def __hash__(self):
         "Return hash(self)."
         if getattr(self, '_hash', None) is None:
-            self._hash = hash((self.length(), self.tobytes()))
+            self._hash = hash((len(self), self.tobytes()))
         return self._hash
 
     def __delitem__(self, *args, **kwargs):

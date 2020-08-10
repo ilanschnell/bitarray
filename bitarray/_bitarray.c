@@ -776,13 +776,19 @@ normalize_index(Py_ssize_t n, Py_ssize_t *i)
 static PyObject *
 bitarray_length(bitarrayobject *self)
 {
+    if (PyErr_WarnEx(PyExc_DeprecationWarning,
+                     "self.length() has been deprecated since 1.5.1, "
+                     "use len(self) instead", 1) < 0)
+        return NULL;
+
     return PyLong_FromLongLong(self->nbits);
 }
 
 PyDoc_STRVAR(length_doc,
 "length() -> int\n\
 \n\
-Return the length - a.length() is the same as len(a).");
+Return the length - a.length() is the same as len(a).\n\
+Deprecated since 1.5.1, use len().");
 
 
 static PyObject *

@@ -422,11 +422,10 @@ class MetaDataTests(unittest.TestCase, Util):
         a = bitarray(endian='big')
         self.assertEqual(a.endian(), 'big')
 
-    def test_length(self):
+    def test_len(self):
         for n in range(100):
             a = bitarray(n)
             self.assertEqual(len(a), n)
-            self.assertEqual(a.length(), n)
 
 
 tests.append(MetaDataTests)
@@ -2551,7 +2550,6 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(b, a)
         self.assertEqual(repr(type(b)), "<class 'bitarray.frozenbitarray'>")
         self.assertEqual(len(b), 7)
-        self.assertEqual(b.length(), 7)
         self.assertEqual(b.all(), False)
         self.assertEqual(b.any(), True)
 
