@@ -1,4 +1,4 @@
-2020-XX-XX   1.5.1:
+2020-08-10   1.5.1:
 -------------------
   * support signed integers in `util.ba2int()` and `util.int2ba()`,
     see issue #85
