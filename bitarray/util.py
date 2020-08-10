@@ -212,7 +212,7 @@ is raised.
         raise TypeError("signed requires length")
 
     if i == 0:
-        # there a special cases for 0 which we'd rather not deal with below
+        # there are special cases for 0 which we'd rather not deal with below
         return zeros(length or 1, endian)
 
     if signed:
