@@ -537,6 +537,10 @@ class TestsHexlify(unittest.TestCase, Util):
                 b = hex2ba(t, default_endian)
                 self.assertEQUAL(a, b)
                 self.assertEqual(id(a), ida)
+                # test simple encode / decode implementation
+                self.assertEqual(a, self.hex2ba(s.lower(), default_endian))
+                self.assertEqual(t, self.ba2hex(a))
+
 
 tests.append(TestsHexlify)
 
