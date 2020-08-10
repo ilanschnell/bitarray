@@ -229,9 +229,8 @@ is raised.
             raise OverflowError("signed integer out of range")
         if i < 0:
             i += 1 << length
-    elif length:
-        if i >= 1 << length:
-            raise OverflowError("unsigned integer out of range")
+    elif length and i >= 1 << length:
+        raise OverflowError("unsigned integer out of range")
 
     big_endian = bool(endian == 'big')
     if _is_py2:
@@ -247,22 +246,15 @@ is raised.
 
     a = bitarray(0, endian)
     a.frombytes(b)
-    la = len(a)
-    if la == length:
-        return a
-
     if length is None:
         return strip(a, 'left' if big_endian else 'right')
 
+    la = len(a)
     if la > length:
-        a = a[la - length:] if big_endian else a[:length - la]
-
+        a = a[-length:] if big_endian else a[:length]
     if la < length:
-        if big_endian:
-            a = zeros(length - la, 'big') + a
-        else:
-            a += zeros(length - la, 'little')
-
+        pad = zeros(length - la, endian)
+        a = pad + a if big_endian else a + pad
     assert len(a) == length
     return a
 
