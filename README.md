@@ -35,8 +35,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.5.1.tar.gz
-    $ cd bitarray-1.5.1
+    $ tar xzf bitarray-1.5.2.tar.gz
+    $ cd bitarray-1.5.2
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -45,7 +45,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.5.1
+    bitarray version: 1.5.2
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
@@ -301,7 +301,7 @@ arbitrary.  If you want all values to be set, use the .setall() method.
 element in the sequence is converted to a bit using its truth value.
 
 `bitarray`: Create bitarray from another bitarray.  This is done by
-copying the memory holding the bitarray data, and is hence very fast.
+copying the buffer holding the bitarray data, and is hence very fast.
 
 The optional keyword arguments `endian` specifies the bit endianness of the
 created bitarray object.
@@ -332,9 +332,9 @@ Append the truth value `bool(item)` to the end of the bitarray.
 `buffer_info()` -> tuple
 
 Return a tuple (address, size, endianness, unused, allocated) giving the
-memory address of the bitarray's data, the size (in bytes) used to hold the
-bitarray's contents, the bit endianness as a string, the number of unused
-bits in the last bytes, and the size (in bytes) of the allocated memory.
+memory address of the bitarray's buffer, the buffer size (in bytes),
+the bit endianness as a string, the number of unused bits within the last
+byte, and the allocated memory for the buffer (in bytes).
 
 
 `bytereverse()`
@@ -668,6 +668,10 @@ hashable object (including `None`).
 
 Change log
 ----------
+
+2020-XX-XX   1.5.2:
+
+
 
 *1.5.1* (2020-08-10):
 

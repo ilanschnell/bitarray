@@ -146,7 +146,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     }
 
     if (newsize == size) {
-        /* the memory size hasn't changed - bypass everything */
+        /* the buffer size hasn't changed - bypass everything */
         self->nbits = nbits;
         return 0;
     }
@@ -960,9 +960,9 @@ PyDoc_STRVAR(buffer_info_doc,
 "buffer_info() -> tuple\n\
 \n\
 Return a tuple (address, size, endianness, unused, allocated) giving the\n\
-memory address of the bitarray's data, the size (in bytes) used to hold the\n\
-bitarray's contents, the bit endianness as a string, the number of unused\n\
-bits in the last bytes, and the size (in bytes) of the allocated memory.");
+memory address of the bitarray's buffer, the buffer size (in bytes),\n\
+the bit endianness as a string, the number of unused bits within the last\n\
+byte, and the allocated memory for the buffer (in bytes).");
 
 
 static PyObject *
@@ -2968,7 +2968,7 @@ arbitrary.  If you want all values to be set, use the .setall() method.\n\
 element in the sequence is converted to a bit using its truth value.\n\
 \n\
 `bitarray`: Create bitarray from another bitarray.  This is done by\n\
-copying the memory holding the bitarray data, and is hence very fast.\n\
+copying the buffer holding the bitarray data, and is hence very fast.\n\
 \n\
 The optional keyword arguments `endian` specifies the bit endianness of the\n\
 created bitarray object.\n\
