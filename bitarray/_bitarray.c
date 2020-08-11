@@ -3177,6 +3177,8 @@ init_bitarray(void)
     m = PyModule_Create(&moduledef);
     if (m == NULL)
         return NULL;
+    if (PyType_Ready(&Bitarraytype) < 0)
+        return NULL;
 #else
     m = Py_InitModule3("_bitarray", module_functions, 0);
     if (m == NULL)
