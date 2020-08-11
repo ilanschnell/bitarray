@@ -13,7 +13,8 @@ try:
 except ImportError:
     pass
 
-from bitarray import bitarray, frozenbitarray, bits2bytes, _set_default_endian
+from bitarray import (bitarray, frozenbitarray, bits2bytes,
+                      get_default_endian, _set_default_endian)
 from bitarray.test_bitarray import Util
 
 from bitarray.util import (zeros, make_endian, rindex, strip, count_n,
@@ -414,7 +415,8 @@ tests.append(TestsSubset)
 
 # ---------------------------------------------------------------------------
 
-CODEDICT_BE = {
+CODEDICT = {'little': {}}
+CODEDICT['big'] = {
     '0': bitarray('0000'),    '1': bitarray('0001'),
     '2': bitarray('0010'),    '3': bitarray('0011'),
     '4': bitarray('0100'),    '5': bitarray('0101'),
@@ -424,9 +426,8 @@ CODEDICT_BE = {
     'c': bitarray('1100'),    'd': bitarray('1101'),
     'e': bitarray('1110'),    'f': bitarray('1111'),
 }
-CODEDICT_LE = {}
-for k, v in CODEDICT_BE.items():
-    CODEDICT_LE[k] = v[::-1]
+for k, v in CODEDICT['big'].items():
+    CODEDICT['little'][k] = v[::-1]
 
 
 class TestsHexlify(unittest.TestCase, Util):
@@ -484,15 +485,14 @@ class TestsHexlify(unittest.TestCase, Util):
         self.assertRaises(TypeError, hex2ba, 0)
 
     @staticmethod
-    def hex2ba(s, endian):
-        a = bitarray(0, endian)
-        a.encode(CODEDICT_BE if endian == 'big' else CODEDICT_LE, s)
+    def hex2ba(s, endian=None):
+        a = bitarray(0, endian or get_default_endian())
+        a.encode(CODEDICT[a.endian()], s)
         return a
 
     @staticmethod
     def ba2hex(a):
-        return ''.join(a.iterdecode(CODEDICT_BE if a.endian() == 'big' else
-                                    CODEDICT_LE))
+        return ''.join(a.iterdecode(CODEDICT[a.endian()]))
 
     def test_explicit(self):
         data = [ #     little  big                  little  big
@@ -538,7 +538,7 @@ class TestsHexlify(unittest.TestCase, Util):
                 self.assertEQUAL(a, b)
                 self.assertEqual(id(a), ida)
                 # test simple encode / decode implementation
-                self.assertEqual(a, self.hex2ba(s.lower(), default_endian))
+                self.assertEqual(a, self.hex2ba(s.lower()))
                 self.assertEqual(t, self.ba2hex(a))
 
 
