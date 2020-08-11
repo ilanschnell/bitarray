@@ -797,11 +797,10 @@ class MiscTests(unittest.TestCase, Util):
         self.assertEqual(a.tobytes(), b.tobytes())
 
     def test_pickle(self):
-        for v in range(3):
-            for a in self.randombitarrays():
-                b = pickle.loads(pickle.dumps(a, v))
-                self.assertFalse(b is a)
-                self.assertEQUAL(a, b)
+        for a in self.randombitarrays():
+            b = pickle.loads(pickle.dumps(a))
+            self.assertFalse(b is a)
+            self.assertEQUAL(a, b)
 
     def test_overflow(self):
         if _sysinfo()[0] == 8:
@@ -1987,14 +1986,13 @@ class FileTests(unittest.TestCase, Util):
 
 
     def test_pickle(self):
-        for v in range(3):
-            for a in self.randombitarrays():
-                with open(self.tmpfname, 'wb') as fo:
-                    pickle.dump(a, fo, v)
-                with open(self.tmpfname, 'rb') as fi:
-                    b = pickle.load(fi)
-                self.assertFalse(b is a)
-                self.assertEQUAL(a, b)
+        for a in self.randombitarrays():
+            with open(self.tmpfname, 'wb') as fo:
+                pickle.dump(a, fo)
+            with open(self.tmpfname, 'rb') as fi:
+                b = pickle.load(fi)
+            self.assertFalse(b is a)
+            self.assertEQUAL(a, b)
 
     def test_shelve(self):
         if not shelve or hasattr(sys, 'gettotalrefcount'):
