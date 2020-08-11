@@ -415,8 +415,7 @@ tests.append(TestsSubset)
 
 # ---------------------------------------------------------------------------
 
-CODEDICT = {'little': {}}
-CODEDICT['big'] = {
+CODEDICT = {'little': {}, 'big': {
     '0': bitarray('0000'),    '1': bitarray('0001'),
     '2': bitarray('0010'),    '3': bitarray('0011'),
     '4': bitarray('0100'),    '5': bitarray('0101'),
@@ -425,7 +424,7 @@ CODEDICT['big'] = {
     'a': bitarray('1010'),    'b': bitarray('1011'),
     'c': bitarray('1100'),    'd': bitarray('1101'),
     'e': bitarray('1110'),    'f': bitarray('1111'),
-}
+}}
 for k, v in CODEDICT['big'].items():
     CODEDICT['little'][k] = v[::-1]
 
