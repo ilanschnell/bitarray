@@ -491,8 +491,8 @@ class TestsHexlify(unittest.TestCase, Util):
 
     @staticmethod
     def ba2hex(a):
-        return ''.join(a.decode(CODEDICT_BE if a.endian() == 'big' else
-                                CODEDICT_LE))
+        return ''.join(a.iterdecode(CODEDICT_BE if a.endian() == 'big' else
+                                    CODEDICT_LE))
 
     def test_explicit(self):
         data = [ #     little  big                  little  big
