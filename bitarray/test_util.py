@@ -518,8 +518,8 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertEqual(ba2hex(a_be), hex_be)
             self.assertEqual(ba2hex(a_le), hex_le)
             # test simple encode / decode implementation
-            self.assertEqual(self.hex2ba(hex_be, 'big'), a_be)
-            self.assertEqual(self.hex2ba(hex_le, 'little'), a_le)
+            self.assertEQUAL(self.hex2ba(hex_be, 'big'), a_be)
+            self.assertEQUAL(self.hex2ba(hex_le, 'little'), a_le)
             self.assertEqual(self.ba2hex(a_be), hex_be)
             self.assertEqual(self.ba2hex(a_le), hex_le)
 
@@ -529,16 +529,14 @@ class TestsHexlify(unittest.TestCase, Util):
             for default_endian in 'big', 'little':
                 _set_default_endian(default_endian)
                 a = hex2ba(s)
-                ida = id(a)
                 self.assertEqual(len(a) % 4, 0)
                 self.assertEqual(a.endian(), default_endian)
                 t = ba2hex(a)
                 self.assertEqual(t, s.lower())
                 b = hex2ba(t, default_endian)
                 self.assertEQUAL(a, b)
-                self.assertEqual(id(a), ida)
                 # test simple encode / decode implementation
-                self.assertEqual(a, self.hex2ba(s.lower()))
+                self.assertEQUAL(a, self.hex2ba(t))
                 self.assertEqual(t, self.ba2hex(a))
 
 
