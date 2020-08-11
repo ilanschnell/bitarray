@@ -160,8 +160,10 @@ The bit-endianness of the bitarray is respected.
         raise ValueError("non-empty bitarray expected")
 
     big_endian = bool(a.endian() == 'big')
-    if big_endian and length % 8:  # pad with leading zeros
-        a = zeros(8 - length % 8, a.endian()) + a
+    # for big endian pad leading zeros - for little endian we don't need to
+    # pad trailing zeros, as .tobytes() will treat them as zero
+    if big_endian and length % 8:
+        a = zeros(8 - length % 8, 'big') + a
     b = a.tobytes()
 
     if _is_py2:
