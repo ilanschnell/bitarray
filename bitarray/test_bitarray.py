@@ -2602,6 +2602,15 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         a.extend(b)
         self.assertEqual(a, bitarray('1100011'))
 
+    def test_pickle(self):
+        for a in self.randombitarrays():
+            f = frozenbitarray(a)
+            g = pickle.loads(pickle.dumps(f))
+            self.assertEqual(f, g)
+            self.assertEqual(f.endian(), g.endian())
+            self.assertTrue(str(g).startswith('frozenbitarray'))
+
+
 tests.append(TestsFrozenbitarray)
 
 # ---------------------------------------------------------------------------
