@@ -671,6 +671,8 @@ Change log
 
 2020-XX-XX   1.5.2:
 
+  * add PyType_Ready usage, issue #66
+  * add tests
 
 
 *1.5.1* (2020-08-10):
