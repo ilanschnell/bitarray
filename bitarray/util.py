@@ -8,7 +8,6 @@ Useful utilities for working with bitarrays.
 from __future__ import absolute_import
 
 import sys
-import heapq
 import binascii
 
 from bitarray import bitarray, bits2bytes, get_default_endian
@@ -250,6 +249,8 @@ calculate the Huffman code, i.e. a dict mapping those symbols to
 bitarrays (with given endianness).  Note that the symbols may be any
 hashable object (including `None`).
 """
+    import heapq
+
     if not isinstance(freq_map, dict):
         raise TypeError("dict expected")
     if len(freq_map) == 0:
