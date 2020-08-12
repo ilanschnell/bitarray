@@ -368,7 +368,7 @@ tests.append(TestsBitwiseCount)
 
 class TestsSubset(unittest.TestCase, Util):
 
-    def test_subset(self):
+    def test_basic(self):
         a = frozenbitarray('0101')
         b = bitarray('0111')
         self.assertTrue(subset(a, b))
@@ -383,7 +383,7 @@ class TestsSubset(unittest.TestCase, Util):
     def subset_simple(self, a, b):
         return (a & b).count() == a.count()
 
-    def test_subset_True(self):
+    def test_True(self):
         for a, b in [('', ''), ('0', '1'), ('0', '0'), ('1', '1'),
                      ('000', '111'), ('0101', '0111'),
                      ('000010111', '010011111')]:
@@ -391,14 +391,14 @@ class TestsSubset(unittest.TestCase, Util):
             self.assertTrue(subset(a, b) is True)
             self.assertTrue(self.subset_simple(a, b) is True)
 
-    def test_subset_False(self):
+    def test_False(self):
         for a, b in [('1', '0'), ('1101', '0111'),
                      ('0000101111', '0100111011')]:
             a, b = bitarray(a), bitarray(b)
             self.assertTrue(subset(a, b) is False)
             self.assertTrue(self.subset_simple(a, b) is False)
 
-    def test_many(self):
+    def test_random(self):
         for a in self.randombitarrays(start=1):
             b = a.copy()
             # we set one random bit in b to 1, so a is always a subset of b
