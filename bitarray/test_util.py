@@ -233,8 +233,7 @@ class TestsCount_N(unittest.TestCase, Util):
         self.assertEqual(count_n(a, 0), 0)
         self.assertEqual(count_n(a, 20), 23)
         self.assertEqual(count_n(a, 37), 45)
-        self.assertRaisesMessage(ValueError,
-                                 "non-negative integer expected",
+        self.assertRaisesMessage(ValueError, "non-negative integer expected",
                                  count_n, a, -1) # n < 0
         self.assertRaisesMessage(ValueError, "n larger than bitarray size",
                                  count_n, a, 49) # n > len(a)
