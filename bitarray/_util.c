@@ -127,7 +127,7 @@ count_to_n(bitarrayobject *a, Py_ssize_t n)
         j += m;
         i += BLOCK_BITS;
     }
-#undef BLOCK_SIZE
+#undef BLOCK_BITS
 
     while (i + 8 < a->nbits) {
         k = i / 8;
