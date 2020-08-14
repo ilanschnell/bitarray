@@ -3,7 +3,7 @@
    bitarray is published under the PSF license.
 
    This file is the C part of the bitarray package.
-   All functionality is implemented here.
+   All functionality of bitarray object is implemented here.
 
    Author: Ilan Schnell
 */
