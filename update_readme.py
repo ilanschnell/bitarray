@@ -31,8 +31,7 @@ def write_changelog():
             fo.write(line)
 
     url = "https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG"
-    fo.write('Please find the complete change log\n'
-             '<a href="%s">here</a>.\n' % url)
+    fo.write('Please find the complete change log [here](%s).\n' % url)
 
 
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
