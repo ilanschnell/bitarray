@@ -279,6 +279,11 @@ return a list of the symbols:
 Since symbols are not limited to being characters, it is necessary to return
 them as elements of a list, rather than simply returning the joined string.
 
+The above dictionary `d` can be efficiently constructed using the function
+`bitarray.util.huffman_code()`.  I also wrote [Huffman coding in Python using
+bitarray](http://ilan.schnell-web.net/prog/huffman/) for more background
+information.
+
 
 Reference
 =========
