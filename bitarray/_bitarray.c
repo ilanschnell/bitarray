@@ -732,7 +732,7 @@ IntBool_AsInt(PyObject *v)
     long x;
 
     if (PyBool_Check(v))
-        return PyObject_IsTrue(v);
+        return v == Py_True;
 
 #if PY_MAJOR_VERSION == 2
     if (PyInt_Check(v)) {
