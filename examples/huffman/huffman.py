@@ -127,7 +127,7 @@ def iterdecode(tree, bitsequence):
         try:
             yield traverse(tree, it)
         except StopIteration:
-            break
+            return
 
 
 def write_dot(tree, fn, binary=False):
