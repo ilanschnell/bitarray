@@ -486,6 +486,9 @@ search(bitarrayobject *self, bitarrayobject *xa, Py_ssize_t p)
     Py_ssize_t i;
 
     assert(p >= 0);
+    if (xa->nbits == 1)         /* faster for sparse bitarrays */
+        return findfirst(self, GETBIT(xa, 0), p, self->nbits);
+
     while (p < self->nbits - xa->nbits + 1) {
         for (i = 0; i < xa->nbits; i++)
             if (GETBIT(self, p + i) != GETBIT(xa, i))
