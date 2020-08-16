@@ -11,7 +11,7 @@ a = bitarray.bitarray('100011001001')
 print(a)
 
 # bitarray  ->  ndarray
-b = numpy.fromstring(a.unpack(), dtype=bool)
+b = numpy.frombuffer(a.unpack(), dtype=bool)
 print(repr(b))
 
 # ndarray  ->  bitarray

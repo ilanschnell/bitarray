@@ -1,44 +1,72 @@
-# Copyright (c) 2019, Ilan Schnell
+# Copyright (c) 2019 - 2020, Ilan Schnell
 # bitarray is published under the PSF license.
 #
 # Author: Ilan Schnell
 """
 Useful utilities for working with bitarrays.
 """
+from __future__ import absolute_import
+
 import sys
-import heapq
 import binascii
 
-from bitarray import bitarray, frozenbitarray, bits2bytes, _bitarray
+from bitarray import bitarray, bits2bytes, get_default_endian
 
 from bitarray._util import (count_n, rindex,
                             count_and, count_or, count_xor, subset,
-                            _set_babt)
+                            _swap_hilo_bytes, _set_bato)
 
 
-__all__ = ['zeros', 'rindex', 'strip', 'count_n',
+__all__ = ['zeros', 'make_endian', 'rindex', 'strip', 'count_n',
            'count_and', 'count_or', 'count_xor', 'subset',
            'ba2hex', 'hex2ba', 'ba2int', 'int2ba', 'huffman_code']
 
 
-# tell the _util extension what the bitarray base type is, such that it can
-# check for instances thereof when checking for bitarray type
-_set_babt(_bitarray)
+# tell the _util extension what the bitarray type object is, such that it
+# can check for instances thereof
+_set_bato(bitarray)
 
 _is_py2 = bool(sys.version_info[0] == 2)
 
 
-def zeros(length, endian='big'):
-    """zeros(length, /, endian='big') -> bitarray
+def zeros(length, endian=None):
+    """zeros(length, /, endian=None) -> bitarray
 
-Create a bitarray of length, with all values 0.
+Create a bitarray of length, with all values 0, and optional
+endianness, which may be 'big', 'lillte'.
 """
     if not isinstance(length, (int, long) if _is_py2 else int):
         raise TypeError("integer expected")
 
-    a = bitarray(length, endian)
+    a = bitarray(length, endian or get_default_endian())
     a.setall(0)
     return a
+
+
+def make_endian(a, endian):
+    """make_endian(bitarray, endian, /) -> bitarray
+
+When the endianness of the given bitarray is different from `endian`,
+return a new bitarray, with endianness `endian` and the same elements
+as the original bitarray, i.e. even though the binary representation of the
+new bitarray will be different, the returned bitarray will equal the original
+one.
+Otherwise (endianness is already `endian`) the original bitarray is returned
+unchanged.
+"""
+    if not isinstance(a, bitarray):
+        raise TypeError("bitarray expected")
+
+    if a.endian() == endian:
+        return a
+
+    b = bitarray(a, endian)
+    b.bytereverse()
+    if len(a) % 8:
+        # copy last few bits directly
+        p = 8 * (bits2bytes(len(a)) - 1)
+        b[p:] = a[p:]
+    return b
 
 
 def strip(a, mode='right'):
@@ -47,7 +75,7 @@ def strip(a, mode='right'):
 Strip zeros from left, right or both ends.
 Allowed values for mode are the strings: `left`, `right`, `both`
 """
-    if not isinstance(a, (bitarray, frozenbitarray)):
+    if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
     if not isinstance(mode, str):
         raise TypeError("string expected for mode")
@@ -59,14 +87,14 @@ Allowed values for mode are the strings: `left`, `right`, `both`
         try:
             first = a.index(1)
         except ValueError:
-            return bitarray(endian=a.endian())
+            return bitarray(0, a.endian())
 
-    last = a.length() - 1
+    last = len(a) - 1
     if mode in ('right', 'both'):
         try:
             last = rindex(a)
         except ValueError:
-            return bitarray(endian=a.endian())
+            return bitarray(0, a.endian())
 
     return a[first:last + 1]
 
@@ -74,68 +102,67 @@ Allowed values for mode are the strings: `left`, `right`, `both`
 def ba2hex(a):
     """ba2hex(bitarray, /) -> hexstr
 
-Return a bytes object containing with hexadecimal representation of
+Return a string containing with hexadecimal representation of
 the bitarray (which has to be multiple of 4 in length).
 """
-    if not isinstance(a, (bitarray, frozenbitarray)):
+    if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
-    if a.endian() != 'big':
-        raise ValueError("big-endian bitarray expected")
-    la = a.length()
-    if la % 4:
+
+    if len(a) % 4:
         raise ValueError("bitarray length not multiple of 4")
-    if la % 8:
-        # make sure we don't mutate the original argument
-        a = a + bitarray(4, 'big')
-    assert a.length() % 8 == 0
 
-    s = binascii.hexlify(a.tobytes())
-    if la % 8:
+    b = a.tobytes()
+    if a.endian() == 'little':
+        b = b.translate(_swap_hilo_bytes)
+
+    s = binascii.hexlify(b)
+    if len(a) % 8:
         s = s[:-1]
-    return s
+    return s if _is_py2 else s.decode()
 
 
-def hex2ba(s):
-    """hex2ba(hexstr, /) -> bitarray
+def hex2ba(s, endian=None):
+    """hex2ba(hexstr, /, endian=None) -> bitarray
 
 Bitarray of hexadecimal representation.
 hexstr may contain any number of hex digits (upper or lower case).
 """
-    if not isinstance(s, (str, bytes)):
-        raise TypeError("string expected")
+    if not isinstance(s, (str, unicode if _is_py2 else bytes)):
+        raise TypeError("string expected, got: %r" % s)
 
-    ls = len(s)
-    if ls % 2:
+    strlen = len(s)
+    if strlen % 2:
         s = s + ('0' if isinstance(s, str) else b'0')
-    assert len(s) % 2 == 0
 
-    a = bitarray(endian='big')
-    a.frombytes(binascii.unhexlify(s))
-    if ls % 2:
+    a = bitarray(0, endian or get_default_endian())
+    b = binascii.unhexlify(s)
+    if a.endian() == 'little':
+        b = b.translate(_swap_hilo_bytes)
+    a.frombytes(b)
+
+    if strlen % 2:
         del a[-4:]
     return a
 
 
-def ba2int(a):
-    """ba2int(bitarray, /) -> int
+def ba2int(a, signed=False):
+    """ba2int(bitarray, /, signed=False) -> int
 
 Convert the given bitarray into an integer.
 The bit-endianness of the bitarray is respected.
+`signed` indicates whether two's complement is used to represent the integer.
 """
-    if not isinstance(a, (bitarray, frozenbitarray)):
+    if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
-    if not a:
+    length = len(a)
+    if length == 0:
         raise ValueError("non-empty bitarray expected")
 
-    endian = a.endian()
-    big_endian = bool(endian == 'big')
-    if a.length() % 8:
-        # pad with leading zeros, such that length is multiple of 8
-        if big_endian:
-            a = zeros(8 - a.length() % 8, 'big') + a
-        else:
-            a = a + zeros(8 - a.length() % 8, 'little')
-    assert a.length() % 8 == 0
+    big_endian = bool(a.endian() == 'big')
+    # for big endian pad leading zeros - for little endian we don't need to
+    # pad trailing zeros, as .tobytes() will treat them as zero
+    if big_endian and length % 8:
+        a = zeros(8 - length % 8, 'big') + a
     b = a.tobytes()
 
     if _is_py2:
@@ -145,39 +172,50 @@ The bit-endianness of the bitarray is respected.
         for x in c:
             res |= x << 8 * j
             j += -1 if big_endian else 1
-        return res
     else: # py3
-        return int.from_bytes(b, byteorder=endian)
+        res = int.from_bytes(b, byteorder=a.endian())
+
+    if signed and res >= 1 << (length - 1):
+        res -= 1 << length
+    return res
 
 
-def int2ba(i, length=None, endian='big'):
-    """int2ba(int, /, length=None, endian='big') -> bitarray
+def int2ba(i, length=None, endian=None, signed=False):
+    """int2ba(int, /, length=None, endian=None, signed=False) -> bitarray
 
-Convert the given integer into a bitarray (with given endianness,
-and no leading (big-endian) / trailing (little-endian) zeros).
-If length is provided, the result will be of this length, and an
-`OverflowError` will be raised, if the integer cannot be represented
-within length bits.
+Convert the given integer to a bitarray (with given endianness,
+and no leading (big-endian) / trailing (little-endian) zeros), unless
+the `length` of the bitarray is provided.  An `OverflowError` is raised
+if the integer is not representable with the given number of bits.
+`signed` determines whether two's complement is used to represent the integer,
+and requires `length` to be provided.
+If signed is False and a negative integer is given, an OverflowError
+is raised.
 """
     if not isinstance(i, (int, long) if _is_py2 else int):
         raise TypeError("integer expected")
-    if i < 0:
-        raise ValueError("non-negative integer expected")
     if length is not None:
         if not isinstance(length, int):
             raise TypeError("integer expected for length")
         if length <= 0:
             raise ValueError("integer larger than 0 expected for length")
-    if not isinstance(endian, str):
-        raise TypeError("string expected for endian")
-    if endian not in ('big', 'little'):
-        raise ValueError("endian can only be 'big' or 'little'")
+    if signed and length is None:
+        raise TypeError("signed requires length")
 
     if i == 0:
-        # there a special cases for 0 which we'd rather not deal with below
-        return zeros(length or 1, endian=endian)
+        # there are special cases for 0 which we'd rather not deal with below
+        return zeros(length or 1, endian)
 
-    big_endian = bool(endian == 'big')
+    if signed:
+        if i >= 1 << (length - 1) or i < -(1 << (length - 1)):
+            raise OverflowError("signed integer out of range")
+        if i < 0:
+            i += 1 << length
+    elif i < 0 or (length and i >= 1 << length):
+        raise OverflowError("unsigned integer out of range")
+
+    a = bitarray(0, endian or get_default_endian())
+    big_endian = bool(a.endian() == 'big')
     if _is_py2:
         c = bytearray()
         while i:
@@ -187,42 +225,32 @@ within length bits.
             c.reverse()
         b = bytes(c)
     else: # py3
-        b = i.to_bytes(bits2bytes(i.bit_length()), byteorder=endian)
+        b = i.to_bytes(bits2bytes(i.bit_length()), byteorder=a.endian())
 
-    a = bitarray(endian=endian)
     a.frombytes(b)
-    la = a.length()
-    if la == length:
-        return a
-
     if length is None:
         return strip(a, 'left' if big_endian else 'right')
 
+    la = len(a)
     if la > length:
-        size = (la - a.index(1)) if big_endian else (rindex(a) + 1)
-        if size > length:
-            raise OverflowError("cannot represent %d bit integer in "
-                                "%d bits" % (size, length))
-        a = a[la - length:] if big_endian else a[:length - la]
-
+        a = a[-length:] if big_endian else a[:length]
     if la < length:
-        if big_endian:
-            a = zeros(length - la, 'big') + a
-        else:
-            a += zeros(length - la, 'little')
-
-    assert a.length() == length
+        pad = zeros(length - la, endian)
+        a = pad + a if big_endian else a + pad
+    assert len(a) == length
     return a
 
 
-def huffman_code(freq_map, endian='big'):
-    """huffman_code(dict, /, endian='big') -> dict
+def huffman_code(freq_map, endian=None):
+    """huffman_code(dict, /, endian=None) -> dict
 
 Given a frequency map, a dictionary mapping symbols to thier frequency,
 calculate the Huffman code, i.e. a dict mapping those symbols to
 bitarrays (with given endianness).  Note that the symbols may be any
 hashable object (including `None`).
 """
+    import heapq
+
     if not isinstance(freq_map, dict):
         raise TypeError("dict expected")
     if len(freq_map) == 0:
@@ -263,7 +291,7 @@ hashable object (including `None`).
 
     result = {}
 
-    def traverse(nd, prefix=bitarray(endian=endian)):
+    def traverse(nd, prefix=bitarray(0, endian or get_default_endian())):
         if hasattr(nd, 'symbol'):  # leaf
             result[nd.symbol] = prefix
         else:  # parent, so traverse each of the children

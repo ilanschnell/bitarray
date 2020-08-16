@@ -1,5 +1,4 @@
 import re
-from os.path import join
 from distutils.core import setup, Extension
 
 
@@ -9,10 +8,10 @@ try:
 except IOError:
     pass
 
-# Read version from bitarray/__init__.py
-pat = re.compile(r'__version__\s*=\s*(\S+)', re.M)
-data = open(join('bitarray', '__init__.py')).read()
-kwds['version'] = eval(pat.search(data).group(1))
+# Read version from bitarray/_bitarray.c
+pat = re.compile(r'#define\s+BITARRAY_VERSION\s+"(\S+)"', re.M)
+data = open('bitarray/_bitarray.c').read()
+kwds['version'] = pat.search(data).group(1)
 
 
 setup(
@@ -34,6 +33,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Topic :: Utilities",
     ],
     description = "efficient arrays of booleans -- C extension",

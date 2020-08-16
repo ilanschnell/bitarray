@@ -32,8 +32,7 @@ Key features
  * Sequential search
  * Pickling and unpickling of bitarray objects.
  * Bitarray objects support the buffer protocol (Python 2.7 and above)
- * On 32-bit systems, a bitarray object can contain up to 2^34 elements,
-   that is 16 Gbits (on 64-bit machines up to 2^63 elements in theory).
+ * On 32-bit systems, a bitarray object can contain up to 2 Gbits.
 
 
 Installation
@@ -46,8 +45,8 @@ Installation
 
 Alternatively `bitarray` can be installed from source:
 
-    $ tar xzf bitarray-1.2.1.tar.gz
-    $ cd bitarray-1.2.1
+    $ tar xzf bitarray-1.5.2.tar.gz
+    $ cd bitarray-1.5.2
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -56,13 +55,13 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.2.1
+    bitarray version: 1.5.2
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
     ..............................
     ----------------------------------------------------------------------
-    Ran 199 tests in 1.144s
+    Ran 230 tests in 0.889s
 
     OK
 
@@ -74,8 +73,9 @@ Using the module
 ----------------
 
 As mentioned above, bitarray objects behave very much like lists, so
-there is not too much to learn.  The biggest difference from list objects
-is the ability to access the machine representation of the object.
+there is not too much to learn.  The biggest difference from list
+objects (except that bitarray are obviously homogeneous) is the ability
+to access the machine representation of the object.
 When doing so, the bit endianness is of importance; this issue is
 explained in detail in the section below.  Here, we demonstrate the
 basic usage of bitarray objects:
@@ -165,8 +165,8 @@ specified explicitly:
 
 Here, the low-bit comes first because little-endian means that increasing
 numeric significance corresponds to an increasing address (index).
-So a[0] is the lowest and least significant bit, and a[7] is the highest
-and most significant bit.
+So `a[0]` is the lowest and least significant bit, and `a[7]` is the
+highest and most significant bit.
 
     >>> a = bitarray(endian='big')
     >>> a.frombytes(b'A')
@@ -178,8 +178,8 @@ and most significant bit.
 
 Here, the high-bit comes first because big-endian
 means "most-significant first".
-So a[0] is now the lowest and most significant bit, and a[7] is the highest
-and least significant bit.
+So `a[0]` is now the lowest and most significant bit, and `a[7]` is the
+highest and least significant bit.
 
 The bit endianness is a property attached to each bitarray object.
 When comparing bitarray objects, the endianness (and hence the machine
@@ -289,6 +289,11 @@ return a list of the symbols:
 Since symbols are not limited to being characters, it is necessary to return
 them as elements of a list, rather than simply returning the joined string.
 
+The above dictionary `d` can be efficiently constructed using the function
+`bitarray.util.huffman_code()`.  I also wrote [Huffman coding in Python using
+bitarray](http://ilan.schnell-web.net/prog/huffman/) for more background
+information.
+
 
 Reference
 =========
@@ -296,12 +301,11 @@ Reference
 The bitarray object:
 --------------------
 
-`bitarray(initial=0, /, endian='big')`
+`bitarray(initializer=0, /, endian='big')` -> bitarray
 
 Return a new bitarray object whose items are bits initialized from
 the optional initial object, and endianness.
-If no initial object is provided, an empty bitarray (length zero) is created.
-The initial object may be of the following types:
+The initializer may be of the following types:
 
 `int`: Create a bitarray of given integer length.  The initial values are
 arbitrary.  If you want all values to be set, use the .setall() method.
@@ -312,7 +316,7 @@ arbitrary.  If you want all values to be set, use the .setall() method.
 element in the sequence is converted to a bit using its truth value.
 
 `bitarray`: Create bitarray from another bitarray.  This is done by
-copying the memory holding the bitarray data, and is hence very fast.
+copying the buffer holding the bitarray data, and is hence very fast.
 
 The optional keyword arguments `endian` specifies the bit endianness of the
 created bitarray object.
@@ -337,16 +341,15 @@ Returns True when any bit in the array is True.
 
 `append(item, /)`
 
-Append the value `bool(item)` to the end of the bitarray.
+Append the truth value `bool(item)` to the end of the bitarray.
 
 
 `buffer_info()` -> tuple
 
 Return a tuple (address, size, endianness, unused, allocated) giving the
-current memory address, the size (in bytes) used to hold the bitarray's
-contents, the bit endianness as a string, the number of unused bits
-(e.g. a bitarray of length 11 will have a buffer size of 2 bytes and
-5 unused bits), and the size (in bytes) of the allocated memory.
+memory address of the bitarray's buffer, the buffer size (in bytes),
+the bit endianness as a string, the number of unused bits within the last
+byte, and the allocated memory for the buffer (in bytes).
 
 
 `bytereverse()`
@@ -354,6 +357,11 @@ contents, the bit endianness as a string, the number of unused bits
 For all bytes representing the bitarray, reverse the bit order (in-place).
 Note: This method changes the actual machine values representing the
 bitarray; it does not change the endianness of the bitarray object.
+
+
+`clear()`
+
+Remove all items from the bitarray.
 
 
 `copy()` -> bitarray
@@ -376,19 +384,19 @@ decode the content of the bitarray and return it as a list of symbols.
 
 Given a prefix code (a dict mapping symbols to bitarrays),
 iterate over the iterable object with symbols, and extend the bitarray
-with the corresponding bitarray for each symbols.
+with the corresponding bitarray for each symbol.
 
 
 `endian()` -> str
 
-Return the bit endianness as a string (either `little` or `big`).
+Return the bit endianness of the bitarray as a string (`little` or `big`).
 
 
-`extend(iterable, /)`
+`extend(iterable or string, /)`
 
-Append bits to the end of the bitarray.  The objects which can be passed
-to this method are the same iterable objects which can given to a bitarray
-object upon initialization.
+Extend bitarray by appending the truth value of each element given
+by iterable.  If a string is provided, each `0` and `1` are appended
+as bits.
 
 
 `fill()` -> int
@@ -399,20 +407,16 @@ will be a multiple of 8.  Returns the number of bits added (0..7).
 
 `frombytes(bytes, /)`
 
-Append from a byte string, interpreted as machine values.
+Extend bitarray with raw bytes.  That is, each append byte will add eight
+bits to the bitarray.
 
 
-`fromfile(f, n=<till EOF>, /)`
+`fromfile(f, n=-1, /)`
 
-Read n bytes from the file object f and append them to the bitarray
-interpreted as machine values.  When n is omitted, as many bytes are
-read until EOF is reached.
-
-
-`fromstring(str)`
-
-Append from a string, interpreting the string as machine values.
-Deprecated since version 0.4.0, use `.frombytes()` instead.
+Extend bitarray with up to n bytes read from the file object f.
+When n is omitted or negative, reads all data until EOF.
+When n is provided and positions but exceeds the data available,
+EOFError is raised (but the available data is still read and appended.
 
 
 `index(value, start=0, stop=<end of array>, /)` -> int
@@ -447,11 +451,8 @@ the start positions where bitarray matches self.
 
 `length()` -> int
 
-Return the length, i.e. number of bits stored in the bitarray.
-This method is preferred over `__len__` (used when typing `len(a)`),
-since `__len__` will fail for a bitarray object with 2^31 or more elements
-on a 32bit machine, whereas this method will return the correct value,
-on 32bit and 64bit machines.
+Return the length - a.length() is the same as len(a).
+Deprecated since 1.5.1, use len().
 
 
 `pack(bytes, /)`
@@ -503,8 +504,6 @@ Sort the bits in the array (in-place).
 
 Return a string containing '0's and '1's, representing the bits in the
 bitarray object.
-Note: To extend a bitarray from a string containing '0's and '1's,
-use the extend method.
 
 
 `tobytes()` -> bytes
@@ -516,27 +515,17 @@ bits (1..7) are considered to be 0.
 
 `tofile(f, /)`
 
-Write all bits (as machine values) to the file object f.
+Write the byte representation of the bitarray to the file object f.
 When the length of the bitarray is not a multiple of 8,
 the remaining bits (1..7) are set to 0.
 
 
 `tolist()` -> list
 
-Return an ordinary list with the items in the bitarray.
+Return a list with the items (False or True) in the bitarray.
 Note that the list object being created will require 32 or 64 times more
-memory than the bitarray object, which may cause a memory error if the
-bitarray is very large.
-Also note that to extend a bitarray with elements from a list,
-use the extend method.
-
-
-`tostring()` -> str
-
-Return the string representing (machine values) of the bitarray.
-When the length of the bitarray is not a multiple of 8, the few remaining
-bits (1..7) are set to 0.
-Deprecated since version 0.4.0, use `.tobytes()` instead.
+memory (depending on the machine architecture) than the bitarray object,
+which may cause a memory error if the bitarray is very large.
 
 
 `unpack(zero=b'\x00', one=b'\xff')` -> bytes
@@ -548,28 +537,34 @@ using the specified mapping.
 The frozenbitarray object:
 --------------------------
 
-`frozenbitarray(initial=0, /, endian='big')`
+This object is very similar to the bitarray object.  The difference is that
+this a frozenbitarray is immutable, and hashable:
+
+    >>> from bitarray import frozenbitarray
+    >>> a = frozenbitarray('1100011')
+    >>> a[3] = 1
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+      File "bitarray/__init__.py", line 40, in __delitem__
+        raise TypeError("'frozenbitarray' is immutable")
+    TypeError: 'frozenbitarray' is immutable
+    >>> {a: 'some value'}
+    {frozenbitarray('1100011'): 'some value'}
+
+`frozenbitarray(initializer=0, /, endian='big')` -> frozenbitarray
 
 Return a frozenbitarray object, which is initialized the same way a bitarray
 object is initialized.  A frozenbitarray is immutable and hashable.
-Its contents cannot be altered after is created; however, it can be used as
-a dictionary key.
+Its contents cannot be altered after it is created; however, it can be used
+as a dictionary key.
 
 
-Functions defined in the module:
---------------------------------
+Functions defined in the `bitarray` package:
+--------------------------------------------
 
 `test(verbosity=1, repeat=1)` -> TextTestResult
 
 Run self-test, and return unittest.runner.TextTestResult object.
-
-
-`bitdiff(a, b, /)` -> int
-
-Return the difference between two bitarrays a and b.
-This is function does the same as (a ^ b).count(), but is more memory
-efficient, as no intermediate bitarray object gets created.
-Deprecated since version 1.2.0, use `bitarray.util.count_xor()` instead.
 
 
 `bits2bytes(n, /)` -> int
@@ -577,12 +572,30 @@ Deprecated since version 1.2.0, use `bitarray.util.count_xor()` instead.
 Return the number of bytes necessary to store n bits.
 
 
-Functions defined in bitarray.util:
------------------------------------
+`get_default_endian()` -> string
 
-`zeros(length, /, endian='big')` -> bitarray
+Return the default endianness for new bitarray objects being created.
+Under normal circumstances, the return value is `big`.
 
-Create a bitarray of length, with all values 0.
+
+Functions defined in `bitarray.util` module:
+--------------------------------------------
+
+`zeros(length, /, endian=None)` -> bitarray
+
+Create a bitarray of length, with all values 0, and optional
+endianness, which may be 'big', 'lillte'.
+
+
+`make_endian(bitarray, endian, /)` -> bitarray
+
+When the endianness of the given bitarray is different from `endian`,
+return a new bitarray, with endianness `endian` and the same elements
+as the original bitarray, i.e. even though the binary representation of the
+new bitarray will be different, the returned bitarray will equal the original
+one.
+Otherwise (endianness is already `endian`) the original bitarray is returned
+unchanged.
 
 
 `rindex(bitarray, value=True, /)` -> int
@@ -600,7 +613,7 @@ Allowed values for mode are the strings: `left`, `right`, `both`
 `count_n(a, n, /)` -> int
 
 Find the smallest index `i` for which `a[:i].count() == n`.
-Raises `ValueError`, when n exceeds the `a.count()`.
+Raises `ValueError`, when n exceeds total count (`a.count()`).
 
 
 `count_and(a, b, /)` -> int
@@ -631,32 +644,36 @@ intermediate bitarray object gets created.
 
 `ba2hex(bitarray, /)` -> hexstr
 
-Return a bytes object containing with hexadecimal representation of
+Return a string containing with hexadecimal representation of
 the bitarray (which has to be multiple of 4 in length).
 
 
-`hex2ba(hexstr, /)` -> bitarray
+`hex2ba(hexstr, /, endian=None)` -> bitarray
 
 Bitarray of hexadecimal representation.
 hexstr may contain any number of hex digits (upper or lower case).
 
 
-`ba2int(bitarray, /)` -> int
+`ba2int(bitarray, /, signed=False)` -> int
 
 Convert the given bitarray into an integer.
 The bit-endianness of the bitarray is respected.
+`signed` indicates whether two's complement is used to represent the integer.
 
 
-`int2ba(int, /, length=None, endian='big')` -> bitarray
+`int2ba(int, /, length=None, endian=None, signed=False)` -> bitarray
 
-Convert the given integer into a bitarray (with given endianness,
-and no leading (big-endian) / trailing (little-endian) zeros).
-If length is provided, the result will be of this length, and an
-`OverflowError` will be raised, if the integer cannot be represented
-within length bits.
+Convert the given integer to a bitarray (with given endianness,
+and no leading (big-endian) / trailing (little-endian) zeros), unless
+the `length` of the bitarray is provided.  An `OverflowError` is raised
+if the integer is not representable with the given number of bits.
+`signed` determines whether two's complement is used to represent the integer,
+and requires `length` to be provided.
+If signed is False and a negative integer is given, an OverflowError
+is raised.
 
 
-`huffman_code(dict, /, endian='big')` -> dict
+`huffman_code(dict, /, endian=None)` -> dict
 
 Given a frequency map, a dictionary mapping symbols to thier frequency,
 calculate the Huffman code, i.e. a dict mapping those symbols to
@@ -667,39 +684,73 @@ hashable object (including `None`).
 Change log
 ----------
 
-*1.2.1* (2020-01-06):
+2020-XX-XX   1.5.2:
 
-  * simplify markdown of readme so PyPI renders better
-  * make tests for bitarray.util required (instead of warning when
-    they cannot be imported)
-
-
-*1.2.0* (2019-12-06):
-
-  * add bitarray.util module which provides useful utility functions
-  * deprecate `bitarray.bitdiff` in favor of `bitarray.util.count_xor`
-  * use markdown for documentation
-  * fix bug in .count() on 32bit systems in special cases when array size
-    is 2^29 bits or larger
-  * simplified tests by using bytes syntax
-  * update smallints and sieve example to use new utility module
-  * simplified mandel example to use numba
-  * use file context managers in tests
+  * add PyType_Ready usage, issue #66
+  * add tests
 
 
-*1.1.0* (2019-11-07):
+*1.5.1* (2020-08-10):
 
-  * add frozenbitarray object
-  * add optional start and stop parameters to .count() method
-  * add official Python 3.8 support
-  * optimize setrange() C-function by using memset
-  * fix issue #74, bitarray is hashable on Python 2
-  * fix issue #68, `unittest.TestCase.assert_` deprecated
-  * improved test suite - tests should run in about 1 second
-  * update documentation to use positional-only syntax in docstrings
-  * update readme to pass Python 3 doctest
-  * add utils module to examples
+  * support signed integers in `util.ba2int()` and `util.int2ba()`,
+    see issue #85
+  * deprecate `.length()` in favor of `len()`
 
 
-Please find the complete change log
-<a href="https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG">here</a>.
+*1.5.0* (2020-08-05):
+
+  * Use `Py_ssize_t` for bitarray index.  This means that on 32bit
+    systems, the maximun number of elements in a bitarray is 2 GBits.
+    We used to have a special 64bit index type for all architectures, but
+    this prevented us from using Python's sequence, mapping and number
+    methods, and made those method lookups slow.
+  * speedup slice operations when step size = 1 (if alignment allows
+    copying whole bytes)
+  * Require equal endianness for operations: `&`, `|`, `^`, `&=`, `|=`, `^=`.
+    This should have always been the case but was overlooked in the past.
+  * raise TypeError when tring to create bitarray from boolean
+  * This will be last release to still support Python 2.6 (which was retired
+    in 2013).  We do NOT plan to stop support for Python 2.7 anytime soon.
+
+
+*1.4.2* (2020-07-15):
+
+  * add more tests
+  * C-level:
+      - simplify pack/unpack code
+      - fix memory leak in `~` operation (bitarray_cpinvert)
+
+
+*1.4.1* (2020-07-14):
+
+  * add official Python 3.9 support
+  * improve many docstrings
+  * add DeprecationWarning for `bitdiff()`
+  * add DeprecationWarning when trying to extend bitarrays
+    from bytes on Python 3 (`bitarrays(b'011')` and `.extend(b'110')`)
+  * C-level:
+      - Rewrote `.fromfile()` and `.tofile()` implementation,
+        such that now the same code is used for Python 2 and 3.
+        The new implementation is more memoery efficient on
+        Python 3.
+      - use memcmp() in richcompare to shortcut EQ/NE, when
+        comparing two very large bitarrays for equality the
+        speedup can easily be 100x
+      - simplify how unpacking is handled
+  * add more tests
+
+
+*1.4.0* (2020-07-11):
+
+  * add `.clear()` method (Python 3.3 added this method to lists)
+  * avoid overallocation when bitarray objects are initially created
+  * raise BufferError when resizing bitarrays which is exporting buffers
+  * add example to study the resize() function
+  * improve some error messages
+  * add more tests
+  * raise `NotImplementedError` with (useful message) when trying to call
+    the `.fromstring()` or `.tostring()` methods, which have been removed
+    in the last release
+
+
+Please find the complete change log [here](https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG).

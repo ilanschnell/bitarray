@@ -1,6 +1,91 @@
-2020-XX-XX   1.2.2:
+2020-XX-XX   1.5.2:
 -------------------
-  *
+  * add PyType_Ready usage, issue #66
+  * add tests
+
+
+2020-08-10   1.5.1:
+-------------------
+  * support signed integers in `util.ba2int()` and `util.int2ba()`,
+    see issue #85
+  * deprecate `.length()` in favor of `len()`
+
+
+2020-08-05   1.5.0:
+-------------------
+  * Use `Py_ssize_t` for bitarray index.  This means that on 32bit
+    systems, the maximun number of elements in a bitarray is 2 GBits.
+    We used to have a special 64bit index type for all architectures, but
+    this prevented us from using Python's sequence, mapping and number
+    methods, and made those method lookups slow.
+  * speedup slice operations when step size = 1 (if alignment allows
+    copying whole bytes)
+  * Require equal endianness for operations: `&`, `|`, `^`, `&=`, `|=`, `^=`.
+    This should have always been the case but was overlooked in the past.
+  * raise TypeError when tring to create bitarray from boolean
+  * This will be last release to still support Python 2.6 (which was retired
+    in 2013).  We do NOT plan to stop support for Python 2.7 anytime soon.
+
+
+2020-07-15   1.4.2:
+-------------------
+  * add more tests
+  * C-level:
+      - simplify pack/unpack code
+      - fix memory leak in `~` operation (bitarray_cpinvert)
+
+
+2020-07-14   1.4.1:
+-------------------
+  * add official Python 3.9 support
+  * improve many docstrings
+  * add DeprecationWarning for `bitdiff()`
+  * add DeprecationWarning when trying to extend bitarrays
+    from bytes on Python 3 (`bitarrays(b'011')` and `.extend(b'110')`)
+  * C-level:
+      - Rewrote `.fromfile()` and `.tofile()` implementation,
+        such that now the same code is used for Python 2 and 3.
+        The new implementation is more memoery efficient on
+        Python 3.
+      - use memcmp() in richcompare to shortcut EQ/NE, when
+        comparing two very large bitarrays for equality the
+        speedup can easily be 100x
+      - simplify how unpacking is handled
+  * add more tests
+
+
+2020-07-11   1.4.0:
+-------------------
+  * add `.clear()` method (Python 3.3 added this method to lists)
+  * avoid overallocation when bitarray objects are initially created
+  * raise BufferError when resizing bitarrays which is exporting buffers
+  * add example to study the resize() function
+  * improve some error messages
+  * add more tests
+  * raise `NotImplementedError` with (useful message) when trying to call
+    the `.fromstring()` or `.tostring()` methods, which have been removed
+    in the last release
+
+
+2020-07-06   1.3.0:
+-------------------
+  * add `bitarray.util.make_endian()`
+  * `util.ba2hex()` and `util.hex2ba()` now also support little-endian
+  * add `bitarray.get_default_endian()`
+  * made first argument of initializer a positional-only parameter
+  * remove `.fromstring()` and `.tostring()` methods, these have been
+    deprecated 8 years ago, since version 0.4.0
+  * add `__all__` in `bitarray/__init__.py`
+  * drop Python 3.3 and 3.4 support
+
+
+2020-05-18   1.2.2:
+-------------------
+  * `util.ba2hex` now always return a string object (instead of bytes object
+    for Python 3), see issue #94
+  * `util.hex2ba` allows a unicode object as input on Python 2
+  * Determine 64-bitness of interpreter in a cross-platform fashion #91,
+    in order to better support PyPy
 
 
 2020-01-06   1.2.1:

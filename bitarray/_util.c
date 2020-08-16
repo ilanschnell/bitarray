@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2019, Ilan Schnell
+   Copyright (c) 2019 - 2020, Ilan Schnell
    bitarray is published under the PSF license.
 
    This file contains the C implementation of some useful utility functions.
@@ -14,37 +14,31 @@
 #define IS_PY3K
 #endif
 
-#ifdef STDC_HEADERS
-#include <stddef.h>
-#else  /* !STDC_HEADERS */
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>      /* For size_t */
-#endif /* HAVE_SYS_TYPES_H */
-#endif /* !STDC_HEADERS */
-
-
-typedef long long int idx_t;
 
 typedef struct {
     PyObject_VAR_HEAD
-    char *ob_item;
+    char *ob_item;              /* buffer */
     Py_ssize_t allocated;       /* how many bytes allocated */
-    idx_t nbits;                /* length of bitarray, i.e. elements */
+    Py_ssize_t nbits;           /* length of bitarray, i.e. elements */
     int endian;                 /* bit endianness of bitarray */
     int ob_exports;             /* how many buffer exports */
     PyObject *weakreflist;      /* list of weak references */
 } bitarrayobject;
 
-#define BITS(bytes)  ((idx_t) (bytes) << 3)
+#define ENDIAN_LITTLE  0
+#define ENDIAN_BIG     1
+
+#define BITS(bytes)  ((bytes) << 3)
 
 #define BYTES(bits)  (((bits) == 0) ? 0 : (((bits) - 1) / 8 + 1))
 
-#define BITMASK(endian, i)  (((char) 1) << ((endian) ? (7 - (i)%8) : (i)%8))
+#define BITMASK(endian, i)  \
+    (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) % 8) : (7 - (i) % 8)))
 
 /* ------------ low level access to bits in bitarrayobject ------------- */
 
 #ifndef NDEBUG
-static int GETBIT(bitarrayobject *self, idx_t i) {
+static int GETBIT(bitarrayobject *self, Py_ssize_t i) {
     assert(0 <= i && i < self->nbits);
     return ((self)->ob_item[(i) / 8] & BITMASK((self)->endian, i) ? 1 : 0);
 }
@@ -54,67 +48,63 @@ static int GETBIT(bitarrayobject *self, idx_t i) {
 #endif
 
 static void
-setbit(bitarrayobject *self, idx_t i, int bit)
-{
-    char *cp, mask;
-
-    assert(0 <= i && i < BITS(Py_SIZE(self)));
-    mask = BITMASK(self->endian, i);
-    cp = self->ob_item + i / 8;
-    if (bit)
-        *cp |= mask;
-    else
-        *cp &= ~mask;
-}
-
-/* set using the Python module function _set_babt() */
-static PyObject *bitarray_basetype = NULL;
-
-/* return 1 if obj is a bitarray, 0 otherwise */
-static int
-bitarray_Check(PyObject *obj)
-{
-    if (bitarray_basetype == NULL) /* fallback */
-        return PyObject_HasAttrString(obj, "endian");
-    return PyObject_IsInstance(obj, bitarray_basetype);
-}
-
-static void
 setunused(bitarrayobject *self)
 {
-    const idx_t n = BITS(Py_SIZE(self));
-    idx_t i;
+    const char mask[16] = {
+        0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, /* little endian */
+        0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, /* big endian */
+    };
 
-    for (i = self->nbits; i < n; i++)
-        setbit(self, i, 0);
+    if (self->nbits % 8 == 0)
+        return;
+    self->ob_item[Py_SIZE(self) - 1] &=
+        mask[self->nbits % 8 + (self->endian == ENDIAN_LITTLE ? 0 : 8)];
 }
 
-static int bitcount_lookup[256] = {
-    0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
-    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-    1, 2, 2, 3, 2, 3, 3, 4, 2, 3, 3, 4, 3, 4, 4, 5,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-    2, 3, 3, 4, 3, 4, 4, 5, 3, 4, 4, 5, 4, 5, 5, 6,
-    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-    3, 4, 4, 5, 4, 5, 5, 6, 4, 5, 5, 6, 5, 6, 6, 7,
-    4, 5, 5, 6, 5, 6, 6, 7, 5, 6, 6, 7, 6, 7, 7, 8,
+static unsigned char bitcount_lookup[256] = {
+    0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
+    1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+    1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+    2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+    1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
+    2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+    2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
+    3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8,
 };
+
+/*********** end of code basically copied from _bitarray.c *************/
+
+/* set using the Python module function _set_bato() */
+static PyObject *bitarray_type_obj = NULL;
+
+/* Return 0 if obj is bitarray.  If not, returns -1 and sets an exception. */
+static int
+ensure_bitarray(PyObject *obj)
+{
+    int t;
+
+    if (bitarray_type_obj == NULL)
+        Py_FatalError("bitarray_type_obj missing");
+    t = PyObject_IsInstance(obj, bitarray_type_obj);
+    if (t < 0)
+        return -1;
+    if (t == 0) {
+        PyErr_SetString(PyExc_TypeError, "bitarray expected");
+        return -1;
+    }
+    return 0;
+}
+
+/************ start of actual functionality in this module *************/
 
 /* return the smallest index i for which a.count(1, 0, i) == n, or when
    n exceeds the total count return -1  */
-static idx_t
-count_to_n(bitarrayobject *a, idx_t n)
+static Py_ssize_t
+count_to_n(bitarrayobject *a, Py_ssize_t n)
 {
-    idx_t i = 0, j = 0, m;  /* i is the index, j the total count up to i */
-    Py_ssize_t block_start, block_stop, k;
+    Py_ssize_t i = 0;        /* index */
+    Py_ssize_t j = 0;        /* total count up to index */
+    Py_ssize_t block_start, block_stop, k, m;
     unsigned char c;
 
     if (n == 0)
@@ -125,7 +115,7 @@ count_to_n(bitarrayobject *a, idx_t n)
     while (i + BLOCK_BITS < a->nbits) {
         m = 0;
         assert(i % 8 == 0);
-        block_start = (Py_ssize_t) (i / 8);
+        block_start = i / 8;
         block_stop = block_start + (BLOCK_BITS / 8);
         for (k = block_start; k < block_stop; k++) {
             assert(k < Py_SIZE(a));
@@ -137,10 +127,10 @@ count_to_n(bitarrayobject *a, idx_t n)
         j += m;
         i += BLOCK_BITS;
     }
-#undef BLOCK_SIZE
+#undef BLOCK_BITS
 
     while (i + 8 < a->nbits) {
-        k = (Py_ssize_t) (i / 8);
+        k = i / 8;
         assert(k < Py_SIZE(a));
         c = a->ob_item[k];
         m = bitcount_lookup[c];
@@ -161,19 +151,18 @@ count_to_n(bitarrayobject *a, idx_t n)
 }
 
 /* return index of last occurrence of vi, -1 when x is not in found. */
-static idx_t
-find_last(bitarrayobject *self, int vi)
+static Py_ssize_t
+find_last(bitarrayobject *a, int vi)
 {
-    Py_ssize_t j;
-    idx_t i;
+    Py_ssize_t i, j;
     char c;
 
-    if (self->nbits == 0)
+    if (a->nbits == 0)
         return -1;
 
     /* search within top byte */
-    for (i = self->nbits - 1; i >= BITS(self->nbits / 8); i--)
-        if (GETBIT(self, i) == vi)
+    for (i = a->nbits - 1; i >= BITS(a->nbits / 8); i--)
+        if (GETBIT(a, i) == vi)
             return i;
 
     if (i < 0)  /* not found within top byte */
@@ -186,7 +175,7 @@ find_last(bitarrayobject *self, int vi)
 
     /* skip ahead by checking whole bytes */
     for (j = BYTES(i) - 1; j >= 0; j--)
-        if (c ^ self->ob_item[j])
+        if (c ^ a->ob_item[j])
             break;
 
     if (j < 0)  /* not found within bytes */
@@ -194,27 +183,40 @@ find_last(bitarrayobject *self, int vi)
 
     /* search within byte found */
     for (i = BITS(j + 1) - 1; i >= BITS(j); i--)
-        if (GETBIT(self, i) == vi)
+        if (GETBIT(a, i) == vi)
             return i;
 
     return -1;
 }
 
+/* translation table which swaps the 4 highest with the 4 lowest bits in
+   each byte - to be used as argument of bytes.translate() */
+static PyObject *
+make_swap_hilo_bytes(void)
+{
+    char bytes[256];
+    int i;
+
+    for (i = 0; i < 256; i++)
+        bytes[i] = (char) (((i & 0x0f) << 4) ^ (i >> 4));
+
+    return PyBytes_FromStringAndSize(bytes, 256);
+}
+
 /*************************** Module functions **********************/
 
 static PyObject *
-count_n(PyObject *self, PyObject *args)
+count_n(PyObject *module, PyObject *args)
 {
     PyObject *a;
-    idx_t n, i;
+    Py_ssize_t n, i;
 
-    if (!PyArg_ParseTuple(args, "OL:count_n", &a, &n))
+    if (!PyArg_ParseTuple(args, "On:count_n", &a, &n))
         return NULL;
 
-    if (!bitarray_Check(a)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+    if (ensure_bitarray(a) < 0)
         return NULL;
-    }
+
     if (n < 0) {
         PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
         return NULL;
@@ -237,30 +239,29 @@ PyDoc_STRVAR(count_n_doc,
 "count_n(a, n, /) -> int\n\
 \n\
 Find the smallest index `i` for which `a[:i].count() == n`.\n\
-Raises `ValueError`, when n exceeds the `a.count()`.");
+Raises `ValueError`, when n exceeds total count (`a.count()`).");
 
 
 static PyObject *
-r_index(PyObject *self, PyObject *args)
+r_index(PyObject *module, PyObject *args)
 {
-    PyObject *a, *x = Py_True;
-    idx_t i;
-    long vi;
+    PyObject *x = Py_True, *a;
+    Py_ssize_t i;
+    int vi;
 
     if (!PyArg_ParseTuple(args, "O|O:rindex", &a, &x))
         return NULL;
 
-    if (!bitarray_Check(a)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+    if (ensure_bitarray(a) < 0)
         return NULL;
-    }
+
     vi = PyObject_IsTrue(x);
     if (vi < 0)
         return NULL;
 
     i = find_last((bitarrayobject *) a, vi);
     if (i < 0) {
-        PyErr_SetString(PyExc_ValueError, "index(x): x not in bitarray");
+        PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
         return NULL;
     }
     return PyLong_FromLongLong(i);
@@ -283,56 +284,53 @@ enum kernel_type {
 static PyObject *
 two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
 {
+    Py_ssize_t res = 0, nbytes, i;
     PyObject *a, *b;
-    Py_ssize_t i;
-    idx_t res = 0;
     unsigned char c;
 
     if (!PyArg_ParseTuple(args, format, &a, &b))
         return NULL;
-    if (!(bitarray_Check(a) && bitarray_Check(b))) {
-        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
+    if (ensure_bitarray(a) < 0 || ensure_bitarray(b) < 0)
         return NULL;
-    }
+
 #define aa  ((bitarrayobject *) a)
 #define bb  ((bitarrayobject *) b)
-    if (aa->nbits != bb->nbits) {
+    if (aa->nbits != bb->nbits || aa->endian != bb->endian) {
         PyErr_SetString(PyExc_ValueError,
-                        "bitarrays of equal length expected");
-        return NULL;
-    }
-    if (aa->endian != bb->endian) {
-        PyErr_SetString(PyExc_ValueError,
-                        "bitarrays of equal endianness expected");
+                        "bitarrays of equal length and endianness expected");
         return NULL;
     }
     setunused(aa);
     setunused(bb);
+    assert(Py_SIZE(a) == Py_SIZE(b));
+    nbytes = Py_SIZE(a);
+
     switch (kern) {
     case KERN_cand:
-        for (i = 0; i < Py_SIZE(aa); i++) {
+        for (i = 0; i < nbytes; i++) {
             c = aa->ob_item[i] & bb->ob_item[i];
             res += bitcount_lookup[c];
         }
         break;
     case KERN_cor:
-        for (i = 0; i < Py_SIZE(aa); i++) {
+        for (i = 0; i < nbytes; i++) {
             c = aa->ob_item[i] | bb->ob_item[i];
             res += bitcount_lookup[c];
         }
         break;
     case KERN_cxor:
-        for (i = 0; i < Py_SIZE(aa); i++) {
+        for (i = 0; i < nbytes; i++) {
             c = aa->ob_item[i] ^ bb->ob_item[i];
             res += bitcount_lookup[c];
         }
         break;
     case KERN_subset:
-        for (i = 0; i < Py_SIZE(aa); i++)
+        for (i = 0; i < nbytes; i++) {
             if ((aa->ob_item[i] & bb->ob_item[i]) != aa->ob_item[i])
                 Py_RETURN_FALSE;
+        }
         Py_RETURN_TRUE;
-    default:  /* should never happen */
+    default:  /* cannot happen */
         return NULL;
     }
 #undef aa
@@ -342,7 +340,7 @@ two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
 
 #define COUNT_FUNC(oper, ochar)                                         \
 static PyObject *                                                       \
-count_ ## oper (bitarrayobject *self, PyObject *args)                   \
+count_ ## oper (bitarrayobject *module, PyObject *args)                 \
 {                                                                       \
     return two_bitarray_func(args, KERN_c ## oper, "OO:count_" #oper);  \
 }                                                                       \
@@ -358,7 +356,7 @@ COUNT_FUNC(xor, "^");
 
 
 static PyObject *
-subset(PyObject *self, PyObject *args)
+subset(PyObject *module, PyObject *args)
 {
     return two_bitarray_func(args, KERN_subset, "OO:subset");
 }
@@ -372,11 +370,11 @@ efficient since we can stop as soon as one mismatch is found, and no\n\
 intermediate bitarray object gets created.");
 
 
-/* set bitarray_basetype (babt) */
+/* set bitarray_type_obj (bato) */
 static PyObject *
-set_babt(PyObject *self, PyObject *obj)
+set_bato(PyObject *module, PyObject *obj)
 {
-    bitarray_basetype = obj;
+    bitarray_type_obj = obj;
     Py_RETURN_NONE;
 }
 
@@ -387,7 +385,7 @@ static PyMethodDef module_functions[] = {
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
     {"subset",    (PyCFunction) subset,    METH_VARARGS, subset_doc},
-    {"_set_babt", (PyCFunction) set_babt,  METH_O,       ""},
+    {"_set_bato", (PyCFunction) set_bato,  METH_O,       },
     {NULL,        NULL}  /* sentinel */
 };
 
@@ -397,10 +395,12 @@ static PyMethodDef module_functions[] = {
 static PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT, "_util", 0, -1, module_functions,
 };
+#endif
+
 PyMODINIT_FUNC
+#ifdef IS_PY3K
 PyInit__util(void)
 #else
-PyMODINIT_FUNC
 init_util(void)
 #endif
 {
@@ -416,6 +416,7 @@ init_util(void)
         return;
 #endif
 
+    PyModule_AddObject(m, "_swap_hilo_bytes", make_swap_hilo_bytes());
 #ifdef IS_PY3K
     return m;
 #endif
