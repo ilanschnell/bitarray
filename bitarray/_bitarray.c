@@ -1592,6 +1592,9 @@ bitarray_concat(bitarrayobject *self, PyObject *other)
     PyObject *res;
 
     res = bitarray_copy(self);
+    if (res == NULL)
+        return NULL;
+
     if (extend_dispatch((bitarrayobject *) res, other) < 0) {
         Py_DECREF(res);
         return NULL;
@@ -1605,6 +1608,9 @@ bitarray_repeat(bitarrayobject *self, Py_ssize_t n)
     PyObject *res;
 
     res = bitarray_copy(self);
+    if (res == NULL)
+        return NULL;
+
     if (repeat((bitarrayobject *) res, n) < 0) {
         Py_DECREF(res);
         return NULL;
@@ -1876,6 +1882,9 @@ bitarray_cpinvert(bitarrayobject *self)
     PyObject *result;
 
     result = bitarray_copy(self);
+    if (result == NULL)
+        return NULL;
+
     invert((bitarrayobject *) result);
     return result;
 }
@@ -1933,6 +1942,8 @@ bitarray_ ## oper (bitarrayobject *self, PyObject *other)           \
     PyObject *res;                                                  \
                                                                     \
     res = bitarray_copy(self);                                      \
+    if (res == NULL)                                                \
+        return NULL;                                                \
     if (bitwise((bitarrayobject *) res, other, OP_ ## oper) < 0) {  \
         Py_DECREF(res);                                             \
         return NULL;                                                \
