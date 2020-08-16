@@ -1960,6 +1960,47 @@ BITWISE_IFUNC(or)               /* bitarray_ior  */
 BITWISE_IFUNC(xor)              /* bitarray_ixor */
 
 
+static PyObject *
+bitarray_lshift(bitarrayobject *self, PyObject *b)
+{
+    PyObject *a;
+    Py_ssize_t n;
+
+    printf("ASD\n");
+    if (PyIndex_Check(b)) {
+        n = PyNumber_AsSsize_t(b, PyExc_IndexError);
+        if (n == -1 && PyErr_Occurred())
+            return NULL;
+    }
+    else {
+        PyErr_Format(PyExc_TypeError,
+                     "unsupported types for <<: '%s' and '%s'",
+                     Py_TYPE(self)->tp_name, Py_TYPE(b)->tp_name);
+        return NULL;
+    }
+    if (n < 0) {
+        PyErr_SetString(PyExc_ValueError, "negative shift count");
+        return NULL;
+    }
+
+    a = bitarray_copy(self);
+    if (n == 0)
+        return a;
+
+#define aa  ((bitarrayobject *) a)
+    if (n < aa->nbits) {
+        copy_n(aa, 0, aa, n, aa->nbits - n);
+        setrange(aa, aa->nbits - n, aa->nbits, 0);
+    }
+    else {
+        memset(aa->ob_item, 0x00, (size_t) Py_SIZE(aa));
+    }
+#undef aa
+
+    return a;
+}
+
+
 static PyNumberMethods bitarray_as_number = {
     0,                          /* nb_add */
     0,                          /* nb_subtract */
@@ -1975,7 +2016,7 @@ static PyNumberMethods bitarray_as_number = {
     0,                          /* nb_absolute */
     0,                          /* nb_bool (was nb_nonzero) */
     (unaryfunc) bitarray_cpinvert,  /* nb_invert */
-    0,                          /* nb_lshift */
+    (binaryfunc) bitarray_lshift,  /* nb_lshift */
     0,                          /* nb_rshift */
     (binaryfunc) bitarray_and,  /* nb_and */
     (binaryfunc) bitarray_xor,  /* nb_xor */
