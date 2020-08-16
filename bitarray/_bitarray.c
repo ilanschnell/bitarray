@@ -1966,7 +1966,6 @@ bitarray_lshift(bitarrayobject *self, PyObject *b)
     PyObject *a;
     Py_ssize_t n;
 
-    printf("ASD\n");
     if (PyIndex_Check(b)) {
         n = PyNumber_AsSsize_t(b, PyExc_IndexError);
         if (n == -1 && PyErr_Occurred())
