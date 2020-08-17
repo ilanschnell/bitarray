@@ -1655,6 +1655,7 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.invert, 5)
         self.assertRaises(IndexError, a.invert, -6)
         self.assertRaises(TypeError, a.invert, "A")
+        self.assertRaises(TypeError, a.invert, 0, 1)
 
     def test_invert_random(self):
         for a in self.randombitarrays(start=1):
