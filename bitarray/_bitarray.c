@@ -7,7 +7,7 @@
 
    Author: Ilan Schnell
 */
-#define BITARRAY_VERSION  "1.5.2"
+#define BITARRAY_VERSION  "1.5.3"
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
@@ -1109,17 +1109,34 @@ will be a multiple of 8.  Returns the number of bits added (0..7).");
 
 
 static PyObject *
-bitarray_invert(bitarrayobject *self)
+bitarray_invert(bitarrayobject *self, PyObject *args)
 {
-    invert(self);
+    Py_ssize_t i = PY_SSIZE_T_MAX;
+
+    if (!PyArg_ParseTuple(args, "|n:invert", &i))
+        return NULL;
+
+    if (i == PY_SSIZE_T_MAX) {  /* default - invert all bits */
+        invert(self);
+        Py_RETURN_NONE;
+    }
+
+    if (i < 0)
+        i += self->nbits;
+
+    if (i < 0 || i >= self->nbits) {
+        PyErr_SetString(PyExc_IndexError, "index out of range");
+        return NULL;
+    }
+    setbit(self, i, 1 - GETBIT(self, i));
     Py_RETURN_NONE;
 }
 
 PyDoc_STRVAR(invert_doc,
-"invert()\n\
+"invert([index])\n\
 \n\
-Invert all bits in the array (in-place),\n\
-i.e. convert each 1-bit into a 0-bit and vice versa.");
+Invert all bits in the array (in-place).\n\
+When the optional `index` is given, only invert the single bit (at index).")
 
 
 static PyObject *
@@ -2542,7 +2559,7 @@ static PyMethodDef bitarray_methods[] = {
      index_doc},
     {"insert",       (PyCFunction) bitarray_insert,      METH_VARARGS,
      insert_doc},
-    {"invert",       (PyCFunction) bitarray_invert,      METH_NOARGS,
+    {"invert",       (PyCFunction) bitarray_invert,      METH_VARARGS,
      invert_doc},
     {"length",       (PyCFunction) bitarray_length,      METH_NOARGS,
      length_doc},

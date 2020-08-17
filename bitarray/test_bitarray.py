@@ -1170,14 +1170,6 @@ class NumberMethodsTests(unittest.TestCase, Util):
         self.assertEQUAL(a, bitarray('010100101'))
 
     def test_invert(self):
-        a = bitarray()
-        a.invert()
-        self.assertEQUAL(a, bitarray())
-
-        a = bitarray('11011')
-        a.invert()
-        self.assertEQUAL(a, bitarray('00100'))
-
         a = bitarray('11011')
         b = ~a
         self.assertEQUAL(b, bitarray('00100'))
@@ -1645,6 +1637,33 @@ class MethodTests(unittest.TestCase, Util):
                 self.assertEqual(b[len(a):],
                                  (len(b) - len(a)) * bitarray('0'))
 
+    def test_invert_simple(self):
+        a = bitarray()
+        a.invert()
+        self.assertEQUAL(a, bitarray())
+
+        a = bitarray('11011')
+        a.invert()
+        self.assertEQUAL(a, bitarray('00100'))
+        a.invert(2)
+        self.assertEQUAL(a, bitarray('00000'))
+        a.invert(-1)
+        self.assertEQUAL(a, bitarray('00001'))
+
+    def test_invert_errors(self):
+        a = bitarray(5)
+        self.assertRaises(IndexError, a.invert, 5)
+        self.assertRaises(IndexError, a.invert, -6)
+        self.assertRaises(TypeError, a.invert, "A")
+
+    def test_invert_random(self):
+        for a in self.randombitarrays(start=1):
+            b = a.copy()
+            c = a.copy()
+            i = randint(0, len(a) - 1)
+            b.invert(i)
+            c[i] = not c[i]
+            self.assertEQUAL(b, c)
 
     def test_sort(self):
         a = bitarray('1101000')
