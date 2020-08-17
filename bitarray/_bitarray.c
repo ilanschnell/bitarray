@@ -1994,6 +1994,8 @@ bitarray_lshift(bitarrayobject *self, PyObject *b)
     }
 
     a = bitarray_copy(self);
+    if (a == NULL)
+        return NULL;
     if (n == 0)
         return a;
 
