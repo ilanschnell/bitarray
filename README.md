@@ -674,7 +674,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2020-XX-XX   1.5.2:
+*1.5.2* (2020-08-16):
 
   * add PyType_Ready usage, issue #66
   * speedup search() for bitarrays with length 1 in sparse bitarrays,
