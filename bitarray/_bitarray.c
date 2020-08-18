@@ -727,7 +727,7 @@ unpack(bitarrayobject *self, char zero, char one, const char *fmt)
                             PyLong_Check(x))
 #endif
 
-/* given an PyLong (which must be 0 or 1), or a PyBool, return 0 or 1,
+/* given a PyLong (which must be 0 or 1) or a PyBool, return 0 or 1,
    or -1 on error */
 static int
 IntBool_AsInt(PyObject *v)
