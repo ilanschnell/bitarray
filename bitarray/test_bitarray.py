@@ -1330,7 +1330,7 @@ tests.append(ExtendTests)
 
 class MethodTests(unittest.TestCase, Util):
 
-    def test_append(self):
+    def test_append_simple(self):
         a = bitarray()
         a.append(True)
         a.append(False)
@@ -1344,6 +1344,7 @@ class MethodTests(unittest.TestCase, Util):
         a.append('a')
         self.assertEQUAL(a, bitarray('100011001'))
 
+    def test_append_random(self):
         for a in self.randombitarrays():
             aa = a.tolist()
             b = a
@@ -1353,7 +1354,6 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEQUAL(b, bitarray(aa + [1], endian=a.endian()))
             b.append('')
             self.assertEQUAL(b, bitarray(aa + [1, 0], endian=a.endian()))
-
 
     def test_insert(self):
         a = bitarray()
@@ -1373,7 +1373,6 @@ class MethodTests(unittest.TestCase, Util):
                 aa.insert(pos, item)
                 self.assertEqual(a.tolist(), aa)
                 self.check_obj(a)
-
 
     def test_index1(self):
         a = bitarray()
@@ -1539,7 +1538,6 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a.count(1, i, j), s[i:j].count('1'))
             self.assertEqual(a.count(0, i, j), s[i:j].count('0'))
 
-
     def test_search(self):
         a = bitarray('')
         self.assertEqual(a.search(bitarray('0')), [])
@@ -1666,7 +1664,7 @@ class MethodTests(unittest.TestCase, Util):
             c[i] = not c[i]
             self.assertEQUAL(b, c)
 
-    def test_sort(self):
+    def test_sort_simple(self):
         a = bitarray('1101000')
         a.sort()
         self.assertEqual(a, bitarray('0000111'))
@@ -1683,26 +1681,14 @@ class MethodTests(unittest.TestCase, Util):
 
         self.assertRaises(TypeError, a.sort, 'A')
 
-        N = 100000
-        a = bitarray(randint(N, N + 100))
-        for dum in range(100):
-            a[randint(0, N - 1)] = randint(0, 1)
-        b = a.tolist()
-        a.sort()
-        self.assertEqual(a, bitarray(sorted(b)))
+    def test_sort_random(self):
+        for rev in 0, 1:
+            for a in self.randombitarrays():
+                b = a.tolist()
+                a.sort(rev)
+                self.assertEqual(a, bitarray(sorted(b, reverse=rev)))
 
-        for a in self.randombitarrays():
-            b = a.tolist()
-            ida = id(a)
-            rev = randint(0, 1)
-            a.sort(rev)
-            self.assertEqual(a, bitarray(sorted(b, reverse=rev)))
-            self.assertEqual(id(a), ida)
-
-
-    def test_reverse(self):
-        self.assertRaises(TypeError, bitarray().reverse, 42)
-
+    def test_reverse_simple(self):
         for x, y in [('', ''), ('1', '1'), ('10', '01'), ('001', '100'),
                      ('1110', '0111'), ('11100', '00111'),
                      ('011000', '000110'), ('1101100', '0011011'),
@@ -1714,6 +1700,9 @@ class MethodTests(unittest.TestCase, Util):
             a.reverse()
             self.assertEQUAL(a, bitarray(y))
 
+        self.assertRaises(TypeError, bitarray().reverse, 42)
+
+    def test_reverse_random(self):
         for a in self.randombitarrays():
             aa = a.tolist()
             b = bitarray(a)
@@ -1722,7 +1711,6 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(ida, id(a))
             self.assertEQUAL(a, bitarray(aa[::-1], endian=a.endian()))
             self.assertEqual(a, b[::-1])
-
 
     def test_tolist(self):
         a = bitarray()
@@ -1735,18 +1723,7 @@ class MethodTests(unittest.TestCase, Util):
             a = bitarray(lst)
             self.assertEqual(a.tolist(), lst)
 
-
     def test_remove(self):
-        a = bitarray()
-        for i in (True, False, 1, 0):
-            self.assertRaises(ValueError, a.remove, i)
-
-        a = bitarray(21)
-        a.setall(0)
-        self.assertRaises(ValueError, a.remove, 1)
-        a.setall(1)
-        self.assertRaises(ValueError, a.remove, 0)
-
         a = bitarray('1010110')
         for val, res in [(False, '110110'), (True, '10110'),
                          (1, '0110'), (1, '010'), (0, '10'),
@@ -1760,8 +1737,18 @@ class MethodTests(unittest.TestCase, Util):
         self.assertTrue(b is a)
         self.assertEQUAL(b, bitarray('000011'))
 
+    def test_remove_errors(self):
+        a = bitarray()
+        for i in (True, False, 1, 0):
+            self.assertRaises(ValueError, a.remove, i)
 
-    def test_pop(self):
+        a = bitarray(21)
+        a.setall(0)
+        self.assertRaises(ValueError, a.remove, 1)
+        a.setall(1)
+        self.assertRaises(ValueError, a.remove, 0)
+
+    def test_pop_simple(self):
         for x, n, r, y in [('1', 0, True, ''),
                            ('0', -1, False, ''),
                            ('0011100', 3, True, '001100')]:
@@ -1774,6 +1761,7 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a.pop(), False)
         self.assertRaises(IndexError, a.pop)
 
+    def test_pop_random(self):
         for a in self.randombitarrays():
             self.assertRaises(IndexError, a.pop, len(a))
             self.assertRaises(IndexError, a.pop, -len(a) - 1)
@@ -1833,7 +1821,7 @@ class MethodTests(unittest.TestCase, Util):
             self.assertTrue(a is b)
             self.check_obj(b)
 
-    def test_bytereverse(self):
+    def test_bytereverse_explicit(self):
         for x, y in [('', ''),
                      ('1', '0'),
                      ('1011', '0000'),
@@ -1846,14 +1834,13 @@ class MethodTests(unittest.TestCase, Util):
             a.bytereverse()
             self.assertEqual(a, bitarray(y))
 
+    def test_bytereverse_byte(self):
         for i in range(256):
             a = bitarray()
             a.frombytes(bytes(bytearray([i])))
-            aa = a.tolist()
-            b = a
+            b = a.copy()
             b.bytereverse()
-            self.assertEqual(b, bitarray(aa[::-1]))
-            self.assertTrue(a is b)
+            self.assertEqual(b, a[::-1])
             self.check_obj(b)
 
 
