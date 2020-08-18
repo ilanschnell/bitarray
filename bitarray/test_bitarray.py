@@ -869,7 +869,6 @@ class SpecialMethodTests(unittest.TestCase, Util):
             self.assertEqual(any(a), a.any())
             self.assertEqual(any(a.tolist()), a.any())
 
-
     def test_repr(self):
         r = repr(bitarray())
         self.assertEqual(r, "bitarray()")
@@ -885,7 +884,6 @@ class SpecialMethodTests(unittest.TestCase, Util):
             self.assertEqual(a, b)
             self.check_obj(b)
 
-
     def test_copy(self):
         for a in self.randombitarrays():
             b = a.copy()
@@ -899,7 +897,6 @@ class SpecialMethodTests(unittest.TestCase, Util):
             b = copy.deepcopy(a)
             self.assertFalse(b is a)
             self.assertEQUAL(a, b)
-
 
     def assertReallyEqual(self, a, b):
         # assertEqual first, because it will have a good message if the
@@ -942,8 +939,18 @@ class SpecialMethodTests(unittest.TestCase, Util):
             b = a.copy()
             self.assertReallyEqual(a, b)
             n = len(a)
-            b[n - 1] = not b[n - 1]  # flip the last bit
+            b.invert(n - 1)  # flip last bit
             self.assertReallyNotEqual(a, b)
+
+    def test_sizeof(self):
+        a = bitarray()
+        size = sys.getsizeof(a)
+        self.assertEqual(size, a.__sizeof__())
+        self.assertIsInstance(size, int if is_py3k else (int, long))
+        self.assertTrue(size < 200)
+        a = bitarray(8000)
+        self.assertTrue(sys.getsizeof(a) > 1000)
+
 
 tests.append(SpecialMethodTests)
 
@@ -1777,14 +1784,6 @@ class MethodTests(unittest.TestCase, Util):
             aa.pop(n)
             self.assertEqual(a, bitarray(aa))
             self.check_obj(a)
-
-    def test_sizeof(self):
-        a = bitarray()
-        size = sys.getsizeof(a)
-        self.assertIsInstance(size, int if is_py3k else (int, long))
-        self.assertTrue(size < 200)
-        a = bitarray(8000)
-        self.assertTrue(sys.getsizeof(a) > 1000)
 
     def test_clear(self):
         for a in self.randombitarrays():
