@@ -232,7 +232,7 @@ count_n(PyObject *module, PyObject *args)
         PyErr_SetString(PyExc_ValueError, "n exceeds total count");
         return NULL;
     }
-    return PyLong_FromLongLong(i);
+    return PyLong_FromSsize_t(i);
 }
 
 PyDoc_STRVAR(count_n_doc,
@@ -264,7 +264,7 @@ r_index(PyObject *module, PyObject *args)
         PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
         return NULL;
     }
-    return PyLong_FromLongLong(i);
+    return PyLong_FromSsize_t(i);
 }
 
 PyDoc_STRVAR(rindex_doc,
@@ -335,7 +335,7 @@ two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
     }
 #undef aa
 #undef bb
-    return PyLong_FromLongLong(res);
+    return PyLong_FromSsize_t(res);
 }
 
 #define COUNT_FUNC(oper, ochar)                                         \

@@ -1796,7 +1796,7 @@ class MethodTests(unittest.TestCase, Util):
     def test_sizeof(self):
         a = bitarray()
         size = sys.getsizeof(a)
-        self.assertIsInstance(size, int if is_py3k else long)
+        self.assertIsInstance(size, int if is_py3k else (int, long))
         self.assertTrue(size < 200)
         a = bitarray(8000)
         self.assertTrue(sys.getsizeof(a) > 1000)

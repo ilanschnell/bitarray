@@ -784,7 +784,7 @@ bitarray_length(bitarrayobject *self)
                      "use len(self) instead", 1) < 0)
         return NULL;
 
-    return PyLong_FromLongLong(self->nbits);
+    return PyLong_FromSsize_t(self->nbits);
 }
 
 PyDoc_STRVAR(length_doc,
@@ -831,7 +831,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     normalize_index(self->nbits, &start);
     normalize_index(self->nbits, &stop);
 
-    return PyLong_FromLongLong(count(self, vi, start, stop));
+    return PyLong_FromSsize_t(count(self, vi, start, stop));
 }
 
 PyDoc_STRVAR(count_doc,
@@ -862,7 +862,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
         PyErr_Format(PyExc_ValueError, "%d is not in bitarray", vi);
         return NULL;
     }
-    return PyLong_FromLongLong(i);
+    return PyLong_FromSsize_t(i);
 }
 
 PyDoc_STRVAR(index_doc,
@@ -920,7 +920,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
         p = search(self, xa, p);
         if (p < 0)
             break;
-        item = PyLong_FromLongLong(p);
+        item = PyLong_FromSsize_t(p);
         p++;
         if (item == NULL || PyList_Append(list, item) < 0) {
             Py_XDECREF(item);
@@ -2477,7 +2477,7 @@ searchiter_next(searchiterobject *it)
     if (p < 0)  /* no more positions -- stop iteration */
         return NULL;
     it->p = p + 1;  /* next search position */
-    return PyLong_FromLongLong(p);
+    return PyLong_FromSsize_t(p);
 }
 
 static void
@@ -3116,7 +3116,7 @@ bitdiff(PyObject *module, PyObject *args)
     }
 #undef aa
 #undef bb
-    return PyLong_FromLongLong(res);
+    return PyLong_FromSsize_t(res);
 }
 
 PyDoc_STRVAR(bitdiff_doc,
