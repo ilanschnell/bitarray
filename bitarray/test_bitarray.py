@@ -1793,6 +1793,13 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a, bitarray(aa))
             self.check_obj(a)
 
+    def test_sizeof(self):
+        a = bitarray()
+        size = sys.getsizeof(a)
+        self.assertIsInstance(size, int if is_py3k else long)
+        self.assertTrue(size < 200)
+        a = bitarray(8000)
+        self.assertTrue(sys.getsizeof(a) > 1000)
 
     def test_clear(self):
         for a in self.randombitarrays():
@@ -1825,7 +1832,6 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(b, bitarray(len(b) * [val]))
             self.assertTrue(a is b)
             self.check_obj(b)
-
 
     def test_bytereverse(self):
         for x, y in [('', ''),

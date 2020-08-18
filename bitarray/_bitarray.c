@@ -1595,6 +1595,19 @@ PyDoc_STRVAR(clear_doc,
 Remove all items from the bitarray.");
 
 
+static PyObject *
+bitarray_sizeof(bitarrayobject *self)
+{
+    Py_ssize_t res;
+
+    res = sizeof(bitarrayobject) + self->allocated;
+    return PyLong_FromSsize_t(res);
+}
+
+PyDoc_STRVAR(sizeof_doc,
+"Return the size of the bitarray in memory, in bytes.");
+
+
 /* ----------------------- bitarray_as_sequence ------------------------ */
 
 static Py_ssize_t
@@ -2599,6 +2612,8 @@ static PyMethodDef bitarray_methods[] = {
      copy_doc},
     {"__reduce__",   (PyCFunction) bitarray_reduce,      METH_NOARGS,
      reduce_doc},
+    {"__sizeof__",   (PyCFunction) bitarray_sizeof,      METH_NOARGS,
+     sizeof_doc},
 
     {NULL,           NULL}  /* sentinel */
 };
