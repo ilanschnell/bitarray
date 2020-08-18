@@ -1704,13 +1704,10 @@ class MethodTests(unittest.TestCase, Util):
 
     def test_reverse_random(self):
         for a in self.randombitarrays():
-            aa = a.tolist()
-            b = bitarray(a)
-            ida = id(a)
+            b = a.copy()
             a.reverse()
-            self.assertEqual(ida, id(a))
-            self.assertEQUAL(a, bitarray(aa[::-1], endian=a.endian()))
-            self.assertEqual(a, b[::-1])
+            self.assertEQUAL(a, bitarray(b.tolist()[::-1], endian=a.endian()))
+            self.assertEQUAL(a, b[::-1])
 
     def test_tolist(self):
         a = bitarray()
