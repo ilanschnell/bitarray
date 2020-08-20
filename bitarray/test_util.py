@@ -219,6 +219,16 @@ tests.append(TestsStrip)
 
 class TestsCount_N(unittest.TestCase, Util):
 
+    @staticmethod
+    def count_n(a, n):
+        "return the index i for which a[:i].count() == n"
+        i, j = n, a.count(1, 0, n)
+        while j < n:
+            if a[i]:
+                j += 1
+            i += 1
+        return i
+
     def check_result(self, a, n, i):
         self.assertEqual(a.count(1, 0, i), n)
         if i:
@@ -244,6 +254,7 @@ class TestsCount_N(unittest.TestCase, Util):
             i = count_n(a, n)
             self.check_result(a, n, i)
             self.assertEqual(a[:i].count(), n)
+            self.assertEqual(i, self.count_n(a, n))
         self.assertEQUAL(a, b)
 
     def test_frozen(self):
