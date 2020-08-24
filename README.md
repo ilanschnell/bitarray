@@ -687,7 +687,7 @@ Change log
 *1.5.3* (2020-08-24):
 
   * add optional index parameter to `.index()` to invert single bit
-  * fix sys.getsizeof(bitarray) by adding `.__sizeof__()`, see issue #100
+  * fix `sys.getsizeof(bitarray)` by adding `.__sizeof__()`, see issue #100
 
 
 *1.5.2* (2020-08-16):
