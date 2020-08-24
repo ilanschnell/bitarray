@@ -684,7 +684,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2020-XX-XX   1.5.3:
+*1.5.3* (2020-08-24):
 
   * add optional index parameter to `.index()` to invert single bit
   * fix sys.getsizeof(bitarray) by adding `.__sizeof__()`, see issue #100
@@ -719,46 +719,6 @@ Change log
   * raise TypeError when tring to create bitarray from boolean
   * This will be last release to still support Python 2.6 (which was retired
     in 2013).  We do NOT plan to stop support for Python 2.7 anytime soon.
-
-
-*1.4.2* (2020-07-15):
-
-  * add more tests
-  * C-level:
-      - simplify pack/unpack code
-      - fix memory leak in `~` operation (bitarray_cpinvert)
-
-
-*1.4.1* (2020-07-14):
-
-  * add official Python 3.9 support
-  * improve many docstrings
-  * add DeprecationWarning for `bitdiff()`
-  * add DeprecationWarning when trying to extend bitarrays
-    from bytes on Python 3 (`bitarrays(b'011')` and `.extend(b'110')`)
-  * C-level:
-      - Rewrote `.fromfile()` and `.tofile()` implementation,
-        such that now the same code is used for Python 2 and 3.
-        The new implementation is more memoery efficient on
-        Python 3.
-      - use memcmp() in richcompare to shortcut EQ/NE, when
-        comparing two very large bitarrays for equality the
-        speedup can easily be 100x
-      - simplify how unpacking is handled
-  * add more tests
-
-
-*1.4.0* (2020-07-11):
-
-  * add `.clear()` method (Python 3.3 added this method to lists)
-  * avoid overallocation when bitarray objects are initially created
-  * raise BufferError when resizing bitarrays which is exporting buffers
-  * add example to study the resize() function
-  * improve some error messages
-  * add more tests
-  * raise `NotImplementedError` with (useful message) when trying to call
-    the `.fromstring()` or `.tostring()` methods, which have been removed
-    in the last release
 
 
 Please find the complete change log [here](https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG).
