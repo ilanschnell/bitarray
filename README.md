@@ -35,8 +35,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.5.2.tar.gz
-    $ cd bitarray-1.5.2
+    $ tar xzf bitarray-1.5.3.tar.gz
+    $ cd bitarray-1.5.3
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -45,13 +45,13 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.5.2
+    bitarray version: 1.5.3
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
     ..............................
     ----------------------------------------------------------------------
-    Ran 230 tests in 0.889s
+    Ran 250 tests in 0.921s
 
     OK
 
@@ -420,10 +420,10 @@ Raises `ValueError` if the value is not present.
 Insert `bool(value)` into the bitarray before index.
 
 
-`invert()`
+`invert(index=<all bits>)`
 
-Invert all bits in the array (in-place),
-i.e. convert each 1-bit into a 0-bit and vice versa.
+Invert all bits in the array (in-place).
+When the optional `index` is given, only invert the single bit at index.
 
 
 `iterdecode(code, /)` -> iterator
@@ -673,6 +673,12 @@ hashable object (including `None`).
 
 Change log
 ----------
+
+2020-XX-XX   1.5.3:
+
+  * add optional index parameter to `.index()` to invert single bit
+  * fix sys.getsizeof(bitarray) by adding `.__sizeof__()`, see issue #100
+
 
 *1.5.2* (2020-08-16):
 
