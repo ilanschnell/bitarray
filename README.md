@@ -44,12 +44,12 @@ privileges.  You can also pip install bitarray.  Please note that you need
 a working C compiler to run the `python setup.py install` command.
 If you rather want to use precompiled binaries, you can:
 
-    * `pip install bitarray-hardbyte` (this PyPI package contains Python
-      wheels for Linux, MaxOSX and Windows and all common Python versions)
-    * `conda install bitarray` (both the default Anaconda repository as well
-      as conda-forge support bitarray)
-    * download Windows wheels from
-      [Chris Gohlke](https://www.lfd.uci.edu/~gohlke/pythonlibs/#bitarray)
+* `pip install bitarray-hardbyte` (this PyPI package contains Python
+  wheels for Linux, MaxOSX and Windows and all common Python versions)
+* `conda install bitarray` (both the default Anaconda repository as well
+  as conda-forge support bitarray)
+* download Windows wheels from
+  [Chris Gohlke](https://www.lfd.uci.edu/~gohlke/pythonlibs/#bitarray)
 
 Once you have installed the package, you may want to test it:
 
