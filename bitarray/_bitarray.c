@@ -2761,7 +2761,7 @@ richcompare(PyObject *v, PyObject *w, int op)
             return PyBool_FromLong((long) (op == Py_NE));
         }
         else if (va->endian == wa->endian) {
-            /* if endianness is the same use memcmp() */
+            /* sizes and endianness are the same - use memcmp() */
             setunused(va);
             setunused(wa);
             cmp = memcmp(va->ob_item, wa->ob_item, (size_t) Py_SIZE(v));
