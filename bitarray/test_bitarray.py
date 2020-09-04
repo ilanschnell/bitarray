@@ -153,7 +153,9 @@ class TestsModuleFunctions(unittest.TestCase, Util):
 
         self.assertEqual(bits2bytes(0), 0)
         for n in range(1, 100):
-            self.assertEqual(bits2bytes(n), (n - 1) // 8 + 1)
+            m = bits2bytes(n)
+            self.assertEqual(m, (n - 1) // 8 + 1)
+            self.assertIsInstance(m, int)
 
         for n, m in [(0, 0), (1, 1), (2, 1), (7, 1), (8, 1), (9, 2),
                      (10, 2), (15, 2), (16, 2), (64, 8), (65, 9),
