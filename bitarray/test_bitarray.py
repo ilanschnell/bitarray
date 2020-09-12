@@ -2529,6 +2529,9 @@ class BufferInterfaceTests(unittest.TestCase):
         v[2] = 67
         self.assertEqual(a.tobytes(), b'\x00ABC\x00')
 
+
+tests.append(BufferInterfaceTests)
+
 # ---------------------------------------------------------------------------
 
 class TestsFrozenbitarray(unittest.TestCase, Util):
