@@ -26,7 +26,7 @@ Key features
  * Bitwise operations: `&`, `|`, `^`, `&=`, `|=`, `^=`, `~`
  * Sequential search
  * Pickling and unpickling of bitarray objects.
- * Bitarray objects support the buffer protocol (Python 2.7 and above)
+ * Bitarray objects support the buffer protocol
  * On 32-bit systems, a bitarray object can contain up to 2 Gbits.
 
 
@@ -683,6 +683,11 @@ hashable object (including `None`).
 
 Change log
 ----------
+
+2020-XX-XX   1.6.0:
+
+  * drop Python 2.6 support
+
 
 *1.5.3* (2020-08-24):
 
