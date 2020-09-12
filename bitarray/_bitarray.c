@@ -7,7 +7,7 @@
 
    Author: Ilan Schnell
 */
-#define BITARRAY_VERSION  "1.5.3"
+#define BITARRAY_VERSION  "1.6.0"
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
