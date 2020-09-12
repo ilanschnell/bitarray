@@ -1,5 +1,7 @@
 2020-XX-XX   1.6.0:
 -------------------
+  * remove deprecated `bitdiff()`, which has been deprecated since version
+    1.2.0, use `bitarray.util.count_xor()` instead
   * drop Python 2.6 support
 
 

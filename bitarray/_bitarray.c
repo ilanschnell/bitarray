@@ -3070,52 +3070,6 @@ static PyTypeObject Bitarraytype = {
 /***************************** Module functions ***************************/
 
 static PyObject *
-bitdiff(PyObject *module, PyObject *args)
-{
-    PyObject *a, *b;
-    Py_ssize_t res = 0, i;
-    unsigned char c;
-
-    if (!PyArg_ParseTuple(args, "OO:bitdiff", &a, &b))
-        return NULL;
-    if (!(bitarray_Check(a) && bitarray_Check(b))) {
-        PyErr_SetString(PyExc_TypeError, "bitarray object expected");
-        return NULL;
-    }
-
-    if (PyErr_WarnEx(PyExc_DeprecationWarning,
-                     "bitarray.bitdiff() has been deprecated since 1.2.0, "
-                     "use bitarray.util.count_xor() instead", 1) < 0)
-        return NULL;
-
-#define aa  ((bitarrayobject *) a)
-#define bb  ((bitarrayobject *) b)
-    if (aa->nbits != bb->nbits) {
-        PyErr_SetString(PyExc_ValueError,
-                        "bitarrays of equal length expected");
-        return NULL;
-    }
-    setunused(aa);
-    setunused(bb);
-    for (i = 0; i < Py_SIZE(aa); i++) {
-        c = aa->ob_item[i] ^ bb->ob_item[i];
-        res += bitcount_lookup[c];
-    }
-#undef aa
-#undef bb
-    return PyLong_FromSsize_t(res);
-}
-
-PyDoc_STRVAR(bitdiff_doc,
-"bitdiff(a, b, /) -> int\n\
-\n\
-Return the difference between two bitarrays a and b.\n\
-This is function does the same as (a ^ b).count(), but is more memory\n\
-efficient, as no intermediate bitarray object gets created.\n\
-Deprecated since version 1.2.0, use `bitarray.util.count_xor()` instead.");
-
-
-static PyObject *
 get_default_endian(PyObject *module)
 {
     return Py_BuildValue("s",
@@ -3176,7 +3130,6 @@ tuple(sizeof(void *),\n\
 
 
 static PyMethodDef module_functions[] = {
-    {"bitdiff",    (PyCFunction) bitdiff,    METH_VARARGS, bitdiff_doc   },
     {"get_default_endian", (PyCFunction) get_default_endian, METH_NOARGS,
                                                    get_default_endian_doc},
     {"_set_default_endian", (PyCFunction) set_default_endian, METH_VARARGS,
