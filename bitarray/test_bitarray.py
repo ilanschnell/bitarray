@@ -92,10 +92,6 @@ class Util(object):
     def assertStopIteration(self, it):
         self.assertRaises(StopIteration, next, it)
 
-    if sys.version_info[:2] == (2, 6):
-        def assertIsInstance(self, o, t):
-            self.assertTrue(isinstance(o, t))
-
     def assertRaisesMessage(self, excClass, msg, callable, *args, **kwargs):
         try:
             callable(*args, **kwargs)
@@ -2479,7 +2475,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
 
 tests.append(PrefixCodeTests)
 
-# -------------- Buffer Interface (Python 2.7 and above) --------------------
+# -------------------------- Buffer Interface -------------------------------
 
 class BufferInterfaceTests(unittest.TestCase):
 
@@ -2532,9 +2528,6 @@ class BufferInterfaceTests(unittest.TestCase):
         v[1] = 66
         v[2] = 67
         self.assertEqual(a.tobytes(), b'\x00ABC\x00')
-
-if sys.version_info[:2] >= (2, 7):
-    tests.append(BufferInterfaceTests)
 
 # ---------------------------------------------------------------------------
 

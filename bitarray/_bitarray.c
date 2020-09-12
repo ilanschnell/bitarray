@@ -29,11 +29,6 @@
 /* block size used when reading / writing blocks of bytes from files */
 #define BLOCKSIZE  65536
 
-#if PY_VERSION_HEX >= 0x02070000
-/* (new) buffer protocol */
-#define WITH_BUFFER
-#endif
-
 #ifdef STDC_HEADERS
 #include <stddef.h>
 #else  /* !STDC_HEADERS */
@@ -2909,8 +2904,6 @@ static PyTypeObject BitarrayIter_Type = {
 
 /*********************** bitarray buffer interface ************************/
 
-#ifdef WITH_BUFFER
-
 #if PY_MAJOR_VERSION == 2       /* old buffer protocol */
 static Py_ssize_t
 bitarray_buffer_getreadbuf(bitarrayobject *self,
@@ -2994,8 +2987,6 @@ static PyBufferProcs bitarray_as_buffer = {
     (releasebufferproc) bitarray_releasebuffer,
 };
 
-#endif  /* WITH_BUFFER */
-
 /***************************** Bitarraytype *******************************/
 
 PyDoc_STRVAR(bitarraytype_doc,
@@ -3049,13 +3040,9 @@ static PyTypeObject Bitarraytype = {
     0,                                        /* tp_str */
     PyObject_GenericGetAttr,                  /* tp_getattro */
     0,                                        /* tp_setattro */
-#ifdef WITH_BUFFER
     &bitarray_as_buffer,                      /* tp_as_buffer */
-#else
-    0,                                        /* tp_as_buffer */
-#endif
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_WEAKREFS
-#if defined(WITH_BUFFER) && PY_MAJOR_VERSION == 2
+#if PY_MAJOR_VERSION == 2
     | Py_TPFLAGS_HAVE_NEWBUFFER
 #endif
     ,                                         /* tp_flags */

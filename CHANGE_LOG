@@ -1,3 +1,8 @@
+2020-XX-XX   1.6.0:
+-------------------
+  * drop Python 2.6 support
+
+
 2020-08-24   1.5.3:
 -------------------
   * add optional index parameter to `.index()` to invert single bit
