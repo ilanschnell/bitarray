@@ -24,6 +24,7 @@
 #define PySlice_GetIndicesEx(slice, len, start, stop, step, slicelength) \
     PySlice_GetIndicesEx(((PySliceObject *) slice),                      \
                          (len), (start), (stop), (step), (slicelength))
+#define PyLong_FromLong  PyInt_FromLong
 #endif
 
 /* block size used when reading / writing blocks of bytes from files */
@@ -1221,26 +1222,39 @@ Sort the bits in the array (in-place).");
 
 
 static PyObject *
-bitarray_tolist(bitarrayobject *self)
+bitarray_tolist(bitarrayobject *self, PyObject *args)
 {
     PyObject *list;
     Py_ssize_t i;
+    int as_ints = 0;
+
+    if (!PyArg_ParseTuple(args, "|i:tolist", &as_ints))
+        return NULL;
 
     list = PyList_New(self->nbits);
     if (list == NULL)
         return NULL;
 
-    for (i = 0; i < self->nbits; i++) {
-        if (PyList_SetItem(list, i, PyBool_FromLong(GETBIT(self, i))) < 0)
-            return NULL;
+    if (as_ints) {
+        for (i = 0; i < self->nbits; i++) {
+            if (PyList_SetItem(list, i, PyLong_FromLong(GETBIT(self, i))) < 0)
+                return NULL;
+        }
+    }
+    else {
+        for (i = 0; i < self->nbits; i++) {
+            if (PyList_SetItem(list, i, PyBool_FromLong(GETBIT(self, i))) < 0)
+                return NULL;
+        }
     }
     return list;
 }
 
 PyDoc_STRVAR(tolist_doc,
-"tolist() -> list\n\
+"tolist(as_ints=False, /) -> list\n\
 \n\
 Return a list with the items (False or True) in the bitarray.\n\
+The optional paramater, changes the items in the list to integers (0 or 1).\n\
 Note that the list object being created will require 32 or 64 times more\n\
 memory (depending on the machine architecture) than the bitarray object,\n\
 which may cause a memory error if the bitarray is very large.");
@@ -2590,7 +2604,7 @@ static PyMethodDef bitarray_methods[] = {
      sort_doc},
     {"tofile",       (PyCFunction) bitarray_tofile,      METH_O,
      tofile_doc},
-    {"tolist",       (PyCFunction) bitarray_tolist,      METH_NOARGS,
+    {"tolist",       (PyCFunction) bitarray_tolist,      METH_VARARGS,
      tolist_doc},
     {"tobytes",      (PyCFunction) bitarray_tobytes,     METH_NOARGS,
      tobytes_doc},
