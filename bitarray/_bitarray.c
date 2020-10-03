@@ -2063,9 +2063,6 @@ static PyNumberMethods bitarray_as_number = {
 static int
 check_codedict(PyObject *codedict)
 {
-    PyObject *unused_key, *value;
-    Py_ssize_t unused_pos = 0;
-
     if (!PyDict_Check(codedict)) {
         PyErr_SetString(PyExc_TypeError, "dict expected");
         return -1;
@@ -2074,24 +2071,28 @@ check_codedict(PyObject *codedict)
         PyErr_SetString(PyExc_ValueError, "prefix code dict empty");
         return -1;
     }
-    while (PyDict_Next(codedict, &unused_pos, &unused_key, &value)) {
-        if (!bitarray_Check(value)) {
-            PyErr_SetString(PyExc_TypeError,
-                            "bitarray expected for dict value");
-            return -1;
-        }
-        if (((bitarrayobject *) value)->nbits == 0) {
-            PyErr_SetString(PyExc_ValueError, "non-empty bitarray expected");
-            return -1;
-        }
-    }
     return 0;
+}
+
+static int
+check_value(PyObject *value)
+{
+     if (!bitarray_Check(value)) {
+         PyErr_SetString(PyExc_TypeError,
+                         "bitarray expected for dict value");
+         return -1;
+     }
+     if (((bitarrayobject *) value)->nbits == 0) {
+         PyErr_SetString(PyExc_ValueError, "non-empty bitarray expected");
+         return -1;
+     }
+     return 0;
 }
 
 static PyObject *
 bitarray_encode(bitarrayobject *self, PyObject *args)
 {
-    PyObject *codedict, *iterable, *iter, *symbol, *bits;
+    PyObject *codedict, *iterable, *iter, *symbol, *value;
 
     if (!PyArg_ParseTuple(args, "OO:encode", &codedict, &iterable))
         return NULL;
@@ -2106,14 +2107,16 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
     }
     /* extend self with the bitarrays from codedict */
     while ((symbol = PyIter_Next(iter)) != NULL) {
-        bits = PyDict_GetItem(codedict, symbol);
+        value = PyDict_GetItem(codedict, symbol);
         Py_DECREF(symbol);
-        if (bits == NULL) {
+        if (value == NULL) {
             PyErr_SetString(PyExc_ValueError,
                             "symbol not defined in prefix code");
             goto error;
         }
-        if (extend_bitarray(self, (bitarrayobject *) bits) < 0)
+        if (check_value(value) < 0)
+            goto error;
+        if (extend_bitarray(self, (bitarrayobject *) value) < 0)
             goto error;
     }
     Py_DECREF(iter);
@@ -2210,15 +2213,17 @@ static binode *
 make_tree(PyObject *codedict)
 {
     binode *tree;
-    PyObject *symbol, *array;
+    PyObject *symbol, *value;
     Py_ssize_t pos = 0;
 
     tree = new_binode();
     if (tree == NULL)
         return NULL;
 
-    while (PyDict_Next(codedict, &pos, &symbol, &array)) {
-        if (insert_symbol(tree, (bitarrayobject *) array, symbol) < 0) {
+    while (PyDict_Next(codedict, &pos, &symbol, &value)) {
+        if (check_value(value) < 0)
+            return NULL;
+        if (insert_symbol(tree, (bitarrayobject *) value, symbol) < 0) {
             delete_binode_tree(tree);
             return NULL;
         }

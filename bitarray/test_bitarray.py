@@ -2310,8 +2310,8 @@ class PrefixCodeTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertRaises(TypeError, a.encode, None, '')
         self.assertRaises(ValueError, a.encode, {}, '')
-        self.assertRaises(TypeError, a.encode, {'a': 'b'}, '')
-        self.assertRaises(ValueError, a.encode, {'a': bitarray()}, '')
+        self.assertRaises(TypeError, a.encode, {'a': 'b'}, 'a')
+        self.assertRaises(ValueError, a.encode, {'a': bitarray()}, 'a')
         self.assertEqual(len(a), 0)
 
     def test_check_codedict_decode(self):
