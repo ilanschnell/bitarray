@@ -2114,9 +2114,8 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
                             "symbol not defined in prefix code");
             goto error;
         }
-        if (check_value(value) < 0)
-            goto error;
-        if (extend_bitarray(self, (bitarrayobject *) value) < 0)
+        if (check_value(value) < 0 ||
+                extend_bitarray(self, (bitarrayobject *) value) < 0)
             goto error;
     }
     Py_DECREF(iter);
@@ -2221,9 +2220,8 @@ make_tree(PyObject *codedict)
         return NULL;
 
     while (PyDict_Next(codedict, &pos, &symbol, &value)) {
-        if (check_value(value) < 0)
-            return NULL;
-        if (insert_symbol(tree, (bitarrayobject *) value, symbol) < 0) {
+        if (check_value(value) < 0 ||
+                insert_symbol(tree, (bitarrayobject *) value, symbol) < 0) {
             delete_binode_tree(tree);
             return NULL;
         }
