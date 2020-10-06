@@ -2393,8 +2393,9 @@ bitarray_decode(bitarrayobject *self, PyObject *obj)
     Py_ssize_t i;
     int k;
 
-    if (DecodeTree_Check(obj))
+    if (DecodeTree_Check(obj)) {
         tree = ((decodetreeobject *) obj)->root;
+    }
     else {
         if (check_codedict(obj) < 0)
             return NULL;
@@ -2448,10 +2449,10 @@ decode the content of the bitarray and return it as a list of symbols.");
 
 typedef struct {
     PyObject_HEAD
-    bitarrayobject *bao;        /* bitarray we're searching in */
+    bitarrayobject *bao;        /* bitarray we're decoding */
     binode *tree;               /* prefix tree containing symbols */
     Py_ssize_t index;           /* current index in bitarray */
-    int delete_tree;            /* whether tree should be deleted afterwards */
+    int collect_tree;           /* whether tree should be deleted afterwards */
 } decodeiterobject;
 
 static PyTypeObject DecodeIter_Type;
@@ -2471,7 +2472,7 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
 
     if (DecodeTree_Check(obj)) {
         it->tree = ((decodetreeobject *) obj)->root;
-        it->delete_tree = 0;
+        it->collect_tree = 0;
     }
     else {
         if (check_codedict(obj) < 0)
@@ -2480,7 +2481,7 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
         it->tree = make_tree(obj);
         if (it->tree == NULL || PyErr_Occurred())
             return NULL;
-        it->delete_tree = 1;
+        it->collect_tree = 1;
     }
 
     Py_INCREF(self);
@@ -2513,7 +2514,7 @@ decodeiter_next(decodeiterobject *it)
 static void
 decodeiter_dealloc(decodeiterobject *it)
 {
-    if (it->delete_tree)
+    if (it->collect_tree)
         delete_binode_tree(it->tree);
     PyObject_GC_UnTrack(it);
     Py_XDECREF(it->bao);
