@@ -2232,20 +2232,20 @@ make_tree(PyObject *codedict)
 typedef struct {
     PyObject_HEAD
     binode *root;
-} bintreeobject;
+} decodetreeobject;
 
-static PyTypeObject BinTree_Type;
+static PyTypeObject DecodeTree_Type;
 
-#define BinTree_Check(op)  PyObject_TypeCheck(op, &BinTree_Type)
+#define DecodeTree_Check(op)  PyObject_TypeCheck(op, &DecodeTree_Type)
 
 static PyObject *
-bintree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     binode *tree;
     PyObject *codedict;
-    bintreeobject *self;
+    decodetreeobject *self;
 
-    if (!PyArg_ParseTuple(args, "O:bintree", &codedict))
+    if (!PyArg_ParseTuple(args, "O:decodetree", &codedict))
         return NULL;
 
     if (check_codedict(codedict) < 0)
@@ -2255,7 +2255,7 @@ bintree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (tree == NULL || PyErr_Occurred())
         goto error;
 
-    self = (bintreeobject *) type->tp_alloc(type, 0);
+    self = (decodetreeobject *) type->tp_alloc(type, 0);
     if (self == NULL)
         goto error;
 
@@ -2285,45 +2285,45 @@ node_size(binode *nd)
 }
 
 static PyObject *
-bintree_sizeof(bintreeobject *self)
+decodetree_sizeof(decodetreeobject *self)
 {
     Py_ssize_t res;
 
-    res = sizeof(bintreeobject);
+    res = sizeof(decodetreeobject);
     res += node_size(self->root);
     return PyLong_FromSsize_t(res);
 }
 
 static void
-bintree_dealloc(bintreeobject *self)
+decodetree_dealloc(decodetreeobject *self)
 {
     delete_binode_tree(self->root);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-static PyMethodDef bintree_methods[] = {
-    {"__sizeof__",   (PyCFunction) bintree_sizeof,       METH_NOARGS, 0},
+static PyMethodDef decodetree_methods[] = {
+    {"__sizeof__",   (PyCFunction) decodetree_sizeof,     METH_NOARGS, 0},
     {NULL,           NULL}  /* sentinel */
 };
 
-PyDoc_STRVAR(bintree_doc,
-"bintree(code, /) -> bintree\n\
+PyDoc_STRVAR(decodetree_doc,
+"decodetree(code, /) -> decodetree\n\
 \n\
 Given a prefix code (a dict mapping symbols to bitarrays),\n\
 create a binary tree object to be passed to `.decode()` or `.iterdecode()`.");
 
-static PyTypeObject BinTree_Type = {
+static PyTypeObject DecodeTree_Type = {
 #ifdef IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
 #endif
-    "bitarray.bintree",                       /* tp_name */
-    sizeof(bintreeobject),                    /* tp_basicsize */
+    "bitarray.decodetree",                    /* tp_name */
+    sizeof(decodetreeobject),                 /* tp_basicsize */
     0,                                        /* tp_itemsize */
     /* methods */
-    (destructor) bintree_dealloc,             /* tp_dealloc */
+    (destructor) decodetree_dealloc,          /* tp_dealloc */
     0,                                        /* tp_print */
     0,                                        /* tp_getattr */
     0,                                        /* tp_setattr */
@@ -2339,14 +2339,14 @@ static PyTypeObject BinTree_Type = {
     0,                                        /* tp_setattro */
     0,                                        /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-    bintree_doc,                              /* tp_doc */
+    decodetree_doc,                           /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
     0,                                        /* tp_richcompare */
     0,                                        /* tp_weaklistoffset */
     0,                                        /* tp_iter */
     0,                                        /* tp_iternext */
-    bintree_methods,                          /* tp_methods */
+    decodetree_methods,                       /* tp_methods */
     0,                                        /* tp_members */
     0,                                        /* tp_getset */
     0,                                        /* tp_base */
@@ -2356,7 +2356,7 @@ static PyTypeObject BinTree_Type = {
     0,                                        /* tp_dictoffset */
     0,                                        /* tp_init */
     PyType_GenericAlloc,                      /* tp_alloc */
-    bintree_new,                              /* tp_new */
+    decodetree_new,                           /* tp_new */
     PyObject_Del,                             /* tp_free */
 };
 
@@ -3303,7 +3303,7 @@ init_bitarray(void)
     Py_TYPE(&SearchIter_Type) = &PyType_Type;
     Py_TYPE(&DecodeIter_Type) = &PyType_Type;
     Py_TYPE(&BitarrayIter_Type) = &PyType_Type;
-    Py_TYPE(&BinTree_Type) = &PyType_Type;
+    Py_TYPE(&DecodeTree_Type) = &PyType_Type;
 #ifdef IS_PY3K
     m = PyModule_Create(&moduledef);
     if (m == NULL)
@@ -3319,8 +3319,8 @@ init_bitarray(void)
     Py_INCREF((PyObject *) &Bitarraytype);
     PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarraytype);
 
-    Py_INCREF((PyObject *) &BinTree_Type);
-    PyModule_AddObject(m, "bintree", (PyObject *) &BinTree_Type);
+    Py_INCREF((PyObject *) &DecodeTree_Type);
+    PyModule_AddObject(m, "decodetree", (PyObject *) &DecodeTree_Type);
 
     PyModule_AddObject(m, "__version__",
                        Py_BuildValue("s", BITARRAY_VERSION));
