@@ -2264,6 +2264,45 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     return NULL;
 }
 
+static void
+add_node_todict(binode *nd, PyObject *dict, PyObject *prefix)
+{
+    bitarrayobject *t;
+    int k;
+
+    if (nd == NULL)
+        return;
+
+    if (nd->symbol) {
+        PyDict_SetItem(dict, nd->symbol, prefix);
+        return;
+    }
+
+    for (k = 0; k < 2; k++) {
+        t = (bitarrayobject *) bitarray_copy((bitarrayobject *) prefix);
+        resize(t, t->nbits + 1);
+        setbit(t, t->nbits - 1, k);
+        add_node_todict(nd->child[k], dict, (PyObject *) t);
+    }
+}
+
+static PyObject *
+decodetree_todict(decodetreeobject *self)
+{
+    PyObject *dict, *prefix;
+
+    dict = PyDict_New();
+    if (dict == NULL)
+        return NULL;
+
+    prefix = newbitarrayobject(&Bitarraytype, 0, ENDIAN_LITTLE);
+    if (prefix == NULL)
+        return NULL;
+
+    add_node_todict(self->root, dict, prefix);
+    return dict;
+}
+
 static Py_ssize_t
 node_size(binode *nd)
 {
@@ -2296,8 +2335,9 @@ decodetree_dealloc(decodetreeobject *self)
 }
 
 static PyMethodDef decodetree_methods[] = {
-    {"__sizeof__",   (PyCFunction) decodetree_sizeof,     METH_NOARGS, 0},
-    {NULL,           NULL}  /* sentinel */
+    {"todict",      (PyCFunction) decodetree_todict,  METH_NOARGS, 0},
+    {"__sizeof__",  (PyCFunction) decodetree_sizeof,  METH_NOARGS, 0},
+    {NULL,          NULL}  /* sentinel */
 };
 
 PyDoc_STRVAR(decodetree_doc,
