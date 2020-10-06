@@ -2257,7 +2257,7 @@ bintree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     self = (bintreeobject *) type->tp_alloc(type, 0);
     if (self == NULL)
-        return NULL;
+        goto error;
 
     self->root = tree;
 
@@ -2268,6 +2268,32 @@ bintree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     return NULL;
 }
 
+static Py_ssize_t
+node_size(binode *nd)
+{
+    Py_ssize_t res;
+    int k;
+
+    if (nd == NULL)
+        return 0;
+
+    res = sizeof(binode);
+    for (k = 0; k < 2; k++)
+        res += node_size(nd->child[k]);
+
+    return res;
+}
+
+static PyObject *
+bintree_sizeof(bintreeobject *self)
+{
+    Py_ssize_t res;
+
+    res = sizeof(bintreeobject);
+    res += node_size(self->root);
+    return PyLong_FromSsize_t(res);
+}
+
 static void
 bintree_dealloc(bintreeobject *self)
 {
@@ -2276,10 +2302,9 @@ bintree_dealloc(bintreeobject *self)
 }
 
 static PyMethodDef bintree_methods[] = {
-    //{"__sizeof__",   (PyCFunction) bintree_sizeof,       METH_NOARGS, 0},
+    {"__sizeof__",   (PyCFunction) bintree_sizeof,       METH_NOARGS, 0},
     {NULL,           NULL}  /* sentinel */
 };
-
 
 PyDoc_STRVAR(bintree_doc,
 "bintree(code, /) -> bintree\n\
