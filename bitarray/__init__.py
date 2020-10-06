@@ -10,7 +10,7 @@ Author: Ilan Schnell
 """
 from __future__ import absolute_import
 
-from bitarray._bitarray import (bitarray, _sysinfo,
+from bitarray._bitarray import (bitarray, bintree, _sysinfo,
                                 get_default_endian, _set_default_endian,
                                 __version__)
 

@@ -2229,6 +2229,112 @@ make_tree(PyObject *codedict)
     return tree;
 }
 
+typedef struct {
+    PyObject_HEAD
+    binode *root;
+} bintreeobject;
+
+static PyTypeObject BinTree_Type;
+
+#define BinTree_Check(op)  PyObject_TypeCheck(op, &BinTree_Type)
+
+static PyObject *
+bintree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    binode *tree;
+    PyObject *codedict;
+    bintreeobject *self;
+
+    if (!PyArg_ParseTuple(args, "O:bintree", &codedict))
+        return NULL;
+
+    if (check_codedict(codedict) < 0)
+        return NULL;
+
+    tree = make_tree(codedict);
+    if (tree == NULL || PyErr_Occurred())
+        goto error;
+
+    self = (bintreeobject *) type->tp_alloc(type, 0);
+    if (self == NULL)
+        return NULL;
+
+    self->root = tree;
+
+    return (PyObject *) self;
+
+ error:
+    delete_binode_tree(tree);
+    return NULL;
+}
+
+static void
+bintree_dealloc(bintreeobject *self)
+{
+    delete_binode_tree(self->root);
+    Py_TYPE(self)->tp_free((PyObject *) self);
+}
+
+static PyMethodDef bintree_methods[] = {
+    //{"__sizeof__",   (PyCFunction) bintree_sizeof,       METH_NOARGS, 0},
+    {NULL,           NULL}  /* sentinel */
+};
+
+
+PyDoc_STRVAR(bintree_doc,
+"bintree(code, /) -> bintree\n\
+\n\
+Given a prefix code (a dict mapping symbols to bitarrays),\n\
+create a binary tree object to be passed to `.decode()` or `.iterdecode()`.");
+
+static PyTypeObject BinTree_Type = {
+#ifdef IS_PY3K
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                                        /* ob_size */
+#endif
+    "bitarray.bintree",                       /* tp_name */
+    sizeof(bintreeobject),                    /* tp_basicsize */
+    0,                                        /* tp_itemsize */
+    /* methods */
+    (destructor) bintree_dealloc,             /* tp_dealloc */
+    0,                                        /* tp_print */
+    0,                                        /* tp_getattr */
+    0,                                        /* tp_setattr */
+    0,                                        /* tp_compare */
+    0,                                        /* tp_repr */
+    0,                                        /* tp_as_number*/
+    0,                                        /* tp_as_sequence */
+    0,                                        /* tp_as_mapping */
+    PyObject_HashNotImplemented,              /* tp_hash */
+    0,                                        /* tp_call */
+    0,                                        /* tp_str */
+    PyObject_GenericGetAttr,                  /* tp_getattro */
+    0,                                        /* tp_setattro */
+    0,                                        /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
+    bintree_doc,                              /* tp_doc */
+    0,                                        /* tp_traverse */
+    0,                                        /* tp_clear */
+    0,                                        /* tp_richcompare */
+    0,                                        /* tp_weaklistoffset */
+    0,                                        /* tp_iter */
+    0,                                        /* tp_iternext */
+    bintree_methods,                          /* tp_methods */
+    0,                                        /* tp_members */
+    0,                                        /* tp_getset */
+    0,                                        /* tp_base */
+    0,                                        /* tp_dict */
+    0,                                        /* tp_descr_get */
+    0,                                        /* tp_descr_set */
+    0,                                        /* tp_dictoffset */
+    0,                                        /* tp_init */
+    PyType_GenericAlloc,                      /* tp_alloc */
+    bintree_new,                              /* tp_new */
+    PyObject_Del,                             /* tp_free */
+};
+
 /* Traverse tree using the branches corresponding to the bitarray `ba`,
    starting at *indexp.  Return the symbol at the leaf node, or NULL
    when the end of the bitarray has been reached, or on error (in which
@@ -3172,6 +3278,7 @@ init_bitarray(void)
     Py_TYPE(&SearchIter_Type) = &PyType_Type;
     Py_TYPE(&DecodeIter_Type) = &PyType_Type;
     Py_TYPE(&BitarrayIter_Type) = &PyType_Type;
+    Py_TYPE(&BinTree_Type) = &PyType_Type;
 #ifdef IS_PY3K
     m = PyModule_Create(&moduledef);
     if (m == NULL)
@@ -3186,6 +3293,10 @@ init_bitarray(void)
 
     Py_INCREF((PyObject *) &Bitarraytype);
     PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarraytype);
+
+    Py_INCREF((PyObject *) &BinTree_Type);
+    PyModule_AddObject(m, "bintree", (PyObject *) &BinTree_Type);
+
     PyModule_AddObject(m, "__version__",
                        Py_BuildValue("s", BITARRAY_VERSION));
 #ifdef IS_PY3K
