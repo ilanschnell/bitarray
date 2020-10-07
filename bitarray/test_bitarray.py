@@ -2238,25 +2238,38 @@ tests.append(FileTests)
 
 # ---------------------------------------------------------------------------
 
+alpabet_code = {
+    ' ': bitarray('001'),         '.': bitarray('0101010'),
+    'a': bitarray('0110'),        'b': bitarray('0001100'),
+    'c': bitarray('000011'),      'd': bitarray('01011'),
+    'e': bitarray('111'),         'f': bitarray('010100'),
+    'g': bitarray('101000'),      'h': bitarray('00000'),
+    'i': bitarray('1011'),        'j': bitarray('0111101111'),
+    'k': bitarray('00011010'),    'l': bitarray('01110'),
+    'm': bitarray('000111'),      'n': bitarray('1001'),
+    'o': bitarray('1000'),        'p': bitarray('101001'),
+    'q': bitarray('00001001101'), 'r': bitarray('1101'),
+    's': bitarray('1100'),        't': bitarray('0100'),
+    'u': bitarray('000100'),      'v': bitarray('0111100'),
+    'w': bitarray('011111'),      'x': bitarray('0000100011'),
+    'y': bitarray('101010'),      'z': bitarray('00011011110')
+}
+
 class PrefixCodeTests(unittest.TestCase, Util):
 
     def test_encode_string(self):
         a = bitarray()
-        d = {'a': bitarray('0')}
-        a.encode(d, '')
+        a.encode(alpabet_code, '')
         self.assertEqual(a, bitarray())
-        a.encode(d, 'a')
-        self.assertEqual(a, bitarray('0'))
-        self.assertEqual(d, {'a': bitarray('0')})
+        a.encode(alpabet_code, 'a')
+        self.assertEqual(a, bitarray('0110'))
 
     def test_encode_list(self):
         a = bitarray()
-        d = {'a': bitarray('0')}
-        a.encode(d, [])
+        a.encode(alpabet_code, [])
         self.assertEqual(a, bitarray())
-        a.encode(d, ['a'])
-        self.assertEqual(a, bitarray('0'))
-        self.assertEqual(d, {'a': bitarray('0')})
+        a.encode(alpabet_code, ['e'])
+        self.assertEqual(a, bitarray('111'))
 
     def test_encode_iter(self):
         a = bitarray()
@@ -2272,20 +2285,6 @@ class PrefixCodeTests(unittest.TestCase, Util):
         a.encode(d, range(2))
         self.assertEqual(a, bitarray('011011001101'))
         self.assertEqual(d, {0: bitarray('0'), 1: bitarray('1')})
-
-    def test_encode(self):
-        d = {'I': bitarray('1'),
-             'l': bitarray('01'),
-             'a': bitarray('001'),
-             'n': bitarray('000')}
-        a = bitarray()
-        a.encode(d, 'Ilan')
-        self.assertEqual(a, bitarray('101001000'))
-        a.encode(d, 'a')
-        self.assertEqual(a, bitarray('101001000001'))
-        self.assertEqual(d, {'I': bitarray('1'), 'l': bitarray('01'),
-                             'a': bitarray('001'), 'n': bitarray('000')})
-        self.assertRaises(ValueError, a.encode, d, 'arvin')
 
     def test_encode_symbol_not_in_code(self):
         d = {None : bitarray('0'),
@@ -2331,10 +2330,8 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('1100101'))
 
     def test_decode_simple(self):
-        d = {'I': bitarray('1'),
-             'l': bitarray('01'),
-             'a': bitarray('001'),
-             'n': bitarray('000')}
+        d = {'I': bitarray('1'),   'l': bitarray('01'),
+             'a': bitarray('001'), 'n': bitarray('000')}
         dcopy = dict(d)
         a = bitarray('101001000')
         self.assertEqual(a.decode(d), ['I', 'l', 'a', 'n'])
@@ -2342,10 +2339,8 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('101001000'))
 
     def test_iterdecode_simple(self):
-        d = {'I': bitarray('1'),
-             'l': bitarray('01'),
-             'a': bitarray('001'),
-             'n': bitarray('000')}
+        d = {'I': bitarray('1'),   'l': bitarray('01'),
+             'a': bitarray('001'), 'n': bitarray('000')}
         dcopy = dict(d)
         a = bitarray('101001000')
         self.assertEqual(list(a.iterdecode(d)), ['I', 'l', 'a', 'n'])
@@ -2439,47 +2434,18 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertStopIteration(it)
 
     def test_real_example(self):
-        code = {' ': bitarray('001'),
-                '.': bitarray('0101010'),
-                'a': bitarray('0110'),
-                'b': bitarray('0001100'),
-                'c': bitarray('000011'),
-                'd': bitarray('01011'),
-                'e': bitarray('111'),
-                'f': bitarray('010100'),
-                'g': bitarray('101000'),
-                'h': bitarray('00000'),
-                'i': bitarray('1011'),
-                'j': bitarray('0111101111'),
-                'k': bitarray('00011010'),
-                'l': bitarray('01110'),
-                'm': bitarray('000111'),
-                'n': bitarray('1001'),
-                'o': bitarray('1000'),
-                'p': bitarray('101001'),
-                'q': bitarray('00001001101'),
-                'r': bitarray('1101'),
-                's': bitarray('1100'),
-                't': bitarray('0100'),
-                'u': bitarray('000100'),
-                'v': bitarray('0111100'),
-                'w': bitarray('011111'),
-                'x': bitarray('0000100011'),
-                'y': bitarray('101010'),
-                'z': bitarray('00011011110')}
         a = bitarray()
         message = 'the quick brown fox jumps over the lazy dog.'
-        a.encode(code, message)
+        a.encode(alpabet_code, message)
         self.assertEqual(a, bitarray('01000000011100100001001101000100101100'
           '00110001101000100011001101100001111110010010101001000000010001100'
           '10111101111000100000111101001110000110000111100111110100101000000'
           '0111001011100110000110111101010100010101110001010000101010'))
-        self.assertEqual(''.join(a.decode(code)), message)
-        self.assertEqual(''.join(a.iterdecode(code)), message)
-        t = decodetree(code)
+        self.assertEqual(''.join(a.decode(alpabet_code)), message)
+        self.assertEqual(''.join(a.iterdecode(alpabet_code)), message)
+        t = decodetree(alpabet_code)
         self.assertEqual(''.join(a.decode(t)), message)
         self.assertEqual(''.join(a.iterdecode(t)), message)
-
 
 tests.append(PrefixCodeTests)
 
@@ -2488,18 +2454,17 @@ tests.append(PrefixCodeTests)
 class DecodeTreeTests(unittest.TestCase):
 
     def test_create(self):
-        d = {'I': bitarray('1'),   'l': bitarray('01'),
-             'a': bitarray('001'), 'n': bitarray('000')}
-        dt = decodetree(d)
+        dt = decodetree(alpabet_code)
         self.assertEqual(repr(type(dt)), "<%s 'bitarray.decodetree'>" %
                          ('class' if is_py3k else 'type'))
         self.assertRaises(TypeError, decodetree, None)
         self.assertRaises(TypeError, decodetree, 'foo')
+        d = dict(alpabet_code)
         d['.'] = bitarray()
         self.assertRaises(ValueError, decodetree, d)
 
     def test_sizeof(self):
-        dt = decodetree({'I': bitarray('1')})
+        dt = decodetree({'.': bitarray('1')})
         self.assertTrue(0 < sys.getsizeof(dt) < 100)
 
         dt = decodetree({'a': bitarray(20 * '0')})
@@ -2510,25 +2475,25 @@ class DecodeTreeTests(unittest.TestCase):
             dt = decodetree({'a': bitarray(n * '0')})
             self.assertEqual(dt.nodes(), n + 1)
 
-        d = {'I': bitarray('1'),   'l': bitarray('01'),
-             'a': bitarray('001'), 'n': bitarray('000')}
-        dt = decodetree(d)
+        dt = decodetree({'I': bitarray('1'),   'l': bitarray('01'),
+                         'a': bitarray('001'), 'n': bitarray('000')})
         self.assertEqual(dt.nodes(), 7)
+        dt = decodetree(alpabet_code)
+        self.assertEqual(dt.nodes(), 70)
 
     def test_todict(self):
-        d1 = {'I': bitarray('1'),   'l': bitarray('01'),
-              'a': bitarray('001'), 'n': bitarray('000')}
-        t = decodetree(d1)
-        d2 = t.todict()
-        self.assertEqual(d1, d2)
+        t = decodetree(alpabet_code)
+        d = t.todict()
+        self.assertEqual(d, alpabet_code)
 
     def test_decode(self):
-        d = {'I': bitarray('1'),   'l': bitarray('01'),
-             'a': bitarray('001'), 'n': bitarray('000')}
-        dt = decodetree(d)
-        a = bitarray('101001000')
-        self.assertEqual(a.decode(dt), ['I', 'l', 'a', 'n'])
-        self.assertEqual(''.join(a.iterdecode(dt)), 'Ilan')
+        t = decodetree(alpabet_code)
+        a = bitarray('10110111001101001')
+        self.assertEqual(a.decode(t), ['i', 'l', 'a', 'n'])
+        self.assertEqual(''.join(a.iterdecode(t)), 'ilan')
+        a = bitarray()
+        self.assertEqual(a.decode(t), [])
+        self.assertEqual(''.join(a.iterdecode(t)), '')
 
 tests.append(DecodeTreeTests)
 
