@@ -2299,7 +2299,7 @@ static int
 add_node_todict(binode *nd, PyObject *dict, bitarrayobject *prefix)
 {
     bitarrayobject *t;
-    int k;
+    int k, ret;
 
     if (nd == NULL)
         return 0;
@@ -2314,7 +2314,9 @@ add_node_todict(binode *nd, PyObject *dict, bitarrayobject *prefix)
         t = (bitarrayobject *) bitarray_copy(prefix);
         resize(t, t->nbits + 1);
         setbit(t, t->nbits - 1, k);
-        if (add_node_todict(nd->child[k], dict, t) < 0)
+        ret = add_node_todict(nd->child[k], dict, t);
+        Py_DECREF((PyObject *) t);
+        if (ret < 0)
             return -1;
     }
     return 0;
@@ -2331,11 +2333,18 @@ decodetree_todict(decodetreeobject *self)
 
     prefix = newbitarrayobject(&Bitarraytype, 0, ENDIAN_LITTLE);
     if (prefix == NULL)
-        return NULL;
+        goto error;
 
     if (add_node_todict(self->root, dict, (bitarrayobject *) prefix) < 0)
-        return NULL;
+        goto error;
+
+    Py_DECREF(prefix);
     return dict;
+
+ error:
+    Py_DECREF(dict);
+    Py_XDECREF(prefix);
+    return NULL;
 }
 
 static Py_ssize_t
