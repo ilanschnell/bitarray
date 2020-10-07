@@ -289,6 +289,13 @@ return a list of the symbols:
 Since symbols are not limited to being characters, it is necessary to return
 them as elements of a list, rather than simply returning the joined string.
 
+When the codes are large, and you have many decode calls, most time will
+be spent creating the (same) internal decode tree objects.  In this case,
+it will be much faster to create a `decodetree` object (which is initialized
+with a prefix code dictionary), and can be passed to bitarray's `.decode()`
+and `.iterdecode()` methods, instead of passing the prefix code dictionary
+to those methods itself.
+
 The above dictionary `d` can be efficiently constructed using the function
 `bitarray.util.huffman_code()`.  I also wrote [Huffman coding in Python using
 bitarray](http://ilan.schnell-web.net/prog/huffman/) for more background
