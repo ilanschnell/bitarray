@@ -2265,7 +2265,7 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 }
 
 static void
-add_node_todict(binode *nd, PyObject *dict, PyObject *prefix)
+add_node_todict(binode *nd, PyObject *dict, bitarrayobject *prefix)
 {
     bitarrayobject *t;
     int k;
@@ -2274,15 +2274,15 @@ add_node_todict(binode *nd, PyObject *dict, PyObject *prefix)
         return;
 
     if (nd->symbol) {
-        PyDict_SetItem(dict, nd->symbol, prefix);
+        PyDict_SetItem(dict, nd->symbol, (PyObject *) prefix);
         return;
     }
 
     for (k = 0; k < 2; k++) {
-        t = (bitarrayobject *) bitarray_copy((bitarrayobject *) prefix);
+        t = (bitarrayobject *) bitarray_copy(prefix);
         resize(t, t->nbits + 1);
         setbit(t, t->nbits - 1, k);
-        add_node_todict(nd->child[k], dict, (PyObject *) t);
+        add_node_todict(nd->child[k], dict, t);
     }
 }
 
@@ -2299,7 +2299,7 @@ decodetree_todict(decodetreeobject *self)
     if (prefix == NULL)
         return NULL;
 
-    add_node_todict(self->root, dict, prefix);
+    add_node_todict(self->root, dict, (bitarrayobject *) prefix);
     return dict;
 }
 
