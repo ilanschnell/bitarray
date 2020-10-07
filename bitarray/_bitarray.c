@@ -51,9 +51,9 @@ typedef struct {
     PyObject *weakreflist;      /* list of weak references */
 } bitarrayobject;
 
-static PyTypeObject Bitarraytype;
+static PyTypeObject Bitarray_Type;
 
-#define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarraytype)
+#define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarray_Type)
 
 /* --- bit endianness --- */
 #define ENDIAN_LITTLE  0
@@ -2331,7 +2331,7 @@ decodetree_todict(decodetreeobject *self)
     if (dict == NULL)
         return NULL;
 
-    prefix = newbitarrayobject(&Bitarraytype, 0, default_endian);
+    prefix = newbitarrayobject(&Bitarray_Type, 0, default_endian);
     if (prefix == NULL)
         goto error;
 
@@ -2628,7 +2628,7 @@ static PyTypeObject DecodeIter_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
 #endif
-    "bitarraydecodeiterator",                 /* tp_name */
+    "bitarray.decodeiterator",                /* tp_name */
     sizeof(decodeiterobject),                 /* tp_basicsize */
     0,                                        /* tp_itemsize */
     /* methods */
@@ -2743,7 +2743,7 @@ static PyTypeObject SearchIter_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
 #endif
-    "bitarraysearchiterator",                 /* tp_name */
+    "bitarray.searchiterator",                /* tp_name */
     sizeof(searchiterobject),                 /* tp_basicsize */
     0,                                        /* tp_itemsize */
     /* methods */
@@ -3117,7 +3117,7 @@ static PyTypeObject BitarrayIter_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
 #endif
-    "bitarrayiterator",                       /* tp_name */
+    "bitarray.bitarrayiterator",              /* tp_name */
     sizeof(bitarrayiterobject),               /* tp_basicsize */
     0,                                        /* tp_itemsize */
     /* methods */
@@ -3232,7 +3232,7 @@ static PyBufferProcs bitarray_as_buffer = {
     (releasebufferproc) bitarray_releasebuffer,
 };
 
-/***************************** Bitarraytype *******************************/
+/***************************** Bitarray Type ******************************/
 
 PyDoc_STRVAR(bitarraytype_doc,
 "bitarray(initializer=0, /, endian='big') -> bitarray\n\
@@ -3260,7 +3260,7 @@ Note that setting the bit endianness only has an effect when accessing the\n\
 machine representation of the bitarray, i.e. when using the methods: tofile,\n\
 fromfile, tobytes, frombytes.");
 
-static PyTypeObject Bitarraytype = {
+static PyTypeObject Bitarray_Type = {
 #ifdef IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
@@ -3400,7 +3400,7 @@ init_bitarray(void)
 {
     PyObject *m;
 
-    Py_TYPE(&Bitarraytype) = &PyType_Type;
+    Py_TYPE(&Bitarray_Type) = &PyType_Type;
     Py_TYPE(&SearchIter_Type) = &PyType_Type;
     Py_TYPE(&DecodeIter_Type) = &PyType_Type;
     Py_TYPE(&BitarrayIter_Type) = &PyType_Type;
@@ -3409,7 +3409,7 @@ init_bitarray(void)
     m = PyModule_Create(&moduledef);
     if (m == NULL)
         return NULL;
-    if (PyType_Ready(&Bitarraytype) < 0)
+    if (PyType_Ready(&Bitarray_Type) < 0)
         return NULL;
 #else
     m = Py_InitModule3("_bitarray", module_functions, 0);
@@ -3417,8 +3417,8 @@ init_bitarray(void)
         return;
 #endif
 
-    Py_INCREF((PyObject *) &Bitarraytype);
-    PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarraytype);
+    Py_INCREF((PyObject *) &Bitarray_Type);
+    PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type);
 
     Py_INCREF((PyObject *) &DecodeTree_Type);
     PyModule_AddObject(m, "decodetree", (PyObject *) &DecodeTree_Type);
