@@ -691,7 +691,7 @@ class TestsIntegerization(unittest.TestCase, Util):
             if a.endian == 'big':
                 self.assertTrue(len(a) == 1 or a.index(1) == 0)
             self.assertEqual(ba2int(a), i)
-            if i > 0 and sys.version_info[:2] >= (2, 7):
+            if i > 0:
                 self.assertEqual(i.bit_length(), len(a))
             # add a few trailing / leading zeros to bitarray
             if endian == 'big':
@@ -784,21 +784,19 @@ class TestsHuffman(unittest.TestCase):
         for i in range(N):
             self.assertEqual(len(code[i]), N - (1 if i <= 1 else i))
 
-    if sys.version_info[:2] >= (2, 7):
-        def test_counter(self):
-            message = 'the quick brown fox jumps over the lazy dog.'
-            code = huffman_code(Counter(message))
-            a = bitarray()
-            a.encode(code, message)
-            self.assertEqual(''.join(a.decode(code)), message)
+    def test_counter(self):
+        message = 'the quick brown fox jumps over the lazy dog.'
+        code = huffman_code(Counter(message))
+        a = bitarray()
+        a.encode(code, message)
+        self.assertEqual(''.join(a.decode(code)), message)
 
-        def test_rand_list(self):
-            plain = [randint(0, 100) for _ in range(500)]
-            code = huffman_code(Counter(plain))
-            a = bitarray()
-            a.encode(code, plain)
-            self.assertEqual(a.decode(code), plain)
-
+    def test_rand_list(self):
+        plain = [randint(0, 100) for _ in range(500)]
+        code = huffman_code(Counter(plain))
+        a = bitarray()
+        a.encode(code, plain)
+        self.assertEqual(a.decode(code), plain)
 
 tests.append(TestsHuffman)
 
