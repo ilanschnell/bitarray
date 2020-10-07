@@ -2558,28 +2558,32 @@ static PyObject *
 bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
 {
     decodeiterobject *it;       /* iterator to be returned */
-
-    it = PyObject_GC_New(decodeiterobject, &DecodeIter_Type);
-    if (it == NULL)
-        return NULL;
+    binode *tree;
+    int collect_tree;
 
     if (DecodeTree_Check(obj)) {
-        it->tree = ((decodetreeobject *) obj)->root;
-        it->collect_tree = 0;
+        tree = ((decodetreeobject *) obj)->root;
+        collect_tree = 0;
     }
     else {
         if (check_codedict(obj) < 0)
             return NULL;
 
-        it->tree = make_tree(obj);
-        if (it->tree == NULL || PyErr_Occurred())
+        tree = make_tree(obj);
+        if (tree == NULL || PyErr_Occurred())
             return NULL;
-        it->collect_tree = 1;
+        collect_tree = 1;
     }
+
+    it = PyObject_GC_New(decodeiterobject, &DecodeIter_Type);
+    if (it == NULL)
+        return NULL;
 
     Py_INCREF(self);
     it->bao = self;
+    it->tree = tree;
     it->index = 0;
+    it->collect_tree = collect_tree;
     PyObject_GC_Track(it);
     return (PyObject *) it;
 }

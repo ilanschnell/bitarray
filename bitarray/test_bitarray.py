@@ -2418,6 +2418,8 @@ class PrefixCodeTests(unittest.TestCase, Util):
                                      a.decode, d)
             self.assertRaisesMessage(ValueError, "prefix code ambiguous",
                                      a.iterdecode, d)
+            self.assertRaisesMessage(ValueError, "prefix code ambiguous",
+                                     decodetree, d)
 
     def test_miscitems(self):
         d = {None : bitarray('00'),
