@@ -2234,6 +2234,36 @@ typedef struct {
     binode *root;
 } decodetreeobject;
 
+static void
+incref_symbols(binode *nd)
+{
+    if (nd == NULL)
+        return;
+
+    if (nd->symbol) {
+        Py_INCREF(nd->symbol);
+        return;
+    }
+
+    incref_symbols(nd->child[0]);
+    incref_symbols(nd->child[1]);
+}
+
+static void
+decref_symbols(binode *nd)
+{
+    if (nd == NULL)
+        return;
+
+    if (nd->symbol) {
+        Py_DECREF(nd->symbol);
+        return;
+    }
+
+    decref_symbols(nd->child[0]);
+    decref_symbols(nd->child[1]);
+}
+
 static PyObject *
 decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
@@ -2255,6 +2285,7 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (self == NULL)
         goto error;
 
+    incref_symbols(tree);
     self->root = tree;
 
     return (PyObject *) self;
@@ -2336,6 +2367,7 @@ decodetree_sizeof(decodetreeobject *self)
 static void
 decodetree_dealloc(decodetreeobject *self)
 {
+    decref_symbols(self->root);
     delete_binode_tree(self->root);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
