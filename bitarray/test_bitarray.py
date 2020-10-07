@@ -2360,7 +2360,13 @@ class PrefixCodeTests(unittest.TestCase, Util):
     def test_decode_no_term(self):
         d = {'a': bitarray('0'), 'b': bitarray('111')}
         a = bitarray('011')
-        self.assertRaises(ValueError, a.decode, d)
+        msg = "decoding not terminated"
+        self.assertRaisesMessage(ValueError, msg, a.decode, d)
+        self.assertRaisesMessage(ValueError, msg, a.iterdecode, d)
+        t = decodetree(d)
+        self.assertRaisesMessage(ValueError, msg, a.decode, t)
+        self.assertRaisesMessage(ValueError, msg, a.iterdecode, t)
+
         self.assertEqual(a, bitarray('011'))
         self.assertEqual(d, {'a': bitarray('0'), 'b': bitarray('111')})
 

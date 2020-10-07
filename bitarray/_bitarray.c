@@ -2527,7 +2527,8 @@ bitarray_decode(bitarrayobject *self, PyObject *obj)
     return list;
 
 error:
-    delete_binode_tree(tree);
+    if (!DecodeTree_Check(obj))
+        delete_binode_tree(tree);
     Py_XDECREF(list);
     return NULL;
 }
