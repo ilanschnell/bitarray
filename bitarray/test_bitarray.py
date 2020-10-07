@@ -32,7 +32,7 @@ else:
     range = xrange
 
 
-from bitarray import (bitarray, frozenbitarray, bits2bytes,
+from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian,
                       _sysinfo, __version__)
 
@@ -2479,6 +2479,55 @@ class PrefixCodeTests(unittest.TestCase, Util):
 
 
 tests.append(PrefixCodeTests)
+
+# ----------------------------- Decode Tree ---------------------------------
+
+class DecodeTreeTests(unittest.TestCase):
+
+    def test_create(self):
+        d = {'I': bitarray('1'),   'l': bitarray('01'),
+             'a': bitarray('001'), 'n': bitarray('000')}
+        dt = decodetree(d)
+        self.assertEqual(repr(type(dt)), "<%s 'bitarray.decodetree'>" %
+                         ('class' if is_py3k else 'type'))
+        self.assertRaises(TypeError, decodetree, None)
+        self.assertRaises(TypeError, decodetree, 'foo')
+        d['.'] = bitarray()
+        self.assertRaises(ValueError, decodetree, d)
+
+    def test_sizeof(self):
+        dt = decodetree({'I': bitarray('1')})
+        self.assertTrue(0 < sys.getsizeof(dt) < 100)
+
+        dt = decodetree({'a': bitarray(20 * '0')})
+        self.assertTrue(sys.getsizeof(dt) > 200)
+
+    def test_nodes(self):
+        for n in range(1, 20):
+            dt = decodetree({'a': bitarray(n * '0')})
+            self.assertEqual(dt.nodes(), n + 1)
+
+        d = {'I': bitarray('1'),   'l': bitarray('01'),
+             'a': bitarray('001'), 'n': bitarray('000')}
+        dt = decodetree(d)
+        self.assertEqual(dt.nodes(), 7)
+
+    def test_todict(self):
+        d1 = {'I': bitarray('1'),   'l': bitarray('01'),
+              'a': bitarray('001'), 'n': bitarray('000')}
+        t = decodetree(d1)
+        d2 = t.todict()
+        self.assertEqual(d1, d2)
+
+    def test_decode(self):
+        d = {'I': bitarray('1'),   'l': bitarray('01'),
+             'a': bitarray('001'), 'n': bitarray('000')}
+        dt = decodetree(d)
+        a = bitarray('101001000')
+        self.assertEqual(a.decode(dt), ['I', 'l', 'a', 'n'])
+        self.assertEqual(''.join(a.iterdecode(dt)), 'Ilan')
+
+tests.append(DecodeTreeTests)
 
 # -------------------------- Buffer Interface -------------------------------
 
