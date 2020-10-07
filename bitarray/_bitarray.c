@@ -2331,7 +2331,7 @@ decodetree_todict(decodetreeobject *self)
     if (dict == NULL)
         return NULL;
 
-    prefix = newbitarrayobject(&Bitarraytype, 0, ENDIAN_LITTLE);
+    prefix = newbitarrayobject(&Bitarraytype, 0, default_endian);
     if (prefix == NULL)
         goto error;
 
@@ -2534,8 +2534,9 @@ error:
 PyDoc_STRVAR(decode_doc,
 "decode(code, /) -> list\n\
 \n\
-Given a prefix code (a dict mapping symbols to bitarrays),\n\
-decode the content of the bitarray and return it as a list of symbols.");
+Given a prefix code (as a dict mapping symbols to bitarrays, or a decodetree\n\
+object), decode the content of the bitarray and return it as a list of\n\
+symbols.");
 
 /*********************** (bitarray) Decode Iterator ***********************/
 
@@ -2586,8 +2587,8 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
 PyDoc_STRVAR(iterdecode_doc,
 "iterdecode(code, /) -> iterator\n\
 \n\
-Given a prefix code (a dict mapping symbols to bitarrays),\n\
-decode the content of the bitarray and return an iterator over\n\
+Given a prefix code (as a dict mapping symbols to bitarrays, or a decodetree\n\
+object), decode the content of the bitarray and return an iterator over\n\
 the symbols.");
 
 static PyObject *
