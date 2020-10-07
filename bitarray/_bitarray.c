@@ -2304,17 +2304,23 @@ decodetree_todict(decodetreeobject *self)
 }
 
 static Py_ssize_t
-node_size(binode *nd)
+number_of_nodes(binode *nd)
 {
     Py_ssize_t res;
 
     if (nd == NULL)
         return 0;
 
-    res = sizeof(binode);
-    res += node_size(nd->child[0]);
-    res += node_size(nd->child[1]);
+    res = 1;
+    res += number_of_nodes(nd->child[0]);
+    res += number_of_nodes(nd->child[1]);
     return res;
+}
+
+static PyObject *
+decodetree_nodes(decodetreeobject *self)
+{
+    return PyLong_FromSsize_t(number_of_nodes(self->root));
 }
 
 static PyObject *
@@ -2323,7 +2329,7 @@ decodetree_sizeof(decodetreeobject *self)
     Py_ssize_t res;
 
     res = sizeof(decodetreeobject);
-    res += node_size(self->root);
+    res += sizeof(binode) * number_of_nodes(self->root);
     return PyLong_FromSsize_t(res);
 }
 
@@ -2335,6 +2341,7 @@ decodetree_dealloc(decodetreeobject *self)
 }
 
 static PyMethodDef decodetree_methods[] = {
+    {"nodes",       (PyCFunction) decodetree_nodes,   METH_NOARGS, 0},
     {"todict",      (PyCFunction) decodetree_todict,  METH_NOARGS, 0},
     {"__sizeof__",  (PyCFunction) decodetree_sizeof,  METH_NOARGS, 0},
     {NULL,          NULL}  /* sentinel */
