@@ -2487,7 +2487,7 @@ class DecodeTreeTests(unittest.TestCase):
         self.assertRaises(TypeError, decodetree, None)
         self.assertRaises(TypeError, decodetree, 'foo')
         d = dict(alpabet_code)
-        d['.'] = bitarray()
+        d['-'] = bitarray()
         self.assertRaises(ValueError, decodetree, d)
 
     def test_sizeof(self):
@@ -2521,6 +2521,14 @@ class DecodeTreeTests(unittest.TestCase):
         a = bitarray()
         self.assertEqual(a.decode(t), [])
         self.assertEqual(''.join(a.iterdecode(t)), '')
+
+    def test_large(self):
+        d = {i: bitarray((1 << j) & i for j in range(10))
+             for i in range(1024)}
+        t = decodetree(d)
+        self.assertEqual(t.todict(), d)
+        self.assertEqual(t.nodes(), 2047)
+        self.assertTrue(sys.getsizeof(t) > 10000)
 
 tests.append(DecodeTreeTests)
 
