@@ -2369,13 +2369,21 @@ class PrefixCodeTests(unittest.TestCase, Util):
 
         self.assertEqual(a, bitarray('011'))
         self.assertEqual(d, {'a': bitarray('0'), 'b': bitarray('111')})
+        self.assertEqual(t.todict(), d)
 
     def test_decode_buggybitarray(self):
         d = {'a': bitarray('0')}
         a = bitarray('1')
-        self.assertRaises(ValueError, a.decode, d)
+        msg = "prefix code does not match data in bitarray"
+        self.assertRaisesMessage(ValueError, msg, a.decode, d)
+        self.assertRaisesMessage(ValueError, msg, a.iterdecode, d)
+        t = decodetree(d)
+        self.assertRaisesMessage(ValueError, msg, a.decode, t)
+        self.assertRaisesMessage(ValueError, msg, a.iterdecode, t)
+
         self.assertEqual(a, bitarray('1'))
         self.assertEqual(d, {'a': bitarray('0')})
+        self.assertEqual(t.todict(), d)
 
     def test_iterdecode_no_term(self):
         d = {'a': bitarray('0'), 'b': bitarray('111')}
@@ -2398,7 +2406,12 @@ class PrefixCodeTests(unittest.TestCase, Util):
         d = {'a': bitarray('00'), 'b': bitarray('01')}
         a = bitarray('1')
         self.assertRaises(ValueError, a.decode, d)
+        t = decodetree(d)
+        self.assertRaises(ValueError, a.decode, t)
+
         self.assertEqual(a, bitarray('1'))
+        self.assertEqual(d, {'a': bitarray('00'), 'b': bitarray('01')})
+        self.assertEqual(t.todict(), d)
 
     def test_iterdecode_buggybitarray2(self):
         d = {'a': bitarray('00'), 'b': bitarray('01')}
@@ -2406,6 +2419,14 @@ class PrefixCodeTests(unittest.TestCase, Util):
         it = a.iterdecode(d)
         self.assertRaises(ValueError, next, it)
         self.assertEqual(a, bitarray('1'))
+
+        t = decodetree(d)
+        it = a.iterdecode(t)
+        self.assertRaises(ValueError, next, it)
+
+        self.assertEqual(a, bitarray('1'))
+        self.assertEqual(d, {'a': bitarray('00'), 'b': bitarray('01')})
+        self.assertEqual(t.todict(), d)
 
     def test_decode_ambiguous_code(self):
         for d in [
