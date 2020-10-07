@@ -2414,12 +2414,10 @@ class PrefixCodeTests(unittest.TestCase, Util):
             {'a': bitarray('0'), 'b': bitarray('11'), 'c': bitarray('111')},
         ]:
             a = bitarray()
-            self.assertRaisesMessage(ValueError, "prefix code ambiguous",
-                                     a.decode, d)
-            self.assertRaisesMessage(ValueError, "prefix code ambiguous",
-                                     a.iterdecode, d)
-            self.assertRaisesMessage(ValueError, "prefix code ambiguous",
-                                     decodetree, d)
+            msg = "prefix code ambiguous"
+            self.assertRaisesMessage(ValueError, msg, a.decode, d)
+            self.assertRaisesMessage(ValueError, msg, a.iterdecode, d)
+            self.assertRaisesMessage(ValueError, msg, decodetree, d)
 
     def test_miscitems(self):
         d = {None : bitarray('00'),
@@ -2478,6 +2476,9 @@ class PrefixCodeTests(unittest.TestCase, Util):
           '0111001011100110000110111101010100010101110001010000101010'))
         self.assertEqual(''.join(a.decode(code)), message)
         self.assertEqual(''.join(a.iterdecode(code)), message)
+        t = decodetree(code)
+        self.assertEqual(''.join(a.decode(t)), message)
+        self.assertEqual(''.join(a.iterdecode(t)), message)
 
 
 tests.append(PrefixCodeTests)

@@ -2285,6 +2285,7 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (self == NULL)
         goto error;
 
+    /* all the symbols have to be incref'ed - this is done recursively */
     incref_symbols(tree);
     self->root = tree;
 
@@ -2298,7 +2299,7 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static int
 add_node_todict(binode *nd, PyObject *dict, bitarrayobject *prefix)
 {
-    bitarrayobject *t;
+    bitarrayobject *t;          /* prefix of the two child nodes */
     int k, ret;
 
     if (nd == NULL)
