@@ -86,6 +86,25 @@ this a frozenbitarray is immutable, and hashable:
 """)
     write_doc('frozenbitarray')
 
+    fo.write("""\
+The decodetree object:
+----------------------
+
+This object stores a binary tree which is initialized with a prefix code
+dictionary, and can be passed to bitarray's .decode() and .iterdecode()
+methods:
+
+    >>> from bitarray import bitarray, decodetree
+    >>> t = decodetree({'a': bitarray('0'), 'b': bitarray('1')})
+    >>> a = bitarray('0110')
+    >>> a.decode(t)
+    ['a', 'b', 'b', 'a']
+    >>> ''.join(a.iterdecode(t))
+    'abba'
+
+""")
+    write_doc('decodetree')
+
     fo.write("Functions defined in the `bitarray` package:\n"
              "--------------------------------------------\n\n")
     write_doc('test')
