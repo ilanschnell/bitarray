@@ -2236,8 +2236,8 @@ binode_make_tree(PyObject *codedict)
 
 /* Traverse using the branches corresponding to bits in `ba`, starting
    at *indexp.  Return the symbol at the leaf node, or NULL when the end
-   of the bitarray has been reached, or on error (in which case the
-   appropriate PyErr_SetString is set.
+   of the bitarray has been reached.  On error, NULL is also returned,
+   and the appropriate PyErr_SetString is set.
 */
 static PyObject *
 binode_traverse(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
@@ -2505,7 +2505,7 @@ error:
 PyDoc_STRVAR(decode_doc,
 "decode(code, /) -> list\n\
 \n\
-Given a prefix code (as a dict mapping symbols to bitarrays, or a decodetree\n\
+Given a prefix code (a dict mapping symbols to bitarrays, or a decodetree\n\
 object), decode the content of the bitarray and return it as a list of\n\
 symbols.");
 
@@ -2560,7 +2560,7 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
 PyDoc_STRVAR(iterdecode_doc,
 "iterdecode(code, /) -> iterator\n\
 \n\
-Given a prefix code (as a dict mapping symbols to bitarrays, or a decodetree\n\
+Given a prefix code (a dict mapping symbols to bitarrays, or a decodetree\n\
 object), decode the content of the bitarray and return an iterator over\n\
 the symbols.");
 

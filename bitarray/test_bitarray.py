@@ -2236,7 +2236,7 @@ class FileTests(unittest.TestCase, Util):
 
 tests.append(FileTests)
 
-# ---------------------------------------------------------------------------
+# ----------------------------- Decode Tree ---------------------------------
 
 alpabet_code = {
     ' ': bitarray('001'),         '.': bitarray('0101010'),
@@ -2254,6 +2254,62 @@ alpabet_code = {
     'w': bitarray('011111'),      'x': bitarray('0000100011'),
     'y': bitarray('101010'),      'z': bitarray('00011011110')
 }
+
+class DecodeTreeTests(unittest.TestCase):
+
+    def test_create(self):
+        dt = decodetree(alpabet_code)
+        self.assertEqual(repr(type(dt)), "<%s 'bitarray.decodetree'>" %
+                         ('class' if is_py3k else 'type'))
+        self.assertRaises(TypeError, decodetree, None)
+        self.assertRaises(TypeError, decodetree, 'foo')
+        d = dict(alpabet_code)
+        d['-'] = bitarray()
+        self.assertRaises(ValueError, decodetree, d)
+
+    def test_sizeof(self):
+        dt = decodetree({'.': bitarray('1')})
+        self.assertTrue(0 < sys.getsizeof(dt) < 100)
+
+        dt = decodetree({'a': bitarray(20 * '0')})
+        self.assertTrue(sys.getsizeof(dt) > 200)
+
+    def test_nodes(self):
+        for n in range(1, 20):
+            dt = decodetree({'a': bitarray(n * '0')})
+            self.assertEqual(dt.nodes(), n + 1)
+
+        dt = decodetree({'I': bitarray('1'),   'l': bitarray('01'),
+                         'a': bitarray('001'), 'n': bitarray('000')})
+        self.assertEqual(dt.nodes(), 7)
+        dt = decodetree(alpabet_code)
+        self.assertEqual(dt.nodes(), 70)
+
+    def test_todict(self):
+        t = decodetree(alpabet_code)
+        d = t.todict()
+        self.assertEqual(d, alpabet_code)
+
+    def test_decode(self):
+        t = decodetree(alpabet_code)
+        a = bitarray('10110111001101001')
+        self.assertEqual(a.decode(t), ['i', 'l', 'a', 'n'])
+        self.assertEqual(''.join(a.iterdecode(t)), 'ilan')
+        a = bitarray()
+        self.assertEqual(a.decode(t), [])
+        self.assertEqual(''.join(a.iterdecode(t)), '')
+
+    def test_large(self):
+        d = {i: bitarray((1 << j) & i for j in range(10))
+             for i in range(1024)}
+        t = decodetree(d)
+        self.assertEqual(t.todict(), d)
+        self.assertEqual(t.nodes(), 2047)
+        self.assertTrue(sys.getsizeof(t) > 10000)
+
+tests.append(DecodeTreeTests)
+
+# ------------------ variable length encoding and decoding ------------------
 
 class PrefixCodeTests(unittest.TestCase, Util):
 
@@ -2484,62 +2540,6 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(''.join(a.iterdecode(t)), message)
 
 tests.append(PrefixCodeTests)
-
-# ----------------------------- Decode Tree ---------------------------------
-
-class DecodeTreeTests(unittest.TestCase):
-
-    def test_create(self):
-        dt = decodetree(alpabet_code)
-        self.assertEqual(repr(type(dt)), "<%s 'bitarray.decodetree'>" %
-                         ('class' if is_py3k else 'type'))
-        self.assertRaises(TypeError, decodetree, None)
-        self.assertRaises(TypeError, decodetree, 'foo')
-        d = dict(alpabet_code)
-        d['-'] = bitarray()
-        self.assertRaises(ValueError, decodetree, d)
-
-    def test_sizeof(self):
-        dt = decodetree({'.': bitarray('1')})
-        self.assertTrue(0 < sys.getsizeof(dt) < 100)
-
-        dt = decodetree({'a': bitarray(20 * '0')})
-        self.assertTrue(sys.getsizeof(dt) > 200)
-
-    def test_nodes(self):
-        for n in range(1, 20):
-            dt = decodetree({'a': bitarray(n * '0')})
-            self.assertEqual(dt.nodes(), n + 1)
-
-        dt = decodetree({'I': bitarray('1'),   'l': bitarray('01'),
-                         'a': bitarray('001'), 'n': bitarray('000')})
-        self.assertEqual(dt.nodes(), 7)
-        dt = decodetree(alpabet_code)
-        self.assertEqual(dt.nodes(), 70)
-
-    def test_todict(self):
-        t = decodetree(alpabet_code)
-        d = t.todict()
-        self.assertEqual(d, alpabet_code)
-
-    def test_decode(self):
-        t = decodetree(alpabet_code)
-        a = bitarray('10110111001101001')
-        self.assertEqual(a.decode(t), ['i', 'l', 'a', 'n'])
-        self.assertEqual(''.join(a.iterdecode(t)), 'ilan')
-        a = bitarray()
-        self.assertEqual(a.decode(t), [])
-        self.assertEqual(''.join(a.iterdecode(t)), '')
-
-    def test_large(self):
-        d = {i: bitarray((1 << j) & i for j in range(10))
-             for i in range(1024)}
-        t = decodetree(d)
-        self.assertEqual(t.todict(), d)
-        self.assertEqual(t.nodes(), 2047)
-        self.assertTrue(sys.getsizeof(t) > 10000)
-
-tests.append(DecodeTreeTests)
 
 # -------------------------- Buffer Interface -------------------------------
 
