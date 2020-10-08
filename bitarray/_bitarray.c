@@ -2465,10 +2465,9 @@ static PyTypeObject DecodeTree_Type = {
 static PyObject *
 bitarray_decode(bitarrayobject *self, PyObject *obj)
 {
-    binode *tree, *nd;
-    PyObject *list = NULL;
-    Py_ssize_t i;
-    int k;
+    binode *tree;
+    PyObject *list = NULL, *symbol;
+    Py_ssize_t index = 0;
 
     if (DecodeTree_Check(obj)) {
         tree = ((decodetreeobject *) obj)->tree;
@@ -2482,30 +2481,16 @@ bitarray_decode(bitarrayobject *self, PyObject *obj)
             goto error;
     }
 
-    nd = tree;
     list = PyList_New(0);
     if (list == NULL)
         goto error;
 
-    /* traverse tree (just like above) */
-    for (i = 0; i < self->nbits; i++) {
-        k = GETBIT(self, i);
-        nd = nd->child[k];
-        if (nd == NULL) {
-            PyErr_SetString(PyExc_ValueError,
-                            "prefix code does not match data in bitarray");
+    while ((symbol = binode_traverse(tree, self, &index))) {
+        if (PyList_Append(list, symbol) < 0)
             goto error;
-        }
-        if (nd->symbol) {  /* leaf */
-            if (PyList_Append(list, nd->symbol) < 0)
-                goto error;
-            nd = tree;
-        }
     }
-    if (nd != tree) {
-        PyErr_SetString(PyExc_ValueError, "decoding not terminated");
+    if (PyErr_Occurred())
         goto error;
-    }
     if (!DecodeTree_Check(obj))
         binode_delete(tree);
     return list;
