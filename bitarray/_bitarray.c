@@ -2344,6 +2344,8 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     return NULL;
 }
 
+/* Return a dict mapping the symbols to bitarrays.  This dict is a
+   reconstruction of the code dict the decodetree was created with. */
 static PyObject *
 decodetree_todict(decodetreeobject *self)
 {
@@ -2369,6 +2371,7 @@ decodetree_todict(decodetreeobject *self)
     return NULL;
 }
 
+/* Return the number of nodes in the tree (not just symbols) */
 static PyObject *
 decodetree_nodes(decodetreeobject *self)
 {
@@ -2392,6 +2395,8 @@ decodetree_dealloc(decodetreeobject *self)
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
+/* as these methods are only useful for debugging and testing,
+   they are only documented within this file */
 static PyMethodDef decodetree_methods[] = {
     {"nodes",       (PyCFunction) decodetree_nodes,   METH_NOARGS, 0},
     {"todict",      (PyCFunction) decodetree_todict,  METH_NOARGS, 0},
