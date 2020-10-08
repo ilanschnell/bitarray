@@ -105,7 +105,7 @@ methods:
 """)
     write_doc('decodetree')
 
-    fo.write("Functions defined in the `bitarray` package:\n"
+    fo.write("Functions defined in the `bitarray` module:\n"
              "--------------------------------------------\n\n")
     write_doc('test')
     write_doc('bits2bytes')

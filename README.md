@@ -589,7 +589,7 @@ Given a prefix code (a dict mapping symbols to bitarrays),
 create a binary tree object to be passed to `.decode()` or `.iterdecode()`.
 
 
-Functions defined in the `bitarray` package:
+Functions defined in the `bitarray` module:
 --------------------------------------------
 
 `test(verbosity=1, repeat=1)` -> TextTestResult

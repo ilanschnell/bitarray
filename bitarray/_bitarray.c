@@ -2144,7 +2144,7 @@ typedef struct _bin_node
 
 
 static binode *
-new_binode(void)
+binode_new(void)
 {
     binode *nd;
 
@@ -2160,19 +2160,19 @@ new_binode(void)
 }
 
 static void
-delete_binode_tree(binode *tree)
+binode_delete(binode *nd)
 {
-    if (tree == NULL)
+    if (nd == NULL)
         return;
 
-    delete_binode_tree(tree->child[0]);
-    delete_binode_tree(tree->child[1]);
-    PyMem_Free(tree);
+    binode_delete(nd->child[0]);
+    binode_delete(nd->child[1]);
+    PyMem_Free(nd);
 }
 
 /* insert symbol (mapping to ba) into the tree */
 static int
-insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
+binode_insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
 {
     binode *nd = tree, *prev;
     Py_ssize_t i;
@@ -2188,7 +2188,7 @@ insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
             goto ambiguity;
 
         if (!nd) {
-            nd = new_binode();
+            nd = binode_new();
             if (nd == NULL)
                 return -1;
             prev->child[k] = nd;
@@ -2209,20 +2209,21 @@ insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
 /* return a binary tree from a codedict, which is created by inserting
    all symbols mapping to bitarrays */
 static binode *
-make_tree(PyObject *codedict)
+binode_make_tree(PyObject *codedict)
 {
     binode *tree;
     PyObject *symbol, *value;
     Py_ssize_t pos = 0;
 
-    tree = new_binode();
+    tree = binode_new();
     if (tree == NULL)
         return NULL;
 
     while (PyDict_Next(codedict, &pos, &symbol, &value)) {
         if (check_value(value) < 0 ||
-                insert_symbol(tree, (bitarrayobject *) value, symbol) < 0) {
-            delete_binode_tree(tree);
+            binode_insert_symbol(tree, (bitarrayobject *) value,
+                                 symbol) < 0) {
+            binode_delete(tree);
             return NULL;
         }
     }
@@ -2235,7 +2236,7 @@ typedef struct {
 } decodetreeobject;
 
 static void
-incref_symbols(binode *nd)
+binode_incref_symbols(binode *nd)
 {
     if (nd == NULL)
         return;
@@ -2245,12 +2246,12 @@ incref_symbols(binode *nd)
         return;
     }
 
-    incref_symbols(nd->child[0]);
-    incref_symbols(nd->child[1]);
+    binode_incref_symbols(nd->child[0]);
+    binode_incref_symbols(nd->child[1]);
 }
 
 static void
-decref_symbols(binode *nd)
+binode_decref_symbols(binode *nd)
 {
     if (nd == NULL)
         return;
@@ -2260,8 +2261,8 @@ decref_symbols(binode *nd)
         return;
     }
 
-    decref_symbols(nd->child[0]);
-    decref_symbols(nd->child[1]);
+    binode_decref_symbols(nd->child[0]);
+    binode_decref_symbols(nd->child[1]);
 }
 
 static PyObject *
@@ -2277,7 +2278,7 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (check_codedict(codedict) < 0)
         return NULL;
 
-    tree = make_tree(codedict);
+    tree = binode_make_tree(codedict);
     if (tree == NULL || PyErr_Occurred())
         goto error;
 
@@ -2286,18 +2287,19 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         goto error;
 
     /* all the symbols have to be incref'ed - this is done recursively */
-    incref_symbols(tree);
+    binode_incref_symbols(tree);
     self->root = tree;
 
     return (PyObject *) self;
 
  error:
-    delete_binode_tree(tree);
+    binode_delete(tree);
     return NULL;
 }
 
+/* add the node's symbol to the dict (recursively) */
 static int
-add_node_todict(binode *nd, PyObject *dict, bitarrayobject *prefix)
+binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
 {
     bitarrayobject *t;          /* prefix of the two child nodes */
     int k, ret;
@@ -2315,7 +2317,7 @@ add_node_todict(binode *nd, PyObject *dict, bitarrayobject *prefix)
         t = (bitarrayobject *) bitarray_copy(prefix);
         resize(t, t->nbits + 1);
         setbit(t, t->nbits - 1, k);
-        ret = add_node_todict(nd->child[k], dict, t);
+        ret = binode_to_dict(nd->child[k], dict, t);
         Py_DECREF((PyObject *) t);
         if (ret < 0)
             return -1;
@@ -2336,7 +2338,7 @@ decodetree_todict(decodetreeobject *self)
     if (prefix == NULL)
         goto error;
 
-    if (add_node_todict(self->root, dict, (bitarrayobject *) prefix) < 0)
+    if (binode_to_dict(self->root, dict, (bitarrayobject *) prefix) < 0)
         goto error;
 
     Py_DECREF(prefix);
@@ -2349,7 +2351,7 @@ decodetree_todict(decodetreeobject *self)
 }
 
 static Py_ssize_t
-number_of_nodes(binode *nd)
+binode_nodes(binode *nd)
 {
     Py_ssize_t res;
 
@@ -2357,15 +2359,15 @@ number_of_nodes(binode *nd)
         return 0;
 
     res = 1;
-    res += number_of_nodes(nd->child[0]);
-    res += number_of_nodes(nd->child[1]);
+    res += binode_nodes(nd->child[0]);
+    res += binode_nodes(nd->child[1]);
     return res;
 }
 
 static PyObject *
 decodetree_nodes(decodetreeobject *self)
 {
-    return PyLong_FromSsize_t(number_of_nodes(self->root));
+    return PyLong_FromSsize_t(binode_nodes(self->root));
 }
 
 static PyObject *
@@ -2374,15 +2376,15 @@ decodetree_sizeof(decodetreeobject *self)
     Py_ssize_t res;
 
     res = sizeof(decodetreeobject);
-    res += sizeof(binode) * number_of_nodes(self->root);
+    res += sizeof(binode) * binode_nodes(self->root);
     return PyLong_FromSsize_t(res);
 }
 
 static void
 decodetree_dealloc(decodetreeobject *self)
 {
-    decref_symbols(self->root);
-    delete_binode_tree(self->root);
+    binode_decref_symbols(self->root);
+    binode_delete(self->root);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
@@ -2493,7 +2495,7 @@ bitarray_decode(bitarrayobject *self, PyObject *obj)
         if (check_codedict(obj) < 0)
             return NULL;
 
-        tree = make_tree(obj);
+        tree = binode_make_tree(obj);
         if (tree == NULL || PyErr_Occurred())
             goto error;
     }
@@ -2523,12 +2525,12 @@ bitarray_decode(bitarrayobject *self, PyObject *obj)
         goto error;
     }
     if (!DecodeTree_Check(obj))
-        delete_binode_tree(tree);
+        binode_delete(tree);
     return list;
 
 error:
     if (!DecodeTree_Check(obj))
-        delete_binode_tree(tree);
+        binode_delete(tree);
     Py_XDECREF(list);
     return NULL;
 }
@@ -2569,7 +2571,7 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
         if (check_codedict(obj) < 0)
             return NULL;
 
-        tree = make_tree(obj);
+        tree = binode_make_tree(obj);
         if (tree == NULL || PyErr_Occurred())
             return NULL;
     }
@@ -2612,7 +2614,7 @@ static void
 decodeiter_dealloc(decodeiterobject *it)
 {
     if (it->decodetree == NULL)
-        delete_binode_tree(it->tree);
+        binode_delete(it->tree);
     else
         Py_DECREF(it->decodetree);
 
