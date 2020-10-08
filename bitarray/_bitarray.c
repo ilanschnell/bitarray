@@ -2234,6 +2234,35 @@ binode_make_tree(PyObject *codedict)
     return tree;
 }
 
+/* Traverse using the branches corresponding to bits in `ba`, starting
+   at *indexp.  Return the symbol at the leaf node, or NULL when the end
+   of the bitarray has been reached, or on error (in which case the
+   appropriate PyErr_SetString is set.
+*/
+static PyObject *
+binode_traverse(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
+{
+    binode *nd = tree;
+    int k;
+
+    while (*indexp < ba->nbits) {
+        k = GETBIT(ba, *indexp);
+        (*indexp)++;
+        nd = nd->child[k];
+        if (nd == NULL) {
+            PyErr_SetString(PyExc_ValueError,
+                            "prefix code does not match data in bitarray");
+            return NULL;
+        }
+        if (nd->symbol)  /* leaf */
+            return nd->symbol;
+    }
+    if (nd != tree)
+        PyErr_SetString(PyExc_ValueError, "decoding not terminated");
+
+    return NULL;
+}
+
 /* add the node's symbol to given dict */
 static int
 binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
@@ -2426,34 +2455,7 @@ static PyTypeObject DecodeTree_Type = {
 
 #define DecodeTree_Check(op)  PyObject_TypeCheck(op, &DecodeTree_Type)
 
-/* Traverse tree using the branches corresponding to the bitarray `ba`,
-   starting at *indexp.  Return the symbol at the leaf node, or NULL
-   when the end of the bitarray has been reached, or on error (in which
-   case the appropriate PyErr_SetString is set.
-*/
-static PyObject *
-traverse_tree(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
-{
-    binode *nd = tree;
-    int k;
-
-    while (*indexp < ba->nbits) {
-        k = GETBIT(ba, *indexp);
-        (*indexp)++;
-        nd = nd->child[k];
-        if (nd == NULL) {
-            PyErr_SetString(PyExc_ValueError,
-                            "prefix code does not match data in bitarray");
-            return NULL;
-        }
-        if (nd->symbol)  /* leaf */
-            return nd->symbol;
-    }
-    if (nd != tree)
-        PyErr_SetString(PyExc_ValueError, "decoding not terminated");
-
-    return NULL;
-}
+/* -------------------------- END decodetree --------------------------- */
 
 static PyObject *
 bitarray_decode(bitarrayobject *self, PyObject *obj)
@@ -2578,7 +2580,7 @@ decodeiter_next(decodeiterobject *it)
     PyObject *symbol;
 
     assert(DecodeIter_Check(it));
-    symbol = traverse_tree(it->tree, it->bao, &(it->index));
+    symbol = binode_traverse(it->tree, it->bao, &(it->index));
     if (symbol == NULL)  /* stop iteration OR error occured */
         return NULL;
     Py_INCREF(symbol);
