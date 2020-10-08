@@ -2167,6 +2167,7 @@ binode_delete(binode *nd)
 
     binode_delete(nd->child[0]);
     binode_delete(nd->child[1]);
+    Py_XDECREF(nd->symbol);
     PyMem_Free(nd);
 }
 
@@ -2199,6 +2200,7 @@ binode_insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
         goto ambiguity;
 
     nd->symbol = symbol;
+    Py_INCREF(symbol);
     return 0;
 
  ambiguity:
@@ -2235,35 +2237,6 @@ typedef struct {
     binode *root;
 } decodetreeobject;
 
-static void
-binode_incref_symbols(binode *nd)
-{
-    if (nd == NULL)
-        return;
-
-    if (nd->symbol) {
-        Py_INCREF(nd->symbol);
-        return;
-    }
-
-    binode_incref_symbols(nd->child[0]);
-    binode_incref_symbols(nd->child[1]);
-}
-
-static void
-binode_decref_symbols(binode *nd)
-{
-    if (nd == NULL)
-        return;
-
-    if (nd->symbol) {
-        Py_DECREF(nd->symbol);
-        return;
-    }
-
-    binode_decref_symbols(nd->child[0]);
-    binode_decref_symbols(nd->child[1]);
-}
 
 static PyObject *
 decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
@@ -2286,8 +2259,6 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (self == NULL)
         goto error;
 
-    /* all the symbols have to be incref'ed - this is done recursively */
-    binode_incref_symbols(tree);
     self->root = tree;
 
     return (PyObject *) self;
@@ -2383,7 +2354,6 @@ decodetree_sizeof(decodetreeobject *self)
 static void
 decodetree_dealloc(decodetreeobject *self)
 {
-    binode_decref_symbols(self->root);
     binode_delete(self->root);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
