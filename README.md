@@ -383,7 +383,7 @@ Count the number of occurrences of bool(value) in the bitarray.
 
 `decode(code, /)` -> list
 
-Given a prefix code (as a dict mapping symbols to bitarrays, or a decodetree
+Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`
 object), decode the content of the bitarray and return it as a list of
 symbols.
 
@@ -446,7 +446,7 @@ When the optional `index` is given, only invert the single bit at index.
 
 `iterdecode(code, /)` -> iterator
 
-Given a prefix code (as a dict mapping symbols to bitarrays, or a decodetree
+Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`
 object), decode the content of the bitarray and return an iterator over
 the symbols.
 

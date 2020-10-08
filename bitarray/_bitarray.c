@@ -2505,7 +2505,7 @@ error:
 PyDoc_STRVAR(decode_doc,
 "decode(code, /) -> list\n\
 \n\
-Given a prefix code (a dict mapping symbols to bitarrays, or a decodetree\n\
+Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`\n\
 object), decode the content of the bitarray and return it as a list of\n\
 symbols.");
 
@@ -2560,7 +2560,7 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
 PyDoc_STRVAR(iterdecode_doc,
 "iterdecode(code, /) -> iterator\n\
 \n\
-Given a prefix code (a dict mapping symbols to bitarrays, or a decodetree\n\
+Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`\n\
 object), decode the content of the bitarray and return an iterator over\n\
 the symbols.");
 
