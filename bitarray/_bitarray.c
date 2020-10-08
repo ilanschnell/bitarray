@@ -2562,8 +2562,9 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
     decodeiterobject *it;       /* iterator to be returned */
     binode *tree;
 
-    if (DecodeTree_Check(obj))
+    if (DecodeTree_Check(obj)) {
         tree = ((decodetreeobject *) obj)->root;
+    }
     else {
         if (check_codedict(obj) < 0)
             return NULL;
@@ -2612,9 +2613,11 @@ decodeiter_dealloc(decodeiterobject *it)
 {
     if (it->decodetree == NULL)
         delete_binode_tree(it->tree);
-    Py_XDECREF(it->decodetree);
+    else
+        Py_DECREF(it->decodetree);
+
     PyObject_GC_UnTrack(it);
-    Py_XDECREF(it->bao);
+    Py_DECREF(it->bao);
     PyObject_GC_Del(it);
 }
 
@@ -2728,8 +2731,8 @@ static void
 searchiter_dealloc(searchiterobject *it)
 {
     PyObject_GC_UnTrack(it);
-    Py_XDECREF(it->bao);
-    Py_XDECREF(it->xa);
+    Py_DECREF(it->bao);
+    Py_DECREF(it->xa);
     PyObject_GC_Del(it);
 }
 
@@ -3103,7 +3106,7 @@ static void
 bitarrayiter_dealloc(bitarrayiterobject *it)
 {
     PyObject_GC_UnTrack(it);
-    Py_XDECREF(it->bao);
+    Py_DECREF(it->bao);
     PyObject_GC_Del(it);
 }
 
