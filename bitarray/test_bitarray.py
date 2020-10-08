@@ -2347,6 +2347,15 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(d, dcopy)
         self.assertEqual(a, bitarray('101001000'))
 
+    def test_iterdecode_remove_tree(self):
+        d = {'I': bitarray('1'),   'l': bitarray('01'),
+             'a': bitarray('001'), 'n': bitarray('000')}
+        t = decodetree(d)
+        a = bitarray('101001000')
+        it = a.iterdecode(t)
+        del t
+        self.assertEqual(''.join(it), "Ilan")
+
     def test_decode_empty(self):
         d = {'a': bitarray('1')}
         a = bitarray()
