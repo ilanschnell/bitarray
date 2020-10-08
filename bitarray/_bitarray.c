@@ -2058,7 +2058,9 @@ static PyNumberMethods bitarray_as_number = {
 #endif
 };
 
-/* ---------------- variable length encoding and decoding -------------- */
+/**************************************************************************
+                    variable length encoding and decoding
+ **************************************************************************/
 
 static int
 check_codedict(PyObject *codedict)
@@ -2134,8 +2136,8 @@ Given a prefix code (a dict mapping symbols to bitarrays),\n\
 iterate over the iterable object with symbols, and extend the bitarray\n\
 with the corresponding bitarray for each symbol.");
 
+/* ----------------------- binary tree (C-level) ----------------------- */
 
-/* Binary tree definition */
 typedef struct _bin_node
 {
     struct _bin_node *child[2];
@@ -2232,6 +2234,51 @@ binode_make_tree(PyObject *codedict)
     return tree;
 }
 
+/* add the node's symbol to given dict */
+static int
+binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
+{
+    bitarrayobject *t;          /* prefix of the two child nodes */
+    int k, ret;
+
+    if (nd == NULL)
+        return 0;
+
+    if (nd->symbol) {
+        if (PyDict_SetItem(dict, nd->symbol, (PyObject *) prefix) < 0)
+            return -1;
+        return 0;
+    }
+
+    for (k = 0; k < 2; k++) {
+        t = (bitarrayobject *) bitarray_copy(prefix);
+        resize(t, t->nbits + 1);
+        setbit(t, t->nbits - 1, k);
+        ret = binode_to_dict(nd->child[k], dict, t);
+        Py_DECREF((PyObject *) t);
+        if (ret < 0)
+            return -1;
+    }
+    return 0;
+}
+
+/* return the number of nodes */
+static Py_ssize_t
+binode_nodes(binode *nd)
+{
+    Py_ssize_t res;
+
+    if (nd == NULL)
+        return 0;
+
+    res = 1;
+    res += binode_nodes(nd->child[0]);
+    res += binode_nodes(nd->child[1]);
+    return res;
+}
+
+/******************************** decodetree ******************************/
+
 typedef struct {
     PyObject_HEAD
     binode *root;
@@ -2268,34 +2315,6 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     return NULL;
 }
 
-/* add the node's symbol to the dict (recursively) */
-static int
-binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
-{
-    bitarrayobject *t;          /* prefix of the two child nodes */
-    int k, ret;
-
-    if (nd == NULL)
-        return 0;
-
-    if (nd->symbol) {
-        if (PyDict_SetItem(dict, nd->symbol, (PyObject *) prefix) < 0)
-            return -1;
-        return 0;
-    }
-
-    for (k = 0; k < 2; k++) {
-        t = (bitarrayobject *) bitarray_copy(prefix);
-        resize(t, t->nbits + 1);
-        setbit(t, t->nbits - 1, k);
-        ret = binode_to_dict(nd->child[k], dict, t);
-        Py_DECREF((PyObject *) t);
-        if (ret < 0)
-            return -1;
-    }
-    return 0;
-}
-
 static PyObject *
 decodetree_todict(decodetreeobject *self)
 {
@@ -2319,20 +2338,6 @@ decodetree_todict(decodetreeobject *self)
     Py_DECREF(dict);
     Py_XDECREF(prefix);
     return NULL;
-}
-
-static Py_ssize_t
-binode_nodes(binode *nd)
-{
-    Py_ssize_t res;
-
-    if (nd == NULL)
-        return 0;
-
-    res = 1;
-    res += binode_nodes(nd->child[0]);
-    res += binode_nodes(nd->child[1]);
-    return res;
 }
 
 static PyObject *
