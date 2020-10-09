@@ -2188,11 +2188,11 @@ binode_insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
         prev = nd;
         nd = nd->child[k];
 
-        /* we cannot have already a symbol when branching to the new leaf */
-        if (nd && nd->symbol)
-            goto ambiguity;
-
-        if (!nd) {
+        if (nd) {
+            if (nd->symbol)     /* we cannot have already a symbol */
+                goto ambiguity;
+        }
+        else {            /* if node does not exist, create new one */
             nd = binode_new();
             if (nd == NULL)
                 return -1;
@@ -2258,8 +2258,10 @@ binode_traverse(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
                             "prefix code does not match data in bitarray");
             return NULL;
         }
-        if (nd->symbol)  /* leaf */
+        if (nd->symbol) {        /* leaf */
+            assert(nd->child[0] == NULL && nd->child[1] == NULL);
             return nd->symbol;
+        }
     }
     if (nd != tree)
         PyErr_SetString(PyExc_ValueError, "decoding not terminated");
