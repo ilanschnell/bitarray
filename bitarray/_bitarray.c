@@ -2168,12 +2168,7 @@ binode_delete(binode *nd)
     if (nd == NULL)
         return;
 
-#ifndef NDEBUG
-    if (nd->symbol)
-        assert(nd->child[0] == NULL && nd->child[1] == NULL);
-    if (nd->child[0] || nd->child[1])
-        assert(nd->symbol == NULL);
-#endif
+    assert(!(nd->symbol && (nd->child[0] || nd->child[1])));
     binode_delete(nd->child[0]);
     binode_delete(nd->child[1]);
     Py_XDECREF(nd->symbol);
