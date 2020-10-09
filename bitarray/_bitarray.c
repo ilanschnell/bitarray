@@ -51,9 +51,9 @@ typedef struct {
     PyObject *weakreflist;      /* list of weak references */
 } bitarrayobject;
 
-static PyTypeObject Bitarraytype;
+static PyTypeObject Bitarray_Type;
 
-#define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarraytype)
+#define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarray_Type)
 
 /* --- bit endianness --- */
 #define ENDIAN_LITTLE  0
@@ -2058,7 +2058,9 @@ static PyNumberMethods bitarray_as_number = {
 #endif
 };
 
-/* ---------------- variable length encoding and decoding -------------- */
+/**************************************************************************
+                    variable length encoding and decoding
+ **************************************************************************/
 
 static int
 check_codedict(PyObject *codedict)
@@ -2134,8 +2136,9 @@ Given a prefix code (a dict mapping symbols to bitarrays),\n\
 iterate over the iterable object with symbols, and extend the bitarray\n\
 with the corresponding bitarray for each symbol.");
 
+/* ----------------------- binary tree (C-level) ----------------------- */
 
-/* Binary tree definition */
+/* a node has either children or a symbol, NEVER both */
 typedef struct _bin_node
 {
     struct _bin_node *child[2];
@@ -2144,7 +2147,7 @@ typedef struct _bin_node
 
 
 static binode *
-new_binode(void)
+binode_new(void)
 {
     binode *nd;
 
@@ -2160,19 +2163,21 @@ new_binode(void)
 }
 
 static void
-delete_binode_tree(binode *tree)
+binode_delete(binode *nd)
 {
-    if (tree == NULL)
+    if (nd == NULL)
         return;
 
-    delete_binode_tree(tree->child[0]);
-    delete_binode_tree(tree->child[1]);
-    PyMem_Free(tree);
+    assert(!(nd->symbol && (nd->child[0] || nd->child[1])));
+    binode_delete(nd->child[0]);
+    binode_delete(nd->child[1]);
+    Py_XDECREF(nd->symbol);
+    PyMem_Free(nd);
 }
 
 /* insert symbol (mapping to ba) into the tree */
 static int
-insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
+binode_insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
 {
     binode *nd = tree, *prev;
     Py_ssize_t i;
@@ -2183,12 +2188,12 @@ insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
         prev = nd;
         nd = nd->child[k];
 
-        /* we cannot have already a symbol when branching to the new leaf */
-        if (nd && nd->symbol)
-            goto ambiguity;
-
-        if (!nd) {
-            nd = new_binode();
+        if (nd) {
+            if (nd->symbol)     /* we cannot have already a symbol */
+                goto ambiguity;
+        }
+        else {            /* if node does not exist, create new one */
+            nd = binode_new();
             if (nd == NULL)
                 return -1;
             prev->child[k] = nd;
@@ -2199,6 +2204,7 @@ insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
         goto ambiguity;
 
     nd->symbol = symbol;
+    Py_INCREF(symbol);
     return 0;
 
  ambiguity:
@@ -2209,38 +2215,41 @@ insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
 /* return a binary tree from a codedict, which is created by inserting
    all symbols mapping to bitarrays */
 static binode *
-make_tree(PyObject *codedict)
+binode_make_tree(PyObject *codedict)
 {
     binode *tree;
     PyObject *symbol, *value;
     Py_ssize_t pos = 0;
 
-    tree = new_binode();
+    tree = binode_new();
     if (tree == NULL)
         return NULL;
 
     while (PyDict_Next(codedict, &pos, &symbol, &value)) {
         if (check_value(value) < 0 ||
-                insert_symbol(tree, (bitarrayobject *) value, symbol) < 0) {
-            delete_binode_tree(tree);
+            binode_insert_symbol(tree, (bitarrayobject *) value,
+                                 symbol) < 0) {
+            binode_delete(tree);
             return NULL;
         }
     }
+    assert(tree);
     return tree;
 }
 
-/* Traverse tree using the branches corresponding to the bitarray `ba`,
-   starting at *indexp.  Return the symbol at the leaf node, or NULL
-   when the end of the bitarray has been reached, or on error (in which
-   case the appropriate PyErr_SetString is set.
+/* Traverse using the branches corresponding to bits in `ba`, starting
+   at *indexp.  Return the symbol at the leaf node, or NULL when the end
+   of the bitarray has been reached.  On error, NULL is also returned,
+   and the appropriate PyErr_SetString is set.
 */
 static PyObject *
-traverse_tree(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
+binode_traverse(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
 {
     binode *nd = tree;
     int k;
 
     while (*indexp < ba->nbits) {
+        assert(nd);
         k = GETBIT(ba, *indexp);
         (*indexp)++;
         nd = nd->child[k];
@@ -2249,8 +2258,10 @@ traverse_tree(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
                             "prefix code does not match data in bitarray");
             return NULL;
         }
-        if (nd->symbol)  /* leaf */
+        if (nd->symbol) {        /* leaf */
+            assert(nd->child[0] == NULL && nd->child[1] == NULL);
             return nd->symbol;
+        }
     }
     if (nd != tree)
         PyErr_SetString(PyExc_ValueError, "decoding not terminated");
@@ -2258,50 +2269,241 @@ traverse_tree(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
     return NULL;
 }
 
-static PyObject *
-bitarray_decode(bitarrayobject *self, PyObject *codedict)
+/* add the node's symbol to given dict */
+static int
+binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
 {
-    binode *tree, *nd;
-    PyObject *list = NULL;
-    Py_ssize_t i;
-    int k;
+    bitarrayobject *t;          /* prefix of the two child nodes */
+    int k, ret;
+
+    if (nd == NULL)
+        return 0;
+
+    if (nd->symbol) {
+        if (PyDict_SetItem(dict, nd->symbol, (PyObject *) prefix) < 0)
+            return -1;
+        return 0;
+    }
+
+    for (k = 0; k < 2; k++) {
+        t = (bitarrayobject *) bitarray_copy(prefix);
+        resize(t, t->nbits + 1);
+        setbit(t, t->nbits - 1, k);
+        ret = binode_to_dict(nd->child[k], dict, t);
+        Py_DECREF((PyObject *) t);
+        if (ret < 0)
+            return -1;
+    }
+    return 0;
+}
+
+/* return the number of nodes */
+static Py_ssize_t
+binode_nodes(binode *nd)
+{
+    Py_ssize_t res;
+
+    if (nd == NULL)
+        return 0;
+
+    res = 1;
+    res += binode_nodes(nd->child[0]);
+    res += binode_nodes(nd->child[1]);
+    return res;
+}
+
+/******************************** decodetree ******************************/
+
+typedef struct {
+    PyObject_HEAD
+    binode *tree;
+} decodetreeobject;
+
+
+static PyObject *
+decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    binode *tree;
+    PyObject *codedict;
+    decodetreeobject *self;
+
+    if (!PyArg_ParseTuple(args, "O:decodetree", &codedict))
+        return NULL;
 
     if (check_codedict(codedict) < 0)
         return NULL;
 
-    tree = make_tree(codedict);
+    tree = binode_make_tree(codedict);
     if (tree == NULL || PyErr_Occurred())
         goto error;
 
-    nd = tree;
+    self = (decodetreeobject *) type->tp_alloc(type, 0);
+    if (self == NULL)
+        goto error;
+
+    self->tree = tree;
+
+    return (PyObject *) self;
+
+ error:
+    binode_delete(tree);
+    return NULL;
+}
+
+/* Return a dict mapping the symbols to bitarrays.  This dict is a
+   reconstruction of the code dict the decodetree was created with. */
+static PyObject *
+decodetree_todict(decodetreeobject *self)
+{
+    PyObject *dict, *prefix;
+
+    dict = PyDict_New();
+    if (dict == NULL)
+        return NULL;
+
+    prefix = newbitarrayobject(&Bitarray_Type, 0, default_endian);
+    if (prefix == NULL)
+        goto error;
+
+    if (binode_to_dict(self->tree, dict, (bitarrayobject *) prefix) < 0)
+        goto error;
+
+    Py_DECREF(prefix);
+    return dict;
+
+ error:
+    Py_DECREF(dict);
+    Py_XDECREF(prefix);
+    return NULL;
+}
+
+/* Return the number of nodes in the tree (not just symbols) */
+static PyObject *
+decodetree_nodes(decodetreeobject *self)
+{
+    return PyLong_FromSsize_t(binode_nodes(self->tree));
+}
+
+static PyObject *
+decodetree_sizeof(decodetreeobject *self)
+{
+    Py_ssize_t res;
+
+    res = sizeof(decodetreeobject);
+    res += sizeof(binode) * binode_nodes(self->tree);
+    return PyLong_FromSsize_t(res);
+}
+
+static void
+decodetree_dealloc(decodetreeobject *self)
+{
+    binode_delete(self->tree);
+    Py_TYPE(self)->tp_free((PyObject *) self);
+}
+
+/* as these methods are only useful for debugging and testing,
+   they are only documented within this file */
+static PyMethodDef decodetree_methods[] = {
+    {"nodes",       (PyCFunction) decodetree_nodes,   METH_NOARGS, 0},
+    {"todict",      (PyCFunction) decodetree_todict,  METH_NOARGS, 0},
+    {"__sizeof__",  (PyCFunction) decodetree_sizeof,  METH_NOARGS, 0},
+    {NULL,          NULL}  /* sentinel */
+};
+
+PyDoc_STRVAR(decodetree_doc,
+"decodetree(code, /) -> decodetree\n\
+\n\
+Given a prefix code (a dict mapping symbols to bitarrays),\n\
+create a binary tree object to be passed to `.decode()` or `.iterdecode()`.");
+
+static PyTypeObject DecodeTree_Type = {
+#ifdef IS_PY3K
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                                        /* ob_size */
+#endif
+    "bitarray.decodetree",                    /* tp_name */
+    sizeof(decodetreeobject),                 /* tp_basicsize */
+    0,                                        /* tp_itemsize */
+    /* methods */
+    (destructor) decodetree_dealloc,          /* tp_dealloc */
+    0,                                        /* tp_print */
+    0,                                        /* tp_getattr */
+    0,                                        /* tp_setattr */
+    0,                                        /* tp_compare */
+    0,                                        /* tp_repr */
+    0,                                        /* tp_as_number*/
+    0,                                        /* tp_as_sequence */
+    0,                                        /* tp_as_mapping */
+    PyObject_HashNotImplemented,              /* tp_hash */
+    0,                                        /* tp_call */
+    0,                                        /* tp_str */
+    PyObject_GenericGetAttr,                  /* tp_getattro */
+    0,                                        /* tp_setattro */
+    0,                                        /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
+    decodetree_doc,                           /* tp_doc */
+    0,                                        /* tp_traverse */
+    0,                                        /* tp_clear */
+    0,                                        /* tp_richcompare */
+    0,                                        /* tp_weaklistoffset */
+    0,                                        /* tp_iter */
+    0,                                        /* tp_iternext */
+    decodetree_methods,                       /* tp_methods */
+    0,                                        /* tp_members */
+    0,                                        /* tp_getset */
+    0,                                        /* tp_base */
+    0,                                        /* tp_dict */
+    0,                                        /* tp_descr_get */
+    0,                                        /* tp_descr_set */
+    0,                                        /* tp_dictoffset */
+    0,                                        /* tp_init */
+    PyType_GenericAlloc,                      /* tp_alloc */
+    decodetree_new,                           /* tp_new */
+    PyObject_Del,                             /* tp_free */
+};
+
+#define DecodeTree_Check(op)  PyObject_TypeCheck(op, &DecodeTree_Type)
+
+/* -------------------------- END decodetree --------------------------- */
+
+static PyObject *
+bitarray_decode(bitarrayobject *self, PyObject *obj)
+{
+    binode *tree;
+    PyObject *list = NULL, *symbol;
+    Py_ssize_t index = 0;
+
+    if (DecodeTree_Check(obj)) {
+        tree = ((decodetreeobject *) obj)->tree;
+    }
+    else {
+        if (check_codedict(obj) < 0)
+            return NULL;
+
+        tree = binode_make_tree(obj);
+        if (tree == NULL || PyErr_Occurred())
+            goto error;
+    }
+
     list = PyList_New(0);
     if (list == NULL)
         goto error;
 
-    /* traverse tree (just like above) */
-    for (i = 0; i < self->nbits; i++) {
-        k = GETBIT(self, i);
-        nd = nd->child[k];
-        if (nd == NULL) {
-            PyErr_SetString(PyExc_ValueError,
-                            "prefix code does not match data in bitarray");
+    while ((symbol = binode_traverse(tree, self, &index))) {
+        if (PyList_Append(list, symbol) < 0)
             goto error;
-        }
-        if (nd->symbol) {  /* leaf */
-            if (PyList_Append(list, nd->symbol) < 0)
-                goto error;
-            nd = tree;
-        }
     }
-    if (nd != tree) {
-        PyErr_SetString(PyExc_ValueError, "decoding not terminated");
+    if (PyErr_Occurred())
         goto error;
-    }
-    delete_binode_tree(tree);
+    if (!DecodeTree_Check(obj))
+        binode_delete(tree);
     return list;
 
 error:
-    delete_binode_tree(tree);
+    if (!DecodeTree_Check(obj))
+        binode_delete(tree);
     Py_XDECREF(list);
     return NULL;
 }
@@ -2309,16 +2511,18 @@ error:
 PyDoc_STRVAR(decode_doc,
 "decode(code, /) -> list\n\
 \n\
-Given a prefix code (a dict mapping symbols to bitarrays),\n\
-decode the content of the bitarray and return it as a list of symbols.");
+Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`\n\
+object), decode the content of the bitarray and return it as a list of\n\
+symbols.");
 
 /*********************** (bitarray) Decode Iterator ***********************/
 
 typedef struct {
     PyObject_HEAD
-    bitarrayobject *bao;        /* bitarray we're searching in */
+    bitarrayobject *bao;        /* bitarray we're decoding */
     binode *tree;               /* prefix tree containing symbols */
     Py_ssize_t index;           /* current index in bitarray */
+    PyObject *decodetree;       /* decodetree or NULL */
 } decodeiterobject;
 
 static PyTypeObject DecodeIter_Type;
@@ -2328,27 +2532,33 @@ static PyTypeObject DecodeIter_Type;
 
 /* create a new initialized bitarray decode iterator object */
 static PyObject *
-bitarray_iterdecode(bitarrayobject *self, PyObject *codedict)
+bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
 {
     decodeiterobject *it;       /* iterator to be returned */
     binode *tree;
 
-    if (check_codedict(codedict) < 0)
-        return NULL;
+    if (DecodeTree_Check(obj)) {
+        tree = ((decodetreeobject *) obj)->tree;
+    }
+    else {
+        if (check_codedict(obj) < 0)
+            return NULL;
 
-    tree = make_tree(codedict);
-    if (tree == NULL || PyErr_Occurred())
-        return NULL;
+        tree = binode_make_tree(obj);
+        if (tree == NULL || PyErr_Occurred())
+            return NULL;
+    }
 
     it = PyObject_GC_New(decodeiterobject, &DecodeIter_Type);
     if (it == NULL)
         return NULL;
 
-    it->tree = tree;
-
     Py_INCREF(self);
     it->bao = self;
+    it->tree = tree;
     it->index = 0;
+    it->decodetree = DecodeTree_Check(obj) ? obj : NULL;
+    Py_XINCREF(it->decodetree);
     PyObject_GC_Track(it);
     return (PyObject *) it;
 }
@@ -2356,8 +2566,8 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *codedict)
 PyDoc_STRVAR(iterdecode_doc,
 "iterdecode(code, /) -> iterator\n\
 \n\
-Given a prefix code (a dict mapping symbols to bitarrays),\n\
-decode the content of the bitarray and return an iterator over\n\
+Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`\n\
+object), decode the content of the bitarray and return an iterator over\n\
 the symbols.");
 
 static PyObject *
@@ -2366,7 +2576,7 @@ decodeiter_next(decodeiterobject *it)
     PyObject *symbol;
 
     assert(DecodeIter_Check(it));
-    symbol = traverse_tree(it->tree, it->bao, &(it->index));
+    symbol = binode_traverse(it->tree, it->bao, &(it->index));
     if (symbol == NULL)  /* stop iteration OR error occured */
         return NULL;
     Py_INCREF(symbol);
@@ -2376,9 +2586,13 @@ decodeiter_next(decodeiterobject *it)
 static void
 decodeiter_dealloc(decodeiterobject *it)
 {
-    delete_binode_tree(it->tree);
+    if (it->decodetree == NULL)
+        binode_delete(it->tree);
+    else
+        Py_DECREF(it->decodetree);
+
     PyObject_GC_UnTrack(it);
-    Py_XDECREF(it->bao);
+    Py_DECREF(it->bao);
     PyObject_GC_Del(it);
 }
 
@@ -2396,7 +2610,7 @@ static PyTypeObject DecodeIter_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
 #endif
-    "bitarraydecodeiterator",                 /* tp_name */
+    "bitarray.decodeiterator",                /* tp_name */
     sizeof(decodeiterobject),                 /* tp_basicsize */
     0,                                        /* tp_itemsize */
     /* methods */
@@ -2492,8 +2706,8 @@ static void
 searchiter_dealloc(searchiterobject *it)
 {
     PyObject_GC_UnTrack(it);
-    Py_XDECREF(it->bao);
-    Py_XDECREF(it->xa);
+    Py_DECREF(it->bao);
+    Py_DECREF(it->xa);
     PyObject_GC_Del(it);
 }
 
@@ -2511,7 +2725,7 @@ static PyTypeObject SearchIter_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
 #endif
-    "bitarraysearchiterator",                 /* tp_name */
+    "bitarray.searchiterator",                /* tp_name */
     sizeof(searchiterobject),                 /* tp_basicsize */
     0,                                        /* tp_itemsize */
     /* methods */
@@ -2867,7 +3081,7 @@ static void
 bitarrayiter_dealloc(bitarrayiterobject *it)
 {
     PyObject_GC_UnTrack(it);
-    Py_XDECREF(it->bao);
+    Py_DECREF(it->bao);
     PyObject_GC_Del(it);
 }
 
@@ -2885,7 +3099,7 @@ static PyTypeObject BitarrayIter_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
 #endif
-    "bitarrayiterator",                       /* tp_name */
+    "bitarray.bitarrayiterator",              /* tp_name */
     sizeof(bitarrayiterobject),               /* tp_basicsize */
     0,                                        /* tp_itemsize */
     /* methods */
@@ -3000,7 +3214,7 @@ static PyBufferProcs bitarray_as_buffer = {
     (releasebufferproc) bitarray_releasebuffer,
 };
 
-/***************************** Bitarraytype *******************************/
+/***************************** Bitarray Type ******************************/
 
 PyDoc_STRVAR(bitarraytype_doc,
 "bitarray(initializer=0, /, endian='big') -> bitarray\n\
@@ -3028,7 +3242,7 @@ Note that setting the bit endianness only has an effect when accessing the\n\
 machine representation of the bitarray, i.e. when using the methods: tofile,\n\
 fromfile, tobytes, frombytes.");
 
-static PyTypeObject Bitarraytype = {
+static PyTypeObject Bitarray_Type = {
 #ifdef IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
@@ -3168,15 +3382,16 @@ init_bitarray(void)
 {
     PyObject *m;
 
-    Py_TYPE(&Bitarraytype) = &PyType_Type;
+    Py_TYPE(&Bitarray_Type) = &PyType_Type;
     Py_TYPE(&SearchIter_Type) = &PyType_Type;
     Py_TYPE(&DecodeIter_Type) = &PyType_Type;
     Py_TYPE(&BitarrayIter_Type) = &PyType_Type;
+    Py_TYPE(&DecodeTree_Type) = &PyType_Type;
 #ifdef IS_PY3K
     m = PyModule_Create(&moduledef);
     if (m == NULL)
         return NULL;
-    if (PyType_Ready(&Bitarraytype) < 0)
+    if (PyType_Ready(&Bitarray_Type) < 0)
         return NULL;
 #else
     m = Py_InitModule3("_bitarray", module_functions, 0);
@@ -3184,8 +3399,12 @@ init_bitarray(void)
         return;
 #endif
 
-    Py_INCREF((PyObject *) &Bitarraytype);
-    PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarraytype);
+    Py_INCREF((PyObject *) &Bitarray_Type);
+    PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type);
+
+    Py_INCREF((PyObject *) &DecodeTree_Type);
+    PyModule_AddObject(m, "decodetree", (PyObject *) &DecodeTree_Type);
+
     PyModule_AddObject(m, "__version__",
                        Py_BuildValue("s", BITARRAY_VERSION));
 #ifdef IS_PY3K

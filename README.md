@@ -289,6 +289,13 @@ return a list of the symbols:
 Since symbols are not limited to being characters, it is necessary to return
 them as elements of a list, rather than simply returning the joined string.
 
+When the codes are large, and you have many decode calls, most time will
+be spent creating the (same) internal decode tree objects.  In this case,
+it will be much faster to create a `decodetree` object (which is initialized
+with a prefix code dictionary), and can be passed to bitarray's `.decode()`
+and `.iterdecode()` methods, instead of passing the prefix code dictionary
+to those methods itself.
+
 The above dictionary `d` can be efficiently constructed using the function
 `bitarray.util.huffman_code()`.  I also wrote [Huffman coding in Python using
 bitarray](http://ilan.schnell-web.net/prog/huffman/) for more background
@@ -376,8 +383,9 @@ Count the number of occurrences of bool(value) in the bitarray.
 
 `decode(code, /)` -> list
 
-Given a prefix code (a dict mapping symbols to bitarrays),
-decode the content of the bitarray and return it as a list of symbols.
+Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`
+object), decode the content of the bitarray and return it as a list of
+symbols.
 
 
 `encode(code, iterable, /)`
@@ -438,8 +446,8 @@ When the optional `index` is given, only invert the single bit at index.
 
 `iterdecode(code, /)` -> iterator
 
-Given a prefix code (a dict mapping symbols to bitarrays),
-decode the content of the bitarray and return an iterator over
+Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`
+object), decode the content of the bitarray and return an iterator over
 the symbols.
 
 
@@ -520,9 +528,10 @@ When the length of the bitarray is not a multiple of 8,
 the remaining bits (1..7) are set to 0.
 
 
-`tolist()` -> list
+`tolist(as_ints=False, /)` -> list
 
 Return a list with the items (False or True) in the bitarray.
+The optional paramater, changes the items in the list to integers (0 or 1).
 Note that the list object being created will require 32 or 64 times more
 memory (depending on the machine architecture) than the bitarray object,
 which may cause a memory error if the bitarray is very large.
@@ -559,7 +568,28 @@ Its contents cannot be altered after it is created; however, it can be used
 as a dictionary key.
 
 
-Functions defined in the `bitarray` package:
+The decodetree object:
+----------------------
+
+This object stores a binary tree which is initialized with a prefix code
+dictionary, and can be passed to bitarray's .decode() and .iterdecode()
+methods:
+
+    >>> from bitarray import bitarray, decodetree
+    >>> t = decodetree({'a': bitarray('0'), 'b': bitarray('1')})
+    >>> a = bitarray('0110')
+    >>> a.decode(t)
+    ['a', 'b', 'b', 'a']
+    >>> ''.join(a.iterdecode(t))
+    'abba'
+
+`decodetree(code, /)` -> decodetree
+
+Given a prefix code (a dict mapping symbols to bitarrays),
+create a binary tree object to be passed to `.decode()` or `.iterdecode()`.
+
+
+Functions defined in the `bitarray` module:
 --------------------------------------------
 
 `test(verbosity=1, repeat=1)` -> TextTestResult
@@ -686,6 +716,8 @@ Change log
 
 2020-XX-XX   1.6.0:
 
+  * add optional parameter to `.tolist()` which changes the items in the
+    returned list to integers (0 or 1), as opposed to Booleans
   * remove deprecated `bitdiff()`, which has been deprecated since version
     1.2.0, use `bitarray.util.count_xor()` instead
   * drop Python 2.6 support
