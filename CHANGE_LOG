@@ -1,5 +1,7 @@
 2020-XX-XX   1.6.0:
 -------------------
+  * add decodetree object, for speeding up consecutive calls
+    to `.decode()` (as well as `.iterdecode()`, see #103
   * add optional parameter to `.tolist()` which changes the items in the
     returned list to integers (0 or 1), as opposed to Booleans
   * remove deprecated `bitdiff()`, which has been deprecated since version
