@@ -2138,6 +2138,7 @@ with the corresponding bitarray for each symbol.");
 
 /* ----------------------- binary tree (C-level) ----------------------- */
 
+/* a node has either children or a symbol, NEVER both */
 typedef struct _bin_node
 {
     struct _bin_node *child[2];
@@ -2167,6 +2168,12 @@ binode_delete(binode *nd)
     if (nd == NULL)
         return;
 
+#ifndef NDEBUG
+    if (nd->symbol)
+        assert(nd->child[0] == NULL && nd->child[1] == NULL);
+    if (nd->child[0] || nd->child[1])
+        assert(nd->symbol == NULL);
+#endif
     binode_delete(nd->child[0]);
     binode_delete(nd->child[1]);
     Py_XDECREF(nd->symbol);
@@ -2231,6 +2238,7 @@ binode_make_tree(PyObject *codedict)
             return NULL;
         }
     }
+    assert(tree);
     return tree;
 }
 
@@ -2246,6 +2254,7 @@ binode_traverse(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
     int k;
 
     while (*indexp < ba->nbits) {
+        assert(nd);
         k = GETBIT(ba, *indexp);
         (*indexp)++;
         nd = nd->child[k];
