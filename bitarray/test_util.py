@@ -766,9 +766,11 @@ class TestsHuffman(unittest.TestCase):
         self.assertRaises(ValueError, huffman_code, {})
 
     def check_tree(self, code):
+        n = len(code)
         tree = decodetree(code)
         self.assertEqual(tree.todict(), code)
-        self.assertEqual(tree.nodes(), 2 * len(code) - 1)
+        # ensure tree has 2n-1 nodes (n symbol nodes and n-1 internal nodes)
+        self.assertEqual(tree.nodes(), 2 * n - 1)
 
     def test_balanced(self):
         n = 6
@@ -808,7 +810,7 @@ class TestsHuffman(unittest.TestCase):
         self.check_tree(code)
 
     def test_random_freq(self):
-        N = 1000
+        N = randint(2, 1000)
         # create Huffman code for N symbols
         code = huffman_code({i: random() for i in range(N)})
         self.check_tree(code)
