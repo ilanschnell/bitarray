@@ -8,6 +8,7 @@
   * remove deprecated `bitdiff()`, which has been deprecated since version
     1.2.0, use `bitarray.util.count_xor()` instead
   * drop Python 2.6 support
+  * update license file, #104
 
 
 2020-08-24   1.5.3:
