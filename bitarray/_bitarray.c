@@ -2168,7 +2168,6 @@ binode_delete(binode *nd)
     if (nd == NULL)
         return;
 
-    assert(!(nd->symbol && (nd->child[0] || nd->child[1])));
     binode_delete(nd->child[0]);
     binode_delete(nd->child[1]);
     Py_XDECREF(nd->symbol);
@@ -2305,6 +2304,11 @@ binode_nodes(binode *nd)
 
     if (nd == NULL)
         return 0;
+
+    /* a node cannot have a symbol and children */
+    assert(!(nd->symbol && (nd->child[0] || nd->child[1])));
+    /* a node must have a symbol or children */
+    assert(nd->symbol || nd->child[0] || nd->child[1]);
 
     res = 1;
     res += binode_nodes(nd->child[0]);
