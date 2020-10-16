@@ -571,9 +571,10 @@ as a dictionary key.
 The decodetree object:
 ----------------------
 
-This object stores a binary tree which is initialized with a prefix code
-dictionary, and can be passed to bitarray's .decode() and .iterdecode()
-methods:
+This object stores a binary tree initialized from a prefix code dictionary.
+A decodetree is immutable and unhashable.  It's sole purpose is to be
+passed to bitarray's .decode() and .iterdecode() methods, instead of passing
+the prefix code dictionary to those methods directly:
 
     >>> from bitarray import bitarray, decodetree
     >>> t = decodetree({'a': bitarray('0'), 'b': bitarray('1')})
@@ -714,13 +715,17 @@ hashable object (including `None`).
 Change log
 ----------
 
-2020-XX-XX   1.6.0:
+2020-10-XX   1.6.0:
 
+  * add `decodetree` object, for speeding up consecutive calls
+    to `.decode()` (as well as `.iterdecode()`, in particular when dealing
+    with large prefix codes, see #103
   * add optional parameter to `.tolist()` which changes the items in the
     returned list to integers (0 or 1), as opposed to Booleans
   * remove deprecated `bitdiff()`, which has been deprecated since version
     1.2.0, use `bitarray.util.count_xor()` instead
   * drop Python 2.6 support
+  * update license file, #104
 
 
 *1.5.3* (2020-08-24):
