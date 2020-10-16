@@ -571,9 +571,9 @@ as a dictionary key.
 The decodetree object:
 ----------------------
 
-This object stores a binary tree initialized from a prefix code dictionary.
-A decodetree is immutable and unhashable.  It's sole purpose is to be
-passed to bitarray's .decode() and .iterdecode() methods, instead of passing
+This (immutable and unhashable) object stores a binary tree initialized
+from a prefix code dictionary.  It's sole purpose is to be passed to
+bitarray's `.decode()` and `.iterdecode()` methods, instead of passing
 the prefix code dictionary to those methods directly:
 
     >>> from bitarray import bitarray, decodetree
