@@ -90,9 +90,10 @@ this a frozenbitarray is immutable, and hashable:
 The decodetree object:
 ----------------------
 
-This object stores a binary tree which is initialized with a prefix code
-dictionary, and can be passed to bitarray's .decode() and .iterdecode()
-methods:
+This (immutable and unhashable) object stores a binary tree initialized
+from a prefix code dictionary.  It's sole purpose is to be passed to
+bitarray's `.decode()` and `.iterdecode()` methods, instead of passing
+the prefix code dictionary to those methods directly:
 
     >>> from bitarray import bitarray, decodetree
     >>> t = decodetree({'a': bitarray('0'), 'b': bitarray('1')})
