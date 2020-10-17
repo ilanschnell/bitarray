@@ -715,7 +715,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2020-10-XX   1.6.0:
+*1.6.0* (2020-10-17):
 
   * add `decodetree` object, for speeding up consecutive calls
     to `.decode()` and `.iterdecode()`, in particular when dealing
