@@ -35,8 +35,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.6.0.tar.gz
-    $ cd bitarray-1.6.0
+    $ tar xzf bitarray-1.6.1.tar.gz
+    $ cd bitarray-1.6.1
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -55,13 +55,13 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.6.0
+    bitarray version: 1.6.1
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
     ..............................
     ----------------------------------------------------------------------
-    Ran 250 tests in 0.921s
+    Ran 257 tests in 0.921s
 
     OK
 
@@ -714,6 +714,10 @@ hashable object (including `None`).
 
 Change log
 ----------
+
+2020-XX-XX   1.6.1:
+
+
 
 *1.6.0* (2020-10-17):
 

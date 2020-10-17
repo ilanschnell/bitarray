@@ -1,3 +1,7 @@
+2020-XX-XX   1.6.1:
+-------------------
+
+
 2020-10-17   1.6.0:
 -------------------
   * add `decodetree` object, for speeding up consecutive calls
