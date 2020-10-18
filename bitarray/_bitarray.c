@@ -3384,13 +3384,25 @@ init_bitarray(void)
 {
     PyObject *m;
 
+#ifdef IS_PY3K
+    m = PyModule_Create(&moduledef);
+#else
+    m = Py_InitModule3("_bitarray", module_functions, 0);
+#endif
+    if (m == NULL)
+        goto error;
+
     if (PyType_Ready(&Bitarray_Type) < 0)
         goto error;
     Py_TYPE(&Bitarray_Type) = &PyType_Type;
+    Py_INCREF((PyObject *) &Bitarray_Type);
+    PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type);
 
-    if (PyType_Ready(&SearchIter_Type) < 0)
+    if (PyType_Ready(&DecodeTree_Type) < 0)
         goto error;
-    Py_TYPE(&SearchIter_Type) = &PyType_Type;
+    Py_TYPE(&DecodeTree_Type) = &PyType_Type;
+    Py_INCREF((PyObject *) &DecodeTree_Type);
+    PyModule_AddObject(m, "decodetree", (PyObject *) &DecodeTree_Type);
 
     if (PyType_Ready(&DecodeIter_Type) < 0)
         goto error;
@@ -3400,23 +3412,9 @@ init_bitarray(void)
         goto error;
     Py_TYPE(&BitarrayIter_Type) = &PyType_Type;
 
-    if (PyType_Ready(&DecodeTree_Type) < 0)
+    if (PyType_Ready(&SearchIter_Type) < 0)
         goto error;
-    Py_TYPE(&DecodeTree_Type) = &PyType_Type;
-
-#ifdef IS_PY3K
-    m = PyModule_Create(&moduledef);
-#else
-    m = Py_InitModule3("_bitarray", module_functions, 0);
-#endif
-    if (m == NULL)
-        goto error;
-
-    Py_INCREF((PyObject *) &Bitarray_Type);
-    PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type);
-
-    Py_INCREF((PyObject *) &DecodeTree_Type);
-    PyModule_AddObject(m, "decodetree", (PyObject *) &DecodeTree_Type);
+    Py_TYPE(&SearchIter_Type) = &PyType_Type;
 
     PyModule_AddObject(m, "__version__",
                        Py_BuildValue("s", BITARRAY_VERSION));
