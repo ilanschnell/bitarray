@@ -2338,20 +2338,17 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return NULL;
 
     tree = binode_make_tree(codedict);
-    if (tree == NULL || PyErr_Occurred())
-        goto error;
+    if (tree == NULL)
+        return NULL;
 
     self = (decodetreeobject *) type->tp_alloc(type, 0);
-    if (self == NULL)
-        goto error;
-
+    if (self == NULL) {
+        binode_delete(tree);
+        return NULL;
+    }
     self->tree = tree;
 
     return (PyObject *) self;
-
- error:
-    binode_delete(tree);
-    return NULL;
 }
 
 /* Return a dict mapping the symbols to bitarrays.  This dict is a
@@ -2487,7 +2484,7 @@ bitarray_decode(bitarrayobject *self, PyObject *obj)
             return NULL;
 
         tree = binode_make_tree(obj);
-        if (tree == NULL || PyErr_Occurred())
+        if (tree == NULL)
             goto error;
     }
 
@@ -2549,7 +2546,7 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
             return NULL;
 
         tree = binode_make_tree(obj);
-        if (tree == NULL || PyErr_Occurred())
+        if (tree == NULL)
             return NULL;
     }
 
