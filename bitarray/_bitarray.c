@@ -3384,22 +3384,33 @@ init_bitarray(void)
 {
     PyObject *m;
 
+    if (PyType_Ready(&Bitarray_Type) < 0)
+        goto error;
     Py_TYPE(&Bitarray_Type) = &PyType_Type;
+
+    if (PyType_Ready(&SearchIter_Type) < 0)
+        goto error;
     Py_TYPE(&SearchIter_Type) = &PyType_Type;
+
+    if (PyType_Ready(&DecodeIter_Type) < 0)
+        goto error;
     Py_TYPE(&DecodeIter_Type) = &PyType_Type;
+
+    if (PyType_Ready(&BitarrayIter_Type) < 0)
+        goto error;
     Py_TYPE(&BitarrayIter_Type) = &PyType_Type;
+
+    if (PyType_Ready(&DecodeTree_Type) < 0)
+        goto error;
     Py_TYPE(&DecodeTree_Type) = &PyType_Type;
+
 #ifdef IS_PY3K
     m = PyModule_Create(&moduledef);
-    if (m == NULL)
-        return NULL;
-    if (PyType_Ready(&Bitarray_Type) < 0)
-        return NULL;
 #else
     m = Py_InitModule3("_bitarray", module_functions, 0);
-    if (m == NULL)
-        return;
 #endif
+    if (m == NULL)
+        goto error;
 
     Py_INCREF((PyObject *) &Bitarray_Type);
     PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type);
@@ -3411,5 +3422,10 @@ init_bitarray(void)
                        Py_BuildValue("s", BITARRAY_VERSION));
 #ifdef IS_PY3K
     return m;
+ error:
+    return NULL;
+#else
+ error:
+    return;
 #endif
 }
