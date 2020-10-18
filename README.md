@@ -531,7 +531,7 @@ the remaining bits (1..7) are set to 0.
 `tolist(as_ints=False, /)` -> list
 
 Return a list with the items (False or True) in the bitarray.
-The optional paramater, changes the items in the list to integers (0 or 1).
+The optional parameter, changes the items in the list to integers (0 or 1).
 Note that the list object being created will require 32 or 64 times more
 memory (depending on the machine architecture) than the bitarray object,
 which may cause a memory error if the bitarray is very large.
@@ -615,7 +615,7 @@ Functions defined in `bitarray.util` module:
 `zeros(length, /, endian=None)` -> bitarray
 
 Create a bitarray of length, with all values 0, and optional
-endianness, which may be 'big', 'lillte'.
+endianness, which may be 'big', 'little'.
 
 
 `make_endian(bitarray, endian, /)` -> bitarray
@@ -706,7 +706,7 @@ is raised.
 
 `huffman_code(dict, /, endian=None)` -> dict
 
-Given a frequency map, a dictionary mapping symbols to thier frequency,
+Given a frequency map, a dictionary mapping symbols to their frequency,
 calculate the Huffman code, i.e. a dict mapping those symbols to
 bitarrays (with given endianness).  Note that the symbols may be any
 hashable object (including `None`).

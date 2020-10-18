@@ -1250,7 +1250,7 @@ PyDoc_STRVAR(tolist_doc,
 "tolist(as_ints=False, /) -> list\n\
 \n\
 Return a list with the items (False or True) in the bitarray.\n\
-The optional paramater, changes the items in the list to integers (0 or 1).\n\
+The optional parameter, changes the items in the list to integers (0 or 1).\n\
 Note that the list object being created will require 32 or 64 times more\n\
 memory (depending on the machine architecture) than the bitarray object,\n\
 which may cause a memory error if the bitarray is very large.");
