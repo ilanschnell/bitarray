@@ -2070,7 +2070,7 @@ check_codedict(PyObject *codedict)
         return -1;
     }
     if (PyDict_Size(codedict) == 0) {
-        PyErr_SetString(PyExc_ValueError, "prefix code dict empty");
+        PyErr_SetString(PyExc_ValueError, "non-empty dict expected");
         return -1;
     }
     return 0;
@@ -2232,6 +2232,7 @@ binode_make_tree(PyObject *codedict)
             return NULL;
         }
     }
+    /* as we require the codedict to be non-empty the tree cannot be empty */
     assert(tree);
     return tree;
 }
