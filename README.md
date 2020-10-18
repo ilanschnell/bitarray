@@ -717,6 +717,8 @@ Change log
 
 2020-XX-XX   1.6.1:
 
+  * use PyType_Ready for all types: bitarray, bitarrayiterator,
+    decodeiterator, decodetree, searchiterator
 
 
 *1.6.0* (2020-10-17):
