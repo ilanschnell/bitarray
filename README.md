@@ -31,7 +31,7 @@ Key features
  * Bitwise operations: `&`, `|`, `^`, `&=`, `|=`, `^=`, `~`
  * Sequential search
  * Pickling and unpickling of bitarray objects.
- * Bitarray objects support the buffer protocol (Python 2.7 and above)
+ * Bitarray objects support the buffer protocol
  * On 32-bit systems, a bitarray object can contain up to 2 Gbits.
 
 
@@ -45,23 +45,33 @@ Installation
 
 Alternatively `bitarray` can be installed from source:
 
-    $ tar xzf bitarray-1.5.2.tar.gz
-    $ cd bitarray-1.5.2
+    $ tar xzf bitarray-1.6.1.tar.gz
+    $ cd bitarray-1.6.1
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
-privileges.  You can also pip install bitarray.
+privileges.  You can also pip install bitarray.  Please note that you need
+a working C compiler to run the `python setup.py install` command.
+If you rather want to use precompiled binaries, you can:
+
+* `pip install bitarray-hardbyte` (this PyPI package contains Python
+  wheels for Linux, MaxOSX and Windows and all common Python versions)
+* `conda install bitarray` (both the default Anaconda repository as well
+  as conda-forge support bitarray)
+* download Windows wheels from
+  [Chris Gohlke](https://www.lfd.uci.edu/~gohlke/pythonlibs/#bitarray)
+
 Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.5.2
+    bitarray version: 1.6.1
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
     ..............................
     ----------------------------------------------------------------------
-    Ran 230 tests in 0.889s
+    Ran 257 tests in 0.921s
 
     OK
 
@@ -289,6 +299,13 @@ return a list of the symbols:
 Since symbols are not limited to being characters, it is necessary to return
 them as elements of a list, rather than simply returning the joined string.
 
+When the codes are large, and you have many decode calls, most time will
+be spent creating the (same) internal decode tree objects.  In this case,
+it will be much faster to create a `decodetree` object (which is initialized
+with a prefix code dictionary), and can be passed to bitarray's `.decode()`
+and `.iterdecode()` methods, instead of passing the prefix code dictionary
+to those methods itself.
+
 The above dictionary `d` can be efficiently constructed using the function
 `bitarray.util.huffman_code()`.  I also wrote [Huffman coding in Python using
 bitarray](http://ilan.schnell-web.net/prog/huffman/) for more background
@@ -376,8 +393,9 @@ Count the number of occurrences of bool(value) in the bitarray.
 
 `decode(code, /)` -> list
 
-Given a prefix code (a dict mapping symbols to bitarrays),
-decode the content of the bitarray and return it as a list of symbols.
+Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`
+object), decode the content of the bitarray and return it as a list of
+symbols.
 
 
 `encode(code, iterable, /)`
@@ -430,16 +448,16 @@ Raises `ValueError` if the value is not present.
 Insert `bool(value)` into the bitarray before index.
 
 
-`invert()`
+`invert(index=<all bits>)`
 
-Invert all bits in the array (in-place),
-i.e. convert each 1-bit into a 0-bit and vice versa.
+Invert all bits in the array (in-place).
+When the optional `index` is given, only invert the single bit at index.
 
 
 `iterdecode(code, /)` -> iterator
 
-Given a prefix code (a dict mapping symbols to bitarrays),
-decode the content of the bitarray and return an iterator over
+Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`
+object), decode the content of the bitarray and return an iterator over
 the symbols.
 
 
@@ -520,9 +538,10 @@ When the length of the bitarray is not a multiple of 8,
 the remaining bits (1..7) are set to 0.
 
 
-`tolist()` -> list
+`tolist(as_ints=False, /)` -> list
 
 Return a list with the items (False or True) in the bitarray.
+The optional parameter, changes the items in the list to integers (0 or 1).
 Note that the list object being created will require 32 or 64 times more
 memory (depending on the machine architecture) than the bitarray object,
 which may cause a memory error if the bitarray is very large.
@@ -559,7 +578,29 @@ Its contents cannot be altered after it is created; however, it can be used
 as a dictionary key.
 
 
-Functions defined in the `bitarray` package:
+The decodetree object:
+----------------------
+
+This (immutable and unhashable) object stores a binary tree initialized
+from a prefix code dictionary.  It's sole purpose is to be passed to
+bitarray's `.decode()` and `.iterdecode()` methods, instead of passing
+the prefix code dictionary to those methods directly:
+
+    >>> from bitarray import bitarray, decodetree
+    >>> t = decodetree({'a': bitarray('0'), 'b': bitarray('1')})
+    >>> a = bitarray('0110')
+    >>> a.decode(t)
+    ['a', 'b', 'b', 'a']
+    >>> ''.join(a.iterdecode(t))
+    'abba'
+
+`decodetree(code, /)` -> decodetree
+
+Given a prefix code (a dict mapping symbols to bitarrays),
+create a binary tree object to be passed to `.decode()` or `.iterdecode()`.
+
+
+Functions defined in the `bitarray` module:
 --------------------------------------------
 
 `test(verbosity=1, repeat=1)` -> TextTestResult
@@ -584,7 +625,7 @@ Functions defined in `bitarray.util` module:
 `zeros(length, /, endian=None)` -> bitarray
 
 Create a bitarray of length, with all values 0, and optional
-endianness, which may be 'big', 'lillte'.
+endianness, which may be 'big', 'little'.
 
 
 `make_endian(bitarray, endian, /)` -> bitarray
@@ -675,7 +716,7 @@ is raised.
 
 `huffman_code(dict, /, endian=None)` -> dict
 
-Given a frequency map, a dictionary mapping symbols to thier frequency,
+Given a frequency map, a dictionary mapping symbols to their frequency,
 calculate the Huffman code, i.e. a dict mapping those symbols to
 bitarrays (with given endianness).  Note that the symbols may be any
 hashable object (including `None`).
@@ -684,9 +725,36 @@ hashable object (including `None`).
 Change log
 ----------
 
-2020-XX-XX   1.5.2:
+2020-XX-XX   1.6.1:
+
+  * use PyType_Ready for all types: bitarray, bitarrayiterator,
+    decodeiterator, decodetree, searchiterator
+
+
+*1.6.0* (2020-10-17):
+
+  * add `decodetree` object, for speeding up consecutive calls
+    to `.decode()` and `.iterdecode()`, in particular when dealing
+    with large prefix codes, see #103
+  * add optional parameter to `.tolist()` which changes the items in the
+    returned list to integers (0 or 1), as opposed to Booleans
+  * remove deprecated `bitdiff()`, which has been deprecated since version
+    1.2.0, use `bitarray.util.count_xor()` instead
+  * drop Python 2.6 support
+  * update license file, #104
+
+
+*1.5.3* (2020-08-24):
+
+  * add optional index parameter to `.index()` to invert single bit
+  * fix `sys.getsizeof(bitarray)` by adding `.__sizeof__()`, see issue #100
+
+
+*1.5.2* (2020-08-16):
 
   * add PyType_Ready usage, issue #66
+  * speedup search() for bitarrays with length 1 in sparse bitarrays,
+    see issue #67
   * add tests
 
 
@@ -711,46 +779,6 @@ Change log
   * raise TypeError when tring to create bitarray from boolean
   * This will be last release to still support Python 2.6 (which was retired
     in 2013).  We do NOT plan to stop support for Python 2.7 anytime soon.
-
-
-*1.4.2* (2020-07-15):
-
-  * add more tests
-  * C-level:
-      - simplify pack/unpack code
-      - fix memory leak in `~` operation (bitarray_cpinvert)
-
-
-*1.4.1* (2020-07-14):
-
-  * add official Python 3.9 support
-  * improve many docstrings
-  * add DeprecationWarning for `bitdiff()`
-  * add DeprecationWarning when trying to extend bitarrays
-    from bytes on Python 3 (`bitarrays(b'011')` and `.extend(b'110')`)
-  * C-level:
-      - Rewrote `.fromfile()` and `.tofile()` implementation,
-        such that now the same code is used for Python 2 and 3.
-        The new implementation is more memoery efficient on
-        Python 3.
-      - use memcmp() in richcompare to shortcut EQ/NE, when
-        comparing two very large bitarrays for equality the
-        speedup can easily be 100x
-      - simplify how unpacking is handled
-  * add more tests
-
-
-*1.4.0* (2020-07-11):
-
-  * add `.clear()` method (Python 3.3 added this method to lists)
-  * avoid overallocation when bitarray objects are initially created
-  * raise BufferError when resizing bitarrays which is exporting buffers
-  * add example to study the resize() function
-  * improve some error messages
-  * add more tests
-  * raise `NotImplementedError` with (useful message) when trying to call
-    the `.fromstring()` or `.tostring()` methods, which have been removed
-    in the last release
 
 
 Please find the complete change log [here](https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG).

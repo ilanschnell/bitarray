@@ -1,6 +1,33 @@
-2020-XX-XX   1.5.2:
+2020-XX-XX   1.6.1:
+-------------------
+  * use PyType_Ready for all types: bitarray, bitarrayiterator,
+    decodeiterator, decodetree, searchiterator
+
+
+2020-10-17   1.6.0:
+-------------------
+  * add `decodetree` object, for speeding up consecutive calls
+    to `.decode()` and `.iterdecode()`, in particular when dealing
+    with large prefix codes, see #103
+  * add optional parameter to `.tolist()` which changes the items in the
+    returned list to integers (0 or 1), as opposed to Booleans
+  * remove deprecated `bitdiff()`, which has been deprecated since version
+    1.2.0, use `bitarray.util.count_xor()` instead
+  * drop Python 2.6 support
+  * update license file, #104
+
+
+2020-08-24   1.5.3:
+-------------------
+  * add optional index parameter to `.index()` to invert single bit
+  * fix `sys.getsizeof(bitarray)` by adding `.__sizeof__()`, see issue #100
+
+
+2020-08-16   1.5.2:
 -------------------
   * add PyType_Ready usage, issue #66
+  * speedup search() for bitarrays with length 1 in sparse bitarrays,
+    see issue #67
   * add tests
 
 

@@ -7,13 +7,13 @@ import os
 import sys
 import unittest
 from string import hexdigits
-from random import choice, randint
+from random import choice, randint, random
 try:
     from collections import Counter
 except ImportError:
     pass
 
-from bitarray import (bitarray, frozenbitarray, bits2bytes,
+from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian)
 from bitarray.test_bitarray import Util
 
@@ -219,6 +219,16 @@ tests.append(TestsStrip)
 
 class TestsCount_N(unittest.TestCase, Util):
 
+    @staticmethod
+    def count_n(a, n):
+        "return the index i for which a[:i].count() == n"
+        i, j = n, a.count(1, 0, n)
+        while j < n:
+            if a[i]:
+                j += 1
+            i += 1
+        return i
+
     def check_result(self, a, n, i):
         self.assertEqual(a.count(1, 0, i), n)
         if i:
@@ -244,6 +254,7 @@ class TestsCount_N(unittest.TestCase, Util):
             i = count_n(a, n)
             self.check_result(a, n, i)
             self.assertEqual(a[:i].count(), n)
+            self.assertEqual(i, self.count_n(a, n))
         self.assertEQUAL(a, b)
 
     def test_frozen(self):
@@ -680,7 +691,7 @@ class TestsIntegerization(unittest.TestCase, Util):
             if a.endian == 'big':
                 self.assertTrue(len(a) == 1 or a.index(1) == 0)
             self.assertEqual(ba2int(a), i)
-            if i > 0 and sys.version_info[:2] >= (2, 7):
+            if i > 0:
                 self.assertEqual(i.bit_length(), len(a))
             # add a few trailing / leading zeros to bitarray
             if endian == 'big':
@@ -754,6 +765,13 @@ class TestsHuffman(unittest.TestCase):
         self.assertRaises(TypeError, huffman_code, {'A': 'a', 'B': 1})
         self.assertRaises(ValueError, huffman_code, {})
 
+    def check_tree(self, code):
+        n = len(code)
+        tree = decodetree(code)
+        self.assertEqual(tree.todict(), code)
+        # ensure tree has 2n-1 nodes (n symbol nodes and n-1 internal nodes)
+        self.assertEqual(tree.nodes(), 2 * n - 1)
+
     def test_balanced(self):
         n = 6
         freq = {}
@@ -762,6 +780,7 @@ class TestsHuffman(unittest.TestCase):
         code = huffman_code(freq)
         self.assertEqual(len(code), 2 ** n)
         self.assertTrue(all(len(v) == n for v in code.values()))
+        self.check_tree(code)
 
     def test_unbalanced(self):
         N = 27
@@ -772,22 +791,29 @@ class TestsHuffman(unittest.TestCase):
         self.assertEqual(len(code), N)
         for i in range(N):
             self.assertEqual(len(code[i]), N - (1 if i <= 1 else i))
+        self.check_tree(code)
 
-    if sys.version_info[:2] >= (2, 7):
-        def test_counter(self):
-            message = 'the quick brown fox jumps over the lazy dog.'
-            code = huffman_code(Counter(message))
-            a = bitarray()
-            a.encode(code, message)
-            self.assertEqual(''.join(a.decode(code)), message)
+    def test_counter(self):
+        message = 'the quick brown fox jumps over the lazy dog.'
+        code = huffman_code(Counter(message))
+        a = bitarray()
+        a.encode(code, message)
+        self.assertEqual(''.join(a.decode(code)), message)
+        self.check_tree(code)
 
-        def test_rand_list(self):
-            plain = [randint(0, 100) for _ in range(500)]
-            code = huffman_code(Counter(plain))
-            a = bitarray()
-            a.encode(code, plain)
-            self.assertEqual(a.decode(code), plain)
+    def test_random_list(self):
+        plain = [randint(0, 100) for _ in range(500)]
+        code = huffman_code(Counter(plain))
+        a = bitarray()
+        a.encode(code, plain)
+        self.assertEqual(a.decode(code), plain)
+        self.check_tree(code)
 
+    def test_random_freq(self):
+        N = randint(2, 1000)
+        # create Huffman code for N symbols
+        code = huffman_code({i: random() for i in range(N)})
+        self.check_tree(code)
 
 tests.append(TestsHuffman)
 

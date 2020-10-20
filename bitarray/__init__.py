@@ -10,12 +10,12 @@ Author: Ilan Schnell
 """
 from __future__ import absolute_import
 
-from bitarray._bitarray import (bitarray, bitdiff, _sysinfo,
+from bitarray._bitarray import (bitarray, decodetree, _sysinfo,
                                 get_default_endian, _set_default_endian,
                                 __version__)
 
 
-__all__ = ['bitarray', 'frozenbitarray', '__version__']
+__all__ = ['bitarray', 'frozenbitarray', 'decodetree', '__version__']
 
 
 class frozenbitarray(bitarray):

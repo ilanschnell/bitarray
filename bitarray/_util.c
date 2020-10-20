@@ -72,7 +72,7 @@ static unsigned char bitcount_lookup[256] = {
     3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8,
 };
 
-/*********** end of code basically copied from _bitarray.c *************/
+/************* end of code basically copied from _bitarray.c **************/
 
 /* set using the Python module function _set_bato() */
 static PyObject *bitarray_type_obj = NULL;
@@ -95,7 +95,7 @@ ensure_bitarray(PyObject *obj)
     return 0;
 }
 
-/************ start of actual functionality in this module *************/
+/************* start of actual functionality in this module ***************/
 
 /* return the smallest index i for which a.count(1, 0, i) == n, or when
    n exceeds the total count return -1  */
@@ -203,7 +203,7 @@ make_swap_hilo_bytes(void)
     return PyBytes_FromStringAndSize(bytes, 256);
 }
 
-/*************************** Module functions **********************/
+/****************************** Module functions **************************/
 
 static PyObject *
 count_n(PyObject *module, PyObject *args)
@@ -232,7 +232,7 @@ count_n(PyObject *module, PyObject *args)
         PyErr_SetString(PyExc_ValueError, "n exceeds total count");
         return NULL;
     }
-    return PyLong_FromLongLong(i);
+    return PyLong_FromSsize_t(i);
 }
 
 PyDoc_STRVAR(count_n_doc,
@@ -264,7 +264,7 @@ r_index(PyObject *module, PyObject *args)
         PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
         return NULL;
     }
-    return PyLong_FromLongLong(i);
+    return PyLong_FromSsize_t(i);
 }
 
 PyDoc_STRVAR(rindex_doc,
@@ -335,7 +335,7 @@ two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
     }
 #undef aa
 #undef bb
-    return PyLong_FromLongLong(res);
+    return PyLong_FromSsize_t(res);
 }
 
 #define COUNT_FUNC(oper, ochar)                                         \
@@ -389,7 +389,7 @@ static PyMethodDef module_functions[] = {
     {NULL,        NULL}  /* sentinel */
 };
 
-/*********************** Install Module **************************/
+/******************************* Install Module ***************************/
 
 #ifdef IS_PY3K
 static PyModuleDef moduledef = {

@@ -13,11 +13,6 @@ growth/
     current implementation.
 
 
-helpers.py:
-    some useful helper function which people have requested, but which are
-    not common enough to add to the library itself.
-
-
 huffman/
     Directory containing a library and examples for working with Huffman
     trees and codes.

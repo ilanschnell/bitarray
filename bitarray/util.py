@@ -33,7 +33,7 @@ def zeros(length, endian=None):
     """zeros(length, /, endian=None) -> bitarray
 
 Create a bitarray of length, with all values 0, and optional
-endianness, which may be 'big', 'lillte'.
+endianness, which may be 'big', 'little'.
 """
     if not isinstance(length, (int, long) if _is_py2 else int):
         raise TypeError("integer expected")
@@ -244,7 +244,7 @@ is raised.
 def huffman_code(freq_map, endian=None):
     """huffman_code(dict, /, endian=None) -> dict
 
-Given a frequency map, a dictionary mapping symbols to thier frequency,
+Given a frequency map, a dictionary mapping symbols to their frequency,
 calculate the Huffman code, i.e. a dict mapping those symbols to
 bitarrays (with given endianness).  Note that the symbols may be any
 hashable object (including `None`).
