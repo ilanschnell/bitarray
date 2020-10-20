@@ -2287,6 +2287,8 @@ binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
 
     for (k = 0; k < 2; k++) {
         t = (bitarrayobject *) bitarray_copy(prefix);
+        if (t == NULL)
+            return -1;
         resize(t, t->nbits + 1);
         setbit(t, t->nbits - 1, k);
         ret = binode_to_dict(nd->child[k], dict, t);
