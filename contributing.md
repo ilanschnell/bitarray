@@ -5,7 +5,7 @@ The bitarray type, is very stable and feature complete at this point,
 which means that pull requests to `bitarray/_bitarray.c` will most likely
 be rejected.
 
-There may be is room improvements/additions in the `bitarray.util` module,
+There may be room for improvements/additions in the `bitarray.util` module,
 added in the 1.2.0 release.  However, due to the slow release cycle of this
 package, it may be more practical to create your own library which depends
 on bitarray.  This is completely possible, even on the C-level.  Please
