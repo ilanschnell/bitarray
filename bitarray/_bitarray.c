@@ -7,7 +7,7 @@
 
    Author: Ilan Schnell
 */
-#define BITARRAY_VERSION  "1.6.1"
+#define BITARRAY_VERSION  "1.6.2"
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
@@ -1376,7 +1376,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
     for (offset = 0; offset < nbytes; offset += BLOCKSIZE) {
         size = Py_MIN(nbytes - offset, BLOCKSIZE);
         assert(size >=0 && offset + size <= nbytes);
-        /* basically: f.write(memoryview(self)[offset:offset+size] */
+        /* basically: f.write(memoryview(self)[offset:offset + size] */
         res = PyObject_CallMethod(f, "write",
                                   PY_MAJOR_VERSION == 2 ? "s#" : "y#",
                                   self->ob_item + offset, size);

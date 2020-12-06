@@ -1,4 +1,8 @@
-2020-XX-XX   1.6.1:
+20XX-XX-XX   1.6.2:
+-------------------
+
+
+2020-11-05   1.6.1:
 -------------------
   * use PyType_Ready for all types: bitarray, bitarrayiterator,
     decodeiterator, decodetree, searchiterator

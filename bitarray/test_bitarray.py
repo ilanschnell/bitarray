@@ -737,7 +737,7 @@ class MiscTests(unittest.TestCase, Util):
         for a in self.randombitarrays(start=0):
             b = ExaggeratingBitarray(a, 1234)
             for i in range(len(a)):
-                self.assertEqual(a[i], b[i+1234])
+                self.assertEqual(a[i], b[i + 1234])
 
     def test_endianness1(self):
         a = bitarray(endian='little')

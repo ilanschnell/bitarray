@@ -725,7 +725,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2020-XX-XX   1.6.1:
+*1.6.1* (2020-11-05):
 
   * use PyType_Ready for all types: bitarray, bitarrayiterator,
     decodeiterator, decodetree, searchiterator
