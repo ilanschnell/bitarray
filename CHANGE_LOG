@@ -1,5 +1,7 @@
 20XX-XX-XX   1.6.2:
 -------------------
+  * use Py_SET_TYPE() and Py_SET_SIZE() for Python 3.10, #109
+  * add official Python 3.10 support
 
 
 2020-11-05   1.6.1:
