@@ -31,7 +31,7 @@ class BloomFilter(object):
 
     def calculate_p(self):
         """
-        Calculate the actual false psitive error rate `p` from the number
+        Calculate the actual false positive error rate `p` from the number
         of hashes `k` and the size if the bitarray `m`.  This is slightly
         different from the given `p`, because the integer value of `k`
         is being used.
