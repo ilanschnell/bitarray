@@ -1,6 +1,6 @@
 20XX-XX-XX   1.6.2:
 -------------------
-  * use Py_SET_TYPE() and Py_SET_SIZE() for Python 3.10, #109
+  * use `Py_SET_TYPE()` and `Py_SET_SIZE()` for Python 3.10, #109
   * add official Python 3.10 support
 
 
