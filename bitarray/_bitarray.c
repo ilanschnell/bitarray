@@ -11,6 +11,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
+#include "pythoncapi_compat.h"
 
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K
@@ -159,7 +160,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     */
     if (allocated >= newsize && newsize >= (allocated >> 1)) {
         assert(self->ob_item != NULL || newsize == 0);
-        Py_SIZE(self) = newsize;
+        Py_SET_SIZE(self, newsize);
         self->nbits = nbits;
         return 0;
     }
@@ -167,7 +168,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     if (newsize == 0) {
         PyMem_FREE(self->ob_item);
         self->ob_item = NULL;
-        Py_SIZE(self) = 0;
+        Py_SET_SIZE(self, 0);
         self->allocated = 0;
         self->nbits = 0;
         return 0;
@@ -197,7 +198,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
         PyErr_NoMemory();
         return -1;
     }
-    Py_SIZE(self) = newsize;
+    Py_SET_SIZE(self, newsize);
     self->allocated = new_allocated;
     self->nbits = nbits;
     return 0;
@@ -215,7 +216,7 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
     if (obj == NULL)
         return NULL;
 
-    Py_SIZE(obj) = nbytes;
+    Py_SET_SIZE(obj, nbytes);
     if (nbytes == 0) {
         obj->ob_item = NULL;
     }
@@ -3396,27 +3397,27 @@ init_bitarray(void)
 
     if (PyType_Ready(&Bitarray_Type) < 0)
         goto error;
-    Py_TYPE(&Bitarray_Type) = &PyType_Type;
+    Py_SET_TYPE(&Bitarray_Type, &PyType_Type);
     Py_INCREF((PyObject *) &Bitarray_Type);
     PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type);
 
     if (PyType_Ready(&DecodeTree_Type) < 0)
         goto error;
-    Py_TYPE(&DecodeTree_Type) = &PyType_Type;
+    Py_SET_TYPE(&DecodeTree_Type, &PyType_Type);
     Py_INCREF((PyObject *) &DecodeTree_Type);
     PyModule_AddObject(m, "decodetree", (PyObject *) &DecodeTree_Type);
 
     if (PyType_Ready(&DecodeIter_Type) < 0)
         goto error;
-    Py_TYPE(&DecodeIter_Type) = &PyType_Type;
+    Py_SET_TYPE(&DecodeIter_Type, &PyType_Type);
 
     if (PyType_Ready(&BitarrayIter_Type) < 0)
         goto error;
-    Py_TYPE(&BitarrayIter_Type) = &PyType_Type;
+    Py_SET_TYPE(&BitarrayIter_Type, &PyType_Type);
 
     if (PyType_Ready(&SearchIter_Type) < 0)
         goto error;
-    Py_TYPE(&SearchIter_Type) = &PyType_Type;
+    Py_SET_TYPE(&SearchIter_Type, &PyType_Type);
 
     PyModule_AddObject(m, "__version__",
                        Py_BuildValue("s", BITARRAY_VERSION));
