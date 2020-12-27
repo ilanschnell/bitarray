@@ -9,70 +9,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
-
-#if PY_MAJOR_VERSION >= 3
-#define IS_PY3K
-#endif
-
-
-typedef struct {
-    PyObject_VAR_HEAD
-    char *ob_item;              /* buffer */
-    Py_ssize_t allocated;       /* how many bytes allocated */
-    Py_ssize_t nbits;           /* length of bitarray, i.e. elements */
-    int endian;                 /* bit endianness of bitarray */
-    int ob_exports;             /* how many buffer exports */
-    PyObject *weakreflist;      /* list of weak references */
-} bitarrayobject;
-
-#define ENDIAN_LITTLE  0
-#define ENDIAN_BIG     1
-
-#define BITS(bytes)  ((bytes) << 3)
-
-#define BYTES(bits)  (((bits) == 0) ? 0 : (((bits) - 1) / 8 + 1))
-
-#define BITMASK(endian, i)  \
-    (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) % 8) : (7 - (i) % 8)))
-
-/* ------------ low level access to bits in bitarrayobject ------------- */
-
-#ifndef NDEBUG
-static int GETBIT(bitarrayobject *self, Py_ssize_t i) {
-    assert(0 <= i && i < self->nbits);
-    return ((self)->ob_item[(i) / 8] & BITMASK((self)->endian, i) ? 1 : 0);
-}
-#else
-#define GETBIT(self, i)  \
-    ((self)->ob_item[(i) / 8] & BITMASK((self)->endian, i) ? 1 : 0)
-#endif
-
-static void
-setunused(bitarrayobject *self)
-{
-    const char mask[16] = {
-        0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, /* little endian */
-        0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, /* big endian */
-    };
-
-    if (self->nbits % 8 == 0)
-        return;
-    self->ob_item[Py_SIZE(self) - 1] &=
-        mask[self->nbits % 8 + (self->endian == ENDIAN_LITTLE ? 0 : 8)];
-}
-
-static unsigned char bitcount_lookup[256] = {
-    0,1,1,2,1,2,2,3,1,2,2,3,2,3,3,4,1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,
-    1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
-    1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
-    2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
-    1,2,2,3,2,3,3,4,2,3,3,4,3,4,4,5,2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,
-    2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
-    2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
-    3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8,
-};
-
-/************* end of code basically copied from _bitarray.c **************/
+#include "bitarray.h"
 
 /* set using the Python module function _set_bato() */
 static PyObject *bitarray_type_obj = NULL;
