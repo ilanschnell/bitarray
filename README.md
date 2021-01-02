@@ -715,10 +715,11 @@ hashable object (including `None`).
 Change log
 ----------
 
-20XX-XX-XX   1.6.2:
+2021-XX-XX   1.6.2:
 
   * use `Py_SET_TYPE()` and `Py_SET_SIZE()` for Python 3.10, #109
   * add official Python 3.10 support
+  * add bitarray.h, #110
 
 
 *1.6.1* (2020-11-05):
