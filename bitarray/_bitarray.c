@@ -1320,7 +1320,7 @@ bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
                                      &zero, &one))
         return NULL;
 
-    return unpack(self, zero, one, PY_MAJOR_VERSION == 3 ? "y#" : "s#");
+    return unpack(self, zero, one, PY_MAJOR_VERSION == 2 ? "s#" : "y#");
 }
 
 PyDoc_STRVAR(unpack_doc,
@@ -3110,7 +3110,7 @@ bitarray_releasebuffer(bitarrayobject *self, Py_buffer *view)
 }
 
 static PyBufferProcs bitarray_as_buffer = {
-#if PY_MAJOR_VERSION == 2   /* old buffer protocol */
+#if PY_MAJOR_VERSION == 2       /* old buffer protocol */
     (readbufferproc) bitarray_buffer_getreadbuf,
     (writebufferproc) bitarray_buffer_getwritebuf,
     (segcountproc) bitarray_buffer_getsegcount,
