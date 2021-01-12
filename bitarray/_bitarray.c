@@ -1277,7 +1277,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
     setunused(self);
     for (offset = 0; offset < nbytes; offset += BLOCKSIZE) {
         size = Py_MIN(nbytes - offset, BLOCKSIZE);
-        assert(size >=0 && offset + size <= nbytes);
+        assert(size >= 0 && offset + size <= nbytes);
         /* basically: f.write(memoryview(self)[offset:offset + size] */
         res = PyObject_CallMethod(f, "write",
                                   PY_MAJOR_VERSION == 2 ? "s#" : "y#",
