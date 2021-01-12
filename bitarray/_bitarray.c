@@ -18,6 +18,9 @@
 
 #ifdef IS_PY3K
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
+#define BYTES_SIZE_FMT  "y#"
+#else
+#define BYTES_SIZE_FMT  "s#"
 #endif
 
 #ifdef STDC_HEADERS
@@ -1279,8 +1282,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
         size = Py_MIN(nbytes - offset, BLOCKSIZE);
         assert(size >= 0 && offset + size <= nbytes);
         /* basically: f.write(memoryview(self)[offset:offset + size] */
-        res = PyObject_CallMethod(f, "write",
-                                  PY_MAJOR_VERSION == 2 ? "s#" : "y#",
+        res = PyObject_CallMethod(f, "write", BYTES_SIZE_FMT,
                                   self->ob_item + offset, size);
         if (res == NULL)
             return NULL;
@@ -1320,7 +1322,7 @@ bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
                                      &zero, &one))
         return NULL;
 
-    return unpack(self, zero, one, PY_MAJOR_VERSION == 2 ? "s#" : "y#");
+    return unpack(self, zero, one, BYTES_SIZE_FMT);
 }
 
 PyDoc_STRVAR(unpack_doc,
