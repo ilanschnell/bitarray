@@ -51,7 +51,7 @@ int resize(bitarrayobject *self, int nbits)
     /* realloc(self->ob_item) */
     self->size = newsize;
     self->allocated = new_allocated;
-    self->nbits = 0;
+    self->nbits = nbits;
     return 1;
 }
 
