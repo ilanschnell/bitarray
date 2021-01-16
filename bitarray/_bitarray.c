@@ -1746,7 +1746,7 @@ setslice(bitarrayobject *self, PyObject *slice, PyObject *value)
     return -1;
 }
 
-/* delete the elements in self, specified by slice, to value */
+/* delete the elements in self, specified by slice */
 static int
 delslice(bitarrayobject *self, PyObject *slice)
 {
