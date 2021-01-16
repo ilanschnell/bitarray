@@ -958,7 +958,7 @@ PyDoc_STRVAR(reduce_doc, "state information for pickling");
 static PyObject *
 bitarray_reverse(bitarrayobject *self)
 {
-    const Py_ssize_t m = self->nbits - 1;   /* index of max item of self */
+    const Py_ssize_t m = self->nbits - 1;     /* index of last item */
     PyObject *t;       /* temp bitarray to store lower half of self */
     Py_ssize_t i;
 
