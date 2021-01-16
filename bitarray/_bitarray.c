@@ -653,8 +653,7 @@ IntBool_AsInt(PyObject *v)
     }
 
     if (x < 0 || x > 1) {
-        PyErr_SetString(PyExc_ValueError,
-                        "integer 0 and 1 expected");
+        PyErr_SetString(PyExc_ValueError, "integer 0 or 1 expected");
         return -1;
     }
     return (int) x;
