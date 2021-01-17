@@ -1694,11 +1694,11 @@ setslice(bitarrayobject *self, PyObject *slice, PyObject *value)
         Py_ssize_t increase = vv->nbits - slicelength;  /* bit increase */
 
         if (step == 1) {
-            if (increase > 0) {        /* make self bigger */
+            if (increase > 0) {        /* increase self */
                 if (insert_n(self, start, increase) < 0)
                     return -1;
             }
-            if (increase < 0) {        /* make self smaller */
+            if (increase < 0) {        /* decrease self */
                 if (delete_n(self, start, -increase) < 0)
                     return -1;
             }
