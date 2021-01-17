@@ -597,6 +597,15 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.__setitem__, slice(None, None, 2), 3)
         self.assertRaises(ValueError, a.__setitem__, slice(None, 2, None), -1)
 
+    def test_setslice_to_invalid(self):
+        a = bitarray('11111111')
+        s = slice(2, 6, None)
+        self.assertRaises(IndexError, a.__setitem__, s, 1.2)
+        self.assertRaises(IndexError, a.__setitem__, s, None)
+        self.assertRaises(IndexError, a.__setitem__, s, "0110")
+        a[s] = False
+        self.assertEqual(a, bitarray('11000011'))
+
     def test_sieve(self):  # Sieve of Eratosthenes
         a = bitarray(50)
         a.setall(1)
