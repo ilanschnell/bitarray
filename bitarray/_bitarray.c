@@ -1691,22 +1691,22 @@ setslice(bitarrayobject *self, PyObject *slice, PyObject *value)
 
     if (bitarray_Check(value)) {
 #define vv  ((bitarrayobject *) value)
+        Py_ssize_t increase = vv->nbits - slicelength;  /* bit increase */
+
         if (step == 1) {
-            if (vv->nbits > slicelength) {
-                /* make self bigger */
-                if (insert_n(self, start, vv->nbits - slicelength) < 0)
+            if (increase > 0) {        /* make self bigger */
+                if (insert_n(self, start, increase) < 0)
                     return -1;
             }
-            if (slicelength > vv->nbits) {
-                /* make self smaller */
-                if (delete_n(self, start, slicelength - vv->nbits) < 0)
+            if (increase < 0) {        /* make self smaller */
+                if (delete_n(self, start, -increase) < 0)
                     return -1;
             }
             /* copy the new values into self */
             copy_n(self, start, vv, 0, vv->nbits);
         }
         else {  /* step != 1 */
-            if (vv->nbits != slicelength) {
+            if (increase != 0) {
                 PyErr_Format(PyExc_ValueError,
                              "attempt to assign sequence of size %zd "
                              "to extended slice of size %zd",
