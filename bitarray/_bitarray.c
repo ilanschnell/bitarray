@@ -1682,6 +1682,7 @@ static int
 setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
 {
     Py_ssize_t start, stop, step, slicelength, increase, i, j;
+    int copy_array = 0;
 
     assert(PySlice_Check(slice) && bitarray_Check(array));
     if (PySlice_GetIndicesEx(slice, self->nbits,
@@ -1691,6 +1692,13 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
 #define aa  ((bitarrayobject *) array)
     /* number of bits by which 'self' has to be increased (decreased) */
     increase = aa->nbits - slicelength;
+
+    if (aa == self) {  /* covers cases like a[2::] = a and a[::-1] = a */
+        array = bitarray_copy(aa);
+        if (array == NULL)
+            return -1;
+        copy_array = 1;
+    }
 
     if (step == 1) {
         if (increase > 0) {        /* increase self */
@@ -1713,23 +1721,14 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
             return -1;
         }
         assert(increase == 0);
-        if (aa == self) {  /* covers step = -1, that is a[::-1] = a */
-            PyObject *b;
-
-            b = bitarray_copy(aa);
-            if (b == NULL)
-                return -1;
-            for (i = 0, j = start; i < slicelength; i++, j += step)
-                setbit(self, j, GETBIT((bitarrayobject *) b, i));
-            Py_DECREF(b);  /* drop copy */
-        }
-        else {
-            for (i = 0, j = start; i < slicelength; i++, j += step)
-                setbit(self, j, GETBIT(aa, i));
-        }
+        for (i = 0, j = start; i < slicelength; i++, j += step)
+            setbit(self, j, GETBIT(aa, i));
     }
-    return 0;
 #undef aa
+
+    if (copy_array)
+        Py_DECREF(array);  /* drop copy */
+    return 0;
 }
 
 /* set the elements in self, specified by slice, to bool */

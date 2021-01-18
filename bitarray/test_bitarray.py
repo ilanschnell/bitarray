@@ -539,8 +539,7 @@ class SliceTests(unittest.TestCase, Util):
                 self.assertEqual(c, bitarray(cc))
 
     def test_setslice_self(self):
-        for a in self.randombitarrays(start=0):
-            la = len(a)
+        for a in self.randombitarrays():
             for step in -1, 1:
                 s = slice(None, None, step)
                 c = bitarray(a)
@@ -548,6 +547,10 @@ class SliceTests(unittest.TestCase, Util):
                 cc = a.tolist()
                 cc[s] = cc
                 self.assertEqual(c, bitarray(cc))
+
+        a = bitarray('100011')
+        a[2::] = a
+        self.assertEqual(a, bitarray('10100011'))
 
     def test_setslice_to_bitarray(self):
         a = bitarray('11111111' '1111')
