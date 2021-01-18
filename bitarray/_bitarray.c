@@ -1713,7 +1713,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
             return -1;
         }
         assert(increase == 0);
-        if (aa == self) {
+        if (aa == self) {  /* covers step = -1, that is a[::-1] = a */
             PyObject *b;
 
             b = bitarray_copy(aa);
@@ -1729,7 +1729,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
         }
     }
     return 0;
-#undef bb
+#undef aa
 }
 
 /* set the elements in self, specified by slice, to bool */
