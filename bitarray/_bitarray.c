@@ -1824,7 +1824,7 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
                         "bitarray or bool expected for slice assignment");
         return -1;
     }
-    return 0;
+    return 0;                   /* cannot happen */
 }
 
 static PyMappingMethods bitarray_as_mapping = {
