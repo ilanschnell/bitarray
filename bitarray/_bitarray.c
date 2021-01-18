@@ -1691,7 +1691,8 @@ setslice(bitarrayobject *self, PyObject *slice, PyObject *value)
 
     if (bitarray_Check(value)) {
 #define vv  ((bitarrayobject *) value)
-        Py_ssize_t increase = vv->nbits - slicelength;  /* bit increase */
+        /* number of bits by which 'self' has to be increased (decreased) */
+        Py_ssize_t increase = vv->nbits - slicelength;
 
         if (step == 1) {
             if (increase > 0) {        /* increase self */
