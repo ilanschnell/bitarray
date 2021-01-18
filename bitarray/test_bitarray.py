@@ -561,6 +561,14 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('010011'))
         a[2::] = a
         self.assertEqual(a, bitarray('01010011'))
+        a[2:-2:1] = a
+        self.assertEqual(a, bitarray('010101001111'))
+
+        a = bitarray('011')
+        a[2:2] = a
+        self.assertEqual(a, bitarray('010111'))
+        a[:] = a
+        self.assertEqual(a, bitarray('010111'))
 
     def test_setslice_to_bitarray(self):
         a = bitarray('11111111' '1111')
@@ -572,24 +580,29 @@ class SliceTests(unittest.TestCase, Util):
         a.setall(0)
         a[3:] = bitarray('111')
         self.assertEqual(a, bitarray('000111'))
+
         a = bitarray(12)
         a.setall(0)
         a[1:11:2] = bitarray('11101')
         self.assertEqual(a, bitarray('01010100' '0100'))
+
         a = bitarray(12)
         a.setall(0)
         a[:-6:-1] = bitarray('10111')
         self.assertEqual(a, bitarray('00000001' '1101'))
+
         a = bitarray('1111')
         a[3:3] = bitarray('000')  # insert
         self.assertEqual(a, bitarray('1110001'))
         a[2:5] = bitarray()  # remove
         self.assertEqual(a, bitarray('1101'))
+
         a = bitarray('1111')
         a[1:3] = bitarray('0000')
         self.assertEqual(a, bitarray('100001'))
         a[:] = bitarray('010')  # replace all values
         self.assertEqual(a, bitarray('010'))
+
         # assign slice to bitarray with different length
         a = bitarray('111111')
         a[3:4] = bitarray('00')
@@ -660,7 +673,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(primes, [2, 3, 5, 7, 11, 13, 17, 19,
                                   23, 29, 31, 37, 41, 43, 47])
 
-    def test_delitem1(self):
+    def test_delitem_1(self):
         a = bitarray('100110')
         del a[1]
         self.assertEqual(len(a), 5)
@@ -681,7 +694,7 @@ class SliceTests(unittest.TestCase, Util):
         del a[:-9:-2] #          ^ ^ ^ ^
         self.assertEqual(a, bitarray('10101100' '011'))
 
-    def test_delitem2(self):
+    def test_delitem_2(self):
         for a in self.randombitarrays(start=1):
             la = len(a)
             for dum in range(10):
