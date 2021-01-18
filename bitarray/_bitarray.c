@@ -1714,8 +1714,13 @@ setslice(bitarrayobject *self, PyObject *slice, PyObject *value)
                              vv->nbits, slicelength);
                 return -1;
             }
-            for (i = 0, j = start; i < slicelength; i++, j += step)
-                setbit(self, j, GETBIT(vv, i));
+            if (vv == self && step == -1) {
+                bitarray_reverse(self);
+            }
+            else {
+                for (i = 0, j = start; i < slicelength; i++, j += step)
+                    setbit(self, j, GETBIT(vv, i));
+            }
         }
         return 0;
 #undef vv
