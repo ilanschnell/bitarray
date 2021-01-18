@@ -1713,13 +1713,15 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *bitarray)
             return -1;
         }
         assert(increase == 0);
-        if (bb == self && step == -1) {
-            PyObject *res;
+        if (bb == self) {
+            PyObject *a;
 
-            res = bitarray_reverse(self);
-            if (res == NULL)
+            a = bitarray_copy(self);
+            if (a == NULL)
                 return -1;
-            Py_DECREF(res);  /* drop None */
+            for (i = 0, j = start; i < slicelength; i++, j += step)
+                setbit(self, j, GETBIT((bitarrayobject *) a, i));
+            Py_DECREF(a);  /* drop copy */
         }
         else {
             for (i = 0, j = start; i < slicelength; i++, j += step)
