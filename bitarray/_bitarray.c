@@ -1688,8 +1688,9 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *bitarray)
                              &start, &stop, &step, &slicelength) < 0)
         return -1;
 
-#define vv  ((bitarrayobject *) bitarray)
-    increase = vv->nbits - slicelength;
+#define bb  ((bitarrayobject *) bitarray)
+    /* number of bits by which 'self' has to be increased (decreased) */
+    increase = bb->nbits - slicelength;
 
     if (step == 1) {
         if (increase > 0) {        /* increase self */
@@ -1701,18 +1702,18 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *bitarray)
                 return -1;
         }
         /* copy the new values into self */
-        copy_n(self, start, vv, 0, vv->nbits);
+        copy_n(self, start, bb, 0, bb->nbits);
     }
     else {  /* step != 1 */
         if (increase != 0) {
             PyErr_Format(PyExc_ValueError,
                          "attempt to assign sequence of size %zd "
                          "to extended slice of size %zd",
-                         vv->nbits, slicelength);
+                         bb->nbits, slicelength);
             return -1;
         }
         assert(increase == 0);
-        if (vv == self && step == -1) {
+        if (bb == self && step == -1) {
             PyObject *res;
 
             res = bitarray_reverse(self);
@@ -1722,11 +1723,11 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *bitarray)
         }
         else {
             for (i = 0, j = start; i < slicelength; i++, j += step)
-                setbit(self, j, GETBIT(vv, i));
+                setbit(self, j, GETBIT(bb, i));
         }
     }
     return 0;
-#undef vv
+#undef bb
 }
 
 /* set the elements in self, specified by slice, to bool */
