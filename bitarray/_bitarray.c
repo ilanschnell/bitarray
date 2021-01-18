@@ -1679,18 +1679,18 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
 
 /* set the elements in self, specified by slice, to bitarray */
 static int
-setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *bitarray)
+setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
 {
     Py_ssize_t start, stop, step, slicelength, increase, i, j;
 
-    assert(PySlice_Check(slice) && bitarray_Check(bitarray));
+    assert(PySlice_Check(slice) && bitarray_Check(array));
     if (PySlice_GetIndicesEx(slice, self->nbits,
                              &start, &stop, &step, &slicelength) < 0)
         return -1;
 
-#define bb  ((bitarrayobject *) bitarray)
+#define aa  ((bitarrayobject *) array)
     /* number of bits by which 'self' has to be increased (decreased) */
-    increase = bb->nbits - slicelength;
+    increase = aa->nbits - slicelength;
 
     if (step == 1) {
         if (increase > 0) {        /* increase self */
@@ -1702,30 +1702,30 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *bitarray)
                 return -1;
         }
         /* copy the new values into self */
-        copy_n(self, start, bb, 0, bb->nbits);
+        copy_n(self, start, aa, 0, aa->nbits);
     }
     else {  /* step != 1 */
         if (increase != 0) {
             PyErr_Format(PyExc_ValueError,
                          "attempt to assign sequence of size %zd "
                          "to extended slice of size %zd",
-                         bb->nbits, slicelength);
+                         aa->nbits, slicelength);
             return -1;
         }
         assert(increase == 0);
-        if (bb == self) {
-            PyObject *a;
+        if (aa == self) {
+            PyObject *b;
 
-            a = bitarray_copy(self);
-            if (a == NULL)
+            b = bitarray_copy(aa);
+            if (b == NULL)
                 return -1;
             for (i = 0, j = start; i < slicelength; i++, j += step)
-                setbit(self, j, GETBIT((bitarrayobject *) a, i));
-            Py_DECREF(a);  /* drop copy */
+                setbit(self, j, GETBIT((bitarrayobject *) b, i));
+            Py_DECREF(b);  /* drop copy */
         }
         else {
             for (i = 0, j = start; i < slicelength; i++, j += step)
-                setbit(self, j, GETBIT(bb, i));
+                setbit(self, j, GETBIT(aa, i));
         }
     }
     return 0;
