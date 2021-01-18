@@ -2,6 +2,7 @@
 -------------------
   * use `Py_SET_TYPE()` and `Py_SET_SIZE()` for Python 3.10, #109
   * add official Python 3.10 support
+  * fix slice assignement to same object for step = -1, #112
   * add bitarray.h, #110
 
 
