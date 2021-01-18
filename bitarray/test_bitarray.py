@@ -556,6 +556,9 @@ class SliceTests(unittest.TestCase, Util):
         a.setall(0)
         a[:-6:-1] = bitarray('10111')
         self.assertEqual(a, bitarray('00000001' '1101'))
+        a = bitarray('1100111')
+        a[::-1] = a.copy()
+        self.assertEqual(a, bitarray('1110011'))
         a = bitarray('1111')
         a[3:3] = bitarray('000')  # insert
         self.assertEqual(a, bitarray('1110001'))
@@ -610,6 +613,20 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__setitem__, s, None)
         self.assertRaises(IndexError, a.__setitem__, s, "0110")
         a[s] = False
+        self.assertEqual(a, bitarray('11000011'))
+        # step != 1 and slicelen != length of assigned bitarray
+        self.assertRaisesMessage(
+            ValueError,
+            "attempt to assign sequence of size 3 to extended slice of size 4",
+            a.__setitem__, slice(None, None, 2), bitarray('000'))
+        self.assertRaisesMessage(
+            ValueError,
+            "attempt to assign sequence of size 3 to extended slice of size 2",
+            a.__setitem__, slice(None, None, 4), bitarray('000'))
+        self.assertRaisesMessage(
+            ValueError,
+            "attempt to assign sequence of size 7 to extended slice of size 8",
+            a.__setitem__, slice(None, None, -1), bitarray('0001000'))
         self.assertEqual(a, bitarray('11000011'))
 
     def test_sieve(self):  # Sieve of Eratosthenes
