@@ -437,10 +437,12 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__getitem__,  0)
         a.append(True)
         self.assertEqual(a[0], True)
+        self.assertEqual(a[-1], True)
         self.assertRaises(IndexError, a.__getitem__,  1)
         self.assertRaises(IndexError, a.__getitem__, -2)
         a.append(False)
         self.assertEqual(a[1], False)
+        self.assertEqual(a[-1], False)
         self.assertRaises(IndexError, a.__getitem__,  2)
         self.assertRaises(IndexError, a.__getitem__, -3)
 
@@ -456,14 +458,14 @@ class SliceTests(unittest.TestCase, Util):
         a = bitarray('01001111' '00001')
         self.assertEQUAL(a[:], a)
         self.assertFalse(a[:] is a)
-        self.assertEQUAL(a[13:2:-3], bitarray('1010'))
-        self.assertEQUAL(a[2:-1:4], bitarray('010'))
-        self.assertEQUAL(a[::2], bitarray('0011001'))
-        self.assertEQUAL(a[8:], bitarray('00001'))
-        self.assertEQUAL(a[7:], bitarray('100001'))
-        self.assertEQUAL(a[:8], bitarray('01001111'))
-        self.assertEQUAL(a[::-1], bitarray('10000111' '10010'))
-        self.assertEQUAL(a[:8:-1], bitarray('1000'))
+        self.assertEqual(a[13:2:-3], bitarray('1010'))
+        self.assertEqual(a[2:-1:4], bitarray('010'))
+        self.assertEqual(a[::2], bitarray('0011001'))
+        self.assertEqual(a[8:], bitarray('00001'))
+        self.assertEqual(a[7:], bitarray('100001'))
+        self.assertEqual(a[:8], bitarray('01001111'))
+        self.assertEqual(a[::-1], bitarray('10000111' '10010'))
+        self.assertEqual(a[:8:-1], bitarray('1000'))
 
         self.assertRaises(ValueError, a.__getitem__, slice(None, None, 0))
         self.assertRaises(TypeError, a.__getitem__, (1, 2))
@@ -477,8 +479,8 @@ class SliceTests(unittest.TestCase, Util):
                 s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
                 self.assertEQUAL(a[s], bitarray(aa[s], endian=a.endian()))
 
-    def test_setitem1(self):
-        a = bitarray([False])
+    def test_setitem_1(self):
+        a = bitarray('0')
         a[0] = 1
         self.assertEqual(a, bitarray('1'))
 
@@ -493,7 +495,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__setitem__,  2, True)
         self.assertRaises(IndexError, a.__setitem__, -3, False)
 
-    def test_setitem2(self):
+    def test_setitem_2(self):
         for a in self.randombitarrays(start=1):
             la = len(a)
             i = randint(0, la - 1)
@@ -520,7 +522,7 @@ class SliceTests(unittest.TestCase, Util):
             b[::-1] = bitarray(a)
             self.assertEqual(a.tolist()[::-1], b.tolist())
 
-    def test_setitem3(self):
+    def test_setitem_3(self):
         a = bitarray('00000')
         a[0] = 1
         a[-2] = 1
