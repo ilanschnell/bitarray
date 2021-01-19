@@ -1660,7 +1660,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
         if (res == NULL)
             return NULL;
 
-        if (step == 1 && start % 8 == 0) {
+        if (step == 1) {
             copy_n((bitarrayobject *) res, 0, self, start, slicelength);
         }
         else {
