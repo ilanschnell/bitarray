@@ -432,7 +432,7 @@ tests.append(MetaDataTests)
 
 class SliceTests(unittest.TestCase, Util):
 
-    def test_getitem1(self):
+    def test_getitem_1(self):
         a = bitarray()
         self.assertRaises(IndexError, a.__getitem__,  0)
         a.append(True)
@@ -444,26 +444,31 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__getitem__,  2)
         self.assertRaises(IndexError, a.__getitem__, -3)
 
-    def test_getitem2(self):
+    def test_getitem_2(self):
         a = bitarray('1100010')
-        for i, b in enumerate([True, True, False, False, False, True, False]):
+        for i, b in enumerate(a):
             self.assertEqual(a[i], b)
             self.assertEqual(a[i - 7], b)
         self.assertRaises(IndexError, a.__getitem__,  7)
         self.assertRaises(IndexError, a.__getitem__, -8)
 
-    def test_getitem3(self):
-        a = bitarray('0100000100001')
+    def test_getslice(self):
+        a = bitarray('01001111' '00001')
         self.assertEQUAL(a[:], a)
         self.assertFalse(a[:] is a)
-        aa = a.tolist()
-        self.assertEQUAL(a[11:2:-3], bitarray(aa[11:2:-3]))
-        self.check_obj(a[:])
+        self.assertEQUAL(a[13:2:-3], bitarray('1010'))
+        self.assertEQUAL(a[2:-1:4], bitarray('010'))
+        self.assertEQUAL(a[::2], bitarray('0011001'))
+        self.assertEQUAL(a[8:], bitarray('00001'))
+        self.assertEQUAL(a[7:], bitarray('100001'))
+        self.assertEQUAL(a[:8], bitarray('01001111'))
+        self.assertEQUAL(a[::-1], bitarray('10000111' '10010'))
+        self.assertEQUAL(a[:8:-1], bitarray('1000'))
 
         self.assertRaises(ValueError, a.__getitem__, slice(None, None, 0))
         self.assertRaises(TypeError, a.__getitem__, (1, 2))
 
-    def test_getitem4(self):
+    def test_getslice_random(self):
         for a in self.randombitarrays(start=1):
             aa = a.tolist()
             la = len(a)
