@@ -8,7 +8,7 @@ try:
 except IOError:
     pass
 
-# Read version from bitarray/_bitarray.c
+# Read version from bitarray/bitarray.h
 pat = re.compile(r'#define\s+BITARRAY_VERSION\s+"(\S+)"', re.M)
 data = open('bitarray/bitarray.h').read()
 kwds['version'] = pat.search(data).group(1)
