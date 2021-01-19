@@ -715,10 +715,11 @@ hashable object (including `None`).
 Change log
 ----------
 
-2021-XX-XX   1.6.2:
+2021-01-XX   1.6.2:
 
   * use `Py_SET_TYPE()` and `Py_SET_SIZE()` for Python 3.10, #109
   * add official Python 3.10 support
+  * fix slice assignement to same object, e.g. a[2::] = a or a[::-1] = a, #112
   * add bitarray.h, #110
 
 
