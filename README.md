@@ -715,7 +715,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2021-01-XX   1.6.2:
+*1.6.2* (2021-01-20):
 
   * use `Py_SET_TYPE()` and `Py_SET_SIZE()` for Python 3.10, #109
   * add official Python 3.10 support
