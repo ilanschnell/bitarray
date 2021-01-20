@@ -107,3 +107,35 @@ static unsigned char bitcount_lookup[256] = {
     2,3,3,4,3,4,4,5,3,4,4,5,4,5,5,6,3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,
     3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8,
 };
+
+
+#if (defined(__GNUC__) || defined(__clang__))
+#define HAS_VECTORS 1
+#else
+#define HAS_VECTORS 0
+#endif
+
+#if HAS_VECTORS
+typedef char vec __attribute__((vector_size(16)));
+#endif
+
+#if (defined(__GNUC__) || defined(__clang__))
+#define ATTR_UNUSED __attribute__((__unused__))
+#else
+#define ATTR_UNUSED
+#endif
+
+#define UNUSEDVAR(x) (void)x
+
+#if HAS_VECTORS
+/*
+  * Perform bitwise operation OP on 16 bytes of memory at a time.
+  */
+ #define vector_op(A, B, OP) do {  \
+     vec __a, __b, __r;            \
+     memcpy(&__a, A, sizeof(vec)); \
+     memcpy(&__b, B, sizeof(vec)); \
+     __r = __a OP __b;             \
+     memcpy(A, &__r, sizeof(vec)); \
+ } while(0);
+#endif

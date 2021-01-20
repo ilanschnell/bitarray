@@ -42,8 +42,15 @@ tests = []
 class Util(object):
 
     @staticmethod
+    def is_heavy_test():
+        return int(os.getenv('TEST_HEAVY', 0))
+
+    @staticmethod
     def randombitarrays(start=0):
-        for n in list(range(start, 25)) + [randint(1000, 2000)]:
+        nb1 = 250 if Util.is_heavy_test() else 25
+        nb2 = 10 if Util.is_heavy_test() else 1
+        lst = list(range(start, nb1)) + [randint(1000, 2000) for _ in range(nb2)]
+        for n in lst:
             a = bitarray(endian=['little', 'big'][randint(0, 1)])
             a.frombytes(os.urandom(bits2bytes(n)))
             del a[n:]
@@ -1927,6 +1934,32 @@ class MethodTests(unittest.TestCase, Util):
             b.bytereverse()
             self.assertEqual(b, a[::-1])
             self.check_obj(b)
+
+    def test_eval_monic(self):
+        input = '11100011' + '11001100'
+        a = bitarray(input)
+        b = bitarray()
+
+        self.assertEqual(b.eval_monic(a, 2, 16), bitarray('1'))
+        self.assertEqual(b.eval_monic(a, 9, 16), bitarray('1'))
+        self.assertEqual(b.eval_monic(a, 10, 16), bitarray('0'))
+
+        self.assertEqual(b.eval_monic(a, 0, 8), bitarray('11'))
+        self.assertEqual(b.eval_monic(a, 2, 8), bitarray('10'))
+
+        self.assertEqual(b.eval_monic(a*100, 0, 8), bitarray('11'*100))
+        self.assertEqual(b.eval_monic(a*100, 2, 8), bitarray('10'*100))
+        self.assertEqual(b.eval_monic(a*10, 0, 1), a*10)
+
+    def test_fast_hw_ops(self):
+        for a in self.randombitarrays():
+            b = bitarray(len(a), endian=a.endian())
+            b.frombytes(os.urandom(bits2bytes(len(a))))
+            del b[len(a):]
+
+            self.assertEqual((a & b).count(1), a.fast_hw_and(b))
+            self.assertEqual((a | b).count(1), a.fast_hw_or(b))
+            self.assertEqual((a ^ b).count(1), a.fast_hw_xor(b))
 
 
 tests.append(MethodTests)

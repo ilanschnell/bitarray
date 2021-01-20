@@ -11,7 +11,7 @@ Author: Ilan Schnell
 from __future__ import absolute_import
 
 from bitarray._bitarray import (bitarray, decodetree, _sysinfo,
-                                get_default_endian, _set_default_endian,
+                                get_default_endian, _set_default_endian, eval_all_terms,
                                 __version__)
 
 
