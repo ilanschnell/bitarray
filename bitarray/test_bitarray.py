@@ -682,7 +682,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(primes, [2, 3, 5, 7, 11, 13, 17, 19,
                                   23, 29, 31, 37, 41, 43, 47])
 
-    def test_delitem_1(self):
+    def test_delitem(self):
         a = bitarray('100110')
         del a[1]
         self.assertEqual(len(a), 5)
@@ -691,6 +691,8 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('100'))
         self.assertRaises(IndexError, a.__delitem__,  3)
         self.assertRaises(IndexError, a.__delitem__, -4)
+
+    def test_delslice(self):
         a = bitarray('10101100' '10110')
         del a[3:9] #     ^^^^^   ^
         self.assertEqual(a, bitarray('1010110'))
@@ -704,9 +706,10 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('10101100' '011'))
         del a[3:3] # zero slicelength
         self.assertEqual(a, bitarray('10101100' '011'))
+        self.assertRaises(ValueError, a.__delitem__, slice(None, None, 0))
 
-    def test_delitem_2(self):
-        for a in self.randombitarrays(start=1):
+    def test_delslice_random(self):
+        for a in self.randombitarrays():
             la = len(a)
             for dum in range(10):
                 step = self.rndsliceidx(la) or None
