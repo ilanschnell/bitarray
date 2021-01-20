@@ -3359,6 +3359,11 @@ init_bitarray(void)
     Py_INCREF((PyObject *) &Bitarray_Type);
     PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type);
 
+    if (PyType_Ready(&TBase_Type) < 0)
+        goto error;
+    Py_INCREF((PyObject *) &TBase_Type);
+    PyModule_AddObject(m, "tbase", (PyObject *) &TBase_Type);
+
     if (PyType_Ready(&DecodeTree_Type) < 0)
         goto error;
     Py_SET_TYPE(&DecodeTree_Type, &PyType_Type);

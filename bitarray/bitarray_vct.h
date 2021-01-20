@@ -27,6 +27,10 @@ typedef char vec __attribute__((vector_size(16)));
      __r = __a OP __b;             \
      memcpy(A, &__r, sizeof(vec)); \
  } while(0);
+
+static const vec bitv_00  = {0x00, 0x00, 0x00, 0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00};
+static const vec bitv_ff  = {(char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff};
+
 #endif
 
 //types and constants used in the functions below

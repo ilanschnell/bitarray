@@ -1,0 +1,32 @@
+static const vec bitv_00  = {0x00, 0x00, 0x00, 0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00};
+static const vec bitv_01  = {(char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0x00, (char)0xff};
+static const vec bitv_m1  = {0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55, 0x55}; //binary: 0101...
+static const vec bitv_m2  = {0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33}; //binary: 00110011..
+static const vec bitv_m4  = {0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f, 0x0f}; //binary:  4 zeros,  4 ones ...
+static const vec bitv_m8  = {(char)0x00, (char)0xff, (char)0x00, (char)0xff, (char)0x00, (char)0xff, (char)0x00, (char)0xff, (char)0x00, (char)0xff, (char)0x00, (char)0xff, (char)0x00, (char)0xff, (char)0x00, (char)0xff}; //binary:  8 zeros,  8 ones ...
+static const vec bitv_ff  = {(char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff, (char)0xff};
+static const vec bitv_h01 = {0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01}; //the sum of 256 to the power of 0,1,2,3..., sum(256**i for i in range(32))
+
+
+#define VECARGS(X) (int)X[0] & 0xff, (int)X[1] & 0xff, (int)X[2] & 0xff, (int)X[3] & 0xff, \
+                   (int)X[4] & 0xff, (int)X[5] & 0xff, (int)X[6] & 0xff, (int)X[7] & 0xff, \
+                   (int)X[8] & 0xff, (int)X[9] & 0xff, (int)X[10] & 0xff, (int)X[11] & 0xff, \
+                   (int)X[12] & 0xff, (int)X[13] & 0xff, (int)X[14] & 0xff, (int)X[15] & 0xff
+
+#define VECIFMT "%08x%08x%08x%08x"
+#define VECIARGS(X) (int)X[0] & 0xffffffff, (int)X[1] & 0xffffffff, (int)X[2] & 0xffffffff, (int)X[3] & 0xffffffff
+#define BITWISE_HW_WP3_VEC(tmpx, hw) do {\
+ tmpx -= (tmpx >> 1) & bitv_m1;\
+ PySys_WriteStdout(" t1: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", VECARGS(tmpx));\
+ tmpx = (tmpx & bitv_m2) + ((tmpx >> 2) & bitv_m2);\
+ PySys_WriteStdout(" t2: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", VECARGS(tmpx));\
+ tmpx = (tmpx & bitv_m4) + ((tmpx >> 4) & bitv_m4);\
+ PySys_WriteStdout(" t3: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", VECARGS(tmpx));\
+ tmpx = (tmpx & bitv_m8) + ((tmpx >> 8) & bitv_m8);\
+ PySys_WriteStdout(" t4: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", VECARGS(tmpx));\
+ tmpx = ((tmpx * bitv_h01) );\
+ PySys_WriteStdout(" t5: %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n", VECARGS(tmpx));\
+ hw += (tmpx);\
+ } while(0)
+
+//hw += ((tmpx * bitv_h01) >> 120) & 0xff;

@@ -427,13 +427,258 @@ static int next_termgen(termgen_t * t){
 #define OP_AND 1
 #define OP_XOR 2
 
+/*********************** (Bitarray) Base object *********************/
+
+#define POLY_DYNAMIC 0
+#define MAX_POLY_DEG 12
+#define MAX_POLY_TERMS 12
+
+typedef struct tpoly {
+    Py_ssize_t nterms;
+    Py_ssize_t mterm_ord;
+    Py_ssize_t maxterm;
+#if POLY_DYNAMIC
+    Py_ssize_t * sizes;
+    Py_ssize_t * poly;        // polynomial, array of term indices
+#else
+    Py_ssize_t sizes[MAX_POLY_TERMS];
+    Py_ssize_t poly[MAX_POLY_DEG * MAX_POLY_TERMS];        // polynomial, array of term indices
+#endif
+} tpoly;
+static void tpoly_destroy_body(tpoly * poly);
+
+typedef struct {
+    PyObject_HEAD
+    Py_ssize_t maxterm;
+    Py_ssize_t base_size;
+    char * valids;
+    bitarrayobject ** base;
+
+    Py_ssize_t eval_buff_size;
+    struct tpoly * eval_buff;
+    BITWISE_HW_TYPE * hws_buff;
+} tbase;
+
+static PyTypeObject TBase_Type;
+
+#define TBase_Check(op)  PyObject_TypeCheck(op, &TBase_Type)
+
+static void
+tbase_destroy(tbase * base, int full_dealloc){
+    if (base == NULL){
+        return;
+    }
+
+    for (Py_ssize_t k = 0; base->base != NULL && k < base->maxterm; k++) {
+        if (base->base[k] == NULL){
+            continue;
+        }
+        Py_DECREF(base->base[k]);
+        base->base[k] = NULL;
+    }
+
+    if (base->base != NULL){
+        PyMem_Free((void *) base->base);
+        base->base = NULL;
+    }
+
+    if (base->valids != NULL){
+        PyMem_Free((void *) base->valids);
+        base->valids = NULL;
+    }
+
+    if (base->eval_buff != NULL){
+        for(Py_ssize_t i = 0; i < base->eval_buff_size; ++i){
+            tpoly_destroy_body(&(base->eval_buff[i]));
+        }
+        PyMem_Free((void *) base->eval_buff);
+        base->eval_buff = NULL;
+    }
+
+    if (base->hws_buff != NULL){
+        PyMem_Free((void *) base->hws_buff);
+        base->hws_buff = NULL;
+    }
+
+    if (full_dealloc)
+        PyMem_Free((void *) base);
+}
+
+static int
+tbase_get(PyObject * base_arr, tbase ** ibase){
+    if (ibase == NULL){
+        PyErr_SetString(PyExc_ValueError, "empty base pointer");
+        return 0;
+    }
+
+    if (!PyList_Check(base_arr)) {
+        PyErr_SetString(PyExc_TypeError, "base is expected as a list of bit arrays");
+        return 0;
+    }
+
+    const int we_alloc = *ibase == NULL;
+    if (*ibase == NULL){
+        *ibase = PyMem_Malloc((size_t) (sizeof(tbase)));
+        if (*ibase == NULL) {
+            PyErr_NoMemory();
+            return 0;
+        }
+    }
+
+    tbase *base = *ibase;
+    base->maxterm = PyList_Size(base_arr);
+    base->base = NULL;
+    base->valids = NULL;
+    base->eval_buff = NULL;
+    base->hws_buff = NULL;
+    base->base_size = -1;
+    base->eval_buff_size = 0;
+
+    base->base = PyMem_Malloc((size_t) (sizeof(PyObject *) * base->maxterm));
+    if (base->base == NULL) {
+        PyErr_NoMemory();
+        tbase_destroy(base, we_alloc);
+        return 0;
+    }
+
+    memset(base->base, 0, (sizeof(PyObject *) * base->maxterm));
+    base->valids = PyMem_Malloc((size_t) (sizeof(char) * base->maxterm));
+    if (base->valids == NULL) {
+        PyErr_NoMemory();
+        tbase_destroy(base, we_alloc);
+        return 0;
+    }
+
+    memset(base->valids, 0, (sizeof(char) * base->maxterm));
+
+    int ok = 1;
+    for (Py_ssize_t k = 0; k < base->maxterm; ++k) {
+        PyObject * tmp_obj = PyList_GetItem(base_arr, (Py_ssize_t) k);
+        if (tmp_obj == Py_None){
+            continue;
+        }
+
+        if (!bitarray_Check(tmp_obj)) {
+            PyErr_SetString(PyExc_TypeError, "bitarray expected in the base array");
+            ok = 0;
+            break;
+        }
+
+        base->valids[k] = 1;
+        base->base[k] = (bitarrayobject *) tmp_obj;
+        Py_INCREF(base->base[k]);
+        if (base->base_size < 0){
+            base->base_size = base->base[k]->nbits;
+
+        } else if (base->base[k]->nbits != base->base_size){
+            PyErr_Format(PyExc_ValueError, "Base size has to be the same, idx: %d", (int) k);
+            ok = 0;
+            break;
+        }
+    }
+
+    if (!ok){
+        tbase_destroy(base, we_alloc);
+        return 0;
+    } else {
+        return 1;
+    }
+}
+
+static int
+tbase_traverse(tbase *base, visitproc visit, void *arg)
+{
+    for (Py_ssize_t k = 0; base->base != NULL && k < base->maxterm; k++) {
+        if (base->base[k] == NULL){
+            continue;
+        }
+        Py_VISIT(base->base[k]);
+    }
+    return 0;
+}
+
+static void
+tbase_dealloc(tbase *it)
+{
+    PyObject_GC_UnTrack(it);
+    tbase_destroy(it, 0);
+    Py_TYPE(it)->tp_free((PyObject *)it);
+}
+
+static int
+tbase_eval_buff(tbase *base, PyObject * num){
+    if (!PyNumber_Check(num)){
+        return 1;
+    }
+
+    Py_ssize_t k = PyNumber_AsSsize_t(num, NULL);
+    if (k <= 0){
+        return 1;
+    }
+
+    base->eval_buff_size = 0;
+    base->eval_buff = PyMem_Malloc((size_t) (sizeof(tpoly) * k));
+    if (base->eval_buff == NULL) {
+        PyErr_NoMemory();
+        return 0;
+    }
+
+    base->hws_buff = PyMem_Malloc((size_t) (sizeof(BITWISE_HW_TYPE) * k));
+    if (base->hws_buff == NULL) {
+        PyMem_Free((void *) base->eval_buff);
+        PyErr_NoMemory();
+        return 0;
+    }
+
+    base->eval_buff_size = k;
+    return 1;
+}
+
+static PyObject *
+tbase_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    PyObject *ibase = NULL;
+    PyObject *nbuff = NULL;
+    static char *kwlist[] = {"base", "buff_size", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OO:tbase", kwlist, &ibase, &nbuff))
+        return NULL;
+
+    assert(type != NULL && type->tp_alloc != NULL);
+    tbase * obj = (tbase *) type->tp_alloc(type, 0);
+    if (obj == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    // https://docs.python.org/3/c-api/gcsupport.html
+    // https://github.com/python/cpython/blob/master/Objects/dictobject.c
+    // Whole object has to be valid when tracking. Thus untrack, setup, track again.
+    PyObject_GC_UnTrack(obj);
+
+    if (!tbase_get(ibase, &obj)){
+        Py_DECREF(obj);
+        return NULL;
+    }
+
+    if (!tbase_eval_buff(obj, nbuff)){
+        Py_DECREF(obj);
+        return NULL;
+    }
+
+    PyObject_GC_Track(obj);
+    return (PyObject *) obj;
+}
+
+/*********************** Eval all terms *********************/
+
 // eval_top_k. We need a simple heap - heap allocated top 128 elements
 static PyObject *
 eval_all_terms(PyObject *self, PyObject *args, PyObject *kwds)
 {
     static char* kwlist[] = {"base", "deg", "topk", "hw_center", NULL};
     PyObject *base_arr;
-    Py_ssize_t deg=2, maxterm=0, topk=128, hw_center=0;
+    Py_ssize_t deg=2, topk=128, hw_center=0;
     long k = 0;
     int op_code = OP_AND;
     topterm_heap_elem_t * heap_data = NULL;
@@ -443,36 +688,22 @@ eval_all_terms(PyObject *self, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    if (!PyList_Check(base_arr)) {
-        PyErr_SetString(PyExc_TypeError, "base is expected as a list of bit arrays");
-        return NULL;
-    }
-
-    maxterm = PyList_Size(base_arr);
-    if (deg > maxterm){
-        PyErr_SetString(PyExc_IndexError, "degree is larger than size of the base");
-        return NULL;
-    }
     if (deg < 2){
         PyErr_SetString(PyExc_IndexError, "Minimal degree is 2. For 1 use directly hw()");
         return NULL;
     }
 
     // Base checking. Allocate memory for the base of maxterms.
-    bitarrayobject ** base = PyMem_Malloc((size_t) (sizeof(PyObject *) * maxterm));
-    if (base == NULL) {
+    tbase * base = NULL;
+    if (!tbase_get(base_arr, &base)){
         PyErr_NoMemory();
         return NULL;
     }
 
-    for (k = 0; k < maxterm; k++) {
-        PyObject * tmp_obj = PyList_GetItem(base_arr, (Py_ssize_t) k);
-        if (!bitarray_Check(tmp_obj)) {
-            PyErr_SetString(PyExc_TypeError, "bitarray expected in the base array");
-            goto error;
-        }
-
-        base[k] = (bitarrayobject *) tmp_obj;
+    if (deg > base->maxterm){
+        PyErr_SetString(PyExc_IndexError, "degree is larger than size of the base");
+        tbase_destroy(base, 1);
+        return NULL;
     }
 
     // Allocate memory for the heap objects, actual storage of the heap structs. Heap contains only pointers.
@@ -488,7 +719,7 @@ eval_all_terms(PyObject *self, PyObject *args, PyObject *kwds)
 
     // Sub result for deg-1
     int last_cached_tmpsub = -1;
-    bitarrayobject *tmpsub = (bitarrayobject *) newbitarrayobject(Py_TYPE(base[0]), base[0]->nbits, base[0]->endian);
+    bitarrayobject *tmpsub = (bitarrayobject *) newbitarrayobject(Py_TYPE(base->base[0]), base->base[0]->nbits, base->base[0]->endian);
     if (tmpsub == NULL) {
         goto error;
     }
@@ -498,7 +729,7 @@ eval_all_terms(PyObject *self, PyObject *args, PyObject *kwds)
 
     // Generate all polynomials
     termgen_t termgen;
-    init_termgen(&termgen, (int)deg, (int)maxterm);
+    init_termgen(&termgen, (int)deg, (int)base->maxterm);
     do {
         hw = 0;
         comb_idx += 1;
@@ -509,12 +740,12 @@ eval_all_terms(PyObject *self, PyObject *args, PyObject *kwds)
         // Precompute tmpsub up to deg-2.
         // Copy the first basis vector. Then AND or XOR next basis vector from the term.
         if (last_cached_tmpsub != idx_plast){
-            memcpy(tmpsub->ob_item, base[idx_first]->ob_item, Py_SIZE(base[idx_first]));
+            memcpy(tmpsub->ob_item, base->base[idx_first]->ob_item, Py_SIZE(base->base[idx_first]));
             for(k=1; k <= deg-2; k++){
                 if (op_code == OP_AND) {
-                    BITWISE_FUNC_INTERNAL(tmpsub, base[termgen.cur[k]], &, &=);
+                    BITWISE_FUNC_INTERNAL(tmpsub, base->base[termgen.cur[k]], &, &=);
                 } else if (op_code == OP_XOR){
-                    BITWISE_FUNC_INTERNAL(tmpsub, base[termgen.cur[k]], ^, ^=);
+                    BITWISE_FUNC_INTERNAL(tmpsub, base->base[termgen.cur[k]], ^, ^=);
                 }
             }
 
@@ -523,9 +754,9 @@ eval_all_terms(PyObject *self, PyObject *args, PyObject *kwds)
 
         // Now do just in-memory HW counting.
         if (op_code == OP_AND) {
-            BITWISE_HW_INTERNAL(tmpsub, base[idx_last], &);
+            BITWISE_HW_INTERNAL(tmpsub, base->base[idx_last], &);
         } else if (op_code == OP_XOR){
-            BITWISE_HW_INTERNAL(tmpsub, base[idx_last], ^);
+            BITWISE_HW_INTERNAL(tmpsub, base->base[idx_last], ^);
         }
 
         int64_t hw_diff = hw_center > hw ? (hw_center - hw) : (hw - hw_center);
@@ -564,9 +795,7 @@ eval_all_terms(PyObject *self, PyObject *args, PyObject *kwds)
     }
 
     heap_free(hp);
-    if (base != NULL) {
-        PyMem_Free((void *) base);
-    }
+    tbase_destroy(base, 1);
     if (heap_data != NULL){
         PyMem_Free((void *) heap_data);
     }
@@ -574,9 +803,7 @@ eval_all_terms(PyObject *self, PyObject *args, PyObject *kwds)
     return ret_list;
 
     error:
-    if (base != NULL) {
-        PyMem_Free((void *) base);
-    }
+    tbase_destroy(base, 1);
     if (heap_data != NULL){
         PyMem_Free((void *) heap_data);
     }
@@ -587,3 +814,375 @@ PyDoc_STRVAR(eval_all_terms_doc,
 "eval_all_terms(base, deg=2, topk=128, hw_center=0) -> list of (hwdiff, hw, idx)\n\
  \n\
  Evaluates all terms on the given basis");
+
+
+static void
+tpoly_destroy_body(tpoly * poly){
+#if POLY_DYNAMIC
+    if (poly == NULL){
+        return;
+    }
+
+    if (poly->sizes){
+        PyMem_Free((void *) poly->sizes);
+        poly->sizes = NULL;
+    }
+
+    if (poly->poly){
+        PyMem_Free((void *) poly->poly);
+        poly->poly = NULL;
+    }
+#endif
+}
+
+static int
+tpoly_get(PyObject * poly_arr, tpoly * poly, int fast){
+    Py_ssize_t (* const ph4_size)(PyObject *o) = PyList_Size;
+    PyObject * (* const ph4_item)(PyObject *o, Py_ssize_t i) = PyList_GetItem;
+#define PH4_DEC_ITEM(x)
+
+    if (!PyList_Check(poly_arr)) {
+        PyErr_SetString(PyExc_TypeError, "poly is expected to be list of lists of integers");
+        return 0;
+    }
+
+    memset(poly, 0, sizeof(tpoly));
+    poly->nterms = ph4_size(poly_arr);
+
+#if POLY_DYNAMIC
+    poly->sizes = PyMem_Malloc((size_t) (poly->nterms * sizeof(Py_ssize_t)));
+    if (poly->sizes == NULL) {
+        tpoly_destroy_body(poly);
+        PyErr_NoMemory();
+        return NULL;
+    }
+#endif
+
+    int ok = 1;
+    for (Py_ssize_t k = 0; k < poly->nterms && ok; ++k) {
+        PyObject * tmp_obj = ph4_item(poly_arr, (Py_ssize_t) k);
+        if (!fast && !PyList_Check(tmp_obj)) {
+            PyErr_Format(PyExc_ValueError, "poly is expected to be list of lists of integers, idx: %d", (int) k);
+            ok = 0;
+
+        } else {
+            const Py_ssize_t tsize = ph4_size(tmp_obj);
+            poly->sizes[k] = tsize;
+            poly->mterm_ord = tsize > poly->mterm_ord ? tsize : poly->mterm_ord;
+        }
+        PH4_DEC_ITEM(tmp_obj);
+    }
+
+    if (!ok){
+        tpoly_destroy_body(poly);
+        return 0;
+    }
+
+#if POLY_DYNAMIC
+    poly->poly = PyMem_Malloc((size_t) (poly->nterms * poly->mterm_ord * sizeof(Py_ssize_t)));
+    if (poly->poly == NULL) {
+        tpoly_destroy_body(poly);
+        PyErr_NoMemory();
+        return NULL;
+    }
+#endif
+
+    for (Py_ssize_t k = 0; k < poly->nterms && ok; ++k) {
+        PyObject * tmp_obj = ph4_item(poly_arr, (Py_ssize_t) k);
+        const Py_ssize_t tsize = ph4_size(tmp_obj);
+
+        for (Py_ssize_t l = 0; l < tsize && ok; ++l) {
+            PyObject * to2 = ph4_item(tmp_obj, (Py_ssize_t) l);
+            if (!fast && !PyNumber_Check(to2)){
+                PyErr_Format(PyExc_ValueError, "poly is expected to be list of lists of integers, idx: %d, %d", (int) k, (int) l);
+                ok = 0;
+
+            } else {
+                const Py_ssize_t ct = PyNumber_AsSsize_t(to2, NULL);
+                poly->poly[k * poly->mterm_ord + l] = ct;
+                poly->maxterm = ct > poly->maxterm ? ct : poly->maxterm;
+            }
+            PH4_DEC_ITEM(to2);
+        }
+        PH4_DEC_ITEM(tmp_obj);
+    }
+
+    if (!ok){
+        tpoly_destroy_body(poly);
+        return 0;
+    } else {
+        return 1;
+    }
+#undef PH4_DEC_ITEM
+}
+
+static PyObject *
+base_eval_polynomial_hw(tbase *base, PyObject *args, PyObject *kwds) {
+    PyObject *poly_arr = NULL;
+    PyObject *polys_arr = NULL;
+    PyObject *res_arr = NULL;
+    if (!PyArg_ParseTuple(args, "|OOO:eval_poly_hw", &poly_arr, &polys_arr, &res_arr)) {
+        return NULL;
+    }
+
+    Py_ssize_t npolys = 1;
+    tpoly bpolys[1];
+    BITWISE_HW_TYPE bhws[1] = {0};
+
+    tpoly * polys = (tpoly *) &bpolys;
+    BITWISE_HW_TYPE * hws = &bhws[0];
+    const int single_poly = poly_arr != NULL && poly_arr != Py_None;
+
+    if (res_arr != NULL && res_arr != Py_None){
+        if (!PyList_Check(res_arr)){
+            PyErr_SetString(PyExc_ValueError, "res array has to be an array");
+            goto error;
+        }
+    }
+
+    if (single_poly){
+        if (!tpoly_get(poly_arr, &polys[0], 1)) {
+            goto error;
+        }
+    } else {
+        polys = NULL;
+        hws = NULL;
+        if (!PyList_Check(polys_arr)){
+            PyErr_SetString(PyExc_ValueError, "polys has to be array of polynomials");
+            goto error;
+        }
+
+        npolys = PyList_Size(polys_arr);
+        if (npolys == 0){
+            return PyList_New(0);
+        }
+
+        if (npolys <= base->eval_buff_size){
+            polys = base->eval_buff;
+            hws = base->hws_buff;
+
+        } else {
+            polys = PyMem_Malloc((size_t) (npolys * sizeof(tpoly)));
+            if (polys == NULL) {
+                PyErr_NoMemory();
+                goto error;
+            }
+
+            hws = PyMem_Malloc((size_t) (npolys * sizeof(BITWISE_HW_TYPE)));
+            if (hws == NULL) {
+                PyErr_NoMemory();
+                goto error;
+            }
+        }
+
+        memset(polys, 0, npolys * sizeof(tpoly));
+        memset(hws, 0, npolys * sizeof(BITWISE_HW_TYPE));
+        for(Py_ssize_t i = 0; i < npolys; ++i){
+            if (!tpoly_get(PyList_GetItem(polys_arr, i), &polys[i], 1)) {
+                goto error;
+            }
+        }
+    }
+
+
+//#define POLY_TERMS(p) (nterms)
+//#define POLY_TERM_SIZE(p, k, t) (PyList_GET_SIZE(PyList_GET_ITEM(poly_arr, k)))
+//#define POLY_TERM(p, k)  (PyList_GET_ITEM(poly_arr, k))
+//#define POLY_TERM_FREE(p, k, t)
+//#define POLY_VAR(p, k, l, t) (PyLong_AsSsize_t(PyList_GET_ITEM(t, l)))
+
+#define POLY_TERMS(p) (polys[p].nterms)
+#define POLY_TERM_SIZE(p, k, t) (polys[p].sizes[k])
+#define POLY_TERM(p, k, name)
+#define POLY_TERM_FREE(p, k, t)
+#define POLY_IDX(p, k, l) ((k) * polys[p].mterm_ord + (l))
+#define POLY_VAR(p, k, l, t) (polys[p].poly[POLY_IDX(p, k, l)])
+
+#define POLY_OBJ(p, k, l, t) (base->base[POLY_VAR(p, k, l, t)])
+#define POLY_DATA(p, k, l, t) ((POLY_OBJ(p, k, l, t))->ob_item)
+
+    // BITWISE_HW_TYPE jumps
+    Py_ssize_t off = 0;
+    Py_ssize_t base_size_lim = 0;
+
+#if HAS_VECTORS
+    base_size_lim = base->base_size < (Py_ssize_t)sizeof(vec) ? 0 : (base->base_size >> 3) - ((base->base_size >> 3) % sizeof(vec));
+    for(Py_ssize_t ii = 0; off < base_size_lim; ++ii, off += (Py_ssize_t)sizeof(vec)) {  // Base
+        for(Py_ssize_t p = 0; p < npolys; ++p) {                         // polys
+            vec res = bitv_00;
+            for (Py_ssize_t k = 0; k < POLY_TERMS(p); ++k) {             // XOR
+                vec subr = bitv_ff;
+                POLY_TERM(p, k, term);
+                for (Py_ssize_t l = 0; l < POLY_TERM_SIZE(p, k, term); ++l) {  // AND
+                    vec ttt;
+                    memcpy(&ttt, &(POLY_DATA(p, k, l, term)[off]), sizeof(vec));
+                    subr &= ttt;
+                }
+                res ^= subr;
+            }
+
+            BITWISE_HW_TYPE ww = 0;
+            memcpy(&ww, &res, 8);
+            BITWISE_HW_WP3(ww, hws[p]);
+            memcpy(&ww, ((char*)&res)+8, 8);
+            BITWISE_HW_WP3(ww, hws[p]);
+        }
+    }
+#endif
+
+    // uint64_t finish
+    base_size_lim = (base->base_size >> 3) - ((base->base_size >> 3) % sizeof(BITWISE_HW_TYPE));
+    for(Py_ssize_t ii = 0; off < base_size_lim; ++ii, off += (Py_ssize_t)sizeof(BITWISE_HW_TYPE)) {  // Base
+        for(Py_ssize_t p = 0; p < npolys; ++p) {                         // polys
+            BITWISE_HW_TYPE res = 0;
+            for (Py_ssize_t k = 0; k < POLY_TERMS(p); ++k) {             // XOR
+                BITWISE_HW_TYPE subr = ~((BITWISE_HW_TYPE) 0);
+                POLY_TERM(p, k, term);
+                for (Py_ssize_t l = 0; l < POLY_TERM_SIZE(p, k, term); ++l) {  // AND
+                    subr &= *(BITWISE_HW_TYPE *) (((char *) POLY_DATA(p, k, l, term)) + off);
+                }
+                res ^= subr;
+            }
+            BITWISE_HW_WP3(res, hws[p]);
+        }
+    }
+
+    // Soft finish, bit-wise
+    Py_ssize_t off_bits = off << 3;
+    Py_ssize_t rem_bits = base->base_size - (off << 3);
+    BITWISE_HW_TYPE res_mask = ((BITWISE_HW_TYPE)1 << (rem_bits)) - 1;
+    for(Py_ssize_t p = 0; p < npolys; ++p) {                           // polys
+        BITWISE_HW_TYPE res = 0;
+        for (Py_ssize_t k = 0; k < POLY_TERMS(p); ++k) {               // XOR
+            BITWISE_HW_TYPE subr = ~((BITWISE_HW_TYPE) 0);
+            POLY_TERM(p, k, term);
+            for (Py_ssize_t l = 0; l < POLY_TERM_SIZE(p, k, term); ++l) {    // AND
+                BITWISE_HW_TYPE cur = 0;
+                for (Py_ssize_t i = off_bits; i < base->base_size; ++i) {  // Base
+                    cur |= (((BITWISE_HW_TYPE) GETBIT(POLY_OBJ(p, k, l, term), i)) << i);
+                }
+                subr &= cur;
+            }
+            res ^= subr;
+        }
+        res &= res_mask;
+        BITWISE_HW_WP3(res, hws[p]);
+    }
+
+#define DEALLOC() \
+    for(Py_ssize_t k = 0; polys != NULL && k < npolys; ++k)         \
+        tpoly_destroy_body(&polys[k]);                              \
+                                                                    \
+    if (!single_poly && npolys > base->eval_buff_size){             \
+        if (hws != NULL)                                            \
+            PyMem_Free((void *) hws);                               \
+        if (polys != NULL)                                          \
+            PyMem_Free((void *) polys);                             \
+    }
+
+    // Return
+    PyObject * ret = !single_poly ? NULL : PyLong_FromLongLong(hws[0]);
+
+    if (single_poly) {
+        DEALLOC()
+        return ret;
+
+    } else {
+        if (res_arr == NULL || res_arr == Py_None){
+            ret = PyList_New(npolys);
+            if (ret == NULL){
+                PyErr_NoMemory();
+                goto error;
+            }
+            Py_INCREF(ret);
+        } else {
+            ret = res_arr;
+            Py_INCREF(ret);
+        }
+
+        for(Py_ssize_t p = 0; p < npolys; ++p) {
+            if (PyList_SetItem(ret, p, PyLong_FromLongLong(hws[p]))){
+                PyErr_SetString(PyExc_ValueError, "Error adding result to the array");
+                goto error;
+            }
+        }
+
+        DEALLOC()
+        return ret;
+    }
+
+    error:
+DEALLOC()
+    return NULL;
+
+#undef STEPTYPE
+#undef DEALLOC
+#undef POLY_OBJ
+#undef POLY_DATA
+#undef POLY_VAR
+#undef POLY_IDX
+#undef POLY_TERM
+#undef POLY_TERM_FREE
+#undef POLY_TERMS
+#undef POLY_TERM_SIZE
+}
+
+PyDoc_STRVAR(base_eval_polynomial_hw_doc,
+             "eval_poly_hw(base, poly) -> hw\n\
+\n\
+Computes Hamming weight of the polynomial evaluated on the basis");
+
+static PyMethodDef
+        tbase_methods[] = {
+        {"eval_poly_hw", (PyCFunction) base_eval_polynomial_hw, METH_VARARGS, base_eval_polynomial_hw_doc},
+        {NULL,           NULL}  /* sentinel */
+};
+
+static PyTypeObject TBase_Type = {
+#ifdef IS_PY3K
+        PyVarObject_HEAD_INIT(NULL, 0)
+#else
+        PyObject_HEAD_INIT(NULL)
+        0,                                           /* ob_size */
+#endif
+        "bitarray.tbase",                          /* tp_name */
+        sizeof(tbase),                                       /* tp_basicsize */
+        0,                                       /* tp_itemsize */
+        /* methods */
+        (destructor) tbase_dealloc,                          /* tp_dealloc */
+        0,                                          /* tp_print */
+        0,                                          /* tp_getattr */
+        0,                                         /* tp_setattr */
+        0,                                       /* tp_compare */
+        0,                                        /* tp_repr */
+        0,                                        /* tp_as_number */
+        0,                                        /* tp_as_sequence */
+        0,                                        /* tp_as_mapping */
+        0,                                        /* tp_hash */
+        0,                                        /* tp_call */
+        0,                                        /* tp_str */
+        PyObject_GenericGetAttr,                  /* tp_getattro */
+        0,                                        /* tp_setattro */
+        0,                                        /* tp_as_buffer */
+        Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,  /* tp_flags */
+        0,                                        /* tp_doc */
+        (traverseproc)tbase_traverse,                     /* tp_traverse */
+        0,                                        /* tp_clear  - empty for immutable */
+        0,                                  /* tp_richcompare */
+        0,                                /* tp_weaklistoffset */
+        0,                                        /* tp_iter */
+        0,                                        /* tp_iternext */
+        tbase_methods,                            /* tp_methods */
+        0,                                        /* tp_members */
+        0,                                        /* tp_getset */
+        0,                                        /* tp_base */
+        0,                                        /* tp_dict */
+        0,                                        /* tp_descr_get */
+        0,                                        /* tp_descr_set */
+        0,                                        /* tp_dictoffset */
+        0,                                        /* tp_init */
+        PyType_GenericAlloc,                     /* tp_alloc */
+        tbase_new,                                /* tp_new */
+        PyObject_GC_Del
+};
+
