@@ -715,6 +715,10 @@ hashable object (including `None`).
 Change log
 ----------
 
+2021-XX-XX   1.7.0:
+
+
+
 *1.6.3* (2021-01-20):
 
   * add missing .h files to sdist tarball, #113
