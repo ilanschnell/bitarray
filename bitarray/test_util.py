@@ -8,10 +8,7 @@ import sys
 import unittest
 from string import hexdigits
 from random import choice, randint, random
-try:
-    from collections import Counter
-except ImportError:
-    pass
+from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian)

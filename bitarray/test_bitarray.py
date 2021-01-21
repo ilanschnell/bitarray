@@ -12,17 +12,13 @@ import tempfile
 import shutil
 from random import randint
 
-is_py3k = bool(sys.version_info[0] == 3)
-
 # imports needed inside tests
 import copy
 import pickle
 import itertools
 
-try:
-    import shelve, hashlib
-except ImportError:
-    shelve = hashlib = None
+
+is_py3k = bool(sys.version_info[0] == 3)
 
 if is_py3k:
     from io import BytesIO
@@ -2093,7 +2089,11 @@ class FileTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
 
     def test_shelve(self):
-        if not shelve or hasattr(sys, 'gettotalrefcount'):
+        try:
+            import shelve, hashlib
+        except ImportError:
+            return
+        if hasattr(sys, 'gettotalrefcount'):
             return
 
         d = shelve.open(self.tmpfname)
