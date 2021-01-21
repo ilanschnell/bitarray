@@ -1,5 +1,6 @@
 2021-XX-XX   1.7.0:
 -------------------
+  * add bitarray.util.randombits()
 
 
 2021-01-20   1.6.3:
