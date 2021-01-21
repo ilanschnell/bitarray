@@ -39,6 +39,7 @@ setup(
     ],
     description = "efficient arrays of booleans -- C extension",
     packages = ["bitarray"],
+    package_data = {"bitarray": ["*.h"]},
     ext_modules = [Extension(name = "bitarray._bitarray",
                              sources = ["bitarray/_bitarray.c"]),
                    Extension(name = "bitarray._util",
