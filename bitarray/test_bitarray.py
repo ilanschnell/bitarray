@@ -16,6 +16,8 @@ from random import randint
 import copy
 import pickle
 import itertools
+import shelve
+import hashlib
 
 
 is_py3k = bool(sys.version_info[0] == 3)
@@ -2089,10 +2091,6 @@ class FileTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
 
     def test_shelve(self):
-        try:
-            import shelve, hashlib
-        except ImportError:
-            return
         if hasattr(sys, 'gettotalrefcount'):
             return
 
@@ -2110,7 +2108,6 @@ class FileTests(unittest.TestCase, Util):
         for k, v in stored:
             self.assertEQUAL(d[k], v)
         d.close()
-
 
     def test_fromfile_empty(self):
         with open(self.tmpfname, 'wb') as fo:
