@@ -618,7 +618,7 @@ Create a bitarray of length, with all values 0, and optional
 endianness, which may be 'big', 'little'.
 
 
-`randombits(length, /, endian=None)` -> bitarray
+`urandom(length, /, endian=None)` -> bitarray
 
 Return a bitarray of `length` random bits (uses `os.urandom`).
 
@@ -722,7 +722,7 @@ Change log
 
 2021-XX-XX   1.7.0:
 
-  * add bitarray.util.randombits()
+  * add bitarray.util.urandom()
 
 
 *1.6.3* (2021-01-20):

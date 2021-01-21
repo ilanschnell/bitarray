@@ -18,7 +18,7 @@ from bitarray._util import (count_n, rindex,
                             _swap_hilo_bytes, _set_bato)
 
 
-__all__ = ['zeros', 'randombits', 'make_endian', 'rindex', 'strip',
+__all__ = ['zeros', 'urandom', 'make_endian', 'rindex', 'strip',
            'count_n', 'count_and', 'count_or', 'count_xor', 'subset',
            'ba2hex', 'hex2ba', 'ba2int', 'int2ba', 'huffman_code']
 
@@ -44,8 +44,8 @@ endianness, which may be 'big', 'little'.
     return a
 
 
-def randombits(length, endian=None):
-    """randombits(length, /, endian=None) -> bitarray
+def urandom(length, endian=None):
+    """urandom(length, /, endian=None) -> bitarray
 
 Return a bitarray of `length` random bits (uses `os.urandom`).
 """
