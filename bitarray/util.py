@@ -7,6 +7,7 @@ Useful utilities for working with bitarrays.
 """
 from __future__ import absolute_import
 
+import os
 import sys
 import binascii
 
@@ -17,8 +18,8 @@ from bitarray._util import (count_n, rindex,
                             _swap_hilo_bytes, _set_bato)
 
 
-__all__ = ['zeros', 'make_endian', 'rindex', 'strip', 'count_n',
-           'count_and', 'count_or', 'count_xor', 'subset',
+__all__ = ['zeros', 'randombits', 'make_endian', 'rindex', 'strip',
+           'count_n', 'count_and', 'count_or', 'count_xor', 'subset',
            'ba2hex', 'hex2ba', 'ba2int', 'int2ba', 'huffman_code']
 
 
@@ -40,6 +41,17 @@ endianness, which may be 'big', 'little'.
 
     a = bitarray(length, endian or get_default_endian())
     a.setall(0)
+    return a
+
+
+def randombits(length, endian=None):
+    """randombits(length, /, endian=None) -> bitarray
+
+Return a bitarray of `length` random bits (uses `os.urandom`).
+"""
+    a = bitarray(0, endian or get_default_endian())
+    a.frombytes(os.urandom(bits2bytes(length)))
+    del a[length:]
     return a
 
 

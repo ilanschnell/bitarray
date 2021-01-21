@@ -17,8 +17,8 @@ from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian)
 from bitarray.test_bitarray import Util
 
-from bitarray.util import (zeros, make_endian, rindex, strip, count_n,
-                           count_and, count_or, count_xor, subset,
+from bitarray.util import (zeros, randombits, make_endian, rindex, strip,
+                           count_n, count_and, count_or, count_xor, subset,
                            ba2hex, hex2ba, ba2int, int2ba, huffman_code)
 
 if sys.version_info[0] == 3:
@@ -61,6 +61,44 @@ class TestsZeros(unittest.TestCase):
         self.assertRaises(ValueError, zeros, 0, 'foo') # endian wrong string
 
 tests.append(TestsZeros)
+
+# ---------------------------------------------------------------------------
+
+class TestsRandom(unittest.TestCase):
+
+    def test_1(self):
+        for default_endian in 'big', 'little':
+            _set_default_endian(default_endian)
+            a = randombits(0)
+            self.assertEqual(a, bitarray())
+            self.assertEqual(a.endian(), default_endian)
+
+            b  = randombits(0, endian=None)
+            self.assertEqual(b.endian(), default_endian)
+
+            for n in range(100):
+                a = randombits(n)
+                self.assertEqual(len(a), n)
+                self.assertEqual(b.endian(), default_endian)
+
+            a = randombits(1000)
+            b = randombits(1000)
+            self.assertNotEqual(a, b)
+            self.assertTrue(400 < a.count() < 600)
+            self.assertTrue(400 < b.count() < 600)
+
+    def test_wrong_args(self):
+        self.assertRaises(TypeError, randombits)
+        self.assertRaises(TypeError, randombits, '')
+        self.assertRaises(TypeError, randombits, bitarray())
+        self.assertRaises(TypeError, randombits, [])
+        self.assertRaises(TypeError, randombits, 1.0)
+        self.assertRaises(ValueError, randombits, -1)
+
+        self.assertRaises(TypeError, randombits, 0, 1)
+        self.assertRaises(ValueError, randombits, 0, 'foo')
+
+tests.append(TestsRandom)
 
 # ---------------------------------------------------------------------------
 
@@ -361,14 +399,10 @@ class TestsBitwiseCount(unittest.TestCase, Util):
         self.assertEqual(count_or(a, b), 5)
         self.assertEqual(count_xor(a, b), 3)
 
-    def test_bit_count2(self):
+    def test_bit_count_random(self):
         for n in list(range(50)) + [randint(1000, 2000)]:
-            a = bitarray()
-            a.frombytes(os.urandom(bits2bytes(n)))
-            del a[n:]
-            b = bitarray()
-            b.frombytes(os.urandom(bits2bytes(n)))
-            del b[n:]
+            a = randombits(n)
+            b = randombits(n)
             self.assertEqual(count_and(a, b), (a & b).count())
             self.assertEqual(count_or(a, b),  (a | b).count())
             self.assertEqual(count_xor(a, b), (a ^ b).count())
