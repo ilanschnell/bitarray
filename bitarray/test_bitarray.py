@@ -818,7 +818,7 @@ class MiscTests(unittest.TestCase, Util):
             def __getitem__(self, i):
                 return bitarray.__getitem__(self, i - self.offset)
 
-        for a in self.randombitarrays(start=0):
+        for a in self.randombitarrays():
             b = ExaggeratingBitarray(a, 1234)
             for i in range(len(a)):
                 self.assertEqual(a[i], b[i + 1234])
@@ -1933,7 +1933,8 @@ tests.append(MethodTests)
 
 class BytesTests(unittest.TestCase, Util):
 
-    def randombytes(self):
+    @staticmethod
+    def randombytes():
         for n in range(1, 20):
             yield os.urandom(n)
 
@@ -2045,7 +2046,7 @@ class BytesTests(unittest.TestCase, Util):
             a.pack(b'\x01\x00\x7a')
             self.assertEqual(a, bitarray('01101'))
 
-    def test_pack_random(self):
+    def test_pack_allbytes(self):
         a = bitarray()
         for n in range(256):
             a.pack(bytes(bytearray([n])))
