@@ -2413,7 +2413,7 @@ bitarray_decode(bitarrayobject *self, PyObject *obj)
 
         tree = binode_make_tree(obj);
         if (tree == NULL)
-            goto error;
+            return NULL;
     }
 
     list = PyList_New(0);
@@ -2479,8 +2479,11 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
     }
 
     it = PyObject_GC_New(decodeiterobject, &DecodeIter_Type);
-    if (it == NULL)
+    if (it == NULL) {
+        if (!DecodeTree_Check(obj))
+            binode_delete(tree);
         return NULL;
+    }
 
     Py_INCREF(self);
     it->bao = self;
