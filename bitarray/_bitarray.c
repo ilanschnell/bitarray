@@ -946,7 +946,7 @@ bitarray_reduce(bitarrayobject *self)
     PyMem_Free((void *) data);
     result = Py_BuildValue("O(Os)O", Py_TYPE(self),
                            repr, ENDIAN_STR(self), dict);
-error:
+ error:
     Py_DECREF(dict);
     Py_XDECREF(repr);
     return result;
@@ -2049,7 +2049,7 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
     if (PyErr_Occurred())
         return NULL;
     Py_RETURN_NONE;
-error:
+ error:
     Py_DECREF(iter);
     return NULL;
 }
@@ -2430,7 +2430,7 @@ bitarray_decode(bitarrayobject *self, PyObject *obj)
         binode_delete(tree);
     return list;
 
-error:
+ error:
     if (!DecodeTree_Check(obj))
         binode_delete(tree);
     Py_XDECREF(list);
