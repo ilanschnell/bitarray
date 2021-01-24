@@ -2930,17 +2930,12 @@ richcompare(PyObject *v, PyObject *w, int op)
         vi = GETBIT(va, i);
         wi = GETBIT(wa, i);
         if (vi != wi) {
-            /* we have an item that differs -- first, shortcut for EQ/NE */
-            if (op == Py_EQ)
-                Py_RETURN_FALSE;
-            if (op == Py_NE)
-                Py_RETURN_TRUE;
-            /* compare the final item using the proper operator */
+            /* we have an item that differs */
             switch (op) {
             case Py_LT: cmp = vi <  wi; break;
             case Py_LE: cmp = vi <= wi; break;
-            case Py_EQ: cmp = vi == wi; break;
-            case Py_NE: cmp = vi != wi; break;
+            case Py_EQ: Py_RETURN_FALSE;
+            case Py_NE: Py_RETURN_TRUE;
             case Py_GT: cmp = vi >  wi; break;
             case Py_GE: cmp = vi >= wi; break;
             default: return NULL;  /* cannot happen */
