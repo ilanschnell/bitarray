@@ -3246,8 +3246,8 @@ set_default_endian(PyObject *module, PyObject *args)
     if (!PyArg_ParseTuple(args, "s:_set_default_endian", &endian_str))
         return NULL;
 
-    /* As endian_from_string might return -1, we have to store its value
-       in a temporary variable before setting default_endian. */
+    /* As endian_from_string() might return -1, we have to store its value
+       in a temporary variable BEFORE setting default_endian. */
     tmp = endian_from_string(endian_str);
     if (tmp < 0)
         return NULL;
