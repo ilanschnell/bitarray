@@ -560,7 +560,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
            been here for Python 3, as it allows bitarray(b'01101011') */
 #ifdef IS_PY3K
         if (PyErr_WarnEx(PyExc_DeprecationWarning,
-                         "cannot extend from 'bytes', "
+                         "cannot extend bitarray with 'bytes', "
                          "use .pack() or .frombytes() instead", 1) < 0)
             return -1;
 #endif
