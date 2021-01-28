@@ -1274,7 +1274,6 @@ class ExtendTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.extend, None)
         self.assertRaises(TypeError, a.extend, True)
         self.assertRaises(TypeError, a.extend, 24)
-        self.assertRaises(ValueError, a.extend, '0011201')
 
     def test_bitarray(self):
         a = bitarray()
@@ -1370,6 +1369,7 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray()
         a.extend('0110111')
         self.assertEqual(a, bitarray('0110111'))
+        self.assertRaises(ValueError, a.extend, '0011201')
 
         for a in self.randomlists():
             for b in self.randomlists():
@@ -1384,6 +1384,7 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray()
         a.extend(unicode())
         self.assertEqual(a, bitarray())
+        self.assertRaises(ValueError, a.extend, unicode('0011201'))
 
         a = bitarray()
         a.extend(unicode('001011'))
