@@ -1027,8 +1027,17 @@ tests.append(SpecialMethodTests)
 class SequenceMethodsTests(unittest.TestCase, Util):
 
     def test_concat(self):
-        c = bitarray('001') + bitarray('110')
-        self.assertEQUAL(c, bitarray('001110'))
+        a = bitarray('001')
+        b = a + bitarray('110')
+        self.assertEQUAL(b, bitarray('001110'))
+        b = a + [0, 1, 2]
+        self.assertEQUAL(b, bitarray('001011'))
+        b = a + '100'
+        self.assertEQUAL(b, bitarray('001100'))
+        b = a + (1, 0, 3)
+        self.assertEQUAL(b, bitarray('001101'))
+
+        self.assertRaises(TypeError, a.__add__, 42)
 
         for a in self.randombitarrays():
             aa = a.copy()
@@ -1042,15 +1051,18 @@ class SequenceMethodsTests(unittest.TestCase, Util):
                 self.assertEQUAL(a, aa)
                 self.assertEQUAL(b, bb)
 
-        a = bitarray()
-        self.assertRaises(TypeError, a.__add__, 42)
-
     def test_inplace_concat(self):
-        c = bitarray('001')
-        c += bitarray('110')
-        self.assertEqual(c, bitarray('001110'))
-        c += '111'
-        self.assertEqual(c, bitarray('001110111'))
+        a = bitarray('001')
+        a += bitarray('110')
+        self.assertEqual(a, bitarray('001110'))
+        a += [0, 1, 2]
+        self.assertEqual(a, bitarray('001110011'))
+        a += '100'
+        self.assertEqual(a, bitarray('001110011100'))
+        a += (1, 0, 3)
+        self.assertEqual(a, bitarray('001110011100101'))
+
+        self.assertRaises(TypeError, a.__iadd__, 42)
 
         for a in self.randombitarrays():
             for b in self.randombitarrays():
@@ -1062,9 +1074,6 @@ class SequenceMethodsTests(unittest.TestCase, Util):
                 self.assertEQUAL(c, d)
                 self.assertEqual(d.endian(), a.endian())
                 self.check_obj(d)
-
-        a = bitarray()
-        self.assertRaises(TypeError, a.__iadd__, 42)
 
     def test_repeat(self):
         for c in [0 * bitarray(),
