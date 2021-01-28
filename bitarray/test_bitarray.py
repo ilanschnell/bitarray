@@ -906,20 +906,6 @@ class MiscTests(unittest.TestCase, Util):
             b = bitarray(unicode(a.to01()))
             self.assertEqual(a, b)
 
-    def test_unicode_extend(self):
-        a = bitarray()
-        a.extend(unicode())
-        self.assertEqual(a, bitarray())
-
-        a = bitarray()
-        a.extend(unicode('001011'))
-        self.assertEqual(a, bitarray('001011'))
-
-        for a in self.randombitarrays():
-            b = bitarray()
-            b.extend(unicode(a.to01()))
-            self.assertEqual(a, b)
-
     def test_unhashable(self):
         a = bitarray()
         self.assertRaises(TypeError, hash, a)
@@ -1394,7 +1380,21 @@ class ExtendTests(unittest.TestCase, Util):
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
 
-    def test_extend_self(self):
+    def test_unicode(self):
+        a = bitarray()
+        a.extend(unicode())
+        self.assertEqual(a, bitarray())
+
+        a = bitarray()
+        a.extend(unicode('001011'))
+        self.assertEqual(a, bitarray('001011'))
+
+        for a in self.randombitarrays():
+            b = bitarray()
+            b.extend(unicode(a.to01()))
+            self.assertEqual(a, b)
+
+    def test_self(self):
         a = bitarray()
         a.extend(a)
         self.assertEqual(a, bitarray())
