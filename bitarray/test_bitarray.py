@@ -352,6 +352,10 @@ class CreateObjectTests(unittest.TestCase, Util):
         # wrong types
         for x in False, True, Ellipsis, slice(0), 0.0, 0 + 0j:
             self.assertRaises(TypeError, bitarray.__new__, bitarray, x)
+        if is_py3k:
+            self.assertRaises(TypeError, bitarray.__new__, bitarray, b'10')
+        else:
+            self.assertEQUAL(bitarray(b'10'), bitarray('10'))
         # wrong values
         for x in -1, 'A':
             self.assertRaises(ValueError, bitarray.__new__, bitarray, x)
@@ -1038,6 +1042,10 @@ class SequenceMethodsTests(unittest.TestCase, Util):
         self.assertEQUAL(b, bitarray('001101'))
 
         self.assertRaises(TypeError, a.__add__, 42)
+        if is_py3k:
+            self.assertRaises(TypeError, a.__add__, b'1101')
+        else:
+            self.assertEqual(a + b'10', bitarray('00110'))
 
         for a in self.randombitarrays():
             aa = a.copy()
@@ -1062,7 +1070,14 @@ class SequenceMethodsTests(unittest.TestCase, Util):
         a += (1, 0, 3)
         self.assertEqual(a, bitarray('001110011100101'))
 
+        a = bitarray('110')
         self.assertRaises(TypeError, a.__iadd__, 42)
+        b = b'101'
+        if is_py3k:
+            self.assertRaises(TypeError, a.__iadd__, b)
+        else:
+            a += b
+            self.assertEqual(a, bitarray('110101'))
 
         for a in self.randombitarrays():
             for b in self.randombitarrays():
@@ -1403,6 +1418,15 @@ class ExtendTests(unittest.TestCase, Util):
             b = bitarray()
             b.extend(unicode(a.to01()))
             self.assertEqual(a, b)
+
+    def test_bytes(self):
+        a = bitarray()
+        b = b'10110'
+        if is_py3k:
+            self.assertRaises(TypeError, a.extend, b)
+        else:
+            a.extend(b)
+            self.assertEqual(a, bitarray('10110'))
 
     def test_self(self):
         a = bitarray()

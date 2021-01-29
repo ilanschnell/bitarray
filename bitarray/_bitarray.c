@@ -556,15 +556,14 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         return extend_tuple(self, obj);
 
     if (PyBytes_Check(obj)) {                             /* bytes 01 */
-        /* This case is used on Python 2.  However, it should have never
-           been here for Python 3, as it allows bitarray(b'01101011') */
 #ifdef IS_PY3K
-        if (PyErr_WarnEx(PyExc_DeprecationWarning,
-                         "cannot extend bitarray with 'bytes', "
-                         "use .pack() or .frombytes() instead", 1) < 0)
-            return -1;
-#endif
+        PyErr_SetString(PyExc_TypeError,
+                        "cannot extend bitarray with 'bytes', "
+                        "use .pack() or .frombytes() instead");
+        return -1;
+#else
         return extend_01(self, obj);
+#endif
     }
 
     if (PyUnicode_Check(obj)) {                /* (unicode) string 01 */

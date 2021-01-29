@@ -723,6 +723,8 @@ Change log
 2021-XX-XX   1.7.0:
 
   * add `bitarray.util.urandom()`
+  * raise TypeError when trying to extend bitarrays from bytes on Python 3,
+    ie. `bitarray(b'011')` and `.extend(b'110')`.  (Deprecated since 1.4.1)
 
 
 *1.6.3* (2021-01-20):
