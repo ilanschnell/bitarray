@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2019 - 2021, Ilan Schnell
+   Copyright (c) 2019 - 2021, Ilan Schnell; All Rights Reserved
    bitarray is published under the PSF license.
 
    This file contains the C implementation of some useful utility functions.
