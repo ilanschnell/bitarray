@@ -643,6 +643,10 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('11010110'))
         a[3:3] = False # zero slicelength
         self.assertEqual(a, bitarray('11010110'))
+        a[:] = False #                ^^^^^^^^
+        self.assertEqual(a, bitarray('00000000'))
+        a[-2:2:-1] = 1 #                 ^^^^
+        self.assertEqual(a, bitarray('00011110'))
 
     def test_setslice_to_int(self):
         a = bitarray('11111111')
