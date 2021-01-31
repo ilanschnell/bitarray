@@ -593,11 +593,6 @@ create a binary tree object to be passed to `.decode()` or `.iterdecode()`.
 Functions defined in the `bitarray` module:
 --------------------------------------------
 
-`test(verbosity=1, repeat=1)` -> TextTestResult
-
-Run self-test, and return unittest.runner.TextTestResult object.
-
-
 `bits2bytes(n, /)` -> int
 
 Return the number of bytes necessary to store n bits.
@@ -607,6 +602,11 @@ Return the number of bytes necessary to store n bits.
 
 Return the default endianness for new bitarray objects being created.
 Under normal circumstances, the return value is `big`.
+
+
+`test(verbosity=1, repeat=1)` -> TextTestResult
+
+Run self-test, and return unittest.runner.TextTestResult object.
 
 
 Functions defined in `bitarray.util` module:

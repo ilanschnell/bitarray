@@ -108,9 +108,8 @@ the prefix code dictionary to those methods directly:
 
     fo.write("Functions defined in the `bitarray` module:\n"
              "--------------------------------------------\n\n")
-    write_doc('test')
-    write_doc('bits2bytes')
-    write_doc('get_default_endian')
+    for func in sorted(['test', 'bits2bytes', 'get_default_endian']):
+        write_doc(func)
 
     fo.write("Functions defined in `bitarray.util` module:\n"
              "--------------------------------------------\n\n")
