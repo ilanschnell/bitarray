@@ -266,7 +266,7 @@ class TestsCount_N(unittest.TestCase, Util):
 
     def check_result(self, a, n, i):
         self.assertEqual(a.count(1, 0, i), n)
-        if i:
+        if i > 0:
             self.assertTrue(a[i - 1])
 
     def test_simple(self):
