@@ -309,7 +309,7 @@ class TestsCount_N(unittest.TestCase, Util):
         for N in list(range(100)) + [1000, 10000, 100000]:
             a = bitarray(N)
             v = randint(0, 1)
-            a.setall(v - 1)
+            a.setall(not v)
             for _ in range(randint(0, min(N, 100))):
                 a[randint(0, N - 1)] = v
             n = randint(0, a.count())
