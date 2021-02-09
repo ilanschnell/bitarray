@@ -20,8 +20,7 @@ Key features
  * Bitarray objects behave very much like a list object, in particular
    slicing (including slice assignment and deletion) is supported.
  * The bit endianness can be specified for each bitarray object, see below.
- * Packing and unpacking to other binary data formats, e.g. numpy.ndarray
-   is possible.
+ * Packing and unpacking to other binary data formats, e.g. `numpy.ndarray`.
  * Fast methods for encoding and decoding variable bit length prefix codes
  * Bitwise operations: `&`, `|`, `^`, `&=`, `|=`, `^=`, `~`
  * Sequential search
