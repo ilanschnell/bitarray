@@ -13,7 +13,7 @@
 #include "pythoncapi_compat.h"
 #include "bitarray.h"
 
-/* block size used when reading / writing blocks of bytes from files */
+/* size used when reading / writing blocks from files (in bytes) */
 #define BLOCKSIZE  65536
 
 #ifdef IS_PY3K
