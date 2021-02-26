@@ -267,6 +267,8 @@ hashable object (including `None`).
         raise TypeError("dict expected")
     if len(freq_map) == 0:
         raise ValueError("non-empty dict expected")
+    if endian is None:
+        endian = get_default_endian()
 
     class Node(object):
         # a Node object will have either .symbol or .child set below,
@@ -303,7 +305,7 @@ hashable object (including `None`).
 
     result = {}
 
-    def traverse(nd, prefix=bitarray(0, endian or get_default_endian())):
+    def traverse(nd, prefix=bitarray(0, endian)):
         if hasattr(nd, 'symbol'):  # leaf
             result[nd.symbol] = prefix
         else:  # parent, so traverse each of the children
