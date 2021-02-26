@@ -39,7 +39,7 @@ endianness, which may be 'big', 'little'.
     if not isinstance(length, (int, long) if _is_py2 else int):
         raise TypeError("integer expected")
 
-    a = bitarray(length, endian or get_default_endian())
+    a = bitarray(length, get_default_endian() if endian is None else endian)
     a.setall(0)
     return a
 
@@ -49,7 +49,7 @@ def urandom(length, endian=None):
 
 Return a bitarray of `length` random bits (uses `os.urandom`).
 """
-    a = bitarray(0, endian or get_default_endian())
+    a = bitarray(0, get_default_endian() if endian is None else endian)
     a.frombytes(os.urandom(bits2bytes(length)))
     del a[length:]
     return a
@@ -146,7 +146,7 @@ hexstr may contain any number of hex digits (upper or lower case).
     if strlen % 2:
         s = s + ('0' if isinstance(s, str) else b'0')
 
-    a = bitarray(0, endian or get_default_endian())
+    a = bitarray(0, get_default_endian() if endian is None else endian)
     b = binascii.unhexlify(s)
     if a.endian() == 'little':
         b = b.translate(_swap_hilo_bytes)
@@ -226,7 +226,7 @@ is raised.
     elif i < 0 or (length and i >= 1 << length):
         raise OverflowError("unsigned integer out of range")
 
-    a = bitarray(0, endian or get_default_endian())
+    a = bitarray(0, get_default_endian() if endian is None else endian)
     big_endian = bool(a.endian() == 'big')
     if _is_py2:
         c = bytearray()
