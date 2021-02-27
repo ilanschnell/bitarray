@@ -54,8 +54,11 @@ class TestsZeros(unittest.TestCase):
         self.assertRaises(TypeError, zeros, 1.0)
         self.assertRaises(ValueError, zeros, -1)
 
-        self.assertRaises(TypeError, zeros, 0, 1) # endian not string
-        self.assertRaises(ValueError, zeros, 0, 'foo') # endian wrong string
+        # endian not string
+        for x in 0, 1, {}, [], False, True:
+            self.assertRaises(TypeError, zeros, 0, x)
+        # endian wrong string
+        self.assertRaises(ValueError, zeros, 0, 'foo')
 
 tests.append(TestsZeros)
 
