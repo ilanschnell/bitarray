@@ -1,4 +1,4 @@
-2021-XX-XX   1.7.0:
+2021-02-27   1.7.0:
 -------------------
   * add `bitarray.util.urandom()`
   * raise TypeError when trying to extend bitarrays from bytes on Python 3,

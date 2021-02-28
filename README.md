@@ -719,7 +719,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2021-XX-XX   1.7.0:
+*1.7.0* (2021-02-27):
 
   * add `bitarray.util.urandom()`
   * raise TypeError when trying to extend bitarrays from bytes on Python 3,
