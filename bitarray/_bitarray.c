@@ -1032,7 +1032,7 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(invert_doc,
-"invert(index=<all bits>)\n\
+"invert(index=<all bits>, /)\n\
 \n\
 Invert all bits in the array (in-place).\n\
 When the optional `index` is given, only invert the single bit at index.");
