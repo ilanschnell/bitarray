@@ -35,7 +35,7 @@ typedef struct {
 #define ENDIAN_LITTLE  0
 #define ENDIAN_BIG     1
 
-/* returns the endianness string from bitarrayobject */
+/* the endianness string from bitarrayobject */
 #define ENDIAN_STR(o)  ((o)->endian == ENDIAN_LITTLE ? "little" : "big")
 
 /* number of bits that can be stored in given bytes */

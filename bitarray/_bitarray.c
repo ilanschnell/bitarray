@@ -902,7 +902,7 @@ bitarray_all(bitarrayobject *self)
 PyDoc_STRVAR(all_doc,
 "all() -> bool\n\
 \n\
-Returns True when all bits in the array are True.");
+Return True when all bits in the array are True.");
 
 
 static PyObject *
@@ -914,7 +914,7 @@ bitarray_any(bitarrayobject *self)
 PyDoc_STRVAR(any_doc,
 "any() -> bool\n\
 \n\
-Returns True when any bit in the array is True.");
+Return True when any bit in the array is True.");
 
 
 static PyObject *
@@ -1003,8 +1003,8 @@ bitarray_fill(bitarrayobject *self)
 PyDoc_STRVAR(fill_doc,
 "fill() -> int\n\
 \n\
-Adds zeros to the end of the bitarray, such that the length of the bitarray\n\
-will be a multiple of 8.  Returns the number of bits added (0..7).");
+Add zeros to the end of the bitarray, such that the length of the bitarray\n\
+will be a multiple of 8, and return the number of bits added (0..7).");
 
 
 static PyObject *

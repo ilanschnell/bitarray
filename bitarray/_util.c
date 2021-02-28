@@ -14,7 +14,7 @@
 /* set using the Python module function _set_bato() */
 static PyObject *bitarray_type_obj = NULL;
 
-/* Return 0 if obj is bitarray.  If not, returns -1 and sets an exception. */
+/* Return 0 if obj is bitarray.  If not, return -1 and sets an exception. */
 static int
 ensure_bitarray(PyObject *obj)
 {
@@ -175,7 +175,7 @@ count_n(PyObject *module, PyObject *args)
 PyDoc_STRVAR(count_n_doc,
 "count_n(a, n, /) -> int\n\
 \n\
-Find the smallest index `i` for which `a[:i].count() == n`.\n\
+Return the smallest index `i` for which `a[:i].count() == n`.\n\
 Raises `ValueError`, when n exceeds total count (`a.count()`).");
 
 
@@ -284,7 +284,7 @@ count_ ## oper (bitarrayobject *module, PyObject *args)                 \
 PyDoc_STRVAR(count_ ## oper ## _doc,                                    \
 "count_" #oper "(a, b, /) -> int\n\
 \n\
-Returns `(a " ochar " b).count()`, but is more memory efficient,\n\
+Return `(a " ochar " b).count()` in a memory efficient manner,\n\
 as no intermediate bitarray object gets created.")
 
 COUNT_FUNC(and, "&");

@@ -337,12 +337,12 @@ fromfile, tobytes, frombytes.
 
 `all()` -> bool
 
-Returns True when all bits in the array are True.
+Return True when all bits in the array are True.
 
 
 `any()` -> bool
 
-Returns True when any bit in the array is True.
+Return True when any bit in the array is True.
 
 
 `append(item, /)`
@@ -408,8 +408,8 @@ as bits.
 
 `fill()` -> int
 
-Adds zeros to the end of the bitarray, such that the length of the bitarray
-will be a multiple of 8.  Returns the number of bits added (0..7).
+Add zeros to the end of the bitarray, such that the length of the bitarray
+will be a multiple of 8, and return the number of bits added (0..7).
 
 
 `frombytes(bytes, /)`
@@ -647,25 +647,25 @@ Allowed values for mode are the strings: `left`, `right`, `both`
 
 `count_n(a, n, /)` -> int
 
-Find the smallest index `i` for which `a[:i].count() == n`.
+Return the smallest index `i` for which `a[:i].count() == n`.
 Raises `ValueError`, when n exceeds total count (`a.count()`).
 
 
 `count_and(a, b, /)` -> int
 
-Returns `(a & b).count()`, but is more memory efficient,
+Return `(a & b).count()` in a memory efficient manner,
 as no intermediate bitarray object gets created.
 
 
 `count_or(a, b, /)` -> int
 
-Returns `(a | b).count()`, but is more memory efficient,
+Return `(a | b).count()` in a memory efficient manner,
 as no intermediate bitarray object gets created.
 
 
 `count_xor(a, b, /)` -> int
 
-Returns `(a ^ b).count()`, but is more memory efficient,
+Return `(a ^ b).count()` in a memory efficient manner,
 as no intermediate bitarray object gets created.
 
 
