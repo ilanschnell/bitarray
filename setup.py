@@ -22,7 +22,7 @@ setup(
     license = "PSF",
     classifiers = [
         "License :: OSI Approved :: Python Software Foundation License",
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 6 - Mature",
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
         "Programming Language :: C",
