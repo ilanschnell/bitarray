@@ -2455,9 +2455,6 @@ typedef struct {
 
 static PyTypeObject DecodeIter_Type;
 
-#define DecodeIter_Check(op)  PyObject_TypeCheck(op, &DecodeIter_Type)
-
-
 /* create a new initialized bitarray decode iterator object */
 static PyObject *
 bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
@@ -2506,7 +2503,6 @@ decodeiter_next(decodeiterobject *it)
 {
     PyObject *symbol;
 
-    assert(DecodeIter_Check(it));
     symbol = binode_traverse(it->tree, it->bao, &(it->index));
     if (symbol == NULL)  /* stop iteration OR error occured */
         return NULL;
@@ -2582,8 +2578,6 @@ typedef struct {
 
 static PyTypeObject SearchIter_Type;
 
-#define SearchIter_Check(op)  PyObject_TypeCheck(op, &SearchIter_Type)
-
 /* create a new initialized bitarray search iterator object */
 static PyObject *
 bitarray_itersearch(bitarrayobject *self, PyObject *x)
@@ -2625,7 +2619,6 @@ searchiter_next(searchiterobject *it)
 {
     Py_ssize_t p;
 
-    assert(SearchIter_Check(it));
     p = search(it->bao, it->xa, it->p);
     if (p < 0)  /* no more positions -- stop iteration */
         return NULL;
@@ -2968,8 +2961,6 @@ typedef struct {
 
 static PyTypeObject BitarrayIter_Type;
 
-#define BitarrayIter_Check(op)  PyObject_TypeCheck(op, &BitarrayIter_Type)
-
 /* create a new initialized bitarray iterator object, this object is
    returned when calling iter(a) */
 static PyObject *
@@ -2977,7 +2968,6 @@ bitarray_iter(bitarrayobject *self)
 {
     bitarrayiterobject *it;
 
-    assert(bitarray_Check(self));
     it = PyObject_GC_New(bitarrayiterobject, &BitarrayIter_Type);
     if (it == NULL)
         return NULL;
@@ -2994,7 +2984,6 @@ bitarrayiter_next(bitarrayiterobject *it)
 {
     long vi;
 
-    assert(BitarrayIter_Check(it));
     if (it->index < it->bao->nbits) {
         vi = GETBIT(it->bao, it->index);
         it->index++;
