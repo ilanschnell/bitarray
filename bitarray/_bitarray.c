@@ -1824,7 +1824,11 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
                         "bitarray or bool expected for slice assignment");
         return -1;
     }
-    return -1;                  /* cannot happen */
+
+    PyErr_Format(PyExc_TypeError,
+                 "bitarray indices must be integers or slices, not %s",
+                 Py_TYPE(item)->tp_name);
+    return -1;
 }
 
 static PyMappingMethods bitarray_as_mapping = {
