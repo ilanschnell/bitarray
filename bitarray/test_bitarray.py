@@ -496,14 +496,9 @@ class SliceTests(unittest.TestCase, Util):
 
         self.assertRaises(IndexError, a.__setitem__,  2, True)
         self.assertRaises(IndexError, a.__setitem__, -3, False)
-
-    def test_setitem_simple2(self):
-        a = bitarray('00000')
-        a[0] = 1
-        a[-2] = 1
-        self.assertEqual(a, bitarray('10010'))
-        self.assertRaises(IndexError, a.__setitem__, 5, 'foo')
-        self.assertRaises(IndexError, a.__setitem__, -6, 'bar')
+        self.assertRaises(TypeError, a.__setitem__, 1.5, 1)  # see issue 144
+        self.assertRaises(TypeError, a.__setitem__, None, 0)
+        self.assertRaises(TypeError, a.__setitem__, 'a', True)
 
     def test_setitem_random(self):
         for a in self.randombitarrays(start=1):
