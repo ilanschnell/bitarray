@@ -1,5 +1,6 @@
 2021-XX-XX   1.7.1:
 -------------------
+  * fix raising SystemError on assignment, #114
   * improve some docstrings and tests
 
 
