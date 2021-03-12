@@ -37,7 +37,7 @@ Create a bitarray of length, with all values 0, and optional
 endianness, which may be 'big', 'little'.
 """
     if not isinstance(length, (int, long) if _is_py2 else int):
-        raise TypeError("integer expected")
+        raise TypeError("int expected")
 
     a = bitarray(length, get_default_endian() if endian is None else endian)
     a.setall(0)
@@ -205,10 +205,10 @@ If signed is False and a negative integer is given, an OverflowError
 is raised.
 """
     if not isinstance(i, (int, long) if _is_py2 else int):
-        raise TypeError("integer expected")
+        raise TypeError("int expected")
     if length is not None:
         if not isinstance(length, int):
-            raise TypeError("integer expected for length")
+            raise TypeError("int expected for length")
         if length <= 0:
             raise ValueError("integer larger than 0 expected for length")
     if signed and length is None:
