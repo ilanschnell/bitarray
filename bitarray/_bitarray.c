@@ -1824,8 +1824,9 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
         if (IS_INT_OR_BOOL(value))
             return setslice_bool(self, item, value);
 
-        PyErr_SetString(PyExc_IndexError,
-                        "bitarray or bool expected for slice assignment");
+        PyErr_Format(PyExc_TypeError,
+                     "bitarray or bool expected for slice assignment, not %s",
+                     Py_TYPE(value)->tp_name);
         return -1;
     }
 

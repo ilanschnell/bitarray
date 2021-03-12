@@ -660,9 +660,9 @@ class SliceTests(unittest.TestCase, Util):
     def test_setslice_to_invalid(self):
         a = bitarray('11111111')
         s = slice(2, 6, None)
-        self.assertRaises(IndexError, a.__setitem__, s, 1.2)
-        self.assertRaises(IndexError, a.__setitem__, s, None)
-        self.assertRaises(IndexError, a.__setitem__, s, "0110")
+        self.assertRaises(TypeError, a.__setitem__, s, 1.2)
+        self.assertRaises(TypeError, a.__setitem__, s, None)
+        self.assertRaises(TypeError, a.__setitem__, s, "0110")
         a[s] = False
         self.assertEqual(a, bitarray('11000011'))
         # step != 1 and slicelen != length of assigned bitarray
@@ -685,7 +685,7 @@ class SliceTests(unittest.TestCase, Util):
         a.setall(1)
         for i in range(2, 8):
             if a[i]:
-                a[i*i::i] = 0
+                a[i * i::i] = 0
         primes = [i for i in range(2, 50) if a[i]]
         self.assertEqual(primes, [2, 3, 5, 7, 11, 13, 17, 19,
                                   23, 29, 31, 37, 41, 43, 47])
