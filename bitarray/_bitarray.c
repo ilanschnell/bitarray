@@ -588,6 +588,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         Py_DECREF(iter);
         return res;
     }
+
     PyErr_Format(PyExc_TypeError,
                  "'%s' object is not iterable", Py_TYPE(obj)->tp_name);
     return -1;
@@ -1668,7 +1669,10 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
         }
         return res;
     }
-    PyErr_SetString(PyExc_TypeError, "index or slice expected");
+
+    PyErr_Format(PyExc_TypeError,
+                 "bitarray indices must be integers or slices, not %s",
+                 Py_TYPE(item)->tp_name);
     return NULL;
 }
 

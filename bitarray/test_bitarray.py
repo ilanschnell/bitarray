@@ -447,6 +447,9 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a[-1], False)
         self.assertRaises(IndexError, a.__getitem__,  2)
         self.assertRaises(IndexError, a.__getitem__, -3)
+        self.assertRaises(TypeError, a.__getitem__, 1.5)
+        self.assertRaises(TypeError, a.__getitem__, None)
+        self.assertRaises(TypeError, a.__getitem__, 'A')
 
     def test_getitem_2(self):
         a = bitarray('1100010')
