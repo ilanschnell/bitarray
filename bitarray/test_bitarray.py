@@ -499,7 +499,7 @@ class SliceTests(unittest.TestCase, Util):
 
         self.assertRaises(IndexError, a.__setitem__,  2, True)
         self.assertRaises(IndexError, a.__setitem__, -3, False)
-        self.assertRaises(TypeError, a.__setitem__, 1.5, 1)  # see issue 144
+        self.assertRaises(TypeError, a.__setitem__, 1.5, 1)  # see issue 114
         self.assertRaises(TypeError, a.__setitem__, None, 0)
         self.assertRaises(TypeError, a.__setitem__, 'a', True)
 
