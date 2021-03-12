@@ -1999,7 +1999,8 @@ static int
 check_codedict(PyObject *codedict)
 {
     if (!PyDict_Check(codedict)) {
-        PyErr_SetString(PyExc_TypeError, "dict expected");
+        PyErr_Format(PyExc_TypeError, "dict expected, got %s",
+                     Py_TYPE(codedict)->tp_name);
         return -1;
     }
     if (PyDict_Size(codedict) == 0) {
@@ -2037,7 +2038,8 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
 
     iter = PyObject_GetIter(iterable);
     if (iter == NULL) {
-        PyErr_SetString(PyExc_TypeError, "iterable object expected");
+        PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
+                     Py_TYPE(iterable)->tp_name);
         return NULL;
     }
     /* extend self with the bitarrays from codedict */
@@ -2057,6 +2059,7 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
     if (PyErr_Occurred())
         return NULL;
     Py_RETURN_NONE;
+
  error:
     Py_DECREF(iter);
     return NULL;
