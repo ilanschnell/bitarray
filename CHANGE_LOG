@@ -1,6 +1,9 @@
 2021-XX-XX   1.7.1:
 -------------------
-  * fix raising SystemError on incorrect slice assignment, #114
+  * fix issue #114, raise TypeError when incorrect index is used during
+    assignment, e.g. `a[1.5] = 1`
+  * raise TypeError (not IndexError) when assigning slice to incorrect type,
+    e.g. `a[1:4] = 1.2`
   * improve some docstrings and tests
 
 
