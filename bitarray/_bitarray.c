@@ -2821,10 +2821,10 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (initial == NULL || initial == Py_None)
         return newbitarrayobject(type, 0, endian);
 
-    /* boolean */
+    /* bool */
     if (PyBool_Check(initial)) {
         PyErr_SetString(PyExc_TypeError,
-                        "cannot create bitarray from boolean");
+                        "cannot create bitarray from bool");
         return NULL;
     }
 
