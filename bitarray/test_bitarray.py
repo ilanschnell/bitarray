@@ -2457,9 +2457,10 @@ class PrefixCodeTests(unittest.TestCase, Util):
             for c in 1, 1, 0, 0, 1, 1:
                 yield c
 
+        a.clear()
         a.encode(d, foo())
         a.encode(d, range(2))
-        self.assertEqual(a, bitarray('011011001101'))
+        self.assertEqual(a, bitarray('11001101'))
         self.assertEqual(d, {0: bitarray('0'), 1: bitarray('1')})
 
     def test_encode_symbol_not_in_code(self):
@@ -2510,16 +2511,9 @@ class PrefixCodeTests(unittest.TestCase, Util):
              'a': bitarray('001'), 'n': bitarray('000')}
         dcopy = dict(d)
         a = bitarray('101001000')
-        self.assertEqual(a.decode(d), ['I', 'l', 'a', 'n'])
-        self.assertEqual(d, dcopy)
-        self.assertEqual(a, bitarray('101001000'))
-
-    def test_iterdecode_simple(self):
-        d = {'I': bitarray('1'),   'l': bitarray('01'),
-             'a': bitarray('001'), 'n': bitarray('000')}
-        dcopy = dict(d)
-        a = bitarray('101001000')
-        self.assertEqual(list(a.iterdecode(d)), ['I', 'l', 'a', 'n'])
+        res = list("Ilan")
+        self.assertEqual(a.decode(d), res)
+        self.assertEqual(list(a.iterdecode(d)), res)
         self.assertEqual(d, dcopy)
         self.assertEqual(a, bitarray('101001000'))
 
