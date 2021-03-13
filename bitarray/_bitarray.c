@@ -507,7 +507,7 @@ extend_01(bitarrayobject *self, PyObject *bytes)
         case '1': vi = 1; break;
         default:
             PyErr_Format(PyExc_ValueError,
-                         "character must be '0' or '1', found '%c'", c);
+                         "character must be '0' or '1', got '%c'", c);
             return -1;
         }
         setbit(self, self->nbits - nbytes + i, vi);
@@ -621,12 +621,12 @@ IntBool_AsInt(PyObject *v)
         x = PyLong_AsLong(v);
     }
     else {
-        PyErr_SetString(PyExc_TypeError, "integer or bool expected");
+        PyErr_SetString(PyExc_TypeError, "int or bool expected");
         return -1;
     }
 
     if (x < 0 || x > 1) {
-        PyErr_SetString(PyExc_ValueError, "integer 0 or 1 expected");
+        PyErr_SetString(PyExc_ValueError, "int 0 or 1 expected");
         return -1;
     }
     return (int) x;
@@ -2796,8 +2796,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* bool */
     if (PyBool_Check(initial)) {
-        PyErr_SetString(PyExc_TypeError,
-                        "cannot create bitarray from bool");
+        PyErr_SetString(PyExc_TypeError, "cannot create bitarray from bool");
         return NULL;
     }
 

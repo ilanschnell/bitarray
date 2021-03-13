@@ -90,7 +90,7 @@ Allowed values for mode are the strings: `left`, `right`, `both`
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
     if not isinstance(mode, str):
-        raise TypeError("string expected for mode")
+        raise TypeError("str expected for mode")
     if mode not in ('left', 'right', 'both'):
         raise ValueError("allowed values 'left', 'right', 'both', got: %r" %
                          mode)
@@ -140,7 +140,7 @@ Bitarray of hexadecimal representation.
 hexstr may contain any number of hex digits (upper or lower case).
 """
     if not isinstance(s, (str, unicode if _is_py2 else bytes)):
-        raise TypeError("string expected, got: %r" % s)
+        raise TypeError("str expected, got: %r" % s)
 
     strlen = len(s)
     if strlen % 2:
