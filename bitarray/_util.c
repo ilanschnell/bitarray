@@ -14,7 +14,7 @@
 /* set using the Python module function _set_bato() */
 static PyObject *bitarray_type_obj = NULL;
 
-/* Return 0 if obj is bitarray.  If not, return -1 and sets an exception. */
+/* Return 0 if obj is bitarray.  If not, return -1 and set an exception. */
 static int
 ensure_bitarray(PyObject *obj)
 {
