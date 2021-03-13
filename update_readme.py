@@ -21,7 +21,7 @@ def write_changelog():
     for line in open('CHANGE_LOG'):
         m = ver_pat.match(line)
         if m:
-            if count == 9:
+            if count == 10:
                 break
             count += 1
             fo.write(m.expand(r'*\2* (\1):\n'))

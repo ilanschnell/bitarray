@@ -719,7 +719,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2021-XX-XX   1.7.1:
+*1.7.1* (2021-03-12):
 
   * fix issue #114, raise TypeError when incorrect index is used during
     assignment, e.g. `a[1.5] = 1`
