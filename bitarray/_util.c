@@ -26,7 +26,8 @@ ensure_bitarray(PyObject *obj)
     if (t < 0)
         return -1;
     if (t == 0) {
-        PyErr_SetString(PyExc_TypeError, "bitarray expected");
+        PyErr_Format(PyExc_TypeError, "bitarray expected, not %s",
+                     Py_TYPE(obj)->tp_name);
         return -1;
     }
     return 0;
