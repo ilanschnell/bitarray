@@ -34,8 +34,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.7.0.tar.gz
-    $ cd bitarray-1.7.0
+    $ tar xzf bitarray-1.7.1.tar.gz
+    $ cd bitarray-1.7.1
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -54,13 +54,13 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.7.0
+    bitarray version: 1.7.1
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
     ..............................
     ----------------------------------------------------------------------
-    Ran 265 tests in 0.921s
+    Ran 264 tests in 0.921s
 
     OK
 
@@ -422,7 +422,7 @@ bits to the bitarray.
 
 Extend bitarray with up to n bytes read from the file object f.
 When n is omitted or negative, reads all data until EOF.
-When n is provided and positions but exceeds the data available,
+When n is provided and positive but exceeds the data available,
 EOFError is raised (but the available data is still read and appended.
 
 
@@ -437,7 +437,7 @@ Raises `ValueError` if the value is not present.
 Insert `bool(value)` into the bitarray before index.
 
 
-`invert(index=<all bits>)`
+`invert(index=<all bits>, /)`
 
 Invert all bits in the array (in-place).
 When the optional `index` is given, only invert the single bit at index.
@@ -718,6 +718,15 @@ hashable object (including `None`).
 
 Change log
 ----------
+
+2021-XX-XX   1.7.1:
+
+  * fix issue #114, raise TypeError when incorrect index is used during
+    assignment, e.g. `a[1.5] = 1`
+  * raise TypeError (not IndexError) when assigning slice to incorrect type,
+    e.g. `a[1:4] = 1.2`
+  * improve some docstrings and tests
+
 
 *1.7.0* (2021-02-27):
 
