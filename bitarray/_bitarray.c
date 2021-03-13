@@ -485,30 +485,6 @@ extend_list(bitarrayobject *self, PyObject *list)
 }
 
 static int
-extend_tuple(bitarrayobject *self, PyObject *tuple)
-{
-    PyObject *item;
-    Py_ssize_t n, i;
-
-    assert(PyTuple_Check(tuple));
-    n = PyTuple_GET_SIZE(tuple);
-    if (n == 0)
-        return 0;
-
-    if (resize(self, self->nbits + n) < 0)
-        return -1;
-
-    for (i = 0; i < n; i++) {
-        item = PyTuple_GET_ITEM(tuple, i);
-        if (item == NULL)
-            return -1;
-        if (set_item(self, self->nbits - n + i, item) < 0)
-            return -1;
-    }
-    return 0;
-}
-
-static int
 extend_01(bitarrayobject *self, PyObject *bytes)
 {
     Py_ssize_t nbytes, i;
@@ -551,9 +527,6 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 
     if (PyList_Check(obj))                                    /* list */
         return extend_list(self, obj);
-
-    if (PyTuple_Check(obj))                                  /* tuple */
-        return extend_tuple(self, obj);
 
     if (PyBytes_Check(obj)) {                             /* bytes 01 */
 #ifdef IS_PY3K
