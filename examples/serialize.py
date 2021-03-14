@@ -16,7 +16,7 @@ its endianness) and is guaranteed not to change in future versions.
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
     buffer_info = a.buffer_info()
-    return 'bty%d%s%s' % (buffer_info[3], buffer_info[2][0],
+    return 'bta%d%s%s' % (buffer_info[3], buffer_info[2][0],
                           binascii.hexlify(a.tobytes()).decode())
 
 def deserialize(s):
@@ -26,8 +26,8 @@ Return a bitarray given a serialized string (returned by `serialized()`).
 """
     if not isinstance(s, (str, unicode) if _is_py2 else str):
         raise TypeError("str expected, got: %s" % type(s))
-    if not s.startswith('bty'):
-        raise ValueError("expected string starting with 'bty'")
+    if not s.startswith('bta'):
+        raise ValueError("expected string starting with 'bta'")
     unused = int(s[3])
     ed = {'l': 'little', 'b': 'big'}
     a = bitarray(endian=ed[s[4]])
@@ -46,4 +46,4 @@ for n in range(1000):
     assert a == b
     assert a.endian() == b.endian()
 
-# print(deserialize('bty9l00ffAB'))
+# print(deserialize('bta9l00ffAB'))

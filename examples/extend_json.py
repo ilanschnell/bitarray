@@ -1,4 +1,5 @@
 import json
+import binascii
 
 from bitarray import bitarray
 
@@ -8,8 +9,12 @@ class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
 
         if isinstance(obj, bitarray):
-            return {'bitarray': obj.to01(),
-                    'endian': obj.endian()}
+            return {
+                'type': 'bitarray',
+                'bytes': binascii.hexlify(obj.tobytes()).decode(),
+                'len': len(obj),
+                'endian': obj.endian()
+            }
 
         return json.JSONEncoder.default(self, obj)
 
@@ -21,17 +26,30 @@ class JSONDecoder(json.JSONDecoder):
                                   *args, **kwargs)
 
     def object_hook(self, obj):
-        if (isinstance(obj, dict) and len(obj) == 2 and
-            'bitarray' in obj and 'endian' in obj):
-            return bitarray(obj['bitarray'], endian=obj['endian'])
+        if isinstance(obj, dict) and obj.get('type') == 'bitarray':
+            a = bitarray(endian=obj['endian'])
+            a.frombytes(binascii.unhexlify(obj['bytes'])),
+            del a[obj['len']:]
+            return a
 
         return obj
 
 
-a = {'abc': bitarray('110'), 'def': [12, 34, 56]}
-#a = bitarray('001')
-print(a)
-j = JSONEncoder().encode(a)
-print(j)
-b = JSONDecoder().decode(j)
-assert a == b
+def test():
+    from random import randint
+    from bitarray.util import urandom
+
+    a = [urandom(n, endian=['little', 'big'][randint(0, 1)])
+         for n in range(1000)]
+    a.append({'key': bitarray('010')})
+    j = JSONEncoder().encode(a)
+    b = JSONDecoder().decode(j)
+    assert a == b
+    for i in range(len(a)):
+        if isinstance(a[i], bitarray):
+            assert a[i] == b[i]
+            assert a[i].endian() == b[i].endian()
+
+
+if __name__ == '__main__':
+    test()
