@@ -10,7 +10,8 @@ def serialize(a):
 
 Return a serialized string representation of the bitarray.  The serialized
 string contains only ASCII letters and numbers, and can be passed as input
-to `deserialize()`.
+to `deserialize()`.  It compactly represents the bitarray object (including
+its endianness) and is guaranteed not to change in future versions.
 """
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
