@@ -781,6 +781,16 @@ class TestsSerialization(unittest.TestCase, Util):
             self.assertEqual(serialize(a), s)
             self.assertEQUAL(deserialize(s), a)
 
+    def test_zeros_and_ones(self):
+        for endian in 'little', 'big':
+            for n in range(100):
+                a = zeros(n, endian)
+                s = serialize(a)
+                self.assertEqual(s[1:], b'\0' * bits2bytes(n))
+                self.assertEQUAL(a, deserialize(s))
+                a.setall(1)
+                self.assertEQUAL(a, deserialize(serialize(a)))
+
     def test_wrong_args(self):
         self.assertRaises(TypeError, serialize, '0')
         self.assertRaises(TypeError, serialize, bitarray(), 1)
