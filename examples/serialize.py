@@ -15,9 +15,11 @@ its endianness) and is guaranteed not to change in future versions.
 """
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
+    ed = {'little': 0, 'big': 1}
     buffer_info = a.buffer_info()
-    return '%d%d%s' % (int(buffer_info[2] == 'big'), buffer_info[3],
+    return '%d%d%s' % (ed[buffer_info[2]], buffer_info[3],
                        binascii.hexlify(a.tobytes()).decode())
+
 
 def deserialize(s):
     """deserialize(string, /) -> bitarray
