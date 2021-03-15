@@ -37,7 +37,7 @@ def test():
     a.append({'key1': bitarray('010'),
               'key2': 'value2'})
     j = JSONEncoder().encode(a)
-    print(j)
+    #print(j)
     b = JSONDecoder().decode(j)
     assert a == b
     for i in range(len(a)):
