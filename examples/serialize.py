@@ -8,14 +8,14 @@ def serialize(a):
     """serialize(bitarray, /) -> bytes
 
 Return a serialized representation of the bitarray, which may be passed
-to `deserialize()`.  It compactly represents the bitarray object (including
+to `deserialize()`.  It efficiently represents the bitarray object (including
 its endianness) and is guaranteed not to change in future versions.
 """
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
     info = a.buffer_info()
     head = 16 * int(info[2] == 'big') + info[3]
-    return (chr(head) if _is_py2 else bytes([head])) + a.tobytes()
+    return bytes(bytearray([head])) + a.tobytes()
 
 
 def deserialize(b):
