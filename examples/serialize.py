@@ -14,10 +14,8 @@ its endianness) and is guaranteed not to change in future versions.
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
     info = a.buffer_info()
-    b = bytearray()
-    b.append(16 * int(info[2] == 'big') + info[3])
-    b.extend(a.tobytes())
-    return bytes(b)
+    head = 16 * int(info[2] == 'big') + info[3]
+    return (chr(head) if _is_py2 else bytes([head])) + a.tobytes()
 
 
 def deserialize(b):
