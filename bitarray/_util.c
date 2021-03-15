@@ -308,6 +308,41 @@ efficient since we can stop as soon as one mismatch is found, and no\n\
 intermediate bitarray object gets created.");
 
 
+static PyObject *
+serialize(PyObject *module, PyObject *a)
+{
+    PyObject *result;
+    Py_ssize_t nbytes;
+    char *data;
+
+    if (ensure_bitarray(a) < 0)
+        return NULL;
+
+    nbytes = Py_SIZE(a);
+    data = (char *) PyMem_Malloc(nbytes + 1);
+    if (data == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+#define aa  ((bitarrayobject *) a)
+    data[0] = (char) (16 * (aa->endian == ENDIAN_BIG) +
+                      BITS(nbytes) - aa->nbits);
+    setunused(aa);
+    memcpy(data + 1, aa->ob_item, (size_t) nbytes);
+#undef aa
+    result = PyBytes_FromStringAndSize(data, nbytes + 1);
+    PyMem_Free((void *) data);
+    return result;
+}
+
+PyDoc_STRVAR(serialize_doc,
+"serialize(bitarray, /) -> bytes\n\
+\n\
+Return a serialized representation of the bitarray, which may be passed to\n\
+`deserialize()`.  It efficiently represents the bitarray object (including\n\
+its endianness) and is guaranteed not to change in future releases.");
+
+
 /* set bitarray_type_obj (bato) */
 static PyObject *
 set_bato(PyObject *module, PyObject *obj)
@@ -323,6 +358,7 @@ static PyMethodDef module_functions[] = {
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
     {"subset",    (PyCFunction) subset,    METH_VARARGS, subset_doc},
+    {"serialize", (PyCFunction) serialize, METH_O,       serialize_doc},
     {"_set_bato", (PyCFunction) set_bato,  METH_O,       },
     {NULL,        NULL}  /* sentinel */
 };

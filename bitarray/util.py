@@ -15,12 +15,13 @@ from bitarray import bitarray, bits2bytes, get_default_endian
 
 from bitarray._util import (count_n, rindex,
                             count_and, count_or, count_xor, subset,
-                            _swap_hilo_bytes, _set_bato)
+                            serialize, _swap_hilo_bytes, _set_bato)
 
 
 __all__ = ['zeros', 'urandom', 'make_endian', 'rindex', 'strip',
            'count_n', 'count_and', 'count_or', 'count_xor', 'subset',
-           'ba2hex', 'hex2ba', 'ba2int', 'int2ba', 'huffman_code']
+           'ba2hex', 'hex2ba', 'ba2int', 'int2ba',
+           'serialize', 'deserialize', 'huffman_code']
 
 
 # tell the _util extension what the bitarray type object is, such that it
@@ -250,6 +251,22 @@ is raised.
         pad = zeros(length - la, endian)
         a = pad + a if big_endian else a + pad
     assert len(a) == length
+    return a
+
+
+def deserialize(b):
+    """deserialize(bytes, /) -> bitarray
+
+Return a bitarray given the bytes representation returned by `serialize()`.
+"""
+    if not isinstance(b, bytes):
+        raise TypeError("bytes expected, got: %s" % type(b))
+
+    endian, unused = divmod(ord(b[0]) if _is_py2 else b[0], 16)
+    a = bitarray(endian=['little', 'big'][endian])
+    a.frombytes(b[1:])
+    if unused:
+        del a[-unused:]
     return a
 
 

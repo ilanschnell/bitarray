@@ -2,8 +2,7 @@ import json
 from base64 import standard_b64encode, standard_b64decode
 
 from bitarray import bitarray
-
-from serialize import serialize, deserialize
+from bitarray.util import serialize, deserialize
 
 
 class JSONEncoder(json.JSONEncoder):

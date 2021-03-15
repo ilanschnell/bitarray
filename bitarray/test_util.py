@@ -16,7 +16,8 @@ from bitarray.test_bitarray import Util
 
 from bitarray.util import (zeros, urandom, make_endian, rindex, strip,
                            count_n, count_and, count_or, count_xor, subset,
-                           ba2hex, hex2ba, ba2int, int2ba, huffman_code)
+                           ba2hex, hex2ba, ba2int, int2ba,
+                           serialize, deserialize, huffman_code)
 
 if sys.version_info[0] == 3:
     unicode = str
@@ -760,6 +761,39 @@ class TestsIntegerization(unittest.TestCase, Util):
 
 
 tests.append(TestsIntegerization)
+
+# ---------------------------------------------------------------------------
+
+class TestsSerialization(unittest.TestCase, Util):
+
+    def test_explicit(self):
+        import binascii
+
+        for a, h in [
+                (bitarray(0, 'little'),   '00'),
+                (bitarray(0, 'big'),      '10'),
+                (bitarray('1', 'little'), '0701'),
+                (bitarray('1', 'big'),    '1780'),
+                (bitarray('11110000', 'little'), '000f'),
+                (bitarray('11110000', 'big'),    '10f0'),
+        ]:
+            s = binascii.unhexlify(h)
+            self.assertEqual(serialize(a), s)
+            self.assertEQUAL(deserialize(s), a)
+
+    def test_wrong_args(self):
+        self.assertRaises(TypeError, serialize, '0')
+        self.assertRaises(TypeError, serialize, bitarray(), 1)
+        self.assertRaises(TypeError, deserialize, unicode('01'))
+        self.assertRaises(TypeError, deserialize, b'\x00', 1)
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            b = deserialize(serialize(a))
+            self.assertEQUAL(a, b)
+
+
+tests.append(TestsSerialization)
 
 # ---------------------------------------------------------------------------
 

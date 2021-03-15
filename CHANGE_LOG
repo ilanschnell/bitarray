@@ -1,5 +1,7 @@
-2021-XX-XX   1.7.2:
+2021-XX-XX   1.8.0:
 -------------------
+  * add `util.serialize()` and `util.deserialize()`
+  * add example showing how to jsonize bitarrays
 
 
 2021-03-12   1.7.1:
