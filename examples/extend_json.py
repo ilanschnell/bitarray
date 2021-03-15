@@ -1,7 +1,9 @@
 import json
-import binascii
+from base64 import standard_b64encode, standard_b64decode
 
 from bitarray import bitarray
+
+from serialize import serialize, deserialize
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -9,12 +11,7 @@ class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
 
         if isinstance(obj, bitarray):
-            return {
-                'type': 'bitarray',
-                'bytes': binascii.hexlify(obj.tobytes()).decode(),
-                'len': len(obj),
-                'endian': obj.endian()
-            }
+            return {'bitarray': standard_b64encode(serialize(obj)).decode()}
 
         return json.JSONEncoder.default(self, obj)
 
@@ -26,11 +23,8 @@ class JSONDecoder(json.JSONDecoder):
                                   *args, **kwargs)
 
     def object_hook(self, obj):
-        if isinstance(obj, dict) and obj.get('type') == 'bitarray':
-            a = bitarray(endian=obj['endian'])
-            a.frombytes(binascii.unhexlify(obj['bytes'])),
-            del a[obj['len']:]
-            return a
+        if isinstance(obj, dict) and len(obj) == 1 and obj.get('bitarray'):
+            return deserialize(standard_b64decode(obj['bitarray']))
 
         return obj
 
@@ -44,6 +38,7 @@ def test():
     a.append({'key1': bitarray('010'),
               'key2': 'value2'})
     j = JSONEncoder().encode(a)
+    print(j)
     b = JSONDecoder().decode(j)
     assert a == b
     for i in range(len(a)):
