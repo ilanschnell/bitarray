@@ -15,9 +15,8 @@ its endianness) and is guaranteed not to change in future versions.
 """
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected")
-    ed = {'little': 0, 'big': 1}
     buffer_info = a.buffer_info()
-    return '%d%d%s' % (ed[buffer_info[2]], buffer_info[3],
+    return '%d%d%s' % (int(buffer_info[2] == 'big'), buffer_info[3],
                        binascii.hexlify(a.tobytes()).decode())
 
 
@@ -28,8 +27,7 @@ Return a bitarray given a serialized string (returned by `serialize()`).
 """
     if not isinstance(s, (str, unicode) if _is_py2 else str):
         raise TypeError("str expected, got: %s" % type(s))
-    ed = {'0': 'little', '1': 'big'}
-    a = bitarray(endian=ed[s[0]])
+    a = bitarray(endian=['little', 'big'][int(s[0])])
     unused = int(s[1])
     a.frombytes(binascii.unhexlify(s[2:]))
     if unused:
