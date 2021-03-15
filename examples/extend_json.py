@@ -41,7 +41,8 @@ def test():
 
     a = [urandom(n, endian=['little', 'big'][randint(0, 1)])
          for n in range(1000)]
-    a.append({'key': bitarray('010')})
+    a.append({'key1': bitarray('010'),
+              'key2': 'value2'})
     j = JSONEncoder().encode(a)
     b = JSONDecoder().decode(j)
     assert a == b
@@ -49,6 +50,8 @@ def test():
         if isinstance(a[i], bitarray):
             assert a[i] == b[i]
             assert a[i].endian() == b[i].endian()
+    assert b[-1]['key1'] == bitarray('010')
+    assert b[-1]['key2'] == 'value2'
 
 
 if __name__ == '__main__':
