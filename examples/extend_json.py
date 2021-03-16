@@ -22,7 +22,7 @@ class JSONDecoder(json.JSONDecoder):
                                   *args, **kwargs)
 
     def object_hook(self, obj):
-        if isinstance(obj, dict) and len(obj) == 1 and obj.get('bitarray'):
+        if isinstance(obj, dict) and len(obj) == 1 and 'bitarray' in obj:
             return deserialize(standard_b64decode(obj['bitarray']))
 
         return obj
