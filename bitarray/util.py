@@ -261,6 +261,8 @@ Return a bitarray given the bytes representation returned by `serialize()`.
 """
     if not isinstance(b, bytes):
         raise TypeError("bytes expected, got: %s" % type(b))
+    if len(b) == 0:
+        raise ValueError("non-empty bytes expected")
 
     endian, unused = divmod(ord(b[0]) if _is_py2 else b[0], 16)
     try:
