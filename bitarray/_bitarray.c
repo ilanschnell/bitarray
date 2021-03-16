@@ -2867,10 +2867,10 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     /* bytes (for pickling) */
     if (PyBytes_Check(initial)) {
         res = unpickle(type, initial, endian);
-        if (res == NULL && PyErr_Occurred())
-            return NULL;
         if (res)
             return res;
+        else if (PyErr_Occurred())
+            return NULL;
     }
 
     /* leave remaining type dispatch to the extend method */
