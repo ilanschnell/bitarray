@@ -798,7 +798,7 @@ class TestsSerialization(unittest.TestCase, Util):
         self.assertRaises(TypeError, deserialize, b'\x00', 1)
 
     def test_invalid_bytes(self):
-        for s in b'', b'\x20', b'\x30':
+        for s in b'', b'\x08', b'\x0f' b'\x18', b'\x1f', b'\x20', b'\x30':
             self.assertRaises(ValueError, deserialize, s)
 
     def test_random(self):

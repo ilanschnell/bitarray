@@ -904,14 +904,14 @@ bitarray_reduce(bitarrayobject *self)
         dict = Py_None;
         Py_INCREF(dict);
     }
-    /* the first byte indicates the number of unused bits at the end, and
-       the rest of the bytes consist of the raw binary data */
     data = (char *) PyMem_Malloc(nbytes + 1);
     if (data == NULL) {
         PyErr_NoMemory();
         goto error;
     }
+    /* first byte contains the number of unused bits */
     data[0] = (char) setunused(self);
+    /* remaining bytes contain buffer */
     memcpy(data + 1, self->ob_item, (size_t) nbytes);
     repr = PyBytes_FromStringAndSize(data, nbytes + 1);
     if (repr == NULL)
@@ -928,37 +928,33 @@ bitarray_reduce(bitarrayobject *self)
 PyDoc_STRVAR(reduce_doc, "state information for pickling");
 
 
+/* Return a bitarray from bytes, where the first byte % 8 is the number of
+   unused bits, and the remaining bytes consist of the buffer */
 static PyObject *
-unpickle(PyTypeObject *type, PyObject *initial, int endian)
+unpickle(PyTypeObject *type, PyObject *bytes, int endian)
 {
     PyObject *res;
     Py_ssize_t nbytes;
+    unsigned char head;
     char *data;
 
-    assert(PyBytes_Check(initial));
-    nbytes = PyBytes_Size(initial);
-    if (nbytes == 0)
-        return NULL;
+    assert(PyBytes_Check(bytes));
+    nbytes = PyBytes_GET_SIZE(bytes);
+    assert(nbytes > 0);
+    data = PyBytes_AsString(bytes);
+    head = data[0];
 
-    data = PyBytes_AsString(initial);
-    if (((unsigned char) data[0]) >= 8)
-        return NULL;
-
-    /* when the first character is smaller than 8, it indicates the
-       number of unused bits at the end, and rest of the bytes
-       consist of the raw binary data */
-    if (nbytes == 1 && data[0] > 0) {
+    if (nbytes == 1 && head % 8) {
         PyErr_Format(PyExc_ValueError,
-                     "did not expect 0x0%d", (int) data[0]);
+                     "invalid header byte 0x%02x", (int) head);
         return NULL;
     }
     res = newbitarrayobject(type,
-                            BITS(nbytes - 1) - ((Py_ssize_t) data[0]),
+                            BITS(nbytes - 1) - ((Py_ssize_t) (head % 8)),
                             endian);
     if (res == NULL)
         return NULL;
-    memcpy(((bitarrayobject *) res)->ob_item, data + 1,
-           (size_t) nbytes - 1);
+    memcpy(((bitarrayobject *) res)->ob_item, data + 1, (size_t) nbytes - 1);
     return res;
 }
 
@@ -2865,12 +2861,14 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     }
 
     /* bytes (for pickling) */
-    if (PyBytes_Check(initial)) {
-        res = unpickle(type, initial, endian);
-        if (res)
-            return res;
-        else if (PyErr_Occurred())
-            return NULL;
+    if (PyBytes_Check(initial) && PyBytes_GET_SIZE(initial) > 0) {
+        unsigned char head = PyBytes_AsString(initial)[0];
+
+        if (head < 32 && head % 16 < 8) {
+            if (endian_str == NULL)  /* no endianness given in argument */
+                endian = head / 16 ? ENDIAN_BIG : ENDIAN_LITTLE;
+            return unpickle(type, initial, endian);
+        }
     }
 
     /* leave remaining type dispatch to the extend method */

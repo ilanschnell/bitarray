@@ -292,9 +292,8 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(bitarray(s, endian='big'),
                              bitarray(r))
 
-        for i in range(1, 8):
-            self.assertRaises(ValueError, bitarray.__new__,
-                              bitarray, bytes(bytearray([i])))
+        for b in '\x01', '\x04', '\x07', '\x11', '\x15', '\x17':
+            self.assertRaises(ValueError, bitarray.__new__, bitarray, b)
 
     def test_bitarray_simple(self):
         for n in range(10):

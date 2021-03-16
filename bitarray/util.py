@@ -263,16 +263,11 @@ Return a bitarray given the bytes representation returned by `serialize()`.
         raise TypeError("bytes expected, got: %s" % type(b))
     if len(b) == 0:
         raise ValueError("non-empty bytes expected")
+    head = ord(b[0]) if _is_py2 else b[0]
+    if head >= 32 or head % 16 >= 8:
+        raise ValueError('invalid header byte 0x%02x' % head)
 
-    endian, unused = divmod(ord(b[0]) if _is_py2 else b[0], 16)
-    try:
-        a = bitarray(endian=['little', 'big'][endian])
-    except IndexError:
-        raise ValueError('found invalid header byte')
-    a.frombytes(b[1:])
-    if unused:
-        del a[-unused:]
-    return a
+    return bitarray(b)
 
 
 def huffman_code(freq_map, endian=None):
