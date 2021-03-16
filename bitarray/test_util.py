@@ -798,8 +798,20 @@ class TestsSerialization(unittest.TestCase, Util):
         self.assertRaises(TypeError, deserialize, b'\x00', 1)
 
     def test_invalid_bytes(self):
-        for s in b'', b'\x08', b'\x0f' b'\x18', b'\x1f', b'\x20', b'\x30':
-            self.assertRaises(ValueError, deserialize, s)
+        self.assertRaises(ValueError, deserialize, b'')
+
+        for i in range(256):
+            b1 = bytes(bytearray([i]))
+            if i == 0 or i == 16:
+                self.assertEqual(deserialize(b1), bitarray())
+            else:
+                self.assertRaises(ValueError, deserialize, b1)
+
+            b2 = bytes(bytearray([i, 0]))
+            if i < 32 and i % 16 < 8:
+                self.assertEqual(deserialize(b2), zeros(8 - i % 8))
+            else:
+                self.assertRaises(ValueError, deserialize, b2)
 
     def test_random(self):
         for a in self.randombitarrays():

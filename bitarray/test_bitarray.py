@@ -347,6 +347,11 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(len(a), 0)
             self.assertEQUAL(a, bitarray())
 
+        if is_py3k:
+            self.assertRaises(TypeError, bitarray.__new__, bitarray, b'')
+        else:
+            self.assertEqual(bitarray(b''), bitarray())
+
     def test_wrong_args(self):
         # wrong types
         for x in False, True, Ellipsis, slice(0), 0.0, 0 + 0j:
