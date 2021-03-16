@@ -797,6 +797,10 @@ class TestsSerialization(unittest.TestCase, Util):
         self.assertRaises(TypeError, deserialize, unicode('01'))
         self.assertRaises(TypeError, deserialize, b'\x00', 1)
 
+    def test_invalid_bytes(self):
+        self.assertRaises(ValueError, deserialize, b'\x20')
+        self.assertRaises(ValueError, deserialize, b'\x30')
+
     def test_random(self):
         for a in self.randombitarrays():
             b = deserialize(serialize(a))

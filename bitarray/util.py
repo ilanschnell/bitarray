@@ -263,7 +263,10 @@ Return a bitarray given the bytes representation returned by `serialize()`.
         raise TypeError("bytes expected, got: %s" % type(b))
 
     endian, unused = divmod(ord(b[0]) if _is_py2 else b[0], 16)
-    a = bitarray(endian=['little', 'big'][endian])
+    try:
+        a = bitarray(endian=['little', 'big'][endian])
+    except IndexError:
+        raise ValueError('found invalid header byte')
     a.frombytes(b[1:])
     if unused:
         del a[-unused:]
