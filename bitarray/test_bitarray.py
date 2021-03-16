@@ -286,14 +286,38 @@ class CreateObjectTests(unittest.TestCase, Util):
 
         self.assertRaises(ValueError, bitarray.__new__, bitarray, '01012100')
 
-    def test_rawbytes(self):  # this representation is used for pickling
+    def test_rawbytes(self):
+        self.assertEqual(bitarray(b'\x00').endian(), 'little')
+        self.assertEqual(bitarray(b'\x10').endian(), 'big')
+
+        # this representation is used for pickling
         for s, r in [(b'\x00', ''), (b'\x07\xff', '1'), (b'\x03\xff', '11111'),
                      (b'\x01\x87\xda', '10000111' '1101101')]:
-            self.assertEqual(bitarray(s, endian='big'),
-                             bitarray(r))
+            self.assertEqual(bitarray(s, endian='big'), bitarray(r))
 
-        for b in '\x01', '\x04', '\x07', '\x11', '\x15', '\x17':
-            self.assertRaises(ValueError, bitarray.__new__, bitarray, b)
+        self.assertEQUAL(bitarray(b'\x12\x0f', 'little'),
+                         bitarray('111100', 'little'))
+        self.assertEQUAL(bitarray(b'\x02\x0f', 'big'),
+                         bitarray('000011', 'big'))
+
+        for a, s in [
+                (bitarray(0, 'little'),   b'\x00'),
+                (bitarray(0, 'big'),      b'\x10'),
+                (bitarray('1', 'little'), b'\x07\x01'),
+                (bitarray('1', 'big'),    b'\x17\x80'),
+                (bitarray('11110000', 'little'), b'\x00\x0f'),
+                (bitarray('11110000', 'big'),    b'\x10\xf0'),
+        ]:
+            self.assertEQUAL(bitarray(s), a)
+
+    def test_rawbytes_invalid(self):
+        for s in b'\x01', b'\x04', b'\x07', b'\x11', b'\x15', b'\x17':
+            self.assertRaises(ValueError, bitarray.__new__, bitarray, s)
+            a = bitarray(s + b'\x00')
+            head = s[0] if is_py3k else ord(s[0])
+            endian, unused = divmod(head, 16)
+            self.assertEqual(a.endian(), ['little', 'big'][endian])
+            self.assertEqual(len(a), 8 - unused)
 
     def test_bitarray_simple(self):
         for n in range(10):
