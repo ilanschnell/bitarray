@@ -929,6 +929,41 @@ PyDoc_STRVAR(reduce_doc, "state information for pickling");
 
 
 static PyObject *
+unpickle(PyTypeObject *type, PyObject *initial, int endian)
+{
+    PyObject *res;
+    Py_ssize_t nbytes;
+    char *data;
+
+    assert(PyBytes_Check(initial));
+    nbytes = PyBytes_Size(initial);
+    if (nbytes == 0)
+        return NULL;
+
+    data = PyBytes_AsString(initial);
+    if (((unsigned char) data[0]) >= 8)
+        return NULL;
+
+    /* when the first character is smaller than 8, it indicates the
+       number of unused bits at the end, and rest of the bytes
+       consist of the raw binary data */
+    if (nbytes == 1 && data[0] > 0) {
+        PyErr_Format(PyExc_ValueError,
+                     "did not expect 0x0%d", (int) data[0]);
+        return NULL;
+    }
+    res = newbitarrayobject(type,
+                            BITS(nbytes - 1) - ((Py_ssize_t) data[0]),
+                            endian);
+    if (res == NULL)
+        return NULL;
+    memcpy(((bitarrayobject *) res)->ob_item, data + 1,
+           (size_t) nbytes - 1);
+    return res;
+}
+
+
+static PyObject *
 bitarray_reverse(bitarrayobject *self)
 {
     const Py_ssize_t m = self->nbits - 1;     /* index of last item */
@@ -2831,32 +2866,11 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* bytes (for pickling) */
     if (PyBytes_Check(initial)) {
-        Py_ssize_t nbytes;
-        char *data;
-
-        nbytes = PyBytes_Size(initial);
-        if (nbytes == 0)        /* no bytes */
-            return newbitarrayobject(type, 0, endian);
-
-        data = PyBytes_AsString(initial);
-        if (0 <= data[0] && data[0] < 8) {
-            /* when the first character is smaller than 8, it indicates the
-               number of unused bits at the end, and rest of the bytes
-               consist of the raw binary data */
-            if (nbytes == 1 && data[0] > 0) {
-                PyErr_Format(PyExc_ValueError,
-                             "did not expect 0x0%d", (int) data[0]);
-                return NULL;
-            }
-            res = newbitarrayobject(type,
-                                    BITS(nbytes - 1) - ((Py_ssize_t) data[0]),
-                                    endian);
-            if (res == NULL)
-                return NULL;
-            memcpy(((bitarrayobject *) res)->ob_item, data + 1,
-                   (size_t) nbytes - 1);
+        res = unpickle(type, initial, endian);
+        if (res == NULL && PyErr_Occurred())
+            return NULL;
+        if (res)
             return res;
-        }
     }
 
     /* leave remaining type dispatch to the extend method */
