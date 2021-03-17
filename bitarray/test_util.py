@@ -767,17 +767,14 @@ tests.append(TestsIntegerization)
 class TestsSerialization(unittest.TestCase, Util):
 
     def test_explicit(self):
-        import binascii
-
-        for a, h in [
-                (bitarray(0, 'little'),   '00'),
-                (bitarray(0, 'big'),      '10'),
-                (bitarray('1', 'little'), '0701'),
-                (bitarray('1', 'big'),    '1780'),
-                (bitarray('11110000', 'little'), '000f'),
-                (bitarray('11110000', 'big'),    '10f0'),
+        for a, s in [
+                (bitarray(0, 'little'),   b'\x00'),
+                (bitarray(0, 'big'),      b'\x10'),
+                (bitarray('1', 'little'), b'\x07\x01'),
+                (bitarray('1', 'big'),    b'\x17\x80'),
+                (bitarray('11110000', 'little'), b'\x00\x0f'),
+                (bitarray('11110000', 'big'),    b'\x10\xf0'),
         ]:
-            s = binascii.unhexlify(h)
             self.assertEqual(serialize(a), s)
             self.assertEQUAL(deserialize(s), a)
 
