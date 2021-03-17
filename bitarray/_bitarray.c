@@ -489,13 +489,12 @@ extend_01(bitarrayobject *self, PyObject *bytes)
 {
     Py_ssize_t i;
     char c, *data;
-    int vi;
+    int vi = 0;  /* to avoid uninitialized warning for some compilers */
 
     assert(PyBytes_Check(bytes));
     data = PyBytes_AsString(bytes);
 
     for (i = 0; i < PyBytes_GET_SIZE(bytes); i++) {
-        vi = -1;
         c = data[i];
         switch (c) {
         case '0': vi = 0; break;
@@ -505,14 +504,12 @@ extend_01(bitarrayobject *self, PyObject *bytes)
         case '\r':
         case '\t':
         case '\v':
-            break;
+            continue;
         default:
             PyErr_Format(PyExc_ValueError,
                          "expected '0' or '1' (or whitespace), got '%c'", c);
             return -1;
         }
-        if (vi < 0)
-            continue;
         if (resize(self, self->nbits + 1) < 0)
             return -1;
         setbit(self, self->nbits - 1, vi);
