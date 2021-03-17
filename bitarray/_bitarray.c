@@ -487,15 +487,15 @@ extend_list(bitarrayobject *self, PyObject *list)
 static int
 extend_01(bitarrayobject *self, PyObject *bytes)
 {
-    Py_ssize_t nbytes, i;
+    Py_ssize_t i;
     char c, *data;
-    int vi = 0;
+    int vi;
 
     assert(PyBytes_Check(bytes));
-    nbytes = PyBytes_GET_SIZE(bytes);
     data = PyBytes_AsString(bytes);
 
-    for (i = 0; i < nbytes; i++) {
+    for (i = 0; i < PyBytes_GET_SIZE(bytes); i++) {
+        vi = -1;
         c = data[i];
         switch (c) {
         case '0': vi = 0; break;
@@ -504,13 +504,14 @@ extend_01(bitarrayobject *self, PyObject *bytes)
         case '\n':
         case '\r':
         case '\t':
-        case '\v': vi = 2; break;
+        case '\v':
+            break;
         default:
             PyErr_Format(PyExc_ValueError,
                          "expected '0' or '1' (or whitespace), got '%c'", c);
             return -1;
         }
-        if (vi == 2)
+        if (vi < 0)
             continue;
         if (resize(self, self->nbits + 1) < 0)
             return -1;
