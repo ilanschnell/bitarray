@@ -34,8 +34,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.7.1.tar.gz
-    $ cd bitarray-1.7.1
+    $ tar xzf bitarray-1.8.0.tar.gz
+    $ cd bitarray-1.8.0
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -54,13 +54,13 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
-    bitarray version: 1.7.1
+    bitarray version: 1.8.0
     3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
     .........................................................................
     .........................................................................
     ..............................
     ----------------------------------------------------------------------
-    Ran 264 tests in 0.921s
+    Ran 272 tests in 0.921s
 
     OK
 
@@ -708,6 +708,18 @@ If signed is False and a negative integer is given, an OverflowError
 is raised.
 
 
+`serialize(bitarray, /)` -> bytes
+
+Return a serialized representation of the bitarray, which may be passed to
+`deserialize()`.  It efficiently represents the bitarray object (including
+its endianness) and is guaranteed not to change in future releases.
+
+
+`deserialize(bytes, /)` -> bitarray
+
+Return a bitarray given the bytes representation returned by `serialize()`.
+
+
 `huffman_code(dict, /, endian=None)` -> dict
 
 Given a frequency map, a dictionary mapping symbols to their frequency,
@@ -718,6 +730,14 @@ hashable object (including `None`).
 
 Change log
 ----------
+
+2021-XX-XX   1.8.0:
+
+  * add `util.serialize()` and `util.deserialize()`
+  * allow whitespace (ignore ` \n\r\t\v`) in "01" input strings,
+    e.g. `bitarray('01 11')` or `a += '10 00'`
+  * add example showing how to jsonize bitarrays
+
 
 *1.7.1* (2021-03-12):
 
