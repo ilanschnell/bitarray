@@ -3,8 +3,14 @@ bloom.py:
     http://en.wikipedia.org/wiki/Bloom_filter
 
 
+extend_json.py:
+    Demonstrates how to construct a json encoder and decoder (using the
+    'json' standard library) which can handle nexted Python data structures
+    containing bitarrays.
+
+
 gene.py:
-    shows how gene sequences (ATGC) can be very easily and efficiently
+    Shows how gene sequences (ATGC) can be very easily and efficiently
     represented by bitarrays.
 
 
