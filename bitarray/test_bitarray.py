@@ -2157,7 +2157,7 @@ class FileTests(unittest.TestCase, Util):
     def test_pickle_load(self):
         if not is_py3k:
             return
-        # test data file was created using bitarray 1.5.0 / Python 3.5.5
+        # the test data file was created using bitarray 1.5.0 / Python 3.5.5
         path = os.path.join(os.path.dirname(__file__), 'test_data.pickle')
         with open(path, 'rb') as fi:
             d = pickle.load(fi)
@@ -2169,11 +2169,11 @@ class FileTests(unittest.TestCase, Util):
                 ('0010011110000000000000000000001', 'big'),
         ]):
             b = d['b%d' % i]
-            self.assertEqual(b, bitarray(s, end))
+            self.assertEqual(b.to01(), s)
             self.assertEqual(b.endian(), end)
             self.assertEqual(repr(type(b)), "<class 'bitarray.bitarray'>")
             f = d['f%d' % i]
-            self.assertEqual(f, frozenbitarray(s, end))
+            self.assertEqual(f.to01(), s)
             self.assertEqual(f.endian(), end)
             self.assertEqual(repr(type(f)),
                              "<class 'bitarray.frozenbitarray'>")
@@ -2223,7 +2223,6 @@ class FileTests(unittest.TestCase, Util):
     def test_fromfile_wrong_args(self):
         a = bitarray()
         self.assertRaises(TypeError, a.fromfile)
-        #self.assertRaises(TypeError, a.fromfile, StringIO())  # file not open
         self.assertRaises(Exception, a.fromfile, 42)
         self.assertRaises(Exception, a.fromfile, 'bar')
 
