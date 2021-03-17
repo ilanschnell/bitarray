@@ -89,7 +89,7 @@ basic usage of bitarray objects:
 Bitarray objects can be instantiated in different ways:
 
     >>> a = bitarray(2**20)       # bitarray of length 1048576 (uninitialized)
-    >>> bitarray('1001011')       # from a string
+    >>> bitarray('1001 011')      # from a string (whitespace is ignored)
     bitarray('1001011')
     >>> lst = [True, False, False, True, False, True, True]
     >>> bitarray(lst)             # from list, tuple, iterable
@@ -245,7 +245,7 @@ the internal data of an object that supports the buffer protocol without
 copying.  Bitarray objects support this protocol, with the memory being
 interpreted as simple bytes.
 
-    >>> a = bitarray('01000001' '01000010' '01000011', endian='big')
+    >>> a = bitarray('01000001 01000010 01000011', endian='big')
     >>> v = memoryview(a)
     >>> len(v)
     3
