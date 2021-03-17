@@ -1327,6 +1327,7 @@ class ExtendTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.extend, None)
         self.assertRaises(TypeError, a.extend, True)
         self.assertRaises(TypeError, a.extend, 24)
+        self.assertRaises(TypeError, a.extend, 1.0)
 
     def test_bitarray(self):
         a = bitarray()
@@ -1351,6 +1352,8 @@ class ExtendTests(unittest.TestCase, Util):
 
     def test_list(self):
         a = bitarray()
+        a.extend([])
+        self.assertEqual(a, bitarray())
         a.extend([0, 1, 3, None, {}])
         self.assertEqual(a, bitarray('01100'))
         a.extend([True, False])
@@ -1367,6 +1370,8 @@ class ExtendTests(unittest.TestCase, Util):
 
     def test_tuple(self):
         a = bitarray()
+        a.extend(tuple())
+        self.assertEqual(a, bitarray())
         a.extend((0, 1, 2, 0, 3))
         self.assertEqual(a, bitarray('01101'))
 
@@ -1401,6 +1406,8 @@ class ExtendTests(unittest.TestCase, Util):
 
     def test_iterator1(self):
         a = bitarray()
+        a.extend(iter([]))
+        self.assertEqual(a, bitarray())
         a.extend(iter([3, 9, 0, 1, -2]))
         self.assertEqual(a, bitarray('11011'))
 
@@ -1420,6 +1427,9 @@ class ExtendTests(unittest.TestCase, Util):
 
     def test_string01(self):
         a = bitarray()
+        a.extend(str())
+        a.extend('')
+        self.assertEqual(a, bitarray())
         a.extend('0110111')
         self.assertEqual(a, bitarray('0110111'))
         self.assertRaises(ValueError, a.extend, '0011201')
