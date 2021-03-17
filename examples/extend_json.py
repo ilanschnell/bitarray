@@ -32,12 +32,12 @@ def test():
     from random import randint
     from bitarray.util import urandom
 
-    a = [urandom(n, endian=['little', 'big'][randint(0, 1)])
-         for n in range(1000)]
+    a = [urandom(n * n, endian=['little', 'big'][randint(0, 1)])
+         for n in range(10)]
     a.append({'key1': bitarray('010'),
               'key2': 'value2'})
-    j = JSONEncoder().encode(a)
-    #print(j)
+    j = JSONEncoder(indent=2).encode(a)
+    print(j)
     b = JSONDecoder().decode(j)
     assert a == b
     for i in range(len(a)):
