@@ -734,7 +734,7 @@ Change log
 2021-XX-XX   1.8.0:
 
   * add `util.serialize()` and `util.deserialize()`
-  * allow whitespace (ignore ` \n\r\t\v`) in "01" input strings,
+  * allow whitespace (ignore space and `\n\r\t\v`) in input strings,
     e.g. `bitarray('01 11')` or `a += '10 00'`
   * add example showing how to jsonize bitarrays
 
