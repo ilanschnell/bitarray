@@ -2155,6 +2155,29 @@ class FileTests(unittest.TestCase, Util):
             self.assertFalse(b is a)
             self.assertEQUAL(a, b)
 
+    def test_pickle_load(self):
+        if not is_py3k:
+            return
+        path = os.path.join(os.path.dirname(__file__), 'test_data.pickle')
+        with open(path, 'rb') as fi:
+            d = pickle.load(fi)
+
+        for i, (s, end) in enumerate([
+                ('110', 'little'),
+                ('011', 'big'),
+                ('1110000001001000000000000000001', 'little'),
+                ('0010011110000000000000000000001', 'big'),
+        ]):
+            b = d['b%d' % i]
+            self.assertEqual(b, bitarray(s, end))
+            self.assertEqual(b.endian(), end)
+            self.assertEqual(repr(type(b)), "<class 'bitarray.bitarray'>")
+            f = d['f%d' % i]
+            self.assertEqual(f, frozenbitarray(s, end))
+            self.assertEqual(f.endian(), end)
+            self.assertEqual(repr(type(f)),
+                             "<class 'bitarray.frozenbitarray'>")
+
     def test_shelve(self):
         if hasattr(sys, 'gettotalrefcount'):
             return
