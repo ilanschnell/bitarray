@@ -17,7 +17,6 @@ import copy
 import pickle
 import itertools
 import shelve
-import hashlib
 
 
 is_py3k = bool(sys.version_info[0] == 3)
@@ -2147,17 +2146,18 @@ class FileTests(unittest.TestCase, Util):
 
 
     def test_pickle(self):
-        for a in self.randombitarrays():
-            with open(self.tmpfname, 'wb') as fo:
-                pickle.dump(a, fo)
-            with open(self.tmpfname, 'rb') as fi:
-                b = pickle.load(fi)
-            self.assertFalse(b is a)
-            self.assertEQUAL(a, b)
+        d1 = {i: a for i, a in enumerate(self.randombitarrays())}
+        with open(self.tmpfname, 'wb') as fo:
+            pickle.dump(d1, fo)
+        with open(self.tmpfname, 'rb') as fi:
+            d2 = pickle.load(fi)
+        for key in d1.keys():
+            self.assertEQUAL(d1[key], d2[key])
 
     def test_pickle_load(self):
         if not is_py3k:
             return
+        # test data file was created using bitarray 1.5.0 / Python 3.5.5
         path = os.path.join(os.path.dirname(__file__), 'test_data.pickle')
         with open(path, 'rb') as fi:
             d = pickle.load(fi)
@@ -2182,20 +2182,18 @@ class FileTests(unittest.TestCase, Util):
         if hasattr(sys, 'gettotalrefcount'):
             return
 
-        d = shelve.open(self.tmpfname)
+        d1 = shelve.open(self.tmpfname)
         stored = []
         for a in self.randombitarrays():
-            key = hashlib.md5(repr(a).encode() +
-                              a.endian().encode()).hexdigest()
-            d[key] = a
+            key = str(len(a))
+            d1[key] = a
             stored.append((key, a))
-        d.close()
-        del d
+        d1.close()
 
-        d = shelve.open(self.tmpfname)
+        d2 = shelve.open(self.tmpfname)
         for k, v in stored:
-            self.assertEQUAL(d[k], v)
-        d.close()
+            self.assertEQUAL(d2[k], v)
+        d2.close()
 
     def test_fromfile_empty(self):
         with open(self.tmpfname, 'wb') as fo:
