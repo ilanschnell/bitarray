@@ -493,24 +493,28 @@ extend_01(bitarrayobject *self, PyObject *bytes)
 
     assert(PyBytes_Check(bytes));
     nbytes = PyBytes_GET_SIZE(bytes);
-    if (nbytes == 0)
-        return 0;
-
-    if (resize(self, self->nbits + nbytes) < 0)
-        return -1;
-
     data = PyBytes_AsString(bytes);
+
     for (i = 0; i < nbytes; i++) {
         c = data[i];
         switch (c) {
         case '0': vi = 0; break;
         case '1': vi = 1; break;
+        case ' ':
+        case '\n':
+        case '\r':
+        case '\t':
+        case '\v': vi = 2; break;
         default:
             PyErr_Format(PyExc_ValueError,
-                         "character must be '0' or '1', got '%c'", c);
+                         "expected '0' or '1' (or whitespace), got '%c'", c);
             return -1;
         }
-        setbit(self, self->nbits - nbytes + i, vi);
+        if (vi == 2)
+            continue;
+        if (resize(self, self->nbits + 1) < 0)
+            return -1;
+        setbit(self, self->nbits - 1, vi);
     }
     return 0;
 }
