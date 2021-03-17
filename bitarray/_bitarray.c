@@ -492,7 +492,7 @@ extend_01(bitarrayobject *self, PyObject *bytes)
     int vi = 0;  /* to avoid uninitialized warning for some compilers */
 
     assert(PyBytes_Check(bytes));
-    data = PyBytes_AsString(bytes);
+    data = PyBytes_AS_STRING(bytes);
 
     for (i = 0; i < PyBytes_GET_SIZE(bytes); i++) {
         c = data[i];
@@ -912,7 +912,7 @@ bitarray_reduce(bitarrayobject *self)
         goto error;
     }
     /* first byte contains the number of unused bits */
-    data[0] = (char) setunused(self);
+    *data = (char) setunused(self);
     /* remaining bytes contain buffer */
     memcpy(data + 1, self->ob_item, (size_t) nbytes);
     repr = PyBytes_FromStringAndSize(data, nbytes + 1);
@@ -943,8 +943,8 @@ unpickle(PyTypeObject *type, PyObject *bytes, int endian)
     assert(PyBytes_Check(bytes));
     nbytes = PyBytes_GET_SIZE(bytes);
     assert(nbytes > 0);
-    data = PyBytes_AsString(bytes);
-    head = data[0];
+    data = PyBytes_AS_STRING(bytes);
+    head = *data;
 
     if (nbytes == 1 && head % 8) {
         PyErr_Format(PyExc_ValueError,
@@ -1194,7 +1194,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
         return NULL;
 
     memcpy(self->ob_item + (Py_SIZE(self) - nbytes),
-           PyBytes_AsString(bytes), (size_t) nbytes);
+           PyBytes_AS_STRING(bytes), (size_t) nbytes);
 
     if (delete_n(self, t, p) < 0)
         return NULL;
@@ -1354,7 +1354,7 @@ bitarray_pack(bitarrayobject *self, PyObject *bytes)
     if (resize(self, self->nbits + nbytes) < 0)
         return NULL;
 
-    data = PyBytes_AsString(bytes);
+    data = PyBytes_AS_STRING(bytes);
     for (i = 0; i < nbytes; i++)
         setbit(self, self->nbits - nbytes + i, data[i] ? 1 : 0);
 
@@ -2865,7 +2865,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* bytes (for pickling) */
     if (PyBytes_Check(initial) && PyBytes_GET_SIZE(initial) > 0) {
-        unsigned char head = PyBytes_AsString(initial)[0];
+        unsigned char head = *PyBytes_AS_STRING(initial);
 
         if (head < 32 && head % 16 < 8) {
             if (endian_str == NULL)  /* no endianness given in argument */
