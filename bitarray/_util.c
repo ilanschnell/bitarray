@@ -325,8 +325,8 @@ serialize(PyObject *module, PyObject *a)
         return NULL;
     }
 #define aa  ((bitarrayobject *) a)
-    data[0] = (char) (16 * (aa->endian == ENDIAN_BIG) +
-                      BITS(nbytes) - aa->nbits);
+    *data = (char) (16 * (aa->endian == ENDIAN_BIG) +
+                    BITS(nbytes) - aa->nbits);
     setunused(aa);
     memcpy(data + 1, aa->ob_item, (size_t) nbytes);
 #undef aa

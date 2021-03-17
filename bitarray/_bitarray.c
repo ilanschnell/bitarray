@@ -2233,7 +2233,8 @@ binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
         t = (bitarrayobject *) bitarray_copy(prefix);
         if (t == NULL)
             return -1;
-        resize(t, t->nbits + 1);
+        if (resize(t, t->nbits + 1) < 0)
+            return -1;
         setbit(t, t->nbits - 1, k);
         ret = binode_to_dict(nd->child[k], dict, t);
         Py_DECREF((PyObject *) t);
