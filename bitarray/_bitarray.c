@@ -543,7 +543,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     if (PyUnicode_Check(obj)) {                /* (unicode) string 01 */
         PyObject *bytes;
 
-        bytes = PyUnicode_AsEncodedString(obj, NULL, NULL);
+        bytes = PyUnicode_AsASCIIString(obj);
         if (bytes == NULL)
             return -1;
         assert(PyBytes_Check(bytes));
