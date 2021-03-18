@@ -272,9 +272,10 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('111011'))
 
     def test_01(self):
-        a = bitarray('0010111')
-        self.assertEqual(a.tolist(), [0, 0, 1, 0, 1, 1, 1])
-        self.check_obj(a)
+        for s in '0010111', u'0010111', '0010 111', u'0010 111':
+            a = bitarray(s)
+            self.assertEqual(a.tolist(), [0, 0, 1, 0, 1, 1, 1])
+            self.check_obj(a)
 
         for n in range(50):
             lst = [bool(randint(0, 1)) for d in range(n)]
@@ -283,7 +284,8 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist(), lst)
             self.check_obj(a)
 
-        self.assertRaises(ValueError, bitarray.__new__, bitarray, '01012100')
+            for s in '01012100', u'1\u26050':
+                self.assertRaises(ValueError, bitarray.__new__, bitarray, s)
 
     def test_rawbytes(self):
         self.assertEqual(bitarray(b'\x00').endian(), 'little')
@@ -1462,6 +1464,7 @@ class ExtendTests(unittest.TestCase, Util):
             b = bitarray()
             b.extend(unicode(a.to01()))
             self.assertEqual(a, b)
+            self.assertRaises(ValueError, a.extend, u'1\u2605 0')
 
     def test_bytes(self):
         a = bitarray()
