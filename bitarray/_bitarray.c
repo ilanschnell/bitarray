@@ -537,7 +537,6 @@ static int
 extend_dispatch(bitarrayobject *self, PyObject *obj)
 {
     PyObject *iter;
-    int res;
 
     /* dispatch on type */
     if (bitarray_Check(obj))                              /* bitarray */
@@ -566,6 +565,8 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     /* finally, try to get the iterator of the object */
     iter = PyObject_GetIter(obj);
     if (iter) {
+        int res;
+
         res = extend_iter(self, iter);
         Py_DECREF(iter);
         return res;

@@ -367,8 +367,17 @@ class CreateObjectTests(unittest.TestCase, Util):
         c = bitarray('11100001', endian='big')
         self.assertEqual(a, c)
 
+    def test_frozenbitarray(self):
+        for endian in 'little', 'big':
+            a = frozenbitarray('011', endian=endian)
+            b = bitarray(a)
+            self.assertIsInstance(b, bitarray)
+            self.assertEqual(b.to01(), '011')
+            self.assertEqual(b.endian(), endian)
+
     def test_create_empty(self):
-        for x in None, 0, '', list(), tuple(), set(), dict():
+        for x in (None, 0, '', list(), tuple(), set(), dict(), u'',
+                  bitarray(), frozenbitarray()):
             a = bitarray(x)
             self.assertEqual(len(a), 0)
             self.assertEQUAL(a, bitarray())
