@@ -2813,8 +2813,8 @@ static PyObject*
 bitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
 {
     Py_ssize_t nbits;
-    assert(PyIndex_Check(index));
 
+    assert(PyIndex_Check(index));
     nbits = PyNumber_AsSsize_t(index, PyExc_IndexError);
     if (nbits == -1 && PyErr_Occurred())
         return NULL;
