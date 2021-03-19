@@ -2809,6 +2809,23 @@ endian_from_string(const char* string)
     return -1;
 }
 
+static PyObject*
+bitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
+{
+    Py_ssize_t nbits;
+    assert(PyIndex_Check(index));
+
+    nbits = PyNumber_AsSsize_t(index, PyExc_IndexError);
+    if (nbits == -1 && PyErr_Occurred())
+        return NULL;
+
+    if (nbits < 0) {
+        PyErr_SetString(PyExc_ValueError,
+                        "cannot create bitarray with negative length");
+        return NULL;
+    }
+    return newbitarrayobject(type, nbits, endian);
+}
 
 static PyObject *
 bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
@@ -2838,20 +2855,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     }
 
     /* index (a number) */
-    if (PyIndex_Check(initial)) {
-        Py_ssize_t nbits;
-
-        nbits = PyNumber_AsSsize_t(initial, PyExc_IndexError);
-        if (nbits == -1 && PyErr_Occurred())
-            return NULL;
-
-        if (nbits < 0) {
-            PyErr_SetString(PyExc_ValueError,
-                            "cannot create bitarray with negative length");
-            return NULL;
-        }
-        return newbitarrayobject(type, nbits, endian);
-    }
+    if (PyIndex_Check(initial))
+        return bitarray_from_index(type, initial, endian);
 
     /* from bitarray itself */
     if (bitarray_Check(initial)) {
