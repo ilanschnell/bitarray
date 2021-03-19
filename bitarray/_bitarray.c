@@ -447,7 +447,7 @@ extend_iter(bitarrayobject *self, PyObject *iter)
     PyObject *item;
 
     assert(PyIter_Check(iter));
-    while ((item = PyIter_Next(iter)) != NULL) {
+    while ((item = PyIter_Next(iter))) {
         if (append_item(self, item) < 0) {
             Py_DECREF(item);
             return -1;
@@ -769,7 +769,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     PyObject *item = NULL, *x;
     Py_ssize_t limit = -1;
     bitarrayobject *xa;
-    Py_ssize_t p;
+    Py_ssize_t p = 0;
 
     if (!PyArg_ParseTuple(args, "O|n:search", &x, &limit))
         return NULL;
@@ -789,13 +789,8 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     if (xa->nbits > self->nbits || limit == 0)
         return list;
 
-    p = 0;
-    while (1) {
-        p = search(self, xa, p);
-        if (p < 0)
-            break;
-        item = PyLong_FromSsize_t(p);
-        p++;
+    while ((p = search(self, xa, p)) >= 0) {
+        item = PyLong_FromSsize_t(p++);
         if (item == NULL || PyList_Append(list, item) < 0) {
             Py_XDECREF(item);
             Py_XDECREF(list);
@@ -2048,7 +2043,7 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
         return NULL;
     }
     /* extend self with the bitarrays from codedict */
-    while ((symbol = PyIter_Next(iter)) != NULL) {
+    while ((symbol = PyIter_Next(iter))) {
         value = PyDict_GetItem(codedict, symbol);
         Py_DECREF(symbol);
         if (value == NULL) {
