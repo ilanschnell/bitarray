@@ -1434,6 +1434,12 @@ class ExtendTests(unittest.TestCase, Util):
         a.extend('0110111')
         self.assertEqual(a, bitarray('0110111'))
         self.assertRaises(ValueError, a.extend, '0011201')
+        # ensure no bits got added after error was raised
+        self.assertEqual(a, bitarray('0110111'))
+
+        a = bitarray()
+        self.assertRaises(ValueError, a.extend, 1000 * '01' + '.')
+        self.assertEqual(a, bitarray())
 
         for a in self.randomlists():
             for b in self.randomlists():
@@ -1454,6 +1460,8 @@ class ExtendTests(unittest.TestCase, Util):
         a.extend(unicode())
         self.assertEqual(a, bitarray())
         self.assertRaises(ValueError, a.extend, unicode('0011201'))
+        # ensure no bits got added after error was raised
+        self.assertEqual(a, bitarray())
 
         a = bitarray()
         a.extend(unicode('001 011'))
@@ -1462,8 +1470,9 @@ class ExtendTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             b = bitarray()
             b.extend(unicode(a.to01()))
-            self.assertEqual(a, b)
+            self.assertEqual(b, a)
             self.assertRaises(UnicodeEncodeError, a.extend, u'1\u2605 0')
+            self.assertEqual(b, a)
 
     def test_bytes(self):
         a = bitarray()
