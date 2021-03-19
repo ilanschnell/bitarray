@@ -485,7 +485,7 @@ extend_list(bitarrayobject *self, PyObject *list)
 }
 
 static int
-extend_01(bitarrayobject *self, PyObject *bytes)
+extend_bytes01(bitarrayobject *self, PyObject *bytes)
 {
     unsigned char c;
     char *data;
@@ -517,6 +517,23 @@ extend_01(bitarrayobject *self, PyObject *bytes)
 }
 
 static int
+extend_unicode01(bitarrayobject *self, PyObject *unicode)
+{
+    PyObject *bytes;
+    int res;
+
+    assert(PyUnicode_Check(unicode));
+    bytes = PyUnicode_AsASCIIString(unicode);
+    if (bytes == NULL)
+        return -1;
+
+    assert(PyBytes_Check(bytes));
+    res = extend_bytes01(self, bytes);
+    Py_DECREF(bytes);  /* drop bytes */
+    return res;
+}
+
+static int
 extend_dispatch(bitarrayobject *self, PyObject *obj)
 {
     PyObject *iter;
@@ -536,21 +553,12 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
                         "use .pack() or .frombytes() instead");
         return -1;
 #else
-        return extend_01(self, obj);
+        return extend_bytes01(self, obj);
 #endif
     }
 
-    if (PyUnicode_Check(obj)) {                /* (unicode) string 01 */
-        PyObject *bytes;
-
-        bytes = PyUnicode_AsASCIIString(obj);
-        if (bytes == NULL)
-            return -1;
-        assert(PyBytes_Check(bytes));
-        res = extend_01(self, bytes);
-        Py_DECREF(bytes);  /* drop bytes */
-        return res;
-    }
+    if (PyUnicode_Check(obj))                           /* unicode 01 */
+        return extend_unicode01(self, obj);
 
     if (PyIter_Check(obj))                                    /* iter */
         return extend_iter(self, obj);
