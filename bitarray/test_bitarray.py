@@ -338,31 +338,26 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
 
             endian2 = self.other_endian(endian)
-            c = bitarray(a, endian2)
-            self.assertEqual(c.endian(), endian2)
-            self.assertEqual(a, c)  # but only because they are empty
+            b = bitarray(a, endian2)
+            self.assertEqual(b.endian(), endian2)
+            self.assertEqual(a, b)
 
-            # Even though the byte representation will be the same,
-            # the bitarrays are not equal.
-            a = bitarray('11001000 11110000', endian)
-            self.assertEqual(len(a) % 8, 0)
-            c = bitarray(a, endian2)
-            # This is only equal because the size of the bitarray is a
-            # multiple of 8, and unused bits are not set (which changes
-            # the byte representation).
-            self.assertEqual(a.tobytes(), c.tobytes())
-            self.assertNotEqual(a.endian(), c.endian())
-            self.assertNotEqual(a, c)
+        for a in self.randombitarrays():
+            endian2 = self.other_endian(a.endian())
+            b = bitarray(a, endian2)
+            self.assertEqual(a, b)
+            self.assertEqual(b.endian(), endian2)
+            self.assertNotEqual(a.endian(), b.endian())
 
     def test_bitarray_endianness(self):
         a = bitarray('11100001', endian='little')
         b = bitarray(a, endian='big')
-        self.assertNotEqual(a, b)
-        self.assertEqual(a.tobytes(), b.tobytes())
-
-        b.bytereverse()
         self.assertEqual(a, b)
         self.assertNotEqual(a.tobytes(), b.tobytes())
+
+        b.bytereverse()
+        self.assertNotEqual(a, b)
+        self.assertEqual(a.tobytes(), b.tobytes())
 
         c = bitarray('11100001', endian='big')
         self.assertEqual(a, c)
@@ -916,12 +911,6 @@ class MiscTests(unittest.TestCase, Util):
         b = bitarray('00000100', endian='little')
         self.assertEqual(b.tobytes(), b' ')
         self.assertNotEqual(a, b)
-
-    def test_endianness5(self):
-        a = bitarray('11100000', endian='little')
-        b = bitarray(a, endian='big')
-        self.assertNotEqual(a, b)
-        self.assertEqual(a.tobytes(), b.tobytes())
 
     def test_pickle(self):
         for a in self.randombitarrays():

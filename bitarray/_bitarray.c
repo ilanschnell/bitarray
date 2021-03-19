@@ -2858,19 +2858,6 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (PyIndex_Check(initial))
         return bitarray_from_index(type, initial, endian);
 
-    /* from bitarray itself */
-    if (bitarray_Check(initial)) {
-#define np  ((bitarrayobject *) initial)
-        res = newbitarrayobject(type, np->nbits,
-                                endian_str == NULL ? np->endian : endian);
-        if (res == NULL)
-            return NULL;
-        memcpy(((bitarrayobject *) res)->ob_item, np->ob_item,
-               (size_t) Py_SIZE(np));
-#undef np
-        return res;
-    }
-
     /* bytes (for pickling) */
     if (PyBytes_Check(initial) && PyBytes_GET_SIZE(initial) > 0) {
         unsigned char head = *PyBytes_AS_STRING(initial);
@@ -2881,6 +2868,9 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
             return unpickle(type, initial, endian);
         }
     }
+
+    if (bitarray_Check(initial) && endian_str == NULL)
+        endian = ((bitarrayobject *) initial)->endian;
 
     /* leave remaining type dispatch to the extend method */
     res = newbitarrayobject(type, 0, endian);

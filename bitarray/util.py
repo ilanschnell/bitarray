@@ -73,13 +73,7 @@ unchanged.
     if a.endian() == endian:
         return a
 
-    b = bitarray(a, endian)
-    b.bytereverse()
-    if len(a) % 8:
-        # copy last few bits directly
-        p = 8 * (bits2bytes(len(a)) - 1)
-        b[p:] = a[p:]
-    return b
+    return bitarray(a, endian)
 
 
 def strip(a, mode='right'):

@@ -150,7 +150,7 @@ Bit endianness
 
 Since a bitarray allows addressing of individual bits, where the machine
 represents 8 bits in one byte, there are two obvious choices for this
-mapping: little- and big-endian.
+mapping: little-endian and big-endian.
 When creating a new bitarray object, the endianness can always be
 specified explicitly:
 
@@ -212,19 +212,13 @@ the endianness matters:
     False
 
 The endianness can not be changed once an object is created.
-However, since creating a bitarray from another bitarray just copies the
-memory representing the data, you can create a new bitarray with different
-endianness:
+However, you can create a new bitarray with different endianness:
 
-    >>> a = bitarray('11100000', endian='little')
-    >>> a
-    bitarray('11100000')
+    >>> a = bitarray('111000', endian='little')
     >>> b = bitarray(a, endian='big')
     >>> b
-    bitarray('00000111')
+    bitarray('111000')
     >>> a == b
-    False
-    >>> a.tobytes() == b.tobytes()
     True
 
 The default bit endianness is currently big-endian, however this may change
@@ -736,6 +730,11 @@ Change log
   * add `util.serialize()` and `util.deserialize()`
   * allow whitespace (ignore space and `\n\r\t\v`) in input strings,
     e.g. `bitarray('01 11')` or `a += '10 00'`
+  * When initializing a bitarray from another with different bit endianness,
+    e.g. `a = bitarray('110', 'little')` and `b = bitarray(a, 'big')`,
+    the buffer used to be simply copied, with consequence that `a == b` would
+    result in `False`.  This is fixed now, that is `a == b` will always
+    evaluate to `True`.
   * add example showing how to jsonize bitarrays
 
 
