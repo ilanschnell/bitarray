@@ -74,8 +74,6 @@ class Util(object):
         return slicelength
 
     def check_obj(self, a):
-        self.assertEqual(repr(type(a)), "<%s 'bitarray.bitarray'>" %
-                         ('class' if is_py3k else 'type'))
         unused = 8 * a.buffer_info()[1] - len(a)
         self.assertTrue(0 <= unused < 8)
         self.assertEqual(unused, a.buffer_info()[3])
@@ -85,6 +83,12 @@ class Util(object):
         self.assertEqual(a.endian(), b.endian())
         self.check_obj(a)
         self.check_obj(b)
+
+    def assertIsType(self, a, b):
+        self.assertEqual(type(a).__name__, b)
+        self.assertEqual(
+            repr(type(a)), "<%s 'bitarray.%s'>" %
+            ('class' if is_py3k or b == 'frozenbitarray' else 'type', b))
 
     def assertStopIteration(self, it):
         self.assertRaises(StopIteration, next, it)
@@ -168,6 +172,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertEqual(len(a), 0)
         self.assertEqual(a.tolist(), [])
+        self.assertIsType(a, 'bitarray')
         self.check_obj(a)
 
     def test_endian(self):
@@ -245,6 +250,9 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.check_obj(a)
 
     def test_iter1(self):
+        a = iter(bitarray())
+        self.assertIsType(a, 'bitarrayiterator')
+
         for n in range(50):
             lst = [bool(randint(0, 1)) for d in range(n)]
             a = bitarray(iter(lst))
@@ -1758,6 +1766,7 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.itersearch, bitarray())
         self.assertRaises(TypeError, a.itersearch, '')
         it = a.itersearch(bitarray('1'))
+        self.assertIsType(it, 'searchiterator')
         self.assertEqual(next(it), 0)
         self.assertEqual(next(it), 3)
         self.assertEqual(next(it), 4)
@@ -2213,12 +2222,11 @@ class FileTests(unittest.TestCase, Util):
             b = d['b%d' % i]
             self.assertEqual(b.to01(), s)
             self.assertEqual(b.endian(), end)
-            self.assertEqual(repr(type(b)), "<class 'bitarray.bitarray'>")
+            self.assertIsType(b, 'bitarray')
             f = d['f%d' % i]
             self.assertEqual(f.to01(), s)
             self.assertEqual(f.endian(), end)
-            self.assertEqual(repr(type(f)),
-                             "<class 'bitarray.frozenbitarray'>")
+            self.assertIsType(f, 'frozenbitarray')
 
     def test_shelve(self):
         if hasattr(sys, 'gettotalrefcount'):
@@ -2465,12 +2473,11 @@ alpabet_code = {
     'y': bitarray('101010'),      'z': bitarray('00011011110')
 }
 
-class DecodeTreeTests(unittest.TestCase):
+class DecodeTreeTests(unittest.TestCase, Util):
 
     def test_create(self):
         dt = decodetree(alpabet_code)
-        self.assertEqual(repr(type(dt)), "<%s 'bitarray.decodetree'>" %
-                         ('class' if is_py3k else 'type'))
+        self.assertIsType(dt, 'decodetree')
         self.assertRaises(TypeError, decodetree, None)
         self.assertRaises(TypeError, decodetree, 'foo')
         d = dict(alpabet_code)
@@ -2606,6 +2613,11 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(list(a.iterdecode(d)), res)
         self.assertEqual(d, dcopy)
         self.assertEqual(a, bitarray('101001000'))
+
+    def test_iterdecode_type(self):
+        a = bitarray('1100101')
+        it = a.iterdecode({'a': bitarray('0'), 'b': bitarray('1')})
+        self.assertIsType(it, 'decodeiterator')
 
     def test_iterdecode_remove_tree(self):
         d = {'I': bitarray('1'),   'l': bitarray('01'),
@@ -2811,6 +2823,8 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         a = frozenbitarray('110')
         self.assertEqual(a, bitarray('110'))
         self.assertEqual(a.to01(), '110')
+        self.assertIsInstance(a, bitarray)
+        self.assertIsType(a, 'frozenbitarray')
         for endian in 'big', 'little':
             a = frozenbitarray(0, endian)
             self.assertEqual(a.endian(), endian)
@@ -2824,7 +2838,7 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(a.index(0), 2)
         b = a.copy()
         self.assertEqual(b, a)
-        self.assertEqual(repr(type(b)), "<class 'bitarray.frozenbitarray'>")
+        self.assertIsType(b, 'frozenbitarray')
         self.assertEqual(len(b), 7)
         self.assertEqual(b.all(), False)
         self.assertEqual(b.any(), True)
