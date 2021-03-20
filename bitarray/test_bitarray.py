@@ -320,6 +320,22 @@ class CreateObjectTests(unittest.TestCase, Util):
             endian, unused = divmod(head, 16)
             self.assertEqual(a.endian(), ['little', 'big'][endian])
             self.assertEqual(len(a), 8 - unused)
+            self.assertFalse(a.any())
+
+        # this error comes from the unpickle() (C function)
+        self.assertRaisesMessage(ValueError, "invalid header byte 0x11",
+                                 bitarray.__new__, bitarray, b'\x011')
+        s = b'\x21'
+        if is_py3k:
+            # on Python 3, we don't allow bitarrays being created from bytes
+            error = TypeError
+            msg = ("cannot extend bitarray with 'bytes', use .pack() or "
+                   ".frombytes() instead")
+        else:
+            # on Python 2, we have an invalid character in the string
+            error = ValueError
+            msg = "expected '0' or '1' (or whitespace), got '!' (0x21)"
+        self.assertRaisesMessage(error, msg, bitarray.__new__, bitarray, s)
 
     def test_bitarray_simple(self):
         for n in range(10):
