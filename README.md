@@ -620,9 +620,7 @@ Return a bitarray of `length` random bits (uses `os.urandom`).
 
 When the endianness of the given bitarray is different from `endian`,
 return a new bitarray, with endianness `endian` and the same elements
-as the original bitarray, i.e. even though the binary representation of the
-new bitarray will be different, the returned bitarray will equal the original
-one.
+as the original bitarray.
 Otherwise (endianness is already `endian`) the original bitarray is returned
 unchanged.
 
