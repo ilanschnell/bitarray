@@ -937,8 +937,8 @@ bitarray_reduce(bitarrayobject *self)
 PyDoc_STRVAR(reduce_doc, "state information for pickling");
 
 
-/* Return a bitarray from bytes, where the first byte % 8 is the number of
-   unused bits, and the remaining bytes consist of the buffer */
+/* The head byte % 8 specifies the number of unused bits (in last buffer
+   byte), the remaining bytes consist of the buffer itself */
 static PyObject *
 unpickle(PyTypeObject *type, PyObject *bytes, int endian)
 {
@@ -955,7 +955,7 @@ unpickle(PyTypeObject *type, PyObject *bytes, int endian)
 
     if (nbytes == 1 && head % 8) {
         PyErr_Format(PyExc_ValueError,
-                     "invalid header byte 0x%02x", (int) head);
+                     "invalid header byte 0x%02x", head);
         return NULL;
     }
     res = newbitarrayobject(type,
