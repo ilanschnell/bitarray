@@ -38,7 +38,7 @@ Create a bitarray of length, with all values 0, and optional
 endianness, which may be 'big', 'little'.
 """
     if not isinstance(length, (int, long) if _is_py2 else int):
-        raise TypeError("int expected")
+        raise TypeError("int expected, got '%s'" % type(length).__name__)
 
     a = bitarray(length, get_default_endian() if endian is None else endian)
     a.setall(0)
@@ -100,7 +100,7 @@ Otherwise (endianness is already `endian`) the original bitarray is returned
 unchanged.
 """
     if not isinstance(a, bitarray):
-        raise TypeError("bitarray expected")
+        raise TypeError("bitarray expected, got '%s'" % type(a).__name__)
 
     if a.endian() == endian:
         return a
@@ -115,7 +115,7 @@ Strip zeros from left, right or both ends.
 Allowed values for mode are the strings: `left`, `right`, `both`
 """
     if not isinstance(a, bitarray):
-        raise TypeError("bitarray expected")
+        raise TypeError("bitarray expected, got '%s'" % type(a).__name__)
     if not isinstance(mode, str):
         raise TypeError("str expected for mode")
     if mode not in ('left', 'right', 'both'):
@@ -145,7 +145,7 @@ Return a string containing with hexadecimal representation of
 the bitarray (which has to be multiple of 4 in length).
 """
     if not isinstance(a, bitarray):
-        raise TypeError("bitarray expected")
+        raise TypeError("bitarray expected, got '%s'" % type(a).__name__)
 
     if len(a) % 4:
         raise ValueError("bitarray length not multiple of 4")
@@ -167,7 +167,7 @@ Bitarray of hexadecimal representation.
 hexstr may contain any number of hex digits (upper or lower case).
 """
     if not isinstance(s, (str, unicode if _is_py2 else bytes)):
-        raise TypeError("str expected, got: %r" % s)
+        raise TypeError("str expected, got: '%s'" % type(s).__name__)
 
     strlen = len(s)
     if strlen % 2:
@@ -192,7 +192,7 @@ The bit-endianness of the bitarray is respected.
 `signed` indicates whether two's complement is used to represent the integer.
 """
     if not isinstance(a, bitarray):
-        raise TypeError("bitarray expected")
+        raise TypeError("bitarray expected, got '%s'" % type(a).__name__)
     length = len(a)
     if length == 0:
         raise ValueError("non-empty bitarray expected")
@@ -232,7 +232,7 @@ If signed is False and a negative integer is given, an OverflowError
 is raised.
 """
     if not isinstance(i, (int, long) if _is_py2 else int):
-        raise TypeError("int expected")
+        raise TypeError("int expected, got '%s'" % type(i).__name__)
     if length is not None:
         if not isinstance(length, int):
             raise TypeError("int expected for length")
@@ -286,7 +286,7 @@ def deserialize(b):
 Return a bitarray given the bytes representation returned by `serialize()`.
 """
     if not isinstance(b, bytes):
-        raise TypeError("bytes expected, got: %s" % type(b))
+        raise TypeError("bytes expected, got: '%s'" % type(b).__name__)
     if len(b) == 0:
         raise ValueError("non-empty bytes expected")
     head = ord(b[0]) if _is_py2 else b[0]
@@ -307,7 +307,7 @@ hashable object (including `None`).
     import heapq
 
     if not isinstance(freq_map, dict):
-        raise TypeError("dict expected")
+        raise TypeError("dict expected, got '%s'" % type(freq_map).__name__)
     if len(freq_map) == 0:
         raise ValueError("non-empty dict expected")
     if endian is None:
