@@ -53,14 +53,16 @@ If you rather want to use precompiled binaries, you can:
 Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
-    bitarray is installed in: /usr/local/lib/python2.7/site-packages/bitarray
+    bitarray is installed in: /Users/ilan/bitarray/bitarray
     bitarray version: 1.8.0
-    3.7.4 (r271:86832, Dec 29 2018) [GCC 4.2.1 (SUSE Linux)]
+    sys.version: 2.7.15 (default, Mar  5 2020, 14:58:04) [GCC Clang 9.0.1]
+    sys.prefix: /Users/ilan/Mini3/envs/py27
+    pointer size: 64 bit
     .........................................................................
     .........................................................................
     ..............................
     ----------------------------------------------------------------------
-    Ran 272 tests in 0.921s
+    Ran 278 tests in 0.638s
 
     OK
 
