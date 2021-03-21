@@ -106,7 +106,7 @@ tests.append(TestsRandom)
 
 # ---------------------------------------------------------------------------
 
-class TestsPprint(unittest.TestCase):
+class TestsPPrint(unittest.TestCase):
 
     @staticmethod
     def get_code_string(a):
@@ -149,7 +149,7 @@ class TestsPprint(unittest.TestCase):
             self.round_trip(urandom(n))
 
 
-tests.append(TestsPprint)
+tests.append(TestsPPrint)
 
 # ---------------------------------------------------------------------------
 
