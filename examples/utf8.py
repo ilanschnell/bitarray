@@ -15,23 +15,23 @@ def code_point(u):
 
     # calculate binary code point from binary UTF-8 representation
     if a[0:1] == bitarray('0'):
-        bin_code_point = a[1:8]
+        c = a[1:8]
         assert len(a) == 8
     elif a[0:3] == bitarray('110'):
-        bin_code_point = a[3:8] + a[10:16]
+        c = a[3:8] + a[10:16]
         assert a[8:10] == bitarray('10')
         assert len(a) == 16
     elif a[0:4] == bitarray('1110'):
-        bin_code_point = a[4:8] + a[10:16] + a[18:24]
+        c = a[4:8] + a[10:16] + a[18:24]
         assert a[8:10] == a[16:18] == bitarray('10')
         assert len(a) == 24
     elif a[0:5] == bitarray('11110'):
-        bin_code_point = a[5:8] + a[10:16] + a[18:24] + a[26:32]
+        c = a[5:8] + a[10:16] + a[18:24] + a[26:32]
         assert a[8:10] == a[16:18] == a[24:26] == bitarray('10')
         assert len(a) == 32
     else:
         raise
-    code_point = ba2int(bin_code_point)
+    code_point = ba2int(c)
 
     print('code point:', hex(code_point))
     print()
