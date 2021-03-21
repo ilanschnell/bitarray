@@ -616,6 +616,12 @@ endianness, which may be 'big', 'little'.
 Return a bitarray of `length` random bits (uses `os.urandom`).
 
 
+`pprint(bitarray, /, stream=None)`
+
+Prints the formatted representation of object on `stream`, followed by a
+newline.  If `stream` is `None`, `sys.stdout` is used.
+
+
 `make_endian(bitarray, endian, /)` -> bitarray
 
 When the endianness of the given bitarray is different from `endian`,
@@ -725,9 +731,10 @@ Change log
 
 2021-XX-XX   1.8.0:
 
-  * add `util.serialize()` and `util.deserialize()`
+  * add `bitarray.util.serialize()` and `bitarray.util.deserialize()`
   * allow whitespace (ignore space and `\n\r\t\v`) in input strings,
     e.g. `bitarray('01 11')` or `a += '10 00'`
+  * add `bitarray.util.pprint()`
   * When initializing a bitarray from another with different bit endianness,
     e.g. `a = bitarray('110', 'little')` and `b = bitarray(a, 'big')`,
     the buffer used to be simply copied, with consequence that `a == b` would
