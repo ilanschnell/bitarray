@@ -1,6 +1,6 @@
 2021-XX-XX   1.8.0:
 -------------------
-  * add `util.serialize()` and `util.deserialize()`
+  * add `util.serialize()`, `util.deserialize()` and `util.pprint()`
   * allow whitespace (ignore space and `\n\r\t\v`) in input strings,
     e.g. `bitarray('01 11')` or `a += '10 00'`
   * When initializing a bitarray from another with different bit endianness,

@@ -18,7 +18,7 @@ from bitarray._util import (count_n, rindex,
                             serialize, _swap_hilo_bytes, _set_bato)
 
 
-__all__ = ['zeros', 'urandom', 'make_endian', 'rindex', 'strip',
+__all__ = ['zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip',
            'count_n', 'count_and', 'count_or', 'count_xor', 'subset',
            'ba2hex', 'hex2ba', 'ba2int', 'int2ba',
            'serialize', 'deserialize', 'huffman_code']
@@ -54,6 +54,40 @@ Return a bitarray of `length` random bits (uses `os.urandom`).
     a.frombytes(os.urandom(bits2bytes(length)))
     del a[length:]
     return a
+
+
+def pprint(a, stream=None):
+    """pprint(bitarray, /, stream=None)
+
+Prints the formatted representation of object on `stream`, followed by a
+newline.  If `stream` is `None`, `sys.stdout` is used.
+"""
+    if stream is None:
+        stream = sys.stdout
+
+    if not isinstance(a, bitarray):
+        import pprint as _pprint
+        _pprint.pprint(a, stream=stream)
+        return
+
+    multiline = bool(len(a) > 56)
+    if multiline:
+        quotes = "'''"
+    elif len(a) > 0:
+        quotes = "'"
+    else:
+        quotes = ""
+
+    stream.write("%s(%s" % (type(a).__name__, quotes))
+    for i, b in enumerate(a):
+        if multiline and i % 64 == 0:
+            stream.write('\n  ')
+        if i % 8 == 0 and i % 64 != 0:
+            stream.write(' ')
+        stream.write(str(int(b)))
+
+    stream.write("%s)\n" % quotes)
+    stream.flush()
 
 
 def make_endian(a, endian):

@@ -14,13 +14,16 @@ from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian)
 from bitarray.test_bitarray import Util
 
-from bitarray.util import (zeros, urandom, make_endian, rindex, strip,
+from bitarray.util import (zeros, urandom, pprint, make_endian, rindex, strip,
                            count_n, count_and, count_or, count_xor, subset,
                            ba2hex, hex2ba, ba2int, int2ba,
                            serialize, deserialize, huffman_code)
 
 if sys.version_info[0] == 3:
     unicode = str
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 tests = []
 
@@ -100,6 +103,53 @@ class TestsRandom(unittest.TestCase):
         self.assertRaises(ValueError, urandom, 0, 'foo')
 
 tests.append(TestsRandom)
+
+# ---------------------------------------------------------------------------
+
+class TestsPprint(unittest.TestCase):
+
+    @staticmethod
+    def get_code_string(a):
+        f = StringIO()
+        pprint(a, stream=f)
+        return f.getvalue()
+
+    def round_trip(self, a):
+        b = eval(self.get_code_string(a))
+        self.assertEqual(b, a)
+        self.assertEqual(type(b), type(a))
+
+    def test_bitarray(self):
+        a = bitarray('110')
+        self.assertEqual(self.get_code_string(a), "bitarray('110')\n")
+        self.round_trip(a)
+
+    def test_frozenbitarray(self):
+        a = frozenbitarray('01')
+        self.assertEqual(self.get_code_string(a), "frozenbitarray('01')\n")
+        self.round_trip(a)
+
+    def test_fallback(self):
+        for a in None, 'asd', [1, 2], bitarray(), frozenbitarray('1'):
+            self.round_trip(a)
+
+    def test_subclass(self):
+        class Foo(bitarray):
+            pass
+
+        a = Foo()
+        code = self.get_code_string(a)
+        self.assertEqual(code, "Foo()\n")
+        b = eval(code)
+        self.assertEqual(b, a)
+        self.assertEqual(type(b), type(a))
+
+    def test_random(self):
+        for n in range(300):
+            self.round_trip(urandom(n))
+
+
+tests.append(TestsPprint)
 
 # ---------------------------------------------------------------------------
 
