@@ -621,7 +621,9 @@ Return a bitarray of `length` random bits (uses `os.urandom`).
 `pprint(bitarray, /, stream=None)`
 
 Prints the formatted representation of object on `stream`, followed by a
-newline.  If `stream` is `None`, `sys.stdout` is used.
+newline.  If `stream` is `None`, `sys.stdout` is used.  Elements are grouped
+in bytes (8 elements), and 8 bytes (64 elements) per line.  Non-bitarray
+objects are prinited by the standard library function `pprint.pprint()`.
 
 
 `make_endian(bitarray, endian, /)` -> bitarray

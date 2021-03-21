@@ -60,7 +60,9 @@ def pprint(a, stream=None):
     """pprint(bitarray, /, stream=None)
 
 Prints the formatted representation of object on `stream`, followed by a
-newline.  If `stream` is `None`, `sys.stdout` is used.
+newline.  If `stream` is `None`, `sys.stdout` is used.  Elements are grouped
+in bytes (8 elements), and 8 bytes (64 elements) per line.  Non-bitarray
+objects are prinited by the standard library function `pprint.pprint()`.
 """
     if stream is None:
         stream = sys.stdout
@@ -81,13 +83,13 @@ newline.  If `stream` is `None`, `sys.stdout` is used.
     stream.write("%s(%s" % (type(a).__name__, quotes))
     for i, b in enumerate(a):
         if multiline and i % 64 == 0:
-            stream.write('\n  ')
+            stream.write('\n    ')
         if i % 8 == 0 and i % 64 != 0:
             stream.write(' ')
         stream.write(str(int(b)))
 
     if multiline:
-        stream.write('\n  ')
+        stream.write('\n')
 
     stream.write("%s)\n" % quotes)
     stream.flush()
