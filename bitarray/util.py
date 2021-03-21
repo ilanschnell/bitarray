@@ -86,6 +86,9 @@ newline.  If `stream` is `None`, `sys.stdout` is used.
             stream.write(' ')
         stream.write(str(int(b)))
 
+    if multiline:
+        stream.write('\n  ')
+
     stream.write("%s)\n" % quotes)
     stream.flush()
 
