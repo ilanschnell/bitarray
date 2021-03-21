@@ -387,12 +387,14 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertEqual(a, c)
 
     def test_frozenbitarray(self):
+        a = bitarray(frozenbitarray())
+        self.assertEQUAL(a, bitarray())
+        self.assertIsType(a, 'bitarray')
+
         for endian in 'little', 'big':
-            a = frozenbitarray('011', endian=endian)
-            b = bitarray(a)
-            self.assertIsInstance(b, bitarray)
-            self.assertEqual(b.to01(), '011')
-            self.assertEqual(b.endian(), endian)
+            a = bitarray(frozenbitarray('011', endian=endian))
+            self.assertEQUAL(a, bitarray('011', endian))
+            self.assertIsType(a, 'bitarray')
 
     def test_create_empty(self):
         for x in (None, 0, '', list(), tuple(), set(), dict(), u'',
@@ -2825,9 +2827,19 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(a.to01(), '110')
         self.assertIsInstance(a, bitarray)
         self.assertIsType(a, 'frozenbitarray')
+
+        a = frozenbitarray(bitarray())
+        self.assertEQUAL(a, frozenbitarray())
+        self.assertIsType(a, 'frozenbitarray')
+
         for endian in 'big', 'little':
             a = frozenbitarray(0, endian)
             self.assertEqual(a.endian(), endian)
+            self.assertIsType(a, 'frozenbitarray')
+
+            a = frozenbitarray(bitarray(0, endian))
+            self.assertEqual(a.endian(), endian)
+            self.assertIsType(a, 'frozenbitarray')
 
     def test_methods(self):
         # test a few methods which do not raise the TypeError
