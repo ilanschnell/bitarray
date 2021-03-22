@@ -62,7 +62,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ..............................
     ----------------------------------------------------------------------
-    Ran 278 tests in 0.638s
+    Ran 279 tests in 0.638s
 
     OK
 
@@ -733,7 +733,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2021-XX-XX   1.8.0:
+*1.8.0* (2021-03-21):
 
   * add `bitarray.util.serialize()` and `bitarray.util.deserialize()`
   * allow whitespace (ignore space and `\n\r\t\v`) in input strings,
@@ -745,6 +745,7 @@ Change log
     result in `False`.  This is fixed now, that is `a == b` will always
     evaluate to `True`.
   * add example showing how to jsonize bitarrays
+  * add tests
 
 
 *1.7.1* (2021-03-12):
