@@ -407,7 +407,8 @@ hex2ba(PyObject *module, PyObject *args)
         else if ('A' <= c && c <= 'F')
             c = c - 'A' + 10;
         else {
-            PyErr_SetString(PyExc_ValueError, "Non-hexadecimal digit found");
+            PyErr_Format(PyExc_ValueError,
+                         "Non-hexadecimal digit found: '%c' (0x%02x)", c, c);
             return NULL;
         }
         assert(c <= 0x0f);
