@@ -541,22 +541,6 @@ for k, v in CODEDICT['big'].items():
 
 class TestsHexlify(unittest.TestCase, Util):
 
-    def test_swap_hilo_bytes(self):
-        from bitarray._util import _swap_hilo_bytes
-
-        self.assertEqual(len(_swap_hilo_bytes), 256)
-        for i in range(256):
-            byte = bytes(bytearray([i]))
-            a = bitarray()
-            a.frombytes(byte)
-            self.assertEqual(len(a), 8)
-
-            b = a[4:8] + a[0:4]
-            self.assertEqual(b.tobytes(),
-                             byte.translate(_swap_hilo_bytes))
-            # with just _swap_hilo_bytes[i] we'd get an integer on Py3
-            self.assertEqual(b.tobytes(), _swap_hilo_bytes[i:i + 1])
-
     def test_ba2hex(self):
         self.assertEqual(ba2hex(bitarray(0, 'big')), '')
         self.assertEqual(ba2hex(bitarray('1110', 'big')), 'e')
@@ -590,7 +574,7 @@ class TestsHexlify(unittest.TestCase, Util):
         self.assertEQUAL(hex2ba('01'), bitarray('00000001', 'big'))
         self.assertEQUAL(hex2ba('08', 'little'),
                          bitarray('00000001', 'little'))
-        self.assertRaises(Exception, hex2ba, '01a7x89')
+        self.assertRaises(ValueError, hex2ba, '01a7x89')
         self.assertRaises(TypeError, hex2ba, 0)
 
     @staticmethod

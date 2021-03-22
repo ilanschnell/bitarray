@@ -127,20 +127,6 @@ find_last(bitarrayobject *a, int vi)
     return -1;
 }
 
-/* translation table which swaps the 4 highest with the 4 lowest bits in
-   each byte - to be used as argument of bytes.translate() */
-static PyObject *
-make_swap_hilo_bytes(void)
-{
-    char bytes[256];
-    int i;
-
-    for (i = 0; i < 256; i++)
-        bytes[i] = (char) (((i & 0x0f) << 4) ^ (i >> 4));
-
-    return PyBytes_FromStringAndSize(bytes, 256);
-}
-
 /****************************** Module functions **************************/
 
 static PyObject *
@@ -375,7 +361,7 @@ ba2hex(PyObject *module, PyObject *a)
     for (i = 0; i < strsize; i++) {
         c = aa->ob_item[i / 2];
         c = (i % 2) ^ (aa->endian == ENDIAN_LITTLE) ? c & 0x0f : c >> 4;
-        assert(c < 16);
+        assert(c <= 0x0f);
         str[i] = hexdigits[c];
     }
 #undef aa
@@ -390,6 +376,48 @@ PyDoc_STRVAR(ba2hex_doc,
 Return a string containing with hexadecimal representation of\n\
 the bitarray (which has to be multiple of 4 in length).");
 
+
+static PyObject *
+hex2ba(PyObject *module, PyObject *args)
+{
+    PyObject *a;
+    char *str;
+    unsigned char c;
+    Py_ssize_t i, strsize;
+
+    if (!PyArg_ParseTuple(args, "Os#", &a, &str, &strsize))
+        return NULL;
+
+    if (ensure_bitarray(a) < 0)
+        return NULL;
+
+#define aa  ((bitarrayobject *) a)
+    if (aa->nbits != 4 * strsize) {
+        PyErr_SetString(PyExc_ValueError, "incorrect bitarray size");
+        return NULL;
+    }
+    memset(aa->ob_item, 0x00, (size_t) Py_SIZE(a));
+
+    for (i = 0; i < strsize; i++) {
+        c = str[i];
+        if ('0' <= c && c <= '9')
+            c = c - '0';
+        else if ('a' <= c && c <= 'f')
+            c = c - 'a' + 10;
+        else if ('A' <= c && c <= 'F')
+            c = c - 'A' + 10;
+        else {
+            PyErr_SetString(PyExc_ValueError, "Non-hexadecimal digit found");
+            return NULL;
+        }
+        assert(c <= 0x0f);
+        aa->ob_item[i / 2] |=
+            ((i % 2) ^ (aa->endian == ENDIAN_LITTLE)) ? c : c << 4;
+    }
+#undef aa
+
+    Py_RETURN_NONE;
+}
 
 /* set bitarray_type_obj (bato) */
 static PyObject *
@@ -408,7 +436,8 @@ static PyMethodDef module_functions[] = {
     {"subset",    (PyCFunction) subset,    METH_VARARGS, subset_doc},
     {"serialize", (PyCFunction) serialize, METH_O,       serialize_doc},
     {"ba2hex",    (PyCFunction) ba2hex,    METH_O,       ba2hex_doc},
-    {"_set_bato", (PyCFunction) set_bato,  METH_O,       },
+    {"_hex2ba",   (PyCFunction) hex2ba,    METH_VARARGS, 0},
+    {"_set_bato", (PyCFunction) set_bato,  METH_O,       0},
     {NULL,        NULL}  /* sentinel */
 };
 
@@ -433,14 +462,10 @@ init_util(void)
     m = PyModule_Create(&moduledef);
     if (m == NULL)
         return NULL;
+    return m;
 #else
     m = Py_InitModule3("_util", module_functions, 0);
     if (m == NULL)
         return;
-#endif
-
-    PyModule_AddObject(m, "_swap_hilo_bytes", make_swap_hilo_bytes());
-#ifdef IS_PY3K
-    return m;
 #endif
 }

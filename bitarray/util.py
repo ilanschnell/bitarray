@@ -9,13 +9,12 @@ from __future__ import absolute_import
 
 import os
 import sys
-import binascii
 
 from bitarray import bitarray, bits2bytes, get_default_endian
 
 from bitarray._util import (count_n, rindex,
                             count_and, count_or, count_xor, subset,
-                            serialize, ba2hex, _swap_hilo_bytes, _set_bato)
+                            serialize, ba2hex, _hex2ba, _set_bato)
 
 
 __all__ = ['zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip',
@@ -152,18 +151,13 @@ hexstr may contain any number of hex digits (upper or lower case).
     if not isinstance(s, (str, unicode if _is_py2 else bytes)):
         raise TypeError("str expected, got: '%s'" % type(s).__name__)
 
-    strlen = len(s)
-    if strlen % 2:
-        s = s + ('0' if isinstance(s, str) else b'0')
+    if isinstance(s, unicode if _is_py2 else str):
+        s = s.encode('ascii')
+    assert isinstance(s, bytes)
 
-    a = bitarray(0, get_default_endian() if endian is None else endian)
-    b = binascii.unhexlify(s)
-    if a.endian() == 'little':
-        b = b.translate(_swap_hilo_bytes)
-    a.frombytes(b)
-
-    if strlen % 2:
-        del a[-4:]
+    a = bitarray(4 * len(s),
+                 get_default_endian() if endian is None else endian)
+    _hex2ba(a, s)
     return a
 
 
