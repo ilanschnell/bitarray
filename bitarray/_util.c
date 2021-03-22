@@ -343,6 +343,54 @@ Return a serialized representation of the bitarray, which may be passed to\n\
 its endianness) and is guaranteed not to change in future releases.");
 
 
+static PyObject *
+ba2hex(PyObject *module, PyObject *a)
+{
+    PyObject *result;
+    Py_ssize_t i, strsize;
+    char *str, *hexdigits = "0123456789abcdef";
+    unsigned char c;
+
+    if (ensure_bitarray(a) < 0)
+        return NULL;
+
+#define aa  ((bitarrayobject *) a)
+    if (aa->nbits > PY_SSIZE_T_MAX / 2) {
+        PyErr_SetString(PyExc_OverflowError,
+                        "bitarray too large to represent");
+        return NULL;
+    }
+    if (aa->nbits % 4) {
+        PyErr_SetString(PyExc_ValueError, "bitarray length not multiple of 4");
+        return NULL;
+    }
+
+    strsize = aa->nbits / 4;
+    str = (char *) PyMem_Malloc((size_t) strsize);
+    if (str == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    for (i = 0; i < strsize; i++) {
+        c = aa->ob_item[i / 2];
+        c = (i % 2) ^ (aa->endian == ENDIAN_LITTLE) ? c & 0x0f : c >> 4;
+        assert(c < 16);
+        str[i] = hexdigits[c];
+    }
+#undef aa
+    result = Py_BuildValue("s#", str, strsize);
+    PyMem_Free((void *) str);
+    return result;
+}
+
+PyDoc_STRVAR(ba2hex_doc,
+"ba2hex(bitarray, /) -> hexstr\n\
+\n\
+Return a string containing with hexadecimal representation of\n\
+the bitarray (which has to be multiple of 4 in length).");
+
+
 /* set bitarray_type_obj (bato) */
 static PyObject *
 set_bato(PyObject *module, PyObject *obj)
@@ -359,6 +407,7 @@ static PyMethodDef module_functions[] = {
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
     {"subset",    (PyCFunction) subset,    METH_VARARGS, subset_doc},
     {"serialize", (PyCFunction) serialize, METH_O,       serialize_doc},
+    {"ba2hex",    (PyCFunction) ba2hex,    METH_O,       ba2hex_doc},
     {"_set_bato", (PyCFunction) set_bato,  METH_O,       },
     {NULL,        NULL}  /* sentinel */
 };

@@ -15,7 +15,7 @@ from bitarray import bitarray, bits2bytes, get_default_endian
 
 from bitarray._util import (count_n, rindex,
                             count_and, count_or, count_xor, subset,
-                            serialize, _swap_hilo_bytes, _set_bato)
+                            serialize, ba2hex, _swap_hilo_bytes, _set_bato)
 
 
 __all__ = ['zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip',
@@ -141,28 +141,6 @@ Allowed values for mode are the strings: `left`, `right`, `both`
             return bitarray(0, a.endian())
 
     return a[first:last + 1]
-
-
-def ba2hex(a):
-    """ba2hex(bitarray, /) -> hexstr
-
-Return a string containing with hexadecimal representation of
-the bitarray (which has to be multiple of 4 in length).
-"""
-    if not isinstance(a, bitarray):
-        raise TypeError("bitarray expected, got '%s'" % type(a).__name__)
-
-    if len(a) % 4:
-        raise ValueError("bitarray length not multiple of 4")
-
-    b = a.tobytes()
-    if a.endian() == 'little':
-        b = b.translate(_swap_hilo_bytes)
-
-    s = binascii.hexlify(b)
-    if len(a) % 8:
-        s = s[:-1]
-    return s if _is_py2 else s.decode()
 
 
 def hex2ba(s, endian=None):
