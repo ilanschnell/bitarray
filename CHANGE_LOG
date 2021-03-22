@@ -10,6 +10,7 @@
     result in `False`.  This is fixed now, that is `a == b` will always
     evaluate to `True`.
   * add example showing how to jsonize bitarrays
+  * add tests
 
 
 2021-03-12   1.7.1:

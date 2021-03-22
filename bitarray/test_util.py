@@ -5,6 +5,8 @@ from __future__ import absolute_import
 
 import os
 import sys
+import shutil
+import tempfile
 import unittest
 from string import hexdigits
 from random import choice, randint, random
@@ -147,6 +149,18 @@ class TestsPPrint(unittest.TestCase):
     def test_random(self):
         for n in range(300):
             self.round_trip(urandom(n))
+
+    def test_file(self):
+        tmpdir = tempfile.mkdtemp()
+        tmpfile = os.path.join(tmpdir, 'testfile')
+        a = bitarray(1000)
+        try:
+            with open(tmpfile, 'w') as fo:
+                pprint(a, fo)
+            b = eval(open(tmpfile).read())
+            self.assertEqual(a, b)
+        finally:
+            shutil.rmtree(tmpdir)
 
 
 tests.append(TestsPPrint)
