@@ -22,7 +22,6 @@ from bitarray.util import (zeros, urandom, pprint, make_endian, rindex, strip,
                            serialize, deserialize, huffman_code)
 
 if sys.version_info[0] == 3:
-    unicode = str
     from io import StringIO
 else:
     from io import BytesIO as StringIO
@@ -567,7 +566,7 @@ class TestsHexlify(unittest.TestCase, Util):
     def test_hex2ba(self):
         _set_default_endian('big')
         self.assertEqual(hex2ba(''), bitarray())
-        for c in 'e', 'E', b'e', b'E', unicode('e'), unicode('E'):
+        for c in 'e', 'E', b'e', b'E', u'e', u'E':
             a = hex2ba(c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
@@ -840,7 +839,7 @@ class TestsSerialization(unittest.TestCase, Util):
     def test_wrong_args(self):
         self.assertRaises(TypeError, serialize, '0')
         self.assertRaises(TypeError, serialize, bitarray(), 1)
-        self.assertRaises(TypeError, deserialize, unicode('01'))
+        self.assertRaises(TypeError, deserialize, u'01')
         self.assertRaises(TypeError, deserialize, b'\x00', 1)
 
     def test_invalid_bytes(self):

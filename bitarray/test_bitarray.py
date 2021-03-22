@@ -23,7 +23,6 @@ is_py3k = bool(sys.version_info[0] == 3)
 
 if is_py3k:
     from io import BytesIO
-    unicode = str
 else:
     from cStringIO import StringIO as BytesIO
     range = xrange
@@ -956,15 +955,11 @@ class MiscTests(unittest.TestCase, Util):
         self.assertRaises(OverflowError, a.__imul__, 17180)
 
     def test_unicode_create(self):
-        a = bitarray(unicode())
+        a = bitarray(u'')
         self.assertEqual(a, bitarray())
 
-        a = bitarray(unicode('111001'))
+        a = bitarray(u'111001')
         self.assertEqual(a, bitarray('111001'))
-
-        for a in self.randombitarrays():
-            b = bitarray(unicode(a.to01()))
-            self.assertEqual(a, b)
 
     def test_unhashable(self):
         a = bitarray()
@@ -1483,22 +1478,17 @@ class ExtendTests(unittest.TestCase, Util):
 
     def test_unicode(self):
         a = bitarray()
-        a.extend(unicode())
+        a.extend(u'')
         self.assertEqual(a, bitarray())
-        self.assertRaises(ValueError, a.extend, unicode('0011201'))
+        self.assertRaises(ValueError, a.extend, u'0011201')
         # ensure no bits got added after error was raised
         self.assertEqual(a, bitarray())
 
         a = bitarray()
-        a.extend(unicode('001 011'))
+        a.extend(u'001 011')
         self.assertEqual(a, bitarray('001011'))
-
-        for a in self.randombitarrays():
-            b = bitarray()
-            b.extend(unicode(a.to01()))
-            self.assertEqual(b, a)
-            self.assertRaises(UnicodeEncodeError, a.extend, u'1\u2605 0')
-            self.assertEqual(b, a)
+        self.assertRaises(UnicodeEncodeError, a.extend, u'1\u2605 0')
+        self.assertEqual(a, bitarray('001011'))
 
     def test_bytes(self):
         a = bitarray()
