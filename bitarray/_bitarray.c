@@ -139,8 +139,7 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
         obj->ob_item = (char *) PyMem_Malloc((size_t) nbytes);
         if (obj->ob_item == NULL) {
             PyObject_Del(obj);
-            PyErr_NoMemory();
-            return NULL;
+            return PyErr_NoMemory();
         }
     }
     obj->allocated = nbytes;
@@ -594,10 +593,9 @@ unpack(bitarrayobject *self, char zero, char one, const char *fmt)
     }
 
     str = (char *) PyMem_Malloc((size_t) self->nbits);
-    if (str == NULL) {
-        PyErr_NoMemory();
-        return NULL;
-    }
+    if (str == NULL)
+        return PyErr_NoMemory();
+
     for (i = 0; i < self->nbits; i++)
         str[i] = GETBIT(self, i) ? one : zero;
 
@@ -1398,10 +1396,9 @@ bitarray_repr(bitarrayobject *self)
     }
 
     str = (char *) PyMem_Malloc(strsize);
-    if (str == NULL) {
-        PyErr_NoMemory();
-        return NULL;
-    }
+    if (str == NULL)
+        return PyErr_NoMemory();
+
     /* add "bitarray('......')" to str */
     strcpy(str, "bitarray('"); /* has length 10 */
     /* don't use strcpy here, as this would add an extra null byte */
