@@ -573,7 +573,8 @@ class TestsHexlify(unittest.TestCase, Util):
         self.assertEQUAL(hex2ba('01'), bitarray('00000001', 'big'))
         self.assertEQUAL(hex2ba('08', 'little'),
                          bitarray('00000001', 'little'))
-        self.assertRaises(ValueError, hex2ba, '01a7x89')
+        self.assertEQUAL(hex2ba('aD'), bitarray('10101101', 'big'))
+        self.assertRaises(ValueError, hex2ba, '01a7g89')
         self.assertRaises(UnicodeEncodeError, hex2ba, u'10\u20ac')
         self.assertRaises(TypeError, hex2ba, 0)
 
