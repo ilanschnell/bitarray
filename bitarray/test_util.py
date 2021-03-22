@@ -157,7 +157,8 @@ class TestsPPrint(unittest.TestCase):
         try:
             with open(tmpfile, 'w') as fo:
                 pprint(a, fo)
-            b = eval(open(tmpfile).read())
+            with open(tmpfile, 'r') as fi:
+                b = eval(fi.read())
             self.assertEqual(a, b)
         finally:
             shutil.rmtree(tmpdir)
