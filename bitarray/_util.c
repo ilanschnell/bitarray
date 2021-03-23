@@ -383,8 +383,6 @@ hex_to_int(char c)
         return c - 'a' + 10;
     if ('A' <= c && c <= 'F')
         return c - 'A' + 10;
-    if (c == 0)
-        return 0;
     return -1;
 }
 
@@ -402,6 +400,7 @@ hex2ba(PyObject *module, PyObject *args)
     if (!setup) {
         for (i = 0; i < 256; i++)
             hex2int[i] = hex_to_int(i);
+        hex2int[0] = 0;
         setup = 1;
     }
 
@@ -416,7 +415,6 @@ hex2ba(PyObject *module, PyObject *args)
         PyErr_SetString(PyExc_ValueError, "incorrect bitarray size");
         return NULL;
     }
-    memset(aa->ob_item, 0x00, (size_t) Py_SIZE(a));
 
     le = aa->endian == ENDIAN_LITTLE;
     be = aa->endian == ENDIAN_BIG;
@@ -429,6 +427,7 @@ hex2ba(PyObject *module, PyObject *args)
         y = hex2int[c];
         if (y < 0)
             goto non_hex;
+        assert(x < 16 && y < 16);
         aa->ob_item[i / 2] = x << 4 | y;
     }
 #undef aa
