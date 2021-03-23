@@ -391,7 +391,6 @@ hex2ba(PyObject *module, PyObject *args)
 {
     PyObject *a;
     char *str;
-    unsigned char c;
     Py_ssize_t i, strsize;
     int le, be, x, y;
     static int setup = 0;
@@ -418,24 +417,18 @@ hex2ba(PyObject *module, PyObject *args)
     le = aa->endian == ENDIAN_LITTLE;
     be = aa->endian == ENDIAN_BIG;
     for (i = 0; i < strsize; i += 2) {
-        c = str[i + le];
-        x = hex2int[c];
-        if (x < 0)
-            goto non_hex;
-        c = str[i + be];
-        y = hex2int[c];
-        if (y < 0)
-            goto non_hex;
+        x = hex2int[(unsigned char) str[i + le]];
+        y = hex2int[(unsigned char) str[i + be]];
+        if (x < 0 || y < 0) {
+            PyErr_Format(PyExc_ValueError,
+                         "Non-hexadecimal digit found");
+            return NULL;
+        }
         assert(x < 16 && y < 16);
         aa->ob_item[i / 2] = x << 4 | y;
     }
 #undef aa
     Py_RETURN_NONE;
-
- non_hex:
-    PyErr_Format(PyExc_ValueError,
-                 "Non-hexadecimal digit found: '%c' (0x%02x)", c, c);
-    return NULL;
 }
 
 /* set bitarray_type_obj (bato) */
