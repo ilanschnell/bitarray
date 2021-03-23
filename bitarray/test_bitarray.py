@@ -38,12 +38,29 @@ tests = []
 class Util(object):
 
     @staticmethod
+    def is_heavy_test():
+        return int(os.getenv('TEST_HEAVY', 0))
+
+    @staticmethod
+    def randomendian():
+        return ['little', 'big'][randint(0, 1)]
+
+    @staticmethod
     def randombitarrays(start=0):
-        for n in list(range(start, 25)) + [randint(1000, 2000)]:
-            a = bitarray(endian=['little', 'big'][randint(0, 1)])
-            a.frombytes(os.urandom(bits2bytes(n)))
-            del a[n:]
-            yield a
+        nb1 = 250 if Util.is_heavy_test() else 25
+        nb2 = 10 if Util.is_heavy_test() else 1
+        lst = list(range(start, nb1)) + [randint(1000, 2000) for _ in range(nb2)]
+        for n in lst:
+            yield Util.randombitarray(n)
+
+    @staticmethod
+    def randombitarray(n=None, endian=None):
+        n = n if n else randint(1000, 2000)
+        endian = endian if endian else Util.randomendian()
+        a = bitarray(endian=endian)
+        a.frombytes(os.urandom(bits2bytes(n)))
+        del a[n:]
+        return a
 
     @staticmethod
     def randomlists():
@@ -2031,6 +2048,102 @@ class MethodTests(unittest.TestCase, Util):
             b.bytereverse()
             self.assertEqual(b, a[::-1])
             self.check_obj(b)
+
+    def test_eval_monic(self):
+        input = '11100011' + '11001100'
+        a = bitarray(input)
+        b = bitarray()
+
+        self.assertEqual(b.eval_monic(a, 2, 16), bitarray('1'))
+        self.assertEqual(b.eval_monic(a, 9, 16), bitarray('1'))
+        self.assertEqual(b.eval_monic(a, 10, 16), bitarray('0'))
+
+        self.assertEqual(b.eval_monic(a, 0, 8), bitarray('11'))
+        self.assertEqual(b.eval_monic(a, 2, 8), bitarray('10'))
+
+        self.assertEqual(b.eval_monic(a*100, 0, 8), bitarray('11'*100))
+        self.assertEqual(b.eval_monic(a*100, 2, 8), bitarray('10'*100))
+        self.assertEqual(b.eval_monic(a*10, 0, 1), a*10)
+
+    def test_fast_hw_ops(self):
+        for a in self.randombitarrays():
+            b = bitarray(len(a), endian=a.endian())
+            b.frombytes(os.urandom(bits2bytes(len(a))))
+            del b[len(a):]
+
+            self.assertEqual((a & b).count(1), a.fast_hw_and(b))
+            self.assertEqual((a | b).count(1), a.fast_hw_or(b))
+            self.assertEqual((a ^ b).count(1), a.fast_hw_xor(b))
+
+    def test_eval_polynomial01(self):
+        from bitarray import tbase
+        dat = '11001100 00110011'.replace(' ', '')
+        a = bitarray(dat, endian=self.randomendian())
+        vars = 8
+        base = [bitarray(vars, endian=a.endian()) for _ in range(vars)]
+        for x in range(vars):
+            base[x].eval_monic(a, x, vars)
+        bb = tbase(base)
+        bb2 = tbase(base, 32)
+
+        self.assertEqual(base[0], bitarray('10', endian=a.endian()))
+        self.assertEqual(base[1], bitarray('10', endian=a.endian()))
+        self.assertEqual(base[-1], bitarray('01', endian=a.endian()))
+
+        self.assertEqual(bb.eval_poly_hw([[0]]), 1)
+        self.assertEqual(bb.eval_poly_hw([[1]]), 1)
+        self.assertEqual(bb.eval_poly_hw([[2]]), 1)
+        self.assertEqual(bb.eval_poly_hw([[0, 1]]), 1)
+        self.assertEqual(bb.eval_poly_hw([[0, 1], [3]]), 2)
+        self.assertEqual(bb.eval_poly_hw([[0, 1], [4, 5]]), 0)
+        self.assertEqual(bb.eval_poly_hw([[0, 1], [2, 3]]), 2)
+        self.assertEqual(bb.eval_poly_hw(None, [
+            [[0, 1], [2, 3]],
+            [[0, 1], [3]],
+            [[0]],
+        ]), [2, 2, 1])
+        self.assertEqual(bb2.eval_poly_hw(None, [
+            [[0, 1], [2, 3]],
+            [[0, 1], [3]],
+            [[0]],
+        ]), [2, 2, 1])
+
+    def test_poly_base(self):
+        from bitarray import tbase
+        for vars in range(12, 133):
+            a = self.randombitarray(vars * randint(1000, 2000))
+            base = [bitarray(vars, endian=a.endian()) for x in range(vars)]
+            for x in range(vars):
+                base[x].eval_monic(a, x, vars)
+
+            for i in range(1500):
+                bb = tbase(base)
+            bb2 = tbase(base, 32)
+
+            poly = []
+            for t in range(randint(1, 4)):
+                b = []
+                for x in range(randint(1, 4)):
+                    b.append(randint(0, vars - 1))
+                poly.append(b)
+
+            res = bitarray(len(base[0]), endian=a.endian())
+            res.setall(0)
+            for ix, term in enumerate(poly):
+                sub = bitarray(base[term[0]])
+                for ax, var in enumerate(term[1:]):
+                    sub &= base[var]
+                res ^= sub
+
+            base = []
+            for i in range(8192):
+                base.append((i, i))
+
+            c = bb.eval_poly_hw(poly)
+            c2 = bb2.eval_poly_hw(poly)
+            self.assertEqual(res.count(), c)
+            self.assertEqual(res.count(), c2)
+            bb = None
 
 
 tests.append(MethodTests)

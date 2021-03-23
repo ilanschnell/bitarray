@@ -12,6 +12,7 @@
 #include "Python.h"
 #include "pythoncapi_compat.h"
 #include "bitarray.h"
+#include "bitarray_vct.h"
 
 /* size used when reading / writing blocks from files (in bytes) */
 #define BLOCKSIZE  65536
@@ -324,11 +325,17 @@ count(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
     if (stop >= start + 8) {
         const Py_ssize_t byte_start = BYTES(start);
         const Py_ssize_t byte_stop = stop / 8;
+        const uint64_t * data64 = (const uint64_t *) (self->ob_item + byte_start);
+        uint64_t tmp = 0;
         Py_ssize_t j;
 
         for (i = start; i < BITS(byte_start); i++)
             res += GETBIT(self, i);
-        for (j = byte_start; j < byte_stop; j++)
+        for (j = byte_start, i = 0; j + 8 < byte_stop; j += 8, ++i) {
+            tmp = data64[i];
+            BITWISE_HW_WP3(tmp, res);
+        }
+        for (; j < byte_stop; j++)
             res += bitcount_lookup[(unsigned char) self->ob_item[j]];
         for (i = BITS(byte_stop); i < stop; i++)
             res += GETBIT(self, i);
@@ -1877,9 +1884,8 @@ enum op_type {
 static int
 bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
 {
-    const Py_ssize_t nbytes = Py_SIZE(self);
     bitarrayobject *other;
-    Py_ssize_t i;
+    Py_ssize_t i = 0;
 
     if (!bitarray_Check(arg)) {
         PyErr_SetString(PyExc_TypeError,
@@ -1894,23 +1900,37 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
     }
     setunused(self);
     setunused(other);
+    Py_ssize_t size = Py_SIZE(self);
+
+#if HAS_VECTORS
+    #define BITWISE_VECTOR_OP(OP)                                     \
+   for (; (Py_ssize_t)(i + sizeof(vec)) < size; i += sizeof(vec))  \
+     vector_op(self->ob_item + i, other->ob_item + i, OP)
+#else
+#define BITWISE_VECTOR_OP(OP)
+#endif
+
     switch (oper) {
     case OP_and:
-        for (i = 0; i < nbytes; i++)
+        BITWISE_VECTOR_OP(&)
+        for (; i < size; ++i)
             self->ob_item[i] &= other->ob_item[i];
         break;
     case OP_or:
-        for (i = 0; i < nbytes; i++)
+        BITWISE_VECTOR_OP(|)
+        for (; i < size; ++i)
             self->ob_item[i] |= other->ob_item[i];
         break;
     case OP_xor:
-        for (i = 0; i < nbytes; i++)
+        BITWISE_VECTOR_OP(^)
+        for (; i < size; ++i)
             self->ob_item[i] ^= other->ob_item[i];
         break;
     default:                    /* cannot happen */
         return -1;
     }
     return 0;
+#undef VECTOR_BITWISE_OP
 }
 
 #define BITWISE_FUNC(oper)  \
@@ -1948,6 +1968,7 @@ BITWISE_IFUNC(and)              /* bitarray_iand */
 BITWISE_IFUNC(or)               /* bitarray_ior  */
 BITWISE_IFUNC(xor)              /* bitarray_ixor */
 
+#include "_bitarray_vct.c"
 
 static PyNumberMethods bitarray_as_number = {
     0,                          /* nb_add */
@@ -2774,6 +2795,18 @@ static PyMethodDef bitarray_methods[] = {
                                                          METH_KEYWORDS,
      unpack_doc},
 
+    {"eval_monic",   (PyCFunction) bitarray_eval_monic,  METH_VARARGS |
+                                                         METH_KEYWORDS,
+            eval_monic_doc},
+    {"fast_copy",   (PyCFunction) bitarray_fast_copy,    METH_O,
+            fast_copy_doc},
+    {"fast_hw_and",   (PyCFunction) bitwise_fast_hw_and, METH_O,
+            bitwise_fast_hw_and_doc},
+    {"fast_hw_or",   (PyCFunction) bitwise_fast_hw_or,   METH_O,
+            bitwise_fast_hw_or_doc},
+    {"fast_hw_xor",   (PyCFunction) bitwise_fast_hw_xor, METH_O,
+            bitwise_fast_hw_xor_doc},
+
     /* special methods */
     {"__copy__",     (PyCFunction) bitarray_copy,        METH_NOARGS,
      copy_doc},
@@ -3275,6 +3308,7 @@ static PyMethodDef module_functions[] = {
     {"_set_default_endian", (PyCFunction) set_default_endian, METH_VARARGS,
                                                    set_default_endian_doc},
     {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS,  sysinfo_doc   },
+    {"eval_all_terms", (PyCFunction) eval_all_terms, METH_VARARGS | METH_KEYWORDS, eval_all_terms_doc },
     {NULL,         NULL}  /* sentinel */
 };
 
@@ -3308,6 +3342,11 @@ init_bitarray(void)
     Py_SET_TYPE(&Bitarray_Type, &PyType_Type);
     Py_INCREF((PyObject *) &Bitarray_Type);
     PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type);
+
+    if (PyType_Ready(&TBase_Type) < 0)
+        goto error;
+    Py_INCREF((PyObject *) &TBase_Type);
+    PyModule_AddObject(m, "tbase", (PyObject *) &TBase_Type);
 
     if (PyType_Ready(&DecodeTree_Type) < 0)
         goto error;

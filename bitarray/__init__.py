@@ -9,10 +9,8 @@ Please find a description of this package at:
 
 Author: Ilan Schnell
 """
-from __future__ import absolute_import
-
-from bitarray._bitarray import (bitarray, decodetree, _sysinfo,
-                                get_default_endian, _set_default_endian,
+from bitarray._bitarray import (bitarray, decodetree, _sysinfo, tbase,
+                                get_default_endian, _set_default_endian, eval_all_terms,
                                 __version__)
 
 
