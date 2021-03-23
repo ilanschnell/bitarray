@@ -11,6 +11,8 @@
 #include "Python.h"
 #include "bitarray.h"
 
+#define HEXDIGITS  "0123456789abcdef"
+
 /* set using the Python module function _set_bato() */
 static PyObject *bitarray_type_obj = NULL;
 
@@ -124,6 +126,18 @@ find_last(bitarrayobject *a, int vi)
         if (GETBIT(a, i) == vi)
             return i;
 
+    return -1;
+}
+
+static int
+hex_to_int(char c)
+{
+    if ('0' <= c && c <= '9')
+        return c - '0';
+    if ('a' <= c && c <= 'f')
+        return c - 'a' + 10;
+    if ('A' <= c && c <= 'F')
+        return c - 'A' + 10;
     return -1;
 }
 
@@ -334,7 +348,7 @@ ba2hex(PyObject *module, PyObject *a)
 {
     PyObject *result;
     size_t i, strsize;
-    char *str, *hexdigits = "0123456789abcdef";
+    char *str;
     unsigned char c;
     int le, be;
 
@@ -358,8 +372,8 @@ ba2hex(PyObject *module, PyObject *a)
     be = aa->endian == ENDIAN_BIG;
     for (i = 0; i < strsize; i += 2) {
         c = aa->ob_item[i / 2];
-        str[i + le] = hexdigits[c >> 4];
-        str[i + be] = hexdigits[0x0f & c];
+        str[i + le] = HEXDIGITS[c >> 4];
+        str[i + be] = HEXDIGITS[0x0f & c];
     }
     result = Py_BuildValue("s#", str, aa->nbits / 4);
 #undef aa
@@ -373,18 +387,6 @@ PyDoc_STRVAR(ba2hex_doc,
 Return a string containing with hexadecimal representation of\n\
 the bitarray (which has to be multiple of 4 in length).");
 
-
-static int
-hex_to_int(char c)
-{
-    if ('0' <= c && c <= '9')
-        return c - '0';
-    if ('a' <= c && c <= 'f')
-        return c - 'a' + 10;
-    if ('A' <= c && c <= 'F')
-        return c - 'A' + 10;
-    return -1;
-}
 
 static PyObject *
 hex2ba(PyObject *module, PyObject *args)
