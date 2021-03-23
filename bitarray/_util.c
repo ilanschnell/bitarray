@@ -333,7 +333,7 @@ static PyObject *
 ba2hex(PyObject *module, PyObject *a)
 {
     PyObject *result;
-    Py_ssize_t i, strsize;
+    size_t i, strsize;
     char *str, *hexdigits = "0123456789abcdef";
     unsigned char c;
     int le, be;
@@ -348,7 +348,7 @@ ba2hex(PyObject *module, PyObject *a)
     }
 
     strsize = 2 * Py_SIZE(a);
-    str = (char *) PyMem_Malloc((size_t) strsize);
+    str = (char *) PyMem_Malloc(strsize);
     if (str == NULL) {
         PyErr_NoMemory();
         return NULL;
@@ -356,10 +356,10 @@ ba2hex(PyObject *module, PyObject *a)
 
     le = aa->endian == ENDIAN_LITTLE;
     be = aa->endian == ENDIAN_BIG;
-    for (i = 0; i < Py_SIZE(a); i++) {
-        c = aa->ob_item[i];
-        str[2 * i + le] = hexdigits[c >> 4];
-        str[2 * i + be] = hexdigits[0x0f & c];
+    for (i = 0; i < strsize; i += 2) {
+        c = aa->ob_item[i / 2];
+        str[i + le] = hexdigits[c >> 4];
+        str[i + be] = hexdigits[0x0f & c];
     }
     result = Py_BuildValue("s#", str, aa->nbits / 4);
 #undef aa
