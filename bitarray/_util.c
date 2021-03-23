@@ -420,8 +420,7 @@ hex2ba(PyObject *module, PyObject *args)
         x = hex2int[(unsigned char) str[i + le]];
         y = hex2int[(unsigned char) str[i + be]];
         if (x < 0 || y < 0) {
-            PyErr_Format(PyExc_ValueError,
-                         "Non-hexadecimal digit found");
+            PyErr_Format(PyExc_ValueError, "Non-hexadecimal digit found");
             return NULL;
         }
         assert(x < 16 && y < 16);
