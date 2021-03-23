@@ -336,6 +336,7 @@ ba2hex(PyObject *module, PyObject *a)
     Py_ssize_t i, strsize;
     char *str, *hexdigits = "0123456789abcdef";
     unsigned char c;
+    int le, be;
 
     if (ensure_bitarray(a) < 0)
         return NULL;
@@ -346,21 +347,22 @@ ba2hex(PyObject *module, PyObject *a)
         return NULL;
     }
 
-    strsize = aa->nbits / 4;
+    strsize = 2 * Py_SIZE(a);
     str = (char *) PyMem_Malloc((size_t) strsize);
     if (str == NULL) {
         PyErr_NoMemory();
         return NULL;
     }
 
-    for (i = 0; i < strsize; i++) {
-        c = aa->ob_item[i / 2];
-        c = (i % 2) ^ (aa->endian == ENDIAN_LITTLE) ? c & 0x0f : c >> 4;
-        assert(c <= 0x0f);
-        str[i] = hexdigits[c];
+    le = aa->endian == ENDIAN_LITTLE;
+    be = aa->endian == ENDIAN_BIG;
+    for (i = 0; i < Py_SIZE(a); i++) {
+        c = aa->ob_item[i];
+        str[2 * i + le] = hexdigits[c >> 4];
+        str[2 * i + be] = hexdigits[0x0f & c];
     }
+    result = Py_BuildValue("s#", str, aa->nbits / 4);
 #undef aa
-    result = Py_BuildValue("s#", str, strsize);
     PyMem_Free((void *) str);
     return result;
 }
