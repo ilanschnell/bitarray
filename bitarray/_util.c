@@ -374,6 +374,20 @@ Return a string containing with hexadecimal representation of\n\
 the bitarray (which has to be multiple of 4 in length).");
 
 
+static int
+hex_to_int(char c)
+{
+    if ('0' <= c && c <= '9')
+        return c - '0';
+    if ('a' <= c && c <= 'f')
+        return c - 'a' + 10;
+    if ('A' <= c && c <= 'F')
+        return c - 'A' + 10;
+    if (c == 0)
+        return 0;
+    return -1;
+}
+
 static PyObject *
 hex2ba(PyObject *module, PyObject *args)
 {
@@ -381,6 +395,15 @@ hex2ba(PyObject *module, PyObject *args)
     char *str;
     unsigned char c;
     Py_ssize_t i, strsize;
+    int le, be, x, y;
+    static int setup = 0;
+    static int hex2int[256];
+
+    if (!setup) {
+        for (i = 0; i < 256; i++)
+            hex2int[i] = hex_to_int(i);
+        setup = 1;
+    }
 
     if (!PyArg_ParseTuple(args, "Os#", &a, &str, &strsize))
         return NULL;
@@ -395,26 +418,26 @@ hex2ba(PyObject *module, PyObject *args)
     }
     memset(aa->ob_item, 0x00, (size_t) Py_SIZE(a));
 
-    for (i = 0; i < strsize; i++) {
-        c = str[i];
-        if ('0' <= c && c <= '9')
-            c = c - '0';
-        else if ('a' <= c && c <= 'f')
-            c = c - 'a' + 10;
-        else if ('A' <= c && c <= 'F')
-            c = c - 'A' + 10;
-        else {
-            PyErr_Format(PyExc_ValueError,
-                         "Non-hexadecimal digit found: '%c' (0x%02x)", c, c);
-            return NULL;
-        }
-        assert(c <= 0x0f);
-        aa->ob_item[i / 2] |=
-            ((i % 2) ^ (aa->endian == ENDIAN_LITTLE)) ? c : c << 4;
+    le = aa->endian == ENDIAN_LITTLE;
+    be = aa->endian == ENDIAN_BIG;
+    for (i = 0; i < strsize; i += 2) {
+        c = str[i + le];
+        x = hex2int[c];
+        if (x < 0)
+            goto non_hex;
+        c = str[i + be];
+        y = hex2int[c];
+        if (y < 0)
+            goto non_hex;
+        aa->ob_item[i / 2] = x << 4 | y;
     }
 #undef aa
-
     Py_RETURN_NONE;
+
+ non_hex:
+    PyErr_Format(PyExc_ValueError,
+                 "Non-hexadecimal digit found: '%c' (0x%02x)", c, c);
+    return NULL;
 }
 
 /* set bitarray_type_obj (bato) */
