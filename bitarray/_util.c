@@ -341,10 +341,6 @@ ba2hex(PyObject *module, PyObject *a)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
-    if (aa->nbits > PY_SSIZE_T_MAX / 4) {
-        PyErr_SetString(PyExc_OverflowError, "bitarray too large to hexlify");
-        return NULL;
-    }
     if (aa->nbits % 4) {
         PyErr_SetString(PyExc_ValueError, "bitarray length not multiple of 4");
         return NULL;

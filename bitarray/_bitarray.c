@@ -587,11 +587,6 @@ unpack(bitarrayobject *self, char zero, char one, const char *fmt)
     Py_ssize_t i;
     char *str;
 
-    if (self->nbits > PY_SSIZE_T_MAX / 8) {
-        PyErr_SetString(PyExc_OverflowError, "bitarray too large to unpack");
-        return NULL;
-    }
-
     str = (char *) PyMem_Malloc((size_t) self->nbits);
     if (str == NULL)
         return PyErr_NoMemory();
@@ -1389,7 +1384,7 @@ bitarray_repr(bitarrayobject *self)
         return Py_BuildValue("s", "bitarray()");
 
     strsize = self->nbits + 12;  /* 12 is the length of "bitarray('')" */
-    if (strsize > PY_SSIZE_T_MAX / 8) {
+    if (strsize > PY_SSIZE_T_MAX) {
         PyErr_SetString(PyExc_OverflowError,
                         "bitarray too large to represent");
         return NULL;
