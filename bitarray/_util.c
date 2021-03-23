@@ -151,7 +151,6 @@ count_n(PyObject *module, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "On:count_n", &a, &n))
         return NULL;
-
     if (ensure_bitarray(a) < 0)
         return NULL;
 
@@ -189,7 +188,6 @@ r_index(PyObject *module, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "O|O:rindex", &a, &x))
         return NULL;
-
     if (ensure_bitarray(a) < 0)
         return NULL;
 
@@ -408,13 +406,12 @@ hex2ba(PyObject *module, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "Os#", &a, &str, &strsize))
         return NULL;
-
     if (ensure_bitarray(a) < 0)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
     if (aa->nbits != 4 * strsize) {
-        PyErr_SetString(PyExc_ValueError, "incorrect bitarray size");
+        PyErr_SetString(PyExc_ValueError, "size mismatch");
         return NULL;
     }
 
