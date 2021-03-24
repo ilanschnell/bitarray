@@ -1,6 +1,7 @@
 2021-XX-XX   1.8.1:
 -------------------
   * moved implementation of and `hex2ba()` and `ba2hex()` to C-level
+  * add `bitarray.util.parity()`
 
 
 2021-03-21   1.8.0:
