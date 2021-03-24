@@ -425,7 +425,6 @@ hex2ba(PyObject *module, PyObject *args)
     if (!setup) {
         for (i = 0; i < 256; i++)
             hex2int[i] = hex_to_int(i);
-        hex2int[0] = 0;
         setup = 1;
     }
 
@@ -446,8 +445,16 @@ hex2ba(PyObject *module, PyObject *args)
         x = hex2int[(unsigned char) str[i + le]];
         y = hex2int[(unsigned char) str[i + be]];
         if (x < 0 || y < 0) {
-            PyErr_Format(PyExc_ValueError, "Non-hexadecimal digit found");
-            return NULL;
+            /* ignore the terminating NUL - happends when strsize is odd */
+            if (i + le == strsize && str[i + le] == 0)
+                x = 0;
+            if (i + be == strsize && str[i + be] == 0)
+                y = 0;
+            /* there is an invalid byte - or (non-terminating) NULL */
+            if (x < 0 || y < 0) {
+                PyErr_Format(PyExc_ValueError, "Non-hexadecimal digit found");
+                return NULL;
+            }
         }
         assert(x < 16 && y < 16);
         aa->ob_item[i / 2] = x << 4 | y;

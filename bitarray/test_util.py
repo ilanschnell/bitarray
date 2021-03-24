@@ -622,11 +622,17 @@ class TestsHexlify(unittest.TestCase, Util):
                          bitarray('0001 0000 1010 1111', 'big'))
         self.assertEQUAL(hex2ba(b'10aF', 'little'),
                          bitarray('1000 0000 0101 1111', 'little'))
-        self.assertRaises(ValueError, hex2ba, '01a7g89')
-        #self.assertRaises(ValueError, hex2ba, b'\x00')
-        #self.assertRaises(ValueError, hex2ba, b'1\x00')
-        self.assertRaises(UnicodeEncodeError, hex2ba, u'10\u20ac')
+
+    def test_hex2ba_errors(self):
         self.assertRaises(TypeError, hex2ba, 0)
+
+        for endian in 'little', 'big':
+            _set_default_endian(endian)
+            self.assertRaises(ValueError, hex2ba, '01a7g89')
+            self.assertRaises(UnicodeEncodeError, hex2ba, u'10\u20ac')
+            # check for NUL bytes
+            for b in b'\0', b'\01', b'1\0', b'\011', b'1\01', b'11\0':
+                self.assertRaises(ValueError, hex2ba, b)
 
     @staticmethod
     def hex2ba(s, endian=None):
