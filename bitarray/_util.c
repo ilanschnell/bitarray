@@ -328,8 +328,8 @@ parity(PyObject *module, PyObject *a)
 PyDoc_STRVAR(parity_doc,
 "parity(a, /) -> bool\n\
 \n\
-Return parity of bitarray `a`.\n\
-That is, `parity(a)` equals `bool(a.count() % 2)` (but much faster).");
+Return the parity of bitarray `a`.  This is equivalent\n\
+to `bool(a.count() % 2)` (but much faster).");
 
 
 static PyObject *

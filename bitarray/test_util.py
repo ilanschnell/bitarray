@@ -536,6 +536,15 @@ class TestsParity(unittest.TestCase, Util):
             a.append(1)
             par = not par
 
+    def test_unused_bits(self):
+        a = bitarray(1)
+        a.setall(1)
+        self.assertTrue(parity(a))
+
+    def test_return_type(self):
+        p = parity(bitarray('101'))
+        self.assertIsInstance(p, bool)
+
     def test_frozenbitarray(self):
         self.assertTrue(parity(frozenbitarray()) is False)
         self.assertTrue(parity(frozenbitarray('0010011')) is True)
