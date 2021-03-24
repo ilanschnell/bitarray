@@ -411,6 +411,7 @@ Return a string containing with hexadecimal representation of\n\
 the bitarray (which has to be multiple of 4 in length).");
 
 
+/* translate hexadecimal digits into the bitarray's buffer */
 static PyObject *
 hex2ba(PyObject *module, PyObject *args)
 {
