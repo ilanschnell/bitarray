@@ -310,7 +310,7 @@ static PyObject *
 parity(PyObject *module, PyObject *a)
 {
     Py_ssize_t i, nbytes;
-    char par = 0;
+    unsigned char par = 0;
 
     if (ensure_bitarray(a) < 0)
         return NULL;
@@ -322,7 +322,7 @@ parity(PyObject *module, PyObject *a)
         par ^= aa->ob_item[i];
 #undef aa
 
-    return PyBool_FromLong(bitcount_lookup[(unsigned char) par] % 2);
+    return PyBool_FromLong((long) bitcount_lookup[par] % 2);
 }
 
 PyDoc_STRVAR(parity_doc,
