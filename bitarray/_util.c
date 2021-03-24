@@ -440,14 +440,15 @@ hex2ba(PyObject *module, PyObject *args)
 
     le = aa->endian == ENDIAN_LITTLE;
     be = aa->endian == ENDIAN_BIG;
+    assert(le + be == 1 && str[strsize] == 0);
     for (i = 0; i < strsize; i += 2) {
         x = hex2int[(unsigned char) str[i + le]];
         y = hex2int[(unsigned char) str[i + be]];
         if (x < 0 || y < 0) {
             /* ignore the terminating NUL - happends when strsize is odd */
-            if (i + le == strsize && str[i + le] == 0)
+            if (i + le == strsize)
                 x = 0;
-            if (i + be == strsize && str[i + be] == 0)
+            if (i + be == strsize)
                 y = 0;
             /* there is an invalid byte - or (non-terminating) NUL */
             if (x < 0 || y < 0) {
