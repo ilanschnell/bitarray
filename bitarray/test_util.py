@@ -530,10 +530,11 @@ class TestsParity(unittest.TestCase, Util):
     def test_bitarray(self):
         a = bitarray()
         self.assertTrue(parity(a) is False)
-        a.append(1)
-        self.assertTrue(parity(a) is True)
-        a.append(1)
-        self.assertTrue(parity(a) is False)
+        par = False
+        for _ in range(100):
+            self.assertTrue(parity(a) is par)
+            a.append(1)
+            par = not par
 
     def test_frozenbitarray(self):
         self.assertTrue(parity(frozenbitarray()) is False)
@@ -544,11 +545,17 @@ class TestsParity(unittest.TestCase, Util):
         self.assertRaises(TypeError, parity, '')
         self.assertRaises(TypeError, bitarray(), 1)
 
+    def test_byte(self):
+        for i in range(256):
+            a = bitarray()
+            a.frombytes(bytes(bytearray([i])))
+            self.assertEqual(parity(a), a.count() % 2)
+
     def test_random(self):
         for a in self.randombitarrays():
             self.assertEqual(parity(a), a.count() % 2)
 
-tests.append(TestsSubset)
+tests.append(TestsParity)
 
 # ---------------------------------------------------------------------------
 
