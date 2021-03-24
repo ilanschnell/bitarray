@@ -196,10 +196,9 @@ r_index(PyObject *module, PyObject *args)
         return NULL;
 
     i = find_last((bitarrayobject *) a, vi);
-    if (i < 0) {
-        PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
-        return NULL;
-    }
+    if (i < 0)
+        return PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
+
     return PyLong_FromSsize_t(i);
 }
 
@@ -427,7 +426,6 @@ hex2ba(PyObject *module, PyObject *args)
             hex2int[i] = hex_to_int(i);
         setup = 1;
     }
-
     if (!PyArg_ParseTuple(args, "Os#", &a, &str, &strsize))
         return NULL;
     if (ensure_bitarray(a) < 0)
@@ -452,7 +450,8 @@ hex2ba(PyObject *module, PyObject *args)
                 y = 0;
             /* there is an invalid byte - or (non-terminating) NUL */
             if (x < 0 || y < 0) {
-                PyErr_Format(PyExc_ValueError, "Non-hexadecimal digit found");
+                PyErr_SetString(PyExc_ValueError,
+                                "Non-hexadecimal digit found");
                 return NULL;
             }
         }

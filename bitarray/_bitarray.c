@@ -738,10 +738,9 @@ bitarray_index(bitarrayobject *self, PyObject *args)
     normalize_index(self->nbits, &stop);
 
     i = findfirst(self, vi, start, stop);
-    if (i < 0) {
-        PyErr_Format(PyExc_ValueError, "%d is not in bitarray", vi);
-        return NULL;
-    }
+    if (i < 0)
+        return PyErr_Format(PyExc_ValueError, "%d is not in bitarray", vi);
+
     return PyLong_FromSsize_t(i);
 }
 
@@ -946,11 +945,10 @@ unpickle(PyTypeObject *type, PyObject *bytes, int endian)
     data = PyBytes_AS_STRING(bytes);
     head = *data;
 
-    if (nbytes == 1 && head % 8) {
-        PyErr_Format(PyExc_ValueError,
-                     "invalid header byte 0x%02x", head);
-        return NULL;
-    }
+    if (nbytes == 1 && head % 8)
+        return PyErr_Format(PyExc_ValueError,
+                            "invalid header byte 0x%02x", head);
+
     res = newbitarrayobject(type,
                             BITS(nbytes - 1) - ((Py_ssize_t) (head % 8)),
                             endian);
@@ -1478,10 +1476,9 @@ bitarray_remove(bitarrayobject *self, PyObject *v)
         return NULL;
 
     i = findfirst(self, vi, 0, self->nbits);
-    if (i < 0) {
-        PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
-        return NULL;
-    }
+    if (i < 0)
+        return PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
+
     if (delete_n(self, i, 1) < 0)
         return NULL;
     Py_RETURN_NONE;
@@ -1675,10 +1672,9 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
         return res;
     }
 
-    PyErr_Format(PyExc_TypeError,
-                 "bitarray indices must be integers or slices, not %s",
-                 Py_TYPE(item)->tp_name);
-    return NULL;
+    return PyErr_Format(PyExc_TypeError,
+                        "bitarray indices must be integers or slices, not %s",
+                        Py_TYPE(item)->tp_name);
 }
 
 /* The following functions (setslice_bitarray, setslice_bool and delslice)
@@ -2042,11 +2038,10 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
         return NULL;
 
     iter = PyObject_GetIter(iterable);
-    if (iter == NULL) {
-        PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
-                     Py_TYPE(iterable)->tp_name);
-        return NULL;
-    }
+    if (iter == NULL)
+        return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
+                            Py_TYPE(iterable)->tp_name);
+
     /* extend self with the bitarrays from codedict */
     while ((symbol = PyIter_Next(iter))) {
         value = PyDict_GetItem(codedict, symbol);
