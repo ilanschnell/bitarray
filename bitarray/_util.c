@@ -450,7 +450,7 @@ hex2ba(PyObject *module, PyObject *args)
                 x = 0;
             if (i + be == strsize && str[i + be] == 0)
                 y = 0;
-            /* there is an invalid byte - or (non-terminating) NULL */
+            /* there is an invalid byte - or (non-terminating) NUL */
             if (x < 0 || y < 0) {
                 PyErr_Format(PyExc_ValueError, "Non-hexadecimal digit found");
                 return NULL;
