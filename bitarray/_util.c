@@ -446,9 +446,9 @@ hex2ba(PyObject *module, PyObject *args)
         y = hex2int[(unsigned char) str[i + be]];
         if (x < 0 || y < 0) {
             /* ignore the terminating NUL - happends when strsize is odd */
-            if (i + le == strsize)
+            if (i + le == strsize) /* str[i+le] is NUL */
                 x = 0;
-            if (i + be == strsize)
+            if (i + be == strsize) /* str[i+be] is NUL */
                 y = 0;
             /* there is an invalid byte - or (non-terminating) NUL */
             if (x < 0 || y < 0) {
