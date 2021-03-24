@@ -897,17 +897,17 @@ class TestsSerialization(unittest.TestCase, Util):
         self.assertRaises(ValueError, deserialize, b'')
 
         for i in range(256):
-            b1 = bytes(bytearray([i]))
+            b = bytes(bytearray([i]))
             if i == 0 or i == 16:
-                self.assertEqual(deserialize(b1), bitarray())
+                self.assertEqual(deserialize(b), bitarray())
             else:
-                self.assertRaises(ValueError, deserialize, b1)
+                self.assertRaises(ValueError, deserialize, b)
 
-            b2 = bytes(bytearray([i, 0]))
+            b += b'\0'
             if i < 32 and i % 16 < 8:
-                self.assertEqual(deserialize(b2), zeros(8 - i % 8))
+                self.assertEqual(deserialize(b), zeros(8 - i % 8))
             else:
-                self.assertRaises(ValueError, deserialize, b2)
+                self.assertRaises(ValueError, deserialize, b)
 
     def test_random(self):
         for a in self.randombitarrays():
