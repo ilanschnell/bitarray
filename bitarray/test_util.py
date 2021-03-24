@@ -16,10 +16,11 @@ from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian)
 from bitarray.test_bitarray import Util
 
-from bitarray.util import (zeros, urandom, pprint, make_endian, rindex, strip,
-                           count_n, count_and, count_or, count_xor, subset,
-                           ba2hex, hex2ba, ba2int, int2ba,
-                           serialize, deserialize, huffman_code)
+from bitarray.util import (
+    zeros, urandom, pprint, make_endian, rindex, strip,
+    count_n, count_and, count_or, count_xor, subset, parity,
+    ba2hex, hex2ba, ba2int, int2ba, serialize, deserialize, huffman_code
+)
 
 if sys.version_info[0] == 3:
     from io import StringIO
@@ -519,6 +520,33 @@ class TestsSubset(unittest.TestCase, Util):
             # we set all bits in a, which ensures that b is a subset of a
             a.setall(1)
             self.assertTrue(subset(b, a))
+
+tests.append(TestsSubset)
+
+# ---------------------------------------------------------------------------
+
+class TestsParity(unittest.TestCase, Util):
+
+    def test_bitarray(self):
+        a = bitarray()
+        self.assertTrue(parity(a) is False)
+        a.append(1)
+        self.assertTrue(parity(a) is True)
+        a.append(1)
+        self.assertTrue(parity(a) is False)
+
+    def test_frozenbitarray(self):
+        self.assertTrue(parity(frozenbitarray()) is False)
+        self.assertTrue(parity(frozenbitarray('0010011')) is True)
+        self.assertTrue(parity(frozenbitarray('10100110')) is False)
+
+    def test_wrong_args(self):
+        self.assertRaises(TypeError, parity, '')
+        self.assertRaises(TypeError, bitarray(), 1)
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            self.assertEqual(parity(a), a.count() % 2)
 
 tests.append(TestsSubset)
 

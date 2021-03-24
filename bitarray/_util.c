@@ -307,6 +307,32 @@ intermediate bitarray object gets created.");
 
 
 static PyObject *
+parity(PyObject *module, PyObject *a)
+{
+    Py_ssize_t i, nbytes;
+    char par = 0;
+
+    if (ensure_bitarray(a) < 0)
+        return NULL;
+
+    nbytes = Py_SIZE(a);
+#define aa  ((bitarrayobject *) a)
+    setunused(aa);
+    for (i = 0; i < nbytes; i++)
+        par ^= aa->ob_item[i];
+#undef aa
+
+    return PyBool_FromLong(bitcount_lookup[(unsigned char) par] % 2);
+}
+
+PyDoc_STRVAR(parity_doc,
+"parity(a, /) -> bool\n\
+\n\
+Return parity of bitarray `a`.\n\
+That is, `parity(a)` equals `bool(a.count() % 2)` (but much faster).");
+
+
+static PyObject *
 serialize(PyObject *module, PyObject *a)
 {
     PyObject *result;
@@ -445,6 +471,7 @@ static PyMethodDef module_functions[] = {
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
     {"subset",    (PyCFunction) subset,    METH_VARARGS, subset_doc},
+    {"parity",    (PyCFunction) parity,    METH_O,       parity_doc},
     {"serialize", (PyCFunction) serialize, METH_O,       serialize_doc},
     {"ba2hex",    (PyCFunction) ba2hex,    METH_O,       ba2hex_doc},
     {"_hex2ba",   (PyCFunction) hex2ba,    METH_VARARGS, 0},
