@@ -544,11 +544,11 @@ class TestsHexlify(unittest.TestCase, Util):
         self.assertEqual(ba2hex(bitarray(0, 'big')), '')
         self.assertEqual(ba2hex(bitarray('1110', 'big')), 'e')
         self.assertEqual(ba2hex(bitarray('1110', 'little')), '7')
-        self.assertEqual(ba2hex(bitarray('00000001', 'big')), '01')
-        self.assertEqual(ba2hex(bitarray('10000000', 'big')), '80')
-        self.assertEqual(ba2hex(bitarray('00000001', 'little')), '08')
-        self.assertEqual(ba2hex(bitarray('10000000', 'little')), '10')
-        self.assertEqual(ba2hex(frozenbitarray('11000111', 'big')), 'c7')
+        self.assertEqual(ba2hex(bitarray('0000 0001', 'big')), '01')
+        self.assertEqual(ba2hex(bitarray('1000 0000', 'big')), '80')
+        self.assertEqual(ba2hex(bitarray('0000 0001', 'little')), '08')
+        self.assertEqual(ba2hex(bitarray('1000 0000', 'little')), '10')
+        self.assertEqual(ba2hex(frozenbitarray('1100 0111', 'big')), 'c7')
         # length not multiple of 4
         self.assertRaises(ValueError, ba2hex, bitarray('10'))
         self.assertRaises(TypeError, ba2hex, '101')
@@ -570,10 +570,10 @@ class TestsHexlify(unittest.TestCase, Util):
             a = hex2ba(c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
-        self.assertEQUAL(hex2ba('01'), bitarray('00000001', 'big'))
+        self.assertEQUAL(hex2ba('01'), bitarray('0000 0001', 'big'))
         self.assertEQUAL(hex2ba('08', 'little'),
-                         bitarray('00000001', 'little'))
-        self.assertEQUAL(hex2ba('aD'), bitarray('10101101', 'big'))
+                         bitarray('0000 0001', 'little'))
+        self.assertEQUAL(hex2ba('aD'), bitarray('1010 1101', 'big'))
         self.assertEQUAL(hex2ba(b'10aF'),
                          bitarray('0001 0000 1010 1111', 'big'))
         self.assertEQUAL(hex2ba(b'10aF', 'little'),
@@ -595,20 +595,13 @@ class TestsHexlify(unittest.TestCase, Util):
         return ''.join(a.iterdecode(CODEDICT[a.endian()]))
 
     def test_explicit(self):
-        data = [ #     little  big                  little  big
-            ('',       '',     ''),
-            ('0000',   '0',    '0'),     ('0001',   '8',    '1'),
-            ('1000',   '1',    '8'),     ('1001',   '9',    '9'),
-            ('0100',   '2',    '4'),     ('0101',   'a',    '5'),
-            ('1100',   '3',    'c'),     ('1101',   'b',    'd'),
-            ('0010',   '4',    '2'),     ('0011',   'c',    '3'),
-            ('1010',   '5',    'a'),     ('1011',   'd',    'b'),
-            ('0110',   '6',    '6'),     ('0111',   'e',    '7'),
-            ('1110',   '7',    'e'),     ('1111',   'f',    'f'),
-            ('10001100',             '13',    '8c'),
-            ('100011001110',         '137',   '8ce'),
-            ('1000110011101111',     '137f',  '8cef'),
-            ('10001100111011110100', '137f2', '8cef4'),
+        data = [ #                       little   big
+            ('',                         '',      ''),
+            ('1000',                     '1',     '8'),
+            ('1000 1100',                '13',    '8c'),
+            ('1000 1100 1110',           '137',   '8ce'),
+            ('1000 1100 1110 1111' ,     '137f',  '8cef'),
+            ('1000 1100 1110 1111 0100', '137f2', '8cef4'),
         ]
         for bs, hex_le, hex_be in data:
             a_be = bitarray(bs, 'big')
