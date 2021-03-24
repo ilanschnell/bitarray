@@ -631,7 +631,7 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertRaises(ValueError, hex2ba, '01a7g89')
             self.assertRaises(UnicodeEncodeError, hex2ba, u'10\u20ac')
             # check for NUL bytes
-            for b in b'\0', b'\01', b'1\0', b'\011', b'1\01', b'11\0':
+            for b in b'\0', b'\0f', b'f\0', b'\0ff', b'f\0f', b'ff\0':
                 self.assertRaises(ValueError, hex2ba, b)
 
     @staticmethod
