@@ -866,7 +866,7 @@ tests.append(TestsIntegerization)
 class TestsSerialization(unittest.TestCase, Util):
 
     def test_explicit(self):
-        for a, s in [
+        for a, b in [
                 (bitarray(0, 'little'),   b'\x00'),
                 (bitarray(0, 'big'),      b'\x10'),
                 (bitarray('1', 'little'), b'\x07\x01'),
@@ -874,8 +874,8 @@ class TestsSerialization(unittest.TestCase, Util):
                 (bitarray('11110000', 'little'), b'\x00\x0f'),
                 (bitarray('11110000', 'big'),    b'\x10\xf0'),
         ]:
-            self.assertEqual(serialize(a), s)
-            self.assertEQUAL(deserialize(s), a)
+            self.assertEqual(serialize(a), b)
+            self.assertEQUAL(deserialize(b), a)
 
     def test_zeros_and_ones(self):
         for endian in 'little', 'big':
@@ -908,6 +908,18 @@ class TestsSerialization(unittest.TestCase, Util):
                 self.assertEqual(deserialize(b), zeros(8 - i % 8))
             else:
                 self.assertRaises(ValueError, deserialize, b)
+
+    def test_bits_ignored(self):
+        # the unused bits (with the last bytes) are ignored
+        for b, a in [
+                (b'\x07\x01', bitarray('1', 'little')),
+                (b'\x07\x03', bitarray('1', 'little')),
+                (b'\x07\xff', bitarray('1', 'little')),
+                (b'\x17\x80', bitarray('1', 'big')),
+                (b'\x17\xc0', bitarray('1', 'big')),
+                (b'\x17\xff', bitarray('1', 'big')),
+        ]:
+            self.assertEQUAL(deserialize(b), a)
 
     def test_random(self):
         for a in self.randombitarrays():
