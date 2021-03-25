@@ -760,11 +760,11 @@ bitarray_extend(bitarrayobject *self, PyObject *obj)
 }
 
 PyDoc_STRVAR(extend_doc,
-"extend(iterable or string, /)\n\
+"extend(iterable, /)\n\
 \n\
 Extend bitarray by appending the truth value of each element given\n\
 by iterable.  If a string is provided, each `0` and `1` are appended\n\
-as bits.");
+as bits (whitespace is ignored).");
 
 
 static PyObject *
