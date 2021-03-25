@@ -145,8 +145,8 @@ Allowed values for mode are the strings: `left`, `right`, `both`
 def hex2ba(s, endian=None):
     """hex2ba(hexstr, /, endian=None) -> bitarray
 
-Bitarray of hexadecimal representation.
-hexstr may contain any number of hex digits (upper or lower case).
+Bitarray of hexadecimal representation.  hexstr may contain any number
+(including odd numbers) of hex digits (upper or lower case).
 """
     if not isinstance(s, (str, unicode if _is_py2 else bytes)):
         raise TypeError("str expected, got: '%s'" % type(s).__name__)
