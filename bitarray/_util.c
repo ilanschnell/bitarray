@@ -343,10 +343,9 @@ serialize(PyObject *module, PyObject *a)
 
     nbytes = Py_SIZE(a);
     data = (char *) PyMem_Malloc(nbytes + 1);
-    if (data == NULL) {
-        PyErr_NoMemory();
-        return NULL;
-    }
+    if (data == NULL)
+        return PyErr_NoMemory();
+
 #define aa  ((bitarrayobject *) a)
     *data = (char) (16 * (aa->endian == ENDIAN_BIG) +
                     BITS(nbytes) - aa->nbits);
@@ -386,10 +385,8 @@ ba2hex(PyObject *module, PyObject *a)
 
     strsize = 2 * Py_SIZE(a);
     str = (char *) PyMem_Malloc(strsize);
-    if (str == NULL) {
-        PyErr_NoMemory();
-        return NULL;
-    }
+    if (str == NULL)
+        return PyErr_NoMemory();
 
     le = aa->endian == ENDIAN_LITTLE;
     be = aa->endian == ENDIAN_BIG;
