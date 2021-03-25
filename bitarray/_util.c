@@ -418,11 +418,11 @@ hex2ba(PyObject *module, PyObject *args)
     Py_ssize_t i, strsize;
     int le, be, x, y;
     static int setup = 0;
-    static int hex2int[256];
+    static char hex2int[256];
 
     if (!setup) {
         for (i = 0; i < 256; i++)
-            hex2int[i] = hex_to_int(i);
+            hex2int[i] = hex_to_int((char) i);
         setup = 1;
     }
     if (!PyArg_ParseTuple(args, "Os#", &a, &str, &strsize))
