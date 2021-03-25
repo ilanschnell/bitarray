@@ -213,7 +213,7 @@ tests.append(TestsMakeEndian)
 
 # ---------------------------------------------------------------------------
 
-class TestsRindex(unittest.TestCase, Util):
+class TestsRIndex(unittest.TestCase, Util):
 
     def test_simple(self):
         self.assertRaises(TypeError, rindex)
@@ -277,7 +277,7 @@ class TestsRindex(unittest.TestCase, Util):
             a[randint(0, N - 1)] = 1
             self.assertEqual(rindex(a), a.index(1))
 
-tests.append(TestsRindex)
+tests.append(TestsRIndex)
 
 # ---------------------------------------------------------------------------
 
@@ -860,6 +860,31 @@ class TestsIntegerization(unittest.TestCase, Util):
 
 
 tests.append(TestsIntegerization)
+
+# ---------------------------------------------------------------------------
+
+class MixedTests(unittest.TestCase, Util):
+
+    def test_bin(self):
+        for i in range(1000):
+            s = bin(i)
+            self.assertEqual(s[:2], '0b')
+            a = bitarray(s[2:], 'big')
+            self.assertEqual(ba2int(a), i)
+            t = '0b%s' % a.to01()
+            self.assertEqual(t, s)
+            self.assertEqual(eval(t), i)
+
+    def test_hex(self):
+        for i in range(1000):
+            s = hex(i)
+            self.assertEqual(s[:2], '0x')
+            a = hex2ba(s[2:], 'big')
+            t = '0x%s' % ba2hex(a)
+            self.assertEqual(t, s)
+            self.assertEqual(eval(t), i)
+
+tests.append(MixedTests)
 
 # ---------------------------------------------------------------------------
 
