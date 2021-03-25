@@ -34,8 +34,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.8.0.tar.gz
-    $ cd bitarray-1.8.0
+    $ tar xzf bitarray-1.8.1.tar.gz
+    $ cd bitarray-1.8.1
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -54,7 +54,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 1.8.0
+    bitarray version: 1.8.1
     sys.version: 2.7.15 (default, Mar  5 2020, 14:58:04) [GCC Clang 9.0.1]
     sys.prefix: /Users/ilan/Mini3/envs/py27
     pointer size: 64 bit
@@ -62,7 +62,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ..............................
     ----------------------------------------------------------------------
-    Ran 279 tests in 0.638s
+    Ran 287 tests in 0.638s
 
     OK
 
@@ -395,11 +395,11 @@ with the corresponding bitarray for each symbol.
 Return the bit endianness of the bitarray as a string (`little` or `big`).
 
 
-`extend(iterable or string, /)`
+`extend(iterable, /)`
 
 Extend bitarray by appending the truth value of each element given
 by iterable.  If a string is provided, each `0` and `1` are appended
-as bits.
+as bits (whitespace is ignored).
 
 
 `fill()` -> int
@@ -679,6 +679,12 @@ efficient since we can stop as soon as one mismatch is found, and no
 intermediate bitarray object gets created.
 
 
+`parity(a, /)` -> bool
+
+Return the parity of bitarray `a`.  This is equivalent
+to `bool(a.count() % 2)` (but more efficient).
+
+
 `ba2hex(bitarray, /)` -> hexstr
 
 Return a string containing with hexadecimal representation of
@@ -732,6 +738,12 @@ hashable object (including `None`).
 
 Change log
 ----------
+
+*1.8.1* (2021-03-25):
+
+  * moved implementation of and `hex2ba()` and `ba2hex()` to C-level
+  * add `bitarray.util.parity()`
+
 
 *1.8.0* (2021-03-21):
 
