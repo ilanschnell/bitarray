@@ -2800,7 +2800,7 @@ endian_from_string(const char* string)
     return -1;
 }
 
-static PyObject*
+static PyObject *
 bitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
 {
     Py_ssize_t nbits;
@@ -3260,11 +3260,12 @@ tuple(sizeof(void *),\n\
 
 
 static PyMethodDef module_functions[] = {
-    {"get_default_endian", (PyCFunction) get_default_endian, METH_NOARGS,
-                                                   get_default_endian_doc},
-    {"_set_default_endian", (PyCFunction) set_default_endian, METH_VARARGS,
-                                                   set_default_endian_doc},
-    {"_sysinfo",   (PyCFunction) sysinfo,    METH_NOARGS,  sysinfo_doc   },
+    {"get_default_endian",  (PyCFunction) get_default_endian,
+                                      METH_NOARGS,  get_default_endian_doc},
+    {"_set_default_endian", (PyCFunction) set_default_endian,
+                                      METH_VARARGS, set_default_endian_doc},
+    {"_sysinfo",            (PyCFunction) sysinfo,
+                                      METH_NOARGS,  sysinfo_doc           },
     {NULL,         NULL}  /* sentinel */
 };
 

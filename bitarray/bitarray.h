@@ -50,7 +50,8 @@ typedef struct {
 /* ------------ low level access to bits in bitarrayobject ------------- */
 
 #ifndef NDEBUG
-static inline int GETBIT(bitarrayobject *self, Py_ssize_t i) {
+static inline int GETBIT(bitarrayobject *self, Py_ssize_t i)
+{
     assert(0 <= i && i < self->nbits);
     return ((self)->ob_item[(i) / 8] & BITMASK((self)->endian, i) ? 1 : 0);
 }
