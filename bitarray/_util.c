@@ -12,6 +12,8 @@
 #include "bitarray.h"
 
 #define HEXDIGITS  "0123456789abcdef"
+#define IS_LE(a)  ((a)->endian == ENDIAN_LITTLE)
+#define IS_BE(a)  ((a)->endian == ENDIAN_BIG)
 
 /* set using the Python module function _set_bato() */
 static PyObject *bitarray_type_obj = NULL;
@@ -347,8 +349,7 @@ serialize(PyObject *module, PyObject *a)
         return PyErr_NoMemory();
 
 #define aa  ((bitarrayobject *) a)
-    *data = (char) (16 * (aa->endian == ENDIAN_BIG) +
-                    BITS(nbytes) - aa->nbits);
+    *data = (char) (16 * IS_BE(aa) + BITS(nbytes) - aa->nbits);
     setunused(aa);
     memcpy(data + 1, aa->ob_item, (size_t) nbytes);
 #undef aa
@@ -388,8 +389,8 @@ ba2hex(PyObject *module, PyObject *a)
     if (str == NULL)
         return PyErr_NoMemory();
 
-    le = aa->endian == ENDIAN_LITTLE;
-    be = aa->endian == ENDIAN_BIG;
+    le = IS_LE(aa);
+    be = IS_BE(aa);
     for (i = 0; i < strsize; i += 2) {
         c = aa->ob_item[i / 2];
         str[i + le] = HEXDIGITS[c >> 4];
@@ -435,8 +436,8 @@ hex2ba(PyObject *module, PyObject *args)
         return NULL;
     }
 
-    le = aa->endian == ENDIAN_LITTLE;
-    be = aa->endian == ENDIAN_BIG;
+    le = IS_LE(aa);
+    be = IS_BE(aa);
     assert(le + be == 1 && str[strsize] == 0);
     for (i = 0; i < strsize; i += 2) {
         x = hex2int[(unsigned char) str[i + le]];
