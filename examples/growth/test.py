@@ -27,10 +27,8 @@ for _ in range(100):
     prev = alloc
 
 
-# initalizing a bitarray from a string or list should not overallocate
+# initalizing a bitarray from a list should not overallocate
 for n in 0, 4, 10, 100, 1000, 10_000:
-    a = bitarray(8 * n * '1')
-    assert n == a.buffer_info()[4]
     a = bitarray(8 * n * [1])
     assert n == a.buffer_info()[4]
 
