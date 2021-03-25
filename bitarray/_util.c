@@ -372,7 +372,6 @@ ba2hex(PyObject *module, PyObject *a)
     PyObject *result;
     size_t i, strsize;
     char *str;
-    unsigned char c;
     int le, be;
 
     if (ensure_bitarray(a) < 0)
@@ -392,7 +391,7 @@ ba2hex(PyObject *module, PyObject *a)
     le = IS_LE(aa);
     be = IS_BE(aa);
     for (i = 0; i < strsize; i += 2) {
-        c = aa->ob_item[i / 2];
+        unsigned char c = aa->ob_item[i / 2];
         str[i + le] = HEXDIGITS[c >> 4];
         str[i + be] = HEXDIGITS[0x0f & c];
     }
@@ -416,9 +415,9 @@ hex2ba(PyObject *module, PyObject *args)
     PyObject *a;
     char *str;
     Py_ssize_t i, strsize;
-    int le, be, x, y;
-    static int setup = 0;
+    int le, be;
     static char hex2int[256];
+    static int setup = 0;
 
     if (!setup) {
         for (i = 0; i < 256; i++)
@@ -440,8 +439,8 @@ hex2ba(PyObject *module, PyObject *args)
     be = IS_BE(aa);
     assert(le + be == 1 && str[strsize] == 0);
     for (i = 0; i < strsize; i += 2) {
-        x = hex2int[(unsigned char) str[i + le]];
-        y = hex2int[(unsigned char) str[i + be]];
+        char x = hex2int[(unsigned char) str[i + le]];
+        char y = hex2int[(unsigned char) str[i + be]];
         if (x < 0 || y < 0) {
             /* ignore the terminating NUL - happends when strsize is odd */
             if (i + le == strsize) /* str[i+le] is NUL */
