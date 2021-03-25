@@ -404,7 +404,7 @@ ba2hex(PyObject *module, PyObject *a)
 PyDoc_STRVAR(ba2hex_doc,
 "ba2hex(bitarray, /) -> hexstr\n\
 \n\
-Return a string containing with hexadecimal representation of\n\
+Return a string containing the hexadecimal representation of\n\
 the bitarray (which has to be multiple of 4 in length).");
 
 
