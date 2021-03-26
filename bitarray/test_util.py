@@ -17,9 +17,9 @@ from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
 from bitarray.test_bitarray import Util
 
 from bitarray.util import (
-    zeros, urandom, pprint, make_endian, rindex, strip,
-    count_n, count_and, count_or, count_xor, subset, parity,
-    ba2hex, hex2ba, ba2int, int2ba, serialize, deserialize, huffman_code
+    zeros, urandom, pprint, make_endian, rindex, strip, count_n,
+    parity, count_and, count_or, count_xor, subset,
+    serialize, deserialize, ba2hex, hex2ba, ba2int, int2ba, huffman_code
 )
 
 if sys.version_info[0] == 3:

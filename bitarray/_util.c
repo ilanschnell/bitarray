@@ -481,11 +481,11 @@ set_bato(PyObject *module, PyObject *obj)
 static PyMethodDef module_functions[] = {
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
     {"rindex",    (PyCFunction) r_index,   METH_VARARGS, rindex_doc},
+    {"parity",    (PyCFunction) parity,    METH_O,       parity_doc},
     {"count_and", (PyCFunction) count_and, METH_VARARGS, count_and_doc},
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
     {"subset",    (PyCFunction) subset,    METH_VARARGS, subset_doc},
-    {"parity",    (PyCFunction) parity,    METH_O,       parity_doc},
     {"serialize", (PyCFunction) serialize, METH_O,       serialize_doc},
     {"ba2hex",    (PyCFunction) ba2hex,    METH_O,       ba2hex_doc},
     {"_hex2ba",   (PyCFunction) hex2ba,    METH_VARARGS, 0},

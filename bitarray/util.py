@@ -12,15 +12,17 @@ import sys
 
 from bitarray import bitarray, bits2bytes, get_default_endian
 
-from bitarray._util import (count_n, rindex,
-                            count_and, count_or, count_xor, subset, parity,
-                            serialize, ba2hex, _hex2ba, _set_bato)
+from bitarray._util import (
+    count_n, rindex, parity, count_and, count_or, count_xor, subset,
+    serialize, ba2hex, _hex2ba, _set_bato,
+)
 
-
-__all__ = ['zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip',
-           'count_n', 'count_and', 'count_or', 'count_xor', 'subset',
-           'parity', 'ba2hex', 'hex2ba', 'ba2int', 'int2ba',
-           'serialize', 'deserialize', 'huffman_code']
+__all__ = [
+    'zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip', 'count_n',
+    'parity', 'count_and', 'count_or', 'count_xor', 'subset',
+    'ba2hex', 'hex2ba', 'ba2int', 'int2ba',
+    'serialize', 'deserialize', 'huffman_code',
+]
 
 
 # tell the _util extension what the bitarray type object is, such that it
