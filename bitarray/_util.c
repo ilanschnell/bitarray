@@ -11,7 +11,6 @@
 #include "Python.h"
 #include "bitarray.h"
 
-#define HEXDIGITS  "0123456789abcdef"
 #define IS_LE(a)  ((a)->endian == ENDIAN_LITTLE)
 #define IS_BE(a)  ((a)->endian == ENDIAN_BIG)
 
@@ -131,18 +130,6 @@ find_last(bitarrayobject *a, int vi)
     return -1;
 }
 
-static int
-hex_to_int(char c)
-{
-    if ('0' <= c && c <= '9')
-        return c - '0';
-    if ('a' <= c && c <= 'f')
-        return c - 'a' + 10;
-    if ('A' <= c && c <= 'F')
-        return c - 'A' + 10;
-    return -1;
-}
-
 /****************************** Module functions **************************/
 
 static PyObject *
@@ -210,6 +197,34 @@ PyDoc_STRVAR(rindex_doc,
 Return the rightmost index of `bool(value)` in bitarray.\n\
 Raises `ValueError` if the value is not present.");
 
+/* --------------------------- unary functions ------------------------- */
+
+static PyObject *
+parity(PyObject *module, PyObject *a)
+{
+    Py_ssize_t i, nbytes;
+    unsigned char par = 0;
+
+    if (ensure_bitarray(a) < 0)
+        return NULL;
+
+    nbytes = Py_SIZE(a);
+#define aa  ((bitarrayobject *) a)
+    setunused(aa);
+    for (i = 0; i < nbytes; i++)
+        par ^= aa->ob_item[i];
+#undef aa
+
+    return PyBool_FromLong((long) bitcount_lookup[par] % 2);
+}
+
+PyDoc_STRVAR(parity_doc,
+"parity(a, /) -> bool\n\
+\n\
+Return the parity of bitarray `a`.  This is equivalent\n\
+to `bool(a.count() % 2)` (but more efficient).");
+
+/* --------------------------- binary functions ------------------------ */
 
 enum kernel_type {
     KERN_cand,     /* count bitwise and -> int */
@@ -306,32 +321,7 @@ Return True if bitarray `a` is a subset of bitarray `b` (False otherwise).\n\
 efficient since we can stop as soon as one mismatch is found, and no\n\
 intermediate bitarray object gets created.");
 
-
-static PyObject *
-parity(PyObject *module, PyObject *a)
-{
-    Py_ssize_t i, nbytes;
-    unsigned char par = 0;
-
-    if (ensure_bitarray(a) < 0)
-        return NULL;
-
-    nbytes = Py_SIZE(a);
-#define aa  ((bitarrayobject *) a)
-    setunused(aa);
-    for (i = 0; i < nbytes; i++)
-        par ^= aa->ob_item[i];
-#undef aa
-
-    return PyBool_FromLong((long) bitcount_lookup[par] % 2);
-}
-
-PyDoc_STRVAR(parity_doc,
-"parity(a, /) -> bool\n\
-\n\
-Return the parity of bitarray `a`.  This is equivalent\n\
-to `bool(a.count() % 2)` (but more efficient).");
-
+/* ---------------------------- serialization -------------------------- */
 
 static PyObject *
 serialize(PyObject *module, PyObject *a)
@@ -365,6 +355,21 @@ Return a serialized representation of the bitarray, which may be passed to\n\
 `deserialize()`.  It efficiently represents the bitarray object (including\n\
 its endianness) and is guaranteed not to change in future releases.");
 
+/* ----------------------------- hexadecimal --------------------------- */
+
+#define HEXDIGITS  "0123456789abcdef"
+
+static int
+hex_to_int(char c)
+{
+    if ('0' <= c && c <= '9')
+        return c - '0';
+    if ('a' <= c && c <= 'f')
+        return c - 'a' + 10;
+    if ('A' <= c && c <= 'F')
+        return c - 'A' + 10;
+    return -1;
+}
 
 static PyObject *
 ba2hex(PyObject *module, PyObject *a)
@@ -462,6 +467,8 @@ hex2ba(PyObject *module, PyObject *args)
 #undef aa
     Py_RETURN_NONE;
 }
+
+/* --------------------------------------------------------------------- */
 
 /* set bitarray_type_obj (bato) */
 static PyObject *
