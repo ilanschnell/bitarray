@@ -4,7 +4,7 @@
 
    Author: Ilan Schnell
 */
-#define BITARRAY_VERSION  "1.8.2"
+#define BITARRAY_VERSION  "1.9.0"
 
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K

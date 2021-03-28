@@ -752,7 +752,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2021-XX-XX   1.8.2:
+2021-XX-XX   1.9.0:
 
   * add `bitarray.util.ba2base()` and `bitarray.util.base2ba()`,
     see [Bitarray representations](examples/represent.md)
