@@ -170,8 +170,9 @@ bytereverse(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     static int setup = 0;
     Py_ssize_t i, stop = start + n;
 
+    assert(n >= 0);
     assert(0 <= start && start <= Py_SIZE(self));
-    assert(n >= 0 && stop <= Py_SIZE(self));
+    assert(0 <= stop && stop <= Py_SIZE(self));
 
     if (!setup) {
         /* setup translation table, which maps each byte to it's reversed:
