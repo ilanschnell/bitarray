@@ -1736,7 +1736,7 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(next(it), 4)
         self.assertStopIteration(it)
 
-    def test_search2(self):
+    def test_search_2(self):
         a = bitarray('10011')
         for s, res in [('0',     [1, 2]),  ('1', [0, 3, 4]),
                        ('01',    [2]),     ('11', [3]),
@@ -1747,7 +1747,7 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a.search(b), res)
             self.assertEqual([p for p in a.itersearch(b)], res)
 
-    def test_search3(self):
+    def test_search_3(self):
         a = bitarray('10010101110011111001011')
         for s, res in [('011', [6, 11, 20]),
                        ('111', [7, 12, 13, 14]),  # note the overlap
@@ -1758,7 +1758,7 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(list(a.itersearch(b)), res)
             self.assertEqual([p for p in a.itersearch(b)], res)
 
-    def test_search4(self):
+    def test_search_4(self):
         for a in self.randombitarrays():
             aa = a.to01()
             for sub in '0', '1', '01', '01', '11', '101', '1111111':
@@ -1769,10 +1769,10 @@ class MethodTests(unittest.TestCase, Util):
                     p = -1
                 self.assertEqual(p, aa.find(sub))
 
-    def test_search_type(self):
+    def test_searchiter_type(self):
         a = bitarray('10011')
         it = a.itersearch(bitarray('1'))
-        self.assertIsInstance(type(it), type)
+        self.assertIsType(it, 'searchiterator')
 
     def test_fill_simple(self):
         for endian in 'little', 'big':
@@ -1796,11 +1796,10 @@ class MethodTests(unittest.TestCase, Util):
             if len(a) % 8 == 0:
                 self.assertEqual(b, a)
             else:
-                self.assertTrue(len(b) % 8 == 0)
+                self.assertEqual(len(b) % 8, 0)
                 self.assertNotEqual(b, a)
                 self.assertEqual(b[:len(a)], a)
-                self.assertEqual(b[len(a):],
-                                 (len(b) - len(a)) * bitarray('0'))
+                self.assertEqual(b[len(a):].to01(), (len(b) - len(a)) * '0')
 
     def test_invert_simple(self):
         a = bitarray()
@@ -1901,10 +1900,8 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEQUAL(a, bitarray(res))
 
         a = bitarray('0010011')
-        b = a
-        b.remove('1')
-        self.assertTrue(b is a)
-        self.assertEQUAL(b, bitarray('000011'))
+        a.remove('1')
+        self.assertEQUAL(a, bitarray('000011'))
 
     def test_remove_errors(self):
         a = bitarray()
@@ -1953,13 +1950,10 @@ class MethodTests(unittest.TestCase, Util):
 
     def test_clear(self):
         for a in self.randombitarrays():
-            ida = id(a)
             endian = a.endian()
             a.clear()
-            self.assertEqual(a, bitarray())
-            self.assertEqual(id(a), ida)
-            self.assertEqual(a.endian(), endian)
             self.assertEqual(len(a), 0)
+            self.assertEqual(a.endian(), endian)
 
     def test_setall(self):
         a = bitarray(5)
@@ -1972,16 +1966,13 @@ class MethodTests(unittest.TestCase, Util):
         a = bitarray()
         for v in 0, 1:
             a.setall(v)
-            self.assertEQUAL(a, bitarray())
+            self.assertEqual(a, bitarray())
 
     def test_setall_random(self):
         for a in self.randombitarrays():
             val = randint(0, 1)
-            b = a
-            b.setall(val)
-            self.assertEqual(b, bitarray(len(b) * [val]))
-            self.assertTrue(a is b)
-            self.check_obj(b)
+            a.setall(val)
+            self.assertEqual(a, bitarray(len(a) * [val]))
 
     def test_bytereverse_explicit(self):
         for x, y in [('', ''),
