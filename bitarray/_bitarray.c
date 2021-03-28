@@ -209,7 +209,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
        bytes using memmove, and copy the remaining few bits individually.
        Note that the order of these two operations matters when copying
        self to self. */
-    if (self->endian == other->endian && a % 8 == 0 && b % 8 == 0 && n >= 8)
+    if (a % 8 == 0 && b % 8 == 0 && n >= 8)
     {
         const size_t bytes = n / 8;
         const Py_ssize_t bits = BITS(bytes);
@@ -219,6 +219,8 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
             copy_n(self, bits + a, other, bits + b, n - bits);
 
         memmove(self->ob_item + a / 8, other->ob_item + b / 8, bytes);
+        if (self->endian != other->endian)
+            bytereverse(self, a / 8, a / 8 + bytes);
 
         if (a <= b && n != bits)
             copy_n(self, bits + a, other, bits + b, n - bits);
