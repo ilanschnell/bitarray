@@ -1361,15 +1361,13 @@ class ExtendTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('1101110'))
 
         a = bitarray('00001111', endian='little')
-        a.extend(bitarray('00111100', endian='big'))
-        self.assertEqual(a, bitarray('0000111100111100'))
+        a.extend(bitarray('00100111', endian='big'))
+        self.assertEqual(a, bitarray('00001111 00100111'))
 
         for a in self.randombitarrays():
             for b in self.randombitarrays():
                 c = bitarray(a)
-                idc = id(c)
                 c.extend(b)
-                self.assertEqual(id(c), idc)
                 self.assertEqual(c, a + b)
 
     def test_list(self):
@@ -1384,11 +1382,8 @@ class ExtendTests(unittest.TestCase, Util):
         for a in self.randomlists():
             for b in self.randomlists():
                 c = bitarray(a)
-                idc = id(c)
                 c.extend(b)
-                self.assertEqual(id(c), idc)
                 self.assertEqual(c.tolist(), a + b)
-                self.check_obj(c)
 
     def test_tuple(self):
         a = bitarray()
@@ -1400,11 +1395,8 @@ class ExtendTests(unittest.TestCase, Util):
         for a in self.randomlists():
             for b in self.randomlists():
                 c = bitarray(a)
-                idc = id(c)
                 c.extend(tuple(b))
-                self.assertEqual(id(c), idc)
                 self.assertEqual(c.tolist(), a + b)
-                self.check_obj(c)
 
     def test_generator(self):
         def bar():
@@ -1510,7 +1502,7 @@ class ExtendTests(unittest.TestCase, Util):
 
         a = bitarray('110')
         a.extend(a)
-        self.assertEqual(a, bitarray('110110'))
+        self.assertEqual(a, bitarray(2 * '110'))
 
         for a in self.randombitarrays():
             b = bitarray(a)
