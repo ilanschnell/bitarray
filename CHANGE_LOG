@@ -2,6 +2,8 @@
 -------------------
   * add `bitarray.util.ba2base()` and `bitarray.util.base2ba()`,
     see last paragraph in [Bitarray representations](examples/represent.md)
+  * speedup initializing or extending a bitarray from another with different
+    bit endianness
 
 
 2021-03-25   1.8.1:

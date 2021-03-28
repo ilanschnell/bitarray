@@ -34,8 +34,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.8.2.tar.gz
-    $ cd bitarray-1.8.2
+    $ tar xzf bitarray-1.9.0.tar.gz
+    $ cd bitarray-1.9.0
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -54,7 +54,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 1.8.2
+    bitarray version: 1.9.0
     sys.version: 2.7.15 (default, Mar  5 2020, 14:58:04) [GCC Clang 9.0.1]
     sys.prefix: /Users/ilan/Mini3/envs/py27
     pointer size: 64 bit
@@ -755,7 +755,9 @@ Change log
 2021-XX-XX   1.9.0:
 
   * add `bitarray.util.ba2base()` and `bitarray.util.base2ba()`,
-    see [Bitarray representations](examples/represent.md)
+    see last paragraph in [Bitarray representations](examples/represent.md)
+  * speedup initializing or extending a bitarray from another with different
+    bit endianness
 
 
 *1.8.1* (2021-03-25):
