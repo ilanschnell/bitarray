@@ -215,14 +215,13 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         const Py_ssize_t bits = BITS(bytes);
 
         assert(bits <= n && n < bits + 8);
-        if (a <= b)
-            memmove(self->ob_item + a / 8, other->ob_item + b / 8, bytes);
-
-        if (n != bits)
+        if (a > b && n != bits)
             copy_n(self, bits + a, other, bits + b, n - bits);
 
-        if (a > b)
-            memmove(self->ob_item + a / 8, other->ob_item + b / 8, bytes);
+        memmove(self->ob_item + a / 8, other->ob_item + b / 8, bytes);
+
+        if (a <= b && n != bits)
+            copy_n(self, bits + a, other, bits + b, n - bits);
 
         return;
     }
