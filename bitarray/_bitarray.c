@@ -214,7 +214,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         const size_t bytes = n / 8;
         const Py_ssize_t bits = BITS(bytes);
 
-        assert(bits <= n && n < bits + 8);
+        assert(bytes > 0 && bits <= n && n < bits + 8);
         if (a > b)
             copy_n(self, bits + a, other, bits + b, n - bits);
 
