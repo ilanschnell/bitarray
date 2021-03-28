@@ -162,6 +162,33 @@ bitarray_dealloc(bitarrayobject *self)
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
+/* reverse all bytes in buffer in-place */
+static void
+bytereverse(bitarrayobject *self)
+{
+    static char trans[256];
+    static int setup = 0;
+    Py_ssize_t i;
+
+    if (!setup) {
+        /* setup translation table, which maps each byte to it's reversed:
+           trans = {0, 128, 64, 192, 32, 160, ..., 255} */
+        int j, k;
+
+        for (k = 0; k < 256; k++) {
+            trans[k] = 0x00;
+            for (j = 0; j < 8; j++)
+                if (1 << (7 - j) & k)
+                    trans[k] |= 1 << j;
+        }
+        setup = 1;
+    }
+
+    setunused(self);
+    for (i = 0; i < Py_SIZE(self); i++)
+        self->ob_item[i] = trans[(unsigned char) self->ob_item[i]];
+}
+
 /* copy n bits from other (starting at b) onto self (starting at a) */
 static void
 copy_n(bitarrayobject *self, Py_ssize_t a,
@@ -1046,28 +1073,7 @@ When the optional `index` is given, only invert the single bit at index.");
 static PyObject *
 bitarray_bytereverse(bitarrayobject *self)
 {
-    static char trans[256];
-    static int setup = 0;
-    Py_ssize_t i;
-
-    if (!setup) {
-        /* setup translation table, which maps each byte to it's reversed:
-           trans = {0, 128, 64, 192, 32, 160, ..., 255} */
-        int j, k;
-
-        for (k = 0; k < 256; k++) {
-            trans[k] = 0x00;
-            for (j = 0; j < 8; j++)
-                if (1 << (7 - j) & k)
-                    trans[k] |= 1 << j;
-        }
-        setup = 1;
-    }
-
-    setunused(self);
-    for (i = 0; i < Py_SIZE(self); i++)
-        self->ob_item[i] = trans[(unsigned char) self->ob_item[i]];
-
+    bytereverse(self);
     Py_RETURN_NONE;
 }
 
