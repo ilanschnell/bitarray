@@ -786,13 +786,6 @@ class TestsBase(unittest.TestCase, Util):
         self.assertEqual(a.tobytes(), msg)
         self.assertEqual(ba2base(32, a), s)
 
-    def test_base32_alpabet(self):
-        for i, c in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'):
-            for endian in 'big', 'little':
-                a = base2ba(32, c, endian)
-                self.assertEqual(ba2int(a), i)
-                self.assertEqual(ba2base(32, a), c)
-
     def test_base64(self):
         import base64
 
@@ -806,14 +799,22 @@ class TestsBase(unittest.TestCase, Util):
         self.assertEqual(a.tobytes(), msg)
         self.assertEqual(ba2base(64, a), s)
 
-    def test_base64_alpabet(self):
-        for i, c in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-                              'abcdefghijklmnopqrstuvwxyz'
-                              '0123456789+/'):
-            for endian in 'big', 'little':
-                a = base2ba(64, c, endian)
-                self.assertEqual(ba2int(a), i)
-                self.assertEqual(ba2base(64, a), c)
+    def test_alphabets(self):
+        for m, n, alpabet in [
+                (1,  2, '01'),
+                (2,  4, '0123'),
+                (3,  8, '01234567'),
+                (4, 16, '0123456789abcdef'),
+                (5, 32, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'),
+                (6, 64, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+                        'abcdefghijklmnopqrstuvwxyz0123456789+/'),
+        ]:
+            self.assertEqual(1 << m, n)
+            self.assertEqual(len(alpabet), n)
+            for i, c in enumerate(alpabet):
+                for endian in 'big', 'little':
+                    self.assertEqual(ba2int(base2ba(n, c, endian)), i)
+                    self.assertEqual(ba2base(n, int2ba(i, m, endian)), c)
 
     def test_random(self):
         for a in self.randombitarrays():

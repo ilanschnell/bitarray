@@ -474,8 +474,8 @@ hex2ba(PyObject *module, PyObject *args)
 static const char *base32_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
 /* standard base 64 alphabet */
-static const char *base64_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "abcdefghijklmnopqrstuvwxyz0123456789+/";
+static const char *base64_alphabet =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static int
 digit_to_int(char c, int n)
