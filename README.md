@@ -755,7 +755,7 @@ Change log
 2021-XX-XX   1.8.2:
 
   * add `bitarray.util.ba2base()` and `bitarray.util.base2ba()`,
-    see [a relative link](examples/represent.md)
+    see [Bitarray representations](examples/represent.md)
 
 
 *1.8.1* (2021-03-25):
