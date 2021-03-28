@@ -36,7 +36,7 @@ ensure_bitarray(PyObject *obj)
     return 0;
 }
 
-/************* start of actual functionality in this module ***************/
+/* ------------------------------- count_n ----------------------------- */
 
 /* return the smallest index i for which a.count(1, 0, i) == n, or when
    n exceeds the total count return -1  */
@@ -91,6 +91,43 @@ count_to_n(bitarrayobject *a, Py_ssize_t n)
     return i;
 }
 
+static PyObject *
+count_n(PyObject *module, PyObject *args)
+{
+    PyObject *a;
+    Py_ssize_t n, i;
+
+    if (!PyArg_ParseTuple(args, "On:count_n", &a, &n))
+        return NULL;
+    if (ensure_bitarray(a) < 0)
+        return NULL;
+
+    if (n < 0) {
+        PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
+        return NULL;
+    }
+#define aa  ((bitarrayobject *) a)
+    if (n > aa->nbits)  {
+        PyErr_SetString(PyExc_ValueError, "n larger than bitarray size");
+        return NULL;
+    }
+    i = count_to_n(aa, n);        /* do actual work here */
+#undef aa
+    if (i < 0) {
+        PyErr_SetString(PyExc_ValueError, "n exceeds total count");
+        return NULL;
+    }
+    return PyLong_FromSsize_t(i);
+}
+
+PyDoc_STRVAR(count_n_doc,
+"count_n(a, n, /) -> int\n\
+\n\
+Return the smallest index `i` for which `a[:i].count() == n`.\n\
+Raises `ValueError`, when n exceeds total count (`a.count()`).");
+
+/* ----------------------------- right index --------------------------- */
+
 /* return index of last occurrence of vi, -1 when x is not in found. */
 static Py_ssize_t
 find_last(bitarrayobject *a, int vi)
@@ -129,44 +166,6 @@ find_last(bitarrayobject *a, int vi)
 
     return -1;
 }
-
-/****************************** Module functions **************************/
-
-static PyObject *
-count_n(PyObject *module, PyObject *args)
-{
-    PyObject *a;
-    Py_ssize_t n, i;
-
-    if (!PyArg_ParseTuple(args, "On:count_n", &a, &n))
-        return NULL;
-    if (ensure_bitarray(a) < 0)
-        return NULL;
-
-    if (n < 0) {
-        PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
-        return NULL;
-    }
-#define aa  ((bitarrayobject *) a)
-    if (n > aa->nbits)  {
-        PyErr_SetString(PyExc_ValueError, "n larger than bitarray size");
-        return NULL;
-    }
-    i = count_to_n(aa, n);        /* do actual work here */
-#undef aa
-    if (i < 0) {
-        PyErr_SetString(PyExc_ValueError, "n exceeds total count");
-        return NULL;
-    }
-    return PyLong_FromSsize_t(i);
-}
-
-PyDoc_STRVAR(count_n_doc,
-"count_n(a, n, /) -> int\n\
-\n\
-Return the smallest index `i` for which `a[:i].count() == n`.\n\
-Raises `ValueError`, when n exceeds total count (`a.count()`).");
-
 
 static PyObject *
 r_index(PyObject *module, PyObject *args)
