@@ -149,6 +149,7 @@ def main():
             f.write(new_data)
 
     doctest.testfile('README.md')
+    doctest.testfile('examples/represent.md')
 
 
 if __name__ == '__main__':
