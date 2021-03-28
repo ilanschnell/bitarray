@@ -780,8 +780,7 @@ class TestsBase(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('11111 10010 00111'))
         self.assertEqual(ba2base(32, a), '7SH')
 
-        msg = b"This message will be base 32 encoded.\0\0\0"
-        self.assertEqual(len(msg) % 5, 0)
+        msg = os.urandom(2777 * 5)  # 2777 is prime
         s = base64.b32encode(msg).decode()
         a = base2ba(32, s, 'big')
         self.assertEqual(a.tobytes(), msg)
@@ -801,10 +800,8 @@ class TestsBase(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('111111 100011 000111'))
         self.assertEqual(ba2base(64, a), '/jH')
 
-        msg = b"This message will be base 64 encoded.\0\0\0\0\0"
-        self.assertEqual(len(msg) % 6, 0)
+        msg = os.urandom(2777 * 3)  # 2777 is prime
         s = base64.standard_b64encode(msg).decode()
-        s = s.replace('=', '')
         a = base2ba(64, s, 'big')
         self.assertEqual(a.tobytes(), msg)
         self.assertEqual(ba2base(64, a), s)

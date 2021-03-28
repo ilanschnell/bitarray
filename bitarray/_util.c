@@ -481,9 +481,10 @@ static int
 digit_to_int(char c, int n)
 {
     if (n <= 16) {              /* base 2, 4, 8, 16 */
-        int i = hex_to_int(c);
-        if (0 <= i && i < n)
-            return i;
+        int i;
+
+        i  = hex_to_int(c);
+        return (0 <= i && i < n) ? i : -1;
     }
     if (n == 32) {              /* base 32 */
         if ('A' <= c && c <= 'Z')
