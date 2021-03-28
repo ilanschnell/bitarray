@@ -1326,9 +1326,7 @@ class NumberMethodsTests(unittest.TestCase, Util):
             for i in range(len(a)):
                 self.assertEqual(b[i], not a[i])
             self.check_obj(b)
-            c = ~a
-            self.assertEQUAL(c, b)
-            self.check_obj(c)
+            self.assertEQUAL(~a, b)
 
 tests.append(NumberMethodsTests)
 
@@ -1518,13 +1516,10 @@ class MethodTests(unittest.TestCase, Util):
     def test_append_random(self):
         for a in self.randombitarrays():
             aa = a.tolist()
-            b = a
-            b.append(1)
-            self.assertTrue(a is b)
-            self.check_obj(b)
-            self.assertEQUAL(b, bitarray(aa + [1], endian=a.endian()))
-            b.append('')
-            self.assertEQUAL(b, bitarray(aa + [1, 0], endian=a.endian()))
+            a.append(1)
+            self.assertEQUAL(a, bitarray(aa + [1], endian=a.endian()))
+            a.append(0)
+            self.assertEQUAL(a, bitarray(aa + [1, 0], endian=a.endian()))
 
     def test_insert(self):
         a = bitarray()
@@ -1933,6 +1928,7 @@ class MethodTests(unittest.TestCase, Util):
         a = bitarray('01')
         self.assertEqual(a.pop(), True)
         self.assertEqual(a.pop(), False)
+        # pop from empty bitarray
         self.assertRaises(IndexError, a.pop)
 
     def test_pop_random(self):
