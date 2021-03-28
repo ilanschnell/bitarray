@@ -164,7 +164,6 @@ class TestsPPrint(unittest.TestCase):
         finally:
             shutil.rmtree(tmpdir)
 
-
 tests.append(TestsPPrint)
 
 # ---------------------------------------------------------------------------
@@ -683,7 +682,6 @@ class TestsHexlify(unittest.TestCase, Util):
                 self.assertEQUAL(a, self.hex2ba(t))
                 self.assertEqual(t, self.ba2hex(a))
 
-
 tests.append(TestsHexlify)
 
 # ---------------------------------------------------------------------------
@@ -1013,7 +1011,6 @@ class TestsIntegerization(unittest.TestCase, Util):
 
             self.assertEqual(i, self.twos_complement(j, len(a)))
 
-
 tests.append(TestsIntegerization)
 
 # ---------------------------------------------------------------------------
@@ -1118,7 +1115,6 @@ class TestsSerialization(unittest.TestCase, Util):
         for a in self.randombitarrays():
             b = deserialize(serialize(a))
             self.assertEQUAL(a, b)
-
 
 tests.append(TestsSerialization)
 
