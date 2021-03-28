@@ -34,8 +34,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.8.1.tar.gz
-    $ cd bitarray-1.8.1
+    $ tar xzf bitarray-1.8.2.tar.gz
+    $ cd bitarray-1.8.2
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -54,7 +54,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 1.8.1
+    bitarray version: 1.8.2
     sys.version: 2.7.15 (default, Mar  5 2020, 14:58:04) [GCC Clang 9.0.1]
     sys.prefix: /Users/ilan/Mini3/envs/py27
     pointer size: 64 bit
@@ -653,6 +653,12 @@ Return the smallest index `i` for which `a[:i].count() == n`.
 Raises `ValueError`, when n exceeds total count (`a.count()`).
 
 
+`parity(a, /)` -> bool
+
+Return the parity of bitarray `a`.  This is equivalent
+to `bool(a.count() % 2)` (but more efficient).
+
+
 `count_and(a, b, /)` -> int
 
 Return `(a & b).count()` in a memory efficient manner,
@@ -679,22 +685,29 @@ efficient since we can stop as soon as one mismatch is found, and no
 intermediate bitarray object gets created.
 
 
-`parity(a, /)` -> bool
-
-Return the parity of bitarray `a`.  This is equivalent
-to `bool(a.count() % 2)` (but more efficient).
-
-
 `ba2hex(bitarray, /)` -> hexstr
 
-Return a string containing with hexadecimal representation of
+Return a string containing the hexadecimal representation of
 the bitarray (which has to be multiple of 4 in length).
 
 
 `hex2ba(hexstr, /, endian=None)` -> bitarray
 
-Bitarray of hexadecimal representation.
-hexstr may contain any number of hex digits (upper or lower case).
+Bitarray of hexadecimal representation.  hexstr may contain any number
+(including odd numbers) of hex digits (upper or lower case).
+
+
+`ba2base(n, bitarray, /)` -> str
+
+Return a string containing the base `n` ascii representation of
+the bitarray.  Allowed values for `n` are 2, 4, 8, 16, 32 and 64.
+The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.
+
+
+`base2ba(n, asciistr, /, endian=None)` -> bitarray
+
+Bitarray of the base `n` ascii representation.
+Allowed values for `n` are 2, 4, 8, 16 and 32.
 
 
 `ba2int(bitarray, /, signed=False)` -> int
@@ -738,6 +751,12 @@ hashable object (including `None`).
 
 Change log
 ----------
+
+2021-XX-XX   1.8.2:
+
+  * add `bitarray.util.ba2base()` and `bitarray.util.base2ba()`,
+    see [a relative link](examples/represent.md)
+
 
 *1.8.1* (2021-03-25):
 
