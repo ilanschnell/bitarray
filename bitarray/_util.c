@@ -471,6 +471,148 @@ hex2ba(PyObject *module, PyObject *args)
 
 /* --------------------------------------------------------------------- */
 
+/* RFC 4648 Base32 alphabet */
+#define BASE32  "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+
+/* standard base 64 alphabet */
+#define BASE64  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" \
+    "0123456789+/"
+
+static int
+digit_to_int(char c, int n)
+{
+    if (n <= 16) {              /* base 2, 4, 8, 16 */
+        int i = hex_to_int(c);
+        if (0 <= i && i < n)
+            return i;
+    }
+    if (n == 32) {              /* base 32 */
+        if ('A' <= c && c <= 'Z')
+            return c - 'A';
+        if ('2' <= c && c <= '7')
+            return c - '2' + 26;
+    }
+    if (n == 64) {              /* base 64 */
+        if ('A' <= c && c <= 'Z')
+            return c - 'A';
+        if ('a' <= c && c <= 'z')
+            return c - 'a' + 26;
+        if ('0' <= c && c <= '9')
+            return c - '0' + 52;
+        if (c == '+')
+            return 62;
+        if (c == '/')
+            return 63;
+    }
+    return -1;
+}
+
+static int
+base_to_length(int n)
+{
+    int k;
+
+    for (k = 1; k < 7; k++) {
+        if (n == (1 << k))
+            return k;
+    }
+    PyErr_SetString(PyExc_ValueError, "base must be 2, 4, 8, 16, 32 or 64");
+    return -1;
+}
+
+static PyObject *
+ba2base(PyObject *module, PyObject *args)
+{
+    PyObject *result, *a;
+    size_t i, strsize;
+    char *str, *digits;
+    int n, m, d, k, le;
+
+    if (!PyArg_ParseTuple(args, "iO:ba2ascii", &n, &a))
+        return NULL;
+    if (ensure_bitarray(a) < 0)
+        return NULL;
+    m = base_to_length(n);
+    if (m < 0)
+        return NULL;
+
+    if (n <= 16)
+        digits = HEXDIGITS;
+    else if (n == 32)
+        digits = BASE32;
+    else if (n == 64)
+        digits = BASE64;
+
+#define aa  ((bitarrayobject *) a)
+    if (aa->nbits % m)
+        return PyErr_Format(PyExc_ValueError,
+                            "bitarray length not multiple of %d", m);
+
+    strsize = aa->nbits / m;
+    str = (char *) PyMem_Malloc(strsize);
+    if (str == NULL)
+        return PyErr_NoMemory();
+
+    le = IS_LE(aa);
+    for (i = 0; i < strsize; i++) {
+        d = 0;
+        for (k = 0; k < m; k++)
+            d |= GETBIT(aa, m * i + (le ? k : (m - k - 1))) << k;
+        str[i] = digits[d];
+    }
+    result = Py_BuildValue("s#", str, strsize);
+#undef aa
+    PyMem_Free((void *) str);
+    return result;
+}
+
+PyDoc_STRVAR(ba2base_doc,
+"ba2base(n, bitarray, /) -> str\n\
+\n\
+Return a string containing the base `n` ascii representation of\n\
+the bitarray.  Allowed values for `n` are 2, 4, 8, 16, 32 and 64.\n\
+The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.");
+
+
+static PyObject *
+base2ba(PyObject *module, PyObject *args)
+{
+    PyObject *a;
+    Py_ssize_t i, strsize;
+    char *str;
+    int n, m, d, k, le;
+
+    if (!PyArg_ParseTuple(args, "iOs#", &n, &a, &str, &strsize))
+        return NULL;
+    if (ensure_bitarray(a) < 0)
+        return NULL;
+    m = base_to_length(n);
+    if (m < 0)
+        return NULL;
+
+#define aa  ((bitarrayobject *) a)
+    if (aa->nbits != m * strsize) {
+        PyErr_SetString(PyExc_ValueError, "size mismatch");
+        return NULL;
+    }
+    memset(aa->ob_item, 0x00, (size_t) Py_SIZE(a));
+
+    le = IS_LE(aa);
+    for (i = 0; i < strsize; i++) {
+        d = digit_to_int(str[i], n);
+        if (d < 0) {
+            PyErr_SetString(PyExc_ValueError, "Invalid digit found");
+            return NULL;
+        }
+        for (k = 0; k < m; k++)
+            setbit(aa, m * i + (le ? k : (m - k - 1)), d & (1 << k));
+    }
+#undef aa
+    Py_RETURN_NONE;
+}
+
+/* --------------------------------------------------------------------- */
+
 /* set bitarray_type_obj (bato) */
 static PyObject *
 set_bato(PyObject *module, PyObject *obj)
@@ -490,6 +632,8 @@ static PyMethodDef module_functions[] = {
     {"serialize", (PyCFunction) serialize, METH_O,       serialize_doc},
     {"ba2hex",    (PyCFunction) ba2hex,    METH_O,       ba2hex_doc},
     {"_hex2ba",   (PyCFunction) hex2ba,    METH_VARARGS, 0},
+    {"ba2base",   (PyCFunction) ba2base,   METH_VARARGS, ba2base_doc},
+    {"_base2ba",  (PyCFunction) base2ba,   METH_VARARGS, 0},
     {"_set_bato", (PyCFunction) set_bato,  METH_O,       0},
     {NULL,        NULL}  /* sentinel */
 };

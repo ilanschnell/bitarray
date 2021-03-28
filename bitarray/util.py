@@ -14,13 +14,13 @@ from bitarray import bitarray, bits2bytes, get_default_endian
 
 from bitarray._util import (
     count_n, rindex, parity, count_and, count_or, count_xor, subset,
-    serialize, ba2hex, _hex2ba, _set_bato,
+    serialize, ba2hex, _hex2ba, ba2base, _base2ba, _set_bato,
 )
 
 __all__ = [
     'zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip', 'count_n',
     'parity', 'count_and', 'count_or', 'count_xor', 'subset',
-    'ba2hex', 'hex2ba', 'ba2int', 'int2ba',
+    'ba2hex', 'hex2ba', 'ba2base', 'base2ba', 'ba2int', 'int2ba',
     'serialize', 'deserialize', 'huffman_code',
 ]
 
@@ -160,6 +160,32 @@ Bitarray of hexadecimal representation.  hexstr may contain any number
     a = bitarray(4 * len(s),
                  get_default_endian() if endian is None else endian)
     _hex2ba(a, s)
+    return a
+
+
+def base2ba(n, s, endian=None):
+    """base2ba(n, asciistr, /, endian=None) -> bitarray
+
+Bitarray of the base `n` ascii representation.
+Allowed values for `n` are 2, 4, 8, 16 and 32.
+"""
+    if not isinstance(n, int):
+        raise TypeError("integer expected")
+    try:
+        m = {2: 1, 4: 2, 8: 3, 16: 4, 32: 5, 64: 6}[n]
+    except KeyError:
+        raise ValueError("base must be 2, 4, 8, 16, 32 or 64")
+
+    if not isinstance(s, (str, unicode if _is_py2 else bytes)):
+        raise TypeError("str expected, got: '%s'" % type(s).__name__)
+
+    if isinstance(s, unicode if _is_py2 else str):
+        s = s.encode('ascii')
+    assert isinstance(s, bytes)
+
+    a = bitarray(m * len(s),
+                 get_default_endian() if endian is None else endian)
+    _base2ba(n, a, s)
     return a
 
 
