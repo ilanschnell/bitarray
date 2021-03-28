@@ -785,6 +785,7 @@ class TestsBase(unittest.TestCase, Util):
         s = base64.b32encode(msg).decode()
         a = base2ba(32, s, 'big')
         self.assertEqual(a.tobytes(), msg)
+        self.assertEqual(ba2base(32, a), s)
 
     def test_base32_alpabet(self):
         for i, c in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'):
@@ -806,6 +807,7 @@ class TestsBase(unittest.TestCase, Util):
         s = s.replace('=', '')
         a = base2ba(64, s, 'big')
         self.assertEqual(a.tobytes(), msg)
+        self.assertEqual(ba2base(64, a), s)
 
     def test_base64_alpabet(self):
         for i, c in enumerate('ABCDEFGHIJKLMNOPQRSTUVWXYZ'
