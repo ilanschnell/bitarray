@@ -1276,15 +1276,12 @@ class NumberMethodsTests(unittest.TestCase, Util):
 
         b = bitarray('1001')
         self.assertRaises(ValueError, a.__and__, b)  # not same length
-        if is_py3k:  # XXX: note sure why this is failing on Py27
-            self.assertRaises(TypeError, a.__and__, 42)
+        self.assertRaises(TypeError, lambda: a & 42)
 
     def test_iand(self):
         a =  bitarray('110010110')
-        ida = id(a)
         a &= bitarray('100110011')
         self.assertEQUAL(a, bitarray('100010010'))
-        self.assertEqual(ida, id(a))
 
     def test_or(self):
         a = bitarray('11001')
