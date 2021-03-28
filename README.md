@@ -702,12 +702,20 @@ Bitarray of hexadecimal representation.  hexstr may contain any number
 Return a string containing the base `n` ascii representation of
 the bitarray.  Allowed values for `n` are 2, 4, 8, 16, 32 and 64.
 The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.
+For `n=16` (hexadecimal), `ba2hex()` will be much faster, as `ba2base()`
+does not take advantage of byte level operations.
+For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the
+standard base 64 alphabet is used.
 
 
 `base2ba(n, asciistr, /, endian=None)` -> bitarray
 
 Bitarray of the base `n` ascii representation.
 Allowed values for `n` are 2, 4, 8, 16 and 32.
+For `n=16` (hexadecimal), `hex2ba()` will be much faster, as `base2ba()`
+does not take advantage of byte level operations.
+For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the
+standard base 64 alphabet is used.
 
 
 `ba2int(bitarray, /, signed=False)` -> int
