@@ -570,7 +570,9 @@ PyDoc_STRVAR(ba2base_doc,
 \n\
 Return a string containing the base `n` ascii representation of\n\
 the bitarray.  Allowed values for `n` are 2, 4, 8, 16, 32 and 64.\n\
-The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.");
+The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.\n\
+For `n=16` (hexadecimal), `ba2hex()` will be much faster, as `ba2base()`\n\
+does not take advantage of byte level operations.");
 
 
 static PyObject *

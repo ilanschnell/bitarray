@@ -168,6 +168,8 @@ def base2ba(n, s, endian=None):
 
 Bitarray of the base `n` ascii representation.
 Allowed values for `n` are 2, 4, 8, 16 and 32.
+For `n=16` (hexadecimal), `hex2ba()` will be much faster, as `base2ba()`
+does not take advantage of byte level operations.");
 """
     if not isinstance(n, int):
         raise TypeError("integer expected")
