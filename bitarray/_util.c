@@ -356,7 +356,7 @@ its endianness) and is guaranteed not to change in future releases.");
 
 /* ----------------------------- hexadecimal --------------------------- */
 
-#define HEXDIGITS  "0123456789abcdef"
+static const char *hexdigits = "0123456789abcdef";
 
 static int
 hex_to_int(char c)
@@ -397,8 +397,8 @@ ba2hex(PyObject *module, PyObject *a)
     be = IS_BE(aa);
     for (i = 0; i < strsize; i += 2) {
         unsigned char c = aa->ob_item[i / 2];
-        str[i + le] = HEXDIGITS[c >> 4];
-        str[i + be] = HEXDIGITS[0x0f & c];
+        str[i + le] = hexdigits[c >> 4];
+        str[i + be] = hexdigits[0x0f & c];
     }
     result = Py_BuildValue("s#", str, aa->nbits / 4);
 #undef aa
@@ -471,11 +471,11 @@ hex2ba(PyObject *module, PyObject *args)
 /* --------------------------------------------------------------------- */
 
 /* RFC 4648 Base32 alphabet */
-#define BASE32  "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
+static const char *base32_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
 /* standard base 64 alphabet */
-#define BASE64  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz" \
-    "0123456789+/"
+static const char *base64_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    "abcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static int
 digit_to_int(char c, int n)
@@ -523,9 +523,10 @@ base_to_length(int n)
 static PyObject *
 ba2base(PyObject *module, PyObject *args)
 {
+    const char *alphabet;
     PyObject *result, *a;
     size_t i, strsize;
-    char *str, *digits;
+    char *str;
     int n, m, d, k, le;
 
     if (!PyArg_ParseTuple(args, "iO:ba2ascii", &n, &a))
@@ -537,11 +538,11 @@ ba2base(PyObject *module, PyObject *args)
         return NULL;
 
     if (n <= 16)
-        digits = HEXDIGITS;
+        alphabet = hexdigits;
     else if (n == 32)
-        digits = BASE32;
+        alphabet = base32_alphabet;
     else if (n == 64)
-        digits = BASE64;
+        alphabet = base64_alphabet;
 
 #define aa  ((bitarrayobject *) a)
     if (aa->nbits % m)
@@ -558,7 +559,7 @@ ba2base(PyObject *module, PyObject *args)
         d = 0;
         for (k = 0; k < m; k++)
             d |= GETBIT(aa, m * i + (le ? k : (m - k - 1))) << k;
-        str[i] = digits[d];
+        str[i] = alphabet[d];
     }
     result = Py_BuildValue("s#", str, strsize);
 #undef aa
