@@ -57,23 +57,30 @@ Return a bitarray of `length` random bits (uses `os.urandom`).
     return a
 
 
-def pprint(a, stream=None):
-    """pprint(bitarray, /, stream=None)
+def pprint(a, stream=None, group=8, indent=4, width=80):
+    """pprint(bitarray, /, stream=None, group=8, indent=4, width=80)
 
 Prints the formatted representation of object on `stream`, followed by a
-newline.  If `stream` is `None`, `sys.stdout` is used.  Elements are grouped
-in bytes (8 elements), and 8 bytes (64 elements) per line.  Non-bitarray
-objects are printed by the standard library function `pprint.pprint()`.
+newline.  If `stream` is `None`, `sys.stdout` is used.  By default, elements
+are grouped in bytes (8 elements), and 8 bytes (64 elements) per line.
+Non-bitarray objects are printed by the standard library
+function `pprint.pprint()`.
 """
     if stream is None:
         stream = sys.stdout
 
     if not isinstance(a, bitarray):
         import pprint as _pprint
-        _pprint.pprint(a, stream=stream)
+        _pprint.pprint(a, stream=stream, indent=indent, width=width)
         return
 
-    multiline = bool(len(a) > 56)
+    gpl = (width - indent) // (group + 1)  # groups per line
+    epl = group * gpl                      # elements per line
+    if epl == 0:
+        epl = width - indent - 2
+    type_name = type(a).__name__
+    multiline = bool(
+        len(type_name) + len("('')") + len(a) + len(a) // group >= width)
     if multiline:
         quotes = "'''"
     elif len(a) > 0:
@@ -81,11 +88,11 @@ objects are printed by the standard library function `pprint.pprint()`.
     else:
         quotes = ""
 
-    stream.write("%s(%s" % (type(a).__name__, quotes))
+    stream.write("%s(%s" % (type_name, quotes))
     for i, b in enumerate(a):
-        if multiline and i % 64 == 0:
-            stream.write('\n    ')
-        if i % 8 == 0 and i % 64 != 0:
+        if multiline and i % epl == 0:
+            stream.write('\n%s' % (indent * ' '))
+        if i % group == 0 and i % epl != 0:
             stream.write(' ')
         stream.write(str(int(b)))
 

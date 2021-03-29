@@ -4,6 +4,7 @@
     see last paragraph in [Bitarray representations](examples/represent.md)
   * speedup initializing or extending a bitarray from another with different
     bit endianness
+  * add formatting options to `bitarray.util.pprint()`
   * add documentation on bitarray representations
 
 
