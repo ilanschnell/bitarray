@@ -564,12 +564,10 @@ class SliceTests(unittest.TestCase, Util):
             la = len(a)
             i = randint(0, la - 1)
             aa = a.tolist()
-            ida = id(a)
             val = bool(randint(0, 1))
             a[i] = val
             aa[i] = val
             self.assertEqual(a.tolist(), aa)
-            self.assertEqual(id(a), ida)
             self.check_obj(a)
 
     def test_setslice_simple(self):
@@ -578,12 +576,12 @@ class SliceTests(unittest.TestCase, Util):
             b = bitarray(la)
             b[0:la] = bitarray(a)
             self.assertEqual(a, b)
-            self.assertNotEqual(id(a), id(b))
+            self.assertFalse(a is b)
 
             b = bitarray(la)
             b[:] = bitarray(a)
             self.assertEqual(a, b)
-            self.assertNotEqual(id(a), id(b))
+            self.assertFalse(a is b)
 
             b = bitarray(la)
             b[::-1] = bitarray(a)
@@ -1165,10 +1163,8 @@ class SequenceMethodsTests(unittest.TestCase, Util):
 
     def test_inplace_repeat(self):
         c = bitarray('1101110011')
-        idc = id(c)
         c *= 0
         self.assertEQUAL(c, bitarray())
-        self.assertEqual(idc, id(c))
 
         c = bitarray('110')
         c *= 3
@@ -1177,11 +1173,9 @@ class SequenceMethodsTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             for n in range(-3, 5):
                 b = a.copy()
-                idb = id(b)
                 b *= n
                 self.assertEQUAL(b, bitarray(n * a.tolist(),
                                              endian=a.endian()))
-                self.assertEqual(idb, id(b))
 
         a = bitarray()
         self.assertRaises(TypeError, a.__imul__, None)
@@ -1400,9 +1394,7 @@ class ExtendTests(unittest.TestCase, Util):
                     for e in b:
                         yield e
                 c = bitarray(a)
-                idc = id(c)
                 c.extend(foo())
-                self.assertEqual(id(c), idc)
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
 
@@ -1416,9 +1408,7 @@ class ExtendTests(unittest.TestCase, Util):
         for a in self.randomlists():
             for b in self.randomlists():
                 c = bitarray(a)
-                idc = id(c)
                 c.extend(iter(b))
-                self.assertEqual(id(c), idc)
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
 

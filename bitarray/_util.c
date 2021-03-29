@@ -387,7 +387,7 @@ ba2hex(PyObject *module, PyObject *a)
         return NULL;
     }
 
-    /* strsize = aa->nbits / 4;  would make strsize odd */
+    /* strsize = aa->nbits / 4;  could make strsize odd */
     strsize = 2 * Py_SIZE(a);
     str = (char *) PyMem_Malloc(strsize);
     if (str == NULL)
