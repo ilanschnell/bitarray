@@ -132,18 +132,19 @@ class TestsPPrint(unittest.TestCase):
         self.assertEqual(self.get_code_string(a), "frozenbitarray('01')\n")
         self.round_trip(a)
 
-    def test_group(self):
-        a = bitarray(840)
-        for n in range(1, 9):
-            f = StringIO()
-            pprint(a, stream=f, group=n)
-            r = f.getvalue()
-            self.assertEqual(eval(r), a)
-            s = r.strip("bitary(') \n")
-            groups = s.split()
-            self.assertEqual(len(groups), 840 // n)
-            for elt in groups:
-                self.assertEqual(len(elt), n)
+    def test_formatting(self):
+        a = bitarray(200)
+        for width in range(40, 130, 10):
+            for n in range(1, 10):
+                f = StringIO()
+                pprint(a, stream=f, group=n, width=width)
+                r = f.getvalue()
+                self.assertEqual(eval(r), a)
+                s = r.strip("bitary(')\n")
+                for group in s.split()[:-1]:
+                    self.assertEqual(len(group), n)
+                for line in s.split('\n'):
+                    self.assertTrue(len(line) < width)
 
     def test_fallback(self):
         for a in None, 'asd', [1, 2], bitarray(), frozenbitarray('1'):
