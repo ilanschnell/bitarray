@@ -672,6 +672,7 @@ class TestsHexlify(unittest.TestCase, Util):
             for default_endian in 'big', 'little':
                 _set_default_endian(default_endian)
                 a = hex2ba(s)
+                self.check_obj(a)
                 self.assertEqual(len(a) % 4, 0)
                 self.assertEqual(a.endian(), default_endian)
                 t = ba2hex(a)
@@ -824,6 +825,7 @@ class TestsBase(unittest.TestCase, Util):
                     s = ba2base(n, a)
                     b = base2ba(n, s, a.endian())
                     self.assertEQUAL(a, b)
+                    self.check_obj(b)
                 else:
                     self.assertRaises(ValueError, ba2base, n, a)
 
@@ -972,6 +974,7 @@ class TestsIntegerization(unittest.TestCase, Util):
     def check_round_trip(self, i):
         for endian in 'big', 'little':
             a = int2ba(i, endian=endian)
+            self.check_obj(a)
             self.assertEqual(a.endian(), endian)
             self.assertTrue(len(a) > 0)
             # ensure we have no leading zeros
@@ -1115,6 +1118,7 @@ class TestsSerialization(unittest.TestCase, Util):
         for a in self.randombitarrays():
             b = deserialize(serialize(a))
             self.assertEQUAL(a, b)
+            self.check_obj(b)
 
 tests.append(TestsSerialization)
 
