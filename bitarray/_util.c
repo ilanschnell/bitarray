@@ -356,7 +356,7 @@ its endianness) and is guaranteed not to change in future releases.");
 
 /* ----------------------------- hexadecimal --------------------------- */
 
-static const char *hexdigits = "0123456789abcdef";
+static const char hexdigits[] = "0123456789abcdef";
 
 static int
 hex_to_int(char c)
@@ -471,10 +471,10 @@ hex2ba(PyObject *module, PyObject *args)
 /* --------------------------------------------------------------------- */
 
 /* RFC 4648 Base32 alphabet */
-static const char *base32_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+static const char base32_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
 /* standard base 64 alphabet */
-static const char *base64_alphabet =
+static const char base64_alphabet[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static int
