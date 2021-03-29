@@ -73,9 +73,14 @@ class Util(object):
         return slicelength
 
     def check_obj(self, a):
-        unused = 8 * a.buffer_info()[1] - len(a)
+        address, size, endian, unused, allocated = a.buffer_info()
         self.assertTrue(0 <= unused < 8)
-        self.assertEqual(unused, a.buffer_info()[3])
+        self.assertEqual(unused, 8 * size - len(a))
+        self.assertTrue(allocated >= size)
+        self.assertTrue(endian in ('little', 'big'))
+        if address == 0:  # NULL
+            self.assertTrue(size == 0)
+            self.assertTrue(allocated == 0)
 
     def assertEQUAL(self, a, b):
         self.assertEqual(a, b)
