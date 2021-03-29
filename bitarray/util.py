@@ -79,8 +79,8 @@ function `pprint.pprint()`.
     if epl == 0:
         epl = width - indent - 2
     type_name = type(a).__name__
-    multiline = bool(
-        len(type_name) + len("('')") + len(a) + len(a) // group >= width)
+    # here 4 is len("'()'")
+    multiline = bool(len(type_name) + 4 + len(a) + len(a) // group >= width)
     if multiline:
         quotes = "'''"
     elif len(a) > 0:
