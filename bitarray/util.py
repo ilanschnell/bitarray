@@ -63,7 +63,7 @@ def pprint(a, stream=None):
 Prints the formatted representation of object on `stream`, followed by a
 newline.  If `stream` is `None`, `sys.stdout` is used.  Elements are grouped
 in bytes (8 elements), and 8 bytes (64 elements) per line.  Non-bitarray
-objects are prinited by the standard library function `pprint.pprint()`.
+objects are printed by the standard library function `pprint.pprint()`.
 """
     if stream is None:
         stream = sys.stdout
@@ -166,7 +166,7 @@ Bitarray of hexadecimal representation.  hexstr may contain any number
 def base2ba(n, s, endian=None):
     """base2ba(n, asciistr, /, endian=None) -> bitarray
 
-Bitarray of the base `n` ascii representation.
+Bitarray of the base `n` ASCII representation.
 Allowed values for `n` are 2, 4, 8, 16 and 32.
 For `n=16` (hexadecimal), `hex2ba()` will be much faster, as `base2ba()`
 does not take advantage of byte level operations.

@@ -2,8 +2,8 @@ Bitarray representations
 ========================
 
 The bitarray library offers many ways to represent bitarray objects.
-Here, we take a closer look at those represent and discuss thier advantages
-and disadvantages.
+Here, we take a closer look at those representations and discuss their
+advantages and disadvantages.
 
 
 Binary representation
@@ -16,7 +16,7 @@ representation, which is great for interactively analyzing bitarray objects:
     >>> a = bitarray('11001')
     >>> repr(a)  # same as str(a)
     "bitarray('11001')"
-    >>> a.to01()  # gived you the raw string of 0's and 1's
+    >>> a.to01()  # gives you the raw string of 0's and 1's
     '11001'
 
 However, this representation is very large compared to the bitarray object
@@ -55,7 +55,7 @@ Hexadecimal representation
 --------------------------
 
 As four bits of a bitarray may be represented by a hexadecimal digit,
-we can represent bitarrays (whos length is a multiple of 4) as a hexadecimal
+we can represent bitarrays (whose length is a multiple of 4) as a hexadecimal
 string:
 
     >>> from bitarray.util import ba2hex, hex2ba
@@ -84,7 +84,7 @@ and take advantage of byte level operations.
 Base 2, 4, 8, 16, 32 and 64 representation
 ------------------------------------------
 
-The utility function `ba2base()` allows representating bitarrays by
+The utility function `ba2base()` allows representing bitarrays by
 base `n`, with possible bases 2, 4, 8, 16, 32 and 64.
 The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.
 Here is an example:
