@@ -2494,7 +2494,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
 
     def test_decode(self):
         t = decodetree(alpabet_code)
-        a = bitarray('10110111001101001')
+        a = bitarray('1011 01110 0110 1001')
         self.assertEqual(a.decode(t), ['i', 'l', 'a', 'n'])
         self.assertEqual(''.join(a.iterdecode(t)), 'ilan')
         a = bitarray()
