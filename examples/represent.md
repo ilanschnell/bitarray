@@ -46,8 +46,9 @@ adds this information to a header byte:
     >>> b = deserialize(x)
     >>> assert a == b and a.endian() == b.endian()
 
-This is the recommended way to (de)serialize bitarray objects.  The exact
-format of this representation is guaranteed not to change in future releases.
+This is the recommended (and fasted) way to (de)serialize bitarray objects
+into bytes objects.  The exact format of this representation is guaranteed to
+not change in future releases.
 
 
 Hexadecimal representation
