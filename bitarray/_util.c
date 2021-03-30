@@ -422,15 +422,8 @@ hex2ba(PyObject *module, PyObject *args)
     PyObject *a;
     char *str;
     Py_ssize_t i, strsize;
-    int le, be;
-    static char hex2int[256];
-    static int setup = 0;
+    int le, be, x, y;
 
-    if (!setup) {
-        for (i = 0; i < 256; i++)
-            hex2int[i] = hex_to_int((char) i);
-        setup = 1;
-    }
     if (!PyArg_ParseTuple(args, "Os#", &a, &str, &strsize))
         return NULL;
     if (ensure_bitarray(a) < 0)
@@ -446,8 +439,8 @@ hex2ba(PyObject *module, PyObject *args)
     be = IS_BE(aa);
     assert(le + be == 1 && str[strsize] == 0);
     for (i = 0; i < strsize; i += 2) {
-        char x = hex2int[(unsigned char) str[i + le]];
-        char y = hex2int[(unsigned char) str[i + be]];
+        x = hex_to_int(str[i + le]);
+        y = hex_to_int(str[i + be]);
         if (x < 0 || y < 0) {
             /* ignore the terminating NUL - happends when strsize is odd */
             if (i + le == strsize) /* str[i+le] is NUL */
