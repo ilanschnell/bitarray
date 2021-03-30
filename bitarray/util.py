@@ -74,6 +74,16 @@ function `pprint.pprint()`.
         _pprint.pprint(a, stream=stream, indent=indent, width=width)
         return
 
+    group = int(group)
+    if group < 1:
+        raise ValueError('group must be >= 1')
+    indent = int(indent)
+    if indent < 0:
+        raise ValueError('indent must be >= 0')
+    width = int(width)
+    if width <= indent:
+        raise ValueError('width must be > %d (indent)' % indent)
+
     gpl = (width - indent) // (group + 1)  # groups per line
     epl = group * gpl                      # elements per line
     if epl == 0:
