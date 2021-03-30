@@ -1883,13 +1883,8 @@ bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
     const Py_ssize_t nbytes = Py_SIZE(self);
     Py_ssize_t i;
 
-    if (self->nbits != other->nbits || self->endian != other->endian) {
-        PyErr_SetString(PyExc_ValueError,
-               "bitarrays of equal length and endianness expected");
-        return -1;
-    }
-    setunused(self);
-    setunused(other);
+    assert(self->nbits == other->nbits);
+    assert(self->endian == other->endian);
     switch (oper) {
     case OP_and:
         for (i = 0; i < nbytes; i++)
@@ -1913,12 +1908,27 @@ bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
 static int
 bitwise_check(PyObject *a, PyObject *b, const char *ostr)
 {
-    if (bitarray_Check(a) && bitarray_Check(b))
-        return 0;
-    PyErr_Format(PyExc_TypeError,
-                 "unsupported operand type(s) for %s: '%s' and '%s'",
-                 ostr, Py_TYPE(a)->tp_name, Py_TYPE(b)->tp_name);
-    return -1;
+    if (!bitarray_Check(a) || !bitarray_Check(b)) {
+        PyErr_Format(PyExc_TypeError,
+                     "unsupported operand type(s) for %s: '%s' and '%s'",
+                     ostr, Py_TYPE(a)->tp_name, Py_TYPE(b)->tp_name);
+        return -1;
+    }
+#define aa  ((bitarrayobject *) a)
+#define bb  ((bitarrayobject *) b)
+    if (aa->nbits != bb->nbits) {
+        PyErr_Format(PyExc_ValueError,
+                     "bitarrays of equal length expected for '%s'", ostr);
+        return -1;
+    }
+    if (aa->endian != bb->endian) {
+        PyErr_Format(PyExc_ValueError,
+                     "bitarrays of equal endianness expected for '%s'", ostr);
+        return -1;
+    }
+#undef aa
+#undef bb
+    return 0;
 }
 
 #define BITWISE_FUNC(oper, ostr)                                    \
