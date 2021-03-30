@@ -537,12 +537,12 @@ ba2base(PyObject *module, PyObject *args)
     if (m < 0)
         return NULL;
 
-    if (n <= 16)
-        alphabet = hexdigits;
-    else if (n == 32)
+    if (n == 32)
         alphabet = base32_alphabet;
     else if (n == 64)
         alphabet = base64_alphabet;
+    else
+        alphabet = hexdigits;
 
 #define aa  ((bitarrayobject *) a)
     if (aa->nbits % m)

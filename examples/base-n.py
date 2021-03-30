@@ -1,3 +1,4 @@
+from __future__ import print_function
 from bitarray.util import urandom, pprint, ba2base, base2ba
 
 
