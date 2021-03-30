@@ -45,10 +45,9 @@ class Util(object):
             del a[n:]
             yield a
 
-    @staticmethod
-    def randomlists():
-        for n in list(range(25)) + [randint(1000, 2000)]:
-            yield [bool(randint(0, 1)) for d in range(n)]
+    def randomlists(self):
+        for a in self.randombitarrays():
+            yield a.tolist()
 
     @staticmethod
     def rndsliceidx(length):
