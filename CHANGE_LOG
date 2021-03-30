@@ -2,6 +2,7 @@
 -------------------
   * add `bitarray.util.ba2base()` and `bitarray.util.base2ba()`,
     see last paragraph in [Bitarray representations](examples/represent.md)
+  * fix crash caused by unsupported types in binary operations, #116
   * speedup initializing or extending a bitarray from another with different
     bit endianness
   * add formatting options to `bitarray.util.pprint()`
