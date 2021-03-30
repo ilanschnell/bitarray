@@ -950,12 +950,14 @@ class MiscTests(unittest.TestCase, Util):
         if _sysinfo()[0] == 8:
             return
 
-        a = bitarray(2**31 - 1);
-        self.assertRaises(OverflowError, bitarray.append, a, True)
-        self.assertRaises(IndexError, bitarray.__new__, bitarray, 2**31)
-
         a = bitarray(10 ** 6)
         self.assertRaises(OverflowError, a.__imul__, 17180)
+        self.assertRaises(IndexError, bitarray.__new__, bitarray, 2**31)
+        try:
+            a = bitarray(2**31 - 1);
+        except MemoryError:
+            return
+        self.assertRaises(OverflowError, bitarray.append, a, True)
 
     def test_unicode_create(self):
         a = bitarray(u'')
