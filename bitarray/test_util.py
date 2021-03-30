@@ -681,21 +681,20 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertEqual(self.ba2hex(a_le), hex_le)
 
     def test_round_trip(self):
-        for i in range(100):
-            s = ''.join(choice(hexdigits) for _ in range(randint(0, 1000)))
-            for default_endian in 'big', 'little':
-                _set_default_endian(default_endian)
-                a = hex2ba(s)
-                self.check_obj(a)
-                self.assertEqual(len(a) % 4, 0)
-                self.assertEqual(a.endian(), default_endian)
-                t = ba2hex(a)
-                self.assertEqual(t, s.lower())
-                b = hex2ba(t, default_endian)
-                self.assertEQUAL(a, b)
-                # test simple encode / decode implementation
-                self.assertEQUAL(a, self.hex2ba(t))
-                self.assertEqual(t, self.ba2hex(a))
+        s = ''.join(choice(hexdigits) for _ in range(randint(0, 1000)))
+        for default_endian in 'big', 'little':
+            _set_default_endian(default_endian)
+            a = hex2ba(s)
+            self.check_obj(a)
+            self.assertEqual(len(a) % 4, 0)
+            self.assertEqual(a.endian(), default_endian)
+            t = ba2hex(a)
+            self.assertEqual(t, s.lower())
+            b = hex2ba(t, default_endian)
+            self.assertEQUAL(a, b)
+            # test simple encode / decode implementation
+            self.assertEQUAL(a, self.hex2ba(t))
+            self.assertEqual(t, self.ba2hex(a))
 
 tests.append(TestsHexlify)
 
