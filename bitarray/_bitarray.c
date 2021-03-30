@@ -1915,13 +1915,26 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
     return 0;
 }
 
-#define BITWISE_FUNC(oper)  \
+static int
+bitwise_check(PyObject *a, PyObject *b, char *oper)
+{
+    if (bitarray_Check(a) && bitarray_Check(b))
+        return 0;
+    PyErr_Format(PyExc_TypeError,
+                 "unsupported operand type(s) for %s: '%s' and '%s'",
+                 oper, Py_TYPE(a)->tp_name, Py_TYPE(b)->tp_name);
+    return -1;
+}
+
+#define BITWISE_FUNC(oper, coper)                                   \
 static PyObject *                                                   \
-bitarray_ ## oper (bitarrayobject *self, PyObject *other)           \
+bitarray_ ## oper (PyObject *self, PyObject *other)                 \
 {                                                                   \
     PyObject *res;                                                  \
                                                                     \
-    res = bitarray_copy(self);                                      \
+    if (bitwise_check(self, other, coper) < 0)                      \
+        return NULL;                                                \
+    res = bitarray_copy((bitarrayobject *) self);                   \
     if (res == NULL)                                                \
         return NULL;                                                \
     if (bitwise((bitarrayobject *) res, other, OP_ ## oper) < 0) {  \
@@ -1931,9 +1944,9 @@ bitarray_ ## oper (bitarrayobject *self, PyObject *other)           \
     return res;                                                     \
 }
 
-BITWISE_FUNC(and)               /* bitarray_and */
-BITWISE_FUNC(or)                /* bitarray_or  */
-BITWISE_FUNC(xor)               /* bitarray_xor */
+BITWISE_FUNC(and, "&")               /* bitarray_and */
+BITWISE_FUNC(or,  "|")               /* bitarray_or  */
+BITWISE_FUNC(xor, "^")               /* bitarray_xor */
 
 
 #define BITWISE_IFUNC(oper)  \
