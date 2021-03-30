@@ -111,3 +111,4 @@ that `ba2base(16, a)` is equivalent to `ba2hex(a)`.
 Unlike `ba2hex()`, `ba2base()` does not take advantage of byte level
 operations and is therefore a lot slower, although still implemented in C.
 The inverse function is called `base2ba()`.
+See also [this example](base-n.py).
