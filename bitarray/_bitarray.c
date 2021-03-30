@@ -1857,11 +1857,12 @@ static PyMappingMethods bitarray_as_mapping = {
 /* --------------------------- bitarray_as_number ---------------------- */
 
 static PyObject *
-bitarray_cpinvert(bitarrayobject *self)
+bitarray_cpinvert(PyObject *a)
 {
     PyObject *result;
 
-    result = bitarray_copy(self);
+    assert(bitarray_Check(a));
+    result = bitarray_copy((bitarrayobject *) a);
     if (result == NULL)
         return NULL;
 
@@ -1877,18 +1878,11 @@ enum op_type {
 
 /* perform bitwise in-place operation */
 static int
-bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
+bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
-    bitarrayobject *other;
     Py_ssize_t i;
 
-    if (!bitarray_Check(arg)) {
-        PyErr_SetString(PyExc_TypeError,
-                        "bitarray expected for bitwise operation");
-        return -1;
-    }
-    other = (bitarrayobject *) arg;
     if (self->nbits != other->nbits || self->endian != other->endian) {
         PyErr_SetString(PyExc_ValueError,
                "bitarrays of equal length and endianness expected");
@@ -1915,29 +1909,31 @@ bitwise(bitarrayobject *self, PyObject *arg, enum op_type oper)
     return 0;
 }
 
+/* return 0 if both a and b are bitarray objects, -1 on error */
 static int
-bitwise_check(PyObject *a, PyObject *b, char *oper)
+bitwise_check(PyObject *a, PyObject *b, const char *ostr)
 {
     if (bitarray_Check(a) && bitarray_Check(b))
         return 0;
     PyErr_Format(PyExc_TypeError,
                  "unsupported operand type(s) for %s: '%s' and '%s'",
-                 oper, Py_TYPE(a)->tp_name, Py_TYPE(b)->tp_name);
+                 ostr, Py_TYPE(a)->tp_name, Py_TYPE(b)->tp_name);
     return -1;
 }
 
-#define BITWISE_FUNC(oper, coper)                                   \
+#define BITWISE_FUNC(oper, ostr)                                    \
 static PyObject *                                                   \
 bitarray_ ## oper (PyObject *self, PyObject *other)                 \
 {                                                                   \
     PyObject *res;                                                  \
                                                                     \
-    if (bitwise_check(self, other, coper) < 0)                      \
+    if (bitwise_check(self, other, ostr) < 0)                       \
         return NULL;                                                \
     res = bitarray_copy((bitarrayobject *) self);                   \
     if (res == NULL)                                                \
         return NULL;                                                \
-    if (bitwise((bitarrayobject *) res, other, OP_ ## oper) < 0) {  \
+    if (bitwise((bitarrayobject *) res,                             \
+                (bitarrayobject *) other, OP_ ## oper) < 0) {       \
         Py_DECREF(res);                                             \
         return NULL;                                                \
     }                                                               \
@@ -1949,19 +1945,22 @@ BITWISE_FUNC(or,  "|")               /* bitarray_or  */
 BITWISE_FUNC(xor, "^")               /* bitarray_xor */
 
 
-#define BITWISE_IFUNC(oper)  \
+#define BITWISE_IFUNC(oper, ostr)                            \
 static PyObject *                                            \
-bitarray_i ## oper (bitarrayobject *self, PyObject *other)   \
+bitarray_i ## oper (PyObject *self, PyObject *other)         \
 {                                                            \
-    if (bitwise(self, other, OP_ ## oper) < 0)               \
+    if (bitwise_check(self, other, ostr) < 0)                \
+        return NULL;                                         \
+    if (bitwise((bitarrayobject *) self,                     \
+                (bitarrayobject *) other, OP_ ## oper) < 0)  \
         return NULL;                                         \
     Py_INCREF(self);                                         \
     return (PyObject *) self;                                \
 }
 
-BITWISE_IFUNC(and)              /* bitarray_iand */
-BITWISE_IFUNC(or)               /* bitarray_ior  */
-BITWISE_IFUNC(xor)              /* bitarray_ixor */
+BITWISE_IFUNC(and, "&=")             /* bitarray_iand */
+BITWISE_IFUNC(or,  "|=")             /* bitarray_ior  */
+BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 
 
 static PyNumberMethods bitarray_as_number = {
