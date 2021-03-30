@@ -1400,19 +1400,18 @@ class ExtendTests(unittest.TestCase, Util):
         def bar():
             for x in ('', '1', None, True, []):
                 yield x
-        a = bitarray()
+        a = bitarray('0011')
         a.extend(bar())
-        self.assertEqual(a, bitarray('01010'))
+        self.assertEqual(a, bitarray('0011 01010'))
 
         for a in self.randomlists():
-            for b in self.randomlists():
-                def foo():
-                    for e in b:
-                        yield e
-                c = bitarray(a)
-                c.extend(foo())
-                self.assertEqual(c.tolist(), a + b)
-                self.check_obj(c)
+            def foo():
+                for e in a:
+                    yield e
+            b = bitarray()
+            b.extend(foo())
+            self.assertEqual(b.tolist(), a)
+            self.check_obj(b)
 
     def test_iterator1(self):
         a = bitarray()
