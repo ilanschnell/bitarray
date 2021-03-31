@@ -162,7 +162,7 @@ class TestsPPrint(unittest.TestCase):
         self.assertEqual(type(b), type(a))
 
     def test_random(self):
-        for n in range(300):
+        for n in range(150):
             self.round_trip(urandom(n))
 
     def test_file(self):
@@ -681,7 +681,7 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertEqual(self.ba2hex(a_le), hex_le)
 
     def test_round_trip(self):
-        s = ''.join(choice(hexdigits) for _ in range(randint(0, 1000)))
+        s = ''.join(choice(hexdigits) for _ in range(randint(10, 100)))
         for default_endian in 'big', 'little':
             _set_default_endian(default_endian)
             a = hex2ba(s)
@@ -794,7 +794,7 @@ class TestsBase(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('11111 10010 00111'))
         self.assertEqual(ba2base(32, a), '7SH')
 
-        msg = os.urandom(2777 * 5)  # 2777 is prime
+        msg = os.urandom(randint(10, 100) * 5)
         s = base64.b32encode(msg).decode()
         a = base2ba(32, s, 'big')
         self.assertEqual(a.tobytes(), msg)
@@ -807,7 +807,7 @@ class TestsBase(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('111111 100011 000111'))
         self.assertEqual(ba2base(64, a), '/jH')
 
-        msg = os.urandom(2777 * 3)  # 2777 is prime
+        msg = os.urandom(randint(10, 100) * 3)
         s = base64.standard_b64encode(msg).decode()
         a = base2ba(64, s, 'big')
         self.assertEqual(a.tobytes(), msg)
@@ -1005,7 +1005,7 @@ class TestsIntegerization(unittest.TestCase, Util):
             self.assertEqual(ba2int(a), i)
 
     def test_many(self):
-        for i in range(100):
+        for i in range(20):
             self.check_round_trip(i)
             self.check_round_trip(randint(0, 10 ** randint(3, 300)))
 

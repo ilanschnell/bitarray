@@ -1857,12 +1857,11 @@ static PyMappingMethods bitarray_as_mapping = {
 /* --------------------------- bitarray_as_number ---------------------- */
 
 static PyObject *
-bitarray_cpinvert(PyObject *a)
+bitarray_cpinvert(bitarrayobject *self)
 {
     PyObject *result;
 
-    assert(bitarray_Check(a));
-    result = bitarray_copy((bitarrayobject *) a);
+    result = bitarray_copy(self);
     if (result == NULL)
         return NULL;
 

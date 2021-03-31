@@ -525,7 +525,7 @@ ba2base(PyObject *module, PyObject *args)
     PyObject *result, *a;
     size_t i, strsize;
     char *str;
-    int n, m, d, k, le;
+    int n, m, x, k, le;
 
     if (!PyArg_ParseTuple(args, "iO:ba2ascii", &n, &a))
         return NULL;
@@ -554,10 +554,10 @@ ba2base(PyObject *module, PyObject *args)
 
     le = IS_LE(aa);
     for (i = 0; i < strsize; i++) {
-        d = 0;
+        x = 0;
         for (k = 0; k < m; k++)
-            d |= GETBIT(aa, m * i + (le ? k : (m - k - 1))) << k;
-        str[i] = alphabet[d];
+            x |= GETBIT(aa, m * i + (le ? k : (m - k - 1))) << k;
+        str[i] = alphabet[x];
     }
     result = Py_BuildValue("s#", str, strsize);
 #undef aa
