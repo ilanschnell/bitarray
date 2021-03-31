@@ -233,7 +233,7 @@ enum kernel_type {
 };
 
 static PyObject *
-two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
+two_bitarray_func(PyObject *args, enum kernel_type kern, const char *format)
 {
     Py_ssize_t res = 0, nbytes, i;
     PyObject *a, *b;
@@ -246,9 +246,14 @@ two_bitarray_func(PyObject *args, enum kernel_type kern, char *format)
 
 #define aa  ((bitarrayobject *) a)
 #define bb  ((bitarrayobject *) b)
-    if (aa->nbits != bb->nbits || aa->endian != bb->endian) {
+    if (aa->nbits != bb->nbits) {
         PyErr_SetString(PyExc_ValueError,
-                        "bitarrays of equal length and endianness expected");
+                        "bitarrays of equal length expected");
+        return NULL;
+    }
+    if (aa->endian != bb->endian) {
+        PyErr_SetString(PyExc_ValueError,
+                        "bitarrays of equal endianness expected");
         return NULL;
     }
     setunused(aa);
