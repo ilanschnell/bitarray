@@ -1293,6 +1293,7 @@ class NumberTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, lambda: 1 & a)
         self.assertEqual(a, bitarray('11001'))
         self.assertEqual(b, bitarray('10011'))
+        self.assertEqual(a & a, bitarray('11001'))
 
     def test_or(self):
         a = bitarray('11001')
@@ -1305,6 +1306,7 @@ class NumberTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, lambda: 1 | a)
         self.assertEqual(a, bitarray('11001'))
         self.assertEqual(b, bitarray('10011'))
+        self.assertEqual(a | a, bitarray('11001'))
 
     def test_xor(self):
         a = bitarray('11001')
@@ -1317,6 +1319,7 @@ class NumberTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, lambda: 1 ^ a)
         self.assertEqual(a, bitarray('11001'))
         self.assertEqual(b, bitarray('10011'))
+        self.assertEqual(a ^ a, bitarray('00000'))
 
     def test_iand(self):
         a = bitarray('110010110')
@@ -1331,6 +1334,8 @@ class NumberTests(unittest.TestCase, Util):
         except TypeError:
             error = 1
         self.assertEqual(error, 1)
+        a &= a
+        self.assertEqual(a, bitarray('100010010'))
 
     def test_ior(self):
         a = bitarray('110010110')
@@ -1343,6 +1348,8 @@ class NumberTests(unittest.TestCase, Util):
         except TypeError:
             error = 1
         self.assertEqual(error, 1)
+        a |= a
+        self.assertEqual(a, bitarray('110110111'))
 
     def test_ixor(self):
         a = bitarray('110010110')
@@ -1355,6 +1362,8 @@ class NumberTests(unittest.TestCase, Util):
         except TypeError:
             error = 1
         self.assertEqual(error, 1)
+        a ^= a
+        self.assertEqual(a, bitarray('000000000'))
 
     def test_invert(self):
         a = bitarray('11011')
