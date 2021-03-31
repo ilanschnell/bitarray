@@ -46,9 +46,19 @@ adds this information to a header byte:
     >>> b = deserialize(x)
     >>> assert a == b and a.endian() == b.endian()
 
-This is the recommended and fasted way to (de)serialize bitarray objects
-to bytes objects (and vice versa).  The exact format of this representation
-is guaranteed to not change in future releases.
+The header byte is structured the following way:
+
+    >>> x[0]        # 0x13
+    19
+    >>> x[0] % 8    # number of unused bits with last byte
+    3
+    >>> x[0] // 16  # endianness: 0 little, 1 big
+    1
+
+The functions `serialize()` and `deserialize()` are the recommended and fasted
+way to (de)serialize bitarray objects to bytes objects (and vice versa).
+The exact format of this representation is guaranteed to not change in future
+releases.
 
 
 Hexadecimal representation
