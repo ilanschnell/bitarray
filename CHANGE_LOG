@@ -7,7 +7,8 @@
     bit endianness
   * add formatting options to `bitarray.util.pprint()`
   * add documentation on bitarray representations
-  * add and improve tests
+  * add and improve tests (all 300+ tests run in less than half a second on
+    a modern machine)
 
 
 2021-03-25   1.8.1:
