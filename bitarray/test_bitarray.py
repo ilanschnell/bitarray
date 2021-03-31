@@ -1249,7 +1249,7 @@ tests.append(SequenceMethodsTests)
 
 # ---------------------------------------------------------------------------
 
-class NumberMethodsTests(unittest.TestCase, Util):
+class NumberTests(unittest.TestCase, Util):
 
     def test_misc(self):
         for a in self.randombitarrays():
@@ -1262,58 +1262,99 @@ class NumberMethodsTests(unittest.TestCase, Util):
             b &= d
             self.assertEqual(~b, a)
 
-    def test_size_and_endianness(self):
+    def test_size_error(self):
         a = bitarray('11001')
         b = bitarray('100111')
-        self.assertRaises(ValueError, a.__and__, b)
-        for x in a.__or__, a.__xor__, a.__iand__, a.__ior__, a.__ixor__:
+        self.assertRaises(ValueError, lambda: a & b)
+        self.assertRaises(ValueError, lambda: a | b)
+        self.assertRaises(ValueError, lambda: a ^ b)
+        for x in (a.__and__, a.__or__, a.__xor__,
+                  a.__iand__, a.__ior__, a.__ixor__):
             self.assertRaises(ValueError, x, b)
+
+    def test_endianness_error(self):
         a = bitarray('11001', 'big')
         b = bitarray('10011', 'little')
-        self.assertRaises(ValueError, a.__and__, b)
-        for x in a.__or__, a.__xor__, a.__iand__, a.__ior__, a.__ixor__:
+        self.assertRaises(ValueError, lambda: a & b)
+        self.assertRaises(ValueError, lambda: a | b)
+        self.assertRaises(ValueError, lambda: a ^ b)
+        for x in (a.__and__, a.__or__, a.__xor__,
+                  a.__iand__, a.__ior__, a.__ixor__):
             self.assertRaises(ValueError, x, b)
 
     def test_and(self):
         a = bitarray('11001')
         b = bitarray('10011')
-        self.assertEQUAL(a & b, bitarray('10001'))
+        c = a & b
+        self.assertEqual(c, bitarray('10001'))
+        self.check_obj(c)
 
-        b = bitarray('1001')
-        self.assertRaises(ValueError, a.__and__, b)  # not same length
-        self.assertRaises(TypeError, lambda: a & 42)
-
-    def test_iand(self):
-        a =  bitarray('110010110')
-        a &= bitarray('100110011')
-        self.assertEQUAL(a, bitarray('100010010'))
+        self.assertRaises(TypeError, lambda: a & 1)
+        self.assertRaises(TypeError, lambda: 1 & a)
+        self.assertEqual(a, bitarray('11001'))
+        self.assertEqual(b, bitarray('10011'))
 
     def test_or(self):
         a = bitarray('11001')
         b = bitarray('10011')
-        aa = a.copy()
-        bb = b.copy()
-        self.assertEQUAL(a | b, bitarray('11011'))
-        self.assertEQUAL(a, aa)
-        self.assertEQUAL(b, bb)
+        c = a | b
+        self.assertEqual(c, bitarray('11011'))
+        self.check_obj(c)
 
-    def test_ior(self):
-        a = bitarray('110010110')
-        b = bitarray('100110011')
-        bb = b.copy()
-        a |= b
-        self.assertEQUAL(a, bitarray('110110111'))
-        self.assertEQUAL(b, bb)
+        self.assertRaises(TypeError, lambda: a | 1)
+        self.assertRaises(TypeError, lambda: 1 | a)
+        self.assertEqual(a, bitarray('11001'))
+        self.assertEqual(b, bitarray('10011'))
 
     def test_xor(self):
         a = bitarray('11001')
         b = bitarray('10011')
-        self.assertEQUAL(a ^ b, bitarray('01010'))
+        c = a ^ b
+        self.assertEQUAL(c, bitarray('01010'))
+        self.check_obj(c)
+
+        self.assertRaises(TypeError, lambda: a ^ 1)
+        self.assertRaises(TypeError, lambda: 1 ^ a)
+        self.assertEqual(a, bitarray('11001'))
+        self.assertEqual(b, bitarray('10011'))
+
+    def test_iand(self):
+        a = bitarray('110010110')
+        b = bitarray('100110011')
+        a &= b
+        self.assertEqual(a, bitarray('100010010'))
+        self.assertEqual(b, bitarray('100110011'))
+        self.check_obj(a)
+        self.check_obj(b)
+        try:
+            a &= 1
+        except TypeError:
+            error = 1
+        self.assertEqual(error, 1)
+
+    def test_ior(self):
+        a = bitarray('110010110')
+        b = bitarray('100110011')
+        a |= b
+        self.assertEQUAL(a, bitarray('110110111'))
+        self.assertEQUAL(b, bitarray('100110011'))
+        try:
+            a |= 1
+        except TypeError:
+            error = 1
+        self.assertEqual(error, 1)
 
     def test_ixor(self):
-        a =  bitarray('110010110')
-        a ^= bitarray('100110011')
+        a = bitarray('110010110')
+        b = bitarray('100110011')
+        a ^= b
         self.assertEQUAL(a, bitarray('010100101'))
+        self.assertEQUAL(b, bitarray('100110011'))
+        try:
+            a ^= 1
+        except TypeError:
+            error = 1
+        self.assertEqual(error, 1)
 
     def test_invert(self):
         a = bitarray('11011')
@@ -1331,7 +1372,7 @@ class NumberMethodsTests(unittest.TestCase, Util):
             self.check_obj(b)
             self.assertEQUAL(~a, b)
 
-tests.append(NumberMethodsTests)
+tests.append(NumberTests)
 
 # ---------------------------------------------------------------------------
 
