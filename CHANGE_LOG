@@ -1,3 +1,7 @@
+2021-04-XX   1.8.3:
+-------------------
+
+
 2021-03-31   1.8.2:
 -------------------
   * fix crash caused by unsupported types in binary operations, #116
