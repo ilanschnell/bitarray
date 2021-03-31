@@ -52,7 +52,7 @@ The header byte is structured the following way:
     19
     >>> x[0] % 16   # number of unused bits (0..7) with last byte
     3
-    >>> x[0] // 16  # endianness: 0 little, 1 big
+    >>> x[0] // 16  # bit endianness: 0 little, 1 big
     1
 
 The functions `serialize()` and `deserialize()` are the recommended and fasted
