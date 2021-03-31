@@ -233,7 +233,7 @@ enum kernel_type {
 };
 
 static PyObject *
-two_bitarray_func(PyObject *args, enum kernel_type kern, const char *format)
+binary_function(PyObject *args, enum kernel_type kern, const char *format)
 {
     Py_ssize_t res = 0, nbytes, i;
     PyObject *a, *b;
@@ -298,7 +298,7 @@ two_bitarray_func(PyObject *args, enum kernel_type kern, const char *format)
 static PyObject *                                                       \
 count_ ## oper (bitarrayobject *module, PyObject *args)                 \
 {                                                                       \
-    return two_bitarray_func(args, KERN_c ## oper, "OO:count_" #oper);  \
+    return binary_function(args, KERN_c ## oper, "OO:count_" #oper);    \
 }                                                                       \
 PyDoc_STRVAR(count_ ## oper ## _doc,                                    \
 "count_" #oper "(a, b, /) -> int\n\
@@ -306,15 +306,15 @@ PyDoc_STRVAR(count_ ## oper ## _doc,                                    \
 Return `(a " ochar " b).count()` in a memory efficient manner,\n\
 as no intermediate bitarray object gets created.")
 
-COUNT_FUNC(and, "&");
-COUNT_FUNC(or,  "|");
-COUNT_FUNC(xor, "^");
+COUNT_FUNC(and, "&");           /* count_and */
+COUNT_FUNC(or,  "|");           /* count_or  */
+COUNT_FUNC(xor, "^");           /* count_xor */
 
 
 static PyObject *
 subset(PyObject *module, PyObject *args)
 {
-    return two_bitarray_func(args, KERN_subset, "OO:subset");
+    return binary_function(args, KERN_subset, "OO:subset");
 }
 
 PyDoc_STRVAR(subset_doc,
