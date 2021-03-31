@@ -50,7 +50,7 @@ The header byte is structured the following way:
 
     >>> x[0]        # 0x13
     19
-    >>> x[0] % 8    # number of unused bits with last byte
+    >>> x[0] % 16   # number of unused bits (0..7) with last byte
     3
     >>> x[0] // 16  # endianness: 0 little, 1 big
     1
