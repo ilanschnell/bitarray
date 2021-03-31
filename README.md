@@ -618,12 +618,13 @@ endianness, which may be 'big', 'little'.
 Return a bitarray of `length` random bits (uses `os.urandom`).
 
 
-`pprint(bitarray, /, stream=None)`
+`pprint(bitarray, /, stream=None, group=8, indent=4, width=80)`
 
 Prints the formatted representation of object on `stream`, followed by a
-newline.  If `stream` is `None`, `sys.stdout` is used.  Elements are grouped
-in bytes (8 elements), and 8 bytes (64 elements) per line.  Non-bitarray
-objects are prinited by the standard library function `pprint.pprint()`.
+newline.  If `stream` is `None`, `sys.stdout` is used.  By default, elements
+are grouped in bytes (8 elements), and 8 bytes (64 elements) per line.
+Non-bitarray objects are printed by the standard library
+function `pprint.pprint()`.
 
 
 `make_endian(bitarray, endian, /)` -> bitarray
@@ -697,27 +698,6 @@ Bitarray of hexadecimal representation.  hexstr may contain any number
 (including odd numbers) of hex digits (upper or lower case).
 
 
-`ba2base(n, bitarray, /)` -> str
-
-Return a string containing the base `n` ascii representation of
-the bitarray.  Allowed values for `n` are 2, 4, 8, 16, 32 and 64.
-The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.
-For `n=16` (hexadecimal), `ba2hex()` will be much faster, as `ba2base()`
-does not take advantage of byte level operations.
-For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the
-standard base 64 alphabet is used.
-
-
-`base2ba(n, asciistr, /, endian=None)` -> bitarray
-
-Bitarray of the base `n` ascii representation.
-Allowed values for `n` are 2, 4, 8, 16 and 32.
-For `n=16` (hexadecimal), `hex2ba()` will be much faster, as `base2ba()`
-does not take advantage of byte level operations.
-For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the
-standard base 64 alphabet is used.
-
-
 `ba2int(bitarray, /, signed=False)` -> int
 
 Convert the given bitarray into an integer.
@@ -760,12 +740,15 @@ hashable object (including `None`).
 Change log
 ----------
 
-2021-XX-XX   1.9.0:
+2021-XX-XX   1.8.2:
 
-  * add `bitarray.util.ba2base()` and `bitarray.util.base2ba()`,
-    see last paragraph in [Bitarray representations](examples/represent.md)
+  * fix crash caused by unsupported types in binary operations, #116
   * speedup initializing or extending a bitarray from another with different
     bit endianness
+  * add formatting options to `bitarray.util.pprint()`
+  * add documentation on bitarray representations
+  * add and improve tests (all 300+ tests run in less than half a second on
+    a modern machine)
 
 
 *1.8.1* (2021-03-25):
@@ -814,7 +797,7 @@ Change log
 
   * use `Py_SET_TYPE()` and `Py_SET_SIZE()` for Python 3.10, #109
   * add official Python 3.10 support
-  * fix slice assignement to same object,
+  * fix slice assignment to same object,
     e.g. `a[2::] = a` or `a[::-1] = a`, #112
   * add bitarray.h, #110
 
@@ -862,7 +845,7 @@ Change log
 *1.5.0* (2020-08-05):
 
   * Use `Py_ssize_t` for bitarray index.  This means that on 32bit
-    systems, the maximun number of elements in a bitarray is 2 GBits.
+    systems, the maximum number of elements in a bitarray is 2 GBits.
     We used to have a special 64bit index type for all architectures, but
     this prevented us from using Python's sequence, mapping and number
     methods, and made those method lookups slow.
@@ -870,7 +853,7 @@ Change log
     copying whole bytes)
   * Require equal endianness for operations: `&`, `|`, `^`, `&=`, `|=`, `^=`.
     This should have always been the case but was overlooked in the past.
-  * raise TypeError when tring to create bitarray from boolean
+  * raise TypeError when trying to create bitarray from boolean
   * This will be last release to still support Python 2.6 (which was retired
     in 2013).  We do NOT plan to stop support for Python 2.7 anytime soon.
 
