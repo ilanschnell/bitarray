@@ -746,7 +746,7 @@ Change log
   * speedup initializing or extending a bitarray from another with different
     bit endianness
   * add formatting options to `bitarray.util.pprint()`
-  * add documentation on bitarray representations
+  * add documentation on [bitarray representations](examples/represent.md)
   * add and improve tests (all 291 tests run in less than half a second on
     a modern machine)
 
