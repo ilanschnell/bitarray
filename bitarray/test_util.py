@@ -1034,7 +1034,7 @@ tests.append(TestsIntegerization)
 class MixedTests(unittest.TestCase, Util):
 
     def test_bin(self):
-        for i in range(1000):
+        for i in range(100):
             s = bin(i)
             self.assertEqual(s[:2], '0b')
             a = bitarray(s[2:], 'big')

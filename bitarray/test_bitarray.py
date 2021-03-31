@@ -1592,7 +1592,7 @@ class MethodTests(unittest.TestCase, Util):
 
         for a in self.randombitarrays():
             aa = a.tolist()
-            for _ in range(50):
+            for _ in range(20):
                 item = bool(randint(0, 1))
                 pos = randint(-len(a) - 2, len(a) + 2)
                 a.insert(pos, item)
@@ -1629,7 +1629,7 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a.index(True), 0)
 
     def test_index2(self):
-        for n in range(50):
+        for n in range(20):
             for m in range(n):
                 a = bitarray(n)
                 a.setall(0)
@@ -1684,22 +1684,21 @@ class MethodTests(unittest.TestCase, Util):
             a = bitarray(n)
             i = randint(0, 1)
             a.setall(i)
-            for unused in range(randint(1, 4)):
-                a[randint(0, n - 1)] = 1 - i
+            for _ in range(randint(1, 4)):
+                a.invert(randint(0, n - 1))
             aa = a.tolist()
-            for unused in range(100):
+            for _ in range(10):
                 start = randint(-50, n + 50)
                 stop = randint(-50, n + 50)
                 try:
-                    res1 = a.index(1 - i, start, stop)
+                    res1 = a.index(not i, start, stop)
                 except ValueError:
                     res1 = None
                 try:
-                    res2 = aa.index(1 - i, start, stop)
+                    res2 = aa.index(not i, start, stop)
                 except ValueError:
                     res2 = None
                 self.assertEqual(res1, res2)
-
 
     def test_count_basic(self):
         a = bitarray('10011')
