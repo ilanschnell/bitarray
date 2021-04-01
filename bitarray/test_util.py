@@ -191,6 +191,7 @@ class TestsMakeEndian(unittest.TestCase, Util):
         c = make_endian(a, 'little')
         self.assertTrue(c == a)
         self.assertEqual(c.endian(), 'little')
+        self.assertIsType(c, 'bitarray')
 
         # wrong arguments
         self.assertRaises(TypeError, make_endian, '', 'big')
@@ -211,6 +212,7 @@ class TestsMakeEndian(unittest.TestCase, Util):
         c = make_endian(a, 'little')
         self.assertTrue(c == a)
         self.assertEqual(c.endian(), 'little')
+        #self.assertIsType(c, 'frozenbitarray')
 
     def test_random(self):
         for a in self.randombitarrays():
@@ -277,7 +279,7 @@ class TestsRIndex(unittest.TestCase, Util):
             n = randint(1, 100000)
             v = randint(0, 1)
             a = bitarray(n)
-            a.setall(1 - v)
+            a.setall(not v)
             lst = [randint(0, n - 1) for _ in range(100)]
             for i in lst:
                 a[i] = v

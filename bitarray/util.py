@@ -134,7 +134,7 @@ unchanged.
 def strip(a, mode='right'):
     """strip(bitarray, mode='right', /) -> bitarray
 
-Strip zeros from left, right or both ends and return a new bitarray.
+Return a new bitarray with zeros stripped from left, right or both ends.
 Allowed values for mode are the strings: `left`, `right`, `both`
 """
     if not isinstance(a, bitarray):
