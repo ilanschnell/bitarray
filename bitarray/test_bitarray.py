@@ -2482,7 +2482,7 @@ class FileTests(unittest.TestCase, Util):
 
             raw = self.read_file()
             self.assertEqual(len(raw), bits2bytes(len(a)))
-            # when we the the unused bits in a, we can compare
+            # when we fill the unused bits in a, we can compare
             a.fill()
             b = bitarray(endian='little')
             b.frombytes(raw)
