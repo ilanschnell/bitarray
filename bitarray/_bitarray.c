@@ -2194,11 +2194,11 @@ binode_make_tree(PyObject *codedict)
 
     while (PyDict_Next(codedict, &pos, &symbol, &value)) {
         if (check_value(value) < 0 ||
-            binode_insert_symbol(tree, (bitarrayobject *) value,
-                                 symbol) < 0) {
-            binode_delete(tree);
-            return NULL;
-        }
+            binode_insert_symbol(tree, (bitarrayobject *) value, symbol) < 0)
+            {
+                binode_delete(tree);
+                return NULL;
+            }
     }
     /* as we require the codedict to be non-empty the tree cannot be empty */
     assert(tree);
