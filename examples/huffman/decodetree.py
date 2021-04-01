@@ -5,7 +5,7 @@ from bitarray import bitarray, decodetree
 from bitarray.util import huffman_code
 
 
-N = 1_000_000
+N = 1000 * 1000
 
 # create Huffman code for N symbols
 code = huffman_code({i: random() for i in range(N)})
