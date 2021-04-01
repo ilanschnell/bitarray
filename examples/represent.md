@@ -55,6 +55,9 @@ The header byte is structured the following way:
     >>> x[0] // 16  # bit endianness: 0 little, 1 big
     1
 
+This means that valid values for the header byte are in the
+ranges 0x00 .. 0x07 and 0x10 .. 0x17 (inclusive).  And only the values
+0x00 and 0x10 are valid when the the serialized bitarray is empty.
 The functions `serialize()` and `deserialize()` are the recommended and fasted
 way to (de)serialize bitarray objects to bytes objects (and vice versa).
 The exact format of this representation is guaranteed to not change in future
