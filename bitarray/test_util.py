@@ -274,8 +274,8 @@ class TestsRIndex(unittest.TestCase, Util):
                 j = None
             self.assertEqual(i, j)
 
-    def test_3(self):
-        for _ in range(100):
+    def test_many_set(self):
+        for _ in range(10):
             n = randint(1, 100000)
             v = randint(0, 1)
             a = bitarray(n)
@@ -286,7 +286,7 @@ class TestsRIndex(unittest.TestCase, Util):
             self.assertEqual(rindex(a, v), max(lst))
 
     def test_one_set(self):
-        for _ in range(100):
+        for _ in range(10):
             N = randint(1, 10000)
             a = bitarray(N)
             a.setall(0)
