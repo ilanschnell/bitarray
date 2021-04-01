@@ -2529,11 +2529,22 @@ class DecodeTreeTests(unittest.TestCase, Util):
     def test_create(self):
         dt = decodetree(alphabet_code)
         self.assertIsType(dt, 'decodetree')
+        self.assertIsInstance(dt, decodetree)
         self.assertRaises(TypeError, decodetree, None)
         self.assertRaises(TypeError, decodetree, 'foo')
         d = dict(alphabet_code)
         d['-'] = bitarray()
         self.assertRaises(ValueError, decodetree, d)
+
+    def test_ambiguous_code(self):
+        for d in [
+            {'a': bitarray('0'), 'b': bitarray('0'), 'c': bitarray('1')},
+            {'a': bitarray('01'), 'b': bitarray('01'), 'c': bitarray('1')},
+            {'a': bitarray('0'), 'b': bitarray('01')},
+            {'a': bitarray('0'), 'b': bitarray('11'), 'c': bitarray('111')},
+        ]:
+            msg = "prefix code ambiguous"
+            self.assertRaisesMessage(ValueError, msg, decodetree, d)
 
     def test_sizeof(self):
         dt = decodetree({'.': bitarray('1')})
@@ -2556,6 +2567,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
     def test_todict(self):
         t = decodetree(alphabet_code)
         d = t.todict()
+        self.assertIsInstance(d, dict)
         self.assertEqual(d, alphabet_code)
 
     def test_decode(self):
@@ -2773,7 +2785,6 @@ class PrefixCodeTests(unittest.TestCase, Util):
             msg = "prefix code ambiguous"
             self.assertRaisesMessage(ValueError, msg, a.decode, d)
             self.assertRaisesMessage(ValueError, msg, a.iterdecode, d)
-            self.assertRaisesMessage(ValueError, msg, decodetree, d)
             self.check_obj(a)
 
     def test_miscitems(self):
