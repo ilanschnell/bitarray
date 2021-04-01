@@ -303,7 +303,12 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray(whitespace)
         self.assertEqual(a, bitarray())
 
-        # ensure first character can be any whitespace character
+        # For Python 2 (where strings are bytes), we are in the lucky
+        # position that none of the valid characters ('\t'=9, '\n'=10,
+        # '\v'=11, '\r'=13, ' '=32, '0'=48 and '1'=49) are valid header
+        # bytes for deserialization 0..7, 16..23.  Therefore a string of
+        # '0's and '1'a can start with any whitespace character (or with
+        # '0' or '1' obviously.
         for c in whitespace:
             a = bitarray(c + '1101110001')
             self.assertEqual(a, bitarray('1101110001'))
