@@ -312,14 +312,19 @@ class TestsStrip(unittest.TestCase, Util):
             self.assertEqual(c, bitarray('1011'))
             self.assertIsType(c, 'frozenbitarray')
 
-        for mode in 'left', 'right', 'both':
-            a = bitarray('000')
-            self.assertEqual(strip(a, mode), bitarray())
-            self.assertEqual(strip(bitarray(), mode), bitarray())
-            b = frozenbitarray(a)
-            c = strip(b, mode)
-            self.assertIsType(c, 'frozenbitarray')
-            self.assertEqual(len(c), 0)
+    def test_zeros(self):
+        for n in range(10):
+            for mode in 'left', 'right', 'both':
+                a = zeros(n)
+                c = strip(a, mode)
+                self.assertIsType(c, 'bitarray')
+                self.assertEqual(c, bitarray())
+                self.assertEqual(a, zeros(n))
+
+                b = frozenbitarray(a)
+                c = strip(b, mode)
+                self.assertIsType(c, 'frozenbitarray')
+                self.assertEqual(c, bitarray())
 
     def test_random(self):
         for a in self.randombitarrays():
@@ -329,7 +334,8 @@ class TestsStrip(unittest.TestCase, Util):
             for mode, res in [
                     ('left',  bitarray(s.lstrip('0'), a.endian())),
                     ('right', bitarray(s.rstrip('0'), a.endian())),
-                    ('both',  bitarray(s.strip('0'), a.endian()))]:
+                    ('both',  bitarray(s.strip('0'),  a.endian())),
+            ]:
                 c = strip(a, mode)
                 self.assertEQUAL(c, res)
                 self.assertIsType(c, 'bitarray')
@@ -342,11 +348,12 @@ class TestsStrip(unittest.TestCase, Util):
 
     def test_one_set(self):
         for _ in range(10):
-            N = randint(1, 10000)
-            a = bitarray(N)
+            n = randint(1, 10000)
+            a = bitarray(n)
             a.setall(0)
-            a[randint(0, N - 1)] = 1
+            a[randint(0, n - 1)] = 1
             self.assertEqual(strip(a, 'both'), bitarray('1'))
+            self.assertEqual(len(a), n)
 
 tests.append(TestsStrip)
 
