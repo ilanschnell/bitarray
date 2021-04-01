@@ -16,17 +16,26 @@ this module useful.
 Key features
 ------------
 
- * All functionality implemented in C.
- * Bitarray objects behave very much like a list object, in particular
-   slicing (including slice assignment and deletion) is supported.
- * The bit endianness can be specified for each bitarray object, see below.
- * Packing and unpacking to other binary data formats, e.g. `numpy.ndarray`.
- * Fast methods for encoding and decoding variable bit length prefix codes
- * Bitwise operations: `&`, `|`, `^`, `&=`, `|=`, `^=`, `~`
- * Sequential search
- * Pickling and unpickling of bitarray objects.
- * Bitarray objects support the buffer protocol
- * On 32-bit systems, a bitarray object can contain up to 2 Gbits.
+  * All functionality implemented in C.
+  * Bitarray objects behave very much like a list object, in particular
+    slicing (including slice assignment and deletion) is supported.
+  * The bit endianness can be specified for each bitarray object, see below.
+  * Fast methods for encoding and decoding variable bit length prefix codes
+  * Bitwise operations: `&`, `|`, `^`, `&=`, `|=`, `^=`, `~`
+  * Sequential search
+  * Packing and unpacking to other binary data formats, e.g. `numpy.ndarray`.
+  * Pickling and unpickling of bitarray objects.
+  * Bitarray objects support the buffer protocol
+  * On 32-bit systems, a bitarray object may contain up to 2 Gbits.
+  * `frozenbitarray` objects which are hashable
+  * a separate utility module `bitarray.util`:
+      - conversion to hexadecimal string
+      - serialization
+      - pretty printing
+      - conversion to integers
+      - creating Huffman codes
+      - various count functions
+      - other helpful functions
 
 
 Installation

@@ -307,8 +307,8 @@ class CreateObjectTests(unittest.TestCase, Util):
         # position that none of the valid characters ('\t'=9, '\n'=10,
         # '\v'=11, '\r'=13, ' '=32, '0'=48 and '1'=49) are valid header
         # bytes for deserialization 0..7, 16..23.  Therefore a string of
-        # '0's and '1'a can start with any whitespace character (or with
-        # '0' or '1' obviously.
+        # '0's and '1'a can start with any whitespace character, as well
+        # as '0' or '1' obviously.
         for c in whitespace:
             a = bitarray(c + '1101110001')
             self.assertEqual(a, bitarray('1101110001'))
