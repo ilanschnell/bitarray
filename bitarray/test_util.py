@@ -308,23 +308,40 @@ class TestsStrip(unittest.TestCase, Util):
             self.assertEQUAL(strip(a, 'left'), bitarray('10110000'))
             self.assertEQUAL(strip(a, 'both'), bitarray('1011'))
             b = frozenbitarray('00010110000')
-            self.assertEqual(strip(b, 'both'), bitarray('1011'))
+            c = strip(b, 'both')
+            self.assertEqual(c, bitarray('1011'))
+            self.assertIsType(c, 'frozenbitarray')
 
         for mode in 'left', 'right', 'both':
-            self.assertEqual(strip(bitarray('000'), mode), bitarray())
+            a = bitarray('000')
+            self.assertEqual(strip(a, mode), bitarray())
             self.assertEqual(strip(bitarray(), mode), bitarray())
+            b = frozenbitarray(a)
+            c = strip(b, mode)
+            self.assertIsType(c, 'frozenbitarray')
+            self.assertEqual(len(c), 0)
 
     def test_random(self):
         for a in self.randombitarrays():
             b = a.copy()
+            f = frozenbitarray(a)
             s = a.to01()
-            self.assertEqual(strip(a, 'left'), bitarray(s.lstrip('0')))
-            self.assertEqual(strip(a, 'right'), bitarray(s.rstrip('0')))
-            self.assertEqual(strip(a, 'both'), bitarray(s.strip('0')))
-            self.assertEQUAL(a, b)
+            for mode, res in [
+                    ('left',  bitarray(s.lstrip('0'), a.endian())),
+                    ('right', bitarray(s.rstrip('0'), a.endian())),
+                    ('both',  bitarray(s.strip('0'), a.endian()))]:
+                c = strip(a, mode)
+                self.assertEQUAL(c, res)
+                self.assertIsType(c, 'bitarray')
+                self.assertEQUAL(a, b)
+
+                c = strip(f, mode)
+                self.assertEQUAL(c, res)
+                self.assertIsType(c, 'frozenbitarray')
+                self.assertEQUAL(f, b)
 
     def test_one_set(self):
-        for _ in range(100):
+        for _ in range(10):
             N = randint(1, 10000)
             a = bitarray(N)
             a.setall(0)

@@ -134,13 +134,13 @@ unchanged.
 def strip(a, mode='right'):
     """strip(bitarray, mode='right', /) -> bitarray
 
-Strip zeros from left, right or both ends.
+Strip zeros from left, right or both ends and return a new bitarray.
 Allowed values for mode are the strings: `left`, `right`, `both`
 """
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected, got '%s'" % type(a).__name__)
     if not isinstance(mode, str):
-        raise TypeError("str expected for mode")
+        raise TypeError("str expected for mode, got '%s'" % type(a).__name__)
     if mode not in ('left', 'right', 'both'):
         raise ValueError("allowed values 'left', 'right', 'both', got: %r" %
                          mode)
@@ -149,14 +149,14 @@ Allowed values for mode are the strings: `left`, `right`, `both`
         try:
             first = a.index(1)
         except ValueError:
-            return bitarray(0, a.endian())
+            return a[:0]
 
     last = len(a) - 1
     if mode in ('right', 'both'):
         try:
             last = rindex(a)
         except ValueError:
-            return bitarray(0, a.endian())
+            return a[:0]
 
     return a[first:last + 1]
 
