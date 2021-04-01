@@ -281,7 +281,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray(range(-3, 3))
         self.assertEqual(a, bitarray('111011'))
 
-    def test_01(self):
+    def test_string01(self):
         for s in '0010111', u'0010111', '0010 111', u'0010 111':
             a = bitarray(s)
             self.assertEqual(a.tolist(), [0, 0, 1, 0, 1, 1, 1])
@@ -297,6 +297,19 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, bitarray.__new__, bitarray, '01021')
         self.assertRaises(UnicodeEncodeError, bitarray.__new__, bitarray,
                           u'1\u26050')
+
+    def test_string01_whitespace(self):
+        whitespace = ' \n\r\t\v'
+        a = bitarray(whitespace)
+        self.assertEqual(a, bitarray())
+
+        # ensure first character can be any whitespace character
+        for c in whitespace:
+            a = bitarray(c + '1101110001')
+            self.assertEqual(a, bitarray('1101110001'))
+
+        a = bitarray(' 0\n1\r0\t1\v0 ')
+        self.assertEqual(a, bitarray('01010'))
 
     def test_rawbytes(self):
         self.assertEqual(bitarray(b'\x00').endian(), 'little')
@@ -1505,8 +1518,7 @@ class ExtendTests(unittest.TestCase, Util):
                 self.check_obj(c)
 
     def test_string01_whitespace(self):
-        a = bitarray(' \n\r\t\v')
-        self.assertEqual(a, bitarray())
+        a = bitarray()
         a.extend('0 1\n0\r1\t0\v1')
         self.assertEqual(a, bitarray('010101'))
         a += ' 1\n0\r1\t0\v'
