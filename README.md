@@ -26,8 +26,9 @@ Key features
   * Packing and unpacking to other binary data formats, e.g. `numpy.ndarray`.
   * Pickling and unpickling of bitarray objects.
   * Bitarray objects support the buffer protocol
-  * On 32-bit systems, a bitarray object may contain up to 2 Gbits.
   * `frozenbitarray` objects which are hashable
+  * Extensive test suite with about 300 unittests
+  * On 32-bit systems, a bitarray object may contain up to 2 Gbits.
   * a separate utility module `bitarray.util`:
       - conversion to hexadecimal string
       - serialization
@@ -43,8 +44,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.8.2.tar.gz
-    $ cd bitarray-1.8.2
+    $ tar xzf bitarray-1.8.3.tar.gz
+    $ cd bitarray-1.8.3
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -63,7 +64,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 1.8.2
+    bitarray version: 1.8.3
     sys.version: 2.7.15 (default, Mar  5 2020, 14:58:04) [GCC Clang 9.0.1]
     sys.prefix: /Users/ilan/Mini3/envs/py27
     pointer size: 64 bit
@@ -748,6 +749,11 @@ hashable object (including `None`).
 
 Change log
 ----------
+
+2021-04-XX   1.8.3:
+
+  * documentation and tests
+
 
 *1.8.2* (2021-03-31):
 
