@@ -1973,29 +1973,26 @@ BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 
 
 static void
-bitarray_shift(bitarrayobject *a, Py_ssize_t n)
+bitarray_shift(bitarrayobject *a, Py_ssize_t n, int rshift)
 {
     Py_ssize_t nbits = a->nbits;
 
-    printf("shift: %zd\n", n);
     if (n == 0)
         return;
 
-    if (n >= nbits || n <= -nbits) {
+    if (n >= nbits) {
         printf("set0: %zd\n", n);
         memset(a->ob_item, 0x00, (size_t) Py_SIZE(a));
         return;
     }
 
-    if (n > 0) {                /* lshift */
-        copy_n(a, 0, a, n, nbits - n);
-        setrange(a, nbits - n, nbits, 0);
-    }
-    else {                      /* rshift */
-        n = -n;
-        printf("rshift: %zd\n", n);
+    if (rshift) {               /* rshift */
         copy_n(a, n, a, 0, nbits - n);
         setrange(a, 0, n, 0);
+    }
+    else {                      /* lshift */
+        copy_n(a, 0, a, n, nbits - n);
+        setrange(a, nbits - n, nbits, 0);
     }
 }
 
@@ -2034,7 +2031,7 @@ bitarray_lshift(PyObject *self, PyObject *other)
     res = bitarray_copy((bitarrayobject *) self);
     if (res == NULL)
         return NULL;
-    bitarray_shift((bitarrayobject *) res, n);
+    bitarray_shift((bitarrayobject *) res, n, 0);
     return res;
 }
 
@@ -2050,7 +2047,7 @@ bitarray_rshift(PyObject *self, PyObject *other)
     res = bitarray_copy((bitarrayobject *) self);
     if (res == NULL)
         return NULL;
-    bitarray_shift((bitarrayobject *) res, -n);
+    bitarray_shift((bitarrayobject *) res, n, 1);
     return res;
 }
 
@@ -2062,7 +2059,7 @@ bitarray_inplace_lshift(PyObject *self, PyObject *other)
     n = shift_check(self, other, "<<=");
     if (n < 0)
         return NULL;
-    bitarray_shift((bitarrayobject *) self, n);
+    bitarray_shift((bitarrayobject *) self, n, 0);
     Py_INCREF(self);
     return self;
 }
@@ -2075,7 +2072,7 @@ bitarray_inplace_rshift(PyObject *self, PyObject *other)
     n = shift_check(self, other, ">>=");
     if (n < 0)
         return NULL;
-    bitarray_shift((bitarrayobject *) self, -n);
+    bitarray_shift((bitarrayobject *) self, n, 1);
     Py_INCREF(self);
     return self;
 }
