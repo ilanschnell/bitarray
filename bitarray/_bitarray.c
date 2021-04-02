@@ -1974,7 +1974,7 @@ BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 
 /* shift bitarray n positions to left (right=0) or right (right=1) */
 static void
-bitarray_shift(bitarrayobject *a, Py_ssize_t n, int right)
+shift(bitarrayobject *a, Py_ssize_t n, int right)
 {
     Py_ssize_t nbits = a->nbits;
 
@@ -2038,7 +2038,7 @@ bitarray_ ## name (PyObject *self, PyObject *other)    \
         if (res == NULL)                               \
             return NULL;                               \
     }                                                  \
-    bitarray_shift((bitarrayobject *) res, n, right);  \
+    shift((bitarrayobject *) res, n, right);           \
     if (inplace)                                       \
         Py_INCREF(res);                                \
     return res;                                        \
