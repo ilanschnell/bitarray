@@ -1876,7 +1876,7 @@ enum op_type {
 };
 
 /* perform bitwise in-place operation */
-static int
+static void
 bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
@@ -1898,9 +1898,8 @@ bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
             self->ob_item[i] ^= other->ob_item[i];
         break;
     default:                    /* cannot happen */
-        return -1;
+        return;
     }
-    return 0;
 }
 
 /* return 0 if both a and b are bitarray objects, -1 on error */
@@ -1941,11 +1940,8 @@ bitarray_ ## oper (PyObject *self, PyObject *other)                 \
     res = bitarray_copy((bitarrayobject *) self);                   \
     if (res == NULL)                                                \
         return NULL;                                                \
-    if (bitwise((bitarrayobject *) res,                             \
-                (bitarrayobject *) other, OP_ ## oper) < 0) {       \
-        Py_DECREF(res);                                             \
-        return NULL;                                                \
-    }                                                               \
+    bitwise((bitarrayobject *) res,                                 \
+            (bitarrayobject *) other, OP_ ## oper);                 \
     return res;                                                     \
 }
 
@@ -1960,9 +1956,8 @@ bitarray_i ## oper (PyObject *self, PyObject *other)         \
 {                                                            \
     if (bitwise_check(self, other, ostr) < 0)                \
         return NULL;                                         \
-    if (bitwise((bitarrayobject *) self,                     \
-                (bitarrayobject *) other, OP_ ## oper) < 0)  \
-        return NULL;                                         \
+    bitwise((bitarrayobject *) self,                         \
+            (bitarrayobject *) other, OP_ ## oper);          \
     Py_INCREF(self);                                         \
     return (PyObject *) self;                                \
 }
