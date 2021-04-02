@@ -1998,7 +1998,7 @@ bitarray_shift(bitarrayobject *a, Py_ssize_t n, int right)
 }
 
 /* check the shift bytes and return the shift count, -1 on error */
-static int
+static Py_ssize_t
 shift_check(PyObject *a, PyObject *b, const char *ostr)
 {
     Py_ssize_t n;
