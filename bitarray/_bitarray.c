@@ -1986,6 +1986,7 @@ bitarray_shift(bitarrayobject *a, Py_ssize_t n, int right)
         return;
     }
 
+    assert(0 < n && n < nbits);
     if (right) {                /* rshift */
         copy_n(a, n, a, 0, nbits - n);
         setrange(a, 0, n, 0);
