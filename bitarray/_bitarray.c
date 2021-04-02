@@ -1898,7 +1898,7 @@ bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
             self->ob_item[i] ^= other->ob_item[i];
         break;
     default:                    /* cannot happen */
-        return;
+        Py_FatalError("unknown bitwise operation");
     }
 }
 
