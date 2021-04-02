@@ -1406,10 +1406,8 @@ class NumberTests(unittest.TestCase, Util):
 
         if direction == 'right':
             return bitarray(n * '0', a.endian()) + a[:len(a)-n]
-        elif direction == 'left':
+        if direction == 'left':
             return a[n:] + bitarray(n * '0', a.endian())
-        else:
-            raise ValueError
 
     def test_lshift(self):
         a = bitarray('11011')
@@ -1420,9 +1418,11 @@ class NumberTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, lambda: a << -1)
 
         for a in self.randombitarrays():
+            c = a.copy()
             n = randint(0, len(a) + 3)
             b = a << n
             self.assertEQUAL(b, self.shift(a, n, 'left'))
+            self.assertEQUAL(a, c)
 
     def test_rshift(self):
         a = bitarray('1101101')
@@ -1433,15 +1433,18 @@ class NumberTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, lambda: a >> -1)
 
         for a in self.randombitarrays():
+            c = a.copy()
             n = randint(0, len(a) + 3)
             b = a >> n
             self.assertEQUAL(b, self.shift(a, n, 'right'))
+            self.assertEQUAL(a, c)
 
     def test_ilshift(self):
         a = bitarray('110110101')
         a <<= 7
         self.assertEQUAL(a, bitarray('010000000'))
         self.assertRaises(TypeError, a.__ilshift__, 1.2)
+        self.assertRaises(ValueError, a.__ilshift__, -3)
 
         for a in self.randombitarrays():
             b = a.copy()
@@ -1454,12 +1457,19 @@ class NumberTests(unittest.TestCase, Util):
         a >>= 3
         self.assertEQUAL(a, bitarray('000110110'))
         self.assertRaises(TypeError, a.__irshift__, 1.2)
+        self.assertRaises(ValueError, a.__irshift__, -4)
 
         for a in self.randombitarrays():
             b = a.copy()
             n = randint(0, len(a) + 3)
             b >>= n
             self.assertEQUAL(b, self.shift(a, n, 'right'))
+
+    def test_shift_example(self):
+        a = bitarray('0010011')
+        self.assertEqual(a << 3, bitarray('0011000'))
+        a >>= 4
+        self.assertEqual(a, bitarray('0000001'))
 
 tests.append(NumberTests)
 
