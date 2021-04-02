@@ -2020,63 +2020,43 @@ shift_check(PyObject *a, PyObject *b, const char *ostr)
     return n;
 }
 
-static PyObject *
-bitarray_lshift(PyObject *self, PyObject *other)
-{
-    PyObject *res;
-    Py_ssize_t n;
-
-    n = shift_check(self, other, "<<");
-    if (n < 0)
-        return NULL;
-    res = bitarray_copy((bitarrayobject *) self);
-    if (res == NULL)
-        return NULL;
-    bitarray_shift((bitarrayobject *) res, n, 0);
-    return res;
+#define SHIFT_FUNC(oper, right, ostr)                  \
+static PyObject *                                      \
+bitarray_ ## oper (PyObject *self, PyObject *other)    \
+{                                                      \
+    PyObject *res;                                     \
+    Py_ssize_t n;                                      \
+                                                       \
+    n = shift_check(self, other, ostr);                \
+    if (n < 0)                                         \
+        return NULL;                                   \
+    res = bitarray_copy((bitarrayobject *) self);      \
+    if (res == NULL)                                   \
+        return NULL;                                   \
+    bitarray_shift((bitarrayobject *) res, n, right);  \
+    return res;                                        \
 }
 
-static PyObject *
-bitarray_rshift(PyObject *self, PyObject *other)
-{
-    PyObject *res;
-    Py_ssize_t n;
+SHIFT_FUNC(lshift, 0, "<<")     /* bitarray_lshift */
+SHIFT_FUNC(rshift, 1, ">>")     /* bitarray_rshift */
 
-    n = shift_check(self, other, ">>");
-    if (n < 0)
-        return NULL;
-    res = bitarray_copy((bitarrayobject *) self);
-    if (res == NULL)
-        return NULL;
-    bitarray_shift((bitarrayobject *) res, n, 1);
-    return res;
+
+#define SHIFT_IFUNC(oper, right, ostr)                       \
+static PyObject *                                            \
+bitarray_inplace_ ## oper (PyObject *self, PyObject *other)  \
+{                                                            \
+    Py_ssize_t n;                                            \
+                                                             \
+    n = shift_check(self, other, ostr);                      \
+    if (n < 0)                                               \
+        return NULL;                                         \
+    bitarray_shift((bitarrayobject *) self, n, right);       \
+    Py_INCREF(self);                                         \
+    return self;                                             \
 }
 
-static PyObject *
-bitarray_inplace_lshift(PyObject *self, PyObject *other)
-{
-    Py_ssize_t n;
-
-    n = shift_check(self, other, "<<=");
-    if (n < 0)
-        return NULL;
-    bitarray_shift((bitarrayobject *) self, n, 0);
-    Py_INCREF(self);
-    return self;
-}
-
-static PyObject *
-bitarray_inplace_rshift(PyObject *self, PyObject *other)
-{
-    Py_ssize_t n;
-
-    n = shift_check(self, other, ">>=");
-    if (n < 0)
-        return NULL;
-    bitarray_shift((bitarrayobject *) self, n, 1);
-    Py_INCREF(self);
-    return self;
-}
+SHIFT_IFUNC(lshift, 0, "<<=")   /* bitarray_inplace_lshift */
+SHIFT_IFUNC(rshift, 1, ">>=")   /* bitarray_inplace_rshift */
 
 
 static PyNumberMethods bitarray_as_number = {
