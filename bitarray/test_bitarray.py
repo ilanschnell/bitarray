@@ -1431,6 +1431,18 @@ class NumberTests(unittest.TestCase, Util):
             b = a >> n
             self.assertEQUAL(b, bitarray(len(a) * '0', a.endian()))
 
+    def test_ilshift(self):
+        a = bitarray('11011')
+        a <<= 2
+        self.assertEQUAL(a, bitarray('01100'))
+        self.assertRaises(TypeError, a.__ilshift__, 1.2)
+
+    def test_irshift(self):
+        a = bitarray('1101101')
+        a >>= 1
+        self.assertEQUAL(a, bitarray('0110110'))
+        self.assertRaises(TypeError, a.__irshift__, 1.2)
+
 tests.append(NumberTests)
 
 # ---------------------------------------------------------------------------
