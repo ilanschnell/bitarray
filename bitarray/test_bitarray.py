@@ -1399,6 +1399,18 @@ class NumberTests(unittest.TestCase, Util):
             self.check_obj(b)
             self.assertEQUAL(~a, b)
 
+    @staticmethod
+    def shift(a, n, direction):
+        if n >= len(a):
+            return bitarray(len(a) * '0', a.endian())
+
+        if direction == 'right':
+            return bitarray(n * '0', a.endian()) + a[:len(a)-n]
+        elif direction == 'left':
+            return a[n:] + bitarray(n * '0', a.endian())
+        else:
+            raise ValueError
+
     def test_lshift(self):
         a = bitarray('11011')
         b = a << 2
@@ -1408,12 +1420,9 @@ class NumberTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, lambda: a << -1)
 
         for a in self.randombitarrays():
-            n = randint(0, len(a))
+            n = randint(0, len(a) + 3)
             b = a << n
-            self.assertEQUAL(b, a[n:] + bitarray(n * '0', a.endian()))
-            n = randint(len(a), len(a) + 3)
-            b = a << n
-            self.assertEQUAL(b, bitarray(len(a) * '0', a.endian()))
+            self.assertEQUAL(b, self.shift(a, n, 'left'))
 
     def test_rshift(self):
         a = bitarray('1101101')
@@ -1424,12 +1433,9 @@ class NumberTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, lambda: a >> -1)
 
         for a in self.randombitarrays():
-            n = randint(0, len(a))
+            n = randint(0, len(a) + 3)
             b = a >> n
-            self.assertEQUAL(b, bitarray(n * '0', a.endian()) + a[:len(a)-n])
-            n = randint(len(a), len(a) + 3)
-            b = a >> n
-            self.assertEQUAL(b, bitarray(len(a) * '0', a.endian()))
+            self.assertEQUAL(b, self.shift(a, n, 'right'))
 
     def test_ilshift(self):
         a = bitarray('110110101')
@@ -1441,10 +1447,7 @@ class NumberTests(unittest.TestCase, Util):
             b = a.copy()
             n = randint(0, len(a) + 3)
             b <<= n
-            if n < len(a):
-                self.assertEQUAL(b, a[n:] + bitarray(n * '0', a.endian()))
-            else:
-                self.assertEQUAL(b, bitarray(len(a) * '0', a.endian()))
+            self.assertEQUAL(b, self.shift(a, n, 'left'))
 
     def test_irshift(self):
         a = bitarray('110110111')
@@ -1456,10 +1459,7 @@ class NumberTests(unittest.TestCase, Util):
             b = a.copy()
             n = randint(0, len(a) + 3)
             b >>= n
-            if n < len(a):
-                self.assertEQUAL(b, bitarray(n * '0', a.endian()) + a[:len(a)-n])
-            else:
-                self.assertEQUAL(b, bitarray(len(a) * '0', a.endian()))
+            self.assertEQUAL(b, self.shift(a, n, 'right'))
 
 tests.append(NumberTests)
 
