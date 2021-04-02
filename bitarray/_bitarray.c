@@ -1972,8 +1972,9 @@ BITWISE_IFUNC(or,  "|=")             /* bitarray_ior  */
 BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 
 
+/* shift bitarray n positions to left (right=0) or right (right=1) */
 static void
-bitarray_shift(bitarrayobject *a, Py_ssize_t n, int rshift)
+bitarray_shift(bitarrayobject *a, Py_ssize_t n, int right)
 {
     Py_ssize_t nbits = a->nbits;
 
@@ -1981,12 +1982,11 @@ bitarray_shift(bitarrayobject *a, Py_ssize_t n, int rshift)
         return;
 
     if (n >= nbits) {
-        printf("set0: %zd\n", n);
         memset(a->ob_item, 0x00, (size_t) Py_SIZE(a));
         return;
     }
 
-    if (rshift) {               /* rshift */
+    if (right) {                /* rshift */
         copy_n(a, n, a, 0, nbits - n);
         setrange(a, 0, n, 0);
     }
