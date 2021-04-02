@@ -1959,7 +1959,7 @@ bitarray_i ## oper (PyObject *self, PyObject *other)         \
     bitwise((bitarrayobject *) self,                         \
             (bitarrayobject *) other, OP_ ## oper);          \
     Py_INCREF(self);                                         \
-    return (PyObject *) self;                                \
+    return self;                                             \
 }
 
 BITWISE_IFUNC(and, "&=")             /* bitarray_iand */
