@@ -1972,6 +1972,48 @@ BITWISE_IFUNC(or,  "|=")             /* bitarray_ior  */
 BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 
 
+static PyObject *
+bitarray_lshift(PyObject *a, PyObject *b)
+{
+    PyObject *res;
+    Py_ssize_t n;
+
+    if (!bitarray_Check(a) || !PyIndex_Check(b)) {
+        PyErr_Format(PyExc_TypeError,
+                     "unsupported operand type(s) for <<: '%s' and '%s'",
+                     Py_TYPE(a)->tp_name, Py_TYPE(b)->tp_name);
+        return NULL;
+    }
+
+    n = PyNumber_AsSsize_t(b, PyExc_IndexError);
+    if (n == -1 && PyErr_Occurred())
+        return NULL;
+
+    if (n < 0) {
+        PyErr_SetString(PyExc_ValueError, "negative shift count");
+        return NULL;
+    }
+
+    res = bitarray_copy((bitarrayobject *) a);
+    if (res == NULL)
+        return NULL;
+    if (n == 0)
+        return res;
+
+#define rr  ((bitarrayobject *) res)
+    if (n < rr->nbits) {
+        copy_n(rr, 0, rr, n, rr->nbits - n);
+        setrange(rr, rr->nbits - n, rr->nbits, 0);
+    }
+    else {
+        memset(rr->ob_item, 0x00, (size_t) Py_SIZE(rr));
+    }
+#undef rr
+
+    return res;
+}
+
+
 static PyNumberMethods bitarray_as_number = {
     0,                          /* nb_add */
     0,                          /* nb_subtract */
@@ -1987,7 +2029,7 @@ static PyNumberMethods bitarray_as_number = {
     0,                          /* nb_absolute */
     0,                          /* nb_bool (was nb_nonzero) */
     (unaryfunc) bitarray_cpinvert,  /* nb_invert */
-    0,                          /* nb_lshift */
+    (binaryfunc) bitarray_lshift,   /* nb_lshift */
     0,                          /* nb_rshift */
     (binaryfunc) bitarray_and,  /* nb_and */
     (binaryfunc) bitarray_xor,  /* nb_xor */
@@ -3205,7 +3247,7 @@ static PyTypeObject Bitarray_Type = {
     &bitarray_as_buffer,                      /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_WEAKREFS
 #if PY_MAJOR_VERSION == 2
-    | Py_TPFLAGS_HAVE_NEWBUFFER
+    | Py_TPFLAGS_HAVE_NEWBUFFER | Py_TPFLAGS_CHECKTYPES
 #endif
     ,                                         /* tp_flags */
     bitarraytype_doc,                         /* tp_doc */
