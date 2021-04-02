@@ -1975,15 +1975,27 @@ BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 static void
 bitarray_shift(bitarrayobject *a, Py_ssize_t n)
 {
+    Py_ssize_t nbits = a->nbits;
+
+    printf("shift: %zd\n", n);
     if (n == 0)
         return;
 
-    if (n < a->nbits) {
-        copy_n(a, 0, a, n, a->nbits - n);
-        setrange(a, a->nbits - n, a->nbits, 0);
-    }
-    else {
+    if (n >= nbits || n <= -nbits) {
+        printf("set0: %zd\n", n);
         memset(a->ob_item, 0x00, (size_t) Py_SIZE(a));
+        return;
+    }
+
+    if (n > 0) {                /* lshift */
+        copy_n(a, 0, a, n, nbits - n);
+        setrange(a, nbits - n, nbits, 0);
+    }
+    else {                      /* rshift */
+        n = -n;
+        printf("rshift: %zd\n", n);
+        copy_n(a, n, a, 0, nbits - n);
+        setrange(a, 0, n, 0);
     }
 }
 
@@ -2019,12 +2031,53 @@ bitarray_lshift(PyObject *self, PyObject *other)
     n = shift_check(self, other, "<<");
     if (n < 0)
         return NULL;
-
     res = bitarray_copy((bitarrayobject *) self);
     if (res == NULL)
         return NULL;
     bitarray_shift((bitarrayobject *) res, n);
     return res;
+}
+
+static PyObject *
+bitarray_rshift(PyObject *self, PyObject *other)
+{
+    PyObject *res;
+    Py_ssize_t n;
+
+    n = shift_check(self, other, ">>");
+    if (n < 0)
+        return NULL;
+    res = bitarray_copy((bitarrayobject *) self);
+    if (res == NULL)
+        return NULL;
+    bitarray_shift((bitarrayobject *) res, -n);
+    return res;
+}
+
+static PyObject *
+bitarray_inplace_lshift(PyObject *self, PyObject *other)
+{
+    Py_ssize_t n;
+
+    n = shift_check(self, other, "<<=");
+    if (n < 0)
+        return NULL;
+    bitarray_shift((bitarrayobject *) self, n);
+    Py_INCREF(self);
+    return self;
+}
+
+static PyObject *
+bitarray_inplace_rshift(PyObject *self, PyObject *other)
+{
+    Py_ssize_t n;
+
+    n = shift_check(self, other, ">>=");
+    if (n < 0)
+        return NULL;
+    bitarray_shift((bitarrayobject *) self, -n);
+    Py_INCREF(self);
+    return self;
 }
 
 
@@ -2044,7 +2097,7 @@ static PyNumberMethods bitarray_as_number = {
     0,                          /* nb_bool (was nb_nonzero) */
     (unaryfunc) bitarray_cpinvert,  /* nb_invert */
     (binaryfunc) bitarray_lshift,   /* nb_lshift */
-    0,                          /* nb_rshift */
+    (binaryfunc) bitarray_rshift,   /* nb_rshift */
     (binaryfunc) bitarray_and,  /* nb_and */
     (binaryfunc) bitarray_xor,  /* nb_xor */
     (binaryfunc) bitarray_or,   /* nb_or */
@@ -2066,8 +2119,8 @@ static PyNumberMethods bitarray_as_number = {
 #endif
     0,                          /* nb_inplace_remainder */
     0,                          /* nb_inplace_power */
-    0,                          /* nb_inplace_lshift */
-    0,                          /* nb_inplace_rshift */
+    (binaryfunc) bitarray_inplace_lshift,  /* nb_inplace_lshift */
+    (binaryfunc) bitarray_inplace_rshift,  /* nb_inplace_rshift */
     (binaryfunc) bitarray_iand, /* nb_inplace_and */
     (binaryfunc) bitarray_ixor, /* nb_inplace_xor */
     (binaryfunc) bitarray_ior,  /* nb_inplace_or */
