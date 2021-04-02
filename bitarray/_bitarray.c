@@ -2044,10 +2044,10 @@ bitarray_ ## oper (PyObject *self, PyObject *other)    \
     return res;                                        \
 }
 
-SHIFT_FUNC(lshift, 0, 0, "<<")          /* bitarray_lshift */
-SHIFT_FUNC(rshift, 0, 1, ">>")          /* bitarray_rshift */
-SHIFT_FUNC(inplace_lshift, 1, 0, "<<=") /* bitarray_inplace_lshift */
-SHIFT_FUNC(inplace_rshift, 1, 1, ">>=") /* bitarray_inplace_rshift */
+SHIFT_FUNC(lshift,  0, 0, "<<")  /* bitarray_lshift */
+SHIFT_FUNC(rshift,  0, 1, ">>")  /* bitarray_rshift */
+SHIFT_FUNC(ilshift, 1, 0, "<<=") /* bitarray_inplace_lshift */
+SHIFT_FUNC(irshift, 1, 1, ">>=") /* bitarray_inplace_rshift */
 
 
 static PyNumberMethods bitarray_as_number = {
@@ -2088,8 +2088,8 @@ static PyNumberMethods bitarray_as_number = {
 #endif
     0,                          /* nb_inplace_remainder */
     0,                          /* nb_inplace_power */
-    (binaryfunc) bitarray_inplace_lshift,  /* nb_inplace_lshift */
-    (binaryfunc) bitarray_inplace_rshift,  /* nb_inplace_rshift */
+    (binaryfunc) bitarray_ilshift,  /* nb_inplace_lshift */
+    (binaryfunc) bitarray_irshift,  /* nb_inplace_rshift */
     (binaryfunc) bitarray_iand, /* nb_inplace_and */
     (binaryfunc) bitarray_ixor, /* nb_inplace_xor */
     (binaryfunc) bitarray_ior,  /* nb_inplace_or */
