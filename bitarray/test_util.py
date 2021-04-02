@@ -927,20 +927,27 @@ class MixedTests(unittest.TestCase, Util):
     def test_bitwise(self):
         for a in self.randombitarrays(start=1):
             b = urandom(len(a), a.endian())
+            aa = a.copy()
+            bb = b.copy()
             i = ba2int(a)
             j = ba2int(b)
             self.assertEqual(ba2int(a & b), i & j)
             self.assertEqual(ba2int(a | b), i | j)
             self.assertEqual(ba2int(a ^ b), i ^ j)
+
             n = randint(0, len(a))
             if a.endian() == 'big':
                 self.assertEqual(ba2int(a >> n), i >> n)
                 c = zeros(len(a)) + a
                 self.assertEqual(ba2int(c << n), i << n)
 
+            self.assertEQUAL(a, aa)
+            self.assertEQUAL(b, bb)
+
     def test_bitwise_inplace(self):
         for a in self.randombitarrays(start=1):
             b = urandom(len(a), a.endian())
+            bb = b.copy()
             i = ba2int(a)
             j = ba2int(b)
             c = a.copy()
@@ -952,6 +959,8 @@ class MixedTests(unittest.TestCase, Util):
             c = a.copy()
             c ^= b
             self.assertEqual(ba2int(c), i ^ j)
+            self.assertEQUAL(b, bb)
+
             n = randint(0, len(a))
             if a.endian() == 'big':
                 c = a.copy()
