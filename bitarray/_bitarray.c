@@ -1972,44 +1972,58 @@ BITWISE_IFUNC(or,  "|=")             /* bitarray_ior  */
 BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 
 
-static PyObject *
-bitarray_lshift(PyObject *a, PyObject *b)
+static void
+bitarray_shift(bitarrayobject *a, Py_ssize_t n)
 {
-    PyObject *res;
+    if (n == 0)
+        return;
+
+    if (n < a->nbits) {
+        copy_n(a, 0, a, n, a->nbits - n);
+        setrange(a, a->nbits - n, a->nbits, 0);
+    }
+    else {
+        memset(a->ob_item, 0x00, (size_t) Py_SIZE(a));
+    }
+}
+
+/* check the shift bytes and return the shift count, -1 on error */
+static int
+shift_check(PyObject *a, PyObject *b, const char *ostr)
+{
     Py_ssize_t n;
 
     if (!bitarray_Check(a) || !PyIndex_Check(b)) {
         PyErr_Format(PyExc_TypeError,
-                     "unsupported operand type(s) for <<: '%s' and '%s'",
-                     Py_TYPE(a)->tp_name, Py_TYPE(b)->tp_name);
-        return NULL;
+                     "unsupported operand type(s) for %s: '%s' and '%s'",
+                     ostr, Py_TYPE(a)->tp_name, Py_TYPE(b)->tp_name);
+        return -1;
     }
-
     n = PyNumber_AsSsize_t(b, PyExc_IndexError);
     if (n == -1 && PyErr_Occurred())
-        return NULL;
+        return -1;
 
     if (n < 0) {
         PyErr_SetString(PyExc_ValueError, "negative shift count");
-        return NULL;
+        return -1;
     }
+    return n;
+}
 
-    res = bitarray_copy((bitarrayobject *) a);
+static PyObject *
+bitarray_lshift(PyObject *self, PyObject *other)
+{
+    PyObject *res;
+    Py_ssize_t n;
+
+    n = shift_check(self, other, "<<");
+    if (n < 0)
+        return NULL;
+
+    res = bitarray_copy((bitarrayobject *) self);
     if (res == NULL)
         return NULL;
-    if (n == 0)
-        return res;
-
-#define rr  ((bitarrayobject *) res)
-    if (n < rr->nbits) {
-        copy_n(rr, 0, rr, n, rr->nbits - n);
-        setrange(rr, rr->nbits - n, rr->nbits, 0);
-    }
-    else {
-        memset(rr->ob_item, 0x00, (size_t) Py_SIZE(rr));
-    }
-#undef rr
-
+    bitarray_shift((bitarrayobject *) res, n);
     return res;
 }
 
