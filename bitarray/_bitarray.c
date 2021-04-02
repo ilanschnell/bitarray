@@ -2020,9 +2020,9 @@ shift_check(PyObject *a, PyObject *b, const char *ostr)
     return n;
 }
 
-#define SHIFT_FUNC(oper, inplace, right, ostr)         \
+#define SHIFT_FUNC(name, inplace, right, ostr)         \
 static PyObject *                                      \
-bitarray_ ## oper (PyObject *self, PyObject *other)    \
+bitarray_ ## name (PyObject *self, PyObject *other)    \
 {                                                      \
     PyObject *res;                                     \
     Py_ssize_t n;                                      \
@@ -2046,8 +2046,8 @@ bitarray_ ## oper (PyObject *self, PyObject *other)    \
 
 SHIFT_FUNC(lshift,  0, 0, "<<")  /* bitarray_lshift */
 SHIFT_FUNC(rshift,  0, 1, ">>")  /* bitarray_rshift */
-SHIFT_FUNC(ilshift, 1, 0, "<<=") /* bitarray_inplace_lshift */
-SHIFT_FUNC(irshift, 1, 1, ">>=") /* bitarray_inplace_rshift */
+SHIFT_FUNC(ilshift, 1, 0, "<<=") /* bitarray_ilshift */
+SHIFT_FUNC(irshift, 1, 1, ">>=") /* bitarray_irshift */
 
 
 static PyNumberMethods bitarray_as_number = {
