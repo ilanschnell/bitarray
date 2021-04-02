@@ -1399,6 +1399,38 @@ class NumberTests(unittest.TestCase, Util):
             self.check_obj(b)
             self.assertEQUAL(~a, b)
 
+    def test_lshift(self):
+        a = bitarray('11011')
+        b = a << 2
+        self.assertEQUAL(b, bitarray('01100'))
+        self.assertRaises(TypeError, lambda: a << 1.2)
+        self.assertRaises(TypeError, a.__lshift__, 1.2)
+        self.assertRaises(ValueError, lambda: a << -1)
+
+        for a in self.randombitarrays():
+            n = randint(0, len(a))
+            b = a << n
+            self.assertEQUAL(b, a[n:] + bitarray(n * '0', a.endian()))
+            n = randint(len(a), len(a) + 3)
+            b = a << n
+            self.assertEQUAL(b, bitarray(len(a) * '0', a.endian()))
+
+    def test_rshift(self):
+        a = bitarray('1101101')
+        b = a >> 1
+        self.assertEQUAL(b, bitarray('0110110'))
+        self.assertRaises(TypeError, lambda: a >> 1.2)
+        self.assertRaises(TypeError, a.__rshift__, 1.2)
+        self.assertRaises(ValueError, lambda: a >> -1)
+
+        for a in self.randombitarrays():
+            n = randint(0, len(a))
+            b = a >> n
+            self.assertEQUAL(b, bitarray(n * '0', a.endian()) + a[:len(a)-n])
+            n = randint(len(a), len(a) + 3)
+            b = a >> n
+            self.assertEQUAL(b, bitarray(len(a) * '0', a.endian()))
+
 tests.append(NumberTests)
 
 # ---------------------------------------------------------------------------
