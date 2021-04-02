@@ -1432,16 +1432,34 @@ class NumberTests(unittest.TestCase, Util):
             self.assertEQUAL(b, bitarray(len(a) * '0', a.endian()))
 
     def test_ilshift(self):
-        a = bitarray('11011')
-        a <<= 2
-        self.assertEQUAL(a, bitarray('01100'))
+        a = bitarray('110110101')
+        a <<= 7
+        self.assertEQUAL(a, bitarray('010000000'))
         self.assertRaises(TypeError, a.__ilshift__, 1.2)
 
+        for a in self.randombitarrays():
+            b = a.copy()
+            n = randint(0, len(a) + 3)
+            b <<= n
+            if n < len(a):
+                self.assertEQUAL(b, a[n:] + bitarray(n * '0', a.endian()))
+            else:
+                self.assertEQUAL(b, bitarray(len(a) * '0', a.endian()))
+
     def test_irshift(self):
-        a = bitarray('1101101')
-        a >>= 1
-        self.assertEQUAL(a, bitarray('0110110'))
+        a = bitarray('110110111')
+        a >>= 3
+        self.assertEQUAL(a, bitarray('000110110'))
         self.assertRaises(TypeError, a.__irshift__, 1.2)
+
+        for a in self.randombitarrays():
+            b = a.copy()
+            n = randint(0, len(a) + 3)
+            b >>= n
+            if n < len(a):
+                self.assertEQUAL(b, bitarray(n * '0', a.endian()) + a[:len(a)-n])
+            else:
+                self.assertEQUAL(b, bitarray(len(a) * '0', a.endian()))
 
 tests.append(NumberTests)
 
