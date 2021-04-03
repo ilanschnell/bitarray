@@ -73,7 +73,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ........................................
     ----------------------------------------------------------------------
-    Ran 318 tests in 0.316s
+    Ran 320 tests in 0.327s
 
     OK
 
@@ -804,7 +804,7 @@ hashable object (including `None`).
 Change log
 ----------
 
-2021-04-XX   1.9.0:
+*1.9.0* (2021-04-03):
 
   * add shift operations (`<<`, `>>`, `<<=`, `>>=`), see #117
   * add `bitarray.util.ba2base()` and `bitarray.util.base2ba()`,
