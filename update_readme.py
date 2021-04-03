@@ -153,5 +153,4 @@ def main():
 
 
 if __name__ == '__main__':
-    #main()
-    doctest.testfile('README.md')
+    main()
