@@ -50,6 +50,12 @@ class Util(object):
             yield a.tolist()
 
     @staticmethod
+    def zeros(n, endian=None):
+        a = bitarray(n, endian or get_default_endian())
+        a.setall(0)
+        return a
+
+    @staticmethod
     def rndsliceidx(length):
         if randint(0, 1):
             return None
@@ -276,7 +282,7 @@ class CreateObjectTests(unittest.TestCase, Util):
 
     def test_iter3(self):
         a = bitarray(itertools.repeat(False, 10))
-        self.assertEqual(a, bitarray(10 * '0'))
+        self.assertEqual(a, self.zeros(10))
         # Note that the through value of '0' is True: bool('0') -> True
         a = bitarray(itertools.repeat('0', 10))
         self.assertEqual(a, bitarray(10 * '1'))
@@ -1383,7 +1389,7 @@ class NumberTests(unittest.TestCase, Util):
             aa = a.copy()
             self.assertEQUAL(a & a, aa)
             self.assertEQUAL(a | a, aa)
-            self.assertEQUAL(a ^ a, bitarray(len(aa) * '0', aa.endian()))
+            self.assertEQUAL(a ^ a, self.zeros(len(aa), aa.endian()))
             self.assertEQUAL(a, aa)
 
     def test_bitwise_inplace_self(self):
@@ -1394,7 +1400,7 @@ class NumberTests(unittest.TestCase, Util):
             a |= a
             self.assertEQUAL(a, aa)
             a ^= a
-            self.assertEqual(a, bitarray(len(aa) * '0', aa.endian()))
+            self.assertEqual(a, self.zeros(len(aa), aa.endian()))
 
     def test_invert(self):
         a = bitarray('11011')
@@ -1991,7 +1997,7 @@ class MethodTests(unittest.TestCase, Util):
                 self.assertEqual(len(b) % 8, 0)
                 self.assertNotEqual(b, a)
                 self.assertEqual(b[:len(a)], a)
-                self.assertEqual(b[len(a):].to01(), (len(b) - len(a)) * '0')
+                self.assertEqual(b[len(a):], self.zeros(len(b) - len(a)))
 
     def test_invert_simple(self):
         a = bitarray()
@@ -2665,12 +2671,12 @@ class DecodeTreeTests(unittest.TestCase, Util):
         dt = decodetree({'.': bitarray('1')})
         self.assertTrue(0 < sys.getsizeof(dt) < 100)
 
-        dt = decodetree({'a': bitarray(20 * '0')})
+        dt = decodetree({'a': self.zeros(20)})
         self.assertTrue(sys.getsizeof(dt) > 200)
 
     def test_nodes(self):
         for n in range(1, 20):
-            dt = decodetree({'a': bitarray(n * '0')})
+            dt = decodetree({'a': self.zeros(n)})
             self.assertEqual(dt.nodes(), n + 1)
 
         dt = decodetree({'I': bitarray('1'),   'l': bitarray('01'),
