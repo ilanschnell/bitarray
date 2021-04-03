@@ -5,6 +5,7 @@ from __future__ import absolute_import
 
 import os
 import sys
+import base64
 import shutil
 import tempfile
 import unittest
@@ -814,8 +815,6 @@ class TestsBase(unittest.TestCase, Util):
                 self.assertEqual(ba2base(16, a), ba2hex(a))
 
     def test_base32(self):
-        import base64
-
         a = base2ba(32, '7SH', 'big')
         self.assertEqual(a, bitarray('11111 10010 00111'))
         self.assertEqual(ba2base(32, a), '7SH')
@@ -827,8 +826,6 @@ class TestsBase(unittest.TestCase, Util):
         self.assertEqual(ba2base(32, a), s)
 
     def test_base64(self):
-        import base64
-
         a = base2ba(64, '/jH', 'big')
         self.assertEqual(a, bitarray('111111 100011 000111'))
         self.assertEqual(ba2base(64, a), '/jH')
