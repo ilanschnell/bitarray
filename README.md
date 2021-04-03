@@ -805,6 +805,7 @@ Change log
 
 2021-04-XX   1.9.0:
 
+  * add shift operations (`<<`, `>>`, `<<=`, `>>=`), see #117
   * add `bitarray.util.ba2base()` and `bitarray.util.base2ba()`,
     see last paragraph in [Bitarray representations](examples/represent.md)
   * documentation and tests
