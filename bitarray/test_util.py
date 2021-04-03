@@ -47,6 +47,10 @@ class TestsZeros(unittest.TestCase):
 
             for n in range(100):
                 a = zeros(n)
+                self.assertEqual(len(a), n)
+                self.assertFalse(a.any())
+                self.assertEqual(a.count(1), 0)
+                self.assertEqual(a, n * bitarray('0'))
                 self.assertEqual(a, bitarray(n * '0'))
 
             for endian in 'big', 'little':
