@@ -177,16 +177,14 @@ The behavior is very much what one would expect:
     >>> b >> 1
     bitarray('011100101')
 
-Notes shift operations:
+The C language does not specify the behavior of negative shifts and
+of left shifts larger or equal than the width of the promoted left operand.
+The exact behavior is compiler/machine specific.
+Our Python bitarray behavior is well specified as follows:
   * the length of the bitarray is unchanged by any shift operation
   * negative shifts result in `ValueError: negative shift count`
   * shifts larger or equal to the length of the bitarray result in
     bitarrays with all values 0
-
-The C language does not specify the behavior of negative shifts and
-of left shifts larger or equal than the width of the promoted left operand.
-The exact behavior is compiler/machine specific.
-Our bitarray shifts should be considered one such machine.
 
 
 Bit endianness
