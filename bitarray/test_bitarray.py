@@ -1315,7 +1315,6 @@ class NumberTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, lambda: 1 & a)
         self.assertEqual(a, bitarray('11001'))
         self.assertEqual(b, bitarray('10011'))
-        self.assertEqual(a & a, bitarray('11001'))
 
     def test_or(self):
         a = bitarray('11001')
@@ -1328,7 +1327,6 @@ class NumberTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, lambda: 1 | a)
         self.assertEqual(a, bitarray('11001'))
         self.assertEqual(b, bitarray('10011'))
-        self.assertEqual(a | a, bitarray('11001'))
 
     def test_xor(self):
         a = bitarray('11001')
@@ -1341,7 +1339,6 @@ class NumberTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, lambda: 1 ^ a)
         self.assertEqual(a, bitarray('11001'))
         self.assertEqual(b, bitarray('10011'))
-        self.assertEqual(a ^ a, bitarray('00000'))
 
     def test_iand(self):
         a = bitarray('110010110')
@@ -1356,8 +1353,6 @@ class NumberTests(unittest.TestCase, Util):
         except TypeError:
             error = 1
         self.assertEqual(error, 1)
-        a &= a
-        self.assertEqual(a, bitarray('100010010'))
 
     def test_ior(self):
         a = bitarray('110010110')
@@ -1370,8 +1365,6 @@ class NumberTests(unittest.TestCase, Util):
         except TypeError:
             error = 1
         self.assertEqual(error, 1)
-        a |= a
-        self.assertEqual(a, bitarray('110110111'))
 
     def test_ixor(self):
         a = bitarray('110010110')
@@ -1384,8 +1377,24 @@ class NumberTests(unittest.TestCase, Util):
         except TypeError:
             error = 1
         self.assertEqual(error, 1)
-        a ^= a
-        self.assertEqual(a, bitarray('000000000'))
+
+    def test_bitwise_self(self):
+        for a in self.randombitarrays():
+            aa = a.copy()
+            self.assertEQUAL(a & a, aa)
+            self.assertEQUAL(a | a, aa)
+            self.assertEQUAL(a ^ a, bitarray(len(aa) * '0', aa.endian()))
+            self.assertEQUAL(a, aa)
+
+    def test_bitwise_inplace_self(self):
+        for a in self.randombitarrays():
+            aa = a.copy()
+            a &= a
+            self.assertEQUAL(a, aa)
+            a |= a
+            self.assertEQUAL(a, aa)
+            a ^= a
+            self.assertEqual(a, bitarray(len(aa) * '0', aa.endian()))
 
     def test_invert(self):
         a = bitarray('11011')
