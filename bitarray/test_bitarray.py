@@ -1483,6 +1483,21 @@ class NumberTests(unittest.TestCase, Util):
             a >>= 0
             self.assertEQUAL(a, aa)
 
+    def test_len_or_larger_shift(self):
+        for a in self.randombitarrays():
+            c = a.copy()
+            z = a.copy()
+            z.setall(0)
+            n = randint(len(a), len(a) + 10)
+            self.assertEQUAL(a << n, z)
+            self.assertEQUAL(a >> n, z)
+            self.assertEQUAL(a, c)
+            a <<= n
+            self.assertEQUAL(a, z)
+            a = bitarray(c)
+            a >>= n
+            self.assertEQUAL(a, z)
+
     def test_shift_example(self):
         a = bitarray('0010011')
         self.assertEqual(a << 3, bitarray('0011000'))
