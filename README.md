@@ -21,7 +21,8 @@ Key features
     slicing (including slice assignment and deletion) is supported.
   * The bit endianness can be specified for each bitarray object, see below.
   * Fast methods for encoding and decoding variable bit length prefix codes
-  * Bitwise operations: `&`, `|`, `^`, `&=`, `|=`, `^=`, `~`
+  * Bitwise operations: `&`, `|`, `^`, `<<`, `>>` (as well as their in-place
+    versions `&=`, `|=`, `^=`, `<<=`, `>>=`).
   * Sequential search
   * Packing and unpacking to other binary data formats, e.g. `numpy.ndarray`.
   * Pickling and unpickling of bitarray objects.
@@ -72,7 +73,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ........................................
     ----------------------------------------------------------------------
-    Ran 291 tests in 0.638s
+    Ran 318 tests in 0.316s
 
     OK
 
@@ -155,6 +156,37 @@ This is easier and faster than:
 
 Note that in the latter we have to create a temporary bitarray whose length
 must be known or calculated.
+
+
+Bitwise operators
+-----------------
+
+Bitarray objects support the bitwise operators `&`, `|`, `^`, `<<`, `>>` (as
+well as their in-place versions `&=`, `|=`, `^=`, `<<=`, `>>=`).
+The behavior is very much what one would expect:
+
+    >>> a = bitarray('101110001')
+    >>> b = bitarray('111001011')
+    >>> a ^ b
+    bitarray('010111010')
+    >>> a &= b
+    >>> a
+    bitarray('101000001')
+    >>> a <<= 2
+    >>> a
+    bitarray('100000100')
+    >>> b >> 1
+    bitarray('011100101')
+
+The C language does not specify the behavior of negative shifts and
+of left shifts larger or equal than the width of the promoted left operand.
+The exact behavior is compiler/machine specific.
+Our Python bitarray behavior is specified as follows:
+  * the length of the bitarray is unchanged by any shift operation
+  * blanks are filled by 0
+  * negative shifts result in `ValueError: negative shift count`
+  * shifts larger or equal to the length of the bitarray result in
+    bitarrays with all values 0
 
 
 Bit endianness

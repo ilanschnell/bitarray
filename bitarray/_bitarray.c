@@ -1948,6 +1948,84 @@ BITWISE_IFUNC(or,  "|=")             /* bitarray_ior  */
 BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 
 
+/* shift bitarray n positions to left (right=0) or right (right=1) */
+static void
+shift(bitarrayobject *a, Py_ssize_t n, int right)
+{
+    Py_ssize_t nbits = a->nbits;
+
+    if (n == 0)
+        return;
+
+    if (n >= nbits) {
+        memset(a->ob_item, 0x00, (size_t) Py_SIZE(a));
+        return;
+    }
+
+    assert(0 < n && n < nbits);
+    if (right) {                /* rshift */
+        copy_n(a, n, a, 0, nbits - n);
+        setrange(a, 0, n, 0);
+    }
+    else {                      /* lshift */
+        copy_n(a, 0, a, n, nbits - n);
+        setrange(a, nbits - n, nbits, 0);
+    }
+}
+
+/* check the shift bytes and return the shift count, -1 on error */
+static Py_ssize_t
+shift_check(PyObject *a, PyObject *b, const char *ostr)
+{
+    Py_ssize_t n;
+
+    if (!bitarray_Check(a) || !PyIndex_Check(b)) {
+        PyErr_Format(PyExc_TypeError,
+                     "unsupported operand type(s) for %s: '%s' and '%s'",
+                     ostr, Py_TYPE(a)->tp_name, Py_TYPE(b)->tp_name);
+        return -1;
+    }
+    n = PyNumber_AsSsize_t(b, PyExc_IndexError);
+    if (n == -1 && PyErr_Occurred())
+        return -1;
+
+    if (n < 0) {
+        PyErr_SetString(PyExc_ValueError, "negative shift count");
+        return -1;
+    }
+    return n;
+}
+
+#define SHIFT_FUNC(name, inplace, right, ostr)         \
+static PyObject *                                      \
+bitarray_ ## name (PyObject *self, PyObject *other)    \
+{                                                      \
+    PyObject *res;                                     \
+    Py_ssize_t n;                                      \
+                                                       \
+    n = shift_check(self, other, ostr);                \
+    if (n < 0)                                         \
+        return NULL;                                   \
+    if (inplace) {                                     \
+        res = self;                                    \
+    }                                                  \
+    else {                                             \
+        res = bitarray_copy((bitarrayobject *) self);  \
+        if (res == NULL)                               \
+            return NULL;                               \
+    }                                                  \
+    shift((bitarrayobject *) res, n, right);           \
+    if (inplace)                                       \
+        Py_INCREF(res);                                \
+    return res;                                        \
+}
+
+SHIFT_FUNC(lshift,  0, 0, "<<")  /* bitarray_lshift */
+SHIFT_FUNC(rshift,  0, 1, ">>")  /* bitarray_rshift */
+SHIFT_FUNC(ilshift, 1, 0, "<<=") /* bitarray_ilshift */
+SHIFT_FUNC(irshift, 1, 1, ">>=") /* bitarray_irshift */
+
+
 static PyNumberMethods bitarray_as_number = {
     0,                          /* nb_add */
     0,                          /* nb_subtract */
@@ -1963,8 +2041,8 @@ static PyNumberMethods bitarray_as_number = {
     0,                          /* nb_absolute */
     0,                          /* nb_bool (was nb_nonzero) */
     (unaryfunc) bitarray_cpinvert,  /* nb_invert */
-    0,                          /* nb_lshift */
-    0,                          /* nb_rshift */
+    (binaryfunc) bitarray_lshift,   /* nb_lshift */
+    (binaryfunc) bitarray_rshift,   /* nb_rshift */
     (binaryfunc) bitarray_and,  /* nb_and */
     (binaryfunc) bitarray_xor,  /* nb_xor */
     (binaryfunc) bitarray_or,   /* nb_or */
@@ -1986,8 +2064,8 @@ static PyNumberMethods bitarray_as_number = {
 #endif
     0,                          /* nb_inplace_remainder */
     0,                          /* nb_inplace_power */
-    0,                          /* nb_inplace_lshift */
-    0,                          /* nb_inplace_rshift */
+    (binaryfunc) bitarray_ilshift,  /* nb_inplace_lshift */
+    (binaryfunc) bitarray_irshift,  /* nb_inplace_rshift */
     (binaryfunc) bitarray_iand, /* nb_inplace_and */
     (binaryfunc) bitarray_ixor, /* nb_inplace_xor */
     (binaryfunc) bitarray_ior,  /* nb_inplace_or */
@@ -3181,7 +3259,7 @@ static PyTypeObject Bitarray_Type = {
     &bitarray_as_buffer,                      /* tp_as_buffer */
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_WEAKREFS
 #if PY_MAJOR_VERSION == 2
-    | Py_TPFLAGS_HAVE_NEWBUFFER
+    | Py_TPFLAGS_HAVE_NEWBUFFER | Py_TPFLAGS_CHECKTYPES
 #endif
     ,                                         /* tp_flags */
     bitarraytype_doc,                         /* tp_doc */
