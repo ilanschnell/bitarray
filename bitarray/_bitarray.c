@@ -1910,20 +1910,20 @@ bitwise_check(PyObject *a, PyObject *b, const char *ostr)
     return 0;
 }
 
-#define BITWISE_FUNC(oper, ostr)                                    \
-static PyObject *                                                   \
-bitarray_ ## oper (PyObject *self, PyObject *other)                 \
-{                                                                   \
-    PyObject *res;                                                  \
-                                                                    \
-    if (bitwise_check(self, other, ostr) < 0)                       \
-        return NULL;                                                \
-    res = bitarray_copy((bitarrayobject *) self);                   \
-    if (res == NULL)                                                \
-        return NULL;                                                \
-    bitwise((bitarrayobject *) res,                                 \
-            (bitarrayobject *) other, OP_ ## oper);                 \
-    return res;                                                     \
+#define BITWISE_FUNC(oper, ostr)                             \
+static PyObject *                                            \
+bitarray_ ## oper (PyObject *self, PyObject *other)          \
+{                                                            \
+    PyObject *res;                                           \
+                                                             \
+    if (bitwise_check(self, other, ostr) < 0)                \
+        return NULL;                                         \
+    res = bitarray_copy((bitarrayobject *) self);            \
+    if (res == NULL)                                         \
+        return NULL;                                         \
+    bitwise((bitarrayobject *) res,                          \
+            (bitarrayobject *) other, OP_ ## oper);          \
+    return res;                                              \
 }
 
 BITWISE_FUNC(and, "&")               /* bitarray_and */
