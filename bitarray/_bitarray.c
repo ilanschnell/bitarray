@@ -633,36 +633,17 @@ unpack(bitarrayobject *self, char zero, char one, const char *fmt)
 
 /* --------- helper functions not involving bitarrayobjects ------------ */
 
-#ifdef IS_PY3K
-#define IS_INT_OR_BOOL(x)  (PyBool_Check(x) || PyLong_Check(x))
-#else  /* Py 2 */
-#define IS_INT_OR_BOOL(x)  (PyBool_Check(x) || PyInt_Check(x) || \
-                            PyLong_Check(x))
-#endif
-
 /* given a PyLong (which must be 0 or 1) or a PyBool, return 0 or 1,
    or -1 on error */
 static int
 IntBool_AsInt(PyObject *v)
 {
-    long x;
+    Py_ssize_t x;
 
-    if (PyBool_Check(v))
-        return v == Py_True;
-
-#if PY_MAJOR_VERSION == 2
-    if (PyInt_Check(v)) {
-        x = PyInt_AsLong(v);
-    }
-    else
-#endif
-    if (PyLong_Check(v)) {
-        x = PyLong_AsLong(v);
-    }
-    else {
-        PyErr_SetString(PyExc_TypeError, "int or bool expected");
+    assert(PyIndex_Check(v));
+    x = PyNumber_AsSsize_t(v, PyExc_IndexError);
+    if (x == -1 && PyErr_Occurred())
         return -1;
-    }
 
     if (x < 0 || x > 1) {
         PyErr_SetString(PyExc_ValueError, "int 0 or 1 expected");
@@ -1598,7 +1579,7 @@ bitarray_ass_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
 static int
 bitarray_contains(bitarrayobject *self, PyObject *item)
 {
-    if (IS_INT_OR_BOOL(item)) {
+    if (PyIndex_Check(item)) {
         int vi;
 
         vi = IntBool_AsInt(item);
@@ -1755,7 +1736,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *bool)
     Py_ssize_t start, stop, step, slicelength, i, j;
     int vi;
 
-    assert(PySlice_Check(slice) && IS_INT_OR_BOOL(bool));
+    assert(PySlice_Check(slice) && PyIndex_Check(bool));
     if (PySlice_GetIndicesEx(slice, self->nbits,
                              &start, &stop, &step, &slicelength) < 0)
         return -1;
@@ -1833,7 +1814,7 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
         if (bitarray_Check(value))
             return setslice_bitarray(self, item, value);
 
-        if (IS_INT_OR_BOOL(value))
+        if (PyIndex_Check(value))
             return setslice_bool(self, item, value);
 
         PyErr_Format(PyExc_TypeError,
@@ -1876,7 +1857,7 @@ enum op_type {
 };
 
 /* perform bitwise in-place operation */
-static int
+static void
 bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
@@ -1898,9 +1879,8 @@ bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
             self->ob_item[i] ^= other->ob_item[i];
         break;
     default:                    /* cannot happen */
-        return -1;
+        Py_FatalError("unknown bitwise operation");
     }
-    return 0;
 }
 
 /* return 0 if both a and b are bitarray objects, -1 on error */
@@ -1941,11 +1921,8 @@ bitarray_ ## oper (PyObject *self, PyObject *other)                 \
     res = bitarray_copy((bitarrayobject *) self);                   \
     if (res == NULL)                                                \
         return NULL;                                                \
-    if (bitwise((bitarrayobject *) res,                             \
-                (bitarrayobject *) other, OP_ ## oper) < 0) {       \
-        Py_DECREF(res);                                             \
-        return NULL;                                                \
-    }                                                               \
+    bitwise((bitarrayobject *) res,                                 \
+            (bitarrayobject *) other, OP_ ## oper);                 \
     return res;                                                     \
 }
 
@@ -1960,11 +1937,10 @@ bitarray_i ## oper (PyObject *self, PyObject *other)         \
 {                                                            \
     if (bitwise_check(self, other, ostr) < 0)                \
         return NULL;                                         \
-    if (bitwise((bitarrayobject *) self,                     \
-                (bitarrayobject *) other, OP_ ## oper) < 0)  \
-        return NULL;                                         \
+    bitwise((bitarrayobject *) self,                         \
+            (bitarrayobject *) other, OP_ ## oper);          \
     Py_INCREF(self);                                         \
-    return (PyObject *) self;                                \
+    return self;                                             \
 }
 
 BITWISE_IFUNC(and, "&=")             /* bitarray_iand */

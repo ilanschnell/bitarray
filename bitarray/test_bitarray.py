@@ -224,6 +224,10 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(len(a), n)
             self.check_obj(a)
 
+        if not is_py3k:
+            a = bitarray(long(29))
+            self.assertEqual(len(a), 29)
+
         self.assertRaises(ValueError, bitarray.__new__, bitarray, -1)
         self.assertRaises(ValueError, bitarray.__new__, bitarray, -924)
 

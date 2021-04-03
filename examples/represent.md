@@ -61,7 +61,7 @@ empty (our `x` only consists of a single byte - the header byte)), the
 only valid values for the header are 0 and 16 (corresponding to a
 little-endian and big-endian empty bitarray).
 The functions `serialize()` and `deserialize()` are the recommended and fasted
-way to (de)serialize bitarray objects to bytes objects (and vice versa).
+way to (de-) serialize bitarray objects to bytes objects (and vice versa).
 The exact format of this representation is guaranteed to not change in future
 releases.
 
@@ -94,3 +94,36 @@ endianness changes:
 
 The functions `ba2hex()` and `hex2ba()` are very efficiently implemented in C,
 and take advantage of byte level operations.
+
+
+Base 2, 4, 8, 16, 32 and 64 representation
+------------------------------------------
+
+The utility function `ba2base()` allows representing bitarrays by
+base `n`, with possible bases 2, 4, 8, 16, 32 and 64.
+The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.
+Here is an example:
+
+    >>> from bitarray.util import ba2base, base2ba
+    >>> a = bitarray('001010011010100000111011100110110001111100101110000100010010')
+    >>> len(a) == 60    # divisible by 2, 3, 4, 5 and 6
+    True
+    >>> ba2base(2, a)   # binary
+    '001010011010100000111011100110110001111100101110000100010010'
+    >>> ba2base(4, a)   # quaternary
+    '022122200323212301330232010102'
+    >>> ba2base(8, a)   # octal
+    '12324073466174560422'
+    >>> ba2base(16, a)  # hexadecimal
+    '29a83b9b1f2e112'
+    >>> ba2base(32, a)  # base 32 (using RFC 4648 Base32 alphabet)
+    'FGUDXGY7FYIS'
+    >>> ba2base(64, a)  # base 64 (using standard base 64 alphabet)
+    'Kag7mx8uES'
+
+Note that `ba2base(2, a)` is equivalent to `a.to01()` and
+that `ba2base(16, a)` is equivalent to `ba2hex(a)`.
+Unlike `ba2hex()`, `ba2base()` does not take advantage of byte level
+operations and is therefore a lot slower, although still implemented in C.
+The inverse function is called `base2ba()`.
+See also [this example](base-n.py).

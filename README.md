@@ -44,8 +44,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.8.3.tar.gz
-    $ cd bitarray-1.8.3
+    $ tar xzf bitarray-1.9.0.tar.gz
+    $ cd bitarray-1.9.0
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -64,7 +64,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 1.8.3
+    bitarray version: 1.9.0
     sys.version: 2.7.15 (default, Mar  5 2020, 14:58:04) [GCC Clang 9.0.1]
     sys.prefix: /Users/ilan/Mini3/envs/py27
     pointer size: 64 bit
@@ -685,7 +685,7 @@ Raises `ValueError` if the value is not present.
 
 `strip(bitarray, mode='right', /)` -> bitarray
 
-Strip zeros from left, right or both ends.
+Return a new bitarray with zeros stripped from left, right or both ends.
 Allowed values for mode are the strings: `left`, `right`, `both`
 
 
@@ -739,6 +739,27 @@ Bitarray of hexadecimal representation.  hexstr may contain any number
 (including odd numbers) of hex digits (upper or lower case).
 
 
+`ba2base(n, bitarray, /)` -> str
+
+Return a string containing the base `n` ASCII representation of
+the bitarray.  Allowed values for `n` are 2, 4, 8, 16, 32 and 64.
+The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.
+For `n=16` (hexadecimal), `ba2hex()` will be much faster, as `ba2base()`
+does not take advantage of byte level operations.
+For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the
+standard base 64 alphabet is used.
+
+
+`base2ba(n, asciistr, /, endian=None)` -> bitarray
+
+Bitarray of the base `n` ASCII representation.
+Allowed values for `n` are 2, 4, 8, 16 and 32.
+For `n=16` (hexadecimal), `hex2ba()` will be much faster, as `base2ba()`
+does not take advantage of byte level operations.
+For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the
+standard base 64 alphabet is used.
+
+
 `ba2int(bitarray, /, signed=False)` -> int
 
 Convert the given bitarray into an integer.
@@ -781,8 +802,10 @@ hashable object (including `None`).
 Change log
 ----------
 
-2021-04-XX   1.8.3:
+2021-04-XX   1.9.0:
 
+  * add `bitarray.util.ba2base()` and `bitarray.util.base2ba()`,
+    see last paragraph in [Bitarray representations](examples/represent.md)
   * documentation and tests
 
 
