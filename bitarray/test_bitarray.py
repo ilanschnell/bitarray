@@ -1425,6 +1425,7 @@ class NumberTests(unittest.TestCase, Util):
             c = a.copy()
             n = randint(0, len(a) + 3)
             b = a << n
+            self.assertEqual(len(b), len(a))
             self.assertEQUAL(b, self.shift(a, n, 'left'))
             self.assertEQUAL(a, c)
 
@@ -1440,6 +1441,7 @@ class NumberTests(unittest.TestCase, Util):
             c = a.copy()
             n = randint(0, len(a) + 3)
             b = a >> n
+            self.assertEqual(len(b), len(a))
             self.assertEQUAL(b, self.shift(a, n, 'right'))
             self.assertEQUAL(a, c)
 
@@ -1454,6 +1456,7 @@ class NumberTests(unittest.TestCase, Util):
             b = a.copy()
             n = randint(0, len(a) + 3)
             b <<= n
+            self.assertEqual(len(b), len(a))
             self.assertEQUAL(b, self.shift(a, n, 'left'))
 
     def test_irshift(self):
@@ -1467,7 +1470,18 @@ class NumberTests(unittest.TestCase, Util):
             b = a.copy()
             n = randint(0, len(a) + 3)
             b >>= n
+            self.assertEqual(len(b), len(a))
             self.assertEQUAL(b, self.shift(a, n, 'right'))
+
+    def test_zero_shift(self):
+        for a in self.randombitarrays():
+            aa = a.copy()
+            self.assertEQUAL(a << 0, aa)
+            self.assertEQUAL(a >> 0, aa)
+            a <<= 0
+            self.assertEQUAL(a, aa)
+            a >>= 0
+            self.assertEQUAL(a, aa)
 
     def test_shift_example(self):
         a = bitarray('0010011')
