@@ -182,6 +182,7 @@ The C language does not specify the behavior of negative shifts and
 of left shifts larger or equal than the width of the promoted left operand.
 The exact behavior is compiler/machine specific.
 Our Python bitarray behavior is specified as follows:
+
   * the length of the bitarray is unchanged by any shift operation
   * blanks are filled by 0
   * negative shifts result in `ValueError: negative shift count`
