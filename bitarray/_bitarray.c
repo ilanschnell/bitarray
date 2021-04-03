@@ -2027,54 +2027,54 @@ SHIFT_FUNC(irshift, 1, 1, ">>=") /* bitarray_irshift */
 
 
 static PyNumberMethods bitarray_as_number = {
-    0,                          /* nb_add */
-    0,                          /* nb_subtract */
-    0,                          /* nb_multiply */
+    0,                                   /* nb_add */
+    0,                                   /* nb_subtract */
+    0,                                   /* nb_multiply */
 #if PY_MAJOR_VERSION == 2
-    0,                          /* nb_divide */
+    0,                                   /* nb_divide */
 #endif
-    0,                          /* nb_remainder */
-    0,                          /* nb_divmod */
-    0,                          /* nb_power */
-    0,                          /* nb_negative */
-    0,                          /* nb_positive */
-    0,                          /* nb_absolute */
-    0,                          /* nb_bool (was nb_nonzero) */
-    (unaryfunc) bitarray_cpinvert,  /* nb_invert */
-    (binaryfunc) bitarray_lshift,   /* nb_lshift */
-    (binaryfunc) bitarray_rshift,   /* nb_rshift */
-    (binaryfunc) bitarray_and,  /* nb_and */
-    (binaryfunc) bitarray_xor,  /* nb_xor */
-    (binaryfunc) bitarray_or,   /* nb_or */
+    0,                                   /* nb_remainder */
+    0,                                   /* nb_divmod */
+    0,                                   /* nb_power */
+    0,                                   /* nb_negative */
+    0,                                   /* nb_positive */
+    0,                                   /* nb_absolute */
+    0,                                   /* nb_bool (was nb_nonzero) */
+    (unaryfunc) bitarray_cpinvert,       /* nb_invert */
+    (binaryfunc) bitarray_lshift,        /* nb_lshift */
+    (binaryfunc) bitarray_rshift,        /* nb_rshift */
+    (binaryfunc) bitarray_and,           /* nb_and */
+    (binaryfunc) bitarray_xor,           /* nb_xor */
+    (binaryfunc) bitarray_or,            /* nb_or */
 #if PY_MAJOR_VERSION == 2
-    0,                          /* nb_coerce */
+    0,                                   /* nb_coerce */
 #endif
-    0,                          /* nb_int */
-    0,                          /* nb_reserved (was nb_long) */
-    0,                          /* nb_float */
+    0,                                   /* nb_int */
+    0,                                   /* nb_reserved (was nb_long) */
+    0,                                   /* nb_float */
 #if PY_MAJOR_VERSION == 2
-    0,                          /* nb_oct */
-    0,                          /* nb_hex */
+    0,                                   /* nb_oct */
+    0,                                   /* nb_hex */
 #endif
-    0,                          /* nb_inplace_add */
-    0,                          /* nb_inplace_subtract */
-    0,                          /* nb_inplace_multiply */
+    0,                                   /* nb_inplace_add */
+    0,                                   /* nb_inplace_subtract */
+    0,                                   /* nb_inplace_multiply */
 #if PY_MAJOR_VERSION == 2
-    0,                          /* nb_inplace_divide */
+    0,                                   /* nb_inplace_divide */
 #endif
-    0,                          /* nb_inplace_remainder */
-    0,                          /* nb_inplace_power */
-    (binaryfunc) bitarray_ilshift,  /* nb_inplace_lshift */
-    (binaryfunc) bitarray_irshift,  /* nb_inplace_rshift */
-    (binaryfunc) bitarray_iand, /* nb_inplace_and */
-    (binaryfunc) bitarray_ixor, /* nb_inplace_xor */
-    (binaryfunc) bitarray_ior,  /* nb_inplace_or */
-    0,                          /* nb_floor_divide */
-    0,                          /* nb_true_divide */
-    0,                          /* nb_inplace_floor_divide */
-    0,                          /* nb_inplace_true_divide */
+    0,                                   /* nb_inplace_remainder */
+    0,                                   /* nb_inplace_power */
+    (binaryfunc) bitarray_ilshift,       /* nb_inplace_lshift */
+    (binaryfunc) bitarray_irshift,       /* nb_inplace_rshift */
+    (binaryfunc) bitarray_iand,          /* nb_inplace_and */
+    (binaryfunc) bitarray_ixor,          /* nb_inplace_xor */
+    (binaryfunc) bitarray_ior,           /* nb_inplace_or */
+    0,                                   /* nb_floor_divide */
+    0,                                   /* nb_true_divide */
+    0,                                   /* nb_inplace_floor_divide */
+    0,                                   /* nb_inplace_true_divide */
 #if PY_MAJOR_VERSION == 3
-    0,                          /* nb_index */
+    0,                                   /* nb_index */
 #endif
 };
 
