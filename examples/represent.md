@@ -61,7 +61,7 @@ empty (our `x` only consists of a single byte - the header byte)), the
 only valid values for the header are 0 and 16 (corresponding to a
 little-endian and big-endian empty bitarray).
 The functions `serialize()` and `deserialize()` are the recommended and fasted
-way to (de)serialize bitarray objects to bytes objects (and vice versa).
+way to (de-) serialize bitarray objects to bytes objects (and vice versa).
 The exact format of this representation is guaranteed to not change in future
 releases.
 
