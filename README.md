@@ -21,7 +21,8 @@ Key features
     slicing (including slice assignment and deletion) is supported.
   * The bit endianness can be specified for each bitarray object, see below.
   * Fast methods for encoding and decoding variable bit length prefix codes
-  * Bitwise operations: `&`, `|`, `^`, `&=`, `|=`, `^=`, `~`
+  * Bitwise operations: `&`, `|`, `^`, `<<`, `>>` (as well as their in-place
+    versions `&=`, `|=`, `^=`, `<<=`, `>>=`).
   * Sequential search
   * Packing and unpacking to other binary data formats, e.g. `numpy.ndarray`.
   * Pickling and unpickling of bitarray objects.
@@ -72,7 +73,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ........................................
     ----------------------------------------------------------------------
-    Ran 291 tests in 0.638s
+    Ran 318 tests in 0.316s
 
     OK
 
@@ -161,7 +162,7 @@ Bitwise operators
 -----------------
 
 Bitarray objects support the bitwise operators `&`, `|`, `^`, `<<`, `>>` (as
-well as their in-place versions `&=`, `|=`, `^=`, `<<=`, `>>=`.
+well as their in-place versions `&=`, `|=`, `^=`, `<<=`, `>>=`).
 The behavior is very much what one would expect:
 
     >>> a = bitarray('101110001')
