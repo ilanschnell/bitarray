@@ -803,4 +803,4 @@ bitarrays (with given endianness).  Note that the symbols may be any
 hashable object (including `None`).
 
 
-[change log](https://github.com/ilanschnell/bitarray/blob/master/CHANGELOG.md).
+Finally the [change log](https://github.com/ilanschnell/bitarray/blob/master/CHANGELOG.md).

@@ -106,11 +106,16 @@ def write_all(data):
 
     write_reference()
     url = "https://github.com/ilanschnell/bitarray/blob/master/CHANGELOG.md"
-    fo.write('[change log](%s).\n' % url)
+    fo.write('Finally the [change log](%s).\n' % url)
 
+
+def issue_replace(match):
+    url = "bitarray#%s" % match.group(1)
+    return "[#%s](%s)" % (match.group(0), url)
 
 def make_changelog():
     ver_pat = re.compile(r'(\d{4}-\d{2}-\d{2})\s+(\d+\.\d+\.\d+)')
+    issue_pat = re.compile(r'#(\d+)')
 
     fo = open('CHANGELOG.md', 'w')
     fo.write("Change log\n"
@@ -120,9 +125,10 @@ def make_changelog():
         m = ver_pat.match(line)
         if m:
             fo.write(m.expand(r'*\2* (\1):\n'))
-        elif line.startswith('---'):
+        elif line.startswith('-----'):
             fo.write('\n')
         else:
+            line = issue_pat.sub(issue_replace, line)
             fo.write(line)
 
     fo.close()
