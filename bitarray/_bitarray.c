@@ -891,7 +891,7 @@ PyDoc_STRVAR(all_doc,
 "all() -> bool\n\
 \n\
 Return True when all bits in the array are True.\n\
-Note that `a.all()` is a faster than `all(a)`.");
+Note that `a.all()` is faster than `all(a)`.");
 
 
 static PyObject *
@@ -904,7 +904,7 @@ PyDoc_STRVAR(any_doc,
 "any() -> bool\n\
 \n\
 Return True when any bit in the array is True.\n\
-Note that `a.any()` is a faster than `any(a)`.");
+Note that `a.any()` is faster than `any(a)`.");
 
 
 static PyObject *
