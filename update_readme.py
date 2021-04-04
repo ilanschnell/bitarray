@@ -10,6 +10,7 @@ import bitarray
 import bitarray.util
 
 
+BASE_URL = "https://github.com/ilanschnell/bitarray"
 fo = None
 
 
@@ -105,12 +106,12 @@ def write_all(data):
         fo.write(line + '\n')
 
     write_reference()
-    url = "https://github.com/ilanschnell/bitarray/blob/master/CHANGELOG.md"
+    url = "%s/blob/master/CHANGELOG.md" % BASE_URL
     fo.write('Finally the [change log](%s).\n' % url)
 
 
 def issue_replace(match):
-    url = "ilanschnell/bitarray#%s" % match.group(1)
+    url = "%s/issues/%s" % (BASE_URL, match.group(1))
     return "[%s](%s)" % (match.group(0), url)
 
 def make_changelog():

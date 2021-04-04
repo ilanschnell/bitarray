@@ -7,7 +7,7 @@ Change log
 
 *1.9.0* (2021-04-03):
 
-  * add shift operations (`<<`, `>>`, `<<=`, `>>=`), see [#117](ilanschnell/bitarray#117)
+  * add shift operations (`<<`, `>>`, `<<=`, `>>=`), see [#117](https://github.com/ilanschnell/bitarray/issues/117)
   * add `bitarray.util.ba2base()` and `bitarray.util.base2ba()`,
     see last paragraph in [Bitarray representations](examples/represent.md)
   * documentation and tests
@@ -15,7 +15,7 @@ Change log
 
 *1.8.2* (2021-03-31):
 
-  * fix crash caused by unsupported types in binary operations, [#116](ilanschnell/bitarray#116)
+  * fix crash caused by unsupported types in binary operations, [#116](https://github.com/ilanschnell/bitarray/issues/116)
   * speedup initializing or extending a bitarray from another with different
     bit endianness
   * add formatting options to `bitarray.util.pprint()`
@@ -47,7 +47,7 @@ Change log
 
 *1.7.1* (2021-03-12):
 
-  * fix issue [#114](ilanschnell/bitarray#114), raise TypeError when incorrect index is used during
+  * fix issue [#114](https://github.com/ilanschnell/bitarray/issues/114), raise TypeError when incorrect index is used during
     assignment, e.g. `a[1.5] = 1`
   * raise TypeError (not IndexError) when assigning slice to incorrect type,
     e.g. `a[1:4] = 1.2`
@@ -63,16 +63,16 @@ Change log
 
 *1.6.3* (2021-01-20):
 
-  * add missing .h files to sdist tarball, [#113](ilanschnell/bitarray#113)
+  * add missing .h files to sdist tarball, [#113](https://github.com/ilanschnell/bitarray/issues/113)
 
 
 *1.6.2* (2021-01-20):
 
-  * use `Py_SET_TYPE()` and `Py_SET_SIZE()` for Python 3.10, [#109](ilanschnell/bitarray#109)
+  * use `Py_SET_TYPE()` and `Py_SET_SIZE()` for Python 3.10, [#109](https://github.com/ilanschnell/bitarray/issues/109)
   * add official Python 3.10 support
   * fix slice assignment to same object,
-    e.g. `a[2::] = a` or `a[::-1] = a`, [#112](ilanschnell/bitarray#112)
-  * add bitarray.h, [#110](ilanschnell/bitarray#110)
+    e.g. `a[2::] = a` or `a[::-1] = a`, [#112](https://github.com/ilanschnell/bitarray/issues/112)
+  * add bitarray.h, [#110](https://github.com/ilanschnell/bitarray/issues/110)
 
 
 *1.6.1* (2020-11-05):
@@ -85,33 +85,33 @@ Change log
 
   * add `decodetree` object, for speeding up consecutive calls
     to `.decode()` and `.iterdecode()`, in particular when dealing
-    with large prefix codes, see [#103](ilanschnell/bitarray#103)
+    with large prefix codes, see [#103](https://github.com/ilanschnell/bitarray/issues/103)
   * add optional parameter to `.tolist()` which changes the items in the
     returned list to integers (0 or 1), as opposed to Booleans
   * remove deprecated `bitdiff()`, which has been deprecated since version
     1.2.0, use `bitarray.util.count_xor()` instead
   * drop Python 2.6 support
-  * update license file, [#104](ilanschnell/bitarray#104)
+  * update license file, [#104](https://github.com/ilanschnell/bitarray/issues/104)
 
 
 *1.5.3* (2020-08-24):
 
   * add optional index parameter to `.index()` to invert single bit
-  * fix `sys.getsizeof(bitarray)` by adding `.__sizeof__()`, see issue [#100](ilanschnell/bitarray#100)
+  * fix `sys.getsizeof(bitarray)` by adding `.__sizeof__()`, see issue [#100](https://github.com/ilanschnell/bitarray/issues/100)
 
 
 *1.5.2* (2020-08-16):
 
-  * add PyType_Ready usage, issue [#66](ilanschnell/bitarray#66)
+  * add PyType_Ready usage, issue [#66](https://github.com/ilanschnell/bitarray/issues/66)
   * speedup search() for bitarrays with length 1 in sparse bitarrays,
-    see issue [#67](ilanschnell/bitarray#67)
+    see issue [#67](https://github.com/ilanschnell/bitarray/issues/67)
   * add tests
 
 
 *1.5.1* (2020-08-10):
 
   * support signed integers in `util.ba2int()` and `util.int2ba()`,
-    see issue [#85](ilanschnell/bitarray#85)
+    see issue [#85](https://github.com/ilanschnell/bitarray/issues/85)
   * deprecate `.length()` in favor of `len()`
 
 
@@ -186,9 +186,9 @@ Change log
 *1.2.2* (2020-05-18):
 
   * `util.ba2hex()` now always return a string object (instead of bytes
-    object for Python 3), see issue [#94](ilanschnell/bitarray#94)
+    object for Python 3), see issue [#94](https://github.com/ilanschnell/bitarray/issues/94)
   * `util.hex2ba` allows a unicode object as input on Python 2
-  * Determine 64-bitness of interpreter in a cross-platform fashion [#91](ilanschnell/bitarray#91),
+  * Determine 64-bitness of interpreter in a cross-platform fashion [#91](https://github.com/ilanschnell/bitarray/issues/91),
     in order to better support PyPy
 
 
@@ -218,8 +218,8 @@ Change log
   * add optional start and stop parameters to .count() method
   * add official Python 3.8 support
   * optimize `setrange()` C-function by using `memset()`
-  * fix issue [#74](ilanschnell/bitarray#74), bitarray is hashable on Python 2
-  * fix issue [#68](ilanschnell/bitarray#68), `unittest.TestCase.assert_` deprecated
+  * fix issue [#74](https://github.com/ilanschnell/bitarray/issues/74), bitarray is hashable on Python 2
+  * fix issue [#68](https://github.com/ilanschnell/bitarray/issues/68), `unittest.TestCase.assert_` deprecated
   * improved test suite - tests should run in about 1 second
   * update documentation to use positional-only syntax in docstrings
   * update readme to pass Python 3 doctest
@@ -252,12 +252,12 @@ Change log
 
 *0.9.2* (2019-04-29):
 
-  * fix to compile on Windows with VS 2015, issue [#72](ilanschnell/bitarray#72)
+  * fix to compile on Windows with VS 2015, issue [#72](https://github.com/ilanschnell/bitarray/issues/72)
 
 
 *0.9.1* (2019-04-28):
 
-  * fix types to actually be types, [#29](ilanschnell/bitarray#29)
+  * fix types to actually be types, [#29](https://github.com/ilanschnell/bitarray/issues/29)
   * check for ambiguous prefix codes when building binary tree for decoding
   * remove Python level methods: encode, decode, iterdecode (in favor of
     having these implemented on the C-level along with check_codedict)
@@ -269,9 +269,9 @@ Change log
 *0.9.0* (2019-04-22):
 
   * more efficient decode and iterdecode by using C-level binary tree
-    instead of a python one, [#54](ilanschnell/bitarray#54)
-  * added buffer protocol support for Python 3, [#55](ilanschnell/bitarray#55)
-  * fixed invalid pointer exceptions in pypy, [#47](ilanschnell/bitarray#47)
+    instead of a python one, [#54](https://github.com/ilanschnell/bitarray/issues/54)
+  * added buffer protocol support for Python 3, [#55](https://github.com/ilanschnell/bitarray/issues/55)
+  * fixed invalid pointer exceptions in pypy, [#47](https://github.com/ilanschnell/bitarray/issues/47)
   * made all examples Py3k compatible
   * add gene sequence example
   * add official Python 3.7 support
@@ -286,15 +286,15 @@ Change log
 *0.8.2* (2018-05-30):
 
   * add official Python 3.6 support (although it was already working)
-  * fix description of `fill()`, [#52](ilanschnell/bitarray#52)
-  * handle extending self correctly, [#28](ilanschnell/bitarray#28)
-  * copy_n: fast copy with memmove fixed, [#43](ilanschnell/bitarray#43)
-  * minor clarity/wording changes to README, [#23](ilanschnell/bitarray#23)
+  * fix description of `fill()`, [#52](https://github.com/ilanschnell/bitarray/issues/52)
+  * handle extending self correctly, [#28](https://github.com/ilanschnell/bitarray/issues/28)
+  * copy_n: fast copy with memmove fixed, [#43](https://github.com/ilanschnell/bitarray/issues/43)
+  * minor clarity/wording changes to README, [#23](https://github.com/ilanschnell/bitarray/issues/23)
 
 
 *0.8.1* (2013-03-30):
 
-  * fix issue [#10](ilanschnell/bitarray#10), i.e. `int(bitarray())` segfault
+  * fix issue [#10](https://github.com/ilanschnell/bitarray/issues/10), i.e. `int(bitarray())` segfault
   * added tests for using a bitarray object as an argument to functions
     like int, long (on Python 2), float, list, tuple, dict
 
