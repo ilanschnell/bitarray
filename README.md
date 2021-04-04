@@ -45,8 +45,8 @@ Installation
 
 Bitarray can be installed from source:
 
-    $ tar xzf bitarray-1.9.0.tar.gz
-    $ cd bitarray-1.9.0
+    $ tar xzf bitarray-1.9.1.tar.gz
+    $ cd bitarray-1.9.1
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -65,7 +65,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 1.9.0
+    bitarray version: 1.9.1
     sys.version: 2.7.15 (default, Mar  5 2020, 14:58:04) [GCC Clang 9.0.1]
     sys.prefix: /Users/ilan/Mini3/envs/py27
     pointer size: 64 bit
@@ -803,133 +803,4 @@ bitarrays (with given endianness).  Note that the symbols may be any
 hashable object (including `None`).
 
 
-Change log
-----------
-
-*1.9.0* (2021-04-03):
-
-  * add shift operations (`<<`, `>>`, `<<=`, `>>=`), see #117
-  * add `bitarray.util.ba2base()` and `bitarray.util.base2ba()`,
-    see last paragraph in [Bitarray representations](examples/represent.md)
-  * documentation and tests
-
-
-*1.8.2* (2021-03-31):
-
-  * fix crash caused by unsupported types in binary operations, #116
-  * speedup initializing or extending a bitarray from another with different
-    bit endianness
-  * add formatting options to `bitarray.util.pprint()`
-  * add documentation on [bitarray representations](examples/represent.md)
-  * add and improve tests (all 291 tests run in less than half a second on
-    a modern machine)
-
-
-*1.8.1* (2021-03-25):
-
-  * moved implementation of and `hex2ba()` and `ba2hex()` to C-level
-  * add `bitarray.util.parity()`
-
-
-*1.8.0* (2021-03-21):
-
-  * add `bitarray.util.serialize()` and `bitarray.util.deserialize()`
-  * allow whitespace (ignore space and `\n\r\t\v`) in input strings,
-    e.g. `bitarray('01 11')` or `a += '10 00'`
-  * add `bitarray.util.pprint()`
-  * When initializing a bitarray from another with different bit endianness,
-    e.g. `a = bitarray('110', 'little')` and `b = bitarray(a, 'big')`,
-    the buffer used to be simply copied, with consequence that `a == b` would
-    result in `False`.  This is fixed now, that is `a == b` will always
-    evaluate to `True`.
-  * add example showing how to [jsonize bitarrays](examples/extend_json.py)
-  * add tests
-
-
-*1.7.1* (2021-03-12):
-
-  * fix issue #114, raise TypeError when incorrect index is used during
-    assignment, e.g. `a[1.5] = 1`
-  * raise TypeError (not IndexError) when assigning slice to incorrect type,
-    e.g. `a[1:4] = 1.2`
-  * improve some docstrings and tests
-
-
-*1.7.0* (2021-02-27):
-
-  * add `bitarray.util.urandom()`
-  * raise TypeError when trying to extend bitarrays from bytes on Python 3,
-    ie. `bitarray(b'011')` and `.extend(b'110')`.  (Deprecated since 1.4.1)
-
-
-*1.6.3* (2021-01-20):
-
-  * add missing .h files to sdist tarball, #113
-
-
-*1.6.2* (2021-01-20):
-
-  * use `Py_SET_TYPE()` and `Py_SET_SIZE()` for Python 3.10, #109
-  * add official Python 3.10 support
-  * fix slice assignment to same object,
-    e.g. `a[2::] = a` or `a[::-1] = a`, #112
-  * add bitarray.h, #110
-
-
-*1.6.1* (2020-11-05):
-
-  * use PyType_Ready for all types: bitarray, bitarrayiterator,
-    decodeiterator, decodetree, searchiterator
-
-
-*1.6.0* (2020-10-17):
-
-  * add `decodetree` object, for speeding up consecutive calls
-    to `.decode()` and `.iterdecode()`, in particular when dealing
-    with large prefix codes, see #103
-  * add optional parameter to `.tolist()` which changes the items in the
-    returned list to integers (0 or 1), as opposed to Booleans
-  * remove deprecated `bitdiff()`, which has been deprecated since version
-    1.2.0, use `bitarray.util.count_xor()` instead
-  * drop Python 2.6 support
-  * update license file, #104
-
-
-*1.5.3* (2020-08-24):
-
-  * add optional index parameter to `.index()` to invert single bit
-  * fix `sys.getsizeof(bitarray)` by adding `.__sizeof__()`, see issue #100
-
-
-*1.5.2* (2020-08-16):
-
-  * add PyType_Ready usage, issue #66
-  * speedup search() for bitarrays with length 1 in sparse bitarrays,
-    see issue #67
-  * add tests
-
-
-*1.5.1* (2020-08-10):
-
-  * support signed integers in `util.ba2int()` and `util.int2ba()`,
-    see issue #85
-  * deprecate `.length()` in favor of `len()`
-
-
-*1.5.0* (2020-08-05):
-
-  * Use `Py_ssize_t` for bitarray index.  This means that on 32bit
-    systems, the maximum number of elements in a bitarray is 2 GBits.
-    We used to have a special 64bit index type for all architectures, but
-    this prevented us from using Python's sequence, mapping and number
-    methods, and made those method lookups slow.
-  * speedup slice operations when step size = 1 (if alignment allows
-    copying whole bytes)
-  * Require equal endianness for operations: `&`, `|`, `^`, `&=`, `|=`, `^=`.
-    This should have always been the case but was overlooked in the past.
-  * raise TypeError when trying to create bitarray from boolean
-  * This will be last release to still support Python 2.6 (which was retired
-    in 2013).  We do NOT plan to stop support for Python 2.7 anytime soon.
-
-
-Please find the complete change log [here](https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG).
+[change log](https://github.com/ilanschnell/bitarray/blob/master/CHANGELOG.md).

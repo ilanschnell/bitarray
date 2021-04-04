@@ -13,27 +13,6 @@ import bitarray.util
 fo = None
 
 
-def write_changelog():
-    fo.write("Change log\n"
-             "----------\n\n")
-    ver_pat = re.compile(r'(\d{4}-\d{2}-\d{2})\s+(\d+\.\d+\.\d+)')
-    count = 0
-    for line in open('CHANGE_LOG'):
-        m = ver_pat.match(line)
-        if m:
-            if count == 14:
-                break
-            count += 1
-            fo.write(m.expand(r'*\2* (\1):\n'))
-        elif line.startswith('---'):
-            fo.write('\n')
-        else:
-            fo.write(line)
-
-    url = "https://github.com/ilanschnell/bitarray/blob/master/CHANGE_LOG"
-    fo.write('Please find the complete change log [here](%s).\n' % url)
-
-
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
 def write_doc(name):
     doc = eval('bitarray.%s.__doc__' % name)
@@ -126,7 +105,27 @@ def write_all(data):
         fo.write(line + '\n')
 
     write_reference()
-    write_changelog()
+    url = "https://github.com/ilanschnell/bitarray/blob/master/CHANGELOG.md"
+    fo.write('[change log](%s).\n' % url)
+
+
+def make_changelog():
+    ver_pat = re.compile(r'(\d{4}-\d{2}-\d{2})\s+(\d+\.\d+\.\d+)')
+
+    fo = open('CHANGELOG.md', 'w')
+    fo.write("Change log\n"
+             "==========\n\n")
+
+    for line in open('CHANGE_LOG'):
+        m = ver_pat.match(line)
+        if m:
+            fo.write(m.expand(r'*\2* (\1):\n'))
+        elif line.startswith('---'):
+            fo.write('\n')
+        else:
+            fo.write(line)
+
+    fo.close()
 
 
 def main():
@@ -148,6 +147,7 @@ def main():
         with open('README.md', 'w') as f:
             f.write(new_data)
 
+    make_changelog()
     doctest.testfile('README.md')
     doctest.testfile('examples/represent.md')
 
