@@ -1008,21 +1008,33 @@ class SpecialMethodTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertTrue(a.all())
         for s, r in ('0', False), ('1', True), ('01', False):
-            self.assertEqual(bitarray(s).all(), r)
+            self.assertTrue(bitarray(s).all() is r)
 
         for a in self.randombitarrays():
-            self.assertEqual(all(a), a.all())
-            self.assertEqual(all(a.tolist()), a.all())
+            self.assertTrue(a.all() is all(a))
+
+        N = randint(1000, 2000)
+        a = bitarray(N)
+        a.setall(1)
+        self.assertTrue(a.all())
+        a[N - 1] = 0
+        self.assertFalse(a.all())
 
     def test_any(self):
         a = bitarray()
         self.assertFalse(a.any())
         for s, r in ('0', False), ('1', True), ('01', True):
-            self.assertEqual(bitarray(s).any(), r)
+            self.assertTrue(bitarray(s).any() is r)
 
         for a in self.randombitarrays():
-            self.assertEqual(any(a), a.any())
-            self.assertEqual(any(a.tolist()), a.any())
+            self.assertTrue(a.any() is any(a))
+
+        N = randint(1000, 2000)
+        a = bitarray(N)
+        a.setall(0)
+        self.assertFalse(a.any())
+        a[N - 1] = 1
+        self.assertTrue(a.any())
 
     def test_repr(self):
         r = repr(bitarray())

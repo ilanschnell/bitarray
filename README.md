@@ -379,11 +379,13 @@ fromfile, tobytes, frombytes.
 `all()` -> bool
 
 Return True when all bits in the array are True.
+Note that `a.all()` is a faster than `all(a)`.
 
 
 `any()` -> bool
 
 Return True when any bit in the array is True.
+Note that `a.any()` is a faster than `any(a)`.
 
 
 `append(item, /)`
