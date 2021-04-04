@@ -28,7 +28,7 @@ Key features
   * Pickling and unpickling of bitarray objects.
   * Bitarray objects support the buffer protocol
   * `frozenbitarray` objects which are hashable
-  * Extensive test suite with about 300 unittests
+  * Extensive test suite with over 300 unittests
   * On 32-bit systems, a bitarray object may contain up to 2 Gbits.
   * a separate utility module `bitarray.util`:
       - conversion to hexadecimal string

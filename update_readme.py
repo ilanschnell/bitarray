@@ -1,6 +1,5 @@
 import sys
-if sys.version_info[0] != 3:
-    sys.exit("This program requires Python 3")
+assert sys.version_info[0] == 3, "This program requires Python 3"
 
 import re
 import doctest
@@ -11,11 +10,10 @@ import bitarray.util
 
 
 BASE_URL = "https://github.com/ilanschnell/bitarray"
-fo = None
 
 
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
-def write_doc(name):
+def write_doc(fo, name):
     doc = eval('bitarray.%s.__doc__' % name)
     assert doc, name
     lines = doc.splitlines()
@@ -25,25 +23,29 @@ def write_doc(name):
     s = '`%s`' %  m.group(1)
     if m.group(3):
         s += ' -> %s' % m.group(3)
-    fo.write(s + '\n\n')
+    fo.write('%s\n\n' % s)
     assert lines[1] == ''
     for line in lines[2:]:
         fo.write(line.rstrip() + '\n')
     fo.write('\n\n')
 
 
-def write_reference():
-    fo.write("Reference\n"
-             "=========\n\n"
-             "The bitarray object:\n"
-             "--------------------\n\n")
-    write_doc('bitarray')
+def write_reference(fo):
+    fo.write("""\
+Reference
+=========
+
+The bitarray object:
+--------------------
+
+""")
+    write_doc(fo, 'bitarray')
 
     fo.write("**A bitarray object supports the following methods:**\n\n")
     for method in sorted(dir(bitarray.bitarray)):
         if method.startswith('_'):
             continue
-        write_doc('bitarray.%s' % method)
+        write_doc(fo, 'bitarray.%s' % method)
 
     fo.write("""\
 The frozenbitarray object:
@@ -64,7 +66,7 @@ this a frozenbitarray is immutable, and hashable:
     {frozenbitarray('1100011'): 'some value'}
 
 """)
-    write_doc('frozenbitarray')
+    write_doc(fo, 'frozenbitarray')
 
     fo.write("""\
 The decodetree object:
@@ -84,69 +86,37 @@ the prefix code dictionary to those methods directly:
     'abba'
 
 """)
-    write_doc('decodetree')
+    write_doc(fo, 'decodetree')
 
     fo.write("Functions defined in the `bitarray` module:\n"
              "--------------------------------------------\n\n")
     for func in sorted(['test', 'bits2bytes', 'get_default_endian']):
-        write_doc(func)
+        write_doc(fo, func)
 
     fo.write("Functions defined in `bitarray.util` module:\n"
              "--------------------------------------------\n\n")
     for func in bitarray.util.__all__:
-        write_doc('util.%s' % func)
+        write_doc(fo, 'util.%s' % func)
 
 
-def write_all(data):
+def write_readme():
     ver_pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
-    for line in data.splitlines():
-        if line == 'Reference':
-            break
-        line = ver_pat.sub(lambda m: m.group(1) + bitarray.__version__, line)
-        fo.write(line + '\n')
-
-    write_reference()
-    url = "%s/blob/master/CHANGELOG.md" % BASE_URL
-    fo.write('Finally the [change log](%s).\n' % url)
-
-
-def issue_replace(match):
-    url = "%s/issues/%s" % (BASE_URL, match.group(1))
-    return "[%s](%s)" % (match.group(0), url)
-
-def make_changelog():
-    ver_pat = re.compile(r'(\d{4}-\d{2}-\d{2})\s+(\d+\.\d+\.\d+)')
-    issue_pat = re.compile(r'#(\d+)')
-
-    fo = open('CHANGELOG.md', 'w')
-    fo.write("Change log\n"
-             "==========\n\n")
-
-    for line in open('CHANGE_LOG'):
-        m = ver_pat.match(line)
-        if m:
-            fo.write(m.expand(r'*\2* (\1):\n'))
-        elif line.startswith('-----'):
-            fo.write('\n')
-        else:
-            line = issue_pat.sub(issue_replace, line)
-            fo.write(line)
-
-    fo.close()
-
-
-def main():
-    if len(sys.argv) > 1:
-        sys.exit("no arguments expected")
 
     with open('README.md', 'r') as fi:
         data = fi.read()
 
-    global fo
     with StringIO() as fo:
-        write_all(data)
+        for line in data.splitlines():
+            if line == 'Reference':
+                break
+            line = ver_pat.sub(lambda m: m.group(1) + bitarray.__version__,
+                               line)
+            fo.write(line + '\n')
+
+        write_reference(fo)
+        url = "%s/blob/master/CHANGELOG.md" % BASE_URL
+        fo.write('Finally the [change log](%s).\n' % url)
         new_data = fo.getvalue()
-        fo.close()
 
     if new_data == data:
         print("already up-to-date")
@@ -154,7 +124,36 @@ def main():
         with open('README.md', 'w') as f:
             f.write(new_data)
 
-    make_changelog()
+
+def write_changelog():
+    ver_pat = re.compile(r'(\d{4}-\d{2}-\d{2})\s+(\d+\.\d+\.\d+)')
+    issue_pat = re.compile(r'#(\d+)')
+
+    def issue_replace(match):
+        url = "%s/issues/%s" % (BASE_URL, match.group(1))
+        return "[%s](%s)" % (match.group(0), url)
+
+    with open('CHANGELOG.md', 'w') as fo:
+        fo.write("Change log\n"
+                 "==========\n\n")
+
+        for line in open('CHANGE_LOG'):
+            m = ver_pat.match(line)
+            if m:
+                fo.write(m.expand(r'*\2* (\1):\n'))
+            elif line.startswith('-----'):
+                fo.write('\n')
+            else:
+                line = issue_pat.sub(issue_replace, line)
+                fo.write(line)
+
+
+def main():
+    if len(sys.argv) > 1:
+        sys.exit("no arguments expected")
+
+    write_readme()
+    write_changelog()
     doctest.testfile('README.md')
     doctest.testfile('examples/represent.md')
 
