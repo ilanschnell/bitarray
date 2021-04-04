@@ -110,8 +110,8 @@ def write_all(data):
 
 
 def issue_replace(match):
-    url = "bitarray#%s" % match.group(1)
-    return "[#%s](%s)" % (match.group(0), url)
+    url = "ilanschnell/bitarray#%s" % match.group(1)
+    return "[%s](%s)" % (match.group(0), url)
 
 def make_changelog():
     ver_pat = re.compile(r'(\d{4}-\d{2}-\d{2})\s+(\d+\.\d+\.\d+)')
