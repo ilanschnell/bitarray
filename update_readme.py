@@ -36,10 +36,13 @@ def write_reference(fo):
 Reference
 =========
 
+bitarray version: %s
+Please see the `change log <%s>`__.
+
 The bitarray object:
 --------------------
 
-""")
+""" % (bitarray.__version__, "%s/blob/master/changelog.rst" % BASE_URL))
     write_doc(fo, 'bitarray')
 
     fo.write("**A bitarray object supports the following methods:**\n\n")
@@ -79,8 +82,6 @@ def write_readme():
             fo.write("%s\n" % line.rstrip())
 
         write_reference(fo)
-        url = "%s/blob/master/changelog.rst" % BASE_URL
-        fo.write('Finally the `change log <%s>`__.\n' % url)
         new_data = fo.getvalue()
 
     if new_data == data:

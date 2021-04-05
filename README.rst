@@ -410,6 +410,9 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
+bitarray version: 1.9.1
+Please see the `change log <https://github.com/ilanschnell/bitarray/blob/master/changelog.rst>`__.
+
 The bitarray object:
 --------------------
 
@@ -780,4 +783,3 @@ Functions defined in `bitarray.util` module:
    hashable object (including ``None``).
 
 
-Finally the `change log <https://github.com/ilanschnell/bitarray/blob/master/changelog.rst>`__.
