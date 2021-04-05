@@ -20,13 +20,14 @@ def write_doc(fo, name):
     m = sig_pat.match(lines[0])
     if m is None:
         raise Exception("signature line invalid: %r" % lines[0])
-    s = '`%s`' %  m.group(1)
+    s = '``%s``' %  m.group(1)
     if m.group(3):
         s += ' -> %s' % m.group(3)
-    fo.write('%s\n\n' % s)
+    fo.write('%s\n' % s)
     assert lines[1] == ''
     for line in lines[2:]:
-        fo.write(line.rstrip() + '\n')
+        out = line.rstrip()
+        fo.write("   %s\n" % out.replace('`', '``') if out else "\n")
     fo.write('\n\n')
 
 
@@ -54,6 +55,8 @@ The frozenbitarray object:
 This object is very similar to the bitarray object.  The difference is that
 this a frozenbitarray is immutable, and hashable:
 
+.. code-block:: python
+
     >>> from bitarray import frozenbitarray
     >>> a = frozenbitarray('1100011')
     >>> a[3] = 1
@@ -76,6 +79,8 @@ This (immutable and unhashable) object stores a binary tree initialized
 from a prefix code dictionary.  It's sole purpose is to be passed to
 bitarray's `.decode()` and `.iterdecode()` methods, instead of passing
 the prefix code dictionary to those methods directly:
+
+.. code-block:: python
 
     >>> from bitarray import bitarray, decodetree
     >>> t = decodetree({'a': bitarray('0'), 'b': bitarray('1')})
@@ -102,7 +107,7 @@ the prefix code dictionary to those methods directly:
 def write_readme():
     ver_pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
 
-    with open('README.md', 'r') as fi:
+    with open('README.rst', 'r') as fi:
         data = fi.read()
 
     with StringIO() as fo:
@@ -114,38 +119,42 @@ def write_readme():
             fo.write(line + '\n')
 
         write_reference(fo)
-        url = "%s/blob/master/CHANGELOG.md" % BASE_URL
-        fo.write('Finally the [change log](%s).\n' % url)
+        url = "%s/blob/master/changelog.rst" % BASE_URL
+        fo.write('Finally the `change log <%s>`__.\n' % url)
         new_data = fo.getvalue()
 
     if new_data == data:
         print("already up-to-date")
     else:
-        with open('README.md', 'w') as f:
+        with open('README.rst', 'w') as f:
             f.write(new_data)
 
 
 def write_changelog():
     ver_pat = re.compile(r'(\d{4}-\d{2}-\d{2})\s+(\d+\.\d+\.\d+)')
     issue_pat = re.compile(r'#(\d+)')
+    link_pat = re.compile(r'\[(.+)\]\((.+)\)')
 
     def issue_replace(match):
         url = "%s/issues/%s" % (BASE_URL, match.group(1))
-        return "[%s](%s)" % (match.group(0), url)
+        return "`%s <%s>`__" % (match.group(0), url)
 
-    with open('CHANGELOG.md', 'w') as fo:
+    with open('changelog.rst', 'w') as fo:
         fo.write("Change log\n"
                  "==========\n\n")
 
         for line in open('CHANGE_LOG'):
-            m = ver_pat.match(line)
-            if m:
-                fo.write(m.expand(r'*\2* (\1):\n'))
+            match = ver_pat.match(line)
+            if match:
+                fo.write(match.expand(r'**\2** (\1):\n'))
             elif line.startswith('-----'):
-                fo.write('\n')
+                pass #fo.write('\n')
             else:
-                line = issue_pat.sub(issue_replace, line)
-                fo.write(line)
+                out = line.replace('`', '``')
+                out = issue_pat.sub(issue_replace, out)
+                out = link_pat.sub(
+                    lambda m: "`%s <%s>`__" % (m.group(1), m.group(2)), out)
+                fo.write(out)
 
 
 def main():
@@ -154,8 +163,8 @@ def main():
 
     write_readme()
     write_changelog()
-    doctest.testfile('README.md')
-    doctest.testfile('examples/represent.md')
+    doctest.testfile('README.rst')
+    doctest.testfile('examples/represent.rst')
 
 
 if __name__ == '__main__':

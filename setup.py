@@ -4,7 +4,7 @@ from distutils.core import setup, Extension
 
 kwds = {}
 try:
-    kwds['long_description'] = open('README.md').read()
+    kwds['long_description'] = open('README.rst').read()
 except IOError:
     pass
 

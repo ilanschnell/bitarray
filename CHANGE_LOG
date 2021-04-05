@@ -1,12 +1,13 @@
 2021-XX-XX   1.9.1:
 -------------------
+  * switch documentation from markdown to reStructuredText
 
 
 2021-04-03   1.9.0:
 -------------------
   * add shift operations (`<<`, `>>`, `<<=`, `>>=`), see #117
   * add `bitarray.util.ba2base()` and `bitarray.util.base2ba()`,
-    see last paragraph in [Bitarray representations](examples/represent.md)
+    see last paragraph in [Bitarray representations](examples/represent.rst)
   * documentation and tests
 
 
@@ -16,7 +17,7 @@
   * speedup initializing or extending a bitarray from another with different
     bit endianness
   * add formatting options to `bitarray.util.pprint()`
-  * add documentation on [bitarray representations](examples/represent.md)
+  * add documentation on [bitarray representations](examples/represent.rst)
   * add and improve tests (all 291 tests run in less than half a second on
     a modern machine)
 
