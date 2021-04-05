@@ -1,7 +1,7 @@
 Change log
 ==========
 
-2021-04-XX   1.9.1:
+**1.9.1** (2021-04-05):
   * switch documentation from markdown to reStructuredText
   * add tests
 
