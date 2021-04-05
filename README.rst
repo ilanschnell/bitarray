@@ -46,7 +46,7 @@ Installation
 
 Bitarray can be installed from source:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
     $ tar xzf bitarray-1.9.1.tar.gz
     $ cd bitarray-1.9.1
@@ -64,7 +64,7 @@ If you rather want to use precompiled binaries, you can:
 
 Once you have installed the package, you may want to test it:
 
-.. code-block:: bash
+.. code-block:: shell-session
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
