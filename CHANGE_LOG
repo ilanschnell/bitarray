@@ -40,6 +40,7 @@
     the buffer used to be simply copied, with consequence that `a == b` would
     result in `False`.  This is fixed now, that is `a == b` will always
     evaluate to `True`.
+  * add test for loading existing pickle file (created using bitarray 1.5.0)
   * add example showing how to [jsonize bitarrays](examples/extend_json.py)
   * add tests
 
