@@ -1301,10 +1301,9 @@ tests.append(TestsHuffman)
 # ---------------------------------------------------------------------------
 
 def run(verbosity=1):
-    import os
     import bitarray
 
-    print('bitarray is installed in: %s' % os.path.dirname(bitarray.__file__))
+    print('bitarray.util is installed in: %s' % os.path.dirname(__file__))
     print('bitarray version: %s' % bitarray.__version__)
     print('Python version: %s' % sys.version)
 
