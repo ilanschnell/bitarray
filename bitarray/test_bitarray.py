@@ -32,8 +32,14 @@ from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian,
                       _sysinfo, __version__)
 
-tests = []
 
+# avoid importing from bitarray.util
+def zeros(n, endian=None):
+    a = bitarray(n, endian or get_default_endian())
+    a.setall(0)
+    return a
+
+tests = []
 
 class Util(object):
 
@@ -48,12 +54,6 @@ class Util(object):
     def randomlists(self):
         for a in self.randombitarrays():
             yield a.tolist()
-
-    @staticmethod
-    def zeros(n, endian=None):
-        a = bitarray(n, endian or get_default_endian())
-        a.setall(0)
-        return a
 
     @staticmethod
     def rndsliceidx(length):
@@ -282,7 +282,7 @@ class CreateObjectTests(unittest.TestCase, Util):
 
     def test_iter3(self):
         a = bitarray(itertools.repeat(False, 10))
-        self.assertEqual(a, self.zeros(10))
+        self.assertEqual(a, zeros(10))
         # Note that the through value of '0' is True: bool('0') -> True
         a = bitarray(itertools.repeat('0', 10))
         self.assertEqual(a, bitarray(10 * '1'))
@@ -1401,7 +1401,7 @@ class NumberTests(unittest.TestCase, Util):
             aa = a.copy()
             self.assertEQUAL(a & a, aa)
             self.assertEQUAL(a | a, aa)
-            self.assertEQUAL(a ^ a, self.zeros(len(aa), aa.endian()))
+            self.assertEQUAL(a ^ a, zeros(len(aa), aa.endian()))
             self.assertEQUAL(a, aa)
 
     def test_bitwise_inplace_self(self):
@@ -1412,7 +1412,7 @@ class NumberTests(unittest.TestCase, Util):
             a |= a
             self.assertEQUAL(a, aa)
             a ^= a
-            self.assertEqual(a, self.zeros(len(aa), aa.endian()))
+            self.assertEqual(a, zeros(len(aa), aa.endian()))
 
     def test_invert(self):
         a = bitarray('11011')
@@ -1514,17 +1514,16 @@ class NumberTests(unittest.TestCase, Util):
         # ensure shifts with len(a) (or larger) result in all zero bitarrays
         for a in self.randombitarrays():
             c = a.copy()
-            zeros = a.copy()
-            zeros.setall(0)
+            z = zeros(len(a), a.endian())
             n = randint(len(a), len(a) + 10)
-            self.assertEQUAL(a << n, zeros)
-            self.assertEQUAL(a >> n, zeros)
+            self.assertEQUAL(a << n, z)
+            self.assertEQUAL(a >> n, z)
             self.assertEQUAL(a, c)
             a <<= n
-            self.assertEQUAL(a, zeros)
+            self.assertEQUAL(a, z)
             a = bitarray(c)
             a >>= n
-            self.assertEQUAL(a, zeros)
+            self.assertEQUAL(a, z)
 
     def test_shift_example(self):
         a = bitarray('0010011')
@@ -2009,7 +2008,7 @@ class MethodTests(unittest.TestCase, Util):
                 self.assertEqual(len(b) % 8, 0)
                 self.assertNotEqual(b, a)
                 self.assertEqual(b[:len(a)], a)
-                self.assertEqual(b[len(a):], self.zeros(len(b) - len(a)))
+                self.assertEqual(b[len(a):], zeros(len(b) - len(a)))
 
     def test_invert_simple(self):
         a = bitarray()
@@ -2683,12 +2682,12 @@ class DecodeTreeTests(unittest.TestCase, Util):
         dt = decodetree({'.': bitarray('1')})
         self.assertTrue(0 < sys.getsizeof(dt) < 100)
 
-        dt = decodetree({'a': self.zeros(20)})
+        dt = decodetree({'a': zeros(20)})
         self.assertTrue(sys.getsizeof(dt) > 200)
 
     def test_nodes(self):
         for n in range(1, 20):
-            dt = decodetree({'a': self.zeros(n)})
+            dt = decodetree({'a': zeros(n)})
             self.assertEqual(dt.nodes(), n + 1)
 
         dt = decodetree({'I': bitarray('1'),   'l': bitarray('01'),

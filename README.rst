@@ -1,7 +1,7 @@
 bitarray: efficient arrays of booleans
 ======================================
 
-This module provides an object type which efficiently represents an array
+This library provides an object type which efficiently represents an array
 of booleans.  Bitarrays are sequence types and behave very much like usual
 lists.  Eight bits are represented by one byte in a contiguous block of
 memory.  The user can select between two representations: little-endian
@@ -74,9 +74,9 @@ Once you have installed the package, you may want to test it:
     pointer size: 64 bit
     .........................................................................
     .........................................................................
-    ........................................
+    .............................................................
     ----------------------------------------------------------------------
-    Ran 320 tests in 0.327s
+    Ran 322 tests in 0.319s
 
     OK
 
