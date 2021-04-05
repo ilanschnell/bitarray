@@ -36,8 +36,7 @@ def write_reference(fo):
 Reference
 =========
 
-bitarray version: %s
-Please see the `change log <%s>`__.
+bitarray version: %s -- `change log <%s>`__
 
 The bitarray object:
 --------------------
