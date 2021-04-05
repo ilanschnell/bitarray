@@ -361,18 +361,50 @@ return a list of the symbols:
 
 Since symbols are not limited to being characters, it is necessary to return
 them as elements of a list, rather than simply returning the joined string.
-
-When the codes are large, and you have many decode calls, most time will
-be spent creating the (same) internal decode tree objects.  In this case,
-it will be much faster to create a ``decodetree`` object (which is initialized
-with a prefix code dictionary), and can be passed to bitarray's ``.decode()``
-and ``.iterdecode()`` methods, instead of passing the prefix code dictionary
-to those methods itself.
-
 The above dictionary ``d`` can be efficiently constructed using the function
 ``bitarray.util.huffman_code()``.  I also wrote `Huffman coding in Python
 using bitarray <http://ilan.schnell-web.net/prog/huffman/>`__ for more
 background information.
+
+When the codes are large, and you have many decode calls, most time will
+be spent creating the (same) internal decode tree objects.  In this case,
+it will be much faster to create a ``decodetree`` object, which can be
+passed to bitarray's ``.decode()`` and ``.iterdecode()`` methods, instead
+of passing the prefix code dictionary to those methods itself:
+
+.. code-block:: python
+
+    >>> from bitarray import bitarray, decodetree
+    >>> t = decodetree({'a': bitarray('0'), 'b': bitarray('1')})
+    >>> a = bitarray('0110')
+    >>> a.decode(t)
+    ['a', 'b', 'b', 'a']
+    >>> ''.join(a.iterdecode(t))
+    'abba'
+
+The ``decodetree`` object is immutable and unhashable, and it's sole purpose
+is to be passed to bitarray's `.decode()` and `.iterdecode()` methods.
+
+
+Frozenbitarrays
+---------------
+
+A ``frozenbitarray`` object is very similar to the bitarray object.
+The difference is that this a ``frozenbitarray`` is immutable, and hashable,
+and can therefore be used as a dictionary key:
+
+.. code-block:: python
+
+    >>> from bitarray import frozenbitarray
+    >>> key = frozenbitarray('1100011')
+    >>> {key: 'some value'}
+    {frozenbitarray('1100011'): 'some value'}
+    >>> key[3] = 1
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+      File "bitarray/__init__.py", line 41, in __delitem__
+        raise TypeError("'frozenbitarray' is immutable")
+    TypeError: 'frozenbitarray' is immutable
 
 
 Reference
@@ -584,24 +616,8 @@ The bitarray object:
    using the specified mapping.
 
 
-The frozenbitarray object:
---------------------------
-
-This object is very similar to the bitarray object.  The difference is that
-this a frozenbitarray is immutable, and hashable:
-
-.. code-block:: python
-
-    >>> from bitarray import frozenbitarray
-    >>> a = frozenbitarray('1100011')
-    >>> a[3] = 1
-    Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-      File "bitarray/__init__.py", line 40, in __delitem__
-        raise TypeError("'frozenbitarray' is immutable")
-    TypeError: 'frozenbitarray' is immutable
-    >>> {a: 'some value'}
-    {frozenbitarray('1100011'): 'some value'}
+Other objects:
+--------------
 
 ``frozenbitarray(initializer=0, /, endian='big')`` -> frozenbitarray
    Return a frozenbitarray object, which is initialized the same way a bitarray
@@ -610,31 +626,13 @@ this a frozenbitarray is immutable, and hashable:
    as a dictionary key.
 
 
-The decodetree object:
-----------------------
-
-This (immutable and unhashable) object stores a binary tree initialized
-from a prefix code dictionary.  It's sole purpose is to be passed to
-bitarray's `.decode()` and `.iterdecode()` methods, instead of passing
-the prefix code dictionary to those methods directly:
-
-.. code-block:: python
-
-    >>> from bitarray import bitarray, decodetree
-    >>> t = decodetree({'a': bitarray('0'), 'b': bitarray('1')})
-    >>> a = bitarray('0110')
-    >>> a.decode(t)
-    ['a', 'b', 'b', 'a']
-    >>> ''.join(a.iterdecode(t))
-    'abba'
-
 ``decodetree(code, /)`` -> decodetree
    Given a prefix code (a dict mapping symbols to bitarrays),
    create a binary tree object to be passed to ``.decode()`` or ``.iterdecode()``.
 
 
 Functions defined in the `bitarray` module:
---------------------------------------------
+-------------------------------------------
 
 ``bits2bytes(n, /)`` -> int
    Return the number of bytes necessary to store n bits.

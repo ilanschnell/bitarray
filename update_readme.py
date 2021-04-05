@@ -48,53 +48,13 @@ The bitarray object:
             continue
         write_doc(fo, 'bitarray.%s' % method)
 
-    fo.write("""\
-The frozenbitarray object:
---------------------------
-
-This object is very similar to the bitarray object.  The difference is that
-this a frozenbitarray is immutable, and hashable:
-
-.. code-block:: python
-
-    >>> from bitarray import frozenbitarray
-    >>> a = frozenbitarray('1100011')
-    >>> a[3] = 1
-    Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-      File "bitarray/__init__.py", line 40, in __delitem__
-        raise TypeError("'frozenbitarray' is immutable")
-    TypeError: 'frozenbitarray' is immutable
-    >>> {a: 'some value'}
-    {frozenbitarray('1100011'): 'some value'}
-
-""")
+    fo.write("Other objects:\n"
+             "--------------\n\n")
     write_doc(fo, 'frozenbitarray')
-
-    fo.write("""\
-The decodetree object:
-----------------------
-
-This (immutable and unhashable) object stores a binary tree initialized
-from a prefix code dictionary.  It's sole purpose is to be passed to
-bitarray's `.decode()` and `.iterdecode()` methods, instead of passing
-the prefix code dictionary to those methods directly:
-
-.. code-block:: python
-
-    >>> from bitarray import bitarray, decodetree
-    >>> t = decodetree({'a': bitarray('0'), 'b': bitarray('1')})
-    >>> a = bitarray('0110')
-    >>> a.decode(t)
-    ['a', 'b', 'b', 'a']
-    >>> ''.join(a.iterdecode(t))
-    'abba'
-
-""")
     write_doc(fo, 'decodetree')
 
     fo.write("Functions defined in the `bitarray` module:\n"
-             "--------------------------------------------\n\n")
+             "-------------------------------------------\n\n")
     for func in sorted(['test', 'bits2bytes', 'get_default_endian']):
         write_doc(fo, func)
 
@@ -116,7 +76,7 @@ def write_readme():
                 break
             line = ver_pat.sub(lambda m: m.group(1) + bitarray.__version__,
                                line)
-            fo.write(line + '\n')
+            fo.write("%s\n" % line.rstrip())
 
         write_reference(fo)
         url = "%s/blob/master/changelog.rst" % BASE_URL
