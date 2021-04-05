@@ -44,7 +44,9 @@ Key features
 Installation
 ------------
 
-Bitarray can be installed from source::
+Bitarray can be installed from source:
+
+.. code-block:: bash
 
     $ tar xzf bitarray-1.9.1.tar.gz
     $ cd bitarray-1.9.1
@@ -55,12 +57,14 @@ privileges.  You can also pip install bitarray.  Please note that you need
 a working C compiler to run the ``python setup.py install`` command.
 If you rather want to use precompiled binaries, you can:
 
-  - `conda install bitarray` (both the default Anaconda repository as well
-    as conda-forge support bitarray)
-  - download Windows wheels from
-    `Chris Gohlke <https://www.lfd.uci.edu/~gohlke/pythonlibs/#bitarray>`__
+* `conda install bitarray` (both the default Anaconda repository as well
+  as conda-forge support bitarray)
+* download Windows wheels from
+  `Chris Gohlke <https://www.lfd.uci.edu/~gohlke/pythonlibs/#bitarray>`__
 
-Once you have installed the package, you may want to test it::
+Once you have installed the package, you may want to test it:
+
+.. code-block:: bash
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray

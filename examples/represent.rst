@@ -18,7 +18,7 @@ representation, which is great for interactively analyzing bitarray objects:
     >>> a = bitarray('11001')
     >>> repr(a)  # same as str(a)
     "bitarray('11001')"
-    >>> a.to01()  # gives you the raw string of 0's and 1's
+    >>> a.to01()  # the raw string of 0's and 1's
     '11001'
 
 However, this representation is very large compared to the bitarray object
