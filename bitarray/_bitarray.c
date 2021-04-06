@@ -633,25 +633,6 @@ unpack(bitarrayobject *self, char zero, char one, const char *fmt)
 
 /* --------- helper functions not involving bitarrayobjects ------------ */
 
-/* given a PyLong (which must be 0 or 1) or a PyBool, return 0 or 1,
-   or -1 on error */
-static int
-IntBool_AsInt(PyObject *v)
-{
-    Py_ssize_t x;
-
-    assert(PyIndex_Check(v));
-    x = PyNumber_AsSsize_t(v, PyExc_IndexError);
-    if (x == -1 && PyErr_Occurred())
-        return -1;
-
-    if (x < 0 || x > 1) {
-        PyErr_SetString(PyExc_ValueError, "int 0 or 1 expected");
-        return -1;
-    }
-    return (int) x;
-}
-
 /* Normalize index (which may be negative), such that 0 <= i <= n */
 static void
 normalize_index(Py_ssize_t n, Py_ssize_t *i)
@@ -1584,7 +1565,7 @@ bitarray_contains(bitarrayobject *self, PyObject *item)
     if (PyIndex_Check(item)) {
         int vi;
 
-        vi = IntBool_AsInt(item);
+        vi = IntOrBool_AsInt(item);
         if (vi < 0)
             return -1;
         return findfirst(self, vi, 0, self->nbits) >= 0;
@@ -1743,7 +1724,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *bool)
                              &start, &stop, &step, &slicelength) < 0)
         return -1;
 
-    vi = IntBool_AsInt(bool);
+    vi = IntOrBool_AsInt(bool);
     if (vi < 0)
         return -1;
 
