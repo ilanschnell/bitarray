@@ -439,7 +439,7 @@ set_item(bitarrayobject *self, Py_ssize_t i, PyObject *v)
     int vi;
 
     assert(0 <= i && i < self->nbits);
-    vi = PyObject_IsTrue(v);
+    vi = IntOrBool_AsInt(v);
     if (vi < 0)
         return -1;
     setbit(self, i, vi);
@@ -475,25 +475,30 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
 static int
 extend_iter(bitarrayobject *self, PyObject *iter)
 {
+    const Py_ssize_t original_nbits = self->nbits;
     PyObject *item;
 
     assert(PyIter_Check(iter));
     while ((item = PyIter_Next(iter))) {
         if (append_item(self, item) < 0) {
             Py_DECREF(item);
-            return -1;
+            goto error;
         }
         Py_DECREF(item);
     }
     if (PyErr_Occurred())
-        return -1;
+        goto error;
 
     return 0;
+ error:
+    resize(self, original_nbits);
+    return -1;
 }
 
 static int
 extend_list(bitarrayobject *self, PyObject *list)
 {
+    const Py_ssize_t original_nbits = self->nbits;
     PyObject *item;
     Py_ssize_t n, i;
 
@@ -508,11 +513,14 @@ extend_list(bitarrayobject *self, PyObject *list)
     for (i = 0; i < n; i++) {
         item = PyList_GET_ITEM(list, i);
         if (item == NULL)
-            return -1;
+            goto error;
         if (set_item(self, self->nbits - n + i, item) < 0)
-            return -1;
+            goto error;
     }
     return 0;
+ error:
+    resize(self, original_nbits);
+    return -1;
 }
 
 static int

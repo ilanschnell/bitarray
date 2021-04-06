@@ -238,7 +238,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, bitarray.__new__, bitarray, -924)
 
     def test_list(self):
-        lst = ['foo', None, [1], {}]
+        lst = [1, False, True, 0]
         a = bitarray(lst)
         self.assertEqual(a.tolist(), [True, False, True, False])
         self.check_obj(a)
@@ -250,10 +250,13 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.check_obj(a)
 
     def test_tuple(self):
-        tup = ('', True, [], {1:2})
+        tup = (0, True, False, 1)
         a = bitarray(tup)
         self.assertEqual(a.tolist(), [False, True, False, True])
         self.check_obj(a)
+        self.assertRaises(TypeError, bitarray.__new__, bitarray, (0, 1, None))
+        self.assertRaises(ValueError, bitarray.__new__, bitarray, (0, 1, 2))
+        self.assertEqual(a, bitarray('0101'))
 
         for n in range(50):
             lst = [bool(randint(0, 1)) for d in range(n)]
@@ -283,12 +286,11 @@ class CreateObjectTests(unittest.TestCase, Util):
     def test_iter3(self):
         a = bitarray(itertools.repeat(False, 10))
         self.assertEqual(a, zeros(10))
-        # Note that the through value of '0' is True: bool('0') -> True
-        a = bitarray(itertools.repeat('0', 10))
+        a = bitarray(itertools.repeat(1, 10))
         self.assertEqual(a, bitarray(10 * '1'))
 
     def test_range(self):
-        a = bitarray(range(-3, 3))
+        a = bitarray(bool(x) for x in range(-3, 3))
         self.assertEqual(a, bitarray('111011'))
 
     def test_string01(self):
@@ -1128,11 +1130,11 @@ class SequenceMethodsTests(unittest.TestCase, Util):
         a = bitarray('001')
         b = a + bitarray('110')
         self.assertEQUAL(b, bitarray('001110'))
-        b = a + [0, 1, 2]
-        self.assertEQUAL(b, bitarray('001011'))
+        b = a + [0, 1, False]
+        self.assertEQUAL(b, bitarray('001010'))
         b = a + '100'
         self.assertEQUAL(b, bitarray('001100'))
-        b = a + (1, 0, 3)
+        b = a + (1, 0, True)
         self.assertEQUAL(b, bitarray('001101'))
 
         self.assertRaises(TypeError, a.__add__, 42)
@@ -1157,11 +1159,11 @@ class SequenceMethodsTests(unittest.TestCase, Util):
         a = bitarray('001')
         a += bitarray('110')
         self.assertEqual(a, bitarray('001110'))
-        a += [0, 1, 2]
+        a += [0, 1, 1]
         self.assertEqual(a, bitarray('001110011'))
         a += '100'
         self.assertEqual(a, bitarray('001110011100'))
-        a += (1, 0, 3)
+        a += (1, 0, 1)
         self.assertEqual(a, bitarray('001110011100101'))
 
         a = bitarray('110')
@@ -1569,10 +1571,13 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray()
         a.extend([])
         self.assertEqual(a, bitarray())
-        a.extend([0, 1, 3, None, {}])
-        self.assertEqual(a, bitarray('01100'))
+        a.extend([0, 1, True, False])
+        self.assertEqual(a, bitarray('0110'))
         a.extend([True, False])
-        self.assertEqual(a, bitarray('0110010'))
+        self.assertEqual(a, bitarray('011010'))
+        self.assertRaises(TypeError, a.extend, [0, 1, None])
+        self.assertRaises(ValueError, a.extend, [1, 0, -1])
+        self.assertEqual(a, bitarray('011010'))
 
         for a in self.randomlists():
             for b in self.randomlists():
@@ -1585,8 +1590,11 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray()
         a.extend(tuple())
         self.assertEqual(a, bitarray())
-        a.extend((0, 1, 2, 0, 3))
-        self.assertEqual(a, bitarray('01101'))
+        a.extend((0, 1, False, True))
+        self.assertEqual(a, bitarray('0101'))
+        self.assertRaises(TypeError, a.extend, (1, 0, 1, None))
+        self.assertRaises(ValueError, a.extend, (0, 1, 2))
+        self.assertEqual(a, bitarray('0101'))
 
         for a in self.randomlists():
             for b in self.randomlists():
@@ -1597,11 +1605,11 @@ class ExtendTests(unittest.TestCase, Util):
 
     def test_generator(self):
         def bar():
-            for x in ('', '1', None, True, []):
+            for x in (0, False, 1, True):
                 yield x
         a = bitarray('0011')
         a.extend(bar())
-        self.assertEqual(a, bitarray('0011 01010'))
+        self.assertEqual(a, bitarray('0011 0011'))
 
         for a in self.randomlists():
             def foo():
@@ -1616,8 +1624,11 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray()
         a.extend(iter([]))
         self.assertEqual(a, bitarray())
-        a.extend(iter([3, 9, 0, 1, -2]))
-        self.assertEqual(a, bitarray('11011'))
+        a.extend(iter([0, 1, False, True]))
+        self.assertEqual(a, bitarray('0101'))
+        self.assertRaises(TypeError, a.extend, iter([1, '']))
+        self.assertRaises(ValueError, a.extend, iter([0, 1, 2]))
+        self.assertEqual(a, bitarray('0101'))
 
         for a in self.randomlists():
             for b in self.randomlists():
