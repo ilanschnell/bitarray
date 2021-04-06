@@ -505,15 +505,12 @@ extend_list(bitarrayobject *self, PyObject *list)
 
     for (i = 0; i < n; i++) {
         item = PyList_GET_ITEM(list, i);
-        if (item == NULL)
-            goto error;
-        if (set_item(self, self->nbits - n + i, item) < 0)
-            goto error;
+        if (item == NULL || set_item(self, self->nbits - n + i, item) < 0) {
+            resize(self, original_nbits);
+            return -1;
+        }
     }
     return 0;
- error:
-    resize(self, original_nbits);
-    return -1;
 }
 
 static int
@@ -538,11 +535,10 @@ extend_bytes01(bitarrayobject *self, PyObject *bytes)
         case '\v':
             continue;
         default:
-            /* ensure no bits are added on error */
-            if (resize(self, original_nbits) < 0)
-                return -1;
             PyErr_Format(PyExc_ValueError, "expected '0' or '1' "
                          "(or whitespace), got '%c' (0x%02x)", c, c);
+            /* ensure no bits are added on error */
+            resize(self, original_nbits);
             return -1;
         }
         if (resize(self, self->nbits + 1) < 0)
