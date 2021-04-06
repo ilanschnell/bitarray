@@ -724,7 +724,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O|nn:index", &x, &start, &stop))
         return NULL;
 
-    vi = PyObject_IsTrue(x);
+    vi = IntOrBool_AsInt(x);
     if (vi < 0)
         return NULL;
 
