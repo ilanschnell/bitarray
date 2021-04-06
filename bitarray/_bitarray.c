@@ -698,7 +698,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "|Onn:count", &x, &start, &stop))
         return NULL;
 
-    vi = PyObject_IsTrue(x);
+    vi = IntOrBool_AsInt(x);
     if (vi < 0)
         return NULL;
 
@@ -851,8 +851,14 @@ Return the bit endianness of the bitarray as a string (`little` or `big`).");
 static PyObject *
 bitarray_append(bitarrayobject *self, PyObject *v)
 {
-    if (append_item(self, v) < 0)
+    int vi;
+
+    vi = IntOrBool_AsInt(v);
+    if (vi < 0)
         return NULL;
+    if (resize(self, self->nbits + 1) < 0)
+        return NULL;
+    setbit(self, self->nbits - 1, vi);
     Py_RETURN_NONE;
 }
 

@@ -1714,11 +1714,11 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEQUAL(a, bitarray('100'))
         a.append(0)
         a.append(1)
-        a.append(2)
-        a.append(None)
-        a.append('')
-        a.append('a')
-        self.assertEQUAL(a, bitarray('100011001'))
+        self.assertEQUAL(a, bitarray('10001'))
+        self.assertRaises(ValueError, a.append, 2)
+        self.assertRaises(TypeError, a.append, None)
+        self.assertRaises(TypeError, a.append, '')
+        self.assertEQUAL(a, bitarray('10001'))
         self.check_obj(a)
 
     def test_append_random(self):
@@ -1856,9 +1856,10 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a.count(False), 2)
         self.assertEqual(a.count(1), 3)
         self.assertEqual(a.count(0), 2)
-        self.assertEqual(a.count(None), 2)
-        self.assertEqual(a.count(''), 2)
-        self.assertEqual(a.count('A'), 3)
+        self.assertRaises(ValueError, a.count, 2)
+        self.assertRaises(TypeError, a.count, None)
+        self.assertRaises(TypeError, a.count, '')
+        self.assertRaises(TypeError, a.count, 'A')
         self.assertRaises(TypeError, a.count, 0, 'A')
         self.assertRaises(TypeError, a.count, 0, 0, 'A')
 
@@ -2713,7 +2714,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
         self.check_obj(a)
 
     def test_large(self):
-        d = {i: bitarray((1 << j) & i for j in range(10))
+        d = {i: bitarray(bool((1 << j) & i) for j in range(10))
              for i in range(1024)}
         t = decodetree(d)
         self.assertEqual(t.todict(), d)
