@@ -1543,7 +1543,7 @@ bitarray_item(bitarrayobject *self, Py_ssize_t i)
         PyErr_SetString(PyExc_IndexError, "bitarray index out of range");
         return NULL;
     }
-    return PyBool_FromLong(GETBIT(self, i));
+    return PyLong_FromLong(GETBIT(self, i));
 }
 
 static int

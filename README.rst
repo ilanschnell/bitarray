@@ -128,8 +128,8 @@ Bits can be assigned from booleans and integers in the range 0 to 1:
     >>> a.remove(0)     # removes first occurrence of 0
     >>> a
     bitarray('110101')
-    >>> a[2]
-    False
+    >>> a[-3]
+    1
 
 Like lists, bitarray objects support slice assignment and deletion:
 
