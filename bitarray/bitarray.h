@@ -116,12 +116,6 @@ IntOrBool_AsInt(PyObject *v)
 {
     Py_ssize_t x;
 
-    if (!PyIndex_Check(v)) {
-        PyErr_Format(PyExc_TypeError, "int or bool expected, got %s",
-                     Py_TYPE(v)->tp_name);
-        return -1;
-    }
-
     x = PyNumber_AsSsize_t(v, PyExc_IndexError);
     if (x == -1 && PyErr_Occurred())
         return -1;

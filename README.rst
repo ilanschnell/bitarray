@@ -48,8 +48,8 @@ Bitarray can be installed from source:
 
 .. code-block:: shell-session
 
-    $ tar xzf bitarray-1.9.1.tar.gz
-    $ cd bitarray-1.9.1
+    $ tar xzf bitarray-1.9.2.tar.gz
+    $ cd bitarray-1.9.2
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -68,7 +68,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 1.9.1
+    bitarray version: 1.9.2
     sys.version: 2.7.15 (default, Mar  5 2020, 14:58:04) [GCC Clang 9.0.1]
     sys.prefix: /Users/ilan/Mini3/envs/py27
     pointer size: 64 bit
@@ -115,21 +115,21 @@ Bitarray objects can be instantiated in different ways:
     >>> bitarray(lst)             # from list, tuple, iterable
     bitarray('1001011')
 
-Bits can be assigned from any Python object, if the value can be interpreted
-as a truth value.  You can think of this as Python's built-in function bool()
-being applied, whenever casting an object:
+Bits can be assigned from booleans and integers in the range 0 to 1:
 
 .. code-block:: python
 
-    >>> a = bitarray([42, '', True, {}, 'foo', None])
+    >>> a = bitarray([1, 0, 1, 0, True, False])
     >>> a
     bitarray('101010')
-    >>> a.append(a)      # note that bool(a) is True
-    >>> a.count(42)      # counts occurrences of True (not 42)
+    >>> a.append(True)  # append 1
+    >>> a.count(1)      # counts occurrences of 1
     4
-    >>> a.remove('')     # removes first occurrence of False
+    >>> a.remove(0)     # removes first occurrence of 0
     >>> a
     bitarray('110101')
+    >>> a[2]
+    False
 
 Like lists, bitarray objects support slice assignment and deletion:
 
@@ -410,7 +410,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 1.9.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/changelog.rst>`__
+bitarray version: 1.9.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/changelog.rst>`__
 
 The bitarray object:
 --------------------
