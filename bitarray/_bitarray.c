@@ -1452,7 +1452,7 @@ bitarray_remove(bitarrayobject *self, PyObject *v)
     Py_ssize_t i;
     int vi;
 
-    vi = PyObject_IsTrue(v);
+    vi = IntOrBool_AsInt(v);
     if (vi < 0)
         return NULL;
 

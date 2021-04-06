@@ -2119,7 +2119,11 @@ class MethodTests(unittest.TestCase, Util):
             self.check_obj(a)
 
         a = bitarray('0010011')
-        a.remove('1')
+        a.remove(True)
+        self.assertEQUAL(a, bitarray('000011'))
+        self.assertRaises(TypeError, a.remove, None)
+        self.assertRaises(TypeError, a.remove, '0')
+        self.assertRaises(ValueError, a.remove, 2)
         self.assertEQUAL(a, bitarray('000011'))
 
     def test_remove_errors(self):
