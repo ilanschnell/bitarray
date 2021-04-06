@@ -244,18 +244,19 @@ class TestsRIndex(unittest.TestCase, Util):
             a = bitarray('00010110000', endian)
             self.assertEqual(rindex(a), 6)
             self.assertEqual(rindex(a, 1), 6)
-            self.assertEqual(rindex(a, 'A'), 6)
             self.assertEqual(rindex(a, True), 6)
+            self.assertRaises(TypeError, rindex, a, 'A')
+            self.assertRaises(TypeError, rindex, a, None)
+            self.assertRaises(ValueError, rindex, a, -1)
 
             a = bitarray('00010110111', endian)
             self.assertEqual(rindex(a, 0), 7)
-            self.assertEqual(rindex(a, None), 7)
             self.assertEqual(rindex(a, False), 7)
 
             a = frozenbitarray('00010110111', endian)
             self.assertEqual(rindex(a, 0), 7)
-            self.assertEqual(rindex(a, None), 7)
             self.assertEqual(rindex(a, False), 7)
+            self.assertRaises(TypeError, rindex, a, None)
 
             for v in 0, 1:
                 self.assertRaises(ValueError, rindex,

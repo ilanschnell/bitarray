@@ -179,7 +179,7 @@ r_index(PyObject *module, PyObject *args)
     if (ensure_bitarray(a) < 0)
         return NULL;
 
-    vi = PyObject_IsTrue(x);
+    vi = IntOrBool_AsInt(x);
     if (vi < 0)
         return NULL;
 
