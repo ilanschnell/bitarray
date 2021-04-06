@@ -1065,7 +1065,7 @@ bitarray_setall(bitarrayobject *self, PyObject *v)
 {
     int vi;
 
-    vi = PyObject_IsTrue(v);
+    vi = IntOrBool_AsInt(v);
     if (vi < 0)
         return NULL;
 
