@@ -1968,7 +1968,7 @@ shift_check(PyObject *a, PyObject *b, const char *ostr)
                      ostr, Py_TYPE(a)->tp_name, Py_TYPE(b)->tp_name);
         return -1;
     }
-    n = PyNumber_AsSsize_t(b, PyExc_IndexError);
+    n = PyNumber_AsSsize_t(b, PyExc_OverflowError);
     if (n == -1 && PyErr_Occurred())
         return -1;
 
@@ -2875,7 +2875,7 @@ bitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
     Py_ssize_t nbits;
 
     assert(PyIndex_Check(index));
-    nbits = PyNumber_AsSsize_t(index, PyExc_IndexError);
+    nbits = PyNumber_AsSsize_t(index, PyExc_OverflowError);
     if (nbits == -1 && PyErr_Occurred())
         return NULL;
 
