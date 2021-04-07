@@ -2109,12 +2109,11 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a.tolist(), [])
 
         a = bitarray('110')
-        self.assertEqual(a.tolist(), [True, True, False])
-        self.assertEqual(a.tolist(True), [1, 1, 0])
-
-        for as_ints in 0, 1:
-            for elt in a.tolist(as_ints):
-                self.assertIsInstance(elt, int if as_ints else bool)
+        lst = a.tolist()
+        self.assertIsInstance(lst, list)
+        self.assertEqual(a.tolist(), [1, 1, 0])
+        for elt in lst:
+            self.assertIsInstance(elt, int)
 
         for lst in self.randomlists():
             a = bitarray(lst)
