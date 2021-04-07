@@ -48,8 +48,8 @@ Bitarray can be installed from source:
 
 .. code-block:: shell-session
 
-    $ tar xzf bitarray-1.9.1.tar.gz
-    $ cd bitarray-1.9.1
+    $ tar xzf bitarray-1.9.2.tar.gz
+    $ cd bitarray-1.9.2
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -68,7 +68,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 1.9.1
+    bitarray version: 1.9.2
     sys.version: 2.7.15 (default, Mar  5 2020, 14:58:04) [GCC Clang 9.0.1]
     sys.prefix: /Users/ilan/Mini3/envs/py27
     pointer size: 64 bit
@@ -410,7 +410,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 1.9.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/changelog.rst>`__
+bitarray version: 1.9.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/changelog.rst>`__
 
 The bitarray object:
 --------------------
@@ -425,19 +425,14 @@ The bitarray object:
 
    ``str``: Create bitarray from a string of ``0`` and ``1``.
 
-   ``list``, ``tuple``, ``iterable``: Create bitarray from a sequence, each
-   element in the sequence is converted to a bit using its truth value.
-
-   ``bitarray``: Create bitarray from another bitarray.  This is done by
-   copying the buffer holding the bitarray data, and is hence very fast.
+   ``iterable``: Create bitarray from a sequence, each element in the sequence
+   is converted to a bit using its truth value.
 
    The optional keyword arguments ``endian`` specifies the bit endianness of the
    created bitarray object.
    Allowed values are the strings ``big`` and ``little`` (default is ``big``).
-
-   Note that setting the bit endianness only has an effect when accessing the
-   machine representation of the bitarray, i.e. when using the methods: tofile,
-   fromfile, tobytes, frombytes.
+   The bit endianness only effects the when buffer representation of the
+   bitarray.
 
 
 **A bitarray object supports the following methods:**

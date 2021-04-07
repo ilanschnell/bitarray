@@ -3196,23 +3196,18 @@ the optional initial object, and endianness.\n\
 The initializer may be of the following types:\n\
 \n\
 `int`: Create a bitarray of given integer length.  The initial values are\n\
-arbitrary.  If you want all values to be set, use the .setall() method.\n\
+uninitialized.\n\
 \n\
 `str`: Create bitarray from a string of `0` and `1`.\n\
 \n\
-`list`, `tuple`, `iterable`: Create bitarray from a sequence, each\n\
-element in the sequence is converted to a bit using its truth value.\n\
-\n\
-`bitarray`: Create bitarray from another bitarray.  This is done by\n\
-copying the buffer holding the bitarray data, and is hence very fast.\n\
+`iterable`: Create bitarray from a sequence, each element in the sequence\n\
+is converted to a bit using its truth value.\n\
 \n\
 The optional keyword arguments `endian` specifies the bit endianness of the\n\
 created bitarray object.\n\
 Allowed values are the strings `big` and `little` (default is `big`).\n\
-\n\
-Note that setting the bit endianness only has an effect when accessing the\n\
-machine representation of the bitarray, i.e. when using the methods: tofile,\n\
-fromfile, tobytes, frombytes.");
+The bit endianness only effects the when buffer representation of the\n\
+bitarray.");
 
 static PyTypeObject Bitarray_Type = {
 #ifdef IS_PY3K
