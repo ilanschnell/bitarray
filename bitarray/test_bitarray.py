@@ -974,12 +974,14 @@ class MiscTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
 
     def test_overflow(self):
+        self.assertRaises(OverflowError, bitarray.__new__, bitarray, 2**63)
+
         if _sysinfo()[0] == 8:
             return
 
         a = bitarray(10 ** 6)
         self.assertRaises(OverflowError, a.__imul__, 17180)
-        self.assertRaises(IndexError, bitarray.__new__, bitarray, 2**31)
+        self.assertRaises(OverflowError, bitarray.__new__, bitarray, 2**31)
         try:
             a = bitarray(2**31 - 1);
         except MemoryError:
