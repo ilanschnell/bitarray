@@ -1428,7 +1428,7 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
     vi = GETBIT(self, i);
     if (delete_n(self, i, 1) < 0)
         return NULL;
-    return PyBool_FromLong(vi);
+    return PyLong_FromLong(vi);
 }
 
 PyDoc_STRVAR(pop_doc,
