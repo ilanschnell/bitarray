@@ -468,7 +468,7 @@ static int
 extend_iter(bitarrayobject *self, PyObject *iter)
 {
     const Py_ssize_t original_nbits = self->nbits;
-    PyObject *item = NULL;
+    PyObject *item;
 
     assert(PyIter_Check(iter));
     while ((item = PyIter_Next(iter))) {
@@ -479,11 +479,11 @@ extend_iter(bitarrayobject *self, PyObject *iter)
         Py_DECREF(item);
     }
     if (PyErr_Occurred())
-        goto error;
+        return -1;
 
     return 0;
  error:
-    Py_XDECREF(item);
+    Py_DECREF(item);
     resize(self, original_nbits);
     return -1;
 }
