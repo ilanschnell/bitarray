@@ -1293,7 +1293,7 @@ static PyObject *
 bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"zero", "one", NULL};
-    char zero = 0x00, one = 0xff;
+    char zero = 0x00, one = 0x01;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|cc:unpack", kwlist,
                                      &zero, &one))
@@ -1303,7 +1303,7 @@ bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
 }
 
 PyDoc_STRVAR(unpack_doc,
-"unpack(zero=b'\\x00', one=b'\\xff') -> bytes\n\
+"unpack(zero=b'\\x00', one=b'\\x01') -> bytes\n\
 \n\
 Return bytes containing one character for each bit in the bitarray,\n\
 using the specified mapping.");

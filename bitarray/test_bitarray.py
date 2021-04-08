@@ -2296,11 +2296,11 @@ class BytesTests(unittest.TestCase, Util):
     def test_unpack_simple(self):
         a = bitarray('01')
         self.assertIsInstance(a.unpack(), bytes)
-        self.assertEqual(a.unpack(), b'\x00\xff')
-        self.assertEqual(a.unpack(b'A'), b'A\xff')
+        self.assertEqual(a.unpack(), b'\x00\x01')
+        self.assertEqual(a.unpack(b'A'), b'A\x01')
         self.assertEqual(a.unpack(b'0', b'1'), b'01')
-        self.assertEqual(a.unpack(one=b'\x01'), b'\x00\x01')
-        self.assertEqual(a.unpack(zero=b'A'), b'A\xff')
+        self.assertEqual(a.unpack(one=b'\xff'), b'\x00\xff')
+        self.assertEqual(a.unpack(zero=b'A'), b'A\x01')
         self.assertEqual(a.unpack(one=b't', zero=b'f'), b'ft')
 
     def test_unpack_random(self):
