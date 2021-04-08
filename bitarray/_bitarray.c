@@ -1086,22 +1086,17 @@ Sort the bits in the array (in-place).");
 
 
 static PyObject *
-bitarray_tolist(bitarrayobject *self, PyObject *args)
+bitarray_tolist(bitarrayobject *self)
 {
     PyObject *list, *item;
     Py_ssize_t i;
-    int as_ints = 0;
-
-    if (!PyArg_ParseTuple(args, "|i:tolist", &as_ints))
-        return NULL;
 
     list = PyList_New(self->nbits);
     if (list == NULL)
         return NULL;
 
     for (i = 0; i < self->nbits; i++) {
-        item = as_ints ? PyLong_FromLong(GETBIT(self, i)) :
-                         PyBool_FromLong(GETBIT(self, i));
+        item = PyLong_FromLong(GETBIT(self, i));
         if (item == NULL)
             return NULL;
         if (PyList_SetItem(list, i, item) < 0)
@@ -1111,10 +1106,9 @@ bitarray_tolist(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(tolist_doc,
-"tolist(as_ints=False, /) -> list\n\
+"tolist() -> list\n\
 \n\
-Return a list with the items (False or True) in the bitarray.\n\
-The optional parameter, changes the items in the list to integers (0 or 1).\n\
+Return a list with the items (0 or 1) in the bitarray.\n\
 Note that the list object being created will require 32 or 64 times more\n\
 memory (depending on the machine architecture) than the bitarray object,\n\
 which may cause a memory error if the bitarray is very large.");
@@ -2802,7 +2796,7 @@ static PyMethodDef bitarray_methods[] = {
      sort_doc},
     {"tofile",       (PyCFunction) bitarray_tofile,      METH_O,
      tofile_doc},
-    {"tolist",       (PyCFunction) bitarray_tolist,      METH_VARARGS,
+    {"tolist",       (PyCFunction) bitarray_tolist,      METH_NOARGS,
      tolist_doc},
     {"tobytes",      (PyCFunction) bitarray_tobytes,     METH_NOARGS,
      tobytes_doc},
