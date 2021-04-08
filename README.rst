@@ -98,46 +98,31 @@ basic usage of bitarray objects:
 .. code-block:: python
 
     >>> from bitarray import bitarray
-    >>> a = bitarray()            # create empty bitarray
-    >>> a.append(True)
-    >>> a.extend([False, True, True])
+    >>> a = bitarray()         # create empty bitarray
+    >>> a.append(1)
+    >>> a.extend([1, 0])
+    >>> a
+    bitarray('110')
+    >>> x = bitarray(2 ** 20)  # bitarray of length 1048576 (uninitialized)
+    >>> bitarray('1001 011')   # initialize from string (whitespace is ignored)
+    bitarray('1001011')
+    >>> lst = [1, 0, False, True, True]
+    >>> a = bitarray(lst)      # initialize from iterable
+    >>> a
+    bitarray('10011')
+    >>> a.count(1)
+    3
+    >>> a.remove(0)            # removes first occurrence of 0
     >>> a
     bitarray('1011')
-
-Bitarray objects can be instantiated in different ways:
-
-.. code-block:: python
-
-    >>> a = bitarray(2 ** 20)     # bitarray of length 1048576 (uninitialized)
-    >>> bitarray('1001 011')      # from a string (whitespace is ignored)
-    bitarray('1001011')
-    >>> lst = [True, False, False, True, False, True, True]
-    >>> bitarray(lst)             # from list, tuple, iterable
-    bitarray('1001011')
-
-Bits can be assigned from any Python object, if the value can be interpreted
-as a truth value.  You can think of this as Python's built-in function bool()
-being applied, whenever casting an object:
-
-.. code-block:: python
-
-    >>> a = bitarray([42, '', True, {}, 'foo', None])
-    >>> a
-    bitarray('101010')
-    >>> a.append(a)      # note that bool(a) is True
-    >>> a.count(42)      # counts occurrences of True (not 42)
-    4
-    >>> a.remove('')     # removes first occurrence of False
-    >>> a
-    bitarray('110101')
 
 Like lists, bitarray objects support slice assignment and deletion:
 
 .. code-block:: python
 
     >>> a = bitarray(50)
-    >>> a.setall(False)
-    >>> a[11:37:3] = 9 * bitarray([True])
+    >>> a.setall(0)
+    >>> a[11:37:3] = 9 * bitarray('1')
     >>> a
     bitarray('00000000000100100100100100100100100100000000000000')
     >>> del a[12::3]
@@ -421,7 +406,7 @@ The bitarray object:
    The initializer may be of the following types:
 
    ``int``: Create a bitarray of given integer length.  The initial values are
-   arbitrary.  If you want all values to be set, use the .setall() method.
+   uninitialized.
 
    ``str``: Create bitarray from a string of ``0`` and ``1``.
 
