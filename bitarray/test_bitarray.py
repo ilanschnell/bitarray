@@ -2130,11 +2130,11 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.remove, 0)
 
     def test_pop_simple(self):
-        for x, n, r, y in [('1', 0, True, ''),
-                           ('0', -1, False, ''),
-                           ('0011100', 3, True, '001100')]:
+        for x, n, r, y in [('1',       0, 1, ''),
+                           ('0',      -1, 0, ''),
+                           ('0011100', 3, 1, '001100')]:
             a = bitarray(x)
-            self.assertEqual(a.pop(n), r)
+            self.assertTrue(a.pop(n) is r)
             self.assertEqual(a, bitarray(y))
             self.check_obj(a)
 
