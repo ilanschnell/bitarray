@@ -1435,12 +1435,12 @@ class NumberTests(unittest.TestCase, Util):
     @staticmethod
     def shift(a, n, direction):
         if n >= len(a):
-            return bitarray(len(a) * '0', a.endian())
+            return zeros(len(a), a.endian())
 
         if direction == 'right':
-            return bitarray(n * '0', a.endian()) + a[:len(a)-n]
+            return zeros(n, a.endian()) + a[:len(a)-n]
         if direction == 'left':
-            return a[n:] + bitarray(n * '0', a.endian())
+            return a[n:] + zeros(n, a.endian())
 
     def test_lshift(self):
         a = bitarray('11011')
@@ -1449,6 +1449,7 @@ class NumberTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, lambda: a << 1.2)
         self.assertRaises(TypeError, a.__lshift__, 1.2)
         self.assertRaises(ValueError, lambda: a << -1)
+        self.assertRaises(OverflowError, a.__lshift__, 2 ** 63)
 
         for a in self.randombitarrays():
             c = a.copy()
