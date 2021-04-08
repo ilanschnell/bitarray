@@ -538,11 +538,9 @@ extend_bytes01(bitarrayobject *self, PyObject *bytes)
         case '\v':
             continue;
         default:
-            /* ensure no bits are added on error */
-            if (resize(self, original_nbits) < 0)
-                return -1;
             PyErr_Format(PyExc_ValueError, "expected '0' or '1' "
                          "(or whitespace), got '%c' (0x%02x)", c, c);
+            resize(self, original_nbits);  /* no bits added on error */
             return -1;
         }
         if (resize(self, self->nbits + 1) < 0)
