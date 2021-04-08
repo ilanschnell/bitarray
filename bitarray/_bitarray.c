@@ -3017,7 +3017,7 @@ bitarrayiter_next(bitarrayiterobject *it)
     if (it->index < it->bao->nbits) {
         vi = GETBIT(it->bao, it->index);
         it->index++;
-        return PyBool_FromLong(vi);
+        return PyLong_FromLong(vi);
     }
     return NULL;  /* stop iteration */
 }

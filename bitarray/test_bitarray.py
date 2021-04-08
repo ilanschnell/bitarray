@@ -262,9 +262,6 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.check_obj(a)
 
     def test_iter1(self):
-        a = iter(bitarray())
-        self.assertIsType(a, 'bitarrayiterator')
-
         for n in range(50):
             lst = [bool(randint(0, 1)) for d in range(n)]
             a = bitarray(iter(lst))
@@ -855,9 +852,10 @@ class MiscTests(unittest.TestCase, Util):
 
     def test_iter1(self):
         it = iter(bitarray('011'))
-        self.assertEqual(next(it), False)
-        self.assertEqual(next(it), True)
-        self.assertEqual(next(it), True)
+        self.assertIsType(it, 'bitarrayiterator')
+        self.assertTrue(next(it) is 0)
+        self.assertTrue(next(it) is 1)
+        self.assertTrue(next(it) is 1)
         self.assertStopIteration(it)
 
     def test_iter2(self):
