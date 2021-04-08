@@ -1762,10 +1762,12 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.index, 1, 0, 'a')
         self.assertRaises(TypeError, a.index, 1, 0, 100, 1)
         a[20] = a[27] = 1
-        self.assertEqual(a.index(42), 20)
+        self.assertEqual(a.index(True), 20)
         self.assertEqual(a.index(1, 21), 27)
         self.assertEqual(a.index(1, 27), 27)
         self.assertEqual(a.index(1, -73), 27)
+        self.assertRaises(ValueError, a.index, -1)
+        self.assertRaises(TypeError, a.index, None)
         self.assertRaises(ValueError, a.index, 1, 5, 17)
         self.assertRaises(ValueError, a.index, 1, 5, -83)
         self.assertRaises(ValueError, a.index, 1, 21, 27)

@@ -705,7 +705,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O|nn:index", &x, &start, &stop))
         return NULL;
 
-    vi = PyObject_IsTrue(x);
+    vi = pybit_as_int(x);
     if (vi < 0)
         return NULL;
 
@@ -722,7 +722,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(index_doc,
 "index(value, start=0, stop=<end of array>, /) -> int\n\
 \n\
-Return index of the first occurrence of `bool(value)` in the bitarray.\n\
+Return index of the first occurrence of `value` in the bitarray.\n\
 Raises `ValueError` if the value is not present.");
 
 

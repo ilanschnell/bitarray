@@ -179,7 +179,7 @@ r_index(PyObject *module, PyObject *args)
     if (ensure_bitarray(a) < 0)
         return NULL;
 
-    vi = PyObject_IsTrue(x);
+    vi = pybit_as_int(x);
     if (vi < 0)
         return NULL;
 
@@ -191,9 +191,9 @@ r_index(PyObject *module, PyObject *args)
 }
 
 PyDoc_STRVAR(rindex_doc,
-"rindex(bitarray, value=True, /) -> int\n\
+"rindex(bitarray, value=1, /) -> int\n\
 \n\
-Return the rightmost index of `bool(value)` in bitarray.\n\
+Return the rightmost index of `value` in bitarray.\n\
 Raises `ValueError` if the value is not present.");
 
 /* --------------------------- unary functions ------------------------- */
