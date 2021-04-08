@@ -1857,9 +1857,10 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a.count(False), 2)
         self.assertEqual(a.count(1), 3)
         self.assertEqual(a.count(0), 2)
-        self.assertEqual(a.count(None), 2)
-        self.assertEqual(a.count(''), 2)
-        self.assertEqual(a.count('A'), 3)
+        self.assertRaises(ValueError, a.count, 2)
+        self.assertRaises(TypeError, a.count, None)
+        self.assertRaises(TypeError, a.count, '')
+        self.assertRaises(TypeError, a.count, 'A')
         self.assertRaises(TypeError, a.count, 0, 'A')
         self.assertRaises(TypeError, a.count, 0, 0, 'A')
 
@@ -2113,8 +2114,10 @@ class MethodTests(unittest.TestCase, Util):
             self.check_obj(a)
 
         a = bitarray('0010011')
-        a.remove('1')
+        a.remove(1)
         self.assertEQUAL(a, bitarray('000011'))
+        self.assertRaises(TypeError, a.remove, 'A')
+        self.assertRaises(ValueError, a.remove, 21)
 
     def test_remove_errors(self):
         a = bitarray()
@@ -2173,8 +2176,10 @@ class MethodTests(unittest.TestCase, Util):
     def test_setall(self):
         a = bitarray(5)
         a.setall(True)
+        self.assertRaises(ValueError, a.setall, -1)
+        self.assertRaises(TypeError, a.setall, None)
         self.assertEQUAL(a, bitarray('11111'))
-        a.setall(False)
+        a.setall(0)
         self.assertEQUAL(a, bitarray('00000'))
         self.check_obj(a)
 

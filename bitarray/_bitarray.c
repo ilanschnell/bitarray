@@ -679,7 +679,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "|Onn:count", &x, &start, &stop))
         return NULL;
 
-    vi = PyObject_IsTrue(x);
+    vi = pybit_as_int(x);
     if (vi < 0)
         return NULL;
 
@@ -690,9 +690,9 @@ bitarray_count(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(count_doc,
-"count(value=True, start=0, stop=<end of array>, /) -> int\n\
+"count(value=1, start=0, stop=<end of array>, /) -> int\n\
 \n\
-Count the number of occurrences of bool(value) in the bitarray.");
+Count the number of occurrences of `value` in the bitarray.");
 
 
 static PyObject *
@@ -1040,7 +1040,7 @@ bitarray_setall(bitarrayobject *self, PyObject *v)
 {
     int vi;
 
-    vi = PyObject_IsTrue(v);
+    vi = pybit_as_int(v);
     if (vi < 0)
         return NULL;
 
@@ -1051,7 +1051,7 @@ bitarray_setall(bitarrayobject *self, PyObject *v)
 PyDoc_STRVAR(setall_doc,
 "setall(value, /)\n\
 \n\
-Set all bits in the bitarray to `bool(value)`.");
+Set all bits in the bitarray to `value`.");
 
 
 static PyObject *
@@ -1421,7 +1421,7 @@ bitarray_remove(bitarrayobject *self, PyObject *v)
     Py_ssize_t i;
     int vi;
 
-    vi = PyObject_IsTrue(v);
+    vi = pybit_as_int(v);
     if (vi < 0)
         return NULL;
 
@@ -1437,7 +1437,7 @@ bitarray_remove(bitarrayobject *self, PyObject *v)
 PyDoc_STRVAR(remove_doc,
 "remove(value, /)\n\
 \n\
-Remove the first occurrence of `bool(value)` in the bitarray.\n\
+Remove the first occurrence of `value` in the bitarray.\n\
 Raises `ValueError` if item is not present.");
 
 
@@ -1540,7 +1540,7 @@ bitarray_contains(bitarrayobject *self, PyObject *item)
     if (PyIndex_Check(item)) {
         int vi;
 
-        vi = IntOrBool_AsInt(item);
+        vi = pybit_as_int(item);
         if (vi < 0)
             return -1;
         return findfirst(self, vi, 0, self->nbits) >= 0;
@@ -1699,7 +1699,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *bool)
                              &start, &stop, &step, &slicelength) < 0)
         return -1;
 
-    vi = IntOrBool_AsInt(bool);
+    vi = pybit_as_int(bool);
     if (vi < 0)
         return -1;
 

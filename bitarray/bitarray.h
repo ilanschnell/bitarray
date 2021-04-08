@@ -109,10 +109,10 @@ static const unsigned char bitcount_lookup[256] = {
     3,4,4,5,4,5,5,6,4,5,5,6,5,6,6,7,4,5,5,6,5,6,6,7,5,6,6,7,6,7,7,8,
 };
 
-/* Given a PyLong (which must be 0 or 1) or a PyBool, return 0 or 1.
+/* Intergrer a PyObject (usualy PyLong or PyBool) as a bit, return 0 or 1.
    On error, return -1 and set error message. */
 static inline int
-IntOrBool_AsInt(PyObject *v)
+pybit_as_int(PyObject *v)
 {
     Py_ssize_t x;
 
