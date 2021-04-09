@@ -243,10 +243,15 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, bitarray.__new__, bitarray, -924)
 
     def test_list(self):
-        lst = ['foo', None, [1], {}]
+        lst = [0, 1, False, True]
         a = bitarray(lst)
-        self.assertEqual(a.tolist(), [True, False, True, False])
+        self.assertEqual(a, bitarray('0101'))
         self.check_obj(a)
+
+        lst = [0, 1, 2]
+        self.assertRaises(ValueError, bitarray.__new__, bitarray, lst)
+        lst = [0, 1, None]
+        self.assertRaises(TypeError, bitarray.__new__, bitarray, lst)
 
         for n in range(50):
             lst = [bool(randint(0, 1)) for d in range(n)]
@@ -591,16 +596,19 @@ class SliceTests(unittest.TestCase, Util):
         a[-2] = 1
         self.assertEqual(a, bitarray('10'))
 
+        self.assertRaises(ValueError, a.__setitem__, 0, -1)
+        self.assertRaises(TypeError, a.__setitem__, 1, None)
+
         self.assertRaises(IndexError, a.__setitem__,  2, True)
         self.assertRaises(IndexError, a.__setitem__, -3, False)
         self.assertRaises(TypeError, a.__setitem__, 1.5, 1)  # see issue 114
         self.assertRaises(TypeError, a.__setitem__, None, 0)
         self.assertRaises(TypeError, a.__setitem__, 'a', True)
+        self.assertEqual(a, bitarray('10'))
 
     def test_setitem_random(self):
         for a in self.randombitarrays(start=1):
-            la = len(a)
-            i = randint(0, la - 1)
+            i = randint(0, len(a) - 1)
             aa = a.tolist()
             val = bool(randint(0, 1))
             a[i] = val
@@ -1133,12 +1141,13 @@ class SequenceMethodsTests(unittest.TestCase, Util):
         a = bitarray('001')
         b = a + bitarray('110')
         self.assertEQUAL(b, bitarray('001110'))
-        b = a + [0, 1, 2]
+        b = a + [0, 1, True]
         self.assertEQUAL(b, bitarray('001011'))
         b = a + '100'
         self.assertEQUAL(b, bitarray('001100'))
         b = a + (1, 0, 3)
         self.assertEQUAL(b, bitarray('001101'))
+        self.assertEQUAL(a, bitarray('001'))
 
         self.assertRaises(TypeError, a.__add__, 42)
         if is_py3k:
@@ -1162,14 +1171,17 @@ class SequenceMethodsTests(unittest.TestCase, Util):
         a = bitarray('001')
         a += bitarray('110')
         self.assertEqual(a, bitarray('001110'))
-        a += [0, 1, 2]
+        a += [0, 1, True]
         self.assertEqual(a, bitarray('001110011'))
         a += '100'
         self.assertEqual(a, bitarray('001110011100'))
-        a += (1, 0, 3)
+        a += (1, 0, True)
         self.assertEqual(a, bitarray('001110011100101'))
 
         a = bitarray('110')
+        self.assertRaises(ValueError, a.__iadd__, [0, 1, 2])
+        self.assertEqual(a, bitarray('110'))
+
         self.assertRaises(TypeError, a.__iadd__, 42)
         b = b'101'
         if is_py3k:
@@ -1575,10 +1587,11 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray()
         a.extend([])
         self.assertEqual(a, bitarray())
-        a.extend([0, 1, 3, None, {}])
-        self.assertEqual(a, bitarray('01100'))
-        a.extend([True, False])
-        self.assertEqual(a, bitarray('0110010'))
+        a.extend([0, 1, True, False])
+        self.assertEqual(a, bitarray('0110'))
+        self.assertRaises(ValueError, a.extend, [0, 1, 2])
+        self.assertRaises(TypeError, a.extend, [0, 1, 'a'])
+        self.assertEqual(a, bitarray('0110'))
 
         for a in self.randomlists():
             for b in self.randomlists():
@@ -1742,13 +1755,16 @@ class MethodTests(unittest.TestCase, Util):
         a.insert(0, True)
         self.assertTrue(a is b)
         self.assertEqual(a, bitarray('1'))
+        self.assertRaises(ValueError, a.insert, 0, 2)
+        self.assertRaises(TypeError, a.insert, 0, None)
         self.assertRaises(TypeError, a.insert)
         self.assertRaises(TypeError, a.insert, None)
+        self.assertEqual(a, bitarray('1'))
 
         for a in self.randombitarrays():
             aa = a.tolist()
             for _ in range(20):
-                item = bool(randint(0, 1))
+                item = randint(0, 1)
                 pos = randint(-len(a) - 2, len(a) + 2)
                 a.insert(pos, item)
                 aa.insert(pos, item)

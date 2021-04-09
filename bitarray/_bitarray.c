@@ -440,7 +440,7 @@ set_item(bitarrayobject *self, Py_ssize_t i, PyObject *v)
     int vi;
 
     assert(0 <= i && i < self->nbits);
-    vi = PyObject_IsTrue(v);
+    vi = pybit_as_int(v);
     if (vi < 0)
         return -1;
     setbit(self, i, vi);
@@ -450,9 +450,15 @@ set_item(bitarrayobject *self, Py_ssize_t i, PyObject *v)
 static int
 append_item(bitarrayobject *self, PyObject *item)
 {
+    int vi;
+
+    vi = PyObject_IsTrue(item);
+    if (vi < 0)
+        return -1;
     if (resize(self, self->nbits + 1) < 0)
         return -1;
-    return set_item(self, self->nbits - 1, item);
+    setbit(self, self->nbits - 1, vi);
+    return 0;
 }
 
 static int
@@ -495,6 +501,7 @@ extend_iter(bitarrayobject *self, PyObject *iter)
 static int
 extend_list(bitarrayobject *self, PyObject *list)
 {
+    const Py_ssize_t original_nbits = self->nbits;
     PyObject *item;
     Py_ssize_t n, i;
 
@@ -508,10 +515,10 @@ extend_list(bitarrayobject *self, PyObject *list)
 
     for (i = 0; i < n; i++) {
         item = PyList_GET_ITEM(list, i);
-        if (item == NULL)
+        if (item == NULL || set_item(self, self->nbits - n + i, item) < 0) {
+            resize(self, original_nbits);
             return -1;
-        if (set_item(self, self->nbits - n + i, item) < 0)
-            return -1;
+        }
     }
     return 0;
 }
@@ -1362,23 +1369,27 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
 {
     Py_ssize_t i;
     PyObject *v;
+    int vi;
 
     if (!PyArg_ParseTuple(args, "nO:insert", &i, &v))
         return NULL;
 
     normalize_index(self->nbits, &i);
 
+    vi = pybit_as_int(v);
+    if (vi < 0)
+        return NULL;
+
     if (insert_n(self, i, 1) < 0)
         return NULL;
-    if (set_item(self, i, v) < 0)
-        return NULL;
+    setbit(self, i, vi);
     Py_RETURN_NONE;
 }
 
 PyDoc_STRVAR(insert_doc,
 "insert(index, value, /)\n\
 \n\
-Insert `bool(value)` into the bitarray before index.");
+Insert `value` into the bitarray before `index`.");
 
 
 static PyObject *
