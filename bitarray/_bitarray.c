@@ -490,14 +490,14 @@ extend_iter(bitarrayobject *self, PyObject *iter)
 }
 
 static int
-extend_list(bitarrayobject *self, PyObject *list)
+extend_sequence(bitarrayobject *self, PyObject *sequence)
 {
     const Py_ssize_t original_nbits = self->nbits;
     PyObject *item;
     Py_ssize_t n, i;
 
-    assert(PyList_Check(list));
-    n = PyList_GET_SIZE(list);
+    assert(PySequence_Check(sequence));
+    n = PySequence_Size(sequence);
     if (n == 0)
         return 0;
 
@@ -505,7 +505,7 @@ extend_list(bitarrayobject *self, PyObject *list)
         return -1;
 
     for (i = 0; i < n; i++) {
-        item = PyList_GET_ITEM(list, i);
+        item = PySequence_GetItem(sequence, i);
         if (item == NULL || set_item(self, self->nbits - n + i, item) < 0) {
             resize(self, original_nbits);
             return -1;
@@ -574,9 +574,6 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     if (bitarray_Check(obj))                              /* bitarray */
         return extend_bitarray(self, (bitarrayobject *) obj);
 
-    if (PyList_Check(obj))                                    /* list */
-        return extend_list(self, obj);
-
     if (PyBytes_Check(obj)) {                             /* bytes 01 */
 #ifdef IS_PY3K
         PyErr_SetString(PyExc_TypeError,
@@ -590,6 +587,9 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 
     if (PyUnicode_Check(obj))                           /* unicode 01 */
         return extend_unicode01(self, obj);
+
+    if (PySequence_Check(obj))                            /* sequence */
+        return extend_sequence(self, obj);
 
     if (PyIter_Check(obj))                                    /* iter */
         return extend_iter(self, obj);
