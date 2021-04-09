@@ -448,20 +448,6 @@ set_item(bitarrayobject *self, Py_ssize_t i, PyObject *v)
 }
 
 static int
-append_item(bitarrayobject *self, PyObject *item)
-{
-    int vi;
-
-    vi = PyObject_IsTrue(item);
-    if (vi < 0)
-        return -1;
-    if (resize(self, self->nbits + 1) < 0)
-        return -1;
-    setbit(self, self->nbits - 1, vi);
-    return 0;
-}
-
-static int
 extend_bitarray(bitarrayobject *self, bitarrayobject *other)
 {
     /* We have to store the sizes before we resize, and since
@@ -482,20 +468,25 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
 static int
 extend_iter(bitarrayobject *self, PyObject *iter)
 {
+    const Py_ssize_t original_nbits = self->nbits;
     PyObject *item;
 
     assert(PyIter_Check(iter));
     while ((item = PyIter_Next(iter))) {
-        if (append_item(self, item) < 0) {
-            Py_DECREF(item);
-            return -1;
-        }
+        if (resize(self, self->nbits + 1) < 0)
+            goto error;
+        if (set_item(self, self->nbits - 1, item) < 0)
+            goto error;
         Py_DECREF(item);
     }
     if (PyErr_Occurred())
         return -1;
 
     return 0;
+ error:
+    Py_DECREF(item);
+    resize(self, original_nbits);
+    return -1;
 }
 
 static int

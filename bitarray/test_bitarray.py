@@ -248,10 +248,8 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('0101'))
         self.check_obj(a)
 
-        lst = [0, 1, 2]
-        self.assertRaises(ValueError, bitarray.__new__, bitarray, lst)
-        lst = [0, 1, None]
-        self.assertRaises(TypeError, bitarray.__new__, bitarray, lst)
+        self.assertRaises(ValueError, bitarray.__new__, bitarray, [0, 1, 2])
+        self.assertRaises(TypeError, bitarray.__new__, bitarray, [0, 1, None])
 
         for n in range(50):
             lst = [bool(randint(0, 1)) for d in range(n)]
@@ -260,10 +258,13 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.check_obj(a)
 
     def test_tuple(self):
-        tup = ('', True, [], {1:2})
+        tup = (0, True, False, 1)
         a = bitarray(tup)
-        self.assertEqual(a.tolist(), [False, True, False, True])
+        self.assertEqual(a, bitarray('0101'))
         self.check_obj(a)
+
+        self.assertRaises(ValueError, bitarray.__new__, bitarray, (0, 1, 2))
+        self.assertRaises(TypeError, bitarray.__new__, bitarray, (0, 1, None))
 
         for n in range(50):
             lst = [bool(randint(0, 1)) for d in range(n)]
@@ -290,13 +291,13 @@ class CreateObjectTests(unittest.TestCase, Util):
     def test_iter3(self):
         a = bitarray(itertools.repeat(False, 10))
         self.assertEqual(a, zeros(10))
-        # Note that the through value of '0' is True: bool('0') -> True
-        a = bitarray(itertools.repeat('0', 10))
+        a = bitarray(itertools.repeat(1, 10))
         self.assertEqual(a, bitarray(10 * '1'))
 
     def test_range(self):
-        a = bitarray(range(-3, 3))
-        self.assertEqual(a, bitarray('111011'))
+        self.assertEqual(bitarray(range(2)), bitarray('01'))
+        self.assertRaises(ValueError, bitarray.__new__, bitarray,
+                          range(0, 3))
 
     def test_string01(self):
         for s in '0010111', u'0010111', '0010 111', u'0010 111':
@@ -1145,8 +1146,9 @@ class SequenceMethodsTests(unittest.TestCase, Util):
         self.assertEQUAL(b, bitarray('001011'))
         b = a + '100'
         self.assertEQUAL(b, bitarray('001100'))
-        b = a + (1, 0, 3)
+        b = a + (1, 0, True)
         self.assertEQUAL(b, bitarray('001101'))
+        self.assertRaises(ValueError, a.__add__, (0, 1, 2))
         self.assertEQUAL(a, bitarray('001'))
 
         self.assertRaises(TypeError, a.__add__, 42)
@@ -1604,8 +1606,11 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray()
         a.extend(tuple())
         self.assertEqual(a, bitarray())
-        a.extend((0, 1, 2, 0, 3))
-        self.assertEqual(a, bitarray('01101'))
+        a.extend((0, 1, True, 0, False))
+        self.assertEqual(a, bitarray('01100'))
+        self.assertRaises(ValueError, a.extend, (0, 1, 2))
+        self.assertRaises(TypeError, a.extend, (0, 1, 'a'))
+        self.assertEqual(a, bitarray('01100'))
 
         for a in self.randomlists():
             for b in self.randomlists():
@@ -1616,7 +1621,7 @@ class ExtendTests(unittest.TestCase, Util):
 
     def test_generator(self):
         def bar():
-            for x in ('', '1', None, True, []):
+            for x in (0, 1, False, True, 0):
                 yield x
         a = bitarray('0011')
         a.extend(bar())
@@ -1635,8 +1640,10 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray()
         a.extend(iter([]))
         self.assertEqual(a, bitarray())
-        a.extend(iter([3, 9, 0, 1, -2]))
-        self.assertEqual(a, bitarray('11011'))
+        a.extend(iter([1, 1, 0, True, False]))
+        self.assertEqual(a, bitarray('11010'))
+        self.assertRaises(ValueError, a.extend, iter([1, 1, 0, 0, 2]))
+        self.assertEqual(a, bitarray('11010'))
 
         for a in self.randomlists():
             for b in self.randomlists():
@@ -2739,7 +2746,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
         self.check_obj(a)
 
     def test_large(self):
-        d = {i: bitarray((1 << j) & i for j in range(10))
+        d = {i: bitarray(bool((1 << j) & i) for j in range(10))
              for i in range(1024)}
         t = decodetree(d)
         self.assertEqual(t.todict(), d)
