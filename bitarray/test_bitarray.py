@@ -99,6 +99,12 @@ class Util(object):
             repr(type(a)), "<%s 'bitarray.%s'>" %
             ('class' if is_py3k or b == 'frozenbitarray' else 'type', b))
 
+    def assertBit0(self, x):
+        self.assertEqual(repr(x), '0')
+
+    def assertBit1(self, x):
+        self.assertEqual(repr(x), '1')
+
     def assertStopIteration(self, it):
         self.assertRaises(StopIteration, next, it)
 
@@ -527,13 +533,13 @@ class SliceTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertRaises(IndexError, a.__getitem__,  0)
         a.append(True)
-        self.assertTrue(a[0] is 1)
-        self.assertTrue(a[-1] is 1)
+        self.assertBit1(a[0])
+        self.assertBit1(a[-1])
         self.assertRaises(IndexError, a.__getitem__,  1)
         self.assertRaises(IndexError, a.__getitem__, -2)
         a.append(False)
-        self.assertTrue(a[1] is 0)
-        self.assertTrue(a[-1] is 0)
+        self.assertBit0(a[1])
+        self.assertBit0(a[-1])
         self.assertRaises(IndexError, a.__getitem__,  2)
         self.assertRaises(IndexError, a.__getitem__, -3)
         self.assertRaises(TypeError, a.__getitem__, 1.5)
@@ -853,9 +859,9 @@ class MiscTests(unittest.TestCase, Util):
     def test_iter1(self):
         it = iter(bitarray('011'))
         self.assertIsType(it, 'bitarrayiterator')
-        self.assertTrue(next(it) is 0)
-        self.assertTrue(next(it) is 1)
-        self.assertTrue(next(it) is 1)
+        self.assertBit0(next(it))
+        self.assertBit1(next(it))
+        self.assertBit1(next(it))
         self.assertStopIteration(it)
 
     def test_iter2(self):
@@ -2099,7 +2105,7 @@ class MethodTests(unittest.TestCase, Util):
 
         a = bitarray('110')
         lst = a.tolist()
-        self.assertEqual(lst, [1, 1, 0])
+        self.assertIsInstance(lst, list)
         self.assertEqual(repr(lst), '[1, 1, 0]')
 
         for lst in self.randomlists():
