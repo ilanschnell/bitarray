@@ -735,9 +735,9 @@ bitarray_extend(bitarrayobject *self, PyObject *obj)
 PyDoc_STRVAR(extend_doc,
 "extend(iterable, /)\n\
 \n\
-Extend bitarray by appending the truth value of each element given\n\
-by iterable.  If a string is provided, each `0` and `1` are appended\n\
-as bits (whitespace is ignored).");
+Append all the items from `iterable` to the end of the bitarray.\n\
+If the iterable is a string, each `0` and `1` are appended as\n\
+bits (ignoring whitespace).");
 
 
 static PyObject *
@@ -1056,7 +1056,7 @@ bitarray_setall(bitarrayobject *self, PyObject *v)
 PyDoc_STRVAR(setall_doc,
 "setall(value, /)\n\
 \n\
-Set all bits in the bitarray to `value`.");
+Set all elements in the bitarray to `value`.");
 
 
 static PyObject *
@@ -3182,8 +3182,7 @@ uninitialized.\n\
 \n\
 `str`: Create bitarray from a string of `0` and `1`.\n\
 \n\
-`iterable`: Create bitarray from a sequence, each element in the sequence\n\
-is converted to a bit using its truth value.\n\
+`iterable`: Create bitarray from iterable or sequence or integers 0 or 1.\n\
 \n\
 The optional keyword arguments `endian` specifies the bit endianness of the\n\
 created bitarray object.\n\
