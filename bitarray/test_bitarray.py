@@ -100,8 +100,8 @@ class Util(object):
             ('class' if is_py3k or b == 'frozenbitarray' else 'type', b))
 
     def assertBitEqual(self, x, y):
-        self.assertTrue(repr(x) in '01')
-        self.assertTrue(repr(y) in '01')
+        for z in x, y:
+            self.assertEqual('01'[z], repr(z))
         self.assertEqual(x, y)
 
     def assertStopIteration(self, it):
@@ -554,8 +554,8 @@ class SliceTests(unittest.TestCase, Util):
     def test_getitem_2(self):
         a = bitarray('1100010')
         for i, b in enumerate(a):
-            self.assertEqual(a[i], b)
-            self.assertEqual(a[i - 7], b)
+            self.assertBitEqual(a[i], b)
+            self.assertBitEqual(a[i - 7], b)
         self.assertRaises(IndexError, a.__getitem__,  7)
         self.assertRaises(IndexError, a.__getitem__, -8)
 
@@ -2199,7 +2199,7 @@ class MethodTests(unittest.TestCase, Util):
         # pop from empty bitarray
         self.assertRaises(IndexError, a.pop)
 
-    def test_pop_random(self):
+    def test_pop_random_1(self):
         for a in self.randombitarrays():
             self.assertRaises(IndexError, a.pop, len(a))
             self.assertRaises(IndexError, a.pop, -len(a) - 1)
@@ -2211,12 +2211,15 @@ class MethodTests(unittest.TestCase, Util):
             self.check_obj(a)
             self.assertEqual(a.endian(), enda)
 
+    def test_pop_random_2(self):
         for a in self.randombitarrays(start=1):
             n = randint(-len(a), len(a)-1)
             aa = a.tolist()
-            self.assertEqual(a.pop(n), aa[n])
-            aa.pop(n)
+            x = a.pop(n)
+            self.assertBitEqual(x, aa[n])
+            y = aa.pop(n)
             self.assertEqual(a, bitarray(aa))
+            self.assertBitEqual(x, y)
             self.check_obj(a)
 
     def test_clear(self):
