@@ -845,7 +845,7 @@ bitarray_append(bitarrayobject *self, PyObject *v)
 PyDoc_STRVAR(append_doc,
 "append(item, /)\n\
 \n\
-Append the truth value `bool(item)` to the end of the bitarray.");
+Append `item` to the end of the bitarray.");
 
 
 static PyObject *
