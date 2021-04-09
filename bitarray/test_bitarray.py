@@ -1620,11 +1620,14 @@ class ExtendTests(unittest.TestCase, Util):
                 self.check_obj(c)
 
     def test_generator(self):
-        def bar():
-            for x in (0, 1, False, True, 0):
+        def gen(lst):
+            for x in lst:
                 yield x
         a = bitarray('0011')
-        a.extend(bar())
+        a.extend(gen([0, 1, False, True, 0]))
+        self.assertEqual(a, bitarray('0011 01010'))
+        self.assertRaises(ValueError, a.extend, gen([0, 1, 2]))
+        self.assertRaises(TypeError, a.extend, gen([1, 0, None]))
         self.assertEqual(a, bitarray('0011 01010'))
 
         for a in self.randomlists():
