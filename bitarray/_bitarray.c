@@ -839,8 +839,15 @@ Return the bit endianness of the bitarray as a string (`little` or `big`).");
 static PyObject *
 bitarray_append(bitarrayobject *self, PyObject *v)
 {
-    if (append_item(self, v) < 0)
+    int vi;
+
+    vi = pybit_as_int(v);
+    if (vi < 0)
         return NULL;
+
+    if (resize(self, self->nbits + 1) < 0)
+        return NULL;
+    setbit(self, self->nbits - 1, vi);
     Py_RETURN_NONE;
 }
 

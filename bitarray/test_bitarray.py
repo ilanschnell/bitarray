@@ -1733,11 +1733,11 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEQUAL(a, bitarray('100'))
         a.append(0)
         a.append(1)
-        a.append(2)
-        a.append(None)
-        a.append('')
-        a.append('a')
-        self.assertEQUAL(a, bitarray('100011001'))
+        self.assertEQUAL(a, bitarray('10001'))
+        self.assertRaises(ValueError, a.append, 2)
+        self.assertRaises(TypeError, a.append, None)
+        self.assertRaises(TypeError, a.append, '')
+        self.assertEQUAL(a, bitarray('10001'))
         self.check_obj(a)
 
     def test_append_random(self):
