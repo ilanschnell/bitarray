@@ -1619,7 +1619,7 @@ class ExtendTests(unittest.TestCase, Util):
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
 
-    def test_generator(self):
+    def test_generator_1(self):
         def gen(lst):
             for x in lst:
                 yield x
@@ -1630,6 +1630,13 @@ class ExtendTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.extend, gen([1, 0, None]))
         self.assertEqual(a, bitarray('0011 01010'))
 
+        a = bytearray()
+        a.extend(gen([0, 1, 255]))
+        self.assertEqual(a, b'\x00\x01\xff')
+        self.assertRaises(ValueError, a.extend, gen([0, 1, 256]))
+        self.assertRaises(TypeError, a.extend, gen([1, 0, None]))
+        self.assertEqual(a, b'\x00\x01\xff')
+
         for a in self.randomlists():
             def foo():
                 for e in a:
@@ -1639,7 +1646,21 @@ class ExtendTests(unittest.TestCase, Util):
             self.assertEqual(b.tolist(), a)
             self.check_obj(b)
 
-    def test_iterator1(self):
+    def test_generator_2(self):
+        def gen():
+            for i in range(10):
+                if i == 4:
+                    raise KeyError
+                yield i % 2
+
+        a = bitarray()
+        self.assertRaises(KeyError, a.extend, gen())
+        self.assertEqual(a, bitarray('0101'))
+        a = []
+        self.assertRaises(KeyError, a.extend, gen())
+        self.assertEqual(a, [0, 1, 0, 1])
+
+    def test_iterator_1(self):
         a = bitarray()
         a.extend(iter([]))
         self.assertEqual(a, bitarray())
@@ -1655,7 +1676,7 @@ class ExtendTests(unittest.TestCase, Util):
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
 
-    def test_iterator2(self):
+    def test_iterator_2(self):
         a = bitarray()
         a.extend(itertools.repeat(True, 23))
         self.assertEqual(a, bitarray(23 * '1'))
