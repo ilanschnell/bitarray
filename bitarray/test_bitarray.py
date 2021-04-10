@@ -248,6 +248,10 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('0101'))
         self.check_obj(a)
 
+        if not is_py3k:
+            a = bitarray([long(1), long(0)])
+            self.assertEqual(a, bitarray('10'))
+
         self.assertRaises(ValueError, bitarray.__new__, bitarray, [0, 1, 2])
         self.assertRaises(TypeError, bitarray.__new__, bitarray, [0, 1, None])
 
@@ -757,6 +761,8 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('01011100'))
         self.assertRaises(ValueError, a.__setitem__, slice(None, None, 2), 3)
         self.assertRaises(ValueError, a.__setitem__, slice(None, 2, None), -1)
+        # a[:2:] = '0'
+        self.assertRaises(TypeError, a.__setitem__, slice(None, 2, None), '0')
 
     def test_setslice_to_invalid(self):
         a = bitarray('11111111')
