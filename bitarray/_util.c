@@ -214,14 +214,14 @@ parity(PyObject *module, PyObject *a)
         par ^= aa->ob_item[i];
 #undef aa
 
-    return PyBool_FromLong((long) bitcount_lookup[par] % 2);
+    return PyLong_FromLong((long) bitcount_lookup[par] % 2);
 }
 
 PyDoc_STRVAR(parity_doc,
-"parity(a, /) -> bool\n\
+"parity(bitarrayobject, /) -> int\n\
 \n\
 Return the parity of bitarray `a`.  This is equivalent\n\
-to `bool(a.count() % 2)` (but more efficient).");
+to `a.count() % 2` (but more efficient).");
 
 /* --------------------------- binary functions ------------------------ */
 

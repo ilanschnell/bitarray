@@ -573,10 +573,10 @@ class TestsParity(unittest.TestCase, Util):
 
     def test_bitarray(self):
         a = bitarray()
-        self.assertTrue(parity(a) is False)
+        self.assertBitEqual(parity(a), 0)
         par = False
         for _ in range(100):
-            self.assertTrue(parity(a) is par)
+            self.assertEqual(parity(a), par)
             a.append(1)
             par = not par
 
@@ -585,14 +585,10 @@ class TestsParity(unittest.TestCase, Util):
         a.setall(1)
         self.assertTrue(parity(a))
 
-    def test_return_type(self):
-        p = parity(bitarray('101'))
-        self.assertIsInstance(p, bool)
-
     def test_frozenbitarray(self):
-        self.assertTrue(parity(frozenbitarray()) is False)
-        self.assertTrue(parity(frozenbitarray('0010011')) is True)
-        self.assertTrue(parity(frozenbitarray('10100110')) is False)
+        self.assertBitEqual(parity(frozenbitarray()), 0)
+        self.assertBitEqual(parity(frozenbitarray('0010011')), 1)
+        self.assertBitEqual(parity(frozenbitarray('10100110')), 0)
 
     def test_wrong_args(self):
         self.assertRaises(TypeError, parity, '')
