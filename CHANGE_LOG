@@ -1,6 +1,7 @@
-2021-XX-XX   1.9.2:
+2021-04-10   1.9.2:
 -------------------
   * update pythoncapi_compat: Fix support with PyPy 3.7, #120
+  * update readme
 
 
 2021-04-05   1.9.1:
