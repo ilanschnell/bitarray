@@ -507,9 +507,11 @@ extend_sequence(bitarrayobject *self, PyObject *sequence)
     for (i = 0; i < n; i++) {
         item = PySequence_GetItem(sequence, i);
         if (item == NULL || set_item(self, self->nbits - n + i, item) < 0) {
+            Py_XDECREF(item);
             resize(self, original_nbits);
             return -1;
         }
+        Py_DECREF(item);
     }
     return 0;
 }
