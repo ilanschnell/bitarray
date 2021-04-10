@@ -531,8 +531,7 @@ ba2base(PyObject *module, PyObject *args)
         return NULL;
     if (ensure_bitarray(a) < 0)
         return NULL;
-    m = base_to_length(n);
-    if (m < 0)
+    if ((m = base_to_length(n)) < 0)
         return NULL;
 
     if (n == 32)
@@ -595,8 +594,7 @@ base2ba(PyObject *module, PyObject *args)
         return NULL;
     if (ensure_bitarray(a) < 0)
         return NULL;
-    m = base_to_length(n);
-    if (m < 0)
+    if ((m = base_to_length(n)) < 0)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
