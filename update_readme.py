@@ -38,6 +38,9 @@ Reference
 
 bitarray version: %s -- `change log <%s>`__
 
+In the following, `item` is usually a single bit - an integer 0 or 1.
+
+
 The bitarray object:
 --------------------
 

@@ -397,6 +397,9 @@ Reference
 
 bitarray version: 1.9.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/changelog.rst>`__
 
+In the following, `item` is usually a single bit - an integer 0 or 1.
+
+
 The bitarray object:
 --------------------
 
