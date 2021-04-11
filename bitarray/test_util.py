@@ -6,6 +6,7 @@ from __future__ import absolute_import
 import os
 import sys
 import base64
+import binascii
 import shutil
 import tempfile
 import unittest
@@ -683,7 +684,7 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertEqual(ba2hex(a_le), hex_le)
 
     def test_round_trip(self):
-        s = ''.join(choice(hexdigits) for _ in range(randint(10, 100)))
+        s = ''.join(choice(hexdigits) for _ in range(randint(20, 100)))
         for default_endian in 'big', 'little':
             _set_default_endian(default_endian)
             a = hex2ba(s)
@@ -694,6 +695,14 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertEqual(t, s.lower())
             b = hex2ba(t, default_endian)
             self.assertEQUAL(a, b)
+
+    def test_binascii(self):
+        a = urandom(800, 'big')
+        s = binascii.hexlify(a.tobytes()).decode()
+        self.assertEqual(ba2hex(a), s)
+        b = bitarray(endian='big')
+        b.frombytes(binascii.unhexlify(s))
+        self.assertEQUAL(hex2ba(s, 'big'), b)
 
 tests.append(TestsHexlify)
 
@@ -779,7 +788,7 @@ class TestsBase(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('1111 0110 0001'))
         self.assertEqual(ba2base(16, a), 'f61')
 
-        for n in range(100):
+        for n in range(50):
             s = ''.join(choice(hexdigits) for _ in range(n))
             for endian in 'big', 'little':
                 a = base2ba(16, s, endian)
