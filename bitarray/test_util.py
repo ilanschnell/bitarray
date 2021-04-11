@@ -613,20 +613,6 @@ tests.append(TestsParity)
 
 # ---------------------------------------------------------------------------
 
-CODEDICT = {'little': {}, 'big': {
-    '0': bitarray('0000'),    '1': bitarray('0001'),
-    '2': bitarray('0010'),    '3': bitarray('0011'),
-    '4': bitarray('0100'),    '5': bitarray('0101'),
-    '6': bitarray('0110'),    '7': bitarray('0111'),
-    '8': bitarray('1000'),    '9': bitarray('1001'),
-    'a': bitarray('1010'),    'b': bitarray('1011'),
-    'c': bitarray('1100'),    'd': bitarray('1101'),
-    'e': bitarray('1110'),    'f': bitarray('1111'),
-}}
-for k, v in CODEDICT['big'].items():
-    CODEDICT['little'][k] = v[::-1]
-
-
 class TestsHexlify(unittest.TestCase, Util):
 
     def test_ba2hex(self):
@@ -679,16 +665,6 @@ class TestsHexlify(unittest.TestCase, Util):
             for b in b'\0', b'\0f', b'f\0', b'\0ff', b'f\0f', b'ff\0':
                 self.assertRaises(ValueError, hex2ba, b)
 
-    @staticmethod
-    def hex2ba(s, endian=None):
-        a = bitarray(0, endian or get_default_endian())
-        a.encode(CODEDICT[a.endian()], s)
-        return a
-
-    @staticmethod
-    def ba2hex(a):
-        return ''.join(a.iterdecode(CODEDICT[a.endian()]))
-
     def test_explicit(self):
         data = [ #                       little   big
             ('',                         '',      ''),
@@ -705,11 +681,6 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertEQUAL(hex2ba(hex_le, 'little'), a_le)
             self.assertEqual(ba2hex(a_be), hex_be)
             self.assertEqual(ba2hex(a_le), hex_le)
-            # test simple encode / decode implementation
-            self.assertEQUAL(self.hex2ba(hex_be, 'big'), a_be)
-            self.assertEQUAL(self.hex2ba(hex_le, 'little'), a_le)
-            self.assertEqual(self.ba2hex(a_be), hex_be)
-            self.assertEqual(self.ba2hex(a_le), hex_le)
 
     def test_round_trip(self):
         s = ''.join(choice(hexdigits) for _ in range(randint(10, 100)))
@@ -723,9 +694,6 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertEqual(t, s.lower())
             b = hex2ba(t, default_endian)
             self.assertEQUAL(a, b)
-            # test simple encode / decode implementation
-            self.assertEQUAL(a, self.hex2ba(t))
-            self.assertEqual(t, self.ba2hex(a))
 
 tests.append(TestsHexlify)
 
