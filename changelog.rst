@@ -1,6 +1,10 @@
 Change log
 ==========
 
+2021-XX-XX   X.X.X:
+  * add examples/hexadecimal.py
+
+
 **1.9.2** (2021-04-10):
   * update pythoncapi_compat: Fix support with PyPy 3.7, `#120 <https://github.com/ilanschnell/bitarray/issues/120>`__
   * update readme
