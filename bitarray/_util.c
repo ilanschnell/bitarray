@@ -170,17 +170,16 @@ find_last(bitarrayobject *a, int vi)
 static PyObject *
 r_index(PyObject *module, PyObject *args)
 {
-    PyObject *x = Py_True, *a;
+    PyObject *v = Py_True, *a;
     Py_ssize_t i;
     int vi;
 
-    if (!PyArg_ParseTuple(args, "O|O:rindex", &a, &x))
+    if (!PyArg_ParseTuple(args, "O|O:rindex", &a, &v))
         return NULL;
     if (ensure_bitarray(a) < 0)
         return NULL;
 
-    vi = pybit_as_int(x);
-    if (vi < 0)
+    if ((vi = pybit_as_int(v)) < 0)
         return NULL;
 
     i = find_last((bitarrayobject *) a, vi);
@@ -218,10 +217,10 @@ parity(PyObject *module, PyObject *a)
 }
 
 PyDoc_STRVAR(parity_doc,
-"parity(bitarrayobject, /) -> int\n\
+"parity(bitarray, /) -> int\n\
 \n\
-Return the parity of bitarray `a`.  This is equivalent\n\
-to `a.count() % 2` (but more efficient).");
+Return the parity of the bitarray.\n\
+This is equivalent to `a.count() % 2` (but more efficient).");
 
 /* --------------------------- binary functions ------------------------ */
 
