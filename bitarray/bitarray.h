@@ -121,7 +121,7 @@ pybit_as_int(PyObject *v)
         return -1;
 
     if (x < 0 || x > 1) {
-        PyErr_SetString(PyExc_ValueError, "bit must be 0 or 1");
+        PyErr_Format(PyExc_ValueError, "bit must be 0 or 1, got %zd", x);
         return -1;
     }
     return (int) x;

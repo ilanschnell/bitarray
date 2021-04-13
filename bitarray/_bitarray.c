@@ -718,8 +718,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
     normalize_index(self->nbits, &start);
     normalize_index(self->nbits, &stop);
 
-    i = findfirst(self, vi, start, stop);
-    if (i < 0)
+    if ((i = findfirst(self, vi, start, stop)) < 0)
         return PyErr_Format(PyExc_ValueError, "%d is not in bitarray", vi);
 
     return PyLong_FromSsize_t(i);
@@ -1427,17 +1426,15 @@ Raises `IndexError` if bitarray is empty or index is out of range.");
 
 
 static PyObject *
-bitarray_remove(bitarrayobject *self, PyObject *v)
+bitarray_remove(bitarrayobject *self, PyObject *value)
 {
     Py_ssize_t i;
     int vi;
 
-    vi = pybit_as_int(v);
-    if (vi < 0)
+    if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
-    i = findfirst(self, vi, 0, self->nbits);
-    if (i < 0)
+    if ((i = findfirst(self, vi, 0, self->nbits)) < 0)
         return PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
 
     if (delete_n(self, i, 1) < 0)
