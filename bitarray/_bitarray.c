@@ -440,8 +440,7 @@ set_item(bitarrayobject *self, Py_ssize_t i, PyObject *v)
     int vi;
 
     assert(0 <= i && i < self->nbits);
-    vi = pybit_as_int(v);
-    if (vi < 0)
+    if ((vi = pybit_as_int(v)) < 0)
         return -1;
     setbit(self, i, vi);
     return 0;
@@ -679,8 +678,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "|Onn:count", &v, &start, &stop))
         return NULL;
 
-    vi = pybit_as_int(v);
-    if (vi < 0)
+    if ((vi = pybit_as_int(v)) < 0)
         return NULL;
 
     normalize_index(self->nbits, &start);
@@ -1044,10 +1042,8 @@ bitarray_setall(bitarrayobject *self, PyObject *v)
 {
     int vi;
 
-    vi = pybit_as_int(v);
-    if (vi < 0)
+    if ((vi = pybit_as_int(v)) < 0)
         return NULL;
-
     memset(self->ob_item, vi ? 0xff : 0x00, (size_t) Py_SIZE(self));
     Py_RETURN_NONE;
 }
@@ -1055,7 +1051,8 @@ bitarray_setall(bitarrayobject *self, PyObject *v)
 PyDoc_STRVAR(setall_doc,
 "setall(value, /)\n\
 \n\
-Set all elements in the bitarray to `value`.");
+Set all elements in the bitarray to `value`.\n\
+Note that `a.setall(value)` is equivalent to `a[:] = value`.");
 
 
 static PyObject *
@@ -1342,8 +1339,7 @@ bitarray_repr(bitarrayobject *self)
         return NULL;
     }
 
-    str = (char *) PyMem_Malloc(strsize);
-    if (str == NULL)
+    if ((str = (char *) PyMem_Malloc(strsize)) == NULL)
         return PyErr_NoMemory();
 
     /* add "bitarray('......')" to str */
@@ -2347,8 +2343,7 @@ decodetree_todict(decodetreeobject *self)
 {
     PyObject *dict, *prefix;
 
-    dict = PyDict_New();
-    if (dict == NULL)
+    if ((dict = PyDict_New()) == NULL)
         return NULL;
 
     prefix = newbitarrayobject(&Bitarray_Type, 0, default_endian);
@@ -2477,8 +2472,7 @@ bitarray_decode(bitarrayobject *self, PyObject *obj)
             return NULL;
     }
 
-    list = PyList_New(0);
-    if (list == NULL)
+    if ((list = PyList_New(0)) == NULL)
         goto error;
 
     while ((symbol = binode_traverse(tree, self, &index))) {
@@ -2531,8 +2525,7 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
         if (check_codedict(obj) < 0)
             return NULL;
 
-        tree = binode_make_tree(obj);
-        if (tree == NULL)
+        if ((tree = binode_make_tree(obj)) == NULL)
             return NULL;
     }
 

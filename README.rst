@@ -397,7 +397,8 @@ Reference
 
 bitarray version: 2.0.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/changelog.rst>`__
 
-In the following, ``item`` is usually a single bit - an integer 0 or 1.
+In the following, ``item`` and ``value`` are usually a single bit -
+an integer 0 or 1.
 
 
 The bitarray object:
@@ -559,6 +560,7 @@ The bitarray object:
 
 ``setall(value, /)``
    Set all elements in the bitarray to ``value``.
+   Note that ``a.setall(value)`` is equivalent to ``a[:] = value``.
 
 
 ``sort(reverse=False)``
