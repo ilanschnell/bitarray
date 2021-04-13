@@ -48,8 +48,8 @@ Bitarray can be installed from source:
 
 .. code-block:: shell-session
 
-    $ tar xzf bitarray-1.9.2.tar.gz
-    $ cd bitarray-1.9.2
+    $ tar xzf bitarray-2.0.0.tar.gz
+    $ cd bitarray-2.0.0
     $ python setup.py install
 
 On Unix systems, the latter command may have to be executed with root
@@ -68,7 +68,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 1.9.2
+    bitarray version: 2.0.0
     sys.version: 2.7.15 (default, Mar  5 2020, 14:58:04) [GCC Clang 9.0.1]
     sys.prefix: /Users/ilan/Mini3/envs/py27
     pointer size: 64 bit
@@ -395,7 +395,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 1.9.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/changelog.rst>`__
+bitarray version: 2.0.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/changelog.rst>`__
 
 In the following, ``item`` is usually a single bit - an integer 0 or 1.
 
@@ -413,8 +413,7 @@ The bitarray object:
 
    ``str``: Create bitarray from a string of ``0`` and ``1``.
 
-   ``iterable``: Create bitarray from a sequence, each element in the sequence
-   is converted to a bit using its truth value.
+   ``iterable``: Create bitarray from iterable or sequence or integers 0 or 1.
 
    The optional keyword arguments ``endian`` specifies the bit endianness of the
    created bitarray object.
@@ -436,7 +435,7 @@ The bitarray object:
 
 
 ``append(item, /)``
-   Append the truth value ``bool(item)`` to the end of the bitarray.
+   Append ``item`` to the end of the bitarray.
 
 
 ``buffer_info()`` -> tuple
@@ -460,8 +459,8 @@ The bitarray object:
    Return a copy of the bitarray.
 
 
-``count(value=True, start=0, stop=<end of array>, /)`` -> int
-   Count the number of occurrences of bool(value) in the bitarray.
+``count(value=1, start=0, stop=<end of array>, /)`` -> int
+   Count the number of occurrences of ``value`` in the bitarray.
 
 
 ``decode(code, /)`` -> list
@@ -481,9 +480,9 @@ The bitarray object:
 
 
 ``extend(iterable, /)``
-   Extend bitarray by appending the truth value of each element given
-   by iterable.  If a string is provided, each ``0`` and ``1`` are appended
-   as bits (whitespace is ignored).
+   Append all the items from ``iterable`` to the end of the bitarray.
+   If the iterable is a string, each ``0`` and ``1`` are appended as
+   bits (ignoring whitespace).
 
 
 ``fill()`` -> int
@@ -504,12 +503,12 @@ The bitarray object:
 
 
 ``index(value, start=0, stop=<end of array>, /)`` -> int
-   Return index of the first occurrence of ``bool(value)`` in the bitarray.
+   Return index of the first occurrence of ``value`` in the bitarray.
    Raises ``ValueError`` if the value is not present.
 
 
 ``insert(index, value, /)``
-   Insert ``bool(value)`` into the bitarray before index.
+   Insert ``value`` into the bitarray before ``index``.
 
 
 ``invert(index=<all bits>, /)``
@@ -528,11 +527,6 @@ The bitarray object:
    the start positions where bitarray matches self.
 
 
-``length()`` -> int
-   Return the length - a.length() is the same as len(a).
-   Deprecated since 1.5.1, use len().
-
-
 ``pack(bytes, /)``
    Extend the bitarray from bytes, where each byte corresponds to a single
    bit.  The byte ``b'\x00'`` maps to bit 0 and all other characters map to
@@ -548,7 +542,7 @@ The bitarray object:
 
 
 ``remove(value, /)``
-   Remove the first occurrence of ``bool(value)`` in the bitarray.
+   Remove the first occurrence of ``value`` in the bitarray.
    Raises ``ValueError`` if item is not present.
 
 
@@ -564,7 +558,7 @@ The bitarray object:
 
 
 ``setall(value, /)``
-   Set all bits in the bitarray to ``bool(value)``.
+   Set all elements in the bitarray to ``value``.
 
 
 ``sort(reverse=False)``
@@ -588,15 +582,14 @@ The bitarray object:
    the remaining bits (1..7) are set to 0.
 
 
-``tolist(as_ints=False, /)`` -> list
-   Return a list with the items (False or True) in the bitarray.
-   The optional parameter, changes the items in the list to integers (0 or 1).
+``tolist()`` -> list
+   Return a list with the items (0 or 1) in the bitarray.
    Note that the list object being created will require 32 or 64 times more
    memory (depending on the machine architecture) than the bitarray object,
    which may cause a memory error if the bitarray is very large.
 
 
-``unpack(zero=b'\x00', one=b'\xff')`` -> bytes
+``unpack(zero=b'\x00', one=b'\x01')`` -> bytes
    Return bytes containing one character for each bit in the bitarray,
    using the specified mapping.
 
@@ -660,8 +653,8 @@ Functions defined in `bitarray.util` module:
    unchanged.
 
 
-``rindex(bitarray, value=True, /)`` -> int
-   Return the rightmost index of ``bool(value)`` in bitarray.
+``rindex(bitarray, value=1, /)`` -> int
+   Return the rightmost index of ``value`` in bitarray.
    Raises ``ValueError`` if the value is not present.
 
 
@@ -675,9 +668,9 @@ Functions defined in `bitarray.util` module:
    Raises ``ValueError``, when n exceeds total count (``a.count()``).
 
 
-``parity(a, /)`` -> bool
-   Return the parity of bitarray ``a``.  This is equivalent
-   to ``bool(a.count() % 2)`` (but more efficient).
+``parity(bitarray, /)`` -> int
+   Return the parity of the bitarray.
+   This is equivalent to ``a.count() % 2`` (but more efficient).
 
 
 ``count_and(a, b, /)`` -> int

@@ -480,7 +480,7 @@ digit_to_int(char c, int n)
     if (n <= 16) {              /* base 2, 4, 8, 16 */
         int i;
 
-        i  = hex_to_int(c);
+        i = hex_to_int(c);
         return (0 <= i && i < n) ? i : -1;
     }
     if (n == 32) {              /* base 32 */

@@ -1,7 +1,12 @@
 Change log
 ==========
 
-2021-XX-XX   X.X.X:
+2021-04-XX   2.0.0:
+  * bitarray now requires more specific objects, see `#119 <https://github.com/ilanschnell/bitarray/issues/119>`__
+  * remove ``.length()`` method (deprecated since 1.5.1)
+  * in ``.unpack()`` the ``one`` argument now defaults to 0x01 (was 0xff)
+  * ``.tolist()`` now always returns a list of integers (0 or 1)
+  * support sequence protocol in ``.extend()``
   * add examples/hexadecimal.py
 
 
