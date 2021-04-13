@@ -672,14 +672,14 @@ Return a copy of the bitarray.");
 static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
-    PyObject *x = Py_True;
+    PyObject *v = Py_True;
     Py_ssize_t start = 0, stop = self->nbits;
     int vi;
 
-    if (!PyArg_ParseTuple(args, "|Onn:count", &x, &start, &stop))
+    if (!PyArg_ParseTuple(args, "|Onn:count", &v, &start, &stop))
         return NULL;
 
-    vi = pybit_as_int(x);
+    vi = pybit_as_int(v);
     if (vi < 0)
         return NULL;
 
@@ -698,15 +698,14 @@ Count the number of occurrences of `value` in the bitarray.");
 static PyObject *
 bitarray_index(bitarrayobject *self, PyObject *args)
 {
-    PyObject *x;
     Py_ssize_t start = 0, stop = self->nbits, i;
+    PyObject *value;
     int vi;
 
-    if (!PyArg_ParseTuple(args, "O|nn:index", &x, &start, &stop))
+    if (!PyArg_ParseTuple(args, "O|nn:index", &value, &start, &stop))
         return NULL;
 
-    vi = pybit_as_int(x);
-    if (vi < 0)
+    if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
     normalize_index(self->nbits, &start);
@@ -830,14 +829,12 @@ Return the bit endianness of the bitarray as a string (`little` or `big`).");
 
 
 static PyObject *
-bitarray_append(bitarrayobject *self, PyObject *v)
+bitarray_append(bitarrayobject *self, PyObject *value)
 {
     int vi;
 
-    vi = pybit_as_int(v);
-    if (vi < 0)
+    if ((vi = pybit_as_int(value)) < 0)
         return NULL;
-
     if (resize(self, self->nbits + 1) < 0)
         return NULL;
     setbit(self, self->nbits - 1, vi);
@@ -1543,22 +1540,22 @@ bitarray_ass_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
         return set_item(self, i, value);
 }
 
-/* return 1 if 'item' (which can be an int or bitarray) is in self,
+/* return 1 if value (which can be an int or bitarray) is in self,
    0 otherwise, and -1 on error */
 static int
-bitarray_contains(bitarrayobject *self, PyObject *item)
+bitarray_contains(bitarrayobject *self, PyObject *value)
 {
-    if (PyIndex_Check(item)) {
+    if (PyIndex_Check(value)) {
         int vi;
 
-        vi = pybit_as_int(item);
+        vi = pybit_as_int(value);
         if (vi < 0)
             return -1;
         return findfirst(self, vi, 0, self->nbits) >= 0;
     }
 
-    if (bitarray_Check(item))
-        return search(self, (bitarrayobject *) item, 0) >= 0;
+    if (bitarray_Check(value))
+        return search(self, (bitarrayobject *) value, 0) >= 0;
 
     PyErr_SetString(PyExc_TypeError, "bitarray or bool expected");
     return -1;
@@ -1698,20 +1695,19 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
     return res;
 }
 
-/* set the elements in self, specified by slice, to bool */
+/* set the elements in self, specified by slice, to value */
 static int
-setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *bool)
+setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
 {
     Py_ssize_t start, stop, step, slicelength, i, j;
     int vi;
 
-    assert(PySlice_Check(slice) && PyIndex_Check(bool));
+    assert(PySlice_Check(slice) && PyIndex_Check(value));
     if (PySlice_GetIndicesEx(slice, self->nbits,
                              &start, &stop, &step, &slicelength) < 0)
         return -1;
 
-    vi = pybit_as_int(bool);
-    if (vi < 0)
+    if ((vi = pybit_as_int(value)) < 0)
         return -1;
 
     if (step == 1) {
