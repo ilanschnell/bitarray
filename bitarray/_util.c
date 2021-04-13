@@ -534,12 +534,11 @@ ba2base(PyObject *module, PyObject *args)
     if ((m = base_to_length(n)) < 0)
         return NULL;
 
-    if (n == 32)
-        alphabet = base32_alphabet;
-    else if (n == 64)
-        alphabet = base64_alphabet;
-    else
-        alphabet = hexdigits;
+    switch (n) {
+    case 32: alphabet = base32_alphabet; break;
+    case 64: alphabet = base64_alphabet; break;
+    default: alphabet = hexdigits;
+    }
 
 #define aa  ((bitarrayobject *) a)
     if (aa->nbits % m)
@@ -547,8 +546,7 @@ ba2base(PyObject *module, PyObject *args)
                             "bitarray length not multiple of %d", m);
 
     strsize = aa->nbits / m;
-    str = (char *) PyMem_Malloc(strsize);
-    if (str == NULL)
+    if ((str = (char *) PyMem_Malloc(strsize)) == NULL)
         return PyErr_NoMemory();
 
     le = IS_LE(aa);
