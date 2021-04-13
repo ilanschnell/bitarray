@@ -121,7 +121,7 @@ Like lists, bitarray objects support slice assignment and deletion:
 .. code-block:: python
 
     >>> a = bitarray(50)
-    >>> a.setall(0)
+    >>> a.setall(0)            # set all elements in a to 0
     >>> a[11:37:3] = 9 * bitarray('1')
     >>> a
     bitarray('00000000000100100100100100100100100100000000000000')
@@ -161,8 +161,8 @@ is setting ranges:
 .. code-block:: python
 
     >>> a = bitarray(30)
-    >>> a[:] = 0            # set all elements to 0, just like a.setall(0)
-    >>> a[10:25] = 1        # set elements in range(10, 25) to 1
+    >>> a[:] = 0         # set all elements to 0 - equivalent to a.setall(0)
+    >>> a[10:25] = 1     # set elements in range(10, 25) to 1
     >>> a
     bitarray('000000000011111111111111100000')
 
