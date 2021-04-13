@@ -99,6 +99,11 @@ class Util(object):
             repr(type(a)), "<%s 'bitarray.%s'>" %
             ('class' if is_py3k or b == 'frozenbitarray' else 'type', b))
 
+    def assertBitEqual(self, x, y):
+        for z in x, y:
+            self.assertEqual('01'[z], repr(z))
+        self.assertEqual(x, y)
+
     def assertStopIteration(self, it):
         self.assertRaises(StopIteration, next, it)
 
@@ -238,10 +243,17 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, bitarray.__new__, bitarray, -924)
 
     def test_list(self):
-        lst = ['foo', None, [1], {}]
+        lst = [0, 1, False, True]
         a = bitarray(lst)
-        self.assertEqual(a.tolist(), [True, False, True, False])
+        self.assertEqual(a, bitarray('0101'))
         self.check_obj(a)
+
+        if not is_py3k:
+            a = bitarray([long(1), long(0)])
+            self.assertEqual(a, bitarray('10'))
+
+        self.assertRaises(ValueError, bitarray.__new__, bitarray, [0, 1, 2])
+        self.assertRaises(TypeError, bitarray.__new__, bitarray, [0, 1, None])
 
         for n in range(50):
             lst = [bool(randint(0, 1)) for d in range(n)]
@@ -250,10 +262,13 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.check_obj(a)
 
     def test_tuple(self):
-        tup = ('', True, [], {1:2})
+        tup = (0, True, False, 1)
         a = bitarray(tup)
-        self.assertEqual(a.tolist(), [False, True, False, True])
+        self.assertEqual(a, bitarray('0101'))
         self.check_obj(a)
+
+        self.assertRaises(ValueError, bitarray.__new__, bitarray, (0, 1, 2))
+        self.assertRaises(TypeError, bitarray.__new__, bitarray, (0, 1, None))
 
         for n in range(50):
             lst = [bool(randint(0, 1)) for d in range(n)]
@@ -262,9 +277,6 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.check_obj(a)
 
     def test_iter1(self):
-        a = iter(bitarray())
-        self.assertIsType(a, 'bitarrayiterator')
-
         for n in range(50):
             lst = [bool(randint(0, 1)) for d in range(n)]
             a = bitarray(iter(lst))
@@ -283,13 +295,13 @@ class CreateObjectTests(unittest.TestCase, Util):
     def test_iter3(self):
         a = bitarray(itertools.repeat(False, 10))
         self.assertEqual(a, zeros(10))
-        # Note that the through value of '0' is True: bool('0') -> True
-        a = bitarray(itertools.repeat('0', 10))
+        a = bitarray(itertools.repeat(1, 10))
         self.assertEqual(a, bitarray(10 * '1'))
 
     def test_range(self):
-        a = bitarray(range(-3, 3))
-        self.assertEqual(a, bitarray('111011'))
+        self.assertEqual(bitarray(range(2)), bitarray('01'))
+        self.assertRaises(ValueError, bitarray.__new__, bitarray,
+                          range(0, 3))
 
     def test_string01(self):
         for s in '0010111', u'0010111', '0010 111', u'0010 111':
@@ -530,13 +542,13 @@ class SliceTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertRaises(IndexError, a.__getitem__,  0)
         a.append(True)
-        self.assertEqual(a[0], True)
-        self.assertEqual(a[-1], True)
+        self.assertBitEqual(a[0], 1)
+        self.assertBitEqual(a[-1], 1)
         self.assertRaises(IndexError, a.__getitem__,  1)
         self.assertRaises(IndexError, a.__getitem__, -2)
         a.append(False)
-        self.assertEqual(a[1], False)
-        self.assertEqual(a[-1], False)
+        self.assertBitEqual(a[1], 0)
+        self.assertBitEqual(a[-1], 0)
         self.assertRaises(IndexError, a.__getitem__,  2)
         self.assertRaises(IndexError, a.__getitem__, -3)
         self.assertRaises(TypeError, a.__getitem__, 1.5)
@@ -546,8 +558,8 @@ class SliceTests(unittest.TestCase, Util):
     def test_getitem_2(self):
         a = bitarray('1100010')
         for i, b in enumerate(a):
-            self.assertEqual(a[i], b)
-            self.assertEqual(a[i - 7], b)
+            self.assertBitEqual(a[i], b)
+            self.assertBitEqual(a[i - 7], b)
         self.assertRaises(IndexError, a.__getitem__,  7)
         self.assertRaises(IndexError, a.__getitem__, -8)
 
@@ -589,16 +601,19 @@ class SliceTests(unittest.TestCase, Util):
         a[-2] = 1
         self.assertEqual(a, bitarray('10'))
 
+        self.assertRaises(ValueError, a.__setitem__, 0, -1)
+        self.assertRaises(TypeError, a.__setitem__, 1, None)
+
         self.assertRaises(IndexError, a.__setitem__,  2, True)
         self.assertRaises(IndexError, a.__setitem__, -3, False)
         self.assertRaises(TypeError, a.__setitem__, 1.5, 1)  # see issue 114
         self.assertRaises(TypeError, a.__setitem__, None, 0)
         self.assertRaises(TypeError, a.__setitem__, 'a', True)
+        self.assertEqual(a, bitarray('10'))
 
     def test_setitem_random(self):
         for a in self.randombitarrays(start=1):
-            la = len(a)
-            i = randint(0, la - 1)
+            i = randint(0, len(a) - 1)
             aa = a.tolist()
             val = bool(randint(0, 1))
             a[i] = val
@@ -746,6 +761,8 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('01011100'))
         self.assertRaises(ValueError, a.__setitem__, slice(None, None, 2), 3)
         self.assertRaises(ValueError, a.__setitem__, slice(None, 2, None), -1)
+        # a[:2:] = '0'
+        self.assertRaises(TypeError, a.__setitem__, slice(None, 2, None), '0')
 
     def test_setslice_to_invalid(self):
         a = bitarray('11111111')
@@ -855,9 +872,10 @@ class MiscTests(unittest.TestCase, Util):
 
     def test_iter1(self):
         it = iter(bitarray('011'))
-        self.assertEqual(next(it), False)
-        self.assertEqual(next(it), True)
-        self.assertEqual(next(it), True)
+        self.assertIsType(it, 'bitarrayiterator')
+        self.assertBitEqual(next(it), 0)
+        self.assertBitEqual(next(it), 1)
+        self.assertBitEqual(next(it), 1)
         self.assertStopIteration(it)
 
     def test_iter2(self):
@@ -1130,12 +1148,14 @@ class SequenceMethodsTests(unittest.TestCase, Util):
         a = bitarray('001')
         b = a + bitarray('110')
         self.assertEQUAL(b, bitarray('001110'))
-        b = a + [0, 1, 2]
+        b = a + [0, 1, True]
         self.assertEQUAL(b, bitarray('001011'))
         b = a + '100'
         self.assertEQUAL(b, bitarray('001100'))
-        b = a + (1, 0, 3)
+        b = a + (1, 0, True)
         self.assertEQUAL(b, bitarray('001101'))
+        self.assertRaises(ValueError, a.__add__, (0, 1, 2))
+        self.assertEQUAL(a, bitarray('001'))
 
         self.assertRaises(TypeError, a.__add__, 42)
         if is_py3k:
@@ -1159,14 +1179,17 @@ class SequenceMethodsTests(unittest.TestCase, Util):
         a = bitarray('001')
         a += bitarray('110')
         self.assertEqual(a, bitarray('001110'))
-        a += [0, 1, 2]
+        a += [0, 1, True]
         self.assertEqual(a, bitarray('001110011'))
         a += '100'
         self.assertEqual(a, bitarray('001110011100'))
-        a += (1, 0, 3)
+        a += (1, 0, True)
         self.assertEqual(a, bitarray('001110011100101'))
 
         a = bitarray('110')
+        self.assertRaises(ValueError, a.__iadd__, [0, 1, 2])
+        self.assertEqual(a, bitarray('110'))
+
         self.assertRaises(TypeError, a.__iadd__, 42)
         b = b'101'
         if is_py3k:
@@ -1572,10 +1595,11 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray()
         a.extend([])
         self.assertEqual(a, bitarray())
-        a.extend([0, 1, 3, None, {}])
-        self.assertEqual(a, bitarray('01100'))
-        a.extend([True, False])
-        self.assertEqual(a, bitarray('0110010'))
+        a.extend([0, 1, True, False])
+        self.assertEqual(a, bitarray('0110'))
+        self.assertRaises(ValueError, a.extend, [0, 1, 2])
+        self.assertRaises(TypeError, a.extend, [0, 1, 'a'])
+        self.assertEqual(a, bitarray('0110'))
 
         for a in self.randomlists():
             for b in self.randomlists():
@@ -1588,8 +1612,11 @@ class ExtendTests(unittest.TestCase, Util):
         a = bitarray()
         a.extend(tuple())
         self.assertEqual(a, bitarray())
-        a.extend((0, 1, 2, 0, 3))
-        self.assertEqual(a, bitarray('01101'))
+        a.extend((0, 1, True, 0, False))
+        self.assertEqual(a, bitarray('01100'))
+        self.assertRaises(ValueError, a.extend, (0, 1, 2))
+        self.assertRaises(TypeError, a.extend, (0, 1, 'a'))
+        self.assertEqual(a, bitarray('01100'))
 
         for a in self.randomlists():
             for b in self.randomlists():
@@ -1598,13 +1625,23 @@ class ExtendTests(unittest.TestCase, Util):
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
 
-    def test_generator(self):
-        def bar():
-            for x in ('', '1', None, True, []):
+    def test_generator_1(self):
+        def gen(lst):
+            for x in lst:
                 yield x
         a = bitarray('0011')
-        a.extend(bar())
+        a.extend(gen([0, 1, False, True, 0]))
         self.assertEqual(a, bitarray('0011 01010'))
+        self.assertRaises(ValueError, a.extend, gen([0, 1, 2]))
+        self.assertRaises(TypeError, a.extend, gen([1, 0, None]))
+        self.assertEqual(a, bitarray('0011 01010'))
+
+        a = bytearray()
+        a.extend(gen([0, 1, 255]))
+        self.assertEqual(a, b'\x00\x01\xff')
+        self.assertRaises(ValueError, a.extend, gen([0, 1, 256]))
+        self.assertRaises(TypeError, a.extend, gen([1, 0, None]))
+        self.assertEqual(a, b'\x00\x01\xff')
 
         for a in self.randomlists():
             def foo():
@@ -1615,12 +1652,28 @@ class ExtendTests(unittest.TestCase, Util):
             self.assertEqual(b.tolist(), a)
             self.check_obj(b)
 
-    def test_iterator1(self):
+    def test_generator_2(self):
+        def gen():
+            for i in range(10):
+                if i == 4:
+                    raise KeyError
+                yield i % 2
+
+        a = bitarray()
+        self.assertRaises(KeyError, a.extend, gen())
+        self.assertEqual(a, bitarray('0101'))
+        a = []
+        self.assertRaises(KeyError, a.extend, gen())
+        self.assertEqual(a, [0, 1, 0, 1])
+
+    def test_iterator_1(self):
         a = bitarray()
         a.extend(iter([]))
         self.assertEqual(a, bitarray())
-        a.extend(iter([3, 9, 0, 1, -2]))
-        self.assertEqual(a, bitarray('11011'))
+        a.extend(iter([1, 1, 0, True, False]))
+        self.assertEqual(a, bitarray('11010'))
+        self.assertRaises(ValueError, a.extend, iter([1, 1, 0, 0, 2]))
+        self.assertEqual(a, bitarray('11010'))
 
         for a in self.randomlists():
             for b in self.randomlists():
@@ -1629,7 +1682,7 @@ class ExtendTests(unittest.TestCase, Util):
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
 
-    def test_iterator2(self):
+    def test_iterator_2(self):
         a = bitarray()
         a.extend(itertools.repeat(True, 23))
         self.assertEqual(a, bitarray(23 * '1'))
@@ -1717,11 +1770,11 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEQUAL(a, bitarray('100'))
         a.append(0)
         a.append(1)
-        a.append(2)
-        a.append(None)
-        a.append('')
-        a.append('a')
-        self.assertEQUAL(a, bitarray('100011001'))
+        self.assertEQUAL(a, bitarray('10001'))
+        self.assertRaises(ValueError, a.append, 2)
+        self.assertRaises(TypeError, a.append, None)
+        self.assertRaises(TypeError, a.append, '')
+        self.assertEQUAL(a, bitarray('10001'))
         self.check_obj(a)
 
     def test_append_random(self):
@@ -1739,13 +1792,16 @@ class MethodTests(unittest.TestCase, Util):
         a.insert(0, True)
         self.assertTrue(a is b)
         self.assertEqual(a, bitarray('1'))
+        self.assertRaises(ValueError, a.insert, 0, 2)
+        self.assertRaises(TypeError, a.insert, 0, None)
         self.assertRaises(TypeError, a.insert)
         self.assertRaises(TypeError, a.insert, None)
+        self.assertEqual(a, bitarray('1'))
 
         for a in self.randombitarrays():
             aa = a.tolist()
             for _ in range(20):
-                item = bool(randint(0, 1))
+                item = randint(0, 1)
                 pos = randint(-len(a) - 2, len(a) + 2)
                 a.insert(pos, item)
                 aa.insert(pos, item)
@@ -1764,10 +1820,12 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.index, 1, 0, 'a')
         self.assertRaises(TypeError, a.index, 1, 0, 100, 1)
         a[20] = a[27] = 1
-        self.assertEqual(a.index(42), 20)
+        self.assertEqual(a.index(True), 20)
         self.assertEqual(a.index(1, 21), 27)
         self.assertEqual(a.index(1, 27), 27)
         self.assertEqual(a.index(1, -73), 27)
+        self.assertRaises(ValueError, a.index, -1)
+        self.assertRaises(TypeError, a.index, None)
         self.assertRaises(ValueError, a.index, 1, 5, 17)
         self.assertRaises(ValueError, a.index, 1, 5, -83)
         self.assertRaises(ValueError, a.index, 1, 21, 27)
@@ -1859,9 +1917,10 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a.count(False), 2)
         self.assertEqual(a.count(1), 3)
         self.assertEqual(a.count(0), 2)
-        self.assertEqual(a.count(None), 2)
-        self.assertEqual(a.count(''), 2)
-        self.assertEqual(a.count('A'), 3)
+        self.assertRaises(ValueError, a.count, 2)
+        self.assertRaises(TypeError, a.count, None)
+        self.assertRaises(TypeError, a.count, '')
+        self.assertRaises(TypeError, a.count, 'A')
         self.assertRaises(TypeError, a.count, 0, 'A')
         self.assertRaises(TypeError, a.count, 0, 0, 'A')
 
@@ -2097,12 +2156,9 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a.tolist(), [])
 
         a = bitarray('110')
-        self.assertEqual(a.tolist(), [True, True, False])
-        self.assertEqual(a.tolist(True), [1, 1, 0])
-
-        for as_ints in 0, 1:
-            for elt in a.tolist(as_ints):
-                self.assertIsInstance(elt, int if as_ints else bool)
+        lst = a.tolist()
+        self.assertIsInstance(lst, list)
+        self.assertEqual(repr(lst), '[1, 1, 0]')
 
         for lst in self.randomlists():
             a = bitarray(lst)
@@ -2118,8 +2174,10 @@ class MethodTests(unittest.TestCase, Util):
             self.check_obj(a)
 
         a = bitarray('0010011')
-        a.remove('1')
+        a.remove(1)
         self.assertEQUAL(a, bitarray('000011'))
+        self.assertRaises(TypeError, a.remove, 'A')
+        self.assertRaises(ValueError, a.remove, 21)
 
     def test_remove_errors(self):
         a = bitarray()
@@ -2133,11 +2191,11 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.remove, 0)
 
     def test_pop_simple(self):
-        for x, n, r, y in [('1', 0, True, ''),
-                           ('0', -1, False, ''),
-                           ('0011100', 3, True, '001100')]:
+        for x, n, r, y in [('1',       0, 1, ''),
+                           ('0',      -1, 0, ''),
+                           ('0011100', 3, 1, '001100')]:
             a = bitarray(x)
-            self.assertEqual(a.pop(n), r)
+            self.assertTrue(a.pop(n) is r)
             self.assertEqual(a, bitarray(y))
             self.check_obj(a)
 
@@ -2147,7 +2205,7 @@ class MethodTests(unittest.TestCase, Util):
         # pop from empty bitarray
         self.assertRaises(IndexError, a.pop)
 
-    def test_pop_random(self):
+    def test_pop_random_1(self):
         for a in self.randombitarrays():
             self.assertRaises(IndexError, a.pop, len(a))
             self.assertRaises(IndexError, a.pop, -len(a) - 1)
@@ -2159,12 +2217,15 @@ class MethodTests(unittest.TestCase, Util):
             self.check_obj(a)
             self.assertEqual(a.endian(), enda)
 
+    def test_pop_random_2(self):
         for a in self.randombitarrays(start=1):
             n = randint(-len(a), len(a)-1)
             aa = a.tolist()
-            self.assertEqual(a.pop(n), aa[n])
-            aa.pop(n)
+            x = a.pop(n)
+            self.assertBitEqual(x, aa[n])
+            y = aa.pop(n)
             self.assertEqual(a, bitarray(aa))
+            self.assertBitEqual(x, y)
             self.check_obj(a)
 
     def test_clear(self):
@@ -2178,8 +2239,10 @@ class MethodTests(unittest.TestCase, Util):
     def test_setall(self):
         a = bitarray(5)
         a.setall(True)
+        self.assertRaises(ValueError, a.setall, -1)
+        self.assertRaises(TypeError, a.setall, None)
         self.assertEQUAL(a, bitarray('11111'))
-        a.setall(False)
+        a.setall(0)
         self.assertEQUAL(a, bitarray('00000'))
         self.check_obj(a)
 
@@ -2296,11 +2359,11 @@ class BytesTests(unittest.TestCase, Util):
     def test_unpack_simple(self):
         a = bitarray('01')
         self.assertIsInstance(a.unpack(), bytes)
-        self.assertEqual(a.unpack(), b'\x00\xff')
-        self.assertEqual(a.unpack(b'A'), b'A\xff')
+        self.assertEqual(a.unpack(), b'\x00\x01')
+        self.assertEqual(a.unpack(b'A'), b'A\x01')
         self.assertEqual(a.unpack(b'0', b'1'), b'01')
-        self.assertEqual(a.unpack(one=b'\x01'), b'\x00\x01')
-        self.assertEqual(a.unpack(zero=b'A'), b'A\xff')
+        self.assertEqual(a.unpack(one=b'\xff'), b'\x00\xff')
+        self.assertEqual(a.unpack(zero=b'A'), b'A\x01')
         self.assertEqual(a.unpack(one=b't', zero=b'f'), b'ft')
 
     def test_unpack_random(self):
@@ -2716,7 +2779,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
         self.check_obj(a)
 
     def test_large(self):
-        d = {i: bitarray((1 << j) & i for j in range(10))
+        d = {i: bitarray(bool((1 << j) & i) for j in range(10))
              for i in range(1024)}
         t = decodetree(d)
         self.assertEqual(t.todict(), d)

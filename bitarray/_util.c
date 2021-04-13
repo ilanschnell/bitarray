@@ -170,17 +170,16 @@ find_last(bitarrayobject *a, int vi)
 static PyObject *
 r_index(PyObject *module, PyObject *args)
 {
-    PyObject *x = Py_True, *a;
+    PyObject *v = Py_True, *a;
     Py_ssize_t i;
     int vi;
 
-    if (!PyArg_ParseTuple(args, "O|O:rindex", &a, &x))
+    if (!PyArg_ParseTuple(args, "O|O:rindex", &a, &v))
         return NULL;
     if (ensure_bitarray(a) < 0)
         return NULL;
 
-    vi = PyObject_IsTrue(x);
-    if (vi < 0)
+    if ((vi = pybit_as_int(v)) < 0)
         return NULL;
 
     i = find_last((bitarrayobject *) a, vi);
@@ -191,9 +190,9 @@ r_index(PyObject *module, PyObject *args)
 }
 
 PyDoc_STRVAR(rindex_doc,
-"rindex(bitarray, value=True, /) -> int\n\
+"rindex(bitarray, value=1, /) -> int\n\
 \n\
-Return the rightmost index of `bool(value)` in bitarray.\n\
+Return the rightmost index of `value` in bitarray.\n\
 Raises `ValueError` if the value is not present.");
 
 /* --------------------------- unary functions ------------------------- */
@@ -214,14 +213,14 @@ parity(PyObject *module, PyObject *a)
         par ^= aa->ob_item[i];
 #undef aa
 
-    return PyBool_FromLong((long) bitcount_lookup[par] % 2);
+    return PyLong_FromLong((long) bitcount_lookup[par] % 2);
 }
 
 PyDoc_STRVAR(parity_doc,
-"parity(a, /) -> bool\n\
+"parity(bitarray, /) -> int\n\
 \n\
-Return the parity of bitarray `a`.  This is equivalent\n\
-to `bool(a.count() % 2)` (but more efficient).");
+Return the parity of the bitarray.\n\
+This is equivalent to `a.count() % 2` (but more efficient).");
 
 /* --------------------------- binary functions ------------------------ */
 
