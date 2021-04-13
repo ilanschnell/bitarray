@@ -448,7 +448,7 @@ The bitarray object:
 ``bytereverse()``
    For all bytes representing the bitarray, reverse the bit order (in-place).
    Note: This method changes the actual machine values representing the
-   bitarray; it does not change the endianness of the bitarray object.
+   bitarray; it does *not* change the endianness of the bitarray object.
 
 
 ``clear()``
@@ -668,8 +668,8 @@ Functions defined in `bitarray.util` module:
    Raises ``ValueError``, when n exceeds total count (``a.count()``).
 
 
-``parity(bitarray, /)`` -> int
-   Return the parity of the bitarray.
+``parity(a, /)`` -> int
+   Return the parity of bitarray ``a``.
    This is equivalent to ``a.count() % 2`` (but more efficient).
 
 
@@ -689,7 +689,7 @@ Functions defined in `bitarray.util` module:
 
 
 ``subset(a, b, /)`` -> bool
-   Return True if bitarray ``a`` is a subset of bitarray ``b`` (False otherwise).
+   Return ``True`` if bitarray ``a`` is a subset of bitarray ``b``.
    ``subset(a, b)`` is equivalent to ``(a & b).count() == a.count()`` but is more
    efficient since we can stop as soon as one mismatch is found, and no
    intermediate bitarray object gets created.

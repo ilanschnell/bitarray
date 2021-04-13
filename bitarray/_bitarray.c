@@ -1036,7 +1036,7 @@ PyDoc_STRVAR(bytereverse_doc,
 \n\
 For all bytes representing the bitarray, reverse the bit order (in-place).\n\
 Note: This method changes the actual machine values representing the\n\
-bitarray; it does not change the endianness of the bitarray object.");
+bitarray; it does *not* change the endianness of the bitarray object.");
 
 
 static PyObject *
@@ -1373,10 +1373,8 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
 
     normalize_index(self->nbits, &i);
 
-    vi = pybit_as_int(v);
-    if (vi < 0)
+    if ((vi = pybit_as_int(v)) < 0)
         return NULL;
-
     if (insert_n(self, i, 1) < 0)
         return NULL;
     setbit(self, i, vi);

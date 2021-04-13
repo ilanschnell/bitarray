@@ -217,9 +217,9 @@ parity(PyObject *module, PyObject *a)
 }
 
 PyDoc_STRVAR(parity_doc,
-"parity(bitarray, /) -> int\n\
+"parity(a, /) -> int\n\
 \n\
-Return the parity of the bitarray.\n\
+Return the parity of bitarray `a`.\n\
 This is equivalent to `a.count() % 2` (but more efficient).");
 
 /* --------------------------- binary functions ------------------------ */
@@ -319,7 +319,7 @@ subset(PyObject *module, PyObject *args)
 PyDoc_STRVAR(subset_doc,
 "subset(a, b, /) -> bool\n\
 \n\
-Return True if bitarray `a` is a subset of bitarray `b` (False otherwise).\n\
+Return `True` if bitarray `a` is a subset of bitarray `b`.\n\
 `subset(a, b)` is equivalent to `(a & b).count() == a.count()` but is more\n\
 efficient since we can stop as soon as one mismatch is found, and no\n\
 intermediate bitarray object gets created.");
