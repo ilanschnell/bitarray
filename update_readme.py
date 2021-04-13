@@ -14,6 +14,8 @@ BASE_URL = "https://github.com/ilanschnell/bitarray"
 
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
 def write_doc(fo, name):
+    if name == 'bitarray.length':
+        return
     doc = eval('bitarray.%s.__doc__' % name)
     assert doc, name
     lines = doc.splitlines()
