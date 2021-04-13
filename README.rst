@@ -155,7 +155,16 @@ This is easier and faster than:
     bitarray('01001001001001000000')
 
 Note that in the latter we have to create a temporary bitarray whose length
-must be known or calculated.
+must be known or calculated.  Another example of assigning slices to Booleans,
+is setting ranges:
+
+.. code-block:: python
+
+    >>> a = bitarray(30)
+    >>> a[:] = 0            # set all elements to 0, just like a.setall(0)
+    >>> a[10:25] = 1        # set elements in range(10, 25) to 1
+    >>> a
+    bitarray('000000000011111111111111100000')
 
 
 Bitwise operators
