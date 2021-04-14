@@ -1489,8 +1489,7 @@ bitarray_concat(bitarrayobject *self, PyObject *other)
 {
     PyObject *res;
 
-    res = bitarray_copy(self);
-    if (res == NULL)
+    if ((res = bitarray_copy(self)) == NULL)
         return NULL;
 
     if (extend_dispatch((bitarrayobject *) res, other) < 0) {
@@ -1505,8 +1504,7 @@ bitarray_repeat(bitarrayobject *self, Py_ssize_t n)
 {
     PyObject *res;
 
-    res = bitarray_copy(self);
-    if (res == NULL)
+    if ((res = bitarray_copy(self)) == NULL)
         return NULL;
 
     if (repeat((bitarrayobject *) res, n) < 0) {
@@ -1656,8 +1654,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
     increase = aa->nbits - slicelength;
 
     if (aa == self) {  /* covers cases like a[2::] = a and a[::-1] = a */
-        array = bitarray_copy(aa);
-        if (array == NULL)
+        if ((array = bitarray_copy(aa)) == NULL)
             return -1;
         copy_array = 1;
     }
@@ -1807,8 +1804,7 @@ bitarray_cpinvert(bitarrayobject *self)
 {
     PyObject *result;
 
-    result = bitarray_copy(self);
-    if (result == NULL)
+    if ((result = bitarray_copy(self)) == NULL)
         return NULL;
 
     invert((bitarrayobject *) result);
@@ -2473,8 +2469,7 @@ bitarray_decode(bitarrayobject *self, PyObject *obj)
         if (check_codedict(obj) < 0)
             return NULL;
 
-        tree = binode_make_tree(obj);
-        if (tree == NULL)
+        if ((tree = binode_make_tree(obj)) == NULL)
             return NULL;
     }
 
