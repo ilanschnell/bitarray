@@ -33,6 +33,7 @@ as a dictionary key.
     def __hash__(self):
         "Return hash(self)."
         if getattr(self, '_hash', None) is None:
+            # ensure hash is independent of endianness
             a = bitarray(self, 'big') if self.endian() == 'little' else self
             self._hash = hash((len(a), a.tobytes()))
         return self._hash
