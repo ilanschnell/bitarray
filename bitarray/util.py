@@ -254,8 +254,6 @@ the `length` of the bitarray is provided.  An `OverflowError` is raised
 if the integer is not representable with the given number of bits.
 `signed` determines whether two's complement is used to represent the integer,
 and requires `length` to be provided.
-If signed is False and a negative integer is given, an OverflowError
-is raised.
 """
     if not isinstance(i, (int, long) if _is_py2 else int):
         raise TypeError("int expected, got '%s'" % type(i).__name__)
@@ -327,8 +325,8 @@ def huffman_code(freq_map, endian=None):
 
 Given a frequency map, a dictionary mapping symbols to their frequency,
 calculate the Huffman code, i.e. a dict mapping those symbols to
-bitarrays (with given endianness).  Note that the symbols may be any
-hashable object (including `None`).
+bitarrays (with given endianness).  Note that the symbols are not limited
+to being strings.  Symbols may may be any hashable object (such as `None`).
 """
     import heapq
 

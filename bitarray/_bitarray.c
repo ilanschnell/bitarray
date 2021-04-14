@@ -1229,7 +1229,7 @@ PyDoc_STRVAR(fromfile_doc,
 Extend bitarray with up to n bytes read from the file object f.\n\
 When n is omitted or negative, reads all data until EOF.\n\
 When n is provided and positive but exceeds the data available,\n\
-EOFError is raised (but the available data is still read and appended.");
+`EOFError` is raised (but the available data is still read and appended.");
 
 
 static PyObject *

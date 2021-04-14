@@ -255,7 +255,7 @@ to bits:
 Bitwise operations (``|``, ``^``, ``&=``, ``|=``, ``^=``, ``~``) are
 implemented efficiently using the corresponding byte operations in C, i.e. the
 operators act on the machine representation of the bitarray objects.
-Therefore, one has to be cautious when applying the operation to bitarrays
+Therefore, it is not possible to perform bitwise operators on bitarrays
 with different endianness.
 
 When converting to and from machine representation, using
@@ -509,7 +509,7 @@ The bitarray object:
    Extend bitarray with up to n bytes read from the file object f.
    When n is omitted or negative, reads all data until EOF.
    When n is provided and positive but exceeds the data available,
-   EOFError is raised (but the available data is still read and appended.
+   ``EOFError`` is raised (but the available data is still read and appended.
 
 
 ``index(value, start=0, stop=<end of array>, /)`` -> int
@@ -748,8 +748,6 @@ Functions defined in `bitarray.util` module:
    if the integer is not representable with the given number of bits.
    ``signed`` determines whether two's complement is used to represent the integer,
    and requires ``length`` to be provided.
-   If signed is False and a negative integer is given, an OverflowError
-   is raised.
 
 
 ``serialize(bitarray, /)`` -> bytes
@@ -765,7 +763,7 @@ Functions defined in `bitarray.util` module:
 ``huffman_code(dict, /, endian=None)`` -> dict
    Given a frequency map, a dictionary mapping symbols to their frequency,
    calculate the Huffman code, i.e. a dict mapping those symbols to
-   bitarrays (with given endianness).  Note that the symbols may be any
-   hashable object (including ``None``).
+   bitarrays (with given endianness).  Note that the symbols are not limited
+   to being strings.  Symbols may may be any hashable object (such as ``None``).
 
 
