@@ -8,6 +8,7 @@
   * fix frozenbitarray hash function, see #121
   * fix frozenbitarray being mutable by `<<=` and `>>=`
   * support sequence protocol in `.extend()` (and bitarray creation)
+  * improve OverflowError messages from `util.int2ba()`
   * add examples/hexadecimal.py
 
 

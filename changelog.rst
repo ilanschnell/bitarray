@@ -10,6 +10,7 @@ Change log
   * fix frozenbitarray hash function, see `#121 <https://github.com/ilanschnell/bitarray/issues/121>`__
   * fix frozenbitarray being mutable by ``<<=`` and ``>>=``
   * support sequence protocol in ``.extend()`` (and bitarray creation)
+  * improve OverflowError messages from ``util.int2ba()``
   * add examples/hexadecimal.py
 
 
