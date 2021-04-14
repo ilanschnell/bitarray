@@ -33,7 +33,8 @@ as a dictionary key.
     def __hash__(self):
         "Return hash(self)."
         if getattr(self, '_hash', None) is None:
-            self._hash = hash((len(self), self.tobytes()))
+            a = bitarray(self, 'big') if self.endian() == 'little' else self
+            self._hash = hash((len(a), a.tobytes()))
         return self._hash
 
     def __delitem__(self, *args, **kwargs):
