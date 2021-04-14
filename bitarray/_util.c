@@ -504,6 +504,7 @@ digit_to_int(char c, int n)
     return -1;
 }
 
+/* return m = log2(n) for m = 1..6 */
 static int
 base_to_length(int n)
 {
@@ -575,7 +576,7 @@ standard base 64 alphabet is used.");
 
 /* Translate ASCII digits into the bitarray's buffer.
    The (Python) arguments to this functions are:
-   - the base n, either 2, 4, 8, 16, 32 or 64    (n=2^m - m bits per digits)
+   - base n, one of 2, 4, 8, 16, 32, 64  (n=2^m   where m bits per digit)
    - bitarray (of length m * len(s)) whose buffer is written into
    - byte object s containing the ASCII digits
 */
