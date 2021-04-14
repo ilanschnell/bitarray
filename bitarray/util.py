@@ -270,12 +270,18 @@ and requires `length` to be provided.
         return zeros(length or 1, endian)
 
     if signed:
-        if i >= 1 << (length - 1) or i < -(1 << (length - 1)):
-            raise OverflowError("signed integer out of range")
+        m = 1 << (length - 1)
+        if not (-m <= i < m):
+            raise OverflowError("signed integer not in range(%d, %d), "
+                                "got %d" % (-m, m, i))
         if i < 0:
             i += 1 << length
-    elif i < 0 or (length and i >= 1 << length):
-        raise OverflowError("unsigned integer out of range")
+    else:  # unsigned
+        if i < 0:
+            raise OverflowError("unsigned integer not positive, got %d" % i)
+        if length and i >= (1 << length):
+            raise OverflowError("unsigned integer not in range(0, %d), "
+                                "got %d" % (1 << length, i))
 
     a = bitarray(0, get_default_endian() if endian is None else endian)
     big_endian = bool(a.endian() == 'big')
