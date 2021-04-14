@@ -3175,6 +3175,32 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         a.extend(b)
         self.assertEqual(a, bitarray('1100011'))
 
+    def test_hash_endianness_simple(self):
+        a = frozenbitarray('1', 'big')
+        b = frozenbitarray('1', 'little')
+        self.assertEqual(a, b)
+        self.assertEqual(hash(a), hash(b))
+        d = {a: 'value'}
+        self.assertEqual(d[b], 'value')
+        self.assertEqual(len(set([a, b])), 1)
+
+    def test_hash_endianness_random(self):
+        s = set()
+        n = 0
+        for a in self.randombitarrays():
+            a = frozenbitarray(a)
+            b = frozenbitarray(a, self.other_endian(a.endian()))
+            self.assertEqual(a, b)
+            self.assertNotEqual(a.endian(), b.endian())
+            self.assertEqual(hash(a), hash(b))
+            d = {a: 1, b: 2}
+            self.assertEqual(len(d), 1)
+            s.add(a)
+            s.add(b)
+            n += 1
+
+        self.assertEqual(len(s), n)
+
     def test_pickle(self):
         for a in self.randombitarrays():
             f = frozenbitarray(a)
