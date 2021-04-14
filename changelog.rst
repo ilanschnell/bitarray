@@ -7,6 +7,7 @@ Change log
   * remove ``.length()`` method (deprecated since 1.5.1 - use ``len()``)
   * in ``.unpack()`` the ``one`` argument now defaults to 0x01 (was 0xff)
   * ``.tolist()`` now always returns a list of integers (0 or 1)
+  * fix frozenbitarray being mutable by ``<<=`` and ``>>=``
   * support sequence protocol in ``.extend()`` (and bitarray creation)
   * add examples/hexadecimal.py
 
