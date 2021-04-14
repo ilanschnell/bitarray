@@ -3143,6 +3143,16 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.__delitem__, 0)
         self.assertRaises(TypeError, a.__setitem__, 0, 0)
 
+    def test_set(self):
+        a = frozenbitarray('1')
+        b = frozenbitarray('11')
+        c = frozenbitarray('01')
+        d = frozenbitarray('011')
+        s = set([a, b, c, d])
+        self.assertEqual(len(s), 4)
+        self.assertTrue(d in s)
+        self.assertFalse(frozenbitarray('0') in s)
+
     def test_dictkey(self):
         a = frozenbitarray('01')
         b = frozenbitarray('1001')
