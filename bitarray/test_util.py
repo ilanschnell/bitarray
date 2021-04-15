@@ -426,11 +426,10 @@ class TestsCount_N(unittest.TestCase, Util):
             a.setall(not v)
             for _ in range(randint(0, min(N, 100))):
                 a[randint(0, N - 1)] = v
-            n = randint(0, a.count())
+            tc = a.count()      # total count
+            n = randint(0, tc)
             self.check_result(a, n, count_n(a, n))
-            # check for total count
-            tc = a.count()
-            self.assertTrue(count_n(a, tc) <= N)
+            self.check_result(a, tc, count_n(a, tc))
             self.assertRaises(ValueError, count_n, a, tc + 1)
 
     def test_one_set(self):
