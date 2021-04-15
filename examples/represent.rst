@@ -65,7 +65,7 @@ The header byte is structured the following way:
 
 Hence, valid values for the header byte are in the ranges 0 .. 7
 and 16 .. 23 (inclusive).  Moreover, if the serialized bitarray is
-empty (our ``x`` only consists of a single byte - the header byte)), the
+empty (``x`` only consists of a single byte - the header byte), the
 only valid values for the header are 0 and 16 (corresponding to a
 little-endian and big-endian empty bitarray).
 The functions ``serialize()`` and ``deserialize()`` are the recommended and
