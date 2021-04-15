@@ -1,7 +1,7 @@
 Change log
 ==========
 
-2021-04-XX   2.0.0:
+**2.0.0** (2021-04-14):
   * require more specific objects, int (0 or 1) or bool, see `#119 <https://github.com/ilanschnell/bitarray/issues/119>`__
   * items are always returned as int 0 or 1, `#119 <https://github.com/ilanschnell/bitarray/issues/119>`__
   * remove ``.length()`` method (deprecated since 1.5.1 - use ``len()``)
