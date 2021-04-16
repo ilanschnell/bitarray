@@ -2896,7 +2896,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         unsigned char head = *PyBytes_AS_STRING(initial);
 
         if (head < 32 && head % 16 < 8) {
-            if (endian_str == NULL)  /* no endianness given in argument */
+            if (endian_str == NULL)  /* no endianness provided */
                 endian = head / 16 ? ENDIAN_BIG : ENDIAN_LITTLE;
             return unpickle(type, initial, endian);
         }
@@ -2905,7 +2905,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (bitarray_Check(initial) && endian_str == NULL)
         endian = ((bitarrayobject *) initial)->endian;
 
-    /* leave remaining type dispatch to the extend method */
+    /* leave remaining type dispatch to extend method */
     res = newbitarrayobject(type, 0, endian);
     if (res == NULL)
         return NULL;
