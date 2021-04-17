@@ -47,7 +47,7 @@ an integer 0 or 1.
 The bitarray object:
 --------------------
 
-""" % (bitarray.__version__, "%s/blob/master/changelog.rst" % BASE_URL))
+""" % (bitarray.__version__, "%s/blob/master/doc/changelog.rst" % BASE_URL))
     write_doc(fo, 'bitarray')
 
     fo.write("**A bitarray object supports the following methods:**\n\n")
@@ -72,10 +72,10 @@ The bitarray object:
         write_doc(fo, 'util.%s' % func)
 
 
-def write_readme():
+def update_readme(path):
     ver_pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
 
-    with open('README.rst', 'r') as fi:
+    with open(path, 'r') as fi:
         data = fi.read()
 
     with StringIO() as fo:
@@ -92,11 +92,11 @@ def write_readme():
     if new_data == data:
         print("already up-to-date")
     else:
-        with open('README.rst', 'w') as f:
+        with open(path, 'w') as f:
             f.write(new_data)
 
 
-def write_changelog():
+def write_changelog(fo):
     ver_pat = re.compile(r'(\d{4}-\d{2}-\d{2})\s+(\d+\.\d+\.\d+)')
     issue_pat = re.compile(r'#(\d+)')
     link_pat = re.compile(r'\[(.+)\]\((.+)\)')
@@ -105,32 +105,35 @@ def write_changelog():
         url = "%s/issues/%s" % (BASE_URL, match.group(1))
         return "`%s <%s>`__" % (match.group(0), url)
 
-    with open('changelog.rst', 'w') as fo:
-        fo.write("Change log\n"
-                 "==========\n\n")
+    fo.write("Change log\n"
+             "==========\n\n")
 
-        for line in open('CHANGE_LOG'):
-            match = ver_pat.match(line)
-            if match:
-                fo.write(match.expand(r'**\2** (\1):\n'))
-            elif line.startswith('-----'):
-                pass #fo.write('\n')
-            else:
-                out = line.replace('`', '``')
-                out = issue_pat.sub(issue_replace, out)
-                out = link_pat.sub(
+    for line in open('CHANGE_LOG'):
+        match = ver_pat.match(line)
+        if match:
+            fo.write(match.expand(r'**\2** (\1):\n'))
+        elif line.startswith('-----'):
+            pass #fo.write('\n')
+        else:
+            out = line.replace('`', '``')
+            out = issue_pat.sub(issue_replace, out)
+            out = link_pat.sub(
                     lambda m: "`%s <%s>`__" % (m.group(1), m.group(2)), out)
-                fo.write(out)
+            fo.write(out)
 
 
 def main():
     if len(sys.argv) > 1:
         sys.exit("no arguments expected")
 
-    write_readme()
-    write_changelog()
-    doctest.testfile('README.rst')
-    doctest.testfile('examples/represent.rst')
+    update_readme('./README.rst')
+    with open('./doc/reference.rst', 'w') as fo:
+        write_reference(fo)
+    with open('./doc/changelog.rst', 'w') as fo:
+        write_changelog(fo)
+
+    doctest.testfile('./README.rst')
+    doctest.testfile('./doc/represent.rst')
 
 
 if __name__ == '__main__':

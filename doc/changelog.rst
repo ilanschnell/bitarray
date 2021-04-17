@@ -1,6 +1,9 @@
 Change log
 ==========
 
+2021-XX-XX   2.0.1:
+
+
 **2.0.0** (2021-04-14):
   * require more specific objects, int (0 or 1) or bool, see `#119 <https://github.com/ilanschnell/bitarray/issues/119>`__
   * items are always returned as int 0 or 1, `#119 <https://github.com/ilanschnell/bitarray/issues/119>`__
@@ -27,7 +30,7 @@ Change log
 **1.9.0** (2021-04-03):
   * add shift operations (``<<``, ``>>``, ``<<=``, ``>>=``), see `#117 <https://github.com/ilanschnell/bitarray/issues/117>`__
   * add ``bitarray.util.ba2base()`` and ``bitarray.util.base2ba()``,
-    see last paragraph in `Bitarray representations <examples/represent.rst>`__
+    see last paragraph in `Bitarray representations <doc/represent.rst>`__
   * documentation and tests
 
 
@@ -36,7 +39,7 @@ Change log
   * speedup initializing or extending a bitarray from another with different
     bit endianness
   * add formatting options to ``bitarray.util.pprint()``
-  * add documentation on `bitarray representations <examples/represent.rst>`__
+  * add documentation on `bitarray representations <doc/represent.rst>`__
   * add and improve tests (all 291 tests run in less than half a second on
     a modern machine)
 
