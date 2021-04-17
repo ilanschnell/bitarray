@@ -582,13 +582,13 @@ The bitarray object:
 ``tobytes()`` -> bytes
    Return the byte representation of the bitarray.
    When the length of the bitarray is not a multiple of 8, the few remaining
-   bits (1..7) are considered to be 0.
+   bits are considered 0.
 
 
 ``tofile(f, /)``
    Write the byte representation of the bitarray to the file object f.
-   When the length of the bitarray is not a multiple of 8,
-   the last few bits are assumed to be 0.
+   When the length of the bitarray is not a multiple of 8, the few remaining
+   bits are considered 0.
 
 
 ``tolist()`` -> list

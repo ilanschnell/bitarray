@@ -1177,7 +1177,7 @@ PyDoc_STRVAR(tobytes_doc,
 \n\
 Return the byte representation of the bitarray.\n\
 When the length of the bitarray is not a multiple of 8, the few remaining\n\
-bits (1..7) are considered to be 0.");
+bits are considered 0.");
 
 
 static PyObject *
@@ -1257,8 +1257,8 @@ PyDoc_STRVAR(tofile_doc,
 "tofile(f, /)\n\
 \n\
 Write the byte representation of the bitarray to the file object f.\n\
-When the length of the bitarray is not a multiple of 8,\n\
-the last few bits are assumed to be 0.");
+When the length of the bitarray is not a multiple of 8, the few remaining\n\
+bits are considered 0.");
 
 
 static PyObject *
