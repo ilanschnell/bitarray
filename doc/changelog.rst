@@ -1,7 +1,7 @@
 Change log
 ==========
 
-21-XX-XX   2.0.1:
+2021-XX-XX   2.0.1:
 
 * update documentation
 
@@ -470,7 +470,7 @@ Change log
   http://pypi.python.org/pypi/bitarray/
 
 
-y 2008:
+May 2008:
 
-ote the initial code, and put it on my personal web-site:
-tp://ilan.schnell-web.net/prog/
+Wrote the initial code, and put it on my personal web-site:
+http://ilan.schnell-web.net/prog/

@@ -108,21 +108,20 @@ def write_changelog(fo):
     fo.write("Change log\n"
              "==========\n\n")
 
-    for line in open('CHANGE_LOG'):
+    for line in open('./CHANGE_LOG'):
+        line = line.rstrip()
         match = ver_pat.match(line)
         if match:
-            fo.write(match.expand(r'**\2** (\1):\n'))
-            continue
-        if line.startswith('-----'):
-            fo.write('\n')
-            continue
-
-        out = line.rstrip()[2:]
-        out = out.replace('`', '``')
-        out = issue_pat.sub(issue_replace, out)
-        out = link_pat.sub(
-                    lambda m: "`%s <%s>`__" % (m.group(1), m.group(2)), out)
-        fo.write(out + '\n')
+            line = match.expand(r'**\2** (\1):')
+        elif line.startswith('-----'):
+            line = ''
+        elif line.startswith('  '):
+            line = line[2:]
+        line = line.replace('`', '``')
+        line = issue_pat.sub(issue_replace, line)
+        line = link_pat.sub(
+                    lambda m: "`%s <%s>`__" % (m.group(1), m.group(2)), line)
+        fo.write(line + '\n')
 
 
 def main():
