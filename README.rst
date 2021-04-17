@@ -44,20 +44,15 @@ Key features
 Installation
 ------------
 
-Bitarray can be installed from source:
+If you have a working C compiler, you can simply:
 
 .. code-block:: shell-session
 
-    $ tar xzf bitarray-2.0.1.tar.gz
-    $ cd bitarray-2.0.1
-    $ python setup.py install
+    $ pip install bitarray
 
-On Unix systems, the latter command may have to be executed with root
-privileges.  You can also pip install bitarray.  Please note that you need
-a working C compiler to run the ``python setup.py install`` command.
 If you rather want to use precompiled binaries, you can:
 
-* `conda install bitarray` (both the default Anaconda repository as well
+* ``conda install bitarray`` (both the default Anaconda repository as well
   as conda-forge support bitarray)
 * download Windows wheels from
   `Chris Gohlke <https://www.lfd.uci.edu/~gohlke/pythonlibs/#bitarray>`__
@@ -206,9 +201,36 @@ This Python bitarray library specifies the behavior as follows:
 Bit endianness
 --------------
 
-Since a bitarray allows addressing of individual bits, where the machine
+Unless explicitly converting to machine representation, using
+the ``.tobytes()``, ``.frombytes()``, ``.tofile()`` and ``.fromfile()``
+methods, as well as using ``memoryview``, the bit endianness will have no
+effect on any computation, and one can skip this section.
+
+Since bitarrays allows addressing individual bits, where the machine
 represents 8 bits in one byte, there are two obvious choices for this
 mapping: little-endian and big-endian.
+
+When dealing with the machine representation of bitarray objects, it is
+recommended to always explicitly specify the endianness.
+
+By default, bitarrays use big-endian representation:
+
+.. code-block:: python
+
+    >>> a = bitarray()
+    >>> a.endian()
+    'big'
+    >>> a.frombytes(b'A')
+    >>> a
+    bitarray('01000001')
+    >>> a[6] = 1
+    >>> a.tobytes()
+    b'C'
+
+Big-endian means that the most-significant bit comes first.
+Here, ``a[0]`` is the lowest address (index) and most significant bit,
+and ``a[7]`` is the highest address and least significant bit.
+
 When creating a new bitarray object, the endianness can always be
 specified explicitly:
 
@@ -218,31 +240,16 @@ specified explicitly:
     >>> a.frombytes(b'A')
     >>> a
     bitarray('10000010')
-    >>> b = bitarray('11000010', endian='little')
-    >>> b.tobytes()
-    b'C'
+    >>> a.endian()
+    'little'
 
 Here, the low-bit comes first because little-endian means that increasing
-numeric significance corresponds to an increasing address (index).
-So ``a[0]`` is the lowest and least significant bit, and ``a[7]`` is the
-highest and most significant bit:
+numeric significance corresponds to an increasing address.
+So ``a[0]`` is the lowest address and least significant bit,
+and ``a[7]`` is the highest address and most significant bit.
 
-.. code-block:: python
-
-    >>> a = bitarray(endian='big')
-    >>> a.frombytes(b'A')
-    >>> a
-    bitarray('01000001')
-    >>> a[6] = 1
-    >>> a.tobytes()
-    b'C'
-
-Here, the high-bit comes first because big-endian
-means "most-significant first".
-So ``a[0]`` is now the lowest and most significant bit, and ``a[7]`` is the
-highest and least significant bit.
-
-The bit endianness is a property attached to each bitarray object.
+The bit endianness is a property of the bitarray object.
+The endianness cannot be changed once a bitarray object is created.
 When comparing bitarray objects, the endianness (and hence the machine
 representation) is irrelevant; what matters is the mapping from indices
 to bits:
@@ -277,8 +284,8 @@ methods, the endianness matters:
     >>> a.tobytes() == b.tobytes()
     False
 
-The endianness can not be changed once an object is created.
-However, you can create a new bitarray with different endianness:
+As mentioned above, the endianness can not be changed once an object is
+created.  However, you can create a new bitarray with different endianness:
 
 .. code-block:: python
 
@@ -288,15 +295,6 @@ However, you can create a new bitarray with different endianness:
     bitarray('111000')
     >>> a == b
     True
-
-The default bit endianness is currently big-endian, however this may change
-in the future, and when dealing with the machine representation of bitarray
-objects, it is recommended to always explicitly specify the endianness.
-
-Unless explicitly converting to machine representation, using
-the ``.tobytes()``, ``.frombytes()``, ``.tofile()`` and ``.fromfile()``
-methods, the bit endianness will have no effect on any computation, and one
-can safely ignore setting the endianness, and other details of this section.
 
 
 Buffer protocol
