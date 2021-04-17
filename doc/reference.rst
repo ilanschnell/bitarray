@@ -187,7 +187,7 @@ The bitarray object:
 ``tofile(f, /)``
    Write the byte representation of the bitarray to the file object f.
    When the length of the bitarray is not a multiple of 8,
-   the remaining bits (1..7) are set to 0.
+   the last few bits are assumed to be 0.
 
 
 ``tolist()`` -> list

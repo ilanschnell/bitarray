@@ -1258,7 +1258,7 @@ PyDoc_STRVAR(tofile_doc,
 \n\
 Write the byte representation of the bitarray to the file object f.\n\
 When the length of the bitarray is not a multiple of 8,\n\
-the remaining bits (1..7) are set to 0.");
+the last few bits are assumed to be 0.");
 
 
 static PyObject *
