@@ -112,14 +112,17 @@ def write_changelog(fo):
         match = ver_pat.match(line)
         if match:
             fo.write(match.expand(r'**\2** (\1):\n'))
-        elif line.startswith('-----'):
+            continue
+        if line.startswith('-----'):
             fo.write('\n')
-        else:
-            out = line.replace('`', '``')
-            out = issue_pat.sub(issue_replace, out)
-            out = link_pat.sub(
+            continue
+
+        out = line.rstrip()[2:]
+        out = out.replace('`', '``')
+        out = issue_pat.sub(issue_replace, out)
+        out = link_pat.sub(
                     lambda m: "`%s <%s>`__" % (m.group(1), m.group(2)), out)
-            fo.write(out)
+        fo.write(out + '\n')
 
 
 def main():
