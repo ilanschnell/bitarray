@@ -113,7 +113,7 @@ def write_changelog(fo):
         if match:
             fo.write(match.expand(r'**\2** (\1):\n'))
         elif line.startswith('-----'):
-            pass #fo.write('\n')
+            fo.write('\n')
         else:
             out = line.replace('`', '``')
             out = issue_pat.sub(issue_replace, out)
