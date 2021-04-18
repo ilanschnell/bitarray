@@ -2853,8 +2853,7 @@ bitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
         return NULL;
 
     if (nbits < 0) {
-        PyErr_SetString(PyExc_ValueError,
-                        "cannot create bitarray with negative length");
+        PyErr_SetString(PyExc_ValueError, "bitarray length must be >= 0");
         return NULL;
     }
     return newbitarrayobject(type, nbits, endian);

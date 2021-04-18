@@ -261,7 +261,7 @@ and requires `length` to be provided.
         if not isinstance(length, int):
             raise TypeError("int expected for length")
         if length <= 0:
-            raise ValueError("integer larger than 0 expected for length")
+            raise ValueError("length must be > 0")
     if signed and length is None:
         raise TypeError("signed requires length")
 

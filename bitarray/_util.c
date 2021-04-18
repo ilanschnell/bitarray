@@ -543,7 +543,7 @@ ba2base(PyObject *module, PyObject *args)
 #define aa  ((bitarrayobject *) a)
     if (aa->nbits % m)
         return PyErr_Format(PyExc_ValueError,
-                            "bitarray length not multiple of %d", m);
+                            "bitarray length must be multiple of %d", m);
 
     strsize = aa->nbits / m;
     if ((str = (char *) PyMem_Malloc(strsize)) == NULL)
@@ -606,7 +606,7 @@ base2ba(PyObject *module, PyObject *args)
     for (i = 0; i < strsize; i++) {
         d = digit_to_int(str[i], n);
         if (d < 0) {
-            PyErr_SetString(PyExc_ValueError, "Invalid digit found");
+            PyErr_SetString(PyExc_ValueError, "invalid digit found");
             return NULL;
         }
         for (k = 0; k < m; k++)
