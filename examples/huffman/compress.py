@@ -17,11 +17,11 @@ def encode(filename):
     code = huffman_code(Counter(plain))
     with open(filename + '.huff', 'wb') as fo:
         for sym in sorted(code):
-            fo.write(('%02x %s\n' % (sym, code[sym].to01())).encode())
+            fo.write(b'%02x %s\n' % (sym, code[sym].to01().encode()))
         a = bitarray(endian='little')
         a.encode(code, plain)
         # write unused bits
-        fo.write(b'unused %s\n' % str(a.buffer_info()[3]).encode())
+        fo.write(b'unused %d\n' % a.buffer_info()[3])
         a.tofile(fo)
     print('Bits: %d / %d' % (len(a), 8 * len(plain)))
     print('Ratio =%6.2f%%' % (100.0 * a.buffer_info()[1] / len(plain)))
@@ -76,10 +76,10 @@ def main():
     if opts.encode:
         encode(filename)
 
-    if opts.decode:
+    elif opts.decode:
         decode(filename + '.huff')
 
-    if opts.test:
+    elif opts.test:
         huff = filename + '.huff'
         out = filename + '.out'
         encode(filename)
@@ -87,6 +87,9 @@ def main():
         assert open(filename, 'rb').read() == open(out, 'rb').read()
         os.unlink(huff)
         os.unlink(out)
+
+    else:
+        p.error("no option provided")
 
 
 if __name__ == '__main__':
