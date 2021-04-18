@@ -210,8 +210,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
        bytes using memmove, and copy the remaining few bits individually.
        Note that the order of these two operations matters when copying
        self to self. */
-    if (a % 8 == 0 && b % 8 == 0 && n >= 8)
-    {
+    if (a % 8 == 0 && b % 8 == 0 && n >= 8) {
         const size_t bytes = n / 8;
         const Py_ssize_t bits = BITS(bytes);
 
