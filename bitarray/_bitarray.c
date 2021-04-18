@@ -373,7 +373,7 @@ count(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
     return vi ? res : stop - start - res;
 }
 
-/* Return index of first occurrence of vi, -1 when x is not in found.
+/* Return index of first occurrence of vi, and -1 when vi is not found.
    This function never fails. */
 static Py_ssize_t
 findfirst(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
