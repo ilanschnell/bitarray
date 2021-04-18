@@ -128,13 +128,14 @@ Raises `ValueError`, when n exceeds total count (`a.count()`).");
 
 /* ----------------------------- right index --------------------------- */
 
-/* return index of last occurrence of vi, -1 when x is not in found. */
+/* return index of last occurrence of vi; return -1 when vi is not found */
 static Py_ssize_t
 find_last(bitarrayobject *a, int vi)
 {
     Py_ssize_t i, j;
     char c;
 
+    assert(vi == 0 || vi == 1);
     if (a->nbits == 0)
         return -1;
 
