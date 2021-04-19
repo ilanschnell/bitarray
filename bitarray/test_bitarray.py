@@ -2396,18 +2396,19 @@ class BytesTests(unittest.TestCase, Util):
         for endian in 'little', 'big':
             _set_default_endian(endian)
             a = bitarray()
+            a.pack(bytes())
+            self.assertEQUAL(a, bitarray())
             a.pack(b'\x00')
-            self.assertEqual(a, bitarray('0'))
+            self.assertEQUAL(a, bitarray('0'))
             a.pack(b'\xff')
-            self.assertEqual(a, bitarray('01'))
+            self.assertEQUAL(a, bitarray('01'))
             a.pack(b'\x01\x00\x7a')
-            self.assertEqual(a, bitarray('01101'))
+            self.assertEQUAL(a, bitarray('01101'))
             self.check_obj(a)
 
     def test_pack_allbytes(self):
         a = bitarray()
-        for n in range(256):
-            a.pack(bytes(bytearray([n])))
+        a.pack(bytes(bytearray(range(256))))
         self.assertEqual(a, bitarray('0' + 255 * '1'))
         self.check_obj(a)
 

@@ -1290,13 +1290,11 @@ bitarray_pack(bitarrayobject *self, PyObject *bytes)
     Py_ssize_t nbytes, i;
     char *data;
 
-    if (!PyBytes_Check(bytes)) {
-        PyErr_SetString(PyExc_TypeError, "bytes expected");
-        return NULL;
-    }
+    if (!PyBytes_Check(bytes))
+        return PyErr_Format(PyExc_TypeError, "bytes expected, not %s",
+                            Py_TYPE(bytes)->tp_name);
+
     nbytes = PyBytes_GET_SIZE(bytes);
-    if (nbytes == 0)
-        Py_RETURN_NONE;
 
     if (resize(self, self->nbits + nbytes) < 0)
         return NULL;
