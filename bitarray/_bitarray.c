@@ -1119,10 +1119,10 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     Py_ssize_t nbytes;
     Py_ssize_t t, p;
 
-    if (!PyBytes_Check(bytes)) {
-        PyErr_SetString(PyExc_TypeError, "bytes expected");
-        return NULL;
-    }
+    if (!PyBytes_Check(bytes))
+        return PyErr_Format(PyExc_TypeError, "bytes expected, not %s",
+                            Py_TYPE(bytes)->tp_name);
+
     nbytes = PyBytes_GET_SIZE(bytes);
     if (nbytes == 0)
         Py_RETURN_NONE;
@@ -1543,7 +1543,8 @@ bitarray_contains(bitarrayobject *self, PyObject *value)
     if (bitarray_Check(value))
         return search(self, (bitarrayobject *) value, 0) >= 0;
 
-    PyErr_SetString(PyExc_TypeError, "bitarray or bool expected");
+    PyErr_Format(PyExc_TypeError, "bitarray or bool expected, got %s",
+                 Py_TYPE(value)->tp_name);
     return -1;
 }
 
