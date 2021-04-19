@@ -1,9 +1,10 @@
 Change log
 ==========
 
-2021-XX-XX   2.0.1:
+**2.0.1** (2021-04-19):
 
 * update documentation
+* improve some error messages
 
 
 **2.0.0** (2021-04-14):
