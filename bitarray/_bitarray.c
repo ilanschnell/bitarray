@@ -58,7 +58,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     }
 
     if (newsize == size) {
-        /* the buffer size hasn't changed - bypass everything */
+        /* buffer size hasn't changed - bypass everything */
         self->nbits = nbits;
         return 0;
     }
@@ -247,8 +247,6 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 {
     assert(0 <= start && start <= self->nbits);
     assert(0 <= n && n <= self->nbits - start);
-    if (n == 0)
-        return 0;
 
     copy_n(self, start, self, start + n, self->nbits - start - n);
     return resize(self, self->nbits - n);
@@ -260,8 +258,6 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 {
     assert(0 <= start && start <= self->nbits);
     assert(n >= 0);
-    if (n == 0)
-        return 0;
 
     if (resize(self, self->nbits + n) < 0)
         return -1;
@@ -453,9 +449,6 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
     const Py_ssize_t self_nbits = self->nbits;
     const Py_ssize_t other_nbits = other->nbits;
 
-    if (other_nbits == 0)
-        return 0;
-
     if (resize(self, self_nbits + other_nbits) < 0)
         return -1;
 
@@ -496,8 +489,6 @@ extend_sequence(bitarrayobject *self, PyObject *sequence)
 
     assert(PySequence_Check(sequence));
     n = PySequence_Size(sequence);
-    if (n == 0)
-        return 0;
 
     if (resize(self, self->nbits + n) < 0)
         return -1;
@@ -1152,7 +1143,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     memcpy(self->ob_item + (Py_SIZE(self) - nbytes),
            PyBytes_AS_STRING(bytes), (size_t) nbytes);
 
-    if (delete_n(self, t, p) < 0)
+    if (p && delete_n(self, t, p) < 0)
         return NULL;
     Py_RETURN_NONE;
 }
