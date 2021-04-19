@@ -17,7 +17,7 @@ Change log
 * fix frozenbitarray being mutable by ``<<=`` and ``>>=``
 * support sequence protocol in ``.extend()`` (and bitarray creation)
 * improve OverflowError messages from ``util.int2ba()``
-* add examples/hexadecimal.py
+* add `hexadecimal example <../examples/hexadecimal.py>`__
 
 
 **1.9.2** (2021-04-10):
@@ -36,7 +36,7 @@ Change log
 
 * add shift operations (``<<``, ``>>``, ``<<=``, ``>>=``), see `#117 <https://github.com/ilanschnell/bitarray/issues/117>`__
 * add ``bitarray.util.ba2base()`` and ``bitarray.util.base2ba()``,
-  see last paragraph in `Bitarray representations <doc/represent.rst>`__
+  see last paragraph in `Bitarray representations <represent.rst>`__
 * documentation and tests
 
 
@@ -46,7 +46,7 @@ Change log
 * speedup initializing or extending a bitarray from another with different
   bit endianness
 * add formatting options to ``bitarray.util.pprint()``
-* add documentation on `bitarray representations <doc/represent.rst>`__
+* add documentation on `bitarray representations <represent.rst>`__
 * add and improve tests (all 291 tests run in less than half a second on
   a modern machine)
 
@@ -69,7 +69,7 @@ Change log
   result in ``False``.  This is fixed now, that is ``a == b`` will always
   evaluate to ``True``.
 * add test for loading existing pickle file (created using bitarray 1.5.0)
-* add example showing how to `jsonize bitarrays <examples/extend_json.py>`__
+* add example showing how to `jsonize bitarrays <../examples/extend_json.py>`__
 * add tests
 
 
