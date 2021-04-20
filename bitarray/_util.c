@@ -24,7 +24,7 @@ ensure_bitarray(PyObject *obj)
     int t;
 
     if (bitarray_type_obj == NULL)
-        Py_FatalError("bitarray_type_obj missing");
+        Py_FatalError("bitarray_type_obj not set");
     t = PyObject_IsInstance(obj, bitarray_type_obj);
     if (t < 0)
         return -1;
@@ -618,7 +618,8 @@ base2ba(PyObject *module, PyObject *args)
 
 /* --------------------------------------------------------------------- */
 
-/* set bitarray_type_obj (bato) */
+/* Set bitarray_type_obj (bato).  This function must be called before any
+   other Python function in this module. */
 static PyObject *
 set_bato(PyObject *module, PyObject *obj)
 {
