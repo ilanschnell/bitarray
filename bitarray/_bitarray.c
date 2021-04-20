@@ -2514,36 +2514,16 @@ static PyTypeObject DecodeIter_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
-    0,                                        /* ob_size */
+    .ob_size = 0,
 #endif
-    "bitarray.decodeiterator",                /* tp_name */
-    sizeof(decodeiterobject),                 /* tp_basicsize */
-    0,                                        /* tp_itemsize */
-    /* methods */
-    (destructor) decodeiter_dealloc,          /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    PyObject_GenericGetAttr,                  /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,  /* tp_flags */
-    0,                                        /* tp_doc */
-    (traverseproc) decodeiter_traverse,       /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    PyObject_SelfIter,                        /* tp_iter */
-    (iternextfunc) decodeiter_next,           /* tp_iternext */
-    0,                                        /* tp_methods */
+    .tp_name = "bitarray.decodeiterator",
+    .tp_basicsize = sizeof(decodeiterobject),
+    .tp_dealloc = (destructor) decodeiter_dealloc,
+    .tp_getattro = PyObject_GenericGetAttr,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
+    .tp_traverse = (traverseproc) decodeiter_traverse,
+    .tp_iter = PyObject_SelfIter,
+    .tp_iternext = (iternextfunc) decodeiter_next,
 };
 
 /*********************** (Bitarray) Search Iterator ***********************/
@@ -2626,36 +2606,16 @@ static PyTypeObject SearchIter_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
-    0,                                        /* ob_size */
+    .ob_size = 0,
 #endif
-    "bitarray.searchiterator",                /* tp_name */
-    sizeof(searchiterobject),                 /* tp_basicsize */
-    0,                                        /* tp_itemsize */
-    /* methods */
-    (destructor) searchiter_dealloc,          /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    PyObject_GenericGetAttr,                  /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,  /* tp_flags */
-    0,                                        /* tp_doc */
-    (traverseproc) searchiter_traverse,       /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    PyObject_SelfIter,                        /* tp_iter */
-    (iternextfunc) searchiter_next,           /* tp_iternext */
-    0,                                        /* tp_methods */
+    .tp_name = "bitarray.searchiterator",
+    .tp_basicsize = sizeof(searchiterobject),
+    .tp_dealloc = (destructor) searchiter_dealloc,
+    .tp_getattro = PyObject_GenericGetAttr,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
+    .tp_traverse = (traverseproc) searchiter_traverse,
+    .tp_iter = PyObject_SelfIter,
+    .tp_iternext = (iternextfunc) searchiter_next,
 };
 
 /*********************** bitarray method definitions **********************/
@@ -2964,36 +2924,16 @@ static PyTypeObject BitarrayIter_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
-    0,                                        /* ob_size */
+    .ob_size = 0,
 #endif
-    "bitarray.bitarrayiterator",              /* tp_name */
-    sizeof(bitarrayiterobject),               /* tp_basicsize */
-    0,                                        /* tp_itemsize */
-    /* methods */
-    (destructor) bitarrayiter_dealloc,        /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number */
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    0,                                        /* tp_hash */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    PyObject_GenericGetAttr,                  /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,  /* tp_flags */
-    0,                                        /* tp_doc */
-    (traverseproc) bitarrayiter_traverse,     /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    PyObject_SelfIter,                        /* tp_iter */
-    (iternextfunc) bitarrayiter_next,         /* tp_iternext */
-    0,                                        /* tp_methods */
+    .tp_name = "bitarray.bitarrayiterator",
+    .tp_basicsize = sizeof(bitarrayiterobject),
+    .tp_dealloc = (destructor) bitarrayiter_dealloc,
+    .tp_getattro = PyObject_GenericGetAttr,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
+    .tp_traverse = (traverseproc) bitarrayiter_traverse,
+    .tp_iter = PyObject_SelfIter,
+    .tp_iternext = (iternextfunc) bitarrayiter_next,
 };
 
 /*********************** bitarray buffer interface ************************/
