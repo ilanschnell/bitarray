@@ -1977,55 +1977,17 @@ SHIFT_FUNC(irshift, 1, 1, ">>=") /* bitarray_irshift */
 
 
 static PyNumberMethods bitarray_as_number = {
-    0,                                   /* nb_add */
-    0,                                   /* nb_subtract */
-    0,                                   /* nb_multiply */
-#if PY_MAJOR_VERSION == 2
-    0,                                   /* nb_divide */
-#endif
-    0,                                   /* nb_remainder */
-    0,                                   /* nb_divmod */
-    0,                                   /* nb_power */
-    0,                                   /* nb_negative */
-    0,                                   /* nb_positive */
-    0,                                   /* nb_absolute */
-    0,                                   /* nb_bool (was nb_nonzero) */
-    (unaryfunc) bitarray_cpinvert,       /* nb_invert */
-    (binaryfunc) bitarray_lshift,        /* nb_lshift */
-    (binaryfunc) bitarray_rshift,        /* nb_rshift */
-    (binaryfunc) bitarray_and,           /* nb_and */
-    (binaryfunc) bitarray_xor,           /* nb_xor */
-    (binaryfunc) bitarray_or,            /* nb_or */
-#if PY_MAJOR_VERSION == 2
-    0,                                   /* nb_coerce */
-#endif
-    0,                                   /* nb_int */
-    0,                                   /* nb_reserved (was nb_long) */
-    0,                                   /* nb_float */
-#if PY_MAJOR_VERSION == 2
-    0,                                   /* nb_oct */
-    0,                                   /* nb_hex */
-#endif
-    0,                                   /* nb_inplace_add */
-    0,                                   /* nb_inplace_subtract */
-    0,                                   /* nb_inplace_multiply */
-#if PY_MAJOR_VERSION == 2
-    0,                                   /* nb_inplace_divide */
-#endif
-    0,                                   /* nb_inplace_remainder */
-    0,                                   /* nb_inplace_power */
-    (binaryfunc) bitarray_ilshift,       /* nb_inplace_lshift */
-    (binaryfunc) bitarray_irshift,       /* nb_inplace_rshift */
-    (binaryfunc) bitarray_iand,          /* nb_inplace_and */
-    (binaryfunc) bitarray_ixor,          /* nb_inplace_xor */
-    (binaryfunc) bitarray_ior,           /* nb_inplace_or */
-    0,                                   /* nb_floor_divide */
-    0,                                   /* nb_true_divide */
-    0,                                   /* nb_inplace_floor_divide */
-    0,                                   /* nb_inplace_true_divide */
-#if PY_MAJOR_VERSION == 3
-    0,                                   /* nb_index */
-#endif
+    .nb_invert = (unaryfunc) bitarray_cpinvert,
+    .nb_lshift = (binaryfunc) bitarray_lshift,
+    .nb_rshift = (binaryfunc) bitarray_rshift,
+    .nb_and = (binaryfunc) bitarray_and,
+    .nb_xor = (binaryfunc) bitarray_xor,
+    .nb_or = (binaryfunc) bitarray_or,
+    .nb_inplace_lshift = (binaryfunc) bitarray_ilshift,
+    .nb_inplace_rshift = (binaryfunc) bitarray_irshift,
+    .nb_inplace_and = (binaryfunc) bitarray_iand,
+    .nb_inplace_xor = (binaryfunc) bitarray_ixor,
+    .nb_inplace_or = (binaryfunc) bitarray_ior,
 };
 
 /**************************************************************************
@@ -2397,47 +2359,19 @@ static PyTypeObject DecodeTree_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
-    0,                                        /* ob_size */
+    .ob_size = 0,
 #endif
-    "bitarray.decodetree",                    /* tp_name */
-    sizeof(decodetreeobject),                 /* tp_basicsize */
-    0,                                        /* tp_itemsize */
-    /* methods */
-    (destructor) decodetree_dealloc,          /* tp_dealloc */
-    0,                                        /* tp_print */
-    0,                                        /* tp_getattr */
-    0,                                        /* tp_setattr */
-    0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
-    0,                                        /* tp_as_number*/
-    0,                                        /* tp_as_sequence */
-    0,                                        /* tp_as_mapping */
-    PyObject_HashNotImplemented,              /* tp_hash */
-    0,                                        /* tp_call */
-    0,                                        /* tp_str */
-    PyObject_GenericGetAttr,                  /* tp_getattro */
-    0,                                        /* tp_setattro */
-    0,                                        /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT,                       /* tp_flags */
-    decodetree_doc,                           /* tp_doc */
-    0,                                        /* tp_traverse */
-    0,                                        /* tp_clear */
-    0,                                        /* tp_richcompare */
-    0,                                        /* tp_weaklistoffset */
-    0,                                        /* tp_iter */
-    0,                                        /* tp_iternext */
-    decodetree_methods,                       /* tp_methods */
-    0,                                        /* tp_members */
-    0,                                        /* tp_getset */
-    0,                                        /* tp_base */
-    0,                                        /* tp_dict */
-    0,                                        /* tp_descr_get */
-    0,                                        /* tp_descr_set */
-    0,                                        /* tp_dictoffset */
-    0,                                        /* tp_init */
-    PyType_GenericAlloc,                      /* tp_alloc */
-    decodetree_new,                           /* tp_new */
-    PyObject_Del,                             /* tp_free */
+    .tp_name = "bitarray.decodetree",
+    .tp_basicsize = sizeof(decodetreeobject),
+    .tp_dealloc = (destructor) decodetree_dealloc,
+    .tp_hash = PyObject_HashNotImplemented,
+    .tp_getattro = PyObject_GenericGetAttr,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_doc = decodetree_doc,
+    .tp_methods = decodetree_methods,
+    .tp_alloc = PyType_GenericAlloc,
+    .tp_new = decodetree_new,
+    .tp_free = PyObject_Del,
 };
 
 #define DecodeTree_Check(op)  PyObject_TypeCheck(op, &DecodeTree_Type)
