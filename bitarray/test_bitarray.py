@@ -899,13 +899,24 @@ class MiscTests(unittest.TestCase, Util):
             a = bitarray(n, 'little')
             a.setall(1)
             for endian in 'little', 'big':
-                b = bitarray(n, endian)
-                b.setall(1)
+                b = bitarray(a, endian)
                 self.assertTrue(a == b)
                 self.assertFalse(a != b)
-                b[n - 1] = not b[n - 1]  # flip last bit
+                b.invert(n - 1)
                 self.assertTrue(a != b)
                 self.assertFalse(a == b)
+
+    def test_compare_size(self):
+        m = 10
+        a = zeros(m, 'little')
+        for n in range(m - 1, m + 2):
+            b = zeros(n, 'big')
+            self.assertEqual(a == b, m == n)
+            self.assertEqual(a != b, m != n)
+            self.assertEqual(a <= b, m <= n)
+            self.assertEqual(a <  b, m <  n)
+            self.assertEqual(a >= b, m >= n)
+            self.assertEqual(a >  b, m >  n)
 
     def test_compare_random(self):
         for a in self.randombitarrays():
