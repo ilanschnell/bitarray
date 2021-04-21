@@ -2907,7 +2907,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static PyObject *
 richcompare(PyObject *v, PyObject *w, int op)
 {
-    int cmp, vi, wi;
+    int cmp;
     Py_ssize_t i, vs, ws;
 
     if (!bitarray_Check(v) || !bitarray_Check(w)) {
@@ -2933,19 +2933,18 @@ richcompare(PyObject *v, PyObject *w, int op)
         }
     }
 
-    /* to avoid uninitialized warning for some compilers */
-    vi = wi = 0;
     /* search for the first index where items are different */
     for (i = 0; i < vs && i < ws; i++) {
-        vi = GETBIT(va, i);
-        wi = GETBIT(wa, i);
+        int vi = GETBIT(va, i);
+        int wi = GETBIT(wa, i);
+
         if (vi != wi) {
             /* we have an item that differs */
             switch (op) {
             case Py_LT: cmp = vi <  wi; break;
             case Py_LE: cmp = vi <= wi; break;
-            case Py_EQ: Py_RETURN_FALSE;
-            case Py_NE: Py_RETURN_TRUE;
+            case Py_EQ: cmp = 0; break;
+            case Py_NE: cmp = 1; break;
             case Py_GT: cmp = vi >  wi; break;
             case Py_GE: cmp = vi >= wi; break;
             default: return NULL;  /* cannot happen */
