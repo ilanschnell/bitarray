@@ -891,45 +891,6 @@ class MiscTests(unittest.TestCase, Util):
         b = bitarray('01010111000')
         self.assertEqual(a, b)
 
-    def test_compare_eq_ne(self):
-        self.assertTrue(bitarray(0, 'big') == bitarray(0, 'little'))
-        self.assertFalse(bitarray(0, 'big') != bitarray(0, 'little'))
-
-        for n in range(1, 20):
-            a = bitarray(n, 'little')
-            a.setall(1)
-            for endian in 'little', 'big':
-                b = bitarray(a, endian)
-                self.assertTrue(a == b)
-                self.assertFalse(a != b)
-                b.invert(n - 1)
-                self.assertTrue(a != b)
-                self.assertFalse(a == b)
-
-    def test_compare_size(self):
-        m = 10
-        a = zeros(m, 'little')
-        for n in range(m - 1, m + 2):
-            b = zeros(n, 'big')
-            self.assertEqual(a == b, m == n)
-            self.assertEqual(a != b, m != n)
-            self.assertEqual(a <= b, m <= n)
-            self.assertEqual(a <  b, m <  n)
-            self.assertEqual(a >= b, m >= n)
-            self.assertEqual(a >  b, m >  n)
-
-    def test_compare_random(self):
-        for a in self.randombitarrays():
-            aa = a.tolist()
-            for b in self.randombitarrays():
-                bb = b.tolist()
-                self.assertEqual(a == b, aa == bb)
-                self.assertEqual(a != b, aa != bb)
-                self.assertEqual(a <= b, aa <= bb)
-                self.assertEqual(a <  b, aa <  bb)
-                self.assertEqual(a >= b, aa >= bb)
-                self.assertEqual(a >  b, aa >  bb)
-
     def test_subclassing(self):
         class ExaggeratingBitarray(bitarray):
 
@@ -1030,6 +991,92 @@ class MiscTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, dict, [(a, 'foo')])
 
 tests.append(MiscTests)
+
+# ---------------------------------------------------------------------------
+
+class RichCompareTests(unittest.TestCase, Util):
+
+    def test_wrong_types(self):
+        a = bitarray()
+        for x in None, 7, 'A':
+            self.assertEqual(a.__eq__(x), NotImplemented)
+            self.assertEqual(a.__ne__(x), NotImplemented)
+            self.assertEqual(a.__ge__(x), NotImplemented)
+            self.assertEqual(a.__gt__(x), NotImplemented)
+            self.assertEqual(a.__le__(x), NotImplemented)
+            self.assertEqual(a.__lt__(x), NotImplemented)
+
+    def test_explicit(self):
+        for sa, sb, res in [
+                ('',   '',   '101010'),
+                ('1',  '',   '011100'),
+                ('11', '10', '011100'),
+                ('0',  '1',  '010011'),
+        ]:
+            a = bitarray(sa)
+            b = bitarray(sb)
+            self.assertEqual(a == b, int(res[0]))
+            self.assertEqual(a != b, int(res[1]))
+            self.assertEqual(a >= b, int(res[2]))
+            self.assertEqual(a >  b, int(res[3]))
+            self.assertEqual(a <= b, int(res[4]))
+            self.assertEqual(a <  b, int(res[5]))
+
+    def test_eq_ne(self):
+        self.assertTrue(bitarray(0, 'big') == bitarray(0, 'little'))
+        self.assertFalse(bitarray(0, 'big') != bitarray(0, 'little'))
+
+        for n in range(1, 20):
+            a = bitarray(n, 'little')
+            a.setall(1)
+            for endian in 'little', 'big':
+                b = bitarray(a, endian)
+                self.assertTrue(a == b)
+                self.assertFalse(a != b)
+                b[n - 1] = 0
+                self.assertTrue(a != b)
+                self.assertFalse(a == b)
+
+    def test_eq_ne_random(self):
+        for a in self.randombitarrays(start=1):
+            for endian in 'little', 'big':
+                b = bitarray(a, endian)
+                self.assertTrue(a == b)
+                self.assertFalse(a != b)
+                b.invert(randint(0, len(a) - 1))
+                self.assertTrue(a != b)
+                self.assertFalse(a == b)
+
+    def check(self, a, b, c, d):
+        self.assertEqual(a == b, c == d)
+        self.assertEqual(a != b, c != d)
+        self.assertEqual(a <= b, c <= d)
+        self.assertEqual(a <  b, c <  d)
+        self.assertEqual(a >= b, c >= d)
+        self.assertEqual(a >  b, c >  d)
+
+    def test_invert_random_element(self):
+        for a in self.randombitarrays(start=1):
+            n = len(a)
+            for endian in 'big', 'little':
+                b = bitarray(a, endian)
+                i = randint(0, n - 1)
+                b.invert(i)
+                self.check(a, b, a[i], b[i])
+
+    def test_size(self):
+        for _ in range(100):
+            a = zeros(randint(1, 20), ['little', 'big'][randint(0, 1)])
+            b = zeros(randint(1, 20), ['little', 'big'][randint(0, 1)])
+            self.check(a, b, len(a), len(b))
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            aa = a.tolist()
+            for b in self.randombitarrays():
+                self.check(a, b, aa, b.tolist())
+
+tests.append(RichCompareTests)
 
 # ---------------------------------------------------------------------------
 
