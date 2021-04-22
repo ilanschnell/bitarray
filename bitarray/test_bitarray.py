@@ -44,6 +44,10 @@ tests = []
 class Util(object):
 
     @staticmethod
+    def random_endian():
+        return ['little', 'big'][randint(0, 1)]
+
+    @staticmethod
     def randombitarrays(start=0):
         for n in list(range(start, 25)) + [randint(1000, 2000)]:
             a = bitarray(endian=['little', 'big'][randint(0, 1)])
@@ -1013,8 +1017,8 @@ class RichCompareTests(unittest.TestCase, Util):
                 ('11', '10', '011100'),
                 ('0',  '1',  '010011'),
         ]:
-            a = bitarray(sa)
-            b = bitarray(sb)
+            a = bitarray(sa, self.random_endian())
+            b = bitarray(sb, self.random_endian())
             self.assertEqual(a == b, int(res[0]))
             self.assertEqual(a != b, int(res[1]))
             self.assertEqual(a >= b, int(res[2]))
@@ -1023,29 +1027,30 @@ class RichCompareTests(unittest.TestCase, Util):
             self.assertEqual(a <  b, int(res[5]))
 
     def test_eq_ne(self):
-        self.assertTrue(bitarray(0, 'big') == bitarray(0, 'little'))
-        self.assertFalse(bitarray(0, 'big') != bitarray(0, 'little'))
+        for _ in range(10):
+            self.assertTrue(bitarray(0, self.random_endian()) ==
+                            bitarray(0, self.random_endian()))
+            self.assertFalse(bitarray(0, self.random_endian()) !=
+                             bitarray(0, self.random_endian()))
 
         for n in range(1, 20):
-            a = bitarray(n, 'little')
+            a = bitarray(n, self.random_endian())
             a.setall(1)
-            for endian in 'little', 'big':
-                b = bitarray(a, endian)
-                self.assertTrue(a == b)
-                self.assertFalse(a != b)
-                b[n - 1] = 0
-                self.assertTrue(a != b)
-                self.assertFalse(a == b)
+            b = bitarray(a, self.random_endian())
+            self.assertTrue(a == b)
+            self.assertFalse(a != b)
+            b[n - 1] = 0
+            self.assertTrue(a != b)
+            self.assertFalse(a == b)
 
     def test_eq_ne_random(self):
         for a in self.randombitarrays(start=1):
-            for endian in 'little', 'big':
-                b = bitarray(a, endian)
-                self.assertTrue(a == b)
-                self.assertFalse(a != b)
-                b.invert(randint(0, len(a) - 1))
-                self.assertTrue(a != b)
-                self.assertFalse(a == b)
+            b = bitarray(a, self.random_endian())
+            self.assertTrue(a == b)
+            self.assertFalse(a != b)
+            b.invert(randint(0, len(a) - 1))
+            self.assertTrue(a != b)
+            self.assertFalse(a == b)
 
     def check(self, a, b, c, d):
         self.assertEqual(a == b, c == d)
@@ -1058,16 +1063,15 @@ class RichCompareTests(unittest.TestCase, Util):
     def test_invert_random_element(self):
         for a in self.randombitarrays(start=1):
             n = len(a)
-            for endian in 'big', 'little':
-                b = bitarray(a, endian)
-                i = randint(0, n - 1)
-                b.invert(i)
-                self.check(a, b, a[i], b[i])
+            b = bitarray(a, self.random_endian())
+            i = randint(0, n - 1)
+            b.invert(i)
+            self.check(a, b, a[i], b[i])
 
     def test_size(self):
         for _ in range(100):
-            a = zeros(randint(1, 20), ['little', 'big'][randint(0, 1)])
-            b = zeros(randint(1, 20), ['little', 'big'][randint(0, 1)])
+            a = zeros(randint(1, 20), self.random_endian())
+            b = zeros(randint(1, 20), self.random_endian())
             self.check(a, b, len(a), len(b))
 
     def test_random(self):
