@@ -1077,8 +1077,14 @@ class RichCompareTests(unittest.TestCase, Util):
     def test_random(self):
         for a in self.randombitarrays():
             aa = a.tolist()
+            if randint(0, 1):
+                a = frozenbitarray(a)
             for b in self.randombitarrays():
-                self.check(a, b, aa, b.tolist())
+                bb = b.tolist()
+                if randint(0, 1):
+                    b = frozenbitarray(b)
+                self.check(a, b, aa, bb)
+                self.check(a, b, aa, bb)
 
 tests.append(RichCompareTests)
 
