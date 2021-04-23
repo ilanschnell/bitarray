@@ -528,9 +528,6 @@ class MetaDataTests(unittest.TestCase, Util):
             a = bitarray(endian=endian)
             self.assertEqual(a.endian(), endian)
 
-        a = bitarray(endian='big')
-        self.assertEqual(a.endian(), 'big')
-
     def test_len(self):
         for n in range(100):
             a = bitarray(n)
@@ -587,7 +584,7 @@ class SliceTests(unittest.TestCase, Util):
         for a in self.randombitarrays(start=1):
             aa = a.tolist()
             la = len(a)
-            for dum in range(10):
+            for _ in range(10):
                 step = self.rndsliceidx(la) or None
                 s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
                 self.assertEQUAL(a[s], bitarray(aa[s], endian=a.endian()))
@@ -645,7 +642,7 @@ class SliceTests(unittest.TestCase, Util):
     def test_setslice_random(self):
         for a in self.randombitarrays(start=1):
             la = len(a)
-            for dum in range(10):
+            for _ in range(10):
                 step = self.rndsliceidx(la) or None
                 s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
                 lb = randint(0, 10) if step is None else self.slicelen(s, la)
@@ -832,7 +829,7 @@ class SliceTests(unittest.TestCase, Util):
     def test_delslice_random(self):
         for a in self.randombitarrays():
             la = len(a)
-            for dum in range(10):
+            for _ in range(10):
                 step = self.rndsliceidx(la) or None
                 s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
                 c = a.copy()
