@@ -1978,70 +1978,6 @@ class MethodTests(unittest.TestCase, Util):
                     res2 = None
                 self.assertEqual(res1, res2)
 
-    def test_count_basic(self):
-        a = bitarray('10011')
-        self.assertEqual(a.count(), 3)
-        self.assertEqual(a.count(True), 3)
-        self.assertEqual(a.count(False), 2)
-        self.assertEqual(a.count(1), 3)
-        self.assertEqual(a.count(0), 2)
-        self.assertRaises(ValueError, a.count, 2)
-        self.assertRaises(TypeError, a.count, None)
-        self.assertRaises(TypeError, a.count, '')
-        self.assertRaises(TypeError, a.count, 'A')
-        self.assertRaises(TypeError, a.count, 0, 'A')
-        self.assertRaises(TypeError, a.count, 0, 0, 'A')
-
-    def test_count_byte(self):
-
-        def count(n):  # count 1 bits in number
-            cnt = 0
-            while n:
-                cnt += n & 1
-                n >>= 1
-            return cnt
-
-        for i in range(256):
-            a = bitarray()
-            a.frombytes(bytes(bytearray([i])))
-            self.assertEqual(len(a), 8)
-            self.assertEqual(a.count(), count(i))
-            self.assertEqual(a.count(), bin(i)[2:].count('1'))
-
-    def test_count_whole_range(self):
-        for a in self.randombitarrays():
-            s = a.to01()
-            self.assertEqual(a.count(1), s.count('1'))
-            self.assertEqual(a.count(0), s.count('0'))
-
-    def test_count_allones(self):
-        N = 37
-        a = bitarray(N)
-        a.setall(1)
-        for i in range(N):
-            for j in range(i, N):
-                self.assertEqual(a.count(1, i, j), j - i)
-
-    def test_count_explicit(self):
-        for endian in 'big', 'little':
-            a = bitarray('01001100 01110011 01', endian)
-            self.assertEqual(a.count(), 9)
-            self.assertEqual(a.count(0, 12), 3)
-            self.assertEqual(a.count(1, -5), 3)
-            self.assertEqual(a.count(1, 2, 17), 7)
-            self.assertEqual(a.count(1, 6, 11), 2)
-            self.assertEqual(a.count(0, 7, -3), 4)
-            self.assertEqual(a.count(1, 1, -1), 8)
-            self.assertEqual(a.count(1, 17, 14), 0)
-
-    def test_count_random(self):
-        for a in self.randombitarrays():
-            s = a.to01()
-            i = randint(-3, len(a) + 1)
-            j = randint(-3, len(a) + 1)
-            self.assertEqual(a.count(1, i, j), s[i:j].count('1'))
-            self.assertEqual(a.count(0, i, j), s[i:j].count('0'))
-
     def test_search(self):
         a = bitarray('')
         self.assertEqual(a.search(bitarray('0')), [])
@@ -2351,6 +2287,67 @@ class MethodTests(unittest.TestCase, Util):
             self.check_obj(b)
 
 tests.append(MethodTests)
+
+# ---------------------------------------------------------------------------
+
+class CountTests(unittest.TestCase, Util):
+
+    def test_basic(self):
+        a = bitarray('10011')
+        self.assertEqual(a.count(), 3)
+        self.assertEqual(a.count(True), 3)
+        self.assertEqual(a.count(False), 2)
+        self.assertEqual(a.count(1), 3)
+        self.assertEqual(a.count(0), 2)
+        self.assertRaises(ValueError, a.count, 2)
+        self.assertRaises(TypeError, a.count, None)
+        self.assertRaises(TypeError, a.count, '')
+        self.assertRaises(TypeError, a.count, 'A')
+        self.assertRaises(TypeError, a.count, 1, 2.0)
+        self.assertRaises(TypeError, a.count, 1, 2, 4.0)
+        self.assertRaises(TypeError, a.count, 0, 'A')
+        self.assertRaises(TypeError, a.count, 0, 0, 'A')
+
+    def test_byte(self):
+        for i in range(256):
+            a = bitarray()
+            a.frombytes(bytes(bytearray([i])))
+            self.assertEqual(len(a), 8)
+            self.assertEqual(a.count(), bin(i)[2:].count('1'))
+
+    def test_whole_range(self):
+        for a in self.randombitarrays():
+            s = a.to01()
+            self.assertEqual(a.count(1), s.count('1'))
+            self.assertEqual(a.count(0), s.count('0'))
+
+    def test_zeros(self):
+        N = 37
+        a = zeros(N)
+        for i in range(N):
+            for j in range(i, N):
+                self.assertEqual(a.count(0, i, j), j - i)
+
+    def test_explicit(self):
+        a = bitarray('01001100 01110011 01')
+        self.assertEqual(a.count(), 9)
+        self.assertEqual(a.count(0, 12), 3)
+        self.assertEqual(a.count(1, -5), 3)
+        self.assertEqual(a.count(1, 2, 17), 7)
+        self.assertEqual(a.count(1, 6, 11), 2)
+        self.assertEqual(a.count(0, 7, -3), 4)
+        self.assertEqual(a.count(1, 1, -1), 8)
+        self.assertEqual(a.count(1, 17, 14), 0)
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            s = a.to01()
+            i = randint(-3, len(a) + 2)
+            j = randint(-3, len(a) + 2)
+            self.assertEqual(a.count(1, i, j), s[i:j].count('1'))
+            self.assertEqual(a.count(0, i, j), s[i:j].count('0'))
+
+tests.append(CountTests)
 
 # ---------------------------------------------------------------------------
 
