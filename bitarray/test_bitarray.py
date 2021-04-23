@@ -1855,17 +1855,17 @@ class MethodTests(unittest.TestCase, Util):
             self.check_obj(a)
 
     def test_insert(self):
-        a = bitarray()
-        b = a
-        a.insert(0, True)
-        self.assertTrue(a is b)
-        self.assertEqual(a, bitarray('1'))
+        a = bitarray('111100')
+        a.insert(3, False)
+        self.assertEqual(a, bitarray('1110100'))
         self.assertRaises(ValueError, a.insert, 0, 2)
         self.assertRaises(TypeError, a.insert, 0, None)
         self.assertRaises(TypeError, a.insert)
         self.assertRaises(TypeError, a.insert, None)
-        self.assertEqual(a, bitarray('1'))
+        self.assertEqual(a, bitarray('1110100'))
+        self.check_obj(a)
 
+    def test_insert_random(self):
         for a in self.randombitarrays():
             aa = a.tolist()
             for _ in range(20):
@@ -1873,8 +1873,8 @@ class MethodTests(unittest.TestCase, Util):
                 pos = randint(-len(a) - 2, len(a) + 2)
                 a.insert(pos, item)
                 aa.insert(pos, item)
-                self.assertEqual(a.tolist(), aa)
-                self.check_obj(a)
+            self.assertEqual(a.tolist(), aa)
+            self.check_obj(a)
 
     def test_index1(self):
         a = bitarray()
