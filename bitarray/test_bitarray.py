@@ -1873,76 +1873,6 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist(), aa)
             self.check_obj(a)
 
-    def test_search(self):
-        a = bitarray('')
-        self.assertEqual(a.search(bitarray('0')), [])
-        self.assertEqual(a.search(bitarray('1')), [])
-
-        a = bitarray('1')
-        self.assertEqual(a.search(bitarray('0')), [])
-        self.assertEqual(a.search(bitarray('1')), [0])
-        self.assertEqual(a.search(bitarray('11')), [])
-
-        a = bitarray(100*'1')
-        self.assertEqual(a.search(bitarray('0')), [])
-        self.assertEqual(a.search(bitarray('1')), list(range(100)))
-
-        a = bitarray('10010101110011111001011')
-        for limit in range(10):
-            self.assertEqual(a.search(bitarray('011'), limit),
-                             [6, 11, 20][:limit])
-        self.assertRaises(ValueError, a.search, bitarray())
-        self.assertRaises(TypeError, a.search, '010')
-
-    def test_itersearch(self):
-        a = bitarray('10011')
-        self.assertRaises(ValueError, a.itersearch, bitarray())
-        self.assertRaises(TypeError, a.itersearch, '')
-        it = a.itersearch(bitarray('1'))
-        self.assertIsType(it, 'searchiterator')
-        self.assertEqual(next(it), 0)
-        self.assertEqual(next(it), 3)
-        self.assertEqual(next(it), 4)
-        self.assertStopIteration(it)
-
-    def test_search_2(self):
-        a = bitarray('10011')
-        for s, res in [('0',     [1, 2]),  ('1', [0, 3, 4]),
-                       ('01',    [2]),     ('11', [3]),
-                       ('000',   []),      ('1001', [0]),
-                       ('011',   [2]),     ('0011', [1]),
-                       ('10011', [0]),     ('100111', [])]:
-            b = bitarray(s)
-            self.assertEqual(a.search(b), res)
-            self.assertEqual([p for p in a.itersearch(b)], res)
-
-    def test_search_3(self):
-        a = bitarray('10010101110011111001011')
-        for s, res in [('011', [6, 11, 20]),
-                       ('111', [7, 12, 13, 14]),  # note the overlap
-                       ('1011', [5, 19]),
-                       ('100', [0, 9, 16])]:
-            b = bitarray(s)
-            self.assertEqual(a.search(b), res)
-            self.assertEqual(list(a.itersearch(b)), res)
-            self.assertEqual([p for p in a.itersearch(b)], res)
-
-    def test_search_4(self):
-        for a in self.randombitarrays():
-            aa = a.to01()
-            for sub in '0', '1', '01', '01', '11', '101', '1111111':
-                sr = a.search(bitarray(sub), 1)
-                try:
-                    p = sr[0]
-                except IndexError:
-                    p = -1
-                self.assertEqual(p, aa.find(sub))
-
-    def test_searchiter_type(self):
-        a = bitarray('10011')
-        it = a.itersearch(bitarray('1'))
-        self.assertIsType(it, 'searchiterator')
-
     def test_fill_simple(self):
         for endian in 'little', 'big':
             a = bitarray(endian=endian)
@@ -2354,6 +2284,77 @@ class IndexTests(unittest.TestCase):
                 self.assertEqual(res1, res2)
 
 tests.append(IndexTests)
+
+# ---------------------------------------------------------------------------
+
+class SearchTests(unittest.TestCase, Util):
+
+    def test_simple(self):
+        a = bitarray('')
+        self.assertEqual(a.search(bitarray('0')), [])
+        self.assertEqual(a.search(bitarray('1')), [])
+
+        a = bitarray('1')
+        self.assertEqual(a.search(bitarray('0')), [])
+        self.assertEqual(a.search(bitarray('1')), [0])
+        self.assertEqual(a.search(bitarray('11')), [])
+
+        a = 100 * bitarray('1')
+        self.assertEqual(a.search(bitarray('0')), [])
+        self.assertEqual(a.search(bitarray('1')), list(range(100)))
+
+        a = bitarray('10010101110011111001011')
+        for limit in range(10):
+            self.assertEqual(a.search(bitarray('011'), limit),
+                             [6, 11, 20][:limit])
+        self.assertRaises(ValueError, a.search, bitarray())
+        self.assertRaises(TypeError, a.search, '010')
+
+    def test_itersearch(self):
+        a = bitarray('10011')
+        self.assertRaises(ValueError, a.itersearch, bitarray())
+        self.assertRaises(TypeError, a.itersearch, '')
+        it = a.itersearch(bitarray('1'))
+        self.assertIsType(it, 'searchiterator')
+        self.assertEqual(next(it), 0)
+        self.assertEqual(next(it), 3)
+        self.assertEqual(next(it), 4)
+        self.assertStopIteration(it)
+
+    def test_explicit_1(self):
+        a = bitarray('10011', self.random_endian())
+        for s, res in [('0',     [1, 2]),  ('1', [0, 3, 4]),
+                       ('01',    [2]),     ('11', [3]),
+                       ('000',   []),      ('1001', [0]),
+                       ('011',   [2]),     ('0011', [1]),
+                       ('10011', [0]),     ('100111', [])]:
+            b = bitarray(s, self.random_endian())
+            self.assertEqual(a.search(b), res)
+            self.assertEqual([p for p in a.itersearch(b)], res)
+
+    def test_explicit_2(self):
+        a = bitarray('10010101110011111001011')
+        for s, res in [('011', [6, 11, 20]),
+                       ('111', [7, 12, 13, 14]),  # note the overlap
+                       ('1011', [5, 19]),
+                       ('100', [0, 9, 16])]:
+            b = bitarray(s)
+            self.assertEqual(a.search(b), res)
+            self.assertEqual(list(a.itersearch(b)), res)
+            self.assertEqual([p for p in a.itersearch(b)], res)
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            aa = a.to01()
+            for sub in '0', '1', '01', '01', '11', '101', '1111111':
+                sr = a.search(bitarray(sub), 1)
+                try:
+                    p = sr[0]
+                except IndexError:
+                    p = -1
+                self.assertEqual(p, aa.find(sub))
+
+tests.append(SearchTests)
 
 # ---------------------------------------------------------------------------
 
