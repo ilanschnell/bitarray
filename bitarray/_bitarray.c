@@ -740,6 +740,39 @@ bits (ignoring whitespace).");
 
 
 static PyObject *
+bitarray_find(bitarrayobject *self, PyObject *args)
+{
+    PyObject *x;
+    Py_ssize_t start = 0, stop = self->nbits;
+    bitarrayobject *xa;
+
+    if (!PyArg_ParseTuple(args, "O|nn:find", &x, &start, &stop))
+        return NULL;
+
+    if (!bitarray_Check(x)) {
+        PyErr_SetString(PyExc_TypeError, "bitarray expected for find");
+        return NULL;
+    }
+    xa = (bitarrayobject *) x;
+    if (xa->nbits == 0) {
+        PyErr_SetString(PyExc_ValueError, "can't find empty bitarray");
+        return NULL;
+    }
+    normalize_index(self->nbits, &start);
+    normalize_index(self->nbits, &stop);
+
+    return PyLong_FromSsize_t(search(self, xa, start, stop));
+}
+
+PyDoc_STRVAR(find_doc,
+"find(sub_bitarray, start=0, stop=<end of array>, /) -> int\n\
+\n\
+Return the lowest index where sub_bitarray is found, such that sub_bitarray\n\
+is contained within `[start:stop]`.  When sub_bitarray is not found, return\n\
+-1.");
+
+
+static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
     PyObject *list = NULL;   /* list of matching positions to be returned */
@@ -2755,6 +2788,8 @@ static PyMethodDef bitarray_methods[] = {
      extend_doc},
     {"fill",         (PyCFunction) bitarray_fill,        METH_NOARGS,
      fill_doc},
+    {"find",         (PyCFunction) bitarray_find,        METH_VARARGS,
+     find_doc},
     {"fromfile",     (PyCFunction) bitarray_fromfile,    METH_VARARGS,
      fromfile_doc},
     {"frombytes",    (PyCFunction) bitarray_frombytes,   METH_O,
