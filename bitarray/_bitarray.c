@@ -371,7 +371,7 @@ count(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
 /* Return index of first occurrence of vi, and -1 when vi is not found.
    This function never fails. */
 static Py_ssize_t
-findfirst(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
+find_bit(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
 {
     Py_ssize_t i;
 
@@ -405,19 +405,18 @@ findfirst(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
     return -1;
 }
 
-/* search for the first occurrence of bitarray xa (in self), starting at p,
-   and return its position (or -1 when not found)
-*/
+/* Return first occurrence of bitarray xa (in self), such that xa is contained
+   within self[start:stop], or -1 when xa is not found */
 static Py_ssize_t
-search(bitarrayobject *self, bitarrayobject *xa,
-       Py_ssize_t start, Py_ssize_t stop)
+find(bitarrayobject *self, bitarrayobject *xa,
+     Py_ssize_t start, Py_ssize_t stop)
 {
     Py_ssize_t i;
 
     assert(0 <= start && start <= self->nbits);
     assert(0 <= stop && stop <= self->nbits);
     if (xa->nbits == 1)         /* faster for sparse bitarrays */
-        return findfirst(self, GETBIT(xa, 0), start, stop);
+        return find_bit(self, GETBIT(xa, 0), start, stop);
 
     while (start <= stop - xa->nbits) {
         for (i = 0; i < xa->nbits; i++)
@@ -710,7 +709,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
     normalize_index(self->nbits, &start);
     normalize_index(self->nbits, &stop);
 
-    if ((i = findfirst(self, vi, start, stop)) < 0)
+    if ((i = find_bit(self, vi, start, stop)) < 0)
         return PyErr_Format(PyExc_ValueError, "%d is not in bitarray", vi);
 
     return PyLong_FromSsize_t(i);
@@ -761,7 +760,7 @@ bitarray_find(bitarrayobject *self, PyObject *args)
     normalize_index(self->nbits, &start);
     normalize_index(self->nbits, &stop);
 
-    return PyLong_FromSsize_t(search(self, xa, start, stop));
+    return PyLong_FromSsize_t(find(self, xa, start, stop));
 }
 
 PyDoc_STRVAR(find_doc,
@@ -799,7 +798,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     if (xa->nbits > self->nbits || limit == 0)
         return list;
 
-    while ((p = search(self, xa, p, self->nbits)) >= 0) {
+    while ((p = find(self, xa, p, self->nbits)) >= 0) {
         item = PyLong_FromSsize_t(p++);
         if (item == NULL || PyList_Append(list, item) < 0) {
             Py_XDECREF(item);
@@ -881,7 +880,7 @@ Append `item` to the end of the bitarray.");
 static PyObject *
 bitarray_all(bitarrayobject *self)
 {
-    return PyBool_FromLong(findfirst(self, 0, 0, self->nbits) == -1);
+    return PyBool_FromLong(find_bit(self, 0, 0, self->nbits) == -1);
 }
 
 PyDoc_STRVAR(all_doc,
@@ -894,7 +893,7 @@ Note that `a.all()` is faster than `all(a)`.");
 static PyObject *
 bitarray_any(bitarrayobject *self)
 {
-    return PyBool_FromLong(findfirst(self, 1, 0, self->nbits) >= 0);
+    return PyBool_FromLong(find_bit(self, 1, 0, self->nbits) >= 0);
 }
 
 PyDoc_STRVAR(any_doc,
@@ -1457,7 +1456,7 @@ bitarray_remove(bitarrayobject *self, PyObject *value)
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
-    if ((i = findfirst(self, vi, 0, self->nbits)) < 0)
+    if ((i = find_bit(self, vi, 0, self->nbits)) < 0)
         return PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
 
     if (delete_n(self, i, 1) < 0)
@@ -1572,11 +1571,11 @@ bitarray_contains(bitarrayobject *self, PyObject *value)
         vi = pybit_as_int(value);
         if (vi < 0)
             return -1;
-        return findfirst(self, vi, 0, self->nbits) >= 0;
+        return find_bit(self, vi, 0, self->nbits) >= 0;
     }
 
     if (bitarray_Check(value))
-        return search(self, (bitarrayobject *) value, 0, self->nbits) >= 0;
+        return find(self, (bitarrayobject *) value, 0, self->nbits) >= 0;
 
     PyErr_Format(PyExc_TypeError, "bitarray or bool expected, got %s",
                  Py_TYPE(value)->tp_name);
@@ -2697,7 +2696,7 @@ searchiter_next(searchiterobject *it)
 {
     Py_ssize_t p;
 
-    p = search(it->bao, it->xa, it->p, it->bao->nbits);
+    p = find(it->bao, it->xa, it->p, it->bao->nbits);
     if (p < 0)  /* no more positions -- stop iteration */
         return NULL;
     it->p = p + 1;  /* next search position */
