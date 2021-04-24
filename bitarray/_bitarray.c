@@ -1953,11 +1953,11 @@ bitarray_ ## name (PyObject *self, PyObject *other)    \
     PyObject *res;                                     \
     Py_ssize_t n;                                      \
                                                        \
-    n = shift_check(self, other, ostr);                \
-    if (n < 0)                                         \
+    if ((n = shift_check(self, other, ostr)) < 0)      \
         return NULL;                                   \
     if (inplace) {                                     \
         res = self;                                    \
+        Py_INCREF(res);                                \
     }                                                  \
     else {                                             \
         res = bitarray_copy((bitarrayobject *) self);  \
@@ -1965,8 +1965,6 @@ bitarray_ ## name (PyObject *self, PyObject *other)    \
             return NULL;                               \
     }                                                  \
     shift((bitarrayobject *) res, n, right);           \
-    if (inplace)                                       \
-        Py_INCREF(res);                                \
     return res;                                        \
 }
 
