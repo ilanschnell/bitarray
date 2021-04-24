@@ -1873,108 +1873,6 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist(), aa)
             self.check_obj(a)
 
-    def test_index1(self):
-        a = bitarray()
-        for i in (True, False, 1, 0):
-            self.assertRaises(ValueError, a.index, i)
-
-        a = bitarray(100 * [False])
-        self.assertRaises(ValueError, a.index, True)
-        self.assertRaises(TypeError, a.index)
-        self.assertRaises(TypeError, a.index, 1, 'a')
-        self.assertRaises(TypeError, a.index, 1, 0, 'a')
-        self.assertRaises(TypeError, a.index, 1, 0, 100, 1)
-        a[20] = a[27] = 1
-        self.assertEqual(a.index(True), 20)
-        self.assertEqual(a.index(1, 21), 27)
-        self.assertEqual(a.index(1, 27), 27)
-        self.assertEqual(a.index(1, -73), 27)
-        self.assertRaises(ValueError, a.index, -1)
-        self.assertRaises(TypeError, a.index, None)
-        self.assertRaises(ValueError, a.index, 1, 5, 17)
-        self.assertRaises(ValueError, a.index, 1, 5, -83)
-        self.assertRaises(ValueError, a.index, 1, 21, 27)
-        self.assertRaises(ValueError, a.index, 1, 28)
-        self.assertEqual(a.index(0), 0)
-
-        a = bitarray(200 * [True])
-        self.assertRaises(ValueError, a.index, False)
-        a[173] = a[187] = 0
-        self.assertEqual(a.index(False), 173)
-        self.assertEqual(a.index(True), 0)
-
-    def test_index2(self):
-        for n in range(20):
-            for m in range(n):
-                a = bitarray(n)
-                a.setall(0)
-                self.assertRaises(ValueError, a.index, 1)
-                a[m] = 1
-                self.assertEqual(a.index(1), m)
-
-                a.setall(1)
-                self.assertRaises(ValueError, a.index, 0)
-                a[m] = 0
-                self.assertEqual(a.index(0), m)
-
-    def test_index3(self):
-        a = bitarray('00001000 00000000 0010000')
-        self.assertEqual(a.index(1), 4)
-        self.assertEqual(a.index(1, 1), 4)
-        self.assertEqual(a.index(0, 4), 5)
-        self.assertEqual(a.index(1, 5), 18)
-        self.assertRaises(ValueError, a.index, 1, 5, 18)
-        self.assertRaises(ValueError, a.index, 1, 19)
-
-    def test_index4(self):
-        a = bitarray('11110111 11111111 1101111')
-        self.assertEqual(a.index(0), 4)
-        self.assertEqual(a.index(0, 1), 4)
-        self.assertEqual(a.index(1, 4), 5)
-        self.assertEqual(a.index(0, 5), 18)
-        self.assertRaises(ValueError, a.index, 0, 5, 18)
-        self.assertRaises(ValueError, a.index, 0, 19)
-
-    def test_index5(self):
-        a = bitarray(2000)
-        a.setall(0)
-        for _ in range(3):
-            a[randint(0, 1999)] = 1
-        aa = a.tolist()
-        for _ in range(100):
-            start = randint(0, 2000)
-            stop = randint(0, 2000)
-            try:
-                res1 = a.index(1, start, stop)
-            except ValueError:
-                res1 = None
-            try:
-                res2 = aa.index(1, start, stop)
-            except ValueError:
-                res2 = None
-            self.assertEqual(res1, res2)
-
-    def test_index6(self):
-        for n in range(1, 50):
-            a = bitarray(n)
-            i = randint(0, 1)
-            a.setall(i)
-            for _ in range(randint(1, 4)):
-                a.invert(randint(0, n - 1))
-            aa = a.tolist()
-            for _ in range(10):
-                start = randint(-50, n + 50)
-                stop = randint(-50, n + 50)
-                try:
-                    res1 = a.index(not i, start, stop)
-                except ValueError:
-                    res1 = None
-                try:
-                    res2 = aa.index(not i, start, stop)
-                except ValueError:
-                    res2 = None
-                self.assertEqual(res1, res2)
-
     def test_search(self):
         a = bitarray('')
         self.assertEqual(a.search(bitarray('0')), [])
@@ -2345,6 +2243,117 @@ class CountTests(unittest.TestCase, Util):
             self.assertEqual(a.count(0, i, j), s[i:j].count('0'))
 
 tests.append(CountTests)
+
+# ---------------------------------------------------------------------------
+
+class IndexTests(unittest.TestCase):
+
+    def test_args(self):
+        a = bitarray()
+        for i in (True, False, 1, 0):
+            self.assertRaises(ValueError, a.index, i)
+
+        a = zeros(100)
+        self.assertRaises(ValueError, a.index, True)
+        self.assertRaises(TypeError, a.index)
+        self.assertRaises(TypeError, a.index, 1, 'a')
+        self.assertRaises(TypeError, a.index, 1, 0, 'a')
+        self.assertRaises(TypeError, a.index, 1, 0, 100, 1)
+        a[20] = a[27] = 1
+        self.assertEqual(a.index(True), 20)
+        self.assertEqual(a.index(1, 21), 27)
+        self.assertEqual(a.index(1, 27), 27)
+        self.assertEqual(a.index(1, -73), 27)
+        self.assertRaises(ValueError, a.index, -1)
+        self.assertRaises(TypeError, a.index, None)
+        self.assertRaises(ValueError, a.index, 1, 5, 17)
+        self.assertRaises(ValueError, a.index, 1, 5, -83)
+        self.assertRaises(ValueError, a.index, 1, 21, 27)
+        self.assertRaises(ValueError, a.index, 1, 28)
+        self.assertEqual(a.index(0), 0)
+
+        a = 200 * bitarray('1')
+        self.assertRaises(ValueError, a.index, False)
+        a[173] = a[187] = 0
+        self.assertEqual(a.index(False), 173)
+        self.assertEqual(a.index(True), 0)
+
+    def test_range(self):
+        for n in range(20):
+            for m in range(n):
+                a = bitarray(n)
+                a.setall(0)
+                self.assertRaises(ValueError, a.index, 1)
+                a[m] = 1
+                self.assertEqual(a.index(1), m)
+
+                a.setall(1)
+                self.assertRaises(ValueError, a.index, 0)
+                a[m] = 0
+                self.assertEqual(a.index(0), m)
+
+    def test_explicit(self):
+        for endian in 'big', 'little':
+            a = bitarray('00001000 00000000 0010000', endian)
+            self.assertEqual(a.index(1), 4)
+            self.assertEqual(a.index(1, 1), 4)
+            self.assertEqual(a.index(0, 4), 5)
+            self.assertEqual(a.index(1, 5), 18)
+            self.assertEqual(a.index(1, -11), 18)
+            self.assertEqual(a.index(1, -50), 4)
+            self.assertRaises(ValueError, a.index, 1, 5, 18)
+            self.assertRaises(ValueError, a.index, 1, 19)
+
+            a.invert()
+            self.assertEqual(a.index(0), 4)
+            self.assertEqual(a.index(0, 1), 4)
+            self.assertEqual(a.index(1, 4), 5)
+            self.assertEqual(a.index(0, 5), 18)
+            self.assertEqual(a.index(0, -11), 18)
+            self.assertEqual(a.index(0, -50), 4)
+            self.assertRaises(ValueError, a.index, 0, 5, 18)
+            self.assertRaises(ValueError, a.index, 0, 19)
+
+    def test_random(self):
+        a = zeros(2000)
+        for _ in range(3):
+            a[randint(0, 1999)] = 1
+        aa = a.tolist()
+        for _ in range(100):
+            start = randint(0, 2000)
+            stop = randint(0, 2000)
+            try:
+                res1 = a.index(1, start, stop)
+            except ValueError:
+                res1 = None
+            try:
+                res2 = aa.index(1, start, stop)
+            except ValueError:
+                res2 = None
+            self.assertEqual(res1, res2)
+
+    def test_random_2(self):
+        for n in range(1, 50):
+            a = bitarray(n)
+            i = randint(0, 1)
+            a.setall(i)
+            for _ in range(randint(1, 4)):
+                a.invert(randint(0, n - 1))
+            aa = a.tolist()
+            for _ in range(10):
+                start = randint(-50, n + 50)
+                stop = randint(-50, n + 50)
+                try:
+                    res1 = a.index(not i, start, stop)
+                except ValueError:
+                    res1 = None
+                try:
+                    res2 = aa.index(not i, start, stop)
+                except ValueError:
+                    res2 = None
+                self.assertEqual(res1, res2)
+
+tests.append(IndexTests)
 
 # ---------------------------------------------------------------------------
 
