@@ -5,6 +5,7 @@ Author: Ilan Schnell
 """
 from __future__ import absolute_import
 
+import re
 import os
 import sys
 import unittest
@@ -2951,8 +2952,8 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('101001000'))
 
     def test_iterdecode_type(self):
-        a = bitarray('1100101')
-        it = a.iterdecode({'a': bitarray('0'), 'b': bitarray('1')})
+        a = bitarray()
+        it = a.iterdecode(alphabet_code)
         self.assertIsType(it, 'decodeiterator')
 
     def test_iterdecode_remove_tree(self):
@@ -3034,27 +3035,34 @@ class PrefixCodeTests(unittest.TestCase, Util):
         d = {'a': bitarray('00'), 'b': bitarray('01')}
         a = bitarray('1')
         self.assertRaises(ValueError, a.decode, d)
+        self.assertRaises(ValueError, next, a.iterdecode(d))
+
         t = decodetree(d)
         self.assertRaises(ValueError, a.decode, t)
+        self.assertRaises(ValueError, next, a.iterdecode(t))
 
         self.assertEqual(a, bitarray('1'))
         self.assertEqual(d, {'a': bitarray('00'), 'b': bitarray('01')})
         self.assertEqual(t.todict(), d)
 
-    def test_iterdecode_buggybitarray2(self):
-        d = {'a': bitarray('00'), 'b': bitarray('01')}
-        a = bitarray('1')
-        it = a.iterdecode(d)
-        self.assertRaises(ValueError, next, it)
-        self.assertEqual(a, bitarray('1'))
-
-        t = decodetree(d)
-        it = a.iterdecode(t)
-        self.assertRaises(ValueError, next, it)
-
-        self.assertEqual(a, bitarray('1'))
-        self.assertEqual(d, {'a': bitarray('00'), 'b': bitarray('01')})
-        self.assertEqual(t.todict(), d)
+    def test_decode_random(self):
+        pat1 = re.compile(r'incomplete prefix code.+\s(\d+)')
+        pat2 = re.compile(r'prefix code unrecognized.+\s(\d+)\s*\.\.\s*(\d+)')
+        t = decodetree(alphabet_code)
+        for a in self.randombitarrays():
+            try:
+                a.decode(t)
+            except ValueError as e:
+                msg = str(e)
+                m1 = pat1.match(msg)
+                m2 = pat2.match(msg)
+                self.assertFalse(m1 and m2)
+                if m1:
+                    i = int(m1.group(1))
+                if m2:
+                    i, j = int(m2.group(1)), int(m2.group(2))
+                    self.assertFalse(a[i:j] in alphabet_code.values())
+                a[:i].decode(t)
 
     def test_decode_ambiguous_code(self):
         for d in [
