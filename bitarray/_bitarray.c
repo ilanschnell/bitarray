@@ -2225,19 +2225,16 @@ static PyObject *
 binode_traverse(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
 {
     binode *nd = tree;
-    int k;
 
     while (*indexp < ba->nbits) {
         assert(nd);
-        k = GETBIT(ba, *indexp);
-        (*indexp)++;
-        nd = nd->child[k];
+        nd = nd->child[GETBIT(ba, *indexp)];
         if (nd == NULL)
             return PyErr_Format(PyExc_ValueError,
-                "prefix code unrecognized in bitarray at position %zd",
-                *indexp - 1);
-
-        if (nd->symbol) {        /* leaf */
+                                "prefix code unrecognized in bitarray "
+                                "at position %zd", *indexp);
+        (*indexp)++;
+        if (nd->symbol) {       /* leaf */
             assert(nd->child[0] == NULL && nd->child[1] == NULL);
             return nd->symbol;
         }
