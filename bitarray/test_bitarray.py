@@ -114,6 +114,7 @@ class Util(object):
     def assertRaisesMessage(self, excClass, msg, callable, *args, **kwargs):
         try:
             callable(*args, **kwargs)
+            raise AssertionError("%s not raised" % excClass.__name__)
         except excClass as e:
             if msg != str(e):
                 raise AssertionError("message: %s\n got: %s" % (msg, e))
@@ -378,7 +379,7 @@ class CreateObjectTests(unittest.TestCase, Util):
 
         # this error comes from the unpickle() (C function)
         self.assertRaisesMessage(ValueError, "invalid header byte 0x11",
-                                 bitarray.__new__, bitarray, b'\x011')
+                                 bitarray.__new__, bitarray, b'\x11')
         s = b'\x21'
         if is_py3k:
             # on Python 3, we don't allow bitarrays being created from bytes
@@ -2814,8 +2815,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
             {'a': bitarray('0'), 'b': bitarray('01')},
             {'a': bitarray('0'), 'b': bitarray('11'), 'c': bitarray('111')},
         ]:
-            msg = "prefix code ambiguous"
-            self.assertRaisesMessage(ValueError, msg, decodetree, d)
+            self.assertRaises(ValueError, decodetree, d)
 
     def test_sizeof(self):
         dt = decodetree({'.': bitarray('1')})
@@ -2973,33 +2973,34 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(d, {'a': bitarray('1')})
         self.assertEqual(len(a), 0)
 
-    def test_decode_no_term(self):
+    def test_decode_incomplete(self):
         d = {'a': bitarray('0'), 'b': bitarray('111')}
         a = bitarray('011')
-        msg = "decoding not terminated"
+        msg = "bitarray ends with incomplete prefix code"
         self.assertRaisesMessage(ValueError, msg, a.decode, d)
-        self.assertRaisesMessage(ValueError, msg, a.iterdecode, d)
+        it = a.iterdecode(d)
+        self.assertIsType(it, 'decodeiterator')
+        self.assertRaisesMessage(ValueError, msg, list, it)
         t = decodetree(d)
         self.assertRaisesMessage(ValueError, msg, a.decode, t)
-        self.assertRaisesMessage(ValueError, msg, a.iterdecode, t)
+        self.assertRaisesMessage(ValueError, msg, list, a.iterdecode(t))
 
         self.assertEqual(a, bitarray('011'))
         self.assertEqual(d, {'a': bitarray('0'), 'b': bitarray('111')})
         self.assertEqual(t.todict(), d)
 
     def test_decode_buggybitarray(self):
-        d = {'a': bitarray('0')}
-        a = bitarray('1')
-        msg = "prefix code does not match data in bitarray"
+        d = dict(alphabet_code)
+        #             i    s    t
+        a = bitarray('1011 1100 0100 011110111001101001')
+        msg = "prefix code unrecognized in bitarray at position 21"
         self.assertRaisesMessage(ValueError, msg, a.decode, d)
-        self.assertRaisesMessage(ValueError, msg, a.iterdecode, d)
+        self.assertRaisesMessage(ValueError, msg, list, a.iterdecode(d))
         t = decodetree(d)
         self.assertRaisesMessage(ValueError, msg, a.decode, t)
-        self.assertRaisesMessage(ValueError, msg, a.iterdecode, t)
+        self.assertRaisesMessage(ValueError, msg, list, a.iterdecode(d))
 
-        self.assertEqual(a, bitarray('1'))
         self.check_obj(a)
-        self.assertEqual(d, {'a': bitarray('0')})
         self.assertEqual(t.todict(), d)
 
     def test_iterdecode_no_term(self):
@@ -3007,7 +3008,8 @@ class PrefixCodeTests(unittest.TestCase, Util):
         a = bitarray('011')
         it = a.iterdecode(d)
         self.assertEqual(next(it), 'a')
-        self.assertRaisesMessage(ValueError, "decoding not terminated",
+        self.assertRaisesMessage(ValueError,
+                                 "bitarray ends with incomplete prefix code",
                                  next, it)
         self.assertEqual(a, bitarray('011'))
 
@@ -3053,9 +3055,8 @@ class PrefixCodeTests(unittest.TestCase, Util):
             {'a': bitarray('0'), 'b': bitarray('11'), 'c': bitarray('111')},
         ]:
             a = bitarray()
-            msg = "prefix code ambiguous"
-            self.assertRaisesMessage(ValueError, msg, a.decode, d)
-            self.assertRaisesMessage(ValueError, msg, a.iterdecode, d)
+            self.assertRaises(ValueError, a.decode, d)
+            self.assertRaises(ValueError, a.iterdecode, d)
             self.check_obj(a)
 
     def test_miscitems(self):

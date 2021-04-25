@@ -2081,8 +2081,13 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
         value = PyDict_GetItem(codedict, symbol);
         Py_DECREF(symbol);
         if (value == NULL) {
+#ifdef IS_PY3K
+            PyErr_Format(PyExc_ValueError,
+                         "symbol not defined in prefix code: %A", symbol);
+#else
             PyErr_SetString(PyExc_ValueError,
                             "symbol not defined in prefix code");
+#endif
             goto error;
         }
         if (check_value(value) < 0 ||
@@ -2177,7 +2182,11 @@ binode_insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
     return 0;
 
  ambiguity:
+#ifdef IS_PY3K
+    PyErr_Format(PyExc_ValueError, "prefix code ambiguous: %A", symbol);
+#else
     PyErr_SetString(PyExc_ValueError, "prefix code ambiguous");
+#endif
     return -1;
 }
 
@@ -2223,19 +2232,19 @@ binode_traverse(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
         k = GETBIT(ba, *indexp);
         (*indexp)++;
         nd = nd->child[k];
-        if (nd == NULL) {
-            PyErr_SetString(PyExc_ValueError,
-                            "prefix code does not match data in bitarray");
-            return NULL;
-        }
+        if (nd == NULL)
+            return PyErr_Format(PyExc_ValueError,
+                "prefix code unrecognized in bitarray at position %zd",
+                *indexp - 1);
+
         if (nd->symbol) {        /* leaf */
             assert(nd->child[0] == NULL && nd->child[1] == NULL);
             return nd->symbol;
         }
     }
     if (nd != tree)
-        PyErr_SetString(PyExc_ValueError, "decoding not terminated");
-
+        PyErr_SetString(PyExc_ValueError,
+                        "bitarray ends with incomplete prefix code");
     return NULL;
 }
 
