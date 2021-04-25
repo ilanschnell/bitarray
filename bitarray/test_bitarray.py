@@ -2976,8 +2976,8 @@ class PrefixCodeTests(unittest.TestCase, Util):
 
     def test_decode_incomplete(self):
         d = {'a': bitarray('0'), 'b': bitarray('111')}
-        a = bitarray('011')
-        msg = "bitarray ends with incomplete prefix code"
+        a = bitarray('00011')
+        msg = "incomplete prefix code at position 3"
         self.assertRaisesMessage(ValueError, msg, a.decode, d)
         it = a.iterdecode(d)
         self.assertIsType(it, 'decodeiterator')
@@ -2986,22 +2986,23 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertRaisesMessage(ValueError, msg, a.decode, t)
         self.assertRaisesMessage(ValueError, msg, list, a.iterdecode(t))
 
-        self.assertEqual(a, bitarray('011'))
+        self.assertEqual(a, bitarray('00011'))
         self.assertEqual(d, {'a': bitarray('0'), 'b': bitarray('111')})
         self.assertEqual(t.todict(), d)
 
     def test_decode_incomplete_2(self):
         a = bitarray()
-        a.encode(alphabet_code, "the power of now")
+        a.encode(alphabet_code, "now we rise")
+        x = len(a)
         a.extend('00')
-        msg = "bitarray ends with incomplete prefix code"
+        msg = "incomplete prefix code at position %d" % x
         self.assertRaisesMessage(ValueError, msg, a.decode, alphabet_code)
 
     def test_decode_buggybitarray(self):
         d = dict(alphabet_code)
         #             i    s    t
         a = bitarray('1011 1100 0100 011110111001101001')
-        msg = "prefix code unrecognized in bitarray at position 21"
+        msg = "prefix code unrecognized in bitarray at position 12 .. 21"
         self.assertRaisesMessage(ValueError, msg, a.decode, d)
         self.assertRaisesMessage(ValueError, msg, list, a.iterdecode(d))
         t = decodetree(d)
@@ -3017,7 +3018,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
         it = a.iterdecode(d)
         self.assertEqual(next(it), 'a')
         self.assertRaisesMessage(ValueError,
-                                 "bitarray ends with incomplete prefix code",
+                                 "incomplete prefix code at position 1",
                                  next, it)
         self.assertEqual(a, bitarray('011'))
 

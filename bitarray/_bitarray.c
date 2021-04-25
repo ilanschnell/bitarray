@@ -2219,12 +2219,13 @@ binode_make_tree(PyObject *codedict)
 /* Traverse using the branches corresponding to bits in `ba`, starting
    at *indexp.  Return the symbol at the leaf node, or NULL when the end
    of the bitarray has been reached.  On error, NULL is also returned,
-   and the appropriate PyErr_SetString is set.
+   and the appropriate exception is set.
 */
 static PyObject *
 binode_traverse(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
 {
     binode *nd = tree;
+    Py_ssize_t start = *indexp;
 
     while (*indexp < ba->nbits) {
         assert(nd);
@@ -2232,7 +2233,7 @@ binode_traverse(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
         if (nd == NULL)
             return PyErr_Format(PyExc_ValueError,
                                 "prefix code unrecognized in bitarray "
-                                "at position %zd", *indexp);
+                                "at position %zd .. %zd", start, *indexp);
         (*indexp)++;
         if (nd->symbol) {       /* leaf */
             assert(nd->child[0] == NULL && nd->child[1] == NULL);
@@ -2240,8 +2241,8 @@ binode_traverse(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
         }
     }
     if (nd != tree)
-        PyErr_SetString(PyExc_ValueError,
-                        "bitarray ends with incomplete prefix code");
+        PyErr_Format(PyExc_ValueError,
+                     "incomplete prefix code at position %zd", start);
     return NULL;
 }
 
