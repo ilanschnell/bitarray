@@ -2896,14 +2896,15 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(d, {0: bitarray('0'), 1: bitarray('1')})
 
     def test_encode_symbol_not_in_code(self):
-        d = {None : bitarray('0'),
-             0    : bitarray('10'),
-             'A'  : bitarray('11')}
+        d = dict(alphabet_code)
         a = bitarray()
-        a.encode(d, ['A', None, 0])
-        self.assertEqual(a, bitarray('11010'))
-        self.assertRaises(ValueError, a.encode, d, [1, 2])
-        self.assertRaises(ValueError, a.encode, d, 'ABCD')
+        a.encode(d, 'is')
+        self.assertEqual(a, bitarray('1011 1100'))
+        self.assertRaises(ValueError, a.encode, d, 'ilAn')
+        msg = "symbol not defined in prefix code"
+        if is_py3k:
+            msg += ": None"
+        self.assertRaisesMessage(ValueError, msg, a.encode, d, [None, 2])
 
     def test_encode_not_iterable(self):
         d = {'a': bitarray('0'), 'b': bitarray('1')}
@@ -2988,6 +2989,13 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('011'))
         self.assertEqual(d, {'a': bitarray('0'), 'b': bitarray('111')})
         self.assertEqual(t.todict(), d)
+
+    def test_decode_incomplete_2(self):
+        a = bitarray()
+        a.encode(alphabet_code, "the power of now")
+        a.extend('00')
+        msg = "bitarray ends with incomplete prefix code"
+        self.assertRaisesMessage(ValueError, msg, a.decode, alphabet_code)
 
     def test_decode_buggybitarray(self):
         d = dict(alphabet_code)
