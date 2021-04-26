@@ -3095,15 +3095,21 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(next(it), 2)
         self.assertStopIteration(it)
 
-    def test_real_example(self):
+    def test_quick_example(self):
         a = bitarray()
         message = 'the quick brown fox jumps over the lazy dog.'
         a.encode(alphabet_code, message)
-        self.assertEqual(a, bitarray('''
-          010000000111001000010011010001001011000011000110100010001100110110
-          000111111001001010100100000001000110010111101111000100000111101001
-          110000110000111100111110100101000000011100101110011000011011110101
-          0100010101110001010000101010'''))
+        self.assertEqual(a, bitarray(
+            # t    h     e       q           u      i    c      k
+            '0100 00000 111 001 00001001101 000100 1011 000011 00011010 001'
+            # b       r    o    w      n        f      o    x
+            '0001100 1101 1000 011111 1001 001 010100 1000 0000100011 001'
+            # j          u      m      p      s        o    v       e   r
+            '0111101111 000100 000111 101001 1100 001 1000 0111100 111 1101'
+            #     t    h     e       l     a    z           y
+            '001 0100 00000 111 001 01110 0110 00011011110 101010 001'
+            # d     o    g      .
+            '01011 1000 101000 0101010'))
         self.assertEqual(''.join(a.decode(alphabet_code)), message)
         self.assertEqual(''.join(a.iterdecode(alphabet_code)), message)
         t = decodetree(alphabet_code)
