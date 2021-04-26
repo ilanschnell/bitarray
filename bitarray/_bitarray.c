@@ -639,15 +639,6 @@ normalize_index(Py_ssize_t n, Py_ssize_t *i)
  **************************************************************************/
 
 static PyObject *
-bitarray_length(bitarrayobject *self)
-{
-    PyErr_SetString(PyExc_NotImplementedError,
-                    "self.length() has been deprecated since 1.5.1, "
-                    "and was removed in 2.0.0.  Use len(self) instead.");
-    return NULL;
-}
-
-static PyObject *
 bitarray_copy(bitarrayobject *self)
 {
     PyObject *res;
@@ -2770,7 +2761,6 @@ static PyMethodDef bitarray_methods[] = {
      insert_doc},
     {"invert",       (PyCFunction) bitarray_invert,      METH_VARARGS,
      invert_doc},
-    {"length",       (PyCFunction) bitarray_length,      METH_NOARGS, 0},
     {"pack",         (PyCFunction) bitarray_pack,        METH_O,
      pack_doc},
     {"pop",          (PyCFunction) bitarray_pop,         METH_VARARGS,
