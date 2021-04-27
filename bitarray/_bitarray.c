@@ -2248,6 +2248,7 @@ binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
         return 0;
 
     if (nd->symbol) {
+        assert(nd->child[0] == NULL && nd->child[1] == NULL);
         if (PyDict_SetItem(dict, nd->symbol, (PyObject *) prefix) < 0)
             return -1;
         return 0;
