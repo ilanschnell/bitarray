@@ -3110,18 +3110,17 @@ static int
 bitarray_getbuffer(bitarrayobject *self, Py_buffer *view, int flags)
 {
     int ret;
-    void *ptr;
 
     if (view == NULL) {
         self->ob_exports++;
         return 0;
     }
-    ptr = (void *) self->ob_item;
-    ret = PyBuffer_FillInfo(view, (PyObject *) self, ptr,
+    ret = PyBuffer_FillInfo(view, (PyObject *) self,
+                            (void *) self->ob_item,
                             Py_SIZE(self), 0, flags);
-    if (ret >= 0) {
+    if (ret >= 0)
         self->ob_exports++;
-    }
+
     return ret;
 }
 
