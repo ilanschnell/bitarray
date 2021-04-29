@@ -280,7 +280,7 @@ and requires `length` to be provided.
         if i < 0:
             raise OverflowError("unsigned integer not positive, got %d" % i)
         if length and i >= (1 << length):
-            raise OverflowError("unsigned integer not in range(0, %d), "
+            raise OverflowError("unsigned integer not in range(0, %d), ",
                                 "got %d" % (1 << length, i))
 
     a = bitarray(0, get_default_endian() if endian is None else endian)
