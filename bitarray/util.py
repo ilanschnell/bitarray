@@ -310,6 +310,25 @@ and requires `length` to be provided.
     return a
 
 
+def next_perm(a):
+    """next_perm(bitarray) -> bitarray
+
+Return the next lexicographical permutation.  The length and the number
+of 1 bits in the bitarray is unchanged.  The integer value (`ba2int`) of the
+next permutation will always increase, except when the cycle is completed (in
+which case the lowest lexicographical permutation will be returned).
+"""
+    v = ba2int(a)
+    if v == 0:
+        return a
+    t = (v | (v - 1)) + 1
+    w = t | ((((t & -t) // (v & -v)) >> 1) - 1)
+    try:
+        return int2ba(w, length=len(a), endian=a.endian())
+    except OverflowError:
+        return a[::-1]
+
+
 def deserialize(b):
     """deserialize(bytes, /) -> bitarray
 

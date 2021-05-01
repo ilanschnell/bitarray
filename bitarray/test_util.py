@@ -10,6 +10,7 @@ import binascii
 import shutil
 import tempfile
 import unittest
+from math import factorial
 from string import hexdigits
 from random import choice, randint, random
 from collections import Counter
@@ -22,13 +23,16 @@ from bitarray.util import (
     zeros, urandom, pprint, make_endian, rindex, strip, count_n,
     parity, count_and, count_or, count_xor, subset,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
-    ba2int, int2ba, huffman_code
+    ba2int, int2ba, next_perm, huffman_code
 )
 
 if sys.version_info[0] == 3:
     from io import StringIO
 else:
     from io import BytesIO as StringIO
+
+def binomial(n, k):
+    return factorial(n) // (factorial(k) * factorial(n - k))
 
 tests = []
 
@@ -1026,6 +1030,91 @@ class TestsIntegerization(unittest.TestCase, Util):
             self.assertEqual(i, self.twos_complement(j, len(a)))
 
 tests.append(TestsIntegerization)
+
+# ---------------------------------------------------------------------------
+
+class PermTests(unittest.TestCase, Util):
+
+    def test_explicit_1(self):
+        a = bitarray('00010011', 'big')
+        for s in ['00010101', '00010110', '00011001',
+                  '00011010', '00011100', '00100011']:
+            a = next_perm(a)
+            self.assertEqual(a.count(), 3)
+            self.assertEqual(a, bitarray(s, 'big'))
+
+    def test_explicit_2(self):
+        for seq in (['0'], ['1'], ['00'], ['11'], ['01', '10'],
+                    ['001', '010', '100'], ['011', '101', '110'],
+                    ['0011', '0101', '0110', '1001', '1010', '1100']):
+            a = bitarray(seq[0], 'big')
+            for i in range(20):
+                self.assertEqual(a, bitarray(seq[i % len(seq)]))
+                a = next_perm(a)
+
+    def test_all_same(self):
+        for endian in 'little', 'big':
+            for n in range(1, 30):
+                for v in 0, 1:
+                    a = bitarray(n, endian)
+                    a.setall(v)
+                    self.assertEqual(next_perm(a), a)
+
+    def test_turnover(self):
+        for a in [bitarray('11111110000', 'big'),
+                  bitarray('0000001111111', 'little')]:
+            self.assertEqual(next_perm(a), a[::-1])
+
+    def test_large(self):
+        a = bitarray('10010101010100100110010101110100111100101111', 'big')
+        b = next_perm(a)
+        c = bitarray('10010101010100100110010101110100111100110111')
+        self.assertEqual(b, c)
+
+    def test_errors(self):
+        self.assertRaises(ValueError, next_perm, bitarray())
+        self.assertRaises(TypeError, next_perm, '1')
+
+    def check_all_perm(self, s):
+        s1 = s.count(1)
+        n = 0
+        a = bitarray(s)
+        coll = set()
+        while 1:
+            a = next_perm(a)
+            coll.add(frozenbitarray(a))
+            self.assertEqual(len(a), len(s))
+            self.assertEqual(a.count(), s1)
+            self.assertEqual(a.endian(), s.endian())
+            n += 1
+            if a == s:
+                break
+        self.assertEqual(n, binomial(len(s), s1))
+        self.assertEqual(len(coll), n)
+
+    def check_order(self, a):
+        i = -1
+        for _ in range(binomial(len(a), a.count())):
+            i, j = ba2int(a), i
+            self.assertTrue(i > j)
+            a = next_perm(a)
+
+    def test_few(self):
+        for s in '0', '1', '00', '01', '111', '0011', '01011', '000000011':
+            for endian in 'little', 'big':
+                a = bitarray(s, endian)
+                self.check_all_perm(a)
+                a.sort(a.endian() == 'little')
+                self.check_order(a)
+
+    def test_random(self):
+        for n in range(1, 10):
+            a = urandom(n, self.random_endian())
+            self.check_all_perm(a)
+            a.sort(a.endian() == 'little')
+            self.check_order(a)
+
+tests.append(PermTests)
 
 # ---------------------------------------------------------------------------
 
