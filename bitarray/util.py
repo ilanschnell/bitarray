@@ -21,7 +21,7 @@ __all__ = [
     'zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip', 'count_n',
     'parity', 'count_and', 'count_or', 'count_xor', 'subset',
     'ba2hex', 'hex2ba', 'ba2base', 'base2ba', 'ba2int', 'int2ba',
-    'serialize', 'deserialize', 'huffman_code',
+    'next_perm', 'serialize', 'deserialize', 'huffman_code',
 ]
 
 
