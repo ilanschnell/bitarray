@@ -321,6 +321,8 @@ which case the lowest lexicographical permutation will be returned).
     v = ba2int(a)
     if v == 0:
         return a
+    # see at the very bottom of:
+    # http://www-graphics.stanford.edu/~seander/bithacks.html
     t = (v | (v - 1)) + 1
     w = t | ((((t & -t) // (v & -v)) >> 1) - 1)
     try:
