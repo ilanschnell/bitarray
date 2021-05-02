@@ -29,6 +29,11 @@ huffman/
     trees and codes.
 
 
+lexico.py
+    Contains two functions, all_perm and next_perm, which are handle
+    lexicographical permutations of bitarrays.
+
+
 mandel.py
     Generates a .ppm image file of size 4000 x 3000 of the Mandelbrot set.
     Despite its size, the output image file has only a size of slightly

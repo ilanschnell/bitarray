@@ -1,6 +1,7 @@
 2021-XX-XX   2.0.2:
 -------------------
   * improve encode/decode error messages
+  * add [lexicographical  permutations example](../examples/lexico.py)
   * add tests
 
 
