@@ -2314,6 +2314,8 @@ class SearchTests(unittest.TestCase, Util):
                              [6, 11, 20][:limit])
         self.assertRaises(ValueError, a.find, bitarray())
         self.assertRaises(TypeError, a.find, '010')
+        self.assertRaises(TypeError, a.find, bitarray('1'), 1.0)
+        self.assertRaises(TypeError, a.find, bitarray('1'), 3, 1.0)
         self.assertRaises(ValueError, a.search, bitarray())
         self.assertRaises(TypeError, a.search, '010')
 
@@ -2341,7 +2343,7 @@ class SearchTests(unittest.TestCase, Util):
             self.assertEqual(list(a.itersearch(b)), res)
 
     def test_explicit_2(self):
-        a = bitarray('10010101110011111001011')
+        a = bitarray('10010101 11001111 1001011')
         for s, res in [('011', [6, 11, 20]),
                        ('111', [7, 12, 13, 14]),  # note the overlap
                        ('1011', [5, 19]),
@@ -2350,7 +2352,11 @@ class SearchTests(unittest.TestCase, Util):
             self.assertEqual(a.find(b), res[0])
             self.assertEqual(a.search(b), res)
             self.assertEqual(list(a.itersearch(b)), res)
-            self.assertEqual([p for p in a.itersearch(b)], res)
+
+        self.assertEqual(a.find(bitarray('011'), 15), 20)
+        self.assertEqual(a.find(bitarray('011'), -3), 20)
+        self.assertEqual(a.find(bitarray('011'), 15, 22), -1)
+        self.assertEqual(a.find(bitarray('011'), 15, -1), -1)
 
     def test_random(self):
         for a in self.randombitarrays():
