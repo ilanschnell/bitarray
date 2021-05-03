@@ -794,41 +794,56 @@ static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
     PyObject *list = NULL;   /* list of matching positions to be returned */
-    PyObject *item = NULL, *x;
-    Py_ssize_t limit = -1;
-    bitarrayobject *xa;
+    PyObject *item = NULL, *t = NULL, *x;
+    Py_ssize_t limit = PY_SSIZE_T_MAX;
     Py_ssize_t p = 0;
 
     if (!PyArg_ParseTuple(args, "O|n:search", &x, &limit))
         return NULL;
 
-    if (!bitarray_Check(x)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray expected for search");
-        return NULL;
-    }
-    xa = (bitarrayobject *) x;
-    if (xa->nbits == 0) {
-        PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
-        return NULL;
-    }
-    list = PyList_New(0);
-    if (list == NULL)
-        return NULL;
-    if (xa->nbits > self->nbits || limit == 0)
-        return list;
+    if (PyIndex_Check(x)) {
+        int vi;
 
-    while ((p = find(self, xa, p, self->nbits)) >= 0) {
+        if ((vi = pybit_as_int(x)) < 0)
+            return NULL;
+        t = newbitarrayobject(Py_TYPE(self), 1, self->endian);
+        setbit((bitarrayobject *) t, 0, vi);
+    }
+    else if (bitarray_Check(x)) {
+        t = x;
+        Py_INCREF(t);
+    }
+    else {
+        PyErr_SetString(PyExc_TypeError, "bitarray or bool expected");
+        return NULL;
+    }
+
+#define tt  ((bitarrayobject *) t)
+    if (tt->nbits == 0) {
+        PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
+        goto error;
+    }
+    if ((list = PyList_New(0)) == NULL)
+        goto error;
+
+    while ((p = find(self, tt, p, self->nbits)) >= 0) {
+        if (PyList_Size(list) >= limit)
+            break;
         item = PyLong_FromSsize_t(p++);
         if (item == NULL || PyList_Append(list, item) < 0) {
             Py_XDECREF(item);
             Py_XDECREF(list);
-            return NULL;
+            goto error;
         }
         Py_DECREF(item);
-        if (limit > 0 && PyList_Size(list) >= limit)
-            break;
     }
+#undef tt
+    Py_DECREF(t);
     return list;
+
+ error:
+    Py_DECREF(t);
+    return NULL;
 }
 
 PyDoc_STRVAR(search_doc,
@@ -2681,11 +2696,23 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
     searchiterobject *it;  /* iterator to be returned */
     bitarrayobject *xa;
 
-    if (!bitarray_Check(x)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray expected for itersearch");
+    if (PyIndex_Check(x)) {
+        int vi;
+
+        if ((vi = pybit_as_int(x)) < 0)
+            return NULL;
+        xa = (bitarrayobject *)
+            newbitarrayobject(Py_TYPE(self), 1, self->endian);
+        setbit((bitarrayobject *) xa, 0, vi);
+    }
+    else if (bitarray_Check(x)) {
+        xa = (bitarrayobject *) x;
+    }
+    else {
+        PyErr_SetString(PyExc_TypeError, "bitarray or bool expected");
         return NULL;
     }
-    xa = (bitarrayobject *) x;
+
     if (xa->nbits == 0) {
         PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
         return NULL;
@@ -2695,10 +2722,11 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
     if (it == NULL)
         return NULL;
 
-    Py_INCREF(self);
     it->bao = self;
-    Py_INCREF(xa);
+    Py_INCREF(self);
     it->xa = xa;
+    if (bitarray_Check(x))
+        Py_INCREF(xa);
     it->p = 0;  /* start search at position 0 */
     PyObject_GC_Track(it);
     return (PyObject *) it;
