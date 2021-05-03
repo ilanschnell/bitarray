@@ -2312,7 +2312,7 @@ class SearchTests(unittest.TestCase, Util):
         for limit in range(10):
             self.assertEqual(a.search(bitarray('011'), limit),
                              [6, 11, 20][:limit])
-        self.assertRaises(ValueError, a.find, bitarray())
+
         self.assertRaises(TypeError, a.find, '010')
         self.assertRaises(TypeError, a.find, bitarray('1'), 1.0)
         self.assertRaises(TypeError, a.find, bitarray('1'), 3, 1.0)
