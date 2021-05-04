@@ -726,7 +726,7 @@ PyDoc_STRVAR(find_doc,
 \n\
 Return the lowest index where sub_bitarray is found, such that sub_bitarray\n\
 is contained within `[start:stop]`.\n\
-When sub_bitarray is not found, return -1.");
+Return -1 when sub_bitarray is not found.");
 
 
 static PyObject *
@@ -752,10 +752,11 @@ bitarray_index(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(index_doc,
-"index(value, start=0, stop=<end of array>, /) -> int\n\
+"index(sub_bitarray, start=0, stop=<end of array>, /) -> int\n\
 \n\
-Return index of the first occurrence of `value` in the bitarray.\n\
-Raises `ValueError` if the value is not present.");
+Return the lowest index where sub_bitarray is found, such that sub_bitarray\n\
+is contained within `[start:stop]`.\n\
+Raises `ValueError` when the sub_bitarray is not present.");
 
 
 static PyObject *
@@ -777,21 +778,21 @@ bits (ignoring whitespace).");
 static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
-    PyObject *list = NULL;   /* list of matching positions to be returned */
-    PyObject *item = NULL, *t = NULL, *x;
-    Py_ssize_t limit = PY_SSIZE_T_MAX;
-    Py_ssize_t p = 0;
+    PyObject *list = NULL, *item = NULL, *t = NULL, *x;
+    Py_ssize_t limit = PY_SSIZE_T_MAX, p = 0;
 
     if (!PyArg_ParseTuple(args, "O|n:search", &x, &limit))
         return NULL;
 
+#define tt  ((bitarrayobject *) t)
     if (PyIndex_Check(x)) {
         int vi;
 
         if ((vi = pybit_as_int(x)) < 0)
             return NULL;
-        t = newbitarrayobject(Py_TYPE(self), 1, self->endian);
-        setbit((bitarrayobject *) t, 0, vi);
+        if ((t = newbitarrayobject(Py_TYPE(self), 1, self->endian)) == NULL)
+            return NULL;
+        setbit(tt, 0, vi);
     }
     else if (bitarray_Check(x)) {
         t = x;
@@ -802,7 +803,6 @@ bitarray_search(bitarrayobject *self, PyObject *args)
         return NULL;
     }
 
-#define tt  ((bitarrayobject *) t)
     if (tt->nbits == 0) {
         PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
         goto error;
@@ -830,9 +830,9 @@ bitarray_search(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(search_doc,
-"search(bitarray, limit=<none>, /) -> list\n\
+"search(sub_bitarray, limit=<none>, /) -> list\n\
 \n\
-Searches for the given bitarray in self, and return the list of start\n\
+Searches for the given sub_bitarray in self, and return the list of start\n\
 positions.\n\
 The optional argument limits the number of search results to the integer\n\
 specified.  By default, all search results are returned.");
@@ -2684,9 +2684,11 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
 
         if ((vi = pybit_as_int(x)) < 0)
             return NULL;
-        xa = (bitarrayobject *)
-            newbitarrayobject(Py_TYPE(self), 1, self->endian);
-        setbit((bitarrayobject *) xa, 0, vi);
+        xa = (bitarrayobject *) newbitarrayobject(Py_TYPE(self), 1,
+                                                  self->endian);
+        if (xa == NULL)
+            return NULL;
+        setbit(xa, 0, vi);
     }
     else if (bitarray_Check(x)) {
         xa = (bitarrayobject *) x;
@@ -2710,15 +2712,15 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
     it->xa = xa;
     if (bitarray_Check(x))
         Py_INCREF(xa);
-    it->p = 0;  /* start search at position 0 */
+    it->p = 0;                  /* start search at position 0 */
     PyObject_GC_Track(it);
     return (PyObject *) it;
 }
 
 PyDoc_STRVAR(itersearch_doc,
-"itersearch(bitarray, /) -> iterator\n\
+"itersearch(sub_bitarray, /) -> iterator\n\
 \n\
-Searches for the given a bitarray in self, and return an iterator over\n\
+Searches for the given sub_bitarray in self, and return an iterator over\n\
 the start positions where bitarray matches self.");
 
 static PyObject *
