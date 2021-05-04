@@ -26,9 +26,7 @@ for i in range(2, int(sqrt(N)) + 1):
         a[i*i::i] = False
 
 print('the first few primes are:')
-for i in range(30):
-    if a[i]:
-        print(i)
+print(a.search(1, 20))
 
 # There are 5,761,455 primes up to 100 million
 print('there are %d primes up to %d' % (a.count(), N))

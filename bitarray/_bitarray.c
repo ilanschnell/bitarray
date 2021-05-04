@@ -751,22 +751,6 @@ Raises `ValueError` when the sub_bitarray is not present.");
 
 
 static PyObject *
-bitarray_extend(bitarrayobject *self, PyObject *obj)
-{
-    if (extend_dispatch(self, obj) < 0)
-        return NULL;
-    Py_RETURN_NONE;
-}
-
-PyDoc_STRVAR(extend_doc,
-"extend(iterable, /)\n\
-\n\
-Append all the items from `iterable` to the end of the bitarray.\n\
-If the iterable is a string, each `0` and `1` are appended as\n\
-bits (ignoring whitespace).");
-
-
-static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
     PyObject *list = NULL, *item = NULL, *t = NULL, *x;
@@ -883,6 +867,22 @@ PyDoc_STRVAR(append_doc,
 "append(item, /)\n\
 \n\
 Append `item` to the end of the bitarray.");
+
+
+static PyObject *
+bitarray_extend(bitarrayobject *self, PyObject *obj)
+{
+    if (extend_dispatch(self, obj) < 0)
+        return NULL;
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(extend_doc,
+"extend(iterable, /)\n\
+\n\
+Append all the items from `iterable` to the end of the bitarray.\n\
+If the iterable is a string, each `0` and `1` are appended as\n\
+bits (ignoring whitespace).");
 
 
 static PyObject *
