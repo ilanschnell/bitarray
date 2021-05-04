@@ -742,9 +742,9 @@ bitarray_index(bitarrayobject *self, PyObject *args)
         Py_DECREF(ret);
 #ifdef IS_PY3K
         return PyErr_Format(PyExc_ValueError, "%A not in bitarray",
-                            PyTuple_GetItem(args, 0));
+                            PyTuple_GET_ITEM(args, 0));
 #else
-        PyErr_SetString(PyExc_ValueError, "not in bitarray");
+        PyErr_SetString(PyExc_ValueError, "item not in bitarray");
         return NULL;
 #endif
     }
