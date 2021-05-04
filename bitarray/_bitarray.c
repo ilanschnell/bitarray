@@ -371,7 +371,7 @@ count(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
 /* Return index of first occurrence of vi, and -1 when vi is not found.
    This function never fails. */
 static Py_ssize_t
-findfirst(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
+find_bit(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
 {
     Py_ssize_t i;
 
@@ -405,26 +405,27 @@ findfirst(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
     return -1;
 }
 
-/* search for the first occurrence of bitarray xa (in self), starting at p,
-   and return its position (or -1 when not found)
-*/
+/* Return first occurrence of bitarray xa (in self), such that xa is contained
+   within self[start:stop], or -1 when xa is not found */
 static Py_ssize_t
-search(bitarrayobject *self, bitarrayobject *xa, Py_ssize_t p)
+find(bitarrayobject *self, bitarrayobject *xa,
+     Py_ssize_t start, Py_ssize_t stop)
 {
     Py_ssize_t i;
 
-    assert(p >= 0);
+    assert(0 <= start && start <= self->nbits);
+    assert(0 <= stop && stop <= self->nbits);
     if (xa->nbits == 1)         /* faster for sparse bitarrays */
-        return findfirst(self, GETBIT(xa, 0), p, self->nbits);
+        return find_bit(self, GETBIT(xa, 0), start, stop);
 
-    while (p < self->nbits - xa->nbits + 1) {
+    while (start <= stop - xa->nbits) {
         for (i = 0; i < xa->nbits; i++)
-            if (GETBIT(self, p + i) != GETBIT(xa, i))
+            if (GETBIT(self, start + i) != GETBIT(xa, i))
                 goto next;
 
-        return p;
+        return start;
     next:
-        p++;
+        start++;
     }
     return -1;
 }
@@ -684,32 +685,69 @@ Count the number of occurrences of `value` in the bitarray.");
 
 
 static PyObject *
-bitarray_index(bitarrayobject *self, PyObject *args)
+bitarray_find(bitarrayobject *self, PyObject *args)
 {
-    Py_ssize_t start = 0, stop = self->nbits, i;
-    PyObject *value;
-    int vi;
+    Py_ssize_t start = 0, stop = self->nbits;
+    PyObject *x;
 
-    if (!PyArg_ParseTuple(args, "O|nn:index", &value, &start, &stop))
-        return NULL;
-
-    if ((vi = pybit_as_int(value)) < 0)
+    if (!PyArg_ParseTuple(args, "O|nn", &x, &start, &stop))
         return NULL;
 
     normalize_index(self->nbits, &start);
     normalize_index(self->nbits, &stop);
 
-    if ((i = findfirst(self, vi, start, stop)) < 0)
-        return PyErr_Format(PyExc_ValueError, "%d is not in bitarray", vi);
+    if (PyIndex_Check(x)) {
+        int vi;
 
-    return PyLong_FromSsize_t(i);
+        if ((vi = pybit_as_int(x)) < 0)
+            return NULL;
+        return PyLong_FromSsize_t(find_bit(self, vi, start, stop));
+    }
+
+    if (bitarray_Check(x))
+        return PyLong_FromSsize_t(
+                    find(self, (bitarrayobject *) x, start, stop));
+
+    PyErr_SetString(PyExc_TypeError, "bitarray or bool expected");
+    return NULL;
+}
+
+PyDoc_STRVAR(find_doc,
+"find(sub_bitarray, start=0, stop=<end of array>, /) -> int\n\
+\n\
+Return the lowest index where sub_bitarray is found, such that sub_bitarray\n\
+is contained within `[start:stop]`.\n\
+Return -1 when sub_bitarray is not found.");
+
+
+static PyObject *
+bitarray_index(bitarrayobject *self, PyObject *args)
+{
+    PyObject *ret;
+
+    if ((ret = bitarray_find(self, args)) == NULL)
+        return NULL;
+
+    assert(PyLong_Check(ret));
+    if (PyLong_AsSsize_t(ret) < 0) {
+        Py_DECREF(ret);
+#ifdef IS_PY3K
+        return PyErr_Format(PyExc_ValueError, "%A not in bitarray",
+                            PyTuple_GET_ITEM(args, 0));
+#else
+        PyErr_SetString(PyExc_ValueError, "item not in bitarray");
+        return NULL;
+#endif
+    }
+    return ret;
 }
 
 PyDoc_STRVAR(index_doc,
-"index(value, start=0, stop=<end of array>, /) -> int\n\
+"index(sub_bitarray, start=0, stop=<end of array>, /) -> int\n\
 \n\
-Return index of the first occurrence of `value` in the bitarray.\n\
-Raises `ValueError` if the value is not present.");
+Return the lowest index where sub_bitarray is found, such that sub_bitarray\n\
+is contained within `[start:stop]`.\n\
+Raises `ValueError` when the sub_bitarray is not present.");
 
 
 static PyObject *
@@ -731,48 +769,61 @@ bits (ignoring whitespace).");
 static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
-    PyObject *list = NULL;   /* list of matching positions to be returned */
-    PyObject *item = NULL, *x;
-    Py_ssize_t limit = -1;
-    bitarrayobject *xa;
-    Py_ssize_t p = 0;
+    PyObject *list = NULL, *item = NULL, *t = NULL, *x;
+    Py_ssize_t limit = PY_SSIZE_T_MAX, p = 0;
 
     if (!PyArg_ParseTuple(args, "O|n:search", &x, &limit))
         return NULL;
 
-    if (!bitarray_Check(x)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray expected for search");
-        return NULL;
-    }
-    xa = (bitarrayobject *) x;
-    if (xa->nbits == 0) {
-        PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
-        return NULL;
-    }
-    list = PyList_New(0);
-    if (list == NULL)
-        return NULL;
-    if (xa->nbits > self->nbits || limit == 0)
-        return list;
+#define tt  ((bitarrayobject *) t)
+    if (PyIndex_Check(x)) {
+        int vi;
 
-    while ((p = search(self, xa, p)) >= 0) {
-        item = PyLong_FromSsize_t(p++);
-        if (item == NULL || PyList_Append(list, item) < 0) {
-            Py_XDECREF(item);
-            Py_XDECREF(list);
+        if ((vi = pybit_as_int(x)) < 0)
             return NULL;
-        }
-        Py_DECREF(item);
-        if (limit > 0 && PyList_Size(list) >= limit)
-            break;
+        if ((t = newbitarrayobject(Py_TYPE(self), 1, self->endian)) == NULL)
+            return NULL;
+        setbit(tt, 0, vi);
     }
+    else if (bitarray_Check(x)) {
+        t = x;
+        Py_INCREF(t);
+    }
+    else {
+        PyErr_SetString(PyExc_TypeError, "bitarray or bool expected");
+        return NULL;
+    }
+
+    if (tt->nbits == 0) {
+        PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
+        goto error;
+    }
+    if ((list = PyList_New(0)) == NULL)
+        goto error;
+
+    while ((p = find(self, tt, p, self->nbits)) >= 0) {
+        if (PyList_Size(list) >= limit)
+            break;
+        item = PyLong_FromSsize_t(p++);
+        if (item == NULL || PyList_Append(list, item) < 0)
+            goto error;
+        Py_DECREF(item);
+    }
+#undef tt
+    Py_DECREF(t);
     return list;
+
+ error:
+    Py_XDECREF(item);
+    Py_XDECREF(list);
+    Py_DECREF(t);
+    return NULL;
 }
 
 PyDoc_STRVAR(search_doc,
-"search(bitarray, limit=<none>, /) -> list\n\
+"search(sub_bitarray, limit=<none>, /) -> list\n\
 \n\
-Searches for the given bitarray in self, and return the list of start\n\
+Searches for the given sub_bitarray in self, and return the list of start\n\
 positions.\n\
 The optional argument limits the number of search results to the integer\n\
 specified.  By default, all search results are returned.");
@@ -837,7 +888,7 @@ Append `item` to the end of the bitarray.");
 static PyObject *
 bitarray_all(bitarrayobject *self)
 {
-    return PyBool_FromLong(findfirst(self, 0, 0, self->nbits) == -1);
+    return PyBool_FromLong(find_bit(self, 0, 0, self->nbits) == -1);
 }
 
 PyDoc_STRVAR(all_doc,
@@ -850,7 +901,7 @@ Note that `a.all()` is faster than `all(a)`.");
 static PyObject *
 bitarray_any(bitarrayobject *self)
 {
-    return PyBool_FromLong(findfirst(self, 1, 0, self->nbits) >= 0);
+    return PyBool_FromLong(find_bit(self, 1, 0, self->nbits) >= 0);
 }
 
 PyDoc_STRVAR(any_doc,
@@ -1413,7 +1464,7 @@ bitarray_remove(bitarrayobject *self, PyObject *value)
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
-    if ((i = findfirst(self, vi, 0, self->nbits)) < 0)
+    if ((i = find_bit(self, vi, 0, self->nbits)) < 0)
         return PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
 
     if (delete_n(self, i, 1) < 0)
@@ -1528,11 +1579,11 @@ bitarray_contains(bitarrayobject *self, PyObject *value)
         vi = pybit_as_int(value);
         if (vi < 0)
             return -1;
-        return findfirst(self, vi, 0, self->nbits) >= 0;
+        return find_bit(self, vi, 0, self->nbits) >= 0;
     }
 
     if (bitarray_Check(value))
-        return search(self, (bitarrayobject *) value, 0) >= 0;
+        return find(self, (bitarrayobject *) value, 0, self->nbits) >= 0;
 
     PyErr_Format(PyExc_TypeError, "bitarray or bool expected, got %s",
                  Py_TYPE(value)->tp_name);
@@ -2627,11 +2678,25 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
     searchiterobject *it;  /* iterator to be returned */
     bitarrayobject *xa;
 
-    if (!bitarray_Check(x)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray expected for itersearch");
+    if (PyIndex_Check(x)) {
+        int vi;
+
+        if ((vi = pybit_as_int(x)) < 0)
+            return NULL;
+        xa = (bitarrayobject *) newbitarrayobject(Py_TYPE(self), 1,
+                                                  self->endian);
+        if (xa == NULL)
+            return NULL;
+        setbit(xa, 0, vi);
+    }
+    else if (bitarray_Check(x)) {
+        xa = (bitarrayobject *) x;
+    }
+    else {
+        PyErr_SetString(PyExc_TypeError, "bitarray or bool expected");
         return NULL;
     }
-    xa = (bitarrayobject *) x;
+
     if (xa->nbits == 0) {
         PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
         return NULL;
@@ -2641,19 +2706,20 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
     if (it == NULL)
         return NULL;
 
-    Py_INCREF(self);
     it->bao = self;
-    Py_INCREF(xa);
+    Py_INCREF(self);
     it->xa = xa;
-    it->p = 0;  /* start search at position 0 */
+    if (bitarray_Check(x))
+        Py_INCREF(xa);
+    it->p = 0;                  /* start search at position 0 */
     PyObject_GC_Track(it);
     return (PyObject *) it;
 }
 
 PyDoc_STRVAR(itersearch_doc,
-"itersearch(bitarray, /) -> iterator\n\
+"itersearch(sub_bitarray, /) -> iterator\n\
 \n\
-Searches for the given a bitarray in self, and return an iterator over\n\
+Searches for the given sub_bitarray in self, and return an iterator over\n\
 the start positions where bitarray matches self.");
 
 static PyObject *
@@ -2661,7 +2727,7 @@ searchiter_next(searchiterobject *it)
 {
     Py_ssize_t p;
 
-    p = search(it->bao, it->xa, it->p);
+    p = find(it->bao, it->xa, it->p, it->bao->nbits);
     if (p < 0)  /* no more positions -- stop iteration */
         return NULL;
     it->p = p + 1;  /* next search position */
@@ -2752,6 +2818,8 @@ static PyMethodDef bitarray_methods[] = {
      extend_doc},
     {"fill",         (PyCFunction) bitarray_fill,        METH_NOARGS,
      fill_doc},
+    {"find",         (PyCFunction) bitarray_find,        METH_VARARGS,
+     find_doc},
     {"fromfile",     (PyCFunction) bitarray_fromfile,    METH_VARARGS,
      fromfile_doc},
     {"frombytes",    (PyCFunction) bitarray_frombytes,   METH_O,

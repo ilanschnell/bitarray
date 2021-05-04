@@ -2178,24 +2178,32 @@ tests.append(CountTests)
 
 # ---------------------------------------------------------------------------
 
-class IndexTests(unittest.TestCase):
+class IndexTests(unittest.TestCase, Util):
 
-    def test_args(self):
+    def test_simple(self):
         a = bitarray()
-        for i in (True, False, 1, 0):
+        for i in True, False, 1, 0:
+            self.assertEqual(a.find(i), -1)
             self.assertRaises(ValueError, a.index, i)
 
         a = zeros(100)
+        self.assertRaises(TypeError, a.find)
+        self.assertRaises(TypeError, a.find, 1, 'a')
+        self.assertRaises(TypeError, a.find, 1, 0, 'a')
+        self.assertRaises(TypeError, a.find, 1, 0, 100, 1)
+
         self.assertRaises(ValueError, a.index, True)
         self.assertRaises(TypeError, a.index)
         self.assertRaises(TypeError, a.index, 1, 'a')
         self.assertRaises(TypeError, a.index, 1, 0, 'a')
         self.assertRaises(TypeError, a.index, 1, 0, 100, 1)
+
         a[20] = a[27] = 1
-        self.assertEqual(a.index(True), 20)
-        self.assertEqual(a.index(1, 21), 27)
-        self.assertEqual(a.index(1, 27), 27)
-        self.assertEqual(a.index(1, -73), 27)
+        for i in 1, True, bitarray('1'), bitarray('10'):
+            self.assertEqual(a.index(i), 20)
+            self.assertEqual(a.index(i, 21), 27)
+            self.assertEqual(a.index(i, 27), 27)
+            self.assertEqual(a.index(i, -73), 27)
         self.assertRaises(ValueError, a.index, -1)
         self.assertRaises(TypeError, a.index, None)
         self.assertRaises(ValueError, a.index, 1, 5, 17)
@@ -2203,12 +2211,25 @@ class IndexTests(unittest.TestCase):
         self.assertRaises(ValueError, a.index, 1, 21, 27)
         self.assertRaises(ValueError, a.index, 1, 28)
         self.assertEqual(a.index(0), 0)
+        self.assertEqual(a.find(0), 0)
 
+        s = bitarray()
+        self.assertEqual(a.index(s), 0)
+        self.assertEqual(a.find(s), 0)
+
+    def test_200(self):
         a = 200 * bitarray('1')
         self.assertRaises(ValueError, a.index, False)
-        a[173] = a[187] = 0
-        self.assertEqual(a.index(False), 173)
+        self.assertEqual(a.find(False), -1)
+        a[173] = a[187] = a[189] = 0
+        for i in 0, False, bitarray('0'), bitarray('01'):
+            self.assertEqual(a.index(i), 173)
+            self.assertEqual(a.find(i), 173)
         self.assertEqual(a.index(True), 0)
+        self.assertEqual(a.find(True), 0)
+        s = bitarray('010')
+        self.assertEqual(a.index(s), 187)
+        self.assertEqual(a.find(s), 187)
 
     def test_range(self):
         for n in range(20):
@@ -2216,13 +2237,17 @@ class IndexTests(unittest.TestCase):
                 a = bitarray(n)
                 a.setall(0)
                 self.assertRaises(ValueError, a.index, 1)
+                self.assertEqual(a.find(1), -1)
                 a[m] = 1
                 self.assertEqual(a.index(1), m)
+                self.assertEqual(a.find(1), m)
 
                 a.setall(1)
                 self.assertRaises(ValueError, a.index, 0)
+                self.assertEqual(a.find(0), -1)
                 a[m] = 0
                 self.assertEqual(a.index(0), m)
+                self.assertEqual(a.find(0), m)
 
     def test_explicit(self):
         for endian in 'big', 'little':
@@ -2236,33 +2261,49 @@ class IndexTests(unittest.TestCase):
             self.assertRaises(ValueError, a.index, 1, 5, 18)
             self.assertRaises(ValueError, a.index, 1, 19)
 
-            a.invert()
-            self.assertEqual(a.index(0), 4)
-            self.assertEqual(a.index(0, 1), 4)
-            self.assertEqual(a.index(1, 4), 5)
-            self.assertEqual(a.index(0, 5), 18)
-            self.assertEqual(a.index(0, -11), 18)
-            self.assertEqual(a.index(0, -50), 4)
-            self.assertRaises(ValueError, a.index, 0, 5, 18)
-            self.assertRaises(ValueError, a.index, 0, 19)
+            self.assertEqual(a.find(1), 4)
+            self.assertEqual(a.find(1, 1), 4)
+            self.assertEqual(a.find(0, 4), 5)
+            self.assertEqual(a.find(1, 5), 18)
+            self.assertEqual(a.find(1, -11), 18)
+            self.assertEqual(a.find(1, -50), 4)
+            self.assertEqual(a.find(1, 5, 18), -1)
+            self.assertEqual(a.find(1, 19), -1)
+
+    def test_explicit_2(self):
+        a = bitarray('10010101 11001111 1001011')
+        s = bitarray('011')
+        self.assertEqual(a.index(s, 15), 20)
+        self.assertEqual(a.index(s, -3), 20)
+        self.assertRaises(ValueError, a.index, s, 15, 22)
+        self.assertRaises(ValueError, a.index, s, 15, -1)
+
+        self.assertEqual(a.find(s, 15), 20)
+        self.assertEqual(a.find(s, -3), 20)
+        self.assertEqual(a.find(s, 15, 22), -1)
+        self.assertEqual(a.find(s, 15, -1), -1)
 
     def test_random(self):
         a = zeros(2000)
         for _ in range(3):
             a[randint(0, 1999)] = 1
         aa = a.tolist()
-        for _ in range(100):
+        for _ in range(10):
             start = randint(0, 2000)
             stop = randint(0, 2000)
             try:
-                res1 = a.index(1, start, stop)
+                res0 = aa.index(1, start, stop)
             except ValueError:
-                res1 = None
+                res0 = -1
+
+            res1 = a.find(1, start, stop)
+            self.assertEqual(res1, res0)
+
             try:
-                res2 = aa.index(1, start, stop)
+                res2 = a.index(1, start, stop)
             except ValueError:
-                res2 = None
-            self.assertEqual(res1, res2)
+                res2 = -1
+            self.assertEqual(res2, res0)
 
     def test_random_2(self):
         for n in range(1, 50):
@@ -2276,14 +2317,38 @@ class IndexTests(unittest.TestCase):
                 start = randint(-50, n + 50)
                 stop = randint(-50, n + 50)
                 try:
-                    res1 = a.index(not i, start, stop)
+                    res0 = aa.index(not i, start, stop)
                 except ValueError:
-                    res1 = None
+                    res0 = -1
+
+                res1 = a.find(not i, start, stop)
+                self.assertEqual(res1, res0)
+
                 try:
-                    res2 = aa.index(not i, start, stop)
+                    res2 = a.index(not i, start, stop)
                 except ValueError:
-                    res2 = None
-                self.assertEqual(res1, res2)
+                    res2 = -1
+                self.assertEqual(res2, res0)
+
+    def test_random_3(self):
+        for a in self.randombitarrays():
+            aa = a.to01()
+            if a:
+                self.assertEqual(a.find(a), 0)
+                self.assertEqual(a.index(a), 0)
+
+            for sub in '0', '1', '01', '01', '11', '101', '1111', '00100':
+                b = bitarray(sub)
+                self.assertEqual(a.find(b), aa.find(sub))
+
+                i = randint(-len(a) - 3, len(a) + 2)
+                j = randint(-len(a) - 3, len(a) + 2)
+                ref = aa.find(sub, i, j)
+                self.assertEqual(a.find(b, i, j), ref)
+                if ref == -1:
+                    self.assertRaises(ValueError, a.index, b, i, j)
+                else:
+                    self.assertEqual(a.index(b, i, j), ref)
 
 tests.append(IndexTests)
 
@@ -2292,31 +2357,32 @@ tests.append(IndexTests)
 class SearchTests(unittest.TestCase, Util):
 
     def test_simple(self):
-        a = bitarray('')
-        self.assertEqual(a.search(bitarray('0')), [])
-        self.assertEqual(a.search(bitarray('1')), [])
+        a = bitarray()
+        for s in 0, 1, False, True, bitarray('0'), bitarray('1'):
+            self.assertEqual(a.search(s), [])
 
-        a = bitarray('1')
-        self.assertEqual(a.search(bitarray('0')), [])
-        self.assertEqual(a.search(bitarray('1')), [0])
-        self.assertEqual(a.search(bitarray('11')), [])
+        a = bitarray('00100')
+        for s in 1, True, bitarray('1'), bitarray('10'):
+            self.assertEqual(a.search(s), [2])
 
         a = 100 * bitarray('1')
-        self.assertEqual(a.search(bitarray('0')), [])
-        self.assertEqual(a.search(bitarray('1')), list(range(100)))
+        self.assertEqual(a.search(0), [])
+        self.assertEqual(a.search(1), list(range(100)))
 
         a = bitarray('10010101110011111001011')
         for limit in range(10):
             self.assertEqual(a.search(bitarray('011'), limit),
                              [6, 11, 20][:limit])
+
         self.assertRaises(ValueError, a.search, bitarray())
         self.assertRaises(TypeError, a.search, '010')
 
     def test_itersearch(self):
         a = bitarray('10011')
         self.assertRaises(ValueError, a.itersearch, bitarray())
+        self.assertRaises(TypeError, a.itersearch, 1, 0)
         self.assertRaises(TypeError, a.itersearch, '')
-        it = a.itersearch(bitarray('1'))
+        it = a.itersearch(1)
         self.assertIsType(it, 'searchiterator')
         self.assertEqual(next(it), 0)
         self.assertEqual(next(it), 3)
@@ -2332,10 +2398,10 @@ class SearchTests(unittest.TestCase, Util):
                        ('10011', [0]),     ('100111', [])]:
             b = bitarray(s, self.random_endian())
             self.assertEqual(a.search(b), res)
-            self.assertEqual([p for p in a.itersearch(b)], res)
+            self.assertEqual(list(a.itersearch(b)), res)
 
     def test_explicit_2(self):
-        a = bitarray('10010101110011111001011')
+        a = bitarray('10010101 11001111 1001011')
         for s, res in [('011', [6, 11, 20]),
                        ('111', [7, 12, 13, 14]),  # note the overlap
                        ('1011', [5, 19]),
@@ -2343,18 +2409,36 @@ class SearchTests(unittest.TestCase, Util):
             b = bitarray(s)
             self.assertEqual(a.search(b), res)
             self.assertEqual(list(a.itersearch(b)), res)
-            self.assertEqual([p for p in a.itersearch(b)], res)
+
+    def test_bool_random(self):
+        for a in self.randombitarrays():
+            b = a.copy()
+            b.setall(0)
+            for i in a.itersearch(1):
+                b[i] = 1
+            self.assertEQUAL(b, a)
+
+            b.setall(1)
+            for i in a.itersearch(0):
+                b[i] = 0
+            self.assertEQUAL(b, a)
+
+            s = set(a.search(0) + a.search(1))
+            self.assertEqual(len(s), len(a))
 
     def test_random(self):
         for a in self.randombitarrays():
             aa = a.to01()
-            for sub in '0', '1', '01', '01', '11', '101', '1111111':
-                sr = a.search(bitarray(sub), 1)
-                try:
-                    p = sr[0]
-                except IndexError:
-                    p = -1
-                self.assertEqual(p, aa.find(sub))
+            if a:
+                self.assertEqual(a.search(a), [0])
+                self.assertEqual(list(a.itersearch(a)), [0])
+
+            for sub in '0', '1', '01', '01', '11', '101', '1101', '01100':
+                b = bitarray(sub)
+                plst = [i for i in range(len(a)) if a[i:i + len(b)] == b]
+                self.assertEqual(a.search(b), plst)
+                for p in a.itersearch(b):
+                    self.assertEqual(a[p:p + len(b)], b)
 
 tests.append(SearchTests)
 
