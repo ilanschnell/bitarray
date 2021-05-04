@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.0.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.0.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -97,6 +97,12 @@ The bitarray object:
    will be a multiple of 8, and return the number of bits added (0..7).
 
 
+``find(sub_bitarray, start=0, stop=<end of array>, /)`` -> int
+   Return the lowest index where sub_bitarray is found, such that sub_bitarray
+   is contained within ``[start:stop]``.
+   Return -1 when sub_bitarray is not found.
+
+
 ``frombytes(bytes, /)``
    Extend bitarray with raw bytes.  That is, each append byte will add eight
    bits to the bitarray.
@@ -109,9 +115,10 @@ The bitarray object:
    ``EOFError`` is raised (but the available data is still read and appended.
 
 
-``index(value, start=0, stop=<end of array>, /)`` -> int
-   Return index of the first occurrence of ``value`` in the bitarray.
-   Raises ``ValueError`` if the value is not present.
+``index(sub_bitarray, start=0, stop=<end of array>, /)`` -> int
+   Return the lowest index where sub_bitarray is found, such that sub_bitarray
+   is contained within ``[start:stop]``.
+   Raises ``ValueError`` when the sub_bitarray is not present.
 
 
 ``insert(index, value, /)``
@@ -129,8 +136,8 @@ The bitarray object:
    the symbols.
 
 
-``itersearch(bitarray, /)`` -> iterator
-   Searches for the given a bitarray in self, and return an iterator over
+``itersearch(sub_bitarray, /)`` -> iterator
+   Searches for the given sub_bitarray in self, and return an iterator over
    the start positions where bitarray matches self.
 
 
@@ -157,8 +164,8 @@ The bitarray object:
    Reverse the order of bits in the array (in-place).
 
 
-``search(bitarray, limit=<none>, /)`` -> list
-   Searches for the given bitarray in self, and return the list of start
+``search(sub_bitarray, limit=<none>, /)`` -> list
+   Searches for the given sub_bitarray in self, and return the list of start
    positions.
    The optional argument limits the number of search results to the integer
    specified.  By default, all search results are returned.

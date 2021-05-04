@@ -1,6 +1,16 @@
 Change log
 ==========
 
+2021-XX-XX   2.0.2:
+
+* add ``.find()`` method, see `#122 <https://github.com/ilanschnell/bitarray/issues/122>`__
+* ``.find()``, ``.index()``, ``.search()`` and ``.itersearch()`` now all except
+  both (sub-) bitarray as well as bool items to be searched for
+* improve encode/decode error messages
+* add `lexicographical  permutations example <../examples/lexico.py>`__
+* add tests
+
+
 **2.0.1** (2021-04-19):
 
 * update documentation
