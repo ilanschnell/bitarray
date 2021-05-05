@@ -1,4 +1,4 @@
-2021-XX-XX   2.1.0:
+2021-05-05   2.1.0:
 -------------------
   * add `.find()` method, see #122
   * `.find()`, `.index()`, `.search()` and `.itersearch()` now all except
