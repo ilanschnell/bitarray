@@ -793,10 +793,11 @@ class SliceTests(unittest.TestCase, Util):
     def test_sieve(self):  # Sieve of Eratosthenes
         a = bitarray(50)
         a.setall(1)
+        a[0:2] = 0
         for i in range(2, 8):
             if a[i]:
                 a[i * i::i] = 0
-        primes = [i for i in range(2, 50) if a[i]]
+        primes = a.search(1)
         self.assertEqual(primes, [2, 3, 5, 7, 11, 13, 17, 19,
                                   23, 29, 31, 37, 41, 43, 47])
 
