@@ -916,6 +916,173 @@ Raises `ValueError` when the sub_bitarray is not present.");
 
 
 static PyObject *
+bitarray_insert(bitarrayobject *self, PyObject *args)
+{
+    Py_ssize_t i;
+    PyObject *v;
+    int vi;
+
+    if (!PyArg_ParseTuple(args, "nO:insert", &i, &v))
+        return NULL;
+
+    normalize_index(self->nbits, &i);
+
+    if ((vi = pybit_as_int(v)) < 0)
+        return NULL;
+    if (insert_n(self, i, 1) < 0)
+        return NULL;
+    setbit(self, i, vi);
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(insert_doc,
+"insert(index, value, /)\n\
+\n\
+Insert `value` into the bitarray before `index`.");
+
+
+static PyObject *
+bitarray_invert(bitarrayobject *self, PyObject *args)
+{
+    Py_ssize_t i = PY_SSIZE_T_MAX;
+
+    if (!PyArg_ParseTuple(args, "|n:invert", &i))
+        return NULL;
+
+    if (i == PY_SSIZE_T_MAX) {  /* default - invert all bits */
+        invert(self);
+        Py_RETURN_NONE;
+    }
+
+    if (i < 0)
+        i += self->nbits;
+
+    if (i < 0 || i >= self->nbits) {
+        PyErr_SetString(PyExc_IndexError, "index out of range");
+        return NULL;
+    }
+    setbit(self, i, 1 - GETBIT(self, i));
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(invert_doc,
+"invert(index=<all bits>, /)\n\
+\n\
+Invert all bits in the array (in-place).\n\
+When the optional `index` is given, only invert the single bit at index.");
+
+
+static PyObject *
+bitarray_reduce(bitarrayobject *self)
+{
+    const Py_ssize_t nbytes = Py_SIZE(self);
+    PyObject *dict, *repr = NULL, *result = NULL;
+    char *data;
+
+    dict = PyObject_GetAttrString((PyObject *) self, "__dict__");
+    if (dict == NULL) {
+        PyErr_Clear();
+        dict = Py_None;
+        Py_INCREF(dict);
+    }
+    data = (char *) PyMem_Malloc(nbytes + 1);
+    if (data == NULL) {
+        PyErr_NoMemory();
+        goto error;
+    }
+    /* first byte contains the number of unused bits */
+    *data = (char) setunused(self);
+    /* remaining bytes contain buffer */
+    memcpy(data + 1, self->ob_item, (size_t) nbytes);
+    repr = PyBytes_FromStringAndSize(data, nbytes + 1);
+    if (repr == NULL)
+        goto error;
+    PyMem_Free((void *) data);
+    result = Py_BuildValue("O(Os)O", Py_TYPE(self),
+                           repr, ENDIAN_STR(self), dict);
+ error:
+    Py_DECREF(dict);
+    Py_XDECREF(repr);
+    return result;
+}
+
+PyDoc_STRVAR(reduce_doc, "state information for pickling");
+
+
+static PyObject *
+bitarray_repr(bitarrayobject *self)
+{
+    PyObject *result;
+    Py_ssize_t i;
+    char *str;
+    size_t strsize;
+
+    if (self->nbits == 0)
+        return Py_BuildValue("s", "bitarray()");
+
+    strsize = self->nbits + 12;  /* 12 is the length of "bitarray('')" */
+    if (strsize > PY_SSIZE_T_MAX) {
+        PyErr_SetString(PyExc_OverflowError,
+                        "bitarray too large to represent");
+        return NULL;
+    }
+
+    str = (char *) PyMem_Malloc(strsize);
+    if (str == NULL)
+        return PyErr_NoMemory();
+
+    /* add "bitarray('......')" to str */
+    strcpy(str, "bitarray('"); /* has length 10 */
+    /* don't use strcpy here, as this would add an extra NUL byte */
+    str[strsize - 2] = '\'';
+    str[strsize - 1] = ')';
+
+    for (i = 0; i < self->nbits; i++)
+        str[i + 10] = GETBIT(self, i) ? '1' : '0';
+
+    result = Py_BuildValue("s#", str, (Py_ssize_t) strsize);
+    PyMem_Free((void *) str);
+    return result;
+}
+
+
+static PyObject *
+bitarray_reverse(bitarrayobject *self)
+{
+    const Py_ssize_t m = self->nbits - 1;     /* index of last item */
+    PyObject *t;       /* temp bitarray to store lower half of self */
+    Py_ssize_t i;
+
+    if (self->nbits < 2)        /* nothing to do */
+        Py_RETURN_NONE;
+
+    t = newbitarrayobject(Py_TYPE(self), self->nbits / 2, self->endian);
+    if (t == NULL)
+        return NULL;
+
+#define tt  ((bitarrayobject *) t)
+    /* copy lower half of array into temporary array */
+    memcpy(tt->ob_item, self->ob_item, (size_t) Py_SIZE(tt));
+
+    /* reverse upper half onto the lower half. */
+    for (i = 0; i < tt->nbits; i++)
+        setbit(self, i, GETBIT(self, m - i));
+
+    /* reverse the stored away lower half onto the upper half of self. */
+    for (i = 0; i < tt->nbits; i++)
+        setbit(self, m - i, GETBIT(tt, i));
+#undef tt
+    Py_DECREF(t);
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(reverse_doc,
+"reverse()\n\
+\n\
+Reverse the order of bits in the array (in-place).");
+
+
+static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
     PyObject *list = NULL, *item = NULL, *t = NULL, *x;
@@ -976,110 +1143,6 @@ Searches for the given sub_bitarray in self, and return the list of start\n\
 positions.\n\
 The optional argument limits the number of search results to the integer\n\
 specified.  By default, all search results are returned.");
-
-
-static PyObject *
-bitarray_reduce(bitarrayobject *self)
-{
-    const Py_ssize_t nbytes = Py_SIZE(self);
-    PyObject *dict, *repr = NULL, *result = NULL;
-    char *data;
-
-    dict = PyObject_GetAttrString((PyObject *) self, "__dict__");
-    if (dict == NULL) {
-        PyErr_Clear();
-        dict = Py_None;
-        Py_INCREF(dict);
-    }
-    data = (char *) PyMem_Malloc(nbytes + 1);
-    if (data == NULL) {
-        PyErr_NoMemory();
-        goto error;
-    }
-    /* first byte contains the number of unused bits */
-    *data = (char) setunused(self);
-    /* remaining bytes contain buffer */
-    memcpy(data + 1, self->ob_item, (size_t) nbytes);
-    repr = PyBytes_FromStringAndSize(data, nbytes + 1);
-    if (repr == NULL)
-        goto error;
-    PyMem_Free((void *) data);
-    result = Py_BuildValue("O(Os)O", Py_TYPE(self),
-                           repr, ENDIAN_STR(self), dict);
- error:
-    Py_DECREF(dict);
-    Py_XDECREF(repr);
-    return result;
-}
-
-PyDoc_STRVAR(reduce_doc, "state information for pickling");
-
-
-static PyObject *
-bitarray_reverse(bitarrayobject *self)
-{
-    const Py_ssize_t m = self->nbits - 1;     /* index of last item */
-    PyObject *t;       /* temp bitarray to store lower half of self */
-    Py_ssize_t i;
-
-    if (self->nbits < 2)        /* nothing needs to be done */
-        Py_RETURN_NONE;
-
-    t = newbitarrayobject(Py_TYPE(self), self->nbits / 2, self->endian);
-    if (t == NULL)
-        return NULL;
-
-#define tt  ((bitarrayobject *) t)
-    /* copy lower half of array into temporary array */
-    memcpy(tt->ob_item, self->ob_item, (size_t) Py_SIZE(tt));
-
-    /* reverse upper half onto the lower half. */
-    for (i = 0; i < tt->nbits; i++)
-        setbit(self, i, GETBIT(self, m - i));
-
-    /* reverse the stored away lower half onto the upper half of self. */
-    for (i = 0; i < tt->nbits; i++)
-        setbit(self, m - i, GETBIT(tt, i));
-#undef tt
-    Py_DECREF(t);
-    Py_RETURN_NONE;
-}
-
-PyDoc_STRVAR(reverse_doc,
-"reverse()\n\
-\n\
-Reverse the order of bits in the array (in-place).");
-
-
-static PyObject *
-bitarray_invert(bitarrayobject *self, PyObject *args)
-{
-    Py_ssize_t i = PY_SSIZE_T_MAX;
-
-    if (!PyArg_ParseTuple(args, "|n:invert", &i))
-        return NULL;
-
-    if (i == PY_SSIZE_T_MAX) {  /* default - invert all bits */
-        invert(self);
-        Py_RETURN_NONE;
-    }
-
-    if (i < 0)
-        i += self->nbits;
-
-    if (i < 0 || i >= self->nbits) {
-        PyErr_SetString(PyExc_IndexError, "index out of range");
-        return NULL;
-    }
-    setbit(self, i, 1 - GETBIT(self, i));
-    Py_RETURN_NONE;
-}
-
-PyDoc_STRVAR(invert_doc,
-"invert(index=<all bits>, /)\n\
-\n\
-Invert all bits in the array (in-place).\n\
-When the optional `index` is given, only invert the single bit at index.");
 
 
 static PyObject *
@@ -1362,68 +1425,6 @@ bit 1.\n\
 This method, as well as the unpack method, are meant for efficient\n\
 transfer of data between bitarray objects to other python objects\n\
 (for example NumPy's ndarray object) which have a different memory view.");
-
-
-static PyObject *
-bitarray_repr(bitarrayobject *self)
-{
-    PyObject *result;
-    Py_ssize_t i;
-    char *str;
-    size_t strsize;
-
-    if (self->nbits == 0)
-        return Py_BuildValue("s", "bitarray()");
-
-    strsize = self->nbits + 12;  /* 12 is the length of "bitarray('')" */
-    if (strsize > PY_SSIZE_T_MAX) {
-        PyErr_SetString(PyExc_OverflowError,
-                        "bitarray too large to represent");
-        return NULL;
-    }
-
-    if ((str = (char *) PyMem_Malloc(strsize)) == NULL)
-        return PyErr_NoMemory();
-
-    /* add "bitarray('......')" to str */
-    strcpy(str, "bitarray('"); /* has length 10 */
-    /* don't use strcpy here, as this would add an extra null byte */
-    str[strsize - 2] = '\'';
-    str[strsize - 1] = ')';
-
-    for (i = 0; i < self->nbits; i++)
-        str[i + 10] = GETBIT(self, i) ? '1' : '0';
-
-    result = Py_BuildValue("s#", str, (Py_ssize_t) strsize);
-    PyMem_Free((void *) str);
-    return result;
-}
-
-
-static PyObject *
-bitarray_insert(bitarrayobject *self, PyObject *args)
-{
-    Py_ssize_t i;
-    PyObject *v;
-    int vi;
-
-    if (!PyArg_ParseTuple(args, "nO:insert", &i, &v))
-        return NULL;
-
-    normalize_index(self->nbits, &i);
-
-    if ((vi = pybit_as_int(v)) < 0)
-        return NULL;
-    if (insert_n(self, i, 1) < 0)
-        return NULL;
-    setbit(self, i, vi);
-    Py_RETURN_NONE;
-}
-
-PyDoc_STRVAR(insert_doc,
-"insert(index, value, /)\n\
-\n\
-Insert `value` into the bitarray before `index`.");
 
 
 static PyObject *

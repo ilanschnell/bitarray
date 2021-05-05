@@ -2271,8 +2271,8 @@ class IndexTests(unittest.TestCase, Util):
             self.assertEqual(a.find(1, 19), -1)
 
     def test_explicit_2(self):
-        a = bitarray('10010101 11001111 1001011')
-        s = bitarray('011')
+        a = bitarray('10010101 11001111 1001011', self.random_endian())
+        s = bitarray('011', self.random_endian())
         self.assertEqual(a.index(s, 15), 20)
         self.assertEqual(a.index(s, -3), 20)
         self.assertRaises(ValueError, a.index, s, 15, 22)
@@ -2338,7 +2338,7 @@ class IndexTests(unittest.TestCase, Util):
                 self.assertEqual(a.index(a), 0)
 
             for sub in '0', '1', '01', '01', '11', '101', '1111', '00100':
-                b = bitarray(sub)
+                b = bitarray(sub, self.random_endian())
                 self.assertEqual(a.find(b), aa.find(sub))
 
                 i = randint(-len(a) - 3, len(a) + 2)
@@ -2434,7 +2434,7 @@ class SearchTests(unittest.TestCase, Util):
                 self.assertEqual(list(a.itersearch(a)), [0])
 
             for sub in '0', '1', '01', '01', '11', '101', '1101', '01100':
-                b = bitarray(sub)
+                b = bitarray(sub, self.random_endian())
                 plst = [i for i in range(len(a)) if a[i:i + len(b)] == b]
                 self.assertEqual(a.search(b), plst)
                 for p in a.itersearch(b):
