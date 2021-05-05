@@ -635,9 +635,129 @@ normalize_index(Py_ssize_t n, Py_ssize_t *i)
         *i = n;
 }
 
+/* Given a string, return an integer representing the endianness.
+   If the string is invalid, set a Python exception and return -1. */
+static int
+endian_from_string(const char* string)
+{
+    assert(default_endian == ENDIAN_LITTLE || default_endian == ENDIAN_BIG);
+
+    if (string == NULL)
+        return default_endian;
+
+    if (strcmp(string, "little") == 0)
+        return ENDIAN_LITTLE;
+
+    if (strcmp(string, "big") == 0)
+        return ENDIAN_BIG;
+
+    PyErr_Format(PyExc_ValueError, "bit endianness must be either "
+                                   "'little' or 'big', got: '%s'", string);
+    return -1;
+}
+
 /**************************************************************************
                      Implementation of bitarray methods
  **************************************************************************/
+
+static PyObject *
+bitarray_all(bitarrayobject *self)
+{
+    return PyBool_FromLong(find_bit(self, 0, 0, self->nbits) == -1);
+}
+
+PyDoc_STRVAR(all_doc,
+"all() -> bool\n\
+\n\
+Return True when all bits in the array are True.\n\
+Note that `a.all()` is faster than `all(a)`.");
+
+
+static PyObject *
+bitarray_any(bitarrayobject *self)
+{
+    return PyBool_FromLong(find_bit(self, 1, 0, self->nbits) >= 0);
+}
+
+PyDoc_STRVAR(any_doc,
+"any() -> bool\n\
+\n\
+Return True when any bit in the array is True.\n\
+Note that `a.any()` is faster than `any(a)`.");
+
+
+static PyObject *
+bitarray_append(bitarrayobject *self, PyObject *value)
+{
+    int vi;
+
+    if ((vi = pybit_as_int(value)) < 0)
+        return NULL;
+    if (resize(self, self->nbits + 1) < 0)
+        return NULL;
+    setbit(self, self->nbits - 1, vi);
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(append_doc,
+"append(item, /)\n\
+\n\
+Append `item` to the end of the bitarray.");
+
+
+static PyObject *
+bitarray_bytereverse(bitarrayobject *self)
+{
+    bytereverse(self, 0, Py_SIZE(self));
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(bytereverse_doc,
+"bytereverse()\n\
+\n\
+For all bytes representing the bitarray, reverse the bit order (in-place).\n\
+Note: This method changes the actual machine values representing the\n\
+bitarray; it does *not* change the endianness of the bitarray object.");
+
+
+static PyObject *
+bitarray_buffer_info(bitarrayobject *self)
+{
+    PyObject *res, *ptr;
+
+    ptr = PyLong_FromVoidPtr(self->ob_item),
+    res = Py_BuildValue("Onsin",
+                        ptr,
+                        Py_SIZE(self),
+                        ENDIAN_STR(self),
+                        (int) (BITS(Py_SIZE(self)) - self->nbits),
+                        self->allocated);
+    Py_DECREF(ptr);
+    return res;
+}
+
+PyDoc_STRVAR(buffer_info_doc,
+"buffer_info() -> tuple\n\
+\n\
+Return a tuple (address, size, endianness, unused, allocated) giving the\n\
+memory address of the bitarray's buffer, the buffer size (in bytes),\n\
+the bit endianness as a string, the number of unused bits within the last\n\
+byte, and the allocated memory for the buffer (in bytes).");
+
+
+static PyObject *
+bitarray_clear(bitarrayobject *self)
+{
+    if (resize(self, 0) < 0)
+        return NULL;
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(clear_doc,
+"clear()\n\
+\n\
+Remove all items from the bitarray.");
+
 
 static PyObject *
 bitarray_copy(bitarrayobject *self)
@@ -682,6 +802,51 @@ PyDoc_STRVAR(count_doc,
 "count(value=1, start=0, stop=<end of array>, /) -> int\n\
 \n\
 Count the number of occurrences of `value` in the bitarray.");
+
+
+static PyObject *
+bitarray_endian(bitarrayobject *self)
+{
+    return Py_BuildValue("s", ENDIAN_STR(self));
+}
+
+PyDoc_STRVAR(endian_doc,
+"endian() -> str\n\
+\n\
+Return the bit endianness of the bitarray as a string (`little` or `big`).");
+
+
+static PyObject *
+bitarray_extend(bitarrayobject *self, PyObject *obj)
+{
+    if (extend_dispatch(self, obj) < 0)
+        return NULL;
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(extend_doc,
+"extend(iterable, /)\n\
+\n\
+Append all the items from `iterable` to the end of the bitarray.\n\
+If the iterable is a string, each `0` and `1` are appended as\n\
+bits (ignoring whitespace).");
+
+
+static PyObject *
+bitarray_fill(bitarrayobject *self)
+{
+    long p;
+
+    p = setunused(self);
+    self->nbits += p;
+    return PyLong_FromLong(p);
+}
+
+PyDoc_STRVAR(fill_doc,
+"fill() -> int\n\
+\n\
+Add zeros to the end of the bitarray, such that the length of the bitarray\n\
+will be a multiple of 8, and return the number of bits added (0..7).");
 
 
 static PyObject *
@@ -814,104 +979,6 @@ specified.  By default, all search results are returned.");
 
 
 static PyObject *
-bitarray_buffer_info(bitarrayobject *self)
-{
-    PyObject *res, *ptr;
-
-    ptr = PyLong_FromVoidPtr(self->ob_item),
-    res = Py_BuildValue("Onsin",
-                        ptr,
-                        Py_SIZE(self),
-                        ENDIAN_STR(self),
-                        (int) (BITS(Py_SIZE(self)) - self->nbits),
-                        self->allocated);
-    Py_DECREF(ptr);
-    return res;
-}
-
-PyDoc_STRVAR(buffer_info_doc,
-"buffer_info() -> tuple\n\
-\n\
-Return a tuple (address, size, endianness, unused, allocated) giving the\n\
-memory address of the bitarray's buffer, the buffer size (in bytes),\n\
-the bit endianness as a string, the number of unused bits within the last\n\
-byte, and the allocated memory for the buffer (in bytes).");
-
-
-static PyObject *
-bitarray_endian(bitarrayobject *self)
-{
-    return Py_BuildValue("s", ENDIAN_STR(self));
-}
-
-PyDoc_STRVAR(endian_doc,
-"endian() -> str\n\
-\n\
-Return the bit endianness of the bitarray as a string (`little` or `big`).");
-
-
-static PyObject *
-bitarray_append(bitarrayobject *self, PyObject *value)
-{
-    int vi;
-
-    if ((vi = pybit_as_int(value)) < 0)
-        return NULL;
-    if (resize(self, self->nbits + 1) < 0)
-        return NULL;
-    setbit(self, self->nbits - 1, vi);
-    Py_RETURN_NONE;
-}
-
-PyDoc_STRVAR(append_doc,
-"append(item, /)\n\
-\n\
-Append `item` to the end of the bitarray.");
-
-
-static PyObject *
-bitarray_extend(bitarrayobject *self, PyObject *obj)
-{
-    if (extend_dispatch(self, obj) < 0)
-        return NULL;
-    Py_RETURN_NONE;
-}
-
-PyDoc_STRVAR(extend_doc,
-"extend(iterable, /)\n\
-\n\
-Append all the items from `iterable` to the end of the bitarray.\n\
-If the iterable is a string, each `0` and `1` are appended as\n\
-bits (ignoring whitespace).");
-
-
-static PyObject *
-bitarray_all(bitarrayobject *self)
-{
-    return PyBool_FromLong(find_bit(self, 0, 0, self->nbits) == -1);
-}
-
-PyDoc_STRVAR(all_doc,
-"all() -> bool\n\
-\n\
-Return True when all bits in the array are True.\n\
-Note that `a.all()` is faster than `all(a)`.");
-
-
-static PyObject *
-bitarray_any(bitarrayobject *self)
-{
-    return PyBool_FromLong(find_bit(self, 1, 0, self->nbits) >= 0);
-}
-
-PyDoc_STRVAR(any_doc,
-"any() -> bool\n\
-\n\
-Return True when any bit in the array is True.\n\
-Note that `a.any()` is faster than `any(a)`.");
-
-
-static PyObject *
 bitarray_reduce(bitarrayobject *self)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
@@ -946,36 +1013,6 @@ bitarray_reduce(bitarrayobject *self)
 }
 
 PyDoc_STRVAR(reduce_doc, "state information for pickling");
-
-
-/* The head byte % 8 specifies the number of unused bits (in last buffer
-   byte), the remaining bytes consist of the buffer itself */
-static PyObject *
-unpickle(PyTypeObject *type, PyObject *bytes, int endian)
-{
-    PyObject *res;
-    Py_ssize_t nbytes;
-    unsigned char head;
-    char *data;
-
-    assert(PyBytes_Check(bytes));
-    nbytes = PyBytes_GET_SIZE(bytes);
-    assert(nbytes > 0);
-    data = PyBytes_AS_STRING(bytes);
-    head = *data;
-
-    if (nbytes == 1 && head % 8)
-        return PyErr_Format(PyExc_ValueError,
-                            "invalid header byte 0x%02x", head);
-
-    res = newbitarrayobject(type,
-                            BITS(nbytes - 1) - ((Py_ssize_t) (head % 8)),
-                            endian);
-    if (res == NULL)
-        return NULL;
-    memcpy(((bitarrayobject *) res)->ob_item, data + 1, (size_t) nbytes - 1);
-    return res;
-}
 
 
 static PyObject *
@@ -1015,23 +1052,6 @@ Reverse the order of bits in the array (in-place).");
 
 
 static PyObject *
-bitarray_fill(bitarrayobject *self)
-{
-    long p;
-
-    p = setunused(self);
-    self->nbits += p;
-    return PyLong_FromLong(p);
-}
-
-PyDoc_STRVAR(fill_doc,
-"fill() -> int\n\
-\n\
-Add zeros to the end of the bitarray, such that the length of the bitarray\n\
-will be a multiple of 8, and return the number of bits added (0..7).");
-
-
-static PyObject *
 bitarray_invert(bitarrayobject *self, PyObject *args)
 {
     Py_ssize_t i = PY_SSIZE_T_MAX;
@@ -1060,21 +1080,6 @@ PyDoc_STRVAR(invert_doc,
 \n\
 Invert all bits in the array (in-place).\n\
 When the optional `index` is given, only invert the single bit at index.");
-
-
-static PyObject *
-bitarray_bytereverse(bitarrayobject *self)
-{
-    bytereverse(self, 0, Py_SIZE(self));
-    Py_RETURN_NONE;
-}
-
-PyDoc_STRVAR(bytereverse_doc,
-"bytereverse()\n\
-\n\
-For all bytes representing the bitarray, reverse the bit order (in-place).\n\
-Note: This method changes the actual machine values representing the\n\
-bitarray; it does *not* change the endianness of the bitarray object.");
 
 
 static PyObject *
@@ -1477,20 +1482,6 @@ PyDoc_STRVAR(remove_doc,
 \n\
 Remove the first occurrence of `value` in the bitarray.\n\
 Raises `ValueError` if item is not present.");
-
-
-static PyObject *
-bitarray_clear(bitarrayobject *self)
-{
-    if (resize(self, 0) < 0)
-        return NULL;
-    Py_RETURN_NONE;
-}
-
-PyDoc_STRVAR(clear_doc,
-"clear()\n\
-\n\
-Remove all items from the bitarray.");
 
 
 static PyObject *
@@ -2820,10 +2811,10 @@ static PyMethodDef bitarray_methods[] = {
      fill_doc},
     {"find",         (PyCFunction) bitarray_find,        METH_VARARGS,
      find_doc},
-    {"fromfile",     (PyCFunction) bitarray_fromfile,    METH_VARARGS,
-     fromfile_doc},
     {"frombytes",    (PyCFunction) bitarray_frombytes,   METH_O,
      frombytes_doc},
+    {"fromfile",     (PyCFunction) bitarray_fromfile,    METH_VARARGS,
+     fromfile_doc},
     {"index",        (PyCFunction) bitarray_index,       METH_VARARGS,
      index_doc},
     {"insert",       (PyCFunction) bitarray_insert,      METH_VARARGS,
@@ -2838,28 +2829,27 @@ static PyMethodDef bitarray_methods[] = {
      remove_doc},
     {"reverse",      (PyCFunction) bitarray_reverse,     METH_NOARGS,
      reverse_doc},
-    {"setall",       (PyCFunction) bitarray_setall,      METH_O,
-     setall_doc},
     {"search",       (PyCFunction) bitarray_search,      METH_VARARGS,
      search_doc},
     {"itersearch",   (PyCFunction) bitarray_itersearch,  METH_O,
      itersearch_doc},
+    {"setall",       (PyCFunction) bitarray_setall,      METH_O,
+     setall_doc},
     {"sort",         (PyCFunction) bitarray_sort,        METH_VARARGS |
                                                          METH_KEYWORDS,
      sort_doc},
+    {"to01",         (PyCFunction) bitarray_to01,        METH_NOARGS,
+     to01_doc},
+    {"tobytes",      (PyCFunction) bitarray_tobytes,     METH_NOARGS,
+     tobytes_doc},
     {"tofile",       (PyCFunction) bitarray_tofile,      METH_O,
      tofile_doc},
     {"tolist",       (PyCFunction) bitarray_tolist,      METH_NOARGS,
      tolist_doc},
-    {"tobytes",      (PyCFunction) bitarray_tobytes,     METH_NOARGS,
-     tobytes_doc},
-    {"to01",         (PyCFunction) bitarray_to01,        METH_NOARGS,
-     to01_doc},
     {"unpack",       (PyCFunction) bitarray_unpack,      METH_VARARGS |
                                                          METH_KEYWORDS,
      unpack_doc},
 
-    /* special methods */
     {"__copy__",     (PyCFunction) bitarray_copy,        METH_NOARGS,
      copy_doc},
     {"__deepcopy__", (PyCFunction) bitarray_copy,        METH_O,
@@ -2873,27 +2863,6 @@ static PyMethodDef bitarray_methods[] = {
 };
 
 /* ------------------------ bitarray initialization -------------------- */
-
-/* Given a string, return an integer representing the endianness.
-   If the string is invalid, set a Python exception and return -1. */
-static int
-endian_from_string(const char* string)
-{
-    assert(default_endian == ENDIAN_LITTLE || default_endian == ENDIAN_BIG);
-
-    if (string == NULL)
-        return default_endian;
-
-    if (strcmp(string, "little") == 0)
-        return ENDIAN_LITTLE;
-
-    if (strcmp(string, "big") == 0)
-        return ENDIAN_BIG;
-
-    PyErr_Format(PyExc_ValueError, "bit endianness must be either "
-                                   "'little' or 'big', got: '%s'", string);
-    return -1;
-}
 
 static PyObject *
 bitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
@@ -2910,6 +2879,35 @@ bitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
         return NULL;
     }
     return newbitarrayobject(type, nbits, endian);
+}
+
+/* The head byte % 8 specifies the number of unused bits (in last buffer
+   byte), the remaining bytes consist of the buffer itself */
+static PyObject *
+unpickle(PyTypeObject *type, PyObject *bytes, int endian)
+{
+    PyObject *res;
+    Py_ssize_t nbytes;
+    unsigned char head;
+    char *data;
+
+    assert(PyBytes_Check(bytes));
+    nbytes = PyBytes_GET_SIZE(bytes);
+    assert(nbytes > 0);
+    data = PyBytes_AS_STRING(bytes);
+    head = *data;
+
+    if (nbytes == 1 && head % 8)
+        return PyErr_Format(PyExc_ValueError,
+                            "invalid header byte 0x%02x", head);
+
+    res = newbitarrayobject(type,
+                            BITS(nbytes - 1) - ((Py_ssize_t) (head % 8)),
+                            endian);
+    if (res == NULL)
+        return NULL;
+    memcpy(((bitarrayobject *) res)->ob_item, data + 1, (size_t) nbytes - 1);
+    return res;
 }
 
 static PyObject *
@@ -2986,7 +2984,7 @@ richcompare(PyObject *v, PyObject *w, int op)
         /* shortcuts for EQ/NE */
         if (vs != ws) {
             /* if sizes differ, the bitarrays differ */
-            return PyBool_FromLong((long) (op == Py_NE));
+            return PyBool_FromLong(op == Py_NE);
         }
         else if (va->endian == wa->endian) {
             /* sizes and endianness are the same - use memcmp() */
@@ -2994,7 +2992,7 @@ richcompare(PyObject *v, PyObject *w, int op)
             setunused(va);
             setunused(wa);
             cmp = memcmp(va->ob_item, wa->ob_item, (size_t) Py_SIZE(v));
-            return PyBool_FromLong((long) ((cmp == 0) ^ (op == Py_NE)));
+            return PyBool_FromLong((cmp == 0) ^ (op == Py_NE));
         }
     }
 
