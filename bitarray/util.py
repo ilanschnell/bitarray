@@ -142,7 +142,7 @@ Allowed values for mode are the strings: `left`, `right`, `both`
     if not isinstance(mode, str):
         raise TypeError("str expected for mode, got '%s'" % type(a).__name__)
     if mode not in ('left', 'right', 'both'):
-        raise ValueError("allowed values 'left', 'right', 'both', got: %r" %
+        raise ValueError("mode must be 'left', 'right' or 'both', got: %r" %
                          mode)
     first = 0
     if mode in ('left', 'both'):
