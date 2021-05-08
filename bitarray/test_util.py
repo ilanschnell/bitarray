@@ -433,13 +433,13 @@ class TestsCount_N(unittest.TestCase, Util):
             self.assertRaises(ValueError, count_n, a, tc + 1)
 
     def test_one_set(self):
-        N = 100000
         for _ in range(10):
-            a = bitarray(N)
+            n = randint(1, 100000)
+            a = bitarray(n)
             a.setall(0)
             self.assertEqual(count_n(a, 0), 0)
             self.assertRaises(ValueError, count_n, a, 1)
-            i = randint(0, N - 1)
+            i = randint(0, n - 1)
             a[i] = 1
             self.assertEqual(count_n(a, 1), i + 1)
             self.assertRaises(ValueError, count_n, a, 2)
