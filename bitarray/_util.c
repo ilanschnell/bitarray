@@ -123,7 +123,7 @@ count_n(PyObject *module, PyObject *args)
 PyDoc_STRVAR(count_n_doc,
 "count_n(a, n, /) -> int\n\
 \n\
-Return the smallest index `i` for which `a[:i].count() == n`.\n\
+Return lowest index `i` for which `a[:i].count() == n`.\n\
 Raises `ValueError`, when n exceeds total count (`a.count()`).");
 
 /* ----------------------------- right index --------------------------- */

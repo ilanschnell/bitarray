@@ -370,7 +370,7 @@ class TestsCount_N(unittest.TestCase, Util):
 
     @staticmethod
     def count_n(a, n):
-        "return the index i for which a[:i].count() == n"
+        "return lowest index i for which a[:i].count() == n"
         i, j = n, a.count(1, 0, n)
         while j < n:
             if a[i]:
@@ -380,15 +380,23 @@ class TestsCount_N(unittest.TestCase, Util):
 
     def check_result(self, a, n, i):
         self.assertEqual(a.count(1, 0, i), n)
-        if i > 0:
+        if i == 0:
+            self.assertEqual(n, 0)
+        else:
             self.assertTrue(a[i - 1])
+
+    def test_empty(self):
+        a = bitarray()
+        self.assertEqual(count_n(a, 0), 0)
+        self.assertRaises(ValueError, count_n, a, 1)
+        self.assertRaises(TypeError, count_n, '', 0)
+        self.assertRaises(TypeError, count_n, a, 7.0)
 
     def test_simple(self):
         a = bitarray('111110111110111110111110011110111110111110111000')
         b = a.copy()
         self.assertEqual(len(a), 48)
         self.assertEqual(a.count(), 37)
-        self.assertRaises(TypeError, count_n, '', 0)
         self.assertEqual(count_n(a, 0), 0)
         self.assertEqual(count_n(a, 20), 23)
         self.assertEqual(count_n(a, 37), 45)
@@ -398,7 +406,6 @@ class TestsCount_N(unittest.TestCase, Util):
                                  count_n, a, 49) # n > len(a)
         self.assertRaisesMessage(ValueError, "n exceeds total count",
                                  count_n, a, 38) # n > a.count()
-        self.assertRaises(TypeError, count_n, a, "7")
         for n in range(0, 37):
             i = count_n(a, n)
             self.check_result(a, n, i)
@@ -420,7 +427,7 @@ class TestsCount_N(unittest.TestCase, Util):
         self.assertRaises(TypeError, count_n, a, "7")
 
     def test_large(self):
-        for N in list(range(100)) + [1000, 10000, 100000]:
+        for N in list(range(50)) + [randint(50, 250000) for _ in range(10)]:
             a = bitarray(N)
             v = randint(0, 1)
             a.setall(not v)
