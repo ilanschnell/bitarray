@@ -373,8 +373,7 @@ class TestsCount_N(unittest.TestCase, Util):
         "return lowest index i for which a[:i].count() == n"
         i, j = n, a.count(1, 0, n)
         while j < n:
-            if a[i]:
-                j += 1
+            j += a[i]
             i += 1
         return i
 
