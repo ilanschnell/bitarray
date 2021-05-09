@@ -77,28 +77,35 @@ tests.append(TestsZeros)
 
 # ---------------------------------------------------------------------------
 
-class TestsRandom(unittest.TestCase):
+class TestsURandom(unittest.TestCase):
 
-    def test_1(self):
+    def test_basic(self):
         for default_endian in 'big', 'little':
             _set_default_endian(default_endian)
             a = urandom(0)
             self.assertEqual(a, bitarray())
             self.assertEqual(a.endian(), default_endian)
 
-            b  = urandom(0, endian=None)
-            self.assertEqual(b.endian(), default_endian)
+            a = urandom(7, endian=None)
+            self.assertEqual(len(a), 7)
+            self.assertEqual(a.endian(), default_endian)
 
-            for n in range(100):
+            for n in range(50):
                 a = urandom(n)
                 self.assertEqual(len(a), n)
-                self.assertEqual(b.endian(), default_endian)
+                self.assertEqual(a.endian(), default_endian)
 
-            a = urandom(1000)
-            b = urandom(1000)
-            self.assertNotEqual(a, b)
-            self.assertTrue(400 < a.count() < 600)
-            self.assertTrue(400 < b.count() < 600)
+            for endian in 'big', 'little':
+                a = urandom(11, endian)
+                self.assertEqual(len(a), 11)
+                self.assertEqual(a.endian(), endian)
+
+    def test_count(self):
+        a = urandom(1000)
+        b = urandom(1000)
+        self.assertNotEqual(a, b)
+        self.assertTrue(400 < a.count() < 600)
+        self.assertTrue(400 < b.count() < 600)
 
     def test_wrong_args(self):
         self.assertRaises(TypeError, urandom)
@@ -111,7 +118,7 @@ class TestsRandom(unittest.TestCase):
         self.assertRaises(TypeError, urandom, 0, 1)
         self.assertRaises(ValueError, urandom, 0, 'foo')
 
-tests.append(TestsRandom)
+tests.append(TestsURandom)
 
 # ---------------------------------------------------------------------------
 
