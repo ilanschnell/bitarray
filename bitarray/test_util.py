@@ -36,22 +36,22 @@ tests = []
 
 class TestsZeros(unittest.TestCase):
 
-    def test_1(self):
+    def test_basic(self):
         for default_endian in 'big', 'little':
             _set_default_endian(default_endian)
             a = zeros(0)
             self.assertEqual(a, bitarray())
             self.assertEqual(a.endian(), default_endian)
 
-            b  = zeros(0, endian=None)
-            self.assertEqual(b.endian(), default_endian)
+            a = zeros(0, endian=None)
+            self.assertEqual(len(a), 0)
+            self.assertEqual(a.endian(), default_endian)
 
             for n in range(100):
                 a = zeros(n)
                 self.assertEqual(len(a), n)
                 self.assertFalse(a.any())
                 self.assertEqual(a.count(1), 0)
-                self.assertEqual(a, n * bitarray('0'))
                 self.assertEqual(a, bitarray(n * '0'))
 
             for endian in 'big', 'little':
