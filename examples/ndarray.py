@@ -16,6 +16,6 @@ print(repr(b))
 
 # ndarray  ->  bitarray
 c = bitarray.bitarray()
-c.pack(b.tostring())
+c.pack(b.tobytes())
 
 assert a == c

@@ -14,7 +14,7 @@ install:
 
 
 doc: bitarray/_bitarray.so
-	$(PYTHON) update_readme.py
+	$(PYTHON) update_doc.py
 	$(PYTHON) setup.py sdist
 	twine check dist/*
 

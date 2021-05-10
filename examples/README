@@ -1,10 +1,21 @@
+base-n.py:
+    Simple illustration of ASCII encoding bitarrays to bases
+    of 2, 4, 8, 16, 32 and 64.
+
+
 bloom.py:
     Demonstrates the implementation of a "Bloom filter", see:
     http://en.wikipedia.org/wiki/Bloom_filter
 
 
+extend_json.py:
+    Demonstrates how to construct a json encoder and decoder (using the
+    'json' standard library) which can handle extended Python data structures
+    containing bitarrays.
+
+
 gene.py:
-    shows how gene sequences (ATGC) can be very easily and efficiently
+    Shows how gene sequences (ATGC) can be very easily and efficiently
     represented by bitarrays.
 
 
@@ -16,6 +27,11 @@ growth/
 huffman/
     Directory containing a library and examples for working with Huffman
     trees and codes.
+
+
+lexico.py
+    Contains two functions, all_perm and next_perm, which are handle
+    lexicographical permutations of bitarrays.
 
 
 mandel.py
