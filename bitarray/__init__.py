@@ -1,3 +1,4 @@
+# Copyright (c) 2008 - 2021, Ilan Schnell; All Rights Reserved
 """
 This package defines an object type which can efficiently represent
 a bitarray.  Bitarrays are sequence types and behave very much like lists.
@@ -32,7 +33,9 @@ as a dictionary key.
     def __hash__(self):
         "Return hash(self)."
         if getattr(self, '_hash', None) is None:
-            self._hash = hash((len(self), self.tobytes()))
+            # ensure hash is independent of endianness
+            a = bitarray(self, 'big') if self.endian() == 'little' else self
+            self._hash = hash((len(a), a.tobytes()))
         return self._hash
 
     def __delitem__(self, *args, **kwargs):
@@ -43,6 +46,7 @@ as a dictionary key.
     frombytes = fromfile = insert = invert = pack = pop = __delitem__
     remove = reverse = setall = sort = __setitem__ = __delitem__
     __iadd__ = __iand__ = __imul__ = __ior__ = __ixor__ = __delitem__
+    __ilshift__ = __irshift__ = __delitem__
 
 
 def bits2bytes(_n):

@@ -6,6 +6,11 @@ compress.py:
     Also allows encoding and decoding of a file, see -h option.
 
 
+decodetree.py:
+    Demonstrates how to use the `decodetree` object, and how much speedup
+    may be achieved when using very large prefix codes.
+
+
 decoding.py:
     This example demonstrates how much faster bitarray's decoing is as
     opposed to traversing the Huffman tree using Python.

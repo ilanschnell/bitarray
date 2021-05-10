@@ -26,3 +26,6 @@ the `bitarrayobject` struct is defined in the same way:
     /* member endian may have these values */
     #define ENDIAN_LITTLE  0
     #define ENDIAN_BIG     1
+
+These essential (as well as other useful) declarations can be found
+in `bitarray/bitarray.h`.

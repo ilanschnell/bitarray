@@ -4,13 +4,13 @@ from distutils.core import setup, Extension
 
 kwds = {}
 try:
-    kwds['long_description'] = open('README.md').read()
+    kwds['long_description'] = open('README.rst').read()
 except IOError:
     pass
 
-# Read version from bitarray/_bitarray.c
+# Read version from bitarray/bitarray.h
 pat = re.compile(r'#define\s+BITARRAY_VERSION\s+"(\S+)"', re.M)
-data = open('bitarray/_bitarray.c').read()
+data = open('bitarray/bitarray.h').read()
 kwds['version'] = pat.search(data).group(1)
 
 
@@ -22,7 +22,7 @@ setup(
     license = "PSF",
     classifiers = [
         "License :: OSI Approved :: Python Software Foundation License",
-        "Development Status :: 5 - Production/Stable",
+        "Development Status :: 6 - Mature",
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
         "Programming Language :: C",
@@ -34,10 +34,12 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Topic :: Utilities",
     ],
     description = "efficient arrays of booleans -- C extension",
     packages = ["bitarray"],
+    package_data = {"bitarray": ["*.h", "*.pickle"]},
     ext_modules = [Extension(name = "bitarray._bitarray",
                              sources = ["bitarray/_bitarray.c"]),
                    Extension(name = "bitarray._util",

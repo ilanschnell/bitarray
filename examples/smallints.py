@@ -1,5 +1,5 @@
 from bitarray import bitarray
-from bitarray.util import int2ba, ba2int
+from bitarray.util import int2ba, ba2int, pprint
 
 
 class SmallIntArray(object):
@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     print(b[:5])
     print(a.array.buffer_info())
-    print(a.array[:25])
+    pprint(a.array[:25], group=5)
 
     for i in range(1000):
         assert a[i] == b[i]

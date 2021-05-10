@@ -1,5 +1,118 @@
-20XX-XX-XX   1.6.2:
+2021-XX-XX   2.1.1:
 -------------------
+
+
+2021-05-05   2.1.0:
+-------------------
+  * add `.find()` method, see #122
+  * `.find()`, `.index()`, `.search()` and `.itersearch()` now all except
+    both (sub-) bitarray as well as bool items to be searched for
+  * improve encode/decode error messages
+  * add [lexicographical  permutations example](../examples/lexico.py)
+  * add tests
+
+
+2021-04-19   2.0.1:
+-------------------
+  * update documentation
+  * improve some error messages
+
+
+2021-04-14   2.0.0:
+-------------------
+  * require more specific objects, int (0 or 1) or bool, see #119
+  * items are always returned as int 0 or 1, #119
+  * remove `.length()` method (deprecated since 1.5.1 - use `len()`)
+  * in `.unpack()` the `one` argument now defaults to 0x01 (was 0xff)
+  * `.tolist()` now always returns a list of integers (0 or 1)
+  * fix frozenbitarray hash function, see #121
+  * fix frozenbitarray being mutable by `<<=` and `>>=`
+  * support sequence protocol in `.extend()` (and bitarray creation)
+  * improve OverflowError messages from `util.int2ba()`
+  * add [hexadecimal example](../examples/hexadecimal.py)
+
+
+2021-04-10   1.9.2:
+-------------------
+  * update pythoncapi_compat: Fix support with PyPy 3.7, #120
+  * update readme
+
+
+2021-04-05   1.9.1:
+-------------------
+  * switch documentation from markdown to reStructuredText
+  * add tests
+
+
+2021-04-03   1.9.0:
+-------------------
+  * add shift operations (`<<`, `>>`, `<<=`, `>>=`), see #117
+  * add `bitarray.util.ba2base()` and `bitarray.util.base2ba()`,
+    see last paragraph in [Bitarray representations](represent.rst)
+  * documentation and tests
+
+
+2021-03-31   1.8.2:
+-------------------
+  * fix crash caused by unsupported types in binary operations, #116
+  * speedup initializing or extending a bitarray from another with different
+    bit endianness
+  * add formatting options to `bitarray.util.pprint()`
+  * add documentation on [bitarray representations](represent.rst)
+  * add and improve tests (all 291 tests run in less than half a second on
+    a modern machine)
+
+
+2021-03-25   1.8.1:
+-------------------
+  * moved implementation of and `hex2ba()` and `ba2hex()` to C-level
+  * add `bitarray.util.parity()`
+
+
+2021-03-21   1.8.0:
+-------------------
+  * add `bitarray.util.serialize()` and `bitarray.util.deserialize()`
+  * allow whitespace (ignore space and `\n\r\t\v`) in input strings,
+    e.g. `bitarray('01 11')` or `a += '10 00'`
+  * add `bitarray.util.pprint()`
+  * When initializing a bitarray from another with different bit endianness,
+    e.g. `a = bitarray('110', 'little')` and `b = bitarray(a, 'big')`,
+    the buffer used to be simply copied, with consequence that `a == b` would
+    result in `False`.  This is fixed now, that is `a == b` will always
+    evaluate to `True`.
+  * add test for loading existing pickle file (created using bitarray 1.5.0)
+  * add example showing how to [jsonize bitarrays](../examples/extend_json.py)
+  * add tests
+
+
+2021-03-12   1.7.1:
+-------------------
+  * fix issue #114, raise TypeError when incorrect index is used during
+    assignment, e.g. `a[1.5] = 1`
+  * raise TypeError (not IndexError) when assigning slice to incorrect type,
+    e.g. `a[1:4] = 1.2`
+  * improve some docstrings and tests
+
+
+2021-02-27   1.7.0:
+-------------------
+  * add `bitarray.util.urandom()`
+  * raise TypeError when trying to extend bitarrays from bytes on Python 3,
+    ie. `bitarray(b'011')` and `.extend(b'110')`.  (Deprecated since 1.4.1)
+
+
+2021-01-20   1.6.3:
+-------------------
+  * add missing .h files to sdist tarball, #113
+
+
+2021-01-20   1.6.2:
+-------------------
+  * use `Py_SET_TYPE()` and `Py_SET_SIZE()` for Python 3.10, #109
+  * add official Python 3.10 support
+  * fix slice assignment to same object,
+    e.g. `a[2::] = a` or `a[::-1] = a`, #112
+  * add bitarray.h, #110
 
 
 2020-11-05   1.6.1:
@@ -45,7 +158,7 @@
 2020-08-05   1.5.0:
 -------------------
   * Use `Py_ssize_t` for bitarray index.  This means that on 32bit
-    systems, the maximun number of elements in a bitarray is 2 GBits.
+    systems, the maximum number of elements in a bitarray is 2 GBits.
     We used to have a special 64bit index type for all architectures, but
     this prevented us from using Python's sequence, mapping and number
     methods, and made those method lookups slow.
@@ -53,7 +166,7 @@
     copying whole bytes)
   * Require equal endianness for operations: `&`, `|`, `^`, `&=`, `|=`, `^=`.
     This should have always been the case but was overlooked in the past.
-  * raise TypeError when tring to create bitarray from boolean
+  * raise TypeError when trying to create bitarray from boolean
   * This will be last release to still support Python 2.6 (which was retired
     in 2013).  We do NOT plan to stop support for Python 2.7 anytime soon.
 
@@ -72,13 +185,13 @@
   * improve many docstrings
   * add DeprecationWarning for `bitdiff()`
   * add DeprecationWarning when trying to extend bitarrays
-    from bytes on Python 3 (`bitarrays(b'011')` and `.extend(b'110')`)
+    from bytes on Python 3 (`bitarray(b'011')` and `.extend(b'110')`)
   * C-level:
       - Rewrote `.fromfile()` and `.tofile()` implementation,
         such that now the same code is used for Python 2 and 3.
-        The new implementation is more memoery efficient on
+        The new implementation is more memory efficient on
         Python 3.
-      - use memcmp() in richcompare to shortcut EQ/NE, when
+      - use `memcmp()` in `richcompare()` to shortcut EQ/NE, when
         comparing two very large bitarrays for equality the
         speedup can easily be 100x
       - simplify how unpacking is handled
@@ -88,7 +201,7 @@
 2020-07-11   1.4.0:
 -------------------
   * add `.clear()` method (Python 3.3 added this method to lists)
-  * avoid overallocation when bitarray objects are initially created
+  * avoid over-allocation when bitarray objects are initially created
   * raise BufferError when resizing bitarrays which is exporting buffers
   * add example to study the resize() function
   * improve some error messages
@@ -112,8 +225,8 @@
 
 2020-05-18   1.2.2:
 -------------------
-  * `util.ba2hex` now always return a string object (instead of bytes object
-    for Python 3), see issue #94
+  * `util.ba2hex()` now always return a string object (instead of bytes
+    object for Python 3), see issue #94
   * `util.hex2ba` allows a unicode object as input on Python 2
   * Determine 64-bitness of interpreter in a cross-platform fashion #91,
     in order to better support PyPy
@@ -129,9 +242,9 @@
 2019-12-06   1.2.0:
 -------------------
   * add bitarray.util module which provides useful utility functions
-  * deprecate `bitarray.bitdiff` in favor of `bitarray.util.count_xor`
+  * deprecate `bitarray.bitdiff()` in favor of `bitarray.util.count_xor`
   * use markdown for documentation
-  * fix bug in .count() on 32bit systems in special cases when array size
+  * fix bug in `.count()` on 32bit systems in special cases when array size
     is 2^29 bits or larger
   * simplified tests by using bytes syntax
   * update smallints and sieve example to use new utility module
@@ -144,7 +257,7 @@
   * add frozenbitarray object
   * add optional start and stop parameters to .count() method
   * add official Python 3.8 support
-  * optimize setrange() C-function by using memset
+  * optimize `setrange()` C-function by using `memset()`
   * fix issue #74, bitarray is hashable on Python 2
   * fix issue #68, `unittest.TestCase.assert_` deprecated
   * improved test suite - tests should run in about 1 second
@@ -213,7 +326,7 @@
 2018-05-30   0.8.2:
 -------------------
   * add official Python 3.6 support (although it was already working)
-  * fix description of fill(), #52
+  * fix description of `fill()`, #52
   * handle extending self correctly, #28
   * copy_n: fast copy with memmove fixed, #43
   * minor clarity/wording changes to README, #23
@@ -221,7 +334,7 @@
 
 2013-03-30   0.8.1:
 -------------------
-  * fix issue #10, i.e. int(bitarray()) segfault
+  * fix issue #10, i.e. `int(bitarray())` segfault
   * added tests for using a bitarray object as an argument to functions
     like int, long (on Python 2), float, list, tuple, dict
 
@@ -243,11 +356,11 @@
 2012-02-06   0.6.0:
 -------------------
   * add buffer protocol to bitarray objects (Python 2.7 only)
-  * allow slice assignment to 0 or 1, e.g. a[::3] = 0  (in addition to
+  * allow slice assignment to 0 or 1, e.g. `a[::3] = 0`  (in addition to
     booleans)
   * moved implementation of itersearch method to C level (Lluis Pamies)
   * search, itersearch now only except bitarray objects,
-    whereas __contains__ excepts either booleans or bitarrays
+    whereas `__contains__` excepts either booleans or bitarrays
   * use a priority queue for Huffman tree example (thanks to Ushma Bhatt)
   * improve documentation
 
@@ -304,7 +417,7 @@
 2008-10-19   0.3.2:
 -------------------
   * Added sequential search method.
-  * The special method __contains__ now also takes advantage of the
+  * The special method `__contains__` now also takes advantage of the
     sequential search.
 
 
