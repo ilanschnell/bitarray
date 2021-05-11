@@ -7,7 +7,7 @@ stages:
       - job:
         displayName: Linux Unit Tests
         pool:
-          vmImage: 'ubuntu-latest'
+          vmImage: 'Ubuntu-20.04'
 
         strategy:
           matrix:
@@ -51,7 +51,7 @@ stages:
       CIBW_BUILD: '*'
     jobs:
     - job: linux
-      pool: {vmImage: 'ubuntu-latest'}
+      pool: {vmImage: 'Ubuntu-20.04'}
       steps:
         - {task: UsePythonVersion@0, inputs: {versionSpec: '3.7', architecture: x64}}
         - {task: UsePythonVersion@0, inputs: {versionSpec: '3.8', architecture: x64}}
@@ -62,7 +62,7 @@ stages:
         - task: PublishBuildArtifacts@1
           inputs: {pathtoPublish: 'wheelhouse'}
     - job: macos
-      pool: {vmImage: 'macOS-10.14'}
+      pool: {vmImage: 'macOS-10.15'}
       steps:
         - task: UsePythonVersion@0
         - bash: |
