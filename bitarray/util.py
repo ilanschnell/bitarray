@@ -379,9 +379,9 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
     result = {}
 
     def traverse(nd, prefix=bitarray(0, endian)):
-        if hasattr(nd, 'symbol'):  # leaf
+        try:                    # leaf
             result[nd.symbol] = prefix
-        else:  # parent, so traverse each of the children
+        except AttributeError:  # parent, so traverse each of the children
             traverse(nd.child[0], prefix + bitarray([0]))
             traverse(nd.child[1], prefix + bitarray([1]))
 
