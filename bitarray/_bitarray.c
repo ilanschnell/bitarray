@@ -1934,26 +1934,26 @@ BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 
 /* shift bitarray n positions to left (right=0) or right (right=1) */
 static void
-shift(bitarrayobject *a, Py_ssize_t n, int right)
+shift(bitarrayobject *self, Py_ssize_t n, int right)
 {
-    Py_ssize_t nbits = a->nbits;
+    Py_ssize_t nbits = self->nbits;
 
     if (n == 0)
         return;
 
     if (n >= nbits) {
-        memset(a->ob_item, 0x00, (size_t) Py_SIZE(a));
+        memset(self->ob_item, 0x00, (size_t) Py_SIZE(self));
         return;
     }
 
     assert(0 < n && n < nbits);
     if (right) {                /* rshift */
-        copy_n(a, n, a, 0, nbits - n);
-        setrange(a, 0, n, 0);
+        copy_n(self, n, self, 0, nbits - n);
+        setrange(self, 0, n, 0);
     }
     else {                      /* lshift */
-        copy_n(a, 0, a, n, nbits - n);
-        setrange(a, nbits - n, nbits, 0);
+        copy_n(self, 0, self, n, nbits - n);
+        setrange(self, nbits - n, nbits, 0);
     }
 }
 
