@@ -1760,8 +1760,8 @@ delslice(bitarrayobject *self, PyObject *slice)
         step = -step;
     }
     assert(step > 0 && start <= stop && slicelength > 0);
-    assert(start >= 0 && start < self->nbits);
-    assert(stop >= 0 && stop <= self->nbits);
+    assert(0 <= start && start < self->nbits);
+    assert(0 <= stop && stop <= self->nbits);
 
     if (step == 1) {
         assert(stop - start == slicelength);
