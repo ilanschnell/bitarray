@@ -9,7 +9,7 @@
   * `.find()`, `.index()`, `.search()` and `.itersearch()` now all except
     both (sub-) bitarray as well as bool items to be searched for
   * improve encode/decode error messages
-  * add [lexicographical  permutations example](../examples/lexico.py)
+  * add [lexicographical permutations example](../examples/lexico.py)
   * add tests
 
 
