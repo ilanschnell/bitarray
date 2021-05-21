@@ -104,7 +104,7 @@ function `pprint.pprint()`.
             stream.write('\n%s' % (indent * ' '))
         if i % group == 0 and i % epl != 0:
             stream.write(' ')
-        stream.write(str(int(b)))
+        stream.write(str(b))
 
     if multiline:
         stream.write('\n')
