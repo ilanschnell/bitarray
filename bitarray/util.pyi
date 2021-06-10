@@ -1,4 +1,4 @@
-from typing import BinaryIO, Literal, Optional, Union, Any, AnyStr
+from typing import Any, AnyStr, BinaryIO, Literal, Optional, Union
 
 from bitarray import bitarray
 
