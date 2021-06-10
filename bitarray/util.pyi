@@ -1,4 +1,4 @@
-from typing import Any, AnyStr, BinaryIO, Literal, Optional, Union
+from typing import Any, AnyStr, BinaryIO, Hashable, Literal, Optional, Union
 
 from bitarray import bitarray
 
@@ -41,5 +41,5 @@ def int2ba(i: int, /,
 
 def serialize(a: bitarray, /) -> bytes: ...
 def deserialize(b: bytes, /) -> bitarray: ...
-def huffman_code(freq_map: dict[Any, Union[int, float]],
-                 endian: Optional[str] = ...) -> dict[Any, bitarray]: ...
+def huffman_code(freq_map: dict[Hashable, Union[int, float]],
+                 endian: Optional[str] = ...) -> dict[Hashable, bitarray]: ...
