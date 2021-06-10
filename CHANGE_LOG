@@ -1,5 +1,6 @@
 2021-XX-XX   2.1.1:
 -------------------
+  * add type hinting (see PEP 484, 561) using .pyi files
   * add tests
 
 
