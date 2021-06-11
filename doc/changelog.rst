@@ -1,13 +1,19 @@
 Change log
 ==========
 
+**2.1.1** (2021-06-11):
+
+* add type hinting (see PEP 484, 561) using stub (``.pyi``) files
+* add tests
+
+
 **2.1.0** (2021-05-05):
 
 * add ``.find()`` method, see `#122 <https://github.com/ilanschnell/bitarray/issues/122>`__
 * ``.find()``, ``.index()``, ``.search()`` and ``.itersearch()`` now all except
   both (sub-) bitarray as well as bool items to be searched for
 * improve encode/decode error messages
-* add `lexicographical  permutations example <../examples/lexico.py>`__
+* add `lexicographical permutations example <../examples/lexico.py>`__
 * add tests
 
 

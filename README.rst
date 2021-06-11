@@ -62,7 +62,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 2.1.0
+    bitarray version: 2.1.1
     sys.version: 2.7.15 (default, Mar  5 2020, 14:58:04) [GCC Clang 9.0.1]
     sys.prefix: /Users/ilan/Mini3/envs/py27
     pointer size: 64 bit
@@ -401,7 +401,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 2.1.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.1.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -633,7 +633,7 @@ Functions defined in the `bitarray` module:
 
 ``get_default_endian()`` -> string
    Return the default endianness for new bitarray objects being created.
-   Under normal circumstances, the return value is ``big``.
+   Unless ``_set_default_endian()`` is called, the return value is ``big``.
 
 
 ``test(verbosity=1, repeat=1)`` -> TextTestResult
@@ -679,7 +679,7 @@ Functions defined in `bitarray.util` module:
 
 
 ``count_n(a, n, /)`` -> int
-   Return the smallest index ``i`` for which ``a[:i].count() == n``.
+   Return lowest index ``i`` for which ``a[:i].count() == n``.
    Raises ``ValueError``, when n exceeds total count (``a.count()``).
 
 
