@@ -1103,7 +1103,7 @@ class MixedTests(unittest.TestCase, Util):
             n = randint(0, len(a))
             if a.endian() == 'big':
                 self.assertEqual(ba2int(a >> n), i >> n)
-                c = zeros(len(a)) + a
+                c = zeros(len(a), 'big') + a
                 self.assertEqual(ba2int(c << n), i << n)
 
             self.assertEQUAL(a, aa)
@@ -1131,7 +1131,7 @@ class MixedTests(unittest.TestCase, Util):
                 c = a.copy()
                 c >>= n
                 self.assertEqual(ba2int(c), i >> n)
-                c = zeros(len(a)) + a
+                c = zeros(len(a), 'big') + a
                 c <<= n
                 self.assertEqual(ba2int(c), i << n)
 
