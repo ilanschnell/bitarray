@@ -1,5 +1,6 @@
 2021-XX-XX   2.1.2:
 -------------------
+  * add explicit endianness to two tests, fixes issue #127
 
 
 2021-06-11   2.1.1:
