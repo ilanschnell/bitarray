@@ -1,10 +1,14 @@
+"""
+This stub, as well as util.pyi, have been tested with
+Python 3.9 and mypy 0.901
+"""
 from collections.abc import Iterable, Iterator
 from unittest.runner import TextTestResult
 
-from typing import Any, BinaryIO, Literal, Union, overload
+from typing import BinaryIO, Hashable, Union, overload
 
 
-Codedict = dict[Any, bitarray]
+Codedict = dict[Hashable, bitarray]
 
 
 class decodetree:
