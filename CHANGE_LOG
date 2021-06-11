@@ -1,4 +1,4 @@
-2021-XX-XX   2.1.1:
+2021-06-11   2.1.1:
 -------------------
   * add type hinting (see PEP 484, 561) using stub (`.pyi`) files
   * add tests
