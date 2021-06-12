@@ -1,6 +1,6 @@
 import sys
 from bitarray import bitarray
-from numba import jit
+from numba import jit  # type: ignore
 
 width, height = 4000, 3000
 maxdepth = 500

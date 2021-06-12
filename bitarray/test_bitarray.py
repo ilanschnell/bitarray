@@ -25,8 +25,8 @@ is_py3k = bool(sys.version_info[0] == 3)
 if is_py3k:
     from io import BytesIO
 else:
-    from cStringIO import StringIO as BytesIO
-    range = xrange
+    from cStringIO import StringIO as BytesIO  # type: ignore
+    range = xrange  # type: ignore
 
 
 from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
@@ -40,7 +40,7 @@ def zeros(n, endian=None):
     a.setall(0)
     return a
 
-tests = []
+tests = []  # type: list
 
 class Util(object):
 

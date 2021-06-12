@@ -30,7 +30,7 @@ if sys.version_info[0] == 3:
 else:
     from io import BytesIO as StringIO
 
-tests = []
+tests = []  # type: list
 
 # ---------------------------------------------------------------------------
 

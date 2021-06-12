@@ -16,8 +16,8 @@ CODEDICT = {'little': {}, 'big': {
     'c': bitarray('1100'),    'd': bitarray('1101'),
     'e': bitarray('1110'),    'f': bitarray('1111'),
 }}
-for k, v in CODEDICT['big'].items():
-    CODEDICT['little'][k] = v[::-1]
+for k, v in CODEDICT['big'].items(): # type: ignore
+    CODEDICT['little'][k] = v[::-1]  # type: ignore
 
 def prefix_ba2hex(a):
     return ''.join(a.iterdecode(CODEDICT[a.endian()]))

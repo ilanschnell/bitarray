@@ -19,6 +19,10 @@ doc: bitarray/_bitarray.so
 	twine check dist/*
 
 
+mypy:
+	mypy examples/*.py examples/huffman/*.py
+
+
 clean:
 	rm -rf build dist
 	rm -f bitarray/*.o bitarray/*.so
