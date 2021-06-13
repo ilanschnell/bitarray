@@ -5,7 +5,7 @@
 from __future__ import print_function
 
 import bitarray
-import numpy
+import numpy  # type: ignore
 
 a = bitarray.bitarray('100011001001')
 print(a)
