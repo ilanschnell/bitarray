@@ -1,5 +1,7 @@
 2021-XX-XX   2.1.2:
 -------------------
+  * support type hinting for all Python 3 versions (that bitarray supports,
+    i.e. 3.5 and higher currently), see #128
   * add explicit endianness to two tests, fixes issue #127
 
 

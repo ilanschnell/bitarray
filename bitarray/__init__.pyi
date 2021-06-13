@@ -1,6 +1,6 @@
 """
 This stub, as well as util.pyi, have been tested with
-Python 3.9 and mypy 0.902
+Python 3.5 .. 3.10 and mypy 0.902
 """
 from collections.abc import Iterable, Iterator
 from unittest.runner import TextTestResult
