@@ -1,6 +1,13 @@
 Change log
 ==========
 
+**2.1.2** (2021-06-13):
+
+* support type hinting for all Python 3 versions (that bitarray supports,
+  3.5 and higher currently), fixed `#128 <https://github.com/ilanschnell/bitarray/issues/128>`__
+* add explicit endianness to two tests, fixes `#127 <https://github.com/ilanschnell/bitarray/issues/127>`__
+
+
 **2.1.1** (2021-06-11):
 
 * add type hinting (see PEP 484, 561) using stub (``.pyi``) files
