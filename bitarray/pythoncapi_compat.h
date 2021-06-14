@@ -260,8 +260,9 @@ PyObject_CallOneArg(PyObject *func, PyObject *arg)
 static inline int
 PyModule_AddObjectRef(PyObject *module, const char *name, PyObject *value)
 {
+    int res;
     Py_XINCREF(value);
-    int res = PyModule_AddObject(module, name, value);
+    res = PyModule_AddObject(module, name, value);
     if (res < 0) {
         Py_XDECREF(value);
     }
