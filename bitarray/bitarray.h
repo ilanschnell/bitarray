@@ -47,10 +47,16 @@ typedef struct {
 #define BITMASK(endian, i)  \
     (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) % 8) : (7 - (i) % 8)))
 
+#ifdef _MSC_VER
+#define INLINE __inline
+#else
+#define INLINE inline
+#endif
+
 /* ------------ low level access to bits in bitarrayobject ------------- */
 
 #ifndef NDEBUG
-static inline int GETBIT(bitarrayobject *self, Py_ssize_t i)
+static INLINE int GETBIT(bitarrayobject *self, Py_ssize_t i)
 {
     assert(0 <= i && i < self->nbits);
     return ((self)->ob_item[(i) / 8] & BITMASK((self)->endian, i) ? 1 : 0);
@@ -60,7 +66,7 @@ static inline int GETBIT(bitarrayobject *self, Py_ssize_t i)
     ((self)->ob_item[(i) / 8] & BITMASK((self)->endian, i) ? 1 : 0)
 #endif
 
-static inline void
+static INLINE void
 setbit(bitarrayobject *self, Py_ssize_t i, int bit)
 {
     char *cp, mask;
@@ -76,7 +82,7 @@ setbit(bitarrayobject *self, Py_ssize_t i, int bit)
 
 /* sets unused padding bits (within last byte of buffer) to 0,
    and return the number of padding bits -- self->nbits is unchanged */
-static inline int
+static INLINE int
 setunused(bitarrayobject *self)
 {
     const char mask[16] = {
@@ -110,7 +116,7 @@ static const unsigned char bitcount_lookup[256] = {
 
 /* Interpret a PyObject (usually PyLong or PyBool) as a bit, return 0 or 1.
    On error, return -1 and set error message. */
-static inline int
+static INLINE int
 pybit_as_int(PyObject *v)
 {
     Py_ssize_t x;
