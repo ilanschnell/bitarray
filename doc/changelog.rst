@@ -1,6 +1,11 @@
 Change log
 ==========
 
+**2.1.3** (2021-06-15):
+
+* Fix building with MSVC / Bullseye, `#129 <https://github.com/ilanschnell/bitarray/issues/129>`__
+
+
 **2.1.2** (2021-06-13):
 
 * support type hinting for all Python 3 versions (that bitarray supports,
