@@ -49,17 +49,17 @@ as a dictionary key.
     __ilshift__ = __irshift__ = __delitem__
 
 
-def bits2bytes(_n):
+def bits2bytes(__n):
     """bits2bytes(n, /) -> int
 
 Return the number of bytes necessary to store n bits.
 """
     import sys
-    if not isinstance(_n, (int, long) if sys.version_info[0] == 2 else int):
+    if not isinstance(__n, (int, long) if sys.version_info[0] == 2 else int):
         raise TypeError("integer expected")
-    if _n < 0:
+    if __n < 0:
         raise ValueError("non-negative integer expected")
-    return 0 if _n == 0 else ((_n - 1) // 8 + 1)
+    return 0 if __n == 0 else ((__n - 1) // 8 + 1)
 
 
 def test(verbosity=1, repeat=1):
