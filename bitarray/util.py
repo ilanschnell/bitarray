@@ -89,12 +89,11 @@ function `pprint.pprint()`.
     if epl == 0:
         epl = width - indent - 2
     type_name = type(__a).__name__
-    lena = len(__a)
     # here 4 is len("'()'")
-    multiline = bool(len(type_name) + 4 + lena + lena // group >= width)
+    multiline = len(type_name) + 4 + len(__a) + len(__a) // group >= width
     if multiline:
         quotes = "'''"
-    elif lena > 0:
+    elif __a:
         quotes = "'"
     else:
         quotes = ""
