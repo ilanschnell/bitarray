@@ -1395,6 +1395,14 @@ class NumberTests(unittest.TestCase, Util):
             b &= d
             self.assertEqual(~b, a)
 
+    def test_bool(self):
+        a = bitarray()
+        self.assertTrue(bool(a) is False)
+        a.append(0)
+        self.assertTrue(bool(a) is True)
+        a.append(1)
+        self.assertTrue(bool(a) is True)
+
     def test_size_error(self):
         a = bitarray('11001')
         b = bitarray('100111')
