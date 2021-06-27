@@ -3,11 +3,15 @@ This program demonstrates how Huffman codes can be used to efficiently
 compress and uncompress files (text or binary).
 """
 import os
+import struct
+from itertools import islice
 from optparse import OptionParser
 from collections import Counter
 
 from bitarray import bitarray
-from bitarray.util import huffman_code
+from bitarray.util import serialize, deserialize, huffman_code
+
+import vlf
 
 
 def encode(filename):
@@ -16,13 +20,12 @@ def encode(filename):
 
     code = huffman_code(Counter(plain))
     with open(filename + '.huff', 'wb') as fo:
+        fo.write(struct.pack("<H", len(code)))
         for sym in sorted(code):
-            fo.write(b'%02x %s\n' % (sym, code[sym].to01().encode()))
+            fo.write(bytes([sym]) + vlf.encode(code[sym]))
         a = bitarray(endian='little')
         a.encode(code, plain)
-        # write unused bits
-        fo.write(b'unused %d\n' % a.buffer_info()[3])
-        a.tofile(fo)
+        fo.write(serialize(a))
     print('Bits: %d / %d' % (len(a), 8 * len(plain)))
     print('Ratio =%6.2f%%' % (100.0 * a.buffer_info()[1] / len(plain)))
 
@@ -32,19 +35,12 @@ def decode(filename):
     code = {}
 
     with open(filename, 'rb') as fi:
-        while 1:
-            line = fi.readline()
-            sym, b = line.split()
-            if sym == b'unused':
-                u = int(b)
-                break
-            i = int(sym, 16)
-            code[i] = bitarray(b.decode())
-        a = bitarray(endian='little')
-        a.fromfile(fi)
-
-    if u:
-        del a[-u:]
+        stream = iter(fi.read())
+    code_size = struct.unpack("<H", bytes(islice(stream, 2)))[0]
+    for _ in range(code_size):
+        sym = next(stream)
+        code[sym] = vlf.decode(stream)
+    a = deserialize(bytes(stream))
 
     with open(filename[:-5] + '.out', 'wb') as fo:
         fo.write(bytearray(a.iterdecode(code)))
