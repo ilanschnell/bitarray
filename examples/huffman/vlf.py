@@ -1,11 +1,11 @@
 # variable length format
 from bitarray import bitarray, get_default_endian
-from bitarray.util import make_endian
+
 
 # 1xxx0000 10000000 00000000
 
 def decode(stream, endian=None):
-    a = bitarray(endian='big')
+    a = bitarray(0, 'big')
     b = next(stream)
     unused = (b & 0x7f) >> 4
     assert 0 <= unused < 7
@@ -17,12 +17,14 @@ def decode(stream, endian=None):
         del a[-8:-7]
     if unused:
         del a[-unused:]
-    return make_endian(a, get_default_endian() if endian is None else endian)
+    if endian is None:
+        endian = get_default_endian()
+    return a if endian == 'big' else bitarray(a, 'little')
 
 
 def encode(a):
-    n = 1 + ((len(a) + 3 - 1) // 7)
-    m = 7 * n - 3
+    n = 1 + ((len(a) + 3 - 1) // 7)  # number of resulting bytes
+    m = 7 * n - 3                    # number of bits resulting bytes can hold
     unused = m - len(a)
     assert 0 <= unused < 7
     res = bitarray(0, 'big')
@@ -32,10 +34,9 @@ def encode(a):
     res.extend(a[:4])
     i = 4
     while i < len(a):
-        res.append(i + 7 < m)
+        res.append(i + 7 < m)   # leading bit
         res.extend(a[i:i + 7])
         i += 7
-    assert 8 * (n - 1) < len(res) <= 8 * n
     return res.tobytes()
 
 # ---------------------------------------------------------------------------
@@ -52,6 +53,7 @@ class VLFTests(unittest.TestCase):
                 (b'\x40', ''),
                 (b'\x30', '0'),
                 (b'\x38', '1'),
+                (b'\x00', '0000'),
                 (b'\x01', '0001'),
                 (b'\xe0\x40', '0000 1'),
                 (b'\x90\x02', '0000 000001'),
@@ -59,16 +61,16 @@ class VLFTests(unittest.TestCase):
                 (b'\x88\x80\x04', '1000 0000000 0000100'),
                 (b'\xe8\x80\x84\x40', '1000 0000000 0000100 1'),
         ]:
-            a = decode(iter(s))
-            self.assertEqual(a, bitarray(bits))
-            t = encode(a)
-            self.assertEqual(t, s)
+            a = bitarray(bits)
+            self.assertEqual(encode(a), s)
+            self.assertEqual(decode(iter(s)), a)
 
     def test_random(self):
         for endian in 'big', 'little':
             for n in range(1000):
                 a = urandom(n, endian=endian)
                 s = encode(a)
+                self.assertEqual(len(s), 1 + ((len(a) + 3 - 1) // 7))
                 b = decode(iter(s), endian)
                 self.assertEqual(b, a)
                 self.assertEqual(b.endian(), endian)
