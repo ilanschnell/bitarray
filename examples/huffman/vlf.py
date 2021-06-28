@@ -43,11 +43,11 @@ def decode(stream, endian=None):
 def encode(a):
     n = (len(a) + 9) // 7  # number of resulting bytes
     m = 7 * n - 3          # number of bits resulting bytes can hold
-    unused = m - len(a)
+    unused = m - len(a)    # number of pad bits
     assert 0 <= unused < 7
     res = bitarray(0, 'big')
-    res.append(len(a) > 4)
-    for x in 4, 2, 1:
+    res.append(len(a) > 4)      # leading bit
+    for x in 4, 2, 1:           # encode number of pad bits
         res.append(bool(x & unused))
     res.extend(a[:4])
     for i in range(4, len(a), 7):
