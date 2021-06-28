@@ -25,7 +25,8 @@ def decode(stream, endian=None):
     a = bitarray(0, 'big')
     b = next(stream)
     unused = (b & 0x7f) >> 4
-    assert 0 <= unused < 7
+    if unused >= 7 or (b & 0x80 == 0 and unused > 4):
+        raise ValueError("Invalid header byte: 0x%02x" % b)
     a.frombytes(bytes([b]))
     del a[:4]
     while b & 0x80:
@@ -83,7 +84,7 @@ class VLFTests(unittest.TestCase):
             self.assertEqual(decode(iter(s)), a)
 
     def test_ambiguity(self):
-        for s in b'\x40', b'\x4f', b'\x50', b'\x6f', b'\x45\xff':
+        for s in b'\x40', b'\x4f', b'\x45\xff':
             self.assertEqual(decode(iter(s)), bitarray())
         for s in b'\x1e', b'\x1f':
             self.assertEqual(decode(iter(s)), bitarray('111'))
@@ -94,8 +95,10 @@ class VLFTests(unittest.TestCase):
             self.assertEqual(decode(stream), bitarray(bits))
 
     def test_decode_errors(self):
-        # number of padding bits can only be 0 .. 6
-        self.assertRaises(AssertionError, decode, iter(b'\x70'))
+        # invalid number of padding bits
+        self.assertRaises(ValueError, decode, iter(b'\xf0'))
+        for s in b'\x70', b'\x60', b'\x50':
+            self.assertRaises(ValueError, decode, iter(s))
         # high bit set, but no continuation
         for s in b'\x80', b'\x80\x80':
             self.assertRaises(StopIteration, decode, iter(s))
