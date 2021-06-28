@@ -1,6 +1,11 @@
 Change log
 ==========
 
+2021-XX-XX   2.1.4:
+
+* add `variable length bitarray format example <../examples/huffman/vlf.py>`__
+
+
 **2.1.3** (2021-06-15):
 
 * Fix building with MSVC / Bullseye, `#129 <https://github.com/ilanschnell/bitarray/issues/129>`__
