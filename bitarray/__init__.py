@@ -59,7 +59,7 @@ Return the number of bytes necessary to store n bits.
         raise TypeError("integer expected")
     if __n < 0:
         raise ValueError("non-negative integer expected")
-    return 0 if __n == 0 else ((__n - 1) // 8 + 1)
+    return (__n + 7) // 8
 
 
 def test(verbosity=1, repeat=1):

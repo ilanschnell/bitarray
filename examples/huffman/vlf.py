@@ -41,8 +41,8 @@ def decode(stream, endian=None):
 
 
 def encode(a):
-    n = 1 + ((len(a) + 3 - 1) // 7)  # number of resulting bytes
-    m = 7 * n - 3                    # number of bits resulting bytes can hold
+    n = (len(a) + 3 + 6) // 7  # number of resulting bytes
+    m = 7 * n - 3              # number of bits resulting bytes can hold
     unused = m - len(a)
     assert 0 <= unused < 7
     res = bitarray(0, 'big')
@@ -107,7 +107,7 @@ class VLFTests(unittest.TestCase):
         for n in range(500):
             a = urandom(n, endian='big')
             s = encode(a)
-            self.assertEqual(len(s), 1 + ((len(a) + 3 - 1) // 7))
+            self.assertEqual(len(s), (len(a) + 3 + 6) // 7)
             self.assertEqual(s, encode(bitarray(a, 'little')))
 
             for endian in 'big', 'little':
