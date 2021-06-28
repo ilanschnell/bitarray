@@ -41,8 +41,8 @@ def decode(stream, endian=None):
 
 
 def encode(a):
-    n = (len(a) + 3 + 6) // 7  # number of resulting bytes
-    m = 7 * n - 3              # number of bits resulting bytes can hold
+    n = (len(a) + 9) // 7  # number of resulting bytes
+    m = 7 * n - 3          # number of bits resulting bytes can hold
     unused = m - len(a)
     assert 0 <= unused < 7
     res = bitarray(0, 'big')

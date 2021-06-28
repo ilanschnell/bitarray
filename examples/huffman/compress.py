@@ -33,7 +33,7 @@ def decode_code(stream):
 
 def encode(filename):
     with open(filename, 'rb') as fi:
-        plain = bytearray(fi.read())
+        plain = fi.read()
 
     code = huffman_code(Counter(plain))
     with open(filename + '.huff', 'wb') as fo:
