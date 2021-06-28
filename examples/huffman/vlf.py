@@ -50,11 +50,9 @@ def encode(a):
     for x in 4, 2, 1:
         res.append(bool(x & unused))
     res.extend(a[:4])
-    i = 4
-    while i < len(a):
+    for i in range(4, len(a), 7):
         res.append(i + 7 < m)   # leading bit
         res.extend(a[i:i + 7])
-        i += 7
     return res.tobytes()
 
 # ---------------------------------------------------------------------------
