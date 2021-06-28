@@ -1,6 +1,6 @@
 """
-Variable length format
-======================
+Variable length bitarray format
+===============================
 
 The variable length format implemented in this module is similar to LEB128.
 It is used to store arbitrarily large bitarrays in a small number of bytes.
