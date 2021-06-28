@@ -1,10 +1,29 @@
-# variable length format
+"""
+Variable length format
+======================
+
+The variable length format implemented in this module is similar to LEB128.
+It is used to store arbitrarily large bitarrays in a small number of bytes.
+A single byte can store bitarrays up to 4 element, every additional byte
+stores up to 7 more elements.
+
+The most significant bit of each byte indicated whether more bytes follow.
+In addition, the first byte contains 3 bits which indicate the number of
+unused bits at the end of the stream.  Here is an example:
+
+     010101001110011          raw bitarray (length 15)
+     0101  0100111  0011      grouped (4, 7, 7, ...)
+     0101  0100111  0011000   pad last group with zeros
+  0110101  0100111  0011000   add number of pad bits (3) add to front (011)
+ 10110101 10100111 00011000   add high bits
+     0xb5     0xa7     0x18   in hexadecimal - output stream
+"""
 from bitarray import bitarray, get_default_endian
 
 
-# 1xxx0000 10000000 00000000
-
 def decode(stream, endian=None):
+    if isinstance(stream, bytes):
+        stream = iter(stream)
     a = bitarray(0, 'big')
     b = next(stream)
     unused = (b & 0x7f) >> 4
@@ -63,7 +82,7 @@ class VLFTests(unittest.TestCase):
         ]:
             a = bitarray(bits)
             self.assertEqual(encode(a), s)
-            self.assertEqual(decode(iter(s)), a)
+            self.assertEqual(decode(s), a)
 
     def test_random(self):
         for endian in 'big', 'little':

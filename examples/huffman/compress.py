@@ -14,15 +14,30 @@ from bitarray.util import serialize, deserialize, huffman_code
 import vlf
 
 
+def encode_code(code):
+    res = bytearray(struct.pack("<H", len(code)))
+    for sym in sorted(code):
+        res.append(sym)
+        res.extend(vlf.encode(code[sym]))
+    return res
+
+
+def decode_code(stream):
+    size = struct.unpack("<H", bytes(islice(stream, 2)))[0]
+    code = {}
+    for _ in range(size):
+        sym = next(stream)
+        code[sym] = vlf.decode(stream)
+    return code
+
+
 def encode(filename):
     with open(filename, 'rb') as fi:
         plain = bytearray(fi.read())
 
     code = huffman_code(Counter(plain))
     with open(filename + '.huff', 'wb') as fo:
-        fo.write(struct.pack("<H", len(code)))
-        for sym in sorted(code):
-            fo.write(bytes([sym]) + vlf.encode(code[sym]))
+        fo.write(encode_code(code))
         a = bitarray(endian='little')
         a.encode(code, plain)
         fo.write(serialize(a))
@@ -32,14 +47,10 @@ def encode(filename):
 
 def decode(filename):
     assert filename.endswith('.huff')
-    code = {}
 
     with open(filename, 'rb') as fi:
         stream = iter(fi.read())
-    code_size = struct.unpack("<H", bytes(islice(stream, 2)))[0]
-    for _ in range(code_size):
-        sym = next(stream)
-        code[sym] = vlf.decode(stream)
+    code = decode_code(stream)
     a = deserialize(bytes(stream))
 
     with open(filename[:-5] + '.out', 'wb') as fo:
