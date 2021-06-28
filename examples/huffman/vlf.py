@@ -9,7 +9,7 @@ stores up to 7 more elements.
 
 The most significant bit of each byte indicated whether more bytes follow.
 In addition, the first byte contains 3 bits which indicate the number of
-unused bits at the end of the stream.  Here is an example:
+padding bits at the end of the stream.  Here is an example:
 
      010101001110011          raw bitarray (length 15)
      0101  0100111  0011      grouped (4, 7, 7, ...)
@@ -22,8 +22,6 @@ from bitarray import bitarray, get_default_endian
 
 
 def decode(stream, endian=None):
-    if isinstance(stream, bytes):
-        stream = iter(stream)
     a = bitarray(0, 'big')
     b = next(stream)
     unused = (b & 0x7f) >> 4
@@ -82,14 +80,34 @@ class VLFTests(unittest.TestCase):
         ]:
             a = bitarray(bits)
             self.assertEqual(encode(a), s)
-            self.assertEqual(decode(s), a)
+            self.assertEqual(decode(iter(s)), a)
+
+    def test_ambiguity(self):
+        for s in b'\x40', b'\x4f', b'\x50', b'\x6f', b'\x45\xff':
+            self.assertEqual(decode(iter(s)), bitarray())
+        for s in b'\x1e', b'\x1f':
+            self.assertEqual(decode(iter(s)), bitarray('111'))
+
+    def test_multiple(self):
+        stream = iter(b'\x30\x38\x40\x2c\xe0\x40')
+        for bits in '0', '1', '', '11', '00001':
+            self.assertEqual(decode(stream), bitarray(bits))
+
+    def test_decode_errors(self):
+        # number of padding bits can only be 0 .. 6
+        self.assertRaises(AssertionError, decode, iter(b'\x70'))
+        # high bit set, but no continuation
+        for s in b'\x80', b'\x80\x80':
+            self.assertRaises(StopIteration, decode, iter(s))
 
     def test_random(self):
-        for endian in 'big', 'little':
-            for n in range(1000):
-                a = urandom(n, endian=endian)
-                s = encode(a)
-                self.assertEqual(len(s), 1 + ((len(a) + 3 - 1) // 7))
+        for n in range(500):
+            a = urandom(n, endian='big')
+            s = encode(a)
+            self.assertEqual(len(s), 1 + ((len(a) + 3 - 1) // 7))
+            self.assertEqual(s, encode(bitarray(a, 'little')))
+
+            for endian in 'big', 'little':
                 b = decode(iter(s), endian)
                 self.assertEqual(b, a)
                 self.assertEqual(b.endian(), endian)
