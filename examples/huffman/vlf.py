@@ -24,7 +24,7 @@ from bitarray import bitarray, get_default_endian
 def decode(stream, endian=None):
     a = bitarray(0, 'big')
     b = next(stream)
-    unused = (b & 0x7f) >> 4
+    unused = (b & 0x70) >> 4
     if unused >= 7 or (b & 0x80 == 0 and unused > 4):
         raise ValueError("Invalid header byte: 0x%02x" % b)
     a.frombytes(bytes([b]))
