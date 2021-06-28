@@ -75,9 +75,9 @@ class VLFTests(unittest.TestCase):
                 (b'\x01', '0001'),
                 (b'\xe0\x40', '0000 1'),
                 (b'\x90\x02', '0000 000001'),
-                (b'\xa8\x80\x04', '1000 0000000 00001'),
-                (b'\x88\x80\x04', '1000 0000000 0000100'),
+                (b'\xb5\xa7\x18', '0101 0100111 0011'),  # module docstring
                 (b'\xe8\x80\x84\x40', '1000 0000000 0000100 1'),
+                (b'\x80\x80\x80\x80\x00', (4 + 7 * 4) * '0'),
         ]:
             a = bitarray(bits)
             self.assertEqual(encode(a), s)
