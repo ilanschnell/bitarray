@@ -57,6 +57,7 @@ def encode(a):
 
 # ---------------------------------------------------------------------------
 
+from random import randint
 import unittest
 
 from bitarray.util import urandom
@@ -91,6 +92,11 @@ class VLFTests(unittest.TestCase):
         stream = iter(b'\x30\x38\x40\x2c\xe0\x40')
         for bits in '0', '1', '', '11', '00001':
             self.assertEqual(decode(stream), bitarray(bits))
+
+        arrays = [urandom(randint(0, 30)) for _ in range(1000)]
+        stream = iter(b''.join(encode(a) for a in arrays))
+        for a in arrays:
+            self.assertEqual(decode(stream), a)
 
     def test_decode_errors(self):
         # invalid number of padding bits
