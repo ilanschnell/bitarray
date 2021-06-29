@@ -9,6 +9,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
+#include "pythoncapi_compat.h"
 #include "bitarray.h"
 
 #define IS_LE(a)  ((a)->endian == ENDIAN_LITTLE)
@@ -612,6 +613,73 @@ base2ba(PyObject *module, PyObject *args)
     Py_RETURN_NONE;
 }
 
+
+static PyObject *
+vl_decode(PyObject *module, PyObject *args)
+{
+    PyObject *iter, *item, *res, *a;
+    Py_ssize_t u, i = 0, j, k;
+    int kk = 0x80;
+    char *str;
+
+    if (!PyArg_ParseTuple(args, "OO", &iter, &a, &str))
+        return NULL;
+    if (!PyIter_Check(iter))
+        return PyErr_Format(PyExc_TypeError,
+                            "'%s' object is iterable", Py_TYPE(iter)->tp_name);
+    if (ensure_bitarray(a) < 0)
+        return NULL;
+
+#define aa  ((bitarrayobject *) a)
+    while ((item = PyIter_Next(iter))) {
+        k = PyNumber_AsSsize_t(item, NULL);
+        Py_DECREF(item);
+        if (k == -1 && PyErr_Occurred())
+            return NULL;
+        if (k < 0 || k > 255)
+            return PyErr_Format(PyExc_TypeError,
+                                "int must be in range(0, 256), got %zd", k);
+        kk = (int) k;
+        if (i == 0) {
+            u = (kk & 0x70) >> 4;
+            if (u >= 7 || ((kk & 0x80) == 0 && u > 4))
+                return PyErr_Format(PyExc_ValueError,
+                                    "invalid header byte: 0x%02x", kk);
+            for (j = 0; j < 4; j++)
+                setbit(aa, i++, (1 << (3 - j)) & kk);
+        }
+        else {
+            for (j = 0; j < 7; j++)
+                setbit(aa, i++, (1 << (6 - j)) & kk);
+        }
+        if ((kk & 0x80) == 0)
+            break;
+
+        if (i + 7 > BITS(aa->allocated)) {
+            aa->nbits = i;
+            Py_SET_SIZE(aa, BYTES(aa->nbits));
+            res = PyObject_CallMethod(a, "extend", "O", a);
+            if (res == NULL)
+                return NULL;
+            Py_DECREF(res);  /* drop extend result */
+        }
+    }
+    aa->nbits = i - u;
+    Py_SET_SIZE(aa, BYTES(aa->nbits));
+
+#undef aa
+    if (PyErr_Occurred())
+        return NULL;
+
+    if (kk & 0x80) {
+        PyErr_SetString(PyExc_StopIteration, "");
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
 static PyObject *
 vl_encode(PyObject *module, PyObject *a)
 {
@@ -676,6 +744,7 @@ static PyMethodDef module_functions[] = {
     {"ba2base",   (PyCFunction) ba2base,   METH_VARARGS, ba2base_doc},
     {"_base2ba",  (PyCFunction) base2ba,   METH_VARARGS, 0},
     {"vl_encode", (PyCFunction) vl_encode, METH_O,       0},
+    {"_vl_decode",(PyCFunction) vl_decode, METH_VARARGS, 0},
     {"_set_bato", (PyCFunction) set_bato,  METH_O,       0},
     {NULL,        NULL}  /* sentinel */
 };
