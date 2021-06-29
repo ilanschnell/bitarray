@@ -612,6 +612,42 @@ base2ba(PyObject *module, PyObject *args)
     Py_RETURN_NONE;
 }
 
+static PyObject *
+vl_encode(PyObject *module, PyObject *a)
+{
+    PyObject *result;
+    Py_ssize_t n, m, p, i, j = 0;
+    char *data;
+
+    if (ensure_bitarray(a) < 0)
+        return NULL;
+
+#define aa  ((bitarrayobject *) a)
+    n = (aa->nbits + 9) / 7;
+    m = 7 * n - 3;
+    p = m - aa->nbits;
+    assert(0 <= p && p < 7);
+
+    if ((data = (char *) PyMem_Malloc(n)) == NULL)
+        return PyErr_NoMemory();
+
+    data[0] = aa->nbits > 4 ? 0x80 : 0x00;
+    data[0] |= p << 4;
+    for (i = 0; i < 4 && i < aa->nbits; i++)
+        data[0] |= GETBIT(aa, i) << (3 - i);
+
+    for (i = 4; i < aa->nbits; i++) {
+        if ((i - 4) % 7 == 0)
+            data[++j] = i + 7 < m ? 0x80 : 0x00;
+        data[j] |= GETBIT(aa, i) << (6 - (i - 4) % 7);
+    }
+#undef aa
+
+    result = PyBytes_FromStringAndSize(data, n);
+    PyMem_Free((void *) data);
+    return result;
+}
+
 /* --------------------------------------------------------------------- */
 
 /* Set bitarray_type_obj (bato).  This function must be called before any
@@ -636,6 +672,7 @@ static PyMethodDef module_functions[] = {
     {"_hex2ba",   (PyCFunction) hex2ba,    METH_VARARGS, 0},
     {"ba2base",   (PyCFunction) ba2base,   METH_VARARGS, ba2base_doc},
     {"_base2ba",  (PyCFunction) base2ba,   METH_VARARGS, 0},
+    {"vl_encode", (PyCFunction) vl_encode, METH_O,       0},
     {"_set_bato", (PyCFunction) set_bato,  METH_O,       0},
     {NULL,        NULL}  /* sentinel */
 };
