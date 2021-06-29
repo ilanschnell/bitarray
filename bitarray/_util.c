@@ -618,11 +618,10 @@ static PyObject *
 vl_decode(PyObject *module, PyObject *args)
 {
     PyObject *iter, *item, *res, *a;
-    Py_ssize_t u, i = 0, j, k;
-    int kk = 0x80;
-    char *str;
+    Py_ssize_t u, i = 0, j;
+    unsigned char k = 0x80;
 
-    if (!PyArg_ParseTuple(args, "OO", &iter, &a, &str))
+    if (!PyArg_ParseTuple(args, "OO", &iter, &a))
         return NULL;
     if (!PyIter_Check(iter))
         return PyErr_Format(PyExc_TypeError,
@@ -632,27 +631,32 @@ vl_decode(PyObject *module, PyObject *args)
 
 #define aa  ((bitarrayobject *) a)
     while ((item = PyIter_Next(iter))) {
-        k = PyNumber_AsSsize_t(item, NULL);
+#ifdef IS_PY3K
+        if (!PyLong_Check(item))
+            return PyErr_Format(PyExc_TypeError, "int expected, got %s",
+                                Py_TYPE(iter)->tp_name);
+        k = (unsigned char) PyLong_AsLong(item);
+#else
+        if (!PyBytes_Check(item))
+            return PyErr_Format(PyExc_TypeError, "bytes expected, got %s",
+                                Py_TYPE(iter)->tp_name);
+        k = (unsigned char) *PyBytes_AS_STRING(item);
+#endif
         Py_DECREF(item);
-        if (k == -1 && PyErr_Occurred())
-            return NULL;
-        if (k < 0 || k > 255)
-            return PyErr_Format(PyExc_TypeError,
-                                "int must be in range(0, 256), got %zd", k);
-        kk = (int) k;
+
         if (i == 0) {
-            u = (kk & 0x70) >> 4;
-            if (u >= 7 || ((kk & 0x80) == 0 && u > 4))
+            u = (k & 0x70) >> 4;
+            if (u >= 7 || ((k & 0x80) == 0 && u > 4))
                 return PyErr_Format(PyExc_ValueError,
-                                    "invalid header byte: 0x%02x", kk);
+                                    "invalid header byte: 0x%02x", k);
             for (j = 0; j < 4; j++)
-                setbit(aa, i++, (1 << (3 - j)) & kk);
+                setbit(aa, i++, (1 << (3 - j)) & k);
         }
         else {
             for (j = 0; j < 7; j++)
-                setbit(aa, i++, (1 << (6 - j)) & kk);
+                setbit(aa, i++, (1 << (6 - j)) & k);
         }
-        if ((kk & 0x80) == 0)
+        if ((k & 0x80) == 0)
             break;
 
         if (i + 7 > BITS(aa->allocated)) {
@@ -671,7 +675,7 @@ vl_decode(PyObject *module, PyObject *args)
     if (PyErr_Occurred())
         return NULL;
 
-    if (kk & 0x80) {
+    if (k & 0x80) {
         PyErr_SetString(PyExc_StopIteration, "");
         return NULL;
     }
