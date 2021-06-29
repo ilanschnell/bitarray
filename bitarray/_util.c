@@ -623,16 +623,16 @@ vl_encode(PyObject *module, PyObject *a)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
-    n = (aa->nbits + 9) / 7;
-    m = 7 * n - 3;
-    p = m - aa->nbits;
+    n = (aa->nbits + 9) / 7;    /* number of resulting bytes */
+    m = 7 * n - 3;              /* number of bits resulting bytes can hold */
+    p = m - aa->nbits;          /* number of pad bits */
     assert(0 <= p && p < 7);
 
     if ((data = (char *) PyMem_Malloc(n)) == NULL)
         return PyErr_NoMemory();
 
-    data[0] = aa->nbits > 4 ? 0x80 : 0x00;
-    data[0] |= p << 4;
+    data[0] = aa->nbits > 4 ? 0x80 : 0x00;     /* leading bit */
+    data[0] |= p << 4;                         /* encode number of pad bits */
     for (i = 0; i < 4 && i < aa->nbits; i++)
         data[0] |= GETBIT(aa, i) << (3 - i);
 
@@ -640,7 +640,7 @@ vl_encode(PyObject *module, PyObject *a)
         k = (i - 4) % 7;
         if (k == 0) {
             j++;
-            data[j] = i + 7 < m ? 0x80 : 0x00;
+            data[j] = i + 7 < m ? 0x80 : 0x00;  /* leading bit */
         }
         data[j] |= GETBIT(aa, i) << (6 - k);
     }
