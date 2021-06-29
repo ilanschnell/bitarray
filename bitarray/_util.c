@@ -523,7 +523,7 @@ ba2base(PyObject *module, PyObject *args)
     char *str;
     int n, m, x, k, le;
 
-    if (!PyArg_ParseTuple(args, "iO:ba2ascii", &n, &a))
+    if (!PyArg_ParseTuple(args, "iO:ba2base", &n, &a))
         return NULL;
     if (ensure_bitarray(a) < 0)
         return NULL;
