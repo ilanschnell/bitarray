@@ -616,7 +616,7 @@ static PyObject *
 vl_encode(PyObject *module, PyObject *a)
 {
     PyObject *result;
-    Py_ssize_t n, m, p, i, j = 0;
+    Py_ssize_t n, m, p, i, j, k;
     char *data;
 
     if (ensure_bitarray(a) < 0)
@@ -636,10 +636,13 @@ vl_encode(PyObject *module, PyObject *a)
     for (i = 0; i < 4 && i < aa->nbits; i++)
         data[0] |= GETBIT(aa, i) << (3 - i);
 
-    for (i = 4; i < aa->nbits; i++) {
-        if ((i - 4) % 7 == 0)
-            data[++j] = i + 7 < m ? 0x80 : 0x00;
-        data[j] |= GETBIT(aa, i) << (6 - (i - 4) % 7);
+    for (j = 0, i = 4; i < aa->nbits; i++) {
+        k = (i - 4) % 7;
+        if (k == 0) {
+            j++;
+            data[j] = i + 7 < m ? 0x80 : 0x00;
+        }
+        data[j] |= GETBIT(aa, i) << (6 - k);
     }
 #undef aa
 
