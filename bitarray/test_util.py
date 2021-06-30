@@ -898,7 +898,7 @@ class VLFTests(unittest.TestCase):
             self.assertEqual(vl_decode(s), a)
 
     def test_follow(self):
-        for s, bits in [(b'\x40A', ''),
+        for s, bits in [(b'\x40ABC', ''),
                         (b'\xe0\x40A', '00001')]:
             stream = iter(s)
             self.assertEqual(vl_decode(stream), bitarray(bits))
@@ -911,9 +911,9 @@ class VLFTests(unittest.TestCase):
         for s in b'\x1e', b'\x1f':
             self.assertEqual(vl_decode(iter(s)), bitarray('111'))
 
-    def test_multiple(self):
-        stream = iter(b'\x30\x38\x40\x2c\xe0\x40')
-        for bits in '0', '1', '', '11', '00001':
+    def test_stream(self):
+        stream = iter(b'\x40\x30\x38\x40\x2c\xe0\x40')
+        for bits in '', '0', '1', '', '11', '00001':
             self.assertEqual(vl_decode(stream), bitarray(bits))
 
         arrays = [urandom(randint(0, 30)) for _ in range(1000)]

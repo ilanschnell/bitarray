@@ -624,8 +624,8 @@ vl_decode(PyObject *module, PyObject *args)
     if (!PyArg_ParseTuple(args, "OO", &iter, &a))
         return NULL;
     if (!PyIter_Check(iter))
-        return PyErr_Format(PyExc_TypeError,
-                            "'%s' object is iterable", Py_TYPE(iter)->tp_name);
+        return PyErr_Format(PyExc_TypeError, "not an iterator object: %s",
+                            Py_TYPE(iter)->tp_name);
     if (ensure_bitarray(a) < 0)
         return NULL;
 
@@ -662,9 +662,7 @@ vl_decode(PyObject *module, PyObject *args)
         if (i + 7 >= BITS(Py_SIZE(aa))) {
             aa->nbits = i;
             Py_SET_SIZE(aa, BYTES(aa->nbits));
-            //printf("%zd (%zd)->", Py_SIZE(aa), aa->allocated);
             res = PyObject_CallMethod(a, "extend", "O", a);
-            //printf(" %zd (%zd)\n", Py_SIZE(aa), aa->allocated);
             if (res == NULL)
                 return NULL;
             Py_DECREF(res);  /* drop extend result */
