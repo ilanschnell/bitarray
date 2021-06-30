@@ -965,8 +965,9 @@ class VLFTests(unittest.TestCase, Util):
     def test_invalid_stream(self):
         if sys.version_info[0] == 2:
             return
-        s = iter(1000 * (3 * [128] + [None]) + [0x38])
-        for _ in range(1000):
+        N = 100
+        s = iter(N * (3 * [0x80] + [None]) + [0x38])
+        for _ in range(N):
             try:
                 vl_decode(s)
             except TypeError:

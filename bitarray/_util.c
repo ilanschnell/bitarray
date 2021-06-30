@@ -620,7 +620,7 @@ vl_decode(PyObject *module, PyObject *args)
     PyObject *iter, *item, *res, *a;
     Py_ssize_t padding, k;
     Py_ssize_t i = 0;           /* bit counter */
-    unsigned char b = 0x80;
+    unsigned char b = 0x80;     /* empty stream will raise StopIteration */
 
     if (!PyArg_ParseTuple(args, "OO", &iter, &a))
         return NULL;
@@ -637,24 +637,18 @@ vl_decode(PyObject *module, PyObject *args)
     }
     while ((item = PyIter_Next(iter))) {
 #ifdef IS_PY3K
-        if (!PyLong_Check(item)) {
-            PyErr_Format(PyExc_TypeError,
-                         "int iterator expected, got '%s' element",
-                         Py_TYPE(item)->tp_name);
-            Py_DECREF(item);
-            return NULL;
-        }
-        b = (unsigned char) PyLong_AsLong(item);
+        if (PyLong_Check(item))
+            b = (unsigned char) PyLong_AsLong(item);
 #else
-        if (!PyBytes_Check(item)) {
-            PyErr_Format(PyExc_TypeError,
-                         "bytes iterator expected, got '%s' element",
-                         Py_TYPE(item)->tp_name);
+        if (PyBytes_Check(item))
+            b = (unsigned char) *PyBytes_AS_STRING(item);
+#endif
+        else {
+            PyErr_Format(PyExc_TypeError, "int (byte) iterator expected, "
+                         "got '%s' element", Py_TYPE(item)->tp_name);
             Py_DECREF(item);
             return NULL;
         }
-        b = (unsigned char) *PyBytes_AS_STRING(item);
-#endif
         Py_DECREF(item);
 
         if (i == 0) {
@@ -686,7 +680,7 @@ vl_decode(PyObject *module, PyObject *args)
     Py_SET_SIZE(aa, BYTES(aa->nbits));
 
 #undef aa
-    if (PyErr_Occurred())
+    if (PyErr_Occurred())       /* from PyIter_Next() */
         return NULL;
 
     if (b & 0x80) {
