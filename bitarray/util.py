@@ -22,7 +22,7 @@ __all__ = [
     'zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip', 'count_n',
     'parity', 'count_and', 'count_or', 'count_xor', 'subset',
     'ba2hex', 'hex2ba', 'ba2base', 'base2ba', 'ba2int', 'int2ba',
-    'serialize', 'deserialize', 'huffman_code',
+    'serialize', 'deserialize', 'vl_encode', 'vl_decode', 'huffman_code',
 ]
 
 
@@ -327,6 +327,13 @@ Return a bitarray given the bytes representation returned by `serialize()`.
 
 
 def vl_decode(__stream, endian=None):
+    """vl_decode(stream, /, endian=None) -> bitarray
+
+Decode binary stream (an integer iterator, or bytes object), and return
+the decoded bitarray.  Raises `StopIteration` when no end marker-byte is
+found.
+Use `vl_encode()` for encoding.
+"""
     if isinstance(__stream, bytes):
         __stream = iter(__stream)
 

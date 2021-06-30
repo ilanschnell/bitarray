@@ -364,6 +364,19 @@ Functions defined in `bitarray.util` module:
    Return a bitarray given the bytes representation returned by ``serialize()``.
 
 
+``vl_encode(bitarray, /)`` -> bytes
+   Return variable length binary representation of bitarray.
+   This representation is useful for efficiently storing small bitarray
+   in a binary stream.  Use ``vl_decode`` for decoding.
+
+
+``vl_decode(stream, /, endian=None)`` -> bitarray
+   Decode binary stream (an integer iterator, or bytes object), and return
+   the decoded bitarray.  Raises ``StopIteration`` when no end marker-byte is
+   found.
+   Use ``vl_encode()`` for encoding.
+
+
 ``huffman_code(dict, /, endian=None)`` -> dict
    Given a frequency map, a dictionary mapping symbols to their frequency,
    calculate the Huffman code, i.e. a dict mapping those symbols to

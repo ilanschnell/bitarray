@@ -734,6 +734,13 @@ vl_encode(PyObject *module, PyObject *a)
     return result;
 }
 
+PyDoc_STRVAR(vl_encode_doc,
+"vl_encode(bitarray, /) -> bytes\n\
+\n\
+Return variable length binary representation of bitarray.\n\
+This representation is useful for efficiently storing small bitarray\n\
+in a binary stream.  Use `vl_decode` for decoding.");
+
 /* --------------------------------------------------------------------- */
 
 /* Set bitarray_type_obj (bato).  This function must be called before any
@@ -758,7 +765,7 @@ static PyMethodDef module_functions[] = {
     {"_hex2ba",   (PyCFunction) hex2ba,    METH_VARARGS, 0},
     {"ba2base",   (PyCFunction) ba2base,   METH_VARARGS, ba2base_doc},
     {"_base2ba",  (PyCFunction) base2ba,   METH_VARARGS, 0},
-    {"vl_encode", (PyCFunction) vl_encode, METH_O,       0},
+    {"vl_encode", (PyCFunction) vl_encode, METH_O,       vl_encode_doc},
     {"_vl_decode",(PyCFunction) vl_decode, METH_VARARGS, 0},
     {"_set_bato", (PyCFunction) set_bato,  METH_O,       0},
     {NULL,        NULL}  /* sentinel */
