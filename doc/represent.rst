@@ -113,8 +113,7 @@ Base 2, 4, 8, 16, 32 and 64 representation
 
 The utility function ``ba2base()`` allows representing bitarrays by
 base ``n``, with possible bases 2, 4, 8, 16, 32 and 64.
-The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.
-Here is an example:
+The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively:
 
 .. code-block:: python
 
@@ -154,4 +153,41 @@ is "self terminating" (in the same way the C strings are NUL terminated).
 That is, when a bitarray of unknown length is encountered in a stream of
 binary data, the format lets you know when the end of a bitarray is reached.
 Such a "variable length format" (most memory efficient for small bitarrays)
-is implemented in ...
+is implemented in ``vl_encode()`` and ``vl_decode()``:
+
+.. code-block:: python
+
+    >>> from bitarray.util import vl_encode, vl_decode
+    >>> a = bitarray('0110001111')
+    >>> b = bitarray('001')
+    >>> data = vl_encode(a) + vl_encode(b) + b'other stuff'
+    >>> data
+    b'\x96\x1e\x12other stuff'
+    >>> stream = iter(data)
+    >>> vl_decode(stream)
+    bitarray('0110001111')
+    >>> vl_decode(stream)
+    bitarray('001')
+    >>> bytes(stream)
+    b'other stuff'
+
+The variable length format is similar to LEB128.  A single byte can store
+bitarrays up to 4 element, every additional byte stores up to 7 more elements.
+The most significant bit of each byte indicated whether more bytes follow.
+In addition, the first byte contains 3 bits which indicate the number of
+padding bits at the end of the stream.  Here is an example of
+encoding ``bitarray('010101001110011')``:
+
+.. code-block::
+
+        010101001110011          raw bitarray (length 15)
+        0101  0100111  0011      grouped (4, 7, 7, ...)
+        0101  0100111  0011000   pad last group with zeros
+     0110101  0100111  0011000   add number of pad bits (3) add to front (011)
+    10110101 10100111 00011000   add high bits
+        0xb5     0xa7     0x18   in hexadecimal - output stream
+
+.. code-block:: python
+
+   >>> vl_encode(bitarray('010101001110011'))
+   b'\xb5\xa7\x18'
