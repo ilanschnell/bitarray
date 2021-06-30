@@ -618,8 +618,9 @@ static PyObject *
 vl_decode(PyObject *module, PyObject *args)
 {
     PyObject *iter, *item, *res, *a;
-    Py_ssize_t p, j, i = 0;
-    unsigned char k = 0x80;
+    Py_ssize_t padding, k;
+    Py_ssize_t i = 0;           /* bit counter */
+    unsigned char b = 0x80;
 
     if (!PyArg_ParseTuple(args, "OO", &iter, &a))
         return NULL;
@@ -640,29 +641,29 @@ vl_decode(PyObject *module, PyObject *args)
             return PyErr_Format(PyExc_TypeError,
                                 "int iterator expected, got '%s' element",
                                 Py_TYPE(item)->tp_name);
-        k = (unsigned char) PyLong_AsLong(item);
+        b = (unsigned char) PyLong_AsLong(item);
 #else
         if (!PyBytes_Check(item))
             return PyErr_Format(PyExc_TypeError,
                                 "bytes iterator expected, got '%s' element",
                                 Py_TYPE(item)->tp_name);
-        k = (unsigned char) *PyBytes_AS_STRING(item);
+        b = (unsigned char) *PyBytes_AS_STRING(item);
 #endif
         Py_DECREF(item);
 
         if (i == 0) {
-            p = (k & 0x70) >> 4;
-            if (p >= 7 || ((k & 0x80) == 0 && p > 4))
+            padding = (b & 0x70) >> 4;
+            if (padding >= 7 || ((b & 0x80) == 0 && padding > 4))
                 return PyErr_Format(PyExc_ValueError,
-                                    "invalid header byte: 0x%02x", k);
-            for (j = 0; j < 4; j++)
-                setbit(aa, i++, (0x08 >> j) & k);
+                                    "invalid header byte: 0x%02x", b);
+            for (k = 0; k < 4; k++)
+                setbit(aa, i++, (0x08 >> k) & b);
         }
         else {
-            for (j = 0; j < 7; j++)
-                setbit(aa, i++, (0x40 >> j) & k);
+            for (k = 0; k < 7; k++)
+                setbit(aa, i++, (0x40 >> k) & b);
         }
-        if ((k & 0x80) == 0)
+        if ((b & 0x80) == 0)
             break;
 
         if (i + 7 >= BITS(Py_SIZE(aa))) {
@@ -675,14 +676,14 @@ vl_decode(PyObject *module, PyObject *args)
             Py_DECREF(res);  /* drop extend result */
         }
     }
-    aa->nbits = i - p;
+    aa->nbits = i - padding;
     Py_SET_SIZE(aa, BYTES(aa->nbits));
 
 #undef aa
     if (PyErr_Occurred())
         return NULL;
 
-    if (k & 0x80) {
+    if (b & 0x80) {
         PyErr_SetString(PyExc_StopIteration,
                         "non-terminating bytes in vl_decode()");
         return NULL;
@@ -696,7 +697,8 @@ static PyObject *
 vl_encode(PyObject *module, PyObject *a)
 {
     PyObject *result;
-    Py_ssize_t n, m, p, i, j, k;
+    Py_ssize_t padding, n, m, i, k;
+    Py_ssize_t j = 0;           /* byte conter */
     char *data;
 
     if (ensure_bitarray(a) < 0)
@@ -705,24 +707,23 @@ vl_encode(PyObject *module, PyObject *a)
 #define aa  ((bitarrayobject *) a)
     n = (aa->nbits + 9) / 7;    /* number of resulting bytes */
     m = 7 * n - 3;              /* number of bits resulting bytes can hold */
-    p = m - aa->nbits;          /* number of pad bits */
-    assert(0 <= p && p < 7);
+    padding = m - aa->nbits;    /* number of pad bits */
+    assert(0 <= padding && padding < 7);
 
     if ((data = (char *) PyMem_Malloc(n)) == NULL)
         return PyErr_NoMemory();
 
-    data[0] = aa->nbits > 4 ? 0x80 : 0x00;     /* leading bit */
-    data[0] |= p << 4;                         /* encode number of pad bits */
+    data[0] = aa->nbits > 4 ? 0x80 : 0x00;  /* leading bit */
+    data[0] |= padding << 4;                /* encode number of pad bits */
     for (i = 0; i < 4 && i < aa->nbits; i++)
         if (GETBIT(aa, i))
             data[0] |= 0x08 >> i;
 
-    for (j = 0, i = 4; i < aa->nbits; i++) {
+    for (i = 4; i < aa->nbits; i++) {
         k = (i - 4) % 7;
-        if (k == 0) {
-            j++;
-            data[j] = i + 7 < m ? 0x80 : 0x00;  /* leading bit */
-        }
+        if (k == 0)
+            data[++j] = i + 7 < m ? 0x80 : 0x00;  /* leading bit */
+
         if (GETBIT(aa, i))
             data[j] |= 0x40 >> k;
     }

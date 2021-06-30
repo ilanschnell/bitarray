@@ -879,7 +879,7 @@ tests.append(TestsBase)
 
 # ---------------------------------------------------------------------------
 
-class VLFTests(unittest.TestCase):
+class VLFTests(unittest.TestCase, Util):
 
     def test_explicit(self):
         for s, bits in [
@@ -891,13 +891,43 @@ class VLFTests(unittest.TestCase):
                 (b'\xe0\x40', '0000 1'),
                 (b'\x90\x02', '0000 000001'),
                 (b'\xb5\xa7\x18', '0101 0100111 0011'),
-                (b'\x80\x80\x80\x80\x00', (4 + 7 * 4) * '0'),
         ]:
             a = bitarray(bits)
             self.assertEqual(vl_encode(a), s)
             self.assertEqual(vl_decode(s), a)
 
-    def test_follow(self):
+    def test_zeros(self):
+        for n in range(500):
+            a = zeros(4 + n * 7)
+            s = n * b'\x80' + b'\x00'
+            self.assertEqual(vl_encode(a), s)
+            self.assertEqual(vl_decode(s), a)
+
+    def test_encode(self):
+        for endian in 'big', 'little':
+            s = vl_encode(bitarray('001101', endian))
+            self.assertIsInstance(s, bytes)
+            self.assertEqual(s, b'\xd3\x20')
+
+    def test_args_decode(self):
+        if sys.version_info[0] == 3:
+            self.assertRaises(TypeError, vl_decode, 'foo')
+            self.assertRaises(TypeError, vl_decode, iter([b'\x40']))
+
+        self.assertRaises(TypeError, vl_decode, b'\x40', 'big', 3)
+        self.assertRaises(ValueError, vl_decode, b'\x40', 'foo')
+        for item in None, 2.34, Ellipsis:
+            self.assertRaises(TypeError, vl_decode, iter([item]))
+
+        lst = [b'\xd3\x20', iter(b'\xd3\x20')]
+        if sys.version_info[0] == 3:
+            lst.append(iter([0xd3, 0x20]))
+        for s in lst:
+            a = vl_decode(s, endian=self.random_endian())
+            self.assertIsInstance(a, bitarray)
+            self.assertEqual(a, bitarray('0011 01'))
+
+    def test_trailing(self):
         for s, bits in [(b'\x40ABC', ''),
                         (b'\xe0\x40A', '00001')]:
             stream = iter(s)
@@ -912,8 +942,8 @@ class VLFTests(unittest.TestCase):
             self.assertEqual(vl_decode(iter(s)), bitarray('111'))
 
     def test_stream(self):
-        stream = iter(b'\x40\x30\x38\x40\x2c\xe0\x40')
-        for bits in '', '0', '1', '', '11', '00001':
+        stream = iter(b'\x40\x30\x38\x40\x2c\xe0\x40\xd3\x20')
+        for bits in '', '0', '1', '', '11', '0000 1', '0011 01':
             self.assertEqual(vl_decode(stream), bitarray(bits))
 
         arrays = [urandom(randint(0, 30)) for _ in range(1000)]
@@ -925,22 +955,29 @@ class VLFTests(unittest.TestCase):
         # decode empty bits
         self.assertRaises(StopIteration, vl_decode, b'')
         # invalid number of padding bits
-        self.assertRaises(ValueError, vl_decode, iter(b'\xf0'))
+        self.assertRaises(ValueError, vl_decode, b'\xf0')
         for s in b'\x70', b'\x60', b'\x50':
-            self.assertRaises(ValueError, vl_decode, iter(s))
+            self.assertRaises(ValueError, vl_decode, s)
         # high bit set, but no continuation
         for s in b'\x80', b'\x80\x80':
-            self.assertRaises(StopIteration, vl_decode, iter(s))
+            self.assertRaises(StopIteration, vl_decode, s)
+
+    def test_large(self):
+        a = urandom(randint(50000, 100000))
+        s = vl_encode(a)
+        self.assertEqual(len(s), (len(a) + 3 + 6) // 7)
+        self.assertEqual(a, vl_decode(s))
 
     def test_random(self):
-        for n in range(500):
-            a = urandom(n, endian='big')
+        for a in self.randombitarrays():
             s = vl_encode(a)
             self.assertEqual(len(s), (len(a) + 3 + 6) // 7)
-            self.assertEqual(s, vl_encode(bitarray(a, 'little')))
+            b = bitarray(a, self.other_endian(a.endian()))
+            self.assertEqual(s, vl_encode(b))
 
             for endian in 'big', 'little':
-                b = vl_decode(iter(s), endian)
+                b = vl_decode(s, endian)
+                self.check_obj(b)
                 self.assertEqual(b, a)
                 self.assertEqual(b.endian(), endian)
 
