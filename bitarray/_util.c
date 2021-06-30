@@ -637,16 +637,22 @@ vl_decode(PyObject *module, PyObject *args)
     }
     while ((item = PyIter_Next(iter))) {
 #ifdef IS_PY3K
-        if (!PyLong_Check(item))
-            return PyErr_Format(PyExc_TypeError,
-                                "int iterator expected, got '%s' element",
-                                Py_TYPE(item)->tp_name);
+        if (!PyLong_Check(item)) {
+            PyErr_Format(PyExc_TypeError,
+                         "int iterator expected, got '%s' element",
+                         Py_TYPE(item)->tp_name);
+            Py_DECREF(item);
+            return NULL;
+        }
         b = (unsigned char) PyLong_AsLong(item);
 #else
-        if (!PyBytes_Check(item))
-            return PyErr_Format(PyExc_TypeError,
-                                "bytes iterator expected, got '%s' element",
-                                Py_TYPE(item)->tp_name);
+        if (!PyBytes_Check(item)) {
+            PyErr_Format(PyExc_TypeError,
+                         "bytes iterator expected, got '%s' element",
+                         Py_TYPE(item)->tp_name);
+            Py_DECREF(item);
+            return NULL;
+        }
         b = (unsigned char) *PyBytes_AS_STRING(item);
 #endif
         Py_DECREF(item);

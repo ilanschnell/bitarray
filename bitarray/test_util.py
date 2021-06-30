@@ -962,6 +962,17 @@ class VLFTests(unittest.TestCase, Util):
         for s in b'\x80', b'\x80\x80':
             self.assertRaises(StopIteration, vl_decode, s)
 
+    def test_invalid_stream(self):
+        if sys.version_info[0] == 2:
+            return
+        s = iter(1000 * (3 * [128] + [None]) + [0x38])
+        for _ in range(1000):
+            try:
+                vl_decode(s)
+            except TypeError:
+                pass
+        self.assertEqual(vl_decode(s), bitarray('1'))
+
     def test_large(self):
         a = urandom(randint(50000, 100000))
         s = vl_encode(a)
