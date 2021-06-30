@@ -624,8 +624,8 @@ vl_decode(PyObject *module, PyObject *args)
     if (!PyArg_ParseTuple(args, "OO", &iter, &a))
         return NULL;
     if (!PyIter_Check(iter))
-        return PyErr_Format(PyExc_TypeError, "not an iterator object: %s",
-                            Py_TYPE(iter)->tp_name);
+        return PyErr_Format(PyExc_TypeError, "iterator or bytes expected, "
+                            "got '%s'", Py_TYPE(iter)->tp_name);
     if (ensure_bitarray(a) < 0)
         return NULL;
 
@@ -633,13 +633,15 @@ vl_decode(PyObject *module, PyObject *args)
     while ((item = PyIter_Next(iter))) {
 #ifdef IS_PY3K
         if (!PyLong_Check(item))
-            return PyErr_Format(PyExc_TypeError, "int expected, got %s",
-                                Py_TYPE(iter)->tp_name);
+            return PyErr_Format(PyExc_TypeError,
+                                "iterator of ints expected, got '%s'",
+                                Py_TYPE(item)->tp_name);
         k = (unsigned char) PyLong_AsLong(item);
 #else
         if (!PyBytes_Check(item))
-            return PyErr_Format(PyExc_TypeError, "bytes expected, got %s",
-                                Py_TYPE(iter)->tp_name);
+            return PyErr_Format(PyExc_TypeError,
+                                "iterator of bytes expected, got '%s'",
+                                Py_TYPE(item)->tp_name);
         k = (unsigned char) *PyBytes_AS_STRING(item);
 #endif
         Py_DECREF(item);
@@ -660,6 +662,7 @@ vl_decode(PyObject *module, PyObject *args)
             break;
 
         if (i + 7 >= BITS(Py_SIZE(aa))) {
+            /* grow memory (in a hacky way) */
             aa->nbits = i;
             Py_SET_SIZE(aa, BYTES(aa->nbits));
             res = PyObject_CallMethod(a, "extend", "O", a);
@@ -676,7 +679,8 @@ vl_decode(PyObject *module, PyObject *args)
         return NULL;
 
     if (k & 0x80) {
-        PyErr_SetString(PyExc_StopIteration, "");
+        PyErr_SetString(PyExc_StopIteration,
+                        "non-terminating bytes in vl_decode()");
         return NULL;
     }
 

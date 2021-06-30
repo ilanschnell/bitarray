@@ -329,11 +329,10 @@ Return a bitarray given the bytes representation returned by `serialize()`.
 def vl_decode(__stream, endian=None):
     if isinstance(__stream, bytes):
         __stream = iter(__stream)
+
     a = bitarray(32, 'big')
     _vl_decode(__stream, a)
-    if endian is None:
-        endian = get_default_endian()
-    return a if endian == 'big' else bitarray(a, 'little')
+    return bitarray(a, get_default_endian() if endian is None else endian)
 
 
 def huffman_code(__freq_map, endian=None):
