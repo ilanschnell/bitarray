@@ -630,6 +630,10 @@ vl_decode(PyObject *module, PyObject *args)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
+    if (aa->nbits < 32) {
+        PyErr_SetString(PyExc_ValueError, "bitarray too small");
+        return NULL;
+    }
     while ((item = PyIter_Next(iter))) {
 #ifdef IS_PY3K
         if (!PyLong_Check(item))
