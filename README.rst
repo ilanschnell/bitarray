@@ -62,7 +62,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 2.1.3
+    bitarray version: 2.2.0
     sys.version: 2.7.15 (default, Mar  5 2020, 14:58:04) [GCC Clang 9.0.1]
     sys.prefix: /Users/ilan/Mini3/envs/py27
     pointer size: 64 bit
@@ -70,7 +70,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     .............................................................
     ----------------------------------------------------------------------
-    Ran 339 tests in 0.329s
+    Ran 351 tests in 0.335s
 
     OK
 
@@ -401,7 +401,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 2.1.3 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.2.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -673,7 +673,7 @@ Functions defined in `bitarray.util` module:
    Raises ``ValueError`` if the value is not present.
 
 
-``strip(bitarray, mode='right', /)`` -> bitarray
+``strip(bitarray, /, mode='right')`` -> bitarray
    Return a new bitarray with zeros stripped from left, right or both ends.
    Allowed values for mode are the strings: ``left``, ``right``, ``both``
 

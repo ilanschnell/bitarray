@@ -154,4 +154,4 @@ is "self terminating" (in the same way the C strings are NUL terminated).
 That is, when a bitarray of unknown length is encountered in a stream of
 binary data, the format lets you know when the end of a bitarray is reached.
 Such a "variable length format" (most memory efficient for small bitarrays)
-is described and implemented in `this example <../examples/huffman/vlf.py>`__.
+is implemented in ...

@@ -1,9 +1,9 @@
 Change log
 ==========
 
-2021-XX-XX   2.1.4:
+2021-XX-XX   2.2.0:
 
-* add `variable length bitarray format example <../examples/huffman/vlf.py>`__
+* add variable length bitarray format, `#131 <https://github.com/ilanschnell/bitarray/issues/131>`__
 
 
 **2.1.3** (2021-06-15):

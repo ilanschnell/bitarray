@@ -1,6 +1,6 @@
 2021-XX-XX   2.2.0:
 -------------------
-  * add [variable length bitarray format example](../examples/huffman/vlf.py)
+  * add variable length bitarray format, #131
 
 
 2021-06-15   2.1.3:

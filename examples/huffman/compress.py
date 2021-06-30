@@ -9,27 +9,24 @@ from optparse import OptionParser
 from collections import Counter
 
 from bitarray import bitarray
-from bitarray.util import serialize, deserialize, huffman_code
-
-import vlf
+from bitarray.util import (serialize, deserialize,
+                           vl_encode, vl_decode, huffman_code)
 
 
 def encode_code(code):
     res = bytearray(struct.pack("<H", len(code)))
     for sym in sorted(code):
         res.append(sym)
-        res.extend(vlf.encode(code[sym]))
+        res.extend(vl_encode(code[sym]))
     return res
-
 
 def decode_code(stream):
     size = struct.unpack("<H", bytes(islice(stream, 2)))[0]
     code = {}
     for _ in range(size):
         sym = next(stream)
-        code[sym] = vlf.decode(stream)
+        code[sym] = vl_decode(stream)
     return code
-
 
 def encode(filename):
     with open(filename, 'rb') as fi:
@@ -44,7 +41,6 @@ def encode(filename):
     print('Bits: %d / %d' % (len(a), 8 * len(plain)))
     print('Ratio =%6.2f%%' % (100.0 * a.buffer_info()[1] / len(plain)))
 
-
 def decode(filename):
     assert filename.endswith('.huff')
 
@@ -55,7 +51,6 @@ def decode(filename):
 
     with open(filename[:-5] + '.out', 'wb') as fo:
         fo.write(bytearray(a.iterdecode(code)))
-
 
 def main():
     p = OptionParser("usage: %prog [options] FILE")
