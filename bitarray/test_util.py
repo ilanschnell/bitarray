@@ -22,7 +22,7 @@ from bitarray.util import (
     zeros, urandom, pprint, make_endian, rindex, strip, count_n,
     parity, count_and, count_or, count_xor, subset,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
-    ba2int, int2ba, huffman_code
+    ba2int, int2ba, vl_encode, vl_decode, huffman_code
 )
 
 if sys.version_info[0] == 3:
@@ -876,6 +876,124 @@ class TestsBase(unittest.TestCase, Util):
                 self.assertEQUAL(base2ba(n, ba2base(n, b), 'big'), b)
 
 tests.append(TestsBase)
+
+# ---------------------------------------------------------------------------
+
+class VLFTests(unittest.TestCase, Util):
+
+    def test_explicit(self):
+        for s, bits in [
+                (b'\x40', ''),
+                (b'\x30', '0'),
+                (b'\x38', '1'),
+                (b'\x00', '0000'),
+                (b'\x01', '0001'),
+                (b'\xe0\x40', '0000 1'),
+                (b'\x90\x02', '0000 000001'),
+                (b'\xb5\xa7\x18', '0101 0100111 0011'),
+        ]:
+            a = bitarray(bits)
+            self.assertEqual(vl_encode(a), s)
+            self.assertEqual(vl_decode(s), a)
+
+    def test_zeros(self):
+        for n in range(500):
+            a = zeros(4 + n * 7)
+            s = n * b'\x80' + b'\x00'
+            self.assertEqual(vl_encode(a), s)
+            self.assertEqual(vl_decode(s), a)
+
+    def test_encode(self):
+        for endian in 'big', 'little':
+            s = vl_encode(bitarray('001101', endian))
+            self.assertIsInstance(s, bytes)
+            self.assertEqual(s, b'\xd3\x20')
+
+    def test_args_decode(self):
+        if sys.version_info[0] == 3:
+            self.assertRaises(TypeError, vl_decode, 'foo')
+            self.assertRaises(TypeError, vl_decode, iter([b'\x40']))
+
+        self.assertRaises(TypeError, vl_decode, b'\x40', 'big', 3)
+        self.assertRaises(ValueError, vl_decode, b'\x40', 'foo')
+        for item in None, 2.34, Ellipsis:
+            self.assertRaises(TypeError, vl_decode, iter([item]))
+
+        lst = [b'\xd3\x20', iter(b'\xd3\x20')]
+        if sys.version_info[0] == 3:
+            lst.append(iter([0xd3, 0x20]))
+        for s in lst:
+            a = vl_decode(s, endian=self.random_endian())
+            self.assertIsInstance(a, bitarray)
+            self.assertEqual(a, bitarray('0011 01'))
+
+    def test_trailing(self):
+        for s, bits in [(b'\x40ABC', ''),
+                        (b'\xe0\x40A', '00001')]:
+            stream = iter(s)
+            self.assertEqual(vl_decode(stream), bitarray(bits))
+            self.assertEqual(next(stream),
+                             b'A' if sys.version_info[0] == 2 else 65)
+
+    def test_ambiguity(self):
+        for s in b'\x40', b'\x4f', b'\x45':
+            self.assertEqual(vl_decode(iter(s)), bitarray())
+        for s in b'\x1e', b'\x1f':
+            self.assertEqual(vl_decode(iter(s)), bitarray('111'))
+
+    def test_stream(self):
+        stream = iter(b'\x40\x30\x38\x40\x2c\xe0\x40\xd3\x20')
+        for bits in '', '0', '1', '', '11', '0000 1', '0011 01':
+            self.assertEqual(vl_decode(stream), bitarray(bits))
+
+        arrays = [urandom(randint(0, 30)) for _ in range(1000)]
+        stream = iter(b''.join(vl_encode(a) for a in arrays))
+        for a in arrays:
+            self.assertEqual(vl_decode(stream), a)
+
+    def test_decode_errors(self):
+        # decode empty bits
+        self.assertRaises(StopIteration, vl_decode, b'')
+        # invalid number of padding bits
+        self.assertRaises(ValueError, vl_decode, b'\xf0')
+        for s in b'\x70', b'\x60', b'\x50':
+            self.assertRaises(ValueError, vl_decode, s)
+        # high bit set, but no continuation
+        for s in b'\x80', b'\x80\x80':
+            self.assertRaises(StopIteration, vl_decode, s)
+
+    def test_invalid_stream(self):
+        if sys.version_info[0] == 2:
+            return
+        N = 100
+        s = iter(N * (3 * [0x80] + [None]) + [0x38])
+        for _ in range(N):
+            try:
+                vl_decode(s)
+            except TypeError:
+                pass
+        self.assertEqual(vl_decode(s), bitarray('1'))
+
+    def test_large(self):
+        a = urandom(randint(50000, 100000))
+        s = vl_encode(a)
+        self.assertEqual(len(s), (len(a) + 3 + 6) // 7)
+        self.assertEqual(a, vl_decode(s))
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            s = vl_encode(a)
+            self.assertEqual(len(s), (len(a) + 3 + 6) // 7)
+            b = bitarray(a, self.other_endian(a.endian()))
+            self.assertEqual(s, vl_encode(b))
+
+            for endian in 'big', 'little':
+                b = vl_decode(s, endian)
+                self.check_obj(b)
+                self.assertEqual(b, a)
+                self.assertEqual(b.endian(), endian)
+
+tests.append(VLFTests)
 
 # ---------------------------------------------------------------------------
 

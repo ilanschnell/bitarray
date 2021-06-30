@@ -9,6 +9,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
+#include "pythoncapi_compat.h"
 #include "bitarray.h"
 
 #define IS_LE(a)  ((a)->endian == ENDIAN_LITTLE)
@@ -612,6 +613,127 @@ base2ba(PyObject *module, PyObject *args)
     Py_RETURN_NONE;
 }
 
+
+static PyObject *
+vl_decode(PyObject *module, PyObject *args)
+{
+    PyObject *iter, *item, *res, *a;
+    Py_ssize_t padding, k;
+    Py_ssize_t i = 0;           /* bit counter */
+    unsigned char b = 0x80;     /* empty stream will raise StopIteration */
+
+    if (!PyArg_ParseTuple(args, "OO", &iter, &a))
+        return NULL;
+    if (!PyIter_Check(iter))
+        return PyErr_Format(PyExc_TypeError, "iterator or bytes expected, "
+                            "got '%s'", Py_TYPE(iter)->tp_name);
+    if (ensure_bitarray(a) < 0)
+        return NULL;
+
+#define aa  ((bitarrayobject *) a)
+    if (aa->nbits < 32) {
+        PyErr_SetString(PyExc_ValueError, "bitarray too small");
+        return NULL;
+    }
+    while ((item = PyIter_Next(iter))) {
+#ifdef IS_PY3K
+        if (PyLong_Check(item))
+            b = (unsigned char) PyLong_AsLong(item);
+#else
+        if (PyBytes_Check(item))
+            b = (unsigned char) *PyBytes_AS_STRING(item);
+#endif
+        else {
+            PyErr_Format(PyExc_TypeError, "int (byte) iterator expected, "
+                         "got '%s' element", Py_TYPE(item)->tp_name);
+            Py_DECREF(item);
+            return NULL;
+        }
+        Py_DECREF(item);
+
+        if (i == 0) {
+            padding = (b & 0x70) >> 4;
+            if (padding >= 7 || ((b & 0x80) == 0 && padding > 4))
+                return PyErr_Format(PyExc_ValueError,
+                                    "invalid header byte: 0x%02x", b);
+            for (k = 0; k < 4; k++)
+                setbit(aa, i++, (0x08 >> k) & b);
+        }
+        else {
+            for (k = 0; k < 7; k++)
+                setbit(aa, i++, (0x40 >> k) & b);
+        }
+        if ((b & 0x80) == 0)
+            break;
+
+        if (i + 7 >= BITS(Py_SIZE(aa))) {
+            /* grow memory (in a hacky way) */
+            aa->nbits = i;
+            Py_SET_SIZE(aa, BYTES(aa->nbits));
+            res = PyObject_CallMethod(a, "extend", "O", a);
+            if (res == NULL)
+                return NULL;
+            Py_DECREF(res);  /* drop extend result */
+        }
+    }
+    aa->nbits = i - padding;
+    Py_SET_SIZE(aa, BYTES(aa->nbits));
+
+#undef aa
+    if (PyErr_Occurred())       /* from PyIter_Next() */
+        return NULL;
+
+    if (b & 0x80) {
+        PyErr_SetString(PyExc_StopIteration,
+                        "non-terminating bytes in vl_decode()");
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+vl_encode(PyObject *module, PyObject *a)
+{
+    PyObject *result;
+    Py_ssize_t padding, n, m, i, k;
+    Py_ssize_t j = 0;           /* byte conter */
+    char *data;
+
+    if (ensure_bitarray(a) < 0)
+        return NULL;
+
+#define aa  ((bitarrayobject *) a)
+    n = (aa->nbits + 9) / 7;    /* number of resulting bytes */
+    m = 7 * n - 3;              /* number of bits resulting bytes can hold */
+    padding = m - aa->nbits;    /* number of pad bits */
+    assert(0 <= padding && padding < 7);
+
+    if ((data = (char *) PyMem_Malloc(n)) == NULL)
+        return PyErr_NoMemory();
+
+    data[0] = aa->nbits > 4 ? 0x80 : 0x00;  /* leading bit */
+    data[0] |= padding << 4;                /* encode number of pad bits */
+    for (i = 0; i < 4 && i < aa->nbits; i++)
+        if (GETBIT(aa, i))
+            data[0] |= 0x08 >> i;
+
+    for (i = 4; i < aa->nbits; i++) {
+        k = (i - 4) % 7;
+        if (k == 0)
+            data[++j] = i + 7 < m ? 0x80 : 0x00;  /* leading bit */
+
+        if (GETBIT(aa, i))
+            data[j] |= 0x40 >> k;
+    }
+#undef aa
+
+    result = PyBytes_FromStringAndSize(data, n);
+    PyMem_Free((void *) data);
+    return result;
+}
+
 /* --------------------------------------------------------------------- */
 
 /* Set bitarray_type_obj (bato).  This function must be called before any
@@ -636,6 +758,8 @@ static PyMethodDef module_functions[] = {
     {"_hex2ba",   (PyCFunction) hex2ba,    METH_VARARGS, 0},
     {"ba2base",   (PyCFunction) ba2base,   METH_VARARGS, ba2base_doc},
     {"_base2ba",  (PyCFunction) base2ba,   METH_VARARGS, 0},
+    {"vl_encode", (PyCFunction) vl_encode, METH_O,       0},
+    {"_vl_decode",(PyCFunction) vl_decode, METH_VARARGS, 0},
     {"_set_bato", (PyCFunction) set_bato,  METH_O,       0},
     {NULL,        NULL}  /* sentinel */
 };
