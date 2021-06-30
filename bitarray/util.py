@@ -330,9 +330,9 @@ def vl_decode(__stream, endian=None):
     if isinstance(__stream, bytes):
         __stream = iter(__stream)
 
-    a = bitarray(32, 'big')
+    a = bitarray(32, get_default_endian() if endian is None else endian)
     _vl_decode(__stream, a)
-    return bitarray(a, get_default_endian() if endian is None else endian)
+    return a
 
 
 def huffman_code(__freq_map, endian=None):

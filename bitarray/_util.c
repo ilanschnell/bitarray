@@ -634,13 +634,13 @@ vl_decode(PyObject *module, PyObject *args)
 #ifdef IS_PY3K
         if (!PyLong_Check(item))
             return PyErr_Format(PyExc_TypeError,
-                                "iterator of ints expected, got '%s'",
+                                "int iterator expected, got '%s' element",
                                 Py_TYPE(item)->tp_name);
         k = (unsigned char) PyLong_AsLong(item);
 #else
         if (!PyBytes_Check(item))
             return PyErr_Format(PyExc_TypeError,
-                                "iterator of bytes expected, got '%s'",
+                                "bytes iterator expected, got '%s' element",
                                 Py_TYPE(item)->tp_name);
         k = (unsigned char) *PyBytes_AS_STRING(item);
 #endif
@@ -652,11 +652,11 @@ vl_decode(PyObject *module, PyObject *args)
                 return PyErr_Format(PyExc_ValueError,
                                     "invalid header byte: 0x%02x", k);
             for (j = 0; j < 4; j++)
-                setbit(aa, i++, (1 << (3 - j)) & k);
+                setbit(aa, i++, (0x08 >> j) & k);
         }
         else {
             for (j = 0; j < 7; j++)
-                setbit(aa, i++, (1 << (6 - j)) & k);
+                setbit(aa, i++, (0x40 >> j) & k);
         }
         if ((k & 0x80) == 0)
             break;
@@ -710,7 +710,8 @@ vl_encode(PyObject *module, PyObject *a)
     data[0] = aa->nbits > 4 ? 0x80 : 0x00;     /* leading bit */
     data[0] |= p << 4;                         /* encode number of pad bits */
     for (i = 0; i < 4 && i < aa->nbits; i++)
-        data[0] |= GETBIT(aa, i) << (3 - i);
+        if (GETBIT(aa, i))
+            data[0] |= 0x08 >> i;
 
     for (j = 0, i = 4; i < aa->nbits; i++) {
         k = (i - 4) % 7;
@@ -718,7 +719,8 @@ vl_encode(PyObject *module, PyObject *a)
             j++;
             data[j] = i + 7 < m ? 0x80 : 0x00;  /* leading bit */
         }
-        data[j] |= GETBIT(aa, i) << (6 - k);
+        if (GETBIT(aa, i))
+            data[j] |= 0x40 >> k;
     }
 #undef aa
 
