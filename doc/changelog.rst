@@ -3,7 +3,8 @@ Change log
 
 2021-XX-XX   2.2.0:
 
-* add variable length bitarray format, `#131 <https://github.com/ilanschnell/bitarray/issues/131>`__
+* add ``bitarray.util.vl_encode()`` and ``bitarray.util.vl_decode()`` which
+  uses a `variable length bitarray format <represent.rst>`__, `#131 <https://github.com/ilanschnell/bitarray/issues/131>`__
 
 
 **2.1.3** (2021-06-15):
