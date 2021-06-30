@@ -618,7 +618,7 @@ static PyObject *
 vl_decode(PyObject *module, PyObject *args)
 {
     PyObject *iter, *item, *res, *a;
-    Py_ssize_t u, i = 0, j;
+    Py_ssize_t p, j, i = 0;
     unsigned char k = 0x80;
 
     if (!PyArg_ParseTuple(args, "OO", &iter, &a))
@@ -645,8 +645,8 @@ vl_decode(PyObject *module, PyObject *args)
         Py_DECREF(item);
 
         if (i == 0) {
-            u = (k & 0x70) >> 4;
-            if (u >= 7 || ((k & 0x80) == 0 && u > 4))
+            p = (k & 0x70) >> 4;
+            if (p >= 7 || ((k & 0x80) == 0 && p > 4))
                 return PyErr_Format(PyExc_ValueError,
                                     "invalid header byte: 0x%02x", k);
             for (j = 0; j < 4; j++)
@@ -659,16 +659,18 @@ vl_decode(PyObject *module, PyObject *args)
         if ((k & 0x80) == 0)
             break;
 
-        if (i + 7 > BITS(aa->allocated)) {
+        if (i + 7 >= BITS(Py_SIZE(aa))) {
             aa->nbits = i;
             Py_SET_SIZE(aa, BYTES(aa->nbits));
+            //printf("%zd (%zd)->", Py_SIZE(aa), aa->allocated);
             res = PyObject_CallMethod(a, "extend", "O", a);
+            //printf(" %zd (%zd)\n", Py_SIZE(aa), aa->allocated);
             if (res == NULL)
                 return NULL;
             Py_DECREF(res);  /* drop extend result */
         }
     }
-    aa->nbits = i - u;
+    aa->nbits = i - p;
     Py_SET_SIZE(aa, BYTES(aa->nbits));
 
 #undef aa

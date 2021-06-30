@@ -14,7 +14,8 @@ from bitarray import bitarray, bits2bytes, get_default_endian
 
 from bitarray._util import (
     count_n, rindex, parity, count_and, count_or, count_xor, subset,
-    serialize, ba2hex, _hex2ba, ba2base, _base2ba, _set_bato,
+    serialize, ba2hex, _hex2ba, ba2base, _base2ba, vl_encode, _vl_decode,
+    _set_bato,
 )
 
 __all__ = [
@@ -323,6 +324,16 @@ Return a bitarray given the bytes representation returned by `serialize()`.
     if head >= 32 or head % 16 >= 8:
         raise ValueError('invalid header byte 0x%02x' % head)
     return bitarray(__b)
+
+
+def vl_decode(__stream, endian=None):
+    if isinstance(__stream, bytes):
+        __stream = iter(__stream)
+    a = bitarray(32, 'big')
+    _vl_decode(__stream, a)
+    if endian is None:
+        endian = get_default_endian()
+    return a if endian == 'big' else bitarray(a, 'little')
 
 
 def huffman_code(__freq_map, endian=None):
