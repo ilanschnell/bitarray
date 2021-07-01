@@ -320,7 +320,9 @@ Return a bitarray given the bytes representation returned by `serialize()`.
         raise TypeError("bytes expected, got: '%s'" % type(__b).__name__)
     if len(__b) == 0:
         raise ValueError("non-empty bytes expected")
+
     head = ord(__b[0]) if _is_py2 else __b[0]
+    assert isinstance(head, int)
     if head >= 32 or head % 16 >= 8:
         raise ValueError('invalid header byte 0x%02x' % head)
     return bitarray(__b)
