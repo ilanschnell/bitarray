@@ -183,8 +183,8 @@ encoding ``bitarray('010101001110011')``:
         010101001110011          raw bitarray (length 15)
         0101  0100111  0011      grouped (4, 7, 7, ...)
         0101  0100111  0011000   pad last group with zeros
-     0110101  0100111  0011000   add number of pad bits (3) add to front (011)
-    10110101 10100111 00011000   add high bits
+     0110101  0100111  0011000   add number of pad bits (3) to front (011)
+    10110101 10100111 00011000   add high bits (1, except 0 for last group)
         0xb5     0xa7     0x18   in hexadecimal - output stream
 
 .. code-block:: python

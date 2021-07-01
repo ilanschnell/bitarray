@@ -399,8 +399,8 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
         try:                    # leaf
             result[nd.symbol] = prefix
         except AttributeError:  # parent, so traverse each of the children
-            traverse(nd.child[0], prefix + bitarray([0]))
-            traverse(nd.child[1], prefix + bitarray([1]))
+            traverse(nd.child[0], prefix + bitarray('0'))
+            traverse(nd.child[1], prefix + bitarray('1'))
 
     traverse(huff_tree(__freq_map))
     return result
