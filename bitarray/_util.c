@@ -630,6 +630,7 @@ vl_decode(PyObject *module, PyObject *args)
     if (ensure_bitarray(a) < 0)
         return NULL;
 
+    padding = 0;       /* avoid uninitialized warning for some compilers */
 #define aa  ((bitarrayobject *) a)
     if (aa->nbits < 32) {
         PyErr_SetString(PyExc_ValueError, "bitarray too small");
