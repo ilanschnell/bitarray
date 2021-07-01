@@ -29,4 +29,6 @@ clean:
 	rm -f bitarray/*.pyc
 	rm -f examples/*.pyc
 	rm -rf bitarray/__pycache__ *.egg-info
-	rm -rf examples/__pycache__
+	rm -rf examples/__pycache__ examples/huffman/__pycache__
+	rm -rf .mypy_cache bitarray/.mypy_cache
+	rm -rf examples/.mypy_cache examples/huffman/.mypy_cache
