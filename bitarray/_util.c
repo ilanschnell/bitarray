@@ -660,6 +660,7 @@ vl_decode(PyObject *module, PyObject *args)
             return NULL;
         }
         Py_DECREF(item);
+        assert(i + 7 < BITS(Py_SIZE(aa)));
 
         if (i == 0) {
             padding = (b & 0x70) >> 4;
@@ -686,6 +687,7 @@ vl_decode(PyObject *module, PyObject *args)
             Py_DECREF(res);  /* drop extend result */
         }
     }
+    /* set final length of bitarray */
     aa->nbits = i - padding;
     Py_SET_SIZE(aa, BYTES(aa->nbits));
 

@@ -897,11 +897,20 @@ class VLFTests(unittest.TestCase, Util):
             self.assertEqual(vl_decode(s), a)
 
     def test_zeros(self):
-        for n in range(500):
+        for n in range(100):
             a = zeros(4 + n * 7)
             s = n * b'\x80' + b'\x00'
             self.assertEqual(vl_encode(a), s)
-            self.assertEqual(vl_decode(s), a)
+            b = vl_decode(s)
+            self.assertEqual(b, a)
+            self.check_obj(b)
+
+    def test_range(self):
+        for n in range(500):
+            a = zeros(n)
+            b = vl_decode(vl_encode(a))
+            self.assertEqual(b, a)
+            self.check_obj(b)
 
     def test_encode(self):
         for endian in 'big', 'little':
@@ -966,13 +975,13 @@ class VLFTests(unittest.TestCase, Util):
         if sys.version_info[0] == 2:
             return
         N = 100
-        s = iter(N * (3 * [0x80] + [None]) + [0x38])
+        s = iter(N * (3 * [0x80] + [None]) + [None])
         for _ in range(N):
             try:
                 vl_decode(s)
             except TypeError:
                 pass
-        self.assertEqual(vl_decode(s), bitarray('1'))
+        self.assertTrue(next(s) is None)
 
     def test_large(self):
         a = urandom(randint(50000, 100000))
