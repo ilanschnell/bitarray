@@ -164,7 +164,7 @@ is implemented in ``vl_encode()`` and ``vl_decode()``:
     >>> data
     b'\x96\x1e\x12other stuff'
     >>> stream = iter(data)
-    >>> vl_decode(stream)
+    >>> vl_decode(stream)      # the remaining stream is untouched
     bitarray('0110001111')
     >>> vl_decode(stream)
     bitarray('001')
