@@ -907,7 +907,7 @@ class VLFTests(unittest.TestCase, Util):
 
     def test_range(self):
         for n in range(500):
-            a = zeros(n)
+            a = bitarray(n)
             b = vl_decode(vl_encode(a))
             self.assertEqual(b, a)
             self.check_obj(b)

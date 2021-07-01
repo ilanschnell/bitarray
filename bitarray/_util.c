@@ -660,7 +660,7 @@ vl_decode(PyObject *module, PyObject *args)
             return NULL;
         }
         Py_DECREF(item);
-        assert(i + 7 < BITS(Py_SIZE(aa)));
+        assert(i + 6 < BITS(Py_SIZE(aa)));
 
         if (i == 0) {
             padding = (b & 0x70) >> 4;
@@ -677,7 +677,7 @@ vl_decode(PyObject *module, PyObject *args)
         if ((b & 0x80) == 0)
             break;
 
-        if (i + 7 >= BITS(Py_SIZE(aa))) {
+        if (i + 6 >= BITS(Py_SIZE(aa))) {
             /* grow memory - see above */
             aa->nbits = i;
             Py_SET_SIZE(aa, BYTES(aa->nbits));
