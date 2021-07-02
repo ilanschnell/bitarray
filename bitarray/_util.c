@@ -682,11 +682,10 @@ vl_decode(PyObject *module, PyObject *args)
             /* grow memory - see above */
             aa->nbits = i;
             Py_SET_SIZE(aa, BYTES(aa->nbits));
-            assert(i % 8 ==0);  /* ensure we don't shift dummy bytes */
+            assert(i % 8 ==0);      /* ensure dummy bytes are aligned */
+            k = i < 4096 ? 7 : 28;  /* added number of bytes */
             res = PyObject_CallMethod(a, "frombytes",
-                                      BYTES_SIZE_FMT, base32_alphabet,
-                                      (Py_ssize_t) (i < 4096 ? 7 : 28));
-            //res = PyObject_CallMethod(a, "extend", "O", a);
+                                      BYTES_SIZE_FMT, base32_alphabet, k);
             if (res == NULL)
                 return NULL;
             Py_DECREF(res);  /* drop extend result */
