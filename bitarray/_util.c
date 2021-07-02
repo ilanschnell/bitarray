@@ -699,11 +699,10 @@ vl_decode(PyObject *module, PyObject *args)
         return NULL;
 
     if (b & 0x80) {
-        PyErr_SetString(PyExc_StopIteration,
-                        "non-terminating bytes in vl_decode()");
-        return NULL;
+        k = (i + 3) / 7;
+        return PyErr_Format(PyExc_StopIteration,
+                            "no terminating byte found, bytes read: %zd", k);
     }
-
     Py_RETURN_NONE;
 }
 

@@ -4,6 +4,7 @@ Tests for bitarray.util module
 from __future__ import absolute_import
 
 import os
+import re
 import sys
 import base64
 import binascii
@@ -964,24 +965,38 @@ class VLFTests(unittest.TestCase, Util):
         # decode empty bits
         self.assertRaises(StopIteration, vl_decode, b'')
         # invalid number of padding bits
-        self.assertRaises(ValueError, vl_decode, b'\xf0')
-        for s in b'\x70', b'\x60', b'\x50':
+        for s in b'\x50', b'\x60', b'\x70':
             self.assertRaises(ValueError, vl_decode, s)
-        # high bit set, but no continuation
+        self.assertRaises(ValueError, vl_decode, b'\xf0')
+        # high bit set, but no terminating byte
         for s in b'\x80', b'\x80\x80':
             self.assertRaises(StopIteration, vl_decode, s)
+
+    def test_decode_error_message(self):
+        pat = re.compile('.+:\s(\d+)')
+        for n in range(120):
+            a = None
+            s = bytes(bytearray([randint(0x80, 0xef) for _ in range(n)]))
+            try:
+                a = vl_decode(s)
+            except StopIteration as e:
+                m = pat.match(str(e))
+                self.assertEqual(m.group(1), str(n))
+            self.assertTrue(a is None)
 
     def test_invalid_stream(self):
         if sys.version_info[0] == 2:
             return
         N = 100
-        s = iter(N * (3 * [0x80] + [None]) + [None])
+        s = iter(N * (3 * [0x80] + ['XX']) + ['end.'])
         for _ in range(N):
+            a = None
             try:
-                vl_decode(s)
+                a = vl_decode(s)
             except TypeError:
                 pass
-        self.assertTrue(next(s) is None)
+            self.assertTrue(a is None)
+        self.assertEqual(next(s), 'end.')
 
     def test_large(self):
         a = urandom(randint(50000, 100000))
