@@ -335,7 +335,7 @@ serialize(PyObject *module, PyObject *a)
         return NULL;
 
     nbytes = Py_SIZE(a);
-    data = (char *) PyMem_Malloc(nbytes + 1);
+    data = (char *) PyMem_Malloc((size_t) nbytes + 1);
     if (data == NULL)
         return PyErr_NoMemory();
 
@@ -726,7 +726,7 @@ vl_encode(PyObject *module, PyObject *a)
     padding = m - aa->nbits;    /* number of pad bits */
     assert(0 <= padding && padding < 7);
 
-    if ((data = (char *) PyMem_Malloc(n)) == NULL)
+    if ((data = (char *) PyMem_Malloc((size_t) n)) == NULL)
         return PyErr_NoMemory();
 
     data[0] = aa->nbits > 4 ? 0x80 : 0x00;  /* leading bit */

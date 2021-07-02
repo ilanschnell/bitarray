@@ -982,7 +982,7 @@ bitarray_reduce(bitarrayobject *self)
         dict = Py_None;
         Py_INCREF(dict);
     }
-    data = (char *) PyMem_Malloc(nbytes + 1);
+    data = (char *) PyMem_Malloc((size_t) nbytes + 1);
     if (data == NULL) {
         PyErr_NoMemory();
         goto error;
