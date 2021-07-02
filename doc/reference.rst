@@ -367,7 +367,7 @@ Functions defined in `bitarray.util` module:
 ``vl_encode(bitarray, /)`` -> bytes
    Return variable length binary representation of bitarray.
    This representation is useful for efficiently storing small bitarray
-   in a binary stream.  Use ``vl_decode`` for decoding.
+   in a binary stream.  Use ``vl_decode()`` for decoding.
 
 
 ``vl_decode(stream, /, endian=None)`` -> bitarray

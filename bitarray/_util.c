@@ -756,7 +756,7 @@ PyDoc_STRVAR(vl_encode_doc,
 \n\
 Return variable length binary representation of bitarray.\n\
 This representation is useful for efficiently storing small bitarray\n\
-in a binary stream.  Use `vl_decode` for decoding.");
+in a binary stream.  Use `vl_decode()` for decoding.");
 
 /* --------------------------------------------------------------------- */
 
