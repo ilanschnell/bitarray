@@ -18,9 +18,6 @@
 
 #ifdef IS_PY3K
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
-#define BYTES_SIZE_FMT  "y#"
-#else
-#define BYTES_SIZE_FMT  "s#"
 #endif
 
 #ifdef STDC_HEADERS

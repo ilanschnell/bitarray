@@ -8,15 +8,15 @@
 
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K
-#endif
-
-#if PY_MAJOR_VERSION == 2
+#define BYTES_SIZE_FMT  "y#"
+#else
 /* the Py_MIN macro was introduced in Python 3.3 */
 #define Py_MIN(x, y)  (((x) > (y)) ? (y) : (x))
 #define PySlice_GetIndicesEx(slice, len, start, stop, step, slicelength) \
     PySlice_GetIndicesEx(((PySliceObject *) slice),                      \
                          (len), (start), (stop), (step), (slicelength))
 #define PyLong_FromLong  PyInt_FromLong
+#define BYTES_SIZE_FMT  "s#"
 #endif
 
 /* ob_size is the byte count of the buffer, not the number of elements.
