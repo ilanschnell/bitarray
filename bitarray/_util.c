@@ -681,8 +681,8 @@ vl_decode(PyObject *module, PyObject *args)
             /* grow memory - see above */
             aa->nbits = i;
             Py_SET_SIZE(aa, BYTES(aa->nbits));
-            res = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
-                                      "0123456789ABCD", 14);
+            res = PyObject_CallMethod(a, "frombytes",
+                                      BYTES_SIZE_FMT, hexdigits, 14);
             //res = PyObject_CallMethod(a, "extend", "O", a);
             if (res == NULL)
                 return NULL;
