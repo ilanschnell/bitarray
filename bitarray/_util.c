@@ -616,12 +616,11 @@ base2ba(PyObject *module, PyObject *args)
 
 /* Consume iterator while decoding bytes into bitarray.
    As we don't have access to bitarrays resize() C function, we give this
-   function a bitarray (of length 32), which will be large enough in
-   many cases.  We manipulate .nbits and .ob_size (using Py_SET_SIZE)
-   directly without having to call resize().  Whenever we need a larger
-   bitarray, we call the (Python) .frombytes() method with a multiple
-   of 7 bytes.  We make sure that the added bytes are aligned to avoid
-   expensive bit shifts of the dummy bytes being added.
+   function a bitarray (large enough in most).  We manipulate .nbits
+   and .ob_size (using Py_SET_SIZE) directly without having to call resize().
+   Whenever we need a larger bitarray, we call .frombytes() with a multiple
+   of 7 dummy bytes (such that the added bytes are aligned - to avoid
+   expensive bit shifts).
 */
 static PyObject *
 vl_decode(PyObject *module, PyObject *args)
@@ -641,9 +640,9 @@ vl_decode(PyObject *module, PyObject *args)
 
     padding = 0;       /* avoid uninitialized warning for some compilers */
 #define aa  ((bitarrayobject *) a)
-    /* note that 32 = 4 + 7 * 4 - the number of bits in a 5 byte stream */
-    if (aa->nbits != 32) {
-        PyErr_SetString(PyExc_ValueError, "bitarray length not 32");
+    /* note that 256 = 4 + 36 * 4, the number of bits in a 37 byte stream */
+    if (aa->nbits != 256) {
+        PyErr_SetString(PyExc_ValueError, "size mismatch");
         return NULL;
     }
     while ((item = PyIter_Next(iter))) {
@@ -682,10 +681,9 @@ vl_decode(PyObject *module, PyObject *args)
             /* grow memory - see above */
             aa->nbits = i;
             Py_SET_SIZE(aa, BYTES(aa->nbits));
-            assert(i % 8 ==0);      /* ensure dummy bytes are aligned */
-            k = i < 4096 ? 7 : 28;  /* added number of bytes */
-            res = PyObject_CallMethod(a, "frombytes",
-                                      BYTES_SIZE_FMT, base32_alphabet, k);
+            assert(i % 8 ==0);
+            res = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
+                                      base64_alphabet, (Py_ssize_t) 63);
             if (res == NULL)
                 return NULL;
             Py_DECREF(res);  /* drop extend result */
