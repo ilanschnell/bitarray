@@ -683,8 +683,9 @@ vl_decode(PyObject *module, PyObject *args)
             aa->nbits = i;
             Py_SET_SIZE(aa, BYTES(aa->nbits));
             assert(i % 8 ==0);  /* ensure we don't shift dummy bytes */
-            res = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
-                                      base32_alphabet, i < 4096 ? 7 : 28);
+            res = PyObject_CallMethod(a, "frombytes",
+                                      BYTES_SIZE_FMT, base32_alphabet,
+                                      (Py_ssize_t) (i < 4096 ? 7 : 28));
             //res = PyObject_CallMethod(a, "extend", "O", a);
             if (res == NULL)
                 return NULL;
