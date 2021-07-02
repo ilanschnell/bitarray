@@ -744,6 +744,7 @@ vl_encode(PyObject *module, PyObject *a)
             data[j] |= 0x40 >> k;
     }
 #undef aa
+    assert(j + 1 == n);
 
     result = PyBytes_FromStringAndSize(data, n);
     PyMem_Free((void *) data);
