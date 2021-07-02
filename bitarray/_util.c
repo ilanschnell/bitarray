@@ -661,6 +661,18 @@ vl_decode(PyObject *module, PyObject *args)
             return NULL;
         }
         Py_DECREF(item);
+
+        if (i + 6 >= BITS(Py_SIZE(aa))) {
+            /* grow memory - see above */
+            aa->nbits = i;
+            Py_SET_SIZE(aa, BYTES(aa->nbits));
+            assert(i % 8 ==0);  /* ensure dummy bytes are aligned */
+            res = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
+                                      base64_alphabet, (Py_ssize_t) 56);
+            if (res == NULL)
+                return NULL;
+            Py_DECREF(res);  /* drop extend result */
+        }
         assert(i + 6 < BITS(Py_SIZE(aa)));
 
         if (i == 0) {
@@ -677,18 +689,6 @@ vl_decode(PyObject *module, PyObject *args)
         }
         if ((b & 0x80) == 0)
             break;
-
-        if (i + 6 >= BITS(Py_SIZE(aa))) {
-            /* grow memory - see above */
-            aa->nbits = i;
-            Py_SET_SIZE(aa, BYTES(aa->nbits));
-            assert(i % 8 ==0);  /* ensure dummy bytes are aligned */
-            res = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
-                                      base64_alphabet, (Py_ssize_t) 56);
-            if (res == NULL)
-                return NULL;
-            Py_DECREF(res);  /* drop extend result */
-        }
     }
     /* set final length of bitarray */
     aa->nbits = i - padding;
