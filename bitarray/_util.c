@@ -641,8 +641,9 @@ vl_decode(PyObject *module, PyObject *args)
 
     padding = 0;       /* avoid uninitialized warning for some compilers */
 #define aa  ((bitarrayobject *) a)
-    if (aa->nbits < 32) {
-        PyErr_SetString(PyExc_ValueError, "bitarray too small");
+    /* note that 32 = 4 + 7 * 4 - the number of bits in a 5 byte stream */
+    if (aa->nbits != 32) {
+        PyErr_SetString(PyExc_ValueError, "bitarray length not 32");
         return NULL;
     }
     while ((item = PyIter_Next(iter))) {
@@ -681,8 +682,9 @@ vl_decode(PyObject *module, PyObject *args)
             /* grow memory - see above */
             aa->nbits = i;
             Py_SET_SIZE(aa, BYTES(aa->nbits));
-            res = PyObject_CallMethod(a, "frombytes",
-                                      BYTES_SIZE_FMT, hexdigits, 14);
+            assert(i % 8 ==0);  /* ensure we don't shift dummy bytes */
+            res = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
+                                      base32_alphabet, i < 4096 ? 7 : 28);
             //res = PyObject_CallMethod(a, "extend", "O", a);
             if (res == NULL)
                 return NULL;
