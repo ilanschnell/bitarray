@@ -619,9 +619,9 @@ base2ba(PyObject *module, PyObject *args)
    function a bitarray (of length 32), which will be large enough in
    many cases.  We manipulate .nbits and .ob_size (using Py_SET_SIZE)
    directly without having to call resize().  Whenever we need a larger
-   bitarray, we call the (Python) .extend() method: a.extend(a)
-   Depending on the current size, this roughly doubles the size.
-   It's a bit hackish, but it works well.
+   bitarray, we call the (Python) .frombytes() method with a multiple
+   of 7 bytes.  We make sure that the added bytes are aligned to avoid
+   expensive bit shifts of the dummy bytes being added.
 */
 static PyObject *
 vl_decode(PyObject *module, PyObject *args)
@@ -681,7 +681,9 @@ vl_decode(PyObject *module, PyObject *args)
             /* grow memory - see above */
             aa->nbits = i;
             Py_SET_SIZE(aa, BYTES(aa->nbits));
-            res = PyObject_CallMethod(a, "extend", "O", a);
+            res = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
+                                      "0123456789ABCD", 14);
+            //res = PyObject_CallMethod(a, "extend", "O", a);
             if (res == NULL)
                 return NULL;
             Py_DECREF(res);  /* drop extend result */
