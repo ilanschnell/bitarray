@@ -342,7 +342,7 @@ Use `vl_encode()` for encoding.
 
     a = bitarray(256, get_default_endian() if endian is None else endian)
     _vl_decode(__stream, a)
-    return bitarray(a)  # drop previously overallocated bitarray
+    return bitarray(a)  # drop previously over-allocated bitarray
 
 
 def huffman_code(__freq_map, endian=None):
