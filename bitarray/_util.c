@@ -618,7 +618,7 @@ base2ba(PyObject *module, PyObject *args)
 }
 
 
-#define PADBITS  3        /* number of padding bits, used in vl_*() */
+#define PADBITS  3        /* number of padding bits used in vl_*() */
 
 /* Consume iterator while decoding bytes into bitarray.
    As we don't have access to bitarrays resize() C function, we give this
@@ -670,6 +670,7 @@ vl_decode(PyObject *module, PyObject *args)
 #define aa  ((bitarrayobject *) a)
         if (i + 6 >= BITS(Py_SIZE(aa))) {
             /* grow memory - see above */
+            assert((i + PADBITS) % 7 == 0);
             assert(i % 8 == 0);  /* ensure added dummy bytes are aligned */
             aa->nbits = i;
             Py_SET_SIZE(aa, BYTES(i));
