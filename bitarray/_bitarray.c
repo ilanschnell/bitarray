@@ -723,11 +723,11 @@ bitarray_buffer_info(bitarrayobject *self)
     PyObject *res, *ptr;
 
     ptr = PyLong_FromVoidPtr(self->ob_item),
-    res = Py_BuildValue("Onsin",
+    res = Py_BuildValue("Onsnn",
                         ptr,
                         Py_SIZE(self),
                         ENDIAN_STR(self),
-                        (int) (BITS(Py_SIZE(self)) - self->nbits),
+                        BITS(Py_SIZE(self)) - self->nbits,
                         self->allocated);
     Py_DECREF(ptr);
     return res;
