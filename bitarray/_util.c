@@ -623,7 +623,8 @@ base2ba(PyObject *module, PyObject *args)
    expensive bit shifts).  We drop the over-allocated bitarray on the Python
    side after this function is called.
 */
-#define PADBITS  3              /* number of padding bits */
+#define PADBITS     3     /* number of padding bits */
+#define INITBITS  256     /* initial number of bits in bitarray */
 
 static PyObject *
 vl_decode(PyObject *module, PyObject *args)
@@ -642,10 +643,10 @@ vl_decode(PyObject *module, PyObject *args)
         return NULL;
 
     padding = 0;       /* avoid uninitialized warning for some compilers */
+    assert(INITBITS == 37 * 7 - PADBITS);    /* bits in a 37 byte stream */
+    assert(INITBITS % 8 == 0);          /* bytes being added are aligned */
 #define aa  ((bitarrayobject *) a)
-    /* 256 = 37 * 7 - 3, the number of bits in a 37 byte stream,
-       is divisible by 8, such that the added bytes are aligned */
-    if (aa->nbits != 256) {
+    if (aa->nbits != INITBITS) {
         PyErr_SetString(PyExc_ValueError, "size mismatch");
         return NULL;
     }
