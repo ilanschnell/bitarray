@@ -1001,8 +1001,12 @@ class VLFTests(unittest.TestCase, Util):
         b = vl_decode(s)
         self.check_obj(b)
         self.assertEqual(a, b)
-        padding = 3
-        self.assertEqual(len(s), (len(a) + padding + 6) // 7)
+        PADBITS = 3
+        self.assertEqual(len(s), (len(a) + PADBITS + 6) // 7)
+
+        head = ord(s[0]) if sys.version_info[0] == 2 else s[0]
+        padding = (head & 0x70) >> 4
+        self.assertEqual(len(a) + padding, 7 * len(s) - PADBITS)
 
     def test_range(self):
         for n in range(500):
