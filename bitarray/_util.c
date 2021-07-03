@@ -623,6 +623,8 @@ base2ba(PyObject *module, PyObject *args)
    expensive bit shifts).  We drop the over-allocated bitarray on the Python
    side after this function is called.
 */
+#define PADBITS  3              /* number of padding bits */
+
 static PyObject *
 vl_decode(PyObject *module, PyObject *args)
 {
@@ -641,7 +643,7 @@ vl_decode(PyObject *module, PyObject *args)
 
     padding = 0;       /* avoid uninitialized warning for some compilers */
 #define aa  ((bitarrayobject *) a)
-    /* note that 256 = 4 + 36 * 4, the number of bits in a 37 byte stream */
+    /* note that 256 = 4 + 36 * 7, the number of bits in a 37 byte stream */
     if (aa->nbits != 256) {
         PyErr_SetString(PyExc_ValueError, "size mismatch");
         return NULL;
@@ -690,7 +692,7 @@ vl_decode(PyObject *module, PyObject *args)
         if ((b & 0x80) == 0)
             break;
     }
-    assert(i == 0 || (i + 3) % 7 == 0);
+    assert(i == 0 || (i + PADBITS) % 7 == 0);
     /* set final length of bitarray */
     aa->nbits = i - padding;
     Py_SET_SIZE(aa, BYTES(aa->nbits));
@@ -700,13 +702,12 @@ vl_decode(PyObject *module, PyObject *args)
         return NULL;
 
     if (b & 0x80) {
-        k = (i + 3) / 7;
+        k = (i + PADBITS) / 7;
         return PyErr_Format(PyExc_StopIteration,
                             "no terminating byte found, bytes read: %zd", k);
     }
     Py_RETURN_NONE;
 }
-
 
 static PyObject *
 vl_encode(PyObject *module, PyObject *a)
@@ -720,9 +721,9 @@ vl_encode(PyObject *module, PyObject *a)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
-    n = (aa->nbits + 9) / 7;    /* number of resulting bytes */
-    m = 7 * n - 3;              /* number of bits resulting bytes can hold */
-    padding = m - aa->nbits;    /* number of pad bits */
+    n = (aa->nbits + PADBITS + 6) / 7;  /* number of resulting bytes */
+    m = 7 * n - PADBITS;      /* number of bits resulting bytes can hold */
+    padding = m - aa->nbits;  /* number of pad bits */
     assert(0 <= padding && padding < 7);
 
     if ((data = (char *) PyMem_Malloc((size_t) n)) == NULL)
