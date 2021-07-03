@@ -643,7 +643,8 @@ vl_decode(PyObject *module, PyObject *args)
 
     padding = 0;       /* avoid uninitialized warning for some compilers */
 #define aa  ((bitarrayobject *) a)
-    /* note that 256 = 4 + 36 * 7, the number of bits in a 37 byte stream */
+    /* 256 = 37 * 7 - 3, the number of bits in a 37 byte stream,
+       is divisible by 8, such that the added bytes are aligned */
     if (aa->nbits != 256) {
         PyErr_SetString(PyExc_ValueError, "size mismatch");
         return NULL;
@@ -668,7 +669,7 @@ vl_decode(PyObject *module, PyObject *args)
             /* grow memory - see above */
             aa->nbits = i;
             Py_SET_SIZE(aa, BYTES(aa->nbits));
-            assert(i % 8 ==0);  /* ensure dummy bytes are aligned */
+            assert(i % 8 == 0);  /* ensure dummy bytes are aligned */
             res = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
                                       base64_alphabet, (Py_ssize_t) 56);
             if (res == NULL)
