@@ -625,9 +625,10 @@ base2ba(PyObject *module, PyObject *args)
    function a bitarray (large enough in most cases).  We manipulate .nbits
    and .ob_size (using Py_SET_SIZE) directly without having to call resize().
    Whenever we need a larger bitarray, we call .frombytes() with a multiple
-   of 7 dummy bytes (such that the added bytes are aligned - to avoid
-   expensive bit shifts).  We drop the over-allocated bitarray on the Python
-   side after this function is called.
+   of 7 dummy bytes, such that the added bytes are aligned for the next time
+   we call .frombytes() (to avoid expensive bit shifts).
+   We drop the over-allocated bitarray on the Python side after this function
+   is called.
 */
 static PyObject *
 vl_decode(PyObject *module, PyObject *args)
@@ -669,11 +670,12 @@ vl_decode(PyObject *module, PyObject *args)
 #define aa  ((bitarrayobject *) a)
         if (i + 6 >= BITS(Py_SIZE(aa))) {
             /* grow memory - see above */
+            assert(i % 8 == 0);  /* ensure added dummy bytes are aligned */
             aa->nbits = i;
-            Py_SET_SIZE(aa, BYTES(aa->nbits));
-            assert(i % 8 == 0);  /* ensure dummy bytes are aligned */
+            Py_SET_SIZE(aa, BYTES(i));
+            /* 63 is a multiple 7, such bytes are aligned for next call */
             res = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
-                                      base64_alphabet, (Py_ssize_t) 56);
+                                      base64_alphabet, (Py_ssize_t) 63);
             if (res == NULL)
                 return NULL;
             Py_DECREF(res);  /* drop extend result */
