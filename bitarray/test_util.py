@@ -928,7 +928,7 @@ class VLFTests(unittest.TestCase, Util):
             self.assertEqual(a.endian(),
                              endian if endian else get_default_endian())
 
-    def test_trailing(self):
+    def test_decode_trailing(self):
         for s, bits in [(b'\x40ABC', ''),
                         (b'\xe0\x40A', '00001')]:
             stream = iter(s)
@@ -936,13 +936,13 @@ class VLFTests(unittest.TestCase, Util):
             self.assertEqual(next(stream),
                              b'A' if sys.version_info[0] == 2 else 65)
 
-    def test_ambiguity(self):
+    def test_decode_ambiguity(self):
         for s in b'\x40', b'\x4f', b'\x45':
             self.assertEqual(vl_decode(iter(s)), bitarray())
         for s in b'\x1e', b'\x1f':
             self.assertEqual(vl_decode(iter(s)), bitarray('111'))
 
-    def test_stream(self):
+    def test_decode_stream(self):
         stream = iter(b'\x40\x30\x38\x40\x2c\xe0\x40\xd3\x20')
         for bits in '', '0', '1', '', '11', '0000 1', '0011 01':
             self.assertEqual(vl_decode(stream), bitarray(bits))
@@ -975,7 +975,7 @@ class VLFTests(unittest.TestCase, Util):
                 self.assertEqual(m.group(1), str(n))
             self.assertTrue(a is None)
 
-    def test_invalid_stream(self):
+    def test_decode_invalid_stream(self):
         if sys.version_info[0] == 2:
             return
         N = 100
@@ -989,7 +989,7 @@ class VLFTests(unittest.TestCase, Util):
             self.assertTrue(a is None)
         self.assertEqual(next(s), 'end.')
 
-    def test_zeros(self):
+    def test_explicit_zeros(self):
         for n in range(100):
             a = zeros(4 + n * 7)
             s = n * b'\x80' + b'\x00'

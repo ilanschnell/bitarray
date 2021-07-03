@@ -513,11 +513,11 @@ digit_to_int(char c, int n)
 static int
 base_to_length(int n)
 {
-    int k;
+    int m;
 
-    for (k = 1; k < 7; k++) {
-        if (n == (1 << k))
-            return k;
+    for (m = 1; m < 7; m++) {
+        if (n == (1 << m))
+            return m;
     }
     PyErr_SetString(PyExc_ValueError, "base must be 2, 4, 8, 16, 32 or 64");
     return -1;
@@ -534,9 +534,9 @@ ba2base(PyObject *module, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "iO:ba2base", &n, &a))
         return NULL;
-    if (ensure_bitarray(a) < 0)
-        return NULL;
     if ((m = base_to_length(n)) < 0)
+        return NULL;
+    if (ensure_bitarray(a) < 0)
         return NULL;
 
     switch (n) {
