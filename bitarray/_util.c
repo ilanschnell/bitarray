@@ -690,6 +690,7 @@ vl_decode(PyObject *module, PyObject *args)
         if ((b & 0x80) == 0)
             break;
     }
+    assert(i == 0 || (i + 3) % 7 == 0);
     /* set final length of bitarray */
     aa->nbits = i - padding;
     Py_SET_SIZE(aa, BYTES(aa->nbits));
