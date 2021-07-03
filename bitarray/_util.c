@@ -37,6 +37,18 @@ ensure_bitarray(PyObject *obj)
     return 0;
 }
 
+static int
+ensure_bitarray_length(PyObject *a, const Py_ssize_t n)
+{
+    if (ensure_bitarray(a) < 0)
+        return -1;
+    if (((bitarrayobject *) a)->nbits != n) {
+        PyErr_SetString(PyExc_ValueError, "size mismatch");
+        return -1;
+    }
+    return 0;
+}
+
 /* ------------------------------- count_n ----------------------------- */
 
 /* return the smallest index i for which a.count(1, 0, i) == n, or when
@@ -428,15 +440,10 @@ hex2ba(PyObject *module, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "Os#", &a, &str, &strsize))
         return NULL;
-    if (ensure_bitarray(a) < 0)
+    if (ensure_bitarray_length(a, 4 * strsize) < 0)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
-    if (aa->nbits != 4 * strsize) {
-        PyErr_SetString(PyExc_ValueError, "size mismatch");
-        return NULL;
-    }
-
     le = IS_LE(aa);
     be = IS_BE(aa);
     assert(le + be == 1 && str[strsize] == 0);
@@ -587,16 +594,12 @@ base2ba(PyObject *module, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "iOs#", &n, &a, &str, &strsize))
         return NULL;
-    if (ensure_bitarray(a) < 0)
-        return NULL;
     if ((m = base_to_length(n)) < 0)
+        return NULL;
+    if (ensure_bitarray_length(a, m * strsize) < 0)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
-    if (aa->nbits != m * strsize) {
-        PyErr_SetString(PyExc_ValueError, "size mismatch");
-        return NULL;
-    }
     memset(aa->ob_item, 0x00, (size_t) Py_SIZE(a));
 
     le = IS_LE(aa);
@@ -624,32 +627,28 @@ base2ba(PyObject *module, PyObject *args)
    side after this function is called.
 */
 #define PADBITS     3     /* number of padding bits */
-#define INITBITS  256     /* initial number of bits in bitarray */
 
 static PyObject *
 vl_decode(PyObject *module, PyObject *args)
 {
+    const Py_ssize_t ibits = 256;    /* initial number of bits in a */
     PyObject *iter, *item, *res, *a;
-    Py_ssize_t padding, k;
-    Py_ssize_t i = 0;           /* bit counter */
-    unsigned char b = 0x80;     /* empty stream will raise StopIteration */
+    Py_ssize_t padding = 0;    /* uninitialized warning for some compiles */
+    Py_ssize_t k;
+    Py_ssize_t i = 0;          /* bit counter */
+    unsigned char b = 0x80;    /* empty stream will raise StopIteration */
+
+    assert(ibits == 37 * 7 - PADBITS);   /* bits in a 37 byte stream */
+    assert(ibits % 8 == 0);     /* bytes being added are aligned */
 
     if (!PyArg_ParseTuple(args, "OO", &iter, &a))
         return NULL;
     if (!PyIter_Check(iter))
         return PyErr_Format(PyExc_TypeError, "iterator or bytes expected, "
                             "got '%s'", Py_TYPE(iter)->tp_name);
-    if (ensure_bitarray(a) < 0)
+    if (ensure_bitarray_length(a, ibits) < 0)
         return NULL;
 
-    padding = 0;       /* avoid uninitialized warning for some compilers */
-    assert(INITBITS == 37 * 7 - PADBITS);    /* bits in a 37 byte stream */
-    assert(INITBITS % 8 == 0);          /* bytes being added are aligned */
-#define aa  ((bitarrayobject *) a)
-    if (aa->nbits != INITBITS) {
-        PyErr_SetString(PyExc_ValueError, "size mismatch");
-        return NULL;
-    }
     while ((item = PyIter_Next(iter))) {
 #ifdef IS_PY3K
         if (PyLong_Check(item))
@@ -666,6 +665,7 @@ vl_decode(PyObject *module, PyObject *args)
         }
         Py_DECREF(item);
 
+#define aa  ((bitarrayobject *) a)
         if (i + 6 >= BITS(Py_SIZE(aa))) {
             /* grow memory - see above */
             aa->nbits = i;
@@ -698,8 +698,8 @@ vl_decode(PyObject *module, PyObject *args)
     /* set final length of bitarray */
     aa->nbits = i - padding;
     Py_SET_SIZE(aa, BYTES(aa->nbits));
-
 #undef aa
+
     if (PyErr_Occurred())       /* from PyIter_Next() */
         return NULL;
 
