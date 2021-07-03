@@ -1,7 +1,7 @@
 Change log
 ==========
 
-2021-XX-XX   2.2.0:
+**2.2.0** (2021-07-03):
 
 * add ``bitarray.util.vl_encode()`` and ``bitarray.util.vl_decode()`` which
   uses a `variable length bitarray format <represent.rst>`__, `#131 <https://github.com/ilanschnell/bitarray/issues/131>`__
