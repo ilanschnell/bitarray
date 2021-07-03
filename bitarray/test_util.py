@@ -973,7 +973,7 @@ class VLFTests(unittest.TestCase, Util):
             self.assertRaises(StopIteration, vl_decode, s)
 
     def test_decode_error_message(self):
-        pat = re.compile('.+:\s(\d+)')
+        pat = re.compile(r'[\w\s,]+:\s+(\d+)')
         for n in range(120):
             a = None
             s = bytes(bytearray([randint(0x80, 0xef) for _ in range(n)]))
