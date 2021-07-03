@@ -37,8 +37,9 @@ ensure_bitarray(PyObject *obj)
     return 0;
 }
 
+/* ensure object is a bitarray of given length */
 static int
-ensure_bitarray_length(PyObject *a, const Py_ssize_t n)
+ensure_ba_of_length(PyObject *a, const Py_ssize_t n)
 {
     if (ensure_bitarray(a) < 0)
         return -1;
@@ -440,7 +441,7 @@ hex2ba(PyObject *module, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "Os#", &a, &str, &strsize))
         return NULL;
-    if (ensure_bitarray_length(a, 4 * strsize) < 0)
+    if (ensure_ba_of_length(a, 4 * strsize) < 0)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
@@ -596,7 +597,7 @@ base2ba(PyObject *module, PyObject *args)
         return NULL;
     if ((m = base_to_length(n)) < 0)
         return NULL;
-    if (ensure_bitarray_length(a, m * strsize) < 0)
+    if (ensure_ba_of_length(a, m * strsize) < 0)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
@@ -617,6 +618,8 @@ base2ba(PyObject *module, PyObject *args)
 }
 
 
+#define PADBITS  3        /* number of padding bits, used in vl_*() */
+
 /* Consume iterator while decoding bytes into bitarray.
    As we don't have access to bitarrays resize() C function, we give this
    function a bitarray (large enough in most cases).  We manipulate .nbits
@@ -626,8 +629,6 @@ base2ba(PyObject *module, PyObject *args)
    expensive bit shifts).  We drop the over-allocated bitarray on the Python
    side after this function is called.
 */
-#define PADBITS     3     /* number of padding bits */
-
 static PyObject *
 vl_decode(PyObject *module, PyObject *args)
 {
@@ -646,7 +647,7 @@ vl_decode(PyObject *module, PyObject *args)
     if (!PyIter_Check(iter))
         return PyErr_Format(PyExc_TypeError, "iterator or bytes expected, "
                             "got '%s'", Py_TYPE(iter)->tp_name);
-    if (ensure_bitarray_length(a, ibits) < 0)
+    if (ensure_ba_of_length(a, ibits) < 0)
         return NULL;
 
     while ((item = PyIter_Next(iter))) {

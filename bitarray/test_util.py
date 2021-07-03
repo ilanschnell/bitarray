@@ -897,29 +897,13 @@ class VLFTests(unittest.TestCase, Util):
             self.assertEqual(vl_encode(a), s)
             self.assertEqual(vl_decode(s), a)
 
-    def test_zeros(self):
-        for n in range(100):
-            a = zeros(4 + n * 7)
-            s = n * b'\x80' + b'\x00'
-            self.assertEqual(vl_encode(a), s)
-            b = vl_decode(s)
-            self.assertEqual(b, a)
-            self.check_obj(b)
-
-    def test_range(self):
-        for n in range(500):
-            a = bitarray(n)
-            b = vl_decode(vl_encode(a))
-            self.assertEqual(b, a)
-            self.check_obj(b)
-
     def test_encode(self):
         for endian in 'big', 'little':
             s = vl_encode(bitarray('001101', endian))
             self.assertIsInstance(s, bytes)
             self.assertEqual(s, b'\xd3\x20')
 
-    def test_args_decode(self):
+    def test_decode_args(self):
         if sys.version_info[0] == 3:
             self.assertRaises(TypeError, vl_decode, 'foo')
             self.assertRaises(TypeError, vl_decode, iter([b'\x40']))
@@ -936,6 +920,13 @@ class VLFTests(unittest.TestCase, Util):
             a = vl_decode(s, endian=self.random_endian())
             self.assertIsInstance(a, bitarray)
             self.assertEqual(a, bitarray('0011 01'))
+
+    def test_decode_endian(self):
+        for endian in 'little', 'big', None:
+            a = vl_decode(b'\xd3\x20', endian)
+            self.assertEqual(a, bitarray('0011 01'))
+            self.assertEqual(a.endian(),
+                             endian if endian else get_default_endian())
 
     def test_trailing(self):
         for s, bits in [(b'\x40ABC', ''),
@@ -998,24 +989,32 @@ class VLFTests(unittest.TestCase, Util):
             self.assertTrue(a is None)
         self.assertEqual(next(s), 'end.')
 
+    def test_zeros(self):
+        for n in range(100):
+            a = zeros(4 + n * 7)
+            s = n * b'\x80' + b'\x00'
+            self.assertEqual(vl_encode(a), s)
+            self.assertEqual(vl_decode(s), a)
+
+    def round_trip(self, a):
+        s = vl_encode(a)
+        b = vl_decode(s)
+        self.check_obj(b)
+        self.assertEqual(a, b)
+        padding = 3
+        self.assertEqual(len(s), (len(a) + padding + 6) // 7)
+
+    def test_range(self):
+        for n in range(500):
+            self.round_trip(bitarray(n))
+
     def test_large(self):
         a = urandom(randint(50000, 100000))
-        s = vl_encode(a)
-        self.assertEqual(len(s), (len(a) + 3 + 6) // 7)
-        self.assertEqual(a, vl_decode(s))
+        self.round_trip(a)
 
     def test_random(self):
         for a in self.randombitarrays():
-            s = vl_encode(a)
-            self.assertEqual(len(s), (len(a) + 3 + 6) // 7)
-            b = bitarray(a, self.other_endian(a.endian()))
-            self.assertEqual(s, vl_encode(b))
-
-            for endian in 'big', 'little':
-                b = vl_decode(s, endian)
-                self.check_obj(b)
-                self.assertEqual(b, a)
-                self.assertEqual(b.endian(), endian)
+            self.round_trip(a)
 
 tests.append(VLFTests)
 
