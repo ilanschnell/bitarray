@@ -28,6 +28,10 @@ def write_doc(fo, name):
     for line in lines[2:]:
         out = line.rstrip()
         fo.write("   %s\n" % out.replace('`', '``') if out else "\n")
+    if '.vl_' in name:
+        url = BASE_URL + '/blob/master/doc/variable_length.rst'
+        fo.write("\n   Please see `Variable length bitarray "
+                 "format <%s>`__ for more details" % url)
     fo.write('\n\n')
 
 
@@ -45,7 +49,7 @@ an integer 0 or 1.
 The bitarray object:
 --------------------
 
-""" % (bitarray.__version__, "%s/blob/master/doc/changelog.rst" % BASE_URL))
+""" % (bitarray.__version__, BASE_URL + "/blob/master/doc/changelog.rst"))
     write_doc(fo, 'bitarray')
 
     fo.write("**A bitarray object supports the following methods:**\n\n")
@@ -134,6 +138,7 @@ def main():
 
     doctest.testfile('./README.rst')
     doctest.testfile('./doc/represent.rst')
+    doctest.testfile('./doc/variable_length.rst')
 
 
 if __name__ == '__main__':

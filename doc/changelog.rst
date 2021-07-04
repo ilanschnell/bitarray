@@ -1,6 +1,10 @@
 Change log
 ==========
 
+2021-XX-XX   2.2.1:
+
+
+
 **2.2.0** (2021-07-03):
 
 * add ``bitarray.util.vl_encode()`` and ``bitarray.util.vl_decode()`` which

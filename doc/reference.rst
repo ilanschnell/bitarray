@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.2.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.2.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -369,6 +369,7 @@ Functions defined in `bitarray.util` module:
    This representation is useful for efficiently storing small bitarray
    in a binary stream.  Use ``vl_decode()`` for decoding.
 
+   Please see `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__ for more details
 
 ``vl_decode(stream, /, endian=None)`` -> bitarray
    Decode binary stream (an integer iterator, or bytes object), and return
@@ -377,6 +378,7 @@ Functions defined in `bitarray.util` module:
    terminating byte is found.
    Use ``vl_encode()`` for encoding.
 
+   Please see `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__ for more details
 
 ``huffman_code(dict, /, endian=None)`` -> dict
    Given a frequency map, a dictionary mapping symbols to their frequency,
