@@ -673,6 +673,8 @@ New in version 1.2.
    Non-bitarray objects are printed by the standard library
    function ``pprint.pprint()``.
 
+   New in version 1.8.
+
 
 ``make_endian(bitarray, endian, /)`` -> bitarray
    When the endianness of the given bitarray is different from ``endian``,
@@ -703,7 +705,7 @@ New in version 1.2.
    Return the parity of bitarray ``a``.
    This is equivalent to ``a.count() % 2`` (but more efficient).
 
-   New in version 1.8.1.
+   New in version 1.9.
 
 
 ``count_and(a, b, /)`` -> int

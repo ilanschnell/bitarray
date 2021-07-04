@@ -10,20 +10,21 @@ import bitarray.util
 
 
 NEW_IN = {
-    'frozenbitarray': '1.1',
+    'frozenbitarray':     '1.1',
     'get_default_endian': '1.3',
-    'decodetree': '1.6',
-    'bitarray.clear': '1.4',
-    'bitarray.find': '2.1',
-    'util.make_endian': '1.3',
-    'util.parity': '1.8.1',
-    'util.ba2base': '1.9',
-    'util.base2ba': '1.9',
-    'util.serialize': '1.8',
-    'util.deserialize': '1.8',
-    'util.urandom': '1.7',
-    'util.vl_encode': '2.2',
-    'util.vl_decode': '2.2',
+    'util.make_endian':   '1.3',
+    'bitarray.clear':     '1.4',
+    'decodetree':         '1.6',
+    'util.urandom':       '1.7',
+    'util.pprint':        '1.8',
+    'util.serialize':     '1.8',
+    'util.deserialize':   '1.8',
+    'util.ba2base':       '1.9',
+    'util.base2ba':       '1.9',
+    'util.parity':        '1.9',
+    'bitarray.find':      '2.1',
+    'util.vl_encode':     '2.2',
+    'util.vl_decode':     '2.2',
 }
 
 BASE_URL = "https://github.com/ilanschnell/bitarray"
