@@ -669,12 +669,12 @@ vl_decode(PyObject *module, PyObject *args)
         Py_DECREF(item);
 
         assert(i == 0 || (i + PADBITS) % 7 == 0);
-#define aa  ((bitarrayobject *) a)
-        if (i + 6 >= BITS(Py_SIZE(aa))) {
+        if (i + 6 >= BITS(Py_SIZE(a))) {
             /* grow memory - see above */
             assert(i % 8 == 0);  /* ensure added dummy bytes are aligned */
+#define aa  ((bitarrayobject *) a)
             aa->nbits = i;
-            Py_SET_SIZE(aa, BYTES(i));
+            Py_SET_SIZE(a, BYTES(i));
             /* 63 is a multiple of 7 - bytes will be aligned for next call */
             res = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
                                       base64_alphabet, (Py_ssize_t) 63);
@@ -682,7 +682,7 @@ vl_decode(PyObject *module, PyObject *args)
                 return NULL;
             Py_DECREF(res);  /* drop extend result */
         }
-        assert(i + 6 < BITS(Py_SIZE(aa)));
+        assert(i + 6 < BITS(Py_SIZE(a)));
 
         if (i == 0) {
             padding = (b & 0x70) >> 4;
@@ -701,7 +701,7 @@ vl_decode(PyObject *module, PyObject *args)
     }
     /* set final length of bitarray */
     aa->nbits = i - padding;
-    Py_SET_SIZE(aa, BYTES(aa->nbits));
+    Py_SET_SIZE(a, BYTES(aa->nbits));
 #undef aa
 
     if (PyErr_Occurred())       /* from PyIter_Next() */
