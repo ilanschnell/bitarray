@@ -28,10 +28,12 @@ def write_doc(fo, name):
     for line in lines[2:]:
         out = line.rstrip()
         fo.write("   %s\n" % out.replace('`', '``') if out else "\n")
-    if '.vl_' in name:
+
+    if name.startswith('util.vl_'):
         url = BASE_URL + '/blob/master/doc/variable_length.rst'
-        fo.write("\n   Please see `Variable length bitarray "
-                 "format <%s>`__ for more details" % url)
+        fo.write("\n   Please find more details in: `Variable length "
+                 "bitarray format <%s>`__" % url)
+
     fo.write('\n\n')
 
 

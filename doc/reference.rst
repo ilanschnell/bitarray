@@ -369,7 +369,7 @@ Functions defined in `bitarray.util` module:
    This representation is useful for efficiently storing small bitarray
    in a binary stream.  Use ``vl_decode()`` for decoding.
 
-   Please see `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__ for more details
+   Please find more details in: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__
 
 ``vl_decode(stream, /, endian=None)`` -> bitarray
    Decode binary stream (an integer iterator, or bytes object), and return
@@ -378,7 +378,7 @@ Functions defined in `bitarray.util` module:
    terminating byte is found.
    Use ``vl_encode()`` for encoding.
 
-   Please see `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__ for more details
+   Please find more details in: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__
 
 ``huffman_code(dict, /, endian=None)`` -> dict
    Given a frequency map, a dictionary mapping symbols to their frequency,
