@@ -461,6 +461,8 @@ The bitarray object:
 ``clear()``
    Remove all items from the bitarray.
 
+   New in version 1.4.
+
 
 ``copy()`` -> bitarray
    Return a copy of the bitarray.
@@ -501,6 +503,8 @@ The bitarray object:
    Return the lowest index where sub_bitarray is found, such that sub_bitarray
    is contained within ``[start:stop]``.
    Return -1 when sub_bitarray is not found.
+
+   New in version 2.1.
 
 
 ``frombytes(bytes, /)``
@@ -618,10 +622,14 @@ Other objects:
    Its contents cannot be altered after it is created; however, it can be used
    as a dictionary key.
 
+   New in version 1.1.
+
 
 ``decodetree(code, /)`` -> decodetree
    Given a prefix code (a dict mapping symbols to bitarrays),
    create a binary tree object to be passed to ``.decode()`` or ``.iterdecode()``.
+
+   New in version 1.6.
 
 
 Functions defined in the `bitarray` module:
@@ -635,6 +643,8 @@ Functions defined in the `bitarray` module:
    Return the default endianness for new bitarray objects being created.
    Unless ``_set_default_endian()`` is called, the return value is ``big``.
 
+   New in version 1.3.
+
 
 ``test(verbosity=1, repeat=1)`` -> TextTestResult
    Run self-test, and return unittest.runner.TextTestResult object.
@@ -643,6 +653,8 @@ Functions defined in the `bitarray` module:
 Functions defined in `bitarray.util` module:
 --------------------------------------------
 
+New in version 1.2.
+
 ``zeros(length, /, endian=None)`` -> bitarray
    Create a bitarray of length, with all values 0, and optional
    endianness, which may be 'big', 'little'.
@@ -650,6 +662,8 @@ Functions defined in `bitarray.util` module:
 
 ``urandom(length, /, endian=None)`` -> bitarray
    Return a bitarray of ``length`` random bits (uses ``os.urandom``).
+
+   New in version 1.7.
 
 
 ``pprint(bitarray, /, stream=None, group=8, indent=4, width=80)``
@@ -666,6 +680,8 @@ Functions defined in `bitarray.util` module:
    as the original bitarray.
    Otherwise (endianness is already ``endian``) the original bitarray is returned
    unchanged.
+
+   New in version 1.3.
 
 
 ``rindex(bitarray, value=1, /)`` -> int
@@ -686,6 +702,8 @@ Functions defined in `bitarray.util` module:
 ``parity(a, /)`` -> int
    Return the parity of bitarray ``a``.
    This is equivalent to ``a.count() % 2`` (but more efficient).
+
+   New in version 1.8.1.
 
 
 ``count_and(a, b, /)`` -> int
@@ -731,6 +749,9 @@ Functions defined in `bitarray.util` module:
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
+   New in version 1.9.
+
+
 ``base2ba(n, asciistr, /, endian=None)`` -> bitarray
    Bitarray of the base ``n`` ASCII representation.
    Allowed values for ``n`` are 2, 4, 8, 16 and 32.
@@ -740,6 +761,9 @@ Functions defined in `bitarray.util` module:
    standard base 64 alphabet is used.
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
+
+   New in version 1.9.
+
 
 ``ba2int(bitarray, /, signed=False)`` -> int
    Convert the given bitarray into an integer.
@@ -763,10 +787,16 @@ Functions defined in `bitarray.util` module:
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
+   New in version 1.8.
+
+
 ``deserialize(bytes, /)`` -> bitarray
    Return a bitarray given the bytes representation returned by ``serialize()``.
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
+
+   New in version 1.8.
+
 
 ``vl_encode(bitarray, /)`` -> bytes
    Return variable length binary representation of bitarray.
@@ -774,6 +804,9 @@ Functions defined in `bitarray.util` module:
    in a binary stream.  Use ``vl_decode()`` for decoding.
 
    See also: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__
+
+   New in version 2.2.
+
 
 ``vl_decode(stream, /, endian=None)`` -> bitarray
    Decode binary stream (an integer iterator, or bytes object), and return
@@ -783,6 +816,9 @@ Functions defined in `bitarray.util` module:
    Use ``vl_encode()`` for encoding.
 
    See also: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__
+
+   New in version 2.2.
+
 
 ``huffman_code(dict, /, endian=None)`` -> dict
    Given a frequency map, a dictionary mapping symbols to their frequency,
