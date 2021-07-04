@@ -675,7 +675,7 @@ vl_decode(PyObject *module, PyObject *args)
             assert(i % 8 == 0);  /* ensure added dummy bytes are aligned */
             aa->nbits = i;
             Py_SET_SIZE(aa, BYTES(i));
-            /* 63 is a multiple 7, such bytes are aligned for next call */
+            /* 63 is a multiple of 7 - bytes will be aligned for next call */
             res = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
                                       base64_alphabet, (Py_ssize_t) 63);
             if (res == NULL)

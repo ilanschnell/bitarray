@@ -30,21 +30,24 @@ NEW_IN = {
 BASE_URL = "https://github.com/ilanschnell/bitarray"
 
 DOCS = {
-    'repr': ('Bitarray representations', 'represent.rst'),
+    'rep': ('Bitarray representations', 'represent.rst'),
     'vlf': ('Variable length bitarray format', 'variable_length.rst'),
 }
 
 DOC_LINKS = {
-    'util.ba2base': 'repr',
-    'util.base2ba': 'repr',
-    'util.serialize': 'repr',
-    'util.deserialize': 'repr',
-    'util.vl_encode': 'vlf',
-    'util.vl_decode': 'vlf',
+    'util.ba2base':     'rep',
+    'util.base2ba':     'rep',
+    'util.serialize':   'rep',
+    'util.deserialize': 'rep',
+    'util.vl_encode':   'vlf',
+    'util.vl_decode':   'vlf',
 }
+
+_NAMES = set()
 
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
 def write_doc(fo, name):
+    _NAMES.add(name)
     doc = eval('bitarray.%s.__doc__' % name)
     assert doc, name
     lines = doc.splitlines()
@@ -112,6 +115,8 @@ The bitarray object:
     for func in bitarray.util.__all__:
         write_doc(fo, 'util.%s' % func)
 
+    for name in list(NEW_IN) + list(DOC_LINKS):
+        assert name in _NAMES, name
 
 def update_readme(path):
     ver_pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
