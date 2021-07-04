@@ -761,10 +761,12 @@ Functions defined in `bitarray.util` module:
    ``deserialize()``.  It efficiently represents the bitarray object (including
    its endianness) and is guaranteed not to change in future releases.
 
+   See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
 ``deserialize(bytes, /)`` -> bitarray
    Return a bitarray given the bytes representation returned by ``serialize()``.
 
+   See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
 ``vl_encode(bitarray, /)`` -> bytes
    Return variable length binary representation of bitarray.

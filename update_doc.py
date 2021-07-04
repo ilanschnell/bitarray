@@ -19,6 +19,8 @@ DOCS = {
 DOC_LINKS = {
     'util.ba2base': 'repr',
     'util.base2ba': 'repr',
+    'util.serialize': 'repr',
+    'util.deserialize': 'repr',
     'util.vl_encode': 'vlf',
     'util.vl_decode': 'vlf',
 }
