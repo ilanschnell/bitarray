@@ -11,6 +11,17 @@ import bitarray.util
 
 BASE_URL = "https://github.com/ilanschnell/bitarray"
 
+DOCS = {
+    'repr': ('Bitarray representations', 'represent.rst'),
+    'vlf': ('Variable length bitarray format', 'variable_length.rst'),
+}
+
+DOC_LINKS = {
+    'util.ba2base': 'repr',
+    'util.base2ba': 'repr',
+    'util.vl_encode': 'vlf',
+    'util.vl_decode': 'vlf',
+}
 
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
 def write_doc(fo, name):
@@ -29,10 +40,11 @@ def write_doc(fo, name):
         out = line.rstrip()
         fo.write("   %s\n" % out.replace('`', '``') if out else "\n")
 
-    if name.startswith('util.vl_'):
-        url = BASE_URL + '/blob/master/doc/variable_length.rst'
-        fo.write("\n   Please find more details in: `Variable length "
-                 "bitarray format <%s>`__" % url)
+    link = DOC_LINKS.get(name)
+    if link:
+        title, filename = DOCS[link]
+        url = BASE_URL + '/blob/master/doc/' + filename
+        fo.write("\n   See also: `%s <%s>`__" % (title, url))
 
     fo.write('\n\n')
 

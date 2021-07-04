@@ -329,6 +329,7 @@ Functions defined in `bitarray.util` module:
    For ``n=32`` the RFC 4648 Base32 alphabet is used, and for ``n=64`` the
    standard base 64 alphabet is used.
 
+   See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
 ``base2ba(n, asciistr, /, endian=None)`` -> bitarray
    Bitarray of the base ``n`` ASCII representation.
@@ -338,6 +339,7 @@ Functions defined in `bitarray.util` module:
    For ``n=32`` the RFC 4648 Base32 alphabet is used, and for ``n=64`` the
    standard base 64 alphabet is used.
 
+   See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
 ``ba2int(bitarray, /, signed=False)`` -> int
    Convert the given bitarray into an integer.
@@ -369,7 +371,7 @@ Functions defined in `bitarray.util` module:
    This representation is useful for efficiently storing small bitarray
    in a binary stream.  Use ``vl_decode()`` for decoding.
 
-   Please find more details in: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__
+   See also: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__
 
 ``vl_decode(stream, /, endian=None)`` -> bitarray
    Decode binary stream (an integer iterator, or bytes object), and return
@@ -378,7 +380,7 @@ Functions defined in `bitarray.util` module:
    terminating byte is found.
    Use ``vl_encode()`` for encoding.
 
-   Please find more details in: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__
+   See also: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__
 
 ``huffman_code(dict, /, endian=None)`` -> dict
    Given a frequency map, a dictionary mapping symbols to their frequency,
