@@ -640,8 +640,8 @@ vl_decode(PyObject *module, PyObject *args)
     Py_ssize_t i = 0;          /* bit counter */
     unsigned char b = 0x80;    /* empty stream will raise StopIteration */
 
-    assert(ibits == 37 * 7 - PADBITS);   /* bits in a 37 byte stream */
-    assert(ibits % 8 == 0);     /* bytes being added are aligned */
+    /* ensure that bits will be aligned when gowing memory below */
+    assert((ibits + PADBITS) % 7 == 0 && ibits % 8 == 0);
 
     if (!PyArg_ParseTuple(args, "OO", &iter, &a))
         return NULL;
@@ -667,10 +667,10 @@ vl_decode(PyObject *module, PyObject *args)
         }
         Py_DECREF(item);
 
+        assert(i == 0 || (i + PADBITS) % 7 == 0);
 #define aa  ((bitarrayobject *) a)
         if (i + 6 >= BITS(Py_SIZE(aa))) {
             /* grow memory - see above */
-            assert((i + PADBITS) % 7 == 0);
             assert(i % 8 == 0);  /* ensure added dummy bytes are aligned */
             aa->nbits = i;
             Py_SET_SIZE(aa, BYTES(i));
@@ -698,7 +698,6 @@ vl_decode(PyObject *module, PyObject *args)
         if ((b & 0x80) == 0)
             break;
     }
-    assert(i == 0 || (i + PADBITS) % 7 == 0);
     /* set final length of bitarray */
     aa->nbits = i - padding;
     Py_SET_SIZE(aa, BYTES(aa->nbits));
