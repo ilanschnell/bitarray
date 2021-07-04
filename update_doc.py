@@ -108,7 +108,7 @@ The bitarray object:
 
     fo.write("Functions defined in `bitarray.util` module:\n"
              "--------------------------------------------\n\n"
-             "New in version 1.2.\n\n")
+             "This sub-module was add in version 1.2.\n\n")
     for func in bitarray.util.__all__:
         write_doc(fo, 'util.%s' % func)
 

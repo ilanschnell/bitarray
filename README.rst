@@ -653,7 +653,7 @@ Functions defined in the `bitarray` module:
 Functions defined in `bitarray.util` module:
 --------------------------------------------
 
-New in version 1.2.
+This sub-module was add in version 1.2.
 
 ``zeros(length, /, endian=None)`` -> bitarray
    Create a bitarray of length, with all values 0, and optional
