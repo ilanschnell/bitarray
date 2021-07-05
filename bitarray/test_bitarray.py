@@ -370,7 +370,16 @@ class CreateObjectTests(unittest.TestCase, Util):
 
     def test_rawbytes_invalid(self):
         for s in b'\x01', b'\x04', b'\x07', b'\x11', b'\x15', b'\x17':
-            self.assertRaises(ValueError, bitarray.__new__, bitarray, s)
+            # this error is raised in unpickle() (C function)
+            if is_py3k:
+                self.assertRaisesMessage(ValueError,
+                                         "invalid header byte: 0x%02x" % s[0],
+                                         bitarray.__new__, bitarray, s)
+            else:
+                # Python 2: PyErr_Format() seems to handle "0x%02x"
+                # incorrectly.  Oh well...
+                self.assertRaises(ValueError, bitarray.__new__, bitarray, s)
+
             a = bitarray(s + b'\x00')
             head = s[0] if is_py3k else ord(s[0])
             endian, unused = divmod(head, 16)
@@ -378,9 +387,6 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(len(a), 8 - unused)
             self.assertFalse(a.any())
 
-        # this error comes from the unpickle() (C function)
-        self.assertRaisesMessage(ValueError, "invalid header byte 0x11",
-                                 bitarray.__new__, bitarray, b'\x11')
         s = b'\x21'
         if is_py3k:
             # on Python 3, we don't allow bitarrays being created from bytes

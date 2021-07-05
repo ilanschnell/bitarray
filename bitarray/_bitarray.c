@@ -2896,7 +2896,7 @@ unpickle(PyTypeObject *type, PyObject *bytes, int endian)
 
     if (nbytes == 1 && head % 8)
         return PyErr_Format(PyExc_ValueError,
-                            "invalid header byte 0x%02x", head);
+                            "invalid header byte: 0x%02x", head);
 
     res = newbitarrayobject(type,
                             BITS(nbytes - 1) - ((Py_ssize_t) (head % 8)),
