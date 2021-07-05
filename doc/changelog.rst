@@ -3,6 +3,7 @@ Change log
 
 2021-XX-XX   2.2.1:
 
+* improve documentation
 
 
 **2.2.0** (2021-07-03):

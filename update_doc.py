@@ -9,6 +9,8 @@ import bitarray
 import bitarray.util
 
 
+BASE_URL = "https://github.com/ilanschnell/bitarray"
+
 NEW_IN = {
     'frozenbitarray':     '1.1',
     'get_default_endian': '1.3',
@@ -26,8 +28,6 @@ NEW_IN = {
     'util.vl_encode':     '2.2',
     'util.vl_decode':     '2.2',
 }
-
-BASE_URL = "https://github.com/ilanschnell/bitarray"
 
 DOCS = {
     'rep': ('Bitarray representations', 'represent.rst'),
