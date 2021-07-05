@@ -47,6 +47,14 @@ typedef struct {
 #define BITMASK(endian, i)  \
     (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) % 8) : (7 - (i) % 8)))
 
+/* Compatibility with Visual Studio 2013 and older which don't support
+   the inline keyword in C (only in C++): use __inline instead.
+   (copied from pythoncapi_compat.h) */
+#if (defined(_MSC_VER) && _MSC_VER < 1900 \
+     && !defined(__cplusplus) && !defined(inline))
+#define inline __inline
+#endif
+
 /* ------------ low level access to bits in bitarrayobject ------------- */
 
 #ifndef NDEBUG
