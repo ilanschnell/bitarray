@@ -1235,14 +1235,13 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
         Py_RETURN_NONE;
 
     /* Before we extend the raw bytes with the new data, we need to store
-       the current size and pad the last byte, as our bitarray size might
-       not be a multiple of 8.  After extending, we remove the padding
-       bits again.
+       the current size and padding, as the bitarray size might not be
+       a multiple of 8.  After extending, we remove the padding bits again.
     */
     t = self->nbits;
-    p = setunused(self);
+    p = BITS(Py_SIZE(self)) - t;     /* padding */
     self->nbits += p;
-    assert(self->nbits % 8 == 0);
+    assert(0 <= p && p < 8 && self->nbits % 8 == 0);
 
     if (resize(self, self->nbits + BITS(nbytes)) < 0)
         return NULL;
