@@ -353,8 +353,7 @@ serialize(PyObject *module, PyObject *a)
         return PyErr_NoMemory();
 
 #define aa  ((bitarrayobject *) a)
-    *data = (char) (16 * IS_BE(aa) + BITS(nbytes) - aa->nbits);
-    setunused(aa);
+    *data = (char) (16 * IS_BE(aa) + setunused(aa));
     memcpy(data + 1, aa->ob_item, (size_t) nbytes);
 #undef aa
     result = PyBytes_FromStringAndSize(data, nbytes + 1);
