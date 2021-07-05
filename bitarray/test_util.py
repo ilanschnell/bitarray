@@ -1331,7 +1331,7 @@ class TestsSerialization(unittest.TestCase, Util):
                 self.assertRaises(ValueError, deserialize, b)
 
     def test_bits_ignored(self):
-        # the unused bits (with the last bytes) are ignored
+        # the unused padding bits (with the last bytes) are ignored
         for b, a in [
                 (b'\x07\x01', bitarray('1', 'little')),
                 (b'\x07\x03', bitarray('1', 'little')),

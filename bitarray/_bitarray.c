@@ -738,8 +738,8 @@ PyDoc_STRVAR(buffer_info_doc,
 \n\
 Return a tuple (address, size, endianness, unused, allocated) giving the\n\
 memory address of the bitarray's buffer, the buffer size (in bytes),\n\
-the bit endianness as a string, the number of unused bits within the last\n\
-byte, and the allocated memory for the buffer (in bytes).");
+the bit endianness as a string, the number of unused padding bits within\n\
+the last byte, and the allocated memory for the buffer (in bytes).");
 
 
 static PyObject *
