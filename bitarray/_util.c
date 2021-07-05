@@ -618,7 +618,7 @@ base2ba(PyObject *module, PyObject *args)
 }
 
 
-#define PADBITS  3        /* number of padding bits used in vl_*() */
+#define PADBITS  3     /* bits used for padding bits used in vl_*() */
 
 /* Consume iterator while decoding bytes into bitarray.
    As we don't have access to bitarrays resize() C function, we give this
@@ -635,10 +635,10 @@ vl_decode(PyObject *module, PyObject *args)
 {
     const Py_ssize_t ibits = 256;    /* initial number of bits in a */
     PyObject *iter, *item, *res, *a;
-    Py_ssize_t padding = 0;    /* uninitialized warning for some compiles */
+    Py_ssize_t padding = 0;  /* number of pad bits read from header byte */
+    Py_ssize_t i = 0;        /* bit counter */
+    unsigned char b = 0x80;  /* empty stream will raise StopIteration */
     Py_ssize_t k;
-    Py_ssize_t i = 0;          /* bit counter */
-    unsigned char b = 0x80;    /* empty stream will raise StopIteration */
 
     /* Ensure that bits will be aligned when gowing memory below.
        Possible values for ibits are: 32, 88, 144, 200, 256, 312, ... */
