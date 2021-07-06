@@ -1232,7 +1232,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
        a multiple of 8.  After extending, we remove the padding bits again.
     */
     t = self->nbits;
-    p = BITS(Py_SIZE(self)) - t;     /* padding */
+    p = BITS(BYTES(t)) - t;     /* padding */
     self->nbits += p;
     assert(0 <= p && p < 8 && self->nbits % 8 == 0);
 

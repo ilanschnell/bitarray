@@ -655,6 +655,7 @@ vl_decode(PyObject *module, PyObject *args)
     if (ensure_ba_of_length(a, ibits) < 0)
         return NULL;
 
+#define aa  ((bitarrayobject *) a)
     while ((item = PyIter_Next(iter))) {
 #ifdef IS_PY3K
         if (PyLong_Check(item))
@@ -672,12 +673,11 @@ vl_decode(PyObject *module, PyObject *args)
         Py_DECREF(item);
 
         assert(i == 0 || (i + PADBITS) % 7 == 0);
-        if (i + 6 >= BITS(Py_SIZE(a))) {
+        if (i + 6 >= aa->nbits) {
             /* grow memory - see above */
             assert(i % 8 == 0);  /* ensure added dummy bytes are aligned */
-#define aa  ((bitarrayobject *) a)
             aa->nbits = i;
-            Py_SET_SIZE(a, BYTES(i));
+            Py_SET_SIZE(a, BYTES(aa->nbits));
             /* 63 is a multiple of 7 - bytes will be aligned for next call */
             res = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
                                       base64_alphabet, (Py_ssize_t) 63);
@@ -685,7 +685,7 @@ vl_decode(PyObject *module, PyObject *args)
                 return NULL;
             Py_DECREF(res);  /* drop extend result */
         }
-        assert(i + 6 < BITS(Py_SIZE(a)));
+        assert(i + 6 < aa->nbits);
 
         if (i == 0) {
             padding = (b & 0x70) >> 4;
