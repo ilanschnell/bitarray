@@ -724,7 +724,7 @@ vl_encode(PyObject *module, PyObject *a)
     PyObject *result;
     Py_ssize_t padding, n, m, i, k;
     Py_ssize_t j = 0;           /* byte conter */
-    char *data;
+    char *str;
 
     if (ensure_bitarray(a) < 0)
         return NULL;
@@ -735,26 +735,26 @@ vl_encode(PyObject *module, PyObject *a)
     padding = m - aa->nbits;  /* number of pad bits */
     assert(0 <= padding && padding < 7);
 
-    if ((data = (char *) PyMem_Malloc((size_t) n)) == NULL)
+    if ((str = (char *) PyMem_Malloc((size_t) n)) == NULL)
         return PyErr_NoMemory();
 
-    data[0] = aa->nbits > 4 ? 0x80 : 0x00;  /* leading bit */
-    data[0] |= padding << 4;                /* encode number of pad bits */
+    str[0] = aa->nbits > 4 ? 0x80 : 0x00;  /* leading bit */
+    str[0] |= padding << 4;                /* encode number of pad bits */
     for (i = 0; i < 4 && i < aa->nbits; i++)
-        data[0] |= (0x08 >> i) * getbit(aa, i);
+        str[0] |= (0x08 >> i) * getbit(aa, i);
 
     for (i = 4; i < aa->nbits; i++) {
         k = (i - 4) % 7;
         if (k == 0)
-            data[++j] = i + 7 < m ? 0x80 : 0x00;  /* leading bit */
+            str[++j] = i + 7 < m ? 0x80 : 0x00;  /* leading bit */
 
-        data[j] |= (0x40 >> k) * getbit(aa, i);
+        str[j] |= (0x40 >> k) * getbit(aa, i);
     }
 #undef aa
     assert(j + 1 == n);
 
-    result = PyBytes_FromStringAndSize(data, n);
-    PyMem_Free((void *) data);
+    result = PyBytes_FromStringAndSize(str, n);
+    PyMem_Free((void *) str);
     return result;
 }
 

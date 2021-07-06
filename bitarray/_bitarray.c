@@ -2170,7 +2170,7 @@ binode_delete(binode *nd)
     binode_delete(nd->child[0]);
     binode_delete(nd->child[1]);
     Py_XDECREF(nd->symbol);
-    PyMem_Free(nd);
+    PyMem_Free((void *) nd);
 }
 
 /* insert symbol (mapping to ba) into the tree */
