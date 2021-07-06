@@ -72,7 +72,7 @@ typedef struct {
 static inline int
 getbit(bitarrayobject *self, Py_ssize_t i)
 {
-    assert(0 <= i && i < self->nbits);
+    assert(0 <= i && i < self->nbits && i / 8 < Py_SIZE(self));
     return (self->ob_item[i / 8] & BITMASK(self->endian, i) ? 1 : 0);
 }
 
@@ -81,7 +81,7 @@ setbit(bitarrayobject *self, Py_ssize_t i, int bit)
 {
     char *cp, mask;
 
-    assert(0 <= i && i < BITS(Py_SIZE(self)));
+    assert(0 <= i && i < self->nbits && i / 8 < Py_SIZE(self));
     mask = BITMASK(self->endian, i);
     cp = self->ob_item + i / 8;
     if (bit)
