@@ -230,11 +230,11 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
        itself. */
     if (a <= b) {
         for (i = 0; i < n; i++)             /* loop forward (delete) */
-            setbit(self, i + a, GETBIT(other, i + b));
+            setbit(self, i + a, getbit(other, i + b));
     }
     else {
         for (i = n - 1; i >= 0; i--)      /* loop backwards (insert) */
-            setbit(self, i + a, GETBIT(other, i + b));
+            setbit(self, i + a, getbit(other, i + b));
     }
 }
 
@@ -352,15 +352,15 @@ count(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
         Py_ssize_t j;
 
         for (i = start; i < BITS(byte_start); i++)
-            res += GETBIT(self, i);
+            res += getbit(self, i);
         for (j = byte_start; j < byte_stop; j++)
             res += bitcount_lookup[(unsigned char) self->ob_item[j]];
         for (i = BITS(byte_stop); i < stop; i++)
-            res += GETBIT(self, i);
+            res += getbit(self, i);
     }
     else {
         for (i = start; i < stop; i++)
-            res += GETBIT(self, i);
+            res += getbit(self, i);
     }
     return vi ? res : stop - start - res;
 }
@@ -396,7 +396,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
 
     /* fine grained search */
     for (i = start; i < stop; i++) {
-        if (GETBIT(self, i) == vi)
+        if (getbit(self, i) == vi)
             return i;
     }
     return -1;
@@ -413,11 +413,11 @@ find(bitarrayobject *self, bitarrayobject *xa,
     assert(0 <= start && start <= self->nbits);
     assert(0 <= stop && stop <= self->nbits);
     if (xa->nbits == 1)         /* faster for sparse bitarrays */
-        return find_bit(self, GETBIT(xa, 0), start, stop);
+        return find_bit(self, getbit(xa, 0), start, stop);
 
     while (start <= stop - xa->nbits) {
         for (i = 0; i < xa->nbits; i++)
-            if (GETBIT(self, start + i) != GETBIT(xa, i))
+            if (getbit(self, start + i) != getbit(xa, i))
                 goto next;
 
         return start;
@@ -610,7 +610,7 @@ unpack(bitarrayobject *self, char zero, char one, const char *fmt)
         return PyErr_NoMemory();
 
     for (i = 0; i < self->nbits; i++)
-        str[i] = GETBIT(self, i) ? one : zero;
+        str[i] = getbit(self, i) ? one : zero;
 
     result = Py_BuildValue(fmt, str, self->nbits);
     PyMem_Free((void *) str);
@@ -958,7 +958,7 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
         PyErr_SetString(PyExc_IndexError, "index out of range");
         return NULL;
     }
-    setbit(self, i, 1 - GETBIT(self, i));
+    setbit(self, i, 1 - getbit(self, i));
     Py_RETURN_NONE;
 }
 
@@ -1035,7 +1035,7 @@ bitarray_repr(bitarrayobject *self)
     str[strsize - 1] = ')';
 
     for (i = 0; i < self->nbits; i++)
-        str[i + 10] = GETBIT(self, i) ? '1' : '0';
+        str[i + 10] = getbit(self, i) ? '1' : '0';
 
     result = Py_BuildValue("s#", str, (Py_ssize_t) strsize);
     PyMem_Free((void *) str);
@@ -1063,11 +1063,11 @@ bitarray_reverse(bitarrayobject *self)
 
     /* reverse upper half onto the lower half. */
     for (i = 0; i < tt->nbits; i++)
-        setbit(self, i, GETBIT(self, m - i));
+        setbit(self, i, getbit(self, m - i));
 
     /* reverse the stored away lower half onto the upper half of self. */
     for (i = 0; i < tt->nbits; i++)
-        setbit(self, m - i, GETBIT(tt, i));
+        setbit(self, m - i, getbit(tt, i));
 #undef tt
     Py_DECREF(t);
     Py_RETURN_NONE;
@@ -1202,7 +1202,7 @@ bitarray_tolist(bitarrayobject *self)
         return NULL;
 
     for (i = 0; i < self->nbits; i++) {
-        item = PyLong_FromLong(GETBIT(self, i));
+        item = PyLong_FromLong(getbit(self, i));
         if (item == NULL)
             return NULL;
         if (PyList_SetItem(list, i, item) < 0)
@@ -1444,7 +1444,7 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
         PyErr_SetString(PyExc_IndexError, "pop index out of range");
         return NULL;
     }
-    vi = GETBIT(self, i);
+    vi = getbit(self, i);
     if (delete_n(self, i, 1) < 0)
         return NULL;
     return PyLong_FromLong(vi);
@@ -1539,7 +1539,7 @@ bitarray_item(bitarrayobject *self, Py_ssize_t i)
         PyErr_SetString(PyExc_IndexError, "bitarray index out of range");
         return NULL;
     }
-    return PyLong_FromLong(GETBIT(self, i));
+    return PyLong_FromLong(getbit(self, i));
 }
 
 static int
@@ -1642,7 +1642,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
         }
         else {
             for (i = 0, j = start; i < slicelength; i++, j += step)
-                setbit((bitarrayobject *) res, i, GETBIT(self, j));
+                setbit((bitarrayobject *) res, i, getbit(self, j));
         }
         return res;
     }
@@ -1700,7 +1700,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
         }
         assert(increase == 0);
         for (i = 0, j = start; i < slicelength; i++, j += step)
-            setbit(self, j, GETBIT(aa, i));
+            setbit(self, j, getbit(aa, i));
     }
 #undef aa
 
@@ -1768,7 +1768,7 @@ delslice(bitarrayobject *self, PyObject *slice)
         /* Now step > 1.  We set the items not to be removed. */
         for (i = j = start; i < self->nbits; i++) {
             if ((i - start) % step != 0 || i >= stop)
-                setbit(self, j++, GETBIT(self, i));
+                setbit(self, j++, getbit(self, i));
         }
         return resize(self, self->nbits - slicelength);
     }
@@ -2188,7 +2188,7 @@ binode_insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
     int k;
 
     for (i = 0; i < ba->nbits; i++) {
-        k = GETBIT(ba, i);
+        k = getbit(ba, i);
         prev = nd;
         nd = nd->child[k];
 
@@ -2259,7 +2259,7 @@ binode_traverse(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
 
     while (*indexp < ba->nbits) {
         assert(nd);
-        nd = nd->child[GETBIT(ba, *indexp)];
+        nd = nd->child[getbit(ba, *indexp)];
         if (nd == NULL)
             return PyErr_Format(PyExc_ValueError,
                                 "prefix code unrecognized in bitarray "
@@ -2995,8 +2995,8 @@ richcompare(PyObject *v, PyObject *w, int op)
 
     /* search for the first index where items are different */
     for (i = 0; i < vs && i < ws; i++) {
-        int vi = GETBIT(va, i);
-        int wi = GETBIT(wa, i);
+        int vi = getbit(va, i);
+        int wi = getbit(wa, i);
 
         if (vi != wi) {
             /* we have an item that differs */
@@ -3062,7 +3062,7 @@ bitarrayiter_next(bitarrayiterobject *it)
     long vi;
 
     if (it->index < it->bao->nbits) {
-        vi = GETBIT(it->bao, it->index);
+        vi = getbit(it->bao, it->index);
         it->index++;
         return PyLong_FromLong(vi);
     }

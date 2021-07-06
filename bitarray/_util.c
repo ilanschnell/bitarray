@@ -92,7 +92,7 @@ count_to_n(bitarrayobject *a, Py_ssize_t n)
     }
 
     while (j < n && i < a->nbits ) {
-        j += GETBIT(a, i);
+        j += getbit(a, i);
         i++;
     }
     if (j < n)
@@ -151,7 +151,7 @@ find_last(bitarrayobject *a, int vi)
 
     /* search within top byte */
     for (i = a->nbits - 1; i >= BITS(a->nbits / 8); i--)
-        if (GETBIT(a, i) == vi)
+        if (getbit(a, i) == vi)
             return i;
 
     if (i < 0)  /* not found within top byte */
@@ -172,7 +172,7 @@ find_last(bitarrayobject *a, int vi)
 
     /* search within byte found */
     for (i = BITS(j + 1) - 1; i >= BITS(j); i--)
-        if (GETBIT(a, i) == vi)
+        if (getbit(a, i) == vi)
             return i;
 
     return -1;
@@ -557,7 +557,7 @@ ba2base(PyObject *module, PyObject *args)
     for (i = 0; i < strsize; i++) {
         x = 0;
         for (k = 0; k < m; k++)
-            x |= GETBIT(aa, m * i + (le ? k : (m - k - 1))) << k;
+            x |= getbit(aa, m * i + (le ? k : (m - k - 1))) << k;
         str[i] = alphabet[x];
     }
     result = Py_BuildValue("s#", str, strsize);
@@ -737,7 +737,7 @@ vl_encode(PyObject *module, PyObject *a)
     data[0] = aa->nbits > 4 ? 0x80 : 0x00;  /* leading bit */
     data[0] |= padding << 4;                /* encode number of pad bits */
     for (i = 0; i < 4 && i < aa->nbits; i++)
-        if (GETBIT(aa, i))
+        if (getbit(aa, i))
             data[0] |= 0x08 >> i;
 
     for (i = 4; i < aa->nbits; i++) {
@@ -745,7 +745,7 @@ vl_encode(PyObject *module, PyObject *a)
         if (k == 0)
             data[++j] = i + 7 < m ? 0x80 : 0x00;  /* leading bit */
 
-        if (GETBIT(aa, i))
+        if (getbit(aa, i))
             data[j] |= 0x40 >> k;
     }
 #undef aa
