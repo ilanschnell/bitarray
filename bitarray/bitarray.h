@@ -73,7 +73,7 @@ static inline int
 getbit(bitarrayobject *self, Py_ssize_t i)
 {
     assert(0 <= i && i < self->nbits);
-    return ((self)->ob_item[(i) / 8] & BITMASK((self)->endian, i) ? 1 : 0);
+    return (self->ob_item[i / 8] & BITMASK(self->endian, i) ? 1 : 0);
 }
 
 static inline void
