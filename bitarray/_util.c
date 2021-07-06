@@ -620,7 +620,7 @@ base2ba(PyObject *module, PyObject *args)
 
 /* PADBITS is always 3 - the number of bits that represent the number of
    padding bits.  The actual number of padding bits is called 'padding'
-   below, and is in range(0, 7).  The two can easily be confused.  */
+   below, and is in range(0, 7). */
 #define PADBITS  3
 
 /* Consume iterator while decoding bytes into bitarray.
@@ -741,16 +741,14 @@ vl_encode(PyObject *module, PyObject *a)
     data[0] = aa->nbits > 4 ? 0x80 : 0x00;  /* leading bit */
     data[0] |= padding << 4;                /* encode number of pad bits */
     for (i = 0; i < 4 && i < aa->nbits; i++)
-        if (getbit(aa, i))
-            data[0] |= 0x08 >> i;
+        data[0] |= (0x08 >> i) * getbit(aa, i);
 
     for (i = 4; i < aa->nbits; i++) {
         k = (i - 4) % 7;
         if (k == 0)
             data[++j] = i + 7 < m ? 0x80 : 0x00;  /* leading bit */
 
-        if (getbit(aa, i))
-            data[j] |= 0x40 >> k;
+        data[j] |= (0x40 >> k) * getbit(aa, i);
     }
 #undef aa
     assert(j + 1 == n);
