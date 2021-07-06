@@ -616,8 +616,12 @@ base2ba(PyObject *module, PyObject *args)
     Py_RETURN_NONE;
 }
 
+/* ------------------- variable length bitarray format ----------------- */
 
-#define PADBITS  3     /* bits used for padding bits used in vl_*() */
+/* PADBITS is always 3 - the number of bits that represent the number of
+   padding bits.  The actual number of padding bits is called 'padding'
+   below, and is in range(0, 7).  The two can easily be confused.  */
+#define PADBITS  3
 
 /* Consume iterator while decoding bytes into bitarray.
    As we don't have access to bitarrays resize() C function, we give this
