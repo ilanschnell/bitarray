@@ -6,19 +6,6 @@
 */
 #define BITARRAY_VERSION  "2.2.1"
 
-#if PY_MAJOR_VERSION >= 3
-#define IS_PY3K
-#define BYTES_SIZE_FMT  "y#"
-#else
-/* the Py_MIN macro was introduced in Python 3.3 */
-#define Py_MIN(x, y)  (((x) > (y)) ? (y) : (x))
-#define PySlice_GetIndicesEx(slice, len, start, stop, step, slicelength) \
-    PySlice_GetIndicesEx(((PySliceObject *) slice),                      \
-                         (len), (start), (stop), (step), (slicelength))
-#define PyLong_FromLong  PyInt_FromLong
-#define BYTES_SIZE_FMT  "s#"
-#endif
-
 /* ob_size is the byte count of the buffer, not the number of elements.
    The number of elements (bits) is nbits. */
 typedef struct {
@@ -47,12 +34,37 @@ typedef struct {
 #define BITMASK(endian, i)  \
     (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) % 8) : (7 - (i) % 8)))
 
+/* --------------- definitions not specific to bitarray ---------------- */
+
+#ifdef STDC_HEADERS
+#include <stddef.h>
+#else  /* !STDC_HEADERS */
+#ifdef HAVE_SYS_TYPES_H
+#include <sys/types.h>      /* For size_t */
+#endif /* HAVE_SYS_TYPES_H */
+#endif /* !STDC_HEADERS */
+
 /* Compatibility with Visual Studio 2013 and older which don't support
    the inline keyword in C (only in C++): use __inline instead.
    (copied from pythoncapi_compat.h) */
 #if (defined(_MSC_VER) && _MSC_VER < 1900 \
      && !defined(__cplusplus) && !defined(inline))
 #define inline __inline
+#endif
+
+/* --- definitions specific to Python --- */
+
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K
+#define BYTES_SIZE_FMT  "y#"
+#else
+/* the Py_MIN macro was introduced in Python 3.3 */
+#define Py_MIN(x, y)  (((x) > (y)) ? (y) : (x))
+#define PySlice_GetIndicesEx(slice, len, start, stop, step, slicelength) \
+    PySlice_GetIndicesEx(((PySliceObject *) slice),                      \
+                         (len), (start), (stop), (step), (slicelength))
+#define PyLong_FromLong  PyInt_FromLong
+#define BYTES_SIZE_FMT  "s#"
 #endif
 
 /* ------------ low level access to bits in bitarrayobject ------------- */

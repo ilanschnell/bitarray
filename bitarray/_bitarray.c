@@ -20,14 +20,6 @@
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
 #endif
 
-#ifdef STDC_HEADERS
-#include <stddef.h>
-#else  /* !STDC_HEADERS */
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>      /* For size_t */
-#endif /* HAVE_SYS_TYPES_H */
-#endif /* !STDC_HEADERS */
-
 static int default_endian = ENDIAN_BIG;
 
 static PyTypeObject Bitarray_Type;
