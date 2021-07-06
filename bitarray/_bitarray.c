@@ -836,6 +836,7 @@ bitarray_fill(bitarrayobject *self)
 
     p = setunused(self);
     self->nbits += p;
+    assert(self->nbits % 8 == 0);
     return PyLong_FromLong(p);
 }
 
