@@ -836,7 +836,7 @@ bitarray_fill(bitarrayobject *self)
 
     p = setunused(self);
     self->nbits += p;
-    assert(self->nbits % 8 == 0);
+    assert(self->nbits % 8 == 0 && self->nbits == BITS(Py_SIZE(self)));
     return PyLong_FromLong(p);
 }
 
@@ -1252,6 +1252,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
 
     if (p && delete_n(self, t, p) < 0)
         return NULL;
+    assert(self->nbits == t + BITS(nbytes));
     Py_RETURN_NONE;
 }
 
