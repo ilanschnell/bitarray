@@ -6,8 +6,8 @@
 */
 #define BITARRAY_VERSION  "2.2.1"
 
-/* ob_size is the byte count of the buffer, not the number of elements.
-   The number of elements (bits) is nbits. */
+/* .ob_size is the byte count of the buffer, not the number of elements.
+   The number of elements (bits) is .nbits. */
 typedef struct {
     PyObject_VAR_HEAD
     char *ob_item;              /* buffer */
@@ -72,7 +72,8 @@ typedef struct {
 static inline int
 getbit(bitarrayobject *self, Py_ssize_t i)
 {
-    assert(0 <= i && i < self->nbits && i / 8 < Py_SIZE(self));
+    assert(0 <= i && i < self->nbits);
+    assert(i / 8 < Py_SIZE(self) && BYTES(self->nbits) == Py_SIZE(self));
     return (self->ob_item[i / 8] & BITMASK(self->endian, i) ? 1 : 0);
 }
 
@@ -81,7 +82,8 @@ setbit(bitarrayobject *self, Py_ssize_t i, int bit)
 {
     char *cp, mask;
 
-    assert(0 <= i && i < self->nbits && i / 8 < Py_SIZE(self));
+    assert(0 <= i && i < self->nbits);
+    assert(i / 8 < Py_SIZE(self) && BYTES(self->nbits) == Py_SIZE(self));
     mask = BITMASK(self->endian, i);
     cp = self->ob_item + i / 8;
     if (bit)
@@ -100,16 +102,18 @@ setunused(bitarrayobject *self)
         0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, /* little endian */
         0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, /* big endian */
     };
+    const Py_ssize_t nbits = self->nbits;
     int res;
 
-    if (self->nbits % 8 == 0)
+    if (nbits % 8 == 0)
         return 0;
 
-    res = (int) (BITS(Py_SIZE(self)) - self->nbits);
-    assert(0 < res && res < 8 && Py_SIZE(self) > 0);
+    res = (int) (BITS(BYTES(nbits)) - nbits);
+    assert(0 < res && res < 8);
+    assert(Py_SIZE(self) > 0 && Py_SIZE(self) == BYTES(nbits));
     /* apply the appropriate mask to the last byte in buffer */
     self->ob_item[Py_SIZE(self) - 1] &=
-        mask[self->nbits % 8 + (self->endian == ENDIAN_LITTLE ? 0 : 8)];
+        mask[nbits % 8 + (self->endian == ENDIAN_LITTLE ? 0 : 8)];
 
     return res;
 }
