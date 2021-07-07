@@ -713,13 +713,14 @@ static PyObject *
 bitarray_buffer_info(bitarrayobject *self)
 {
     PyObject *res, *ptr;
+    Py_ssize_t size = Py_SIZE(self);
 
     ptr = PyLong_FromVoidPtr(self->ob_item),
     res = Py_BuildValue("Onsnn",
                         ptr,
-                        Py_SIZE(self),
+                        size,
                         ENDIAN_STR(self),
-                        BITS(Py_SIZE(self)) - self->nbits,
+                        BITS(size) - self->nbits,
                         self->allocated);
     Py_DECREF(ptr);
     return res;
@@ -828,7 +829,8 @@ bitarray_fill(bitarrayobject *self)
 
     p = setunused(self);
     self->nbits += p;
-    assert(self->nbits % 8 == 0 && self->nbits == BITS(Py_SIZE(self)));
+    assert(self->nbits % 8 == 0);
+    assert_nbits(self);
     return PyLong_FromLong(p);
 }
 
@@ -1235,6 +1237,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     p = BITS(BYTES(t)) - t;     /* padding */
     self->nbits += p;
     assert(0 <= p && p < 8 && self->nbits % 8 == 0);
+    assert_nbits(self);
 
     if (resize(self, self->nbits + BITS(nbytes)) < 0)
         return NULL;
