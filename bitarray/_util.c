@@ -742,19 +742,20 @@ vl_encode(PyObject *module, PyObject *a)
         return PyErr_NoMemory();
 
     str[0] = aa->nbits > 4 ? 0x80 : 0x00;  /* leading bit */
-    str[0] |= padding << 4;                /* encode number of pad bits */
+    str[0] |= padding << 4;                /* encode padding */
     for (i = 0; i < 4 && i < aa->nbits; i++)
         str[0] |= (0x08 >> i) * getbit(aa, i);
 
     for (i = 4; i < aa->nbits; i++) {
         k = (i - 4) % 7;
-        if (k == 0)
-            str[++j] = i + 7 < m ? 0x80 : 0x00;  /* leading bit */
-
+        if (k == 0) {
+            j++;
+            str[j] = j < n - 1 ? 0x80 : 0x00;  /* leading bit */
+        }
         str[j] |= (0x40 >> k) * getbit(aa, i);
     }
 #undef aa
-    assert(j + 1 == n);
+    assert(j == n - 1);
 
     result = PyBytes_FromStringAndSize(str, n);
     PyMem_Free((void *) str);
