@@ -4,6 +4,9 @@ Change log
 2021-XX-XX   2.2.1:
 
 * improve documentation
+* speedup ``vl_encode()``
+* ``bitarray.h``: make ``getbit()`` always an (inline) function
+* add assertions in C code
 
 
 **2.2.0** (2021-07-03):
