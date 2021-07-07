@@ -620,7 +620,11 @@ base2ba(PyObject *module, PyObject *args)
 
 /* PADBITS is always 3 - the number of bits that represent the number of
    padding bits.  The actual number of padding bits is called 'padding'
-   below, and is in range(0, 7). */
+   below, and is in range(0, 7).
+   Also note that 'padding' refers to the pad bits within the variable
+   length format, which is not the same as the pad bits of the actual
+   bitarray.  For example, b'\x10' has padding = 1, and decodes to
+   bitarray('000'), which has 5 pad bits. */
 #define PADBITS  3
 
 /* Consume iterator while decoding bytes into bitarray.
