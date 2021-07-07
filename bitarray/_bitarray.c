@@ -3165,7 +3165,7 @@ bitarray_buffer_getcharbuf(bitarrayobject *self,
     return Py_SIZE(self);
 }
 
-#endif
+#endif  /* old buffer protocol */
 
 static int
 bitarray_getbuffer(bitarrayobject *self, Py_buffer *view, int flags)
