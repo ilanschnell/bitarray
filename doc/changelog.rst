@@ -1,7 +1,7 @@
 Change log
 ==========
 
-2021-XX-XX   2.2.1:
+**2.2.1** (2021-07-06):
 
 * improve documentation
 * speedup ``vl_encode()``
