@@ -112,7 +112,7 @@ setunused(bitarrayobject *self)
         return 0;
 
     res = (int) (BITS(BYTES(nbits)) - nbits);
-    assert(0 < res && res < 8 && Py_SIZE(self));
+    assert(0 < res && res < 8 && Py_SIZE(self) > 0);
     assert_nbits(self);
     /* apply the appropriate mask to the last byte in buffer */
     self->ob_item[Py_SIZE(self) - 1] &=
