@@ -105,20 +105,18 @@ setunused(bitarrayobject *self)
         0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, /* little endian */
         0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, /* big endian */
     };
-    const Py_ssize_t nbits = self->nbits;
-    int res;
+    int i = self->nbits % 8;    /* index into mask (minus endian offset) */
 
-    if (nbits % 8 == 0)
+    if (i == 0)
         return 0;
 
-    res = (int) (BITS(BYTES(nbits)) - nbits);
-    assert(0 < res && res < 8 && Py_SIZE(self) > 0);
     assert_nbits(self);
+    assert(Py_SIZE(self) > 0);
     /* apply the appropriate mask to the last byte in buffer */
     self->ob_item[Py_SIZE(self) - 1] &=
-        mask[nbits % 8 + (self->endian == ENDIAN_LITTLE ? 0 : 8)];
+        mask[i + (self->endian == ENDIAN_LITTLE ? 0 : 8)];
 
-    return res;
+    return 8 - i;
 }
 
 static const unsigned char bitcount_lookup[256] = {
