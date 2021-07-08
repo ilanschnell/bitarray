@@ -719,7 +719,7 @@ bitarray_buffer_info(bitarrayobject *self)
     res = Py_BuildValue("Onsnn",
                         ptr,
                         size,
-                        ENDIAN_STR(self),
+                        ENDIAN_STR(self->endian),
                         BITS(size) - self->nbits,
                         self->allocated);
     Py_DECREF(ptr);
@@ -797,7 +797,7 @@ Count the number of occurrences of `value` in the bitarray.");
 static PyObject *
 bitarray_endian(bitarrayobject *self)
 {
-    return Py_BuildValue("s", ENDIAN_STR(self));
+    return Py_BuildValue("s", ENDIAN_STR(self->endian));
 }
 
 PyDoc_STRVAR(endian_doc,
@@ -991,7 +991,7 @@ bitarray_reduce(bitarrayobject *self)
         goto error;
     PyMem_Free((void *) data);
     result = Py_BuildValue("O(Os)O", Py_TYPE(self),
-                           repr, ENDIAN_STR(self), dict);
+                           repr, ENDIAN_STR(self->endian), dict);
  error:
     Py_DECREF(dict);
     Py_XDECREF(repr);
@@ -3281,8 +3281,7 @@ static PyTypeObject Bitarray_Type = {
 static PyObject *
 get_default_endian(PyObject *module)
 {
-    return Py_BuildValue("s",
-                         default_endian == ENDIAN_LITTLE ? "little" : "big");
+    return Py_BuildValue("s", ENDIAN_STR(default_endian));
 }
 
 PyDoc_STRVAR(get_default_endian_doc,
