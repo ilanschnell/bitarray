@@ -29,7 +29,7 @@ typedef struct {
 #define BITS(bytes)  ((bytes) << 3)
 
 /* number of bytes necessary to store given bits */
-#define BYTES(bits)  ((bits) == 0 ? 0 : (((bits) - 1) / 8 + 1))
+#define BYTES(bits)  (((bits) + 7) / 8)
 
 #define BITMASK(endian, i)  \
     (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) % 8) : (7 - (i) % 8)))

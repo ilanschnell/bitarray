@@ -2872,6 +2872,9 @@ bitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
         PyErr_SetString(PyExc_ValueError, "bitarray length must be >= 0");
         return NULL;
     }
+    if (BYTES(nbits) < 0)
+        return PyErr_Format(PyExc_OverflowError, "new bitarray %zd", nbits);
+
     return newbitarrayobject(type, nbits, endian);
 }
 
