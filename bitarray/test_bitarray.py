@@ -982,8 +982,10 @@ class MiscTests(unittest.TestCase, Util):
         a = bitarray(10 ** 6)
         self.assertRaises(OverflowError, a.__imul__, 17180)
         self.assertRaises(OverflowError, bitarray.__new__, bitarray, 2**31)
+        self.assertRaises(OverflowError, bitarray.__new__, bitarray, 2**31 - 1)
+        self.assertRaises(OverflowError, bitarray.__new__, bitarray, 2**31 - 7)
         try:
-            a = bitarray(2**31 - 1);
+            a = bitarray(2**31 - 8);
         except MemoryError:
             return
         self.assertRaises(OverflowError, bitarray.append, a, True)
