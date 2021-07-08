@@ -105,7 +105,7 @@ setunused(bitarrayobject *self)
         0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, /* little endian */
         0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, /* big endian */
     };
-    int i = self->nbits % 8;    /* index into mask (minus endian offset) */
+    int i = self->nbits % 8;  /* index into mask array (minus offset) */
 
     if (i == 0)
         return 0;
