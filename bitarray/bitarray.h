@@ -114,7 +114,7 @@ setunused(bitarrayobject *self)
     assert(Py_SIZE(self) > 0);
     /* apply the appropriate mask to the last byte in buffer */
     self->ob_item[Py_SIZE(self) - 1] &=
-        mask[i + (self->endian == ENDIAN_LITTLE ? 0 : 8)];
+        mask[i + 8 * (self->endian == ENDIAN_BIG)];
 
     return 8 - i;
 }
