@@ -41,7 +41,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     assert(allocated != 0 || size == 0);
 
     newsize = BYTES(nbits);
-    if (nbits < 0 || BITS(newsize) < 0) {
+    if (nbits < 0 || newsize < 0) {
         PyErr_Format(PyExc_OverflowError, "bitarray resize %zd", nbits);
         return -1;
     }

@@ -976,6 +976,8 @@ class MiscTests(unittest.TestCase, Util):
         a = bitarray(1)
         for i in -7, -1, 0, 1:
             self.assertRaises(OverflowError, a.__imul__, 2 ** 63 + i)
+        a = bitarray(2 ** 10)
+        self.assertRaises(OverflowError, a.__imul__, 2 ** 53)
 
         if _sysinfo()[0] == 8:
             return
