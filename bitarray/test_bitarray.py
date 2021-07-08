@@ -221,15 +221,15 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertEqual(a_little.endian(), 'little')
 
     def test_endian_wrong(self):
-        self.assertRaises(TypeError, bitarray.__new__, bitarray, endian=0)
-        self.assertRaises(ValueError, bitarray.__new__, bitarray, endian='')
+        self.assertRaises(TypeError, bitarray, endian=0)
+        self.assertRaises(ValueError, bitarray, endian='')
         self.assertRaisesMessage(
             ValueError,
             "bit endianness must be either 'little' or 'big', got: 'foo'",
-            bitarray.__new__, bitarray, endian='foo')
+            bitarray, endian='foo')
         self.assertRaisesMessage(TypeError,
                                  "'ellipsis' object is not iterable",
-                                 bitarray.__new__, bitarray, Ellipsis)
+                                 bitarray, Ellipsis)
 
     def test_integers(self):
         for n in range(50):
@@ -245,8 +245,8 @@ class CreateObjectTests(unittest.TestCase, Util):
             a = bitarray(long(29))
             self.assertEqual(len(a), 29)
 
-        self.assertRaises(ValueError, bitarray.__new__, bitarray, -1)
-        self.assertRaises(ValueError, bitarray.__new__, bitarray, -924)
+        self.assertRaises(ValueError, bitarray, -1)
+        self.assertRaises(ValueError, bitarray, -924)
 
     def test_list(self):
         lst = [0, 1, False, True]
@@ -258,8 +258,8 @@ class CreateObjectTests(unittest.TestCase, Util):
             a = bitarray([long(1), long(0)])
             self.assertEqual(a, bitarray('10'))
 
-        self.assertRaises(ValueError, bitarray.__new__, bitarray, [0, 1, 2])
-        self.assertRaises(TypeError, bitarray.__new__, bitarray, [0, 1, None])
+        self.assertRaises(ValueError, bitarray, [0, 1, 2])
+        self.assertRaises(TypeError, bitarray, [0, 1, None])
 
         for n in range(50):
             lst = [bool(randint(0, 1)) for d in range(n)]
@@ -273,8 +273,8 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('0101'))
         self.check_obj(a)
 
-        self.assertRaises(ValueError, bitarray.__new__, bitarray, (0, 1, 2))
-        self.assertRaises(TypeError, bitarray.__new__, bitarray, (0, 1, None))
+        self.assertRaises(ValueError, bitarray, (0, 1, 2))
+        self.assertRaises(TypeError, bitarray, (0, 1, None))
 
         for n in range(50):
             lst = [bool(randint(0, 1)) for d in range(n)]
@@ -306,8 +306,7 @@ class CreateObjectTests(unittest.TestCase, Util):
 
     def test_range(self):
         self.assertEqual(bitarray(range(2)), bitarray('01'))
-        self.assertRaises(ValueError, bitarray.__new__, bitarray,
-                          range(0, 3))
+        self.assertRaises(ValueError, bitarray, range(0, 3))
 
     def test_string01(self):
         for s in '0010111', u'0010111', '0010 111', u'0010 111':
@@ -322,9 +321,8 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist(), lst)
             self.check_obj(a)
 
-        self.assertRaises(ValueError, bitarray.__new__, bitarray, '01021')
-        self.assertRaises(UnicodeEncodeError, bitarray.__new__, bitarray,
-                          u'1\u26050')
+        self.assertRaises(ValueError, bitarray, '01021')
+        self.assertRaises(UnicodeEncodeError, bitarray, u'1\u26050')
 
     def test_string01_whitespace(self):
         whitespace = ' \n\r\t\v'
@@ -374,11 +372,11 @@ class CreateObjectTests(unittest.TestCase, Util):
             if is_py3k:
                 self.assertRaisesMessage(ValueError,
                                          "invalid header byte: 0x%02x" % s[0],
-                                         bitarray.__new__, bitarray, s)
+                                         bitarray, s)
             else:
                 # Python 2: PyErr_Format() seems to handle "0x%02x"
                 # incorrectly.  Oh well...
-                self.assertRaises(ValueError, bitarray.__new__, bitarray, s)
+                self.assertRaises(ValueError, bitarray, s)
 
             a = bitarray(s + b'\x00')
             head = s[0] if is_py3k else ord(s[0])
@@ -397,7 +395,7 @@ class CreateObjectTests(unittest.TestCase, Util):
             # on Python 2, we have an invalid character in the string
             error = ValueError
             msg = "expected '0' or '1' (or whitespace), got '!' (0x21)"
-        self.assertRaisesMessage(error, msg, bitarray.__new__, bitarray, s)
+        self.assertRaisesMessage(error, msg, bitarray, s)
 
     def test_bitarray_simple(self):
         for n in range(10):
@@ -458,27 +456,27 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEQUAL(a, bitarray())
 
         if is_py3k:
-            self.assertRaises(TypeError, bitarray.__new__, bitarray, b'')
+            self.assertRaises(TypeError, bitarray, b'')
         else:
             self.assertEqual(bitarray(b''), bitarray())
 
     def test_wrong_args(self):
         # wrong types
         for x in False, True, Ellipsis, slice(0), 0.0, 0 + 0j:
-            self.assertRaises(TypeError, bitarray.__new__, bitarray, x)
+            self.assertRaises(TypeError, bitarray, x)
         if is_py3k:
-            self.assertRaises(TypeError, bitarray.__new__, bitarray, b'10')
+            self.assertRaises(TypeError, bitarray, b'10')
         else:
             self.assertEQUAL(bitarray(b'10'), bitarray('10'))
         # wrong values
         for x in -1, 'A':
-            self.assertRaises(ValueError, bitarray.__new__, bitarray, x)
+            self.assertRaises(ValueError, bitarray, x)
         # test second (endian) argument
-        self.assertRaises(TypeError, bitarray.__new__, bitarray, 0, None)
-        self.assertRaises(TypeError, bitarray.__new__, bitarray, 0, 0)
-        self.assertRaises(ValueError, bitarray.__new__, bitarray, 0, 'foo')
+        self.assertRaises(TypeError, bitarray, 0, None)
+        self.assertRaises(TypeError, bitarray, 0, 0)
+        self.assertRaises(ValueError, bitarray, 0, 'foo')
         # too many args
-        self.assertRaises(TypeError, bitarray.__new__, bitarray, 0, 'big', 0)
+        self.assertRaises(TypeError, bitarray, 0, 'big', 0)
 
 tests.append(CreateObjectTests)
 
@@ -974,18 +972,17 @@ class MiscTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
 
     def test_overflow(self):
-        self.assertRaises(OverflowError, bitarray.__new__, bitarray, 2**63)
+        self.assertRaises(OverflowError, bitarray, 2 ** 63)
 
         if _sysinfo()[0] == 8:
             return
 
         a = bitarray(10 ** 6)
         self.assertRaises(OverflowError, a.__imul__, 17180)
-        self.assertRaises(OverflowError, bitarray.__new__, bitarray, 2**31)
-        self.assertRaises(OverflowError, bitarray.__new__, bitarray, 2**31 - 1)
-        self.assertRaises(OverflowError, bitarray.__new__, bitarray, 2**31 - 7)
+        for i in -7, -1, 0, 1:
+            self.assertRaises(OverflowError, bitarray, 2 ** 31 + i)
         try:
-            a = bitarray(2**31 - 8);
+            a = bitarray(2 ** 31 - 8);
         except MemoryError:
             return
         self.assertRaises(OverflowError, bitarray.append, a, True)
