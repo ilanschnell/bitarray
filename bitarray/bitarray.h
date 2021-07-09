@@ -101,9 +101,8 @@ static inline int
 setunused(bitarrayobject *self)
 {
     const char mask[16] = {
-        /* elements 0 and 8 (with value 0x00) are never accessed */
-        0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f, /* little endian */
-        0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe, /* big endian */
+        0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f,  /* little endian */
+        0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe,  /* big endian */
     };
     int i = self->nbits % 8;  /* index into mask array (minus offset) */
 
@@ -114,7 +113,7 @@ setunused(bitarrayobject *self)
     assert(Py_SIZE(self) > 0);
     /* apply the appropriate mask to the last byte in buffer */
     self->ob_item[Py_SIZE(self) - 1] &=
-        mask[i + 8 * (self->endian == ENDIAN_BIG)];
+        mask[self->endian == ENDIAN_LITTLE ? i - 1 : i + 6];
 
     return 8 - i;
 }
