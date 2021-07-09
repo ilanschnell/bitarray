@@ -16,7 +16,7 @@ the `bitarrayobject` struct is defined in the same way:
     typedef struct {
         PyObject_VAR_HEAD
         char *ob_item;              /* buffer */
-        Py_ssize_t allocated;       /* how many bytes allocated */
+        Py_ssize_t allocated;       /* allocated buffer size (in bytes) */
         Py_ssize_t nbits;           /* length of bitarray, i.e. elements */
         int endian;                 /* bit endianness of bitarray */
         int ob_exports;             /* how many buffer exports */

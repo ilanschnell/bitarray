@@ -6,12 +6,12 @@
 */
 #define BITARRAY_VERSION  "2.2.2"
 
-/* .ob_size is the byte count of the buffer, not the number of elements.
+/* .ob_size is buffer size (in bytes), not the number of elements.
    The number of elements (bits) is .nbits. */
 typedef struct {
     PyObject_VAR_HEAD
     char *ob_item;              /* buffer */
-    Py_ssize_t allocated;       /* how many bytes allocated */
+    Py_ssize_t allocated;       /* allocated buffer size (in bytes) */
     Py_ssize_t nbits;           /* length of bitarray, i.e. elements */
     int endian;                 /* bit endianness of bitarray */
     int ob_exports;             /* how many buffer exports */
