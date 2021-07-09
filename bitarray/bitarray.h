@@ -100,7 +100,7 @@ setbit(bitarrayobject *self, Py_ssize_t i, int bit)
 static inline int
 setunused(bitarrayobject *self)
 {
-    const char mask[16] = {
+    const char mask[14] = {
         0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f,  /* little endian */
         0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe,  /* big endian */
     };
