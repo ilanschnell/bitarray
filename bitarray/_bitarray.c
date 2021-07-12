@@ -22,6 +22,10 @@
 
 #ifdef PY_UINT64_T
 #define UINT64_BUFFER(self)  ((PY_UINT64_T *) (self)->ob_item)
+#define UINT64_WORDS(bytes)  ((nbytes) / 8)
+#else
+#define UINT64_BUFFER(self)  ((self)->ob_item)
+#define UINT64_WORDS(bytes)  0
 #endif
 
 static int default_endian = ENDIAN_BIG;
@@ -262,19 +266,13 @@ static void
 invert(bitarrayobject *self)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
-#ifdef PY_UINT64_T
-    const Py_ssize_t words = nbytes / 8;
-#else
-    const Py_ssize_t words = 0;
-#endif
+    const Py_ssize_t nwords = UINT64_WORDS(bytes);
     Py_ssize_t i;
 
     assert_nbits(self);
-#ifdef PY_UINT64_T
-    for (i = 0; i < words; i++)
+    for (i = 0; i < nwords; i++)
         UINT64_BUFFER(self)[i] = ~UINT64_BUFFER(self)[i];
-#endif
-    for (i = 8 * words; i < nbytes; i++)
+    for (i = 8 * nwords; i < nbytes; i++)
         self->ob_item[i] = ~self->ob_item[i];
 }
 
@@ -1852,11 +1850,7 @@ static void
 bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
-#ifdef PY_UINT64_T
-    const Py_ssize_t words = nbytes / 8;
-#else
-    const Py_ssize_t words = 0;
-#endif
+    const Py_ssize_t nwords = UINT64_WORDS(nbytes);
     Py_ssize_t i;
 
     assert(self->nbits == other->nbits);
@@ -1864,29 +1858,23 @@ bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
     assert_nbits(self);
     switch (oper) {
     case OP_and:
-#ifdef PY_UINT64_T
-        for (i = 0; i < words; i++)
+        for (i = 0; i < nwords; i++)
             UINT64_BUFFER(self)[i] &= UINT64_BUFFER(other)[i];
-#endif
-        for (i = 8 * words; i < nbytes; i++)
+        for (i = 8 * nwords; i < nbytes; i++)
             self->ob_item[i] &= other->ob_item[i];
         break;
 
     case OP_or:
-#ifdef PY_UINT64_T
-        for (i = 0; i < words; i++)
+        for (i = 0; i < nwords; i++)
             UINT64_BUFFER(self)[i] |= UINT64_BUFFER(other)[i];
-#endif
-        for (i = 8 * words; i < nbytes; i++)
+        for (i = 8 * nwords; i < nbytes; i++)
             self->ob_item[i] |= other->ob_item[i];
         break;
 
     case OP_xor:
-#ifdef PY_UINT64_T
-        for (i = 0; i < words; i++)
+        for (i = 0; i < nwords; i++)
             UINT64_BUFFER(self)[i] ^= UINT64_BUFFER(other)[i];
-#endif
-        for (i = 8 * words; i < nbytes; i++)
+        for (i = 8 * nwords; i < nbytes; i++)
             self->ob_item[i] ^= other->ob_item[i];
         break;
     default:                    /* cannot happen */
