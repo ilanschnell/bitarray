@@ -1838,21 +1838,41 @@ static void
 bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
+#ifdef PY_UINT64_T
+    const Py_ssize_t words = nbytes / 8;
+#define UINT64_BUFFER(a)  ((PY_UINT64_T *) (a)->ob_item)
+#else
+    const Py_ssize_t words = 0;
+#endif
     Py_ssize_t i;
 
     assert(self->nbits == other->nbits);
     assert(self->endian == other->endian);
     switch (oper) {
     case OP_and:
-        for (i = 0; i < nbytes; i++)
+#ifdef PY_UINT64_T
+        for (i = 0; i < words; i++)
+            UINT64_BUFFER(self)[i] &= UINT64_BUFFER(other)[i];
+#endif
+        for (i = 8 * words; i < nbytes; i++)
             self->ob_item[i] &= other->ob_item[i];
         break;
+
     case OP_or:
-        for (i = 0; i < nbytes; i++)
+#ifdef PY_UINT64_T
+        for (i = 0; i < words; i++)
+            UINT64_BUFFER(self)[i] |= UINT64_BUFFER(other)[i];
+#endif
+        for (i = 8 * words; i < nbytes; i++)
             self->ob_item[i] |= other->ob_item[i];
         break;
+
     case OP_xor:
-        for (i = 0; i < nbytes; i++)
+#ifdef PY_UINT64_T
+        for (i = 0; i < words; i++)
+            UINT64_BUFFER(self)[i] ^= UINT64_BUFFER(other)[i];
+#endif
+        for (i = 8 * words; i < nbytes; i++)
             self->ob_item[i] ^= other->ob_item[i];
         break;
     default:                    /* cannot happen */
