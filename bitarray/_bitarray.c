@@ -269,6 +269,7 @@ invert(bitarrayobject *self)
 #endif
     Py_ssize_t i;
 
+    assert_nbits(self);
 #ifdef PY_UINT64_T
     for (i = 0; i < words; i++)
         UINT64_BUFFER(self)[i] = ~UINT64_BUFFER(self)[i];
@@ -1860,6 +1861,7 @@ bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
 
     assert(self->nbits == other->nbits);
     assert(self->endian == other->endian);
+    assert_nbits(self);
     switch (oper) {
     case OP_and:
 #ifdef PY_UINT64_T
