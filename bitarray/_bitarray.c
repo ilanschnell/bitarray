@@ -20,6 +20,10 @@
 #define Py_TPFLAGS_HAVE_WEAKREFS  0
 #endif
 
+#ifdef PY_UINT64_T
+#define UINT64_BUFFER(self)  ((PY_UINT64_T *) (self)->ob_item)
+#endif
+
 static int default_endian = ENDIAN_BIG;
 
 static PyTypeObject Bitarray_Type;
@@ -258,9 +262,18 @@ static void
 invert(bitarrayobject *self)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
+#ifdef PY_UINT64_T
+    const Py_ssize_t words = nbytes / 8;
+#else
+    const Py_ssize_t words = 0;
+#endif
     Py_ssize_t i;
 
-    for (i = 0; i < nbytes; i++)
+#ifdef PY_UINT64_T
+    for (i = 0; i < words; i++)
+        UINT64_BUFFER(self)[i] = ~UINT64_BUFFER(self)[i];
+#endif
+    for (i = 8 * words; i < nbytes; i++)
         self->ob_item[i] = ~self->ob_item[i];
 }
 
@@ -1840,7 +1853,6 @@ bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
     const Py_ssize_t nbytes = Py_SIZE(self);
 #ifdef PY_UINT64_T
     const Py_ssize_t words = nbytes / 8;
-#define UINT64_BUFFER(a)  ((PY_UINT64_T *) (a)->ob_item)
 #else
     const Py_ssize_t words = 0;
 #endif
