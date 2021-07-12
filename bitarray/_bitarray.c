@@ -3342,12 +3342,18 @@ Set the default bit endianness for new bitarray objects being created.");
 static PyObject *
 sysinfo(void)
 {
-    return Py_BuildValue("iiiii",
+    return Py_BuildValue("iiiiii",
                          (int) sizeof(void *),
                          (int) sizeof(size_t),
                          (int) sizeof(bitarrayobject),
                          (int) sizeof(decodetreeobject),
-                         (int) sizeof(binode));
+                         (int) sizeof(binode),
+#ifdef PY_UINT64_T
+                         1
+#else
+                         0
+#endif
+                         );
 }
 
 PyDoc_STRVAR(sysinfo_doc,
@@ -3357,7 +3363,8 @@ tuple(sizeof(void *),\n\
       sizeof(size_t),\n\
       sizeof(bitarrayobject),\n\
       sizeof(decodetreeobject),\n\
-      sizeof(binode))");
+      sizeof(binode),\n\
+      PY_UINT64_T defined)");
 
 
 static PyMethodDef module_functions[] = {
