@@ -175,7 +175,7 @@ find_last(bitarrayobject *a, int vi)
         if (getbit(a, i) == vi)
             return i;
 
-    return -1;
+    return -1;  /* cannot happen */
 }
 
 static PyObject *

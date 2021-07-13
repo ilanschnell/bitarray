@@ -411,7 +411,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
     start = BITS(j);
     assert(start % 8 == 0 && start < stop);
 
-    /* search within byte found */
+    /* search within found or highest byte */
     for (i = start; i < stop; i++) {
         if (getbit(self, i) == vi)
             return i;
