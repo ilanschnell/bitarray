@@ -2251,9 +2251,9 @@ class IndexTests(unittest.TestCase, Util):
         self.assertEqual(a.find(s), 187)
 
     def test_range(self):
-        for n in range(20):
+        for n in range(50):
+            a = bitarray(n)
             for m in range(n):
-                a = bitarray(n)
                 a.setall(0)
                 self.assertRaises(ValueError, a.index, 1)
                 self.assertEqual(a.find(1), -1)
