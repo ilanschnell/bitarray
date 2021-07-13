@@ -362,7 +362,8 @@ count(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
 static Py_ssize_t
 find_bit(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
 {
-    Py_ssize_t i;
+    Py_ssize_t i, j;
+    char c;
 
     assert(0 <= start && start <= self->nbits);
     assert(0 <= stop && stop <= self->nbits);
@@ -382,24 +383,21 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
             return -1;
         start = BITS(BYTES(start));
     }
-    assert(start % 8 == 0 && start <= stop);
+    assert(start % 8 == 0 && start < stop);
 
-    if (stop >= start + 8) {
-        /* seraching for 1 means: break when byte is not 0x00
-           searching for 0 means: break when byte is not 0xff */
-        const char c = vi ? 0x00 : 0xff;
-        Py_ssize_t j;
+    /* seraching for 1 means: break when byte is not 0x00
+       searching for 0 means: break when byte is not 0xff */
+    c = vi ? 0x00 : 0xff;
 
-        /* skip ahead by checking whole bytes */
-        for (j = start / 8; j < BYTES(stop); j++) {
-            if (c ^ self->ob_item[j])
-                break;
-        }
-        if (j == BYTES(stop))
-            return -1;
-        start = BITS(j);
+    /* skip ahead by checking whole bytes */
+    for (j = start / 8; j < BYTES(stop); j++) {
+        if (c ^ self->ob_item[j])
+            break;
     }
-    assert(start % 8 == 0 && start <= stop);
+    if (j == BYTES(stop))
+        return -1;
+    start = BITS(j);
+    assert(start % 8 == 0 && start < stop);
 
     /* search within last byte */
     for (i = start; i < stop; i++) {
