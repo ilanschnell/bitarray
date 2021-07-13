@@ -163,18 +163,20 @@ find_last(bitarrayobject *a, int vi)
     c = vi ? 0x00 : 0xff;
 
     /* skip ahead by checking whole bytes */
-    for (j = BYTES(i) - 1; j >= 0; j--)
+    for (j = i / 8; j >= 0; j--) {
+        assert(0 <= j && j < Py_SIZE(a));
         if (c ^ a->ob_item[j])
             break;
-
-    if (j < 0)  /* not found within bytes */
+    }
+    if (j < 0)  /* not found within whole bytes */
         return -1;
 
     /* search within byte found */
-    for (i = BITS(j + 1) - 1; i >= BITS(j); i--)
+    for (i = BITS(j) + 7; i >= BITS(j); i--)
         if (getbit(a, i) == vi)
             return i;
 
+    assert(0);
     return -1;  /* cannot happen */
 }
 
