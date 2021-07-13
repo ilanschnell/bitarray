@@ -273,6 +273,20 @@ class TestsRIndex(unittest.TestCase, Util):
             self.assertRaises(ValueError, rindex,
                               bitarray('11111', endian), 0)
 
+    def test_range(self):
+        for n in range(50):
+            a = bitarray(n)
+            for m in range(n):
+                a.setall(0)
+                self.assertRaises(ValueError, rindex, a, 1)
+                a[m] = 1
+                self.assertEqual(rindex(a, 1), m)
+
+                a.setall(1)
+                self.assertRaises(ValueError, rindex, a, 0)
+                a[m] = 0
+                self.assertEqual(rindex(a, 0), m)
+
     def test_random(self):
         for a in self.randombitarrays():
             v = randint(0, 1)
