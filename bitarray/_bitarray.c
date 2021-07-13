@@ -382,8 +382,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
             return -1;
         start = BITS(BYTES(start));
     }
-    assert(start % 8 == 0);
-    assert(start <= stop);
+    assert(start % 8 == 0 && start <= stop);
 
     if (stop >= start + 8) {
         /* seraching for 1 means: break when byte is not 0x00
@@ -396,11 +395,13 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
             if (c ^ self->ob_item[j])
                 break;
         }
+        if (j == BYTES(stop))
+            return -1;
         start = BITS(j);
     }
-    assert(start % 8 == 0);
+    assert(start % 8 == 0 && start <= stop);
 
-    /* search within last byte(s) */
+    /* search within last byte */
     for (i = start; i < stop; i++) {
         if (getbit(self, i) == vi)
             return i;
