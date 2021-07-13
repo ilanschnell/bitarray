@@ -3423,6 +3423,7 @@ def run(verbosity=1, repeat=1):
     print('sys.version: %s' % sys.version)
     print('sys.prefix: %s' % sys.prefix)
     print('pointer size: %d bit' % (8 * _sysinfo()[0]))
+    print('PY_UINT64_T defined: %s' % bool(_sysinfo()[5]))
     suite = unittest.TestSuite()
     for cls in tests:
         for _ in range(repeat):

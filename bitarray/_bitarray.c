@@ -254,13 +254,25 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     return 0;
 }
 
+#ifdef PY_UINT64_T
+#define UINT64_BUFFER(self)  ((PY_UINT64_T *) (self)->ob_item)
+#define UINT64_WORDS(bytes)  ((nbytes) / 8)
+#else
+#define UINT64_BUFFER(self)  ((self)->ob_item)
+#define UINT64_WORDS(bytes)  0
+#endif
+
 static void
 invert(bitarrayobject *self)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
+    const Py_ssize_t nwords = UINT64_WORDS(bytes);
     Py_ssize_t i;
 
-    for (i = 0; i < nbytes; i++)
+    assert_nbits(self);
+    for (i = 0; i < nwords; i++)
+        UINT64_BUFFER(self)[i] = ~UINT64_BUFFER(self)[i];
+    for (i = 8 * nwords; i < nbytes; i++)
         self->ob_item[i] = ~self->ob_item[i];
 }
 
@@ -1851,21 +1863,31 @@ static void
 bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
+    const Py_ssize_t nwords = UINT64_WORDS(nbytes);
     Py_ssize_t i;
 
     assert(self->nbits == other->nbits);
     assert(self->endian == other->endian);
+    assert_nbits(self);
     switch (oper) {
     case OP_and:
-        for (i = 0; i < nbytes; i++)
+        for (i = 0; i < nwords; i++)
+            UINT64_BUFFER(self)[i] &= UINT64_BUFFER(other)[i];
+        for (i = 8 * nwords; i < nbytes; i++)
             self->ob_item[i] &= other->ob_item[i];
         break;
+
     case OP_or:
-        for (i = 0; i < nbytes; i++)
+        for (i = 0; i < nwords; i++)
+            UINT64_BUFFER(self)[i] |= UINT64_BUFFER(other)[i];
+        for (i = 8 * nwords; i < nbytes; i++)
             self->ob_item[i] |= other->ob_item[i];
         break;
+
     case OP_xor:
-        for (i = 0; i < nbytes; i++)
+        for (i = 0; i < nwords; i++)
+            UINT64_BUFFER(self)[i] ^= UINT64_BUFFER(other)[i];
+        for (i = 8 * nwords; i < nbytes; i++)
             self->ob_item[i] ^= other->ob_item[i];
         break;
     default:                    /* cannot happen */
@@ -3335,12 +3357,18 @@ Set the default bit endianness for new bitarray objects being created.");
 static PyObject *
 sysinfo(void)
 {
-    return Py_BuildValue("iiiii",
+    return Py_BuildValue("iiiiii",
                          (int) sizeof(void *),
                          (int) sizeof(size_t),
                          (int) sizeof(bitarrayobject),
                          (int) sizeof(decodetreeobject),
-                         (int) sizeof(binode));
+                         (int) sizeof(binode),
+#ifdef PY_UINT64_T
+                         1
+#else
+                         0
+#endif
+                         );
 }
 
 PyDoc_STRVAR(sysinfo_doc,
@@ -3350,7 +3378,8 @@ tuple(sizeof(void *),\n\
       sizeof(size_t),\n\
       sizeof(bitarrayobject),\n\
       sizeof(decodetreeobject),\n\
-      sizeof(binode))");
+      sizeof(binode),\n\
+      PY_UINT64_T defined)");
 
 
 static PyMethodDef module_functions[] = {
