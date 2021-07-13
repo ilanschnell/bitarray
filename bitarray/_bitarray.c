@@ -376,14 +376,15 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
         /* seraching for 1 means: break when byte is not 0x00
            searching for 0 means: break when byte is not 0xff */
         const char c = vi ? 0x00 : 0xff;
+        Py_ssize_t j;
 
         /* skip ahead by checking whole bytes */
-        for (i = start / 8; i < BYTES(stop); i++) {
-            if (c ^ self->ob_item[i])
+        for (j = start / 8; j < BYTES(stop); j++) {
+            if (c ^ self->ob_item[j])
                 break;
         }
-        if (start < BITS(i))
-            start = BITS(i);
+        if (start < BITS(j))
+            start = BITS(j);
     }
 
     /* fine grained search */
