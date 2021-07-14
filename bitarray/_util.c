@@ -149,12 +149,11 @@ find_last(bitarrayobject *a, int vi)
     if (a->nbits == 0)
         return -1;
 
-    /* search within top byte */
+    /* search within highest (partial) byte */
     for (i = a->nbits - 1; i >= BITS(a->nbits / 8); i--)
         if (getbit(a, i) == vi)
             return i;
-
-    if (i < 0)  /* not found within top byte */
+    if (i < 0)  /* not found */
         return -1;
     assert((i + 1) % 8 == 0);
 
@@ -168,16 +167,12 @@ find_last(bitarrayobject *a, int vi)
         if (c ^ a->ob_item[j])
             break;
     }
-    if (j < 0)  /* not found within whole bytes */
-        return -1;
-
     /* search within byte found */
-    for (i = BITS(j) + 7; i >= BITS(j); i--)
+    for (i = BITS(j) + 7; i >= 0; i--)
         if (getbit(a, i) == vi)
             return i;
 
-    assert(0);
-    return -1;  /* cannot happen */
+    return -1;
 }
 
 static PyObject *
