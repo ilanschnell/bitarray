@@ -155,7 +155,7 @@ find_last(bitarrayobject *a, int vi)
             return i;
     if (i < 0)  /* not found */
         return -1;
-    assert((i + 1) % 8 == 0);
+    assert((i + 1) % 8 == 0 && i == BITS(a->nbits / 8) - 1);
 
     /* seraching for 1 means: break when byte is not 0x00
        searching for 0 means: break when byte is not 0xff */
@@ -169,9 +169,11 @@ find_last(bitarrayobject *a, int vi)
     }
     /* search within byte found */
     for (i = BITS(j) + 7; i >= 0; i--)
-        if (getbit(a, i) == vi)
+        if (getbit(a, i) == vi) {
+            assert(BITS(j) <= i && i < BITS(j + 1));
             return i;
-
+        }
+    assert(j < 0 && i < 0);
     return -1;
 }
 
