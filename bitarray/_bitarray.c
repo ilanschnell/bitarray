@@ -355,6 +355,8 @@ count(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
         const Py_ssize_t byte_stop = stop / 8;
         Py_ssize_t j;
 
+        assert(start + 8 > BITS(byte_start) && BITS(byte_stop) + 8 > stop);
+
         for (i = start; i < BITS(byte_start); i++)
             res += getbit(self, i);
         for (j = byte_start; j < byte_stop; j++)
