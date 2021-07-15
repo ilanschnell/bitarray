@@ -306,14 +306,15 @@ repeat(bitarrayobject *self, Py_ssize_t n)
     return 0;
 }
 
-/* set the bits from start to stop (excluding) in self to val */
+/* set the bits from start to stop (excluding) in self to vi */
 static void
-setrange(bitarrayobject *self, Py_ssize_t start, Py_ssize_t stop, int val)
+setrange(bitarrayobject *self, Py_ssize_t start, Py_ssize_t stop, int vi)
 {
     Py_ssize_t i;
 
     assert(0 <= start && start <= self->nbits);
     assert(0 <= stop && stop <= self->nbits);
+    assert(0 <= vi && vi <= 1);
 
     if (self->nbits == 0 || start >= stop)
         return;
@@ -323,15 +324,15 @@ setrange(bitarrayobject *self, Py_ssize_t start, Py_ssize_t stop, int val)
         const Py_ssize_t byte_stop = stop / 8;
 
         for (i = start; i < BITS(byte_start); i++)
-            setbit(self, i, val);
-        memset(self->ob_item + byte_start, val ? 0xff : 0x00,
+            setbit(self, i, vi);
+        memset(self->ob_item + byte_start, vi ? 0xff : 0x00,
                (size_t) (byte_stop - byte_start));
         for (i = BITS(byte_stop); i < stop; i++)
-            setbit(self, i, val);
+            setbit(self, i, vi);
     }
     else {
         for (i = start; i < stop; i++)
-            setbit(self, i, val);
+            setbit(self, i, vi);
     }
 }
 
