@@ -887,7 +887,7 @@ bitarray_find(bitarrayobject *self, PyObject *args)
         return PyLong_FromSsize_t(
                     find(self, (bitarrayobject *) x, start, stop));
 
-    PyErr_SetString(PyExc_TypeError, "bitarray or bool expected");
+    PyErr_SetString(PyExc_TypeError, "bitarray or int expected");
     return NULL;
 }
 
@@ -1120,7 +1120,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
         Py_INCREF(t);
     }
     else {
-        PyErr_SetString(PyExc_TypeError, "bitarray or bool expected");
+        PyErr_SetString(PyExc_TypeError, "bitarray or int expected");
         return NULL;
     }
 
@@ -1592,7 +1592,7 @@ bitarray_contains(bitarrayobject *self, PyObject *value)
     if (bitarray_Check(value))
         return find(self, (bitarrayobject *) value, 0, self->nbits) >= 0;
 
-    PyErr_Format(PyExc_TypeError, "bitarray or bool expected, got %s",
+    PyErr_Format(PyExc_TypeError, "bitarray or int expected, got %s",
                  Py_TYPE(value)->tp_name);
     return -1;
 }
@@ -1818,7 +1818,7 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
             return setslice_bool(self, item, value);
 
         PyErr_Format(PyExc_TypeError,
-                     "bitarray or bool expected for slice assignment, not %s",
+                     "bitarray or int expected for slice assignment, not %s",
                      Py_TYPE(value)->tp_name);
         return -1;
     }
@@ -2710,7 +2710,7 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
         xa = (bitarrayobject *) x;
     }
     else {
-        PyErr_SetString(PyExc_TypeError, "bitarray or bool expected");
+        PyErr_SetString(PyExc_TypeError, "bitarray or int expected");
         return NULL;
     }
 
