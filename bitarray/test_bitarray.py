@@ -758,6 +758,17 @@ class SliceTests(unittest.TestCase, Util):
         a[-2:2:-1] = 1 #                 ^^^^
         self.assertEqual(a, bitarray('00011110'))
 
+    def test_setslice_bool_random(self):
+        N = 1000
+        a = bitarray(N)
+        for _ in range(50):
+            a.setall(0)
+            aa = a.tolist()
+            s = slice(self.rndsliceidx(N), self.rndsliceidx(N), randint(1, 20))
+            a[s] = 1
+            aa[s] = self.slicelen(s, N) * [1]
+            self.assertEqual(a.tolist(), aa)
+
     def test_setslice_to_int(self):
         a = bitarray('11111111')
         a[::2] = 0 #  ^ ^ ^ ^
