@@ -10,7 +10,7 @@ typedef struct {
 
 
 /* number of bytes necessary to store given bits */
-#define BYTES(bits)  (((bits) + 7) / 8)
+#define BYTES(bits)  (((bits) + 7) >> 3)
 
 
 int resize(bitarrayobject *self, int nbits)

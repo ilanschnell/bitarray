@@ -4,6 +4,7 @@
   * speedup slice assignment, see #132 and #135
   * fix TypeError messages when bitarray or int (0, 1) are expected (bool
     is a subclass of int)
+  * optimize `getbit()` and `setbit()` in `bitarray.h`
   * add and improve tests
 
 
