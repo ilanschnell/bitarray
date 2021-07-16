@@ -69,8 +69,8 @@ count_to_n(bitarrayobject *a, Py_ssize_t n)
     while (i + BLOCK_BITS < a->nbits) {
         m = 0;
         assert(i % 8 == 0);
-        block_start = i / 8;
-        block_stop = block_start + (BLOCK_BITS / 8);
+        block_start = i >> 3;
+        block_stop = block_start + (BLOCK_BITS >> 3);
         assert(block_stop <= Py_SIZE(a));
         for (k = block_start; k < block_stop; k++)
             m += bitcount_lookup[(unsigned char) a->ob_item[k]];
@@ -82,7 +82,7 @@ count_to_n(bitarrayobject *a, Py_ssize_t n)
 #undef BLOCK_BITS
 
     while (i + 8 < a->nbits) {
-        k = i / 8;
+        k = i >> 3;
         assert(k < Py_SIZE(a));
         m = bitcount_lookup[(unsigned char) a->ob_item[k]];
         if (j + m >= n)
