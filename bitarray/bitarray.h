@@ -29,10 +29,10 @@ typedef struct {
 #define BITS(bytes)  ((bytes) << 3)
 
 /* number of bytes necessary to store given bits */
-#define BYTES(bits)  (((bits) + 7) / 8)
+#define BYTES(bits)  (((bits) + 7) >> 3)
 
 #define BITMASK(endian, i)  \
-    (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) % 8) : (7 - (i) % 8)))
+    (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) & 7) : (7 - ((i) & 7))))
 
 /* assert that .nbits is in agreement with .ob_size */
 #define assert_nbits(self)  assert(BYTES((self)->nbits) == Py_SIZE(self))
@@ -75,9 +75,9 @@ typedef struct {
 static inline int
 getbit(bitarrayobject *self, Py_ssize_t i)
 {
-    assert(0 <= i && i < self->nbits && i / 8 < Py_SIZE(self));
+    assert(0 <= i && i < self->nbits && i >> 3 < Py_SIZE(self));
     assert_nbits(self);
-    return (self->ob_item[i / 8] & BITMASK(self->endian, i) ? 1 : 0);
+    return (self->ob_item[i >> 3] & BITMASK(self->endian, i) ? 1 : 0);
 }
 
 static inline void
@@ -85,10 +85,10 @@ setbit(bitarrayobject *self, Py_ssize_t i, int bit)
 {
     char *cp, mask;
 
-    assert(0 <= i && i < self->nbits && i / 8 < Py_SIZE(self));
+    assert(0 <= i && i < self->nbits && i >> 3 < Py_SIZE(self));
     assert_nbits(self);
     mask = BITMASK(self->endian, i);
-    cp = self->ob_item + i / 8;
+    cp = self->ob_item + (i >> 3);
     if (bit)
         *cp |= mask;
     else
