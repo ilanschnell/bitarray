@@ -1,10 +1,10 @@
-2021-XX-XX   2.2.2:
+2021-07-16   2.2.2:
 -------------------
-  * speedup bitwise operations, #133
   * speedup slice assignment, see #132 and #135
+  * speedup bitwise operations, #133
+  * optimize `getbit()` and `setbit()` in `bitarray.h`
   * fix TypeError messages when bitarray or int (0, 1) are expected (bool
     is a subclass of int)
-  * optimize `getbit()` and `setbit()` in `bitarray.h`
   * add and improve tests
 
 

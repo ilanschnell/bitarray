@@ -1,6 +1,16 @@
 Change log
 ==========
 
+**2.2.2** (2021-07-16):
+
+* speedup slice assignment, see `#132 <https://github.com/ilanschnell/bitarray/issues/132>`__ and `#135 <https://github.com/ilanschnell/bitarray/issues/135>`__
+* speedup bitwise operations, `#133 <https://github.com/ilanschnell/bitarray/issues/133>`__
+* optimize ``getbit()`` and ``setbit()`` in ``bitarray.h``
+* fix TypeError messages when bitarray or int (0, 1) are expected (bool
+  is a subclass of int)
+* add and improve tests
+
+
 **2.2.1** (2021-07-06):
 
 * improve documentation
