@@ -1749,8 +1749,22 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
         setrange(self, start, start + slicelength, vi);
     }
     else {  /* step != 1 */
-        for (i = 0, j = start; i < slicelength; i++, j += step)
-            setbit(self, j, vi);
+
+        /* set up bitmask table */
+        char bitmask_table[8];
+        for (i = 0; i < 8; i++) {
+            bitmask_table[i] = BITMASK(self->endian, i);
+        }
+        
+        if (vi == 0) {
+            for (i = 0, j = start; i < slicelength; i++, j += step) {
+                self->ob_item[j >> 3] &= ~bitmask_table[j & 0b111];
+            }
+        } else {
+            for (i = 0, j = start; i < slicelength; i++, j += step) {
+                self->ob_item[j >> 3] |= bitmask_table[j & 0b111];
+            }
+        }
     }
     return 0;
 }
