@@ -150,19 +150,19 @@ find_last(bitarrayobject *a, int vi)
         return -1;
 
     /* search within highest (partial) byte */
-    for (i = a->nbits - 1; i >= BITS(a->nbits / 8); i--)
+    for (i = a->nbits - 1; i >= BITS(a->nbits >> 3); i--)
         if (getbit(a, i) == vi)
             return i;
     if (i < 0)  /* not found */
         return -1;
-    assert((i + 1) % 8 == 0 && i == BITS(a->nbits / 8) - 1);
+    assert((i + 1) % 8 == 0 && i == BITS(a->nbits >> 3) - 1);
 
     /* seraching for 1 means: break when byte is not 0x00
        searching for 0 means: break when byte is not 0xff */
     c = vi ? 0x00 : 0xff;
 
     /* skip ahead by checking whole bytes */
-    for (j = i / 8; j >= 0; j--) {
+    for (j = i >> 3; j >= 0; j--) {
         assert(0 <= j && j < Py_SIZE(a));
         if (c ^ a->ob_item[j])
             break;

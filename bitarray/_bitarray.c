@@ -200,16 +200,16 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
        Note that the order of these two operations matters when copying
        self to self. */
     if (a % 8 == 0 && b % 8 == 0 && n >= 8) {
-        const size_t bytes = n / 8;
+        const size_t bytes = n >> 3;
         const Py_ssize_t bits = BITS(bytes);
 
         assert(bytes > 0 && bits <= n && n < bits + 8);
         if (a > b)
             copy_n(self, bits + a, other, bits + b, n - bits);
 
-        memmove(self->ob_item + a / 8, other->ob_item + b / 8, bytes);
+        memmove(self->ob_item + (a >> 3), other->ob_item + (b >> 3), bytes);
         if (self->endian != other->endian)
-            bytereverse(self, a / 8, bytes);
+            bytereverse(self, a >> 3, bytes);
 
         if (a <= b)
             copy_n(self, bits + a, other, bits + b, n - bits);
@@ -256,7 +256,7 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 
 #ifdef PY_UINT64_T
 #define UINT64_BUFFER(self)  ((PY_UINT64_T *) (self)->ob_item)
-#define UINT64_WORDS(bytes)  ((nbytes) / 8)
+#define UINT64_WORDS(bytes)  ((nbytes) >> 3)
 #else
 #define UINT64_BUFFER(self)  ((self)->ob_item)
 #define UINT64_WORDS(bytes)  0
@@ -272,7 +272,7 @@ invert(bitarrayobject *self)
     assert_nbits(self);
     for (i = 0; i < nwords; i++)
         UINT64_BUFFER(self)[i] = ~UINT64_BUFFER(self)[i];
-    for (i = 8 * nwords; i < nbytes; i++)
+    for (i = nwords << 3; i < nbytes; i++)
         self->ob_item[i] = ~self->ob_item[i];
 }
 
@@ -321,7 +321,7 @@ setrange(bitarrayobject *self, Py_ssize_t start, Py_ssize_t stop, int vi)
 
     if (stop >= start + 8) {
         const Py_ssize_t byte_start = BYTES(start);
-        const Py_ssize_t byte_stop = stop / 8;
+        const Py_ssize_t byte_stop = stop >> 3;
 
         for (i = start; i < BITS(byte_start); i++)
             setbit(self, i, vi);
@@ -353,7 +353,7 @@ count(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
 
     if (stop >= start + 8) {
         const Py_ssize_t byte_start = BYTES(start);
-        const Py_ssize_t byte_stop = stop / 8;
+        const Py_ssize_t byte_stop = stop >> 3;
         Py_ssize_t j;
 
         assert(start + 8 > BITS(byte_start) && BITS(byte_stop) + 8 > stop);
@@ -401,7 +401,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
     c = vi ? 0x00 : 0xff;
 
     /* skip ahead by checking whole bytes */
-    for (j = i / 8; j < stop / 8; j++) {
+    for (j = i >> 3; j < stop >> 3; j++) {
         assert(0 <= j && j < Py_SIZE(self));
         if (c ^ self->ob_item[j])
             break;
@@ -1891,23 +1891,24 @@ bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
     case OP_and:
         for (i = 0; i < nwords; i++)
             UINT64_BUFFER(self)[i] &= UINT64_BUFFER(other)[i];
-        for (i = 8 * nwords; i < nbytes; i++)
+        for (i = nwords << 3; i < nbytes; i++)
             self->ob_item[i] &= other->ob_item[i];
         break;
 
     case OP_or:
         for (i = 0; i < nwords; i++)
             UINT64_BUFFER(self)[i] |= UINT64_BUFFER(other)[i];
-        for (i = 8 * nwords; i < nbytes; i++)
+        for (i = nwords << 3; i < nbytes; i++)
             self->ob_item[i] |= other->ob_item[i];
         break;
 
     case OP_xor:
         for (i = 0; i < nwords; i++)
             UINT64_BUFFER(self)[i] ^= UINT64_BUFFER(other)[i];
-        for (i = 8 * nwords; i < nbytes; i++)
+        for (i = nwords << 3; i < nbytes; i++)
             self->ob_item[i] ^= other->ob_item[i];
         break;
+
     default:                    /* cannot happen */
         Py_FatalError("unknown bitwise operation");
     }
