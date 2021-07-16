@@ -1,6 +1,7 @@
 2021-XX-XX   2.2.2:
 -------------------
   * speedup bitwise operations, #133
+  * speedup slice assignment, see #132 and #135
   * fix TypeError messages when bitarray or int (0, 1) are expected (bool
     is a subclass of int)
   * add and improve tests
