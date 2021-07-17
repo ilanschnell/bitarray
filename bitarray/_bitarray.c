@@ -1737,6 +1737,7 @@ slice_get_indices(PyObject *slice, Py_ssize_t length,
                   Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step,
                   Py_ssize_t *slicelength)
 {
+    assert(PySlice_Check(slice) && length >= 0);
     if (PySlice_GetIndicesEx(slice, length,
                              start, stop, step, slicelength) < 0)
         return -1;
@@ -1749,10 +1750,11 @@ slice_get_indices(PyObject *slice, Py_ssize_t length,
         *start = *stop + *step * (*slicelength - 1) - 1;
         *step *= -1;
     }
-    assert(*step > 0 && *start <= *stop && *slicelength > 0);
+    assert(*step > 0 && *start < *stop && *slicelength > 0);
     assert(0 <= *start && *start < length);
     assert(0 <= *stop && *stop <= length);
-    assert(*step != 1 || *stop - *start == *slicelength);
+    assert(*step != 1 || *start + *slicelength == *stop);
+    assert(*start + ((*slicelength - 1) * *step) < *stop);
     return 0;
 }
 
