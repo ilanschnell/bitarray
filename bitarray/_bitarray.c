@@ -1731,6 +1731,31 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
     return res;
 }
 
+/* like PySlice_GetIndicesEx(), but step index will always be positive */
+static int
+slice_get_indices(PyObject *slice, Py_ssize_t length,
+                  Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step,
+                  Py_ssize_t *slicelength)
+{
+    if (PySlice_GetIndicesEx(slice, length,
+                             start, stop, step, slicelength) < 0)
+        return -1;
+
+    if (*slicelength == 0)
+        return 0;
+
+    if (*step < 0) {
+        *stop = *start + 1;
+        *start = *stop + *step * (*slicelength - 1) - 1;
+        *step *= -1;
+    }
+    assert(*step > 0 && *start <= *stop && *slicelength > 0);
+    assert(0 <= *start && *start < length);
+    assert(0 <= *stop && *stop <= length);
+    assert(*step != 1 || *stop - *start == *slicelength);
+    return 0;
+}
+
 /* set the elements in self, specified by slice, to value */
 static int
 setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
@@ -1739,27 +1764,16 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     int vi;
 
     assert(PySlice_Check(slice) && PyIndex_Check(value));
-    if (PySlice_GetIndicesEx(slice, self->nbits,
-                             &start, &stop, &step, &slicelength) < 0)
-        return -1;
-
     if ((vi = pybit_as_int(value)) < 0)
         return -1;
 
+    if (slice_get_indices(slice, self->nbits,
+                          &start, &stop, &step, &slicelength) < 0)
+        return -1;
     if (slicelength == 0)
         return 0;
 
-    if (step < 0) {
-        stop = start + 1;
-        start = stop + step * (slicelength - 1) - 1;
-        step = -step;
-    }
-    assert(step > 0 && start <= stop && slicelength > 0);
-    assert(0 <= start && start < self->nbits);
-    assert(0 <= stop && stop <= self->nbits);
-
     if (step == 1) {
-        assert(stop - start == slicelength);
         setrange(self, start, stop, vi);
     }
     else {  /* step != 1 */
@@ -1797,24 +1811,13 @@ delslice(bitarrayobject *self, PyObject *slice)
     Py_ssize_t start, stop, step, slicelength;
 
     assert(PySlice_Check(slice));
-    if (PySlice_GetIndicesEx(slice, self->nbits,
-                             &start, &stop, &step, &slicelength) < 0)
+    if (slice_get_indices(slice, self->nbits,
+                          &start, &stop, &step, &slicelength) < 0)
         return -1;
-
     if (slicelength == 0)
         return 0;
 
-    if (step < 0) {
-        stop = start + 1;
-        start = stop + step * (slicelength - 1) - 1;
-        step = -step;
-    }
-    assert(step > 0 && start <= stop && slicelength > 0);
-    assert(0 <= start && start < self->nbits);
-    assert(0 <= stop && stop <= self->nbits);
-
     if (step == 1) {
-        assert(stop - start == slicelength);
         return delete_n(self, start, slicelength);
     }
     else {
