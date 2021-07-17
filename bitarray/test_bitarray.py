@@ -759,7 +759,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('00011110'))
 
     def test_setslice_bool_range(self):
-        N = 500
+        N = 200
         a = bitarray(N)
         b = bitarray(N)
         for step in range(-N - 1, N):
@@ -779,7 +779,7 @@ class SliceTests(unittest.TestCase, Util):
     def test_setslice_bool_random(self):
         N = 100
         a = bitarray(N)
-        for _ in range(20):
+        for _ in range(100):
             a.setall(0)
             aa = a.tolist()
             step = self.rndsliceidx(N) or None

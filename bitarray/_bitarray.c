@@ -1746,8 +1746,21 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     if ((vi = pybit_as_int(value)) < 0)
         return -1;
 
+    if (slicelength == 0)
+        return 0;
+
+    if (step < 0) {
+        stop = start + 1;
+        start = stop + step * (slicelength - 1) - 1;
+        step = -step;
+    }
+    assert(step > 0 && start <= stop && slicelength > 0);
+    assert(0 <= start && start < self->nbits);
+    assert(0 <= stop && stop <= self->nbits);
+
     if (step == 1) {
-        setrange(self, start, start + slicelength, vi);
+        assert(stop - start == slicelength);
+        setrange(self, start, stop, vi);
     }
     else {  /* step != 1 */
         if (slicelength < 8) {
