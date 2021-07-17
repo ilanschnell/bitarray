@@ -692,7 +692,7 @@ class SliceTests(unittest.TestCase, Util):
         a[:] = a
         self.assertEqual(a, bitarray('010111'))
 
-    def test_setslice_to_bitarray(self):
+    def test_setslice_bitarray(self):
         a = bitarray('11111111 1111')
         a[2:6] = bitarray('0010')
         self.assertEqual(a, bitarray('11001011 1111'))
@@ -713,7 +713,7 @@ class SliceTests(unittest.TestCase, Util):
         a[:-6:-1] = bitarray('10111')
         self.assertEqual(a, bitarray('00000001 1101'))
 
-    def test_setslice_to_bitarray_2(self):
+    def test_setslice_bitarray_2(self):
         a = bitarray('1111')
         a[3:3] = bitarray('000')  # insert
         self.assertEqual(a, bitarray('1110001'))
@@ -733,7 +733,7 @@ class SliceTests(unittest.TestCase, Util):
         a[2:5] = bitarray('0')  # remove
         self.assertEqual(a, bitarray('11011'))
 
-    def test_setslice_to_bool(self):
+    def test_setslice_bool_explicit(self):
         a = bitarray('11111111')
         a[::2] = False
         self.assertEqual(a, bitarray('01010101'))
@@ -757,6 +757,17 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('00000000'))
         a[-2:2:-1] = 1 #                 ^^^^
         self.assertEqual(a, bitarray('00011110'))
+
+    def test_setslice_bool_simple(self):
+        for _ in range(100):
+            N = randint(100, 2000)
+            s = slice(randint(0, 20), randint(N - 20, N), randint(1, 20))
+            a = zeros(N)
+            a[s] = 1
+            b = zeros(N)
+            for i in range(s.start, s.stop, s.step):
+                b[i] = 1
+            self.assertEqual(a, b)
 
     def test_setslice_bool_range(self):
         N = 200
