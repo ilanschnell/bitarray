@@ -65,7 +65,7 @@ class Util(object):
         if randint(0, 1):
             return None
         else:
-            return randint(-length-5, length+5)
+            return randint(-length - 5, length + 5)
 
     @staticmethod
     def other_endian(endian):
@@ -762,22 +762,29 @@ class SliceTests(unittest.TestCase, Util):
         N = 500
         a = bitarray(N)
         b = bitarray(N)
-        for step in range(1, N):
+        for step in range(-N - 1, N):
+            if step == 0:
+                continue
             v = randint(0, 1)
             a.setall(not v)
             a[::step] = v
 
             b.setall(not v)
-            for i in range(0, N, step):
-                b[i] = v
+            if step > 0:
+                for i in range(0, N, step):
+                    b[i] = v
+            else:
+                for i in range(N - 1, -1, step):
+                    b[i] = v
             self.assertEqual(a, b)
 
     def test_setslice_bool_random(self):
-        N = 1000
+        N = 100
         a = bitarray(N)
-        for step in range(1, 50):
+        for _ in range(20):
             a.setall(0)
             aa = a.tolist()
+            step = self.rndsliceidx(N) or None
             s = slice(self.rndsliceidx(N), self.rndsliceidx(N), step)
             a[s] = 1
             aa[s] = self.slicelen(s, N) * [1]
@@ -787,7 +794,8 @@ class SliceTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             n = len(a)
             aa = a.tolist()
-            s = slice(self.rndsliceidx(n), self.rndsliceidx(n), randint(1, 9))
+            step = self.rndsliceidx(n) or None
+            s = slice(self.rndsliceidx(n), self.rndsliceidx(n), step)
             v = randint(0, 1)
             a[s] = v
             aa[s] = self.slicelen(s, n) * [v]

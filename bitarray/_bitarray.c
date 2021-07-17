@@ -426,6 +426,7 @@ find(bitarrayobject *self, bitarrayobject *xa,
 
     assert(0 <= start && start <= self->nbits);
     assert(0 <= stop && stop <= self->nbits);
+
     if (xa->nbits == 1)         /* faster for sparse bitarrays */
         return find_bit(self, getbit(xa, 0), start, stop);
 
