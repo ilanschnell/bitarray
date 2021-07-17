@@ -281,7 +281,6 @@ static int
 repeat(bitarrayobject *self, Py_ssize_t n)
 {
     const Py_ssize_t nbits = self->nbits;
-    Py_ssize_t i;
 
     if (nbits == 0 || n == 1)   /* nothing to do */
         return 0;
@@ -300,8 +299,19 @@ repeat(bitarrayobject *self, Py_ssize_t n)
     if (resize(self, n * nbits) < 0)
         return -1;
 
-    for (i = 1; i < n; i++)
-        copy_n(self, i * nbits, self, 0, nbits);
+    /* double number of bits until it's a large multiple of 8 */
+    Py_ssize_t bits_to_copy = nbits;
+    while (bits_to_copy <= n * nbits / 2 && (bits_to_copy % 8 != 0 || bits_to_copy < 10000)) {
+        copy_n(self, bits_to_copy, self, 0, bits_to_copy);
+        bits_to_copy *= 2;
+    }
+
+    Py_ssize_t position = bits_to_copy;
+    for (; position < (n * nbits) - bits_to_copy; position += bits_to_copy) {
+        copy_n(self, position, self, 0, bits_to_copy);
+    }
+    Py_ssize_t bitsLeft = nbits * n - position;
+    copy_n(self, position, self, 0, bitsLeft);
 
     return 0;
 }
