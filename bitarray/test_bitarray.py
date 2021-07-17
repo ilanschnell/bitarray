@@ -770,12 +770,10 @@ class SliceTests(unittest.TestCase, Util):
             a[::step] = v
 
             b.setall(not v)
-            if step > 0:
-                for i in range(0, N, step):
-                    b[i] = v
-            else:
-                for i in range(N - 1, -1, step):
-                    b[i] = v
+            for i in range(0, N, abs(step)):
+                b[i] = v
+            if step < 0:
+                b.reverse()
             self.assertEqual(a, b)
 
     def test_setslice_bool_random(self):
