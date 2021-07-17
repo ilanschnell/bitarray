@@ -1762,7 +1762,7 @@ slice_get_indices(PyObject *slice, Py_ssize_t length,
 static int
 setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
 {
-    Py_ssize_t start, stop, step, slicelength, i, j;
+    Py_ssize_t start, stop, step, slicelength, i;
     int vi;
 
     assert(PySlice_Check(slice) && PyIndex_Check(value));
@@ -1780,8 +1780,8 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     }
     else {  /* step != 1 */
         if (slicelength < 8) {
-            for (i = 0, j = start; i < slicelength; i++, j += step)
-                setbit(self, j, vi);
+            for (i = start; i < stop; i += step)
+                setbit(self, i, vi);
         }
         else {
             char bitmask_table[8];
@@ -1790,16 +1790,12 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
                 bitmask_table[i] = BITMASK(self->endian, i);
 
             if (vi) {
-                for (i = 0, j = start; i < slicelength; i++, j += step) {
-                    assert(0 <= j >> 3 && j >> 3 < Py_SIZE(self));
-                    self->ob_item[j >> 3] |= bitmask_table[j & 7];
-                }
+                for (i = start; i < stop; i += step)
+                    self->ob_item[i >> 3] |= bitmask_table[i & 7];
             }
             else {
-                for (i = 0, j = start; i < slicelength; i++, j += step) {
-                    assert(0 <= j >> 3 && j >> 3 < Py_SIZE(self));
-                    self->ob_item[j >> 3] &= ~bitmask_table[j & 7];
-                }
+                for (i = start; i < stop; i += step)
+                    self->ob_item[i >> 3] &= ~bitmask_table[i & 7];
             }
         }
     }
