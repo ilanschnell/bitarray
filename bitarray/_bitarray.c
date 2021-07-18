@@ -182,6 +182,14 @@ bytereverse(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
         self->ob_item[i] = trans[(unsigned char) self->ob_item[i]];
 }
 
+#ifdef PY_UINT64_T
+#define UINT64_BUFFER(self)  ((PY_UINT64_T *) (self)->ob_item)
+#define UINT64_WORDS(bytes)  ((nbytes) >> 3)
+#else
+#define UINT64_BUFFER(self)  ((self)->ob_item)
+#define UINT64_WORDS(bytes)  0
+#endif
+
 /* copy n bits from other (starting at b) onto self (starting at a) */
 static void
 copy_n(bitarrayobject *self, Py_ssize_t a,
@@ -253,14 +261,6 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     copy_n(self, start + n, self, start, self->nbits - start - n);
     return 0;
 }
-
-#ifdef PY_UINT64_T
-#define UINT64_BUFFER(self)  ((PY_UINT64_T *) (self)->ob_item)
-#define UINT64_WORDS(bytes)  ((nbytes) >> 3)
-#else
-#define UINT64_BUFFER(self)  ((self)->ob_item)
-#define UINT64_WORDS(bytes)  0
-#endif
 
 static void
 invert(bitarrayobject *self)
