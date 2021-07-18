@@ -1368,7 +1368,7 @@ class SequenceMethodsTests(unittest.TestCase, Util):
             b = a.copy()
             for m in list(range(-3, 5)) + [randint(100, 200)]:
                 res = bitarray(m * a.to01(), endian=a.endian())
-                self.assertEqual(len(res), len(a) * (m if m > 0 else 0))
+                self.assertEqual(len(res), len(a) * max(0, m))
 
                 c = a * m
                 self.assertEQUAL(c, res)
