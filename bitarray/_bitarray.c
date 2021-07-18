@@ -190,6 +190,18 @@ bytereverse(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 #define UINT64_WORDS(bytes)  0
 #endif
 
+static void
+shift1(bitarrayobject *self)
+{
+    Py_ssize_t i, nwords = UINT64_WORDS(Py_SIZE(self));
+
+    for (i = 0; i < nwords; i++) {
+        UINT64_BUFFER(self)[i] >>= 1;
+        if (i + 1 != nwords)
+            setbit(self, i * 64 + 63, getbit(self, (i + 1) * 64));
+    }
+}
+
 /* copy n bits from other (starting at b) onto self (starting at a) */
 static void
 copy_n(bitarrayobject *self, Py_ssize_t a,
@@ -202,6 +214,13 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     assert(0 <= b && b <= other->nbits - n);
     if (n == 0)
         return;
+
+    if (self == other && self->endian == ENDIAN_LITTLE &&
+            a == 0 && b == 1 && n == self->nbits - 1 &&
+            self->nbits >= 64 && self->nbits % 64 == 0) {
+        shift1(self);
+        return;
+    }
 
     /* When the start positions are at byte positions, we can copy whole
        bytes using memmove, and copy the remaining few bits individually.
