@@ -184,7 +184,7 @@ bytereverse(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 
 #ifdef PY_UINT64_T
 #define UINT64_BUFFER(self)  ((PY_UINT64_T *) (self)->ob_item)
-#define UINT64_WORDS(bytes)  ((nbytes) >> 3)
+#define UINT64_WORDS(bytes)  ((bytes) >> 3)
 #else
 #define UINT64_BUFFER(self)  ((self)->ob_item)
 #define UINT64_WORDS(bytes)  0
@@ -266,7 +266,7 @@ static void
 invert(bitarrayobject *self)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
-    const Py_ssize_t nwords = UINT64_WORDS(bytes);
+    const Py_ssize_t nwords = UINT64_WORDS(nbytes);
     Py_ssize_t i;
 
     assert_nbits(self);
