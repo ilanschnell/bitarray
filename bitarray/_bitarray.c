@@ -276,43 +276,37 @@ invert(bitarrayobject *self)
         self->ob_item[i] = ~self->ob_item[i];
 }
 
-/* repeat self n times (negative n is treated as 0) */
+/* repeat self m times (negative n is treated as 0) */
 static int
-repeat(bitarrayobject *self, Py_ssize_t n)
+repeat(bitarrayobject *self, Py_ssize_t m)
 {
     const Py_ssize_t nbits = self->nbits;
+    Py_ssize_t k;
 
-    if (nbits == 0 || n == 1)   /* nothing to do */
+    if (nbits == 0 || m == 1)   /* nothing to do */
         return 0;
 
-    if (n <= 0)                 /* clear */
+    if (m <= 0)                 /* clear */
         return resize(self, 0);
 
-    assert(n > 1 && nbits > 0);
-    if (nbits > PY_SSIZE_T_MAX / n) {
+    assert(m > 1 && nbits > 0);
+    if (nbits > PY_SSIZE_T_MAX / m) {
         PyErr_Format(PyExc_OverflowError,
                      "cannot repeat bitarray (of size %zd) %zd times",
-                     nbits, n);
+                     nbits, m);
         return -1;
     }
 
-    if (resize(self, n * nbits) < 0)
+    if (resize(self, m * nbits) < 0)
         return -1;
 
-    /* double number of bits until it's a large multiple of 8 */
-    Py_ssize_t bits_to_copy = nbits;
-    while (bits_to_copy <= n * nbits / 2 && (bits_to_copy % 8 != 0 || bits_to_copy < 10000)) {
-        copy_n(self, bits_to_copy, self, 0, bits_to_copy);
-        bits_to_copy *= 2;
+    k = nbits;  /* number of bits which have been copied */
+    while (k <= self->nbits / 2) {  /* double copies */
+        copy_n(self, k, self, 0, k);
+        k *= 2;
     }
-
-    Py_ssize_t position = bits_to_copy;
-    for (; position < (n * nbits) - bits_to_copy; position += bits_to_copy) {
-        copy_n(self, position, self, 0, bits_to_copy);
-    }
-    Py_ssize_t bitsLeft = nbits * n - position;
-    copy_n(self, position, self, 0, bitsLeft);
-
+    assert(self->nbits - k >= 0);
+    copy_n(self, k, self, 0, self->nbits - k);  /* copy remaining bits */
     return 0;
 }
 
