@@ -186,6 +186,9 @@ bytereverse(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 #define UINT64_BUFFER(self)  ((PY_UINT64_T *) (self)->ob_item)
 #define UINT64_WORDS(bytes)  ((bytes) >> 3)
 #else
+/* The UINT64_BUFFER macro only exists here in order to write code which
+   complies with and without PY_UINT64_T defined (in order to avoid
+   #ifdef'ing the code below). */
 #define UINT64_BUFFER(self)  ((self)->ob_item)
 #define UINT64_WORDS(bytes)  0
 #endif
