@@ -1,9 +1,9 @@
 Contributing to bitarray
 ========================
 
-The bitarray type, is very stable and feature complete at this point,
+The bitarray type is very stable and feature complete at this point,
 which means that pull requests to `bitarray/_bitarray.c` will most likely
-be rejected.
+be rejected, unless they improve readability and performance.
 
 There may be room for improvements/additions in the `bitarray.util` module,
 added in the 1.2.0 release.  However, due to the slow release cycle of this
