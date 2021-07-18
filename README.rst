@@ -16,10 +16,9 @@ this module useful.
 Key features
 ------------
 
-* All functionality implemented in C.
-* Bitarray objects behave very much like a list object, in particular
-  slicing (including slice assignment and deletion) is supported.
 * The bit endianness can be specified for each bitarray object, see below.
+* Sequence methods: slicing (including slice assignment and deletion),
+  operations ``+``, ``*``, ``+=``, ``*=``, the ``in`` operator, ``len()``
 * Fast methods for encoding and decoding variable bit length prefix codes
 * Bitwise operations: ``~``, ``&``, ``|``, ``^``, ``<<``, ``>>`` (as well as
   their in-place versions ``&=``, ``|=``, ``^=``, ``<<=``, ``>>=``).
@@ -100,6 +99,8 @@ basic usage of bitarray objects:
     >>> a
     bitarray('110')
     >>> x = bitarray(2 ** 20)  # bitarray of length 1048576 (uninitialized)
+    >>> len(x)
+    1048576
     >>> bitarray('1001 011')   # initialize from string (whitespace is ignored)
     bitarray('1001011')
     >>> lst = [1, 0, False, True, True]
