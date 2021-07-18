@@ -1339,52 +1339,48 @@ class SequenceMethodsTests(unittest.TestCase, Util):
                 self.assertEqual(d.endian(), a.endian())
                 self.check_obj(d)
 
-    def test_repeat(self):
-        for c in [0 * bitarray(),
-                  0 * bitarray('1001111'),
-                  -1 * bitarray('100110'),
-                  11 * bitarray()]:
-            self.assertEQUAL(c, bitarray())
+    def test_repeat_explicit(self):
+        for m, s, r in [
+                ( 0,        '',      ''),
+                ( 0, '1001111',      ''),
+                (-1,  '100110',      ''),
+                (11,        '',      ''),
+                ( 1,     '110',   '110'),
+                ( 2,      '01',  '0101'),
+                ( 5,       '1', '11111'),
+        ]:
+            a = bitarray(s)
+            self.assertEqual(a * m, bitarray(r))
+            self.assertEqual(m * a, bitarray(r))
+            c = a.copy()
+            c *= m
+            self.assertEqual(c, bitarray(r))
 
-        c = 3 * bitarray('001')
-        self.assertEQUAL(c, bitarray('001001001'))
-
-        c = bitarray('110') * 3
-        self.assertEQUAL(c, bitarray('110110110'))
-
-        for a in self.randombitarrays():
-            b = a.copy()
-            for n in range(-3, 5):
-                c = a * n
-                self.assertEQUAL(c, bitarray(n * a.tolist(),
-                                             endian=a.endian()))
-                c = n * a
-                self.assertEqual(c, bitarray(n * a.tolist(),
-                                             endian=a.endian()))
-                self.assertEQUAL(a, b)
-
+    def test_repeat_wrong_args(self):
         a = bitarray()
         self.assertRaises(TypeError, a.__mul__, None)
-
-    def test_inplace_repeat(self):
-        c = bitarray('1101110011')
-        c *= 0
-        self.assertEQUAL(c, bitarray())
-
-        c = bitarray('110')
-        c *= 3
-        self.assertEQUAL(c, bitarray('110110110'))
-        self.check_obj(c)
-
-        for a in self.randombitarrays():
-            for n in range(-3, 5):
-                b = a.copy()
-                b *= n
-                self.assertEQUAL(b, bitarray(n * a.tolist(),
-                                             endian=a.endian()))
-
-        a = bitarray()
+        self.assertRaises(TypeError, a.__mul__, 2.0)
         self.assertRaises(TypeError, a.__imul__, None)
+        self.assertRaises(TypeError, a.__imul__, 3.0)
+
+    def test_repeat_random(self):
+        for a in self.randombitarrays():
+            b = a.copy()
+            for m in list(range(-3, 5)) + [randint(100, 200)]:
+                res = bitarray(m * a.to01(), endian=a.endian())
+                self.assertEqual(len(res), len(a) * (m if m > 0 else 0))
+
+                c = a * m
+                self.assertEQUAL(c, res)
+                c = m * a
+                self.assertEQUAL(c, res)
+
+                c = a.copy()
+                c *= m
+                self.assertEQUAL(c, res)
+                self.check_obj(c)
+
+            self.assertEQUAL(a, b)
 
     def test_contains_simple(self):
         a = bitarray()
