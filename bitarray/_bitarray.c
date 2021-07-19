@@ -177,7 +177,6 @@ bytereverse(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
         setup = 1;
     }
 
-    setunused(self);
     for (i = start; i < stop; i++)
         self->ob_item[i] = trans[(unsigned char) self->ob_item[i]];
 }
@@ -727,6 +726,7 @@ Append `item` to the end of the bitarray.");
 static PyObject *
 bitarray_bytereverse(bitarrayobject *self)
 {
+    setunused(self);
     bytereverse(self, 0, Py_SIZE(self));
     Py_RETURN_NONE;
 }
