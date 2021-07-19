@@ -2002,14 +2002,51 @@ BITWISE_IFUNC(or,  "|=")             /* bitarray_ior  */
 BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 
 
+static void
+shift_left(bitarrayobject *self, Py_ssize_t n)
+{
+    const Py_ssize_t nbytes = Py_SIZE(self);
+    const Py_ssize_t nwords = UINT64_WORDS(Py_SIZE(self));
+    const Py_ssize_t s_bits = n % 8;    /* bit shift */
+    const Py_ssize_t s_bytes = n / 8;   /* byte shift */
+    Py_ssize_t i;
+    int be = self->endian == ENDIAN_BIG;
+
+    setunused(self);
+    if (be)
+        bytereverse(self, 0, nbytes);
+
+    if (s_bits) {
+        for (i = 0; i < nwords; i++) {
+            UINT64_BUFFER(self)[i] >>= s_bits;
+            if (i + 1 != nwords)
+                UINT64_BUFFER(self)[i] |=
+                    UINT64_BUFFER(self)[i + 1] << (64 - s_bits);
+        }
+        if (nwords && nbytes % 8)
+            self->ob_item[8 * nwords - 1] |=
+                self->ob_item[8 * nwords] << (8 - s_bits);
+
+        for (i = 8 * nwords; i < nbytes; i++) {
+            ((unsigned char *) self->ob_item)[i] >>= s_bits;
+            if (i + 1 != nbytes)
+                self->ob_item[i] |= self->ob_item[i + 1] << (8 - s_bits);
+        }
+    }
+    if (s_bytes) {
+        memmove(self->ob_item, self->ob_item + s_bytes, nbytes - s_bytes);
+        memset(self->ob_item + nbytes - s_bytes, 0x00, s_bytes);
+    }
+
+    if (be)
+        bytereverse(self, 0, nbytes);
+}
+
 /* shift bitarray n positions to left (right=0) or right (right=1) */
 static void
 shift(bitarrayobject *self, Py_ssize_t n, int right)
 {
-    const Py_ssize_t nbytes = Py_SIZE(self);
-    Py_ssize_t nwords = UINT64_WORDS(Py_SIZE(self));
-    Py_ssize_t i, nbits = self->nbits;
-    int be = self->endian == ENDIAN_BIG;
+    Py_ssize_t nbits = self->nbits;
 
     if (n == 0)
         return;
@@ -2025,36 +2062,7 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
         setrange(self, 0, n, 0);
     }
     else {                      /* lshift */
-        Py_ssize_t m = n % 8;
-
-        setunused(self);
-        if (be)
-            bytereverse(self, 0, nbytes);
-
-        if (m) {
-            for (i = 0; i < nwords; i++) {
-                UINT64_BUFFER(self)[i] >>= m;
-                if (i + 1 != nwords)
-                    UINT64_BUFFER(self)[i] |=
-                        UINT64_BUFFER(self)[i + 1] << (64 - m);
-            }
-            if (nbytes % 8 && nwords)
-                self->ob_item[8 * nwords - 1] |=
-                    self->ob_item[8 * nwords] << (8 - m);
-
-            for (i = 8 * nwords; i < nbytes; i++) {
-                ((unsigned char *) self->ob_item)[i] >>= m;
-                if (i + 1 != nbytes) {
-                    self->ob_item[i] |=
-                        self->ob_item[i + 1] << (8 - m);
-                }
-            }
-        }
-        memmove(self->ob_item, self->ob_item + n / 8, Py_SIZE(self) - n / 8);
-        memset(self->ob_item + Py_SIZE(self) - n / 8, 0x00, n / 8);
-
-        if (be)
-            bytereverse(self, 0, nbytes);
+        shift_left(self, n);
     }
 }
 
