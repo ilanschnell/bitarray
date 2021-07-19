@@ -191,7 +191,7 @@ bytereverse(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 #endif
 
 static void
-shift1(bitarrayobject *self)
+shift1(bitarrayobject *self, int insert)
 {
     Py_ssize_t i, nwords = UINT64_WORDS(Py_SIZE(self));
     /* position of lowest bit in byte */
@@ -200,12 +200,23 @@ shift1(bitarrayobject *self)
     if (self->endian == ENDIAN_BIG)
         bytereverse(self, 0, Py_SIZE(self));
 
-    for (i = 0; i < nwords; i++) {
-        UINT64_BUFFER(self)[i] >>= 1;
-        if (i + 1 != nwords)
-            /* copy single bit from following word */
-            setbit(self, i * 64 + 63 - bit0,
-                   getbit(self, (i + 1) * 64 + bit0));
+    if (insert) {               /* insert */
+        for (i = nwords - 1; i >= 0; i--) {
+            UINT64_BUFFER(self)[i] <<= 1;
+            if (i != 0)
+                /* copy single bit from previous word */
+                setbit(self, i * 64 + bit0,
+                       getbit(self, (i - 1) * 64 + 63 - bit0));
+        }
+    }
+    else {                      /* delete */
+        for (i = 0; i < nwords; i++) {
+            UINT64_BUFFER(self)[i] >>= 1;
+            if (i + 1 != nwords)
+                /* copy single bit from following word */
+                setbit(self, i * 64 + 63 - bit0,
+                       getbit(self, (i + 1) * 64 + bit0));
+        }
     }
 
     if (self->endian == ENDIAN_BIG)
@@ -225,11 +236,15 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     if (n == 0)
         return;
 
-    if (self == other &&
-            a == 0 && b == 1 && n == self->nbits - 1 &&
-            self->nbits >= 64 && self->nbits % 64 == 0) {
-        shift1(self);
-        return;
+    if (self == other && self->nbits % 64 == 0 && n == self->nbits - 1) {
+        if (a == 0 && b == 1) {  /* delete */
+            shift1(self, 0);
+            return;
+        }
+        if (a == 1 && b == 0) {  /* insert */
+            shift1(self, 1);
+            return;
+        }
     }
 
     /* When the start positions are at byte positions, we can copy whole
