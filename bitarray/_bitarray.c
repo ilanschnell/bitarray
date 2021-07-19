@@ -195,11 +195,21 @@ shift1(bitarrayobject *self)
 {
     Py_ssize_t i, nwords = UINT64_WORDS(Py_SIZE(self));
 
+    if (self->endian == ENDIAN_BIG)
+        bytereverse(self, 0, Py_SIZE(self));
+
     for (i = 0; i < nwords; i++) {
         UINT64_BUFFER(self)[i] >>= 1;
-        if (i + 1 != nwords)
-            setbit(self, i * 64 + 63, getbit(self, (i + 1) * 64));
+        if (i + 1 != nwords) {
+            if (self->endian == ENDIAN_LITTLE)
+                setbit(self, i * 64 + 63, getbit(self, (i + 1) * 64));
+            else
+                setbit(self, i * 64 + 56, getbit(self, (i + 1) * 64 + 7));
+        }
     }
+
+    if (self->endian == ENDIAN_BIG)
+        bytereverse(self, 0, Py_SIZE(self));
 }
 
 /* copy n bits from other (starting at b) onto self (starting at a) */
@@ -215,7 +225,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     if (n == 0)
         return;
 
-    if (self == other && self->endian == ENDIAN_LITTLE &&
+    if (self == other &&
             a == 0 && b == 1 && n == self->nbits - 1 &&
             self->nbits >= 64 && self->nbits % 64 == 0) {
         shift1(self);
