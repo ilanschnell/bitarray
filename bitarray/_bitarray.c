@@ -2031,10 +2031,6 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
         if (be)
             bytereverse(self, 0, nbytes);
 
-        if (be)
-            printf("nwords=%zd  nbytes=%zd  n=%zd  m=%zd  be=%d\n",
-                   nwords, nbytes, n, m, be);
-
         if (m) {
             for (i = 0; i < nwords; i++) {
                 UINT64_BUFFER(self)[i] >>= m;
@@ -2050,7 +2046,7 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
                 ((unsigned char *) self->ob_item)[i] >>= m;
                 if (i + 1 != nbytes) {
                     self->ob_item[i] |=
-                        self->ob_item[i + 1] << (be ? m : (8 - m));
+                        self->ob_item[i + 1] << (8 - m);
                 }
             }
         }
