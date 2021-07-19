@@ -194,18 +194,18 @@ static void
 shift1(bitarrayobject *self)
 {
     Py_ssize_t i, nwords = UINT64_WORDS(Py_SIZE(self));
+    /* position of lowest bit in byte */
+    Py_ssize_t bit0 = self->endian == ENDIAN_LITTLE ? 0 : 7;
 
     if (self->endian == ENDIAN_BIG)
         bytereverse(self, 0, Py_SIZE(self));
 
     for (i = 0; i < nwords; i++) {
         UINT64_BUFFER(self)[i] >>= 1;
-        if (i + 1 != nwords) {
-            if (self->endian == ENDIAN_LITTLE)
-                setbit(self, i * 64 + 63, getbit(self, (i + 1) * 64));
-            else
-                setbit(self, i * 64 + 56, getbit(self, (i + 1) * 64 + 7));
-        }
+        if (i + 1 != nwords)
+            /* copy single bit from following word */
+            setbit(self, i * 64 + 63 - bit0,
+                   getbit(self, (i + 1) * 64 + bit0));
     }
 
     if (self->endian == ENDIAN_BIG)
