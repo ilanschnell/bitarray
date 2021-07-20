@@ -2002,6 +2002,88 @@ BITWISE_IFUNC(or,  "|=")             /* bitarray_ior  */
 BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 
 
+#define UCB  ((unsigned char *) (self)->ob_item)
+
+static void
+shift_left(bitarrayobject *self, Py_ssize_t n)
+{
+    const Py_ssize_t nbytes = Py_SIZE(self);
+    const Py_ssize_t nwords = UINT64_WORDS(nbytes);
+    const Py_ssize_t s_bytes = n / 8;   /* byte shift */
+    const int s_bits = n % 8;           /* bit shift */
+    Py_ssize_t i;
+
+    assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
+    setunused(self);
+    if (self->endian == ENDIAN_BIG)
+        bytereverse(self, s_bytes, nbytes - s_bytes);
+
+    if (s_bits) {
+        for (i = 0; i < nwords; i++) {
+            UINT64_BUFFER(self)[i] >>= s_bits;
+            if (i + 1 != nwords)
+                UINT64_BUFFER(self)[i] |=
+                    UINT64_BUFFER(self)[i + 1] << (64 - s_bits);
+        }
+        if (nwords && nbytes % 8)
+            UCB[8 * nwords - 1] |= UCB[8 * nwords] << (8 - s_bits);
+
+        for (i = 8 * nwords; i < nbytes; i++) {
+            UCB[i] >>= s_bits;
+            if (i + 1 != nbytes)
+                UCB[i] |= UCB[i + 1] << (8 - s_bits);
+        }
+    }
+    if (s_bytes) {
+        memmove(self->ob_item, self->ob_item + s_bytes, nbytes - s_bytes);
+        memset(self->ob_item + nbytes - s_bytes, 0x00, (size_t) s_bytes);
+    }
+
+    if (self->endian == ENDIAN_BIG)
+        bytereverse(self, 0, nbytes - s_bytes);
+}
+
+static void
+shift_right(bitarrayobject *self, Py_ssize_t n)
+{
+    const Py_ssize_t nbytes = Py_SIZE(self);
+    const Py_ssize_t nwords = UINT64_WORDS(nbytes);
+    const Py_ssize_t s_bytes = n / 8;   /* byte shift */
+    const int s_bits = n % 8;           /* bit shift */
+    Py_ssize_t i;
+
+    assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
+    setunused(self);
+    if (self->endian == ENDIAN_BIG)
+        bytereverse(self, 0, nbytes - s_bytes);
+
+    if (s_bits) {
+        for (i = nbytes - 1; i >= 8 * nwords; i--) {
+            UCB[i] <<= s_bits;
+            if (i != 8 * nwords)
+                UCB[i] |= UCB[i - 1] >> (8 - s_bits);
+        }
+        if (nwords && nbytes % 8)
+            UCB[8 * nwords] |= UCB[8 * nwords - 1] >> (8 - s_bits);
+
+        for (i = nwords - 1; i >= 0; i--) {
+            UINT64_BUFFER(self)[i] <<= s_bits;
+            if (i != 0)
+                UINT64_BUFFER(self)[i] |=
+                    UINT64_BUFFER(self)[i - 1] >> (64 - s_bits);
+        }
+    }
+    if (s_bytes) {
+        memmove(self->ob_item + s_bytes, self->ob_item, nbytes - s_bytes);
+        memset(self->ob_item, 0x00, (size_t) s_bytes);
+    }
+
+    if (self->endian == ENDIAN_BIG)
+        bytereverse(self, s_bytes, nbytes - s_bytes);
+}
+
+#undef UCB
+
 /* shift bitarray n positions to left (right=0) or right (right=1) */
 static void
 shift(bitarrayobject *self, Py_ssize_t n, int right)
@@ -2010,21 +2092,16 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
 
     if (n == 0)
         return;
-
     if (n >= nbits) {
         memset(self->ob_item, 0x00, (size_t) Py_SIZE(self));
         return;
     }
 
     assert(0 < n && n < nbits);
-    if (right) {                /* rshift */
-        copy_n(self, n, self, 0, nbits - n);
-        setrange(self, 0, n, 0);
-    }
-    else {                      /* lshift */
-        copy_n(self, 0, self, n, nbits - n);
-        setrange(self, nbits - n, nbits, 0);
-    }
+    if (right)                  /* rshift */
+        shift_right(self, n);
+    else                        /* lshift */
+        shift_left(self, n);
 }
 
 /* check shift arguments and return the shift count, -1 on error */
