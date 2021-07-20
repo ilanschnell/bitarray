@@ -2012,7 +2012,7 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
 
     assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
     setunused(self);
-    if (self->endian == ENDIAN_BIG && n)
+    if (self->endian == ENDIAN_BIG && s_bits)
         /* only reverse relevant bytes - not the ones getting shifted out */
         bytereverse(self, s_bytes, nbytes);
 
@@ -2038,7 +2038,7 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
         memset(self->ob_item + nbytes - s_bytes, 0x00, (size_t) s_bytes);
     }
 
-    if (self->endian == ENDIAN_BIG && n)
+    if (self->endian == ENDIAN_BIG && s_bits)
         /* only reverse relevant bytes - not the blank zero ones */
         bytereverse(self, 0, nbytes - s_bytes);
 }
@@ -2054,7 +2054,7 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
 
     assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
     setunused(self);
-    if (self->endian == ENDIAN_BIG && n)
+    if (self->endian == ENDIAN_BIG && s_bits)
         /* only reverse relevant bytes - not the ones getting shifted out */
         bytereverse(self, 0, nbytes - s_bytes);
 
@@ -2080,7 +2080,7 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
         memset(self->ob_item, 0x00, (size_t) s_bytes);
     }
 
-    if (self->endian == ENDIAN_BIG && n)
+    if (self->endian == ENDIAN_BIG && s_bits)
         /* only reverse relevant bytes - not the blank zero ones */
         bytereverse(self, s_bytes, nbytes);
 }
