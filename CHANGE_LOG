@@ -1,6 +1,7 @@
 2021-XX-XX   2.2.3:
 -------------------
-  * speed up `repeat()`, #136
+  * speedup `repeat()`, #136
+  * speedup shift operations, #139
   * optimize slice assignment with negative step, e.g.: `a[::-1] = 1`
 
 
