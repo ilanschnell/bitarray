@@ -2002,11 +2002,13 @@ BITWISE_IFUNC(or,  "|=")             /* bitarray_ior  */
 BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 
 
+#define BI(self, i)  (((unsigned char *) (self)->ob_item)[i])
+
 static void
 shift_left(bitarrayobject *self, Py_ssize_t n)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
-    const Py_ssize_t nwords = UINT64_WORDS(Py_SIZE(self));
+    const Py_ssize_t nwords = UINT64_WORDS(nbytes);
     const Py_ssize_t s_bits = n % 8;    /* bit shift */
     const Py_ssize_t s_bytes = n / 8;   /* byte shift */
     Py_ssize_t i;
@@ -2024,18 +2026,59 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
                     UINT64_BUFFER(self)[i + 1] << (64 - s_bits);
         }
         if (nwords && nbytes % 8)
-            self->ob_item[8 * nwords - 1] |=
-                self->ob_item[8 * nwords] << (8 - s_bits);
+            BI(self, 8 * nwords - 1) |= BI(self, 8 * nwords) << (8 - s_bits);
 
         for (i = 8 * nwords; i < nbytes; i++) {
-            ((unsigned char *) self->ob_item)[i] >>= s_bits;
+            BI(self, i) >>= s_bits;
             if (i + 1 != nbytes)
-                self->ob_item[i] |= self->ob_item[i + 1] << (8 - s_bits);
+                BI(self, i) |= BI(self, i + 1) << (8 - s_bits);
         }
     }
     if (s_bytes) {
         memmove(self->ob_item, self->ob_item + s_bytes, nbytes - s_bytes);
         memset(self->ob_item + nbytes - s_bytes, 0x00, s_bytes);
+    }
+
+    if (be)
+        bytereverse(self, 0, nbytes);
+}
+
+static void
+shift_right(bitarrayobject *self, Py_ssize_t n)
+{
+    const Py_ssize_t nbytes = Py_SIZE(self);
+    const Py_ssize_t nwords = UINT64_WORDS(nbytes);
+    const Py_ssize_t s_bits = n % 8;    /* bit shift */
+    const Py_ssize_t s_bytes = n / 8;   /* byte shift */
+    Py_ssize_t i;
+    int be = self->endian == ENDIAN_BIG;
+
+    //printf("nwords=%zd  nbytes=%zd  nbits=%zd  n=%zd  s_bits=%zd  be=%d\n",
+    //       nwords,      nbytes,   self->nbits, n,     s_bits,     be);
+
+    setunused(self);
+    if (be)
+        bytereverse(self, 0, nbytes);
+
+    if (s_bits) {
+        for (i = nbytes - 1; i >= 8 * nwords; i--) {
+            BI(self, i) <<= s_bits;
+            if (i != 8 * nwords)
+                BI(self, i) |= BI(self, i - 1) >> (8 - s_bits);
+        }
+        if (nwords && nbytes % 8)
+            BI(self, 8 * nwords) |= BI(self, 8 * nwords - 1) >> (8 - s_bits);
+
+        for (i = nwords - 1; i >= 0; i--) {
+            UINT64_BUFFER(self)[i] <<= s_bits;
+            if (i != 0)
+                UINT64_BUFFER(self)[i] |=
+                    UINT64_BUFFER(self)[i - 1] >> (64 - s_bits);
+        }
+    }
+    if (s_bytes) {
+        memmove(self->ob_item + s_bytes, self->ob_item, nbytes - s_bytes);
+        memset(self->ob_item, 0x00, s_bytes);
     }
 
     if (be)
@@ -2057,13 +2100,10 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
     }
 
     assert(0 < n && n < nbits);
-    if (right) {                /* rshift */
-        copy_n(self, n, self, 0, nbits - n);
-        setrange(self, 0, n, 0);
-    }
-    else {                      /* lshift */
+    if (right)                  /* rshift */
+        shift_right(self, n);
+    else                        /* lshift */
         shift_left(self, n);
-    }
 }
 
 /* check shift arguments and return the shift count, -1 on error */
