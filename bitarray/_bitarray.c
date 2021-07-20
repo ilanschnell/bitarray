@@ -2015,30 +2015,31 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
     assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
     setunused(self);
     if (self->endian == ENDIAN_BIG)
+        /* only reverse relevant bytes - not the ones getting shifted out */
         bytereverse(self, s_bytes, nbytes);
 
     if (s_bits) {
         for (i = 0; i < nwords; i++) {
-            UINT64_BUFFER(self)[i] >>= s_bits;
-            if (i + 1 != nwords)
-                UINT64_BUFFER(self)[i] |=
-                    UINT64_BUFFER(self)[i + 1] << (64 - s_bits);
+            UINT64_BUFFER(self)[i] >>= s_bits;  /* shift word */
+            if (i + 1 != nwords)  /* add lowest byte from next word */
+                UCB[8 * i + 7] |= UCB[8 * (i + 1)] << (8 - s_bits);
         }
-        if (nwords && nbytes % 8)
+        if (nwords && nbytes % 8) /* add byte from next (partial) word */
             UCB[8 * nwords - 1] |= UCB[8 * nwords] << (8 - s_bits);
 
         for (i = 8 * nwords; i < nbytes; i++) {
-            UCB[i] >>= s_bits;
-            if (i + 1 != nbytes)
+            UCB[i] >>= s_bits;    /* shift byte */
+            if (i + 1 != nbytes)  /* add shifted next byte */
                 UCB[i] |= UCB[i + 1] << (8 - s_bits);
         }
     }
-    if (s_bytes) {
+    if (s_bytes) {              /* shift bytes and zero blanks */
         memmove(self->ob_item, self->ob_item + s_bytes, nbytes - s_bytes);
         memset(self->ob_item + nbytes - s_bytes, 0x00, (size_t) s_bytes);
     }
 
     if (self->endian == ENDIAN_BIG)
+        /* only reverse relevant bytes - not the blank zero ones */
         bytereverse(self, 0, nbytes - s_bytes);
 }
 
@@ -2054,30 +2055,31 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
     assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
     setunused(self);
     if (self->endian == ENDIAN_BIG)
+        /* only reverse relevant bytes - not the ones getting shifted out */
         bytereverse(self, 0, nbytes - s_bytes);
 
     if (s_bits) {
         for (i = nbytes - 1; i >= 8 * nwords; i--) {
-            UCB[i] <<= s_bits;
-            if (i != 8 * nwords)
+            UCB[i] <<= s_bits;    /* shift byte (from highest to lowest) */
+            if (i != 8 * nwords)  /* add shifted next lower byte */
                 UCB[i] |= UCB[i - 1] >> (8 - s_bits);
         }
-        if (nwords && nbytes % 8)
+        if (nwords && nbytes % 8) /* add byte from word */
             UCB[8 * nwords] |= UCB[8 * nwords - 1] >> (8 - s_bits);
 
         for (i = nwords - 1; i >= 0; i--) {
-            UINT64_BUFFER(self)[i] <<= s_bits;
-            if (i != 0)
-                UINT64_BUFFER(self)[i] |=
-                    UINT64_BUFFER(self)[i - 1] >> (64 - s_bits);
+            UINT64_BUFFER(self)[i] <<= s_bits; /* shift word */
+            if (i != 0)         /* add shifted byte from next lower word */
+                UCB[8 * i] |= UCB[8 * i - 1] >> (8 - s_bits);
         }
     }
-    if (s_bytes) {
+    if (s_bytes) {              /* shift bytes and zero blanks */
         memmove(self->ob_item + s_bytes, self->ob_item, nbytes - s_bytes);
         memset(self->ob_item, 0x00, (size_t) s_bytes);
     }
 
     if (self->endian == ENDIAN_BIG)
+        /* only reverse relevant bytes - not the blank zero ones */
         bytereverse(self, s_bytes, nbytes);
 }
 
