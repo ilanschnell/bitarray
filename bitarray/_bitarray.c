@@ -151,15 +151,14 @@ bitarray_dealloc(bitarrayobject *self)
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-/* reverse n bytes (starting at start) in buffer */
+/* reverse bytes range(start, stop) in buffer */
 static void
-bytereverse(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
+bytereverse(bitarrayobject *self, Py_ssize_t start, Py_ssize_t stop)
 {
     static char trans[256];
     static int setup = 0;
-    Py_ssize_t i, stop = start + n;
+    Py_ssize_t i;
 
-    assert(n >= 0);
     assert(0 <= start && start <= Py_SIZE(self));
     assert(0 <= stop && stop <= Py_SIZE(self));
 
@@ -219,7 +218,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
 
         memmove(self->ob_item + (a >> 3), other->ob_item + (b >> 3), bytes);
         if (self->endian != other->endian)
-            bytereverse(self, a >> 3, bytes);
+            bytereverse(self, a >> 3, (a >> 3) + bytes);
 
         if (a <= b)
             copy_n(self, bits + a, other, bits + b, n - bits);
@@ -2016,7 +2015,7 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
     assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
     setunused(self);
     if (self->endian == ENDIAN_BIG)
-        bytereverse(self, s_bytes, nbytes - s_bytes);
+        bytereverse(self, s_bytes, nbytes);
 
     if (s_bits) {
         for (i = 0; i < nwords; i++) {
@@ -2079,7 +2078,7 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
     }
 
     if (self->endian == ENDIAN_BIG)
-        bytereverse(self, s_bytes, nbytes - s_bytes);
+        bytereverse(self, s_bytes, nbytes);
 }
 
 #undef UCB
