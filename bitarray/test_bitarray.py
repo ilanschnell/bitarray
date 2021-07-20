@@ -1662,21 +1662,27 @@ class NumberTests(unittest.TestCase, Util):
             self.assertEqual(len(b), len(a))
             self.assertEQUAL(b, self.shift(a, n, 'right'))
 
+    def check_random(self, n, endian, n_shift, direction):
+        a = bitarray(0, endian)
+        a.frombytes(os.urandom(bits2bytes(n)))
+        del a[n:]
+        self.assertEqual(len(a), n)
+
+        b = a.copy()
+        if direction == 'left':
+            b <<= n_shift
+        else:
+            b >>= n_shift
+        self.assertEQUAL(b, self.shift(a, n_shift, direction))
+
     def test_shift_range(self):
         for endian in 'little', 'big':
             for direction in 'left', 'right':
-                for N in range(0, 200):
-                    a = bitarray(0, endian)
-                    a.frombytes(os.urandom(bits2bytes(N)))
-                    del a[N:]
-
-                    n = randint(0, N)
-                    b = a.copy()
-                    if direction == 'left':
-                        b <<= n
-                    else:
-                        b >>= n
-                    self.assertEQUAL(b, self.shift(a, n , direction))
+                for n in range(0, 200):
+                    self.check_random(n, endian, 1, direction)
+                    self.check_random(n, endian, randint(0, n), direction)
+                for n_shift in range(0, 100):
+                    self.check_random(100, endian, n_shift, direction)
 
     def test_zero_shift(self):
         for a in self.randombitarrays():
