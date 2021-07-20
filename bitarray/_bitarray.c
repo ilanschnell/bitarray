@@ -2002,7 +2002,7 @@ BITWISE_IFUNC(or,  "|=")             /* bitarray_ior  */
 BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 
 
-#define BI(i)  (((unsigned char *) (self)->ob_item)[i])
+#define UCB  ((unsigned char *) (self)->ob_item)
 
 static void
 shift_left(bitarrayobject *self, Py_ssize_t n)
@@ -2012,10 +2012,9 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
     const Py_ssize_t s_bits = n % 8;    /* bit shift */
     const Py_ssize_t s_bytes = n / 8;   /* byte shift */
     Py_ssize_t i;
-    int be = self->endian == ENDIAN_BIG;
 
     setunused(self);
-    if (be)
+    if (self->endian == ENDIAN_BIG)
         bytereverse(self, 0, nbytes);
 
     if (s_bits) {
@@ -2026,12 +2025,12 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
                     UINT64_BUFFER(self)[i + 1] << (64 - s_bits);
         }
         if (nwords && nbytes % 8)
-            BI(8 * nwords - 1) |= BI(8 * nwords) << (8 - s_bits);
+            UCB[8 * nwords - 1] |= UCB[8 * nwords] << (8 - s_bits);
 
         for (i = 8 * nwords; i < nbytes; i++) {
-            BI(i) >>= s_bits;
+            UCB[i] >>= s_bits;
             if (i + 1 != nbytes)
-                BI(i) |= BI(i + 1) << (8 - s_bits);
+                UCB[i] |= UCB[i + 1] << (8 - s_bits);
         }
     }
     if (s_bytes) {
@@ -2039,7 +2038,7 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
         memset(self->ob_item + nbytes - s_bytes, 0x00, s_bytes);
     }
 
-    if (be)
+    if (self->endian == ENDIAN_BIG)
         bytereverse(self, 0, nbytes);
 }
 
@@ -2051,20 +2050,19 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
     const Py_ssize_t s_bits = n % 8;    /* bit shift */
     const Py_ssize_t s_bytes = n / 8;   /* byte shift */
     Py_ssize_t i;
-    int be = self->endian == ENDIAN_BIG;
 
     setunused(self);
-    if (be)
+    if (self->endian == ENDIAN_BIG)
         bytereverse(self, 0, nbytes);
 
     if (s_bits) {
         for (i = nbytes - 1; i >= 8 * nwords; i--) {
-            BI(i) <<= s_bits;
+            UCB[i] <<= s_bits;
             if (i != 8 * nwords)
-                BI(i) |= BI(i - 1) >> (8 - s_bits);
+                UCB[i] |= UCB[i - 1] >> (8 - s_bits);
         }
         if (nwords && nbytes % 8)
-            BI(8 * nwords) |= BI(8 * nwords - 1) >> (8 - s_bits);
+            UCB[8 * nwords] |= UCB[8 * nwords - 1] >> (8 - s_bits);
 
         for (i = nwords - 1; i >= 0; i--) {
             UINT64_BUFFER(self)[i] <<= s_bits;
@@ -2078,11 +2076,11 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
         memset(self->ob_item, 0x00, s_bytes);
     }
 
-    if (be)
+    if (self->endian == ENDIAN_BIG)
         bytereverse(self, 0, nbytes);
 }
 
-#undef BI
+#undef UCB
 
 /* shift bitarray n positions to left (right=0) or right (right=1) */
 static void
