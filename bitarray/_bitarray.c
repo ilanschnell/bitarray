@@ -2002,7 +2002,7 @@ BITWISE_IFUNC(or,  "|=")             /* bitarray_ior  */
 BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 
 
-#define BI(self, i)  (((unsigned char *) (self)->ob_item)[i])
+#define BI(i)  (((unsigned char *) (self)->ob_item)[i])
 
 static void
 shift_left(bitarrayobject *self, Py_ssize_t n)
@@ -2026,12 +2026,12 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
                     UINT64_BUFFER(self)[i + 1] << (64 - s_bits);
         }
         if (nwords && nbytes % 8)
-            BI(self, 8 * nwords - 1) |= BI(self, 8 * nwords) << (8 - s_bits);
+            BI(8 * nwords - 1) |= BI(8 * nwords) << (8 - s_bits);
 
         for (i = 8 * nwords; i < nbytes; i++) {
-            BI(self, i) >>= s_bits;
+            BI(i) >>= s_bits;
             if (i + 1 != nbytes)
-                BI(self, i) |= BI(self, i + 1) << (8 - s_bits);
+                BI(i) |= BI(i + 1) << (8 - s_bits);
         }
     }
     if (s_bytes) {
@@ -2053,21 +2053,18 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
     Py_ssize_t i;
     int be = self->endian == ENDIAN_BIG;
 
-    //printf("nwords=%zd  nbytes=%zd  nbits=%zd  n=%zd  s_bits=%zd  be=%d\n",
-    //       nwords,      nbytes,   self->nbits, n,     s_bits,     be);
-
     setunused(self);
     if (be)
         bytereverse(self, 0, nbytes);
 
     if (s_bits) {
         for (i = nbytes - 1; i >= 8 * nwords; i--) {
-            BI(self, i) <<= s_bits;
+            BI(i) <<= s_bits;
             if (i != 8 * nwords)
-                BI(self, i) |= BI(self, i - 1) >> (8 - s_bits);
+                BI(i) |= BI(i - 1) >> (8 - s_bits);
         }
         if (nwords && nbytes % 8)
-            BI(self, 8 * nwords) |= BI(self, 8 * nwords - 1) >> (8 - s_bits);
+            BI(8 * nwords) |= BI(8 * nwords - 1) >> (8 - s_bits);
 
         for (i = nwords - 1; i >= 0; i--) {
             UINT64_BUFFER(self)[i] <<= s_bits;
@@ -2084,6 +2081,8 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
     if (be)
         bytereverse(self, 0, nbytes);
 }
+
+#undef BI
 
 /* shift bitarray n positions to left (right=0) or right (right=1) */
 static void
