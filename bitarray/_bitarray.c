@@ -2001,8 +2001,6 @@ BITWISE_IFUNC(or,  "|=")             /* bitarray_ior  */
 BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 
 
-#define UCB  ((unsigned char *) (self)->ob_item)
-
 static void
 shift_left(bitarrayobject *self, Py_ssize_t n)
 {
@@ -2019,19 +2017,21 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
         bytereverse(self, s_bytes, nbytes);
 
     if (s_bits) {
+#define ucb  ((unsigned char *) (self)->ob_item)
         for (i = 0; i < nwords; i++) {
             UINT64_BUFFER(self)[i] >>= s_bits;  /* shift word */
             if (i + 1 != nwords)  /* add lowest byte from next word */
-                UCB[8 * i + 7] |= UCB[8 * (i + 1)] << (8 - s_bits);
+                ucb[8 * i + 7] |= ucb[8 * (i + 1)] << (8 - s_bits);
         }
         if (nwords && nbytes % 8) /* add byte from next (partial) word */
-            UCB[8 * nwords - 1] |= UCB[8 * nwords] << (8 - s_bits);
+            ucb[8 * nwords - 1] |= ucb[8 * nwords] << (8 - s_bits);
 
         for (i = 8 * nwords; i < nbytes; i++) {
-            UCB[i] >>= s_bits;    /* shift byte */
+            ucb[i] >>= s_bits;    /* shift byte */
             if (i + 1 != nbytes)  /* add shifted next byte */
-                UCB[i] |= UCB[i + 1] << (8 - s_bits);
+                ucb[i] |= ucb[i + 1] << (8 - s_bits);
         }
+#undef ucb
     }
     if (s_bytes) {              /* shift bytes and zero blanks */
         memmove(self->ob_item, self->ob_item + s_bytes, nbytes - s_bytes);
@@ -2059,19 +2059,21 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
         bytereverse(self, 0, nbytes - s_bytes);
 
     if (s_bits) {
+#define ucb  ((unsigned char *) (self)->ob_item)
         for (i = nbytes - 1; i >= 8 * nwords; i--) {
-            UCB[i] <<= s_bits;    /* shift byte (from highest to lowest) */
+            ucb[i] <<= s_bits;    /* shift byte (from highest to lowest) */
             if (i != 8 * nwords)  /* add shifted next lower byte */
-                UCB[i] |= UCB[i - 1] >> (8 - s_bits);
+                ucb[i] |= ucb[i - 1] >> (8 - s_bits);
         }
         if (nwords && nbytes % 8) /* add byte from word */
-            UCB[8 * nwords] |= UCB[8 * nwords - 1] >> (8 - s_bits);
+            ucb[8 * nwords] |= ucb[8 * nwords - 1] >> (8 - s_bits);
 
         for (i = nwords - 1; i >= 0; i--) {
             UINT64_BUFFER(self)[i] <<= s_bits; /* shift word */
             if (i != 0)         /* add shifted byte from next lower word */
-                UCB[8 * i] |= UCB[8 * i - 1] >> (8 - s_bits);
+                ucb[8 * i] |= ucb[8 * i - 1] >> (8 - s_bits);
         }
+#undef ucb
     }
     if (s_bytes) {              /* shift bytes and zero blanks */
         memmove(self->ob_item + s_bytes, self->ob_item, nbytes - s_bytes);
@@ -2082,8 +2084,6 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
         /* only reverse relevant bytes - not the blank zero ones */
         bytereverse(self, s_bytes, nbytes);
 }
-
-#undef UCB
 
 /* shift bitarray n positions to left (right=0) or right (right=1) */
 static void
