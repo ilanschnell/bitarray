@@ -2015,7 +2015,7 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
 
     setunused(self);
     if (self->endian == ENDIAN_BIG)
-        bytereverse(self, 0, nbytes);
+        bytereverse(self, s_bytes, nbytes - s_bytes);
 
     if (s_bits) {
         for (i = 0; i < nwords; i++) {
@@ -2039,7 +2039,7 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
     }
 
     if (self->endian == ENDIAN_BIG)
-        bytereverse(self, 0, nbytes);
+        bytereverse(self, 0, nbytes - s_bytes);
 }
 
 static void
@@ -2053,7 +2053,7 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
 
     setunused(self);
     if (self->endian == ENDIAN_BIG)
-        bytereverse(self, 0, nbytes);
+        bytereverse(self, 0, nbytes - s_bytes);
 
     if (s_bits) {
         for (i = nbytes - 1; i >= 8 * nwords; i--) {
@@ -2077,7 +2077,7 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
     }
 
     if (self->endian == ENDIAN_BIG)
-        bytereverse(self, 0, nbytes);
+        bytereverse(self, s_bytes, nbytes - s_bytes);
 }
 
 #undef UCB
