@@ -2009,10 +2009,11 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
     const Py_ssize_t nwords = UINT64_WORDS(nbytes);
-    const Py_ssize_t s_bits = n % 8;    /* bit shift */
     const Py_ssize_t s_bytes = n / 8;   /* byte shift */
+    const int s_bits = n % 8;           /* bit shift */
     Py_ssize_t i;
 
+    assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
     setunused(self);
     if (self->endian == ENDIAN_BIG)
         bytereverse(self, s_bytes, nbytes - s_bytes);
@@ -2035,7 +2036,7 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
     }
     if (s_bytes) {
         memmove(self->ob_item, self->ob_item + s_bytes, nbytes - s_bytes);
-        memset(self->ob_item + nbytes - s_bytes, 0x00, s_bytes);
+        memset(self->ob_item + nbytes - s_bytes, 0x00, (size_t) s_bytes);
     }
 
     if (self->endian == ENDIAN_BIG)
@@ -2047,10 +2048,11 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
     const Py_ssize_t nwords = UINT64_WORDS(nbytes);
-    const Py_ssize_t s_bits = n % 8;    /* bit shift */
     const Py_ssize_t s_bytes = n / 8;   /* byte shift */
+    const int s_bits = n % 8;           /* bit shift */
     Py_ssize_t i;
 
+    assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
     setunused(self);
     if (self->endian == ENDIAN_BIG)
         bytereverse(self, 0, nbytes - s_bytes);
@@ -2073,7 +2075,7 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
     }
     if (s_bytes) {
         memmove(self->ob_item + s_bytes, self->ob_item, nbytes - s_bytes);
-        memset(self->ob_item, 0x00, s_bytes);
+        memset(self->ob_item, 0x00, (size_t) s_bytes);
     }
 
     if (self->endian == ENDIAN_BIG)
@@ -2090,7 +2092,6 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
 
     if (n == 0)
         return;
-
     if (n >= nbits) {
         memset(self->ob_item, 0x00, (size_t) Py_SIZE(self));
         return;
