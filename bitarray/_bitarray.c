@@ -250,16 +250,63 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     return resize(self, self->nbits - n);
 }
 
+static void
+shift_r8(bitarrayobject *self, Py_ssize_t start_byte, int n)
+{
+    const Py_ssize_t nbytes = Py_SIZE(self);
+    Py_ssize_t i;
+
+    assert(0 < n && n < 8);
+    assert(0 <= start_byte && start_byte <= Py_SIZE(self));
+
+    if (self->endian == ENDIAN_BIG)
+        bytereverse(self, start_byte, nbytes);
+
+#define ucb  ((unsigned char *) (self)->ob_item)
+    for (i = nbytes - 1; i >= start_byte; i--) {
+        ucb[i] <<= n;    /* shift byte (from highest to lowest) */
+        if (i != start_byte)  /* add shifted next lower byte */
+            ucb[i] |= ucb[i - 1] >> (8 - n);
+    }
+#undef ucb
+
+    if (self->endian == ENDIAN_BIG)
+        bytereverse(self, start_byte, nbytes);
+}
+
 /* starting at start, insert n (uninitialized) bits into self */
 static int
 insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 {
+    const Py_ssize_t start_byte = start / 8;
+    const Py_ssize_t s_bytes = n / 8;   /* byte shift */
+    const int s_bits = n % 8;           /* bit shift */
+    char t;
+    Py_ssize_t i;
+
     assert(0 <= start && start <= self->nbits);
     assert(n >= 0);
 
+    if (n == 0)
+        return 0;
+
+    setunused(self);
     if (resize(self, self->nbits + n) < 0)
         return -1;
-    copy_n(self, start + n, self, start, self->nbits - start - n);
+    t = self->ob_item[start_byte];
+
+    if (s_bits)
+        shift_r8(self, start_byte, s_bits);
+
+    if (s_bytes)
+        memmove(self->ob_item + start_byte + s_bytes,
+                self->ob_item + start_byte,
+                Py_SIZE(self) - start_byte);
+
+    if (s_bits) {
+        for (i = 0; i < start % 8; i++)
+            setbit(self, 8 * start_byte + i, t & BITMASK(self->endian, i));
+    }
     return 0;
 }
 
