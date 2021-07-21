@@ -279,6 +279,8 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 
     if (n == 0)
         return 0;
+    if (start == nbits)
+        return resize(self, nbits - n);
     if (resize(self, nbits + 8) < 0)
         return -1;
 
