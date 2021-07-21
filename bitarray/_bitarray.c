@@ -293,11 +293,11 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     if (start == nbits)
         return 0;
 
+    assert(start_byte < Py_SIZE(self));
     if (s_bits) {
         Py_ssize_t i;
         char tmp;               /* actual start byte */
 
-        assert(start_byte < Py_SIZE(self));
         tmp = self->ob_item[start_byte];
 
         shift_r8(self, start_byte, s_bits);
