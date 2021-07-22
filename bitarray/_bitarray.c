@@ -389,20 +389,16 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     */
     if (n == 0)
         return 0;
-    if (resize(self, nbits + n) < 0)
-        return -1;
     if (start == nbits)
-        return 0;
+        return resize(self, nbits + n);
+    if (resize(self, nbits + n + 8) < 0)
+        return -1;
 
     assert_byte_in_range(self, p);
     assert(self->ob_item != NULL);
     tmp = self->ob_item[p];
-    //printf("-- tmp=0x%02x\n", (unsigned char) tmp);
     if (s_bits)
         shift_r8(self, p, s_bits);
-
-    //for (i = 0; i < self->nbits; i++)
-    //    printf("-- i=%zd  %d\n", i, getbit(self, i));
 
     if (s_bytes) {
         i = nbytes - p + 1;
@@ -415,16 +411,13 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
                 self->ob_item + p, i);
     }
 
-    //for (i = 0; i < self->nbits; i++)
-    //    printf("---- i=%zd  %d\n", i, getbit(self, i));
-
     if (s_bits) {
         for (i = 0; i < start % 8; i++) {
             assert_bit_in_range(self, 8 * p + i);
             setbit(self, 8 * p + i, tmp & BITMASK(self->endian, i));
         }
     }
-    return 0;
+    return resize(self, nbits + n);
 }
 
 static void
