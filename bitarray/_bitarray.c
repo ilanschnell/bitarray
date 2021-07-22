@@ -409,7 +409,7 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
         assert_byte_in_range(self, p + s_bytes);
         assert_byte_in_range(self, p);
         assert(i >= 0);
-        assert_byte_in_range(self, p + 1);
+        assert_byte_in_range(self, p + i);
         //printf("memmove: %zd\n", i);
         memmove(self->ob_item + p + s_bytes,
                 self->ob_item + p, i);
