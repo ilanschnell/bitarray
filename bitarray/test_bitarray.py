@@ -40,6 +40,12 @@ def zeros(n, endian=None):
     a.setall(0)
     return a
 
+def urandom(n, endian=None):
+    a = bitarray(0, endian or get_default_endian())
+    a.frombytes(os.urandom(bits2bytes(n)))
+    del a[n:]
+    return a
+
 tests = []  # type: list
 
 class Util(object):
@@ -669,6 +675,20 @@ class SliceTests(unittest.TestCase, Util):
                 aa[s] = aa
                 self.assertEqual(a, bitarray(aa))
 
+    def test_setslice_range(self):
+        # tests C function insert_n()
+        for endian in 'big', 'little':
+            for n in range(500):
+                a = urandom(n, endian)
+                p = randint(0, n)
+                m = randint(0, 500)
+
+                x = urandom(m, endian)  # array to be inserted at p
+                b = a.copy()
+                b[p:p] = x
+                self.assertEQUAL(b, a[:p] + x + a[p:])
+                self.check_obj(b)
+
     def test_setslice_self(self):
         a = bitarray('1100111')
         a[::-1] = a
@@ -857,7 +877,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(primes, [2, 3, 5, 7, 11, 13, 17, 19,
                                   23, 29, 31, 37, 41, 43, 47])
 
-    def test_delitem(self):
+    def test_delitem_simple(self):
         a = bitarray('100110')
         del a[1]
         self.assertEqual(len(a), 5)
@@ -865,6 +885,16 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('100'))
         self.assertRaises(IndexError, a.__delitem__,  3)
         self.assertRaises(IndexError, a.__delitem__, -4)
+
+    def test_delitem_random(self):
+        for a in self.randombitarrays(start=1):
+            n = len(a)
+            b = a.copy()
+            i = randint(0, n - 1)
+            del b[i]
+            self.assertEQUAL(b, a[:i] + a[i + 1:])
+            self.assertEqual(len(b), n - 1)
+            self.check_obj(b)
 
     def test_delslice(self):
         a = bitarray('10101100 10110')
@@ -897,6 +927,19 @@ class SliceTests(unittest.TestCase, Util):
                 c_lst = a.tolist()
                 del c_lst[s]
                 self.assertEQUAL(c, bitarray(c_lst, endian=c.endian()))
+
+    def test_delslice_range(self):
+        # tests C function delete_n()
+        for endian in 'little', 'big':
+            for n in range(500):
+                a = urandom(n, endian)
+                p = randint(0, n)
+                m = randint(0, 500)
+
+                b = a.copy()
+                del b[p:p + m]
+                self.assertEQUAL(b, a[:p] + a[p + m:])
+                self.check_obj(b)
 
 tests.append(SliceTests)
 
@@ -1663,9 +1706,7 @@ class NumberTests(unittest.TestCase, Util):
             self.assertEQUAL(b, self.shift(a, n, 'right'))
 
     def check_random(self, n, endian, n_shift, direction):
-        a = bitarray(0, endian)
-        a.frombytes(os.urandom(bits2bytes(n)))
-        del a[n:]
+        a = urandom(n, endian)
         self.assertEqual(len(a), n)
 
         b = a.copy()
