@@ -1,6 +1,14 @@
 Change log
 ==========
 
+**2.2.3** (2021-07-22):
+
+* speedup ``repeat()``, `#136 <https://github.com/ilanschnell/bitarray/issues/136>`__
+* speedup shift operations, `#139 <https://github.com/ilanschnell/bitarray/issues/139>`__
+* optimize slice assignment with negative step, e.g.: ``a[::-1] = 1``
+* add tests
+
+
 **2.2.2** (2021-07-16):
 
 * speedup slice assignment, see `#132 <https://github.com/ilanschnell/bitarray/issues/132>`__ and `#135 <https://github.com/ilanschnell/bitarray/issues/135>`__
