@@ -337,7 +337,8 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     if (resize(self, nbits + 8) < 0)
         return -1;
 
-    assert(p < Py_SIZE(self));
+    assert_byte_in_range(self, p);
+    assert(self->ob_item != NULL);
     tmp = self->ob_item[p];
     if (s_bits) {
         shift_r8(self, p, 8 - s_bits);
