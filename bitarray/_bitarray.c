@@ -151,16 +151,16 @@ bitarray_dealloc(bitarrayobject *self)
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-/* reverse bytes range(start, stop) in buffer */
+/* reverse bytes range(a, b) in buffer */
 static void
-bytereverse(bitarrayobject *self, Py_ssize_t start, Py_ssize_t stop)
+bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
     static char trans[256];
     static int setup = 0;
     Py_ssize_t i;
 
-    assert(0 <= start && start <= Py_SIZE(self));
-    assert(0 <= stop && stop <= Py_SIZE(self));
+    assert(0 <= a && a <= Py_SIZE(self));
+    assert(0 <= b && b <= Py_SIZE(self));
 
     if (!setup) {
         /* setup translation table, which maps each byte to it's reversed:
@@ -176,7 +176,7 @@ bytereverse(bitarrayobject *self, Py_ssize_t start, Py_ssize_t stop)
         setup = 1;
     }
 
-    for (i = start; i < stop; i++)
+    for (i = a; i < b; i++)
         self->ob_item[i] = trans[(unsigned char) self->ob_item[i]];
 }
 
