@@ -27,7 +27,7 @@ Key features
 * Pickling and unpickling of bitarray objects.
 * Bitarray objects support the buffer protocol
 * ``frozenbitarray`` objects which are hashable
-* Extensive test suite with over 300 unittests
+* Extensive test suite with over 350 unittests
 * Utility module ``bitarray.util``:
 
   * conversion to hexadecimal string
@@ -71,7 +71,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     .............................................................
     ----------------------------------------------------------------------
-    Ran 357 tests in 0.361s
+    Ran 364 tests in 0.415s
 
     OK
 
