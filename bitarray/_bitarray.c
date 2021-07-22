@@ -272,13 +272,13 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, int n)
 
     assert(nbytes >= 8 * nwords);
     assert(aword <= nwords);
-    assert(a <= 8 * aword + 8);
+    assert(UINT64_WORDS(64) == 0 || a <= 8 * aword + 8);
 
     if (self->endian == ENDIAN_BIG)
         bytereverse(self, a, nbytes);
 
 #define ucb  ((unsigned char *) (self)->ob_item)
-    if (nbytes >= a + 8) {
+    if (UINT64_WORDS(64) && nbytes >= a + 8) {
 
         if (nbytes > 8 * nwords) {
             _shift_r8_bl(self, 8 * nwords, nbytes, n);
