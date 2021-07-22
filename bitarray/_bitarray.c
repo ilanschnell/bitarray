@@ -248,7 +248,7 @@ _shift_r8_bl(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
     assert(0 < n && n < 8);
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
-    assert(UINT64_WORDS(64) == 0 || a <= b && b - a <= 16);
+    assert(UINT64_WORDS(64) == 0 || a <= b && b - a <= 8);
 #define ucb  ((unsigned char *) (self)->ob_item)
     for (i = b - 1; i >= a; i--) {
         ucb[i] <<= n;    /* shift byte (from highest to lowest) */
@@ -274,6 +274,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, int n)
     assert(aword <= nwords);
     assert(a <= 8 * aword + 8);
 
+    setunused(self);
     if (self->endian == ENDIAN_BIG)
         bytereverse(self, a, nbytes);
 
@@ -2185,36 +2186,13 @@ static void
 shift_right(bitarrayobject *self, Py_ssize_t n)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
-    const Py_ssize_t nwords = UINT64_WORDS(nbytes);
     const Py_ssize_t s_bytes = n / 8;   /* byte shift */
     const int s_bits = n % 8;           /* bit shift */
-    Py_ssize_t i;
 
     assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
-    setunused(self);
-    if (self->endian == ENDIAN_BIG && s_bits)
-        /* only reverse relevant bytes - not the ones getting shifted out */
-        bytereverse(self, 0, nbytes - s_bytes);
 
-    if (s_bits) {
-#define ucb  ((unsigned char *) (self)->ob_item)
-        for (i = nbytes - 1; i >= 8 * nwords; i--) {
-            ucb[i] <<= s_bits;    /* shift byte (from highest to lowest) */
-            if (i != 8 * nwords)  /* add shifted next lower byte */
-                ucb[i] |= ucb[i - 1] >> (8 - s_bits);
-        }
-        if (nwords && nbytes % 8) /* add byte from word */
-            ucb[8 * nwords] |= ucb[8 * nwords - 1] >> (8 - s_bits);
-
-        for (i = nwords - 1; i >= 0; i--) {
-            UINT64_BUFFER(self)[i] <<= s_bits; /* shift word */
-            if (i != 0)         /* add shifted byte from next lower word */
-                ucb[8 * i] |= ucb[8 * i - 1] >> (8 - s_bits);
-        }
-#undef ucb
-    }
-    if (self->endian == ENDIAN_BIG && s_bits)  /* (re-) reverse */
-        bytereverse(self, 0, nbytes - s_bytes);
+    if (s_bits)
+        shift_r8(self, 0, s_bits);
 
     if (s_bytes) {              /* shift bytes and zero blanks */
         memmove(self->ob_item + s_bytes, self->ob_item, nbytes - s_bytes);
