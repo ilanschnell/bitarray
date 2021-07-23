@@ -334,11 +334,9 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
         shift_r8(self, p, 8 - s_bits);
         s_bytes++;
     }
-    if (s_bytes) {
-        assert_byte_in_range(self, p + s_bytes);
-        memmove(self->ob_item + p,
-                self->ob_item + p + s_bytes, Py_SIZE(self) - p - s_bytes);
-    }
+    if (s_bytes)
+        copy_n(self, BITS(p), self, BITS(p + s_bytes),
+               self->nbits - BITS(p + s_bytes));
 
     for (i = 0; i < start % 8; i++)
         setbit(self, 8 * p + i, tmp & BITMASK(self->endian, i));
