@@ -601,6 +601,17 @@ class SliceTests(unittest.TestCase, Util):
                 s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
                 self.assertEQUAL(a[s], bitarray(aa[s], endian=a.endian()))
 
+    def test_getslice_random2(self):
+        n = randint(1000, 2000)
+        a = urandom(n, self.random_endian())
+        sa = a.to01()
+        for _ in range(100):
+            i = randint(0, n)
+            j = randint(i, n)
+            b = a[i:j]
+            self.assertEqual(b.to01(), sa[i:j])
+            self.assertEqual(b.endian(), a.endian())
+
     def test_setitem_simple(self):
         a = bitarray('0')
         a[0] = 1
@@ -1783,11 +1794,15 @@ class ExtendTests(unittest.TestCase, Util):
         a.extend(bitarray('00100111', endian='big'))
         self.assertEqual(a, bitarray('00001111 00100111'))
 
+    def test_bitarray_random(self):
         for a in self.randombitarrays():
+            sa = a.to01()
             for b in self.randombitarrays():
+                sb = b.to01()
                 c = bitarray(a)
                 c.extend(b)
-                self.assertEqual(c, a + b)
+                self.assertEqual(c.to01(), sa + sb)
+                self.assertEqual(c.endian(), a.endian())
                 self.check_obj(c)
 
     def test_list(self):
@@ -1950,9 +1965,11 @@ class ExtendTests(unittest.TestCase, Util):
             self.assertEqual(a, bitarray(2 * s))
 
         for a in self.randombitarrays():
-            b = bitarray(a)
+            endian = a.endian()
+            s = a.to01()
             a.extend(a)
-            self.assertEqual(a, b + b)
+            self.assertEqual(a.to01(), 2 * s)
+            self.assertEqual(a.endian(), endian)
             self.check_obj(a)
 
 tests.append(ExtendTests)
