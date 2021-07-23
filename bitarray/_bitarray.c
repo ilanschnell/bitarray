@@ -267,12 +267,11 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, int n)
     const Py_ssize_t aword = Py_MIN(UINT64_WORDS(a + 7), nwords);
     Py_ssize_t i;
 
-    assert(n >= 0);
+    assert(0 <= n && n < 8);
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= nwords && nwords <= nbytes / 8);
     assert(0 <= aword && aword <= nwords);
     assert(UINT64_WORDS(8) == 0 || a < 8 * aword + 8);
-    n %= 8;
     if (n == 0)
         return;
 
@@ -313,7 +312,6 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     const Py_ssize_t nbits = self->nbits;
     const Py_ssize_t p = start / 8;
     Py_ssize_t s_bytes = n / 8;             /* byte shift to left */
-    int s_bits = n % 8;                     /* bit shift to left */
     Py_ssize_t i;
     char tmp;
 
@@ -330,8 +328,8 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     assert_byte_in_range(self, p);
     assert(self->ob_item != NULL);
     tmp = self->ob_item[p];
-    if (s_bits) {
-        shift_r8(self, p, 8 - s_bits);
+    if (n % 8) {                /* shift n % 8 bits to left */
+        shift_r8(self, p, 8 - n % 8);
         s_bytes++;
     }
     if (s_bytes)
@@ -368,7 +366,7 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     assert_byte_in_range(self, p);
     assert(self->ob_item != NULL);
     tmp = self->ob_item[p];
-    shift_r8(self, p, n);
+    shift_r8(self, p, n % 8);
 
     if (s_bytes)
         copy_n(self, BITS(p + s_bytes), self, BITS(p), nbits - 8 * p + 8);
@@ -585,7 +583,7 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
        other may be self, we also need to store other->nbits. */
     const Py_ssize_t self_nbits = self->nbits;
     const Py_ssize_t other_nbits = other->nbits;
-    const Py_ssize_t s_bits = self_nbits % 8;  /* right bit shift of other */
+    const int s_bits = self_nbits % 8;  /* right bit shift of other */
 
     if (other_nbits == 0)
         return 0;
@@ -2205,7 +2203,7 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
 
     assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
 
-    shift_r8(self, 0, n);       /* shift n % 8 bits to right */
+    shift_r8(self, 0, n % 8);       /* shift n % 8 bits to right */
 
     if (s_bytes) {              /* shift bytes and zero blanks */
         memmove(self->ob_item + s_bytes, self->ob_item, nbytes - s_bytes);
