@@ -269,9 +269,8 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, int n)
 
     assert(0 < n && n < 8);
     assert(0 <= a && a <= Py_SIZE(self));
-
-    assert(nbytes >= 8 * nwords);
-    assert(aword <= nwords);
+    assert(0 <= nwords && nwords <= nbytes / 8);
+    assert(0 <= aword && aword <= nwords);
     assert(UINT64_WORDS(64) == 0 || a <= 8 * aword + 8);
 
     if (self->endian == ENDIAN_BIG)
@@ -279,31 +278,19 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, int n)
 
 #define ucb  ((unsigned char *) (self)->ob_item)
     if (UINT64_WORDS(64) && nbytes >= a + 8) {
-
         _shift_r8_bl(self, 8 * nwords, nbytes, n);
-        if (a < 8 * nwords && 8 * nwords < nbytes) {
-            /* add byte from below */
-            assert_byte_in_range(self, 8 * nwords);
-            assert_byte_in_range(self, 8 * nwords - 1);
+        if (a < 8 * nwords && 8 * nwords < nbytes)
+            /* add byte from word below */
             ucb[8 * nwords] |= ucb[8 * nwords - 1] >> (8 - n);
-        }
 
         for (i = nwords - 1; i >= aword; i--) {
-            assert(0 <= i && i <= nwords);
-            assert_byte_in_range(self, 8 * i);
             UINT64_BUFFER(self)[i] <<= n; /* shift word */
-            if (i != aword) {   /* add shifted byte from next lower word */
-                assert_byte_in_range(self, 8 * i - 1);
+            if (i != aword)    /* add shifted byte from next lower word */
                 ucb[8 * i] |= ucb[8 * i - 1] >> (8 - n);
-            }
         }
-
-        if (a < 8 * aword && 8 * aword < nbytes) {
-            assert_byte_in_range(self, 8 * aword);
-            assert_byte_in_range(self, 8 * aword - 1);
-            /* add byte from word */
+        if (a < 8 * aword && 8 * aword < nbytes)
+            /* add byte from below */
             ucb[8 * aword] |= ucb[8 * aword - 1] >> (8 - n);
-        }
 
         _shift_r8_bl(self, a, 8 * aword, n);
     }
@@ -311,6 +298,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, int n)
         _shift_r8_bl(self, a, nbytes, n);
     }
 #undef ucb
+
     if (self->endian == ENDIAN_BIG)
         bytereverse(self, a, nbytes);
 }
