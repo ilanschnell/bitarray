@@ -271,7 +271,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, int n)
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= nwords && nwords <= nbytes / 8);
     assert(0 <= aword && aword <= nwords);
-    assert(UINT64_WORDS(64) == 0 || a <= 8 * aword + 8);
+    assert(UINT64_WORDS(64) == 0 || a < 8 * aword + 8);
 
     if (self->endian == ENDIAN_BIG)
         bytereverse(self, a, nbytes);
