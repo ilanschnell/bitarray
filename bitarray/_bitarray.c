@@ -348,7 +348,6 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 static int
 insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 {
-    const Py_ssize_t nbytes = Py_SIZE(self);
     const Py_ssize_t nbits = self->nbits;
     const Py_ssize_t p = start / 8;
     const Py_ssize_t s_bytes = n / 8;   /* byte shift to right */
@@ -371,14 +370,8 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     tmp = self->ob_item[p];
     shift_r8(self, p, n);
 
-    if (s_bytes) {
-        i = nbytes - p + 1;
-        assert_byte_in_range(self, p + s_bytes);
-        assert_byte_in_range(self, p);
-        assert(i >= 0);
-        assert_byte_in_range(self, p + i);
-        memmove(self->ob_item + p + s_bytes, self->ob_item + p, i);
-    }
+    if (s_bytes)
+        copy_n(self, BITS(p + s_bytes), self, BITS(p), nbits - 8 * p + 8);
 
     if (n % 8) {
         for (i = 0; i < start % 8; i++) {
