@@ -267,11 +267,13 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, int n)
     const Py_ssize_t aword = Py_MIN(UINT64_WORDS(a + 7), nwords);
     Py_ssize_t i;
 
-    assert(0 < n && n < 8);
+    assert(0 <= n && n < 8);
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= nwords && nwords <= nbytes / 8);
     assert(0 <= aword && aword <= nwords);
     assert(UINT64_WORDS(8) == 0 || a < 8 * aword + 8);
+    if (n == 0)
+        return;
 
     if (self->endian == ENDIAN_BIG)
         bytereverse(self, a, nbytes);
@@ -369,8 +371,7 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     assert_byte_in_range(self, p);
     assert(self->ob_item != NULL);
     tmp = self->ob_item[p];
-    if (s_bits)
-        shift_r8(self, p, s_bits);
+    shift_r8(self, p, s_bits);
 
     if (s_bytes) {
         i = nbytes - p + 1;
@@ -2178,8 +2179,7 @@ shift_right(bitarrayobject *self, Py_ssize_t n)
 
     assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
 
-    if (s_bits)
-        shift_r8(self, 0, s_bits);
+    shift_r8(self, 0, s_bits);
 
     if (s_bytes) {              /* shift bytes and zero blanks */
         memmove(self->ob_item + s_bytes, self->ob_item, nbytes - s_bytes);
