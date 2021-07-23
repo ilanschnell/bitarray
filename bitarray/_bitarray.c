@@ -280,13 +280,12 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, int n)
 #define ucb  ((unsigned char *) (self)->ob_item)
     if (UINT64_WORDS(64) && nbytes >= a + 8) {
 
-        if (nbytes > 8 * nwords) {
-            _shift_r8_bl(self, 8 * nwords, nbytes, n);
-            if (8 * nwords > a) {  /* add byte from below */
-                assert_byte_in_range(self, 8 * nwords);
-                assert_byte_in_range(self, 8 * nwords - 1);
-                ucb[8 * nwords] |= ucb[8 * nwords - 1] >> (8 - n);
-            }
+        _shift_r8_bl(self, 8 * nwords, nbytes, n);
+        if (a < 8 * nwords && 8 * nwords < nbytes) {
+            /* add byte from below */
+            assert_byte_in_range(self, 8 * nwords);
+            assert_byte_in_range(self, 8 * nwords - 1);
+            ucb[8 * nwords] |= ucb[8 * nwords - 1] >> (8 - n);
         }
 
         for (i = nwords - 1; i >= aword; i--) {
