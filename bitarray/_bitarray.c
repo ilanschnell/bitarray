@@ -248,7 +248,7 @@ _shift_r8_bl(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
     assert(0 < n && n < 8);
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
-    assert(UINT64_WORDS(64) == 0 || a <= b && b - a <= 8);
+    assert(UINT64_WORDS(64) == 0 || a <= b && b - a < 8);
 #define ucb  ((unsigned char *) (self)->ob_item)
     for (i = b - 1; i >= a; i--) {
         ucb[i] <<= n;    /* shift byte (from highest to lowest) */
@@ -264,7 +264,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, int n)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
     const Py_ssize_t nwords = UINT64_WORDS(nbytes);
-    const Py_ssize_t aword = Py_MIN(UINT64_WORDS(a) + 1, nwords);
+    const Py_ssize_t aword = Py_MIN(UINT64_WORDS(a + 7), nwords);
     Py_ssize_t i;
 
     assert(0 < n && n < 8);
