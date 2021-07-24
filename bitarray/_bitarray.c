@@ -465,8 +465,6 @@ invert(bitarrayobject *self)
         self->ob_item[i] = ~self->ob_item[i];
 }
 
-static int extend_bitarray(bitarrayobject *self, bitarrayobject *other);
-
 /* repeat self m times (negative n is treated as 0) */
 static int
 repeat(bitarrayobject *self, Py_ssize_t m)
