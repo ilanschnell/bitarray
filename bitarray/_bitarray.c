@@ -320,13 +320,12 @@ getrange(bitarrayobject *self, bitarrayobject *other,
     assert(n >= 0 && self->nbits == n);
 
     if (a % 8 && n > 8) {
-        int i, s_bits = 8 - a % 8;  /* s_bits = bit shift right */
+        int s_bits = 8 - a % 8;  /* s_bits = bit shift right */
 
         assert(a + s_bits == 8 * (a / 8 + 1));
         copy_n(self, 0, other, a + s_bits, n - s_bits);
         shift_r8(self, 0, Py_SIZE(self), s_bits);
-        for (i = 0; i < s_bits; i++)
-            setbit(self, i, getbit(other, a + i));
+        copy_n(self, 0, other, a, s_bits);
     }
     else {
         copy_n(self, 0, other, a, n);
