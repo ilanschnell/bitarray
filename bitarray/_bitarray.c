@@ -258,7 +258,8 @@ _shift_r8_bl(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 #undef ucb
 }
 
-/* shift bits by n % 8 in using uin64 shifts to right, starting at byte a */
+/* shift bits by n % 8 in using uin64 shifts to right, starting at byte a -
+   leave bitarray size untouched, which means a few bits get pushed out */
 static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, int n)
 {
