@@ -1798,12 +1798,15 @@ class ExtendTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             sa = a.to01()
             for b in self.randombitarrays():
-                sb = b.to01()
+                bb = b.copy()
                 c = bitarray(a)
                 c.extend(b)
-                self.assertEqual(c.to01(), sa + sb)
+                self.assertEqual(c.to01(), sa + bb.to01())
                 self.assertEqual(c.endian(), a.endian())
                 self.check_obj(c)
+                # ensure b hasn't changed
+                self.assertEQUAL(b, bb)
+                self.check_obj(b)
 
     def test_list(self):
         a = bitarray()
