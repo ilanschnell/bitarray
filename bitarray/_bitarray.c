@@ -308,37 +308,29 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
         bytereverse(self, a, b);
 }
 
-/* return new bitarray with elements from self in range(a, b) */
-static PyObject *
-getrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
+/* copy self[a:b] into other (which much have length b - a) */
+static void
+getrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b,
+         bitarrayobject *other)
 {
-    const Py_ssize_t length = b - a;
-    PyObject *res;
+    const Py_ssize_t n = b - a;
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
-    assert(length >= 0);
+    assert(n >= 0 && other->nbits == n);
 
-    res = newbitarrayobject(Py_TYPE(self), length, self->endian);
-    if (res == NULL)
-        return NULL;
-
-#define rr  ((bitarrayobject *) res)
-    if (a % 8 && length > 8) {
+    if (a % 8 && n > 8) {
         int i, s_bits = 8 - a % 8;  /* s_bits = bit shift right */
 
         assert(a + s_bits == 8 * (a / 8 + 1));
-        copy_n(rr, 0, self, a + s_bits, length - s_bits);
-        shift_r8(rr, 0, Py_SIZE(rr), s_bits);
+        copy_n(other, 0, self, a + s_bits, n - s_bits);
+        shift_r8(other, 0, Py_SIZE(other), s_bits);
         for (i = 0; i < s_bits; i++)
-            setbit(rr, i, getbit(self, a + i));
+            setbit(other, i, getbit(self, a + i));
     }
     else {
-        copy_n(rr, 0, self, a, length);
+        copy_n(other, 0, self, a, n);
     }
-#undef rr
-
-    return res;
 }
 
 /* copy n bits from other (starting at b) into self (starting at a) -
@@ -1846,27 +1838,26 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
 
     if (PySlice_Check(item)) {
         Py_ssize_t start, stop, step, slicelength;
+        PyObject *res;
 
         if (PySlice_GetIndicesEx(item, self->nbits,
                                  &start, &stop, &step, &slicelength) < 0) {
             return NULL;
         }
 
+        res = newbitarrayobject(Py_TYPE(self), slicelength,
+                                self->endian);
         if (step == 1) {
-            return getrange(self, start, start + slicelength);
+            getrange(self, start, start + slicelength,
+                     (bitarrayobject *) res);
         }
         else {
             Py_ssize_t i, j;
-            PyObject *res;
-
-            res = newbitarrayobject(Py_TYPE(self), slicelength,
-                                    self->endian);
 
             for (i = 0, j = start; i < slicelength; i++, j += step)
                 setbit((bitarrayobject *) res, i, getbit(self, j));
-
-            return res;
         }
+        return res;
     }
 
     return PyErr_Format(PyExc_TypeError,
