@@ -317,8 +317,7 @@ getrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     assert(0 <= b && b <= self->nbits);
     assert(length >= 0);
 
-    res = newbitarrayobject(Py_TYPE(self), length + 8 * ns,
-                                self->endian);
+    res = newbitarrayobject(Py_TYPE(self), length + 8 * ns, self->endian);
     if (res == NULL)
         return NULL;
 
@@ -433,33 +432,44 @@ static int extend_bitarray(bitarrayobject *self, bitarrayobject *other);
 static int
 repeat(bitarrayobject *self, Py_ssize_t m)
 {
-    const Py_ssize_t nbits = self->nbits;
-    Py_ssize_t k;
+    Py_ssize_t q, k = self->nbits;
 
-    if (nbits == 0 || m == 1)   /* nothing to do */
+    if (k == 0 || m == 1)   /* nothing to do */
         return 0;
 
     if (m <= 0)                 /* clear */
         return resize(self, 0);
 
-    assert(m > 1 && nbits > 0);
-    if (nbits >= PY_SSIZE_T_MAX / m) {
+    assert(m > 1 && k > 0);
+    if (k >= PY_SSIZE_T_MAX / m) {
         PyErr_Format(PyExc_OverflowError,
                      "cannot repeat bitarray (of size %zd) %zd times",
-                     nbits, m);
+                     k, m);
         return -1;
     }
 
-    k = nbits;  /* number of bits which have been copied */
-    while (k <= (m * nbits) / 2) {  /* double copies */
+    /* k = self->nbits, the number of bits which have been copied */
+    q = k * m;          /* number of resulting bits */
+    while (k <= q / 2) {  /* double copies */
         extend_bitarray(self, self);
         k *= 2;
     }
-    assert(m * nbits >= k);
-    if (resize(self, m * nbits) < 0)
-        return -1;
+    assert(k <= q);
 
-    copy_n(self, k, self, 0, self->nbits - k);  /* copy remaining bits */
+    if (k < q) {        /* copy remaining bits */
+        if (k % 8 == 0) {
+            if (resize(self, q) < 0)
+                return -1;
+            copy_n(self, k, self, 0, self->nbits - k);
+        }
+        else {
+            PyObject *t;
+            t = getrange(self, 0, q - k);
+            extend_bitarray(self, (bitarrayobject *) t);
+            Py_DECREF(t);
+        }
+    }
+    assert(self->nbits == q);
     return 0;
 }
 
