@@ -449,12 +449,12 @@ repeat(bitarrayobject *self, Py_ssize_t m)
     }
 
     /* k = self->nbits, the number of bits which have been copied */
-    q = k * m;          /* number of resulting bits */
+    q = k * m;  /* number of resulting bits */
     while (k <= q / 2) {  /* double copies */
         extend_bitarray(self, self);
         k *= 2;
     }
-    assert(k <= q);
+    assert(k == self->nbits && q / 2 < k && k <= q);
 
     if (k < q) {        /* copy remaining bits */
         if (k % 8 == 0) {
