@@ -379,37 +379,11 @@ copy2(bitarrayobject *self, Py_ssize_t a,
 static int
 delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 {
-    const Py_ssize_t nbits = self->nbits;
-    const Py_ssize_t p = start / 8;
-    Py_ssize_t s_bytes = n / 8;             /* byte shift to left */
-    Py_ssize_t i;
-    char tmp;
+    assert(0 <= start && start <= self->nbits);
+    assert(0 <= n && n <= self->nbits - start);
 
-    assert(0 <= start && start <= nbits);
-    assert(0 <= n && n <= nbits - start);
-
-    if (n == 0)
-        return 0;
-    if (start == nbits)
-        return resize(self, nbits - n);
-    if (resize(self, nbits + 8) < 0)
-        return -1;
-
-    assert_byte_in_range(self, p);
-    assert(self->ob_item != NULL);
-    tmp = self->ob_item[p];
-    if (n % 8) {                /* shift n % 8 bits to left */
-        shift_r8(self, p, Py_SIZE(self), 8 - n % 8);
-        s_bytes++;
-    }
-    if (s_bytes)
-        copy_n(self, BITS(p), self, BITS(p + s_bytes),
-               self->nbits - BITS(p + s_bytes));
-
-    for (i = 0; i < start % 8; i++)
-        setbit(self, 8 * p + i, tmp & BITMASK(self->endian, i));
-
-    return resize(self, nbits - n);
+    copy2(self, start, self, start + n, self->nbits - start - n);
+    return resize(self, self->nbits - n);
 }
 
 /* starting at start, insert n (uninitialized) bits into self */
