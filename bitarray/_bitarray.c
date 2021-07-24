@@ -638,7 +638,8 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
         return -1;
 
     if (s_bits) {
-        const Py_ssize_t p = BYTES(self_nbits) - 1;  /* last byte in self */
+        /* last byte in self (before resizing) */
+        const Py_ssize_t p = BYTES(self_nbits) - 1;
         Py_ssize_t i;
         char tmp;
 
