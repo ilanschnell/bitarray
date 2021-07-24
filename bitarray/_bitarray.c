@@ -394,6 +394,8 @@ invert(bitarrayobject *self)
         self->ob_item[i] = ~self->ob_item[i];
 }
 
+static int extend_bitarray(bitarrayobject *self, bitarrayobject *other);
+
 /* repeat self m times (negative n is treated as 0) */
 static int
 repeat(bitarrayobject *self, Py_ssize_t m)
@@ -415,15 +417,15 @@ repeat(bitarrayobject *self, Py_ssize_t m)
         return -1;
     }
 
+    k = nbits;  /* number of bits which have been copied */
+    while (k <= (m * nbits) / 2) {  /* double copies */
+        extend_bitarray(self, self);
+        k *= 2;
+    }
+    assert(m * nbits >= k);
     if (resize(self, m * nbits) < 0)
         return -1;
 
-    k = nbits;  /* number of bits which have been copied */
-    while (k <= self->nbits / 2) {  /* double copies */
-        copy_n(self, k, self, 0, k);
-        k *= 2;
-    }
-    assert(self->nbits - k >= 0);
     copy_n(self, k, self, 0, self->nbits - k);  /* copy remaining bits */
     return 0;
 }
