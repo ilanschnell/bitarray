@@ -1847,16 +1847,17 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
 
         res = newbitarrayobject(Py_TYPE(self), slicelength,
                                 self->endian);
+#define rr  ((bitarrayobject *) res)
         if (step == 1) {
-            getrange((bitarrayobject *) res,
-                     self, start, start + slicelength);
+            getrange(rr, self, start, start + slicelength);
         }
         else {
             Py_ssize_t i, j;
 
             for (i = 0, j = start; i < slicelength; i++, j += step)
-                setbit((bitarrayobject *) res, i, getbit(self, j));
+                setbit(rr, i, getbit(self, j));
         }
+#undef rr
         return res;
     }
 
