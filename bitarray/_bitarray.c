@@ -348,6 +348,7 @@ copy2(bitarrayobject *self, Py_ssize_t a,
 {
     const int s_bits = a % 8;  /* right bit shift of other */
 
+    assert(b == 0);      /* XXX currently parameter b not supported */
     assert(0 <= n && n <= self->nbits && n <= other->nbits);
     assert(0 <= a && a <= self->nbits - n);
     assert(0 <= b && b <= other->nbits - n);
@@ -485,29 +486,19 @@ repeat(bitarrayobject *self, Py_ssize_t m)
                      k, m);
         return -1;
     }
-
     /* k = self->nbits, the number of bits which have been copied */
     q = k * m;  /* number of resulting bits */
+    if (resize(self, q) < 0)
+        return -1;
+
     while (k <= q / 2) {  /* double copies */
-        extend_bitarray(self, self);
+        copy2(self, k, self, 0, k);
         k *= 2;
     }
-    assert(k == self->nbits && q / 2 < k && k <= q);
+    assert(q / 2 < k && k <= q);
 
-    if (k < q) {        /* copy remaining bits */
-        if (k % 8 == 0) {
-            if (resize(self, q) < 0)
-                return -1;
-            copy_n(self, k, self, 0, self->nbits - k);
-        }
-        else {
-            PyObject *t;
-            t = getrange(self, 0, q - k);
-            extend_bitarray(self, (bitarrayobject *) t);
-            Py_DECREF(t);
-        }
-    }
-    assert(self->nbits == q);
+    if (k < q)        /* copy remaining bits */
+        copy2(self, k, self, 0, self->nbits - k);
     return 0;
 }
 
