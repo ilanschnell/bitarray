@@ -318,6 +318,7 @@ getrange(bitarrayobject *self, bitarrayobject *other,
     assert(0 <= a && a <= other->nbits);
     assert(0 <= b && b <= other->nbits);
     assert(n >= 0 && self->nbits == n);
+    assert(self != other);
 
     if (a % 8 && n > 8) {
         int s_bits = 8 - a % 8;  /* s_bits = bit shift right */
