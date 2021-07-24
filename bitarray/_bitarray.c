@@ -340,18 +340,18 @@ getrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     return res;
 }
 
-/* copy the first b bits of other into self at position a -
+/* copy n bits from other (starting at b) into self (starting at a) -
    self is not resized */
 static void
-copy2(bitarrayobject *self, Py_ssize_t a, bitarrayobject *other, Py_ssize_t b)
+copy2(bitarrayobject *self, Py_ssize_t a,
+      bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
 {
     const int s_bits = a % 8;  /* right bit shift of other */
 
-    assert(0 <= a && a <= self->nbits);
-    assert(0 <= b && b <= other->nbits);
-    assert(a + b <= self->nbits);
-
-    if (b == 0)
+    assert(0 <= n && n <= self->nbits && n <= other->nbits);
+    assert(0 <= a && a <= self->nbits - n);
+    assert(0 <= b && b <= other->nbits - n);
+    if (n == 0)
         return;
 
     if (s_bits) {
@@ -364,14 +364,14 @@ copy2(bitarrayobject *self, Py_ssize_t a, bitarrayobject *other, Py_ssize_t b)
         assert(0 <= p && p < Py_SIZE(self));
         tmp = self->ob_item[p];
 
-        copy_n(self, BITS(p), other, 0, b);
-        shift_r8(self, p, BYTES(a + b), s_bits);
+        copy_n(self, BITS(p), other, b, n);
+        shift_r8(self, p, BYTES(a + n), s_bits);
 
         for (i = 0; i < s_bits; i++)
             setbit(self, 8 * p + i, tmp & BITMASK(self->endian, i));
     }
     else {
-        copy_n(self, a, other, 0, b);
+        copy_n(self, a, other, b, n);
     }
 }
 
@@ -673,7 +673,7 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
     if (resize(self, self_nbits + other_nbits) < 0)
         return -1;
 
-    copy2(self, self_nbits, other, other_nbits);
+    copy2(self, self_nbits, other, 0, other_nbits);
     return 0;
 }
 
