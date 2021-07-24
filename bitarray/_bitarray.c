@@ -314,23 +314,23 @@ getrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
     const Py_ssize_t length = b - a;
     PyObject *res;
-    int ns = (a % 8 != 0 && length > 8);  /* need bit level shift */
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
     assert(length >= 0);
 
-    res = newbitarrayobject(Py_TYPE(self), length + 8 * ns, self->endian);
+    res = newbitarrayobject(Py_TYPE(self), length, self->endian);
     if (res == NULL)
         return NULL;
 
 #define rr  ((bitarrayobject *) res)
-    if (ns) {
-        copy_n(rr, 0, self, BITS(a / 8), length + a % 8);
-        shift_r8(rr, 0, Py_SIZE(rr), 8 - a % 8);
-        copy_n(rr, 0, rr, 8, rr->nbits - 8);
-        if (resize(rr, length) < 0)
-            return NULL;
+    if (a % 8 && length > 8) {
+        int i, s_bits = 8 - a % 8;  /* s_bits = bit shift right */
+
+        copy_n(rr, 0, self, BITS(a / 8) + 8, length - s_bits);
+        shift_r8(rr, 0, Py_SIZE(rr), s_bits);
+        for (i = 0; i < s_bits; i++)
+            setbit(rr, i, getbit(self, a + i));
     }
     else {
         copy_n(rr, 0, self, a, length);
