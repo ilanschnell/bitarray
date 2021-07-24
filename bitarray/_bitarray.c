@@ -291,7 +291,7 @@ repeat(bitarrayobject *self, Py_ssize_t m)
         return resize(self, 0);
 
     assert(m > 1 && nbits > 0);
-    if (nbits > PY_SSIZE_T_MAX / m) {
+    if (nbits >= PY_SSIZE_T_MAX / m) {
         PyErr_Format(PyExc_OverflowError,
                      "cannot repeat bitarray (of size %zd) %zd times",
                      nbits, m);
