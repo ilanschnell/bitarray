@@ -764,6 +764,38 @@ class SliceTests(unittest.TestCase, Util):
         a[2:5] = bitarray('0')  # remove
         self.assertEqual(a, bitarray('11011'))
 
+    def test_setslice_bitarray_random_same_length(self):
+        for endian in 'little', 'big':
+            for _ in range(100):
+                n = randint(0, 200)
+                a = urandom(n, endian)
+                lst_a = a.tolist()
+                b = urandom(randint(0, n), self.random_endian())
+                lst_b = b.tolist()
+                i = randint(0, n - len(b))
+                j = i + len(b)
+                self.assertEqual(j - i, len(b))
+                a[i:j] = b
+                lst_a[i:j] = lst_b
+                self.assertEqual(a.tolist(), lst_a)
+                # a didn't change length
+                self.assertEqual(len(a), n)
+                self.assertEqual(a.endian(), endian)
+                self.check_obj(a)
+
+    def test_setslice_bitarray_random_step_1(self):
+        for _ in range(100):
+            n = randint(0, 100)
+            a = urandom(n, self.random_endian())
+            lst_a = a.tolist()
+            b = urandom(randint(0, 100), self.random_endian())
+            lst_b = b.tolist()
+            s = slice(self.rndsliceidx(n), self.rndsliceidx(n), None)
+            a[s] = b
+            lst_a[s] = lst_b
+            self.assertEqual(a.tolist(), lst_a)
+            self.check_obj(a)
+
     def test_setslice_bool_explicit(self):
         a = bitarray('11111111')
         a[::2] = False
