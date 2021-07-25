@@ -225,7 +225,8 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
 
         return;
     }
-    assert(n <= 8);    /* not strict required below */
+    /* not required below, but used to ensure we don't use slow copies */
+    assert(n <= 8);
 
     /* The two different types of looping are only relevant when copying
        self to self, i.e. when copying a piece of an bitarrayobject onto
@@ -352,21 +353,18 @@ copy2(bitarrayobject *self, Py_ssize_t a,
     if (s_bits) {
         /* other will be copied into self[a:c] */
         const Py_ssize_t c = a + n;
-        const Py_ssize_t p1 = BYTES(a) - 1;
+        const Py_ssize_t p1 = a / 8;
         const Py_ssize_t p2 = BYTES(c) - 1;
         char tmp1, tmp2;
         Py_ssize_t i;
 
-        assert(a > 0);
         assert(0 <= p1 && p1 < Py_SIZE(self));
         assert(0 <= p2 && p2 < Py_SIZE(self));
-        assert(8 * p1 < a && a <= 8 * p1 + 8);
-        assert(8 * p2 < c && c <= 8 * p2 + 8);
         tmp1 = self->ob_item[p1];
         tmp2 = self->ob_item[p2];
 
         copy_n(self, BITS(p1), other, b, n);
-        shift_r8(self, p1, BYTES(c), s_bits);
+        shift_r8(self, p1, p2 + 1, s_bits);
 
         for (i = 0; i < s_bits; i++)
             setbit(self, 8 * p1 + i, tmp1 & BITMASK(self->endian, i));
