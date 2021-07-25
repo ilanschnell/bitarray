@@ -339,7 +339,6 @@ static void
 copy2(bitarrayobject *self, Py_ssize_t a,
       bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
 {
-    const Py_ssize_t c = a + n;
     const int s_bits = a % 8;  /* right bit shift of self */
 
     assert(b == 0);      /* XXX currently parameter b not supported */
@@ -352,6 +351,7 @@ copy2(bitarrayobject *self, Py_ssize_t a,
     assert(self->nbits > 0);
 
     if (s_bits) {
+        const Py_ssize_t c = a + n;
         const Py_ssize_t p1 = BYTES(a) - 1;  /* byte of position a in self */
         const Py_ssize_t p2 = BYTES(c) - 1;
         char tmp1, tmp2;
