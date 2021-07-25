@@ -65,8 +65,9 @@ typedef struct {
 #define IS_PY3K
 #define BYTES_SIZE_FMT  "y#"
 #else
-/* the Py_MIN macro was introduced in Python 3.3 */
+/* the Py_MIN and Py_MAX macros were introduced in Python 3.3 */
 #define Py_MIN(x, y)  (((x) > (y)) ? (y) : (x))
+#define Py_MAX(x, y)  (((x) > (y)) ? (x) : (y))
 #define PySlice_GetIndicesEx(slice, len, start, stop, step, slicelength) \
     PySlice_GetIndicesEx(((PySliceObject *) slice),                      \
                          (len), (start), (stop), (step), (slicelength))
