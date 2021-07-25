@@ -610,6 +610,7 @@ class SliceTests(unittest.TestCase, Util):
             j = randint(i, n)
             b = a[i:j]
             self.assertEqual(b.to01(), sa[i:j])
+            self.assertEqual(len(b), j - i)
             self.assertEqual(b.endian(), a.endian())
 
     def test_setitem_simple(self):
@@ -1835,6 +1836,7 @@ class ExtendTests(unittest.TestCase, Util):
                 c.extend(b)
                 self.assertEqual(c.to01(), sa + bb.to01())
                 self.assertEqual(c.endian(), a.endian())
+                self.assertEqual(len(c), len(a) + len(b))
                 self.check_obj(c)
                 # ensure b hasn't changed
                 self.assertEQUAL(b, bb)
@@ -2005,6 +2007,7 @@ class ExtendTests(unittest.TestCase, Util):
             a.extend(a)
             self.assertEqual(a.to01(), 2 * s)
             self.assertEqual(a.endian(), endian)
+            self.assertEqual(len(a), 2 * len(s))
             self.check_obj(a)
 
 tests.append(ExtendTests)
