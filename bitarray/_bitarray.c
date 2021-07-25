@@ -1715,6 +1715,24 @@ PyDoc_STRVAR(sizeof_doc,
 "Return the size of the bitarray in memory, in bytes.");
 
 
+static PyObject *
+bitarray_copy2(bitarrayobject *self, PyObject *args)
+{
+    PyObject *other;
+    Py_ssize_t a, b, n;
+
+    if (!PyArg_ParseTuple(args, "nOnn", &a, &other, &b, &n))
+        return NULL;
+    if (!bitarray_Check(other)) {
+        PyErr_SetString(PyExc_TypeError, "bitarray expected");
+        return NULL;
+    }
+    copy2(self, a, (bitarrayobject *) other, b, n);
+
+    Py_RETURN_NONE;
+}
+
+
 /* ----------------------- bitarray_as_sequence ------------------------ */
 
 static Py_ssize_t
@@ -3164,6 +3182,7 @@ static PyMethodDef bitarray_methods[] = {
      reduce_doc},
     {"__sizeof__",   (PyCFunction) bitarray_sizeof,      METH_NOARGS,
      sizeof_doc},
+    {"_copy2",       (PyCFunction) bitarray_copy2,       METH_VARARGS, 0},
 
     {NULL,           NULL}  /* sentinel */
 };
