@@ -351,6 +351,7 @@ copy2(bitarrayobject *self, Py_ssize_t a,
     assert(self->nbits > 0);
 
     if (s_bits) {
+        /* other will be copied into self[a:c] */
         const Py_ssize_t c = a + n;
         const Py_ssize_t p1 = BYTES(a) - 1;  /* byte of position a in self */
         const Py_ssize_t p2 = BYTES(c) - 1;
