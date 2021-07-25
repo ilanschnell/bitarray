@@ -339,6 +339,7 @@ static void
 copy2(bitarrayobject *self, Py_ssize_t a,
       bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
 {
+    const Py_ssize_t c = a + n;
     const int s_bits = a % 8;  /* right bit shift of other */
 
     assert(b == 0);      /* XXX currently parameter b not supported */
@@ -348,21 +349,28 @@ copy2(bitarrayobject *self, Py_ssize_t a,
     if (n == 0)
         return;
 
+    assert(self->nbits > 0);
+
     if (s_bits) {
-        /* byte of position a in self */
-        const Py_ssize_t p = BYTES(a) - 1;
+        const Py_ssize_t p1 = BYTES(a) - 1;  /* byte of position a in self */
+        const Py_ssize_t p2 = BYTES(c) - 1;
+        char tmp1, tmp2;
         Py_ssize_t i;
-        char tmp;
 
-        assert(self->nbits > 0);
-        assert(0 <= p && p < Py_SIZE(self));
-        tmp = self->ob_item[p];
+        assert(0 <= p1 && p1 < Py_SIZE(self));
+        assert(0 <= p2 && p2 < Py_SIZE(self));
+        tmp1 = self->ob_item[p1];
+        tmp2 = self->ob_item[p2];
 
-        copy_n(self, BITS(p), other, b, n);
-        shift_r8(self, p, BYTES(a + n), s_bits);
+        copy_n(self, BITS(p1), other, b, n);
+        shift_r8(self, p1, BYTES(a + n), s_bits);
 
         for (i = 0; i < s_bits; i++)
-            setbit(self, 8 * p + i, tmp & BITMASK(self->endian, i));
+            setbit(self, 8 * p1 + i, tmp1 & BITMASK(self->endian, i));
+
+        if (c % 8)
+            for (i = c % 8; i < 8 && 8 * p2 + i < self->nbits; i++)
+                setbit(self, 8 * p2 + i, tmp2 & BITMASK(self->endian, i));
     }
     else {
         copy_n(self, a, other, b, n);
@@ -1901,7 +1909,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
                 goto error;
         }
         /* copy the new values into self */
-        copy_n(self, start, aa, 0, aa->nbits);
+        copy2(self, start, aa, 0, aa->nbits);
     }
     else {  /* step != 1 */
         if (increase != 0) {
