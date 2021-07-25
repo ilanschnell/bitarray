@@ -2237,22 +2237,6 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
     }
 }
 
-static void
-shift_right(bitarrayobject *self, Py_ssize_t n)
-{
-    const Py_ssize_t nbytes = Py_SIZE(self);
-    const Py_ssize_t s_bytes = n / 8;   /* byte shift */
-
-    assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
-
-    shift_r8(self, 0, nbytes, n % 8);       /* shift n % 8 bits to right */
-
-    if (s_bytes) {              /* shift bytes and zero blanks */
-        memmove(self->ob_item + s_bytes, self->ob_item, nbytes - s_bytes);
-        memset(self->ob_item, 0x00, (size_t) s_bytes);
-    }
-}
-
 /* shift bitarray n positions to left (right=0) or right (right=1) */
 static void
 shift(bitarrayobject *self, Py_ssize_t n, int right)
@@ -2267,10 +2251,13 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
     }
 
     assert(0 < n && n < nbits);
-    if (right)                  /* rshift */
-        shift_right(self, n);
-    else                        /* lshift */
+    if (right) {                  /* rshift */
+        copy2(self, n, self, 0, nbits - n);
+        setrange(self, 0, n, 0);
+    }
+    else {                        /* lshift */
         shift_left(self, n);
+    }
 }
 
 /* check shift arguments and return the shift count, -1 on error */
