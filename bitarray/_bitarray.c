@@ -336,6 +336,48 @@ copy_range(bitarrayobject *self, bitarrayobject *other,
     }
 }
 
+/* Copy the first n bits from other to self (starting at a).
+   self[a:a+n] = other[:n] */
+static void
+copy2(bitarrayobject *self, Py_ssize_t a,
+      bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
+{
+    const int s_bits = a % 8;  /* right bit shift of self */
+
+    assert(b == 0);  /* parameter b is currently not supported */
+    assert(0 <= n && n <= self->nbits && n <= other->nbits);
+    assert(0 <= a && a <= self->nbits - n);
+    assert(0 <= b && b <= other->nbits - n);
+    if (n == 0 || self->nbits == 0)
+        return;
+
+    if (s_bits) {
+        /* other will be copied into self[a:c] */
+        const Py_ssize_t c = a + n;
+        const Py_ssize_t p1 = a / 8;
+        const Py_ssize_t p2 = BYTES(c) - 1;
+        char tmp1, tmp2;
+        Py_ssize_t i;
+
+        assert_byte_in_range(self, p1);
+        assert_byte_in_range(self, p2);
+        tmp1 = self->ob_item[p1];
+        tmp2 = self->ob_item[p2];
+
+        copy_n(self, BITS(p1), other, b, n);
+        shift_r8(self, p1, p2 + 1, s_bits);
+
+        for (i = 0; i < s_bits; i++)
+            setbit(self, 8 * p1 + i, tmp1 & BITMASK(self->endian, i));
+
+        for (i = c; i < 8 * p2 + 8 && i < self->nbits; i++)
+            setbit(self, i, tmp2 & BITMASK(self->endian, i % 8));
+    }
+    else {
+        copy_n(self, a, other, b, n);
+    }
+}
+
 /* starting at start, delete n bits from self */
 static int
 delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
@@ -378,33 +420,34 @@ invert(bitarrayobject *self)
 static int
 repeat(bitarrayobject *self, Py_ssize_t m)
 {
-    const Py_ssize_t nbits = self->nbits;
-    Py_ssize_t k;
+    Py_ssize_t q, k = self->nbits;
 
-    if (nbits == 0 || m == 1)   /* nothing to do */
+    if (k == 0 || m == 1)   /* nothing to do */
         return 0;
 
     if (m <= 0)                 /* clear */
         return resize(self, 0);
 
-    assert(m > 1 && nbits > 0);
-    if (nbits >= PY_SSIZE_T_MAX / m) {
+    assert(m > 1 && k > 0);
+    if (k >= PY_SSIZE_T_MAX / m) {
         PyErr_Format(PyExc_OverflowError,
                      "cannot repeat bitarray (of size %zd) %zd times",
-                     nbits, m);
+                     k, m);
         return -1;
     }
-
-    if (resize(self, m * nbits) < 0)
+    /* k = self->nbits, the number of bits which have been copied */
+    q = k * m;  /* number of resulting bits */
+    if (resize(self, q) < 0)
         return -1;
 
-    k = nbits;  /* number of bits which have been copied */
-    while (k <= self->nbits / 2) {  /* double copies */
-        copy_n(self, k, self, 0, k);
+    while (k <= q / 2) {  /* double copies */
+        copy2(self, k, self, 0, k);
         k *= 2;
     }
-    assert(self->nbits - k >= 0);
-    copy_n(self, k, self, 0, self->nbits - k);  /* copy remaining bits */
+    assert(q / 2 < k && k <= q);
+
+    if (k < q)        /* copy remaining bits */
+        copy2(self, k, self, 0, self->nbits - k);
     return 0;
 }
 
@@ -567,7 +610,7 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
     if (resize(self, self_nbits + other_nbits) < 0)
         return -1;
 
-    copy_n(self, self_nbits, other, 0, other_nbits);
+    copy2(self, self_nbits, other, 0, other_nbits);
     return 0;
 }
 
@@ -1835,7 +1878,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
                 goto error;
         }
         /* copy the new values into self */
-        copy_n(self, start, aa, 0, aa->nbits);
+        copy2(self, start, aa, 0, aa->nbits);
     }
     else {  /* step != 1 */
         if (increase != 0) {
