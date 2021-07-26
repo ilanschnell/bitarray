@@ -687,6 +687,20 @@ class SliceTests(unittest.TestCase, Util):
                 aa[s] = aa
                 self.assertEqual(a, bitarray(aa))
 
+    def test_setslice_special(self):
+        for n in 0, 1, 10, 87:
+            a = urandom(n)
+            for m in 0, 1, 10, 99:
+                x = urandom(m)
+                b = a.copy()
+                b[n:n] = x
+                self.assertEqual(b, a + x)
+                self.assertEqual(len(b), len(a) + len(x))
+                b[0:0] = x
+                self.assertEqual(b, x + a + x)
+                self.check_obj(b)
+                self.assertEqual(len(b), len(a) + 2 * len(x))
+
     def test_setslice_range(self):
         # tests C function insert_n()
         for endian in 'big', 'little':
@@ -940,7 +954,7 @@ class SliceTests(unittest.TestCase, Util):
             self.assertEqual(len(b), n - 1)
             self.check_obj(b)
 
-    def test_delslice(self):
+    def test_delslice_explicit(self):
         a = bitarray('10101100 10110')
         del a[3:9] #     ^^^^^ ^
         self.assertEqual(a, bitarray('1010110'))
@@ -958,6 +972,17 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(len(a), 11)
         del a[:]
         self.assertEqual(a, bitarray())
+
+    def test_delslice_special(self):
+        for n in 0, 1, 10, 73:
+            a = urandom(n)
+            b = a.copy()
+            del b[0:0]
+            del b[n:n]
+            self.assertEqual(a, b)
+            del b[0:n]
+            self.assertEqual(len(b), 0)
+            self.check_obj(b)
 
     def test_delslice_random(self):
         for a in self.randombitarrays():
