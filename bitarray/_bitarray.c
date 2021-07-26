@@ -191,7 +191,8 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 #define UINT64_WORDS(bytes)  0
 #endif
 
-/* copy n bits from other (starting at b) onto self (starting at a) */
+/* Copy n bits from other (starting at b) onto self (starting at a).
+   self[a:a+n] = other[b:b+n] */
 static void
 copy_n(bitarrayobject *self, Py_ssize_t a,
        bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
@@ -309,8 +310,9 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
         bytereverse(self, a, b);
 }
 
-/* Copy other[a:b] onto self which must have length b - a.
-   other and self cannot be the same object.  */
+/* Copy other bits in range(a, b) onto self which must have length b - a.
+   other and self cannot be the same object.
+   self = other[a:b] */
 static void
 copy_range(bitarrayobject *self, bitarrayobject *other,
          Py_ssize_t a, Py_ssize_t b)
@@ -335,8 +337,8 @@ copy_range(bitarrayobject *self, bitarrayobject *other,
     }
 }
 
-/* copy n bits from other (starting at b) into self (starting at a)
-   self[a:a+n] = other[0:n] */
+/* Copy the first n bits from other into self (starting at a).
+   self[a:a+n] = other[:n] */
 static void
 copy2(bitarrayobject *self, Py_ssize_t a,
       bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
@@ -377,7 +379,8 @@ copy2(bitarrayobject *self, Py_ssize_t a,
     }
 }
 
-/* starting at start, delete n bits from self */
+/* Starting at start, delete n bits from self.
+   del self[start:start+n] */
 static int
 delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 {
@@ -395,7 +398,7 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 
     if (n == 0)              /* nothing to delete */
         return 0;
-    if (start + n == nbits)  /* delete at end, nothing to move */
+    if (start + n == nbits)  /* delete end, nothing to move */
         return resize(self, nbits - n);
 
     s_bits = (n % 8) ? (8 - n % 8) : 0;  /* bit shift to right */
@@ -418,7 +421,8 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     return resize(self, nbits - n);
 }
 
-/* starting at start, insert n (uninitialized) bits into self */
+/* Starting at start, insert n (uninitialized) bits into self.
+   self[start:start] = bitarray(n) */
 static int
 insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 {
@@ -502,7 +506,7 @@ repeat(bitarrayobject *self, Py_ssize_t m)
     return 0;
 }
 
-/* set the bits from start to stop (excluding) in self to vi */
+/* Set bits in range(a, b) in self to vi.  self[a:b] = vi */
 static void
 setrange(bitarrayobject *self, Py_ssize_t start, Py_ssize_t stop, int vi)
 {
