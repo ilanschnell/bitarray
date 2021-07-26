@@ -665,9 +665,6 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
     const Py_ssize_t self_nbits = self->nbits;
     const Py_ssize_t other_nbits = other->nbits;
 
-    if (other_nbits == 0)
-        return 0;
-
     if (resize(self, self_nbits + other_nbits) < 0)
         return -1;
 
