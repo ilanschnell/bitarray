@@ -392,8 +392,11 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     /* start == nbits implies n == 0 */
     assert(start != nbits || n == 0);
 
-    if (n == 0)  /* nothing to delete */
+    if (n == 0)              /* nothing to delete */
         return 0;
+    if (start + n == nbits)  /* delete at end, nothing to move */
+        return resize(self, nbits - n);
+
     assert(0 <= s_bits && s_bits < 8);
     if (resize(self, nbits + s_bits) < 0)
         return -1;
@@ -427,10 +430,11 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     assert(0 <= start && start <= nbits);
     assert(n >= 0);
 
-    if (n == 0)  /* nothing to insert */
+    if (n == 0)          /* nothing to insert */
         return 0;
-    if (start == nbits)  /* insert at end - nothing needs to be moved */
+    if (start == nbits)  /* insert at end - nothing to  move */
         return resize(self, nbits + n);
+
     if (resize(self, nbits + n + 8) < 0)
         return -1;
 
