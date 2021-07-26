@@ -309,9 +309,9 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
         bytereverse(self, a, b);
 }
 
-/* copy other[a:b] onto self (which must have length b - a) */
+/* copy other[a:b] onto self which must have length b - a */
 static void
-getrange(bitarrayobject *self, bitarrayobject *other,
+copy_range(bitarrayobject *self, bitarrayobject *other,
          Py_ssize_t a, Py_ssize_t b)
 {
     const Py_ssize_t n = b - a;
@@ -1887,7 +1887,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
         res = newbitarrayobject(Py_TYPE(self), slicelength, self->endian);
 #define rr  ((bitarrayobject *) res)
         if (step == 1) {
-            getrange(rr, self, start, start + slicelength);
+            copy_range(rr, self, start, start + slicelength);
         }
         else {
             Py_ssize_t i, j;
