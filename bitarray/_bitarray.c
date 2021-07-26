@@ -191,6 +191,76 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 #define UINT64_WORDS(bytes)  0
 #endif
 
+/* shift bits by n in byte-range(a, b) using byte level shifts to right */
+static void
+_shift_r8_bl(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
+{
+    Py_ssize_t i;
+
+    assert(0 < n && n < 8 && a <= b);
+    assert(0 <= a && a <= Py_SIZE(self));
+    assert(0 <= b && b <= Py_SIZE(self));
+    /* when PY_UINT64_T is available, ensure we don't call this function
+       with large ranges */
+    assert(UINT64_WORDS(8) == 0 || b - a < 8);
+
+#define ucb  ((unsigned char *) (self)->ob_item)
+    for (i = b - 1; i >= a; i--) {
+        ucb[i] <<= n;    /* shift byte (from highest to lowest) */
+        if (i != a)      /* add shifted next lower byte */
+            ucb[i] |= ucb[i - 1] >> (8 - n);
+    }
+#undef ucb
+}
+
+/* shift bits in byte-range(a, b) by n bits to right (using uin64 shifts) */
+static void
+shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
+{
+    const Py_ssize_t bword = UINT64_WORDS(b);
+    const Py_ssize_t aword = Py_MIN(UINT64_WORDS(a + 7), bword);
+    Py_ssize_t i;
+
+    assert(0 <= n && n < 8 && a <= b);
+    assert(0 <= a && a <= Py_SIZE(self));
+    assert(0 <= b && b <= Py_SIZE(self));
+    assert(0 <= bword && bword <= Py_SIZE(self) / 8);
+    assert(0 <= aword && aword <= bword);
+    assert(UINT64_WORDS(8) == 0 || b < 8 * bword + 8);
+    assert(UINT64_WORDS(8) == 0 || a < 8 * aword + 8);
+    if (n == 0)
+        return;
+
+    if (self->endian == ENDIAN_BIG)
+        bytereverse(self, a, b);
+
+#define ucb  ((unsigned char *) (self)->ob_item)
+    if (UINT64_WORDS(8) && b >= a + 8) {
+        _shift_r8_bl(self, 8 * bword, b, n);
+        if (a < 8 * bword && 8 * bword < b)
+            /* add byte from word below */
+            ucb[8 * bword] |= ucb[8 * bword - 1] >> (8 - n);
+
+        for (i = bword - 1; i >= aword; i--) {
+            UINT64_BUFFER(self)[i] <<= n; /* shift word */
+            if (i != aword)    /* add shifted byte from next lower word */
+                ucb[8 * i] |= ucb[8 * i - 1] >> (8 - n);
+        }
+        if (a < 8 * aword && 8 * aword < b)
+            /* add byte from below */
+            ucb[8 * aword] |= ucb[8 * aword - 1] >> (8 - n);
+
+        _shift_r8_bl(self, a, 8 * aword, n);
+    }
+    else {
+        _shift_r8_bl(self, a, b, n);
+    }
+#undef ucb
+
+    if (self->endian == ENDIAN_BIG)
+        bytereverse(self, a, b);
+}
+
 /* copy n bits from other (starting at b) onto self (starting at a) */
 static void
 copy_n(bitarrayobject *self, Py_ssize_t a,
@@ -1519,6 +1589,27 @@ bitarray_sizeof(bitarrayobject *self)
 PyDoc_STRVAR(sizeof_doc,
 "Return the size of the bitarray in memory, in bytes.");
 
+/* ----------------- functionality exposed for testing ----------------- */
+
+static PyObject *
+bitarray_shift_r8(bitarrayobject *self, PyObject *args)
+{
+    Py_ssize_t a, b;
+    int n;
+
+    if (!PyArg_ParseTuple(args, "nni", &a, &b, &n))
+        return NULL;
+
+    if (0 <= a && a <= Py_SIZE(self) &&
+        0 <= b && b <= Py_SIZE(self) &&
+        0 <= n && n < 8 && a <= b)
+    {
+        shift_r8(self, a, b, n);
+        Py_RETURN_NONE;
+    }
+    PyErr_SetString(PyExc_ValueError, "variable out of range");
+    return NULL;
+}
 
 /* ----------------------- bitarray_as_sequence ------------------------ */
 
@@ -3005,6 +3096,9 @@ static PyMethodDef bitarray_methods[] = {
      reduce_doc},
     {"__sizeof__",   (PyCFunction) bitarray_sizeof,      METH_NOARGS,
      sizeof_doc},
+
+    /* functionality exposed for testing */
+    {"_shift_r8",    (PyCFunction) bitarray_shift_r8,    METH_VARARGS, 0},
 
     {NULL,           NULL}  /* sentinel */
 };
