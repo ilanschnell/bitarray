@@ -330,8 +330,9 @@ copy_range(bitarrayobject *self, bitarrayobject *other,
         const int s_bits = 8 - a % 8;  /* s_bits = bit shift right */
 
         assert(a + s_bits == 8 * (a / 8 + 1) && s_bits < 8);
-        copy_n(self, 0, other, a + s_bits, n - s_bits);
+        copy_n(self, 0, other, a + s_bits, n - s_bits);  /* aligned copy */
         shift_r8(self, 0, Py_SIZE(self), s_bits);
+        /* copy remaining few bits */
         copy_n(self, 0, other, a, s_bits);
     }
     else {
@@ -367,7 +368,7 @@ copy2(bitarrayobject *self, Py_ssize_t a,
         tmp1 = self->ob_item[p1];
         tmp2 = self->ob_item[p2];
 
-        copy_n(self, BITS(p1), other, b, n);
+        copy_n(self, BITS(p1), other, b, n);  /* aligned copy */
         shift_r8(self, p1, p2 + 1, s_bits);
 
         for (i = 0; i < s_bits; i++)
@@ -414,7 +415,7 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
         shift_r8(self, p, Py_SIZE(self), s_bits);
         s_bytes++;
     }
-    if (s_bytes)
+    if (s_bytes)                /* aligned copy */
         copy_n(self, pbits, self, pbits + BITS(s_bytes),
                self->nbits - pbits - BITS(s_bytes));
 
@@ -452,7 +453,7 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     tmp = self->ob_item[p];
     shift_r8(self, p, Py_SIZE(self), s_bits);
 
-    if (s_bytes)
+    if (s_bytes)         /* aligned copy */
         copy_n(self, BITS(p + s_bytes), self, pbits, nbits + s_bits - pbits);
 
     if (s_bits) {
