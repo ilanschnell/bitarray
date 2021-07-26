@@ -261,7 +261,8 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
         bytereverse(self, a, b);
 }
 
-/* copy n bits from other (starting at b) onto self (starting at a) */
+/* Copy n bits from other (starting at b) onto self (starting at a).
+   self[a:a+n] = other[b:b+n] */
 static void
 copy_n(bitarrayobject *self, Py_ssize_t a,
        bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
@@ -295,6 +296,8 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
 
         return;
     }
+    /* not required below, but ensuring we don't use slow copies */
+    assert(n <= 8);
 
     /* The two different types of looping are only relevant when copying
        self to self, i.e. when copying a piece of an bitarrayobject onto
