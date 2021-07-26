@@ -247,7 +247,7 @@ _shift_r8_bl(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 {
     Py_ssize_t i;
 
-    assert(0 < n && n < 8);
+    assert(0 < n && n < 8 && a <= b);
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
     assert(UINT64_WORDS(8) == 0 || a <= b && b - a < 8);
@@ -269,10 +269,9 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
     const Py_ssize_t aword = Py_MIN(UINT64_WORDS(a + 7), bword);
     Py_ssize_t i;
 
-    assert(0 <= n && n < 8);
+    assert(0 <= n && n < 8 && a <= b);
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
-    assert(a <= b);
     assert(0 <= bword && bword <= Py_SIZE(self) / 8);
     assert(0 <= aword && aword <= bword);
     assert(UINT64_WORDS(8) == 0 || b < 8 * bword + 8);
