@@ -693,10 +693,10 @@ class SliceTests(unittest.TestCase, Util):
             for m in 0, 1, 10, 99:
                 x = urandom(m)
                 b = a.copy()
-                b[n:n] = x
+                b[n:n] = x  # insert at end - extend
                 self.assertEqual(b, a + x)
                 self.assertEqual(len(b), len(a) + len(x))
-                b[0:0] = x
+                b[0:0] = x  # insert at 0 - prepend
                 self.assertEqual(b, x + a + x)
                 self.check_obj(b)
                 self.assertEqual(len(b), len(a) + 2 * len(x))
@@ -977,10 +977,12 @@ class SliceTests(unittest.TestCase, Util):
         for n in 0, 1, 10, 73:
             a = urandom(n)
             b = a.copy()
-            del b[0:0]
-            del b[n:n]
-            self.assertEqual(a, b)
-            del b[0:n]
+            del b[:0]
+            del b[n:]
+            self.assertEqual(b, a)
+            del b[10:]  # delete at end
+            self.assertEqual(b, a[:10])
+            del b[:]  # clear
             self.assertEqual(len(b), 0)
             self.check_obj(b)
 
