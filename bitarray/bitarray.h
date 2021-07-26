@@ -37,9 +37,9 @@ typedef struct {
 /* assert that .nbits is in agreement with .ob_size */
 #define assert_nbits(self)  assert(BYTES((self)->nbits) == Py_SIZE(self))
 
-/* assert index i is in range */
-#define assert_bit_in_range(self, i)  assert(0 <= (i) && (i) < (self)->nbits)
-#define assert_byte_in_range(self, i)  assert(0 <= (i) && (i) < Py_SIZE(self))
+/* assert byte index is in range */
+#define assert_byte_in_range(self, j)  \
+    assert(self->ob_item && 0 <= (j) && (j) < Py_SIZE(self))
 
 /* --------------- definitions not specific to bitarray ---------------- */
 
@@ -81,7 +81,6 @@ static inline int
 getbit(bitarrayobject *self, Py_ssize_t i)
 {
     assert_nbits(self);
-    assert_bit_in_range(self, i);
     assert_byte_in_range(self, i >> 3);
     return (self->ob_item[i >> 3] & BITMASK(self->endian, i) ? 1 : 0);
 }
@@ -92,7 +91,6 @@ setbit(bitarrayobject *self, Py_ssize_t i, int bit)
     char *cp, mask;
 
     assert_nbits(self);
-    assert_bit_in_range(self, i);
     assert_byte_in_range(self, i >> 3);
     mask = BITMASK(self->endian, i);
     cp = self->ob_item + (i >> 3);
