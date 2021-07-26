@@ -311,32 +311,32 @@ repeat(bitarrayobject *self, Py_ssize_t m)
     return 0;
 }
 
-/* set the bits from start to stop (excluding) in self to vi */
+/* Set bits in range(a, b) in self to vi.  self[a:b] = vi */
 static void
-setrange(bitarrayobject *self, Py_ssize_t start, Py_ssize_t stop, int vi)
+setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 {
     Py_ssize_t i;
 
-    assert(0 <= start && start <= self->nbits);
-    assert(0 <= stop && stop <= self->nbits);
+    assert(0 <= a && a <= self->nbits);
+    assert(0 <= b && b <= self->nbits);
     assert(0 <= vi && vi <= 1);
 
-    if (self->nbits == 0 || start >= stop)
+    if (self->nbits == 0 || a >= b)
         return;
 
-    if (stop >= start + 8) {
-        const Py_ssize_t byte_start = BYTES(start);
-        const Py_ssize_t byte_stop = stop >> 3;
+    if (b >= a + 8) {
+        const Py_ssize_t byte_a = BYTES(a);
+        const Py_ssize_t byte_b = b / 8;
 
-        for (i = start; i < BITS(byte_start); i++)
+        for (i = a; i < BITS(byte_a); i++)
             setbit(self, i, vi);
-        memset(self->ob_item + byte_start, vi ? 0xff : 0x00,
-               (size_t) (byte_stop - byte_start));
-        for (i = BITS(byte_stop); i < stop; i++)
+        memset(self->ob_item + byte_a, vi ? 0xff : 0x00,
+               (size_t) (byte_b - byte_a));
+        for (i = BITS(byte_b); i < b; i++)
             setbit(self, i, vi);
     }
     else {
-        for (i = start; i < stop; i++)
+        for (i = a; i < b; i++)
             setbit(self, i, vi);
     }
 }
