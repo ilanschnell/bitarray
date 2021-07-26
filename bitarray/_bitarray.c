@@ -225,7 +225,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
 
         return;
     }
-    /* not required below, but used to ensure we don't use slow copies */
+    /* not required below, but ensuring we don't use slow copies */
     assert(n <= 8);
 
     /* The two different types of looping are only relevant when copying
@@ -322,7 +322,7 @@ copy_range(bitarrayobject *self, bitarrayobject *other,
     assert(self != other);
 
     if (a % 8 && n > 8) {
-        int s_bits = 8 - a % 8;  /* s_bits = bit shift right */
+        const int s_bits = 8 - a % 8;  /* s_bits = bit shift right */
 
         assert(a + s_bits == 8 * (a / 8 + 1));
         copy_n(self, 0, other, a + s_bits, n - s_bits);
@@ -1711,9 +1711,10 @@ PyDoc_STRVAR(sizeof_doc,
 static PyObject *
 bitarray_shift_r8(bitarrayobject *self, PyObject *args)
 {
-    Py_ssize_t a, b, n;
+    Py_ssize_t a, b;
+    int n;
 
-    if (!PyArg_ParseTuple(args, "nnn", &a, &b, &n))
+    if (!PyArg_ParseTuple(args, "nni", &a, &b, &n))
         return NULL;
 
     if (0 <= a && a <= Py_SIZE(self) &&
