@@ -396,7 +396,6 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     if (resize(self, nbits + 8) < 0)
         return -1;
 
-    assert(nbits > 0);
     assert_byte_in_range(self, p);
     tmp = self->ob_item[p];
     if (n % 8) {                /* shift n % 8 bits to left */
@@ -433,7 +432,6 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     if (resize(self, nbits + n + 8) < 0)
         return -1;
 
-    assert(nbits > 0);
     assert_byte_in_range(self, p);
     tmp = self->ob_item[p];
     shift_r8(self, p, Py_SIZE(self), n % 8);
@@ -442,10 +440,8 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
         copy_n(self, BITS(p + s_bytes), self, BITS(p), nbits - 8 * p + 8);
 
     if (n % 8) {
-        for (i = 0; i < start % 8; i++) {
-            assert_bit_in_range(self, 8 * p + i);
+        for (i = 0; i < start % 8; i++)
             setbit(self, 8 * p + i, tmp & BITMASK(self->endian, i));
-        }
     }
     return resize(self, nbits + n);
 }
