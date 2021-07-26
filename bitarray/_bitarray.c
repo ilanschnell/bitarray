@@ -337,7 +337,7 @@ copy_range(bitarrayobject *self, bitarrayobject *other,
     }
 }
 
-/* Copy the first n bits from other into self (starting at a).
+/* Copy the first n bits from other to self (starting at a).
    self[a:a+n] = other[:n] */
 static void
 copy2(bitarrayobject *self, Py_ssize_t a,
@@ -345,7 +345,7 @@ copy2(bitarrayobject *self, Py_ssize_t a,
 {
     const int s_bits = a % 8;  /* right bit shift of self */
 
-    assert(b == 0);      /* XXX currently parameter b not supported */
+    assert(b == 0);  /* parameter b is currently not supported */
     assert(0 <= n && n <= self->nbits && n <= other->nbits);
     assert(0 <= a && a <= self->nbits - n);
     assert(0 <= b && b <= other->nbits - n);
