@@ -383,7 +383,7 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     const Py_ssize_t nbits = self->nbits;
     const Py_ssize_t p = start / 8;
     Py_ssize_t s_bytes = n / 8;              /* byte shift to left */
-    int s_bits = (n % 8) ? (8 - n % 8) : 0;  /* bit shift to right */
+    int s_bits;
     Py_ssize_t i;
     char tmp;
 
@@ -397,7 +397,7 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     if (start + n == nbits)  /* delete at end, nothing to move */
         return resize(self, nbits - n);
 
-    assert(0 <= s_bits && s_bits < 8);
+    s_bits = (n % 8) ? (8 - n % 8) : 0;  /* bit shift to right */
     if (resize(self, nbits + s_bits) < 0)
         return -1;
 
