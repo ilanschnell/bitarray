@@ -2206,47 +2206,6 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
     }
 }
 
-static void
-shift_right(bitarrayobject *self, Py_ssize_t n)
-{
-    const Py_ssize_t nbytes = Py_SIZE(self);
-    const Py_ssize_t nwords = UINT64_WORDS(nbytes);
-    const Py_ssize_t s_bytes = n / 8;   /* byte shift */
-    const int s_bits = n % 8;           /* bit shift */
-    Py_ssize_t i;
-
-    assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
-    setunused(self);
-    if (self->endian == ENDIAN_BIG && s_bits)
-        /* only reverse relevant bytes - not the ones getting shifted out */
-        bytereverse(self, 0, nbytes - s_bytes);
-
-    if (s_bits) {
-#define ucb  ((unsigned char *) (self)->ob_item)
-        for (i = nbytes - 1; i >= 8 * nwords; i--) {
-            ucb[i] <<= s_bits;    /* shift byte (from highest to lowest) */
-            if (i != 8 * nwords)  /* add shifted next lower byte */
-                ucb[i] |= ucb[i - 1] >> (8 - s_bits);
-        }
-        if (nwords && nbytes % 8) /* add byte from word */
-            ucb[8 * nwords] |= ucb[8 * nwords - 1] >> (8 - s_bits);
-
-        for (i = nwords - 1; i >= 0; i--) {
-            UINT64_BUFFER(self)[i] <<= s_bits; /* shift word */
-            if (i != 0)         /* add shifted byte from next lower word */
-                ucb[8 * i] |= ucb[8 * i - 1] >> (8 - s_bits);
-        }
-#undef ucb
-    }
-    if (self->endian == ENDIAN_BIG && s_bits)  /* (re-) reverse */
-        bytereverse(self, 0, nbytes - s_bytes);
-
-    if (s_bytes) {              /* shift bytes and zero blanks */
-        memmove(self->ob_item + s_bytes, self->ob_item, nbytes - s_bytes);
-        memset(self->ob_item, 0x00, (size_t) s_bytes);
-    }
-}
-
 /* shift bitarray n positions to left (right=0) or right (right=1) */
 static void
 shift(bitarrayobject *self, Py_ssize_t n, int right)
@@ -2261,10 +2220,13 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
     }
 
     assert(0 < n && n < nbits);
-    if (right)                  /* rshift */
-        shift_right(self, n);
-    else                        /* lshift */
+    if (right) {                  /* rshift */
+        copy2(self, n, self, 0, nbits - n);
+        setrange(self, 0, n, 0);
+    }
+    else {                        /* lshift */
         shift_left(self, n);
+    }
 }
 
 /* check shift arguments and return the shift count, -1 on error */
