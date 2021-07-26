@@ -388,11 +388,11 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 
     assert(0 <= start && start <= nbits);
     assert(0 <= n && n <= nbits - start);
+    /* start == nbits implies n == 0 */
+    assert(start != nbits || n == 0);
 
     if (n == 0)
         return 0;
-    if (start == nbits)
-        return resize(self, nbits - n);
     if (resize(self, nbits + 8) < 0)
         return -1;
 
