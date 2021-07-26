@@ -309,6 +309,33 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     }
 }
 
+/* Copy other bits in range(a, b) onto self which must have length b - a.
+   other and self cannot be the same object.
+   self = other[a:b] */
+static void
+copy_range(bitarrayobject *self, bitarrayobject *other,
+           Py_ssize_t a, Py_ssize_t b)
+{
+    const Py_ssize_t n = b - a;
+
+    assert(0 <= a && a <= other->nbits);
+    assert(0 <= b && b <= other->nbits);
+    assert(n >= 0 && self->nbits == n);
+    assert(self != other);
+
+    if (a % 8 && n > 8) {
+        const int s_bits = 8 - a % 8;  /* s_bits = bit shift right */
+
+        assert(a + s_bits == 8 * (a / 8 + 1) && s_bits < 8);
+        copy_n(self, 0, other, a + s_bits, n - s_bits);
+        shift_r8(self, 0, Py_SIZE(self), s_bits);
+        copy_n(self, 0, other, a, s_bits);
+    }
+    else {
+        copy_n(self, 0, other, a, n);
+    }
+}
+
 /* starting at start, delete n bits from self */
 static int
 delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
@@ -1743,7 +1770,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
     }
 
     if (PySlice_Check(item)) {
-        Py_ssize_t start, stop, step, slicelength, i, j;
+        Py_ssize_t start, stop, step, slicelength;
         PyObject *res;
 
         if (PySlice_GetIndicesEx(item, self->nbits,
@@ -1753,14 +1780,17 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
         res = newbitarrayobject(Py_TYPE(self), slicelength, self->endian);
         if (res == NULL)
             return NULL;
-
+#define rr  ((bitarrayobject *) res)
         if (step == 1) {
-            copy_n((bitarrayobject *) res, 0, self, start, slicelength);
+            copy_range(rr, self, start, start + slicelength);
         }
         else {
+            Py_ssize_t i, j;
+
             for (i = 0, j = start; i < slicelength; i++, j += step)
-                setbit((bitarrayobject *) res, i, getbit(self, j));
+                setbit(rr, i, getbit(self, j));
         }
+#undef rr
         return res;
     }
 
