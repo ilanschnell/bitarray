@@ -324,7 +324,7 @@ copy_range(bitarrayobject *self, bitarrayobject *other,
     if (a % 8 && n > 8) {
         const int s_bits = 8 - a % 8;  /* s_bits = bit shift right */
 
-        assert(a + s_bits == 8 * (a / 8 + 1));
+        assert(a + s_bits == 8 * (a / 8 + 1) && s_bits < 8);
         copy_n(self, 0, other, a + s_bits, n - s_bits);
         shift_r8(self, 0, Py_SIZE(self), s_bits);
         copy_n(self, 0, other, a, s_bits);
@@ -381,8 +381,8 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 {
     const Py_ssize_t nbits = self->nbits;
     const Py_ssize_t p = start / 8;
-    Py_ssize_t s_bytes = n / 8;             /* byte shift to left */
-    int s_bits = n % 8 ? 8 - n % 8 : 0;     /* bit shift to right */
+    Py_ssize_t s_bytes = n / 8;              /* byte shift to left */
+    int s_bits = (n % 8) ? (8 - n % 8) : 0;  /* bit shift to right */
     Py_ssize_t i;
     char tmp;
 
