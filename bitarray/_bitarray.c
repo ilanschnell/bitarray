@@ -260,8 +260,8 @@ _shift_r8_bl(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 #undef ucb
 }
 
-/* shift bits in range(a, b) by n bits to right (using uin64 shifts) -
-   leave bitarray size untouched, which means a few bits get pushed out */
+/* Shift bits in range(a, b) by n bits to right (using uin64 shifts).
+   Leave bitarray size untouched, which means a few bits get pushed out */
 static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 {
@@ -309,7 +309,8 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
         bytereverse(self, a, b);
 }
 
-/* copy other[a:b] onto self which must have length b - a */
+/* Copy other[a:b] onto self which must have length b - a.
+   other and self cannot be the same object.  */
 static void
 copy_range(bitarrayobject *self, bitarrayobject *other,
          Py_ssize_t a, Py_ssize_t b)
@@ -334,8 +335,8 @@ copy_range(bitarrayobject *self, bitarrayobject *other,
     }
 }
 
-/* copy n bits from other (starting at b) into self (starting at a) -
-   self is not resized */
+/* copy n bits from other (starting at b) into self (starting at a)
+   self[a:a+n] = other[0:n] */
 static void
 copy2(bitarrayobject *self, Py_ssize_t a,
       bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
