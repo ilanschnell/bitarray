@@ -586,22 +586,33 @@ class InternalTests(unittest.TestCase, Util):
         y = x.tolist()
         if n > 0 and a != b:
             y[8 * a : 8 * b] = n * [0] + y[8 * a : 8 * b - n]
+            del y[len(x):]
         self.assertEqual(len(y), len(x))
         return bitarray(y, x.endian())
 
+    def check(self, x, a, b, n):
+        if a <= b and 0 <= n < 8:
+            y = x.copy()
+            x._shift_r8(a, b, n)
+            self.assertEQUAL(x, self.shift_r8(y, a, b, n))
+        else:
+            self.assertRaises(ValueError, x._shift_r8, a, b, n)
+
     def test_shift_r8_random(self):
-        for N in range(1, 10):
-            for _ in range(10):
-                x = urandom(8 * N, self.random_endian())
-                cx = x.copy()
-                a = randint(0, N)
-                b = randint(0, N)
-                n = randint(0, 7)
-                if a <= b:
-                    x._shift_r8(a, b, n)
-                    self.assertEQUAL(x, self.shift_r8(cx, a, b, n))
-                else:
-                    self.assertRaises(ValueError, x._shift_r8, a, b, n)
+        for x in self.randombitarrays():
+            N = bits2bytes(len(x))
+            a = randint(0, N)
+            b = randint(0, N)
+            n = randint(0, 7)
+            self.check(x, a, b, n)
+
+    def test_shift_r8_random_bytes(self):
+        for N in range(100):
+            x = urandom(8 * N, self.random_endian())
+            a = randint(0, N)
+            b = randint(0, N)
+            n = randint(0, 7)
+            self.check(x, a, b, n)
 
 tests.append(InternalTests)
 
