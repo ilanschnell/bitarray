@@ -266,7 +266,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 
    When the start positions (a and b) are multiple of 8, this function uses
    memmove().  Otherwise, it uses sequence of getbit(), setbit() calls.
-   As the later case is quite slow, n is artificially limited to 8.
+   As the latter case is quite slow, n is artificially limited to 8.
 
    When other functions, such as copy_range(), copy2(), delete_n() and
    insert_n(), need to copy unaligned arrays, shift_r8() is used to align
