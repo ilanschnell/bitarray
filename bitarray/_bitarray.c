@@ -341,7 +341,7 @@ copy_range(bitarrayobject *self, bitarrayobject *other,
         assert(a + s_bits == 8 * (a / 8 + 1) && s_bits < 8);
         copy_n(self, 0, other, a + s_bits, n - s_bits);  /* aligned copy */
         shift_r8(self, 0, Py_SIZE(self), s_bits);
-        /* copy remaining few bits */
+        /* copy remaining few unaligned bits */
         copy_n(self, 0, other, a, s_bits);
     }
     else {
@@ -388,7 +388,8 @@ copy2(bitarrayobject *self, Py_ssize_t a,
             setbit(self, i, tmp2 & BITMASK(self->endian, i % 8));
     }
     else {
-        copy_n(self, a, other, b, n);
+        assert(a % 8 == 0 && b == 0);
+        copy_n(self, a, other, b, n);         /* aligned copy */
     }
 }
 
