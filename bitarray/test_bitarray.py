@@ -560,18 +560,25 @@ class InternalTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray())
 
         a = urandom(80)
-        b = a.copy()
-        a._shift_r8(7, 7, 5)
-        self.assertEqual(a, b)
+        for i in range(11):
+            b = a.copy()
+            a._shift_r8(i, i, 5)
+            self.assertEqual(a, b)
 
     def test_shift_r8_explicit(self):
-        a = bitarray('11000100 01111000 10110101 11101011 11001000')
-        b = bitarray(a)
-        a._shift_r8(2, 2, 7)
-        self.assertEqual(a, b)
-        a._shift_r8(1, 4, 5)
-        self.assertEqual(
-            a, bitarray('11000100 00000011 11000101 10101111 11001000'))
+        x = bitarray('11000100 11111111 11100111 11111111 00001000')
+        y = bitarray('11000100 00000111 11111111 00111111 00001000')
+        x._shift_r8(1, 4, 5)
+        self.assertEqual(x, y)
+
+        x = bitarray('11000100 11110')
+        y = bitarray('00011000 10011')
+        x._shift_r8(0, 2, 3)
+        self.assertEqual(x, y)
+
+        self.assertRaises(ValueError, x._shift_r8, 0, 3, 0) # b=3 out of range
+        self.assertRaises(ValueError, x._shift_r8, 2, 1, 0) # not a=2 <= b=1
+        self.assertRaises(ValueError, x._shift_r8, 0, 2, 8) # not n=8 < 8
 
     def shift_r8(self, x, a, b, n):
         self.assertTrue(a <= b)
@@ -583,17 +590,18 @@ class InternalTests(unittest.TestCase, Util):
         return bitarray(y, x.endian())
 
     def test_shift_r8_random(self):
-        for N in range(1, 100):
-            x = urandom(8 * N, self.random_endian())
-            cx = x.copy()
-            a = randint(0, N)
-            b = randint(0, N)
-            n = randint(0, 7)
-            if a <= b:
-                x._shift_r8(a, b, n)
-                self.assertEQUAL(x, self.shift_r8(cx, a, b, n))
-            else:
-                self.assertRaises(ValueError, x._shift_r8, a, b, n)
+        for N in range(1, 10):
+            for _ in range(10):
+                x = urandom(8 * N, self.random_endian())
+                cx = x.copy()
+                a = randint(0, N)
+                b = randint(0, N)
+                n = randint(0, 7)
+                if a <= b:
+                    x._shift_r8(a, b, n)
+                    self.assertEQUAL(x, self.shift_r8(cx, a, b, n))
+                else:
+                    self.assertRaises(ValueError, x._shift_r8, a, b, n)
 
 tests.append(InternalTests)
 
