@@ -1952,11 +1952,11 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
 
     if (step == 1) {
         if (increase > 0) {        /* increase self */
-            if (insert_n(self, start, increase) < 0)
+            if (insert_n(self, start + slicelength, increase) < 0)
                 goto error;
         }
         if (increase < 0) {        /* decrease self */
-            if (delete_n(self, start, -increase) < 0)
+            if (delete_n(self, start + aa->nbits, -increase) < 0)
                 goto error;
         }
         /* copy the new values into self */
