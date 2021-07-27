@@ -357,9 +357,11 @@ copy_range(bitarrayobject *self, bitarrayobject *other,
    have the parameter is for consistency, as we wish to have the same
    signature as copy_n().  Also, if parameter b ever gets supported (I've
    looked into it but things get complicated), we can use copy2() as
-   a drop-in replacement.  The "2" in the name "copy2" is actually twofold:
-   (i) version 2 of copy_n  (ii) copy2 as copy "to"
-*/
+   a drop-in replacement.  This would actually remove the need for
+   copy_range() and make delete_n() and insert_n() as trivial as they used
+   to be.  The "2" in the name "copy2" is actually twofold:
+   (i) version 2 of copy_n  (ii) copy2 as copy "to".
+ */
 static void
 copy2(bitarrayobject *self, Py_ssize_t a,
       bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
