@@ -320,35 +320,6 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     }
 }
 
-/* Copy other bits in range(a, b) onto self which must have length b - a.
-   other and self cannot be the same object.
-   self = other[a:b] */
-static void
-copy_range(bitarrayobject *self, bitarrayobject *other,
-           Py_ssize_t a, Py_ssize_t b)
-{
-    const Py_ssize_t n = b - a;
-
-    assert(0 <= a && a <= other->nbits);
-    assert(0 <= b && b <= other->nbits);
-    assert(n >= 0 && self->nbits == n);
-    assert(self != other);
-
-    if (a % 8 && n > 8) {
-        const int s_bits = 8 - a % 8;  /* s_bits = bit shift right */
-
-        assert(a + s_bits == 8 * (a / 8 + 1) && s_bits < 8);
-        copy_n(self, 0, other, a + s_bits, n - s_bits);  /* aligned copy */
-        shift_r8(self, 0, Py_SIZE(self), s_bits);
-        /* copy remaining few unaligned bits */
-        copy_n(self, 0, other, a, s_bits);
-    }
-    else {
-        assert(a % 8 == 0 || n <= 8);
-        copy_n(self, 0, other, a, n);
-    }
-}
-
 /* Copy n bits from other (starting at b) onto self (starting at a).
    self[a:a+n] = other[b:b+n]
 
@@ -357,8 +328,8 @@ copy_range(bitarrayobject *self, bitarrayobject *other,
    signature as copy_n().  Also, if parameter b ever gets supported (I've
    looked into it but things get complicated), we can use copy2() as
    a drop-in replacement.  This would actually remove the need for
-   copy_range() and make delete_n() and insert_n() as trivial as they used
-   to be.  The "2" in the name "copy2" is actually twofold:
+   copy_range() and make delete_n(), insert_n() and shift_left() as trivial
+   as they used to be.  The "2" in the name "copy2" is actually twofold:
    (i) version 2 of copy_n  (ii) copy2 as copy "to".
  */
 static void
@@ -399,6 +370,35 @@ copy2(bitarrayobject *self, Py_ssize_t a,
     else {
         assert(a % 8 == 0 && b == 0);
         copy_n(self, a, other, b, n);         /* aligned copy */
+    }
+}
+
+/* Copy other bits in range(a, b) onto self which must have length b - a.
+   other and self cannot be the same object.
+   self = other[a:b] */
+static void
+copy_range(bitarrayobject *self, bitarrayobject *other,
+           Py_ssize_t a, Py_ssize_t b)
+{
+    const Py_ssize_t n = b - a;
+
+    assert(0 <= a && a <= other->nbits);
+    assert(0 <= b && b <= other->nbits);
+    assert(n >= 0 && self->nbits == n);
+    assert(self != other);
+
+    if (a % 8 && n > 8) {
+        const int s_bits = 8 - a % 8;  /* bit shift right */
+
+        assert(a + s_bits == 8 * (a / 8 + 1) && s_bits < 8);
+        copy_n(self, 0, other, a + s_bits, n - s_bits);  /* aligned copy */
+        shift_r8(self, 0, Py_SIZE(self), s_bits);
+        /* copy remaining few unaligned bits */
+        copy_n(self, 0, other, a, s_bits);
+    }
+    else {
+        assert(a % 8 == 0 || n <= 8);
+        copy_n(self, 0, other, a, n);
     }
 }
 
