@@ -191,7 +191,78 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 #define UINT64_WORDS(bytes)  0
 #endif
 
-/* copy n bits from other (starting at b) onto self (starting at a) */
+/* shift bits by n in byte-range(a, b) using byte level shifts to right */
+static void
+_shift_r8_bl(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
+{
+    Py_ssize_t i;
+
+    assert(0 < n && n < 8 && a <= b);
+    assert(0 <= a && a <= Py_SIZE(self));
+    assert(0 <= b && b <= Py_SIZE(self));
+    /* when PY_UINT64_T is available, ensure we don't call this function
+       with large ranges */
+    assert(UINT64_WORDS(8) == 0 || b - a < 8);
+
+#define ucb  ((unsigned char *) (self)->ob_item)
+    for (i = b - 1; i >= a; i--) {
+        ucb[i] <<= n;    /* shift byte (from highest to lowest) */
+        if (i != a)      /* add shifted next lower byte */
+            ucb[i] |= ucb[i - 1] >> (8 - n);
+    }
+#undef ucb
+}
+
+/* shift bits in byte-range(a, b) by n bits to right (using uint64 shifts) */
+static void
+shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
+{
+    const Py_ssize_t bword = UINT64_WORDS(b);
+    const Py_ssize_t aword = Py_MIN(UINT64_WORDS(a + 7), bword);
+    Py_ssize_t i;
+
+    assert(0 <= n && n < 8 && a <= b);
+    assert(0 <= a && a <= Py_SIZE(self));
+    assert(0 <= b && b <= Py_SIZE(self));
+    assert(0 <= bword && bword <= Py_SIZE(self) / 8);
+    assert(0 <= aword && aword <= bword);
+    assert(UINT64_WORDS(8) == 0 || b < 8 * bword + 8);
+    assert(UINT64_WORDS(8) == 0 || a < 8 * aword + 8);
+    if (n == 0)
+        return;
+
+    if (self->endian == ENDIAN_BIG)
+        bytereverse(self, a, b);
+
+#define ucb  ((unsigned char *) (self)->ob_item)
+    if (UINT64_WORDS(8) && b >= a + 8) {
+        _shift_r8_bl(self, 8 * bword, b, n);
+        if (a < 8 * bword && 8 * bword < b)
+            /* add byte from word below */
+            ucb[8 * bword] |= ucb[8 * bword - 1] >> (8 - n);
+
+        for (i = bword - 1; i >= aword; i--) {
+            UINT64_BUFFER(self)[i] <<= n; /* shift word */
+            if (i != aword)    /* add shifted byte from next lower word */
+                ucb[8 * i] |= ucb[8 * i - 1] >> (8 - n);
+        }
+        if (a < 8 * aword && 8 * aword < b)
+            /* add byte from below */
+            ucb[8 * aword] |= ucb[8 * aword - 1] >> (8 - n);
+
+        _shift_r8_bl(self, a, 8 * aword, n);
+    }
+    else {
+        _shift_r8_bl(self, a, b, n);
+    }
+#undef ucb
+
+    if (self->endian == ENDIAN_BIG)
+        bytereverse(self, a, b);
+}
+
+/* Copy n bits from other (starting at b) onto self (starting at a).
+   self[a:a+n] = other[b:b+n] */
 static void
 copy_n(bitarrayobject *self, Py_ssize_t a,
        bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
@@ -225,6 +296,8 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
 
         return;
     }
+    /* not required below, but ensuring we don't use slow copies */
+    assert(n <= 8);
 
     /* The two different types of looping are only relevant when copying
        self to self, i.e. when copying a piece of an bitarrayobject onto
@@ -239,28 +312,155 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     }
 }
 
-/* starting at start, delete n bits from self */
+/* Copy other bits in range(a, b) onto self which must have length b - a.
+   other and self cannot be the same object.
+   self = other[a:b] */
+static void
+copy_range(bitarrayobject *self, bitarrayobject *other,
+           Py_ssize_t a, Py_ssize_t b)
+{
+    const Py_ssize_t n = b - a;
+
+    assert(0 <= a && a <= other->nbits);
+    assert(0 <= b && b <= other->nbits);
+    assert(n >= 0 && self->nbits == n);
+    assert(self != other);
+
+    if (a % 8 && n > 8) {
+        const int s_bits = 8 - a % 8;  /* s_bits = bit shift right */
+
+        assert(a + s_bits == 8 * (a / 8 + 1) && s_bits < 8);
+        copy_n(self, 0, other, a + s_bits, n - s_bits);  /* aligned copy */
+        shift_r8(self, 0, Py_SIZE(self), s_bits);
+        /* copy remaining few bits */
+        copy_n(self, 0, other, a, s_bits);
+    }
+    else {
+        copy_n(self, 0, other, a, n);
+    }
+}
+
+/* Copy the first n bits from other to self (starting at a).
+   self[a:a+n] = other[:n] */
+static void
+copy2(bitarrayobject *self, Py_ssize_t a,
+      bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
+{
+    const int s_bits = a % 8;  /* right bit shift of self */
+
+    assert(b == 0);  /* parameter b is currently not supported */
+    assert(0 <= n && n <= self->nbits && n <= other->nbits);
+    assert(0 <= a && a <= self->nbits - n);
+    assert(0 <= b && b <= other->nbits - n);
+    if (n == 0 || self->nbits == 0)
+        return;
+
+    if (s_bits) {
+        /* other will be copied into self[a:c] */
+        const Py_ssize_t c = a + n;
+        const Py_ssize_t p1 = a / 8;
+        const Py_ssize_t p2 = BYTES(c) - 1;
+        char tmp1, tmp2;
+        Py_ssize_t i;
+
+        assert_byte_in_range(self, p1);
+        assert_byte_in_range(self, p2);
+        tmp1 = self->ob_item[p1];
+        tmp2 = self->ob_item[p2];
+
+        copy_n(self, BITS(p1), other, b, n);  /* aligned copy */
+        shift_r8(self, p1, p2 + 1, s_bits);
+
+        for (i = 0; i < s_bits; i++)
+            setbit(self, 8 * p1 + i, tmp1 & BITMASK(self->endian, i));
+
+        for (i = c; i < 8 * p2 + 8 && i < self->nbits; i++)
+            setbit(self, i, tmp2 & BITMASK(self->endian, i % 8));
+    }
+    else {
+        copy_n(self, a, other, b, n);
+    }
+}
+
+/* Starting at start, delete n bits from self.
+   del self[start:start+n] */
 static int
 delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 {
-    assert(0 <= start && start <= self->nbits);
-    assert(0 <= n && n <= self->nbits - start);
+    const Py_ssize_t nbits = self->nbits;
+    const Py_ssize_t p = start / 8;
+    const Py_ssize_t pbits = 8 * p;
+    Py_ssize_t s_bytes = n / 8;              /* byte shift to left */
+    int s_bits;
+    Py_ssize_t i;
+    char tmp;
 
-    copy_n(self, start, self, start + n, self->nbits - start - n);
-    return resize(self, self->nbits - n);
+    assert(0 <= start && start <= nbits);
+    assert(0 <= n && n <= nbits - start);
+    /* start == nbits implies n == 0 */
+    assert(start != nbits || n == 0);
+
+    if (n == 0)              /* nothing to delete */
+        return 0;
+    if (start + n == nbits)  /* delete end, nothing to move */
+        return resize(self, nbits - n);
+
+    s_bits = (n % 8) ? (8 - n % 8) : 0;  /* bit shift to right */
+    if (resize(self, nbits + s_bits) < 0)
+        return -1;
+
+    assert_byte_in_range(self, p);
+    tmp = self->ob_item[p];
+    if (s_bits) {                /* shift n % 8 bits to left */
+        shift_r8(self, p, Py_SIZE(self), s_bits);
+        s_bytes++;
+    }
+    if (s_bytes)                /* aligned copy */
+        copy_n(self, pbits, self, pbits + BITS(s_bytes),
+               self->nbits - pbits - BITS(s_bytes));
+
+    for (i = 0; i < start % 8; i++)
+        setbit(self, pbits + i, tmp & BITMASK(self->endian, i));
+
+    return resize(self, nbits - n);
 }
 
-/* starting at start, insert n (uninitialized) bits into self */
+/* Starting at start, insert n (uninitialized) bits into self.
+   self[start:start] = bitarray(n) */
 static int
 insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 {
-    assert(0 <= start && start <= self->nbits);
+    const Py_ssize_t nbits = self->nbits;
+    const Py_ssize_t p = start / 8;
+    const Py_ssize_t pbits = 8 * p;
+    const Py_ssize_t s_bytes = n / 8;   /* byte shift to right */
+    const int s_bits = n % 8;           /* bit shift to right */
+    char tmp;
+    Py_ssize_t i;
+
+    assert(0 <= start && start <= nbits);
     assert(n >= 0);
 
-    if (resize(self, self->nbits + n) < 0)
+    if (n == 0)          /* nothing to insert */
+        return 0;
+    if (start == nbits)  /* insert at end - nothing to  move */
+        return resize(self, nbits + n);
+
+    if (resize(self, nbits + n + s_bits) < 0)
         return -1;
-    copy_n(self, start + n, self, start, self->nbits - start - n);
-    return 0;
+
+    assert_byte_in_range(self, p);
+    tmp = self->ob_item[p];
+    shift_r8(self, p, Py_SIZE(self), s_bits);
+
+    if (s_bytes)         /* aligned copy */
+        copy_n(self, BITS(p + s_bytes), self, pbits, nbits + s_bits - pbits);
+
+    if (s_bits) {
+        for (i = 0; i < start % 8; i++)
+            setbit(self, pbits + i, tmp & BITMASK(self->endian, i));
+    }
+    return resize(self, nbits + n);
 }
 
 static void
@@ -281,33 +481,34 @@ invert(bitarrayobject *self)
 static int
 repeat(bitarrayobject *self, Py_ssize_t m)
 {
-    const Py_ssize_t nbits = self->nbits;
-    Py_ssize_t k;
+    Py_ssize_t q, k = self->nbits;
 
-    if (nbits == 0 || m == 1)   /* nothing to do */
+    if (k == 0 || m == 1)   /* nothing to do */
         return 0;
 
     if (m <= 0)                 /* clear */
         return resize(self, 0);
 
-    assert(m > 1 && nbits > 0);
-    if (nbits >= PY_SSIZE_T_MAX / m) {
+    assert(m > 1 && k > 0);
+    if (k >= PY_SSIZE_T_MAX / m) {
         PyErr_Format(PyExc_OverflowError,
                      "cannot repeat bitarray (of size %zd) %zd times",
-                     nbits, m);
+                     k, m);
         return -1;
     }
-
-    if (resize(self, m * nbits) < 0)
+    /* k = self->nbits, the number of bits which have been copied */
+    q = k * m;  /* number of resulting bits */
+    if (resize(self, q) < 0)
         return -1;
 
-    k = nbits;  /* number of bits which have been copied */
-    while (k <= self->nbits / 2) {  /* double copies */
-        copy_n(self, k, self, 0, k);
+    while (k <= q / 2) {  /* double copies */
+        copy2(self, k, self, 0, k);
         k *= 2;
     }
-    assert(self->nbits - k >= 0);
-    copy_n(self, k, self, 0, self->nbits - k);  /* copy remaining bits */
+    assert(q / 2 < k && k <= q);
+
+    if (k < q)        /* copy remaining bits */
+        copy2(self, k, self, 0, self->nbits - k);
     return 0;
 }
 
@@ -470,7 +671,7 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
     if (resize(self, self_nbits + other_nbits) < 0)
         return -1;
 
-    copy_n(self, self_nbits, other, 0, other_nbits);
+    copy2(self, self_nbits, other, 0, other_nbits);
     return 0;
 }
 
@@ -1519,6 +1720,27 @@ bitarray_sizeof(bitarrayobject *self)
 PyDoc_STRVAR(sizeof_doc,
 "Return the size of the bitarray in memory, in bytes.");
 
+/* ----------------- functionality exposed for testing ----------------- */
+
+static PyObject *
+bitarray_shift_r8(bitarrayobject *self, PyObject *args)
+{
+    Py_ssize_t a, b;
+    int n;
+
+    if (!PyArg_ParseTuple(args, "nni", &a, &b, &n))
+        return NULL;
+
+    if (0 <= a && a <= Py_SIZE(self) &&
+        0 <= b && b <= Py_SIZE(self) &&
+        0 <= n && n < 8 && a <= b)
+    {
+        shift_r8(self, a, b, n);
+        Py_RETURN_NONE;
+    }
+    PyErr_SetString(PyExc_ValueError, "variable out of range");
+    return NULL;
+}
 
 /* ----------------------- bitarray_as_sequence ------------------------ */
 
@@ -1652,7 +1874,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
     }
 
     if (PySlice_Check(item)) {
-        Py_ssize_t start, stop, step, slicelength, i, j;
+        Py_ssize_t start, stop, step, slicelength;
         PyObject *res;
 
         if (PySlice_GetIndicesEx(item, self->nbits,
@@ -1663,13 +1885,17 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
         if (res == NULL)
             return NULL;
 
+#define rr  ((bitarrayobject *) res)
         if (step == 1) {
-            copy_n((bitarrayobject *) res, 0, self, start, slicelength);
+            copy_range(rr, self, start, start + slicelength);
         }
         else {
+            Py_ssize_t i, j;
+
             for (i = 0, j = start; i < slicelength; i++, j += step)
-                setbit((bitarrayobject *) res, i, getbit(self, j));
+                setbit(rr, i, getbit(self, j));
         }
+#undef rr
         return res;
     }
 
@@ -1714,7 +1940,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
                 goto error;
         }
         /* copy the new values into self */
-        copy_n(self, start, aa, 0, aa->nbits);
+        copy2(self, start, aa, 0, aa->nbits);
     }
     else {  /* step != 1 */
         if (increase != 0) {
@@ -2042,47 +2268,6 @@ shift_left(bitarrayobject *self, Py_ssize_t n)
     }
 }
 
-static void
-shift_right(bitarrayobject *self, Py_ssize_t n)
-{
-    const Py_ssize_t nbytes = Py_SIZE(self);
-    const Py_ssize_t nwords = UINT64_WORDS(nbytes);
-    const Py_ssize_t s_bytes = n / 8;   /* byte shift */
-    const int s_bits = n % 8;           /* bit shift */
-    Py_ssize_t i;
-
-    assert(0 <= n && n <= self->nbits && nbytes >= s_bytes);
-    setunused(self);
-    if (self->endian == ENDIAN_BIG && s_bits)
-        /* only reverse relevant bytes - not the ones getting shifted out */
-        bytereverse(self, 0, nbytes - s_bytes);
-
-    if (s_bits) {
-#define ucb  ((unsigned char *) (self)->ob_item)
-        for (i = nbytes - 1; i >= 8 * nwords; i--) {
-            ucb[i] <<= s_bits;    /* shift byte (from highest to lowest) */
-            if (i != 8 * nwords)  /* add shifted next lower byte */
-                ucb[i] |= ucb[i - 1] >> (8 - s_bits);
-        }
-        if (nwords && nbytes % 8) /* add byte from word */
-            ucb[8 * nwords] |= ucb[8 * nwords - 1] >> (8 - s_bits);
-
-        for (i = nwords - 1; i >= 0; i--) {
-            UINT64_BUFFER(self)[i] <<= s_bits; /* shift word */
-            if (i != 0)         /* add shifted byte from next lower word */
-                ucb[8 * i] |= ucb[8 * i - 1] >> (8 - s_bits);
-        }
-#undef ucb
-    }
-    if (self->endian == ENDIAN_BIG && s_bits)  /* (re-) reverse */
-        bytereverse(self, 0, nbytes - s_bytes);
-
-    if (s_bytes) {              /* shift bytes and zero blanks */
-        memmove(self->ob_item + s_bytes, self->ob_item, nbytes - s_bytes);
-        memset(self->ob_item, 0x00, (size_t) s_bytes);
-    }
-}
-
 /* shift bitarray n positions to left (right=0) or right (right=1) */
 static void
 shift(bitarrayobject *self, Py_ssize_t n, int right)
@@ -2097,10 +2282,13 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
     }
 
     assert(0 < n && n < nbits);
-    if (right)                  /* rshift */
-        shift_right(self, n);
-    else                        /* lshift */
+    if (right) {                  /* rshift */
+        copy2(self, n, self, 0, nbits - n);
+        setrange(self, 0, n, 0);
+    }
+    else {                        /* lshift */
         shift_left(self, n);
+    }
 }
 
 /* check shift arguments and return the shift count, -1 on error */
@@ -3005,6 +3193,9 @@ static PyMethodDef bitarray_methods[] = {
      reduce_doc},
     {"__sizeof__",   (PyCFunction) bitarray_sizeof,      METH_NOARGS,
      sizeof_doc},
+
+    /* functionality exposed for testing */
+    {"_shift_r8",    (PyCFunction) bitarray_shift_r8,    METH_VARARGS, 0},
 
     {NULL,           NULL}  /* sentinel */
 };
