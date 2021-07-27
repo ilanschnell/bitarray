@@ -262,7 +262,16 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 }
 
 /* Copy n bits from other (starting at b) onto self (starting at a).
-   self[a:a+n] = other[b:b+n] */
+   self[a:a+n] = other[b:b+n]
+
+   When the start positions (a and b) are multiple of 8, this function uses
+   memmove().  Otherwise, it uses sequence of getbit(), setbit() calls.
+   As the later case is quite slow, n is artificially limited to 8.
+
+   When other functions, such as copy_range(), copy2(), delete_n() and
+   insert_n(), need to copy unaligned arrays, shift_r8() is used to align
+   the arrays before calling copy_n().
+ */
 static void
 copy_n(bitarrayobject *self, Py_ssize_t a,
        bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
@@ -336,6 +345,7 @@ copy_range(bitarrayobject *self, bitarrayobject *other,
         copy_n(self, 0, other, a, s_bits);
     }
     else {
+        assert(a % 8 == 0 || n <= 8);
         copy_n(self, 0, other, a, n);
     }
 }
