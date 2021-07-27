@@ -213,7 +213,7 @@ _shift_r8_bl(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 #undef ucb
 }
 
-/* shift bits in byte-range(a, b) by n bits to right (using uin64 shifts) */
+/* shift bits in byte-range(a, b) by n bits to right (using uint64 shifts) */
 static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 {
