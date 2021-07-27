@@ -778,11 +778,27 @@ class SliceTests(unittest.TestCase, Util):
                 p = randint(0, n)
                 m = randint(0, 500)
 
-                x = urandom(m, endian)  # array to be inserted at p
+                x = urandom(m, self.random_endian())
                 b = a.copy()
                 b[p:p] = x
                 self.assertEQUAL(b, a[:p] + x + a[p:])
+                self.assertEqual(len(b), len(a) + m)
                 self.check_obj(b)
+
+    def test_setslice_resize(self):
+        N, M = 1000, 1500
+        for endian in 'big', 'little':
+            for n in 0, randint(0, N), N:
+                a = urandom(n, endian)
+                for p1 in 0, randint(0, n), n:
+                    for p2 in p1, randint(p1, n), n:
+                        for m in 0, randint(0, M), M:
+                            x = urandom(m, self.random_endian())
+                            b = a.copy()
+                            b[p1:p2] = x
+                            self.assertEQUAL(b, a[:p1] + x + a[p2:])
+                            self.assertEqual(len(b), n + p1 - p2 + len(x))
+                            self.check_obj(b)
 
     def test_setslice_self(self):
         a = bitarray('1100111')

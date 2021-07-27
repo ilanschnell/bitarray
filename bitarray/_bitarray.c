@@ -1941,7 +1941,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
         return -1;
 
 #define aa  ((bitarrayobject *) array)
-    /* number of bits by which 'self' has to be increased (decreased) */
+    /* number of bits by which self has to be increased (decreased) */
     increase = aa->nbits - slicelength;
 
     if (aa == self) {  /* covers cases like a[2::] = a and a[::-1] = a */
