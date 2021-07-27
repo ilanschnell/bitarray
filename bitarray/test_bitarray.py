@@ -791,13 +791,20 @@ class SliceTests(unittest.TestCase, Util):
             for n in 0, randint(0, N), N:
                 a = urandom(n, endian)
                 for p1 in 0, randint(0, n), n:
-                    for p2 in p1, randint(p1, n), n:
+                    for p2 in 0, randint(0, p1), p1, randint(0, n), n:
                         for m in 0, randint(0, M), M:
                             x = urandom(m, self.random_endian())
                             b = a.copy()
                             b[p1:p2] = x
-                            self.assertEQUAL(b, a[:p1] + x + a[p2:])
-                            self.assertEqual(len(b), n + p1 - p2 + len(x))
+                            b_lst = a.tolist()
+                            b_lst[p1:p2] = x.tolist()
+                            self.assertEqual(b.tolist(), b_lst)
+                            if p1 <= p2:
+                                self.assertEQUAL(b, a[:p1] + x + a[p2:])
+                                self.assertEqual(len(b), n + p1 - p2 + len(x))
+                            else:
+                                self.assertEqual(b, a[:p1] + x + a[p1:])
+                                self.assertEqual(len(b), n + len(x))
                             self.check_obj(b)
 
     def test_setslice_self(self):
