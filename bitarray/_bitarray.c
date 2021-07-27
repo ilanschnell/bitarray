@@ -350,8 +350,16 @@ copy_range(bitarrayobject *self, bitarrayobject *other,
     }
 }
 
-/* Copy the first n bits from other to self (starting at a).
-   self[a:a+n] = other[:n] */
+/* Copy n bits from other (starting at b) onto self (starting at a).
+   self[a:a+n] = other[b:b+n]
+
+   Note: this function is currently limited to b=0.  The reason we have
+   have the parameter is for consistency, as we wish to have the same
+   signature as copy_n().  Also, if parameter b ever gets supported (I've
+   looked into it but things get complicated), we can use copy2() as
+   a drop-in replacement.  The "2" in the name "copy2" is actually twofold:
+   (i) version 2 of copy_n  (ii) copy2 as copy "to"
+*/
 static void
 copy2(bitarrayobject *self, Py_ssize_t a,
       bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
