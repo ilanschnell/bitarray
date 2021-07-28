@@ -635,6 +635,23 @@ class InternalTests(unittest.TestCase, Util):
             x_lst[a:a + n] = y.tolist()[b:b + n]
             self.assertEqual(x, bitarray(x_lst))
 
+    @staticmethod
+    def getslice(a, start, slicelength):
+        # this is the Python eqivalent of __getitem__ for slices with step=1
+        b = bitarray(slicelength, a.endian())
+        b._copy2(0, a, start, slicelength)
+        return b
+
+    def test_getslice(self):
+        for a in self.randombitarrays():
+            a_lst = a.tolist()
+            n = len(a)
+            i = randint(0, n)
+            j = randint(i, n)
+            b = self.getslice(a, i, j - i)
+            self.assertEqual(b.tolist(), a_lst[i:j])
+            self.assertEqual(b, a[i:j])
+
 if DEBUG:
     tests.append(InternalTests)
 
