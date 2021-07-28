@@ -621,20 +621,33 @@ class InternalTests(unittest.TestCase, Util):
         x._copy2(5, bitarray(), 0, 0)  # copy empty bitarray onto x
         self.assertEqual(x, y)
 
-    def test_copy2_random(self):
-        N = 100
-        for _ in range(500):
+    def test_copy2_random_self(self):
+        for N in range(500):
             x = urandom(N, self.random_endian())
-            x_org = x.copy()
+            x_lst = x.tolist()
+            a = randint(0, N)
+            b = randint(0, N)
+            n = randint(0, N - max(a, b))
+            x_lst[a:a + n] = x.tolist()[b:b + n]
+            x._copy2(a, x, b, n)
+            self.assertEqual(x, bitarray(x_lst))
+            self.assertEqual(len(x), N)
+            self.check_obj(x)
+
+    def test_copy2_random_other(self):
+        for N in range(500):
+            x = urandom(N, self.random_endian())
             x_lst = x.tolist()
             M = randint(0, N)
             y = urandom(M, self.random_endian())
             a = randint(0, N)
-            b = randint(0, max(M, 0))
+            b = randint(0, M)
             n = randint(0, min(N - a, M - b))
-            x._copy2(a, y, b, n)
             x_lst[a:a + n] = y.tolist()[b:b + n]
+            x._copy2(a, y, b, n)
             self.assertEqual(x, bitarray(x_lst))
+            self.assertEqual(len(x), N)
+            self.check_obj(x)
 
     @staticmethod
     def getslice(a, start, slicelength):
