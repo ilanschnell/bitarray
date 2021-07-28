@@ -281,7 +281,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     assert(0 <= n && n <= self->nbits && n <= other->nbits);
     assert(0 <= a && a <= self->nbits - n);
     assert(0 <= b && b <= other->nbits - n);
-    if (n == 0)
+    if (n == 0 || (self == other && a == b))
         return;
 
     /* When the start positions multiple of 8, we use memmove() and copy
