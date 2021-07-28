@@ -3105,6 +3105,7 @@ static PyMethodDef bitarray_methods[] = {
      sizeof_doc},
 
 #ifndef NDEBUG
+    /* functionality exposed in debug mode for testing */
     {"_shift_r8",    (PyCFunction) bitarray_shift_r8,    METH_VARARGS, 0},
     {"_copy2",       (PyCFunction) bitarray_copy2,       METH_VARARGS, 0},
 #endif

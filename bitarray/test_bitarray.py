@@ -622,15 +622,15 @@ class InternalTests(unittest.TestCase, Util):
         self.assertEqual(x, y)
 
     def test_copy2_random(self):
-        N = 640  # len(x)
+        N = 100
         for _ in range(500):
-            M = randint(0, N)  # len(y)
             x = urandom(N, self.random_endian())
             x_org = x.copy()
             x_lst = x.tolist()
+            M = randint(0, N)
             y = urandom(M, self.random_endian())
-            a = randint(0, N - 1)
-            b = randint(0, max(M - 1, 0))
+            a = randint(0, N)
+            b = randint(0, max(M, 0))
             n = randint(0, min(N - a, M - b))
             x._copy2(a, y, b, n)
             x_lst[a:a + n] = y.tolist()[b:b + n]
@@ -651,7 +651,7 @@ class InternalTests(unittest.TestCase, Util):
             j = randint(i, n)
             b = self.getslice(a, i, j - i)
             self.assertEqual(b.tolist(), a_lst[i:j])
-            self.assertEqual(b, a[i:j])
+            self.assertEQUAL(b, a[i:j])
 
 if DEBUG:
     tests.append(InternalTests)
