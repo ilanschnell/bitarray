@@ -1740,7 +1740,9 @@ bitarray_sizeof(bitarrayobject *self)
 PyDoc_STRVAR(sizeof_doc,
 "Return the size of the bitarray in memory, in bytes.");
 
-/* ----------------- functionality exposed for testing ----------------- */
+/* ---------- functionality exposed in debug mode for testing ---------- */
+
+#ifndef NDEBUG
 
 static PyObject *
 bitarray_shift_r8(bitarrayobject *self, PyObject *args)
@@ -1751,16 +1753,11 @@ bitarray_shift_r8(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "nni", &a, &b, &n))
         return NULL;
 
-    if (0 <= a && a <= Py_SIZE(self) &&
-        0 <= b && b <= Py_SIZE(self) &&
-        0 <= n && n < 8 && a <= b)
-    {
-        shift_r8(self, a, b, n);
-        Py_RETURN_NONE;
-    }
-    PyErr_SetString(PyExc_ValueError, "variable out of range");
-    return NULL;
+    shift_r8(self, a, b, n);
+    Py_RETURN_NONE;
 }
+
+#endif
 
 /* ----------------------- bitarray_as_sequence ------------------------ */
 
@@ -3214,8 +3211,9 @@ static PyMethodDef bitarray_methods[] = {
     {"__sizeof__",   (PyCFunction) bitarray_sizeof,      METH_NOARGS,
      sizeof_doc},
 
-    /* functionality exposed for testing */
+#ifndef NDEBUG
     {"_shift_r8",    (PyCFunction) bitarray_shift_r8,    METH_VARARGS, 0},
+#endif
 
     {NULL,           NULL}  /* sentinel */
 };

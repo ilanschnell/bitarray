@@ -578,45 +578,30 @@ class InternalTests(unittest.TestCase, Util):
         x._shift_r8(0, 2, 3)
         self.assertEqual(x, y)
 
-        self.assertRaises(ValueError, x._shift_r8, 0, 3, 0) # b=3 out of range
-        self.assertRaises(ValueError, x._shift_r8, 2, 1, 0) # not a=2 <= b=1
-        self.assertRaises(ValueError, x._shift_r8, 0, 2, 8) # not n=8 < 8
-
     def shift_r8(self, x, a, b, n):
         self.assertTrue(a <= b)
         self.assertTrue(n < 8)
         y = x.tolist()
         if n > 0 and a != b:
             y[8 * a : 8 * b] = n * [0] + y[8 * a : 8 * b - n]
-            del y[len(x):]
         self.assertEqual(len(y), len(x))
         return bitarray(y, x.endian())
 
     def check(self, x, a, b, n):
-        if a <= b and 0 <= n < 8:
-            y = x.copy()
-            x._shift_r8(a, b, n)
-            self.assertEQUAL(x, self.shift_r8(y, a, b, n))
-        else:
-            self.assertRaises(ValueError, x._shift_r8, a, b, n)
-
-    def test_shift_r8_random(self):
-        for x in self.randombitarrays():
-            N = bits2bytes(len(x))
-            a = randint(0, N)
-            b = randint(0, N)
-            n = randint(0, 7)
-            self.check(x, a, b, n)
+        y = x.copy()
+        x._shift_r8(a, b, n)
+        self.assertEQUAL(x, self.shift_r8(y, a, b, n))
 
     def test_shift_r8_random_bytes(self):
         for N in range(100):
             x = urandom(8 * N, self.random_endian())
             a = randint(0, N)
-            b = randint(0, N)
+            b = randint(a, N)
             n = randint(0, 7)
             self.check(x, a, b, n)
 
-tests.append(InternalTests)
+if DEBUG:
+    tests.append(InternalTests)
 
 # ---------------------------------------------------------------------------
 
