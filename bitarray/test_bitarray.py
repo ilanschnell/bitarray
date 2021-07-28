@@ -579,13 +579,13 @@ class InternalTests(unittest.TestCase, Util):
         x._shift_r8(0, 2, 3)
         self.assertEqual(x, y)
 
-    def shift_r8(self, x, a, b, n):
-        self.assertTrue(a <= b)
-        self.assertTrue(n < 8)
+    @staticmethod
+    def shift_r8(x, a, b, n):
+        assert a <= b and n < 8
         y = x.tolist()
         if n > 0 and a != b:
             y[8 * a : 8 * b] = n * [0] + y[8 * a : 8 * b - n]
-        self.assertEqual(len(y), len(x))
+        assert len(y) == len(x)
         return bitarray(y, x.endian())
 
     def test_shift_r8_random_bytes(self):
