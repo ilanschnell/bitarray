@@ -33,7 +33,8 @@ from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian,
                       _sysinfo, __version__)
 
-DEBUG = _sysinfo()[6]
+SYSINFO = _sysinfo()
+DEBUG = SYSINFO[6]
 
 
 # avoid importing from bitarray.util
@@ -1276,7 +1277,7 @@ class MiscTests(unittest.TestCase, Util):
         a = bitarray(2 ** 10)
         self.assertRaises(OverflowError, a.__imul__, 2 ** 53)
 
-        if _sysinfo()[0] == 8:
+        if SYSINFO[0] == 8:
             return
 
         a = bitarray(10 ** 6)
@@ -3748,10 +3749,9 @@ def run(verbosity=1, repeat=1):
     print('bitarray version: %s' % __version__)
     print('sys.version: %s' % sys.version)
     print('sys.prefix: %s' % sys.prefix)
-    info = _sysinfo()
-    print('pointer size: %d bit' % (8 * info[0]))
-    print('sizeof(size_t): %d' % info[1])
-    print('PY_UINT64_T defined: %s' % info[5])
+    print('pointer size: %d bit' % (8 * SYSINFO[0]))
+    print('sizeof(size_t): %d' % SYSINFO[1])
+    print('PY_UINT64_T defined: %s' % SYSINFO[5])
     print('DEBUG: %s' % DEBUG)
     suite = unittest.TestSuite()
     for cls in tests:
