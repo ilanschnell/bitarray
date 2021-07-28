@@ -33,6 +33,8 @@ from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian,
                       _sysinfo, __version__)
 
+DEBUG = _sysinfo()[6]
+
 
 # avoid importing from bitarray.util
 def zeros(n, endian=None):
@@ -3713,6 +3715,7 @@ def run(verbosity=1, repeat=1):
     print('pointer size: %d bit' % (8 * info[0]))
     print('sizeof(size_t): %d' % info[1])
     print('PY_UINT64_T defined: %s' % info[5])
+    print('DEBUG: %s' % DEBUG)
     suite = unittest.TestSuite()
     for cls in tests:
         for _ in range(repeat):
