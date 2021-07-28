@@ -553,8 +553,8 @@ tests.append(MetaDataTests)
 
 class InternalTests(unittest.TestCase, Util):
 
-    # Here we test internal functionality exposed for the purpose of testing.
-    # This is currently the ._shift_r8() method.
+    # Internal functionality exposed for the purpose of testing.
+    # This class will only be part of the test suite in debug mode.
 
     def test_shift_r8_empty(self):
         a = bitarray()
@@ -587,18 +587,53 @@ class InternalTests(unittest.TestCase, Util):
         self.assertEqual(len(y), len(x))
         return bitarray(y, x.endian())
 
-    def check(self, x, a, b, n):
-        y = x.copy()
-        x._shift_r8(a, b, n)
-        self.assertEQUAL(x, self.shift_r8(y, a, b, n))
-
     def test_shift_r8_random_bytes(self):
         for N in range(100):
             x = urandom(8 * N, self.random_endian())
             a = randint(0, N)
             b = randint(a, N)
             n = randint(0, 7)
-            self.check(x, a, b, n)
+
+            y = x.copy()
+            x._shift_r8(a, b, n)
+            self.assertEQUAL(x, self.shift_r8(y, a, b, n))
+
+    def test_copy2_empty(self):
+        x = bitarray()
+        x._copy2(0, bitarray(), 0, 0)
+        self.assertEqual(len(x), 0)
+
+    def test_copy2_explicit(self):
+        x = bitarray('11000100 11110')
+        #                 ^^^^ ^
+        y = bitarray('0101110001')
+        #              ^^^^^
+        x._copy2(4, y, 1, 5)
+        self.assertEqual(x, bitarray('11001011 11110'))
+        #                                 ^^^^ ^
+        x = bitarray('10110111 101', 'little')
+        y = x.copy()
+        x._copy2(3, x, 3, 7)  # copy region of x onto x
+        self.assertEqual(x, y)
+        x._copy2(3, bitarray(x, 'big'), 3, 7)  # as before but other endian
+        self.assertEqual(x, y)
+        x._copy2(5, bitarray(), 0, 0)  # copy empty bitarray onto x
+        self.assertEqual(x, y)
+
+    def test_copy2_random(self):
+        N = 640  # len(x)
+        for _ in range(500):
+            M = randint(0, N)  # len(y)
+            x = urandom(N, self.random_endian())
+            x_org = x.copy()
+            x_lst = x.tolist()
+            y = urandom(M, self.random_endian())
+            a = randint(0, N - 1)
+            b = randint(0, max(M - 1, 0))
+            n = randint(0, min(N - a, M - b))
+            x._copy2(a, y, b, n)
+            x_lst[a:a + n] = y.tolist()[b:b + n]
+            self.assertEqual(x, bitarray(x_lst))
 
 if DEBUG:
     tests.append(InternalTests)

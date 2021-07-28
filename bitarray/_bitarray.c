@@ -322,54 +322,51 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
 
 /* Copy n bits from other (starting at b) onto self (starting at a).
    self[a:a+n] = other[b:b+n]
-
-   Note: this function is currently limited to b=0.  The reason we have
-   have the parameter is for consistency, as we wish to have the same
-   signature as copy_n().  Also, if parameter b ever gets supported (I've
-   looked into it but things get complicated), we can use copy2() as
-   a drop-in replacement.  This would actually remove the need for
-   copy_range() and make delete_n(), insert_n() and shift_left() as trivial
-   as they used to be.  The "2" in the name "copy2" is actually twofold:
-   (i) version 2 of copy_n  (ii) copy2 as copy "to".
  */
 static void
 copy2(bitarrayobject *self, Py_ssize_t a,
       bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
 {
-    const int s_bits = a % 8;  /* right bit shift of self */
-
-    assert(b == 0);  /* parameter b is currently not supported */
     assert(0 <= n && n <= self->nbits && n <= other->nbits);
     assert(0 <= a && a <= self->nbits - n);
     assert(0 <= b && b <= other->nbits - n);
-    if (n == 0)
+    if (n == 0 || (self == other && a == b))
         return;
 
-    if (s_bits) {
-        /* other will be copied into self[a:c] */
+    if (n < 8 || (a % 8 == 0 && b % 8 == 0)) {
+        copy_n(self, a, other, b, n);
+    }
+    else {
         const Py_ssize_t c = a + n;
         const Py_ssize_t p1 = a / 8;
         const Py_ssize_t p2 = BYTES(c) - 1;
-        char tmp1, tmp2;
-        Py_ssize_t i;
+        const Py_ssize_t p3 = b / 8;
+        int sa = a % 8;
+        int sb = 8 - b % 8;
+        char tmp1, tmp2, tmp3;
+        Py_ssize_t i, j;
 
         assert_byte_in_range(self, p1);
         assert_byte_in_range(self, p2);
+        assert_byte_in_range(other, p3);
         tmp1 = self->ob_item[p1];
         tmp2 = self->ob_item[p2];
+        tmp3 = other->ob_item[p3];
 
-        copy_n(self, BITS(p1), other, b, n);  /* aligned copy */
-        shift_r8(self, p1, p2 + 1, s_bits);
+        assert(b + sb == 8 * (b / 8 + 1));
+        if (sa + sb >= 8)
+            sb -= 8;
+        copy_n(self, BITS(p1), other, b + sb, n - sb);
+        shift_r8(self, p1, p2 + 1, (sa + sb) % 8);
 
-        for (i = 0; i < s_bits; i++)
+        for (i = 0; i < sa; i++)
             setbit(self, 8 * p1 + i, tmp1 & BITMASK(self->endian, i));
 
         for (i = c; i < 8 * p2 + 8 && i < self->nbits; i++)
             setbit(self, i, tmp2 & BITMASK(self->endian, i % 8));
-    }
-    else {
-        assert(a % 8 == 0 && b == 0);
-        copy_n(self, a, other, b, n);         /* aligned copy */
+
+        for (i = b % 8, j = a; i < 8; i++, j++)
+            setbit(self, j, tmp3 & BITMASK(other->endian, i));
     }
 }
 
@@ -1757,7 +1754,22 @@ bitarray_shift_r8(bitarrayobject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-#endif
+static PyObject *
+bitarray_copy2(bitarrayobject *self, PyObject *args)
+{
+    PyObject *other;
+    Py_ssize_t a, b, n;
+
+    if (!PyArg_ParseTuple(args, "nOnn", &a, &other, &b, &n))
+        return NULL;
+    if (!bitarray_Check(other)) {
+        PyErr_SetString(PyExc_TypeError, "bitarray expected");
+        return NULL;
+    }
+    copy2(self, a, (bitarrayobject *) other, b, n);
+    Py_RETURN_NONE;
+}
+#endif  /* #ifndef NDEBUG */
 
 /* ----------------------- bitarray_as_sequence ------------------------ */
 
@@ -3213,6 +3225,7 @@ static PyMethodDef bitarray_methods[] = {
 
 #ifndef NDEBUG
     {"_shift_r8",    (PyCFunction) bitarray_shift_r8,    METH_VARARGS, 0},
+    {"_copy2",       (PyCFunction) bitarray_copy2,       METH_VARARGS, 0},
 #endif
 
     {NULL,           NULL}  /* sentinel */
