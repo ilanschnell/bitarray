@@ -599,11 +599,6 @@ class InternalTests(unittest.TestCase, Util):
             x._shift_r8(a, b, n)
             self.assertEQUAL(x, self.shift_r8(y, a, b, n))
 
-    def test_copy2_empty(self):
-        x = bitarray()
-        x._copy2(0, bitarray(), 0, 0)
-        self.assertEqual(len(x), 0)
-
     def test_copy2_explicit(self):
         x = bitarray('11000100 11110')
         #                 ^^^^ ^
@@ -638,7 +633,7 @@ class InternalTests(unittest.TestCase, Util):
         for N in range(500):
             x = urandom(N, self.random_endian())
             x_lst = x.tolist()
-            M = randint(0, N)
+            M = randint(0, 2 * N)
             y = urandom(M, self.random_endian())
             a = randint(0, N)
             b = randint(0, M)
