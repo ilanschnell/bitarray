@@ -1,6 +1,7 @@
 2021-XX-XX   2.2.4:
 -------------------
   * use shift operations for speedup, #142
+  * expose functionality to Python level only in debug mode for testing
   * add and improve tests
 
 
