@@ -82,6 +82,7 @@ getbit(bitarrayobject *self, Py_ssize_t i)
 {
     assert_nbits(self);
     assert_byte_in_range(self, i >> 3);
+    assert(0 <= i && i < self->nbits);
     return (self->ob_item[i >> 3] & BITMASK(self->endian, i) ? 1 : 0);
 }
 
@@ -92,6 +93,7 @@ setbit(bitarrayobject *self, Py_ssize_t i, int bit)
 
     assert_nbits(self);
     assert_byte_in_range(self, i >> 3);
+    assert(0 <= i && i < self->nbits);
     mask = BITMASK(self->endian, i);
     cp = self->ob_item + (i >> 3);
     if (bit)
