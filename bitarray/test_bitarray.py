@@ -137,6 +137,12 @@ class TestsModuleFunctions(unittest.TestCase, Util):
         # the version string is not a function, but test it here anyway
         self.assertIsInstance(__version__, str)
 
+    def test_sysinfo(self):
+        info = _sysinfo()
+        self.assertIsInstance(info, tuple)
+        for x in info:
+            self.assertIsInstance(x, int)
+
     def test_set_default_endian(self):
         self.assertRaises(TypeError, _set_default_endian, 0)
         self.assertRaises(TypeError, _set_default_endian, 'little', 0)
@@ -633,7 +639,7 @@ class InternalTests(unittest.TestCase, Util):
         for N in range(500):
             x = urandom(N, self.random_endian())
             x_lst = x.tolist()
-            M = randint(0, 2 * N)
+            M = randint(0, 5 + 2 * N)
             y = urandom(M, self.random_endian())
             a = randint(0, N)
             b = randint(0, M)
