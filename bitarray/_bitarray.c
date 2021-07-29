@@ -371,7 +371,8 @@ copy2(bitarrayobject *self, Py_ssize_t a,
         for (i = a + n; i < 8 * (p2 + 1) && i < self->nbits; i++)
             setbit(self, i, t2 & BITMASK(self->endian, i % 8));
 
-        /* copy missing bits from other->ob_item[p3] to self */
+        /* as copy_n() copies other starting at b + sb, we need to copy
+           the first sb bits here */
         for (i = 0; i < sb; i++)
             setbit(self, i + a, t3 & BITMASK(other->endian, (i + b) % 8));
     }
