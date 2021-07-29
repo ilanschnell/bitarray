@@ -587,7 +587,7 @@ class InternalTests(unittest.TestCase, Util):
 
     @staticmethod
     def shift_r8(x, a, b, n):
-        assert a <= b and n < 8
+        assert a <= b and 0 <= n < 8
         y = x.tolist()
         if n > 0 and a != b:
             y[8 * a : 8 * b] = n * [0] + y[8 * a : 8 * b - n]
@@ -600,7 +600,6 @@ class InternalTests(unittest.TestCase, Util):
             a = randint(0, N)
             b = randint(a, N)
             n = randint(0, 7)
-
             y = x.copy()
             x._shift_r8(a, b, n)
             self.assertEQUAL(x, self.shift_r8(y, a, b, n))

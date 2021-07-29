@@ -231,6 +231,8 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
     if (n == 0)
         return;
 
+    /* as the big-endian representation has reversed bit order in each
+       byte, we reverse each byte, and (re-) reverse again below */
     if (self->endian == ENDIAN_BIG)
         bytereverse(self, a, b);
 
@@ -257,7 +259,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
     }
 #undef ucb
 
-    if (self->endian == ENDIAN_BIG)
+    if (self->endian == ENDIAN_BIG)  /* (re-) reverse bytes */
         bytereverse(self, a, b);
 }
 
