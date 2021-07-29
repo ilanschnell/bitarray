@@ -346,9 +346,10 @@ copy2(bitarrayobject *self, Py_ssize_t a,
         char t1, t2, t3;
         Py_ssize_t i;
 
-        /* useful equalities */
-        assert(a - sa == 8 * p1);
+        /* useful equations */
         assert(b + sb == 8 * (p3 + 1));
+        assert(a - sa == 8 * p1);
+        assert(a + n >= 8 * p2);
 
         assert_byte_in_range(self, p1);
         assert_byte_in_range(self, p2);
@@ -362,14 +363,17 @@ copy2(bitarrayobject *self, Py_ssize_t a,
         copy_n(self, 8 * p1, other, b + sb, n - sb);
         shift_r8(self, p1, p2 + 1, sa + sb);
 
-        for (i = a - sa; i < a; i++)
+        /* restore bits in self->ob_item[p1] */
+        for (i = 8 * p1; i < a; i++)
             setbit(self, i, t1 & BITMASK(self->endian, i % 8));
 
+        /* restore bits in self->ob_item[p2] */
         for (i = a + n; i < 8 * (p2 + 1) && i < self->nbits; i++)
             setbit(self, i, t2 & BITMASK(self->endian, i % 8));
 
-        for (i = a; i < a + sb; i++)
-            setbit(self, i, t3 & BITMASK(other->endian, (i - a + b) % 8));
+        /* copy missing bits from other->ob_item[p3] to self */
+        for (i = 0; i < sb; i++)
+            setbit(self, i + a, t3 & BITMASK(other->endian, (i + b) % 8));
     }
 }
 
