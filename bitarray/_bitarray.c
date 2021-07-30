@@ -349,7 +349,7 @@ copy2(bitarrayobject *self, Py_ssize_t a,
         /* useful equations */
         assert(b + sb == 8 * (p3 + 1));
         assert(a - sa == 8 * p1);
-        assert(a + n >= 8 * p2);
+        assert(a + n > 8 * p2);
 
         assert_byte_in_range(self, p1);
         assert_byte_in_range(self, p2);
