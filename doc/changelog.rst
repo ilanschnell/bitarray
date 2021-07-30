@@ -1,6 +1,13 @@
 Change log
 ==========
 
+**2.2.4** (2021-07-29):
+
+* use shift operations to speedup all unaligned copy operations, `#142 <https://github.com/ilanschnell/bitarray/issues/142>`__
+* expose functionality to Python level only in debug mode for testing
+* add and improve tests
+
+
 **2.2.3** (2021-07-22):
 
 * speedup ``repeat()``, `#136 <https://github.com/ilanschnell/bitarray/issues/136>`__
