@@ -365,16 +365,16 @@ copy2(bitarrayobject *self, Py_ssize_t a,
 
         /* restore bits in self->ob_item[p1] */
         for (i = 8 * p1; i < a; i++)
-            setbit(self, i, t1 & BITMASK(self->endian, i % 8));
+            setbit(self, i, t1 & BITMASK(self->endian, i));
 
         /* restore bits in self->ob_item[p2] */
-        for (i = a + n; i < 8 * (p2 + 1) && i < self->nbits; i++)
-            setbit(self, i, t2 & BITMASK(self->endian, i % 8));
+        for (i = a + n; i < 8 * p2 + 8 && i < self->nbits; i++)
+            setbit(self, i, t2 & BITMASK(self->endian, i));
 
         /* as copy_n() copies other starting at b + sb, we need to copy
            the first sb bits here */
         for (i = 0; i < sb; i++)
-            setbit(self, i + a, t3 & BITMASK(other->endian, (i + b) % 8));
+            setbit(self, i + a, t3 & BITMASK(other->endian, i + b));
     }
 }
 
