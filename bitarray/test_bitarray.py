@@ -727,7 +727,7 @@ class SliceTests(unittest.TestCase, Util):
         n = randint(1000, 2000)
         a = urandom(n, self.random_endian())
         sa = a.to01()
-        for _ in range(100):
+        for _ in range(50):
             i = randint(0, n)
             j = randint(i, n)
             b = a[i:j]
@@ -839,7 +839,7 @@ class SliceTests(unittest.TestCase, Util):
                 self.check_obj(b)
 
     def test_setslice_resize(self):
-        N, M = 1000, 1500
+        N, M = 200, 300
         for endian in 'big', 'little':
             for n in 0, randint(0, N), N:
                 a = urandom(n, endian)
@@ -944,8 +944,8 @@ class SliceTests(unittest.TestCase, Util):
                 self.check_obj(a)
 
     def test_setslice_bitarray_random_step_1(self):
-        for _ in range(100):
-            n = randint(0, 100)
+        for _ in range(50):
+            n = randint(0, 300)
             a = urandom(n, self.random_endian())
             lst_a = a.tolist()
             b = urandom(randint(0, 100), self.random_endian())
