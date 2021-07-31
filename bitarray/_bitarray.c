@@ -344,36 +344,31 @@ copy2(bitarrayobject *self, Py_ssize_t a,
         char t1, t2, t3;
         Py_ssize_t i;
 
-        /* useful equations */
-        assert(b + sb == 8 * (p3 + 1));
+        assert(b + sb == 8 * (p3 + 1));  /* useful equations */
         assert(a - sa == 8 * p1);
         assert(a + n > 8 * p2);
 
         assert_byte_in_range(self, p1);
         assert_byte_in_range(self, p2);
         assert_byte_in_range(other, p3);
-        t1 = self->ob_item[p1];
+        t1 = self->ob_item[p1];     /* temporary bytes for later use */
         t2 = self->ob_item[p2];
         t3 = other->ob_item[p3];
 
         if (sa + sb >= 8)
             sb -= 8;
-        copy_n(self, 8 * p1, other, b + sb, n - sb);
-        shift_r8(self, p1, p2 + 1, sa + sb);
+        copy_n(self, 8 * p1, other, b + sb, n - sb);  /* aligned copy */
+        shift_r8(self, p1, p2 + 1, sa + sb);          /* right shift */
 
-        /* restore bits in self->ob_item[p1] */
-        for (i = 8 * p1; i < a; i++)
+        for (i = 8 * p1; i < a; i++)  /* restore bits at p1 */
             setbit(self, i, t1 & BITMASK(self->endian, i));
 
-        if (sa + sb != 0) {
-            /* if shift occured, restore bits in self->ob_item[p2] */
+        if (sa + sb != 0) {  /* if shifted, restore bits at p2 */
             for (i = a + n; i < 8 * p2 + 8 && i < self->nbits; i++)
                 setbit(self, i, t2 & BITMASK(self->endian, i));
         }
 
-        /* as copy_n() copies other starting at b + sb, we need to copy
-           the first sb bits here */
-        for (i = 0; i < sb; i++)
+        for (i = 0; i < sb; i++)  /* copy first bits missed by copy_n() */
             setbit(self, i + a, t3 & BITMASK(other->endian, i + b));
     }
 }
