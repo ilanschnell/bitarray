@@ -31,9 +31,9 @@ The steps copy2() performs are the following:
 4.) Calculate the total right shift of bytes p1..p2 (once copied into self).
     Note that this shift depends on a % 8 and b % 8.
 
-5.) Using copy_n(), copy the byte region from other at p3 into self at p1.
-    Note that (since b is usually not a multiple of 8) we miss the beginning
-    in few bytes.  This is why we need t3, and this those bits later.
+5.) Using copy_n(), copy the byte region from other at p3 (or p3 + 1) into
+    self at p1.  Since in some cases we miss the beginning bit b in other,
+    we need t3, and fix those bits later.
 
 6.) Right shift self in byte range p1..p2.  This region includes the
     bit-range(a, a + n), but is generally larger.  This is why we need t1
