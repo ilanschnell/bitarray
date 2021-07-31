@@ -320,8 +320,8 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     }
 }
 
-/* Copy n bits from other (starting at b) onto self (starting at a).
-   This function is explained in glorious detail in copy2.txt */
+/* copy n bits from other (starting at b) onto self (starting at a),
+   more details in copy2.txt */
 static void
 copy2(bitarrayobject *self, Py_ssize_t a,
       bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
