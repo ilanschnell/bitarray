@@ -19,31 +19,31 @@ The steps copy2() performs are the following:
 1.) If n is smaller than a small limit or if both a and b are multiples
     of 8, call copy_n() and return.
 
-2.) Calculate the following parameters:
-    p1: the start byte position (in self) memory is moved to
-    p2: the last byte position memory is moved to
-    p3: the first byte (in other) memory is copied from
+2.) Calculate the following byte positions:
+    p1: start (in self) memory is copied to, i.e. a / 8
+    p2: last (in self) memory is copied to, i.e. (a + n - 1) / 8
+    p3: first (in other) memory is copied from, i.e. b / 8
 
 3.) Store temporary bytes corresponding to p1, p2, p3 in t1, t2, t3.
     We need these bytes later to restore bits which got overwritten or
     shifted away.
 
-4.) Calculate the total right shift of bytes p1..p2+1 (once copied into self).
+4.) Calculate the total right shift of bytes p1..p2 (once copied into self).
     Note that this shift depends on a % 8 and b % 8.
 
 5.) Copy, using copy_n(), the byte region from other at p3 into self at p1.
     Note that (since b is usually not a multiple of 8) we miss the beginning
     in few bytes.  This is why we need t3, and this those bits later.
 
-6.) Right shift self in byte-range(p1, p2 + 1).  This region includes the
-    bit-range(a, a + n), but is usually larger.  This is why we need t1
+6.) Right shift self in byte range p1..p2.  This region includes the
+    bit-range(a, a + n), but is generally larger.  This is why we need t1
     and t2 to restore the bytes at p1 and p2 in self later.
 
-7.) Restore bit in self at:
+7.) Restore bits in self at:
     - p1 using t1 (those got overwritten and shifted)
     - p2 using t2 (those got shifted)
 
-8.) Copy the first few bits from other to self (using t2, see step 5).
+8.) Copy the first few bits from other to self (using t3, see step 5).
 
 
 That's it!
