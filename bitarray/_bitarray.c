@@ -264,7 +264,6 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 }
 
 /* Copy n bits from other (starting at b) onto self (starting at a).
-   self[a:a+n] = other[b:b+n]
 
    When the start positions (a and b) are multiple of 8, this function uses
    memmove().  Otherwise, it uses sequence of getbit(), setbit() calls.
@@ -306,7 +305,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         return;
     }
     /* not required below, but ensuring we don't use slow copies */
-    assert(n <= 8);
+    assert(n <= 32);
 
     /* The two different types of looping are only relevant when copying
        self to self, i.e. when copying a piece of an bitarrayobject onto
@@ -321,9 +320,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     }
 }
 
-/* Copy n bits from other (starting at b) onto self (starting at a).
-   self[a:a+n] = other[b:b+n]
- */
+/* copy n bits from other (starting at b) onto self (starting at a) */
 static void
 copy2(bitarrayobject *self, Py_ssize_t a,
       bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
@@ -334,7 +331,7 @@ copy2(bitarrayobject *self, Py_ssize_t a,
     if (n == 0 || (self == other && a == b))
         return;
 
-    if (n < 8 || (a % 8 == 0 && b % 8 == 0)) {
+    if (n <= 32 || (a % 8 == 0 && b % 8 == 0)) {
         copy_n(self, a, other, b, n);
     }
     else {
@@ -380,8 +377,7 @@ copy2(bitarrayobject *self, Py_ssize_t a,
     }
 }
 
-/* Starting at start, delete n bits from self.
-   del self[start:start+n] */
+/* starting at start, delete n bits from self */
 static int
 delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 {
@@ -396,8 +392,7 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     return resize(self, nbits - n);
 }
 
-/* Starting at start, insert n (uninitialized) bits into self.
-   self[start:start] = bitarray(n) */
+/* starting at start, insert n (uninitialized) bits into self */
 static int
 insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 {
@@ -461,7 +456,7 @@ repeat(bitarrayobject *self, Py_ssize_t m)
     return 0;
 }
 
-/* Set bits in range(a, b) in self to vi.  self[a:b] = vi */
+/* set bits in range(a, b) in self to vi */
 static void
 setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 {
@@ -1701,7 +1696,7 @@ bitarray_copy2(bitarrayobject *self, PyObject *args)
     copy2(self, a, (bitarrayobject *) other, b, n);
     Py_RETURN_NONE;
 }
-#endif  /* #ifndef NDEBUG */
+#endif  /* NDEBUG */
 
 /* ----------------------- bitarray_as_sequence ------------------------ */
 
