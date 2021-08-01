@@ -264,11 +264,15 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
         bytereverse(self, a, b);
 }
 
+/* Limit for n in copy_n() in the unaligned case (needs to be at least 8) */
+#define COPY_N_LIMIT  32
+
 /* Copy n bits from other (starting at b) onto self (starting at a).
 
-   When the start positions (a and b) are multiple of 8, this function uses
-   memmove().  Otherwise, it uses sequence of getbit(), setbit() calls.
-   As the latter case is quite slow, n is artificially limited to 8.
+   In the aligned case, i.e. when both start positions (a and b) are a
+   multiple of 8, this function uses memmove().  In the unaligned case,
+   we use a sequence of getbit(), setbit() calls which is quite slow.
+   The latter case is (artificially) limited to n < COPY_N_LIMIT.
 
    When copy2() needs to copy unaligned arrays, shift_r8() is used to align
    the arrays before calling copy_n().
@@ -306,7 +310,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         return;
     }
     /* not required below, but ensuring we don't use slow copies */
-    assert(n <= 32);
+    assert(n < COPY_N_LIMIT);
 
     /* The two different types of looping are only relevant when copying
        self to self, i.e. when copying a piece of an bitarrayobject onto
@@ -333,7 +337,7 @@ copy2(bitarrayobject *self, Py_ssize_t a,
     if (n == 0 || (self == other && a == b))
         return;
 
-    if (n <= 32 || (a % 8 == 0 && b % 8 == 0)) {
+    if (n < COPY_N_LIMIT || (a % 8 == 0 && b % 8 == 0)) {
         copy_n(self, a, other, b, n);
     }
     else {
