@@ -191,7 +191,8 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 #define UINT64_WORDS(bytes)  0
 #endif
 
-/* shift bits by n in byte-range(a, b) using byte level shifts to right */
+/* Shift bits by n in byte-range(a, b) using byte level shifts to right.
+   This function is only designed to be called from inside shift_r8(). */
 static void
 _shift_r8_bl(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 {
