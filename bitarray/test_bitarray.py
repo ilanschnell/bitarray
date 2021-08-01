@@ -621,33 +621,36 @@ class InternalTests(unittest.TestCase, Util):
         x._copy2(5, bitarray(), 0, 0)  # copy empty bitarray onto x
         self.assertEqual(x, y)
 
+    def check_copy2(self, N, M, a, b, n):
+        x = urandom(N, self.random_endian())
+        x_lst = x.tolist()
+        y = x if M < 0 else urandom(M, self.random_endian())
+        x_lst[a:a + n] = y.tolist()[b:b + n]
+        x._copy2(a, y, b, n)
+        self.assertEqual(x, bitarray(x_lst))
+        self.assertEqual(len(x), N)
+        self.check_obj(x)
+
+    def test_copy2_range(self):
+        for a in range(8):
+            for b in range(8):
+                self.check_copy2(50, -1, a, b, 40)
+                self.check_copy2(50, 50, a, b, 40)
+
     def test_copy2_random_self(self):
         for N in range(500):
-            x = urandom(N, self.random_endian())
-            x_lst = x.tolist()
             n = randint(0, N)
             a = randint(0, N - n)
             b = randint(0, N - n)
-            x_lst[a:a + n] = x.tolist()[b:b + n]
-            x._copy2(a, x, b, n)
-            self.assertEqual(x, bitarray(x_lst))
-            self.assertEqual(len(x), N)
-            self.check_obj(x)
+            self.check_copy2(N, -1, a, b, n)
 
     def test_copy2_random_other(self):
         for N in range(500):
-            x = urandom(N, self.random_endian())
-            x_lst = x.tolist()
             M = randint(0, 5 + 2 * N)
-            y = urandom(M, self.random_endian())
             n = randint(0, min(N, M))
             a = randint(0, N - n)
             b = randint(0, M - n)
-            x_lst[a:a + n] = y.tolist()[b:b + n]
-            x._copy2(a, y, b, n)
-            self.assertEqual(x, bitarray(x_lst))
-            self.assertEqual(len(x), N)
-            self.check_obj(x)
+            self.check_copy2(N, M, a, b, n)
 
     @staticmethod
     def getslice(a, start, slicelength):
