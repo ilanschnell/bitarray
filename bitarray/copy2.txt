@@ -26,14 +26,16 @@ The steps copy2() performs are the following:
 
 3.) Store temporary bytes corresponding to p1, p2, p3 in t1, t2, t3.
     We need these bytes later to restore bits which got overwritten or
-    shifted away.
+    shifted away.  Note that we have to store t3 (the byte with b in other),
+    as other can be self.
 
 4.) Calculate the total right shift of bytes p1..p2 (once copied into self).
-    Note that this shift depends on a % 8 and b % 8.
+    This shift depends on a % 8 and b % 8, and has to be a right shift
+    below 8.
 
-5.) Using copy_n(), copy the byte region from other at p3 (or p3 + 1) into
-    self at p1.  Since in some cases we miss the beginning bit b in other,
-    we need t3, and fix those bits later.
+5.) Using copy_n(), copy the byte region from other at p3 or p3 + 1 into
+    self at p1.  Because in the latter case we miss the beginning bits in
+    other, we need t3 and copy those bits later.
 
 6.) Right shift self in byte range p1..p2.  This region includes the
     bit-range(a, a + n), but is generally larger.  This is why we need t1
@@ -45,8 +47,6 @@ The steps copy2() performs are the following:
 
 8.) Copy the first few bits from other to self (using t3, see step 5).
 
-
-That's it!
 
 Here is an example with the following parameters:
 
