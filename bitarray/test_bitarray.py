@@ -625,9 +625,9 @@ class InternalTests(unittest.TestCase, Util):
         for N in range(500):
             x = urandom(N, self.random_endian())
             x_lst = x.tolist()
-            a = randint(0, N)
-            b = randint(0, N)
-            n = randint(0, N - max(a, b))
+            n = randint(0, N)
+            a = randint(0, N - n)
+            b = randint(0, N - n)
             x_lst[a:a + n] = x.tolist()[b:b + n]
             x._copy2(a, x, b, n)
             self.assertEqual(x, bitarray(x_lst))
@@ -640,9 +640,9 @@ class InternalTests(unittest.TestCase, Util):
             x_lst = x.tolist()
             M = randint(0, 5 + 2 * N)
             y = urandom(M, self.random_endian())
-            a = randint(0, N)
-            b = randint(0, M)
-            n = randint(0, min(N - a, M - b))
+            n = randint(0, min(N, M))
+            a = randint(0, N - n)
+            b = randint(0, M - n)
             x_lst[a:a + n] = y.tolist()[b:b + n]
             x._copy2(a, y, b, n)
             self.assertEqual(x, bitarray(x_lst))
