@@ -265,7 +265,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 }
 
 /* copy n bits from other (starting at b) onto self (starting at a),
-   more details in copy_n.txt */
+   please find details about how this function works in copy_n.txt */
 static void
 copy_n(bitarrayobject *self, Py_ssize_t a,
        bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
@@ -2160,11 +2160,11 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
     }
 
     assert(0 < n && n < nbits);
-    if (right) {                  /* rshift */
+    if (right) {                /* rshift */
         copy_n(self, n, self, 0, nbits - n);
         setrange(self, 0, n, 0);
     }
-    else {                        /* lshift */
+    else {                      /* lshift */
         copy_n(self, 0, self, n, nbits - n);
         setrange(self, nbits - n, nbits, 0);
     }

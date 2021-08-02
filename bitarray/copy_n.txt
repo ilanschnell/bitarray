@@ -13,6 +13,7 @@ the source code:
 There are 3 cases handled by this function: (i) aligned case (ii) small n case
 (iii) general case.  We will briefly discuss the first two cases (which are
 pretty straight forward), and then go into more detail about the general case.
+For all cases, it is important to handle self == other.
 
 
 Aligned case
@@ -27,17 +28,20 @@ two operations (memmove() and copy_n()) matters when copying self to self.
 Small n case
 ------------
 
-For n smaller than a low limit (like 32), we use a sequence of getbit() and
-setbit() calls which is quite slow.  As other might be self, we need to
-either loop forward or backwards in order to not copy already changed bits.
+For n smaller than a low limit (like 32 bits), we use a sequence of getbit()
+and setbit() calls which is quite slow.  We could choose the low limit to be
+as low as 8.  However, as the general case has some overhead, we don't see
+a speedup over this case until we copy at least several bytes.
+As other might be self, we need to either loop forward or backwards in order
+to not copy from bits already changed.
 
 
 General case
 ------------
 
 We choose an aligned region to be copied using copy_n() itself, and use
-shift_r8() to and a few bit fixes to create the correct copy.  The is
-done in the following steps:
+shift_r8() and a few fixes to create the correct copy.  The is done in the
+following steps:
 
 1.) Calculate the following byte positions:
     p1: start (in self) memory is copied to, i.e. a / 8
