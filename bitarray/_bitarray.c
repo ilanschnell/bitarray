@@ -291,7 +291,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         if (a <= b)
             copy_n(self, bits + a, other, b + bits, n - bits);
     }
-    else if (n < 32) {                           /***** small n case *****/
+    else if (n < 24) {                           /***** small n case *****/
         Py_ssize_t i;
 
         if (a <= b) {  /* loop forward (delete) */

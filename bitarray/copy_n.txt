@@ -28,7 +28,7 @@ two operations (memmove() and copy_n()) matters when copying self to self.
 Small n case
 ------------
 
-For n smaller than a low limit (like 32 bits), we use a sequence of getbit()
+For n smaller than a low limit (like 24 bits), we use a sequence of getbit()
 and setbit() calls which is quite slow.  We could choose the low limit to be
 as low as 8.  However, as the general case has some overhead, we don't see
 a speedup over this case until we copy at least several bytes.
@@ -76,29 +76,29 @@ Here is an example with the following parameters:
 
 a = 21
 b = 6
-n = 32
+n = 31
 p1 = 2
 p2 = 6
 p3 = 0
 
 other
-bitarray('11011101 00111101 01010011 11010111 11001000 001')
-b..b+n          ^^ ^^^^^^^^ ^^^^^^^^ ^^^^^^^^ ^^^^^^
-                   ======== ======== ======== ======
+bitarray('00101110 11111001 01011101 11001011 10110000 01011110 011')
+b..b+n          ^^ ^^^^^^^^ ^^^^^^^^ ^^^^^^^^ ^^^^^
+                   ======== ======== ======== =====
                 33
 self
-bitarray('01000011 10110000 01111111 00110111 11000100 11011111 10011101')
-a..a+n                           ^^^ ^^^^^^^^ ^^^^^^^^ ^^^^^^^^ ^^^^^
+bitarray('01011101 11100101 01110101 01011001 01110100 10001010 01111011')
+a..a+n                           ^^^ ^^^^^^^^ ^^^^^^^^ ^^^^^^^^ ^^^^
                             11111
-                                                                     222
+                                                                    2222
 copy_n
-                            ======== ======== ======== ======
-bitarray('01000011 10110000 00111101 01010011 11010111 11001011 10011101')
+                            ======== ======== ======== =====
+bitarray('01011101 11100101 11111001 01011101 11001011 10110010 01111011')
 rshift 7
                             >>>>>>>> >>>>>>>> >>>>>>>> >>>>>>>> >>>>>>>>
-bitarray('01000011 10110000 00000000 01111010 10100111 10101111 10010111')
-a..a+n                             = ======== ======== ======== =====
+bitarray('01011101 11100101 00000001 11110010 10111011 10010111 01100100')
+a..a+n                             = ======== ======== ======== ====
                             11111
-                                                                     222
+                                                                    2222
                                  33
-bitarray('01000011 10110000 01111010 01111010 10100111 10101111 10010101')
+bitarray('01011101 11100101 01110101 11110010 10111011 10010111 01101011')
