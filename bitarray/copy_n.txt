@@ -11,9 +11,9 @@ the source code:
     n       number of bits being copied
 
 There are 3 cases handled by this function: (i) aligned case (ii) small n case
-(iii) general case.  We will briefly discuss the first two cases (which are
-pretty straight forward), and then go into more detail about the general case.
-For all cases, it is important to handle self == other.
+(iii) general case.  For all cases, it is important to handle self == other.
+We will briefly discuss the first two cases, and then go into more detail
+about the general case.
 
 
 Aligned case
@@ -76,29 +76,29 @@ Here is an example with the following parameters:
 
 a = 21
 b = 6
-n = 31
+n = 32
 p1 = 2
 p2 = 6
 p3 = 0
 
 other
-bitarray('00101110 11111001 01011101 11001011 10110000 01011110 00110011 01')
-b..b+n          ^^ ^^^^^^^^ ^^^^^^^^ ^^^^^^^^ ^^^^^
-                   ======== ======== ======== =====
+bitarray('11011101 00111101 01010011 11010111 11001000 001')
+b..b+n          ^^ ^^^^^^^^ ^^^^^^^^ ^^^^^^^^ ^^^^^^
+                   ======== ======== ======== ======
                 33
 self
-bitarray('01011101 11100101 01110101 01011001 01110100 10001010 01111111')
-a..a+n                           ^^^ ^^^^^^^^ ^^^^^^^^ ^^^^^^^^ ^^^^
+bitarray('01000011 10110000 01111111 00110111 11000100 11011111 10011101')
+a..a+n                           ^^^ ^^^^^^^^ ^^^^^^^^ ^^^^^^^^ ^^^^^
                             11111
-                                                                    2222
+                                                                     222
 copy_n
-                            ======== ======== ======== =====
-bitarray('01011101 11100101 11111001 01011101 11001011 10110010 01111111')
+                            ======== ======== ======== ======
+bitarray('01000011 10110000 00111101 01010011 11010111 11001011 10011101')
 rshift 7
                             >>>>>>>> >>>>>>>> >>>>>>>> >>>>>>>> >>>>>>>>
-bitarray('01011101 11100101 00000001 11110010 10111011 10010111 01100100')
-a..a+n                             = ======== ======== ======== ====
+bitarray('01000011 10110000 00000000 01111010 10100111 10101111 10010111')
+a..a+n                             = ======== ======== ======== =====
                             11111
-                                                                    2222
+                                                                     222
                                  33
-bitarray('01011101 11100101 01110101 11110010 10111011 10010111 01101111')
+bitarray('01000011 10110000 01111010 01111010 10100111 10101111 10010101')
