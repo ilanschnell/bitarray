@@ -1,51 +1,71 @@
-copy2() in _bitarray.c
-======================
+copy_n() in _bitarray.c
+=======================
 
-The function copy2() is tricky.  The following variable names are used to
-in this document (as well as in the source code):
+The following variable names are used to in this document, as well as in
+the source code:
 
-    self      bitarray object bits are copies onto
-    a         start bit (in self) bits are copied onto
-    other     bitarray object bits are copied from
-    b         start bit (in other) bits are copied from
-    n         number of bits being copied
+    self    bitarray object bits are copies onto
+    a       start bit (in self) bits are copied onto
+    other   bitarray object bits are copied from
+    b       start bit (in other) bits are copied from
+    n       number of bits being copied
 
-These variables (as well as the signature) of copy2() are the same as for
-copy_n(), which only performs aligned copies (using memmove()) when both
-a and b are multiples of 8.
+There are 3 cases handled by this function: (i) aligned case (ii) small n case
+(iii) general case.  We will briefly discuss the first two cases (which are
+pretty straight forward), and then go into more detail about the general case.
 
-The steps copy2() performs are the following:
 
-1.) If n is smaller than a small limit or if both a and b are multiples
-    of 8, call copy_n() and return.
+Aligned case
+------------
 
-2.) Calculate the following byte positions:
+In the aligned case, i.e. when both start positions (a and b) are a
+multiple of 8, we use memmove() on the first 8 * n bits, and call copy_n()
+on itself to handle the few remaining bits.  Note that the order of these
+two operations (memmove() and copy_n()) matters when copying self to self.
+
+
+Small n case
+------------
+
+For n smaller than a low limit (like 32), we use a sequence of getbit() and
+setbit() calls which is quite slow.  As other might be self, we need to
+either loop forward or backwards in order to not copy already changed bits.
+
+
+General case
+------------
+
+We choose an aligned region to be copied using copy_n() itself, and use
+shift_r8() to and a few bit fixes to create the correct copy.  The is
+done in the following steps:
+
+1.) Calculate the following byte positions:
     p1: start (in self) memory is copied to, i.e. a / 8
     p2: last (in self) memory is copied to, i.e. (a + n - 1) / 8
     p3: first (in other) memory is copied from, i.e. b / 8
 
-3.) Store temporary bytes corresponding to p1, p2, p3 in t1, t2, t3.
+2.) Store temporary bytes corresponding to p1, p2, p3 in t1, t2, t3.
     We need these bytes later to restore bits which got overwritten or
     shifted away.  Note that we have to store t3 (the byte with b in other),
     as other can be self.
 
-4.) Calculate the total right shift of bytes p1..p2 (once copied into self).
+3.) Calculate the total right shift of bytes p1..p2 (once copied into self).
     This shift depends on a % 8 and b % 8, and has to be a right shift
     below 8.
 
-5.) Using copy_n(), copy the byte region from other at p3 or p3 + 1 into
+4.) Using copy_n(), copy the byte region from other at p3 or p3 + 1 into
     self at p1.  Because in the latter case we miss the beginning bits in
     other, we need t3 and copy those bits later.
 
-6.) Right shift self in byte range p1..p2.  This region includes the
+5.) Right shift self in byte range p1..p2.  This region includes the
     bit-range(a, a + n), but is generally larger.  This is why we need t1
     and t2 to restore the bytes at p1 and p2 in self later.
 
-7.) Restore bits in self at, see step 6:
+6.) Restore bits in self at, see step 5:
     - p1 using t1 (those got overwritten and shifted)
     - p2 using t2 (those got shifted)
 
-8.) Copy the first few bits from other to self (using t3, see step 5).
+7.) Copy the first few bits from other to self (using t3, see step 4).
 
 
 Here is an example with the following parameters:

@@ -604,59 +604,60 @@ class InternalTests(unittest.TestCase, Util):
             x._shift_r8(a, b, n)
             self.assertEQUAL(x, self.shift_r8(y, a, b, n))
 
-    def test_copy2_explicit(self):
+    def test_copy_n_explicit(self):
         x = bitarray('11000100 11110')
         #                 ^^^^ ^
         y = bitarray('0101110001')
         #              ^^^^^
-        x._copy2(4, y, 1, 5)
+        x._copy_n(4, y, 1, 5)
         self.assertEqual(x, bitarray('11001011 11110'))
         #                                 ^^^^ ^
         x = bitarray('10110111 101', 'little')
         y = x.copy()
-        x._copy2(3, x, 3, 7)  # copy region of x onto x
+        x._copy_n(3, x, 3, 7)  # copy region of x onto x
         self.assertEqual(x, y)
-        x._copy2(3, bitarray(x, 'big'), 3, 7)  # as before but other endian
+        x._copy_n(3, bitarray(x, 'big'), 3, 7)  # as before but other endian
         self.assertEqual(x, y)
-        x._copy2(5, bitarray(), 0, 0)  # copy empty bitarray onto x
+        x._copy_n(5, bitarray(), 0, 0)  # copy empty bitarray onto x
         self.assertEqual(x, y)
 
-    def check_copy2(self, N, M, a, b, n):
+    def check_copy_n(self, N, M, a, b, n):
         x = urandom(N, self.random_endian())
         x_lst = x.tolist()
         y = x if M < 0 else urandom(M, self.random_endian())
         x_lst[a:a + n] = y.tolist()[b:b + n]
-        x._copy2(a, y, b, n)
+        x._copy_n(a, y, b, n)
         self.assertEqual(x, bitarray(x_lst))
         self.assertEqual(len(x), N)
         self.check_obj(x)
 
-    def test_copy2_range(self):
+    def test_copy_n_range(self):
         for a in range(8):
             for b in range(8):
-                self.check_copy2(50, -1, a, b, 40)
-                self.check_copy2(50, 50, a, b, 40)
+                for n in range(90):
+                    self.check_copy_n(100,  -1, a, b, n)
+                    self.check_copy_n(100, 100, a, b, n)
 
-    def test_copy2_random_self(self):
+    def test_copy_n_random_self(self):
         for N in range(500):
             n = randint(0, N)
             a = randint(0, N - n)
             b = randint(0, N - n)
-            self.check_copy2(N, -1, a, b, n)
+            self.check_copy_n(N, -1, a, b, n)
 
-    def test_copy2_random_other(self):
+    def test_copy_n_random_other(self):
         for N in range(500):
             M = randint(0, 5 + 2 * N)
             n = randint(0, min(N, M))
             a = randint(0, N - n)
             b = randint(0, M - n)
-            self.check_copy2(N, M, a, b, n)
+            self.check_copy_n(N, M, a, b, n)
 
     @staticmethod
     def getslice(a, start, slicelength):
         # this is the Python eqivalent of __getitem__ for slices with step=1
         b = bitarray(slicelength, a.endian())
-        b._copy2(0, a, start, slicelength)
+        b._copy_n(0, a, start, slicelength)
         return b
 
     def test_getslice(self):
