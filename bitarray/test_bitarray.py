@@ -585,24 +585,17 @@ class InternalTests(unittest.TestCase, Util):
         x._shift_r8(0, 2, 3)
         self.assertEqual(x, y)
 
-    @staticmethod
-    def shift_r8(x, a, b, n):
-        assert a <= b and 0 <= n < 8
-        y = x.tolist()
-        if n > 0 and a != b:
-            y[8 * a : 8 * b] = n * [0] + y[8 * a : 8 * b - n]
-        assert len(y) == len(x)
-        return bitarray(y, x.endian())
-
     def test_shift_r8_random_bytes(self):
         for N in range(100):
-            x = urandom(8 * N, self.random_endian())
             a = randint(0, N)
             b = randint(a, N)
             n = randint(0, 7)
+            x = urandom(8 * N, self.random_endian())
             y = x.copy()
             x._shift_r8(a, b, n)
-            self.assertEQUAL(x, self.shift_r8(y, a, b, n))
+            y[8 * a : 8 * b] >>= n
+            self.assertEQUAL(x, y)
+            self.assertEqual(len(x), 8 * N)
 
     def test_copy_n_explicit(self):
         x = bitarray('11000100 11110')
