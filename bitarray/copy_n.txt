@@ -72,7 +72,8 @@ following steps:
 7.) Copy the first few bits from other to self (using t3, see step 4).
 
 
-Here is an example with the following parameters:
+Here is an example with the following parameters (created using
+examples/copy_n.py):
 
 a = 21
 b = 6
