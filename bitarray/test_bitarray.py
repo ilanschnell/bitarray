@@ -614,6 +614,16 @@ class InternalTests(unittest.TestCase, Util):
         x._copy_n(5, bitarray(), 0, 0)  # copy empty bitarray onto x
         self.assertEqual(x, y)
 
+    def test_copy_n_example(self):
+        # example givin in bitarray/copy_n.txt
+        y = bitarray(
+            '00101110 11111001 01011101 11001011 10110000 01011110 011')
+        x =  bitarray(
+            '01011101 11100101 01110101 01011001 01110100 10001010 01111011')
+        x._copy_n(21, y, 6, 31)
+        self.assertEqual(x, bitarray(
+            '01011101 11100101 01110101 11110010 10111011 10010111 01101011'))
+
     def check_copy_n(self, N, M, a, b, n):
         x = urandom(N, self.random_endian())
         x_lst = x.tolist()
