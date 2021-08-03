@@ -1,5 +1,6 @@
 2021-XX-XX   2.2.5:
 -------------------
+  * add [example to illustrate how `copy_n()` works](../examples/copy_n.py)
 
 
 2021-07-29   2.2.4:
