@@ -51,6 +51,8 @@ def copy_n(self, a, other, b, n):
     p3 = b // 8
     sa = a % 8
     sb = 8 - b % 8
+
+    assert n >= 8
     assert b + sb == 8 * (p3 + 1)
     assert a - sa == 8 * p1
     assert a + n >= 8 * p2

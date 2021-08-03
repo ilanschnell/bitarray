@@ -312,6 +312,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         char t1, t2, t3;
         Py_ssize_t i;
 
+        assert(n >= 8);
         assert(b + sb == 8 * (p3 + 1));  /* useful equations */
         assert(a - sa == 8 * p1);
         assert(a + n > 8 * p2);
