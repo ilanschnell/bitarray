@@ -1,6 +1,7 @@
 2021-XX-XX   2.2.5:
 -------------------
-  * add [example to illustrate how `copy_n()` works](../examples/copy_n.py)
+  * add example to illustrate how
+    [unaligned copying](../examples/copy_n.py) works internally.
   * add documentation
 
 

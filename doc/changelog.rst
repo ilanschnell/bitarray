@@ -1,6 +1,13 @@
 Change log
 ==========
 
+2021-XX-XX   2.2.5:
+
+* add example to illustrate how
+  `unaligned copying <../examples/copy_n.py>`__ works internally.
+* add documentation
+
+
 **2.2.4** (2021-07-29):
 
 * use shift operations to speedup all unaligned copy operations, `#142 <https://github.com/ilanschnell/bitarray/issues/142>`__
