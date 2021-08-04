@@ -44,11 +44,24 @@ def copy_n(self, a, other, b, n):
         return
 
     if a % 8 == 0 and b % 8 == 0 and n >= 8: # aligned case
-        self[a:a + n] = other[b:b + n]
+        m = n // 8
+
+        if a > b:
+            copy_n(self, a + 8 * m, other, b + 8 * m, n % 8)
+
+        memoryview(self)[a//8:a//8 + m] = memoryview(other)[b//8:b//8 + m]
+
+        if a <= b:
+            copy_n(self, a + 8 * m, other, b + 8 * m, n % 8)
         return
 
     if n < 24:                               # small n case
-        self[a:a + n] = other[b:b + n]
+        if a <= b:  # loop forward
+            for i in range(n):
+                self[i + a] = other[i + b]
+        else:       # loop backwards
+            for i in range(n - 1, -1, -1):
+                self[i + a] = other[i + b]
         return
 
     # -------------------------------------- # general case

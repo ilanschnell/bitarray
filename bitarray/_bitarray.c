@@ -277,19 +277,17 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         return;
 
     if (a % 8 == 0 && b % 8 == 0 && n >= 8) {    /***** aligned case *****/
-        const size_t bytes = n / 8;
-        const Py_ssize_t bits = BITS(bytes);
+        const size_t m = n / 8;  /* bytes copied using memmove() */
 
-        assert(bytes > 0 && bits <= n && n < bits + 8);
         if (a > b)
-            copy_n(self, bits + a, other, b + bits, n - bits);
+            copy_n(self, a + BITS(m), other, b + BITS(m), n % 8);
 
-        memmove(self->ob_item + a / 8, other->ob_item + b / 8, bytes);
+        memmove(self->ob_item + a / 8, other->ob_item + b / 8, m);
         if (self->endian != other->endian)
-            bytereverse(self, a / 8, a / 8 + bytes);
+            bytereverse(self, a / 8, a / 8 + m);
 
         if (a <= b)
-            copy_n(self, bits + a, other, b + bits, n - bits);
+            copy_n(self, a + BITS(m), other, b + BITS(m), n % 8);
     }
     else if (n < 24) {                           /***** small n case *****/
         Py_ssize_t i;
