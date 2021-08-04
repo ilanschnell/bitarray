@@ -4,8 +4,14 @@ This is a Python implementation of the general case of copy_n() with output
 of the different stages of the of the bitarray we copy into.
 For more details, see also: bitarray/copy_n.txt
 """
+from __future__ import print_function
+
+import sys
 from random import randint
-from io import StringIO
+if sys.version_info[0] == 2:
+    from io import BytesIO as StringIO
+else:
+    from io import StringIO
 
 from bitarray import bitarray
 from bitarray.util import pprint, urandom
