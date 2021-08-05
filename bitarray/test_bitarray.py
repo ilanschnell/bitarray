@@ -2500,13 +2500,22 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(table[:9], b'\x00\x80\x40\xc0\x20\xa0\x60\xe0\x10')
 
         for n in range(100):
-            a = urandom(8 * n)
+            a = urandom(8 * n, self.random_endian())
             i = randint(0, n)  # start
             j = randint(0, n)  # stop
             b = a.copy()
             memoryview(b)[i:j] = b.tobytes()[i:j].translate(table)
             a.bytereverse(i, j)
-            self.assertEqual(a, b)
+            self.assertEQUAL(a, b)
+            self.check_obj(a)
+
+    def test_bytereverse_endian(self):
+        for n in range(20):
+            a = urandom(8 * n, self.random_endian())
+            b = a.copy()
+            a.bytereverse()
+            a = bitarray(a, self.other_endian(a.endian()))
+            self.assertEqual(a.tobytes(), b.tobytes())
 
 tests.append(MethodTests)
 
