@@ -164,7 +164,7 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 
     if (!setup) {
         /* setup translation table, which maps each byte to it's reversed:
-           trans = {0, 128, 64, 192, 32, 160, ..., 255} */
+           trans = {0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, ..., 0xff} */
         int j, k;
 
         for (k = 0; k < 256; k++) {

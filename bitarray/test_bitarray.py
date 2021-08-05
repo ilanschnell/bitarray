@@ -2493,10 +2493,11 @@ class MethodTests(unittest.TestCase, Util):
             self.check_obj(b)
 
     def test_bytereverse_random(self):
-        t = bitarray()
+        t = bitarray(endian=self.random_endian())
         t.frombytes(bytes(bytearray(range(256))))
         t.bytereverse()
         table = t.tobytes()  # translation table
+        self.assertEqual(table[:9], b'\x00\x80\x40\xc0\x20\xa0\x60\xe0\x10')
 
         for n in range(100):
             a = urandom(8 * n)
