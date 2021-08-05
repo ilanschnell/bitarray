@@ -832,14 +832,17 @@ Append `item` to the end of the bitarray.");
 static PyObject *
 bitarray_bytereverse(bitarrayobject *self, PyObject *args)
 {
-    Py_ssize_t start = 0, stop = Py_SIZE(self);
+    const Py_ssize_t nbytes = Py_SIZE(self);
+    Py_ssize_t start = 0, stop = nbytes;
 
     if (!PyArg_ParseTuple(args, "|nn:bytereverse", &start, &stop))
         return NULL;
 
+    if (start < 0 || start > nbytes || stop < 0 || stop > nbytes) {
+        PyErr_SetString(PyExc_IndexError, "byte index out of range");
+        return NULL;
+    }
     setunused(self);
-    normalize_index(Py_SIZE(self), &start);
-    normalize_index(Py_SIZE(self), &stop);
     bytereverse(self, start, stop);
     Py_RETURN_NONE;
 }
@@ -1098,7 +1101,7 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
         PyErr_SetString(PyExc_IndexError, "index out of range");
         return NULL;
     }
-    setbit(self, i, 1 - getbit(self, i));
+    self->ob_item[i / 8] ^= BITMASK(self->endian, i % 8);
     Py_RETURN_NONE;
 }
 
