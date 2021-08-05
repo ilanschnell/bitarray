@@ -4,6 +4,7 @@
   * add example to illustrate how
     [unaligned copying](../examples/copy_n.py) works internally.
   * add documentation
+  * add tests
 
 
 2021-07-29   2.2.4:

@@ -61,7 +61,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 2.2.5
+    bitarray version: 2.3.0
     sys.version: 2.7.15 (default, Mar  5 2020, 14:58:04) [GCC Clang 9.0.1]
     sys.prefix: /Users/ilan/Mini3/envs/py27
     pointer size: 64 bit
@@ -72,7 +72,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     .............................................................
     ----------------------------------------------------------------------
-    Ran 372 tests in 0.449s
+    Ran 375 tests in 0.461s
 
     OK
 
@@ -405,7 +405,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 2.2.5 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.3.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -456,10 +456,12 @@ The bitarray object:
    the last byte, and the allocated memory for the buffer (in bytes).
 
 
-``bytereverse()``
-   For all bytes representing the bitarray, reverse the bit order (in-place).
-   Note: This method changes the actual machine values representing the
-   bitarray; it does *not* change the endianness of the bitarray object.
+``bytereverse(start=0, stop=<end of buffer>, /)``
+   Reverse the bit order for the bytes in range(start, stop) in-place.
+   The start and stop indices are given in terms of bytes (not bits).
+   By default, all bytes in the buffer are reversed.
+   Note: This method only changes the buffer; it does not change the
+   endianness of the bitarray object.
 
 
 ``clear()``
