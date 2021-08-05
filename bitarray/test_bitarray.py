@@ -2478,6 +2478,10 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('00000111 11000000 11111100 111110'))
         a.bytereverse(2)  # reverse bytes 2 till end of buffer
         self.assertEqual(a, bitarray('00000111 11000000 00111111 000111'))
+        a.bytereverse(-1)  # reverse last byte
+        self.assertEqual(a, bitarray('00000111 11000000 00111111 001110'))
+        a.bytereverse(4, 0)  # start > stop (no change)
+        self.assertEqual(a, bitarray('00000111 11000000 00111111 001110'))
 
     def test_bytereverse_byte(self):
         for i in range(256):
@@ -2487,6 +2491,21 @@ class MethodTests(unittest.TestCase, Util):
             b.bytereverse()
             self.assertEqual(b, a[::-1])
             self.check_obj(b)
+
+    def test_bytereverse_random(self):
+        t = bitarray()
+        t.frombytes(bytes(bytearray(range(256))))
+        t.bytereverse()
+        table = t.tobytes()  # translation table
+
+        for n in range(100):
+            a = urandom(8 * n)
+            i = randint(0, n)  # start
+            j = randint(0, n)  # stop
+            b = a.copy()
+            memoryview(b)[i:j] = b.tobytes()[i:j].translate(table)
+            a.bytereverse(i, j)
+            self.assertEqual(a, b)
 
 tests.append(MethodTests)
 

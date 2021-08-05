@@ -849,7 +849,7 @@ PyDoc_STRVAR(bytereverse_doc,
 \n\
 Reverse the bit order for the bytes in range(start, stop) in-place.\n\
 The start and stop positions are given in terms of bytes (not bits).\n\
-By default, all bytes representing the bitarray are reversed.\n\
+By default, all bytes in the buffer are reversed.\n\
 Note: This method changes the actual machine values representing the\n\
 bitarray; it does *not* change the endianness of the bitarray object.");
 
