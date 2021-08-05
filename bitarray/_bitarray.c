@@ -830,17 +830,26 @@ Append `item` to the end of the bitarray.");
 
 
 static PyObject *
-bitarray_bytereverse(bitarrayobject *self)
+bitarray_bytereverse(bitarrayobject *self, PyObject *args)
 {
+    Py_ssize_t start = 0, stop = Py_SIZE(self);
+
+    if (!PyArg_ParseTuple(args, "|nn:bytereverse", &start, &stop))
+        return NULL;
+
     setunused(self);
-    bytereverse(self, 0, Py_SIZE(self));
+    normalize_index(Py_SIZE(self), &start);
+    normalize_index(Py_SIZE(self), &stop);
+    bytereverse(self, start, stop);
     Py_RETURN_NONE;
 }
 
 PyDoc_STRVAR(bytereverse_doc,
-"bytereverse()\n\
+"bytereverse(start=0, stop=<end of buffer>, /)\n\
 \n\
-For all bytes representing the bitarray, reverse the bit order (in-place).\n\
+Reverse the bit order for the bytes in range(start, stop) in-place.\n\
+The start and stop positions are given in terms of bytes (not bits).\n\
+By default, all bytes representing the bitarray are reversed.\n\
 Note: This method changes the actual machine values representing the\n\
 bitarray; it does *not* change the endianness of the bitarray object.");
 
@@ -3002,7 +3011,7 @@ static PyMethodDef bitarray_methods[] = {
      append_doc},
     {"buffer_info",  (PyCFunction) bitarray_buffer_info, METH_NOARGS,
      buffer_info_doc},
-    {"bytereverse",  (PyCFunction) bitarray_bytereverse, METH_NOARGS,
+    {"bytereverse",  (PyCFunction) bitarray_bytereverse, METH_VARARGS,
      bytereverse_doc},
     {"clear",        (PyCFunction) bitarray_clear,       METH_NOARGS,
      clear_doc},

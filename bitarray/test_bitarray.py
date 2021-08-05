@@ -2457,7 +2457,7 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a, bitarray(len(a) * [val]))
             self.check_obj(a)
 
-    def test_bytereverse_explicit(self):
+    def test_bytereverse_explicit_all(self):
         for x, y in [('', ''),
                      ('1', '0'),
                      ('1011', '0000'),
@@ -2469,6 +2469,15 @@ class MethodTests(unittest.TestCase, Util):
             a = bitarray(x)
             a.bytereverse()
             self.assertEqual(a, bitarray(y))
+
+    def test_bytereverse_explicit_range(self):
+        a = bitarray('11100000 00000011 00111111 111110')
+        a.bytereverse(0, 1)  # reverse byte 0
+        self.assertEqual(a, bitarray('00000111 00000011 00111111 111110'))
+        a.bytereverse(1, 3)  # reverse bytes 1 and 2
+        self.assertEqual(a, bitarray('00000111 11000000 11111100 111110'))
+        a.bytereverse(2)  # reverse bytes 2 till end of buffer
+        self.assertEqual(a, bitarray('00000111 11000000 00111111 000111'))
 
     def test_bytereverse_byte(self):
         for i in range(256):

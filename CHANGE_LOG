@@ -1,5 +1,6 @@
-2021-XX-XX   2.2.5:
+2021-XX-XX   2.3.0:
 -------------------
+  * add start and stop parameters to `.bytereverse()`
   * add example to illustrate how
     [unaligned copying](../examples/copy_n.py) works internally.
   * add documentation

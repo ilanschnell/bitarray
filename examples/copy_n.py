@@ -50,6 +50,8 @@ def copy_n(self, a, other, b, n):
             copy_n(self, a + 8 * m, other, b + 8 * m, n % 8)
 
         memoryview(self)[a//8:a//8 + m] = memoryview(other)[b//8:b//8 + m]
+        if self.endian() != other.endian():
+            self.bytereverse(a//8, a//8 + m)
 
         if a <= b:
             copy_n(self, a + 8 * m, other, b + 8 * m, n % 8)
@@ -144,13 +146,17 @@ def copy_n(self, a, other, b, n):
 
 
 def test_copy_n():
+
+    def random_endian():
+        return ['little', 'big'][randint(0, 1)]
+
     for N in range(1000):
         M = randint(0, 5 + 2 * N)
         n = randint(0, min(N, M))
         a = randint(0, N - n)
         b = randint(0, M - n)
-        x = urandom(N)
-        y = urandom(M)
+        x = urandom(N, random_endian())
+        y = urandom(M, random_endian())
         z = x.copy()
         copy_n(x, a, y, b, n)
         z[a:a + n] = y[b:b + n]
@@ -160,7 +166,7 @@ def test_copy_n():
         n = randint(0, N)
         a = randint(0, N - n)
         b = randint(0, N - n)
-        x = urandom(N)
+        x = urandom(N, random_endian())
         z = x.copy()
         copy_n(x, a, x, b, n)
         z[a:a + n] = z[b:b + n]
