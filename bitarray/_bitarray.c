@@ -478,47 +478,44 @@ count(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     return vi ? res : b - a - res;
 }
 
-/* Return index of first occurrence of vi, and -1 when vi is not found.
-   This function never fails. */
+/* return index of first occurrence of vi in self[a:b], and when not found */
 static Py_ssize_t
-find_bit(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
+find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 {
     Py_ssize_t i, j;
     char c;
 
-    assert(0 <= start && start <= self->nbits);
-    assert(0 <= stop && stop <= self->nbits);
+    assert(0 <= a && a <= self->nbits);
+    assert(0 <= b && b <= self->nbits);
     assert(0 <= vi && vi <= 1);
-    assert(BYTES(stop) <= Py_SIZE(self));
-
-    if (self->nbits == 0 || start >= stop)
+    if (self->nbits == 0 || a >= b)
         return -1;
 
     /* search within lowest (partial) byte */
-    for (i = start; i < stop && i < BITS(BYTES(start)); i++)
+    for (i = a; i < b && i < BITS(BYTES(a)); i++)
         if (getbit(self, i) == vi)
             return i;
-    if (i == stop)  /* not found */
+    if (i == b)  /* not found */
         return -1;
-    assert(i % 8 == 0 && i < stop && i < start + 8);
+    assert(i % 8 == 0 && i < b && i < a + 8);
 
     /* seraching for 1 means: break when byte is not 0x00
        searching for 0 means: break when byte is not 0xff */
     c = vi ? 0x00 : 0xff;
 
     /* skip ahead by checking whole bytes */
-    for (j = i >> 3; j < stop >> 3; j++) {
+    for (j = i / 8; j < b / 8; j++) {
         assert(0 <= j && j < Py_SIZE(self));
         if (c ^ self->ob_item[j])
             break;
     }
     /* search within found or highest (partial) byte */
-    for (i = BITS(j); i < stop; i++)
+    for (i = BITS(j); i < b; i++)
         if (getbit(self, i) == vi) {
             assert(i < BITS(j + 1));
             return i;
         }
-    assert(j == stop / 8 && i == stop);
+    assert(j == b / 8 && i == b);
     return -1;
 }
 
