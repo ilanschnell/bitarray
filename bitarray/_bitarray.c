@@ -427,7 +427,6 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
     assert(0 <= vi && vi <= 1);
-
     if (self->nbits == 0 || a >= b)
         return;
 
@@ -435,12 +434,10 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
         const Py_ssize_t byte_a = BYTES(a);
         const Py_ssize_t byte_b = b / 8;
 
-        for (i = a; i < BITS(byte_a); i++)
-            setbit(self, i, vi);
+        setrange(self, a, BITS(byte_a), vi);
         memset(self->ob_item + byte_a, vi ? 0xff : 0x00,
                (size_t) (byte_b - byte_a));
-        for (i = BITS(byte_b); i < b; i++)
-            setbit(self, i, vi);
+        setrange(self, BITS(byte_b), b, vi);
     }
     else {
         for (i = a; i < b; i++)
