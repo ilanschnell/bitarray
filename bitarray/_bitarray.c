@@ -218,18 +218,10 @@ _shift_r8_bl(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 {
-    const Py_ssize_t bword = UINT64_WORDS(b);
-    const Py_ssize_t aword = Py_MIN(UINT64_WORDS(a + 7), bword);
-    Py_ssize_t i;
-
     assert(0 <= n && n < 8 && a <= b);
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
-    assert(0 <= bword && bword <= Py_SIZE(self) / 8);
-    assert(0 <= aword && aword <= bword);
-    assert(UINT64_WORDS(8) == 0 || b < 8 * bword + 8);
-    assert(UINT64_WORDS(8) == 0 || a < 8 * aword + 8);
-    if (n == 0)
+    if (n == 0 || a == b)
         return;
 
     /* as the big-endian representation has reversed bit order in each
@@ -237,11 +229,19 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
     if (self->endian == ENDIAN_BIG)
         bytereverse(self, a, b);
 
-#define ucb  ((unsigned char *) (self)->ob_item)
     if (UINT64_WORDS(8) && b >= a + 8) {
+        const Py_ssize_t bword = UINT64_WORDS(b);
+        const Py_ssize_t aword = Py_MIN(UINT64_WORDS(a + 7), bword);
+        Py_ssize_t i;
+
+        assert(0 <= bword && bword <= Py_SIZE(self) / 8);
+        assert(0 <= aword && aword <= bword);
+        assert(b < 8 * bword + 8);
+        assert(a < 8 * aword + 8);
+
         _shift_r8_bl(self, 8 * bword, b, n);
-        if (a < 8 * bword && 8 * bword < b)
-            /* add byte from word below */
+#define ucb  ((unsigned char *) (self)->ob_item)
+        if (a < 8 * bword && 8 * bword < b)  /* add byte from word below */
             ucb[8 * bword] |= ucb[8 * bword - 1] >> (8 - n);
 
         for (i = bword - 1; i >= aword; i--) {
@@ -249,16 +249,14 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
             if (i != aword)    /* add shifted byte from next lower word */
                 ucb[8 * i] |= ucb[8 * i - 1] >> (8 - n);
         }
-        if (a < 8 * aword && 8 * aword < b)
-            /* add byte from below */
+        if (a < 8 * aword && 8 * aword < b)  /* add byte from below */
             ucb[8 * aword] |= ucb[8 * aword - 1] >> (8 - n);
-
+#undef ucb
         _shift_r8_bl(self, a, 8 * aword, n);
     }
     else {
         _shift_r8_bl(self, a, b, n);
     }
-#undef ucb
 
     if (self->endian == ENDIAN_BIG)  /* (re-) reverse bytes */
         bytereverse(self, a, b);
