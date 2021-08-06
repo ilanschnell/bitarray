@@ -191,33 +191,16 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 #define UINT64_WORDS(bytes)  0
 #endif
 
-/* Shift bits by n in byte-range(a, b) using byte level shifts to right.
-   This function is only designed to be called from inside shift_r8(). */
+/* Shift bits in byte-range(a, b) by n bits to right (using uint64 shifts
+   when possible).
+   The parameter (bebr = big endian byte reverse) is used to allow this
+   function to call itself without calling bytereverse().  Elsewhere, this
+   function should always be called with bebr=1. */
 static void
-_shift_r8_bl(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
+shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 {
     Py_ssize_t i;
 
-    assert(0 < n && n < 8 && a <= b);
-    assert(0 <= a && a <= Py_SIZE(self));
-    assert(0 <= b && b <= Py_SIZE(self));
-    /* when PY_UINT64_T is available, ensure we don't call this function
-       with large ranges */
-    assert(UINT64_WORDS(8) == 0 || b - a < 8);
-
-#define ucb  ((unsigned char *) (self)->ob_item)
-    for (i = b - 1; i >= a; i--) {
-        ucb[i] <<= n;    /* shift byte (from highest to lowest) */
-        if (i != a)      /* add shifted next lower byte */
-            ucb[i] |= ucb[i - 1] >> (8 - n);
-    }
-#undef ucb
-}
-
-/* shift bits in byte-range(a, b) by n bits to right (using uint64 shifts) */
-static void
-shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
-{
     assert(0 <= n && n < 8 && a <= b);
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
@@ -226,20 +209,19 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 
     /* as the big-endian representation has reversed bit order in each
        byte, we reverse each byte, and (re-) reverse again below */
-    if (self->endian == ENDIAN_BIG)
+    if (bebr && self->endian == ENDIAN_BIG)
         bytereverse(self, a, b);
 
     if (UINT64_WORDS(8) && b >= a + 8) {
         const Py_ssize_t bword = UINT64_WORDS(b);
         const Py_ssize_t aword = Py_MIN(UINT64_WORDS(a + 7), bword);
-        Py_ssize_t i;
 
         assert(0 <= bword && bword <= Py_SIZE(self) / 8);
         assert(0 <= aword && aword <= bword);
         assert(b < 8 * bword + 8);
         assert(a < 8 * aword + 8);
 
-        _shift_r8_bl(self, 8 * bword, b, n);
+        shift_r8(self, 8 * bword, b, n, 0);
 #define ucb  ((unsigned char *) (self)->ob_item)
         if (a < 8 * bword && 8 * bword < b)  /* add byte from word below */
             ucb[8 * bword] |= ucb[8 * bword - 1] >> (8 - n);
@@ -251,14 +233,21 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
         }
         if (a < 8 * aword && 8 * aword < b)  /* add byte from below */
             ucb[8 * aword] |= ucb[8 * aword - 1] >> (8 - n);
-#undef ucb
-        _shift_r8_bl(self, a, 8 * aword, n);
+
+        shift_r8(self, a, 8 * aword, n, 0);
     }
     else {
-        _shift_r8_bl(self, a, b, n);
-    }
+        /* when PY_UINT64_T is available, ensure we don't use large ranges */
+        assert(UINT64_WORDS(8) == 0 || b - a < 8);
 
-    if (self->endian == ENDIAN_BIG)  /* (re-) reverse bytes */
+        for (i = b - 1; i >= a; i--) {
+            ucb[i] <<= n;    /* shift byte (from highest to lowest) */
+            if (i != a)      /* add shifted next lower byte */
+                ucb[i] |= ucb[i - 1] >> (8 - n);
+        }
+ #undef ucb
+    }
+    if (bebr && self->endian == ENDIAN_BIG)  /* (re-) reverse bytes */
         bytereverse(self, a, b);
 }
 
@@ -323,7 +312,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         if (sa + sb >= 8)
             sb -= 8;
         copy_n(self, 8 * p1, other, b + sb, n - sb);  /* aligned copy */
-        shift_r8(self, p1, p2 + 1, sa + sb);          /* right shift */
+        shift_r8(self, p1, p2 + 1, sa + sb, 1);       /* right shift */
 
         for (i = 8 * p1; i < a; i++)  /* restore bits at p1 */
             setbit(self, i, t1 & BITMASK(self->endian, i));
@@ -1640,7 +1629,7 @@ bitarray_shift_r8(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "nni", &a, &b, &n))
         return NULL;
 
-    shift_r8(self, a, b, n);
+    shift_r8(self, a, b, n, 1);
     Py_RETURN_NONE;
 }
 
