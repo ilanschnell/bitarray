@@ -213,28 +213,26 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
         bytereverse(self, a, b);
 
     if (UINT64_WORDS(8) && b >= a + 8) {
-        const Py_ssize_t bword = UINT64_WORDS(b);
-        const Py_ssize_t aword = Py_MIN(UINT64_WORDS(a + 7), bword);
+        const Py_ssize_t word_a = (a + 7) / 8;
+        const Py_ssize_t word_b = UINT64_WORDS(b);
 
-        assert(0 <= bword && bword <= Py_SIZE(self) / 8);
-        assert(0 <= aword && aword <= bword);
-        assert(b < 8 * bword + 8);
-        assert(a < 8 * aword + 8);
+        assert(word_a <= word_b && word_b <= Py_SIZE(self) / 8);
+        assert(b < 8 * word_b + 8 && a < 8 * word_a + 8);
 
-        shift_r8(self, 8 * bword, b, n, 0);
+        shift_r8(self, 8 * word_b, b, n, 0);
 #define ucb  ((unsigned char *) (self)->ob_item)
-        if (a < 8 * bword && 8 * bword < b)  /* add byte from word below */
-            ucb[8 * bword] |= ucb[8 * bword - 1] >> (8 - n);
+        if (a < 8 * word_b && 8 * word_b < b)  /* add byte from word below */
+            ucb[8 * word_b] |= ucb[8 * word_b - 1] >> (8 - n);
 
-        for (i = bword - 1; i >= aword; i--) {
+        for (i = word_b - 1; i >= word_a; i--) {
             UINT64_BUFFER(self)[i] <<= n; /* shift word */
-            if (i != aword)    /* add shifted byte from next lower word */
+            if (i != word_a)    /* add shifted byte from next lower word */
                 ucb[8 * i] |= ucb[8 * i - 1] >> (8 - n);
         }
-        if (a < 8 * aword && 8 * aword < b)  /* add byte from below */
-            ucb[8 * aword] |= ucb[8 * aword - 1] >> (8 - n);
+        if (a < 8 * word_a && 8 * word_a < b)  /* add byte from below */
+            ucb[8 * word_a] |= ucb[8 * word_a - 1] >> (8 - n);
 
-        shift_r8(self, a, 8 * aword, n, 0);
+        shift_r8(self, a, 8 * word_a, n, 0);
     }
     else {
         /* when PY_UINT64_T is available, ensure we don't use large ranges */
@@ -465,7 +463,7 @@ count(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     return vi ? res : b - a - res;
 }
 
-/* return index of first occurrence of vi in self[a:b], and when not found */
+/* return index of first occurrence of vi in self[a:b], -1 when not found */
 static Py_ssize_t
 find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 {

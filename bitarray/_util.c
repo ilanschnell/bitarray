@@ -138,7 +138,7 @@ Raises `ValueError`, when n exceeds total count (`a.count()`).");
 
 /* ----------------------------- right index --------------------------- */
 
-/* return index of last occurrence of vi; return -1 when vi is not found */
+/* return index of highest occurrence of vi in self[a:b], -1 when not found */
 static Py_ssize_t
 find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 {
