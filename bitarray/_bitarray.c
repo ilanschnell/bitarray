@@ -469,8 +469,7 @@ count(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 static Py_ssize_t
 find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 {
-    Py_ssize_t i, j;
-    char c;
+    Py_ssize_t i;
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
@@ -478,32 +477,29 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     if (self->nbits == 0 || a >= b)
         return -1;
 
-    /* search within lowest (partial) byte */
-    for (i = a; i < b && i < BITS(BYTES(a)); i++)
-        if (getbit(self, i) == vi)
-            return i;
-    if (i == b)  /* not found */
-        return -1;
-    assert(i % 8 == 0 && i < b && i < a + 8);
+    if (b > a + 8) {
+        const Py_ssize_t byte_a = BYTES(a);
+        const Py_ssize_t byte_b = b / 8;
+        const char c = vi ? 0x00 : 0xff;
+        Py_ssize_t res;
 
-    /* seraching for 1 means: break when byte is not 0x00
-       searching for 0 means: break when byte is not 0xff */
-    c = vi ? 0x00 : 0xff;
-
-    /* skip ahead by checking whole bytes */
-    for (j = i / 8; j < b / 8; j++) {
-        assert(0 <= j && j < Py_SIZE(self));
-        if (c ^ self->ob_item[j])
-            break;
-    }
-    /* search within found or highest (partial) byte */
-    for (i = BITS(j); i < b; i++)
-        if (getbit(self, i) == vi) {
-            assert(i < BITS(j + 1));
-            return i;
+        if ((res = find_bit(self, vi, a, BITS(byte_a))) >= 0)
+            return res;
+        /* skip ahead by checking whole bytes */
+        for (i = byte_a; i < byte_b; i++) {
+            assert(0 <= i && i < Py_SIZE(self));
+            if (c ^ self->ob_item[i])
+                return find_bit(self, vi, BITS(i), BITS(i) + 8);
         }
-    assert(j == b / 8 && i == b);
-    return -1;
+        return find_bit(self, vi, BITS(byte_b), b);
+    }
+    else {
+        assert(b - a <= 8);
+        for (i = a; i < b; i++)
+            if (getbit(self, i) == vi)
+                return i;
+        return -1;
+    }
 }
 
 /* Return first occurrence of bitarray xa (in self), such that xa is contained
