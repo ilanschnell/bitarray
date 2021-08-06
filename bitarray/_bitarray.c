@@ -434,6 +434,8 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
         const Py_ssize_t byte_a = BYTES(a);
         const Py_ssize_t byte_b = b / 8;
 
+        assert(a + 8 > BITS(byte_a) && BITS(byte_b) + 8 > b);
+
         setrange(self, a, BITS(byte_a), vi);
         memset(self->ob_item + byte_a, vi ? 0xff : 0x00,
                (size_t) (byte_b - byte_a));
@@ -448,37 +450,32 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 /* Return number of 'vi' bits in range(start, stop).
    This function never fails. */
 static Py_ssize_t
-count(bitarrayobject *self, int vi, Py_ssize_t start, Py_ssize_t stop)
+count(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 {
     Py_ssize_t res = 0, i;
 
-    assert(0 <= start && start <= self->nbits);
-    assert(0 <= stop && stop <= self->nbits);
+    assert(0 <= a && a <= self->nbits);
+    assert(0 <= b && b <= self->nbits);
     assert(0 <= vi && vi <= 1);
-    assert(BYTES(stop) <= Py_SIZE(self));
-
-    if (self->nbits == 0 || start >= stop)
+    if (self->nbits == 0 || a >= b)
         return 0;
 
-    if (stop >= start + 8) {
-        const Py_ssize_t byte_start = BYTES(start);
-        const Py_ssize_t byte_stop = stop >> 3;
-        Py_ssize_t j;
+    if (b >= a + 8) {
+        const Py_ssize_t byte_a = BYTES(a);
+        const Py_ssize_t byte_b = b / 8;
 
-        assert(start + 8 > BITS(byte_start) && BITS(byte_stop) + 8 > stop);
+        assert(a + 8 > BITS(byte_a) && BITS(byte_b) + 8 > b);
 
-        for (i = start; i < BITS(byte_start); i++)
-            res += getbit(self, i);
-        for (j = byte_start; j < byte_stop; j++)
-            res += bitcount_lookup[(unsigned char) self->ob_item[j]];
-        for (i = BITS(byte_stop); i < stop; i++)
-            res += getbit(self, i);
+        res += count(self, 1, a, BITS(byte_a));
+        for (i = byte_a; i < byte_b; i++)
+            res += bitcount_lookup[(unsigned char) self->ob_item[i]];
+        res += count(self, 1, BITS(byte_b), b);
     }
     else {
-        for (i = start; i < stop; i++)
+        for (i = a; i < b; i++)
             res += getbit(self, i);
     }
-    return vi ? res : stop - start - res;
+    return vi ? res : b - a - res;
 }
 
 /* Return index of first occurrence of vi, and -1 when vi is not found.
