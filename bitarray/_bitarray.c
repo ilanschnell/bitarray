@@ -469,23 +469,39 @@ count(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 static Py_ssize_t
 find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 {
-    Py_ssize_t i;
+    const Py_ssize_t n = b - a;
+    Py_ssize_t res, i;
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
     assert(0 <= vi && vi <= 1);
-    if (self->nbits == 0 || a >= b)
+    if (self->nbits == 0 || n <= 0)
         return -1;
 
-    if (b > a + 8) {
+#ifdef PY_UINT64_T
+    if (n > 64) {
+        const Py_ssize_t word_a = (a + 63) / 64;
+        const Py_ssize_t word_b = b / 64;
+        const PY_UINT64_T c = vi ? 0 : ~0;
+
+        if ((res = find_bit(self, vi, a, 64 * word_a)) >= 0)
+            return res;
+
+        for (i = word_a; i < word_b; i++) {
+            if (c ^ UINT64_BUFFER(self)[i])
+                return find_bit(self, vi, 64 * i, 64 * i + 64);
+        }
+        return find_bit(self, vi, 64 * word_b, b);
+    }
+#endif
+    if (n > 8) {
         const Py_ssize_t byte_a = BYTES(a);
         const Py_ssize_t byte_b = b / 8;
-        const char c = vi ? 0x00 : 0xff;
-        Py_ssize_t res;
+        const char c = vi ? 0 : ~0;
 
         if ((res = find_bit(self, vi, a, BITS(byte_a))) >= 0)
             return res;
-        /* skip ahead by checking whole bytes */
+
         for (i = byte_a; i < byte_b; i++) {
             assert(0 <= i && i < Py_SIZE(self));
             if (c ^ self->ob_item[i])
@@ -493,13 +509,11 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         }
         return find_bit(self, vi, BITS(byte_b), b);
     }
-    else {
-        assert(b - a <= 8);
-        for (i = a; i < b; i++)
-            if (getbit(self, i) == vi)
-                return i;
-        return -1;
-    }
+    assert(n <= 8);
+    for (i = a; i < b; i++)
+        if (getbit(self, i) == vi)
+            return i;
+    return -1;
 }
 
 /* Return first occurrence of bitarray xa (in self), such that xa is contained

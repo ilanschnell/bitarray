@@ -1,5 +1,6 @@
 2021-08-XX   2.2.5:
 -------------------
+  * speedup `find_bit()` using uint64 checking
   * add start and stop arguments to `.bytereverse()`
   * add example to illustrate how
     [unaligned copying](../examples/copy_n.py) works internally.
