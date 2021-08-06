@@ -140,40 +140,52 @@ Raises `ValueError`, when n exceeds total count (`a.count()`).");
 
 /* return index of last occurrence of vi; return -1 when vi is not found */
 static Py_ssize_t
-find_last(bitarrayobject *a, int vi)
+find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 {
-    Py_ssize_t i, j;
-    char c;
+    const Py_ssize_t n = b - a;
+    Py_ssize_t res, i;
 
-    assert(vi == 0 || vi == 1);
-    if (a->nbits == 0)
+    assert(0 <= a && a <= self->nbits);
+    assert(0 <= b && b <= self->nbits);
+    assert(0 <= vi && vi <= 1);
+    if (self->nbits == 0 || n <= 0)
         return -1;
 
-    /* search within highest (partial) byte */
-    for (i = a->nbits - 1; i >= BITS(a->nbits >> 3); i--)
-        if (getbit(a, i) == vi)
-            return i;
-    if (i < 0)  /* not found */
-        return -1;
-    assert((i + 1) % 8 == 0 && i == BITS(a->nbits >> 3) - 1);
+#ifdef PY_UINT64_T
+    if (n > 64) {
+        const Py_ssize_t word_a = (a + 63) / 64;
+        const Py_ssize_t word_b = b / 64;
+        const PY_UINT64_T c = vi ? 0 : ~0;
 
-    /* seraching for 1 means: break when byte is not 0x00
-       searching for 0 means: break when byte is not 0xff */
-    c = vi ? 0x00 : 0xff;
+        if ((res = find_last(self, vi, 64 * word_b, b)) >= 0)
+            return res;
 
-    /* skip ahead by checking whole bytes */
-    for (j = i >> 3; j >= 0; j--) {
-        assert(0 <= j && j < Py_SIZE(a));
-        if (c ^ a->ob_item[j])
-            break;
-    }
-    /* search within byte found */
-    for (i = BITS(j) + 7; i >= 0; i--)
-        if (getbit(a, i) == vi) {
-            assert(BITS(j) <= i && i < BITS(j + 1));
-            return i;
+        for (i = word_b - 1; i >= word_a; i--) {
+            if (c ^ ((PY_UINT64_T *) self->ob_item)[i])
+                return find_last(self, vi, 64 * i, 64 * i + 64);
         }
-    assert(j < 0 && i < 0);
+        return find_last(self, vi, a, 64 * word_a);
+    }
+#endif
+    if (n > 8) {
+        const Py_ssize_t byte_a = BYTES(a);
+        const Py_ssize_t byte_b = b / 8;
+        const char c = vi ? 0 : ~0;
+
+        if ((res = find_last(self, vi, BITS(byte_b), b)) >= 0)
+            return res;
+
+        for (i = byte_b - 1; i >= byte_a; i--) {
+            assert(0 <= i && i < Py_SIZE(self));
+            if (c ^ self->ob_item[i])
+                return find_last(self, vi, BITS(i), BITS(i) + 8);
+        }
+        return find_last(self, vi, a, BITS(byte_a));
+    }
+    assert(n <= 8);
+    for (i = b - 1; i >= a; i--)
+        if (getbit(self, i) == vi)
+            return i;
     return -1;
 }
 
@@ -192,7 +204,9 @@ r_index(PyObject *module, PyObject *args)
     if ((vi = pybit_as_int(v)) < 0)
         return NULL;
 
-    i = find_last((bitarrayobject *) a, vi);
+#define aa  ((bitarrayobject *) a)
+    i = find_last(aa, vi, 0, aa->nbits);
+#undef aa
     if (i < 0)
         return PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
 
