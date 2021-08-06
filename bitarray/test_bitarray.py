@@ -2293,11 +2293,10 @@ class MethodTests(unittest.TestCase, Util):
     def test_invert_random(self):
         for a in self.randombitarrays(start=1):
             b = a.copy()
-            c = a.copy()
             i = randint(0, len(a) - 1)
             b.invert(i)
-            c[i] = not c[i]
-            self.assertEQUAL(b, c)
+            a[i] = not a[i]
+            self.assertEQUAL(a, b)
 
     def test_sort_simple(self):
         a = bitarray('1101000')
