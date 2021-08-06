@@ -4,7 +4,7 @@
 
    Author: Ilan Schnell
 */
-#define BITARRAY_VERSION  "2.3.0"
+#define BITARRAY_VERSION  "2.2.5"
 
 /* .ob_size is buffer size (in bytes), not the number of elements.
    The number of elements (bits) is .nbits. */
