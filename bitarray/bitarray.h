@@ -135,6 +135,19 @@ static const unsigned char bitcount_lookup[256] = {
 #undef B6
 };
 
+/* normalize index (which may be negative), such that 0 <= i <= n */
+static inline void
+normalize_index(Py_ssize_t n, Py_ssize_t *i)
+{
+    if (*i < 0) {
+        *i += n;
+        if (*i < 0)
+            *i = 0;
+    }
+    if (*i > n)
+        *i = n;
+}
+
 /* Interpret a PyObject (usually PyLong or PyBool) as a bit, return 0 or 1.
    On error, return -1 and set error message. */
 static inline int

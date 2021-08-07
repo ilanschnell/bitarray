@@ -738,19 +738,6 @@ unpack(bitarrayobject *self, char zero, char one, const char *fmt)
 
 /* --------- helper functions not involving bitarrayobjects ------------ */
 
-/* Normalize index (which may be negative), such that 0 <= i <= n */
-static void
-normalize_index(Py_ssize_t n, Py_ssize_t *i)
-{
-    if (*i < 0) {
-        *i += n;
-        if (*i < 0)
-            *i = 0;
-    }
-    if (*i > n)
-        *i = n;
-}
-
 /* Given a string, return an integer representing the endianness.
    If the string is invalid, set a Python exception and return -1. */
 static int
