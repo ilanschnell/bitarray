@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.2.4 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.2.5 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -52,10 +52,12 @@ The bitarray object:
    the last byte, and the allocated memory for the buffer (in bytes).
 
 
-``bytereverse()``
-   For all bytes representing the bitarray, reverse the bit order (in-place).
-   Note: This method changes the actual machine values representing the
-   bitarray; it does *not* change the endianness of the bitarray object.
+``bytereverse(start=0, stop=<end of buffer>, /)``
+   Reverse the bit order for the bytes in range(start, stop) in-place.
+   The start and stop indices are given in terms of bytes (not bits).
+   By default, all bytes in the buffer are reversed.
+   Note: This method only changes the buffer; it does not change the
+   endianness of the bitarray object.
 
 
 ``clear()``

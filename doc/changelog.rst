@@ -1,11 +1,15 @@
 Change log
 ==========
 
-2021-XX-XX   2.2.5:
+**2.2.5** (2021-08-07):
 
+* speedup ``find_bit()`` and ``find_last()`` using uint64 checking, this means
+  a speedup for ``.find()``, ``.index()``, ``.search()`` and ``util.rindex()``
+* add start and stop arguments to ``.bytereverse()``
 * add example to illustrate how
   `unaligned copying <../examples/copy_n.py>`__ works internally.
 * add documentation
+* add tests
 
 
 **2.2.4** (2021-07-29):
