@@ -274,18 +274,18 @@ class TestsRIndex(unittest.TestCase, Util):
                               bitarray('11111', endian), 0)
 
     def test_range(self):
-        for n in range(50):
-            a = bitarray(n)
-            for m in range(n):
-                a.setall(0)
-                self.assertRaises(ValueError, rindex, a, 1)
-                a[m] = 1
-                self.assertEqual(rindex(a, 1), m)
+        n = 250
+        a = bitarray(n)
+        for m in range(n):
+            a.setall(0)
+            self.assertRaises(ValueError, rindex, a, 1)
+            a[m] = 1
+            self.assertEqual(rindex(a, 1), m)
 
-                a.setall(1)
-                self.assertRaises(ValueError, rindex, a, 0)
-                a[m] = 0
-                self.assertEqual(rindex(a, 0), m)
+            a.setall(1)
+            self.assertRaises(ValueError, rindex, a, 0)
+            a[m] = 0
+            self.assertEqual(rindex(a, 0), m)
 
     def test_random(self):
         for a in self.randombitarrays():
@@ -303,7 +303,7 @@ class TestsRIndex(unittest.TestCase, Util):
 
     def test_many_set(self):
         for _ in range(10):
-            n = randint(1, 100000)
+            n = randint(1, 10000)
             v = randint(0, 1)
             a = bitarray(n)
             a.setall(not v)

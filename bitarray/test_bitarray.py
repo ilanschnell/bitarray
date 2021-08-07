@@ -2642,22 +2642,22 @@ class IndexTests(unittest.TestCase, Util):
         self.assertEqual(a.find(s), 187)
 
     def test_range(self):
-        for n in range(50):
-            a = bitarray(n)
-            for m in range(n):
-                a.setall(0)
-                self.assertRaises(ValueError, a.index, 1)
-                self.assertEqual(a.find(1), -1)
-                a[m] = 1
-                self.assertEqual(a.index(1), m)
-                self.assertEqual(a.find(1), m)
+        n = 250
+        a = bitarray(n)
+        for m in range(n):
+            a.setall(0)
+            self.assertRaises(ValueError, a.index, 1)
+            self.assertEqual(a.find(1), -1)
+            a[m] = 1
+            self.assertEqual(a.index(1), m)
+            self.assertEqual(a.find(1), m)
 
-                a.setall(1)
-                self.assertRaises(ValueError, a.index, 0)
-                self.assertEqual(a.find(0), -1)
-                a[m] = 0
-                self.assertEqual(a.index(0), m)
-                self.assertEqual(a.find(0), m)
+            a.setall(1)
+            self.assertRaises(ValueError, a.index, 0)
+            self.assertEqual(a.find(0), -1)
+            a[m] = 0
+            self.assertEqual(a.index(0), m)
+            self.assertEqual(a.find(0), m)
 
     def test_explicit(self):
         for endian in 'big', 'little':
@@ -2701,7 +2701,7 @@ class IndexTests(unittest.TestCase, Util):
         for _ in range(10):
             start = randint(0, 2000)
             stop = randint(0, 2000)
-            try:
+            try:  # reference from list
                 res0 = aa.index(1, start, stop)
             except ValueError:
                 res0 = -1
@@ -2716,7 +2716,7 @@ class IndexTests(unittest.TestCase, Util):
             self.assertEqual(res2, res0)
 
     def test_random_2(self):
-        for n in range(1, 50):
+        for n in range(1, 70):
             a = bitarray(n)
             i = randint(0, 1)
             a.setall(i)
@@ -2724,8 +2724,8 @@ class IndexTests(unittest.TestCase, Util):
                 a.invert(randint(0, n - 1))
             aa = a.tolist()
             for _ in range(10):
-                start = randint(-50, n + 50)
-                stop = randint(-50, n + 50)
+                start = randint(-10, n + 10)
+                stop = randint(-10, n + 10)
                 try:
                     res0 = aa.index(not i, start, stop)
                 except ValueError:
