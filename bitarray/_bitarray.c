@@ -476,6 +476,9 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         return -1;
 
 #ifdef PY_UINT64_T
+    /* When the search range is greater than 64 bits, we skip uint64 words.
+       Note that we cannot check for n >= 64 here as the function could then
+       go into an infinite recursive loop when a word is found. */
     if (n > 64) {
         const Py_ssize_t word_a = (a + 63) / 64;
         const Py_ssize_t word_b = b / 64;
@@ -491,6 +494,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         return find_bit(self, vi, 64 * word_b, b);
     }
 #endif
+    /* For the same reason as above, we cannot check for n >= 8 here. */
     if (n > 8) {
         const Py_ssize_t byte_a = BYTES(a);
         const Py_ssize_t byte_b = b / 8;
