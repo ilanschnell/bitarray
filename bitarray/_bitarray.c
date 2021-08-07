@@ -479,13 +479,13 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     if (n > 64) {
         const Py_ssize_t word_a = (a + 63) / 64;
         const Py_ssize_t word_b = b / 64;
-        const PY_UINT64_T c = vi ? 0 : ~0;
+        const PY_UINT64_T w = vi ? 0 : ~0;
 
         if ((res = find_bit(self, vi, a, 64 * word_a)) >= 0)
             return res;
 
         for (i = word_a; i < word_b; i++) {  /* skip uint64 words */
-            if (c ^ UINT64_BUFFER(self)[i])
+            if (w ^ UINT64_BUFFER(self)[i])
                 return find_bit(self, vi, 64 * i, 64 * i + 64);
         }
         return find_bit(self, vi, 64 * word_b, b);
@@ -496,6 +496,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         const Py_ssize_t byte_b = b / 8;
         const char c = vi ? 0 : ~0;
 
+        assert(n <= 64);
         if ((res = find_bit(self, vi, a, BITS(byte_a))) >= 0)
             return res;
 
