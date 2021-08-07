@@ -479,7 +479,7 @@ The bitarray object:
 ``count(value=1, start=0, stop=<end of array>, /)`` -> int
    Count the number of occurrences of ``value`` in the bitarray.
 
-   New in version 1.1: optional start and stop arguments.
+   New in version 1.1.0: optional start and stop arguments.
 
 
 ``decode(code, /)`` -> list
@@ -542,6 +542,8 @@ The bitarray object:
 ``invert(index=<all bits>, /)``
    Invert all bits in the array (in-place).
    When the optional ``index`` is given, only invert the single bit at index.
+
+   New in version 1.5.3: optional index argument.
 
 
 ``iterdecode(code, /)`` -> iterator
