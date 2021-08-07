@@ -6,7 +6,7 @@
 -------------------
   * speedup `find_bit()` and `find_last()` using uint64 checking, this means
     a speedup for `.find()`, `.index()`, `.search()` and `util.rindex()`
-  * add start and stop arguments to `.bytereverse()`
+  * add optional start and stop arguments to `.bytereverse()`
   * add example to illustrate how
     [unaligned copying](../examples/copy_n.py) works internally.
   * add documentation
@@ -323,7 +323,7 @@
 2019-11-07   1.1.0:
 -------------------
   * add frozenbitarray object
-  * add optional start and stop parameters to .count() method
+  * add optional start and stop arguments to `.count()` method
   * add official Python 3.8 support
   * optimize `setrange()` C-function by using `memset()`
   * fix issue #74, bitarray is hashable on Python 2
