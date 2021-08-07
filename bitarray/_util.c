@@ -160,7 +160,7 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         if ((res = find_last(self, vi, 64 * word_b, b)) >= 0)
             return res;
 
-        for (i = word_b - 1; i >= word_a; i--) {
+        for (i = word_b - 1; i >= word_a; i--) {  /* skip uint64 words */
             if (c ^ ((PY_UINT64_T *) self->ob_item)[i])
                 return find_last(self, vi, 64 * i, 64 * i + 64);
         }
@@ -175,7 +175,7 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         if ((res = find_last(self, vi, BITS(byte_b), b)) >= 0)
             return res;
 
-        for (i = byte_b - 1; i >= byte_a; i--) {
+        for (i = byte_b - 1; i >= byte_a; i--) {  /* skip bytes */
             assert(0 <= i && i < Py_SIZE(self));
             if (c ^ self->ob_item[i])
                 return find_last(self, vi, BITS(i), BITS(i) + 8);
@@ -183,9 +183,10 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         return find_last(self, vi, a, BITS(byte_a));
     }
     assert(n <= 8);
-    for (i = b - 1; i >= a; i--)
+    for (i = b - 1; i >= a; i--) {
         if (getbit(self, i) == vi)
             return i;
+    }
     return -1;
 }
 

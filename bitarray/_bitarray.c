@@ -211,16 +211,17 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
        byte, we reverse each byte, and (re-) reverse again below */
     if (bebr && self->endian == ENDIAN_BIG)
         bytereverse(self, a, b);
+#define ucb  ((unsigned char *) (self)->ob_item)
 
-    if (UINT64_WORDS(8) && b >= a + 8) {
+#ifdef PY_UINT64_T
+    if (b >= a + 8) {
         const Py_ssize_t word_a = (a + 7) / 8;
-        const Py_ssize_t word_b = UINT64_WORDS(b);
+        const Py_ssize_t word_b = b / 8;
 
         assert(word_a <= word_b && word_b <= Py_SIZE(self) / 8);
         assert(b < 8 * word_b + 8 && a < 8 * word_a + 8);
 
         shift_r8(self, 8 * word_b, b, n, 0);
-#define ucb  ((unsigned char *) (self)->ob_item)
         if (a < 8 * word_b && 8 * word_b < b)  /* add byte from word below */
             ucb[8 * word_b] |= ucb[8 * word_b - 1] >> (8 - n);
 
@@ -234,17 +235,15 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 
         shift_r8(self, a, 8 * word_a, n, 0);
     }
-    else {
-        /* when PY_UINT64_T is available, ensure we don't use large ranges */
-        assert(UINT64_WORDS(8) == 0 || b - a < 8);
-
+#endif
+    if (UINT64_WORDS(8) == 0 || b < a + 8) {
         for (i = b - 1; i >= a; i--) {
             ucb[i] <<= n;    /* shift byte (from highest to lowest) */
             if (i != a)      /* add shifted next lower byte */
                 ucb[i] |= ucb[i - 1] >> (8 - n);
         }
- #undef ucb
     }
+#undef ucb
     if (bebr && self->endian == ENDIAN_BIG)  /* (re-) reverse bytes */
         bytereverse(self, a, b);
 }
@@ -485,7 +484,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         if ((res = find_bit(self, vi, a, 64 * word_a)) >= 0)
             return res;
 
-        for (i = word_a; i < word_b; i++) {
+        for (i = word_a; i < word_b; i++) {  /* skip uint64 words */
             if (c ^ UINT64_BUFFER(self)[i])
                 return find_bit(self, vi, 64 * i, 64 * i + 64);
         }
@@ -500,7 +499,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         if ((res = find_bit(self, vi, a, BITS(byte_a))) >= 0)
             return res;
 
-        for (i = byte_a; i < byte_b; i++) {
+        for (i = byte_a; i < byte_b; i++) {  /* skip bytes */
             assert(0 <= i && i < Py_SIZE(self));
             if (c ^ self->ob_item[i])
                 return find_bit(self, vi, BITS(i), BITS(i) + 8);
@@ -508,9 +507,10 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         return find_bit(self, vi, BITS(byte_b), b);
     }
     assert(n <= 8);
-    for (i = a; i < b; i++)
+    for (i = a; i < b; i++) {
         if (getbit(self, i) == vi)
             return i;
+    }
     return -1;
 }
 
