@@ -172,7 +172,6 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         const Py_ssize_t byte_b = b / 8;
         const char c = vi ? 0 : ~0;
 
-        assert(n <= 64);
         if ((res = find_last(self, vi, BITS(byte_b), b)) >= 0)
             return res;
 
