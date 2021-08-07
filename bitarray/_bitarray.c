@@ -218,8 +218,8 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
         const Py_ssize_t word_a = (a + 7) / 8;
         const Py_ssize_t word_b = b / 8;
 
-        assert(word_a <= word_b && word_b <= Py_SIZE(self) / 8);
-        assert(a < 8 * word_a + 8 && b < 8 * word_b + 8);
+        assert(word_a <= word_b && 8 * (word_b - 1) + 7 < Py_SIZE(self));
+        assert(b - 8 * word_b < 8 && 8 * word_a - a < 8);
 
         shift_r8(self, 8 * word_b, b, n, 0);
         if (a < 8 * word_b && 8 * word_b < b)  /* add byte from word below */
@@ -487,7 +487,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         if ((res = find_bit(self, vi, a, 64 * word_a)) >= 0)
             return res;
 
-        assert(word_a <= word_b && word_b <= Py_SIZE(self) / 8);
+        assert(word_a <= word_b && 8 * (word_b - 1) + 7 < Py_SIZE(self));
         for (i = word_a; i < word_b; i++) {  /* skip uint64 words */
             if (w ^ UINT64_BUFFER(self)[i])
                 return find_bit(self, vi, 64 * i, 64 * i + 64);
