@@ -1,3 +1,7 @@
+2021-XX-XX   2.2.6:
+-------------------
+
+
 2021-08-07   2.2.5:
 -------------------
   * speedup `find_bit()` and `find_last()` using uint64 checking, this means
