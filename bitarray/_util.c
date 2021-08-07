@@ -177,7 +177,7 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
             return res;
 
         for (i = byte_b - 1; i >= byte_a; i--) {  /* skip bytes */
-            assert(0 <= i && i < Py_SIZE(self));
+            assert_byte_in_range(self, i);
             if (c ^ self->ob_item[i])
                 return find_last(self, vi, BITS(i), BITS(i) + 8);
         }
