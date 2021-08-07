@@ -736,29 +736,6 @@ unpack(bitarrayobject *self, char zero, char one, const char *fmt)
     return result;
 }
 
-/* --------- helper functions not involving bitarrayobjects ------------ */
-
-/* Given a string, return an integer representing the endianness.
-   If the string is invalid, set a Python exception and return -1. */
-static int
-endian_from_string(const char* string)
-{
-    assert(default_endian == ENDIAN_LITTLE || default_endian == ENDIAN_BIG);
-
-    if (string == NULL)
-        return default_endian;
-
-    if (strcmp(string, "little") == 0)
-        return ENDIAN_LITTLE;
-
-    if (strcmp(string, "big") == 0)
-        return ENDIAN_BIG;
-
-    PyErr_Format(PyExc_ValueError, "bit endianness must be either "
-                                   "'little' or 'big', got: '%s'", string);
-    return -1;
-}
-
 /**************************************************************************
                      Implementation of bitarray methods
  **************************************************************************/
@@ -3073,6 +3050,27 @@ static PyMethodDef bitarray_methods[] = {
 };
 
 /* ------------------------ bitarray initialization -------------------- */
+
+/* Given a string, return an integer representing the endianness.
+   If the string is invalid, set a Python exception and return -1. */
+static int
+endian_from_string(const char* string)
+{
+    assert(default_endian == ENDIAN_LITTLE || default_endian == ENDIAN_BIG);
+
+    if (string == NULL)
+        return default_endian;
+
+    if (strcmp(string, "little") == 0)
+        return ENDIAN_LITTLE;
+
+    if (strcmp(string, "big") == 0)
+        return ENDIAN_BIG;
+
+    PyErr_Format(PyExc_ValueError, "bit endianness must be either "
+                                   "'little' or 'big', got: '%s'", string);
+    return -1;
+}
 
 static PyObject *
 bitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
