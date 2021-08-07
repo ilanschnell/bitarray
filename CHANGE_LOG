@@ -1,5 +1,6 @@
 2021-XX-XX   2.2.6:
 -------------------
+  * add optional start and stop arguments to `util.rindex()`
 
 
 2021-08-07   2.2.5:

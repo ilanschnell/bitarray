@@ -698,9 +698,11 @@ This sub-module was add in version 1.2.
    New in version 1.3.
 
 
-``rindex(bitarray, value=1, /)`` -> int
-   Return the rightmost index of ``value`` in bitarray.
+``rindex(bitarray, value=1, start=0, stop=<end of array>, /)`` -> int
+   Return the rightmost (highest) index of ``value`` in bitarray.
    Raises ``ValueError`` if the value is not present.
+
+   New in version 2.2.6: optional start and stop arguments.
 
 
 ``strip(bitarray, /, mode='right')`` -> bitarray

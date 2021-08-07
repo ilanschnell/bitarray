@@ -195,30 +195,31 @@ static PyObject *
 r_index(PyObject *module, PyObject *args)
 {
     PyObject *v = Py_True, *a;
-    Py_ssize_t i;
+    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, res;
     int vi;
 
-    if (!PyArg_ParseTuple(args, "O|O:rindex", &a, &v))
+    if (!PyArg_ParseTuple(args, "O|Onn:rindex", &a, &v, &start, &stop))
         return NULL;
     if (ensure_bitarray(a) < 0)
         return NULL;
-
     if ((vi = pybit_as_int(v)) < 0)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
-    i = find_last(aa, vi, 0, aa->nbits);
+    normalize_index(aa->nbits, &start);
+    normalize_index(aa->nbits, &stop);
+    res = find_last(aa, vi, start, stop);
 #undef aa
-    if (i < 0)
+    if (res < 0)
         return PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
 
-    return PyLong_FromSsize_t(i);
+    return PyLong_FromSsize_t(res);
 }
 
 PyDoc_STRVAR(rindex_doc,
-"rindex(bitarray, value=1, /) -> int\n\
+"rindex(bitarray, value=1, start=0, stop=<end of array>, /) -> int\n\
 \n\
-Return the rightmost index of `value` in bitarray.\n\
+Return the rightmost (highest) index of `value` in bitarray.\n\
 Raises `ValueError` if the value is not present.");
 
 /* --------------------------- unary functions ------------------------- */

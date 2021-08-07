@@ -248,19 +248,26 @@ class TestsRIndex(unittest.TestCase, Util):
     def test_simple(self):
         self.assertRaises(TypeError, rindex)
         self.assertRaises(TypeError, rindex, None)
-        self.assertRaises(TypeError, rindex, bitarray(), 1, 2)
+        self.assertRaises(ValueError, rindex, bitarray(), 1)
         for endian in 'big', 'little':
-            a = bitarray('00010110000', endian)
+            a = bitarray('00010110 000', endian)
             self.assertEqual(rindex(a), 6)
             self.assertEqual(rindex(a, 1), 6)
+            self.assertEqual(rindex(a, 1, 3), 6)
+            self.assertEqual(rindex(a, 1, 3, 8), 6)
+            self.assertEqual(rindex(a, 1, 0, 5), 3)
             self.assertRaises(TypeError, rindex, a, 'A')
             self.assertRaises(ValueError, rindex, a, 2)
+            self.assertRaises(ValueError, rindex, a, 1, 7)
+            self.assertRaises(ValueError, rindex, a, 1, 10, 3)
+            self.assertRaises(TypeError, rindex, a, 1, 10, 3, 4)
 
-            a = bitarray('00010110111', endian)
+            a = bitarray('00010110 111', endian)
             self.assertEqual(rindex(a, 0), 7)
+            self.assertEqual(rindex(a, 0, 0, 4), 2)
             self.assertEqual(rindex(a, False), 7)
 
-            a = frozenbitarray('00010110111', endian)
+            a = frozenbitarray('00010110 111', endian)
             self.assertEqual(rindex(a, 0), 7)
             self.assertRaises(TypeError, rindex, a, None)
             self.assertRaises(ValueError, rindex, a, 7)
@@ -300,6 +307,23 @@ class TestsRIndex(unittest.TestCase, Util):
             except ValueError:
                 j = None
             self.assertEqual(i, j)
+
+    def test_random_start_stop(self):
+        n = 2000
+        a = zeros(n)
+        indices = [randint(0, n - 1) for _ in range(100)]
+        for i in indices:
+            a[i] = 1
+        for _ in range(100):
+            start = randint(0, n)
+            stop = randint(0, n)
+            filtered = [i for i in indices if i >= start and i < stop]
+            ref = max(filtered) if filtered else -1
+            try:
+                res = rindex(a, 1, start, stop)
+            except ValueError:
+                res = -1
+            self.assertEqual(res, ref)
 
     def test_many_set(self):
         for _ in range(10):

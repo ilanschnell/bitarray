@@ -18,6 +18,7 @@ NEW_IN = {
     'bitarray.bytereverse': '2.2.5: optional start and stop arguments',
     'bitarray.count':       '1.1.0: optional start and stop arguments',
     'bitarray.clear':       '1.4',
+    'bitarray.find':        '2.1',
     'bitarray.invert':      '1.5.3: optional index argument',
     'decodetree':           '1.6',
     'util.urandom':         '1.7',
@@ -27,7 +28,7 @@ NEW_IN = {
     'util.ba2base':         '1.9',
     'util.base2ba':         '1.9',
     'util.parity':          '1.9',
-    'bitarray.find':        '2.1',
+    'util.rindex':          '2.2.6: optional start and stop arguments',
     'util.vl_encode':       '2.2',
     'util.vl_decode':       '2.2',
 }
