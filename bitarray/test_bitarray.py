@@ -2694,13 +2694,14 @@ class IndexTests(unittest.TestCase, Util):
         self.assertEqual(a.find(s, 15, -1), -1)
 
     def test_random(self):
-        a = zeros(2000)
-        for _ in range(3):
-            a[randint(0, 1999)] = 1
-        aa = a.tolist()
+        n = 2000
+        a = zeros(n)
         for _ in range(10):
-            start = randint(0, 2000)
-            stop = randint(0, 2000)
+            a[randint(0, n - 1)] = 1
+        aa = a.tolist()
+        for _ in range(100):
+            start = randint(0, n)
+            stop = randint(0, n)
             try:  # reference from list
                 res0 = aa.index(1, start, stop)
             except ValueError:
