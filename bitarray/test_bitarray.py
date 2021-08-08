@@ -2317,11 +2317,12 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.sort, 'A')
 
     def test_sort_random(self):
-        for rev in 0, 1:
+        for rev in False, True, 0, 1, 7:
             for a in self.randombitarrays():
-                b = a.tolist()
+                lst = a.tolist()
+                lst.sort(reverse=rev)
                 a.sort(rev)
-                self.assertEqual(a, bitarray(sorted(b, reverse=rev)))
+                self.assertEqual(a, bitarray(lst))
                 self.check_obj(a)
 
     def test_reverse_simple(self):
