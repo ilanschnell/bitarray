@@ -1143,16 +1143,13 @@ bitarray_repr(bitarrayobject *self)
 static PyObject *
 bitarray_reverse(bitarrayobject *self)
 {
-    const Py_ssize_t m = self->nbits - 1;     /* index of last item */
-    Py_ssize_t i;
+    Py_ssize_t i, j;
     int t;
 
-    if (self->nbits > 1) {
-        for (i = 0; i < self->nbits / 2; i++) {
-            t = getbit(self, i);
-            setbit(self, i, getbit(self, m - i));
-            setbit(self, m - i, t);
-        }
+    for (i = 0, j = self->nbits - 1; i < j; i++, j--) {
+        t = getbit(self, i);
+        setbit(self, i, getbit(self, j));
+        setbit(self, j, t);
     }
     Py_RETURN_NONE;
 }
