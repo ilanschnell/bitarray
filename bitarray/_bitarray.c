@@ -430,8 +430,7 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     }
 }
 
-/* Return number of 'vi' bits in range(start, stop).
-   This function never fails. */
+/* return number of 'vi' bits in range(a, b) */
 static Py_ssize_t
 count(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 {
