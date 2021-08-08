@@ -410,7 +410,6 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
-    assert(0 <= vi && vi <= 1);
     assert(a <= b);
 
     if (b >= a + 8) {
@@ -438,7 +437,6 @@ count(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
-    assert(0 <= vi && vi <= 1);
     if (a >= b)
         return 0;
 
@@ -880,7 +878,6 @@ bitarray_count(bitarrayobject *self, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "|Onn:count", &v, &start, &stop))
         return NULL;
-
     if ((vi = pybit_as_int(v)) < 0)
         return NULL;
 
@@ -1249,7 +1246,6 @@ bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:sort", kwlist, &reverse))
         return NULL;
-    reverse = reverse ? 1 : 0;
 
     cnt = count(self, reverse, 0, self->nbits);
     setrange(self, 0, cnt, reverse);
