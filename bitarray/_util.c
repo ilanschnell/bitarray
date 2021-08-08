@@ -57,16 +57,18 @@ ensure_ba_of_length(PyObject *a, const Py_ssize_t n)
 static Py_ssize_t
 count_to_n(bitarrayobject *a, Py_ssize_t n)
 {
+    const Py_ssize_t nbits = a->nbits;
     Py_ssize_t i = 0;        /* index */
     Py_ssize_t j = 0;        /* total count up to index */
     Py_ssize_t block_start, block_stop, k, m;
 
+    assert(0 <= n && n <= nbits);
     if (n == 0)
         return 0;
 
 #define BLOCK_BITS  8192
     /* by counting big blocks we save comparisons */
-    while (i + BLOCK_BITS < a->nbits) {
+    while (i + BLOCK_BITS < nbits) {
         m = 0;
         assert(i % 8 == 0);
         block_start = i >> 3;
@@ -81,7 +83,7 @@ count_to_n(bitarrayobject *a, Py_ssize_t n)
     }
 #undef BLOCK_BITS
 
-    while (i + 8 < a->nbits) {
+    while (i + 8 < nbits) {
         k = i >> 3;
         assert(k < Py_SIZE(a));
         m = bitcount_lookup[(unsigned char) a->ob_item[k]];
@@ -91,7 +93,7 @@ count_to_n(bitarrayobject *a, Py_ssize_t n)
         i += 8;
     }
 
-    while (j < n && i < a->nbits ) {
+    while (j < n && i < nbits ) {
         j += getbit(a, i);
         i++;
     }
