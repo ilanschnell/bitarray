@@ -1244,24 +1244,16 @@ static PyObject *
 bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"reverse", NULL};
-    const Py_ssize_t n = self->nbits;
-    Py_ssize_t n0, n1;
+    Py_ssize_t cnt;
     int reverse = 0;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:sort", kwlist, &reverse))
         return NULL;
+    reverse = reverse ? 1 : 0;
 
-    n1 = count(self, 1, 0, n);
-
-    if (reverse) {
-        setrange(self, 0, n1, 1);
-        setrange(self, n1, n, 0);
-    }
-    else {
-        n0 = n - n1;
-        setrange(self, 0, n0, 0);
-        setrange(self, n0, n, 1);
-    }
+    cnt = count(self, reverse, 0, self->nbits);
+    setrange(self, 0, cnt, reverse);
+    setrange(self, cnt, self->nbits, !reverse);
     Py_RETURN_NONE;
 }
 
