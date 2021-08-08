@@ -150,7 +150,7 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
     assert(0 <= vi && vi <= 1);
-    if (self->nbits == 0 || n <= 0)
+    if (n <= 0)
         return -1;
 
     /* the logic here is the same as in find_bit() in _bitarray.c */

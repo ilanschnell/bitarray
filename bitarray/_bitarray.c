@@ -411,8 +411,7 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
     assert(0 <= vi && vi <= 1);
-    if (self->nbits == 0 || a >= b)
-        return;
+    assert(a <= b);
 
     if (b >= a + 8) {
         const Py_ssize_t byte_a = BYTES(a);
@@ -441,7 +440,7 @@ count(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
     assert(0 <= vi && vi <= 1);
-    if (self->nbits == 0 || a >= b)
+    if (a >= b)
         return 0;
 
     if (b >= a + 8) {
@@ -472,7 +471,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
     assert(0 <= vi && vi <= 1);
-    if (self->nbits == 0 || n <= 0)
+    if (n <= 0)
         return -1;
 
 #ifdef PY_UINT64_T
