@@ -2325,7 +2325,7 @@ class MethodTests(unittest.TestCase, Util):
                 self.assertEqual(a, bitarray(lst))
                 self.check_obj(a)
 
-    def test_reverse_simple(self):
+    def test_reverse_explicit(self):
         for x, y in [('', ''), ('1', '1'), ('10', '01'), ('001', '100'),
                      ('1110', '0111'), ('11100', '00111'),
                      ('011000', '000110'), ('1101100', '0011011'),
@@ -2344,7 +2344,7 @@ class MethodTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             b = a.copy()
             a.reverse()
-            self.assertEQUAL(a, bitarray(b.tolist()[::-1], endian=a.endian()))
+            self.assertEQUAL(a, bitarray(reversed(b), endian=a.endian()))
             self.assertEQUAL(a, b[::-1])
             self.check_obj(a)
 
@@ -2494,9 +2494,12 @@ class MethodTests(unittest.TestCase, Util):
         for i in range(256):
             a = bitarray()
             a.frombytes(bytes(bytearray([i])))
+            self.assertEqual(len(a), 8)
             b = a.copy()
             b.bytereverse()
             self.assertEqual(b, a[::-1])
+            a.reverse()
+            self.assertEqual(b, a)
             self.check_obj(b)
 
     def test_bytereverse_random(self):
