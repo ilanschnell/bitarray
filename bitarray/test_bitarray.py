@@ -2693,28 +2693,28 @@ class IndexTests(unittest.TestCase, Util):
         self.assertEqual(a.find(s, 15, 22), -1)
         self.assertEqual(a.find(s, 15, -1), -1)
 
-    def test_random(self):
+    def test_random_start_stop(self):
         n = 2000
         a = zeros(n)
-        for _ in range(10):
+        for _ in range(100):
             a[randint(0, n - 1)] = 1
         aa = a.tolist()
         for _ in range(100):
             start = randint(0, n)
             stop = randint(0, n)
             try:  # reference from list
-                res0 = aa.index(1, start, stop)
+                ref = aa.index(1, start, stop)
             except ValueError:
-                res0 = -1
+                ref = -1
 
             res1 = a.find(1, start, stop)
-            self.assertEqual(res1, res0)
+            self.assertEqual(res1, ref)
 
             try:
                 res2 = a.index(1, start, stop)
             except ValueError:
                 res2 = -1
-            self.assertEqual(res2, res0)
+            self.assertEqual(res2, ref)
 
     def test_random_2(self):
         for n in range(1, 70):
