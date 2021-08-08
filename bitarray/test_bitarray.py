@@ -2317,11 +2317,15 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.sort, 'A')
 
     def test_sort_random(self):
-        for rev in False, True, 0, 1, 7:
+        for rev in False, True, 0, 1, 7, -1, -7, None:
             for a in self.randombitarrays():
                 lst = a.tolist()
-                lst.sort(reverse=rev)
-                a.sort(rev)
+                if rev is None:
+                    lst.sort()
+                    a.sort()
+                else:
+                    lst.sort(reverse=rev)
+                    a.sort(reverse=rev)
                 self.assertEqual(a, bitarray(lst))
                 self.check_obj(a)
 
