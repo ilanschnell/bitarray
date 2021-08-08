@@ -1144,10 +1144,9 @@ static PyObject *
 bitarray_reverse(bitarrayobject *self)
 {
     Py_ssize_t i, j;
-    int t;
 
     for (i = 0, j = self->nbits - 1; i < j; i++, j--) {
-        t = getbit(self, i);
+        int t = getbit(self, i);
         setbit(self, i, getbit(self, j));
         setbit(self, j, t);
     }
@@ -1157,7 +1156,7 @@ bitarray_reverse(bitarrayobject *self)
 PyDoc_STRVAR(reverse_doc,
 "reverse()\n\
 \n\
-Reverse the order of bits in the array (in-place).");
+Reverse all bits in the array (in-place).");
 
 
 static PyObject *

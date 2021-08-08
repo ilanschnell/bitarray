@@ -2,6 +2,7 @@
 -------------------
   * add optional start and stop arguments to `util.rindex()`
   * add missing type hinting for new `.bytereverse()` arguments
+  * avoid `.reverse()` using temporary memory
 
 
 2021-08-07   2.2.5:
