@@ -70,7 +70,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     }
 
     if (newsize == 0) {
-        PyMem_FREE(self->ob_item);
+        PyMem_Free(self->ob_item);
         self->ob_item = NULL;
         Py_SET_SIZE(self, 0);
         self->allocated = 0;
