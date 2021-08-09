@@ -1444,13 +1444,22 @@ static PyObject *
 bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"zero", "one", NULL};
-    char zero = 0x00, one = 0x01;
+    PyObject *res;
+    char zero = 0x00, one = 0x01, *str;
+    Py_ssize_t i;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|cc:unpack", kwlist,
                                      &zero, &one))
         return NULL;
 
-    return unpack(self, zero, one, BYTES_SIZE_FMT);
+    if ((res = PyBytes_FromStringAndSize(NULL, self->nbits)) == NULL)
+        return PyErr_NoMemory();
+    assert(PyBytes_Check(res));
+
+    str = PyBytes_AsString(res);
+    for (i = 0; i < self->nbits; i++)
+        str[i] = getbit(self, i) ? one : zero;
+    return res;
 }
 
 PyDoc_STRVAR(unpack_doc,
