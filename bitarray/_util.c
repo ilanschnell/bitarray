@@ -754,9 +754,10 @@ vl_encode(PyObject *module, PyObject *a)
     padding = m - aa->nbits;  /* number of pad bits */
     assert(0 <= padding && padding < 7);
 
-    if ((str = (char *) PyMem_Malloc((size_t) n)) == NULL)
+    if ((result = PyBytes_FromStringAndSize(NULL, n)) == NULL)
         return PyErr_NoMemory();
 
+    str = PyBytes_AsString(result);
     str[0] = aa->nbits > 4 ? 0x80 : 0x00;  /* leading bit */
     str[0] |= padding << 4;                /* encode padding */
     for (i = 0; i < 4 && i < aa->nbits; i++)
@@ -773,8 +774,6 @@ vl_encode(PyObject *module, PyObject *a)
 #undef aa
     assert(j == n - 1);
 
-    result = PyBytes_FromStringAndSize(str, n);
-    PyMem_Free((void *) str);
     return result;
 }
 
