@@ -713,7 +713,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     return -1;
 }
 
-/* place characters ('0' or '1') corresponding to self into str */
+/* place self->nbits characters ('0', '1' corresponding to self) into str */
 static void
 setstr01(bitarrayobject *self, char *str)
 {
