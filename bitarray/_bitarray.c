@@ -542,13 +542,24 @@ find(bitarrayobject *self, bitarrayobject *xa,
     return -1;
 }
 
+/* place self->nbits characters ('0', '1' corresponding to self) into str */
+static void
+setstr01(bitarrayobject *self, char *str)
+{
+    Py_ssize_t i;
+
+    for (i = 0; i < self->nbits; i++)
+        str[i] = getbit(self, i) ? '1' : '0';
+}
+
+/* set item i in self to given value */
 static int
-set_item(bitarrayobject *self, Py_ssize_t i, PyObject *v)
+set_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
 {
     int vi;
 
     assert(0 <= i && i < self->nbits);
-    if ((vi = pybit_as_int(v)) < 0)
+    if ((vi = pybit_as_int(value)) < 0)
         return -1;
     setbit(self, i, vi);
     return 0;
@@ -713,16 +724,6 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     return -1;
 }
 
-/* place self->nbits characters ('0', '1' corresponding to self) into str */
-static void
-setstr01(bitarrayobject *self, char *str)
-{
-    Py_ssize_t i;
-
-    for (i = 0; i < self->nbits; i++)
-        str[i] = getbit(self, i) ? '1' : '0';
-}
-
 /**************************************************************************
                      Implementation of bitarray methods
  **************************************************************************/
@@ -863,13 +864,13 @@ Return a copy of the bitarray.");
 static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
-    PyObject *v = Py_True;
+    PyObject *value = Py_True;
     Py_ssize_t start = 0, stop = self->nbits;
     int vi;
 
-    if (!PyArg_ParseTuple(args, "|Onn:count", &v, &start, &stop))
+    if (!PyArg_ParseTuple(args, "|Onn:count", &value, &start, &stop))
         return NULL;
-    if ((vi = pybit_as_int(v)) < 0)
+    if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
     normalize_index(self->nbits, &start);
@@ -1001,15 +1002,15 @@ static PyObject *
 bitarray_insert(bitarrayobject *self, PyObject *args)
 {
     Py_ssize_t i;
-    PyObject *v;
+    PyObject *value;
     int vi;
 
-    if (!PyArg_ParseTuple(args, "nO:insert", &i, &v))
+    if (!PyArg_ParseTuple(args, "nO:insert", &i, &value))
         return NULL;
 
     normalize_index(self->nbits, &i);
 
-    if ((vi = pybit_as_int(v)) < 0)
+    if ((vi = pybit_as_int(value)) < 0)
         return NULL;
     if (insert_n(self, i, 1) < 0)
         return NULL;
@@ -1204,11 +1205,11 @@ specified.  By default, all search results are returned.");
 
 
 static PyObject *
-bitarray_setall(bitarrayobject *self, PyObject *v)
+bitarray_setall(bitarrayobject *self, PyObject *value)
 {
     int vi;
 
-    if ((vi = pybit_as_int(v)) < 0)
+    if ((vi = pybit_as_int(value)) < 0)
         return NULL;
     memset(self->ob_item, vi ? 0xff : 0x00, (size_t) Py_SIZE(self));
     Py_RETURN_NONE;
@@ -1414,14 +1415,13 @@ bits are considered 0.");
 static PyObject *
 bitarray_to01(bitarrayobject *self)
 {
-    const Py_ssize_t nbits = self->nbits;
     PyObject *result;
     char *str;
 
-    if ((str = (char *) PyMem_Malloc((size_t) nbits)) == NULL)
+    if ((str = (char *) PyMem_Malloc((size_t) self->nbits)) == NULL)
         return PyErr_NoMemory();
     setstr01(self, str);
-    result = Py_BuildValue("s#", str, nbits);
+    result = Py_BuildValue("s#", str, self->nbits);
     PyMem_Free((void *) str);
     return result;
 }
@@ -1430,7 +1430,7 @@ PyDoc_STRVAR(to01_doc,
 "to01() -> str\n\
 \n\
 Return a string containing '0's and '1's, representing the bits in the\n\
-bitarray object.");
+bitarray.");
 
 
 static PyObject *
@@ -2311,8 +2311,7 @@ binode_new(void)
 {
     binode *nd;
 
-    nd = (binode *) PyMem_Malloc(sizeof(binode));
-    if (nd == NULL) {
+    if ((nd = (binode *) PyMem_Malloc(sizeof(binode))) == NULL) {
         PyErr_NoMemory();
         return NULL;
     }

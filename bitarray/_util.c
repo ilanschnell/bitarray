@@ -196,15 +196,15 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 static PyObject *
 r_index(PyObject *module, PyObject *args)
 {
-    PyObject *v = Py_True, *a;
+    PyObject *value = Py_True, *a;
     Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, res;
     int vi;
 
-    if (!PyArg_ParseTuple(args, "O|Onn:rindex", &a, &v, &start, &stop))
+    if (!PyArg_ParseTuple(args, "O|Onn:rindex", &a, &value, &start, &stop))
         return NULL;
     if (ensure_bitarray(a) < 0)
         return NULL;
-    if ((vi = pybit_as_int(v)) < 0)
+    if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
