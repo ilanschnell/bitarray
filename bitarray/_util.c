@@ -360,22 +360,20 @@ serialize(PyObject *module, PyObject *a)
 {
     PyObject *result;
     Py_ssize_t nbytes;
-    char *data;
+    char *str;
 
     if (ensure_bitarray(a) < 0)
         return NULL;
 
     nbytes = Py_SIZE(a);
-    data = (char *) PyMem_Malloc((size_t) nbytes + 1);
-    if (data == NULL)
+    if ((result = PyBytes_FromStringAndSize(NULL, nbytes + 1)) == NULL)
         return PyErr_NoMemory();
 
+    str = PyBytes_AsString(result);
 #define aa  ((bitarrayobject *) a)
-    *data = (char) (16 * IS_BE(aa) + setunused(aa));
-    memcpy(data + 1, aa->ob_item, (size_t) nbytes);
+    *str = (char) (16 * IS_BE(aa) + setunused(aa));
+    memcpy(str + 1, aa->ob_item, (size_t) nbytes);
 #undef aa
-    result = PyBytes_FromStringAndSize(data, nbytes + 1);
-    PyMem_Free((void *) data);
     return result;
 }
 
