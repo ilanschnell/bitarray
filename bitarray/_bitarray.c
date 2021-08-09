@@ -3042,6 +3042,48 @@ endian_from_string(const char* string)
     return -1;
 }
 
+static PyObject*
+bitarray_from_buffer(PyTypeObject *type, PyObject *arg, int endian)
+{
+    PyObject *view;
+    Py_ssize_t nbytes;
+    Py_buffer *buffer;
+    bitarrayobject *obj;
+
+    view = PyMemoryView_FromObject(arg);
+    if (view == NULL) {
+        /* XXX */
+    }
+    printf("bitarray_from_buffer(): %d\n", PyMemoryView_Check(view));
+    assert(PyMemoryView_Check(view));
+
+    buffer = PyMemoryView_GET_BUFFER(view);
+
+    printf("buffer.buf:      %p\n",  buffer->buf);
+    printf("buffer.len:      %zd\n", buffer->len);
+    printf("buffer.readonly: %d\n",  buffer->readonly);
+    printf("buffer.itemsize: %zd\n", buffer->itemsize);
+    printf("buffer.format:   %s\n",  buffer->format);
+    printf("buffer.ndim:     %d\n",  buffer->ndim);
+
+    nbytes = buffer->len;
+
+    obj = (bitarrayobject *) type->tp_alloc(type, 0);
+    if (obj == NULL)
+        return NULL;
+
+    Py_SET_SIZE(obj, nbytes);
+    obj->ob_item = (char *) buffer->buf;
+    //PyBuffer_Release(buffer);
+
+    obj->allocated = nbytes;
+    obj->nbits = 8 * nbytes;
+    obj->endian = endian;
+    obj->ob_exports = 1;
+    obj->weakreflist = NULL;
+    return (PyObject *) obj;
+}
+
 static PyObject *
 bitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
 {
@@ -3095,18 +3137,27 @@ static PyObject *
 bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PyObject *res;  /* to be returned in some cases */
-    PyObject *initial = NULL;
+    PyObject *initial = NULL, *buffer = NULL;
     char *endian_str = NULL;
     int endian;
-    static char *kwlist[] = {"", "endian", NULL};
+    static char *kwlist[] = {"", "endian", "buffer", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Os:bitarray",
-                                     kwlist, &initial, &endian_str))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OsO:bitarray",
+                                     kwlist, &initial, &endian_str, &buffer))
         return NULL;
 
     endian = endian_from_string(endian_str);
     if (endian < 0)
         return NULL;
+
+    if (buffer) {
+        if (initial && initial != Py_None) {
+            PyErr_SetString(PyExc_TypeError,
+                            "buffer requires no initial argument");
+            return NULL;
+        }
+        return bitarray_from_buffer(type, buffer, endian);
+    }
 
     /* no arg or None */
     if (initial == NULL || initial == Py_None)
