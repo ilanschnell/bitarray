@@ -1057,6 +1057,7 @@ bitarray_reduce(bitarrayobject *self)
         dict = Py_None;
         Py_INCREF(dict);
     }
+
     repr = PyBytes_FromStringAndSize(NULL, nbytes + 1);
     if (repr == NULL) {
         PyErr_NoMemory();
@@ -1409,17 +1410,18 @@ bits are considered 0.");
 static PyObject *
 bitarray_to01(bitarrayobject *self)
 {
+    const Py_ssize_t nbits = self->nbits;
     PyObject *result;
     Py_ssize_t i;
     char *str;
 
-    if ((str = (char *) PyMem_Malloc((size_t) self->nbits)) == NULL)
+    if ((str = (char *) PyMem_Malloc((size_t) nbits)) == NULL)
         return PyErr_NoMemory();
 
-    for (i = 0; i < self->nbits; i++)
+    for (i = 0; i < nbits; i++)
         str[i] = getbit(self, i) ? '1' : '0';
 
-    result = Py_BuildValue("s#", str, self->nbits);
+    result = Py_BuildValue("s#", str, nbits);
     PyMem_Free((void *) str);
     return result;
 }
