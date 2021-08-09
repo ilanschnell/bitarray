@@ -1109,12 +1109,11 @@ bitarray_repr(bitarrayobject *self)
 
     if ((str = (char *) PyMem_Malloc(strsize)) == NULL)
         return PyErr_NoMemory();
-    /* add "bitarray('......')" to str */
+
     strcpy(str, "bitarray('"); /* has length 10 */
     setstr01(self, str + 10);
-    /* don't use strcpy here, as this would add an extra NUL byte */
     str[strsize - 2] = '\'';
-    str[strsize - 1] = ')';
+    str[strsize - 1] = ')';     /* no terminating '\0' */
 
     result = Py_BuildValue("s#", str, (Py_ssize_t) strsize);
     PyMem_Free((void *) str);
