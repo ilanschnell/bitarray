@@ -713,25 +713,6 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     return -1;
 }
 
-static PyObject *
-unpack(bitarrayobject *self, char zero, char one, const char *fmt)
-{
-    PyObject *result;
-    Py_ssize_t i;
-    char *str;
-
-    str = (char *) PyMem_Malloc((size_t) self->nbits);
-    if (str == NULL)
-        return PyErr_NoMemory();
-
-    for (i = 0; i < self->nbits; i++)
-        str[i] = getbit(self, i) ? one : zero;
-
-    result = Py_BuildValue(fmt, str, self->nbits);
-    PyMem_Free((void *) str);
-    return result;
-}
-
 /**************************************************************************
                      Implementation of bitarray methods
  **************************************************************************/
@@ -1430,7 +1411,19 @@ bits are considered 0.");
 static PyObject *
 bitarray_to01(bitarrayobject *self)
 {
-    return unpack(self, '0', '1', "s#");
+    PyObject *result;
+    Py_ssize_t i;
+    char *str;
+
+    if ((str = (char *) PyMem_Malloc((size_t) self->nbits)) == NULL)
+        return PyErr_NoMemory();
+
+    for (i = 0; i < self->nbits; i++)
+        str[i] = getbit(self, i) ? '1' : '0';
+
+    result = Py_BuildValue("s#", str, self->nbits);
+    PyMem_Free((void *) str);
+    return result;
 }
 
 PyDoc_STRVAR(to01_doc,
