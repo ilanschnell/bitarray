@@ -713,6 +713,16 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     return -1;
 }
 
+/* place characters ('0' or '1') corresponding to self into str */
+static void
+setstr01(bitarrayobject *self, char *str)
+{
+    Py_ssize_t i;
+
+    for (i = 0; i < self->nbits; i++)
+        str[i] = getbit(self, i) ? '1' : '0';
+}
+
 /**************************************************************************
                      Implementation of bitarray methods
  **************************************************************************/
@@ -1084,9 +1094,8 @@ static PyObject *
 bitarray_repr(bitarrayobject *self)
 {
     PyObject *result;
-    Py_ssize_t i;
-    char *str;
     size_t strsize;
+    char *str;
 
     if (self->nbits == 0)
         return Py_BuildValue("s", "bitarray()");
@@ -1098,18 +1107,14 @@ bitarray_repr(bitarrayobject *self)
         return NULL;
     }
 
-    str = (char *) PyMem_Malloc(strsize);
-    if (str == NULL)
+    if ((str = (char *) PyMem_Malloc(strsize)) == NULL)
         return PyErr_NoMemory();
-
     /* add "bitarray('......')" to str */
     strcpy(str, "bitarray('"); /* has length 10 */
+    setstr01(self, str + 10);
     /* don't use strcpy here, as this would add an extra NUL byte */
     str[strsize - 2] = '\'';
     str[strsize - 1] = ')';
-
-    for (i = 0; i < self->nbits; i++)
-        str[i + 10] = getbit(self, i) ? '1' : '0';
 
     result = Py_BuildValue("s#", str, (Py_ssize_t) strsize);
     PyMem_Free((void *) str);
@@ -1412,15 +1417,11 @@ bitarray_to01(bitarrayobject *self)
 {
     const Py_ssize_t nbits = self->nbits;
     PyObject *result;
-    Py_ssize_t i;
     char *str;
 
     if ((str = (char *) PyMem_Malloc((size_t) nbits)) == NULL)
         return PyErr_NoMemory();
-
-    for (i = 0; i < nbits; i++)
-        str[i] = getbit(self, i) ? '1' : '0';
-
+    setstr01(self, str);
     result = Py_BuildValue("s#", str, nbits);
     PyMem_Free((void *) str);
     return result;
