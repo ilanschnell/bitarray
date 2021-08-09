@@ -1049,7 +1049,7 @@ bitarray_reduce(bitarrayobject *self)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
     PyObject *dict, *repr = NULL, *result = NULL;
-    char *data;
+    char *str;
 
     dict = PyObject_GetAttrString((PyObject *) self, "__dict__");
     if (dict == NULL) {
@@ -1057,19 +1057,17 @@ bitarray_reduce(bitarrayobject *self)
         dict = Py_None;
         Py_INCREF(dict);
     }
-    data = (char *) PyMem_Malloc((size_t) nbytes + 1);
-    if (data == NULL) {
+    repr = PyBytes_FromStringAndSize(NULL, nbytes + 1);
+    if (repr == NULL) {
         PyErr_NoMemory();
         goto error;
     }
+    str = PyBytes_AsString(repr);
     /* first byte contains the number of unused bits */
-    *data = (char) setunused(self);
+    *str = (char) setunused(self);
     /* remaining bytes contain buffer */
-    memcpy(data + 1, self->ob_item, (size_t) nbytes);
-    repr = PyBytes_FromStringAndSize(data, nbytes + 1);
-    if (repr == NULL)
-        goto error;
-    PyMem_Free((void *) data);
+    memcpy(str + 1, self->ob_item, (size_t) nbytes);
+
     result = Py_BuildValue("O(Os)O", Py_TYPE(self),
                            repr, ENDIAN_STR(self->endian), dict);
  error:
