@@ -1345,6 +1345,7 @@ class TestsSerialization(unittest.TestCase, Util):
             for n in range(100):
                 a = zeros(n, endian)
                 s = serialize(a)
+                self.assertIsInstance(s, bytes)
                 self.assertEqual(s[1:], b'\0' * bits2bytes(n))
                 self.assertEQUAL(a, deserialize(s))
                 a.setall(1)
