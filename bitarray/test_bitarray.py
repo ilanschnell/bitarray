@@ -3795,9 +3795,32 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
     def test_immutable(self):
         a = frozenbitarray('111')
         self.assertRaises(TypeError, a.append, True)
+        self.assertRaises(TypeError, a.bytereverse)
         self.assertRaises(TypeError, a.clear)
+        self.assertRaises(TypeError, a.encode, {'a': bitarray('0')}, 'aa')
+        self.assertRaises(TypeError, a.extend, [0, 1, 0])
+        self.assertRaises(TypeError, a.fill)
+        self.assertRaises(TypeError, a.insert, 0, 1)
+        self.assertRaises(TypeError, a.invert)
+        self.assertRaises(TypeError, a.pack, b'\0\0\xff')
+        self.assertRaises(TypeError, a.pop)
+        self.assertRaises(TypeError, a.remove, 1)
+        self.assertRaises(TypeError, a.reverse)
+        self.assertRaises(TypeError, a.setall, 0)
+        self.assertRaises(TypeError, a.sort)
         self.assertRaises(TypeError, a.__delitem__, 0)
         self.assertRaises(TypeError, a.__setitem__, 0, 0)
+        self.assertRaises(TypeError, a.__iadd__, bitarray('010'))
+        self.assertRaises(TypeError, a.__ior__, bitarray('100'))
+        self.assertRaises(TypeError, a.__ixor__, bitarray('110'))
+        self.assertRaises(TypeError, a.__irshift__, 1)
+        self.assertRaises(TypeError, a.__ilshift__, 1)
+
+    def test_memoryview(self):
+        a = frozenbitarray('01000001 01000010', 'big')
+        v = memoryview(a)
+        self.assertEqual(v.tobytes(), b'AB')
+        self.assertRaises(TypeError, v.__setitem__, 0, 255)
 
     def test_set(self):
         a = frozenbitarray('1')
