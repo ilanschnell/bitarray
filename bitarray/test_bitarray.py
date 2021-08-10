@@ -98,7 +98,8 @@ class Util(object):
         self.assertTrue(0 <= unused < 8)
         self.assertEqual(endian, a.endian())
         self.assertTrue(endian in ('little', 'big'))
-        self.assertTrue(allocated >= size)
+        if flags == 0:
+            self.assertTrue(allocated >= size)
         if address == 0:  # NULL
             self.assertTrue(size == 0)
             self.assertTrue(allocated == 0)
@@ -245,6 +246,25 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaisesMessage(TypeError,
                                  "'ellipsis' object is not iterable",
                                  bitarray, Ellipsis)
+
+    def test_buffer(self):
+        # buffer requires no initial argument
+        self.assertRaises(TypeError, bitarray, 5, buffer=b'DATA\0')
+
+        for endian in 'big', 'little':
+            a = bitarray(buffer=b'', endian=endian)
+            self.assertEQUAL(a, bitarray(0, endian))
+
+            _set_default_endian(endian)
+            a = bitarray(buffer=b'A')
+            self.assertEqual(a.endian(), endian)
+            self.assertEqual(len(a), 8)
+
+        a = bitarray(buffer=b'\xf0', endian='little')
+        self.assertRaises(TypeError, a.clear)
+        self.assertRaises(TypeError, a.__setitem__, 3, 1)
+        self.assertEQUAL(a, bitarray('00001111', 'little'))
+        self.check_obj(a)
 
     def test_integers(self):
         for n in range(50):
