@@ -3645,7 +3645,29 @@ tests.append(PrefixCodeTests)
 
 # -------------------------- Buffer Interface -------------------------------
 
-class BufferInterfaceTests(unittest.TestCase):
+class BufferImportTests(unittest.TestCase, Util):
+
+    def test_bytes(self):
+        b = 100 * b'\0'
+        a = bitarray(buffer=b)
+        self.assertRaises(TypeError, a.setall, 1)
+        self.assertRaises(TypeError, a.clear)
+        self.assertEqual(a, zeros(800))
+
+    def test_bytearray(self):
+        b = bytearray(100 * [0])
+        a = bitarray(buffer=b, endian='little')
+        a[0] = 1
+        self.assertEqual(b[0], 1)
+        a[7] = 1
+        self.assertEqual(b[0], 129)
+        a[:] = 1
+        self.assertEqual(b, bytearray(100 * [255]))
+        self.assertRaises(TypeError, a.pop)
+
+tests.append(BufferImportTests)
+
+class BufferExportTests(unittest.TestCase):
 
     def test_read_simple(self):
         a = bitarray('01000001 01000010 01000011', endian='big')
@@ -3697,7 +3719,7 @@ class BufferInterfaceTests(unittest.TestCase):
         v[2] = 67
         self.assertEqual(a.tobytes(), b'\x00ABC\x00')
 
-tests.append(BufferInterfaceTests)
+tests.append(BufferExportTests)
 
 # ---------------------------------------------------------------------------
 
