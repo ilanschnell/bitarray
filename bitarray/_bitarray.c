@@ -732,13 +732,13 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
                      Implementation of bitarray methods
  **************************************************************************/
 
-#define CHECK_FIXEDSIZE(self, ret_value)                                    \
+#define RAISE_IF_FIXEDSIZE(self, ret_value)                                 \
     if ((self)->flags & BUF_FIXEDSIZE) {                                    \
         PyErr_SetString(PyExc_TypeError, "cannot resize buffer");           \
         return ret_value;                                                   \
     }
 
-#define CHECK_READONLY(self, ret_value)                                     \
+#define RAISE_IF_READONLY(self, ret_value)                                  \
     if ((self)->flags & BUF_READONLY) {                                     \
         PyErr_SetString(PyExc_TypeError, "cannot modify read-only memory"); \
         return ret_value;                                                   \
@@ -775,7 +775,7 @@ bitarray_append(bitarrayobject *self, PyObject *value)
 {
     int vi;
 
-    CHECK_FIXEDSIZE(self, NULL);
+    RAISE_IF_FIXEDSIZE(self, NULL);
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
     if (resize(self, self->nbits + 1) < 0)
@@ -796,7 +796,7 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
     const Py_ssize_t nbytes = Py_SIZE(self);
     Py_ssize_t start = 0, stop = nbytes;
 
-    CHECK_READONLY(self, NULL);
+    RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|nn:bytereverse", &start, &stop))
         return NULL;
 
@@ -849,7 +849,7 @@ the last byte, and the allocated memory for the buffer (in bytes).");
 static PyObject *
 bitarray_clear(bitarrayobject *self)
 {
-    CHECK_FIXEDSIZE(self, NULL);
+    RAISE_IF_FIXEDSIZE(self, NULL);
     if (resize(self, 0) < 0)
         return NULL;
     Py_RETURN_NONE;
@@ -938,7 +938,7 @@ bitarray_fill(bitarrayobject *self)
 {
     long p;
 
-    CHECK_READONLY(self, NULL);
+    RAISE_IF_READONLY(self, NULL);
     p = setunused(self);
     self->nbits += p;
     assert(self->nbits % 8 == 0);
@@ -1026,7 +1026,7 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
     PyObject *value;
     int vi;
 
-    CHECK_FIXEDSIZE(self, NULL);
+    RAISE_IF_FIXEDSIZE(self, NULL);
     if (!PyArg_ParseTuple(args, "nO:insert", &i, &value))
         return NULL;
 
@@ -1051,7 +1051,7 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
 {
     Py_ssize_t i = PY_SSIZE_T_MAX;
 
-    CHECK_READONLY(self, NULL);
+    RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|n:invert", &i))
         return NULL;
 
@@ -1150,7 +1150,7 @@ bitarray_reverse(bitarrayobject *self)
 {
     Py_ssize_t i, j;
 
-    CHECK_READONLY(self, NULL);
+    RAISE_IF_READONLY(self, NULL);
     for (i = 0, j = self->nbits - 1; i < j; i++, j--) {
         int t = getbit(self, i);
         setbit(self, i, getbit(self, j));
@@ -1233,7 +1233,7 @@ bitarray_setall(bitarrayobject *self, PyObject *value)
 {
     int vi;
 
-    CHECK_READONLY(self, NULL);
+    RAISE_IF_READONLY(self, NULL);
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
     memset(self->ob_item, vi ? 0xff : 0x00, (size_t) Py_SIZE(self));
@@ -1254,7 +1254,7 @@ bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
     Py_ssize_t cnt;
     int reverse = 0;
 
-    CHECK_READONLY(self, NULL);
+    RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:sort", kwlist, &reverse))
         return NULL;
 
@@ -1305,7 +1305,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     Py_ssize_t nbytes;
     Py_ssize_t t, p;
 
-    CHECK_FIXEDSIZE(self, NULL);
+    RAISE_IF_FIXEDSIZE(self, NULL);
     if (!PyBytes_Check(bytes))
         return PyErr_Format(PyExc_TypeError, "bytes expected, not %s",
                             Py_TYPE(bytes)->tp_name);
@@ -1365,7 +1365,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
     Py_ssize_t nblock, nread = 0, nbytes = -1;
     int not_enough_bytes;
 
-    CHECK_FIXEDSIZE(self, NULL);
+    RAISE_IF_FIXEDSIZE(self, NULL);
     if (!PyArg_ParseTuple(args, "O|n:fromfile", &f, &nbytes))
         return NULL;
 
@@ -1496,7 +1496,7 @@ bitarray_pack(bitarrayobject *self, PyObject *bytes)
     Py_ssize_t nbytes, i;
     char *data;
 
-    CHECK_FIXEDSIZE(self, NULL);
+    RAISE_IF_FIXEDSIZE(self, NULL);
     if (!PyBytes_Check(bytes))
         return PyErr_Format(PyExc_TypeError, "bytes expected, not %s",
                             Py_TYPE(bytes)->tp_name);
@@ -1530,7 +1530,7 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
     Py_ssize_t i = -1;
     long vi;
 
-    CHECK_FIXEDSIZE(self, NULL);
+    RAISE_IF_FIXEDSIZE(self, NULL);
     if (!PyArg_ParseTuple(args, "|n:pop", &i))
         return NULL;
 
@@ -1565,7 +1565,7 @@ bitarray_remove(bitarrayobject *self, PyObject *value)
     Py_ssize_t i;
     int vi;
 
-    CHECK_FIXEDSIZE(self, NULL);
+    RAISE_IF_FIXEDSIZE(self, NULL);
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
@@ -1689,7 +1689,7 @@ bitarray_item(bitarrayobject *self, Py_ssize_t i)
 static int
 bitarray_ass_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
 {
-    CHECK_READONLY(self, -1);
+    RAISE_IF_READONLY(self, -1);
     if (i < 0 || i >= self->nbits) {
         PyErr_SetString(PyExc_IndexError,
                         "bitarray assignment index out of range");
@@ -1726,7 +1726,7 @@ bitarray_contains(bitarrayobject *self, PyObject *value)
 static PyObject *
 bitarray_inplace_concat(bitarrayobject *self, PyObject *other)
 {
-    CHECK_FIXEDSIZE(self, NULL);
+    RAISE_IF_FIXEDSIZE(self, NULL);
     if (extend_dispatch(self, other) < 0)
         return NULL;
     Py_INCREF(self);
@@ -1736,7 +1736,7 @@ bitarray_inplace_concat(bitarrayobject *self, PyObject *other)
 static PyObject *
 bitarray_inplace_repeat(bitarrayobject *self, Py_ssize_t n)
 {
-    CHECK_FIXEDSIZE(self, NULL);
+    RAISE_IF_FIXEDSIZE(self, NULL);
     if (repeat(self, n) < 0)
         return NULL;
     Py_INCREF(self);
@@ -1823,7 +1823,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
     /* number of bits by which self has to be increased (decreased) */
     increase = aa->nbits - slicelength;
     if (increase != 0)
-        CHECK_FIXEDSIZE(self, -1);
+        RAISE_IF_FIXEDSIZE(self, -1);
 
     if (aa == self) {  /* covers cases like a[2::] = a and a[::-1] = a */
         if ((array = bitarray_copy(self)) == NULL)
@@ -1966,7 +1966,7 @@ delslice(bitarrayobject *self, PyObject *slice)
 static int
 bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
 {
-    CHECK_READONLY(self, -1);
+    RAISE_IF_READONLY(self, -1);
 
     if (PyIndex_Check(item)) {
         Py_ssize_t i;
@@ -1981,7 +1981,7 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
 
     if (PySlice_Check(item)) {
         if (value == NULL) {
-            CHECK_FIXEDSIZE(self, -1);
+            RAISE_IF_FIXEDSIZE(self, -1);
             return delslice(self, item);
         }
         if (bitarray_Check(value))
@@ -2118,7 +2118,7 @@ BITWISE_FUNC(xor, "^")               /* bitarray_xor */
 static PyObject *                                            \
 bitarray_i ## oper (PyObject *self, PyObject *other)         \
 {                                                            \
-    CHECK_READONLY((bitarrayobject *) self, NULL);           \
+    RAISE_IF_READONLY((bitarrayobject *) self, NULL);        \
     if (bitwise_check(self, other, ostr) < 0)                \
         return NULL;                                         \
     bitwise((bitarrayobject *) self,                         \
@@ -2179,27 +2179,27 @@ shift_check(PyObject *a, PyObject *b, const char *ostr)
     return n;
 }
 
-#define SHIFT_FUNC(name, inplace, right, ostr)         \
-static PyObject *                                      \
-bitarray_ ## name (PyObject *self, PyObject *other)    \
-{                                                      \
-    PyObject *res;                                     \
-    Py_ssize_t n;                                      \
-                                                       \
-    if ((n = shift_check(self, other, ostr)) < 0)      \
-        return NULL;                                   \
-    if (inplace) {                                     \
-        CHECK_READONLY((bitarrayobject *) self, NULL); \
-        res = self;                                    \
-        Py_INCREF(res);                                \
-    }                                                  \
-    else {                                             \
-        res = bitarray_copy((bitarrayobject *) self);  \
-        if (res == NULL)                               \
-            return NULL;                               \
-    }                                                  \
-    shift((bitarrayobject *) res, n, right);           \
-    return res;                                        \
+#define SHIFT_FUNC(name, inplace, right, ostr)             \
+static PyObject *                                          \
+bitarray_ ## name (PyObject *self, PyObject *other)        \
+{                                                          \
+    PyObject *res;                                         \
+    Py_ssize_t n;                                          \
+                                                           \
+    if ((n = shift_check(self, other, ostr)) < 0)          \
+        return NULL;                                       \
+    if (inplace) {                                         \
+        RAISE_IF_READONLY((bitarrayobject *) self, NULL);  \
+        res = self;                                        \
+        Py_INCREF(res);                                    \
+    }                                                      \
+    else {                                                 \
+        res = bitarray_copy((bitarrayobject *) self);      \
+        if (res == NULL)                                   \
+            return NULL;                                   \
+    }                                                      \
+    shift((bitarrayobject *) res, n, right);               \
+    return res;                                            \
 }
 
 SHIFT_FUNC(lshift,  0, 0, "<<")  /* bitarray_lshift */
@@ -2299,7 +2299,7 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
 {
     PyObject *codedict, *iterable, *iter, *symbol, *value;
 
-    CHECK_FIXEDSIZE(self, NULL);
+    RAISE_IF_FIXEDSIZE(self, NULL);
     if (!PyArg_ParseTuple(args, "OO:encode", &codedict, &iterable))
         return NULL;
 
