@@ -1598,15 +1598,9 @@ PyDoc_STRVAR(sizeof_doc,
 
 
 static PyObject *
-bitarray_setflags(bitarrayobject *self, PyObject *value)
+bitarray_freeze(bitarrayobject *self)
 {
-    Py_ssize_t flags;
-
-    flags = PyNumber_AsSsize_t(value, NULL);
-    if (flags == -1 && PyErr_Occurred())
-        return NULL;
-
-    self->flags = (int) flags;
+    self->flags = BUF_READONLY | BUF_FIXEDSIZE;
     Py_RETURN_NONE;
 }
 
@@ -3065,7 +3059,7 @@ static PyMethodDef bitarray_methods[] = {
      reduce_doc},
     {"__sizeof__",   (PyCFunction) bitarray_sizeof,      METH_NOARGS,
      sizeof_doc},
-    {"_setflags",    (PyCFunction) bitarray_setflags,    METH_O,       0},
+    {"_freeze",      (PyCFunction) bitarray_freeze,      METH_NOARGS,  0},
 
 #ifndef NDEBUG
     /* functionality exposed in debug mode for testing */
