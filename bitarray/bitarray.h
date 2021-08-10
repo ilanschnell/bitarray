@@ -35,6 +35,12 @@ typedef struct {
 #define BITMASK(endian, i)  \
     (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) & 7) : (7 - ((i) & 7))))
 
+#define CHECK_RESIZE(self, ret_value)                                       \
+    if ((self)->buffer) {                                                   \
+        PyErr_SetString(PyExc_TypeError, "cannot resize buffer");           \
+        return ret_value;                                                   \
+    }
+
 #define CHECK_READONLY(self, ret_value)                                     \
     if ((self)->buffer && (self)->buffer->readonly) {                       \
         PyErr_SetString(PyExc_TypeError, "cannot modify read-only memory"); \
