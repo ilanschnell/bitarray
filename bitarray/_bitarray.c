@@ -137,6 +137,7 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
     obj->endian = endian;
     obj->ob_exports = 0;
     obj->weakreflist = NULL;
+    obj->buffer = NULL;
     obj->flags = 0;
     return (PyObject *) obj;
 }
@@ -147,7 +148,11 @@ bitarray_dealloc(bitarrayobject *self)
     if (self->weakreflist != NULL)
         PyObject_ClearWeakRefs((PyObject *) self);
 
-    if (self->ob_item != NULL && !(self->flags & BUF_IMPORTED))
+    if (self->buffer) {
+        PyBuffer_Release(self->buffer);
+        PyMem_Free(self->buffer);
+    }
+    else if (self->ob_item != NULL)
         PyMem_Free((void *) self->ob_item);
 
     Py_TYPE(self)->tp_free((PyObject *) self);
@@ -3119,10 +3124,14 @@ bitarray_from_buffer(PyTypeObject *type, PyObject *arg, int endian)
     obj->endian = endian;
     obj->ob_exports = 0;
     obj->weakreflist = NULL;
+
+    obj->buffer = (Py_buffer *) PyMem_Malloc(sizeof(Py_buffer));
+    if (obj->buffer == NULL)
+        return NULL;
+    memcpy(obj->buffer, &view, sizeof(Py_buffer));
+
     obj->flags = BUF_IMPORTED | BUF_FIXEDSIZE |
                  (view.readonly ? BUF_READONLY : 0);
-
-    PyBuffer_Release(&view);
 
     return (PyObject *) obj;
 }

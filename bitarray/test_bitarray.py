@@ -3670,6 +3670,15 @@ class BufferImportTests(unittest.TestCase, Util):
             self.assertRaises(TypeError, a.__setitem__, slice(8, 16),
                               bitarray(n))
 
+    def test_del_importer(self):
+        b = bytearray(100 * [0])
+        a = bitarray(buffer=b)
+        del b
+        self.assertEqual(len(a), 800)
+        a.setall(1)
+        self.assertTrue(a.all())
+
+
 tests.append(BufferImportTests)
 
 # --------------------------- Buffer Export ---------------------------------
