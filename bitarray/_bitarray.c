@@ -146,10 +146,7 @@ bitarray_dealloc(bitarrayobject *self)
     if (self->weakreflist != NULL)
         PyObject_ClearWeakRefs((PyObject *) self);
 
-    if (self->flags & BUF_IMPORTED) {
-        /* nothing to do here */
-    }
-    else if (self->ob_item != NULL)
+    if (self->ob_item != NULL && !(self->flags & BUF_IMPORTED))
         PyMem_Free((void *) self->ob_item);
 
     Py_TYPE(self)->tp_free((PyObject *) self);
