@@ -46,8 +46,6 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
         return -1;
     }
 
-    CHECK_RESIZE(self, -1);
-
     if (newsize == size) {
         /* buffer size hasn't changed - bypass everything */
         self->nbits = nbits;
@@ -138,7 +136,7 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
     obj->endian = endian;
     obj->ob_exports = 0;
     obj->weakreflist = NULL;
-    obj->buffer = NULL;
+    obj->flags = 0;
     return (PyObject *) obj;
 }
 
@@ -148,9 +146,8 @@ bitarray_dealloc(bitarrayobject *self)
     if (self->weakreflist != NULL)
         PyObject_ClearWeakRefs((PyObject *) self);
 
-    if (self->buffer != NULL) {
-        //PyBuffer_Release(self->buffer);
-        PyMem_Free(self->buffer);
+    if (self->flags & BUF_IMPORTED) {
+        /* nothing to do here */
     }
     else if (self->ob_item != NULL)
         PyMem_Free((void *) self->ob_item);
@@ -341,7 +338,6 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     /* start == nbits implies n == 0 */
     assert(start != nbits || n == 0);
 
-    CHECK_RESIZE(self, -1);
     copy_n(self, start, self, start + n, nbits - start - n);
     return resize(self, nbits - n);
 }
@@ -355,7 +351,6 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     assert(0 <= start && start <= nbits);
     assert(n >= 0);
 
-    CHECK_RESIZE(self, -1);
     if (resize(self, nbits + n) < 0)
         return -1;
     copy_n(self, start + n, self, start, nbits - start);
@@ -382,7 +377,6 @@ repeat(bitarrayobject *self, Py_ssize_t m)
 {
     Py_ssize_t q, k = self->nbits;
 
-    CHECK_RESIZE(self, -1);
     if (k == 0 || m == 1)   /* nothing to do */
         return 0;
 
@@ -569,7 +563,6 @@ set_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
     int vi;
 
     assert(0 <= i && i < self->nbits);
-    CHECK_READONLY(self, -1);
     if ((vi = pybit_as_int(value)) < 0)
         return -1;
     setbit(self, i, vi);
@@ -696,7 +689,6 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 {
     PyObject *iter;
 
-    CHECK_RESIZE(self, -1);
     /* dispatch on type */
     if (bitarray_Check(obj))                              /* bitarray */
         return extend_bitarray(self, (bitarrayobject *) obj);
@@ -740,6 +732,18 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
                      Implementation of bitarray methods
  **************************************************************************/
 
+#define CHECK_FIXEDSIZE(self, ret_value)                                    \
+    if ((self)->flags & BUF_FIXEDSIZE) {                                    \
+        PyErr_SetString(PyExc_TypeError, "cannot resize buffer");           \
+        return ret_value;                                                   \
+    }
+
+#define CHECK_READONLY(self, ret_value)                                     \
+    if ((self)->flags & BUF_READONLY) {                                     \
+        PyErr_SetString(PyExc_TypeError, "cannot modify read-only memory"); \
+        return ret_value;                                                   \
+    }
+
 static PyObject *
 bitarray_all(bitarrayobject *self)
 {
@@ -771,7 +775,7 @@ bitarray_append(bitarrayobject *self, PyObject *value)
 {
     int vi;
 
-    CHECK_RESIZE(self, NULL);
+    CHECK_FIXEDSIZE(self, NULL);
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
     if (resize(self, self->nbits + 1) < 0)
@@ -844,7 +848,7 @@ the last byte, and the allocated memory for the buffer (in bytes).");
 static PyObject *
 bitarray_clear(bitarrayobject *self)
 {
-    CHECK_RESIZE(self, NULL);
+    CHECK_FIXEDSIZE(self, NULL);
     if (resize(self, 0) < 0)
         return NULL;
     Py_RETURN_NONE;
@@ -1021,7 +1025,7 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
     PyObject *value;
     int vi;
 
-    CHECK_RESIZE(self, NULL);
+    CHECK_FIXEDSIZE(self, NULL);
     if (!PyArg_ParseTuple(args, "nO:insert", &i, &value))
         return NULL;
 
@@ -1300,7 +1304,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     Py_ssize_t nbytes;
     Py_ssize_t t, p;
 
-    CHECK_RESIZE(self, NULL);
+    CHECK_FIXEDSIZE(self, NULL);
     if (!PyBytes_Check(bytes))
         return PyErr_Format(PyExc_TypeError, "bytes expected, not %s",
                             Py_TYPE(bytes)->tp_name);
@@ -1360,7 +1364,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
     Py_ssize_t nblock, nread = 0, nbytes = -1;
     int not_enough_bytes;
 
-    CHECK_RESIZE(self, NULL);
+    CHECK_FIXEDSIZE(self, NULL);
     if (!PyArg_ParseTuple(args, "O|n:fromfile", &f, &nbytes))
         return NULL;
 
@@ -1491,7 +1495,7 @@ bitarray_pack(bitarrayobject *self, PyObject *bytes)
     Py_ssize_t nbytes, i;
     char *data;
 
-    CHECK_RESIZE(self, NULL);
+    CHECK_FIXEDSIZE(self, NULL);
     if (!PyBytes_Check(bytes))
         return PyErr_Format(PyExc_TypeError, "bytes expected, not %s",
                             Py_TYPE(bytes)->tp_name);
@@ -1525,7 +1529,7 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
     Py_ssize_t i = -1;
     long vi;
 
-    CHECK_RESIZE(self, NULL);
+    CHECK_FIXEDSIZE(self, NULL);
     if (!PyArg_ParseTuple(args, "|n:pop", &i))
         return NULL;
 
@@ -1560,7 +1564,7 @@ bitarray_remove(bitarrayobject *self, PyObject *value)
     Py_ssize_t i;
     int vi;
 
-    CHECK_RESIZE(self, NULL);
+    CHECK_FIXEDSIZE(self, NULL);
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
@@ -1713,7 +1717,7 @@ bitarray_contains(bitarrayobject *self, PyObject *value)
 static PyObject *
 bitarray_inplace_concat(bitarrayobject *self, PyObject *other)
 {
-    CHECK_RESIZE(self, NULL);
+    CHECK_FIXEDSIZE(self, NULL);
     if (extend_dispatch(self, other) < 0)
         return NULL;
     Py_INCREF(self);
@@ -1723,7 +1727,7 @@ bitarray_inplace_concat(bitarrayobject *self, PyObject *other)
 static PyObject *
 bitarray_inplace_repeat(bitarrayobject *self, Py_ssize_t n)
 {
-    CHECK_RESIZE(self, NULL);
+    CHECK_FIXEDSIZE(self, NULL);
     if (repeat(self, n) < 0)
         return NULL;
     Py_INCREF(self);
@@ -1810,7 +1814,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
     /* number of bits by which self has to be increased (decreased) */
     increase = aa->nbits - slicelength;
     if (increase != 0)
-        CHECK_RESIZE(self, -1);
+        CHECK_FIXEDSIZE(self, -1);
 
     if (aa == self) {  /* covers cases like a[2::] = a and a[::-1] = a */
         if ((array = bitarray_copy(self)) == NULL)
@@ -1958,8 +1962,6 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
     printf("self.buffer.len:      %zd\n", self->buffer->len);
     printf("self.buffer.readonly: %d\n",  self->buffer->readonly);
     printf("self.buffer.itemsize: %zd\n", self->buffer->itemsize);
-    printf("self.buffer.format:   %s\n",  self->buffer->format);
-    printf("self.buffer.ndim:     %d\n",  self->buffer->ndim);
 #endif
     CHECK_READONLY(self, -1);
 
@@ -1976,7 +1978,7 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
 
     if (PySlice_Check(item)) {
         if (value == NULL) {
-            CHECK_RESIZE(self, -1);
+            CHECK_FIXEDSIZE(self, -1);
             return delslice(self, item);
         }
         if (bitarray_Check(value))
@@ -2294,7 +2296,7 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
 {
     PyObject *codedict, *iterable, *iter, *symbol, *value;
 
-    CHECK_RESIZE(self, NULL);
+    CHECK_FIXEDSIZE(self, NULL);
     if (!PyArg_ParseTuple(args, "OO:encode", &codedict, &iterable))
         return NULL;
 
@@ -3120,11 +3122,9 @@ bitarray_from_buffer(PyTypeObject *type, PyObject *arg, int endian)
     obj->endian = endian;
     obj->ob_exports = 0;
     obj->weakreflist = NULL;
+    obj->flags = BUF_IMPORTED | BUF_FIXEDSIZE |
+                 (view.readonly ? BUF_READONLY : 0);
 
-    obj->buffer = (Py_buffer *) PyMem_Malloc(sizeof(Py_buffer));
-    if (obj->buffer == NULL)
-        return PyErr_NoMemory();
-    memcpy(obj->buffer, &view, sizeof(Py_buffer));
     PyBuffer_Release(&view);
 
     return (PyObject *) obj;

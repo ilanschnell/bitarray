@@ -16,8 +16,13 @@ typedef struct {
     int endian;                 /* bit endianness of bitarray */
     int ob_exports;             /* how many buffer exports */
     PyObject *weakreflist;      /* list of weak references */
-    Py_buffer *buffer;
+    int flags;
 } bitarrayobject;
+
+/* --- flags --- */
+#define BUF_READONLY   1
+#define BUF_FIXEDSIZE  2
+#define BUF_IMPORTED   4
 
 /* --- bit endianness --- */
 #define ENDIAN_LITTLE  0
@@ -34,18 +39,6 @@ typedef struct {
 
 #define BITMASK(endian, i)  \
     (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) & 7) : (7 - ((i) & 7))))
-
-#define CHECK_RESIZE(self, ret_value)                                       \
-    if ((self)->buffer) {                                                   \
-        PyErr_SetString(PyExc_TypeError, "cannot resize buffer");           \
-        return ret_value;                                                   \
-    }
-
-#define CHECK_READONLY(self, ret_value)                                     \
-    if ((self)->buffer && (self)->buffer->readonly) {                       \
-        PyErr_SetString(PyExc_TypeError, "cannot modify read-only memory"); \
-        return ret_value;                                                   \
-    }
 
 /* assert that .nbits is in agreement with .ob_size */
 #define assert_nbits(self)  assert(BYTES((self)->nbits) == Py_SIZE(self))
