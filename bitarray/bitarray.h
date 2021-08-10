@@ -35,6 +35,12 @@ typedef struct {
 #define BITMASK(endian, i)  \
     (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) & 7) : (7 - ((i) & 7))))
 
+#define CHECK_READONLY(self, ret_value)                                     \
+    if ((self)->buffer && (self)->buffer->readonly) {                       \
+        PyErr_SetString(PyExc_TypeError, "cannot modify read-only memory"); \
+        return ret_value;                                                   \
+    }
+
 /* assert that .nbits is in agreement with .ob_size */
 #define assert_nbits(self)  assert(BYTES((self)->nbits) == Py_SIZE(self))
 

@@ -46,6 +46,8 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
         return -1;
     }
 
+    CHECK_READONLY(self, -1);
+
     if (newsize == size) {
         /* buffer size hasn't changed - bypass everything */
         self->nbits = nbits;
@@ -337,6 +339,7 @@ delete_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     /* start == nbits implies n == 0 */
     assert(start != nbits || n == 0);
 
+    CHECK_READONLY(self, -1);
     copy_n(self, start, self, start + n, nbits - start - n);
     return resize(self, nbits - n);
 }
@@ -350,6 +353,7 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     assert(0 <= start && start <= nbits);
     assert(n >= 0);
 
+    CHECK_READONLY(self, -1);
     if (resize(self, nbits + n) < 0)
         return -1;
     copy_n(self, start + n, self, start, nbits - start);
@@ -376,6 +380,7 @@ repeat(bitarrayobject *self, Py_ssize_t m)
 {
     Py_ssize_t q, k = self->nbits;
 
+    CHECK_READONLY(self, -1);
     if (k == 0 || m == 1)   /* nothing to do */
         return 0;
 
@@ -562,6 +567,7 @@ set_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
     int vi;
 
     assert(0 <= i && i < self->nbits);
+    CHECK_READONLY(self, -1);
     if ((vi = pybit_as_int(value)) < 0)
         return -1;
     setbit(self, i, vi);
@@ -688,6 +694,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 {
     PyObject *iter;
 
+    CHECK_READONLY(self, -1);
     /* dispatch on type */
     if (bitarray_Check(obj))                              /* bitarray */
         return extend_bitarray(self, (bitarrayobject *) obj);
@@ -762,6 +769,7 @@ bitarray_append(bitarrayobject *self, PyObject *value)
 {
     int vi;
 
+    CHECK_READONLY(self, NULL);
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
     if (resize(self, self->nbits + 1) < 0)
@@ -782,6 +790,7 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
     const Py_ssize_t nbytes = Py_SIZE(self);
     Py_ssize_t start = 0, stop = nbytes;
 
+    CHECK_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|nn:bytereverse", &start, &stop))
         return NULL;
 
@@ -833,6 +842,7 @@ the last byte, and the allocated memory for the buffer (in bytes).");
 static PyObject *
 bitarray_clear(bitarrayobject *self)
 {
+    CHECK_READONLY(self, NULL);
     if (resize(self, 0) < 0)
         return NULL;
     Py_RETURN_NONE;
@@ -921,6 +931,7 @@ bitarray_fill(bitarrayobject *self)
 {
     long p;
 
+    CHECK_READONLY(self, NULL);
     p = setunused(self);
     self->nbits += p;
     assert(self->nbits % 8 == 0);
@@ -1008,6 +1019,7 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
     PyObject *value;
     int vi;
 
+    CHECK_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "nO:insert", &i, &value))
         return NULL;
 
@@ -1032,6 +1044,7 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
 {
     Py_ssize_t i = PY_SSIZE_T_MAX;
 
+    CHECK_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|n:invert", &i))
         return NULL;
 
@@ -1130,6 +1143,7 @@ bitarray_reverse(bitarrayobject *self)
 {
     Py_ssize_t i, j;
 
+    CHECK_READONLY(self, NULL);
     for (i = 0, j = self->nbits - 1; i < j; i++, j--) {
         int t = getbit(self, i);
         setbit(self, i, getbit(self, j));
@@ -1212,6 +1226,7 @@ bitarray_setall(bitarrayobject *self, PyObject *value)
 {
     int vi;
 
+    CHECK_READONLY(self, NULL);
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
     memset(self->ob_item, vi ? 0xff : 0x00, (size_t) Py_SIZE(self));
@@ -1232,6 +1247,7 @@ bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
     Py_ssize_t cnt;
     int reverse = 0;
 
+    CHECK_READONLY(self, NULL);
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:sort", kwlist, &reverse))
         return NULL;
 
@@ -1282,6 +1298,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     Py_ssize_t nbytes;
     Py_ssize_t t, p;
 
+    CHECK_READONLY(self, NULL);
     if (!PyBytes_Check(bytes))
         return PyErr_Format(PyExc_TypeError, "bytes expected, not %s",
                             Py_TYPE(bytes)->tp_name);
@@ -1341,6 +1358,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
     Py_ssize_t nblock, nread = 0, nbytes = -1;
     int not_enough_bytes;
 
+    CHECK_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "O|n:fromfile", &f, &nbytes))
         return NULL;
 
@@ -1471,6 +1489,7 @@ bitarray_pack(bitarrayobject *self, PyObject *bytes)
     Py_ssize_t nbytes, i;
     char *data;
 
+    CHECK_READONLY(self, NULL);
     if (!PyBytes_Check(bytes))
         return PyErr_Format(PyExc_TypeError, "bytes expected, not %s",
                             Py_TYPE(bytes)->tp_name);
@@ -1504,6 +1523,7 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
     Py_ssize_t i = -1;
     long vi;
 
+    CHECK_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|n:pop", &i))
         return NULL;
 
@@ -1538,6 +1558,7 @@ bitarray_remove(bitarrayobject *self, PyObject *value)
     Py_ssize_t i;
     int vi;
 
+    CHECK_READONLY(self, NULL);
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
@@ -1653,6 +1674,7 @@ bitarray_item(bitarrayobject *self, Py_ssize_t i)
 static int
 bitarray_ass_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
 {
+    CHECK_READONLY(self, -1);
     if (i < 0 || i >= self->nbits) {
         PyErr_SetString(PyExc_IndexError,
                         "bitarray assignment index out of range");
@@ -1689,6 +1711,7 @@ bitarray_contains(bitarrayobject *self, PyObject *value)
 static PyObject *
 bitarray_inplace_concat(bitarrayobject *self, PyObject *other)
 {
+    CHECK_READONLY(self, NULL);
     if (extend_dispatch(self, other) < 0)
         return NULL;
     Py_INCREF(self);
@@ -1698,6 +1721,7 @@ bitarray_inplace_concat(bitarrayobject *self, PyObject *other)
 static PyObject *
 bitarray_inplace_repeat(bitarrayobject *self, Py_ssize_t n)
 {
+    CHECK_READONLY(self, NULL);
     if (repeat(self, n) < 0)
         return NULL;
     Py_INCREF(self);
@@ -1925,6 +1949,8 @@ delslice(bitarrayobject *self, PyObject *slice)
 static int
 bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
 {
+    CHECK_READONLY(self, -1);
+
     if (PyIndex_Check(item)) {
         Py_ssize_t i;
 
@@ -2074,6 +2100,7 @@ BITWISE_FUNC(xor, "^")               /* bitarray_xor */
 static PyObject *                                            \
 bitarray_i ## oper (PyObject *self, PyObject *other)         \
 {                                                            \
+    CHECK_READONLY((bitarrayobject *) self, NULL);           \
     if (bitwise_check(self, other, ostr) < 0)                \
         return NULL;                                         \
     bitwise((bitarrayobject *) self,                         \
@@ -2144,6 +2171,7 @@ bitarray_ ## name (PyObject *self, PyObject *other)    \
     if ((n = shift_check(self, other, ostr)) < 0)      \
         return NULL;                                   \
     if (inplace) {                                     \
+        CHECK_READONLY((bitarrayobject *) self, NULL); \
         res = self;                                    \
         Py_INCREF(res);                                \
     }                                                  \
@@ -2253,6 +2281,7 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
 {
     PyObject *codedict, *iterable, *iter, *symbol, *value;
 
+    CHECK_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "OO:encode", &codedict, &iterable))
         return NULL;
 
