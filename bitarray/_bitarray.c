@@ -3082,12 +3082,11 @@ bitarray_from_buffer(PyTypeObject *type, PyObject *arg, int endian)
     Py_buffer *buffer;
     bitarrayobject *obj;
 
-    mview = PyMemoryView_FromObject(arg);
-    if (mview == NULL) {
-        /* XXX */
-    }
-    assert(PyMemoryView_Check(mview));
+    if ((mview = PyMemoryView_FromObject(arg)) == NULL)
+        return PyErr_Format(PyExc_TypeError, "cannot use '%s' as buffer",
+                            Py_TYPE(arg)->tp_name);
 
+    assert(PyMemoryView_Check(mview));
     buffer = PyMemoryView_GET_BUFFER(mview);
     Py_DECREF(mview);
 
