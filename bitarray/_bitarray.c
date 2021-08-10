@@ -829,13 +829,14 @@ bitarray_buffer_info(bitarrayobject *self)
     Py_ssize_t size = Py_SIZE(self);
 
     ptr = PyLong_FromVoidPtr(self->ob_item),
-    res = Py_BuildValue("Onsnni",
+    res = Py_BuildValue("Onsnnii",
                         ptr,
                         size,
                         ENDIAN_STR(self->endian),
                         BITS(size) - self->nbits,
                         self->allocated,
-                        123);
+                        self->readonly,
+                        self->buffer ? 1 : 0);
     Py_DECREF(ptr);
     return res;
 }

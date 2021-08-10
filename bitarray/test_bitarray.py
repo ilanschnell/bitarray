@@ -92,13 +92,13 @@ class Util(object):
         return slicelength
 
     def check_obj(self, a):
-        address, size, endian, unused, allocated, flags = a.buffer_info()
+        address, size, endian, unused, allocated, ro, buf = a.buffer_info()
         self.assertEqual(size, bits2bytes(len(a)))
         self.assertEqual(unused, 8 * size - len(a))
         self.assertTrue(0 <= unused < 8)
         self.assertEqual(endian, a.endian())
         self.assertTrue(endian in ('little', 'big'))
-        if flags == 0:
+        if buf == 0:
             self.assertTrue(allocated >= size)
         if address == 0:  # NULL
             self.assertTrue(size == 0)
@@ -548,13 +548,10 @@ class MetaDataTests(unittest.TestCase, Util):
 
         bi = a.buffer_info()
         self.assertIsInstance(bi, tuple)
-        self.assertEqual(len(bi), 6)
-        self.assertIsInstance(bi[0], int)
-        self.assertIsInstance(bi[1], int)
+        self.assertEqual(len(bi), 7)
         self.assertIsInstance(bi[2], str)
-        self.assertIsInstance(bi[3], int)
-        self.assertIsInstance(bi[4], int)
-        self.assertIsInstance(bi[5], int)
+        for i in 0, 1, 3, 4, 5, 6:
+            self.assertIsInstance(bi[i], int)
 
     def test_buffer_info2(self):
         for endian in 'big', 'little':
