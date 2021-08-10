@@ -34,6 +34,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     Py_ssize_t newsize;
     size_t new_allocated;
 
+    assert((self->flags & BUF_FIXEDSIZE) == 0);
     assert(allocated >= size && size == BYTES(self->nbits));
     /* ob_item == NULL implies ob_size == allocated == 0 */
     assert(self->ob_item != NULL || (size == 0 && allocated == 0));
@@ -3103,13 +3104,11 @@ bitarray_from_buffer(PyTypeObject *type, PyObject *arg, int endian)
 
     if (PyObject_GetBuffer(arg, &view, PyBUF_SIMPLE) < 0)
         return NULL;
-#if 0
-    printf("view.buf:      %p\n",  view.buf);
-    printf("view.len:      %zd\n", view.len);
-    printf("view.readonly: %d\n",  view.readonly);
-    printf("view.itemsize: %zd\n", view.itemsize);
-    printf("view.ndim:     %d\n",  view.ndim);
-#endif
+
+    if (view.itemsize != 1)
+        return PyErr_Format(PyExc_ValueError, "can only import buffer with "
+                            "itemsize 1, got: %zd", view.itemsize);
+
     nbytes = view.len;
 
     obj = (bitarrayobject *) type->tp_alloc(type, 0);
@@ -3118,7 +3117,7 @@ bitarray_from_buffer(PyTypeObject *type, PyObject *arg, int endian)
 
     Py_SET_SIZE(obj, nbytes);
     obj->ob_item = (char *) view.buf;
-    obj->allocated = nbytes;
+    obj->allocated = 0;
     obj->nbits = 8 * nbytes;
     obj->endian = endian;
     obj->ob_exports = 0;
