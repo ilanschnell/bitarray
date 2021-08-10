@@ -3094,7 +3094,6 @@ endian_from_string(const char* string)
 static PyObject*
 bitarray_from_buffer(PyTypeObject *type, PyObject *arg, int endian)
 {
-    Py_ssize_t nbytes;
     Py_buffer view;
     bitarrayobject *obj;
 
@@ -3109,16 +3108,14 @@ bitarray_from_buffer(PyTypeObject *type, PyObject *arg, int endian)
         return PyErr_Format(PyExc_ValueError, "can only import buffer with "
                             "itemsize 1, got: %zd", view.itemsize);
 
-    nbytes = view.len;
-
     obj = (bitarrayobject *) type->tp_alloc(type, 0);
     if (obj == NULL)
         return NULL;
 
-    Py_SET_SIZE(obj, nbytes);
+    Py_SET_SIZE(obj, view.len);
     obj->ob_item = (char *) view.buf;
     obj->allocated = 0;
-    obj->nbits = 8 * nbytes;
+    obj->nbits = BITS(view.len);
     obj->endian = endian;
     obj->ob_exports = 0;
     obj->weakreflist = NULL;
