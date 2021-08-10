@@ -3825,6 +3825,7 @@ def run(verbosity=1, repeat=1):
     print('sys.prefix: %s' % sys.prefix)
     print('pointer size: %d bit' % (8 * SYSINFO[0]))
     print('sizeof(size_t): %d' % SYSINFO[1])
+    print('sizeof(bitarrayobject): %d' % SYSINFO[2])
     print('PY_UINT64_T defined: %s' % SYSINFO[5])
     print('DEBUG: %s' % DEBUG)
     suite = unittest.TestSuite()
