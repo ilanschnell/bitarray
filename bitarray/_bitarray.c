@@ -34,7 +34,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     Py_ssize_t newsize;
     size_t new_allocated;
 
-    assert((self->flags & BUF_FIXEDSIZE) == 0);
+    assert(self->buffer == NULL);
     assert(allocated >= size && size == BYTES(self->nbits));
     /* ob_item == NULL implies ob_size == allocated == 0 */
     assert(self->ob_item != NULL || (size == 0 && allocated == 0));
@@ -138,7 +138,7 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
     obj->ob_exports = 0;
     obj->weakreflist = NULL;
     obj->buffer = NULL;
-    obj->flags = 0;
+    obj->readonly = 0;
     return (PyObject *) obj;
 }
 
@@ -736,13 +736,13 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
  **************************************************************************/
 
 #define RAISE_IF_FIXEDSIZE(self, ret_value)                                 \
-    if ((self)->flags & BUF_FIXEDSIZE) {                                    \
+    if ((self)->buffer) {                                                   \
         PyErr_SetString(PyExc_TypeError, "cannot resize buffer");           \
         return ret_value;                                                   \
     }
 
 #define RAISE_IF_READONLY(self, ret_value)                                  \
-    if ((self)->flags & BUF_READONLY) {                                     \
+    if ((self)->readonly) {                                                 \
         PyErr_SetString(PyExc_TypeError, "cannot modify read-only memory"); \
         return ret_value;                                                   \
     }
@@ -835,7 +835,7 @@ bitarray_buffer_info(bitarrayobject *self)
                         ENDIAN_STR(self->endian),
                         BITS(size) - self->nbits,
                         self->allocated,
-                        self->flags);
+                        123);
     Py_DECREF(ptr);
     return res;
 }
@@ -1603,7 +1603,7 @@ PyDoc_STRVAR(sizeof_doc,
 static PyObject *
 bitarray_freeze(bitarrayobject *self)
 {
-    self->flags = BUF_READONLY | BUF_FIXEDSIZE;
+    self->readonly = 1;
     Py_RETURN_NONE;
 }
 
@@ -3124,14 +3124,12 @@ bitarray_from_buffer(PyTypeObject *type, PyObject *arg, int endian)
     obj->endian = endian;
     obj->ob_exports = 0;
     obj->weakreflist = NULL;
+    obj->readonly = view.readonly;
 
     obj->buffer = (Py_buffer *) PyMem_Malloc(sizeof(Py_buffer));
     if (obj->buffer == NULL)
         return NULL;
     memcpy(obj->buffer, &view, sizeof(Py_buffer));
-
-    obj->flags = BUF_IMPORTED | BUF_FIXEDSIZE |
-                 (view.readonly ? BUF_READONLY : 0);
 
     return (PyObject *) obj;
 }
@@ -3466,7 +3464,7 @@ bitarray_getbuffer(bitarrayobject *self, Py_buffer *view, int flags)
                             (PyObject *) self,
                             (void *) self->ob_item,
                             Py_SIZE(self),
-                            self->flags & BUF_READONLY,
+                            self->readonly,
                             flags);
     if (ret >= 0)
         self->ob_exports++;

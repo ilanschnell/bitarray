@@ -17,13 +17,8 @@ typedef struct {
     int ob_exports;             /* how many buffer exports */
     PyObject *weakreflist;      /* list of weak references */
     Py_buffer *buffer;
-    int flags;
+    int readonly;
 } bitarrayobject;
-
-/* --- flags --- */
-#define BUF_READONLY   1
-#define BUF_FIXEDSIZE  2
-#define BUF_IMPORTED   4
 
 /* --- bit endianness --- */
 #define ENDIAN_LITTLE  0
