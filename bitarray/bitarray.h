@@ -16,6 +16,7 @@ typedef struct {
     int endian;                 /* bit endianness of bitarray */
     int ob_exports;             /* how many buffer exports */
     PyObject *weakreflist;      /* list of weak references */
+    Py_buffer *buffer;
 } bitarrayobject;
 
 /* --- bit endianness --- */

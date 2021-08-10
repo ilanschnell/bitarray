@@ -136,6 +136,7 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
     obj->endian = endian;
     obj->ob_exports = 0;
     obj->weakreflist = NULL;
+    obj->buffer = NULL;
     return (PyObject *) obj;
 }
 
@@ -145,7 +146,9 @@ bitarray_dealloc(bitarrayobject *self)
     if (self->weakreflist != NULL)
         PyObject_ClearWeakRefs((PyObject *) self);
 
-    if (self->ob_item != NULL)
+    if (self->buffer != NULL)
+        PyBuffer_Release(self->buffer);
+    else if (self->ob_item != NULL)
         PyMem_Free((void *) self->ob_item);
 
     Py_TYPE(self)->tp_free((PyObject *) self);
@@ -3045,19 +3048,19 @@ endian_from_string(const char* string)
 static PyObject*
 bitarray_from_buffer(PyTypeObject *type, PyObject *arg, int endian)
 {
-    PyObject *view;
+    PyObject *mview;
     Py_ssize_t nbytes;
     Py_buffer *buffer;
     bitarrayobject *obj;
 
-    view = PyMemoryView_FromObject(arg);
-    if (view == NULL) {
+    mview = PyMemoryView_FromObject(arg);
+    if (mview == NULL) {
         /* XXX */
     }
-    printf("bitarray_from_buffer(): %d\n", PyMemoryView_Check(view));
-    assert(PyMemoryView_Check(view));
+    assert(PyMemoryView_Check(mview));
 
-    buffer = PyMemoryView_GET_BUFFER(view);
+    buffer = PyMemoryView_GET_BUFFER(mview);
+    Py_DECREF(mview);
 
     printf("buffer.buf:      %p\n",  buffer->buf);
     printf("buffer.len:      %zd\n", buffer->len);
@@ -3074,13 +3077,12 @@ bitarray_from_buffer(PyTypeObject *type, PyObject *arg, int endian)
 
     Py_SET_SIZE(obj, nbytes);
     obj->ob_item = (char *) buffer->buf;
-    //PyBuffer_Release(buffer);
-
     obj->allocated = nbytes;
     obj->nbits = 8 * nbytes;
     obj->endian = endian;
-    obj->ob_exports = 1;
+    obj->ob_exports = 0;
     obj->weakreflist = NULL;
+    obj->buffer = buffer;
     return (PyObject *) obj;
 }
 
