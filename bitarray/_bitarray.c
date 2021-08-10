@@ -1946,6 +1946,7 @@ delslice(bitarrayobject *self, PyObject *slice)
     if (slicelength == 0)
         return 0;
 
+    RAISE_IF_FIXEDSIZE(self, -1);
     if (step == 1) {
         return delete_n(self, start, slicelength);
     }
@@ -1978,10 +1979,9 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
     }
 
     if (PySlice_Check(item)) {
-        if (value == NULL) {
-            RAISE_IF_FIXEDSIZE(self, -1);
+        if (value == NULL)
             return delslice(self, item);
-        }
+
         if (bitarray_Check(value))
             return setslice_bitarray(self, item, value);
 
