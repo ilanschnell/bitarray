@@ -3643,7 +3643,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
 
 tests.append(PrefixCodeTests)
 
-# -------------------------- Buffer Interface -------------------------------
+# --------------------------- Buffer Import =--------------------------------
 
 class BufferImportTests(unittest.TestCase, Util):
 
@@ -3664,8 +3664,15 @@ class BufferImportTests(unittest.TestCase, Util):
         a[:] = 1
         self.assertEqual(b, bytearray(100 * [255]))
         self.assertRaises(TypeError, a.pop)
+        a[8:16] = bitarray('00000000', endian='big')
+        self.assertEqual(b, bytearray([255, 0] + 98 * [255]))
+        for n in 7, 9:
+            self.assertRaises(TypeError, a.__setitem__, slice(8, 16),
+                              bitarray(n))
 
 tests.append(BufferImportTests)
+
+# --------------------------- Buffer Export ---------------------------------
 
 class BufferExportTests(unittest.TestCase):
 
