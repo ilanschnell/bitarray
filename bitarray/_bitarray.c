@@ -1596,6 +1596,20 @@ bitarray_sizeof(bitarrayobject *self)
 PyDoc_STRVAR(sizeof_doc,
 "Return the size of the bitarray in memory, in bytes.");
 
+
+static PyObject *
+bitarray_setflags(bitarrayobject *self, PyObject *value)
+{
+    Py_ssize_t flags;
+
+    flags = PyNumber_AsSsize_t(value, NULL);
+    if (flags == -1 && PyErr_Occurred())
+        return NULL;
+
+    self->flags = (int) flags;
+    Py_RETURN_NONE;
+}
+
 /* ---------- functionality exposed in debug mode for testing ---------- */
 
 #ifndef NDEBUG
@@ -3051,6 +3065,7 @@ static PyMethodDef bitarray_methods[] = {
      reduce_doc},
     {"__sizeof__",   (PyCFunction) bitarray_sizeof,      METH_NOARGS,
      sizeof_doc},
+    {"_setflags",    (PyCFunction) bitarray_setflags,    METH_O,       0},
 
 #ifndef NDEBUG
     /* functionality exposed in debug mode for testing */
