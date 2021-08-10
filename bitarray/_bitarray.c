@@ -826,12 +826,13 @@ bitarray_buffer_info(bitarrayobject *self)
     Py_ssize_t size = Py_SIZE(self);
 
     ptr = PyLong_FromVoidPtr(self->ob_item),
-    res = Py_BuildValue("Onsnn",
+    res = Py_BuildValue("Onsnni",
                         ptr,
                         size,
                         ENDIAN_STR(self->endian),
                         BITS(size) - self->nbits,
-                        self->allocated);
+                        self->allocated,
+                        self->flags);
     Py_DECREF(ptr);
     return res;
 }
@@ -1957,12 +1958,6 @@ delslice(bitarrayobject *self, PyObject *slice)
 static int
 bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
 {
-#if 0
-    printf("self.buffer.buf:      %p\n",  self->buffer->buf);
-    printf("self.buffer.len:      %zd\n", self->buffer->len);
-    printf("self.buffer.readonly: %d\n",  self->buffer->readonly);
-    printf("self.buffer.itemsize: %zd\n", self->buffer->itemsize);
-#endif
     CHECK_READONLY(self, -1);
 
     if (PyIndex_Check(item)) {
@@ -3456,9 +3451,12 @@ bitarray_getbuffer(bitarrayobject *self, Py_buffer *view, int flags)
         self->ob_exports++;
         return 0;
     }
-    ret = PyBuffer_FillInfo(view, (PyObject *) self,
+    ret = PyBuffer_FillInfo(view,
+                            (PyObject *) self,
                             (void *) self->ob_item,
-                            Py_SIZE(self), 0, flags);
+                            Py_SIZE(self),
+                            self->flags & BUF_READONLY,
+                            flags);
     if (ret >= 0)
         self->ob_exports++;
 
