@@ -3780,6 +3780,12 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, b.__setitem__, 1, 0)
         self.check_obj(b)
 
+    def test_invalid_buffer(self):
+        # these objects do not expose a buffer
+        for arg in (123, 1.23, Ellipsis, [1, 2, 3], (1, 2, 3), {1: 2},
+                    set([1, 2, 3]), None):
+            self.assertRaises(TypeError, bitarray, None, 'big', arg)
+
     def test_del_import_object(self):
         b = bytearray(100 * [0])
         a = bitarray(buffer=b)
