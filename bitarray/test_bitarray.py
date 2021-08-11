@@ -98,9 +98,17 @@ class Util(object):
         self.assertTrue(0 <= unused < 8)
         self.assertEqual(endian, a.endian())
         self.assertTrue(endian in ('little', 'big'))
-        if buf == 0:
+
+        if buf:
+            # imported buffer implies that no extra memory is allocated
+            self.assertEqual(allocated, 0)
+        else:
+            # the allocated memory is always larger than the buffer size
             self.assertTrue(allocated >= size)
-        if address == 0:  # NULL
+
+        if address == 0:
+            # the buffer being a NULL pointer implies that the buffer size
+            # and the allocated memory size are 0
             self.assertTrue(size == 0)
             self.assertTrue(allocated == 0)
 
@@ -3676,6 +3684,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.setall, 1)
         self.assertRaises(TypeError, a.clear)
         self.assertEqual(a, zeros(800))
+        self.check_obj(a)
 
     def test_bytearray(self):
         b = bytearray(100 * [0])
@@ -3698,15 +3707,16 @@ class BufferImportTests(unittest.TestCase, Util):
         for n in 7, 9:
             self.assertRaises(TypeError, a.__setitem__, slice(8, 16),
                               bitarray(n))
+        self.check_obj(a)
 
     def test_del_import_object(self):
         b = bytearray(100 * [0])
         a = bitarray(buffer=b)
         del b
-        self.assertEqual(a, bitarray(800))
+        self.assertEqual(a, zeros(800))
         a.setall(1)
         self.assertTrue(a.all())
-
+        self.check_obj(a)
 
 tests.append(BufferImportTests)
 

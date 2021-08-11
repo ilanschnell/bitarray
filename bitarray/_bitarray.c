@@ -34,12 +34,13 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     Py_ssize_t newsize;
     size_t new_allocated;
 
-    assert(self->buffer == NULL && self->readonly == 0);
     assert(allocated >= size && size == BYTES(self->nbits));
     /* ob_item == NULL implies ob_size == allocated == 0 */
     assert(self->ob_item != NULL || (size == 0 && allocated == 0));
     /* allocated == 0 implies size == 0 */
     assert(allocated != 0 || size == 0);
+    /* resize is never called for imported buffer, or for readonly memory */
+    assert(self->buffer == NULL && self->readonly == 0);
 
     newsize = BYTES(nbits);
     if (nbits < 0 || newsize < 0) {
@@ -848,10 +849,14 @@ bitarray_buffer_info(bitarrayobject *self)
 PyDoc_STRVAR(buffer_info_doc,
 "buffer_info() -> tuple\n\
 \n\
-Return a tuple (address, size, endianness, unused, allocated) giving the\n\
-memory address of the bitarray's buffer, the buffer size (in bytes),\n\
-the bit endianness as a string, the number of unused padding bits within\n\
-the last byte, and the allocated memory for the buffer (in bytes).");
+Return a tuple containing:\n\
+  0) memory address of the bitarray's buffer\n\
+  1) buffer size (in bytes)\n\
+  2) bit endianness as a string\n\
+  3) number of unused padding bits\n\
+  4) allocated memory for the buffer (in bytes)\n\
+  5) whether memory is read only\n\
+  6) whether buffer is imported");
 
 
 static PyObject *
