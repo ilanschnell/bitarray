@@ -735,17 +735,21 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
                      Implementation of bitarray methods
  **************************************************************************/
 
-#define RAISE_IF_FIXEDSIZE(self, ret_value)                                 \
-    if ((self)->buffer) {                                                   \
-        PyErr_SetString(PyExc_TypeError, "cannot resize buffer");           \
-        return ret_value;                                                   \
-    }
-
+/* raise when buffer is readonly */
 #define RAISE_IF_READONLY(self, ret_value)                                  \
     if ((self)->readonly) {                                                 \
         PyErr_SetString(PyExc_TypeError, "cannot modify read-only memory"); \
         return ret_value;                                                   \
     }
+
+/* raise when butter is imported - implies raising when buffer is readonly */
+#define RAISE_IF_FIXEDSIZE(self, ret_value) {                               \
+    RAISE_IF_READONLY(self, ret_value);                                     \
+    if ((self)->buffer) {                                                   \
+        PyErr_SetString(PyExc_TypeError, "cannot resize buffer");           \
+        return ret_value;                                                   \
+    }                                                                       \
+}
 
 static PyObject *
 bitarray_all(bitarrayobject *self)
@@ -924,6 +928,7 @@ Return the bit endianness of the bitarray as a string (`little` or `big`).");
 static PyObject *
 bitarray_extend(bitarrayobject *self, PyObject *obj)
 {
+    RAISE_IF_FIXEDSIZE(self, NULL);
     if (extend_dispatch(self, obj) < 0)
         return NULL;
     Py_RETURN_NONE;
