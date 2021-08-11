@@ -48,16 +48,16 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
         return -1;
     }
 
-    if (newsize == size) {
-        /* buffer size hasn't changed - bypass everything */
-        self->nbits = nbits;
-        return 0;
-    }
-
     if (self->ob_exports > 0) {
         PyErr_SetString(PyExc_BufferError,
                         "cannot resize bitarray that is exporting buffers");
         return -1;
+    }
+
+    if (newsize == size) {
+        /* buffer size hasn't changed - bypass everything */
+        self->nbits = nbits;
+        return 0;
     }
 
     /* Bypass reallocation when a allocation is large enough to accommodate

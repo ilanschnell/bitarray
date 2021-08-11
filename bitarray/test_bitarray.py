@@ -92,7 +92,7 @@ class Util(object):
         return slicelength
 
     def check_obj(self, a):
-        address, size, endian, unused, allocated, ro, buf = a.buffer_info()
+        address, size, endian, unused, alloc, ro, buf = a.buffer_info()
         self.assertEqual(size, bits2bytes(len(a)))
         self.assertEqual(unused, 8 * size - len(a))
         self.assertTrue(0 <= unused < 8)
@@ -101,16 +101,16 @@ class Util(object):
 
         if buf:
             # imported buffer implies that no extra memory is allocated
-            self.assertEqual(allocated, 0)
+            self.assertEqual(alloc, 0)
         else:
             # the allocated memory is always larger than the buffer size
-            self.assertTrue(allocated >= size)
+            self.assertTrue(alloc >= size)
 
         if address == 0:
             # the buffer being a NULL pointer implies that the buffer size
             # and the allocated memory size are 0
-            self.assertTrue(size == 0)
-            self.assertTrue(allocated == 0)
+            self.assertEqual(size, 0)
+            self.assertEqual(alloc, 0)
 
     def assertEQUAL(self, a, b):
         self.assertEqual(a, b)
@@ -273,6 +273,10 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.__setitem__, 3, 1)
         self.assertEQUAL(a, bitarray('00001111', 'little'))
         self.check_obj(a)
+
+        # positinal arguments
+        a = bitarray(None, 'big', bytearray([15]))
+        self.assertEQUAL(a, bitarray('00001111', 'big'))
 
     def test_integers(self):
         for n in range(50):
@@ -3717,6 +3721,24 @@ class BufferImportTests(unittest.TestCase, Util):
         a.setall(1)
         self.assertTrue(a.all())
         self.check_obj(a)
+
+    def test_import_from_other_bitarray(self):
+        n = 10000
+        a = urandom(n)
+        b = bitarray(buffer=memoryview(a))
+        # a and b are two bitarrays that share the same buffer
+        self.assertEqual(a, b)
+        b[437:461] = 0
+        self.assertEqual(a, b)
+        a[327:350] = 1
+        self.assertEqual(a, b)
+        b[101:187] <<= 9
+        self.assertEqual(a, b)
+
+        self.assertRaises(BufferError, a.pop)
+        self.assertRaises(TypeError, b.pop)
+        self.check_obj(a)
+        self.check_obj(b)
 
 tests.append(BufferImportTests)
 
