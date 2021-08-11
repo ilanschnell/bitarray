@@ -3708,6 +3708,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.pop)
         a[8:16] = bitarray('10000010', endian='big')
         self.assertEqual(b, bytearray([255, 65] + 98 * [255]))
+        self.assertEqual(a.tobytes(), bytes(b))
         for n in 7, 9:
             self.assertRaises(TypeError, a.__setitem__, slice(8, 16),
                               bitarray(n))
@@ -3741,7 +3742,8 @@ class BufferImportTests(unittest.TestCase, Util):
     def test_import_from_other_bitarray(self):
         a = urandom(10000)
         b = bitarray(buffer=memoryview(a))
-        # a and b are two bitarrays that share the same buffer now
+        # a and b are two distict bitarrays that share the same buffer now
+        self.assertFalse(a is b)
         self.assertEqual(a, b)
         b[437:461] = 0
         self.assertEqual(a, b)
