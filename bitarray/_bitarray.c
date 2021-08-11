@@ -3530,9 +3530,10 @@ Optional keyword arguments:\n\
   representation of the bitarray.\n\
 \n\
 `buffer`:\n\
-  An object which exposes its buffer.  When provided, `initializer`\n\
+  Any object which exposes its buffer.  When provided, `initializer`\n\
   has to be not present, or `None`.  The imported buffer may be\n\
   readonly or writeable, depending on the object type.");
+
 
 static PyTypeObject Bitarray_Type = {
 #ifdef IS_PY3K

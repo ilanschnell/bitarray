@@ -435,7 +435,7 @@ The bitarray object:
      representation of the bitarray.
 
    ``buffer``:
-     An object which exposes its buffer.  When provided, ``initializer``
+     Any object which exposes its buffer.  When provided, ``initializer``
      has to be not present, or ``None``.  The imported buffer may be
      readonly or writeable, depending on the object type.
 
