@@ -92,7 +92,9 @@ class Util(object):
         return slicelength
 
     def check_obj(self, a):
-        address, size, endian, unused, alloc, ro, buf = a.buffer_info()
+        self.assertIsInstance(a, bitarray)
+
+        ptr, size, endian, unused, alloc, readonly, buf = a.buffer_info()
         self.assertEqual(size, bits2bytes(len(a)))
         self.assertEqual(unused, 8 * size - len(a))
         self.assertTrue(0 <= unused < 8)
@@ -106,11 +108,16 @@ class Util(object):
             # the allocated memory is always larger than the buffer size
             self.assertTrue(alloc >= size)
 
-        if address == 0:
+        if ptr == 0:
             # the buffer being a NULL pointer implies that the buffer size
             # and the allocated memory size are 0
             self.assertEqual(size, 0)
             self.assertEqual(alloc, 0)
+
+        if type(a).__name__ == 'frozenbitarray':
+            self.assertEqual(readonly, 1)
+        elif not buf:
+            self.assertEqual(readonly, 0)
 
     def assertEQUAL(self, a, b):
         self.assertEqual(a, b)
@@ -3708,7 +3715,7 @@ class BufferImportTests(unittest.TestCase, Util):
 
         info = a.buffer_info()
         self.assertEqual(info[4], 0)  # allocated
-        self.assertEqual(info[5], 0)  # readonly
+        self.assertEqual(info[5], 0)  # not readonly
         self.assertEqual(info[6], 1)  # has imported buffer
 
         a[0] = 1
@@ -3741,17 +3748,9 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertEqual(b, bitarray('00000000 00000100 00000010'))
         b[3] = 1
         self.assertEqual(a.tolist(), [8, 32, 64])
+        self.check_obj(b)
 
-    def test_del_import_object(self):
-        b = bytearray(100 * [0])
-        a = bitarray(buffer=b)
-        del b
-        self.assertEqual(a, zeros(800))
-        a.setall(1)
-        self.assertTrue(a.all())
-        self.check_obj(a)
-
-    def test_import_from_other_bitarray(self):
+    def test_bitarray(self):
         a = urandom(10000)
         b = bitarray(buffer=memoryview(a))
         # a and b are two distict bitarrays that share the same buffer now
@@ -3770,6 +3769,25 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, b.pop)
         self.check_obj(a)
         self.check_obj(b)
+
+    def test_frozenbitarray(self):
+        a = frozenbitarray('10011011 011')
+        self.assertEqual(a.buffer_info()[5], 1)  # readonly
+        self.check_obj(a)
+
+        b = bitarray(buffer=a)
+        self.assertEqual(b.buffer_info()[5], 1)  # also readonly
+        self.assertRaises(TypeError, b.__setitem__, 1, 0)
+        self.check_obj(b)
+
+    def test_del_import_object(self):
+        b = bytearray(100 * [0])
+        a = bitarray(buffer=b)
+        del b
+        self.assertEqual(a, zeros(800))
+        a.setall(1)
+        self.assertTrue(a.all())
+        self.check_obj(a)
 
     def test_readonly_errors(self):
         a = bitarray(buffer=b'A')
@@ -3802,7 +3820,7 @@ class BufferImportTests(unittest.TestCase, Util):
     def test_resize_errors(self):
         a = bitarray(buffer=bytearray([123]))
         info = a.buffer_info()
-        self.assertEqual(info[5], 0)  # readonly
+        self.assertEqual(info[5], 0)  # not readonly
         self.assertEqual(info[6], 1)  # has imported buffer
 
         self.assertRaises(TypeError, a.append, True)
@@ -3883,6 +3901,9 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(a.to01(), '110')
         self.assertIsInstance(a, bitarray)
         self.assertIsType(a, 'frozenbitarray')
+        info = a.buffer_info()
+        self.assertEqual(info[5], 1)  # readonly
+        self.check_obj(a)
 
         a = frozenbitarray(bitarray())
         self.assertEQUAL(a, frozenbitarray())
@@ -3954,6 +3975,13 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.__ixor__, bitarray('110'))
         self.assertRaises(TypeError, a.__irshift__, 1)
         self.assertRaises(TypeError, a.__ilshift__, 1)
+
+    def test_freeze(self):
+        # not so much a test for frozenbitarray, but how it is initialized
+        a = bitarray(78)
+        self.assertEqual(a.buffer_info()[5], 0)  # not readonly
+        a._freeze()
+        self.assertEqual(a.buffer_info()[5], 1)  # readonly
 
     def test_memoryview(self):
         a = frozenbitarray('01000001 01000010', 'big')
