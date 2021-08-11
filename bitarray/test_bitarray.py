@@ -3318,15 +3318,15 @@ class FileTests(unittest.TestCase, Util):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(1000 * b'\0')
 
-        with open(self.tmpfname, 'r+b') as f:
+        with open(self.tmpfname, 'r+b') as f:  # see issue #141
             with mmap.mmap(f.fileno(), 0) as mapping:
                 a = bitarray(buffer=mapping, endian='little')
-                a[::4] = 1
+                a[::2] = True
                 # not sure this is necessary, without 'del a', I get:
                 # BufferError: cannot close exported pointers exist
                 del a
 
-        self.assertEqual(self.read_file(), 1000 * b'\x11')
+        self.assertEqual(self.read_file(), 1000 * b'\x55')
 
 
 tests.append(FileTests)
