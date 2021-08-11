@@ -3660,13 +3660,19 @@ class PrefixCodeTests(unittest.TestCase, Util):
 
 tests.append(PrefixCodeTests)
 
-# --------------------------- Buffer Import =--------------------------------
+# --------------------------- Buffer Import ---------------------------------
 
 class BufferImportTests(unittest.TestCase, Util):
 
     def test_bytes(self):
         b = 100 * b'\0'
         a = bitarray(buffer=b)
+
+        info = a.buffer_info()
+        self.assertEqual(info[4], 0)  # allocated
+        self.assertEqual(info[5], 1)  # readonly
+        self.assertEqual(info[6], 1)  # has imported buffer
+
         self.assertRaises(TypeError, a.setall, 1)
         self.assertRaises(TypeError, a.clear)
         self.assertEqual(a, zeros(800))
@@ -3674,6 +3680,12 @@ class BufferImportTests(unittest.TestCase, Util):
     def test_bytearray(self):
         b = bytearray(100 * [0])
         a = bitarray(buffer=b, endian='little')
+
+        info = a.buffer_info()
+        self.assertEqual(info[4], 0)  # allocated
+        self.assertEqual(info[5], 0)  # readonly
+        self.assertEqual(info[6], 1)  # has imported buffer
+
         a[0] = 1
         self.assertEqual(b[0], 1)
         a[7] = 1
@@ -3687,11 +3699,11 @@ class BufferImportTests(unittest.TestCase, Util):
             self.assertRaises(TypeError, a.__setitem__, slice(8, 16),
                               bitarray(n))
 
-    def test_del_importer(self):
+    def test_del_import_object(self):
         b = bytearray(100 * [0])
         a = bitarray(buffer=b)
         del b
-        self.assertEqual(len(a), 800)
+        self.assertEqual(a, bitarray(800))
         a.setall(1)
         self.assertTrue(a.all())
 
