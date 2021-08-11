@@ -414,7 +414,7 @@ an integer 0 or 1.
 The bitarray object:
 --------------------
 
-``bitarray(initializer=0, /, endian='big')`` -> bitarray
+``bitarray(initializer=0, /, endian='big', buffer=None)`` -> bitarray
    Return a new bitarray object whose items are bits initialized from
    the optional initial object, and endianness.
    The initializer may be of the following types:
@@ -426,11 +426,16 @@ The bitarray object:
 
    ``iterable``: Create bitarray from iterable or sequence or integers 0 or 1.
 
-   The optional keyword arguments ``endian`` specifies the bit endianness of the
-   created bitarray object.
-   Allowed values are the strings ``big`` and ``little`` (default is ``big``).
-   The bit endianness only effects the when buffer representation of the
-   bitarray.
+   Optional keyword arguments:
+
+   ``endian``: specifies the bit endianness of the created bitarray object.
+             Allowed values are the strings ``big`` and ``little`` (the default
+             is ``big``).  The bit endianness only effects the buffer
+             representation of the bitarray.
+
+   ``buffer``: An object which exposes its buffer.  When provided, ``initializer``
+             has to be not present, or ``None``.  The imported buffer may be
+             readonly or writeable, depending on the object type.
 
 
 **A bitarray object supports the following methods:**

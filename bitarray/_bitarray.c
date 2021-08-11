@@ -3508,7 +3508,7 @@ static PyBufferProcs bitarray_as_buffer = {
 /***************************** Bitarray Type ******************************/
 
 PyDoc_STRVAR(bitarraytype_doc,
-"bitarray(initializer=0, /, endian='big') -> bitarray\n\
+"bitarray(initializer=0, /, endian='big', buffer=None) -> bitarray\n\
 \n\
 Return a new bitarray object whose items are bits initialized from\n\
 the optional initial object, and endianness.\n\
@@ -3521,11 +3521,16 @@ uninitialized.\n\
 \n\
 `iterable`: Create bitarray from iterable or sequence or integers 0 or 1.\n\
 \n\
-The optional keyword arguments `endian` specifies the bit endianness of the\n\
-created bitarray object.\n\
-Allowed values are the strings `big` and `little` (default is `big`).\n\
-The bit endianness only effects the when buffer representation of the\n\
-bitarray.");
+Optional keyword arguments:\n\
+\n\
+`endian`: specifies the bit endianness of the created bitarray object.\n\
+          Allowed values are the strings `big` and `little` (the default\n\
+          is `big`).  The bit endianness only effects the buffer\n\
+          representation of the bitarray.\n\
+\n\
+`buffer`: An object which exposes its buffer.  When provided, `initializer`\n\
+          has to be not present, or `None`.  The imported buffer may be\n\
+          readonly or writeable, depending on the object type.");
 
 static PyTypeObject Bitarray_Type = {
 #ifdef IS_PY3K
