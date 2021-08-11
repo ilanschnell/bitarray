@@ -153,11 +153,11 @@ normalize_index(Py_ssize_t n, Py_ssize_t *i)
 /* Interpret a PyObject (usually PyLong or PyBool) as a bit, return 0 or 1.
    On error, return -1 and set error message. */
 static inline int
-pybit_as_int(PyObject *v)
+pybit_as_int(PyObject *value)
 {
     Py_ssize_t x;
 
-    x = PyNumber_AsSsize_t(v, NULL);
+    x = PyNumber_AsSsize_t(value, NULL);
     if (x == -1 && PyErr_Occurred())
         return -1;
 
