@@ -3113,7 +3113,7 @@ endian_from_string(const char* string)
 }
 
 static PyObject*
-bitarray_from_buffer(PyTypeObject *type, PyObject *arg, int endian)
+newbitarray_from_buffer(PyTypeObject *type, PyObject *arg, int endian)
 {
     Py_buffer view;
     bitarrayobject *obj;
@@ -3173,7 +3173,7 @@ newbitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
 /* The head byte % 8 specifies the number of unused bits (in last buffer
    byte), the remaining bytes consist of the buffer itself */
 static PyObject *
-unpickle(PyTypeObject *type, PyObject *bytes, int endian)
+newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, int endian)
 {
     PyObject *res;
     Py_ssize_t nbytes;
@@ -3222,7 +3222,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
                             "buffer requires no initial argument");
             return NULL;
         }
-        return bitarray_from_buffer(type, buffer, endian);
+        return newbitarray_from_buffer(type, buffer, endian);
     }
 
     /* no arg or None */
@@ -3246,7 +3246,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         if (head < 32 && head % 16 < 8) {
             if (endian_str == NULL)  /* no endianness provided */
                 endian = head / 16 ? ENDIAN_BIG : ENDIAN_LITTLE;
-            return unpickle(type, initial, endian);
+            return newbitarray_from_pickle(type, initial, endian);
         }
     }
 
