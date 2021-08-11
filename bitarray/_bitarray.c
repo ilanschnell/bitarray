@@ -2196,27 +2196,27 @@ shift_check(PyObject *a, PyObject *b, const char *ostr)
     return n;
 }
 
-#define SHIFT_FUNC(name, inplace, right, ostr)             \
-static PyObject *                                          \
-bitarray_ ## name (PyObject *self, PyObject *other)        \
-{                                                          \
-    PyObject *res;                                         \
-    Py_ssize_t n;                                          \
-                                                           \
-    if ((n = shift_check(self, other, ostr)) < 0)          \
-        return NULL;                                       \
-    if (inplace) {                                         \
-        RAISE_IF_READONLY(self, NULL);                     \
-        res = self;                                        \
-        Py_INCREF(res);                                    \
-    }                                                      \
-    else {                                                 \
-        res = bitarray_copy((bitarrayobject *) self);      \
-        if (res == NULL)                                   \
-            return NULL;                                   \
-    }                                                      \
-    shift((bitarrayobject *) res, n, right);               \
-    return res;                                            \
+#define SHIFT_FUNC(name, inplace, right, ostr)         \
+static PyObject *                                      \
+bitarray_ ## name (PyObject *self, PyObject *other)    \
+{                                                      \
+    PyObject *res;                                     \
+    Py_ssize_t n;                                      \
+                                                       \
+    if ((n = shift_check(self, other, ostr)) < 0)      \
+        return NULL;                                   \
+    if (inplace) {                                     \
+        RAISE_IF_READONLY(self, NULL);                 \
+        res = self;                                    \
+        Py_INCREF(res);                                \
+    }                                                  \
+    else {                                             \
+        res = bitarray_copy((bitarrayobject *) self);  \
+        if (res == NULL)                               \
+            return NULL;                               \
+    }                                                  \
+    shift((bitarrayobject *) res, n, right);           \
+    return res;                                        \
 }
 
 SHIFT_FUNC(lshift,  0, 0, "<<")  /* bitarray_lshift */
