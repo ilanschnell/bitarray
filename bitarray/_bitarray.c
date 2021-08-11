@@ -34,7 +34,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     Py_ssize_t newsize;
     size_t new_allocated;
 
-    assert(self->buffer == NULL);
+    assert(self->buffer == NULL && self->readonly == 0);
     assert(allocated >= size && size == BYTES(self->nbits));
     /* ob_item == NULL implies ob_size == allocated == 0 */
     assert(self->ob_item != NULL || (size == 0 && allocated == 0));
@@ -737,7 +737,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 
 /* raise when buffer is readonly */
 #define RAISE_IF_READONLY(self, ret_value)                                  \
-    if ((self)->readonly) {                                                 \
+    if (((bitarrayobject *) self)->readonly) {                              \
         PyErr_SetString(PyExc_TypeError, "cannot modify read-only memory"); \
         return ret_value;                                                   \
     }
@@ -745,7 +745,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 /* raise when butter is imported - implies raising when buffer is readonly */
 #define RAISE_IF_FIXEDSIZE(self, ret_value) {                               \
     RAISE_IF_READONLY(self, ret_value);                                     \
-    if ((self)->buffer) {                                                   \
+    if (((bitarrayobject *) self)->buffer) {                                \
         PyErr_SetString(PyExc_TypeError, "cannot resize buffer");           \
         return ret_value;                                                   \
     }                                                                       \
@@ -2127,7 +2127,7 @@ BITWISE_FUNC(xor, "^")               /* bitarray_xor */
 static PyObject *                                            \
 bitarray_i ## oper (PyObject *self, PyObject *other)         \
 {                                                            \
-    RAISE_IF_READONLY((bitarrayobject *) self, NULL);        \
+    RAISE_IF_READONLY(self, NULL);                           \
     if (bitwise_check(self, other, ostr) < 0)                \
         return NULL;                                         \
     bitwise((bitarrayobject *) self,                         \
@@ -2198,7 +2198,7 @@ bitarray_ ## name (PyObject *self, PyObject *other)        \
     if ((n = shift_check(self, other, ostr)) < 0)          \
         return NULL;                                       \
     if (inplace) {                                         \
-        RAISE_IF_READONLY((bitarrayobject *) self, NULL);  \
+        RAISE_IF_READONLY(self, NULL);                     \
         res = self;                                        \
         Py_INCREF(res);                                    \
     }                                                      \
