@@ -3298,6 +3298,9 @@ class FileTests(unittest.TestCase, Util):
             self.assertEqual(f.getvalue(), data)
 
     def test_mmap(self):
+        if not is_py3k:
+            return
+
         import mmap
 
         with open(self.tmpfname, 'wb') as fo:
