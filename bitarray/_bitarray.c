@@ -3151,7 +3151,7 @@ bitarray_from_buffer(PyTypeObject *type, PyObject *arg, int endian)
 }
 
 static PyObject *
-bitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
+newbitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
 {
     Py_ssize_t nbits;
 
@@ -3237,7 +3237,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* index (a number) */
     if (PyIndex_Check(initial))
-        return bitarray_from_index(type, initial, endian);
+        return newbitarray_from_index(type, initial, endian);
 
     /* bytes (for pickling) */
     if (PyBytes_Check(initial) && PyBytes_GET_SIZE(initial) > 0) {
