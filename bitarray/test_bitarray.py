@@ -3711,7 +3711,23 @@ class BufferImportTests(unittest.TestCase, Util):
         for n in 7, 9:
             self.assertRaises(TypeError, a.__setitem__, slice(8, 16),
                               bitarray(n))
+        b[1] = b[2] = 255
+        self.assertEqual(b, bytearray(100 * [255]))
+        self.assertEqual(a, 800 * bitarray('1'))
         self.check_obj(a)
+
+    def test_array(self):
+        if not is_py3k:  # Python 2's array cannot be used as buffer
+            return
+        from array import array
+
+        a = array('B', [0, 255, 64])
+        b = bitarray(None, 'little', a)
+        self.assertEqual(b, bitarray('00000000 11111111 00000010'))
+        a[1] = 32
+        self.assertEqual(b, bitarray('00000000 00000100 00000010'))
+        b[3] = 1
+        self.assertEqual(a.tolist(), [8, 32, 64])
 
     def test_del_import_object(self):
         b = bytearray(100 * [0])
@@ -3725,7 +3741,7 @@ class BufferImportTests(unittest.TestCase, Util):
     def test_import_from_other_bitarray(self):
         a = urandom(10000)
         b = bitarray(buffer=memoryview(a))
-        # a and b are two bitarrays that share the same buffer
+        # a and b are two bitarrays that share the same buffer now
         self.assertEqual(a, b)
         b[437:461] = 0
         self.assertEqual(a, b)
