@@ -383,7 +383,7 @@ class CreateObjectTests(unittest.TestCase, Util):
 
     def test_rawbytes_invalid(self):
         for s in b'\x01', b'\x04', b'\x07', b'\x11', b'\x15', b'\x17':
-            # this error is raised in unpickle() (C function)
+            # this error is raised in newbitarray_from_pickle() (C function)
             if is_py3k:
                 self.assertRaisesMessage(ValueError,
                                          "invalid header byte: 0x%02x" % s[0],
