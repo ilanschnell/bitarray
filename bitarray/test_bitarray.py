@@ -3312,7 +3312,6 @@ class FileTests(unittest.TestCase, Util):
     def test_mmap(self):
         if not is_py3k:
             return
-
         import mmap
 
         with open(self.tmpfname, 'wb') as fo:
@@ -3328,6 +3327,19 @@ class FileTests(unittest.TestCase, Util):
 
         self.assertEqual(self.read_file(), 1000 * b'\x55')
 
+    def test_mmap_2(self):
+        if not is_py3k:
+            return
+        from mmap import mmap
+
+        with open(self.tmpfname, 'wb') as fo:
+            fo.write(1000 * b'\0')
+
+        with open(self.tmpfname, 'r+b') as f:
+            a = bitarray(buffer=mmap(f.fileno(), 0), endian='little')
+            a[::4] = 1
+
+        self.assertEqual(self.read_file(), 1000 * b'\x11')
 
 tests.append(FileTests)
 
