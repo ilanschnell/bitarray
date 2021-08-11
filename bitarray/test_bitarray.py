@@ -3297,6 +3297,21 @@ class FileTests(unittest.TestCase, Util):
             a.tofile(f)
             self.assertEqual(f.getvalue(), data)
 
+    def test_mmap(self):
+        import mmap
+
+        with open(self.tmpfname, 'wb') as fo:
+            fo.write(1000 * b'\0')
+
+        with open(self.tmpfname, 'r+b') as f:
+            with mmap.mmap(f.fileno(), 0) as mapping:
+                a = bitarray(buffer=mapping, endian='little')
+                a[::4] = 1
+                del a
+
+        self.assertEqual(self.read_file(), 1000 * b'\x11')
+
+
 tests.append(FileTests)
 
 # ----------------------------- Decode Tree ---------------------------------
