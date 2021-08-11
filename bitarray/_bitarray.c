@@ -1709,10 +1709,13 @@ bitarray_ass_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
                         "bitarray assignment index out of range");
         return -1;
     }
-    if (value == NULL)
+    if (value == NULL) {
+        RAISE_IF_FIXEDSIZE(self, -1)
         return delete_n(self, i, 1);
-    else
+    }
+    else {
         return set_item(self, i, value);
+    }
 }
 
 /* return 1 if value (which can be an int or bitarray) is in self,

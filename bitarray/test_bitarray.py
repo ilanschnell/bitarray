@@ -3706,8 +3706,8 @@ class BufferImportTests(unittest.TestCase, Util):
         a[:] = 1
         self.assertEqual(b, bytearray(100 * [255]))
         self.assertRaises(TypeError, a.pop)
-        a[8:16] = bitarray('00000000', endian='big')
-        self.assertEqual(b, bytearray([255, 0] + 98 * [255]))
+        a[8:16] = bitarray('10000010', endian='big')
+        self.assertEqual(b, bytearray([255, 65] + 98 * [255]))
         for n in 7, 9:
             self.assertRaises(TypeError, a.__setitem__, slice(8, 16),
                               bitarray(n))
@@ -3723,8 +3723,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.check_obj(a)
 
     def test_import_from_other_bitarray(self):
-        n = 10000
-        a = urandom(n)
+        a = urandom(10000)
         b = bitarray(buffer=memoryview(a))
         # a and b are two bitarrays that share the same buffer
         self.assertEqual(a, b)
@@ -3732,13 +3731,59 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertEqual(a, b)
         a[327:350] = 1
         self.assertEqual(a, b)
-        b[101:187] <<= 9
+        b[101:1187] <<= 79
+        self.assertEqual(a, b)
+        a[100:9800:5] = 1
         self.assertEqual(a, b)
 
         self.assertRaises(BufferError, a.pop)
         self.assertRaises(TypeError, b.pop)
         self.check_obj(a)
         self.check_obj(b)
+
+    def test_readonly_errors(self):
+        a = bitarray(buffer=b'A')
+        info = a.buffer_info()
+        self.assertEqual(info[5], 1)  # readonly
+        self.assertEqual(info[6], 1)  # has imported buffer
+
+        self.assertRaises(TypeError, a.append, True)
+        self.assertRaises(TypeError, a.bytereverse)
+        self.assertRaises(TypeError, a.clear)
+        self.assertRaises(TypeError, a.encode, {'a': bitarray('0')}, 'aa')
+        self.assertRaises(TypeError, a.extend, [0, 1, 0])
+        self.assertRaises(TypeError, a.fill)
+        self.assertRaises(TypeError, a.insert, 0, 1)
+        self.assertRaises(TypeError, a.invert)
+        self.assertRaises(TypeError, a.pack, b'\0\0\xff')
+        self.assertRaises(TypeError, a.pop)
+        self.assertRaises(TypeError, a.remove, 1)
+        self.assertRaises(TypeError, a.reverse)
+        self.assertRaises(TypeError, a.setall, 0)
+        self.assertRaises(TypeError, a.sort)
+        self.assertRaises(TypeError, a.__delitem__, 0)
+        self.assertRaises(TypeError, a.__setitem__, 0, 0)
+        self.assertRaises(TypeError, a.__iadd__, bitarray('010'))
+        self.assertRaises(TypeError, a.__ior__, bitarray('100'))
+        self.assertRaises(TypeError, a.__ixor__, bitarray('110'))
+        self.assertRaises(TypeError, a.__irshift__, 1)
+        self.assertRaises(TypeError, a.__ilshift__, 1)
+
+    def test_resize_errors(self):
+        a = bitarray(buffer=bytearray([123]))
+        info = a.buffer_info()
+        self.assertEqual(info[5], 0)  # readonly
+        self.assertEqual(info[6], 1)  # has imported buffer
+
+        self.assertRaises(TypeError, a.append, True)
+        self.assertRaises(TypeError, a.clear)
+        self.assertRaises(TypeError, a.encode, {'a': bitarray('0')}, 'aa')
+        self.assertRaises(TypeError, a.extend, [0, 1, 0])
+        self.assertRaises(TypeError, a.insert, 0, 1)
+        self.assertRaises(TypeError, a.pack, b'\0\0\xff')
+        self.assertRaises(TypeError, a.pop)
+        self.assertRaises(TypeError, a.remove, 1)
+        self.assertRaises(TypeError, a.__delitem__, 0)
 
 tests.append(BufferImportTests)
 
