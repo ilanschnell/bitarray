@@ -3310,6 +3310,8 @@ class FileTests(unittest.TestCase, Util):
             with mmap.mmap(f.fileno(), 0) as mapping:
                 a = bitarray(buffer=mapping, endian='little')
                 a[::4] = 1
+                # not sure this is necessary, without 'del a', I get:
+                # BufferError: cannot close exported pointers exist
                 del a
 
         self.assertEqual(self.read_file(), 1000 * b'\x11')
