@@ -1604,6 +1604,8 @@ bitarray_sizeof(bitarrayobject *self)
     Py_ssize_t res;
 
     res = sizeof(bitarrayobject) + self->allocated;
+    if (self->buffer)
+        res += sizeof(Py_buffer);
     return PyLong_FromSsize_t(res);
 }
 
