@@ -1958,6 +1958,7 @@ delslice(bitarrayobject *self, PyObject *slice)
 {
     Py_ssize_t start, stop, step, slicelength;
 
+    RAISE_IF_FIXEDSIZE(self, -1);
     assert(PySlice_Check(slice));
     if (slice_get_indices(slice, self->nbits,
                           &start, &stop, &step, &slicelength) < 0)
@@ -1965,7 +1966,6 @@ delslice(bitarrayobject *self, PyObject *slice)
     if (slicelength == 0)
         return 0;
 
-    RAISE_IF_FIXEDSIZE(self, -1);
     if (step == 1) {
         return delete_n(self, start, slicelength);
     }
