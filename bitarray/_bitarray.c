@@ -3523,14 +3523,16 @@ uninitialized.\n\
 \n\
 Optional keyword arguments:\n\
 \n\
-`endian`: specifies the bit endianness of the created bitarray object.\n\
-          Allowed values are the strings `big` and `little` (the default\n\
-          is `big`).  The bit endianness only effects the buffer\n\
-          representation of the bitarray.\n\
+`endian`:\n\
+  specifies the bit endianness of the created bitarray object.\n\
+  Allowed values are the strings `big` and `little` (the default\n\
+  is `big`).  The bit endianness only effects the buffer\n\
+  representation of the bitarray.\n\
 \n\
-`buffer`: An object which exposes its buffer.  When provided, `initializer`\n\
-          has to be not present, or `None`.  The imported buffer may be\n\
-          readonly or writeable, depending on the object type.");
+`buffer`:\n\
+  An object which exposes its buffer.  When provided, `initializer`\n\
+  has to be not present, or `None`.  The imported buffer may be\n\
+  readonly or writeable, depending on the object type.");
 
 static PyTypeObject Bitarray_Type = {
 #ifdef IS_PY3K

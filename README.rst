@@ -428,14 +428,16 @@ The bitarray object:
 
    Optional keyword arguments:
 
-   ``endian``: specifies the bit endianness of the created bitarray object.
-             Allowed values are the strings ``big`` and ``little`` (the default
-             is ``big``).  The bit endianness only effects the buffer
-             representation of the bitarray.
+   ``endian``:
+     specifies the bit endianness of the created bitarray object.
+     Allowed values are the strings ``big`` and ``little`` (the default
+     is ``big``).  The bit endianness only effects the buffer
+     representation of the bitarray.
 
-   ``buffer``: An object which exposes its buffer.  When provided, ``initializer``
-             has to be not present, or ``None``.  The imported buffer may be
-             readonly or writeable, depending on the object type.
+   ``buffer``:
+     An object which exposes its buffer.  When provided, ``initializer``
+     has to be not present, or ``None``.  The imported buffer may be
+     readonly or writeable, depending on the object type.
 
 
 **A bitarray object supports the following methods:**
