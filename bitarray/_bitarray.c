@@ -3642,13 +3642,14 @@ sysinfo(void)
 PyDoc_STRVAR(sysinfo_doc,
 "_sysinfo() -> tuple\n\
 \n\
-tuple(sizeof(void *),\n\
-      sizeof(size_t),\n\
-      sizeof(bitarrayobject),\n\
-      sizeof(decodetreeobject),\n\
-      sizeof(binode),\n\
-      PY_UINT64_T defined,\n\
-      NDEBUG not defined)");
+Return tuple containing:\n\
+  0) sizeof(void *)\n\
+  1) sizeof(size_t)\n\
+  2) sizeof(bitarrayobject)\n\
+  3) sizeof(decodetreeobject)\n\
+  4) sizeof(binode)\n\
+  5) PY_UINT64_T defined\n\
+  6) NDEBUG not defined");
 
 
 static PyMethodDef module_functions[] = {
