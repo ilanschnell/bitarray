@@ -3531,7 +3531,7 @@ Optional keyword arguments:\n\
 \n\
 `buffer`:\n\
   Any object which exposes its buffer.  When provided, `initializer`\n\
-  has to be not present, or `None`.  The imported buffer may be\n\
+  cannot be present (or has to be `None`).  The imported buffer may be\n\
   readonly or writeable, depending on the object type.");
 
 
