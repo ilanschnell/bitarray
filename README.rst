@@ -414,7 +414,7 @@ an integer 0 or 1.
 The bitarray object:
 --------------------
 
-``bitarray(initializer=0, /, endian='big')`` -> bitarray
+``bitarray(initializer=0, /, endian='big', buffer=None)`` -> bitarray
    Return a new bitarray object whose items are bits initialized from
    the optional initial object, and endianness.
    The initializer may be of the following types:
@@ -426,11 +426,18 @@ The bitarray object:
 
    ``iterable``: Create bitarray from iterable or sequence or integers 0 or 1.
 
-   The optional keyword arguments ``endian`` specifies the bit endianness of the
-   created bitarray object.
-   Allowed values are the strings ``big`` and ``little`` (default is ``big``).
-   The bit endianness only effects the when buffer representation of the
-   bitarray.
+   Optional keyword arguments:
+
+   ``endian``:
+     specifies the bit endianness of the created bitarray object.
+     Allowed values are the strings ``big`` and ``little`` (the default
+     is ``big``).  The bit endianness only effects the buffer
+     representation of the bitarray.
+
+   ``buffer``:
+     Any object which exposes its buffer.  When provided, ``initializer``
+     cannot be present (or has to be ``None``).  The imported buffer may be
+     readonly or writeable, depending on the object type.
 
 
 **A bitarray object supports the following methods:**
@@ -450,10 +457,14 @@ The bitarray object:
 
 
 ``buffer_info()`` -> tuple
-   Return a tuple (address, size, endianness, unused, allocated) giving the
-   memory address of the bitarray's buffer, the buffer size (in bytes),
-   the bit endianness as a string, the number of unused padding bits within
-   the last byte, and the allocated memory for the buffer (in bytes).
+   Return a tuple containing:
+     0) memory address of the bitarray's buffer
+     1) buffer size (in bytes)
+     2) bit endianness as a string
+     3) number of unused padding bits
+     4) allocated memory for the buffer (in bytes)
+     5) whether memory is read only
+     6) whether buffer is imported
 
 
 ``bytereverse(start=0, stop=<end of buffer>, /)``
@@ -577,7 +588,7 @@ The bitarray object:
 
 
 ``reverse()``
-   Reverse the order of bits in the array (in-place).
+   Reverse all bits in the array (in-place).
 
 
 ``search(sub_bitarray, limit=<none>, /)`` -> list
@@ -598,7 +609,7 @@ The bitarray object:
 
 ``to01()`` -> str
    Return a string containing '0's and '1's, representing the bits in the
-   bitarray object.
+   bitarray.
 
 
 ``tobytes()`` -> bytes
