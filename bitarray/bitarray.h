@@ -106,14 +106,15 @@ setbit(bitarrayobject *self, Py_ssize_t i, int vi)
         *cp &= ~mask;
 }
 
+/* mask table to zero out unused padding bits */
 static const char setunused_mask_table[16] = {
     0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f,  /* little endian */
     0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe,  /* big endian */
 };
 
 /* Unless the buffer is readonly, sets unused padding bits (when within last
-   buffer byte) to 0.
-   Always return the number of padding bits -- self->nbits is unchanged */
+   buffer byte) to zero.
+   Always returns the number of padding bits - leaves self->nbits unchanged */
 static inline int
 setunused(bitarrayobject *self)
 {

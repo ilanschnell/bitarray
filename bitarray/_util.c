@@ -237,9 +237,9 @@ parity(PyObject *module, PyObject *a)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
-    r = aa->nbits % 8;
-    s = aa->nbits / 8;
-    t = Py_SIZE(aa) - 1;
+    s = aa->nbits / 8;       /* number of whole bytes in buffer */
+    r = aa->nbits % 8;       /* remaining bits  */
+    t = Py_SIZE(aa) - 1;     /* index of last byte in buffer */
     for (i = 0; i < s; i++)
         par ^= aa->ob_item[i];
     if (r)
@@ -290,9 +290,9 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
                         "bitarrays of equal endianness expected");
         return NULL;
     }
-    r = aa->nbits % 8;
-    s = aa->nbits / 8;
-    t = Py_SIZE(aa) - 1;
+    s = aa->nbits / 8;       /* number of whole bytes in buffer */
+    r = aa->nbits % 8;       /* remaining bits  */
+    t = Py_SIZE(aa) - 1;     /* index of last byte in buffer */
     mask = setunused_mask_table[r + 8 * IS_BE(aa)];
 
     switch (kern) {
