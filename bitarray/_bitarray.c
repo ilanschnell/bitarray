@@ -835,7 +835,10 @@ bitarray_buffer_info(bitarrayobject *self)
     PyObject *res, *ptr;
     Py_ssize_t size = Py_SIZE(self);
 
-    ptr = PyLong_FromVoidPtr(self->ob_item),
+    ptr = PyLong_FromVoidPtr(self->ob_item);
+    if (ptr == NULL)
+        return NULL;
+
     res = Py_BuildValue("Onsnniii",
                         ptr,
                         size,
