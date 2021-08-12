@@ -229,15 +229,14 @@ Raises `ValueError` if the value is not present.");
 static PyObject *
 parity(PyObject *module, PyObject *a)
 {
-    Py_ssize_t i, s;
+    Py_ssize_t i;
     unsigned char par = 0;
 
     if (ensure_bitarray(a) < 0)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
-    s = aa->nbits / 8;       /* number of whole bytes in buffer */
-    for (i = 0; i < s; i++)
+    for (i = 0; i < aa->nbits / 8; i++)
         par ^= aa->ob_item[i];
     if (aa->nbits % 8)
         par ^= zeroed_last_byte(aa);
