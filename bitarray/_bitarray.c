@@ -3168,11 +3168,14 @@ richcompare(PyObject *v, PyObject *w, int op)
             return PyBool_FromLong(op == Py_NE);
         }
         else if (va->endian == wa->endian) {
+            size_t s = vs / 8;  /* bytes to whole bytes in buffer */
+
             /* sizes and endianness are the same - use memcmp() */
             assert(vs == ws && Py_SIZE(v) == Py_SIZE(w));
-            setunused(va);
-            setunused(wa);
-            cmp = memcmp(va->ob_item, wa->ob_item, (size_t) Py_SIZE(v));
+            cmp = memcmp(va->ob_item, wa->ob_item, s);
+            if (cmp == 0 && vs % 8)  /* compare remaining few bits */
+                cmp = zeroed_last_byte(va) != zeroed_last_byte(wa);
+
             return PyBool_FromLong((cmp == 0) ^ (op == Py_NE));
         }
     }

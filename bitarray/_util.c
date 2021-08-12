@@ -229,17 +229,18 @@ Raises `ValueError` if the value is not present.");
 static PyObject *
 parity(PyObject *module, PyObject *a)
 {
-    Py_ssize_t i, nbytes;
+    Py_ssize_t i, s;
     unsigned char par = 0;
 
     if (ensure_bitarray(a) < 0)
         return NULL;
 
-    nbytes = Py_SIZE(a);
 #define aa  ((bitarrayobject *) a)
-    setunused(aa);
-    for (i = 0; i < nbytes; i++)
+    s = aa->nbits / 8;       /* number of whole bytes in buffer */
+    for (i = 0; i < s; i++)
         par ^= aa->ob_item[i];
+    if (aa->nbits % 8)
+        par ^= zeroed_last_byte(aa);
 #undef aa
 
     return PyLong_FromLong((long) bitcount_lookup[par] % 2);
@@ -263,9 +264,10 @@ enum kernel_type {
 static PyObject *
 binary_function(PyObject *args, enum kernel_type kern, const char *format)
 {
-    Py_ssize_t res = 0, nbytes, i;
+    Py_ssize_t res = 0, s, i;
     PyObject *a, *b;
     unsigned char c;
+    int r;
 
     if (!PyArg_ParseTuple(args, format, &a, &b))
         return NULL;
@@ -284,36 +286,55 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
                         "bitarrays of equal endianness expected");
         return NULL;
     }
-    setunused(aa);
-    setunused(bb);
-    assert(Py_SIZE(a) == Py_SIZE(b));
-    nbytes = Py_SIZE(a);
+    s = aa->nbits / 8;       /* number of whole bytes in buffer */
+    r = aa->nbits % 8;       /* remaining bits  */
 
     switch (kern) {
     case KERN_cand:
-        for (i = 0; i < nbytes; i++) {
+        for (i = 0; i < s; i++) {
             c = aa->ob_item[i] & bb->ob_item[i];
             res += bitcount_lookup[c];
         }
+        if (r) {
+            c = zeroed_last_byte(aa) & zeroed_last_byte(bb);
+            res += bitcount_lookup[c];
+        }
         break;
+
     case KERN_cor:
-        for (i = 0; i < nbytes; i++) {
+        for (i = 0; i < s; i++) {
             c = aa->ob_item[i] | bb->ob_item[i];
             res += bitcount_lookup[c];
         }
-        break;
-    case KERN_cxor:
-        for (i = 0; i < nbytes; i++) {
-            c = aa->ob_item[i] ^ bb->ob_item[i];
+        if (r) {
+            c = zeroed_last_byte(aa) | zeroed_last_byte(bb);
             res += bitcount_lookup[c];
         }
         break;
+
+    case KERN_cxor:
+        for (i = 0; i < s; i++) {
+            c = aa->ob_item[i] ^ bb->ob_item[i];
+            res += bitcount_lookup[c];
+        }
+        if (r) {
+            c = zeroed_last_byte(aa) ^ zeroed_last_byte(bb);
+            res += bitcount_lookup[c];
+        }
+        break;
+
     case KERN_subset:
-        for (i = 0; i < nbytes; i++) {
+        for (i = 0; i < s; i++) {
             if ((aa->ob_item[i] & bb->ob_item[i]) != aa->ob_item[i])
                 Py_RETURN_FALSE;
         }
+        if (r) {
+            if ((zeroed_last_byte(aa) & zeroed_last_byte(bb)) !=
+                 zeroed_last_byte(aa))
+                Py_RETURN_FALSE;
+        }
         Py_RETURN_TRUE;
+
     default:  /* cannot happen */
         return NULL;
     }
