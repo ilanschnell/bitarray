@@ -428,13 +428,13 @@ The bitarray object:
 
    Optional keyword arguments:
 
-   ``endian``:
+   ``endian``
      specifies the bit endianness of the created bitarray object.
      Allowed values are the strings ``big`` and ``little`` (the default
      is ``big``).  The bit endianness only effects the buffer
      representation of the bitarray.
 
-   ``buffer``:
+   ``buffer``
      Any object which exposes its buffer.  When provided, ``initializer``
      cannot be present (or has to be ``None``).  The imported buffer may be
      readonly or writeable, depending on the object type.
@@ -458,13 +458,14 @@ The bitarray object:
 
 ``buffer_info()`` -> tuple
    Return a tuple containing:
-     0) memory address of the bitarray's buffer
-     1) buffer size (in bytes)
-     2) bit endianness as a string
-     3) number of unused padding bits
-     4) allocated memory for the buffer (in bytes)
-     5) whether memory is read only
-     6) whether buffer is imported
+
+   0. memory address of the bitarray's buffer
+   1. buffer size (in bytes)
+   2. bit endianness as a string
+   3. number of unused padding bits
+   4. allocated memory for the buffer (in bytes)
+   5. whether memory is read only
+   6. whether buffer is imported
 
 
 ``bytereverse(start=0, stop=<end of buffer>, /)``

@@ -852,13 +852,14 @@ PyDoc_STRVAR(buffer_info_doc,
 "buffer_info() -> tuple\n\
 \n\
 Return a tuple containing:\n\
-  0) memory address of the bitarray's buffer\n\
-  1) buffer size (in bytes)\n\
-  2) bit endianness as a string\n\
-  3) number of unused padding bits\n\
-  4) allocated memory for the buffer (in bytes)\n\
-  5) whether memory is read only\n\
-  6) whether buffer is imported");
+\n\
+0. memory address of the bitarray's buffer\n\
+1. buffer size (in bytes)\n\
+2. bit endianness as a string\n\
+3. number of unused padding bits\n\
+4. allocated memory for the buffer (in bytes)\n\
+5. whether memory is read only\n\
+6. whether buffer is imported");
 
 
 static PyObject *
@@ -3528,13 +3529,13 @@ uninitialized.\n\
 \n\
 Optional keyword arguments:\n\
 \n\
-`endian`:\n\
+`endian`\n\
   specifies the bit endianness of the created bitarray object.\n\
   Allowed values are the strings `big` and `little` (the default\n\
   is `big`).  The bit endianness only effects the buffer\n\
   representation of the bitarray.\n\
 \n\
-`buffer`:\n\
+`buffer`\n\
   Any object which exposes its buffer.  When provided, `initializer`\n\
   cannot be present (or has to be `None`).  The imported buffer may be\n\
   readonly or writeable, depending on the object type.");
@@ -3658,13 +3659,14 @@ PyDoc_STRVAR(sysinfo_doc,
 "_sysinfo() -> tuple\n\
 \n\
 Return tuple containing:\n\
-  0) sizeof(void *)\n\
-  1) sizeof(size_t)\n\
-  2) sizeof(bitarrayobject)\n\
-  3) sizeof(decodetreeobject)\n\
-  4) sizeof(binode)\n\
-  5) PY_UINT64_T defined\n\
-  6) NDEBUG not defined");
+\n\
+0. sizeof(void *)\n\
+1. sizeof(size_t)\n\
+2. sizeof(bitarrayobject)\n\
+3. sizeof(decodetreeobject)\n\
+4. sizeof(binode)\n\
+5. PY_UINT64_T defined\n\
+6. NDEBUG not defined");
 
 
 static PyMethodDef module_functions[] = {
