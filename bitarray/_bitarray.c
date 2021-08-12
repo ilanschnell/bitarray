@@ -417,7 +417,7 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 {
     Py_ssize_t i;
 
-    assert(self->readonly == 0);
+    assert(self->readonly == 0);  /* never called on readonly memory */
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
     assert(a <= b);
@@ -1714,7 +1714,7 @@ bitarray_ass_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
         return -1;
     }
     if (value == NULL) {
-        RAISE_IF_FIXEDSIZE(self, -1)
+        RAISE_IF_FIXEDSIZE(self, -1);
         return delete_n(self, i, 1);
     }
     else {
