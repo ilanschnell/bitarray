@@ -3529,14 +3529,11 @@ uninitialized.\n\
 \n\
 Optional keyword arguments:\n\
 \n\
-`endian`\n\
-  specifies the bit endianness of the created bitarray object.\n\
-  Allowed values are the strings `big` and `little` (the default\n\
-  is `big`).  The bit endianness only effects the buffer\n\
-  representation of the bitarray.\n\
+`endian`: Specifies the bit endianness of the created bitarray object.\n\
+  Allowed values are `big` and `little` (the default is `big`).\n\
+  The bit endianness effects the buffer representation of the bitarray.\n\
 \n\
-`buffer`\n\
-  Any object which exposes its buffer.  When provided, `initializer`\n\
+`buffer`: Any object which exposes a buffer.  When provided, `initializer`\n\
   cannot be present (or has to be `None`).  The imported buffer may be\n\
   readonly or writeable, depending on the object type.");
 
