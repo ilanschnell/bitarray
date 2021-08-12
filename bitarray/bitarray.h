@@ -106,8 +106,8 @@ setbit(bitarrayobject *self, Py_ssize_t i, int vi)
         *cp &= ~mask;
 }
 
-/* Return the (padded with zeros) last byte of the buffer.  When called,
-   the number of bits in the bitarrayobject CANNOT be a multiple of 8. */
+/* Return the (padded with zeros) last byte of the buffer.  When called with
+   a bitarray whose number of bits is a multiple of 8, return a NUL byte. */
 static inline char
 zeroed_last_byte(bitarrayobject *self)
 {
@@ -119,14 +119,15 @@ zeroed_last_byte(bitarrayobject *self)
     int r = self->nbits % 8;              /* remaining bits  */
     int be = self->endian == ENDIAN_BIG;  /* is big endian */
 
-    assert(r != 0);
+    if (r == 0)
+        return 0x00;
     assert_nbits(self);
     assert_byte_in_range(self, t);
     return mask_table[r + 8 * be] & self->ob_item[t];
 }
 
-/* Unless the buffer is readonly, zero out padding bits.
-   Always returns the number of padding bits - leaves self->nbits unchanged */
+/* Unless the buffer is readonly, zero out pad bits.
+   Always return the number of pad bits - leave self->nbits unchanged */
 static inline int
 setunused(bitarrayobject *self)
 {
@@ -134,10 +135,8 @@ setunused(bitarrayobject *self)
 
     if (r == 0)
         return 0;
-
     if (self->readonly == 0)
         self->ob_item[Py_SIZE(self) - 1] = zeroed_last_byte(self);
-
     return 8 - r;
 }
 
