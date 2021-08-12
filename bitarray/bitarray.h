@@ -112,6 +112,21 @@ static const char setunused_mask_table[16] = {
     0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe,  /* big endian */
 };
 
+/* Return the padded with zeros last byte of the buffer.
+   The number of bits in the bitarrayobject must be a multiple of 8 */
+static inline char
+zeroed_last_byte(bitarrayobject *self)
+{
+    Py_ssize_t t = Py_SIZE(self) - 1;       /* index of last byte in buffer */
+    int r = self->nbits % 8;                /* remaining bits  */
+    int be = (self->endian == ENDIAN_BIG);  /* is big endian */
+
+    assert(r != 0);
+    assert_nbits(self);
+    assert_byte_in_range(self, t);
+    return setunused_mask_table[r + 8 * be] & self->ob_item[t];
+}
+
 /* Unless the buffer is readonly, sets unused padding bits (when within last
    buffer byte) to zero.
    Always returns the number of padding bits - leaves self->nbits unchanged */

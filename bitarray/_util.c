@@ -229,21 +229,18 @@ Raises `ValueError` if the value is not present.");
 static PyObject *
 parity(PyObject *module, PyObject *a)
 {
-    Py_ssize_t i, s, t;
+    Py_ssize_t i, s;
     unsigned char par = 0;
-    int r;
 
     if (ensure_bitarray(a) < 0)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
     s = aa->nbits / 8;       /* number of whole bytes in buffer */
-    r = aa->nbits % 8;       /* remaining bits  */
-    t = Py_SIZE(aa) - 1;     /* index of last byte in buffer */
     for (i = 0; i < s; i++)
         par ^= aa->ob_item[i];
-    if (r)
-        par ^= setunused_mask_table[r + 8 * IS_BE(aa)] & aa->ob_item[t];
+    if (aa->nbits % 8)
+        par ^= zeroed_last_byte(aa);
 #undef aa
 
     return PyLong_FromLong((long) bitcount_lookup[par] % 2);
