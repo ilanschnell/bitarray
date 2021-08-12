@@ -133,19 +133,15 @@ zeroed_last_byte(bitarrayobject *self)
 static inline int
 setunused(bitarrayobject *self)
 {
-    int i = self->nbits % 8;  /* index into mask array (minus offset) */
+    int r = self->nbits % 8;
 
-    if (i == 0)
+    if (r == 0)
         return 0;
 
-    assert_nbits(self);
-    assert(self->ob_item && Py_SIZE(self) > 0);
-    if (self->readonly == 0) {
-        /* apply the appropriate mask to the last byte in buffer */
-        self->ob_item[Py_SIZE(self) - 1] &=
-            setunused_mask_table[i + 8 * (self->endian == ENDIAN_BIG)];
-    }
-    return 8 - i;
+    if (self->readonly == 0)
+        self->ob_item[Py_SIZE(self) - 1] = zeroed_last_byte(self);
+
+    return 8 - r;
 }
 
 static const unsigned char bitcount_lookup[256] = {
