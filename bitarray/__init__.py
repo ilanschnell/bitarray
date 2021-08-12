@@ -36,8 +36,8 @@ as a dictionary key.
     def __hash__(self):
         "Return hash(self)."
         if getattr(self, '_hash', None) is None:
-            # ensure hash is independent of endianness, also a will be mutable
-            # such that .tobytes() can always be padded with zeros
+            # ensure hash is independent of endianness, also the copy will be
+            # mutable such that .tobytes() can zero out the pad bits
             a = bitarray(self, 'big')
             self._hash = hash((len(a), a.tobytes()))
         return self._hash
