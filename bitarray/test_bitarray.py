@@ -92,16 +92,32 @@ class Util(object):
         return slicelength
 
     def check_obj(self, a):
-        address, size, endian, unused, allocated = a.buffer_info()
+        self.assertIsInstance(a, bitarray)
+
+        ptr, size, endian, unused, alloc, readonly, buf = a.buffer_info()
         self.assertEqual(size, bits2bytes(len(a)))
         self.assertEqual(unused, 8 * size - len(a))
         self.assertTrue(0 <= unused < 8)
         self.assertEqual(endian, a.endian())
         self.assertTrue(endian in ('little', 'big'))
-        self.assertTrue(allocated >= size)
-        if address == 0:  # NULL
-            self.assertTrue(size == 0)
-            self.assertTrue(allocated == 0)
+
+        if buf:
+            # imported buffer implies that no extra memory is allocated
+            self.assertEqual(alloc, 0)
+        else:
+            # the allocated memory is always larger than the buffer size
+            self.assertTrue(alloc >= size)
+
+        if ptr == 0:
+            # the buffer being a NULL pointer implies that the buffer size
+            # and the allocated memory size are 0
+            self.assertEqual(size, 0)
+            self.assertEqual(alloc, 0)
+
+        if type(a).__name__ == 'frozenbitarray':
+            self.assertEqual(readonly, 1)
+        elif not buf:
+            self.assertEqual(readonly, 0)
 
     def assertEQUAL(self, a, b):
         self.assertEqual(a, b)
@@ -245,6 +261,29 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaisesMessage(TypeError,
                                  "'ellipsis' object is not iterable",
                                  bitarray, Ellipsis)
+
+    def test_buffer(self):
+        # buffer requires no initial argument
+        self.assertRaises(TypeError, bitarray, 5, buffer=b'DATA\0')
+
+        for endian in 'big', 'little':
+            a = bitarray(buffer=b'', endian=endian)
+            self.assertEQUAL(a, bitarray(0, endian))
+
+            _set_default_endian(endian)
+            a = bitarray(buffer=b'A')
+            self.assertEqual(a.endian(), endian)
+            self.assertEqual(len(a), 8)
+
+        a = bitarray(buffer=b'\xf0', endian='little')
+        self.assertRaises(TypeError, a.clear)
+        self.assertRaises(TypeError, a.__setitem__, 3, 1)
+        self.assertEQUAL(a, bitarray('00001111', 'little'))
+        self.check_obj(a)
+
+        # positinal arguments
+        a = bitarray(None, 'big', bytearray([15]))
+        self.assertEQUAL(a, bitarray('00001111', 'big'))
 
     def test_integers(self):
         for n in range(50):
@@ -528,12 +567,10 @@ class MetaDataTests(unittest.TestCase, Util):
 
         bi = a.buffer_info()
         self.assertIsInstance(bi, tuple)
-        self.assertEqual(len(bi), 5)
-        self.assertIsInstance(bi[0], int)
-        self.assertIsInstance(bi[1], int)
+        self.assertEqual(len(bi), 7)
         self.assertIsInstance(bi[2], str)
-        self.assertIsInstance(bi[3], int)
-        self.assertIsInstance(bi[4], int)
+        for i in 0, 1, 3, 4, 5, 6:
+            self.assertIsInstance(bi[i], int)
 
     def test_buffer_info2(self):
         for endian in 'big', 'little':
@@ -3279,6 +3316,38 @@ class FileTests(unittest.TestCase, Util):
             a.tofile(f)
             self.assertEqual(f.getvalue(), data)
 
+    def test_mmap(self):
+        if not is_py3k:
+            return
+        import mmap
+
+        with open(self.tmpfname, 'wb') as fo:
+            fo.write(1000 * b'\0')
+
+        with open(self.tmpfname, 'r+b') as f:  # see issue #141
+            with mmap.mmap(f.fileno(), 0) as mapping:
+                a = bitarray(buffer=mapping, endian='little')
+                a[::2] = True
+                # not sure this is necessary, without 'del a', I get:
+                # BufferError: cannot close exported pointers exist
+                del a
+
+        self.assertEqual(self.read_file(), 1000 * b'\x55')
+
+    def test_mmap_2(self):
+        if not is_py3k:
+            return
+        from mmap import mmap
+
+        with open(self.tmpfname, 'wb') as fo:
+            fo.write(1000 * b'\0')
+
+        with open(self.tmpfname, 'r+b') as f:
+            a = bitarray(buffer=mmap(f.fileno(), 0), endian='little')
+            a[::4] = 1
+
+        self.assertEqual(self.read_file(), 1000 * b'\x11')
+
 tests.append(FileTests)
 
 # ----------------------------- Decode Tree ---------------------------------
@@ -3622,9 +3691,159 @@ class PrefixCodeTests(unittest.TestCase, Util):
 
 tests.append(PrefixCodeTests)
 
-# -------------------------- Buffer Interface -------------------------------
+# --------------------------- Buffer Import ---------------------------------
 
-class BufferInterfaceTests(unittest.TestCase):
+class BufferImportTests(unittest.TestCase, Util):
+
+    def test_bytes(self):
+        b = 100 * b'\0'
+        a = bitarray(buffer=b)
+
+        info = a.buffer_info()
+        self.assertEqual(info[4], 0)  # allocated
+        self.assertEqual(info[5], 1)  # readonly
+        self.assertEqual(info[6], 1)  # has imported buffer
+
+        self.assertRaises(TypeError, a.setall, 1)
+        self.assertRaises(TypeError, a.clear)
+        self.assertEqual(a, zeros(800))
+        self.check_obj(a)
+
+    def test_bytearray(self):
+        b = bytearray(100 * [0])
+        a = bitarray(buffer=b, endian='little')
+
+        info = a.buffer_info()
+        self.assertEqual(info[4], 0)  # allocated
+        self.assertEqual(info[5], 0)  # not readonly
+        self.assertEqual(info[6], 1)  # has imported buffer
+
+        a[0] = 1
+        self.assertEqual(b[0], 1)
+        a[7] = 1
+        self.assertEqual(b[0], 129)
+        a[:] = 1
+        self.assertEqual(b, bytearray(100 * [255]))
+        self.assertRaises(TypeError, a.pop)
+        a[8:16] = bitarray('10000010', endian='big')
+        self.assertEqual(b, bytearray([255, 65] + 98 * [255]))
+        self.assertEqual(a.tobytes(), bytes(b))
+        for n in 7, 9:
+            self.assertRaises(TypeError, a.__setitem__, slice(8, 16),
+                              bitarray(n))
+        b[1] = b[2] = 255
+        self.assertEqual(b, bytearray(100 * [255]))
+        self.assertEqual(a, 800 * bitarray('1'))
+        self.check_obj(a)
+
+    def test_array(self):
+        if not is_py3k:  # Python 2's array cannot be used as buffer
+            return
+        from array import array
+
+        a = array('B', [0, 255, 64])
+        b = bitarray(None, 'little', a)
+        self.assertEqual(b, bitarray('00000000 11111111 00000010'))
+        a[1] = 32
+        self.assertEqual(b, bitarray('00000000 00000100 00000010'))
+        b[3] = 1
+        self.assertEqual(a.tolist(), [8, 32, 64])
+        self.check_obj(b)
+
+    def test_bitarray(self):
+        a = urandom(10000)
+        b = bitarray(buffer=memoryview(a))
+        # a and b are two distict bitarrays that share the same buffer now
+        self.assertFalse(a is b)
+        self.assertEqual(a, b)
+        b[437:461] = 0
+        self.assertEqual(a, b)
+        a[327:350] = 1
+        self.assertEqual(a, b)
+        b[101:1187] <<= 79
+        self.assertEqual(a, b)
+        a[100:9800:5] = 1
+        self.assertEqual(a, b)
+
+        self.assertRaises(BufferError, a.pop)
+        self.assertRaises(TypeError, b.pop)
+        self.check_obj(a)
+        self.check_obj(b)
+
+    def test_frozenbitarray(self):
+        a = frozenbitarray('10011011 011')
+        self.assertEqual(a.buffer_info()[5], 1)  # readonly
+        self.check_obj(a)
+
+        b = bitarray(buffer=a)
+        self.assertEqual(b.buffer_info()[5], 1)  # also readonly
+        self.assertRaises(TypeError, b.__setitem__, 1, 0)
+        self.check_obj(b)
+
+    def test_invalid_buffer(self):
+        # these objects do not expose a buffer
+        for arg in (123, 1.23, Ellipsis, [1, 2, 3], (1, 2, 3), {1: 2},
+                    set([1, 2, 3]), None):
+            self.assertRaises(TypeError, bitarray, None, 'big', arg)
+
+    def test_del_import_object(self):
+        b = bytearray(100 * [0])
+        a = bitarray(buffer=b)
+        del b
+        self.assertEqual(a, zeros(800))
+        a.setall(1)
+        self.assertTrue(a.all())
+        self.check_obj(a)
+
+    def test_readonly_errors(self):
+        a = bitarray(buffer=b'A')
+        info = a.buffer_info()
+        self.assertEqual(info[5], 1)  # readonly
+        self.assertEqual(info[6], 1)  # has imported buffer
+
+        self.assertRaises(TypeError, a.append, True)
+        self.assertRaises(TypeError, a.bytereverse)
+        self.assertRaises(TypeError, a.clear)
+        self.assertRaises(TypeError, a.encode, {'a': bitarray('0')}, 'aa')
+        self.assertRaises(TypeError, a.extend, [0, 1, 0])
+        self.assertRaises(TypeError, a.fill)
+        self.assertRaises(TypeError, a.insert, 0, 1)
+        self.assertRaises(TypeError, a.invert)
+        self.assertRaises(TypeError, a.pack, b'\0\0\xff')
+        self.assertRaises(TypeError, a.pop)
+        self.assertRaises(TypeError, a.remove, 1)
+        self.assertRaises(TypeError, a.reverse)
+        self.assertRaises(TypeError, a.setall, 0)
+        self.assertRaises(TypeError, a.sort)
+        self.assertRaises(TypeError, a.__delitem__, 0)
+        self.assertRaises(TypeError, a.__setitem__, 0, 0)
+        self.assertRaises(TypeError, a.__iadd__, bitarray('010'))
+        self.assertRaises(TypeError, a.__ior__, bitarray('100'))
+        self.assertRaises(TypeError, a.__ixor__, bitarray('110'))
+        self.assertRaises(TypeError, a.__irshift__, 1)
+        self.assertRaises(TypeError, a.__ilshift__, 1)
+
+    def test_resize_errors(self):
+        a = bitarray(buffer=bytearray([123]))
+        info = a.buffer_info()
+        self.assertEqual(info[5], 0)  # not readonly
+        self.assertEqual(info[6], 1)  # has imported buffer
+
+        self.assertRaises(TypeError, a.append, True)
+        self.assertRaises(TypeError, a.clear)
+        self.assertRaises(TypeError, a.encode, {'a': bitarray('0')}, 'aa')
+        self.assertRaises(TypeError, a.extend, [0, 1, 0])
+        self.assertRaises(TypeError, a.insert, 0, 1)
+        self.assertRaises(TypeError, a.pack, b'\0\0\xff')
+        self.assertRaises(TypeError, a.pop)
+        self.assertRaises(TypeError, a.remove, 1)
+        self.assertRaises(TypeError, a.__delitem__, 0)
+
+tests.append(BufferImportTests)
+
+# --------------------------- Buffer Export ---------------------------------
+
+class BufferExportTests(unittest.TestCase):
 
     def test_read_simple(self):
         a = bitarray('01000001 01000010 01000011', endian='big')
@@ -3676,7 +3895,7 @@ class BufferInterfaceTests(unittest.TestCase):
         v[2] = 67
         self.assertEqual(a.tobytes(), b'\x00ABC\x00')
 
-tests.append(BufferInterfaceTests)
+tests.append(BufferExportTests)
 
 # ---------------------------------------------------------------------------
 
@@ -3688,6 +3907,9 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(a.to01(), '110')
         self.assertIsInstance(a, bitarray)
         self.assertIsType(a, 'frozenbitarray')
+        info = a.buffer_info()
+        self.assertEqual(info[5], 1)  # readonly
+        self.check_obj(a)
 
         a = frozenbitarray(bitarray())
         self.assertEQUAL(a, frozenbitarray())
@@ -3739,9 +3961,39 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
     def test_immutable(self):
         a = frozenbitarray('111')
         self.assertRaises(TypeError, a.append, True)
+        self.assertRaises(TypeError, a.bytereverse)
         self.assertRaises(TypeError, a.clear)
+        self.assertRaises(TypeError, a.encode, {'a': bitarray('0')}, 'aa')
+        self.assertRaises(TypeError, a.extend, [0, 1, 0])
+        self.assertRaises(TypeError, a.fill)
+        self.assertRaises(TypeError, a.insert, 0, 1)
+        self.assertRaises(TypeError, a.invert)
+        self.assertRaises(TypeError, a.pack, b'\0\0\xff')
+        self.assertRaises(TypeError, a.pop)
+        self.assertRaises(TypeError, a.remove, 1)
+        self.assertRaises(TypeError, a.reverse)
+        self.assertRaises(TypeError, a.setall, 0)
+        self.assertRaises(TypeError, a.sort)
         self.assertRaises(TypeError, a.__delitem__, 0)
         self.assertRaises(TypeError, a.__setitem__, 0, 0)
+        self.assertRaises(TypeError, a.__iadd__, bitarray('010'))
+        self.assertRaises(TypeError, a.__ior__, bitarray('100'))
+        self.assertRaises(TypeError, a.__ixor__, bitarray('110'))
+        self.assertRaises(TypeError, a.__irshift__, 1)
+        self.assertRaises(TypeError, a.__ilshift__, 1)
+
+    def test_freeze(self):
+        # not so much a test for frozenbitarray, but how it is initialized
+        a = bitarray(78)
+        self.assertEqual(a.buffer_info()[5], 0)  # not readonly
+        a._freeze()
+        self.assertEqual(a.buffer_info()[5], 1)  # readonly
+
+    def test_memoryview(self):
+        a = frozenbitarray('01000001 01000010', 'big')
+        v = memoryview(a)
+        self.assertEqual(v.tobytes(), b'AB')
+        self.assertRaises(TypeError, v.__setitem__, 0, 255)
 
     def test_set(self):
         a = frozenbitarray('1')
@@ -3824,6 +4076,7 @@ def run(verbosity=1, repeat=1):
     print('sys.prefix: %s' % sys.prefix)
     print('pointer size: %d bit' % (8 * SYSINFO[0]))
     print('sizeof(size_t): %d' % SYSINFO[1])
+    print('sizeof(bitarrayobject): %d' % SYSINFO[2])
     print('PY_UINT64_T defined: %s' % SYSINFO[5])
     print('DEBUG: %s' % DEBUG)
     suite = unittest.TestSuite()
