@@ -417,6 +417,7 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 {
     Py_ssize_t i;
 
+    assert(self->readonly == 0);
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
     assert(a <= b);
