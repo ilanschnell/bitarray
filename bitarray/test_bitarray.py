@@ -94,7 +94,9 @@ class Util(object):
     def check_obj(self, a):
         self.assertIsInstance(a, bitarray)
 
-        ptr, size, endian, unused, alloc, readonly, buf = a.buffer_info()
+        ptr, size, endian, unused, alloc, readonly, buf, exports \
+            = a.buffer_info()
+
         self.assertEqual(size, bits2bytes(len(a)))
         self.assertEqual(unused, 8 * size - len(a))
         self.assertTrue(0 <= unused < 8)
@@ -567,9 +569,9 @@ class MetaDataTests(unittest.TestCase, Util):
 
         bi = a.buffer_info()
         self.assertIsInstance(bi, tuple)
-        self.assertEqual(len(bi), 7)
+        self.assertEqual(len(bi), 8)
         self.assertIsInstance(bi[2], str)
-        for i in 0, 1, 3, 4, 5, 6:
+        for i in 0, 1, 3, 4, 5, 6, 7:
             self.assertIsInstance(bi[i], int)
 
     def test_buffer_info2(self):
