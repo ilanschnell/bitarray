@@ -107,7 +107,7 @@ setbit(bitarrayobject *self, Py_ssize_t i, int vi)
 }
 
 /* Return the padded with zeros last byte of the buffer.
-   The number of bits in the bitarrayobject must be a multiple of 8 */
+   The number of bits in the bitarrayobject must be a multiple of 8. */
 static inline char
 zeroed_last_byte(bitarrayobject *self)
 {
