@@ -264,10 +264,9 @@ enum kernel_type {
 static PyObject *
 binary_function(PyObject *args, enum kernel_type kern, const char *format)
 {
-    Py_ssize_t res = 0, i, s, t;
+    Py_ssize_t res = 0, i, s;
     PyObject *a, *b;
     unsigned char c;
-    char mask;
     int r;
 
     if (!PyArg_ParseTuple(args, format, &a, &b))
@@ -289,8 +288,6 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
     }
     s = aa->nbits / 8;       /* number of whole bytes in buffer */
     r = aa->nbits % 8;       /* remaining bits  */
-    t = Py_SIZE(aa) - 1;     /* index of last byte in buffer */
-    mask = setunused_mask_table[r + 8 * IS_BE(aa)];
 
     switch (kern) {
     case KERN_cand:
@@ -299,7 +296,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
             res += bitcount_lookup[c];
         }
         if (r) {
-            c = mask & aa->ob_item[t] & bb->ob_item[t];
+            c = zeroed_last_byte(aa) & zeroed_last_byte(bb);
             res += bitcount_lookup[c];
         }
         break;
@@ -310,7 +307,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
             res += bitcount_lookup[c];
         }
         if (r) {
-            c = mask & (aa->ob_item[t] | bb->ob_item[t]);
+            c = zeroed_last_byte(aa) | zeroed_last_byte(bb);
             res += bitcount_lookup[c];
         }
         break;
@@ -321,7 +318,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
             res += bitcount_lookup[c];
         }
         if (r) {
-            c = mask & (aa->ob_item[t] ^ bb->ob_item[t]);
+            c = zeroed_last_byte(aa) ^ zeroed_last_byte(bb);
             res += bitcount_lookup[c];
         }
         break;
@@ -332,8 +329,8 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
                 Py_RETURN_FALSE;
         }
         if (r) {
-            if ((mask & aa->ob_item[t] & bb->ob_item[t]) !=
-                (mask & aa->ob_item[t]))
+            if ((zeroed_last_byte(aa) & zeroed_last_byte(bb)) !=
+                 zeroed_last_byte(aa))
                 Py_RETURN_FALSE;
         }
         Py_RETURN_TRUE;
