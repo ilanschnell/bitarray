@@ -265,6 +265,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     assert(0 <= n && n <= self->nbits && n <= other->nbits);
     assert(0 <= a && a <= self->nbits - n);
     assert(0 <= b && b <= other->nbits - n);
+    assert(self->readonly == 0);  /* never called on readonly memory */
     if (n == 0 || (self == other && a == b))
         return;
 
@@ -3285,11 +3286,19 @@ richcompare(PyObject *v, PyObject *w, int op)
             return PyBool_FromLong(op == Py_NE);
         }
         else if (va->endian == wa->endian) {
+            size_t b = vs / 8;  /* bytes to compare using memcmp() */
+
             /* sizes and endianness are the same - use memcmp() */
             assert(vs == ws && Py_SIZE(v) == Py_SIZE(w));
-            setunused(va);
-            setunused(wa);
-            cmp = memcmp(va->ob_item, wa->ob_item, (size_t) Py_SIZE(v));
+            cmp = memcmp(va->ob_item, wa->ob_item, b);
+            if (cmp == 0) {
+                /* bytes equal, compare remaining few bits (if any) */
+                for (i = 8 * b; i < vs; i++)
+                    if (getbit(va, i) != getbit(wa, i)) {
+                        cmp = 1;
+                        break;
+                    }
+            }
             return PyBool_FromLong((cmp == 0) ^ (op == Py_NE));
         }
     }
