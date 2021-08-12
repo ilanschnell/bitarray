@@ -3702,9 +3702,9 @@ class BufferImportTests(unittest.TestCase, Util):
         a = bitarray(buffer=b)
 
         info = a.buffer_info()
-        self.assertEqual(info[4], 0)  # allocated
-        self.assertEqual(info[5], 1)  # readonly
-        self.assertEqual(info[6], 1)  # has imported buffer
+        self.assertFalse(info[4])  # allocated
+        self.assertTrue(info[5])   # readonly
+        self.assertTrue(info[6])   # has imported buffer
 
         self.assertRaises(TypeError, a.setall, 1)
         self.assertRaises(TypeError, a.clear)
@@ -3716,9 +3716,9 @@ class BufferImportTests(unittest.TestCase, Util):
         a = bitarray(buffer=b, endian='little')
 
         info = a.buffer_info()
-        self.assertEqual(info[4], 0)  # allocated
-        self.assertEqual(info[5], 0)  # not readonly
-        self.assertEqual(info[6], 1)  # has imported buffer
+        self.assertFalse(info[4])  # allocated
+        self.assertFalse(info[5])  # readonly
+        self.assertTrue(info[6])   # has imported buffer
 
         a[0] = 1
         self.assertEqual(b[0], 1)
@@ -3800,8 +3800,8 @@ class BufferImportTests(unittest.TestCase, Util):
     def test_readonly_errors(self):
         a = bitarray(buffer=b'A')
         info = a.buffer_info()
-        self.assertEqual(info[5], 1)  # readonly
-        self.assertEqual(info[6], 1)  # has imported buffer
+        self.assertTrue(info[5])  # readonly
+        self.assertTrue(info[6])  # has imported buffer
 
         self.assertRaises(TypeError, a.append, True)
         self.assertRaises(TypeError, a.bytereverse)
@@ -3828,8 +3828,8 @@ class BufferImportTests(unittest.TestCase, Util):
     def test_resize_errors(self):
         a = bitarray(buffer=bytearray([123]))
         info = a.buffer_info()
-        self.assertEqual(info[5], 0)  # not readonly
-        self.assertEqual(info[6], 1)  # has imported buffer
+        self.assertFalse(info[5])  # not readonly
+        self.assertTrue(info[6])   # has imported buffer
 
         self.assertRaises(TypeError, a.append, True)
         self.assertRaises(TypeError, a.clear)
@@ -3910,7 +3910,7 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertIsInstance(a, bitarray)
         self.assertIsType(a, 'frozenbitarray')
         info = a.buffer_info()
-        self.assertEqual(info[5], 1)  # readonly
+        self.assertTrue(info[5])  # readonly
         self.check_obj(a)
 
         a = frozenbitarray(bitarray())
