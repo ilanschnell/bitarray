@@ -644,6 +644,7 @@ extend_bytes01(bitarrayobject *self, PyObject *bytes)
         switch (c) {
         case '0': vi = 0; break;
         case '1': vi = 1; break;
+        case '_':
         case ' ':
         case '\n':
         case '\r':
