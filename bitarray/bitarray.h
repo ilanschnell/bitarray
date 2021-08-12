@@ -96,6 +96,8 @@ setbit(bitarrayobject *self, Py_ssize_t i, int vi)
     assert_nbits(self);
     assert_byte_in_range(self, i >> 3);
     assert(0 <= i && i < self->nbits);
+    assert(self->readonly == 0);  /* never called on readonly memory */
+
     mask = BITMASK(self->endian, i);
     cp = self->ob_item + (i >> 3);
     if (vi)
@@ -104,15 +106,17 @@ setbit(bitarrayobject *self, Py_ssize_t i, int vi)
         *cp &= ~mask;
 }
 
-/* sets unused padding bits (within last byte of buffer) to 0,
-   and return the number of padding bits -- self->nbits is unchanged */
+static const char setunused_mask_table[16] = {
+    0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f,  /* little endian */
+    0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe,  /* big endian */
+};
+
+/* Unless the buffer is readonly, sets unused padding bits (when within last
+   buffer byte) to 0.
+   Always return the number of padding bits -- self->nbits is unchanged */
 static inline int
 setunused(bitarrayobject *self)
 {
-    const char mask[14] = {
-        0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f,  /* little endian */
-        0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe,  /* big endian */
-    };
     int i = self->nbits % 8;  /* index into mask array (minus offset) */
 
     if (i == 0)
@@ -120,10 +124,11 @@ setunused(bitarrayobject *self)
 
     assert_nbits(self);
     assert(self->ob_item && Py_SIZE(self) > 0);
-    /* apply the appropriate mask to the last byte in buffer */
-    self->ob_item[Py_SIZE(self) - 1] &=
-        mask[self->endian == ENDIAN_LITTLE ? i - 1 : i + 6];
-
+    if (self->readonly == 0) {
+        /* apply the appropriate mask to the last byte in buffer */
+        self->ob_item[Py_SIZE(self) - 1] &=
+            setunused_mask_table[i + 8 * (self->endian == ENDIAN_BIG)];
+    }
     return 8 - i;
 }
 

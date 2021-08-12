@@ -229,17 +229,21 @@ Raises `ValueError` if the value is not present.");
 static PyObject *
 parity(PyObject *module, PyObject *a)
 {
-    Py_ssize_t i, nbytes;
+    Py_ssize_t i, s, t;
     unsigned char par = 0;
+    int r;
 
     if (ensure_bitarray(a) < 0)
         return NULL;
 
-    nbytes = Py_SIZE(a);
 #define aa  ((bitarrayobject *) a)
-    setunused(aa);
-    for (i = 0; i < nbytes; i++)
+    r = aa->nbits % 8;
+    s = aa->nbits / 8;
+    t = Py_SIZE(aa) - 1;
+    for (i = 0; i < s; i++)
         par ^= aa->ob_item[i];
+    if (r)
+        par ^= setunused_mask_table[r + 8 * IS_BE(aa)] & aa->ob_item[t];
 #undef aa
 
     return PyLong_FromLong((long) bitcount_lookup[par] % 2);
@@ -263,9 +267,11 @@ enum kernel_type {
 static PyObject *
 binary_function(PyObject *args, enum kernel_type kern, const char *format)
 {
-    Py_ssize_t res = 0, nbytes, i;
+    Py_ssize_t res = 0, i, s, t;
     PyObject *a, *b;
     unsigned char c;
+    char mask;
+    int r;
 
     if (!PyArg_ParseTuple(args, format, &a, &b))
         return NULL;
@@ -284,36 +290,57 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
                         "bitarrays of equal endianness expected");
         return NULL;
     }
-    setunused(aa);
-    setunused(bb);
-    assert(Py_SIZE(a) == Py_SIZE(b));
-    nbytes = Py_SIZE(a);
+    r = aa->nbits % 8;
+    s = aa->nbits / 8;
+    t = Py_SIZE(aa) - 1;
+    mask = setunused_mask_table[r + 8 * IS_BE(aa)];
 
     switch (kern) {
     case KERN_cand:
-        for (i = 0; i < nbytes; i++) {
+        for (i = 0; i < s; i++) {
             c = aa->ob_item[i] & bb->ob_item[i];
             res += bitcount_lookup[c];
         }
+        if (r) {
+            c = mask & aa->ob_item[t] & bb->ob_item[t];
+            res += bitcount_lookup[c];
+        }
         break;
+
     case KERN_cor:
-        for (i = 0; i < nbytes; i++) {
+        for (i = 0; i < s; i++) {
             c = aa->ob_item[i] | bb->ob_item[i];
             res += bitcount_lookup[c];
         }
-        break;
-    case KERN_cxor:
-        for (i = 0; i < nbytes; i++) {
-            c = aa->ob_item[i] ^ bb->ob_item[i];
+        if (r) {
+            c = mask & (aa->ob_item[t] | bb->ob_item[t]);
             res += bitcount_lookup[c];
         }
         break;
+
+    case KERN_cxor:
+        for (i = 0; i < s; i++) {
+            c = aa->ob_item[i] ^ bb->ob_item[i];
+            res += bitcount_lookup[c];
+        }
+        if (r) {
+            c = mask & (aa->ob_item[t] ^ bb->ob_item[t]);
+            res += bitcount_lookup[c];
+        }
+        break;
+
     case KERN_subset:
-        for (i = 0; i < nbytes; i++) {
+        for (i = 0; i < s; i++) {
             if ((aa->ob_item[i] & bb->ob_item[i]) != aa->ob_item[i])
                 Py_RETURN_FALSE;
         }
+        if (r) {
+            if ((mask & aa->ob_item[t] & bb->ob_item[t]) !=
+                (mask & aa->ob_item[t]))
+                Py_RETURN_FALSE;
+        }
         Py_RETURN_TRUE;
+
     default:  /* cannot happen */
         return NULL;
     }
