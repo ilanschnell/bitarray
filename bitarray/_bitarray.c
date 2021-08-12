@@ -39,6 +39,8 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     assert(self->ob_item != NULL || (size == 0 && allocated == 0));
     /* allocated == 0 implies size == 0 */
     assert(allocated != 0 || size == 0);
+    /* resize is never called for imported buffer, or for readonly memory */
+    assert(self->buffer == NULL && self->readonly == 0);
 
     newsize = BYTES(nbits);
     if (nbits < 0 || newsize < 0) {
@@ -46,16 +48,16 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
         return -1;
     }
 
-    if (newsize == size) {
-        /* buffer size hasn't changed - bypass everything */
-        self->nbits = nbits;
-        return 0;
-    }
-
     if (self->ob_exports > 0) {
         PyErr_SetString(PyExc_BufferError,
                         "cannot resize bitarray that is exporting buffers");
         return -1;
+    }
+
+    if (newsize == size) {
+        /* buffer size hasn't changed - bypass everything */
+        self->nbits = nbits;
+        return 0;
     }
 
     /* Bypass reallocation when a allocation is large enough to accommodate
@@ -136,6 +138,8 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
     obj->endian = endian;
     obj->ob_exports = 0;
     obj->weakreflist = NULL;
+    obj->buffer = NULL;
+    obj->readonly = 0;
     return (PyObject *) obj;
 }
 
@@ -257,6 +261,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     assert(0 <= n && n <= self->nbits && n <= other->nbits);
     assert(0 <= a && a <= self->nbits - n);
     assert(0 <= b && b <= other->nbits - n);
+    assert(self->readonly == 0);  /* never called on readonly memory */
     if (n == 0 || (self == other && a == b))
         return;
 
@@ -408,6 +413,7 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 {
     Py_ssize_t i;
 
+    assert(self->readonly == 0);
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
     assert(a <= b);
@@ -3362,9 +3368,12 @@ bitarray_getbuffer(bitarrayobject *self, Py_buffer *view, int flags)
         self->ob_exports++;
         return 0;
     }
-    ret = PyBuffer_FillInfo(view, (PyObject *) self,
+    ret = PyBuffer_FillInfo(view,
+                            (PyObject *) self,
                             (void *) self->ob_item,
-                            Py_SIZE(self), 0, flags);
+                            Py_SIZE(self),
+                            self->readonly,
+                            flags);
     if (ret >= 0)
         self->ob_exports++;
 
