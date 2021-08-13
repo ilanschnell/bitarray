@@ -3784,12 +3784,15 @@ class BufferImportTests(unittest.TestCase, Util):
         a = urandom(10000)
         b = bitarray(buffer=a)
         # a and b are two distict bitarrays that share the same buffer now
+        self.assertFalse(a is b)
+
         a_info = a.buffer_info()
         self.assertFalse(a_info[6])     # imported buffer
         self.assertEqual(a_info[7], 1)  # exported buffers
         b_info = b.buffer_info()
         self.assertTrue(b_info[6])      # imported buffer
         self.assertEqual(b_info[7], 0)  # exported buffers
+        self.assertEqual(a_info[0], b_info[0])  # buffer address is the same
 
         self.assertFalse(a is b)
         self.assertEqual(a, b)
@@ -3812,6 +3815,25 @@ class BufferImportTests(unittest.TestCase, Util):
             b.pop)
         self.check_obj(a)
         self.check_obj(b)
+
+    def test_bitarray_range(self):
+        for n in range(100):
+            a = urandom(n, self.random_endian())
+            b = bitarray(buffer=a, endian=a.endian())
+            self.assertEqual(len(b) % 8, 0)
+            self.assertEQUAL(b[:n], a)
+
+    def test_bitarray_chain(self):
+        a = urandom(64)
+        d = {0: a}
+        for n in range(1, 100):
+            d[n] = bitarray(buffer=d[n - 1])
+
+        self.assertEqual(d[99], a)
+        a.setall(0)
+        self.assertEqual(d[99], zeros(64))
+        a[:] = 1
+        self.assertTrue(d[99].all())
 
     def test_frozenbitarray(self):
         a = frozenbitarray('10011011 011')
