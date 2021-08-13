@@ -154,7 +154,11 @@ bitarray_dealloc(bitarrayobject *self)
     if (self->weakreflist != NULL)
         PyObject_ClearWeakRefs((PyObject *) self);
 
-    if (self->ob_item != NULL)
+    if (self->buffer) {
+        PyBuffer_Release(self->buffer);
+        PyMem_Free(self->buffer);
+    }
+    else if (self->ob_item != NULL)
         PyMem_Free((void *) self->ob_item);
 
     Py_TYPE(self)->tp_free((PyObject *) self);
@@ -742,6 +746,13 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
                      Implementation of bitarray methods
  **************************************************************************/
 
+/* raise when buffer is readonly */
+#define RAISE_IF_READONLY(self, ret_value)                                  \
+    if (((bitarrayobject *) self)->readonly) {                              \
+        PyErr_SetString(PyExc_TypeError, "cannot modify read-only memory"); \
+        return ret_value;                                                   \
+    }
+
 static PyObject *
 bitarray_all(bitarrayobject *self)
 {
@@ -773,6 +784,7 @@ bitarray_append(bitarrayobject *self, PyObject *value)
 {
     int vi;
 
+    RAISE_IF_READONLY(self, NULL);
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
     if (resize(self, self->nbits + 1) < 0)
@@ -793,6 +805,7 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
     const Py_ssize_t nbytes = Py_SIZE(self);
     Py_ssize_t start = 0, stop = nbytes;
 
+    RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|nn:bytereverse", &start, &stop))
         return NULL;
 
@@ -838,15 +851,19 @@ bitarray_buffer_info(bitarrayobject *self)
 PyDoc_STRVAR(buffer_info_doc,
 "buffer_info() -> tuple\n\
 \n\
-Return a tuple (address, size, endianness, unused, allocated) giving the\n\
-memory address of the bitarray's buffer, the buffer size (in bytes),\n\
-the bit endianness as a string, the number of unused padding bits within\n\
-the last byte, and the allocated memory for the buffer (in bytes).");
+Return a tuple containing:\n\
+\n\
+0. memory address of the bitarray's buffer\n\
+1. buffer size (in bytes)\n\
+2. bit endianness as a string\n\
+3. number of unused padding bits\n\
+4. allocated memory for the buffer (in bytes)");
 
 
 static PyObject *
 bitarray_clear(bitarrayobject *self)
 {
+    RAISE_IF_READONLY(self, NULL);
     if (resize(self, 0) < 0)
         return NULL;
     Py_RETURN_NONE;
@@ -917,6 +934,7 @@ Return the bit endianness of the bitarray as a string (`little` or `big`).");
 static PyObject *
 bitarray_extend(bitarrayobject *self, PyObject *obj)
 {
+    RAISE_IF_READONLY(self, NULL);
     if (extend_dispatch(self, obj) < 0)
         return NULL;
     Py_RETURN_NONE;
@@ -935,6 +953,7 @@ bitarray_fill(bitarrayobject *self)
 {
     long p;
 
+    RAISE_IF_READONLY(self, NULL);
     p = setunused(self);
     self->nbits += p;
     assert(self->nbits % 8 == 0);
@@ -1022,6 +1041,7 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
     PyObject *value;
     int vi;
 
+    RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "nO:insert", &i, &value))
         return NULL;
 
@@ -1046,6 +1066,7 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
 {
     Py_ssize_t i = PY_SSIZE_T_MAX;
 
+    RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|n:invert", &i))
         return NULL;
 
@@ -1144,6 +1165,7 @@ bitarray_reverse(bitarrayobject *self)
 {
     Py_ssize_t i, j;
 
+    RAISE_IF_READONLY(self, NULL);
     for (i = 0, j = self->nbits - 1; i < j; i++, j--) {
         int t = getbit(self, i);
         setbit(self, i, getbit(self, j));
@@ -1226,6 +1248,7 @@ bitarray_setall(bitarrayobject *self, PyObject *value)
 {
     int vi;
 
+    RAISE_IF_READONLY(self, NULL);
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
     memset(self->ob_item, vi ? 0xff : 0x00, (size_t) Py_SIZE(self));
@@ -1246,6 +1269,7 @@ bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
     Py_ssize_t cnt;
     int reverse = 0;
 
+    RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:sort", kwlist, &reverse))
         return NULL;
 
@@ -1296,6 +1320,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     Py_ssize_t nbytes;
     Py_ssize_t t, p;
 
+    RAISE_IF_READONLY(self, NULL);
     if (!PyBytes_Check(bytes))
         return PyErr_Format(PyExc_TypeError, "bytes expected, not %s",
                             Py_TYPE(bytes)->tp_name);
@@ -1355,6 +1380,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
     Py_ssize_t nblock, nread = 0, nbytes = -1;
     int not_enough_bytes;
 
+    RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "O|n:fromfile", &f, &nbytes))
         return NULL;
 
@@ -1485,6 +1511,7 @@ bitarray_pack(bitarrayobject *self, PyObject *bytes)
     Py_ssize_t nbytes, i;
     char *data;
 
+    RAISE_IF_READONLY(self, NULL);
     if (!PyBytes_Check(bytes))
         return PyErr_Format(PyExc_TypeError, "bytes expected, not %s",
                             Py_TYPE(bytes)->tp_name);
@@ -1518,6 +1545,7 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
     Py_ssize_t i = -1;
     long vi;
 
+    RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|n:pop", &i))
         return NULL;
 
@@ -1552,6 +1580,7 @@ bitarray_remove(bitarrayobject *self, PyObject *value)
     Py_ssize_t i;
     int vi;
 
+    RAISE_IF_READONLY(self, NULL);
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
@@ -1677,6 +1706,7 @@ bitarray_item(bitarrayobject *self, Py_ssize_t i)
 static int
 bitarray_ass_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
 {
+    RAISE_IF_READONLY(self, -1);
     if (i < 0 || i >= self->nbits) {
         PyErr_SetString(PyExc_IndexError,
                         "bitarray assignment index out of range");
@@ -1713,6 +1743,7 @@ bitarray_contains(bitarrayobject *self, PyObject *value)
 static PyObject *
 bitarray_inplace_concat(bitarrayobject *self, PyObject *other)
 {
+    RAISE_IF_READONLY(self, NULL);
     if (extend_dispatch(self, other) < 0)
         return NULL;
     Py_INCREF(self);
@@ -1722,6 +1753,7 @@ bitarray_inplace_concat(bitarrayobject *self, PyObject *other)
 static PyObject *
 bitarray_inplace_repeat(bitarrayobject *self, Py_ssize_t n)
 {
+    RAISE_IF_READONLY(self, NULL);
     if (repeat(self, n) < 0)
         return NULL;
     Py_INCREF(self);
@@ -1949,6 +1981,8 @@ delslice(bitarrayobject *self, PyObject *slice)
 static int
 bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
 {
+    RAISE_IF_READONLY(self, -1);
+
     if (PyIndex_Check(item)) {
         Py_ssize_t i;
 
@@ -2098,6 +2132,7 @@ BITWISE_FUNC(xor, "^")               /* bitarray_xor */
 static PyObject *                                            \
 bitarray_i ## oper (PyObject *self, PyObject *other)         \
 {                                                            \
+    RAISE_IF_READONLY(self, NULL);                           \
     if (bitwise_check(self, other, ostr) < 0)                \
         return NULL;                                         \
     bitwise((bitarrayobject *) self,                         \
@@ -2168,6 +2203,7 @@ bitarray_ ## name (PyObject *self, PyObject *other)    \
     if ((n = shift_check(self, other, ostr)) < 0)      \
         return NULL;                                   \
     if (inplace) {                                     \
+        RAISE_IF_READONLY(self, NULL);                 \
         res = self;                                    \
         Py_INCREF(res);                                \
     }                                                  \
@@ -2277,6 +2313,7 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
 {
     PyObject *codedict, *iterable, *iter, *symbol, *value;
 
+    RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "OO:encode", &codedict, &iterable))
         return NULL;
 
@@ -3070,6 +3107,40 @@ endian_from_string(const char* string)
     return -1;
 }
 
+static PyObject*
+newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
+{
+    Py_buffer view;
+    bitarrayobject *obj;
+
+    if (!PyObject_CheckBuffer(buffer))
+        return PyErr_Format(PyExc_TypeError, "cannot use '%s' as buffer",
+                            Py_TYPE(buffer)->tp_name);
+
+    if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
+        return NULL;
+
+    obj = (bitarrayobject *) type->tp_alloc(type, 0);
+    if (obj == NULL)
+        return NULL;
+
+    Py_SET_SIZE(obj, view.len);
+    obj->ob_item = (char *) view.buf;
+    obj->allocated = 0;       /* no buffer allocated (in this object) */
+    obj->nbits = BITS(view.len);
+    obj->endian = endian;
+    obj->ob_exports = 0;
+    obj->weakreflist = NULL;
+    obj->readonly = view.readonly;
+
+    obj->buffer = (Py_buffer *) PyMem_Malloc(sizeof(Py_buffer));
+    if (obj->buffer == NULL)
+        return NULL;
+    memcpy(obj->buffer, &view, sizeof(Py_buffer));
+
+    return (PyObject *) obj;
+}
+
 static PyObject *
 newbitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
 {
@@ -3123,18 +3194,27 @@ static PyObject *
 bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PyObject *res;  /* to be returned in some cases */
-    PyObject *initial = NULL;
+    PyObject *initial = NULL, *buffer = NULL;
     char *endian_str = NULL;
     int endian;
-    static char *kwlist[] = {"", "endian", NULL};
+    static char *kwlist[] = {"", "endian", "buffer", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Os:bitarray",
-                                     kwlist, &initial, &endian_str))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OsO:bitarray",
+                                     kwlist, &initial, &endian_str, &buffer))
         return NULL;
 
     endian = endian_from_string(endian_str);
     if (endian < 0)
         return NULL;
+
+    if (buffer) {
+        if (initial && initial != Py_None) {
+            PyErr_SetString(PyExc_TypeError,
+                            "buffer requires no initial argument");
+            return NULL;
+        }
+        return newbitarray_from_buffer(type, buffer, endian);
+    }
 
     /* no arg or None */
     if (initial == NULL || initial == Py_None)
@@ -3422,7 +3502,7 @@ static PyBufferProcs bitarray_as_buffer = {
 /***************************** Bitarray Type ******************************/
 
 PyDoc_STRVAR(bitarraytype_doc,
-"bitarray(initializer=0, /, endian='big') -> bitarray\n\
+"bitarray(initializer=0, /, endian='big', buffer=None) -> bitarray\n\
 \n\
 Return a new bitarray object whose items are bits initialized from\n\
 the optional initial object, and endianness.\n\
@@ -3435,11 +3515,16 @@ uninitialized.\n\
 \n\
 `iterable`: Create bitarray from iterable or sequence or integers 0 or 1.\n\
 \n\
-The optional keyword arguments `endian` specifies the bit endianness of the\n\
-created bitarray object.\n\
-Allowed values are the strings `big` and `little` (default is `big`).\n\
-The bit endianness only effects the when buffer representation of the\n\
-bitarray.");
+Optional keyword arguments:\n\
+\n\
+`endian`: Specifies the bit endianness of the created bitarray object.\n\
+Allowed values are `big` and `little` (the default is `big`).\n\
+The bit endianness effects the buffer representation of the bitarray.\n\
+\n\
+`buffer`: Any object which exposes a buffer.  When provided, `initializer`\n\
+cannot be present (or has to be `None`).  The imported buffer may be\n\
+readonly or writable, depending on the object type.");
+
 
 static PyTypeObject Bitarray_Type = {
 #ifdef IS_PY3K
