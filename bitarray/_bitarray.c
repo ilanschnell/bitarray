@@ -34,28 +34,28 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     Py_ssize_t newsize;
     size_t new_allocated;
 
-    assert(allocated >= size && size == BYTES(self->nbits));
-    /* ob_item == NULL implies ob_size == allocated == 0 */
-    assert(self->ob_item != NULL || (size == 0 && allocated == 0));
-    /* allocated == 0 implies size == 0 */
-    assert(allocated != 0 || size == 0);
-
     newsize = BYTES(nbits);
     if (nbits < 0 || newsize < 0) {
         PyErr_Format(PyExc_OverflowError, "bitarray resize %zd", nbits);
         return -1;
     }
 
-    if (newsize == size) {
-        /* buffer size hasn't changed - bypass everything */
-        self->nbits = nbits;
-        return 0;
-    }
-
     if (self->ob_exports > 0) {
         PyErr_SetString(PyExc_BufferError,
                         "cannot resize bitarray that is exporting buffers");
         return -1;
+    }
+
+    assert(allocated >= size && size == BYTES(self->nbits));
+    /* ob_item == NULL implies ob_size == allocated == 0 */
+    assert(self->ob_item != NULL || (size == 0 && allocated == 0));
+    /* allocated == 0 implies size == 0 */
+    assert(allocated != 0 || size == 0);
+
+    if (newsize == size) {
+        /* buffer size hasn't changed - bypass everything */
+        self->nbits = nbits;
+        return 0;
     }
 
     /* Bypass reallocation when a allocation is large enough to accommodate
