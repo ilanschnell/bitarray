@@ -3540,7 +3540,7 @@ The bit endianness effects the buffer representation of the bitarray.\n\
 \n\
 `buffer`: Any object which exposes a buffer.  When provided, `initializer`\n\
 cannot be present (or has to be `None`).  The imported buffer may be\n\
-readonly or writeable, depending on the object type.");
+readonly or writable, depending on the object type.");
 
 
 static PyTypeObject Bitarray_Type = {
