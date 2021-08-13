@@ -27,14 +27,23 @@ object is initialized.  A frozenbitarray is immutable and hashable.
 Its contents cannot be altered after it is created; however, it can be used
 as a dictionary key.
 """
+    def __init__(self, *args, **kwargs):
+        if 'buffer' in kwargs:
+            info = self.buffer_info()
+            if not info[5]:  # not readonly
+                raise TypeError("cannot import writable buffer into "
+                                "frozenbitarray")
+        self._freeze()
+
     def __repr__(self):
         return 'frozen' + bitarray.__repr__(self)
 
     def __hash__(self):
         "Return hash(self)."
         if getattr(self, '_hash', None) is None:
-            # ensure hash is independent of endianness
-            a = bitarray(self, 'big') if self.endian() == 'little' else self
+            # ensure hash is independent of endianness, also the copy will be
+            # mutable such that .tobytes() can zero out the pad bits
+            a = bitarray(self, 'big')
             self._hash = hash((len(a), a.tobytes()))
         return self._hash
 
