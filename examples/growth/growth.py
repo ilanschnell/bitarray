@@ -2,7 +2,9 @@ from bitarray import bitarray
 
 
 def show(a):
-    _ptr, size, _endian, _unused, alloc = a.buffer_info()
+    info = a.buffer_info()
+    size = info[1]
+    alloc = info[4]
     print('%d  %d' % (size, alloc))
 
 a = bitarray()

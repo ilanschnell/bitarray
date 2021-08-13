@@ -29,8 +29,7 @@ as a dictionary key.
 """
     def __init__(self, *args, **kwargs):
         if 'buffer' in kwargs:
-            info = self.buffer_info()
-            if not info[5]:  # not readonly
+            if not self.buffer_info()[5]:  # not readonly
                 raise TypeError("cannot import writable buffer into "
                                 "frozenbitarray")
         self._freeze()
