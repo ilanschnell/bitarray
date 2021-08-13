@@ -46,9 +46,12 @@ as a dictionary key.
             self._hash = hash((len(a), a.tobytes()))
         return self._hash
 
+    # Technically the code below is not necessary, as all these methods will
+    # raise a TypeError on read-only memory.  However, with a different error
+    # message.
     def __delitem__(self, *args, **kwargs):
         ""  # no docstring
-        raise TypeError("'frozenbitarray' is immutable")
+        raise TypeError("frozenbitarray is immutable")
 
     append = bytereverse = clear = extend = encode = fill = __delitem__
     frombytes = fromfile = insert = invert = pack = pop = __delitem__
