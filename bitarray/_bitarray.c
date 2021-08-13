@@ -56,6 +56,8 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     assert(self->ob_item != NULL || (size == 0 && allocated == 0));
     /* allocated == 0 implies size == 0 */
     assert(allocated != 0 || size == 0);
+    /* resize is never called on readonly memory */
+    assert(self->readonly == 0);
 
     if (newsize == size) {
         /* buffer size hasn't changed - bypass everything */
@@ -1546,10 +1548,10 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
     Py_ssize_t i = -1;
     long vi;
 
+    RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|n:pop", &i))
         return NULL;
 
-    RAISE_IF_READONLY(self, NULL);
     if (self->nbits == 0) {
         /* special case -- most common failure cause */
         PyErr_SetString(PyExc_IndexError, "pop from empty bitarray");
