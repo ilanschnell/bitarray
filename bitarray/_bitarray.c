@@ -46,11 +46,18 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
         return -1;
     }
 
+    if (self->buffer) {
+        PyErr_SetString(PyExc_BufferError, "cannot resize imported buffer");
+        return -1;
+    }
+
     assert(allocated >= size && size == BYTES(self->nbits));
     /* ob_item == NULL implies ob_size == allocated == 0 */
     assert(self->ob_item != NULL || (size == 0 && allocated == 0));
     /* allocated == 0 implies size == 0 */
     assert(allocated != 0 || size == 0);
+    /* resize() is never called on readonly memory */
+    assert(self->readonly == 0);
 
     if (newsize == size) {
         /* buffer size hasn't changed - bypass everything */
@@ -136,6 +143,8 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
     obj->endian = endian;
     obj->ob_exports = 0;
     obj->weakreflist = NULL;
+    obj->buffer = NULL;
+    obj->readonly = 0;
     return (PyObject *) obj;
 }
 
@@ -257,6 +266,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     assert(0 <= n && n <= self->nbits && n <= other->nbits);
     assert(0 <= a && a <= self->nbits - n);
     assert(0 <= b && b <= other->nbits - n);
+    assert(self->readonly == 0);
     if (n == 0 || (self == other && a == b))
         return;
 
@@ -361,6 +371,7 @@ invert(bitarrayobject *self)
     Py_ssize_t i;
 
     assert_nbits(self);
+    assert(self->readonly == 0);
     for (i = 0; i < nwords; i++)
         UINT64_BUFFER(self)[i] = ~UINT64_BUFFER(self)[i];
     for (i = nwords << 3; i < nbytes; i++)
@@ -373,6 +384,7 @@ repeat(bitarrayobject *self, Py_ssize_t m)
 {
     Py_ssize_t q, k = self->nbits;
 
+    assert(self->readonly == 0);
     if (k == 0 || m == 1)   /* nothing to do */
         return 0;
 
@@ -411,6 +423,7 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
     assert(a <= b);
+    assert(self->readonly == 0);
 
     if (b >= a + 8) {
         const Py_ssize_t byte_a = BYTES(a);
@@ -1563,11 +1576,21 @@ bitarray_sizeof(bitarrayobject *self)
     Py_ssize_t res;
 
     res = sizeof(bitarrayobject) + self->allocated;
+    if (self->buffer)
+        res += sizeof(Py_buffer);
     return PyLong_FromSsize_t(res);
 }
 
 PyDoc_STRVAR(sizeof_doc,
 "Return the size of the bitarray in memory, in bytes.");
+
+
+static PyObject *
+bitarray_freeze(bitarrayobject *self)
+{
+    self->readonly = 1;
+    Py_RETURN_NONE;
+}
 
 /* ---------- functionality exposed in debug mode for testing ---------- */
 
@@ -3013,6 +3036,7 @@ static PyMethodDef bitarray_methods[] = {
      reduce_doc},
     {"__sizeof__",   (PyCFunction) bitarray_sizeof,      METH_NOARGS,
      sizeof_doc},
+    {"_freeze",      (PyCFunction) bitarray_freeze,      METH_NOARGS,  0},
 
 #ifndef NDEBUG
     /* functionality exposed in debug mode for testing */
@@ -3366,9 +3390,12 @@ bitarray_getbuffer(bitarrayobject *self, Py_buffer *view, int flags)
         self->ob_exports++;
         return 0;
     }
-    ret = PyBuffer_FillInfo(view, (PyObject *) self,
+    ret = PyBuffer_FillInfo(view,
+                            (PyObject *) self,  /* exporter */
                             (void *) self->ob_item,
-                            Py_SIZE(self), 0, flags);
+                            Py_SIZE(self),
+                            self->readonly,
+                            flags);
     if (ret >= 0)
         self->ob_exports++;
 
