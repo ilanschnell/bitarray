@@ -861,8 +861,8 @@ Return a tuple containing:\n\
 2. bit endianness as a string\n\
 3. number of unused padding bits\n\
 4. allocated memory for the buffer (in bytes)\n\
-5. whether memory is read only\n\
-6. whether buffer is imported\n\
+5. memory is read-only\n\
+6. buffer is imported\n\
 7. number of buffer exports");
 
 

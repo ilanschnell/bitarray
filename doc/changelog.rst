@@ -1,11 +1,24 @@
 Change log
 ==========
 
+2021-08-XX   2.3.0:
+
+* add optional ``buffer`` argument to ``bitarray()`` to import the buffer of
+  another object, `#146 <https://github.com/ilanschnell/bitarray/issues/146>`__
+* add optional start and stop arguments to ``util.rindex()``
+* ignore underscore (``_``) in string input, e.g. ``bitarray('1100_0111')``
+* add missing type hinting for new ``.bytereverse()`` arguments
+* fix ``.extend()`` type annotations, `#145 <https://github.com/ilanschnell/bitarray/issues/145>`__
+* avoid ``.reverse()`` using temporary memory
+* make ``.unpack()``, ``util.serialize()``, ``util.vl_encode()``
+  and ``.__reduce__()`` more memory efficient
+
+
 **2.2.5** (2021-08-07):
 
 * speedup ``find_bit()`` and ``find_last()`` using uint64 checking, this means
   a speedup for ``.find()``, ``.index()``, ``.search()`` and ``util.rindex()``
-* add start and stop arguments to ``.bytereverse()``
+* add optional start and stop arguments to ``.bytereverse()``
 * add example to illustrate how
   `unaligned copying <../examples/copy_n.py>`__ works internally.
 * add documentation
@@ -322,7 +335,7 @@ Change log
 **1.1.0** (2019-11-07):
 
 * add frozenbitarray object
-* add optional start and stop parameters to .count() method
+* add optional start and stop arguments to ``.count()`` method
 * add official Python 3.8 support
 * optimize ``setrange()`` C-function by using ``memset()``
 * fix issue `#74 <https://github.com/ilanschnell/bitarray/issues/74>`__, bitarray is hashable on Python 2

@@ -1,5 +1,7 @@
-2021-XX-XX   2.2.6:
+2021-08-XX   2.3.0:
 -------------------
+  * add optional `buffer` argument to `bitarray()` to import the buffer of
+    another object, #146
   * add optional start and stop arguments to `util.rindex()`
   * ignore underscore (`_`) in string input, e.g. `bitarray('1100_0111')`
   * add missing type hinting for new `.bytereverse()` arguments
