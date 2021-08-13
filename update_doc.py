@@ -15,11 +15,12 @@ NEW_IN = {
     'frozenbitarray':       '1.1',
     'get_default_endian':   '1.3',
     'util.make_endian':     '1.3',
-    'bitarray.bytereverse': '2.2.5: optional start and stop arguments',
-    'bitarray.count':       '1.1.0: optional start and stop arguments',
+    'bitarray':             '2.3: optional `buffer` argument',
+    'bitarray.bytereverse': '2.2.5: optional `start` and `stop` arguments',
+    'bitarray.count':       '1.1.0: optional `start` and `stop` arguments',
     'bitarray.clear':       '1.4',
     'bitarray.find':        '2.1',
-    'bitarray.invert':      '1.5.3: optional index argument',
+    'bitarray.invert':      '1.5.3: optional `index` argument',
     'decodetree':           '1.6',
     'util.urandom':         '1.7',
     'util.pprint':          '1.8',
@@ -28,7 +29,7 @@ NEW_IN = {
     'util.ba2base':         '1.9',
     'util.base2ba':         '1.9',
     'util.parity':          '1.9',
-    'util.rindex':          '2.2.6: optional start and stop arguments',
+    'util.rindex':          '2.3.0: optional `start` and `stop` arguments',
     'util.vl_encode':       '2.2',
     'util.vl_decode':       '2.2',
 }
@@ -75,7 +76,7 @@ def write_doc(fo, name):
 
     new_in = NEW_IN.get(name)
     if new_in:
-        fo.write("\n   New in version %s.\n" % new_in)
+        fo.write("\n   New in version %s.\n" % new_in.replace('`', '``'))
 
     fo.write('\n\n')
 

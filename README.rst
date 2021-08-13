@@ -437,6 +437,8 @@ The bitarray object:
    cannot be present (or has to be ``None``).  The imported buffer may be
    readonly or writable, depending on the object type.
 
+   New in version 2.3: optional ``buffer`` argument.
+
 
 **A bitarray object supports the following methods:**
 
@@ -474,7 +476,7 @@ The bitarray object:
    Note: This method only changes the buffer; it does not change the
    endianness of the bitarray object.
 
-   New in version 2.2.5: optional start and stop arguments.
+   New in version 2.2.5: optional ``start`` and ``stop`` arguments.
 
 
 ``clear()``
@@ -490,7 +492,7 @@ The bitarray object:
 ``count(value=1, start=0, stop=<end of array>, /)`` -> int
    Count the number of occurrences of ``value`` in the bitarray.
 
-   New in version 1.1.0: optional start and stop arguments.
+   New in version 1.1.0: optional ``start`` and ``stop`` arguments.
 
 
 ``decode(code, /)`` -> list
@@ -554,7 +556,7 @@ The bitarray object:
    Invert all bits in the array (in-place).
    When the optional ``index`` is given, only invert the single bit at index.
 
-   New in version 1.5.3: optional index argument.
+   New in version 1.5.3: optional ``index`` argument.
 
 
 ``iterdecode(code, /)`` -> iterator
@@ -713,7 +715,7 @@ This sub-module was add in version 1.2.
    Return the rightmost (highest) index of ``value`` in bitarray.
    Raises ``ValueError`` if the value is not present.
 
-   New in version 2.2.6: optional start and stop arguments.
+   New in version 2.3.0: optional ``start`` and ``stop`` arguments.
 
 
 ``strip(bitarray, /, mode='right')`` -> bitarray
