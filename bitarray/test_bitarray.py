@@ -3346,17 +3346,17 @@ class FileTests(unittest.TestCase, Util):
         from mmap import mmap
 
         with open(self.tmpfname, 'wb') as fo:
-            fo.write(1000 * b'\0')
+            fo.write(1000 * b'\x22')
 
         with open(self.tmpfname, 'r+b') as f:
             a = bitarray(buffer=mmap(f.fileno(), 0), endian='little')
             info = a.buffer_info()
             self.assertFalse(info[5])  # readonly
             self.assertTrue(info[6])   # buffer imported
-            self.assertEqual(a, zeros(8000))
+            self.assertEqual(a, 1000 * bitarray('0100 0100'))
             a[::4] = 1
 
-        self.assertEqual(self.read_file(), 1000 * b'\x11')
+        self.assertEqual(self.read_file(), 1000 * b'\x33')
 
     def test_mmap_readonly(self):
         if not is_py3k:
@@ -3364,7 +3364,7 @@ class FileTests(unittest.TestCase, Util):
         import mmap
 
         with open(self.tmpfname, 'wb') as fo:
-            fo.write(994 * b'\0' + b'Veedon')
+            fo.write(994 * b'\x89' + b'Veedon')
 
         with open(self.tmpfname, 'rb') as fi:  # readonly
             m = mmap.mmap(fi.fileno(), 0, access=mmap.ACCESS_READ)
@@ -3375,9 +3375,8 @@ class FileTests(unittest.TestCase, Util):
             self.assertRaisesMessage(TypeError,
                                      "cannot modify read-only memory",
                                      a.__setitem__, 0, 1)
-            b = a[8 * 994:]
-            self.assertEqual(b.tobytes(), b'Veedon')
-
+            self.assertEqual(a[:8 * 994], 994 * bitarray('1000 1001'))
+            self.assertEqual(a[8 * 994:].tobytes(), b'Veedon')
 
 tests.append(FileTests)
 
@@ -3783,8 +3782,15 @@ class BufferImportTests(unittest.TestCase, Util):
 
     def test_bitarray(self):
         a = urandom(10000)
-        b = bitarray(buffer=memoryview(a))
+        b = bitarray(buffer=a)
         # a and b are two distict bitarrays that share the same buffer now
+        a_info = a.buffer_info()
+        self.assertFalse(a_info[6])     # imported buffer
+        self.assertEqual(a_info[7], 1)  # exported buffers
+        b_info = b.buffer_info()
+        self.assertTrue(b_info[6])      # imported buffer
+        self.assertEqual(b_info[7], 0)  # exported buffers
+
         self.assertFalse(a is b)
         self.assertEqual(a, b)
         b[437:461] = 0
@@ -3796,8 +3802,14 @@ class BufferImportTests(unittest.TestCase, Util):
         a[100:9800:5] = 1
         self.assertEqual(a, b)
 
-        self.assertRaises(BufferError, a.pop)
-        self.assertRaises(TypeError, b.pop)
+        self.assertRaisesMessage(
+            BufferError,
+            "cannot resize bitarray that is exporting buffers",
+            a.pop)
+        self.assertRaisesMessage(
+            TypeError,
+            "cannot resize imported buffer",
+            b.pop)
         self.check_obj(a)
         self.check_obj(b)
 
@@ -3879,11 +3891,24 @@ class BufferExportTests(unittest.TestCase):
     def test_read_simple(self):
         a = bitarray('01000001 01000010 01000011', endian='big')
         v = memoryview(a)
+        self.assertEqual(a.buffer_info()[7], 1)  # exported buffers
         self.assertEqual(len(v), 3)
         self.assertEqual(v[0], 65 if is_py3k else 'A')
         self.assertEqual(v.tobytes(), b'ABC')
         a[13] = 1
         self.assertEqual(v.tobytes(), b'AFC')
+
+        w = memoryview(a)  # a second buffer export
+        self.assertEqual(a.buffer_info()[7], 2)
+
+    def test_many_exports(self):
+        a = bitarray('01000111 01011111')
+        d = {}  # put bitarrays in dict to key object around
+        for n in range(1, 20):
+            d[n] = bitarray(buffer=a)
+            a_info = a.buffer_info()
+            self.assertEqual(a_info[7], n)  # exported buffers
+            self.assertEqual(len(d[n]), 16)
 
     def test_read_random(self):
         a = bitarray()

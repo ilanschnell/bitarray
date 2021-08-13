@@ -749,7 +749,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 #define RAISE_IF_FIXEDSIZE(self, ret_value) {                               \
     RAISE_IF_READONLY(self, ret_value);                                     \
     if (((bitarrayobject *) self)->buffer) {                                \
-        PyErr_SetString(PyExc_TypeError, "cannot resize buffer");           \
+        PyErr_SetString(PyExc_TypeError, "cannot resize imported buffer");  \
         return ret_value;                                                   \
     }                                                                       \
 }
