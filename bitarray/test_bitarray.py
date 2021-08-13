@@ -365,7 +365,8 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, bitarray, range(0, 3))
 
     def test_string01(self):
-        for s in '0010111', u'0010111', '0010 111', u'0010 111':
+        for s in ('0010111', u'0010111', '0010 111', u'0010 111',
+                  '0010_111', u'0010_111'):
             a = bitarray(s)
             self.assertEqual(a.tolist(), [0, 0, 1, 0, 1, 1, 1])
             self.check_obj(a)
