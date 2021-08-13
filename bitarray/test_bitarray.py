@@ -3329,6 +3329,10 @@ class FileTests(unittest.TestCase, Util):
         with open(self.tmpfname, 'r+b') as f:  # see issue #141
             with mmap.mmap(f.fileno(), 0) as mapping:
                 a = bitarray(buffer=mapping, endian='little')
+                info = a.buffer_info()
+                self.assertFalse(info[5])  # readonly
+                self.assertTrue(info[6])   # buffer imported
+                self.assertEqual(a, zeros(8000))
                 a[::2] = True
                 # not sure this is necessary, without 'del a', I get:
                 # BufferError: cannot close exported pointers exist
@@ -3346,9 +3350,34 @@ class FileTests(unittest.TestCase, Util):
 
         with open(self.tmpfname, 'r+b') as f:
             a = bitarray(buffer=mmap(f.fileno(), 0), endian='little')
+            info = a.buffer_info()
+            self.assertFalse(info[5])  # readonly
+            self.assertTrue(info[6])   # buffer imported
+            self.assertEqual(a, zeros(8000))
             a[::4] = 1
 
         self.assertEqual(self.read_file(), 1000 * b'\x11')
+
+    def test_mmap_readonly(self):
+        if not is_py3k:
+            return
+        import mmap
+
+        with open(self.tmpfname, 'wb') as fo:
+            fo.write(994 * b'\0' + b'Veedon')
+
+        with open(self.tmpfname, 'rb') as fi:  # readonly
+            m = mmap.mmap(fi.fileno(), 0, access=mmap.ACCESS_READ)
+            a = bitarray(buffer=m, endian='big')
+            info = a.buffer_info()
+            self.assertTrue(info[5])  # readonly
+            self.assertTrue(info[6])  # buffer imported
+            self.assertRaisesMessage(TypeError,
+                                     "cannot modify read-only memory",
+                                     a.__setitem__, 0, 1)
+            b = a[8 * 994:]
+            self.assertEqual(b.tobytes(), b'Veedon')
+
 
 tests.append(FileTests)
 
@@ -3996,6 +4025,20 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         v = memoryview(a)
         self.assertEqual(v.tobytes(), b'AB')
         self.assertRaises(TypeError, v.__setitem__, 0, 255)
+
+    def test_buffer_import_readonly(self):
+        b = bytes(bytearray([15, 95, 128]))
+        a = frozenbitarray(buffer=b, endian='big')
+        self.assertEQUAL(a, bitarray('00001111 01011111 10000000', 'big'))
+        self.assertTrue(a.buffer_info()[5])  # readonly
+        self.assertTrue(a.buffer_info()[6])  # imported buffer
+
+    def test_buffer_import_writable(self):
+        c = bytearray([15, 95])
+        self.assertRaisesMessage(
+            TypeError,
+            "cannot import writable buffer into frozenbitarray",
+            frozenbitarray, buffer=c)
 
     def test_set(self):
         a = frozenbitarray('1')
