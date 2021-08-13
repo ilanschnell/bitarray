@@ -102,6 +102,26 @@ setbit(bitarrayobject *self, Py_ssize_t i, int vi)
         *cp &= ~mask;
 }
 
+/* Return the (padded with zeros) last byte of the buffer.  When called with
+   a bitarray whose number of bits is a multiple of 8, return a NUL byte. */
+static inline char
+zeroed_last_byte(bitarrayobject *self)
+{
+    const char mask_table[16] = {
+        0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f,  /* little endian */
+        0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe,  /* big endian */
+    };
+    Py_ssize_t t = Py_SIZE(self) - 1;     /* index of last byte in buffer */
+    int r = self->nbits % 8;      /* index into mask table (minus offset) */
+    int be = self->endian == ENDIAN_BIG;  /* is big endian */
+
+    if (r == 0)
+        return 0x00;
+    assert_nbits(self);
+    assert_byte_in_range(self, t);
+    return mask_table[r + 8 * be] & self->ob_item[t];
+}
+
 /* sets unused padding bits (within last byte of buffer) to 0,
    and return the number of padding bits -- self->nbits is unchanged */
 static inline int
