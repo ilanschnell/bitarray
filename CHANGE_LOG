@@ -3,6 +3,7 @@
   * add optional start and stop arguments to `util.rindex()`
   * ignore underscore (`_`) in string input, e.g. `bitarray('1100_0111')`
   * add missing type hinting for new `.bytereverse()` arguments
+  * fix `.extend()` type annotations, #145
   * avoid `.reverse()` using temporary memory
   * make `.unpack()`, `util.serialize()`, `util.vl_encode()`
     and `.__reduce__()` more memory efficient
