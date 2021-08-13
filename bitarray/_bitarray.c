@@ -3120,12 +3120,8 @@ newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
         return PyErr_Format(PyExc_TypeError, "cannot use '%s' as buffer",
                             Py_TYPE(buffer)->tp_name);
 
-    if (PyObject_GetBuffer(buffer, &view, 0) < 0)
+    if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
         return NULL;
-
-    if (view.itemsize != 1)
-        return PyErr_Format(PyExc_ValueError, "can only import buffer with "
-                            "itemsize 1, got: %zd", view.itemsize);
 
     obj = (bitarrayobject *) type->tp_alloc(type, 0);
     if (obj == NULL)
@@ -3478,7 +3474,7 @@ bitarray_getbuffer(bitarrayobject *self, Py_buffer *view, int flags)
         return 0;
     }
     ret = PyBuffer_FillInfo(view,
-                            (PyObject *) self,
+                            (PyObject *) self,  /* exporter */
                             (void *) self->ob_item,
                             Py_SIZE(self),
                             self->readonly,
