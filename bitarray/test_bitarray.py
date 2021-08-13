@@ -36,18 +36,23 @@ from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
 SYSINFO = _sysinfo()
 DEBUG = SYSINFO[6]
 
-def buffer_info(a):
+def buffer_info(a, key=None):
+    fields = (
+        "address",    # 0. address of byte buffer
+        "size",       # 1. buffer size in bytes
+        "endian",     # 2. bit endianness
+        "padding",    # 3. number of pad bits
+        "allocated",  # 4. allocated memory
+        "readonly",   # 5. memory is read-only
+        "imported",   # 6. buffer is imported
+        "exports",    # 7. number of buffer exports
+    )
     info = a.buffer_info()
-    return {
-        "address":   info[0],  # address of byte buffer
-        "size":      info[1],  # buffer size in bytes
-        "endian":    info[2],  # bit endianness
-        "padding":   info[3],  # number of pad bits
-        "allocated": info[4],  # allocated memory
-        "readonly":  info[5],  # memory is read-only
-        "imported":  info[6],  # buffer is imported
-        "exports":   info[7],  # number of buffer exports
-    }
+    if key is None:
+        return dict(zip(fields, info))
+    else:
+        return info[fields.index(key)]
+
 
 # avoid importing from bitarray.util
 def zeros(n, endian=None):
@@ -3173,7 +3178,7 @@ class FileTests(unittest.TestCase, Util):
             with open(self.tmpfname, 'rb') as fi:
                 a.fromfile(fi)
             self.assertEqual(len(a), 8 * N)
-            self.assertEqual(buffer_info(a)['size'], N)
+            self.assertEqual(buffer_info(a, 'size'), N)
             self.assertEqual(a.tobytes(), data)
 
     def test_fromfile_extend_existing(self):
@@ -3843,11 +3848,11 @@ class BufferImportTests(unittest.TestCase, Util):
 
     def test_frozenbitarray(self):
         a = frozenbitarray('10011011 011')
-        self.assertTrue(buffer_info(a)['readonly'])
+        self.assertTrue(buffer_info(a, 'readonly'))
         self.check_obj(a)
 
         b = bitarray(buffer=a)
-        self.assertTrue(buffer_info(b)['readonly'])  # also readonly
+        self.assertTrue(buffer_info(b, 'readonly'))  # also readonly
         self.assertRaises(TypeError, b.__setitem__, 1, 0)
         self.check_obj(b)
 
@@ -3920,7 +3925,7 @@ class BufferExportTests(unittest.TestCase):
     def test_read_simple(self):
         a = bitarray('01000001 01000010 01000011', endian='big')
         v = memoryview(a)
-        self.assertEqual(buffer_info(a)['exports'], 1)
+        self.assertEqual(buffer_info(a, 'exports'), 1)
         self.assertEqual(len(v), 3)
         self.assertEqual(v[0], 65 if is_py3k else 'A')
         self.assertEqual(v.tobytes(), b'ABC')
@@ -3928,14 +3933,14 @@ class BufferExportTests(unittest.TestCase):
         self.assertEqual(v.tobytes(), b'AFC')
 
         w = memoryview(a)  # a second buffer export
-        self.assertEqual(buffer_info(a)['exports'], 2)
+        self.assertEqual(buffer_info(a, 'exports'), 2)
 
     def test_many_exports(self):
         a = bitarray('01000111 01011111')
         d = {}  # put bitarrays in dict to key object around
         for n in range(1, 20):
             d[n] = bitarray(buffer=a)
-            self.assertEqual(buffer_info(a)['exports'], n)
+            self.assertEqual(buffer_info(a, 'exports'), n)
             self.assertEqual(len(d[n]), 16)
 
     def test_read_random(self):
@@ -3991,7 +3996,7 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(a.to01(), '110')
         self.assertIsInstance(a, bitarray)
         self.assertIsType(a, 'frozenbitarray')
-        self.assertTrue(buffer_info(a)['readonly'])
+        self.assertTrue(buffer_info(a, 'readonly'))
         self.check_obj(a)
 
         a = frozenbitarray(bitarray())
@@ -4069,9 +4074,9 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
     def test_freeze(self):
         # not so much a test for frozenbitarray, but how it is initialized
         a = bitarray(78)
-        self.assertFalse(buffer_info(a)['readonly'])  # not readonly
+        self.assertFalse(buffer_info(a, 'readonly'))  # not readonly
         a._freeze()
-        self.assertTrue(buffer_info(a)['readonly'])   # readonly
+        self.assertTrue(buffer_info(a, 'readonly'))   # readonly
 
     def test_memoryview(self):
         a = frozenbitarray('01000001 01000010', 'big')
