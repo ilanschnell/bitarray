@@ -463,6 +463,7 @@ The bitarray object:
    4. allocated memory for the buffer (in bytes)
    5. whether memory is read only
    6. whether buffer is imported
+   7. number of buffer exports
 
 
 ``bytereverse(start=0, stop=<end of buffer>, /)``

@@ -19,8 +19,9 @@ from bitarray._util import (
 )
 
 __all__ = [
-    'zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip', 'count_n',
-    'parity', 'count_and', 'count_or', 'count_xor', 'subset',
+    'zeros', 'urandom', 'pprint', 'print_buffer_info', 'make_endian',
+    'rindex', 'strip', 'count_n', 'parity',
+    'count_and', 'count_or', 'count_xor', 'subset',
     'ba2hex', 'hex2ba', 'ba2base', 'base2ba', 'ba2int', 'int2ba',
     'serialize', 'deserialize', 'vl_encode', 'vl_decode', 'huffman_code',
 ]
@@ -111,6 +112,34 @@ function `pprint.pprint()`.
         stream.write('\n')
 
     stream.write("%s)\n" % quotes)
+    stream.flush()
+
+
+def print_buffer_info(__a, title=None, stream=None):
+    """print_buffer_info(bitarray, /, title=None, stream=None)
+
+Print bitarray's buffer info in human readable form to stream.
+"""
+    if stream is None:
+        stream = sys.stdout
+
+    fields = (
+        "address of buffer",
+        "buffer size",
+        "bit endianness",
+        "pad bits",
+        "allocated memory",
+        "readonly memory",
+        "buffer is imported",
+        "buffer exports",
+    )
+    info = __a.buffer_info()
+    assert len(info) == len(fields)
+
+    if title:
+        stream.write('%s %s %s\n' % (25 * '-', title, 25 * '-'))
+    for item in zip(fields, info):
+        stream.write("%20s: %s\n" % item)
     stream.flush()
 
 

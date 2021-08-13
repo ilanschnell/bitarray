@@ -11,6 +11,10 @@ import bitarray.util
 
 BASE_URL = "https://github.com/ilanschnell/bitarray"
 
+IGNORE = set([
+    'util.print_buffer_info'
+])
+
 NEW_IN = {
     'frozenbitarray':       '1.1',
     'get_default_endian':   '1.3',
@@ -51,6 +55,8 @@ _NAMES = set()
 
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
 def write_doc(fo, name):
+    if name in IGNORE:
+        return
     _NAMES.add(name)
     doc = eval('bitarray.%s.__doc__' % name)
     assert doc, name
