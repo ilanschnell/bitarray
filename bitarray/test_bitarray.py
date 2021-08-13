@@ -3754,12 +3754,12 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertEqual(b[0], 129)
         a[:] = 1
         self.assertEqual(b, bytearray(100 * [255]))
-        self.assertRaises(TypeError, a.pop)
+        self.assertRaises(BufferError, a.pop)
         a[8:16] = bitarray('10000010', endian='big')
         self.assertEqual(b, bytearray([255, 65] + 98 * [255]))
         self.assertEqual(a.tobytes(), bytes(b))
         for n in 7, 9:
-            self.assertRaises(TypeError, a.__setitem__, slice(8, 16),
+            self.assertRaises(BufferError, a.__setitem__, slice(8, 16),
                               bitarray(n))
         b[1] = b[2] = 255
         self.assertEqual(b, bytearray(100 * [255]))
@@ -3810,7 +3810,7 @@ class BufferImportTests(unittest.TestCase, Util):
             "cannot resize bitarray that is exporting buffers",
             a.pop)
         self.assertRaisesMessage(
-            TypeError,
+            BufferError,
             "cannot resize imported buffer",
             b.pop)
         self.check_obj(a)
@@ -3895,15 +3895,15 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertFalse(info[5])  # not readonly
         self.assertTrue(info[6])   # has imported buffer
 
-        self.assertRaises(TypeError, a.append, True)
-        self.assertRaises(TypeError, a.clear)
-        self.assertRaises(TypeError, a.encode, {'a': bitarray('0')}, 'aa')
-        self.assertRaises(TypeError, a.extend, [0, 1, 0])
-        self.assertRaises(TypeError, a.insert, 0, 1)
-        self.assertRaises(TypeError, a.pack, b'\0\0\xff')
-        self.assertRaises(TypeError, a.pop)
-        self.assertRaises(TypeError, a.remove, 1)
-        self.assertRaises(TypeError, a.__delitem__, 0)
+        self.assertRaises(BufferError, a.append, True)
+        self.assertRaises(BufferError, a.clear)
+        self.assertRaises(BufferError, a.encode, {'a': bitarray('0')}, 'aa')
+        self.assertRaises(BufferError, a.extend, [0, 1, 0])
+        self.assertRaises(BufferError, a.insert, 0, 1)
+        self.assertRaises(BufferError, a.pack, b'\0\0\xff')
+        self.assertRaises(BufferError, a.pop)
+        self.assertRaises(BufferError, a.remove, 1)
+        self.assertRaises(BufferError, a.__delitem__, 0)
 
 tests.append(BufferImportTests)
 

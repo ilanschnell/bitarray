@@ -47,7 +47,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     }
 
     if (self->buffer) {
-        PyErr_SetString(PyExc_TypeError, "cannot resize imported buffer");
+        PyErr_SetString(PyExc_BufferError, "cannot resize imported buffer");
         return -1;
     }
 
