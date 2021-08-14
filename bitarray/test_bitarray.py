@@ -121,6 +121,10 @@ class Util(object):
         if buf:
             # imported buffer implies that no extra memory is allocated
             self.assertEqual(alloc, 0)
+            # an imported buffer will always have a multiple of 8 bits
+            self.assertEqual(len(a) % 8, 0)
+            self.assertEqual(len(a), 8 * size)
+            self.assertEqual(unused, 0)
         else:
             # the allocated memory is always larger than the buffer size
             self.assertTrue(alloc >= size)
@@ -3828,8 +3832,11 @@ class BufferImportTests(unittest.TestCase, Util):
         for n in range(100):
             a = urandom(n, self.random_endian())
             b = bitarray(buffer=a, endian=a.endian())
+            # an imported buffer will always have a multiple of 8 bits
             self.assertEqual(len(b) % 8, 0)
             self.assertEQUAL(b[:n], a)
+            self.check_obj(a)
+            self.check_obj(b)
 
     def test_bitarray_chain(self):
         a = urandom(64)
@@ -3842,6 +3849,8 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertEqual(d[99], zeros(64))
         a[:] = 1
         self.assertTrue(d[99].all())
+        for c in d.values():
+            self.check_obj(c)
 
     def test_frozenbitarray(self):
         a = frozenbitarray('10011011 011')
@@ -3897,6 +3906,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.__ixor__, bitarray('110'))
         self.assertRaises(TypeError, a.__irshift__, 1)
         self.assertRaises(TypeError, a.__ilshift__, 1)
+        self.check_obj(a)
 
     def test_resize_errors(self):
         a = bitarray(buffer=bytearray([123]))
@@ -3915,6 +3925,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertRaises(BufferError, a.pop)
         self.assertRaises(BufferError, a.remove, 1)
         self.assertRaises(BufferError, a.__delitem__, 0)
+        self.check_obj(a)
 
 tests.append(BufferImportTests)
 
@@ -3944,6 +3955,16 @@ class BufferExportTests(unittest.TestCase):
             self.assertEqual(buffer_info(a, 'exports'), n)
             self.assertEqual(len(d[n]), 16)
 
+    def test_range(self):
+        for n in range(100):
+            a = bitarray(n)
+            v = memoryview(a)
+            self.assertEqual(len(v), bits2bytes(len(a)))
+            info = buffer_info(a)
+            self.assertFalse(info['readonly'])
+            self.assertFalse(info['imported'])
+            self.assertEqual(info['exports'], 1)
+
     def test_read_random(self):
         a = bitarray()
         a.frombytes(os.urandom(100))
@@ -3954,13 +3975,19 @@ class BufferExportTests(unittest.TestCase):
         self.assertEqual(v.tobytes(), a.tobytes())
 
     def test_resize(self):
-        a = bitarray(32, endian='big')
+        a = bitarray('011', endian='big')
         v = memoryview(a)
         self.assertFalse(v.readonly)
         self.assertRaises(BufferError, a.append, 1)
         self.assertRaises(BufferError, a.clear)
+        self.assertRaises(BufferError, a.encode, {'a': bitarray('0')}, 'aa')
+        self.assertRaises(BufferError, a.extend, '0')
         self.assertRaises(BufferError, a.fill)
         self.assertRaises(BufferError, a.frombytes, b'\0')
+        self.assertRaises(BufferError, a.insert, 0, 1)
+        self.assertRaises(BufferError, a.pack, b'\0')
+        self.assertRaises(BufferError, a.pop)
+        self.assertRaises(BufferError, a.remove, 1)
         self.assertRaises(BufferError, a.__delitem__, slice(0, 8))
         self.assertEqual(v.tobytes(), a.tobytes())
 
@@ -4086,6 +4113,7 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.__ixor__, bitarray('110'))
         self.assertRaises(TypeError, a.__irshift__, 1)
         self.assertRaises(TypeError, a.__ilshift__, 1)
+        self.check_obj(a)
 
     def test_freeze(self):
         # not so much a test for frozenbitarray, but how it is initialized
