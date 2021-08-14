@@ -5,6 +5,7 @@ Change log
 
 * add optional ``buffer`` argument to ``bitarray()`` to import the buffer of
   another object, `#146 <https://github.com/ilanschnell/bitarray/issues/146>`__
+* add `memory-mapped file <../examples/mapped-file.py>`__ example
 * add optional start and stop arguments to ``util.rindex()``
 * ignore underscore (``_``) in string input, e.g. ``bitarray('1100_0111')``
 * add missing type hinting for new ``.bytereverse()`` arguments
@@ -20,7 +21,7 @@ Change log
   a speedup for ``.find()``, ``.index()``, ``.search()`` and ``util.rindex()``
 * add optional start and stop arguments to ``.bytereverse()``
 * add example to illustrate how
-  `unaligned copying <../examples/copy_n.py>`__ works internally.
+  `unaligned copying <../examples/copy_n.py>`__ works internally
 * add documentation
 * add tests
 
