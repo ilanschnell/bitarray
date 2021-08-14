@@ -546,7 +546,7 @@ The bitarray object:
 ``extend(iterable, /)``
    Append all the items from ``iterable`` to the end of the bitarray.
    If the iterable is a string, each ``0`` and ``1`` are appended as
-   bits (ignoring whitespace).
+   bits (ignoring whitespace and underscore).
 
 
 ``fill()`` -> int
@@ -673,7 +673,7 @@ The bitarray object:
 Other objects:
 --------------
 
-``frozenbitarray(initializer=0, /, endian='big')`` -> frozenbitarray
+``frozenbitarray(initializer=0, /, endian='big', buffer=None)`` -> frozenbitarray
    Return a frozenbitarray object, which is initialized the same way a bitarray
    object is initialized.  A frozenbitarray is immutable and hashable.
    Its contents cannot be altered after it is created; however, it can be used
@@ -815,7 +815,7 @@ This sub-module was add in version 1.2.
 
 ``base2ba(n, asciistr, /, endian=None)`` -> bitarray
    Bitarray of the base ``n`` ASCII representation.
-   Allowed values for ``n`` are 2, 4, 8, 16 and 32.
+   Allowed values for ``n`` are 2, 4, 8, 16, 32 and 64.
    For ``n=16`` (hexadecimal), ``hex2ba()`` will be much faster, as ``base2ba()``
    does not take advantage of byte level operations.
    For ``n=32`` the RFC 4648 Base32 alphabet is used, and for ``n=64`` the
