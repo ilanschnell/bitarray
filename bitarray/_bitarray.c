@@ -747,6 +747,22 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
                      Implementation of bitarray methods
  **************************************************************************/
 
+/*
+   All methods which modify the buffer need to raise an exception when the
+   buffer is read-only.  This is necessary because the buffer may be imported
+   from another object which has a read-only buffer.
+
+   We decided to do this check at the top level here, by adding the
+   RAISE_IF_READONLY macro to all methods which modify the buffer.
+   We could have done it at the low level (in setbit(), etc. also), but
+   because most of these low level functions have no return value.
+
+   The situation is different from how resize() raises an exception when
+   called on an imported buffer.  There, it is easy to raise the exception
+   in resize() itself, as there only one function which resizes the buffer,
+   and this function (resize()) needs to report failures anyway.
+*/
+
 /* raise when buffer is readonly */
 #define RAISE_IF_READONLY(self, ret_value)                                  \
     if (((bitarrayobject *) self)->readonly) {                              \
@@ -857,7 +873,7 @@ PyDoc_STRVAR(buffer_info_doc,
 \n\
 Return a tuple containing:\n\
 \n\
-0. memory address of the bitarray's buffer\n\
+0. memory address of buffer\n\
 1. buffer size (in bytes)\n\
 2. bit endianness as a string\n\
 3. number of unused padding bits\n\
@@ -3114,6 +3130,8 @@ endian_from_string(const char* string)
     return -1;
 }
 
+/* create a new bitarray object whose buffer is imported from another object
+   which exposes the buffer protocol */
 static PyObject*
 newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
 {
@@ -3419,7 +3437,7 @@ static PyTypeObject BitarrayIter_Type = {
     0,                                        /* tp_methods */
 };
 
-/*********************** bitarray buffer interface ************************/
+/******************** bitarray buffer export interface ********************/
 
 #if PY_MAJOR_VERSION == 2       /* old buffer protocol */
 static Py_ssize_t

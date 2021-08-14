@@ -3857,7 +3857,7 @@ class BufferImportTests(unittest.TestCase, Util):
         # these objects do not expose a buffer
         for arg in (123, 1.23, Ellipsis, [1, 2, 3], (1, 2, 3), {1: 2},
                     set([1, 2, 3]), None):
-            self.assertRaises(TypeError, bitarray, None, 'big', arg)
+            self.assertRaises(TypeError, bitarray, buffer=arg)
 
     def test_del_import_object(self):
         b = bytearray(100 * [0])
