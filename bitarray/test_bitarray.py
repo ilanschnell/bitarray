@@ -580,15 +580,14 @@ class MetaDataTests(unittest.TestCase, Util):
         a = bitarray(13, endian='little')
         self.assertEqual(a.buffer_info()[1:4], (2, 'little', 3))
 
-        a = bitarray()
-        self.assertRaises(TypeError, a.buffer_info, 42)
-
-        bi = a.buffer_info()
-        self.assertIsInstance(bi, tuple)
-        self.assertEqual(len(bi), 8)
-        self.assertIsInstance(bi[2], str)
-        for i in 0, 1, 3, 4, 5, 6, 7:
-            self.assertIsInstance(bi[i], int)
+        info = a.buffer_info()
+        self.assertIsInstance(info, tuple)
+        self.assertEqual(len(info), 8)
+        for i, item in enumerate(info):
+            if i == 2:
+                self.assertIsInstance(item, str)
+                continue
+            self.assertIsInstance(item, int)
 
     def test_endian(self):
         for endian in 'big', 'little':
@@ -4021,20 +4020,24 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(b, a)
         self.assertIsType(b, 'frozenbitarray')
         self.assertEqual(len(b), 7)
-        self.assertEqual(b.all(), False)
-        self.assertEqual(b.any(), True)
+        self.assertFalse(b.all())
+        self.assertTrue(b.any())
 
     def test_init_from_bitarray(self):
         for a in self.randombitarrays():
             b = frozenbitarray(a)
             self.assertFalse(b is a)
-            self.assertEqual(b, a)
-            self.assertEqual(b.endian(), a.endian())
+            self.assertEQUAL(b, a)
             c = frozenbitarray(b)
-            self.assertEqual(c, b)
             self.assertFalse(c is b)
-            self.assertEqual(c.endian(), a.endian())
+            self.assertEQUAL(c, b)
             self.assertEqual(hash(c), hash(b))
+
+    def test_init_from_misc(self):
+        tup = 0, 1, 0, 1, 1, False, True
+        for obj in list(tup), tup, iter(tup), bitarray(tup):
+            a = frozenbitarray(obj)
+            self.assertEqual(a, bitarray(tup))
 
     def test_repr(self):
         a = frozenbitarray()
