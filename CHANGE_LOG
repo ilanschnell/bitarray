@@ -2,7 +2,7 @@
 -------------------
   * add optional `buffer` argument to `bitarray()` to import the buffer of
     another object, #146
-  * add [memory-mapped file](../examples/mapped-file.py) example
+  * add [memory-mapped file](../examples/mmapped-file.py) example
   * add optional start and stop arguments to `util.rindex()`
   * ignore underscore (`_`) in string input, e.g. `bitarray('1100_0111')`
   * add missing type hinting for new `.bytereverse()` arguments
