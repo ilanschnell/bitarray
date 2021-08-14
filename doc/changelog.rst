@@ -5,8 +5,10 @@ Change log
 
 * add optional ``buffer`` argument to ``bitarray()`` to import the buffer of
   another object, `#146 <https://github.com/ilanschnell/bitarray/issues/146>`__
-* add `memory-mapped file <../examples/mapped-file.py>`__ example
+* update ``.buffer_info()`` to include: a read-only flag, an imported buffer
+  flag, and the number of buffer exports
 * add optional start and stop arguments to ``util.rindex()``
+* add `memory-mapped file <../examples/mmapped-file.py>`__ example
 * ignore underscore (``_``) in string input, e.g. ``bitarray('1100_0111')``
 * add missing type hinting for new ``.bytereverse()`` arguments
 * fix ``.extend()`` type annotations, `#145 <https://github.com/ilanschnell/bitarray/issues/145>`__

@@ -304,10 +304,9 @@ created.  However, you can create a new bitarray with different endianness:
 Buffer protocol
 ---------------
 
-Python 2.7 provides memoryview objects, which allow Python code to access
-the internal data of an object that supports the buffer protocol without
-copying.  Bitarray objects support this protocol, with the memory being
-interpreted as simple bytes:
+Bitarray objects support the buffer protocol.  They can both export their
+own buffer, as well as import another object's buffer.  Here is an example
+where the bitarray's buffer is exported:
 
 .. code-block:: python
 
@@ -319,11 +318,36 @@ interpreted as simple bytes:
     67
     >>> v[:2].tobytes()
     b'AB'
-    >>> v.readonly  # changing a bitarray's memory is also possible
+    >>> v.readonly
     False
-    >>> v[1] = 111
+    >>> v[1] = 255
     >>> a
-    bitarray('010000010110111101000011')
+    bitarray('010000011111111101000011')
+
+As of bitarray 2.3, it is also possible to import a buffer from an object
+which exposes it:
+
+.. code-block:: python
+
+    >>> b = bytearray([0x41, 0xff, 0x01])
+    >>> a = bitarray(buffer=b)
+    >>> a
+    bitarray('010000011111111100000001')
+    >>> a <<= 3
+    >>> b
+    bytearray(b'\x0f\xf8\x08')
+    >>> a[20:] = 1
+    >>> a
+    bitarray('000011111111100000001111')
+
+We can even create two bitarray which share the same buffer:
+
+.. code-block:: python
+
+    >>> a = bitarray(64)
+    >>> b = bitarray(buffer=a)
+    >>> # the buffer address is the same!
+    >>> assert a.buffer_info()[0] == b.buffer_info()[0]
 
 
 Variable bit length prefix codes

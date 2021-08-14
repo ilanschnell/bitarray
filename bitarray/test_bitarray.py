@@ -3922,6 +3922,7 @@ class BufferExportTests(unittest.TestCase):
     def test_read_simple(self):
         a = bitarray('01000001 01000010 01000011', endian='big')
         v = memoryview(a)
+        self.assertFalse(v.readonly)
         self.assertEqual(buffer_info(a, 'exports'), 1)
         self.assertEqual(len(v), 3)
         self.assertEqual(v[0], 65 if is_py3k else 'A')
@@ -3950,11 +3951,19 @@ class BufferExportTests(unittest.TestCase):
         self.assertEqual(v.tobytes(), a.tobytes())
 
     def test_resize(self):
-        a = bitarray('01000001 01000010 01000011', endian='big')
+        a = bitarray(32, endian='big')
         v = memoryview(a)
+        self.assertFalse(v.readonly)
         self.assertRaises(BufferError, a.append, 1)
         self.assertRaises(BufferError, a.clear)
         self.assertRaises(BufferError, a.__delitem__, slice(0, 8))
+        self.assertEqual(v.tobytes(), a.tobytes())
+
+    def test_frozenbitarray(self):
+        a = frozenbitarray(40)
+        v = memoryview(a)
+        self.assertTrue(v.readonly)
+        self.assertEqual(len(v), 5)
         self.assertEqual(v.tobytes(), a.tobytes())
 
     def test_write(self):
