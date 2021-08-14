@@ -2187,9 +2187,9 @@ class ExtendTests(unittest.TestCase, Util):
 
     def test_string01_whitespace(self):
         a = bitarray()
-        a.extend('0 1\n0\r1\t0\v1')
+        a.extend('0 1\n0\r1\t0\v1_')
         self.assertEqual(a, bitarray('010101'))
-        a += ' 1\n0\r1\t0\v'
+        a += '_ 1\n0\r1\t0\v'
         self.assertEqual(a, bitarray('010101 1010'))
         self.check_obj(a)
 
@@ -2203,7 +2203,7 @@ class ExtendTests(unittest.TestCase, Util):
         self.check_obj(a)
 
         a = bitarray()
-        a.extend(u'001 011')
+        a.extend(u'001 011_')
         self.assertEqual(a, bitarray('001011'))
         self.assertRaises(UnicodeEncodeError, a.extend, u'1\u2605 0')
         self.assertEqual(a, bitarray('001011'))
