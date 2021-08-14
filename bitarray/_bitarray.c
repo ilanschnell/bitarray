@@ -978,7 +978,9 @@ bitarray_fill(bitarrayobject *self)
 
     RAISE_IF_READONLY(self, NULL);
     p = setunused(self);
-    self->nbits += p;
+    if (resize(self, self->nbits + p) < 0)
+        return NULL;
+
     assert(self->nbits % 8 == 0);
     assert_nbits(self);
     return PyLong_FromLong(p);
@@ -1358,10 +1360,12 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     */
     t = self->nbits;            /* number of bits before extending */
     p = BITS(BYTES(t)) - t;     /* number of pad bits */
-    self->nbits += p;
-    assert(0 <= p && p < 8 && self->nbits % 8 == 0);
-    assert_nbits(self);
+    assert(0 <= p && p < 8);
+    if (resize(self, t + p) < 0)
+        return NULL;
 
+    assert(self->nbits % 8 == 0);
+    assert_nbits(self);
     if (resize(self, self->nbits + BITS(nbytes)) < 0)
         return NULL;
 
