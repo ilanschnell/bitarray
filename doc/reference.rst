@@ -236,7 +236,7 @@ The bitarray object:
 Other objects:
 --------------
 
-``frozenbitarray(initializer=0, /, endian='big')`` -> frozenbitarray
+``frozenbitarray(initializer=0, /, endian='big', buffer=None)`` -> frozenbitarray
    Return a frozenbitarray object, which is initialized the same way a bitarray
    object is initialized.  A frozenbitarray is immutable and hashable.
    Its contents cannot be altered after it is created; however, it can be used
