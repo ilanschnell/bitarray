@@ -1340,7 +1340,7 @@ which may cause a memory error if the bitarray is very large.");
 static PyObject *
 bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
 {
-    Py_ssize_t nbytes;
+    Py_ssize_t nbytes;          /* number of bytes we add to self */
     Py_ssize_t t, p;
 
     RAISE_IF_READONLY(self, NULL);
@@ -1356,8 +1356,8 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
        the current size and padding, as the bitarray size might not be
        a multiple of 8.  After extending, we remove the padding bits again.
     */
-    t = self->nbits;
-    p = BITS(BYTES(t)) - t;     /* padding */
+    t = self->nbits;            /* number of bits before extending */
+    p = BITS(BYTES(t)) - t;     /* number of pad bits */
     self->nbits += p;
     assert(0 <= p && p < 8 && self->nbits % 8 == 0);
     assert_nbits(self);
@@ -1368,7 +1368,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     memcpy(self->ob_item + (Py_SIZE(self) - nbytes),
            PyBytes_AS_STRING(bytes), (size_t) nbytes);
 
-    if (delete_n(self, t, p) < 0)
+    if (delete_n(self, t, p) < 0)  /* remove padding bits */
         return NULL;
     assert(self->nbits == t + BITS(nbytes));
     Py_RETURN_NONE;
