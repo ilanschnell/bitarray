@@ -671,7 +671,7 @@ extend_bytes01(bitarrayobject *self, PyObject *bytes)
             continue;
         default:
             PyErr_Format(PyExc_ValueError, "expected '0' or '1' "
-                         "(or whitespace), got '%c' (0x%02x)", c, c);
+                         "(or whitespace, or underscore), got '%c' (0x%02x)", c, c);
             resize(self, original_nbits);  /* no bits added on error */
             return -1;
         }
@@ -968,7 +968,7 @@ PyDoc_STRVAR(extend_doc,
 \n\
 Append all the items from `iterable` to the end of the bitarray.\n\
 If the iterable is a string, each `0` and `1` are appended as\n\
-bits (ignoring whitespace).");
+bits (ignoring whitespace and underscore).");
 
 
 static PyObject *
