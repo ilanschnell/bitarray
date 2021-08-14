@@ -378,7 +378,7 @@ This sub-module was add in version 1.2.
 
 ``base2ba(n, asciistr, /, endian=None)`` -> bitarray
    Bitarray of the base ``n`` ASCII representation.
-   Allowed values for ``n`` are 2, 4, 8, 16 and 32.
+   Allowed values for ``n`` are 2, 4, 8, 16, 32 and 64.
    For ``n=16`` (hexadecimal), ``hex2ba()`` will be much faster, as ``base2ba()``
    does not take advantage of byte level operations.
    For ``n=32`` the RFC 4648 Base32 alphabet is used, and for ``n=64`` the
