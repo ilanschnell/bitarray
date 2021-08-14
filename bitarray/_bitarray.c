@@ -576,6 +576,7 @@ set_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
     int vi;
 
     assert(0 <= i && i < self->nbits);
+    assert(self->readonly == 0);
     if ((vi = pybit_as_int(value)) < 0)
         return -1;
     setbit(self, i, vi);

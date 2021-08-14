@@ -48,10 +48,8 @@ def buffer_info(a, key=None):
         "exports",    # 7. number of buffer exports
     )
     info = a.buffer_info()
-    if key is None:
-        return dict(zip(fields, info))
-    else:
-        return info[fields.index(key)]
+    res = dict(zip(fields, info))
+    return res if key is None else res[key]
 
 
 # avoid importing from bitarray.util
