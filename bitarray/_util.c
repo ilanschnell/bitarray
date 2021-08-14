@@ -721,7 +721,7 @@ vl_decode(PyObject *module, PyObject *args)
                                       base64_alphabet, (Py_ssize_t) 63);
             if (res == NULL)
                 return NULL;
-            Py_DECREF(res);  /* drop extend result */
+            Py_DECREF(res);  /* drop frombytes result */
         }
         assert(i + 6 < aa->nbits);
 

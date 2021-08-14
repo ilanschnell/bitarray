@@ -1391,9 +1391,7 @@ bitarray_tobytes(bitarrayobject *self)
 PyDoc_STRVAR(tobytes_doc,
 "tobytes() -> bytes\n\
 \n\
-Return the byte representation of the bitarray.\n\
-When the length of the bitarray is not a multiple of 8, the few remaining\n\
-bits are considered 0.");
+Return the byte representation of the bitarray.");
 
 
 static PyObject *
@@ -1473,9 +1471,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
 PyDoc_STRVAR(tofile_doc,
 "tofile(f, /)\n\
 \n\
-Write the byte representation of the bitarray to the file object f.\n\
-When the length of the bitarray is not a multiple of 8, the few remaining\n\
-bits are considered 0.");
+Write the byte representation of the bitarray to the file object f.");
 
 
 static PyObject *
