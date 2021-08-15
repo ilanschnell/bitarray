@@ -1,3 +1,7 @@
+2021-XX-XX   2.3.1:
+-------------------
+
+
 2021-08-15   2.3.0:
 -------------------
   * add optional `buffer` argument to `bitarray()` to import the buffer of
