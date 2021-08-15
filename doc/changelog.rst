@@ -1,10 +1,10 @@
 Change log
 ==========
 
-2021-08-XX   2.3.0:
+**2.3.0** (2021-08-15):
 
 * add optional ``buffer`` argument to ``bitarray()`` to import the buffer of
-  another object, `#146 <https://github.com/ilanschnell/bitarray/issues/146>`__, see also: `buffer protocol <buffer.rst>`__
+  another object, `#141 <https://github.com/ilanschnell/bitarray/issues/141>`__, `#146 <https://github.com/ilanschnell/bitarray/issues/146>`__, see also: `buffer protocol <buffer.rst>`__
 * update ``.buffer_info()`` to include: a read-only flag, an imported buffer
   flag, and the number of buffer exports
 * add optional start and stop arguments to ``util.rindex()``
@@ -15,6 +15,7 @@ Change log
 * avoid ``.reverse()`` using temporary memory
 * make ``.unpack()``, ``util.serialize()``, ``util.vl_encode()``
   and ``.__reduce__()`` more memory efficient
+* add and improve tests
 
 
 **2.2.5** (2021-08-07):
