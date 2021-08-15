@@ -116,8 +116,8 @@ zeroed_last_byte(bitarrayobject *self)
         0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe,  /* big endian */
     };
     Py_ssize_t t = Py_SIZE(self) - 1;     /* index of last byte in buffer */
-    int r = self->nbits % 8;      /* index into mask table (minus offset) */
     int be = self->endian == ENDIAN_BIG;  /* is big endian */
+    int r = self->nbits % 8;      /* index into mask table (minus offset) */
 
     if (r == 0)
         return 0x00;

@@ -1035,14 +1035,14 @@ Return -1 when sub_bitarray is not found.");
 static PyObject *
 bitarray_index(bitarrayobject *self, PyObject *args)
 {
-    PyObject *ret;
+    PyObject *result;
 
-    if ((ret = bitarray_find(self, args)) == NULL)
+    if ((result = bitarray_find(self, args)) == NULL)
         return NULL;
 
-    assert(PyLong_Check(ret));
-    if (PyLong_AsSsize_t(ret) < 0) {
-        Py_DECREF(ret);
+    assert(PyLong_Check(result));
+    if (PyLong_AsSsize_t(result) < 0) {
+        Py_DECREF(result);
 #ifdef IS_PY3K
         return PyErr_Format(PyExc_ValueError, "%A not in bitarray",
                             PyTuple_GET_ITEM(args, 0));
@@ -1051,7 +1051,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
         return NULL;
 #endif
     }
-    return ret;
+    return result;
 }
 
 PyDoc_STRVAR(index_doc,
@@ -1404,9 +1404,8 @@ Return the byte representation of the bitarray.");
 static PyObject *
 bitarray_fromfile(bitarrayobject *self, PyObject *args)
 {
-    PyObject *bytes, *f, *res;
-    Py_ssize_t nblock, nread = 0, nbytes = -1;
-    int not_enough_bytes;
+    PyObject *bytes, *f;
+    Py_ssize_t nread = 0, nbytes = -1;
 
     RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "O|n:fromfile", &f, &nbytes))
@@ -1416,7 +1415,10 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         nbytes = PY_SSIZE_T_MAX;
 
     while (nread < nbytes) {
-        nblock = Py_MIN(nbytes - nread, BLOCKSIZE);
+        PyObject *ret;         /* return object from frombytes call */
+        Py_ssize_t nblock = Py_MIN(nbytes - nread, BLOCKSIZE);
+        int not_enough_bytes;
+
         bytes = PyObject_CallMethod(f, "read", "n", nblock);
         if (bytes == NULL)
             return NULL;
@@ -1429,11 +1431,11 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         nread += PyBytes_GET_SIZE(bytes);
         assert(nread >= 0 && nread <= nbytes);
 
-        res = bitarray_frombytes(self, bytes);
+        ret = bitarray_frombytes(self, bytes);
         Py_DECREF(bytes);
-        if (res == NULL)
+        if (ret == NULL)
             return NULL;
-        Py_DECREF(res);  /* drop frombytes result */
+        Py_DECREF(ret);  /* drop frombytes result */
 
         if (not_enough_bytes) {
             if (nbytes == PY_SSIZE_T_MAX)  /* read till EOF */
@@ -1458,19 +1460,20 @@ static PyObject *
 bitarray_tofile(bitarrayobject *self, PyObject *f)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
-    Py_ssize_t size, offset;
-    PyObject *res;
+    Py_ssize_t offset;
 
     setunused(self);
     for (offset = 0; offset < nbytes; offset += BLOCKSIZE) {
-        size = Py_MIN(nbytes - offset, BLOCKSIZE);
+        PyObject *ret;          /* return object from write call */
+        Py_ssize_t size = Py_MIN(nbytes - offset, BLOCKSIZE);
+
         assert(size >= 0 && offset + size <= nbytes);
         /* basically: f.write(memoryview(self)[offset:offset + size] */
-        res = PyObject_CallMethod(f, "write", BYTES_SIZE_FMT,
+        ret = PyObject_CallMethod(f, "write", BYTES_SIZE_FMT,
                                   self->ob_item + offset, size);
-        if (res == NULL)
+        if (ret == NULL)
             return NULL;
-        Py_DECREF(res);  /* drop write result */
+        Py_DECREF(ret);  /* drop write result */
     }
     Py_RETURN_NONE;
 }
@@ -3221,7 +3224,7 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, int endian)
 static PyObject *
 bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    PyObject *res;  /* to be returned in some cases */
+    PyObject *result;
     PyObject *initial = Py_None, *buffer = Py_None;
     char *endian_str = NULL;
     int endian;
@@ -3273,14 +3276,14 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         endian = ((bitarrayobject *) initial)->endian;
 
     /* leave remaining type dispatch to extend method */
-    res = newbitarrayobject(type, 0, endian);
-    if (res == NULL)
+    result = newbitarrayobject(type, 0, endian);
+    if (result == NULL)
         return NULL;
-    if (extend_dispatch((bitarrayobject *) res, initial) < 0) {
-        Py_DECREF(res);
+    if (extend_dispatch((bitarrayobject *) result, initial) < 0) {
+        Py_DECREF(result);
         return NULL;
     }
-    return res;
+    return result;
 }
 
 static PyObject *

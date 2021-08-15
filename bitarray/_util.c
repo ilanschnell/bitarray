@@ -677,7 +677,7 @@ static PyObject *
 vl_decode(PyObject *module, PyObject *args)
 {
     const Py_ssize_t ibits = 256;    /* initial number of bits in a */
-    PyObject *iter, *item, *res, *a;
+    PyObject *iter, *item, *a;
     Py_ssize_t padding = 0;  /* number of pad bits read from header byte */
     Py_ssize_t i = 0;        /* bit counter */
     unsigned char b = 0x80;  /* empty stream will raise StopIteration */
@@ -714,14 +714,16 @@ vl_decode(PyObject *module, PyObject *args)
 
         assert(i == 0 || (i + PADBITS) % 7 == 0);
         if (i == aa->nbits) {
+            PyObject *ret;  /* return object from .frombytes() call */
+
             /* grow memory - see above */
             assert(i % 8 == 0);  /* added dummy bytes are aligned */
             /* 63 is a multiple of 7 - bytes will be aligned for next call */
-            res = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
+            ret = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
                                       base64_alphabet, (Py_ssize_t) 63);
-            if (res == NULL)
+            if (ret == NULL)
                 return NULL;
-            Py_DECREF(res);  /* drop frombytes result */
+            Py_DECREF(ret);  /* drop frombytes result */
         }
         assert(i + 6 < aa->nbits);
 
