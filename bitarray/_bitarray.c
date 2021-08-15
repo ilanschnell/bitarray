@@ -3441,6 +3441,37 @@ static PyTypeObject BitarrayIter_Type = {
 };
 
 /******************** bitarray buffer export interface ********************/
+/*
+   Here we create bitarray_as_buffer for exporting bitarray buffers.
+   Buffer imports, are NOT handled here, but in newbitarray_from_buffer().
+*/
+
+static int
+bitarray_getbuffer(bitarrayobject *self, Py_buffer *view, int flags)
+{
+    int ret;
+
+    if (view == NULL) {
+        self->ob_exports++;
+        return 0;
+    }
+    ret = PyBuffer_FillInfo(view,
+                            (PyObject *) self,  /* exporter */
+                            (void *) self->ob_item,
+                            Py_SIZE(self),
+                            self->readonly,
+                            flags);
+    if (ret >= 0)
+        self->ob_exports++;
+
+    return ret;
+}
+
+static void
+bitarray_releasebuffer(bitarrayobject *self, Py_buffer *view)
+{
+    self->ob_exports--;
+}
 
 #if PY_MAJOR_VERSION == 2       /* old buffer protocol */
 static Py_ssize_t
@@ -3486,35 +3517,8 @@ bitarray_buffer_getcharbuf(bitarrayobject *self,
     *ptr = self->ob_item;
     return Py_SIZE(self);
 }
-
 #endif  /* old buffer protocol */
 
-static int
-bitarray_getbuffer(bitarrayobject *self, Py_buffer *view, int flags)
-{
-    int ret;
-
-    if (view == NULL) {
-        self->ob_exports++;
-        return 0;
-    }
-    ret = PyBuffer_FillInfo(view,
-                            (PyObject *) self,  /* exporter */
-                            (void *) self->ob_item,
-                            Py_SIZE(self),
-                            self->readonly,
-                            flags);
-    if (ret >= 0)
-        self->ob_exports++;
-
-    return ret;
-}
-
-static void
-bitarray_releasebuffer(bitarrayobject *self, Py_buffer *view)
-{
-    self->ob_exports--;
-}
 
 static PyBufferProcs bitarray_as_buffer = {
 #if PY_MAJOR_VERSION == 2       /* old buffer protocol */
