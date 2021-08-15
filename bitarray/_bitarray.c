@@ -1638,6 +1638,8 @@ PyDoc_STRVAR(sizeof_doc,
 "Return the size of the bitarray in memory, in bytes.");
 
 
+/* private method: called only when frozenbitarray are initialized to
+   disallow memory-views to change the buffer */
 static PyObject *
 bitarray_freeze(bitarrayobject *self)
 {
