@@ -136,8 +136,10 @@ class Util(object):
             self.assertEqual(alloc, 0)
 
         if type(a).__name__ == 'frozenbitarray':
+            # frozenbitarray have read-only memory
             self.assertEqual(readonly, 1)
         elif not buf:
+            # otherwise, unless the buffer is imported, it is writable
             self.assertEqual(readonly, 0)
 
     def assertEQUAL(self, a, b):
@@ -578,7 +580,7 @@ tests.append(ToObjectsTests)
 
 # ---------------------------------------------------------------------------
 
-class MetaDataTests(unittest.TestCase, Util):
+class MetaDataTests(unittest.TestCase):
 
     def test_buffer_info(self):
         a = bitarray(13, endian='little')
@@ -3931,7 +3933,7 @@ tests.append(BufferImportTests)
 
 # --------------------------- Buffer Export ---------------------------------
 
-class BufferExportTests(unittest.TestCase):
+class BufferExportTests(unittest.TestCase, Util):
 
     def test_read_simple(self):
         a = bitarray('01000001 01000010 01000011', endian='big')
@@ -3946,6 +3948,7 @@ class BufferExportTests(unittest.TestCase):
 
         w = memoryview(a)  # a second buffer export
         self.assertEqual(buffer_info(a, 'exports'), 2)
+        self.check_obj(a)
 
     def test_many_exports(self):
         a = bitarray('01000111 01011111')
@@ -3954,6 +3957,7 @@ class BufferExportTests(unittest.TestCase):
             d[n] = bitarray(buffer=a)
             self.assertEqual(buffer_info(a, 'exports'), n)
             self.assertEqual(len(d[n]), 16)
+        self.check_obj(a)
 
     def test_range(self):
         for n in range(100):
@@ -3964,6 +3968,7 @@ class BufferExportTests(unittest.TestCase):
             self.assertFalse(info['readonly'])
             self.assertFalse(info['imported'])
             self.assertEqual(info['exports'], 1)
+            self.check_obj(a)
 
     def test_read_random(self):
         a = bitarray()
@@ -3973,6 +3978,7 @@ class BufferExportTests(unittest.TestCase):
         b = a[34 * 8 : 67 * 8]
         self.assertEqual(v[34:67].tobytes(), b.tobytes())
         self.assertEqual(v.tobytes(), a.tobytes())
+        self.check_obj(a)
 
     def test_resize(self):
         a = bitarray('011', endian='big')
@@ -3990,6 +3996,7 @@ class BufferExportTests(unittest.TestCase):
         self.assertRaises(BufferError, a.remove, 1)
         self.assertRaises(BufferError, a.__delitem__, slice(0, 8))
         self.assertEqual(v.tobytes(), a.tobytes())
+        self.check_obj(a)
 
     def test_frozenbitarray(self):
         a = frozenbitarray(40)
@@ -3997,6 +4004,7 @@ class BufferExportTests(unittest.TestCase):
         self.assertTrue(v.readonly)
         self.assertEqual(len(v), 5)
         self.assertEqual(v.tobytes(), a.tobytes())
+        self.check_obj(a)
 
     def test_write(self):
         a = bitarray(8000)
@@ -4009,6 +4017,7 @@ class BufferExportTests(unittest.TestCase):
         self.assertEqual(a[3999:4009], bitarray('0111011110'))
         v[301:304] = b'ABC'
         self.assertEqual(a[300 * 8 : 305 * 8].tobytes(), b'\x00ABC\x00')
+        self.check_obj(a)
 
     def test_write_py3(self):
         if not is_py3k:
@@ -4021,6 +4030,7 @@ class BufferExportTests(unittest.TestCase):
         v[1] = 66
         v[2] = 67
         self.assertEqual(a.tobytes(), b'\x00ABC\x00')
+        self.check_obj(a)
 
 tests.append(BufferExportTests)
 
