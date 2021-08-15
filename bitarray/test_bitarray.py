@@ -1344,10 +1344,12 @@ class MiscTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
 
     def test_overflow(self):
-        self.assertRaises(OverflowError, bitarray, 2 ** 63)
         a = bitarray(1)
         for i in -7, -1, 0, 1:
-            self.assertRaises(OverflowError, a.__imul__, 2 ** 63 + i)
+            n = 2 ** 63 + i
+            self.assertRaises(OverflowError, a.__imul__, n)
+            self.assertRaises(OverflowError, bitarray, n)
+
         a = bitarray(2 ** 10)
         self.assertRaises(OverflowError, a.__imul__, 2 ** 53)
 
