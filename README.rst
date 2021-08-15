@@ -6,11 +6,9 @@ of booleans.  Bitarrays are sequence types and behave very much like usual
 lists.  Eight bits are represented by one byte in a contiguous block of
 memory.  The user can select between two representations: little-endian
 and big-endian.  All of the functionality is implemented in C.
-Methods for accessing the machine representation are provided.
-This can be useful when bit level access to binary files is required,
-such as portable bitmap image files (.pbm).  Also, when dealing with
-compressed data which uses variable bit length encoding, you may find
-this module useful.
+Methods for accessing the machine representation are provided, including the
+ability to import and export buffers.  This allows creating bitarrays that
+mapped are to other objects, including memory-mapped files.
 
 
 Key features
@@ -19,16 +17,16 @@ Key features
 * The bit endianness can be specified for each bitarray object, see below.
 * Sequence methods: slicing (including slice assignment and deletion),
   operations ``+``, ``*``, ``+=``, ``*=``, the ``in`` operator, ``len()``
-* Fast methods for encoding and decoding variable bit length prefix codes
+* Fast methods for encoding and decoding variable bit length prefix codes.
 * Bitwise operations: ``~``, ``&``, ``|``, ``^``, ``<<``, ``>>`` (as well as
   their in-place versions ``&=``, ``|=``, ``^=``, ``<<=``, ``>>=``).
-* Sequential search
 * Packing and unpacking to other binary data formats, e.g. ``numpy.ndarray``.
-* Pickling and unpickling of bitarray objects.
 * Bitarray objects support the buffer protocol (both importing and
-  exporting buffers)
+  exporting buffers).
 * ``frozenbitarray`` objects which are hashable
-* Extensive test suite with round 400 unittests
+* Pickling and unpickling of bitarray objects.
+* Sequential search
+* Extensive test suite with over 400 unittests.
 * Utility module ``bitarray.util``:
 
   * conversion to hexadecimal string
