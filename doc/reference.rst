@@ -54,7 +54,7 @@ The bitarray object:
 ``buffer_info()`` -> tuple
    Return a tuple containing:
 
-   0. memory address of the bitarray's buffer
+   0. memory address of buffer
    1. buffer size (in bytes)
    2. bit endianness as a string
    3. number of unused padding bits
@@ -211,14 +211,10 @@ The bitarray object:
 
 ``tobytes()`` -> bytes
    Return the byte representation of the bitarray.
-   When the length of the bitarray is not a multiple of 8, the few remaining
-   bits are considered 0.
 
 
 ``tofile(f, /)``
    Write the byte representation of the bitarray to the file object f.
-   When the length of the bitarray is not a multiple of 8, the few remaining
-   bits are considered 0.
 
 
 ``tolist()`` -> list

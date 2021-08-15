@@ -186,6 +186,7 @@ def main():
         write_changelog(fo)
 
     doctest.testfile('./README.rst')
+    doctest.testfile('./doc/buffer.rst')
     doctest.testfile('./doc/represent.rst')
     doctest.testfile('./doc/variable_length.rst')
 
