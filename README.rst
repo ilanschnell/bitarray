@@ -306,7 +306,8 @@ Buffer protocol
 
 Bitarray objects support the buffer protocol.  They can both export their
 own buffer, as well as import another object's buffer.  To learn more about
-this topic, please read `buffer protocol <https://github.com/ilanschnell/bitarray/blob/master/doc/buffer.rst>`__.
+this topic, please read `buffer protocol <https://github.com/ilanschnell/bitarray/blob/master/doc/buffer.rst>`__.  There is also an example that shows how
+to memory-map a file to a bitarray: `mmapped-file.py <https://github.com/ilanschnell/bitarray/blob/master/examples/mmapped-file.py>`__
 
 
 Variable bit length prefix codes
@@ -380,9 +381,7 @@ and can therefore be used as a dictionary key:
     {frozenbitarray('1100011'): 'some value'}
     >>> key[3] = 1
     Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-      File "bitarray/__init__.py", line 41, in __delitem__
-        raise TypeError("frozenbitarray is immutable")
+        ...
     TypeError: frozenbitarray is immutable
 
 

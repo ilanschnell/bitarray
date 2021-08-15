@@ -4,7 +4,7 @@ Change log
 2021-08-XX   2.3.0:
 
 * add optional ``buffer`` argument to ``bitarray()`` to import the buffer of
-  another object, `#146 <https://github.com/ilanschnell/bitarray/issues/146>`__, see also: `buffer protocol <./buffer.rst>`__
+  another object, `#146 <https://github.com/ilanschnell/bitarray/issues/146>`__, see also: `buffer protocol <buffer.rst>`__
 * update ``.buffer_info()`` to include: a read-only flag, an imported buffer
   flag, and the number of buffer exports
 * add optional start and stop arguments to ``util.rindex()``
