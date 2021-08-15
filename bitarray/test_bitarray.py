@@ -474,7 +474,8 @@ class CreateObjectTests(unittest.TestCase, Util):
         else:
             # on Python 2, we have an invalid character in the string
             error = ValueError
-            msg = "expected '0' or '1' (or whitespace, or underscore), got '!' (0x21)"
+            msg = ("expected '0' or '1' (or whitespace, or underscore), "
+                   "got '!' (0x21)")
         self.assertRaisesMessage(error, msg, bitarray, s)
 
     def test_bitarray_simple(self):

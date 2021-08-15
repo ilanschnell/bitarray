@@ -446,7 +446,7 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     }
 }
 
-/* return number of 'vi' bits in range(a, b) */
+/* return number of bits with value vi in range(a, b) */
 static Py_ssize_t
 count(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 {
@@ -671,7 +671,8 @@ extend_bytes01(bitarrayobject *self, PyObject *bytes)
             continue;
         default:
             PyErr_Format(PyExc_ValueError, "expected '0' or '1' "
-                         "(or whitespace, or underscore), got '%c' (0x%02x)", c, c);
+                         "(or whitespace, or underscore), got '%c' (0x%02x)",
+                         c, c);
             resize(self, original_nbits);  /* no bits added on error */
             return -1;
         }
