@@ -307,6 +307,8 @@ class CreateObjectTests(unittest.TestCase, Util):
         # positinal arguments
         a = bitarray(None, 'big', bytearray([15]))
         self.assertEQUAL(a, bitarray('00001111', 'big'))
+        a = bitarray(None, 'little', None)
+        self.assertEQUAL(a, bitarray(0, 'little'))
 
     def test_integers(self):
         for n in range(50):
@@ -3867,7 +3869,7 @@ class BufferImportTests(unittest.TestCase, Util):
     def test_invalid_buffer(self):
         # these objects do not expose a buffer
         for arg in (123, 1.23, Ellipsis, [1, 2, 3], (1, 2, 3), {1: 2},
-                    set([1, 2, 3]), None):
+                    set([1, 2, 3]),):
             self.assertRaises(TypeError, bitarray, buffer=arg)
 
     def test_del_import_object(self):

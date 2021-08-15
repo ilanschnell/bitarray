@@ -28,7 +28,7 @@ Key features
 * Bitarray objects support the buffer protocol (both importing and
   exporting buffers)
 * ``frozenbitarray`` objects which are hashable
-* Extensive test suite with over 350 unittests
+* Extensive test suite with round 400 unittests
 * Utility module ``bitarray.util``:
 
   * conversion to hexadecimal string

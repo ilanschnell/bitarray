@@ -3219,7 +3219,7 @@ static PyObject *
 bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PyObject *res;  /* to be returned in some cases */
-    PyObject *initial = NULL, *buffer = NULL;
+    PyObject *initial = Py_None, *buffer = Py_None;
     char *endian_str = NULL;
     int endian;
     static char *kwlist[] = {"", "endian", "buffer", NULL};
@@ -3232,8 +3232,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (endian < 0)
         return NULL;
 
-    if (buffer) {
-        if (initial && initial != Py_None) {
+    if (buffer != Py_None) {
+        if (initial != Py_None) {
             PyErr_SetString(PyExc_TypeError,
                             "buffer requires no initial argument");
             return NULL;
@@ -3241,8 +3241,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return newbitarray_from_buffer(type, buffer, endian);
     }
 
-    /* no arg or None */
-    if (initial == NULL || initial == Py_None)
+    /* no arg / None */
+    if (initial == Py_None)
         return newbitarrayobject(type, 0, endian);
 
     /* bool */
