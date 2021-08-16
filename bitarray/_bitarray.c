@@ -16,10 +16,6 @@
 /* size used when reading / writing blocks from files (in bytes) */
 #define BLOCKSIZE  65536
 
-#ifdef IS_PY3K
-#define Py_TPFLAGS_HAVE_WEAKREFS  0
-#endif
-
 static int default_endian = ENDIAN_BIG;
 
 static PyTypeObject Bitarray_Type;
@@ -3588,8 +3584,9 @@ static PyTypeObject Bitarray_Type = {
     PyObject_GenericGetAttr,                  /* tp_getattro */
     0,                                        /* tp_setattro */
     &bitarray_as_buffer,                      /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_WEAKREFS
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE
 #if PY_MAJOR_VERSION == 2
+    | Py_TPFLAGS_HAVE_WEAKREFS
     | Py_TPFLAGS_HAVE_NEWBUFFER | Py_TPFLAGS_CHECKTYPES
 #endif
     ,                                         /* tp_flags */
