@@ -29,5 +29,8 @@ the `bitarrayobject` struct is defined in the same way:
     #define ENDIAN_LITTLE  0
     #define ENDIAN_BIG     1
 
+The last two members, `buffer` and `readonly`, were introduced in bitarray
+version 2.3.  If those are not needed, and one wants to maintain backward
+compatibility with earlier version, one can omit them.
 These essential (as well as other useful) declarations can be found
 in `bitarray/bitarray.h`.
