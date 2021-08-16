@@ -8,17 +8,19 @@ from __future__ import absolute_import
 import re
 import os
 import sys
-import weakref
 import unittest
-import tempfile
 import shutil
+import tempfile
 from random import randint
 
 # imports needed inside tests
+import array
 import copy
-import pickle
 import itertools
+import mmap
+import pickle
 import shelve
+import weakref
 
 
 is_py3k = bool(sys.version_info[0] == 3)
@@ -3346,8 +3348,6 @@ class FileTests(unittest.TestCase, Util):
     def test_mmap(self):
         if not is_py3k:
             return
-        import mmap
-
         with open(self.tmpfname, 'wb') as fo:
             fo.write(1000 * b'\0')
 
@@ -3368,13 +3368,11 @@ class FileTests(unittest.TestCase, Util):
     def test_mmap_2(self):
         if not is_py3k:
             return
-        from mmap import mmap
-
         with open(self.tmpfname, 'wb') as fo:
             fo.write(1000 * b'\x22')
 
         with open(self.tmpfname, 'r+b') as f:
-            a = bitarray(buffer=mmap(f.fileno(), 0), endian='little')
+            a = bitarray(buffer=mmap.mmap(f.fileno(), 0), endian='little')
             info = buffer_info(a)
             self.assertFalse(info['readonly'])
             self.assertTrue(info['imported'])
@@ -3386,8 +3384,6 @@ class FileTests(unittest.TestCase, Util):
     def test_mmap_readonly(self):
         if not is_py3k:
             return
-        import mmap
-
         with open(self.tmpfname, 'wb') as fo:
             fo.write(994 * b'\x89' + b'Veedon')
 
@@ -3794,9 +3790,7 @@ class BufferImportTests(unittest.TestCase, Util):
     def test_array(self):
         if not is_py3k:  # Python 2's array cannot be used as buffer
             return
-        from array import array
-
-        a = array('B', [0, 255, 64])
+        a = array.array('B', [0, 255, 64])
         b = bitarray(None, 'little', a)
         self.assertEqual(b, bitarray('00000000 11111111 00000010'))
         a[1] = 32
@@ -3960,6 +3954,7 @@ class BufferExportTests(unittest.TestCase, Util):
         self.assertEqual(v.tobytes(), b'AFC')
 
         w = memoryview(a)  # a second buffer export
+        self.assertFalse(w.readonly)
         self.assertEqual(buffer_info(a, 'exports'), 2)
         self.check_obj(a)
 
