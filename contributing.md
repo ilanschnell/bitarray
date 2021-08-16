@@ -21,6 +21,8 @@ the `bitarrayobject` struct is defined in the same way:
         int endian;                 /* bit endianness of bitarray */
         int ob_exports;             /* how many buffer exports */
         PyObject *weakreflist;      /* list of weak references */
+        Py_buffer *buffer;          /* used when importing a buffer */
+        int readonly;               /* buffer is readonly */
     } bitarrayobject;
 
     /* member endian may have these values */
