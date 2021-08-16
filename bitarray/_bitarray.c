@@ -424,8 +424,6 @@ repeat(bitarrayobject *self, Py_ssize_t m)
 static void
 setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 {
-    Py_ssize_t i;
-
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
     assert(a <= b);
@@ -443,6 +441,8 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
         setrange(self, BITS(byte_b), b, vi);
     }
     else {
+        Py_ssize_t i;
+
         for (i = a; i < b; i++)
             setbit(self, i, vi);
     }
@@ -2434,10 +2434,10 @@ binode_insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
 {
     binode *nd = tree, *prev;
     Py_ssize_t i;
-    int k;
 
     for (i = 0; i < ba->nbits; i++) {
-        k = getbit(ba, i);
+        int k = getbit(ba, i);
+
         prev = nd;
         nd = nd->child[k];
 
@@ -2529,8 +2529,7 @@ binode_traverse(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
 static int
 binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
 {
-    bitarrayobject *t;          /* prefix of the two child nodes */
-    int k, ret;
+    int k;
 
     if (nd == NULL)
         return 0;
@@ -2543,6 +2542,9 @@ binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
     }
 
     for (k = 0; k < 2; k++) {
+        bitarrayobject *t;      /* prefix of the two child nodes */
+        int ret;
+
         t = (bitarrayobject *) bitarray_copy(prefix);
         if (t == NULL)
             return -1;
@@ -2916,9 +2918,9 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
     bitarrayobject *xa;
 
     if (PyIndex_Check(x)) {
-        int vi;
+        int vi = pybit_as_int(x);
 
-        if ((vi = pybit_as_int(x)) < 0)
+        if (vi < 0)
             return NULL;
         xa = (bitarrayobject *) newbitarrayobject(Py_TYPE(self), 1,
                                                   self->endian);
@@ -3224,8 +3226,7 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, int endian)
 static PyObject *
 bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    PyObject *result;
-    PyObject *initial = Py_None, *buffer = Py_None;
+    PyObject *result, *initial = Py_None, *buffer = Py_None;
     char *endian_str = NULL;
     int endian;
     static char *kwlist[] = {"", "endian", "buffer", NULL};

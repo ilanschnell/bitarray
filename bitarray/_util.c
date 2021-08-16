@@ -229,8 +229,8 @@ Raises `ValueError` if the value is not present.");
 static PyObject *
 parity(PyObject *module, PyObject *a)
 {
-    Py_ssize_t i;
     unsigned char par = 0;
+    Py_ssize_t i;
 
     if (ensure_bitarray(a) < 0)
         return NULL;
@@ -447,6 +447,7 @@ ba2hex(PyObject *module, PyObject *a)
     be = IS_BE(aa);
     for (i = 0; i < strsize; i += 2) {
         unsigned char c = aa->ob_item[i / 2];
+
         str[i + le] = hexdigits[c >> 4];
         str[i + be] = hexdigits[0x0f & c];
     }
@@ -472,7 +473,7 @@ hex2ba(PyObject *module, PyObject *args)
     PyObject *a;
     char *str;
     Py_ssize_t i, strsize;
-    int le, be, x, y;
+    int le, be;
 
     if (!PyArg_ParseTuple(args, "Os#", &a, &str, &strsize))
         return NULL;
@@ -484,8 +485,9 @@ hex2ba(PyObject *module, PyObject *args)
     be = IS_BE(aa);
     assert(le + be == 1 && str[strsize] == 0);
     for (i = 0; i < strsize; i += 2) {
-        x = hex_to_int(str[i + le]);
-        y = hex_to_int(str[i + be]);
+        int x = hex_to_int(str[i + le]);
+        int y = hex_to_int(str[i + be]);
+
         if (x < 0 || y < 0) {
             /* ignore the terminating NUL - happends when strsize is odd */
             if (i + le == strsize) /* str[i+le] is NUL */
@@ -520,6 +522,7 @@ digit_to_int(char c, int n)
 {
     if (n <= 16) {              /* base 2, 4, 8, 16 */
         int i = hex_to_int(c);
+
         if (0 <= i && i < n)
             return i;
     }
@@ -565,7 +568,7 @@ ba2base(PyObject *module, PyObject *args)
     PyObject *result, *a;
     size_t i, strsize;
     char *str;
-    int n, m, x, k, le;
+    int n, m, le;
 
     if (!PyArg_ParseTuple(args, "iO:ba2base", &n, &a))
         return NULL;
@@ -591,7 +594,8 @@ ba2base(PyObject *module, PyObject *args)
 
     le = IS_LE(aa);
     for (i = 0; i < strsize; i++) {
-        x = 0;
+        int k, x = 0;
+
         for (k = 0; k < m; k++)
             x |= getbit(aa, m * i + (le ? k : (m - k - 1))) << k;
         str[i] = alphabet[x];
@@ -626,7 +630,7 @@ base2ba(PyObject *module, PyObject *args)
     PyObject *a;
     Py_ssize_t i, strsize;
     char *str;
-    int n, m, d, k, le;
+    int n, m, le;
 
     if (!PyArg_ParseTuple(args, "iOs#", &n, &a, &str, &strsize))
         return NULL;
@@ -640,7 +644,8 @@ base2ba(PyObject *module, PyObject *args)
 
     le = IS_LE(aa);
     for (i = 0; i < strsize; i++) {
-        d = digit_to_int(str[i], n);
+        int k, d = digit_to_int(str[i], n);
+
         if (d < 0) {
             PyErr_SetString(PyExc_ValueError, "invalid digit found");
             return NULL;
@@ -763,7 +768,7 @@ static PyObject *
 vl_encode(PyObject *module, PyObject *a)
 {
     PyObject *result;
-    Py_ssize_t padding, n, m, i, k;
+    Py_ssize_t padding, n, m, i;
     Py_ssize_t j = 0;           /* byte conter */
     char *str;
 
@@ -786,7 +791,8 @@ vl_encode(PyObject *module, PyObject *a)
         str[0] |= (0x08 >> i) * getbit(aa, i);
 
     for (i = 4; i < aa->nbits; i++) {
-        k = (i - 4) % 7;
+        int k = (i - 4) % 7;
+
         if (k == 0) {
             j++;
             str[j] = j < n - 1 ? 0x80 : 0x00;  /* leading bit */
