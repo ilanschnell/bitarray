@@ -8,6 +8,7 @@ from __future__ import absolute_import
 import re
 import os
 import sys
+import weakref
 import unittest
 import tempfile
 import shutil
@@ -558,6 +559,13 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, bitarray, 0, 'foo')
         # too many args
         self.assertRaises(TypeError, bitarray, 0, 'big', 0)
+
+    def test_weakref(self):
+        a = bitarray('0100')
+        b = weakref.proxy(a)
+        self.assertEqual(b.to01(), a.to01())
+        a = None
+        self.assertRaises(ReferenceError, len, b)
 
 tests.append(CreateObjectTests)
 
