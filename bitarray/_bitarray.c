@@ -149,15 +149,16 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
 static void
 bitarray_dealloc(bitarrayobject *self)
 {
-    if (self->weakreflist != NULL)
+    if (self->weakreflist)
         PyObject_ClearWeakRefs((PyObject *) self);
 
     if (self->buffer) {
         PyBuffer_Release(self->buffer);
         PyMem_Free(self->buffer);
     }
-    else if (self->ob_item != NULL)
+    else if (self->ob_item) {
         PyMem_Free((void *) self->ob_item);
+    }
 
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
@@ -413,6 +414,7 @@ repeat(bitarrayobject *self, Py_ssize_t m)
 
     if (k < q)        /* copy remaining bits */
         copy_n(self, k, self, 0, self->nbits - k);
+
     return 0;
 }
 
@@ -1589,6 +1591,7 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
     vi = getbit(self, i);
     if (delete_n(self, i, 1) < 0)
         return NULL;
+
     return PyLong_FromLong(vi);
 }
 
@@ -1614,6 +1617,7 @@ bitarray_remove(bitarrayobject *self, PyObject *value)
 
     if (delete_n(self, i, 1) < 0)
         return NULL;
+
     Py_RETURN_NONE;
 }
 
@@ -1821,9 +1825,9 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
         PyObject *res;
 
         if (PySlice_GetIndicesEx(item, self->nbits,
-                                 &start, &stop, &step, &slicelength) < 0) {
+                                 &start, &stop, &step, &slicelength) < 0)
             return NULL;
-        }
+
         res = newbitarrayobject(Py_TYPE(self), slicelength, self->endian);
         if (res == NULL)
             return NULL;
