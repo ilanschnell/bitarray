@@ -1871,8 +1871,9 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
     /* number of bits by which self has to be increased (decreased) */
     increase = aa->nbits - slicelength;
 
-    /* as buffer may be shared, it is not enough to check for a == self,
-       covers cases like a[2::] = a and a[::-1] = a */
+    /* as buffer may be shared, it is not enough to check for aa == self,
+       covers cases `like a[2::] = a`, `a[::-1] = a`,
+       or `a[::-1] = b` when a and b have the same buffer */
     if (aa->ob_item == self->ob_item) {
         array = bitarray_copy(self);
         if (array == NULL)
@@ -2498,7 +2499,7 @@ binode_make_tree(PyObject *codedict)
     return tree;
 }
 
-/* Traverse using the branches corresponding to bits in `ba`, starting
+/* Traverse using the branches corresponding to bits in ba, starting
    at *indexp.  Return the symbol at the leaf node, or NULL when the end
    of the bitarray has been reached.  On error, NULL is also returned,
    and the appropriate exception is set.
