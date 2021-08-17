@@ -3152,10 +3152,6 @@ newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
     Py_buffer view;
     bitarrayobject *obj;
 
-    if (!PyObject_CheckBuffer(buffer))
-        return PyErr_Format(PyExc_TypeError, "cannot use '%s' as buffer",
-                            Py_TYPE(buffer)->tp_name);
-
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
         return NULL;
 
@@ -3166,7 +3162,7 @@ newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
     Py_SET_SIZE(obj, view.len);
     obj->ob_item = (char *) view.buf;
     obj->allocated = 0;       /* no buffer allocated (in this object) */
-    obj->nbits = BITS(view.len);
+    obj->nbits = 8 * view.len;
     obj->endian = endian;
     obj->ob_exports = 0;
     obj->weakreflist = NULL;
