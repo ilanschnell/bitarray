@@ -1871,8 +1871,11 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
     /* number of bits by which self has to be increased (decreased) */
     increase = aa->nbits - slicelength;
 
-    if (aa == self) {  /* covers cases like a[2::] = a and a[::-1] = a */
-        if ((array = bitarray_copy(self)) == NULL)
+    /* as buffer may be shared, it is not enough to check for a == self,
+       covers cases like a[2::] = a and a[::-1] = a */
+    if (aa->ob_item == self->ob_item) {
+        array = bitarray_copy(self);
+        if (array == NULL)
             return -1;
         copy_self = 1;
     }

@@ -954,6 +954,19 @@ class SliceTests(unittest.TestCase, Util):
         a[:] = a
         self.assertEqual(a, bitarray('010111'))
 
+    def test_setslice_self_shared_buffer(self):
+        # This is a very special case.  We have two bitarrays which share the
+        # same buffer, and then do a slice assignment.  The bitarray is
+        # copied onto itself in reverse order.  So we need to make a copy
+        # in setslice_bitarray().  However, since a and b are two distinct
+        # objects, it is not enough to check for self == other, but rather
+        # self->ob_item == other->ob_item.
+        a = bitarray('11100000')
+        b = bitarray(buffer=a)
+        b[::-1] = a
+        self.assertEqual(a, b)
+        self.assertEqual(a, bitarray('00000111'))
+
     def test_setslice_bitarray(self):
         a = bitarray('11111111 1111')
         a[2:6] = bitarray('0010')
@@ -3802,7 +3815,7 @@ class BufferImportTests(unittest.TestCase, Util):
     def test_bitarray(self):
         a = urandom(10000)
         b = bitarray(buffer=a)
-        # a and b are two distict bitarrays that share the same buffer now
+        # a and b are two distinct bitarrays that share the same buffer now
         self.assertFalse(a is b)
 
         a_info = buffer_info(a)
