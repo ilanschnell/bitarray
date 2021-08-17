@@ -155,6 +155,8 @@ def write_changelog(fo):
     def hash_replace(match):
         group1 = match.group(1)
         if len(group1) >= 7:
+            if len(group1) != 8:
+                print("Warning: commit hash length != 8, got", len(group1))
             url = "%s/commit/%s" % (BASE_URL, group1)
         else:
             url = "%s/issues/%d" % (BASE_URL, int(group1))

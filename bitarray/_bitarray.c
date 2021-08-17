@@ -157,6 +157,7 @@ bitarray_dealloc(bitarrayobject *self)
         PyMem_Free(self->buffer);
     }
     else if (self->ob_item) {
+        /* only free the object's buffer - imported buffers CANNOT be freed */
         PyMem_Free((void *) self->ob_item);
     }
 
