@@ -1,6 +1,11 @@
 Change log
 ==========
 
+2021-XX-XX   2.3.1:
+
+* fix special shared buffer copy case, see `#815c2a11 <https://github.com/ilanschnell/bitarray/commit/815c2a11>`__
+
+
 **2.3.0** (2021-08-15):
 
 * add optional ``buffer`` argument to ``bitarray()`` to import the buffer of

@@ -149,11 +149,15 @@ def update_readme(path):
 
 def write_changelog(fo):
     ver_pat = re.compile(r'(\d{4}-\d{2}-\d{2})\s+(\d+\.\d+\.\d+)')
-    issue_pat = re.compile(r'#(\d+)')
+    hash_pat = re.compile(r'#([0-9a-f]+)')
     link_pat = re.compile(r'\[(.+)\]\((.+)\)')
 
-    def issue_replace(match):
-        url = "%s/issues/%s" % (BASE_URL, match.group(1))
+    def hash_replace(match):
+        group1 = match.group(1)
+        if len(group1) >= 7:
+            url = "%s/commit/%s" % (BASE_URL, group1)
+        else:
+            url = "%s/issues/%d" % (BASE_URL, int(group1))
         return "`%s <%s>`__" % (match.group(0), url)
 
     fo.write("Change log\n"
@@ -169,7 +173,7 @@ def write_changelog(fo):
         elif line.startswith('  '):
             line = line[2:]
         line = line.replace('`', '``')
-        line = issue_pat.sub(issue_replace, line)
+        line = hash_pat.sub(hash_replace, line)
         line = link_pat.sub(
                     lambda m: "`%s <%s>`__" % (m.group(1), m.group(2)), line)
         fo.write(line + '\n')
