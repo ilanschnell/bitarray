@@ -29,10 +29,6 @@ Its contents cannot be altered after it is created; however, it can be used
 as a dictionary key.
 """
     def __init__(self, *args, **kwargs):
-        if 'buffer' in kwargs:
-            if not self.buffer_info()[5]:  # not readonly
-                raise TypeError("cannot import writable buffer into "
-                                "frozenbitarray")
         self._freeze()
 
     def __repr__(self):

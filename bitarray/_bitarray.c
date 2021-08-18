@@ -849,8 +849,8 @@ endianness of the bitarray object.");
 static PyObject *
 bitarray_buffer_info(bitarrayobject *self)
 {
+    const Py_ssize_t size = Py_SIZE(self);
     PyObject *res, *ptr;
-    Py_ssize_t size = Py_SIZE(self);
 
     ptr = PyLong_FromVoidPtr(self->ob_item);
     if (ptr == NULL)
@@ -1648,6 +1648,14 @@ PyDoc_STRVAR(sizeof_doc,
 static PyObject *
 bitarray_freeze(bitarrayobject *self)
 {
+    if (self->buffer) {
+        assert(self->buffer->readonly == self->readonly);
+        if (self->readonly == 0) {
+            PyErr_SetString(PyExc_TypeError, "cannot import writable buffer "
+                            "into frozenbitarray");
+            return NULL;
+        }
+    }
     self->readonly = 1;
     Py_RETURN_NONE;
 }
