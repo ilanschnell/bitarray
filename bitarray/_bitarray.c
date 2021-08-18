@@ -164,7 +164,7 @@ bitarray_dealloc(bitarrayobject *self)
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-/* reverse bytes range(a, b) in buffer */
+/* reverse each byte in byte-range(a, b) */
 static void
 bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
@@ -398,8 +398,7 @@ repeat(bitarrayobject *self, Py_ssize_t m)
     assert(m > 1 && k > 0);
     if (k >= PY_SSIZE_T_MAX / m) {
         PyErr_Format(PyExc_OverflowError,
-                     "cannot repeat bitarray (of size %zd) %zd times",
-                     k, m);
+                     "cannot repeat bitarray (of size %zd) %zd times", k, m);
         return -1;
     }
     /* k = self->nbits, the number of bits which have been copied */
@@ -1645,7 +1644,7 @@ PyDoc_STRVAR(sizeof_doc,
 
 
 /* private method: called only when frozenbitarray are initialized to
-   disallow memory-views to change the buffer */
+   disallow memoryviews to change the buffer */
 static PyObject *
 bitarray_freeze(bitarrayobject *self)
 {
@@ -1685,6 +1684,7 @@ bitarray_copy_n(bitarrayobject *self, PyObject *args)
     copy_n(self, a, (bitarrayobject *) other, b, n);
     Py_RETURN_NONE;
 }
+
 #endif  /* NDEBUG */
 
 /* ----------------------- bitarray_as_sequence ------------------------ */
@@ -2380,7 +2380,7 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
             goto error;
     }
     Py_DECREF(iter);
-    if (PyErr_Occurred())
+    if (PyErr_Occurred())       /* from PyIter_Next() */
         return NULL;
     Py_RETURN_NONE;
 
