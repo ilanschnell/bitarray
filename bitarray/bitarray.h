@@ -6,42 +6,6 @@
 */
 #define BITARRAY_VERSION  "2.3.1"
 
-/* .ob_size is buffer size (in bytes), not the number of elements.
-   The number of elements (bits) is .nbits. */
-typedef struct {
-    PyObject_VAR_HEAD
-    char *ob_item;              /* buffer */
-    Py_ssize_t allocated;       /* allocated buffer size (in bytes) */
-    Py_ssize_t nbits;           /* length of bitarray, i.e. elements */
-    int endian;                 /* bit endianness of bitarray */
-    int ob_exports;             /* how many buffer exports */
-    PyObject *weakreflist;      /* list of weak references */
-    Py_buffer *buffer;          /* used when importing a buffer */
-    int readonly;               /* buffer is readonly */
-} bitarrayobject;
-
-/* --- bit endianness --- */
-#define ENDIAN_LITTLE  0
-#define ENDIAN_BIG     1
-
-/* the endianness string */
-#define ENDIAN_STR(endian)  ((endian) == ENDIAN_LITTLE ? "little" : "big")
-
-/* number of bits that can be stored in given bytes */
-#define BITS(bytes)  ((bytes) << 3)
-
-/* number of bytes necessary to store given bits */
-#define BYTES(bits)  (((bits) + 7) >> 3)
-
-/* assert that .nbits is in agreement with .ob_size */
-#define assert_nbits(self)  assert(BYTES((self)->nbits) == Py_SIZE(self))
-
-/* assert byte index is in range */
-#define assert_byte_in_range(self, j)  \
-    assert(self->ob_item && 0 <= (j) && (j) < Py_SIZE(self))
-
-/* --------------- definitions not specific to bitarray ---------------- */
-
 #ifdef STDC_HEADERS
 #include <stddef.h>
 #else  /* !STDC_HEADERS */
@@ -74,15 +38,47 @@ typedef struct {
 #define BYTES_SIZE_FMT  "s#"
 #endif
 
+/* --- bitarrayobject --- */
+
+/* .ob_size is buffer size (in bytes), not the number of elements.
+   The number of elements (bits) is .nbits. */
+typedef struct {
+    PyObject_VAR_HEAD
+    char *ob_item;              /* buffer */
+    Py_ssize_t allocated;       /* allocated buffer size (in bytes) */
+    Py_ssize_t nbits;           /* length of bitarray, i.e. elements */
+    int endian;                 /* bit endianness of bitarray */
+    int ob_exports;             /* how many buffer exports */
+    PyObject *weakreflist;      /* list of weak references */
+    Py_buffer *buffer;          /* used when importing a buffer */
+    int readonly;               /* buffer is readonly */
+} bitarrayobject;
+
+/* --- bit endianness --- */
+#define ENDIAN_LITTLE  0
+#define ENDIAN_BIG     1
+
+/* the endianness string */
+#define ENDIAN_STR(endian)  ((endian) == ENDIAN_LITTLE ? "little" : "big")
+
+/* number of bits that can be stored in given bytes */
+#define BITS(bytes)  ((bytes) << 3)
+
+/* number of bytes necessary to store given bits */
+#define BYTES(bits)  (((bits) + 7) >> 3)
+
+/* we're not using bitmask_table here, as it is actually slower */
+#define BITMASK(self, i)  (((char) 1) << ((self)->endian == ENDIAN_LITTLE ? \
+                                          ((i) % 8) : (7 - (i) % 8)))
+
+/* assert that .nbits is in agreement with .ob_size */
+#define assert_nbits(self)  assert(BYTES((self)->nbits) == Py_SIZE(self))
+
+/* assert byte index is in range */
+#define assert_byte_in_range(self, j)  \
+    assert(self->ob_item && 0 <= (j) && (j) < Py_SIZE(self))
+
 /* ------------ low level access to bits in bitarrayobject ------------- */
-
-static const char bitmask_table[2][8] = {
-    {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80},  /* little endian */
-    {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01},  /* big endian */
-};
-
-#define BITMASK(self, i)  \
-    (bitmask_table[(self)->endian == ENDIAN_BIG][(i) & 7])
 
 static inline int
 getbit(bitarrayobject *self, Py_ssize_t i)
@@ -143,6 +139,11 @@ setunused(bitarrayobject *self)
         self->ob_item[Py_SIZE(self) - 1] = zeroed_last_byte(self);
     return 8 - r;
 }
+
+static const char bitmask_table[2][8] = {
+    {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80},  /* little endian */
+    {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01},  /* big endian */
+};
 
 static const unsigned char bitcount_lookup[256] = {
 #define B2(n)  n, n + 1, n + 1, n + 2
