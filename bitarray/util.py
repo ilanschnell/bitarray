@@ -114,8 +114,8 @@ function `pprint.pprint()`.
     stream.flush()
 
 
-def make_endian(a, endian):
-    """make_endian(bitarray, endian, /) -> bitarray
+def make_endian(__a, endian):
+    """make_endian(bitarray, /, endian) -> bitarray
 
 When the endianness of the given bitarray is different from `endian`,
 return a new bitarray, with endianness `endian` and the same elements
@@ -123,13 +123,13 @@ as the original bitarray.
 Otherwise (endianness is already `endian`) the original bitarray is returned
 unchanged.
 """
-    if not isinstance(a, bitarray):
-        raise TypeError("bitarray expected, got '%s'" % type(a).__name__)
+    if not isinstance(__a, bitarray):
+        raise TypeError("bitarray expected, got '%s'" % type(__a).__name__)
 
-    if a.endian() == endian:
-        return a
+    if __a.endian() == endian:
+        return __a
 
-    return bitarray(a, endian)
+    return bitarray(__a, endian)
 
 
 def strip(__a, mode='right'):

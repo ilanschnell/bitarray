@@ -202,7 +202,7 @@ class TestsMakeEndian(unittest.TestCase, Util):
         a = bitarray('1110001', endian='big')
         b = make_endian(a, 'big')
         self.assertTrue(b is a)
-        c = make_endian(a, 'little')
+        c = make_endian(a, endian='little')
         self.assertTrue(c == a)
         self.assertEqual(c.endian(), 'little')
         self.assertIsType(c, 'bitarray')
