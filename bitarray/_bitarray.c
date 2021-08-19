@@ -3388,9 +3388,13 @@ bitarray_iter(bitarrayobject *self)
 static PyObject *
 bitarrayiter_next(bitarrayiterobject *it)
 {
-    if (it->index < it->bao->nbits)
-        return PyLong_FromLong(getbit(it->bao, it->index++));
+    long vi;
 
+    if (it->index < it->bao->nbits) {
+        vi = getbit(it->bao, it->index);
+        it->index++;
+        return PyLong_FromLong(vi);
+    }
     return NULL;  /* stop iteration */
 }
 
