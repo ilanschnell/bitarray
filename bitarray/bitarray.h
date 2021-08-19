@@ -85,7 +85,7 @@ getbit(bitarrayobject *self, Py_ssize_t i)
     assert_nbits(self);
     assert_byte_in_range(self, i >> 3);
     assert(0 <= i && i < self->nbits);
-    return (self->ob_item[i >> 3] & BITMASK(self->endian, i) ? 1 : 0);
+    return self->ob_item[i >> 3] & BITMASK(self->endian, i) ? 1 : 0;
 }
 
 static inline void
@@ -111,19 +111,18 @@ setbit(bitarrayobject *self, Py_ssize_t i, int vi)
 static inline char
 zeroed_last_byte(bitarrayobject *self)
 {
-    const char mask_table[16] = {
-        0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f,  /* little endian */
-        0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe,  /* big endian */
+    static const char mask_table[2][8] = {
+        {0, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f},  /* little endian */
+        {0, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe},  /* big endian */
     };
-    Py_ssize_t t = Py_SIZE(self) - 1;     /* index of last byte in buffer */
-    int be = self->endian == ENDIAN_BIG;  /* is big endian */
-    int r = self->nbits % 8;      /* index into mask table (minus offset) */
+    Py_ssize_t t = Py_SIZE(self) - 1;  /* index of last byte in buffer */
+    int r = self->nbits % 8;           /* index into mask table */
 
     if (r == 0)
         return 0x00;
     assert_nbits(self);
     assert_byte_in_range(self, t);
-    return mask_table[r + 8 * be] & self->ob_item[t];
+    return mask_table[self->endian == ENDIAN_BIG][r] & self->ob_item[t];
 }
 
 /* Unless the buffer is readonly, zero out pad bits.
