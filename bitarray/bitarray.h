@@ -33,9 +33,6 @@ typedef struct {
 /* number of bytes necessary to store given bits */
 #define BYTES(bits)  (((bits) + 7) >> 3)
 
-#define BITMASK(endian, i)  \
-    (((char) 1) << ((endian) == ENDIAN_LITTLE ? ((i) & 7) : (7 - ((i) & 7))))
-
 /* assert that .nbits is in agreement with .ob_size */
 #define assert_nbits(self)  assert(BYTES((self)->nbits) == Py_SIZE(self))
 
@@ -78,6 +75,13 @@ typedef struct {
 #endif
 
 /* ------------ low level access to bits in bitarrayobject ------------- */
+
+static const char bitmask_table[2][8] = {
+    {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80},  /* little endian */
+    {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01},  /* big endian */
+};
+
+#define BITMASK(endian, i)  (bitmask_table[(endian) == ENDIAN_BIG][(i) & 7])
 
 static inline int
 getbit(bitarrayobject *self, Py_ssize_t i)
