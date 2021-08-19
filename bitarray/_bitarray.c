@@ -1643,7 +1643,7 @@ PyDoc_STRVAR(sizeof_doc,
 "Return the size of the bitarray in memory, in bytes.");
 
 
-/* private method: called only when frozenbitarray are initialized to
+/* private method - called only when frozenbitarray is initialized to
    disallow memoryviews to change the buffer */
 static PyObject *
 bitarray_freeze(bitarrayobject *self)
@@ -1747,6 +1747,7 @@ static int
 bitarray_ass_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
 {
     RAISE_IF_READONLY(self, -1);
+
     if (i < 0 || i >= self->nbits) {
         PyErr_SetString(PyExc_IndexError,
                         "bitarray assignment index out of range");
