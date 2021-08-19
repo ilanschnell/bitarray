@@ -81,7 +81,8 @@ static const char bitmask_table[2][8] = {
     {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01},  /* big endian */
 };
 
-#define BITMASK(endian, i)  (bitmask_table[(endian) == ENDIAN_BIG][(i) & 7])
+#define BITMASK(self, i)  \
+    (bitmask_table[(self)->endian == ENDIAN_BIG][(i) & 7])
 
 static inline int
 getbit(bitarrayobject *self, Py_ssize_t i)
@@ -89,7 +90,7 @@ getbit(bitarrayobject *self, Py_ssize_t i)
     assert_nbits(self);
     assert_byte_in_range(self, i >> 3);
     assert(0 <= i && i < self->nbits);
-    return self->ob_item[i >> 3] & BITMASK(self->endian, i) ? 1 : 0;
+    return self->ob_item[i >> 3] & BITMASK(self, i) ? 1 : 0;
 }
 
 static inline void
@@ -102,7 +103,7 @@ setbit(bitarrayobject *self, Py_ssize_t i, int vi)
     assert(0 <= i && i < self->nbits);
     assert(self->readonly == 0);
 
-    mask = BITMASK(self->endian, i);
+    mask = BITMASK(self, i);
     cp = self->ob_item + (i >> 3);
     if (vi)
         *cp |= mask;

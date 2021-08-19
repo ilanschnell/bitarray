@@ -326,14 +326,14 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         shift_r8(self, p1, p2 + 1, sa + sb, 1);       /* right shift */
 
         for (i = 8 * p1; i < a; i++)  /* restore bits at p1 */
-            setbit(self, i, t1 & BITMASK(self->endian, i));
+            setbit(self, i, t1 & BITMASK(self, i));
 
         if (sa + sb != 0) {  /* if shifted, restore bits at p2 */
             for (i = a + n; i < 8 * p2 + 8 && i < self->nbits; i++)
-                setbit(self, i, t2 & BITMASK(self->endian, i));
+                setbit(self, i, t2 & BITMASK(self, i));
         }
         for (i = 0; i < sb; i++)  /* copy first bits missed by copy_n() */
-            setbit(self, i + a, t3 & BITMASK(other->endian, i + b));
+            setbit(self, i + a, t3 & BITMASK(other, i + b));
     }
 }
 
@@ -1108,7 +1108,7 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
         PyErr_SetString(PyExc_IndexError, "index out of range");
         return NULL;
     }
-    self->ob_item[i / 8] ^= BITMASK(self->endian, i % 8);
+    self->ob_item[i / 8] ^= BITMASK(self, i);
     Py_RETURN_NONE;
 }
 
