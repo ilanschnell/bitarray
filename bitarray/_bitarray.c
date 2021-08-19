@@ -1972,16 +1972,16 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
         setrange(self, start, stop, vi);
     }
     else {  /* step > 1 */
-        const int be = self->endian == ENDIAN_BIG;
+        const char *table = bitmask_table[self->endian == ENDIAN_BIG];
         Py_ssize_t i;
 
         if (vi) {
             for (i = start; i < stop; i += step)
-                self->ob_item[i >> 3] |= bitmask_table[be][i & 7];
+                self->ob_item[i >> 3] |= table[i & 7];
         }
         else {
             for (i = start; i < stop; i += step)
-                self->ob_item[i >> 3] &= ~bitmask_table[be][i & 7];
+                self->ob_item[i >> 3] &= ~table[i & 7];
         }
     }
     return 0;
