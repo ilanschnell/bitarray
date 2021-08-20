@@ -1550,7 +1550,7 @@ bitarray_pack(bitarrayobject *self, PyObject *bytes)
 
     data = PyBytes_AS_STRING(bytes);
     for (i = 0; i < nbytes; i++)
-        setbit(self, self->nbits - nbytes + i, data[i] ? 1 : 0);
+        setbit(self, self->nbits - nbytes + i, data[i]);
 
     Py_RETURN_NONE;
 }
@@ -1971,10 +1971,11 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     if (step == 1) {
         setrange(self, start, stop, vi);
     }
-    else {  /* step > 1 */
+    else {
         const char *table = bitmask_table[self->endian == ENDIAN_BIG];
         Py_ssize_t i;
 
+        assert(step > 1);
         if (vi) {
             for (i = start; i < stop; i += step)
                 self->ob_item[i >> 3] |= table[i & 7];
