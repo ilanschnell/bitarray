@@ -110,6 +110,22 @@ which imports the buffer from another bitarray:
     >>> a
     bitarray('10000001000000100000010000001000')
 
+We can also create bitarrays which share part of the buffer.  Let's create
+a large bitarray ``a``, and then have ``b`` and ``c`` share different portions
+of ``a``'s buffer:
+
+.. code-block:: python
+
+    >>> a = bitarray(1 << 23)
+    >>> a.setall(0)
+    >>> b = bitarray(buffer=memoryview(a)[0x10000:0x30000])
+    >>> assert a.buffer_info()[0] + 0x10000 == b.buffer_info()[0]
+    >>> c = bitarray(buffer=memoryview(a)[0x20000:0x50000])
+    >>> assert a.buffer_info()[0] + 0x20000 == c.buffer_info()[0]
+    >>> c[0] = 1
+    >>> assert b[8 * 0x10000] == 1
+    >>> assert a[8 * 0x20000] == 1
+
 Finally, importing buffers allows creating bitarrays that are memory mapped
 to a file.  Please see the `mmapped-file.py <../examples/mmapped-file.py>`__
 example.
