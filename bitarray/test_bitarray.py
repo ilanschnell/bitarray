@@ -1077,22 +1077,23 @@ class SliceTests(unittest.TestCase, Util):
             self.assertEqual(a, b)
 
     def test_setslice_bool_range(self):
-        N = 200
-        a = bitarray(N)
-        b = bitarray(N)
-        for step in range(-N - 1, N):
-            if step == 0:
-                continue
-            v = randint(0, 1)
-            a.setall(not v)
-            a[::step] = v
+        for endian in 'little', 'big':
+            N = 200
+            a = bitarray(N, endian)
+            b = bitarray(N)
+            for step in range(-N - 1, N):
+                if step == 0:
+                    continue
+                v = randint(0, 1)
+                a.setall(not v)
+                a[::step] = v
 
-            b.setall(not v)
-            for i in range(0, N, abs(step)):
-                b[i] = v
-            if step < 0:
-                b.reverse()
-            self.assertEqual(a, b)
+                b.setall(not v)
+                for i in range(0, N, abs(step)):
+                    b[i] = v
+                if step < 0:
+                    b.reverse()
+                self.assertEqual(a, b)
 
     def test_setslice_bool_random(self):
         N = 100
