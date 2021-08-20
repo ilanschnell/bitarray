@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.3.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.3.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -292,7 +292,7 @@ This sub-module was add in version 1.2.
    New in version 1.8.
 
 
-``make_endian(bitarray, endian, /)`` -> bitarray
+``make_endian(bitarray, /, endian)`` -> bitarray
    When the endianness of the given bitarray is different from ``endian``,
    return a new bitarray, with endianness ``endian`` and the same elements
    as the original bitarray.

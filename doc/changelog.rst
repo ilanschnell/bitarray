@@ -1,9 +1,10 @@
 Change log
 ==========
 
-2021-XX-XX   2.3.1:
+**2.3.1** (2021-08-20):
 
 * fix special shared buffer copy case, see `#815c2a11 <https://github.com/ilanschnell/bitarray/commit/815c2a11>`__
+* add and improve tests
 
 
 **2.3.0** (2021-08-15):
