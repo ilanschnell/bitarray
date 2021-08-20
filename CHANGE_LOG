@@ -1,6 +1,7 @@
 2021-XX-XX   2.3.1:
 -------------------
   * fix special shared buffer copy case, see #815c2a11
+  * add and improve tests
 
 
 2021-08-15   2.3.0:

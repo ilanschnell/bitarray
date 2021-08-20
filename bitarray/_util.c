@@ -594,10 +594,12 @@ ba2base(PyObject *module, PyObject *args)
 
     le = IS_LE(aa);
     for (i = 0; i < strsize; i++) {
-        int k, x = 0;
+        int j, k, x = 0;
 
-        for (k = 0; k < m; k++)
-            x |= getbit(aa, m * i + (le ? k : (m - k - 1))) << k;
+        for (j = 0; j < m; j++) {
+            k = le ? j : (m - j - 1);
+            x |= getbit(aa, i * m + k) << j;
+        }
         str[i] = alphabet[x];
     }
     result = Py_BuildValue("s#", str, strsize);
@@ -644,14 +646,16 @@ base2ba(PyObject *module, PyObject *args)
 
     le = IS_LE(aa);
     for (i = 0; i < strsize; i++) {
-        int k, d = digit_to_int(str[i], n);
+        int j, k, d = digit_to_int(str[i], n);
 
         if (d < 0) {
             PyErr_SetString(PyExc_ValueError, "invalid digit found");
             return NULL;
         }
-        for (k = 0; k < m; k++)
-            setbit(aa, m * i + (le ? k : (m - k - 1)), d & (1 << k));
+        for (j = 0; j < m; j++) {
+            k = le ? j : (m - j - 1);
+            setbit(aa, i * m + k, d & (1 << j));
+        }
     }
 #undef aa
     Py_RETURN_NONE;
