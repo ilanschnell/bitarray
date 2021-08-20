@@ -1077,23 +1077,22 @@ class SliceTests(unittest.TestCase, Util):
             self.assertEqual(a, b)
 
     def test_setslice_bool_range(self):
-        for endian in 'little', 'big':
-            N = 200
-            a = bitarray(N, endian)
-            b = bitarray(N)
-            for step in range(-N - 1, N):
-                if step == 0:
-                    continue
-                v = randint(0, 1)
-                a.setall(not v)
-                a[::step] = v
+        N = 200
+        a = bitarray(N, self.random_endian())
+        b = bitarray(N)
+        for step in range(-N - 1, N):
+            if step == 0:
+                continue
+            v = randint(0, 1)
+            a.setall(not v)
+            a[::step] = v
 
-                b.setall(not v)
-                for i in range(0, N, abs(step)):
-                    b[i] = v
-                if step < 0:
-                    b.reverse()
-                self.assertEqual(a, b)
+            b.setall(not v)
+            for i in range(0, N, abs(step)):
+                b[i] = v
+            if step < 0:
+                b.reverse()
+            self.assertEqual(a, b)
 
     def test_setslice_bool_random(self):
         N = 100
@@ -1231,16 +1230,26 @@ class SliceTests(unittest.TestCase, Util):
 
     def test_delslice_range(self):
         # tests C function delete_n()
-        for endian in 'little', 'big':
-            for n in range(500):
-                a = urandom(n, endian)
-                p = randint(0, n)
-                m = randint(0, 500)
+        for n in range(500):
+            a = urandom(n, self.random_endian())
+            p = randint(0, n)
+            m = randint(0, 500)
 
-                b = a.copy()
-                del b[p:p + m]
-                self.assertEQUAL(b, a[:p] + a[p + m:])
-                self.check_obj(b)
+            b = a.copy()
+            del b[p:p + m]
+            self.assertEQUAL(b, a[:p] + a[p + m:])
+            self.check_obj(b)
+
+    def test_delslice_range_step(self):
+        N = 200
+        for step in range(-N - 1, N):
+            if step == 0:
+                continue
+            a = urandom(N, self.random_endian())
+            lst = a.tolist()
+            del a[::step]
+            del lst[::step]
+            self.assertEqual(a.tolist(), lst)
 
 tests.append(SliceTests)
 
