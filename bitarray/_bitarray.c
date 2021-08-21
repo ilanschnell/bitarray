@@ -2010,10 +2010,12 @@ delslice(bitarrayobject *self, PyObject *slice)
         Py_ssize_t i, j;
 
         assert(step > 1);
-        /* set the items not to be removed */
+        /* set items not to be removed */
         for (i = j = start; i < self->nbits; i++) {
-            if ((i - start) % step != 0 || i >= stop)
-                setbit(self, j++, getbit(self, i));
+            if ((i - start) % step != 0 || i >= stop) {
+                setbit(self, j, getbit(self, i));
+                j++;
+            }
         }
         return resize(self, self->nbits - slicelength);
     }
