@@ -1,6 +1,7 @@
 2021-XX-XX   2.3.2:
 -------------------
-  * fix slice assignment for shared with offset special case, see #3ba05687
+  * fix slice assignment for shared with offset special case,
+    see #3ba05687 and #73081e98
 
 
 2021-08-20   2.3.1:
