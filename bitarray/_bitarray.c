@@ -1870,7 +1870,7 @@ static int
 setslice_bitarray(bitarrayobject *self, PyObject *slice,
                   bitarrayobject *other)
 {
-    Py_ssize_t start, stop, step, slicelength, increase, i, j;
+    Py_ssize_t start, stop, step, slicelength, increase;
     int other_copied = 0, res = -1;
 
     assert(PySlice_Check(slice));
@@ -1906,11 +1906,13 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
         /* copy the new values into self */
         copy_n(self, start, other, 0, other->nbits);
     }
-    else {  /* step != 1 */
+    else {
+        Py_ssize_t i, j;
+
+        assert(step != 1);
         if (increase != 0) {
-            PyErr_Format(PyExc_ValueError,
-                         "attempt to assign sequence of size %zd "
-                         "to extended slice of size %zd",
+            PyErr_Format(PyExc_ValueError, "attempt to assign sequence of "
+                         "size %zd to extended slice of size %zd",
                          other->nbits, slicelength);
             goto error;
         }
