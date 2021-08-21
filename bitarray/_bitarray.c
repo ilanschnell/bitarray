@@ -1881,10 +1881,13 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
     /* number of bits by which self has to be increased (decreased) */
     increase = other->nbits - slicelength;
 
-    /* make a copy of other, when the other buffer is part of the self buffer,
-       that is when it's address falls into self's buffer */
-    if (self->ob_item <= other->ob_item &&
-                         other->ob_item <= self->ob_item + Py_SIZE(self)) {
+    /* make a copy of other, when the other buffer is part of the self buffer
+       that is when it's address falls into self's buffer (or vise versa) */
+    if ((self->ob_item <= other->ob_item &&
+                          other->ob_item <= self->ob_item + Py_SIZE(self)) ||
+        (other->ob_item <= self->ob_item &&
+                           self->ob_item <= other->ob_item + Py_SIZE(other)))
+    {
         other = (bitarrayobject *) bitarray_copy(other);
         if (other == NULL)
             return -1;

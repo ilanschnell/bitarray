@@ -984,6 +984,20 @@ class SliceTests(unittest.TestCase, Util):
         c[8:56] = c[55:7:-1]
         self.assertEqual(a, c)
 
+    def test_setslice_self_shared_buffer_3(self):
+        # Requires to check for (in setslice_bitarray()):
+        #
+        #   other->ob_item <= self->ob_item <= other->ob_item + Py_SIZE(other)
+        #
+        a = bitarray('11111111 11000000 00000000')
+        b = bitarray(buffer=memoryview(a)[:2])
+        c = bitarray(buffer=memoryview(a)[1:])
+        self.assertEqual(b, bitarray('11111111 11000000'))
+        self.assertEqual(c, bitarray('11000000 00000000'))
+        c[::-1] = b
+        self.assertEqual(c, bitarray('00000011 11111111'))
+        self.assertEqual(a, bitarray('11111111 00000011 11111111'))
+
     def test_setslice_bitarray(self):
         a = bitarray('11111111 1111')
         a[2:6] = bitarray('0010')
