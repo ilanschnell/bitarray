@@ -389,7 +389,7 @@ repeat(bitarrayobject *self, Py_ssize_t m)
     Py_ssize_t q, k = self->nbits;
 
     assert(self->readonly == 0);
-    if (k == 0 || m == 1)   /* nothing to do */
+    if (k == 0 || m == 1)       /* nothing to do */
         return 0;
 
     if (m <= 0)                 /* clear */
@@ -406,13 +406,13 @@ repeat(bitarrayobject *self, Py_ssize_t m)
     if (resize(self, q) < 0)
         return -1;
 
-    while (k <= q / 2) {  /* double copies */
+    while (k <= q / 2) {        /* double copies */
         copy_n(self, k, self, 0, k);
         k *= 2;
     }
     assert(q / 2 < k && k <= q);
 
-    if (k < q)        /* copy remaining bits */
+    if (k < q)                  /* copy remaining bits */
         copy_n(self, k, self, 0, self->nbits - k);
 
     return 0;
@@ -1175,7 +1175,7 @@ bitarray_repr(bitarrayobject *self)
     if ((str = (char *) PyMem_Malloc(strsize)) == NULL)
         return PyErr_NoMemory();
 
-    strcpy(str, "bitarray('"); /* has length 10 */
+    strcpy(str, "bitarray('");  /* has length 10 */
     setstr01(self, str + 10);
     str[strsize - 2] = '\'';
     str[strsize - 1] = ')';     /* no terminating '\0' */
@@ -1871,7 +1871,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
                   bitarrayobject *other)
 {
     Py_ssize_t start, stop, step, slicelength, increase, i, j;
-    int copy_other = 0, res = -1;
+    int other_copied = 0, res = -1;
 
     assert(PySlice_Check(slice));
     if (PySlice_GetIndicesEx(slice, self->nbits,
@@ -1891,7 +1891,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
         other = (bitarrayobject *) bitarray_copy(other);
         if (other == NULL)
             return -1;
-        copy_other = 1;
+        other_copied = 1;
     }
 
     if (step == 1) {
@@ -1921,7 +1921,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
 
     res = 0;
  error:
-    if (copy_other)
+    if (other_copied)
         Py_DECREF(other);
     return res;
 }
@@ -2069,7 +2069,8 @@ bitarray_cpinvert(bitarrayobject *self)
 {
     PyObject *result;
 
-    if ((result = bitarray_copy(self)) == NULL)
+    result = bitarray_copy(self);
+    if (result == NULL)
         return NULL;
 
     invert((bitarrayobject *) result);
