@@ -955,7 +955,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('010111'))
 
     def test_setslice_self_shared_buffer(self):
-        # This is a very special case.  We have two bitarrays which share the
+        # This is a special case.  We have two bitarrays which share the
         # same buffer, and then do a slice assignment.  The bitarray is
         # copied onto itself in reverse order.  So we need to make a copy
         # in setslice_bitarray().  However, since a and b are two distinct
@@ -966,6 +966,23 @@ class SliceTests(unittest.TestCase, Util):
         b[::-1] = a
         self.assertEqual(a, b)
         self.assertEqual(a, bitarray('00000111'))
+
+    def test_setslice_self_shared_buffer_2(self):
+        # This is an even more special case.  We have a bitarrays which
+        # shares part of anothers bitarray buffer.  So in setslice_bitarray(),
+        # we need to make a copy of other if:
+        #
+        #   self->ob_item <= other->ob_item <= self->ob_item + Py_SIZE(self)
+        #
+        # In words: Is the other buffer inside the self buffer (which inclues
+        #           the previous case)
+        a = zeros(64)
+        a[:13] = 1
+        c = a.copy()
+        b = bitarray(buffer=memoryview(a)[1:7])
+        a[55:7:-1] = b
+        c[8:56] = c[55:7:-1]
+        self.assertEqual(a, c)
 
     def test_setslice_bitarray(self):
         a = bitarray('11111111 1111')
@@ -3859,6 +3876,25 @@ class BufferImportTests(unittest.TestCase, Util):
             b.pop)
         self.check_obj(a)
         self.check_obj(b)
+
+    def test_bitarray_shared_sections(self):
+        a = urandom(0x2000)
+        b = bitarray(buffer=memoryview(a)[0x100:0x300])
+        self.assertEqual(buffer_info(b, 'address'),
+                         buffer_info(a, 'address') + 0x100)
+        c = bitarray(buffer=memoryview(a)[0x200:0x800])
+        self.assertEqual(buffer_info(c, 'address'),
+                         buffer_info(a, 'address') + 0x200)
+        self.assertEqual(a[8 * 0x100 : 8 * 0x300], b)
+        self.assertEqual(a[8 * 0x200 : 8 * 0x800], c)
+        a.setall(0)
+        b.setall(1)
+        c.setall(0)
+
+        d = bitarray(0x2000)
+        d.setall(0)
+        d[8 * 0x100 : 8 * 0x200] = 1
+        self.assertEqual(a, d)
 
     def test_bitarray_range(self):
         for n in range(100):

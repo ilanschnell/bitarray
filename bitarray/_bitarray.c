@@ -1867,28 +1867,28 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
 
 /* set the elements in self, specified by slice, to bitarray */
 static int
-setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
+setslice_bitarray(bitarrayobject *self, PyObject *slice,
+                  bitarrayobject *other)
 {
     Py_ssize_t start, stop, step, slicelength, increase, i, j;
-    int copy_self = 0, res = -1;
+    int copy_other = 0, res = -1;
 
-    assert(PySlice_Check(slice) && bitarray_Check(array));
+    assert(PySlice_Check(slice));
     if (PySlice_GetIndicesEx(slice, self->nbits,
                              &start, &stop, &step, &slicelength) < 0)
         return -1;
 
-#define aa  ((bitarrayobject *) array)
     /* number of bits by which self has to be increased (decreased) */
-    increase = aa->nbits - slicelength;
+    increase = other->nbits - slicelength;
 
-    /* as buffer may be shared, it is not enough to check for aa == self,
-       covers cases `like a[2::] = a`, `a[::-1] = a`,
-       or `a[::-1] = b` when a and b have the same buffer */
-    if (aa->ob_item == self->ob_item) {
-        array = bitarray_copy(self);
-        if (array == NULL)
+    /* make a copy of other, when the other buffer is part of the self buffer,
+       that is when it's address falls into self's buffer */
+    if (self->ob_item <= other->ob_item &&
+                         other->ob_item <= self->ob_item + Py_SIZE(self)) {
+        other = (bitarrayobject *) bitarray_copy(other);
+        if (other == NULL)
             return -1;
-        copy_self = 1;
+        copy_other = 1;
     }
 
     if (step == 1) {
@@ -1897,30 +1897,29 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice, PyObject *array)
                 goto error;
         }
         if (increase < 0) {        /* decrease self */
-            if (delete_n(self, start + aa->nbits, -increase) < 0)
+            if (delete_n(self, start + other->nbits, -increase) < 0)
                 goto error;
         }
         /* copy the new values into self */
-        copy_n(self, start, aa, 0, aa->nbits);
+        copy_n(self, start, other, 0, other->nbits);
     }
     else {  /* step != 1 */
         if (increase != 0) {
             PyErr_Format(PyExc_ValueError,
                          "attempt to assign sequence of size %zd "
                          "to extended slice of size %zd",
-                         aa->nbits, slicelength);
+                         other->nbits, slicelength);
             goto error;
         }
         assert(increase == 0);
         for (i = 0, j = start; i < slicelength; i++, j += step)
-            setbit(self, j, getbit(aa, i));
+            setbit(self, j, getbit(other, i));
     }
-#undef aa
 
     res = 0;
  error:
-    if (copy_self)
-        Py_DECREF(array);
+    if (copy_other)
+        Py_DECREF(other);
     return res;
 }
 
@@ -2037,7 +2036,7 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
             return delslice(self, item);
 
         if (bitarray_Check(value))
-            return setslice_bitarray(self, item, value);
+            return setslice_bitarray(self, item, (bitarrayobject *) value);
 
         if (PyIndex_Check(value))
             return setslice_bool(self, item, value);
