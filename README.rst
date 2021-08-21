@@ -5,7 +5,7 @@ This library provides an object type which efficiently represents an array
 of booleans.  Bitarrays are sequence types and behave very much like usual
 lists.  Eight bits are represented by one byte in a contiguous block of
 memory.  The user can select between two representations: little-endian
-and big-endian.  All of the functionality is implemented in C.
+and big-endian.  All functionality is implemented in C.
 Methods for accessing the machine representation are provided, including the
 ability to import and export buffers.  This allows creating bitarrays that
 mapped are to other objects, including memory-mapped files.
