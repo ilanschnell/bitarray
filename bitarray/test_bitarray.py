@@ -976,13 +976,11 @@ class SliceTests(unittest.TestCase, Util):
         #
         # In words: Is the other buffer inside the self buffer (which inclues
         #           the previous case)
-        a = zeros(64)
-        a[:13] = 1
-        c = a.copy()
-        b = bitarray(buffer=memoryview(a)[1:7])
-        a[55:7:-1] = b
-        c[8:56] = c[55:7:-1]
-        self.assertEqual(a, c)
+        a = bitarray('11111111 11000000 00000000')
+        b = bitarray(buffer=memoryview(a)[1:2])
+        self.assertEqual(b, bitarray('11000000'))
+        a[15:7:-1] = b
+        self.assertEqual(a, bitarray('11111111 00000011 00000000'))
 
     def test_setslice_self_shared_buffer_3(self):
         # Requires to check for (in setslice_bitarray()):
