@@ -746,9 +746,11 @@ class InternalTests(unittest.TestCase, Util):
 
     def test_overlap_distinct(self):
         for a in self.randombitarrays():
-            for b in self.randombitarrays():
-                self.assertEqual(a._overlap(b), 0)
-                self.assertEqual(b._overlap(a), 0)
+            # buffers overlaps with itself, unless bitarray is empty
+            self.assertEqual(a._overlap(a), bool(a))
+            b = a.copy()
+            self.assertEqual(a._overlap(b), 0)
+            self.assertEqual(b._overlap(a), 0)
 
     def test_overlap_shared(self):
         a = bitarray(64)
@@ -767,7 +769,7 @@ class InternalTests(unittest.TestCase, Util):
         self.assertEqual(d._overlap(b), 1)
         self.assertEqual(b._overlap(d), 1)
 
-    def test_overlap_random(self):
+    def test_overlap_shared_random(self):
         a = bitarray(8000)
         for _ in range(10000):
             i1 = randint(0, 1000)

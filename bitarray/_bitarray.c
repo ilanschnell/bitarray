@@ -3150,7 +3150,7 @@ static PyMethodDef bitarray_methods[] = {
     /* functionality exposed in debug mode for testing */
     {"_shift_r8",    (PyCFunction) bitarray_shift_r8,    METH_VARARGS, 0},
     {"_copy_n",      (PyCFunction) bitarray_copy_n,      METH_VARARGS, 0},
-    {"_overlap",     (PyCFunction) bitarray_overlap,     METH_O, 0},
+    {"_overlap",     (PyCFunction) bitarray_overlap,     METH_O,       0},
 #endif
 
     {NULL,           NULL}  /* sentinel */
