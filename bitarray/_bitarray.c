@@ -1693,6 +1693,18 @@ bitarray_copy_n(bitarrayobject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
+static int buffers_overlap(bitarrayobject *self, bitarrayobject *other);
+
+static PyObject *
+bitarray_overlap(bitarrayobject *self, PyObject *other)
+{
+    if (!bitarray_Check(other)) {
+        PyErr_SetString(PyExc_TypeError, "bitarray expected");
+        return NULL;
+    }
+    return PyLong_FromLong(buffers_overlap(self, (bitarrayobject *) other));
+}
+
 #endif  /* NDEBUG */
 
 /* ----------------------- bitarray_as_sequence ------------------------ */
@@ -1870,8 +1882,11 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
 static int
 buffers_overlap(bitarrayobject *self, bitarrayobject *other)
 {
+    if (self->ob_item == NULL || other->ob_item == NULL)
+        return 0;
+
 #define ptr_in_buf(a, b)  \
-    (a->ob_item <= b->ob_item && b->ob_item <= a->ob_item + Py_SIZE(a))
+    (a->ob_item <= b->ob_item && b->ob_item < a->ob_item + Py_SIZE(a))
 
     return ptr_in_buf(self, other) || ptr_in_buf(other, self);
 #undef ptr_in_buf
@@ -1925,7 +1940,6 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
                          other->nbits, slicelength);
             goto error;
         }
-        assert(increase == 0);
         for (i = 0, j = start; i < slicelength; i++, j += step)
             setbit(self, j, getbit(other, i));
     }
@@ -1978,6 +1992,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     if (slice_get_indices(slice, self->nbits,
                           &start, &stop, &step, &slicelength) < 0)
         return -1;
+
     if (slicelength == 0)
         return 0;
 
@@ -2011,6 +2026,7 @@ delslice(bitarrayobject *self, PyObject *slice)
     if (slice_get_indices(slice, self->nbits,
                           &start, &stop, &step, &slicelength) < 0)
         return -1;
+
     if (slicelength == 0)
         return 0;
 
@@ -3136,6 +3152,7 @@ static PyMethodDef bitarray_methods[] = {
     /* functionality exposed in debug mode for testing */
     {"_shift_r8",    (PyCFunction) bitarray_shift_r8,    METH_VARARGS, 0},
     {"_copy_n",      (PyCFunction) bitarray_copy_n,      METH_VARARGS, 0},
+    {"_overlap",     (PyCFunction) bitarray_overlap,     METH_O, 0},
 #endif
 
     {NULL,           NULL}  /* sentinel */
