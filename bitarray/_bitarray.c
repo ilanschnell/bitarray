@@ -852,7 +852,7 @@ bitarray_buffer_info(bitarrayobject *self)
     const Py_ssize_t size = Py_SIZE(self);
     PyObject *res, *ptr;
 
-    ptr = PyLong_FromVoidPtr(self->ob_item);
+    ptr = PyLong_FromVoidPtr((void *) self->ob_item);
     if (ptr == NULL)
         return NULL;
 
