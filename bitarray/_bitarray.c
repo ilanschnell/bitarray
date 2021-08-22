@@ -559,6 +559,20 @@ find(bitarrayobject *self, bitarrayobject *xa,
     return -1;
 }
 
+/* return 1 when buffers overlap, 0 otherwise */
+static int
+buffers_overlap(bitarrayobject *self, bitarrayobject *other)
+{
+    if (self->ob_item == NULL || other->ob_item == NULL)
+        return 0;
+
+#define ptr_in_buf(a, b)  \
+    (a->ob_item <= b->ob_item && b->ob_item < a->ob_item + Py_SIZE(a))
+
+    return ptr_in_buf(self, other) || ptr_in_buf(other, self);
+#undef ptr_in_buf
+}
+
 /* place self->nbits characters ('0', '1' corresponding to self) into str */
 static void
 setstr01(bitarrayobject *self, char *str)
@@ -1693,8 +1707,6 @@ bitarray_copy_n(bitarrayobject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-static int buffers_overlap(bitarrayobject *self, bitarrayobject *other);
-
 static PyObject *
 bitarray_overlap(bitarrayobject *self, PyObject *other)
 {
@@ -1877,20 +1889,6 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
    delslice(), are called from bitarray_ass_subscr().  Having all this
    functionality inside bitarray_ass_subscr() would make the function
    incomprehensibly long. */
-
-/* return 1 if buffers overlap, 0 otherwise */
-static int
-buffers_overlap(bitarrayobject *self, bitarrayobject *other)
-{
-    if (self->ob_item == NULL || other->ob_item == NULL)
-        return 0;
-
-#define ptr_in_buf(a, b)  \
-    (a->ob_item <= b->ob_item && b->ob_item < a->ob_item + Py_SIZE(a))
-
-    return ptr_in_buf(self, other) || ptr_in_buf(other, self);
-#undef ptr_in_buf
-}
 
 /* set the elements in self, specified by slice, to bitarray */
 static int

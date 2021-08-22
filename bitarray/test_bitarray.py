@@ -772,11 +772,11 @@ class InternalTests(unittest.TestCase, Util):
         for _ in range(10000):
             i1 = randint(0, 1000)
             j1 = randint(0, 1000)
-            if j1 <= i1:
+            if j1 < i1:
                 continue
             i2 = randint(0, 1000)
             j2 = randint(0, 1000)
-            if j2 <= i2:
+            if j2 < i2:
                 continue
 
             b1 = bitarray(buffer=memoryview(a)[i1:j1])
@@ -784,11 +784,12 @@ class InternalTests(unittest.TestCase, Util):
             r = b1._overlap(b2)
             self.assertEqual(r, b2._overlap(b1))
 
-            x1 = zeros(1000)
-            x1[i1:j1] = 1
-            x2 = zeros(1000)
-            x2[i2:j2] = 1
-            self.assertEqual(r, (x1 & x2).any())
+            if b1 and b2:
+                x1 = zeros(1000)
+                x2 = zeros(1000)
+                x1[i1:j1] = 1
+                x2[i2:j2] = 1
+                self.assertEqual(r, (x1 & x2).any())
 
 if DEBUG:
     tests.append(InternalTests)
