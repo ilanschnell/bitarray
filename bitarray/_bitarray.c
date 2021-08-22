@@ -1861,9 +1861,21 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
                         Py_TYPE(item)->tp_name);
 }
 
-/* The following functions (setslice_bitarray, setslice_bool and delslice)
-   are called from bitarray_ass_subscr.  Having this functionality inside
-   bitarray_ass_subscr would make the function incomprehensibly long. */
+/* The following functions, namely setslice_bitarray(), setslice_bool() and
+   delslice(), are called from bitarray_ass_subscr().  Having all this
+   functionality inside bitarray_ass_subscr() would make the function
+   incomprehensibly long. */
+
+/* return 1 if buffers overlap, 0 otherwise */
+static int
+buffers_overlap(bitarrayobject *self, bitarrayobject *other)
+{
+#define ptr_in_buf(a, b)  \
+    (a->ob_item <= b->ob_item && b->ob_item <= a->ob_item + Py_SIZE(a))
+
+    return ptr_in_buf(self, other) || ptr_in_buf(other, self);
+#undef ptr_in_buf
+}
 
 /* set the elements in self, specified by slice, to bitarray */
 static int
@@ -1881,13 +1893,10 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
     /* number of bits by which self has to be increased (decreased) */
     increase = other->nbits - slicelength;
 
-    /* make a copy of other, when the other buffer is part of the self buffer
-       that is when it's address falls into self's buffer (or vise versa) */
-    if ((self->ob_item <= other->ob_item &&
-                          other->ob_item <= self->ob_item + Py_SIZE(self)) ||
-        (other->ob_item <= self->ob_item &&
-                           self->ob_item <= other->ob_item + Py_SIZE(other)))
-    {
+    /* Make a copy of other, in case the buffers overlap.  This is obviously
+       the case when self and other are the same object, but can happen when
+       the bitarray share memory. */
+    if (buffers_overlap(self, other)) {
         other = (bitarrayobject *) bitarray_copy(other);
         if (other == NULL)
             return -1;
