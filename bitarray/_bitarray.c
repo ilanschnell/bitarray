@@ -1714,7 +1714,7 @@ bitarray_overlap(bitarrayobject *self, PyObject *other)
         PyErr_SetString(PyExc_TypeError, "bitarray expected");
         return NULL;
     }
-    return PyLong_FromLong(buffers_overlap(self, (bitarrayobject *) other));
+    return PyBool_FromLong(buffers_overlap(self, (bitarrayobject *) other));
 }
 
 #endif  /* NDEBUG */

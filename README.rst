@@ -65,13 +65,14 @@ Once you have installed the package, you may want to test it:
     sys.prefix: /Users/ilan/Mini3/envs/py27
     pointer size: 64 bit
     sizeof(size_t): 8
+    sizeof(bitarrayobject): 80
     PY_UINT64_T defined: 1
     DEBUG: 0
     .........................................................................
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 401 tests in 0.479s
+    Ran 404 tests in 0.481s
 
     OK
 

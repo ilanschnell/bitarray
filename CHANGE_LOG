@@ -2,6 +2,7 @@
 -------------------
   * fix slice assignment for shared with offset special case,
     see #3ba05687 and #73081e98
+  * add tests (including internal debug mode tests for `buffers_overlap()`)
 
 
 2021-08-20   2.3.1:
