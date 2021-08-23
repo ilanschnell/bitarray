@@ -1,6 +1,13 @@
 Change log
 ==========
 
+**2.3.2** (2021-08-23):
+
+* fix slice assignment for shared buffer with offset case, see `#3ba05687 <https://github.com/ilanschnell/bitarray/commit/3ba05687>`__
+  and `#73081e98 <https://github.com/ilanschnell/bitarray/commit/73081e98>`__
+* add tests (including internal debug mode tests for ``buffers_overlap()``)
+
+
 **2.3.1** (2021-08-20):
 
 * fix special shared buffer copy case, see `#815c2a11 <https://github.com/ilanschnell/bitarray/commit/815c2a11>`__

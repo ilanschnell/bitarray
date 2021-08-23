@@ -1,4 +1,4 @@
-2021-08-XX   2.3.2:
+2021-08-23   2.3.2:
 -------------------
   * fix slice assignment for shared buffer with offset case, see #3ba05687
     and #73081e98
