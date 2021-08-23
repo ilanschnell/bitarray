@@ -3694,7 +3694,7 @@ Set the default bit endianness for new bitarray objects being created.");
 
 
 static PyObject *
-sysinfo(void)
+sysinfo(PyObject *module)
 {
     return Py_BuildValue("iiiiiii",
                          (int) sizeof(void *),

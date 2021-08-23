@@ -344,7 +344,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
 
 #define COUNT_FUNC(oper, ochar)                                         \
 static PyObject *                                                       \
-count_ ## oper (bitarrayobject *module, PyObject *args)                 \
+count_ ## oper (PyObject *module, PyObject *args)                       \
 {                                                                       \
     return binary_function(args, KERN_c ## oper, "OO:count_" #oper);    \
 }                                                                       \
