@@ -746,8 +746,9 @@ class InternalTests(unittest.TestCase, Util):
 
     def test_overlap_distinct(self):
         for a in self.randombitarrays():
-            # buffers overlaps with itself, unless bitarray is empty
-            self.assertEqual(a._overlap(a), bool(a))
+            # buffers overlaps with itself, unless buffer is NULL
+            self.assertEqual(a._overlap(a),
+                             bool(a) and bool(buffer_info(a, 'address')))
             b = a.copy()
             self.assertEqual(a._overlap(b), 0)
             self.assertEqual(b._overlap(a), 0)
@@ -770,15 +771,16 @@ class InternalTests(unittest.TestCase, Util):
         self.assertEqual(b._overlap(d), 1)
 
     def test_overlap_shared_random(self):
-        a = bitarray(8000)
-        for _ in range(10000):
-            i1 = randint(0, 1000)
-            j1 = randint(0, 1000)
-            if j1 < i1:
+        n = 100  # buffer size in bytes
+        a = bitarray(8 * n)
+        for _ in range(1000):
+            i1 = randint(0, n)
+            j1 = randint(0, n)
+            if j1 <= i1:
                 continue
-            i2 = randint(0, 1000)
-            j2 = randint(0, 1000)
-            if j2 < i2:
+            i2 = randint(0, n)
+            j2 = randint(0, n)
+            if j2 <= i2:
                 continue
 
             b1 = bitarray(buffer=memoryview(a)[i1:j1])
@@ -786,12 +788,11 @@ class InternalTests(unittest.TestCase, Util):
             r = b1._overlap(b2)
             self.assertEqual(r, b2._overlap(b1))
 
-            if b1 and b2:
-                x1 = zeros(1000)
-                x2 = zeros(1000)
-                x1[i1:j1] = 1
-                x2[i2:j2] = 1
-                self.assertEqual(r, (x1 & x2).any())
+            x1 = zeros(n)
+            x2 = zeros(n)
+            x1[i1:j1] = 1
+            x2[i2:j2] = 1
+            self.assertEqual(r, (x1 & x2).any())
 
 if DEBUG:
     tests.append(InternalTests)
