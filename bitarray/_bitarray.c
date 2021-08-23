@@ -566,11 +566,10 @@ buffers_overlap(bitarrayobject *self, bitarrayobject *other)
     if (self->ob_item == NULL || other->ob_item == NULL)
         return 0;
 
-#define ptr_in_buf(a, b)  \
-    (a->ob_item <= b->ob_item && b->ob_item < a->ob_item + Py_SIZE(a))
-
-    return ptr_in_buf(self, other) || ptr_in_buf(other, self);
-#undef ptr_in_buf
+/* pointer in buffer */
+#define PIB(a, ptr)  (a->ob_item <= ptr && ptr < a->ob_item + Py_SIZE(a))
+    return PIB(self, other->ob_item) || PIB(other, self->ob_item);
+#undef PIB
 }
 
 /* place self->nbits characters ('0', '1' corresponding to self) into str */
