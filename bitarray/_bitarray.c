@@ -563,6 +563,9 @@ find(bitarrayobject *self, bitarrayobject *xa,
 static int
 buffers_overlap(bitarrayobject *self, bitarrayobject *other)
 {
+    if (Py_SIZE(self) == 0 || Py_SIZE(other) == 0)
+        return 0;
+
 /* is pointer in buffer? */
 #define PIB(a, ptr)  (a->ob_item <= ptr && ptr < a->ob_item + Py_SIZE(a))
     return PIB(self, other->ob_item) || PIB(other, self->ob_item);

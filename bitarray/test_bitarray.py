@@ -754,8 +754,7 @@ class InternalTests(unittest.TestCase, Util):
     def test_overlap_distinct(self):
         for a in self.randombitarrays():
             # buffers overlaps with itself, unless buffer is NULL
-            self.check_overlap(a, a,
-                               bool(a) and bool(buffer_info(a, 'address')))
+            self.check_overlap(a, a, bool(a))
             b = a.copy()
             self.check_overlap(a, b, False)
 
@@ -772,7 +771,7 @@ class InternalTests(unittest.TestCase, Util):
         self.check_overlap(d, b, True)
 
         e = bitarray(buffer=memoryview(a)[3:3])
-        self.check_overlap(e, c, True)
+        self.check_overlap(e, c, False)
         self.check_overlap(e, d, False)
 
     def test_overlap_shared_random(self):
@@ -781,11 +780,11 @@ class InternalTests(unittest.TestCase, Util):
         for _ in range(1000):
             i1 = randint(0, n)
             j1 = randint(0, n)
-            if j1 <= i1:
+            if j1 < i1:
                 continue
             i2 = randint(0, n)
             j2 = randint(0, n)
-            if j2 <= i2:
+            if j2 < i2:
                 continue
 
             b1 = bitarray(buffer=memoryview(a)[i1:j1])
