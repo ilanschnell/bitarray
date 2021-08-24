@@ -1052,7 +1052,7 @@ class VLFTests(unittest.TestCase, Util):
 
     def test_range(self):
         for n in range(500):
-            self.round_trip(bitarray(n))
+            self.round_trip(urandom(n))
 
     def test_large(self):
         a = urandom(randint(50000, 100000))

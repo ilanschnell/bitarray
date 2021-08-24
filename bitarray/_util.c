@@ -663,6 +663,30 @@ base2ba(PyObject *module, PyObject *args)
 
 /* ------------------- variable length bitarray format ----------------- */
 
+static int
+grow_buffer(bitarrayobject *self)
+{
+    size_t newsize = Py_SIZE(self) + 1;
+
+    assert_nbits(self);
+    assert(self->allocated >= Py_SIZE(self));
+    assert(self->ob_exports == 0);
+    assert(self->buffer == NULL);
+    assert(self->readonly == 0);
+
+    /* standard growth pattern */
+    newsize += (newsize >> 4) + (newsize < 8 ? 3 : 7);
+
+    self->ob_item = PyMem_Realloc(self->ob_item, newsize);
+    if (self->ob_item == NULL)
+        return -1;
+
+    Py_SET_SIZE(self, newsize);
+    self->allocated = newsize;
+    self->nbits = 8 * newsize;
+    return 0;
+}
+
 /* PADBITS is always 3 - the number of bits that represent the number of
    padding bits.  The actual number of padding bits is called 'padding'
    below, and is in range(0, 7).
@@ -705,18 +729,8 @@ vl_decode(PyObject *module, PyObject *args)
         }
         Py_DECREF(item);
 
-        if (i + 6 >= aa->nbits) {
-            size_t newsize = Py_SIZE(aa) + 1;
-
-            /* standard growth pattern */
-            newsize += (newsize >> 4) + (newsize < 8 ? 3 : 7);
-            aa->ob_item = PyMem_Realloc(aa->ob_item, newsize);
-            if (aa->ob_item == NULL)
-                return PyErr_NoMemory();
-            Py_SET_SIZE(aa, newsize);
-            aa->allocated = newsize;
-            aa->nbits = 8 * newsize;
-        }
+        if (i + 6 >= aa->nbits && grow_buffer(aa) < 0)
+            return PyErr_NoMemory();
         assert(i + 6 < aa->nbits);
 
         if (i == 0) {
