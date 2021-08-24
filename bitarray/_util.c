@@ -672,37 +672,21 @@ base2ba(PyObject *module, PyObject *args)
    bitarray('000'), which has 5 pad bits. */
 #define PADBITS  3
 
-/* Consume iterator while decoding bytes into bitarray.
-   As we don't have access to bitarrays resize() C function, we give this
-   function a bitarray (large enough in many cases).  We manipulate .nbits
-   and .ob_size (using Py_SET_SIZE) directly without having to call resize().
-   Whenever we need a larger bitarray, we call .frombytes() with a multiple
-   of 7 dummy bytes, such that the added bytes are aligned for the next time
-   we call .frombytes() (to avoid expensive bit shifts).
-   We drop the over-allocated bitarray on the Python side after this function
-   is called.
-*/
+/* consume iterator while decoding bytes into bitarray */
 static PyObject *
 vl_decode(PyObject *module, PyObject *args)
 {
-    const Py_ssize_t ibits = 256;    /* initial number of bits in a */
     PyObject *iter, *item, *a;
     Py_ssize_t padding = 0;  /* number of pad bits read from header byte */
     Py_ssize_t i = 0;        /* bit counter */
     unsigned char b = 0x80;  /* empty stream will raise StopIteration */
     Py_ssize_t k;
 
-    /* Ensure that bits will be aligned when gowing memory below.
-       Possible values for ibits are: 32, 88, 144, 200, 256, 312, ... */
-    assert((ibits + PADBITS) % 7 == 0 && ibits % 8 == 0);
-
     if (!PyArg_ParseTuple(args, "OO", &iter, &a))
         return NULL;
     if (!PyIter_Check(iter))
         return PyErr_Format(PyExc_TypeError, "iterator or bytes expected, "
                             "got '%s'", Py_TYPE(iter)->tp_name);
-    if (ensure_ba_of_length(a, ibits) < 0)
-        return NULL;
 
 #define aa  ((bitarrayobject *) a)
     while ((item = PyIter_Next(iter))) {
@@ -721,18 +705,17 @@ vl_decode(PyObject *module, PyObject *args)
         }
         Py_DECREF(item);
 
-        assert(i == 0 || (i + PADBITS) % 7 == 0);
-        if (i == aa->nbits) {
-            PyObject *ret;  /* return object from .frombytes() call */
+        if (i + 6 >= aa->nbits) {
+            size_t newsize = Py_SIZE(aa) + 1;
 
-            /* grow memory - see above */
-            assert(i % 8 == 0);  /* added dummy bytes are aligned */
-            /* 63 is a multiple of 7 - bytes will be aligned for next call */
-            ret = PyObject_CallMethod(a, "frombytes", BYTES_SIZE_FMT,
-                                      base64_alphabet, (Py_ssize_t) 63);
-            if (ret == NULL)
-                return NULL;
-            Py_DECREF(ret);  /* drop frombytes result */
+            /* standard growth pattern */
+            newsize += (newsize >> 4) + (newsize < 8 ? 3 : 7);
+            aa->ob_item = PyMem_Realloc(aa->ob_item, newsize);
+            if (aa->ob_item == NULL)
+                return PyErr_NoMemory();
+            Py_SET_SIZE(aa, newsize);
+            aa->allocated = newsize;
+            aa->nbits = 8 * newsize;
         }
         assert(i + 6 < aa->nbits);
 
