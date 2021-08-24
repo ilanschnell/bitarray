@@ -663,6 +663,7 @@ base2ba(PyObject *module, PyObject *args)
 
 /* ------------------- variable length bitarray format ----------------- */
 
+/* grow buffer by at least one byte */
 static int
 grow_buffer(bitarrayobject *self)
 {
@@ -678,9 +679,10 @@ grow_buffer(bitarrayobject *self)
     newsize += (newsize >> 4) + (newsize < 8 ? 3 : 7);
 
     self->ob_item = PyMem_Realloc(self->ob_item, newsize);
-    if (self->ob_item == NULL)
+    if (self->ob_item == NULL) {
+        PyErr_NoMemory();
         return -1;
-
+    }
     Py_SET_SIZE(self, newsize);
     self->allocated = newsize;
     self->nbits = 8 * newsize;
@@ -730,7 +732,7 @@ vl_decode(PyObject *module, PyObject *args)
         Py_DECREF(item);
 
         if (i + 6 >= aa->nbits && grow_buffer(aa) < 0)
-            return PyErr_NoMemory();
+            return NULL;
         assert(i + 6 < aa->nbits);
 
         if (i == 0) {
