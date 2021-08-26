@@ -627,7 +627,7 @@ standard base 64 alphabet is used.");
 
 /* Translate ASCII digits into the bitarray's buffer.
    The (Python) arguments to this functions are:
-   - bits per digit, m
+   - base n, one of 2, 4, 8, 16, 32, 64  (n=2^m   where m bits per digit)
    - bitarray (of length m * len(s)) whose buffer is written into
    - byte object s containing the ASCII digits
 */
