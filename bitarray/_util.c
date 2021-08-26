@@ -632,11 +632,9 @@ base2ba(PyObject *module, PyObject *args)
     PyObject *a;
     Py_ssize_t i, strsize;
     char *str;
-    int n, m, le;
+    int m, le;
 
-    if (!PyArg_ParseTuple(args, "iOs#", &n, &a, &str, &strsize))
-        return NULL;
-    if ((m = base_to_length(n)) < 0)
+    if (!PyArg_ParseTuple(args, "iOs#", &m, &a, &str, &strsize))
         return NULL;
     if (ensure_ba_of_length(a, m * strsize) < 0)
         return NULL;
@@ -646,7 +644,7 @@ base2ba(PyObject *module, PyObject *args)
 
     le = IS_LE(aa);
     for (i = 0; i < strsize; i++) {
-        int j, k, d = digit_to_int(str[i], n);
+        int j, k, d = digit_to_int(str[i], 1 << m);
 
         if (d < 0) {
             PyErr_SetString(PyExc_ValueError, "invalid digit found");

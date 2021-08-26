@@ -191,12 +191,12 @@ does not take advantage of byte level operations.
 For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the
 standard base 64 alphabet is used.
 """
-    if not isinstance(__n, int):
-        raise TypeError("integer expected")
     try:
         m = {2: 1, 4: 2, 8: 3, 16: 4, 32: 5, 64: 6}[__n]
     except KeyError:
-        raise ValueError("base must be 2, 4, 8, 16, 32 or 64")
+        if not isinstance(__n, int):
+            raise TypeError("int expected for base")
+        raise ValueError("base must be 2, 4, 8, 16, 32 or 64, not %r" % __n)
 
     if not isinstance(__s, (str, unicode if _is_py2 else bytes)):
         raise TypeError("str expected, got: '%s'" % type(s).__name__)
@@ -207,7 +207,7 @@ standard base 64 alphabet is used.
 
     a = bitarray(m * len(__s),
                  get_default_endian() if endian is None else endian)
-    _base2ba(__n, a, __s)
+    _base2ba(m, a, __s)
     return a
 
 
