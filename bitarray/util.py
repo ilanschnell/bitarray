@@ -199,7 +199,7 @@ standard base 64 alphabet is used.
         raise ValueError("base must be 2, 4, 8, 16, 32 or 64, not %r" % __n)
 
     if not isinstance(__s, (str, unicode if _is_py2 else bytes)):
-        raise TypeError("str expected, got: '%s'" % type(s).__name__)
+        raise TypeError("str expected, got: '%s'" % type(__s).__name__)
 
     if isinstance(__s, unicode if _is_py2 else str):
         __s = __s.encode('ascii')

@@ -520,19 +520,17 @@ static const char base64_alphabet[] =
 static int
 digit_to_int(char c, int n)
 {
-    if (n <= 16) {              /* base 2, 4, 8, 16 */
-        int i = hex_to_int(c);
+    int i;
 
-        if (0 <= i && i < n)
-            return i;
-    }
-    if (n == 32) {              /* base 32 */
+    switch (n) {
+    case 32:                    /* base 32 */
         if ('A' <= c && c <= 'Z')
             return c - 'A';
         if ('2' <= c && c <= '7')
             return c - '2' + 26;
-    }
-    if (n == 64) {              /* base 64 */
+        break;
+
+    case 64:                    /* base 64 */
         if ('A' <= c && c <= 'Z')
             return c - 'A';
         if ('a' <= c && c <= 'z')
@@ -543,6 +541,12 @@ digit_to_int(char c, int n)
             return 62;
         if (c == '/')
             return 63;
+        break;
+
+    default:                    /* base 2, 4, 8, 16 */
+        i = hex_to_int(c);
+        if (i < n)
+            return i;
     }
     return -1;
 }
@@ -647,10 +651,10 @@ base2ba(PyObject *module, PyObject *args)
     for (i = 0; i < strsize; i++) {
         int j, k, d = digit_to_int(str[i], n);
 
-        if (d < 0) {
-            PyErr_SetString(PyExc_ValueError, "invalid digit found");
-            return NULL;
-        }
+        if (d < 0)
+            return PyErr_Format(PyExc_ValueError, "invalid digit found for "
+                                "base %d, got '%c'", n, str[i]);
+
         for (j = 0; j < m; j++) {
             k = le ? j : (m - j - 1);
             setbit(aa, i * m + k, d & (1 << j));
