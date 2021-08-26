@@ -826,6 +826,9 @@ class TestsBase(unittest.TestCase, Util):
             self.assertRaises(ValueError, ba2base, i, a)
             self.assertRaises(ValueError, base2ba, i, '')
 
+        self.assertRaises(TypeError, ba2base, 32, None)
+        self.assertRaises(TypeError, base2ba, 32, None)
+
     def test_binary(self):
         a = base2ba(2, '1011')
         self.assertEqual(a, bitarray('1011'))

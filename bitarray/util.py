@@ -207,7 +207,7 @@ standard base 64 alphabet is used.
 
     a = bitarray(m * len(__s),
                  get_default_endian() if endian is None else endian)
-    _base2ba(m, a, __s)
+    _base2ba(__n, a, __s)
     return a
 
 

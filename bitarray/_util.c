@@ -561,7 +561,8 @@ base_to_length(int n)
         if (n == (1 << m))
             return m;
     }
-    PyErr_SetString(PyExc_ValueError, "base must be 2, 4, 8, 16, 32 or 64");
+    PyErr_Format(PyExc_ValueError,
+                 "base must be 2, 4, 8, 16, 32 or 64, not %d", n);
     return -1;
 }
 
@@ -638,7 +639,9 @@ base2ba(PyObject *module, PyObject *args)
     char *str;
     int n, m, le;
 
-    if (!PyArg_ParseTuple(args, "iOs#", &m, &a, &str, &strsize))
+    if (!PyArg_ParseTuple(args, "iOs#", &n, &a, &str, &strsize))
+        return NULL;
+    if ((m = base_to_length(n)) < 0)
         return NULL;
     if (ensure_ba_of_length(a, m * strsize) < 0)
         return NULL;
@@ -646,14 +649,14 @@ base2ba(PyObject *module, PyObject *args)
 #define aa  ((bitarrayobject *) a)
     memset(aa->ob_item, 0x00, (size_t) Py_SIZE(a));
 
-    n = 1 << m;
     le = IS_LE(aa);
     for (i = 0; i < strsize; i++) {
         int j, k, d = digit_to_int(str[i], n);
 
         if (d < 0)
-            return PyErr_Format(PyExc_ValueError, "invalid digit found for "
-                                "base %d, got '%c'", n, str[i]);
+            return PyErr_Format(PyExc_ValueError,
+                                "invalid digit found for base %d, "
+                                "got '%c' (0x%02x)", n, str[i], str[i]);
 
         for (j = 0; j < m; j++) {
             k = le ? j : (m - j - 1);
