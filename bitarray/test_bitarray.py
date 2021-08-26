@@ -3024,7 +3024,6 @@ class SearchTests(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            aa = a.to01()
             if a:
                 self.assertEqual(a.search(a), [0])
                 self.assertEqual(list(a.itersearch(a)), [0])
