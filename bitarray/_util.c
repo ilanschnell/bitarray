@@ -622,7 +622,7 @@ standard base 64 alphabet is used.");
 
 /* Translate ASCII digits into the bitarray's buffer.
    The (Python) arguments to this functions are:
-   - base n, one of 2, 4, 8, 16, 32, 64  (n=2^m   where m bits per digit)
+   - bits per digit, m
    - bitarray (of length m * len(s)) whose buffer is written into
    - byte object s containing the ASCII digits
 */
@@ -632,7 +632,7 @@ base2ba(PyObject *module, PyObject *args)
     PyObject *a;
     Py_ssize_t i, strsize;
     char *str;
-    int m, le;
+    int n, m, le;
 
     if (!PyArg_ParseTuple(args, "iOs#", &m, &a, &str, &strsize))
         return NULL;
@@ -642,9 +642,10 @@ base2ba(PyObject *module, PyObject *args)
 #define aa  ((bitarrayobject *) a)
     memset(aa->ob_item, 0x00, (size_t) Py_SIZE(a));
 
+    n = 1 << m;
     le = IS_LE(aa);
     for (i = 0; i < strsize; i++) {
-        int j, k, d = digit_to_int(str[i], 1 << m);
+        int j, k, d = digit_to_int(str[i], n);
 
         if (d < 0) {
             PyErr_SetString(PyExc_ValueError, "invalid digit found");
