@@ -1031,8 +1031,8 @@ bitarray_find(bitarrayobject *self, PyObject *args)
         return PyLong_FromSsize_t(
                     find(self, (bitarrayobject *) x, start, stop));
 
-    PyErr_SetString(PyExc_TypeError, "bitarray or int expected");
-    return NULL;
+    return PyErr_Format(PyExc_TypeError, "bitarray or int expected, "
+                        "not '%s'", Py_TYPE(x)->tp_name);
 }
 
 PyDoc_STRVAR(find_doc,
@@ -1243,8 +1243,8 @@ bitarray_search(bitarrayobject *self, PyObject *args)
         Py_INCREF(t);
     }
     else {
-        PyErr_SetString(PyExc_TypeError, "bitarray or int expected");
-        return NULL;
+        return PyErr_Format(PyExc_TypeError, "bitarray or int expected, "
+                            "not '%s'", Py_TYPE(x)->tp_name);
     }
 
     if (tt->nbits == 0) {

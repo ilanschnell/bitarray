@@ -497,7 +497,7 @@ hex2ba(PyObject *module, PyObject *args)
             /* there is an invalid byte - or (non-terminating) NUL */
             if (x < 0 || y < 0) {
                 PyErr_SetString(PyExc_ValueError,
-                                "Non-hexadecimal digit found");
+                                "non-hexadecimal digit found");
                 return NULL;
             }
         }
