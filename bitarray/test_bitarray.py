@@ -458,7 +458,7 @@ class CreateObjectTests(unittest.TestCase, Util):
                                          bitarray, s)
             else:
                 # Python 2: PyErr_Format() seems to handle "0x%02x"
-                # incorrectly.  Oh well...
+                # incorrectly.  E.g. instead of "0x01", I get "0x1"
                 self.assertRaises(ValueError, bitarray, s)
 
             a = bitarray(s + b'\x00')
