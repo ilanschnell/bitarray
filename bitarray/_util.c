@@ -653,11 +653,11 @@ base2ba(PyObject *module, PyObject *args)
     for (i = 0; i < strsize; i++) {
         int j, k, d = digit_to_int(str[i], n);
 
-        if (d < 0)
-            return PyErr_Format(PyExc_ValueError,
-                                "invalid digit found for base %d, "
-                                "got '%c' (0x%02x)", n, str[i], str[i]);
-
+        if (d < 0) {
+            unsigned char c = str[i];
+            return PyErr_Format(PyExc_ValueError, "invalid digit found for "
+                                "base %d, got '%c' (0x%02x)", n, c, c);
+        }
         for (j = 0; j < m; j++) {
             k = le ? j : (m - j - 1);
             setbit(aa, i * m + k, d & (1 << j));
