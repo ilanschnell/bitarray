@@ -451,6 +451,7 @@ ba2hex(PyObject *module, PyObject *a)
         str[i + le] = hexdigits[c >> 4];
         str[i + be] = hexdigits[0x0f & c];
     }
+    assert((size_t) aa->nbits / 4 <= strsize);
     result = Py_BuildValue("s#", str, aa->nbits / 4);
 #undef aa
     PyMem_Free((void *) str);
@@ -501,7 +502,7 @@ hex2ba(PyObject *module, PyObject *args)
                 return NULL;
             }
         }
-        assert(x < 16 && y < 16);
+        assert(0 <= x && x < 16 && 0 <= y && y < 16);
         aa->ob_item[i / 2] = x << 4 | y;
     }
 #undef aa
