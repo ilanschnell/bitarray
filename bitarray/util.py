@@ -193,7 +193,7 @@ standard base 64 alphabet is used.
         m = {2: 1, 4: 2, 8: 3, 16: 4, 32: 5, 64: 6}[__n]
     except KeyError:
         if not isinstance(__n, int):
-            raise TypeError("int expected for base, got '%s'",
+            raise TypeError("int expected for base, got '%s'" %
                             type(__n).__name__)
         raise ValueError("base must be 2, 4, 8, 16, 32 or 64, not %r" % __n)
 
