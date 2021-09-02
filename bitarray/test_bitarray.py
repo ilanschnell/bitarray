@@ -282,7 +282,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, bitarray, endian='')
         self.assertRaisesMessage(
             ValueError,
-            "bit endianness must be either 'little' or 'big', got: 'foo'",
+            "bit endianness must be either 'little' or 'big', not 'foo'",
             bitarray, endian='foo')
         self.assertRaisesMessage(TypeError,
                                  "'ellipsis' object is not iterable",

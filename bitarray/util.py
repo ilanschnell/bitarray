@@ -143,7 +143,7 @@ Allowed values for mode are the strings: `left`, `right`, `both`
     if not isinstance(mode, str):
         raise TypeError("str expected for mode, got '%s'" % type(__a).__name__)
     if mode not in ('left', 'right', 'both'):
-        raise ValueError("mode must be 'left', 'right' or 'both', got: %r" %
+        raise ValueError("mode must be 'left', 'right' or 'both', got %r" %
                          mode)
     first = 0
     if mode in ('left', 'both'):
@@ -171,7 +171,7 @@ Bitarray of hexadecimal representation.  hexstr may contain any number
     if isinstance(__s, unicode if _is_py2 else str):
         __s = __s.encode('ascii')
     if not isinstance(__s, bytes):
-        raise TypeError("str expected, got: '%s'" % type(__s).__name__)
+        raise TypeError("str expected, got '%s'" % type(__s).__name__)
 
     a = bitarray(4 * len(__s),
                  get_default_endian() if endian is None else endian)
@@ -193,13 +193,14 @@ standard base 64 alphabet is used.
         m = {2: 1, 4: 2, 8: 3, 16: 4, 32: 5, 64: 6}[__n]
     except KeyError:
         if not isinstance(__n, int):
-            raise TypeError("int expected for base")
+            raise TypeError("int expected for base, got '%s'",
+                            type(__n).__name__)
         raise ValueError("base must be 2, 4, 8, 16, 32 or 64, not %r" % __n)
 
     if isinstance(__s, unicode if _is_py2 else str):
         __s = __s.encode('ascii')
     if not isinstance(__s, bytes):
-        raise TypeError("str expected, got: '%s'" % type(__s).__name__)
+        raise TypeError("str expected, got '%s'" % type(__s).__name__)
 
     a = bitarray(m * len(__s),
                  get_default_endian() if endian is None else endian)
@@ -313,7 +314,7 @@ def deserialize(__b):
 Return a bitarray given the bytes representation returned by `serialize()`.
 """
     if not isinstance(__b, bytes):
-        raise TypeError("bytes expected, got: '%s'" % type(__b).__name__)
+        raise TypeError("bytes expected, got '%s'" % type(__b).__name__)
     if len(__b) == 0:
         raise ValueError("non-empty bytes expected")
 

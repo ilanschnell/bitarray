@@ -3174,7 +3174,7 @@ endian_from_string(const char* string)
         return ENDIAN_BIG;
 
     PyErr_Format(PyExc_ValueError, "bit endianness must be either "
-                                   "'little' or 'big', got: '%s'", string);
+                                   "'little' or 'big', not '%s'", string);
     return -1;
 }
 
