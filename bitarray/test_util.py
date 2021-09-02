@@ -820,6 +820,8 @@ class TestsBase(unittest.TestCase, Util):
         a = bitarray()
         self.assertRaises(TypeError, ba2base, None, a)
         self.assertRaises(TypeError, base2ba, None, '')
+        self.assertRaises(TypeError, ba2base, 16.0, a)
+        self.assertRaises(TypeError, base2ba, 16.0, '')
         for i in range(-10, 260):
             if i in (2, 4, 8, 16, 32, 64):
                 continue
