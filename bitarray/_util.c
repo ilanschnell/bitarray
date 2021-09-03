@@ -635,15 +635,17 @@ standard base 64 alphabet is used.");
 static PyObject *
 base2ba(PyObject *module, PyObject *args)
 {
-    PyObject *a;
-    Py_ssize_t i, strsize;
-    char *str;
+    PyObject *a = NULL;
+    Py_ssize_t i, strsize = 0;
+    char *str = NULL;
     int n, m, le;
 
-    if (!PyArg_ParseTuple(args, "iOs#", &n, &a, &str, &strsize))
+    if (!PyArg_ParseTuple(args, "i|Os#", &n, &a, &str, &strsize))
         return NULL;
     if ((m = base_to_length(n)) < 0)
         return NULL;
+    if (a == NULL)
+        return PyLong_FromLong(m);
     if (ensure_ba_of_length(a, m * strsize) < 0)
         return NULL;
 

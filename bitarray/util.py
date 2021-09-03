@@ -9,7 +9,6 @@ from __future__ import absolute_import
 
 import os
 import sys
-import math
 
 from bitarray import bitarray, bits2bytes, get_default_endian
 
@@ -195,7 +194,7 @@ standard base 64 alphabet is used.
     if not isinstance(__s, bytes):
         raise TypeError("str expected, got '%s'" % type(__s).__name__)
 
-    a = bitarray(int(math.log(__n, 2.0) + 0.5) * len(__s),
+    a = bitarray(_base2ba(__n) * len(__s),
                  get_default_endian() if endian is None else endian)
     _base2ba(__n, a, __s)
     return a
