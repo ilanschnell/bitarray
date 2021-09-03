@@ -195,7 +195,7 @@ standard base 64 alphabet is used.
     if not isinstance(__s, bytes):
         raise TypeError("str expected, got '%s'" % type(__s).__name__)
 
-    a = bitarray(int(math.log(__n, 2.0 - 1e-6)) * len(__s),
+    a = bitarray(int(math.log(__n, 2.0) + 0.5) * len(__s),
                  get_default_endian() if endian is None else endian)
     _base2ba(__n, a, __s)
     return a
