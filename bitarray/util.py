@@ -9,6 +9,7 @@ from __future__ import absolute_import
 
 import os
 import sys
+import math
 
 from bitarray import bitarray, bits2bytes, get_default_endian
 
@@ -189,20 +190,12 @@ does not take advantage of byte level operations.
 For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the
 standard base 64 alphabet is used.
 """
-    try:
-        m = {2: 1, 4: 2, 8: 3, 16: 4, 32: 5, 64: 6}[__n]
-    except KeyError:
-        if not isinstance(__n, int):
-            raise TypeError("int expected for base, got '%s'" %
-                            type(__n).__name__)
-        raise ValueError("base must be 2, 4, 8, 16, 32 or 64, not %r" % __n)
-
     if isinstance(__s, unicode if _is_py2 else str):
         __s = __s.encode('ascii')
     if not isinstance(__s, bytes):
         raise TypeError("str expected, got '%s'" % type(__s).__name__)
 
-    a = bitarray(m * len(__s),
+    a = bitarray(int(math.log(__n, 2.0 - 1e-6)) * len(__s),
                  get_default_endian() if endian is None else endian)
     _base2ba(__n, a, __s)
     return a
