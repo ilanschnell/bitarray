@@ -1,6 +1,12 @@
 Change log
 ==========
 
+**2.3.3** (2021-09-05):
+
+* improve some error messages
+* add tests
+
+
 **2.3.2** (2021-08-23):
 
 * fix slice assignment for shared buffer with offset case, see `#3ba05687 <https://github.com/ilanschnell/bitarray/commit/3ba05687>`__
