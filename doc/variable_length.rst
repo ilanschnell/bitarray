@@ -30,18 +30,18 @@ bitarrays up to 4 element, every additional byte stores up to 7 more elements.
 The most significant bit of each byte indicated whether more bytes follow.
 In addition, the first byte contains 3 bits which indicate the number of
 padding bits at the end of the stream.  Here is an example of
-encoding ``bitarray('0101011011100111')``:
+encoding ``bitarray('01010110111001110')``:
 
 .. code-block::
 
-        0101011011100111         raw bitarray
-        0101  0110111  00111     grouped (4, 7, 7, ...)
+        01010110111001110        raw bitarray
+        0101  0110111  001110    grouped (4, 7, 7, ...)
         0101  0110111  0011100   pad last group with zeros
-     0100101  0110111  0011100   add number of pad bits (2) to front (010)
-    10100101 10110111 00011100   add high bits (1, except 0 for last group)
-        0xa5     0xb7     0x1c   in hexadecimal - output stream
+     0010101  0110111  0011100   add number of pad bits (1) to front (001)
+    10010101 10110111 00011100   add high bits (1, except 0 for last group)
+        0x95     0xb7     0x1c   in hexadecimal - output stream
 
 .. code-block:: python
 
-    >>> vl_encode(bitarray('0101011011100111'))
-    b'\xa5\xb7\x1c'
+    >>> vl_encode(bitarray('01010110111001110'))
+    b'\x95\xb7\x1c'
