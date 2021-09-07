@@ -378,7 +378,7 @@ invert(bitarrayobject *self)
     assert(self->readonly == 0);
     for (i = 0; i < nwords; i++)
         UINT64_BUFFER(self)[i] = ~UINT64_BUFFER(self)[i];
-    for (i = nwords << 3; i < nbytes; i++)
+    for (i = 8 * nwords; i < nbytes; i++)
         self->ob_item[i] = ~self->ob_item[i];
 }
 
@@ -1548,6 +1548,7 @@ using the specified mapping.");
 static PyObject *
 bitarray_pack(bitarrayobject *self, PyObject *bytes)
 {
+    const Py_ssize_t nbits = self->nbits;
     Py_ssize_t nbytes, i;
     char *data;
 
@@ -1558,12 +1559,12 @@ bitarray_pack(bitarrayobject *self, PyObject *bytes)
 
     nbytes = PyBytes_GET_SIZE(bytes);
 
-    if (resize(self, self->nbits + nbytes) < 0)
+    if (resize(self, nbits + nbytes) < 0)
         return NULL;
 
     data = PyBytes_AS_STRING(bytes);
     for (i = 0; i < nbytes; i++)
-        setbit(self, self->nbits - nbytes + i, data[i]);
+        setbit(self, nbits + i, data[i]);
 
     Py_RETURN_NONE;
 }
@@ -2125,21 +2126,21 @@ bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
     case OP_and:
         for (i = 0; i < nwords; i++)
             UINT64_BUFFER(self)[i] &= UINT64_BUFFER(other)[i];
-        for (i = nwords << 3; i < nbytes; i++)
+        for (i = 8 * nwords; i < nbytes; i++)
             self->ob_item[i] &= other->ob_item[i];
         break;
 
     case OP_or:
         for (i = 0; i < nwords; i++)
             UINT64_BUFFER(self)[i] |= UINT64_BUFFER(other)[i];
-        for (i = nwords << 3; i < nbytes; i++)
+        for (i = 8 * nwords; i < nbytes; i++)
             self->ob_item[i] |= other->ob_item[i];
         break;
 
     case OP_xor:
         for (i = 0; i < nwords; i++)
             UINT64_BUFFER(self)[i] ^= UINT64_BUFFER(other)[i];
-        for (i = nwords << 3; i < nbytes; i++)
+        for (i = 8 * nwords; i < nbytes; i++)
             self->ob_item[i] ^= other->ob_item[i];
         break;
 
