@@ -140,3 +140,13 @@ Unlike ``ba2hex()``, ``ba2base()`` does not take advantage of byte level
 operations and is therefore a lot slower, although still implemented in C.
 The inverse function is called ``base2ba()``.
 See also `this example <../examples/base-n.py>`__.
+
+
+Variable length representation
+------------------------------
+
+In some cases, it is useful to represent bitarrays in a binary format that
+is "self terminating" (in the same way that C strings are NUL terminated).
+That is, when a bitarray of unknown length is encountered in a stream of
+binary data, the format lets you know when the end of a bitarray is reached.
+See `variable length format <./variable_length.rst>`__ for this representation.
