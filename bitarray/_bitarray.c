@@ -2644,7 +2644,6 @@ typedef struct {
 static PyObject *
 decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    binode *tree;
     PyObject *codedict;
     decodetreeobject *obj;
 
@@ -2654,17 +2653,15 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (check_codedict(codedict) < 0)
         return NULL;
 
-    tree = binode_make_tree(codedict);
-    if (tree == NULL)
+    obj = (decodetreeobject *) type->tp_alloc(type, 0);
+    if (obj == NULL)
         return NULL;
 
-    obj = (decodetreeobject *) type->tp_alloc(type, 0);
-    if (obj == NULL) {
-        binode_delete(tree);
+    obj->tree = binode_make_tree(codedict);
+    if (obj->tree == NULL) {
+        PyObject_Del(obj);
         return NULL;
     }
-    obj->tree = tree;
-
     return (PyObject *) obj;
 }
 
