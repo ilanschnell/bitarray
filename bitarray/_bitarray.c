@@ -3181,7 +3181,7 @@ endian_from_string(const char* string)
 
 /* create a new bitarray object whose buffer is imported from another object
    which exposes the buffer protocol */
-static PyObject*
+static PyObject *
 newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
 {
     Py_buffer view;
@@ -3204,8 +3204,10 @@ newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
     obj->readonly = view.readonly;
 
     obj->buffer = (Py_buffer *) PyMem_Malloc(sizeof(Py_buffer));
-    if (obj->buffer == NULL)
-        return NULL;
+    if (obj->buffer == NULL) {
+        PyObject_Del(obj);
+        return PyErr_NoMemory();
+    }
     memcpy(obj->buffer, &view, sizeof(Py_buffer));
 
     return (PyObject *) obj;
