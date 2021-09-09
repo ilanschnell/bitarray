@@ -1147,10 +1147,9 @@ bitarray_reduce(bitarrayobject *self)
     }
 
     repr = PyBytes_FromStringAndSize(NULL, nbytes + 1);
-    if (repr == NULL) {
-        PyErr_NoMemory();
+    if (repr == NULL)
         goto error;
-    }
+
     str = PyBytes_AsString(repr);
     /* first byte contains the number of unused bits */
     *str = (char) setunused(self);
@@ -1501,8 +1500,10 @@ bitarray_to01(bitarrayobject *self)
     PyObject *result;
     char *str;
 
-    if ((str = (char *) PyMem_Malloc((size_t) self->nbits)) == NULL)
+    str = (char *) PyMem_Malloc((size_t) self->nbits);
+    if (str == NULL)
         return PyErr_NoMemory();
+
     setstr01(self, str);
     result = Py_BuildValue("s#", str, self->nbits);
     PyMem_Free((void *) str);
@@ -1528,9 +1529,9 @@ bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
                                      &zero, &one))
         return NULL;
 
-    if ((res = PyBytes_FromStringAndSize(NULL, self->nbits)) == NULL)
-        return PyErr_NoMemory();
-    assert(PyBytes_Check(res));
+    res = PyBytes_FromStringAndSize(NULL, self->nbits);
+    if (res  == NULL)
+        return NULL;
 
     str = PyBytes_AsString(res);
     for (i = 0; i < self->nbits; i++)

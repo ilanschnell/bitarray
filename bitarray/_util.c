@@ -386,8 +386,9 @@ serialize(PyObject *module, PyObject *a)
         return NULL;
 
     nbytes = Py_SIZE(a);
-    if ((result = PyBytes_FromStringAndSize(NULL, nbytes + 1)) == NULL)
-        return PyErr_NoMemory();
+    result = PyBytes_FromStringAndSize(NULL, nbytes + 1);
+    if (result == NULL)
+        return NULL;
 
     str = PyBytes_AsString(result);
 #define aa  ((bitarrayobject *) a)
@@ -793,8 +794,9 @@ vl_encode(PyObject *module, PyObject *a)
     padding = m - aa->nbits;  /* number of pad bits */
     assert(0 <= padding && padding < 7);
 
-    if ((result = PyBytes_FromStringAndSize(NULL, n)) == NULL)
-        return PyErr_NoMemory();
+    result = PyBytes_FromStringAndSize(NULL, n);
+    if (result == NULL)
+        return NULL;
 
     str = PyBytes_AsString(result);
     str[0] = aa->nbits > 4 ? 0x80 : 0x00;  /* leading bit */
