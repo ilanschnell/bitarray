@@ -2630,7 +2630,7 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     binode *tree;
     PyObject *codedict;
-    decodetreeobject *self;
+    decodetreeobject *obj;
 
     if (!PyArg_ParseTuple(args, "O:decodetree", &codedict))
         return NULL;
@@ -2642,14 +2642,14 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (tree == NULL)
         return NULL;
 
-    self = (decodetreeobject *) type->tp_alloc(type, 0);
-    if (self == NULL) {
+    obj = (decodetreeobject *) type->tp_alloc(type, 0);
+    if (obj == NULL) {
         binode_delete(tree);
         return NULL;
     }
-    self->tree = tree;
+    obj->tree = tree;
 
-    return (PyObject *) self;
+    return (PyObject *) obj;
 }
 
 /* Return a dict mapping the symbols to bitarrays.  This dict is a
