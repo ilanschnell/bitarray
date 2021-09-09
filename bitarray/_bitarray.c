@@ -2783,12 +2783,11 @@ static PyTypeObject DecodeTree_Type = {
 
 /* -------------------------- END decodetree --------------------------- */
 
-static PyObject *
-bitarray_decode(bitarrayobject *self, PyObject *obj)
+/* return a binary tree from a decodetree or codedict */
+static binode *
+get_tree(PyObject *obj)
 {
     binode *tree;
-    PyObject *list = NULL, *symbol;
-    Py_ssize_t index = 0;
 
     if (DecodeTree_Check(obj)) {
         tree = ((decodetreeobject *) obj)->tree;
@@ -2797,9 +2796,22 @@ bitarray_decode(bitarrayobject *self, PyObject *obj)
         if (check_codedict(obj) < 0)
             return NULL;
 
-        if ((tree = binode_make_tree(obj)) == NULL)
+        tree = binode_make_tree(obj);
+        if (tree == NULL)
             return NULL;
     }
+    return tree;
+}
+
+static PyObject *
+bitarray_decode(bitarrayobject *self, PyObject *obj)
+{
+    binode *tree;
+    PyObject *list, *symbol;
+    Py_ssize_t index = 0;
+
+    if ((tree = get_tree(obj)) == NULL)
+        return NULL;
 
     if ((list = PyList_New(0)) == NULL)
         goto error;
@@ -2810,6 +2822,7 @@ bitarray_decode(bitarrayobject *self, PyObject *obj)
     }
     if (PyErr_Occurred())
         goto error;
+
     if (!DecodeTree_Check(obj))
         binode_delete(tree);
     return list;
@@ -2847,16 +2860,8 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
     decodeiterobject *it;       /* iterator to be returned */
     binode *tree;
 
-    if (DecodeTree_Check(obj)) {
-        tree = ((decodetreeobject *) obj)->tree;
-    }
-    else {
-        if (check_codedict(obj) < 0)
-            return NULL;
-
-        if ((tree = binode_make_tree(obj)) == NULL)
-            return NULL;
-    }
+    if ((tree = get_tree(obj)) == NULL)
+        return NULL;
 
     it = PyObject_GC_New(decodeiterobject, &DecodeIter_Type);
     if (it == NULL) {
