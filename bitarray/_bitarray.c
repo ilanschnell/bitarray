@@ -590,8 +590,11 @@ set_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
 
     assert(0 <= i && i < self->nbits);
     assert(self->readonly == 0);
-    if ((vi = pybit_as_int(value)) < 0)
+
+    vi = pybit_as_int(value);
+    if (vi < 0)
         return -1;
+
     setbit(self, i, vi);
     return 0;
 }
@@ -816,8 +819,11 @@ bitarray_append(bitarrayobject *self, PyObject *value)
     int vi;
 
     RAISE_IF_READONLY(self, NULL);
-    if ((vi = pybit_as_int(value)) < 0)
+
+    vi = pybit_as_int(value);
+    if (vi < 0)
         return NULL;
+
     if (resize(self, self->nbits + 1) < 0)
         return NULL;
     setbit(self, self->nbits - 1, vi);
@@ -1048,7 +1054,8 @@ bitarray_index(bitarrayobject *self, PyObject *args)
 {
     PyObject *result;
 
-    if ((result = bitarray_find(self, args)) == NULL)
+    result = bitarray_find(self, args);
+    if (result == NULL)
         return NULL;
 
     assert(PyLong_Check(result));
@@ -1086,8 +1093,10 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
 
     normalize_index(self->nbits, &i);
 
-    if ((vi = pybit_as_int(value)) < 0)
+    vi = pybit_as_int(value);
+    if (vi < 0)
         return NULL;
+
     if (insert_n(self, i, 1) < 0)
         return NULL;
     setbit(self, i, vi);
@@ -1184,7 +1193,8 @@ bitarray_repr(bitarrayobject *self)
         return NULL;
     }
 
-    if ((str = (char *) PyMem_Malloc(strsize)) == NULL)
+    str = (char *) PyMem_Malloc(strsize);
+    if (str == NULL)
         return PyErr_NoMemory();
 
     strcpy(str, "bitarray('");  /* has length 10 */
@@ -1233,7 +1243,8 @@ bitarray_search(bitarrayobject *self, PyObject *args)
 
         if ((vi = pybit_as_int(x)) < 0)
             return NULL;
-        if ((t = newbitarrayobject(Py_TYPE(self), 1, self->endian)) == NULL)
+        t = newbitarrayobject(Py_TYPE(self), 1, self->endian);
+        if (t == NULL)
             return NULL;
         setbit(tt, 0, vi);
     }
@@ -1627,7 +1638,8 @@ bitarray_remove(bitarrayobject *self, PyObject *value)
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
-    if ((i = find_bit(self, vi, 0, self->nbits)) < 0)
+    i = find_bit(self, vi, 0, self->nbits);
+    if (i < 0)
         return PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
 
     if (delete_n(self, i, 1) < 0)
@@ -1733,7 +1745,8 @@ bitarray_concat(bitarrayobject *self, PyObject *other)
 {
     PyObject *res;
 
-    if ((res = bitarray_copy(self)) == NULL)
+    res = bitarray_copy(self);
+    if (res == NULL)
         return NULL;
 
     if (extend_dispatch((bitarrayobject *) res, other) < 0) {
@@ -1748,7 +1761,8 @@ bitarray_repeat(bitarrayobject *self, Py_ssize_t n)
 {
     PyObject *res;
 
-    if ((res = bitarray_copy(self)) == NULL)
+    res = bitarray_copy(self);
+    if (res == NULL)
         return NULL;
 
     if (repeat((bitarrayobject *) res, n) < 0) {
@@ -2445,7 +2459,8 @@ binode_new(void)
 {
     binode *nd;
 
-    if ((nd = (binode *) PyMem_Malloc(sizeof(binode))) == NULL) {
+    nd = (binode *) PyMem_Malloc(sizeof(binode));
+    if (nd == NULL) {
         PyErr_NoMemory();
         return NULL;
     }
@@ -2660,7 +2675,8 @@ decodetree_todict(decodetreeobject *self)
 {
     PyObject *dict, *prefix;
 
-    if ((dict = PyDict_New()) == NULL)
+    dict = PyDict_New();
+    if (dict == NULL)
         return NULL;
 
     prefix = newbitarrayobject(&Bitarray_Type, 0, default_endian);
