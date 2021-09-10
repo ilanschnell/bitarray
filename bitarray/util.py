@@ -214,17 +214,17 @@ The bit-endianness of the bitarray is respected.
         raise ValueError("non-empty bitarray expected")
 
     big_endian = bool(__a.endian() == 'big')
-    # for big endian pad leading zeros - for little endian we don't need to
-    # pad trailing zeros, as .tobytes() will treat them as zero
-    if big_endian and length % 8:
-        __a = zeros(8 - length % 8, 'big') + __a
+    if length % 8:
+        pad = zeros(8 - length % 8, __a.endian())
+        __a = pad + __a if big_endian else __a + pad
     b = __a.tobytes()
 
     if _is_py2:
         c = bytearray(b)
         res = 0
-        for i, x in enumerate(reversed(c) if big_endian else c):
-            res |= x << 8 * i
+        for x in (c if big_endian else reversed(c)):
+            res <<= 8
+            res |= x
     else: # py3
         res = int.from_bytes(b, byteorder=__a.endian())
 

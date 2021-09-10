@@ -1088,6 +1088,16 @@ class TestsIntegerization(unittest.TestCase, Util):
         # ensure original object wasn't altered
         self.assertEQUAL(a, b)
 
+    def test_ba2int_frozen(self):
+        for a in self.randombitarrays(start=1):
+            b = frozenbitarray(a)
+            self.assertEqual(ba2int(b), ba2int(a))
+
+    def test_ba2int_random(self):
+        for a in self.randombitarrays(start=1):
+            b = bitarray(a, 'big')
+            self.assertEqual(ba2int(b), int(b.to01(), 2))
+
     def test_int2ba(self):
         self.assertEqual(int2ba(0), bitarray('0'))
         self.assertEqual(int2ba(1), bitarray('1'))
