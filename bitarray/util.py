@@ -223,10 +223,8 @@ The bit-endianness of the bitarray is respected.
     if _is_py2:
         c = bytearray(b)
         res = 0
-        j = len(c) - 1 if big_endian else 0
-        for x in c:
-            res |= x << 8 * j
-            j += -1 if big_endian else 1
+        for i, x in enumerate(reversed(c) if big_endian else c):
+            res |= x << 8 * i
     else: # py3
         res = int.from_bytes(b, byteorder=__a.endian())
 
