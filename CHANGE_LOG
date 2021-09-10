@@ -1,6 +1,6 @@
-2021-XX-XX   2.3.4:
+2021-09-XX   2.3.4:
 -------------------
-  * fix util.ba2int() for frozenbitarrays
+  * fix `util.ba2int()` for frozenbitarrays
   * add tests
 
 
