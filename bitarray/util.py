@@ -203,7 +203,7 @@ standard base 64 alphabet is used.
 def ba2int(__a, signed=False):
     """ba2int(bitarray, /, signed=False) -> int
 
-Convert the given bitarray into an integer.
+Convert the given bitarray to an integer.
 The bit-endianness of the bitarray is respected.
 `signed` indicates whether two's complement is used to represent the integer.
 """

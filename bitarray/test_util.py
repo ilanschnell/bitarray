@@ -1103,7 +1103,7 @@ class TestsIntegerization(unittest.TestCase, Util):
     def test_ba2int_bytes(self):
         for n in range(1, 100):
             endian = self.random_endian()
-            a = bitarray(8 * n, endian)
+            a = urandom(8 * n, endian)
             c = bytearray(a.tobytes())
             i = 0
             for x in (c if endian == 'big' else reversed(c)):
