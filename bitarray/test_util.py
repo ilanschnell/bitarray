@@ -1096,6 +1096,7 @@ class TestsIntegerization(unittest.TestCase, Util):
     def test_ba2int_random(self):
         for a in self.randombitarrays(start=1):
             b = bitarray(a, 'big')
+            self.assertEqual(a, b)
             self.assertEqual(ba2int(b), int(b.to01(), 2))
 
     def test_int2ba(self):
@@ -1133,24 +1134,25 @@ class TestsIntegerization(unittest.TestCase, Util):
                 ('11110',  15),
                 ('00001', -16),
                 ('11111',  -1),
-                ('000000000',    0),
-                ('111111110',  255),
-                ('000000001', -256),
-                ('111111111',   -1),
-                ('0000000000000000000000', 0),
-                ('1001000011000000100010', 9 + 3 * 256 + 17 * 2 ** 16),
-                ('1111111111111111111110', 2 ** 21 - 1),
-                ('0000000000000000000001', -2 ** 21),
-                ('1001000011000000100011', -2 ** 21
+                ('00000000 0',    0),
+                ('11111111 0',  255),
+                ('00000000 1', -256),
+                ('11111111 1',   -1),
+                ('00000000 00000000 000000', 0),
+                ('10010000 11000000 100010', 9 + 3 * 256 + 17 * 2 ** 16),
+                ('11111111 11111111 111110', 2 ** 21 - 1),
+                ('00000000 00000000 000001', -2 ** 21),
+                ('10010000 11000000 100011', -2 ** 21
                                            + (9 + 3 * 256 + 17 * 2 ** 16)),
-                ('1111111111111111111111', -1),
+                ('11111111 11111111 111111', -1),
         ]:
             self.assertEqual(ba2int(bitarray(s, 'little'), signed=1), i)
             self.assertEqual(ba2int(bitarray(s[::-1], 'big'), signed=1), i)
 
-            self.assertEQUAL(int2ba(i, len(s), 'little', signed=1),
+            lens = len(s.replace(' ', ''))
+            self.assertEQUAL(int2ba(i, lens, 'little', signed=1),
                              bitarray(s, 'little'))
-            self.assertEQUAL(int2ba(i, len(s), 'big', signed=1),
+            self.assertEQUAL(int2ba(i, lens, 'big', signed=1),
                              bitarray(s[::-1], 'big'))
 
     def test_int2ba_overflow(self):
