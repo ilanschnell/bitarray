@@ -217,16 +217,14 @@ The bit-endianness of the bitarray is respected.
     if length % 8:
         pad = zeros(8 - length % 8, __a.endian())
         __a = pad + __a if big_endian else __a + pad
-    b = __a.tobytes()
 
     if _is_py2:
-        c = bytearray(b)
-        res = 0
-        for x in (c if big_endian else reversed(c)):
-            res <<= 8
-            res |= x
+        a = bitarray(__a, 'big')
+        if not big_endian:
+            a.reverse()
+        res = int(ba2hex(a), 16)
     else: # py3
-        res = int.from_bytes(b, byteorder=__a.endian())
+        res = int.from_bytes(__a.tobytes(), byteorder=__a.endian())
 
     if signed and res >= 1 << (length - 1):
         res -= 1 << length
@@ -274,17 +272,14 @@ and requires `length` to be provided.
     a = bitarray(0, get_default_endian() if endian is None else endian)
     big_endian = bool(a.endian() == 'big')
     if _is_py2:
-        c = bytearray()
-        while __i:
-            __i, r = divmod(__i, 256)
-            c.append(r)
-        if big_endian:
-            c.reverse()
-        b = bytes(c)
+        s = hex(__i)[2:].rstrip('L')
+        a.extend(hex2ba(s, 'big'))
+        if not big_endian:
+            a.reverse()
     else: # py3
         b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian())
+        a.frombytes(b)
 
-    a.frombytes(b)
     if length is None:
         return strip(a, 'left' if big_endian else 'right')
 
