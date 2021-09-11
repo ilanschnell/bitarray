@@ -213,14 +213,14 @@ The bit-endianness of the bitarray is respected.
     if length == 0:
         raise ValueError("non-empty bitarray expected")
 
-    big_endian = bool(__a.endian() == 'big')
+    le = bool(__a.endian() == 'little')
     if length % 8:
         pad = zeros(8 - length % 8, __a.endian())
-        __a = pad + __a if big_endian else __a + pad
+        __a = __a + pad if le else pad + __a
 
     if _is_py2:
         a = bitarray(__a, 'big')
-        if not big_endian:
+        if le:
             a.reverse()
         res = int(ba2hex(a), 16)
     else: # py3
@@ -270,25 +270,25 @@ and requires `length` to be provided.
                                 "got %d" % (1 << length, __i))
 
     a = bitarray(0, get_default_endian() if endian is None else endian)
-    big_endian = bool(a.endian() == 'big')
+    le = bool(a.endian() == 'little')
     if _is_py2:
         s = hex(__i)[2:].rstrip('L')
         a.extend(hex2ba(s, 'big'))
-        if not big_endian:
+        if le:
             a.reverse()
     else: # py3
         b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian())
         a.frombytes(b)
 
     if length is None:
-        return strip(a, 'left' if big_endian else 'right')
+        return strip(a, 'right' if le else 'left')
 
     la = len(a)
     if la > length:
-        a = a[-length:] if big_endian else a[:length]
+        a = a[:length] if le else a[-length:]
     if la < length:
         pad = zeros(length - la, endian)
-        a = pad + a if big_endian else a + pad
+        a = a + pad if le else pad + a
     assert len(a) == length
     return a
 

@@ -1092,12 +1092,24 @@ class TestsIntegerization(unittest.TestCase, Util):
         for a in self.randombitarrays(start=1):
             b = frozenbitarray(a)
             self.assertEqual(ba2int(b), ba2int(a))
+            self.assertEQUAL(a, b)
 
     def test_ba2int_random(self):
         for a in self.randombitarrays(start=1):
             b = bitarray(a, 'big')
             self.assertEqual(a, b)
             self.assertEqual(ba2int(b), int(b.to01(), 2))
+
+    def test_ba2int_bytes(self):
+        for n in range(1, 100):
+            endian = self.random_endian()
+            a = bitarray(8 * n, endian)
+            c = bytearray(a.tobytes())
+            i = 0
+            for x in (c if endian == 'big' else reversed(c)):
+                i <<= 8
+                i |= x
+            self.assertEqual(ba2int(a), i)
 
     def test_int2ba(self):
         self.assertEqual(int2ba(0), bitarray('0'))
@@ -1149,10 +1161,10 @@ class TestsIntegerization(unittest.TestCase, Util):
             self.assertEqual(ba2int(bitarray(s, 'little'), signed=1), i)
             self.assertEqual(ba2int(bitarray(s[::-1], 'big'), signed=1), i)
 
-            lens = len(s.replace(' ', ''))
-            self.assertEQUAL(int2ba(i, lens, 'little', signed=1),
+            len_s = len(bitarray(s))
+            self.assertEQUAL(int2ba(i, len_s, 'little', signed=1),
                              bitarray(s, 'little'))
-            self.assertEQUAL(int2ba(i, lens, 'big', signed=1),
+            self.assertEQUAL(int2ba(i, len_s, 'big', signed=1),
                              bitarray(s[::-1], 'big'))
 
     def test_int2ba_overflow(self):
