@@ -1101,12 +1101,11 @@ class TestsIntegerization(unittest.TestCase, Util):
             self.assertEqual(ba2int(b), int(b.to01(), 2))
 
     def test_ba2int_bytes(self):
-        for n in range(1, 100):
-            endian = self.random_endian()
-            a = urandom(8 * n, endian)
+        for n in range(1, 50):
+            a = urandom(8 * n, self.random_endian())
             c = bytearray(a.tobytes())
             i = 0
-            for x in (c if endian == 'big' else reversed(c)):
+            for x in (c if a.endian() == 'big' else reversed(c)):
                 i <<= 8
                 i |= x
             self.assertEqual(ba2int(a), i)
