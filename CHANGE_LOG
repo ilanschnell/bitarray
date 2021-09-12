@@ -1,3 +1,7 @@
+2021-XX-XX   2.3.5:
+-------------------
+
+
 2021-09-12   2.3.4:
 -------------------
   * Fix `util.ba2int()` for frozenbitarrays.  A bug was introduced in 2.3.0
