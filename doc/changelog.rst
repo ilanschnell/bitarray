@@ -1,6 +1,13 @@
 Change log
 ==========
 
+**2.3.4** (2021-09-12):
+
+* Fix ``util.ba2int()`` for frozenbitarrays.  A bug was introduced in 2.3.0
+  as ``.tobytes()`` no longer treats pad bits for read-only buffers as zero.
+* add tests
+
+
 **2.3.3** (2021-09-05):
 
 * improve some error messages
