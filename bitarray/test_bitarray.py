@@ -1557,6 +1557,17 @@ class RichCompareTests(unittest.TestCase, Util):
             self.assertTrue(a != b)
             self.assertFalse(a == b)
 
+    def test_eq_reserve_shrink(self):
+        a = bitarray('01110010101', 'big')
+        b = a.copy()
+        b.reserve(100)
+        c = b.copy()
+        c.shrinktofit()
+
+        self.assertEqual(a, b)
+        self.assertEqual(a, c)
+        self.assertEqual(b, c)
+
     def check(self, a, b, c, d):
         self.assertEqual(a == b, c == d)
         self.assertEqual(a != b, c != d)
@@ -2505,6 +2516,15 @@ class MethodTests(unittest.TestCase, Util):
                     a.sort(reverse=rev)
                 self.assertEqual(a, bitarray(lst))
                 self.check_obj(a)
+
+    def test_reserve(self):
+        for a in self.randombitarrays():
+            b = a.copy()
+            b.reserve(100)
+            c = b.copy()
+            self.assertEQUAL(a, b)
+            self.assertEQUAL(b, c)
+            self.assertEQUAL(c, a)
 
     def test_reverse_explicit(self):
         for x, y in [('', ''), ('1', '1'), ('10', '01'), ('001', '100'),
@@ -4250,7 +4270,9 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.pop)
         self.assertRaises(TypeError, a.remove, 1)
         self.assertRaises(TypeError, a.reverse)
+        self.assertRaises(TypeError, a.reserve, 100)
         self.assertRaises(TypeError, a.setall, 0)
+        self.assertRaises(TypeError, a.shrinktofit)
         self.assertRaises(TypeError, a.sort)
         self.assertRaises(TypeError, a.__delitem__, 0)
         self.assertRaises(TypeError, a.__delitem__, slice(None, None, 2))

@@ -1228,6 +1228,44 @@ PyDoc_STRVAR(reverse_doc,
 Reverse all bits in the array (in-place).");
 
 
+static PyObject*
+bitarray_reserve(bitarrayobject* self, PyObject* size)
+{
+    Py_ssize_t newsize, old_nbit;
+
+    RAISE_IF_READONLY(self, NULL);
+
+    if (!PyLong_Check(size)) {
+        PyErr_Format(PyExc_TypeError, "size must be an int object.");
+        return NULL;
+    }
+
+    newsize = PyLong_AsSsize_t(size);
+    if (newsize < 0) {
+        PyErr_Format(PyExc_ValueError, "size must be >= 0.");
+        return NULL;
+    }
+
+    old_nbit = self->nbits;
+    if (self->allocated < BYTES(newsize)) {
+        if (resize(self, newsize) < 0) {
+            PyErr_SetString(PyExc_RuntimeError, "????????");
+            return NULL;
+        }
+
+        self->nbits = old_nbit;
+        Py_SET_SIZE(self, BYTES(old_nbit));
+    }
+
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(reserve_doc,
+"reserve(n, /)\n\
+\n\
+Ensure capacity greater than n bits in this bitarray (in-place).");
+
+
 static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
@@ -1309,6 +1347,31 @@ PyDoc_STRVAR(setall_doc,
 \n\
 Set all elements in the bitarray to `value`.\n\
 Note that `a.setall(value)` is equivalent to `a[:] = value`.");
+
+
+static PyObject *
+bitarray_shrinktofit(bitarrayobject *self)
+{
+    Py_ssize_t old_nbit;
+
+    RAISE_IF_READONLY(self, NULL);
+
+    old_nbit = self->nbits;
+    if (self->allocated > BYTES(self->nbits)) {
+        if (resize(self, old_nbit) < 0)
+            return NULL;
+
+        self->nbits = old_nbit;
+        Py_SET_SIZE(self, BYTES(old_nbit));
+    }
+
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(shrinktofit_doc,
+"shrinktofit()\n\
+\n\
+shrink preallocated bytes to fits the real size of this bitarray.");
 
 
 static PyObject *
@@ -3137,6 +3200,8 @@ static PyMethodDef bitarray_methods[] = {
      remove_doc},
     {"reverse",      (PyCFunction) bitarray_reverse,     METH_NOARGS,
      reverse_doc},
+    {"reserve",      (PyCFunction) bitarray_reserve,     METH_O,
+     reserve_doc},
     {"search",       (PyCFunction) bitarray_search,      METH_VARARGS,
      search_doc},
     {"itersearch",   (PyCFunction) bitarray_itersearch,  METH_O,
@@ -3146,6 +3211,8 @@ static PyMethodDef bitarray_methods[] = {
     {"sort",         (PyCFunction) bitarray_sort,        METH_VARARGS |
                                                          METH_KEYWORDS,
      sort_doc},
+    {"shrinktofit",  (PyCFunction) bitarray_shrinktofit, METH_NOARGS,
+     shrinktofit_doc},
     {"to01",         (PyCFunction) bitarray_to01,        METH_NOARGS,
      to01_doc},
     {"tobytes",      (PyCFunction) bitarray_tobytes,     METH_NOARGS,
