@@ -183,7 +183,7 @@ Bitarray objects support the bitwise operators ``~``, ``&``, ``|``, ``^``,
     >>> a &= b
     >>> a
     bitarray('101000001')
-    >>> a <<= 2
+    >>> a <<= 2   # in-place left shift by 2
     >>> a
     bitarray('100000100')
     >>> b >> 1
