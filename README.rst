@@ -187,6 +187,7 @@ Bitarray objects support the bitwise operators ``~``, ``&``, ``|``, ``^``,
     >>> a
     bitarray('100000100')
     >>> b >> 1
+    >>> b
     bitarray('011100101')
 
 The C language does not specify the behavior of negative shifts and
