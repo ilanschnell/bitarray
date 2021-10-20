@@ -31,7 +31,7 @@ print(a.search(1, 20))
 # There are 5,761,455 primes up to 100 million
 print('there are %d primes up to %d' % (a.count(), N))
 
-# The number of twin primes up to 100 million is 400312
+# The number of twin primes up to 100 million is 440312
 print('number of twin primes up to %d is %d' %
       (N, len(a.search(bitarray('101')))))
 
