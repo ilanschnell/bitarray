@@ -8,7 +8,7 @@ memory.  The user can select between two representations: little-endian
 and big-endian.  All functionality is implemented in C.
 Methods for accessing the machine representation are provided, including the
 ability to import and export buffers.  This allows creating bitarrays that
-mapped are to other objects, including memory-mapped files.
+are mapped to other objects, including memory-mapped files.
 
 
 Key features
