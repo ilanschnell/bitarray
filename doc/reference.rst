@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.3.4 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.3.5 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -283,9 +283,9 @@ This sub-module was add in version 1.2.
 
 
 ``pprint(bitarray, /, stream=None, group=8, indent=4, width=80)``
-   Prints the formatted representation of object on ``stream``, followed by a
-   newline.  If ``stream`` is ``None``, ``sys.stdout`` is used.  By default, elements
-   are grouped in bytes (8 elements), and 8 bytes (64 elements) per line.
+   Prints the formatted representation of object on ``stream`` (which defaults
+   to ``sys.stdout``).  By default, elements are grouped in bytes (8 elements),
+   and 8 bytes (64 elements) per line.
    Non-bitarray objects are printed by the standard library
    function ``pprint.pprint()``.
 

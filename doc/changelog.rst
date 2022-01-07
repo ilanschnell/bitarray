@@ -1,6 +1,12 @@
 Change log
 ==========
 
+**2.3.5** (2022-01-07):
+
+* Fixed bug for big-endian systems (such as IBM s390), see `#159 <https://github.com/ilanschnell/bitarray/issues/159>`__ and `#160 <https://github.com/ilanschnell/bitarray/issues/160>`__
+* Pass ``zip_safe=False`` to ``setup()``, see `#151 <https://github.com/ilanschnell/bitarray/issues/151>`__
+
+
 **2.3.4** (2021-09-12):
 
 * Fix ``util.ba2int()`` for frozenbitarrays.  A bug was introduced in 2.3.0
