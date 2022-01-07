@@ -1,4 +1,4 @@
-# Copyright (c) 2019 - 2021, Ilan Schnell; All Rights Reserved
+# Copyright (c) 2019 - 2022, Ilan Schnell; All Rights Reserved
 # bitarray is published under the PSF license.
 #
 # Author: Ilan Schnell
