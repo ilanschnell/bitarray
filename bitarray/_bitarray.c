@@ -196,8 +196,8 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 #ifdef PY_UINT64_T
 #define UINT64_BUFFER(self)  ((PY_UINT64_T *) (self)->ob_item)
 #define UINT64_WORDS(bytes)  ((bytes) >> 3)
-/* use 64-bit word shift when machine has little endian byteorder */
-#define USE_WORD_SHIFT  (*(PY_UINT64_T *) "\xff\0\0\0\0\0\0\0" == 0xff)
+/* use 64-bit word shift only when the machine has little endian byteorder */
+#define USE_WORD_SHIFT  (*((PY_UINT64_T *) "\xff\0\0\0\0\0\0\0") == 0xff)
 #else
 /* The UINT64_BUFFER macro only exists here in order to write code which
    complies with and without PY_UINT64_T defined (in order to avoid
