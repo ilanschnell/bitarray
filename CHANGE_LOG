@@ -1,5 +1,7 @@
-2021-XX-XX   2.3.5:
+2022-01-XX   2.3.5:
 -------------------
+  * Fixed bug in `shift_r8()` on big-endian systems (such as IBM s390),
+    see #159 and #160
   * Pass `zip_safe=False` to `setup()`, see #151
 
 
