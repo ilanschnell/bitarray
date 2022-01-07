@@ -196,12 +196,15 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 #ifdef PY_UINT64_T
 #define UINT64_BUFFER(self)  ((PY_UINT64_T *) (self)->ob_item)
 #define UINT64_WORDS(bytes)  ((bytes) >> 3)
+/* use 64-bit word shift only when the machine has little endian byteorder */
+#define USE_WORD_SHIFT  (*((PY_UINT64_T *) "\xff\0\0\0\0\0\0\0") == 0xff)
 #else
 /* The UINT64_BUFFER macro only exists here in order to write code which
    complies with and without PY_UINT64_T defined (in order to avoid
    #ifdef'ing the code below). */
 #define UINT64_BUFFER(self)  ((self)->ob_item)
 #define UINT64_WORDS(bytes)  0
+#define USE_WORD_SHIFT  0
 #endif
 
 /* Shift bits in byte-range(a, b) by n bits to right (using uint64 shifts
@@ -227,7 +230,8 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 #define ucb  ((unsigned char *) (self)->ob_item)
 
 #ifdef PY_UINT64_T
-    if (b >= a + 8) {
+    if (USE_WORD_SHIFT && b >= a + 8) {
+        /* the word shift code is only designed for little endian machines */
         const Py_ssize_t word_a = (a + 7) / 8;
         const Py_ssize_t word_b = b / 8;
 
@@ -249,7 +253,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
         shift_r8(self, a, 8 * word_a, n, 0);
     }
 #endif
-    if (UINT64_WORDS(8) == 0 || b < a + 8) {
+    if (!USE_WORD_SHIFT || b < a + 8) {
         for (i = b - 1; i >= a; i--) {
             ucb[i] <<= n;    /* shift byte (from highest to lowest) */
             if (i != a)      /* add shifted next lower byte */
@@ -3721,7 +3725,7 @@ Set the default bit endianness for new bitarray objects being created.");
 static PyObject *
 sysinfo(PyObject *module)
 {
-    return Py_BuildValue("iiiiiii",
+    return Py_BuildValue("iiiiiiii",
                          (int) sizeof(void *),
                          (int) sizeof(size_t),
                          (int) sizeof(bitarrayobject),
@@ -3733,10 +3737,11 @@ sysinfo(PyObject *module)
                          0,
 #endif
 #ifndef NDEBUG
-                         1
+                         1,
 #else
-                         0
+                         0,
 #endif
+                         (int) USE_WORD_SHIFT
                          );
 }
 
@@ -3751,7 +3756,8 @@ Return tuple containing:\n\
 3. sizeof(decodetreeobject)\n\
 4. sizeof(binode)\n\
 5. PY_UINT64_T defined\n\
-6. NDEBUG not defined");
+6. NDEBUG not defined\n\
+7. USE_WORD_SHIFT");
 
 
 static PyMethodDef module_functions[] = {
