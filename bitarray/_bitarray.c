@@ -231,7 +231,6 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 
 #ifdef PY_UINT64_T
     if (USE_WORD_SHIFT && b >= a + 8) {
-        /* the word shift code is only designed for little endian machines */
         const Py_ssize_t word_a = (a + 7) / 8;
         const Py_ssize_t word_b = b / 8;
 
@@ -243,7 +242,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 
         for (i = word_b - 1; i >= word_a; i--) {
             assert_byte_in_range(self, 8 * i + 7);
-            /* shift word - assumes little endian machine */
+            /* shift word - assumes machine has little endian byteorder */
             UINT64_BUFFER(self)[i] <<= n;
             if (i != word_a)    /* add shifted byte from next lower word */
                 ucb[8 * i] |= ucb[8 * i - 1] >> (8 - n);
