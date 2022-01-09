@@ -243,7 +243,8 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 
         for (i = word_b - 1; i >= word_a; i--) {
             assert_byte_in_range(self, 8 * i + 7);
-            UINT64_BUFFER(self)[i] <<= n; /* shift word */
+            /* shift word - assumes little endian machine */
+            UINT64_BUFFER(self)[i] <<= n;
             if (i != word_a)    /* add shifted byte from next lower word */
                 ucb[8 * i] |= ucb[8 * i - 1] >> (8 - n);
         }
