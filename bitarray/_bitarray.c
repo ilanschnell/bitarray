@@ -216,6 +216,7 @@ static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 {
     Py_ssize_t i;
+    int m = 8 - n;
 
     assert(0 <= n && n < 8 && a <= b);
     assert(0 <= a && a <= Py_SIZE(self));
@@ -239,17 +240,17 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 
         shift_r8(self, 8 * word_b, b, n, 0);
         if (8 * word_b != b)  /* add byte from word below */
-            ucb[8 * word_b] |= ucb[8 * word_b - 1] >> (8 - n);
+            ucb[8 * word_b] |= ucb[8 * word_b - 1] >> m;
 
         for (i = word_b - 1; i >= word_a; i--) {
             assert_byte_in_range(self, 8 * i + 7);
             /* shift word - assumes machine has little endian byteorder */
             UINT64_BUFFER(self)[i] <<= n;
             if (i != word_a)    /* add shifted byte from next lower word */
-                ucb[8 * i] |= ucb[8 * i - 1] >> (8 - n);
+                ucb[8 * i] |= ucb[8 * i - 1] >> m;
         }
         if (a != 8 * word_a)  /* add byte from below */
-            ucb[8 * word_a] |= ucb[8 * word_a - 1] >> (8 - n);
+            ucb[8 * word_a] |= ucb[8 * word_a - 1] >> m;
 
         shift_r8(self, a, 8 * word_a, n, 0);
     }
@@ -257,7 +258,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
         for (i = b - 1; i >= a; i--) {
             ucb[i] <<= n;    /* shift byte (from highest to lowest) */
             if (i != a)      /* add shifted next lower byte */
-                ucb[i] |= ucb[i - 1] >> (8 - n);
+                ucb[i] |= ucb[i - 1] >> m;
         }
     }
 #undef ucb
