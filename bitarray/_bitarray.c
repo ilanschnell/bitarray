@@ -231,8 +231,9 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 #define ucb  ((unsigned char *) (self)->ob_item)
 
     if (USE_WORD_SHIFT && b >= a + 8) {
-        const Py_ssize_t wa = (a + 7) / 8, va = 8 * wa;
-        const Py_ssize_t wb = b / 8, vb = 8 * wb;
+        const Py_ssize_t wa = (a + 7) / 8;  /* word range(wa, wb) */
+        const Py_ssize_t wb = b / 8;
+        const Py_ssize_t va = 8 * wa, vb = 8 * wb;
 
         assert(wa <= wb && b - vb < 8 && va - a < 8);
         assert(a <  vb && vb <= b);
