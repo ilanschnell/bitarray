@@ -231,16 +231,16 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 #define ucb  ((unsigned char *) (self)->ob_item)
 
     if (USE_WORD_SHIFT && b >= a + 8) {
-        const Py_ssize_t wa = (a + 7) / 8;
-        const Py_ssize_t wb = b / 8;
+        const Py_ssize_t wa = (a + 7) / 8, va = 8 * wa;
+        const Py_ssize_t wb = b / 8, vb = 8 * wb;
 
-        assert(wa <= wb && b - 8 * wb < 8 && 8 * wa - a < 8);
-        assert(a <  8 * wb && 8 * wb <= b);
-        assert(a <= 8 * wa && 8 * wa <  b);
+        assert(wa <= wb && b - vb < 8 && va - a < 8);
+        assert(a <  vb && vb <= b);
+        assert(a <= va && va <  b);
 
-        shift_r8(self, 8 * wb, b, n, 0);
-        if (8 * wb != b)  /* add byte from word below */
-            ucb[8 * wb] |= ucb[8 * wb - 1] >> m;
+        shift_r8(self, vb, b, n, 0);
+        if (b != vb)  /* add byte from word below */
+            ucb[vb] |= ucb[vb - 1] >> m;
 
         for (i = wb - 1; i >= wa; i--) {
             assert_byte_in_range(self, 8 * i + 7);
@@ -249,10 +249,10 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
             if (i != wa)    /* add shifted byte from next lower word */
                 ucb[8 * i] |= ucb[8 * i - 1] >> m;
         }
-        if (a != 8 * wa)  /* add byte from below */
-            ucb[8 * wa] |= ucb[8 * wa - 1] >> m;
+        if (a != va)  /* add byte from below */
+            ucb[va] |= ucb[va - 1] >> m;
 
-        shift_r8(self, a, 8 * wa, n, 0);
+        shift_r8(self, a, va, n, 0);
     }
     else {
         for (i = b - 1; i >= a; i--) {
