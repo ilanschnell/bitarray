@@ -234,9 +234,11 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
         const Py_ssize_t word_b = b / 8;
 
         assert(word_a <= word_b && b - 8 * word_b < 8 && 8 * word_a - a < 8);
+        assert(a <  8 * word_b && 8 * word_b <= b);
+        assert(a <= 8 * word_a && 8 * word_a <  b);
 
         shift_r8(self, 8 * word_b, b, n, 0);
-        if (a < 8 * word_b && 8 * word_b < b)  /* add byte from word below */
+        if (8 * word_b != b)  /* add byte from word below */
             ucb[8 * word_b] |= ucb[8 * word_b - 1] >> (8 - n);
 
         for (i = word_b - 1; i >= word_a; i--) {
@@ -246,7 +248,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
             if (i != word_a)    /* add shifted byte from next lower word */
                 ucb[8 * i] |= ucb[8 * i - 1] >> (8 - n);
         }
-        if (a < 8 * word_a && 8 * word_a < b)  /* add byte from below */
+        if (a != 8 * word_a)  /* add byte from below */
             ucb[8 * word_a] |= ucb[8 * word_a - 1] >> (8 - n);
 
         shift_r8(self, a, 8 * word_a, n, 0);
