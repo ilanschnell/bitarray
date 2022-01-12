@@ -215,8 +215,8 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 {
+    const int m = 8 - n;
     Py_ssize_t i;
-    int m = 8 - n;
 
     assert(0 <= n && n < 8 && a <= b);
     assert(0 <= a && a <= Py_SIZE(self));
@@ -231,28 +231,28 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 #define ucb  ((unsigned char *) (self)->ob_item)
 
     if (USE_WORD_SHIFT && b >= a + 8) {
-        const Py_ssize_t word_a = (a + 7) / 8;
-        const Py_ssize_t word_b = b / 8;
+        const Py_ssize_t wa = (a + 7) / 8;
+        const Py_ssize_t wb = b / 8;
 
-        assert(word_a <= word_b && b - 8 * word_b < 8 && 8 * word_a - a < 8);
-        assert(a <  8 * word_b && 8 * word_b <= b);
-        assert(a <= 8 * word_a && 8 * word_a <  b);
+        assert(wa <= wb && b - 8 * wb < 8 && 8 * wa - a < 8);
+        assert(a <  8 * wb && 8 * wb <= b);
+        assert(a <= 8 * wa && 8 * wa <  b);
 
-        shift_r8(self, 8 * word_b, b, n, 0);
-        if (8 * word_b != b)  /* add byte from word below */
-            ucb[8 * word_b] |= ucb[8 * word_b - 1] >> m;
+        shift_r8(self, 8 * wb, b, n, 0);
+        if (8 * wb != b)  /* add byte from word below */
+            ucb[8 * wb] |= ucb[8 * wb - 1] >> m;
 
-        for (i = word_b - 1; i >= word_a; i--) {
+        for (i = wb - 1; i >= wa; i--) {
             assert_byte_in_range(self, 8 * i + 7);
             /* shift word - assumes machine has little endian byteorder */
             UINT64_BUFFER(self)[i] <<= n;
-            if (i != word_a)    /* add shifted byte from next lower word */
+            if (i != wa)    /* add shifted byte from next lower word */
                 ucb[8 * i] |= ucb[8 * i - 1] >> m;
         }
-        if (a != 8 * word_a)  /* add byte from below */
-            ucb[8 * word_a] |= ucb[8 * word_a - 1] >> m;
+        if (a != 8 * wa)  /* add byte from below */
+            ucb[8 * wa] |= ucb[8 * wa - 1] >> m;
 
-        shift_r8(self, a, 8 * word_a, n, 0);
+        shift_r8(self, a, 8 * wa, n, 0);
     }
     else {
         for (i = b - 1; i >= a; i--) {
