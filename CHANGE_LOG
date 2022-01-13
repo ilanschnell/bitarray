@@ -1,5 +1,7 @@
 2022-XX-XX   2.3.6:
 -------------------
+  * determine machine endianness at build time when possible, by using
+    the `PY_LITTLE_ENDIAN` macro, in order to optimize `shift_r8()`
 
 
 2022-01-07   2.3.5:
