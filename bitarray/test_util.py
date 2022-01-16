@@ -1353,7 +1353,7 @@ class MixedTests(unittest.TestCase, Util):
     def test_primes(self):  # Sieve of Eratosthenes
         sieve = bitarray(10000)
         sieve.setall(1)
-        sieve[:2] = 0
+        sieve[:2] = 0  # zero and one are not prime
         for i in range(2, 100):
             if sieve[i]:
                 sieve[i * i::i] = 0
