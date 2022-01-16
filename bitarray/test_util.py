@@ -1350,6 +1350,23 @@ class MixedTests(unittest.TestCase, Util):
                 c <<= n
                 self.assertEqual(ba2int(c), i << n)
 
+    def test_primes(self):  # Sieve of Eratosthenes
+        sieve = bitarray(10000)
+        sieve.setall(1)
+        sieve[:2] = 0
+        for i in range(2, 100):
+            if sieve[i]:
+                sieve[i * i::i] = 0
+        # the first 15 primes
+        self.assertEqual(sieve.search(1, 15), [2, 3, 5, 7, 11, 13, 17, 19,
+                                               23, 29, 31, 37, 41, 43, 47])
+        # there are 1229 primes between 1 and 10000
+        self.assertEqual(sieve.count(1), 1229)
+        # there are 119 primes between 4000 and 5000
+        self.assertEqual(sieve.count(1, 4000, 5000), 119)
+        # the 1000th prime is 7919
+        self.assertEqual(count_n(sieve, 1000) - 1, 7919)
+
 tests.append(MixedTests)
 
 # ---------------------------------------------------------------------------

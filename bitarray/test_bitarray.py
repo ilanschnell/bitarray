@@ -1241,17 +1241,6 @@ class SliceTests(unittest.TestCase, Util):
             a.__setitem__, slice(None, None, -1), bitarray('0001000'))
         self.assertEqual(a, bitarray('11000011'))
 
-    def test_sieve(self):  # Sieve of Eratosthenes
-        a = bitarray(50)
-        a.setall(1)
-        a[0:2] = 0
-        for i in range(2, 8):
-            if a[i]:
-                a[i * i::i] = 0
-        primes = a.search(1)
-        self.assertEqual(primes, [2, 3, 5, 7, 11, 13, 17, 19,
-                                  23, 29, 31, 37, 41, 43, 47])
-
     def test_delitem_simple(self):
         a = bitarray('100110')
         del a[1]
