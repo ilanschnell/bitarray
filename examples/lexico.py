@@ -1,13 +1,15 @@
 # issue 6
 # http://www-graphics.stanford.edu/~seander/bithacks.html#NextBitPermutation
 
-from math import factorial
 from bitarray import bitarray, get_default_endian
 from bitarray.util import ba2int, int2ba, zeros
 
-
-def binomial(n, k):
-    return factorial(n) // (factorial(k) * factorial(n - k))
+try:
+    from math import comb
+except ImportError:
+    from math import factorial
+    def comb(n, k):
+        return factorial(n) // (factorial(k) * factorial(n - k))
 
 
 def all_perm(n, k, endian=None):
@@ -28,7 +30,7 @@ in lexicographical order.
         return
 
     v = (1 << k) - 1
-    for _ in range(binomial(n, k)):
+    for _ in range(comb(n, k)):
         yield int2ba(v, length=n,
                 endian=get_default_endian() if endian is None else endian)
         t = (v | (v - 1)) + 1
@@ -118,12 +120,12 @@ class PermTests(unittest.TestCase, Util):
             n += 1
             if a == s:
                 break
-        self.assertEqual(n, binomial(len(s), s1))
+        self.assertEqual(n, comb(len(s), s1))
         self.assertEqual(len(coll), n)
 
     def check_order(self, a):
         i = -1
-        for _ in range(binomial(len(a), a.count())):
+        for _ in range(comb(len(a), a.count())):
             i, j = ba2int(a), i
             self.assertTrue(i > j)
             a = next_perm(a)
@@ -165,8 +167,8 @@ class PermTests(unittest.TestCase, Util):
             self.assertEqual(a.count(), k)
             s.add(frozenbitarray(a))
             c += 1
-        self.assertEqual(c, binomial(n, k))
-        self.assertEqual(len(s), binomial(n, k))
+        self.assertEqual(c, comb(n, k))
+        self.assertEqual(len(s), comb(n, k))
 
 # ---------------------------------------------------------------------------
 
