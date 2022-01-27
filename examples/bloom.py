@@ -7,7 +7,7 @@ from bitarray import bitarray
 if sys.version_info[0] == 2:
     int = long
     range = xrange
-    log2 = lambda x: log(x) / log(2)
+    log2 = lambda x: log(x, 2.0)
 else:
     from math import log2
 
