@@ -8,8 +8,7 @@ try:
     from math import comb
 except ImportError:
     from math import factorial
-    def comb(n, k):
-        return factorial(n) // (factorial(k) * factorial(n - k))
+    comb = lambda n, k: factorial(n) // (factorial(k) * factorial(n - k))
 
 
 def all_perm(n, k, endian=None):
