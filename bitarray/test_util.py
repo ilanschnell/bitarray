@@ -440,7 +440,7 @@ class TestsCount_N(unittest.TestCase, Util):
         self.assertRaises(ValueError, count_n, a, 1)
         self.assertRaises(TypeError, count_n, '', 0)
         self.assertRaises(TypeError, count_n, a, 7.0)
-        self.assertRaises(TypeError, count_n, a, 0, 0)
+        self.assertRaises(ValueError, count_n, a, 0, 2)
 
     def test_simple(self):
         a = bitarray('111110111110111110111110011110111110111110111000')
@@ -515,8 +515,11 @@ class TestsCount_N(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            n = a.count() // 2
-            i = count_n(a, n)
+            n = a.count(0) // 2
+            i = count_n(a, n, 0)
+            self.check_result(~a, n, i)
+            n = a.count(1) // 2
+            i = count_n(a, n, 1)
             self.check_result(a, n, i)
 
 tests.append(TestsCount_N)
