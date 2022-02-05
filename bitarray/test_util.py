@@ -463,6 +463,7 @@ class TestsCount_N(unittest.TestCase, Util):
 
         self.assertEqual(count_n(a, 0), 0)
         self.assertEqual(count_n(a, 20), 23)
+        self.assertEqual(count_n(a, 20, 1), 23)
         self.assertEqual(count_n(a, 37), 45)
         self.assertRaisesMessage(ValueError, "non-negative integer expected",
                                  count_n, a, -1) # n < 0
@@ -472,7 +473,7 @@ class TestsCount_N(unittest.TestCase, Util):
                                  count_n, a, 38) # n > a.count()
 
         for v in 0, 1:
-            for n in range(0, a.count(v) + 1):
+            for n in range(a.count(v) + 1):
                 i = count_n(a, n, v)
                 self.check_result(a, n, i, v)
                 self.assertEqual(a[:i].count(v), n)
@@ -489,7 +490,7 @@ class TestsCount_N(unittest.TestCase, Util):
         self.assertRaises(ValueError, count_n, a, -1) # n < 0
         self.assertRaises(ValueError, count_n, a, 25) # n > a.count()
         self.assertRaises(ValueError, count_n, a, 34) # n > len(a)
-        for n in range(0, 25):
+        for n in range(25):
             self.check_result(a, n, count_n(a, n))
 
     def test_ones(self):
@@ -548,7 +549,7 @@ class TestsBitwiseCount(unittest.TestCase, Util):
         ones.setall(1)
         zeros = bitarray(8)
         zeros.setall(0)
-        for i in range(0, 256):
+        for i in range(256):
             a = bitarray()
             a.frombytes(bytes(bytearray([i])))
             cnt = a.count()
