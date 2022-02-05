@@ -427,12 +427,12 @@ class TestsCount_N(unittest.TestCase, Util):
             i += 1
         return i
 
-    def check_result(self, a, n, i):
-        self.assertEqual(a.count(1, 0, i), n)
+    def check_result(self, a, n, i, v=1):
+        self.assertEqual(a.count(v, 0, i), n)
         if i == 0:
             self.assertEqual(n, 0)
         else:
-            self.assertTrue(a[i - 1])
+            self.assertEqual(a[i - 1], v)
 
     def test_empty(self):
         a = bitarray()
@@ -515,12 +515,10 @@ class TestsCount_N(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            n = a.count(0) // 2
-            i = count_n(a, n, 0)
-            self.check_result(~a, n, i)
-            n = a.count(1) // 2
-            i = count_n(a, n, 1)
-            self.check_result(a, n, i)
+            for v in 0, 1:
+                n = a.count(v) // 2
+                i = count_n(a, n, v)
+                self.check_result(a, n, i, v)
 
 tests.append(TestsCount_N)
 
