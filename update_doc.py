@@ -30,6 +30,7 @@ NEW_IN = {
     'util.base2ba':         '1.9',
     'util.parity':          '1.9',
     'util.rindex':          '2.3.0: optional `start` and `stop` arguments',
+    'util.count_n':         '2.3.6: optional `value` argument',
     'util.vl_encode':       '2.2',
     'util.vl_decode':       '2.2',
 }
