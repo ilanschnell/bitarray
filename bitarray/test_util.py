@@ -437,6 +437,8 @@ class TestsCount_N(unittest.TestCase, Util):
     def test_empty(self):
         a = bitarray()
         self.assertEqual(count_n(a, 0), 0)
+        self.assertEqual(count_n(a, 0, 0), 0)
+        self.assertEqual(count_n(a, 0, 1), 0)
         self.assertRaises(ValueError, count_n, a, 1)
         self.assertRaises(TypeError, count_n, '', 0)
         self.assertRaises(TypeError, count_n, a, 7.0)
@@ -447,6 +449,18 @@ class TestsCount_N(unittest.TestCase, Util):
         b = a.copy()
         self.assertEqual(len(a), 48)
         self.assertEqual(a.count(), 37)
+        self.assertEqual(a.count(0), 11)
+
+        self.assertEqual(count_n(a, 0, 0), 0)
+        self.assertEqual(count_n(a, 2, 0), 12)
+        self.assertEqual(count_n(a, 10, 0), 47)
+        self.assertRaisesMessage(ValueError, "non-negative integer expected",
+                                 count_n, a, -1, 0) # n < 0
+        self.assertRaisesMessage(ValueError, "n larger than bitarray size",
+                                 count_n, a, 49, 0) # n > len(a)
+        self.assertRaisesMessage(ValueError, "n exceeds total count",
+                                 count_n, a, 12, 0) # n > a.count(0)
+
         self.assertEqual(count_n(a, 0), 0)
         self.assertEqual(count_n(a, 20), 23)
         self.assertEqual(count_n(a, 37), 45)
@@ -456,11 +470,13 @@ class TestsCount_N(unittest.TestCase, Util):
                                  count_n, a, 49) # n > len(a)
         self.assertRaisesMessage(ValueError, "n exceeds total count",
                                  count_n, a, 38) # n > a.count()
-        for n in range(0, 38):
-            i = count_n(a, n)
-            self.check_result(a, n, i)
-            self.assertEqual(a[:i].count(), n)
-            self.assertEqual(i, self.count_n(a, n))
+
+        for v in 0, 1:
+            for n in range(0, a.count(v) + 1):
+                i = count_n(a, n, v)
+                self.check_result(a, n, i, v)
+                self.assertEqual(a[:i].count(v), n)
+                self.assertEqual(i, self.count_n(a if v else ~a, n))
         self.assertEQUAL(a, b)
 
     def test_frozen(self):
@@ -481,6 +497,7 @@ class TestsCount_N(unittest.TestCase, Util):
         a = bitarray(n)
         a.setall(1)
         self.assertEqual(count_n(a, n), n)
+        self.assertRaises(ValueError, count_n, a, 1, 0)
         self.assertRaises(ValueError, count_n, a, n + 1)
         for _ in range(20):
             i = randint(0, n)
