@@ -98,10 +98,7 @@ count_to_n(bitarrayobject *a, Py_ssize_t n, int vi)
     }
 
     while (j < n && i < nbits) {
-        m = getbit(a, i);
-        if (!vi)
-            m = 1 - m;
-        j += m;
+        j += vi ? getbit(a, i) : 1 - getbit(a, i);
         i++;
     }
     if (j < n)  /* n exceeds total count */
