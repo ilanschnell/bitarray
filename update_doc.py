@@ -12,27 +12,27 @@ import bitarray.util
 BASE_URL = "https://github.com/ilanschnell/bitarray"
 
 NEW_IN = {
-    'frozenbitarray':       '1.1',
-    'get_default_endian':   '1.3',
-    'util.make_endian':     '1.3',
     'bitarray':             '2.3: optional `buffer` argument',
     'bitarray.bytereverse': '2.2.5: optional `start` and `stop` arguments',
-    'bitarray.count':       '1.1.0: optional `start` and `stop` arguments',
     'bitarray.clear':       '1.4',
+    'bitarray.count':       '1.1.0: optional `start` and `stop` arguments',
     'bitarray.find':        '2.1',
     'bitarray.invert':      '1.5.3: optional `index` argument',
     'decodetree':           '1.6',
-    'util.urandom':         '1.7',
-    'util.pprint':          '1.8',
-    'util.serialize':       '1.8',
-    'util.deserialize':     '1.8',
+    'frozenbitarray':       '1.1',
+    'get_default_endian':   '1.3',
     'util.ba2base':         '1.9',
     'util.base2ba':         '1.9',
-    'util.parity':          '1.9',
-    'util.rindex':          '2.3.0: optional `start` and `stop` arguments',
     'util.count_n':         '2.3.6: optional `value` argument',
-    'util.vl_encode':       '2.2',
+    'util.deserialize':     '1.8',
+    'util.make_endian':     '1.3',
+    'util.parity':          '1.9',
+    'util.pprint':          '1.8',
+    'util.rindex':          '2.3.0: optional `start` and `stop` arguments',
+    'util.serialize':       '1.8',
+    'util.urandom':         '1.7',
     'util.vl_decode':       '2.2',
+    'util.vl_encode':       '2.2',
 }
 
 DOCS = {
@@ -43,10 +43,10 @@ DOCS = {
 DOC_LINKS = {
     'util.ba2base':     'rep',
     'util.base2ba':     'rep',
-    'util.serialize':   'rep',
     'util.deserialize': 'rep',
-    'util.vl_encode':   'vlf',
+    'util.serialize':   'rep',
     'util.vl_decode':   'vlf',
+    'util.vl_encode':   'vlf',
 }
 
 _NAMES = set()
