@@ -1,5 +1,6 @@
 2022-02-XX   2.3.6:
 -------------------
+  * add optional value parameter to count_n(), see #154 and #161
   * determine machine endianness at build time when possible, by using
     the `PY_LITTLE_ENDIAN` macro, in order to optimize `shift_r8()`
   * add official Python 3.11 support
