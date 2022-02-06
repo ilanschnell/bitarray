@@ -518,18 +518,21 @@ class TestsCount_N(unittest.TestCase, Util):
             self.assertRaises(ValueError, count_n, a, 2)
 
     def test_large(self):
-        for N in list(range(50)) + [randint(50, 250000) for _ in range(10)]:
+        for _ in range(100):
+            N = randint(100000, 250000)
             a = bitarray(N)
             v = randint(0, 1)
             a.setall(not v)
-            for _ in range(randint(0, min(N, 100))):
+            for _ in range(100):
                 a[randint(0, N - 1)] = v
-            tc = a.count()      # total count
-            self.check_result(a, tc, count_n(a, tc))
-            self.assertRaises(ValueError, count_n, a, tc + 1)
+            tc = a.count(v)      # total count
+            i = count_n(a, tc, v)
+            self.check_result(a, tc, i, v)
+            self.assertRaises(ValueError, count_n, a, tc + 1, v)
             for _ in range(20):
                 n = randint(0, tc)
-                self.check_result(a, n, count_n(a, n))
+                i = count_n(a, n, v)
+                self.check_result(a, n, i, v)
 
     def test_random(self):
         for a in self.randombitarrays():
