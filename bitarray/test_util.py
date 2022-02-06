@@ -427,28 +427,43 @@ class TestsCount_N(unittest.TestCase, Util):
             i += 1
         return i
 
-    def check_result(self, a, n, i):
-        self.assertEqual(a.count(1, 0, i), n)
+    def check_result(self, a, n, i, v=1):
+        self.assertEqual(a.count(v, 0, i), n)
         if i == 0:
             self.assertEqual(n, 0)
         else:
-            self.assertTrue(a[i - 1])
+            self.assertEqual(a[i - 1], v)
 
     def test_empty(self):
         a = bitarray()
         self.assertEqual(count_n(a, 0), 0)
+        self.assertEqual(count_n(a, 0, 0), 0)
+        self.assertEqual(count_n(a, 0, 1), 0)
         self.assertRaises(ValueError, count_n, a, 1)
         self.assertRaises(TypeError, count_n, '', 0)
         self.assertRaises(TypeError, count_n, a, 7.0)
-        self.assertRaises(TypeError, count_n, a, 0, 0)
+        self.assertRaises(ValueError, count_n, a, 0, 2)
 
     def test_simple(self):
         a = bitarray('111110111110111110111110011110111110111110111000')
         b = a.copy()
         self.assertEqual(len(a), 48)
         self.assertEqual(a.count(), 37)
+        self.assertEqual(a.count(0), 11)
+
+        self.assertEqual(count_n(a, 0, 0), 0)
+        self.assertEqual(count_n(a, 2, 0), 12)
+        self.assertEqual(count_n(a, 10, 0), 47)
+        self.assertRaisesMessage(ValueError, "non-negative integer expected",
+                                 count_n, a, -1, 0) # n < 0
+        self.assertRaisesMessage(ValueError, "n larger than bitarray size",
+                                 count_n, a, 49, 0) # n > len(a)
+        self.assertRaisesMessage(ValueError, "n exceeds total count",
+                                 count_n, a, 12, 0) # n > a.count(0)
+
         self.assertEqual(count_n(a, 0), 0)
         self.assertEqual(count_n(a, 20), 23)
+        self.assertEqual(count_n(a, 20, 1), 23)
         self.assertEqual(count_n(a, 37), 45)
         self.assertRaisesMessage(ValueError, "non-negative integer expected",
                                  count_n, a, -1) # n < 0
@@ -456,11 +471,13 @@ class TestsCount_N(unittest.TestCase, Util):
                                  count_n, a, 49) # n > len(a)
         self.assertRaisesMessage(ValueError, "n exceeds total count",
                                  count_n, a, 38) # n > a.count()
-        for n in range(0, 38):
-            i = count_n(a, n)
-            self.check_result(a, n, i)
-            self.assertEqual(a[:i].count(), n)
-            self.assertEqual(i, self.count_n(a, n))
+
+        for v in 0, 1:
+            for n in range(a.count(v) + 1):
+                i = count_n(a, n, v)
+                self.check_result(a, n, i, v)
+                self.assertEqual(a[:i].count(v), n)
+                self.assertEqual(i, self.count_n(a if v else ~a, n))
         self.assertEQUAL(a, b)
 
     def test_frozen(self):
@@ -473,7 +490,7 @@ class TestsCount_N(unittest.TestCase, Util):
         self.assertRaises(ValueError, count_n, a, -1) # n < 0
         self.assertRaises(ValueError, count_n, a, 25) # n > a.count()
         self.assertRaises(ValueError, count_n, a, 34) # n > len(a)
-        for n in range(0, 25):
+        for n in range(25):
             self.check_result(a, n, count_n(a, n))
 
     def test_ones(self):
@@ -481,6 +498,7 @@ class TestsCount_N(unittest.TestCase, Util):
         a = bitarray(n)
         a.setall(1)
         self.assertEqual(count_n(a, n), n)
+        self.assertRaises(ValueError, count_n, a, 1, 0)
         self.assertRaises(ValueError, count_n, a, n + 1)
         for _ in range(20):
             i = randint(0, n)
@@ -500,24 +518,28 @@ class TestsCount_N(unittest.TestCase, Util):
             self.assertRaises(ValueError, count_n, a, 2)
 
     def test_large(self):
-        for N in list(range(50)) + [randint(50, 250000) for _ in range(10)]:
+        for _ in range(100):
+            N = randint(100000, 250000)
             a = bitarray(N)
             v = randint(0, 1)
             a.setall(not v)
-            for _ in range(randint(0, min(N, 100))):
+            for _ in range(100):
                 a[randint(0, N - 1)] = v
-            tc = a.count()      # total count
-            self.check_result(a, tc, count_n(a, tc))
-            self.assertRaises(ValueError, count_n, a, tc + 1)
+            tc = a.count(v)      # total count
+            i = count_n(a, tc, v)
+            self.check_result(a, tc, i, v)
+            self.assertRaises(ValueError, count_n, a, tc + 1, v)
             for _ in range(20):
                 n = randint(0, tc)
-                self.check_result(a, n, count_n(a, n))
+                i = count_n(a, n, v)
+                self.check_result(a, n, i, v)
 
     def test_random(self):
         for a in self.randombitarrays():
-            n = a.count() // 2
-            i = count_n(a, n)
-            self.check_result(a, n, i)
+            for v in 0, 1:
+                n = a.count(v) // 2
+                i = count_n(a, n, v)
+                self.check_result(a, n, i, v)
 
 tests.append(TestsCount_N)
 
@@ -530,7 +552,7 @@ class TestsBitwiseCount(unittest.TestCase, Util):
         ones.setall(1)
         zeros = bitarray(8)
         zeros.setall(0)
-        for i in range(0, 256):
+        for i in range(256):
             a = bitarray()
             a.frombytes(bytes(bytearray([i])))
             cnt = a.count()

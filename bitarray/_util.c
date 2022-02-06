@@ -52,10 +52,10 @@ ensure_ba_of_length(PyObject *a, const Py_ssize_t n)
 
 /* ------------------------------- count_n ----------------------------- */
 
-/* return the smallest index i for which a.count(1, 0, i) == n, or when
+/* return the smallest index i for which a.count(vi, 0, i) == n, or when
    n exceeds the total count return -1  */
 static Py_ssize_t
-count_to_n(bitarrayobject *a, Py_ssize_t n)
+count_to_n(bitarrayobject *a, Py_ssize_t n, int vi)
 {
     const Py_ssize_t nbits = a->nbits;
     Py_ssize_t i = 0;        /* index */
@@ -76,6 +76,8 @@ count_to_n(bitarrayobject *a, Py_ssize_t n)
         assert(block_stop <= Py_SIZE(a));
         for (k = block_start; k < block_stop; k++)
             m += bitcount_lookup[(unsigned char) a->ob_item[k]];
+        if (!vi)
+            m = BLOCK_BITS - m;
         if (j + m >= n)
             break;
         j += m;
@@ -87,6 +89,8 @@ count_to_n(bitarrayobject *a, Py_ssize_t n)
         k = i >> 3;
         assert(k < Py_SIZE(a));
         m = bitcount_lookup[(unsigned char) a->ob_item[k]];
+        if (!vi)
+            m = 8 - m;
         if (j + m >= n)
             break;
         j += m;
@@ -94,7 +98,7 @@ count_to_n(bitarrayobject *a, Py_ssize_t n)
     }
 
     while (j < n && i < nbits) {
-        j += getbit(a, i);
+        j += vi ? getbit(a, i) : 1 - getbit(a, i);
         i++;
     }
     if (j < n)  /* n exceeds total count */
@@ -106,12 +110,15 @@ count_to_n(bitarrayobject *a, Py_ssize_t n)
 static PyObject *
 count_n(PyObject *module, PyObject *args)
 {
-    PyObject *a;
+    PyObject *value = Py_True, *a;
     Py_ssize_t n, i;
+    int vi;
 
-    if (!PyArg_ParseTuple(args, "On:count_n", &a, &n))
+    if (!PyArg_ParseTuple(args, "On|O:count_n", &a, &n, &value))
         return NULL;
     if (ensure_bitarray(a) < 0)
+        return NULL;
+    if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
     if (n < 0) {
@@ -123,7 +130,7 @@ count_n(PyObject *module, PyObject *args)
         PyErr_SetString(PyExc_ValueError, "n larger than bitarray size");
         return NULL;
     }
-    i = count_to_n(aa, n);        /* do actual work here */
+    i = count_to_n(aa, n, vi);        /* do actual work here */
 #undef aa
     if (i < 0) {
         PyErr_SetString(PyExc_ValueError, "n exceeds total count");
@@ -133,10 +140,10 @@ count_n(PyObject *module, PyObject *args)
 }
 
 PyDoc_STRVAR(count_n_doc,
-"count_n(a, n, /) -> int\n\
+"count_n(a, n, value=1, /) -> int\n\
 \n\
-Return lowest index `i` for which `a[:i].count() == n`.\n\
-Raises `ValueError`, when n exceeds total count (`a.count()`).");
+Return lowest index `i` for which `a[:i].count(value) == n`.\n\
+Raises `ValueError`, when n exceeds total count (`a.count(value)`).");
 
 /* ----------------------------- right index --------------------------- */
 
