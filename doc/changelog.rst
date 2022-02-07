@@ -1,6 +1,14 @@
 Change log
 ==========
 
+**2.3.6** (2022-02-07):
+
+* add optional value parameter to ``util.count_n()``, see `#154 <https://github.com/ilanschnell/bitarray/issues/154>`__ and `#161 <https://github.com/ilanschnell/bitarray/issues/161>`__
+* determine machine endianness at build time when possible, by using
+  the ``PY_LITTLE_ENDIAN`` macro, in order to optimize ``shift_r8()``
+* add official Python 3.11 support
+
+
 **2.3.5** (2022-01-07):
 
 * Fixed bug for big-endian systems (such as IBM s390), see `#159 <https://github.com/ilanschnell/bitarray/issues/159>`__ and `#160 <https://github.com/ilanschnell/bitarray/issues/160>`__

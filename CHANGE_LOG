@@ -1,4 +1,4 @@
-2022-02-XX   2.3.6:
+2022-02-07   2.3.6:
 -------------------
   * add optional value parameter to `util.count_n()`, see #154 and #161
   * determine machine endianness at build time when possible, by using
