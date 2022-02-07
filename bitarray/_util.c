@@ -118,13 +118,13 @@ count_n(PyObject *module, PyObject *args)
         return NULL;
     if (ensure_bitarray(a) < 0)
         return NULL;
-    if ((vi = pybit_as_int(value)) < 0)
-        return NULL;
-
     if (n < 0) {
         PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
         return NULL;
     }
+    if ((vi = pybit_as_int(value)) < 0)
+        return NULL;
+
 #define aa  ((bitarrayobject *) a)
     if (n > aa->nbits)  {
         PyErr_SetString(PyExc_ValueError, "n larger than bitarray size");
