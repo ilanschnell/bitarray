@@ -335,7 +335,7 @@ calculate the Huffman code, i.e. a dict mapping those symbols to
 bitarrays (with given endianness).  Note that the symbols are not limited
 to being strings.  Symbols may may be any hashable object (such as `None`).
 """
-    import heapq
+    from heapq import heappush, heappop
 
     if not isinstance(__freq_map, dict):
         raise TypeError("dict expected, got '%s'" % type(__freq_map).__name__)
@@ -361,18 +361,18 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
             nd = Node()
             nd.symbol = sym
             nd.freq = f
-            heapq.heappush(minheap, nd)
+            heappush(minheap, nd)
 
         # repeat the process until only one node remains
         while len(minheap) > 1:
             # take the nodes with smallest frequencies from the queue
-            child_0 = heapq.heappop(minheap)
-            child_1 = heapq.heappop(minheap)
+            child_0 = heappop(minheap)
+            child_1 = heappop(minheap)
             # construct the new internal node and push it onto the queue
             parent = Node()
             parent.child = [child_0, child_1]
             parent.freq = child_0.freq + child_1.freq
-            heapq.heappush(minheap, parent)
+            heappush(minheap, parent)
 
         # the single remaining node is the root of the Huffman tree
         return minheap[0]
