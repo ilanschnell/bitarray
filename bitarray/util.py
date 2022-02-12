@@ -356,7 +356,7 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
         # construct a Huffman tree and return its root node
 
         minheap = []
-        # create all the leaf nodes and push them onto the queue
+        # create all leaf nodes and push them onto the queue
         for sym, f in freq_map.items():
             nd = Node()
             nd.symbol = sym
@@ -365,7 +365,7 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
 
         # repeat the process until only one node remains
         while len(minheap) > 1:
-            # take the nodes with smallest frequencies from the queue
+            # take the two nodes with smallest frequencies from the queue
             child_0 = heappop(minheap)
             child_1 = heappop(minheap)
             # construct the new internal node and push it onto the queue

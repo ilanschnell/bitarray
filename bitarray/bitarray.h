@@ -126,7 +126,7 @@ zeroed_last_byte(bitarrayobject *self)
     return mask_table[self->endian == ENDIAN_BIG][r] & self->ob_item[t];
 }
 
-/* Unless the buffer is readonly, zero out pad bits.
+/* Unless buffer is readonly, zero out pad bits.
    Always return the number of pad bits - leave self->nbits unchanged */
 static inline int
 setunused(bitarrayobject *self)
