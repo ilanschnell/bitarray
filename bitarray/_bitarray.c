@@ -3376,7 +3376,7 @@ richcompare(PyObject *v, PyObject *w, int op)
             /* if sizes differ, the bitarrays differ */
             return PyBool_FromLong(op == Py_NE);
         }
-        else if (va->endian == wa->endian) {
+        if (va->endian == wa->endian) {
             /* sizes and endianness are the same - use memcmp() */
             size_t s = vs / 8;  /* bytes to whole bytes in buffer */
 
