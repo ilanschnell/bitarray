@@ -61,9 +61,6 @@ typedef struct {
 /* the endianness string */
 #define ENDIAN_STR(endian)  ((endian) == ENDIAN_LITTLE ? "little" : "big")
 
-/* number of bits that can be stored in given bytes */
-#define BITS(bytes)  ((bytes) << 3)
-
 /* number of bytes necessary to store given bits */
 #define BYTES(bits)  (((bits) + 7) >> 3)
 

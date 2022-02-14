@@ -288,14 +288,14 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         const size_t m = n / 8;  /* bytes copied using memmove() */
 
         if (a > b)
-            copy_n(self, a + BITS(m), other, b + BITS(m), n % 8);
+            copy_n(self, a + 8 * m, other, b + 8 * m, n % 8);
 
         memmove(self->ob_item + a / 8, other->ob_item + b / 8, m);
         if (self->endian != other->endian)
             bytereverse(self, a / 8, a / 8 + m);
 
         if (a <= b)
-            copy_n(self, a + BITS(m), other, b + BITS(m), n % 8);
+            copy_n(self, a + 8 * m, other, b + 8 * m, n % 8);
     }
     else if (n < 24) {                           /***** small n case *****/
         Py_ssize_t i;
@@ -441,12 +441,12 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
         const Py_ssize_t byte_a = BYTES(a);
         const Py_ssize_t byte_b = b / 8;
 
-        assert(a + 8 > BITS(byte_a) && BITS(byte_b) + 8 > b);
+        assert(a + 8 > 8 * byte_a && 8 * byte_b + 8 > b);
 
-        setrange(self, a, BITS(byte_a), vi);
+        setrange(self, a, 8 * byte_a, vi);
         memset(self->ob_item + byte_a, vi ? 0xff : 0x00,
                (size_t) (byte_b - byte_a));
-        setrange(self, BITS(byte_b), b, vi);
+        setrange(self, 8 * byte_b, b, vi);
     }
     else {
         Py_ssize_t i;
@@ -471,12 +471,12 @@ count(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         const Py_ssize_t byte_a = BYTES(a);
         const Py_ssize_t byte_b = b / 8;
 
-        assert(a + 8 > BITS(byte_a) && BITS(byte_b) + 8 > b);
+        assert(a + 8 > 8 * byte_a && 8 * byte_b + 8 > b);
 
-        res += count(self, 1, a, BITS(byte_a));
+        res += count(self, 1, a, 8 * byte_a);
         for (i = byte_a; i < byte_b; i++)
             res += bitcount_lookup[(unsigned char) self->ob_item[i]];
-        res += count(self, 1, BITS(byte_b), b);
+        res += count(self, 1, 8 * byte_b, b);
     }
     else {
         for (i = a; i < b; i++)
@@ -525,15 +525,15 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         const char c = vi ? 0 : ~0;
 
         assert(UINT64_WORDS(8) == 0 || n <= 64);
-        if ((res = find_bit(self, vi, a, BITS(byte_a))) >= 0)
+        if ((res = find_bit(self, vi, a, 8 * byte_a)) >= 0)
             return res;
 
         for (i = byte_a; i < byte_b; i++) {  /* skip bytes */
             assert_byte_in_range(self, i);
             if (c ^ self->ob_item[i])
-                return find_bit(self, vi, BITS(i), BITS(i) + 8);
+                return find_bit(self, vi, 8 * i, 8 * i + 8);
         }
-        return find_bit(self, vi, BITS(byte_b), b);
+        return find_bit(self, vi, 8 * byte_b, b);
     }
     assert(n <= 8);
     for (i = a; i < b; i++) {
@@ -889,7 +889,7 @@ bitarray_buffer_info(bitarrayobject *self)
                         ptr,
                         size,
                         ENDIAN_STR(self->endian),
-                        BITS(size) - self->nbits,
+                        8 * size - self->nbits,
                         self->allocated,
                         self->readonly,
                         self->buffer ? 1 : 0,
@@ -1392,15 +1392,15 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
        the current size and padding, as the bitarray size might not be
        a multiple of 8.  After extending, we remove the padding bits again.
     */
-    t = self->nbits;            /* number of bits before extending */
-    p = BITS(BYTES(t)) - t;     /* number of pad bits */
+    t = self->nbits;          /* number of bits before extending */
+    p = 8 * BYTES(t) - t;     /* number of pad bits */
     assert(0 <= p && p < 8);
     if (resize(self, t + p) < 0)
         return NULL;
 
     assert(self->nbits % 8 == 0);
     assert_nbits(self);
-    if (resize(self, self->nbits + BITS(nbytes)) < 0)
+    if (resize(self, self->nbits + 8 * nbytes) < 0)
         return NULL;
 
     memcpy(self->ob_item + (Py_SIZE(self) - nbytes),
@@ -1408,7 +1408,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
 
     if (delete_n(self, t, p) < 0)  /* remove padding bits */
         return NULL;
-    assert(self->nbits == t + BITS(nbytes));
+    assert(self->nbits == t + 8 * nbytes);
     Py_RETURN_NONE;
 }
 
@@ -3284,7 +3284,7 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, int endian)
                             "invalid header byte: 0x%02x", head);
 
     res = newbitarrayobject(type,
-                            BITS(nbytes - 1) - ((Py_ssize_t) (head % 8)),
+                            8 * (nbytes - 1) - ((Py_ssize_t) (head % 8)),
                             endian);
     if (res == NULL)
         return NULL;

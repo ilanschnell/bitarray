@@ -182,15 +182,15 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         const Py_ssize_t byte_b = b / 8;
         const char c = vi ? 0 : ~0;
 
-        if ((res = find_last(self, vi, BITS(byte_b), b)) >= 0)
+        if ((res = find_last(self, vi, 8 * byte_b, b)) >= 0)
             return res;
 
         for (i = byte_b - 1; i >= byte_a; i--) {  /* skip bytes */
             assert_byte_in_range(self, i);
             if (c ^ self->ob_item[i])
-                return find_last(self, vi, BITS(i), BITS(i) + 8);
+                return find_last(self, vi, 8 * i, 8 * i + 8);
         }
-        return find_last(self, vi, a, BITS(byte_a));
+        return find_last(self, vi, a, 8 * byte_a);
     }
     assert(n <= 8);
     for (i = b - 1; i >= a; i--) {
