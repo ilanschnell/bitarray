@@ -658,8 +658,6 @@ base2ba(PyObject *module, PyObject *args)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
-    memset(aa->ob_item, 0x00, (size_t) Py_SIZE(a));
-
     le = IS_LE(aa);
     for (i = 0; i < strsize; i++) {
         int j, k, d = digit_to_int(str[i], n);
