@@ -608,10 +608,10 @@ ba2base(PyObject *module, PyObject *args)
 
     le = IS_LE(aa);
     for (i = 0; i < strsize; i++) {
-        int j, k, x = 0;
+        int j, x = 0;
 
         for (j = 0; j < m; j++) {
-            k = le ? j : (m - j - 1);
+            const int k = le ? j : (m - j - 1);
             x |= getbit(aa, i * m + k) << j;
         }
         str[i] = alphabet[x];
@@ -660,7 +660,7 @@ base2ba(PyObject *module, PyObject *args)
 #define aa  ((bitarrayobject *) a)
     le = IS_LE(aa);
     for (i = 0; i < strsize; i++) {
-        int j, k, d = digit_to_int(str[i], n);
+        int j, d = digit_to_int(str[i], n);
 
         if (d < 0) {
             unsigned char c = str[i];
@@ -668,7 +668,7 @@ base2ba(PyObject *module, PyObject *args)
                                 "base %d, got '%c' (0x%02x)", n, c, c);
         }
         for (j = 0; j < m; j++) {
-            k = le ? j : (m - j - 1);
+            const int k = le ? j : (m - j - 1);
             setbit(aa, i * m + k, d & (1 << j));
         }
     }
@@ -774,11 +774,10 @@ vl_decode(PyObject *module, PyObject *args)
     if (PyErr_Occurred())       /* from PyIter_Next() */
         return NULL;
 
-    if (b & 0x80) {
-        k = (i + PADBITS) / 7;
-        return PyErr_Format(PyExc_StopIteration,
-                            "no terminating byte found, bytes read: %zd", k);
-    }
+    if (b & 0x80)
+        return PyErr_Format(PyExc_StopIteration, "no terminating byte found, "
+                            "bytes read: %zd", (i + PADBITS) / 7);
+
     Py_RETURN_NONE;
 }
 
@@ -810,7 +809,7 @@ vl_encode(PyObject *module, PyObject *a)
         str[0] |= (0x08 >> i) * getbit(aa, i);
 
     for (i = 4; i < aa->nbits; i++) {
-        int k = (i - 4) % 7;
+        const int k = (i - 4) % 7;
 
         if (k == 0) {
             j++;
