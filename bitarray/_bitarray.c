@@ -982,7 +982,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(count_doc,
-"count(value=1, start=0, stop=<end of array>, /) -> int\n\
+"count(value=1, start=0, stop=<end of array>, step=1, /) -> int\n\
 \n\
 Count the number of occurrences of `value` in the bitarray.");
 

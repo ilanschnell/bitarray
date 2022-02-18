@@ -2740,20 +2740,12 @@ class CountTests(unittest.TestCase, Util):
             for j in range(i, N):
                 self.assertEqual(a.count(0, i, j), j - i)
 
-    def test_step(self):
-        for a in self.randombitarrays():
-            s = randint(1, 4)
-            if s == 0:
-                continue
-            i = randint(-3, len(a) + 2)
-            j = randint(-3, len(a) + 2)
-            v = randint(0, 1)
-            self.assertEqual(a.count(v, i, j, s), a[i:j:s].count(v))
-
     def test_explicit(self):
         a = bitarray('01001100 01110011 01')
         self.assertEqual(a.count(), 9)
         self.assertEqual(a.count(0, 12), 3)
+        self.assertEqual(a.count(1, 1, 18, 2), 6)
+        self.assertEqual(a.count(1, 0, 18, 3), 2)
         self.assertEqual(a.count(1, -5), 3)
         self.assertEqual(a.count(1, 2, 17), 7)
         self.assertEqual(a.count(1, 6, 11), 2)
@@ -2763,11 +2755,11 @@ class CountTests(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            s = a.to01()
             i = randint(-3, len(a) + 2)
             j = randint(-3, len(a) + 2)
-            self.assertEqual(a.count(1, i, j), s[i:j].count('1'))
-            self.assertEqual(a.count(0, i, j), s[i:j].count('0'))
+            for s in 1, 2, randint(1, len(a) + 1):
+                self.assertEqual(a.count(1, i, j, s), a[i:j:s].count(1))
+                self.assertEqual(a.count(0, i, j, s), a[i:j:s].count(0))
 
 tests.append(CountTests)
 
