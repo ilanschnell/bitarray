@@ -2711,6 +2711,7 @@ class CountTests(unittest.TestCase, Util):
         self.assertEqual(a.count(1), 3)
         self.assertEqual(a.count(0), 2)
         self.assertRaises(ValueError, a.count, 2)
+        self.assertRaises(ValueError, a.count, 1, 0, 5, 0)
         self.assertRaises(TypeError, a.count, None)
         self.assertRaises(TypeError, a.count, '')
         self.assertRaises(TypeError, a.count, 'A')
@@ -2738,6 +2739,16 @@ class CountTests(unittest.TestCase, Util):
         for i in range(N):
             for j in range(i, N):
                 self.assertEqual(a.count(0, i, j), j - i)
+
+    def test_step(self):
+        for a in self.randombitarrays():
+            s = randint(1, 4)
+            if s == 0:
+                continue
+            i = randint(-3, len(a) + 2)
+            j = randint(-3, len(a) + 2)
+            v = randint(0, 1)
+            self.assertEqual(a.count(v, i, j, s), a[i:j:s].count(v))
 
     def test_explicit(self):
         a = bitarray('01001100 01110011 01')

@@ -952,10 +952,10 @@ static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
     PyObject *value = Py_True;
-    Py_ssize_t start = 0, stop = self->nbits;
+    Py_ssize_t start = 0, stop = self->nbits, step = 1;
     int vi;
 
-    if (!PyArg_ParseTuple(args, "|Onn:count", &value, &start, &stop))
+    if (!PyArg_ParseTuple(args, "|Onnn:count", &value, &start, &stop, &step))
         return NULL;
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
@@ -963,7 +963,22 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     normalize_index(self->nbits, &start);
     normalize_index(self->nbits, &stop);
 
-    return PyLong_FromSsize_t(count(self, vi, start, stop));
+    if (step == 1) {
+        return PyLong_FromSsize_t(count(self, vi, start, stop));
+    }
+    else if (step <= 0) {
+        PyErr_SetString(PyExc_ValueError,
+                        "count step cannot be negative or zero");
+        return NULL;
+    }
+    else {
+        Py_ssize_t cnt = 0, i;
+
+        for (i = start; i < stop; i += step)
+            cnt += getbit((bitarrayobject *) self, i) == vi;
+
+        return PyLong_FromSsize_t(cnt);
+    }
 }
 
 PyDoc_STRVAR(count_doc,
