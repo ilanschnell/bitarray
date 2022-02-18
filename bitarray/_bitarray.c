@@ -1281,8 +1281,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O|n:search", &x, &limit))
         return NULL;
 
-    xa = searcharg(x);
-    if (xa == NULL)
+    if ((xa = searcharg(x)) == NULL)
         return NULL;
 
     if ((list = PyList_New(0)) == NULL)
@@ -3000,8 +2999,7 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
     searchiterobject *it;  /* iterator to be returned */
     bitarrayobject *xa;
 
-    xa = searcharg(x);
-    if (xa == NULL)
+    if ((xa = searcharg(x)) == NULL)
         return NULL;
 
     it = PyObject_GC_New(searchiterobject, &SearchIter_Type);
