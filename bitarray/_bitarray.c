@@ -1265,8 +1265,8 @@ searcharg(PyObject *x)
         Py_INCREF(xa);
         return xa;
     }
-    PyErr_Format(PyExc_TypeError, "bitarray or int expected, "
-                 "not '%s'", Py_TYPE(x)->tp_name);
+    PyErr_Format(PyExc_TypeError, "bitarray or int expected, not '%s'",
+                 Py_TYPE(x)->tp_name);
     return NULL;
 }
 
