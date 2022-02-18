@@ -1241,40 +1241,41 @@ Reverse all bits in the array (in-place).");
 static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
-    PyObject *list = NULL, *item = NULL, *t = NULL, *x;
+    PyObject *list = NULL, *item = NULL, *x;
     Py_ssize_t limit = PY_SSIZE_T_MAX, p = 0;
+    bitarrayobject *xa;
 
     if (!PyArg_ParseTuple(args, "O|n:search", &x, &limit))
         return NULL;
 
-#define tt  ((bitarrayobject *) t)
     if (PyIndex_Check(x)) {
-        int vi;
+        int vi = pybit_as_int(x);
 
-        if ((vi = pybit_as_int(x)) < 0)
+        if (vi < 0)
             return NULL;
-        t = newbitarrayobject(Py_TYPE(self), 1, self->endian);
-        if (t == NULL)
+        xa = (bitarrayobject *) newbitarrayobject(Py_TYPE(self), 1,
+                                                  self->endian);
+        if (xa == NULL)
             return NULL;
-        setbit(tt, 0, vi);
+        setbit(xa, 0, vi);
     }
     else if (bitarray_Check(x)) {
-        t = x;
-        Py_INCREF(t);
+        xa = (bitarrayobject *) x;
+        Py_INCREF(xa);
     }
     else {
         return PyErr_Format(PyExc_TypeError, "bitarray or int expected, "
                             "not '%s'", Py_TYPE(x)->tp_name);
     }
 
-    if (tt->nbits == 0) {
+    if (xa->nbits == 0) {
         PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
         goto error;
     }
     if ((list = PyList_New(0)) == NULL)
         goto error;
 
-    while ((p = find(self, tt, p, self->nbits)) >= 0) {
+    while ((p = find(self, xa, p, self->nbits)) >= 0) {
         if (PyList_Size(list) >= limit)
             break;
         item = PyLong_FromSsize_t(p++);
@@ -1282,14 +1283,13 @@ bitarray_search(bitarrayobject *self, PyObject *args)
             goto error;
         Py_DECREF(item);
     }
-#undef tt
-    Py_DECREF(t);
+    Py_DECREF(xa);
     return list;
 
  error:
     Py_XDECREF(item);
     Py_XDECREF(list);
-    Py_DECREF(t);
+    Py_DECREF(xa);
     return NULL;
 }
 
