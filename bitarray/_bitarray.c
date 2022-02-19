@@ -2032,6 +2032,7 @@ slice_get_indices(PyObject *slice, Py_ssize_t length,
                              start, stop, step, slicelength) < 0)
         return -1;
 
+    assert(get_slicelength(*start, *stop, *step) == *slicelength);
     make_step_positive(start, stop, step);
     return 0;
 }
