@@ -948,6 +948,36 @@ PyDoc_STRVAR(copy_doc,
 Return a copy of the bitarray.");
 
 
+/* adjust slice parameters such that step is always positive,
+   and return the slicelength */
+static Py_ssize_t
+positive_step(Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
+{
+    Py_ssize_t slicelength = 0;
+
+    assert(step != 0);
+
+    if (*step < 0) {
+        if (*stop < *start)
+            slicelength = (*start - *stop - 1) / (-(*step)) + 1;
+
+        *stop = *start + 1;
+        *start = *stop + *step * (slicelength - 1) - 1;
+        *step *= -1;
+    }
+    else {
+        if (*start < *stop)
+            slicelength = (*stop - *start - 1) / *step + 1;
+    }
+    assert(*start < *stop || slicelength == 0);
+    assert(*step > 0 && slicelength >= 0);
+    assert(0 <= *start && 0 <= *stop);
+    assert(*step != 1 || *start + slicelength == *stop);
+    assert(slicelength == 0 || *start + ((slicelength - 1) * *step) < *stop);
+
+    return slicelength;
+}
+
 static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
@@ -971,21 +1001,9 @@ bitarray_count(bitarrayobject *self, PyObject *args)
         return NULL;
     }
     else {
-        Py_ssize_t slicelength = 0, cnt = 0, i;
+        Py_ssize_t slicelength, cnt = 0, i;
 
-        if (step < 0) {
-            if (stop < start)
-                slicelength = (start - stop - 1) / (-step) + 1;
-
-            stop = start + 1;
-            start = stop + step * (slicelength - 1) - 1;
-            step *= -1;
-        }
-        else {
-            if (start < stop)
-                slicelength = (stop - start - 1) / step + 1;
-        }
-        assert(start < stop || slicelength == 0);
+        slicelength = positive_step(&start, &stop, &step);
 
         for (i = start; i < stop; i += step)
             cnt += getbit((bitarrayobject *) self, i);
@@ -2016,16 +2034,9 @@ slice_get_indices(PyObject *slice, Py_ssize_t length,
     if (*slicelength == 0)
         return 0;
 
-    if (*step < 0) {
-        *stop = *start + 1;
-        *start = *stop + *step * (*slicelength - 1) - 1;
-        *step *= -1;
-    }
-    assert(*step > 0 && *start < *stop && *slicelength > 0);
-    assert(0 <= *start && *start < length);
-    assert(0 <= *stop && *stop <= length);
-    assert(*step != 1 || *start + *slicelength == *stop);
-    assert(*start + ((*slicelength - 1) * *step) < *stop);
+    if (positive_step(start, stop, step) != *slicelength)
+        return -1;
+
     return 0;
 }
 
