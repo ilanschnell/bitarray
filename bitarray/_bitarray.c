@@ -948,26 +948,73 @@ PyDoc_STRVAR(copy_doc,
 Return a copy of the bitarray.");
 
 
+static Py_ssize_t
+calc_slicelength(Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
+{
+    assert(step != 0);
+    if (step < 0) {
+        if (stop < start)
+            return (start - stop - 1) / (-step) + 1;
+    }
+    else {
+        if (start < stop)
+            return (stop - start - 1) / step + 1;
+    }
+    return 0;
+}
+
+/* adjust slice parameters such that step is always positive */
+static void
+make_step_positive(Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
+{
+    if (*step < 0) {
+        Py_ssize_t slicelength = calc_slicelength(*start, *stop, *step);
+
+        *stop = *start + 1;
+        *start = *stop + *step * (slicelength - 1) - 1;
+        *step *= -1;
+        assert(*start < *stop || slicelength == 0);
+    }
+    assert(*start >= 0 && *stop >= 0);
+}
+
 static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
     PyObject *value = Py_True;
-    Py_ssize_t start = 0, stop = self->nbits;
+    Py_ssize_t start = 0, stop = self->nbits, step = 1;
     int vi;
 
-    if (!PyArg_ParseTuple(args, "|Onn:count", &value, &start, &stop))
+    if (!PyArg_ParseTuple(args, "|Onnn:count", &value, &start, &stop, &step))
         return NULL;
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
-    normalize_index(self->nbits, &start);
-    normalize_index(self->nbits, &stop);
+    normalize_index(self->nbits, step, &start);
+    normalize_index(self->nbits, step, &stop);
 
-    return PyLong_FromSsize_t(count(self, vi, start, stop));
+    if (step == 1) {
+        return PyLong_FromSsize_t(count(self, vi, start, stop));
+    }
+    else if (step == 0) {
+        PyErr_SetString(PyExc_ValueError, "count step cannot be zero");
+        return NULL;
+    }
+    else {
+        Py_ssize_t cnt = 0, i;
+
+        make_step_positive(&start, &stop, &step);
+        for (i = start; i < stop; i += step)
+            cnt += getbit((bitarrayobject *) self, i);
+
+        if (!vi)
+            cnt = calc_slicelength(start, stop, step) - cnt;
+        return PyLong_FromSsize_t(cnt);
+    }
 }
 
 PyDoc_STRVAR(count_doc,
-"count(value=1, start=0, stop=<end of array>, /) -> int\n\
+"count(value=1, start=0, stop=<end of array>, step=1, /) -> int\n\
 \n\
 Count the number of occurrences of `value` in the bitarray.");
 
@@ -1032,8 +1079,8 @@ bitarray_find(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O|nn", &x, &start, &stop))
         return NULL;
 
-    normalize_index(self->nbits, &start);
-    normalize_index(self->nbits, &stop);
+    normalize_index(self->nbits, 1, &start);
+    normalize_index(self->nbits, 1, &stop);
 
     if (PyIndex_Check(x)) {
         int vi;
@@ -1101,7 +1148,7 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "nO:insert", &i, &value))
         return NULL;
 
-    normalize_index(self->nbits, &i);
+    normalize_index(self->nbits, 1, &i);
 
     vi = pybit_as_int(value);
     if (vi < 0)
@@ -1974,7 +2021,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
     return res;
 }
 
-/* like PySlice_GetIndicesEx(), but step index will always be positive */
+/* like PySlice_GetIndicesEx(), but step will always be positive */
 static int
 slice_get_indices(PyObject *slice, Py_ssize_t length,
                   Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step,
@@ -1985,19 +2032,8 @@ slice_get_indices(PyObject *slice, Py_ssize_t length,
                              start, stop, step, slicelength) < 0)
         return -1;
 
-    if (*slicelength == 0)
-        return 0;
-
-    if (*step < 0) {
-        *stop = *start + 1;
-        *start = *stop + *step * (*slicelength - 1) - 1;
-        *step *= -1;
-    }
-    assert(*step > 0 && *start < *stop && *slicelength > 0);
-    assert(0 <= *start && *start < length);
-    assert(0 <= *stop && *stop <= length);
-    assert(*step != 1 || *start + *slicelength == *stop);
-    assert(*start + ((*slicelength - 1) * *step) < *stop);
+    assert(calc_slicelength(*start, *stop, *step) == *slicelength);
+    make_step_positive(start, stop, step);
     return 0;
 }
 

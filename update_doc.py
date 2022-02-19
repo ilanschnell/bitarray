@@ -15,7 +15,8 @@ NEW_IN = {
     'bitarray':             '2.3: optional `buffer` argument',
     'bitarray.bytereverse': '2.2.5: optional start and stop arguments',
     'bitarray.clear':       '1.4',
-    'bitarray.count':       '1.1.0: optional start and stop arguments',
+    'bitarray.count':      ['1.1.0: optional start and stop arguments',
+                            '2.3.7: optional step argument'],
     'bitarray.find':        '2.1',
     'bitarray.invert':      '1.5.3: optional index argument',
     'decodetree':           '1.6',
@@ -77,7 +78,8 @@ def write_doc(fo, name):
 
     new_in = NEW_IN.get(name)
     if new_in:
-        fo.write("\n   New in version %s.\n" % new_in.replace('`', '``'))
+        for line in new_in if isinstance(new_in, list) else [new_in]:
+            fo.write("\n   New in version %s.\n" % line.replace('`', '``'))
 
     fo.write('\n\n')
 
