@@ -1,5 +1,6 @@
 2022-XX-XX   2.3.7:
 -------------------
+  * add step argument to `.count()` method, see #162 and #163
 
 
 2022-02-07   2.3.6:
