@@ -2034,9 +2034,10 @@ slice_get_indices(PyObject *slice, Py_ssize_t length,
     if (*slicelength == 0)
         return 0;
 
-    if (positive_step(start, stop, step) != *slicelength)
+    if (positive_step(start, stop, step) != *slicelength) {
+        PyErr_Format(PyExc_SystemError, "slice_get_indices(): internal error");
         return -1;
-
+    }
     return 0;
 }
 
