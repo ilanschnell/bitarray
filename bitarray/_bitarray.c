@@ -949,7 +949,7 @@ Return a copy of the bitarray.");
 
 
 static Py_ssize_t
-get_slicelength(Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
+calc_slicelength(Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 {
     assert(step != 0);
     if (step < 0) {
@@ -968,7 +968,7 @@ static void
 make_step_positive(Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
 {
     if (*step < 0) {
-        Py_ssize_t slicelength = get_slicelength(*start, *stop, *step);
+        Py_ssize_t slicelength = calc_slicelength(*start, *stop, *step);
 
         *stop = *start + 1;
         *start = *stop + *step * (slicelength - 1) - 1;
@@ -1008,7 +1008,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
             cnt += getbit((bitarrayobject *) self, i);
 
         if (!vi)
-            cnt = get_slicelength(start, stop, step) - cnt;
+            cnt = calc_slicelength(start, stop, step) - cnt;
         return PyLong_FromSsize_t(cnt);
     }
 }
@@ -2032,7 +2032,7 @@ slice_get_indices(PyObject *slice, Py_ssize_t length,
                              start, stop, step, slicelength) < 0)
         return -1;
 
-    assert(get_slicelength(*start, *stop, *step) == *slicelength);
+    assert(calc_slicelength(*start, *stop, *step) == *slicelength);
     make_step_positive(start, stop, step);
     return 0;
 }
