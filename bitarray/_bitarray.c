@@ -960,22 +960,47 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
-    normalize_index(self->nbits, &start);
-    normalize_index(self->nbits, &stop);
-
     if (step == 1) {
+        normalize_index(self->nbits, &start);
+        normalize_index(self->nbits, &stop);
         return PyLong_FromSsize_t(count(self, vi, start, stop));
     }
-    else if (step <= 0) {
-        PyErr_SetString(PyExc_ValueError,
-                        "count step cannot be negative or zero");
+    else if (step == 0) {
+        PyErr_SetString(PyExc_ValueError, "count step cannot be zero");
         return NULL;
     }
     else {
-        Py_ssize_t cnt = 0, i;
+        Py_ssize_t length = self->nbits, sl = 0, cnt = 0, i, j;
 
-        for (i = start; i < stop; i += step)
-            cnt += getbit((bitarrayobject *) self, i) == vi;
+        if (start < 0) {
+            start += length;
+            if (start < 0)
+                start = (step < 0) ? -1 : 0;
+        }
+        else if (start >= length) {
+            start = (step < 0) ? length - 1 : length;
+        }
+
+        if (stop < 0) {
+            stop += length;
+            if (stop < 0)
+                stop = (step < 0) ? -1 : 0;
+        }
+        else if (stop >= length) {
+            stop = (step < 0) ? length - 1 : length;
+        }
+
+        if (step < 0) {
+            if (stop < start)
+                sl = (start - stop - 1) / (-step) + 1;
+        }
+        else {
+            if (start < stop)
+                sl = (stop - start - 1) / step + 1;
+        }
+
+        for (i = 0, j = start; i < sl; i++, j += step)
+            cnt += getbit((bitarrayobject *) self, j) == vi;
 
         return PyLong_FromSsize_t(cnt);
     }
