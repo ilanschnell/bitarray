@@ -2729,9 +2729,12 @@ class CountTests(unittest.TestCase, Util):
 
     def test_whole_range(self):
         for a in self.randombitarrays():
+            n = len(a)
             s = a.to01()
-            self.assertEqual(a.count(1), s.count('1'))
-            self.assertEqual(a.count(0), s.count('0'))
+            for v in 0, 1:
+                ref = s.count(str(v))
+                self.assertEqual(a.count(v), ref)
+                self.assertEqual(a.count(v, n, -n - 1, -1), ref)
 
     def test_zeros(self):
         N = 37
@@ -2746,6 +2749,7 @@ class CountTests(unittest.TestCase, Util):
         self.assertEqual(a.count(0, 12), 3)
         self.assertEqual(a.count(1, 1, 18, 2), 6)
         self.assertEqual(a.count(1, 0, 18, 3), 2)
+        self.assertEqual(a.count(1, 15, 4, -3), 2)
         self.assertEqual(a.count(1, -5), 3)
         self.assertEqual(a.count(1, 2, 17), 7)
         self.assertEqual(a.count(1, 6, 11), 2)
@@ -2758,8 +2762,8 @@ class CountTests(unittest.TestCase, Util):
             i = randint(-3, len(a) + 2)
             j = randint(-3, len(a) + 2)
             for s in 1, 2, randint(1, len(a) + 1):
-                self.assertEqual(a.count(1, i, j, s), a[i:j:s].count(1))
-                self.assertEqual(a.count(0, i, j, s), a[i:j:s].count(0))
+                for v in 0, 1:
+                    self.assertEqual(a.count(v, i, j, s), a[i:j:s].count(v))
 
 tests.append(CountTests)
 
