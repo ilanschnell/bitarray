@@ -1004,12 +1004,12 @@ bitarray_count(bitarrayobject *self, PyObject *args)
         Py_ssize_t cnt = 0, i;
 
         make_step_positive(&start, &stop, &step);
-
         for (i = start; i < stop; i += step)
             cnt += getbit((bitarrayobject *) self, i);
 
-        return PyLong_FromSsize_t(vi ? cnt :
-                                  get_slicelength(start, stop, step) - cnt);
+        if (!vi)
+            cnt = get_slicelength(start, stop, step) - cnt;
+        return PyLong_FromSsize_t(cnt);
     }
 }
 
