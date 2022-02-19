@@ -982,7 +982,7 @@ static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
     PyObject *value = Py_True;
-    Py_ssize_t start = 0, stop = self->nbits, step = 1;
+    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, step = 1;
     int vi;
 
     if (!PyArg_ParseTuple(args, "|Onnn:count", &value, &start, &stop, &step))
@@ -1073,7 +1073,7 @@ will be a multiple of 8, and return the number of bits added (0..7).");
 static PyObject *
 bitarray_find(bitarrayobject *self, PyObject *args)
 {
-    Py_ssize_t start = 0, stop = self->nbits;
+    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX;
     PyObject *x;
 
     if (!PyArg_ParseTuple(args, "O|nn", &x, &start, &stop))
