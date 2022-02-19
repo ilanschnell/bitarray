@@ -972,7 +972,7 @@ positive_step(Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
     assert(*start < *stop || slicelength == 0);
     assert(*step > 0 && slicelength >= 0);
     assert(0 <= *start && 0 <= *stop);
-    assert(*step != 1 || *start + slicelength == *stop);
+    assert(slicelength == 0 || *step != 1 || *start + slicelength == *stop);
     assert(slicelength == 0 || *start + ((slicelength - 1) * *step) < *stop);
 
     return slicelength;
