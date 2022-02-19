@@ -1005,7 +1005,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
 
         make_step_positive(&start, &stop, &step);
         for (i = start; i < stop; i += step)
-            cnt += getbit((bitarrayobject *) self, i);
+            cnt += getbit(self, i);
 
         if (!vi)
             cnt = calc_slicelength(start, stop, step) - cnt;
