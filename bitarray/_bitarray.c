@@ -960,9 +960,10 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
 
+    normalize_index(self->nbits, step, &start);
+    normalize_index(self->nbits, step, &stop);
+
     if (step == 1) {
-        normalize_index(self->nbits, &start);
-        normalize_index(self->nbits, &stop);
         return PyLong_FromSsize_t(count(self, vi, start, stop));
     }
     else if (step == 0) {
@@ -970,39 +971,26 @@ bitarray_count(bitarrayobject *self, PyObject *args)
         return NULL;
     }
     else {
-        Py_ssize_t length = self->nbits, sl = 0, cnt = 0, i, j;
-
-        if (start < 0) {
-            start += length;
-            if (start < 0)
-                start = (step < 0) ? -1 : 0;
-        }
-        else if (start >= length) {
-            start = (step < 0) ? length - 1 : length;
-        }
-
-        if (stop < 0) {
-            stop += length;
-            if (stop < 0)
-                stop = (step < 0) ? -1 : 0;
-        }
-        else if (stop >= length) {
-            stop = (step < 0) ? length - 1 : length;
-        }
+        Py_ssize_t slicelength = 0, cnt = 0, i;
 
         if (step < 0) {
             if (stop < start)
-                sl = (start - stop - 1) / (-step) + 1;
+                slicelength = (start - stop - 1) / (-step) + 1;
+
+            stop = start + 1;
+            start = stop + step * (slicelength - 1) - 1;
+            step *= -1;
         }
         else {
             if (start < stop)
-                sl = (stop - start - 1) / step + 1;
+                slicelength = (stop - start - 1) / step + 1;
         }
+        assert(start < stop || slicelength == 0);
 
-        for (i = 0, j = start; i < sl; i++, j += step)
-            cnt += getbit((bitarrayobject *) self, j) == vi;
+        for (i = start; i < stop; i += step)
+            cnt += getbit((bitarrayobject *) self, i);
 
-        return PyLong_FromSsize_t(cnt);
+        return PyLong_FromSsize_t(vi ? cnt : slicelength - cnt);
     }
 }
 
@@ -1072,8 +1060,8 @@ bitarray_find(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O|nn", &x, &start, &stop))
         return NULL;
 
-    normalize_index(self->nbits, &start);
-    normalize_index(self->nbits, &stop);
+    normalize_index(self->nbits, 1, &start);
+    normalize_index(self->nbits, 1, &stop);
 
     if (PyIndex_Check(x)) {
         int vi;
@@ -1141,7 +1129,7 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "nO:insert", &i, &value))
         return NULL;
 
-    normalize_index(self->nbits, &i);
+    normalize_index(self->nbits, 1, &i);
 
     vi = pybit_as_int(value);
     if (vi < 0)

@@ -154,15 +154,16 @@ static const unsigned char bitcount_lookup[256] = {
 
 /* normalize index (which may be negative), such that 0 <= i <= n */
 static inline void
-normalize_index(Py_ssize_t n, Py_ssize_t *i)
+normalize_index(Py_ssize_t length, Py_ssize_t step, Py_ssize_t *i)
 {
     if (*i < 0) {
-        *i += n;
+        *i += length;
         if (*i < 0)
-            *i = 0;
+            *i = (step < 0) ? -1 : 0;
     }
-    if (*i > n)
-        *i = n;
+    else if (*i >= length) {
+        *i = (step < 0) ? length - 1 : length;
+    }
 }
 
 /* Interpret a PyObject (usually PyLong or PyBool) as a bit, return 0 or 1.
