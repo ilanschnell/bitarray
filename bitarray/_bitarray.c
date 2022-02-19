@@ -948,34 +948,34 @@ PyDoc_STRVAR(copy_doc,
 Return a copy of the bitarray.");
 
 
-/* adjust slice parameters such that step is always positive,
-   and return the slicelength */
 static Py_ssize_t
-positive_step(Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
+get_slicelength(Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 {
-    Py_ssize_t slicelength = 0;
-
     assert(step != 0);
+    if (step < 0) {
+        if (stop < start)
+            return (start - stop - 1) / (-step) + 1;
+    }
+    else {
+        if (start < stop)
+            return (stop - start - 1) / step + 1;
+    }
+    return 0;
+}
 
+/* adjust slice parameters such that step is always positive */
+static void
+make_step_positive(Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
+{
     if (*step < 0) {
-        if (*stop < *start)
-            slicelength = (*start - *stop - 1) / (-(*step)) + 1;
+        Py_ssize_t slicelength = get_slicelength(*start, *stop, *step);
 
         *stop = *start + 1;
         *start = *stop + *step * (slicelength - 1) - 1;
         *step *= -1;
+        assert(*start < *stop || slicelength == 0);
     }
-    else {
-        if (*start < *stop)
-            slicelength = (*stop - *start - 1) / *step + 1;
-    }
-    assert(*start < *stop || slicelength == 0);
-    assert(*step > 0 && slicelength >= 0);
-    assert(0 <= *start && 0 <= *stop);
-    assert(slicelength == 0 || *step != 1 || *start + slicelength == *stop);
-    assert(slicelength == 0 || *start + ((slicelength - 1) * *step) < *stop);
-
-    return slicelength;
+    assert(*start >= 0 && *stop >= 0);
 }
 
 static PyObject *
@@ -1001,14 +1001,15 @@ bitarray_count(bitarrayobject *self, PyObject *args)
         return NULL;
     }
     else {
-        Py_ssize_t slicelength, cnt = 0, i;
+        Py_ssize_t cnt = 0, i;
 
-        slicelength = positive_step(&start, &stop, &step);
+        make_step_positive(&start, &stop, &step);
 
         for (i = start; i < stop; i += step)
             cnt += getbit((bitarrayobject *) self, i);
 
-        return PyLong_FromSsize_t(vi ? cnt : slicelength - cnt);
+        return PyLong_FromSsize_t(vi ? cnt :
+                                  get_slicelength(start, stop, step) - cnt);
     }
 }
 
@@ -2020,7 +2021,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
     return res;
 }
 
-/* like PySlice_GetIndicesEx(), but step index will always be positive */
+/* like PySlice_GetIndicesEx(), but step will always be positive */
 static int
 slice_get_indices(PyObject *slice, Py_ssize_t length,
                   Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step,
@@ -2031,13 +2032,7 @@ slice_get_indices(PyObject *slice, Py_ssize_t length,
                              start, stop, step, slicelength) < 0)
         return -1;
 
-    if (*slicelength == 0)
-        return 0;
-
-    if (positive_step(start, stop, step) != *slicelength) {
-        PyErr_Format(PyExc_SystemError, "slice_get_indices(): internal error");
-        return -1;
-    }
+    make_step_positive(start, stop, step);
     return 0;
 }
 
