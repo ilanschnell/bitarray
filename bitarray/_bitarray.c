@@ -952,9 +952,10 @@ static Py_ssize_t
 calc_slicelength(Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 {
     /* we assume that start and stop are normalized */
-    assert(step < 0 || (start >= 0 && stop >= 0));
-    assert(step > 0 || (start >= -1 && stop >= -1));
+    assert(step < 0 || (start >= 0 && stop >= 0));    /* step > 0 */
+    assert(step > 0 || (start >= -1 && stop >= -1));  /* step < 0 */
     assert(step != 0);
+
     if (step < 0) {
         if (stop < start)
             return (start - stop - 1) / (-step) + 1;
