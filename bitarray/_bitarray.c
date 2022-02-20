@@ -1284,6 +1284,39 @@ PyDoc_STRVAR(reverse_doc,
 Reverse all bits in the array (in-place).");
 
 
+static bitarrayobject *
+searcharg(PyObject *x)
+{
+    bitarrayobject *xa;
+
+    if (PyIndex_Check(x)) {
+        int vi = pybit_as_int(x);
+
+        if (vi < 0)
+            return NULL;
+        xa = (bitarrayobject *) newbitarrayobject(&Bitarray_Type, 1,
+                                                  ENDIAN_LITTLE);
+        if (xa == NULL)
+            return NULL;
+        setbit(xa, 0, vi);
+        return xa;
+    }
+    if (bitarray_Check(x)) {
+        xa = (bitarrayobject *) x;
+        if (xa->nbits == 0) {
+            PyErr_SetString(PyExc_ValueError,
+                            "can't search for empty bitarray");
+            return NULL;
+        }
+        Py_INCREF(xa);
+        return xa;
+    }
+    PyErr_Format(PyExc_TypeError, "bitarray or int expected, not '%s'",
+                 Py_TYPE(x)->tp_name);
+    return NULL;
+}
+
+
 static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
@@ -1294,30 +1327,9 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O|n:search", &x, &limit))
         return NULL;
 
-    if (PyIndex_Check(x)) {
-        int vi = pybit_as_int(x);
+    if ((xa = searcharg(x)) == NULL)
+        return NULL;
 
-        if (vi < 0)
-            return NULL;
-        xa = (bitarrayobject *) newbitarrayobject(Py_TYPE(self), 1,
-                                                  self->endian);
-        if (xa == NULL)
-            return NULL;
-        setbit(xa, 0, vi);
-    }
-    else if (bitarray_Check(x)) {
-        xa = (bitarrayobject *) x;
-        Py_INCREF(xa);
-    }
-    else {
-        return PyErr_Format(PyExc_TypeError, "bitarray or int expected, "
-                            "not '%s'", Py_TYPE(x)->tp_name);
-    }
-
-    if (xa->nbits == 0) {
-        PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
-        goto error;
-    }
     if ((list = PyList_New(0)) == NULL)
         goto error;
 
@@ -3025,29 +3037,8 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
     searchiterobject *it;  /* iterator to be returned */
     bitarrayobject *xa;
 
-    if (PyIndex_Check(x)) {
-        int vi = pybit_as_int(x);
-
-        if (vi < 0)
-            return NULL;
-        xa = (bitarrayobject *) newbitarrayobject(Py_TYPE(self), 1,
-                                                  self->endian);
-        if (xa == NULL)
-            return NULL;
-        setbit(xa, 0, vi);
-    }
-    else if (bitarray_Check(x)) {
-        xa = (bitarrayobject *) x;
-    }
-    else {
-        PyErr_SetString(PyExc_TypeError, "bitarray or int expected");
+    if ((xa = searcharg(x)) == NULL)
         return NULL;
-    }
-
-    if (xa->nbits == 0) {
-        PyErr_SetString(PyExc_ValueError, "can't search for empty bitarray");
-        return NULL;
-    }
 
     it = PyObject_GC_New(searchiterobject, &SearchIter_Type);
     if (it == NULL)
@@ -3056,8 +3047,6 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
     it->bao = self;
     Py_INCREF(self);
     it->xa = xa;
-    if (bitarray_Check(x))
-        Py_INCREF(xa);
     it->p = 0;                  /* start search at position 0 */
     PyObject_GC_Track(it);
     return (PyObject *) it;
