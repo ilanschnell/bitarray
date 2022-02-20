@@ -1284,6 +1284,8 @@ PyDoc_STRVAR(reverse_doc,
 Reverse all bits in the array (in-place).");
 
 
+/* given either an int (0 or 1) or a non-empty bitarray,
+   return a bitarrayobject */
 static bitarrayobject *
 searcharg(PyObject *x)
 {
