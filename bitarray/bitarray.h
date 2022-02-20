@@ -152,7 +152,9 @@ static const unsigned char bitcount_lookup[256] = {
 #undef B6
 };
 
-/* normalize index (which may be negative), such that 0 <= i <= n */
+/* normalize index (which may be negative), such that:
+    0 <= i <= length        (for step > 0)
+   -1 <= i <= length - 1    (for step < 0)                           */
 static inline void
 normalize_index(Py_ssize_t length, Py_ssize_t step, Py_ssize_t *i)
 {
