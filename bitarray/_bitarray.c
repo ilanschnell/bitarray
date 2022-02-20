@@ -956,6 +956,11 @@ calc_slicelength(Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
     assert(step > 0 || (start >= -1 && stop >= -1));  /* step < 0 */
     assert(step != 0);
 
+    /*
+      a / b does integer division.  If either a or b is negative, the result
+      depends on the compiler (rounding can go toward 0 or negative infinity).
+      Therefore, we are careful that both a and b are always positive.
+    */
     if (step < 0) {
         if (stop < start)
             return (start - stop - 1) / (-step) + 1;
