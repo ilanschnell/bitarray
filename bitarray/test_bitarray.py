@@ -1864,7 +1864,8 @@ class SequenceMethodsTests(unittest.TestCase, Util):
 
     def test_contains_explicit(self):
         a = bitarray('011010000001')
-        for s, r in [('', True), ('1', True), ('11', True), ('111', False),
+        for s, r in [('', True), # every bitarray contains an empty one
+                     ('1', True), ('11', True), ('111', False),
                      ('011', True), ('0001', True), ('00011', False)]:
             self.assertEqual(bitarray(s) in a, r)
 
