@@ -972,10 +972,9 @@ make_step_positive(Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
 
         *stop = *start + 1;
         *start = *stop + *step * (slicelength - 1) - 1;
-        *step *= -1;
-        assert(*start < *stop || slicelength == 0);
+        *step = -(*step);
     }
-    assert(*start >= 0 && *stop >= 0);
+    assert(*start >= 0 && *stop >= 0 && *step > 0);
 }
 
 static PyObject *
@@ -2032,7 +2031,9 @@ slice_get_indices(PyObject *slice, Py_ssize_t length,
                              start, stop, step, slicelength) < 0)
         return -1;
 
+    /* just a sanity check for calc_slicelength() */
     assert(calc_slicelength(*start, *stop, *step) == *slicelength);
+
     make_step_positive(start, stop, step);
     return 0;
 }
