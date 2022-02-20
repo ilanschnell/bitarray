@@ -2763,6 +2763,22 @@ class CountTests(unittest.TestCase, Util):
             for j in range(i, N):
                 self.assertEqual(a.count(0, i, j), j - i)
 
+    def test_slicelength(self):
+        for N in range(100):
+            v = randint(0, 1)
+            a = bitarray(N)
+            a.setall(v)
+
+            step = randint(-N - 1, N)
+            if step == 0:
+                continue
+            i = randint(-N - 1, N)
+            j = randint(-N - 1, N)
+
+            self.assertEqual(a.count(v, i, j, step),
+                             self.slicelen(slice(i, j, step), N))
+            self.assertEqual(a.count(not v, i, j, step), 0)
+
     def test_explicit(self):
         a = bitarray('01001100 01110011 01')
         self.assertEqual(a.count(), 9)
