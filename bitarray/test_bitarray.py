@@ -2762,7 +2762,9 @@ class CountTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             i = randint(-3, len(a) + 2)
             j = randint(-3, len(a) + 2)
-            for s in 1, 2, randint(1, len(a) + 1):
+            for s in -1, 1, randint(-len(a) - 2, len(a) + 1):
+                if s == 0:
+                    continue
                 for v in 0, 1:
                     self.assertEqual(a.count(v, i, j, s), a[i:j:s].count(v))
 
