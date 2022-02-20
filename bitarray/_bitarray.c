@@ -2031,8 +2031,9 @@ slice_get_indices(PyObject *slice, Py_ssize_t length,
                              start, stop, step, slicelength) < 0)
         return -1;
 
-    /* just a sanity check for calc_slicelength() */
+    /* sanity check for calc_slicelength() */
     assert(calc_slicelength(*start, *stop, *step) == *slicelength);
+    assert(*slicelength >= 0);
 
     make_step_positive(start, stop, step);
     return 0;
