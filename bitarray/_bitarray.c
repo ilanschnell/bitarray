@@ -965,16 +965,16 @@ calc_slicelength(Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 
 /* adjust slice parameters such that step is always positive */
 static void
-make_step_positive(Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
+make_step_positive(Py_ssize_t slicelength,
+                   Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
 {
     if (*step < 0) {
-        Py_ssize_t slicelength = calc_slicelength(*start, *stop, *step);
-
         *stop = *start + 1;
         *start = *stop + *step * (slicelength - 1) - 1;
         *step = -(*step);
     }
-    assert(*start >= 0 && *stop >= 0 && *step > 0);
+    assert(*start >= 0 && *stop >= 0 && *step > 0 && slicelength >= 0);
+    assert(calc_slicelength(*start, *stop, *step) == slicelength);
 }
 
 static PyObject *
@@ -1000,15 +1000,14 @@ bitarray_count(bitarrayobject *self, PyObject *args)
         return NULL;
     }
     else {
+        const Py_ssize_t slicelength = calc_slicelength(start, stop, step);
         Py_ssize_t cnt = 0, i;
 
-        make_step_positive(&start, &stop, &step);
+        make_step_positive(slicelength, &start, &stop, &step);
         for (i = start; i < stop; i += step)
             cnt += getbit(self, i);
 
-        if (!vi)
-            cnt = calc_slicelength(start, stop, step) - cnt;
-        return PyLong_FromSsize_t(cnt);
+        return PyLong_FromSsize_t(vi ? cnt : slicelength - cnt);
     }
 }
 
@@ -2045,11 +2044,7 @@ slice_get_indices(PyObject *slice, Py_ssize_t length,
                              start, stop, step, slicelength) < 0)
         return -1;
 
-    /* sanity check for calc_slicelength() */
-    assert(calc_slicelength(*start, *stop, *step) == *slicelength);
-    assert(*slicelength >= 0);
-
-    make_step_positive(start, stop, step);
+    make_step_positive(*slicelength, start, stop, step);
     return 0;
 }
 
