@@ -2805,9 +2805,13 @@ class IndexTests(unittest.TestCase, Util):
         self.assertEqual(a.index(0), 0)
         self.assertEqual(a.find(0), 0)
 
-        s = bitarray()
-        self.assertEqual(a.index(s), 0)
-        self.assertEqual(a.find(s), 0)
+    def test_empty(self):
+        for a in self.randombitarrays():
+            # empty bitarray is always found at start index
+            sub = bitarray()
+            start = randint(0, len(a))
+            self.assertEqual(a.index(sub, start), start)
+            self.assertEqual(a.find(sub, start), start)
 
     def test_200(self):
         a = 200 * bitarray('1')
