@@ -2764,6 +2764,9 @@ class CountTests(unittest.TestCase, Util):
             for j in range(i, N):
                 self.assertEqual(a.count(0, i, j), j - i)
 
+            for step in list(range(-N - 3, 0)) + list(range(1, N + 3)):
+                self.assertEqual(a.count(0, i, i, step), 0)
+
     def test_slicelength(self):
         for N in range(100):
             step = randint(-N - 1, N)
