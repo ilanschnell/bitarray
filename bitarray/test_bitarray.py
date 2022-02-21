@@ -2769,17 +2769,22 @@ class CountTests(unittest.TestCase, Util):
             step = randint(-N - 1, N)
             if step == 0:
                 continue
-            v = randint(0, 1)
-            a = bitarray(N)
-            a.setall(v)
 
+            a = bitarray(N, self.random_endian())
             i = randint(-N - 1, N)
             j = randint(-N - 1, N)
+            slicelength = self.calc_slicelength(slice(i, j, step), N)
+            self.assertEqual(len(a[i:j:step]), slicelength)
 
-            ref = self.calc_slicelength(slice(i, j, step), N)
-            self.assertEqual(len(a[i:j:step]), ref)
-            self.assertEqual(a.count(v, i, j, step), ref)
-            self.assertEqual(a.count(not v, i, j, step), 0)
+            a.setall(0)
+            self.assertEqual(a.count(0, i, j, step), slicelength)
+            self.assertEqual(a.count(1, i, j, step), 0)
+            a[i:j:step] = 1
+            self.assertEqual(a.count(0), N - slicelength)
+            self.assertEqual(a.count(1), slicelength)
+            del a[i:j:step]
+            self.assertEqual(len(a), N - slicelength)
+            self.assertFalse(a.any())
 
     def test_explicit(self):
         a = bitarray('01001100 01110011 01')
