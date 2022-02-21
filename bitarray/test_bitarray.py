@@ -2766,13 +2766,13 @@ class CountTests(unittest.TestCase, Util):
 
     def test_slicelength(self):
         for N in range(100):
+            step = randint(-N - 1, N)
+            if step == 0:
+                continue
             v = randint(0, 1)
             a = bitarray(N)
             a.setall(v)
 
-            step = randint(-N - 1, N)
-            if step == 0:
-                continue
             i = randint(-N - 1, N)
             j = randint(-N - 1, N)
 
@@ -2795,14 +2795,15 @@ class CountTests(unittest.TestCase, Util):
         self.assertEqual(a.count(1, 17, 14), 0)
 
     def test_random(self):
+      for _ in range(10000):
         for a in self.randombitarrays():
-            i = randint(-3, len(a) + 2)
-            j = randint(-3, len(a) + 2)
-            for s in -1, 1, randint(-len(a) - 2, len(a) + 1):
-                if s == 0:
-                    continue
+            n = len(a)
+            i = randint(-n - 3, n + 3)
+            j = randint(-n - 3, n + 3)
+            for step in randint(-n - 3, -2), -1, 1, randint(2, n + 3):
                 for v in 0, 1:
-                    self.assertEqual(a.count(v, i, j, s), a[i:j:s].count(v))
+                    self.assertEqual(a.count(v, i, j, step),
+                                     a[i:j:step].count(v))
 
 tests.append(CountTests)
 
