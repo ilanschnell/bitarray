@@ -2764,7 +2764,9 @@ class CountTests(unittest.TestCase, Util):
             for j in range(i, N):
                 self.assertEqual(a.count(0, i, j), j - i)
 
-            for step in list(range(-N - 3, 0)) + list(range(1, N + 3)):
+            for step in range(-N - 3, N + 3):
+                if step == 0:
+                    continue
                 self.assertEqual(a.count(0, i, i, step), 0)
 
     def test_slicelength(self):
