@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.3.6 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.3.7 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -84,10 +84,12 @@ The bitarray object:
    Return a copy of the bitarray.
 
 
-``count(value=1, start=0, stop=<end of array>, /)`` -> int
+``count(value=1, start=0, stop=<end of array>, step=1, /)`` -> int
    Count the number of occurrences of ``value`` in the bitarray.
 
    New in version 1.1.0: optional start and stop arguments.
+
+   New in version 2.3.7: optional step argument.
 
 
 ``decode(code, /)`` -> list

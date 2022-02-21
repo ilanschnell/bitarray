@@ -1,6 +1,12 @@
 Change log
 ==========
 
+**2.3.7** (2022-02-21):
+
+* add optional step argument to ``.count()`` method, see `#162 <https://github.com/ilanschnell/bitarray/issues/162>`__ and `#163 <https://github.com/ilanschnell/bitarray/issues/163>`__
+* add tests
+
+
 **2.3.6** (2022-02-07):
 
 * add optional value parameter to ``util.count_n()``, see `#154 <https://github.com/ilanschnell/bitarray/issues/154>`__ and `#161 <https://github.com/ilanschnell/bitarray/issues/161>`__
