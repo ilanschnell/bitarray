@@ -2776,8 +2776,9 @@ class CountTests(unittest.TestCase, Util):
             i = randint(-N - 1, N)
             j = randint(-N - 1, N)
 
-            self.assertEqual(a.count(v, i, j, step),
-                             self.calc_slicelength(slice(i, j, step), N))
+            ref = self.calc_slicelength(slice(i, j, step), N)
+            self.assertEqual(len(a[i:j:step]), ref)
+            self.assertEqual(a.count(v, i, j, step), ref)
             self.assertEqual(a.count(not v, i, j, step), 0)
 
     def test_explicit(self):
