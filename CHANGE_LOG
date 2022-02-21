@@ -1,5 +1,6 @@
 2022-XX-XX   2.3.8:
 -------------------
+  * add missing type hinting for `.count()` step argument
 
 
 2022-02-21   2.3.7:
