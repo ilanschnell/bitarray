@@ -2795,7 +2795,6 @@ class CountTests(unittest.TestCase, Util):
         self.assertEqual(a.count(1, 17, 14), 0)
 
     def test_random(self):
-      for _ in range(10000):
         for a in self.randombitarrays():
             n = len(a)
             i = randint(-n - 3, n + 3)
