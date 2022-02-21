@@ -101,7 +101,7 @@ class Util(object):
         return t[endian]
 
     @staticmethod
-    def slicelen(s, length):
+    def calc_slicelength(s, length):
         assert isinstance(s, slice)
         start, stop, step = s.indices(length)
         assert step < 0 or (start >= 0 and stop >= 0)
@@ -940,7 +940,8 @@ class SliceTests(unittest.TestCase, Util):
             for _ in range(10):
                 step = self.rndsliceidx(la) or None
                 s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
-                lb = randint(0, 10) if step is None else self.slicelen(s, la)
+                lb = (randint(0, 10) if step is None else
+                      self.calc_slicelength(s, la))
                 b = bitarray(lb)
                 c = bitarray(a)
                 c[s] = b
@@ -1210,7 +1211,7 @@ class SliceTests(unittest.TestCase, Util):
             step = self.rndsliceidx(N) or None
             s = slice(self.rndsliceidx(N), self.rndsliceidx(N), step)
             a[s] = 1
-            aa[s] = self.slicelen(s, N) * [1]
+            aa[s] = self.calc_slicelength(s, N) * [1]
             self.assertEqual(a.tolist(), aa)
 
     def test_setslice_bool_random2(self):
@@ -1221,7 +1222,7 @@ class SliceTests(unittest.TestCase, Util):
             s = slice(self.rndsliceidx(n), self.rndsliceidx(n), step)
             v = randint(0, 1)
             a[s] = v
-            aa[s] = self.slicelen(s, n) * [v]
+            aa[s] = self.calc_slicelength(s, n) * [v]
             self.assertEqual(a.tolist(), aa)
 
     def test_setslice_to_int(self):
@@ -2776,7 +2777,7 @@ class CountTests(unittest.TestCase, Util):
             j = randint(-N - 1, N)
 
             self.assertEqual(a.count(v, i, j, step),
-                             self.slicelen(slice(i, j, step), N))
+                             self.calc_slicelength(slice(i, j, step), N))
             self.assertEqual(a.count(not v, i, j, step), 0)
 
     def test_explicit(self):
