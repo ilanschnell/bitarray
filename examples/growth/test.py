@@ -2,8 +2,8 @@ from bitarray import bitarray
 
 
 def show(a):
-    ptr, size, _endian, _unused, alloc = a.buffer_info()
-    print('%18d %10d %10d' % (ptr, size, alloc))
+    info = a.buffer_info()
+    print('%18d %10d %10d' % (info[0], info[1], info[4]))
 
 
 # make sure sequence of appends will always increase allocated size
