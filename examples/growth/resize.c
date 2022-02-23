@@ -13,7 +13,7 @@ typedef struct {
 #define BYTES(bits)  (((bits) + 7) >> 3)
 
 
-int resize(bitarrayobject *self, int nbits)
+void resize(bitarrayobject *self, int nbits)
 {
     int new_allocated, allocated = self->allocated, size = self->size;
     int newsize;
@@ -22,14 +22,14 @@ int resize(bitarrayobject *self, int nbits)
     if (newsize == size) {
         /* the memory size hasn't changed - bypass almost everything */
         self->nbits = nbits;
-        return 0;
+        return;
     }
 
     /* Bypass realloc() ... */
     if (allocated >= newsize && newsize >= (allocated >> 1)) {
         self->size = newsize;
         self->nbits = nbits;
-        return 0;
+        return;
     }
 
     if (newsize == 0) {
@@ -37,7 +37,7 @@ int resize(bitarrayobject *self, int nbits)
         self->size = 0;
         self->allocated = 0;
         self->nbits = 0;
-        return 0;
+        return;
     }
 
     new_allocated = newsize;
@@ -52,13 +52,12 @@ int resize(bitarrayobject *self, int nbits)
     self->size = newsize;
     self->allocated = new_allocated;
     self->nbits = nbits;
-    return 1;
 }
 
 
 int main()
 {
-    int size;
+    int size, prev_alloc = -1;
     bitarrayobject x;
 
     x.size = 0;
@@ -66,10 +65,12 @@ int main()
 
 #define SHOW  printf("%d  %d\n", x.size, x.allocated)
 
-    resize(&x, 0);      SHOW;
-    for (size = 0; size < 2000; size++)
-        if (resize(&x, size))
+    for (size = 0; size < 2000; size++) {
+        if (prev_alloc != x.allocated)
             SHOW;
+        prev_alloc = x.allocated;
+        resize(&x, size);
+    }
 
     resize(&x, 800000);  SHOW;
     resize(&x, 400000);  SHOW;
