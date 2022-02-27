@@ -28,11 +28,13 @@ for _ in range(100):
 
 
 # initalizing a bitarray from a list or bitarray should not overallocate
-for n in 0, 4, 10, 100, 1000, 10_000:
+for n in range(1000):
+    alloc = (n + 3) & ~3
+    assert n <= alloc < n + 4 and alloc % 4 == 0
     a = bitarray(8 * n * [1])
-    assert n == a.buffer_info()[4]
+    assert alloc == a.buffer_info()[4]
     b = bitarray(a)
-    assert n == b.buffer_info()[4]
+    assert alloc == b.buffer_info()[4]
 
 
 # starting from a large bitarray, make we sure we don't realloc each time

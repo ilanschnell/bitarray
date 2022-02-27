@@ -691,7 +691,7 @@ grow_buffer(bitarrayobject *self)
     assert(self->readonly == 0);
 
     /* standard growth pattern */
-    newsize += (newsize >> 4) + (newsize < 8 ? 3 : 7);
+    newsize = (newsize + (newsize >> 4) + (newsize < 8 ? 3 : 7)) & ~(size_t) 3;
 
     self->ob_item = PyMem_Realloc(self->ob_item, newsize);
     if (self->ob_item == NULL) {
