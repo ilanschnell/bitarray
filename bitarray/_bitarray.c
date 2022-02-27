@@ -27,14 +27,8 @@ static int
 resize(bitarrayobject *self, Py_ssize_t nbits)
 {
     const Py_ssize_t allocated = self->allocated, size = Py_SIZE(self);
-    Py_ssize_t newsize;
+    const Py_ssize_t newsize = BYTES(nbits);
     size_t new_allocated;
-
-    newsize = BYTES(nbits);
-    if (nbits < 0 || newsize < 0) {
-        PyErr_Format(PyExc_OverflowError, "bitarray resize %zd", nbits);
-        return -1;
-    }
 
     if (self->ob_exports > 0) {
         PyErr_SetString(PyExc_BufferError,
@@ -44,6 +38,11 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
 
     if (self->buffer) {
         PyErr_SetString(PyExc_BufferError, "cannot resize imported buffer");
+        return -1;
+    }
+
+    if (nbits < 0 || newsize < 0) {
+        PyErr_Format(PyExc_OverflowError, "bitarray resize %zd", nbits);
         return -1;
     }
 
