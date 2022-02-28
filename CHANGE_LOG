@@ -1,5 +1,6 @@
 2022-XX-XX   2.3.8:
 -------------------
+  * use setuptools instead of distutils in `setup.py`, #168
   * add missing type hinting for `.count()` step argument
 
 
