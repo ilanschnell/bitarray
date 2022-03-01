@@ -13,12 +13,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Set up QEMU
+        if: runner.os == 'Linux'
+        uses: docker/setup-qemu-action@v1
+        with:
+          platforms: all
+
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.3.1
         # to supply options, put them in 'env', like:
-        # env:
-        #   CIBW_SOME_OPTION: value
-
+        env:
+          # configure cibuildwheel to build native archs ('auto'), and some
+          # emulated ones
+          CIBW_ARCHS_LINUX: auto aarch64 ppc64le s390x
+        
       - uses: actions/upload-artifact@v2
         with:
           path: ./wheelhouse/*.whl
