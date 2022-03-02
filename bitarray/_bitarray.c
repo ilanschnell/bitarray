@@ -27,14 +27,8 @@ static int
 resize(bitarrayobject *self, Py_ssize_t nbits)
 {
     const Py_ssize_t allocated = self->allocated, size = Py_SIZE(self);
-    Py_ssize_t newsize;
+    const Py_ssize_t newsize = BYTES(nbits);
     size_t new_allocated;
-
-    newsize = BYTES(nbits);
-    if (nbits < 0 || newsize < 0) {
-        PyErr_Format(PyExc_OverflowError, "bitarray resize %zd", nbits);
-        return -1;
-    }
 
     if (self->ob_exports > 0) {
         PyErr_SetString(PyExc_BufferError,
@@ -44,6 +38,11 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
 
     if (self->buffer) {
         PyErr_SetString(PyExc_BufferError, "cannot resize imported buffer");
+        return -1;
+    }
+
+    if (nbits < 0 || newsize < 0) {
+        PyErr_Format(PyExc_OverflowError, "bitarray resize %zd", nbits);
         return -1;
     }
 
@@ -81,23 +80,19 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
         return 0;
     }
 
-    new_allocated = (size_t) newsize;
-    if (size == 0 && newsize <= 4)
-        /* When resizing an empty bitarray, we want at least 4 bytes. */
-        new_allocated = 4;
+    /* Overallocate proportional to the bitarray size.
+       Add padding to make the allocated size multiple of 4.
+       The growth pattern is:  0, 4, 8, 16, 24, 32, 40, 48, 56, 64, 76, ...
+       The pattern starts out the same as for lists but then grows at a
+       smaller rate so that larger bitarrays only overallocate by 1/16th,
+       as bitarrays are assumed to be memory critical. */
+    new_allocated = ((size_t) newsize + (newsize >> 4) +
+                     (newsize < 8 ? 3 : 7)) & ~(size_t) 3;
 
-    /* Over-allocate when the (previous) size is non-zero (as we often
-       extend an empty array on creation) and the size is actually
-       increasing. */
-    else if (size != 0 && newsize > size)
-        /* This over-allocates proportional to the bitarray size, making
-           room for additional growth.
-           The growth pattern is:  0, 4, 8, 16, 25, 34, 44, 54, 65, 77, ...
-           The pattern starts out the same as for lists but then
-           grows at a smaller rate so that larger bitarrays only overallocate
-           by about 1/16th -- this is done because bitarrays are assumed
-           to be memory critical. */
-        new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
+    /* Do not overallocate if the new size is closer to overallocated size
+       than to the old size. */
+    if (newsize - size > (Py_ssize_t) new_allocated - newsize)
+        new_allocated = ((size_t) newsize + 3) & ~(size_t) 3;
 
     assert(new_allocated >= (size_t) newsize);
     self->ob_item = PyMem_Realloc(self->ob_item, new_allocated);

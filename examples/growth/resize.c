@@ -40,13 +40,11 @@ void resize(bitarrayobject *self, int nbits)
         return;
     }
 
-    new_allocated = newsize;
-    if (size == 0 && newsize <= 4)
-        /* When resizing an empty bitarray, we want at least 4 bytes. */
-        new_allocated = 4;
+    new_allocated = (newsize + (newsize >> 4) +
+                     (newsize < 8 ? 3 : 7)) & ~(int) 3;
 
-    else if (size != 0 && newsize > size)
-        new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
+    if (newsize - size > new_allocated - newsize)
+        new_allocated = (newsize + 3) & ~(int) 3;
 
     /* realloc(self->ob_item) */
     self->size = newsize;
