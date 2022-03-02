@@ -1,3 +1,7 @@
+2022-XX-XX   2.4.1:
+-------------------
+
+
 2022-03-01   2.4.0:
 -------------------
   * enable building wheels for multiple platforms and Python versions using
