@@ -41,18 +41,19 @@ Key features
 Installation
 ------------
 
-If you have a working C compiler, you can simply:
+Python wheels are are available on PyPI for all mayor platforms and Python
+versions.  Which means you can simply:
 
 .. code-block:: shell-session
 
     $ pip install bitarray
 
-If you rather want to use precompiled binaries, you can:
+In addition, conda packages are available (both the default Anaconda
+repository as well as conda-forge support bitarray):
 
-* ``conda install bitarray`` (both the default Anaconda repository as well
-  as conda-forge support bitarray)
-* download Windows wheels from
-  `Chris Gohlke <https://www.lfd.uci.edu/~gohlke/pythonlibs/#bitarray>`__
+.. code-block:: shell-session
+
+    $ conda install bitarray
 
 Once you have installed the package, you may want to test it:
 
@@ -60,7 +61,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 2.3.7
+    bitarray version: 2.4.0
     sys.version: 2.7.15 (default, Mar  5 2020, 14:58:04) [GCC Clang 9.0.1]
     sys.prefix: /Users/ilan/Mini3/envs/py27
     pointer size: 64 bit
@@ -388,7 +389,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 2.3.7 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.4.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.

@@ -1,5 +1,8 @@
 import re
-from distutils.core import setup, Extension
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    from distutils.core import setup, Extension
 
 
 kwds = {}

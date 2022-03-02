@@ -1,6 +1,14 @@
 Change log
 ==========
 
+**2.4.0** (2022-03-01):
+
+* enable building wheels for multiple platforms and Python versions using
+  pypa/cibuildwheel, see `#165 <https://github.com/ilanschnell/bitarray/issues/165>`__ and `#170 <https://github.com/ilanschnell/bitarray/issues/170>`__ (thanks Brian Thorne, @hardbyte)
+* use setuptools instead of distutils in ``setup.py``, `#168 <https://github.com/ilanschnell/bitarray/issues/168>`__
+* add missing type hinting for ``.count()`` step argument
+
+
 **2.3.7** (2022-02-21):
 
 * add optional step argument to ``.count()`` method, see `#162 <https://github.com/ilanschnell/bitarray/issues/162>`__ and `#163 <https://github.com/ilanschnell/bitarray/issues/163>`__
