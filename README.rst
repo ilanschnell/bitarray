@@ -17,22 +17,22 @@ Key features
 * The bit endianness can be specified for each bitarray object, see below.
 * Sequence methods: slicing (including slice assignment and deletion),
   operations ``+``, ``*``, ``+=``, ``*=``, the ``in`` operator, ``len()``
-* Fast methods for encoding and decoding variable bit length prefix codes.
 * Bitwise operations: ``~``, ``&``, ``|``, ``^``, ``<<``, ``>>`` (as well as
   their in-place versions ``&=``, ``|=``, ``^=``, ``<<=``, ``>>=``).
-* Packing and unpacking to other binary data formats, e.g. ``numpy.ndarray``.
+* Fast methods for encoding and decoding variable bit length prefix codes.
 * Bitarray objects support the buffer protocol (both importing and
   exporting buffers).
-* ``frozenbitarray`` objects which are hashable
+* Packing and unpacking to other binary data formats, e.g. ``numpy.ndarray``.
 * Pickling and unpickling of bitarray objects.
+* Immutable ``frozenbitarray`` objects which are hashable
 * Sequential search
 * Extensive test suite with over 400 unittests.
 * Utility module ``bitarray.util``:
 
-  * conversion to hexadecimal string
-  * serialization
+  * conversion to and from hexadecimal strings
+  * (de-) serialization
   * pretty printing
-  * conversion to integers
+  * conversion to and from integers
   * creating Huffman codes
   * various count functions
   * other helpful functions
