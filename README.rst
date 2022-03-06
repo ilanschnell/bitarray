@@ -26,6 +26,7 @@ Key features
 * Pickling and unpickling of bitarray objects.
 * Immutable ``frozenbitarray`` objects which are hashable
 * Sequential search
+* Type hinting
 * Extensive test suite with over 400 unittests.
 * Utility module ``bitarray.util``:
 
