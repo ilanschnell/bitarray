@@ -2123,7 +2123,7 @@ delslice(bitarrayobject *self, PyObject *slice)
 }
 
 static int
-bitarray_ass_subscr(bitarrayobject *self, PyObject* item, PyObject* value)
+bitarray_ass_subscr(bitarrayobject *self, PyObject *item, PyObject *value)
 {
     RAISE_IF_READONLY(self, -1);
 
@@ -2315,17 +2315,17 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
 
 /* check shift arguments and return the shift count, -1 on error */
 static Py_ssize_t
-shift_check(PyObject *a, PyObject *b, const char *ostr)
+shift_check(PyObject *self, PyObject *other, const char *ostr)
 {
     Py_ssize_t n;
 
-    if (!bitarray_Check(a) || !PyIndex_Check(b)) {
+    if (!bitarray_Check(self) || !PyIndex_Check(other)) {
         PyErr_Format(PyExc_TypeError,
                      "unsupported operand type(s) for %s: '%s' and '%s'",
-                     ostr, Py_TYPE(a)->tp_name, Py_TYPE(b)->tp_name);
+                     ostr, Py_TYPE(self)->tp_name, Py_TYPE(other)->tp_name);
         return -1;
     }
-    n = PyNumber_AsSsize_t(b, PyExc_OverflowError);
+    n = PyNumber_AsSsize_t(other, PyExc_OverflowError);
     if (n == -1 && PyErr_Occurred())
         return -1;
 
