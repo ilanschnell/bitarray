@@ -776,8 +776,8 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 
    We decided to do this check at the top level here, by adding the
    RAISE_IF_READONLY macro to all methods which modify the buffer.
-   We could have done it at the low level (in setbit(), etc.), but as
-   many these functions have no return value we decided to do it here.
+   We could have done it at the low level (in setbit(), etc.), however as
+   many of these functions have no return value we decided to do it here.
 
    The situation is different from how resize() raises an exception when
    called on an imported buffer.  There, it is easy to raise the exception
