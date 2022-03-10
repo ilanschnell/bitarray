@@ -113,14 +113,13 @@ zeroed_last_byte(bitarrayobject *self)
         {0, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f},  /* little endian */
         {0, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe},  /* big endian */
     };
-    Py_ssize_t t = Py_SIZE(self) - 1;  /* index of last byte in buffer */
-    int r = self->nbits % 8;           /* index into mask table */
+    const int r = self->nbits % 8;     /* index into mask table */
 
+    assert_nbits(self);
     if (r == 0)
         return 0x00;
-    assert_nbits(self);
-    assert_byte_in_range(self, t);
-    return mask_table[self->endian == ENDIAN_BIG][r] & self->ob_item[t];
+    return mask_table[self->endian == ENDIAN_BIG][r] &
+                self->ob_item[Py_SIZE(self) - 1];
 }
 
 /* Unless buffer is readonly, zero out pad bits.
@@ -128,7 +127,7 @@ zeroed_last_byte(bitarrayobject *self)
 static inline int
 setunused(bitarrayobject *self)
 {
-    int r = self->nbits % 8;
+    const int r = self->nbits % 8;
 
     if (r == 0)
         return 0;
