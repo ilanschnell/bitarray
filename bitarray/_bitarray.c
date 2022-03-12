@@ -417,9 +417,7 @@ repeat(bitarrayobject *self, Py_ssize_t m)
     }
     assert(q / 2 < k && k <= q);
 
-    if (k < q)                  /* copy remaining bits */
-        copy_n(self, k, self, 0, q - k);
-
+    copy_n(self, k, self, 0, q - k);  /* copy remaining bits */
     return 0;
 }
 
