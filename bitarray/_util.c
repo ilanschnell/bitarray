@@ -527,7 +527,7 @@ static const char base64_alphabet[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static int
-digit_to_int(char c, int n)
+digit_to_int(int n, char c)
 {
     int i;
 
@@ -660,7 +660,7 @@ base2ba(PyObject *module, PyObject *args)
 #define aa  ((bitarrayobject *) a)
     le = IS_LE(aa);
     for (i = 0; i < strsize; i++) {
-        int j, d = digit_to_int(str[i], n);
+        int j, d = digit_to_int(n, str[i]);
 
         if (d < 0) {
             unsigned char c = str[i];

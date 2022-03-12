@@ -593,9 +593,6 @@ set_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
 {
     int vi;
 
-    assert(0 <= i && i < self->nbits);
-    assert(self->readonly == 0);
-
     vi = pybit_as_int(value);
     if (vi < 0)
         return -1;
@@ -2295,7 +2292,7 @@ BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
 static void
 shift(bitarrayobject *self, Py_ssize_t n, int right)
 {
-    Py_ssize_t nbits = self->nbits;
+    const Py_ssize_t nbits = self->nbits;
 
     if (n >= nbits) {
         memset(self->ob_item, 0x00, (size_t) Py_SIZE(self));
