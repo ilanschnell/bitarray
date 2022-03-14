@@ -1527,9 +1527,16 @@ class RichCompareTests(unittest.TestCase, Util):
     def test_explicit(self):
         for sa, sb, res in [
                 ('',   '',   '101010'),
+                ('0',  '0',  '101010'),
+                ('1',  '1',  '101010'),
+                ('0',  '',   '011100'),
                 ('1',  '',   '011100'),
+                ('1',  '0',  '011100'),
                 ('11', '10', '011100'),
+                ('01', '00', '011100'),
                 ('0',  '1',  '010011'),
+                ('',   '0',  '010011'),
+                ('',   '1',  '010011'),
         ]:
             a = bitarray(sa, self.random_endian())
             b = bitarray(sb, self.random_endian())
