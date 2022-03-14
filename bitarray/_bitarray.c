@@ -3399,10 +3399,8 @@ richcompare(PyObject *v, PyObject *w, int op)
         }
         if (va->endian == wa->endian) {
             /* sizes and endianness are the same - use memcmp() */
-            size_t s = vs / 8;  /* bytes to whole bytes in buffer */
-
             assert(vs == ws);
-            cmp = memcmp(va->ob_item, wa->ob_item, s);
+            cmp = memcmp(va->ob_item, wa->ob_item, (size_t) vs / 8);
             if (cmp == 0 && vs % 8)  /* if equal, compare remaining bits */
                 cmp = zeroed_last_byte(va) != zeroed_last_byte(wa);
 
