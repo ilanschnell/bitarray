@@ -210,7 +210,7 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
    when possible).
    The parameter (bebr = big endian byte reverse) is used to allow this
    function to call itself without calling bytereverse().  Elsewhere, ie.
-   outside this function itself, it is always call with bebr=1. */
+   outside this function itself, it should always be called with bebr=1. */
 static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 {
