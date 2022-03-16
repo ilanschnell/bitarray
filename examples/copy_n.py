@@ -1,7 +1,7 @@
 """
 The purpose of this script is to illustrate how copy_n() in _bitarray.c works.
 This is essentially a Python implementation of copy_n() with output of the
-different stages of the of the bitarray we copy into.
+different stages of the bitarray we copy into.
 For more details, see also: bitarray/copy_n.txt
 """
 from __future__ import print_function
