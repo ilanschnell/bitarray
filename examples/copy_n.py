@@ -71,11 +71,11 @@ def copy_n(self, a, other, b, n):
     p2 = (a + n - 1) // 8
     p3 = b // 8
     sa = a % 8
-    sb = 8 - b % 8
+    sb = -(b % 8)
 
     assert n >= 8
-    assert b + sb == 8 * (p3 + 1)
     assert a - sa == 8 * p1
+    assert b + sb == 8 * p3
     assert a + n >= 8 * p2
 
     if verbose:
@@ -92,8 +92,8 @@ def copy_n(self, a, other, b, n):
     t2 = self[8 * p2: 8 * p2 + 8]
     t3 = other[8 * p3: 8 * p3 + 8]
 
-    if sa + sb >= 8:
-        sb -= 8
+    if sa + sb < 0:
+        sb += 8
         if verbose:
             print(' -> sb =', sb)
 

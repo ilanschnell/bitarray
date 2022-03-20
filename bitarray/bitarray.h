@@ -58,6 +58,9 @@ typedef struct {
 #define ENDIAN_LITTLE  0
 #define ENDIAN_BIG     1
 
+#define IS_LE(self)  ((self)->endian == ENDIAN_LITTLE)
+#define IS_BE(self)  ((self)->endian == ENDIAN_BIG)
+
 /* the endianness string */
 #define ENDIAN_STR(endian)  ((endian) == ENDIAN_LITTLE ? "little" : "big")
 
@@ -102,21 +105,28 @@ setbit(bitarrayobject *self, Py_ssize_t i, int vi)
         *cp &= ~mask;
 }
 
+static const char bitmask_table[2][8] = {
+    {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80},  /* little endian */
+    {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01},  /* big endian */
+};
+
+/* character with n leading ones is: ones_table[endian][n] */
+static const char ones_table[2][8] = {
+    {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f},  /* little endian */
+    {0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe},  /* big endian */
+};
+
 /* Return the (padded with zeros) last byte of the buffer.  When called with
    a bitarray whose number of bits is a multiple of 8, return a NUL byte. */
 static inline char
 zeroed_last_byte(bitarrayobject *self)
 {
-    static const char mask_table[2][8] = {
-        {0, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f},  /* little endian */
-        {0, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe},  /* big endian */
-    };
     const int r = self->nbits % 8;     /* index into mask table */
 
     assert_nbits(self);
     if (r == 0)
         return 0x00;
-    return mask_table[self->endian == ENDIAN_BIG][r] &
+    return ones_table[self->endian == ENDIAN_BIG][r] &
                 self->ob_item[Py_SIZE(self) - 1];
 }
 
@@ -133,11 +143,6 @@ setunused(bitarrayobject *self)
         self->ob_item[Py_SIZE(self) - 1] = zeroed_last_byte(self);
     return 8 - r;
 }
-
-static const char bitmask_table[2][8] = {
-    {0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80},  /* little endian */
-    {0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01},  /* big endian */
-};
 
 static const unsigned char bitcount_lookup[256] = {
 #define B2(n)  n, n + 1, n + 1, n + 2

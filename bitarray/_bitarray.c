@@ -225,7 +225,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 
     /* as the big-endian representation has reversed bit order in each
        byte, we reverse each byte, and (re-) reverse again below */
-    if (bebr && self->endian == ENDIAN_BIG)
+    if (bebr && IS_BE(self))
         bytereverse(self, a, b);
 #define ucb  ((unsigned char *) (self)->ob_item)
 
@@ -262,7 +262,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
         }
     }
 #undef ucb
-    if (bebr && self->endian == ENDIAN_BIG)  /* (re-) reverse bytes */
+    if (bebr && IS_BE(self))  /* (re-) reverse bytes */
         bytereverse(self, a, b);
 }
 
@@ -309,13 +309,15 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         const Py_ssize_t p2 = (a + n - 1) / 8;
         const Py_ssize_t p3 = b / 8;
         int sa = a % 8;
-        int sb = 8 - b % 8;
+        int sb = -(b % 8);
         char t1, t2, t3;
+        char m1 = ones_table[IS_BE(self)][sa];
+        char m2 = ones_table[IS_BE(self)][(a + n) % 8];
         Py_ssize_t i;
 
         assert(n >= 8);
-        assert(b + sb == 8 * (p3 + 1));  /* useful equations */
-        assert(a - sa == 8 * p1);
+        assert(a - sa == 8 * p1);   /* useful equations */
+        assert(b + sb == 8 * p3);
         assert(a + n > 8 * p2);
 
         assert_byte_in_range(self, p1);
@@ -325,18 +327,17 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         t2 = self->ob_item[p2];
         t3 = other->ob_item[p3];
 
-        if (sa + sb >= 8)
-            sb -= 8;
+        if (sa + sb < 0)
+            sb += 8;
         copy_n(self, 8 * p1, other, b + sb, n - sb);  /* aligned copy */
         shift_r8(self, p1, p2 + 1, sa + sb, 1);       /* right shift */
 
-        for (i = 8 * p1; i < a; i++)  /* restore bits at p1 */
-            setbit(self, i, t1 & BITMASK(self, i));
+        if (sa)                   /* restore bits at p1 */
+            self->ob_item[p1] = (self->ob_item[p1] & ~m1) | (t1 & m1);
 
-        if (sa + sb != 0) {  /* if shifted, restore bits at p2 */
-            for (i = a + n; i < 8 * p2 + 8 && i < self->nbits; i++)
-                setbit(self, i, t2 & BITMASK(self, i));
-        }
+        if (sa + sb != 0 && m2)   /* if shifted, restore bits at p2 */
+            self->ob_item[p2] = (self->ob_item[p2] & m2) | (t2 & ~m2);
+
         for (i = 0; i < sb; i++)  /* copy first bits missed by copy_n() */
             setbit(self, i + a, t3 & BITMASK(other, i + b));
     }
@@ -2069,7 +2070,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
         setrange(self, start, stop, vi);
     }
     else {
-        const char *table = bitmask_table[self->endian == ENDIAN_BIG];
+        const char *table = bitmask_table[IS_BE(self)];
         Py_ssize_t i;
 
         assert(step > 1);
