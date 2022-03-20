@@ -309,15 +309,15 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         const Py_ssize_t p2 = (a + n - 1) / 8;
         const Py_ssize_t p3 = b / 8;
         int sa = a % 8;
-        int sb = 8 - b % 8;
+        int sb = -(b % 8);
         char t1, t2, t3;
         char m1 = ones_table[self->endian == ENDIAN_BIG][sa];
         char m2 = ones_table[self->endian == ENDIAN_BIG][(a + n) % 8];
         Py_ssize_t i;
 
         assert(n >= 8);
-        assert(b + sb == 8 * (p3 + 1));  /* useful equations */
-        assert(a - sa == 8 * p1);
+        assert(a - sa == 8 * p1);   /* useful equations */
+        assert(b + sb == 8 * p3);
         assert(a + n > 8 * p2);
 
         assert_byte_in_range(self, p1);
@@ -327,8 +327,8 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         t2 = self->ob_item[p2];
         t3 = other->ob_item[p3];
 
-        if (sa + sb >= 8)
-            sb -= 8;
+        if (sa + sb < 0)
+            sb += 8;
         copy_n(self, 8 * p1, other, b + sb, n - sb);  /* aligned copy */
         shift_r8(self, p1, p2 + 1, sa + sb, 1);       /* right shift */
 
