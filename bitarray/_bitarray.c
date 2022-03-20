@@ -311,8 +311,8 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         int sa = a % 8;
         int sb = 8 - b % 8;
         char t1, t2, t3;
-        char m1 = mask_table[self->endian == ENDIAN_BIG][sa];
-        char m2 = mask_table[self->endian == ENDIAN_BIG][(a + n) % 8];
+        char m1 = ones_table[self->endian == ENDIAN_BIG][sa];
+        char m2 = ones_table[self->endian == ENDIAN_BIG][(a + n) % 8];
         Py_ssize_t i;
 
         assert(n >= 8);
