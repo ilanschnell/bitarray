@@ -12,9 +12,6 @@
 #include "pythoncapi_compat.h"
 #include "bitarray.h"
 
-#define IS_LE(a)  ((a)->endian == ENDIAN_LITTLE)
-#define IS_BE(a)  ((a)->endian == ENDIAN_BIG)
-
 /* set using the Python module function _set_bato() */
 static PyObject *bitarray_type_obj = NULL;
 

@@ -225,7 +225,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 
     /* as the big-endian representation has reversed bit order in each
        byte, we reverse each byte, and (re-) reverse again below */
-    if (bebr && self->endian == ENDIAN_BIG)
+    if (bebr && IS_BE(self))
         bytereverse(self, a, b);
 #define ucb  ((unsigned char *) (self)->ob_item)
 
@@ -262,7 +262,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
         }
     }
 #undef ucb
-    if (bebr && self->endian == ENDIAN_BIG)  /* (re-) reverse bytes */
+    if (bebr && IS_BE(self))  /* (re-) reverse bytes */
         bytereverse(self, a, b);
 }
 
@@ -311,8 +311,8 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         int sa = a % 8;
         int sb = -(b % 8);
         char t1, t2, t3;
-        char m1 = ones_table[self->endian == ENDIAN_BIG][sa];
-        char m2 = ones_table[self->endian == ENDIAN_BIG][(a + n) % 8];
+        char m1 = ones_table[IS_BE(self)][sa];
+        char m2 = ones_table[IS_BE(self)][(a + n) % 8];
         Py_ssize_t i;
 
         assert(n >= 8);
@@ -2070,7 +2070,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
         setrange(self, start, stop, vi);
     }
     else {
-        const char *table = bitmask_table[self->endian == ENDIAN_BIG];
+        const char *table = bitmask_table[IS_BE(self)];
         Py_ssize_t i;
 
         assert(step > 1);

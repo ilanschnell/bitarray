@@ -58,6 +58,9 @@ typedef struct {
 #define ENDIAN_LITTLE  0
 #define ENDIAN_BIG     1
 
+#define IS_LE(self)  ((self)->endian == ENDIAN_LITTLE)
+#define IS_BE(self)  ((self)->endian == ENDIAN_BIG)
+
 /* the endianness string */
 #define ENDIAN_STR(endian)  ((endian) == ENDIAN_LITTLE ? "little" : "big")
 
