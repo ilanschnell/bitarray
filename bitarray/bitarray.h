@@ -102,15 +102,16 @@ setbit(bitarrayobject *self, Py_ssize_t i, int vi)
         *cp &= ~mask;
 }
 
+static const char mask_table[2][8] = {
+    {0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f},  /* little endian */
+    {0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe},  /* big endian */
+};
+
 /* Return the (padded with zeros) last byte of the buffer.  When called with
    a bitarray whose number of bits is a multiple of 8, return a NUL byte. */
 static inline char
 zeroed_last_byte(bitarrayobject *self)
 {
-    static const char mask_table[2][8] = {
-        {0, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f},  /* little endian */
-        {0, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe},  /* big endian */
-    };
     const int r = self->nbits % 8;     /* index into mask table */
 
     assert_nbits(self);

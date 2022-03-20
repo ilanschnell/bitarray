@@ -311,6 +311,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         int sa = a % 8;
         int sb = 8 - b % 8;
         char t1, t2, t3;
+        char m1 = mask_table[self->endian == ENDIAN_BIG][sa];
         Py_ssize_t i;
 
         assert(n >= 8);
@@ -330,8 +331,8 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         copy_n(self, 8 * p1, other, b + sb, n - sb);  /* aligned copy */
         shift_r8(self, p1, p2 + 1, sa + sb, 1);       /* right shift */
 
-        for (i = 8 * p1; i < a; i++)  /* restore bits at p1 */
-            setbit(self, i, t1 & BITMASK(self, i));
+        if (sa)              /* restore bits at p1 */
+            self->ob_item[p1] = ((self->ob_item[p1] & ~m1) | (t1 & m1));
 
         if (sa + sb != 0) {  /* if shifted, restore bits at p2 */
             for (i = a + n; i < 8 * p2 + 8 && i < self->nbits; i++)
