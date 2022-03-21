@@ -16,7 +16,7 @@ from bitarray._bitarray import (bitarray, decodetree, _sysinfo,
                                 __version__)
 
 
-__all__ = ['bitarray', 'frozenbitarray', 'decodetree', '__version__']
+__all__ = ['bitarray', 'frozenbitarray', 'decodetree', 'bits2bytes']
 
 
 class frozenbitarray(bitarray):
