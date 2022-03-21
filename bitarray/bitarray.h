@@ -126,8 +126,7 @@ zeroed_last_byte(bitarrayobject *self)
     assert_nbits(self);
     if (r == 0)
         return 0x00;
-    return ones_table[self->endian == ENDIAN_BIG][r] &
-                self->ob_item[Py_SIZE(self) - 1];
+    return ones_table[IS_BE(self)][r] & self->ob_item[Py_SIZE(self) - 1];
 }
 
 /* Unless buffer is readonly, zero out pad bits.
