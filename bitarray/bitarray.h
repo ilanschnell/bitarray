@@ -116,8 +116,8 @@ static const char ones_table[2][8] = {
     {0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe},  /* big endian */
 };
 
-/* Return the (padded with zeros) last byte of the buffer.  When called with
-   a bitarray whose number of bits is a multiple of 8, return a NUL byte. */
+/* Return last byte in buffer with pad bits zeroed out.  When the number of
+   bits in the bitarray is a multiple of 8, return a NUL character. */
 static inline char
 zeroed_last_byte(bitarrayobject *self)
 {
@@ -155,7 +155,8 @@ static const unsigned char bitcount_lookup[256] = {
 
 /* normalize index (which may be negative), such that:
     0 <= i <= length        (for step > 0)
-   -1 <= i <= length - 1    (for step < 0)                           */
+   -1 <= i <= length - 1    (for step < 0)
+*/
 static inline void
 normalize_index(Py_ssize_t length, Py_ssize_t step, Py_ssize_t *i)
 {
