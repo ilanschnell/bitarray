@@ -4,14 +4,9 @@ This is essentially a Python implementation of copy_n() with output of the
 different stages of the bitarray we copy into.
 For more details, see also: bitarray/copy_n.txt
 """
-from __future__ import print_function
-
 import sys
 from random import randint
-if sys.version_info[0] == 2:
-    from io import BytesIO as StringIO
-else:
-    from io import StringIO
+from io import StringIO
 
 from bitarray import bitarray
 from bitarray.util import pprint, urandom
@@ -35,6 +30,18 @@ def shift_r8(self, a, b, n):
     assert a <= b and 0 <= n < 8
     self[8 * a : 8 * b] >>= n
 
+def is_be(self):
+    return self.endian() == 'big'
+
+bitmask_table = [
+    [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80],  # little endian
+    [0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01],  # big endian
+]
+
+ones_table = [
+    [0x00, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f],  # little endian
+    [0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe],  # big endian
+]
 
 def copy_n(self, a, other, b, n):
     assert 0 <= a <= len(self)
@@ -72,6 +79,8 @@ def copy_n(self, a, other, b, n):
     p3 = b // 8
     sa = a % 8
     sb = -(b % 8)
+    m1 = ones_table[is_be(self)][sa]
+    m2 = ones_table[is_be(self)][(a + n) % 8]
 
     assert n >= 8
     assert a - sa == 8 * p1
@@ -88,9 +97,9 @@ def copy_n(self, a, other, b, n):
         print('sa =', sa)
         print('sb =', sb)
 
-    t1 = self[8 * p1: 8 * p1 + 8]
-    t2 = self[8 * p2: 8 * p2 + 8]
-    t3 = other[8 * p3: 8 * p3 + 8]
+    t1 = memoryview(self)[p1]
+    t2 = memoryview(self)[p2]
+    t3 = memoryview(other)[p3]
 
     if sa + sb < 0:
         sb += 8
@@ -125,21 +134,20 @@ def copy_n(self, a, other, b, n):
         pprint(self)
         mark_range_n(8 * p1 + sa + sb, n - sb, '=', 'a..a+n')
 
-    if verbose:
-        mark_range(8 * p1, a, '1')
-    for i in range(8 * p1, a):
-        self[i] = t1[i % 8]
+    if sa:
+        if verbose:
+            mark_range(8 * p1, a, '1')
+        memoryview(self)[p1] = (memoryview(self)[p1] & ~m1) | (t1 & m1)
 
-    if sa + sb != 0:
+    if sa + sb != 0 and m2:
         if verbose:
             mark_range(a + n, 8 * p2 + 8, '2')
-        for i in range(a + n, min(8 * p2 + 8, len(self))):
-            self[i] = t2[i % 8]
+        memoryview(self)[p2] = (memoryview(self)[p2] & m2) | (t2 & ~m2)
 
     if verbose:
         mark_range_n(a, sb, '3')
     for i in range(0, sb):
-        self[i + a] = t3[(i + b) % 8]
+        self[i + a] = bool(t3 & bitmask_table[is_be(other)][(i + b) % 8])
 
     if verbose:
         pprint(self)
