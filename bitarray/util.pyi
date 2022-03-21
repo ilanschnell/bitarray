@@ -1,3 +1,5 @@
+# Copyright (c) 2021 - 2022, Ilan Schnell; All Rights Reserved
+
 from collections.abc import Iterator
 from typing import Any, AnyStr, BinaryIO, Optional, Union
 

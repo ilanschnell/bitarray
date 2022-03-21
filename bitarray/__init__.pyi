@@ -1,7 +1,7 @@
-"""
-This stub, as well as util.pyi, have been tested with all Python 3 versions
-that bitarray supports and mypy 0.902.
-"""
+# Copyright (c) 2021 - 2022, Ilan Schnell; All Rights Reserved
+#
+# This stub, as well as util.pyi, are tested with Python 3.9 and mypy 0.902.
+
 from collections.abc import Iterable, Iterator
 from unittest.runner import TextTestResult
 
