@@ -364,8 +364,8 @@ of passing the prefix code dictionary to those methods itself:
     >>> ''.join(a.iterdecode(t))
     'abba'
 
-The ``decodetree`` object is immutable and unhashable, and it's sole purpose
-is to be passed to bitarray's `.decode()` and `.iterdecode()` methods.
+The sole purpose of the immutable ``decodetree`` object is to be passed
+to bitarray's `.decode()` and `.iterdecode()` methods.
 
 
 Frozenbitarrays
