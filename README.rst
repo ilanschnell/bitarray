@@ -365,7 +365,7 @@ of passing the prefix code dictionary to those methods itself:
     'abba'
 
 The sole purpose of the immutable ``decodetree`` object is to be passed
-to bitarray's `.decode()` and `.iterdecode()` methods.
+to bitarray's ``.decode()`` and ``.iterdecode()`` methods.
 
 
 Frozenbitarrays
