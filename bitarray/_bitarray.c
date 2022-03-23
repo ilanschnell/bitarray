@@ -2668,6 +2668,32 @@ binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
     return 0;
 }
 
+static Py_hash_t
+binode_hash(binode *nd)
+{
+    if (nd == NULL)
+        return 11;
+
+    if (nd->symbol) {
+        return PyObject_Hash(nd->symbol);
+    }
+    else {
+        Py_uhash_t x = 13;
+        Py_hash_t y;
+        int k;
+
+        for (k = 0; k < 2; k++) {
+            y = binode_hash(nd->child[k]);
+            if (y == -1)
+                return -1;
+            x = (x ^ y) * (k ? 17 : 19);
+        }
+        if (x == (Py_uhash_t) -1)
+            x = -2;
+        return x;
+    }
+}
+
 /* return the number of nodes */
 static Py_ssize_t
 binode_nodes(binode *nd)
@@ -2750,6 +2776,12 @@ decodetree_todict(decodetreeobject *self)
     return NULL;
 }
 
+static Py_hash_t
+decodetree_hash(decodetreeobject *self)
+{
+    return binode_hash(self->tree);
+}
+
 /* Return the number of nodes in the tree (not just symbols) */
 static PyObject *
 decodetree_nodes(decodetreeobject *self)
@@ -2809,7 +2841,7 @@ static PyTypeObject DecodeTree_Type = {
     0,                                        /* tp_as_number*/
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
-    PyObject_HashNotImplemented,              /* tp_hash */
+    (hashfunc) decodetree_hash,               /* tp_hash */
     0,                                        /* tp_call */
     0,                                        /* tp_str */
     PyObject_GenericGetAttr,                  /* tp_getattro */

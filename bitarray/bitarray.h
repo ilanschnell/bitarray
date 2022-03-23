@@ -35,6 +35,8 @@
     PySlice_GetIndicesEx(((PySliceObject *) slice),                      \
                          (len), (start), (stop), (step), (slicelength))
 #define PyLong_FromLong  PyInt_FromLong
+typedef Py_ssize_t Py_hash_t;
+typedef size_t Py_uhash_t;
 #define BYTES_SIZE_FMT  "s#"
 #endif
 
