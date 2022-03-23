@@ -2216,8 +2216,8 @@ bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
             self->ob_item[i] ^= other->ob_item[i];
         break;
 
-    default:                    /* cannot happen */
-        Py_FatalError("unknown bitwise operation");
+    default:
+        Py_UNREACHABLE();
     }
 }
 
@@ -3381,8 +3381,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static PyObject *
 richcompare(PyObject *v, PyObject *w, int op)
 {
-    int cmp;
     Py_ssize_t i, vs, ws;
+    int cmp = 0;                /* silence uninitialized warning */
 
     if (!bitarray_Check(v) || !bitarray_Check(w)) {
         Py_INCREF(Py_NotImplemented);
@@ -3423,7 +3423,7 @@ richcompare(PyObject *v, PyObject *w, int op)
             case Py_NE: cmp = 1; break;
             case Py_GT: cmp = vi >  wi; break;
             case Py_GE: cmp = vi >= wi; break;
-            default: return NULL;  /* cannot happen */
+            default: Py_UNREACHABLE();
             }
             return PyBool_FromLong((long) cmp);
         }
@@ -3439,7 +3439,7 @@ richcompare(PyObject *v, PyObject *w, int op)
     case Py_NE: cmp = vs != ws; break;
     case Py_GT: cmp = vs >  ws; break;
     case Py_GE: cmp = vs >= ws; break;
-    default: return NULL;  /* cannot happen */
+    default: Py_UNREACHABLE();
     }
     return PyBool_FromLong((long) cmp);
 }
