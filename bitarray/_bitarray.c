@@ -2672,13 +2672,13 @@ static Py_hash_t
 binode_hash(binode *nd)
 {
     if (nd == NULL)
-        return 11;
+        return 1134503UL;
 
     if (nd->symbol) {
         return PyObject_Hash(nd->symbol);
     }
     else {
-        Py_uhash_t x = 13;
+        Py_uhash_t x = 1214977UL;
         Py_hash_t y;
         int k;
 
@@ -2686,8 +2686,9 @@ binode_hash(binode *nd)
             y = binode_hash(nd->child[k]);
             if (y == -1)
                 return -1;
-            x = (x ^ y) * (k ? 17 : 19);
+            x = (x ^ y) * (k ? 1295201UL : 1375547UL);
         }
+        x += 1454993UL;
         if (x == (Py_uhash_t) -1)
             x = -2;
         return x;
