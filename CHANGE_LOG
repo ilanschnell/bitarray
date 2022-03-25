@@ -2,7 +2,7 @@
 -------------------
   * improve `resize()`, see #167
   * avoid loops in `copy_n()`, #171
-  * unused bits in `.bytereverse()` are no longer treated as zero
+  * `.bytereverse()` are no longer treats unused bits as zero
 
 
 2022-03-01   2.4.0:
