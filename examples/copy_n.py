@@ -8,7 +8,7 @@ import sys
 from random import randint
 from io import StringIO
 
-from bitarray import bitarray
+from bitarray import bitarray, bits2bytes
 from bitarray.util import pprint, urandom
 
 
@@ -51,17 +51,18 @@ def copy_n(self, a, other, b, n):
         return
 
     if a % 8 == 0 and b % 8 == 0 and n >= 8: # aligned case
-        m = n // 8
-
-        if a > b:
-            copy_n(self, a + 8 * m, other, b + 8 * m, n % 8)
+        m = bits2bytes(n)
+        p2 = (a + n - 1) // 8
+        assert(a // 8 + m == p2 + 1);
+        m2 = ones_table[is_be(self)][(a + n) % 8]
+        t2 = memoryview(self)[p2]
 
         memoryview(self)[a//8:a//8 + m] = memoryview(other)[b//8:b//8 + m]
         if self.endian() != other.endian():
-            self.bytereverse(a//8, a//8 + m)
+            self.bytereverse(a // 8, p2 + 1)
 
-        if a <= b:
-            copy_n(self, a + 8 * m, other, b + 8 * m, n % 8)
+        if m2:
+            memoryview(self)[p2] = (memoryview(self)[p2] & m2) | (t2 & ~m2)
         return
 
     if n < 24:                               # small n case
