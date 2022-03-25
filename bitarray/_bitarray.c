@@ -291,7 +291,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         if (self->endian != other->endian)
             bytereverse(self, a / 8, p2 + 1);
 
-        if (m2)  /* restore bits not to be copies */
+        if (m2)  /* restore bits not to be copied */
             self->ob_item[p2] = (self->ob_item[p2] & m2) | (t2 & ~m2);
     }
     else if (n < 24) {                           /***** small n case *****/
