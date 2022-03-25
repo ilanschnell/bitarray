@@ -287,7 +287,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         assert_byte_in_range(self, p2);
         t2 = self->ob_item[p2];
 
-        memmove(self->ob_item + a / 8, other->ob_item + b / 8, BYTES(n));
+        memmove(self->ob_item + a/8, other->ob_item + b/8, (size_t) BYTES(n));
         if (self->endian != other->endian)
             bytereverse(self, a / 8, p2 + 1);
 
