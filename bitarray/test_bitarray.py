@@ -2657,36 +2657,51 @@ class MethodTests(unittest.TestCase, Util):
 
     def test_bytereverse_explicit_all(self):
         for x, y in [('', ''),
-                     ('1', '0'),
-                     ('1011', '0000'),
-                     ('111011', '001101'),
                      ('11101101', '10110111'),
-                     ('000000011', '100000000'),
-                     ('11011111 00100000 000111',
-                      '11111011 00000100 001110')]:
+                     ('00000001', '10000000'),
+                     ('11011111 00100000 00011111',
+                      '11111011 00000100 11111000')]:
             a = bitarray(x)
             a.bytereverse()
             self.assertEqual(a, bitarray(y))
 
     def test_bytereverse_explicit_range(self):
-        a = bitarray('11100000 00000011 00111111 111110')
+        a = bitarray('11100000 00000011 00111111 11111000')
         a.bytereverse(0, 1)  # reverse byte 0
-        self.assertEqual(a, bitarray('00000111 00000011 00111111 111110'))
+        self.assertEqual(a, bitarray('00000111 00000011 00111111 11111000'))
         a.bytereverse(1, 3)  # reverse bytes 1 and 2
-        self.assertEqual(a, bitarray('00000111 11000000 11111100 111110'))
+        self.assertEqual(a, bitarray('00000111 11000000 11111100 11111000'))
         a.bytereverse(2)  # reverse bytes 2 till end of buffer
-        self.assertEqual(a, bitarray('00000111 11000000 00111111 000111'))
+        self.assertEqual(a, bitarray('00000111 11000000 00111111 00011111'))
         a.bytereverse(3)  # reverse last byte
-        self.assertEqual(a, bitarray('00000111 11000000 00111111 001110'))
+        self.assertEqual(a, bitarray('00000111 11000000 00111111 11111000'))
         a.bytereverse(3, 1)  # start > stop (nothing to reverse)
-        self.assertEqual(a, bitarray('00000111 11000000 00111111 001110'))
+        self.assertEqual(a, bitarray('00000111 11000000 00111111 11111000'))
         a.bytereverse(0, 4)  # reverse all bytes
-        self.assertEqual(a, bitarray('11100000 00000011 11111100 000111'))
+        self.assertEqual(a, bitarray('11100000 00000011 11111100 00011111'))
 
         self.assertRaises(IndexError, a.bytereverse, -1)
         self.assertRaises(IndexError, a.bytereverse, 0, -1)
         self.assertRaises(IndexError, a.bytereverse, 5)
         self.assertRaises(IndexError, a.bytereverse, 0, 5)
+
+    def test_bytereverse_part(self):
+        if not is_py3k:
+            return
+
+        a = bitarray(5, 'big')
+        memoryview(a)[0] = 0x13  # 0001 0011
+        self.assertEqual(a, bitarray('0001 0'))
+        # the unused bits (011) are not treated as zeros
+        a.bytereverse()
+        self.assertEqual(a, bitarray('1100 1'))
+
+        a = bitarray(12, 'little')
+        memoryview(a)[1] = 0xd4  # .... ....  0010 1011
+        self.assertEqual(a[8:], bitarray('0010'))
+        # the unused bits (1011) are not treated as zeros
+        a.bytereverse(1)
+        self.assertEqual(a[8:], bitarray('1101'))
 
     def test_bytereverse_byte(self):
         for i in range(256):

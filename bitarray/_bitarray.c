@@ -851,7 +851,6 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
         PyErr_SetString(PyExc_IndexError, "byte index out of range");
         return NULL;
     }
-    setunused(self);
     bytereverse(self, start, stop);
     Py_RETURN_NONE;
 }
