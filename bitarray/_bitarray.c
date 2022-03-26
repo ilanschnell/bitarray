@@ -279,7 +279,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     if (n == 0 || (self == other && a == b))
         return;
 
-    if (a % 8 == 0 && b % 8 == 0 && n >= 8) {    /***** aligned case *****/
+    if (a % 8 == 0 && b % 8 == 0) {              /***** aligned case *****/
         const Py_ssize_t p2 = (a + n - 1) / 8;
         char t2, m2 = ones_table[IS_BE(self)][(a + n) % 8];
 
@@ -294,7 +294,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         if (m2)  /* restore bits not to be copied */
             self->ob_item[p2] = (self->ob_item[p2] & m2) | (t2 & ~m2);
     }
-    else if (n < 24) {                           /***** small n case *****/
+    else if (n < 8) {                            /***** small n case *****/
         Py_ssize_t i;
 
         if (a <= b) {  /* loop forward (delete) */

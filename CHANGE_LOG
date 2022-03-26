@@ -1,7 +1,7 @@
 2022-XX-XX   2.4.1:
 -------------------
   * improve `resize()`, see #167
-  * avoid loops in `copy_n()`, #171
+  * optimize `copy_n()` by avoiding loops, #171
   * `.bytereverse()` no longer treats unused bits as zero
 
 

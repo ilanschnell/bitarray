@@ -27,10 +27,10 @@ any partial byte at the end, whose bits get restored as necessary.
 Small n case
 ------------
 
-For n smaller than a low limit (like 24 bits), we use a sequence of getbit()
-and setbit() calls which is quite slow.  We could choose the low limit to be
-as low as 8.  However, as the general case has some overhead, we don't see
-a speedup over this case until we copy at least several bytes.
+For n smaller than a low limit (like 8 bits), we use a sequence of getbit()
+and setbit() calls which is quite slow.  However, as the general case has
+some overhead, we don't see a speedup over this case until we copy at least
+one byte.
 As other might be self, we need to either loop forward or backwards in order
 to not copy from bits already changed.
 

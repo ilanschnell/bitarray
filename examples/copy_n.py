@@ -50,7 +50,7 @@ def copy_n(self, a, other, b, n):
     if n == 0 or (self == other and a == b):
         return
 
-    if a % 8 == 0 and b % 8 == 0 and n >= 8: # aligned case
+    if a % 8 == 0 and b % 8 == 0:            # aligned case
         m = bits2bytes(n)
         p2 = (a + n - 1) // 8
         assert(a // 8 + m == p2 + 1);
@@ -65,7 +65,7 @@ def copy_n(self, a, other, b, n):
             memoryview(self)[p2] = (memoryview(self)[p2] & m2) | (t2 & ~m2)
         return
 
-    if n < 24:                               # small n case
+    if n < 8:                                # small n case
         if a <= b:  # loop forward
             for i in range(n):
                 self[i + a] = other[i + b]
