@@ -1488,7 +1488,7 @@ bitarray_tobytes(bitarrayobject *self)
 PyDoc_STRVAR(tobytes_doc,
 "tobytes() -> bytes\n\
 \n\
-Return the byte representation of the bitarray.");
+Return the bitarray buffer in bytes (unused bits are set to zero).");
 
 
 static PyObject *
