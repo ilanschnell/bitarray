@@ -27,10 +27,9 @@ any partial byte at the end, whose bits get restored as necessary.
 Small n case
 ------------
 
-For n smaller than a low limit (like 8 bits), we use a sequence of getbit()
-and setbit() calls which is quite slow.  However, as the general case has
-some overhead, we don't see a speedup over this case until we copy at least
-one byte.
+For n smaller than 8 bits, we use a simple sequence of getbit() and setbit()
+calls which is relatively slow.  However, as the general case has some
+overhead, it is still faster to copy a small number of bits one by one.
 As other might be self, we need to either loop forward or backwards in order
 to not copy from bits already changed.
 
@@ -38,9 +37,9 @@ to not copy from bits already changed.
 General case
 ------------
 
-We choose an aligned region to be copied using copy_n() itself, and use
-shift_r8() and a few fixes to create the correct copy.  The is done in the
-following steps:
+Here we assume that n is at least 8 bits.  We choose an aligned region to
+be copied using copy_n() itself, and use shift_r8() and a few fixes to
+create the correct copy.  The is done in the following steps:
 
 1.) Calculate the following byte positions:
     p1: start (in self) memory is copied to, i.e. a / 8
