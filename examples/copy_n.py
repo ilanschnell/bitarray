@@ -86,7 +86,7 @@ def copy_n(self, a, other, b, n):
     assert n >= 8
     assert a - sa == 8 * p1
     assert b + sb == 8 * p3
-    assert a + n >= 8 * p2
+    assert a + n > 8 * p2
 
     if verbose:
         print('a =', a)
