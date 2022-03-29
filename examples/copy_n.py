@@ -121,9 +121,9 @@ def copy_n(self, a, other, b, n):
         mark_range(a + n, 8 * p2 + 8, '2')
 
         print('copy_n')
-        mark_range_n(8 * p1, n - sb, '=')
+        mark_range_n(a - sa, n - sb, '=')
 
-    copy_n(self, 8 * p1, other, b + sb, n - sb)
+    copy_n(self, a - sa, other, b + sb, n - sb)
     if verbose:
         pprint(self)
 
