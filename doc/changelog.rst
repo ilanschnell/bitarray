@@ -1,6 +1,13 @@
 Change log
 ==========
 
+**2.4.1** (2022-03-29):
+
+* improve ``resize()``, see `#167 <https://github.com/ilanschnell/bitarray/issues/167>`__
+* optimize ``copy_n()`` by avoiding loops, `#171 <https://github.com/ilanschnell/bitarray/issues/171>`__
+* ``.bytereverse()`` no longer sets unused bits to zero
+
+
 **2.4.0** (2022-03-01):
 
 * enable building wheels for multiple platforms and Python versions using

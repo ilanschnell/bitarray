@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.4.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.4.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -65,10 +65,9 @@ The bitarray object:
 
 
 ``bytereverse(start=0, stop=<end of buffer>, /)``
-   Reverse the bit order for the bytes in range(start, stop) in-place.
+   Reverse the bit order for each buffer byte in range(start, stop) in-place.
    The start and stop indices are given in terms of bytes (not bits).
-   By default, all bytes in the buffer are reversed.
-   Note: This method only changes the buffer; it does not change the
+   Also note that this method only changes the buffer; it does not change the
    endianness of the bitarray object.
 
    New in version 2.2.5: optional start and stop arguments.
@@ -212,7 +211,7 @@ The bitarray object:
 
 
 ``tobytes()`` -> bytes
-   Return the byte representation of the bitarray.
+   Return the bitarray buffer in bytes (unused bits are set to zero).
 
 
 ``tofile(f, /)``
