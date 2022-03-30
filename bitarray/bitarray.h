@@ -4,7 +4,7 @@
 
    Author: Ilan Schnell
 */
-#define BITARRAY_VERSION  "2.4.1"
+#define BITARRAY_VERSION  "2.4.2"
 
 #ifdef STDC_HEADERS
 #include <stddef.h>
@@ -23,6 +23,11 @@
 #endif
 
 /* --- definitions specific to Python --- */
+
+/* Py_UNREACHABLE was introduced in Python 3.7 */
+#ifndef Py_UNREACHABLE
+#define Py_UNREACHABLE() abort()
+#endif
 
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K
@@ -118,16 +123,15 @@ static const char ones_table[2][8] = {
     {0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe},  /* big endian */
 };
 
-/* Return last byte in buffer with pad bits zeroed out.  When the number of
-   bits in the bitarray is a multiple of 8, return a NUL character. */
+/* Return last byte in buffer with pad bits zeroed out.  The the number of
+   bits in the bitarray must not be a multiple of 8. */
 static inline char
 zeroed_last_byte(bitarrayobject *self)
 {
     const int r = self->nbits % 8;     /* index into mask table */
 
+    assert(r % 8 > 0);
     assert_nbits(self);
-    if (r == 0)
-        return 0x00;
     return ones_table[IS_BE(self)][r] & self->ob_item[Py_SIZE(self) - 1];
 }
 

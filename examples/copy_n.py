@@ -8,7 +8,7 @@ import sys
 from random import randint
 from io import StringIO
 
-from bitarray import bitarray
+from bitarray import bitarray, bits2bytes
 from bitarray.util import pprint, urandom
 
 
@@ -50,21 +50,22 @@ def copy_n(self, a, other, b, n):
     if n == 0 or (self == other and a == b):
         return
 
-    if a % 8 == 0 and b % 8 == 0 and n >= 8: # aligned case
-        m = n // 8
-
-        if a > b:
-            copy_n(self, a + 8 * m, other, b + 8 * m, n % 8)
+    if a % 8 == 0 and b % 8 == 0:            # aligned case
+        m = bits2bytes(n)
+        p2 = (a + n - 1) // 8
+        assert(a // 8 + m == p2 + 1);
+        m2 = ones_table[is_be(self)][(a + n) % 8]
+        t2 = memoryview(self)[p2]
 
         memoryview(self)[a//8:a//8 + m] = memoryview(other)[b//8:b//8 + m]
         if self.endian() != other.endian():
-            self.bytereverse(a//8, a//8 + m)
+            self.bytereverse(a // 8, p2 + 1)
 
-        if a <= b:
-            copy_n(self, a + 8 * m, other, b + 8 * m, n % 8)
+        if m2:
+            memoryview(self)[p2] = (memoryview(self)[p2] & m2) | (t2 & ~m2)
         return
 
-    if n < 24:                               # small n case
+    if n < 8:                                # small n case
         if a <= b:  # loop forward
             for i in range(n):
                 self[i + a] = other[i + b]
@@ -85,7 +86,7 @@ def copy_n(self, a, other, b, n):
     assert n >= 8
     assert a - sa == 8 * p1
     assert b + sb == 8 * p3
-    assert a + n >= 8 * p2
+    assert a + n > 8 * p2
 
     if verbose:
         print('a =', a)
@@ -120,9 +121,9 @@ def copy_n(self, a, other, b, n):
         mark_range(a + n, 8 * p2 + 8, '2')
 
         print('copy_n')
-        mark_range_n(8 * p1, n - sb, '=')
+        mark_range_n(a - sa, n - sb, '=')
 
-    copy_n(self, 8 * p1, other, b + sb, n - sb)
+    copy_n(self, a - sa, other, b + sb, n - sb)
     if verbose:
         pprint(self)
 

@@ -279,20 +279,22 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     if (n == 0 || (self == other && a == b))
         return;
 
-    if (a % 8 == 0 && b % 8 == 0 && n >= 8) {    /***** aligned case *****/
-        const size_t m = n / 8;  /* bytes copied using memmove() */
+    if (a % 8 == 0 && b % 8 == 0) {              /***** aligned case *****/
+        const Py_ssize_t p2 = (a + n - 1) / 8;
+        char t2, m2 = ones_table[IS_BE(self)][(a + n) % 8];
 
-        if (a > b)
-            copy_n(self, a + 8 * m, other, b + 8 * m, n % 8);
+        assert(a / 8 + BYTES(n) == p2 + 1);
+        assert_byte_in_range(self, p2);
+        t2 = self->ob_item[p2];
 
-        memmove(self->ob_item + a / 8, other->ob_item + b / 8, m);
+        memmove(self->ob_item + a/8, other->ob_item + b/8, (size_t) BYTES(n));
         if (self->endian != other->endian)
-            bytereverse(self, a / 8, a / 8 + m);
+            bytereverse(self, a / 8, p2 + 1);
 
-        if (a <= b)
-            copy_n(self, a + 8 * m, other, b + 8 * m, n % 8);
+        if (m2)  /* restore bits not to be copied */
+            self->ob_item[p2] = (self->ob_item[p2] & m2) | (t2 & ~m2);
     }
-    else if (n < 24) {                           /***** small n case *****/
+    else if (n < 8) {                            /***** small n case *****/
         Py_ssize_t i;
 
         if (a <= b) {  /* loop forward (delete) */
@@ -329,7 +331,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
 
         if (sa + sb < 0)
             sb += 8;
-        copy_n(self, 8 * p1, other, b + sb, n - sb);  /* aligned copy */
+        copy_n(self, a - sa, other, b + sb, n - sb);  /* aligned copy */
         shift_r8(self, p1, p2 + 1, sa + sb, 1);       /* right shift */
 
         if (sa)                   /* restore bits at p1 */
@@ -851,7 +853,6 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
         PyErr_SetString(PyExc_IndexError, "byte index out of range");
         return NULL;
     }
-    setunused(self);
     bytereverse(self, start, stop);
     Py_RETURN_NONE;
 }
@@ -859,10 +860,9 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(bytereverse_doc,
 "bytereverse(start=0, stop=<end of buffer>, /)\n\
 \n\
-Reverse the bit order for the bytes in range(start, stop) in-place.\n\
+Reverse the bit order for each buffer byte in range(start, stop) in-place.\n\
 The start and stop indices are given in terms of bytes (not bits).\n\
-By default, all bytes in the buffer are reversed.\n\
-Note: This method only changes the buffer; it does not change the\n\
+Also note that this method only changes the buffer; it does not change the\n\
 endianness of the bitarray object.");
 
 
@@ -1488,7 +1488,7 @@ bitarray_tobytes(bitarrayobject *self)
 PyDoc_STRVAR(tobytes_doc,
 "tobytes() -> bytes\n\
 \n\
-Return the byte representation of the bitarray.");
+Return the bitarray buffer in bytes (unused bits are set to zero).");
 
 
 static PyObject *
@@ -2216,8 +2216,8 @@ bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
             self->ob_item[i] ^= other->ob_item[i];
         break;
 
-    default:                    /* cannot happen */
-        Py_FatalError("unknown bitwise operation");
+    default:
+        Py_UNREACHABLE();
     }
 }
 
@@ -3414,8 +3414,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static PyObject *
 richcompare(PyObject *v, PyObject *w, int op)
 {
-    int cmp;
     Py_ssize_t i, vs, ws;
+    int cmp = 0;                /* silence uninitialized warning */
 
     if (!bitarray_Check(v) || !bitarray_Check(w)) {
         Py_INCREF(Py_NotImplemented);
@@ -3456,7 +3456,7 @@ richcompare(PyObject *v, PyObject *w, int op)
             case Py_NE: cmp = 1; break;
             case Py_GT: cmp = vi >  wi; break;
             case Py_GE: cmp = vi >= wi; break;
-            default: return NULL;  /* cannot happen */
+            default: Py_UNREACHABLE();
             }
             return PyBool_FromLong((long) cmp);
         }
@@ -3472,7 +3472,7 @@ richcompare(PyObject *v, PyObject *w, int op)
     case Py_NE: cmp = vs != ws; break;
     case Py_GT: cmp = vs >  ws; break;
     case Py_GE: cmp = vs >= ws; break;
-    default: return NULL;  /* cannot happen */
+    default: Py_UNREACHABLE();
     }
     return PyBool_FromLong((long) cmp);
 }

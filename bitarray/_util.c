@@ -338,8 +338,8 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
         }
         Py_RETURN_TRUE;
 
-    default:  /* cannot happen */
-        return NULL;
+    default:
+        Py_UNREACHABLE();
     }
 #undef aa
 #undef bb
