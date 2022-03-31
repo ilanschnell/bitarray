@@ -299,11 +299,11 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
 
         if (a <= b) {  /* loop forward (delete) */
             for (i = 0; i < n; i++)
-                setbit(self, i + a, getbit(other, i + b));
+                setbit(self, a + i, getbit(other, b + i));
         }
         else {         /* loop backwards (insert) */
             for (i = n - 1; i >= 0; i--)
-                setbit(self, i + a, getbit(other, i + b));
+                setbit(self, a + i, getbit(other, b + i));
         }
     }
     else {                                       /***** general case *****/
@@ -341,7 +341,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
             self->ob_item[p2] = (self->ob_item[p2] & m2) | (t2 & ~m2);
 
         for (i = 0; i < sb; i++)  /* copy first bits missed by copy_n() */
-            setbit(self, i + a, t3 & BITMASK(other, i + b));
+            setbit(self, a + i, t3 & BITMASK(other, b + i));
     }
 }
 

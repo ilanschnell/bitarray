@@ -47,7 +47,7 @@ def copy_n(self, a, other, b, n):
     assert 0 <= a <= len(self)
     assert 0 <= b <= len(other)
     assert n >= 0
-    if n == 0 or (self == other and a == b):
+    if n == 0 or (self is other and a == b):
         return
 
     if a % 8 == 0 and b % 8 == 0:            # aligned case
