@@ -165,7 +165,7 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
     static char trans[256];
     static int setup = 0;
-    Py_ssize_t i;
+    char *cp;
 
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
@@ -184,8 +184,8 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         setup = 1;
     }
 
-    for (i = a; i < b; i++)
-        self->ob_item[i] = trans[(unsigned char) self->ob_item[i]];
+    for (cp = self->ob_item + a; a < b; a++, cp++)
+        *cp = trans[(unsigned char) *cp];
 }
 
 #ifdef PY_UINT64_T
