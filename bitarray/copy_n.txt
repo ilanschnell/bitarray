@@ -9,6 +9,8 @@ the source code:
     other   bitarray object bits are copied from
     b       start bit (in other) bits are copied from
     n       number of bits being copied
+    p1      start byte (in self) memory is copied to, i.e. a / 8
+    p2      last byte (in self) memory is copied to, i.e. (a + n - 1) / 8
 
 There are 3 cases handled by this function: (i) aligned case (ii) small n case
 (iii) general case.  For all cases, it is important to handle self == other.
@@ -41,10 +43,8 @@ Here we assume that n is at least 8 bits.  We choose an aligned region to
 be copied using copy_n() itself, and use shift_r8() and a few fixes to
 create the correct copy.  The is done in the following steps:
 
-1.) Calculate the following byte positions:
-    p1: start (in self) memory is copied to, i.e. a / 8
-    p2: last (in self) memory is copied to, i.e. (a + n - 1) / 8
-    p3: first (in other) memory is copied from, i.e. b / 8
+1.) Calculate the following byte positions: p1, p2, and p3 (the first
+    byte (in other) memory is copied from, i.e. b / 8)
 
 2.) Store temporary bytes corresponding to p1, p2, p3 in t1, t2, t3.
     We need these bytes later to restore bits which got overwritten or
