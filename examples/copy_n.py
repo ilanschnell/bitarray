@@ -137,19 +137,19 @@ def copy_n(self, a, other, b, n):
         pprint(self)
         mark_range_n(8 * p1 + sa + sb, n - sb, '=', 'a..a+n')
 
-    if sa:
+    if m1:
         if verbose:
             mark_range(8 * p1, a, '1')
         memoryview(self)[p1] = (memoryview(self)[p1] & ~m1) | (t1 & m1)
 
-    if sa + sb != 0 and m2:
+    if m2 and sa + sb:
         if verbose:
             mark_range(a + n, 8 * p2 + 8, '2')
         memoryview(self)[p2] = (memoryview(self)[p2] & m2) | (t2 & ~m2)
 
     if verbose:
         mark_range_n(a, sb, '3')
-    for i in range(0, sb):
+    for i in range(sb):
         self[i + a] = bool(t3 & bitmask_table[is_be(other)][(i + b) % 8])
 
     if verbose:
