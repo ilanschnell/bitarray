@@ -280,16 +280,17 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         return;
 
     if (a % 8 == 0 && b % 8 == 0) {              /***** aligned case *****/
-        const Py_ssize_t p2 = (a + n - 1) / 8;
+        Py_ssize_t p1 = a / 8;
+        Py_ssize_t p2 = (a + n - 1) / 8;
         char t2, m2 = ones_table[IS_BE(self)][(a + n) % 8];
 
-        assert(a / 8 + BYTES(n) == p2 + 1);
+        assert(p1 + BYTES(n) == p2 + 1);
         assert_byte_in_range(self, p2);
         t2 = self->ob_item[p2];
 
-        memmove(self->ob_item + a/8, other->ob_item + b/8, (size_t) BYTES(n));
+        memmove(self->ob_item + p1, other->ob_item + b / 8, (size_t) BYTES(n));
         if (self->endian != other->endian)
-            bytereverse(self, a / 8, p2 + 1);
+            bytereverse(self, p1, p2 + 1);
 
         if (m2)  /* restore bits not to be copied */
             self->ob_item[p2] = (self->ob_item[p2] & m2) | (t2 & ~m2);
@@ -299,17 +300,17 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
 
         if (a <= b) {  /* loop forward (delete) */
             for (i = 0; i < n; i++)
-                setbit(self, a + i, getbit(other, b + i));
+                setbit(self, i + a, getbit(other, i + b));
         }
         else {         /* loop backwards (insert) */
             for (i = n - 1; i >= 0; i--)
-                setbit(self, a + i, getbit(other, b + i));
+                setbit(self, i + a, getbit(other, i + b));
         }
     }
     else {                                       /***** general case *****/
-        const Py_ssize_t p1 = a / 8;
-        const Py_ssize_t p2 = (a + n - 1) / 8;
-        const Py_ssize_t p3 = b / 8;
+        Py_ssize_t p1 = a / 8;
+        Py_ssize_t p2 = (a + n - 1) / 8;
+        Py_ssize_t p3 = b / 8;
         int sa = a % 8;
         int sb = -(b % 8);
         char t1, t2, t3;
@@ -341,7 +342,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
             self->ob_item[p2] = (self->ob_item[p2] & m2) | (t2 & ~m2);
 
         for (i = 0; i < sb; i++)  /* copy first bits missed by copy_n() */
-            setbit(self, a + i, t3 & BITMASK(other, b + i));
+            setbit(self, i + a, t3 & BITMASK(other, i + b));
     }
 }
 

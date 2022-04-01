@@ -51,15 +51,17 @@ def copy_n(self, a, other, b, n):
         return
 
     if a % 8 == 0 and b % 8 == 0:            # aligned case
-        m = bits2bytes(n)
+        p1 = a // 8
         p2 = (a + n - 1) // 8
-        assert(a // 8 + m == p2 + 1);
+        m = bits2bytes(n)
+
+        assert(p1 + m == p2 + 1);
         m2 = ones_table[is_be(self)][(a + n) % 8]
         t2 = memoryview(self)[p2]
 
-        memoryview(self)[a//8:a//8 + m] = memoryview(other)[b//8:b//8 + m]
+        memoryview(self)[p1:p1 + m] = memoryview(other)[b // 8:b // 8 + m]
         if self.endian() != other.endian():
-            self.bytereverse(a // 8, p2 + 1)
+            self.bytereverse(p1, p2 + 1)
 
         if m2:
             memoryview(self)[p2] = (memoryview(self)[p2] & m2) | (t2 & ~m2)
