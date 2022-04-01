@@ -335,10 +335,10 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         copy_n(self, a - sa, other, b + sb, n - sb);  /* aligned copy */
         shift_r8(self, p1, p2 + 1, sa + sb, 1);       /* right shift */
 
-        if (sa)                   /* restore bits at p1 */
+        if (m1)                   /* restore bits at p1 */
             self->ob_item[p1] = (self->ob_item[p1] & ~m1) | (t1 & m1);
 
-        if (sa + sb != 0 && m2)   /* if shifted, restore bits at p2 */
+        if (m2 && sa + sb)        /* if shifted, restore bits at p2 */
             self->ob_item[p2] = (self->ob_item[p2] & m2) | (t2 & ~m2);
 
         for (i = 0; i < sb; i++)  /* copy first bits missed by copy_n() */
