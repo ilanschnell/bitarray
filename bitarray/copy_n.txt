@@ -11,6 +11,7 @@ the source code:
     n       number of bits being copied
     p1      start byte (in self) memory is copied to, i.e. a / 8
     p2      last byte (in self) memory is copied to, i.e. (a + n - 1) / 8
+    p3      first byte (in other) memory is copied from, i.e. b / 8
 
 There are 3 cases handled by this function: (i) aligned case (ii) small n case
 (iii) general case.  For all cases, it is important to handle self == other.
@@ -23,7 +24,7 @@ Aligned case
 
 In the aligned case, i.e. when both start positions (a and b) are a
 multiple of 8, we use memmove() on all bytes to be copied.  This includes
-any partial byte at the end, whose bits get restored as necessary.
+any partial byte (p2), whose bits get restored afterwards.
 
 
 Small n case
@@ -43,31 +44,27 @@ Here we assume that n is at least 8 bits.  We choose an aligned region to
 be copied using copy_n() itself, and use shift_r8() and a few fixes to
 create the correct copy.  The is done in the following steps:
 
-1.) Calculate the following byte positions: p1, p2, and p3 (the first
-    byte (in other) memory is copied from, i.e. b / 8)
+1.) Calculate positions p1, p2, p3 and store the corresponding bytes from
+    memory into t1, t2, t3.  We need these bytes later to restore bits which
+    got overwritten or shifted away.  Note that we have to store t3 (the byte
+    with b in other), as other can be self.
 
-2.) Store temporary bytes corresponding to p1, p2, p3 in t1, t2, t3.
-    We need these bytes later to restore bits which got overwritten or
-    shifted away.  Note that we have to store t3 (the byte with b in other),
-    as other can be self.
+2.) Calculate the total right shift of bytes p1..p2 (once copied into self).
+    This shift depends on a % 8 and b % 8, and has to be below 8.
 
-3.) Calculate the total right shift of bytes p1..p2 (once copied into self).
-    This shift depends on a % 8 and b % 8, and has to be a right shift
-    below 8.
-
-4.) Using copy_n(), copy the byte region from other at p3 or p3 + 1 into
+3.) Using copy_n(), copy the byte region from other at p3 or p3 + 1 into
     self at p1.  Because in the latter case we miss the beginning bits in
     other, we need t3 and copy those bits later.
 
-5.) Right shift self in byte range p1..p2.  This region includes the
+4.) Right shift self in byte range p1..p2.  This region includes the
     bit-range(a, a + n), but is generally larger.  This is why we need t1
     and t2 to restore the bytes at p1 and p2 in self later.
 
-6.) Restore bits in self at, see step 5:
+5.) Restore bits in self at, see step 4:
     - p1 using t1 (those got overwritten and shifted)
     - p2 using t2 (those got shifted)
 
-7.) Copy the first few bits from other to self (using t3, see step 4).
+6.) Copy the first few bits from other to self (using t3, see step 3).
 
 
 Here is an example with the following parameters (created using
