@@ -282,18 +282,18 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     if (a % 8 == 0 && b % 8 == 0) {              /***** aligned case *****/
         Py_ssize_t p1 = a / 8;
         Py_ssize_t p2 = (a + n - 1) / 8;
-        char t2, m2 = ones_table[IS_BE(self)][(a + n) % 8];
+        char *cp2 = self->ob_item + p2, t2;
+        char m2 = ones_table[IS_BE(self)][(a + n) % 8];
 
         assert(p1 + BYTES(n) == p2 + 1);
-        assert_byte_in_range(self, p2);
-        t2 = self->ob_item[p2];
+        t2 = *cp2;
 
         memmove(self->ob_item + p1, other->ob_item + b / 8, (size_t) BYTES(n));
         if (self->endian != other->endian)
             bytereverse(self, p1, p2 + 1);
 
         if (m2)  /* restore bits not to be copied */
-            self->ob_item[p2] = (self->ob_item[p2] & m2) | (t2 & ~m2);
+            *cp2 = (*cp2 & m2) | (t2 & ~m2);
     }
     else if (n < 8) {                            /***** small n case *****/
         Py_ssize_t i;
@@ -313,9 +313,11 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         Py_ssize_t p3 = b / 8;
         int sa = a % 8;
         int sb = -(b % 8);
-        char t1, t2, t3;
+        char *cp1 = self->ob_item + p1;
+        char *cp2 = self->ob_item + p2;
         char m1 = ones_table[IS_BE(self)][sa];
         char m2 = ones_table[IS_BE(self)][(a + n) % 8];
+        char t1, t2, t3;
         Py_ssize_t i;
 
         assert(n >= 8);
@@ -323,11 +325,8 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         assert(b + sb == 8 * p3);
         assert(a + n > 8 * p2);
 
-        assert_byte_in_range(self, p1);
-        assert_byte_in_range(self, p2);
-        assert_byte_in_range(other, p3);
-        t1 = self->ob_item[p1];     /* temporary bytes for later use */
-        t2 = self->ob_item[p2];
+        t1 = *cp1;                  /* temporary bytes for later use */
+        t2 = *cp2;
         t3 = other->ob_item[p3];
 
         if (sa + sb < 0)
@@ -336,10 +335,10 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         shift_r8(self, p1, p2 + 1, sa + sb, 1);       /* right shift */
 
         if (m1)                   /* restore bits at p1 */
-            self->ob_item[p1] = (self->ob_item[p1] & ~m1) | (t1 & m1);
+            *cp1 = (*cp1 & ~m1) | (t1 & m1);
 
         if (m2 && sa + sb)        /* if shifted, restore bits at p2 */
-            self->ob_item[p2] = (self->ob_item[p2] & m2) | (t2 & ~m2);
+            *cp2 = (*cp2 & m2) | (t2 & ~m2);
 
         for (i = 0; i < sb; i++)  /* copy first bits missed by copy_n() */
             setbit(self, i + a, t3 & BITMASK(other, i + b));
