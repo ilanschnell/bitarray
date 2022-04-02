@@ -166,7 +166,7 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     static char trans[256];
     static int setup = 0;
     Py_ssize_t i;
-    char *cp;
+    char *cp, *buff = self->ob_item;
 
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
@@ -185,10 +185,9 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         setup = 1;
     }
 
-    cp = self->ob_item + a;
     for (i = a; i < b; i++) {
+        cp = buff + i;
         *cp = trans[(unsigned char) *cp];
-        cp++;
     }
 }
 
@@ -219,6 +218,7 @@ static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 {
     const int m = 8 - n;
+    unsigned char *ucb = (unsigned char *) self->ob_item;
     Py_ssize_t i;
 
     assert(0 <= n && n < 8 && a <= b);
@@ -231,7 +231,6 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
        byte, we reverse each byte, and (re-) reverse again below */
     if (bebr && IS_BE(self))
         bytereverse(self, a, b);
-#define ucb  ((unsigned char *) (self)->ob_item)
 
     if (USE_WORD_SHIFT && b >= a + 8) {
         const Py_ssize_t wa = (a + 7) / 8;  /* word range(wa, wb) */
@@ -265,7 +264,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
                 ucb[i] |= ucb[i - 1] >> m;
         }
     }
-#undef ucb
+
     if (bebr && IS_BE(self))  /* (re-) reverse bytes */
         bytereverse(self, a, b);
 }
@@ -466,12 +465,13 @@ count(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     if (b >= a + 8) {
         const Py_ssize_t byte_a = BYTES(a);
         const Py_ssize_t byte_b = b / 8;
+        unsigned char *ucb = (unsigned char *) self->ob_item;
 
         assert(a + 8 > 8 * byte_a && 8 * byte_b + 8 > b);
 
         res += count(self, 1, a, 8 * byte_a);
         for (i = byte_a; i < byte_b; i++)
-            res += bitcount_lookup[(unsigned char) self->ob_item[i]];
+            res += bitcount_lookup[ucb[i]];
         res += count(self, 1, 8 * byte_b, b);
     }
     else {
@@ -2071,16 +2071,17 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     }
     else {
         const char *table = bitmask_table[IS_BE(self)];
+        char *buff = self->ob_item;
         Py_ssize_t i;
 
         assert(step > 1);
         if (vi) {
             for (i = start; i < stop; i += step)
-                self->ob_item[i >> 3] |= table[i & 7];
+                buff[i >> 3] |= table[i & 7];
         }
         else {
             for (i = start; i < stop; i += step)
-                self->ob_item[i >> 3] &= ~table[i & 7];
+                buff[i >> 3] &= ~table[i & 7];
         }
     }
     return 0;
