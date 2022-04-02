@@ -218,7 +218,7 @@ static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 {
     const int m = 8 - n;
-    unsigned char *ucb = (unsigned char *) self->ob_item;
+    unsigned char *ucbuff = (unsigned char *) self->ob_item;
     Py_ssize_t i;
 
     assert(0 <= n && n < 8 && a <= b);
@@ -243,25 +243,25 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 
         shift_r8(self, vb, b, n, 0);
         if (b != vb)  /* add byte from word below */
-            ucb[vb] |= ucb[vb - 1] >> m;
+            ucbuff[vb] |= ucbuff[vb - 1] >> m;
 
         for (i = wb - 1; i >= wa; i--) {
             assert_byte_in_range(self, 8 * i + 7);
             /* shift word - assumes machine has little endian byteorder */
             UINT64_BUFFER(self)[i] <<= n;
             if (i != wa)    /* add shifted byte from next lower word */
-                ucb[8 * i] |= ucb[8 * i - 1] >> m;
+                ucbuff[8 * i] |= ucbuff[8 * i - 1] >> m;
         }
         if (a != va)  /* add byte from below */
-            ucb[va] |= ucb[va - 1] >> m;
+            ucbuff[va] |= ucbuff[va - 1] >> m;
 
         shift_r8(self, a, va, n, 0);
     }
     else {
         for (i = b - 1; i >= a; i--) {
-            ucb[i] <<= n;    /* shift byte (from highest to lowest) */
+            ucbuff[i] <<= n;    /* shift byte (from highest to lowest) */
             if (i != a)      /* add shifted next lower byte */
-                ucb[i] |= ucb[i - 1] >> m;
+                ucbuff[i] |= ucbuff[i - 1] >> m;
         }
     }
 
@@ -465,13 +465,13 @@ count(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     if (b >= a + 8) {
         const Py_ssize_t byte_a = BYTES(a);
         const Py_ssize_t byte_b = b / 8;
-        unsigned char *ucb = (unsigned char *) self->ob_item;
+        unsigned char *ucbuff = (unsigned char *) self->ob_item;
 
         assert(a + 8 > 8 * byte_a && 8 * byte_b + 8 > b);
 
         res += count(self, 1, a, 8 * byte_a);
         for (i = byte_a; i < byte_b; i++)
-            res += bitcount_lookup[ucb[i]];
+            res += bitcount_lookup[ucbuff[i]];
         res += count(self, 1, 8 * byte_b, b);
     }
     else {
@@ -499,16 +499,16 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
        Note that we cannot check for n >= 64 here as the function could then
        go into an infinite recursive loop when a word is found. */
     if (n > 64) {
-        const Py_ssize_t word_a = (a + 63) / 64;
-        const Py_ssize_t word_b = b / 64;
-        const PY_UINT64_T w = vi ? 0 : ~0;
+        Py_ssize_t word_a = (a + 63) / 64;
+        Py_ssize_t word_b = b / 64;
+        PY_UINT64_T *wbuff = (PY_UINT64_T *) self->ob_item, w = vi ? 0 : ~0;
 
         if ((res = find_bit(self, vi, a, 64 * word_a)) >= 0)
             return res;
 
         for (i = word_a; i < word_b; i++) {  /* skip uint64 words */
             assert_byte_in_range(self, 8 * i + 7);
-            if (w ^ UINT64_BUFFER(self)[i])
+            if (w ^ wbuff[i])
                 return find_bit(self, vi, 64 * i, 64 * i + 64);
         }
         return find_bit(self, vi, 64 * word_b, b);
@@ -516,9 +516,9 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 #endif
     /* For the same reason as above, we cannot check for n >= 8 here. */
     if (n > 8) {
-        const Py_ssize_t byte_a = BYTES(a);
-        const Py_ssize_t byte_b = b / 8;
-        const char c = vi ? 0 : ~0;
+        Py_ssize_t byte_a = BYTES(a);
+        Py_ssize_t byte_b = b / 8;
+        char *buff = self->ob_item, c = vi ? 0 : ~0;
 
         assert(UINT64_WORDS(8) == 0 || n <= 64);
         if ((res = find_bit(self, vi, a, 8 * byte_a)) >= 0)
@@ -526,7 +526,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 
         for (i = byte_a; i < byte_b; i++) {  /* skip bytes */
             assert_byte_in_range(self, i);
-            if (c ^ self->ob_item[i])
+            if (c ^ buff[i])
                 return find_bit(self, vi, 8 * i, 8 * i + 8);
         }
         return find_bit(self, vi, 8 * byte_b, b);

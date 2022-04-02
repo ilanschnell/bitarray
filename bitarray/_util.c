@@ -55,7 +55,7 @@ static Py_ssize_t
 count_to_n(bitarrayobject *a, Py_ssize_t n, int vi)
 {
     const Py_ssize_t nbits = a->nbits;
-    unsigned char *ucb = (unsigned char *) a->ob_item;
+    unsigned char *ucbuff = (unsigned char *) a->ob_item;
     Py_ssize_t i = 0;        /* index */
     Py_ssize_t j = 0;        /* total count up to index */
     Py_ssize_t block_start, block_stop, k, m;
@@ -73,7 +73,7 @@ count_to_n(bitarrayobject *a, Py_ssize_t n, int vi)
         block_stop = block_start + (BLOCK_BITS >> 3);
         assert(block_stop <= Py_SIZE(a));
         for (k = block_start; k < block_stop; k++)
-            m += bitcount_lookup[ucb[k]];
+            m += bitcount_lookup[ucbuff[k]];
         if (!vi)
             m = BLOCK_BITS - m;
         if (j + m >= n)
@@ -86,7 +86,7 @@ count_to_n(bitarrayobject *a, Py_ssize_t n, int vi)
     while (i + 8 < nbits) {
         k = i >> 3;
         assert(k < Py_SIZE(a));
-        m = bitcount_lookup[ucb[k]];
+        m = bitcount_lookup[ucbuff[k]];
         if (!vi)
             m = 8 - m;
         if (j + m >= n)
@@ -161,31 +161,31 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     /* the logic here is the same as in find_bit() in _bitarray.c */
 #ifdef PY_UINT64_T
     if (n > 64) {
-        const Py_ssize_t word_a = (a + 63) / 64;
-        const Py_ssize_t word_b = b / 64;
-        const PY_UINT64_T w = vi ? 0 : ~0;
+        Py_ssize_t word_a = (a + 63) / 64;
+        Py_ssize_t word_b = b / 64;
+        PY_UINT64_T *wbuff = (PY_UINT64_T *) self->ob_item, w = vi ? 0 : ~0;
 
         if ((res = find_last(self, vi, 64 * word_b, b)) >= 0)
             return res;
 
         for (i = word_b - 1; i >= word_a; i--) {  /* skip uint64 words */
-            if (w ^ ((PY_UINT64_T *) self->ob_item)[i])
+            if (w ^ wbuff[i])
                 return find_last(self, vi, 64 * i, 64 * i + 64);
         }
         return find_last(self, vi, a, 64 * word_a);
     }
 #endif
     if (n > 8) {
-        const Py_ssize_t byte_a = BYTES(a);
-        const Py_ssize_t byte_b = b / 8;
-        const char c = vi ? 0 : ~0;
+        Py_ssize_t byte_a = BYTES(a);
+        Py_ssize_t byte_b = b / 8;
+        char *buff = self->ob_item, c = vi ? 0 : ~0;
 
         if ((res = find_last(self, vi, 8 * byte_b, b)) >= 0)
             return res;
 
         for (i = byte_b - 1; i >= byte_a; i--) {  /* skip bytes */
             assert_byte_in_range(self, i);
-            if (c ^ self->ob_item[i])
+            if (c ^ buff[i])
                 return find_last(self, vi, 8 * i, 8 * i + 8);
         }
         return find_last(self, vi, a, 8 * byte_a);
@@ -270,6 +270,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
 {
     Py_ssize_t res = 0, s, i;
     PyObject *a, *b;
+    char *abuf, *bbuf;
     unsigned char c;
     int r;
 
@@ -290,13 +291,15 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
                         "bitarrays of equal endianness expected");
         return NULL;
     }
+    abuf = aa->ob_item;
+    bbuf = bb->ob_item;
     s = aa->nbits / 8;       /* number of whole bytes in buffer */
     r = aa->nbits % 8;       /* remaining bits  */
 
     switch (kern) {
     case KERN_cand:
         for (i = 0; i < s; i++) {
-            c = aa->ob_item[i] & bb->ob_item[i];
+            c = abuf[i] & bbuf[i];
             res += bitcount_lookup[c];
         }
         if (r) {
@@ -307,7 +310,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
 
     case KERN_cor:
         for (i = 0; i < s; i++) {
-            c = aa->ob_item[i] | bb->ob_item[i];
+            c = abuf[i] | bbuf[i];
             res += bitcount_lookup[c];
         }
         if (r) {
@@ -318,7 +321,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
 
     case KERN_cxor:
         for (i = 0; i < s; i++) {
-            c = aa->ob_item[i] ^ bb->ob_item[i];
+            c = abuf[i] ^ bbuf[i];
             res += bitcount_lookup[c];
         }
         if (r) {
@@ -329,7 +332,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
 
     case KERN_subset:
         for (i = 0; i < s; i++) {
-            if ((aa->ob_item[i] & bb->ob_item[i]) != aa->ob_item[i])
+            if ((abuf[i] & bbuf[i]) != abuf[i])
                 Py_RETURN_FALSE;
         }
         if (r) {
