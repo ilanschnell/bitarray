@@ -270,7 +270,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
 {
     Py_ssize_t res = 0, s, i;
     PyObject *a, *b;
-    char *abuf, *bbuf;
+    char *buff_a, *buff_b;
     unsigned char c;
     int r;
 
@@ -291,15 +291,15 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
                         "bitarrays of equal endianness expected");
         return NULL;
     }
-    abuf = aa->ob_item;
-    bbuf = bb->ob_item;
+    buff_a = aa->ob_item;
+    buff_b = bb->ob_item;
     s = aa->nbits / 8;       /* number of whole bytes in buffer */
     r = aa->nbits % 8;       /* remaining bits  */
 
     switch (kern) {
     case KERN_cand:
         for (i = 0; i < s; i++) {
-            c = abuf[i] & bbuf[i];
+            c = buff_a[i] & buff_b[i];
             res += bitcount_lookup[c];
         }
         if (r) {
@@ -310,7 +310,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
 
     case KERN_cor:
         for (i = 0; i < s; i++) {
-            c = abuf[i] | bbuf[i];
+            c = buff_a[i] | buff_b[i];
             res += bitcount_lookup[c];
         }
         if (r) {
@@ -321,7 +321,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
 
     case KERN_cxor:
         for (i = 0; i < s; i++) {
-            c = abuf[i] ^ bbuf[i];
+            c = buff_a[i] ^ buff_b[i];
             res += bitcount_lookup[c];
         }
         if (r) {
@@ -332,7 +332,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
 
     case KERN_subset:
         for (i = 0; i < s; i++) {
-            if ((abuf[i] & bbuf[i]) != abuf[i])
+            if ((buff_a[i] & buff_b[i]) != buff_a[i])
                 Py_RETURN_FALSE;
         }
         if (r) {
