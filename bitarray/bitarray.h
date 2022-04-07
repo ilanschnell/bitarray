@@ -128,7 +128,7 @@ zeroed_last_byte(bitarrayobject *self)
 {
     const int r = self->nbits % 8;     /* index into mask table */
 
-    assert(r % 8 > 0);
+    assert(r > 0);
     assert_nbits(self);
     return ones_table[IS_BE(self)][r] & self->ob_item[Py_SIZE(self) - 1];
 }
