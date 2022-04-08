@@ -1454,13 +1454,10 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     t = self->nbits;          /* number of bits before extending */
     p = 8 * BYTES(t) - t;     /* number of pad bits */
     assert(0 <= p && p < 8);
-    if (resize(self, t + p) < 0)
-        return NULL;
 
-    assert(self->nbits % 8 == 0);
-    assert_nbits(self);
-    if (resize(self, self->nbits + 8 * nbytes) < 0)
+    if (resize(self, t + p + 8 * nbytes) < 0)
         return NULL;
+    assert(self->nbits % 8 == 0);
 
     memcpy(self->ob_item + (Py_SIZE(self) - nbytes),
            PyBytes_AS_STRING(bytes), (size_t) nbytes);
