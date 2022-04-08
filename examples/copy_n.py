@@ -55,7 +55,7 @@ def copy_n(self, a, other, b, n):
         p2 = (a + n - 1) // 8
         m = bits2bytes(n)
 
-        assert(p1 + m == p2 + 1);
+        assert p1 + m == p2 + 1
         m2 = ones_table[is_be(self)][(a + n) % 8]
         t2 = memoryview(self)[p2]
 
