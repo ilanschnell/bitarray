@@ -2099,7 +2099,7 @@ delslice(bitarrayobject *self, PyObject *slice)
                           &start, &stop, &step, &slicelength) < 0)
         return -1;
 
-    if (slicelength == 0)
+    if (slicelength == 0)  /* shortcut cases like `del a[1:1:2]` */
         return 0;
 
     if (step == 1) {
