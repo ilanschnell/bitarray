@@ -221,11 +221,11 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
     unsigned char *ucbuff = (unsigned char *) self->ob_item;
     Py_ssize_t i;
 
-    assert(0 <= n && n < 8 && a <= b);
+    assert(0 <= n && n < 8);
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
     assert(self->readonly == 0);
-    if (n == 0 || a == b)
+    if (n == 0 || a >= b)
         return;
 
     /* as the big-endian representation has reversed bit order in each
@@ -290,7 +290,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         char m2 = ones_table[IS_BE(self)][(a + n) % 8];
         char t2 = *cp2;
 
-        assert(p1 + BYTES(n) == p2 + 1);
+        assert(p1 + BYTES(n) == p2 + 1 && p1 <= p2);
 
         memmove(self->ob_item + p1, other->ob_item + b / 8, (size_t) BYTES(n));
         if (self->endian != other->endian)
@@ -324,7 +324,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         char t1 = *cp1, t2 = *cp2, t3 = other->ob_item[p3];
         Py_ssize_t i;
 
-        assert(n >= 8);
+        assert(n >= 8 && cp1 <= cp2);
         assert(a - sa == 8 * p1);   /* useful equations */
         assert(b + sb == 8 * p3);
         assert(a + n > 8 * p2);
@@ -975,6 +975,8 @@ make_step_positive(Py_ssize_t slicelength,
     }
     assert(*start >= 0 && *stop >= 0 && *step > 0 && slicelength >= 0);
     assert(calc_slicelength(*start, *stop, *step) == slicelength);
+    /* slicelength == 0 implies stop <= start */
+    assert(slicelength != 0 || *stop <= *start);
 }
 
 static PyObject *
