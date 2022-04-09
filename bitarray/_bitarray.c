@@ -2030,7 +2030,9 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
     return res;
 }
 
-/* like PySlice_GetIndicesEx(), but step will always be positive */
+/* like PySlice_GetIndicesEx(), but step will always be positive -- useful
+   when the order of elements is irrelevant, namely for slice deletion and
+   slice assignment to a bool */
 static int
 slice_get_indices(PyObject *slice, Py_ssize_t length,
                   Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step,
