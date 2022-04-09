@@ -224,6 +224,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
     assert(0 <= n && n < 8 && a <= b);
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
+    assert(self->readonly == 0);
     if (n == 0 || a == b)
         return;
 
@@ -429,7 +430,6 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 {
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
-    assert(a <= b);
     assert(self->readonly == 0);
 
     if (b >= a + 8) {
