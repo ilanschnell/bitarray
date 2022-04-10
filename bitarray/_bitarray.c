@@ -2096,9 +2096,6 @@ delslice(bitarrayobject *self, PyObject *slice)
                           &start, &stop, &step, &slicelength) < 0)
         return -1;
 
-    if (slicelength == 0)
-        return 0;
-
     if (step == 1) {
         return delete_n(self, start, slicelength);
     }
