@@ -2099,7 +2099,7 @@ delslice(bitarrayobject *self, PyObject *slice)
                           &start, &stop, &step, &slicelength) < 0)
         return -1;
 
-    if (slicelength == 0)  /* shortcut cases like `del a[1:1:2]` */
+    if (slicelength == 0)
         return 0;
 
     if (step == 1) {
@@ -2109,14 +2109,12 @@ delslice(bitarrayobject *self, PyObject *slice)
         Py_ssize_t i, j;
 
         assert(step > 1);
-        /* set items not to be removed */
-        for (i = j = start; i < self->nbits; i++) {
-            if ((i - start) % step != 0 || i >= stop) {
-                setbit(self, j, getbit(self, i));
-                j++;
-            }
+        /* set items not to be removed (up to stop) */
+        for (i = j = start; i < stop; i++) {
+            if ((i - start) % step != 0)
+                setbit(self, j++, getbit(self, i));
         }
-        return resize(self, self->nbits - slicelength);
+        return delete_n(self, stop - slicelength, slicelength);
     }
 }
 
