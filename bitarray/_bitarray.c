@@ -2064,9 +2064,6 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
                           &start, &stop, &step, &slicelength) < 0)
         return -1;
 
-    if (slicelength == 0)
-        return 0;
-
     if (step == 1) {
         setrange(self, start, stop, vi);
     }
