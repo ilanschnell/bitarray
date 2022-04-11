@@ -963,7 +963,8 @@ calc_slicelength(Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
     return 0;
 }
 
-/* adjust slice parameters such that step is always positive */
+/* adjust slice parameters such that step is always positive; produces
+   simpler loops over elements when their order is irrelevant */
 static void
 make_step_positive(Py_ssize_t slicelength,
                    Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
@@ -2032,23 +2033,6 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
     return res;
 }
 
-/* like PySlice_GetIndicesEx(), but step will always be positive -- useful
-   when the order of elements is irrelevant, namely for slice deletion and
-   slice assignment to a bool */
-static int
-slice_get_indices(PyObject *slice, Py_ssize_t length,
-                  Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step,
-                  Py_ssize_t *slicelength)
-{
-    assert(PySlice_Check(slice) && length >= 0);
-    if (PySlice_GetIndicesEx(slice, length,
-                             start, stop, step, slicelength) < 0)
-        return -1;
-
-    make_step_positive(*slicelength, start, stop, step);
-    return 0;
-}
-
 /* set the elements in self, specified by slice, to value */
 static int
 setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
@@ -2060,9 +2044,10 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     if ((vi = pybit_as_int(value)) < 0)
         return -1;
 
-    if (slice_get_indices(slice, self->nbits,
-                          &start, &stop, &step, &slicelength) < 0)
+    if (PySlice_GetIndicesEx(slice, self->nbits,
+                             &start, &stop, &step, &slicelength) < 0)
         return -1;
+    make_step_positive(slicelength, &start, &stop, &step);
 
     if (step == 1) {
         setrange(self, start, stop, vi);
@@ -2092,9 +2077,10 @@ delslice(bitarrayobject *self, PyObject *slice)
     Py_ssize_t start, stop, step, slicelength;
 
     assert(PySlice_Check(slice));
-    if (slice_get_indices(slice, self->nbits,
-                          &start, &stop, &step, &slicelength) < 0)
+    if (PySlice_GetIndicesEx(slice, self->nbits,
+                             &start, &stop, &step, &slicelength) < 0)
         return -1;
+    make_step_positive(slicelength, &start, &stop, &step);
 
     if (step == 1) {
         return delete_n(self, start, slicelength);

@@ -24,7 +24,7 @@ class Node(object):
 
 def huff_tree(freq):
     """
-    Given a dictionary mapping symbols to thier frequency, construct a Huffman
+    Given a dictionary mapping symbols to their frequency, construct a Huffman
     tree and return its root node.
     """
     minheap = []
@@ -178,7 +178,7 @@ def write_dot(tree, fn, binary=False):
 
 def print_code(freq, codedict):
     """
-    Given a frequency map (dictionary mapping symbols to thier frequency)
+    Given a frequency map (dictionary mapping symbols to their frequency)
     and a codedict, print them in a readable form.
     """
     special_ascii = {0: 'NUL', 9: 'TAB', 10: 'LF', 13: 'CR', 127: 'DEL'}

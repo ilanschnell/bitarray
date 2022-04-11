@@ -352,7 +352,7 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
             return self.freq < other.freq
 
     def huff_tree(freq_map):
-        # given a dictionary mapping symbols to thier frequency,
+        # given a dictionary mapping symbols to their frequency,
         # construct a Huffman tree and return its root node
 
         minheap = []
