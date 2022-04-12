@@ -1090,6 +1090,8 @@ class SliceTests(unittest.TestCase, Util):
         a.setall(0)
         a[1:11:2] = bitarray('11101')
         self.assertEqual(a, bitarray('01010100 0100'))
+        a[5:2] = bitarray('111')  # make sure we inserts brefore 5 (not 2)
+        self.assertEqual(a, bitarray('01010111 1000100'))
 
         a = bitarray(12)
         a.setall(0)
