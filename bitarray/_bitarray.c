@@ -453,7 +453,7 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 
 /* return number of bits with value vi in range(a, b) */
 static Py_ssize_t
-count(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
+count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
     Py_ssize_t res = 0, i;
 
@@ -469,16 +469,16 @@ count(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 
         assert(a + 8 > 8 * byte_a && 8 * byte_b + 8 > b);
 
-        res += count(self, 1, a, 8 * byte_a);
+        res += count(self, a, 8 * byte_a);
         for (i = byte_a; i < byte_b; i++)
             res += bitcount_lookup[ucbuff[i]];
-        res += count(self, 1, 8 * byte_b, b);
+        res += count(self, 8 * byte_b, b);
     }
     else {
         for (i = a; i < b; i++)
             res += getbit(self, i);
     }
-    return vi ? res : b - a - res;
+    return res;
 }
 
 /* return index of first occurrence of vi in self[a:b], -1 when not found */
@@ -1002,7 +1002,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     make_step_positive(slicelength, &start, &stop, &step);
 
     if (step == 1) {
-        cnt = count(self, 1, start, stop);
+        cnt = count(self, start, stop);
     }
     else {
         Py_ssize_t i;
@@ -1386,16 +1386,23 @@ static PyObject *
 bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"reverse", NULL};
-    Py_ssize_t cnt;
+    Py_ssize_t nbits = self->nbits, n0, n1;
     int reverse = 0;
 
     RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:sort", kwlist, &reverse))
         return NULL;
 
-    cnt = count(self, reverse, 0, self->nbits);
-    setrange(self, 0, cnt, reverse);
-    setrange(self, cnt, self->nbits, !reverse);
+    n1 = count(self, 0, nbits);
+    n0 = nbits - n1;
+    if (reverse) {
+        setrange(self, 0, n1, 1);
+        setrange(self, n1, nbits, 0);
+    }
+    else {
+        setrange(self, 0, n0, 0);
+        setrange(self, n0, nbits, 1);
+    }
     Py_RETURN_NONE;
 }
 
