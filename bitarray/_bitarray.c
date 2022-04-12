@@ -984,29 +984,28 @@ static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
     PyObject *value = Py_True;
-    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, step = 1;
+    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, step = 1, slicelength;
     int vi;
 
     if (!PyArg_ParseTuple(args, "|Onnn:count", &value, &start, &stop, &step))
         return NULL;
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
-
+    if (step == 0) {
+        PyErr_SetString(PyExc_ValueError, "count step cannot be zero");
+        return NULL;
+    }
     normalize_index(self->nbits, step, &start);
     normalize_index(self->nbits, step, &stop);
+    slicelength = calc_slicelength(start, stop, step);
+    make_step_positive(slicelength, &start, &stop, &step);
 
     if (step == 1) {
         return PyLong_FromSsize_t(count(self, vi, start, stop));
     }
-    else if (step == 0) {
-        PyErr_SetString(PyExc_ValueError, "count step cannot be zero");
-        return NULL;
-    }
     else {
-        const Py_ssize_t slicelength = calc_slicelength(start, stop, step);
         Py_ssize_t cnt = 0, i;
 
-        make_step_positive(slicelength, &start, &stop, &step);
         for (i = start; i < stop; i += step)
             cnt += getbit(self, i);
 
