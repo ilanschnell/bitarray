@@ -451,7 +451,7 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     }
 }
 
-/* return number of bits with value vi in range(a, b) */
+/* return number of 1 bits in range(a, b) */
 static Py_ssize_t
 count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
@@ -1002,11 +1002,13 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     make_step_positive(slicelength, &start, &stop, &step);
 
     if (step == 1) {
+        assert(slicelength == 0 || stop - start == slicelength);
         cnt = count(self, start, stop);
     }
     else {
         Py_ssize_t i;
 
+        assert(step > 1);
         for (i = start; i < stop; i += step)
             cnt += getbit(self, i);
     }
