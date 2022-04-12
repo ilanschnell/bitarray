@@ -1090,8 +1090,9 @@ class SliceTests(unittest.TestCase, Util):
         a.setall(0)
         a[1:11:2] = bitarray('11101')
         self.assertEqual(a, bitarray('01010100 0100'))
-        a[5:2] = bitarray('111')  # make sure we inserts brefore 5 (not 2)
-        self.assertEqual(a, bitarray('01010111 1000100'))
+        a.setall(0)
+        a[5:2] = bitarray('111')  # make sure inserts before 5 (not 2)
+        self.assertEqual(a, bitarray('00000111 0000000'))
 
         a = bitarray(12)
         a.setall(0)
@@ -1149,6 +1150,33 @@ class SliceTests(unittest.TestCase, Util):
             lst_a[s] = lst_b
             self.assertEqual(a.tolist(), lst_a)
             self.check_obj(a)
+
+    def test_setslice_bitarray_random(self):
+        for _ in range(50):
+            step = randint(-10, 10)
+            if step == 0:
+                continue
+            n = randint(0, 200)
+            a = urandom(n, self.random_endian())
+            lst_a = a.tolist()
+            b = urandom(randint(0, 200), self.random_endian())
+            lst_b = b.tolist()
+            s = slice(self.rndsliceidx(n), self.rndsliceidx(n), step)
+            try:
+                a[s] = b
+            except ValueError:
+                a = None
+
+            try:
+                lst_a[s] = lst_b
+            except ValueError:
+                lst_a = None
+
+            if a is None:
+                self.assertTrue(lst_a is None)
+            else:
+                self.assertEqual(a.tolist(), lst_a)
+                self.check_obj(a)
 
     def test_setslice_bool_explicit(self):
         a = bitarray('11111111')
