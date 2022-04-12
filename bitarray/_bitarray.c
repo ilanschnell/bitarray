@@ -1386,22 +1386,22 @@ static PyObject *
 bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"reverse", NULL};
-    Py_ssize_t nbits = self->nbits, n0, n1;
+    Py_ssize_t nbits = self->nbits, cnt1;
     int reverse = 0;
 
     RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:sort", kwlist, &reverse))
         return NULL;
 
-    n1 = count(self, 0, nbits);
-    n0 = nbits - n1;
+    cnt1 = count(self, 0, nbits);
     if (reverse) {
-        setrange(self, 0, n1, 1);
-        setrange(self, n1, nbits, 0);
+        setrange(self, 0, cnt1, 1);
+        setrange(self, cnt1, nbits, 0);
     }
     else {
-        setrange(self, 0, n0, 0);
-        setrange(self, n0, nbits, 1);
+        Py_ssize_t cnt0 = nbits - cnt1;
+        setrange(self, 0, cnt0, 0);
+        setrange(self, cnt0, nbits, 1);
     }
     Py_RETURN_NONE;
 }
