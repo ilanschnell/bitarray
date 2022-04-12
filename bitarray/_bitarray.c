@@ -978,6 +978,8 @@ make_step_positive(Py_ssize_t slicelength,
     assert(calc_slicelength(*start, *stop, *step) == slicelength);
     /* slicelength == 0 implies stop <= start */
     assert(slicelength != 0 || *stop <= *start);
+    /* step == 1 and slicelength != 0 implies stop - start == slicelength */
+    assert(*step != 1 || slicelength == 0 || *stop - *start == slicelength);
 }
 
 static PyObject *
@@ -1002,7 +1004,6 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     make_step_positive(slicelength, &start, &stop, &step);
 
     if (step == 1) {
-        assert(slicelength == 0 || stop - start == slicelength);
         cnt = count(self, start, stop);
     }
     else {
