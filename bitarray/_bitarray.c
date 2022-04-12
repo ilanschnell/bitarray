@@ -984,7 +984,8 @@ static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
     PyObject *value = Py_True;
-    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, step = 1, slicelength;
+    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, step = 1;
+    Py_ssize_t cnt = 0, slicelength;
     int vi;
 
     if (!PyArg_ParseTuple(args, "|Onnn:count", &value, &start, &stop, &step))
@@ -1001,16 +1002,15 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     make_step_positive(slicelength, &start, &stop, &step);
 
     if (step == 1) {
-        return PyLong_FromSsize_t(count(self, vi, start, stop));
+        cnt = count(self, 1, start, stop);
     }
     else {
-        Py_ssize_t cnt = 0, i;
+        Py_ssize_t i;
 
         for (i = start; i < stop; i += step)
             cnt += getbit(self, i);
-
-        return PyLong_FromSsize_t(vi ? cnt : slicelength - cnt);
     }
+    return PyLong_FromSsize_t(vi ? cnt : slicelength - cnt);
 }
 
 PyDoc_STRVAR(count_doc,
