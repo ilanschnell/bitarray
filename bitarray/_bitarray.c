@@ -939,26 +939,26 @@ PyDoc_STRVAR(copy_doc,
 Return a copy of the bitarray.");
 
 
+/* same as PySlice_AdjustIndices() which was introduced in Python 3.6.1 */
 static Py_ssize_t
-calc_slicelength(Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
+adjust_indices(Py_ssize_t length, Py_ssize_t *start, Py_ssize_t *stop,
+               Py_ssize_t step)
 {
-    /* we assume that start and stop are normalized */
-    assert(step < 0 || (start >= 0 && stop >= 0));    /* step > 0 */
-    assert(step > 0 || (start >= -1 && stop >= -1));  /* step < 0 */
     assert(step != 0);
-
+    adjust_index(length, start, step);
+    adjust_index(length, stop, step);
     /*
       a / b does integer division.  If either a or b is negative, the result
       depends on the compiler (rounding can go toward 0 or negative infinity).
       Therefore, we are careful that both a and b are always positive.
     */
     if (step < 0) {
-        if (stop < start)
-            return (start - stop - 1) / (-step) + 1;
+        if (*stop < *start)
+            return (*start - *stop - 1) / (-step) + 1;
     }
     else {
-        if (start < stop)
-            return (stop - start - 1) / step + 1;
+        if (*start < *stop)
+            return (*stop - *start - 1) / step + 1;
     }
     return 0;
 }
@@ -975,7 +975,6 @@ make_step_positive(Py_ssize_t slicelength,
         *step = -(*step);
     }
     assert(*start >= 0 && *stop >= 0 && *step > 0 && slicelength >= 0);
-    assert(calc_slicelength(*start, *stop, *step) == slicelength);
     /* slicelength == 0 implies stop <= start */
     assert(slicelength != 0 || *stop <= *start);
     /* step == 1 and slicelength != 0 implies stop - start == slicelength */
@@ -998,9 +997,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
         PyErr_SetString(PyExc_ValueError, "count step cannot be zero");
         return NULL;
     }
-    adjust_index(self->nbits, &start, step);
-    adjust_index(self->nbits, &stop, step);
-    slicelength = calc_slicelength(start, stop, step);
+    slicelength = adjust_indices(self->nbits, &start, &stop, step);
     make_step_positive(slicelength, &start, &stop, &step);
 
     if (step == 1) {
@@ -1082,8 +1079,7 @@ bitarray_find(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O|nn", &x, &start, &stop))
         return NULL;
 
-    adjust_index(self->nbits, &start, 1);
-    adjust_index(self->nbits, &stop, 1);
+    adjust_indices(self->nbits, &start, &stop, 1);
 
     if (PyIndex_Check(x)) {
         int vi;
