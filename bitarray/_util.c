@@ -213,8 +213,8 @@ r_index(PyObject *module, PyObject *args)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
-    normalize_index(aa->nbits, 1, &start);
-    normalize_index(aa->nbits, 1, &stop);
+    adjust_index(aa->nbits, 1, &start);
+    adjust_index(aa->nbits, 1, &stop);
     res = find_last(aa, vi, start, stop);
 #undef aa
     if (res < 0)
