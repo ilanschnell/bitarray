@@ -159,7 +159,7 @@ static const unsigned char bitcount_lookup[256] = {
 
 /* adjust index a manner consistent with the handling of normal slices */
 static inline void
-adjust_index(Py_ssize_t length, Py_ssize_t step, Py_ssize_t *i)
+adjust_index(Py_ssize_t length, Py_ssize_t *i, Py_ssize_t step)
 {
     if (*i < 0) {
         *i += length;
