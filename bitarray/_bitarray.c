@@ -944,6 +944,9 @@ static Py_ssize_t
 adjust_indices(Py_ssize_t length, Py_ssize_t *start, Py_ssize_t *stop,
                Py_ssize_t step)
 {
+#if PY_VERSION_HEX > 0x03060100
+    return PySlice_AdjustIndices(length, start, stop, step);
+#else
     assert(step != 0);
     adjust_index(length, start, step);
     adjust_index(length, stop, step);
@@ -961,6 +964,7 @@ adjust_indices(Py_ssize_t length, Py_ssize_t *start, Py_ssize_t *stop,
             return (*stop - *start - 1) / step + 1;
     }
     return 0;
+#endif
 }
 
 /* adjust slice parameters such that step is always positive; produces
