@@ -1152,16 +1152,14 @@ class SliceTests(unittest.TestCase, Util):
             self.check_obj(a)
 
     def test_setslice_bitarray_random(self):
-        for _ in range(50):
-            step = randint(-10, 10)
-            if step == 0:
-                continue
-            n = randint(0, 200)
+        for _ in range(100):
+            n = randint(0, 50)
             a = urandom(n, self.random_endian())
             lst_a = a.tolist()
-            b = urandom(randint(0, 200), self.random_endian())
+            b = urandom(randint(0, 50), self.random_endian())
             lst_b = b.tolist()
-            s = slice(self.rndsliceidx(n), self.rndsliceidx(n), step)
+            s = slice(self.rndsliceidx(n), self.rndsliceidx(n),
+                      randint(-3, 3) or None)
             try:
                 a[s] = b
             except ValueError:
