@@ -113,7 +113,7 @@ class Util(object):
         if res1 < 0:
             res1 = 0
 
-        # The above implementation is not used in calc_slicelength().
+        # The above implementation is not used in C.
         # In C's a / b, if either a or b is negative, the result depends on
         # the compiler.  Therefore, we use the implementation below (where
         # both a and b are always positive).
