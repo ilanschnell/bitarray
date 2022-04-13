@@ -939,34 +939,6 @@ PyDoc_STRVAR(copy_doc,
 Return a copy of the bitarray.");
 
 
-/* same as PySlice_AdjustIndices() which was introduced in Python 3.6.1 */
-static Py_ssize_t
-adjust_indices(Py_ssize_t length, Py_ssize_t *start, Py_ssize_t *stop,
-               Py_ssize_t step)
-{
-#if PY_VERSION_HEX > 0x03060100
-    return PySlice_AdjustIndices(length, start, stop, step);
-#else
-    assert(step != 0);
-    adjust_index(length, start, step);
-    adjust_index(length, stop, step);
-    /*
-      a / b does integer division.  If either a or b is negative, the result
-      depends on the compiler (rounding can go toward 0 or negative infinity).
-      Therefore, we are careful that both a and b are always positive.
-    */
-    if (step < 0) {
-        if (*stop < *start)
-            return (*start - *stop - 1) / (-step) + 1;
-    }
-    else {
-        if (*start < *stop)
-            return (*stop - *start - 1) / step + 1;
-    }
-    return 0;
-#endif
-}
-
 /* adjust slice parameters such that step is always positive; produces
    simpler loops over elements when their order is irrelevant */
 static void
