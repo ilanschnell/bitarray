@@ -199,6 +199,24 @@ adjust_indices(Py_ssize_t length, Py_ssize_t *start, Py_ssize_t *stop,
 #endif
 }
 
+/* adjust slice parameters such that step is always positive; produces
+   simpler loops over elements when their order is irrelevant */
+static inline void
+adjust_step_positive(Py_ssize_t slicelength,
+                     Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
+{
+    if (*step < 0) {
+        *stop = *start + 1;
+        *start = *stop + *step * (slicelength - 1) - 1;
+        *step = -(*step);
+    }
+    assert(*start >= 0 && *stop >= 0 && *step > 0 && slicelength >= 0);
+    /* slicelength == 0 implies stop <= start */
+    assert(slicelength != 0 || *stop <= *start);
+    /* step == 1 and slicelength != 0 implies stop - start == slicelength */
+    assert(*step != 1 || slicelength == 0 || *stop - *start == slicelength);
+}
+
 /* Interpret a PyObject (usually PyLong or PyBool) as a bit, return 0 or 1.
    On error, return -1 and set error message. */
 static inline int

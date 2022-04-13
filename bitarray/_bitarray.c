@@ -939,24 +939,6 @@ PyDoc_STRVAR(copy_doc,
 Return a copy of the bitarray.");
 
 
-/* adjust slice parameters such that step is always positive; produces
-   simpler loops over elements when their order is irrelevant */
-static void
-make_step_positive(Py_ssize_t slicelength,
-                   Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
-{
-    if (*step < 0) {
-        *stop = *start + 1;
-        *start = *stop + *step * (slicelength - 1) - 1;
-        *step = -(*step);
-    }
-    assert(*start >= 0 && *stop >= 0 && *step > 0 && slicelength >= 0);
-    /* slicelength == 0 implies stop <= start */
-    assert(slicelength != 0 || *stop <= *start);
-    /* step == 1 and slicelength != 0 implies stop - start == slicelength */
-    assert(*step != 1 || slicelength == 0 || *stop - *start == slicelength);
-}
-
 static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
@@ -974,7 +956,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
         return NULL;
     }
     slicelength = adjust_indices(self->nbits, &start, &stop, step);
-    make_step_positive(slicelength, &start, &stop, &step);
+    adjust_step_positive(slicelength, &start, &stop, &step);
 
     if (step == 1) {
         cnt = count(self, start, stop);
@@ -2028,7 +2010,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     if (PySlice_GetIndicesEx(slice, self->nbits,
                              &start, &stop, &step, &slicelength) < 0)
         return -1;
-    make_step_positive(slicelength, &start, &stop, &step);
+    adjust_step_positive(slicelength, &start, &stop, &step);
 
     if (step == 1) {
         setrange(self, start, stop, vi);
@@ -2061,7 +2043,7 @@ delslice(bitarrayobject *self, PyObject *slice)
     if (PySlice_GetIndicesEx(slice, self->nbits,
                              &start, &stop, &step, &slicelength) < 0)
         return -1;
-    make_step_positive(slicelength, &start, &stop, &step);
+    adjust_step_positive(slicelength, &start, &stop, &step);
 
     if (step == 1) {
         return delete_n(self, start, slicelength);
