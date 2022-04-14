@@ -28,18 +28,33 @@ def decode_code(stream):
         code[sym] = vl_decode(stream)
     return code
 
+def create_code(cnt):
+    if len(cnt) == 0:
+        # when we encode an empty file we use a dummy code such that we
+        # don't need special case the .encode() and .decode() methods
+        return {0: bitarray('0')}
+    if len(cnt) == 1:
+        # when we encode a file with only one character (possibly many of
+        # the same single character), e.g. "xxx"
+        return {list(cnt)[0]: bitarray('0')}
+    return huffman_code(cnt)
+
 def encode(filename):
     with open(filename, 'rb') as fi:
         plain = fi.read()
 
-    code = huffman_code(Counter(plain))
+    code = create_code(Counter(plain))
     with open(filename + '.huff', 'wb') as fo:
         fo.write(encode_code(code))
         a = bitarray(endian='little')
         a.encode(code, plain)
         fo.write(serialize(a))
-    print('Bits: %d / %d' % (len(a), 8 * len(plain)))
-    print('Ratio =%6.2f%%' % (100.0 * a.buffer_info()[1] / len(plain)))
+
+    if len(plain) == 0:
+        assert len(a) == 0
+    else:
+        print('Bits: %d / %d' % (len(a), 8 * len(plain)))
+        print('Ratio =%6.2f%%' % (100.0 * a.buffer_info()[1] / len(plain)))
 
 def decode(filename):
     assert filename.endswith('.huff')
