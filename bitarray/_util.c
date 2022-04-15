@@ -830,6 +830,164 @@ Return variable length binary representation of bitarray.\n\
 This representation is useful for efficiently storing small bitarray\n\
 in a binary stream.  Use `vl_decode()` for decoding.");
 
+/* ----------------------- canonical Huffman decoder ------------------- */
+
+#define MAXBITS  31                  /* maximum bits in a code */
+
+typedef struct {
+    PyObject_HEAD
+    bitarrayobject *array;           /* bitarray we're decoding */
+    Py_ssize_t index;                /* current index in bitarray */
+    Py_ssize_t count[MAXBITS + 1];   /* array of bit length counts */
+    PyObject *symbols;               /* list of symbols */
+} chdi;                              /* canonical Huffman decode iterator */
+
+static PyTypeObject CHDI_Type;
+
+/* create a new initialized canonical Huffman decode iterator object */
+static PyObject *
+chdi_new(PyObject *module, PyObject *args)
+{
+    PyObject *a, *counts, *symbols;
+    Py_ssize_t i, c, sm = 0;
+    chdi *it;       /* iterator to be returned */
+
+    if (!PyArg_ParseTuple(args, "OOO:count_n", &a, &counts, &symbols))
+        return NULL;
+    if (ensure_bitarray(a) < 0)
+        return NULL;
+    if (!PyList_Check(counts))
+        return PyErr_Format(PyExc_TypeError, "list expected for counts, "
+                            "got %s", Py_TYPE(counts)->tp_name);
+    if (PyList_GET_SIZE(counts) > MAXBITS) {
+        PyErr_SetString(PyExc_ValueError, "list too long");
+        return NULL;
+    }
+    if (!PyList_Check(symbols))
+        return PyErr_Format(PyExc_TypeError, "list expected for symbols, "
+                            "got %s", Py_TYPE(symbols)->tp_name);
+
+    it = PyObject_GC_New(chdi, &CHDI_Type);
+    if (it == NULL)
+        return NULL;
+
+    for (i = 0; i <= MAXBITS; i++) {
+        c = 0;
+        if (i < PyList_GET_SIZE(counts)) {
+            PyObject *item = PyList_GET_ITEM(counts, i);
+            c = PyNumber_AsSsize_t(item, NULL);
+            if (c == -1 && PyErr_Occurred())
+                return NULL;
+        }
+        it->count[i] = c;
+        sm += c;
+    }
+    if (sm != PyList_GET_SIZE(symbols))
+        return PyErr_Format(PyExc_ValueError, "sum(counts) = %zd, but len("
+                            "symbols) = %zd", sm, PyList_GET_SIZE(symbols));
+
+    Py_INCREF(a);
+    it->array = (bitarrayobject *) a;
+    it->index = 0;
+    Py_INCREF(symbols);
+    it->symbols = symbols;
+
+    PyObject_GC_Track(it);
+    return (PyObject *) it;
+}
+
+PyDoc_STRVAR(chdi_doc,
+"canonical_decode(bitarray, counts, symbols, /) -> iterator\n\
+\n\
+...");
+
+/* This function is based on the function decode() in:
+   https://github.com/madler/zlib/blob/master/contrib/puff/puff.c
+ */
+static PyObject *
+chdi_next(chdi *it)
+{
+    PyObject *symbol;  /* symbol we return (if any) */
+    Py_ssize_t len;    /* current number of bits in code */
+    Py_ssize_t code;   /* len bits being decoded */
+    Py_ssize_t first;  /* first code of length len */
+    Py_ssize_t count;  /* number of codes of length len */
+    Py_ssize_t index;  /* index of first code of length len in symbols list */
+
+    code = first = index = 0;
+    for (len = 1; len <= MAXBITS; len++) {
+        if (it->index >= it->array->nbits)
+            return NULL;
+        code |= getbit(it->array, it->index++);
+        count = it->count[len];
+        if (code - count < first) {   /* if length len, return symbol */
+            symbol = PyList_GetItem(it->symbols, index + (code - first));
+            if (symbol == NULL)
+                return NULL;
+            Py_INCREF(symbol);
+            return symbol;
+        }
+        index += count;               /* else update for next length */
+        first += count;
+        first <<= 1;
+        code <<= 1;
+    }
+    return NULL;                      /* ran out of codes */
+}
+
+static void
+chdi_dealloc(chdi *it)
+{
+    PyObject_GC_UnTrack(it);
+    Py_DECREF(it->array);
+    Py_DECREF(it->symbols);
+    PyObject_GC_Del(it);
+}
+
+static int
+chdi_traverse(chdi *it, visitproc visit, void *arg)
+{
+    Py_VISIT(it->array);
+    return 0;
+}
+
+static PyTypeObject CHDI_Type = {
+#ifdef IS_PY3K
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                                        /* ob_size */
+#endif
+    "bitarray.util.canonical_decode",         /* tp_name */
+    sizeof(chdi),                             /* tp_basicsize */
+    0,                                        /* tp_itemsize */
+    /* methods */
+    (destructor) chdi_dealloc,                /* tp_dealloc */
+    0,                                        /* tp_print */
+    0,                                        /* tp_getattr */
+    0,                                        /* tp_setattr */
+    0,                                        /* tp_compare */
+    0,                                        /* tp_repr */
+    0,                                        /* tp_as_number */
+    0,                                        /* tp_as_sequence */
+    0,                                        /* tp_as_mapping */
+    0,                                        /* tp_hash */
+    0,                                        /* tp_call */
+    0,                                        /* tp_str */
+    PyObject_GenericGetAttr,                  /* tp_getattro */
+    0,                                        /* tp_setattro */
+    0,                                        /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,  /* tp_flags */
+    0,                                        /* tp_doc */
+    (traverseproc) chdi_traverse,             /* tp_traverse */
+    0,                                        /* tp_clear */
+    0,                                        /* tp_richcompare */
+    0,                                        /* tp_weaklistoffset */
+    PyObject_SelfIter,                        /* tp_iter */
+    (iternextfunc) chdi_next,                 /* tp_iternext */
+    0,                                        /* tp_methods */
+};
+
 /* --------------------------------------------------------------------- */
 
 /* Set bitarray_type_obj (bato).  This function must be called before any
@@ -856,6 +1014,8 @@ static PyMethodDef module_functions[] = {
     {"_base2ba",  (PyCFunction) base2ba,   METH_VARARGS, 0},
     {"vl_encode", (PyCFunction) vl_encode, METH_O,       vl_encode_doc},
     {"_vl_decode",(PyCFunction) vl_decode, METH_VARARGS, 0},
+    {"canonical_decode",
+                  (PyCFunction) chdi_new,  METH_VARARGS, chdi_doc},
     {"_set_bato", (PyCFunction) set_bato,  METH_O,       0},
     {NULL,        NULL}  /* sentinel */
 };
