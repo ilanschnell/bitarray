@@ -23,7 +23,8 @@ from bitarray.util import (
     zeros, urandom, pprint, make_endian, rindex, strip, count_n,
     parity, count_and, count_or, count_xor, subset,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
-    ba2int, int2ba, vl_encode, vl_decode, huffman_code
+    ba2int, int2ba, vl_encode, vl_decode,
+    huffman_code, canonical_huffman, canonical_decode,
 )
 
 if sys.version_info[0] == 3:
@@ -1549,6 +1550,96 @@ class TestsHuffman(unittest.TestCase):
         self.check_tree(code)
 
 tests.append(TestsHuffman)
+
+# ---------------------------------------------------------------------------
+
+class TestsCanonicalHuffman(unittest.TestCase):
+
+    def test_basic(self):
+        plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
+        hc = huffman_code(Counter(plain))
+        chc, count, symbol = canonical_huffman(hc)
+        self.assertIsInstance(chc, dict)
+        self.assertIsInstance(count, list)
+        self.assertIsInstance(symbol, list)
+        a = bitarray()
+        a.encode(chc, plain)
+        self.assertEqual(bytearray(a.iterdecode(chc)), plain)
+        self.assertEqual(bytearray(canonical_decode(a, count, symbol)), plain)
+
+    def test_canonical_huffman_errors(self):
+        self.assertRaises(TypeError, canonical_huffman, [])
+        self.assertRaises(ValueError, canonical_huffman, {})
+        self.assertRaises(TypeError, canonical_huffman)
+        hc = huffman_code(Counter('aabc'))
+        self.assertRaises(TypeError, canonical_huffman, hc, 'a')
+        hc = {'a': bitarray()}  # bitarray length 0
+        self.assertRaises(ValueError, canonical_huffman, hc)
+
+    def test_canonical_huffman_tiny(self):
+        hc = {'a': bitarray('1')}
+        chc, count, symbol = canonical_huffman(hc)
+        self.assertEqual(chc, {'a': bitarray('0')})
+        self.assertEqual(count, [0, 1])
+        self.assertEqual(symbol, ['a'])
+
+    def test_canonical_decode_errors(self):
+        a = bitarray('1101')
+        # bitarray not of bitarray type
+        self.assertRaises(TypeError, canonical_decode, '11', [0, 1], ['a'])
+        # count not list
+        self.assertRaises(TypeError, canonical_decode, a, (0, 1), ['a'])
+        # symbol not list
+        self.assertRaises(TypeError, canonical_decode, a, [0, 1], ('a'))
+        # negative count
+        self.assertRaises(ValueError, canonical_decode, a, [0, -1], ['a'])
+        # count too long
+        self.assertRaises(ValueError, canonical_decode, a, 32 * [0], [])
+        # sum(count) != len(symbol)
+        self.assertRaises(ValueError, canonical_decode, a,
+                          [0, 1, 2], ['a', 'b', 'c', 'd'])
+
+    def check_code(self, hc):
+        chc, count, symbol = canonical_huffman(hc)
+        self.assertTrue(len(hc) == len(chc) == len(symbol) == sum(count))
+        self.assertEqual(count[0], 0)
+        self.assertTrue(set(hc) == set(chc) == set(symbol))
+        for sym in symbol:
+            self.assertEqual(len(hc[sym]), len(chc[sym]))
+        # ensure codes are sorted
+        for i in range(len(symbol) - 1):
+            a = chc[symbol[i]]
+            b = chc[symbol[i + 1]]
+            self.assertTrue(ba2int(a) < ba2int(b))
+
+        first = 0
+        for nbits, cnt in enumerate(count):
+            for i in range(first, first + cnt - 1):
+                # ensure two consecutive codes (with same bit length) have
+                # consecutive integer values
+                a = chc[symbol[i]]
+                b = chc[symbol[i + 1]]
+                self.assertTrue(len(a) == len(b) == nbits)
+                self.assertEqual(ba2int(a) + 1, ba2int(b))
+            first += cnt
+
+        msg = [choice(symbol) for _ in range(10)]
+        a = bitarray()
+        a.encode(chc, msg)
+        it = canonical_decode(a, count, symbol)
+        #print(type(it).__name__)
+        self.assertEqual(list(it), msg)
+
+    def test_simple_counter(self):
+        plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
+        self.check_code(huffman_code(Counter(plain)))
+
+    def test_random_freq(self):
+        cnt = {i: random() for i in range(100)}
+        self.check_code(huffman_code(cnt))
+
+
+tests.append(TestsCanonicalHuffman)
 
 # ---------------------------------------------------------------------------
 

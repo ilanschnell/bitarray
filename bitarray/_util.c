@@ -987,7 +987,7 @@ static PyTypeObject CHDI_Type = {
     PyObject_HEAD_INIT(NULL)
     0,                                        /* ob_size */
 #endif
-    "bitarray.util.canonical_decode",         /* tp_name */
+    "bitarray.util.canonical_decodeiter",     /* tp_name */
     sizeof(chdi_obj),                         /* tp_basicsize */
     0,                                        /* tp_itemsize */
     /* methods */
