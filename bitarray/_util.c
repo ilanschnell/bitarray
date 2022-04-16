@@ -915,6 +915,9 @@ chdi_new(PyObject *module, PyObject *args)
     return (PyObject *) it;
 
  error:
+    it->array = NULL;
+    it->symbols = NULL;
+    Py_DECREF((PyObject *) it);
     return NULL;
 }
 
@@ -967,8 +970,8 @@ static void
 chdi_dealloc(chdi_obj *it)
 {
     PyObject_GC_UnTrack(it);
-    Py_DECREF(it->array);
-    Py_DECREF(it->symbols);
+    Py_XDECREF(it->array);
+    Py_XDECREF(it->symbols);
     PyObject_GC_Del(it);
 }
 
