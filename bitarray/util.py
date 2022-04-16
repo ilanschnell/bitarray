@@ -402,6 +402,8 @@ by `huffman_code()`), return a tuple containing:
 0. the canonical Huffman code as a dict mapping symbols to bitarrays
 1. a list containing the number of symbols of each code length
 2. a list of symbols in canonical order
+
+Note: the two lists may be used as input for `canonical_decode()`.
 """
     if not isinstance(__hc, dict):
         raise TypeError("dict expected, got '%s'" % type(__hc).__name__)

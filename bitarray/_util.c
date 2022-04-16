@@ -921,11 +921,11 @@ chdi_new(PyObject *module, PyObject *args)
 }
 
 PyDoc_STRVAR(chdi_doc,
-"canonical_decode(bitarray, counts, symbols, /) -> iterator\n\
+"canonical_decode(bitarray, count, symbol, /) -> iterator\n\
 \n\
 Decode bitarray which was encoded using a canonical Huffman code\n\
-with `counts` (a list of the number of bit counts for each code length)\n\
-and `symbols` (a list of symbols).  ...");
+with `counts` (a list of the number of bit count for each code length)\n\
+and `symbols` (a list of symbols).");
 
 /* This function is based on the function decode() in:
    https://github.com/madler/zlib/blob/master/contrib/puff/puff.c */
