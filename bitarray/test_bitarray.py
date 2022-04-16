@@ -3785,9 +3785,10 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('101001000'))
 
     def test_iterdecode_type(self):
-        a = bitarray()
+        a = bitarray('0110')
         it = a.iterdecode(alphabet_code)
         self.assertIsType(it, 'decodeiterator')
+        self.assertEqual(list(it), ['a'])
 
     def test_iterdecode_remove_tree(self):
         d = {'I': bitarray('1'),   'l': bitarray('01'),

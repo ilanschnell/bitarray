@@ -1627,7 +1627,7 @@ class TestsCanonicalHuffman(unittest.TestCase):
         a = bitarray()
         a.encode(chc, msg)
         it = canonical_decode(a, count, symbol)
-        #print(type(it).__name__)
+        self.assertEqual(type(it).__name__, 'canonical_decodeiter')
         self.assertEqual(list(it), msg)
 
     def test_simple_counter(self):
