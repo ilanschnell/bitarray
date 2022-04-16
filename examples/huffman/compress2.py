@@ -15,16 +15,12 @@ from bitarray.util import (
 )
 
 def create_code(cnt):
-    if len(cnt) == 0:
-        # when we encode an empty file we use a dummy code such that we
-        # don't need special case the .encode() and .decode() methods
-        return {0: bitarray('0')}, [0, 1], [0]
-    if len(cnt) == 1:
-        # when we encode a file with only one character (possibly many of
-        # the same single character), e.g. "xxx"
-        sym = list(cnt)[0]
-        return {sym: bitarray('0')}, [0, 1], [sym]
-    return canonical_huffman(huffman_code(cnt))
+    if len(cnt) > 1:
+        return canonical_huffman(huffman_code(cnt))
+    # special case for when we encode an empty file or a file with only
+    # one character (possibly many of the same single character, e.g. "xxx")
+    sym = list(cnt)[0] if cnt else 0
+    return {sym: bitarray('0')}, [0, 1], [sym]
 
 def encode(filename):
     with open(filename, 'rb') as fi:
