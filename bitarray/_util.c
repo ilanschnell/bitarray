@@ -915,7 +915,6 @@ chdi_new(PyObject *module, PyObject *args)
     return (PyObject *) it;
 
  error:
-    PyObject_GC_Del(it);
     return NULL;
 }
 
@@ -977,6 +976,7 @@ static int
 chdi_traverse(chdi_obj *it, visitproc visit, void *arg)
 {
     Py_VISIT(it->array);
+    Py_VISIT(it->symbols);
     return 0;
 }
 
@@ -1068,12 +1068,22 @@ init_util(void)
 
 #ifdef IS_PY3K
     m = PyModule_Create(&moduledef);
-    if (m == NULL)
-        return NULL;
-    return m;
 #else
     m = Py_InitModule3("_util", module_functions, 0);
+#endif
     if (m == NULL)
-        return;
+        goto error;
+
+    if (PyType_Ready(&CHDI_Type) < 0)
+        goto error;
+    Py_SET_TYPE(&CHDI_Type, &PyType_Type);
+
+#ifdef IS_PY3K
+    return m;
+ error:
+    return NULL;
+#else
+ error:
+    return;
 #endif
 }
