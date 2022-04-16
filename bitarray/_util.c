@@ -844,13 +844,13 @@ typedef struct {
 
 static PyTypeObject CHDI_Type;
 
-/* set elements in count (from list) and return the sum (-1 on error) */
+/* set elements in count (from list) and return their sum (-1 on error) */
 static Py_ssize_t
 set_count(Py_ssize_t *count, PyObject *list)
 {
-    Py_ssize_t i, c, res = 0;
+    Py_ssize_t i, c, res = 0, list_size = PyList_GET_SIZE(list);
 
-    if (PyList_GET_SIZE(list) > MAXBITS) {
+    if (list_size > MAXBITS) {
         PyErr_Format(PyExc_ValueError, "counts list cannot have more than %d "
                      "elements", MAXBITS);
         return -1;
@@ -858,9 +858,8 @@ set_count(Py_ssize_t *count, PyObject *list)
 
     for (i = 1; i <= MAXBITS; i++) {
         c = 0;
-        if (i < PyList_GET_SIZE(list)) {
-            PyObject *item = PyList_GET_ITEM(list, i);
-            c = PyNumber_AsSsize_t(item, NULL);
+        if (i < list_size) {
+            c = PyNumber_AsSsize_t(PyList_GET_ITEM(list, i), NULL);
             if (c == -1 && PyErr_Occurred())
                 return -1;
             if (c < 0) {
@@ -933,7 +932,6 @@ and `symbols` (a list of symbols).  ...");
 static PyObject *
 chdi_next(chdi_obj *it)
 {
-    PyObject *symbol;  /* symbol we return (if any) */
     Py_ssize_t len;    /* current number of bits in code */
     Py_ssize_t code;   /* len bits being decoded */
     Py_ssize_t first;  /* first code of length len */
@@ -943,6 +941,7 @@ chdi_next(chdi_obj *it)
     code = first = index = 0;
     for (len = 1; len <= MAXBITS; len++) {
         if (it->index >= it->array->nbits) {
+            /* stop iteration */
             if (len != 1)
                 PyErr_SetString(PyExc_ValueError,
                                 "incomplete prefix code at end of bitarray");
@@ -951,10 +950,10 @@ chdi_next(chdi_obj *it)
         code |= getbit(it->array, it->index++);
         count = it->count[len];
         if (code - count < first) {   /* if length len, return symbol */
+            PyObject *symbol;
+
             symbol = PyList_GetItem(it->symbols, index + (code - first));
-            if (symbol == NULL)
-                return NULL;
-            Py_INCREF(symbol);
+            Py_XINCREF(symbol);
             return symbol;
         }
         index += count;               /* else update for next length */
