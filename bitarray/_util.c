@@ -899,11 +899,12 @@ chdi_new(PyObject *module, PyObject *args)
 PyDoc_STRVAR(chdi_doc,
 "canonical_decode(bitarray, counts, symbols, /) -> iterator\n\
 \n\
-...");
+Decode bitarray which was encoded using a canonical Huffman code\n\
+with `counts` (a list of the number of bit counts for each code length)\n\
+and `symbols` (a list of symbols).  ...");
 
 /* This function is based on the function decode() in:
-   https://github.com/madler/zlib/blob/master/contrib/puff/puff.c
- */
+   https://github.com/madler/zlib/blob/master/contrib/puff/puff.c */
 static PyObject *
 chdi_next(chdi_obj *it)
 {
@@ -916,8 +917,12 @@ chdi_next(chdi_obj *it)
 
     code = first = index = 0;
     for (len = 1; len <= MAXBITS; len++) {
-        if (it->index >= it->array->nbits)
+        if (it->index >= it->array->nbits) {
+            if (len != 1)
+                PyErr_SetString(PyExc_ValueError,
+                                "incomplete prefix code at end of bitarray");
             return NULL;
+        }
         code |= getbit(it->array, it->index++);
         count = it->count[len];
         if (code - count < first) {   /* if length len, return symbol */
@@ -932,7 +937,8 @@ chdi_next(chdi_obj *it)
         first <<= 1;
         code <<= 1;
     }
-    return NULL;                      /* ran out of codes */
+    PyErr_SetString(PyExc_ValueError, "ran out of codes");
+    return NULL;
 }
 
 static void

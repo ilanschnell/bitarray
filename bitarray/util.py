@@ -22,7 +22,8 @@ __all__ = [
     'zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip', 'count_n',
     'parity', 'count_and', 'count_or', 'count_xor', 'subset',
     'ba2hex', 'hex2ba', 'ba2base', 'base2ba', 'ba2int', 'int2ba',
-    'serialize', 'deserialize', 'vl_encode', 'vl_decode', 'huffman_code',
+    'serialize', 'deserialize', 'vl_encode', 'vl_decode',
+    'huffman_code', 'canonical_huffman', 'canonical_decode',
 ]
 
 
@@ -390,3 +391,35 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
 
     traverse(huff_tree(__freq_map))
     return result
+
+
+def canonical_huffman(__hc):
+    """canonical_huffman(dict, /) -> tuple
+
+Given a Huffman code, i.e. a dict mapping symbols to bitarrays (as returned
+by `huffman_code()`), return a tuple containing:
+
+0. the canonical Huffman code as a dict mapping symbols to bitarrays
+1. a list containing the number of symbols of each code length
+2. a list of symbols in canonical order
+"""
+    if not isinstance(__hc, dict):
+        raise TypeError("dict expected, got '%s'" % type(__hc).__name__)
+    if len(__hc) == 0:
+        raise ValueError("non-empty dict expected")
+
+    table = [(sym, len(ba)) for sym, ba in __hc.items()]
+    table.sort(key=lambda item: (item[1], item[0]))
+
+    maxbits = max(item[1] for item in table)
+    codedict = {}
+    count = (maxbits + 1) * [0]
+
+    code = 0
+    for i, (sym, nbits) in enumerate(table):
+        codedict[sym] = int2ba(code, nbits, 'big')
+        count[nbits] += 1
+        if i + 1 < len(table):
+            code = (code + 1) << (table[i + 1][1] - nbits)
+
+    return codedict, count, [item[0] for item in table]
