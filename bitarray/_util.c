@@ -840,7 +840,7 @@ typedef struct {
     Py_ssize_t index;                /* current index in bitarray */
     Py_ssize_t count[MAXBITS + 1];   /* array of bit length counts */
     PyObject *symbols;               /* list of symbols */
-} chdi;                              /* canonical Huffman decode iterator */
+} chdi_obj;                          /* canonical Huffman decode iterator */
 
 static PyTypeObject CHDI_Type;
 
@@ -849,8 +849,8 @@ static PyObject *
 chdi_new(PyObject *module, PyObject *args)
 {
     PyObject *a, *counts, *symbols;
-    Py_ssize_t i, c, sm = 0;
-    chdi *it;       /* iterator to be returned */
+    Py_ssize_t i, c, counts_sum = 0;
+    chdi_obj *it;       /* iterator to be returned */
 
     if (!PyArg_ParseTuple(args, "OOO:count_n", &a, &counts, &symbols))
         return NULL;
@@ -859,15 +859,14 @@ chdi_new(PyObject *module, PyObject *args)
     if (!PyList_Check(counts))
         return PyErr_Format(PyExc_TypeError, "list expected for counts, "
                             "got %s", Py_TYPE(counts)->tp_name);
-    if (PyList_GET_SIZE(counts) > MAXBITS) {
-        PyErr_SetString(PyExc_ValueError, "list too long");
-        return NULL;
-    }
+    if (PyList_GET_SIZE(counts) > MAXBITS)
+        return PyErr_Format(PyExc_ValueError, "counts list longer than %d "
+                            "element", MAXBITS);
     if (!PyList_Check(symbols))
         return PyErr_Format(PyExc_TypeError, "list expected for symbols, "
                             "got %s", Py_TYPE(symbols)->tp_name);
 
-    it = PyObject_GC_New(chdi, &CHDI_Type);
+    it = PyObject_GC_New(chdi_obj, &CHDI_Type);
     if (it == NULL)
         return NULL;
 
@@ -880,11 +879,12 @@ chdi_new(PyObject *module, PyObject *args)
                 return NULL;
         }
         it->count[i] = c;
-        sm += c;
+        counts_sum += c;
     }
-    if (sm != PyList_GET_SIZE(symbols))
-        return PyErr_Format(PyExc_ValueError, "sum(counts) = %zd, but len("
-                            "symbols) = %zd", sm, PyList_GET_SIZE(symbols));
+    if (counts_sum != PyList_GET_SIZE(symbols))
+        return PyErr_Format(PyExc_ValueError, "sum(counts) = %zd, but "
+                            "len(symbols) = %zd",
+                            counts_sum, PyList_GET_SIZE(symbols));
 
     Py_INCREF(a);
     it->array = (bitarrayobject *) a;
@@ -905,7 +905,7 @@ PyDoc_STRVAR(chdi_doc,
    https://github.com/madler/zlib/blob/master/contrib/puff/puff.c
  */
 static PyObject *
-chdi_next(chdi *it)
+chdi_next(chdi_obj *it)
 {
     PyObject *symbol;  /* symbol we return (if any) */
     Py_ssize_t len;    /* current number of bits in code */
@@ -936,7 +936,7 @@ chdi_next(chdi *it)
 }
 
 static void
-chdi_dealloc(chdi *it)
+chdi_dealloc(chdi_obj *it)
 {
     PyObject_GC_UnTrack(it);
     Py_DECREF(it->array);
@@ -945,7 +945,7 @@ chdi_dealloc(chdi *it)
 }
 
 static int
-chdi_traverse(chdi *it, visitproc visit, void *arg)
+chdi_traverse(chdi_obj *it, visitproc visit, void *arg)
 {
     Py_VISIT(it->array);
     return 0;
@@ -959,7 +959,7 @@ static PyTypeObject CHDI_Type = {
     0,                                        /* ob_size */
 #endif
     "bitarray.util.canonical_decode",         /* tp_name */
-    sizeof(chdi),                             /* tp_basicsize */
+    sizeof(chdi_obj),                         /* tp_basicsize */
     0,                                        /* tp_itemsize */
     /* methods */
     (destructor) chdi_dealloc,                /* tp_dealloc */
