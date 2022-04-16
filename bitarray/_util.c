@@ -844,12 +844,42 @@ typedef struct {
 
 static PyTypeObject CHDI_Type;
 
+/* set elements in count (from list) and return the sum (-1 on error) */
+static Py_ssize_t
+set_count(Py_ssize_t *count, PyObject *list)
+{
+    Py_ssize_t i, c, res = 0;
+
+    if (PyList_GET_SIZE(list) > MAXBITS) {
+        PyErr_Format(PyExc_ValueError, "counts list cannot have more than %d "
+                     "elements", MAXBITS);
+        return -1;
+    }
+
+    for (i = 1; i <= MAXBITS; i++) {
+        c = 0;
+        if (i < PyList_GET_SIZE(list)) {
+            PyObject *item = PyList_GET_ITEM(list, i);
+            c = PyNumber_AsSsize_t(item, NULL);
+            if (c == -1 && PyErr_Occurred())
+                return -1;
+            if (c < 0) {
+                PyErr_SetString(PyExc_ValueError, "count cannot be negative");
+                return -1;
+            }
+        }
+        count[i] = c;
+        res += c;
+    }
+    return res;
+}
+
 /* create a new initialized canonical Huffman decode iterator object */
 static PyObject *
 chdi_new(PyObject *module, PyObject *args)
 {
     PyObject *a, *counts, *symbols;
-    Py_ssize_t i, c, counts_sum = 0;
+    Py_ssize_t counts_sum;
     chdi_obj *it;       /* iterator to be returned */
 
     if (!PyArg_ParseTuple(args, "OOO:count_n", &a, &counts, &symbols))
@@ -859,9 +889,6 @@ chdi_new(PyObject *module, PyObject *args)
     if (!PyList_Check(counts))
         return PyErr_Format(PyExc_TypeError, "list expected for counts, "
                             "got %s", Py_TYPE(counts)->tp_name);
-    if (PyList_GET_SIZE(counts) > MAXBITS)
-        return PyErr_Format(PyExc_ValueError, "counts list longer than %d "
-                            "element", MAXBITS);
     if (!PyList_Check(symbols))
         return PyErr_Format(PyExc_TypeError, "list expected for symbols, "
                             "got %s", Py_TYPE(symbols)->tp_name);
@@ -870,22 +897,14 @@ chdi_new(PyObject *module, PyObject *args)
     if (it == NULL)
         return NULL;
 
-    for (i = 0; i <= MAXBITS; i++) {
-        c = 0;
-        if (i < PyList_GET_SIZE(counts)) {
-            PyObject *item = PyList_GET_ITEM(counts, i);
-            c = PyNumber_AsSsize_t(item, NULL);
-            if (c == -1 && PyErr_Occurred())
-                return NULL;
-        }
-        it->count[i] = c;
-        counts_sum += c;
-    }
-    if (counts_sum != PyList_GET_SIZE(symbols))
-        return PyErr_Format(PyExc_ValueError, "sum(counts) = %zd, but "
-                            "len(symbols) = %zd",
-                            counts_sum, PyList_GET_SIZE(symbols));
+    if ((counts_sum = set_count(it->count, counts)) < 0)
+        goto error;
 
+    if (counts_sum != PyList_GET_SIZE(symbols)) {
+        PyErr_Format(PyExc_ValueError, "sum(counts) = %zd, but len(symbols) "
+                     "= %zd", counts_sum, PyList_GET_SIZE(symbols));
+        goto error;
+    }
     Py_INCREF(a);
     it->array = (bitarrayobject *) a;
     it->index = 0;
@@ -894,6 +913,10 @@ chdi_new(PyObject *module, PyObject *args)
 
     PyObject_GC_Track(it);
     return (PyObject *) it;
+
+ error:
+    PyObject_GC_Del(it);
+    return NULL;
 }
 
 PyDoc_STRVAR(chdi_doc,
