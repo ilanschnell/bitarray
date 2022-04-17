@@ -196,6 +196,7 @@ def main():
 
     doctest.testfile('./README.rst')
     doctest.testfile('./doc/buffer.rst')
+    doctest.testfile('./doc/canonical.rst')
     doctest.testfile('./doc/represent.rst')
     doctest.testfile('./doc/variable_length.rst')
 
