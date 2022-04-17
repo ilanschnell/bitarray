@@ -327,6 +327,42 @@ Use `vl_encode()` for encoding.
     _vl_decode(__stream, a)
     return a
 
+# ------------------------------ Huffman coding -----------------------------
+
+def _huffman_tree(freq_map):
+    # given a dict mapping symbols to their frequency,
+    # construct a Huffman tree and return its root node
+    from heapq import heappush, heappop
+
+    class Node(object):
+        # a Node object will have either .symbol or .child set below,
+        # .freq will always be set
+        def __lt__(self, other):
+            # heapq needs to be able to compare the nodes
+            return self.freq < other.freq
+
+    minheap = []
+    # create all leaf nodes and push them onto the queue
+    for sym, f in freq_map.items():
+        nd = Node()
+        nd.symbol = sym
+        nd.freq = f
+        heappush(minheap, nd)
+
+    # repeat the process until only one node remains
+    while len(minheap) > 1:
+        # take the two nodes with smallest frequencies from the queue
+        child_0 = heappop(minheap)
+        child_1 = heappop(minheap)
+        # construct the new internal node and push it onto the queue
+        parent = Node()
+        parent.child = [child_0, child_1]
+        parent.freq = child_0.freq + child_1.freq
+        heappush(minheap, parent)
+
+    # the single remaining node is the root of the Huffman tree
+    return minheap[0]
+
 
 def huffman_code(__freq_map, endian=None):
     """huffman_code(dict, /, endian=None) -> dict
@@ -336,7 +372,6 @@ calculate the Huffman code, i.e. a dict mapping those symbols to
 bitarrays (with given endianness).  Note that the symbols are not limited
 to being strings.  Symbols may may be any hashable object (such as `None`).
 """
-    from heapq import heappush, heappop
 
     if not isinstance(__freq_map, dict):
         raise TypeError("dict expected, got '%s'" % type(__freq_map).__name__)
@@ -344,39 +379,6 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
         raise ValueError("non-empty dict expected")
     if endian is None:
         endian = get_default_endian()
-
-    class Node(object):
-        # a Node object will have either .symbol or .child set below,
-        # .freq will always be set
-        def __lt__(self, other):
-            # heapq needs to be able to compare the nodes
-            return self.freq < other.freq
-
-    def huff_tree(freq_map):
-        # given a dictionary mapping symbols to their frequency,
-        # construct a Huffman tree and return its root node
-
-        minheap = []
-        # create all leaf nodes and push them onto the queue
-        for sym, f in freq_map.items():
-            nd = Node()
-            nd.symbol = sym
-            nd.freq = f
-            heappush(minheap, nd)
-
-        # repeat the process until only one node remains
-        while len(minheap) > 1:
-            # take the two nodes with smallest frequencies from the queue
-            child_0 = heappop(minheap)
-            child_1 = heappop(minheap)
-            # construct the new internal node and push it onto the queue
-            parent = Node()
-            parent.child = [child_0, child_1]
-            parent.freq = child_0.freq + child_1.freq
-            heappush(minheap, parent)
-
-        # the single remaining node is the root of the Huffman tree
-        return minheap[0]
 
     b0 = bitarray('0', endian)
     b1 = bitarray('1', endian)
@@ -389,15 +391,15 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
             traverse(nd.child[0], prefix + b0)
             traverse(nd.child[1], prefix + b1)
 
-    traverse(huff_tree(__freq_map))
+    traverse(_huffman_tree(__freq_map))
     return result
 
 
-def canonical_huffman(__hc):
+def canonical_huffman(__freq_map):
     """canonical_huffman(dict, /) -> tuple
 
-Given a Huffman code, i.e. a dict mapping symbols to bitarrays (as returned
-by `huffman_code()`), return a tuple containing:
+Given a frequency map, a dictionary mapping symbols to their frequency,
+calculate the canonical Huffman code.  Returns a tuple containing:
 
 0. the canonical Huffman code as a dict mapping symbols to bitarrays
 1. a list containing the number of symbols of each code length
@@ -405,12 +407,23 @@ by `huffman_code()`), return a tuple containing:
 
 Note: the two lists may be used as input for `canonical_decode()`.
 """
-    if not isinstance(__hc, dict):
-        raise TypeError("dict expected, got '%s'" % type(__hc).__name__)
-    if len(__hc) == 0:
-        raise ValueError("non-empty dict expected")
+    if not isinstance(__freq_map, dict):
+        raise TypeError("dict expected, got '%s'" % type(__freq_map).__name__)
+    if len(__freq_map) < 2:
+        raise ValueError("at least 2 symbols expected in frequency map")
 
-    table = [(sym, len(ba)) for sym, ba in __hc.items()]
+    code_length = {}  # map symbols to their code length
+
+    def traverse(nd, length=0):
+        try:                    # leaf
+            code_length[nd.symbol] = length
+        except AttributeError:  # parent, so traverse each of the children
+            traverse(nd.child[0], length + 1)
+            traverse(nd.child[1], length + 1)
+
+    traverse(_huffman_tree(__freq_map))
+
+    table = list(code_length.items())
     table.sort(key=lambda item: (item[1], item[0]))
 
     maxbits = max(item[1] for item in table)

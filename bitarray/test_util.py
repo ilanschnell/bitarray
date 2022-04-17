@@ -1557,8 +1557,7 @@ class TestsCanonicalHuffman(unittest.TestCase):
 
     def test_basic(self):
         plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
-        hc = huffman_code(Counter(plain))
-        chc, count, symbol = canonical_huffman(hc)
+        chc, count, symbol = canonical_huffman(Counter(plain))
         self.assertIsInstance(chc, dict)
         self.assertIsInstance(count, list)
         self.assertIsInstance(symbol, list)
@@ -1571,17 +1570,10 @@ class TestsCanonicalHuffman(unittest.TestCase):
         self.assertRaises(TypeError, canonical_huffman, [])
         self.assertRaises(ValueError, canonical_huffman, {})
         self.assertRaises(TypeError, canonical_huffman)
-        hc = huffman_code(Counter('aabc'))
-        self.assertRaises(TypeError, canonical_huffman, hc, 'a')
-        hc = {'a': bitarray()}  # bitarray length 0
-        self.assertRaises(ValueError, canonical_huffman, hc)
-
-    def test_canonical_huffman_tiny(self):
-        hc = {'a': bitarray('1')}
-        chc, count, symbol = canonical_huffman(hc)
-        self.assertEqual(chc, {'a': bitarray('0')})
-        self.assertEqual(count, [0, 1])
-        self.assertEqual(symbol, ['a'])
+        cnt = huffman_code(Counter('aabc'))
+        self.assertRaises(TypeError, canonical_huffman, cnt, 'a')
+        cnt = {'a': 1}  # only one symbol
+        self.assertRaises(ValueError, canonical_huffman, cnt)
 
     def test_canonical_decode_errors(self):
         a = bitarray('1101')
@@ -1599,13 +1591,11 @@ class TestsCanonicalHuffman(unittest.TestCase):
         self.assertRaises(ValueError, canonical_decode, a,
                           [0, 1, 2], ['a', 'b', 'c', 'd'])
 
-    def check_code(self, hc):
-        chc, count, symbol = canonical_huffman(hc)
-        self.assertTrue(len(hc) == len(chc) == len(symbol) == sum(count))
+    def check_code(self, freq_map):
+        chc, count, symbol = canonical_huffman(freq_map)
+        self.assertTrue(len(chc) == len(symbol) == sum(count))
         self.assertEqual(count[0], 0)  # no codes have length 0
-        self.assertTrue(set(hc) == set(chc) == set(symbol))
-        for sym in symbol:
-            self.assertEqual(len(hc[sym]), len(chc[sym]))
+        self.assertTrue(set(chc) == set(symbol))
         # ensure codes are sorted
         for i in range(len(symbol) - 1):
             a = chc[symbol[i]]
@@ -1623,6 +1613,11 @@ class TestsCanonicalHuffman(unittest.TestCase):
                 self.assertEqual(ba2int(a) + 1, ba2int(b))
             first += cnt
 
+        # For a code to be complete and not oversubscribed
+        #maxbits = len(count)
+        #print(1 << maxbits ==
+        #      sum(count[i] << (maxbits - i) for i in range(1, maxbits)))
+
         msg = [choice(symbol) for _ in range(10)]
         a = bitarray()
         a.encode(chc, msg)
@@ -1634,33 +1629,33 @@ class TestsCanonicalHuffman(unittest.TestCase):
 
     def test_simple_counter(self):
         plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
-        self.check_code(huffman_code(Counter(plain)))
+        self.check_code(Counter(plain))
 
     def test_balanced(self):
         n = 7
         freq = {}
         for i in range(2 ** n):
             freq[i] = 1
-        code = huffman_code(freq)
+        code = canonical_huffman(freq)[0]
         self.assertEqual(len(code), 2 ** n)
         self.assertTrue(all(len(v) == n for v in code.values()))
-        self.check_code(code)
+        self.check_code(freq)
 
     def test_unbalanced(self):
         n = 29
         freq = {}
         for i in range(n):
             freq[i] = 2 ** i
-        code = huffman_code(freq)
+        code = canonical_huffman(freq)[0]
         self.assertEqual(len(code), n)
         for i in range(n):
             self.assertEqual(len(code[i]), n - (1 if i <= 1 else i))
-        self.check_code(code)
+        self.check_code(freq)
 
     def test_random_freq(self):
         for n in 2, 3, 5, 100:
-            cnt = {i: random() for i in range(n)}
-            self.check_code(huffman_code(cnt))
+            freq = {i: random() for i in range(n)}
+            self.check_code(freq)
 
 
 tests.append(TestsCanonicalHuffman)
