@@ -3084,6 +3084,10 @@ class SearchTests(unittest.TestCase, Util):
         self.assertEqual(next(it), 3)
         self.assertEqual(next(it), 4)
         self.assertStopIteration(it)
+        x = bitarray('11')
+        it = a.itersearch(x)
+        del a, x
+        self.assertEqual(next(it), 3)
 
     def test_explicit_1(self):
         a = bitarray('10011', self.random_endian())
@@ -3789,13 +3793,17 @@ class PrefixCodeTests(unittest.TestCase, Util):
         it = a.iterdecode(alphabet_code)
         self.assertIsType(it, 'decodeiterator')
 
-    def test_iterdecode_remove_tree(self):
+    def test_iterdecode_remove(self):
         d = {'I': bitarray('1'),   'l': bitarray('01'),
              'a': bitarray('001'), 'n': bitarray('000')}
         t = decodetree(d)
         a = bitarray('101001000')
         it = a.iterdecode(t)
-        del t
+        del t  # remove tree
+        self.assertEqual(''.join(it), "Ilan")
+
+        it = a.iterdecode(d)
+        del a
         self.assertEqual(''.join(it), "Ilan")
 
     def test_decode_empty(self):

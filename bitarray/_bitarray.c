@@ -2917,6 +2917,7 @@ static int
 decodeiter_traverse(decodeiterobject *it, visitproc visit, void *arg)
 {
     Py_VISIT(it->bao);
+    Py_VISIT(it->decodetree);
     return 0;
 }
 
