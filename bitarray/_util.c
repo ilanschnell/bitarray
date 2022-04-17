@@ -970,7 +970,7 @@ chdi_next(chdi_obj *it)
         first <<= 1;
         code <<= 1;
     }
-    PyErr_SetString(PyExc_ValueError, "ran out of codes");
+    PyErr_SetString(PyExc_ValueError, "out of codes");
     return NULL;
 }
 

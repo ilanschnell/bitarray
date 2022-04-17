@@ -1553,7 +1553,7 @@ tests.append(TestsHuffman)
 
 # ---------------------------------------------------------------------------
 
-class TestsCanonicalHuffman(unittest.TestCase):
+class TestsCanonicalHuffman(unittest.TestCase, Util):
 
     def test_basic(self):
         plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
@@ -1615,8 +1615,14 @@ class TestsCanonicalHuffman(unittest.TestCase):
         a = bitarray('000')
         self.assertEqual(list(canonical_decode(a, count, symbols)),
                          3 * symbols)
-        iterator = canonical_decode(bitarray('001000'), count, symbols)
-        self.assertRaises(ValueError, list, iterator)
+        a.append(1)
+        a.extend(bitarray(10 * '0'))
+        iterator = canonical_decode(a, count, symbols)
+        self.assertRaisesMessage(ValueError, "invalid code", list, iterator)
+
+        a.extend(bitarray(20 * '0'))
+        iterator = canonical_decode(a, count, symbols)
+        self.assertRaisesMessage(ValueError, "out of codes", list, iterator)
 
     def ensure_sorted(self, chc, symbol):
         # ensure codes are sorted
