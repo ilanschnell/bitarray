@@ -939,18 +939,19 @@ and `symbols` (a list of symbols).");
 static PyObject *
 chdi_next(chdi_obj *it)
 {
+    Py_ssize_t nbits = it->array->nbits;
     Py_ssize_t len;    /* current number of bits in code */
     Py_ssize_t code;   /* current code */
     Py_ssize_t first;  /* first code of length len */
     Py_ssize_t count;  /* number of codes of length len */
     Py_ssize_t index;  /* index of first code of length len in symbol list */
 
-    if (it->index >= it->array->nbits)  /* no more bits - stop iteration */
+    if (it->index >= nbits)  /* no more bits - stop iteration */
         return NULL;
 
     code = first = index = 0;
     for (len = 1; len <= MAXBITS; len++) {
-        if (it->index >= it->array->nbits) {
+        if (it->index >= nbits) {
             /* we reached the end of the bitarray prematurely */
             PyErr_SetString(PyExc_ValueError, "invalid code");
             return NULL;
