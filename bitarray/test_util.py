@@ -1591,6 +1591,33 @@ class TestsCanonicalHuffman(unittest.TestCase):
         self.assertRaises(ValueError, canonical_decode, a,
                           [0, 1, 2], ['a', 'b', 'c', 'd'])
 
+    def test_canonical_decode_simple(self):
+        # symbols can be anything, they do not even have to be hashable here
+        s = ['A', 42, [1.2-3.7j, 4j], {'B': 6}]
+        a = bitarray('00 01 10 11')
+        self.assertEqual(list(canonical_decode(a, [0, 0, 4], s)), s)
+        self.assertEqual(list(canonical_decode(7 * a, [0, 0, 4], s)), 7 * s)
+        # the count list may have extra 0's at the end (but not too many)
+        count = [0, 0, 4, 0, 0, 0, 0, 0]
+        self.assertEqual(list(canonical_decode(a, count, s)), s)
+        # the zero-th element in the count list is unused
+        self.assertEqual(list(canonical_decode(a, [-47, 0, 4], s)), s)
+        # in fact it can be anything - it is complete ignored
+        self.assertEqual(list(canonical_decode(a, [s, 0, 4], s)), s)
+
+    def test_canonical_decode_empty(self):
+        a = bitarray()
+        self.assertEqual(list(canonical_decode(a, [], [])), [])
+
+    def test_canonical_decode_one_symbol(self):
+        symbols = ['A']
+        count = [0, 1]
+        a = bitarray('000')
+        self.assertEqual(list(canonical_decode(a, count, symbols)),
+                         3 * symbols)
+        iterator = canonical_decode(bitarray('001000'), count, symbols)
+        self.assertRaises(ValueError, list, iterator)
+
     def ensure_sorted(self, chc, symbol):
         # ensure codes are sorted
         for i in range(len(symbol) - 1):

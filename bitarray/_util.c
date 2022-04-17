@@ -940,7 +940,7 @@ static PyObject *
 chdi_next(chdi_obj *it)
 {
     Py_ssize_t len;    /* current number of bits in code */
-    Py_ssize_t code;   /* len bits being decoded */
+    Py_ssize_t code;   /* current code */
     Py_ssize_t first;  /* first code of length len */
     Py_ssize_t count;  /* number of codes of length len */
     Py_ssize_t index;  /* index of first code of length len in symbols list */
@@ -950,8 +950,7 @@ chdi_next(chdi_obj *it)
         if (it->index >= it->array->nbits) {
             /* stop iteration */
             if (len != 1)
-                PyErr_SetString(PyExc_ValueError,
-                                "incomplete prefix code at end of bitarray");
+                PyErr_SetString(PyExc_ValueError, "invalid code");
             return NULL;
         }
         code |= getbit(it->array, it->index++);
