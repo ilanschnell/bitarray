@@ -9,14 +9,12 @@ from optparse import OptionParser
 from collections import Counter
 
 from bitarray import bitarray
-from bitarray.util import (
-    serialize, deserialize,
-    huffman_code, canonical_huffman, canonical_decode,
-)
+from bitarray.util import (serialize, deserialize,
+                           canonical_huffman, canonical_decode)
 
 def create_code(cnt):
     if len(cnt) > 1:
-        return canonical_huffman(huffman_code(cnt))
+        return canonical_huffman(cnt)
     # special case for when we encode an empty file or a file with only
     # one character (possibly many of the same single character, e.g. "xxx")
     sym = list(cnt)[0] if cnt else 0
