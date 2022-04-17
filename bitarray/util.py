@@ -415,6 +415,8 @@ Note: the two lists may be used as input for `canonical_decode()`.
     code_length = {}  # map symbols to their code length
 
     def traverse(nd, length=0):
+        # traverse the Huffman tree, but (unlike in huffman_code() above) we
+        # now just simply record the length for reaching each symbol
         try:                    # leaf
             code_length[nd.symbol] = length
         except AttributeError:  # parent, so traverse each of the children
@@ -422,6 +424,9 @@ Note: the two lists may be used as input for `canonical_decode()`.
             traverse(nd.child[1], length + 1)
 
     traverse(_huffman_tree(__freq_map))
+
+    # we now have a mapping of symbols to their code length,
+    # which is all we need
 
     table = list(code_length.items())
     table.sort(key=lambda item: (item[1], item[0]))
@@ -431,10 +436,10 @@ Note: the two lists may be used as input for `canonical_decode()`.
     count = (maxbits + 1) * [0]
 
     code = 0
-    for i, (sym, nbits) in enumerate(table):
-        codedict[sym] = int2ba(code, nbits, 'big')
-        count[nbits] += 1
+    for i, (sym, length) in enumerate(table):
+        codedict[sym] = int2ba(code, length, 'big')
+        count[length] += 1
         if i + 1 < len(table):
-            code = (code + 1) << (table[i + 1][1] - nbits)
+            code = (code + 1) << (table[i + 1][1] - length)
 
     return codedict, count, [item[0] for item in table]
