@@ -943,14 +943,16 @@ chdi_next(chdi_obj *it)
     Py_ssize_t code;   /* current code */
     Py_ssize_t first;  /* first code of length len */
     Py_ssize_t count;  /* number of codes of length len */
-    Py_ssize_t index;  /* index of first code of length len in symbols list */
+    Py_ssize_t index;  /* index of first code of length len in symbol list */
+
+    if (it->index >= it->array->nbits)  /* no more bits - stop iteration */
+        return NULL;
 
     code = first = index = 0;
     for (len = 1; len <= MAXBITS; len++) {
         if (it->index >= it->array->nbits) {
-            /* stop iteration */
-            if (len != 1)
-                PyErr_SetString(PyExc_ValueError, "invalid code");
+            /* we reached the end of the bitarray prematurely */
+            PyErr_SetString(PyExc_ValueError, "invalid code");
             return NULL;
         }
         code |= getbit(it->array, it->index++);
