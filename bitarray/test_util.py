@@ -1591,17 +1591,14 @@ class TestsCanonicalHuffman(unittest.TestCase):
         self.assertRaises(ValueError, canonical_decode, a,
                           [0, 1, 2], ['a', 'b', 'c', 'd'])
 
-    def check_code(self, freq_map):
-        chc, count, symbol = canonical_huffman(freq_map)
-        self.assertTrue(len(chc) == len(symbol) == sum(count))
-        self.assertEqual(count[0], 0)  # no codes have length 0
-        self.assertTrue(set(chc) == set(symbol))
+    def ensure_sorted(self, chc, symbol):
         # ensure codes are sorted
         for i in range(len(symbol) - 1):
             a = chc[symbol[i]]
             b = chc[symbol[i + 1]]
             self.assertTrue(ba2int(a) < ba2int(b))
 
+    def ensure_consecutive(self, chc, count, symbol):
         first = 0
         for nbits, cnt in enumerate(count):
             for i in range(first, first + cnt - 1):
@@ -1613,11 +1610,14 @@ class TestsCanonicalHuffman(unittest.TestCase):
                 self.assertEqual(ba2int(a) + 1, ba2int(b))
             first += cnt
 
-        # For a code to be complete and not oversubscribed
-        #maxbits = len(count)
-        #print(1 << maxbits ==
-        #      sum(count[i] << (maxbits - i) for i in range(1, maxbits)))
+    def ensure_complete(self, count):
+        # ensure code is complete and not oversubscribed
+        maxbits = len(count)
+        x = sum(count[i] << (maxbits - i) for i in range(1, maxbits))
+        self.assertEqual(x, 1 << maxbits)
 
+    def ensure_round_trip(self, chc, count, symbol):
+        # create a short test message, encode and decode
         msg = [choice(symbol) for _ in range(10)]
         a = bitarray()
         a.encode(chc, msg)
@@ -1626,6 +1626,17 @@ class TestsCanonicalHuffman(unittest.TestCase):
         del a, count, symbol
         self.assertEqual(type(it).__name__, 'canonical_decodeiter')
         self.assertEqual(list(it), msg)
+
+    def check_code(self, freq_map):
+        chc, count, symbol = canonical_huffman(freq_map)
+        self.assertTrue(len(chc) == len(symbol) == sum(count))
+        self.assertEqual(count[0], 0)  # no codes have length 0
+        self.assertTrue(set(chc) == set(symbol))
+
+        self.ensure_sorted(chc, symbol)
+        self.ensure_consecutive(chc, count, symbol)
+        self.ensure_complete(count)
+        self.ensure_round_trip(chc, count, symbol)
 
     def test_simple_counter(self):
         plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
