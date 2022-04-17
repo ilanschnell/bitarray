@@ -335,8 +335,8 @@ def _huffman_tree(freq_map):
     from heapq import heappush, heappop
 
     class Node(object):
-        # a Node object will have either .symbol or .child set below,
-        # .freq will always be set
+        # a Node object will either have .symbol or both .child_0 and .child_1
+        # set below, .freq will always be set
         def __lt__(self, other):
             # heapq needs to be able to compare the nodes
             return self.freq < other.freq
@@ -356,7 +356,8 @@ def _huffman_tree(freq_map):
         child_1 = heappop(minheap)
         # construct a new (internal) node and push it onto the queue
         parent = Node()
-        parent.child = [child_0, child_1]
+        parent.child_0 = child_0
+        parent.child_1 = child_1
         parent.freq = child_0.freq + child_1.freq
         heappush(minheap, parent)
 
@@ -388,8 +389,8 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
         try:                    # leaf
             result[nd.symbol] = prefix
         except AttributeError:  # parent, so traverse each of the children
-            traverse(nd.child[0], prefix + b0)
-            traverse(nd.child[1], prefix + b1)
+            traverse(nd.child_0, prefix + b0)
+            traverse(nd.child_1, prefix + b1)
 
     traverse(_huffman_tree(__freq_map))
     return result
@@ -420,8 +421,8 @@ Note: the two lists may be used as input for `canonical_decode()`.
         try:                    # leaf
             code_length[nd.symbol] = length
         except AttributeError:  # parent, so traverse each of the children
-            traverse(nd.child[0], length + 1)
-            traverse(nd.child[1], length + 1)
+            traverse(nd.child_0, length + 1)
+            traverse(nd.child_1, length + 1)
 
     traverse(_huffman_tree(__freq_map))
 
