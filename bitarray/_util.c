@@ -832,19 +832,26 @@ in a binary stream.  Use `vl_decode()` for decoding.");
 
 /* ----------------------- canonical Huffman decoder ------------------- */
 
+/*
+   The decode iterator object includes the Huffman code decoding tables:
+   - count[1..MAXBITS] is the number of symbols of each length, which for a
+     canonical code are stepped through in order.  count[0] is unused.
+   - symbols is a Python list of the symbol values in canonical order
+     where the number of entries is the sum of the counts in count[].
+ */
 #define MAXBITS  31                  /* maximum bits in a code */
 
 typedef struct {
     PyObject_HEAD
     bitarrayobject *array;           /* bitarray we're decoding */
     Py_ssize_t index;                /* current index in bitarray */
-    Py_ssize_t count[MAXBITS + 1];   /* array of bit length counts */
-    PyObject *symbols;               /* list of symbols */
+    Py_ssize_t count[MAXBITS + 1];   /* number of symbols of each length */
+    PyObject *symbols;               /* list of canonical ordered symbols */
 } chdi_obj;                          /* canonical Huffman decode iterator */
 
 static PyTypeObject CHDI_Type;
 
-/* set elements in count (from list) and return their sum (-1 on error) */
+/* set elements in count (from list) and return their sum, or -1 on error */
 static Py_ssize_t
 set_count(Py_ssize_t *count, PyObject *list)
 {
