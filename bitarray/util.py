@@ -354,7 +354,7 @@ def _huffman_tree(freq_map):
         # take the two nodes with smallest frequencies from the queue
         child_0 = heappop(minheap)
         child_1 = heappop(minheap)
-        # construct the new internal node and push it onto the queue
+        # construct a new (internal) node and push it onto the queue
         parent = Node()
         parent.child = [child_0, child_1]
         parent.freq = child_0.freq + child_1.freq
@@ -428,8 +428,7 @@ Note: the two lists may be used as input for `canonical_decode()`.
     # we now have a mapping of symbols to their code length,
     # which is all we need
 
-    table = list(code_length.items())
-    table.sort(key=lambda item: (item[1], item[0]))
+    table = sorted(code_length.items(), key=lambda item: (item[1], item[0]))
 
     maxbits = max(item[1] for item in table)
     codedict = {}
