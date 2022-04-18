@@ -36,7 +36,7 @@ ensure_bitarray(PyObject *obj)
 
 /* ensure object is a bitarray of given length */
 static int
-ensure_ba_of_length(PyObject *a, const Py_ssize_t n)
+ensure_ba_of_length(PyObject *a, Py_ssize_t n)
 {
     if (ensure_bitarray(a) < 0)
         return -1;
@@ -611,7 +611,7 @@ ba2base(PyObject *module, PyObject *args)
         int j, x = 0;
 
         for (j = 0; j < m; j++) {
-            const int k = le ? j : (m - j - 1);
+            int k = le ? j : (m - j - 1);
             x |= getbit(aa, i * m + k) << j;
         }
         str[i] = alphabet[x];
@@ -668,7 +668,7 @@ base2ba(PyObject *module, PyObject *args)
                                 "base %d, got '%c' (0x%02x)", n, c, c);
         }
         for (j = 0; j < m; j++) {
-            const int k = le ? j : (m - j - 1);
+            int k = le ? j : (m - j - 1);
             setbit(aa, i * m + k, d & (1 << j));
         }
     }
@@ -809,7 +809,7 @@ vl_encode(PyObject *module, PyObject *a)
         str[0] |= (0x08 >> i) * getbit(aa, i);
 
     for (i = 4; i < aa->nbits; i++) {
-        const int k = (i - 4) % 7;
+        int k = (i - 4) % 7;
 
         if (k == 0) {
             j++;
@@ -835,7 +835,7 @@ in a binary stream.  Use `vl_decode()` for decoding.");
 /*
    The decode iterator object includes the Huffman code decoding tables:
    - count[1..MAXBITS] is the number of symbols of each length, which for a
-     canonical code are stepped through in order.  count[0] is unused.
+     canonical code are stepped through in order.  count[0] is not used.
    - symbol is a Python list of the symbol values in canonical order
      where the number of entries is the sum of the counts in count[].
  */
@@ -866,13 +866,14 @@ set_count(Py_ssize_t *count, PyObject *list)
     for (i = 1; i <= MAXBITS; i++) {
         c = 0;
         if (i < list_size) {
-            Py_ssize_t limit = ((Py_ssize_t) 1) << i;
+            Py_ssize_t maxcount = ((Py_ssize_t) 1) << i;
+
             c = PyNumber_AsSsize_t(PyList_GET_ITEM(list, i), NULL);
             if (c == -1 && PyErr_Occurred())
                 return -1;
-            if (c < 0 || c > limit) {
+            if (c < 0 || c > maxcount) {
                 PyErr_Format(PyExc_ValueError, "count[%zd] cannot be negative"
-                             " or larger than %zd, got %zd", i, limit, c);
+                             " or larger than %zd, got %zd", i, maxcount, c);
                 return -1;
             }
         }
