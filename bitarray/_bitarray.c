@@ -2983,8 +2983,9 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
     if (it == NULL)
         return NULL;
 
-    it->bao = self;
     Py_INCREF(self);
+    it->bao = self;
+    /* searcharg() returns xa with the added reference, so no incref here */
     it->xa = xa;
     it->p = 0;                  /* start search at position 0 */
     PyObject_GC_Track(it);
