@@ -34,6 +34,13 @@ The output is tuple with the following elements:
   code length ``3``.
 * A list of symbols in canonical order
 
+If we add up numbers in ``count``, we get the total number of symbols coded:
+
+.. code-block:: python
+
+   >>> sum(count) == len(symbol)
+   True
+
 The canonical Huffman code is:
 
 .. code-block::
