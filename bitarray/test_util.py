@@ -1655,6 +1655,16 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
                 self.assertEqual(ba2int(a) + 1, ba2int(b))
             first += cnt
 
+    def ensure_count(self, chc, count):
+        # ensure count list corresponds to length counts from codedict
+        maxbits = 0
+        my_count = 100 * [0]
+        for a in chc.values():
+            self.assertEqual(a.endian(), 'big')
+            maxbits = max(maxbits, len(a))
+            my_count[len(a)] += 1
+        self.assertEqual(my_count[:maxbits + 1], count)
+
     def ensure_complete(self, count):
         # ensure code is complete and not oversubscribed
         maxbits = len(count)
@@ -1679,6 +1689,7 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
 
         self.ensure_sorted(chc, symbol)
         self.ensure_consecutive(chc, count, symbol)
+        self.ensure_count(chc, count)
         self.ensure_complete(count)
         self.ensure_round_trip(chc, count, symbol)
 
