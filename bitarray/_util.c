@@ -941,7 +941,7 @@ chdi_next(chdi_obj *it)
 {
     Py_ssize_t nbits = it->array->nbits;
     Py_ssize_t len;    /* current number of bits in code */
-    Py_ssize_t code;   /* current code */
+    Py_ssize_t code;   /* current code (of len bits) */
     Py_ssize_t first;  /* first code of length len */
     Py_ssize_t count;  /* number of codes of length len */
     Py_ssize_t index;  /* index of first code of length len in symbol list */
@@ -958,7 +958,8 @@ chdi_next(chdi_obj *it)
         }
         code |= getbit(it->array, it->index++);
         count = it->count[len];
-        if (code - count < first) {   /* if length len, return symbol */
+        assert(code - first >= 0);
+        if (code - first < count) {   /* if length len, return symbol */
             PyObject *symbol;
 
             symbol = PyList_GetItem(it->symbols, index + (code - first));
