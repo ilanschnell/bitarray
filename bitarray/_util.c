@@ -866,11 +866,13 @@ set_count(Py_ssize_t *count, PyObject *list)
     for (i = 1; i <= MAXBITS; i++) {
         c = 0;
         if (i < list_size) {
+            Py_ssize_t limit = 1L << i;
             c = PyNumber_AsSsize_t(PyList_GET_ITEM(list, i), NULL);
             if (c == -1 && PyErr_Occurred())
                 return -1;
-            if (c < 0) {
-                PyErr_SetString(PyExc_ValueError, "count cannot be negative");
+            if (c < 0 || c > limit) {
+                PyErr_Format(PyExc_ValueError, "count[%zd] cannot be negative"
+                             " or larger than %zd, got %zd", i, limit, c);
                 return -1;
             }
         }

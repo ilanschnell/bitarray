@@ -1587,11 +1587,16 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         self.assertRaises(ValueError, canonical_decode, a, [0, -1], ['a'])
         # count list too long
         self.assertRaises(ValueError, canonical_decode, a, 32 * [0], [])
+
+        symbol = ['a', 'b', 'c', 'd']
         # sum(count) != len(symbol)
         self.assertRaisesMessage(ValueError,
                                  "sum(count) = 3, but len(symbol) = 4",
-                                 canonical_decode,
-                                 a, [0, 1, 2], ['a', 'b', 'c', 'd'])
+                                 canonical_decode, a, [0, 1, 2], symbol)
+        # count[i] > 1 << i
+        self.assertRaisesMessage(ValueError,
+                        "count[2] cannot be negative or larger than 4, got 5",
+                        canonical_decode, a, [0, 2, 5], symbol)
 
     def test_canonical_decode_simple(self):
         # symbols can be anything, they do not even have to be hashable here
