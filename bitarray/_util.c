@@ -836,7 +836,7 @@ in a binary stream.  Use `vl_decode()` for decoding.");
    The decode iterator object includes the Huffman code decoding tables:
    - count[1..MAXBITS] is the number of symbols of each length, which for a
      canonical code are stepped through in order.  count[0] is unused.
-   - symbols is a Python list of the symbol values in canonical order
+   - symbol is a Python list of the symbol values in canonical order
      where the number of entries is the sum of the counts in count[].
  */
 #define MAXBITS  31                  /* maximum bits in a code */
@@ -846,7 +846,7 @@ typedef struct {
     bitarrayobject *array;           /* bitarray we're decoding */
     Py_ssize_t index;                /* current index in bitarray */
     Py_ssize_t count[MAXBITS + 1];   /* number of symbols of each length */
-    PyObject *symbols;               /* list of canonical ordered symbols */
+    PyObject *symbol;                /* list of canonical ordered symbols */
 } chdi_obj;                          /* canonical Huffman decode iterator */
 
 static PyTypeObject CHDI_Type;
@@ -858,7 +858,7 @@ set_count(Py_ssize_t *count, PyObject *list)
     Py_ssize_t i, c, res = 0, list_size = PyList_GET_SIZE(list);
 
     if (list_size > MAXBITS) {
-        PyErr_Format(PyExc_ValueError, "counts list cannot have more than %d "
+        PyErr_Format(PyExc_ValueError, "count list cannot have more than %d "
                      "elements", MAXBITS);
         return -1;
     }
@@ -884,45 +884,45 @@ set_count(Py_ssize_t *count, PyObject *list)
 static PyObject *
 chdi_new(PyObject *module, PyObject *args)
 {
-    PyObject *a, *counts, *symbols;
-    Py_ssize_t counts_sum;
+    PyObject *a, *count, *symbol;
+    Py_ssize_t count_sum;
     chdi_obj *it;       /* iterator to be returned */
 
-    if (!PyArg_ParseTuple(args, "OOO:count_n", &a, &counts, &symbols))
+    if (!PyArg_ParseTuple(args, "OOO:count_n", &a, &count, &symbol))
         return NULL;
     if (ensure_bitarray(a) < 0)
         return NULL;
-    if (!PyList_Check(counts))
-        return PyErr_Format(PyExc_TypeError, "list expected for counts, "
-                            "got %s", Py_TYPE(counts)->tp_name);
-    if (!PyList_Check(symbols))
-        return PyErr_Format(PyExc_TypeError, "list expected for symbols, "
-                            "got %s", Py_TYPE(symbols)->tp_name);
+    if (!PyList_Check(count))
+        return PyErr_Format(PyExc_TypeError, "list expected for count, "
+                            "got %s", Py_TYPE(count)->tp_name);
+    if (!PyList_Check(symbol))
+        return PyErr_Format(PyExc_TypeError, "list expected for symbol, "
+                            "got %s", Py_TYPE(symbol)->tp_name);
 
     it = PyObject_GC_New(chdi_obj, &CHDI_Type);
     if (it == NULL)
         return NULL;
 
-    if ((counts_sum = set_count(it->count, counts)) < 0)
+    if ((count_sum = set_count(it->count, count)) < 0)
         goto error;
 
-    if (counts_sum != PyList_GET_SIZE(symbols)) {
-        PyErr_Format(PyExc_ValueError, "sum(counts) = %zd, but len(symbols) "
-                     "= %zd", counts_sum, PyList_GET_SIZE(symbols));
+    if (count_sum != PyList_GET_SIZE(symbol)) {
+        PyErr_Format(PyExc_ValueError, "sum(count) = %zd, but len(symbol) "
+                     "= %zd", count_sum, PyList_GET_SIZE(symbol));
         goto error;
     }
     Py_INCREF(a);
     it->array = (bitarrayobject *) a;
     it->index = 0;
-    Py_INCREF(symbols);
-    it->symbols = symbols;
+    Py_INCREF(symbol);
+    it->symbol = symbol;
 
     PyObject_GC_Track(it);
     return (PyObject *) it;
 
  error:
     it->array = NULL;
-    it->symbols = NULL;
+    it->symbol = NULL;
     Py_DECREF((PyObject *) it);
     return NULL;
 }
@@ -931,8 +931,8 @@ PyDoc_STRVAR(chdi_doc,
 "canonical_decode(bitarray, count, symbol, /) -> iterator\n\
 \n\
 Decode bitarray which was encoded using a canonical Huffman code\n\
-with `counts` (a list of the number of bit count for each code length)\n\
-and `symbols` (a list of symbols).");
+with `count` (a list of the number of bit count for each code length)\n\
+and `symbol` (a list of symbols).");
 
 /* This function is based on the function decode() in:
    https://github.com/madler/zlib/blob/master/contrib/puff/puff.c */
@@ -962,7 +962,7 @@ chdi_next(chdi_obj *it)
         if (code - first < count) {   /* if length len, return symbol */
             PyObject *symbol;
 
-            symbol = PyList_GetItem(it->symbols, index + (code - first));
+            symbol = PyList_GetItem(it->symbol, index + (code - first));
             Py_XINCREF(symbol);
             return symbol;
         }
@@ -980,7 +980,7 @@ chdi_dealloc(chdi_obj *it)
 {
     PyObject_GC_UnTrack(it);
     Py_XDECREF(it->array);
-    Py_XDECREF(it->symbols);
+    Py_XDECREF(it->symbol);
     PyObject_GC_Del(it);
 }
 
@@ -988,7 +988,7 @@ static int
 chdi_traverse(chdi_obj *it, visitproc visit, void *arg)
 {
     Py_VISIT(it->array);
-    Py_VISIT(it->symbols);
+    Py_VISIT(it->symbol);
     return 0;
 }
 
