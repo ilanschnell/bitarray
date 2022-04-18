@@ -329,21 +329,27 @@ Use `vl_encode()` for encoding.
 
 # ------------------------------ Huffman coding -----------------------------
 
-def _huffman_tree(freq_map):
-    # given a dict mapping symbols to their frequency,
-    # construct a Huffman tree and return its root node
+def _huffman_tree(__freq_map):
+    """_huffman_tree(dict, /) -> Node
+
+Given a dict mapping symbols to their frequency, construct a Huffman tree
+and return its root node.
+"""
     from heapq import heappush, heappop
 
     class Node(object):
-        # a Node object will either have .symbol or both .child_0 and .child_1
-        # set below, .freq will always be set
+        """
+        A Node object will either have .symbol (leaf node) or
+        both .child_0 and .child_1 (internal node) attributes.
+        The .freq attributes will always be present.
+        """
         def __lt__(self, other):
             # heapq needs to be able to compare the nodes
             return self.freq < other.freq
 
     minheap = []
     # create all leaf nodes and push them onto the queue
-    for sym, f in freq_map.items():
+    for sym, f in __freq_map.items():
         nd = Node()
         nd.symbol = sym
         nd.freq = f
