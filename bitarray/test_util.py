@@ -1544,7 +1544,7 @@ class TestsHuffman(unittest.TestCase):
         self.check_tree(code)
 
     def test_random_freq(self):
-        for n in 2, 3, 5, 100:
+        for n in 2, 3, 5, randint(50, 200):
             # create Huffman code for n symbols
             code = huffman_code({i: random() for i in range(n)})
             self.check_tree(code)
@@ -1685,6 +1685,8 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         self.assertTrue(len(chc) == len(symbol) == sum(count))
         self.assertEqual(count[0], 0)  # no codes have length 0
         self.assertTrue(set(chc) == set(symbol))
+        # the code of the lst symbol has all 1 bits
+        self.assertTrue(chc[symbol[-1]].all())
 
         self.ensure_sorted(chc, symbol)
         self.ensure_consecutive(chc, count, symbol)
@@ -1718,7 +1720,7 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         self.check_code(*canonical_huffman(freq))
 
     def test_random_freq(self):
-        for n in 2, 3, 5, 100:
+        for n in 2, 3, 5, randint(50, 200):
             freq = {i: random() for i in range(n)}
             self.check_code(*canonical_huffman(freq))
 
