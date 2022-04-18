@@ -866,7 +866,7 @@ set_count(Py_ssize_t *count, PyObject *list)
     for (i = 1; i <= MAXBITS; i++) {
         c = 0;
         if (i < list_size) {
-            Py_ssize_t limit = 1L << i;
+            Py_ssize_t limit = ((Py_ssize_t) 1) << i;
             c = PyNumber_AsSsize_t(PyList_GET_ITEM(list, i), NULL);
             if (c == -1 && PyErr_Occurred())
                 return -1;
