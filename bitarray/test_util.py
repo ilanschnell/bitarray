@@ -1624,6 +1624,16 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         iterator = canonical_decode(a, count, symbols)
         self.assertRaisesMessage(ValueError, "out of codes", list, iterator)
 
+    def test_canonical_decode_large(self):
+        with open(__file__, 'rb') as f:
+            msg = bytearray(f.read())
+        self.assertTrue(len(msg) > 50000)
+        codedict, count, symbol = canonical_huffman(Counter(msg))
+        a = bitarray()
+        a.encode(codedict, msg)
+        self.assertEqual(bytearray(canonical_decode(a, count, symbol)), msg)
+        self.check_code(codedict, count, symbol)
+
     def ensure_sorted(self, chc, symbol):
         # ensure codes are sorted
         for i in range(len(symbol) - 1):
@@ -1660,8 +1670,7 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         self.assertEqual(type(it).__name__, 'canonical_decodeiter')
         self.assertEqual(list(it), msg)
 
-    def check_code(self, freq_map):
-        chc, count, symbol = canonical_huffman(freq_map)
+    def check_code(self, chc, count, symbol):
         self.assertTrue(len(chc) == len(symbol) == sum(count))
         self.assertEqual(count[0], 0)  # no codes have length 0
         self.assertTrue(set(chc) == set(symbol))
@@ -1673,17 +1682,17 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
 
     def test_simple_counter(self):
         plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
-        self.check_code(Counter(plain))
+        self.check_code(*canonical_huffman(Counter(plain)))
 
     def test_balanced(self):
         n = 7
         freq = {}
         for i in range(2 ** n):
             freq[i] = 1
-        code = canonical_huffman(freq)[0]
+        code, count, sym = canonical_huffman(freq)
         self.assertEqual(len(code), 2 ** n)
         self.assertTrue(all(len(v) == n for v in code.values()))
-        self.check_code(freq)
+        self.check_code(code, count, sym)
 
     def test_unbalanced(self):
         n = 29
@@ -1694,12 +1703,12 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         self.assertEqual(len(code), n)
         for i in range(n):
             self.assertEqual(len(code[i]), n - (1 if i <= 1 else i))
-        self.check_code(freq)
+        self.check_code(*canonical_huffman(freq))
 
     def test_random_freq(self):
         for n in 2, 3, 5, 100:
             freq = {i: random() for i in range(n)}
-            self.check_code(freq)
+            self.check_code(*canonical_huffman(freq))
 
 
 tests.append(TestsCanonicalHuffman)
