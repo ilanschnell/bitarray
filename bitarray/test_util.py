@@ -1685,8 +1685,10 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         self.assertTrue(len(chc) == len(symbol) == sum(count))
         self.assertEqual(count[0], 0)  # no codes have length 0
         self.assertTrue(set(chc) == set(symbol))
-        # the code of the lst symbol has all 1 bits
+        # the code of the last symbol has all 1 bits
         self.assertTrue(chc[symbol[-1]].all())
+        # the code of the first symbol starts with bit 0
+        self.assertFalse(chc[symbol[0]][0])
 
         self.ensure_sorted(chc, symbol)
         self.ensure_consecutive(chc, count, symbol)
