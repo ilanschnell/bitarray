@@ -853,14 +853,15 @@ static PyTypeObject CHDI_Type;
 
 /* set elements in count (from seq) and return their sum, or -1 on error */
 static Py_ssize_t
-set_count(Py_ssize_t *count, PyObject *seq)
+set_count(Py_ssize_t *count, PyObject *sequence)
 {
-    Py_ssize_t i, c, res = 0, seq_size = PySequence_Size(seq);
+    Py_ssize_t i, n, c, res = 0;
 
-    if (seq_size < 0)
+    n = PySequence_Size(sequence);
+    if (n < 0)
         return -1;
 
-    if (seq_size > MAXBITS) {
+    if (n > MAXBITS) {
         PyErr_Format(PyExc_ValueError, "count cannot have more than %d "
                      "elements", MAXBITS);
         return -1;
@@ -868,8 +869,8 @@ set_count(Py_ssize_t *count, PyObject *seq)
 
     for (i = 1; i <= MAXBITS; i++) {
         c = 0;
-        if (i < seq_size) {
-            PyObject *item = PySequence_GetItem(seq, i);
+        if (i < n) {
+            PyObject *item = PySequence_GetItem(sequence, i);
             Py_ssize_t maxcount = ((Py_ssize_t) 1) << i;
 
             if (item == NULL)
