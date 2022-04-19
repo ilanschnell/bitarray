@@ -1579,10 +1579,10 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         a = bitarray('1101')
         # bitarray not of bitarray type
         self.assertRaises(TypeError, canonical_decode, '11', [0, 1], ['a'])
-        # count not list
-        self.assertRaises(TypeError, canonical_decode, a, (0, 1), ['a'])
-        # symbol not list
-        self.assertRaises(TypeError, canonical_decode, a, [0, 1], ('a'))
+        # count not sequence
+        self.assertRaises(TypeError, canonical_decode, a, {0, 1}, ['a'])
+        # symbol not sequence
+        self.assertRaises(TypeError, canonical_decode, a, [0, 1], {'a'})
         # negative count
         self.assertRaises(ValueError, canonical_decode, a, [0, -1], ['a'])
         # count list too long
@@ -1602,7 +1602,10 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         # symbols can be anything, they do not even have to be hashable here
         s = ['A', 42, [1.2-3.7j, 4j], {'B': 6}]
         a = bitarray('00 01 10 11')
+        # count can be a list
         self.assertEqual(list(canonical_decode(a, [0, 0, 4], s)), s)
+        # count can also be a tuple (any sequence object in fact)
+        self.assertEqual(list(canonical_decode(a, (0, 0, 4), s)), s)
         self.assertEqual(list(canonical_decode(7 * a, [0, 0, 4], s)), 7 * s)
         # the count list may have extra 0's at the end (but not too many)
         count = [0, 0, 4, 0, 0, 0, 0, 0]
@@ -1669,7 +1672,7 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         for a in chc.values():
             self.assertEqual(a.endian(), 'big')
             my_count[len(a)] += 1
-        self.assertEqual(my_count, count)
+        self.assertEqual(my_count, list(count))
 
     def ensure_complete(self, count):
         # ensure code is complete and not oversubscribed
@@ -1705,7 +1708,12 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
 
     def test_simple_counter(self):
         plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
-        self.check_code(*canonical_huffman(Counter(plain)))
+        cnt = Counter(plain)
+        code, count, symbol = canonical_huffman(cnt)
+        self.check_code(code, count, symbol)
+        self.check_code(code, tuple(count), tuple(symbol))
+        self.check_code(code, bytearray(count), symbol)
+        self.check_code(code, count, bytearray(symbol))
 
     def test_balanced(self):
         n = 7

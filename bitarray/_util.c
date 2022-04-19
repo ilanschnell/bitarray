@@ -836,7 +836,7 @@ in a binary stream.  Use `vl_decode()` for decoding.");
    The decode iterator object includes the Huffman code decoding tables:
    - count[1..MAXBITS] is the number of symbols of each length, which for a
      canonical code are stepped through in order.  count[0] is not used.
-   - symbol is a Python list of the symbol values in canonical order
+   - symbol is a Python sequence of the symbol values in canonical order
      where the number of entries is the sum of the counts in count[].
  */
 #define MAXBITS  31                  /* maximum bits in a code */
@@ -846,29 +846,36 @@ typedef struct {
     bitarrayobject *array;           /* bitarray we're decoding */
     Py_ssize_t index;                /* current index in bitarray */
     Py_ssize_t count[MAXBITS + 1];   /* number of symbols of each length */
-    PyObject *symbol;                /* list of canonical ordered symbols */
+    PyObject *symbol;                /* canonical ordered symbols */
 } chdi_obj;                          /* canonical Huffman decode iterator */
 
 static PyTypeObject CHDI_Type;
 
-/* set elements in count (from list) and return their sum, or -1 on error */
+/* set elements in count (from seq) and return their sum, or -1 on error */
 static Py_ssize_t
-set_count(Py_ssize_t *count, PyObject *list)
+set_count(Py_ssize_t *count, PyObject *seq)
 {
-    Py_ssize_t i, c, res = 0, list_size = PyList_GET_SIZE(list);
+    Py_ssize_t i, c, res = 0, seq_size = PySequence_Size(seq);
 
-    if (list_size > MAXBITS) {
-        PyErr_Format(PyExc_ValueError, "count list cannot have more than %d "
+    if (seq_size < 0)
+        return -1;
+
+    if (seq_size > MAXBITS) {
+        PyErr_Format(PyExc_ValueError, "count cannot have more than %d "
                      "elements", MAXBITS);
         return -1;
     }
 
     for (i = 1; i <= MAXBITS; i++) {
         c = 0;
-        if (i < list_size) {
+        if (i < seq_size) {
+            PyObject *item = PySequence_GetItem(seq, i);
             Py_ssize_t maxcount = ((Py_ssize_t) 1) << i;
 
-            c = PyNumber_AsSsize_t(PyList_GET_ITEM(list, i), NULL);
+            if (item == NULL)
+                return -1;
+            c = PyNumber_AsSsize_t(item, NULL);
+            Py_DECREF(item);
             if (c == -1 && PyErr_Occurred())
                 return -1;
             if (c < 0 || c > maxcount) {
@@ -895,11 +902,11 @@ chdi_new(PyObject *module, PyObject *args)
         return NULL;
     if (ensure_bitarray(a) < 0)
         return NULL;
-    if (!PyList_Check(count))
-        return PyErr_Format(PyExc_TypeError, "list expected for count, "
+    if (!PySequence_Check(count))
+        return PyErr_Format(PyExc_TypeError, "sequence expected for count, "
                             "got %s", Py_TYPE(count)->tp_name);
-    if (!PyList_Check(symbol))
-        return PyErr_Format(PyExc_TypeError, "list expected for symbol, "
+    if (!PySequence_Check(symbol))
+        return PyErr_Format(PyExc_TypeError, "sequence expected for symbol, "
                             "got %s", Py_TYPE(symbol)->tp_name);
 
     it = PyObject_GC_New(chdi_obj, &CHDI_Type);
@@ -909,9 +916,9 @@ chdi_new(PyObject *module, PyObject *args)
     if ((count_sum = set_count(it->count, count)) < 0)
         goto error;
 
-    if (count_sum != PyList_GET_SIZE(symbol)) {
+    if (count_sum != PySequence_Size(symbol)) {
         PyErr_Format(PyExc_ValueError, "sum(count) = %zd, but len(symbol) "
-                     "= %zd", count_sum, PyList_GET_SIZE(symbol));
+                     "= %zd", count_sum, PySequence_Size(symbol));
         goto error;
     }
     Py_INCREF(a);
@@ -934,8 +941,8 @@ PyDoc_STRVAR(chdi_doc,
 "canonical_decode(bitarray, count, symbol, /) -> iterator\n\
 \n\
 Decode bitarray which was encoded using a canonical Huffman code\n\
-with `count` (a list of the number of bit count for each code length)\n\
-and `symbol` (a list of symbols).");
+with `count` (a sequence of the number of bit count for each code length)\n\
+and `symbol` (a sequence of symbols).");
 
 /* This function is based on the function decode() in:
    https://github.com/madler/zlib/blob/master/contrib/puff/puff.c */
@@ -958,11 +965,7 @@ chdi_next(chdi_obj *it)
         count = it->count[len];
         assert(code - first >= 0);
         if (code - first < count) {   /* if length len, return symbol */
-            PyObject *symbol;
-
-            symbol = PyList_GetItem(it->symbol, index + (code - first));
-            Py_XINCREF(symbol);
-            return symbol;
+            return PySequence_GetItem(it->symbol, index + (code - first));
         }
         index += count;               /* else update for next length */
         first += count;
