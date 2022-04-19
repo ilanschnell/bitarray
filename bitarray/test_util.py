@@ -1625,11 +1625,13 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         a.append(1)
         a.extend(bitarray(10 * '0'))
         iterator = canonical_decode(a, count, symbols)
-        self.assertRaisesMessage(ValueError, "invalid code", list, iterator)
+        self.assertRaisesMessage(ValueError, "reached end of bitarray",
+                                 list, iterator)
 
         a.extend(bitarray(20 * '0'))
         iterator = canonical_decode(a, count, symbols)
-        self.assertRaisesMessage(ValueError, "out of codes", list, iterator)
+        self.assertRaisesMessage(ValueError, "ran out of codes",
+                                 list, iterator)
 
     def test_canonical_decode_large(self):
         with open(__file__, 'rb') as f:
