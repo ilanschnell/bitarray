@@ -648,8 +648,9 @@ extend_sequence(bitarrayobject *self, PyObject *sequence)
     PyObject *item;
     Py_ssize_t n, i;
 
-    assert(PySequence_Check(sequence));
     n = PySequence_Size(sequence);
+    if (n < 0)
+        return -1;
 
     if (resize(self, self->nbits + n) < 0)
         return -1;
