@@ -1615,6 +1615,7 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         self.assertEqual(list(canonical_decode(a, [-47, 0, 4], s)), s)
         # in fact it can be anything, as it is entirely ignored
         self.assertEqual(list(canonical_decode(a, [s, 0, 4], s)), s)
+
         # the symbol argument can be any sequence object
         s = [65, 66, 67, 98]
         self.assertEqual(list(canonical_decode(a, cnt, s)), s)
@@ -1622,7 +1623,13 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         self.assertEqual(list(canonical_decode(a, cnt, tuple(s))), s)
         if sys.version_info[0] == 3:
             self.assertEqual(list(canonical_decode(a, cnt, bytes(s))), s)
-        # the symbol can also be an iterable
+        # the symbol can even be an iterable
+        # Note:
+        # This was done because we so because we want to use PySequence_Fast
+        # in order to convert sequence objects like bytes and bytearray
+        # to a list which is faster as all objects are now in an array
+        # of pointers (as opposed to having the object's get item methods
+        # called on every iteration).
         self.assertEqual(list(canonical_decode(a, cnt, iter(s))), s)
 
     def test_canonical_decode_empty(self):

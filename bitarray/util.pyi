@@ -1,6 +1,6 @@
 # Copyright (c) 2021 - 2022, Ilan Schnell; All Rights Reserved
 
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator, Sequence
 from typing import Any, AnyStr, BinaryIO, Optional, Union
 
 from bitarray import bitarray
@@ -53,4 +53,6 @@ def vl_decode(stream: Union[bytes, Iterator[int]],
 def huffman_code(freq_map: dict[Any, Union[int, float]],
                  endian: Optional[str] = ...) -> dict[Any, bitarray]: ...
 def canonical_huffman(huff_code: dict[Any, Union[int, float]]) -> tuple: ...
-def canonical_decode(a: bitarray, count: list, symbol: list) -> None: ...
+def canonical_decode(a: bitarray,
+                     count: Sequence[int],
+                     symbol: Iterable[Any]) -> None: ...
