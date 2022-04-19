@@ -16,7 +16,7 @@ def create_code(cnt):
     if len(cnt) > 1:
         return canonical_huffman(cnt)
     # special case for when we encode an empty file or a file with only
-    # one character (possibly many of the same single character, e.g. "xxx")
+    # one character (possibly many of the same single character, e.g. "aaa")
     sym = list(cnt)[0] if cnt else 0
     return {sym: bitarray('0')}, [0, 1], [sym]
 
