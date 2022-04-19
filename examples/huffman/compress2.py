@@ -51,11 +51,11 @@ def decode(filename):
                    for _ in range(maxbits - 1)]
 
     symbol_n = struct.unpack("<H", bytes(islice(stream, 2)))[0]
-    symbol = list(bytearray(islice(stream, symbol_n)))
+    symbol = bytearray(islice(stream, symbol_n))
 
     a = deserialize(bytes(stream))
     with open(filename[:-6] + '.out', 'wb') as fo:
-        fo.write(bytearray(canonical_decode(a, count, symbol)))
+        fo.write(bytes(canonical_decode(a, count, symbol)))
 
 def main():
     p = OptionParser("usage: %prog [options] FILE")

@@ -862,8 +862,8 @@ set_count(Py_ssize_t *count, PyObject *sequence)
         return -1;
 
     if (n > MAXBITS) {
-        PyErr_Format(PyExc_ValueError, "count cannot have more than %d "
-                     "elements", MAXBITS);
+        PyErr_Format(PyExc_ValueError, "len(count) cannot be larger than %d",
+                     MAXBITS);
         return -1;
     }
 
