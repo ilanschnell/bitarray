@@ -890,6 +890,12 @@ set_count(Py_ssize_t *count, PyObject *seq)
     return res;
 }
 
+#define CHECK_SEQUENCE(obj)                                            \
+    if (!PySequence_Check(obj))                                        \
+        return PyErr_Format(PyExc_TypeError,                           \
+                            "'%s' object does not support indexing",   \
+                            Py_TYPE(obj)->tp_name)
+
 /* create a new initialized canonical Huffman decode iterator object */
 static PyObject *
 chdi_new(PyObject *module, PyObject *args)
@@ -902,12 +908,9 @@ chdi_new(PyObject *module, PyObject *args)
         return NULL;
     if (ensure_bitarray(a) < 0)
         return NULL;
-    if (!PySequence_Check(count))
-        return PyErr_Format(PyExc_TypeError, "sequence expected for count, "
-                            "got '%s'", Py_TYPE(count)->tp_name);
-    if (!PySequence_Check(symbol))
-        return PyErr_Format(PyExc_TypeError, "sequence expected for symbol, "
-                            "got '%s'", Py_TYPE(symbol)->tp_name);
+
+    CHECK_SEQUENCE(count);
+    CHECK_SEQUENCE(symbol);
 
     it = PyObject_GC_New(chdi_obj, &CHDI_Type);
     if (it == NULL)
