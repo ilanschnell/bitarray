@@ -1,5 +1,6 @@
-2022-XX-XX   2.4.2:
+2022-XX-XX   2.5.0:
 -------------------
+  * add creation of canonical Huffman codes and decoding thereof, #173
   * optimize `.bytereverse()`
   * optimize `delslice()` for cases like `del a[1:17:2]` when `a` is large
   * fix `examples/huffman/compress.py` to handle files with 0 or 1 characters,
