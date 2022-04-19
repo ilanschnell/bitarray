@@ -36,7 +36,7 @@ ensure_bitarray(PyObject *obj)
 
 /* ensure object is a bitarray of given length */
 static int
-ensure_ba_of_length(PyObject *a, const Py_ssize_t n)
+ensure_ba_of_length(PyObject *a, Py_ssize_t n)
 {
     if (ensure_bitarray(a) < 0)
         return -1;
@@ -611,7 +611,7 @@ ba2base(PyObject *module, PyObject *args)
         int j, x = 0;
 
         for (j = 0; j < m; j++) {
-            const int k = le ? j : (m - j - 1);
+            int k = le ? j : (m - j - 1);
             x |= getbit(aa, i * m + k) << j;
         }
         str[i] = alphabet[x];
@@ -668,7 +668,7 @@ base2ba(PyObject *module, PyObject *args)
                                 "base %d, got '%c' (0x%02x)", n, c, c);
         }
         for (j = 0; j < m; j++) {
-            const int k = le ? j : (m - j - 1);
+            int k = le ? j : (m - j - 1);
             setbit(aa, i * m + k, d & (1 << j));
         }
     }
@@ -809,7 +809,7 @@ vl_encode(PyObject *module, PyObject *a)
         str[0] |= (0x08 >> i) * getbit(aa, i);
 
     for (i = 4; i < aa->nbits; i++) {
-        const int k = (i - 4) % 7;
+        int k = (i - 4) % 7;
 
         if (k == 0) {
             j++;
@@ -829,6 +829,213 @@ PyDoc_STRVAR(vl_encode_doc,
 Return variable length binary representation of bitarray.\n\
 This representation is useful for efficiently storing small bitarray\n\
 in a binary stream.  Use `vl_decode()` for decoding.");
+
+/* ----------------------- canonical Huffman decoder ------------------- */
+
+/*
+   The decode iterator object includes the Huffman code decoding tables:
+   - count[1..MAXBITS] is the number of symbols of each length, which for a
+     canonical code are stepped through in order.  count[0] is not used.
+   - symbol is a Python sequence of the symbol values in canonical order
+     where the number of entries is the sum of the counts in count[].
+ */
+#define MAXBITS  31                  /* maximum bits in a code */
+
+typedef struct {
+    PyObject_HEAD
+    bitarrayobject *array;           /* bitarray we're decoding */
+    Py_ssize_t index;                /* current index in bitarray */
+    Py_ssize_t count[MAXBITS + 1];   /* number of symbols of each length */
+    PyObject *symbol;                /* canonical ordered symbols */
+} chdi_obj;                          /* canonical Huffman decode iterator */
+
+static PyTypeObject CHDI_Type;
+
+/* set elements in count (from seq) and return their sum, or -1 on error */
+static Py_ssize_t
+set_count(Py_ssize_t *count, PyObject *sequence)
+{
+    Py_ssize_t i, n, c, res = 0;
+
+    n = PySequence_Size(sequence);
+    if (n < 0)
+        return -1;
+
+    if (n > MAXBITS) {
+        PyErr_Format(PyExc_ValueError, "len(count) cannot be larger than %d",
+                     MAXBITS);
+        return -1;
+    }
+
+    for (i = 1; i <= MAXBITS; i++) {
+        c = 0;
+        if (i < n) {
+            PyObject *item = PySequence_GetItem(sequence, i);
+            Py_ssize_t maxcount = ((Py_ssize_t) 1) << i;
+
+            if (item == NULL)
+                return -1;
+            c = PyNumber_AsSsize_t(item, NULL);
+            Py_DECREF(item);
+            if (c == -1 && PyErr_Occurred())
+                return -1;
+            if (c < 0 || c > maxcount) {
+                PyErr_Format(PyExc_ValueError, "count[%zd] cannot be negative"
+                             " or larger than %zd, got %zd", i, maxcount, c);
+                return -1;
+            }
+        }
+        count[i] = c;
+        res += c;
+    }
+    return res;
+}
+
+/* create a new initialized canonical Huffman decode iterator object */
+static PyObject *
+chdi_new(PyObject *module, PyObject *args)
+{
+    PyObject *a, *count, *symbol;
+    Py_ssize_t count_sum;
+    chdi_obj *it;       /* iterator object to be returned */
+
+    if (!PyArg_ParseTuple(args, "OOO:count_n", &a, &count, &symbol))
+        return NULL;
+    if (ensure_bitarray(a) < 0)
+        return NULL;
+    if (!PySequence_Check(count))
+        return PyErr_Format(PyExc_TypeError, "count expected to be sequence, "
+                            "got '%s'", Py_TYPE(count)->tp_name);
+
+    symbol = PySequence_Fast(symbol, "symbol not iterable");
+    if (symbol == NULL)
+        return NULL;
+
+    it = PyObject_GC_New(chdi_obj, &CHDI_Type);
+    if (it == NULL)
+        goto error;
+
+    if ((count_sum = set_count(it->count, count)) < 0)
+        goto error;
+
+    if (count_sum != PySequence_Size(symbol)) {
+        PyErr_Format(PyExc_ValueError, "sum(count) = %zd, but len(symbol) "
+                     "= %zd", count_sum, PySequence_Size(symbol));
+        goto error;
+    }
+    Py_INCREF(a);
+    it->array = (bitarrayobject *) a;
+    it->index = 0;
+    it->symbol = symbol;
+
+    PyObject_GC_Track(it);
+    return (PyObject *) it;
+
+ error:
+    it->array = NULL;
+    Py_XDECREF(symbol);
+    it->symbol = NULL;
+    Py_DECREF((PyObject *) it);
+    return NULL;
+}
+
+PyDoc_STRVAR(chdi_doc,
+"canonical_decode(bitarray, count, symbol, /) -> iterator\n\
+\n\
+Decode bitarray which was encoded using a canonical Huffman code\n\
+with `count` (a sequence of the number of bit count for each code length)\n\
+and `symbol` (a sequence of symbols).");
+
+/* This function is based on the function decode() in:
+   https://github.com/madler/zlib/blob/master/contrib/puff/puff.c */
+static PyObject *
+chdi_next(chdi_obj *it)
+{
+    Py_ssize_t nbits = it->array->nbits;
+    Py_ssize_t len;    /* current number of bits in code */
+    Py_ssize_t code;   /* current code (of len bits) */
+    Py_ssize_t first;  /* first code of length len */
+    Py_ssize_t count;  /* number of codes of length len */
+    Py_ssize_t index;  /* index of first code of length len in symbol list */
+
+    if (it->index >= nbits)           /* no bits - stop iteration */
+        return NULL;
+
+    code = first = index = 0;
+    for (len = 1; len <= MAXBITS; len++) {
+        code |= getbit(it->array, it->index++);
+        count = it->count[len];
+        assert(code - first >= 0);
+        if (code - first < count) {   /* if length len, return symbol */
+            return PySequence_ITEM(it->symbol, index + (code - first));
+        }
+        index += count;               /* else update for next length */
+        first += count;
+        first <<= 1;
+        code <<= 1;
+
+        if (it->index >= nbits && len != MAXBITS) {
+            PyErr_SetString(PyExc_ValueError, "reached end of bitarray");
+            return NULL;
+        }
+    }
+    PyErr_SetString(PyExc_ValueError, "ran out of codes");
+    return NULL;
+}
+
+static void
+chdi_dealloc(chdi_obj *it)
+{
+    PyObject_GC_UnTrack(it);
+    Py_XDECREF(it->array);
+    Py_XDECREF(it->symbol);
+    PyObject_GC_Del(it);
+}
+
+static int
+chdi_traverse(chdi_obj *it, visitproc visit, void *arg)
+{
+    Py_VISIT(it->array);
+    Py_VISIT(it->symbol);
+    return 0;
+}
+
+static PyTypeObject CHDI_Type = {
+#ifdef IS_PY3K
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
+    PyObject_HEAD_INIT(NULL)
+    0,                                        /* ob_size */
+#endif
+    "bitarray.util.canonical_decodeiter",     /* tp_name */
+    sizeof(chdi_obj),                         /* tp_basicsize */
+    0,                                        /* tp_itemsize */
+    /* methods */
+    (destructor) chdi_dealloc,                /* tp_dealloc */
+    0,                                        /* tp_print */
+    0,                                        /* tp_getattr */
+    0,                                        /* tp_setattr */
+    0,                                        /* tp_compare */
+    0,                                        /* tp_repr */
+    0,                                        /* tp_as_number */
+    0,                                        /* tp_as_sequence */
+    0,                                        /* tp_as_mapping */
+    0,                                        /* tp_hash */
+    0,                                        /* tp_call */
+    0,                                        /* tp_str */
+    PyObject_GenericGetAttr,                  /* tp_getattro */
+    0,                                        /* tp_setattro */
+    0,                                        /* tp_as_buffer */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,  /* tp_flags */
+    0,                                        /* tp_doc */
+    (traverseproc) chdi_traverse,             /* tp_traverse */
+    0,                                        /* tp_clear */
+    0,                                        /* tp_richcompare */
+    0,                                        /* tp_weaklistoffset */
+    PyObject_SelfIter,                        /* tp_iter */
+    (iternextfunc) chdi_next,                 /* tp_iternext */
+    0,                                        /* tp_methods */
+};
 
 /* --------------------------------------------------------------------- */
 
@@ -856,6 +1063,8 @@ static PyMethodDef module_functions[] = {
     {"_base2ba",  (PyCFunction) base2ba,   METH_VARARGS, 0},
     {"vl_encode", (PyCFunction) vl_encode, METH_O,       vl_encode_doc},
     {"_vl_decode",(PyCFunction) vl_decode, METH_VARARGS, 0},
+    {"canonical_decode",
+                  (PyCFunction) chdi_new,  METH_VARARGS, chdi_doc},
     {"_set_bato", (PyCFunction) set_bato,  METH_O,       0},
     {NULL,        NULL}  /* sentinel */
 };
@@ -879,12 +1088,22 @@ init_util(void)
 
 #ifdef IS_PY3K
     m = PyModule_Create(&moduledef);
-    if (m == NULL)
-        return NULL;
-    return m;
 #else
     m = Py_InitModule3("_util", module_functions, 0);
+#endif
     if (m == NULL)
-        return;
+        goto error;
+
+    if (PyType_Ready(&CHDI_Type) < 0)
+        goto error;
+    Py_SET_TYPE(&CHDI_Type, &PyType_Type);
+
+#ifdef IS_PY3K
+    return m;
+ error:
+    return NULL;
+#else
+ error:
+    return;
 #endif
 }

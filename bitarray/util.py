@@ -15,14 +15,15 @@ from bitarray import bitarray, bits2bytes, get_default_endian
 from bitarray._util import (
     count_n, rindex, parity, count_and, count_or, count_xor, subset,
     serialize, ba2hex, _hex2ba, ba2base, _base2ba, vl_encode, _vl_decode,
-    _set_bato,
+    canonical_decode, _set_bato,
 )
 
 __all__ = [
     'zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip', 'count_n',
     'parity', 'count_and', 'count_or', 'count_xor', 'subset',
     'ba2hex', 'hex2ba', 'ba2base', 'base2ba', 'ba2int', 'int2ba',
-    'serialize', 'deserialize', 'vl_encode', 'vl_decode', 'huffman_code',
+    'serialize', 'deserialize', 'vl_encode', 'vl_decode',
+    'huffman_code', 'canonical_huffman', 'canonical_decode',
 ]
 
 
@@ -326,6 +327,49 @@ Use `vl_encode()` for encoding.
     _vl_decode(__stream, a)
     return a
 
+# ------------------------------ Huffman coding -----------------------------
+
+def _huffman_tree(__freq_map):
+    """_huffman_tree(dict, /) -> Node
+
+Given a dict mapping symbols to their frequency, construct a Huffman tree
+and return its root node.
+"""
+    from heapq import heappush, heappop
+
+    class Node(object):
+        """
+        A Node object will either have .symbol (leaf node) or
+        both .child_0 and .child_1 (internal node) attributes.
+        The .freq attributes will always be present.
+        """
+        def __lt__(self, other):
+            # heapq needs to be able to compare the nodes
+            return self.freq < other.freq
+
+    minheap = []
+    # create all leaf nodes and push them onto the queue
+    for sym, f in __freq_map.items():
+        nd = Node()
+        nd.symbol = sym
+        nd.freq = f
+        heappush(minheap, nd)
+
+    # repeat the process until only one node remains
+    while len(minheap) > 1:
+        # take the two nodes with smallest frequencies from the queue
+        child_0 = heappop(minheap)
+        child_1 = heappop(minheap)
+        # construct a new (internal) node and push it onto the queue
+        parent = Node()
+        parent.child_0 = child_0
+        parent.child_1 = child_1
+        parent.freq = child_0.freq + child_1.freq
+        heappush(minheap, parent)
+
+    # the single remaining node is the root of the Huffman tree
+    return minheap[0]
+
 
 def huffman_code(__freq_map, endian=None):
     """huffman_code(dict, /, endian=None) -> dict
@@ -335,7 +379,6 @@ calculate the Huffman code, i.e. a dict mapping those symbols to
 bitarrays (with given endianness).  Note that the symbols are not limited
 to being strings.  Symbols may may be any hashable object (such as `None`).
 """
-    from heapq import heappush, heappop
 
     if not isinstance(__freq_map, dict):
         raise TypeError("dict expected, got '%s'" % type(__freq_map).__name__)
@@ -343,39 +386,6 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
         raise ValueError("non-empty dict expected")
     if endian is None:
         endian = get_default_endian()
-
-    class Node(object):
-        # a Node object will have either .symbol or .child set below,
-        # .freq will always be set
-        def __lt__(self, other):
-            # heapq needs to be able to compare the nodes
-            return self.freq < other.freq
-
-    def huff_tree(freq_map):
-        # given a dictionary mapping symbols to their frequency,
-        # construct a Huffman tree and return its root node
-
-        minheap = []
-        # create all leaf nodes and push them onto the queue
-        for sym, f in freq_map.items():
-            nd = Node()
-            nd.symbol = sym
-            nd.freq = f
-            heappush(minheap, nd)
-
-        # repeat the process until only one node remains
-        while len(minheap) > 1:
-            # take the two nodes with smallest frequencies from the queue
-            child_0 = heappop(minheap)
-            child_1 = heappop(minheap)
-            # construct the new internal node and push it onto the queue
-            parent = Node()
-            parent.child = [child_0, child_1]
-            parent.freq = child_0.freq + child_1.freq
-            heappush(minheap, parent)
-
-        # the single remaining node is the root of the Huffman tree
-        return minheap[0]
 
     b0 = bitarray('0', endian)
     b1 = bitarray('1', endian)
@@ -385,8 +395,57 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
         try:                    # leaf
             result[nd.symbol] = prefix
         except AttributeError:  # parent, so traverse each of the children
-            traverse(nd.child[0], prefix + b0)
-            traverse(nd.child[1], prefix + b1)
+            traverse(nd.child_0, prefix + b0)
+            traverse(nd.child_1, prefix + b1)
 
-    traverse(huff_tree(__freq_map))
+    traverse(_huffman_tree(__freq_map))
     return result
+
+
+def canonical_huffman(__freq_map):
+    """canonical_huffman(dict, /) -> tuple
+
+Given a frequency map, a dictionary mapping symbols to their frequency,
+calculate the canonical Huffman code.  Returns a tuple containing:
+
+0. the canonical Huffman code as a dict mapping symbols to bitarrays
+1. a list containing the number of symbols of each code length
+2. a list of symbols in canonical order
+
+Note: the two lists may be used as input for `canonical_decode()`.
+"""
+    if not isinstance(__freq_map, dict):
+        raise TypeError("dict expected, got '%s'" % type(__freq_map).__name__)
+    if len(__freq_map) < 2:
+        raise ValueError("at least 2 symbols expected in frequency map")
+
+    code_length = {}  # map symbols to their code length
+
+    def traverse(nd, length=0):
+        # traverse the Huffman tree, but (unlike in huffman_code() above) we
+        # now just simply record the length for reaching each symbol
+        try:                    # leaf
+            code_length[nd.symbol] = length
+        except AttributeError:  # parent, so traverse each of the children
+            traverse(nd.child_0, length + 1)
+            traverse(nd.child_1, length + 1)
+
+    traverse(_huffman_tree(__freq_map))
+
+    # we now have a mapping of symbols to their code length,
+    # which is all we need
+
+    table = sorted(code_length.items(), key=lambda item: (item[1], item[0]))
+
+    maxbits = max(item[1] for item in table)
+    codedict = {}
+    count = (maxbits + 1) * [0]
+
+    code = 0
+    for i, (sym, length) in enumerate(table):
+        codedict[sym] = int2ba(code, length, 'big')
+        count[length] += 1
+        if i + 1 < len(table):
+            code = (code + 1) << (table[i + 1][1] - length)
+
+    return codedict, count, [item[0] for item in table]

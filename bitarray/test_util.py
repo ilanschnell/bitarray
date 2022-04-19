@@ -23,7 +23,8 @@ from bitarray.util import (
     zeros, urandom, pprint, make_endian, rindex, strip, count_n,
     parity, count_and, count_or, count_xor, subset,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
-    ba2int, int2ba, vl_encode, vl_decode, huffman_code
+    ba2int, int2ba, vl_encode, vl_decode,
+    huffman_code, canonical_huffman, canonical_decode,
 )
 
 if sys.version_info[0] == 3:
@@ -1543,12 +1544,239 @@ class TestsHuffman(unittest.TestCase):
         self.check_tree(code)
 
     def test_random_freq(self):
-        N = randint(2, 1000)
-        # create Huffman code for N symbols
-        code = huffman_code({i: random() for i in range(N)})
-        self.check_tree(code)
+        for n in 2, 3, 5, randint(50, 200):
+            # create Huffman code for n symbols
+            code = huffman_code({i: random() for i in range(n)})
+            self.check_tree(code)
 
 tests.append(TestsHuffman)
+
+# ---------------------------------------------------------------------------
+
+class TestsCanonicalHuffman(unittest.TestCase, Util):
+
+    def test_basic(self):
+        plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
+        chc, count, symbol = canonical_huffman(Counter(plain))
+        self.assertIsInstance(chc, dict)
+        self.assertIsInstance(count, list)
+        self.assertIsInstance(symbol, list)
+        a = bitarray()
+        a.encode(chc, plain)
+        self.assertEqual(bytearray(a.iterdecode(chc)), plain)
+        self.assertEqual(bytearray(canonical_decode(a, count, symbol)), plain)
+
+    def test_canonical_huffman_errors(self):
+        self.assertRaises(TypeError, canonical_huffman, [])
+        self.assertRaises(ValueError, canonical_huffman, {})
+        self.assertRaises(TypeError, canonical_huffman)
+        cnt = huffman_code(Counter('aabc'))
+        self.assertRaises(TypeError, canonical_huffman, cnt, 'a')
+        cnt = {'a': 1}  # only one symbol
+        self.assertRaises(ValueError, canonical_huffman, cnt)
+
+    def test_canonical_decode_errors(self):
+        a = bitarray('1101')
+        # bitarray not of bitarray type
+        self.assertRaises(TypeError, canonical_decode, '11', [0, 1], ['a'])
+        # count not sequence
+        self.assertRaises(TypeError, canonical_decode, a, {0, 1}, ['a'])
+        # symbol not sequence
+        self.assertRaises(TypeError, canonical_decode, a, [0, 1], 43)
+        # negative count
+        self.assertRaises(ValueError, canonical_decode, a, [0, -1], ['a'])
+        # count list too long
+        self.assertRaises(ValueError, canonical_decode, a, 32 * [0], [])
+
+        symbol = ['a', 'b', 'c', 'd']
+        # sum(count) != len(symbol)
+        self.assertRaisesMessage(ValueError,
+                                 "sum(count) = 3, but len(symbol) = 4",
+                                 canonical_decode, a, [0, 1, 2], symbol)
+        # count[i] > 1 << i
+        self.assertRaisesMessage(ValueError,
+                        "count[2] cannot be negative or larger than 4, got 5",
+                        canonical_decode, a, [0, 2, 5], symbol)
+
+    def test_canonical_decode_simple(self):
+        # symbols can be anything, they do not even have to be hashable here
+        cnt = [0, 0, 4]
+        s = ['A', 42, [1.2-3.7j, 4j], {'B': 6}]
+        a = bitarray('00 01 10 11')
+        # count can be a list
+        self.assertEqual(list(canonical_decode(a, cnt, s)), s)
+        # count can also be a tuple (any sequence object in fact)
+        self.assertEqual(list(canonical_decode(a, (0, 0, 4), s)), s)
+        self.assertEqual(list(canonical_decode(7 * a, cnt, s)), 7 * s)
+        # the count list may have extra 0's at the end (but not too many)
+        count = [0, 0, 4, 0, 0, 0, 0, 0]
+        self.assertEqual(list(canonical_decode(a, count, s)), s)
+        # the element count[0] list is unused
+        self.assertEqual(list(canonical_decode(a, [-47, 0, 4], s)), s)
+        # in fact it can be anything, as it is entirely ignored
+        self.assertEqual(list(canonical_decode(a, [s, 0, 4], s)), s)
+
+        # the symbol argument can be any sequence object
+        s = [65, 66, 67, 98]
+        self.assertEqual(list(canonical_decode(a, cnt, s)), s)
+        self.assertEqual(list(canonical_decode(a, cnt, bytearray(s))), s)
+        self.assertEqual(list(canonical_decode(a, cnt, tuple(s))), s)
+        if sys.version_info[0] == 3:
+            self.assertEqual(list(canonical_decode(a, cnt, bytes(s))), s)
+        # Implementation Note:
+        #   The symbol can even be an iterable.  This was done because we
+        #   want to use PySequence_Fast in order to convert sequence
+        #   objects (like bytes and bytearray) to a list.  This is faster
+        #   as all objects are now elements in an array of pointers (as
+        #   opposed to having the object's __getitem__ method called on
+        #   every iteration).
+        self.assertEqual(list(canonical_decode(a, cnt, iter(s))), s)
+
+    def test_canonical_decode_empty(self):
+        a = bitarray()
+        self.assertEqual(list(canonical_decode(a, [], [])), [])
+
+    def test_canonical_decode_one_symbol(self):
+        symbols = ['A']
+        count = [0, 1]
+        a = bitarray('000')
+        self.assertEqual(list(canonical_decode(a, count, symbols)),
+                         3 * symbols)
+        a.append(1)
+        a.extend(bitarray(10 * '0'))
+        iterator = canonical_decode(a, count, symbols)
+        self.assertRaisesMessage(ValueError, "reached end of bitarray",
+                                 list, iterator)
+
+        a.extend(bitarray(20 * '0'))
+        iterator = canonical_decode(a, count, symbols)
+        self.assertRaisesMessage(ValueError, "ran out of codes",
+                                 list, iterator)
+
+    def test_canonical_decode_large(self):
+        with open(__file__, 'rb') as f:
+            msg = bytearray(f.read())
+        self.assertTrue(len(msg) > 50000)
+        codedict, count, symbol = canonical_huffman(Counter(msg))
+        a = bitarray()
+        a.encode(codedict, msg)
+        self.assertEqual(bytearray(canonical_decode(a, count, symbol)), msg)
+        self.check_code(codedict, count, symbol)
+
+    def test_canonical_decode_symbol_change(self):
+        msg = bytearray(b"Hello World!")
+        codedict, count, symbol = canonical_huffman(Counter(msg))
+        self.check_code(codedict, count, symbol)
+        a = bitarray()
+        a.encode(codedict, 10 * msg)
+
+        it = canonical_decode(a, count, symbol)
+        def decode_one_msg():
+            return bytearray(next(it) for _ in range(len(msg)))
+
+        self.assertEqual(decode_one_msg(), msg)
+        symbol[symbol.index(ord("l"))] = ord("k")
+        self.assertEqual(decode_one_msg(), bytearray(b"Hekko Workd!"))
+        del symbol[:]
+        self.assertRaises(IndexError, decode_one_msg)
+
+    def ensure_sorted(self, chc, symbol):
+        # ensure codes are sorted
+        for i in range(len(symbol) - 1):
+            a = chc[symbol[i]]
+            b = chc[symbol[i + 1]]
+            self.assertTrue(ba2int(a) < ba2int(b))
+
+    def ensure_consecutive(self, chc, count, symbol):
+        first = 0
+        for nbits, cnt in enumerate(count):
+            for i in range(first, first + cnt - 1):
+                # ensure two consecutive codes (with same bit length) have
+                # consecutive integer values
+                a = chc[symbol[i]]
+                b = chc[symbol[i + 1]]
+                self.assertTrue(len(a) == len(b) == nbits)
+                self.assertEqual(ba2int(a) + 1, ba2int(b))
+            first += cnt
+
+    def ensure_count(self, chc, count):
+        # ensure count list corresponds to length counts from codedict
+        maxbits = max(len(a) for a in chc.values())
+        my_count = (maxbits + 1) * [0]
+        for a in chc.values():
+            self.assertEqual(a.endian(), 'big')
+            my_count[len(a)] += 1
+        self.assertEqual(my_count, list(count))
+
+    def ensure_complete(self, count):
+        # ensure code is complete and not oversubscribed
+        maxbits = len(count)
+        x = sum(count[i] << (maxbits - i) for i in range(1, maxbits))
+        self.assertEqual(x, 1 << maxbits)
+
+    def ensure_round_trip(self, chc, count, symbol):
+        # create a short test message, encode and decode
+        msg = [choice(symbol) for _ in range(10)]
+        a = bitarray()
+        a.encode(chc, msg)
+        it = canonical_decode(a, count, symbol)
+        # the iterator holds a reference to the bitarray and symbol list
+        del a, count, symbol
+        self.assertEqual(type(it).__name__, 'canonical_decodeiter')
+        self.assertEqual(list(it), msg)
+
+    def check_code(self, chc, count, symbol):
+        self.assertTrue(len(chc) == len(symbol) == sum(count))
+        self.assertEqual(count[0], 0)  # no codes have length 0
+        self.assertTrue(set(chc) == set(symbol))
+        # the code of the last symbol has all 1 bits
+        self.assertTrue(chc[symbol[-1]].all())
+        # the code of the first symbol starts with bit 0
+        self.assertFalse(chc[symbol[0]][0])
+
+        self.ensure_sorted(chc, symbol)
+        self.ensure_consecutive(chc, count, symbol)
+        self.ensure_count(chc, count)
+        self.ensure_complete(count)
+        self.ensure_round_trip(chc, count, symbol)
+
+    def test_simple_counter(self):
+        plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
+        cnt = Counter(plain)
+        code, count, symbol = canonical_huffman(cnt)
+        self.check_code(code, count, symbol)
+        self.check_code(code, tuple(count), tuple(symbol))
+        self.check_code(code, bytearray(count), symbol)
+        self.check_code(code, count, bytearray(symbol))
+
+    def test_balanced(self):
+        n = 7
+        freq = {}
+        for i in range(2 ** n):
+            freq[i] = 1
+        code, count, sym = canonical_huffman(freq)
+        self.assertEqual(len(code), 2 ** n)
+        self.assertTrue(all(len(v) == n for v in code.values()))
+        self.check_code(code, count, sym)
+
+    def test_unbalanced(self):
+        n = 29
+        freq = {}
+        for i in range(n):
+            freq[i] = 2 ** i
+        code = canonical_huffman(freq)[0]
+        self.assertEqual(len(code), n)
+        for i in range(n):
+            self.assertEqual(len(code[i]), n - (1 if i <= 1 else i))
+        self.check_code(*canonical_huffman(freq))
+
+    def test_random_freq(self):
+        for n in 2, 3, 5, randint(50, 200):
+            freq = {i: random() for i in range(n)}
+            self.check_code(*canonical_huffman(freq))
+
+
+tests.append(TestsCanonicalHuffman)
 
 # ---------------------------------------------------------------------------
 
