@@ -836,7 +836,7 @@ in a binary stream.  Use `vl_decode()` for decoding.");
    The decode iterator object includes the Huffman code decoding tables:
    - count[1..MAXBITS] is the number of symbols of each length, which for a
      canonical code are stepped through in order.  count[0] is not used.
-   - symbol is a Python sequence of the symbol values in canonical order
+   - symbol is a Python sequence of the symbols in canonical order
      where the number of entries is the sum of the counts in count[].
  */
 #define MAXBITS  31                  /* maximum bits in a code */
@@ -943,9 +943,9 @@ chdi_new(PyObject *module, PyObject *args)
 PyDoc_STRVAR(chdi_doc,
 "canonical_decode(bitarray, count, symbol, /) -> iterator\n\
 \n\
-Decode bitarray which was encoded using a canonical Huffman code\n\
-with `count` (a sequence of the number of bit count for each code length)\n\
-and `symbol` (a sequence of symbols).");
+Decode bitarray using canonical Huffman decoding tables\n\
+where `count` is a sequence containing the number of symbols of each length\n\
+and `symbol` is a sequence of symbols in canonical order.");
 
 /* This function is based on the function decode() in:
    https://github.com/madler/zlib/blob/master/contrib/puff/puff.c */
