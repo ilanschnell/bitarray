@@ -904,10 +904,10 @@ chdi_new(PyObject *module, PyObject *args)
         return NULL;
     if (!PySequence_Check(count))
         return PyErr_Format(PyExc_TypeError, "sequence expected for count, "
-                            "got %s", Py_TYPE(count)->tp_name);
+                            "got '%s'", Py_TYPE(count)->tp_name);
     if (!PySequence_Check(symbol))
         return PyErr_Format(PyExc_TypeError, "sequence expected for symbol, "
-                            "got %s", Py_TYPE(symbol)->tp_name);
+                            "got '%s'", Py_TYPE(symbol)->tp_name);
 
     it = PyObject_GC_New(chdi_obj, &CHDI_Type);
     if (it == NULL)

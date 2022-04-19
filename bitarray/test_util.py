@@ -1646,6 +1646,23 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         self.assertEqual(bytearray(canonical_decode(a, count, symbol)), msg)
         self.check_code(codedict, count, symbol)
 
+    def test_canonical_decode_symbol_change(self):
+        msg = bytearray(b"Hello World!")
+        codedict, count, symbol = canonical_huffman(Counter(msg))
+        self.check_code(codedict, count, symbol)
+        a = bitarray()
+        a.encode(codedict, 10 * msg)
+
+        it = canonical_decode(a, count, symbol)
+        def decode_one_msg():
+            return bytearray(next(it) for _ in range(len(msg)))
+
+        self.assertEqual(decode_one_msg(), msg)
+        symbol[symbol.index(ord("l"))] = ord("k")
+        self.assertEqual(decode_one_msg(), bytearray(b"Hekko Workd!"))
+        del symbol[:]
+        self.assertRaises(IndexError, decode_one_msg)
+
     def ensure_sorted(self, chc, symbol):
         # ensure codes are sorted
         for i in range(len(symbol) - 1):
