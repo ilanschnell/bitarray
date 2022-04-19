@@ -904,15 +904,16 @@ chdi_new(PyObject *module, PyObject *args)
     if (ensure_bitarray(a) < 0)
         return NULL;
     if (!PySequence_Check(count))
-        return PyErr_Format(PyExc_TypeError, "'%s' is not a sequence",
-                            Py_TYPE(count)->tp_name);
-    if (!PySequence_Check(symbol))
-        return PyErr_Format(PyExc_TypeError, "'%s' is not a sequence",
-                            Py_TYPE(symbol)->tp_name);
+        return PyErr_Format(PyExc_TypeError, "count expected to be sequence, "
+                            "got '%s'", Py_TYPE(count)->tp_name);
+
+    symbol = PySequence_Fast(symbol, "symbol not iterable");
+    if (symbol == NULL)
+        return NULL;
 
     it = PyObject_GC_New(chdi_obj, &CHDI_Type);
     if (it == NULL)
-        return NULL;
+        goto error;
 
     if ((count_sum = set_count(it->count, count)) < 0)
         goto error;
@@ -925,7 +926,6 @@ chdi_new(PyObject *module, PyObject *args)
     Py_INCREF(a);
     it->array = (bitarrayobject *) a;
     it->index = 0;
-    Py_INCREF(symbol);
     it->symbol = symbol;
 
     PyObject_GC_Track(it);
@@ -933,6 +933,7 @@ chdi_new(PyObject *module, PyObject *args)
 
  error:
     it->array = NULL;
+    Py_XDECREF(symbol);
     it->symbol = NULL;
     Py_DECREF((PyObject *) it);
     return NULL;
@@ -966,7 +967,7 @@ chdi_next(chdi_obj *it)
         count = it->count[len];
         assert(code - first >= 0);
         if (code - first < count) {   /* if length len, return symbol */
-            return PySequence_GetItem(it->symbol, index + (code - first));
+            return PySequence_ITEM(it->symbol, index + (code - first));
         }
         index += count;               /* else update for next length */
         first += count;

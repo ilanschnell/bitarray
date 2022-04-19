@@ -1582,7 +1582,7 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         # count not sequence
         self.assertRaises(TypeError, canonical_decode, a, {0, 1}, ['a'])
         # symbol not sequence
-        self.assertRaises(TypeError, canonical_decode, a, [0, 1], {'a'})
+        self.assertRaises(TypeError, canonical_decode, a, [0, 1], 43)
         # negative count
         self.assertRaises(ValueError, canonical_decode, a, [0, -1], ['a'])
         # count list too long
@@ -1600,13 +1600,14 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
 
     def test_canonical_decode_simple(self):
         # symbols can be anything, they do not even have to be hashable here
+        cnt = [0, 0, 4]
         s = ['A', 42, [1.2-3.7j, 4j], {'B': 6}]
         a = bitarray('00 01 10 11')
         # count can be a list
-        self.assertEqual(list(canonical_decode(a, [0, 0, 4], s)), s)
+        self.assertEqual(list(canonical_decode(a, cnt, s)), s)
         # count can also be a tuple (any sequence object in fact)
         self.assertEqual(list(canonical_decode(a, (0, 0, 4), s)), s)
-        self.assertEqual(list(canonical_decode(7 * a, [0, 0, 4], s)), 7 * s)
+        self.assertEqual(list(canonical_decode(7 * a, cnt, s)), 7 * s)
         # the count list may have extra 0's at the end (but not too many)
         count = [0, 0, 4, 0, 0, 0, 0, 0]
         self.assertEqual(list(canonical_decode(a, count, s)), s)
@@ -1614,6 +1615,15 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         self.assertEqual(list(canonical_decode(a, [-47, 0, 4], s)), s)
         # in fact it can be anything, as it is entirely ignored
         self.assertEqual(list(canonical_decode(a, [s, 0, 4], s)), s)
+        # the symbol argument can be any sequence object
+        s = [65, 66, 67, 98]
+        self.assertEqual(list(canonical_decode(a, cnt, s)), s)
+        self.assertEqual(list(canonical_decode(a, cnt, bytearray(s))), s)
+        self.assertEqual(list(canonical_decode(a, cnt, tuple(s))), s)
+        if sys.version_info[0] == 3:
+            self.assertEqual(list(canonical_decode(a, cnt, bytes(s))), s)
+        # the symbol can also be an iterable
+        self.assertEqual(list(canonical_decode(a, cnt, iter(s))), s)
 
     def test_canonical_decode_empty(self):
         a = bitarray()
