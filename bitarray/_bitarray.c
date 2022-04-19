@@ -1244,7 +1244,7 @@ Reverse all bits in the array (in-place).");
 
 
 /* given either an int (0 or 1) or a non-empty bitarray,
-   return a bitarrayobject */
+   return a bitarrayobject (with a new reference) */
 static bitarrayobject *
 searcharg(PyObject *x)
 {
@@ -2986,7 +2986,7 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
 
     Py_INCREF(self);
     it->bao = self;
-    /* searcharg() returns xa with the added reference, so no incref here */
+    /* searcharg() returns a new reference, so no Py_INCREF here */
     it->xa = xa;
     it->p = 0;                  /* start search at position 0 */
     PyObject_GC_Track(it);

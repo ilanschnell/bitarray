@@ -926,6 +926,7 @@ chdi_new(PyObject *module, PyObject *args)
     Py_INCREF(a);
     it->array = (bitarrayobject *) a;
     it->index = 0;
+    /* PySequence_Fast() returns a new reference, so no Py_INCREF here */
     it->symbol = symbol;
 
     PyObject_GC_Track(it);
