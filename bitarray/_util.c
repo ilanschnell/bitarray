@@ -886,7 +886,7 @@ set_count(int *count, PyObject *sequence)
                 return -1;
             }
         }
-        count[i] = c;
+        count[i] = (int) c;
         res += c;
     }
     return res;
