@@ -1,6 +1,9 @@
-2022-XX-XX   2.5.0:
+2022-04-XX   2.5.0:
 -------------------
-  * add creation of canonical Huffman codes and decoding thereof, #173
+  * add calculating of canonical Huffman codes `util.canonical_huffman()`
+    and decoding thereof `util.canonical_decode()`, see #173
+  * allow creating "Huffman codes" from frequency maps with a single symbol
+    in `util.huffman_code()` and `util.canonical_huffman()`, see #172
   * optimize `.bytereverse()`
   * optimize `delslice()` for cases like `del a[1:17:2]` when `a` is large
   * fix `examples/huffman/compress.py` to handle files with 0 or 1 characters,

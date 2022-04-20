@@ -390,7 +390,7 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
     if len(__freq_map) < 2:
         if len(__freq_map) == 0:
             raise ValueError("cannot create Huffman code with no symbols")
-        # technically not a Huffman tree but what one would expect
+        # n = 1: technically not a Huffman code but what one would expect
         return {list(__freq_map)[0]: b0}
 
     result = {}
@@ -424,7 +424,7 @@ Note: the two lists may be used as input for `canonical_decode()`.
     if len(__freq_map) < 2:
         if len(__freq_map) == 0:
             raise ValueError("cannot create Huffman code with no symbols")
-        # technically not a Huffman tree but what one would expect
+        # n = 1: technically not a Huffman code but what one would expect
         sym = list(__freq_map)[0]
         return {sym: bitarray('0', 'big')}, [0, 1], [sym]
 
