@@ -1591,16 +1591,21 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
 
     def test_canonical_decode_errors(self):
         a = bitarray('1101')
+        s = ['a']
         # bitarray not of bitarray type
-        self.assertRaises(TypeError, canonical_decode, '11', [0, 1], ['a'])
+        self.assertRaises(TypeError, canonical_decode, '11', [0, 1], s)
         # count not sequence
-        self.assertRaises(TypeError, canonical_decode, a, {0, 1}, ['a'])
+        self.assertRaises(TypeError, canonical_decode, a, {0, 1}, s)
+        # count element not an int
+        self.assertRaises(TypeError, canonical_decode, a, [0, 1.0], s)
+        # count element overflow
+        self.assertRaises(OverflowError, canonical_decode, a, [0, 1 << 65], s)
+        # negative count
+        self.assertRaises(ValueError, canonical_decode, a, [0, -1], s)
+        # count list too long
+        self.assertRaises(ValueError, canonical_decode, a, 32 * [0], s)
         # symbol not sequence
         self.assertRaises(TypeError, canonical_decode, a, [0, 1], 43)
-        # negative count
-        self.assertRaises(ValueError, canonical_decode, a, [0, -1], ['a'])
-        # count list too long
-        self.assertRaises(ValueError, canonical_decode, a, 32 * [0], [])
 
         symbol = ['a', 'b', 'c', 'd']
         # sum(count) != len(symbol)
@@ -1649,6 +1654,12 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
     def test_canonical_decode_empty(self):
         a = bitarray()
         self.assertEqual(list(canonical_decode(a, [], [])), [])
+        a.append(0)
+        self.assertRaisesMessage(ValueError, "reached end of bitarray",
+                                 list, canonical_decode(a, [], []))
+        a = bitarray(31 * '0')
+        self.assertRaisesMessage(ValueError, "ran out of codes",
+                                 list, canonical_decode(a, [], []))
 
     def test_canonical_decode_one_symbol(self):
         symbols = ['A']

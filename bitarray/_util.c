@@ -876,7 +876,7 @@ set_count(int *count, PyObject *sequence)
 
             if (item == NULL)
                 return -1;
-            c = PyNumber_AsSsize_t(item, NULL);
+            c = PyNumber_AsSsize_t(item, PyExc_OverflowError);
             Py_DECREF(item);
             if (c == -1 && PyErr_Occurred())
                 return -1;
