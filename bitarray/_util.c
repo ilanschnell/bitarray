@@ -845,7 +845,7 @@ typedef struct {
     PyObject_HEAD
     bitarrayobject *array;           /* bitarray we're decoding */
     Py_ssize_t index;                /* current index in bitarray */
-    Py_ssize_t count[MAXBITS + 1];   /* number of symbols of each length */
+    int count[MAXBITS + 1];          /* number of symbols of each length */
     PyObject *symbol;                /* canonical ordered symbols */
 } chdi_obj;                          /* canonical Huffman decode iterator */
 
@@ -853,9 +853,10 @@ static PyTypeObject CHDI_Type;
 
 /* set elements in count (from seq) and return their sum, or -1 on error */
 static Py_ssize_t
-set_count(Py_ssize_t *count, PyObject *sequence)
+set_count(int *count, PyObject *sequence)
 {
-    Py_ssize_t i, n, c, res = 0;
+    Py_ssize_t n, c, res = 0;
+    int i;
 
     n = PySequence_Size(sequence);
     if (n < 0)
@@ -880,7 +881,7 @@ set_count(Py_ssize_t *count, PyObject *sequence)
             if (c == -1 && PyErr_Occurred())
                 return -1;
             if (c < 0 || c > maxcount) {
-                PyErr_Format(PyExc_ValueError, "count[%zd] cannot be negative"
+                PyErr_Format(PyExc_ValueError, "count[%d] cannot be negative"
                              " or larger than %zd, got %zd", i, maxcount, c);
                 return -1;
             }
@@ -953,11 +954,11 @@ static PyObject *
 chdi_next(chdi_obj *it)
 {
     Py_ssize_t nbits = it->array->nbits;
-    Py_ssize_t len;    /* current number of bits in code */
-    Py_ssize_t code;   /* current code (of len bits) */
-    Py_ssize_t first;  /* first code of length len */
-    Py_ssize_t count;  /* number of codes of length len */
-    Py_ssize_t index;  /* index of first code of length len in symbol list */
+    int len;    /* current number of bits in code */
+    int code;   /* current code (of len bits) */
+    int first;  /* first code of length len */
+    int count;  /* number of codes of length len */
+    int index;  /* index of first code of length len in symbol list */
 
     if (it->index >= nbits)           /* no bits - stop iteration */
         return NULL;
