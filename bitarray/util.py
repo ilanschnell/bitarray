@@ -426,7 +426,7 @@ Note: the two lists may be used as input for `canonical_decode()`.
             raise ValueError("cannot create Huffman code with no symbols")
         # technically not a Huffman tree but what one would expect
         sym = list(__freq_map)[0]
-        return {sym: bitarray('0')}, [0, 1], [sym]
+        return {sym: bitarray('0', 'big')}, [0, 1], [sym]
 
     code_length = {}  # map symbols to their code length
 

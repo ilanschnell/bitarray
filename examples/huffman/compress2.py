@@ -13,12 +13,10 @@ from bitarray.util import (serialize, deserialize,
                            canonical_huffman, canonical_decode)
 
 def create_code(cnt):
-    if len(cnt) > 1:
+    if len(cnt) > 0:
         return canonical_huffman(cnt)
-    # special case for when we encode an empty file or a file with only
-    # one character (possibly many of the same single character, e.g. "aaa")
-    sym = list(cnt)[0] if cnt else 0
-    return {sym: bitarray('0')}, [0, 1], [sym]
+    # special case for empty file
+    return {0: bitarray('0')}, [0, 1], [0]
 
 def encode(filename):
     with open(filename, 'rb') as fi:
