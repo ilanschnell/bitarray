@@ -379,16 +379,20 @@ calculate the Huffman code, i.e. a dict mapping those symbols to
 bitarrays (with given endianness).  Note that the symbols are not limited
 to being strings.  Symbols may may be any hashable object (such as `None`).
 """
-
     if not isinstance(__freq_map, dict):
         raise TypeError("dict expected, got '%s'" % type(__freq_map).__name__)
-    if len(__freq_map) == 0:
-        raise ValueError("non-empty dict expected")
     if endian is None:
         endian = get_default_endian()
 
     b0 = bitarray('0', endian)
     b1 = bitarray('1', endian)
+
+    if len(__freq_map) < 2:
+        if len(__freq_map) == 0:
+            raise ValueError("cannot create Huffman code with no symbols")
+        # technically not a Huffman tree but what one would expect
+        return {list(__freq_map)[0]: b0}
+
     result = {}
 
     def traverse(nd, prefix=bitarray(0, endian)):
@@ -416,8 +420,13 @@ Note: the two lists may be used as input for `canonical_decode()`.
 """
     if not isinstance(__freq_map, dict):
         raise TypeError("dict expected, got '%s'" % type(__freq_map).__name__)
+
     if len(__freq_map) < 2:
-        raise ValueError("at least 2 symbols expected in frequency map")
+        if len(__freq_map) == 0:
+            raise ValueError("cannot create Huffman code with no symbols")
+        # technically not a Huffman tree but what one would expect
+        sym = list(__freq_map)[0]
+        return {sym: bitarray('0')}, [0, 1], [sym]
 
     code_length = {}  # map symbols to their code length
 

@@ -1473,16 +1473,6 @@ class TestsHuffman(unittest.TestCase):
         self.assertEqual(len(code['as']), 2)
         self.assertEqual(len(code[None]), 2)
 
-    def test_tiny(self):
-        code = huffman_code({0: 0})
-        self.assertEqual(len(code), 1)
-        self.assertEqual(code, {0: bitarray()})
-
-        code = huffman_code({0: 0, 1: 0})
-        self.assertEqual(len(code), 2)
-        for i in range(2):
-            self.assertEqual(len(code[i]), 1)
-
     def test_endianness(self):
         freq = {'A': 10, 'B': 2, 'C': 5}
         for endian in 'big', 'little':
@@ -1497,7 +1487,19 @@ class TestsHuffman(unittest.TestCase):
         self.assertRaises(TypeError, huffman_code, None)
         # cannot compare 'a' with 1
         self.assertRaises(TypeError, huffman_code, {'A': 'a', 'B': 1})
+        # frequency map cannot be empty
         self.assertRaises(ValueError, huffman_code, {})
+
+    def test_one_symbol(self):
+        cnt = {'a': 1}
+        code = huffman_code(cnt)
+        self.assertEqual(code, {'a': bitarray('0')})
+        for n in range(4):
+            msg = n * ['a']
+            a = bitarray()
+            a.encode(code, msg)
+            self.assertEqual(a.to01(), n * '0')
+            self.assertEqual(a.decode(code), msg)
 
     def check_tree(self, code):
         n = len(code)
@@ -1568,12 +1570,24 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
 
     def test_canonical_huffman_errors(self):
         self.assertRaises(TypeError, canonical_huffman, [])
+        # frequency map cannot be empty
         self.assertRaises(ValueError, canonical_huffman, {})
         self.assertRaises(TypeError, canonical_huffman)
         cnt = huffman_code(Counter('aabc'))
         self.assertRaises(TypeError, canonical_huffman, cnt, 'a')
-        cnt = {'a': 1}  # only one symbol
-        self.assertRaises(ValueError, canonical_huffman, cnt)
+
+    def test_one_symbol(self):
+        cnt = {'a': 1}
+        chc, count, symbol = canonical_huffman(cnt)
+        self.assertEqual(chc, {'a': bitarray('0')})
+        self.assertEqual(count, [0, 1])
+        self.assertEqual(symbol, ['a'])
+        for n in range(4):
+            msg = n * ['a']
+            a = bitarray()
+            a.encode(chc, msg)
+            self.assertEqual(a.to01(), n * '0')
+            self.assertEqual(list(canonical_decode(a, count, symbol)), msg)
 
     def test_canonical_decode_errors(self):
         a = bitarray('1101')
