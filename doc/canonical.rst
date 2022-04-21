@@ -73,3 +73,19 @@ tables ``count`` and ``symbol`` instead:
     >>> from bitarray.util import canonical_decode
     >>> ''.join(canonical_decode(a, count, symbol))
     'abracadabra'
+
+
+Side note on DEFLATE:
+---------------------
+
+DEFLATE is a lossless data compression file format that uses a combination
+of LZ77 and Huffman coding.  It is used by ``gzip`` and implemented
+in ``zlib``.  A DEFLATE block, consists of a 3 bit header.  The static and
+the dynamic Huffman compressed blocks contain a Huffman encoded data.
+In addition to the 256 literal (byte) symbols, 1 stop symbol are 29 LZ77
+match length symbols.  When a LZ77 symbol is encountered, more bits may be
+read from the stream before continuing with decoding the next element in
+the stream.  The fact that extra bits are taken from the stream make our
+decode function (``canonical_decode()``) unsuitable for DEFLATE (or at least
+inefficient as we would have to create a new iterator for decoding each
+symbol).
