@@ -390,7 +390,12 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
     if len(__freq_map) < 2:
         if len(__freq_map) == 0:
             raise ValueError("cannot create Huffman code with no symbols")
-        # n = 1: technically not a Huffman code but what one would expect
+        # Only one symbol: Normally if only one symbol is given, the code
+        # could be represented with zero bits.  However here, the code should
+        # be at least one bit for the .encode() and .decode() methods to work.
+        # So we represent the symbol by a single code of length one, in
+        # particular one 0 bit.  This is an incomplete code, since if a 1 bit
+        # is received, it has no meaning and will result in an error.
         return {list(__freq_map)[0]: b0}
 
     result = {}
@@ -424,7 +429,7 @@ Note: the two lists may be used as input for `canonical_decode()`.
     if len(__freq_map) < 2:
         if len(__freq_map) == 0:
             raise ValueError("cannot create Huffman code with no symbols")
-        # n = 1: technically not a Huffman code but what one would expect
+        # Only one symbol: see note above in huffman_code()
         sym = list(__freq_map)[0]
         return {sym: bitarray('0', 'big')}, [0, 1], [sym]
 

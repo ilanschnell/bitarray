@@ -1500,6 +1500,9 @@ class TestsHuffman(unittest.TestCase):
             a.encode(code, msg)
             self.assertEqual(a.to01(), n * '0')
             self.assertEqual(a.decode(code), msg)
+            a.append(1)
+            self.assertRaises(ValueError, a.decode, code)
+            self.assertRaises(ValueError, list, a.iterdecode(code))
 
     def check_tree(self, code):
         n = len(code)
@@ -1588,6 +1591,9 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
             a.encode(chc, msg)
             self.assertEqual(a.to01(), n * '0')
             self.assertEqual(list(canonical_decode(a, count, symbol)), msg)
+            a.append(1)
+            self.assertRaises(ValueError, list,
+                              canonical_decode(a, count, symbol))
 
     def test_canonical_decode_errors(self):
         a = bitarray('1101')
