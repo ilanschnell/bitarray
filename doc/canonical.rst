@@ -83,7 +83,7 @@ of LZ77 and Huffman coding.  It is used by ``gzip`` and implemented
 in ``zlib``.  The format is organized in blocks, which contain Huffman
 encoded data (except for raw blocks).  In addition to symbols that represent
 bytes, there is a stop symbol and up to 29 LZ77 match length symbols.
-When a LZ77 symbol is encountered, more bits may be read from the stream
+When a LZ77 symbol is encountered, more bits are read from the stream
 before continuing with decoding the next element in the stream.
 The fact that extra bits are taken from the stream makes our
 decode function (``canonical_decode()``) unsuitable for DEFLATE,
