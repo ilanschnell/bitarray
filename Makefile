@@ -20,7 +20,10 @@ doc: bitarray/_bitarray.so
 
 
 mypy:
-	mypy bitarray/test_*.py examples/*.py examples/huffman/*.py
+	mypy bitarray/*.pyi
+	mypy bitarray/test_*.py
+	mypy examples/*.py
+	mypy examples/huffman/*.py
 
 
 clean:
