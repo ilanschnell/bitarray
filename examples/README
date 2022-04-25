@@ -1,3 +1,6 @@
+All files under this 'examples/' directory are unsupported.
+
+
 base-n.py:
     Simple illustration of ASCII encoding bitarrays to bases
     of 2, 4, 8, 16, 32 and 64.
