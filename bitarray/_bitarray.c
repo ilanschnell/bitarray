@@ -164,14 +164,14 @@ static void
 bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
     static char trans[256];
-    static int setup = 0;
+    static int virgin = 1;
     Py_ssize_t i;
     char *cp, *buff = self->ob_item;
 
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
 
-    if (!setup) {
+    if (virgin) {
         /* setup translation table, which maps each byte to it's reversed:
            trans = {0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, ..., 0xff} */
         int j, k;
@@ -182,7 +182,7 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
                 if (1 << (7 - j) & k)
                     trans[k] |= 1 << j;
         }
-        setup = 1;
+        virgin = 0;  /* do this just once */
     }
 
     for (i = a; i < b; i++) {
