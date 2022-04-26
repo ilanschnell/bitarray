@@ -602,6 +602,25 @@ set_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
     return 0;
 }
 
+/* set s and n to the contents of a PyBytes or PyByteArray object */
+static int
+bytes_as_string(PyObject *obj, char **s, Py_ssize_t *n)
+{
+    if (PyBytes_Check(obj)) {
+        *n = PyBytes_Size(obj);
+        *s = PyBytes_AsString(obj);
+        return 0;
+    }
+    if (PyByteArray_Check(obj)) {
+        *n = PyByteArray_Size(obj);
+        *s = PyByteArray_AsString(obj);
+        return 0;
+    }
+    PyErr_Format(PyExc_TypeError, "bytes or bytearray expected, got %s",
+                 Py_TYPE(obj)->tp_name);
+    return -1;
+}
+
 static int
 extend_bitarray(bitarrayobject *self, bitarrayobject *other)
 {
@@ -1404,13 +1423,12 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
 {
     Py_ssize_t nbytes;          /* number of bytes we add to self */
     Py_ssize_t t, p;
+    char *s;
 
     RAISE_IF_READONLY(self, NULL);
-    if (!PyBytes_Check(bytes))
-        return PyErr_Format(PyExc_TypeError, "bytes expected, not %s",
-                            Py_TYPE(bytes)->tp_name);
+    if (bytes_as_string(bytes, &s, &nbytes) < 0)
+        return NULL;
 
-    nbytes = PyBytes_GET_SIZE(bytes);
     if (nbytes == 0)
         Py_RETURN_NONE;
 
@@ -1426,8 +1444,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
         return NULL;
     assert(self->nbits % 8 == 0);
 
-    memcpy(self->ob_item + (Py_SIZE(self) - nbytes),
-           PyBytes_AS_STRING(bytes), (size_t) nbytes);
+    memcpy(self->ob_item + (Py_SIZE(self) - nbytes), s, (size_t) nbytes);
 
     if (delete_n(self, t, p) < 0)  /* remove padding bits */
         return NULL;
