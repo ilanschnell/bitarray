@@ -1615,16 +1615,12 @@ bitarray_pack(bitarrayobject *self, PyObject *bytes)
     char *data;
 
     RAISE_IF_READONLY(self, NULL);
-    if (!PyBytes_Check(bytes))
-        return PyErr_Format(PyExc_TypeError, "bytes expected, not %s",
-                            Py_TYPE(bytes)->tp_name);
-
-    nbytes = PyBytes_GET_SIZE(bytes);
+    if (bytes_as_string(bytes, &data, &nbytes) < 0)
+        return NULL;
 
     if (resize(self, nbits + nbytes) < 0)
         return NULL;
 
-    data = PyBytes_AS_STRING(bytes);
     for (i = 0; i < nbytes; i++)
         setbit(self, nbits + i, data[i]);
 

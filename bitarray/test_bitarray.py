@@ -3262,11 +3262,13 @@ class BytesTests(unittest.TestCase, Util):
             self.assertEQUAL(a, bitarray('01'))
             a.pack(b'\x01\x00\x7a')
             self.assertEQUAL(a, bitarray('01101'))
+            a.pack(bytearray([0x01, 0x00, 0xff, 0xa7]))
+            self.assertEQUAL(a, bitarray('01101 1011'))
             self.check_obj(a)
 
     def test_pack_allbytes(self):
         a = bitarray()
-        a.pack(bytes(bytearray(range(256))))
+        a.pack(bytearray(range(256)))
         self.assertEqual(a, bitarray('0' + 255 * '1'))
         self.check_obj(a)
 
