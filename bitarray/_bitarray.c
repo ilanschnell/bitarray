@@ -602,25 +602,6 @@ set_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
     return 0;
 }
 
-/* set s and n to the buffer contents of a PyBytes or PyByteArray object */
-static int
-bytes_as_string(PyObject *obj, char **s, Py_ssize_t *n)
-{
-    if (PyBytes_Check(obj)) {
-        *n = PyBytes_Size(obj);
-        *s = PyBytes_AsString(obj);
-        return 0;
-    }
-    if (PyByteArray_Check(obj)) {
-        *n = PyByteArray_Size(obj);
-        *s = PyByteArray_AsString(obj);
-        return 0;
-    }
-    PyErr_Format(PyExc_TypeError, "bytes or bytearray expected, got %s",
-                 Py_TYPE(obj)->tp_name);
-    return -1;
-}
-
 static int
 extend_bitarray(bitarrayobject *self, bitarrayobject *other)
 {
@@ -1611,22 +1592,24 @@ using the specified mapping.");
 
 
 static PyObject *
-bitarray_pack(bitarrayobject *self, PyObject *bytes)
+bitarray_pack(bitarrayobject *self, PyObject *buffer)
 {
     const Py_ssize_t nbits = self->nbits;
-    Py_ssize_t nbytes, i;
-    char *str;
+    Py_buffer view;
+    Py_ssize_t i;
 
     RAISE_IF_READONLY(self, NULL);
-    if (bytes_as_string(bytes, &str, &nbytes) < 0)
+    if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
         return NULL;
 
-    if (resize(self, nbits + nbytes) < 0)
+    if (resize(self, nbits + view.len) < 0) {
+        PyBuffer_Release(&view);
         return NULL;
+    }
+    for (i = 0; i < view.len; i++)
+        setbit(self, nbits + i, ((char *) view.buf)[i]);
 
-    for (i = 0; i < nbytes; i++)
-        setbit(self, nbits + i, str[i]);
-
+    PyBuffer_Release(&view);
     Py_RETURN_NONE;
 }
 

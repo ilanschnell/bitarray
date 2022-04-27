@@ -3163,7 +3163,7 @@ class BytesTests(unittest.TestCase, Util):
 
     def test_frombytes_types(self):
         a = bitarray(endian='big')
-        a.frombytes(b'A')  # bytes
+        a.frombytes(b'A')                           # bytes
         self.assertEqual(a, bitarray('01000001'))
         a.frombytes(bytearray([254]))               # bytearray
         self.assertEqual(a, bitarray('01000001 11111110'))
@@ -3174,6 +3174,8 @@ class BytesTests(unittest.TestCase, Util):
         if is_py3k:  # Python 2's array cannot be used as buffer
             a.frombytes(array.array('B', [5, 255, 192]))
             self.assertEqual(a, bitarray('00000101 11111111 11000000'))
+
+        self.check_obj(a)
 
     def test_frombytes_bitarray(self):
         for endian in 'little', 'big':
@@ -3292,6 +3294,21 @@ class BytesTests(unittest.TestCase, Util):
             self.assertEQUAL(a, bitarray('01101 1011'))
             self.check_obj(a)
 
+    def test_pack_types(self):
+        a = bitarray()
+        a.pack(b'\0\x01')                        # bytes
+        self.assertEqual(a, bitarray('01'))
+        a.pack(bytearray([0, 2]))                # bytearray
+        self.assertEqual(a, bitarray('01 01'))
+        a.pack(memoryview(b'\x02\0'))            # memoryview
+        self.assertEqual(a, bitarray('01 01 10'))
+
+        if is_py3k:  # Python 2's array cannot be used as buffer
+            a.pack(array.array('B', [0, 255, 192]))
+            self.assertEqual(a, bitarray('01 01 10 011'))
+
+        self.check_obj(a)
+
     def test_pack_allbytes(self):
         a = bitarray()
         a.pack(bytearray(range(256)))
@@ -3304,7 +3321,7 @@ class BytesTests(unittest.TestCase, Util):
         if is_py3k:
             self.assertRaises(TypeError, a.pack, '1')
         self.assertRaises(TypeError, a.pack, [1, 3])
-        self.assertRaises(TypeError, a.pack, bitarray())
+
 
 tests.append(BytesTests)
 
