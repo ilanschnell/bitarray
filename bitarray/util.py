@@ -314,17 +314,14 @@ Return a bitarray given the bytes representation returned by `serialize()`.
 def vl_decode(__stream, endian=None):
     """vl_decode(stream, /, endian=None) -> bitarray
 
-Decode binary stream (an integer iterator, or bytes object), and return
+Decode binary stream (an integer iterator, or bytes-like object), and return
 the decoded bitarray.  This function consumes only one bitarray and leaves
 the remaining stream untouched.  `StopIteration` is raised when no
 terminating byte is found.
 Use `vl_encode()` for encoding.
 """
-    if isinstance(__stream, bytes):
-        __stream = iter(__stream)
-
     a = bitarray(32, get_default_endian() if endian is None else endian)
-    _vl_decode(__stream, a)
+    _vl_decode(iter(__stream), a)
     return a
 
 # ------------------------------ Huffman coding -----------------------------

@@ -976,16 +976,23 @@ class VLFTests(unittest.TestCase, Util):
     def test_decode_args(self):
         if sys.version_info[0] == 3:
             self.assertRaises(TypeError, vl_decode, 'foo')
+            # item not integer
             self.assertRaises(TypeError, vl_decode, iter([b'\x40']))
 
         self.assertRaises(TypeError, vl_decode, b'\x40', 'big', 3)
         self.assertRaises(ValueError, vl_decode, b'\x40', 'foo')
+        # these objects are not iterable
+        for arg in None, 0, 1, 0.0:
+            self.assertRaises(TypeError, vl_decode, arg)
+        # these items cannot be interpreted as ints
         for item in None, 2.34, Ellipsis:
-            self.assertRaises(TypeError, vl_decode, iter([item]))
+            self.assertRaises(TypeError, vl_decode, iter([0x95, item]))
 
-        lst = [b'\xd3\x20', iter(b'\xd3\x20')]
+        b = b'\xd3\x20'
+        lst = [b, iter(b), memoryview(b)]
         if sys.version_info[0] == 3:
             lst.append(iter([0xd3, 0x20]))
+            lst.append(bytearray(b))
         for s in lst:
             a = vl_decode(s, endian=self.random_endian())
             self.assertIsInstance(a, bitarray)

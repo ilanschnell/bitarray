@@ -739,7 +739,7 @@ vl_decode(PyObject *module, PyObject *args)
             b = (unsigned char) *PyBytes_AS_STRING(item);
 #endif
         else {
-            PyErr_Format(PyExc_TypeError, "int (byte) iterator expected, "
+            PyErr_Format(PyExc_TypeError, "int iterator expected, "
                          "got '%s' element", Py_TYPE(item)->tp_name);
             Py_DECREF(item);
             return NULL;
