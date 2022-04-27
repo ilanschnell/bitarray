@@ -3191,8 +3191,10 @@ newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
         return NULL;
 
     obj = (bitarrayobject *) type->tp_alloc(type, 0);
-    if (obj == NULL)
+    if (obj == NULL) {
+        PyBuffer_Release(&view);
         return NULL;
+    }
 
     Py_SET_SIZE(obj, view.len);
     obj->ob_item = (char *) view.buf;
@@ -3206,6 +3208,7 @@ newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
     obj->buffer = (Py_buffer *) PyMem_Malloc(sizeof(Py_buffer));
     if (obj->buffer == NULL) {
         PyObject_Del(obj);
+        PyBuffer_Release(&view);
         return PyErr_NoMemory();
     }
     memcpy(obj->buffer, &view, sizeof(Py_buffer));
