@@ -3177,6 +3177,9 @@ class BytesTests(unittest.TestCase, Util):
 
         self.check_obj(a)
 
+        for x in u'', 0, 1, False, True, None, []:
+            self.assertRaises(TypeError, a.frombytes, x)
+
     def test_frombytes_bitarray(self):
         for endian in 'little', 'big':
             # endianness doesn't matter here as we're writting the buffer

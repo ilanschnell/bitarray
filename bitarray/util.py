@@ -297,10 +297,13 @@ and requires `length` to be provided.
 def deserialize(__b):
     """deserialize(bytes, /) -> bitarray
 
-Return a bitarray given the bytes representation returned by `serialize()`.
+Return a bitarray given a bytes-like representation such as returned
+by `serialize()`.
 """
+    if isinstance(__b, int):  # as bytes(n) will return n NUL bytes
+        raise TypeError("cannot convert 'int' object to bytes")
     if not isinstance(__b, bytes):
-        raise TypeError("bytes expected, got '%s'" % type(__b).__name__)
+        __b = bytes(__b)
     if len(__b) == 0:
         raise ValueError("non-empty bytes expected")
 

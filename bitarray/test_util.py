@@ -1417,7 +1417,7 @@ class TestsSerialization(unittest.TestCase, Util):
 
     def test_zeros_and_ones(self):
         for endian in 'little', 'big':
-            for n in range(100):
+            for n in range(50):
                 a = zeros(n, endian)
                 s = serialize(a)
                 self.assertIsInstance(s, bytes)
@@ -1426,11 +1426,33 @@ class TestsSerialization(unittest.TestCase, Util):
                 a.setall(1)
                 self.assertEQUAL(a, deserialize(serialize(a)))
 
-    def test_wrong_args(self):
-        self.assertRaises(TypeError, serialize, '0')
+    def test_serialize_args(self):
+        for x in '0', 0, 1, b'\x00', 0.0, [0, 1], bytearray([0]):
+            self.assertRaises(TypeError, serialize, x)
+        # no arguments
+        self.assertRaises(TypeError, serialize)
+        # too many arguments
         self.assertRaises(TypeError, serialize, bitarray(), 1)
-        self.assertRaises(TypeError, deserialize, u'01')
+
+    def test_deserialize_args(self):
+        if sys.version_info[0] == 2:
+            # On Python 2, bytes(x) is the string representation of x,
+            # so x can almost be of any type.  And the string representation
+            # of these object will cause ValueErrors in bitarray(x).
+            # Instead of adding special cases in deserialize() or here,
+            # we decided to skip these tests for Python 2 altogether.
+            return
+
+        for x in 0, 1, False, True, None, u'', u'01', 0.0, [0, 0.6]:
+            self.assertRaises(TypeError, deserialize, x)
         self.assertRaises(TypeError, deserialize, b'\x00', 1)
+        self.assertRaises(ValueError, deserialize, [0, 256])
+
+        b = b'\x03\x06'
+        for s in b, bytearray(b), memoryview(b), iter(b):
+            a = deserialize(s)
+            self.assertEqual(a.endian(), 'little')
+            self.assertEqual(a, bitarray('01100'))
 
     def test_invalid_bytes(self):
         self.assertRaises(ValueError, deserialize, b'')
