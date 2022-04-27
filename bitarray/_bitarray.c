@@ -1419,18 +1419,14 @@ which may cause a memory error if the bitarray is very large.");
 
 
 static PyObject *
-bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
+bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
 {
-    Py_ssize_t nbytes;          /* number of bytes we add to self */
+    Py_buffer view;
     Py_ssize_t t, p;
-    char *str;
 
     RAISE_IF_READONLY(self, NULL);
-    if (bytes_as_string(bytes, &str, &nbytes) < 0)
+    if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
         return NULL;
-
-    if (nbytes == 0)
-        Py_RETURN_NONE;
 
     /* Before we extend the raw bytes with the new data, we need to store
        the current size and padding, as the bitarray size might not be
@@ -1440,23 +1436,30 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     p = 8 * BYTES(t) - t;     /* number of pad bits */
     assert(0 <= p && p < 8 && t + p == 8 * Py_SIZE(self));
 
-    if (resize(self, t + p + 8 * nbytes) < 0)
-        return NULL;
+    if (resize(self, t + p + 8 * view.len) < 0)
+        goto error;
     assert(self->nbits % 8 == 0);
 
-    memcpy(self->ob_item + (Py_SIZE(self) - nbytes), str, (size_t) nbytes);
+    memcpy(self->ob_item + (Py_SIZE(self) - view.len),
+           (char *) view.buf, (size_t) view.len);
 
     if (delete_n(self, t, p) < 0)  /* remove padding bits */
-        return NULL;
-    assert(self->nbits == t + 8 * nbytes);
+        goto error;
+    assert(self->nbits == t + 8 * view.len);
+
+    PyBuffer_Release(&view);
     Py_RETURN_NONE;
+
+ error:
+    PyBuffer_Release(&view);
+    return NULL;
 }
 
 PyDoc_STRVAR(frombytes_doc,
 "frombytes(bytes, /)\n\
 \n\
-Extend bitarray with raw bytes.  That is, each append byte will add eight\n\
-bits to the bitarray.");
+Extend bitarray with raw bytes from a bytes-like object.\n\
+Each append byte will add eight bits to the bitarray.");
 
 
 static PyObject *

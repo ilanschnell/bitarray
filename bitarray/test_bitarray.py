@@ -3161,6 +3161,32 @@ class BytesTests(unittest.TestCase, Util):
                                      endian='big'))
         self.assertTrue(b is a)
 
+    def test_frombytes_types(self):
+        a = bitarray(endian='big')
+        a.frombytes(b'A')  # bytes
+        self.assertEqual(a, bitarray('01000001'))
+        a.frombytes(bytearray([254]))               # bytearray
+        self.assertEqual(a, bitarray('01000001 11111110'))
+        a.frombytes(memoryview(b'C'))               # memoryview
+        self.assertEqual(a, bitarray('01000001 11111110 01000011'))
+
+        a.clear()
+        if is_py3k:  # Python 2's array cannot be used as buffer
+            a.frombytes(array.array('B', [5, 255, 192]))
+            self.assertEqual(a, bitarray('00000101 11111111 11000000'))
+
+    def test_frombytes_bitarray(self):
+        for endian in 'little', 'big':
+            # endianness doesn't matter here as we're writting the buffer
+            # from bytes, and then getting the memoryview
+            b = bitarray(0, endian)
+            b.frombytes(b'ABC')
+
+            a = bitarray(0, 'big')
+            a.frombytes(bitarray(b))
+            self.assertEqual(a.endian(), 'big')
+            self.assertEqual(a, bitarray('01000001 01000010 01000011'))
+
     def test_frombytes_empty(self):
         for a in self.randombitarrays():
             b = a.copy()
@@ -3183,7 +3209,7 @@ class BytesTests(unittest.TestCase, Util):
                 a = bitarray(endian=b.endian())
                 a.frombytes(s)
                 c = b.copy()
-                b.frombytes(bytearray(s))  # from bytearray
+                b.frombytes(s)
                 self.assertEQUAL(b[-len(a):], a)
                 self.assertEQUAL(b[:-len(a)], c)
                 self.assertEQUAL(b, c + a)
