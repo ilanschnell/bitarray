@@ -6,6 +6,7 @@
     in `util.huffman_code()` and `util.canonical_huffman()`, see #172
   * allow bytes-like argument in `.frombytes()` and `.pack()` - previously,
     the arguments were limited to the `bytes` object, see #174
+  * add [DEFLATE decompression](../examples/puff/) example
   * optimize `.bytereverse()`
   * optimize `delslice()` for cases like `del a[1:17:2]` when `a` is large
   * fix `examples/huffman/compress.py` to handle files with 0 or 1 characters,

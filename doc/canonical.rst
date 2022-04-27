@@ -86,6 +86,8 @@ bytes, there is a stop symbol and up to 29 LZ77 match length symbols.
 When a LZ77 symbol is encountered, more bits are read from the stream
 before continuing with decoding the next element in the stream.
 The fact that extra bits are taken from the stream makes our
-decode function (``canonical_decode()``) unsuitable for DEFLATE,
+decode function (``canonical_decode()``) unsuitable for DEFLATE decompression,
 or at least inefficient as we would have to create a new iterator for
-decoding each symbol.
+decoding each symbol.  A more efficient implementation can be found
+in  `examples/puff
+<https://github.com/ilanschnell/bitarray/tree/master/examples/puff/>`__

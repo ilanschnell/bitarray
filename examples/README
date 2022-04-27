@@ -61,6 +61,11 @@ pbm.py
     - storing and loading .ppm (P4), which is the same as .pbm, files
 
 
+puff/
+    DEFLATE decompression implemention based on Mark Adler's excellent Puff:
+    https://github.com/madler/zlib/blob/master/contrib/puff/puff.c
+
+
 sieve.py
     Demonstrates the "Sieve of Eratosthenes" algorithm for finding all prime
     numbers up to a specified integer.
