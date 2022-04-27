@@ -1400,19 +1400,14 @@ which may cause a memory error if the bitarray is very large.");
 
 
 static PyObject *
-bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
+bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
 {
-    Py_ssize_t nbytes;          /* number of bytes we add to self */
+    Py_buffer view;
     Py_ssize_t t, p;
 
     RAISE_IF_READONLY(self, NULL);
-    if (!PyBytes_Check(bytes))
-        return PyErr_Format(PyExc_TypeError, "bytes expected, not %s",
-                            Py_TYPE(bytes)->tp_name);
-
-    nbytes = PyBytes_GET_SIZE(bytes);
-    if (nbytes == 0)
-        Py_RETURN_NONE;
+    if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
+        return NULL;
 
     /* Before we extend the raw bytes with the new data, we need to store
        the current size and padding, as the bitarray size might not be
@@ -1422,24 +1417,30 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
     p = 8 * BYTES(t) - t;     /* number of pad bits */
     assert(0 <= p && p < 8 && t + p == 8 * Py_SIZE(self));
 
-    if (resize(self, t + p + 8 * nbytes) < 0)
-        return NULL;
+    if (resize(self, t + p + 8 * view.len) < 0)
+        goto error;
     assert(self->nbits % 8 == 0);
 
-    memcpy(self->ob_item + (Py_SIZE(self) - nbytes),
-           PyBytes_AS_STRING(bytes), (size_t) nbytes);
+    memcpy(self->ob_item + (Py_SIZE(self) - view.len),
+           (char *) view.buf, (size_t) view.len);
 
     if (delete_n(self, t, p) < 0)  /* remove padding bits */
-        return NULL;
-    assert(self->nbits == t + 8 * nbytes);
+        goto error;
+    assert(self->nbits == t + 8 * view.len);
+
+    PyBuffer_Release(&view);
     Py_RETURN_NONE;
+
+ error:
+    PyBuffer_Release(&view);
+    return NULL;
 }
 
 PyDoc_STRVAR(frombytes_doc,
 "frombytes(bytes, /)\n\
 \n\
-Extend bitarray with raw bytes.  That is, each append byte will add eight\n\
-bits to the bitarray.");
+Extend the bitarray with raw bytes from a bytes-like object.\n\
+Each added byte will add eight bits to the bitarray.");
 
 
 static PyObject *
@@ -1591,35 +1592,33 @@ using the specified mapping.");
 
 
 static PyObject *
-bitarray_pack(bitarrayobject *self, PyObject *bytes)
+bitarray_pack(bitarrayobject *self, PyObject *buffer)
 {
     const Py_ssize_t nbits = self->nbits;
-    Py_ssize_t nbytes, i;
-    char *data;
+    Py_buffer view;
+    Py_ssize_t i;
 
     RAISE_IF_READONLY(self, NULL);
-    if (!PyBytes_Check(bytes))
-        return PyErr_Format(PyExc_TypeError, "bytes expected, not %s",
-                            Py_TYPE(bytes)->tp_name);
-
-    nbytes = PyBytes_GET_SIZE(bytes);
-
-    if (resize(self, nbits + nbytes) < 0)
+    if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
         return NULL;
 
-    data = PyBytes_AS_STRING(bytes);
-    for (i = 0; i < nbytes; i++)
-        setbit(self, nbits + i, data[i]);
+    if (resize(self, nbits + view.len) < 0) {
+        PyBuffer_Release(&view);
+        return NULL;
+    }
+    for (i = 0; i < view.len; i++)
+        setbit(self, nbits + i, ((char *) view.buf)[i]);
 
+    PyBuffer_Release(&view);
     Py_RETURN_NONE;
 }
 
 PyDoc_STRVAR(pack_doc,
 "pack(bytes, /)\n\
 \n\
-Extend the bitarray from bytes, where each byte corresponds to a single\n\
-bit.  The byte `b'\\x00'` maps to bit 0 and all other characters map to\n\
-bit 1.\n\
+Extend the bitarray from a bytes-like object, where each byte corresponds\n\
+to a single bit.  The byte `b'\\x00'` maps to bit 0 and all other bytes\n\
+map to bit 1.\n\
 This method, as well as the unpack method, are meant for efficient\n\
 transfer of data between bitarray objects to other python objects\n\
 (for example NumPy's ndarray object) which have a different memory view.");

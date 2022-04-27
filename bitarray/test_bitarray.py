@@ -2734,7 +2734,7 @@ class MethodTests(unittest.TestCase, Util):
     def test_bytereverse_byte(self):
         for i in range(256):
             a = bitarray()
-            a.frombytes(bytes(bytearray([i])))
+            a.frombytes(bytearray([i]))
             self.assertEqual(len(a), 8)
             b = a.copy()
             b.bytereverse()
@@ -2745,7 +2745,7 @@ class MethodTests(unittest.TestCase, Util):
 
     def test_bytereverse_random(self):
         t = bitarray(endian=self.random_endian())
-        t.frombytes(bytes(bytearray(range(256))))
+        t.frombytes(bytearray(range(256)))
         t.bytereverse()
         table = t.tobytes()  # translation table
         self.assertEqual(table[:9], b'\x00\x80\x40\xc0\x20\xa0\x60\xe0\x10')
@@ -2794,7 +2794,7 @@ class CountTests(unittest.TestCase, Util):
     def test_byte(self):
         for i in range(256):
             a = bitarray()
-            a.frombytes(bytes(bytearray([i])))
+            a.frombytes(bytearray([i]))
             self.assertEqual(len(a), 8)
             self.assertEqual(a.count(), bin(i)[2:].count('1'))
 
@@ -3161,10 +3161,47 @@ class BytesTests(unittest.TestCase, Util):
                                      endian='big'))
         self.assertTrue(b is a)
 
+    def test_frombytes_types(self):
+        a = bitarray(endian='big')
+        a.frombytes(b'A')                           # bytes
+        self.assertEqual(a, bitarray('01000001'))
+        a.frombytes(bytearray([254]))               # bytearray
+        self.assertEqual(a, bitarray('01000001 11111110'))
+        a.frombytes(memoryview(b'C'))               # memoryview
+        self.assertEqual(a, bitarray('01000001 11111110 01000011'))
+
+        a.clear()
+        if is_py3k:  # Python 2's array cannot be used as buffer
+            a.frombytes(array.array('B', [5, 255, 192]))
+            self.assertEqual(a, bitarray('00000101 11111111 11000000'))
+
+        self.check_obj(a)
+
+    def test_frombytes_bitarray(self):
+        for endian in 'little', 'big':
+            # endianness doesn't matter here as we're writting the buffer
+            # from bytes, and then getting the memoryview
+            b = bitarray(0, endian)
+            b.frombytes(b'ABC')
+
+            a = bitarray(0, 'big')
+            a.frombytes(bitarray(b))
+            self.assertEqual(a.endian(), 'big')
+            self.assertEqual(a, bitarray('01000001 01000010 01000011'))
+            self.check_obj(a)
+
+    def test_frombytes_self(self):
+        a = bitarray()
+        self.assertRaisesMessage(
+            BufferError,
+            "cannot resize bitarray that is exporting buffers",
+            a.frombytes, a)
+
     def test_frombytes_empty(self):
         for a in self.randombitarrays():
             b = a.copy()
             a.frombytes(b'')
+            a.frombytes(bytearray())
             self.assertEQUAL(a, b)
             self.assertFalse(a is b)
             self.check_obj(a)
@@ -3261,11 +3298,42 @@ class BytesTests(unittest.TestCase, Util):
             self.assertEQUAL(a, bitarray('01'))
             a.pack(b'\x01\x00\x7a')
             self.assertEQUAL(a, bitarray('01101'))
+            a.pack(bytearray([0x01, 0x00, 0xff, 0xa7]))
+            self.assertEQUAL(a, bitarray('01101 1011'))
             self.check_obj(a)
+
+    def test_pack_types(self):
+        a = bitarray()
+        a.pack(b'\0\x01')                        # bytes
+        self.assertEqual(a, bitarray('01'))
+        a.pack(bytearray([0, 2]))                # bytearray
+        self.assertEqual(a, bitarray('01 01'))
+        a.pack(memoryview(b'\x02\0'))            # memoryview
+        self.assertEqual(a, bitarray('01 01 10'))
+
+        if is_py3k:  # Python 2's array cannot be used as buffer
+            a.pack(array.array('B', [0, 255, 192]))
+            self.assertEqual(a, bitarray('01 01 10 011'))
+
+        self.check_obj(a)
+
+    def test_pack_bitarray(self):
+        b = bitarray("00000000 00000001 10000000 11111111 00000000")
+        a = bitarray()
+        a.pack(bitarray(b))
+        self.assertEqual(a, bitarray('01110'))
+        self.check_obj(a)
+
+    def test_pack_self(self):
+        a = bitarray()
+        self.assertRaisesMessage(
+            BufferError,
+            "cannot resize bitarray that is exporting buffers",
+            a.pack, a)
 
     def test_pack_allbytes(self):
         a = bitarray()
-        a.pack(bytes(bytearray(range(256))))
+        a.pack(bytearray(range(256)))
         self.assertEqual(a, bitarray('0' + 255 * '1'))
         self.check_obj(a)
 
@@ -3275,7 +3343,7 @@ class BytesTests(unittest.TestCase, Util):
         if is_py3k:
             self.assertRaises(TypeError, a.pack, '1')
         self.assertRaises(TypeError, a.pack, [1, 3])
-        self.assertRaises(TypeError, a.pack, bitarray())
+
 
 tests.append(BytesTests)
 
