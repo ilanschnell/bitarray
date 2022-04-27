@@ -3188,6 +3188,14 @@ class BytesTests(unittest.TestCase, Util):
             a.frombytes(bitarray(b))
             self.assertEqual(a.endian(), 'big')
             self.assertEqual(a, bitarray('01000001 01000010 01000011'))
+            self.check_obj(a)
+
+    def test_frombytes_self(self):
+        a = bitarray()
+        self.assertRaisesMessage(
+            BufferError,
+            "cannot resize bitarray that is exporting buffers",
+            a.frombytes, a)
 
     def test_frombytes_empty(self):
         for a in self.randombitarrays():
@@ -3308,6 +3316,22 @@ class BytesTests(unittest.TestCase, Util):
             self.assertEqual(a, bitarray('01 01 10 011'))
 
         self.check_obj(a)
+
+    def test_pack_bitarray(self):
+        b = bitarray()
+        b.frombytes(b'\0\x01\xff\0')
+
+        a = bitarray()
+        a.pack(bitarray(b))
+        self.assertEqual(a, bitarray('0110'))
+        self.check_obj(a)
+
+    def test_pack_self(self):
+        a = bitarray()
+        self.assertRaisesMessage(
+            BufferError,
+            "cannot resize bitarray that is exporting buffers",
+            a.pack, a)
 
     def test_pack_allbytes(self):
         a = bitarray()
