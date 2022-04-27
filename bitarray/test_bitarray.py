@@ -3318,12 +3318,10 @@ class BytesTests(unittest.TestCase, Util):
         self.check_obj(a)
 
     def test_pack_bitarray(self):
-        b = bitarray()
-        b.frombytes(b'\0\x01\xff\0')
-
+        b = bitarray("00000000 00000001 10000000 11111111 00000000")
         a = bitarray()
         a.pack(bitarray(b))
-        self.assertEqual(a, bitarray('0110'))
+        self.assertEqual(a, bitarray('01110'))
         self.check_obj(a)
 
     def test_pack_self(self):
