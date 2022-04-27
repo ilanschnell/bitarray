@@ -1439,8 +1439,8 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
 PyDoc_STRVAR(frombytes_doc,
 "frombytes(bytes, /)\n\
 \n\
-Extend bitarray with raw bytes from a bytes-like object.\n\
-Each append byte will add eight bits to the bitarray.");
+Extend the bitarray with raw bytes from a bytes-like object.\n\
+Each added byte will add eight bits to the bitarray.");
 
 
 static PyObject *
@@ -1616,9 +1616,9 @@ bitarray_pack(bitarrayobject *self, PyObject *buffer)
 PyDoc_STRVAR(pack_doc,
 "pack(bytes, /)\n\
 \n\
-Extend the bitarray from bytes, where each byte corresponds to a single\n\
-bit.  The byte `b'\\x00'` maps to bit 0 and all other characters map to\n\
-bit 1.\n\
+Extend the bitarray from a bytes-like object, where each byte corresponds\n\
+to a single bit.  The byte `b'\\x00'` maps to bit 0 and all other bytes\n\
+map to bit 1.\n\
 This method, as well as the unpack method, are meant for efficient\n\
 transfer of data between bitarray objects to other python objects\n\
 (for example NumPy's ndarray object) which have a different memory view.");
