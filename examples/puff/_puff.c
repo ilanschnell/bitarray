@@ -112,7 +112,7 @@ append_byte(state_obj *self, int byte)
     char *cp;
 
     if (byte < 0 || byte > 0xff) {
-        PyErr_Format(PyExc_ValueError, "invalid byte: %zd", byte);
+        PyErr_Format(PyExc_ValueError, "invalid byte: %d", byte);
         return -1;
     }
     if (PyByteArray_Resize(self->out, self->outcnt + 1) < 0) {
@@ -243,7 +243,7 @@ codes(state_obj *s, const struct huffman *lencode,
             symbol -= 257;
             if (symbol >= 29) {
                 PyErr_Format(PyExc_ValueError,
-                             "invalid fixed code: %zd", symbol);
+                             "invalid fixed code: %d", symbol);
                 return -1;
             }
             len = lens[symbol] + read_uint(s, lext[symbol]);
@@ -395,7 +395,7 @@ set_lengths(short *lengths, PyObject *sequence)
             return -1;
         if (len < 0 || len > MAXBITS) {
             PyErr_Format(PyExc_ValueError, "lengths[%d] cannot be negative"
-                         " or larger than %zd, got %zd", i, MAXBITS, len);
+                         " or larger than %d, got %zd", i, MAXBITS, len);
             return -1;
         }
         lengths[i] = (short) len;
