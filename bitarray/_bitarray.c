@@ -602,7 +602,7 @@ set_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
     return 0;
 }
 
-/* set s and n to the contents of a PyBytes or PyByteArray object */
+/* set s and n to the buffer contents of a PyBytes or PyByteArray object */
 static int
 bytes_as_string(PyObject *obj, char **s, Py_ssize_t *n)
 {
@@ -1423,10 +1423,10 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
 {
     Py_ssize_t nbytes;          /* number of bytes we add to self */
     Py_ssize_t t, p;
-    char *s;
+    char *str;
 
     RAISE_IF_READONLY(self, NULL);
-    if (bytes_as_string(bytes, &s, &nbytes) < 0)
+    if (bytes_as_string(bytes, &str, &nbytes) < 0)
         return NULL;
 
     if (nbytes == 0)
@@ -1444,7 +1444,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *bytes)
         return NULL;
     assert(self->nbits % 8 == 0);
 
-    memcpy(self->ob_item + (Py_SIZE(self) - nbytes), s, (size_t) nbytes);
+    memcpy(self->ob_item + (Py_SIZE(self) - nbytes), str, (size_t) nbytes);
 
     if (delete_n(self, t, p) < 0)  /* remove padding bits */
         return NULL;
@@ -1612,17 +1612,17 @@ bitarray_pack(bitarrayobject *self, PyObject *bytes)
 {
     const Py_ssize_t nbits = self->nbits;
     Py_ssize_t nbytes, i;
-    char *data;
+    char *str;
 
     RAISE_IF_READONLY(self, NULL);
-    if (bytes_as_string(bytes, &data, &nbytes) < 0)
+    if (bytes_as_string(bytes, &str, &nbytes) < 0)
         return NULL;
 
     if (resize(self, nbits + nbytes) < 0)
         return NULL;
 
     for (i = 0; i < nbytes; i++)
-        setbit(self, nbits + i, data[i]);
+        setbit(self, nbits + i, str[i]);
 
     Py_RETURN_NONE;
 }
