@@ -1,5 +1,8 @@
 All files under this 'examples/' directory are unsupported.
 
+While bitarray itself still supports Python 2, some of the examples
+may require Python 3, or specific Python 3 versions.
+
 
 base-n.py:
     Simple illustration of ASCII encoding bitarrays to bases
