@@ -307,11 +307,14 @@ by `serialize()`.
     if len(__b) == 0:
         raise ValueError("non-empty bytes expected")
 
-    head = ord(__b[0]) if _is_py2 else __b[0]
-    assert isinstance(head, int)
-    if head >= 32 or head % 16 >= 8:
-        raise ValueError('invalid header byte 0x%02x' % head)
-    return bitarray(__b)
+    if _is_py2:
+        head = ord(__b[0])
+        if head >= 32 or head % 16 >= 8:
+            raise ValueError('invalid header byte: 0x%02x' % head)
+    try:
+        return bitarray(__b)
+    except TypeError:
+        raise ValueError('invalid header byte: 0x%02x' % __b[0])
 
 
 def vl_decode(__stream, endian=None):

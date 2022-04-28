@@ -1457,18 +1457,27 @@ class TestsSerialization(unittest.TestCase, Util):
     def test_invalid_bytes(self):
         self.assertRaises(ValueError, deserialize, b'')
 
+        def check_msg(b):
+            # Python 2: PyErr_Format() seems to handle "0x%02x"
+            # incorrectly.  E.g. instead of "0x01", I get "0x1"
+            if sys.version_info[0] == 3:
+                msg = "invalid header byte: 0x%02x" % b[0]
+                self.assertRaisesMessage(ValueError, msg, deserialize, b)
+
         for i in range(256):
             b = bytes(bytearray([i]))
             if i == 0 or i == 16:
                 self.assertEqual(deserialize(b), bitarray())
             else:
                 self.assertRaises(ValueError, deserialize, b)
+                check_msg(b)
 
             b += b'\0'
             if i < 32 and i % 16 < 8:
                 self.assertEqual(deserialize(b), zeros(8 - i % 8))
             else:
                 self.assertRaises(ValueError, deserialize, b)
+                check_msg(b)
 
     def test_bits_ignored(self):
         # the unused padding bits (with the last bytes) are ignored

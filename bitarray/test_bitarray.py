@@ -471,14 +471,12 @@ class CreateObjectTests(unittest.TestCase, Util):
     def test_rawbytes_invalid(self):
         for s in b'\x01', b'\x04', b'\x07', b'\x11', b'\x15', b'\x17':
             # this error is raised in newbitarray_from_pickle() (C function)
+            self.assertRaises(ValueError, bitarray, s)
+            # Python 2: PyErr_Format() seems to handle "0x%02x"
+            # incorrectly.  E.g. instead of "0x01", I get "0x1"
             if is_py3k:
-                self.assertRaisesMessage(ValueError,
-                                         "invalid header byte: 0x%02x" % s[0],
-                                         bitarray, s)
-            else:
-                # Python 2: PyErr_Format() seems to handle "0x%02x"
-                # incorrectly.  E.g. instead of "0x01", I get "0x1"
-                self.assertRaises(ValueError, bitarray, s)
+                msg = "invalid header byte: 0x%02x" % s[0]
+                self.assertRaisesMessage(ValueError, msg, bitarray, s)
 
             a = bitarray(s + b'\x00')
             head = s[0] if is_py3k else ord(s[0])
