@@ -128,11 +128,34 @@ class TestState(unittest.TestCase):
         # simple sum check, as I didn't want to cut and paste the whole list
         self.assertEqual(sum(length), 2183)
 
+    def test_decode_lengths_error(self):
+        a = bitarray(1000)
+        b = bytearray()
+        s = State(a, b)
+        # nlen > 286 (MAXLCODES)
+        self.assertRaises(ValueError, s.decode_lengths, 19 * [0], 287, 23)
+        # ndist > 30 (MAXDCODES)
+        self.assertRaises(ValueError, s.decode_lengths, 19 * [0], 279, 31)
+        # sequence length not 19
+        self.assertRaises(ValueError, s.decode_lengths, 20 * [0], 279, 23)
+
+    def test_decode_block_error(self):
+        a = bitarray(1000)
+        b = bytearray()
+        s = State(a, b)
+        # nlen > 288 (FIXLCODES)
+        self.assertRaises(ValueError, s.decode_block, 273 * [0], 289, 23)
+        # ndist > 32 (FIXDCODES)
+        self.assertRaises(ValueError, s.decode_block, 274 * [0], 279, 33)
+        # sequence length not 279 + 23 = 302
+        self.assertRaises(ValueError, s.decode_block, 301 * [0], 279, 23)
+
 
 class TestPuff(unittest.TestCase):
 
     def test_constants(self):
-        self.assertEqual(len(Puff.FIXED_LENGTHS), Puff.FIXLCODES + 32)
+        from puff import FIXLCODES, FIXDCODES, FIXED_LENGTHS
+        self.assertEqual(len(FIXED_LENGTHS), FIXLCODES + FIXDCODES)
 
     def test_align_byte_boundary(self):
         a = bitarray(15)

@@ -32,8 +32,11 @@
 
 #define MAXBITS  15             /* maximum bits in a code */
 #define MAXLCODES 286           /* maximum number of literal/length codes */
-#define MAXDCODES 30            /* maximum number of distance codes */
+#define MAXDCODES  30           /* maximum number of distance codes */
 #define MAXCODES (MAXLCODES+MAXDCODES)  /* maximum codes lengths to read */
+#define FIXLCODES 288           /* number of fixed literal/length codes */
+#define FIXDCODES  32           /* number of fixed distance codes */
+#define FIXCODES (FIXLCODES+FIXDCODES)  /* fixed codes lengths */
 
 
 /* input and output state */
@@ -383,6 +386,11 @@ set_lengths(short *lengths, PyObject *sequence)
     n = PySequence_Size(sequence);
     if (n < 0)
         return -1;
+    if (n > FIXCODES) {
+        PyErr_Format(PyExc_ValueError,
+                     "sequence too long: %zd > %d (FIXCODES)", n, FIXCODES);
+        return -1;
+    }
 
     for (i = 0; i < n; i++) {
         PyObject *item = PySequence_GetItem(sequence, i);
@@ -400,6 +408,7 @@ set_lengths(short *lengths, PyObject *sequence)
         }
         lengths[i] = (short) len;
     }
+
     return 0;
 }
 
@@ -411,13 +420,20 @@ state_decode_block(state_obj *self, PyObject *args)
     PyObject *sequence;
     Py_ssize_t nlen, ndist;
     struct huffman lencode, distcode;   /* length and distance codes */
-    static short lengths[MAXCODES];     /* descriptor code lengths */
-    short lencnt[MAXBITS+1], lensym[MAXLCODES];     /* lencode memory */
-    short distcnt[MAXBITS+1], distsym[MAXDCODES];   /* distcode memory */
+    short lengths[FIXCODES];            /* descriptor code lengths */
+    short lencnt[MAXBITS+1], lensym[FIXLCODES];     /* lencode memory */
+    short distcnt[MAXBITS+1], distsym[FIXDCODES];   /* distcode memory */
     int err;                            /* construct() return value */
 
     if (!PyArg_ParseTuple(args, "Onn:decode_block", &sequence, &nlen, &ndist))
         return NULL;
+
+    if (nlen > FIXLCODES)
+        return PyErr_Format(PyExc_ValueError,
+                            "%zd > %d (FIXLCODES)", nlen, FIXLCODES);
+    if (ndist > FIXDCODES)
+        return PyErr_Format(PyExc_ValueError,
+                            "%zd > %d (FIXDCODES)", ndist, FIXDCODES);
 
     if (set_lengths(lengths, sequence) < 0)
         return NULL;
@@ -458,6 +474,10 @@ list_from_shorts(const short *array, Py_ssize_t n)
     PyObject *list, *item;
     Py_ssize_t i;
 
+    if (n > MAXCODES)
+        return PyErr_Format(PyExc_ValueError,
+                            "%zd > %d (MAXCODES)", n, MAXCODES);
+
     list = PyList_New(n);
     if (list == NULL)
         return NULL;
@@ -481,13 +501,20 @@ state_decode_lengths(state_obj *self, PyObject *args)
     Py_ssize_t nlen, ndist;             /* number of lengths in descriptor */
     int index;                          /* index of lengths[] */
     int err;                            /* construct() return value */
-    static short lengths[MAXCODES];             /* descriptor code lengths */
-    short cnt[MAXBITS+1], sym[MAXLCODES];       /* codelencode memory */
+    short lengths[MAXCODES];            /* descriptor code lengths */
+    short cnt[MAXBITS+1], sym[19];      /* codelencode memory */
     struct huffman codelencode;     /* length and distance code length code */
 
     if (!PyArg_ParseTuple(args, "Onn:decode_dynamic_header",
                           &sequence, &nlen, &ndist))
         return NULL;
+
+    if (nlen > MAXLCODES)
+        return PyErr_Format(PyExc_ValueError,
+                            "%zd > %d (MAXLCODES)", nlen, MAXLCODES);
+    if (ndist > MAXDCODES)
+        return PyErr_Format(PyExc_ValueError,
+                            "%zd > %d (MAXDCODES)", ndist, MAXDCODES);
 
     if (set_lengths(lengths, sequence) < 0)
         return NULL;
@@ -666,6 +693,11 @@ PyMODINIT_FUNC PyInit__puff(void)
     Py_SET_TYPE(&state_type, &PyType_Type);
     Py_INCREF((PyObject *) &state_type);
     PyModule_AddObject(m, "State", (PyObject *) &state_type);
+
+    PyModule_AddObject(m, "MAXLCODES", Py_BuildValue("i", MAXLCODES));
+    PyModule_AddObject(m, "MAXDCODES", Py_BuildValue("i", MAXDCODES));
+    PyModule_AddObject(m, "FIXLCODES", Py_BuildValue("i", FIXLCODES));
+    PyModule_AddObject(m, "FIXDCODES", Py_BuildValue("i", FIXDCODES));
 
     return m;
 }

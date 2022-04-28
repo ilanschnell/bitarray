@@ -2,26 +2,22 @@ from collections import Counter, defaultdict
 
 from bitarray import bitarray
 
-from _puff import State, _set_bato
+from _puff import State, _set_bato, MAXLCODES, MAXDCODES, FIXLCODES, FIXDCODES
 
 # tell the _puff extension what the bitarray type object is, such that it
 # can check for instances thereof
 _set_bato(bitarray)
 
 
+# fixed literal/lengths and distance lengths
+FIXED_LENGTHS = tuple(
+    # literal/length lengths (288 elements)
+    [8] * 144 + [9] * 112 + [7] * 24 + [8] * 8 +
+    # distance lengths (32 elements)
+    [5] * 32
+)
+
 class Puff(State):
-
-    MAXLCODES = 286  # maximum number of literal/length codes
-    MAXDCODES =  30  # maximum number of distance codes
-    FIXLCODES = 288  # number of fixed literal/length codes
-
-    # fixed literal/lengths and distance lengths
-    FIXED_LENGTHS = tuple(
-        # literal/length lengths (FIXLCODES elements)
-        [8] * 144 + [9] * 112 + [7] * 24 + [8] * 8 +
-        # distance lengths (32 elements)
-        [5] * 32
-    )
 
     def process_blocks(self, callback=None):
         self.stats = defaultdict(Counter)
@@ -36,7 +32,7 @@ class Puff(State):
                 self.process_stored_block()
 
             elif btype == 1:                    # process fixed block
-                self.decode_block(self.FIXED_LENGTHS, self.FIXLCODES, 32)
+                self.decode_block(FIXED_LENGTHS, FIXLCODES, FIXDCODES)
 
             elif btype == 2:                    # process dynamic block
                 self.process_dynamic_block()
@@ -76,7 +72,7 @@ class Puff(State):
         nlen = self.read_uint(5) + 257
         ndist = self.read_uint(5) + 1
         ncode = self.read_uint(4) + 4
-        if nlen > self.MAXLCODES or ndist > self.MAXDCODES:
+        if nlen > MAXLCODES or ndist > MAXDCODES:
             raise ValueError("bad counts")
 
         self.stats['dynamic nlen'][nlen] += 1
