@@ -411,7 +411,7 @@ state_decode_block(state_obj *self, PyObject *args)
     PyObject *sequence;
     Py_ssize_t nlen, ndist;
     struct huffman lencode, distcode;   /* length and distance codes */
-    short lengths[MAXCODES];            /* descriptor code lengths */
+    static short lengths[MAXCODES];     /* descriptor code lengths */
     short lencnt[MAXBITS+1], lensym[MAXLCODES];     /* lencode memory */
     short distcnt[MAXBITS+1], distsym[MAXDCODES];   /* distcode memory */
     int err;                            /* construct() return value */
@@ -481,7 +481,7 @@ state_decode_lengths(state_obj *self, PyObject *args)
     Py_ssize_t nlen, ndist;             /* number of lengths in descriptor */
     int index;                          /* index of lengths[] */
     int err;                            /* construct() return value */
-    short lengths[MAXCODES];            /* descriptor code lengths */
+    static short lengths[MAXCODES];             /* descriptor code lengths */
     short cnt[MAXBITS+1], sym[MAXLCODES];       /* codelencode memory */
     struct huffman codelencode;     /* length and distance code length code */
 
