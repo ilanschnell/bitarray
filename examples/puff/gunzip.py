@@ -91,8 +91,11 @@ class GunZip(Puff):
             raise ValueError(f"CRC-32 mismatch: expected={crc:08X}, "
                              f"actual={actualcrc:08X}")
 
+def print_dot(*args):
+    sys.stdout.write('.')
+    sys.stdout.flush()
 
-def decompress_file(infile, outfile):
+def decompress_file(infile, outfile, opts):
     # read input file and store content in little endian bitarray
     input_bits = bitarray(0, 'little')
     with open(infile, "rb") as fi:
@@ -102,9 +105,13 @@ def decompress_file(infile, outfile):
     output = bytearray()
     d = GunZip(input_bits, output)
     d.read_header()
-    stats = d.process_blocks()
+    stats = d.process_blocks(print_dot if opts.progress else None)
     d.check_footer(output)
-    pprint(stats)
+
+    if opts.progress:
+        sys.stdout.write('\n')
+    if opts.stats:
+        pprint(stats)
 
     # write output to file
     with open(outfile, "wb") as fo:
@@ -112,12 +119,26 @@ def decompress_file(infile, outfile):
 
 
 def main():
-    if len(sys.argv) != 3:
-        sys.exit(f"Usage: python {sys.argv[0]} InputFile.gz OutputFile")
-    infile = sys.argv[1]
-    outfile = sys.argv[2]
+    from optparse import OptionParser
 
-    decompress_file(infile, outfile)
+    p = OptionParser(usage="usage: %prog [options] IN_FILE.gz [OUT_FILE]")
+
+    p.add_option('-p', '--progress',
+                 action="store_true",
+                 help="show progress while decoding")
+
+    p.add_option('-s', '--stats',
+                 action="store_true",
+                 help="show block statistics")
+
+    opts, args = p.parse_args()
+
+    if len(args) not in (1, 2):
+        p.error("incorrect number of arguments")
+
+    out_file = args[1] if len(args) == 2 else 'out'
+
+    decompress_file(args[0], out_file, opts)
 
 
 if __name__ == "__main__":

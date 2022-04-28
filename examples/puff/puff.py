@@ -23,7 +23,7 @@ class Puff(State):
         [5] * 32
     )
 
-    def process_blocks(self):
+    def process_blocks(self, callback=None):
         self.stats = defaultdict(Counter)
 
         while True:
@@ -44,6 +44,9 @@ class Puff(State):
             else:
                 assert btype == 3, "Impossible block type"
                 raise ValueError("Reserved block type")
+
+            if callback:
+                callback(self.stats)
 
             if last:
                 break
