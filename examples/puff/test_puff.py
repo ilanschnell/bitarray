@@ -113,16 +113,16 @@ class TestState(unittest.TestCase):
     11111011 01010111 10110100 11111010 11101010 11101010 10101110 11110100
     01011110 10001110 01010101 11010101 01011111 11010111 1100
         ''')
-        nlen, ndist = 279, 23
+        ncode = 279 + 23
 
         b = bytearray()
         s = State(a, b)
         length = s.decode_lengths([4, 0, 6, 5, 4, 0, 0, 4, 2, 3,
-                                   6, 0, 5, 5, 0, 0, 2, 4, 0], nlen, ndist)
+                                   6, 0, 5, 5, 0, 0, 2, 4, 0], ncode)
         # no bytes were added to the output stream
         self.assertEqual(len(b), 0)
         # the code lengths list contains literal/lengths and distance codes
-        self.assertEqual(len(length), nlen + ndist)
+        self.assertEqual(len(length), ncode)
         # we've exhausted the input array exactly
         self.assertEqual(s.get_incnt(), len(a))
         # simple sum check, as I didn't want to cut and paste the whole list
@@ -132,12 +132,10 @@ class TestState(unittest.TestCase):
         a = bitarray(1000)
         b = bytearray()
         s = State(a, b)
-        # nlen > 286 (MAXLCODES)
-        self.assertRaises(ValueError, s.decode_lengths, 19 * [0], 287, 23)
-        # ndist > 30 (MAXDCODES)
-        self.assertRaises(ValueError, s.decode_lengths, 19 * [0], 279, 31)
+        # nlen > 316 (MAXCODES)
+        self.assertRaises(ValueError, s.decode_lengths, 19 * [0], 317)
         # sequence length not 19
-        self.assertRaises(ValueError, s.decode_lengths, 20 * [0], 279, 23)
+        self.assertRaises(ValueError, s.decode_lengths, 20 * [0], 316)
 
     def test_decode_block_error(self):
         a = bitarray(1000)

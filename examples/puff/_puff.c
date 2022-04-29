@@ -370,25 +370,18 @@ state_extend_block(state_obj *self, PyObject *value)
     Py_RETURN_NONE;
 }
 
-/* set lengths[] from items in Python sequence - items must be positive
-   integers not larger then MAXBITS */
+/* set array[0..n-1] from the n items of the Python sequence */
 static int
-set_lengths(short *lengths, PyObject *sequence)
+set_lengths(PyObject *sequence, Py_ssize_t n, short *array)
 {
-    Py_ssize_t n, len;
-    int i;
+    Py_ssize_t i, len;
 
     if (!PySequence_Check(sequence)) {
         PyErr_SetString(PyExc_TypeError, "sequence expected");
         return -1;
     }
-
-    n = PySequence_Size(sequence);
-    if (n < 0)
-        return -1;
-    if (n > FIXCODES) {
-        PyErr_Format(PyExc_ValueError,
-                     "sequence too long: %zd > %d (FIXCODES)", n, FIXCODES);
+    if (PySequence_Size(sequence) != n) {
+        PyErr_Format(PyExc_ValueError, "sequence of size %zd expected", n);
         return -1;
     }
 
@@ -401,21 +394,16 @@ set_lengths(short *lengths, PyObject *sequence)
         Py_DECREF(item);
         if (len == -1 && PyErr_Occurred())
             return -1;
-        if (len < 0 || len > MAXBITS) {
-            PyErr_Format(PyExc_ValueError, "lengths[%d] cannot be negative"
-                         " or larger than %d, got %zd", i, MAXBITS, len);
-            return -1;
-        }
-        lengths[i] = (short) len;
+        array[i] = (short) len;
     }
 
     return 0;
 }
 
-#define CHECK_N(n, codes)                                                \
-    if (n > codes)                                                       \
+#define CHECK_N_MAX(n, maxcodes)                                         \
+    if (n > maxcodes)                                                    \
         return PyErr_Format(PyExc_ValueError,                            \
-                   "size of length list too large: %zd > %d", n, codes)
+          "size of length list too large: %zd > %d", n, maxcodes)
 
 /* given the liter/lengths and distance lengths as one big list,
    decode literal/length and distance codes until an end-of-block code */
@@ -433,22 +421,17 @@ state_decode_block(state_obj *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "Onn:decode_block", &sequence, &nlen, &ndist))
         return NULL;
 
-    CHECK_N(nlen, FIXLCODES);
-    CHECK_N(ndist, FIXDCODES);
-
-    if (set_lengths(lengths, sequence) < 0)
+    CHECK_N_MAX(nlen, FIXLCODES);
+    CHECK_N_MAX(ndist, FIXDCODES);
+    if (set_lengths(sequence, nlen + ndist, lengths) < 0)
         return NULL;
-
-    if (PySequence_Size(sequence) != nlen + ndist)
-        return PyErr_Format(PyExc_ValueError, "sequence of length "
-                            "%zd + %zd expected", nlen, ndist);
 
     /* build huffman table for literal/length codes */
     lencode.count = lencnt;
     lencode.symbol = lensym;
     err = construct(&lencode, lengths, nlen);
     if (err && (err < 0 || nlen != lencode.count[0] + lencode.count[1])) {
-        PyErr_SetString(PyExc_TypeError, "incomplete literal/lengths code");
+        PyErr_SetString(PyExc_ValueError, "incomplete literal/lengths code");
         return NULL;
     }
 
@@ -457,7 +440,7 @@ state_decode_block(state_obj *self, PyObject *args)
     distcode.symbol = distsym;
     err = construct(&distcode, lengths + nlen, ndist);
     if (err && (err < 0 || ndist != distcode.count[0] + distcode.count[1])) {
-        PyErr_SetString(PyExc_TypeError, "incomplete distance code");
+        PyErr_SetString(PyExc_ValueError, "incomplete distance code");
         return NULL;
     }
 
@@ -468,16 +451,12 @@ state_decode_block(state_obj *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-/* create a Python list from array[] with n elements */
+/* create a Python list from array[0..n-1] with n elements */
 static PyObject *
 list_from_shorts(const short *array, Py_ssize_t n)
 {
     PyObject *list, *item;
     Py_ssize_t i;
-
-    if (n > MAXCODES)
-        return PyErr_Format(PyExc_ValueError,
-                            "%zd > %d (MAXCODES)", n, MAXCODES);
 
     list = PyList_New(n);
     if (list == NULL)
@@ -499,27 +478,19 @@ static PyObject *
 state_decode_lengths(state_obj *self, PyObject *args)
 {
     PyObject *sequence;
-    Py_ssize_t nlen, ndist;             /* number of lengths in descriptor */
+    Py_ssize_t ncode;                   /* number of lengths in descriptor */
     int index;                          /* index of lengths[] */
     int err;                            /* construct() return value */
     short lengths[MAXCODES];            /* descriptor code lengths */
     short cnt[MAXBITS+1], sym[19];      /* codelencode memory */
     struct huffman codelencode;     /* length and distance code length code */
 
-    if (!PyArg_ParseTuple(args, "Onn:decode_dynamic_header",
-                          &sequence, &nlen, &ndist))
+    if (!PyArg_ParseTuple(args, "On:decode_lengths", &sequence, &ncode))
         return NULL;
 
-    CHECK_N(nlen, MAXLCODES);
-    CHECK_N(ndist, MAXDCODES);
-
-    if (set_lengths(lengths, sequence) < 0)
+    if (set_lengths(sequence, 19, lengths) < 0)
         return NULL;
-
-    if (PySequence_Size(sequence) != 19) {
-        PyErr_SetString(PyExc_ValueError, "sequence of length 19 expected");
-        return NULL;
-    }
+    CHECK_N_MAX(ncode, MAXCODES);
 
     /* build huffman table for code lengths codes (codelencode) */
     codelencode.count = cnt;
@@ -534,7 +505,7 @@ state_decode_lengths(state_obj *self, PyObject *args)
 
     /* read length/literal and distance code length tables */
     index = 0;
-    while (index < nlen + ndist) {
+    while (index < ncode) {
         int symbol;             /* decoded value */
 
         symbol = decode(self, &codelencode);
@@ -561,7 +532,7 @@ state_decode_lengths(state_obj *self, PyObject *args)
             else                        /* == 18, repeat zero 11..138 times */
                 n = 11 + read_uint(self, 7);
 
-            if (index + n > nlen + ndist) {
+            if (index + n > ncode) {
                 PyErr_SetString(PyExc_ValueError, "too many lengths!");
                 return NULL;
             }
@@ -576,7 +547,7 @@ state_decode_lengths(state_obj *self, PyObject *args)
         return NULL;
     }
 
-    return list_from_shorts(lengths, nlen + ndist);
+    return list_from_shorts(lengths, ncode);
 }
 
 /* copy 'len' bytes starting at 'dist' bytes ago in self->out,

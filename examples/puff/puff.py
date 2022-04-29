@@ -85,7 +85,7 @@ class Puff(State):
             lengths[order[index]] = self.read_uint(3)
 
         # decode literal/lengths and distance lengths
-        lengths = self.decode_lengths(lengths, nlen, ndist)
+        lengths = self.decode_lengths(lengths, nlen + ndist)
 
         # decode actual block data
         self.decode_block(lengths, nlen, ndist)
