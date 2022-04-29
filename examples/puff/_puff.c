@@ -412,6 +412,11 @@ set_lengths(short *lengths, PyObject *sequence)
     return 0;
 }
 
+#define CHECK_N(n, codes)                                                \
+    if (n > codes)                                                       \
+        return PyErr_Format(PyExc_ValueError,                            \
+                   "size of length list too large: %zd > %d", n, codes)
+
 /* given the liter/lengths and distance lengths as one big list,
    decode literal/length and distance codes until an end-of-block code */
 static PyObject *
@@ -428,12 +433,8 @@ state_decode_block(state_obj *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "Onn:decode_block", &sequence, &nlen, &ndist))
         return NULL;
 
-    if (nlen > FIXLCODES)
-        return PyErr_Format(PyExc_ValueError,
-                            "%zd > %d (FIXLCODES)", nlen, FIXLCODES);
-    if (ndist > FIXDCODES)
-        return PyErr_Format(PyExc_ValueError,
-                            "%zd > %d (FIXDCODES)", ndist, FIXDCODES);
+    CHECK_N(nlen, FIXLCODES);
+    CHECK_N(ndist, FIXDCODES);
 
     if (set_lengths(lengths, sequence) < 0)
         return NULL;
@@ -509,12 +510,8 @@ state_decode_lengths(state_obj *self, PyObject *args)
                           &sequence, &nlen, &ndist))
         return NULL;
 
-    if (nlen > MAXLCODES)
-        return PyErr_Format(PyExc_ValueError,
-                            "%zd > %d (MAXLCODES)", nlen, MAXLCODES);
-    if (ndist > MAXDCODES)
-        return PyErr_Format(PyExc_ValueError,
-                            "%zd > %d (MAXDCODES)", ndist, MAXDCODES);
+    CHECK_N(nlen, MAXLCODES);
+    CHECK_N(ndist, MAXDCODES);
 
     if (set_lengths(lengths, sequence) < 0)
         return NULL;
