@@ -421,6 +421,7 @@ state_decode_block(state_obj *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "Onn:decode_block", &sequence, &nlen, &ndist))
         return NULL;
 
+    /* check arguments and set values in lengths[0..nlen+ndist-1] */
     CHECK_N_MAX(nlen, FIXLCODES);
     CHECK_N_MAX(ndist, FIXDCODES);
     if (set_lengths(sequence, nlen + ndist, lengths) < 0)
@@ -478,7 +479,7 @@ static PyObject *
 state_decode_lengths(state_obj *self, PyObject *args)
 {
     PyObject *sequence;
-    Py_ssize_t ncode;                   /* number of lengths in descriptor */
+    Py_ssize_t ncode;     /* number of lengths in descriptor (nlen + ndist) */
     int index;                          /* index of lengths[] */
     int err;                            /* construct() return value */
     short lengths[MAXCODES];            /* descriptor code lengths */
@@ -488,6 +489,7 @@ state_decode_lengths(state_obj *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "On:decode_lengths", &sequence, &ncode))
         return NULL;
 
+    /* check arguments and set lengths[0..18] */
     if (set_lengths(sequence, 19, lengths) < 0)
         return NULL;
     CHECK_N_MAX(ncode, MAXCODES);
