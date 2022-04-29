@@ -400,9 +400,9 @@ set_lengths(PyObject *sequence, Py_ssize_t n, short *array)
     return 0;
 }
 
-#define CHECK_N_MAX(n, maxcodes)                                         \
-    if (n > maxcodes)                                                    \
-        return PyErr_Format(PyExc_ValueError,                            \
+#define CHECK_MAX(n, maxcodes)                                         \
+    if (n > maxcodes)                                                  \
+        return PyErr_Format(PyExc_ValueError,                          \
           "size of length list too large: %zd > %d", n, maxcodes)
 
 /* given the liter/lengths and distance lengths as one big list,
@@ -422,8 +422,8 @@ state_decode_block(state_obj *self, PyObject *args)
         return NULL;
 
     /* check arguments and set values in lengths[0..nlen+ndist-1] */
-    CHECK_N_MAX(nlen, FIXLCODES);
-    CHECK_N_MAX(ndist, FIXDCODES);
+    CHECK_MAX(nlen, FIXLCODES);
+    CHECK_MAX(ndist, FIXDCODES);
     if (set_lengths(sequence, nlen + ndist, lengths) < 0)
         return NULL;
 
@@ -492,7 +492,7 @@ state_decode_lengths(state_obj *self, PyObject *args)
     /* check arguments and set lengths[0..18] */
     if (set_lengths(sequence, 19, lengths) < 0)
         return NULL;
-    CHECK_N_MAX(ncode, MAXCODES);
+    CHECK_MAX(ncode, MAXCODES);
 
     /* build huffman table for code lengths codes (codelencode) */
     codelencode.count = cnt;
@@ -664,10 +664,10 @@ PyMODINIT_FUNC PyInit__puff(void)
     Py_INCREF((PyObject *) &state_type);
     PyModule_AddObject(m, "State", (PyObject *) &state_type);
 
-    PyModule_AddObject(m, "MAXLCODES", Py_BuildValue("i", MAXLCODES));
-    PyModule_AddObject(m, "MAXDCODES", Py_BuildValue("i", MAXDCODES));
-    PyModule_AddObject(m, "FIXLCODES", Py_BuildValue("i", FIXLCODES));
-    PyModule_AddObject(m, "FIXDCODES", Py_BuildValue("i", FIXDCODES));
+    PyModule_AddObject(m, "MAXLCODES", PyLong_FromSsize_t(MAXLCODES));
+    PyModule_AddObject(m, "MAXDCODES", PyLong_FromSsize_t(MAXDCODES));
+    PyModule_AddObject(m, "FIXLCODES", PyLong_FromSsize_t(FIXLCODES));
+    PyModule_AddObject(m, "FIXDCODES", PyLong_FromSsize_t(FIXDCODES));
 
     return m;
 }
