@@ -30,7 +30,7 @@
 #include "bitarray.h"
 
 
-#define MAXBITS  15             /* maximum bits in a code */
+#define MAXBITS    15           /* maximum bits in a code */
 #define MAXLCODES 286           /* maximum number of literal/length codes */
 #define MAXDCODES  30           /* maximum number of distance codes */
 #define MAXCODES (MAXLCODES+MAXDCODES)  /* maximum codes lengths to read */
@@ -401,9 +401,12 @@ set_lengths(PyObject *sequence, Py_ssize_t n, short *array)
 }
 
 #define CHECK_MAX(n, maxcodes)                                         \
+    if (n < 0)                                                         \
+        return PyErr_Format(PyExc_ValueError,                          \
+              "size of length list cannot be negative: %zd", n);       \
     if (n > maxcodes)                                                  \
         return PyErr_Format(PyExc_ValueError,                          \
-          "size of length list too large: %zd > %d", n, maxcodes)
+              "size of length list too large: %zd > %d", n, maxcodes)
 
 /* given the liter/lengths and distance lengths as one big list,
    decode literal/length and distance codes until an end-of-block code */

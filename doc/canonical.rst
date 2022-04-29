@@ -75,8 +75,8 @@ tables ``count`` and ``symbol`` instead:
     'abracadabra'
 
 
-Side note on DEFLATE:
----------------------
+Notes on DEFLATE:
+-----------------
 
 DEFLATE is a lossless data compression file format that uses a combination
 of LZ77 and Huffman coding.  It is used by ``gzip`` and implemented
