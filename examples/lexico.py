@@ -4,11 +4,7 @@
 from bitarray import bitarray, get_default_endian
 from bitarray.util import ba2int, int2ba, zeros
 
-try:
-    from math import comb
-except ImportError:
-    from math import factorial
-    comb = lambda n, k: factorial(n) // (factorial(k) * factorial(n - k))
+from math import comb
 
 
 def all_perm(n, k, endian=None):

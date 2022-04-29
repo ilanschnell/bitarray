@@ -1,6 +1,6 @@
 # Copyright (c) 2021 - 2022, Ilan Schnell; All Rights Reserved
 #
-# This stub, as well as util.pyi, are tested with Python 3.9 and mypy 0.902.
+# This stub, as well as util.pyi, are tested with Python 3.9 and mypy 0.950
 
 from collections.abc import Iterable, Iterator
 from unittest.runner import TextTestResult
