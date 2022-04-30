@@ -2,7 +2,7 @@ from collections import Counter, defaultdict
 
 from bitarray import bitarray
 
-from _puff import State, _set_bato, MAXLCODES, MAXDCODES, FIXLCODES, FIXDCODES
+from _puff import State, _set_bato, MAXLCODES, MAXDCODES, FIXLCODES
 
 # tell the _puff extension what the bitarray type object is, such that it
 # can check for instances thereof
@@ -11,10 +11,10 @@ _set_bato(bitarray)
 
 # fixed literal/lengths and distance lengths
 FIXED_LENGTHS = tuple(
-    # literal/length lengths (288 elements)
+    # literal/length lengths (FIXLCODES elements)
     [8] * 144 + [9] * 112 + [7] * 24 + [8] * 8 +
-    # distance lengths (32 elements)
-    [5] * 32
+    # distance lengths (MAXDCODES elements)
+    [5] * MAXDCODES
 )
 
 class Puff(State):
@@ -32,7 +32,7 @@ class Puff(State):
                 self.process_stored_block()
 
             elif btype == 1:                    # process fixed block
-                self.decode_block(FIXED_LENGTHS, FIXLCODES, FIXDCODES)
+                self.decode_block(FIXED_LENGTHS, FIXLCODES, MAXDCODES)
 
             elif btype == 2:                    # process dynamic block
                 self.process_dynamic_block()

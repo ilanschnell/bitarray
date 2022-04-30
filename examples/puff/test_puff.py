@@ -143,8 +143,8 @@ class TestState(unittest.TestCase):
         s = State(a, b)
         # nlen > 288 (FIXLCODES)
         self.assertRaises(ValueError, s.decode_block, 273 * [0], 289, 23)
-        # ndist > 32 (FIXDCODES)
-        self.assertRaises(ValueError, s.decode_block, 274 * [0], 279, 33)
+        # ndist > 30 (MAXDCODES)
+        self.assertRaises(ValueError, s.decode_block, 274 * [0], 279, 31)
         # sequence length not 279 + 23 = 302
         self.assertRaises(ValueError, s.decode_block, 301 * [0], 279, 23)
 
@@ -152,8 +152,8 @@ class TestState(unittest.TestCase):
 class TestPuff(unittest.TestCase):
 
     def test_constants(self):
-        from puff import FIXLCODES, FIXDCODES, FIXED_LENGTHS
-        self.assertEqual(len(FIXED_LENGTHS), FIXLCODES + FIXDCODES)
+        from puff import FIXLCODES, MAXDCODES, FIXED_LENGTHS
+        self.assertEqual(len(FIXED_LENGTHS), FIXLCODES + MAXDCODES)
 
     def test_align_byte_boundary(self):
         a = bitarray(15)

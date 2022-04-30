@@ -35,8 +35,6 @@
 #define MAXDCODES  30           /* maximum number of distance codes */
 #define MAXCODES (MAXLCODES+MAXDCODES)  /* maximum codes lengths to read */
 #define FIXLCODES 288           /* number of fixed literal/length codes */
-#define FIXDCODES  32           /* number of fixed distance codes */
-#define FIXCODES (FIXLCODES+FIXDCODES)  /* fixed codes lengths */
 
 
 /* input and output state */
@@ -416,9 +414,9 @@ state_decode_block(state_obj *self, PyObject *args)
     PyObject *sequence;
     Py_ssize_t nlen, ndist;
     struct huffman lencode, distcode;   /* length and distance codes */
-    short lengths[FIXCODES];            /* descriptor code lengths */
+    short lengths[FIXLCODES + MAXDCODES];    /* descriptor code lengths */
     short lencnt[MAXBITS+1], lensym[FIXLCODES];     /* lencode memory */
-    short distcnt[MAXBITS+1], distsym[FIXDCODES];   /* distcode memory */
+    short distcnt[MAXBITS+1], distsym[MAXDCODES];   /* distcode memory */
     int err;                            /* construct() return value */
 
     if (!PyArg_ParseTuple(args, "Onn:decode_block", &sequence, &nlen, &ndist))
@@ -426,7 +424,7 @@ state_decode_block(state_obj *self, PyObject *args)
 
     /* check arguments and set values in lengths[0..nlen+ndist-1] */
     CHECK_MAX(nlen, FIXLCODES);
-    CHECK_MAX(ndist, FIXDCODES);
+    CHECK_MAX(ndist, MAXDCODES);
     if (set_lengths(sequence, nlen + ndist, lengths) < 0)
         return NULL;
 
@@ -443,8 +441,12 @@ state_decode_block(state_obj *self, PyObject *args)
     distcode.count = distcnt;
     distcode.symbol = distsym;
     err = construct(&distcode, lengths + nlen, ndist);
-    if (err && (err < 0 || ndist != distcode.count[0] + distcode.count[1])) {
-        PyErr_SetString(PyExc_ValueError, "incomplete distance code");
+    /* Fixed distance codes also have two invalid symbols that should result
+       in an error if received.  This can be implemented as an incomplete code,
+       which is why the error is ignored for fixed codes. */
+    if (nlen <= MAXLCODES &&
+        err && (err < 0 || ndist != distcode.count[0] + distcode.count[1])) {
+        PyErr_SetString(PyExc_ValueError, "incomplete distance codeX");
         return NULL;
     }
 
@@ -670,7 +672,6 @@ PyMODINIT_FUNC PyInit__puff(void)
     PyModule_AddObject(m, "MAXLCODES", PyLong_FromSsize_t(MAXLCODES));
     PyModule_AddObject(m, "MAXDCODES", PyLong_FromSsize_t(MAXDCODES));
     PyModule_AddObject(m, "FIXLCODES", PyLong_FromSsize_t(FIXLCODES));
-    PyModule_AddObject(m, "FIXDCODES", PyLong_FromSsize_t(FIXDCODES));
 
     return m;
 }
