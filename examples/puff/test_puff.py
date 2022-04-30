@@ -132,21 +132,29 @@ class TestState(unittest.TestCase):
         a = bitarray(1000)
         b = bytearray()
         s = State(a, b)
+        lengths = 19 * [0]
         # nlen > 316 (MAXCODES)
-        self.assertRaises(ValueError, s.decode_lengths, 19 * [0], 317)
+        self.assertRaises(ValueError, s.decode_lengths, lengths, 317)
         # sequence length not 19
         self.assertRaises(ValueError, s.decode_lengths, 20 * [0], 316)
+        lengths[1] = 16
+        # length[1] > MAXBITS
+        self.assertRaises(ValueError, s.decode_lengths, lengths, 316)
 
     def test_decode_block_error(self):
         a = bitarray(1000)
         b = bytearray()
         s = State(a, b)
+        lengths = 302 * [0]
         # nlen > 288 (FIXLCODES)
-        self.assertRaises(ValueError, s.decode_block, 273 * [0], 289, 23)
+        self.assertRaises(ValueError, s.decode_block, lengths, 289, 23)
         # ndist > 30 (MAXDCODES)
-        self.assertRaises(ValueError, s.decode_block, 274 * [0], 279, 31)
+        self.assertRaises(ValueError, s.decode_block, lengths, 279, 31)
         # sequence length not 279 + 23 = 302
         self.assertRaises(ValueError, s.decode_block, 301 * [0], 279, 23)
+        lengths[1] = 16
+        # length[1] > MAXBITS
+        self.assertRaises(ValueError, s.decode_block, lengths, 279, 23)
 
 
 class TestPuff(unittest.TestCase):

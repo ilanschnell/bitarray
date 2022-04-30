@@ -392,6 +392,11 @@ set_lengths(PyObject *sequence, Py_ssize_t n, short *array)
         Py_DECREF(item);
         if (len == -1 && PyErr_Occurred())
             return -1;
+        if (len < 0 || len > MAXBITS) {
+            PyErr_Format(PyExc_ValueError, "length cannot be negative or "
+                         "larger than %d, got %zd", MAXBITS, len);
+            return -1;
+        }
         array[i] = (short) len;
     }
 
