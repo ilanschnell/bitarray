@@ -106,9 +106,9 @@ decode(state_obj *s, const struct huffman *h)
     return -1;
 }
 
-/* add a byte to self->out */
+/* add a byte to s->out */
 static int
-append_byte(state_obj *self, int byte)
+append_byte(state_obj *s, int byte)
 {
     char *cp;
 
@@ -116,20 +116,20 @@ append_byte(state_obj *self, int byte)
         PyErr_Format(PyExc_ValueError, "invalid byte: %d", byte);
         return -1;
     }
-    if (PyByteArray_Resize(self->out, self->outcnt + 1) < 0) {
+    if (PyByteArray_Resize(s->out, s->outcnt + 1) < 0) {
         PyErr_NoMemory();
         return -1;
     }
-    cp = PyByteArray_AS_STRING(self->out) + self->outcnt;
+    cp = PyByteArray_AS_STRING(s->out) + s->outcnt;
     *cp = (char) byte;
 
-    self->outcnt++;
+    s->outcnt++;
     return 0;
 }
 
-/* copy 'len' bytes starting at 'dist' bytes ago in self->out */
+/* copy 'len' bytes starting at 'dist' bytes ago in s->out */
 static int
-dist_len_copy(state_obj *self, int dist, int len)
+dist_len_copy(state_obj *s, int dist, int len)
 {
     char *out;
 
@@ -141,20 +141,19 @@ dist_len_copy(state_obj *self, int dist, int len)
         PyErr_SetString(PyExc_ValueError, "distance cannot be negative or 0");
         return -1;
     }
-    if (dist > self->outcnt) {
+    if (dist > s->outcnt) {
         PyErr_SetString(PyExc_ValueError, "distance too far back");
         return -1;
     }
-
-    if (PyByteArray_Resize(self->out, self->outcnt + len) < 0) {
+    if (PyByteArray_Resize(s->out, s->outcnt + len) < 0) {
         PyErr_NoMemory();
         return -1;
     }
 
-    out = PyByteArray_AS_STRING(self->out);
+    out = PyByteArray_AS_STRING(s->out);
     while (len--) {
-        out[self->outcnt] = out[self->outcnt - dist];
-        self->outcnt++;
+        out[s->outcnt] = out[s->outcnt - dist];
+        s->outcnt++;
     }
 
     return 0;
@@ -193,10 +192,8 @@ construct(struct huffman *h, const short *length, int n)
     for (len = 1; len < MAXBITS; len++)
         offs[len + 1] = offs[len] + h->count[len];
 
-    /*
-     * put symbols in table sorted by length, by symbol order within each
-     * length
-     */
+    /* put symbols in table sorted by length, by symbol order within each
+       length */
     for (symbol = 0; symbol < n; symbol++)
         if (length[symbol] != 0)
             h->symbol[offs[length[symbol]]++] = symbol;
@@ -293,7 +290,7 @@ static PyObject *
 state_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     PyObject *in, *out;
-    state_obj *obj;
+    state_obj *self;
 
     if (!PyArg_ParseTuple(args, "OO:State", &in, &out))
         return NULL;
@@ -304,19 +301,19 @@ state_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    obj = (state_obj *) type->tp_alloc(type, 0);
-    if (obj == NULL)
+    self = (state_obj *) type->tp_alloc(type, 0);
+    if (self == NULL)
         return NULL;
 
     Py_INCREF(in);
-    obj->in = (bitarrayobject *) in;
-    obj->incnt = 0;
+    self->in = (bitarrayobject *) in;
+    self->incnt = 0;
 
     Py_INCREF(out);
-    obj->out = out;
-    obj->outcnt = PyByteArray_Size(out);
+    self->out = out;
+    self->outcnt = PyByteArray_Size(out);
 
-    return (PyObject *) obj;
+    return (PyObject *) self;
 }
 
 /* append one byte to self->out */
@@ -451,7 +448,7 @@ state_decode_block(state_obj *self, PyObject *args)
        which is why the error is ignored for fixed codes. */
     if (nlen <= MAXLCODES &&
         err && (err < 0 || ndist != distcode.count[0] + distcode.count[1])) {
-        PyErr_SetString(PyExc_ValueError, "incomplete distance codeX");
+        PyErr_SetString(PyExc_ValueError, "incomplete distance code");
         return NULL;
     }
 
