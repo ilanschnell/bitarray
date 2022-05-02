@@ -1674,7 +1674,7 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         # the count list may have extra 0's at the end (but not too many)
         count = [0, 0, 4, 0, 0, 0, 0, 0]
         self.assertEqual(list(canonical_decode(a, count, s)), s)
-        # the element count[0] list is unused
+        # the element count[0] is unused
         self.assertEqual(list(canonical_decode(a, [-47, 0, 4], s)), s)
         # in fact it can be anything, as it is entirely ignored
         self.assertEqual(list(canonical_decode(a, [s, 0, 4], s)), s)
@@ -1697,6 +1697,7 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
 
     def test_canonical_decode_empty(self):
         a = bitarray()
+        # count and symbol are empty, ok because sum([]) == len([])
         self.assertEqual(list(canonical_decode(a, [], [])), [])
         a.append(0)
         self.assertRaisesMessage(ValueError, "reached end of bitarray",
