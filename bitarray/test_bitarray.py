@@ -3735,6 +3735,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
         for n in range(1, 20):
             dt = decodetree({'a': zeros(n)})
             self.assertEqual(dt.nodes(), n + 1)
+            self.assertFalse(dt.complete())
 
         dt = decodetree({'I': bitarray('1'),   'l': bitarray('01'),
                          'a': bitarray('001'), 'n': bitarray('000')})

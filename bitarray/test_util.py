@@ -1786,6 +1786,11 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         x = sum(count[i] << (maxbits - i) for i in range(1, maxbits))
         self.assertEqual(x, 1 << maxbits)
 
+    def ensure_complete_2(self, chc):
+        # ensure code is complete
+        dt = decodetree(chc)
+        self.assertTrue(dt.complete())
+
     def ensure_round_trip(self, chc, count, symbol):
         # create a short test message, encode and decode
         msg = [choice(symbol) for _ in range(10)]
@@ -1810,6 +1815,7 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         self.ensure_consecutive(chc, count, symbol)
         self.ensure_count(chc, count)
         self.ensure_complete(count)
+        self.ensure_complete_2(chc)
         self.ensure_round_trip(chc, count, symbol)
 
     def test_simple_counter(self):
