@@ -1548,6 +1548,8 @@ class TestsHuffman(unittest.TestCase):
         self.assertEqual(tree.todict(), code)
         # ensure tree has 2n-1 nodes (n symbol nodes and n-1 internal nodes)
         self.assertEqual(tree.nodes(), 2 * n - 1)
+        # a proper Huffman tree is complete
+        self.assertTrue(tree.complete())
 
     def test_balanced(self):
         n = 6

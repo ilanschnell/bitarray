@@ -2611,6 +2611,20 @@ binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
     return 0;
 }
 
+/* return whether the node is complete - doesn't have only one child */
+static Py_ssize_t
+binode_complete(binode *nd)
+{
+    if (nd == NULL)
+        return 0;
+
+    if (nd->symbol)
+        return 1;
+
+    return (binode_complete(nd->child[0]) &&
+            binode_complete(nd->child[1]));
+}
+
 /* return the number of nodes */
 static Py_ssize_t
 binode_nodes(binode *nd)
@@ -2693,6 +2707,13 @@ decodetree_todict(decodetreeobject *self)
     return NULL;
 }
 
+/* is the tree complete? */
+static PyObject *
+decodetree_complete(decodetreeobject *self)
+{
+    return PyBool_FromLong(binode_complete(self->tree));
+}
+
 /* Return the number of nodes in the tree (not just symbols) */
 static PyObject *
 decodetree_nodes(decodetreeobject *self)
@@ -2720,9 +2741,10 @@ decodetree_dealloc(decodetreeobject *self)
 /* as these methods are only useful for debugging and testing,
    they are only documented within this file */
 static PyMethodDef decodetree_methods[] = {
-    {"nodes",       (PyCFunction) decodetree_nodes,   METH_NOARGS, 0},
-    {"todict",      (PyCFunction) decodetree_todict,  METH_NOARGS, 0},
-    {"__sizeof__",  (PyCFunction) decodetree_sizeof,  METH_NOARGS, 0},
+    {"complete",   (PyCFunction) decodetree_complete, METH_NOARGS, 0},
+    {"nodes",      (PyCFunction) decodetree_nodes,    METH_NOARGS, 0},
+    {"todict",     (PyCFunction) decodetree_todict,   METH_NOARGS, 0},
+    {"__sizeof__", (PyCFunction) decodetree_sizeof,   METH_NOARGS, 0},
     {NULL,          NULL}  /* sentinel */
 };
 

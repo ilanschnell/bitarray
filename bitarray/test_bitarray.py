@@ -3742,6 +3742,24 @@ class DecodeTreeTests(unittest.TestCase, Util):
         dt = decodetree(alphabet_code)
         self.assertEqual(dt.nodes(), 70)
 
+    def test_complete(self):
+        dt = decodetree({'.': bitarray('1')})
+        self.assertIsInstance(dt.complete(), bool)
+        self.assertFalse(dt.complete())
+
+        dt = decodetree({'a': bitarray('0'),
+                         'b': bitarray('1')})
+        self.assertTrue(dt.complete())
+
+        dt = decodetree({'a': bitarray('0'),
+                         'b': bitarray('11')})
+        self.assertFalse(dt.complete())
+
+        dt = decodetree({'a': bitarray('0'),
+                         'b': bitarray('11'),
+                         'c': bitarray('10')})
+        self.assertTrue(dt.complete())
+
     def test_todict(self):
         t = decodetree(alphabet_code)
         d = t.todict()
