@@ -1,7 +1,8 @@
-2022-04-XX   2.5.0:
+2022-05-XX   2.5.0:
 -------------------
   * add calculating of canonical Huffman codes `util.canonical_huffman()`
     and decoding thereof `util.canonical_decode()`, see #173
+  * add official pyodide support
   * allow creating "Huffman codes" from frequency maps with a single symbol
     in `util.huffman_code()` and `util.canonical_huffman()`, see #172
   * allow bytes-like argument in `.frombytes()` and `.pack()` - previously,
@@ -12,6 +13,7 @@
   * optimize `delslice()` for cases like `del a[1:17:2]` when `a` is large
   * fix `examples/huffman/compress.py` to handle files with 0 or 1 characters,
     see also #172
+  * add `skipIF` decorator for skipping tests
   * add tests
 
 
