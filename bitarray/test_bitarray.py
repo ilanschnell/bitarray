@@ -36,6 +36,12 @@ from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian,
                       _sysinfo, __version__)
 
+def skipIf(condition):
+    "Skip a test if the condition is true."
+    if condition:
+        return lambda f: None
+    return lambda f: f
+
 SYSINFO = _sysinfo()
 DEBUG = SYSINFO[6]
 
@@ -2711,10 +2717,8 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.bytereverse, 5)
         self.assertRaises(IndexError, a.bytereverse, 0, 5)
 
+    @skipIf(sys.version_info[0] == 2)
     def test_bytereverse_part(self):
-        if not is_py3k:
-            return
-
         a = bitarray(5, 'big')
         memoryview(a)[0] = 0x13  # 0001 0011
         self.assertEqual(a, bitarray('0001 0'))
@@ -3376,9 +3380,8 @@ class FileTests(unittest.TestCase, Util):
         for key in d1.keys():
             self.assertEQUAL(d1[key], d2[key])
 
+    @skipIf(sys.version_info[0] == 2)
     def test_pickle_load(self):
-        if not is_py3k:
-            return
         # the test data file was created using bitarray 1.5.0 / Python 3.5.5
         path = os.path.join(os.path.dirname(__file__), 'test_data.pickle')
         with open(path, 'rb') as fi:
@@ -3628,9 +3631,8 @@ class FileTests(unittest.TestCase, Util):
             a.tofile(f)
             self.assertEqual(f.getvalue(), data)
 
+    @skipIf(sys.version_info[0] == 2)
     def test_mmap(self):
-        if not is_py3k:
-            return
         with open(self.tmpfname, 'wb') as fo:
             fo.write(1000 * b'\0')
 
@@ -3648,9 +3650,8 @@ class FileTests(unittest.TestCase, Util):
 
         self.assertEqual(self.read_file(), 1000 * b'\x55')
 
+    @skipIf(sys.version_info[0] == 2)
     def test_mmap_2(self):
-        if not is_py3k:
-            return
         with open(self.tmpfname, 'wb') as fo:
             fo.write(1000 * b'\x22')
 
@@ -3664,9 +3665,8 @@ class FileTests(unittest.TestCase, Util):
 
         self.assertEqual(self.read_file(), 1000 * b'\x33')
 
+    @skipIf(sys.version_info[0] == 2)
     def test_mmap_readonly(self):
-        if not is_py3k:
-            return
         with open(self.tmpfname, 'wb') as fo:
             fo.write(994 * b'\x89' + b'Veedon')
 
@@ -4094,9 +4094,9 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertEqual(a, 800 * bitarray('1'))
         self.check_obj(a)
 
+    # Python 2's array cannot be used as buffer
+    @skipIf(sys.version_info[0] == 2)
     def test_array(self):
-        if not is_py3k:  # Python 2's array cannot be used as buffer
-            return
         a = array.array('B', [0, 255, 64])
         b = bitarray(None, 'little', a)
         self.assertEqual(b, bitarray('00000000 11111111 00000010'))
@@ -4353,9 +4353,8 @@ class BufferExportTests(unittest.TestCase, Util):
         self.assertEqual(a[300 * 8 : 305 * 8].tobytes(), b'\x00ABC\x00')
         self.check_obj(a)
 
+    @skipIf(sys.version_info[0] == 2)
     def test_write_py3(self):
-        if not is_py3k:
-            return
         a = bitarray(40)
         a.setall(0)
         m = memoryview(a)

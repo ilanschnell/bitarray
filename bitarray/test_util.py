@@ -17,7 +17,7 @@ from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian)
-from bitarray.test_bitarray import Util
+from bitarray.test_bitarray import Util, skipIf
 
 from bitarray.util import (
     zeros, urandom, pprint, make_endian, rindex, strip, count_n,
@@ -1052,9 +1052,8 @@ class VLFTests(unittest.TestCase, Util):
                 self.assertEqual(m.group(1), str(n))
             self.assertTrue(a is None)
 
+    @skipIf(sys.version_info[0] == 2)
     def test_decode_invalid_stream(self):
-        if sys.version_info[0] == 2:
-            return
         N = 100
         s = iter(N * (3 * [0x80] + ['XX']) + ['end.'])
         for _ in range(N):
@@ -1312,9 +1311,8 @@ class MixedTests(unittest.TestCase, Util):
             self.assertEqual(t, s)
             self.assertEqual(eval(t), i)
 
+    @skipIf(sys.version_info[0] == 2)
     def test_oct(self):
-        if sys.version_info[0] == 2:
-            return
         for i in range(1000):
             s = oct(i)
             self.assertEqual(s[:2], '0o')
@@ -1434,15 +1432,13 @@ class TestsSerialization(unittest.TestCase, Util):
         # too many arguments
         self.assertRaises(TypeError, serialize, bitarray(), 1)
 
+    # On Python 2, bytes(x) is the string representation of x,
+    # so x can almost be of any type.  And the string representation
+    # of these object will cause ValueErrors in bitarray(x).
+    # Instead of adding special cases in deserialize() or here,
+    # we decided to skip these tests for Python 2 altogether.
+    @skipIf(sys.version_info[0] == 2)
     def test_deserialize_args(self):
-        if sys.version_info[0] == 2:
-            # On Python 2, bytes(x) is the string representation of x,
-            # so x can almost be of any type.  And the string representation
-            # of these object will cause ValueErrors in bitarray(x).
-            # Instead of adding special cases in deserialize() or here,
-            # we decided to skip these tests for Python 2 altogether.
-            return
-
         for x in 0, 1, False, True, None, u'', u'01', 0.0, [0, 0.6]:
             self.assertRaises(TypeError, deserialize, x)
         self.assertRaises(TypeError, deserialize, b'\x00', 1)
