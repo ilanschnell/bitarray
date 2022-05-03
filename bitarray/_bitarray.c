@@ -2684,8 +2684,6 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     return (PyObject *) obj;
 }
 
-/* Return a dict mapping the symbols to bitarrays.  This dict is a
-   reconstruction of the code dict the decodetree was created with. */
 static PyObject *
 decodetree_todict(decodetreeobject *self)
 {
@@ -2711,19 +2709,37 @@ decodetree_todict(decodetreeobject *self)
     return NULL;
 }
 
-/* is the tree complete? */
+PyDoc_STRVAR(todict_doc,
+"todict() -> dict\n\
+\n\
+Return a dict mapping the symbols to bitarrays.  This dict is a\n\
+reconstruction of the code dict the `decodetree` was created with.");
+
+
 static PyObject *
 decodetree_complete(decodetreeobject *self)
 {
     return PyBool_FromLong(binode_complete(self->tree));
 }
 
-/* Return the number of nodes in the tree (not just symbols) */
+PyDoc_STRVAR(complete_doc,
+"complete() -> bool\n\
+\n\
+Return whether the tree is complete.  That is, whether or not all\n\
+nodes have both children (unless they are symbols nodes).");
+
+
 static PyObject *
 decodetree_nodes(decodetreeobject *self)
 {
     return PyLong_FromSsize_t(binode_nodes(self->tree));
 }
+
+PyDoc_STRVAR(nodes_doc,
+"nodes() -> int\n\
+\n\
+Return the number of nodes in the tree (internal and symbol nodes).");
+
 
 static PyObject *
 decodetree_sizeof(decodetreeobject *self)
@@ -2742,12 +2758,16 @@ decodetree_dealloc(decodetreeobject *self)
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-/* as these methods are only useful for debugging and testing,
-   they are only documented within this file */
+/* These methods are mostly useful for debugging and testing.  We provide
+   docstrings, but they are not mentioned in the documentation, and are not
+   part of the API */
 static PyMethodDef decodetree_methods[] = {
-    {"complete",   (PyCFunction) decodetree_complete, METH_NOARGS, 0},
-    {"nodes",      (PyCFunction) decodetree_nodes,    METH_NOARGS, 0},
-    {"todict",     (PyCFunction) decodetree_todict,   METH_NOARGS, 0},
+    {"complete",   (PyCFunction) decodetree_complete, METH_NOARGS,
+     complete_doc},
+    {"nodes",      (PyCFunction) decodetree_nodes,    METH_NOARGS,
+     nodes_doc},
+    {"todict",     (PyCFunction) decodetree_todict,   METH_NOARGS,
+     todict_doc},
     {"__sizeof__", (PyCFunction) decodetree_sizeof,   METH_NOARGS, 0},
     {NULL,          NULL}  /* sentinel */
 };
