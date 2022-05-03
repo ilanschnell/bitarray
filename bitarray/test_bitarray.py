@@ -8,6 +8,7 @@ from __future__ import absolute_import
 import re
 import os
 import sys
+import platform
 import unittest
 import shutil
 import tempfile
@@ -24,6 +25,7 @@ import weakref
 
 
 is_py3k = bool(sys.version_info[0] == 3)
+pyodide = bool(platform.machine() == 'wasm32')
 
 if is_py3k:
     from io import BytesIO
@@ -3405,6 +3407,7 @@ class FileTests(unittest.TestCase, Util):
             self.assertIsType(f, 'frozenbitarray')
             self.check_obj(f)
 
+    @skipIf(pyodide)   # pyodide has no dbm module
     def test_shelve(self):
         if hasattr(sys, 'gettotalrefcount'):
             return
@@ -3650,7 +3653,8 @@ class FileTests(unittest.TestCase, Util):
 
         self.assertEqual(self.read_file(), 1000 * b'\x55')
 
-    @skipIf(sys.version_info[0] == 2)
+    # pyodide hits emscripten mmap bug
+    @skipIf(sys.version_info[0] == 2 or pyodide)
     def test_mmap_2(self):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(1000 * b'\x22')
