@@ -1,6 +1,25 @@
 Change log
 ==========
 
+**2.5.0** (2022-05-04):
+
+* add calculating of canonical Huffman codes ``util.canonical_huffman()``
+  and decoding thereof ``util.canonical_decode()``, see `#173 <https://github.com/ilanschnell/bitarray/issues/173>`__
+* allow creating "Huffman codes" from frequency maps with a single symbol
+  in ``util.huffman_code()`` and ``util.canonical_huffman()``, see `#172 <https://github.com/ilanschnell/bitarray/issues/172>`__
+* allow bytes-like argument in ``.frombytes()`` and ``.pack()`` - previously,
+  the arguments were limited to the ``bytes`` object, see `#174 <https://github.com/ilanschnell/bitarray/issues/174>`__
+* allow bytes-like arguments in ``util.deserialize()``
+* add official pyodide support
+* add `DEFLATE decompression <../examples/puff/>`__ example
+* optimize ``.bytereverse()``
+* optimize ``delslice()`` for cases like ``del a[1:17:2]`` when ``a`` is large
+* fix ``examples/huffman/compress.py`` to handle files with 0 or 1 characters,
+  see also `#172 <https://github.com/ilanschnell/bitarray/issues/172>`__
+* add ``skipIF`` decorator for skipping tests
+* add tests
+
+
 **2.4.1** (2022-03-29):
 
 * improve ``resize()``, see `#167 <https://github.com/ilanschnell/bitarray/issues/167>`__
@@ -473,7 +492,7 @@ Change log
 * add official Python 3.6 support (although it was already working)
 * fix description of ``fill()``, `#52 <https://github.com/ilanschnell/bitarray/issues/52>`__
 * handle extending self correctly, `#28 <https://github.com/ilanschnell/bitarray/issues/28>`__
-* copy_n: fast copy with memmove fixed, `#43 <https://github.com/ilanschnell/bitarray/issues/43>`__
+* ``copy_n()``: fast copy with ``memmove()`` fixed, `#43 <https://github.com/ilanschnell/bitarray/issues/43>`__
 * minor clarity/wording changes to README, `#23 <https://github.com/ilanschnell/bitarray/issues/23>`__
 
 
@@ -534,7 +553,8 @@ Change log
 **0.4.0** (2011-12-29):
 
 * porting to Python 3.x (Roland Puntaier)
-* introduced tobytes, frombytes (tostring, fromstring are now deprecated)
+* introduced ``.tobytes()`` and ``.frombytes()`` (``.tostring()``
+  and ``.fromstring()`` are now deprecated)
 * updated development status
 * added sieve prime number example
 * moved project to github: https://github.com/ilanschnell/bitarray
@@ -543,8 +563,8 @@ Change log
 **0.3.5** (2009-04-06):
 
 * fixed reference counts bugs
-* added possibility to slice assign to True or False, e.g. a[::3] = True
-  will set every third element to True
+* added possibility to slice assign to ``True`` or ``False``,
+  e.g. ``a[::3] = True`` will set every third element to ``True``
 
 
 **0.3.4** (2009-01-15):
@@ -576,13 +596,13 @@ Change log
 
 * Fixed a severe bug for 64-bit machines.  Implemented all methods in C,
   improved tests.
-* Removed deprecated methods from01 and fromlist.
+* Removed deprecated methods ``.from01()`` and ``.fromlist()``.
 
 
 **0.2.5** (2008-09-23):
 
 * Added section in README about prefix codes.  Implemented _multiply method
-  for faster __mul__ and __imul__.  Fixed some typos.
+  for faster ``__mul__`` and ``__imul__``.  Fixed some typos.
 
 
 **0.2.4** (2008-09-22):

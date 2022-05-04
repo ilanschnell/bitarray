@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.4.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.5.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -127,8 +127,10 @@ The bitarray object:
 
 
 ``frombytes(bytes, /)``
-   Extend bitarray with raw bytes.  That is, each append byte will add eight
-   bits to the bitarray.
+   Extend the bitarray with raw bytes from a bytes-like object.
+   Each added byte will add eight bits to the bitarray.
+
+   New in version 2.5.0: allow bytes-like argument.
 
 
 ``fromfile(f, n=-1, /)``
@@ -167,12 +169,14 @@ The bitarray object:
 
 
 ``pack(bytes, /)``
-   Extend the bitarray from bytes, where each byte corresponds to a single
-   bit.  The byte ``b'\x00'`` maps to bit 0 and all other characters map to
-   bit 1.
+   Extend the bitarray from a bytes-like object, where each byte corresponds
+   to a single bit.  The byte ``b'\x00'`` maps to bit 0 and all other bytes
+   map to bit 1.
    This method, as well as the unpack method, are meant for efficient
    transfer of data between bitarray objects to other python objects
    (for example NumPy's ndarray object) which have a different memory view.
+
+   New in version 2.5.0: allow bytes-like argument.
 
 
 ``pop(index=-1, /)`` -> item
@@ -414,11 +418,14 @@ This sub-module was add in version 1.2.
 
 
 ``deserialize(bytes, /)`` -> bitarray
-   Return a bitarray given the bytes representation returned by ``serialize()``.
+   Return a bitarray given a bytes-like representation such as returned
+   by ``serialize()``.
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
    New in version 1.8.
+
+   New in version 2.5.0: allow bytes-like argument.
 
 
 ``vl_encode(bitarray, /)`` -> bytes
@@ -432,7 +439,7 @@ This sub-module was add in version 1.2.
 
 
 ``vl_decode(stream, /, endian=None)`` -> bitarray
-   Decode binary stream (an integer iterator, or bytes object), and return
+   Decode binary stream (an integer iterator, or bytes-like object), and return
    the decoded bitarray.  This function consumes only one bitarray and leaves
    the remaining stream untouched.  ``StopIteration`` is raised when no
    terminating byte is found.
@@ -448,5 +455,30 @@ This sub-module was add in version 1.2.
    calculate the Huffman code, i.e. a dict mapping those symbols to
    bitarrays (with given endianness).  Note that the symbols are not limited
    to being strings.  Symbols may may be any hashable object (such as ``None``).
+
+
+``canonical_huffman(dict, /)`` -> tuple
+   Given a frequency map, a dictionary mapping symbols to their frequency,
+   calculate the canonical Huffman code.  Returns a tuple containing:
+
+   0. the canonical Huffman code as a dict mapping symbols to bitarrays
+   1. a list containing the number of symbols of each code length
+   2. a list of symbols in canonical order
+
+   Note: the two lists may be used as input for ``canonical_decode()``.
+
+   See also: `Canonical Huffman Coding <https://github.com/ilanschnell/bitarray/blob/master/doc/canonical.rst>`__
+
+   New in version 2.5.
+
+
+``canonical_decode(bitarray, count, symbol, /)`` -> iterator
+   Decode bitarray using canonical Huffman decoding tables
+   where ``count`` is a sequence containing the number of symbols of each length
+   and ``symbol`` is a sequence of symbols in canonical order.
+
+   See also: `Canonical Huffman Coding <https://github.com/ilanschnell/bitarray/blob/master/doc/canonical.rst>`__
+
+   New in version 2.5.
 
 
