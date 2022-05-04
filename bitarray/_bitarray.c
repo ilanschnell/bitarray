@@ -2613,7 +2613,7 @@ binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
 
 /* return whether the node is complete - has both children,
    or is a symbol node */
-static Py_ssize_t
+static int
 binode_complete(binode *nd)
 {
     if (nd == NULL)
