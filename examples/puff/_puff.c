@@ -326,7 +326,7 @@ state_append_byte(state_obj *self, PyObject *obj)
     if (byte == -1 && PyErr_Occurred())
         return NULL;
 
-    if (append_byte(self, byte) < 0)
+    if (append_byte(self, (int) byte) < 0)
         return NULL;
 
     Py_RETURN_NONE;
@@ -414,14 +414,14 @@ static PyObject *
 state_decode_block(state_obj *self, PyObject *args)
 {
     PyObject *sequence;
-    Py_ssize_t nlen, ndist;
+    int nlen, ndist;
     struct huffman lencode, distcode;   /* length and distance codes */
     short lengths[FIXLCODES + MAXDCODES];    /* descriptor code lengths */
     short lencnt[MAXBITS+1], lensym[FIXLCODES];     /* lencode memory */
     short distcnt[MAXBITS+1], distsym[MAXDCODES];   /* distcode memory */
     int err;                            /* construct() return value */
 
-    if (!PyArg_ParseTuple(args, "Onn:decode_block", &sequence, &nlen, &ndist))
+    if (!PyArg_ParseTuple(args, "Oii:decode_block", &sequence, &nlen, &ndist))
         return NULL;
 
     /* check arguments and set values in lengths[0..nlen+ndist-1] */
@@ -486,14 +486,14 @@ static PyObject *
 state_decode_lengths(state_obj *self, PyObject *args)
 {
     PyObject *sequence;
-    Py_ssize_t ncode;     /* number of lengths in descriptor (nlen + ndist) */
+    int ncode;     /* number of lengths in descriptor (nlen + ndist) */
     int index;                          /* index of lengths[] */
     int err;                            /* construct() return value */
     short lengths[MAXCODES];            /* descriptor code lengths */
     short cnt[MAXBITS+1], sym[19];      /* codelencode memory */
     struct huffman codelencode;     /* length and distance code length code */
 
-    if (!PyArg_ParseTuple(args, "On:decode_lengths", &sequence, &ncode))
+    if (!PyArg_ParseTuple(args, "Oi:decode_lengths", &sequence, &ncode))
         return NULL;
 
     /* check arguments and set lengths[0..18] */
@@ -565,9 +565,9 @@ state_decode_lengths(state_obj *self, PyObject *args)
 static PyObject *
 state_copy(state_obj *self, PyObject *args)
 {
-    Py_ssize_t dist, len;
+    int dist, len;
 
-    if (!PyArg_ParseTuple(args, "nn:copy", &dist, &len))
+    if (!PyArg_ParseTuple(args, "ii:copy", &dist, &len))
         return NULL;
 
     if (dist_len_copy(self, dist, len) < 0)
