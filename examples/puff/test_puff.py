@@ -1,4 +1,5 @@
 import os
+import sys
 import zlib
 import unittest
 
@@ -201,6 +202,7 @@ class TestPuff(unittest.TestCase):
         for level in range(1, 10):
             self.round_trip(data, level)
 
+    @unittest.skipIf(sys.platform == "win32", "Windows doesn't have this file")
     def test_words(self):
         with open('/usr/share/dict/words', 'rb') as f:
             data = f.read()
