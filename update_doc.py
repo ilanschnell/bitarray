@@ -187,8 +187,7 @@ def write_changelog(fo):
             line = line[2:]
         line = line.replace('`', '``')
         line = hash_pat.sub(hash_replace, line)
-        line = link_pat.sub(
-                    lambda m: "`%s <%s>`__" % (m.group(1), m.group(2)), line)
+        line = link_pat.sub(r"`\1 <\2>`__", line)
         fo.write(line + '\n')
 
 
