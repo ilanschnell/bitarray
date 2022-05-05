@@ -134,8 +134,9 @@ The bitarray object:
     for name in list(NEW_IN) + list(DOC_LINKS):
         assert name in _NAMES, name
 
+
 def update_readme(path):
-    ver_pat = re.compile(r'(bitarray.+?)(\d+\.\d+\.\d+)')
+    ver_pat = re.compile(r'(bitarray.+?)\s(\d+\.\d+\.\d+)')
 
     with open(path, 'r') as fi:
         data = fi.read()
@@ -144,8 +145,7 @@ def update_readme(path):
         for line in data.splitlines():
             if line == 'Reference':
                 break
-            line = ver_pat.sub(lambda m: m.group(1) + bitarray.__version__,
-                               line)
+            line = ver_pat.sub(r'\1 ' + bitarray.__version__, line)
             fo.write("%s\n" % line.rstrip())
 
         write_reference(fo)
@@ -185,9 +185,9 @@ def write_changelog(fo):
             line = ''
         elif line.startswith('  '):
             line = line[2:]
-        line = line.replace('`', '``')
-        line = hash_pat.sub(hash_replace, line)
-        line = link_pat.sub(r"`\1 <\2>`__", line)
+            line = line.replace('`', '``')
+            line = hash_pat.sub(hash_replace, line)
+            line = link_pat.sub(r"`\1 <\2>`__", line)
         fo.write(line + '\n')
 
 
