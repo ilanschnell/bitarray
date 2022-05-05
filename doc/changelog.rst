@@ -10,7 +10,7 @@ Change log
 * allow bytes-like argument in ``.frombytes()`` and ``.pack()`` - previously,
   the arguments were limited to the ``bytes`` object, see `#174 <https://github.com/ilanschnell/bitarray/issues/174>`__
 * allow bytes-like arguments in ``util.deserialize()``
-* add official pyodide support
+* add official `pyodide <https://pyodide.org/>`__ support
 * add `DEFLATE decompression <../examples/puff/>`__ example
 * optimize ``.bytereverse()``
 * optimize ``delslice()`` for cases like ``del a[1:17:2]`` when ``a`` is large
