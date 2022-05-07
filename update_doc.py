@@ -58,11 +58,19 @@ DOC_LINKS = {
     'util.vl_encode':          'vlf',
 }
 
+GETSET = {
+    'bitarray.bitorder':   'str',
+    'bitarray.buffer_obj': 'bytes-like | None',
+    'bitarray.nbytes':     'int',
+    'bitarray.readonly':   'bool',
+}
+
 _NAMES = set()
 
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
 def get_doc(name):
     parts = name.split('.')
+    last_part = parts[-1]
     obj = bitarray
     while parts:
         obj = getattr(obj, parts[0])
@@ -71,18 +79,20 @@ def get_doc(name):
     docstring = obj.__doc__
     lines = docstring.splitlines()
 
-    if len(lines) > 1:
-        assert docstring.startswith(name.split('.')[-1])
-        m = sig_pat.match(lines[0])
-        if m is None:
-            raise Exception("signature line invalid: %r" % lines[0])
-        sig = '``%s``' %  m.group(1)
-        if m.group(3):
-            sig += ' -> %s' % m.group(3)
-        assert lines[1] == ''
-        return sig, lines[2:]
-    else:
-        ...
+    if len(lines) == 1:
+        sig = '``%s`` -> %s' % (last_part, GETSET[name])
+        return sig, lines
+
+    assert docstring.startswith(last_part)
+    m = sig_pat.match(lines[0])
+    if m is None:
+        raise Exception("signature line invalid: %r" % lines[0])
+    sig = '``%s``' %  m.group(1)
+    if m.group(3):
+        sig += ' -> %s' % m.group(3)
+    assert lines[1] == ''
+    return sig, lines[2:]
+
 
 def write_doc(fo, name):
     _NAMES.add(name)
@@ -123,11 +133,19 @@ The bitarray object:
 """ % (bitarray.__version__, BASE_URL + "/blob/master/doc/changelog.rst"))
     write_doc(fo, 'bitarray')
 
-    fo.write("**A bitarray object supports the following methods:**\n\n")
+    fo.write("**bitarray methods:**\n\n")
     for method in sorted(dir(bitarray.bitarray)):
         if method.startswith('_'):
             continue
-        write_doc(fo, 'bitarray.%s' % method)
+        name = 'bitarray.%s' % method
+        if name not in GETSET:
+            write_doc(fo, name)
+
+    fo.write("**bitarray data descriptors:**\n\n")
+    for getset in sorted(dir(bitarray.bitarray)):
+        name = 'bitarray.%s' % getset
+        if name in GETSET:
+            write_doc(fo, name)
 
     fo.write("Other objects:\n"
              "--------------\n\n")
