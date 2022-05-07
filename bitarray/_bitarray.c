@@ -1764,6 +1764,36 @@ bitarray_overlap(bitarrayobject *self, PyObject *other)
 
 #endif  /* NDEBUG */
 
+/* ---------------------- bitarray getset members ---------------------- */
+
+static PyObject *
+bitarray_get_bitorder(bitarrayobject *self, void *Py_UNUSED(ignored))
+{
+    return Py_BuildValue("s", ENDIAN_STR(self->endian));
+}
+
+static PyObject *
+bitarray_get_nbytes(bitarrayobject *self, void *Py_UNUSED(ignored))
+{
+    return PyLong_FromSsize_t(Py_SIZE(self));
+}
+
+static PyObject *
+bitarray_get_readonly(bitarrayobject *self, void *Py_UNUSED(ignored))
+{
+    return PyBool_FromLong(self->readonly);
+}
+
+static PyGetSetDef bitarray_getsets [] = {
+    {"bitorder", (getter) bitarray_get_bitorder, NULL,
+     PyDoc_STR("bit order as a string -- same as .endian()")},
+    {"nbytes",   (getter) bitarray_get_nbytes,   NULL,
+     PyDoc_STR("buffer size in bytes")},
+    {"readonly", (getter) bitarray_get_readonly, NULL,
+     PyDoc_STR("bool indicating whether buffer is read only")},
+    {NULL, NULL, NULL, NULL}
+};
+
 /* ----------------------- bitarray_as_sequence ------------------------ */
 
 static Py_ssize_t
@@ -3690,7 +3720,7 @@ static PyTypeObject Bitarray_Type = {
     0,                                        /* tp_iternext */
     bitarray_methods,                         /* tp_methods */
     0,                                        /* tp_members */
-    0,                                        /* tp_getset */
+    bitarray_getsets,                         /* tp_getset */
     0,                                        /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */

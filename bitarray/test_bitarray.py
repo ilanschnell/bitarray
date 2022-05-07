@@ -3356,6 +3356,32 @@ tests.append(BytesTests)
 
 # ---------------------------------------------------------------------------
 
+class DescriptorTests(unittest.TestCase, Util):
+
+    def test_bitorder(self):
+        for endian in 'little', 'big':
+            a = bitarray(endian=endian)
+            self.assertEqual(a.bitorder, endian)
+            self.assertIsInstance(a.bitorder, str)
+
+    def test_nbytes(self):
+        for a in self.randombitarrays():
+            self.assertEqual(a.nbytes, bits2bytes(len(a)))
+            self.assertIsInstance(a.nbytes, int)
+
+    def test_readonly(self):
+        a = bitarray('110')
+        self.assertFalse(a.readonly)
+        self.assertIsInstance(a.readonly, bool)
+
+        b = frozenbitarray(a)
+        self.assertTrue(b.readonly)
+        self.assertIsInstance(b.readonly, bool)
+
+tests.append(DescriptorTests)
+
+# ---------------------------------------------------------------------------
+
 class FileTests(unittest.TestCase, Util):
 
     def setUp(self):
