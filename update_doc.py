@@ -61,20 +61,34 @@ DOC_LINKS = {
 _NAMES = set()
 
 sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
+def get_doc(name):
+    parts = name.split('.')
+    obj = bitarray
+    while parts:
+        obj = getattr(obj, parts[0])
+        del parts[0]
+
+    docstring = obj.__doc__
+    lines = docstring.splitlines()
+
+    if len(lines) > 1:
+        assert docstring.startswith(name.split('.')[-1])
+        m = sig_pat.match(lines[0])
+        if m is None:
+            raise Exception("signature line invalid: %r" % lines[0])
+        sig = '``%s``' %  m.group(1)
+        if m.group(3):
+            sig += ' -> %s' % m.group(3)
+        assert lines[1] == ''
+        return sig, lines[2:]
+    else:
+        ...
+
 def write_doc(fo, name):
     _NAMES.add(name)
-    doc = eval('bitarray.%s.__doc__' % name)
-    assert doc, name
-    lines = doc.splitlines()
-    m = sig_pat.match(lines[0])
-    if m is None:
-        raise Exception("signature line invalid: %r" % lines[0])
-    s = '``%s``' %  m.group(1)
-    if m.group(3):
-        s += ' -> %s' % m.group(3)
-    fo.write('%s\n' % s)
-    assert lines[1] == ''
-    for line in lines[2:]:
+    sig, lines = get_doc(name)
+    fo.write('%s\n' % sig)
+    for line in lines:
         out = line.rstrip()
         fo.write("   %s\n" % out.replace('`', '``') if out else "\n")
 
