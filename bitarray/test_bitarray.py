@@ -3368,6 +3368,16 @@ class DescriptorTests(unittest.TestCase, Util):
             self.assertEqual(a.bitorder, endian)
             self.assertIsInstance(a.bitorder, str)
 
+    def test_buffer_obj(self):
+        b = bytearray(b'ABC')
+        a = bitarray(buffer=b)
+        self.assertTrue(a.buffer_obj is b)
+        del b
+        self.assertEqual(a.tobytes(), b'ABC')
+
+        a = bitarray()
+        self.assertTrue(a.buffer_obj is None)
+
     def test_nbytes(self):
         for a in self.randombitarrays():
             self.assertEqual(a.nbytes, bits2bytes(len(a)))
