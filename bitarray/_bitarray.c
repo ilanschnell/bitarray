@@ -1230,11 +1230,26 @@ bitarray_reverse(bitarrayobject *self)
     Py_ssize_t i, j;
 
     RAISE_IF_READONLY(self, NULL);
-    for (i = 0, j = self->nbits - 1; i < j; i++, j--) {
-        int t = getbit(self, i);
-        setbit(self, i, getbit(self, j));
-        setbit(self, j, t);
+    const Py_ssize_t nbytes = Py_SIZE(self);
+
+    // Reverse the order of bytes
+    for (i = 0, j = nbytes-1; i<j; i++, j--) {
+        char temp = self->ob_item[i];
+        self->ob_item[i] = self->ob_item[j];
+        self->ob_item[j] = temp;
     }
+
+    // Reverse the order from bits within each byte
+    bytereverse(self, 0, nbytes);
+
+    // The k excess/padding bits at the end of the original bitarray
+    // will now be the leading k bits. We shave them off here.
+    // Note that this involves reading/writing past self->nbits bits,
+    // but not past nbytes bytes.
+    Py_ssize_t k = (8 - (self->nbits % 8)) % 8;
+    copy_n(self, 0, self, k, self->nbits + k);
+    setrange(self, self->nbits, self->nbits + k, 0);
+
     Py_RETURN_NONE;
 }
 
