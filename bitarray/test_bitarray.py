@@ -150,6 +150,7 @@ class Util(object):
 
         self.assertEqual(a.bitorder, endian)
         self.assertEqual(a.nbytes, size)
+        self.assertEqual(a.padbits, unused)
         self.assertEqual(a.readonly, readonly)
 
         if buf:
@@ -3383,6 +3384,12 @@ class DescriptorTests(unittest.TestCase, Util):
             self.assertEqual(a.nbytes, bits2bytes(len(a)))
             if is_py3k:
                 self.assertIsInstance(a.nbytes, int)
+
+    def test_padbits(self):
+        for a in self.randombitarrays():
+            self.assertEqual(a.padbits, 8 * a.nbytes - len(a))
+            if is_py3k:
+                self.assertIsInstance(a.padbits, int)
 
     def test_readonly(self):
         a = bitarray('110')

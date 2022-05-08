@@ -252,6 +252,10 @@ Data descriptors were added in version 2.6.
    buffer size in bytes
 
 
+``padbits`` -> int
+   number of pad bits
+
+
 ``readonly`` -> bool
    bool indicating whether buffer is read only
 
