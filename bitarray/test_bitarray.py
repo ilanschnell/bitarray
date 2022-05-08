@@ -2482,6 +2482,12 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a, bitarray('10100000'))
             self.check_obj(a)
 
+    def test_fill_exported(self):
+        a = bitarray('11101')
+        b = bitarray(buffer=a)
+        self.assertEqual(a.fill(), 3)
+        self.assertEqual(a, b)
+
     def test_fill_random(self):
         for a in self.randombitarrays():
             b = a.copy()
@@ -4257,7 +4263,6 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertRaises(BufferError, a.clear)
         self.assertRaises(BufferError, a.encode, {'a': bitarray('0')}, 'aa')
         self.assertRaises(BufferError, a.extend, [0, 1, 0])
-        self.assertRaises(BufferError, a.fill)
         self.assertRaises(BufferError, a.frombytes, b'a')
         self.assertRaises(BufferError, a.insert, 0, 1)
         self.assertRaises(BufferError, a.pack, b'\0\0\xff')
@@ -4326,13 +4331,13 @@ class BufferExportTests(unittest.TestCase, Util):
         self.assertRaises(BufferError, a.clear)
         self.assertRaises(BufferError, a.encode, {'a': bitarray('0')}, 'aa')
         self.assertRaises(BufferError, a.extend, '0')
-        self.assertRaises(BufferError, a.fill)
         self.assertRaises(BufferError, a.frombytes, b'\0')
         self.assertRaises(BufferError, a.insert, 0, 1)
         self.assertRaises(BufferError, a.pack, b'\0')
         self.assertRaises(BufferError, a.pop)
         self.assertRaises(BufferError, a.remove, 1)
         self.assertRaises(BufferError, a.__delitem__, slice(0, 8))
+        a.fill()
         self.assertEqual(v.tobytes(), a.tobytes())
         self.check_obj(a)
 

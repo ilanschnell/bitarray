@@ -1014,8 +1014,7 @@ bitarray_fill(bitarrayobject *self)
 
     RAISE_IF_READONLY(self, NULL);
     p = setunused(self);
-    if (resize(self, self->nbits + p) < 0)
-        return NULL;
+    self->nbits += p;
 
     assert(self->nbits % 8 == 0);
     assert_nbits(self);
