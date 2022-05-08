@@ -1228,35 +1228,43 @@ static PyObject *
 bitarray_reverse(bitarrayobject *self)
 {
     const Py_ssize_t nbytes = Py_SIZE(self), nbits = self->nbits;
-    const Py_ssize_t p = 8 * nbytes - nbits;  /* number of pad bits */
     Py_ssize_t i, j;
 
     RAISE_IF_READONLY(self, NULL);
 
-    /* Increase self->nbits to full buffer size.  The p pad bits will later
-       be the leading p bits.  To remove those p leading bits, we must have
-       p extra bits at the end of the bitarray. */
-    self->nbits += p;
-    assert(self->nbits == 8 * nbytes);
-    assert_nbits(self);
-
-    /* reverse the order of bytes */
-    for (i = 0, j = nbytes - 1; i < j; i++, j--) {
-        char temp = self->ob_item[i];
-        self->ob_item[i] = self->ob_item[j];
-        self->ob_item[j] = temp;
+    if (nbits < 16 && nbits != 8) {  /* shortcuts for small bitarrays */
+        for (i = 0, j = nbits - 1; i < j; i++, j--) {
+            int t = getbit(self, i);
+            setbit(self, i, getbit(self, j));
+            setbit(self, j, t);
+        }
     }
-    /* reverse order of bits within each byte */
-    bytereverse(self, 0, nbytes);
+    else {
+        const Py_ssize_t p = 8 * nbytes - nbits;  /* number of pad bits */
 
-    /* remove the p pad bits at the end of the original bitarray that are now
-       the leading p bits */
-    copy_n(self, 0, self, p, nbits);
+        /* Increase self->nbits to full buffer size.  The p pad bits will
+           later be the leading p bits.  To remove those p leading bits, we
+           must have p extra bits at the end of the bitarray. */
+        self->nbits += p;
+        assert(self->nbits == 8 * nbytes);
 
-    /* restore number of bits */
-    self->nbits = nbits;
+        /* reverse order of bytes */
+        for (i = 0, j = nbytes - 1; i < j; i++, j--) {
+            char t = self->ob_item[i];
+            self->ob_item[i] = self->ob_item[j];
+            self->ob_item[j] = t;
+        }
+        /* reverse order of bits within each byte */
+        bytereverse(self, 0, nbytes);
+
+        /* remove the p pad bits at the end of the original bitarray that
+           are now the leading p bits */
+        copy_n(self, 0, self, p, nbits);
+
+        /* restore number of bits */
+        self->nbits = nbits;
+    }
     assert_nbits(self);
-
     Py_RETURN_NONE;
 }
 
