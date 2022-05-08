@@ -1227,28 +1227,35 @@ bitarray_repr(bitarrayobject *self)
 static PyObject *
 bitarray_reverse(bitarrayobject *self)
 {
+    const Py_ssize_t nbytes = Py_SIZE(self), nbits = self->nbits;
+    const Py_ssize_t p = 8 * nbytes - nbits;  /* number of pad bits */
     Py_ssize_t i, j;
 
     RAISE_IF_READONLY(self, NULL);
-    const Py_ssize_t nbytes = Py_SIZE(self);
 
-    // Reverse the order of bytes
-    for (i = 0, j = nbytes-1; i<j; i++, j--) {
+    /* Increase self->nbits to full buffer size.  The p pad bits will later
+       be the leading p bits.  To remove those p leading bits, we must have
+       p extra bits at the end of the bitarray. */
+    self->nbits += p;
+    assert(self->nbits == 8 * nbytes);
+    assert_nbits(self);
+
+    /* reverse the order of bytes */
+    for (i = 0, j = nbytes - 1; i < j; i++, j--) {
         char temp = self->ob_item[i];
         self->ob_item[i] = self->ob_item[j];
         self->ob_item[j] = temp;
     }
-
-    // Reverse the order from bits within each byte
+    /* reverse order of bits within each byte */
     bytereverse(self, 0, nbytes);
 
-    // The k excess/padding bits at the end of the original bitarray
-    // will now be the leading k bits. We shave them off here.
-    // Note that this involves reading/writing past self->nbits bits,
-    // but not past nbytes bytes.
-    Py_ssize_t k = (8 - (self->nbits % 8)) % 8;
-    copy_n(self, 0, self, k, self->nbits + k);
-    setrange(self, self->nbits, self->nbits + k, 0);
+    /* remove the p pad bits at the end of the original bitarray that are now
+       the leading p bits */
+    copy_n(self, 0, self, p, nbits);
+
+    /* restore number of bits */
+    self->nbits = nbits;
+    assert_nbits(self);
 
     Py_RETURN_NONE;
 }
