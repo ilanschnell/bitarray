@@ -78,7 +78,6 @@ sig_pat = re.compile(r"""
 
 def get_doc(name):
     parts = name.split('.')
-    last_name = parts[-1]
     obj = bitarray
     while parts:
         obj = getattr(obj, parts.pop(0))
@@ -86,14 +85,14 @@ def get_doc(name):
     lines = obj.__doc__.splitlines()
 
     if len(lines) == 1:
-        sig = '``%s`` -> %s' % (last_name, GETSET[name])
+        sig = '``%s`` -> %s' % (obj.__name__, GETSET[name])
         return sig, lines
 
     m = sig_pat.match(lines[0])
     if m is None:
         raise Exception("signature invalid: %r" % lines[0])
     sig = '``%s``' %  m.group(1)
-    assert m.group(2) == last_name
+    assert m.group(2) == obj.__name__
     if m.group(4):
         sig += ' -> %s' % m.group(4)
     assert lines[1] == ''
