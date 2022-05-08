@@ -140,7 +140,8 @@ The bitarray object:
 """ % (bitarray.__version__, BASE_URL + "/blob/master/doc/changelog.rst"))
     write_doc(fo, 'bitarray')
 
-    fo.write("**bitarray methods:**\n\n")
+    fo.write("bitarray methods:\n"
+             "-----------------\n\n")
     for method in sorted(dir(bitarray.bitarray)):
         if method.startswith('_'):
             continue
@@ -148,7 +149,8 @@ The bitarray object:
         if name not in GETSET:
             write_doc(fo, name)
 
-    fo.write("**bitarray data descriptors:**\n\n")
+    fo.write("bitarray data descriptors:\n"
+             "--------------------------\n\n")
     for getset in sorted(dir(bitarray.bitarray)):
         name = 'bitarray.%s' % getset
         if name in GETSET:

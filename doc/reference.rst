@@ -35,7 +35,8 @@ The bitarray object:
    New in version 2.3: optional ``buffer`` argument.
 
 
-**bitarray methods:**
+bitarray methods:
+-----------------
 
 ``all()`` -> bool
    Return True when all bits in the array are True.
@@ -234,7 +235,8 @@ The bitarray object:
    using the specified mapping.
 
 
-**bitarray data descriptors:**
+bitarray data descriptors:
+--------------------------
 
 ``bitorder`` -> str
    bit order as a string -- same as .endian()
