@@ -150,7 +150,8 @@ The bitarray object:
             write_doc(fo, name)
 
     fo.write("bitarray data descriptors:\n"
-             "--------------------------\n\n")
+             "--------------------------\n\n"
+             "Data descriptors were added in version 2.6.\n\n")
     for getset in sorted(dir(bitarray.bitarray)):
         name = 'bitarray.%s' % getset
         if name in GETSET:
@@ -168,7 +169,7 @@ The bitarray object:
 
     fo.write("Functions defined in `bitarray.util` module:\n"
              "--------------------------------------------\n\n"
-             "This sub-module was add in version 1.2.\n\n")
+             "This sub-module was added in version 1.2.\n\n")
     for func in bitarray.util.__all__:
         write_doc(fo, 'util.%s' % func)
 

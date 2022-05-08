@@ -238,6 +238,8 @@ bitarray methods:
 bitarray data descriptors:
 --------------------------
 
+Data descriptors were added in version 2.6.
+
 ``bitorder`` -> str
    bit order as a string -- same as .endian()
 
@@ -294,7 +296,7 @@ Functions defined in the `bitarray` module:
 Functions defined in `bitarray.util` module:
 --------------------------------------------
 
-This sub-module was add in version 1.2.
+This sub-module was added in version 1.2.
 
 ``zeros(length, /, endian=None)`` -> bitarray
    Create a bitarray of length, with all values 0, and optional
