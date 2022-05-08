@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.5.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.5.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -35,7 +35,7 @@ The bitarray object:
    New in version 2.3: optional ``buffer`` argument.
 
 
-**A bitarray object supports the following methods:**
+**bitarray methods:**
 
 ``all()`` -> bool
    Return True when all bits in the array are True.
@@ -232,6 +232,24 @@ The bitarray object:
 ``unpack(zero=b'\x00', one=b'\x01')`` -> bytes
    Return bytes containing one character for each bit in the bitarray,
    using the specified mapping.
+
+
+**bitarray data descriptors:**
+
+``bitorder`` -> str
+   bit order as a string -- same as .endian()
+
+
+``buffer_obj`` -> bytes-like | None
+   when buffer is imported, return the underlying object
+
+
+``nbytes`` -> int
+   buffer size in bytes
+
+
+``readonly`` -> bool
+   bool indicating whether buffer is read only
 
 
 Other objects:

@@ -1,6 +1,10 @@
 Change log
 ==========
 
+2022-XX-XX   2.5.1:
+
+
+
 **2.5.0** (2022-05-04):
 
 * add calculating of canonical Huffman codes ``util.canonical_huffman()``
