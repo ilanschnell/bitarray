@@ -1014,6 +1014,8 @@ bitarray_fill(bitarrayobject *self)
 
     RAISE_IF_READONLY(self, NULL);
     p = setunused(self);
+    /* there is no reason to call resize() - .fill() will not raise
+       BufferError when buffer is imported or exported */
     self->nbits += p;
 
     assert(self->nbits % 8 == 0);

@@ -2485,8 +2485,11 @@ class MethodTests(unittest.TestCase, Util):
     def test_fill_exported(self):
         a = bitarray('11101')
         b = bitarray(buffer=a)
+        v = memoryview(a)
         self.assertEqual(a.fill(), 3)
         self.assertEqual(a, b)
+        if is_py3k:
+            self.assertEqual(v.nbytes, 1)
 
     def test_fill_random(self):
         for a in self.randombitarrays():
