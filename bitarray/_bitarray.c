@@ -1248,7 +1248,7 @@ bitarray_reverse(bitarrayobject *self)
            later be the leading p bits.  To remove those p leading bits, we
            must have p extra bits at the end of the bitarray. */
         self->nbits += p;
-        assert(self->nbits == 8 * nbytes);
+        assert(0 <= p && p < 8 && self->nbits == 8 * nbytes);
 
         /* reverse order of bytes */
         for (i = 0, j = nbytes - 1; i < j; i++, j--) {
@@ -1265,8 +1265,8 @@ bitarray_reverse(bitarrayobject *self)
 
         /* restore number of bits */
         self->nbits = nbits;
+        assert_nbits(self);
     }
-    assert_nbits(self);
     Py_RETURN_NONE;
 }
 
