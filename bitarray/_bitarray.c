@@ -1232,7 +1232,8 @@ bitarray_reverse(bitarrayobject *self)
 
     RAISE_IF_READONLY(self, NULL);
 
-    if (nbits < 16 && nbits != 8) {  /* shortcuts for small bitarrays */
+    if (nbits < 16 && nbits != 8) {
+        /* small bitarray - swapping individual bits is slightly faster */
         for (i = 0, j = nbits - 1; i < j; i++, j--) {
             int t = getbit(self, i);
             setbit(self, i, getbit(self, j));
