@@ -1242,6 +1242,7 @@ bitarray_reverse(bitarrayobject *self)
     }
     else {
         const Py_ssize_t p = 8 * nbytes - nbits;  /* number of pad bits */
+        char *buff = self->ob_item;
 
         /* Increase self->nbits to full buffer size.  The p pad bits will
            later be the leading p bits.  To remove those p leading bits, we
@@ -1251,9 +1252,9 @@ bitarray_reverse(bitarrayobject *self)
 
         /* reverse order of bytes */
         for (i = 0, j = nbytes - 1; i < j; i++, j--) {
-            char t = self->ob_item[i];
-            self->ob_item[i] = self->ob_item[j];
-            self->ob_item[j] = t;
+            char t = buff[i];
+            buff[i] = buff[j];
+            buff[j] = t;
         }
         /* reverse order of bits within each byte */
         bytereverse(self, 0, nbytes);
