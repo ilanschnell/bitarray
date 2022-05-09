@@ -58,7 +58,6 @@ DOC_LINKS = {
 }
 
 GETSET = {
-    'bitarray.bitorder':   'str',
     'bitarray.buffer_obj': 'bytes-like | None',
     'bitarray.nbytes':     'int',
     'bitarray.padbits':    'int',

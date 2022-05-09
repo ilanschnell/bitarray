@@ -148,7 +148,6 @@ class Util(object):
         self.assertEqual(endian, a.endian())
         self.assertTrue(endian in ('little', 'big'))
 
-        self.assertEqual(a.bitorder, endian)
         self.assertEqual(a.nbytes, size)
         self.assertEqual(a.padbits, unused)
         self.assertEqual(a.readonly, readonly)
@@ -3362,12 +3361,6 @@ tests.append(BytesTests)
 # ---------------------------------------------------------------------------
 
 class DescriptorTests(unittest.TestCase, Util):
-
-    def test_bitorder(self):
-        for endian in 'little', 'big':
-            a = bitarray(endian=endian)
-            self.assertEqual(a.bitorder, endian)
-            self.assertIsInstance(a.bitorder, str)
 
     def test_buffer_obj(self):
         b = bytearray(b'ABC')

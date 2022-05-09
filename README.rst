@@ -629,10 +629,6 @@ bitarray data descriptors:
 
 Data descriptors were added in version 2.6.
 
-``bitorder`` -> str
-   bit order as a string -- same as .endian()
-
-
 ``buffer_obj`` -> bytes-like | None
    when buffer is imported, return the underlying object
 

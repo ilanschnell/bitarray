@@ -1779,12 +1779,6 @@ bitarray_get_obj(bitarrayobject *self, void *Py_UNUSED(ignored))
 }
 
 static PyObject *
-bitarray_get_bitorder(bitarrayobject *self, void *Py_UNUSED(ignored))
-{
-    return Py_BuildValue("s", ENDIAN_STR(self->endian));
-}
-
-static PyObject *
 bitarray_get_nbytes(bitarrayobject *self, void *Py_UNUSED(ignored))
 {
     return PyLong_FromSsize_t(Py_SIZE(self));
@@ -1803,8 +1797,6 @@ bitarray_get_readonly(bitarrayobject *self, void *Py_UNUSED(ignored))
 }
 
 static PyGetSetDef bitarray_getsets [] = {
-    {"bitorder",   (getter) bitarray_get_bitorder, NULL,
-     PyDoc_STR("bit order as a string -- same as .endian()")},
     {"buffer_obj", (getter) bitarray_get_obj,      NULL,
      PyDoc_STR("when buffer is imported, return the underlying object")},
     {"nbytes",     (getter) bitarray_get_nbytes,   NULL,
