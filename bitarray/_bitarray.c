@@ -1018,8 +1018,7 @@ bitarray_fill(bitarrayobject *self)
        BufferError when buffer is imported or exported */
     self->nbits += p;
 
-    assert(self->nbits % 8 == 0);
-    assert_nbits(self);
+    assert(self->nbits == 8 * Py_SIZE(self));
     return PyLong_FromLong(p);
 }
 
@@ -1452,7 +1451,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
 
     if (resize(self, t + p + 8 * view.len) < 0)
         goto error;
-    assert(self->nbits % 8 == 0);
+    assert(self->nbits == 8 * Py_SIZE(self));
 
     memcpy(self->ob_item + (Py_SIZE(self) - view.len),
            (char *) view.buf, (size_t) view.len);

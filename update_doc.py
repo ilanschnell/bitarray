@@ -5,7 +5,6 @@ import re
 import doctest
 from io import StringIO
 
-import bitarray
 import bitarray.util
 
 
@@ -60,34 +59,42 @@ DOC_LINKS = {
 
 _NAMES = set()
 
-sig_pat = re.compile(r'(\w+\([^()]*\))( -> (.+))?')
+sig_pat = re.compile(r"""
+(                # group 1
+  (\w+)          # function name, group 2
+  \([^()]*\)     # (...)
+)
+(                # optional group 3
+  \s->\s(.+)     # return type, group 4
+)?
+""", re.VERBOSE)
+
 def get_doc(name):
     parts = name.split('.')
     obj = bitarray
     while parts:
-        obj = getattr(obj, parts[0])
-        del parts[0]
+        obj = getattr(obj, parts.pop(0))
 
-    docstring = obj.__doc__
-    lines = docstring.splitlines()
+    lines = obj.__doc__.splitlines()
 
-    if len(lines) > 1:
-        assert docstring.startswith(name.split('.')[-1])
-        m = sig_pat.match(lines[0])
-        if m is None:
-            raise Exception("signature line invalid: %r" % lines[0])
-        sig = '``%s``' %  m.group(1)
-        if m.group(3):
-            sig += ' -> %s' % m.group(3)
-        assert lines[1] == ''
-        return sig, lines[2:]
-    else:
-        ...
+    if len(lines) == 1:
+        return ...
+
+    m = sig_pat.match(lines[0])
+    if m is None:
+        raise Exception("signature invalid: %r" % lines[0])
+    sig = '``%s``' %  m.group(1)
+    assert m.group(2) == obj.__name__
+    if m.group(4):
+        sig += ' -> %s' % m.group(4)
+    assert lines[1] == ''
+    return sig, lines[2:]
+
 
 def write_doc(fo, name):
     _NAMES.add(name)
     sig, lines = get_doc(name)
-    fo.write('%s\n' % sig)
+    fo.write(sig + '\n')
     for line in lines:
         out = line.rstrip()
         fo.write("   %s\n" % out.replace('`', '``') if out else "\n")
@@ -123,7 +130,8 @@ The bitarray object:
 """ % (bitarray.__version__, BASE_URL + "/blob/master/doc/changelog.rst"))
     write_doc(fo, 'bitarray')
 
-    fo.write("**A bitarray object supports the following methods:**\n\n")
+    fo.write("bitarray methods:\n"
+             "-----------------\n\n")
     for method in sorted(dir(bitarray.bitarray)):
         if method.startswith('_'):
             continue
@@ -141,7 +149,7 @@ The bitarray object:
 
     fo.write("Functions defined in `bitarray.util` module:\n"
              "--------------------------------------------\n\n"
-             "This sub-module was add in version 1.2.\n\n")
+             "This sub-module was added in version 1.2.\n\n")
     for func in bitarray.util.__all__:
         write_doc(fo, 'util.%s' % func)
 
