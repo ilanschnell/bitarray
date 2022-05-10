@@ -1,6 +1,12 @@
 Change log
 ==========
 
+**2.5.1** (2022-05-10):
+
+* optimize ``.reverse()``, see `#177 <https://github.com/ilanschnell/bitarray/issues/177>`__
+* allow negative (byte) indices in ``.bytereverse()``
+
+
 **2.5.0** (2022-05-04):
 
 * add calculating of canonical Huffman codes ``util.canonical_huffman()``

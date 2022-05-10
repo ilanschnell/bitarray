@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.5.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.5.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -35,7 +35,8 @@ The bitarray object:
    New in version 2.3: optional ``buffer`` argument.
 
 
-**A bitarray object supports the following methods:**
+bitarray methods:
+-----------------
 
 ``all()`` -> bool
    Return True when all bits in the array are True.
@@ -65,7 +66,7 @@ The bitarray object:
 
 
 ``bytereverse(start=0, stop=<end of buffer>, /)``
-   Reverse the bit order for each buffer byte in range(start, stop) in-place.
+   Reverse the order of bits in byte-range(start, stop) in-place.
    The start and stop indices are given in terms of bytes (not bits).
    Also note that this method only changes the buffer; it does not change the
    endianness of the bitarray object.
@@ -274,7 +275,7 @@ Functions defined in the `bitarray` module:
 Functions defined in `bitarray.util` module:
 --------------------------------------------
 
-This sub-module was add in version 1.2.
+This sub-module was added in version 1.2.
 
 ``zeros(length, /, endian=None)`` -> bitarray
    Create a bitarray of length, with all values 0, and optional

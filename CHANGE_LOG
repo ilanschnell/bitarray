@@ -1,6 +1,7 @@
-2022-05-XX   2.5.1:
+2022-05-10   2.5.1:
 -------------------
   * optimize `.reverse()`, see #177
+  * allow negative (byte) indices in `.bytereverse()`
 
 
 2022-05-04   2.5.0:
