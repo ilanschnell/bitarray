@@ -2712,19 +2712,21 @@ class MethodTests(unittest.TestCase, Util):
         a = bitarray('11100000 00000011 00111111 11111000')
         a.bytereverse(0, 1)  # reverse byte 0
         self.assertEqual(a, bitarray('00000111 00000011 00111111 11111000'))
-        a.bytereverse(1, 3)  # reverse bytes 1 and 2
+        a.bytereverse(1, -1)  # reverse bytes 1 and 2
         self.assertEqual(a, bitarray('00000111 11000000 11111100 11111000'))
         a.bytereverse(2)  # reverse bytes 2 till end of buffer
         self.assertEqual(a, bitarray('00000111 11000000 00111111 00011111'))
-        a.bytereverse(3)  # reverse last byte
+        a.bytereverse(-1)  # reverse last byte
         self.assertEqual(a, bitarray('00000111 11000000 00111111 11111000'))
         a.bytereverse(3, 1)  # start > stop (nothing to reverse)
         self.assertEqual(a, bitarray('00000111 11000000 00111111 11111000'))
         a.bytereverse(0, 4)  # reverse all bytes
         self.assertEqual(a, bitarray('11100000 00000011 11111100 00011111'))
+        a.bytereverse()  # reverse all bytes
+        self.assertEqual(a, bitarray('00000111 11000000 00111111 11111000'))
 
-        self.assertRaises(IndexError, a.bytereverse, -1)
-        self.assertRaises(IndexError, a.bytereverse, 0, -1)
+        self.assertRaises(IndexError, a.bytereverse, -5)
+        self.assertRaises(IndexError, a.bytereverse, 0, -5)
         self.assertRaises(IndexError, a.bytereverse, 5)
         self.assertRaises(IndexError, a.bytereverse, 0, 5)
 

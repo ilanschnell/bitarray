@@ -850,6 +850,11 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "|nn:bytereverse", &start, &stop))
         return NULL;
 
+    if (start < 0)
+        start += nbytes;
+    if (stop < 0)
+        stop += nbytes;
+
     if (start < 0 || start > nbytes || stop < 0 || stop > nbytes) {
         PyErr_SetString(PyExc_IndexError, "byte index out of range");
         return NULL;
@@ -861,7 +866,7 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(bytereverse_doc,
 "bytereverse(start=0, stop=<end of buffer>, /)\n\
 \n\
-Reverse the bit order for each buffer byte in range(start, stop) in-place.\n\
+Reverse the order of bits in byte-range(start, stop) in-place.\n\
 The start and stop indices are given in terms of bytes (not bits).\n\
 Also note that this method only changes the buffer; it does not change the\n\
 endianness of the bitarray object.");
