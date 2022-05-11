@@ -38,7 +38,7 @@ bitarrays.  However, this representation is not very human readable.
     >>> a.tobytes()  # raw buffer
     b'\xce\r\x1cxJ\xf1\xe0'
 
-Here, the number of unused bits within the last byte, as well as the bit
+Here, the number of pad bits within the last byte, as well as the bit
 endianness, is not part of the byte buffer itself.  Therefore, extra work
 is required to store this information.  The utility function ``serialize()``
 adds this information to a header byte:
@@ -58,15 +58,15 @@ The header byte is structured the following way:
 
     >>> x[0]        # 0x13
     19
-    >>> x[0] % 16   # number of unused bits (0..7) with last byte
+    >>> x[0] % 16   # number of pad bits (0..7) within last byte
     3
     >>> x[0] // 16  # bit endianness: 0 little, 1 big
     1
 
 Hence, valid values for the header byte are in the ranges 0 .. 7
-and 16 .. 23 (inclusive).  Moreover, if the serialized bitarray is
+or 16 .. 23 (inclusive).  Moreover, if the serialized bitarray is
 empty (``x`` only consists of a single byte - the header byte), the
-only valid values for the header are 0 and 16 (corresponding to a
+only valid values for the header are 0 or 16 (corresponding to a
 little-endian and big-endian empty bitarray).
 The functions ``serialize()`` and ``deserialize()`` are the recommended and
 fasted way to (de-) serialize bitarray objects to bytes objects (and vice
