@@ -3374,16 +3374,12 @@ tests.append(BytesTests)
 
 class DescriptorTests(unittest.TestCase, Util):
 
-    def test_nbytes(self):
+    def test_nbytes_padbits(self):
         for a in self.randombitarrays():
             self.assertEqual(a.nbytes, bits2bytes(len(a)))
-            if is_py3k:
-                self.assertIsInstance(a.nbytes, int)
-
-    def test_padbits(self):
-        for a in self.randombitarrays():
             self.assertEqual(a.padbits, 8 * a.nbytes - len(a))
             if is_py3k:
+                self.assertIsInstance(a.nbytes, int)
                 self.assertIsInstance(a.padbits, int)
 
     def test_readonly(self):
