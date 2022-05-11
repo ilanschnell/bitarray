@@ -215,8 +215,8 @@ The bit-endianness of the bitarray is respected.
         raise ValueError("non-empty bitarray expected")
 
     le = bool(__a.endian() == 'little')
-    if length % 8:
-        pad = zeros(8 - length % 8, __a.endian())
+    if __a.padbits:
+        pad = zeros(__a.padbits, __a.endian())
         __a = __a + pad if le else pad + __a
 
     if _is_py2:

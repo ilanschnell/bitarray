@@ -15,7 +15,7 @@ from string import hexdigits
 from random import choice, randint, random
 from collections import Counter
 
-from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
+from bitarray import (bitarray, frozenbitarray, decodetree,
                       get_default_endian, _set_default_endian)
 from bitarray.test_bitarray import Util, skipIf
 
@@ -1419,7 +1419,7 @@ class TestsSerialization(unittest.TestCase, Util):
                 a = zeros(n, endian)
                 s = serialize(a)
                 self.assertIsInstance(s, bytes)
-                self.assertEqual(s[1:], b'\0' * bits2bytes(n))
+                self.assertEqual(s[1:], b'\0' * a.nbytes)
                 self.assertEQUAL(a, deserialize(s))
                 a.setall(1)
                 self.assertEQUAL(a, deserialize(serialize(a)))

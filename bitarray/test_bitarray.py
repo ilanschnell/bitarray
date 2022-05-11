@@ -139,17 +139,17 @@ class Util(object):
     def check_obj(self, a):
         self.assertIsInstance(a, bitarray)
 
-        ptr, size, endian, unused, alloc, readonly, buf, exports = \
+        ptr, size, endian, padbits, alloc, readonly, buf, exports = \
                                                           a.buffer_info()
 
         self.assertEqual(size, bits2bytes(len(a)))
-        self.assertEqual(unused, 8 * size - len(a))
-        self.assertTrue(0 <= unused < 8)
+        self.assertEqual(padbits, 8 * size - len(a))
+        self.assertTrue(0 <= padbits < 8)
         self.assertEqual(endian, a.endian())
         self.assertTrue(endian in ('little', 'big'))
 
         self.assertEqual(a.nbytes, size)
-        self.assertEqual(a.padbits, unused)
+        self.assertEqual(a.padbits, padbits)
         self.assertEqual(a.readonly, readonly)
         self.assertEqual(len(a) + a.padbits, 8 * a.nbytes)
 
@@ -159,7 +159,7 @@ class Util(object):
             # an imported buffer will always have a multiple of 8 bits
             self.assertEqual(len(a) % 8, 0)
             self.assertEqual(len(a), 8 * size)
-            self.assertEqual(unused, 0)
+            self.assertEqual(padbits, 0)
         else:
             # the allocated memory is always larger than the buffer size
             self.assertTrue(alloc >= size)
@@ -493,9 +493,10 @@ class CreateObjectTests(unittest.TestCase, Util):
 
             a = bitarray(s + b'\x00')
             head = s[0] if is_py3k else ord(s[0])
-            endian, unused = divmod(head, 16)
+            endian, padbits = divmod(head, 16)
             self.assertEqual(a.endian(), ['little', 'big'][endian])
-            self.assertEqual(len(a), 8 - unused)
+            self.assertEqual(len(a) + padbits, 8)
+            self.assertEqual(a.padbits, padbits)
             self.assertFalse(a.any())
 
         s = b'\x21'
@@ -2740,14 +2741,14 @@ class MethodTests(unittest.TestCase, Util):
         a = bitarray(5, 'big')
         memoryview(a)[0] = 0x13  # 0001 0011
         self.assertEqual(a, bitarray('0001 0'))
-        # the unused bits (011) are not treated as zeros
+        # the padbits (011) are not treated as zeros
         a.bytereverse()
         self.assertEqual(a, bitarray('1100 1'))
 
         a = bitarray(12, 'little')
         memoryview(a)[1] = 0xd4  # .... ....  0010 1011
         self.assertEqual(a[8:], bitarray('0010'))
-        # the unused bits (1011) are not treated as zeros
+        # the padbits (1011) are not treated as zeros
         a.bytereverse(1)
         self.assertEqual(a[8:], bitarray('1101'))
 
@@ -3615,7 +3616,7 @@ class FileTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             with open(self.tmpfname, 'wb') as fo:
                 a.tofile(fo)
-            n = bits2bytes(len(a))
+            n = a.nbytes
             self.assertFileSize(n)
             raw = self.read_file()
             self.assertEqual(len(raw), n)
@@ -3659,8 +3660,8 @@ class FileTests(unittest.TestCase, Util):
                 a.tofile(fo)
 
             raw = self.read_file()
-            self.assertEqual(len(raw), bits2bytes(len(a)))
-            # when we fill the unused bits in a, we can compare
+            self.assertEqual(len(raw), a.nbytes)
+            # when we fill the padbits in a, we can compare
             a.fill()
             b = bitarray(endian='little')
             b.frombytes(raw)
@@ -3671,7 +3672,7 @@ class FileTests(unittest.TestCase, Util):
             data = os.urandom(n)
             a = bitarray(0, 'big')
             a.frombytes(data)
-            self.assertEqual(len(a), 8 * n)
+            self.assertEqual(a.nbytes, n)
             f = BytesIO()
             a.tofile(f)
             self.assertEqual(f.getvalue(), data)
@@ -4213,7 +4214,8 @@ class BufferImportTests(unittest.TestCase, Util):
         for n in range(100):
             a = urandom(n, self.random_endian())
             b = bitarray(buffer=a, endian=a.endian())
-            # an imported buffer will always have a multiple of 8 bits
+            # an imported buffer will always no padbits
+            self.assertEqual(b.padbits, 0)
             self.assertEqual(len(b) % 8, 0)
             self.assertEQUAL(b[:n], a)
             self.check_obj(a)
@@ -4235,11 +4237,11 @@ class BufferImportTests(unittest.TestCase, Util):
 
     def test_frozenbitarray(self):
         a = frozenbitarray('10011011 011')
-        self.assertTrue(buffer_info(a, 'readonly'))
+        self.assertTrue(a.readonly)
         self.check_obj(a)
 
         b = bitarray(buffer=a)
-        self.assertTrue(buffer_info(b, 'readonly'))  # also readonly
+        self.assertTrue(b.readonly)  # also readonly
         self.assertRaises(TypeError, b.__setitem__, 1, 0)
         self.check_obj(b)
 
@@ -4342,7 +4344,7 @@ class BufferExportTests(unittest.TestCase, Util):
         for n in range(100):
             a = bitarray(n)
             v = memoryview(a)
-            self.assertEqual(len(v), bits2bytes(len(a)))
+            self.assertEqual(len(v), a.nbytes)
             info = buffer_info(a)
             self.assertFalse(info['readonly'])
             self.assertFalse(info['imported'])
@@ -4422,7 +4424,7 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(a.to01(), '110')
         self.assertIsInstance(a, bitarray)
         self.assertIsType(a, 'frozenbitarray')
-        self.assertTrue(buffer_info(a, 'readonly'))
+        self.assertTrue(a.readonly)
         self.check_obj(a)
 
         a = frozenbitarray(bitarray())
@@ -4506,9 +4508,9 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
     def test_freeze(self):
         # not so much a test for frozenbitarray, but how it is initialized
         a = bitarray(78)
-        self.assertFalse(buffer_info(a, 'readonly'))  # not readonly
+        self.assertFalse(a.readonly)  # not readonly
         a._freeze()
-        self.assertTrue(buffer_info(a, 'readonly'))   # readonly
+        self.assertTrue(a.readonly)   # readonly
 
     def test_memoryview(self):
         a = frozenbitarray('01000001 01000010', 'big')
