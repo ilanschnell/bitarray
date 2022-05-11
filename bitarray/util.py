@@ -463,6 +463,7 @@ Note: the two lists may be used as input for `canonical_decode()`.
         codedict[sym] = int2ba(code, length, 'big')
         count[length] += 1
         if i + 1 < len(table):
-            code = (code + 1) << (table[i + 1][1] - length)
+            code += 1
+            code <<= table[i + 1][1] - length
 
     return codedict, count, [item[0] for item in table]
