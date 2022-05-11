@@ -148,6 +148,11 @@ class Util(object):
         self.assertEqual(endian, a.endian())
         self.assertTrue(endian in ('little', 'big'))
 
+        self.assertEqual(a.nbytes, size)
+        self.assertEqual(a.padbits, unused)
+        self.assertEqual(a.readonly, readonly)
+        self.assertEqual(len(a) + a.padbits, 8 * a.nbytes)
+
         if buf:
             # imported buffer implies that no extra memory is allocated
             self.assertEqual(alloc, 0)
@@ -3362,8 +3367,34 @@ class BytesTests(unittest.TestCase, Util):
             self.assertRaises(TypeError, a.pack, '1')
         self.assertRaises(TypeError, a.pack, [1, 3])
 
-
 tests.append(BytesTests)
+
+# ---------------------------------------------------------------------------
+
+class DescriptorTests(unittest.TestCase, Util):
+
+    def test_nbytes(self):
+        for a in self.randombitarrays():
+            self.assertEqual(a.nbytes, bits2bytes(len(a)))
+            if is_py3k:
+                self.assertIsInstance(a.nbytes, int)
+
+    def test_padbits(self):
+        for a in self.randombitarrays():
+            self.assertEqual(a.padbits, 8 * a.nbytes - len(a))
+            if is_py3k:
+                self.assertIsInstance(a.padbits, int)
+
+    def test_readonly(self):
+        a = bitarray('110')
+        self.assertFalse(a.readonly)
+        self.assertIsInstance(a.readonly, bool)
+
+        b = frozenbitarray(a)
+        self.assertTrue(b.readonly)
+        self.assertIsInstance(b.readonly, bool)
+
+tests.append(DescriptorTests)
 
 # ---------------------------------------------------------------------------
 

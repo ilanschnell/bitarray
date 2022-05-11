@@ -57,6 +57,12 @@ DOC_LINKS = {
     'util.vl_encode':          'vlf',
 }
 
+GETSET = {
+    'bitarray.nbytes':     'int',
+    'bitarray.padbits':    'int',
+    'bitarray.readonly':   'bool',
+}
+
 _NAMES = set()
 
 sig_pat = re.compile(r"""
@@ -78,7 +84,8 @@ def get_doc(name):
     lines = obj.__doc__.splitlines()
 
     if len(lines) == 1:
-        return ...
+        sig = '``%s`` -> %s' % (obj.__name__, GETSET[name])
+        return sig, lines
 
     m = sig_pat.match(lines[0])
     if m is None:
@@ -135,7 +142,17 @@ The bitarray object:
     for method in sorted(dir(bitarray.bitarray)):
         if method.startswith('_'):
             continue
-        write_doc(fo, 'bitarray.%s' % method)
+        name = 'bitarray.%s' % method
+        if name not in GETSET:
+            write_doc(fo, name)
+
+    fo.write("bitarray data descriptors:\n"
+             "--------------------------\n\n"
+             "Data descriptors were added in version 2.6.\n\n")
+    for getset in sorted(dir(bitarray.bitarray)):
+        name = 'bitarray.%s' % getset
+        if name in GETSET:
+            write_doc(fo, name)
 
     fo.write("Other objects:\n"
              "--------------\n\n")

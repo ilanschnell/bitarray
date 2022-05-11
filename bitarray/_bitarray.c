@@ -866,7 +866,7 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(bytereverse_doc,
 "bytereverse(start=0, stop=<end of buffer>, /)\n\
 \n\
-Reverse the order of bits in byte-range(start, stop) in-place.\n\
+For each byte in byte-range(start, stop) reverse the bit order in-place.\n\
 The start and stop indices are given in terms of bytes (not bits).\n\
 Also note that this method only changes the buffer; it does not change the\n\
 endianness of the bitarray object.");
@@ -1800,6 +1800,36 @@ bitarray_overlap(bitarrayobject *self, PyObject *other)
 }
 
 #endif  /* NDEBUG */
+
+/* ---------------------- bitarray getset members ---------------------- */
+
+static PyObject *
+bitarray_get_nbytes(bitarrayobject *self, void *Py_UNUSED(ignored))
+{
+    return PyLong_FromSsize_t(Py_SIZE(self));
+}
+
+static PyObject *
+bitarray_get_padbits(bitarrayobject *self, void *Py_UNUSED(ignored))
+{
+    return PyLong_FromSsize_t(8 * Py_SIZE(self) - self->nbits);
+}
+
+static PyObject *
+bitarray_get_readonly(bitarrayobject *self, void *Py_UNUSED(ignored))
+{
+    return PyBool_FromLong(self->readonly);
+}
+
+static PyGetSetDef bitarray_getsets [] = {
+    {"nbytes", (getter) bitarray_get_nbytes, NULL,
+     PyDoc_STR("buffer size in bytes")},
+    {"padbits", (getter) bitarray_get_padbits, NULL,
+     PyDoc_STR("number of pad bits")},
+    {"readonly", (getter) bitarray_get_readonly, NULL,
+     PyDoc_STR("bool indicating whether buffer is read only")},
+    {NULL, NULL, NULL, NULL}
+};
 
 /* ----------------------- bitarray_as_sequence ------------------------ */
 
@@ -3727,7 +3757,7 @@ static PyTypeObject Bitarray_Type = {
     0,                                        /* tp_iternext */
     bitarray_methods,                         /* tp_methods */
     0,                                        /* tp_members */
-    0,                                        /* tp_getset */
+    bitarray_getsets,                         /* tp_getset */
     0,                                        /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
