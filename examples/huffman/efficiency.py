@@ -10,7 +10,7 @@ from bitarray.util import huffman_code
 
 def efficiency(freq, code):
     total = sum(freq.values())  # total frequency
-    H = 0.0                     # entrophy
+    H = 0.0                     # entropy
     L = 0.0                     # average length
     for s in freq.keys():
         p = freq[s] / total     # probability
