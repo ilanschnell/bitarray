@@ -22,7 +22,7 @@ def efficiency(freq, code):
 
 if len(sys.argv) > 1:
     with open(sys.argv[1], 'rb') as fi:
-        plain = bytearray(fi.read())
+        plain = fi.read()
 else:
     plain = b'aaabbbcde'
 

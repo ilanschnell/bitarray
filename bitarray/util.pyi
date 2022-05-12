@@ -1,12 +1,13 @@
 # Copyright (c) 2021 - 2022, Ilan Schnell; All Rights Reserved
 
+from collections import Counter
 from collections.abc import Iterable, Sequence
 from typing import Any, AnyStr, BinaryIO, Optional, Union
 
 from bitarray import bitarray, BytesLike, CodeDict
 
 
-FreqMap = dict[Any, Union[int, float]]
+FreqMap = Union[Counter[int], dict[Any, Union[int, float]]]
 
 
 def zeros(length: int, endian: Optional[str] = ...) -> bitarray: ...
