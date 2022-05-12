@@ -343,7 +343,7 @@ and return its root node.
     class Node(object):
         """
         A Node instance will either have a 'symbol' (leaf node) or
-        a 'child' (a tuple with both children / internal node) attribute.
+        a 'child' (a tuple with both children) attribute.
         The 'freq' attribute will always be present.
         """
         def __lt__(self, other):
@@ -353,15 +353,15 @@ and return its root node.
     minheap = []
     # create all leaf nodes and push them onto the queue
     for sym, f in __freq_map.items():
-        nd = Node()
-        nd.symbol = sym
-        nd.freq = f
-        heappush(minheap, nd)
+        leaf = Node()
+        leaf.symbol = sym
+        leaf.freq = f
+        heappush(minheap, leaf)
 
     # repeat the process until only one node remains
     while len(minheap) > 1:
-        # take the two nodes with smallest frequencies from the queue
-        # to construct a new (internal) node and push it onto the queue
+        # take the two nodes with lowest frequencies from the queue
+        # to construct a new node and push it onto the queue
         parent = Node()
         parent.child = heappop(minheap), heappop(minheap)
         parent.freq = parent.child[0].freq + parent.child[1].freq
