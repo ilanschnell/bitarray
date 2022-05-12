@@ -364,7 +364,7 @@ and return its root node.
         # to construct a new (internal) node and push it onto the queue
         parent = Node()
         parent.child = heappop(minheap), heappop(minheap)
-        parent.freq = sum(parent.child[k].freq for k in range(2))
+        parent.freq = parent.child[0].freq + parent.child[1].freq
         heappush(minheap, parent)
 
     # the single remaining node is the root of the Huffman tree
