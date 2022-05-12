@@ -1,10 +1,11 @@
-from __future__ import print_function
 from optparse import OptionParser
 from time import time
 from collections import Counter
-from bitarray import bitarray
 
-from huffman import (huff_tree, huff_code, write_dot, print_code,
+from bitarray import bitarray
+from bitarray.util import _huffman_tree
+
+from huffman import (huff_code, write_dot, print_code,
                      make_tree, iterdecode)
 
 
@@ -29,15 +30,13 @@ def main():
 
     with open(filename, 'rb') as fi:
         plain = bytearray(fi.read())
-    if len(args) == 0:
-        plain *= 1000
 
     t0 = time()
     freq = Counter(plain)
     print('count:     %9.6f sec' % (time() - t0))
 
     t0 = time()
-    tree = huff_tree(freq)
+    tree = _huffman_tree(freq)
     print('tree:      %9.6f sec' % (time() - t0))
 
     if opts.tree:

@@ -6,48 +6,17 @@ Note:
 There is a function for directly creating a Huffman code from a frequency
 map in the bitarray library itself: bitarray.util.huffman_code()
 """
-from __future__ import print_function
-from heapq import heappush, heappop
 from bitarray import bitarray
 
 
 class Node(object):
     def __init__(self):
         self.child = [None, None]
-        self.symbol = None
         self.freq = None
 
     def __lt__(self, other):
         # heapq needs to be able to compare the nodes
         return self.freq < other.freq
-
-
-def huff_tree(freq):
-    """
-    Given a dictionary mapping symbols to their frequency, construct a Huffman
-    tree and return its root node.
-    """
-    minheap = []
-    # create all the leaf nodes and push them onto the queue
-    for sym in sorted(freq):
-        nd = Node()
-        nd.symbol = sym
-        nd.freq = freq[sym]
-        heappush(minheap, nd)
-
-    # repeat the process until only one node remains
-    while len(minheap) > 1:
-        # take the nodes with smallest frequencies from the queue
-        child_0 = heappop(minheap)
-        child_1 = heappop(minheap)
-        # construct the new internal node and push it onto the queue
-        parent = Node()
-        parent.child = [child_0, child_1]
-        parent.freq = child_0.freq + child_1.freq
-        heappush(minheap, parent)
-
-    # return the one remaining node, which is the root of the Huffman tree
-    return minheap[0]
 
 
 def huff_code(tree):
@@ -58,11 +27,11 @@ def huff_code(tree):
     result = {}
 
     def traverse(nd, prefix=bitarray()):
-        if nd.symbol is None: # parent, so traverse each of the children
+        try:  # leaf
+            result[nd.symbol] = prefix
+        except AttributeError:
             traverse(nd.child[0], prefix + bitarray([0]))
             traverse(nd.child[1], prefix + bitarray([1]))
-        else: # leaf
-            result[nd.symbol] = prefix
 
     traverse(tree)
     return result
@@ -73,19 +42,21 @@ def insert_symbol(tree, ba, sym):
     Insert symbol into a tree at the position described by the bitarray,
     creating nodes as necessary.
     """
-    if sym is None:
-        raise ValueError("symbol cannot be None")
     nd = tree
     for k in ba:
         prev = nd
         nd = nd.child[k]
-        if nd and nd.symbol is not None:
+
+        if hasattr(nd, 'symbol'):
             raise ValueError("ambiguity")
-        if not nd:
+
+        if nd is None:
             nd = Node()
             prev.child[k] = nd
-    if nd.symbol is not None or nd.child[0] or nd.child[1]:
+
+    if hasattr(nd, 'symbol') or nd.child[0] or nd.child[1]:
         raise ValueError("ambiguity")
+
     nd.symbol = sym
 
 
@@ -109,10 +80,14 @@ def traverse(tree, it):
     nd = tree
     while 1:
         nd = nd.child[next(it)]
-        if not nd:
+        if nd is None:
             raise ValueError("prefix code does not match data in bitarray")
-        if nd.symbol is not None:
+
+        try:
             return nd.symbol
+        except AttributeError:
+            pass
+
     if nd != tree:
         raise ValueError("decoding not terminated")
 
@@ -151,25 +126,27 @@ def write_dot(tree, fn, binary=False):
             return ''
         return '%d' % f
 
+    def write_nd(fo, nd):
+        if hasattr(nd, 'symbol'):  # leaf node
+            a, b = disp_freq(nd.freq), disp_sym(nd.symbol)
+            fo.write('  %d  [label="%s%s%s"];\n' %
+                     (id(nd), a, ': ' if a and b else '', b))
+            return
+
+        assert hasattr(nd, 'child')
+        fo.write('  %d  [shape=circle, style=filled, '
+                 'fillcolor=grey, label="%s"];\n' %
+                 (id(nd), disp_freq(nd.freq)))
+
+        for k in range(2):
+            if nd.child[k]:
+                fo.write('  %d->%d;\n' % (id(nd), id(nd.child[k])))
+
+        for k in range(2):
+            if nd.child[k]:
+                write_nd(fo, nd.child[k])
+
     with open(fn, 'w') as fo:    # dot -Tpng tree.dot -O
-        def write_nd(fo, nd):
-            if nd.symbol is not None: # leaf node
-                a, b = disp_freq(nd.freq), disp_sym(nd.symbol)
-                fo.write('  %d  [label="%s%s%s"];\n' %
-                         (id(nd), a, ': ' if a and b else '', b))
-            else: # parent node
-                fo.write('  %d  [shape=circle, style=filled, '
-                         'fillcolor=grey, label="%s"];\n' %
-                         (id(nd), disp_freq(nd.freq)))
-
-            for k in range(2):
-                if nd.child[k]:
-                    fo.write('  %d->%d;\n' % (id(nd), id(nd.child[k])))
-
-            for k in range(2):
-                if nd.child[k]:
-                    write_nd(fo, nd.child[k])
-
         fo.write('digraph BT {\n')
         fo.write('  node [shape=box, fontsize=20, fontname="Arial"];\n')
         write_nd(fo, tree)
@@ -195,8 +172,10 @@ def print_code(freq, codedict):
 
 
 def test():
+    from bitarray.util import _huffman_tree
+
     freq = {'a': 10, 'b': 2, 'c': 1}
-    tree = huff_tree(freq)
+    tree = _huffman_tree(freq)
     code = huff_code(tree)
     assert len(code['a']) == 1
     assert len(code['b']) == len(code['c']) == 2
@@ -209,7 +188,7 @@ def test():
     a = bitarray()
     a.encode(code, txt)
     assert a == bitarray('010110')
-    assert list(iterdecode(tree, a)) == ['a', 'b', 'c', 'a']
+    assert ''.join(iterdecode(tree, a)) == txt
 
 
 if __name__ == '__main__':
