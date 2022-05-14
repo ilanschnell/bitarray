@@ -161,8 +161,8 @@ class TestState(unittest.TestCase):
 class TestFixedBlock(unittest.TestCase):
 
     @staticmethod
-    def decode(a):
-        res = bytearray()
+    def decode(a, buffer=b''):
+        res = bytearray(buffer)
         s = State(a, res)
         s.decode_block(FIXED_LENGTHS, FIXLCODES, MAXDCODES)
         return bytes(res)
@@ -186,6 +186,14 @@ class TestFixedBlock(unittest.TestCase):
         #             B        len=227  31     dist=1  end-of-block
         # here len = 227 + 31 = 258, same as before
         self.assertEqual(self.decode(a), 259 * b"B")
+
+    def test_max_back(self):
+        a = bitarray('0000001  11101 1111111111111  0000000')
+        #             len=3    dist=24577 + 8191
+        buffer = b'ABCD' + 32764 * b'-'
+        self.assertEqual(len(buffer), 1 << 15)
+        out = self.decode(a, buffer)
+        self.assertEqual(out, buffer + b'ABC')
 
     def test_too_far_back(self):
         a = bitarray('01110001 0000001  00001   0000000')
