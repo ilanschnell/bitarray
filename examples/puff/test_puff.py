@@ -5,7 +5,7 @@ import unittest
 
 from bitarray import bitarray
 
-from puff import State, Puff
+from puff import State, Puff, FIXLCODES, MAXDCODES, FIXED_LENGTHS
 
 
 class TestState(unittest.TestCase):
@@ -142,6 +142,15 @@ class TestState(unittest.TestCase):
         # length[1] > MAXBITS
         self.assertRaises(ValueError, s.decode_lengths, lengths, 316)
 
+    def test_decode_fixed_block(self):
+        a = bitarray('01111001 10011100 10010001 10011110 0000000')
+        #             I        l        a        n        end-of-block
+        b = bytearray()
+        s = State(a, b)
+        s.decode_block(FIXED_LENGTHS, FIXLCODES, MAXDCODES)
+        self.assertEqual(s.get_incnt(), 39)
+        self.assertEqual(bytes(b), b"Ilan")
+
     def test_decode_block_error(self):
         a = bitarray(1000)
         b = bytearray()
@@ -161,7 +170,6 @@ class TestState(unittest.TestCase):
 class TestPuff(unittest.TestCase):
 
     def test_constants(self):
-        from puff import FIXLCODES, MAXDCODES, FIXED_LENGTHS
         self.assertEqual(len(FIXED_LENGTHS), FIXLCODES + MAXDCODES)
 
     def test_align_byte_boundary(self):
