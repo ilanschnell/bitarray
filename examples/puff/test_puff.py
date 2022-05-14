@@ -142,49 +142,6 @@ class TestState(unittest.TestCase):
         # length[1] > MAXBITS
         self.assertRaises(ValueError, s.decode_lengths, lengths, 316)
 
-    @staticmethod
-    def decode_fixed_block(a):
-        res = bytearray()
-        s = State(a, res)
-        s.decode_block(FIXED_LENGTHS, FIXLCODES, MAXDCODES)
-        return bytes(res)
-
-    def test_decode_fixed_literal(self):
-        a = bitarray('01111001 10011100 10010001 10011110 0000000')
-        #             I        l        a        n        end-of-block
-        self.assertEqual(self.decode_fixed_block(a), b"Ilan")
-
-    def test_decode_fixed_rle(self):
-        a = bitarray('01110001 0000001  00000   0000000')
-        #             A        len=3    dist=1  end-of-block
-        self.assertEqual(self.decode_fixed_block(a), b"AAAA")
-
-    def test_decode_fixed_rle_258(self):
-        a = bitarray('01110001 11000101  00000   0000000')
-        #             A        len=258   dist=1  end-of-block
-        self.assertEqual(self.decode_fixed_block(a), 259 * b"A")
-
-        a = bitarray('01110010 11000100 11111  00000   0000000')
-        #             A        len=227  31     dist=1  end-of-block
-        # here len = 227 + 31 = 258, same as before
-        self.assertEqual(self.decode_fixed_block(a), 259 * b"B")
-
-    def test_decode_fixed_rle(self):
-        a = bitarray('01110001 0000001  00000   0000000')
-        #             A        len=3    dist=1  end-of-block
-        self.assertEqual(self.decode_fixed_block(a), b"AAAA")
-
-    def test_decode_fixed_too_far_back(self):
-        a = bitarray('01110001 0000001  00001   0000000')
-        #             A        len=3    dist=2  end-of-block
-        self.assertRaises(ValueError, self.decode_fixed_block, a)
-
-    def test_decode_fixed_invalid_length_symbols(self):
-        a = bitarray('11000110')  # symbol 286
-        self.assertRaises(ValueError, self.decode_fixed_block, a)
-        a = bitarray('11000111')  # symbol 287
-        self.assertRaises(ValueError, self.decode_fixed_block, a)
-
     def test_decode_block_error(self):
         a = bitarray(1000)
         b = bytearray()
@@ -199,6 +156,47 @@ class TestState(unittest.TestCase):
         lengths[1] = 16
         # length[1] > MAXBITS
         self.assertRaises(ValueError, s.decode_block, lengths, 279, 23)
+
+
+class TestFixedBlock(unittest.TestCase):
+
+    @staticmethod
+    def decode(a):
+        res = bytearray()
+        s = State(a, res)
+        s.decode_block(FIXED_LENGTHS, FIXLCODES, MAXDCODES)
+        return bytes(res)
+
+    def test_literal(self):
+        a = bitarray('01111001 10011100 10010001 10011110 0000000')
+        #             I        l        a        n        end-of-block
+        self.assertEqual(self.decode(a), b"Ilan")
+
+    def test_rle(self):
+        a = bitarray('01110001 0000001  00000   0000000')
+        #             A        len=3    dist=1  end-of-block
+        self.assertEqual(self.decode(a), b"AAAA")
+
+    def test_rle_258(self):
+        a = bitarray('01110001 11000101  00000   0000000')
+        #             A        len=258   dist=1  end-of-block
+        self.assertEqual(self.decode(a), 259 * b"A")
+
+        a = bitarray('01110010 11000100 11111  00000   0000000')
+        #             B        len=227  31     dist=1  end-of-block
+        # here len = 227 + 31 = 258, same as before
+        self.assertEqual(self.decode(a), 259 * b"B")
+
+    def test_too_far_back(self):
+        a = bitarray('01110001 0000001  00001   0000000')
+        #             A        len=3    dist=2  end-of-block
+        self.assertRaises(ValueError, self.decode, a)
+
+    def test_invalid_length_symbols(self):
+        a = bitarray('11000110')  # symbol 286
+        self.assertRaises(ValueError, self.decode, a)
+        a = bitarray('11000111')  # symbol 287
+        self.assertRaises(ValueError, self.decode, a)
 
 
 class TestPuff(unittest.TestCase):
