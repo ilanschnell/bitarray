@@ -142,14 +142,28 @@ class TestState(unittest.TestCase):
         # length[1] > MAXBITS
         self.assertRaises(ValueError, s.decode_lengths, lengths, 316)
 
-    def test_decode_fixed_block(self):
+    @staticmethod
+    def decode_fixed_block(a):
+        res = bytearray()
+        s = State(a, res)
+        s.decode_block(FIXED_LENGTHS, FIXLCODES, MAXDCODES)
+        return bytes(res)
+
+    def test_decode_fixed_literal(self):
         a = bitarray('01111001 10011100 10010001 10011110 0000000')
         #             I        l        a        n        end-of-block
-        b = bytearray()
-        s = State(a, b)
-        s.decode_block(FIXED_LENGTHS, FIXLCODES, MAXDCODES)
-        self.assertEqual(s.get_incnt(), 39)
-        self.assertEqual(bytes(b), b"Ilan")
+        self.assertEqual(self.decode_fixed_block(a), b"Ilan")
+
+    def test_decode_fixed_rle(self):
+        a = bitarray('01110001 0000001  00000   0000000')
+        #             A        len=3    dist=1  end-of-block
+        self.assertEqual(self.decode_fixed_block(a), b"AAAA")
+
+    def test_decode_fixed_invalid_length_symbols(self):
+        a = bitarray('11000110')
+        self.assertRaises(ValueError, self.decode_fixed_block, a)
+        a = bitarray('11000111')
+        self.assertRaises(ValueError, self.decode_fixed_block, a)
 
     def test_decode_block_error(self):
         a = bitarray(1000)
