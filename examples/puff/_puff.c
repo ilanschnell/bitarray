@@ -446,7 +446,7 @@ state_decode_block(state_obj *self, PyObject *args)
     /* Fixed distance codes also have two invalid symbols that should result
        in an error if received.  This can be implemented as an incomplete code,
        which is why the error is ignored for fixed codes. */
-    if (nlen <= MAXLCODES &&
+    if (nlen != FIXLCODES &&
         err && (err < 0 || ndist != distcode.count[0] + distcode.count[1])) {
         PyErr_SetString(PyExc_ValueError, "incomplete distance code");
         return NULL;
