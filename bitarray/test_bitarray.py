@@ -4604,6 +4604,7 @@ def run(verbosity=1, repeat=1):
     import bitarray.test_util as btu
     tests.extend(btu.tests)
 
+    default_endian = get_default_endian()
     print('bitarray is installed in: %s' % os.path.dirname(__file__))
     print('bitarray version: %s' % __version__)
     print('sys.version: %s' % sys.version)
@@ -4620,7 +4621,9 @@ def run(verbosity=1, repeat=1):
             suite.addTest(unittest.makeSuite(cls))
 
     runner = unittest.TextTestRunner(verbosity=verbosity)
-    return runner.run(suite)
+    result = runner.run(suite)
+    _set_default_endian(default_endian)
+    return result
 
 
 if __name__ == '__main__':
