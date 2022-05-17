@@ -38,8 +38,7 @@ class Puff(State):
                 self.process_dynamic_block()
 
             else:
-                assert btype == 3, "Impossible block type"
-                raise ValueError("Reserved block type")
+                raise ValueError("Reserved block type: %d" % btype)
 
             if callback:
                 callback(self.stats)
