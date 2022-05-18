@@ -399,7 +399,7 @@ serialize(PyObject *module, PyObject *a)
 
     str = PyBytes_AsString(result);
 #define aa  ((bitarrayobject *) a)
-    *str = (char) (16 * IS_BE(aa) + setunused(aa));
+    *str = (char) (16 * IS_BE(aa) + set_padbits(aa));
     memcpy(str + 1, aa->ob_item, (size_t) nbytes);
 #undef aa
     return result;

@@ -136,7 +136,7 @@ zeroed_last_byte(bitarrayobject *self)
 /* Unless buffer is readonly, zero out pad bits.
    Always return the number of pad bits - leave self->nbits unchanged */
 static inline int
-setunused(bitarrayobject *self)
+set_padbits(bitarrayobject *self)
 {
     const int r = self->nbits % 8;
 

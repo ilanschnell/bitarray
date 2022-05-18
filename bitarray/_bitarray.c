@@ -1018,7 +1018,7 @@ bitarray_fill(bitarrayobject *self)
     long p;
 
     RAISE_IF_READONLY(self, NULL);
-    p = setunused(self);
+    p = set_padbits(self);
     /* there is no reason to call resize() - .fill() will not raise
        BufferError when buffer is imported or exported */
     self->nbits += p;
@@ -1181,7 +1181,7 @@ bitarray_reduce(bitarrayobject *self)
 
     str = PyBytes_AsString(repr);
     /* first byte contains the number of pad bits */
-    *str = (char) setunused(self);
+    *str = (char) set_padbits(self);
     /* remaining bytes contain buffer */
     memcpy(str + 1, self->ob_item, (size_t) nbytes);
 
@@ -1483,7 +1483,7 @@ Each added byte will add eight bits to the bitarray.");
 static PyObject *
 bitarray_tobytes(bitarrayobject *self)
 {
-    setunused(self);
+    set_padbits(self);
     return PyBytes_FromStringAndSize(self->ob_item, Py_SIZE(self));
 }
 
@@ -1554,7 +1554,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
     const Py_ssize_t nbytes = Py_SIZE(self);
     Py_ssize_t offset;
 
-    setunused(self);
+    set_padbits(self);
     for (offset = 0; offset < nbytes; offset += BLOCKSIZE) {
         PyObject *ret;          /* return object from write call */
         Py_ssize_t size = Py_MIN(nbytes - offset, BLOCKSIZE);
