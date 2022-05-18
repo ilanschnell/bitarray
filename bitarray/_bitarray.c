@@ -903,7 +903,7 @@ Return a tuple containing:\n\
 0. memory address of buffer\n\
 1. buffer size (in bytes)\n\
 2. bit endianness as a string\n\
-3. number of unused padding bits\n\
+3. number of unused pad bits\n\
 4. allocated memory for the buffer (in bytes)\n\
 5. memory is read-only\n\
 6. buffer is imported\n\
@@ -1180,7 +1180,7 @@ bitarray_reduce(bitarrayobject *self)
         goto error;
 
     str = PyBytes_AsString(repr);
-    /* first byte contains the number of unused bits */
+    /* first byte contains the number of pad bits */
     *str = (char) setunused(self);
     /* remaining bytes contain buffer */
     memcpy(str + 1, self->ob_item, (size_t) nbytes);
@@ -1490,7 +1490,7 @@ bitarray_tobytes(bitarrayobject *self)
 PyDoc_STRVAR(tobytes_doc,
 "tobytes() -> bytes\n\
 \n\
-Return the bitarray buffer in bytes (unused bits are set to zero).");
+Return the bitarray buffer in bytes (unused pad bits are set to zero).");
 
 
 static PyObject *
