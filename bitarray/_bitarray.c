@@ -875,7 +875,6 @@ endianness of the bitarray object.");
 static PyObject *
 bitarray_buffer_info(bitarrayobject *self)
 {
-    const Py_ssize_t size = Py_SIZE(self);
     PyObject *res, *ptr;
 
     ptr = PyLong_FromVoidPtr((void *) self->ob_item);
@@ -884,9 +883,9 @@ bitarray_buffer_info(bitarrayobject *self)
 
     res = Py_BuildValue("Onsnniii",
                         ptr,
-                        size,
+                        Py_SIZE(self),
                         ENDIAN_STR(self->endian),
-                        8 * size - self->nbits,
+                        PADBITS(self),
                         self->allocated,
                         self->readonly,
                         self->buffer ? 1 : 0,
@@ -1231,7 +1230,7 @@ bitarray_repr(bitarrayobject *self)
 static PyObject *
 bitarray_reverse(bitarrayobject *self)
 {
-    const Py_ssize_t nbytes = Py_SIZE(self), nbits = self->nbits;
+    const Py_ssize_t nbits = self->nbits;
     Py_ssize_t i, j;
 
     RAISE_IF_READONLY(self, NULL);
@@ -1245,7 +1244,8 @@ bitarray_reverse(bitarrayobject *self)
         }
     }
     else {
-        const Py_ssize_t p = 8 * nbytes - nbits;  /* number of pad bits */
+        const Py_ssize_t nbytes = Py_SIZE(self);
+        const Py_ssize_t p = PADBITS(self);  /* number of pad bits */
         char *buff = self->ob_item;
 
         /* Increase self->nbits to full buffer size.  The p pad bits will
@@ -1451,7 +1451,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
        a multiple of 8.  After extending, we remove the padding bits again.
     */
     t = self->nbits;          /* number of bits before extending */
-    p = 8 * BYTES(t) - t;     /* number of pad bits */
+    p = PADBITS(self);        /* number of pad bits */
     assert(0 <= p && p < 8 && t + p == 8 * Py_SIZE(self));
 
     if (resize(self, t + p + 8 * view.len) < 0)
@@ -1812,7 +1812,7 @@ bitarray_get_nbytes(bitarrayobject *self, void *Py_UNUSED(ignored))
 static PyObject *
 bitarray_get_padbits(bitarrayobject *self, void *Py_UNUSED(ignored))
 {
-    return PyLong_FromSsize_t(8 * Py_SIZE(self) - self->nbits);
+    return PyLong_FromSsize_t(PADBITS(self));
 }
 
 static PyObject *

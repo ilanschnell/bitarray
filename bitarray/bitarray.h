@@ -69,6 +69,9 @@ typedef struct {
 /* the endianness string */
 #define ENDIAN_STR(endian)  ((endian) == ENDIAN_LITTLE ? "little" : "big")
 
+/* number of pad bits */
+#define PADBITS(self)  (8 * Py_SIZE(self) - (self)->nbits)
+
 /* number of bytes necessary to store given bits */
 #define BYTES(bits)  (((bits) + 7) >> 3)
 
