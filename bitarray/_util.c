@@ -704,14 +704,16 @@ grow_buffer(bitarrayobject *self)
     return 0;
 }
 
-/* PAD_BITS is always 3 - the number of bits that represent the number of
-   padding bits.  The actual number of padding bits is called 'padding'
-   below, and is in range(0, 7).
-   Also note that 'padding' refers to the pad bits within the variable
-   length format, which is not the same as the pad bits of the actual
-   bitarray.  For example, b'\x10' has padding = 1, and decodes to
-   bitarray('000'), which has 5 pad bits. */
-#define PAD_BITS  3
+/* LEN_PAD_BITS is always 3 - the number of bits (length) that is necessary to
+   represent the number of pad bits.  The number of padding bits itself is
+   called 'padding' below.
+
+   'padding' refers to the pad bits within the variable length format.
+   This is not the same as the pad bits of the actual bitarray.
+   For example, b'\x10' has padding = 1, and decodes to bitarray('000'),
+   which has 5 pad bits.  'padding' can take values to up 6.
+ */
+#define LEN_PAD_BITS  3
 
 /* consume iterator while decoding bytes into bitarray */
 static PyObject *
@@ -776,7 +778,7 @@ vl_decode(PyObject *module, PyObject *args)
 
     if (b & 0x80)
         return PyErr_Format(PyExc_StopIteration, "no terminating byte found, "
-                            "bytes read: %zd", (i + PAD_BITS) / 7);
+                            "bytes read: %zd", (i + LEN_PAD_BITS) / 7);
 
     Py_RETURN_NONE;
 }
@@ -793,9 +795,9 @@ vl_encode(PyObject *module, PyObject *a)
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
-    n = (aa->nbits + PAD_BITS + 6) / 7;  /* number of resulting bytes */
-    m = 7 * n - PAD_BITS;     /* number of bits resulting bytes can hold */
-    padding = m - aa->nbits;  /* number of pad bits */
+    n = (aa->nbits + LEN_PAD_BITS + 6) / 7;  /* number of resulting bytes */
+    m = 7 * n - LEN_PAD_BITS;    /* number of bits resulting bytes can hold */
+    padding = m - aa->nbits;     /* number of pad bits */
     assert(0 <= padding && padding < 7);
 
     result = PyBytes_FromStringAndSize(NULL, n);

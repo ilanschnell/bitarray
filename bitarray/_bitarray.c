@@ -1447,8 +1447,8 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
         return NULL;
 
     /* Before we extend the raw bytes with the new data, we need to store
-       the current size and padding, as the bitarray size might not be
-       a multiple of 8.  After extending, we remove the padding bits again.
+       the current size and pad bits, as the bitarray size might not be
+       a multiple of 8.  After extending, we remove the pad bits again.
     */
     t = self->nbits;          /* number of bits before extending */
     p = PADBITS(self);        /* number of pad bits */
@@ -1461,7 +1461,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
     memcpy(self->ob_item + (Py_SIZE(self) - view.len),
            (char *) view.buf, (size_t) view.len);
 
-    if (delete_n(self, t, p) < 0)  /* remove padding bits */
+    if (delete_n(self, t, p) < 0)  /* remove pad bits */
         goto error;
     assert(self->nbits == t + 8 * view.len);
 

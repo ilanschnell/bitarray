@@ -1077,12 +1077,12 @@ class VLFTests(unittest.TestCase, Util):
         b = vl_decode(s)
         self.check_obj(b)
         self.assertEqual(a, b)
-        PAD_BITS = 3
-        self.assertEqual(len(s), (len(a) + PAD_BITS + 6) // 7)
+        LEN_PAD_BITS = 3
+        self.assertEqual(len(s), (len(a) + LEN_PAD_BITS + 6) // 7)
 
         head = ord(s[0]) if sys.version_info[0] == 2 else s[0]
         padding = (head & 0x70) >> 4
-        self.assertEqual(len(a) + padding, 7 * len(s) - PAD_BITS)
+        self.assertEqual(len(a) + padding, 7 * len(s) - LEN_PAD_BITS)
 
     def test_range(self):
         for n in range(500):
