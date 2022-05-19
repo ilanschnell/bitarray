@@ -902,7 +902,7 @@ Return a tuple containing:\n\
 0. memory address of buffer\n\
 1. buffer size (in bytes)\n\
 2. bit endianness as a string\n\
-3. number of unused pad bits\n\
+3. number of pad bits\n\
 4. allocated memory for the buffer (in bytes)\n\
 5. memory is read-only\n\
 6. buffer is imported\n\
@@ -1490,7 +1490,7 @@ bitarray_tobytes(bitarrayobject *self)
 PyDoc_STRVAR(tobytes_doc,
 "tobytes() -> bytes\n\
 \n\
-Return the bitarray buffer in bytes (unused pad bits are set to zero).");
+Return the bitarray buffer in bytes (pad bits are set to zero).");
 
 
 static PyObject *
@@ -3346,8 +3346,8 @@ newbitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
     return newbitarrayobject(type, nbits, endian);
 }
 
-/* The head byte % 8 specifies the number of unused bits (in last buffer
-   byte), the remaining bytes consist of the buffer itself */
+/* head byte % 8 specifies the number of pad bits - remaining bytes consist
+   of the buffer itself */
 static PyObject *
 newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, int endian)
 {
