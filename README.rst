@@ -79,8 +79,14 @@ Once you have installed the package, you may want to test it:
 
     OK
 
-You can always import the function test,
-and ``test().wasSuccessful()`` will return ``True`` when the test went well.
+The ``test()`` function is part of the API.  It will return
+a ``unittest.runner.TextTestResult`` object, such that one can verify that
+all tests ran successfully by:
+
+.. code-block:: python
+
+    import bitarray
+    assert bitarray.test().wasSuccessful()
 
 
 Using the module
