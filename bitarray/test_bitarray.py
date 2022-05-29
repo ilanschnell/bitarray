@@ -173,6 +173,10 @@ class Util(object):
         if type(a).__name__ == 'frozenbitarray':
             # frozenbitarray have read-only memory
             self.assertEqual(readonly, 1)
+            if padbits:  # ensure padbits are zero
+                b = bitarray(endian=endian)
+                b.frombytes(a.tobytes()[-1:])
+                self.assertEqual(b[-padbits:], zeros(padbits))
         elif not buf:
             # otherwise, unless the buffer is imported, it is writable
             self.assertEqual(readonly, 0)
@@ -4449,6 +4453,7 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(len(b), 7)
         self.assertFalse(b.all())
         self.assertTrue(b.any())
+        self.check_obj(a)
 
     def test_init_from_bitarray(self):
         for a in self.randombitarrays():
@@ -4459,6 +4464,7 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
             self.assertFalse(c is b)
             self.assertEQUAL(c, b)
             self.assertEqual(hash(c), hash(b))
+            self.check_obj(b)
 
     def test_init_from_misc(self):
         tup = 0, 1, 0, 1, 1, False, True

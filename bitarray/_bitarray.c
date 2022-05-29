@@ -1752,6 +1752,7 @@ bitarray_freeze(bitarrayobject *self)
             return NULL;
         }
     }
+    set_padbits(self);
     self->readonly = 1;
     Py_RETURN_NONE;
 }
