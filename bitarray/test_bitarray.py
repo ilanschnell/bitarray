@@ -502,6 +502,7 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(len(a) + padbits, 8)
             self.assertEqual(a.padbits, padbits)
             self.assertFalse(a.any())
+            self.check_obj(a)
 
         s = b'\x21'
         if is_py3k:
@@ -1516,6 +1517,7 @@ class MiscTests(unittest.TestCase, Util):
             b = pickle.loads(pickle.dumps(a))
             self.assertFalse(b is a)
             self.assertEQUAL(a, b)
+            self.check_obj(b)
 
     def test_overflow(self):
         a = bitarray(1)
@@ -4601,6 +4603,8 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
             self.assertEqual(f.endian(), g.endian())
             self.assertTrue(str(g).startswith('frozenbitarray'))
             self.check_obj(a)
+            self.check_obj(f)
+            self.check_obj(g)
 
 tests.append(TestsFrozenbitarray)
 
