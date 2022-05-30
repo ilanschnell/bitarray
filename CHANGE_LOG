@@ -1,6 +1,7 @@
 2022-XX-XX   2.6.0:
 -------------------
   * add data descriptions: `.nbytes`, `.padbits`, `.readonly`
+  * frozenbitarray's padbits are now guaranteed to be zero
   * add tests
 
 
