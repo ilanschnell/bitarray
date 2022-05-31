@@ -2863,7 +2863,7 @@ static PyTypeObject DecodeTree_Type = {
     0,                                        /* tp_setattr */
     0,                                        /* tp_compare */
     0,                                        /* tp_repr */
-    0,                                        /* tp_as_number*/
+    0,                                        /* tp_as_number */
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
     PyObject_HashNotImplemented,              /* tp_hash */
@@ -3734,7 +3734,7 @@ static PyTypeObject Bitarray_Type = {
     0,                                        /* tp_setattr */
     0,                                        /* tp_compare */
     (reprfunc) bitarray_repr,                 /* tp_repr */
-    &bitarray_as_number,                      /* tp_as_number*/
+    &bitarray_as_number,                      /* tp_as_number */
     &bitarray_as_sequence,                    /* tp_as_sequence */
     &bitarray_as_mapping,                     /* tp_as_mapping */
     PyObject_HashNotImplemented,              /* tp_hash */
@@ -3849,13 +3849,13 @@ Return tuple containing:\n\
 
 
 static PyMethodDef module_functions[] = {
-    {"get_default_endian",  (PyCFunction) get_default_endian,
-                                      METH_NOARGS,  get_default_endian_doc},
-    {"_set_default_endian", (PyCFunction) set_default_endian,
-                                      METH_VARARGS, set_default_endian_doc},
-    {"_sysinfo",            (PyCFunction) sysinfo,
-                                      METH_NOARGS,  sysinfo_doc           },
-    {NULL,         NULL}  /* sentinel */
+    {"get_default_endian",  (PyCFunction) get_default_endian, METH_NOARGS,
+     get_default_endian_doc},
+    {"_set_default_endian", (PyCFunction) set_default_endian, METH_VARARGS,
+     set_default_endian_doc},
+    {"_sysinfo",            (PyCFunction) sysinfo,            METH_NOARGS,
+     sysinfo_doc},
+    {NULL, NULL}  /* sentinel */
 };
 
 /******************************* Install Module ***************************/
