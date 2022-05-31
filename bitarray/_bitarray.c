@@ -3274,7 +3274,7 @@ static PyMethodDef bitarray_methods[] = {
 /* Given a string, return an integer representing the endianness.
    If the string is invalid, set a Python exception and return -1. */
 static int
-endian_from_string(const char* string)
+endian_from_string(const char *string)
 {
     assert(default_endian == ENDIAN_LITTLE || default_endian == ENDIAN_BIG);
 
@@ -3779,7 +3779,7 @@ get_default_endian(PyObject *module)
 }
 
 PyDoc_STRVAR(get_default_endian_doc,
-"get_default_endian() -> string\n\
+"get_default_endian() -> str\n\
 \n\
 Return the default endianness for new bitarray objects being created.\n\
 Unless `_set_default_endian()` is called, the return value is `big`.");
