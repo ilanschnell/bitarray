@@ -22,7 +22,7 @@ class decodetree:
 class bitarray:
     def __init__(self,
                  initializer: Union[int, str, Iterable[int], None] = ...,
-                 endian: str = ...,
+                 endian: Union[str, None] = ...,
                  buffer: Any = ...) -> None: ...
 
     def all(self) -> bool: ...

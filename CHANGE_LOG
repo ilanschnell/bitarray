@@ -1,6 +1,7 @@
 2022-XX-XX   2.6.0:
 -------------------
   * add data descriptions: `.nbytes`, `.padbits`, `.readonly`
+  * allow optional `endian` argument to be `None` when creating bitarrays
   * frozenbitarray's padbits are now guaranteed to be zero
   * add tests
 
