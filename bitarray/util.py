@@ -10,7 +10,7 @@ from __future__ import absolute_import
 import os
 import sys
 
-from bitarray import bitarray, bits2bytes, get_default_endian
+from bitarray import bitarray, bits2bytes
 
 from bitarray._util import (
     count_n, rindex, parity, count_and, count_or, count_xor, subset,
@@ -34,10 +34,6 @@ _set_bato(bitarray)
 _is_py2 = bool(sys.version_info[0] == 2)
 
 
-def _get_endian(endian):
-    return get_default_endian() if endian is None else endian
-
-
 def zeros(__length, endian=None):
     """zeros(length, /, endian=None) -> bitarray
 
@@ -47,7 +43,7 @@ endianness, which may be 'big', 'little'.
     if not isinstance(__length, (int, long) if _is_py2 else int):
         raise TypeError("int expected, got '%s'" % type(__length).__name__)
 
-    a = bitarray(__length, _get_endian(endian))
+    a = bitarray(__length, endian)
     a.setall(0)
     return a
 
@@ -57,7 +53,7 @@ def urandom(__length, endian=None):
 
 Return a bitarray of `length` random bits (uses `os.urandom`).
 """
-    a = bitarray(0, _get_endian(endian))
+    a = bitarray(0, endian)
     a.frombytes(os.urandom(bits2bytes(__length)))
     del a[__length:]
     return a
@@ -178,7 +174,7 @@ Bitarray of hexadecimal representation.  hexstr may contain any number
     if not isinstance(__s, bytes):
         raise TypeError("str expected, got '%s'" % type(__s).__name__)
 
-    a = bitarray(4 * len(__s), _get_endian(endian))
+    a = bitarray(4 * len(__s), endian)
     _hex2ba(a, __s)
     return a
 
@@ -198,7 +194,7 @@ standard base 64 alphabet is used.
     if not isinstance(__s, bytes):
         raise TypeError("str expected, got '%s'" % type(__s).__name__)
 
-    a = bitarray(_base2ba(__n) * len(__s), _get_endian(endian))
+    a = bitarray(_base2ba(__n) * len(__s), endian)
     _base2ba(__n, a, __s)
     return a
 
@@ -272,7 +268,7 @@ and requires `length` to be provided.
             raise OverflowError("unsigned integer not in range(0, %d), "
                                 "got %d" % (1 << length, __i))
 
-    a = bitarray(0, _get_endian(endian))
+    a = bitarray(0, endian)
     le = bool(a.endian() == 'little')
     if _is_py2:
         s = hex(__i)[2:].rstrip('L')
@@ -328,7 +324,7 @@ the remaining stream untouched.  `StopIteration` is raised when no
 terminating byte is found.
 Use `vl_encode()` for encoding.
 """
-    a = bitarray(32, _get_endian(endian))
+    a = bitarray(32, endian)
     _vl_decode(iter(__stream), a)
     return a
 
@@ -384,7 +380,6 @@ to being strings.  Symbols may may be any hashable object (such as `None`).
     if not isinstance(__freq_map, dict):
         raise TypeError("dict expected, got '%s'" % type(__freq_map).__name__)
 
-    endian = _get_endian(endian)
     b0 = bitarray('0', endian)
     b1 = bitarray('1', endian)
 
