@@ -35,9 +35,7 @@ _is_py2 = bool(sys.version_info[0] == 2)
 
 
 def _get_endian(endian):
-    if endian is None:
-        endian = get_default_endian()
-    return endian
+    return get_default_endian() if endian is None else endian
 
 
 def zeros(__length, endian=None):
