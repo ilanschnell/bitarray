@@ -233,9 +233,12 @@ class TestsModuleFunctions(unittest.TestCase, Util):
                 a = bitarray(x)
                 self.assertEqual(a.endian(), default_endian)
 
-            for endian in 'big', 'little':
+            for endian in 'big', 'little', None:
                 a = bitarray(endian=endian)
-                self.assertEqual(a.endian(), endian)
+                if endian is None:
+                    self.assertEqual(a.endian(), default_endian)
+                else:
+                    self.assertEqual(a.endian(), endian)
 
             # make sure that calling _set_default_endian wrong does not
             # change the default endianness
@@ -520,14 +523,14 @@ class CreateObjectTests(unittest.TestCase, Util):
     def test_bitarray_simple(self):
         for n in range(10):
             a = bitarray(n)
-            b = bitarray(a)
+            b = bitarray(a, endian=None)
             self.assertFalse(a is b)
             self.assertEQUAL(a, b)
 
     def test_bitarray_endian(self):
         # Test creating a new bitarray with different endianness from an
         # existing bitarray.
-        for endian in 'little', 'big':
+        for endian in 'little', 'big', u'little', u'big':
             a = bitarray(endian=endian)
             b = bitarray(a)
             self.assertFalse(a is b)
@@ -592,7 +595,6 @@ class CreateObjectTests(unittest.TestCase, Util):
         for x in -1, 'A':
             self.assertRaises(ValueError, bitarray, x)
         # test second (endian) argument
-        self.assertRaises(TypeError, bitarray, 0, None)
         self.assertRaises(TypeError, bitarray, 0, 0)
         self.assertRaises(ValueError, bitarray, 0, 'foo')
         # too many args
