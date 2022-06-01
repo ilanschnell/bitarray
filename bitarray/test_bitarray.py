@@ -235,10 +235,8 @@ class TestsModuleFunctions(unittest.TestCase, Util):
 
             for endian in 'big', 'little', None:
                 a = bitarray(endian=endian)
-                if endian is None:
-                    self.assertEqual(a.endian(), default_endian)
-                else:
-                    self.assertEqual(a.endian(), endian)
+                self.assertEqual(a.endian(),
+                                 default_endian if endian is None else endian)
 
             # make sure that calling _set_default_endian wrong does not
             # change the default endianness
