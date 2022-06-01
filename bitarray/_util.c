@@ -12,8 +12,8 @@
 #include "pythoncapi_compat.h"
 #include "bitarray.h"
 
-/* set using the Python module function _set_bato() */
-static PyObject *bitarray_type_obj = NULL;
+/* set in PyInit__util() */
+static PyObject *bitarray_type_obj;
 
 /* Return 0 if obj is bitarray.  If not, return -1 and set an exception. */
 static int
@@ -21,8 +21,6 @@ ensure_bitarray(PyObject *obj)
 {
     int t;
 
-    if (bitarray_type_obj == NULL)
-        Py_FatalError("bitarray_type_obj not set");
     t = PyObject_IsInstance(obj, bitarray_type_obj);
     if (t < 0)
         return -1;
@@ -1045,15 +1043,6 @@ static PyTypeObject CHDI_Type = {
 
 /* --------------------------------------------------------------------- */
 
-/* Set bitarray_type_obj (bato).  This function must be called before any
-   other Python function in this module. */
-static PyObject *
-set_bato(PyObject *module, PyObject *obj)
-{
-    bitarray_type_obj = obj;
-    Py_RETURN_NONE;
-}
-
 static PyMethodDef module_functions[] = {
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
     {"rindex",    (PyCFunction) r_index,   METH_VARARGS, rindex_doc},
@@ -1071,7 +1060,6 @@ static PyMethodDef module_functions[] = {
     {"_vl_decode",(PyCFunction) vl_decode, METH_VARARGS, 0},
     {"canonical_decode",
                   (PyCFunction) chdi_new,  METH_VARARGS, chdi_doc},
-    {"_set_bato", (PyCFunction) set_bato,  METH_O,       0},
     {NULL,        NULL}  /* sentinel */
 };
 
@@ -1090,7 +1078,7 @@ PyInit__util(void)
 init_util(void)
 #endif
 {
-    PyObject *m;
+    PyObject *m, *bitarray_module;
 
 #ifdef IS_PY3K
     m = PyModule_Create(&moduledef);
@@ -1098,6 +1086,12 @@ init_util(void)
     m = Py_InitModule3("_util", module_functions, 0);
 #endif
     if (m == NULL)
+        goto error;
+
+    if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
+        goto error;
+    bitarray_type_obj = PyObject_GetAttrString(bitarray_module, "bitarray");
+    if (bitarray_type_obj == NULL)
         goto error;
 
     if (PyType_Ready(&CHDI_Type) < 0)

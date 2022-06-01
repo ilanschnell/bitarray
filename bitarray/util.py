@@ -15,7 +15,7 @@ from bitarray import bitarray, bits2bytes
 from bitarray._util import (
     count_n, rindex, parity, count_and, count_or, count_xor, subset,
     serialize, ba2hex, _hex2ba, ba2base, _base2ba, vl_encode, _vl_decode,
-    canonical_decode, _set_bato,
+    canonical_decode,
 )
 
 __all__ = [
@@ -26,10 +26,6 @@ __all__ = [
     'huffman_code', 'canonical_huffman', 'canonical_decode',
 ]
 
-
-# tell the _util extension what the bitarray type object is, such that it
-# can check for instances thereof
-_set_bato(bitarray)
 
 _is_py2 = bool(sys.version_info[0] == 2)
 
