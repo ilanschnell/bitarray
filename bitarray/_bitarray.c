@@ -1780,12 +1780,9 @@ bitarray_copy_n(bitarrayobject *self, PyObject *args)
     PyObject *other;
     Py_ssize_t a, b, n;
 
-    if (!PyArg_ParseTuple(args, "nOnn", &a, &other, &b, &n))
+    if (!PyArg_ParseTuple(args, "nO!nn", &a, &Bitarray_Type, &other, &b, &n))
         return NULL;
-    if (!bitarray_Check(other)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray expected");
-        return NULL;
-    }
+
     copy_n(self, a, (bitarrayobject *) other, b, n);
     Py_RETURN_NONE;
 }
