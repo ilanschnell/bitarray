@@ -730,6 +730,8 @@ vl_decode(PyObject *module, PyObject *args)
     if (!PyIter_Check(iter))
         return PyErr_Format(PyExc_TypeError, "iterator or bytes expected, "
                             "got '%s'", Py_TYPE(iter)->tp_name);
+    if (ensure_bitarray(a) < 0)
+        return NULL;
 
 #define aa  ((bitarrayobject *) a)
     while ((item = PyIter_Next(iter))) {
