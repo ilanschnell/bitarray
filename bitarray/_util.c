@@ -12,7 +12,7 @@
 #include "pythoncapi_compat.h"
 #include "bitarray.h"
 
-/* set in PyInit__util() */
+/* set during module initialization */
 static PyObject *bitarray_type_obj;
 
 /* Return 0 if obj is bitarray.  If not, return -1 and set an exception. */
@@ -1064,18 +1064,18 @@ init_util(void)
 {
     PyObject *m, *bitarray_module;
 
+    if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
+        goto error;
+    bitarray_type_obj = PyObject_GetAttrString(bitarray_module, "bitarray");
+    if (bitarray_type_obj == NULL)
+        goto error;
+
 #ifdef IS_PY3K
     m = PyModule_Create(&moduledef);
 #else
     m = Py_InitModule3("_util", module_functions, 0);
 #endif
     if (m == NULL)
-        goto error;
-
-    if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
-        goto error;
-    bitarray_type_obj = PyObject_GetAttrString(bitarray_module, "bitarray");
-    if (bitarray_type_obj == NULL)
         goto error;
 
     if (PyType_Ready(&CHDI_Type) < 0)
