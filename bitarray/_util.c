@@ -1067,6 +1067,7 @@ init_util(void)
     if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
         goto error;
     bitarray_type_obj = PyObject_GetAttrString(bitarray_module, "bitarray");
+    Py_DECREF(bitarray_module);
     if (bitarray_type_obj == NULL)
         goto error;
 
