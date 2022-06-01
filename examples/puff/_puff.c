@@ -262,10 +262,10 @@ codes(state_obj *s, const struct huffman *lencode,
     return 0;
 }
 
-/* set using the Python module function _set_bato() */
-static PyObject *bitarray_type_obj = NULL;
-
 /* ------------------------ State Python interface ------------------ */
+
+/* set during module init */
+static PyObject *bitarray_type_obj;
 
 /* Return 0 if obj is bitarray.  If not, return -1 and set an exception. */
 static int
@@ -273,8 +273,6 @@ ensure_bitarray(PyObject *obj)
 {
     int t;
 
-    if (bitarray_type_obj == NULL)
-        Py_FatalError("bitarray_type_obj not set");
     t = PyObject_IsInstance(obj, bitarray_type_obj);
     if (t < 0)
         return -1;
@@ -641,27 +639,19 @@ static PyTypeObject state_type = {
 
 /* --------------------------------------------------------------------- */
 
-/* Set bitarray_type_obj (bato).  This function must be called before any
-   other Python function in this module. */
-static PyObject *
-set_bato(PyObject *module, PyObject *obj)
-{
-    bitarray_type_obj = obj;
-    Py_RETURN_NONE;
-}
-
-static PyMethodDef module_functions[] = {
-    {"_set_bato", (PyCFunction) set_bato, METH_O, 0},
-    {NULL,        NULL}  /* sentinel */
-};
-
 static PyModuleDef moduledef = {
-    PyModuleDef_HEAD_INIT, "_puff", 0, -1, module_functions,
+    PyModuleDef_HEAD_INIT, "_puff", 0, -1,
 };
 
 PyMODINIT_FUNC PyInit__puff(void)
 {
-    PyObject *m;
+    PyObject *m, *bitarray_module;
+
+    if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
+        return NULL;
+    bitarray_type_obj = PyObject_GetAttrString(bitarray_module, "bitarray");
+    if (bitarray_type_obj == NULL)
+        return NULL;
 
     m = PyModule_Create(&moduledef);
     if (m == NULL)

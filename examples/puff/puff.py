@@ -2,11 +2,7 @@ from collections import Counter, defaultdict
 
 from bitarray import bitarray
 
-from _puff import State, _set_bato, MAXLCODES, MAXDCODES, FIXLCODES
-
-# tell the _puff extension what the bitarray type object is, such that it
-# can check for instances thereof
-_set_bato(bitarray)
+from _puff import State, MAXLCODES, MAXDCODES, FIXLCODES
 
 
 # fixed literal/lengths and distance lengths
