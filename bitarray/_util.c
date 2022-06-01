@@ -32,19 +32,6 @@ ensure_bitarray(PyObject *obj)
     return 0;
 }
 
-/* ensure object is a bitarray of given length */
-static int
-ensure_ba_of_length(PyObject *a, Py_ssize_t n)
-{
-    if (ensure_bitarray(a) < 0)
-        return -1;
-    if (((bitarrayobject *) a)->nbits != n) {
-        PyErr_SetString(PyExc_ValueError, "size mismatch");
-        return -1;
-    }
-    return 0;
-}
-
 /* ------------------------------- count_n ----------------------------- */
 
 /* return the smallest index i for which a.count(vi, 0, i) == n, or when
@@ -110,9 +97,8 @@ count_n(PyObject *module, PyObject *args)
     Py_ssize_t n, i;
     int vi;
 
-    if (!PyArg_ParseTuple(args, "On|O:count_n", &a, &n, &value))
-        return NULL;
-    if (ensure_bitarray(a) < 0)
+    if (!PyArg_ParseTuple(args, "O!n|O:count_n",
+                          bitarray_type_obj, &a, &n, &value))
         return NULL;
     if (n < 0) {
         PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
@@ -203,9 +189,8 @@ r_index(PyObject *module, PyObject *args)
     Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, res;
     int vi;
 
-    if (!PyArg_ParseTuple(args, "O|Onn:rindex", &a, &value, &start, &stop))
-        return NULL;
-    if (ensure_bitarray(a) < 0)
+    if (!PyArg_ParseTuple(args, "O!|Onn:rindex",
+                          bitarray_type_obj, &a, &value, &start, &stop))
         return NULL;
     if ((vi = pybit_as_int(value)) < 0)
         return NULL;
@@ -271,9 +256,8 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
     unsigned char c;
     int r;
 
-    if (!PyArg_ParseTuple(args, format, &a, &b))
-        return NULL;
-    if (ensure_bitarray(a) < 0 || ensure_bitarray(b) < 0)
+    if (!PyArg_ParseTuple(args, format,
+                          bitarray_type_obj, &a, bitarray_type_obj, &b))
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
@@ -351,7 +335,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
 static PyObject *                                                       \
 count_ ## oper (PyObject *module, PyObject *args)                       \
 {                                                                       \
-    return binary_function(args, KERN_c ## oper, "OO:count_" #oper);    \
+    return binary_function(args, KERN_c ## oper, "O!O!:count_" #oper);  \
 }                                                                       \
 PyDoc_STRVAR(count_ ## oper ## _doc,                                    \
 "count_" #oper "(a, b, /) -> int\n\
@@ -367,7 +351,7 @@ COUNT_FUNC(xor, "^");           /* count_xor */
 static PyObject *
 subset(PyObject *module, PyObject *args)
 {
-    return binary_function(args, KERN_subset, "OO:subset");
+    return binary_function(args, KERN_subset, "O!O!:subset");
 }
 
 PyDoc_STRVAR(subset_doc,
@@ -482,12 +466,14 @@ hex2ba(PyObject *module, PyObject *args)
     Py_ssize_t i, strsize;
     int le, be;
 
-    if (!PyArg_ParseTuple(args, "Os#", &a, &str, &strsize))
-        return NULL;
-    if (ensure_ba_of_length(a, 4 * strsize) < 0)
+    if (!PyArg_ParseTuple(args, "O!s#", bitarray_type_obj, &a, &str, &strsize))
         return NULL;
 
 #define aa  ((bitarrayobject *) a)
+    if (aa->nbits != 4 * strsize) {
+        PyErr_SetString(PyExc_ValueError, "size mismatch");
+        return NULL;
+    }
     le = IS_LE(aa);
     be = IS_BE(aa);
     assert(le + be == 1 && str[strsize] == 0);
@@ -582,11 +568,9 @@ ba2base(PyObject *module, PyObject *args)
     char *str;
     int n, m, le;
 
-    if (!PyArg_ParseTuple(args, "iO:ba2base", &n, &a))
+    if (!PyArg_ParseTuple(args, "iO!:ba2base", &n, bitarray_type_obj, &a))
         return NULL;
     if ((m = base_to_length(n)) < 0)
-        return NULL;
-    if (ensure_bitarray(a) < 0)
         return NULL;
 
     switch (n) {
@@ -646,16 +630,19 @@ base2ba(PyObject *module, PyObject *args)
     char *str = NULL;
     int n, m, le;
 
-    if (!PyArg_ParseTuple(args, "i|Os#", &n, &a, &str, &strsize))
+    if (!PyArg_ParseTuple(args, "i|O!s#",
+                          &n, bitarray_type_obj, &a, &str, &strsize))
         return NULL;
     if ((m = base_to_length(n)) < 0)
         return NULL;
     if (a == NULL)
         return PyLong_FromLong(m);
-    if (ensure_ba_of_length(a, m * strsize) < 0)
-        return NULL;
 
 #define aa  ((bitarrayobject *) a)
+    if (aa->nbits != m * strsize) {
+        PyErr_SetString(PyExc_ValueError, "size mismatch");
+        return NULL;
+    }
     le = IS_LE(aa);
     for (i = 0; i < strsize; i++) {
         int j, d = digit_to_int(n, str[i]);
@@ -723,13 +710,11 @@ vl_decode(PyObject *module, PyObject *args)
     unsigned char b = 0x80;  /* empty stream will raise StopIteration */
     Py_ssize_t k;
 
-    if (!PyArg_ParseTuple(args, "OO", &iter, &a))
+    if (!PyArg_ParseTuple(args, "OO!", &iter, bitarray_type_obj, &a))
         return NULL;
     if (!PyIter_Check(iter))
         return PyErr_Format(PyExc_TypeError, "iterator or bytes expected, "
                             "got '%s'", Py_TYPE(iter)->tp_name);
-    if (ensure_bitarray(a) < 0)
-        return NULL;
 
 #define aa  ((bitarrayobject *) a)
     while ((item = PyIter_Next(iter))) {
@@ -902,9 +887,8 @@ chdi_new(PyObject *module, PyObject *args)
     Py_ssize_t count_sum;
     chdi_obj *it;       /* iterator object to be returned */
 
-    if (!PyArg_ParseTuple(args, "OOO:count_n", &a, &count, &symbol))
-        return NULL;
-    if (ensure_bitarray(a) < 0)
+    if (!PyArg_ParseTuple(args, "O!OO:count_n",
+                          bitarray_type_obj, &a, &count, &symbol))
         return NULL;
     if (!PySequence_Check(count))
         return PyErr_Format(PyExc_TypeError, "count expected to be sequence, "
