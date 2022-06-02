@@ -3779,7 +3779,8 @@ PyDoc_STRVAR(get_default_endian_doc,
 "get_default_endian() -> str\n\
 \n\
 Return the default endianness for new bitarray objects being created.\n\
-Unless `_set_default_endian()` is called, the return value is `big`.");
+Unless `_set_default_endian('little')` was called, the default endianness\n\
+is `big`.");
 
 
 static PyObject *
