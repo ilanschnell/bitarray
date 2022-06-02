@@ -93,19 +93,17 @@ count_to_n(bitarrayobject *a, Py_ssize_t n, int vi)
 static PyObject *
 count_n(PyObject *module, PyObject *args)
 {
-    PyObject *value = Py_True, *a;
+    PyObject *a;
     Py_ssize_t n, i;
-    int vi;
+    int vi = 1;
 
-    if (!PyArg_ParseTuple(args, "O!n|O:count_n",
-                          bitarray_type_obj, &a, &n, &value))
+    if (!PyArg_ParseTuple(args, "O!n|O&:count_n",
+                          bitarray_type_obj, &a, &n, conv_pybit, &vi))
         return NULL;
     if (n < 0) {
         PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
         return NULL;
     }
-    if ((vi = pybit_as_int(value)) < 0)
-        return NULL;
 
 #define aa  ((bitarrayobject *) a)
     if (n > aa->nbits)  {
@@ -185,14 +183,12 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 static PyObject *
 r_index(PyObject *module, PyObject *args)
 {
-    PyObject *value = Py_True, *a;
+    PyObject *a;
     Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, res;
-    int vi;
+    int vi = 1;
 
-    if (!PyArg_ParseTuple(args, "O!|Onn:rindex",
-                          bitarray_type_obj, &a, &value, &start, &stop))
-        return NULL;
-    if ((vi = pybit_as_int(value)) < 0)
+    if (!PyArg_ParseTuple(args, "O!|O&nn:rindex", bitarray_type_obj, &a,
+                          conv_pybit, &vi, &start, &stop))
         return NULL;
 
 #define aa  ((bitarrayobject *) a)

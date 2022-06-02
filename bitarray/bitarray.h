@@ -220,20 +220,21 @@ adjust_step_positive(Py_ssize_t slicelength,
     assert(*step != 1 || slicelength == 0 || *stop - *start == slicelength);
 }
 
-/* Interpret a PyObject (usually PyLong or PyBool) as a bit, return 0 or 1.
-   On error, return -1 and set error message. */
+/* convert Python object to C int and set value at address -
+   return 1 on success, 0 on failure (and raise exception) */
 static inline int
-pybit_as_int(PyObject *value)
+conv_pybit(PyObject *value, int *vi)
 {
-    Py_ssize_t x;
+    Py_ssize_t n;
 
-    x = PyNumber_AsSsize_t(value, NULL);
-    if (x == -1 && PyErr_Occurred())
-        return -1;
+    n = PyNumber_AsSsize_t(value, NULL);
+    if (n == -1 && PyErr_Occurred())
+        return 0;
 
-    if (x < 0 || x > 1) {
-        PyErr_Format(PyExc_ValueError, "bit must be 0 or 1, got %zd", x);
-        return -1;
+    if (n < 0 || n > 1) {
+        PyErr_Format(PyExc_ValueError, "bit must be 0 or 1, got %zd", n);
+        return 0;
     }
-    return (int) x;
+    *vi = (int) n;
+    return 1;
 }

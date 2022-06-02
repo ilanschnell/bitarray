@@ -594,8 +594,7 @@ set_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
 {
     int vi;
 
-    vi = pybit_as_int(value);
-    if (vi < 0)
+    if (!conv_pybit(value, &vi))
         return -1;
 
     setbit(self, i, vi);
@@ -824,8 +823,7 @@ bitarray_append(bitarrayobject *self, PyObject *value)
 
     RAISE_IF_READONLY(self, NULL);
 
-    vi = pybit_as_int(value);
-    if (vi < 0)
+    if (!conv_pybit(value, &vi))
         return NULL;
 
     if (resize(self, self->nbits + 1) < 0)
@@ -947,14 +945,12 @@ Return a copy of the bitarray.");
 static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
-    PyObject *value = Py_True;
     Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, step = 1;
     Py_ssize_t cnt = 0, slicelength;
-    int vi;
+    int vi = 1;
 
-    if (!PyArg_ParseTuple(args, "|Onnn:count", &value, &start, &stop, &step))
-        return NULL;
-    if ((vi = pybit_as_int(value)) < 0)
+    if (!PyArg_ParseTuple(args, "|O&nnn:count",
+                          conv_pybit, &vi, &start, &stop, &step))
         return NULL;
     if (step == 0) {
         PyErr_SetString(PyExc_ValueError, "count step cannot be zero");
@@ -1047,7 +1043,7 @@ bitarray_find(bitarrayobject *self, PyObject *args)
     if (PyIndex_Check(x)) {
         int vi;
 
-        if ((vi = pybit_as_int(x)) < 0)
+        if (!conv_pybit(x, &vi))
             return NULL;
         return PyLong_FromSsize_t(find_bit(self, vi, start, stop));
     }
@@ -1103,18 +1099,13 @@ static PyObject *
 bitarray_insert(bitarrayobject *self, PyObject *args)
 {
     Py_ssize_t i;
-    PyObject *value;
     int vi;
 
     RAISE_IF_READONLY(self, NULL);
-    if (!PyArg_ParseTuple(args, "nO:insert", &i, &value))
+    if (!PyArg_ParseTuple(args, "nO&:insert", &i, conv_pybit, &vi))
         return NULL;
 
     adjust_index(self->nbits, &i, 1);
-
-    vi = pybit_as_int(value);
-    if (vi < 0)
-        return NULL;
 
     if (insert_n(self, i, 1) < 0)
         return NULL;
@@ -1288,9 +1279,9 @@ searcharg(PyObject *x)
     bitarrayobject *xa;
 
     if (PyIndex_Check(x)) {
-        int vi = pybit_as_int(x);
+        int vi;
 
-        if (vi < 0)
+        if (!conv_pybit(x, &vi))
             return NULL;
         xa = (bitarrayobject *) newbitarrayobject(&Bitarray_Type, 1,
                                                   ENDIAN_LITTLE);
@@ -1364,8 +1355,9 @@ bitarray_setall(bitarrayobject *self, PyObject *value)
     int vi;
 
     RAISE_IF_READONLY(self, NULL);
-    if ((vi = pybit_as_int(value)) < 0)
+    if (!conv_pybit(value, &vi))
         return NULL;
+
     memset(self->ob_item, vi ? 0xff : 0x00, (size_t) Py_SIZE(self));
     Py_RETURN_NONE;
 }
@@ -1704,7 +1696,7 @@ bitarray_remove(bitarrayobject *self, PyObject *value)
     int vi;
 
     RAISE_IF_READONLY(self, NULL);
-    if ((vi = pybit_as_int(value)) < 0)
+    if (!conv_pybit(value, &vi))
         return NULL;
 
     i = find_bit(self, vi, 0, self->nbits);
@@ -1903,8 +1895,7 @@ bitarray_contains(bitarrayobject *self, PyObject *value)
     if (PyIndex_Check(value)) {
         int vi;
 
-        vi = pybit_as_int(value);
-        if (vi < 0)
+        if (!conv_pybit(value, &vi))
             return -1;
         return find_bit(self, vi, 0, self->nbits) >= 0;
     }
@@ -2069,7 +2060,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     int vi;
 
     assert(PySlice_Check(slice) && PyIndex_Check(value));
-    if ((vi = pybit_as_int(value)) < 0)
+    if (!conv_pybit(value, &vi))
         return -1;
 
     if (PySlice_GetIndicesEx(slice, self->nbits,
