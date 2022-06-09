@@ -58,6 +58,11 @@ DOC_LINKS = {
 }
 
 NOTES = {
+    'bitarray.pack': """\
+This method, as well as the ``.unpack()`` method, are meant for efficient
+   transfer of data between bitarray objects to other Python objects (for
+   example NumPy's ndarray object) which have a different memory view.\
+""",
     'util.count_xor': "This is also known as the Hamming distance."
 }
 
@@ -112,7 +117,7 @@ def write_doc(fo, name):
 
     note = NOTES.get(name)
     if note:
-        fo.write("\n   Note: %s\n" % note)
+        fo.write("\n   %s\n" % note)
 
     link = DOC_LINKS.get(name)
     if link:
