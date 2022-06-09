@@ -1647,10 +1647,7 @@ PyDoc_STRVAR(pack_doc,
 \n\
 Extend the bitarray from a bytes-like object, where each byte corresponds\n\
 to a single bit.  The byte `b'\\x00'` maps to bit 0 and all other bytes\n\
-map to bit 1.\n\
-This method, as well as the unpack method, are meant for efficient\n\
-transfer of data between bitarray objects to other python objects\n\
-(for example NumPy's ndarray object) which have a different memory view.");
+map to bit 1.");
 
 
 static PyObject *
