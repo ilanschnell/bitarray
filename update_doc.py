@@ -57,6 +57,10 @@ DOC_LINKS = {
     'util.vl_encode':          'vlf',
 }
 
+NOTES = {
+    'util.count_xor': "This is also known as the Hamming distance."
+}
+
 GETSET = {
     'bitarray.nbytes':     'int',
     'bitarray.padbits':    'int',
@@ -105,6 +109,10 @@ def write_doc(fo, name):
     for line in lines:
         out = line.rstrip()
         fo.write("   %s\n" % out.replace('`', '``') if out else "\n")
+
+    note = NOTES.get(name)
+    if note:
+        fo.write("\n   Note: %s\n" % note)
 
     link = DOC_LINKS.get(name)
     if link:
