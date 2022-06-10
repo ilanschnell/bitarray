@@ -1412,11 +1412,14 @@ bitarray_tolist(bitarrayobject *self)
     for (i = 0; i < self->nbits; i++) {
         item = PyLong_FromLong(getbit(self, i));
         if (item == NULL)
-            return NULL;
+            goto error;
         if (PyList_SetItem(list, i, item) < 0)
-            return NULL;
+            goto error;
     }
     return list;
+ error:
+    Py_DECREF(list);
+    return NULL;
 }
 
 PyDoc_STRVAR(tolist_doc,
