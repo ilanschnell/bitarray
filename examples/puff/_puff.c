@@ -470,10 +470,11 @@ list_from_shorts(const short *array, Py_ssize_t n)
 
     for (i = 0; i < n; i++) {
         item = PyLong_FromLong((long) array[i]);
-        if (item == NULL)
+        if (item == NULL) {
+            Py_DECREF(list);
             return NULL;
-        if (PyList_SetItem(list, i, item) < 0)
-            return NULL;
+        }
+        PyList_SET_ITEM(list, i, item);
     }
     return list;
 }
