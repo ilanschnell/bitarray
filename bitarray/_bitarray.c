@@ -1681,7 +1681,7 @@ PyDoc_STRVAR(pop_doc,
 "pop(index=-1, /) -> item\n\
 \n\
 Return the i-th (default last) element and delete it from the bitarray.\n\
-Raises `IndexError` if bitarray is empty or index is out of range.");
+Raises `IndexError` if index is out of range.");
 
 
 static PyObject *
