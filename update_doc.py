@@ -59,11 +59,16 @@ DOC_LINKS = {
 
 NOTES = {
     'bitarray.pack': """\
-This method, as well as the ``.unpack()`` method, are meant for efficient
+   This method, as well as the ``.unpack()`` method, are meant for efficient
    transfer of data between bitarray objects to other Python objects (for
-   example NumPy's ndarray object) which have a different memory view.\
-""",
-    'util.count_xor': "This is also known as the Hamming distance."
+   example NumPy's ndarray object) which have a different memory view.""",
+
+    'bitarray.tolist': """\
+   Note that the list object being created will require 32 or 64 times more
+   memory (depending on the machine architecture) than the bitarray object,
+   which may cause a memory error if the bitarray is very large.""",
+
+    'util.count_xor': "   This is also known as the Hamming distance."
 }
 
 GETSET = {
@@ -117,7 +122,7 @@ def write_doc(fo, name):
 
     note = NOTES.get(name)
     if note:
-        fo.write("\n   %s\n" % note)
+        fo.write("\n%s\n" % note)
 
     link = DOC_LINKS.get(name)
     if link:

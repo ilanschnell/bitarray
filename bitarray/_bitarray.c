@@ -1422,10 +1422,7 @@ bitarray_tolist(bitarrayobject *self)
 PyDoc_STRVAR(tolist_doc,
 "tolist() -> list\n\
 \n\
-Return a list with the items (0 or 1) in the bitarray.\n\
-Note that the list object being created will require 32 or 64 times more\n\
-memory (depending on the machine architecture) than the bitarray object,\n\
-which may cause a memory error if the bitarray is very large.");
+Return the bitarray as a list of integer items.");
 
 
 static PyObject *
@@ -1587,7 +1584,7 @@ bitarray_to01(bitarrayobject *self)
 PyDoc_STRVAR(to01_doc,
 "to01() -> str\n\
 \n\
-Return a string containing '0's and '1's, representing the bits in the\n\
+Return a string containing `0`s and `1`s, representing the bits in the\n\
 bitarray.");
 
 
@@ -3095,7 +3092,7 @@ PyDoc_STRVAR(itersearch_doc,
 "itersearch(sub_bitarray, /) -> iterator\n\
 \n\
 Searches for the given sub_bitarray in self, and return an iterator over\n\
-the start positions where bitarray matches self.");
+the start positions where sub_bitarray matches self.");
 
 static PyObject *
 searchiter_next(searchiterobject *it)
