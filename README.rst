@@ -453,7 +453,7 @@ bitarray methods:
    0. memory address of buffer
    1. buffer size (in bytes)
    2. bit endianness as a string
-   3. number of unused padding bits
+   3. number of pad bits
    4. allocated memory for the buffer (in bytes)
    5. memory is read-only
    6. buffer is imported
@@ -461,7 +461,7 @@ bitarray methods:
 
 
 ``bytereverse(start=0, stop=<end of buffer>, /)``
-   Reverse the order of bits in byte-range(start, stop) in-place.
+   For each byte in byte-range(start, stop) reverse the bit order in-place.
    The start and stop indices are given in terms of bytes (not bits).
    Also note that this method only changes the buffer; it does not change the
    endianness of the bitarray object.
@@ -561,16 +561,17 @@ bitarray methods:
 
 ``itersearch(sub_bitarray, /)`` -> iterator
    Searches for the given sub_bitarray in self, and return an iterator over
-   the start positions where bitarray matches self.
+   the start positions where sub_bitarray matches self.
 
 
 ``pack(bytes, /)``
    Extend the bitarray from a bytes-like object, where each byte corresponds
    to a single bit.  The byte ``b'\x00'`` maps to bit 0 and all other bytes
    map to bit 1.
-   This method, as well as the unpack method, are meant for efficient
-   transfer of data between bitarray objects to other python objects
-   (for example NumPy's ndarray object) which have a different memory view.
+
+   This method, as well as the ``.unpack()`` method, are meant for efficient
+   transfer of data between bitarray objects to other Python objects (for
+   example NumPy's ndarray object) which have a different memory view.
 
    New in version 2.5.0: allow bytes-like argument.
 
@@ -606,12 +607,12 @@ bitarray methods:
 
 
 ``to01()`` -> str
-   Return a string containing '0's and '1's, representing the bits in the
+   Return a string containing ``0``s and ``1``s, representing the bits in the
    bitarray.
 
 
 ``tobytes()`` -> bytes
-   Return the bitarray buffer in bytes (unused bits are set to zero).
+   Return the bitarray buffer in bytes (pad bits are set to zero).
 
 
 ``tofile(f, /)``
@@ -619,7 +620,8 @@ bitarray methods:
 
 
 ``tolist()`` -> list
-   Return a list with the items (0 or 1) in the bitarray.
+   Return the bitarray as a list of integer items.
+
    Note that the list object being created will require 32 or 64 times more
    memory (depending on the machine architecture) than the bitarray object,
    which may cause a memory error if the bitarray is very large.
@@ -656,9 +658,10 @@ Functions defined in the `bitarray` module:
    Return the number of bytes necessary to store n bits.
 
 
-``get_default_endian()`` -> string
+``get_default_endian()`` -> str
    Return the default endianness for new bitarray objects being created.
-   Unless ``_set_default_endian()`` is called, the return value is ``big``.
+   Unless ``_set_default_endian('little')`` was called, the default endianness
+   is ``big``.
 
    New in version 1.3.
 
@@ -742,6 +745,8 @@ This sub-module was added in version 1.2.
 ``count_xor(a, b, /)`` -> int
    Return ``(a ^ b).count()`` in a memory efficient manner,
    as no intermediate bitarray object gets created.
+
+   This is also known as the Hamming distance.
 
 
 ``subset(a, b, /)`` -> bool
