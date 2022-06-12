@@ -965,7 +965,6 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     else {
         Py_ssize_t i;
 
-        assert(step > 1);
         for (i = start; i < stop; i += step)
             cnt += getbit(self, i);
     }
@@ -2071,7 +2070,6 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
         char *buff = self->ob_item;
         Py_ssize_t i;
 
-        assert(step > 1);
         if (vi) {
             for (i = start; i < stop; i += step)
                 buff[i >> 3] |= table[i & 7];
@@ -2096,20 +2094,16 @@ delslice(bitarrayobject *self, PyObject *slice)
         return -1;
     adjust_step_positive(slicelength, &start, &stop, &step);
 
-    if (step == 1) {
-        return delete_n(self, start, slicelength);
-    }
-    else {
+    if (step > 1) {
         Py_ssize_t i, j;
 
-        assert(step > 1);
         /* set items not to be removed (up to stop) */
         for (i = j = start; i < stop; i++) {
             if ((i - start) % step != 0)
                 setbit(self, j++, getbit(self, i));
         }
-        return delete_n(self, stop - slicelength, slicelength);
     }
+    return delete_n(self, stop - slicelength, slicelength);
 }
 
 static int
