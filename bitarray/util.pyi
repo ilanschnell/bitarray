@@ -1,7 +1,7 @@
 # Copyright (c) 2021 - 2022, Ilan Schnell; All Rights Reserved
 
 from collections import Counter
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from typing import Any, AnyStr, BinaryIO, Optional, Union
 
 from bitarray import bitarray, BytesLike, CodeDict
@@ -60,4 +60,4 @@ def huffman_code(freq_map: FreqMap,
 def canonical_huffman(Freq_Map) -> tuple[CodeDict, list, list]: ...
 def canonical_decode(a: bitarray,
                      count: Sequence[int],
-                     symbol: Iterable[Any]) -> None: ...
+                     symbol: Iterable[Any]) -> Iterator: ...
