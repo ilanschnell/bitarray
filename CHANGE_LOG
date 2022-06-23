@@ -2,7 +2,7 @@
 -------------------
   * add data descriptions: `.nbytes`, `.padbits`, `.readonly`
   * allow optional `endian` argument to be `None` when creating bitarrays
-  * fix wrong type annotation for canonical_decode(), #178
+  * fix type annotation for `canonical_decode()`, #178
   * frozenbitarray's padbits are now guaranteed to be zero
   * add tests
 
