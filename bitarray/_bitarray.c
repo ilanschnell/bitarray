@@ -1987,7 +1987,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
    functionality inside bitarray_ass_subscr() would make the function
    incomprehensibly long. */
 
-/* set the elements in self, specified by slice, to bitarray */
+/* set elements in self, specified by slice, to other bitarray */
 static int
 setslice_bitarray(bitarrayobject *self, PyObject *slice,
                   bitarrayobject *other)
@@ -2046,7 +2046,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
     return res;
 }
 
-/* set the elements in self, specified by slice, to value */
+/* set elements in self, specified by slice, to value */
 static int
 setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
 {
@@ -2082,7 +2082,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     return 0;
 }
 
-/* delete the elements in self, specified by slice */
+/* delete elements in self, specified by slice */
 static int
 delslice(bitarrayobject *self, PyObject *slice)
 {
