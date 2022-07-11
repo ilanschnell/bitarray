@@ -183,7 +183,7 @@ bitarray methods:
 
 ``pop(index=-1, /)`` -> item
    Return the i-th (default last) element and delete it from the bitarray.
-   Raises ``IndexError`` if bitarray is empty or index is out of range.
+   Raises ``IndexError`` if index is out of range.
 
 
 ``remove(value, /)``
