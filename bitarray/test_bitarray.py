@@ -4216,7 +4216,7 @@ class BufferImportTests(unittest.TestCase, Util):
         for n in range(100):
             a = urandom(n, self.random_endian())
             b = bitarray(buffer=a, endian=a.endian())
-            # an imported buffer will always no padbits
+            # an imported buffer will never have padbits
             self.assertEqual(b.padbits, 0)
             self.assertEqual(len(b) % 8, 0)
             self.assertEQUAL(b[:n], a)
