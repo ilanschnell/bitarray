@@ -1,3 +1,7 @@
+2022-XX-XX   2.6.1:
+-------------------
+
+
 2022-07-19   2.6.0:
 -------------------
   * add data descriptions: `.nbytes`, `.padbits`, `.readonly`
