@@ -1,6 +1,15 @@
 Change log
 ==========
 
+**2.6.0** (2022-07-19):
+
+* add data descriptions: ``.nbytes``, ``.padbits``, ``.readonly``
+* allow optional ``endian`` argument to be ``None`` when creating bitarrays
+* fix type annotation for ``canonical_decode()``, `#178 <https://github.com/ilanschnell/bitarray/issues/178>`__
+* frozenbitarray's padbits are now guaranteed to be zero
+* add tests
+
+
 **2.5.1** (2022-05-10):
 
 * optimize ``.reverse()``, see `#177 <https://github.com/ilanschnell/bitarray/issues/177>`__
@@ -30,7 +39,7 @@ Change log
 
 * improve ``resize()``, see `#167 <https://github.com/ilanschnell/bitarray/issues/167>`__
 * optimize ``copy_n()`` by avoiding loops, `#171 <https://github.com/ilanschnell/bitarray/issues/171>`__
-* ``.bytereverse()`` no longer sets unused bits to zero
+* ``.bytereverse()`` no longer sets unused pad bits to zero
 
 
 **2.4.0** (2022-03-01):

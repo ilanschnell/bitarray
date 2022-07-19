@@ -1584,7 +1584,7 @@ bitarray_to01(bitarrayobject *self)
 PyDoc_STRVAR(to01_doc,
 "to01() -> str\n\
 \n\
-Return a string containing `0`s and `1`s, representing the bits in the\n\
+Return a string containing '0's and '1's, representing the bits in the\n\
 bitarray.");
 
 

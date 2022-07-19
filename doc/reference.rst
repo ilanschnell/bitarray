@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.5.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.6.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -212,7 +212,7 @@ bitarray methods:
 
 
 ``to01()`` -> str
-   Return a string containing ``0``s and ``1``s, representing the bits in the
+   Return a string containing '0's and '1's, representing the bits in the
    bitarray.
 
 
@@ -235,6 +235,23 @@ bitarray methods:
 ``unpack(zero=b'\x00', one=b'\x01')`` -> bytes
    Return bytes containing one character for each bit in the bitarray,
    using the specified mapping.
+
+
+bitarray data descriptors:
+--------------------------
+
+Data descriptors were added in version 2.6.
+
+``nbytes`` -> int
+   buffer size in bytes
+
+
+``padbits`` -> int
+   number of pad bits
+
+
+``readonly`` -> bool
+   bool indicating whether buffer is read only
 
 
 Other objects:
