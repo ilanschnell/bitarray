@@ -25,8 +25,7 @@ frozenbitarray
 
 Return a frozenbitarray object, which is initialized the same way a bitarray
 object is initialized.  A frozenbitarray is immutable and hashable,
-and (unlike a bitarray) it may be used as a dictionary key.
-Its contents cannot be altered after it is created.
+and (unlike a bitarray) may be used as a dictionary key.
 """
     def __init__(self, *args, **kwargs):
         self._freeze()
