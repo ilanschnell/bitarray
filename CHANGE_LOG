@@ -1,5 +1,6 @@
 2022-XX-XX   2.6.1:
 -------------------
+  * fix typo in iterable initializer description, #179
 
 
 2022-07-19   2.6.0:
