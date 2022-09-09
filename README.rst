@@ -415,7 +415,7 @@ The bitarray object:
 
    ``str``: Create bitarray from a string of ``0`` and ``1``.
 
-   ``iterable``: Create bitarray from iterable or sequence or integers 0 or 1.
+   ``iterable``: Create bitarray from iterable or sequence of integers 0 or 1.
 
    Optional keyword arguments:
 
