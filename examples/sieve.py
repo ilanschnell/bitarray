@@ -2,11 +2,7 @@
 Demonstrates the implementation of "Sieve of Eratosthenes" algorithm for
 finding all prime numbers up to any given limit.
 """
-from __future__ import print_function
-import sys
-from math import sqrt
-if sys.version_info[0] == 2:
-    range = xrange
+from math import ceil, sqrt
 
 from bitarray import bitarray
 from bitarray.util import count_n
@@ -15,13 +11,13 @@ from bitarray.util import count_n
 MILLION = 1000 * 1000
 N = 100 * MILLION
 
-# Each bit corresponds to whether or not a[i] is a prime
-a = bitarray(N + 1)
+# Each bit a[i] corresponds to whether or not i is a prime
+a = bitarray(N)
 a.setall(True)
 # Zero and one are not prime
 a[:2] = False
 # Perform sieve
-for i in range(2, int(sqrt(N)) + 1):
+for i in range(2, ceil(sqrt(N))):
     if a[i]:  # i is prime, so all multiples are not
         a[i*i::i] = False
 
