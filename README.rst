@@ -209,6 +209,10 @@ This Python bitarray library specifies the behavior as follows:
 * shifts larger or equal to the length of the bitarray result in
   bitarrays with all values 0
 
+It is worth noting that (regardless of bit endianness) the bitarray left
+shift (``<<``) always shifts towards lower indices, and the right
+shift (``>>``) always shifts towards higher indices.
+
 
 Bit endianness
 --------------
