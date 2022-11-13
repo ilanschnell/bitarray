@@ -282,7 +282,7 @@ and requires `length` to be provided.
     if la > length:
         a = a[:length] if le else a[-length:]
     if la < length:
-        pad = zeros(length - la, endian)
+        pad = zeros(length - la, a.endian())
         a = a + pad if le else pad + a
     assert len(a) == length
     return a
