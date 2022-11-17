@@ -631,7 +631,7 @@ base2ba(PyObject *module, PyObject *args)
         return NULL;
     if ((m = base_to_length(n)) < 0)
         return NULL;
-    if (a == NULL)
+    if (a == NULL)  /* when only base n is given - return length log2(n) */
         return PyLong_FromLong(m);
 
 #define aa  ((bitarrayobject *) a)
