@@ -612,10 +612,10 @@ For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the\n\
 standard base 64 alphabet is used.");
 
 
-/* Translate ASCII digits into the bitarray's buffer.
+/* Translate ASCII digits into bitarray.
    The (Python) arguments to this functions are:
    - base n, one of 2, 4, 8, 16, 32, 64  (n=2^m   where m bits per digit)
-   - bitarray (of length m * len(s)) whose buffer is written into
+   - bitarray (of length m * len(s)) whose elements are overwritten
    - byte object s containing the ASCII digits
 */
 static PyObject *
