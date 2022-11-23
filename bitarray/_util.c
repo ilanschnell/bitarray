@@ -423,7 +423,9 @@ ba2hex(PyObject *module, PyObject *a)
         return NULL;
     }
 
-    /* strsize = aa->nbits / 4;  could make strsize odd */
+    /* We want strsize to be even, such that we can transform the entire
+       bitarray buffer at once.  Hence, we don't use aa->nbits / 4 here, as
+       is could make strsize odd. */
     strsize = 2 * Py_SIZE(a);
     str = (char *) PyMem_Malloc(strsize);
     if (str == NULL)
