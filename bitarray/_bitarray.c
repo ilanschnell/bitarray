@@ -539,11 +539,11 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     return -1;
 }
 
-/* Return first occurrence of bitarray xa (in self), such that xa is contained
-   within self[start:stop], or -1 when xa is not found */
+/* Return first occurrence of (sub) bitarray xa (in self), such that xa is
+   contained within self[start:stop], or -1 when xa is not found */
 static Py_ssize_t
-find(bitarrayobject *self, bitarrayobject *xa,
-     Py_ssize_t start, Py_ssize_t stop)
+find_sub(bitarrayobject *self, bitarrayobject *xa,
+         Py_ssize_t start, Py_ssize_t stop)
 {
     Py_ssize_t i;
 
@@ -1049,7 +1049,7 @@ bitarray_find(bitarrayobject *self, PyObject *args)
 
     if (bitarray_Check(x))
         return PyLong_FromSsize_t(
-                    find(self, (bitarrayobject *) x, start, stop));
+                find_sub(self, (bitarrayobject *) x, start, stop));
 
     return PyErr_Format(PyExc_TypeError, "bitarray or int expected, "
                         "not '%s'", Py_TYPE(x)->tp_name);
@@ -1321,7 +1321,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     if ((list = PyList_New(0)) == NULL)
         goto error;
 
-    while ((p = find(self, xa, p, self->nbits)) >= 0) {
+    while ((p = find_sub(self, xa, p, self->nbits)) >= 0) {
         if (PyList_Size(list) >= limit)
             break;
         item = PyLong_FromSsize_t(p++);
@@ -1895,7 +1895,7 @@ bitarray_contains(bitarrayobject *self, PyObject *value)
     }
 
     if (bitarray_Check(value))
-        return find(self, (bitarrayobject *) value, 0, self->nbits) >= 0;
+        return find_sub(self, (bitarrayobject *) value, 0, self->nbits) >= 0;
 
     PyErr_Format(PyExc_TypeError, "bitarray or int expected, got %s",
                  Py_TYPE(value)->tp_name);
@@ -3094,7 +3094,7 @@ searchiter_next(searchiterobject *it)
 {
     Py_ssize_t p;
 
-    p = find(it->bao, it->xa, it->p, it->bao->nbits);
+    p = find_sub(it->bao, it->xa, it->p, it->bao->nbits);
     if (p < 0)  /* no more positions -- stop iteration */
         return NULL;
     it->p = p + 1;  /* next search position */
