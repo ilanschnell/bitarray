@@ -540,7 +540,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 }
 
 /* Return first occurrence of (sub) bitarray xa (in self), such that xa is
-   contained within self[start:stop], or -1 when xa is not found */
+   contained within self[start:stop], or -1 when xa is not found. */
 static Py_ssize_t
 find_sub(bitarrayobject *self, bitarrayobject *xa,
          Py_ssize_t start, Py_ssize_t stop)
@@ -563,6 +563,28 @@ find_sub(bitarrayobject *self, bitarrayobject *xa,
         start++;
     }
     return -1;
+}
+
+/* Return first occurrence of either a bit or a (sub) bitarray (depending
+   on the type of object x) contained within self[start:stop], or -1 when
+   not found.  On Error, return -2. */
+static Py_ssize_t
+find_obj(bitarrayobject *self, PyObject *x, Py_ssize_t start, Py_ssize_t stop)
+{
+    if (PyIndex_Check(x)) {
+        int vi;
+
+        if (!conv_pybit(x, &vi))
+            return -2;
+        return find_bit(self, vi, start, stop);
+    }
+
+    if (bitarray_Check(x))
+        return find_sub(self, (bitarrayobject *) x, start, stop);
+
+    PyErr_Format(PyExc_TypeError, "bitarray or int expected, "
+                 "not '%s'", Py_TYPE(x)->tp_name);
+    return -2;
 }
 
 /* return 1 when buffers overlap, 0 otherwise */
@@ -1031,7 +1053,7 @@ will be a multiple of 8, and return the number of bits added (0..7).");
 static PyObject *
 bitarray_find(bitarrayobject *self, PyObject *args)
 {
-    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX;
+    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, pos;
     PyObject *x;
 
     if (!PyArg_ParseTuple(args, "O|nn", &x, &start, &stop))
@@ -1039,20 +1061,9 @@ bitarray_find(bitarrayobject *self, PyObject *args)
 
     adjust_indices(self->nbits, &start, &stop, 1);
 
-    if (PyIndex_Check(x)) {
-        int vi;
-
-        if (!conv_pybit(x, &vi))
-            return NULL;
-        return PyLong_FromSsize_t(find_bit(self, vi, start, stop));
-    }
-
-    if (bitarray_Check(x))
-        return PyLong_FromSsize_t(
-                find_sub(self, (bitarrayobject *) x, start, stop));
-
-    return PyErr_Format(PyExc_TypeError, "bitarray or int expected, "
-                        "not '%s'", Py_TYPE(x)->tp_name);
+    if ((pos = find_obj(self, x, start, stop)) == -2)
+        return NULL;
+    return PyLong_FromSsize_t(pos);
 }
 
 PyDoc_STRVAR(find_doc,
@@ -1076,12 +1087,12 @@ bitarray_index(bitarrayobject *self, PyObject *args)
     if (PyLong_AsSsize_t(result) < 0) {
         Py_DECREF(result);
 #ifdef IS_PY3K
-        return PyErr_Format(PyExc_ValueError, "%A not in bitarray",
-                            PyTuple_GET_ITEM(args, 0));
+        PyErr_Format(PyExc_ValueError, "%A not in bitarray",
+                     PyTuple_GET_ITEM(args, 0));
 #else
         PyErr_SetString(PyExc_ValueError, "item not in bitarray");
-        return NULL;
 #endif
+        return NULL;
     }
     return result;
 }
@@ -1886,20 +1897,12 @@ bitarray_ass_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
 static int
 bitarray_contains(bitarrayobject *self, PyObject *value)
 {
-    if (PyIndex_Check(value)) {
-        int vi;
+    Py_ssize_t pos;
 
-        if (!conv_pybit(value, &vi))
-            return -1;
-        return find_bit(self, vi, 0, self->nbits) >= 0;
-    }
+    if ((pos = find_obj(self, value, 0, self->nbits)) == -2)
+        return -1;
 
-    if (bitarray_Check(value))
-        return find_sub(self, (bitarrayobject *) value, 0, self->nbits) >= 0;
-
-    PyErr_Format(PyExc_TypeError, "bitarray or int expected, got %s",
-                 Py_TYPE(value)->tp_name);
-    return -1;
+    return pos >= 0;
 }
 
 static PyObject *
