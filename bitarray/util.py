@@ -143,14 +143,14 @@ Allowed values for mode are the strings: `left`, `right`, `both`
         raise ValueError("mode must be 'left', 'right' or 'both', got %r" %
                          mode)
     first = 0
-    if mode in ('left', 'both'):
+    if mode != 'right':
         try:
             first = __a.index(1)
         except ValueError:
             return __a[:0]
 
     last = len(__a) - 1
-    if mode in ('right', 'both'):
+    if mode != 'left':
         try:
             last = rindex(__a)
         except ValueError:
