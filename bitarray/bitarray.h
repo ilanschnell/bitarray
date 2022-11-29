@@ -221,7 +221,7 @@ adjust_step_positive(Py_ssize_t slicelength,
 }
 
 /* convert Python object to C int and set value at address -
-   return 1 on success, 0 on failure (and raise exception) */
+   return 1 on success, 0 on failure (and set exception) */
 static inline int
 conv_pybit(PyObject *value, int *vi)
 {

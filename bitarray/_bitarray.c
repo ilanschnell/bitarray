@@ -567,7 +567,7 @@ find_sub(bitarrayobject *self, bitarrayobject *xa,
 
 /* Return first occurrence of either a bit or a (sub) bitarray (depending
    on the type of object x) contained within self[start:stop], or -1 when
-   not found.  On Error, return -2. */
+   not found.  On Error, return -2 and set exception. */
 static Py_ssize_t
 find_obj(bitarrayobject *self, PyObject *x, Py_ssize_t start, Py_ssize_t stop)
 {
@@ -3252,7 +3252,7 @@ static PyMethodDef bitarray_methods[] = {
 /* ------------------------ bitarray initialization -------------------- */
 
 /* Given a string, return an integer representing the endianness.
-   If the string is invalid, set a Python exception and return -1. */
+   If the string is invalid, return -1 and set exception. */
 static int
 endian_from_string(const char *string)
 {
