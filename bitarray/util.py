@@ -142,21 +142,23 @@ Allowed values for mode are the strings: `left`, `right`, `both`
     if mode not in ('left', 'right', 'both'):
         raise ValueError("mode must be 'left', 'right' or 'both', got %r" %
                          mode)
-    first = 0
-    if mode != 'right':
+    if mode == 'right':
+        start = None
+    else:
         try:
-            first = __a.index(1)
+            start = __a.index(1)
         except ValueError:
             return __a[:0]
 
-    last = len(__a) - 1
-    if mode != 'left':
+    if mode == 'left':
+        stop = None
+    else:
         try:
-            last = rindex(__a)
+            stop = rindex(__a) + 1
         except ValueError:
             return __a[:0]
 
-    return __a[first:last + 1]
+    return __a[start:stop]
 
 
 def hex2ba(__s, endian=None):
