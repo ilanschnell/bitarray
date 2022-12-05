@@ -135,8 +135,6 @@ def strip(__a, mode='right'):
 Return a new bitarray with zeros stripped from left, right or both ends.
 Allowed values for mode are the strings: `left`, `right`, `both`
 """
-    if not isinstance(__a, bitarray):
-        raise TypeError("bitarray expected, got '%s'" % type(__a).__name__)
     if not isinstance(mode, str):
         raise TypeError("str expected for mode, got '%s'" % type(__a).__name__)
     if mode not in ('left', 'right', 'both'):
