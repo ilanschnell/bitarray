@@ -355,8 +355,8 @@ PyDoc_STRVAR(subset_doc,
 \n\
 Return `True` if bitarray `a` is a subset of bitarray `b`.\n\
 `subset(a, b)` is equivalent to `(a & b).count() == a.count()` but is more\n\
-efficient since we can stop as soon as one mismatch is found, and no\n\
-intermediate bitarray object gets created.");
+efficient as iterating the buffers can be stopped as soon as one mismatch\n\
+is found.  Moreover, no intermediate bitarray object is created.");
 
 /* ---------------------------- serialization -------------------------- */
 
