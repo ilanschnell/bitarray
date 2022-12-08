@@ -2265,9 +2265,9 @@ BITWISE_FUNC(xor, "^")               /* bitarray_xor */
 static PyObject *                                            \
 bitarray_i ## oper (PyObject *self, PyObject *other)         \
 {                                                            \
-    RAISE_IF_READONLY(self, NULL);                           \
     if (bitwise_check(self, other, ostr) < 0)                \
         return NULL;                                         \
+    RAISE_IF_READONLY(self, NULL);                           \
     bitwise((bitarrayobject *) self,                         \
             (bitarrayobject *) other, OP_ ## oper);          \
     Py_INCREF(self);                                         \
