@@ -409,11 +409,11 @@ repeat(bitarrayobject *self, Py_ssize_t m)
                      "cannot repeat bitarray (of size %zd) %zd times", k, m);
         return -1;
     }
-    /* k = self->nbits, the number of bits which have been copied */
     q = k * m;  /* number of resulting bits */
     if (resize(self, q) < 0)
         return -1;
 
+    /* k (initially nbits): number of bits which have been copied so far */
     while (k <= q / 2) {        /* double copies */
         copy_n(self, k, self, 0, k);
         k *= 2;
