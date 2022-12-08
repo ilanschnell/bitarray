@@ -1433,7 +1433,8 @@ bitarray_tolist(bitarrayobject *self)
 PyDoc_STRVAR(tolist_doc,
 "tolist() -> list\n\
 \n\
-Return the bitarray as a list of integer items.");
+Return bitarray as list of integer items.\n\
+`a.tolist()` is equal to `list(a)`.");
 
 
 static PyObject *
