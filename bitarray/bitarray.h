@@ -132,8 +132,7 @@ zeroed_last_byte(bitarrayobject *self)
     const int r = self->nbits % 8;     /* index into mask table */
 
     assert(r > 0);
-    assert_nbits(self);
-    return ones_table[IS_BE(self)][r] & self->ob_item[Py_SIZE(self) - 1];
+    return self->ob_item[Py_SIZE(self) - 1] & ones_table[IS_BE(self)][r];
 }
 
 /* Unless buffer is readonly, zero out pad bits.
@@ -141,12 +140,12 @@ zeroed_last_byte(bitarrayobject *self)
 static inline int
 set_padbits(bitarrayobject *self)
 {
-    const int r = self->nbits % 8;
+    const int r = self->nbits % 8;     /* index into mask table */
 
     if (r == 0)
         return 0;
     if (self->readonly == 0)
-        self->ob_item[Py_SIZE(self) - 1] = zeroed_last_byte(self);
+        self->ob_item[Py_SIZE(self) - 1] &= ones_table[IS_BE(self)][r];
     return 8 - r;
 }
 
