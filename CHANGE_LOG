@@ -424,7 +424,7 @@
 2019-12-06   1.2.0:
 -------------------
   * add bitarray.util module which provides useful utility functions
-  * deprecate `bitarray.bitdiff()` in favor of `bitarray.util.count_xor`
+  * deprecate `bitarray.bitdiff()` in favor of `bitarray.util.count_xor()`
   * use markdown for documentation
   * fix bug in `.count()` on 32bit systems in special cases when array size
     is 2^29 bits or larger
@@ -439,7 +439,7 @@
   * add frozenbitarray object
   * add optional start and stop arguments to `.count()` method
   * add official Python 3.8 support
-  * optimize `setrange()` C-function by using `memset()`
+  * optimize `setrange()` (C-function) by using `memset()`
   * fix issue #74, bitarray is hashable on Python 2
   * fix issue #68, `unittest.TestCase.assert_` deprecated
   * improved test suite - tests should run in about 1 second
