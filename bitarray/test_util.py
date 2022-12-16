@@ -651,7 +651,7 @@ class TestsSubset(unittest.TestCase, Util):
             # we set one random bit in b to 1, so a is always a subset of b
             b[randint(0, len(a) - 1)] = 1
             self.assertTrue(subset(a, b))
-            # but b in not always a subset of a
+            # but b is not always a subset of a
             self.assertEqual(subset(b, a), self.subset_simple(b, a))
             # we set all bits in a, which ensures that b is a subset of a
             a.setall(1)
