@@ -626,6 +626,9 @@ class TestsSubset(unittest.TestCase, Util):
         self.assertRaises(TypeError, subset, a, 4)
         b.append(1)
         self.assertRaises(ValueError, subset, a, b)
+        self.assertRaises(ValueError, subset,
+                          bitarray('01', 'little'),
+                          bitarray('11', 'big'))
 
     def check(self, a, b, res):
         r = subset(a, b)
