@@ -3421,11 +3421,24 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     return result;
 }
 
+static int
+ssize_richcompare(Py_ssize_t v, Py_ssize_t w, int op)
+{
+    switch (op) {
+    case Py_LT: return v <  w;
+    case Py_LE: return v <= w;
+    case Py_EQ: return v == w;
+    case Py_NE: return v != w;
+    case Py_GT: return v >  w;
+    case Py_GE: return v >= w;
+    default: Py_UNREACHABLE();
+    }
+}
+
 static PyObject *
 richcompare(PyObject *v, PyObject *w, int op)
 {
-    Py_ssize_t i, vs, ws;
-    int cmp = 0;                /* silence uninitialized warning */
+    Py_ssize_t i = 0, vs, ws;
 
     if (!bitarray_Check(v) || !bitarray_Check(w)) {
         Py_INCREF(Py_NotImplemented);
@@ -3443,8 +3456,8 @@ richcompare(PyObject *v, PyObject *w, int op)
         }
         if (va->endian == wa->endian) {
             /* sizes and endianness are the same - use memcmp() */
-            assert(vs == ws);
-            cmp = memcmp(va->ob_item, wa->ob_item, (size_t) vs / 8);
+            int cmp = memcmp(va->ob_item, wa->ob_item, (size_t) vs / 8);
+
             if (cmp == 0 && vs % 8)  /* if equal, compare remaining bits */
                 cmp = zeroed_last_byte(va) != zeroed_last_byte(wa);
 
@@ -3453,38 +3466,29 @@ richcompare(PyObject *v, PyObject *w, int op)
     }
 
     /* search for the first index where items are different */
-    for (i = 0; i < vs && i < ws; i++) {
+    if (va->endian == wa->endian) {
+        /* equal endianness - skip ahead by comparing bytes directly */
+        Py_ssize_t j = 0, c = Py_MIN(vs / 8, ws / 8); /* c: common size */
+
+        while (j < c && va->ob_item[j] == wa->ob_item[j])
+            j++;
+
+        i = 8 * j;
+    }
+
+    for (; i < vs && i < ws; i++) {
         int vi = getbit(va, i);
         int wi = getbit(wa, i);
 
-        if (vi != wi) {
+        if (vi != wi)
             /* we have an item that differs */
-            switch (op) {
-            case Py_LT: cmp = vi <  wi; break;
-            case Py_LE: cmp = vi <= wi; break;
-            case Py_EQ: cmp = 0; break;
-            case Py_NE: cmp = 1; break;
-            case Py_GT: cmp = vi >  wi; break;
-            case Py_GE: cmp = vi >= wi; break;
-            default: Py_UNREACHABLE();
-            }
-            return PyBool_FromLong((long) cmp);
-        }
+            return PyBool_FromLong(ssize_richcompare(vi, wi, op));
     }
 #undef va
 #undef wa
 
     /* no more items to compare -- compare sizes */
-    switch (op) {
-    case Py_LT: cmp = vs <  ws; break;
-    case Py_LE: cmp = vs <= ws; break;
-    case Py_EQ: cmp = vs == ws; break;
-    case Py_NE: cmp = vs != ws; break;
-    case Py_GT: cmp = vs >  ws; break;
-    case Py_GE: cmp = vs >= ws; break;
-    default: Py_UNREACHABLE();
-    }
-    return PyBool_FromLong((long) cmp);
+    return PyBool_FromLong(ssize_richcompare(vs, ws, op));
 }
 
 /***************************** bitarray iterator **************************/
