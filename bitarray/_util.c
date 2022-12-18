@@ -93,7 +93,7 @@ count_to_n(bitarrayobject *a, Py_ssize_t n, int vi)
 static PyObject *
 count_n(PyObject *module, PyObject *args)
 {
-    PyObject *a;
+    bitarrayobject *a;
     Py_ssize_t n, i;
     int vi = 1;
 
@@ -104,14 +104,12 @@ count_n(PyObject *module, PyObject *args)
         PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
         return NULL;
     }
-
-#define aa  ((bitarrayobject *) a)
-    if (n > aa->nbits)  {
+    if (n > a->nbits)  {
         PyErr_SetString(PyExc_ValueError, "n larger than bitarray size");
         return NULL;
     }
-    i = count_to_n(aa, n, vi);        /* do actual work here */
-#undef aa
+    i = count_to_n(a, n, vi);        /* do actual work here */
+
     if (i < 0) {
         PyErr_SetString(PyExc_ValueError, "n exceeds total count");
         return NULL;

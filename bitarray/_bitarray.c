@@ -3439,13 +3439,14 @@ static PyObject *
 richcompare(PyObject *v, PyObject *w, int op)
 {
     Py_ssize_t i = 0, vs, ws;
+    bitarrayobject *va, *wa;
 
     if (!bitarray_Check(v) || !bitarray_Check(w)) {
         Py_INCREF(Py_NotImplemented);
         return Py_NotImplemented;
     }
-#define va  ((bitarrayobject *) v)
-#define wa  ((bitarrayobject *) w)
+    va = (bitarrayobject *) v;
+    wa = (bitarrayobject *) w;
     vs = va->nbits;
     ws = wa->nbits;
     if (op == Py_EQ || op == Py_NE) {
@@ -3484,8 +3485,6 @@ richcompare(PyObject *v, PyObject *w, int op)
             /* we have an item that differs */
             return PyBool_FromLong(ssize_richcompare(vi, wi, op));
     }
-#undef va
-#undef wa
 
     /* no more items to compare -- compare sizes */
     return PyBool_FromLong(ssize_richcompare(vs, ws, op));
