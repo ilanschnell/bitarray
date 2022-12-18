@@ -1,6 +1,13 @@
 Change log
 ==========
 
+**2.6.1** (2022-12-18):
+
+* add documentation on shift operators, `#181 <https://github.com/ilanschnell/bitarray/issues/181>`__
+* fix typo in iterable initializer description, `#179 <https://github.com/ilanschnell/bitarray/issues/179>`__
+* optimize ``richcompare()``
+
+
 **2.6.0** (2022-07-19):
 
 * add data descriptions: ``.nbytes``, ``.padbits``, ``.readonly``
@@ -421,7 +428,7 @@ Change log
 **1.2.0** (2019-12-06):
 
 * add bitarray.util module which provides useful utility functions
-* deprecate ``bitarray.bitdiff()`` in favor of ``bitarray.util.count_xor``
+* deprecate ``bitarray.bitdiff()`` in favor of ``bitarray.util.count_xor()``
 * use markdown for documentation
 * fix bug in ``.count()`` on 32bit systems in special cases when array size
   is 2^29 bits or larger
@@ -436,7 +443,7 @@ Change log
 * add frozenbitarray object
 * add optional start and stop arguments to ``.count()`` method
 * add official Python 3.8 support
-* optimize ``setrange()`` C-function by using ``memset()``
+* optimize ``setrange()`` (C-function) by using ``memset()``
 * fix issue `#74 <https://github.com/ilanschnell/bitarray/issues/74>`__, bitarray is hashable on Python 2
 * fix issue `#68 <https://github.com/ilanschnell/bitarray/issues/68>`__, ``unittest.TestCase.assert_`` deprecated
 * improved test suite - tests should run in about 1 second

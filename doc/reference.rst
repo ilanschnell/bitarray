@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.6.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.6.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -20,7 +20,7 @@ The bitarray object:
 
    ``str``: Create bitarray from a string of ``0`` and ``1``.
 
-   ``iterable``: Create bitarray from iterable or sequence or integers 0 or 1.
+   ``iterable``: Create bitarray from iterable or sequence of integers 0 or 1.
 
    Optional keyword arguments:
 
@@ -225,7 +225,8 @@ bitarray methods:
 
 
 ``tolist()`` -> list
-   Return the bitarray as a list of integer items.
+   Return bitarray as list of integer items.
+   ``a.tolist()`` is equal to ``list(a)``.
 
    Note that the list object being created will require 32 or 64 times more
    memory (depending on the machine architecture) than the bitarray object,
@@ -259,9 +260,8 @@ Other objects:
 
 ``frozenbitarray(initializer=0, /, endian='big', buffer=None)`` -> frozenbitarray
    Return a frozenbitarray object, which is initialized the same way a bitarray
-   object is initialized.  A frozenbitarray is immutable and hashable.
-   Its contents cannot be altered after it is created; however, it can be used
-   as a dictionary key.
+   object is initialized.  A frozenbitarray is immutable and hashable,
+   and (unlike a bitarray) may be used as a dictionary key.
 
    New in version 1.1.
 
@@ -373,9 +373,9 @@ This sub-module was added in version 1.2.
 
 ``subset(a, b, /)`` -> bool
    Return ``True`` if bitarray ``a`` is a subset of bitarray ``b``.
-   ``subset(a, b)`` is equivalent to ``(a & b).count() == a.count()`` but is more
-   efficient since we can stop as soon as one mismatch is found, and no
-   intermediate bitarray object gets created.
+   ``subset(a, b)`` is equivalent to ``a | b == b`` (and ``a & b == a``) but more
+   efficient as iterating the buffers can be stopped as soon as one mismatch
+   is found.  Moreover, no intermediate bitarray object is created.
 
 
 ``ba2hex(bitarray, /)`` -> hexstr

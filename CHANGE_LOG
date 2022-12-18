@@ -1,4 +1,4 @@
-2022-XX-XX   2.6.1:
+2022-12-18   2.6.1:
 -------------------
   * add documentation on shift operators, #181
   * fix typo in iterable initializer description, #179
