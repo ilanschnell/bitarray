@@ -3454,7 +3454,7 @@ richcompare(PyObject *v, PyObject *w, int op)
             /* if sizes differ, the bitarrays differ */
             return PyBool_FromLong(op == Py_NE);
         }
-        if (va->endian == wa->endian) {
+        else if (va->endian == wa->endian) {
             /* sizes and endianness are the same - use memcmp() */
             int cmp = memcmp(va->ob_item, wa->ob_item, (size_t) vs / 8);
 
@@ -3468,12 +3468,12 @@ richcompare(PyObject *v, PyObject *w, int op)
     /* search for the first index where items are different */
     if (va->endian == wa->endian) {
         /* equal endianness - skip ahead by comparing bytes directly */
-        Py_ssize_t c = Py_MIN(vs, ws) / 8;  /* common size */
+        Py_ssize_t c = Py_MIN(vs, ws) / 8;  /* common buffer size */
 
         while (i < c && va->ob_item[i] == wa->ob_item[i])
             i++;
 
-        i *= 8;
+        i *= 8;  /* i is now the bit index up to which we compared bytes */
     }
 
     for (; i < vs && i < ws; i++) {
