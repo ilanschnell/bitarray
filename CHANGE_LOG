@@ -2,7 +2,7 @@
 -------------------
   * add documentation on shift operators, #181
   * fix typo in iterable initializer description, #179
-  * optimize richcompare()
+  * optimize `richcompare()`
 
 
 2022-07-19   2.6.0:

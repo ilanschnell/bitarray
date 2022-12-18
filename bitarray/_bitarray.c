@@ -3468,12 +3468,12 @@ richcompare(PyObject *v, PyObject *w, int op)
     /* search for the first index where items are different */
     if (va->endian == wa->endian) {
         /* equal endianness - skip ahead by comparing bytes directly */
-        Py_ssize_t j = 0, c = Py_MIN(vs / 8, ws / 8); /* c: common size */
+        Py_ssize_t c = Py_MIN(vs, ws) / 8;  /* common size */
 
-        while (j < c && va->ob_item[j] == wa->ob_item[j])
-            j++;
+        while (i < c && va->ob_item[i] == wa->ob_item[i])
+            i++;
 
-        i = 8 * j;
+        i *= 8;
     }
 
     for (; i < vs && i < ws; i++) {
