@@ -15,7 +15,7 @@
 /* set during module initialization */
 static PyObject *bitarray_type_obj;
 
-/* Return 0 if obj is bitarray.  If not, return -1 and set an exception. */
+/* Return 0 if obj is bitarray.  If not, set exception and return -1. */
 static int
 ensure_bitarray(PyObject *obj)
 {
@@ -34,8 +34,8 @@ ensure_bitarray(PyObject *obj)
 
 /* ------------------------------- count_n ----------------------------- */
 
-/* return the smallest index i for which a.count(vi, 0, i) == n, or when
-   n exceeds the total count return -1  */
+/* Return the smallest index i for which a.count(vi, 0, i) == n.
+   When n exceeds the total count, return -1.  */
 static Py_ssize_t
 count_to_n(bitarrayobject *a, Py_ssize_t n, int vi)
 {
@@ -207,18 +207,18 @@ Raises `ValueError` if the value is not present.");
 static PyObject *
 parity(PyObject *module, PyObject *a)
 {
+    bitarrayobject *aa;
     unsigned char par = 0;
     Py_ssize_t i;
 
     if (ensure_bitarray(a) < 0)
         return NULL;
 
-#define aa  ((bitarrayobject *) a)
+    aa = (bitarrayobject *) a;
     for (i = 0; i < aa->nbits / 8; i++)
         par ^= aa->ob_item[i];
     if (aa->nbits % 8)
         par ^= zeroed_last_byte(aa);
-#undef aa
 
     return PyLong_FromLong((long) bitcount_lookup[par] % 2);
 }
@@ -402,6 +402,7 @@ static PyObject *
 ba2hex(PyObject *module, PyObject *a)
 {
     PyObject *result;
+    bitarrayobject *aa;
     size_t i, strsize;
     char *str;
     int le, be;
@@ -409,7 +410,7 @@ ba2hex(PyObject *module, PyObject *a)
     if (ensure_bitarray(a) < 0)
         return NULL;
 
-#define aa  ((bitarrayobject *) a)
+    aa = (bitarrayobject *) a;
     if (aa->nbits % 4) {
         PyErr_SetString(PyExc_ValueError, "bitarray length not multiple of 4");
         return NULL;
@@ -433,7 +434,6 @@ ba2hex(PyObject *module, PyObject *a)
     }
     assert((size_t) aa->nbits / 4 <= strsize);
     result = Py_BuildValue("s#", str, aa->nbits / 4);
-#undef aa
     PyMem_Free((void *) str);
     return result;
 }
@@ -759,6 +759,7 @@ static PyObject *
 vl_encode(PyObject *module, PyObject *a)
 {
     PyObject *result;
+    bitarrayobject *aa;
     Py_ssize_t padding, n, m, i;
     Py_ssize_t j = 0;           /* byte conter */
     char *str;
@@ -766,7 +767,7 @@ vl_encode(PyObject *module, PyObject *a)
     if (ensure_bitarray(a) < 0)
         return NULL;
 
-#define aa  ((bitarrayobject *) a)
+    aa = (bitarrayobject *) a;
     n = (aa->nbits + LEN_PAD_BITS + 6) / 7;  /* number of resulting bytes */
     m = 7 * n - LEN_PAD_BITS;    /* number of bits resulting bytes can hold */
     padding = m - aa->nbits;     /* number of pad bits */
@@ -791,7 +792,6 @@ vl_encode(PyObject *module, PyObject *a)
         }
         str[j] |= (0x40 >> k) * getbit(aa, i);
     }
-#undef aa
     assert(j == n - 1);
 
     return result;

@@ -567,7 +567,7 @@ find_sub(bitarrayobject *self, bitarrayobject *xa,
 
 /* Return first occurrence of either a bit or a (sub) bitarray (depending
    on the type of object x) contained within self[start:stop], or -1 when
-   not found.  On Error, return -2 and set exception. */
+   not found.  On Error, set exception and return -2. */
 static Py_ssize_t
 find_obj(bitarrayobject *self, PyObject *x, Py_ssize_t start, Py_ssize_t stop)
 {
@@ -2213,7 +2213,8 @@ bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
     }
 }
 
-/* return 0 if both a and b are bitarray objects, -1 on error */
+/* Return 0 if both a and b are bitarray objects with same length and
+   endianness.  Otherwise, set exception and return -1. */
 static int
 bitwise_check(PyObject *a, PyObject *b, const char *ostr)
 {
@@ -2598,8 +2599,8 @@ binode_make_tree(PyObject *codedict)
 
 /* Traverse using the branches corresponding to bits in ba, starting
    at *indexp.  Return the symbol at the leaf node, or NULL when the end
-   of the bitarray has been reached.  On error, NULL is also returned,
-   and the appropriate exception is set.
+   of the bitarray has been reached.  On error, set the appropriate exception
+   and also return NULL.
 */
 static PyObject *
 binode_traverse(binode *tree, bitarrayobject *ba, Py_ssize_t *indexp)
@@ -3253,7 +3254,7 @@ static PyMethodDef bitarray_methods[] = {
 /* ------------------------ bitarray initialization -------------------- */
 
 /* Given a string, return an integer representing the endianness.
-   If the string is invalid, return -1 and set exception. */
+   If the string is invalid, set exception and return -1. */
 static int
 endian_from_string(const char *string)
 {
