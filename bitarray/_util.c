@@ -97,8 +97,8 @@ count_n(PyObject *module, PyObject *args)
     Py_ssize_t n, i;
     int vi = 1;
 
-    if (!PyArg_ParseTuple(args, "O!n|O&:count_n",
-                          bitarray_type_obj, &a, &n, conv_pybit, &vi))
+    if (!PyArg_ParseTuple(args, "O!n|O&:count_n", bitarray_type_obj,
+                          (PyObject *) &a, &n, conv_pybit, &vi))
         return NULL;
     if (n < 0) {
         PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
@@ -181,19 +181,16 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 static PyObject *
 r_index(PyObject *module, PyObject *args)
 {
-    PyObject *a;
+    bitarrayobject *a;
     Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, res;
     int vi = 1;
 
-    if (!PyArg_ParseTuple(args, "O!|O&nn:rindex", bitarray_type_obj, &a,
-                          conv_pybit, &vi, &start, &stop))
+    if (!PyArg_ParseTuple(args, "O!|O&nn:rindex", bitarray_type_obj,
+                          (PyObject *) &a, conv_pybit, &vi, &start, &stop))
         return NULL;
 
-#define aa  ((bitarrayobject *) a)
-    adjust_indices(aa->nbits, &start, &stop, 1);
-    res = find_last(aa, vi, start, stop);
-#undef aa
-    if (res < 0)
+    adjust_indices(a->nbits, &start, &stop, 1);
+    if ((res = find_last(a, vi, start, stop)) < 0)
         return PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
 
     return PyLong_FromSsize_t(res);
@@ -245,31 +242,30 @@ static PyObject *
 binary_function(PyObject *args, enum kernel_type kern, const char *format)
 {
     Py_ssize_t res = 0, s, i;
-    PyObject *a, *b;
+    bitarrayobject *a, *b;
     char *buff_a, *buff_b;
     unsigned char c;
     int r;
 
     if (!PyArg_ParseTuple(args, format,
-                          bitarray_type_obj, &a, bitarray_type_obj, &b))
+                          bitarray_type_obj, (PyObject *) &a,
+                          bitarray_type_obj, (PyObject *) &b))
         return NULL;
 
-#define aa  ((bitarrayobject *) a)
-#define bb  ((bitarrayobject *) b)
-    if (aa->nbits != bb->nbits) {
+    if (a->nbits != b->nbits) {
         PyErr_SetString(PyExc_ValueError,
                         "bitarrays of equal length expected");
         return NULL;
     }
-    if (aa->endian != bb->endian) {
+    if (a->endian != b->endian) {
         PyErr_SetString(PyExc_ValueError,
                         "bitarrays of equal endianness expected");
         return NULL;
     }
-    buff_a = aa->ob_item;
-    buff_b = bb->ob_item;
-    s = aa->nbits / 8;       /* number of whole bytes in buffer */
-    r = aa->nbits % 8;       /* remaining bits  */
+    buff_a = a->ob_item;
+    buff_b = b->ob_item;
+    s = a->nbits / 8;       /* number of whole bytes in buffer */
+    r = a->nbits % 8;       /* remaining bits  */
 
     switch (kern) {
     case KERN_cand:
@@ -278,7 +274,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
             res += bitcount_lookup[c];
         }
         if (r) {
-            c = zeroed_last_byte(aa) & zeroed_last_byte(bb);
+            c = zeroed_last_byte(a) & zeroed_last_byte(b);
             res += bitcount_lookup[c];
         }
         break;
@@ -289,7 +285,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
             res += bitcount_lookup[c];
         }
         if (r) {
-            c = zeroed_last_byte(aa) | zeroed_last_byte(bb);
+            c = zeroed_last_byte(a) | zeroed_last_byte(b);
             res += bitcount_lookup[c];
         }
         break;
@@ -300,7 +296,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
             res += bitcount_lookup[c];
         }
         if (r) {
-            c = zeroed_last_byte(aa) ^ zeroed_last_byte(bb);
+            c = zeroed_last_byte(a) ^ zeroed_last_byte(b);
             res += bitcount_lookup[c];
         }
         break;
@@ -311,8 +307,8 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
                 Py_RETURN_FALSE;
         }
         if (r) {
-            if ((zeroed_last_byte(aa) & zeroed_last_byte(bb)) !=
-                 zeroed_last_byte(aa))
+            if ((zeroed_last_byte(a) & zeroed_last_byte(b)) !=
+                 zeroed_last_byte(a))
                 Py_RETURN_FALSE;
         }
         Py_RETURN_TRUE;
@@ -320,8 +316,6 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
     default:
         Py_UNREACHABLE();
     }
-#undef aa
-#undef bb
     return PyLong_FromSsize_t(res);
 }
 
@@ -457,21 +451,21 @@ the bitarray (which has to be multiple of 4 in length).");
 static PyObject *
 hex2ba(PyObject *module, PyObject *args)
 {
-    PyObject *a;
+    bitarrayobject *a;
     char *str;
     Py_ssize_t i, strsize;
     int le, be;
 
-    if (!PyArg_ParseTuple(args, "O!s#", bitarray_type_obj, &a, &str, &strsize))
+    if (!PyArg_ParseTuple(args, "O!s#", bitarray_type_obj, (PyObject *) &a,
+                          &str, &strsize))
         return NULL;
 
-#define aa  ((bitarrayobject *) a)
-    if (aa->nbits != 4 * strsize) {
+    if (a->nbits != 4 * strsize) {
         PyErr_SetString(PyExc_ValueError, "size mismatch");
         return NULL;
     }
-    le = IS_LE(aa);
-    be = IS_BE(aa);
+    le = IS_LE(a);
+    be = IS_BE(a);
     assert(le + be == 1 && str[strsize] == 0);
     for (i = 0; i < strsize; i += 2) {
         int x = hex_to_int(str[i + le]);
@@ -491,9 +485,8 @@ hex2ba(PyObject *module, PyObject *args)
             }
         }
         assert(0 <= x && x < 16 && 0 <= y && y < 16);
-        aa->ob_item[i / 2] = x << 4 | y;
+        a->ob_item[i / 2] = x << 4 | y;
     }
-#undef aa
     Py_RETURN_NONE;
 }
 
@@ -559,12 +552,14 @@ static PyObject *
 ba2base(PyObject *module, PyObject *args)
 {
     const char *alphabet;
-    PyObject *result, *a;
+    bitarrayobject *a;
+    PyObject *result;
     size_t i, strsize;
     char *str;
     int n, m, le;
 
-    if (!PyArg_ParseTuple(args, "iO!:ba2base", &n, bitarray_type_obj, &a))
+    if (!PyArg_ParseTuple(args, "iO!:ba2base", &n,
+                          bitarray_type_obj, (PyObject *) &a))
         return NULL;
     if ((m = base_to_length(n)) < 0)
         return NULL;
@@ -575,27 +570,25 @@ ba2base(PyObject *module, PyObject *args)
     default: alphabet = hexdigits;
     }
 
-#define aa  ((bitarrayobject *) a)
-    if (aa->nbits % m)
+    if (a->nbits % m)
         return PyErr_Format(PyExc_ValueError,
                             "bitarray length must be multiple of %d", m);
 
-    strsize = aa->nbits / m;
+    strsize = a->nbits / m;
     if ((str = (char *) PyMem_Malloc(strsize)) == NULL)
         return PyErr_NoMemory();
 
-    le = IS_LE(aa);
+    le = IS_LE(a);
     for (i = 0; i < strsize; i++) {
         int j, x = 0;
 
         for (j = 0; j < m; j++) {
             int k = le ? j : (m - j - 1);
-            x |= getbit(aa, i * m + k) << j;
+            x |= getbit(a, i * m + k) << j;
         }
         str[i] = alphabet[x];
     }
     result = Py_BuildValue("s#", str, strsize);
-#undef aa
     PyMem_Free((void *) str);
     return result;
 }
@@ -621,25 +614,24 @@ standard base 64 alphabet is used.");
 static PyObject *
 base2ba(PyObject *module, PyObject *args)
 {
-    PyObject *a = NULL;
+    bitarrayobject *a = NULL;
     Py_ssize_t i, strsize = 0;
     char *str = NULL;
     int n, m, le;
 
-    if (!PyArg_ParseTuple(args, "i|O!s#",
-                          &n, bitarray_type_obj, &a, &str, &strsize))
+    if (!PyArg_ParseTuple(args, "i|O!s#", &n, bitarray_type_obj,
+                          (PyObject *) &a, &str, &strsize))
         return NULL;
     if ((m = base_to_length(n)) < 0)
         return NULL;
     if (a == NULL)  /* when only base n is given - return length log2(n) */
         return PyLong_FromLong(m);
 
-#define aa  ((bitarrayobject *) a)
-    if (aa->nbits != m * strsize) {
+    if (a->nbits != m * strsize) {
         PyErr_SetString(PyExc_ValueError, "size mismatch");
         return NULL;
     }
-    le = IS_LE(aa);
+    le = IS_LE(a);
     for (i = 0; i < strsize; i++) {
         int j, d = digit_to_int(n, str[i]);
 
@@ -650,10 +642,9 @@ base2ba(PyObject *module, PyObject *args)
         }
         for (j = 0; j < m; j++) {
             int k = le ? j : (m - j - 1);
-            setbit(aa, i * m + k, d & (1 << j));
+            setbit(a, i * m + k, d & (1 << j));
         }
     }
-#undef aa
     Py_RETURN_NONE;
 }
 
@@ -700,19 +691,20 @@ grow_buffer(bitarrayobject *self)
 static PyObject *
 vl_decode(PyObject *module, PyObject *args)
 {
-    PyObject *iter, *item, *a;
+    PyObject *iter, *item;
+    bitarrayobject *a;
     Py_ssize_t padding = 0;  /* number of pad bits read from header byte */
     Py_ssize_t i = 0;        /* bit counter */
     unsigned char b = 0x80;  /* empty stream will raise StopIteration */
     Py_ssize_t k;
 
-    if (!PyArg_ParseTuple(args, "OO!", &iter, bitarray_type_obj, &a))
+    if (!PyArg_ParseTuple(args, "OO!", &iter,
+                          bitarray_type_obj, (PyObject *) &a))
         return NULL;
     if (!PyIter_Check(iter))
         return PyErr_Format(PyExc_TypeError, "iterator or bytes expected, "
                             "got '%s'", Py_TYPE(iter)->tp_name);
 
-#define aa  ((bitarrayobject *) a)
     while ((item = PyIter_Next(iter))) {
 #ifdef IS_PY3K
         if (PyLong_Check(item))
@@ -729,9 +721,9 @@ vl_decode(PyObject *module, PyObject *args)
         }
         Py_DECREF(item);
 
-        if (i + 6 >= aa->nbits && grow_buffer(aa) < 0)
+        if (i + 6 >= a->nbits && grow_buffer(a) < 0)
             return NULL;
-        assert(i + 6 < aa->nbits);
+        assert(i + 6 < a->nbits);
 
         if (i == 0) {
             padding = (b & 0x70) >> 4;
@@ -739,20 +731,19 @@ vl_decode(PyObject *module, PyObject *args)
                 return PyErr_Format(PyExc_ValueError,
                                     "invalid header byte: 0x%02x", b);
             for (k = 0; k < 4; k++)
-                setbit(aa, i++, (0x08 >> k) & b);
+                setbit(a, i++, (0x08 >> k) & b);
         }
         else {
             for (k = 0; k < 7; k++)
-                setbit(aa, i++, (0x40 >> k) & b);
+                setbit(a, i++, (0x40 >> k) & b);
         }
         if ((b & 0x80) == 0)
             break;
     }
     /* set final length of bitarray */
-    aa->nbits = i - padding;
-    Py_SET_SIZE(a, BYTES(aa->nbits));
-    assert_nbits(aa);
-#undef aa
+    a->nbits = i - padding;
+    Py_SET_SIZE(a, BYTES(a->nbits));
+    assert_nbits(a);
 
     if (PyErr_Occurred())       /* from PyIter_Next() */
         return NULL;
