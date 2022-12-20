@@ -35,12 +35,13 @@ and (unlike a bitarray) may be used as a dictionary key.
 
     def __hash__(self):
         "Return hash(self)."
-        if getattr(self, '_hash', None) is None:
-            # ensure hash is independent of endianness, also the copy will be
-            # mutable such that .tobytes() can zero out the pad bits
-            a = bitarray(self, 'big')
+        try:
+            return self._hash
+        except AttributeError:
+            # ensure hash is independent of endianness
+            a = self if self.endian() == 'big' else bitarray(self, 'big')
             self._hash = hash((len(a), a.tobytes()))
-        return self._hash
+            return self._hash
 
     # Technically the code below is not necessary, as all these methods will
     # raise a TypeError on read-only memory.  However, with a different error

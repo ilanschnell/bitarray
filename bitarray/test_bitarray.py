@@ -176,7 +176,7 @@ class Util(object):
             if padbits:  # ensure padbits are zero
                 b = bitarray(endian=endian)
                 b.frombytes(a.tobytes()[-1:])
-                self.assertEqual(b[-padbits:], zeros(padbits))
+                self.assertFalse(b[-padbits:].any())
         elif not buf:
             # otherwise, unless the buffer is imported, it is writable
             self.assertEqual(readonly, 0)
