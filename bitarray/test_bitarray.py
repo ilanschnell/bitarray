@@ -325,10 +325,7 @@ class CreateObjectTests(unittest.TestCase, Util):
                                  "'ellipsis' object is not iterable",
                                  bitarray, Ellipsis)
 
-    def test_buffer(self):
-        # buffer requires no initial argument
-        self.assertRaises(TypeError, bitarray, 5, buffer=b'DATA\0')
-
+    def test_buffer_endian(self):
         for endian in 'big', 'little':
             a = bitarray(buffer=b'', endian=endian)
             self.assertEQUAL(a, bitarray(0, endian))
@@ -338,11 +335,22 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(a.endian(), endian)
             self.assertEqual(len(a), 8)
 
+    def test_buffer_readonly(self):
         a = bitarray(buffer=b'\xf0', endian='little')
+        self.assertTrue(a.readonly)
         self.assertRaises(TypeError, a.clear)
         self.assertRaises(TypeError, a.__setitem__, 3, 1)
         self.assertEQUAL(a, bitarray('00001111', 'little'))
         self.check_obj(a)
+
+    def test_buffer_writeable(self):
+        a = bitarray(buffer=bytearray([65]))
+        self.assertFalse(a.readonly)
+        a[6] = 1
+
+    def test_buffer_args(self):
+        # buffer requires no initial argument
+        self.assertRaises(TypeError, bitarray, 5, buffer=b'DATA\0')
 
         # positinal arguments
         a = bitarray(None, 'big', bytearray([15]))
@@ -3532,24 +3540,20 @@ class FileTests(unittest.TestCase, Util):
             self.assertEqual(len(a), 8 * N)
             self.assertEqual(buffer_info(a, 'size'), N)
             self.assertEqual(a.tobytes(), data)
+            self.check_obj(a)
 
     def test_fromfile_extend_existing(self):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(b'Foo')
 
-        foo_le = '011000101111011011110110'
-        a = bitarray('1', endian='little')
-        with open(self.tmpfname, 'rb') as fi:
-            a.fromfile(fi)
-
-        self.assertEqual(a, bitarray('1' + foo_le))
+        foo_le = '01100010 11110110 11110110'
 
         for n in range(20):
-            a = bitarray(n, endian='little')
-            a.setall(1)
+            a = bitarray(n * '1', endian='little')
             with open(self.tmpfname, 'rb') as fi:
                 a.fromfile(fi)
             self.assertEqual(a, bitarray(n * '1' + foo_le))
+            self.check_obj(a)
 
     def test_fromfile_n(self):
         a = bitarray()
