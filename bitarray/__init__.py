@@ -23,9 +23,9 @@ class frozenbitarray(bitarray):
     """frozenbitarray(initializer=0, /, endian='big', buffer=None) -> \
 frozenbitarray
 
-Return a frozenbitarray object, which is initialized the same way a bitarray
-object is initialized.  A frozenbitarray is immutable and hashable,
-and (unlike a bitarray) may be used as a dictionary key.
+Return a `frozenbitarray` object.  Initialized the same way a `bitarray`
+object is initialized.  A `frozenbitarray` is immutable and hashable,
+and may therefore be used as a dictionary key.
 """
     def __init__(self, *args, **kwargs):
         self._freeze()
