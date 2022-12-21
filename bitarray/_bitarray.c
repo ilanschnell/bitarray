@@ -20,6 +20,9 @@ static int default_endian = ENDIAN_BIG;
 
 static PyTypeObject Bitarray_Type;
 
+/* translation table  - setup during module initialization */
+static char reverse_trans[256];
+
 #define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarray_Type)
 
 
@@ -159,35 +162,33 @@ bitarray_dealloc(bitarrayobject *self)
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
+/* setup translation table, which maps each byte to it's reversed:
+   reverse_trans = {0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, ..., 0xff} */
+static void setup_reverse_trans()
+{
+    int j, k;
+
+    for (k = 0; k < 256; k++) {
+        reverse_trans[k] = 0x00;
+        for (j = 0; j < 8; j++)
+            if (1 << (7 - j) & k)
+                reverse_trans[k] |= 1 << j;
+    }
+}
+
 /* reverse each byte in byte-range(a, b) */
 static void
 bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
-    static char trans[256];
-    static int virgin = 1;
     Py_ssize_t i;
     char *cp, *buff = self->ob_item;
 
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
 
-    if (virgin) {
-        /* setup translation table, which maps each byte to it's reversed:
-           trans = {0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, ..., 0xff} */
-        int j, k;
-
-        for (k = 0; k < 256; k++) {
-            trans[k] = 0x00;
-            for (j = 0; j < 8; j++)
-                if (1 << (7 - j) & k)
-                    trans[k] |= 1 << j;
-        }
-        virgin = 0;  /* do this just once */
-    }
-
     for (i = a; i < b; i++) {
         cp = buff + i;
-        *cp = trans[(unsigned char) *cp];
+        *cp = reverse_trans[(unsigned char) *cp];
     }
 }
 
@@ -3439,8 +3440,9 @@ ssize_richcompare(Py_ssize_t v, Py_ssize_t w, int op)
 static PyObject *
 richcompare(PyObject *v, PyObject *w, int op)
 {
-    Py_ssize_t i = 0, vs, ws;
+    Py_ssize_t i = 0, vs, ws, c;
     bitarrayobject *va, *wa;
+    char *vb, *wb;
 
     if (!bitarray_Check(v) || !bitarray_Check(w)) {
         Py_INCREF(Py_NotImplemented);
@@ -3450,6 +3452,8 @@ richcompare(PyObject *v, PyObject *w, int op)
     wa = (bitarrayobject *) w;
     vs = va->nbits;
     ws = wa->nbits;
+    vb = va->ob_item;
+    wb = wa->ob_item;
     if (op == Py_EQ || op == Py_NE) {
         /* shortcuts for EQ/NE */
         if (vs != ws) {
@@ -3458,7 +3462,7 @@ richcompare(PyObject *v, PyObject *w, int op)
         }
         else if (va->endian == wa->endian) {
             /* sizes and endianness are the same - use memcmp() */
-            int cmp = memcmp(va->ob_item, wa->ob_item, (size_t) vs / 8);
+            int cmp = memcmp(vb, wb, (size_t) vs / 8);
 
             if (cmp == 0 && vs % 8)  /* if equal, compare remaining bits */
                 cmp = zeroed_last_byte(va) != zeroed_last_byte(wa);
@@ -3468,15 +3472,18 @@ richcompare(PyObject *v, PyObject *w, int op)
     }
 
     /* search for the first index where items are different */
+    c = Py_MIN(vs, ws) / 8;  /* common buffer size */
     if (va->endian == wa->endian) {
         /* equal endianness - skip ahead by comparing bytes directly */
-        Py_ssize_t c = Py_MIN(vs, ws) / 8;  /* common buffer size */
-
-        while (i < c && va->ob_item[i] == wa->ob_item[i])
+        while (i < c && vb[i] == wb[i])
             i++;
-
-        i *= 8;  /* i is now the bit index up to which we compared bytes */
     }
+    else {
+        /* opposite endianness - compare with reversed byte */
+        while (i < c && vb[i] == reverse_trans[(unsigned char) wb[i]])
+            i++;
+    }
+    i *= 8;  /* i is now the bit index up to which we compared bytes */
 
     for (; i < vs && i < ws; i++) {
         int vi = getbit(va, i);
@@ -3860,6 +3867,8 @@ init_bitarray(void)
 #endif
 {
     PyObject *m;
+
+    setup_reverse_trans();
 
 #ifdef IS_PY3K
     m = PyModule_Create(&moduledef);
