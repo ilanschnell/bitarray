@@ -171,7 +171,7 @@ static void setup_reverse_trans()
     for (k = 0; k < 256; k++) {
         reverse_trans[k] = 0x00;
         for (j = 0; j < 8; j++)
-            if (1 << (7 - j) & k)
+            if (k & 128 >> j)
                 reverse_trans[k] |= 1 << j;
     }
 }
