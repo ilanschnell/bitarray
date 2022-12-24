@@ -2010,7 +2010,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
 
     /* Make a copy of other, in case the buffers overlap.  This is obviously
        the case when self and other are the same object, but can also happen
-       when the two bitarray share memory. */
+       when the two bitarrays share memory. */
     if (buffers_overlap(self, other)) {
         other = (bitarrayobject *) bitarray_copy(other);
         if (other == NULL)
