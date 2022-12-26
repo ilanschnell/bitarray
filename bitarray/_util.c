@@ -346,9 +346,9 @@ PyDoc_STRVAR(subset_doc,
 "subset(a, b, /) -> bool\n\
 \n\
 Return `True` if bitarray `a` is a subset of bitarray `b`.\n\
-`subset(a, b)` is equivalent to `a | b == b` (and `a & b == a`) but more\n\
-efficient as iterating the buffers can be stopped as soon as one mismatch\n\
-is found.  Moreover, no intermediate bitarray object is created.");
+`subset(a, b)` is equivalent to `a | b == b` (and equally `a & b == a`) but\n\
+more efficient as no intermediate bitarray object is created and the buffer\n\
+iteration is stopped as soon as one mismatch found.");
 
 /* ---------------------------- serialization -------------------------- */
 
