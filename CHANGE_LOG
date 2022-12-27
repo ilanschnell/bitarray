@@ -1,6 +1,7 @@
 20XX-XX-XX   2.6.2:
 -------------------
   * optimize `richcompare()` for opposite endianness
+  * improve some docstrings add tests
 
 
 2022-12-18   2.6.1:
