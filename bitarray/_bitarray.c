@@ -2331,7 +2331,7 @@ bitarray_ ## name (PyObject *self, PyObject *other)    \
         if (res == NULL)                               \
             return NULL;                               \
     }                                                  \
-    shift((bitarrayobject *) res, n, ostr[0] == '>');  \
+    shift((bitarrayobject *) res, n, *ostr == '>');    \
     return res;                                        \
 }
 

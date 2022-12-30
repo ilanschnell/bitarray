@@ -232,7 +232,7 @@ This is equivalent to `a.count() % 2` (but more efficient).");
 /* --------------------------- binary functions ------------------------ */
 
 static PyObject *
-binary_function(PyObject *args, const char kern, const char *format)
+binary_function(PyObject *args, const char *format, const char oper)
 {
     Py_ssize_t res = 0, s, i;
     bitarrayobject *a, *b;
@@ -260,7 +260,7 @@ binary_function(PyObject *args, const char kern, const char *format)
     s = a->nbits / 8;       /* number of whole bytes in buffer */
     r = a->nbits % 8;       /* remaining bits  */
 
-    switch (kern) {
+    switch (oper) {
     case '&':                   /* count and */
         for (i = 0; i < s; i++) {
             c = buff_a[i] & buff_b[i];
@@ -294,7 +294,7 @@ binary_function(PyObject *args, const char kern, const char *format)
         }
         break;
 
-    case 's':                   /* subset */
+    case 's':                   /* is subset */
         for (i = 0; i < s; i++) {
             if ((buff_a[i] & buff_b[i]) != buff_a[i])
                 Py_RETURN_FALSE;
@@ -312,16 +312,16 @@ binary_function(PyObject *args, const char kern, const char *format)
     return PyLong_FromSsize_t(res);
 }
 
-#define COUNT_FUNC(oper, ochar)                                         \
+#define COUNT_FUNC(oper, ostr)                                          \
 static PyObject *                                                       \
 count_ ## oper (PyObject *module, PyObject *args)                       \
 {                                                                       \
-    return binary_function(args, *ochar, "O!O!:count_" #oper);          \
+    return binary_function(args, "O!O!:count_" #oper, *ostr);           \
 }                                                                       \
 PyDoc_STRVAR(count_ ## oper ## _doc,                                    \
 "count_" #oper "(a, b, /) -> int\n\
 \n\
-Return `(a " ochar " b).count()` in a memory efficient manner,\n\
+Return `(a " ostr " b).count()` in a memory efficient manner,\n\
 as no intermediate bitarray object gets created.")
 
 COUNT_FUNC(and, "&");           /* count_and */
@@ -332,7 +332,7 @@ COUNT_FUNC(xor, "^");           /* count_xor */
 static PyObject *
 subset(PyObject *module, PyObject *args)
 {
-    return binary_function(args, 's', "O!O!:subset");
+    return binary_function(args, "O!O!:subset", 's');
 }
 
 PyDoc_STRVAR(subset_doc,
