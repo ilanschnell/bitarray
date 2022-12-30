@@ -2242,43 +2242,35 @@ bitwise_check(PyObject *a, PyObject *b, const char *ostr)
     return 0;
 }
 
-#define BITWISE_FUNC(oper, ostr)                             \
+#define BITWISE_FUNC(name, inplace, oper, ostr)              \
 static PyObject *                                            \
-bitarray_ ## oper (PyObject *self, PyObject *other)          \
+bitarray_ ## name (PyObject *self, PyObject *other)          \
 {                                                            \
     PyObject *res;                                           \
                                                              \
     if (bitwise_check(self, other, ostr) < 0)                \
         return NULL;                                         \
-    res = bitarray_copy((bitarrayobject *) self);            \
-    if (res == NULL)                                         \
-        return NULL;                                         \
+    if (inplace) {                                           \
+        RAISE_IF_READONLY(self, NULL);                       \
+        res = self;                                          \
+        Py_INCREF(res);                                      \
+    }                                                        \
+    else {                                                   \
+        res = bitarray_copy((bitarrayobject *) self);        \
+        if (res == NULL)                                     \
+            return NULL;                                     \
+    }                                                        \
     bitwise((bitarrayobject *) res,                          \
             (bitarrayobject *) other, OP_ ## oper);          \
     return res;                                              \
 }
 
-BITWISE_FUNC(and, "&")               /* bitarray_and */
-BITWISE_FUNC(or,  "|")               /* bitarray_or  */
-BITWISE_FUNC(xor, "^")               /* bitarray_xor */
-
-
-#define BITWISE_IFUNC(oper, ostr)                            \
-static PyObject *                                            \
-bitarray_i ## oper (PyObject *self, PyObject *other)         \
-{                                                            \
-    if (bitwise_check(self, other, ostr) < 0)                \
-        return NULL;                                         \
-    RAISE_IF_READONLY(self, NULL);                           \
-    bitwise((bitarrayobject *) self,                         \
-            (bitarrayobject *) other, OP_ ## oper);          \
-    Py_INCREF(self);                                         \
-    return self;                                             \
-}
-
-BITWISE_IFUNC(and, "&=")             /* bitarray_iand */
-BITWISE_IFUNC(or,  "|=")             /* bitarray_ior  */
-BITWISE_IFUNC(xor, "^=")             /* bitarray_ixor */
+BITWISE_FUNC(and, 0, and, "&")    /* bitarray_and */
+BITWISE_FUNC(or,  0, or,  "|")    /* bitarray_or  */
+BITWISE_FUNC(xor, 0, xor, "^")    /* bitarray_xor */
+BITWISE_FUNC(iand, 1, and, "&=")  /* bitarray_iand */
+BITWISE_FUNC(ior,  1, or,  "|=")  /* bitarray_ior  */
+BITWISE_FUNC(ixor, 1, xor, "^=")  /* bitarray_ixor */
 
 
 /* shift bitarray n positions to left (right=0) or right (right=1) */
