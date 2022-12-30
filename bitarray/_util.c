@@ -231,15 +231,8 @@ This is equivalent to `a.count() % 2` (but more efficient).");
 
 /* --------------------------- binary functions ------------------------ */
 
-enum kernel_type {
-    KERN_cand,     /* count bitwise and -> int */
-    KERN_cor,      /* count bitwise or -> int */
-    KERN_cxor,     /* count bitwise xor -> int */
-    KERN_subset,   /* is subset -> bool */
-};
-
 static PyObject *
-binary_function(PyObject *args, enum kernel_type kern, const char *format)
+binary_function(PyObject *args, const char kern, const char *format)
 {
     Py_ssize_t res = 0, s, i;
     bitarrayobject *a, *b;
@@ -268,7 +261,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
     r = a->nbits % 8;       /* remaining bits  */
 
     switch (kern) {
-    case KERN_cand:
+    case '&':                   /* count and */
         for (i = 0; i < s; i++) {
             c = buff_a[i] & buff_b[i];
             res += bitcount_lookup[c];
@@ -279,7 +272,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
         }
         break;
 
-    case KERN_cor:
+    case '|':                   /* count or */
         for (i = 0; i < s; i++) {
             c = buff_a[i] | buff_b[i];
             res += bitcount_lookup[c];
@@ -290,7 +283,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
         }
         break;
 
-    case KERN_cxor:
+    case '^':                   /* count xor */
         for (i = 0; i < s; i++) {
             c = buff_a[i] ^ buff_b[i];
             res += bitcount_lookup[c];
@@ -301,7 +294,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
         }
         break;
 
-    case KERN_subset:
+    case 's':                   /* subset */
         for (i = 0; i < s; i++) {
             if ((buff_a[i] & buff_b[i]) != buff_a[i])
                 Py_RETURN_FALSE;
@@ -323,7 +316,7 @@ binary_function(PyObject *args, enum kernel_type kern, const char *format)
 static PyObject *                                                       \
 count_ ## oper (PyObject *module, PyObject *args)                       \
 {                                                                       \
-    return binary_function(args, KERN_c ## oper, "O!O!:count_" #oper);  \
+    return binary_function(args, *ochar, "O!O!:count_" #oper);          \
 }                                                                       \
 PyDoc_STRVAR(count_ ## oper ## _doc,                                    \
 "count_" #oper "(a, b, /) -> int\n\
@@ -339,7 +332,7 @@ COUNT_FUNC(xor, "^");           /* count_xor */
 static PyObject *
 subset(PyObject *module, PyObject *args)
 {
-    return binary_function(args, KERN_subset, "O!O!:subset");
+    return binary_function(args, 's', "O!O!:subset");
 }
 
 PyDoc_STRVAR(subset_doc,
