@@ -2170,15 +2170,9 @@ bitarray_cpinvert(bitarrayobject *self)
     return result;
 }
 
-enum op_type {
-    OP_and,
-    OP_or,
-    OP_xor,
-};
-
 /* perform bitwise in-place operation */
 static void
-bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
+bitwise(bitarrayobject *self, bitarrayobject *other, const char oper)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
     const Py_ssize_t nwords = UINT64_WORDS(nbytes);
@@ -2188,21 +2182,21 @@ bitwise(bitarrayobject *self, bitarrayobject *other, enum op_type oper)
     assert(self->endian == other->endian);
     assert_nbits(self);
     switch (oper) {
-    case OP_and:
+    case '&':
         for (i = 0; i < nwords; i++)
             UINT64_BUFFER(self)[i] &= UINT64_BUFFER(other)[i];
         for (i = 8 * nwords; i < nbytes; i++)
             self->ob_item[i] &= other->ob_item[i];
         break;
 
-    case OP_or:
+    case '|':
         for (i = 0; i < nwords; i++)
             UINT64_BUFFER(self)[i] |= UINT64_BUFFER(other)[i];
         for (i = 8 * nwords; i < nbytes; i++)
             self->ob_item[i] |= other->ob_item[i];
         break;
 
-    case OP_xor:
+    case '^':
         for (i = 0; i < nwords; i++)
             UINT64_BUFFER(self)[i] ^= UINT64_BUFFER(other)[i];
         for (i = 8 * nwords; i < nbytes; i++)
@@ -2242,7 +2236,7 @@ bitwise_check(PyObject *a, PyObject *b, const char *ostr)
     return 0;
 }
 
-#define BITWISE_FUNC(name, inplace, oper, ostr)              \
+#define BITWISE_FUNC(name, inplace, ostr)                    \
 static PyObject *                                            \
 bitarray_ ## name (PyObject *self, PyObject *other)          \
 {                                                            \
@@ -2261,16 +2255,16 @@ bitarray_ ## name (PyObject *self, PyObject *other)          \
             return NULL;                                     \
     }                                                        \
     bitwise((bitarrayobject *) res,                          \
-            (bitarrayobject *) other, OP_ ## oper);          \
+            (bitarrayobject *) other, *ostr);                \
     return res;                                              \
 }
 
-BITWISE_FUNC(and, 0, and, "&")    /* bitarray_and */
-BITWISE_FUNC(or,  0, or,  "|")    /* bitarray_or  */
-BITWISE_FUNC(xor, 0, xor, "^")    /* bitarray_xor */
-BITWISE_FUNC(iand, 1, and, "&=")  /* bitarray_iand */
-BITWISE_FUNC(ior,  1, or,  "|=")  /* bitarray_ior  */
-BITWISE_FUNC(ixor, 1, xor, "^=")  /* bitarray_ixor */
+BITWISE_FUNC(and, 0, "&")    /* bitarray_and */
+BITWISE_FUNC(or,  0, "|")    /* bitarray_or  */
+BITWISE_FUNC(xor, 0, "^")    /* bitarray_xor */
+BITWISE_FUNC(iand, 1, "&=")  /* bitarray_iand */
+BITWISE_FUNC(ior,  1, "|=")  /* bitarray_ior  */
+BITWISE_FUNC(ixor, 1, "^=")  /* bitarray_ixor */
 
 
 /* shift bitarray n positions to left (right=0) or right (right=1) */
@@ -2318,7 +2312,7 @@ shift_check(PyObject *self, PyObject *other, const char *ostr)
     return n;
 }
 
-#define SHIFT_FUNC(name, inplace, right, ostr)         \
+#define SHIFT_FUNC(name, inplace, ostr)                \
 static PyObject *                                      \
 bitarray_ ## name (PyObject *self, PyObject *other)    \
 {                                                      \
@@ -2337,14 +2331,14 @@ bitarray_ ## name (PyObject *self, PyObject *other)    \
         if (res == NULL)                               \
             return NULL;                               \
     }                                                  \
-    shift((bitarrayobject *) res, n, right);           \
+    shift((bitarrayobject *) res, n, ostr[0] == '>');  \
     return res;                                        \
 }
 
-SHIFT_FUNC(lshift,  0, 0, "<<")  /* bitarray_lshift */
-SHIFT_FUNC(rshift,  0, 1, ">>")  /* bitarray_rshift */
-SHIFT_FUNC(ilshift, 1, 0, "<<=") /* bitarray_ilshift */
-SHIFT_FUNC(irshift, 1, 1, ">>=") /* bitarray_irshift */
+SHIFT_FUNC(lshift,  0, "<<")  /* bitarray_lshift */
+SHIFT_FUNC(rshift,  0, ">>")  /* bitarray_rshift */
+SHIFT_FUNC(ilshift, 1, "<<=") /* bitarray_ilshift */
+SHIFT_FUNC(irshift, 1, ">>=") /* bitarray_irshift */
 
 
 static PyNumberMethods bitarray_as_number = {
