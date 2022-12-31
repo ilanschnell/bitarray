@@ -124,8 +124,8 @@ static const char ones_table[2][8] = {
     {0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe},  /* big endian */
 };
 
-/* Return last byte in buffer with pad bits zeroed out.  The the number of
-   bits in the bitarray must not be a multiple of 8. */
+/* Return last byte in buffer with pad bits zeroed out.  It is an error if
+   the number of bits in the bitarray is a multiple of 8. */
 static inline char
 zeroed_last_byte(bitarrayobject *self)
 {
