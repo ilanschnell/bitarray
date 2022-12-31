@@ -234,10 +234,9 @@ This is equivalent to `a.count() % 2` (but more efficient).");
 static PyObject *
 binary_function(PyObject *args, const char *format, const char oper)
 {
-    Py_ssize_t res = 0, s, i;
+    Py_ssize_t cnt = 0, s, i;
     bitarrayobject *a, *b;
-    char *buff_a, *buff_b;
-    unsigned char c;
+    unsigned char *buff_a, *buff_b, za = 0, zb = 0;
     int r;
 
     if (!PyArg_ParseTuple(args, format,
@@ -255,43 +254,35 @@ binary_function(PyObject *args, const char *format, const char oper)
                         "bitarrays of equal endianness expected");
         return NULL;
     }
-    buff_a = a->ob_item;
-    buff_b = b->ob_item;
+    buff_a = (unsigned char *) a->ob_item;
+    buff_b = (unsigned char *) b->ob_item;
     s = a->nbits / 8;       /* number of whole bytes in buffer */
     r = a->nbits % 8;       /* remaining bits  */
+    if (r) {
+        za = zeroed_last_byte(a);
+        zb = zeroed_last_byte(b);
+    }
 
     switch (oper) {
     case '&':                   /* count and */
-        for (i = 0; i < s; i++) {
-            c = buff_a[i] & buff_b[i];
-            res += bitcount_lookup[c];
-        }
-        if (r) {
-            c = zeroed_last_byte(a) & zeroed_last_byte(b);
-            res += bitcount_lookup[c];
-        }
+        for (i = 0; i < s; i++)
+            cnt += bitcount_lookup[buff_a[i] & buff_b[i]];
+        if (r)
+            cnt += bitcount_lookup[za & zb];
         break;
 
     case '|':                   /* count or */
-        for (i = 0; i < s; i++) {
-            c = buff_a[i] | buff_b[i];
-            res += bitcount_lookup[c];
-        }
-        if (r) {
-            c = zeroed_last_byte(a) | zeroed_last_byte(b);
-            res += bitcount_lookup[c];
-        }
+        for (i = 0; i < s; i++)
+            cnt += bitcount_lookup[buff_a[i] | buff_b[i]];
+        if (r)
+            cnt += bitcount_lookup[za | zb];
         break;
 
     case '^':                   /* count xor */
-        for (i = 0; i < s; i++) {
-            c = buff_a[i] ^ buff_b[i];
-            res += bitcount_lookup[c];
-        }
-        if (r) {
-            c = zeroed_last_byte(a) ^ zeroed_last_byte(b);
-            res += bitcount_lookup[c];
-        }
+        for (i = 0; i < s; i++)
+            cnt += bitcount_lookup[buff_a[i] ^ buff_b[i]];
+        if (r)
+            cnt += bitcount_lookup[za ^ zb];
         break;
 
     case 's':                   /* is subset */
@@ -299,17 +290,12 @@ binary_function(PyObject *args, const char *format, const char oper)
             if ((buff_a[i] & buff_b[i]) != buff_a[i])
                 Py_RETURN_FALSE;
         }
-        if (r) {
-            if ((zeroed_last_byte(a) & zeroed_last_byte(b)) !=
-                 zeroed_last_byte(a))
-                Py_RETURN_FALSE;
-        }
-        Py_RETURN_TRUE;
+        return PyBool_FromLong((za & zb) == za);
 
     default:
         Py_UNREACHABLE();
     }
-    return PyLong_FromSsize_t(res);
+    return PyLong_FromSsize_t(cnt);
 }
 
 #define COUNT_FUNC(oper, ostr)                                          \
