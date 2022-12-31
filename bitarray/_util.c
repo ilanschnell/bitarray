@@ -236,7 +236,7 @@ binary_function(PyObject *args, const char *format, const char oper)
 {
     Py_ssize_t cnt = 0, s, i;
     bitarrayobject *a, *b;
-    unsigned char *buff_a, *buff_b, za = 0, zb = 0;
+    unsigned char *buff_a, *buff_b;
     int r;
 
     if (!PyArg_ParseTuple(args, format,
@@ -256,33 +256,30 @@ binary_function(PyObject *args, const char *format, const char oper)
     }
     buff_a = (unsigned char *) a->ob_item;
     buff_b = (unsigned char *) b->ob_item;
+#define UZ(x)  ((unsigned char) zeroed_last_byte(x))
     s = a->nbits / 8;       /* number of whole bytes in buffer */
     r = a->nbits % 8;       /* remaining bits  */
-    if (r) {
-        za = zeroed_last_byte(a);
-        zb = zeroed_last_byte(b);
-    }
 
     switch (oper) {
     case '&':                   /* count and */
         for (i = 0; i < s; i++)
             cnt += bitcount_lookup[buff_a[i] & buff_b[i]];
         if (r)
-            cnt += bitcount_lookup[za & zb];
+            cnt += bitcount_lookup[UZ(a) & UZ(b)];
         break;
 
     case '|':                   /* count or */
         for (i = 0; i < s; i++)
             cnt += bitcount_lookup[buff_a[i] | buff_b[i]];
         if (r)
-            cnt += bitcount_lookup[za | zb];
+            cnt += bitcount_lookup[UZ(a) | UZ(b)];
         break;
 
     case '^':                   /* count xor */
         for (i = 0; i < s; i++)
             cnt += bitcount_lookup[buff_a[i] ^ buff_b[i]];
         if (r)
-            cnt += bitcount_lookup[za ^ zb];
+            cnt += bitcount_lookup[UZ(a) ^ UZ(b)];
         break;
 
     case 's':                   /* is subset */
@@ -290,11 +287,12 @@ binary_function(PyObject *args, const char *format, const char oper)
             if ((buff_a[i] & buff_b[i]) != buff_a[i])
                 Py_RETURN_FALSE;
         }
-        return PyBool_FromLong((za & zb) == za);
+        return PyBool_FromLong(r == 0 || (UZ(a) & UZ(b)) == UZ(a));
 
     default:
         Py_UNREACHABLE();
     }
+#undef UZ
     return PyLong_FromSsize_t(cnt);
 }
 
