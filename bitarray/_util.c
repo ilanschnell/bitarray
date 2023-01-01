@@ -205,20 +205,20 @@ Raises `ValueError` if the value is not present.");
 /* --------------------------- unary functions ------------------------- */
 
 static PyObject *
-parity(PyObject *module, PyObject *a)
+parity(PyObject *module, PyObject *obj)
 {
-    bitarrayobject *aa;
+    bitarrayobject *a;
     unsigned char par = 0;
     Py_ssize_t i;
 
-    if (ensure_bitarray(a) < 0)
+    if (ensure_bitarray(obj) < 0)
         return NULL;
 
-    aa = (bitarrayobject *) a;
-    for (i = 0; i < aa->nbits / 8; i++)
-        par ^= aa->ob_item[i];
-    if (aa->nbits % 8)
-        par ^= zeroed_last_byte(aa);
+    a = (bitarrayobject *) obj;
+    for (i = 0; i < a->nbits / 8; i++)
+        par ^= a->ob_item[i];
+    if (a->nbits % 8)
+        par ^= zeroed_last_byte(a);
 
     return PyLong_FromLong((long) bitcount_lookup[par] % 2);
 }
@@ -376,41 +376,41 @@ hex_to_int(char c)
 }
 
 static PyObject *
-ba2hex(PyObject *module, PyObject *a)
+ba2hex(PyObject *module, PyObject *obj)
 {
     PyObject *result;
-    bitarrayobject *aa;
+    bitarrayobject *a;
     size_t i, strsize;
     char *str;
     int le, be;
 
-    if (ensure_bitarray(a) < 0)
+    if (ensure_bitarray(obj) < 0)
         return NULL;
 
-    aa = (bitarrayobject *) a;
-    if (aa->nbits % 4) {
+    a = (bitarrayobject *) obj;
+    if (a->nbits % 4) {
         PyErr_SetString(PyExc_ValueError, "bitarray length not multiple of 4");
         return NULL;
     }
 
     /* We want strsize to be even, such that we can transform the entire
-       bitarray buffer at once.  Hence, we don't use aa->nbits / 4 here, as
+       bitarray buffer at once.  Hence, we don't use a->nbits / 4 here, as
        is could make strsize odd. */
-    strsize = 2 * Py_SIZE(a);
+    strsize = 2 * Py_SIZE(obj);
     str = (char *) PyMem_Malloc(strsize);
     if (str == NULL)
         return PyErr_NoMemory();
 
-    le = IS_LE(aa);
-    be = IS_BE(aa);
+    le = IS_LE(a);
+    be = IS_BE(a);
     for (i = 0; i < strsize; i += 2) {
-        unsigned char c = aa->ob_item[i / 2];
+        unsigned char c = a->ob_item[i / 2];
 
         str[i + le] = hexdigits[c >> 4];
         str[i + be] = hexdigits[0x0f & c];
     }
-    assert((size_t) aa->nbits / 4 <= strsize);
-    result = Py_BuildValue("s#", str, aa->nbits / 4);
+    assert((size_t) a->nbits / 4 <= strsize);
+    result = Py_BuildValue("s#", str, a->nbits / 4);
     PyMem_Free((void *) str);
     return result;
 }
@@ -733,21 +733,21 @@ vl_decode(PyObject *module, PyObject *args)
 }
 
 static PyObject *
-vl_encode(PyObject *module, PyObject *a)
+vl_encode(PyObject *module, PyObject *obj)
 {
     PyObject *result;
-    bitarrayobject *aa;
+    bitarrayobject *a;
     Py_ssize_t padding, n, m, i;
     Py_ssize_t j = 0;           /* byte conter */
     char *str;
 
-    if (ensure_bitarray(a) < 0)
+    if (ensure_bitarray(obj) < 0)
         return NULL;
 
-    aa = (bitarrayobject *) a;
-    n = (aa->nbits + LEN_PAD_BITS + 6) / 7;  /* number of resulting bytes */
+    a = (bitarrayobject *) obj;
+    n = (a->nbits + LEN_PAD_BITS + 6) / 7;  /* number of resulting bytes */
     m = 7 * n - LEN_PAD_BITS;    /* number of bits resulting bytes can hold */
-    padding = m - aa->nbits;     /* number of pad bits */
+    padding = m - a->nbits;      /* number of pad bits */
     assert(0 <= padding && padding < 7);
 
     result = PyBytes_FromStringAndSize(NULL, n);
@@ -755,19 +755,19 @@ vl_encode(PyObject *module, PyObject *a)
         return NULL;
 
     str = PyBytes_AsString(result);
-    str[0] = aa->nbits > 4 ? 0x80 : 0x00;  /* leading bit */
+    str[0] = a->nbits > 4 ? 0x80 : 0x00;   /* leading bit */
     str[0] |= padding << 4;                /* encode padding */
-    for (i = 0; i < 4 && i < aa->nbits; i++)
-        str[0] |= (0x08 >> i) * getbit(aa, i);
+    for (i = 0; i < 4 && i < a->nbits; i++)
+        str[0] |= (0x08 >> i) * getbit(a, i);
 
-    for (i = 4; i < aa->nbits; i++) {
+    for (i = 4; i < a->nbits; i++) {
         int k = (i - 4) % 7;
 
         if (k == 0) {
             j++;
             str[j] = j < n - 1 ? 0x80 : 0x00;  /* leading bit */
         }
-        str[j] |= (0x40 >> k) * getbit(aa, i);
+        str[j] |= (0x40 >> k) * getbit(a, i);
     }
     assert(j == n - 1);
 
