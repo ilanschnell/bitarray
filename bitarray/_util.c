@@ -227,7 +227,7 @@ PyDoc_STRVAR(parity_doc,
 "parity(a, /) -> int\n\
 \n\
 Return the parity of bitarray `a`.\n\
-This is equivalent to `a.count() % 2` (but more efficient).");
+`parity(a)` is equivalent to `a.count() % 2` but more efficient.");
 
 /* --------------------------- binary functions ------------------------ */
 
@@ -256,11 +256,11 @@ binary_function(PyObject *args, const char *format, const char oper)
     }
     buff_a = (unsigned char *) a->ob_item;
     buff_b = (unsigned char *) b->ob_item;
-#define UZ(x)  ((unsigned char) zeroed_last_byte(x))
     s = a->nbits / 8;       /* number of whole bytes in buffer */
     r = a->nbits % 8;       /* remaining bits  */
 
     switch (oper) {
+#define UZ(x)  ((unsigned char) zeroed_last_byte(x))
     case '&':                   /* count and */
         for (i = 0; i < s; i++)
             cnt += bitcount_lookup[buff_a[i] & buff_b[i]];
@@ -291,8 +291,8 @@ binary_function(PyObject *args, const char *format, const char oper)
 
     default:
         Py_UNREACHABLE();
-    }
 #undef UZ
+    }
     return PyLong_FromSsize_t(cnt);
 }
 
