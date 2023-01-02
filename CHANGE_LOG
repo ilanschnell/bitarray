@@ -1,3 +1,7 @@
+2023-XX-XX   2.6.3:
+-------------------
+
+
 2023-01-01   2.6.2:
 -------------------
   * optimize `richcompare()` for opposite endianness
