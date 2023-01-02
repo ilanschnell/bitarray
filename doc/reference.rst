@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.6.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.6.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -259,9 +259,9 @@ Other objects:
 --------------
 
 ``frozenbitarray(initializer=0, /, endian='big', buffer=None)`` -> frozenbitarray
-   Return a frozenbitarray object, which is initialized the same way a bitarray
-   object is initialized.  A frozenbitarray is immutable and hashable,
-   and (unlike a bitarray) may be used as a dictionary key.
+   Return a ``frozenbitarray`` object.  Initialized the same way a ``bitarray``
+   object is initialized.  A ``frozenbitarray`` is immutable and hashable,
+   and may therefore be used as a dictionary key.
 
    New in version 1.1.
 
@@ -349,7 +349,7 @@ This sub-module was added in version 1.2.
 
 ``parity(a, /)`` -> int
    Return the parity of bitarray ``a``.
-   This is equivalent to ``a.count() % 2`` (but more efficient).
+   ``parity(a)`` is equivalent to ``a.count() % 2`` but more efficient.
 
    New in version 1.9.
 
@@ -373,9 +373,9 @@ This sub-module was added in version 1.2.
 
 ``subset(a, b, /)`` -> bool
    Return ``True`` if bitarray ``a`` is a subset of bitarray ``b``.
-   ``subset(a, b)`` is equivalent to ``a | b == b`` (and ``a & b == a``) but more
-   efficient as iterating the buffers can be stopped as soon as one mismatch
-   is found.  Moreover, no intermediate bitarray object is created.
+   ``subset(a, b)`` is equivalent to ``a | b == b`` (and equally ``a & b == a``) but
+   more efficient as no intermediate bitarray object is created and the buffer
+   iteration is stopped as soon as one mismatch found.
 
 
 ``ba2hex(bitarray, /)`` -> hexstr

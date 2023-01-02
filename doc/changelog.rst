@@ -1,6 +1,12 @@
 Change log
 ==========
 
+**2.6.2** (2023-01-01):
+
+* optimize ``richcompare()`` for opposite endianness
+* improve some docstrings add tests
+
+
 **2.6.1** (2022-12-18):
 
 * add documentation on shift operators, `#181 <https://github.com/ilanschnell/bitarray/issues/181>`__
