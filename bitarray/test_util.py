@@ -609,6 +609,28 @@ class TestsBitwiseCount(unittest.TestCase, Util):
             self.assertEqual(count_or(a, b),  (a | b).count())
             self.assertEqual(count_xor(a, b), (a ^ b).count())
 
+    def test_misc(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            b = urandom(n, a.endian())
+            # any and
+            self.assertEqual(any(a & b), count_and(a, b) > 0)
+            # any or
+            self.assertEqual(any(a | b), count_or(a, b) > 0)
+            self.assertEqual(any(a | b), any(a) or any(b))
+            # any xor
+            self.assertEqual(any(a ^ b), count_xor(a, b) > 0)
+            self.assertEqual(any(a ^ b), a != b)
+
+            # all and
+            self.assertEqual(all(a & b), count_and(a, b) == n)
+            self.assertEqual(all(a & b), all(a) and all(b))
+            # all or
+            self.assertEqual(all(a | b), count_or(a, b) == n)
+            # all xor
+            self.assertEqual(all(a ^ b), count_xor(a, b) == n)
+            self.assertEqual(all(a ^ b), a == ~b)
+
 tests.append(TestsBitwiseCount)
 
 # ---------------------------------------------------------------------------
