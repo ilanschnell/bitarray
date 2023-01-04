@@ -339,10 +339,9 @@ iteration is stopped as soon as one mismatch found.");
 static PyObject *
 correspond_all(PyObject *module, PyObject *args)
 {
-    Py_ssize_t nff = 0, nft = 0, ntf = 0, ntt = 0, s, i;
+    Py_ssize_t nff = 0, nft = 0, ntf = 0, ntt = 0, i;
     bitarrayobject *a, *b;
     unsigned char u, v, not_u, not_v;
-    int r;
 
     if (!PyArg_ParseTuple(args, "O!O!:_correspond_all",
                           bitarray_type_obj, (PyObject *) &a,
@@ -351,10 +350,7 @@ correspond_all(PyObject *module, PyObject *args)
     if (same_size_endian(a, b) < 0)
         return NULL;
 
-    s = a->nbits / 8;       /* number of whole bytes in buffer */
-    r = a->nbits % 8;       /* remaining bits  */
-
-    for (i = 0; i < s; i++) {
+    for (i = 0; i < a->nbits / 8; i++) {
         u = a->ob_item[i];
         v = b->ob_item[i];
         not_u = ~u;
@@ -364,8 +360,8 @@ correspond_all(PyObject *module, PyObject *args)
         ntf += bitcount_lookup[u & not_v];
         ntt += bitcount_lookup[u & v];
     }
-    if (r) {
-        unsigned char mask = ones_table[IS_BE(a)][r];
+    if (a->nbits % 8) {
+        unsigned char mask = ones_table[IS_BE(a)][a->nbits % 8];
         u = a->ob_item[Py_SIZE(a) - 1];
         v = b->ob_item[Py_SIZE(b) - 1];
         not_u = ~u;

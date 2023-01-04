@@ -1,5 +1,6 @@
 2023-XX-XX   2.6.3:
 -------------------
+  * add examples/distance.py
   * add examples/intervals.py
 
 
