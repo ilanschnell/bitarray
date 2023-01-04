@@ -21,7 +21,7 @@ from bitarray.test_bitarray import Util, skipIf
 
 from bitarray.util import (
     zeros, urandom, pprint, make_endian, rindex, strip, count_n,
-    parity, count_and, count_or, count_xor, subset,
+    parity, count_and, count_or, count_xor, subset, _correspond_all,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
     ba2int, int2ba, vl_encode, vl_decode,
     huffman_code, canonical_huffman, canonical_decode,
@@ -683,6 +683,44 @@ class TestsSubset(unittest.TestCase, Util):
             self.check(b, a, True)
 
 tests.append(TestsSubset)
+
+# ---------------------------------------------------------------------------
+
+class TestsCorrespondAll(unittest.TestCase, Util):
+
+    def test_basic(self):
+        a = frozenbitarray('0101')
+        b = bitarray('0111')
+        self.assertTrue(_correspond_all(a, b), (1, 1, 1, 1))
+        self.assertRaises(TypeError, _correspond_all)
+        b.append(1)
+        self.assertRaises(ValueError, _correspond_all, a, b)
+        self.assertRaises(ValueError, _correspond_all,
+                          bitarray('01', 'little'),
+                          bitarray('11', 'big'))
+
+    def test_explitcit(self):
+        for a, b, res in [
+                ('', '', (0, 0, 0, 0)),
+                ('0000011111',
+                 '0000100111', (4, 1, 2, 3)),
+            ]:
+            self.assertEqual(_correspond_all(bitarray(a), bitarray(b)), res)
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            b = urandom(n, a.endian())
+            res = _correspond_all(a, b)
+            self.assertEqual(res[0], count_and(~a, ~b))
+            self.assertEqual(res[1], count_and(~a, b))
+            self.assertEqual(res[2], count_and(a, ~b))
+            self.assertEqual(res[3], count_and(a, b))
+
+            self.assertEqual(res[0], n - count_or(a, b))
+            self.assertEqual(sum(res), n)
+
+tests.append(TestsCorrespondAll)
 
 # ---------------------------------------------------------------------------
 

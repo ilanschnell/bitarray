@@ -327,6 +327,57 @@ Return `True` if bitarray `a` is a subset of bitarray `b`.\n\
 more efficient as no intermediate bitarray object is created and the buffer\n\
 iteration is stopped as soon as one mismatch found.");
 
+
+static PyObject *
+correspond_all(PyObject *module, PyObject *args)
+{
+    Py_ssize_t nff = 0, nft = 0, ntf = 0, ntt = 0, s, i;
+    bitarrayobject *a, *b;
+    unsigned char u, v, not_u, not_v;
+    int r;
+
+    if (!PyArg_ParseTuple(args, "O!O!:_correspond_all",
+                          bitarray_type_obj, (PyObject *) &a,
+                          bitarray_type_obj, (PyObject *) &b))
+        return NULL;
+
+    if (a->nbits != b->nbits) {
+        PyErr_SetString(PyExc_ValueError,
+                        "bitarrays of equal length expected");
+        return NULL;
+    }
+    if (a->endian != b->endian) {
+        PyErr_SetString(PyExc_ValueError,
+                        "bitarrays of equal endianness expected");
+        return NULL;
+    }
+    s = a->nbits / 8;       /* number of whole bytes in buffer */
+    r = a->nbits % 8;       /* remaining bits  */
+
+    for (i = 0; i < s; i++) {
+        u = a->ob_item[i];
+        v = b->ob_item[i];
+        not_u = ~u;
+        not_v = ~v;
+        nff += bitcount_lookup[not_u & not_v];
+        nft += bitcount_lookup[not_u & v];
+        ntf += bitcount_lookup[u & not_v];
+        ntt += bitcount_lookup[u & v];
+    }
+    if (r) {
+        unsigned char mask = ones_table[IS_BE(a)][r];
+        u = a->ob_item[Py_SIZE(a) - 1];
+        v = b->ob_item[Py_SIZE(b) - 1];
+        not_u = ~u;
+        not_v = ~v;
+        nff += bitcount_lookup[not_u & not_v & mask];
+        nft += bitcount_lookup[not_u & v & mask];
+        ntf += bitcount_lookup[u & not_v & mask];
+        ntt += bitcount_lookup[u & v & mask];
+    }
+    return Py_BuildValue("nnnn", nff, nft, ntf, ntt);
+}
+
 /* ---------------------------- serialization -------------------------- */
 
 static PyObject *
@@ -999,6 +1050,9 @@ static PyMethodDef module_functions[] = {
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
     {"subset",    (PyCFunction) subset,    METH_VARARGS, subset_doc},
+    {"_correspond_all",
+                  (PyCFunction) correspond_all,
+                                           METH_VARARGS, 0},
     {"serialize", (PyCFunction) serialize, METH_O,       serialize_doc},
     {"ba2hex",    (PyCFunction) ba2hex,    METH_O,       ba2hex_doc},
     {"_hex2ba",   (PyCFunction) hex2ba,    METH_VARARGS, 0},
