@@ -1,3 +1,8 @@
+"""
+In this module, we implement distance functions and compare them to the
+corresponding functions in the scipy.spatial.distance module.
+The functions in this module are typically around 10 - 50 times faster.
+"""
 from time import time
 
 from bitarray.util import _correspond_all, count_and, count_xor, urandom
@@ -18,8 +23,7 @@ def jaccard(u, v):
     return x / (count_and(u, v) + x)
 
 def kulczynski1(u, v):
-    x = count_xor(u, v)
-    return float(count_and(u, v)) / x
+    return float(count_and(u, v)) / count_xor(u, v)
 
 def rogerstanimoto(u, v):
     nff, nft, ntf, ntt = _correspond_all(u, v)
@@ -60,12 +64,14 @@ def test(n):
         f1 = eval(name)
         t0 = time()
         x1 = f1(a, b)
-        print('%.14f  %9.6f sec  %s' % (x1, time() - t0, name))
+        t1 = time() - t0
+        print('%.14f  %9.6f sec  %s' % (x1, t1, name))
 
         f2 = getattr(distance, name)
         t0 = time()
         x2 = f2(aa, bb)
-        print('%.14f  %9.6f sec' % (x2, time() - t0))
+        t2 = time() - t0
+        print('%.14f  %9.6f sec  %9.2f' % (x2, t2, t2 / t1))
 
         assert abs(x1 - x2) < 1E-14
 
