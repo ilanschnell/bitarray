@@ -1,7 +1,7 @@
 """
 In this module, we implement distance functions and compare them to the
 corresponding functions in the scipy.spatial.distance module.
-The functions in this module are typically around 10 - 50 times faster.
+The functions in this module are typically around 10 to 50 times faster.
 """
 from time import time
 
@@ -26,18 +26,16 @@ def kulczynski1(u, v):
     return float(count_and(u, v)) / count_xor(u, v)
 
 def rogerstanimoto(u, v):
-    nff, nft, ntf, ntt = _correspond_all(u, v)
-    R = 2.0 * (ntf + nft)
-    return R / (ntt + nff + R)
+    x = float(count_xor(u, v))
+    return 2.0 * x / (len(u) + x)
 
 def russellrao(u, v):
     n = float(len(u))
     return (n - count_and(u, v)) / n
 
 def sokalmichener(u, v):
-    nff, nft, ntf, ntt = _correspond_all(u, v)
-    R = 2.0 * (ntf + nft)
-    return R / (ntt + nff + R)
+    x = float(count_xor(u, v))
+    return 2.0 * x / (len(u) + x)
 
 def sokalsneath(u, v):
     R = 2.0 * count_xor(u, v)

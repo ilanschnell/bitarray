@@ -339,7 +339,7 @@ iteration is stopped as soon as one mismatch found.");
 static PyObject *
 correspond_all(PyObject *module, PyObject *args)
 {
-    Py_ssize_t nff = 0, nft = 0, ntf = 0, ntt = 0, i;
+    Py_ssize_t nff = 0, nft = 0, ntf = 0, ntt = 0, i, s;
     bitarrayobject *a, *b;
     unsigned char u, v, not_u, not_v;
 
@@ -349,8 +349,9 @@ correspond_all(PyObject *module, PyObject *args)
         return NULL;
     if (same_size_endian(a, b) < 0)
         return NULL;
+    s = a->nbits / 8;       /* number of whole bytes in buffer */
 
-    for (i = 0; i < a->nbits / 8; i++) {
+    for (i = 0; i < s; i++) {
         u = a->ob_item[i];
         v = b->ob_item[i];
         not_u = ~u;
@@ -362,8 +363,8 @@ correspond_all(PyObject *module, PyObject *args)
     }
     if (a->nbits % 8) {
         unsigned char mask = ones_table[IS_BE(a)][a->nbits % 8];
-        u = a->ob_item[Py_SIZE(a) - 1];
-        v = b->ob_item[Py_SIZE(b) - 1];
+        u = a->ob_item[s];
+        v = b->ob_item[s];
         not_u = ~u;
         not_v = ~v;
         nff += bitcount_lookup[not_u & not_v & mask];
