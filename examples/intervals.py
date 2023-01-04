@@ -30,17 +30,17 @@ Return the number of uninterrupted intervals of `0`s and `1`s in bitarray `a`.
 """
     if not a:
         return 0
-    cnt = 0
+    cnt = 1
     i = 0
     x = a[0]
 
     while True:
-        cnt += 1
         try:
             x = not x
             i = a.index(x, i)
         except ValueError:
             return cnt
+        cnt += 1
 
 # ---------------------------------------------------------------------------
 
