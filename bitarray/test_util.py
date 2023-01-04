@@ -718,6 +718,7 @@ class TestsCorrespondAll(unittest.TestCase, Util):
             self.assertEqual(res[3], count_and(a, b))
 
             self.assertEqual(res[0], n - count_or(a, b))
+            self.assertEqual(res[1] + res[2], count_xor(a, b))
             self.assertEqual(sum(res), n)
 
 tests.append(TestsCorrespondAll)
