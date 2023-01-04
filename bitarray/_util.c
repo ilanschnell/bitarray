@@ -231,6 +231,22 @@ Return the parity of bitarray `a`.\n\
 
 /* --------------------------- binary functions ------------------------ */
 
+static int
+same_size_endian(bitarrayobject *a, bitarrayobject *b)
+{
+    if (a->nbits != b->nbits) {
+        PyErr_SetString(PyExc_ValueError,
+                        "bitarrays of equal length expected");
+        return -1;
+    }
+    if (a->endian != b->endian) {
+        PyErr_SetString(PyExc_ValueError,
+                        "bitarrays of equal endianness expected");
+        return -1;
+    }
+    return 0;
+}
+
 static PyObject *
 binary_function(PyObject *args, const char *format, const char oper)
 {
@@ -243,17 +259,9 @@ binary_function(PyObject *args, const char *format, const char oper)
                           bitarray_type_obj, (PyObject *) &a,
                           bitarray_type_obj, (PyObject *) &b))
         return NULL;
+    if (same_size_endian(a, b) < 0)
+        return NULL;
 
-    if (a->nbits != b->nbits) {
-        PyErr_SetString(PyExc_ValueError,
-                        "bitarrays of equal length expected");
-        return NULL;
-    }
-    if (a->endian != b->endian) {
-        PyErr_SetString(PyExc_ValueError,
-                        "bitarrays of equal endianness expected");
-        return NULL;
-    }
     buff_a = (unsigned char *) a->ob_item;
     buff_b = (unsigned char *) b->ob_item;
     s = a->nbits / 8;       /* number of whole bytes in buffer */
@@ -340,17 +348,9 @@ correspond_all(PyObject *module, PyObject *args)
                           bitarray_type_obj, (PyObject *) &a,
                           bitarray_type_obj, (PyObject *) &b))
         return NULL;
+    if (same_size_endian(a, b) < 0)
+        return NULL;
 
-    if (a->nbits != b->nbits) {
-        PyErr_SetString(PyExc_ValueError,
-                        "bitarrays of equal length expected");
-        return NULL;
-    }
-    if (a->endian != b->endian) {
-        PyErr_SetString(PyExc_ValueError,
-                        "bitarrays of equal endianness expected");
-        return NULL;
-    }
     s = a->nbits / 8;       /* number of whole bytes in buffer */
     r = a->nbits % 8;       /* remaining bits  */
 
