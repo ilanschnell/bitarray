@@ -290,6 +290,13 @@ binary_function(PyObject *args, const char *format, const char oper)
             cnt += bitcount_lookup[UZ(a) ^ UZ(b)];
         break;
 
+    case 'a':                   /* any and */
+        for (i = 0; i < s; i++) {
+            if (buff_a[i] & buff_b[i])
+                Py_RETURN_TRUE;
+        }
+        return PyBool_FromLong(r && (UZ(a) & UZ(b)));
+
     case 's':                   /* is subset */
         for (i = 0; i < s; i++) {
             if ((buff_a[i] & buff_b[i]) != buff_a[i])
@@ -319,6 +326,19 @@ as no intermediate bitarray object gets created.")
 COUNT_FUNC(and, "&");           /* count_and */
 COUNT_FUNC(or,  "|");           /* count_or  */
 COUNT_FUNC(xor, "^");           /* count_xor */
+
+
+static PyObject *
+any_and(PyObject *module, PyObject *args)
+{
+    return binary_function(args, "O!O!:any_and", 'a');
+}
+
+PyDoc_STRVAR(any_and_doc,
+"any_and(a, b, /) -> bool\n\
+\n\
+Return `True` if bitarray `a` and `b` have any `1` element in common.\n\
+`any_and(a, b)` is equivalent to `any(a & b)` but more efficient.");
 
 
 static PyObject *
@@ -1046,6 +1066,7 @@ static PyMethodDef module_functions[] = {
     {"count_and", (PyCFunction) count_and, METH_VARARGS, count_and_doc},
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
+    {"any_and",   (PyCFunction) any_and,   METH_VARARGS, any_and_doc},
     {"subset",    (PyCFunction) subset,    METH_VARARGS, subset_doc},
     {"_correspond_all",
                   (PyCFunction) correspond_all,

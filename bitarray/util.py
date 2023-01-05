@@ -13,7 +13,7 @@ import sys
 from bitarray import bitarray, bits2bytes
 
 from bitarray._util import (
-    count_n, rindex, parity, count_and, count_or, count_xor, subset,
+    count_n, rindex, parity, count_and, count_or, count_xor, any_and, subset,
     _correspond_all,
     serialize, ba2hex, _hex2ba, ba2base, _base2ba, vl_encode, _vl_decode,
     canonical_decode,
@@ -21,7 +21,7 @@ from bitarray._util import (
 
 __all__ = [
     'zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip', 'count_n',
-    'parity', 'count_and', 'count_or', 'count_xor', 'subset',
+    'parity', 'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
     'ba2hex', 'hex2ba', 'ba2base', 'base2ba', 'ba2int', 'int2ba',
     'serialize', 'deserialize', 'vl_encode', 'vl_decode',
     'huffman_code', 'canonical_huffman', 'canonical_decode',

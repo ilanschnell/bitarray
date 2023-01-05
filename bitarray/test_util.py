@@ -21,7 +21,7 @@ from bitarray.test_bitarray import Util, skipIf
 
 from bitarray.util import (
     zeros, urandom, pprint, make_endian, rindex, strip, count_n,
-    parity, count_and, count_or, count_xor, subset, _correspond_all,
+    parity, count_and, count_or, count_xor, any_and, subset, _correspond_all,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
     ba2int, int2ba, vl_encode, vl_decode,
     huffman_code, canonical_huffman, canonical_decode,
@@ -615,6 +615,7 @@ class TestsBitwiseCount(unittest.TestCase, Util):
             b = urandom(n, a.endian())
             # any and
             self.assertEqual(any(a & b), count_and(a, b) > 0)
+            self.assertEqual(any_and(a, b), any(a & b))
             # any or
             self.assertEqual(any(a | b), count_or(a, b) > 0)
             self.assertEqual(any(a | b), any(a) or any(b))
@@ -632,6 +633,50 @@ class TestsBitwiseCount(unittest.TestCase, Util):
             self.assertEqual(all(a ^ b), a == ~b)
 
 tests.append(TestsBitwiseCount)
+
+# ---------------------------------------------------------------------------
+
+class TestsBitwiseAny(unittest.TestCase, Util):
+
+    def test_basic(self):
+        a = frozenbitarray('0101')
+        b = bitarray('0111')
+        self.assertTrue(any_and(a, b))
+        self.assertRaises(TypeError, any_and)
+        self.assertRaises(TypeError, any_and, a, 4)
+        b.append(1)
+        self.assertRaises(ValueError, any_and, a, b)
+        self.assertRaises(ValueError, any_and,
+                          bitarray('01', 'little'),
+                          bitarray('11', 'big'))
+
+    def check(self, a, b):
+        r = any_and(a, b)
+        self.assertIsInstance(r, bool)
+        self.assertEqual(r, any_and(b, a))  # symmettry
+        self.assertEqual(r, any(a & b))
+        self.assertEqual(r, (a & b).any())
+
+    def test_explitcit(self):
+        for a, b , res in [
+                ('', '', False),
+                ('0', '1', False),
+                ('0', '0', False),
+                ('1', '1', True),
+                ('00011', '11100', False),
+                ('00001011 1', '01000100 1', True)]:
+            a = bitarray(a)
+            b = bitarray(b)
+            self.assertEqual(any_and(a, b), res)
+            self.check(a, b)
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            b = urandom(n, a.endian())
+            self.check(a, b)
+
+tests.append(TestsBitwiseAny)
 
 # ---------------------------------------------------------------------------
 
