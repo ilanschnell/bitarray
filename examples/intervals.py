@@ -19,8 +19,8 @@ intervals of `value` in the bitarray.
             stop = __a.index(not value, stop)
         except ValueError:
             stop = n
-        yield value, start, stop
-        value = int(not value)
+        yield int(value), start, stop
+        value = not value
 
 # ---------------------------------------------------------------------------
 
@@ -62,17 +62,15 @@ class TestsIntervals(unittest.TestCase, Util):
         for a in self.randombitarrays():
             b = urandom(len(a))
             cnt = {0: 0, 1: 0}
-            values = bitarray()
+            v = a[0] if a else None
             for value, start, stop in intervals(a):
+                self.assertFalse(isinstance(value, bool))
+                self.assertEqual(value, v)
+                v = not v
                 self.assertTrue(0 <= start < stop <= len(a))
                 cnt[value] += stop - start
-                values.append(value)
                 b[start:stop] = value
             self.assertEqual(a, b)
-            for v in 0, 1:
-                self.assertEqual(cnt[v], a.count(v))
-            self.assertFalse(bitarray('00') in values)
-            self.assertFalse(bitarray('11') in values)
 
 # ---------------------------------------------------------------------------
 
