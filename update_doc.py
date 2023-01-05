@@ -23,6 +23,7 @@ NEW_IN = {
     'decodetree':             '1.6',
     'frozenbitarray':         '1.1',
     'get_default_endian':     '1.3',
+    'util.any_and':           '2.7',
     'util.ba2base':           '1.9',
     'util.base2ba':           '1.9',
     'util.count_n':           '2.3.6: optional value argument',

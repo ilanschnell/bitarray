@@ -656,6 +656,7 @@ class TestsBitwiseAny(unittest.TestCase, Util):
         self.assertEqual(r, any_and(b, a))  # symmettry
         self.assertEqual(r, any(a & b))
         self.assertEqual(r, (a & b).any())
+        self.assertEqual(r, count_and(a, b) > 0)
 
     def test_explitcit(self):
         for a, b , res in [
@@ -675,6 +676,14 @@ class TestsBitwiseAny(unittest.TestCase, Util):
             n = len(a)
             b = urandom(n, a.endian())
             self.check(a, b)
+
+    def test_one(self):
+        for n in range(1, 200):
+            a = zeros(n)
+            b = urandom(n)
+            i = randint(0, n - 1)
+            a[i] = 1
+            self.assertEqual(b[i], any_and(a, b))
 
 tests.append(TestsBitwiseAny)
 
