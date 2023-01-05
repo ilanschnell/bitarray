@@ -1,22 +1,22 @@
 from bitarray import bitarray
 
 
-def ranges(a):
-    """ranges(a) -> iterator
+def ranges(a, value=1):
+    """ranges(a, value=1) -> iterator
 
-Iterate over all tuples (start, stop) which contain contiguous `1`s (in
-`range(start, stop)`) in bitarray `a`.
+Iterate over all tuples (start, stop) which contain contiguous `1`s (or
+specified by `value`) in `range(start, stop)`) in bitarray `a`.
 """
     stop = 0
 
     while True:
         try:
-            start = a.index(1, stop)
+            start = a.index(value, stop)
         except ValueError:
             return
 
         try:
-            stop = a.index(0, start)
+            stop = a.index(not value, start)
         except ValueError:
             stop = len(a)
 
@@ -46,30 +46,47 @@ Return the number of uninterrupted intervals of `0`s and `1`s in bitarray `a`.
 
 import unittest
 
-from bitarray.util import zeros
+from bitarray.util import urandom
 from bitarray.test_bitarray import Util
 
 
 class RangesTests(unittest.TestCase, Util):
 
     def test_explicit(self):
-        for s, lst in [('', []),
-                       ('0', []),
-                       ('1', [(0, 1)]),
-                       ('00111100 00000111 00', [(2, 6), (13, 16)]),
+        for s, lst0, lst1 in [
+                ('', [], []),
+                ('0', [(0, 1)], []),
+                ('1', [], [(0, 1)]),
+                ('00111100 00000111 00',
+                 [(0, 2), (6, 13), (16, 18)],
+                 [(2, 6), (13, 16)]),
             ]:
-            self.assertEqual(list(ranges(bitarray(s))), lst)
+            a = bitarray(s)
+            self.assertEqual(list(ranges(a)), lst1)
+            self.assertEqual(list(ranges(a, 0)), lst0)
+            self.assertEqual(list(ranges(a, 1)), lst1)
 
     def test_random(self):
+        for value in 0, 1:
+            for a in self.randombitarrays():
+                b = bitarray(len(a))
+                b.setall(not value)
+                cnt = 0
+                for start, stop in ranges(a, value):
+                    self.assertTrue(0 <= start < stop <= len(a))
+                    b[start:stop] = value
+                    cnt += stop - start
+                self.assertEqual(a, b)
+                self.assertEqual(a.count(value), cnt)
+
+    def test_random2(self):
         for a in self.randombitarrays():
-            b = zeros(len(a))
-            cnt = 0
-            for start, stop in ranges(a):
-                self.assertTrue(0 <= start < stop <= len(a))
-                b[start:stop] = 1
-                cnt += stop - start
+            b = urandom(len(a))
+            for v in range(2):
+                for start, stop in ranges(a, v):
+                    b[start:stop] = v
             self.assertEqual(a, b)
-            self.assertEqual(a.count(), cnt)
+
 
 class IntervalsTests(unittest.TestCase, Util):
 
@@ -81,13 +98,8 @@ class IntervalsTests(unittest.TestCase, Util):
             s = s.replace('11', '1')
         self.assertEqual(intervals(a), len(s))
 
-        if a:
-            c = 2 * len(list(ranges(a))) - 1
-            c += not a[0]
-            c += not a[-1]
-        else:
-            c = 0
-        self.assertEqual(intervals(a), c)
+        self.assertEqual(intervals(a),
+                         len(list(ranges(a, 0)) + list(ranges(a, 1))))
 
     def test_explicit(self):
         for s, res in [('', 0),
