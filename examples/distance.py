@@ -8,7 +8,7 @@ from time import time
 from bitarray.util import _correspond_all, count_and, count_xor, urandom
 
 import numpy
-import scipy.spatial.distance as distance
+import scipy.spatial.distance as distance  # type: ignore
 
 
 def dice(u, v):
