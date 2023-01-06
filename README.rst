@@ -771,8 +771,7 @@ This sub-module was added in version 1.2.
 
 
 ``any_and(a, b, /)`` -> bool
-   Return ``True`` if bitarray ``a`` and ``b`` have any ``1`` element in common.
-   ``any_and(a, b)`` is equivalent to ``any(a & b)`` but more efficient.
+   Efficient implementation of ``any(a & b)``.
 
    New in version 2.7.
 
@@ -781,7 +780,7 @@ This sub-module was added in version 1.2.
    Return ``True`` if bitarray ``a`` is a subset of bitarray ``b``.
    ``subset(a, b)`` is equivalent to ``a | b == b`` (and equally ``a & b == a``) but
    more efficient as no intermediate bitarray object is created and the buffer
-   iteration is stopped as soon as one mismatch found.
+   iteration is stopped as soon as one mismatch is found.
 
 
 ``intervals(bitarray, /)`` -> iterator

@@ -337,8 +337,7 @@ any_and(PyObject *module, PyObject *args)
 PyDoc_STRVAR(any_and_doc,
 "any_and(a, b, /) -> bool\n\
 \n\
-Return `True` if bitarray `a` and `b` have any `1` element in common.\n\
-`any_and(a, b)` is equivalent to `any(a & b)` but more efficient.");
+Efficient implementation of `any(a & b)`.");
 
 
 static PyObject *
@@ -353,7 +352,7 @@ PyDoc_STRVAR(subset_doc,
 Return `True` if bitarray `a` is a subset of bitarray `b`.\n\
 `subset(a, b)` is equivalent to `a | b == b` (and equally `a & b == a`) but\n\
 more efficient as no intermediate bitarray object is created and the buffer\n\
-iteration is stopped as soon as one mismatch found.");
+iteration is stopped as soon as one mismatch is found.");
 
 
 static PyObject *
@@ -394,6 +393,11 @@ correspond_all(PyObject *module, PyObject *args)
     }
     return Py_BuildValue("nnnn", nff, nft, ntf, ntt);
 }
+
+PyDoc_STRVAR(correspond_all_doc,
+"_correspond_all(a, b, /) -> tuple\n\
+\n\
+Return tuple with counts of: ~a & ~b, ~a & b, a & ~b, a & b");
 
 /* ---------------------------- serialization -------------------------- */
 
@@ -1070,7 +1074,7 @@ static PyMethodDef module_functions[] = {
     {"subset",    (PyCFunction) subset,    METH_VARARGS, subset_doc},
     {"_correspond_all",
                   (PyCFunction) correspond_all,
-                                           METH_VARARGS, 0},
+                                           METH_VARARGS, correspond_all_doc},
     {"serialize", (PyCFunction) serialize, METH_O,       serialize_doc},
     {"ba2hex",    (PyCFunction) ba2hex,    METH_O,       ba2hex_doc},
     {"_hex2ba",   (PyCFunction) hex2ba,    METH_VARARGS, 0},
