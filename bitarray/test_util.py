@@ -653,7 +653,7 @@ class TestsBitwiseAny(unittest.TestCase, Util):
     def check(self, a, b):
         r = any_and(a, b)
         self.assertIsInstance(r, bool)
-        self.assertEqual(r, any_and(b, a))  # symmettry
+        self.assertEqual(r, any_and(b, a))  # symmetry
         self.assertEqual(r, any(a & b))
         self.assertEqual(r, (a & b).any())
         self.assertEqual(r, count_and(a, b) > 0)
@@ -668,7 +668,7 @@ class TestsBitwiseAny(unittest.TestCase, Util):
                 ('00001011 1', '01000100 1', True)]:
             a = bitarray(a)
             b = bitarray(b)
-            self.assertEqual(any_and(a, b), res)
+            self.assertTrue(any_and(a, b) is res)
             self.check(a, b)
 
     def test_random(self):

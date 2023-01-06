@@ -77,16 +77,14 @@ class TestsIntervals(unittest.TestCase, Util):
     def test_runs(self):
         for a in self.randombitarrays():
             first = a[0] if a else None
-            runs = []  # list runs of alternating bits
-            for value, start, stop in intervals(a):
-                runs.append(stop - start)
+            # list runs of alternating bits
+            runs = [stop - start for _, start, stop in intervals(a)]
 
             b = bitarray()
-            if first is not None:
-                v = first
-                for length in runs:
-                    b.extend(length * bitarray([v]))
-                    v = not v
+            v = first
+            for length in runs:
+                b.extend(length * bitarray([v]))
+                v = not v
 
             self.assertEqual(a, b)
 
