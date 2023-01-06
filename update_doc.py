@@ -29,6 +29,7 @@ NEW_IN = {
     'util.count_n':           '2.3.6: optional value argument',
     'util.deserialize':      ['1.8',
                               '2.5.0: allow bytes-like argument'],
+    'util.intervals':         '2.7',
     'util.make_endian':       '1.3',
     'util.parity':            '1.9',
     'util.pprint':            '1.8',

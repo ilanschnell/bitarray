@@ -164,7 +164,7 @@ Allowed values for mode are the strings: `left`, `right`, `both`
 def intervals(__a):
     """intervals(bitarray, /) -> iterator
 
-Compute all uninterrupted intervals of `0`s and `1`s, and return an
+Compute all uninterrupted intervals of 1s and 0s, and return an
 iterator over tuples (value, start, stop).
 """
     try:

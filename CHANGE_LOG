@@ -2,7 +2,9 @@
 -------------------
   * add `util.any_and()`
   * add `util.intervals()`
-  * add examples/distance.py
+  * add [distance metrics](../examples/distance.py) example:
+    dice, hamming, jaccard, kulczynski1, rogerstanimoto, russellrao,
+    sokalmichener, sokalsneath, yule
 
 
 2023-01-01   2.6.2:

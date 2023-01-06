@@ -62,7 +62,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 2.6.2
+    bitarray version: 2.7.0
     sys.version: 3.9.4 (default, May 10 2021, 22:13:15) [Clang 11.1.0]
     sys.prefix: /Users/ilan/Mini3/envs/py39
     pointer size: 64 bit
@@ -75,7 +75,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 438 tests in 0.531s
+    Ran 450 tests in 0.564s
 
     OK
 
@@ -400,7 +400,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 2.6.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.7.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -770,11 +770,25 @@ This sub-module was added in version 1.2.
    This is also known as the Hamming distance.
 
 
+``any_and(a, b, /)`` -> bool
+   Return ``True`` if bitarray ``a`` and ``b`` have any ``1`` element in common.
+   ``any_and(a, b)`` is equivalent to ``any(a & b)`` but more efficient.
+
+   New in version 2.7.
+
+
 ``subset(a, b, /)`` -> bool
    Return ``True`` if bitarray ``a`` is a subset of bitarray ``b``.
    ``subset(a, b)`` is equivalent to ``a | b == b`` (and equally ``a & b == a``) but
    more efficient as no intermediate bitarray object is created and the buffer
    iteration is stopped as soon as one mismatch found.
+
+
+``intervals(bitarray, /)`` -> iterator
+   Compute all uninterrupted intervals of 1s and 0s, and return an
+   iterator over tuples (value, start, stop).
+
+   New in version 2.7.
 
 
 ``ba2hex(bitarray, /)`` -> hexstr
