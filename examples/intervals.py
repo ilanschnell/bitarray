@@ -4,8 +4,8 @@ from bitarray import bitarray
 def intervals(__a):
     """intervals(bitarray, /) -> iterator
 
-Iterate over all tuples (value, start, stop) which contain uninterrupted
-intervals of `value` in the bitarray.
+Compute all uninterrupted intervals of `0`s and `1`s, and return an
+iterator over tuples (value, start, stop).
 """
     n = len(__a)
     if n == 0:
@@ -26,7 +26,7 @@ intervals of `value` in the bitarray.
 
 import unittest
 
-from bitarray.util import urandom
+from bitarray.util import zeros, urandom
 from bitarray.test_bitarray import Util
 
 
@@ -70,6 +70,23 @@ class TestsIntervals(unittest.TestCase, Util):
                 self.assertTrue(0 <= start < stop <= len(a))
                 cnt[value] += stop - start
                 b[start:stop] = value
+            self.assertEqual(a, b)
+
+    def test_random_zeros(self):
+        for a in self.randombitarrays():
+            b = zeros(len(a))
+            for value, start, stop in intervals(a):
+                if value:
+                    b[start:stop] = 1
+            self.assertEqual(a, b)
+
+    def test_random_ones(self):
+        for a in self.randombitarrays():
+            b = bitarray(len(a))
+            b.setall(1)
+            for value, start, stop in intervals(a):
+                if not value:
+                    b[start:stop] = 0
             self.assertEqual(a, b)
 
 # ---------------------------------------------------------------------------
