@@ -26,7 +26,7 @@ iterator over tuples (value, start, stop).
 
 import unittest
 
-from bitarray.util import zeros, urandom
+from bitarray.util import urandom
 from bitarray.test_bitarray import Util
 
 
@@ -61,7 +61,7 @@ class TestsIntervals(unittest.TestCase, Util):
     def test_random(self):
         for a in self.randombitarrays():
             b = urandom(len(a))
-            cnt = {0: 0, 1: 0}
+            cnt = [0, 0]
             v = a[0] if a else None
             for value, start, stop in intervals(a):
                 self.assertFalse(isinstance(value, bool))
@@ -71,22 +71,23 @@ class TestsIntervals(unittest.TestCase, Util):
                 cnt[value] += stop - start
                 b[start:stop] = value
             self.assertEqual(a, b)
+            for v in 0, 1:
+                self.assertEqual(cnt[v], a.count(v))
 
-    def test_random_zeros(self):
+    def test_runs(self):
         for a in self.randombitarrays():
-            b = zeros(len(a))
+            first = a[0] if a else None
+            runs = []  # list runs of alternating bits
             for value, start, stop in intervals(a):
-                if value:
-                    b[start:stop] = 1
-            self.assertEqual(a, b)
+                runs.append(stop - start)
 
-    def test_random_ones(self):
-        for a in self.randombitarrays():
-            b = bitarray(len(a))
-            b.setall(1)
-            for value, start, stop in intervals(a):
-                if not value:
-                    b[start:stop] = 0
+            b = bitarray()
+            if first is not None:
+                v = first
+                for length in runs:
+                    b.extend(length * bitarray([v]))
+                    v = not v
+
             self.assertEqual(a, b)
 
 # ---------------------------------------------------------------------------
