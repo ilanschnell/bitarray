@@ -168,20 +168,21 @@ Compute all uninterrupted intervals of 1s and 0s, and return an
 iterator over tuples (value, start, stop).
 """
     try:
-        value = __a[0]
+        value = __a[0]  # value of current interval
     except IndexError:
         return
     n = len(__a)
-    stop = 0
+    stop = 0  # "previous" stop - becomes next start
 
     while stop < n:
         start = stop
-        try:
-            stop = __a.index(not value, stop)
+        # assert __a[start] == value
+        try:  # find next occurrence of opposite value
+            stop = __a.index(not value, start)
         except ValueError:
             stop = n
         yield int(value), start, stop
-        value = not value
+        value = not value  # next interval has opposite value
 
 
 def hex2ba(__s, endian=None):
