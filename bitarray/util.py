@@ -22,6 +22,7 @@ from bitarray._util import (
 __all__ = [
     'zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip', 'count_n',
     'parity', 'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
+    'intervals',
     'ba2hex', 'hex2ba', 'ba2base', 'base2ba', 'ba2int', 'int2ba',
     'serialize', 'deserialize', 'vl_encode', 'vl_decode',
     'huffman_code', 'canonical_huffman', 'canonical_decode',
@@ -158,6 +159,29 @@ Allowed values for mode are the strings: `left`, `right`, `both`
             return __a[:0]
 
     return __a[start:stop]
+
+
+def intervals(__a):
+    """intervals(bitarray, /) -> iterator
+
+Compute all uninterrupted intervals of `0`s and `1`s, and return an
+iterator over tuples (value, start, stop).
+"""
+    try:
+        value = __a[0]
+    except IndexError:
+        return
+    n = len(__a)
+    stop = 0
+
+    while stop < n:
+        start = stop
+        try:
+            stop = __a.index(not value, stop)
+        except ValueError:
+            stop = n
+        yield int(value), start, stop
+        value = not value
 
 
 def hex2ba(__s, endian=None):

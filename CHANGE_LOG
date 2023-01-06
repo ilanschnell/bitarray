@@ -1,8 +1,8 @@
-2023-XX-XX   2.6.3:
+2023-XX-XX   2.7.0:
 -------------------
   * add `util.any_and()`
+  * add `util.intervals()`
   * add examples/distance.py
-  * add examples/intervals.py
 
 
 2023-01-01   2.6.2:

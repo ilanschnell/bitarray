@@ -22,6 +22,7 @@ from bitarray.test_bitarray import Util, skipIf
 from bitarray.util import (
     zeros, urandom, pprint, make_endian, rindex, strip, count_n,
     parity, count_and, count_or, count_xor, any_and, subset, _correspond_all,
+    intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
     ba2int, int2ba, vl_encode, vl_decode,
     huffman_code, canonical_huffman, canonical_decode,
@@ -815,6 +816,68 @@ class TestsParity(unittest.TestCase, Util):
             self.assertEqual(parity(a), a.count() % 2)
 
 tests.append(TestsParity)
+
+# ---------------------------------------------------------------------------
+
+class TestsIntervals(unittest.TestCase, Util):
+
+    def test_explicit(self):
+        for s, lst in [
+                ('', []),
+                ('0', [(0, 0, 1)]),
+                ('1', [(1, 0, 1)]),
+                ('00111100 00000111 00',
+                 [(0, 0, 2), (1, 2, 6), (0, 6, 13), (1, 13, 16), (0, 16, 18)]),
+            ]:
+            a = bitarray(s)
+            self.assertEqual(list(intervals(a)), lst)
+
+    def test_count(self):
+        for s, res in [
+                ('', 0),
+                ('0', 1),
+                ('1', 1),
+                ('00', 1),
+                ('01', 2),
+                ('10', 2),
+                ('11', 1),
+                ('0011110000000', 3),
+            ]:
+            a = bitarray(s)
+            self.assertEqual(res, len(list(intervals(a))))
+            self.assertEqual(res, sum(1 for _ in intervals(a)))
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            b = urandom(len(a))
+            cnt = [0, 0]
+            v = a[0] if a else None
+            for value, start, stop in intervals(a):
+                self.assertFalse(isinstance(value, bool))
+                self.assertEqual(value, v)
+                v = not v
+                self.assertTrue(0 <= start < stop <= len(a))
+                cnt[value] += stop - start
+                b[start:stop] = value
+            self.assertEqual(a, b)
+            for v in 0, 1:
+                self.assertEqual(cnt[v], a.count(v))
+
+    def test_runs(self):
+        for a in self.randombitarrays():
+            first = a[0] if a else None
+            # list runs of alternating bits
+            runs = [stop - start for _, start, stop in intervals(a)]
+
+            b = bitarray()
+            v = first
+            for length in runs:
+                b.extend(length * bitarray([v]))
+                v = not v
+
+            self.assertEqual(a, b)
+
+tests.append(TestsIntervals)
 
 # ---------------------------------------------------------------------------
 
