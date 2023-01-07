@@ -1,3 +1,5 @@
+from bisect import bisect
+
 from bitarray import bitarray
 from bitarray.util import intervals
 
@@ -6,30 +8,35 @@ class sparse:
 
     def __init__(self, a):
         self.first = a[0] if a else 0
-        self.runs = [stop - start for _, start, stop in intervals(a)]
+        self.stops = [t[2] for t in intervals(a)]
 
     def __len__(self):
-        return sum(self.runs)
+        return self.stops[-1] if self.stops else 0
 
     def __getitem__(self, i):
+        p = bisect(self.stops, i)
+        return (self.first + p) % 2
+
+    def intervals(self):
+        v = self.first
         start = 0
-        for p, cnt in enumerate(self.runs):
-            stop = start + cnt
-            if start <= i < stop:
-                return (self.first + p) % 2
+        for stop in self.stops:
+            yield v, start, stop
+            v = not v
             start = stop
-        raise IndexError
 
     def export(self):
-        res = bitarray()
-        v = self.first
-        for length in self.runs:
-            res.extend(length * bitarray([v]))
-            v = not v
+        res = bitarray(len(self))
+        for v, start, stop in self.intervals():
+            res[start:stop] = v
         return res
 
     def count(self, value=1):
-        return sum(self.runs[self.first ^ value::2])
+        cnt = 0
+        for v, start, stop in self.intervals():
+            if v == value:
+                cnt += stop - start
+        return cnt
 
 # ---------------------------------------------------------------------------
 
@@ -37,6 +44,7 @@ from random import randint
 import unittest
 
 from bitarray.test_bitarray import Util
+
 
 class TestsSparse(unittest.TestCase, Util):
 
