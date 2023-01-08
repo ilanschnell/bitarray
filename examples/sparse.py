@@ -11,6 +11,9 @@ For example:
 is represented as:
 
    changes:   [0, 2, 4, 9, 12]
+
+The last element in the list is always the length of the bitarray, such that
+an empty bitarray is represented as [0].
 """
 from bisect import bisect
 from collections import Counter
@@ -39,8 +42,7 @@ class SparseBitarray:
         if not 0 <= i < len(self):
             raise IndexError
         p = bisect(self.stops, i)
-        v = p % 2
-        if v == value:
+        if p % 2 == value:
             return
         self.stops[p:p] = [i, i + 1]
         self._reduce()
