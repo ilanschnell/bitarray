@@ -15,19 +15,20 @@ is represented as:
 The last element in the list is always the length of the bitarray, such that
 an empty bitarray is represented as [0].
 """
-from bisect import bisect
+from bisect import bisect, bisect_left
 
 from bitarray import bitarray
-from bitarray.util import intervals
 
 
 class SparseBitarray:
 
-    def __init__(self, a):
-        lst = [] if a and a[0] == 0 else [0]
-        lst.extend(t[2] for t in intervals(a))
-        assert len(lst) > 0
-        self.stops = lst
+    def __init__(self, x = 0):
+        if isinstance(x, int):
+            self.stops = [x]
+        else:
+            self.stops = [0]
+            for v in x:
+                self.append(int(v))
 
     def __len__(self):
         return self.stops[-1]
@@ -83,6 +84,27 @@ class SparseBitarray:
             res[start:stop] = v
         return res
 
+    def invert(self):
+        self.stops.insert(0, 0)
+        self._reduce()
+
+    def _adjust_index(self, i):
+        n = len(self)
+        if i < 0:
+            i += n
+            if i < 0:
+                i = 0
+        elif i > n:
+            i = n
+        return i
+
+    def insert(self, i, value):
+        i = self._adjust_index(i)
+        p = bisect_left(self.stops, i)
+        for j in range(p, len(self.stops)):
+            self.stops[j] += 1
+        self[i] = value
+
     def count(self, value=1):
         cnt = 0
         for v, start, stop in self._intervals():
@@ -98,21 +120,17 @@ class SparseBitarray:
         self.stops = lst
         self._reduce()
 
-"""
-a = bitarray('010')
+'''
+s = SparseBitarray('0001000')
+a = bitarray(s)
 print(a)
-s = SparseBitarray(a)
 print(s.stops)
-s.reverse()
-a.reverse()
-print(s.stops)
-s._reduce()
+s.insert(0, 1)
+a.insert(0, 1)
 print(s.stops)
 print(s.export())
 print(a)
-for x in s:
-    print(x)
-"""
+'''
 # ---------------------------------------------------------------------------
 
 from collections import Counter
@@ -158,19 +176,35 @@ class TestsSparse(unittest.TestCase, Util):
 
     def test_append(self):
         for a in self.randombitarrays():
-            s = SparseBitarray(a)
-            for _ in range(10):
-                v = randint(0, 1)
+            s = SparseBitarray()
+            for v in a:
                 s.append(v)
-                a.append(v)
-                self.assertEqual(s.export(), a)
-                self.check(s)
+            self.assertEqual(s.export(), a)
+            self.check(s)
 
     def test_count(self):
         for a in self.randombitarrays():
             s = SparseBitarray(a)
             for v in 0, 1:
                 self.assertEqual(s.count(v), a.count(v))
+
+    def test_invert(self):
+        for a in self.randombitarrays():
+            s = SparseBitarray(a)
+            s.invert()
+            a.invert()
+            self.assertEqual(s.export(), a)
+            self.check(s)
+
+    def test_insert(self):
+        for a in self.randombitarrays():
+            s = SparseBitarray(a)
+            i = randint(-2, len(s) + 2)
+            v = randint(0, 1)
+            s.insert(i, v)
+            a.insert(i, v)
+            self.assertEqual(s.export(), a)
+            self.check(s)
 
     def test_reverse(self):
         for a in self.randombitarrays():
