@@ -47,20 +47,19 @@ class SparseBitarray:
         self._reduce()
 
     def _reduce(self):
-        n = len(self.stops)     # length to internal representation
-        m = len(self)           # length of bitarray
-        lst = []
+        n = len(self)           # length of bitarray
+        lst = []                # new representation list
         i = 0
-        while i < n:
-            curr = self.stops[i]  # current element
-            if curr == m:       # element with bitarray length reached
-                lst.append(m)
+        while True:
+            c = self.stops[i]   # current element (at index i)
+            if c == n:          # element with bitarray length reached
+                lst.append(n)
                 break
-            j = i + 1           # find next value
-            while j < n and self.stops[j] == curr:
+            j = i + 1           # find next value (at index j)
+            while self.stops[j] == c:
                 j += 1
             if (j - i) % 2:     # only append index if repeated even times
-                lst.append(curr)
+                lst.append(c)
             i = j
         self.stops = lst
 
@@ -71,6 +70,12 @@ class SparseBitarray:
             yield v, start, stop
             v = 1 - v
             start = stop
+
+    def append(self, value):
+        if value == len(self.stops) % 2:  # opposite value as last element
+            self.stops.append(len(self) + 1)
+        else:                             # same value as last element
+            self.stops[-1] += 1
 
     def export(self):
         res = bitarray(len(self))
@@ -90,9 +95,7 @@ a = bitarray('110011111000')
 print(a)
 s = SparseBitarray(a)
 print(s.stops)
-i = 11
-for x in range(2):
-    s[i] = a[i] = x % 2
+s.append(1)
 print(s.stops)
 s._reduce()
 print(s.stops)
@@ -110,18 +113,20 @@ from bitarray.test_bitarray import Util
 
 class TestsSparse(unittest.TestCase, Util):
 
-    def check(self, stops):
-        assert stops == sorted(stops)
+    def check(self, s):
+        stops = s.stops
+        self.assertTrue(len(stops) > 0)
+        self.assertEqual(stops, sorted(stops))
         cnt = Counter(stops)
         cnt[stops[-1]] = 1
-        assert all(c == 1 for c in cnt.values())
+        self.assertTrue(all(c == 1 for c in cnt.values()))
 
     def test_init_export(self):
         for a in self.randombitarrays():
             s = SparseBitarray(a)
             self.assertEqual(len(s), len(a))
             self.assertEqual(s.export(), a)
-            self.check(s.stops)
+            self.check(s)
 
     def test_getitem(self):
         for a in self.randombitarrays(start=1):
@@ -138,7 +143,17 @@ class TestsSparse(unittest.TestCase, Util):
                 v = randint(0, 1)
                 s[i] = a[i] = v
                 self.assertEqual(s.export(), a)
-                self.check(s.stops)
+                self.check(s)
+
+    def test_append(self):
+        for a in self.randombitarrays(start=1):
+            s = SparseBitarray(a)
+            for _ in range(10):
+                v = randint(0, 1)
+                s.append(v)
+                a.append(v)
+                self.assertEqual(s.export(), a)
+                self.check(s)
 
     def test_count(self):
         for a in self.randombitarrays():
