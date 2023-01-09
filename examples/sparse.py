@@ -16,7 +16,6 @@ The last element in the list is always the length of the bitarray, such that
 an empty bitarray is represented as [0].
 """
 from bisect import bisect
-from collections import Counter
 
 from bitarray import bitarray
 from bitarray.util import intervals
@@ -48,9 +47,22 @@ class SparseBitarray:
         self._reduce()
 
     def _reduce(self):
-        cnt = Counter(self.stops)
-        cnt[self.stops[-1]] = 1
-        self.stops = sorted(i for i, c in cnt.items() if c % 2)
+        n = len(self.stops)     # length to internal representation
+        m = len(self)           # length of bitarray
+        lst = []
+        i = 0
+        while i < n:
+            curr = self.stops[i]  # current element
+            if curr == m:       # element with bitarray length reached
+                lst.append(m)
+                break
+            j = i + 1           # find next value
+            while j < n and self.stops[j] == curr:
+                j += 1
+            if (j - i) % 2:     # only append index if repeated even times
+                lst.append(curr)
+            i = j
+        self.stops = lst
 
     def _intervals(self):
         v = 0
@@ -89,6 +101,7 @@ print(a)
 """
 # ---------------------------------------------------------------------------
 
+from collections import Counter
 from random import randint
 import unittest
 
@@ -97,11 +110,18 @@ from bitarray.test_bitarray import Util
 
 class TestsSparse(unittest.TestCase, Util):
 
+    def check(self, stops):
+        assert stops == sorted(stops)
+        cnt = Counter(stops)
+        cnt[stops[-1]] = 1
+        assert all(c == 1 for c in cnt.values())
+
     def test_init_export(self):
         for a in self.randombitarrays():
             s = SparseBitarray(a)
             self.assertEqual(len(s), len(a))
             self.assertEqual(s.export(), a)
+            self.check(s.stops)
 
     def test_getitem(self):
         for a in self.randombitarrays(start=1):
@@ -118,7 +138,7 @@ class TestsSparse(unittest.TestCase, Util):
                 v = randint(0, 1)
                 s[i] = a[i] = v
                 self.assertEqual(s.export(), a)
-            #print(s.stops)
+                self.check(s.stops)
 
     def test_count(self):
         for a in self.randombitarrays():
