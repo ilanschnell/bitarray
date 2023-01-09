@@ -90,17 +90,28 @@ class SparseBitarray:
                 cnt += stop - start
         return cnt
 
+    def reverse(self):
+        n = len(self)
+        lst = [0] if len(self.stops) % 2 else []
+        lst.extend(n - p for p in reversed(self.stops))
+        lst.append(n)
+        self.stops = lst
+        self._reduce()
+
 """
-a = bitarray('110011111000')
+a = bitarray('010')
 print(a)
 s = SparseBitarray(a)
 print(s.stops)
-s.append(1)
+s.reverse()
+a.reverse()
 print(s.stops)
 s._reduce()
 print(s.stops)
 print(s.export())
 print(a)
+for x in s:
+    print(x)
 """
 # ---------------------------------------------------------------------------
 
@@ -146,7 +157,7 @@ class TestsSparse(unittest.TestCase, Util):
                 self.check(s)
 
     def test_append(self):
-        for a in self.randombitarrays(start=1):
+        for a in self.randombitarrays():
             s = SparseBitarray(a)
             for _ in range(10):
                 v = randint(0, 1)
@@ -160,6 +171,14 @@ class TestsSparse(unittest.TestCase, Util):
             s = SparseBitarray(a)
             for v in 0, 1:
                 self.assertEqual(s.count(v), a.count(v))
+
+    def test_reverse(self):
+        for a in self.randombitarrays():
+            s = SparseBitarray(a)
+            s.reverse()
+            a.reverse()
+            self.assertEqual(s.export(), a)
+            self.check(s)
 
 if __name__ == '__main__':
     unittest.main()
