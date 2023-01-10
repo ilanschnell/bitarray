@@ -785,7 +785,8 @@ This sub-module was added in version 1.2.
 
 ``intervals(bitarray, /)`` -> iterator
    Compute all uninterrupted intervals of 1s and 0s, and return an
-   iterator over tuples (value, start, stop).
+   iterator over tuples ``(value, start, stop)``.  The intervals are guaranteed
+   to be in order, and their size is always non-zero (``stop - start > 0``).
 
    New in version 2.7.
 

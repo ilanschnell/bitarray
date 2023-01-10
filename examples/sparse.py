@@ -10,7 +10,7 @@ For example:
 
 is represented as:
 
-   changes:   [0, 2, 4, 9, 12]
+   flips:   [0, 2, 4, 9, 12]
 
 The last element in the list is always the length of the bitarray, such that
 an empty bitarray is represented as [0].
@@ -24,27 +24,35 @@ class SparseBitarray:
 
     def __init__(self, x = 0):
         if isinstance(x, int):
-            self.stops = [x]
+            self.flips = [x]  # bitarray with x zeros
         else:
-            self.stops = [0]
+            self.flips = [0]
             for v in x:
                 self.append(int(v))
 
     def __len__(self):
-        return self.stops[-1]
+        return self.flips[-1]
+
+    def __delitem__(self, i):
+        if not 0 <= i < len(self):
+            raise IndexError
+        p = bisect(self.flips, i)
+        for j in range(p, len(self.flips)):
+            self.flips[j] -= 1
+        self._reduce()
 
     def __getitem__(self, i):
         if not 0 <= i < len(self):
             raise IndexError
-        return bisect(self.stops, i) % 2
+        return bisect(self.flips, i) % 2
 
     def __setitem__(self, i, value):
         if not 0 <= i < len(self):
             raise IndexError
-        p = bisect(self.stops, i)
+        p = bisect(self.flips, i)
         if p % 2 == value:
             return
-        self.stops[p:p] = [i, i + 1]
+        self.flips[p:p] = [i, i + 1]
         self._reduce()
 
     def _reduce(self):
@@ -52,31 +60,31 @@ class SparseBitarray:
         lst = []                # new representation list
         i = 0
         while True:
-            c = self.stops[i]   # current element (at index i)
+            c = self.flips[i]   # current element (at index i)
             if c == n:          # element with bitarray length reached
                 lst.append(n)
                 break
             j = i + 1           # find next value (at index j)
-            while self.stops[j] == c:
+            while self.flips[j] == c:
                 j += 1
             if (j - i) % 2:     # only append index if repeated even times
                 lst.append(c)
             i = j
-        self.stops = lst
+        self.flips = lst
 
     def _intervals(self):
         v = 0
         start = 0
-        for stop in self.stops:
+        for stop in self.flips:
             yield v, start, stop
             v = 1 - v
             start = stop
 
     def append(self, value):
-        if value == len(self.stops) % 2:  # opposite value as last element
-            self.stops.append(len(self) + 1)
+        if value == len(self.flips) % 2:  # opposite value as last element
+            self.flips.append(len(self) + 1)
         else:                             # same value as last element
-            self.stops[-1] += 1
+            self.flips[-1] += 1
 
     def export(self):
         res = bitarray(len(self))
@@ -85,7 +93,7 @@ class SparseBitarray:
         return res
 
     def invert(self):
-        self.stops.insert(0, 0)
+        self.flips.insert(0, 0)
         self._reduce()
 
     def _adjust_index(self, i):
@@ -100,9 +108,9 @@ class SparseBitarray:
 
     def insert(self, i, value):
         i = self._adjust_index(i)
-        p = bisect_left(self.stops, i)
-        for j in range(p, len(self.stops)):
-            self.stops[j] += 1
+        p = bisect_left(self.flips, i)
+        for j in range(p, len(self.flips)):
+            self.flips[j] += 1
         self[i] = value
 
     def count(self, value=1):
@@ -114,23 +122,23 @@ class SparseBitarray:
 
     def reverse(self):
         n = len(self)
-        lst = [0] if len(self.stops) % 2 else []
-        lst.extend(n - p for p in reversed(self.stops))
+        lst = [0] if len(self.flips) % 2 else []
+        lst.extend(n - p for p in reversed(self.flips))
         lst.append(n)
-        self.stops = lst
+        self.flips = lst
         self._reduce()
 
-'''
-s = SparseBitarray('0001000')
+"""
+s = SparseBitarray('10')
 a = bitarray(s)
 print(a)
-print(s.stops)
-s.insert(0, 1)
-a.insert(0, 1)
-print(s.stops)
+print(s.flips)
+del s[1]
+del a[1]
+print(s.flips)
 print(s.export())
 print(a)
-'''
+"""
 # ---------------------------------------------------------------------------
 
 from collections import Counter
@@ -143,11 +151,12 @@ from bitarray.test_bitarray import Util
 class TestsSparse(unittest.TestCase, Util):
 
     def check(self, s):
-        stops = s.stops
-        self.assertTrue(len(stops) > 0)
-        self.assertEqual(stops, sorted(stops))
-        cnt = Counter(stops)
-        cnt[stops[-1]] = 1
+        flips = s.flips
+        self.assertTrue(len(flips) > 0)
+        self.assertEqual(flips, sorted(flips))
+        self.assertTrue(all(i >= 0 for i in flips))
+        cnt = Counter(flips)
+        cnt[flips[-1]] = 1
         self.assertTrue(all(c == 1 for c in cnt.values()))
 
     def test_init_export(self):
@@ -157,12 +166,21 @@ class TestsSparse(unittest.TestCase, Util):
             self.assertEqual(s.export(), a)
             self.check(s)
 
-    def test_getitem(self):
+    def test_delitem(self):
         for a in self.randombitarrays(start=1):
             s = SparseBitarray(a)
             for _ in range(10):
                 i = randint(0, len(s) - 1)
                 self.assertEqual(s[i], a[i])
+
+    def test_getitem(self):
+        for a in self.randombitarrays(start=1):
+            s = SparseBitarray(a)
+            i = randint(0, len(s) - 1)
+            del s[i]
+            del a[i]
+            self.assertEqual(s.export(), a)
+            self.check(s)
 
     def test_setitem(self):
         for a in self.randombitarrays(start=1):
