@@ -56,7 +56,7 @@ class SparseBitarray:
         self._reduce()
 
     def _reduce(self):
-        n = len(self)           # length of bitarray
+        n = self.flips[-1]      # length of bitarray
         lst = []                # new representation list
         i = 0
         while True:
@@ -67,7 +67,7 @@ class SparseBitarray:
             j = i + 1           # find next value (at index j)
             while self.flips[j] == c:
                 j += 1
-            if (j - i) % 2:     # only append index if repeated even times
+            if (j - i) % 2:     # only append index if repeated odd times
                 lst.append(c)
             i = j
         self.flips = lst
@@ -239,6 +239,21 @@ class TestsSparse(unittest.TestCase, Util):
             s.reverse()
             a.reverse()
             self.check(s, a)
+
+    def test_reduce(self):
+        for a, b in [
+                ([0],                 [0]),
+                ([0, 0],              [0]),
+                ([3, 7],              [3, 7]),
+                ([3, 7, 7],           [3, 7]),
+                ([3, 3, 7, 7, 7],     [7]),
+                ([0, 0, 2, 2],        [2]),
+                ([0, 2, 2, 2, 2, 3],  [0, 3]),
+            ]:
+            s = SparseBitarray()
+            s.flips = a
+            s._reduce()
+            self.assertEqual(s.flips, b)
 
 if __name__ == '__main__':
     unittest.main()
