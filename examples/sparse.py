@@ -86,7 +86,7 @@ class SparseBitarray:
         else:                             # same value as last element
             self.flips[-1] += 1
 
-    def export(self):
+    def to_bitarray(self):
         res = bitarray(len(self))
         for v, start, stop in self._intervals():
             res[start:stop] = v
@@ -136,51 +136,64 @@ print(s.flips)
 del s[1]
 del a[1]
 print(s.flips)
-print(s.export())
+print(s.to_bitarray())
 print(a)
 """
 # ---------------------------------------------------------------------------
 
-from collections import Counter
+import sys
 from random import randint
 import unittest
 
+if sys.version_info >= (3, 10):
+    from itertools import pairwise
+else:
+    from itertools import tee
+    def pairwise(iterable):
+        a, b = tee(iterable)
+        next(b, None)
+        return zip(a, b)
+
+from bitarray.util import intervals
 from bitarray.test_bitarray import Util
 
 
 class TestsSparse(unittest.TestCase, Util):
 
-    def check(self, s):
+    def check(self, s, a):
         flips = s.flips
-        self.assertTrue(len(flips) > 0)
-        self.assertEqual(flips, sorted(flips))
-        self.assertTrue(all(i >= 0 for i in flips))
-        cnt = Counter(flips)
-        cnt[flips[-1]] = 1
-        self.assertTrue(all(c == 1 for c in cnt.values()))
+        self.assertTrue(len(flips) > 0 and flips[0] >= 0)
+        for x, y in pairwise(flips):
+            self.assertTrue(y > x)
 
-    def test_init_export(self):
+        self.assertEqual(s.to_bitarray(), a)
+
+    def test_flips(self):
+        for a in self.randombitarrays():
+            lst = [] if a and a[0] == 0 else [0]
+            lst.extend(t[2] for t in intervals(a))
+            s = SparseBitarray(a)
+            self.assertEqual(s.flips, lst)
+
+    def test_len(self):
         for a in self.randombitarrays():
             s = SparseBitarray(a)
             self.assertEqual(len(s), len(a))
-            self.assertEqual(s.export(), a)
-            self.check(s)
-
-    def test_delitem(self):
-        for a in self.randombitarrays(start=1):
-            s = SparseBitarray(a)
-            for _ in range(10):
-                i = randint(0, len(s) - 1)
-                self.assertEqual(s[i], a[i])
+            self.check(s, a)
 
     def test_getitem(self):
+        for a in self.randombitarrays(start=1):
+            s = SparseBitarray(a)
+            for i in range(len(a)):
+                self.assertEqual(s[i], a[i])
+
+    def test_delitem(self):
         for a in self.randombitarrays(start=1):
             s = SparseBitarray(a)
             i = randint(0, len(s) - 1)
             del s[i]
             del a[i]
-            self.assertEqual(s.export(), a)
-            self.check(s)
+            self.check(s, a)
 
     def test_setitem(self):
         for a in self.randombitarrays(start=1):
@@ -189,16 +202,14 @@ class TestsSparse(unittest.TestCase, Util):
                 i = randint(0, len(s) - 1)
                 v = randint(0, 1)
                 s[i] = a[i] = v
-                self.assertEqual(s.export(), a)
-                self.check(s)
+                self.check(s, a)
 
     def test_append(self):
         for a in self.randombitarrays():
             s = SparseBitarray()
             for v in a:
                 s.append(v)
-            self.assertEqual(s.export(), a)
-            self.check(s)
+            self.check(s, a)
 
     def test_count(self):
         for a in self.randombitarrays():
@@ -211,8 +222,7 @@ class TestsSparse(unittest.TestCase, Util):
             s = SparseBitarray(a)
             s.invert()
             a.invert()
-            self.assertEqual(s.export(), a)
-            self.check(s)
+            self.check(s, a)
 
     def test_insert(self):
         for a in self.randombitarrays():
@@ -221,16 +231,14 @@ class TestsSparse(unittest.TestCase, Util):
             v = randint(0, 1)
             s.insert(i, v)
             a.insert(i, v)
-            self.assertEqual(s.export(), a)
-            self.check(s)
+            self.check(s, a)
 
     def test_reverse(self):
         for a in self.randombitarrays():
             s = SparseBitarray(a)
             s.reverse()
             a.reverse()
-            self.assertEqual(s.export(), a)
-            self.check(s)
+            self.check(s, a)
 
 if __name__ == '__main__':
     unittest.main()
