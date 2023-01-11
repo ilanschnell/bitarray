@@ -35,7 +35,7 @@ class SparseBitarray:
 
     def _get_start_stop(self, key):
         if key.step not in (1, None):
-            raise ValueError("Steps %r not allowed" % key)
+            raise ValueError("only step = 1 allowed, got %r" % key)
         start = key.start
         if start is None:
             start = 0
@@ -83,12 +83,10 @@ class SparseBitarray:
             i = bisect(self.flips, start)
             j = bisect_left(self.flips, stop)
 
-            lst = []
-            if i % 2 != value:
-                lst.append(start)
-            if j % 2 != value:
-                lst.append(stop)
-            self.flips[i:j] = lst
+            self.flips[i:j] = (
+                ([] if i % 2 == value else [start]) +
+                ([] if j % 2 == value else [stop])
+            )
 
         elif isinstance(key, int):
             if not 0 <= key < len(self):
@@ -217,7 +215,7 @@ class TestsSparse(unittest.TestCase, Util):
             self.assertEqual(len(s), len(a))
             self.check(s, a)
 
-    def test_getitem(self):
+    def test_getitem_index(self):
         for a in self.randombitarrays(start=1):
             s = SparseBitarray(a)
             for i in range(len(a)):
@@ -232,7 +230,7 @@ class TestsSparse(unittest.TestCase, Util):
             self.check(s, a)
 
     def test_delitem_slice(self):
-        for a in self.randombitarrays(start=1):
+        for a in self.randombitarrays():
             s = SparseBitarray(a)
             i = randint(0, len(s))
             j = randint(0, len(s))
