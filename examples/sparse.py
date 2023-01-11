@@ -33,6 +33,17 @@ class SparseBitarray:
     def __len__(self):
         return self.flips[-1]
 
+    def _get_start_stop(self, key):
+        if key.step not in (1, None):
+            raise ValueError("Steps %r not allowed" % key)
+        start = key.start
+        if start is None:
+            start = 0
+        stop = key.stop
+        if stop is None:
+            stop = len(self)
+        return start, stop
+
     def __delitem__(self, i):
         if not 0 <= i < len(self):
             raise IndexError
@@ -46,13 +57,33 @@ class SparseBitarray:
             raise IndexError
         return bisect(self.flips, i) % 2
 
-    def __setitem__(self, i, value):
-        if not 0 <= i < len(self):
-            raise IndexError
-        p = bisect(self.flips, i)
-        if p % 2 == value:
-            return
-        self.flips[p:p] = [i, i + 1]
+    def __setitem__(self, key, value):
+        if isinstance(key, slice):
+            start, stop = self._get_start_stop(key)
+            if stop <= start:
+                return
+
+            i = bisect(self.flips, start)
+            j = bisect_left(self.flips, stop)
+
+            lst = []
+            if i % 2 != value:
+                lst.append(start)
+            if j % 2 != value:
+                lst.append(stop)
+            self.flips[i:j] = lst
+
+        elif isinstance(key, int):
+            if not 0 <= key < len(self):
+                raise IndexError
+            p = bisect(self.flips, key)
+            if p % 2 == value:
+                return
+            self.flips[p:p] = [key, key + 1]
+
+        else:
+            raise TypeError
+
         self._reduce()
 
     def _reduce(self):
@@ -62,7 +93,6 @@ class SparseBitarray:
         while True:
             c = self.flips[i]   # current element (at index i)
             if c == n:          # element with bitarray length reached
-                lst.append(n)
                 break
             j = i + 1           # find next value (at index j)
             while self.flips[j] == c:
@@ -70,6 +100,7 @@ class SparseBitarray:
             if (j - i) % 2:     # only append index if repeated odd times
                 lst.append(c)
             i = j
+        lst.append(n)
         self.flips = lst
 
     def _intervals(self):
@@ -128,26 +159,14 @@ class SparseBitarray:
         self.flips = lst
         self._reduce()
 
-"""
-s = SparseBitarray('10')
-a = bitarray(s)
-print(a)
-print(s.flips)
-del s[1]
-del a[1]
-print(s.flips)
-print(s.to_bitarray())
-print(a)
-"""
 # ---------------------------------------------------------------------------
 
-import sys
 from random import randint
 import unittest
 
-if sys.version_info >= (3, 10):
+try:
     from itertools import pairwise
-else:
+except ImportError:
     from itertools import tee
     def pairwise(iterable):
         a, b = tee(iterable)
@@ -195,13 +214,23 @@ class TestsSparse(unittest.TestCase, Util):
             del a[i]
             self.check(s, a)
 
-    def test_setitem(self):
+    def test_setitem_index(self):
         for a in self.randombitarrays(start=1):
             s = SparseBitarray(a)
             for _ in range(10):
                 i = randint(0, len(s) - 1)
                 v = randint(0, 1)
                 s[i] = a[i] = v
+                self.check(s, a)
+
+    def test_setitem_slice(self):
+        for a in self.randombitarrays():
+            s = SparseBitarray(a)
+            for _ in range(10):
+                i = randint(0, len(s))
+                j = randint(0, len(s))
+                v = randint(0, 1)
+                s[i:j] = a[i:j] = v
                 self.check(s, a)
 
     def test_append(self):
@@ -247,8 +276,10 @@ class TestsSparse(unittest.TestCase, Util):
                 ([3, 7],              [3, 7]),
                 ([3, 7, 7],           [3, 7]),
                 ([3, 3, 7, 7, 7],     [7]),
+                ([3, 3, 3, 7, 7],     [3, 7]),
                 ([0, 0, 2, 2],        [2]),
                 ([0, 2, 2, 2, 2, 3],  [0, 3]),
+                ([0, 0, 0, 1, 1, 2, 2, 2, 3, 4, 4, 4, 4, 5],  [0, 2, 3, 5]),
             ]:
             s = SparseBitarray()
             s.flips = a
