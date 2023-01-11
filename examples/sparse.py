@@ -44,35 +44,29 @@ class SparseBitarray:
             stop = len(self)
         return start, stop
 
-    def __delitem__(self, key):
+    def __getitem__(self, key):
         if isinstance(key, slice):
             start, stop = self._get_start_stop(key)
             if stop <= start:
-                return
+                return SparseBitarray()
 
             i = bisect(self.flips, start)
             j = bisect_left(self.flips, stop)
 
-            for x in range(j, len(self.flips)):
-                self.flips[x] -= stop - start
-            self.flips[i:j] = [start] if (j - i) % 2 else []
+            res = SparseBitarray()
+            res.flips = [0] if i % 2 else []
+            for k in range(i, j):
+                res.flips.append(self.flips[k] - start)
+            res.flips.append(stop - start)
+            return res
 
         elif isinstance(key, int):
             if not 0 <= key < len(self):
                 raise IndexError
-            p = bisect(self.flips, key)
-            for j in range(p, len(self.flips)):
-                self.flips[j] -= 1
+            return bisect(self.flips, key) % 2
 
         else:
             raise TypeError
-
-        self._reduce()
-
-    def __getitem__(self, i):
-        if not 0 <= i < len(self):
-            raise IndexError
-        return bisect(self.flips, i) % 2
 
     def __setitem__(self, key, value):
         if isinstance(key, slice):
@@ -95,6 +89,31 @@ class SparseBitarray:
             if p % 2 == value:
                 return
             self.flips[p:p] = [key, key + 1]
+
+        else:
+            raise TypeError
+
+        self._reduce()
+
+    def __delitem__(self, key):
+        if isinstance(key, slice):
+            start, stop = self._get_start_stop(key)
+            if stop <= start:
+                return
+
+            i = bisect(self.flips, start)
+            j = bisect_left(self.flips, stop)
+
+            for k in range(j, len(self.flips)):
+                self.flips[k] -= stop - start
+            self.flips[i:j] = [start] if (j - i) % 2 else []
+
+        elif isinstance(key, int):
+            if not 0 <= key < len(self):
+                raise IndexError
+            p = bisect(self.flips, key)
+            for j in range(p, len(self.flips)):
+                self.flips[j] -= 1
 
         else:
             raise TypeError
@@ -221,21 +240,14 @@ class TestsSparse(unittest.TestCase, Util):
             for i in range(len(a)):
                 self.assertEqual(s[i], a[i])
 
-    def test_delitem_index(self):
-        for a in self.randombitarrays(start=1):
-            s = SparseBitarray(a)
-            i = randint(0, len(s) - 1)
-            del s[i]
-            del a[i]
-            self.check(s, a)
-
-    def test_delitem_slice(self):
+    def test_getitem_slice(self):
         for a in self.randombitarrays():
             s = SparseBitarray(a)
             i = randint(0, len(s))
             j = randint(0, len(s))
-            del s[i:j]
-            del a[i:j]
+            t = s[i:j]
+            b = a[i:j]
+            self.check(t, b)
             self.check(s, a)
 
     def test_setitem_index(self):
@@ -256,6 +268,23 @@ class TestsSparse(unittest.TestCase, Util):
                 v = randint(0, 1)
                 s[i:j] = a[i:j] = v
                 self.check(s, a)
+
+    def test_delitem_index(self):
+        for a in self.randombitarrays(start=1):
+            s = SparseBitarray(a)
+            i = randint(0, len(s) - 1)
+            del s[i]
+            del a[i]
+            self.check(s, a)
+
+    def test_delitem_slice(self):
+        for a in self.randombitarrays():
+            s = SparseBitarray(a)
+            i = randint(0, len(s))
+            j = randint(0, len(s))
+            del s[i:j]
+            del a[i:j]
+            self.check(s, a)
 
     def test_append(self):
         for a in self.randombitarrays():
