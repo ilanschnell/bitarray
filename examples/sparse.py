@@ -30,6 +30,9 @@ class SparseBitarray:
             for v in x:
                 self.append(int(v))
 
+    def __repr__(self):
+        return "SparseBitarray('%s')" % (''.join(str(v) for v in self))
+
     def __len__(self):
         return self.flips[-1]
 
@@ -150,6 +153,15 @@ class SparseBitarray:
             self.flips.append(len(self) + 1)
         else:                             # same value as last element
             self.flips[-1] += 1
+
+    def extend(self, other):
+        n = len(self)
+        m = len(other.flips)
+        if len(self.flips) % 2:
+            self.flips.append(n)
+        for i in range(m):
+            self.flips.append(other.flips[i] + n)
+        self._reduce()
 
     def to_bitarray(self):
         res = bitarray(len(self))
@@ -292,6 +304,21 @@ class TestsSparse(unittest.TestCase, Util):
             for v in a:
                 s.append(v)
             self.check(s, a)
+
+    def test_extent(self):
+        for aa in self.randombitarrays():
+            for b in self.randombitarrays():
+                a = aa.copy()
+                s = SparseBitarray(a)
+                t = SparseBitarray(b)
+                s.extend(t)
+                a.extend(b)
+                self.check(s, a)
+                self.check(t, b)
+
+            s = SparseBitarray(aa)
+            s.extend(s)
+            self.check(s, 2 * aa)
 
     def test_count(self):
         for a in self.randombitarrays():
