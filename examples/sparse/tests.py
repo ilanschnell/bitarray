@@ -162,6 +162,13 @@ class TestsSparse(unittest.TestCase, Util):
             a.invert()
             self.check(s, a)
 
+    def test_pop(self):
+        for a in self.randombitarrays(start=1):
+            s = BitArray(a)
+            i = randint(-len(a), len(a) - 1)
+            self.assertEqual(s.pop(i), a.pop(i))
+            self.check(s, a)
+
     def test_remove(self):
         for a in self.randombitarrays():
             s = BitArray(a)
@@ -184,6 +191,14 @@ class TestsSparse(unittest.TestCase, Util):
             s.reverse()
             a.reverse()
             self.check(s, a)
+
+    def test_sort(self):
+        for a in self.randombitarrays():
+            s = BitArray(a)
+            for rev in 0, 1:
+                s.sort(rev)
+                a.sort(rev)
+                self.check(s, a)
 
     if MODE == 'flips':
         def test_flips(self):
