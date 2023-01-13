@@ -162,6 +162,22 @@ class TestsSparse(unittest.TestCase, Util):
             a.invert()
             self.check(s, a)
 
+    def test_remove(self):
+        for a in self.randombitarrays():
+            s = BitArray(a)
+            v = randint(0, 1)
+            error = 0
+            try:
+                s.remove(v)
+            except ValueError:
+                error += 1
+            try:
+                a.remove(v)
+            except ValueError:
+                error += 1
+            self.assertTrue(error % 2 == 0)
+            self.check(s, a)
+
     def test_reverse(self):
         for a in self.randombitarrays():
             s = BitArray(a)

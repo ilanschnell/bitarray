@@ -3,6 +3,12 @@ class Common:
     def __repr__(self):
         return "SparseBitarray('%s')" % (''.join(str(v) for v in self))
 
+    def remove(self, value):
+        i = self.find(value)
+        if i < 0:
+            raise ValueError
+        del self[i]
+
     def _get_start_stop(self, key):
         if key.step not in (1, None):
             raise ValueError("only step = 1 allowed, got %r" % key)
