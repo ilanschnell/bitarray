@@ -32,9 +32,6 @@ class SparseBitarray(Common):
             for v in x:
                 self.append(int(v))
 
-    def __repr__(self):
-        return "SparseBitarray('%s')" % (''.join(str(v) for v in self))
-
     def __len__(self):
         return self.flips[-1]
 

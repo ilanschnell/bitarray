@@ -11,6 +11,7 @@ except ImportError:
         next(b, None)
         return zip(a, b)
 
+from bitarray import bitarray
 from bitarray.util import intervals
 from bitarray.test_bitarray import Util
 
@@ -24,26 +25,44 @@ class TestsSparse(unittest.TestCase, Util):
 
     def check(self, s, a):
         if MODE == 'flips':
-            self.assertTrue(len(s.flips) > 0 and s.flips[0] >= 0)
+            self.assertTrue(len(s.flips) > 0)
+            self.assertTrue(s.flips[0] >= 0)
             for x, y in pairwise(s.flips):
                 self.assertTrue(y > x)
             self.assertEqual(s.to_bitarray(), a)
 
         elif MODE == 'ones':
-            for x, y in pairwise(s.ones):
-                self.assertTrue(y > x)
             if s.ones:
                 self.assertTrue(s.ones[-1] < s.n)
+            for x, y in pairwise(s.ones):
+                self.assertTrue(y > x)
             self.assertEqual(s.to_bitarray(), a)
 
         else:
             self.assertEqual(s, a)
 
+        def test_init(self):
+            if MODE != '-':
+                for n in 0, 1, 2, 3, 99:
+                    a = bitarray(n)
+                    a.setall(0)
+                    t = BitArray(n)
+                    self.check(t, a)
+
+            for s in '', '0', '1', '01110001':
+                a = bitarray(s)
+                t = BitArray(s)
+                self.check(t, a)
+
+    def test_repr(self):
+        s = BitArray('01001')
+        if MODE != '-':
+            self.assertEqual(repr(s), "SparseBitarray('01001')")
+
     def test_len(self):
         for a in self.randombitarrays():
             s = BitArray(a)
             self.assertEqual(len(s), len(a))
-            self.check(s, a)
 
     def test_getitem_index(self):
         for a in self.randombitarrays(start=1):
@@ -56,10 +75,7 @@ class TestsSparse(unittest.TestCase, Util):
             s = BitArray(a)
             i = randint(0, len(s))
             j = randint(0, len(s))
-            t = s[i:j]
-            b = a[i:j]
-            self.check(t, b)
-            self.check(s, a)
+            self.check(s[i:j], a[i:j])
 
     def test_setitem_index(self):
         for a in self.randombitarrays(start=1):
@@ -113,7 +129,6 @@ class TestsSparse(unittest.TestCase, Util):
                 s.extend(t)
                 a.extend(b)
                 self.check(s, a)
-                self.check(t, b)
 
             s = BitArray(aa)
             s.extend(s)
@@ -177,7 +192,6 @@ class TestsSparse(unittest.TestCase, Util):
 
 if __name__ == '__main__':
     if MODE == '-':
-        from bitarray import bitarray
         BitArray = bitarray
     else:
         BitArray = __import__(MODE).SparseBitarray  # type: ignore
