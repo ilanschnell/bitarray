@@ -41,18 +41,18 @@ class TestsSparse(unittest.TestCase, Util):
         else:
             self.assertEqual(s, a)
 
-        def test_init(self):
-            if MODE != '-':
-                for n in 0, 1, 2, 3, 99:
-                    a = bitarray(n)
-                    a.setall(0)
-                    t = BitArray(n)
-                    self.check(t, a)
-
-            for s in '', '0', '1', '01110001':
-                a = bitarray(s)
-                t = BitArray(s)
+    def test_init(self):
+        if MODE != '-':
+            for n in 0, 1, 2, 3, 99:
+                a = bitarray(n)
+                a.setall(0)
+                t = BitArray(n)
                 self.check(t, a)
+
+        for s in '', '0', '1', '01110001':
+            a = bitarray(s)
+            t = BitArray(s)
+            self.check(t, a)
 
     def test_repr(self):
         s = BitArray('01001')
