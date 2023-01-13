@@ -155,10 +155,10 @@ class SparseBitarray(Common):
         self._reduce()
 
     def to_bitarray(self):
-        res = bitarray(len(self))
+        a = bitarray(len(self))
         for v, start, stop in self._intervals():
-            res[start:stop] = v
-        return res
+            a[start:stop] = v
+        return a
 
     def invert(self):
         self.flips.insert(0, 0)

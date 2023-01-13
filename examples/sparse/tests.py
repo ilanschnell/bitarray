@@ -32,6 +32,8 @@ class TestsSparse(unittest.TestCase, Util):
         elif MODE == 'ones':
             for x, y in pairwise(s.ones):
                 self.assertTrue(y > x)
+            if s.ones:
+                self.assertTrue(s.ones[-1] < s.n)
             self.assertEqual(s.to_bitarray(), a)
 
         else:

@@ -13,7 +13,7 @@ is represented as:
 The last element in the list is always the length of the bitarray, such that
 an empty bitarray is represented as [0].
 """
-from bisect import bisect, bisect_left
+from bisect import bisect_left
 
 from bitarray import bitarray
 
@@ -54,7 +54,7 @@ class SparseBitarray:
                 return SparseBitarray()
 
             i = bisect_left(self.ones, start)
-            j = bisect(self.ones, stop)
+            j = bisect_left(self.ones, stop)
             res = SparseBitarray(stop - start)
             for k in range(i, j):
                 res.ones.append(self.ones[k] - start)
@@ -134,11 +134,11 @@ class SparseBitarray:
         self.n += other.n
 
     def to_bitarray(self):
-        res = bitarray()
-        for v in self:
-            res.append(v)
-        assert len(res) == self.n
-        return res
+        a = bitarray(self.n)
+        a.setall(0)
+        for k in self.ones:
+            a[k] = 1
+        return a
 
     def _adjust_index(self, i):
         n = len(self)
