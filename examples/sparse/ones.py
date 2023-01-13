@@ -17,8 +17,10 @@ from bisect import bisect_left
 
 from bitarray import bitarray
 
+from common import Common
 
-class SparseBitarray:
+
+class SparseBitarray(Common):
 
     def __init__(self, x = 0):
         if isinstance(x, int):
@@ -35,17 +37,6 @@ class SparseBitarray:
 
     def __len__(self):
         return self.n
-
-    def _get_start_stop(self, key):
-        if key.step not in (1, None):
-            raise ValueError("only step = 1 allowed, got %r" % key)
-        start = key.start
-        if start is None:
-            start = 0
-        stop = key.stop
-        if stop is None:
-            stop = len(self)
-        return start, stop
 
     def __getitem__(self, key):
         if isinstance(key, slice):
@@ -139,16 +130,6 @@ class SparseBitarray:
         for k in self.ones:
             a[k] = 1
         return a
-
-    def _adjust_index(self, i):
-        n = len(self)
-        if i < 0:
-            i += n
-            if i < 0:
-                i = 0
-        elif i > n:
-            i = n
-        return i
 
     def insert(self, k, value):
         k = self._adjust_index(k)
