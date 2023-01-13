@@ -91,9 +91,10 @@ class SparseBitarray(Common):
             i = bisect_left(self.ones, start)
             j = bisect_left(self.ones, stop)
             del self.ones[i:j]
+            size = stop - start
             for k in range(i, len(self.ones)):
-                self.ones[k] -= stop - start
-            self.n -= stop - start
+                self.ones[k] -= size
+            self.n -= size
 
         elif isinstance(key, int):
             if not 0 <= key < len(self):

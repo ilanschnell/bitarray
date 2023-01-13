@@ -95,8 +95,9 @@ class SparseBitarray(Common):
             i = bisect(self.flips, start)
             j = bisect_left(self.flips, stop)
 
+            size = stop - start
             for k in range(j, len(self.flips)):
-                self.flips[k] -= stop - start
+                self.flips[k] -= size
             self.flips[i:j] = [start] if (j - i) % 2 else []
 
         elif isinstance(key, int):
