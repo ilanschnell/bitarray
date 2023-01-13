@@ -157,9 +157,7 @@ class SparseBitarray(Common):
             return -1
         flips = self.flips
         if value:
-            if len(flips) == 1:
-                return -1
-            return flips[0]
+            return -1 if len(flips) == 1 else flips[0]
         else:
             if flips[0] > 0:
                 return 0

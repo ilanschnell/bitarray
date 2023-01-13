@@ -119,10 +119,13 @@ class SparseBitarray(Common):
         if value:
             return ones[0] if ones else -1
         else:
-            for i in range(len(ones)):
+            m = len(ones)
+            if m == self.n:
+                return -1
+            for i in range(m):
                 if ones[i] != i:
                     return i
-            return -1 if len(ones) == self.n else len(ones)
+            return m
 
     def extend(self, other):
         self.ones.extend(other.ones[i] + self.n for i in
