@@ -1,7 +1,7 @@
 """
 Implementation of a sparse bitarray
 
-Internally we store a list of positions at a which a bit changes from
+Internally we store a list of positions at which a bit changes from
 1 to 0 or vice versa.  Moreover, we start with bit 0, meaning that if the
 first bit in the bitarray is 1 our list starts with posistion 0.
 For example:
