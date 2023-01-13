@@ -19,12 +19,12 @@ class Common:
     def sort(self, reverse=False):
         if reverse:
             c1 = self.count(1)
-            self[:c1] = 1
-            self[c1:] = 0
+            self[:c1:] = 1
+            self[c1::] = 0
         else:
             c0 = self.count(0)
-            self[:c0] = 0
-            self[c0:] = 1
+            self[:c0:] = 0
+            self[c0::] = 1
 
     def _get_start_stop(self, key):
         if key.step not in (1, None):
