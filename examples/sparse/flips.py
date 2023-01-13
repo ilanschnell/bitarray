@@ -152,6 +152,19 @@ class SparseBitarray(Common):
             self.flips.append(other.flips[i] + n)
         self._reduce()
 
+    def find(self, value):
+        if len(self) == 0:
+            return -1
+        flips = self.flips
+        if value:
+            if len(flips) == 1:
+                return -1
+            return flips[0]
+        else:
+            if flips[0] > 0:
+                return 0
+            return -1 if len(flips) == 2 else flips[1]
+
     def to_bitarray(self):
         a = bitarray(len(self))
         for v, start, stop in self._intervals():

@@ -120,6 +120,12 @@ class TestsSparse(unittest.TestCase, Util):
                 s.append(v)
             self.check(s, a)
 
+    def test_find(self):
+        for a in self.randombitarrays():
+            s = BitArray(a)
+            for v in 0, 1:
+                self.assertEqual(s.find(v), a.find(v))
+
     def test_extent(self):
         for aa in self.randombitarrays():
             for b in self.randombitarrays():

@@ -114,6 +114,16 @@ class SparseBitarray(Common):
             self.ones.append(self.n)
         self.n += 1
 
+    def find(self, value):
+        ones = self.ones
+        if value:
+            return ones[0] if ones else -1
+        else:
+            for i in range(len(ones)):
+                if ones[i] != i:
+                    return i
+            return -1 if len(ones) == self.n else len(ones)
+
     def extend(self, other):
         self.ones.extend(other.ones[i] + self.n for i in
                          range(len(other.ones)))
