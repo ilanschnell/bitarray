@@ -7,11 +7,8 @@ For example:
 
 is represented as:
 
-   n:      11
-   ones:   [0, 1, 4, 5, 6, 7, 8]
-
-The last element in the list is always the length of the bitarray, such that
-an empty bitarray is represented as [0].
+   length:  11
+   ones:    [0, 1, 4, 5, 6, 7, 8]
 """
 from bisect import bisect_left
 
@@ -138,6 +135,9 @@ class SparseBitarray(Common):
             self.ones[j] += 1
         self.n += 1
         self[k] = value
+
+    def invert(self):
+        self.ones = sorted(set(range(self.n)) - set(self.ones))
 
     def count(self, value=1):
         if value:

@@ -41,19 +41,19 @@ class TestsSparse(unittest.TestCase, Util):
 
     def test_len(self):
         for a in self.randombitarrays():
-            s = SparseBitarray(a)
+            s = BitArray(a)
             self.assertEqual(len(s), len(a))
             self.check(s, a)
 
     def test_getitem_index(self):
         for a in self.randombitarrays(start=1):
-            s = SparseBitarray(a)
+            s = BitArray(a)
             for i in range(len(a)):
                 self.assertEqual(s[i], a[i])
 
     def test_getitem_slice(self):
         for a in self.randombitarrays():
-            s = SparseBitarray(a)
+            s = BitArray(a)
             i = randint(0, len(s))
             j = randint(0, len(s))
             t = s[i:j]
@@ -63,7 +63,7 @@ class TestsSparse(unittest.TestCase, Util):
 
     def test_setitem_index(self):
         for a in self.randombitarrays(start=1):
-            s = SparseBitarray(a)
+            s = BitArray(a)
             for _ in range(10):
                 i = randint(0, len(s) - 1)
                 v = randint(0, 1)
@@ -72,7 +72,7 @@ class TestsSparse(unittest.TestCase, Util):
 
     def test_setitem_slice(self):
         for a in self.randombitarrays():
-            s = SparseBitarray(a)
+            s = BitArray(a)
             for _ in range(10):
                 i = randint(0, len(s))
                 j = randint(0, len(s))
@@ -82,7 +82,7 @@ class TestsSparse(unittest.TestCase, Util):
 
     def test_delitem_index(self):
         for a in self.randombitarrays(start=1):
-            s = SparseBitarray(a)
+            s = BitArray(a)
             i = randint(0, len(s) - 1)
             del s[i]
             del a[i]
@@ -90,7 +90,7 @@ class TestsSparse(unittest.TestCase, Util):
 
     def test_delitem_slice(self):
         for a in self.randombitarrays():
-            s = SparseBitarray(a)
+            s = BitArray(a)
             i = randint(0, len(s))
             j = randint(0, len(s))
             del s[i:j]
@@ -99,7 +99,7 @@ class TestsSparse(unittest.TestCase, Util):
 
     def test_append(self):
         for a in self.randombitarrays():
-            s = SparseBitarray()
+            s = BitArray()
             for v in a:
                 s.append(v)
             self.check(s, a)
@@ -108,56 +108,54 @@ class TestsSparse(unittest.TestCase, Util):
         for aa in self.randombitarrays():
             for b in self.randombitarrays():
                 a = aa.copy()
-                s = SparseBitarray(a)
-                t = SparseBitarray(b)
+                s = BitArray(a)
+                t = BitArray(b)
                 s.extend(t)
                 a.extend(b)
                 self.check(s, a)
                 self.check(t, b)
 
-            s = SparseBitarray(aa)
+            s = BitArray(aa)
             s.extend(s)
             self.check(s, 2 * aa)
 
     def test_count(self):
         for a in self.randombitarrays():
-            s = SparseBitarray(a)
+            s = BitArray(a)
             for v in 0, 1:
                 self.assertEqual(s.count(v), a.count(v))
 
     def test_insert(self):
         for a in self.randombitarrays():
-            s = SparseBitarray(a)
+            s = BitArray(a)
             i = randint(-2, len(s) + 2)
             v = randint(0, 1)
             s.insert(i, v)
             a.insert(i, v)
             self.check(s, a)
 
-    if MODE != 'ones':
-        def test_invert(self):
-            for a in self.randombitarrays():
-                s = SparseBitarray(a)
-                s.invert()
-                a.invert()
-                self.check(s, a)
+    def test_invert(self):
+        for a in self.randombitarrays():
+            s = BitArray(a)
+            s.invert()
+            a.invert()
+            self.check(s, a)
+
+    def test_reverse(self):
+        for a in self.randombitarrays():
+            s = BitArray(a)
+            s.reverse()
+            a.reverse()
+            self.check(s, a)
 
     if MODE == 'flips':
         def test_flips(self):
             for a in self.randombitarrays():
                 lst = [] if a and a[0] == 0 else [0]
                 lst.extend(t[2] for t in intervals(a))
-                s = SparseBitarray(a)
+                s = BitArray(a)
                 self.assertEqual(s.flips, lst)
 
-    def test_reverse(self):
-        for a in self.randombitarrays():
-            s = SparseBitarray(a)
-            s.reverse()
-            a.reverse()
-            self.check(s, a)
-
-    if MODE == 'flips':
         def test_reduce(self):
             for a, b in [
                     ([0],                 [0]),
@@ -171,7 +169,7 @@ class TestsSparse(unittest.TestCase, Util):
                     ([0, 0, 0, 1, 1, 2, 2, 2, 3, 4, 4, 4, 4, 5],
                      [0, 2, 3, 5]),
                 ]:
-                s = SparseBitarray()
+                s = BitArray()
                 s.flips = a
                 s._reduce()
                 self.assertEqual(s.flips, b)
@@ -180,7 +178,7 @@ class TestsSparse(unittest.TestCase, Util):
 if __name__ == '__main__':
     if MODE == '-':
         from bitarray import bitarray
-        SparseBitarray = bitarray
+        BitArray = bitarray
     else:
-        SparseBitarray = __import__(MODE).SparseBitarray  # type: ignore
+        BitArray = __import__(MODE).SparseBitarray  # type: ignore
     unittest.main()
