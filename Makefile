@@ -24,6 +24,7 @@ mypy:
 	mypy bitarray/test_*.py
 	mypy examples/*.py
 	mypy examples/huffman/*.py
+	mypy examples/sparse/*.py
 
 
 clean:
