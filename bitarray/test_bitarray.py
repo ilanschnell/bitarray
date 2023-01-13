@@ -83,13 +83,10 @@ class Util(object):
     def random_endian():
         return ['little', 'big'][randint(0, 1)]
 
-    @staticmethod
-    def randombitarrays(start=0):
-        for n in list(range(start, 25)) + [randint(1000, 2000)]:
-            a = bitarray(endian=['little', 'big'][randint(0, 1)])
-            a.frombytes(os.urandom(bits2bytes(n)))
-            del a[n:]
-            yield a
+    def randombitarrays(self, start=0):
+        for n in range(start, 26):
+            yield urandom(n, self.random_endian())
+        yield urandom(randint(1000, 2000), self.random_endian())
 
     def randomlists(self):
         for a in self.randombitarrays():
