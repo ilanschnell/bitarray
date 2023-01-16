@@ -725,6 +725,39 @@ grow_buffer(bitarrayobject *self)
     return 0;
 }
 
+/* Consume one byte from the iteratior and return it's value as an integer
+   in range(256).  On failure, set an exception and return -1.  */
+static int
+next_char(PyObject *iter)
+{
+    PyObject *item;
+    unsigned char c;
+
+    item = PyIter_Next(iter);
+    if (item == NULL) {
+        if (PyErr_Occurred())   /* from PyIter_Next() */
+            return -1;
+        PyErr_SetString(PyExc_ValueError, "unexpected end of stream");
+        return -1;
+    }
+
+#ifdef IS_PY3K
+    if (PyLong_Check(item))
+        c = (unsigned char) PyLong_AsLong(item);
+#else
+    if (PyBytes_Check(item))
+        c = (unsigned char) *PyBytes_AS_STRING(item);
+#endif
+    else {
+        PyErr_Format(PyExc_TypeError, "int iterator expected, "
+                     "got '%s' element", Py_TYPE(item)->tp_name);
+        Py_DECREF(item);
+        return -1;
+    }
+    Py_DECREF(item);
+    return (int) c;
+}
+
 /* LEN_PAD_BITS is always 3 - the number of bits (length) that is necessary to
    represent the number of pad bits.  The number of padding bits itself is
    called 'padding' below.
@@ -740,12 +773,10 @@ grow_buffer(bitarrayobject *self)
 static PyObject *
 vl_decode(PyObject *module, PyObject *args)
 {
-    PyObject *iter, *item;
+    PyObject *iter;
     bitarrayobject *a;
     Py_ssize_t padding = 0;  /* number of pad bits read from header byte */
     Py_ssize_t i = 0;        /* bit counter */
-    unsigned char b = 0x80;  /* empty stream will raise StopIteration */
-    Py_ssize_t k;
 
     if (!PyArg_ParseTuple(args, "OO!", &iter,
                           bitarray_type_obj, (PyObject *) &a))
@@ -754,21 +785,11 @@ vl_decode(PyObject *module, PyObject *args)
         return PyErr_Format(PyExc_TypeError, "iterator or bytes expected, "
                             "got '%s'", Py_TYPE(iter)->tp_name);
 
-    while ((item = PyIter_Next(iter))) {
-#ifdef IS_PY3K
-        if (PyLong_Check(item))
-            b = (unsigned char) PyLong_AsLong(item);
-#else
-        if (PyBytes_Check(item))
-            b = (unsigned char) *PyBytes_AS_STRING(item);
-#endif
-        else {
-            PyErr_Format(PyExc_TypeError, "int iterator expected, "
-                         "got '%s' element", Py_TYPE(item)->tp_name);
-            Py_DECREF(item);
+    while (1) {
+        int k, b;
+
+        if ((b = next_char(iter)) < 0)
             return NULL;
-        }
-        Py_DECREF(item);
 
         if (i + 6 >= a->nbits && grow_buffer(a) < 0)
             return NULL;
@@ -793,13 +814,6 @@ vl_decode(PyObject *module, PyObject *args)
     a->nbits = i - padding;
     Py_SET_SIZE(a, BYTES(a->nbits));
     assert_nbits(a);
-
-    if (PyErr_Occurred())       /* from PyIter_Next() */
-        return NULL;
-
-    if (b & 0x80)
-        return PyErr_Format(PyExc_StopIteration, "no terminating byte found, "
-                            "bytes read: %zd", (i + LEN_PAD_BITS) / 7);
 
     Py_RETURN_NONE;
 }

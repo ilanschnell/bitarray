@@ -1212,26 +1212,14 @@ class VLFTests(unittest.TestCase, Util):
 
     def test_decode_errors(self):
         # decode empty bits
-        self.assertRaises(StopIteration, vl_decode, b'')
+        self.assertRaises(ValueError, vl_decode, b'')
         # invalid number of padding bits
         for s in b'\x50', b'\x60', b'\x70':
             self.assertRaises(ValueError, vl_decode, s)
         self.assertRaises(ValueError, vl_decode, b'\xf0')
         # high bit set, but no terminating byte
         for s in b'\x80', b'\x80\x80':
-            self.assertRaises(StopIteration, vl_decode, s)
-
-    def test_decode_error_message(self):
-        pat = re.compile(r'[\w\s,]+:\s+(\d+)')
-        for n in range(120):
-            a = None
-            s = bytes(bytearray([randint(0x80, 0xef) for _ in range(n)]))
-            try:
-                a = vl_decode(s)
-            except StopIteration as e:
-                m = pat.match(str(e))
-                self.assertEqual(m.group(1), str(n))
-            self.assertTrue(a is None)
+            self.assertRaises(ValueError, vl_decode, s)
 
     @skipIf(sys.version_info[0] == 2)
     def test_decode_invalid_stream(self):
