@@ -343,9 +343,7 @@ def vl_decode(__stream, endian=None):
 
 Decode binary stream (an integer iterator, or bytes-like object), and return
 the decoded bitarray.  This function consumes only one bitarray and leaves
-the remaining stream untouched.  `StopIteration` is raised when no
-terminating byte is found.
-Use `vl_encode()` for encoding.
+the remaining stream untouched.  Use `vl_encode()` for encoding.
 """
     a = bitarray(32, endian)
     _vl_decode(iter(__stream), a)
