@@ -699,29 +699,50 @@ base2ba(PyObject *module, PyObject *args)
 
 /* ------------------- variable length bitarray format ----------------- */
 
-/* grow buffer by at least one byte */
+/* like resize() */
 static int
-grow_buffer(bitarrayobject *self)
+resize_lite(bitarrayobject *self, Py_ssize_t nbits)
 {
-    size_t newsize = Py_SIZE(self) + 1;
+    const Py_ssize_t allocated = self->allocated, size = Py_SIZE(self);
+    const Py_ssize_t newsize = BYTES(nbits);
+    size_t new_allocated;
 
-    assert_nbits(self);
-    assert(self->allocated >= Py_SIZE(self));
+    assert(allocated >= size && size == BYTES(self->nbits));
     assert(self->ob_exports == 0);
     assert(self->buffer == NULL);
     assert(self->readonly == 0);
 
-    /* standard growth pattern */
-    newsize = (newsize + (newsize >> 4) + (newsize < 8 ? 3 : 7)) & ~(size_t) 3;
+    if (newsize == size) {
+        /* buffer size hasn't changed - bypass everything */
+        self->nbits = nbits;
+        return 0;
+    }
 
-    self->ob_item = PyMem_Realloc(self->ob_item, newsize);
+    /* Bypass reallocation when a allocation is large enough to accommodate
+       the newsize.  In the newsize falls lower than the current size,
+       then proceed with the reallocation to shrink the bitarray.
+    */
+    if (allocated >= newsize && newsize > size) {
+        Py_SET_SIZE(self, newsize);
+        self->nbits = nbits;
+        return 0;
+    }
+
+    if (newsize > size)  /* only over-allocate when size increases */
+        new_allocated = ((size_t) newsize + (newsize >> 4) +
+                         (newsize < 8 ? 3 : 7)) & ~(size_t) 3;
+    else
+        new_allocated = ((size_t) newsize + 3) & ~(size_t) 3;
+
+    assert(new_allocated >= (size_t) newsize);
+    self->ob_item = PyMem_Realloc(self->ob_item, new_allocated);
     if (self->ob_item == NULL) {
         PyErr_NoMemory();
         return -1;
     }
     Py_SET_SIZE(self, newsize);
-    self->allocated = newsize;
-    self->nbits = 8 * newsize;
+    self->allocated = new_allocated;
+    self->nbits = nbits;
     return 0;
 }
 
@@ -791,7 +812,7 @@ vl_decode(PyObject *module, PyObject *args)
         if ((b = next_char(iter)) < 0)
             return NULL;
 
-        if (i + 6 >= a->nbits && grow_buffer(a) < 0)
+        if (i + 6 >= a->nbits && resize_lite(a, i + 7) < 0)
             return NULL;
         assert(i + 6 < a->nbits);
 
@@ -811,9 +832,7 @@ vl_decode(PyObject *module, PyObject *args)
             break;
     }
     /* set final length of bitarray */
-    a->nbits = i - padding;
-    Py_SET_SIZE(a, BYTES(a->nbits));
-    assert_nbits(a);
+    resize_lite(a, i - padding);
 
     Py_RETURN_NONE;
 }
