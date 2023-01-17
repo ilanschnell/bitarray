@@ -835,6 +835,7 @@ sc_encode(PyObject *module, PyObject *obj)
     str[len++] = IS_BE(a) ? 'B' : 'L';
     str[len++] = a->nbits % 256;
 
+    set_padbits(a);
     for (offset = 0;; offset += 32) {
         int n, last;
 

@@ -1141,6 +1141,8 @@ class SCTests(unittest.TestCase, Util):
                 (b'B\x08\xc1\x02',     '00000010',          'big'),
                 (b'L\x10\xc2\xf0\x0f', '00001111 11110000', 'little'),
                 (b'B\x10\x81\x0c',     '00000000 00001000', 'big'),
+                (b'B\x09\x81\x08',     '00000000 1',        'big'),
+                (b'LE\x83ABD',         65 * '0' + '1101',   'little'),
         ]:
             a = bitarray(bits, endian)
             self.assertEqual(sc_encode(a), s)
@@ -1149,6 +1151,20 @@ class SCTests(unittest.TestCase, Util):
     def random_array(self, n, p=0.01):
         return bitarray((random() < p for _ in range(n)),
                         self.random_endian())
+
+    @skipIf(sys.version_info[0] == 2)
+    def test_decode_errors(self):
+        self.assertRaisesMessage(ValueError, "invalid header byte: 0x43",
+                                 sc_decode, b"\x43\x00\xc0")
+        self.assertRaisesMessage(ValueError, "invalid header byte: 0x20",
+                                 sc_decode, b"B\x00\x20")
+        self.assertRaisesMessage(ValueError, "invalid header byte: 0x61",
+                                 sc_decode, b"B\x00\x61")
+        for stream in b'', b'L', b'B\x00', b'B\x00\xc1', b'B\x00\x00':
+            self.assertRaisesMessage(ValueError, "unexpected end of stream",
+                                     sc_decode, stream)
+        self.assertRaises(TypeError, sc_decode, [0x42, None])
+        self.assertRaises(TypeError, sc_decode, 3.2)
 
     def test_random(self):
         for n in 128, 256, 257, randint(0, 512):
