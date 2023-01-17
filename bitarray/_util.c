@@ -837,7 +837,8 @@ sc_encode(PyObject *module, PyObject *obj)
 
     set_padbits(a);
     for (offset = 0;; offset += 32) {
-        int n, last;
+        Py_ssize_t n;
+        int last;
 
         if (_PyBytes_Resize(&out, len + 33) < 0)
             return NULL;
