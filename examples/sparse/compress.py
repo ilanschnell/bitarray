@@ -1,8 +1,11 @@
+import bz2
+import gzip
 from collections import Counter
 from itertools import count, islice
 from math import ceil, sqrt
 from pprint import pprint
 from random import random, randint
+from time import time
 
 from bitarray import bitarray, bits2bytes
 from bitarray.util import count_n, sc_encode, sc_decode
@@ -90,7 +93,26 @@ def sieve_example():
     cnt = stats_bytes(b)[0]
     pprint(cnt)
 
+def compare():
+    a = random_array(1 << 24, 0.01)
+    raw = a.tobytes()
+    print("               compress (ms)   decompress (ms)             ratio")
+    print(65 * '-')
+    for name, f_e, f_d in [
+            ('sc' , sc_encode, sc_decode),
+            ('gzip', gzip.compress, gzip.decompress),
+            ('bz2', bz2.compress, bz2.decompress)]:
+        x = a if name == 'sc' else raw
+        t0 = time()
+        b = f_e(x)  # compression
+        t1 = time()
+        c = f_d(b)  # decompression
+        t2 = time()
+        print("    %-6s  %16.3f  %16.3f  %16.3f" %
+              (name, 1000 * (t1 - t0), 1000 * (t2 - t1), len(b) / len(raw)))
+        assert c == x
 
 if __name__ == '__main__':
     test_stats()
     sieve_example()
+    compare()
