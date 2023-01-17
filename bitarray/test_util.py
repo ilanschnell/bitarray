@@ -1165,6 +1165,8 @@ class SCTests(unittest.TestCase, Util):
                                      sc_decode, stream)
         self.assertRaises(TypeError, sc_decode, [0x42, None])
         self.assertRaises(TypeError, sc_decode, 3.2)
+        for _ in range(10):
+            self.assertRaises(TypeError, sc_decode, [0x42, 0x00, 0x00, None])
 
     def test_random(self):
         for n in 128, 256, 257, randint(0, 512):

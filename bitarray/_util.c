@@ -941,30 +941,23 @@ sc_decode(PyObject *module, PyObject *obj)
         return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
                             Py_TYPE(obj)->tp_name);
 
-    if (!PyIter_Check(iter))
-        return PyErr_Format(PyExc_TypeError, "iterator or bytes expected, "
-                            "got '%s'", Py_TYPE(iter)->tp_name);
-
     a = (bitarrayobject *) PyObject_CallObject(bitarray_type_obj, NULL);
     if (a == NULL)
-        return NULL;
+        goto error;
+    assert(a->nbits == 0 && a->readonly == 0 && a->buffer == NULL);
 
-    if (a->nbits || a->readonly || a->buffer) {
-        PyErr_SetString(PyExc_SystemError, "empty writable bitarray expected");
-        return NULL;
-    }
     if (sc_read_header(iter, &endian, &last_nbits) < 0)
-        return NULL;
+        goto error;
 
     a->endian = endian;
-
     while (1) {
         int last = sc_decode_block(a, iter);
         if (last < 0)
-            return NULL;
+            goto error;
         if (last)
             break;
     }
+    Py_DECREF(iter);
     if (last_nbits) {           /* shrink to actual size */
         Py_ssize_t full_blocks = (a->nbits - 1) / 256;
         Py_ssize_t new_nbits = 256 * full_blocks + last_nbits;
@@ -972,6 +965,10 @@ sc_decode(PyObject *module, PyObject *obj)
         resize_lite(a, new_nbits);
     }
     return (PyObject *) a;
+ error:
+    Py_DECREF(iter);
+    Py_XDECREF((PyObject *) a);
+    return NULL;
 }
 
 PyDoc_STRVAR(sc_decode_doc,
