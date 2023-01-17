@@ -781,21 +781,21 @@ next_char(PyObject *iter)
 
 /* ---------------------- sparse compressed bitarray ------------------- */
 
-/* Encode n bits (up to 256) of a (starting at offset) and write to buffer
-   str.  Return number of bytes written into str.  */
+/* Encode m bytes (up to 32) of a's buffer (starting at offset) and write
+   to buffer str.  Return number of bytes written into str.  */
 static int
 sc_encode_block(char *str, bitarrayobject *a, Py_ssize_t offset,
-                int n, int last)
+                int m, int last)
 {
-    int m, cnt = 0, raw, i, j, k, len = 0;
+    int cnt = 0, raw, i, j, k, len = 0;
     char *buff = a->ob_item + offset;
 
-    m = BYTES(n);                            /* block size in bytes */
+    assert(m <= 32 && (last == 0 || last == 1));
     for (i = 0; i < m; i++)
         cnt += bitcount_lookup[(unsigned char) buff[i]];
 
     raw = cnt >= m;
-    k = raw ? m : cnt;      /* bytes in OUTPUT block (without head) */
+    k = raw ? m : cnt;      /* bytes in output block (without head) */
     str[len++] = last << 7 | raw << 6 | k;
 
     if (raw) {
@@ -844,7 +844,7 @@ sc_encode(PyObject *module, PyObject *obj)
 
         n = Py_MIN(a->nbits - 8 * offset, 256);  /* block size in bits */
         last = n < 256 || 8 * offset + 256 == a->nbits;
-        len += sc_encode_block(str + len, a, offset, n, last);
+        len += sc_encode_block(str + len, a, offset, BYTES(n), last);
         if (last)
             break;
     }
@@ -872,18 +872,18 @@ sc_decode_block(bitarrayobject *a, PyObject *iter)
     if ((c = next_char(iter)) < 0)
         return -1;
 
-    last = c & 0x80;
-    raw = c & 0x40;
-    k = c & 0x3f;
+    last = c & 0x80;            /* is this the last block? */
+    raw = c & 0x40;             /* is this a raw block? */
+    k = c & 0x3f;               /* bytes to read from stream */
 
-    if (k > (raw ? 32 : 31)) {
+    if (k > (raw ? 32 : 31) || (!last && raw && k != 32)) {
         PyErr_Format(PyExc_ValueError, "invalid header byte: 0x%02x", c);
         return -1;
     }
     assert(a->nbits % 256 == 0);
     offset = a->nbits / 8;      /* buffer offset in bytes */
 
-    if (resize_lite(a, a->nbits + 256) < 0)
+    if (resize_lite(a, a->nbits + (raw ? (8 * k) : 256)) < 0)
         return -1;
 
     if (!raw)
@@ -898,9 +898,6 @@ sc_decode_block(bitarrayobject *a, PyObject *iter)
         else
             setbit(a, 8 * offset + c, 1);
     }
-    if (raw && last)
-        resize_lite(a, 8 * (offset + k));
-
     return last;
 }
 
@@ -909,7 +906,6 @@ sc_decode(PyObject *module, PyObject *args)
 {
     PyObject *iter;
     bitarrayobject *a;
-    Py_ssize_t full_blocks;
     int last_nbits;
 
     if (!PyArg_ParseTuple(args, "OO!", &iter,
@@ -928,16 +924,17 @@ sc_decode(PyObject *module, PyObject *args)
         return NULL;
 
     while (1) {
-        int last_block = sc_decode_block(a, iter);
-        if (last_block < 0)
+        int last = sc_decode_block(a, iter);
+        if (last < 0)
             return NULL;
-        if (last_block)
+        if (last)
             break;
     }
-    if (last_nbits) {
-        assert(a->nbits > 0);
-        full_blocks = (a->nbits - 1) / 256;
-        resize_lite(a, 256 * full_blocks + last_nbits);
+    if (last_nbits) {           /* shrink to actual size */
+        Py_ssize_t full_blocks = (a->nbits - 1) / 256;
+        Py_ssize_t new_nbits = 256 * full_blocks + last_nbits;
+        assert(a->nbits > 0 && new_nbits <= a->nbits);
+        resize_lite(a, new_nbits);
     }
     Py_RETURN_NONE;
 }

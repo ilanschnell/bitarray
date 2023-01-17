@@ -1138,9 +1138,9 @@ class SCTests(unittest.TestCase, Util):
     def test_explicit(self):
         for s, bits, endian in [
                 (b'L\x00\xc0',         '',                  'little'),
-                (b'B\x07\xc1\x02',     '0000001',           'big'),
+                (b'B\x08\xc1\x02',     '00000010',          'big'),
                 (b'L\x10\xc2\xf0\x0f', '00001111 11110000', 'little'),
-                (b'B\x10\x81\x0e',     '00000000 00000010', 'big'),
+                (b'B\x10\x81\x0c',     '00000000 00001000', 'big'),
         ]:
             a = bitarray(bits, endian)
             self.assertEqual(sc_encode(a), s)
