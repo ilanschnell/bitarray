@@ -827,21 +827,25 @@ sc_encode(PyObject *module, PyObject *obj)
 
     a = (bitarrayobject *) obj;
 
-    out = PyBytes_FromStringAndSize(NULL, 2);
+    out = PyBytes_FromStringAndSize(NULL, 255);
     if (out == NULL)
         return NULL;
 
-    str = PyBytes_AsString(out);
+    str = PyBytes_AS_STRING(out);
     str[len++] = IS_BE(a) ? 'B' : 'L';
     str[len++] = a->nbits % 256;
 
     set_padbits(a);
     for (offset = 0;; offset += 32) {
+        Py_ssize_t out_size;
         int n, last;
 
-        if (_PyBytes_Resize(&out, len + 33) < 0)
-            return NULL;
-        str = PyBytes_AsString(out);
+        out_size = PyBytes_GET_SIZE(out);
+        if (out_size < len + 33) {
+            if (_PyBytes_Resize(&out, out_size + 1024) < 0)
+                return NULL;
+            str = PyBytes_AS_STRING(out);
+        }
 
         n = (int) Py_MIN(a->nbits - 8 * offset, 256);  /* block size in bits */
         last = n < 256 || 8 * offset + 256 == a->nbits;
