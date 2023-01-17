@@ -1138,13 +1138,26 @@ class SCTests(unittest.TestCase, Util):
     def test_explicit(self):
         for s, bits, endian in [
                 (b'L\x00\xc0',         '',                  'little'),
-                (b'B\x08\xc1\x02',     '00000010',          'big'),
+                (b'B\x07\xc1\x02',     '0000001',           'big'),
                 (b'L\x10\xc2\xf0\x0f', '00001111 11110000', 'little'),
                 (b'B\x10\x81\x0e',     '00000000 00000010', 'big'),
         ]:
             a = bitarray(bits, endian)
             self.assertEqual(sc_encode(a), s)
             self.assertEqual(sc_decode(s), a)
+
+    def random_array(self, n, p=0.01):
+        return bitarray((random() < p for _ in range(n)),
+                        self.random_endian())
+
+    def test_random(self):
+        for n in 128, 256, 257, randint(0, 512):
+            for p in 0, 0.125, 0.5:
+                a = self.random_array(n, p)
+                b = sc_encode(a)
+                c = sc_decode(b)
+                self.assertEqual(a, c)
+                self.assertEqual(a.endian(), c.endian())
 
 tests.append(SCTests)
 

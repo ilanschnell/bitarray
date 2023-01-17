@@ -36,6 +36,8 @@ NEW_IN = {
     'util.rindex':            '2.3.0: optional start and stop arguments',
     'util.serialize':         '1.8',
     'util.urandom':           '1.7',
+    'util.sc_encode':         '2.7',
+    'util.sc_decode':         '2.7',
     'util.vl_decode':         '2.2',
     'util.vl_encode':         '2.2',
     'util.canonical_huffman': '2.5',
