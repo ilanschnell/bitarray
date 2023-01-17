@@ -930,18 +930,24 @@ sc_read_header(PyObject *iter, int *endian, int *last_nbits)
 }
 
 static PyObject *
-sc_decode(PyObject *module, PyObject *args)
+sc_decode(PyObject *module, PyObject *obj)
 {
     PyObject *iter;
     bitarrayobject *a;
     int endian, last_nbits;
 
-    if (!PyArg_ParseTuple(args, "OO!", &iter,
-                          bitarray_type_obj, (PyObject *) &a))
-        return NULL;
+    iter = PyObject_GetIter(obj);
+    if (iter == NULL)
+        return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
+                            Py_TYPE(obj)->tp_name);
+
     if (!PyIter_Check(iter))
         return PyErr_Format(PyExc_TypeError, "iterator or bytes expected, "
                             "got '%s'", Py_TYPE(iter)->tp_name);
+
+    a = (bitarrayobject *) PyObject_CallObject(bitarray_type_obj, NULL);
+    if (a == NULL)
+        return NULL;
 
     if (a->nbits || a->readonly || a->buffer) {
         PyErr_SetString(PyExc_SystemError, "empty writable bitarray expected");
@@ -965,8 +971,16 @@ sc_decode(PyObject *module, PyObject *args)
         assert(a->nbits > 0 && new_nbits <= a->nbits);
         resize_lite(a, new_nbits);
     }
-    Py_RETURN_NONE;
+    return (PyObject *) a;
 }
+
+PyDoc_STRVAR(sc_decode_doc,
+"sc_decode(stream) -> bitarray\n\
+\n\
+Decode binary stream (an integer iterator, or bytes-like object) of a\n\
+sparse compressed (`sc`) bitarray, and return the decoded bitarray.\n\
+This function consumes only one bitarray and leaves the remaining stream\n\
+untouched.  Use `sc_encode()` for encoding.");
 
 /* ------------------- variable length bitarray format ----------------- */
 
@@ -1305,7 +1319,7 @@ static PyMethodDef module_functions[] = {
     {"ba2base",   (PyCFunction) ba2base,   METH_VARARGS, ba2base_doc},
     {"_base2ba",  (PyCFunction) base2ba,   METH_VARARGS, 0},
     {"sc_encode", (PyCFunction) sc_encode, METH_O,       sc_encode_doc},
-    {"_sc_decode",(PyCFunction) sc_decode, METH_VARARGS, 0},
+    {"sc_decode", (PyCFunction) sc_decode, METH_O,       sc_decode_doc},
     {"vl_encode", (PyCFunction) vl_encode, METH_O,       vl_encode_doc},
     {"_vl_decode",(PyCFunction) vl_decode, METH_VARARGS, 0},
     {"canonical_decode",

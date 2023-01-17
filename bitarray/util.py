@@ -16,7 +16,7 @@ from bitarray._util import (
     count_n, rindex, parity, count_and, count_or, count_xor, any_and, subset,
     _correspond_all,
     serialize, ba2hex, _hex2ba, ba2base, _base2ba,
-    sc_encode, _sc_decode,
+    sc_encode, sc_decode,
     vl_encode, _vl_decode,
     canonical_decode,
 )
@@ -340,19 +340,6 @@ by `serialize()`.
         return bitarray(__b)
     except TypeError:
         raise ValueError('invalid header byte: 0x%02x' % __b[0])
-
-
-def sc_decode(__stream):
-    """sc_decode(stream) -> bitarray
-
-Decode binary stream (an integer iterator, or bytes-like object) of a
-sparse compressed (`sc`) bitarray, and return the decoded bitarray.
-This function consumes only one bitarray and leaves the remaining stream
-untouched.  Use `sc_encode()` for encoding.
-"""
-    a = bitarray()
-    _sc_decode(iter(__stream), a)
-    return a
 
 
 def vl_decode(__stream, endian=None):
