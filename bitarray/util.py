@@ -350,16 +350,8 @@ sparse compressed (`sc`) bitarray, and return the decoded bitarray.
 This function consumes only one bitarray and leaves the remaining stream
 untouched.  Use `sc_encode()` for encoding.
 """
-    stream = iter(__stream)
-    c = next(stream)
-    if _is_py2:
-        c = ord(c)
-    try:
-        endian = {66: 'big', 76: 'little'}[c]
-    except KeyError:
-        raise ValueError("invalid header byte: 0x%2x" % c)
-    a = bitarray(0, endian)
-    _sc_decode(stream, a)
+    a = bitarray()
+    _sc_decode(iter(__stream), a)
     return a
 
 

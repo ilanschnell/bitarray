@@ -901,12 +901,39 @@ sc_decode_block(bitarrayobject *a, PyObject *iter)
     return last;
 }
 
+static int
+sc_read_header(PyObject *iter, int *endian, int *last_nbits)
+{
+    int c;
+
+    if ((c = next_char(iter)) < 0)
+        return -1;
+
+    switch (c) {
+    case 'B':
+        *endian = ENDIAN_BIG;
+        break;
+    case 'L':
+        *endian = ENDIAN_LITTLE;
+        break;
+    default:
+        PyErr_Format(PyExc_ValueError, "invalid header byte: 0x%02x", c);
+        return -1;
+    }
+
+    *last_nbits = next_char(iter);
+    if (*last_nbits < 0)
+        return -1;
+
+    return 0;
+}
+
 static PyObject *
 sc_decode(PyObject *module, PyObject *args)
 {
     PyObject *iter;
     bitarrayobject *a;
-    int last_nbits;
+    int endian, last_nbits;
 
     if (!PyArg_ParseTuple(args, "OO!", &iter,
                           bitarray_type_obj, (PyObject *) &a))
@@ -919,9 +946,10 @@ sc_decode(PyObject *module, PyObject *args)
         PyErr_SetString(PyExc_SystemError, "empty writable bitarray expected");
         return NULL;
     }
-    last_nbits = next_char(iter);
-    if (last_nbits < 0)
+    if (sc_read_header(iter, &endian, &last_nbits) < 0)
         return NULL;
+
+    a->endian = endian;
 
     while (1) {
         int last = sc_decode_block(a, iter);
