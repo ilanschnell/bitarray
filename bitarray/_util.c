@@ -837,14 +837,13 @@ sc_encode(PyObject *module, PyObject *obj)
 
     set_padbits(a);
     for (offset = 0;; offset += 32) {
-        Py_ssize_t n;
-        int last;
+        int n, last;
 
         if (_PyBytes_Resize(&out, len + 33) < 0)
             return NULL;
         str = PyBytes_AsString(out);
 
-        n = Py_MIN(a->nbits - 8 * offset, 256);  /* block size in bits */
+        n = (int) Py_MIN(a->nbits - 8 * offset, 256);  /* block size in bits */
         last = n < 256 || 8 * offset + 256 == a->nbits;
         len += sc_encode_block(str + len, a, offset, BYTES(n), last);
         if (last)
