@@ -837,19 +837,20 @@ sc_encode(PyObject *module, PyObject *obj)
 
     set_padbits(a);
     for (offset = 0;; offset += 32) {
-        Py_ssize_t out_size;
-        int n, last;
+        Py_ssize_t allocated;   /* size (in bytes) of output buffer */
+        Py_ssize_t n;           /* bitarray block size in bits */
+        int last;               /* is this the last block? */
 
-        out_size = PyBytes_GET_SIZE(out);
-        if (out_size < len + 33) {
-            if (_PyBytes_Resize(&out, out_size + 1024) < 0)
+        allocated = PyBytes_GET_SIZE(out);
+        if (allocated < len + 33) {  /* increase allocation */
+            if (_PyBytes_Resize(&out, allocated + 256) < 0)
                 return NULL;
             str = PyBytes_AS_STRING(out);
         }
 
-        n = (int) Py_MIN(a->nbits - 8 * offset, 256);  /* block size in bits */
+        n = Py_MIN(a->nbits - 8 * offset, 256);
         last = n < 256 || 8 * offset + 256 == a->nbits;
-        len += sc_encode_block(str + len, a, offset, BYTES(n), last);
+        len += sc_encode_block(str + len, a, offset, (int) BYTES(n), last);
         if (last)
             break;
     }
