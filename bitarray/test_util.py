@@ -24,7 +24,9 @@ from bitarray.util import (
     parity, count_and, count_or, count_xor, any_and, subset, _correspond_all,
     intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
-    ba2int, int2ba, vl_encode, vl_decode,
+    ba2int, int2ba,
+    sc_encode, sc_decode,
+    vl_encode, vl_decode,
     huffman_code, canonical_huffman, canonical_decode,
 )
 
@@ -1128,6 +1130,23 @@ class TestsBase(unittest.TestCase, Util):
                 self.assertEQUAL(base2ba(n, ba2base(n, b), 'big'), b)
 
 tests.append(TestsBase)
+
+# ---------------------------------------------------------------------------
+
+class SCTests(unittest.TestCase, Util):
+
+    def test_explicit(self):
+        for s, bits, endian in [
+                (b'L\x00\xc0',         '',                  'little'),
+                (b'B\x08\xc1\x02',     '00000010',          'big'),
+                (b'L\x10\xc2\xf0\x0f', '00001111 11110000', 'little'),
+                (b'B\x10\x81\x0e',     '00000000 00000010', 'big'),
+        ]:
+            a = bitarray(bits, endian)
+            self.assertEqual(sc_encode(a), s)
+            self.assertEqual(sc_decode(s), a)
+
+tests.append(SCTests)
 
 # ---------------------------------------------------------------------------
 

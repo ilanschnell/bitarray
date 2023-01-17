@@ -697,7 +697,7 @@ base2ba(PyObject *module, PyObject *args)
     Py_RETURN_NONE;
 }
 
-/* ------------------- variable length bitarray format ----------------- */
+/* -------------------------- utility functions ------------------------ */
 
 /* like resize() */
 static int
@@ -778,6 +778,171 @@ next_char(PyObject *iter)
     Py_DECREF(item);
     return (int) c;
 }
+
+/* ---------------------- sparse compressed bitarray ------------------- */
+
+/* Encode n bits (up to 256) of a (starting at offset) and write to buffer
+   str.  Return number of bytes written into str.  */
+static int
+sc_encode_block(char *str, bitarrayobject *a, Py_ssize_t offset,
+                int n, int last)
+{
+    int m, cnt = 0, raw, i, j, k, len = 0;
+    char *buff = a->ob_item + offset;
+
+    m = BYTES(n);                            /* block size in bytes */
+    for (i = 0; i < m; i++)
+        cnt += bitcount_lookup[(unsigned char) buff[i]];
+
+    raw = cnt >= m;
+    k = raw ? m : cnt;      /* bytes in OUTPUT block (without head) */
+    str[len++] = last << 7 | raw << 6 | k;
+
+    if (raw) {
+        memcpy(str + len, a->ob_item + offset, (size_t) k);
+        len += k;
+    }
+    else if (cnt) {
+        for (i = 0; i < m; i++)
+            if (buff[i]) {
+                for (j = 0; j < 8; j++)
+                    if (buff[i] & BITMASK(a, j))
+                        str[len++] = 8 * i + j;
+            }
+    }
+    assert(len == k + 1);
+    return len;
+}
+
+static PyObject *
+sc_encode(PyObject *module, PyObject *obj)
+{
+    PyObject *out;
+    bitarrayobject *a;
+    Py_ssize_t offset, len = 0;
+    char *str;
+
+    if (ensure_bitarray(obj) < 0)
+        return NULL;
+
+    a = (bitarrayobject *) obj;
+
+    out = PyBytes_FromStringAndSize(NULL, 2);
+    if (out == NULL)
+        return NULL;
+
+    str = PyBytes_AsString(out);
+    str[len++] = IS_BE(a) ? 'B' : 'L';
+    str[len++] = a->nbits % 256;
+
+    for (offset = 0;; offset += 32) {
+        int n, last;
+
+        if (_PyBytes_Resize(&out, len + 33) < 0)
+            return NULL;
+        str = PyBytes_AsString(out);
+
+        n = Py_MIN(a->nbits - 8 * offset, 256);  /* block size in bits */
+        last = n < 256 || 8 * offset + 256 == a->nbits;
+        len += sc_encode_block(str + len, a, offset, n, last);
+        if (last)
+            break;
+    }
+    if (_PyBytes_Resize(&out, len) < 0)
+        return NULL;
+
+    return out;
+}
+
+PyDoc_STRVAR(sc_encode_doc,
+"sc_encode(bitarray, /) -> bytes\n\
+\n\
+Compress a sparse bitarray and return its binary representation.\n\
+This representation is useful for efficiently storing sparse bitarrays.\n\
+Use `sc_decode()` for decoding.");
+
+
+/* decode one block - consume iter and extend bitarray a */
+static int
+sc_decode_block(bitarrayobject *a, PyObject *iter)
+{
+    Py_ssize_t offset;
+    int last, raw, c, i, k;
+
+    if ((c = next_char(iter)) < 0)
+        return -1;
+
+    last = c & 0x80;
+    raw = c & 0x40;
+    k = c & 0x3f;
+
+    if (k > (raw ? 32 : 31)) {
+        PyErr_Format(PyExc_ValueError, "invalid header byte: 0x%02x", c);
+        return -1;
+    }
+    assert(a->nbits % 256 == 0);
+    offset = a->nbits / 8;      /* buffer offset in bytes */
+
+    if (resize_lite(a, a->nbits + 256) < 0)
+        return -1;
+
+    if (!raw)
+        memset(a->ob_item + offset, 0x00, (size_t) 32);
+
+    for (i = 0; i < k; i++) {
+        if ((c = next_char(iter)) < 0)
+            return -1;
+
+        if (raw)
+            a->ob_item[i + offset] = (unsigned char) c;
+        else
+            setbit(a, 8 * offset + c, 1);
+    }
+    if (raw && last)
+        resize_lite(a, 8 * (offset + k));
+
+    return last;
+}
+
+static PyObject *
+sc_decode(PyObject *module, PyObject *args)
+{
+    PyObject *iter;
+    bitarrayobject *a;
+    Py_ssize_t full_blocks;
+    int last_nbits;
+
+    if (!PyArg_ParseTuple(args, "OO!", &iter,
+                          bitarray_type_obj, (PyObject *) &a))
+        return NULL;
+    if (!PyIter_Check(iter))
+        return PyErr_Format(PyExc_TypeError, "iterator or bytes expected, "
+                            "got '%s'", Py_TYPE(iter)->tp_name);
+
+    if (a->nbits || a->readonly || a->buffer) {
+        PyErr_SetString(PyExc_SystemError, "empty writable bitarray expected");
+        return NULL;
+    }
+    last_nbits = next_char(iter);
+    if (last_nbits < 0)
+        return NULL;
+
+    while (1) {
+        int last_block = sc_decode_block(a, iter);
+        if (last_block < 0)
+            return NULL;
+        if (last_block)
+            break;
+    }
+    if (last_nbits) {
+        assert(a->nbits > 0);
+        full_blocks = (a->nbits - 1) / 256;
+        resize_lite(a, 256 * full_blocks + last_nbits);
+    }
+    Py_RETURN_NONE;
+}
+
+/* ------------------- variable length bitarray format ----------------- */
 
 /* LEN_PAD_BITS is always 3 - the number of bits (length) that is necessary to
    represent the number of pad bits.  The number of padding bits itself is
@@ -1113,6 +1278,8 @@ static PyMethodDef module_functions[] = {
     {"_hex2ba",   (PyCFunction) hex2ba,    METH_VARARGS, 0},
     {"ba2base",   (PyCFunction) ba2base,   METH_VARARGS, ba2base_doc},
     {"_base2ba",  (PyCFunction) base2ba,   METH_VARARGS, 0},
+    {"sc_encode", (PyCFunction) sc_encode, METH_O,       sc_encode_doc},
+    {"_sc_decode",(PyCFunction) sc_decode, METH_VARARGS, 0},
     {"vl_encode", (PyCFunction) vl_encode, METH_O,       vl_encode_doc},
     {"_vl_decode",(PyCFunction) vl_decode, METH_VARARGS, 0},
     {"canonical_decode",

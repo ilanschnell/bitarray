@@ -15,7 +15,9 @@ from bitarray import bitarray, bits2bytes
 from bitarray._util import (
     count_n, rindex, parity, count_and, count_or, count_xor, any_and, subset,
     _correspond_all,
-    serialize, ba2hex, _hex2ba, ba2base, _base2ba, vl_encode, _vl_decode,
+    serialize, ba2hex, _hex2ba, ba2base, _base2ba,
+    sc_encode, _sc_decode,
+    vl_encode, _vl_decode,
     canonical_decode,
 )
 
@@ -24,7 +26,9 @@ __all__ = [
     'parity', 'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
     'intervals',
     'ba2hex', 'hex2ba', 'ba2base', 'base2ba', 'ba2int', 'int2ba',
-    'serialize', 'deserialize', 'vl_encode', 'vl_decode',
+    'serialize', 'deserialize',
+    'sc_encode', 'sc_decode',
+    'vl_encode', 'vl_decode',
     'huffman_code', 'canonical_huffman', 'canonical_decode',
 ]
 
@@ -336,6 +340,27 @@ by `serialize()`.
         return bitarray(__b)
     except TypeError:
         raise ValueError('invalid header byte: 0x%02x' % __b[0])
+
+
+def sc_decode(__stream):
+    """sc_decode(stream) -> bitarray
+
+Decode binary stream (an integer iterator, or bytes-like object) of a
+sparse compressed (`sc`) bitarray, and return the decoded bitarray.
+This function consumes only one bitarray and leaves the remaining stream
+untouched.  Use `sc_encode()` for encoding.
+"""
+    stream = iter(__stream)
+    c = next(stream)
+    if _is_py2:
+        c = ord(c)
+    try:
+        endian = {66: 'big', 76: 'little'}[c]
+    except KeyError:
+        raise ValueError("invalid header byte: 0x%2x" % c)
+    a = bitarray(0, endian)
+    _sc_decode(stream, a)
+    return a
 
 
 def vl_decode(__stream, endian=None):
