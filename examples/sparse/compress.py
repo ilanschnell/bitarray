@@ -37,17 +37,24 @@ def stats_bytes(stream):
     nbits = 0
     while True:
         head = next(stream)
-        last = bool(head & 0x80)
-        raw = bool(head & 0x40)
-        k = head & 0x3f
+        last_block = bool(head & 0x80)  # is this the last block?
+        raw = bool(head & 0x40)         # is this a raw block?
+        k = head & 0x3f      # block size in bytes (without head byte)
         bytes(islice(stream, k))
         if raw:
+            if last_bits:
+                assert k == (bits2bytes(last_bits) if last_block else 32)
+            else:
+                assert k in ([0, 32] if last_block else [32])
+            # all raw blocks contain 32 bytes, except maybe the last block
+            assert k == 32 or last_block
+
             nbits += 8 * k
             cnt['raw'] += 1
         else:
             nbits += 256
             cnt[k] += 1
-        if last:
+        if last_block:
             break
 
     if last_bits:

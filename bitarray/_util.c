@@ -790,7 +790,7 @@ sc_encode_block(char *str, bitarrayobject *a, Py_ssize_t offset,
     int cnt = 0, raw, i, j, k, len = 0;
     char *buff = a->ob_item + offset;
 
-    assert(m <= 32 && (last == 0 || last == 1));
+    assert(0 <= m && m <= 32 && (last == 0 || last == 1));
     for (i = 0; i < m; i++)
         cnt += bitcount_lookup[(unsigned char) buff[i]];
 
