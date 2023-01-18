@@ -33,7 +33,10 @@ def stats_bytes(stream):
     cnt = Counter()
     stream = iter(stream)
     endian = 'big' if next(stream) == 66 else 'little'
-    last_bits = next(stream)
+    # `last_nbits` is the number of bits added by the last block.
+    # The value 0 means that 256 bits are added, unless the last block is
+    # raw block with no content (k=0) in which 0 bits are added.
+    last_nbits = next(stream)
     nbits = 0
     while True:
         head = next(stream)
@@ -42,8 +45,11 @@ def stats_bytes(stream):
         k = head & 0x3f      # block size in bytes (without head byte)
         bytes(islice(stream, k))
         if raw:
-            if last_bits:
-                assert k == (bits2bytes(last_bits) if last_block else 32)
+            if k == 0:   #  empty block
+                assert last_block and last_nbits == 0
+
+            if last_nbits:
+                assert k == (bits2bytes(last_nbits) if last_block else 32)
             else:
                 assert k in ([0, 32] if last_block else [32])
             # all raw blocks contain 32 bytes, except maybe the last block
@@ -57,10 +63,10 @@ def stats_bytes(stream):
         if last_block:
             break
 
-    if last_bits:
+    if last_nbits:
         assert nbits > 0
         full_blocks = (nbits - 1) // 256
-        nbits = 256 * full_blocks + last_bits
+        nbits = 256 * full_blocks + last_nbits
 
     return cnt, endian, nbits
 
