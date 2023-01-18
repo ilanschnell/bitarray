@@ -874,6 +874,29 @@ This representation is useful for efficiently storing sparse bitarrays.\n\
 Use `sc_decode()` for decoding.");
 
 
+static int
+sc_read_header(PyObject *iter, int *endian, int *last_nbits)
+{
+    int c;
+
+    if ((c = next_char(iter)) < 0)
+        return -1;
+
+    switch (c) {
+    case 'B': *endian = ENDIAN_BIG;    break;
+    case 'L': *endian = ENDIAN_LITTLE; break;
+    default:
+        PyErr_Format(PyExc_ValueError, "invalid header: 0x%02x", c);
+        return -1;
+    }
+
+    *last_nbits = next_char(iter);
+    if (*last_nbits < 0)
+        return -1;
+
+    return 0;
+}
+
 /* decode one block - consume iter and extend bitarray a */
 static int
 sc_decode_block(bitarrayobject *a, PyObject *iter)
@@ -914,33 +937,6 @@ sc_decode_block(bitarrayobject *a, PyObject *iter)
             setbit(a, 8 * offset + c, 1);
     }
     return last;
-}
-
-static int
-sc_read_header(PyObject *iter, int *endian, int *last_nbits)
-{
-    int c;
-
-    if ((c = next_char(iter)) < 0)
-        return -1;
-
-    switch (c) {
-    case 'B':
-        *endian = ENDIAN_BIG;
-        break;
-    case 'L':
-        *endian = ENDIAN_LITTLE;
-        break;
-    default:
-        PyErr_Format(PyExc_ValueError, "invalid header: 0x%02x", c);
-        return -1;
-    }
-
-    *last_nbits = next_char(iter);
-    if (*last_nbits < 0)
-        return -1;
-
-    return 0;
 }
 
 static PyObject *

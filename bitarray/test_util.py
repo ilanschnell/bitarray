@@ -1138,7 +1138,7 @@ class SCTests(unittest.TestCase, Util):
     def test_explicit(self):
         for s, bits, endian in [
                 (b'L\x00\xc0',         '',                  'little'),
-                (b'B\x08\xc1\x02',     '00000010',          'big'),
+                (b'B\x07\xc1\x02',     '0000001',           'big'),
                 (b'L\x10\xc2\xf0\x0f', '00001111 11110000', 'little'),
                 (b'B\x10\x81\x0c',     '00000000 00001000', 'big'),
                 (b'B\x09\x81\x08',     '00000000 1',        'big'),
@@ -1193,14 +1193,36 @@ class SCTests(unittest.TestCase, Util):
             cnt += 1
         self.assertTrue(cnt > 100)
 
+    def test_decode_ambiguity(self):
+        for b in [
+                b'B\x06\xc1\x5c',      # this is what sc_encode
+                b'B\x06\xc1\x5f',      # the two pad bits are 1
+                b'B\x06\x84\x01\x03\x04\x05',         # using sparse block
+                b'B\x06\x84\x05\x03\x01\x04',         # different order
+                b'B\x06\x84\x01\x03\x04\x05\x06\xff', # some pad bits set
+        ]:
+            a = sc_decode(b)
+            self.assertEqual(a.to01(), '010111')
+
+    def round_trip(self, a):
+        b = sc_encode(a)
+        c = sc_decode(b)
+        self.assertEqual(a, c)
+        self.assertEqual(a.endian(), c.endian())
+
+    def test_zeros(self):
+        for n in range(300):
+            self.round_trip(zeros(n))
+
     def test_random(self):
         for n in 128, 256, 257, randint(0, 512):
             for p in 0, 0.125, 0.5, 1:
                 a = self.random_array(n, p)
-                b = sc_encode(a)
-                c = sc_decode(b)
-                self.assertEqual(a, c)
-                self.assertEqual(a.endian(), c.endian())
+                self.round_trip(a)
+
+    def test_large(self):
+        a = self.random_array(randint(5000, 10000), 0.01)
+        self.round_trip(a)
 
 tests.append(SCTests)
 
