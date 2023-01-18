@@ -35,10 +35,11 @@ def stats_bytes(stream):
     endian = 'big' if next(stream) == 66 else 'little'
     # `last_nbits` is the number of bits added by the last block.
     # The value 0 means that 256 bits are added, unless the last block is
-    # raw block with no content (k=0) in which 0 bits are added.
+    # raw block with no content (k=0) in which 0 bits are added.  This
+    # only happens when we have an encoded an empty bitarray.
     last_nbits = next(stream)
     nbits = 0
-    while True:
+    for block_number in count(0):
         head = next(stream)
         last_block = bool(head & 0x80)  # is this the last block?
         raw = bool(head & 0x40)         # is this a raw block?
@@ -46,12 +47,18 @@ def stats_bytes(stream):
         bytes(islice(stream, k))
         if raw:
             if k == 0:   #  empty block
-                assert last_block and last_nbits == 0
+                assert last_block and last_nbits == 0 and block_number == 0
+
+            # all raw block contain data, except maybe the first (this
+            # happends when an empty bitarray was encoded and this first
+            # block will also be the last block).
+            assert k > 0 or (block_number == 0 and last_block)
 
             if last_nbits:
                 assert k == (bits2bytes(last_nbits) if last_block else 32)
             else:
                 assert k in ([0, 32] if last_block else [32])
+
             # all raw blocks contain 32 bytes, except maybe the last block
             assert k == 32 or last_block
 
