@@ -1152,25 +1152,50 @@ class SCTests(unittest.TestCase, Util):
         return bitarray((random() < p for _ in range(n)),
                         self.random_endian())
 
-    @skipIf(sys.version_info[0] == 2)
     def test_decode_errors(self):
-        self.assertRaisesMessage(ValueError, "invalid header byte: 0x43",
+        # header byte muse be 'B' (0x42) or 'L' (0x4c)
+        self.assertRaisesMessage(ValueError, "invalid header: 0x43",
                                  sc_decode, b"\x43\x00\xc0")
-        self.assertRaisesMessage(ValueError, "invalid header byte: 0x20",
+        # block is sparse, so k must be smaller then 32 (0x20)
+        self.assertRaisesMessage(ValueError, "invalid block header: 0x20",
                                  sc_decode, b"B\x00\x20")
-        self.assertRaisesMessage(ValueError, "invalid header byte: 0x61",
+        # block is raw, so k must be smaller than 33   0x61 == 0x40 + 0x21
+        self.assertRaisesMessage(ValueError, "invalid block header: 0x61",
                                  sc_decode, b"B\x00\x61")
+        # last_nbits = 1, but last raw block is empty
+        self.assertRaisesMessage(ValueError, "decode error: 0 1",
+                                 sc_decode, b"B\x01\xc0")
+        # last_nbits = 9, but we only have 1 byte in raw block
+        self.assertRaisesMessage(ValueError, "decode error: 8 9",
+                                 sc_decode, b"B\x09\xc1\x00")
+        # unexpected end of stream
         for stream in b'', b'L', b'B\x00', b'B\x00\xc1', b'B\x00\x00':
             self.assertRaisesMessage(ValueError, "unexpected end of stream",
                                      sc_decode, stream)
-        self.assertRaises(TypeError, sc_decode, [0x42, None])
+
+        self.assertRaises(TypeError, sc_decode, [0x4c, None])
         self.assertRaises(TypeError, sc_decode, 3.2)
         for _ in range(10):
             self.assertRaises(TypeError, sc_decode, [0x42, 0x00, 0x00, None])
 
+    def test_decode_random_bytes(self):
+        # ensure random input doesn't crash the decoder
+        cnt = 0
+        for _ in range(1000):
+            n = randint(0, 100)
+            b = b'L' + os.urandom(n)
+            try:
+                a = sc_decode(b)
+            except ValueError as e:
+                if e != 'unexpected end of stream':
+                    continue
+            self.assertEqual(a.endian(), 'little')
+            cnt += 1
+        self.assertTrue(cnt > 100)
+
     def test_random(self):
         for n in 128, 256, 257, randint(0, 512):
-            for p in 0, 0.125, 0.5:
+            for p in 0, 0.125, 0.5, 1:
                 a = self.random_array(n, p)
                 b = sc_encode(a)
                 c = sc_decode(b)

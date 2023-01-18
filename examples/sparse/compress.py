@@ -8,8 +8,12 @@ from random import random, randint
 from time import time
 
 from bitarray import bitarray, bits2bytes
-from bitarray.util import count_n, sc_encode, sc_decode
-
+from bitarray.util import (
+    count_n,
+    sc_encode, sc_decode,
+    vl_encode, vl_decode,
+    serialize, deserialize,
+)
 
 def random_array(n, p=0.1, endian=None):
     return bitarray((random() < p for _ in range(n)), endian)
@@ -101,14 +105,13 @@ def sieve_example():
     for i in range(2, ceil(sqrt(N))):
         if a[i]:
             a[i*i::i] = False
+    assert(count_n(a, MILLION) - 1 == 15_485_863)
 
     print(100.0 * a.count() / len(a))
     b = sc_encode(a)
     print(100.0 * len(b) / bits2bytes(N))
     c = sc_decode(b)
     assert a == c
-    m = MILLION
-    assert(count_n(c, m) - 1 == 15_485_863)
 
     cnt = stats_bytes(b)[0]
     pprint(cnt)
@@ -116,19 +119,21 @@ def sieve_example():
 def compare():
     a = random_array(1 << 24, 0.01)
     raw = a.tobytes()
-    print("               compress (ms)   decompress (ms)             ratio")
-    print(65 * '-')
+    print(20 * ' ' +  "compress (ms)   decompress (ms)             ratio")
+    print(70 * '-')
     for name, f_e, f_d in [
+            ('serialize', serialize, deserialize),
+            ('vl', vl_encode, vl_decode),
             ('sc' , sc_encode, sc_decode),
             ('gzip', gzip.compress, gzip.decompress),
             ('bz2', bz2.compress, bz2.decompress)]:
-        x = a if name == 'sc' else raw
+        x = a if name in ('serialize', 'vl', 'sc') else raw
         t0 = time()
         b = f_e(x)  # compression
         t1 = time()
         c = f_d(b)  # decompression
         t2 = time()
-        print("    %-6s  %16.3f  %16.3f  %16.3f" %
+        print("    %-11s  %16.3f  %16.3f  %16.3f" %
               (name, 1000 * (t1 - t0), 1000 * (t2 - t1), len(b) / len(raw)))
         assert c == x
 

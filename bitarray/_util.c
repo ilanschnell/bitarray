@@ -790,6 +790,7 @@ sc_encode_block(char *str, bitarrayobject *a, Py_ssize_t offset, int n,
     int len = 0, cnt = 0, raw, i, j, k;
     char *buff = a->ob_item + offset;
 
+    assert(offset + n <= Py_SIZE(a));
     assert(0 <= n && n <= 32);
     /* all bitarray blocks have 32 bytes, except maybe the last */
     assert(n == 32 || last);
@@ -845,6 +846,7 @@ sc_encode(PyObject *module, PyObject *obj)
         Py_ssize_t n;           /* bitarray block size in bytes */
         int last;               /* is this the last block? */
 
+        /* make sure we have enough space in output buffer for next block */
         allocated = PyBytes_GET_SIZE(out);
         if (allocated < len + 33) {  /* increase allocation */
             if (_PyBytes_Resize(&out, allocated + 256) < 0)
@@ -890,11 +892,11 @@ sc_decode_block(bitarrayobject *a, PyObject *iter)
         /* all raw blocks contain 32 bytes, except maybe the last block */
         (raw && !last && k != 32))
     {
-        PyErr_Format(PyExc_ValueError, "invalid header byte: 0x%02x", c);
+        PyErr_Format(PyExc_ValueError, "invalid block header: 0x%02x", c);
         return -1;
     }
     assert(a->nbits % 256 == 0);
-    offset = a->nbits / 8;      /* buffer offset in bytes */
+    offset = Py_SIZE(a);        /* buffer offset in bytes */
 
     if (resize_lite(a, a->nbits + (raw ? (8 * k) : 256)) < 0)
         return -1;
@@ -930,7 +932,7 @@ sc_read_header(PyObject *iter, int *endian, int *last_nbits)
         *endian = ENDIAN_LITTLE;
         break;
     default:
-        PyErr_Format(PyExc_ValueError, "invalid header byte: 0x%02x", c);
+        PyErr_Format(PyExc_ValueError, "invalid header: 0x%02x", c);
         return -1;
     }
 
@@ -969,13 +971,20 @@ sc_decode(PyObject *module, PyObject *obj)
         if (last)
             break;
     }
-    Py_DECREF(iter);
+    assert(a->nbits % 8 == 0);
+
     if (last_nbits) {           /* shrink to actual size */
         Py_ssize_t full_blocks = (a->nbits - 1) / 256;
         Py_ssize_t new_nbits = 256 * full_blocks + last_nbits;
-        assert(a->nbits > 0 && new_nbits <= a->nbits);
+
+        if (a->nbits == 0 || new_nbits > a->nbits) {
+            PyErr_Format(PyExc_ValueError, "decode error: %zd %zd",
+                         a->nbits, new_nbits);
+            goto error;
+        }
         resize_lite(a, new_nbits);
     }
+    Py_DECREF(iter);
     return (PyObject *) a;
  error:
     Py_DECREF(iter);
