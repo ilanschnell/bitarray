@@ -1138,6 +1138,7 @@ class SCTests(unittest.TestCase, Util):
     def test_explicit(self):
         for s, bits, endian in [
                 (b'L\x00\xc0',         '',                  'little'),
+                (b'L\x03\xc1\x03',     '110',               'little'),
                 (b'B\x07\xc1\x02',     '0000001',           'big'),
                 (b'L\x10\xc2\xf0\x0f', '00001111 11110000', 'little'),
                 (b'B\x10\x81\x0c',     '00000000 00001000', 'big'),
@@ -1147,6 +1148,17 @@ class SCTests(unittest.TestCase, Util):
             a = bitarray(bits, endian)
             self.assertEqual(sc_encode(a), s)
             self.assertEqual(sc_decode(s), a)
+
+    @skipIf(sys.version_info[0] == 2)
+    def test_decode_untouch(self):
+        stream = iter(b'B\x07\xc1\x02XYZ')
+        self.assertEqual(sc_decode(stream), bitarray('0000001'))
+        self.assertEqual(next(stream), ord('X'))
+
+        stream = iter([0x42, 0x07, 0xc1, 0x02, None, 'foo'])
+        self.assertEqual(sc_decode(stream), bitarray('0000001'))
+        self.assertTrue(next(stream) is None)
+        self.assertEqual(next(stream), 'foo')
 
     def test_decode_errors(self):
         # header byte muse be 'B' (0x42) or 'L' (0x4c)
@@ -1191,7 +1203,7 @@ class SCTests(unittest.TestCase, Util):
 
     def test_decode_ambiguity(self):
         for b in [
-                b'B\x06\xc1\x5c',      # this is what sc_encode
+                b'B\x06\xc1\x5c',      # this is what sc_encode gives us
                 b'B\x06\xc1\x5f',      # the two pad bits are 1
                 b'B\x06\x84\x01\x03\x04\x05',         # using sparse block
                 b'B\x06\x84\x05\x03\x01\x04',         # different order
