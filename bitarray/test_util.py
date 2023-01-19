@@ -1150,6 +1150,35 @@ class SCTests(unittest.TestCase, Util):
             self.assertEqual(sc_decode(s), a)
 
     @skipIf(sys.version_info[0] == 2)
+    def test_sparse_block(self):
+        a = bitarray(256)
+        for n in range(0, 32):
+            positions = os.urandom(n)
+            b = bytearray([0x42, 0, 0x80 | n])
+            b.extend(positions)
+            a.setall(0)
+            for p in positions:
+                a[p] = 1
+            self.assertEqual(sc_decode(b), a)
+
+            lst = sorted(set(positions))
+            b = bytearray([0x42, 0, 0x80 | len(lst)] + lst)
+            self.assertEqual(sc_decode(b), a)
+            self.assertEqual(sc_encode(a), b)
+
+    @skipIf(sys.version_info[0] == 2)
+    def test_raw_block(self):
+        for n in range(0, 33):
+            raw = os.urandom(n)
+            b = bytearray([0x42, 8 * (n % 32), 0xc0 | n])
+            b.extend(raw)
+            a = bitarray(0, 'big')
+            a.frombytes(raw)
+            self.assertEqual(sc_decode(b), a)
+            c = sc_encode(a)
+            self.assertEqual(c == b, a.count() >= n)
+
+    @skipIf(sys.version_info[0] == 2)
     def test_decode_untouch(self):
         stream = iter(b'B\x07\xc1\x02XYZ')
         self.assertEqual(sc_decode(stream), bitarray('0000001'))
@@ -1203,11 +1232,13 @@ class SCTests(unittest.TestCase, Util):
 
     def test_decode_ambiguity(self):
         for b in [
-                b'B\x06\xc1\x5c',      # this is what sc_encode gives us
-                b'B\x06\xc1\x5f',      # the two pad bits are 1
+                b'B\x06\xc1\x5c',          # this is what sc_encode gives us
+                b'B\x06\xc1\x5f',          # the two pad bits are 1
+                b'B\x06\xc3\x5f\x87\x0f',  # extra raw bytes
                 b'B\x06\x84\x01\x03\x04\x05',         # using sparse block
                 b'B\x06\x84\x05\x03\x01\x04',         # different order
-                b'B\x06\x84\x01\x03\x04\x05\x06\xff', # some pad bits set
+                b'B\x06\x84\x05\x03\x01\x04\x04\x05', # some twice
+                b'B\x06\x84\x05\x03\x01\x04\x06\xff', # some pad bits set
         ]:
             a = sc_decode(b)
             self.assertEqual(a.to01(), '010111')

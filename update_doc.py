@@ -47,6 +47,7 @@ NEW_IN = {
 DOCS = {
     'chc': ('Canonical Huffman Coding', 'canonical.rst'),
     'rep': ('Bitarray representations', 'represent.rst'),
+    'sc':  ('Sparse compression', 'sparse_compression.rst'),
     'vlf': ('Variable length bitarray format', 'variable_length.rst'),
 }
 
@@ -57,6 +58,8 @@ DOC_LINKS = {
     'util.base2ba':            'rep',
     'util.deserialize':        'rep',
     'util.serialize':          'rep',
+    'util.sc_decode':          'sc',
+    'util.sc_encode':          'sc',
     'util.vl_decode':          'vlf',
     'util.vl_encode':          'vlf',
 }
@@ -267,6 +270,7 @@ def main():
     doctest.testfile('./doc/canonical.rst')
     doctest.testfile('./doc/represent.rst')
     doctest.testfile('./doc/variable_length.rst')
+    doctest.testfile('./doc/sparse_compression.rst')
 
 
 if __name__ == '__main__':
