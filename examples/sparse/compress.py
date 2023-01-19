@@ -9,7 +9,7 @@ from time import time
 
 from bitarray import bitarray, bits2bytes
 from bitarray.util import (
-    count_n,
+    count_n, urandom,
     sc_encode, sc_decode,
     vl_encode, vl_decode,
     serialize, deserialize,
@@ -116,8 +116,24 @@ def sieve_example():
     cnt = stats_bytes(b)[0]
     pprint(cnt)
 
+def p_range():
+    for p in range(21):
+        p *= 0.01
+        a = random_array(1 << 16, p)
+        nbytes = bits2bytes(len(a))
+        b = sc_encode(a)
+        cnt = stats_bytes(b)[0]
+        print('%8.2f  %8.3f  %8d' % (p, len(b) / nbytes, cnt['raw']))
+        assert a == sc_decode(b)
+
 def compare():
-    a = random_array(1 << 24, 0.01)
+    n = 1 << 24
+    # create random bitarray with p = 1 / 2^6 = 1 / 64 = 1.56%
+    a = bitarray(n)
+    a.setall(1)
+    for i in range(6):
+        a &= urandom(n)
+
     raw = a.tobytes()
     print(20 * ' ' +  "compress (ms)   decompress (ms)             ratio")
     print(70 * '-')
@@ -140,4 +156,5 @@ def compare():
 if __name__ == '__main__':
     test_stats()
     sieve_example()
+    p_range()
     compare()

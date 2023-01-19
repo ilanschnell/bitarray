@@ -1148,10 +1148,6 @@ class SCTests(unittest.TestCase, Util):
             self.assertEqual(sc_encode(a), s)
             self.assertEqual(sc_decode(s), a)
 
-    def random_array(self, n, p=0.01):
-        return bitarray((random() < p for _ in range(n)),
-                        self.random_endian())
-
     def test_decode_errors(self):
         # header byte muse be 'B' (0x42) or 'L' (0x4c)
         self.assertRaisesMessage(ValueError, "invalid header: 0x43",
@@ -1204,24 +1200,37 @@ class SCTests(unittest.TestCase, Util):
             a = sc_decode(b)
             self.assertEqual(a.to01(), '010111')
 
+    def random_array(self, n, m):  # p = 1 / 2^m
+        endian = self.random_endian()
+        a = bitarray(n, endian)
+        a.setall(1)
+        for i in range(m):
+            a &= urandom(n, endian)
+        return a
+
     def round_trip(self, a):
         b = sc_encode(a)
         c = sc_decode(b)
         self.assertEqual(a, c)
         self.assertEqual(a.endian(), c.endian())
 
-    def test_zeros(self):
+    def test_zeros_ones(self):
         for n in range(300):
-            self.round_trip(zeros(n))
+            a = zeros(n)
+            self.round_trip(a)
+            a.setall(1)
+            self.round_trip(a)
 
     def test_random(self):
         for n in 128, 256, 257, randint(0, 512):
-            for p in 0, 0.125, 0.5, 1:
-                a = self.random_array(n, p)
+            for m in range(8):
+                a = self.random_array(n, m)
                 self.round_trip(a)
 
     def test_large(self):
-        a = self.random_array(randint(5000, 10000), 0.01)
+        n = randint(50000, 100000)
+        # create bitarray with p = 1 / 2^3 = 1 / 8 = 12.5%
+        a = self.random_array(n, 3)
         self.round_trip(a)
 
 tests.append(SCTests)
