@@ -1,7 +1,7 @@
 2023-XX-XX   2.7.0:
 -------------------
-  * add `util.sc_encode()` and `util.sc_decode()` for (de-) compressing
-    sparse bitarrays
+  * add `util.sc_encode()` and `util.sc_decode()` for
+    [compression of sparse bitarrays](sparse_compression.rst), #185
   * add `util.any_and()`
   * add `util.intervals()`
   * add [distance metrics](../examples/distance.py) example:

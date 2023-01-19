@@ -838,10 +838,12 @@ sc_encode(PyObject *module, PyObject *obj)
 
     str = PyBytes_AS_STRING(out);
     str[len++] = IS_BE(a) ? 'B' : 'L';
-    str[len++] = a->nbits % 256;
+    str[len++] = a->nbits & 0xff;
 
     set_padbits(a);
     for (offset = 0;; offset += 32) {
+        /* remaining bytes to encode in bitarray buffer */
+        Py_ssize_t remaining = Py_SIZE(a) - offset;
         Py_ssize_t allocated;   /* size (in bytes) of output buffer */
         Py_ssize_t n;           /* bitarray block size in bytes */
         int last;               /* is this the last block? */
@@ -854,8 +856,8 @@ sc_encode(PyObject *module, PyObject *obj)
             str = PyBytes_AS_STRING(out);
         }
 
-        last = Py_SIZE(a) - offset <= 32;
-        n = last ? Py_SIZE(a) - offset : 32;
+        last = remaining <= 32;
+        n = last ? remaining : 32;
         len += sc_encode_block(str + len, a, offset, (int) n, last);
         if (last)
             break;
@@ -974,6 +976,9 @@ sc_decode(PyObject *module, PyObject *obj)
         Py_ssize_t new_nbits = 256 * full_blocks + last_nbits;
 
         if (a->nbits == 0 || new_nbits > a->nbits) {
+            /* the bitarray would have to be increased (exposing
+               uninitialized memory) - the number of bits in the last block
+               exceeds the corresponding raw bytes in the last block */
             PyErr_Format(PyExc_ValueError, "decode error: %zd %zd",
                          a->nbits, new_nbits);
             goto error;

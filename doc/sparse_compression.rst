@@ -15,3 +15,24 @@ The lower the population count, the more efficient the compression will be:
     >>> data
     b'L\x00\x00\x01\x85\x00\x81\x0c'
     >>> assert sc_decode(data) == a
+
+Strategy
+--------
+
+Our bitarray if divided into blocks of 256 bits.
+
+
+Speed
+-----
+
+...
+
+Statistics
+----------
+
+...
+
+Binary compression format
+-------------------------
+
+...
