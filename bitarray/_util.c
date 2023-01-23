@@ -884,21 +884,23 @@ write_block(char *str, bitarrayobject *a, Py_ssize_t offset, int n, int k)
     switch (n) {
     case 0:                     /* type 0 - raw bytes */
         assert(0 < k && k <= 128);
-        *str = (char) k;
+        str[len++] = (char) k;
         assert(offset + k <= Py_SIZE(a));
-        memcpy(str + 1, buff, (size_t) k);
-        return k + 1;
+        memcpy(str + len, buff, (size_t) k);
+        len += k;
+        assert(len == k + 1);
+        return len;
 
     case 1:                     /* type 1 - single byte for each position */
         assert(k < 32);
 
-        na = Py_MIN(nbytes, 32);
-        str[len++] = 160 + k;
+        na = Py_MIN(nbytes, 1 << (8 - 3));   /* bytes to encode */
+        str[len++] = (char) (160 + k);
         for (i = 0; i < na; i++) {
             if (buff[i]) {
                 for (j = 0; j < 8; j++)
                     if (buff[i] & BITMASK(a, j))
-                        str[len++] = 8 * i + j;
+                        str[len++] = (char) (8 * i + j);
             }
         }
         assert(len == k + 1);
@@ -907,7 +909,7 @@ write_block(char *str, bitarrayobject *a, Py_ssize_t offset, int n, int k)
     case 2:
     case 3:
     case 4:
-        na = Py_MIN(nbytes, 1 << (8 * n));   /* bytes to encode */
+        na = Py_MIN(nbytes, 1 << (8 * n - 3));   /* bytes to encode */
 
         str[len++] = 190 + n;
         str[len++] = k;
@@ -926,7 +928,6 @@ write_block(char *str, bitarrayobject *a, Py_ssize_t offset, int n, int k)
     default:
         Py_UNREACHABLE();
     }
-    Py_UNREACHABLE();
     return -1;                  /* cannot happen */
 }
 
@@ -991,7 +992,7 @@ sc_encode(PyObject *module, PyObject *obj)
 
         /* make sure we have enough space in output buffer for next block */
         allocated = PyBytes_GET_SIZE(out);
-        if (allocated < len + 1025) {  /* increase allocation */
+        if (allocated < len + 2 + 4 * 256) {  /* increase allocation */
             if (_PyBytes_Resize(&out, allocated + 32768) < 0)
                 return NULL;
             str = PyBytes_AS_STRING(out);
