@@ -782,11 +782,11 @@ next_char(PyObject *iter)
 static void
 write_n(char *str, int n, Py_ssize_t i)
 {
-    int j, len = 0;
+    int j;
 
     assert(n <= 8);
     for (j = 0; j < n; j++) {
-        str[len++] = i & 0xff;
+        str[j] = (char) i & 0xff;
         i >>= 8;
     }
     assert(i == 0);
@@ -803,7 +803,7 @@ read_n(int n, PyObject *iter)
         c = next_char(iter);
         if (c < 0)
             return -1;
-        i |= c << (8 * j);
+        i |= ((Py_ssize_t) c) << (8 * j);
     }
     return i;
 }
@@ -1031,10 +1031,11 @@ sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
         PyErr_Format(PyExc_ValueError, "invalid header: 0x%02x", head);
         return -1;
     }
-    if ((n = read_n(len, iter)) < 0)
+    n = read_n(len, iter);
+    if (n < 0)
         return -1;
-
     *nbits = n;
+
     return 0;
 }
 
@@ -1054,8 +1055,8 @@ read_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int n, int k)
 
         i += 8 * offset;
         if (i >= a->nbits) {
-            PyErr_Format(PyExc_ValueError, "decode error: %zd >= %zd",
-                         i, a->nbits);
+            PyErr_Format(PyExc_ValueError, "decode error (n=%d): %zd >= %zd",
+                         n, i, a->nbits);
             return -1;
         }
         setbit(a, i, 1);
