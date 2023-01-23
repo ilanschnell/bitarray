@@ -805,6 +805,11 @@ read_n(int n, PyObject *iter)
             return -1;
         i |= ((Py_ssize_t) c) << (8 * j);
     }
+    if (i < 0) {
+        PyErr_Format(PyExc_ValueError,
+                     "read %d bytes got negative value: %zd", n, i);
+        return -1;
+    }
     return i;
 }
 
@@ -1024,7 +1029,7 @@ sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
     if ((head = next_char(iter)) < 0)
         return -1;
 
-    *endian = head & 0x10 ? 1 : 0;
+    *endian = head & 0x10 ? ENDIAN_BIG : ENDIAN_LITTLE;
     len = head & 0x0f;
 
     if (head & 0xe0 || len > 8) {
@@ -1084,7 +1089,7 @@ sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
 
         k = head;
         if (offset + k > Py_SIZE(a)) {
-            PyErr_Format(PyExc_ValueError, "decode error: %zd + %d > %zd",
+            PyErr_Format(PyExc_ValueError, "decode error (raw): %zd + %d > %zd",
                          offset, k, Py_SIZE(a));
             return -1;
         }
@@ -1123,7 +1128,7 @@ sc_decode(PyObject *module, PyObject *obj)
 {
     PyObject *iter;
     bitarrayobject *a;
-    Py_ssize_t offset = 0, nbits;
+    Py_ssize_t offset = 0, increase, nbits;
     int endian;
 
     iter = PyObject_GetIter(obj);
@@ -1140,18 +1145,14 @@ sc_decode(PyObject *module, PyObject *obj)
         goto error;
 
     a->endian = endian;
-    resize_lite(a, nbits);
+    if (resize_lite(a, nbits) < 0)
+        goto error;
     memset(a->ob_item, 0x00, (size_t) Py_SIZE(a));
 
-    while (1) {
-        Py_ssize_t tmp;
-
-        tmp = sc_decode_block(a, offset, iter);
-        if (tmp < 0)
+    while ((increase = sc_decode_block(a, offset, iter))) {
+        if (increase < 0)
             goto error;
-        if (tmp == 0)
-            break;
-        offset += tmp;
+        offset += increase;
     }
     Py_DECREF(iter);
     return (PyObject *) a;
