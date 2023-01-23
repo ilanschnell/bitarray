@@ -870,9 +870,10 @@ type0_get_k(bitarrayobject *a, Py_ssize_t offset)
 }
 
 /* increase bitarray offset by 1 << (8 * n) - 3 bytes - return number of
-   bytes written to str */
+   bytes written to str - k is the number of number of counts */
 static Py_ssize_t
-write_block(char *str, bitarrayobject *a, Py_ssize_t offset, int n, int k)
+write_block(char *str, bitarrayobject *a, Py_ssize_t offset, int n,
+            Py_ssize_t k)
 {
     Py_ssize_t nbytes = Py_SIZE(a) - offset;        /* remaining bytes */
     Py_ssize_t na, i, j, len = 0;
@@ -892,7 +893,7 @@ write_block(char *str, bitarrayobject *a, Py_ssize_t offset, int n, int k)
     case 1:                     /* type 1 - single byte for each position */
         assert(k < 32);
 
-        na = Py_MIN(nbytes, 1 << (8 - 3));   /* bytes to encode */
+        na = Py_MIN(nbytes, 32);   /* bytes to encode   32 = 1 << (8 - 3)) */
         str[len++] = (char) (160 + k);
         for (i = 0; i < na; i++) {
             if (buff[i]) {
@@ -907,10 +908,11 @@ write_block(char *str, bitarrayobject *a, Py_ssize_t offset, int n, int k)
     case 2:
     case 3:
     case 4:
-        na = Py_MIN(nbytes, 1 << (8 * n - 3));   /* bytes to encode */
+        assert(k < 256);
+        na = Py_MIN(nbytes, ((Py_ssize_t) 1) << (8 * n - 3));
 
         str[len++] = 190 + n;
-        str[len++] = k;
+        str[len++] = (char) k;
         for (i = 0; i < na; i++) {
             if (buff[i]) {
                 for (j = 0; j < 8; j++)
@@ -1068,6 +1070,7 @@ sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
         }
         return k;
     }
+
     if (160 <= head && head < 192) {       /* type 1 - 0xa0 .. 0xbf */
         k = head - 160;
         assert(k < 32);
@@ -1084,6 +1087,7 @@ sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
         }
         return 32;
     }
+
     if (192 <= head && head <= 194) {      /* type 2, 3, 4 - 0xc0 .. 0xc2 */
         n = head - 190;
         if ((k = next_char(iter)) < 0)
@@ -1099,7 +1103,7 @@ sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
             }
             setbit(a, i, 1);
         }
-        return 1 << (8 * n - 3);
+        return ((Py_ssize_t) 1) << (8 * n - 3);
     }
 
     PyErr_Format(PyExc_ValueError, "invalid block head: 0x%02x", head);
