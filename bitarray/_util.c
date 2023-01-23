@@ -1048,7 +1048,8 @@ read_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int n, int k)
     for (j = 0; j < k; j++) {
         Py_ssize_t i;
 
-        if ((i = read_n(n, iter)) < 0)
+        i = (n == 1) ? next_char(iter) : read_n(n, iter);
+        if (i < 0)
             return -1;
 
         i += 8 * offset;
@@ -1068,22 +1069,22 @@ read_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int n, int k)
 static Py_ssize_t
 sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
 {
-    Py_ssize_t nbytes = Py_SIZE(a);
-    Py_ssize_t i, k;
-    int head;
-    char *buff = a->ob_item + offset;
+    int head, k;
 
     if ((head = next_char(iter)) < 0)
         return -1;
 
-    if (head == 0)              /* stop byte */
+    if (head == 0)                         /* stop byte */
         return 0;
 
     if (head <= 128) {                     /* type 0 - 0x01 .. 0x80 */
+        char *buff = a->ob_item + offset;
+        Py_ssize_t i;
+
         k = head;
-        if (offset + k > nbytes) {
-            PyErr_Format(PyExc_ValueError, "decode error: %zd + %zd > %zd",
-                         offset, k, nbytes);
+        if (offset + k > Py_SIZE(a)) {
+            PyErr_Format(PyExc_ValueError, "decode error: %zd + %d > %zd",
+                         offset, k, Py_SIZE(a));
             return -1;
         }
         for (i = 0; i < k; i++) {
@@ -1102,7 +1103,7 @@ sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
         return 32;
     }
 
-    if (192 <= head && head <= 194) {      /* type 2, 3, 4 - 0xc0 .. 0xc2 */
+    if (192 <= head && head <= 194) {      /* type 2 .. 4 - 0xc0 .. 0xc2 */
         int n = head - 190;
 
         if ((k = next_char(iter)) < 0)
