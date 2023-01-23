@@ -841,11 +841,12 @@ sc_encode_header(char *str, bitarrayobject *a)
 static Py_ssize_t
 clip_count(bitarrayobject *a, Py_ssize_t offset, Py_ssize_t n, Py_ssize_t m)
 {
-    Py_ssize_t cnt = 0, i;
+    Py_ssize_t cnt = 0, na, i;
     char *buff = a->ob_item + offset;
 
-    assert(offset + n <= Py_SIZE(a));
-    for (i = 0; i < n; i++) {
+    na = Py_MIN(Py_SIZE(a) - offset, n);
+    assert(offset + na <= Py_SIZE(a));
+    for (i = 0; i < na; i++) {
         cnt += bitcount_lookup[(unsigned char) buff[i]];
         if (cnt >= m)
             return m;
@@ -857,15 +858,14 @@ static int
 type0_get_k(bitarrayobject *a, Py_ssize_t offset)
 {
     Py_ssize_t nbytes = Py_SIZE(a) - offset;  /* remaining bytes */
-    Py_ssize_t k, r;
+    Py_ssize_t k = 0;
 
     assert(nbytes > 0);
 
-    for (k = 0; k <= 128; k += 32) {
-        r = Py_MIN(32, nbytes - k);
-        if (r > clip_count(a, offset + k, 32, 32))
-            break;
-    }
+    while (k < 128 &&
+           Py_MIN(32, nbytes - k) <= clip_count(a, offset + k, 32, 32))
+        k += 32;
+
     k = Py_MIN(k, nbytes);
     assert(0 < k && k <= Py_MIN(128, nbytes));
     return (int) k;
@@ -891,13 +891,16 @@ write_block(char *str, bitarrayobject *a, Py_ssize_t offset, int n, int k)
 
     case 1:                     /* type 1 - single byte for each position */
         assert(k < 32);
+
+        na = Py_MIN(nbytes, 32);
         str[len++] = 160 + k;
-        for (i = 0; i < 32; i++)
+        for (i = 0; i < na; i++) {
             if (buff[i]) {
                 for (j = 0; j < 8; j++)
                     if (buff[i] & BITMASK(a, j))
                         str[len++] = 8 * i + j;
             }
+        }
         assert(len == k + 1);
         return len;
 
@@ -919,6 +922,7 @@ write_block(char *str, bitarrayobject *a, Py_ssize_t offset, int n, int k)
         }
         assert(len == k + 2);
         return len;
+
     default:
         Py_UNREACHABLE();
     }
