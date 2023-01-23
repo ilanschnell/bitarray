@@ -1038,6 +1038,30 @@ sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
     return 0;
 }
 
+/* read n * k bytes from iter and set elements in bitarray */
+static int
+read_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int n, int k)
+{
+    int j;
+
+    assert(1 <= n && n <= 4);
+    for (j = 0; j < k; j++) {
+        Py_ssize_t i;
+
+        if ((i = read_n(n, iter)) < 0)
+            return -1;
+
+        i += 8 * offset;
+        if (i >= a->nbits) {
+            PyErr_Format(PyExc_ValueError, "decode error: %zd >= %zd",
+                         i, a->nbits);
+            return -1;
+        }
+        setbit(a, i, 1);
+    }
+    return 0;
+}
+
 /* Decode one block: consume iter and set bitarray buffer at offset.
    Return the number of bytes added to bitarray.
    On failure, set an exception and return -1. */
@@ -1045,9 +1069,8 @@ static Py_ssize_t
 sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
 {
     Py_ssize_t nbytes = Py_SIZE(a);
-    Py_ssize_t nbits = a->nbits;
-    Py_ssize_t i, j, k;
-    int head, c, n;
+    Py_ssize_t i, k;
+    int head;
     char *buff = a->ob_item + offset;
 
     if ((head = next_char(iter)) < 0)
@@ -1064,7 +1087,8 @@ sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
             return -1;
         }
         for (i = 0; i < k; i++) {
-            if ((c = next_char(iter)) < 0)
+            int c = next_char(iter);
+            if (c < 0)
                 return -1;
             buff[i] = (char) c;
         }
@@ -1073,36 +1097,18 @@ sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
 
     if (160 <= head && head < 192) {       /* type 1 - 0xa0 .. 0xbf */
         k = head - 160;
-        assert(k < 32);
-        for (j = 0; j < k; j++) {
-            if ((i = next_char(iter)) < 0)
-                return -1;
-            i += 8 * offset;
-            if (i >= nbits) {
-                 PyErr_Format(PyExc_ValueError, "decode error: %zd >= %zd",
-                              i, nbits);
-                 return -1;
-            }
-            setbit(a, i, 1);
-        }
+        if (read_block(a, offset, iter, 1, k) < 0)
+            return -1;
         return 32;
     }
 
     if (192 <= head && head <= 194) {      /* type 2, 3, 4 - 0xc0 .. 0xc2 */
-        n = head - 190;
+        int n = head - 190;
+
         if ((k = next_char(iter)) < 0)
             return -1;
-        for (j = 0; j < k; j++) {
-            if ((i = read_n(n, iter)) < 0)
-                return -1;
-            i += 8 * offset;
-            if (i >= nbits) {
-                 PyErr_Format(PyExc_ValueError, "decode error: %zd >= %zd",
-                              i, nbits);
-                 return -1;
-            }
-            setbit(a, i, 1);
-        }
+        if (read_block(a, offset, iter, n, k) < 0)
+            return -1;
         return ((Py_ssize_t) 1) << (8 * n - 3);
     }
 
