@@ -792,7 +792,6 @@ write_n(char *str, int n, Py_ssize_t i)
     assert(i == 0);
 }
 
-/*
 static Py_ssize_t
 read_n(int n, PyObject *iter)
 {
@@ -808,7 +807,6 @@ read_n(int n, PyObject *iter)
     }
     return i;
 }
-*/
 
 static int
 byte_length(Py_ssize_t i)
@@ -1015,6 +1013,150 @@ This representation is useful for efficiently storing sparse bitarrays.\n\
 Use `sc_decode()` for decoding.");
 
 
+static int
+sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
+{
+    Py_ssize_t n;
+    int head, len;
+
+    if ((head = next_char(iter)) < 0)
+        return -1;
+
+    *endian = head & 0x10 ? 1 : 0;
+    len = head & 0x0f;
+
+    if (head & 0xe0 || len > 8) {
+        PyErr_Format(PyExc_ValueError, "invalid header: 0x%02x", head);
+        return -1;
+    }
+    if ((n = read_n(len, iter)) < 0)
+        return -1;
+
+    *nbits = n;
+    return 0;
+}
+
+/* Decode one block: consume iter and set bitarray buffer at offset.
+   Return the number of bytes added to bitarray.
+   On failure, set an exception and return -1. */
+static Py_ssize_t
+sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
+{
+    Py_ssize_t nbytes = Py_SIZE(a);
+    Py_ssize_t nbits = a->nbits;
+    Py_ssize_t i, j, k;
+    int head, c, n;
+    char *buff = a->ob_item + offset;
+
+    if ((head = next_char(iter)) < 0)
+        return -1;
+
+    if (head == 0)              /* stop byte */
+        return 0;
+
+    if (head <= 128) {                     /* type 0 - 0x01 .. 0x80 */
+        k = head;
+        if (offset + k > nbytes) {
+            PyErr_Format(PyExc_ValueError, "decode error: %zd + %zd > %zd",
+                         offset, k, nbytes);
+            return -1;
+        }
+        for (i = 0; i < k; i++) {
+            if ((c = next_char(iter)) < 0)
+                return -1;
+            buff[i] = (char) c;
+        }
+        return k;
+    }
+    if (160 <= head && head < 192) {       /* type 1 - 0xa0 .. 0xbf */
+        k = head - 160;
+        assert(k < 32);
+        for (j = 0; j < k; j++) {
+            if ((i = next_char(iter)) < 0)
+                return -1;
+            i += 8 * offset;
+            if (i >= nbits) {
+                 PyErr_Format(PyExc_ValueError, "decode error: %zd >= %zd",
+                              i, nbits);
+                 return -1;
+            }
+            setbit(a, i, 1);
+        }
+        return 32;
+    }
+    if (192 <= head && head <= 194) {      /* type 2, 3, 4 - 0xc0 .. 0xc2 */
+        n = head - 190;
+        if ((k = next_char(iter)) < 0)
+            return -1;
+        for (j = 0; j < k; j++) {
+            if ((i = read_n(n, iter)) < 0)
+                return -1;
+            i += 8 * offset;
+            if (i >= nbits) {
+                 PyErr_Format(PyExc_ValueError, "decode error: %zd >= %zd",
+                              i, nbits);
+                 return -1;
+            }
+            setbit(a, i, 1);
+        }
+        return 1 << (8 * n - 3);
+    }
+
+    PyErr_Format(PyExc_ValueError, "invalid block head: 0x%02x", head);
+    return -1;
+}
+
+static PyObject *
+sc_decode(PyObject *module, PyObject *obj)
+{
+    PyObject *iter;
+    bitarrayobject *a;
+    Py_ssize_t offset = 0, nbits;
+    int endian;
+
+    iter = PyObject_GetIter(obj);
+    if (iter == NULL)
+        return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
+                            Py_TYPE(obj)->tp_name);
+
+    a = (bitarrayobject *) PyObject_CallObject(bitarray_type_obj, NULL);
+    if (a == NULL)
+        goto error;
+    assert(a->nbits == 0 && a->readonly == 0 && a->buffer == NULL);
+
+    if (sc_decode_header(iter, &endian, &nbits) < 0)
+        goto error;
+
+    a->endian = endian;
+    resize_lite(a, nbits);
+    memset(a->ob_item, 0x00, (size_t) Py_SIZE(a));
+
+    while (1) {
+        Py_ssize_t tmp;
+
+        tmp = sc_decode_block(a, offset, iter);
+        if (tmp < 0)
+            goto error;
+        if (tmp == 0)
+            break;
+        offset += tmp;
+    }
+    Py_DECREF(iter);
+    return (PyObject *) a;
+
+ error:
+    Py_DECREF(iter);
+    Py_XDECREF((PyObject *) a);
+    return NULL;
+}
+
+PyDoc_STRVAR(sc_decode_doc,
+"sc_decode(stream) -> bitarray\n\
+\n\
+Decode binary stream (an integer iterator, or bytes-like object) of a\n\
+sparse compressed (`sc`) bitarray, and return the decoded bitarray.\n\
+This function consumes only one bitarray and leaves the remaining stream\n\
+untouched.  Use `sc_encode()` for encoding.");
 
 /* ------------------- variable length bitarray format ----------------- */
 
@@ -1353,6 +1495,7 @@ static PyMethodDef module_functions[] = {
     {"ba2base",   (PyCFunction) ba2base,   METH_VARARGS, ba2base_doc},
     {"_base2ba",  (PyCFunction) base2ba,   METH_VARARGS, 0},
     {"sc_encode", (PyCFunction) sc_encode, METH_O,       sc_encode_doc},
+    {"sc_decode", (PyCFunction) sc_decode, METH_O,       sc_decode_doc},
     {"vl_encode", (PyCFunction) vl_encode, METH_O,       vl_encode_doc},
     {"_vl_decode",(PyCFunction) vl_decode, METH_VARARGS, 0},
     {"canonical_decode",
