@@ -697,7 +697,7 @@ base2ba(PyObject *module, PyObject *args)
     Py_RETURN_NONE;
 }
 
-/* ------------------- variable length bitarray format ----------------- */
+/* ------------------------ utility C functions ------------------------ */
 
 /* like resize() */
 static int
@@ -778,6 +778,240 @@ next_char(PyObject *iter)
     Py_DECREF(item);
     return (int) c;
 }
+
+static void
+write_n(char *str, int n, Py_ssize_t i)
+{
+    int j, len = 0;
+
+    assert(n <= 8);
+    for (j = 0; j < n; j++) {
+        str[len++] = i & 0xff;
+        i >>= 8;
+    }
+    assert(i == 0);
+}
+
+/*
+static Py_ssize_t
+read_n(int n, PyObject *iter)
+{
+    Py_ssize_t i = 0;
+    int j, c;
+
+    assert(n <= 8);
+    for (j = 0; j < n; j++) {
+        c = next_char(iter);
+        if (c < 0)
+            return -1;
+        i |= c << (8 * j);
+    }
+    return i;
+}
+*/
+
+static int
+byte_length(Py_ssize_t i)
+{
+    int m = sizeof(Py_ssize_t), n;
+
+    assert(i >= 0);
+    for (n = 0; m; n++) {
+        if (!i)
+            return n;
+        i >>= 8;
+    }
+    return -1;
+}
+
+/* ---------------------- sparse compressed bitarray ------------------- */
+
+static int
+sc_encode_header(char *str, bitarrayobject *a)
+{
+    int len;
+
+    len = byte_length(a->nbits);
+    *str = (IS_BE(a) ? 0x10 : 0x00) | ((char) len);
+    write_n(str + 1, len, a->nbits);
+
+    return 1 + len;
+}
+
+static Py_ssize_t
+clip_count(bitarrayobject *a, Py_ssize_t offset, Py_ssize_t n, Py_ssize_t m)
+{
+    Py_ssize_t cnt = 0, i;
+    char *buff = a->ob_item + offset;
+
+    assert(offset + n <= Py_SIZE(a));
+    for (i = 0; i < n; i++) {
+        cnt += bitcount_lookup[(unsigned char) buff[i]];
+        if (cnt >= m)
+            return m;
+    }
+    return cnt;
+}
+
+static int
+type0_get_k(bitarrayobject *a, Py_ssize_t offset)
+{
+    Py_ssize_t nbytes = Py_SIZE(a) - offset;  /* remaining bytes */
+    Py_ssize_t k, r;
+
+    assert(nbytes > 0);
+
+    for (k = 0; k <= 128; k += 32) {
+        r = Py_MIN(32, nbytes - k);
+        if (r > clip_count(a, offset + k, 32, 32))
+            break;
+    }
+    k = Py_MIN(k, nbytes);
+    assert(0 < k && k <= Py_MIN(128, nbytes));
+    return (int) k;
+}
+
+/* increase bitarray offset by 1 << (8 * n) - 3 bytes - return number of
+   bytes written to str */
+static Py_ssize_t
+write_block(char *str, bitarrayobject *a, Py_ssize_t offset, int n, int k)
+{
+    Py_ssize_t nbytes = Py_SIZE(a) - offset;        /* remaining bytes */
+    Py_ssize_t na, i, j, len = 0;
+    char *buff = a->ob_item + offset;
+
+    assert(nbytes >= 0);
+    switch (n) {
+    case 0:                     /* type 0 - raw bytes */
+        assert(0 < k && k <= 128);
+        *str = (char) k;
+        assert(offset + k <= Py_SIZE(a));
+        memcpy(str + 1, buff, (size_t) k);
+        return k + 1;
+
+    case 1:                     /* type 1 - single byte for each position */
+        assert(k < 32);
+        str[len++] = 160 + k;
+        for (i = 0; i < 32; i++)
+            if (buff[i]) {
+                for (j = 0; j < 8; j++)
+                    if (buff[i] & BITMASK(a, j))
+                        str[len++] = 8 * i + j;
+            }
+        assert(len == k + 1);
+        return len;
+
+    case 2:
+    case 3:
+    case 4:
+        na = Py_MIN(nbytes, 1 << (8 * n));   /* bytes to encode */
+
+        str[len++] = 190 + n;
+        str[len++] = k;
+        for (i = 0; i < na; i++) {
+            if (buff[i]) {
+                for (j = 0; j < 8; j++)
+                    if (buff[i] & BITMASK(a, j)) {
+                        write_n(str + len, n, 8 * i + j);
+                        len += n;
+                    }
+            }
+        }
+        assert(len == k + 2);
+        return len;
+    default:
+        Py_UNREACHABLE();
+    }
+    Py_UNREACHABLE();
+    return -1;                  /* cannot happen */
+}
+
+static Py_ssize_t
+sc_encode_block(char *str, Py_ssize_t *len,
+                bitarrayobject *a, Py_ssize_t offset)
+{
+    Py_ssize_t nbytes = Py_SIZE(a) - offset;        /* remaining bytes */
+    Py_ssize_t count8, count16, count24, count32;
+
+    assert(nbytes >= 0);
+    count8 = clip_count(a, offset, 32, 32);
+    if (Py_MIN(32, nbytes) <= count8) {                      /* type 0 */
+        int k = type0_get_k(a, offset);
+
+        *len += write_block(str + *len, a, offset, 0, k);
+        return k;
+    }
+    count16 = clip_count(a, offset, 1 << (16 - 3), 256);
+    if (Py_MIN(256, nbytes >> (8 - 3)) <= count16) {         /* type 1 */
+        *len += write_block(str + *len, a, offset, 1, count8);
+        return 32;
+    }
+    count24 = clip_count(a, offset, 1 << (24 - 3), 256);
+    if (Py_MIN(256, nbytes >> (16 - 3)) <= count24) {        /* type 2 */
+        *len += write_block(str + *len, a, offset, 2, count16);
+        return 1 << (8 * 2 - 3);
+    }
+    count32 = clip_count(a, offset, 1 << (32 - 3), 256);
+    if (Py_MIN(256, nbytes >> (24 - 3)) <= count32) {        /* type 3 */
+        *len += write_block(str + *len, a, offset, 3, count24);
+        return 1 << (8 * 3 - 3);
+    }
+    *len += write_block(str + *len, a, offset, 4, count32);  /* type 4 */
+    return 1 << (8 * 4 - 3);
+}
+
+static PyObject *
+sc_encode(PyObject *module, PyObject *obj)
+{
+    PyObject *out;
+    char *str;                  /* output buffer */
+    Py_ssize_t len = 0;         /* bytes written into output buffer */
+    bitarrayobject *a;
+    Py_ssize_t offset = 0;      /* block offset into bitarray a in bytes */
+
+    if (ensure_bitarray(obj) < 0)
+        return NULL;
+
+    a = (bitarrayobject *) obj;
+
+    out = PyBytes_FromStringAndSize(NULL, 32768);
+    if (out == NULL)
+        return NULL;
+
+    str = PyBytes_AS_STRING(out);
+    len += sc_encode_header(str, a);
+
+    set_padbits(a);
+    while (offset < Py_SIZE(a)) {
+        Py_ssize_t allocated;   /* size (in bytes) of output buffer */
+
+        /* make sure we have enough space in output buffer for next block */
+        allocated = PyBytes_GET_SIZE(out);
+        if (allocated < len + 1025) {  /* increase allocation */
+            if (_PyBytes_Resize(&out, allocated + 32768) < 0)
+                return NULL;
+            str = PyBytes_AS_STRING(out);
+        }
+        offset += sc_encode_block(str, &len, a, offset);
+    }
+    str[len++] = 0x00;          /* add stop byte */
+
+    if (_PyBytes_Resize(&out, len) < 0)
+        return NULL;
+
+    return out;
+}
+
+PyDoc_STRVAR(sc_encode_doc,
+"sc_encode(bitarray, /) -> bytes\n\
+\n\
+Compress a sparse bitarray and return its binary representation.\n\
+This representation is useful for efficiently storing sparse bitarrays.\n\
+Use `sc_decode()` for decoding.");
+
+
+
+/* ------------------- variable length bitarray format ----------------- */
 
 /* LEN_PAD_BITS is always 3 - the number of bits (length) that is necessary to
    represent the number of pad bits.  The number of padding bits itself is
@@ -1113,6 +1347,7 @@ static PyMethodDef module_functions[] = {
     {"_hex2ba",   (PyCFunction) hex2ba,    METH_VARARGS, 0},
     {"ba2base",   (PyCFunction) ba2base,   METH_VARARGS, ba2base_doc},
     {"_base2ba",  (PyCFunction) base2ba,   METH_VARARGS, 0},
+    {"sc_encode", (PyCFunction) sc_encode, METH_O,       sc_encode_doc},
     {"vl_encode", (PyCFunction) vl_encode, METH_O,       vl_encode_doc},
     {"_vl_decode",(PyCFunction) vl_decode, METH_VARARGS, 0},
     {"canonical_decode",
