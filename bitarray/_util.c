@@ -832,7 +832,8 @@ vl_decode(PyObject *module, PyObject *args)
             break;
     }
     /* set final length of bitarray */
-    resize_lite(a, i - padding);
+    if (resize_lite(a, i - padding) < 0)
+        return NULL;
 
     Py_RETURN_NONE;
 }
