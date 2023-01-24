@@ -954,36 +954,31 @@ sc_encode_block(char *str, Py_ssize_t *len,
                 bitarrayobject *a, Py_ssize_t offset)
 {
     Py_ssize_t nbytes = Py_SIZE(a) - offset;        /* remaining bytes */
-    Py_ssize_t count8, count16, count24, count32;
+    int count, next_count, n;
 
     assert(nbytes >= 0);
-    count8 = clip_count(a, offset, 32, 32);
-    if (Py_MIN(32, nbytes) <= count8) {                      /* type 0 */
+
+    next_count = (int) clip_count(a, offset, 32, 32);
+    if (Py_MIN(32, nbytes) <= next_count) {                     /* type 0 */
         int k = raw_block_size(a, offset);
 
         *len += write_raw_block(str + *len, a, offset, k);
         return k;
     }
+    count = next_count;
 
-    count16 = clip_count(a, offset, 1 << (16 - 3), 256);
-    if (Py_MIN(256, nbytes >> (8 - 3)) <= count16) {         /* type 1 */
-        *len += write_sparse_block(str + *len, a, offset, 1, (int) count8);
-        return 32;
+    for (n = 1; n <= 3; n++) {                               /* type 1..3 */
+        next_count = (int) clip_count(a, offset, 1 << (8 * (n + 1) - 3), 256);
+
+        if (Py_MIN(256, nbytes >> (8 * n - 3)) <= next_count) { /* type n */
+            *len += write_sparse_block(str + *len, a, offset, n,
+                                       count);
+            return 1 << (8 * n - 3);
+        }
+        count = next_count;
     }
 
-    count24 = clip_count(a, offset, 1 << (24 - 3), 256);
-    if (Py_MIN(256, nbytes >> (16 - 3)) <= count24) {        /* type 2 */
-        *len += write_sparse_block(str + *len, a, offset, 2, (int) count16);
-        return 1 << (8 * 2 - 3);
-    }
-
-    count32 = clip_count(a, offset, 1 << (32 - 3), 256);
-    if (Py_MIN(256, nbytes >> (24 - 3)) <= count32) {        /* type 3 */
-        *len += write_sparse_block(str + *len, a, offset, 3, (int) count24);
-        return 1 << (8 * 3 - 3);
-    }
-                                                             /* type 4 */
-    *len += write_sparse_block(str + *len, a, offset, 4, (int) count32);
+    *len += write_sparse_block(str + *len, a, offset, 4, count); /* type 4 */
     return 1 << (8 * 4 - 3);
 }
 
