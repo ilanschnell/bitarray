@@ -874,66 +874,63 @@ type0_get_k(bitarrayobject *a, Py_ssize_t offset)
     return (int) k;
 }
 
+static Py_ssize_t
+write_raw_block(char *str, bitarrayobject *a, Py_ssize_t offset, int k)
+{
+    assert(0 < k && k <= 128);
+    assert(offset + k <= Py_SIZE(a));
+
+    /* block header */
+    *str = k;
+
+    /* block data */
+    memcpy(str + 1, a->ob_item + offset, (size_t) k);
+
+    return k + 1;
+}
+
 /* increase bitarray offset by 1 << (8 * n) - 3 bytes - return number of
    bytes written to str - k is the number of number of counts */
 static Py_ssize_t
-write_block(char *str, bitarrayobject *a, Py_ssize_t offset, int n,
-            Py_ssize_t k)
+write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
+                   int n, int k)
 {
     Py_ssize_t nbytes = Py_SIZE(a) - offset;        /* remaining bytes */
     Py_ssize_t na, i, j, len = 0;
     char *buff = a->ob_item + offset;
 
+    assert(1 <= n && n <= 4 && 0 <= k && k < 256);
     assert(nbytes >= 0);
-    switch (n) {
-    case 0:                     /* type 0 - raw bytes */
-        assert(0 < k && k <= 128);
-        str[len++] = (char) k;
-        assert(offset + k <= Py_SIZE(a));
-        memcpy(str + len, buff, (size_t) k);
-        len += k;
-        assert(len == k + 1);
-        return len;
+    /* bytes to encode */
+    na = Py_MIN(nbytes, ((Py_ssize_t) 1) << (8 * n - 3));
 
-    case 1:                     /* type 1 - single byte for each position */
+    /* block header */
+    if (n == 1) {               /* type 1 - single byte for each position */
         assert(k < 32);
-
-        na = Py_MIN(nbytes, 32);   /* bytes to encode   32 = 1 << (8 - 3)) */
-        str[len++] = (char) (160 + k);
-        for (i = 0; i < na; i++) {
-            if (buff[i]) {
-                for (j = 0; j < 8; j++)
-                    if (buff[i] & BITMASK(a, j))
-                        str[len++] = (char) (8 * i + j);
-            }
-        }
-        assert(len == k + 1);
-        return len;
-
-    case 2:
-    case 3:
-    case 4:
-        assert(k < 256);
-        na = Py_MIN(nbytes, ((Py_ssize_t) 1) << (8 * n - 3));
-
+        str[len++] = 160 + k;
+    }
+    else {            /* type 2, 3, 4 - multiple bytes for each positions */
         str[len++] = 190 + n;
-        str[len++] = (char) k;
-        for (i = 0; i < na; i++) {
-            if (buff[i]) {
-                for (j = 0; j < 8; j++)
-                    if (buff[i] & BITMASK(a, j)) {
+        str[len++] = k;
+    }
+
+    /* block data */
+    for (i = 0; i < na; i++) {
+        if (buff[i])
+            for (j = 0; j < 8; j++)
+                if (buff[i] & BITMASK(a, j)) {
+                    if (n == 1) {
+                        str[len++] = (char) (8 * i + j);
+                    }
+                    else {
                         write_n(str + len, n, 8 * i + j);
                         len += n;
                     }
-            }
-        }
-        assert(len == k + 2);
-        return len;
-
-    default:
-        Py_UNREACHABLE();
+                }
     }
-    return -1;                  /* cannot happen */
+    assert(len == k + (n == 1 ? 1 : 2));
+
+    return len;
 }
 
 static Py_ssize_t
@@ -948,25 +945,29 @@ sc_encode_block(char *str, Py_ssize_t *len,
     if (Py_MIN(32, nbytes) <= count8) {                      /* type 0 */
         int k = type0_get_k(a, offset);
 
-        *len += write_block(str + *len, a, offset, 0, k);
+        *len += write_raw_block(str + *len, a, offset, k);
         return k;
     }
+
     count16 = clip_count(a, offset, 1 << (16 - 3), 256);
     if (Py_MIN(256, nbytes >> (8 - 3)) <= count16) {         /* type 1 */
-        *len += write_block(str + *len, a, offset, 1, count8);
+        *len += write_sparse_block(str + *len, a, offset, 1, (int) count8);
         return 32;
     }
+
     count24 = clip_count(a, offset, 1 << (24 - 3), 256);
     if (Py_MIN(256, nbytes >> (16 - 3)) <= count24) {        /* type 2 */
-        *len += write_block(str + *len, a, offset, 2, count16);
+        *len += write_sparse_block(str + *len, a, offset, 2, (int) count16);
         return 1 << (8 * 2 - 3);
     }
+
     count32 = clip_count(a, offset, 1 << (32 - 3), 256);
     if (Py_MIN(256, nbytes >> (24 - 3)) <= count32) {        /* type 3 */
-        *len += write_block(str + *len, a, offset, 3, count24);
+        *len += write_sparse_block(str + *len, a, offset, 3, (int) count24);
         return 1 << (8 * 3 - 3);
     }
-    *len += write_block(str + *len, a, offset, 4, count32);  /* type 4 */
+                                                             /* type 4 */
+    *len += write_sparse_block(str + *len, a, offset, 4, (int) count32);
     return 1 << (8 * 4 - 3);
 }
 
