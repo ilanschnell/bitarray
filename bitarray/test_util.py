@@ -24,7 +24,8 @@ from bitarray.util import (
     parity, count_and, count_or, count_xor, any_and, subset, _correspond_all,
     intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
-    ba2int, int2ba, vl_encode, vl_decode,
+    ba2int, int2ba,
+    sc_encode, sc_decode, vl_encode, vl_decode,
     huffman_code, canonical_huffman, canonical_decode,
 )
 
@@ -1128,6 +1129,52 @@ class TestsBase(unittest.TestCase, Util):
                 self.assertEQUAL(base2ba(n, ba2base(n, b), 'big'), b)
 
 tests.append(TestsBase)
+
+# ---------------------------------------------------------------------------
+
+class SCTests(unittest.TestCase, Util):
+
+    def test_explicit(self):
+        for s, bits, endian in [
+                (b'\x00\0',                 '',                  'little'),
+                (b'\x01\x03\x01\x03\0',     '110',               'little'),
+                (b'\x11\x07\x01\x02\0',     '0000001',           'big'),
+                (b'\x01\x10\x02\xf0\x0f\0', '00001111 11110000', 'little'),
+                (b'\x11\x10\xa1\x0c\0',     '00000000 00001000', 'big'),
+                (b'\x11\x09\xa1\x08\0',     '00000000 1',        'big'),
+                (b'\x01E\xa3ABD\0',         65 * '0' + '1101',   'little'),
+        ]:
+            a = bitarray(bits, endian)
+            self.assertEqual(sc_encode(a), s)
+            self.assertEqual(sc_decode(s), a)
+
+    def random_array(self, n, m):  # p = 1 / 2^m
+        endian = self.random_endian()
+        a = bitarray(n, endian)
+        a.setall(1)
+        for i in range(m):
+            a &= urandom(n, endian)
+        return a
+
+    def round_trip(self, a):
+        b = sc_encode(a)
+        c = sc_decode(b)
+        self.assertEqual(a, c)
+        self.assertEqual(a.endian(), c.endian())
+
+    def test_zeros_ones(self):
+        for n in range(300):
+            a = zeros(n)
+            self.round_trip(a)
+            a.setall(1)
+            self.round_trip(a)
+
+    def test_random(self):
+        for n in randint(128, 2048), randint(64000, 70000):
+            a = self.random_array(n, 10)
+            self.round_trip(a)
+
+tests.append(SCTests)
 
 # ---------------------------------------------------------------------------
 

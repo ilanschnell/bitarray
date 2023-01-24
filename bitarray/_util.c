@@ -928,7 +928,7 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
                     }
                 }
     }
-    assert(len == k + (n == 1 ? 1 : 2));
+    assert(len == n * k + (n == 1 ? 1 : 2));
 
     return len;
 }
