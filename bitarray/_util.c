@@ -779,6 +779,8 @@ next_char(PyObject *iter)
     return (int) c;
 }
 
+/* write n bytes (into buffer str) representing the integer i (using
+   little endian byte-order) */
 static void
 write_n(char *str, int n, Py_ssize_t i)
 {
@@ -792,6 +794,8 @@ write_n(char *str, int n, Py_ssize_t i)
     assert(i == 0);
 }
 
+/* read n bytes from iter and return the corresponding positive integer,
+   using little endian byte-order */
 static Py_ssize_t
 read_n(int n, PyObject *iter)
 {
@@ -813,6 +817,7 @@ read_n(int n, PyObject *iter)
     return i;
 }
 
+/* return number of bytes necessary to represent i */
 static int
 byte_length(Py_ssize_t i)
 {
@@ -841,6 +846,14 @@ sc_encode_header(char *str, bitarrayobject *a)
     return 1 + len;
 }
 
+/* Count 1 elements in bitarray (starting at offset, and up to n bytes in
+   buffer) with a maximum limit of m.  Equivalent to:
+
+      min(a.count(1, 8 * offset, 8 * (offset + n)), m)
+
+   However, this function is much more efficient, as counting stops as soon
+   as the limit is reached.
+*/
 static Py_ssize_t
 clip_count(bitarrayobject *a, Py_ssize_t offset, Py_ssize_t n, Py_ssize_t m)
 {
@@ -857,8 +870,9 @@ clip_count(bitarrayobject *a, Py_ssize_t offset, Py_ssize_t n, Py_ssize_t m)
     return cnt;
 }
 
+/* calculate number of bytes (1..128) of raw block starting at offset */
 static int
-type0_get_k(bitarrayobject *a, Py_ssize_t offset)
+raw_block_size(bitarrayobject *a, Py_ssize_t offset)
 {
     Py_ssize_t nbytes = Py_SIZE(a) - offset;  /* remaining bytes */
     Py_ssize_t k = 0;
@@ -889,8 +903,8 @@ write_raw_block(char *str, bitarrayobject *a, Py_ssize_t offset, int k)
     return k + 1;
 }
 
-/* increase bitarray offset by 1 << (8 * n) - 3 bytes - return number of
-   bytes written to str - k is the number of number of counts */
+/* Encode one sparse block (from offset, and up to k 1 bits).
+   Return number of bytes written to buffer str. */
 static Py_ssize_t
 write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
                    int n, int k)
@@ -933,6 +947,8 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
     return len;
 }
 
+/* Encode one block (starting at offset) and return offset increment.
+   The output is written into str buffer and len is increased. */
 static Py_ssize_t
 sc_encode_block(char *str, Py_ssize_t *len,
                 bitarrayobject *a, Py_ssize_t offset)
@@ -943,7 +959,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
     assert(nbytes >= 0);
     count8 = clip_count(a, offset, 32, 32);
     if (Py_MIN(32, nbytes) <= count8) {                      /* type 0 */
-        int k = type0_get_k(a, offset);
+        int k = raw_block_size(a, offset);
 
         *len += write_raw_block(str + *len, a, offset, k);
         return k;
@@ -1046,7 +1062,7 @@ sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
 }
 
 /* Read k bytes from iter and set elements in bitarray.  Return the size of
-   the offset increment in bytes (i.e. k), or -1 on failure. */
+   the offset increment in bytes (i.e. just k), or -1 on failure. */
 static Py_ssize_t
 read_raw_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int k)
 {
@@ -1069,7 +1085,7 @@ read_raw_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int k)
 }
 
 /* Read n * k bytes from iter and set elements in bitarray.
-   Return the size of the offset increment in bytes, or -1 on failure. */
+   Return size of offset increment in bytes, or -1 on failure. */
 static Py_ssize_t
 read_sparse_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter,
                   int n, int k)
@@ -1096,8 +1112,7 @@ read_sparse_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter,
 }
 
 /* Decode one block: consume iter and set bitarray buffer at offset.
-   Return the number of bytes added to bitarray.
-   On failure, set an exception and return -1. */
+   Return size of offset increment in bytes, or -1 on failure. */
 static Py_ssize_t
 sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
 {
@@ -1132,7 +1147,7 @@ static PyObject *
 sc_decode(PyObject *module, PyObject *obj)
 {
     PyObject *iter;
-    bitarrayobject *a;
+    bitarrayobject *a = NULL;
     Py_ssize_t offset = 0, increase, nbits;
     int endian;
 
@@ -1141,19 +1156,22 @@ sc_decode(PyObject *module, PyObject *obj)
         return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
                             Py_TYPE(obj)->tp_name);
 
+    if (sc_decode_header(iter, &endian, &nbits) < 0)
+        goto error;
+
+    /* create empty bitarray */
     a = (bitarrayobject *) PyObject_CallObject(bitarray_type_obj, NULL);
     if (a == NULL)
         goto error;
     assert(a->nbits == 0 && a->readonly == 0 && a->buffer == NULL);
 
-    if (sc_decode_header(iter, &endian, &nbits) < 0)
-        goto error;
-
+    /* set endianness, resize to nbits, and set all elements to 0 */
     a->endian = endian;
     if (resize_lite(a, nbits) < 0)
         goto error;
     memset(a->ob_item, 0x00, (size_t) Py_SIZE(a));
 
+    /* consume blocks until stop byte is encountered */
     while ((increase = sc_decode_block(a, offset, iter))) {
         if (increase < 0)
             goto error;
