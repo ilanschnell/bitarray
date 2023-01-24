@@ -1044,9 +1044,34 @@ sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
     return 0;
 }
 
-/* read n * k bytes from iter and set elements in bitarray */
-static int
-read_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int n, int k)
+/* Read k bytes from iter and set elements in bitarray.  Return the size of
+   the offset increment in bytes (i.e. k), or -1 on failure. */
+static Py_ssize_t
+read_raw_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int k)
+{
+    Py_ssize_t i;
+    char *buff = a->ob_item + offset;
+
+    if (offset + k > Py_SIZE(a)) {
+        PyErr_Format(PyExc_ValueError, "decode error (raw): %zd + %d > %zd",
+                     offset, k, Py_SIZE(a));
+        return -1;
+    }
+    for (i = 0; i < k; i++) {
+        int c;
+
+        if ((c = next_char(iter)) < 0)
+            return -1;
+        buff[i] = (char) c;
+    }
+    return k;
+}
+
+/* Read n * k bytes from iter and set elements in bitarray.
+   Return the size of the offset increment in bytes, or -1 on failure. */
+static Py_ssize_t
+read_sparse_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter,
+                  int n, int k)
 {
     int j;
 
@@ -1066,7 +1091,7 @@ read_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int n, int k)
         }
         setbit(a, i, 1);
     }
-    return 0;
+    return ((Py_ssize_t) 1) << (8 * n - 3);
 }
 
 /* Decode one block: consume iter and set bitarray buffer at offset.
@@ -1075,7 +1100,7 @@ read_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int n, int k)
 static Py_ssize_t
 sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
 {
-    int head, k;
+    int head;
 
     if ((head = next_char(iter)) < 0)
         return -1;
@@ -1083,40 +1108,19 @@ sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
     if (head == 0)                         /* stop byte */
         return 0;
 
-    if (head <= 128) {                     /* type 0 - 0x01 .. 0x80 */
-        char *buff = a->ob_item + offset;
-        Py_ssize_t i;
+    if (head <= 128)                       /* type 0 - 0x01 .. 0x80 */
+        return read_raw_block(a, offset, iter, head);
 
-        k = head;
-        if (offset + k > Py_SIZE(a)) {
-            PyErr_Format(PyExc_ValueError, "decode error (raw): %zd + %d > %zd",
-                         offset, k, Py_SIZE(a));
-            return -1;
-        }
-        for (i = 0; i < k; i++) {
-            int c = next_char(iter);
-            if (c < 0)
-                return -1;
-            buff[i] = (char) c;
-        }
-        return k;
-    }
-
-    if (160 <= head && head < 192) {       /* type 1 - 0xa0 .. 0xbf */
-        k = head - 160;
-        if (read_block(a, offset, iter, 1, k) < 0)
-            return -1;
-        return 32;
-    }
+    if (160 <= head && head < 192)         /* type 1 - 0xa0 .. 0xbf */
+        return read_sparse_block(a, offset, iter, 1, head - 160);
 
     if (192 <= head && head <= 194) {      /* type 2 .. 4 - 0xc0 .. 0xc2 */
-        int n = head - 190;
+        int k;
 
         if ((k = next_char(iter)) < 0)
             return -1;
-        if (read_block(a, offset, iter, n, k) < 0)
-            return -1;
-        return ((Py_ssize_t) 1) << (8 * n - 3);
+
+        return read_sparse_block(a, offset, iter, head - 190, k);
     }
 
     PyErr_Format(PyExc_ValueError, "invalid block head: 0x%02x", head);
