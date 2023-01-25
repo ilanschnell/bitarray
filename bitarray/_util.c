@@ -962,27 +962,26 @@ sc_encode_block(char *str, Py_ssize_t *len,
 
     assert(nbytes >= 0);
 
-    next_count = (int) clip_count(a, offset, 32, 32);
-    if (Py_MIN(32, nbytes) <= next_count) {                     /* type 0 */
+    count = (int) clip_count(a, offset, 32, 32);
+    if (Py_MIN(32, nbytes) <= count) {           /* type 0 - raw bytes */
         int k = raw_block_size(a, offset);
 
         *len += write_raw_block(str + *len, a, offset, k);
         return k;
     }
-    count = next_count;
 
-    for (n = 1; n < 4; n++) {                                /* type 1..3 */
+    /* keep checking if next block type would result in less encoded data */
+    for (n = 1; n < 4; n++) {
         next_count = (int) clip_count(a, offset, BSI(n + 1), 256);
 
-        if (Py_MIN(256, nbytes >> (8 * n - 3)) <= next_count) { /* type n */
-            *len += write_sparse_block(str + *len, a, offset, n, count);
-            return BSI(n);
-        }
+        if (Py_MIN(256, nbytes >> (8 * n - 3)) <= next_count)
+            break;
+
         count = next_count;
     }
 
-    *len += write_sparse_block(str + *len, a, offset, 4, count); /* type 4 */
-    return BSI(4);
+    *len += write_sparse_block(str + *len, a, offset, n, count);
+    return BSI(n);
 }
 
 static PyObject *

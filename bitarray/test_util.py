@@ -1160,6 +1160,7 @@ class SC_Tests(unittest.TestCase, Util):
         ]:
             a = sc_decode(b)
             self.assertEqual(len(a), n)
+            self.assertFalse(a.any())
 
     @skipIf(sys.version_info[0] == 2)
     def test_decode_untouch(self):
