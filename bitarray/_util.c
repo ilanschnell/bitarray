@@ -880,14 +880,17 @@ static int
 raw_block_size(bitarrayobject *a, Py_ssize_t offset)
 {
     Py_ssize_t nbytes = Py_SIZE(a) - offset;  /* remaining bytes */
-    Py_ssize_t k = 0;
+    Py_ssize_t k = Py_MIN(32, nbytes);
 
     assert(nbytes > 0);
-
-    while (k < 128 &&
-           Py_MIN(32, nbytes - k) <= clip_count(a, offset + k, 32, 32))
-        k += 32;
-
+    if (k == 32) {
+        /* We already know the first 32 bytes are better represented using
+           raw bytes (otherwise this function wouldn't have been called).
+           Now also check the next 3 blocks of 32 bytes. */
+        while (k < 128 &&
+               Py_MIN(32, nbytes - k) <= clip_count(a, offset + k, 32, 32))
+            k += 32;
+    }
     k = Py_MIN(k, nbytes);
     assert(0 < k && k <= Py_MIN(128, nbytes));
     return (int) k;
@@ -963,6 +966,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
     assert(nbytes >= 0);
 
     count = (int) clip_count(a, offset, 32, 32);
+    /* are there fewer raw bytes than index bytes */
     if (Py_MIN(32, nbytes) <= count) {           /* type 0 - raw bytes */
         int k = raw_block_size(a, offset);
 
@@ -970,10 +974,12 @@ sc_encode_block(char *str, Py_ssize_t *len,
         return k;
     }
 
-    /* keep checking if next block type would result in less encoded data */
+    /* find most efficient block type n */
     for (n = 1; n < 4; n++) {
         next_count = (int) clip_count(a, offset, BSI(n + 1), 256);
 
+        /* are fewer count bytes (using the current block type (n))
+           than (new) index bytes in the next block type (n + 1) ? */
         if (Py_MIN(256, nbytes >> (8 * n - 3)) <= next_count)
             break;
 
