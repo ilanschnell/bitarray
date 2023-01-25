@@ -834,6 +834,11 @@ byte_length(Py_ssize_t i)
 
 /* ---------------------- sparse compressed bitarray ------------------- */
 
+/* Bitarray buffer size (in bytes) that can be indexed by n bytes.  E.g.:
+   with 1 byte you can index 256 bits which have a buffer size of 32 bytes,
+   so BSI(1) = 32, BSI(2) = 8192, ... */
+#define BSI(n)  (((Py_ssize_t) 1) << (8 * (n) - 3))
+
 static int
 sc_encode_header(char *str, bitarrayobject *a)
 {
@@ -915,8 +920,7 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
 
     assert(1 <= n && n <= 4 && 0 <= k && k < 256);
     assert(nbytes >= 0);
-    /* bytes to encode */
-    na = Py_MIN(nbytes, ((Py_ssize_t) 1) << (8 * n - 3));
+    na = Py_MIN(nbytes, BSI(n));  /* bytes to encode */
 
     /* block header */
     if (n == 1) {               /* type 1 - single byte for each position */
@@ -968,18 +972,18 @@ sc_encode_block(char *str, Py_ssize_t *len,
     count = next_count;
 
     for (n = 1; n <= 3; n++) {                               /* type 1..3 */
-        next_count = (int) clip_count(a, offset, 1 << (8 * (n + 1) - 3), 256);
+        next_count = (int) clip_count(a, offset, BSI(n + 1), 256);
 
         if (Py_MIN(256, nbytes >> (8 * n - 3)) <= next_count) { /* type n */
             *len += write_sparse_block(str + *len, a, offset, n,
                                        count);
-            return 1 << (8 * n - 3);
+            return BSI(n);
         }
         count = next_count;
     }
 
     *len += write_sparse_block(str + *len, a, offset, 4, count); /* type 4 */
-    return 1 << (8 * 4 - 3);
+    return BSI(4);
 }
 
 static PyObject *
@@ -1103,7 +1107,7 @@ read_sparse_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter,
         }
         setbit(a, i, 1);
     }
-    return ((Py_ssize_t) 1) << (8 * n - 3);
+    return BSI(n);
 }
 
 /* Decode one block: consume iter and set bitarray buffer at offset.
