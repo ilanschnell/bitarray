@@ -1132,7 +1132,7 @@ tests.append(TestsBase)
 
 # ---------------------------------------------------------------------------
 
-class SCTests(unittest.TestCase, Util):
+class SC_Tests(unittest.TestCase, Util):
 
     def test_explicit(self):
         for s, bits, endian in [
@@ -1147,6 +1147,102 @@ class SCTests(unittest.TestCase, Util):
             a = bitarray(bits, endian)
             self.assertEqual(sc_encode(a), s)
             self.assertEqual(sc_decode(s), a)
+
+    def test_decode_header_nbits(self):
+        for b, n in [
+                (b'\x00\0', 0),
+                (b'\x01\x00\0', 0),
+                (b'\x01\x01\0', 1),
+                (b'\x02\x00\x00\0', 0),
+                (b'\x02\x00\x01\0', 256),
+                (b'\x03\x00\x00\x00\0', 0),
+                (b'\x03\x00\x00\x01\0', 65536),
+        ]:
+            a = sc_decode(b)
+            self.assertEqual(len(a), n)
+
+    @skipIf(sys.version_info[0] == 2)
+    def test_decode_untouch(self):
+        stream = iter(b'\x01\x03\x01\x03\0XYZ')
+        self.assertEqual(sc_decode(stream), bitarray('110'))
+        self.assertEqual(next(stream), ord('X'))
+
+        stream = iter([0x11, 0x05, 0x01, 0xff, 0, None, 'foo'])
+        self.assertEqual(sc_decode(stream), bitarray('11111'))
+        self.assertTrue(next(stream) is None)
+        self.assertEqual(next(stream), 'foo')
+
+    @skipIf(sys.version_info[0] == 2)
+    def test_decode_header_errors(self):
+        # invalid bits to endianness
+        self.assertRaisesMessage(ValueError, "invalid header: 0x21",
+                                 sc_decode, b"\x21\x00\xc0")
+        # header contains too many bytes for nbits
+        self.assertRaisesMessage(ValueError, "invalid header: 0x19",
+                                 sc_decode, b"\x19\x00\xc0")
+        # invalid block head
+        self.assertRaisesMessage(ValueError, "invalid block head: 0x81",
+                                 sc_decode, b"\x01\x10\x81")
+        for i in 0x81, 0x9f, 0xc3, 0xff:
+            self.assertRaisesMessage(ValueError,
+                                     "invalid block head: 0x%02x" % i,
+                                     sc_decode,
+                                     bytearray([0x01, 0x10, i]))
+
+    def test_decode_errors(self):
+        # too many raw bytes
+        self.assertRaisesMessage(
+            ValueError, "decode error (raw): 0 + 2 > 1",
+            sc_decode, b"\x01\x05\x02\xff\xff\0")
+        self.assertRaisesMessage(
+            ValueError, "decode error (raw): 32 + 3 > 34",
+            sc_decode, b"\x02\x0f\x01\xa0\x03\xff\xff\xff\0")
+        # sparse index too high
+        self.assertRaisesMessage(
+            ValueError, "decode error (n=1): 128 >= 128",
+            sc_decode, b"\x01\x80\xa1\x80\0")
+        self.assertRaisesMessage(
+            ValueError, "decode error (n=2): 513 >= 512",
+            sc_decode, b"\x02\x00\x02\xc0\x01\x01\x02\0")
+
+    def test_decode_end_of_stream(self):
+        for stream in [b'', b'\x00', b'\x01', b'\x02\x77',
+                       b'\x01\x04\x01', b'\x01\x04\xa1', b'\x01\x04\xa0']:
+            self.assertRaisesMessage(ValueError, "unexpected end of stream",
+                                     sc_decode, stream)
+
+        self.assertRaises(TypeError, sc_decode, [0x02, None])
+        self.assertRaises(TypeError, sc_decode, 3.2)
+        for _ in range(10):
+            self.assertRaises(TypeError, sc_decode, [0x00, None])
+
+    def test_decode_ambiguity(self):
+        for b in [
+                b'\x11\x03\x01\x20\0',    # this is what sc_encode gives us
+                b'\x11\x03\x01\x2f\0',    # some pad bits are 1
+                b'\x11\x03\xa1\x02\0',                  # using block type 1
+                b'\x11\x03\xc0\x01\x02\x00\0',          # using block type 2
+                b'\x11\x03\xc1\x01\x02\x00\x00\0',      # using block type 3
+                b'\x11\x03\xc2\x01\x02\x00\x00\x00\0',  # using block type 4
+        ]:
+            a = sc_decode(b)
+            self.assertEqual(a.to01(), '001')
+
+    def test_decode_random_bytes(self):
+        # ensure random input doesn't crash the decoder
+        cnt = 0
+        for _ in range(5000):
+            n = randint(0, 20)
+            b = b'\x02\x00\x04' + os.urandom(n)
+            try:
+                a = sc_decode(b)
+            except ValueError as e:
+                if e != 'unexpected end of stream':
+                    continue
+            self.assertEqual(len(a), 1024)
+            self.assertEqual(a.endian(), 'little')
+            cnt += 1
+        self.assertTrue(cnt > 2)
 
     def random_array(self, n, m):  # p = 1 / 2^m
         endian = self.random_endian()
@@ -1174,7 +1270,7 @@ class SCTests(unittest.TestCase, Util):
             a = self.random_array(n, 10)
             self.round_trip(a)
 
-tests.append(SCTests)
+tests.append(SC_Tests)
 
 # ---------------------------------------------------------------------------
 

@@ -971,12 +971,11 @@ sc_encode_block(char *str, Py_ssize_t *len,
     }
     count = next_count;
 
-    for (n = 1; n <= 3; n++) {                               /* type 1..3 */
+    for (n = 1; n < 4; n++) {                                /* type 1..3 */
         next_count = (int) clip_count(a, offset, BSI(n + 1), 256);
 
         if (Py_MIN(256, nbytes >> (8 * n - 3)) <= next_count) { /* type n */
-            *len += write_sparse_block(str + *len, a, offset, n,
-                                       count);
+            *len += write_sparse_block(str + *len, a, offset, n, count);
             return BSI(n);
         }
         count = next_count;
@@ -1033,7 +1032,7 @@ PyDoc_STRVAR(sc_encode_doc,
 \n\
 Compress a sparse bitarray and return its binary representation.\n\
 This representation is useful for efficiently storing sparse bitarrays.\n\
-Use `sc_decode()` for decoding.");
+Use `sc_decode()` for decompressing (decoding).");
 
 
 static int
@@ -1188,10 +1187,10 @@ sc_decode(PyObject *module, PyObject *obj)
 PyDoc_STRVAR(sc_decode_doc,
 "sc_decode(stream) -> bitarray\n\
 \n\
-Decode binary stream (an integer iterator, or bytes-like object) of a\n\
-sparse compressed (`sc`) bitarray, and return the decoded bitarray.\n\
+Decompress binary stream (an integer iterator, or bytes-like object) of a\n\
+sparse compressed (`sc`) bitarray, and return the decoded  bitarray.\n\
 This function consumes only one bitarray and leaves the remaining stream\n\
-untouched.  Use `sc_encode()` for encoding.");
+untouched.  Use `sc_encode()` for compressing (encoding).");
 
 /* ------------------- variable length bitarray format ----------------- */
 
