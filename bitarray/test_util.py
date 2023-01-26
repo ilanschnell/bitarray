@@ -1219,8 +1219,10 @@ class SC_Tests(unittest.TestCase, Util):
 
     def test_decode_ambiguity(self):
         for b in [
+                # raw:
                 b'\x11\x03\x01\x20\0',    # this is what sc_encode gives us
                 b'\x11\x03\x01\x2f\0',    # some pad bits are 1
+                # sparse:
                 b'\x11\x03\xa1\x02\0',                  # using block type 1
                 b'\x11\x03\xc0\x01\x02\x00\0',          # using block type 2
                 b'\x11\x03\xc1\x01\x02\x00\x00\0',      # using block type 3
@@ -1228,6 +1230,32 @@ class SC_Tests(unittest.TestCase, Util):
         ]:
             a = sc_decode(b)
             self.assertEqual(a.to01(), '001')
+
+    @skipIf(sys.version_info[0] == 2)
+    def test_sparse_block_type1(self):
+        a = bitarray(256, 'little')
+        for n in range(0, 32):
+            positions = os.urandom(n)
+            b = bytearray([0x02, 0x00, 0x01, 0xa0 + n])
+            b.extend(positions)
+            b.append(0)  # stop
+
+            a.setall(0)
+            for p in positions:
+                a[p] = 1
+
+            self.assertEqual(sc_decode(b), a)
+
+            if n == 0:
+                b = bytearray([0x02, 0x00, 0x01, 0xc0, 0x00, 0])
+            else:
+                lst = sorted(set(positions))
+                b = bytearray([0x02, 0x00, 0x01, 0xa0 + len(lst)])
+                b.extend(lst)
+                b.append(0)  # stop
+
+            self.assertEqual(sc_decode(b), a)
+            self.assertEqual(sc_encode(a), bytes(b))
 
     def test_decode_random_bytes(self):
         # ensure random input doesn't crash the decoder
@@ -1251,7 +1279,7 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertEqual(a, c)
         self.assertEqual(a.endian(), c.endian())
 
-    def test_zeros(self):
+    def test_encode_zeros(self):
         for i in range(18):
             n = 1 << i
             a = bitarray(n)
@@ -1265,7 +1293,7 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(m, len(b))
             self.round_trip(a)
 
-    def test_ones(self):
+    def test_encode_ones(self):
         for _ in range(50):
             n = randint(0, 10000)
             a = bitarray(n)
