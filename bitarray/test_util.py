@@ -11,6 +11,7 @@ import binascii
 import shutil
 import tempfile
 import unittest
+from array import array
 from string import hexdigits
 from random import choice, randint, random
 from collections import Counter
@@ -1221,13 +1222,14 @@ class SC_Tests(unittest.TestCase, Util):
     @skipIf(sys.version_info[0] == 2)
     def test_decode_types(self):
         blob = b'\x11\x03\x01\x20\0'
-        for b in blob, bytearray(blob), list(bytearray(blob)):
+        for b in blob, bytearray(blob), list(blob), array('B', blob):
             a = sc_decode(b)
             self.assertEqual(a.endian(), 'big')
             self.assertEqual(a.to01(), '001')
 
         self.assertRaises(TypeError, sc_decode, [0x02, None])
-        self.assertRaises(TypeError, sc_decode, 3.2)
+        for x in None, 3, 3.2, Ellipsis:
+            self.assertRaises(TypeError, sc_decode, x)
         for _ in range(10):
             self.assertRaises(TypeError, sc_decode, [0x00, None])
 
