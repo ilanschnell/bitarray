@@ -1218,6 +1218,14 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertRaisesMessage(ValueError, "unexpected end of stream",
                                      sc_decode, stream)
 
+    @skipIf(sys.version_info[0] == 2)
+    def test_decode_types(self):
+        blob = b'\x11\x03\x01\x20\0'
+        for b in blob, bytearray(blob), list(bytearray(blob)):
+            a = sc_decode(b)
+            self.assertEqual(a.endian(), 'big')
+            self.assertEqual(a.to01(), '001')
+
         self.assertRaises(TypeError, sc_decode, [0x02, None])
         self.assertRaises(TypeError, sc_decode, 3.2)
         for _ in range(10):
@@ -1294,6 +1302,10 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(a.endian(), 'little')
             cnt += 1
         self.assertTrue(cnt > 2)
+
+    def test_encode_types(self):
+        for a in None, [], 0, 123, b'', b'\x00', 3.14:
+            self.assertRaises(TypeError, sc_encode, a)
 
     def round_trip(self, a):
         b = sc_encode(a)
