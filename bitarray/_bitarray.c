@@ -659,6 +659,7 @@ extend_iter(bitarrayobject *self, PyObject *iter)
     return 0;
  error:
     Py_DECREF(item);
+    /* ignore resize() return value as we fail anyhow */
     resize(self, original_nbits);
     return -1;
 }
