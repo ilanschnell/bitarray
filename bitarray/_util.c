@@ -892,7 +892,7 @@ raw_block_size(bitarrayobject *a, Py_ssize_t offset)
             k += 32;
     }
     k = Py_MIN(k, nbytes);
-    assert(0 < k && k <= Py_MIN(128, nbytes));
+    assert(0 < k && k <= 128 && k <= nbytes);
     return (int) k;
 }
 
@@ -966,7 +966,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
     assert(nbytes >= 0);
 
     count = (int) clip_count(a, offset, 32, 32);
-    /* are there fewer raw bytes than index bytes */
+    /* are there fewer (or equal) raw bytes than index bytes */
     if (Py_MIN(32, nbytes) <= count) {           /* type 0 - raw bytes */
         int k = raw_block_size(a, offset);
 
@@ -978,7 +978,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
     for (n = 1; n < 4; n++) {
         next_count = (int) clip_count(a, offset, BSI(n + 1), 256);
 
-        /* are fewer count bytes (using the current block type (n))
+        /* are fewer (or equal) count bytes (using the current block type (n))
            than (new) index bytes in the next block type (n + 1) ? */
         if (Py_MIN(256, nbytes >> (8 * n - 3)) <= next_count)
             break;

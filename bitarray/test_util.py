@@ -15,7 +15,7 @@ from string import hexdigits
 from random import choice, randint, random
 from collections import Counter
 
-from bitarray import (bitarray, frozenbitarray, decodetree,
+from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       get_default_endian, _set_default_endian)
 from bitarray.test_bitarray import Util, skipIf
 
@@ -1245,31 +1245,46 @@ class SC_Tests(unittest.TestCase, Util):
             cnt += 1
         self.assertTrue(cnt > 2)
 
-    def random_array(self, n, m):  # p = 1 / 2^m
-        endian = self.random_endian()
-        a = bitarray(n, endian)
-        a.setall(1)
-        for i in range(m):
-            a &= urandom(n, endian)
-        return a
-
     def round_trip(self, a):
         b = sc_encode(a)
         c = sc_decode(b)
         self.assertEqual(a, c)
         self.assertEqual(a.endian(), c.endian())
 
-    def test_zeros_ones(self):
-        for n in range(300):
-            a = zeros(n)
+    def test_zeros(self):
+        for i in range(18):
+            n = 1 << i
+            a = bitarray(n)
+            a.setall(0)
+            m = 2                            # head byte and stop byte
+            m += bits2bytes(n.bit_length())  # size bytes
+            # For smaller or equal to 1 << 32, we have only one type 4 block.
+            m += bool(n > 0)                 # number of blocks (head bytes)
+            m += bool(n > 248)               # number of second block heads
+            b = sc_encode(a)
+            self.assertEqual(m, len(b))
             self.round_trip(a)
+
+    def test_ones(self):
+        for _ in range(50):
+            n = randint(0, 10000)
+            a = bitarray(n)
             a.setall(1)
+            m = 2                            # head byte and stop byte
+            m += bits2bytes(n.bit_length())  # size bytes
+            m += (n + 1023) // 1024          # number of blocks (head bytes)
+            m += bits2bytes(n)               # actual raw bytes
+            self.assertEqual(m, len(sc_encode(a)))
             self.round_trip(a)
 
     def test_random(self):
         for n in randint(128, 2048), randint(64000, 70000):
-            a = self.random_array(n, 10)
-            self.round_trip(a)
+            endian = self.random_endian()
+            a = bitarray(n, endian)
+            a.setall(1)
+            for _ in range(12):
+                a &= urandom(n, endian)
+                self.round_trip(a)
 
 tests.append(SC_Tests)
 
