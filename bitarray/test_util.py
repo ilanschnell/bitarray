@@ -1209,9 +1209,10 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertRaisesMessage(
             ValueError, "decode error (n=3): 32768 >= 32768",
             sc_decode, b"\x02\x00\x80\xc1\x01\x00\x80\x00\0")
-        self.assertRaisesMessage(
-            ValueError, "decode error (n=4): 4294967295 >= 16",
-            sc_decode, b"\x01\x10\xc2\x01\xff\xff\xff\xff\0")
+        if tuple.__itemsize__ == 8:  # only test this on 64-bit machines
+            self.assertRaisesMessage(
+                ValueError, "decode error (n=4): 4294967295 >= 16",
+                sc_decode, b"\x01\x10\xc2\x01\xff\xff\xff\xff\0")
 
     def test_decode_end_of_stream(self):
         for stream in [b'', b'\x00', b'\x01', b'\x02\x77',
