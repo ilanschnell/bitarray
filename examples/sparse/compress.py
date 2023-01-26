@@ -2,14 +2,21 @@
 # In particular the function sc_stats() which returns the
 # frequency of each block type.
 
+import bz2
+import gzip
 import sys
+from time import time
 from collections import Counter
 from itertools import islice
 from random import random, randint
 
 from bitarray import bitarray
-from bitarray.util import zeros, sc_encode, sc_decode
-
+from bitarray.util import (
+    zeros, urandom,
+    serialize, deserialize,
+    sc_encode, sc_decode,
+    vl_encode, vl_decode,
+)
 
 def read_n(n, stream):
     i = 0
@@ -115,7 +122,12 @@ def test_raw_block_size():
         assert blocks[0] == (n + 1023) // 1024
         assert sc_decode(b) == a
 
-def random_array(n, p = 0.5):
+def random_array(n, p=0.5):
+    """random_array(n, p=0.5) -> bitarray
+
+Generate random bitarray of length n.
+Each bit has a probability p of being 1.
+"""
     if p < 0.05:
         # when the probability p is small, it is faster to randomly
         # set p * n elements
@@ -129,13 +141,56 @@ def random_array(n, p = 0.5):
 def test_random_array():
     n = 10_000_000
     p = 1e-6
-    while p < 1:
+    while p < 1.0:
         a = random_array(n, p)
         cnt = a.count()
         print("%10.7f  %10.7f  %10.7f" % (p, cnt / n, abs(p - cnt / n)))
         p *= 1.4
 
+def p_range():
+    n = 1 << 24
+    p = 1e-6
+    print("     p         ratio         raw    type 1    type 2    type 3")
+    print(65 *'-')
+    while p < 1.0:
+        a = random_array(n, p)
+        b = sc_encode(a)
+        blocks = sc_stats(b)['blocks']
+        print('%10.7f  %10.7f  %8d  %8d  %8d  %8d' % (
+            p, len(b) / (n / 8), blocks[0], blocks[1], blocks[2], blocks[3]))
+        assert a == sc_decode(b)
+        p *= 1.6
+
+def compare():
+    n = 1 << 24
+    # create random bitarray with p = 1 / 2^9 = 1 / 512 = 0.195 %
+    a = bitarray(n)
+    a.setall(1)
+    for i in range(9):
+        a &= urandom(n)
+
+    raw = a.tobytes()
+    print(20 * ' ' +  "compress (ms)   decompress (ms)             ratio")
+    print(70 * '-')
+    for name, f_e, f_d in [
+            ('serialize', serialize, deserialize),
+            ('vl', vl_encode, vl_decode),
+            ('sc' , sc_encode, sc_decode),
+            ('gzip', gzip.compress, gzip.decompress),
+            ('bz2', bz2.compress, bz2.decompress)]:
+        x = a if name in ('serialize', 'vl', 'sc') else raw
+        t0 = time()
+        b = f_e(x)  # compression
+        t1 = time()
+        c = f_d(b)  # decompression
+        t2 = time()
+        print("    %-11s  %16.3f  %16.3f  %16.3f" %
+              (name, 1000 * (t1 - t0), 1000 * (t2 - t1), len(b) / len(raw)))
+        assert c == x
+
 if __name__ == '__main__':
-    test_sc_stat()
+    #test_sc_stat()
     test_raw_block_size()
     #test_random_array()
+    p_range()
+    compare()

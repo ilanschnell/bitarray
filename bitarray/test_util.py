@@ -1232,13 +1232,27 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(a.to01(), '001')
 
     @skipIf(sys.version_info[0] == 2)
+    def test_raw_block(self):
+        for nbits in range(1, 1025):
+            nbytes = bits2bytes(nbits)
+            raw = os.urandom(nbytes)
+            b = bytearray([0x12, nbits & 0xff, nbits >> 8, nbytes])
+            b.extend(raw)
+            b.append(0)  # stop byte
+
+            a = bitarray(0, 'big')
+            a.frombytes(raw)
+            del a[nbits:]
+            self.assertEqual(sc_decode(b), a)
+
+    @skipIf(sys.version_info[0] == 2)
     def test_sparse_block_type1(self):
         a = bitarray(256, 'little')
-        for n in range(0, 32):
+        for n in range(1, 32):
             positions = os.urandom(n)
             b = bytearray([0x02, 0x00, 0x01, 0xa0 + n])
             b.extend(positions)
-            b.append(0)  # stop
+            b.append(0)  # stop byte
 
             a.setall(0)
             for p in positions:
@@ -1246,13 +1260,10 @@ class SC_Tests(unittest.TestCase, Util):
 
             self.assertEqual(sc_decode(b), a)
 
-            if n == 0:
-                b = bytearray([0x02, 0x00, 0x01, 0xc0, 0x00, 0])
-            else:
-                lst = sorted(set(positions))
-                b = bytearray([0x02, 0x00, 0x01, 0xa0 + len(lst)])
-                b.extend(lst)
-                b.append(0)  # stop
+            lst = sorted(set(positions))
+            b = bytearray([0x02, 0x00, 0x01, 0xa0 + len(lst)])
+            b.extend(lst)
+            b.append(0)  # stop
 
             self.assertEqual(sc_decode(b), a)
             self.assertEqual(sc_encode(a), bytes(b))
