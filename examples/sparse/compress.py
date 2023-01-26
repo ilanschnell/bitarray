@@ -184,7 +184,7 @@ def compare():
         t1 = time()
         c = f_d(b)  # decompression
         t2 = time()
-        print("    %-11s  %16.3f  %16.3f  %16.3f" %
+        print("    %-11s  %16.3f  %16.3f  %16.4f" %
               (name, 1000 * (t1 - t0), 1000 * (t2 - t1), len(b) / len(raw)))
         assert c == x
 

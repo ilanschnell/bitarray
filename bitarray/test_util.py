@@ -1203,8 +1203,14 @@ class SC_Tests(unittest.TestCase, Util):
             ValueError, "decode error (n=1): 128 >= 128",
             sc_decode, b"\x01\x80\xa1\x80\0")
         self.assertRaisesMessage(
-            ValueError, "decode error (n=2): 513 >= 512",
-            sc_decode, b"\x02\x00\x02\xc0\x01\x01\x02\0")
+            ValueError, "decode error (n=2): 512 >= 512",
+            sc_decode, b"\x02\x00\x02\xc0\x01\x00\x02\0")
+        self.assertRaisesMessage(
+            ValueError, "decode error (n=3): 32768 >= 32768",
+            sc_decode, b"\x02\x00\x80\xc1\x01\x00\x80\x00\0")
+        self.assertRaisesMessage(
+            ValueError, "decode error (n=4): 4294967295 >= 16",
+            sc_decode, b"\x01\x10\xc2\x01\xff\xff\xff\xff\0")
 
     def test_decode_end_of_stream(self):
         for stream in [b'', b'\x00', b'\x01', b'\x02\x77',
@@ -1233,17 +1239,21 @@ class SC_Tests(unittest.TestCase, Util):
 
     @skipIf(sys.version_info[0] == 2)
     def test_raw_block(self):
-        for nbits in range(1, 1025):
-            nbytes = bits2bytes(nbits)
-            raw = os.urandom(nbytes)
-            b = bytearray([0x12, nbits & 0xff, nbits >> 8, nbytes])
+        a = bitarray(0, 'big')
+        for nbytes in range(1, 129):
+            nbits = 8 * nbytes
+            raw = nbytes * b'\xf7'
+            if nbits < 256:
+                b = bytearray([0x11, nbits])
+            else:
+                b = bytearray([0x12, nbits & 0xff, nbits >> 8])
+            b.append(nbytes)  # head byte
             b.extend(raw)
-            b.append(0)  # stop byte
+            b.append(0)       # stop byte
 
-            a = bitarray(0, 'big')
-            a.frombytes(raw)
-            del a[nbits:]
+            a.frombytes(b'\xf7')
             self.assertEqual(sc_decode(b), a)
+            self.assertEqual(sc_encode(a), bytes(b))
 
     @skipIf(sys.version_info[0] == 2)
     def test_sparse_block_type1(self):
@@ -1257,9 +1267,10 @@ class SC_Tests(unittest.TestCase, Util):
             a.setall(0)
             for p in positions:
                 a[p] = 1
-
             self.assertEqual(sc_decode(b), a)
 
+            # in order to recreate the block sc_encode generates, we need
+            # a sorted list of the positions with no duplicates
             lst = sorted(set(positions))
             b = bytearray([0x02, 0x00, 0x01, 0xa0 + len(lst)])
             b.extend(lst)
