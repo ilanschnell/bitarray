@@ -2,7 +2,7 @@ import sys
 assert sys.version_info[0] == 3, "This program requires Python 3"
 
 import re
-import doctest
+from doctest import testfile
 from io import StringIO
 
 import bitarray.util
@@ -265,12 +265,12 @@ def main():
     with open('./doc/changelog.rst', 'w') as fo:
         write_changelog(fo)
 
-    doctest.testfile('./README.rst')
-    doctest.testfile('./doc/buffer.rst')
-    doctest.testfile('./doc/canonical.rst')
-    doctest.testfile('./doc/represent.rst')
-    doctest.testfile('./doc/sparse_compression.rst')
-    doctest.testfile('./doc/variable_length.rst')
+    testfile('./README.rst')
+    testfile('./doc/buffer.rst')
+    testfile('./doc/canonical.rst')
+    testfile('./doc/represent.rst')
+    testfile('./doc/sparse_compression.rst')
+    testfile('./doc/variable_length.rst')
 
 
 if __name__ == '__main__':

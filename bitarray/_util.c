@@ -784,11 +784,11 @@ next_char(PyObject *iter)
 static void
 write_n(char *str, int n, Py_ssize_t i)
 {
-    int j;
+    int len = 0;
 
     assert(n <= 8);
-    for (j = 0; j < n; j++) {
-        str[j] = (char) i & 0xff;
+    while (len < n) {
+        str[len++] = (char) i & 0xff;
         i >>= 8;
     }
     assert(i == 0);
@@ -821,15 +821,14 @@ read_n(int n, PyObject *iter)
 static int
 byte_length(Py_ssize_t i)
 {
-    int m = sizeof(Py_ssize_t), n;
+    int n = 0;
 
     assert(i >= 0);
-    for (n = 0; m; n++) {
-        if (!i)
-            return n;
+    while (i) {
         i >>= 8;
+        n++;
     }
-    return -1;
+    return n;
 }
 
 /* ---------------------- sparse compressed bitarray ------------------- */
@@ -1099,10 +1098,8 @@ static Py_ssize_t
 read_sparse_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter,
                   int n, int k)
 {
-    int j;
-
     assert(1 <= n && n <= 4);
-    for (j = 0; j < k; j++) {
+    while (k--) {
         Py_ssize_t i;
 
         i = (n == 1) ? next_char(iter) : read_n(n, iter);
