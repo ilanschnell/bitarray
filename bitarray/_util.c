@@ -1104,7 +1104,8 @@ read_sparse_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter,
             return -1;
 
         i += 8 * offset;
-        if (i >= a->nbits) {
+        /* also check for negative value as offset might cause overflow */
+        if (i < 0 || i >= a->nbits) {
             PyErr_Format(PyExc_ValueError, "decode error (n=%d): %zd >= %zd",
                          n, i, a->nbits);
             return -1;
