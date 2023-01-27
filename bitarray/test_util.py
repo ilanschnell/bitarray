@@ -1179,15 +1179,12 @@ class SC_Tests(unittest.TestCase, Util):
         # invalid bits to endianness
         self.assertRaisesMessage(ValueError, "invalid header: 0x21",
                                  sc_decode, b"\x21\x00\xc0")
-
         # invalid block head
-        self.assertRaisesMessage(ValueError, "invalid block head: 0x81",
-                                 sc_decode, b"\x01\x10\x81")
-        for i in 0x81, 0x9f, 0xc3, 0xff:
+        for c in 0x81, 0x9f, 0xc3, 0xff:
             self.assertRaisesMessage(ValueError,
-                                     "invalid block head: 0x%02x" % i,
+                                     "invalid block head: 0x%02x" % c,
                                      sc_decode,
-                                     bytearray([0x01, 0x10, i]))
+                                     bytearray([0x01, 0x10, c]))
 
     def test_decode_header_overflow(self):
         nbytes = tuple.__itemsize__
