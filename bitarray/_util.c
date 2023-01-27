@@ -1052,7 +1052,13 @@ sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
     *endian = head & 0x10 ? ENDIAN_BIG : ENDIAN_LITTLE;
     len = head & 0x0f;
 
-    if (head & 0xe0 || len > 8) {
+    if (len > (int) sizeof(Py_ssize_t)) {
+        PyErr_Format(PyExc_OverflowError,
+                     "sizeof(Py_ssize_t) = %d: cannot read %d bytes",
+                     (int) sizeof(Py_ssize_t), len);
+        return -1;
+    }
+    if (head & 0xe0) {
         PyErr_Format(PyExc_ValueError, "invalid header: 0x%02x", head);
         return -1;
     }

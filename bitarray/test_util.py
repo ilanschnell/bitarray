@@ -1179,9 +1179,7 @@ class SC_Tests(unittest.TestCase, Util):
         # invalid bits to endianness
         self.assertRaisesMessage(ValueError, "invalid header: 0x21",
                                  sc_decode, b"\x21\x00\xc0")
-        # header contains too many bytes for nbits
-        self.assertRaisesMessage(ValueError, "invalid header: 0x19",
-                                 sc_decode, b"\x19\x00\xc0")
+
         # invalid block head
         self.assertRaisesMessage(ValueError, "invalid block head: 0x81",
                                  sc_decode, b"\x01\x10\x81")
@@ -1190,6 +1188,29 @@ class SC_Tests(unittest.TestCase, Util):
                                      "invalid block head: 0x%02x" % i,
                                      sc_decode,
                                      bytearray([0x01, 0x10, i]))
+
+    def test_decode_header_overflow(self):
+        nbytes = tuple.__itemsize__
+        self.assertRaisesMessage(
+            OverflowError,
+            "sizeof(Py_ssize_t) = %d: cannot read 9 bytes" % nbytes,
+            sc_decode, b'\x09' + 9 * b'\x00')
+
+        self.assertRaisesMessage(
+            ValueError,
+            "read %d bytes got negative value: -1" % nbytes,
+            sc_decode, bytes(bytearray([nbytes] + nbytes * [0xff])))
+
+        if nbytes == 4:
+            self.assertRaisesMessage(
+                OverflowError,
+                "sizeof(Py_ssize_t) = 4: cannot read 5 bytes",
+                sc_decode, b'\x05' + 5 * b'\x00')
+
+            self.assertRaisesMessage(
+                OverflowError,
+                "read 4 bytes got negative value: -2147483648",
+                sc_decode, b'\x04\x00\x00\x00\x80')
 
     def test_decode_errors(self):
         # too many raw bytes
@@ -1209,11 +1230,19 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertRaisesMessage(
             ValueError, "decode error (n=3): 32768 >= 32768",
             sc_decode, b"\x02\x00\x80\xc1\x01\x00\x80\x00\0")
+
+        i = 2147483648
+        if tuple.__itemsize__ == 4:
+            i *= -1
         self.assertRaisesMessage(
-            ValueError, "decode error (n=4): 2147483648 >= 16",
+            ValueError, "decode error (n=4): %d >= 16" % i,
             sc_decode, b"\x01\x10\xc2\x01\x00\x00\x00\x80\0")
+
+        i = 4294967295
+        if tuple.__itemsize__ == 4:
+            i = -1
         self.assertRaisesMessage(
-            ValueError, "decode error (n=4): 4294967295 >= 16",
+            ValueError, "decode error (n=4): %d >= 16" % i,
             sc_decode, b"\x01\x10\xc2\x01\xff\xff\xff\xff\0")
 
     def test_decode_end_of_stream(self):
