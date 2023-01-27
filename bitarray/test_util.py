@@ -1208,7 +1208,7 @@ class SC_Tests(unittest.TestCase, Util):
                 sc_decode, b'\x05' + 5 * b'\x00')
 
             self.assertRaisesMessage(
-                OverflowError,
+                ValueError,
                 "read 4 bytes got negative value: -2147483648",
                 sc_decode, b'\x04\x00\x00\x00\x80')
 
@@ -1231,18 +1231,20 @@ class SC_Tests(unittest.TestCase, Util):
             ValueError, "decode error (n=3): 32768 >= 32768",
             sc_decode, b"\x02\x00\x80\xc1\x01\x00\x80\x00\0")
 
-        i = 2147483648
         if tuple.__itemsize__ == 4:
-            i *= -1
+            msg = "read 4 bytes got negative value: -2147483648"
+        else:
+            msg = "decode error (n=4): 2147483648 >= 16"
         self.assertRaisesMessage(
-            ValueError, "decode error (n=4): %d >= 16" % i,
+            ValueError, msg,
             sc_decode, b"\x01\x10\xc2\x01\x00\x00\x00\x80\0")
 
-        i = 4294967295
         if tuple.__itemsize__ == 4:
-            i = -1
+            msg = "read 4 bytes got negative value: -1"
+        else:
+            msg = "decode error (n=4): 4294967295 >= 16"
         self.assertRaisesMessage(
-            ValueError, "decode error (n=4): %d >= 16" % i,
+            ValueError, msg,
             sc_decode, b"\x01\x10\xc2\x01\xff\xff\xff\xff\0")
 
     def test_decode_end_of_stream(self):
