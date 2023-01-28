@@ -849,7 +849,7 @@ sc_encode_header(char *str, bitarrayobject *a)
     return 1 + len;
 }
 
-/* Count 1 elements in bitarray (starting at offset, and up to n bytes in
+/* Count 1 elements in bitarray (starting at offset, up to n bytes in
    buffer) with a maximum limit of m.  Equivalent to:
 
       min(a.count(1, 8 * offset, 8 * (offset + n)), m)
@@ -860,12 +860,14 @@ sc_encode_header(char *str, bitarrayobject *a)
 static Py_ssize_t
 clip_count(bitarrayobject *a, Py_ssize_t offset, Py_ssize_t n, Py_ssize_t m)
 {
-    Py_ssize_t cnt = 0, na, i;
+    Py_ssize_t cnt = 0, i;
     char *buff = a->ob_item + offset;
 
-    na = Py_MIN(Py_SIZE(a) - offset, n);
-    assert(offset + na <= Py_SIZE(a));
-    for (i = 0; i < na; i++) {
+    /* limit bytes to count up to by remaining buffer size */
+    n = Py_MIN(n, Py_SIZE(a) - offset);
+    assert(offset + n <= Py_SIZE(a));
+
+    for (i = 0; i < n; i++) {
         cnt += bitcount_lookup[(unsigned char) buff[i]];
         if (cnt >= m)
             return m;
@@ -915,29 +917,28 @@ static Py_ssize_t
 write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
                    int n, int k)
 {
-    Py_ssize_t nbytes = Py_SIZE(a) - offset;        /* remaining bytes */
-    Py_ssize_t na, i, j, outsize, len = 0;
+    /* bytes to encode limited by remaining buffer size */
+    Py_ssize_t na = Py_MIN(BSI(n), Py_SIZE(a) - offset);
+    Py_ssize_t i, j, outsize, len = 0;
     char *buff = a->ob_item + offset;
 
     assert(1 <= n && n <= 4 && 0 <= k && k < 256);
-    assert(nbytes >= 0);
-    na = Py_MIN(nbytes, BSI(n));  /* bytes to encode */
+    assert(offset + na <= Py_SIZE(a));
 
     /* block header */
     if (n == 1) {               /* type 1 - single byte for each position */
         assert(k < 32);
         str[len++] = 0xa0 + k;
-        outsize = k + 1;
     }
     else {            /* type 2, 3, 4 - multiple bytes for each positions */
         str[len++] = 0xc0 + n;
         str[len++] = k;
-        outsize = n * k + 2;
     }
     if (k == 0)  /* no index bytes */
         return len;
 
     /* block data */
+    outsize = len + n * k;
     for (i = 0; i < na; i++) {
         if (buff[i])
             for (j = 0; j < 8; j++)
@@ -978,7 +979,8 @@ sc_encode_block(char *str, Py_ssize_t *len,
     }
 
     for (n = 1; n < 4; n++) {
-        int next_count, size_n, size_next_n;
+        Py_ssize_t size_n, size_next_n;
+        int next_count;
 
         /* population for next block type */
         next_count = (int) clip_count(a, offset, BSI(n + 1), 256);
@@ -989,7 +991,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
         /* To decide if this n is the block type with the smallest encoded
            output size, compare with output size of type n + 1. */
         size_n = ((n == 1 ? 1 : 2) *
-                  Py_MIN(256, nbytes / BSI(n)) +
+                  Py_MIN(256, (nbytes + BSI(n) - 1) / BSI(n)) +
                   n * next_count);
         size_next_n = 2 + (n + 1) * next_count;
 
