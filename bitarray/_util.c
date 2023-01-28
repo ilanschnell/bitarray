@@ -804,8 +804,7 @@ read_n(int n, PyObject *iter)
 
     assert(n <= 8);
     for (j = 0; j < n; j++) {
-        c = next_char(iter);
-        if (c < 0)
+        if ((c = next_char(iter)) < 0)
             return -1;
         i |= ((Py_ssize_t) c) << (8 * j);
     }
@@ -927,10 +926,10 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
     /* block header */
     if (n == 1) {               /* type 1 - single byte for each position */
         assert(k < 32);
-        str[len++] = 160 + k;
+        str[len++] = 0xa0 + k;
     }
     else {            /* type 2, 3, 4 - multiple bytes for each positions */
-        str[len++] = 190 + n;
+        str[len++] = 0xc0 + n;
         str[len++] = k;
     }
 
@@ -1098,7 +1097,7 @@ static Py_ssize_t
 read_sparse_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter,
                   int n, int k)
 {
-    assert(1 <= n && n <= 4);
+    assert(1 <= n && n <= 4 && k >= 0);
     while (k--) {
         Py_ssize_t i;
 
@@ -1131,19 +1130,19 @@ sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
     if (head == 0)                         /* stop byte */
         return 0;
 
-    if (head <= 128)                       /* type 0 - 0x01 .. 0x80 */
+    if (head <= 0x80)                      /* type 0 - 0x01 .. 0x80 */
         return read_raw_block(a, offset, iter, head);
 
-    if (160 <= head && head < 192)         /* type 1 - 0xa0 .. 0xbf */
-        return read_sparse_block(a, offset, iter, 1, head - 160);
+    if (0xa0 <= head && head < 0xc0)       /* type 1 - 0xa0 .. 0xbf */
+        return read_sparse_block(a, offset, iter, 1, head - 0xa0);
 
-    if (192 <= head && head <= 194) {      /* type 2 .. 4 - 0xc0 .. 0xc2 */
+    if (0xc2 <= head && head <= 0xc4) {    /* type 2 .. 4 - 0xc2 .. 0xc4 */
         int k;
 
         if ((k = next_char(iter)) < 0)
             return -1;
 
-        return read_sparse_block(a, offset, iter, head - 190, k);
+        return read_sparse_block(a, offset, iter, head - 0xc0, k);
     }
 
     PyErr_Format(PyExc_ValueError, "invalid block head: 0x%02x", head);

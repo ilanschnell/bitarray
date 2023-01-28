@@ -42,16 +42,14 @@ def sc_decode_block(stream, stats):
     if head == 0:  # stop byte
         return False
 
-    if head <= 128:
+    if head <= 0x80:
         n = 0
         k = head
-        assert 0 < k <= 128
-    elif 160 <= head < 192:
+    elif 0xa0 <= head < 0xc0:
         n = 1
-        k = head - 160
-        assert k < 32
-    elif 192 <= head <= 194:
-        n = head - 190
+        k = head - 0xa0
+    elif 0xc2 <= head <= 0xc4:
+        n = head - 0xc0
         k = next(stream)
     else:
         raise ValueError("Invalid block head: 0x%02x" % head)

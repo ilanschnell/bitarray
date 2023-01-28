@@ -1178,9 +1178,9 @@ class SC_Tests(unittest.TestCase, Util):
     def test_decode_header_errors(self):
         # invalid bits to endianness
         self.assertRaisesMessage(ValueError, "invalid header: 0x21",
-                                 sc_decode, b"\x21\x00\xc0")
+                                 sc_decode, b"\x21\x00")
         # invalid block head
-        for c in 0x81, 0x9f, 0xc3, 0xff:
+        for c in 0x81, 0x9f, 0xc0, 0xc1, 0xc5, 0xff:
             self.assertRaisesMessage(ValueError,
                                      "invalid block head: 0x%02x" % c,
                                      sc_decode,
@@ -1223,10 +1223,10 @@ class SC_Tests(unittest.TestCase, Util):
             sc_decode, b"\x01\x80\xa1\x80\0")
         self.assertRaisesMessage(
             ValueError, "decode error (n=2): 512 >= 512",
-            sc_decode, b"\x02\x00\x02\xc0\x01\x00\x02\0")
+            sc_decode, b"\x02\x00\x02\xc2\x01\x00\x02\0")
         self.assertRaisesMessage(
             ValueError, "decode error (n=3): 32768 >= 32768",
-            sc_decode, b"\x02\x00\x80\xc1\x01\x00\x80\x00\0")
+            sc_decode, b"\x02\x00\x80\xc3\x01\x00\x80\x00\0")
 
         if tuple.__itemsize__ == 4:
             msg = "read 4 bytes got negative value: -2147483648"
@@ -1234,7 +1234,7 @@ class SC_Tests(unittest.TestCase, Util):
             msg = "decode error (n=4): 2147483648 >= 16"
         self.assertRaisesMessage(
             ValueError, msg,
-            sc_decode, b"\x01\x10\xc2\x01\x00\x00\x00\x80\0")
+            sc_decode, b"\x01\x10\xc4\x01\x00\x00\x00\x80\0")
 
         if tuple.__itemsize__ == 4:
             msg = "read 4 bytes got negative value: -1"
@@ -1242,7 +1242,7 @@ class SC_Tests(unittest.TestCase, Util):
             msg = "decode error (n=4): 4294967295 >= 16"
         self.assertRaisesMessage(
             ValueError, msg,
-            sc_decode, b"\x01\x10\xc2\x01\xff\xff\xff\xff\0")
+            sc_decode, b"\x01\x10\xc4\x01\xff\xff\xff\xff\0")
 
     def test_decode_end_of_stream(self):
         for stream in [b'', b'\x00', b'\x01', b'\x02\x77',
@@ -1271,9 +1271,9 @@ class SC_Tests(unittest.TestCase, Util):
                 b'\x11\x03\x01\x2f\0',    # some pad bits are 1
                 # sparse:
                 b'\x11\x03\xa1\x02\0',                  # using block type 1
-                b'\x11\x03\xc0\x01\x02\x00\0',          # using block type 2
-                b'\x11\x03\xc1\x01\x02\x00\x00\0',      # using block type 3
-                b'\x11\x03\xc2\x01\x02\x00\x00\x00\0',  # using block type 4
+                b'\x11\x03\xc2\x01\x02\x00\0',          # using block type 2
+                b'\x11\x03\xc3\x01\x02\x00\x00\0',      # using block type 3
+                b'\x11\x03\xc4\x01\x02\x00\x00\x00\0',  # using block type 4
         ]:
             a = sc_decode(b)
             self.assertEqual(a.to01(), '001')
