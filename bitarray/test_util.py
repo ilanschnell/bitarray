@@ -1355,7 +1355,7 @@ class SC_Tests(unittest.TestCase, Util):
             m += bits2bytes(n.bit_length())  # size bytes
             # For smaller or equal to 1 << 32, we have only one type 4 block.
             m += bool(n > 0)                 # number of blocks (head bytes)
-            m += bool(n > 248)               # number of second block heads
+            m += bool(n > 256)               # number of second block heads
             b = sc_encode(a)
             self.assertEqual(m, len(b))
             self.round_trip(a)

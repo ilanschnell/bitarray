@@ -916,7 +916,7 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
                    int n, int k)
 {
     Py_ssize_t nbytes = Py_SIZE(a) - offset;        /* remaining bytes */
-    Py_ssize_t na, i, j, len = 0;
+    Py_ssize_t na, i, j, outsize, len = 0;
     char *buff = a->ob_item + offset;
 
     assert(1 <= n && n <= 4 && 0 <= k && k < 256);
@@ -927,11 +927,15 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
     if (n == 1) {               /* type 1 - single byte for each position */
         assert(k < 32);
         str[len++] = 0xa0 + k;
+        outsize = k + 1;
     }
     else {            /* type 2, 3, 4 - multiple bytes for each positions */
         str[len++] = 0xc0 + n;
         str[len++] = k;
+        outsize = n * k + 2;
     }
+    if (k == 0)  /* no index bytes */
+        return len;
 
     /* block data */
     for (i = 0; i < na; i++) {
@@ -945,11 +949,12 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
                         write_n(str + len, n, 8 * i + j);
                         len += n;
                     }
+                    if (len == outsize)  /* final index reached */
+                        return len;
                 }
     }
-    assert(len == n * k + (n == 1 ? 1 : 2));
-
-    return len;
+    Py_FatalError("internal encode error");
+    return -1;  /* silence compiler warning */
 }
 
 /* Encode one block (starting at offset) and return offset increment.
@@ -959,12 +964,12 @@ sc_encode_block(char *str, Py_ssize_t *len,
                 bitarrayobject *a, Py_ssize_t offset)
 {
     Py_ssize_t nbytes = Py_SIZE(a) - offset;        /* remaining bytes */
-    int count, next_count, n;
+    int count, n;
 
     assert(nbytes >= 0);
 
     count = (int) clip_count(a, offset, 32, 32);
-    /* are there fewer (or equal) raw bytes than index bytes */
+    /* are there fewer or equal raw bytes than index bytes */
     if (Py_MIN(32, nbytes) <= count) {           /* type 0 - raw bytes */
         int k = raw_block_size(a, offset);
 
@@ -972,13 +977,23 @@ sc_encode_block(char *str, Py_ssize_t *len,
         return k;
     }
 
-    /* find most efficient block type n */
     for (n = 1; n < 4; n++) {
-        next_count = (int) clip_count(a, offset, BSI(n + 1), 256);
+        int next_count, size_n, size_next_n;
 
-        /* are fewer (or equal) count bytes (using the current block type (n))
-           than (new) index bytes in the next block type (n + 1) ? */
-        if (Py_MIN(256, nbytes >> (8 * n - 3)) <= next_count)
+        /* population for next block type */
+        next_count = (int) clip_count(a, offset, BSI(n + 1), 256);
+        if (next_count >= 256)
+            /* too many index bytes for next block type */
+            break;
+
+        /* To decide if this n is the block type with the smallest encoded
+           output size, compare with output size of type n + 1. */
+        size_n = ((n == 1 ? 1 : 2) *
+                  Py_MIN(256, nbytes / BSI(n)) +
+                  n * next_count);
+        size_next_n = 2 + (n + 1) * next_count;
+
+        if (size_n <= size_next_n)
             break;
 
         count = next_count;
@@ -1013,9 +1028,11 @@ sc_encode(PyObject *module, PyObject *obj)
     while (offset < Py_SIZE(a)) {
         Py_ssize_t allocated;   /* size (in bytes) of output buffer */
 
-        /* make sure we have enough space in output buffer for next block */
+        /* Make sure we have enough space in output buffer for next block.
+           The largest block possible is a type 4 block with 255 indices.
+           It's site is: 2 header bytes + 4 * 255 index bytes. */
         allocated = PyBytes_GET_SIZE(out);
-        if (allocated < len + 2 + 4 * 256) {  /* increase allocation */
+        if (allocated < len + 2 + 4 * 255) {  /* increase allocation */
             if (_PyBytes_Resize(&out, allocated + 32768) < 0)
                 return NULL;
             str = PyBytes_AS_STRING(out);
