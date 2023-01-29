@@ -1021,10 +1021,10 @@ sc_encode_block(char *str, Py_ssize_t *len,
         Py_ssize_t size_a, size_b;
         int next_count;
 
-        /* population for next block type */
+        /* population for next block type n+1 */
         next_count = (int) clip_count(a, offset, BSI(n + 1), 256);
         if (next_count >= 256)
-            /* too many index bytes for next block type */
+            /* too many index bytes for next block type n+1 */
             break;
 
         /* encoded size of (up to 256) blocks of type n */
@@ -1034,7 +1034,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
         size_b = 2 + (n + 1) * next_count;
 
         if (size_a <= size_b)
-            /* current type is smaller so don't move to next block type */
+            /* next block type n+1 is not smaller - use block type n */
             break;
 
         count = next_count;

@@ -6,6 +6,7 @@ functionality to efficiently compress and decompress sparse bitarrays.
 The lower the population count, the more efficient the compression will be:
 
 .. code-block:: python
+
     >>> from bitarray import bitarray
     >>> from bitarray.util import zeros, sc_encode, sc_decode
     >>> a = zeros(1 << 30, 'little')  # 2^30 bits
@@ -25,7 +26,18 @@ Our bitarray if divided into blocks ...
 Speed
 -----
 
-...
+We create a 64 mbit (8mb) random bitarray with a probability of 1/1024
+for each bit being 1.  The table shows a comparison of different compression
+methods:
+
+.. code-block::
+
+                     compress (ms)   decompress (ms)    ratio
+   ----------------------------------------------------------
+   serialize            4.562             1.188        1.0000
+   sc                  28.117             2.620        0.0158
+   gzip               920.343            16.161        0.0169
+   bz2                 59.580            33.435        0.0117
 
 
 Statistics

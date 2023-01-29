@@ -146,25 +146,27 @@ def test_random_array():
         p *= 1.4
 
 def p_range():
-    n = 1 << 24
-    p = 1e-6
-    print("     p         ratio         raw    type 1    type 2    type 3")
-    print(65 *'-')
+    n = 1 << 28
+    p = 1e-8
+    print("      p          ratio         raw"
+          "    type 1    type 2    type 3    type 4")
+    print(74 *'-')
     while p < 1.0:
         a = random_array(n, p)
         b = sc_encode(a)
         blocks = sc_stats(b)['blocks']
-        print('%10.7f  %10.7f  %8d  %8d  %8d  %8d' % (
-            p, len(b) / (n / 8), blocks[0], blocks[1], blocks[2], blocks[3]))
+        print('%11.8f  %11.8f  %8d  %8d  %8d  %8d  %8d' % (
+            p, len(b) / (n / 8),
+            blocks[0], blocks[1], blocks[2], blocks[3], blocks[4]))
         assert a == sc_decode(b)
-        p *= 1.6
+        p *= 1.8
 
 def compare():
-    n = 1 << 24
+    n = 1 << 26
     # create random bitarray with p = 1 / 2^9 = 1 / 512 = 0.195 %
     a = bitarray(n)
     a.setall(1)
-    for i in range(9):
+    for i in range(10):
         a &= urandom(n)
 
     raw = a.tobytes()
@@ -187,8 +189,8 @@ def compare():
         assert c == x
 
 if __name__ == '__main__':
-    #test_sc_stat()
+    test_sc_stat()
     test_raw_block_size()
     #test_random_array()
-    p_range()
     compare()
+    p_range()
