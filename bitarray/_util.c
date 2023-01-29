@@ -886,9 +886,12 @@ clip_count(bitarrayobject *a, Py_ssize_t offset, Py_ssize_t n, Py_ssize_t m)
     return cnt;
 }
 
-/* calculate number of bytes (1..128) of raw block starting at offset */
+/* Calculate number of bytes (1..128) of the raw block starting at offset,
+   encode the block (write the header and copy the bytes into the encode
+   buffer str), and return the number of raw bytes.
+   Note that the encoded block size is the return value + 1. */
 static int
-raw_block_size(bitarrayobject *a, Py_ssize_t offset)
+write_raw_block(char *str, bitarrayobject *a, Py_ssize_t offset)
 {
     Py_ssize_t nbytes = Py_SIZE(a) - offset;  /* remaining bytes */
     Py_ssize_t k = Py_MIN(32, nbytes);
@@ -904,26 +907,19 @@ raw_block_size(bitarrayobject *a, Py_ssize_t offset)
     }
     k = Py_MIN(k, nbytes);
     assert(0 < k && k <= 128 && k <= nbytes);
+
+    /* block header */
+    *str = (char) k;
+
+    /* block data */
+    assert(offset + k <= Py_SIZE(a));
+    memcpy(str + 1, a->ob_item + offset, (size_t) k);
+
     return (int) k;
 }
 
-static Py_ssize_t
-write_raw_block(char *str, bitarrayobject *a, Py_ssize_t offset, int k)
-{
-    assert(0 < k && k <= 128);
-    assert(offset + k <= Py_SIZE(a));
-
-    /* block header */
-    *str = k;
-
-    /* block data */
-    memcpy(str + 1, a->ob_item + offset, (size_t) k);
-
-    return k + 1;
-}
-
-/* Encode one sparse block (from offset, and up to k 1 bits).
-   Return number of bytes written to buffer str. */
+/* Encode one sparse block (from offset, and up to k one bits).
+   Return number of bytes written to buffer str (encoded block size). */
 static Py_ssize_t
 write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
                    int n, int k)
@@ -980,9 +976,8 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
      be used.
 
    - If a raw block is used, we check if the next three 32 byte buffer
-     blocks are also suitable for raw encoding (this is done in
-     raw_block_size()).  Therefore we have type 0 blocks with up to 128
-     raw bytes.
+     blocks are also suitable for raw encoding, see write_raw_block().
+     Therefore, we have type 0 blocks with up to 128 raw bytes.
 
    - Now we decide which sparse block type to use.  We do this by
      first calculating the population count for the bitarray buffer size of
@@ -1017,9 +1012,8 @@ sc_encode_block(char *str, Py_ssize_t *len,
     count = (int) clip_count(a, offset, 32, 32);
     /* are there fewer or equal raw bytes than index bytes */
     if (Py_MIN(32, nbytes) <= count) {           /* type 0 - raw bytes */
-        int k = raw_block_size(a, offset);
-
-        *len += write_raw_block(str + *len, a, offset, k);
+        int k = write_raw_block(str + *len, a, offset);
+        *len += 1 + k;
         return k;
     }
 
