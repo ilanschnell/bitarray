@@ -850,7 +850,7 @@ sc_encode_header(char *str, bitarrayobject *a)
 }
 
 /* Count 1 elements in bitarray (starting at offset, up to n bytes in
-   buffer) with a maximum limit of m.  Equivalent to:
+   buffer) with a maximum limit of m.  Equivalent to the Python expression:
 
       min(a.count(1, 8 * offset, 8 * (offset + n)), m)
 
@@ -876,9 +876,10 @@ clip_count(bitarrayobject *a, Py_ssize_t offset, Py_ssize_t n, Py_ssize_t m)
             return m;
     }
     if (nbits % 8) {
+        /* nbits can only not be multiple of 8 when it was limited by the
+           remaining bit size.  Hence, following equally: */
         assert(offset + nbits / 8 == Py_SIZE(a) - 1);
-        cnt += bitcount_lookup[(unsigned char)
-               (buff[nbits / 8] & ones_table[IS_BE(a)][nbits % 8])];
+        cnt += bitcount_lookup[(unsigned char) zeroed_last_byte(a)];
         if (cnt >= m)
             return m;
     }
@@ -933,7 +934,7 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
     char *buff = a->ob_item + offset;
 
     assert(1 <= n && n <= 4 && 0 <= k && k < 256);
-    assert(offset + na <= Py_SIZE(a));
+    assert(na > 0 && offset + na <= Py_SIZE(a));
 
     /* block header */
     if (n == 1) {               /* type 1 - single byte for each position */
@@ -977,7 +978,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
     Py_ssize_t nbytes = Py_SIZE(a) - offset;        /* remaining bytes */
     int count, n;
 
-    assert(nbytes >= 0);
+    assert(nbytes > 0);
 
     count = (int) clip_count(a, offset, 32, 32);
     /* are there fewer or equal raw bytes than index bytes */
@@ -998,10 +999,12 @@ sc_encode_block(char *str, Py_ssize_t *len,
             /* too many index bytes for next block type */
             break;
 
-        /* To decide if this n is the block type with the smallest encoded
-           output size, compare with output size of type n + 1. */
-        size_n = ((n == 1 ? 1 : 2) *
-                  Py_MIN(256, (nbytes + BSI(n) - 1) / BSI(n)) +
+        /* to decide if this n is the block type with the smallest encoded
+           output size, compare with output size of type n + 1 */
+        size_n = (/* header size * number of type n blocks */
+                  (n == 1 ? 1 : 2) *
+                  Py_MIN(256, (nbytes - 1) / BSI(n) + 1) +
+                  /* bytes for each index * total number of indices */
                   n * next_count);
         size_next_n = 2 + (n + 1) * next_count;
 

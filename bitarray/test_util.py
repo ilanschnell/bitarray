@@ -1145,6 +1145,7 @@ class SC_Tests(unittest.TestCase, Util):
                 (b'\x11\x09\xa1\x08\0',     '00000000 1',        'big'),
                 (b'\x01E\xa3ABD\0',         65 * '0' + '1101',   'little'),
         ]:
+            # the padbits in a frozenbitarray are guaranteed to be zero
             a = frozenbitarray(bits, endian)
             self.assertEqual(sc_encode(a), b)
             self.assertEqual(sc_decode(b), a)
