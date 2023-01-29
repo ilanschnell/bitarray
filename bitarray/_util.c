@@ -970,7 +970,41 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
 }
 
 /* Encode one block (starting at offset) and return offset increment.
-   The output is written into str buffer and len is increased. */
+   The output is written into str buffer and len is increased.
+
+   Notes:
+
+   - 32 index bytes take up as much space as a raw buffer of 32 bytes.
+     Hence, we start by counting up to 32 bits in the first 32 bytes of the
+     bitarray buffer in order to decide whether a raw block (type 0) should
+     be used.
+
+   - If a raw block is used, we check if the next three 32 byte buffer
+     blocks are also suitable for raw encoding (this is done in
+     raw_block_size()).  Therefore we have type 0 blocks with up to 128
+     raw bytes.
+
+   - Now we decide which sparse block type to use.  We do this by
+     first calculating the population count for the bitarray buffer size of
+     the NEXT block type.  If the this count is larger than 255 (too large
+     for the count byte) we have to stick with the current type.
+     Otherwise we compare the encoded sizes of (a) sticking with the current
+     type n, and (b) moving to the next type n+1.  These sizes are calculated
+     as follows:
+
+     (a) Although we consider sticking with the current type n, we are
+         looking at the population for the next type block size.  We
+         have to calculate the encoded size of ALL the type n blocks
+         which would otherwise just be a single type n+1 block.  This
+         size is:
+
+             header size  *  number of blocks  +  n  *  population
+
+     (b) Calculating the encoded size of a single block of type n+1 is
+         much easier:
+
+             header size  +  (n + 1)  *  population
+ */
 static Py_ssize_t
 sc_encode_block(char *str, Py_ssize_t *len,
                 bitarrayobject *a, Py_ssize_t offset)
@@ -990,7 +1024,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
     }
 
     for (n = 1; n < 4; n++) {
-        Py_ssize_t size_n, size_next_n;
+        Py_ssize_t size_a, size_b;
         int next_count;
 
         /* population for next block type */
@@ -999,16 +1033,14 @@ sc_encode_block(char *str, Py_ssize_t *len,
             /* too many index bytes for next block type */
             break;
 
-        /* to decide if this n is the block type with the smallest encoded
-           output size, compare with output size of type n + 1 */
-        size_n = (/* header size * number of type n blocks */
-                  (n == 1 ? 1 : 2) *
-                  Py_MIN(256, (nbytes - 1) / BSI(n) + 1) +
-                  /* bytes for each index * total number of indices */
+        /* encoded size of (up to 256) blocks of type n */
+        size_a = ((n == 1 ? 1 : 2) * Py_MIN(256, (nbytes - 1) / BSI(n) + 1) +
                   n * next_count);
-        size_next_n = 2 + (n + 1) * next_count;
+        /* encoded size of (a single) block of type n+1 */
+        size_b = 2 + (n + 1) * next_count;
 
-        if (size_n <= size_next_n)
+        if (size_a <= size_b)
+            /* current type is smaller so don't move to next block type */
             break;
 
         count = next_count;
