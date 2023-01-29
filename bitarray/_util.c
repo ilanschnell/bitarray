@@ -860,15 +860,25 @@ sc_encode_header(char *str, bitarrayobject *a)
 static Py_ssize_t
 clip_count(bitarrayobject *a, Py_ssize_t offset, Py_ssize_t n, Py_ssize_t m)
 {
-    Py_ssize_t cnt = 0, i;
+    Py_ssize_t cnt = 0, nbits, i;
     char *buff = a->ob_item + offset;
 
-    /* limit bytes to count up to by remaining buffer size */
-    n = Py_MIN(n, Py_SIZE(a) - offset);
-    assert(offset + n <= Py_SIZE(a));
+    if (8 * offset >= a->nbits)
+        return 0;
 
-    for (i = 0; i < n; i++) {
+    /* number of bits to count up to - limited by remaining bit size */
+    nbits = Py_MIN(8 * n, a->nbits - 8 * offset);
+    assert(nbits >= 0 && offset + nbits / 8 <= Py_SIZE(a));
+
+    for (i = 0; i < nbits / 8; i++) {
         cnt += bitcount_lookup[(unsigned char) buff[i]];
+        if (cnt >= m)
+            return m;
+    }
+    if (nbits % 8) {
+        assert(offset + nbits / 8 == Py_SIZE(a) - 1);
+        cnt += bitcount_lookup[(unsigned char)
+               (buff[nbits / 8] & ones_table[IS_BE(a)][nbits % 8])];
         if (cnt >= m)
             return m;
     }
@@ -954,7 +964,7 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
                         return len;
                 }
     }
-    Py_FatalError("internal encode error");
+    Py_FatalError("internal sc_encode() error");
     return -1;  /* silence compiler warning */
 }
 
@@ -1026,13 +1036,12 @@ sc_encode(PyObject *module, PyObject *obj)
     str = PyBytes_AS_STRING(out);
     len += sc_encode_header(str, a);
 
-    set_padbits(a);
     while (offset < Py_SIZE(a)) {
         Py_ssize_t allocated;   /* size (in bytes) of output buffer */
 
         /* Make sure we have enough space in output buffer for next block.
            The largest block possible is a type 4 block with 255 indices.
-           It's site is: 2 header bytes + 4 * 255 index bytes. */
+           It's site is: 2 header bytes + 4 * 255 index bytes */
         allocated = PyBytes_GET_SIZE(out);
         if (allocated < len + 2 + 4 * 255) {  /* increase allocation */
             if (_PyBytes_Resize(&out, allocated + 32768) < 0)

@@ -1136,7 +1136,7 @@ tests.append(TestsBase)
 class SC_Tests(unittest.TestCase, Util):
 
     def test_explicit(self):
-        for s, bits, endian in [
+        for b, bits, endian in [
                 (b'\x00\0',                 '',                  'little'),
                 (b'\x01\x03\x01\x03\0',     '110',               'little'),
                 (b'\x11\x07\x01\x02\0',     '0000001',           'big'),
@@ -1145,9 +1145,9 @@ class SC_Tests(unittest.TestCase, Util):
                 (b'\x11\x09\xa1\x08\0',     '00000000 1',        'big'),
                 (b'\x01E\xa3ABD\0',         65 * '0' + '1101',   'little'),
         ]:
-            a = bitarray(bits, endian)
-            self.assertEqual(sc_encode(a), s)
-            self.assertEqual(sc_decode(s), a)
+            a = frozenbitarray(bits, endian)
+            self.assertEqual(sc_encode(a), b)
+            self.assertEqual(sc_decode(b), a)
 
     def test_decode_header_nbits(self):
         for b, n in [
