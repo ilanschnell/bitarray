@@ -1177,7 +1177,7 @@ class SC_Tests(unittest.TestCase, Util):
 
     @skipIf(sys.version_info[0] == 2)
     def test_decode_header_errors(self):
-        # invalid bits to endianness
+        # invalid bits for endianness
         self.assertRaisesMessage(ValueError, "invalid header: 0x21",
                                  sc_decode, b"\x21\x00")
         # invalid block head

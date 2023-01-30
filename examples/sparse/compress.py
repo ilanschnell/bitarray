@@ -21,19 +21,17 @@ from bitarray.util import (
 def read_n(n, stream):
     i = 0
     for j in range(n):
-        c = next(stream)
-        i |= c << 8 * j
+        i |= next(stream) << 8 * j
     if i < 0:
         raise ValueError("read %d bytes got negative value: %d" % (n, i))
     return i
 
 def sc_decode_header(stream):
     head = next(stream)
+    if head & 0xe0:
+        raise ValueError("invalid header: 0x%02x" % head)
     endian = 'big' if head & 0x10 else 'little'
     length = head & 0x0f
-    if head & 0xe0 or length > 8:
-        raise ValueError("invalid header: 0x%02x" % head)
-
     nbits = read_n(length, stream)
     return endian, nbits
 
@@ -148,14 +146,14 @@ def test_random_array():
 def p_range():
     n = 1 << 28
     p = 1e-8
-    print("      p          ratio         raw"
+    print("        p          ratio         raw"
           "    type 1    type 2    type 3    type 4")
-    print(74 *'-')
+    print("   " + 73 *'-')
     while p < 1.0:
         a = random_array(n, p)
         b = sc_encode(a)
         blocks = sc_stats(b)['blocks']
-        print('%11.8f  %11.8f  %8d  %8d  %8d  %8d  %8d' % (
+        print('  %11.8f  %11.8f  %8d  %8d  %8d  %8d  %8d' % (
             p, len(b) / (n / 8),
             blocks[0], blocks[1], blocks[2], blocks[3], blocks[4]))
         assert a == sc_decode(b)

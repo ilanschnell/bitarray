@@ -950,19 +950,14 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t offset,
         if (buff[i])
             for (j = 0; j < 8; j++)
                 if (buff[i] & BITMASK(a, j)) {
-                    if (n == 1) {
-                        str[len++] = (char) (8 * i + j);
-                    }
-                    else {
-                        write_n(str + len, n, 8 * i + j);
-                        len += n;
-                    }
+                    write_n(str + len, n, 8 * i + j);
+                    len += n;
                     if (len == outsize)  /* final index reached */
                         return len;
                 }
     }
     Py_FatalError("internal sc_encode() error");
-    return -1;  /* silence compiler warning */
+    return -1;  /* cannot happen - silence compiler warning */
 }
 
 /* Encode one block (starting at offset) and return offset increment.
@@ -1098,11 +1093,15 @@ Use `sc_decode()` for decompressing (decoding).");
 static int
 sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
 {
-    Py_ssize_t n;
     int head, len;
 
     if ((head = next_char(iter)) < 0)
         return -1;
+
+    if (head & 0xe0) {
+        PyErr_Format(PyExc_ValueError, "invalid header: 0x%02x", head);
+        return -1;
+    }
 
     *endian = head & 0x10 ? ENDIAN_BIG : ENDIAN_LITTLE;
     len = head & 0x0f;
@@ -1113,14 +1112,8 @@ sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
                      (int) sizeof(Py_ssize_t), len);
         return -1;
     }
-    if (head & 0xe0) {
-        PyErr_Format(PyExc_ValueError, "invalid header: 0x%02x", head);
+    if ((*nbits = read_n(len, iter)) < 0)
         return -1;
-    }
-    n = read_n(len, iter);
-    if (n < 0)
-        return -1;
-    *nbits = n;
 
     return 0;
 }
@@ -1158,8 +1151,7 @@ read_sparse_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter,
     while (k--) {
         Py_ssize_t i;
 
-        i = (n == 1) ? next_char(iter) : read_n(n, iter);
-        if (i < 0)
+        if ((i = read_n(n, iter)) < 0)
             return -1;
 
         i += 8 * offset;
