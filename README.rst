@@ -35,6 +35,7 @@ Key features
   * pretty printing
   * conversion to and from integers
   * creating Huffman codes
+  * compression of sparse bitarrays
   * various count functions
   * other helpful functions
 
@@ -63,8 +64,8 @@ Once you have installed the package, you may want to test it:
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
     bitarray version: 2.7.0
-    sys.version: 3.9.4 (default, May 10 2021, 22:13:15) [Clang 11.1.0]
-    sys.prefix: /Users/ilan/Mini3/envs/py39
+    sys.version: 3.11.0 (main, Oct 25 2022) [Clang 14.0.4]
+    sys.prefix: /Users/ilan/Mini3/envs/py311
     pointer size: 64 bit
     sizeof(size_t): 8
     sizeof(bitarrayobject): 80
@@ -75,7 +76,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 450 tests in 0.564s
+    Ran 465 tests in 0.472s
 
     OK
 

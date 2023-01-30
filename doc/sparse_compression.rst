@@ -23,18 +23,17 @@ by an arbitrary number of blocks and a final stop byte.  There are 5 block
 types.  Each block starts with a block header encoding the block type and
 specifying the size of the block data that follows.
 
-+--------+------------+--------+-------+-----------+-----------+-------------+
-| block  | head       | count  | count | bytes     |   size    |     size    |
-| type   | byte       |        | byte  | per index | (encoded) |   (decoded) |
-+========+============+========+=======+===========+===========+=============+
-| stop   | 0x00       |        |       |           |        1  |             |
-| type 0 | 0x01..0x80 | 1..128 | no    | raw       |   2..129  |      1..128 |
-| type 1 | 0xa0..0xbf |  0..31 | no    |  1        |    1..32  |          32 |
-| type 2 | 0xc2       | 0..255 | yes   |  2        |   2..512  |       8,192 |
-| type 3 | 0xc3       | 0..255 | yes   |  3        |   2..767  |   2,097,152 |
-| type 4 | 0xc4       | 0..255 | yes   |  4        |  2..1022  | 536,870,912 |
-+--------+------------+--------+-------+-----------+-----------+-------------+
+.. code-block::
 
+   block    head         count    count   bytes             block size
+   type     byte                  byte    per index   (encoded)     (decoded)
+   --------------------------------------------------------------------------
+   stop     0x00                                            1
+   type 0   0x01..0x80   1..128   no      raw          2..129          1..128
+   type 1   0xa0..0xbf    0..31   no       1            1..32              32
+   type 2   0xc2         0..255   yes      2           2..512           8,192
+   type 3   0xc3         0..255   yes      3           2..767       2,097,152
+   type 4   0xc4         0..255   yes      4          2..1022     536,870,912
 
 
 Speed
@@ -97,19 +96,3 @@ ratio, and the number of blocks of each type:
    0.25287311   1.00781268    262144         0         0         0         0
    0.45517160   1.00781268    262144         0         0         0         0
    0.81930887   1.00781268    262144         0         0         0         0
-
-
-Binary compression format
--------------------------
-
-.. code-block::
-
-   block    head         count    count   bytes             block size
-   type     byte                  byte    per index   (encoded)     (decoded)
-   --------------------------------------------------------------------------
-   stop     0x00                                            1
-   type 0   0x01..0x80   1..128   no      raw          2..129          1..128
-   type 1   0xa0..0xbf    0..31   no       1            1..32              32
-   type 2   0xc2         0..255   yes      2           2..512           8,192
-   type 3   0xc3         0..255   yes      3           2..767       2,097,152
-   type 4   0xc4         0..255   yes      4          2..1022     536,870,912

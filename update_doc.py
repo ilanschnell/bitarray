@@ -47,7 +47,7 @@ NEW_IN = {
 DOCS = {
     'chc': ('Canonical Huffman Coding', 'canonical.rst'),
     'rep': ('Bitarray representations', 'represent.rst'),
-    'sc':  ('Sparse compression', 'sparse_compression.rst'),
+    'sc':  ('Compression of sparse bitarrays', 'sparse_compression.rst'),
     'vlf': ('Variable length bitarray format', 'variable_length.rst'),
 }
 
