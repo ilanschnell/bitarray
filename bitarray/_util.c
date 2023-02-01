@@ -867,21 +867,48 @@ count_final(bitarrayobject *a, Py_ssize_t start)
 /* number of 256 bit segments given nbits */
 #define NSEG(nbits)  (((nbits) + 255) / 256)
 
-/* Calculate an array with the running totals (rts) for 256 bits segments.
-   As each segment converts 256 bits (32 bytes), and each element in the
-   running totals array takes 8 bytes (on a 64-bit machine at least) the
+/* Calculate an array with the running totals (rts) for 256 bit segments.
+   Note that we call these "segments", as opposed to "blocks", in order to
+   avoid confusion with encode blocks.
+
+   0       1       2       3       4       5    6   index into rts array
+   +-------+-------+-------+-------+-------+----+
+   |     3 |     7 |     2 |    11 |     6 |  4 |   count per segment
+   +-------+-------+-------+-------+-------+----+
+   0       3      10      12      23      29   33   running totals
+
+   In this example we have a bitarray with 6 segments, e.g. with 1400 bits.
+   Note that:
+
+     * Here we have 6 segments, but the rts array has a size
+       of 7 elements: 0 .. 6
+       The rts array has always NSEG(nbits) + 1 elements, such that the
+       last element is always indexed by NSEG(nbits).  Here, NSEG(1400) = 6
+
+     * The first element rts[0] is always zero.
+
+     * The last last element rts[NSEG(nbits)] is always the total count.
+       Here: rts[NSEG(nbits)] = rts[NSEG(1400)] = rts[6] = 33
+
+     * The last segment may be partial.  Here, spanning 120 bits, that
+       is a[1280:1400].  The count of this segment is 3:
+       a[1280:].count() = a.count(1, 1280) = 1
+
+   As each segment covers 256 bits (32 bytes), and each element in the
+   running totals array takes up 8 bytes (on a 64-bit machine at least) the
    additional memory to accommodate the rts array is 1/4 of the bitarrays
-   memory.  However, calculating this array allows count_block() to simply
-   look up two entries from the array and take their difference.  Thus, the
-   the speedup we get is very significant.  The function write_sparse_block()
-   also takes advantage of the running totals array, as it can quickly check
-   for empty segments to skip.  */
+   memory.  However, calculating this array upfront allows count_block() to
+   simply look up two entries from the array and take their difference.
+   Thus, the speedup we get can be significant.
+   The function write_sparse_block() also takes advantage of the running
+   totals array, as it can quickly check for segments that only contain
+   only zeros to skip.  */
 static Py_ssize_t *
 calc_rts(bitarrayobject *a)
 {
     const Py_ssize_t n_seg = NSEG(a->nbits);  /* number of segments */
     const Py_ssize_t c_seg = a->nbits / 256;  /* number of complete segs */
-    char zeros[32];                           /* memory for empty segment */
+    char zeros[32];                           /* segment with only zeros */
     Py_ssize_t cnt = 0;                       /* current count */
     char *buff;
     Py_ssize_t *res, i, j;
@@ -936,7 +963,7 @@ count_block(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
        However, on 32-bit machines this will fail for n=4 because 8 * BSI(4)
        is 1 << 32.  This is problematic, as 32-bit machines can address
        at least partially filled type 4 blocks).  Therefore, we first
-       limit BSI(n) by the buffer size (before multiplying 8). */
+       limit BSI(n) by the buffer size before multiplying 8. */
     nbits = Py_MIN(8 * Py_MIN(BSI(n), Py_SIZE(a)),
                    a->nbits - 8 * offset);
     assert(nbits >= 0);
