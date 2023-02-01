@@ -922,17 +922,31 @@ calc_rts(bitarrayobject *a)
 static Py_ssize_t
 count_block(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
 {
-    Py_ssize_t nbits;
+    Py_ssize_t nbytes, nbits;
 
     assert(offset % 32 == 0 && n > 0);
     if (8 * offset >= a->nbits)
         return 0;
 
-    /* number of bits to count up to - limited by remaining bitarray size */
-    nbits = Py_MIN(8 * BSI(n), a->nbits - 8 * offset);
+    /* The desired number of bits to count up to (limited by remaining
+       bitarray size) is given by:
+
+           nbits = Py_MIN(8 * BSI(n), a->nbits - 8 * offset);
+
+       However, on 32-bit machines this will fail for n=4 (even though
+       we can address enough memory to use at least partially filled
+       type 4 blocks).  Therefore, we first calculate the buffer size
+       in bytes: */
+    nbytes = Py_MIN(BSI(n), Py_SIZE(a) - offset);
+    assert(nbytes >= 0 && offset + nbytes <= Py_SIZE(a));
+    /* And now use this number (which does not overflow for n=4) as
+       the limiting factor: */
+    nbits = Py_MIN(8 * nbytes, a->nbits - 8 * offset);
     assert(nbits >= 0 && offset + nbits / 8 <= Py_SIZE(a));
 
     offset >>= 5;
+    assert(NSEG(nbits) + offset <= NSEG(a->nbits));
+
     return rts[NSEG(nbits) + offset] - rts[offset];
 }
 
