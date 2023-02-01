@@ -1007,6 +1007,7 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
                 continue;
             }
         }
+        assert(offset + i < Py_SIZE(a));
         if (buff[i])
             for (j = 0; j < 8; j++)
                 if (buff[i] & BITMASK(a, j)) {

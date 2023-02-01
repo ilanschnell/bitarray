@@ -1361,6 +1361,9 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(m, len(b))
             self.round_trip(a)
 
+        self.assertEqual(sc_encode(zeros(1 << 25)),
+                         b'\x14\x00\x00\x00\x02\xc4\x00\0')
+
     def test_encode_ones(self):
         for _ in range(50):
             n = randint(0, 10000)
