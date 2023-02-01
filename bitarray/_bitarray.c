@@ -164,7 +164,8 @@ bitarray_dealloc(bitarrayobject *self)
 
 /* setup translation table, which maps each byte to it's reversed:
    reverse_trans = {0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, ..., 0xff} */
-static void setup_reverse_trans()
+static void
+setup_reverse_trans(void)
 {
     int j, k;
 
