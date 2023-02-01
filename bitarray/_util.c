@@ -851,7 +851,7 @@ sc_encode_header(char *str, bitarrayobject *a)
 
 /* starting at start (byte index) count the remaining bits */
 static Py_ssize_t
-count_till_end(bitarrayobject *a, Py_ssize_t start)
+count_final(bitarrayobject *a, Py_ssize_t start)
 {
     Py_ssize_t cnt = 0, i;
 
@@ -873,10 +873,10 @@ calc_rts(bitarrayobject *a)
 {
     const Py_ssize_t n_seg = NSEG(a->nbits);  /* number of segments */
     const Py_ssize_t c_seg = a->nbits / 256;  /* number of complete segs */
-    Py_ssize_t cnt = 0, i, j;
+    char zeros[32];                           /* memory for empty segment */
+    Py_ssize_t cnt = 0;                       /* current count */
     char *buff = a->ob_item;
-    Py_ssize_t *res;
-    char zeros[32];    /* memory for zeros we memcmp blocks against */
+    Py_ssize_t *res, i, j;
 
     memset(zeros, 0x00, 32);
     res = (Py_ssize_t *) PyMem_Malloc((size_t)
@@ -884,10 +884,10 @@ calc_rts(bitarrayobject *a)
     if (res == NULL)
         return (Py_ssize_t *) PyErr_NoMemory();
 
-    for (j = 0; j < c_seg; j++) {
-        res[j] = cnt;
+    for (j = 0; j < c_seg; j++) { /* count all complete segments */
+        res[j] = cnt;             /* rts[0] is always 0 */
         assert(buff - a->ob_item + 32 <= Py_SIZE(a));
-        if (memcmp(buff, zeros, 32))
+        if (memcmp(buff, zeros, 32)) /* segment is not empty */
             for (i = 0; i < 32; i++)
                 cnt += bitcount_lookup[(unsigned char) buff[i]];
 
@@ -896,11 +896,11 @@ calc_rts(bitarrayobject *a)
     assert(buff - a->ob_item == 32 * c_seg);
     res[c_seg] = cnt;
 
-    if (n_seg > c_seg) {
+    if (n_seg > c_seg) {           /* we have a final partial segment */
         assert(c_seg + 1 == n_seg && Py_SIZE(a) - 32 * c_seg <= 32);
         assert(a->nbits - 256 * c_seg < 256);
 
-        cnt += count_till_end(a, 32 * c_seg);
+        cnt += count_final(a, 32 * c_seg);
         res[n_seg] = cnt;
     }
     return res;
@@ -908,10 +908,10 @@ calc_rts(bitarrayobject *a)
 
 /* Equivalent to the Python expression:
 
-      a.count(1, 8 * offset, 8 * (offset + (1 << (8 * n - 3))))
+      a.count(1, 8 * offset, 8 * offset + (1 << (8 * n)))
 
-   The offset is required to be multiple of 32, as this functions makes use
-   of running totals (stored in Py_ssize_t array rts). */
+   The offset is required to be multiple of 32 (the segment size), as this
+   functions makes use of running totals (stored in Py_ssize_t array rts). */
 static Py_ssize_t
 count_block(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
 {
@@ -925,7 +925,8 @@ count_block(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
     nbits = Py_MIN(8 * BSI(n), a->nbits - 8 * offset);
     assert(nbits >= 0 && offset + nbits / 8 <= Py_SIZE(a));
 
-    return rts[NSEG(nbits) + offset / 32] - rts[offset / 32];
+    offset >>= 5;
+    return rts[NSEG(nbits) + offset] - rts[offset];
 }
 
 /* Calculate number of bytes (1..128) of the raw block starting at offset,
