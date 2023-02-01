@@ -124,7 +124,7 @@ def random_array(n, p=0.5):
 Generate random bitarray of length n.
 Each bit has a probability p of being 1.
 """
-    if p < 0.05:
+    if p < 0.05:  # XXX what happens for small N?  N=0 crashes right now.
         # when the probability p is small, it is faster to randomly
         # set p * n elements
         a = zeros(n)
