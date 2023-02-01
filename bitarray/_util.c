@@ -1312,6 +1312,9 @@ sparse compressed (`sc`) bitarray, and return the decoded  bitarray.\n\
 This function consumes only one bitarray and leaves the remaining stream\n\
 untouched.  Use `sc_encode()` for compressing (encoding).");
 
+#undef NSEG
+#undef BSI
+
 /* ------------------- variable length bitarray format ----------------- */
 
 /* LEN_PAD_BITS is always 3 - the number of bits (length) that is necessary to
