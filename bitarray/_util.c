@@ -868,11 +868,11 @@ count_till_end(bitarrayobject *a, Py_ssize_t start)
 #define NSEG(nbits)  (((nbits) + 255) / 256)
 
 /* Calculate an array with the running totals (rts) for 256 bits segments */
-static void *
+static Py_ssize_t *
 calc_rts(bitarrayobject *a)
 {
-    const Py_ssize_t nseg = NSEG(a->nbits);  /* number of segments */
-    const Py_ssize_t cseg = a->nbits / 256;  /* number of complete segments */
+    const Py_ssize_t n_seg = NSEG(a->nbits);  /* number of segments */
+    const Py_ssize_t c_seg = a->nbits / 256;  /* number of complete segs */
     Py_ssize_t cnt = 0, i, j;
     char *buff = a->ob_item;
     Py_ssize_t *res;
@@ -880,13 +880,11 @@ calc_rts(bitarrayobject *a)
 
     memset(zeros, 0x00, 32);
     res = (Py_ssize_t *) PyMem_Malloc((size_t)
-                                      sizeof(Py_ssize_t) * (nseg + 1));
-    if (res == NULL) {
-        PyErr_NoMemory();
-        return NULL;
-    }
+                                      sizeof(Py_ssize_t) * (n_seg + 1));
+    if (res == NULL)
+        return (Py_ssize_t *) PyErr_NoMemory();
 
-    for (j = 0; j < cseg; j++) {
+    for (j = 0; j < c_seg; j++) {
         res[j] = cnt;
         assert(buff - a->ob_item + 32 <= Py_SIZE(a));
         if (memcmp(buff, zeros, 32))
@@ -895,15 +893,15 @@ calc_rts(bitarrayobject *a)
 
         buff += 32;
     }
-    assert(buff - a->ob_item == 32 * cseg);
-    res[cseg] = cnt;
+    assert(buff - a->ob_item == 32 * c_seg);
+    res[c_seg] = cnt;
 
-    if (nseg > cseg) {
-        assert(cseg + 1 == nseg && Py_SIZE(a) - 32 * cseg <= 32);
-        assert(a->nbits - 256 * cseg < 256);
+    if (n_seg > c_seg) {
+        assert(c_seg + 1 == n_seg && Py_SIZE(a) - 32 * c_seg <= 32);
+        assert(a->nbits - 256 * c_seg < 256);
 
-        cnt += count_till_end(a, 32 * cseg);
-        res[nseg] = cnt;
+        cnt += count_till_end(a, 32 * c_seg);
+        res[n_seg] = cnt;
     }
     return res;
 }
@@ -917,10 +915,10 @@ calc_rts(bitarrayobject *a)
    as the limit is reached.
 */
 static Py_ssize_t
-clip_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset,
-           Py_ssize_t n, Py_ssize_t m)
+clip_count(bitarrayobject *a, Py_ssize_t *rts,
+           Py_ssize_t offset, Py_ssize_t n)
 {
-    Py_ssize_t cnt = 0, nbits;
+    Py_ssize_t nbits;
 
     assert(offset % 32 == 0 && n % 32 == 0);
     if (8 * offset >= a->nbits)
@@ -930,29 +928,7 @@ clip_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset,
     nbits = Py_MIN(8 * n, a->nbits - 8 * offset);
     assert(nbits >= 0 && offset + nbits / 8 <= Py_SIZE(a));
 
-    if (rts) {
-        cnt = rts[NSEG(nbits) + offset / 32] - rts[offset / 32];
-        return Py_MIN(m, cnt);
-    }
-    else {
-        char *buff = a->ob_item + offset;
-        Py_ssize_t i;
-
-        for (i = 0; i < nbits / 8; i++) {
-            cnt += bitcount_lookup[(unsigned char) buff[i]];
-            if (cnt >= m)
-                return m;
-        }
-        if (nbits % 8) {
-            /* nbits can only not be multiple of 8 when it was limited by the
-               remaining bit size.  Hence, following equally: */
-            assert(offset + nbits / 8 == Py_SIZE(a) - 1);
-            cnt += bitcount_lookup[(unsigned char) zeroed_last_byte(a)];
-            if (cnt >= m)
-                return m;
-        }
-        return cnt;
-    }
+    return rts[NSEG(nbits) + offset / 32] - rts[offset / 32];
 }
 
 /* Calculate number of bytes (1..128) of the raw block starting at offset,
@@ -972,8 +948,7 @@ write_raw_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
            raw bytes (otherwise this function wouldn't have been called).
            Now also check the next 3 blocks of 32 bytes. */
         while (k < 128 &&
-               Py_MIN(32, nbytes - k) <= clip_count(a, rts, offset + k,
-                                                    32, 32))
+               Py_MIN(32, nbytes - k) <= clip_count(a, rts, offset + k, 32))
             k += 32;
     }
     k = Py_MIN(k, nbytes);
@@ -1084,7 +1059,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
 
     assert(nbytes > 0);
 
-    count = (int) clip_count(a, rts, offset, 32, 32);
+    count = (int) clip_count(a, rts, offset, 32);
     /* are there fewer or equal raw bytes than index bytes */
     if (Py_MIN(32, nbytes) <= count) {           /* type 0 - raw bytes */
         int k = write_raw_block(str + *len, a, rts, offset);
@@ -1097,7 +1072,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
         int next_count;
 
         /* population for next block type n+1 */
-        next_count = (int) clip_count(a, rts, offset, BSI(n + 1), 256);
+        next_count = (int) clip_count(a, rts, offset, BSI(n + 1));
         if (next_count >= 256)
             /* too many index bytes for next block type n+1 */
             break;
@@ -1120,7 +1095,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
 }
 
 static PyObject *
-sc_encode(PyObject *module, PyObject *args)
+sc_encode(PyObject *module, PyObject *obj)
 {
     PyObject *out;
     char *str;                  /* output buffer */
@@ -1128,23 +1103,13 @@ sc_encode(PyObject *module, PyObject *args)
     bitarrayobject *a;
     Py_ssize_t offset = 0;      /* block offset into bitarray a in bytes */
     Py_ssize_t *rts = NULL;
-    int use_rts = 1;            /* use runing totals */
 
-    if (!PyArg_ParseTuple(args, "O!|i", bitarray_type_obj, (PyObject *) &a,
-                          &use_rts))
+    if (ensure_bitarray(obj) < 0)
         return NULL;
 
-    rts = use_rts ? calc_rts(a) : NULL;
-    if (0) {
-        Py_ssize_t i, x;
-        for (i = 0; i <= NSEG(a->nbits); i++) {
-            x = clip_count(a, NULL, 0, 32 * i, 10000000);
-            if (x != rts[i])
-                return PyErr_Format(PyExc_ValueError,
-                                    "rts[%zd] = %zd    %zd",
-                                    i, rts[i], x);
-        }
-    }
+    a = (bitarrayobject *) obj;
+    if ((rts = calc_rts(a)) == NULL)
+        return NULL;
 
     out = PyBytes_FromStringAndSize(NULL, 32768);
     if (out == NULL)
@@ -1679,7 +1644,7 @@ static PyMethodDef module_functions[] = {
     {"_hex2ba",   (PyCFunction) hex2ba,    METH_VARARGS, 0},
     {"ba2base",   (PyCFunction) ba2base,   METH_VARARGS, ba2base_doc},
     {"_base2ba",  (PyCFunction) base2ba,   METH_VARARGS, 0},
-    {"sc_encode", (PyCFunction) sc_encode, METH_VARARGS, sc_encode_doc},
+    {"sc_encode", (PyCFunction) sc_encode, METH_O,       sc_encode_doc},
     {"sc_decode", (PyCFunction) sc_decode, METH_O,       sc_decode_doc},
     {"vl_encode", (PyCFunction) vl_encode, METH_O,       vl_encode_doc},
     {"_vl_decode",(PyCFunction) vl_decode, METH_VARARGS, 0},
