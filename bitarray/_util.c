@@ -864,14 +864,14 @@ count_till_end(bitarrayobject *a, Py_ssize_t start)
     return cnt;
 }
 
-/* number of 256 bit segments in bitarray */
-#define NSEG(self)  (((self)->nbits + 255) / 256)
+/* number of 256 bit segments given nbits */
+#define NSEG(nbits)  (((nbits) + 255) / 256)
 
 /* Calculate an array with the running totals for 256 bits segments */
 static void *
-calc_ccache(bitarrayobject *a)
+calc_rta(bitarrayobject *a)
 {
-    const Py_ssize_t nseg = NSEG(a);         /* number of segments */
+    const Py_ssize_t nseg = NSEG(a->nbits);  /* number of segments */
     const Py_ssize_t cseg = a->nbits / 256;  /* number of complete segments */
     Py_ssize_t cnt = 0, i, j;
     char *buff = a->ob_item;
@@ -917,7 +917,7 @@ calc_ccache(bitarrayobject *a)
    as the limit is reached.
 */
 static Py_ssize_t
-clip_count(bitarrayobject *a, Py_ssize_t *ccache, Py_ssize_t offset,
+clip_count(bitarrayobject *a, Py_ssize_t *rta, Py_ssize_t offset,
            Py_ssize_t n, Py_ssize_t m)
 {
     Py_ssize_t cnt = 0, nbits;
@@ -930,8 +930,8 @@ clip_count(bitarrayobject *a, Py_ssize_t *ccache, Py_ssize_t offset,
     nbits = Py_MIN(8 * n, a->nbits - 8 * offset);
     assert(nbits >= 0 && offset + nbits / 8 <= Py_SIZE(a));
 
-    if (ccache) {
-        cnt = ccache[(nbits + 255) / 256 + offset / 32] - ccache[offset / 32];
+    if (rta) {
+        cnt = rta[NSEG(nbits) + offset / 32] - rta[offset / 32];
         return Py_MIN(m, cnt);
     }
     else {
@@ -960,8 +960,8 @@ clip_count(bitarrayobject *a, Py_ssize_t *ccache, Py_ssize_t offset,
    buffer str), and return the number of raw bytes.
    Note that the encoded block size is the return value + 1. */
 static int
-write_raw_block(char *str, bitarrayobject *a,
-                Py_ssize_t *ccache, Py_ssize_t offset)
+write_raw_block(char *str, bitarrayobject *a, Py_ssize_t *rta,
+                Py_ssize_t offset)
 {
     Py_ssize_t nbytes = Py_SIZE(a) - offset;  /* remaining bytes */
     Py_ssize_t k = Py_MIN(32, nbytes);
@@ -972,7 +972,7 @@ write_raw_block(char *str, bitarrayobject *a,
            raw bytes (otherwise this function wouldn't have been called).
            Now also check the next 3 blocks of 32 bytes. */
         while (k < 128 &&
-               Py_MIN(32, nbytes - k) <= clip_count(a, ccache, offset + k,
+               Py_MIN(32, nbytes - k) <= clip_count(a, rta, offset + k,
                                                     32, 32))
             k += 32;
     }
@@ -992,7 +992,7 @@ write_raw_block(char *str, bitarrayobject *a,
 /* Encode one sparse block (from offset, and up to k one bits).
    Return number of bytes written to buffer str (encoded block size). */
 static Py_ssize_t
-write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *ccache,
+write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rta,
                    Py_ssize_t offset, int n, int k)
 {
     /* bytes to encode limited by remaining buffer size */
@@ -1019,10 +1019,10 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *ccache,
     /* block data */
     outsize = len + n * k;
     for (i = 0; i < na; i++) {
-        if (ccache && i % 32 == 0) {
+        if (rta && i % 32 == 0) {
             Py_ssize_t x = (i + offset) / 32;
-            assert(x < NSEG(a));
-            if (ccache[x + 1] == ccache[x]) {
+            assert(x < NSEG(a->nbits));
+            if (rta[x + 1] == rta[x]) {
                 i += 31;
                 continue;
             }
@@ -1077,17 +1077,17 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *ccache,
  */
 static Py_ssize_t
 sc_encode_block(char *str, Py_ssize_t *len,
-                bitarrayobject *a, Py_ssize_t *ccache, Py_ssize_t offset)
+                bitarrayobject *a, Py_ssize_t *rta, Py_ssize_t offset)
 {
     Py_ssize_t nbytes = Py_SIZE(a) - offset;        /* remaining bytes */
     int count, n;
 
     assert(nbytes > 0);
 
-    count = (int) clip_count(a, ccache, offset, 32, 32);
+    count = (int) clip_count(a, rta, offset, 32, 32);
     /* are there fewer or equal raw bytes than index bytes */
     if (Py_MIN(32, nbytes) <= count) {           /* type 0 - raw bytes */
-        int k = write_raw_block(str + *len, a, ccache, offset);
+        int k = write_raw_block(str + *len, a, rta, offset);
         *len += 1 + k;
         return k;
     }
@@ -1097,7 +1097,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
         int next_count;
 
         /* population for next block type n+1 */
-        next_count = (int) clip_count(a, ccache, offset, BSI(n + 1), 256);
+        next_count = (int) clip_count(a, rta, offset, BSI(n + 1), 256);
         if (next_count >= 256)
             /* too many index bytes for next block type n+1 */
             break;
@@ -1115,7 +1115,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
         count = next_count;
     }
 
-    *len += write_sparse_block(str + *len, a, ccache, offset, n, count);
+    *len += write_sparse_block(str + *len, a, rta, offset, n, count);
     return BSI(n);
 }
 
@@ -1127,24 +1127,22 @@ sc_encode(PyObject *module, PyObject *args)
     Py_ssize_t len = 0;         /* bytes written into output buffer */
     bitarrayobject *a;
     Py_ssize_t offset = 0;      /* block offset into bitarray a in bytes */
-    Py_ssize_t *ccache = NULL;
+    Py_ssize_t *rta = NULL;
     int use_rt = 1;
 
     if (!PyArg_ParseTuple(args, "O!|i", bitarray_type_obj, (PyObject *) &a,
                           &use_rt))
         return NULL;
 
-    ccache = use_rt ? calc_ccache(a) : NULL;
-    if (ccache) {
+    rta = use_rt ? calc_rta(a) : NULL;
+    if (rta) {
         Py_ssize_t i, x;
-        for (i = 0; i <= NSEG(a); i++) {
+        for (i = 0; i <= NSEG(a->nbits); i++) {
             x = clip_count(a, NULL, 0, 32 * i, 10000000);
-            //printf("count[%zd] = %zd   %zd\n", i, ccache[i], x);
-
-            if (x != ccache[i])
+            if (x != rta[i])
                 return PyErr_Format(PyExc_ValueError,
-                                    "ccache[%zd] = %zd    %zd",
-                                    i, ccache[i], x);
+                                    "rta[%zd] = %zd    %zd",
+                                    i, rta[i], x);
         }
     }
 
@@ -1167,9 +1165,9 @@ sc_encode(PyObject *module, PyObject *args)
                 return NULL;
             str = PyBytes_AS_STRING(out);
         }
-        offset += sc_encode_block(str, &len, a, ccache, offset);
+        offset += sc_encode_block(str, &len, a, rta, offset);
     }
-    PyMem_Free(ccache);
+    PyMem_Free(rta);
     str[len++] = 0x00;          /* add stop byte */
 
     if (_PyBytes_Resize(&out, len) < 0)
