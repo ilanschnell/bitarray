@@ -1361,8 +1361,11 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(m, len(b))
             self.round_trip(a)
 
-        self.assertEqual(sc_encode(zeros(1 << 25)),
-                         b'\x14\x00\x00\x00\x02\xc4\x00\0')
+        a = zeros(1 << 25)
+        a[0] = 1
+        self.assertEqual(
+            sc_encode(a),
+            b'\x14\x00\x00\x00\x02\xc4\x01\x00\x00\x00\x00\x00')
 
     def test_encode_ones(self):
         for _ in range(50):
