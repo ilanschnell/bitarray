@@ -917,8 +917,7 @@ static Py_ssize_t
 clip_count(bitarrayobject *a, Py_ssize_t *ccache, Py_ssize_t offset,
            Py_ssize_t n, Py_ssize_t m)
 {
-    Py_ssize_t cnt = 0, i = 0, nbits;
-    char *buff = a->ob_item + offset;
+    Py_ssize_t cnt = 0, nbits;
 
     assert(offset % 32 == 0);
     if (8 * offset >= a->nbits)
@@ -930,26 +929,27 @@ clip_count(bitarrayobject *a, Py_ssize_t *ccache, Py_ssize_t offset,
 
     if (ccache) {
         cnt = ccache[(nbits + 255) / 256 + offset / 32] - ccache[offset / 32];
-        i = 32 * (nbits / 256);
-        if (cnt >= m)
-            return m;
+        return Py_MIN(m, cnt);
+    }
+    else {
+        char *buff = a->ob_item + offset;
+        Py_ssize_t i;
+
+        for (i = 0; i < nbits / 8; i++) {
+            cnt += bitcount_lookup[(unsigned char) buff[i]];
+            if (cnt >= m)
+                return m;
+        }
+        if (nbits % 8) {
+            /* nbits can only not be multiple of 8 when it was limited by the
+               remaining bit size.  Hence, following equally: */
+            assert(offset + nbits / 8 == Py_SIZE(a) - 1);
+            cnt += bitcount_lookup[(unsigned char) zeroed_last_byte(a)];
+            if (cnt >= m)
+                return m;
+        }
         return cnt;
     }
-
-    while (i < nbits / 8) {
-        cnt += bitcount_lookup[(unsigned char) buff[i++]];
-        if (cnt >= m)
-            return m;
-    }
-    if (nbits % 8) {
-        /* nbits can only not be multiple of 8 when it was limited by the
-           remaining bit size.  Hence, following equally: */
-        assert(offset + nbits / 8 == Py_SIZE(a) - 1);
-        cnt += bitcount_lookup[(unsigned char) zeroed_last_byte(a)];
-        if (cnt >= m)
-            return m;
-    }
-    return cnt;
 }
 
 /* Calculate number of bytes (1..128) of the raw block starting at offset,
@@ -1131,7 +1131,7 @@ sc_encode(PyObject *module, PyObject *args)
         return NULL;
 
     ccache = use_rt ? calc_ccache(a) : NULL;
-    if (0) {
+    if (ccache) {
         Py_ssize_t i, x;
         for (i = 0; i <= (a->nbits + 255) / 256; i++) {
             x = clip_count(a, NULL, 0, 32 * i, 10000000);
@@ -1143,6 +1143,7 @@ sc_encode(PyObject *module, PyObject *args)
                                     i, ccache[i], x);
         }
     }
+    ccache = NULL;
 
     out = PyBytes_FromStringAndSize(NULL, 32768);
     if (out == NULL)
