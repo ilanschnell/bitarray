@@ -936,10 +936,10 @@ count_block(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
        However, on 32-bit machines this will fail for n=4 because 8 * BSI(4)
        is 1 << 32.  This is problematic, as 32-bit machines can address
        at least partially filled type 4 blocks).  Therefore, we first
-       limit BSI(n) by the remaining buffer size (before multiplying 8). */
-    nbits = Py_MIN(8 * Py_MIN(BSI(n), Py_SIZE(a) - offset),
+       limit BSI(n) by the buffer size (before multiplying 8). */
+    nbits = Py_MIN(8 * Py_MIN(BSI(n), Py_SIZE(a)),
                    a->nbits - 8 * offset);
-    assert(nbits >= 0 && offset + nbits / 8 <= Py_SIZE(a));
+    assert(nbits >= 0);
 
     offset >>= 5;
     assert(NSEG(nbits) + offset <= NSEG(a->nbits));
