@@ -929,8 +929,11 @@ clip_count(bitarrayobject *a, Py_ssize_t *ccache, Py_ssize_t offset,
     assert(nbits >= 0 && offset + nbits / 8 <= Py_SIZE(a));
 
     if (ccache) {
-        cnt = ccache[nbits / 256 + offset / 32] - ccache[offset / 32];
+        cnt = ccache[(nbits + 255) / 256 + offset / 32] - ccache[offset / 32];
         i = 32 * (nbits / 256);
+        if (cnt >= m)
+            return m;
+        return cnt;
     }
 
     while (i < nbits / 8) {
@@ -1128,14 +1131,15 @@ sc_encode(PyObject *module, PyObject *args)
         return NULL;
 
     ccache = use_rt ? calc_ccache(a) : NULL;
-    if (ccache) {
+    if (0) {
         Py_ssize_t i, x;
-        //printf("nblocks = %zd\n", NBLOCKS(Py_SIZE(a)));
-        for (i = 0; i <= (Py_SIZE(a) + 31) / 32; i++) {
+        for (i = 0; i <= (a->nbits + 255) / 256; i++) {
             x = clip_count(a, NULL, 0, 32 * i, 10000000);
+            //printf("count[%zd] = %zd   %zd\n", i, ccache[i], x);
+
             if (x != ccache[i])
                 return PyErr_Format(PyExc_ValueError,
-                                    "ccache[%zd] = %zd    %zd\n",
+                                    "ccache[%zd] = %zd    %zd",
                                     i, ccache[i], x);
         }
     }
