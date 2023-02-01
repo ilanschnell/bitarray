@@ -864,12 +864,15 @@ count_till_end(bitarrayobject *a, Py_ssize_t start)
     return cnt;
 }
 
-/* Calculate an array with the running totals for each 256 bits in `a` */
+/* number of 256 bit segments in bitarray */
+#define NSEG(self)  (((self)->nbits + 255) / 256)
+
+/* Calculate an array with the running totals for 256 bits segments */
 static void *
 calc_ccache(bitarrayobject *a)
 {
-    const Py_ssize_t nblox = (a->nbits + 255) / 256;
-    const Py_ssize_t cblox = a->nbits / 256;
+    const Py_ssize_t nseg = NSEG(a);         /* number of segments */
+    const Py_ssize_t cseg = a->nbits / 256;  /* number of complete segments */
     Py_ssize_t cnt = 0, i, j;
     char *buff = a->ob_item;
     Py_ssize_t *res;
@@ -877,13 +880,13 @@ calc_ccache(bitarrayobject *a)
 
     memset(zeros, 0x00, 32);
     res = (Py_ssize_t *) PyMem_Malloc((size_t)
-                                      sizeof(Py_ssize_t) * (nblox + 1));
+                                      sizeof(Py_ssize_t) * (nseg + 1));
     if (res == NULL) {
         PyErr_NoMemory();
         return NULL;
     }
 
-    for (j = 0; j < cblox; j++) {
+    for (j = 0; j < cseg; j++) {
         res[j] = cnt;
         assert(buff - a->ob_item + 32 <= Py_SIZE(a));
         if (memcmp(buff, zeros, 32))
@@ -892,15 +895,15 @@ calc_ccache(bitarrayobject *a)
 
         buff += 32;
     }
-    assert(buff - a->ob_item == 32 * cblox);
-    res[cblox] = cnt;
+    assert(buff - a->ob_item == 32 * cseg);
+    res[cseg] = cnt;
 
-    if (nblox > cblox) {
-        assert(cblox + 1 == nblox && Py_SIZE(a) - 32 * cblox <= 32);
-        assert(a->nbits - 256 * cblox < 256);
+    if (nseg > cseg) {
+        assert(cseg + 1 == nseg && Py_SIZE(a) - 32 * cseg <= 32);
+        assert(a->nbits - 256 * cseg < 256);
 
-        cnt += count_till_end(a, 32 * cblox);
-        res[nblox] = cnt;
+        cnt += count_till_end(a, 32 * cseg);
+        res[nseg] = cnt;
     }
     return res;
 }
@@ -1018,6 +1021,7 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *ccache,
     for (i = 0; i < na; i++) {
         if (ccache && i % 32 == 0) {
             Py_ssize_t x = (i + offset) / 32;
+            assert(x < NSEG(a));
             if (ccache[x + 1] == ccache[x]) {
                 i += 31;
                 continue;
@@ -1133,7 +1137,7 @@ sc_encode(PyObject *module, PyObject *args)
     ccache = use_rt ? calc_ccache(a) : NULL;
     if (ccache) {
         Py_ssize_t i, x;
-        for (i = 0; i <= (a->nbits + 255) / 256; i++) {
+        for (i = 0; i <= NSEG(a); i++) {
             x = clip_count(a, NULL, 0, 32 * i, 10000000);
             //printf("count[%zd] = %zd   %zd\n", i, ccache[i], x);
 
@@ -1143,7 +1147,6 @@ sc_encode(PyObject *module, PyObject *args)
                                     i, ccache[i], x);
         }
     }
-    ccache = NULL;
 
     out = PyBytes_FromStringAndSize(NULL, 32768);
     if (out == NULL)
