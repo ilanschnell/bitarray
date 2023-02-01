@@ -922,11 +922,11 @@ clip_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset,
 {
     Py_ssize_t cnt = 0, nbits;
 
-    assert(offset % 32 == 0);
+    assert(offset % 32 == 0 && n % 32 == 0);
     if (8 * offset >= a->nbits)
         return 0;
 
-    /* number of bits to count up to - limited by remaining bit size */
+    /* number of bits to count up to - limited by remaining bitarray size */
     nbits = Py_MIN(8 * n, a->nbits - 8 * offset);
     assert(nbits >= 0 && offset + nbits / 8 <= Py_SIZE(a));
 
