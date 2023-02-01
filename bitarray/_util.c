@@ -849,14 +849,14 @@ sc_encode_header(char *str, bitarrayobject *a)
     return 1 + len;
 }
 
-/* starting at start (byte index) count the remaining bits */
+/* starting at byte index 'i' count the remaining bits */
 static Py_ssize_t
-count_final(bitarrayobject *a, Py_ssize_t start)
+count_final(bitarrayobject *a, Py_ssize_t i)
 {
-    Py_ssize_t cnt = 0, i;
+    Py_ssize_t cnt = 0;
 
-    for (i = start; i < a->nbits / 8; i++)
-        cnt += bitcount_lookup[(unsigned char) a->ob_item[i]];
+    while (i < a->nbits / 8)
+        cnt += bitcount_lookup[(unsigned char) a->ob_item[i++]];
 
     if (a->nbits % 8)
         cnt += bitcount_lookup[(unsigned char) zeroed_last_byte(a)];
@@ -871,28 +871,30 @@ count_final(bitarrayobject *a, Py_ssize_t start)
    Note that we call these "segments", as opposed to "blocks", in order to
    avoid confusion with encode blocks.
 
-   0       1       2       3       4       5    6   index into rts array
+   0       1       2       3       4       5    6   index into rts array, i
    +-------+-------+-------+-------+-------+----+
-   |     3 |     7 |     2 |    11 |     6 |  4 |   count per segment
+   |     5 |     7 |     0 |    11 |     6 |  4 |   count per segment
    +-------+-------+-------+-------+-------+----+
-   0       3      10      12      23      29   33   running totals
+   0       5      12      12      23      29   33   running totals, rts[i]
 
-   In this example we have a bitarray with 6 segments, e.g. with 1400 bits.
+   In this example we have a bitarray with 6 segments, e.g. with 1407 bits.
    Note that:
 
      * Here we have 6 segments, but the rts array has a size
        of 7 elements: 0 .. 6
        The rts array has always NSEG(nbits) + 1 elements, such that the
-       last element is always indexed by NSEG(nbits).  Here, NSEG(1400) = 6
+       last element is always indexed by NSEG(nbits).  Here, NSEG(1407) = 6
 
      * The first element rts[0] is always zero.
 
      * The last last element rts[NSEG(nbits)] is always the total count.
-       Here: rts[NSEG(nbits)] = rts[NSEG(1400)] = rts[6] = 33
+       Here: rts[NSEG(nbits)] = rts[NSEG(1407)] = rts[6] = 33
 
-     * The last segment may be partial.  Here, spanning 120 bits, that
-       is a[1280:1400].  The count of this segment is 3:
+     * The last segment may be partial.  Here, spanning 127 bits, that
+       is a[1280:1407].  The count of this segment is 3:
        a[1280:].count() = a.count(1, 1280) = 1
+
+     * The segment a[512:768] has a count of zero, such that: rts[2] = rts[3]
 
    As each segment covers 256 bits (32 bytes), and each element in the
    running totals array takes up 8 bytes (on a 64-bit machine at least) the
@@ -900,9 +902,11 @@ count_final(bitarrayobject *a, Py_ssize_t start)
    memory.  However, calculating this array upfront allows count_block() to
    simply look up two entries from the array and take their difference.
    Thus, the speedup we get can be significant.
+
    The function write_sparse_block() also takes advantage of the running
    totals array, as it can quickly check for segments that only contain
-   only zeros to skip.  */
+   only zeros to skip.
+*/
 static Py_ssize_t *
 calc_rts(bitarrayobject *a)
 {
@@ -921,22 +925,25 @@ calc_rts(bitarrayobject *a)
 
     /* count all complete segments */
     for (j = 0, buff = a->ob_item; j < c_seg; j++, buff += 32) {
-        res[j] = cnt;             /* rts[0] is always 0 */
+        res[j] = cnt;         /* rts[0] is always 0 */
         assert(buff - a->ob_item + 32 <= Py_SIZE(a));
-        if (memcmp(buff, zeros, 32)) /* segment is not empty */
-            for (i = 0; i < 32; i++)
-                cnt += bitcount_lookup[(unsigned char) buff[i]];
+        if (memcmp(buff, zeros, 32) == 0)  /* segment has only zeros */
+            continue;
+
+        for (i = 0; i < 32; i++)
+            cnt += bitcount_lookup[(unsigned char) buff[i]];
     }
     assert(buff - a->ob_item == 32 * c_seg);
     res[c_seg] = cnt;
 
     if (n_seg > c_seg) {           /* we have a final partial segment */
-        assert(c_seg + 1 == n_seg && Py_SIZE(a) - 32 * c_seg <= 32);
-        assert(a->nbits - 256 * c_seg < 256);
+        assert(n_seg == c_seg + 1 && Py_SIZE(a) - 32 * c_seg <= 32);
+        assert(a->nbits && a->nbits < 256 * n_seg);
 
         cnt += count_final(a, 32 * c_seg);
         res[n_seg] = cnt;
     }
+
     return res;
 }
 
@@ -952,7 +959,7 @@ count_block(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
     Py_ssize_t nbits;
 
     assert(offset % 32 == 0 && n > 0);
-    if (8 * offset >= a->nbits)
+    if (offset >= Py_SIZE(a))
         return 0;
 
     /* The desired number of bits to count up to (limited by remaining
@@ -968,7 +975,7 @@ count_block(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
                    a->nbits - 8 * offset);
     assert(nbits >= 0);
 
-    offset >>= 5;
+    offset >>= 5;               /* offset in terms of segments now */
     assert(NSEG(nbits) + offset <= NSEG(a->nbits));
 
     return rts[NSEG(nbits) + offset] - rts[offset];
@@ -1038,10 +1045,10 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
     outsize = len + n * k;
     for (i = 0; i < na; i++) {
         if (i % 32 == 0) {
-            Py_ssize_t si = (i + offset) / 32;   /* segment index */
-            assert(si < NSEG(a->nbits));
-            if (rts[si] == rts[si + 1]) {  /* the segment is empty */
-                i += 31;                   /* skip ahead */
+            j = (i + offset) / 32;       /* running total index */
+            assert(j < NSEG(a->nbits));
+            if (rts[j] == rts[j + 1]) {  /* the segment has only zeros */
+                i += 31;                 /* skip ahead */
                 continue;
             }
         }
