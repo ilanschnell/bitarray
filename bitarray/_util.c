@@ -944,8 +944,9 @@ calc_rts(bitarrayobject *a)
     res[c_seg] = cnt;
 
     if (n_seg > c_seg) {           /* we have a final partial segment */
-        assert(n_seg == c_seg + 1 && Py_SIZE(a) - 32 * c_seg <= 32);
-        assert(a->nbits && a->nbits < 256 * n_seg);
+        assert(n_seg == c_seg + 1);
+        assert(Py_SIZE(a) <= SEGSIZE * n_seg);
+        assert(a->nbits && a->nbits < 8 * SEGSIZE * n_seg);
 
         cnt += count_final(a, SEGSIZE * c_seg);
         res[n_seg] = cnt;
