@@ -9,11 +9,11 @@ The lower the population count, the more efficient the compression will be:
 
     >>> from bitarray import bitarray
     >>> from bitarray.util import zeros, sc_encode, sc_decode
-    >>> a = zeros(1 << 30, 'little')  # 2^30 bits
-    >>> a[123] = a[4_567] = a[890_123_456] = 1
+    >>> a = zeros(1 << 24, 'little')  # 16 mbits
+    >>> a[0xaa] = a[0xbbcc] = a[0xddeeff] = 1
     >>> blob = sc_encode(a)
     >>> blob
-    b'\x04\x00\x00\x00@\xc4\x03{\x00\x00\x00\xd7\x11\x00\x00\xc04\x0e5\x00'
+    b'\x04\x00\x00\x00\x01\xc3\x03\xaa\x00\x00\xcc\xbb\x00\xff\xee\xdd\x00'
     >>> assert sc_decode(blob) == a
 
 
