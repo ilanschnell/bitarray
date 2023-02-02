@@ -864,11 +864,13 @@ count_final(bitarrayobject *a, Py_ssize_t i)
     return cnt;
 }
 
-/* number of 256 bit segments given nbits */
-#define NSEG(nbits)  (((nbits) + 255) / 256)
-
-/* segment size in bytes */
+/* segment size in bytes - although of no practical value, the code below
+   will also work when changing this value from 32 to 1, 2, 4, 8 or 16.
+   As long as a multiple of SEGSIZE is 32. */
 #define SEGSIZE  32
+
+/* number of 256 bit segments given nbits */
+#define NSEG(nbits)  (((nbits) + 8 * SEGSIZE - 1) / (8 * SEGSIZE))
 
 /* Calculate an array with the running totals (rts) for 256 bit segments.
    Note that we call these "segments", as opposed to "blocks", in order to
@@ -914,7 +916,7 @@ static Py_ssize_t *
 calc_rts(bitarrayobject *a)
 {
     const Py_ssize_t n_seg = NSEG(a->nbits);  /* number of segments */
-    const Py_ssize_t c_seg = a->nbits / 256;  /* number of complete segs */
+    const Py_ssize_t c_seg = a->nbits / (8 * SEGSIZE);  /* complete segs */
     char zeros[SEGSIZE];                      /* segment with only zeros */
     Py_ssize_t cnt = 0;                       /* current count */
     char *buff;
