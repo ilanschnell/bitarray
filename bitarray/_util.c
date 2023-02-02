@@ -867,6 +867,9 @@ count_final(bitarrayobject *a, Py_ssize_t i)
 /* number of 256 bit segments given nbits */
 #define NSEG(nbits)  (((nbits) + 255) / 256)
 
+/* segment size in bytes */
+#define SEGSIZE  32
+
 /* Calculate an array with the running totals (rts) for 256 bit segments.
    Note that we call these "segments", as opposed to "blocks", in order to
    avoid confusion with encode blocks.
@@ -912,34 +915,34 @@ calc_rts(bitarrayobject *a)
 {
     const Py_ssize_t n_seg = NSEG(a->nbits);  /* number of segments */
     const Py_ssize_t c_seg = a->nbits / 256;  /* number of complete segs */
-    char zeros[32];                           /* segment with only zeros */
+    char zeros[SEGSIZE];                      /* segment with only zeros */
     Py_ssize_t cnt = 0;                       /* current count */
     char *buff;
     Py_ssize_t *res, i, j;
 
-    memset(zeros, 0x00, 32);
+    memset(zeros, 0x00, SEGSIZE);
     res = (Py_ssize_t *) PyMem_Malloc((size_t)
                                       sizeof(Py_ssize_t) * (n_seg + 1));
     if (res == NULL)
         return (Py_ssize_t *) PyErr_NoMemory();
 
     /* all complete segments */
-    for (j = 0, buff = a->ob_item; j < c_seg; j++, buff += 32) {
+    for (j = 0, buff = a->ob_item; j < c_seg; j++, buff += SEGSIZE) {
         res[j] = cnt;
-        assert(buff - a->ob_item + 32 <= Py_SIZE(a));
-        if (memcmp(buff, zeros, 32)) {  /* segment has not only zeros */
-            for (i = 0; i < 32; i++)
+        assert(buff - a->ob_item + SEGSIZE <= Py_SIZE(a));
+        if (memcmp(buff, zeros, SEGSIZE)) { /* segment has not only zeros */
+            for (i = 0; i < SEGSIZE; i++)
                 cnt += bitcount_lookup[(unsigned char) buff[i]];
         }
     }
-    assert(buff - a->ob_item == 32 * c_seg);
+    assert(buff - a->ob_item == SEGSIZE * c_seg);
     res[c_seg] = cnt;
 
     if (n_seg > c_seg) {           /* we have a final partial segment */
         assert(n_seg == c_seg + 1 && Py_SIZE(a) - 32 * c_seg <= 32);
         assert(a->nbits && a->nbits < 256 * n_seg);
 
-        cnt += count_final(a, 32 * c_seg);
+        cnt += count_final(a, SEGSIZE * c_seg);
         res[n_seg] = cnt;
     }
     return res;
@@ -956,7 +959,7 @@ count_block(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
 {
     Py_ssize_t nbits;
 
-    assert(offset % 32 == 0 && n > 0);
+    assert(offset % SEGSIZE == 0 && n > 0);
     if (offset >= Py_SIZE(a))
         return 0;
 
@@ -973,7 +976,7 @@ count_block(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
                    a->nbits - 8 * offset);
     assert(nbits >= 0);
 
-    offset >>= 5;               /* offset in terms of segments now */
+    offset /= SEGSIZE;               /* offset in terms of segments now */
     assert(NSEG(nbits) + offset <= NSEG(a->nbits));
 
     return rts[NSEG(nbits) + offset] - rts[offset];
@@ -994,10 +997,10 @@ write_raw_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
     if (k == 32) {
         /* We already know the first 32 bytes are better represented using
            raw bytes (otherwise this function wouldn't have been called).
-           Now also check the next 3 blocks of 32 bytes. */
+           Now also check the next 3 segments. */
         while (k < 128 &&
                Py_MIN(32, nbytes - k) <= count_block(a, rts, offset + k, 1))
-            k += 32;
+            k += SEGSIZE;
     }
     k = Py_MIN(k, nbytes);
     assert(0 < k && k <= 128 && k <= nbytes);
@@ -1023,7 +1026,7 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
     Py_ssize_t i, j, outsize, len = 0;
     char *buff = a->ob_item + offset;
 
-    assert(offset % 32 == 0);
+    assert(offset % SEGSIZE == 0);
     assert(1 <= n && n <= 4 && 0 <= k && k < 256);
     assert(na > 0 && offset + na <= Py_SIZE(a));
 
@@ -1042,11 +1045,11 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
     /* block data */
     outsize = len + n * k;
     for (i = 0; i < na; i++) {
-        if (i % 32 == 0) {
-            j = (i + offset) / 32;       /* running total index */
+        if (i % SEGSIZE == 0) {
+            j = (i + offset) / SEGSIZE;  /* running total index */
             assert(j < NSEG(a->nbits));
             if (rts[j] == rts[j + 1]) {  /* the segment has only zeros */
-                i += 31;                 /* skip ahead */
+                i += SEGSIZE - 1;        /* skip ahead */
                 continue;
             }
         }
