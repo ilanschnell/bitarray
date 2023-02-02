@@ -923,15 +923,14 @@ calc_rts(bitarrayobject *a)
     if (res == NULL)
         return (Py_ssize_t *) PyErr_NoMemory();
 
-    /* count all complete segments */
+    /* all complete segments */
     for (j = 0, buff = a->ob_item; j < c_seg; j++, buff += 32) {
-        res[j] = cnt;         /* rts[0] is always 0 */
+        res[j] = cnt;
         assert(buff - a->ob_item + 32 <= Py_SIZE(a));
-        if (memcmp(buff, zeros, 32) == 0)  /* segment has only zeros */
-            continue;
-
-        for (i = 0; i < 32; i++)
-            cnt += bitcount_lookup[(unsigned char) buff[i]];
+        if (memcmp(buff, zeros, 32)) {  /* segment has not only zeros */
+            for (i = 0; i < 32; i++)
+                cnt += bitcount_lookup[(unsigned char) buff[i]];
+        }
     }
     assert(buff - a->ob_item == 32 * c_seg);
     res[c_seg] = cnt;
@@ -943,7 +942,6 @@ calc_rts(bitarrayobject *a)
         cnt += count_final(a, 32 * c_seg);
         res[n_seg] = cnt;
     }
-
     return res;
 }
 
