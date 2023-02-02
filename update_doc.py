@@ -2,7 +2,7 @@ import sys
 assert sys.version_info[0] == 3, "This program requires Python 3"
 
 import re
-import doctest
+from doctest import testfile
 from io import StringIO
 
 import bitarray.util
@@ -36,6 +36,8 @@ NEW_IN = {
     'util.rindex':            '2.3.0: optional start and stop arguments',
     'util.serialize':         '1.8',
     'util.urandom':           '1.7',
+    'util.sc_encode':         '2.7',
+    'util.sc_decode':         '2.7',
     'util.vl_decode':         '2.2',
     'util.vl_encode':         '2.2',
     'util.canonical_huffman': '2.5',
@@ -45,6 +47,7 @@ NEW_IN = {
 DOCS = {
     'chc': ('Canonical Huffman Coding', 'canonical.rst'),
     'rep': ('Bitarray representations', 'represent.rst'),
+    'sc':  ('Compression of sparse bitarrays', 'sparse_compression.rst'),
     'vlf': ('Variable length bitarray format', 'variable_length.rst'),
 }
 
@@ -55,6 +58,8 @@ DOC_LINKS = {
     'util.base2ba':            'rep',
     'util.deserialize':        'rep',
     'util.serialize':          'rep',
+    'util.sc_decode':          'sc',
+    'util.sc_encode':          'sc',
     'util.vl_decode':          'vlf',
     'util.vl_encode':          'vlf',
 }
@@ -260,11 +265,12 @@ def main():
     with open('./doc/changelog.rst', 'w') as fo:
         write_changelog(fo)
 
-    doctest.testfile('./README.rst')
-    doctest.testfile('./doc/buffer.rst')
-    doctest.testfile('./doc/canonical.rst')
-    doctest.testfile('./doc/represent.rst')
-    doctest.testfile('./doc/variable_length.rst')
+    testfile('./README.rst')
+    testfile('./doc/buffer.rst')
+    testfile('./doc/canonical.rst')
+    testfile('./doc/represent.rst')
+    testfile('./doc/sparse_compression.rst')
+    testfile('./doc/variable_length.rst')
 
 
 if __name__ == '__main__':

@@ -11,11 +11,12 @@ import binascii
 import shutil
 import tempfile
 import unittest
+from array import array
 from string import hexdigits
 from random import choice, randint, random
 from collections import Counter
 
-from bitarray import (bitarray, frozenbitarray, decodetree,
+from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       get_default_endian, _set_default_endian)
 from bitarray.test_bitarray import Util, skipIf
 
@@ -24,7 +25,8 @@ from bitarray.util import (
     parity, count_and, count_or, count_xor, any_and, subset, _correspond_all,
     intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
-    ba2int, int2ba, vl_encode, vl_decode,
+    ba2int, int2ba,
+    sc_encode, sc_decode, vl_encode, vl_decode,
     huffman_code, canonical_huffman, canonical_decode,
 )
 
@@ -1128,6 +1130,266 @@ class TestsBase(unittest.TestCase, Util):
                 self.assertEQUAL(base2ba(n, ba2base(n, b), 'big'), b)
 
 tests.append(TestsBase)
+
+# ---------------------------------------------------------------------------
+
+class SC_Tests(unittest.TestCase, Util):
+
+    def test_explicit(self):
+        for b, bits, endian in [
+                (b'\x00\0',                 '',                  'little'),
+                (b'\x01\x03\x01\x03\0',     '110',               'little'),
+                (b'\x11\x07\x01\x02\0',     '0000001',           'big'),
+                (b'\x01\x10\x02\xf0\x0f\0', '00001111 11110000', 'little'),
+                (b'\x11\x10\xa1\x0c\0',     '00000000 00001000', 'big'),
+                (b'\x11\x09\xa1\x08\0',     '00000000 1',        'big'),
+                (b'\x01E\xa3ABD\0',         65 * '0' + '1101',   'little'),
+        ]:
+            # the padbits in a frozenbitarray are guaranteed to be zero
+            a = frozenbitarray(bits, endian)
+            self.assertEqual(sc_encode(a), b)
+            self.assertEqual(sc_decode(b), a)
+
+    def test_decode_header_nbits(self):
+        for b, n in [
+                (b'\x00\0', 0),
+                (b'\x01\x00\0', 0),
+                (b'\x01\x01\0', 1),
+                (b'\x02\x00\x00\0', 0),
+                (b'\x02\x00\x01\0', 256),
+                (b'\x03\x00\x00\x00\0', 0),
+                (b'\x03\x00\x00\x01\0', 65536),
+        ]:
+            a = sc_decode(b)
+            self.assertEqual(len(a), n)
+            self.assertFalse(a.any())
+
+    @skipIf(sys.version_info[0] == 2)
+    def test_decode_untouch(self):
+        stream = iter(b'\x01\x03\x01\x03\0XYZ')
+        self.assertEqual(sc_decode(stream), bitarray('110'))
+        self.assertEqual(next(stream), ord('X'))
+
+        stream = iter([0x11, 0x05, 0x01, 0xff, 0, None, 'foo'])
+        self.assertEqual(sc_decode(stream), bitarray('11111'))
+        self.assertTrue(next(stream) is None)
+        self.assertEqual(next(stream), 'foo')
+
+    @skipIf(sys.version_info[0] == 2)
+    def test_decode_header_errors(self):
+        # invalid bits for endianness
+        self.assertRaisesMessage(ValueError, "invalid header: 0x21",
+                                 sc_decode, b"\x21\x00")
+        # invalid block head
+        for c in 0x81, 0x9f, 0xc0, 0xc1, 0xc5, 0xff:
+            self.assertRaisesMessage(ValueError,
+                                     "invalid block head: 0x%02x" % c,
+                                     sc_decode,
+                                     bytearray([0x01, 0x10, c]))
+
+    def test_decode_header_overflow(self):
+        nbytes = tuple.__itemsize__
+        self.assertRaisesMessage(
+            OverflowError,
+            "sizeof(Py_ssize_t) = %d: cannot read 9 bytes" % nbytes,
+            sc_decode, b'\x09' + 9 * b'\x00')
+
+        self.assertRaisesMessage(
+            ValueError,
+            "read %d bytes got negative value: -1" % nbytes,
+            sc_decode, bytes(bytearray([nbytes] + nbytes * [0xff])))
+
+        if nbytes == 4:
+            self.assertRaisesMessage(
+                OverflowError,
+                "sizeof(Py_ssize_t) = 4: cannot read 5 bytes",
+                sc_decode, b'\x05' + 5 * b'\x00')
+
+            self.assertRaisesMessage(
+                ValueError,
+                "read 4 bytes got negative value: -2147483648",
+                sc_decode, b'\x04\x00\x00\x00\x80')
+
+    def test_decode_errors(self):
+        # too many raw bytes
+        self.assertRaisesMessage(
+            ValueError, "decode error (raw): 0 + 2 > 1",
+            sc_decode, b"\x01\x05\x02\xff\xff\0")
+        self.assertRaisesMessage(
+            ValueError, "decode error (raw): 32 + 3 > 34",
+            sc_decode, b"\x02\x0f\x01\xa0\x03\xff\xff\xff\0")
+        # sparse index too high
+        self.assertRaisesMessage(
+            ValueError, "decode error (n=1): 128 >= 128",
+            sc_decode, b"\x01\x80\xa1\x80\0")
+        self.assertRaisesMessage(
+            ValueError, "decode error (n=2): 512 >= 512",
+            sc_decode, b"\x02\x00\x02\xc2\x01\x00\x02\0")
+        self.assertRaisesMessage(
+            ValueError, "decode error (n=3): 32768 >= 32768",
+            sc_decode, b"\x02\x00\x80\xc3\x01\x00\x80\x00\0")
+
+        if tuple.__itemsize__ == 4:
+            msg = "read 4 bytes got negative value: -2147483648"
+        else:
+            msg = "decode error (n=4): 2147483648 >= 16"
+        self.assertRaisesMessage(
+            ValueError, msg,
+            sc_decode, b"\x01\x10\xc4\x01\x00\x00\x00\x80\0")
+
+        if tuple.__itemsize__ == 4:
+            msg = "read 4 bytes got negative value: -1"
+        else:
+            msg = "decode error (n=4): 4294967295 >= 16"
+        self.assertRaisesMessage(
+            ValueError, msg,
+            sc_decode, b"\x01\x10\xc4\x01\xff\xff\xff\xff\0")
+
+    def test_decode_end_of_stream(self):
+        for stream in [b'', b'\x00', b'\x01', b'\x02\x77',
+                       b'\x01\x04\x01', b'\x01\x04\xa1', b'\x01\x04\xa0']:
+            self.assertRaisesMessage(ValueError, "unexpected end of stream",
+                                     sc_decode, stream)
+
+    @skipIf(sys.version_info[0] == 2)
+    def test_decode_types(self):
+        blob = b'\x11\x03\x01\x20\0'
+        for b in blob, bytearray(blob), list(blob), array('B', blob):
+            a = sc_decode(b)
+            self.assertEqual(a.endian(), 'big')
+            self.assertEqual(a.to01(), '001')
+
+        self.assertRaises(TypeError, sc_decode, [0x02, None])
+        for x in None, 3, 3.2, Ellipsis:
+            self.assertRaises(TypeError, sc_decode, x)
+        for _ in range(10):
+            self.assertRaises(TypeError, sc_decode, [0x00, None])
+
+    def test_decode_ambiguity(self):
+        for b in [
+                # raw:
+                b'\x11\x03\x01\x20\0',    # this is what sc_encode gives us
+                b'\x11\x03\x01\x2f\0',    # some pad bits are 1
+                # sparse:
+                b'\x11\x03\xa1\x02\0',                  # using block type 1
+                b'\x11\x03\xc2\x01\x02\x00\0',          # using block type 2
+                b'\x11\x03\xc3\x01\x02\x00\x00\0',      # using block type 3
+                b'\x11\x03\xc4\x01\x02\x00\x00\x00\0',  # using block type 4
+        ]:
+            a = sc_decode(b)
+            self.assertEqual(a.to01(), '001')
+
+    @skipIf(sys.version_info[0] == 2)
+    def test_raw_block(self):
+        a = bitarray(0, 'big')
+        for nbytes in range(1, 129):
+            nbits = 8 * nbytes
+            raw = nbytes * b'\xf7'
+            if nbits < 256:
+                b = bytearray([0x11, nbits])
+            else:
+                b = bytearray([0x12, nbits & 0xff, nbits >> 8])
+            b.append(nbytes)  # head byte
+            b.extend(raw)
+            b.append(0)       # stop byte
+
+            a.frombytes(b'\xf7')
+            self.assertEqual(sc_decode(b), a)
+            self.assertEqual(sc_encode(a), bytes(b))
+
+    @skipIf(sys.version_info[0] == 2)
+    def test_sparse_block_type1(self):
+        a = bitarray(256, 'little')
+        for n in range(1, 32):
+            positions = os.urandom(n)
+            b = bytearray([0x02, 0x00, 0x01, 0xa0 + n])
+            b.extend(positions)
+            b.append(0)  # stop byte
+
+            a.setall(0)
+            for p in positions:
+                a[p] = 1
+            self.assertEqual(sc_decode(b), a)
+
+            # in order to recreate the block sc_encode generates, we need
+            # a sorted list of the positions with no duplicates
+            lst = sorted(set(positions))
+            b = bytearray([0x02, 0x00, 0x01, 0xa0 + len(lst)])
+            b.extend(lst)
+            b.append(0)  # stop
+
+            self.assertEqual(sc_decode(b), a)
+            self.assertEqual(sc_encode(a), bytes(b))
+
+    def test_decode_random_bytes(self):
+        # ensure random input doesn't crash the decoder
+        cnt = 0
+        for _ in range(5000):
+            n = randint(0, 20)
+            b = b'\x02\x00\x04' + os.urandom(n)
+            try:
+                a = sc_decode(b)
+            except ValueError as e:
+                if e != 'unexpected end of stream':
+                    continue
+            self.assertEqual(len(a), 1024)
+            self.assertEqual(a.endian(), 'little')
+            cnt += 1
+        self.assertTrue(cnt > 2)
+
+    def test_encode_types(self):
+        for a in None, [], 0, 123, b'', b'\x00', 3.14:
+            self.assertRaises(TypeError, sc_encode, a)
+
+    def round_trip(self, a):
+        b = sc_encode(a)
+        c = sc_decode(b)
+        self.assertEqual(a, c)
+        self.assertEqual(a.endian(), c.endian())
+
+    def test_encode_zeros(self):
+        for i in range(18):
+            n = 1 << i
+            a = bitarray(n)
+            a.setall(0)
+            m = 2                            # head byte and stop byte
+            m += bits2bytes(n.bit_length())  # size bytes
+            # For smaller or equal to 1 << 32, we have only one type 4 block.
+            m += bool(n > 0)                 # number of blocks (head bytes)
+            m += bool(n > 256)               # number of second block heads
+            b = sc_encode(a)
+            self.assertEqual(m, len(b))
+            self.round_trip(a)
+
+        a = zeros(1 << 25)
+        a[0] = 1
+        self.assertEqual(
+            sc_encode(a),
+            b'\x14\x00\x00\x00\x02\xc4\x01\x00\x00\x00\x00\x00')
+
+    def test_encode_ones(self):
+        for _ in range(50):
+            n = randint(0, 10000)
+            a = bitarray(n)
+            a.setall(1)
+            m = 2                            # head byte and stop byte
+            m += bits2bytes(n.bit_length())  # size bytes
+            m += (n + 1023) // 1024          # number of blocks (head bytes)
+            m += bits2bytes(n)               # actual raw bytes
+            self.assertEqual(m, len(sc_encode(a)))
+            self.round_trip(a)
+
+    def test_random(self):
+        for _ in range(10):
+            n = randint(0, 100000)
+            endian = self.random_endian()
+            a = bitarray(n, endian)
+            a.setall(1)
+            for _ in range(16):
+                a &= urandom(n, endian)
+                self.round_trip(a)
+
+tests.append(SC_Tests)
 
 # ---------------------------------------------------------------------------
 
