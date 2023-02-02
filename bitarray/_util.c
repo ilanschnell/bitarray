@@ -864,9 +864,12 @@ count_final(bitarrayobject *a, Py_ssize_t i)
     return cnt;
 }
 
-/* segment size in bytes - although of no practical value, the code below
-   will also work when changing this value from 32 to 1, 2, 4, 8 or 16.
-   As long as a multiple of SEGSIZE is 32. */
+/* segment size in bytes - although of little practical value, the code
+   below will also work when changing SEGSIZE to 1, 2, 4, 8 or 16, as long
+   as a multiple of SEGSIZE is 32.  The size 32 is rooted in the fact that
+   a bitarray of 32 bytes (256 bits) can be indexed with one index byte
+   (BSI(0) = 32).  Our entire 'sc' format is constructed around this.
+ */
 #define SEGSIZE  32
 
 /* number of 256 bit segments given nbits */
@@ -993,15 +996,15 @@ write_raw_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
                 Py_ssize_t offset)
 {
     Py_ssize_t nbytes = Py_SIZE(a) - offset;  /* remaining bytes */
-    Py_ssize_t k = Py_MIN(32, nbytes);
+    Py_ssize_t k = Py_MIN(SEGSIZE, nbytes);
 
     assert(nbytes > 0);
-    if (k == 32) {
+    if (k == SEGSIZE) {
         /* We already know the first 32 bytes are better represented using
            raw bytes (otherwise this function wouldn't have been called).
            Now also check the next 3 segments. */
         while (k < 128 &&
-               Py_MIN(32, nbytes - k) <= count_block(a, rts, offset + k, 1))
+               Py_MIN(SEGSIZE, nbytes - k) <= count_block(a, rts, offset + k, 1))
             k += SEGSIZE;
     }
     k = Py_MIN(k, nbytes);
@@ -1115,7 +1118,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
 
     count = (int) count_block(a, rts, offset, 1);
     /* are there fewer or equal raw bytes than index bytes */
-    if (Py_MIN(32, nbytes) <= count) {           /* type 0 - raw bytes */
+    if (Py_MIN(SEGSIZE, nbytes) <= count) {           /* type 0 - raw bytes */
         int k = write_raw_block(str + *len, a, rts, offset);
         *len += 1 + k;
         return k;
