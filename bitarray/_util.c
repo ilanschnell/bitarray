@@ -885,14 +885,14 @@ count_final(bitarrayobject *a, Py_ssize_t i)
        The rts array has always NSEG(nbits) + 1 elements, such that the
        last element is always indexed by NSEG(nbits).  Here, NSEG(1407) = 6
 
-     * The first element rts[0] is always zero.
+     * The zeroth element rts[0] is always zero.
 
      * The last last element rts[NSEG(nbits)] is always the total count.
        Here: rts[NSEG(nbits)] = rts[NSEG(1407)] = rts[6] = 33
 
      * The last segment may be partial.  Here, spanning 127 bits, that
-       is a[1280:1407].  The count of this segment is 3:
-       a[1280:].count() = a.count(1, 1280) = 1
+       is a[1280:1407].  The count of this segment is 4:
+       a[1280:].count() = a.count(1, 1280) = 4
 
      * The segment a[512:768] has a count of zero, such that: rts[2] = rts[3]
 
