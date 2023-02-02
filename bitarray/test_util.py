@@ -1380,11 +1380,12 @@ class SC_Tests(unittest.TestCase, Util):
             self.round_trip(a)
 
     def test_random(self):
-        for n in randint(128, 2048), randint(64000, 70000):
+        for _ in range(10):
+            n = randint(0, 100000)
             endian = self.random_endian()
             a = bitarray(n, endian)
             a.setall(1)
-            for _ in range(12):
+            for _ in range(16):
                 a &= urandom(n, endian)
                 self.round_trip(a)
 
