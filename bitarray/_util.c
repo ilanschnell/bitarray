@@ -1151,6 +1151,9 @@ sc_encode_block(char *str, Py_ssize_t *len,
     return BSI(n);
 }
 
+#undef SEGSIZE
+#undef NSEG
+
 static PyObject *
 sc_encode(PyObject *module, PyObject *obj)
 {
@@ -1365,7 +1368,6 @@ sparse compressed (`sc`) bitarray, and return the decoded  bitarray.\n\
 This function consumes only one bitarray and leaves the remaining stream\n\
 untouched.  Use `sc_encode()` for compressing (encoding).");
 
-#undef NSEG
 #undef BSI
 
 /* ------------------- variable length bitarray format ----------------- */
