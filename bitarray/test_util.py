@@ -1180,9 +1180,12 @@ class SC_Tests(unittest.TestCase, Util):
 
     @skipIf(sys.version_info[0] == 2)
     def test_decode_header_errors(self):
-        # invalid bits for endianness
-        self.assertRaisesMessage(ValueError, "invalid header: 0x21",
-                                 sc_decode, b"\x21\x00")
+        # invalid header
+        for c in 0x20, 0x21, 0x40, 0x80, 0xc0, 0xf0, 0xff:
+            self.assertRaisesMessage(ValueError,
+                                     "invalid header: 0x%02x" % c,
+                                     sc_decode,
+                                     bytearray([c]))
         # invalid block head
         for c in 0x81, 0x9f, 0xc0, 0xc1, 0xc5, 0xff:
             self.assertRaisesMessage(ValueError,
