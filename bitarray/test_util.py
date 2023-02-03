@@ -44,13 +44,10 @@ class TestsZeros(unittest.TestCase):
     def test_basic(self):
         for default_endian in 'big', 'little':
             _set_default_endian(default_endian)
-            a = zeros(0)
-            self.assertEqual(a, bitarray())
-            self.assertEqual(a.endian(), default_endian)
 
-            a = zeros(0, endian=None)
-            self.assertEqual(len(a), 0)
-            self.assertEqual(a.endian(), default_endian)
+            for a in zeros(0), zeros(0, None), zeros(0, endian=None):
+                self.assertEqual(a, bitarray())
+                self.assertEqual(a.endian(), default_endian)
 
             for n in range(100):
                 a = zeros(n)
@@ -60,9 +57,9 @@ class TestsZeros(unittest.TestCase):
                 self.assertEqual(a, bitarray(n * '0'))
 
             for endian in 'big', 'little':
-                a = zeros(3, endian)
-                self.assertEqual(a, bitarray('000'))
-                self.assertEqual(a.endian(), endian)
+                for a in zeros(3, endian), zeros(3, endian=endian):
+                    self.assertEqual(a, bitarray('000'))
+                    self.assertEqual(a.endian(), endian)
 
     def test_wrong_args(self):
         self.assertRaises(TypeError, zeros) # no argument
@@ -87,13 +84,10 @@ class TestsURandom(unittest.TestCase):
     def test_basic(self):
         for default_endian in 'big', 'little':
             _set_default_endian(default_endian)
-            a = urandom(0)
-            self.assertEqual(a, bitarray())
-            self.assertEqual(a.endian(), default_endian)
 
-            a = urandom(7, endian=None)
-            self.assertEqual(len(a), 7)
-            self.assertEqual(a.endian(), default_endian)
+            for a in urandom(0), urandom(0, None), urandom(0, endian=None):
+                self.assertEqual(a, bitarray())
+                self.assertEqual(a.endian(), default_endian)
 
             for n in range(50):
                 a = urandom(n)
@@ -101,9 +95,9 @@ class TestsURandom(unittest.TestCase):
                 self.assertEqual(a.endian(), default_endian)
 
             for endian in 'big', 'little':
-                a = urandom(11, endian)
-                self.assertEqual(len(a), 11)
-                self.assertEqual(a.endian(), endian)
+                for a in urandom(11, endian), urandom(11, endian=endian):
+                    self.assertEqual(len(a), 11)
+                    self.assertEqual(a.endian(), endian)
 
     def test_count(self):
         a = urandom(1000)

@@ -65,12 +65,12 @@ def buffer_info(a, key=None):
 
 # avoid importing from bitarray.util
 def zeros(n, endian=None):
-    a = bitarray(n, endian or get_default_endian())
+    a = bitarray(n, endian)
     a.setall(0)
     return a
 
 def urandom(n, endian=None):
-    a = bitarray(0, endian or get_default_endian())
+    a = bitarray(0, endian)
     a.frombytes(os.urandom(bits2bytes(n)))
     del a[n:]
     return a
