@@ -15,7 +15,9 @@ from bitarray import bitarray, bits2bytes
 from bitarray._util import (
     count_n, rindex, parity, count_and, count_or, count_xor, any_and, subset,
     _correspond_all,
-    serialize, ba2hex, _hex2ba, ba2base, _base2ba,
+    serialize, deserialize,
+    ba2hex, hex2ba,
+    ba2base, base2ba,
     sc_encode, sc_decode,
     vl_encode, vl_decode,
     canonical_decode,
@@ -25,7 +27,9 @@ __all__ = [
     'zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip', 'count_n',
     'parity', 'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
     'intervals',
-    'ba2hex', 'hex2ba', 'ba2base', 'base2ba', 'ba2int', 'int2ba',
+    'ba2hex', 'hex2ba',
+    'ba2base', 'base2ba',
+    'ba2int', 'int2ba',
     'serialize', 'deserialize',
     'sc_encode', 'sc_decode',
     'vl_encode', 'vl_decode',
@@ -190,42 +194,6 @@ to be in order, and their size is always non-zero (`stop - start > 0`).
         value = not value  # next interval has opposite value
 
 
-def hex2ba(__s, endian=None):
-    """hex2ba(hexstr, /, endian=None) -> bitarray
-
-Bitarray of hexadecimal representation.  hexstr may contain any number
-(including odd numbers) of hex digits (upper or lower case).
-"""
-    if isinstance(__s, unicode if _is_py2 else str):
-        __s = __s.encode('ascii')
-    if not isinstance(__s, bytes):
-        raise TypeError("str expected, got '%s'" % type(__s).__name__)
-
-    a = bitarray(4 * len(__s), endian)
-    _hex2ba(a, __s)
-    return a
-
-
-def base2ba(__n, __s, endian=None):
-    """base2ba(n, asciistr, /, endian=None) -> bitarray
-
-Bitarray of the base `n` ASCII representation.
-Allowed values for `n` are 2, 4, 8, 16, 32 and 64.
-For `n=16` (hexadecimal), `hex2ba()` will be much faster, as `base2ba()`
-does not take advantage of byte level operations.
-For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the
-standard base 64 alphabet is used.
-"""
-    if isinstance(__s, unicode if _is_py2 else str):
-        __s = __s.encode('ascii')
-    if not isinstance(__s, bytes):
-        raise TypeError("str expected, got '%s'" % type(__s).__name__)
-
-    a = bitarray(_base2ba(__n) * len(__s), endian)
-    _base2ba(__n, a, __s)
-    return a
-
-
 def ba2int(__a, signed=False):
     """ba2int(bitarray, /, signed=False) -> int
 
@@ -317,29 +285,6 @@ and requires `length` to be provided.
         a = a + pad if le else pad + a
     assert len(a) == length
     return a
-
-
-def deserialize(__b):
-    """deserialize(bytes, /) -> bitarray
-
-Return a bitarray given a bytes-like representation such as returned
-by `serialize()`.
-"""
-    if isinstance(__b, int):  # as bytes(n) will return n NUL bytes
-        raise TypeError("cannot convert 'int' object to bytes")
-    if not isinstance(__b, bytes):
-        __b = bytes(__b)
-    if len(__b) == 0:
-        raise ValueError("non-empty bytes expected")
-
-    if _is_py2:
-        head = ord(__b[0])
-        if head >= 32 or head % 16 >= 8:
-            raise ValueError('invalid header byte: 0x%02x' % head)
-    try:
-        return bitarray(__b)
-    except TypeError:
-        raise ValueError('invalid header byte: 0x%02x' % __b[0])
 
 # ------------------------------ Huffman coding -----------------------------
 

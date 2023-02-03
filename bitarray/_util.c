@@ -456,6 +456,49 @@ Return a serialized representation of the bitarray, which may be passed to\n\
 `deserialize()`.  It efficiently represents the bitarray object (including\n\
 its endianness) and is guaranteed not to change in future releases.");
 
+
+static PyObject *
+deserialize(PyObject *module, PyObject *buffer)
+{
+    Py_buffer view;
+    bitarrayobject *a;
+    unsigned char head;
+
+    if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
+        return NULL;
+
+    if (view.len == 0) {
+        PyErr_SetString(PyExc_ValueError, "non-empty bytes expected");
+        goto error;
+    }
+
+    head = *((unsigned char *) view.buf);
+
+    if (head & 0xe8 || (view.len == 1 && head & 0xef)) {
+        PyErr_Format(PyExc_ValueError, "invalid header byte: 0x%02x", head);
+        goto error;
+    }
+    a = new_bitarray(8 * (view.len - 1) - ((Py_ssize_t) (head & 0x07)),
+                     Py_None);
+    if (a == NULL)
+        goto error;
+    a->endian = head & 0x10 ? ENDIAN_BIG : ENDIAN_LITTLE;
+
+    memcpy(a->ob_item, ((char *) view.buf) + 1, (size_t) view.len - 1);
+
+    PyBuffer_Release(&view);
+    return (PyObject *) a;
+ error:
+    PyBuffer_Release(&view);
+    return NULL;
+}
+
+PyDoc_STRVAR(deserialize_doc,
+"deserialize(bytes, /) -> bitarray\n\
+\n\
+Return a bitarray given a bytes-like representation such as returned\n\
+by `serialize()`.");
+
 /* ----------------------------- hexadecimal --------------------------- */
 
 static const char hexdigits[] = "0123456789abcdef";
@@ -519,28 +562,22 @@ Return a string containing the hexadecimal representation of\n\
 the bitarray (which has to be multiple of 4 in length).");
 
 
-/* Translate hexadecimal digits into the bitarray's buffer.
+/* Translate hexadecimal digits 'bytes' into the bitarray 'a' buffer.
    Each digit corresponds to 4 bits in the bitarray.
    The number of digits may be odd. */
-static PyObject *
-hex2ba(PyObject *module, PyObject *args)
+static int
+hex2ba_core(bitarrayobject *a, PyObject *bytes)
 {
-    bitarrayobject *a;
+    Py_ssize_t strsize, i;
     char *str;
-    Py_ssize_t i, strsize;
-    int le, be;
+    int le = IS_LE(a), be = IS_BE(a);
 
-    if (!PyArg_ParseTuple(args, "O!s#", bitarray_type_obj, (PyObject *) &a,
-                          &str, &strsize))
-        return NULL;
-
-    if (a->nbits != 4 * strsize) {
-        PyErr_SetString(PyExc_ValueError, "size mismatch");
-        return NULL;
-    }
-    le = IS_LE(a);
-    be = IS_BE(a);
+    assert(PyBytes_Check(bytes));
+    str = PyBytes_AS_STRING(bytes);
+    strsize = PyBytes_GET_SIZE(bytes);
+    assert(a->nbits == 4 * strsize);
     assert(le + be == 1 && str[strsize] == 0);
+
     for (i = 0; i < strsize; i += 2) {
         int x = hex_to_int(str[i + le]);
         int y = hex_to_int(str[i + be]);
@@ -555,14 +592,74 @@ hex2ba(PyObject *module, PyObject *args)
             if (x < 0 || y < 0) {
                 PyErr_SetString(PyExc_ValueError,
                                 "non-hexadecimal digit found");
-                return NULL;
+                return -1;
             }
         }
         assert(0 <= x && x < 16 && 0 <= y && y < 16);
         a->ob_item[i / 2] = x << 4 | y;
     }
-    Py_RETURN_NONE;
+    return 0;
 }
+
+/* Return new reference to bytes object from either str (unicode) or bytes.
+   On failure, set exception and return NULL. */
+static PyObject *
+anystr_to_bytes(PyObject *obj)
+{
+    PyObject *bytes;
+
+    if (PyUnicode_Check(obj)) {
+        bytes = PyUnicode_AsASCIIString(obj);
+        if (bytes == NULL)
+            return NULL;
+    }
+    else if (PyBytes_Check(obj)) {
+        bytes = obj;
+        Py_INCREF(bytes);
+    }
+    else {
+        PyErr_Format(PyExc_TypeError, "str or bytes expected, got '%s'",
+                     Py_TYPE(obj)->tp_name);
+        return NULL;
+    }
+    assert(PyBytes_Check(bytes));
+    return bytes;
+}
+
+static PyObject *
+hex2ba(PyObject *module, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"", "endian", NULL};
+    PyObject *obj, *bytes, *endian = Py_None;
+    bitarrayobject *a = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O:hex2ba", kwlist,
+                                     &obj, &endian))
+        return NULL;
+
+    if ((bytes = anystr_to_bytes(obj)) == NULL)
+        goto error;
+
+    a = new_bitarray(4 * PyBytes_GET_SIZE(bytes), endian);
+    if (a == NULL)
+        goto error;
+
+    if (hex2ba_core(a, bytes) < 0)  /* do translation here */
+        goto error;
+
+    Py_DECREF(bytes);
+    return (PyObject *) a;
+ error:
+    Py_XDECREF(bytes);
+    Py_XDECREF((PyObject *) a);
+    return NULL;
+}
+
+PyDoc_STRVAR(hex2ba_doc,
+"hex2ba(hexstr, /, endian=None) -> bitarray\n\
+\n\
+Bitarray of hexadecimal representation.  hexstr may contain any number\n\
+(including odd numbers) of hex digits (upper or lower case).");
 
 /* ----------------------- base 2, 4, 8, 16, 32, 64 -------------------- */
 
@@ -679,48 +776,83 @@ For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the\n\
 standard base 64 alphabet is used.");
 
 
-/* Translate ASCII digits into bitarray.
-   The (Python) arguments to this functions are:
-   - base n, one of 2, 4, 8, 16, 32, 64  (n=2^m   where m bits per digit)
+/* Translate ASCII digits 'bytes' into bitarray buffer.
+   The arguments to this functions are:
    - bitarray (of length m * len(s)) whose elements are overwritten
    - byte object s containing the ASCII digits
+   - bits per digit, that is the base length m  (1..6)
 */
-static PyObject *
-base2ba(PyObject *module, PyObject *args)
+static int
+base2ba_core(bitarrayobject *a, PyObject *bytes, int m)
 {
-    bitarrayobject *a = NULL;
-    Py_ssize_t i, strsize = 0;
-    char *str = NULL;
-    int n, m, le;
+    Py_ssize_t strsize, i;
+    char *str;
+    int le = IS_LE(a), n = 1 << m;
 
-    if (!PyArg_ParseTuple(args, "i|O!s#", &n, bitarray_type_obj,
-                          (PyObject *) &a, &str, &strsize))
-        return NULL;
-    if ((m = base_to_length(n)) < 0)
-        return NULL;
-    if (a == NULL)  /* when only base n is given - return length log2(n) */
-        return PyLong_FromLong(m);
+    assert(PyBytes_Check(bytes));
+    str = PyBytes_AS_STRING(bytes);
+    strsize = PyBytes_GET_SIZE(bytes);
+    assert(a->nbits == m * strsize);
 
-    if (a->nbits != m * strsize) {
-        PyErr_SetString(PyExc_ValueError, "size mismatch");
-        return NULL;
-    }
-    le = IS_LE(a);
     for (i = 0; i < strsize; i++) {
         int j, d = digit_to_int(n, str[i]);
 
         if (d < 0) {
             unsigned char c = str[i];
-            return PyErr_Format(PyExc_ValueError, "invalid digit found for "
-                                "base %d, got '%c' (0x%02x)", n, c, c);
+            PyErr_Format(PyExc_ValueError, "invalid digit found for "
+                         "base %d, got '%c' (0x%02x)", n, c, c);
+            return -1;
         }
         for (j = 0; j < m; j++) {
             int k = le ? j : (m - j - 1);
             setbit(a, i * m + k, d & (1 << j));
         }
     }
-    Py_RETURN_NONE;
+    return 0;
 }
+
+static PyObject *
+base2ba(PyObject *module, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"", "", "endian", NULL};
+    PyObject *obj, *bytes, *endian = Py_None;
+    bitarrayobject *a = NULL;
+    int n, m;                   /* n = 2^m */
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iO|O:base2ba", kwlist,
+                                     &n, &obj, &endian))
+        return NULL;
+
+    if ((m = base_to_length(n)) < 0)
+        return NULL;
+
+    if ((bytes = anystr_to_bytes(obj)) == NULL)
+        goto error;
+
+    a = new_bitarray(m * PyBytes_GET_SIZE(bytes), endian);
+    if (a == NULL)
+        goto error;
+
+    if (base2ba_core(a, bytes, m) < 0)  /* do translation here */
+        goto error;
+
+    Py_DECREF(bytes);
+    return (PyObject *) a;
+ error:
+    Py_XDECREF(bytes);
+    Py_XDECREF((PyObject *) a);
+    return NULL;
+}
+
+PyDoc_STRVAR(base2ba_doc,
+"base2ba(n, asciistr, /, endian=None) -> bitarray\n\
+\n\
+Bitarray of the base `n` ASCII representation.\n\
+Allowed values for `n` are 2, 4, 8, 16, 32 and 64.\n\
+For `n=16` (hexadecimal), `hex2ba()` will be much faster, as `base2ba()`\n\
+does not take advantage of byte level operations.\n\
+For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the\n\
+standard base 64 alphabet is used.");
 
 /* ------------------------ utility C functions ------------------------ */
 
@@ -1475,7 +1607,7 @@ vl_decode(PyObject *module, PyObject *args, PyObject *kwds)
 }
 
 PyDoc_STRVAR(vl_decode_doc,
-"vl_decode(stream) -> bitarray\n\
+"vl_decode(stream, /, endian=None) -> bitarray\n\
 \n\
 Decode binary stream (an integer iterator, or bytes-like object), and\n\
 return the decoded bitarray.  This function consumes only one bitarray and\n\
@@ -1754,10 +1886,15 @@ static PyMethodDef module_functions[] = {
                   (PyCFunction) correspond_all,
                                            METH_VARARGS, correspond_all_doc},
     {"serialize", (PyCFunction) serialize, METH_O,       serialize_doc},
+    {"deserialize",
+                  (PyCFunction) deserialize,
+                                           METH_O,       deserialize_doc},
     {"ba2hex",    (PyCFunction) ba2hex,    METH_O,       ba2hex_doc},
-    {"_hex2ba",   (PyCFunction) hex2ba,    METH_VARARGS, 0},
+    {"hex2ba",    (PyCFunction) hex2ba,    METH_KEYWORDS |
+                                           METH_VARARGS, hex2ba_doc},
     {"ba2base",   (PyCFunction) ba2base,   METH_VARARGS, ba2base_doc},
-    {"_base2ba",  (PyCFunction) base2ba,   METH_VARARGS, 0},
+    {"base2ba",   (PyCFunction) base2ba,   METH_KEYWORDS |
+                                           METH_VARARGS, base2ba_doc},
     {"sc_encode", (PyCFunction) sc_encode, METH_O,       sc_encode_doc},
     {"sc_decode", (PyCFunction) sc_decode, METH_O,       sc_decode_doc},
     {"vl_encode", (PyCFunction) vl_encode, METH_O,       vl_encode_doc},

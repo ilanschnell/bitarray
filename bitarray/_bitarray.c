@@ -3334,7 +3334,7 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, int endian)
     data = PyBytes_AS_STRING(bytes);
     head = *data;
 
-    if (nbytes == 1 && head % 8)
+    if (nbytes == 1 && head & 0xef)
         return PyErr_Format(PyExc_ValueError,
                             "invalid header byte: 0x%02x", head);
 
@@ -3388,11 +3388,11 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* bytes (for pickling) */
     if (PyBytes_Check(initial) && PyBytes_GET_SIZE(initial) > 0) {
-        unsigned char head = *PyBytes_AS_STRING(initial);
+        char head = *PyBytes_AS_STRING(initial);
 
-        if (head < 32 && head % 16 < 8) {
+        if ((head & 0xe8) == 0) {
             if (endian_str == NULL)  /* no endianness provided */
-                endian = head / 16 ? ENDIAN_BIG : ENDIAN_LITTLE;
+                endian = head & 0x10 ? ENDIAN_BIG : ENDIAN_LITTLE;
             return newbitarray_from_pickle(type, initial, endian);
         }
     }
