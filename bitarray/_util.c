@@ -1396,8 +1396,8 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian)
 
     /* PyTuple_SET_ITEM “steals” a reference to item */
     PyTuple_SET_ITEM(args, 0, PyLong_FromSsize_t(nbits));
-    PyTuple_SET_ITEM(args, 1, endian);
     Py_INCREF(endian);
+    PyTuple_SET_ITEM(args, 1, endian);
 
     res = (bitarrayobject *) PyObject_CallObject(bitarray_type_obj, args);
     Py_DECREF(args);
@@ -1408,15 +1408,47 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian)
     return res;
 }
 
-/* consume iterator while decoding bytes into bitarray */
+/* Consume 'iter' while extending bitarray 'a'.
+   Return 0 on success.  On failure, set exception and return -1. */
+static int
+vl_decode_core(bitarrayobject *a, PyObject *iter)
+{
+    Py_ssize_t padding;      /* number of pad bits read from header byte */
+    Py_ssize_t i = 0;        /* bit counter */
+    int k, c;
+
+    if ((c = next_char(iter)) < 0)           /* header byte */
+        return -1;
+
+    padding = (c & 0x70) >> 4;
+    if (padding >= 7 || ((c & 0x80) == 0 && padding > 4)) {
+        PyErr_Format(PyExc_ValueError, "invalid header byte: 0x%02x", c);
+        return -1;
+    }
+    for (k = 0; k < 4; k++)
+        setbit(a, i++, (0x08 >> k) & c);
+
+    while (c & 0x80) {
+        if ((c = next_char(iter)) < 0)
+            return -1;
+
+        if (i + 6 >= a->nbits && resize_lite(a, i + 7) < 0)
+            return -1;
+        assert(i + 6 < a->nbits);
+
+        for (k = 0; k < 7; k++)
+            setbit(a, i++, (0x40 >> k) & c);
+    }
+    /* set final length of bitarray */
+    return resize_lite(a, i - padding);
+}
+
 static PyObject *
 vl_decode(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "endian", NULL};
     PyObject *obj, *iter, *endian = Py_None;
     bitarrayobject *a;
-    Py_ssize_t padding = 0;  /* number of pad bits read from header byte */
-    Py_ssize_t i = 0;        /* bit counter */
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O:vl_decode", kwlist,
                                      &obj, &endian))
@@ -1431,35 +1463,7 @@ vl_decode(PyObject *module, PyObject *args, PyObject *kwds)
     if (a == NULL)
         goto error;
 
-    while (1) {
-        int k, b;
-
-        if ((b = next_char(iter)) < 0)
-            goto error;
-
-        if (i + 6 >= a->nbits && resize_lite(a, i + 7) < 0)
-            goto error;
-        assert(i + 6 < a->nbits);
-
-        if (i == 0) {
-            padding = (b & 0x70) >> 4;
-            if (padding >= 7 || ((b & 0x80) == 0 && padding > 4)) {
-                PyErr_Format(PyExc_ValueError,
-                             "invalid header byte: 0x%02x", b);
-                goto error;
-            }
-            for (k = 0; k < 4; k++)
-                setbit(a, i++, (0x08 >> k) & b);
-        }
-        else {
-            for (k = 0; k < 7; k++)
-                setbit(a, i++, (0x40 >> k) & b);
-        }
-        if ((b & 0x80) == 0)
-            break;
-    }
-    /* set final length of bitarray */
-    if (resize_lite(a, i - padding) < 0)
+    if (vl_decode_core(a, iter) < 0)         /* do actual decoding work */
         goto error;
 
     Py_DECREF(iter);
