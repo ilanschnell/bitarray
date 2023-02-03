@@ -57,6 +57,35 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian)
     return res;
 }
 
+/* -------------------------------- zeros ------------------------------ */
+
+static PyObject *
+zeros(PyObject *module, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"", "endian", NULL};
+    PyObject *endian = Py_None;
+    bitarrayobject *a = NULL;
+    Py_ssize_t nbits;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "n|O:zeros", kwlist,
+                                     &nbits, &endian))
+        return NULL;
+
+    a = new_bitarray(nbits, endian);
+    if (a == NULL)
+        return NULL;
+
+    memset(a->ob_item, 0x00, (size_t) Py_SIZE(a));
+
+    return (PyObject *) a;
+}
+
+PyDoc_STRVAR(zeros_doc,
+"zeros(length, /, endian=None) -> bitarray\n\
+\n\
+Create a bitarray of length, with all values 0, and optional\n\
+endianness, which may be 'big', 'little'.");
+
 /* ------------------------------- count_n ----------------------------- */
 
 /* Return the smallest index i for which a.count(vi, 0, i) == n.
@@ -1874,6 +1903,8 @@ static PyTypeObject CHDI_Type = {
 /* --------------------------------------------------------------------- */
 
 static PyMethodDef module_functions[] = {
+    {"zeros",     (PyCFunction) zeros,     METH_KEYWORDS |
+                                           METH_VARARGS, zeros_doc},
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
     {"rindex",    (PyCFunction) r_index,   METH_VARARGS, rindex_doc},
     {"parity",    (PyCFunction) parity,    METH_O,       parity_doc},

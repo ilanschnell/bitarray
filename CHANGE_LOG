@@ -5,7 +5,7 @@
   * add `util.any_and()`
   * add `util.intervals()`
   * move functionality of the following utility functions entirely to C:
-    `hex2ba()`, `base2ba()`, `deserialize()`, `vl_decode()`
+    `hex2ba()`, `base2ba()`, `deserialize()`, `vl_decode()`, `zeros()`
   * add [distance metrics](../examples/distance.py) example:
     dice, hamming, jaccard, kulczynski1, rogerstanimoto, russellrao,
     sokalmichener, sokalsneath, yule

@@ -13,7 +13,8 @@ import sys
 from bitarray import bitarray, bits2bytes
 
 from bitarray._util import (
-    count_n, rindex, parity, count_and, count_or, count_xor, any_and, subset,
+    zeros, count_n, rindex, parity,
+    count_and, count_or, count_xor, any_and, subset,
     _correspond_all,
     serialize, deserialize,
     ba2hex, hex2ba,
@@ -38,20 +39,6 @@ __all__ = [
 
 
 _is_py2 = bool(sys.version_info[0] == 2)
-
-
-def zeros(__length, endian=None):
-    """zeros(length, /, endian=None) -> bitarray
-
-Create a bitarray of length, with all values 0, and optional
-endianness, which may be 'big', 'little'.
-"""
-    if not isinstance(__length, (int, long) if _is_py2 else int):
-        raise TypeError("int expected, got '%s'" % type(__length).__name__)
-
-    a = bitarray(__length, endian)
-    a.setall(0)
-    return a
 
 
 def urandom(__length, endian=None):
