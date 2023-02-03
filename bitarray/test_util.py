@@ -1442,11 +1442,21 @@ class VLFTests(unittest.TestCase, Util):
             self.assertEqual(a, bitarray('0011 01'))
 
     def test_decode_endian(self):
-        for endian in 'little', 'big', None:
-            a = vl_decode(b'\xd3\x20', endian)
-            self.assertEqual(a, bitarray('0011 01'))
-            self.assertEqual(a.endian(),
-                             endian if endian else get_default_endian())
+        blob = b'\xd3\x20'
+        res = bitarray('0011 01')
+
+        for default_endian in 'little', 'big':
+            _set_default_endian(default_endian)
+
+            for endian in 'little', 'big', None:
+                a = vl_decode(blob, endian)
+                self.assertEqual(a, res)
+                self.assertEqual(a.endian(),
+                                 endian if endian else default_endian)
+
+            a = vl_decode(blob)
+            self.assertEqual(a, res)
+            self.assertEqual(a.endian(), default_endian)
 
     def test_decode_trailing(self):
         for s, bits in [(b'\x40ABC', ''),
