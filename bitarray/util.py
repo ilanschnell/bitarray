@@ -17,7 +17,7 @@ from bitarray._util import (
     _correspond_all,
     serialize, ba2hex, _hex2ba, ba2base, _base2ba,
     sc_encode, sc_decode,
-    vl_encode, _vl_decode,
+    vl_encode, vl_decode,
     canonical_decode,
 )
 
@@ -340,18 +340,6 @@ by `serialize()`.
         return bitarray(__b)
     except TypeError:
         raise ValueError('invalid header byte: 0x%02x' % __b[0])
-
-
-def vl_decode(__stream, endian=None):
-    """vl_decode(stream, /, endian=None) -> bitarray
-
-Decode binary stream (an integer iterator, or bytes-like object), and return
-the decoded bitarray.  This function consumes only one bitarray and leaves
-the remaining stream untouched.  Use `vl_encode()` for encoding.
-"""
-    a = bitarray(32, endian)
-    _vl_decode(iter(__stream), a)
-    return a
 
 # ------------------------------ Huffman coding -----------------------------
 

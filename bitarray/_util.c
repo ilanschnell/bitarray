@@ -1383,37 +1383,71 @@ untouched.  Use `sc_encode()` for compressing (encoding).");
  */
 #define LEN_PAD_BITS  3
 
+/* return new bitarray of length 'nbits' (with uninitialized buffer) and
+   endianness given by the PyObject 'endian' */
+static bitarrayobject *
+new_bitarray(Py_ssize_t nbits, PyObject *endian)
+{
+    PyObject *args;             /* args for bitarray() */
+    bitarrayobject *res;
+
+    if ((args = PyTuple_New(2)) == NULL)
+        return NULL;
+
+    /* PyTuple_SET_ITEM “steals” a reference to item */
+    PyTuple_SET_ITEM(args, 0, PyLong_FromSsize_t(nbits));
+    PyTuple_SET_ITEM(args, 1, endian);
+    Py_INCREF(endian);
+
+    res = (bitarrayobject *) PyObject_CallObject(bitarray_type_obj, args);
+    Py_DECREF(args);
+    if (res == NULL)
+        return NULL;
+    assert(res->nbits == nbits && res->readonly == 0 && res->buffer == NULL);
+
+    return res;
+}
+
 /* consume iterator while decoding bytes into bitarray */
 static PyObject *
-vl_decode(PyObject *module, PyObject *args)
+vl_decode(PyObject *module, PyObject *args, PyObject *kwds)
 {
-    PyObject *iter;
+    static char *kwlist[] = {"", "endian", NULL};
+    PyObject *obj, *iter, *endian = Py_None;
     bitarrayobject *a;
     Py_ssize_t padding = 0;  /* number of pad bits read from header byte */
     Py_ssize_t i = 0;        /* bit counter */
 
-    if (!PyArg_ParseTuple(args, "OO!", &iter,
-                          bitarray_type_obj, (PyObject *) &a))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O:vl_decode", kwlist,
+                                     &obj, &endian))
         return NULL;
-    if (!PyIter_Check(iter))
-        return PyErr_Format(PyExc_TypeError, "iterator or bytes expected, "
-                            "got '%s'", Py_TYPE(iter)->tp_name);
+
+    iter = PyObject_GetIter(obj);
+    if (iter == NULL)
+        return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
+                            Py_TYPE(obj)->tp_name);
+
+    a = new_bitarray(32, endian);
+    if (a == NULL)
+        goto error;
 
     while (1) {
         int k, b;
 
         if ((b = next_char(iter)) < 0)
-            return NULL;
+            goto error;
 
         if (i + 6 >= a->nbits && resize_lite(a, i + 7) < 0)
-            return NULL;
+            goto error;
         assert(i + 6 < a->nbits);
 
         if (i == 0) {
             padding = (b & 0x70) >> 4;
-            if (padding >= 7 || ((b & 0x80) == 0 && padding > 4))
-                return PyErr_Format(PyExc_ValueError,
-                                    "invalid header byte: 0x%02x", b);
+            if (padding >= 7 || ((b & 0x80) == 0 && padding > 4)) {
+                PyErr_Format(PyExc_ValueError,
+                             "invalid header byte: 0x%02x", b);
+                goto error;
+            }
             for (k = 0; k < 4; k++)
                 setbit(a, i++, (0x08 >> k) & b);
         }
@@ -1426,10 +1460,23 @@ vl_decode(PyObject *module, PyObject *args)
     }
     /* set final length of bitarray */
     if (resize_lite(a, i - padding) < 0)
-        return NULL;
+        goto error;
 
-    Py_RETURN_NONE;
+    Py_DECREF(iter);
+    return (PyObject *) a;
+ error:
+    Py_DECREF(iter);
+    Py_XDECREF((PyObject *) a);
+    return NULL;
 }
+
+PyDoc_STRVAR(vl_decode_doc,
+"vl_decode(stream) -> bitarray\n\
+\n\
+Decode binary stream (an integer iterator, or bytes-like object), and\n\
+return the decoded bitarray.  This function consumes only one bitarray and\n\
+leaves the remaining stream untouched.  Use `vl_encode()` for encoding.");
+
 
 static PyObject *
 vl_encode(PyObject *module, PyObject *obj)
@@ -1710,7 +1757,8 @@ static PyMethodDef module_functions[] = {
     {"sc_encode", (PyCFunction) sc_encode, METH_O,       sc_encode_doc},
     {"sc_decode", (PyCFunction) sc_decode, METH_O,       sc_decode_doc},
     {"vl_encode", (PyCFunction) vl_encode, METH_O,       vl_encode_doc},
-    {"_vl_decode",(PyCFunction) vl_decode, METH_VARARGS, 0},
+    {"vl_decode", (PyCFunction) vl_decode, METH_KEYWORDS |
+                                           METH_VARARGS, vl_decode_doc},
     {"canonical_decode",
                   (PyCFunction) chdi_new,  METH_VARARGS, chdi_doc},
     {NULL,        NULL}  /* sentinel */
