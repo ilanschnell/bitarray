@@ -32,6 +32,31 @@ ensure_bitarray(PyObject *obj)
     return 0;
 }
 
+/* return new bitarray of length 'nbits' (with uninitialized buffer) and
+   endianness given by the PyObject 'endian' */
+static bitarrayobject *
+new_bitarray(Py_ssize_t nbits, PyObject *endian)
+{
+    PyObject *args;             /* args for bitarray() */
+    bitarrayobject *res;
+
+    if ((args = PyTuple_New(2)) == NULL)
+        return NULL;
+
+    /* PyTuple_SET_ITEM “steals” a reference to item */
+    PyTuple_SET_ITEM(args, 0, PyLong_FromSsize_t(nbits));
+    Py_INCREF(endian);
+    PyTuple_SET_ITEM(args, 1, endian);
+
+    res = (bitarrayobject *) PyObject_CallObject(bitarray_type_obj, args);
+    Py_DECREF(args);
+    if (res == NULL)
+        return NULL;
+    assert(res->nbits == nbits && res->readonly == 0 && res->buffer == NULL);
+
+    return res;
+}
+
 /* ------------------------------- count_n ----------------------------- */
 
 /* Return the smallest index i for which a.count(vi, 0, i) == n.
@@ -713,25 +738,30 @@ resize_lite(bitarrayobject *self, Py_ssize_t nbits)
     assert(self->readonly == 0);
 
     if (newsize == size) {
-        /* buffer size hasn't changed - bypass everything */
         self->nbits = nbits;
         return 0;
     }
 
-    /* Bypass reallocation when a allocation is large enough to accommodate
-       the newsize.  In the newsize falls lower than the current size,
-       then proceed with the reallocation to shrink the bitarray.
-    */
-    if (allocated >= newsize && newsize > size) {
+    if (allocated >= newsize && newsize >= (allocated >> 1)) {
+        assert(self->ob_item != NULL || newsize == 0);
         Py_SET_SIZE(self, newsize);
         self->nbits = nbits;
         return 0;
     }
 
-    if (newsize > size)  /* only over-allocate when size increases */
-        new_allocated = ((size_t) newsize + (newsize >> 4) +
-                         (newsize < 8 ? 3 : 7)) & ~(size_t) 3;
-    else
+    if (newsize == 0) {
+        PyMem_Free(self->ob_item);
+        self->ob_item = NULL;
+        Py_SET_SIZE(self, 0);
+        self->allocated = 0;
+        self->nbits = 0;
+        return 0;
+    }
+
+    new_allocated = ((size_t) newsize + (newsize >> 4) +
+                     (newsize < 8 ? 3 : 7)) & ~(size_t) 3;
+
+    if (newsize - size > (Py_ssize_t) new_allocated - newsize)
         new_allocated = ((size_t) newsize + 3) & ~(size_t) 3;
 
     assert(new_allocated >= (size_t) newsize);
@@ -1333,16 +1363,11 @@ sc_decode(PyObject *module, PyObject *obj)
     if (sc_decode_header(iter, &endian, &nbits) < 0)
         goto error;
 
-    /* create empty bitarray */
-    a = (bitarrayobject *) PyObject_CallObject(bitarray_type_obj, NULL);
+    /* create bitarray of length 'nbits' and set all elements to 0 */
+    a = new_bitarray(nbits, Py_None);
     if (a == NULL)
         goto error;
-    assert(a->nbits == 0 && a->readonly == 0 && a->buffer == NULL);
-
-    /* set endianness, resize to nbits, and set all elements to 0 */
     a->endian = endian;
-    if (resize_lite(a, nbits) < 0)
-        goto error;
     memset(a->ob_item, 0x00, (size_t) Py_SIZE(a));
 
     /* consume blocks until stop byte is encountered */
@@ -1382,31 +1407,6 @@ untouched.  Use `sc_encode()` for compressing (encoding).");
    which has 5 pad bits.  'padding' can take values to up 6.
  */
 #define LEN_PAD_BITS  3
-
-/* return new bitarray of length 'nbits' (with uninitialized buffer) and
-   endianness given by the PyObject 'endian' */
-static bitarrayobject *
-new_bitarray(Py_ssize_t nbits, PyObject *endian)
-{
-    PyObject *args;             /* args for bitarray() */
-    bitarrayobject *res;
-
-    if ((args = PyTuple_New(2)) == NULL)
-        return NULL;
-
-    /* PyTuple_SET_ITEM “steals” a reference to item */
-    PyTuple_SET_ITEM(args, 0, PyLong_FromSsize_t(nbits));
-    Py_INCREF(endian);
-    PyTuple_SET_ITEM(args, 1, endian);
-
-    res = (bitarrayobject *) PyObject_CallObject(bitarray_type_obj, args);
-    Py_DECREF(args);
-    if (res == NULL)
-        return NULL;
-    assert(res->nbits == nbits && res->readonly == 0 && res->buffer == NULL);
-
-    return res;
-}
 
 /* Consume 'iter' while extending bitarray 'a'.
    Return 0 on success.  On failure, set exception and return -1. */
