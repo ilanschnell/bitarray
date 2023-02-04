@@ -455,6 +455,12 @@ Return tuple with counts of: ~a & ~b, ~a & b, a & ~b, a & b");
 
 /* ---------------------------- serialization -------------------------- */
 
+/*
+  The binary format used here is similar to the one used for pickling
+  bitarray objects.  This format encodes the bit-endianness in the head byte,
+  whereas the binary pickle blob does not.
+*/
+
 static PyObject *
 serialize(PyObject *module, PyObject *a)
 {
@@ -472,7 +478,7 @@ serialize(PyObject *module, PyObject *a)
 
     str = PyBytes_AsString(result);
 #define aa  ((bitarrayobject *) a)
-    *str = (char) (16 * IS_BE(aa) + set_padbits(aa));
+    *str = (IS_BE(aa) ? 0x10 : 0x00) | ((char) set_padbits(aa));
     memcpy(str + 1, aa->ob_item, (size_t) nbytes);
 #undef aa
     return result;
@@ -497,7 +503,8 @@ deserialize(PyObject *module, PyObject *buffer)
         return NULL;
 
     if (view.len == 0) {
-        PyErr_SetString(PyExc_ValueError, "non-empty bytes expected");
+        PyErr_SetString(PyExc_ValueError,
+                        "non-empty bytes-like object expected");
         goto error;
     }
 
@@ -1593,7 +1600,7 @@ vl_decode_core(bitarrayobject *a, PyObject *iter)
         if ((c = next_char(iter)) < 0)
             return -1;
 
-        if (i + 6 >= a->nbits && resize_lite(a, i + 7) < 0)
+        if (resize_lite(a, i + 7) < 0)
             return -1;
         assert(i + 6 < a->nbits);
 

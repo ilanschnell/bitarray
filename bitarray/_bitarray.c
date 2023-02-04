@@ -3339,7 +3339,7 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, int endian)
                             "invalid header byte: 0x%02x", head);
 
     res = newbitarrayobject(type,
-                            8 * (nbytes - 1) - ((Py_ssize_t) (head % 8)),
+                            8 * (nbytes - 1) - ((Py_ssize_t) (head & 0x07)),
                             endian);
     if (res == NULL)
         return NULL;
