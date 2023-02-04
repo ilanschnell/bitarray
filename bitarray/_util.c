@@ -489,7 +489,7 @@ PyDoc_STRVAR(serialize_doc,
 \n\
 Return a serialized representation of the bitarray, which may be passed to\n\
 `deserialize()`.  It efficiently represents the bitarray object (including\n\
-its endianness) and is guaranteed not to change in future releases.");
+its bit-endianness) and is guaranteed not to change in future releases.");
 
 
 static PyObject *
@@ -514,12 +514,14 @@ deserialize(PyObject *module, PyObject *buffer)
         PyErr_Format(PyExc_ValueError, "invalid header byte: 0x%02x", head);
         goto error;
     }
+    /* create bitarray of desired length (buffer uninitialized) */
     a = new_bitarray(8 * (view.len - 1) - ((Py_ssize_t) (head & 0x07)),
                      Py_None);
     if (a == NULL)
         goto error;
+    /* set bit-endianness and buffer */
     a->endian = head & 0x10 ? ENDIAN_BIG : ENDIAN_LITTLE;
-
+    assert(Py_SIZE(a) == view.len - 1);
     memcpy(a->ob_item, ((char *) view.buf) + 1, (size_t) view.len - 1);
 
     PyBuffer_Release(&view);

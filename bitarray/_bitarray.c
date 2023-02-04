@@ -3333,6 +3333,7 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, int endian)
     assert(nbytes > 0);
     data = PyBytes_AS_STRING(bytes);
     head = *data;
+    assert((head & 0xe8) == 0);
 
     if (nbytes == 1 && head & 0xef)
         return PyErr_Format(PyExc_ValueError,
