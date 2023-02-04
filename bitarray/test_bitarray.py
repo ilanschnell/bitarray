@@ -3440,9 +3440,13 @@ class FileTests(unittest.TestCase, Util):
             d = pickle.load(fi)
 
         for i, (s, end) in enumerate([
+                # 0x03
                 ('110', 'little'),
+                # 0x60
                 ('011', 'big'),
+                # 0x07    0x12    0x00    0x40
                 ('1110000001001000000000000000001', 'little'),
+                # 0x27    0x80    0x00    0x02
                 ('0010011110000000000000000000001', 'big'),
         ]):
             b = d['b%d' % i]

@@ -1923,9 +1923,11 @@ class TestsSerialization(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            b = deserialize(serialize(a))
-            self.assertEQUAL(a, b)
-            self.check_obj(b)
+            b = serialize(a)
+            c = deserialize(b)
+            self.assertEqual(a, c)
+            self.assertEqual(a.endian(), c.endian())
+            self.check_obj(c)
 
 tests.append(TestsSerialization)
 
