@@ -3318,19 +3318,34 @@ newbitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
     return newbitarrayobject(type, nbits, endian);
 }
 
-/* head byte specifies the number of pad bits - remaining bytes consist
-   of the buffer itself */
+/* Return a new bitarray from pickle bytes (created by .__reduce__()).
+   The head byte specifies the number of pad bits, the remaining bytes
+   consist of the buffer itself.  As the bit-endianness must be known,
+   we pass this function the actual argument endian_str (and not just
+   endian, which would default to the default bit-endianness).  This way,
+   we can raise an exception when the endian argument was not provided to
+   bitarray().  Also, we only call this function with a non-empty PyBytes
+   object.
+ */
 static PyObject *
-newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, int endian)
+newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, char *endian_str)
 {
     PyObject *res;
     Py_ssize_t nbytes;
-    unsigned char head;
     char *data;
+    unsigned char head;
+    int endian;
+
+    if (endian_str == NULL) {
+        PyErr_SetString(PyExc_ValueError, "endianness missing for pickle");
+        return NULL;
+    }
+    if ((endian = endian_from_string(endian_str)) < 0)
+        return NULL;
 
     assert(PyBytes_Check(bytes));
     nbytes = PyBytes_GET_SIZE(bytes);
-    assert(nbytes > 0);
+    assert(nbytes > 0);         /* verified below */
     data = PyBytes_AS_STRING(bytes);
     head = *data;
 
@@ -3390,7 +3405,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (PyBytes_Check(initial) && PyBytes_GET_SIZE(initial) > 0) {
         char head = *PyBytes_AS_STRING(initial);
         if ((head & 0xf8) == 0)
-            return newbitarray_from_pickle(type, initial, endian);
+            return newbitarray_from_pickle(type, initial, endian_str);
     }
 
     if (bitarray_Check(initial) && endian_str == NULL)

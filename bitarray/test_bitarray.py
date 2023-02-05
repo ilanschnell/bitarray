@@ -493,15 +493,18 @@ class CreateObjectTests(unittest.TestCase, Util):
             # no bytes are interpreted as an empty string on Python 2
             self.assertEqual(bitarray(b''), bitarray())
 
+        self.assertRaisesMessage(ValueError, "endianness missing for pickle",
+                                 bitarray, b'\x00')
+
         for i in range(1, 8):
             s = bytes(bytearray([i]))
             # this error is raised in newbitarray_from_pickle()
-            self.assertRaises(ValueError, bitarray, s)
+            self.assertRaises(ValueError, bitarray, s, 'big')
             # Python 2: PyErr_Format() seems to handle "0x%02x"
             # incorrectly.  E.g. instead of "0x01", I get "0x1"
             if is_py3k:
                 msg = "invalid pickle header byte: 0x%02x" % s[0]
-                self.assertRaisesMessage(ValueError, msg, bitarray, s)
+                self.assertRaisesMessage(ValueError, msg, bitarray, s, 'big')
 
         for i in range(8, 256):
             s = bytes(bytearray([i]))
