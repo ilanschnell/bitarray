@@ -3341,6 +3341,7 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, char *endian_str)
         return NULL;
     }
     if ((endian = endian_from_string(endian_str)) < 0)
+        /* cannot happen as we called check the string before */
         return NULL;
 
     assert(PyBytes_Check(bytes));
@@ -3401,7 +3402,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (PyIndex_Check(initial))
         return newbitarray_from_index(type, initial, endian);
 
-    /* bytes (for pickling) - must have at test one byte */
+    /* bytes (for pickling) - must have head byte (0x00 .. 0x07) */
     if (PyBytes_Check(initial) && PyBytes_GET_SIZE(initial) > 0) {
         char head = *PyBytes_AS_STRING(initial);
         if ((head & 0xf8) == 0)
