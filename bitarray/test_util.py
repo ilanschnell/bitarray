@@ -1345,7 +1345,7 @@ class SC_Tests(unittest.TestCase, Util):
         for a in bitarray('1', 'big'), frozenbitarray('1', 'big'):
             b = sc_encode(a)
             self.assertIsInstance(b, bytes)
-            self.assertEqual(len(b), 5)
+            self.assertEqual(b, b'\x11\x01\x01\x80\0')
 
         for a in None, [], 0, 123, b'', b'\x00', 3.14:
             self.assertRaises(TypeError, sc_encode, a)

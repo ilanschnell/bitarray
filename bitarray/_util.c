@@ -1368,6 +1368,7 @@ sc_encode(PyObject *module, PyObject *obj)
         return NULL;
 
     a = (bitarrayobject *) obj;
+    set_padbits(a);
     if ((rts = calc_rts(a)) == NULL)
         return NULL;
 
