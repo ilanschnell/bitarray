@@ -847,7 +847,7 @@ This sub-module was added in version 1.2.
 ``serialize(bitarray, /)`` -> bytes
    Return a serialized representation of the bitarray, which may be passed to
    ``deserialize()``.  It efficiently represents the bitarray object (including
-   its endianness) and is guaranteed not to change in future releases.
+   its bit-endianness) and is guaranteed not to change in future releases.
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
@@ -865,6 +865,27 @@ This sub-module was added in version 1.2.
    New in version 2.5.0: allow bytes-like argument.
 
 
+``sc_encode(bitarray, /)`` -> bytes
+   Compress a sparse bitarray and return its binary representation.
+   This representation is useful for efficiently storing sparse bitarrays.
+   Use ``sc_decode()`` for decompressing (decoding).
+
+   See also: `Compression of sparse bitarrays <https://github.com/ilanschnell/bitarray/blob/master/doc/sparse_compression.rst>`__
+
+   New in version 2.7.
+
+
+``sc_decode(stream)`` -> bitarray
+   Decompress binary stream (an integer iterator, or bytes-like object) of a
+   sparse compressed (``sc``) bitarray, and return the decoded  bitarray.
+   This function consumes only one bitarray and leaves the remaining stream
+   untouched.  Use ``sc_encode()`` for compressing (encoding).
+
+   See also: `Compression of sparse bitarrays <https://github.com/ilanschnell/bitarray/blob/master/doc/sparse_compression.rst>`__
+
+   New in version 2.7.
+
+
 ``vl_encode(bitarray, /)`` -> bytes
    Return variable length binary representation of bitarray.
    This representation is useful for efficiently storing small bitarray
@@ -876,9 +897,9 @@ This sub-module was added in version 1.2.
 
 
 ``vl_decode(stream, /, endian=None)`` -> bitarray
-   Decode binary stream (an integer iterator, or bytes-like object), and return
-   the decoded bitarray.  This function consumes only one bitarray and leaves
-   the remaining stream untouched.  Use ``vl_encode()`` for encoding.
+   Decode binary stream (an integer iterator, or bytes-like object), and
+   return the decoded bitarray.  This function consumes only one bitarray and
+   leaves the remaining stream untouched.  Use ``vl_encode()`` for encoding.
 
    See also: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__
 

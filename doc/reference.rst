@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.6.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.7.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -371,11 +371,25 @@ This sub-module was added in version 1.2.
    This is also known as the Hamming distance.
 
 
+``any_and(a, b, /)`` -> bool
+   Efficient implementation of ``any(a & b)``.
+
+   New in version 2.7.
+
+
 ``subset(a, b, /)`` -> bool
    Return ``True`` if bitarray ``a`` is a subset of bitarray ``b``.
    ``subset(a, b)`` is equivalent to ``a | b == b`` (and equally ``a & b == a``) but
    more efficient as no intermediate bitarray object is created and the buffer
-   iteration is stopped as soon as one mismatch found.
+   iteration is stopped as soon as one mismatch is found.
+
+
+``intervals(bitarray, /)`` -> iterator
+   Compute all uninterrupted intervals of 1s and 0s, and return an
+   iterator over tuples ``(value, start, stop)``.  The intervals are guaranteed
+   to be in order, and their size is always non-zero (``stop - start > 0``).
+
+   New in version 2.7.
 
 
 ``ba2hex(bitarray, /)`` -> hexstr
@@ -433,7 +447,7 @@ This sub-module was added in version 1.2.
 ``serialize(bitarray, /)`` -> bytes
    Return a serialized representation of the bitarray, which may be passed to
    ``deserialize()``.  It efficiently represents the bitarray object (including
-   its endianness) and is guaranteed not to change in future releases.
+   its bit-endianness) and is guaranteed not to change in future releases.
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
@@ -451,6 +465,27 @@ This sub-module was added in version 1.2.
    New in version 2.5.0: allow bytes-like argument.
 
 
+``sc_encode(bitarray, /)`` -> bytes
+   Compress a sparse bitarray and return its binary representation.
+   This representation is useful for efficiently storing sparse bitarrays.
+   Use ``sc_decode()`` for decompressing (decoding).
+
+   See also: `Compression of sparse bitarrays <https://github.com/ilanschnell/bitarray/blob/master/doc/sparse_compression.rst>`__
+
+   New in version 2.7.
+
+
+``sc_decode(stream)`` -> bitarray
+   Decompress binary stream (an integer iterator, or bytes-like object) of a
+   sparse compressed (``sc``) bitarray, and return the decoded  bitarray.
+   This function consumes only one bitarray and leaves the remaining stream
+   untouched.  Use ``sc_encode()`` for compressing (encoding).
+
+   See also: `Compression of sparse bitarrays <https://github.com/ilanschnell/bitarray/blob/master/doc/sparse_compression.rst>`__
+
+   New in version 2.7.
+
+
 ``vl_encode(bitarray, /)`` -> bytes
    Return variable length binary representation of bitarray.
    This representation is useful for efficiently storing small bitarray
@@ -462,11 +497,9 @@ This sub-module was added in version 1.2.
 
 
 ``vl_decode(stream, /, endian=None)`` -> bitarray
-   Decode binary stream (an integer iterator, or bytes-like object), and return
-   the decoded bitarray.  This function consumes only one bitarray and leaves
-   the remaining stream untouched.  ``StopIteration`` is raised when no
-   terminating byte is found.
-   Use ``vl_encode()`` for encoding.
+   Decode binary stream (an integer iterator, or bytes-like object), and
+   return the decoded bitarray.  This function consumes only one bitarray and
+   leaves the remaining stream untouched.  Use ``vl_encode()`` for encoding.
 
    See also: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__
 

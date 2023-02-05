@@ -910,7 +910,7 @@ class TestsHexlify(unittest.TestCase, Util):
             a = hex2ba(c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
-            self.assertIsInstance(a, bitarray)
+            self.assertIsType(a, 'bitarray')
         self.assertEQUAL(hex2ba('01'), bitarray('0000 0001', 'big'))
         self.assertEQUAL(hex2ba('08', 'little'),
                          bitarray('0000 0001', 'little'))
@@ -985,7 +985,7 @@ class TestsBase(unittest.TestCase, Util):
             a = base2ba(16, c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
-            self.assertIsInstance(a, bitarray)
+            self.assertIsType(a, 'bitarray')
 
     def test_explicit(self):
         data = [ #              n  little   big
@@ -1259,7 +1259,7 @@ class SC_Tests(unittest.TestCase, Util):
         blob = b'\x11\x03\x01\x20\0'
         for b in blob, bytearray(blob), list(blob), array('B', blob):
             a = sc_decode(b)
-            self.assertIsInstance(a, bitarray)
+            self.assertIsType(a, 'bitarray')
             self.assertEqual(a.endian(), 'big')
             self.assertEqual(a.to01(), '001')
 
@@ -1447,7 +1447,7 @@ class VLFTests(unittest.TestCase, Util):
             lst.append(bytearray(b))
         for s in lst:
             a = vl_decode(s, endian=self.random_endian())
-            self.assertIsInstance(a, bitarray)
+            self.assertIsType(a, 'bitarray')
             self.assertEqual(a, bitarray('0011 01'))
 
     def test_decode_endian(self):
@@ -1869,7 +1869,7 @@ class TestsSerialization(unittest.TestCase, Util):
             b = deserialize(blob)
             self.assertEqual(b, a)
             self.assertEqual(b.endian(), endian)
-            self.assertIsInstance(b, bitarray)
+            self.assertIsType(b, 'bitarray')
 
     def test_serialize_args(self):
         for x in '0', 0, 1, b'\x00', 0.0, [0, 1], bytearray([0]):

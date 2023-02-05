@@ -1,6 +1,21 @@
 Change log
 ==========
 
+**2.7.0** (2023-02-05):
+
+* add ``util.sc_encode()`` and ``util.sc_decode()`` for
+  `compression of sparse bitarrays <sparse_compression.rst>`__
+* add ``util.any_and()``
+* add ``util.intervals()``
+* move functionality of the following utility functions entirely to C:
+  ``hex2ba()``, ``base2ba()``, ``deserialize()``, ``vl_decode()``, ``zeros()``
+* improve error checking for unpickling
+* add `distance metrics <../examples/distance.py>`__ example:
+  dice, hamming, jaccard, kulczynski1, rogerstanimoto, russellrao,
+  sokalmichener, sokalsneath, yule
+* add example `sparse bitarray <../examples/sparse>`__ implementations
+
+
 **2.6.2** (2023-01-01):
 
 * optimize ``richcompare()`` for opposite endianness
