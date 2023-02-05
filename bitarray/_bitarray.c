@@ -3346,11 +3346,12 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, char *endian_str)
 
     assert(PyBytes_Check(bytes));
     nbytes = PyBytes_GET_SIZE(bytes);
-    assert(nbytes > 0);         /* verified below */
+    assert(nbytes > 0);            /* verified in bitarray_new() */
     data = PyBytes_AS_STRING(bytes);
     head = *data;
+    assert((head & 0xf8) == 0);    /* verified in bitarray_new() */
 
-    if (head & 0xf8 || (nbytes == 1 && head))
+    if (nbytes == 1 && head)
         return PyErr_Format(PyExc_ValueError,
                             "invalid pickle header byte: 0x%02x", head);
 

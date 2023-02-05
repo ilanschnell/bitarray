@@ -493,33 +493,36 @@ class CreateObjectTests(unittest.TestCase, Util):
             # no bytes are interpreted as an empty string on Python 2
             self.assertEqual(bitarray(b''), bitarray())
 
-        self.assertRaisesMessage(ValueError, "endianness missing for pickle",
-                                 bitarray, b'\x00')
+        for blob in b'\x00', b'\x07\x80':
+            self.assertRaisesMessage(ValueError,
+                                     "endianness missing for pickle",
+                                     bitarray, blob)
 
         for i in range(1, 8):
-            s = bytes(bytearray([i]))
+            b = bytes(bytearray([i]))
             # this error is raised in newbitarray_from_pickle()
-            self.assertRaises(ValueError, bitarray, s, 'big')
+            self.assertRaises(ValueError, bitarray, b, 'big')
             # Python 2: PyErr_Format() seems to handle "0x%02x"
             # incorrectly.  E.g. instead of "0x01", I get "0x1"
             if is_py3k:
-                msg = "invalid pickle header byte: 0x%02x" % s[0]
-                self.assertRaisesMessage(ValueError, msg, bitarray, s, 'big')
+                self.assertRaisesMessage(ValueError,
+                            "invalid pickle header byte: 0x%02x" % b[0],
+                            bitarray, b, 'big')
 
         for i in range(8, 256):
-            s = bytes(bytearray([i]))
+            b = bytes(bytearray([i]))
             if is_py3k:
                 # we don't allow bitarrays being created from bytes
-                self.assertRaises(TypeError, bitarray, s)
+                self.assertRaises(TypeError, bitarray, b)
                 continue
 
             # on Python 2
-            if s in WHITESPACE + '_01':
+            if b in WHITESPACE + '_01':
                 # character is valid
-                self.assertEqual(len(bitarray(s)), 1 if s in '01' else 0)
+                self.assertEqual(len(bitarray(b)), 1 if b in '01' else 0)
             else:
                 # character is invalid
-                self.assertRaises(ValueError, bitarray, s)
+                self.assertRaises(ValueError, bitarray, b)
 
     def test_bitarray_simple(self):
         for n in range(10):

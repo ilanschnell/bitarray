@@ -55,6 +55,7 @@ class TestsZeros(unittest.TestCase):
                 self.assertFalse(a.any())
                 self.assertEqual(a.count(1), 0)
                 self.assertEqual(a, bitarray(n * '0'))
+                self.assertIsInstance(a, bitarray)
 
             for endian in 'big', 'little':
                 for a in zeros(3, endian), zeros(3, endian=endian):
@@ -909,6 +910,7 @@ class TestsHexlify(unittest.TestCase, Util):
             a = hex2ba(c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
+            self.assertIsInstance(a, bitarray)
         self.assertEQUAL(hex2ba('01'), bitarray('0000 0001', 'big'))
         self.assertEQUAL(hex2ba('08', 'little'),
                          bitarray('0000 0001', 'little'))
@@ -983,6 +985,7 @@ class TestsBase(unittest.TestCase, Util):
             a = base2ba(16, c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
+            self.assertIsInstance(a, bitarray)
 
     def test_explicit(self):
         data = [ #              n  little   big
@@ -1256,6 +1259,7 @@ class SC_Tests(unittest.TestCase, Util):
         blob = b'\x11\x03\x01\x20\0'
         for b in blob, bytearray(blob), list(blob), array('B', blob):
             a = sc_decode(b)
+            self.assertIsInstance(a, bitarray)
             self.assertEqual(a.endian(), 'big')
             self.assertEqual(a.to01(), '001')
 
@@ -1338,6 +1342,11 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertTrue(cnt > 2)
 
     def test_encode_types(self):
+        for a in bitarray('1', 'big'), frozenbitarray('1', 'big'):
+            b = sc_encode(a)
+            self.assertIsInstance(b, bytes)
+            self.assertEqual(len(b), 5)
+
         for a in None, [], 0, 123, b'', b'\x00', 3.14:
             self.assertRaises(TypeError, sc_encode, a)
 
@@ -1843,27 +1852,24 @@ tests.append(MixedTests)
 class TestsSerialization(unittest.TestCase, Util):
 
     def test_explicit(self):
-        for a, b in [
-                (bitarray(0, 'little'),   b'\x00'),
-                (bitarray(0, 'big'),      b'\x10'),
-                (bitarray('1', 'little'), b'\x07\x01'),
-                (bitarray('1', 'big'),    b'\x17\x80'),
-                (bitarray('11110000', 'little'), b'\x00\x0f'),
-                (bitarray('11110000', 'big'),    b'\x10\xf0'),
+        for blob, endian, bits in [
+                (b'\x00',         'little', ''),
+                (b'\x07\x01',     'little', '1'),
+                (b'\x17\x80',     'big',    '1'),
+                (b'\x13\xf8',     'big',    '11111'),
+                (b'\x00\x0f',     'little', '11110000'),
+                (b'\x10\xf0',     'big',    '11110000'),
+                (b'\x12\x87\xd8', 'big',    '10000111 110110')
         ]:
-            self.assertEqual(serialize(a), b)
-            self.assertEQUAL(deserialize(b), a)
+            a = bitarray(bits, endian)
+            s = serialize(a)
+            self.assertEqual(blob, s)
+            self.assertIsInstance(s, bytes)
 
-    def test_zeros_and_ones(self):
-        for endian in 'little', 'big':
-            for n in range(50):
-                a = zeros(n, endian)
-                s = serialize(a)
-                self.assertIsInstance(s, bytes)
-                self.assertEqual(s[1:], b'\0' * a.nbytes)
-                self.assertEQUAL(a, deserialize(s))
-                a.setall(1)
-                self.assertEQUAL(a, deserialize(serialize(a)))
+            b = deserialize(blob)
+            self.assertEqual(b, a)
+            self.assertEqual(b.endian(), endian)
+            self.assertIsInstance(b, bitarray)
 
     def test_serialize_args(self):
         for x in '0', 0, 1, b'\x00', 0.0, [0, 1], bytearray([0]):
@@ -1873,16 +1879,24 @@ class TestsSerialization(unittest.TestCase, Util):
         # too many arguments
         self.assertRaises(TypeError, serialize, bitarray(), 1)
 
+        for a in bitarray('0111', 'big'), frozenbitarray('0111', 'big'):
+            self.assertEqual(serialize(a), b'\x14\x70')
+
     def test_deserialize_args(self):
         for x in 0, 1, False, True, None, u'', u'01', 0.0, [0, 1]:
             self.assertRaises(TypeError, deserialize, x)
+        # no arguments
+        self.assertRaises(TypeError, deserialize)
+        # too many arguments
         self.assertRaises(TypeError, deserialize, b'\x00', 1)
 
-        b = b'\x03\x06'
-        for s in b, bytearray(b), memoryview(b):
+        blob = b'\x03\x06'
+        x = bitarray()  # we can deserialize a bitarray as it has a buffer
+        x.frombytes(blob)
+        for s in blob, bytearray(blob), memoryview(blob), x:
             a = deserialize(s)
+            self.assertEqual(a.to01(), '01100')
             self.assertEqual(a.endian(), 'little')
-            self.assertEqual(a, bitarray('01100'))
 
     def test_invalid_bytes(self):
         self.assertRaises(ValueError, deserialize, b'')
@@ -1911,15 +1925,17 @@ class TestsSerialization(unittest.TestCase, Util):
 
     def test_bits_ignored(self):
         # the unused padding bits (with the last bytes) are ignored
-        for b, a in [
-                (b'\x07\x01', bitarray('1', 'little')),
-                (b'\x07\x03', bitarray('1', 'little')),
-                (b'\x07\xff', bitarray('1', 'little')),
-                (b'\x17\x80', bitarray('1', 'big')),
-                (b'\x17\xc0', bitarray('1', 'big')),
-                (b'\x17\xff', bitarray('1', 'big')),
+        for blob, endian in [
+                (b'\x07\x01', 'little'),
+                (b'\x07\x03', 'little'),
+                (b'\x07\xff', 'little'),
+                (b'\x17\x80', 'big'),
+                (b'\x17\xc0', 'big'),
+                (b'\x17\xff', 'big'),
         ]:
-            self.assertEQUAL(deserialize(b), a)
+            a = deserialize(blob)
+            self.assertEqual(a.to01(), '1')
+            self.assertEqual(a.endian(), endian)
 
     def test_random(self):
         for a in self.randombitarrays():
