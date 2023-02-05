@@ -3318,7 +3318,7 @@ newbitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
     return newbitarrayobject(type, nbits, endian);
 }
 
-/* head byte % 8 specifies the number of pad bits - remaining bytes consist
+/* head byte specifies the number of pad bits - remaining bytes consist
    of the buffer itself */
 static PyObject *
 newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, int endian)
@@ -3333,14 +3333,13 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, int endian)
     assert(nbytes > 0);
     data = PyBytes_AS_STRING(bytes);
     head = *data;
-    assert((head & 0xe8) == 0);
 
-    if (nbytes == 1 && head & 0xef)
+    if (head & 0xf8 || (nbytes == 1 && head))
         return PyErr_Format(PyExc_ValueError,
-                            "invalid header byte: 0x%02x", head);
+                            "invalid pickle header byte: 0x%02x", head);
 
     res = newbitarrayobject(type,
-                            8 * (nbytes - 1) - ((Py_ssize_t) (head & 0x07)),
+                            8 * (nbytes - 1) - ((Py_ssize_t) head),
                             endian);
     if (res == NULL)
         return NULL;
@@ -3387,15 +3386,11 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (PyIndex_Check(initial))
         return newbitarray_from_index(type, initial, endian);
 
-    /* bytes (for pickling) */
+    /* bytes (for pickling) - must have at test one byte */
     if (PyBytes_Check(initial) && PyBytes_GET_SIZE(initial) > 0) {
         char head = *PyBytes_AS_STRING(initial);
-
-        if ((head & 0xe8) == 0) {
-            if (endian_str == NULL)  /* no endianness provided */
-                endian = head & 0x10 ? ENDIAN_BIG : ENDIAN_LITTLE;
+        if ((head & 0xf8) == 0)
             return newbitarray_from_pickle(type, initial, endian);
-        }
     }
 
     if (bitarray_Check(initial) && endian_str == NULL)

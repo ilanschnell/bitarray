@@ -75,6 +75,8 @@ def urandom(n, endian=None):
     del a[n:]
     return a
 
+WHITESPACE = ' \n\r\t\v'
+
 tests = []  # type: list
 
 class Util(object):
@@ -450,78 +452,71 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(UnicodeEncodeError, bitarray, u'1\u26050')
 
     def test_string01_whitespace(self):
-        whitespace = ' \n\r\t\v'
-        a = bitarray(whitespace)
+        a = bitarray(WHITESPACE)
         self.assertEqual(a, bitarray())
 
         # For Python 2 (where strings are bytes), we are in the lucky
         # position that none of the valid characters ('\t'=9, '\n'=10,
-        # '\v'=11, '\r'=13, ' '=32, '0'=48 and '1'=49) are valid header
-        # bytes for deserialization 0..7, 16..23.  Therefore a string of
-        # '0's and '1'a can start with any whitespace character, as well
-        # as '0' or '1' obviously.
-        for c in whitespace:
+        # '\v'=11, '\r'=13, ' '=32, '0'=48 and '1'=49) are valid pickle
+        # header bytes (0..7).
+        # Therefore a string of '0's and '1'a can start with any whitespace
+        # character, as well as '0' or '1' (obviously).
+        for c in WHITESPACE:
             a = bitarray(c + '1101110001')
             self.assertEqual(a, bitarray('1101110001'))
 
         a = bitarray(' 0\n1\r0\t1\v0 ')
         self.assertEqual(a, bitarray('01010'))
 
-    def test_rawbytes(self):
-        self.assertEqual(bitarray(b'\x00').endian(), 'little')
-        self.assertEqual(bitarray(b'\x10').endian(), 'big')
-
-        # this representation is used for pickling
-        for s, r in [(b'\x00', ''), (b'\x07\xff', '1'), (b'\x03\xff', '11111'),
-                     (b'\x01\x87\xda', '10000111 1101101')]:
-            self.assertEqual(bitarray(s, endian='big'), bitarray(r))
-
-        self.assertEQUAL(bitarray(b'\x12\x0f', 'little'),
-                         bitarray('111100', 'little'))
-        self.assertEQUAL(bitarray(b'\x02\x0f', 'big'),
-                         bitarray('000011', 'big'))
-
-        for a, s in [
-                (bitarray(0, 'little'),   b'\x00'),
-                (bitarray(0, 'big'),      b'\x10'),
-                (bitarray('1', 'little'), b'\x07\x01'),
-                (bitarray('1', 'big'),    b'\x17\x80'),
-                (bitarray('11110000', 'little'), b'\x00\x0f'),
-                (bitarray('11110000', 'big'),    b'\x10\xf0'),
+    def test_rawbytes(self):  # representation used for pickling
+        for blob, endian, s in [
+                (b'\x00',         'little', ''),
+                (b'\x07\x01',     'little', '1'),
+                (b'\x07\x80',     'big',    '1'),
+                (b'\x03\xff',     'big',    '11111'),
+                (b'\x00\x0f',     'little', '11110000'),
+                (b'\x00\xf0',     'big',    '11110000'),
+                (b'\x02\x87\xda', 'big',    '10000111 110110')
         ]:
-            self.assertEQUAL(bitarray(s), a)
+            a = bitarray(blob, endian)
+            self.assertEqual(a, bitarray(s))
+            self.assertEqual(a.endian(), endian)
+            self.check_obj(a)
 
     def test_rawbytes_invalid(self):
-        for s in b'\x01', b'\x04', b'\x07', b'\x11', b'\x15', b'\x17':
-            # this error is raised in newbitarray_from_pickle() (C function)
+        msg3 = ("cannot extend bitarray with 'bytes', "
+                "use .pack() or .frombytes() instead")
+        if is_py3k:
+            # no bytes will cause TypeError
+            self.assertRaisesMessage(TypeError, msg3, bitarray, b'')
+        else:
+            # no bytes are interpreted as an empty string on Python 2
+            self.assertEqual(bitarray(b''), bitarray())
+
+        for i in range(1, 8):
+            s = bytes(bytearray([i]))
+            # this error is raised in newbitarray_from_pickle()
             self.assertRaises(ValueError, bitarray, s)
             # Python 2: PyErr_Format() seems to handle "0x%02x"
             # incorrectly.  E.g. instead of "0x01", I get "0x1"
             if is_py3k:
-                msg = "invalid header byte: 0x%02x" % s[0]
+                msg = "invalid pickle header byte: 0x%02x" % s[0]
                 self.assertRaisesMessage(ValueError, msg, bitarray, s)
 
-            a = bitarray(s + b'\x00')
-            head = s[0] if is_py3k else ord(s[0])
-            endian, padbits = divmod(head, 16)
-            self.assertEqual(a.endian(), ['little', 'big'][endian])
-            self.assertEqual(len(a) + padbits, 8)
-            self.assertEqual(a.padbits, padbits)
-            self.assertFalse(a.any())
-            self.check_obj(a)
+        for i in range(8, 256):
+            s = bytes(bytearray([i]))
+            if is_py3k:
+                # we don't allow bitarrays being created from bytes
+                self.assertRaises(TypeError, bitarray, s)
+                continue
 
-        s = b'\x21'
-        if is_py3k:
-            # on Python 3, we don't allow bitarrays being created from bytes
-            error = TypeError
-            msg = ("cannot extend bitarray with 'bytes', use .pack() or "
-                   ".frombytes() instead")
-        else:
-            # on Python 2, we have an invalid character in the string
-            error = ValueError
-            msg = ("expected '0' or '1' (or whitespace, or underscore), "
-                   "got '!' (0x21)")
-        self.assertRaisesMessage(error, msg, bitarray, s)
+            # on Python 2
+            if s in WHITESPACE + '_01':
+                # character is valid
+                self.assertEqual(len(bitarray(s)), 1 if s in '01' else 0)
+            else:
+                # character is invalid
+                self.assertRaises(ValueError, bitarray, s)
 
     def test_bitarray_simple(self):
         for n in range(10):
@@ -2387,6 +2382,8 @@ class ExtendTests(unittest.TestCase, Util):
 
     def test_string01_whitespace(self):
         a = bitarray()
+        a.extend(WHITESPACE)
+        self.assertEqual(len(a), 0)
         a.extend('0 1\n0\r1\t0\v1_')
         self.assertEqual(a, bitarray('010101'))
         a += '_ 1\n0\r1\t0\v'
