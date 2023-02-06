@@ -953,16 +953,18 @@ class TestsHexlify(unittest.TestCase, Util):
         for default_endian in 'big', 'little':
             _set_default_endian(default_endian)
             a = hex2ba(s)
-            self.check_obj(a)
             self.assertEqual(len(a) % 4, 0)
             self.assertEqual(a.endian(), default_endian)
+            self.assertIsType(a, 'bitarray')
+            self.check_obj(a)
+
             t = ba2hex(a)
             self.assertEqual(t, s.lower())
-            b = hex2ba(t, default_endian)
-            self.assertEQUAL(a, b)
+            self.assertIsInstance(t, str)
+            self.assertEQUAL(a, hex2ba(t, default_endian))
 
     def test_binascii(self):
-        a = urandom(800, 'big')
+        a = urandom(80, 'big')
         s = binascii.hexlify(a.tobytes()).decode()
         self.assertEqual(ba2hex(a), s)
         b = bitarray(endian='big')
@@ -1145,8 +1147,7 @@ class SC_Tests(unittest.TestCase, Util):
                 (b'\x11\x09\xa1\x08\0',     '00000000 1',        'big'),
                 (b'\x01E\xa3ABD\0',         65 * '0' + '1101',   'little'),
         ]:
-            # the padbits in a frozenbitarray are guaranteed to be zero
-            a = frozenbitarray(bits, endian)
+            a = bitarray(bits, endian)
             self.assertEqual(sc_encode(a), b)
             self.assertEqual(sc_decode(b), a)
 
