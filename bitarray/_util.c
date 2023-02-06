@@ -1093,7 +1093,7 @@ count_final(bitarrayobject *a, Py_ssize_t i)
        The rts array has always NSEG(nbits) + 1 elements, such that the
        last element is always indexed by NSEG(nbits).  Here, NSEG(1407) = 6
 
-     * The zeroth element rts[0] is always zero.
+     * The element rts[0] is always zero.
 
      * The last last element rts[NSEG(nbits)] is always the total count.
        Here: rts[NSEG(nbits)] = rts[NSEG(1407)] = rts[6] = 33
@@ -1125,6 +1125,7 @@ calc_rts(bitarrayobject *a)
     char *buff;
     Py_ssize_t *res, i, j;
 
+    assert(n_seg == c_seg || n_seg == c_seg + 1);
     memset(zeros, 0x00, SEGSIZE);
     res = (Py_ssize_t *) PyMem_Malloc((size_t)
                                       sizeof(Py_ssize_t) * (n_seg + 1));
@@ -1144,7 +1145,6 @@ calc_rts(bitarrayobject *a)
     res[c_seg] = cnt;
 
     if (n_seg > c_seg) {           /* we have a final partial segment */
-        assert(n_seg == c_seg + 1);
         assert(Py_SIZE(a) <= SEGSIZE * n_seg);
         assert(a->nbits && a->nbits < 8 * SEGSIZE * n_seg);
 

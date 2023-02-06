@@ -948,18 +948,17 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertEqual(ba2hex(a_be), hex_be)
             self.assertEqual(ba2hex(a_le), hex_le)
 
-    def test_round_trip(self):
-        s = ''.join(choice(hexdigits) for _ in range(randint(20, 100)))
+    def test_hexdigits(self):
         for default_endian in 'big', 'little':
             _set_default_endian(default_endian)
-            a = hex2ba(s)
+            a = hex2ba(hexdigits)
             self.assertEqual(len(a) % 4, 0)
             self.assertEqual(a.endian(), default_endian)
             self.assertIsType(a, 'bitarray')
             self.check_obj(a)
 
             t = ba2hex(a)
-            self.assertEqual(t, s.lower())
+            self.assertEqual(t, hexdigits.lower())
             self.assertIsInstance(t, str)
             self.assertEQUAL(a, hex2ba(t, default_endian))
 
