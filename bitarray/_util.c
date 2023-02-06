@@ -639,8 +639,8 @@ hex2ba_core(bitarrayobject *a, PyObject *bytes)
     return 0;
 }
 
-/* Return new reference to bytes object from either str (unicode) or bytes.
-   On failure, set exception and return NULL. */
+/* Return new reference to bytes object from either ASCII str (unicode) or
+   bytes.  On failure, set exception and return NULL. */
 static PyObject *
 anystr_to_bytes(PyObject *obj)
 {
@@ -669,14 +669,14 @@ hex2ba(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "endian", NULL};
     PyObject *obj, *bytes, *endian = Py_None;
-    bitarrayobject *a = NULL;
+    bitarrayobject *a;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O:hex2ba", kwlist,
                                      &obj, &endian))
         return NULL;
 
     if ((bytes = anystr_to_bytes(obj)) == NULL)
-        goto error;
+        return NULL;
 
     a = new_bitarray(4 * PyBytes_GET_SIZE(bytes), endian);
     if (a == NULL)
@@ -854,7 +854,7 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "", "endian", NULL};
     PyObject *obj, *bytes, *endian = Py_None;
-    bitarrayobject *a = NULL;
+    bitarrayobject *a;
     int n, m;                   /* n = 2^m */
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "iO|O:base2ba", kwlist,
@@ -865,7 +865,7 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
         return NULL;
 
     if ((bytes = anystr_to_bytes(obj)) == NULL)
-        goto error;
+        return NULL;
 
     a = new_bitarray(m * PyBytes_GET_SIZE(bytes), endian);
     if (a == NULL)
