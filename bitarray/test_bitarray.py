@@ -1142,6 +1142,17 @@ class SliceTests(unittest.TestCase, Util):
         a[2:5] = bitarray('0')  # remove
         self.assertEqual(a, bitarray('11011'))
 
+    def test_setslice_frozenbitarray(self):
+        a = bitarray('11111111 1111')
+        a[2:6] = frozenbitarray('0000')
+        self.assertEqual(a, bitarray('11000011 1111'))
+        b = frozenbitarray('011100')
+        a[::2] = b
+        self.assertEqual(a, bitarray('01101011 0101'))
+        self.check_obj(a)
+        self.assertTrue(b.readonly)
+        self.assertEqual(b, bitarray('011100'))
+
     def test_setslice_bitarray_random_same_length(self):
         for endian in 'little', 'big':
             for _ in range(100):
