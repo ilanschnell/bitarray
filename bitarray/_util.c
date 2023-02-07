@@ -1033,8 +1033,8 @@ byte_length(Py_ssize_t i)
 /* ---------------------- sparse compressed bitarray ------------------- */
 
 /* Bitarray buffer size (in bytes) that can be indexed by n bytes.  E.g.:
-   with 1 byte you can index 256 bits which have a buffer size of 32 bytes,
-   so BSI(1) = 32, BSI(2) = 8192, ... */
+   with 1 byte you can index 256 bits which have a buffer size of 32 bytes.
+   BSI(1) = 32, BSI(2) = 8_192, BSI(3) = 2_097_152, BSI(4) = 536_870_912 */
 #define BSI(n)  (((Py_ssize_t) 1) << (8 * (n) - 3))
 
 static int
@@ -1068,7 +1068,7 @@ count_final(bitarrayobject *a, Py_ssize_t i)
    below will also work when changing SEGSIZE to 1, 2, 4, 8 or 16, as long
    as a multiple of SEGSIZE is 32.  The size 32 is rooted in the fact that
    a bitarray of 32 bytes (256 bits) can be indexed with one index byte
-   (BSI(0) = 32).  Our entire 'sc' format is constructed around this.
+   (BSI(1) = 32).  Our entire 'sc' format is constructed around this.
  */
 #define SEGSIZE  32
 
@@ -1085,7 +1085,7 @@ count_final(bitarrayobject *a, Py_ssize_t i)
    +-------+-------+-------+-------+-------+----+
    0       5      12      12      23      29   33   running totals, rts[i]
 
-   In this example we have a bitarray with 6 segments, e.g. with 1407 bits.
+   In this example we have a bitarray with 6 segments, with 1407 bits.
    Note that:
 
      * Here we have 6 segments, but the rts array has a size
@@ -1099,21 +1099,21 @@ count_final(bitarrayobject *a, Py_ssize_t i)
        Here: rts[NSEG(nbits)] = rts[NSEG(1407)] = rts[6] = 33
 
      * The last segment may be partial.  Here, spanning 127 bits, that
-       is a[1280:1407].  The count of this segment is 4:
+       is [1280:1407].  The count of this segment is 4:
        a[1280:].count() = a.count(1, 1280) = 4
 
      * The segment a[512:768] has a count of zero, such that: rts[2] = rts[3]
 
    As each segment covers 256 bits (32 bytes), and each element in the
-   running totals array takes up 8 bytes (on a 64-bit machine at least) the
-   additional memory to accommodate the rts array is 1/4 of the bitarrays
+   running totals array takes up 8 bytes (on a 64-bit machine) the additional
+   memory to accommodate the rts array is therefore 1/4 of the bitarray's
    memory.  However, calculating this array upfront allows count_block() to
    simply look up two entries from the array and take their difference.
    Thus, the speedup we get can be significant.
 
    The function write_sparse_block() also takes advantage of the running
-   totals array, as it can quickly check for segments that only contain
-   only zeros to skip.
+   totals array.  It checks for segments that only contain only zeros
+   to skip (such as segment [512:768] in the example).
 */
 static Py_ssize_t *
 calc_rts(bitarrayobject *a)
