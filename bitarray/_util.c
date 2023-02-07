@@ -1079,30 +1079,32 @@ count_final(bitarrayobject *a, Py_ssize_t i)
    Note that we call these "segments", as opposed to "blocks", in order to
    avoid confusion with encode blocks.
 
-   0       1       2       3       4       5    6   index into rts array, i
-   +-------+-------+-------+-------+-------+----+
-   |     5 |     7 |     0 |    11 |     6 |  4 |   count per segment
-   +-------+-------+-------+-------+-------+----+
-   0       5      12      12      23      29   33   running totals, rts[i]
+   0           1           2           3           4   index in rts array, i
+   +-----------+-----------+-----------+-----------+
+   |      5    |      0    |      3    |      4    |   segment count
+   |           |           |           |           |
+   | [  0:256] | [256:512] | [512:768] | [768:987] |   bitarray slice
+   +-----------+-----------+-----------+-----------+
+   0           5           5           8          12   running totals, rts[i]
 
-   In this example we have a bitarray with 6 segments, with 1407 bits.
-   Note that:
+   In this example we have a bitarray 987 segments.  Note that:
 
-     * Here we have 6 segments, but the rts array has a size
-       of 7 elements: 0 .. 6
-       The rts array has always NSEG(nbits) + 1 elements, such that the
-       last element is always indexed by NSEG(nbits).  Here, NSEG(1407) = 6
+     * The number of segments is given by NSEG(nbits).
+       Here we have 4 segments: NSEG(nbits) = NSEG(987) = 4
+
+     * The rts array has always NSEG(nbits) + 1 elements, such that
+       last element is always indexed by NSEG(nbits).
 
      * The element rts[0] is always zero.
 
-     * The last last element rts[NSEG(nbits)] is always the total count.
-       Here: rts[NSEG(nbits)] = rts[NSEG(1407)] = rts[6] = 33
+     * The last element rts[NSEG(nbits)] is always the total count.
+       Here: rts[NSEG(nbits)] = rts[NSEG(987)] = rts[4] = 12
 
-     * The last segment may be partial.  Here, spanning 127 bits, that
-       is [1280:1407].  The count of this segment is 4:
-       a[1280:].count() = a.count(1, 1280) = 4
+     * The last segment may be partial.  In that case, it's size it given
+       by nbits % 256.  Here: nbits % 256 = 987 % 256 = 219
 
-     * The segment a[512:768] has a count of zero, such that: rts[2] = rts[3]
+     * Here, the segment [256:512] has a count of a[256:512].count() = 0,
+       such that rts[1] = rts[2].
 
    As each segment covers 256 bits (32 bytes), and each element in the
    running totals array takes up 8 bytes (on a 64-bit machine) the additional
@@ -1113,7 +1115,7 @@ count_final(bitarrayobject *a, Py_ssize_t i)
 
    The function write_sparse_block() also takes advantage of the running
    totals array.  It checks for segments that only contain only zeros
-   to skip (such as segment [512:768] in the example).
+   to skip (such as segment [256:512] in the example).
 */
 static Py_ssize_t *
 calc_rts(bitarrayobject *a)
