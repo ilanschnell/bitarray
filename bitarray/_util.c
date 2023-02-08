@@ -1083,7 +1083,7 @@ count_final(bitarrayobject *a, Py_ssize_t i)
    +-----------+-----------+-----------+-----------+
    |      5    |      0    |      3    |      4    |   segment count
    |           |           |           |           |
-   | [  0:256] | [256:512] | [512:768] | [768:987] |   bitarray slice
+   |  [0:256]  | [256:512] | [512:768] | [768:987] |   bitarray slice
    +-----------+-----------+-----------+-----------+
    0           5           5           8          12   running totals, rts[i]
 
@@ -1106,10 +1106,11 @@ count_final(bitarrayobject *a, Py_ssize_t i)
      * Here, the segment [256:512] has a count of a[256:512].count() = 0,
        such that rts[1] = rts[2].
 
-   As each segment covers 256 bits (32 bytes), and each element in the
-   running totals array takes up 8 bytes (on a 64-bit machine) the additional
-   memory to accommodate the rts array is therefore 1/4 of the bitarray's
-   memory.  However, calculating this array upfront allows count_block() to
+   As each segment (at large) covers 256 bits (32 bytes), and each element
+   in the running totals array takes up 8 bytes (on a 64-bit machine) the
+   additional memory to accommodate the rts array is therefore 1/4 of the
+   bitarray's memory.
+   However, calculating this array upfront allows count_block() to
    simply look up two entries from the array and take their difference.
    Thus, the speedup we get can be significant.
 
@@ -1180,8 +1181,7 @@ count_block(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
        is 1 << 32.  This is problematic, as 32-bit machines can address
        at least partially filled type 4 blocks).  Therefore, we first
        limit BSI(n) by the buffer size before multiplying 8. */
-    nbits = Py_MIN(8 * Py_MIN(BSI(n), Py_SIZE(a)),
-                   a->nbits - 8 * offset);
+    nbits = Py_MIN(8 * Py_MIN(BSI(n), Py_SIZE(a)), a->nbits - 8 * offset);
     assert(nbits >= 0);
 
     offset /= SEGSIZE;               /* offset in terms of segments now */
@@ -1229,14 +1229,11 @@ static Py_ssize_t
 write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
                    Py_ssize_t offset, int n, int k)
 {
-    /* bytes to encode limited by remaining buffer size */
-    Py_ssize_t na = Py_MIN(BSI(n), Py_SIZE(a) - offset);
-    Py_ssize_t i, j, outsize, len = 0;
+    Py_ssize_t outsize, len = 0, i, j;
     char *buff = a->ob_item + offset;
 
     assert(offset % SEGSIZE == 0);
     assert(1 <= n && n <= 4 && 0 <= k && k < 256);
-    assert(na > 0 && offset + na <= Py_SIZE(a));
 
     /* block header */
     if (n == 1) {               /* type 1 - single byte for each position */
@@ -1252,7 +1249,7 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
     /* block data */
     outsize = len + n * k;
-    for (i = 0; i < na; i++) {
+    for (i = 0;; i++) {
         if (i % SEGSIZE == 0) {
             j = (i + offset) / SEGSIZE;  /* running total index */
             assert(j < NSEG(a->nbits));
@@ -1271,8 +1268,6 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
                         return len;
                 }
     }
-    Py_FatalError("internal sc_encode() error");
-    return -1;  /* cannot happen - silence compiler warning */
 }
 
 /* Encode one block (starting at offset) and return offset increment.
