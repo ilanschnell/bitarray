@@ -1229,7 +1229,7 @@ static Py_ssize_t
 write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
                    Py_ssize_t offset, int n, int k)
 {
-    Py_ssize_t outsize, len = 0, i, j;
+    Py_ssize_t outsize, len = 0, i, j, m;
     char *buff = a->ob_item + offset;
 
     assert(offset % SEGSIZE == 0);
@@ -1249,24 +1249,23 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
     /* block data */
     outsize = len + n * k;
-    for (i = 0;; i++) {
-        if (i % SEGSIZE == 0) {
-            j = (i + offset) / SEGSIZE;  /* running total index */
-            assert(j < NSEG(a->nbits));
-            if (rts[j] == rts[j + 1]) {  /* the segment has only zeros */
-                i += SEGSIZE - 1;        /* skip ahead */
+    rts += offset / SEGSIZE;
+    for (m = 0;; m++) {                                  /* segment counter */
+        assert(m + offset / SEGSIZE < NSEG(a->nbits));
+        if (rts[m + 1] == rts[m])
+            continue;
+        for (i = m * SEGSIZE; i < (m + 1) * SEGSIZE; i++) { /* byte counter */
+            assert(offset + i < Py_SIZE(a));
+            if (buff[i] == 0)
                 continue;
-            }
-        }
-        assert(offset + i < Py_SIZE(a));
-        if (buff[i])
-            for (j = 0; j < 8; j++)
+            for (j = 0; j < 8; j++)                          /* bit counter */
                 if (buff[i] & BITMASK(a, j)) {
                     write_n(str + len, n, 8 * i + j);
                     len += n;
                     if (len == outsize)  /* final index reached */
                         return len;
                 }
+        }
     }
 }
 
