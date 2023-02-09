@@ -1226,15 +1226,14 @@ static Py_ssize_t
 write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
                    Py_ssize_t offset, int n, int k)
 {
-    Py_ssize_t outsize, len = 0, i, j, m = 0, c;
+    Py_ssize_t outsize, len = 0, m = 0, i, j, c;
     char *buff = a->ob_item + offset;
 
     assert(offset % SEGSIZE == 0);
-    assert(1 <= n && n <= 4 && 0 <= k && k < 256);
+    assert(1 <= n && n <= 4 && 0 <= k && k < 256 && (n > 1 || k < 32));
 
     /* block header */
     if (n == 1) {               /* type 1 - single byte for each position */
-        assert(k < 32);
         str[len++] = 0xa0 + k;
     }
     else {            /* type 2, 3, 4 - multiple bytes for each positions */
@@ -1246,11 +1245,12 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
     /* block data */
     outsize = len + n * k;
-    rts += offset / SEGSIZE;
+    rts += offset / SEGSIZE;  /* rts index refers to offset now */
     while (1) {                                            /* segment loop */
         assert(m + offset / SEGSIZE < NSEG(a->nbits));
         if ((c = rts[m + 1] - rts[m]) == 0)  /* count of this segment */
             goto next_segment;
+
         for (i = m * SEGSIZE; i < (m + 1) * SEGSIZE; i++) {   /* byte loop */
             assert(offset + i < Py_SIZE(a));
             if (buff[i] == 0)
