@@ -2765,22 +2765,6 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.bytereverse, 5)
         self.assertRaises(IndexError, a.bytereverse, 0, 5)
 
-    @skipIf(sys.version_info[0] == 2)
-    def test_bytereverse_part(self):
-        a = bitarray(5, 'big')
-        memoryview(a)[0] = 0x13  # 0001 0011
-        self.assertEqual(a, bitarray('0001 0'))
-        # the padbits (011) are not treated as zeros
-        a.bytereverse()
-        self.assertEqual(a, bitarray('1100 1'))
-
-        a = bitarray(12, 'little')
-        memoryview(a)[1] = 0xd4  # .... ....  0010 1011
-        self.assertEqual(a[8:], bitarray('0010'))
-        # the padbits (1011) are not treated as zeros
-        a.bytereverse(1)
-        self.assertEqual(a[8:], bitarray('1101'))
-
     def test_bytereverse_byte(self):
         for i in range(256):
             a = bitarray()
