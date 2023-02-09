@@ -1204,6 +1204,8 @@ sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
         while (k < 128 &&
                Py_MIN(32, nbytes - k) <= sc_count(a, rts, offset + k, 1))
             k += 32;
+
+        assert(k % SEGSIZE == 0);
     }
     k = Py_MIN(k, nbytes);
     assert(0 < k && k <= 128 && k <= nbytes);
@@ -1287,7 +1289,7 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
     if (k == 0)  /* no index bytes */
         return len;
 
-    /* write block data */
+    /* write block data - `k` indices, `n` bytes per index) */
     sc_write_indices(str + len, a, rts, offset, n, k);
     return len + n * k;
 }
