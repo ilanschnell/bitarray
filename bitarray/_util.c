@@ -1049,7 +1049,7 @@ sc_encode_header(char *str, bitarrayobject *a)
     return 1 + len;
 }
 
-/* starting at byte index 'i' count the remaining bits */
+/* starting at byte index `i` count the remaining 1 bits */
 static Py_ssize_t
 count_final(bitarrayobject *a, Py_ssize_t i)
 {
@@ -1220,55 +1220,78 @@ write_raw_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
     return (int) k;
 }
 
-/* Encode one sparse block (from offset, and up to k one bits).
-   Return number of bytes written to buffer str (encoded block size). */
+/* Write `ni` indices (of `n` bytes each) into buffer `str`.
+   `i` is the start position in the bitarray buffer relative to offset. */
+static void
+write_indices(char *str, bitarrayobject *a, Py_ssize_t offset,
+              Py_ssize_t i, int ni, int n)
+{
+    char *str_end = str + ni * n;  /* end position in buffer `str` */
+    char *buff = a->ob_item + offset;
+
+    assert(0 <= i && i < Py_SIZE(a) - offset);
+    assert(1 <= n && n <= 4);
+    assert(0 < ni && ni < 256);
+
+    for (;; i++) {  /* loop bytes */
+        int j;
+
+        assert(offset + i < Py_SIZE(a));
+        if (buff[i] == 0)
+            continue;
+
+        for (j = 0; j < 8; j++)  /* loop bits */
+            if (buff[i] & BITMASK(a, j)) {
+                write_n(str, n, 8 * i + j);
+                str += n;
+                if (str == str_end)  /* we have encountered all indices */
+                    return;
+            }
+    }
+    Py_UNREACHABLE();
+}
+
+/* Encode one sparse block (from `offset`, and up to `k` one bits).
+   Return number of bytes written to buffer `str` (encoded block size). */
 static Py_ssize_t
 write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
                    Py_ssize_t offset, int n, int k)
 {
-    Py_ssize_t outsize, len = 0, m = 0, i, j, c;
-    char *buff = a->ob_item + offset;
+    Py_ssize_t outsize, len = 0, i;
 
     assert(offset % SEGSIZE == 0);
-    assert(1 <= n && n <= 4 && 0 <= k && k < 256 && (n > 1 || k < 32));
+    assert(1 <= n && n <= 4);
+    assert(0 <= k && k < 256);
 
-    /* block header */
+    /* write block header */
     if (n == 1) {               /* type 1 - single byte for each position */
-        str[len++] = 0xa0 + k;
+        assert(k < 32);
+        str[len++] = (char) (0xa0 + k);
     }
     else {            /* type 2, 3, 4 - multiple bytes for each positions */
-        str[len++] = 0xc0 + n;
-        str[len++] = k;
+        str[len++] = (char) (0xc0 + n);
+        str[len++] = (char) k;
     }
     if (k == 0)  /* no index bytes */
         return len;
 
-    /* block data */
-    outsize = len + n * k;
+    outsize = len + n * k;    /* encoded block size - head + index bytes */
     rts += offset / SEGSIZE;  /* rts index refers to offset now */
-    while (1) {                                            /* segment loop */
-        assert(m + offset / SEGSIZE < NSEG(a->nbits));
-        if ((c = rts[m + 1] - rts[m]) == 0)  /* count of this segment */
-            goto next_segment;
 
-        for (i = m * SEGSIZE; i < (m + 1) * SEGSIZE; i++) {   /* byte loop */
-            assert(offset + i < Py_SIZE(a));
-            if (buff[i] == 0)
-                continue;
-            for (j = 0; j < 8; j++)                            /* bit loop */
-                if (buff[i] & BITMASK(a, j)) {
-                    write_n(str + len, n, 8 * i + j);
-                    len += n;
-                    if (len == outsize)  /* final index reached */
-                        return len;
-                    if (--c == 0)
-                        /* we have encountered all 1 bits in this segment */
-                        goto next_segment;
-                }
-        }
-    next_segment:
-        m++;
+    for (i = 0;; i++) {  /* loop segments */
+        int ni;
+
+        assert(i + offset / SEGSIZE < NSEG(a->nbits));
+        ni = (int) (rts[i + 1] - rts[i]);  /* indices in this segment */
+        if (ni == 0)
+            continue;
+
+        write_indices(str + len, a, offset, i * SEGSIZE, ni, n);
+        len += n * ni;
+        if (len == outsize)  /* final index reached */
+            return len;
     }
+    Py_UNREACHABLE();
 }
 
 /* Encode one block (starting at offset) and return offset increment.
