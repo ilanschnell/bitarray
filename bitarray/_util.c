@@ -32,7 +32,7 @@ ensure_bitarray(PyObject *obj)
     return 0;
 }
 
-/* return new bitarray of length 'nbits' (with uninitialized buffer) and
+/* return new bitarray of length `nbits` (with uninitialized buffer) and
    endianness given by the PyObject 'endian' */
 static bitarrayobject *
 new_bitarray(Py_ssize_t nbits, PyObject *endian)
@@ -1064,12 +1064,11 @@ sc_encode_header(char *str, bitarrayobject *a)
     return 1 + len;
 }
 
-/* segment size in bytes - although of little practical value, the code
+/* segment size in bytes - Although of little practical value, the code
    below will also work when changing SEGSIZE to 1, 2, 4, 8 or 16, as long
    as a multiple of SEGSIZE is 32.  The size 32 is rooted in the fact that
    a bitarray of 32 bytes (256 bits) can be indexed with one index byte
-   (BSI(1) = 32).  Our entire 'sc' format is constructed around this.
- */
+   (BSI(1) = 32).  Our entire 'sc' format is constructed around this. */
 #define SEGSIZE  32
 
 /* number of 256 bit segments given nbits */
