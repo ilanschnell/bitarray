@@ -1351,10 +1351,10 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertRaises(TypeError, sc_encode, a)
 
     def round_trip(self, a):
-        b = sc_encode(a)
-        c = sc_decode(b)
-        self.assertEqual(a, c)
-        self.assertEqual(a.endian(), c.endian())
+        c = a.copy()
+        b = sc_decode(sc_encode(a))
+        self.assertTrue(a == b == c)
+        self.assertTrue(a.endian() == b.endian() == c.endian())
 
     def test_encode_zeros(self):
         for i in range(18):
@@ -1523,10 +1523,10 @@ class VLFTests(unittest.TestCase, Util):
             self.assertEqual(vl_decode(s), a)
 
     def round_trip(self, a):
+        c = a.copy()
         s = vl_encode(a)
         b = vl_decode(s)
-        self.check_obj(b)
-        self.assertEqual(a, b)
+        self.assertTrue(a == b == c)
         LEN_PAD_BITS = 3
         self.assertEqual(len(s), (len(a) + LEN_PAD_BITS + 6) // 7)
 
