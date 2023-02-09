@@ -1103,9 +1103,6 @@ count_final(bitarrayobject *a, Py_ssize_t i)
      * The last segment may be partial.  In that case, it's size it given
        by nbits % 256.  Here: nbits % 256 = 987 % 256 = 219
 
-     * Here, the segment [256:512] has a count of a[256:512].count() = 0,
-       such that rts[1] = rts[2].
-
    As each segment (at large) covers 256 bits (32 bytes), and each element
    in the running totals array takes up 8 bytes (on a 64-bit machine) the
    additional memory to accommodate the rts array is therefore 1/4 of the
@@ -1115,8 +1112,8 @@ count_final(bitarrayobject *a, Py_ssize_t i)
    Thus, the speedup we get can be significant.
 
    The function write_sparse_block() also takes advantage of the running
-   totals array.  It checks for segments that only contain only zeros
-   to skip (such as segment [256:512] in the example).
+   totals array.  It loops over segments and skips to the next segment as
+   soon as the count the current segment is reached.
 */
 static Py_ssize_t *
 calc_rts(bitarrayobject *a)
@@ -1229,7 +1226,7 @@ static Py_ssize_t
 write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
                    Py_ssize_t offset, int n, int k)
 {
-    Py_ssize_t outsize, len = 0, i, j, m;
+    Py_ssize_t outsize, len = 0, i, j, m = 0, c;
     char *buff = a->ob_item + offset;
 
     assert(offset % SEGSIZE == 0);
@@ -1250,22 +1247,27 @@ write_sparse_block(char *str, bitarrayobject *a, Py_ssize_t *rts,
     /* block data */
     outsize = len + n * k;
     rts += offset / SEGSIZE;
-    for (m = 0;; m++) {                                  /* segment counter */
+    while (1) {                                            /* segment loop */
         assert(m + offset / SEGSIZE < NSEG(a->nbits));
-        if (rts[m + 1] == rts[m])
-            continue;
-        for (i = m * SEGSIZE; i < (m + 1) * SEGSIZE; i++) { /* byte counter */
+        if ((c = rts[m + 1] - rts[m]) == 0)  /* count of this segment */
+            goto next_segment;
+        for (i = m * SEGSIZE; i < (m + 1) * SEGSIZE; i++) {   /* byte loop */
             assert(offset + i < Py_SIZE(a));
             if (buff[i] == 0)
                 continue;
-            for (j = 0; j < 8; j++)                          /* bit counter */
+            for (j = 0; j < 8; j++)                            /* bit loop */
                 if (buff[i] & BITMASK(a, j)) {
                     write_n(str + len, n, 8 * i + j);
                     len += n;
                     if (len == outsize)  /* final index reached */
                         return len;
+                    if (--c == 0)
+                        /* we have encountered all 1 bits in this segment */
+                        goto next_segment;
                 }
         }
+    next_segment:
+        m++;
     }
 }
 
