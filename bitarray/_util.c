@@ -1045,7 +1045,10 @@ count_from(bitarrayobject *a, Py_ssize_t i)
     return cnt;
 }
 
-/* ---------------------- sparse compressed bitarray ------------------- */
+/* ---------------------- sparse compressed bitarray -------------------
+ *
+ * see also: doc/sparse_compression.rst
+ */
 
 /* Bitarray buffer size (in bytes) that can be indexed by n bytes.  E.g.:
    with 1 byte you can index 256 bits which have a buffer size of 32 bytes.

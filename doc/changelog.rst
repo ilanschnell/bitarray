@@ -1,6 +1,11 @@
 Change log
 ==========
 
+**2.7.1** (2023-02-10):
+
+* optimize ``util.sc_encode()``
+
+
 **2.7.0** (2023-02-05):
 
 * add ``util.sc_encode()`` and ``util.sc_decode()`` for
