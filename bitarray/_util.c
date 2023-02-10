@@ -1086,7 +1086,7 @@ sc_encode_header(char *str, bitarrayobject *a)
    +-----------+-----------+-----------+-----------+
    0           5           5           8          12   running totals, rts[i]
 
-   In this example we have a bitarray 987 segments.  Note that:
+   In this example we have a bitarray of length nbits = 987.  Note that:
 
      * The number of segments is given by NSEG(nbits).
        Here we have 4 segments: NSEG(nbits) = NSEG(987) = 4
@@ -1222,7 +1222,10 @@ sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
 
 /* Write `k` indices (of `n` bytes each) into buffer `str`.
    Note that `n` (which is also the block type) has been selected
-   (in sc_encode_block()) such that: k == sc_count(a, rts, offset, n) */
+   (in sc_encode_block()) such that:
+
+       k = sc_count(a, rts, offset, n) < 256
+*/
 static void
 sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
                  Py_ssize_t offset, int n, int k)
@@ -1295,7 +1298,7 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
     if (k == 0)  /* no index bytes */
         return len;
 
-    /* write block data - `k` indices, `n` bytes per index) */
+    /* write block data - `k` indices, `n` bytes per index */
     sc_write_indices(str + len, a, rts, offset, n, k);
     return len + n * k;
 }
@@ -1385,7 +1388,7 @@ sc_encode(PyObject *module, PyObject *obj)
     char *str;                  /* output buffer */
     Py_ssize_t len = 0;         /* bytes written into output buffer */
     bitarrayobject *a;
-    Py_ssize_t offset = 0;      /* block offset into bitarray a in bytes */
+    Py_ssize_t offset = 0;      /* block offset into bitarray `a` in bytes */
     Py_ssize_t *rts;            /* running totals for 256 bit segments */
 
     if (ensure_bitarray(obj) < 0)
@@ -1408,7 +1411,7 @@ sc_encode(PyObject *module, PyObject *obj)
 
         /* Make sure we have enough space in output buffer for next block.
            The largest block possible is a type 4 block with 255 indices.
-           It's site is: 2 header bytes + 4 * 255 index bytes */
+           It's size is: 2 header bytes + 4 * 255 index bytes */
         allocated = PyBytes_GET_SIZE(out);
         if (allocated < len + 2 + 4 * 255) {  /* increase allocation */
             if (_PyBytes_Resize(&out, allocated + 32768) < 0)
