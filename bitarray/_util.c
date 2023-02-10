@@ -688,7 +688,7 @@ hex2ba(PyObject *module, PyObject *args, PyObject *kwds)
     Py_DECREF(bytes);
     return (PyObject *) a;
  error:
-    Py_XDECREF(bytes);
+    Py_DECREF(bytes);
     Py_XDECREF((PyObject *) a);
     return NULL;
 }
@@ -877,7 +877,7 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
     Py_DECREF(bytes);
     return (PyObject *) a;
  error:
-    Py_XDECREF(bytes);
+    Py_DECREF(bytes);
     Py_XDECREF((PyObject *) a);
     return NULL;
 }
