@@ -1220,7 +1220,9 @@ sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
     return (int) k;
 }
 
-/* write `k` indices (of `n` bytes each) into buffer `str` */
+/* Write `k` indices (of `n` bytes each) into buffer `str`.
+   Note that `n` (which is also the block type) has been selected
+   (in sc_encode_block()) such that: k == sc_count(a, rts, offset, n) */
 static void
 sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
                  Py_ssize_t offset, int n, int k)
@@ -1231,6 +1233,7 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
     assert(1 <= n && n <= 4);
     assert(0 < k && k < 256);  /* note that k cannot be 0 in this function */
+    assert(k == sc_count(a, rts, offset, n));   /* see above */
     assert(offset % SEGSIZE == 0);
 
     rts += offset / SEGSIZE;   /* rts index relative to offset now */
@@ -1265,6 +1268,9 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
     }
     Py_UNREACHABLE();
 }
+
+#undef SEGSIZE
+#undef NSEG
 
 /* Write one sparse block (from `offset`, and up to `k` one bits).
    Return number of bytes written to buffer `str` (encoded block size). */
@@ -1371,9 +1377,6 @@ sc_encode_block(char *str, Py_ssize_t *len,
     *len += sc_write_sparse(str + *len, a, rts, offset, n, count);
     return BSI(n);
 }
-
-#undef SEGSIZE
-#undef NSEG
 
 static PyObject *
 sc_encode(PyObject *module, PyObject *obj)
