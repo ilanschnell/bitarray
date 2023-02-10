@@ -1052,18 +1052,6 @@ count_from(bitarrayobject *a, Py_ssize_t i)
    BSI(1) = 32, BSI(2) = 8_192, BSI(3) = 2_097_152, BSI(4) = 536_870_912 */
 #define BSI(n)  (((Py_ssize_t) 1) << (8 * (n) - 3))
 
-static int
-sc_encode_header(char *str, bitarrayobject *a)
-{
-    int len;
-
-    len = byte_length(a->nbits);
-    *str = (IS_BE(a) ? 0x10 : 0x00) | ((char) len);
-    write_n(str + 1, len, a->nbits);
-
-    return 1 + len;
-}
-
 /* segment size in bytes - Although of little practical value, the code
    below will also work when changing SEGSIZE to 1, 2, 4, 8 or 16, as long
    as a multiple of SEGSIZE is 32.  The size 32 is rooted in the fact that
@@ -1379,6 +1367,18 @@ sc_encode_block(char *str, Py_ssize_t *len,
 
     *len += sc_write_sparse(str + *len, a, rts, offset, n, count);
     return BSI(n);
+}
+
+static int
+sc_encode_header(char *str, bitarrayobject *a)
+{
+    int len;
+
+    len = byte_length(a->nbits);
+    *str = (IS_BE(a) ? 0x10 : 0x00) | ((char) len);
+    write_n(str + 1, len, a->nbits);
+
+    return 1 + len;
 }
 
 static PyObject *
