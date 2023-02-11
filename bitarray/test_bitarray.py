@@ -2841,12 +2841,29 @@ class CountTests(unittest.TestCase, Util):
                 self.assertEqual(a.count(v), ref)
                 self.assertEqual(a.count(v, n, -n - 1, -1), ref)
 
-    def test_zeros(self):
-        N = 37
+    def test_sparse(self):
+        N = 65536
         a = zeros(N)
-        for i in range(N):
-            for j in range(i, N):
-                self.assertEqual(a.count(0, i, j), j - i)
+        indices = set(randint(0, N - 1) for _ in range(256))
+        for i in indices:
+            a[i] = 1
+        self.assertEqual(a.count(1), len(indices))
+        self.assertEqual(a.count(0), N - len(indices))
+
+        for _ in range(100):
+            i = randint(0, N - 1)
+            j = randint(i, N - 1)
+            cnt = sum(1 for k in indices if i <= k < j)
+            self.assertEqual(a.count(1, i, j), cnt)
+            self.assertEqual(a.count(0, i, j), j - i - cnt)
+
+    def test_zeros(self):
+        N = 300
+        a = zeros(N)
+        for _ in range(10):
+            i = randint(0, N - 1)
+            j = randint(i, N - 1)
+            self.assertEqual(a.count(0, i, j), j - i)
 
             for step in range(-N - 3, N + 3):
                 if step == 0:
