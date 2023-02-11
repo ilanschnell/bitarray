@@ -457,14 +457,15 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 static Py_ssize_t
 count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
+    const Py_ssize_t n = b - a;
     Py_ssize_t res = 0, i;
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
-    if (a >= b)
+    if (n <= 0)
         return 0;
 
-    if (b >= a + 8) {
+    if (n >= 8) {
         const Py_ssize_t byte_a = BYTES(a);
         const Py_ssize_t byte_b = b / 8;
         unsigned char *ucbuff = (unsigned char *) self->ob_item;
