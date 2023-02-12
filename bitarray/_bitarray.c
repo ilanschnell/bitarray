@@ -1419,7 +1419,7 @@ Sort the bits in the array (in-place).");
 static PyObject *
 bitarray_tolist(bitarrayobject *self)
 {
-    PyObject *list, *item;
+    PyObject *list;
     Py_ssize_t i;
 
     list = PyList_New(self->nbits);
@@ -1427,7 +1427,7 @@ bitarray_tolist(bitarrayobject *self)
         return NULL;
 
     for (i = 0; i < self->nbits; i++) {
-        item = PyLong_FromLong(getbit(self, i));
+        PyObject *item = PyLong_FromLong(getbit(self, i));
         if (item == NULL) {
             Py_DECREF(list);
             return NULL;
