@@ -1194,6 +1194,9 @@ _sc_rts(PyObject *module, PyObject *obj)
     bitarrayobject *a;
     Py_ssize_t *rts, i;
 
+#ifdef IS_PY3K
+    PyModule_AddObject(module, "SEGSIZE", PyLong_FromSsize_t(SEGSIZE));
+#endif
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
