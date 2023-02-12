@@ -30,13 +30,10 @@ from bitarray.util import (
     huffman_code, canonical_huffman, canonical_decode,
 )
 
-SEGSIZE = -1
 if DEBUG:
-    from bitarray._util import _sc_rts
-    if sys.version_info[0] == 3:
-        # calling _sc_rts() will set module attribute SEGSIZE (on Python 3)
-        _sc_rts(bitarray())
-        from bitarray._util import SEGSIZE
+    from bitarray._util import _sc_rts, _sc_SEGSIZE as SEGSIZE
+else:
+    SEGSIZE = -1
 
 if sys.version_info[0] == 3:
     from io import StringIO
@@ -1414,7 +1411,7 @@ class SC_Tests(unittest.TestCase, Util):
                 a &= urandom(n, endian)
                 self.round_trip(a)
 
-    @skipIf(SEGSIZE < 0)
+    @skipIf(not DEBUG)
     def test_rts_empty(self):
         a = bitarray()
         self.assertEqual(_sc_rts(a), [0])
@@ -1429,7 +1426,7 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertEqual(len(rts), 5)
         self.assertEqual(rts, [0, 5, 5, 8, 12])
 
-    @skipIf(SEGSIZE < 0)
+    @skipIf(not DEBUG)
     def test_rts_random(self):
         segbits = 8 * SEGSIZE
         for n in range(2000):

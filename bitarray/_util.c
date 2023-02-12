@@ -1188,15 +1188,12 @@ sc_calc_rts(bitarrayobject *a)
 /* expose sc_calc_rts() to Python during debug mode for testing */
 #ifndef NDEBUG
 static PyObject *
-_sc_rts(PyObject *module, PyObject *obj)
+sc_rts(PyObject *module, PyObject *obj)
 {
     PyObject *list;
     bitarrayobject *a;
     Py_ssize_t *rts, i;
 
-#if IS_PY3K
-    PyModule_AddObject(module, "SEGSIZE", PyLong_FromSsize_t(SEGSIZE));
-#endif
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
@@ -1338,9 +1335,6 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
     }
     Py_UNREACHABLE();
 }
-
-#undef SEGSIZE
-#undef NSEG
 
 /* Write one sparse block (from `offset`, and up to `k` one bits).
    Return number of bytes written to buffer `str` (encoded block size). */
@@ -2051,7 +2045,7 @@ static PyMethodDef module_functions[] = {
                   (PyCFunction) chdi_new,  METH_VARARGS, chdi_doc},
 #ifndef NDEBUG
     /* functionality exposed in debug mode for testing */
-    {"_sc_rts",   (PyCFunction) _sc_rts,   METH_O,       0},
+    {"_sc_rts",   (PyCFunction) sc_rts,     METH_O,       0},
 #endif
     {NULL,        NULL}  /* sentinel */
 };
@@ -2091,6 +2085,10 @@ init_util(void)
     if (PyType_Ready(&CHDI_Type) < 0)
         goto error;
     Py_SET_TYPE(&CHDI_Type, &PyType_Type);
+
+#ifndef NDEBUG
+    PyModule_AddObject(m, "_sc_SEGSIZE", PyLong_FromSsize_t(SEGSIZE));
+#endif
 
 #if IS_PY3K
     return m;
