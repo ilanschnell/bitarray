@@ -758,7 +758,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         return extend_bitarray(self, (bitarrayobject *) obj);
 
     if (PyBytes_Check(obj)) {                             /* bytes 01 */
-#ifdef IS_PY3K
+#if IS_PY3K
         PyErr_SetString(PyExc_TypeError,
                         "cannot extend bitarray with 'bytes', "
                         "use .pack() or .frombytes() instead");
@@ -1093,7 +1093,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
     assert(PyLong_Check(result));
     if (PyLong_AsSsize_t(result) < 0) {
         Py_DECREF(result);
-#ifdef IS_PY3K
+#if IS_PY3K
         PyErr_Format(PyExc_ValueError, "%A not in bitarray",
                      PyTuple_GET_ITEM(args, 0));
 #else
@@ -2459,7 +2459,7 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
         value = PyDict_GetItem(codedict, symbol);
         Py_DECREF(symbol);
         if (value == NULL) {
-#ifdef IS_PY3K
+#if IS_PY3K
             PyErr_Format(PyExc_ValueError,
                          "symbol not defined in prefix code: %A", symbol);
 #else
@@ -2560,7 +2560,7 @@ binode_insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
     return 0;
 
  ambiguity:
-#ifdef IS_PY3K
+#if IS_PY3K
     PyErr_Format(PyExc_ValueError, "prefix code ambiguous: %A", symbol);
 #else
     PyErr_SetString(PyExc_ValueError, "prefix code ambiguous");
@@ -2826,7 +2826,7 @@ Given a prefix code (a dict mapping symbols to bitarrays),\n\
 create a binary tree object to be passed to `.decode()` or `.iterdecode()`.");
 
 static PyTypeObject DecodeTree_Type = {
-#ifdef IS_PY3K
+#if IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
@@ -3015,7 +3015,7 @@ decodeiter_traverse(decodeiterobject *it, visitproc visit, void *arg)
 }
 
 static PyTypeObject DecodeIter_Type = {
-#ifdef IS_PY3K
+#if IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
@@ -3120,7 +3120,7 @@ searchiter_traverse(searchiterobject *it, visitproc visit, void *arg)
 }
 
 static PyTypeObject SearchIter_Type = {
-#ifdef IS_PY3K
+#if IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
@@ -3564,7 +3564,7 @@ bitarrayiter_traverse(bitarrayiterobject *it, visitproc visit, void *arg)
 }
 
 static PyTypeObject BitarrayIter_Type = {
-#ifdef IS_PY3K
+#if IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
@@ -3719,7 +3719,7 @@ readonly or writable, depending on the object type.");
 
 
 static PyTypeObject Bitarray_Type = {
-#ifdef IS_PY3K
+#if IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
@@ -3862,14 +3862,14 @@ static PyMethodDef module_functions[] = {
 
 /******************************* Install Module ***************************/
 
-#ifdef IS_PY3K
+#if IS_PY3K
 static PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT, "_bitarray", 0, -1, module_functions,
 };
 #endif
 
 PyMODINIT_FUNC
-#ifdef IS_PY3K
+#if IS_PY3K
 PyInit__bitarray(void)
 #else
 init_bitarray(void)
@@ -3879,7 +3879,7 @@ init_bitarray(void)
 
     setup_reverse_trans();
 
-#ifdef IS_PY3K
+#if IS_PY3K
     m = PyModule_Create(&moduledef);
 #else
     m = Py_InitModule3("_bitarray", module_functions, 0);
@@ -3913,7 +3913,7 @@ init_bitarray(void)
 
     PyModule_AddObject(m, "__version__",
                        Py_BuildValue("s", BITARRAY_VERSION));
-#ifdef IS_PY3K
+#if IS_PY3K
     return m;
  error:
     return NULL;

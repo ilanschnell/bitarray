@@ -993,7 +993,7 @@ next_char(PyObject *iter)
         return -1;
     }
 
-#ifdef IS_PY3K
+#if IS_PY3K
     if (PyLong_Check(item))
         c = (unsigned char) PyLong_AsLong(item);
 #else
@@ -1194,7 +1194,7 @@ _sc_rts(PyObject *module, PyObject *obj)
     bitarrayobject *a;
     Py_ssize_t *rts, i;
 
-#ifdef IS_PY3K
+#if IS_PY3K
     PyModule_AddObject(module, "SEGSIZE", PyLong_FromSsize_t(SEGSIZE));
 #endif
     if (ensure_bitarray(obj) < 0)
@@ -1980,7 +1980,7 @@ chdi_traverse(chdi_obj *it, visitproc visit, void *arg)
 }
 
 static PyTypeObject CHDI_Type = {
-#ifdef IS_PY3K
+#if IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
 #else
     PyObject_HEAD_INIT(NULL)
@@ -2058,14 +2058,14 @@ static PyMethodDef module_functions[] = {
 
 /******************************* Install Module ***************************/
 
-#ifdef IS_PY3K
+#if IS_PY3K
 static PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT, "_util", 0, -1, module_functions,
 };
 #endif
 
 PyMODINIT_FUNC
-#ifdef IS_PY3K
+#if IS_PY3K
 PyInit__util(void)
 #else
 init_util(void)
@@ -2080,7 +2080,7 @@ init_util(void)
     if (bitarray_type_obj == NULL)
         goto error;
 
-#ifdef IS_PY3K
+#if IS_PY3K
     m = PyModule_Create(&moduledef);
 #else
     m = Py_InitModule3("_util", module_functions, 0);
@@ -2092,7 +2092,7 @@ init_util(void)
         goto error;
     Py_SET_TYPE(&CHDI_Type, &PyType_Type);
 
-#ifdef IS_PY3K
+#if IS_PY3K
     return m;
  error:
     return NULL;

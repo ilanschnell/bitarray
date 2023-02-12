@@ -30,9 +30,10 @@
 #endif
 
 #if PY_MAJOR_VERSION >= 3
-#define IS_PY3K
+#define IS_PY3K  1
 #define BYTES_SIZE_FMT  "y#"
 #else
+#define IS_PY3K  0
 /* the Py_MIN and Py_MAX macros were introduced in Python 3.3 */
 #define Py_MIN(x, y)  (((x) > (y)) ? (y) : (x))
 #define Py_MAX(x, y)  (((x) > (y)) ? (x) : (y))
