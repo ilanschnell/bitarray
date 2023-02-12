@@ -70,7 +70,7 @@ Once you have installed the package, you may want to test it:
     sizeof(size_t): 8
     sizeof(bitarrayobject): 80
     __GNUC__ defined: 1
-    USE_WORD_SHIFT: 1
+    PY_LITTLE_ENDIAN (use word shift): 1
     DEBUG: 0
     .........................................................................
     .........................................................................

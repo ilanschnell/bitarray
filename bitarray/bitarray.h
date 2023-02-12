@@ -29,6 +29,12 @@
 #define Py_UNREACHABLE() abort()
 #endif
 
+/* PY_LITTLE_ENDIAN and PY_BIG_ENDIAN (machine byteorder) are available in
+   Python 3.5.10.  Not sure when they were introduced */
+#ifndef PY_LITTLE_ENDIAN
+#define PY_LITTLE_ENDIAN  (*((uint64_t *) "\xff\0\0\0\0\0\0\0") == 0xff)
+#endif
+
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K  1
 #define BYTES_SIZE_FMT  "y#"

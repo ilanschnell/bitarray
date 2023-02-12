@@ -193,13 +193,6 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     }
 }
 
-/* use 64-bit word shift only when the machine has little endian byteorder */
-#ifdef PY_LITTLE_ENDIAN
-#define USE_WORD_SHIFT  PY_LITTLE_ENDIAN
-#else
-#define USE_WORD_SHIFT  (*((uint64_t *) "\xff\0\0\0\0\0\0\0") == 0xff)
-#endif
-
 /* Shift bits in byte-range(a, b) by n bits to right (using uint64 shifts
    when possible).
    The parameter (bebr = big endian byte reverse) is used to allow this
@@ -224,7 +217,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
     if (bebr && IS_BE(self))
         bytereverse(self, a, b);
 
-    if (USE_WORD_SHIFT && b >= a + 8) {
+    if (PY_LITTLE_ENDIAN && b >= a + 8) {
         const Py_ssize_t wa = (a + 7) / 8;  /* word range(wa, wb) */
         const Py_ssize_t wb = b / 8;
         const Py_ssize_t va = 8 * wa, vb = 8 * wb;
@@ -3831,7 +3824,7 @@ sysinfo(PyObject *module)
 #else
                          0,
 #endif
-                         (int) USE_WORD_SHIFT
+                         (int) PY_LITTLE_ENDIAN
                          );
 }
 
@@ -3847,7 +3840,7 @@ Return tuple containing:\n\
 4. sizeof(binode)\n\
 5. __GNUC__ defined\n\
 6. NDEBUG not defined\n\
-7. USE_WORD_SHIFT");
+7. PY_LITTLE_ENDIAN");
 
 
 static PyMethodDef module_functions[] = {

@@ -4647,7 +4647,7 @@ def run(verbosity=1, repeat=1):
     print('sizeof(size_t): %d' % SYSINFO[1])
     print('sizeof(bitarrayobject): %d' % SYSINFO[2])
     print('__GNUC__ defined: %s' % SYSINFO[5])
-    print('USE_WORD_SHIFT: %s' % SYSINFO[7])
+    print('PY_LITTLE_ENDIAN (use word shift): %s' % SYSINFO[7])
     print('DEBUG: %s' % DEBUG)
     suite = unittest.TestSuite()
     for cls in tests:
