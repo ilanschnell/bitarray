@@ -18,7 +18,7 @@ from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       get_default_endian, _set_default_endian)
-from bitarray.test_bitarray import Util, skipIf
+from bitarray.test_bitarray import Util, skipIf, DEBUG
 
 from bitarray.util import (
     zeros, urandom, pprint, make_endian, rindex, strip, count_n,
@@ -29,6 +29,9 @@ from bitarray.util import (
     sc_encode, sc_decode, vl_encode, vl_decode,
     huffman_code, canonical_huffman, canonical_decode,
 )
+
+if DEBUG:
+    from bitarray._util import _sc_rts
 
 if sys.version_info[0] == 3:
     from io import StringIO
@@ -1405,6 +1408,34 @@ class SC_Tests(unittest.TestCase, Util):
             for _ in range(16):
                 a &= urandom(n, endian)
                 self.round_trip(a)
+
+    @skipIf(not DEBUG)
+    def test_rts_empty(self):
+        a = bitarray()
+        self.assertEqual(_sc_rts(a), [0])
+
+    @skipIf(not DEBUG)
+    def test_rts_example(self):
+        # see example before sc_calc_rts() in _util.c
+        a = zeros(987)
+        a[:5] = a[512:515] = a[768:772] = 1
+        self.assertEqual(a.count(), 12)
+        rts = _sc_rts(a)
+        self.assertEqual(len(rts), 5)
+        self.assertEqual(rts, [0, 5, 5, 8, 12])
+
+    @skipIf(not DEBUG)
+    def test_rts_random(self):
+        for n in range(2000):
+            a = urandom(n)
+            rts = _sc_rts(a)
+            self.assertEqual(len(rts), (n + 255) // 256 + 1)
+            self.assertEqual(rts[0], 0)
+            self.assertEqual(rts[-1], a.count())
+
+            for i in range(len(rts) - 1):
+                self.assertEqual(rts[i + 1] - rts[i],
+                                 a.count(1, 256 * i, 256 * (i + 1)))
 
 tests.append(SC_Tests)
 

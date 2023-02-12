@@ -1185,6 +1185,38 @@ sc_calc_rts(bitarrayobject *a)
     return res;
 }
 
+/* expose sc_calc_rts() to Python during debug mode for testing */
+#ifndef NDEBUG
+static PyObject *
+_sc_rts(PyObject *module, PyObject *obj)
+{
+    PyObject *list;
+    bitarrayobject *a;
+    Py_ssize_t *rts, i;
+
+    if (ensure_bitarray(obj) < 0)
+        return NULL;
+
+    a = (bitarrayobject *) obj;
+    if ((rts = sc_calc_rts(a)) == NULL)
+        return NULL;
+
+    if ((list = PyList_New(NSEG(a->nbits) + 1)) == NULL)
+        return NULL;
+
+    for (i = 0; i <= NSEG(a->nbits); i++) {
+        PyObject *item = PyLong_FromSsize_t(rts[i]);
+        if (item == NULL) {
+            Py_DECREF(list);
+            return NULL;
+        }
+        PyList_SET_ITEM(list, i, item);
+    }
+    PyMem_Free(rts);
+    return list;
+}
+#endif  /* NDEBUG */
+
 /* Equivalent to the Python expression:
 
       a.count(1, 8 * offset, 8 * offset + (1 << (8 * n)))
@@ -2014,6 +2046,10 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, vl_decode_doc},
     {"canonical_decode",
                   (PyCFunction) chdi_new,  METH_VARARGS, chdi_doc},
+#ifndef NDEBUG
+    /* functionality exposed in debug mode for testing */
+    {"_sc_rts",   (PyCFunction) _sc_rts,   METH_O,       0},
+#endif
     {NULL,        NULL}  /* sentinel */
 };
 
