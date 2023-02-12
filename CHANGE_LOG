@@ -2,7 +2,7 @@
 -------------------
   * speedup all count functionality by using `__builtin_popcountll` when
     available, see #187
-  * add `popcount64()` to `bitarray.h` - we assume not that `uint64_t` is
+  * add `popcount64()` to `bitarray.h` - we assume now that `uint64_t` is
     always available
 
 
