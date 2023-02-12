@@ -159,6 +159,26 @@ static const unsigned char bitcount_lookup[256] = {
 #undef B6
 };
 
+/* Population count: count the number of 1's in 'x'. */
+static inline int
+popcount64(uint64_t x)
+{
+#if defined(__GNUC__)
+    return __builtin_popcountll(x);
+#else
+    /* https://en.wikipedia.org/wiki/Hamming_weight popcount64c */
+    const uint64_t m1  = 0x5555555555555555;
+    const uint64_t m2  = 0x3333333333333333;
+    const uint64_t m4  = 0x0f0f0f0f0f0f0f0f;
+    const uint64_t h01 = 0x0101010101010101;
+
+    x -= (x >> 1) & m1;
+    x = (x & m2) + ((x >> 2) & m2);
+    x = (x + (x >> 4)) & m4;
+    return (x * h01) >> 56;
+#endif  /* __GNUC__ */
+}
+
 /* adjust index a manner consistent with the handling of normal slices */
 static inline void
 adjust_index(Py_ssize_t length, Py_ssize_t *i, Py_ssize_t step)

@@ -193,22 +193,11 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     }
 }
 
-#ifdef PY_UINT64_T
-#define UINT64_BUFFER(self)  ((PY_UINT64_T *) (self)->ob_item)
-#define UINT64_WORDS(bytes)  ((bytes) >> 3)
 /* use 64-bit word shift only when the machine has little endian byteorder */
 #ifdef PY_LITTLE_ENDIAN
 #define USE_WORD_SHIFT  PY_LITTLE_ENDIAN
 #else
-#define USE_WORD_SHIFT  (*((PY_UINT64_T *) "\xff\0\0\0\0\0\0\0") == 0xff)
-#endif
-#else  /* !PY_UINT64_T */
-/* The UINT64_BUFFER macro only exists here in order to write code which
-   complies with and without PY_UINT64_T defined (in order to avoid
-   #ifdef'ing the code below). */
-#define UINT64_BUFFER(self)  ((self)->ob_item)
-#define UINT64_WORDS(bytes)  0
-#define USE_WORD_SHIFT  0
+#define USE_WORD_SHIFT  (*((uint64_t *) "\xff\0\0\0\0\0\0\0") == 0xff)
 #endif
 
 /* Shift bits in byte-range(a, b) by n bits to right (using uint64 shifts
@@ -251,7 +240,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
         for (i = wb - 1; i >= wa; i--) {
             assert_byte_in_range(self, 8 * i + 7);
             /* shift word - assumes machine has little endian byteorder */
-            UINT64_BUFFER(self)[i] <<= n;
+            ((uint64_t *) ucbuff)[i] <<= n;
             if (i != wa)    /* add shifted byte from next lower word */
                 ucbuff[8 * i] |= ucbuff[8 * i - 1] >> m;
         }
@@ -381,15 +370,17 @@ static void
 invert(bitarrayobject *self)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
-    const Py_ssize_t nwords = UINT64_WORDS(nbytes);
+    const Py_ssize_t cwords = nbytes / 8;      /* complete 64-bit words */
+    char *buff = self->ob_item;
+    uint64_t *wbuff = (uint64_t *) buff;
     Py_ssize_t i;
 
     assert_nbits(self);
     assert(self->readonly == 0);
-    for (i = 0; i < nwords; i++)
-        UINT64_BUFFER(self)[i] = ~UINT64_BUFFER(self)[i];
-    for (i = 8 * nwords; i < nbytes; i++)
-        self->ob_item[i] = ~self->ob_item[i];
+    for (i = 0; i < cwords; i++)
+        wbuff[i] = ~wbuff[i];
+    for (i = 8 * cwords; i < nbytes; i++)
+        buff[i] = ~buff[i];
 }
 
 /* repeat self m times (negative m is treated as 0) */
@@ -465,10 +456,22 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     if (n <= 0)
         return 0;
 
-    if (n >= 8) {
+    if (n >= 64) {
+        const Py_ssize_t word_a = (a + 63) / 64;
+        const Py_ssize_t word_b = b / 64;
+        const uint64_t *wbuff = (uint64_t *) self->ob_item;
+
+        assert(a + 64 > 64 * word_a && 64 * word_b + 64 > b);
+
+        res += count(self, a, 64 * word_a);
+        for (i = word_a; i < word_b; i++)
+            res += popcount64(wbuff[i]);
+        res += count(self, 64 * word_b, b);
+    }
+    else if (n >= 8) {
         const Py_ssize_t byte_a = BYTES(a);
         const Py_ssize_t byte_b = b / 8;
-        unsigned char *ucbuff = (unsigned char *) self->ob_item;
+        const unsigned char *ucbuff = (unsigned char *) self->ob_item;
 
         assert(a + 8 > 8 * byte_a && 8 * byte_b + 8 > b);
 
@@ -497,14 +500,14 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     if (n <= 0)
         return -1;
 
-#ifdef PY_UINT64_T
     /* When the search range is greater than 64 bits, we skip uint64 words.
        Note that we cannot check for n >= 64 here as the function could then
        go into an infinite recursive loop when a word is found. */
     if (n > 64) {
-        Py_ssize_t word_a = (a + 63) / 64;
-        Py_ssize_t word_b = b / 64;
-        PY_UINT64_T *wbuff = (PY_UINT64_T *) self->ob_item, w = vi ? 0 : ~0;
+        const Py_ssize_t word_a = (a + 63) / 64;
+        const Py_ssize_t word_b = b / 64;
+        const uint64_t *wbuff = (uint64_t *) self->ob_item;
+        const uint64_t w = vi ? 0 : ~0;
 
         if ((res = find_bit(self, vi, a, 64 * word_a)) >= 0)
             return res;
@@ -516,14 +519,14 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         }
         return find_bit(self, vi, 64 * word_b, b);
     }
-#endif
+
     /* For the same reason as above, we cannot check for n >= 8 here. */
     if (n > 8) {
-        Py_ssize_t byte_a = BYTES(a);
-        Py_ssize_t byte_b = b / 8;
-        char *buff = self->ob_item, c = vi ? 0 : ~0;
+        const Py_ssize_t byte_a = BYTES(a);
+        const Py_ssize_t byte_b = b / 8;
+        const char *buff = self->ob_item;
+        const char c = vi ? 0 : ~0;
 
-        assert(UINT64_WORDS(8) == 0 || n <= 64);
         if ((res = find_bit(self, vi, a, 8 * byte_a)) >= 0)
             return res;
 
@@ -534,7 +537,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         }
         return find_bit(self, vi, 8 * byte_b, b);
     }
-    assert(n <= 8);
+
     for (i = a; i < b; i++) {
         if (getbit(self, i) == vi)
             return i;
@@ -2178,32 +2181,36 @@ static void
 bitwise(bitarrayobject *self, bitarrayobject *other, const char oper)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
-    const Py_ssize_t nwords = UINT64_WORDS(nbytes);
+    const Py_ssize_t cwords = nbytes / 8;      /* complete 64-bit words */
     Py_ssize_t i;
+    char *buff_s = self->ob_item;
+    char *buff_o = other->ob_item;
+    uint64_t *wbuff_s = (uint64_t *) buff_s;
+    uint64_t *wbuff_o = (uint64_t *) buff_o;
 
     assert(self->nbits == other->nbits);
     assert(self->endian == other->endian);
     assert_nbits(self);
     switch (oper) {
     case '&':
-        for (i = 0; i < nwords; i++)
-            UINT64_BUFFER(self)[i] &= UINT64_BUFFER(other)[i];
-        for (i = 8 * nwords; i < nbytes; i++)
-            self->ob_item[i] &= other->ob_item[i];
+        for (i = 0; i < cwords; i++)
+            wbuff_s[i] &= wbuff_o[i];
+        for (i = 8 * cwords; i < nbytes; i++)
+            buff_s[i] &= buff_o[i];
         break;
 
     case '|':
-        for (i = 0; i < nwords; i++)
-            UINT64_BUFFER(self)[i] |= UINT64_BUFFER(other)[i];
-        for (i = 8 * nwords; i < nbytes; i++)
-            self->ob_item[i] |= other->ob_item[i];
+        for (i = 0; i < cwords; i++)
+            wbuff_s[i] |= wbuff_o[i];
+        for (i = 8 * cwords; i < nbytes; i++)
+            buff_s[i] |= buff_o[i];
         break;
 
     case '^':
-        for (i = 0; i < nwords; i++)
-            UINT64_BUFFER(self)[i] ^= UINT64_BUFFER(other)[i];
-        for (i = 8 * nwords; i < nbytes; i++)
-            self->ob_item[i] ^= other->ob_item[i];
+        for (i = 0; i < cwords; i++)
+            wbuff_s[i] ^= wbuff_o[i];
+        for (i = 8 * cwords; i < nbytes; i++)
+            buff_s[i] ^= buff_o[i];
         break;
 
     default:
@@ -3814,7 +3821,7 @@ sysinfo(PyObject *module)
                          (int) sizeof(bitarrayobject),
                          (int) sizeof(decodetreeobject),
                          (int) sizeof(binode),
-#ifdef PY_UINT64_T
+#ifdef __GNUC__
                          1,
 #else
                          0,
@@ -3838,7 +3845,7 @@ Return tuple containing:\n\
 2. sizeof(bitarrayobject)\n\
 3. sizeof(decodetreeobject)\n\
 4. sizeof(binode)\n\
-5. PY_UINT64_T defined\n\
+5. __GNUC__ defined\n\
 6. NDEBUG not defined\n\
 7. USE_WORD_SHIFT");
 

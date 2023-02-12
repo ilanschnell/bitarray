@@ -1,5 +1,8 @@
 2023-XX-XX   2.7.2:
 -------------------
+  * speedup all count functionality by using `__builtin_popcountll` when
+    available, see #187
+  * add `popcount64()` to header
 
 
 2023-02-10   2.7.1:
