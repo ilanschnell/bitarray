@@ -516,6 +516,14 @@ class TestsCount_N(unittest.TestCase, Util):
             self.assertEqual(count_n(a, 1), i + 1)
             self.assertRaises(ValueError, count_n, a, 2)
 
+    def test_last(self):
+        for n in range(1, 1000):
+            a = zeros(n)
+            a[-1] = 1
+            self.assertEqual(a.count(), 1)
+            self.assertEqual(count_n(a, 1), n)
+            self.assertRaises(ValueError, count_n, a, 2)
+
     def test_large(self):
         for _ in range(100):
             N = randint(100000, 250000)
