@@ -31,9 +31,9 @@ from bitarray.util import (
 )
 
 if DEBUG:
-    from bitarray._util import _sc_rts, _sc_SEGSIZE as SEGSIZE
+    from bitarray._util import _sc_rts, _sc_SEGSIZE  # type: ignore
 else:
-    SEGSIZE = -1
+    _sc_SEGSIZE = -1
 
 if sys.version_info[0] == 3:
     from io import StringIO
@@ -1416,7 +1416,7 @@ class SC_Tests(unittest.TestCase, Util):
         a = bitarray()
         self.assertEqual(_sc_rts(a), [0])
 
-    @skipIf(SEGSIZE != 32)
+    @skipIf(_sc_SEGSIZE != 32)
     def test_rts_example(self):
         # see example before sc_calc_rts() in _util.c
         a = zeros(987)
@@ -1428,7 +1428,7 @@ class SC_Tests(unittest.TestCase, Util):
 
     @skipIf(not DEBUG)
     def test_rts_random(self):
-        segbits = 8 * SEGSIZE
+        segbits = 8 * _sc_SEGSIZE
         for n in range(2000):
             a = urandom(n)
             rts = _sc_rts(a)
