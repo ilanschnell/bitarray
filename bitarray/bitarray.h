@@ -170,7 +170,7 @@ static const unsigned char bitcount_lookup[256] = {
 static inline int
 popcount64(uint64_t x)
 {
-#if defined(__GNUC__)
+#if (defined(__clang__) || defined(__GNUC__))
     return __builtin_popcountll(x);
 #else
     /* https://en.wikipedia.org/wiki/Hamming_weight popcount64c */

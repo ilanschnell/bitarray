@@ -3814,7 +3814,7 @@ sysinfo(PyObject *module)
                          (int) sizeof(bitarrayobject),
                          (int) sizeof(decodetreeobject),
                          (int) sizeof(binode),
-#ifdef __GNUC__
+#if (defined(__clang__) || defined(__GNUC__))
                          1,
 #else
                          0,
@@ -3838,7 +3838,7 @@ Return tuple containing:\n\
 2. sizeof(bitarrayobject)\n\
 3. sizeof(decodetreeobject)\n\
 4. sizeof(binode)\n\
-5. __GNUC__ defined\n\
+5. __clang__ or __GNUC__ defined\n\
 6. NDEBUG not defined\n\
 7. PY_LITTLE_ENDIAN");
 
