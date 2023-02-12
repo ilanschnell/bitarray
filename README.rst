@@ -69,14 +69,14 @@ Once you have installed the package, you may want to test it:
     pointer size: 64 bit
     sizeof(size_t): 8
     sizeof(bitarrayobject): 80
-    PY_UINT64_T defined: 1
+    __GNUC__ defined: 1
     USE_WORD_SHIFT: 1
     DEBUG: 0
     .........................................................................
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 464 tests in 0.472s
+    Ran 466 tests in 0.460s
 
     OK
 

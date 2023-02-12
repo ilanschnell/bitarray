@@ -91,10 +91,10 @@ endianness, which may be 'big', 'little'.");
 /* Return the smallest index i for which a.count(vi, 0, i) == n.
    When n exceeds the total count, return -1.  */
 static Py_ssize_t
-count_to_n(bitarrayobject *a, Py_ssize_t n, int vi)
+count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
 {
     const Py_ssize_t nbits = a->nbits;
-    unsigned char *ucbuff = (unsigned char *) a->ob_item;
+    uint64_t *wbuff = (uint64_t *) a->ob_item;
     Py_ssize_t i = 0;        /* index */
     Py_ssize_t j = 0;        /* total count up to index */
     Py_ssize_t block_start, block_stop, k, m;
@@ -108,11 +108,11 @@ count_to_n(bitarrayobject *a, Py_ssize_t n, int vi)
     while (i + BLOCK_BITS < nbits) {
         m = 0;
         assert(i % 8 == 0);
-        block_start = i >> 3;
-        block_stop = block_start + (BLOCK_BITS >> 3);
-        assert(block_stop <= Py_SIZE(a));
+        block_start = i / 64;
+        block_stop = block_start + (BLOCK_BITS / 64);
+        assert(8 * block_stop <= Py_SIZE(a));
         for (k = block_start; k < block_stop; k++)
-            m += bitcount_lookup[ucbuff[k]];
+            m += popcount64(wbuff[k]);
         if (!vi)
             m = BLOCK_BITS - m;
         if (j + m >= n)
@@ -122,16 +122,16 @@ count_to_n(bitarrayobject *a, Py_ssize_t n, int vi)
     }
 #undef BLOCK_BITS
 
-    while (i + 8 < nbits) {
-        k = i >> 3;
-        assert(k < Py_SIZE(a));
-        m = bitcount_lookup[ucbuff[k]];
+    while (i + 64 < nbits) {
+        k = i / 64;
+        assert(8 * k + 8 <= Py_SIZE(a));
+        m = popcount64(wbuff[k]);
         if (!vi)
-            m = 8 - m;
+            m = 64 - m;
         if (j + m >= n)
             break;
         j += m;
-        i += 8;
+        i += 64;
     }
 
     while (j < n && i < nbits) {
@@ -162,7 +162,7 @@ count_n(PyObject *module, PyObject *args)
         PyErr_SetString(PyExc_ValueError, "n larger than bitarray size");
         return NULL;
     }
-    i = count_to_n(a, n, vi);        /* do actual work here */
+    i = count_n_core(a, n, vi);        /* do actual work here */
 
     if (i < 0) {
         PyErr_SetString(PyExc_ValueError, "n exceeds total count");
@@ -193,11 +193,11 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         return -1;
 
     /* the logic here is the same as in find_bit() in _bitarray.c */
-#ifdef PY_UINT64_T
     if (n > 64) {
-        Py_ssize_t word_a = (a + 63) / 64;
-        Py_ssize_t word_b = b / 64;
-        PY_UINT64_T *wbuff = (PY_UINT64_T *) self->ob_item, w = vi ? 0 : ~0;
+        const Py_ssize_t word_a = (a + 63) / 64;
+        const Py_ssize_t word_b = b / 64;
+        const uint64_t *wbuff = (uint64_t *) self->ob_item;
+        const uint64_t w = vi ? 0 : ~0;
 
         if ((res = find_last(self, vi, 64 * word_b, b)) >= 0)
             return res;
@@ -208,11 +208,12 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         }
         return find_last(self, vi, a, 64 * word_a);
     }
-#endif
+
     if (n > 8) {
-        Py_ssize_t byte_a = BYTES(a);
-        Py_ssize_t byte_b = b / 8;
-        char *buff = self->ob_item, c = vi ? 0 : ~0;
+        const Py_ssize_t byte_a = BYTES(a);
+        const Py_ssize_t byte_b = b / 8;
+        const char *buff = self->ob_item;
+        const char c = vi ? 0 : ~0;
 
         if ((res = find_last(self, vi, 8 * byte_b, b)) >= 0)
             return res;
@@ -224,7 +225,7 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
         }
         return find_last(self, vi, a, 8 * byte_a);
     }
-    assert(n <= 8);
+
     for (i = b - 1; i >= a; i--) {
         if (getbit(self, i) == vi)
             return i;
@@ -304,10 +305,11 @@ same_size_endian(bitarrayobject *a, bitarrayobject *b)
 static PyObject *
 binary_function(PyObject *args, const char *format, const char oper)
 {
-    Py_ssize_t cnt = 0, s, i;
+    Py_ssize_t cnt = 0, cwords, cbytes, i;
     bitarrayobject *a, *b;
     unsigned char *buff_a, *buff_b;
-    int r;
+    uint64_t *wbuff_a, *wbuff_b;
+    int rbits;
 
     if (!PyArg_ParseTuple(args, format,
                           bitarray_type_obj, (PyObject *) &a,
@@ -318,45 +320,62 @@ binary_function(PyObject *args, const char *format, const char oper)
 
     buff_a = (unsigned char *) a->ob_item;
     buff_b = (unsigned char *) b->ob_item;
-    s = a->nbits / 8;       /* number of whole bytes in buffer */
-    r = a->nbits % 8;       /* remaining bits  */
+    wbuff_a = (uint64_t *) buff_a;
+    wbuff_b = (uint64_t *) buff_b;
+    cwords = a->nbits / 64;     /* number of complete 64-bit words */
+    cbytes = a->nbits / 8;      /* number of complete bytes in buffer */
+    rbits = a->nbits % 8;       /* remaining bits  */
 
     switch (oper) {
 #define UZ(x)  ((unsigned char) zeroed_last_byte(x))
     case '&':                   /* count and */
-        for (i = 0; i < s; i++)
+        for (i = 0; i < cwords; i++)
+            cnt += popcount64(wbuff_a[i] & wbuff_b[i]);
+        for (i = 8 * cwords; i < cbytes; i++)
             cnt += bitcount_lookup[buff_a[i] & buff_b[i]];
-        if (r)
+        if (rbits)
             cnt += bitcount_lookup[UZ(a) & UZ(b)];
         break;
 
     case '|':                   /* count or */
-        for (i = 0; i < s; i++)
+        for (i = 0; i < cwords; i++)
+            cnt += popcount64(wbuff_a[i] | wbuff_b[i]);
+        for (i = 8 * cwords; i < cbytes; i++)
             cnt += bitcount_lookup[buff_a[i] | buff_b[i]];
-        if (r)
+        if (rbits)
             cnt += bitcount_lookup[UZ(a) | UZ(b)];
         break;
 
     case '^':                   /* count xor */
-        for (i = 0; i < s; i++)
+        for (i = 0; i < cwords; i++)
+            cnt += popcount64(wbuff_a[i] ^ wbuff_b[i]);
+        for (i = 8 * cwords; i < cbytes; i++)
             cnt += bitcount_lookup[buff_a[i] ^ buff_b[i]];
-        if (r)
+        if (rbits)
             cnt += bitcount_lookup[UZ(a) ^ UZ(b)];
         break;
 
     case 'a':                   /* any and */
-        for (i = 0; i < s; i++) {
+        for (i = 0; i < cwords; i++) {
+            if (wbuff_a[i] & wbuff_b[i])
+                Py_RETURN_TRUE;
+        }
+        for (i = 8 * cwords; i < cbytes; i++) {
             if (buff_a[i] & buff_b[i])
                 Py_RETURN_TRUE;
         }
-        return PyBool_FromLong(r && (UZ(a) & UZ(b)));
+        return PyBool_FromLong(rbits && (UZ(a) & UZ(b)));
 
     case 's':                   /* is subset */
-        for (i = 0; i < s; i++) {
+        for (i = 0; i < cwords; i++) {
+            if ((wbuff_a[i] & wbuff_b[i]) != wbuff_a[i])
+                Py_RETURN_FALSE;
+        }
+        for (i = 8 * cwords; i < cbytes; i++) {
             if ((buff_a[i] & buff_b[i]) != buff_a[i])
                 Py_RETURN_FALSE;
         }
-        return PyBool_FromLong(r == 0 || (UZ(a) & UZ(b)) == UZ(a));
+        return PyBool_FromLong(rbits == 0 || (UZ(a) & UZ(b)) == UZ(a));
 
     default:
         Py_UNREACHABLE();
@@ -412,9 +431,10 @@ iteration is stopped as soon as one mismatch is found.");
 static PyObject *
 correspond_all(PyObject *module, PyObject *args)
 {
-    Py_ssize_t nff = 0, nft = 0, ntf = 0, ntt = 0, i, s;
+    Py_ssize_t nff = 0, nft = 0, ntf = 0, ntt = 0, cwords, cbytes, i;
     bitarrayobject *a, *b;
     unsigned char u, v, not_u, not_v;
+    uint64_t u64, v64, not_u64, not_v64;
 
     if (!PyArg_ParseTuple(args, "O!O!:_correspond_all",
                           bitarray_type_obj, (PyObject *) &a,
@@ -422,9 +442,20 @@ correspond_all(PyObject *module, PyObject *args)
         return NULL;
     if (same_size_endian(a, b) < 0)
         return NULL;
-    s = a->nbits / 8;       /* number of whole bytes in buffer */
+    cwords = a->nbits / 64;     /* number of complete 64-bit words */
+    cbytes = a->nbits / 8;      /* number of complete bytes in buffer */
 
-    for (i = 0; i < s; i++) {
+    for (i = 0; i < cwords; i++) {
+        u64 = ((uint64_t *) a->ob_item)[i];
+        v64 = ((uint64_t *) b->ob_item)[i];
+        not_u64 = ~u64;
+        not_v64 = ~v64;
+        nff += popcount64(not_u64 & not_v64);
+        nft += popcount64(not_u64 & v64);
+        ntf += popcount64(u64 & not_v64);
+        ntt += popcount64(u64 & v64);
+    }
+    for (i = 8 * cwords; i < cbytes; i++) {
         u = a->ob_item[i];
         v = b->ob_item[i];
         not_u = ~u;
@@ -436,8 +467,8 @@ correspond_all(PyObject *module, PyObject *args)
     }
     if (a->nbits % 8) {
         unsigned char mask = ones_table[IS_BE(a)][a->nbits % 8];
-        u = a->ob_item[s];
-        v = b->ob_item[s];
+        u = a->ob_item[cbytes];
+        v = b->ob_item[cbytes];
         not_u = ~u;
         not_v = ~v;
         nff += bitcount_lookup[not_u & not_v & mask];
@@ -1030,14 +1061,22 @@ byte_length(Py_ssize_t i)
     return n;
 }
 
-/* starting from byte i count the remaining population in bitarray buffer */
+/* starting from word `i` count the remaining population in bitarray buffer */
 static Py_ssize_t
-count_from(bitarrayobject *a, Py_ssize_t i)
+count_from_word(bitarrayobject *a, Py_ssize_t i)
 {
+    const Py_ssize_t cwords = a->nbits / 64;
+    const Py_ssize_t cbytes = a->nbits / 8;
     Py_ssize_t cnt = 0;
 
-    while (i < a->nbits / 8)
-        cnt += bitcount_lookup[(unsigned char) a->ob_item[i++]];
+    if (64 * i >= a->nbits)
+        return 0;
+
+    while (i < cwords)
+        cnt += popcount64(((uint64_t *) a->ob_item)[i++]);
+
+    for (i = 8 * cwords; i < cbytes; i++)
+        cnt += bitcount_lookup[(unsigned char) a->ob_item[i]];
 
     if (a->nbits % 8)
         cnt += bitcount_lookup[(unsigned char) zeroed_last_byte(a)];
@@ -1056,10 +1095,12 @@ count_from(bitarrayobject *a, Py_ssize_t i)
 #define BSI(n)  (((Py_ssize_t) 1) << (8 * (n) - 3))
 
 /* segment size in bytes - Although of little practical value, the code
-   below will also work when changing SEGSIZE to 1, 2, 4, 8 or 16, as long
-   as a multiple of SEGSIZE is 32.  The size 32 is rooted in the fact that
-   a bitarray of 32 bytes (256 bits) can be indexed with one index byte
-   (BSI(1) = 32).  Our entire 'sc' format is constructed around this. */
+   below will also work for SEGSIZE values of: 8, 16 and 32
+   BSI(1) = 32 must be divisible by SEGSIZE.
+   SEGSIZE must also be a multiple of the word size (sizeof(uint64_t) = 8).
+   The size 32 is rooted in the fact that a bitarray of 32 bytes (256 bits)
+   can be indexed with one index byte (BSI(1) = 32).  Our entire 'sc' format
+   is constructed around this. */
 #define SEGSIZE  32
 
 /* number of 256 bit segments given nbits */
@@ -1127,8 +1168,8 @@ sc_calc_rts(bitarrayobject *a)
         res[j] = cnt;
         assert(buff - a->ob_item + SEGSIZE <= Py_SIZE(a));
         if (memcmp(buff, zeros, SEGSIZE)) { /* segment has not only zeros */
-            for (i = 0; i < SEGSIZE; i++)
-                cnt += bitcount_lookup[(unsigned char) buff[i]];
+            for (i = 0; i < SEGSIZE / 8; i++)
+                cnt += popcount64(((uint64_t *) buff)[i]);
         }
     }
     assert(buff - a->ob_item == SEGSIZE * c_seg);
@@ -1138,7 +1179,7 @@ sc_calc_rts(bitarrayobject *a)
         assert(Py_SIZE(a) <= SEGSIZE * n_seg);
         assert(a->nbits && a->nbits < 8 * SEGSIZE * n_seg);
 
-        cnt += count_from(a, SEGSIZE * c_seg);
+        cnt += count_from_word(a, (SEGSIZE / 8) * c_seg);
         res[n_seg] = cnt;
     }
     return res;
