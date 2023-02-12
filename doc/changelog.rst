@@ -1,6 +1,15 @@
 Change log
 ==========
 
+**2.7.2** (2023-02-12):
+
+* speedup all count functionality by using ``__builtin_popcountll`` when
+  available, see `#187 <https://github.com/ilanschnell/bitarray/issues/187>`__
+* add ``popcount64()`` to ``bitarray.h`` - we assume now that ``uint64_t`` is
+  always available
+* improve testing
+
+
 **2.7.1** (2023-02-10):
 
 * optimize ``util.sc_encode()``

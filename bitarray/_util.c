@@ -2087,7 +2087,7 @@ init_util(void)
     Py_SET_TYPE(&CHDI_Type, &PyType_Type);
 
 #ifndef NDEBUG
-    PyModule_AddObject(m, "_sc_SEGSIZE", PyLong_FromSsize_t(SEGSIZE));
+    PyModule_AddObject(m, "_SEGSIZE", PyLong_FromSsize_t(SEGSIZE));
 #endif
 
 #if IS_PY3K
