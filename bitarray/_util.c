@@ -1069,6 +1069,9 @@ count_from_word(bitarrayobject *a, Py_ssize_t i)
     const Py_ssize_t cbytes = a->nbits / 8;
     Py_ssize_t cnt = 0;
 
+    if (64 * i >= a->nbits)
+        return 0;
+
     while (i < cwords)
         cnt += popcount64(((uint64_t *) a->ob_item)[i++]);
 
@@ -1179,7 +1182,6 @@ sc_calc_rts(bitarrayobject *a)
         cnt += count_from_word(a, (SEGSIZE / 8) * c_seg);
         res[n_seg] = cnt;
     }
-    assert(res[n_seg] == count_from_word(a, 0));
     return res;
 }
 
