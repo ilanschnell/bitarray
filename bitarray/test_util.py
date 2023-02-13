@@ -737,9 +737,8 @@ class TestsSubset(unittest.TestCase, Util):
             self.check(bitarray(a), bitarray(b), False)
 
     def test_random(self):
-        for _ in range(100):
-            n = randint(1, 1000)
-            a = urandom(n, self.random_endian())
+        for a in self.randombitarrays(start=1):
+            n = len(a)
             b = a.copy()
             # we set one random bit in b to 1, so a is always a subset of b
             b[randint(0, len(a) - 1)] == 1
@@ -799,20 +798,19 @@ class TestsParity(unittest.TestCase, Util):
         a = bitarray()
         self.assertBitEqual(parity(a), 0)
         par = False
-        for _ in range(100):
+        for _ in range(1000):
             self.assertEqual(parity(a), par)
             a.append(1)
             par = not par
 
-    def test_unused_bits(self):
+    def test_pad_ignored(self):
         a = bitarray(1)
         a.setall(1)
         self.assertTrue(parity(a))
 
     def test_frozenbitarray(self):
-        self.assertBitEqual(parity(frozenbitarray()), 0)
-        self.assertBitEqual(parity(frozenbitarray('0010011')), 1)
-        self.assertBitEqual(parity(frozenbitarray('10100110')), 0)
+        for s, p in [('', 0), ('0010011', 1), ('10100110', 0)]:
+            self.assertBitEqual(parity(frozenbitarray(s)), p)
 
     def test_wrong_args(self):
         self.assertRaises(TypeError, parity, '')
@@ -826,7 +824,9 @@ class TestsParity(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
+            b = a.copy()
             self.assertEqual(parity(a), a.count() % 2)
+            self.assertEqual(a, b)
 
 tests.append(TestsParity)
 
