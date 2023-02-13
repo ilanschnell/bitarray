@@ -578,7 +578,7 @@ class TestsBitwiseCount(unittest.TestCase, Util):
             self.assertEqual(count_xor(a, ones), 8 - cnt)
             self.assertEqual(count_xor(a, a), 0)
 
-    def test_bit_count1(self):
+    def test_1(self):
         a = bitarray('001111')
         aa = a.copy()
         b = bitarray('010011')
@@ -605,17 +605,18 @@ class TestsBitwiseCount(unittest.TestCase, Util):
                               bitarray('110', 'big'),
                               bitarray('101', 'little'))
 
-    def test_bit_count_frozen(self):
+    def test_frozen(self):
         a = frozenbitarray('001111')
         b = frozenbitarray('010011')
         self.assertEqual(count_and(a, b), 2)
         self.assertEqual(count_or(a, b), 5)
         self.assertEqual(count_xor(a, b), 3)
 
-    def test_bit_count_random(self):
-        for n in list(range(50)) + [randint(1000, 2000)]:
-            a = urandom(n)
-            b = urandom(n)
+    def test_random(self):
+        for _ in range(100):
+            n = randint(0, 1000)
+            a = urandom(n, self.random_endian())
+            b = urandom(n, a.endian())
             self.assertEqual(count_and(a, b), (a & b).count())
             self.assertEqual(count_or(a, b),  (a | b).count())
             self.assertEqual(count_xor(a, b), (a ^ b).count())
@@ -689,7 +690,7 @@ class TestsBitwiseAny(unittest.TestCase, Util):
             self.check(a, b)
 
     def test_one(self):
-        for n in range(1, 200):
+        for n in range(1, 300):
             a = zeros(n)
             b = urandom(n)
             i = randint(0, n - 1)
@@ -736,7 +737,9 @@ class TestsSubset(unittest.TestCase, Util):
             self.check(bitarray(a), bitarray(b), False)
 
     def test_random(self):
-        for a in self.randombitarrays(start=1):
+        for _ in range(100):
+            n = randint(1, 1000)
+            a = urandom(n, self.random_endian())
             b = a.copy()
             # we set one random bit in b to 1, so a is always a subset of b
             b[randint(0, len(a) - 1)] == 1

@@ -2833,8 +2833,8 @@ class CountTests(unittest.TestCase, Util):
             self.assertEqual(a.count(), bin(i)[2:].count('1'))
 
     def test_whole_range(self):
-        for a in self.randombitarrays():
-            n = len(a)
+        for n in range(500):
+            a = urandom(n, self.random_endian())
             s = a.to01()
             for v in 0, 1:
                 ref = s.count(str(v))
@@ -2859,7 +2859,7 @@ class CountTests(unittest.TestCase, Util):
 
     def test_zeros(self):
         N = 300
-        a = zeros(N)
+        a = zeros(N, self.random_endian())
         for _ in range(10):
             i = randint(0, N - 1)
             j = randint(i, N - 1)
@@ -2869,6 +2869,17 @@ class CountTests(unittest.TestCase, Util):
                 if step == 0:
                     continue
                 self.assertEqual(a.count(0, i, i, step), 0)
+
+    def test_range(self):
+        N = 300
+        a = urandom(N, self.random_endian())
+        s = a.to01()
+        for _ in range(1000):
+            i = randint(0, N - 1)
+            j = randint(i, N - 1)
+            t = s[i:j]
+            self.assertEqual(a.count(0, i, j), t.count('0'))
+            self.assertEqual(a.count(1, i, j), t.count('1'))
 
     def test_slicelength(self):
         for N in range(100):
