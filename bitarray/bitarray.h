@@ -180,18 +180,6 @@ set_padbits(bitarrayobject *self)
     return 8 - r;
 }
 
-#if 0  /* no longer in use - in favor of popcount64 */
-static const unsigned char bitcount_lookup[256] = {
-#define B2(n)  n, n + 1, n + 1, n + 2
-#define B4(n)  B2(n), B2(n + 1), B2(n + 1), B2(n + 2)
-#define B6(n)  B4(n), B4(n + 1), B4(n + 1), B4(n + 2)
-    B6(0), B6(1), B6(1), B6(2)
-#undef B2
-#undef B4
-#undef B6
-};
-#endif
-
 /* Population count: count the number of 1's in 'x'. */
 static inline int
 popcount64(uint64_t x)

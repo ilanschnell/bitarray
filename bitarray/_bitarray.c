@@ -181,16 +181,13 @@ setup_reverse_trans(void)
 static void
 bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
-    Py_ssize_t i;
-    char *cp, *buff = self->ob_item;
+    char *cp, *buff_stop = self->ob_item + b;
 
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
 
-    for (i = a; i < b; i++) {
-        cp = buff + i;
+    for (cp = self->ob_item + a; cp < buff_stop; cp++)
         *cp = reverse_trans[(unsigned char) *cp];
-    }
 }
 
 /* Shift bits in byte-range(a, b) by n bits to right (using uint64 shifts
@@ -464,17 +461,17 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     else if (n >= 8) {
         const Py_ssize_t byte_a = BYTES(a);
         const Py_ssize_t byte_b = b / 8;
-        uint64_t tmp = 0;
 
         assert(a + 8 > 8 * byte_a && 8 * byte_b + 8 > b);
         assert(byte_b >= byte_a && byte_b - byte_a < 8);
 
         cnt += count(self, a, 8 * byte_a);
-
-        /* copy bytes we want to count into tmp word */
-        memcpy((char *) &tmp, self->ob_item + byte_a, byte_b - byte_a);
-        cnt += popcount64(tmp);
-
+        if (byte_b > byte_a) {
+            uint64_t tmp = 0;
+            /* copy bytes we want to count into tmp word */
+            memcpy((char *) &tmp, self->ob_item + byte_a, byte_b - byte_a);
+            cnt += popcount64(tmp);
+        }
         cnt += count(self, 8 * byte_b, b);
     }
     else {
