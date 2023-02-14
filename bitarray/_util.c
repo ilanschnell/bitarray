@@ -306,9 +306,8 @@ same_size_endian(bitarrayobject *a, bitarrayobject *b)
 static PyObject *
 binary_function(PyObject *args, const char *format, const char oper)
 {
-    Py_ssize_t cnt = 0, cwords, cbytes, i;
+    Py_ssize_t cnt = 0, cwords, i;
     bitarrayobject *a, *b;
-    unsigned char *buff_a, *buff_b;
     uint64_t *wbuff_a, *wbuff_b;
     int rbits;
 
@@ -319,41 +318,31 @@ binary_function(PyObject *args, const char *format, const char oper)
     if (same_size_endian(a, b) < 0)
         return NULL;
 
-    buff_a = (unsigned char *) a->ob_item;
-    buff_b = (unsigned char *) b->ob_item;
-    wbuff_a = (uint64_t *) buff_a;
-    wbuff_b = (uint64_t *) buff_b;
+    wbuff_a = (uint64_t *) a->ob_item;
+    wbuff_b = (uint64_t *) b->ob_item;
     cwords = a->nbits / 64;     /* number of complete 64-bit words */
-    cbytes = a->nbits / 8;      /* number of complete bytes in buffer */
-    rbits = a->nbits % 8;       /* remaining bits  */
+    rbits = a->nbits % 64;      /* remaining bits  */
 
     switch (oper) {
-#define UZ(x)  ((unsigned char) zeroed_last_byte(x))
     case '&':                   /* count and */
         for (i = 0; i < cwords; i++)
             cnt += popcount64(wbuff_a[i] & wbuff_b[i]);
-        for (i = 8 * cwords; i < cbytes; i++)
-            cnt += bitcount_lookup[buff_a[i] & buff_b[i]];
         if (rbits)
-            cnt += bitcount_lookup[UZ(a) & UZ(b)];
+            cnt += popcount64(zlw(a) & zlw(b));
         break;
 
     case '|':                   /* count or */
         for (i = 0; i < cwords; i++)
             cnt += popcount64(wbuff_a[i] | wbuff_b[i]);
-        for (i = 8 * cwords; i < cbytes; i++)
-            cnt += bitcount_lookup[buff_a[i] | buff_b[i]];
         if (rbits)
-            cnt += bitcount_lookup[UZ(a) | UZ(b)];
+            cnt += popcount64(zlw(a) | zlw(b));
         break;
 
     case '^':                   /* count xor */
         for (i = 0; i < cwords; i++)
             cnt += popcount64(wbuff_a[i] ^ wbuff_b[i]);
-        for (i = 8 * cwords; i < cbytes; i++)
-            cnt += bitcount_lookup[buff_a[i] ^ buff_b[i]];
         if (rbits)
-            cnt += bitcount_lookup[UZ(a) ^ UZ(b)];
+            cnt += popcount64(zlw(a) ^ zlw(b));
         break;
 
     case 'a':                   /* any and */
@@ -361,26 +350,17 @@ binary_function(PyObject *args, const char *format, const char oper)
             if (wbuff_a[i] & wbuff_b[i])
                 Py_RETURN_TRUE;
         }
-        for (i = 8 * cwords; i < cbytes; i++) {
-            if (buff_a[i] & buff_b[i])
-                Py_RETURN_TRUE;
-        }
-        return PyBool_FromLong(rbits && (UZ(a) & UZ(b)));
+        return PyBool_FromLong(rbits && (zlw(a) & zlw(b)));
 
     case 's':                   /* is subset */
         for (i = 0; i < cwords; i++) {
             if ((wbuff_a[i] & wbuff_b[i]) != wbuff_a[i])
                 Py_RETURN_FALSE;
         }
-        for (i = 8 * cwords; i < cbytes; i++) {
-            if ((buff_a[i] & buff_b[i]) != buff_a[i])
-                Py_RETURN_FALSE;
-        }
-        return PyBool_FromLong(rbits == 0 || (UZ(a) & UZ(b)) == UZ(a));
+        return PyBool_FromLong(rbits == 0 || (zlw(a) & zlw(b)) == zlw(a));
 
     default:
         Py_UNREACHABLE();
-#undef UZ
     }
     return PyLong_FromSsize_t(cnt);
 }
@@ -432,10 +412,9 @@ iteration is stopped as soon as one mismatch is found.");
 static PyObject *
 correspond_all(PyObject *module, PyObject *args)
 {
-    Py_ssize_t nff = 0, nft = 0, ntf = 0, ntt = 0, cwords, cbytes, i;
+    Py_ssize_t nff = 0, nft = 0, ntf = 0, ntt = 0, cwords, rbits, i;
     bitarrayobject *a, *b;
-    unsigned char u, v, not_u, not_v;
-    uint64_t u64, v64, not_u64, not_v64;
+    uint64_t u, v, not_u, not_v;
 
     if (!PyArg_ParseTuple(args, "O!O!:_correspond_all",
                           bitarray_type_obj, (PyObject *) &a,
@@ -443,39 +422,30 @@ correspond_all(PyObject *module, PyObject *args)
         return NULL;
     if (same_size_endian(a, b) < 0)
         return NULL;
-    cwords = a->nbits / 64;     /* number of complete 64-bit words */
-    cbytes = a->nbits / 8;      /* number of complete bytes in buffer */
+    cwords = a->nbits / 64;     /* complete 64-bit words */
+    rbits = a->nbits % 64;      /* remaining bits */
 
     for (i = 0; i < cwords; i++) {
-        u64 = ((uint64_t *) a->ob_item)[i];
-        v64 = ((uint64_t *) b->ob_item)[i];
-        not_u64 = ~u64;
-        not_v64 = ~v64;
-        nff += popcount64(not_u64 & not_v64);
-        nft += popcount64(not_u64 & v64);
-        ntf += popcount64(u64 & not_v64);
-        ntt += popcount64(u64 & v64);
-    }
-    for (i = 8 * cwords; i < cbytes; i++) {
-        u = a->ob_item[i];
-        v = b->ob_item[i];
+        u = ((uint64_t *) a->ob_item)[i];
+        v = ((uint64_t *) b->ob_item)[i];
         not_u = ~u;
         not_v = ~v;
-        nff += bitcount_lookup[not_u & not_v];
-        nft += bitcount_lookup[not_u & v];
-        ntf += bitcount_lookup[u & not_v];
-        ntt += bitcount_lookup[u & v];
+        nff += popcount64(not_u & not_v);
+        nft += popcount64(not_u & v);
+        ntf += popcount64(u & not_v);
+        ntt += popcount64(u & v);
     }
-    if (a->nbits % 8) {
-        unsigned char mask = ones_table[IS_BE(a)][a->nbits % 8];
-        u = a->ob_item[cbytes];
-        v = b->ob_item[cbytes];
+
+    if (rbits) {
+        u = zlw(a);
+        v = zlw(b);
         not_u = ~u;
         not_v = ~v;
-        nff += bitcount_lookup[not_u & not_v & mask];
-        nft += bitcount_lookup[not_u & v & mask];
-        ntf += bitcount_lookup[u & not_v & mask];
-        ntt += bitcount_lookup[u & v & mask];
+        /* for nff we need to substract the number of unused 1 bits */
+        nff += popcount64(not_u & not_v) - (64 - rbits);
+        nft += popcount64(not_u & v);
+        ntf += popcount64(u & not_v);
+        ntt += popcount64(u & v);
     }
     return Py_BuildValue("nnnn", nff, nft, ntf, ntt);
 }
@@ -1066,21 +1036,16 @@ byte_length(Py_ssize_t i)
 static Py_ssize_t
 count_from_word(bitarrayobject *a, Py_ssize_t i)
 {
-    const Py_ssize_t cwords = a->nbits / 64;
-    const Py_ssize_t cbytes = a->nbits / 8;
     Py_ssize_t cnt = 0;
 
     if (64 * i >= a->nbits)
         return 0;
 
-    while (i < cwords)
+    while (i < a->nbits / 64)
         cnt += popcount64(((uint64_t *) a->ob_item)[i++]);
 
-    for (i = 8 * cwords; i < cbytes; i++)
-        cnt += bitcount_lookup[(unsigned char) a->ob_item[i]];
-
-    if (a->nbits % 8)
-        cnt += bitcount_lookup[(unsigned char) zeroed_last_byte(a)];
+    if (a->nbits % 64)
+        cnt += popcount64(zlw(a));
 
     return cnt;
 }
