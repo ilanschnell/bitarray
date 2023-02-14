@@ -2858,7 +2858,7 @@ class CountTests(unittest.TestCase, Util):
             self.assertEqual(a.count(0, i, j), j - i - cnt)
 
     def test_zeros(self):
-        N = 300
+        N = 30
         a = zeros(N, self.random_endian())
         for _ in range(10):
             i = randint(0, N - 1)
@@ -2877,9 +2877,18 @@ class CountTests(unittest.TestCase, Util):
         for _ in range(1000):
             i = randint(0, N - 1)
             j = randint(i, N - 1)
+
             t = s[i:j]
-            self.assertEqual(a.count(0, i, j), t.count('0'))
-            self.assertEqual(a.count(1, i, j), t.count('1'))
+            c0 = t.count('0')
+            c1 = t.count('1')
+            self.assertEqual(c0 + c1, j - i)
+
+            self.assertEqual(a.count(0, i, j), c0)
+            self.assertEqual(a.count(1, i, j), c1)
+
+            b = a[i:j]
+            self.assertEqual(b.count(0), c0)
+            self.assertEqual(b.count(1), c1)
 
     def test_slicelength(self):
         for N in range(100):

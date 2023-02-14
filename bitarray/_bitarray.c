@@ -437,7 +437,7 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     }
 }
 
-/* return number of 1 bits in range(a, b) */
+/* return number of 1 bits in self[a:b] */
 static Py_ssize_t
 count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {

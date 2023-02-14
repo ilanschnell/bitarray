@@ -135,7 +135,7 @@ static const char ones_table[2][8] = {
    If the length of the bitarray is a multiple of 8 (which includes an empty
    bitarray), 0 is returned. */
 static inline char
-zlc(bitarrayobject *self)
+zlc(bitarrayobject *self)       /* zlc = zeroed last char */
 {
     const int r = self->nbits % 8;     /* index into mask table */
 
@@ -150,7 +150,7 @@ zlc(bitarrayobject *self)
    If the length of the bitarray is a multiple of 64 (which includes an empty
    bitarray), 0 is returned. */
 static inline uint64_t
-zlw(bitarrayobject *self)
+zlw(bitarrayobject *self)       /* zlw = zeroed last word */
 {
     const Py_ssize_t nbits = self->nbits;
     const Py_ssize_t ncw = 8 * (nbits / 64);  /* bytes in complete words */
