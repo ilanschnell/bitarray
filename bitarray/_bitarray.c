@@ -3471,7 +3471,7 @@ richcompare(PyObject *v, PyObject *w, int op)
             int cmp = memcmp(vb, wb, (size_t) vs / 8);
 
             if (cmp == 0 && vs % 8)  /* if equal, compare remaining bits */
-                cmp = zeroed_last_byte(va) != zeroed_last_byte(wa);
+                cmp = zlc(va) != zlc(wa);
 
             return PyBool_FromLong((cmp == 0) ^ (op == Py_NE));
         }

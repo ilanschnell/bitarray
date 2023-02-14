@@ -131,14 +131,16 @@ static const char ones_table[2][8] = {
     {0x00, 0x80, 0xc0, 0xe0, 0xf0, 0xf8, 0xfc, 0xfe},  /* big endian */
 };
 
-/* Return last byte in buffer with pad bits zeroed out.  It is an error if
-   the number of bits in the bitarray is a multiple of 8. */
+/* Return last byte in buffer with pad bits zeroed out.
+   If the length of the bitarray is a multiple of 8 (which includes an empty
+   bitarray), 0 is returned. */
 static inline char
-zeroed_last_byte(bitarrayobject *self)
+zlc(bitarrayobject *self)
 {
     const int r = self->nbits % 8;     /* index into mask table */
 
-    assert(r > 0);
+    if (r == 0)
+        return 0;
     return self->ob_item[Py_SIZE(self) - 1] & ones_table[IS_BE(self)][r];
 }
 
@@ -156,7 +158,7 @@ zlw(bitarrayobject *self)
 
     memcpy((char *) &res, self->ob_item + (8 * (nbits / 64)), cbytes);
     if (nbits % 8)
-        *(((char *) &res) + cbytes) = zeroed_last_byte(self);
+        *(((char *) &res) + cbytes) = zlc(self);
 
     assert(nbits % 64 || res == 0);
     return res;
@@ -176,6 +178,7 @@ set_padbits(bitarrayobject *self)
     return 8 - r;
 }
 
+#if 0  /* no longer in use - in favor of popcount64 */
 static const unsigned char bitcount_lookup[256] = {
 #define B2(n)  n, n + 1, n + 1, n + 2
 #define B4(n)  B2(n), B2(n + 1), B2(n + 1), B2(n + 2)
@@ -185,6 +188,7 @@ static const unsigned char bitcount_lookup[256] = {
 #undef B4
 #undef B6
 };
+#endif
 
 /* Population count: count the number of 1's in 'x'. */
 static inline int
