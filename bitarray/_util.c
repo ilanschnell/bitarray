@@ -274,7 +274,7 @@ parity(PyObject *module, PyObject *obj)
         par ^= ((uint64_t *) a->ob_item)[i];
     if (a->nbits % 64)
         par ^= zlw(a);
-    for (i = 32; i > 0; i >>= 1)
+    for (i = 32; i > 0; i /= 2)
         par ^= par >> i;
     return PyLong_FromLong(par & 1);
 }
