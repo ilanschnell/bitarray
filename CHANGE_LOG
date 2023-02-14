@@ -1,5 +1,9 @@
 2023-XX-XX   2.7.3:
 -------------------
+  * simplify count functionality by using `zlw()`, a function which returns
+    a `uint64_t` word representing the tail of the bitarray buffer
+  * retire use of `bitcount_lookup[256]` table
+  * improve testing
 
 
 2023-02-12   2.7.2:
