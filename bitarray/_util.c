@@ -263,19 +263,20 @@ static PyObject *
 parity(PyObject *module, PyObject *obj)
 {
     bitarrayobject *a;
-    unsigned char par = 0;
+    uint64_t par = 0;
     Py_ssize_t i;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
     a = (bitarrayobject *) obj;
-    for (i = 0; i < a->nbits / 8; i++)
-        par ^= a->ob_item[i];
-    if (a->nbits % 8)
-        par ^= zeroed_last_byte(a);
-
-    return PyLong_FromLong((long) bitcount_lookup[par] % 2);
+    for (i = 0; i < a->nbits / 64; i++)
+        par ^= ((uint64_t *) a->ob_item)[i];
+    if (a->nbits % 64)
+        par ^= zlw(a);
+    for (i = 32; i > 0; i >>= 1)
+        par ^= par >> i;
+    return PyLong_FromLong(par & 1);
 }
 
 PyDoc_STRVAR(parity_doc,

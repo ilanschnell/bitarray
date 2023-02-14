@@ -30,7 +30,7 @@
 #endif
 
 /* PY_LITTLE_ENDIAN and PY_BIG_ENDIAN (machine byteorder) are available in
-   Python 3.5.10.  Not sure when they were introduced */
+   Python 3.4.10.  Not sure when exactly they were introduced. */
 #ifndef PY_LITTLE_ENDIAN
 #define PY_LITTLE_ENDIAN  (*((uint64_t *) "\xff\0\0\0\0\0\0\0") == 0xff)
 #endif
@@ -140,6 +140,26 @@ zeroed_last_byte(bitarrayobject *self)
 
     assert(r > 0);
     return self->ob_item[Py_SIZE(self) - 1] & ones_table[IS_BE(self)][r];
+}
+
+/* Return a uint64_t word representing the last (up to 63) remaining bits
+   of the buffer.  All missing bytes (to complete the word) and padbits are
+   treated as zeros.
+   If the length of the bitarray is a multiple of 64 (which includes an empty
+   bitarray), 0 is returned. */
+static inline uint64_t
+zlw(bitarrayobject *self)
+{
+    const Py_ssize_t nbits = self->nbits;
+    const Py_ssize_t cbytes = (nbits % 64) / 8;
+    uint64_t res = 0;
+
+    memcpy((char *) &res, self->ob_item + (8 * (nbits / 64)), cbytes);
+    if (nbits % 8)
+        *(((char *) &res) + cbytes) = zeroed_last_byte(self);
+
+    assert(nbits % 64 || res == 0);
+    return res;
 }
 
 /* Unless buffer is readonly, zero out pad bits.

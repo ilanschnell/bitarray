@@ -464,13 +464,17 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     else if (n >= 8) {
         const Py_ssize_t byte_a = BYTES(a);
         const Py_ssize_t byte_b = b / 8;
-        const unsigned char *ucbuff = (unsigned char *) self->ob_item;
+        uint64_t tmp = 0;
 
         assert(a + 8 > 8 * byte_a && 8 * byte_b + 8 > b);
+        assert(byte_b >= byte_a && byte_b - byte_a < 8);
 
         res += count(self, a, 8 * byte_a);
-        for (i = byte_a; i < byte_b; i++)
-            res += bitcount_lookup[ucbuff[i]];
+
+        /* copy bytes we want to count into tmp word */
+        memcpy((char *) &tmp, self->ob_item + byte_a, byte_b - byte_a);
+        res += popcount64(tmp);
+
         res += count(self, 8 * byte_b, b);
     }
     else {

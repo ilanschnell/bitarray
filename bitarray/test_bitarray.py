@@ -86,7 +86,7 @@ class Util(object):
         return ['little', 'big'][randint(0, 1)]
 
     def randombitarrays(self, start=0):
-        for n in range(start, 26):
+        for n in range(start, 130 if DEBUG else 26):
             yield urandom(n, self.random_endian())
         yield urandom(randint(1000, 2000), self.random_endian())
 
