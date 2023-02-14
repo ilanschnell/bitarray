@@ -738,7 +738,6 @@ class TestsSubset(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays(start=1):
-            n = len(a)
             b = a.copy()
             # we set one random bit in b to 1, so a is always a subset of b
             b[randint(0, len(a) - 1)] == 1

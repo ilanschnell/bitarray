@@ -412,9 +412,10 @@ iteration is stopped as soon as one mismatch is found.");
 static PyObject *
 correspond_all(PyObject *module, PyObject *args)
 {
-    Py_ssize_t nff = 0, nft = 0, ntf = 0, ntt = 0, cwords, rbits, i;
+    Py_ssize_t nff = 0, nft = 0, ntf = 0, ntt = 0, cwords, i;
     bitarrayobject *a, *b;
     uint64_t u, v, not_u, not_v;
+    int rbits;
 
     if (!PyArg_ParseTuple(args, "O!O!:_correspond_all",
                           bitarray_type_obj, (PyObject *) &a,
@@ -422,6 +423,7 @@ correspond_all(PyObject *module, PyObject *args)
         return NULL;
     if (same_size_endian(a, b) < 0)
         return NULL;
+
     cwords = a->nbits / 64;     /* complete 64-bit words */
     rbits = a->nbits % 64;      /* remaining bits */
 
