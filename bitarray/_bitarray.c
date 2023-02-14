@@ -442,7 +442,7 @@ static Py_ssize_t
 count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
     const Py_ssize_t n = b - a;
-    Py_ssize_t res = 0, i;
+    Py_ssize_t cnt = 0, i;
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
@@ -456,10 +456,10 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 
         assert(a + 64 > 64 * word_a && 64 * word_b + 64 > b);
 
-        res += count(self, a, 64 * word_a);
+        cnt += count(self, a, 64 * word_a);
         for (i = word_a; i < word_b; i++)
-            res += popcount64(wbuff[i]);
-        res += count(self, 64 * word_b, b);
+            cnt += popcount64(wbuff[i]);
+        cnt += count(self, 64 * word_b, b);
     }
     else if (n >= 8) {
         const Py_ssize_t byte_a = BYTES(a);
@@ -469,19 +469,19 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         assert(a + 8 > 8 * byte_a && 8 * byte_b + 8 > b);
         assert(byte_b >= byte_a && byte_b - byte_a < 8);
 
-        res += count(self, a, 8 * byte_a);
+        cnt += count(self, a, 8 * byte_a);
 
         /* copy bytes we want to count into tmp word */
         memcpy((char *) &tmp, self->ob_item + byte_a, byte_b - byte_a);
-        res += popcount64(tmp);
+        cnt += popcount64(tmp);
 
-        res += count(self, 8 * byte_b, b);
+        cnt += count(self, 8 * byte_b, b);
     }
     else {
         for (i = a; i < b; i++)
-            res += getbit(self, i);
+            cnt += getbit(self, i);
     }
-    return res;
+    return cnt;
 }
 
 /* return index of first occurrence of vi in self[a:b], -1 when not found */

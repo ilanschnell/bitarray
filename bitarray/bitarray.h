@@ -153,12 +153,14 @@ static inline uint64_t
 zlw(bitarrayobject *self)
 {
     const Py_ssize_t nbits = self->nbits;
-    const int cr_bytes = (nbits % 64) / 8;  /* complete remaining bytes */
+    const Py_ssize_t ncw = 8 * (nbits / 64);  /* bytes in complete words */
+    const int crn = (nbits % 64) / 8;         /* complete remaining bytes */
     uint64_t res = 0;
 
-    memcpy((char *) &res, self->ob_item + (8 * (nbits / 64)), cr_bytes);
+    assert(ncw + crn <= Py_SIZE(self));
+    memcpy((char *) &res, self->ob_item + ncw, crn);
     if (nbits % 8)
-        *(((char *) &res) + cr_bytes) = zlc(self);
+        *(((char *) &res) + crn) = zlc(self);
 
     assert(nbits % 64 || res == 0);
     return res;
