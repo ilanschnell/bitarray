@@ -4,7 +4,6 @@ Tests for bitarray.util module
 from __future__ import absolute_import
 
 import os
-import re
 import sys
 import base64
 import binascii
@@ -17,7 +16,7 @@ from random import choice, randint, random
 from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
-                      get_default_endian, _set_default_endian)
+                      _set_default_endian)
 from bitarray.test_bitarray import Util, skipIf, DEBUG
 
 from bitarray.util import (
