@@ -445,23 +445,23 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         return 0;
 
     if (n >= 64) {
-        const Py_ssize_t word_a = (a + 63) / 64;
-        const Py_ssize_t word_b = b / 64;
+        const Py_ssize_t wa = (a + 63) / 64;  /* word range(wa, ba) */
+        const Py_ssize_t wb = b / 64;
         const uint64_t *wbuff = (uint64_t *) self->ob_item;
 
-        assert(a + 64 > 64 * word_a && 64 * word_b + 64 > b);
+        assert(wa <= wb && 64 * wa - a < 64 && b - 64 * wb < 64);
 
-        cnt += count(self, a, 64 * word_a);
-        for (i = word_a; i < word_b; i++)
+        cnt += count(self, a, 64 * wa);
+        for (i = wa; i < wb; i++)
             cnt += popcount64(wbuff[i]);
-        cnt += count(self, 64 * word_b, b);
+        cnt += count(self, 64 * wb, b);
     }
     else if (n >= 8) {
         const Py_ssize_t byte_a = BYTES(a);
         const Py_ssize_t byte_b = b / 8;
 
-        assert(a + 8 > 8 * byte_a && 8 * byte_b + 8 > b);
-        assert(byte_b >= byte_a && byte_b - byte_a < 8);
+        assert(8 * byte_a - a < 8 && b - 8 * byte_b < 8);
+        assert(byte_a <= byte_b && byte_b - byte_a < 8);
 
         cnt += count(self, a, 8 * byte_a);
         if (byte_b > byte_a) {
