@@ -181,13 +181,13 @@ setup_reverse_trans(void)
 static void
 bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
-    char *cp, *buff_stop = self->ob_item + b;
+    char *buff = self->ob_item + a;
 
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
 
-    for (cp = self->ob_item + a; cp < buff_stop; cp++)
-        *cp = reverse_trans[(unsigned char) *cp];
+    for (; a < b; a++, buff++)
+        *buff = reverse_trans[(unsigned char) *buff];
 }
 
 /* Shift bits in byte-range(a, b) by n bits to right (using uint64 shifts
@@ -427,10 +427,8 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
         setrange(self, 8 * byte_b, b, vi);
     }
     else {
-        Py_ssize_t i;
-
-        for (i = a; i < b; i++)
-            setbit(self, i, vi);
+        while (a < b)
+            setbit(self, a++, vi);
     }
 }
 

@@ -95,24 +95,22 @@ count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
 {
     const Py_ssize_t nbits = a->nbits;
     uint64_t *wbuff = (uint64_t *) a->ob_item;
-    Py_ssize_t i = 0;        /* index */
+    Py_ssize_t i = 0;        /* index (result) */
     Py_ssize_t j = 0;        /* total count up to index */
-    Py_ssize_t block_start, block_stop, k, m;
 
     assert(0 <= n && n <= nbits);
     if (n == 0)
         return 0;
 
-#define BLOCK_BITS  8192
+#define BLOCK_BITS  4096
     /* by counting big blocks we save comparisons */
     while (i + BLOCK_BITS < nbits) {
-        m = 0;
-        assert(i % 8 == 0);
-        block_start = i / 64;
-        block_stop = block_start + (BLOCK_BITS / 64);
-        assert(8 * block_stop <= Py_SIZE(a));
-        for (k = block_start; k < block_stop; k++)
-            m += popcount64(wbuff[k]);
+        uint64_t *w = wbuff + i / 64;   /* pointer to first word in block */
+        Py_ssize_t k = BLOCK_BITS / 64; /* number of words in block */
+        Py_ssize_t m = 0;               /* block population count */
+
+        while (k--)  /* loop over words in block - accumulate popcount */
+            m += popcount64(*w++);
         if (!vi)
             m = BLOCK_BITS - m;
         if (j + m >= n)
@@ -123,9 +121,8 @@ count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
 #undef BLOCK_BITS
 
     while (i + 64 < nbits) {
-        k = i / 64;
-        assert(8 * k + 8 <= Py_SIZE(a));
-        m = popcount64(wbuff[k]);
+        Py_ssize_t m = popcount64(wbuff[i / 64]);
+
         if (!vi)
             m = 64 - m;
         if (j + m >= n)
