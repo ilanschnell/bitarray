@@ -181,12 +181,12 @@ setup_reverse_trans(void)
 static void
 bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
-    char *buff = self->ob_item + a;
+    char *buff;
 
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
 
-    for (; a < b; a++, buff++)
+    for (buff = self->ob_item + a; a < b; a++, buff++)
         *buff = reverse_trans[(unsigned char) *buff];
 }
 
@@ -362,7 +362,7 @@ invert(bitarrayobject *self)
     const Py_ssize_t nbytes = Py_SIZE(self);
     const Py_ssize_t cwords = nbytes / 8;      /* complete 64-bit words */
     char *buff = self->ob_item;
-    uint64_t *wbuff = (uint64_t *) buff;
+    uint64_t *wbuff = WBUFF(self);
     Py_ssize_t i;
 
     assert_nbits(self);
@@ -437,7 +437,7 @@ static Py_ssize_t
 count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
     const Py_ssize_t n = b - a;
-    Py_ssize_t cnt = 0, i;
+    Py_ssize_t cnt = 0;
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
@@ -447,13 +447,11 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     if (n >= 64) {
         const Py_ssize_t wa = (a + 63) / 64;  /* word range(wa, ba) */
         const Py_ssize_t wb = b / 64;
-        const uint64_t *wbuff = (uint64_t *) self->ob_item;
 
         assert(wa <= wb && 64 * wa - a < 64 && b - 64 * wb < 64);
 
         cnt += count(self, a, 64 * wa);
-        for (i = wa; i < wb; i++)
-            cnt += popcount64(wbuff[i]);
+        cnt += popcount_nwords(WBUFF(self) + wa, wb - wa);
         cnt += count(self, 64 * wb, b);
     }
     else if (n >= 8) {
@@ -473,8 +471,8 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         cnt += count(self, 8 * byte_b, b);
     }
     else {
-        for (i = a; i < b; i++)
-            cnt += getbit(self, i);
+        while (a < b)
+            cnt += getbit(self, a++);
     }
     return cnt;
 }
@@ -498,7 +496,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     if (n > 64) {
         const Py_ssize_t word_a = (a + 63) / 64;
         const Py_ssize_t word_b = b / 64;
-        const uint64_t *wbuff = (uint64_t *) self->ob_item;
+        const uint64_t *wbuff = WBUFF(self);
         const uint64_t w = vi ? 0 : ~0;
 
         if ((res = find_bit(self, vi, a, 64 * word_a)) >= 0)
@@ -605,7 +603,7 @@ setstr01(bitarrayobject *self, char *str)
     Py_ssize_t i;
 
     for (i = 0; i < self->nbits; i++)
-        str[i] = getbit(self, i) ? '1' : '0';
+        str[i] = getbit(self, i) + '0';
 }
 
 /* set item i in self to given value */
@@ -2177,8 +2175,8 @@ bitwise(bitarrayobject *self, bitarrayobject *other, const char oper)
     Py_ssize_t i;
     char *buff_s = self->ob_item;
     char *buff_o = other->ob_item;
-    uint64_t *wbuff_s = (uint64_t *) buff_s;
-    uint64_t *wbuff_o = (uint64_t *) buff_o;
+    uint64_t *wbuff_s = WBUFF(self);
+    uint64_t *wbuff_o = WBUFF(other);
 
     assert(self->nbits == other->nbits);
     assert(self->endian == other->endian);

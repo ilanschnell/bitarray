@@ -86,6 +86,9 @@ typedef struct {
 #define BITMASK(self, i)  (((char) 1) << ((self)->endian == ENDIAN_LITTLE ? \
                                           ((i) % 8) : (7 - (i) % 8)))
 
+/* buffer as uint64 array */
+#define WBUFF(self)  ((uint64_t *) (self)->ob_item)
+
 /* assert that .nbits is in agreement with .ob_size */
 #define assert_nbits(self)  assert(BYTES((self)->nbits) == Py_SIZE(self))
 
@@ -198,6 +201,18 @@ popcount64(uint64_t x)
     x = (x + (x >> 4)) & m4;
     return (x * h01) >> 56;
 #endif  /* __GNUC__ */
+}
+
+/* population count of `n` words starting from `w` */
+static inline Py_ssize_t
+popcount_nwords(uint64_t *w, Py_ssize_t n)
+{
+    Py_ssize_t cnt = 0;
+
+    assert(n >= 0);
+    while (n--)
+        cnt += popcount64(*w++);
+    return cnt;
 }
 
 /* adjust index a manner consistent with the handling of normal slices */

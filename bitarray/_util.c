@@ -94,48 +94,43 @@ static Py_ssize_t
 count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
 {
     const Py_ssize_t nbits = a->nbits;
-    uint64_t *wbuff = (uint64_t *) a->ob_item;
-    Py_ssize_t i = 0;        /* index (result) */
-    Py_ssize_t j = 0;        /* total count up to index */
+    uint64_t *wbuff = WBUFF(a);
+    Py_ssize_t i = 0;         /* index (result) */
+    Py_ssize_t t = 0;         /* total count up to index */
+    Py_ssize_t m;             /* popcount in each block */
 
     assert(0 <= n && n <= nbits);
     if (n == 0)
         return 0;
 
-#define BLOCK_BITS  4096
     /* by counting big blocks we save comparisons */
+#define BLOCK_BITS  4096      /* block size: 4096 bits = 64 words */
     while (i + BLOCK_BITS < nbits) {
-        uint64_t *w = wbuff + i / 64;   /* pointer to first word in block */
-        Py_ssize_t k = BLOCK_BITS / 64; /* number of words in block */
-        Py_ssize_t m = 0;               /* block population count */
-
-        while (k--)  /* loop over words in block - accumulate popcount */
-            m += popcount64(*w++);
+        m = popcount_nwords(wbuff + i / 64, BLOCK_BITS / 64);
         if (!vi)
             m = BLOCK_BITS - m;
-        if (j + m >= n)
+        if (t + m >= n)
             break;
-        j += m;
+        t += m;
         i += BLOCK_BITS;
     }
 #undef BLOCK_BITS
 
-    while (i + 64 < nbits) {
-        Py_ssize_t m = popcount64(wbuff[i / 64]);
-
+    while (i + 64 < nbits) {  /* count blocks of single (64-bit) words */
+        m = popcount64(wbuff[i / 64]);
         if (!vi)
             m = 64 - m;
-        if (j + m >= n)
+        if (t + m >= n)
             break;
-        j += m;
+        t += m;
         i += 64;
     }
 
-    while (j < n && i < nbits) {
-        j += vi ? getbit(a, i) : 1 - getbit(a, i);
-        i++;
+    while (i < nbits && t < n) {
+        t += getbit(a, i++) == vi;
     }
-    if (j < n)  /* n exceeds total count */
+
+    if (t < n)  /* n exceeds total count */
         return -1;
 
     return i;
@@ -172,7 +167,7 @@ PyDoc_STRVAR(count_n_doc,
 "count_n(a, n, value=1, /) -> int\n\
 \n\
 Return lowest index `i` for which `a[:i].count(value) == n`.\n\
-Raises `ValueError`, when n exceeds total count (`a.count(value)`).");
+Raises `ValueError` when `n` exceeds total count (`a.count(value)`).");
 
 /* ----------------------------- right index --------------------------- */
 
@@ -193,7 +188,7 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     if (n > 64) {
         const Py_ssize_t word_a = (a + 63) / 64;
         const Py_ssize_t word_b = b / 64;
-        const uint64_t *wbuff = (uint64_t *) self->ob_item;
+        const uint64_t *wbuff = WBUFF(self);
         const uint64_t w = vi ? 0 : ~0;
 
         if ((res = find_last(self, vi, 64 * word_b, b)) >= 0)
@@ -268,7 +263,7 @@ parity(PyObject *module, PyObject *obj)
 
     a = (bitarrayobject *) obj;
     for (i = 0; i < a->nbits / 64; i++)
-        par ^= ((uint64_t *) a->ob_item)[i];
+        par ^= WBUFF(a)[i];
     if (a->nbits % 64)
         par ^= zlw(a);
     for (i = 32; i > 0; i /= 2)
@@ -315,8 +310,8 @@ binary_function(PyObject *args, const char *format, const char oper)
     if (same_size_endian(a, b) < 0)
         return NULL;
 
-    wbuff_a = (uint64_t *) a->ob_item;
-    wbuff_b = (uint64_t *) b->ob_item;
+    wbuff_a = WBUFF(a);
+    wbuff_b = WBUFF(b);
     cwords = a->nbits / 64;     /* number of complete 64-bit words */
     rbits = a->nbits % 64;      /* remaining bits  */
 
@@ -425,8 +420,8 @@ correspond_all(PyObject *module, PyObject *args)
     rbits = a->nbits % 64;      /* remaining bits */
 
     for (i = 0; i < cwords; i++) {
-        u = ((uint64_t *) a->ob_item)[i];
-        v = ((uint64_t *) b->ob_item)[i];
+        u = WBUFF(a)[i];
+        v = WBUFF(b)[i];
         not_u = ~u;
         not_v = ~v;
         nff += popcount64(not_u & not_v);
@@ -1031,21 +1026,19 @@ byte_length(Py_ssize_t i)
     return n;
 }
 
-/* starting from word `i` count the remaining population in bitarray buffer */
+/* Starting from word index `i`, count the remaining population in bitarray
+   buffer.  Equivalent to:  a[64 * i:].count()  */
 static Py_ssize_t
 count_from_word(bitarrayobject *a, Py_ssize_t i)
 {
+    const Py_ssize_t nbits = a->nbits;
     Py_ssize_t cnt = 0;
 
-    if (64 * i >= a->nbits)
+    if (64 * i >= nbits)
         return 0;
-
-    while (i < a->nbits / 64)
-        cnt += popcount64(((uint64_t *) a->ob_item)[i++]);
-
-    if (a->nbits % 64)
+    cnt += popcount_nwords(WBUFF(a) + i, nbits / 64 - i);
+    if (nbits % 64)
         cnt += popcount64(zlw(a));
-
     return cnt;
 }
 
@@ -1114,36 +1107,31 @@ count_from_word(bitarrayobject *a, Py_ssize_t i)
 static Py_ssize_t *
 sc_calc_rts(bitarrayobject *a)
 {
-    const Py_ssize_t n_seg = NSEG(a->nbits);  /* number of segments */
-    const Py_ssize_t c_seg = a->nbits / (8 * SEGSIZE);  /* complete segs */
+    const Py_ssize_t nbits = a->nbits;
+    const Py_ssize_t n_seg = NSEG(nbits);     /* number of segments */
+    const Py_ssize_t c_seg = nbits / (8 * SEGSIZE);  /* complete segments */
     char zeros[SEGSIZE];                      /* segment with only zeros */
     Py_ssize_t cnt = 0;                       /* current count */
-    char *buff;
-    Py_ssize_t *res, i, j;
+    char *buff;                               /* buffer in current segment */
+    Py_ssize_t *res, m;
 
-    assert(n_seg == c_seg || n_seg == c_seg + 1);
     memset(zeros, 0x00, SEGSIZE);
     res = (Py_ssize_t *) PyMem_Malloc((size_t)
                                       sizeof(Py_ssize_t) * (n_seg + 1));
     if (res == NULL)
         return (Py_ssize_t *) PyErr_NoMemory();
 
-    /* all complete segments */
-    for (j = 0, buff = a->ob_item; j < c_seg; j++, buff += SEGSIZE) {
-        res[j] = cnt;
-        assert(buff - a->ob_item + SEGSIZE <= Py_SIZE(a));
-        if (memcmp(buff, zeros, SEGSIZE)) { /* segment has not only zeros */
-            for (i = 0; i < SEGSIZE / 8; i++)
-                cnt += popcount64(((uint64_t *) buff)[i]);
-        }
+    for (m = 0; m < c_seg; m++) {  /* loop all complete segments */
+        res[m] = cnt;
+        buff = a->ob_item + m * SEGSIZE;
+        assert((m + 1) * SEGSIZE <= Py_SIZE(a));
+
+        if (memcmp(buff, zeros, SEGSIZE))  /* segment has not only zeros */
+            cnt += popcount_nwords((uint64_t *) buff, SEGSIZE / 8);
     }
-    assert(buff - a->ob_item == SEGSIZE * c_seg);
     res[c_seg] = cnt;
 
     if (n_seg > c_seg) {           /* we have a final partial segment */
-        assert(Py_SIZE(a) <= SEGSIZE * n_seg);
-        assert(a->nbits && a->nbits < 8 * SEGSIZE * n_seg);
-
         cnt += count_from_word(a, (SEGSIZE / 8) * c_seg);
         res[n_seg] = cnt;
     }
@@ -1181,6 +1169,7 @@ sc_rts(PyObject *module, PyObject *obj)
     return list;
 }
 #endif  /* NDEBUG */
+
 
 /* Equivalent to the Python expression:
 

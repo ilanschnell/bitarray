@@ -50,6 +50,6 @@ setup(
                              sources = ["bitarray/_bitarray.c"]),
                    Extension(name = "bitarray._util",
                              sources = ["bitarray/_util.c"])],
-    zip_safe = False,  # see PEP 561
+    zip_safe = False,
     **kwds
 )
