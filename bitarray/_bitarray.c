@@ -1730,8 +1730,7 @@ bitarray_sizeof(bitarrayobject *self)
     return PyLong_FromSsize_t(res);
 }
 
-PyDoc_STRVAR(sizeof_doc,
-"Return the size of the bitarray in memory, in bytes.");
+PyDoc_STRVAR(sizeof_doc, "Return the size of bitarray object in bytes.");
 
 
 /* private method - called only when frozenbitarray is initialized to
