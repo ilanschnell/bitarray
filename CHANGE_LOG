@@ -2,6 +2,7 @@
 -------------------
   * simplify count functionality in util module
   * retire `bitcount_lookup[256]` table
+  * improve `util.count_n()` error messages
   * improve testing
 
 

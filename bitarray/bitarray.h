@@ -205,7 +205,7 @@ popcount64(uint64_t x)
 
 /* population count of `n` words starting from `w` */
 static inline Py_ssize_t
-popcount_nwords(uint64_t *w, Py_ssize_t n)
+popcount_words(uint64_t *w, Py_ssize_t n)
 {
     Py_ssize_t cnt = 0;
 

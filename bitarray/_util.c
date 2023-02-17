@@ -89,7 +89,9 @@ endianness, which may be 'big', 'little'.");
 /* ------------------------------- count_n ----------------------------- */
 
 /* Return the smallest index i for which a.count(vi, 0, i) == n.
-   When n exceeds the total count, return -1.  */
+   When n exceeds the total count, the result is a always negative
+   number (the negative of the total count + 1, which is useful
+   for displaying the error message). */
 static Py_ssize_t
 count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
 {
@@ -103,10 +105,10 @@ count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
     if (n == 0)
         return 0;
 
-    /* by counting big blocks we save comparisons */
+    /* by counting big blocks we save comparisons and updates */
 #define BLOCK_BITS  4096      /* block size: 4096 bits = 64 words */
     while (i + BLOCK_BITS < nbits) {
-        m = popcount_nwords(wbuff + i / 64, BLOCK_BITS / 64);
+        m = popcount_words(wbuff + i / 64, BLOCK_BITS / 64);
         if (!vi)
             m = BLOCK_BITS - m;
         if (t + m >= n)
@@ -131,7 +133,7 @@ count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
     }
 
     if (t < n)  /* n exceeds total count */
-        return -1;
+        return -(t + 1);
 
     return i;
 }
@@ -150,16 +152,16 @@ count_n(PyObject *module, PyObject *args)
         PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
         return NULL;
     }
-    if (n > a->nbits)  {
-        PyErr_SetString(PyExc_ValueError, "n larger than bitarray size");
-        return NULL;
-    }
+    if (n > a->nbits)
+        return PyErr_Format(PyExc_ValueError,
+                            "n (%zd) larger than bitarray size (%zd)",
+                            n, a->nbits);
     i = count_n_core(a, n, vi);        /* do actual work here */
 
-    if (i < 0) {
-        PyErr_SetString(PyExc_ValueError, "n exceeds total count");
-        return NULL;
-    }
+    if (i < 0)
+        return PyErr_Format(PyExc_ValueError,
+                            "n (%zd) exceeds total count (%zd)",
+                            n, -(i + 1));
     return PyLong_FromSsize_t(i);
 }
 
@@ -1036,7 +1038,7 @@ count_from_word(bitarrayobject *a, Py_ssize_t i)
 
     if (64 * i >= nbits)
         return 0;
-    cnt += popcount_nwords(WBUFF(a) + i, nbits / 64 - i);
+    cnt += popcount_words(WBUFF(a) + i, nbits / 64 - i);
     if (nbits % 64)
         cnt += popcount64(zlw(a));
     return cnt;
@@ -1127,7 +1129,7 @@ sc_calc_rts(bitarrayobject *a)
         assert((m + 1) * SEGSIZE <= Py_SIZE(a));
 
         if (memcmp(buff, zeros, SEGSIZE))  /* segment has not only zeros */
-            cnt += popcount_nwords((uint64_t *) buff, SEGSIZE / 8);
+            cnt += popcount_words((uint64_t *) buff, SEGSIZE / 8);
     }
     res[c_seg] = cnt;
 
