@@ -153,15 +153,15 @@ count_n(PyObject *module, PyObject *args)
         return NULL;
     }
     if (n > a->nbits)
-        return PyErr_Format(PyExc_ValueError,
-                            "n (%zd) larger than bitarray size (%zd)",
-                            n, a->nbits);
+        return PyErr_Format(PyExc_ValueError, "n = %zd larger than bitarray "
+                            "size %zd", n, a->nbits);
+
     i = count_n_core(a, n, vi);        /* do actual work here */
 
     if (i < 0)
         return PyErr_Format(PyExc_ValueError,
-                            "n (%zd) exceeds total count (%zd)",
-                            n, -(i + 1));
+                            "n = %zd exceeds total count %zd", n, -(i + 1));
+
     return PyLong_FromSsize_t(i);
 }
 

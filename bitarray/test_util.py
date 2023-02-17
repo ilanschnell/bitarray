@@ -446,6 +446,9 @@ class TestsCount_N(unittest.TestCase, Util):
         self.assertRaises(TypeError, count_n, '', 0)
         self.assertRaises(TypeError, count_n, a, 7.0)
         self.assertRaises(ValueError, count_n, a, 0, 2)
+        self.assertRaisesMessage(ValueError,
+                                 "n = 1 larger than bitarray size 0",
+                                 count_n, a, 1)
 
     def test_simple(self):
         a = bitarray('111110111110111110111110011110111110111110111000')
@@ -460,10 +463,10 @@ class TestsCount_N(unittest.TestCase, Util):
         self.assertRaisesMessage(ValueError, "non-negative integer expected",
                                  count_n, a, -1, 0) # n < 0
         self.assertRaisesMessage(ValueError,
-                                 "n (49) larger than bitarray size (48)",
+                                 "n = 49 larger than bitarray size 48",
                                  count_n, a, 49, 0) # n > len(a)
         self.assertRaisesMessage(ValueError,
-                                 "n (12) exceeds total count (11)",
+                                 "n = 12 exceeds total count 11",
                                  count_n, a, 12, 0) # n > a.count(0)
 
         self.assertEqual(count_n(a, 0), 0)
@@ -473,10 +476,10 @@ class TestsCount_N(unittest.TestCase, Util):
         self.assertRaisesMessage(ValueError, "non-negative integer expected",
                                  count_n, a, -1) # n < 0
         self.assertRaisesMessage(ValueError,
-                                 "n (49) larger than bitarray size (48)",
+                                 "n = 49 larger than bitarray size 48",
                                  count_n, a, 49) # n > len(a)
         self.assertRaisesMessage(ValueError,
-                                 "n (38) exceeds total count (37)",
+                                 "n = 38 exceeds total count 37",
                                  count_n, a, 38) # n > a.count()
 
         for v in 0, 1:
