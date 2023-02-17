@@ -530,12 +530,16 @@ class TestsCount_N(unittest.TestCase, Util):
             self.assertRaises(ValueError, count_n, a, 2)
 
     def test_last(self):
-        for n in range(1, 1000):
-            a = zeros(n)
+        for N in range(1, 1000):
+            a = zeros(N)
             a[-1] = 1
             self.assertEqual(a.count(), 1)
-            self.assertEqual(count_n(a, 1), n)
-            self.assertRaises(ValueError, count_n, a, 2)
+            self.assertEqual(count_n(a, 1), N)
+            if N == 1:
+                msg = "n = 2 larger than bitarray size (len(a) = 1)"
+            else:
+                msg = "n = 2 exceeds total count (a.count(1) = 1)"
+            self.assertRaisesMessage(ValueError, msg, count_n, a, 2)
 
     def test_large(self):
         for _ in range(100):
@@ -548,7 +552,9 @@ class TestsCount_N(unittest.TestCase, Util):
             tc = a.count(v)      # total count
             i = count_n(a, tc, v)
             self.check_result(a, tc, i, v)
-            self.assertRaises(ValueError, count_n, a, tc + 1, v)
+            self.assertRaisesMessage(ValueError, "n = %d exceeds total count "
+                                     "(a.count(%d) = %d)" % (tc + 1, v, tc),
+                                     count_n, a, tc + 1, v)
             for _ in range(20):
                 n = randint(0, tc)
                 i = count_n(a, n, v)
