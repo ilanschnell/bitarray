@@ -17,7 +17,7 @@ from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       _set_default_endian)
-from bitarray.test_bitarray import Util, skipIf, DEBUG
+from bitarray.test_bitarray import Util, skipIf, SYSINFO, DEBUG
 
 from bitarray.util import (
     zeros, urandom, pprint, make_endian, rindex, strip, count_n,
@@ -1220,7 +1220,7 @@ class SC_Tests(unittest.TestCase, Util):
                                      bytearray([0x01, 0x10, c]))
 
     def test_decode_header_overflow(self):
-        nbytes = tuple.__itemsize__
+        nbytes = SYSINFO[1]
         self.assertRaisesMessage(
             OverflowError,
             "sizeof(Py_ssize_t) = %d: cannot read 9 bytes" % nbytes,
@@ -1261,7 +1261,7 @@ class SC_Tests(unittest.TestCase, Util):
             ValueError, "decode error (n=3): 32768 >= 32768",
             sc_decode, b"\x02\x00\x80\xc3\x01\x00\x80\x00\0")
 
-        if tuple.__itemsize__ == 4:
+        if SYSINFO[1] == 4:
             msg = "read 4 bytes got negative value: -2147483648"
         else:
             msg = "decode error (n=4): 2147483648 >= 16"
@@ -1269,7 +1269,7 @@ class SC_Tests(unittest.TestCase, Util):
             ValueError, msg,
             sc_decode, b"\x01\x10\xc4\x01\x00\x00\x00\x80\0")
 
-        if tuple.__itemsize__ == 4:
+        if SYSINFO[1] == 4:
             msg = "read 4 bytes got negative value: -1"
         else:
             msg = "decode error (n=4): 4294967295 >= 16"

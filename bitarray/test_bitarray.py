@@ -26,6 +26,7 @@ import weakref
 
 is_py3k = bool(sys.version_info[0] == 3)
 pyodide = bool(platform.machine() == 'wasm32')
+is_pypy = bool(platform.python_implementation() == 'PyPy')
 
 if is_py3k:
     from io import BytesIO
@@ -342,6 +343,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertEQUAL(a, bitarray('00001111', 'little'))
         self.check_obj(a)
 
+    @skipIf(is_pypy)
     def test_buffer_writeable(self):
         a = bitarray(buffer=bytearray([65]))
         self.assertFalse(a.readonly)
@@ -604,6 +606,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         # too many args
         self.assertRaises(TypeError, bitarray, 0, 'big', 0)
 
+    @skipIf(is_pypy)
     def test_weakref(self):
         a = bitarray('0100')
         b = weakref.proxy(a)
@@ -1084,6 +1087,7 @@ class SliceTests(unittest.TestCase, Util):
         a[15:7:-1] = b
         self.assertEqual(a, bitarray('11111111 00000011 00000000'))
 
+    @skipIf(is_pypy)
     def test_setslice_self_shared_buffer_3(self):
         # Requires to check for (in setslice_bitarray()):
         #
@@ -1540,6 +1544,7 @@ class MiscTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
             self.check_obj(b)
 
+    @skipIf(is_pypy)
     def test_overflow(self):
         a = bitarray(1)
         for i in -7, -1, 0, 1:
@@ -1785,6 +1790,7 @@ class SpecialMethodTests(unittest.TestCase, Util):
             b.invert(n - 1)  # flip last bit
             self.assertReallyNotEqual(a, b)
 
+    @skipIf(is_pypy)
     def test_sizeof(self):
         a = bitarray()
         size = sys.getsizeof(a)
@@ -3723,7 +3729,7 @@ class FileTests(unittest.TestCase, Util):
             a.tofile(f)
             self.assertEqual(f.getvalue(), data)
 
-    @skipIf(sys.version_info[0] == 2)
+    @skipIf(sys.version_info[0] == 2 or is_pypy)
     def test_mmap(self):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(1000 * b'\0')
@@ -3743,7 +3749,7 @@ class FileTests(unittest.TestCase, Util):
         self.assertEqual(self.read_file(), 1000 * b'\x55')
 
     # pyodide hits emscripten mmap bug
-    @skipIf(sys.version_info[0] == 2 or pyodide)
+    @skipIf(sys.version_info[0] == 2 or pyodide or is_pypy)
     def test_mmap_2(self):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(1000 * b'\x22')
@@ -3758,7 +3764,7 @@ class FileTests(unittest.TestCase, Util):
 
         self.assertEqual(self.read_file(), 1000 * b'\x33')
 
-    @skipIf(sys.version_info[0] == 2)
+    @skipIf(sys.version_info[0] == 2 or is_pypy)
     def test_mmap_readonly(self):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(994 * b'\x89' + b'Veedon')
@@ -3817,6 +3823,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
         ]:
             self.assertRaises(ValueError, decodetree, d)
 
+    @skipIf(is_pypy)
     def test_sizeof(self):
         dt = decodetree({'.': bitarray('1')})
         self.assertTrue(0 < sys.getsizeof(dt) < 100)
@@ -3870,6 +3877,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
         self.assertEqual(''.join(a.iterdecode(t)), '')
         self.check_obj(a)
 
+    @skipIf(is_pypy)
     def test_large(self):
         d = {i: bitarray(bool((1 << j) & i) for j in range(10))
              for i in range(1024)}
@@ -4160,6 +4168,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertEqual(a, zeros(800))
         self.check_obj(a)
 
+    @skipIf(is_pypy)
     def test_bytearray(self):
         b = bytearray(100 * [0])
         a = bitarray(buffer=b, endian='little')
@@ -4188,7 +4197,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.check_obj(a)
 
     # Python 2's array cannot be used as buffer
-    @skipIf(sys.version_info[0] == 2)
+    @skipIf(sys.version_info[0] == 2 or is_pypy)
     def test_array(self):
         a = array.array('B', [0, 255, 64])
         b = bitarray(None, 'little', a)
@@ -4237,6 +4246,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.check_obj(a)
         self.check_obj(b)
 
+    @skipIf(is_pypy)
     def test_bitarray_shared_sections(self):
         a = urandom(0x2000)
         b = bitarray(buffer=memoryview(a)[0x100:0x300])
@@ -4297,6 +4307,7 @@ class BufferImportTests(unittest.TestCase, Util):
                     set([1, 2, 3]),):
             self.assertRaises(TypeError, bitarray, buffer=arg)
 
+    @skipIf(is_pypy)
     def test_del_import_object(self):
         b = bytearray(100 * [0])
         a = bitarray(buffer=b)
@@ -4306,6 +4317,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertTrue(a.all())
         self.check_obj(a)
 
+    @skipIf(is_pypy)
     def test_readonly_errors(self):
         a = bitarray(buffer=b'A')
         info = buffer_info(a)
@@ -4337,6 +4349,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.__ilshift__, 1)
         self.check_obj(a)
 
+    @skipIf(is_pypy)
     def test_resize_errors(self):
         a = bitarray(buffer=bytearray([123]))
         info = buffer_info(a)
@@ -4574,6 +4587,7 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertTrue(info['readonly'])
         self.assertTrue(info['imported'])
 
+    @skipIf(is_pypy)
     def test_buffer_import_writable(self):
         c = bytearray([15, 95])
         self.assertRaisesMessage(
