@@ -416,7 +416,7 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     assert(self->readonly == 0);
 
     if (b >= a + 8) {
-        const Py_ssize_t byte_a = BYTES(a);
+        const Py_ssize_t byte_a = BYTES(a);  /* byte range(byte_a, byte_b) */
         const Py_ssize_t byte_b = b / 8;
 
         assert(a + 8 > 8 * byte_a && 8 * byte_b + 8 > b);
@@ -455,7 +455,7 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         cnt += count(self, 64 * wb, b);
     }
     else if (n >= 8) {
-        const Py_ssize_t byte_a = BYTES(a);
+        const Py_ssize_t byte_a = BYTES(a);  /* byte range(byte_a, byte_b) */
         const Py_ssize_t byte_b = b / 8;
 
         assert(8 * byte_a - a < 8 && b - 8 * byte_b < 8);
@@ -494,25 +494,25 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
        Note that we cannot check for n >= 64 here as the function could then
        go into an infinite recursive loop when a word is found. */
     if (n > 64) {
-        const Py_ssize_t word_a = (a + 63) / 64;
-        const Py_ssize_t word_b = b / 64;
+        const Py_ssize_t wa = (a + 63) / 64;  /* word range(wa, wb) */
+        const Py_ssize_t wb = b / 64;
         const uint64_t *wbuff = WBUFF(self);
         const uint64_t w = vi ? 0 : ~0;
 
-        if ((res = find_bit(self, vi, a, 64 * word_a)) >= 0)
+        if ((res = find_bit(self, vi, a, 64 * wa)) >= 0)
             return res;
 
-        for (i = word_a; i < word_b; i++) {  /* skip uint64 words */
+        for (i = wa; i < wb; i++) {  /* skip uint64 words */
             assert_byte_in_range(self, 8 * i + 7);
             if (w ^ wbuff[i])
                 return find_bit(self, vi, 64 * i, 64 * i + 64);
         }
-        return find_bit(self, vi, 64 * word_b, b);
+        return find_bit(self, vi, 64 * wb, b);
     }
 
     /* For the same reason as above, we cannot check for n >= 8 here. */
     if (n > 8) {
-        const Py_ssize_t byte_a = BYTES(a);
+        const Py_ssize_t byte_a = BYTES(a);  /* byte range(byte_a, byte_b) */
         const Py_ssize_t byte_b = b / 8;
         const char *buff = self->ob_item;
         const char c = vi ? 0 : ~0;

@@ -188,23 +188,23 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 
     /* the logic here is the same as in find_bit() in _bitarray.c */
     if (n > 64) {
-        const Py_ssize_t word_a = (a + 63) / 64;
-        const Py_ssize_t word_b = b / 64;
+        const Py_ssize_t wa = (a + 63) / 64;  /* word range(wa, wb) */
+        const Py_ssize_t wb = b / 64;
         const uint64_t *wbuff = WBUFF(self);
         const uint64_t w = vi ? 0 : ~0;
 
-        if ((res = find_last(self, vi, 64 * word_b, b)) >= 0)
+        if ((res = find_last(self, vi, 64 * wb, b)) >= 0)
             return res;
 
-        for (i = word_b - 1; i >= word_a; i--) {  /* skip uint64 words */
+        for (i = wb - 1; i >= wa; i--) {  /* skip uint64 words */
             if (w ^ wbuff[i])
                 return find_last(self, vi, 64 * i, 64 * i + 64);
         }
-        return find_last(self, vi, a, 64 * word_a);
+        return find_last(self, vi, a, 64 * wa);
     }
 
     if (n > 8) {
-        const Py_ssize_t byte_a = BYTES(a);
+        const Py_ssize_t byte_a = BYTES(a);  /* byte range(byte_a, byte_b) */
         const Py_ssize_t byte_b = b / 8;
         const char *buff = self->ob_item;
         const char c = vi ? 0 : ~0;

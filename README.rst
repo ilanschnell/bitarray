@@ -742,7 +742,7 @@ This sub-module was added in version 1.2.
 
 ``count_n(a, n, value=1, /)`` -> int
    Return lowest index ``i`` for which ``a[:i].count(value) == n``.
-   Raises ``ValueError``, when n exceeds total count (``a.count(value)``).
+   Raises ``ValueError`` when ``n`` exceeds total count (``a.count(value)``).
 
    New in version 2.3.6: optional value argument.
 
