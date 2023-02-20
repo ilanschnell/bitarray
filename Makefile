@@ -6,7 +6,7 @@ bitarray/_bitarray.so: bitarray/_bitarray.c
 
 
 test: bitarray/_bitarray.so
-	$(PYTHON) -c "import bitarray; bitarray.test()"
+	$(PYTHON) setup.py test
 
 
 install:
