@@ -1,6 +1,22 @@
 Change log
 ==========
 
+**2.7.3** (2023-02-20):
+
+* fix popcount64 name conflict on NetBSD, `#189 <https://github.com/ilanschnell/bitarray/issues/189>`__
+* even though PyPy is not actively supported, allow running tests for
+  PyPy 3.7 and 3.8, see also `#188 <https://github.com/ilanschnell/bitarray/issues/188>`__
+* allow running ``python setup.py test``
+* add official Python 3.12 support
+* simplify count functionality in util module
+* retire ``bitcount_lookup[256]`` table
+* improve ``util.count_n()`` error messages
+* avoid ``util`` module tests from being run more than once in each
+  call to ``bitarray.test()`` when called multiple times in the same
+  Python process, see `#6e52e49a <https://github.com/ilanschnell/bitarray/commit/6e52e49a>`__
+* improve testing
+
+
 **2.7.2** (2023-02-12):
 
 * speedup all count functionality by using ``__builtin_popcountll`` when

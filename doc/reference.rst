@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.7.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.7.3 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -342,7 +342,7 @@ This sub-module was added in version 1.2.
 
 ``count_n(a, n, value=1, /)`` -> int
    Return lowest index ``i`` for which ``a[:i].count(value) == n``.
-   Raises ``ValueError``, when n exceeds total count (``a.count(value)``).
+   Raises ``ValueError`` when ``n`` exceeds total count (``a.count(value)``).
 
    New in version 2.3.6: optional value argument.
 
