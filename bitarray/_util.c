@@ -108,7 +108,7 @@ count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
     /* by counting big blocks we save comparisons and updates */
 #define BLOCK_BITS  4096      /* block size: 4096 bits = 64 words */
     while (i + BLOCK_BITS < nbits) {
-        m = popcount_words(wbuff + i / 64, BLOCK_BITS / 64);
+        m = popcnt_words(wbuff + i / 64, BLOCK_BITS / 64);
         if (!vi)
             m = BLOCK_BITS - m;
         if (t + m >= n)
@@ -1038,7 +1038,7 @@ count_from_word(bitarrayobject *a, Py_ssize_t i)
 
     if (64 * i >= nbits)
         return 0;
-    cnt += popcount_words(WBUFF(a) + i, nbits / 64 - i);
+    cnt += popcnt_words(WBUFF(a) + i, nbits / 64 - i);
     if (nbits % 64)
         cnt += popcnt_64(zlw(a));
     return cnt;
@@ -1129,7 +1129,7 @@ sc_calc_rts(bitarrayobject *a)
         assert((m + 1) * SEGSIZE <= Py_SIZE(a));
 
         if (memcmp(buff, zeros, SEGSIZE))  /* segment has not only zeros */
-            cnt += popcount_words((uint64_t *) buff, SEGSIZE / 8);
+            cnt += popcnt_words((uint64_t *) buff, SEGSIZE / 8);
     }
     res[c_seg] = cnt;
 

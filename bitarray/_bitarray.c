@@ -451,7 +451,7 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         assert(wa <= wb && 64 * wa - a < 64 && b - 64 * wb < 64);
 
         cnt += count(self, a, 64 * wa);
-        cnt += popcount_words(WBUFF(self) + wa, wb - wa);
+        cnt += popcnt_words(WBUFF(self) + wa, wb - wa);
         cnt += count(self, 64 * wb, b);
     }
     else if (n >= 8) {
