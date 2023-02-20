@@ -1,5 +1,6 @@
-2023-XX-XX   2.7.3:
+2023-02-XX   2.7.3:
 -------------------
+  * fix popcount64 name conflict on NetBSD, #189
   * even though PyPy is not actively supported, allow running tests for
     PyPy 3.7 and 3.8, see also #188
   * add official Python 3.12 support
