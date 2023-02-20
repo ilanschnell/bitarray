@@ -119,7 +119,7 @@ count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
 #undef BLOCK_BITS
 
     while (i + 64 < nbits) {  /* count blocks of single (64-bit) words */
-        m = popcount64(wbuff[i / 64]);
+        m = popcnt_64(wbuff[i / 64]);
         if (!vi)
             m = 64 - m;
         if (t + m >= n)
@@ -320,23 +320,23 @@ binary_function(PyObject *args, const char *format, const char oper)
     switch (oper) {
     case '&':                   /* count and */
         for (i = 0; i < cwords; i++)
-            cnt += popcount64(wbuff_a[i] & wbuff_b[i]);
+            cnt += popcnt_64(wbuff_a[i] & wbuff_b[i]);
         if (rbits)
-            cnt += popcount64(zlw(a) & zlw(b));
+            cnt += popcnt_64(zlw(a) & zlw(b));
         break;
 
     case '|':                   /* count or */
         for (i = 0; i < cwords; i++)
-            cnt += popcount64(wbuff_a[i] | wbuff_b[i]);
+            cnt += popcnt_64(wbuff_a[i] | wbuff_b[i]);
         if (rbits)
-            cnt += popcount64(zlw(a) | zlw(b));
+            cnt += popcnt_64(zlw(a) | zlw(b));
         break;
 
     case '^':                   /* count xor */
         for (i = 0; i < cwords; i++)
-            cnt += popcount64(wbuff_a[i] ^ wbuff_b[i]);
+            cnt += popcnt_64(wbuff_a[i] ^ wbuff_b[i]);
         if (rbits)
-            cnt += popcount64(zlw(a) ^ zlw(b));
+            cnt += popcnt_64(zlw(a) ^ zlw(b));
         break;
 
     case 'a':                   /* any and */
@@ -426,10 +426,10 @@ correspond_all(PyObject *module, PyObject *args)
         v = WBUFF(b)[i];
         not_u = ~u;
         not_v = ~v;
-        nff += popcount64(not_u & not_v);
-        nft += popcount64(not_u & v);
-        ntf += popcount64(u & not_v);
-        ntt += popcount64(u & v);
+        nff += popcnt_64(not_u & not_v);
+        nft += popcnt_64(not_u & v);
+        ntf += popcnt_64(u & not_v);
+        ntt += popcnt_64(u & v);
     }
 
     if (rbits) {
@@ -438,10 +438,10 @@ correspond_all(PyObject *module, PyObject *args)
         not_u = ~u;
         not_v = ~v;
         /* for nff we need to substract the number of unused 1 bits */
-        nff += popcount64(not_u & not_v) - (64 - rbits);
-        nft += popcount64(not_u & v);
-        ntf += popcount64(u & not_v);
-        ntt += popcount64(u & v);
+        nff += popcnt_64(not_u & not_v) - (64 - rbits);
+        nft += popcnt_64(not_u & v);
+        ntf += popcnt_64(u & not_v);
+        ntt += popcnt_64(u & v);
     }
     return Py_BuildValue("nnnn", nff, nft, ntf, ntt);
 }
@@ -1040,7 +1040,7 @@ count_from_word(bitarrayobject *a, Py_ssize_t i)
         return 0;
     cnt += popcount_words(WBUFF(a) + i, nbits / 64 - i);
     if (nbits % 64)
-        cnt += popcount64(zlw(a));
+        cnt += popcnt_64(zlw(a));
     return cnt;
 }
 

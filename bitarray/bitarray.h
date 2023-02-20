@@ -185,7 +185,7 @@ set_padbits(bitarrayobject *self)
 
 /* Population count: count the number of 1's in 'x'. */
 static inline int
-popcount64(uint64_t x)
+popcnt_64(uint64_t x)
 {
 #if (defined(__clang__) || defined(__GNUC__))
     return __builtin_popcountll(x);
@@ -211,7 +211,7 @@ popcount_words(uint64_t *w, Py_ssize_t n)
 
     assert(n >= 0);
     while (n--)
-        cnt += popcount64(*w++);
+        cnt += popcnt_64(*w++);
     return cnt;
 }
 

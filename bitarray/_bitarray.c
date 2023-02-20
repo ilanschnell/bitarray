@@ -466,7 +466,7 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
             uint64_t tmp = 0;
             /* copy bytes we want to count into tmp word */
             memcpy((char *) &tmp, self->ob_item + byte_a, byte_b - byte_a);
-            cnt += popcount64(tmp);
+            cnt += popcnt_64(tmp);
         }
         cnt += count(self, 8 * byte_b, b);
     }
