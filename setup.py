@@ -7,7 +7,7 @@ except ImportError:
 
 if "test" in sys.argv:
     exit('ERROR: To run the bitarray test suite, type:\n\n'
-         '    python -c "import bitarray; bitarray.test()\n')
+         '    python -c "import bitarray; bitarray.test()"\n')
 
 kwds = {}
 try:
