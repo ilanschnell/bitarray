@@ -1399,7 +1399,7 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(m, len(b))
             self.round_trip(a)
 
-        a = zeros(1 << 25)
+        a = zeros(1 << 25, 'big')
         a[0] = 1
         self.assertEqual(
             sc_encode(a),
