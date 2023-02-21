@@ -33,7 +33,7 @@ ensure_bitarray(PyObject *obj)
 }
 
 /* return new bitarray of length `nbits` (with uninitialized buffer) and
-   endianness given by the PyObject 'endian' */
+   endianness given by the PyObject 'endian' (which may be Py_None) */
 static bitarrayobject *
 new_bitarray(Py_ssize_t nbits, PyObject *endian)
 {
@@ -43,7 +43,7 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian)
     if ((args = PyTuple_New(2)) == NULL)
         return NULL;
 
-    /* PyTuple_SET_ITEM “steals” a reference to item */
+    /* PyTuple_SET_ITEM "steals" a reference to item */
     PyTuple_SET_ITEM(args, 0, PyLong_FromSsize_t(nbits));
     Py_INCREF(endian);
     PyTuple_SET_ITEM(args, 1, endian);
