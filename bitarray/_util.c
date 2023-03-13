@@ -2001,7 +2001,7 @@ static PyMethodDef module_functions[] = {
                   (PyCFunction) chdi_new,  METH_VARARGS, chdi_doc},
 #ifndef NDEBUG
     /* functionality exposed in debug mode for testing */
-    {"_sc_rts",   (PyCFunction) sc_rts,     METH_O,       0},
+    {"_sc_rts",   (PyCFunction) sc_rts,    METH_O,       0},
 #endif
     {NULL,        NULL}  /* sentinel */
 };

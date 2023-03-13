@@ -1429,8 +1429,9 @@ class SC_Tests(unittest.TestCase, Util):
 
     @skipIf(not DEBUG)
     def test_rts_empty(self):
-        a = bitarray()
-        self.assertEqual(_sc_rts(a), [0])
+        rts = _sc_rts(bitarray())
+        self.assertEqual(len(rts), 1)
+        self.assertEqual(rts, [0])
 
     @skipIf(_SEGSIZE != 32)
     def test_rts_example(self):
