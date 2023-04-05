@@ -142,6 +142,8 @@ Like lists, bitarray objects support slice assignment and deletion:
     >>> a += bitarray('000111')
     >>> a[9:]
     bitarray('001010101010101010100010011000111')
+    >>> a[9]                   # single element slice is an int
+    0
 
 In addition, slices can be assigned to booleans, which is easier (and
 faster) than assigning to a bitarray in which all values are the same:
