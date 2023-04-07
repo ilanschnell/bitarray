@@ -1,4 +1,4 @@
-from time import time
+from time import perf_counter
 
 from bitarray import bitarray, get_default_endian
 from bitarray.util import urandom, ba2hex, hex2ba, ba2base, base2ba
@@ -42,16 +42,16 @@ def test_round(f, g, n, endian):
     # g: function which takes hexstr and returns bitarray
     # n: size of random bitarray
     a = urandom(n, endian)
-    t0 = time()
+    t0 = perf_counter()
     s = f(a)
-    print('%s:  %9.6f sec' % (f.__name__, time() - t0))
-    t0 = time()
+    print('%s:  %6.3f ms' % (f.__name__, 1000.0 * (perf_counter() - t0)))
+    t0 = perf_counter()
     b = g(s, endian)
-    print('%s:  %9.6f sec' % (g.__name__, time() - t0))
+    print('%s:  %6.3f ms' % (g.__name__, 1000.0 * (perf_counter() - t0)))
     assert b == a
 
 if __name__ == '__main__':
-    n = 100 * 1000 * 1000 + 4
+    n = 1000 * 1000 + 4
     for endian in 'little', 'big':
         print('%s-endian:' % endian)
         for f in ba2hex, ba2_base16, prefix_ba2hex:

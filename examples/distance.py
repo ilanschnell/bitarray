@@ -3,7 +3,7 @@ In this module, we implement distance functions and compare them to the
 corresponding functions in the scipy.spatial.distance module.
 The functions in this module are typically around 10 to 50 times faster.
 """
-from time import time
+from time import perf_counter
 
 from bitarray.util import _correspond_all, count_and, count_xor, urandom
 
@@ -59,18 +59,19 @@ def test(n):
     for name in ['dice', 'hamming', 'jaccard', 'kulczynski1',
                  'rogerstanimoto', 'russellrao', 'sokalmichener',
                  'sokalsneath', 'yule']:
-        f1 = eval(name)
-        t0 = time()
-        x1 = f1(a, b)
-        t1 = time() - t0
-        print('%.14f  %9.6f sec  %s' % (x1, t1, name))
 
-        f2 = getattr(distance, name)
-        t0 = time()
+        f1 = eval(name)               # function defined above
+        t0 = perf_counter()
+        x1 = f1(a, b)
+        t1 = perf_counter() - t0
+        print('%.14f  %6.3f ms  %s' % (x1, 1000.0 * t1, name))
+
+        f2 = getattr(distance, name)  # scipy.spatial.distance function
+        t0 = perf_counter()
         x2 = f2(aa, bb)
-        t2 = time() - t0
-        print('%.14f  %9.6f sec  %9.2f' % (x2, t2, t2 / t1))
+        t2 = perf_counter() - t0
+        print('%.14f  %6.3f ms  %9.2f' % (x2, 1000.0 * t2, t2 / t1))
 
         assert abs(x1 - x2) < 1E-14
 
-test(2 ** 25 + 67)
+test(2 ** 20 + 67)

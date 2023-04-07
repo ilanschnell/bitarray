@@ -1,5 +1,5 @@
 from optparse import OptionParser
-from time import time
+from time import perf_counter
 from collections import Counter
 
 from bitarray import bitarray
@@ -31,13 +31,13 @@ def main():
     with open(filename, 'rb') as fi:
         plain = bytearray(fi.read())
 
-    t0 = time()
+    t0 = perf_counter()
     freq = Counter(plain)
-    print('count:     %9.6f sec' % (time() - t0))
+    print('count:     %9.3f ms' % (1000.0 * (perf_counter() - t0)))
 
-    t0 = time()
+    t0 = perf_counter()
     tree = _huffman_tree(freq)
-    print('tree:      %9.6f sec' % (time() - t0))
+    print('tree:      %9.3f ms' % (1000.0 * (perf_counter() - t0)))
 
     if opts.tree:
         write_dot(tree, 'tree.dot', 0 in plain)
@@ -50,22 +50,22 @@ def main():
 
     a = bitarray()
 
-    t0 = time()
+    t0 = perf_counter()
     a.encode(code, plain)
-    print('C encode:  %9.6f sec' % (time() - t0))
+    print('C encode:  %9.3f ms' % (1000.0 * (perf_counter() - t0)))
 
     # Time the decode function above
-    t0 = time()
+    t0 = perf_counter()
     res = bytearray(iterdecode(tree, a))
-    Py_time = time() - t0
-    print('Py decode: %9.6f sec' % Py_time)
+    Py_time = perf_counter() - t0
+    print('Py decode: %9.3f ms' % (1000.0 * Py_time))
     assert res == plain
 
     # Time the decode method which is implemented in C
-    t0 = time()
+    t0 = perf_counter()
     res = bytearray(a.iterdecode(code))
-    C_time = time() - t0
-    print('C decode:  %9.6f sec' % C_time)
+    C_time = perf_counter() - t0
+    print('C decode:  %9.3f ms' % (1000.0 * C_time))
     assert res == plain
 
     print('Ratio: %f' % (Py_time / C_time))

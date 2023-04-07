@@ -5,7 +5,7 @@
 import bz2
 import gzip
 import sys
-from time import time
+from time import perf_counter
 from collections import Counter
 from itertools import islice
 from random import random, randint
@@ -177,11 +177,11 @@ def compare():
             ('gzip', gzip.compress, gzip.decompress),
             ('bz2', bz2.compress, bz2.decompress)]:
         x = a if name in ('serialize', 'vl', 'sc') else raw
-        t0 = time()
+        t0 = perf_counter()
         b = f_e(x)  # compression
-        t1 = time()
+        t1 = perf_counter()
         c = f_d(b)  # decompression
-        t2 = time()
+        t2 = perf_counter()
         print("    %-11s  %16.3f  %16.3f  %16.4f" %
               (name, 1000 * (t1 - t0), 1000 * (t2 - t1), len(b) / len(raw)))
         assert c == x
