@@ -25,7 +25,12 @@ class GunZip(Puff):
                 return a.decode("UTF-8")
             a.append(b)
 
-    def read_header(self) -> None:
+    def read_header(self, verbose=False) -> None:
+
+        def vprint(txt):
+            if verbose:
+                print(txt)
+
         if self.read_uint(16) != 0x8b1f:
             raise ValueError("Invalid GZIP magic number")
 
@@ -36,44 +41,44 @@ class GunZip(Puff):
         # reserved flags
         flags: int = self.read_uint(8)
         if flags & 0xe0 != 0:
-            print("Reserved flags are set")
+            vprint("Reserved flags are set")
 
         # modification time
         mtime = self.read_uint(32)
         if mtime != 0:
             dt = datetime.datetime.fromtimestamp(mtime, datetime.timezone.utc)
-            print(f"Last modified: {dt}")
+            vprint(f"Last modified: {dt}")
         else:
-            print("Last modified: N/A")
+            vprint("Last modified: N/A")
 
         # extra flags
         extraflags = self.read_uint(8)
         if extraflags == 2:
-            print("Extra flags: Maximum compression")
+            vprint("Extra flags: Maximum compression")
         elif extraflags == 4:
-            print("Extra flags: Fastest compression")
+            vprint("Extra flags: Fastest compression")
         else:
-            print(f"Extra flags: Unknown ({extraflags})")
+            vprint(f"Extra flags: Unknown ({extraflags})")
 
         osbyte = self.read_uint(8)
         osstr: str = self.operating_system.get(osbyte, "Really unknown")
-        print(f"Operating system: {osstr}")
+        vprint(f"Operating system: {osstr}")
 
         # handle assorted flags
         if flags & 0x01:
-            print("Flag: Text")
+            vprint("Flag: Text")
         if flags & 0x04:
-            print("Flag: Extra")
+            vprint("Flag: Extra")
             count: int = self.read_uint(16)
             while count > 0:  # Skip extra data
                 self.read_uint(8)
                 count -= 1
         if flags & 0x08:
-            print(f"File name: {self.read_null_terminated_string()}")
+            vprint(f"File name: {self.read_null_terminated_string()}")
         if flags & 0x02:
-            print(f"Header CRC-16: {self.read_uint(16):04X}")
+            vprint(f"Header CRC-16: {self.read_uint(16):04X}")
         if flags & 0x10:
-            print(f"Comment: {self.read_null_terminated_string()}")
+            vprint(f"Comment: {self.read_null_terminated_string()}")
 
     def check_footer(self, decomp):
         self.align_byte_boundary()
@@ -104,7 +109,7 @@ def decompress_file(infile, outfile, opts):
     # gunzip: the output is accumulated in a bytearray
     output = bytearray()
     d = GunZip(input_bits, output)
-    d.read_header()
+    d.read_header(verbose=opts.verbose)
     stats = d.process_blocks(print_dot if opts.progress else None)
     d.check_footer(output)
 
@@ -119,26 +124,29 @@ def decompress_file(infile, outfile, opts):
 
 
 def main():
-    from optparse import OptionParser
+    from argparse import ArgumentParser
 
-    p = OptionParser(usage="usage: %prog [options] IN_FILE.gz [OUT_FILE]")
+    p = ArgumentParser()
 
-    p.add_option('-p', '--progress',
-                 action="store_true",
-                 help="show progress while decoding")
+    p.add_argument('-p', '--progress', action="store_true",
+                   help="show progress while decoding")
 
-    p.add_option('-s', '--stats',
-                 action="store_true",
-                 help="show block statistics")
+    p.add_argument('-s', '--stats', action="store_true",
+                   help="show block statistics")
 
-    opts, args = p.parse_args()
+    p.add_argument('-v', '--verbose', action="store_true")
 
-    if len(args) not in (1, 2):
-        p.error("incorrect number of arguments")
+    p.add_argument('-o', '--out', action="store", dest='dst',
+                   help='output filename')
 
-    out_file = args[1] if len(args) == 2 else 'out'
+    p.add_argument(dest='src', metavar='SRC')
 
-    decompress_file(args[0], out_file, opts)
+    args = p.parse_args()
+
+    if args.dst is None and args.src.endswith('.gz'):
+        args.dst = args.src[:-3]
+
+    decompress_file(args.src, args.dst, args)
 
 
 if __name__ == "__main__":
