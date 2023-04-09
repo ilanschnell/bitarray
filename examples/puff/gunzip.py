@@ -143,8 +143,14 @@ def main():
 
     args = p.parse_args()
 
-    if args.dst is None and args.src.endswith('.gz'):
-        args.dst = args.src[:-3]
+    if args.dst is None:
+        if args.src.endswith('.gz'):
+            args.dst = args.src[:-3]
+        elif args.src.endswith('.tgz'):
+            args.dst = '%s.tar' % args.src[:-4]
+        else:
+            p.error('cannot guess uncompressed filename from %r, '
+                    'please provide -o/-out option' % args.src)
 
     decompress_file(args.src, args.dst, args)
 
