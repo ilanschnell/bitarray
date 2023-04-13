@@ -118,6 +118,12 @@ basic usage of bitarray objects:
     >>> a = bitarray(lst)      # initialize from iterable
     >>> a
     bitarray('10011')
+    >>> a[2]    # indexing a single element will always return an integer
+    0
+    >>> a[2:4]  # whereas indexing a slice will always return a bitarray
+    bitarray('01')
+    >>> a[2:3]  # even when the slice length is just one
+    bitarray('0')
     >>> a.count(1)
     3
     >>> a.remove(0)            # removes first occurrence of 0
@@ -142,8 +148,6 @@ Like lists, bitarray objects support slice assignment and deletion:
     >>> a += bitarray('000111')
     >>> a[9:]
     bitarray('001010101010101010100010011000111')
-    >>> a[9]  # indexing a single element will always return an integer
-    0
 
 In addition, slices can be assigned to booleans, which is easier (and
 faster) than assigning to a bitarray in which all values are the same:
