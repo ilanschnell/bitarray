@@ -1688,7 +1688,7 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(pop_doc,
 "pop(index=-1, /) -> item\n\
 \n\
-Return the i-th (default last) element and delete it from the bitarray.\n\
+Remove and return item at `index` (default last).\n\
 Raises `IndexError` if index is out of range.");
 
 
@@ -1987,7 +1987,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
    functionality inside bitarray_ass_subscr() would make the function
    incomprehensibly long. */
 
-/* set elements in self, specified by slice, to other bitarray */
+/* set items in self, specified by slice, to other bitarray */
 static int
 setslice_bitarray(bitarrayobject *self, PyObject *slice,
                   bitarrayobject *other)
@@ -2046,7 +2046,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
     return res;
 }
 
-/* set elements in self, specified by slice, to value */
+/* set items in self, specified by slice, to value */
 static int
 setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
 {
@@ -2082,7 +2082,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     return 0;
 }
 
-/* delete elements in self, specified by slice */
+/* delete items in self, specified by slice */
 static int
 delslice(bitarrayobject *self, PyObject *slice)
 {

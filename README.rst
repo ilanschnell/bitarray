@@ -118,7 +118,7 @@ basic usage of bitarray objects:
     >>> a = bitarray(lst)      # initialize from iterable
     >>> a
     bitarray('10011')
-    >>> a[2]    # indexing a single element will always return an integer
+    >>> a[2]    # indexing a single item will always return an integer
     0
     >>> a[2:4]  # whereas indexing a slice will always return a bitarray
     bitarray('01')

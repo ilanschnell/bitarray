@@ -1,5 +1,7 @@
 2023-XX-XX   2.7.4:
 -------------------
+  * improve documentation regarding type when indexing single
+    bitarray items, #192
 
 
 2023-02-20   2.7.3:
