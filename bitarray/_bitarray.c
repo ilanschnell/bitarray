@@ -1540,10 +1540,12 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(fromfile_doc,
 "fromfile(f, n=-1, /)\n\
 \n\
-Extend bitarray with up to n bytes read from the file object f.\n\
-When n is omitted or negative, reads all data until EOF.\n\
-When n is provided and positive but exceeds the data available,\n\
-`EOFError` is raised (but the available data is still read and appended.");
+Extend bitarray with up to `n` bytes read from file object `f` (or any\n\
+other binary stream what supports a `.read()` method, e.g. `io.BytesIO`).\n\
+Each read byte will add eight bits to the bitarray.  When `n` is omitted or\n\
+negative, all bytes until EOF are read.  When `n` is non-negative but\n\
+exceeds the data available, `EOFError` is raised (but the available data\n\
+is still read and appended).");
 
 
 static PyObject *
