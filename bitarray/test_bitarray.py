@@ -1580,6 +1580,16 @@ class MiscTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, hash, a)
         self.assertRaises(TypeError, dict, [(a, 'foo')])
 
+    @skipIf(sys.version_info[0] == 2)
+    def test_abc(self):
+        from collections import abc
+
+        a = bitarray('001')
+        self.assertIsInstance(a, abc.Sequence)
+        self.assertIsInstance(a, abc.MutableSequence)
+        self.assertFalse(isinstance(a, abc.Hashable))
+
+
 tests.append(MiscTests)
 
 # ---------------------------------------------------------------------------

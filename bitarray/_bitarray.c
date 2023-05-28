@@ -3854,6 +3854,29 @@ static PyMethodDef module_functions[] = {
 /******************************* Install Module ***************************/
 
 #if IS_PY3K
+static int
+register_mutablesequence(void)
+{
+    PyObject *abc_module, *mutablesequence, *res;
+
+    if ((abc_module = PyImport_ImportModule("collections.abc")) == NULL)
+        return -1;
+
+    mutablesequence = PyObject_GetAttrString(abc_module, "MutableSequence");
+    Py_DECREF(abc_module);
+    if (mutablesequence == NULL)
+        return -1;
+
+    res = PyObject_CallMethod(mutablesequence, "register", "O",
+                              (PyObject *) &Bitarray_Type);
+    Py_DECREF(mutablesequence);
+    if (res == NULL)
+        return -1;
+
+    Py_DECREF(res);
+    return 0;
+}
+
 static PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT, "_bitarray", 0, -1, module_functions,
 };
@@ -3883,6 +3906,11 @@ init_bitarray(void)
     Py_SET_TYPE(&Bitarray_Type, &PyType_Type);
     Py_INCREF((PyObject *) &Bitarray_Type);
     PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type);
+
+#if IS_PY3K
+    if (register_mutablesequence() < 0)
+        goto error;
+#endif
 
     if (PyType_Ready(&DecodeTree_Type) < 0)
         goto error;
