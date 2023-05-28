@@ -3854,8 +3854,9 @@ static PyMethodDef module_functions[] = {
 /******************************* Install Module ***************************/
 
 #if IS_PY3K
+/* register bitarray as collections.abc.MutableSequence */
 static int
-register_mutablesequence(void)
+register_abc(void)
 {
     PyObject *abc_module, *mutablesequence, *res;
 
@@ -3908,7 +3909,7 @@ init_bitarray(void)
     PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type);
 
 #if IS_PY3K
-    if (register_mutablesequence() < 0)
+    if (register_abc() < 0)
         goto error;
 #endif
 
