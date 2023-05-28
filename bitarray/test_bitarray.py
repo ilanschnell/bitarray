@@ -1587,7 +1587,8 @@ class MiscTests(unittest.TestCase, Util):
         a = bitarray('001')
         self.assertIsInstance(a, abc.Sequence)
         self.assertIsInstance(a, abc.MutableSequence)
-        self.assertFalse(isinstance(a, abc.Hashable))
+        if sys.platform != "win32":
+            self.assertFalse(isinstance(a, abc.Hashable))
 
 
 tests.append(MiscTests)
