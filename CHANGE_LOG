@@ -1,5 +1,6 @@
 2023-XX-XX   2.7.4:
 -------------------
+  * register `bitarray` as `abc.MutableSequence`, see #196
   * improve documentation regarding type when indexing single
     bitarray items, #192
 
