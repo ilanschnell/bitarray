@@ -76,7 +76,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 467 tests in 0.460s
+    Ran 468 tests in 0.460s
 
     OK
 
@@ -541,10 +541,12 @@ bitarray methods:
 
 
 ``fromfile(f, n=-1, /)``
-   Extend bitarray with up to n bytes read from the file object f.
-   When n is omitted or negative, reads all data until EOF.
-   When n is provided and positive but exceeds the data available,
-   ``EOFError`` is raised (but the available data is still read and appended.
+   Extend bitarray with up to ``n`` bytes read from file object ``f`` (or any
+   other binary stream what supports a ``.read()`` method, e.g. ``io.BytesIO``).
+   Each read byte will add eight bits to the bitarray.  When ``n`` is omitted or
+   negative, all bytes until EOF are read.  When ``n`` is non-negative but
+   exceeds the data available, ``EOFError`` is raised (but the available data
+   is still read and appended).
 
 
 ``index(sub_bitarray, start=0, stop=<end of array>, /)`` -> int
@@ -588,7 +590,7 @@ bitarray methods:
 
 
 ``pop(index=-1, /)`` -> item
-   Return the i-th (default last) element and delete it from the bitarray.
+   Remove and return item at ``index`` (default last).
    Raises ``IndexError`` if index is out of range.
 
 
