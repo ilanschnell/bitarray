@@ -17,7 +17,7 @@ class GunZip(Puff):
         12: "QDOS",   13: "Acorn RISCOS", 255: "Unknown",
     }
 
-    def read_null_terminated_string(self) -> str:
+    def read_nul_terminated_string(self) -> str:
         a = bytearray()
         while True:
             b: int = self.read_uint(8)
@@ -74,11 +74,11 @@ class GunZip(Puff):
                 self.read_uint(8)
                 count -= 1
         if flags & 0x08:
-            vprint(f"File name: {self.read_null_terminated_string()}")
+            vprint(f"File name: {self.read_nul_terminated_string()}")
         if flags & 0x02:
             vprint(f"Header CRC-16: {self.read_uint(16):04X}")
         if flags & 0x10:
-            vprint(f"Comment: {self.read_null_terminated_string()}")
+            vprint(f"Comment: {self.read_nul_terminated_string()}")
 
     def check_footer(self, decomp):
         self.align_byte_boundary()
