@@ -1,6 +1,15 @@
 Change log
 ==========
 
+**2.7.4** (2023-05-29):
+
+* register ``bitarray`` as ``abc.MutableSequence``, see `#196 <https://github.com/ilanschnell/bitarray/issues/196>`__
+* cibuildwheel: update macOS version to 11 from unsupported 10.15, see
+  https://github.com/actions/runner-images/issues/5583
+* improve documentation regarding type when indexing single
+  bitarray items, `#192 <https://github.com/ilanschnell/bitarray/issues/192>`__
+
+
 **2.7.3** (2023-02-20):
 
 * fix popcount64 name conflict on NetBSD, `#189 <https://github.com/ilanschnell/bitarray/issues/189>`__

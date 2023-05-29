@@ -63,7 +63,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 2.7.3
+    bitarray version: 2.7.4
     sys.version: 3.11.0 (main, Oct 25 2022) [Clang 14.0.4]
     sys.prefix: /Users/ilan/Mini3/envs/py311
     pointer size: 64 bit
@@ -407,7 +407,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 2.7.3 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.7.4 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
