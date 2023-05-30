@@ -1,4 +1,3 @@
-from __future__ import print_function
 from bitarray import bitarray
 from bitarray.util import ba2int, pprint
 
