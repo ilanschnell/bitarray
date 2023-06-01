@@ -25,7 +25,6 @@ jobs:
         env:
           # configure cibuildwheel to build native archs ('auto'), and some
           # emulated ones
-          CIBW_SKIP: pp*
           CIBW_ARCHS_LINUX: auto aarch64 ppc64le s390x
           CIBW_ARCHS_MACOS: x86_64 universal2 arm64
           CIBW_TEST_COMMAND: python -c "import bitarray; assert bitarray.test().wasSuccessful()"
