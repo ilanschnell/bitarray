@@ -1,6 +1,12 @@
 Change log
 ==========
 
+**2.7.5** (2023-06-10):
+
+* fix for pypy3.9-v7.3.11, `#198 <https://github.com/ilanschnell/bitarray/issues/198>`__ (fixes `#188 <https://github.com/ilanschnell/bitarray/issues/188>`__)
+* enable building wheels for PyPy
+
+
 **2.7.4** (2023-05-29):
 
 * register ``bitarray`` as ``abc.MutableSequence``, see `#196 <https://github.com/ilanschnell/bitarray/issues/196>`__

@@ -1,4 +1,4 @@
-2023-06-XX   2.7.5:
+2023-06-10   2.7.5:
 -------------------
   * fix for pypy3.9-v7.3.11, #198 (fixes #188)
   * enable building wheels for PyPy
