@@ -390,7 +390,8 @@ PyThreadState_LeaveTracing(PyThreadState *tstate)
 
 
 // bpo-37194 added PyObject_CallNoArgs() to Python 3.9.0a1
-#if PY_VERSION_HEX < 0x030900A1 && !defined(PYPY_VERSION)
+// PyObject_CallNoArgs() added to PyPy 3.9.16-v7.3.11
+#if !defined(PyObject_CallNoArgs) && PY_VERSION_HEX < 0x030900A1
 PYCAPI_COMPAT_STATIC_INLINE(PyObject*)
 PyObject_CallNoArgs(PyObject *func)
 {
@@ -401,7 +402,8 @@ PyObject_CallNoArgs(PyObject *func)
 
 // bpo-39245 made PyObject_CallOneArg() public (previously called
 // _PyObject_CallOneArg) in Python 3.9.0a4
-#if PY_VERSION_HEX < 0x030900A4 && !defined(PYPY_VERSION)
+// PyObject_CallOneArg() added to PyPy 3.9.16-v7.3.11
+#if !defined(PyObject_CallOneArg) && PY_VERSION_HEX < 0x030900A4
 PYCAPI_COMPAT_STATIC_INLINE(PyObject*)
 PyObject_CallOneArg(PyObject *func, PyObject *arg)
 {
