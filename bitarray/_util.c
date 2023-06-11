@@ -1033,15 +1033,10 @@ byte_length(Py_ssize_t i)
 static Py_ssize_t
 count_from_word(bitarrayobject *a, Py_ssize_t i)
 {
-    const Py_ssize_t nbits = a->nbits;
-    Py_ssize_t cnt = 0;
-
-    if (64 * i >= nbits)
+    if (64 * i >= a->nbits)
         return 0;
-    cnt += popcnt_words(WBUFF(a) + i, nbits / 64 - i);
-    if (nbits % 64)
-        cnt += popcnt_64(zlw(a));
-    return cnt;
+
+    return popcnt_words(WBUFF(a) + i, a->nbits / 64 - i) + popcnt_64(zlw(a));
 }
 
 /* ---------------------- sparse compressed bitarray -------------------
