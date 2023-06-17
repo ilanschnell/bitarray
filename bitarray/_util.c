@@ -102,8 +102,6 @@ count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
     Py_ssize_t m;             /* popcount in each block */
 
     assert(0 <= n && n <= nbits);
-    if (n == 0)
-        return 0;
 
     /* by counting big blocks we save comparisons and updates */
 #define BLOCK_BITS  4096      /* block size: 4096 bits = 64 words */
@@ -132,7 +130,7 @@ count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
         t += getbit(a, i++) == vi;
     }
 
-    if (n > t)  /* n exceeds total count */
+    if (t < n)  /* n exceeds total count */
         return -(t + 1);
 
     return i;
