@@ -1033,6 +1033,7 @@ byte_length(Py_ssize_t i)
 static Py_ssize_t
 count_from_word(bitarrayobject *a, Py_ssize_t i)
 {
+    assert(i >= 0);
     if (64 * i >= a->nbits)
         return 0;
 
