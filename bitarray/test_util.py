@@ -567,6 +567,7 @@ class TestsCount_N(unittest.TestCase, Util):
                 n = a.count(v) // 2
                 i = count_n(a, n, v)
                 self.check_result(a, n, i, v)
+                self.assertEqual(count_n(a, 0, v), 0)
 
 tests.append(TestsCount_N)
 
