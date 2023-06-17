@@ -57,6 +57,18 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian)
     return res;
 }
 
+/* Starting from word index `i`, count the remaining population in bitarray
+   buffer.  Equivalent to:  a[64 * i:].count()  */
+static Py_ssize_t
+count_from_word(bitarrayobject *a, Py_ssize_t i)
+{
+    assert(i >= 0);
+    if (64 * i >= a->nbits)
+        return 0;
+
+    return popcnt_words(WBUFF(a) + i, a->nbits / 64 - i) + popcnt_64(zlw(a));
+}
+
 /* -------------------------------- zeros ------------------------------ */
 
 static PyObject *
@@ -130,9 +142,10 @@ count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
         t += getbit(a, i++) == vi;
     }
 
-    if (t < n)  /* n exceeds total count */
+    if (t < n) {  /* n exceeds total count */
+        assert((vi ? t : nbits - t) == count_from_word(a, 0));
         return -(t + 1);
-
+    }
     return i;
 }
 
@@ -1024,18 +1037,6 @@ byte_length(Py_ssize_t i)
         n++;
     }
     return n;
-}
-
-/* Starting from word index `i`, count the remaining population in bitarray
-   buffer.  Equivalent to:  a[64 * i:].count()  */
-static Py_ssize_t
-count_from_word(bitarrayobject *a, Py_ssize_t i)
-{
-    assert(i >= 0);
-    if (64 * i >= a->nbits)
-        return 0;
-
-    return popcnt_words(WBUFF(a) + i, a->nbits / 64 - i) + popcnt_64(zlw(a));
 }
 
 /* ---------------------- sparse compressed bitarray -------------------
