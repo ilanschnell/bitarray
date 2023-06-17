@@ -132,7 +132,7 @@ count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
         t += getbit(a, i++) == vi;
     }
 
-    if (t < n)  /* n exceeds total count */
+    if (n > t)  /* n exceeds total count */
         return -(t + 1);
 
     return i;
@@ -1130,7 +1130,7 @@ sc_calc_rts(bitarrayobject *a)
     res[c_seg] = cnt;
 
     if (n_seg > c_seg) {           /* we have a final partial segment */
-        cnt += count_from_word(a, (SEGSIZE / 8) * c_seg);
+        cnt += count_from_word(a, c_seg * SEGSIZE / 8);
         res[n_seg] = cnt;
     }
     return res;

@@ -552,9 +552,10 @@ class TestsCount_N(unittest.TestCase, Util):
             tc = a.count(v)      # total count
             i = count_n(a, tc, v)
             self.check_result(a, tc, i, v)
+            n = tc + 1
             self.assertRaisesMessage(ValueError, "n = %d exceeds total count "
-                                     "(a.count(%d) = %d)" % (tc + 1, v, tc),
-                                     count_n, a, tc + 1, v)
+                                     "(a.count(%d) = %d)" % (n, v, tc),
+                                     count_n, a, n, v)
             for _ in range(20):
                 n = randint(0, tc)
                 i = count_n(a, n, v)
