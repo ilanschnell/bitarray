@@ -1059,7 +1059,7 @@ byte_length(Py_ssize_t i)
    is constructed around this. */
 #define SEGSIZE  32
 
-/* number of 256 bit segments given nbits */
+/* number of segments for given number of bits */
 #define NSEG(nbits)  (((nbits) + 8 * SEGSIZE - 1) / (8 * SEGSIZE))
 
 /* Calculate an array with the running totals (rts) for 256 bit segments.
@@ -1105,9 +1105,9 @@ byte_length(Py_ssize_t i)
 static Py_ssize_t *
 sc_calc_rts(bitarrayobject *a)
 {
-    const Py_ssize_t nbits = a->nbits;
-    const Py_ssize_t n_seg = NSEG(nbits);     /* number of segments */
-    const Py_ssize_t c_seg = nbits / (8 * SEGSIZE);  /* complete segments */
+    /* total number of segments - number of complete segments */
+    const Py_ssize_t n_seg = NSEG(a->nbits);
+    const Py_ssize_t c_seg = a->nbits / (8 * SEGSIZE);
     char zeros[SEGSIZE];                      /* segment with only zeros */
     Py_ssize_t cnt = 0;                       /* current count */
     char *buff;                               /* buffer in current segment */
