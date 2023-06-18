@@ -101,9 +101,9 @@ endianness, which may be 'big', 'little'.");
 /* ------------------------------- count_n ----------------------------- */
 
 /* Return the smallest index i for which a.count(vi, 0, i) == n.
-   When n exceeds the total count, the result is a always negative
-   number (the negative of the total count + 1, which is useful
-   for displaying the error message). */
+   When n exceeds the total count, the result is a negative
+   number; the negative of the total count + 1, which is useful
+   for displaying the error message. */
 static Py_ssize_t
 count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
 {
@@ -139,7 +139,8 @@ count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
     }
 
     while (i < nbits && t < n) {
-        t += getbit(a, i++) == vi;
+        t += getbit(a, i) == vi;
+        i++;
     }
 
     if (t < n) {  /* n exceeds total count */
