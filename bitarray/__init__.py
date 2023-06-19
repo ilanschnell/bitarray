@@ -35,7 +35,7 @@ and may therefore be used as a dictionary key.
 
     def __hash__(self):
         "Return hash(self)."
-        return hash((len(self), self._adler32()))
+        return self._adler32()
 
     # Technically the code below is not necessary, as all these methods will
     # raise a TypeError on read-only memory.  However, with a different error

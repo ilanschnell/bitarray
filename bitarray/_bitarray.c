@@ -1753,8 +1753,8 @@ bitarray_freeze(bitarrayobject *self)
     Py_RETURN_NONE;
 }
 
-/* return Adler 32 hash of buffer, note that this hash is independent of
-   bit-endianness */
+/* return Adler 32 based hash of buffer, note that this hash is independent
+   of bit-endianness */
 static PyObject *
 bitarray_adler32(bitarrayobject *self)
 {
@@ -1772,6 +1772,8 @@ bitarray_adler32(bitarrayobject *self)
         a = (a + c) % MOD_ADLER;
         b = (b + a) % MOD_ADLER;
     }
+    a = (a + self->nbits) % MOD_ADLER;
+    b = (b + a) % MOD_ADLER;
     return PyLong_FromSsize_t((b << 16) | a);
 }
 
