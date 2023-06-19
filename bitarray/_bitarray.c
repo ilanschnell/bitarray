@@ -1753,6 +1753,28 @@ bitarray_freeze(bitarrayobject *self)
     Py_RETURN_NONE;
 }
 
+/* return Adler 32 hash of buffer, note that this hash is independent of
+   bit-endianness */
+static PyObject *
+bitarray_adler32(bitarrayobject *self)
+{
+    const PY_UINT32_T MOD_ADLER = 65521;
+    PY_UINT32_T a = 1, b = 0;
+    Py_ssize_t i;
+    unsigned char c;
+
+    set_padbits(self);
+    for (i = 0; i < Py_SIZE(self); i++)
+    {
+        c = self->ob_item[i];
+        if (IS_LE(self))
+            c = reverse_trans[c];
+        a = (a + c) % MOD_ADLER;
+        b = (b + a) % MOD_ADLER;
+    }
+    return PyLong_FromSsize_t((b << 16) | a);
+}
+
 /* ---------- functionality exposed in debug mode for testing ---------- */
 
 #ifndef NDEBUG
@@ -3228,6 +3250,7 @@ static PyMethodDef bitarray_methods[] = {
     {"__sizeof__",   (PyCFunction) bitarray_sizeof,      METH_NOARGS,
      sizeof_doc},
     {"_freeze",      (PyCFunction) bitarray_freeze,      METH_NOARGS,  0},
+    {"_adler32",     (PyCFunction) bitarray_adler32,     METH_NOARGS,  0},
 
 #ifndef NDEBUG
     /* functionality exposed in debug mode for testing */
