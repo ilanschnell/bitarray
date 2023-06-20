@@ -103,7 +103,7 @@ class Util(object):
             return randint(-length - 5, length + 5)
 
     @staticmethod
-    def other_endian(endian):
+    def opposite_endian(endian):
         t = {'little': 'big',
              'big': 'little'}
         return t[endian]
@@ -542,13 +542,13 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertFalse(a is b)
             self.assertEQUAL(a, b)
 
-            endian2 = self.other_endian(endian)
+            endian2 = self.opposite_endian(endian)
             b = bitarray(a, endian2)
             self.assertEqual(b.endian(), endian2)
             self.assertEqual(a, b)
 
         for a in self.randombitarrays():
-            endian2 = self.other_endian(a.endian())
+            endian2 = self.opposite_endian(a.endian())
             b = bitarray(a, endian2)
             self.assertEqual(a, b)
             self.assertEqual(b.endian(), endian2)
@@ -2816,7 +2816,7 @@ class MethodTests(unittest.TestCase, Util):
             a = urandom(8 * n, self.random_endian())
             b = a.copy()
             a.bytereverse()
-            a = bitarray(a, self.other_endian(a.endian()))
+            a = bitarray(a, self.opposite_endian(a.endian()))
             self.assertEqual(a.tobytes(), b.tobytes())
 
 tests.append(MethodTests)
@@ -4652,7 +4652,7 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         n = 0
         for a in self.randombitarrays():
             a = frozenbitarray(a)
-            b = frozenbitarray(a, self.other_endian(a.endian()))
+            b = frozenbitarray(a, self.opposite_endian(a.endian()))
             self.assertEqual(a, b)
             self.assertNotEqual(a.endian(), b.endian())
             self.assertEqual(hash(a), hash(b))
