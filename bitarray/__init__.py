@@ -35,13 +35,9 @@ and may therefore be used as a dictionary key.
 
     def __hash__(self):
         "Return hash(self)."
-        try:
-            return self._hash
-        except AttributeError:
-            # ensure hash is independent of endianness
-            a = self if self.endian() == 'big' else bitarray(self, 'big')
-            self._hash = hash((len(a), a.tobytes()))
-            return self._hash
+        # ensure hash is independent of endianness
+        a = self if self.endian() == 'big' else bitarray(self, 'big')
+        return hash((len(a), a.tobytes()))
 
     # Technically the code below is not necessary, as all these methods will
     # raise a TypeError on read-only memory.  However, with a different error

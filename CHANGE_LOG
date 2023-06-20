@@ -1,5 +1,6 @@
 2023-XX-XX   2.7.6:
 -------------------
+  * remove caching hash value, fixes issue #201
 
 
 2023-06-10   2.7.5:
