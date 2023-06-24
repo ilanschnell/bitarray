@@ -1,4 +1,4 @@
-2023-XX-XX   2.7.6:
+2023-06-24   2.7.6:
 -------------------
   * remove caching hash value, fixes issue #201
 

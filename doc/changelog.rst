@@ -1,6 +1,11 @@
 Change log
 ==========
 
+**2.7.6** (2023-06-24):
+
+* remove caching hash value, fixes issue `#201 <https://github.com/ilanschnell/bitarray/issues/201>`__
+
+
 **2.7.5** (2023-06-10):
 
 * fix for pypy3.9-v7.3.11, `#198 <https://github.com/ilanschnell/bitarray/issues/198>`__ (fixes `#188 <https://github.com/ilanschnell/bitarray/issues/188>`__)
