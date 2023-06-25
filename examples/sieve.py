@@ -8,8 +8,7 @@ from bitarray import bitarray
 from bitarray.util import count_n
 
 
-MILLION = 1000 * 1000
-N = 100 * MILLION
+N = 100_000_000
 
 # Each bit a[i] corresponds to whether or not i is a prime
 a = bitarray(N)
@@ -32,5 +31,5 @@ print('number of twin primes up to %d is %d' %
       (N, len(a.search(bitarray('101')))))
 
 # The 1 millionth prime number is 15,485,863
-m = MILLION
+m = 1_000_000
 print('the %dth prime is %d' % (m, count_n(a, m) - 1))

@@ -1,15 +1,8 @@
 import sys
 import hashlib
-from math import ceil, exp, log
+from math import ceil, exp, log, log2
 
 from bitarray import bitarray
-
-if sys.version_info[0] == 2:
-    int = long
-    range = xrange
-    log2 = lambda x: log(x, 2.0)
-else:
-    from math import log2
 
 
 class BloomFilter(object):
