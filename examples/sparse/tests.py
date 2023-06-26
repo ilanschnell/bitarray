@@ -6,7 +6,7 @@ try:
     from itertools import pairwise  # type: ignore
 except ImportError:
     from itertools import tee
-    def pairwise(iterable):
+    def pairwise(iterable):  # type: ignore
         a, b = tee(iterable)
         next(b, None)
         return zip(a, b)
