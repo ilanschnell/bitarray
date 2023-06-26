@@ -4,7 +4,6 @@ This is essentially a Python implementation of copy_n() with output of the
 different stages of the bitarray we copy into.
 For more details, see also: bitarray/copy_n.txt
 """
-import sys
 from random import randint
 from io import StringIO
 

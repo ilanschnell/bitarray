@@ -1,7 +1,5 @@
 from collections import Counter, defaultdict
 
-from bitarray import bitarray
-
 from _puff import State, MAXLCODES, MAXDCODES, FIXLCODES
 
 

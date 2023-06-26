@@ -1,4 +1,3 @@
-import sys
 import hashlib
 from math import ceil, exp, log, log2
 
