@@ -2750,7 +2750,13 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a, bitarray(len(a) * [val]))
             self.check_obj(a)
 
-    def test_bytereverse_explicit_all(self):
+tests.append(MethodTests)
+
+# ---------------------------------------------------------------------------
+
+class ByteReverseTests(unittest.TestCase, Util):
+
+    def test_explicit_all(self):
         for x, y in [('', ''),
                      ('11101101', '10110111'),
                      ('00000001', '10000000'),
@@ -2760,7 +2766,7 @@ class MethodTests(unittest.TestCase, Util):
             a.bytereverse()
             self.assertEqual(a, bitarray(y))
 
-    def test_bytereverse_explicit_range(self):
+    def test_explicit_range(self):
         a = bitarray('11100000 00000011 00111111 11111000')
         a.bytereverse(0, 1)  # reverse byte 0
         self.assertEqual(a, bitarray('00000111 00000011 00111111 11111000'))
@@ -2782,7 +2788,7 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.bytereverse, 5)
         self.assertRaises(IndexError, a.bytereverse, 0, 5)
 
-    def test_bytereverse_byte(self):
+    def test_byte(self):
         for i in range(256):
             a = bitarray()
             a.frombytes(bytearray([i]))
@@ -2794,7 +2800,16 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(b, a)
             self.check_obj(b)
 
-    def test_bytereverse_random(self):
+    def test_consecutive(self):
+        for a in self.randombitarrays():
+            b = a.copy()
+            # two consecutive calls to .bytereverse() leave the bitarray
+            # unchanged (even when the length is not a multiple of 8).
+            a.bytereverse()
+            a.bytereverse()
+            self.assertEQUAL(a, b)
+
+    def test_random(self):
         t = bitarray(endian=self.random_endian())
         t.frombytes(bytearray(range(256)))
         t.bytereverse()
@@ -2811,7 +2826,7 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
             self.check_obj(a)
 
-    def test_bytereverse_endian(self):
+    def test_endian(self):
         for n in range(20):
             a = urandom(8 * n, self.random_endian())
             b = a.copy()
@@ -2819,7 +2834,7 @@ class MethodTests(unittest.TestCase, Util):
             a = bitarray(a, self.opposite_endian(a.endian()))
             self.assertEqual(a.tobytes(), b.tobytes())
 
-tests.append(MethodTests)
+tests.append(ByteReverseTests)
 
 # ---------------------------------------------------------------------------
 
