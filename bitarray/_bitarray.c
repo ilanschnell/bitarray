@@ -886,7 +886,8 @@ PyDoc_STRVAR(bytereverse_doc,
 For each byte in byte-range(start, stop) reverse the bit order in-place.\n\
 The start and stop indices are given in terms of bytes (not bits).\n\
 Also note that this method only changes the buffer; it does not change the\n\
-endianness of the bitarray object.");
+endianness of the bitarray object.  Padbits are left unchanged such that\n\
+two consecutive calls will always leave the bitarray unchanged.");
 
 
 static PyObject *
