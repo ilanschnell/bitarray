@@ -1,5 +1,6 @@
 2023-XX-XX   2.7.7:
 -------------------
+  * imrpove `.bytereverse()` docstring, see issue #202
 
 
 2023-06-24   2.7.6:
