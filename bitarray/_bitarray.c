@@ -3410,6 +3410,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
             return newbitarray_from_pickle(type, initial, endian_str);
     }
 
+    /* bitarray: use its endianness (when endian argument missing) */
     if (bitarray_Check(initial) && endian_str == NULL)
         endian = ((bitarrayobject *) initial)->endian;
 
