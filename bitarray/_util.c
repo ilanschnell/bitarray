@@ -1824,7 +1824,7 @@ chdi_new(PyObject *module, PyObject *args)
     Py_ssize_t count_sum;
     chdi_obj *it;       /* iterator object to be returned */
 
-    if (!PyArg_ParseTuple(args, "O!OO:count_n",
+    if (!PyArg_ParseTuple(args, "O!OO:canonical_decode",
                           bitarray_type_obj, &a, &count, &symbol))
         return NULL;
     if (!PySequence_Check(count))
