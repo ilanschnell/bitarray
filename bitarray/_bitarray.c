@@ -1940,6 +1940,7 @@ static PySequenceMethods bitarray_as_sequence = {
 
 /* ----------------------- bitarray_as_mapping ------------------------- */
 
+/* return new bitarray with item in self, specified by slice */
 static PyObject *
 getslice(bitarrayobject *self, PyObject *slice)
 {
