@@ -1941,6 +1941,35 @@ static PySequenceMethods bitarray_as_sequence = {
 /* ----------------------- bitarray_as_mapping ------------------------- */
 
 static PyObject *
+getslice(bitarrayobject *self, PyObject *slice)
+{
+    Py_ssize_t start, stop, step, slicelength;
+    PyObject *res;
+
+    assert(PySlice_Check(slice));
+    if (PySlice_GetIndicesEx(slice, self->nbits,
+                             &start, &stop, &step, &slicelength) < 0)
+        return NULL;
+
+    res = newbitarrayobject(Py_TYPE(self), slicelength, self->endian);
+    if (res == NULL)
+        return NULL;
+
+#define rr  ((bitarrayobject *) res)
+    if (step == 1) {
+        copy_n(rr, 0, self, start, slicelength);
+    }
+    else {
+        Py_ssize_t i, j;
+
+        for (i = 0, j = start; i < slicelength; i++, j += step)
+            setbit(rr, i, getbit(self, j));
+    }
+#undef rr
+    return res;
+}
+
+static PyObject *
 bitarray_subscr(bitarrayobject *self, PyObject *item)
 {
     if (PyIndex_Check(item)) {
@@ -1954,31 +1983,8 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
         return bitarray_item(self, i);
     }
 
-    if (PySlice_Check(item)) {
-        Py_ssize_t start, stop, step, slicelength;
-        PyObject *res;
-
-        if (PySlice_GetIndicesEx(item, self->nbits,
-                                 &start, &stop, &step, &slicelength) < 0)
-            return NULL;
-
-        res = newbitarrayobject(Py_TYPE(self), slicelength, self->endian);
-        if (res == NULL)
-            return NULL;
-
-#define rr  ((bitarrayobject *) res)
-        if (step == 1) {
-            copy_n(rr, 0, self, start, slicelength);
-        }
-        else {
-            Py_ssize_t i, j;
-
-            for (i = 0, j = start; i < slicelength; i++, j += step)
-                setbit(rr, i, getbit(self, j));
-        }
-#undef rr
-        return res;
-    }
+    if (PySlice_Check(item))
+        return getslice(self, item);
 
     return PyErr_Format(PyExc_TypeError,
                         "bitarray indices must be integers or slices, not %s",
