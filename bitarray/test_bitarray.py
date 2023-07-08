@@ -1421,9 +1421,9 @@ tests.append(SliceTests)
 
 # ---------------------------------------------------------------------------
 
-class ItemsTests(unittest.TestCase, Util):
+class SequenceTests(unittest.TestCase, Util):
 
-    def test_getitems_basic(self):
+    def test_get_basic(self):
         a = bitarray('00110101 00')
         self.assertEqual(a[[2, 4, -3, 9]], bitarray('1010'))
         self.assertEqual(a[71 * [2, 4, 7]], 71 * bitarray('101'))
@@ -1431,13 +1431,13 @@ class ItemsTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__getitem__, [1, 10])
         self.assertRaises(IndexError, a.__getitem__, [-11])
 
-    def test_getitems_types(self):
+    def test_get_types(self):
         a = bitarray('11001101 01')
         lst = [1, 3, -2]
         for b in [tuple(lst), lst, array.array('i', lst)]:
             self.assertEqual(a[b], bitarray('100'))
 
-    def test_getitems_random(self):
+    def test_get_random(self):
         for a in self.randombitarrays():
             n = len(a)
             lst = [randint(0, n - 1) for _ in range(n // 2)]
@@ -1445,7 +1445,30 @@ class ItemsTests(unittest.TestCase, Util):
             self.assertEqual(b, bitarray(a[i] for i in lst))
             self.assertEqual(b.endian(), a.endian())
 
-tests.append(ItemsTests)
+    def test_set_basic(self):
+        a = zeros(10)
+        a[[2, 3, 5, 7]] = 1
+        self.assertEqual(a, bitarray('00110101 00'))
+        a[[-1]] = True
+        self.assertEqual(a, bitarray('00110101 01'))
+        a[(3, -1)] = 0
+        self.assertEqual(a, bitarray('00100101 00'))
+        self.assertRaises(IndexError, a.__setitem__, [1, 10], 0)
+        self.assertRaises(ValueError, a.__setitem__, [1], 2)
+        self.assertRaises(TypeError, a.__setitem__, [1], "A")
+
+    def test_set_random(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            lst = [randint(0, n - 1) for _ in range(n // 2)]
+            b = a.copy()
+            for v in 0, 1:
+                a[lst] = v
+                for i in lst:
+                    b[i] = v
+                self.assertEqual(a, b)
+
+tests.append(SequenceTests)
 
 # ---------------------------------------------------------------------------
 

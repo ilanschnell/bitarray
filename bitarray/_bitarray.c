@@ -1995,8 +1995,10 @@ index_from_seq(PyObject *sequence, Py_ssize_t j, Py_ssize_t length)
     return i;
 }
 
+/* return a new bitarray with items from 'self' listed by
+   sequence (of indices) 'seq' */
 static PyObject *
-getitems(bitarrayobject *self, PyObject *seq)
+getsequence(bitarrayobject *self, PyObject *seq)
 {
     PyObject *res;
     Py_ssize_t i, j, n;
@@ -2034,7 +2036,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
         return getslice(self, item);
 
     if (PySequence_Check(item))
-        return getitems(self, item);
+        return getsequence(self, item);
 
     return PyErr_Format(PyExc_TypeError,
                         "bitarray index must be integer, slice or sequence, "
@@ -2042,9 +2044,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
 }
 
 /* The following functions, namely setslice_bitarray(), setslice_bool() and
-   delslice(), are called from bitarray_ass_subscr().  Having all this
-   functionality inside bitarray_ass_subscr() would make the function
-   incomprehensibly long. */
+   delslice(), are called from assign_slice (). */
 
 /* set items in self, specified by slice, to other bitarray */
 static int
@@ -2184,6 +2184,45 @@ assign_slice(bitarrayobject *self, PyObject *slice, PyObject *value)
     return -1;
 }
 
+/* assign sequence (of indices) of bitarray self to Boolean value */
+static int
+setseq_bool(bitarrayobject *self, PyObject *seq, PyObject *value)
+{
+    Py_ssize_t n, i, j;
+    int vi;
+
+    if (!conv_pybit(value, &vi))
+        return -1;
+
+    n = PySequence_Size(seq);
+    for (j = 0; j < n; j++) {
+        if ((i = index_from_seq(seq, j, self->nbits)) < 0)
+            return -1;
+        setbit(self, i, vi);
+    }
+    return 0;
+}
+
+/* assign sequence (of indices) of bitarray self to value */
+static int
+assign_sequence(bitarrayobject *self, PyObject *seq, PyObject *value)
+{
+    /*
+    if (value == NULL)
+        return delsequence(self, seq);
+
+    if (bitarray_Check(value))
+        return setslice_bitarray(self, slice, (bitarrayobject *) value);
+    */
+    if (PyIndex_Check(value))
+        return setseq_bool(self, seq, value);
+
+    PyErr_Format(PyExc_TypeError,
+                 "bitarray or int expected for sequence assignment, not %s",
+                 Py_TYPE(value)->tp_name);
+    return -1;
+}
+
 static int
 bitarray_ass_subscr(bitarrayobject *self, PyObject *item, PyObject *value)
 {
@@ -2202,6 +2241,9 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject *item, PyObject *value)
 
     if (PySlice_Check(item))
         return assign_slice(self, item, value);
+
+    if (PySequence_Check(item))
+        return assign_sequence(self, item, value);
 
     PyErr_Format(PyExc_TypeError,
                  "bitarray indices must be integers or slices, not %s",
