@@ -2116,6 +2116,25 @@ delslice(bitarrayobject *self, PyObject *slice)
     return delete_n(self, stop - slicelength, slicelength);
 }
 
+/* assign slice of bitarray self to value */
+static int
+assign_slice(bitarrayobject *self, PyObject *slice, PyObject *value)
+{
+    if (value == NULL)
+        return delslice(self, slice);
+
+    if (bitarray_Check(value))
+        return setslice_bitarray(self, slice, (bitarrayobject *) value);
+
+    if (PyIndex_Check(value))
+        return setslice_bool(self, slice, value);
+
+    PyErr_Format(PyExc_TypeError,
+                 "bitarray or int expected for slice assignment, not %s",
+                 Py_TYPE(value)->tp_name);
+    return -1;
+}
+
 static int
 bitarray_ass_subscr(bitarrayobject *self, PyObject *item, PyObject *value)
 {
@@ -2132,21 +2151,8 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject *item, PyObject *value)
         return bitarray_ass_item(self, i, value);
     }
 
-    if (PySlice_Check(item)) {
-        if (value == NULL)
-            return delslice(self, item);
-
-        if (bitarray_Check(value))
-            return setslice_bitarray(self, item, (bitarrayobject *) value);
-
-        if (PyIndex_Check(value))
-            return setslice_bool(self, item, value);
-
-        PyErr_Format(PyExc_TypeError,
-                     "bitarray or int expected for slice assignment, not %s",
-                     Py_TYPE(value)->tp_name);
-        return -1;
-    }
+    if (PySlice_Check(item))
+        return assign_slice(self, item, value);
 
     PyErr_Format(PyExc_TypeError,
                  "bitarray indices must be integers or slices, not %s",
