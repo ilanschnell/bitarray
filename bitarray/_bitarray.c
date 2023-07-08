@@ -1970,6 +1970,52 @@ getslice(bitarrayobject *self, PyObject *slice)
     return res;
 }
 
+/* Return j-th item from sequence.  The item is considered an index into
+   an array with given length, and is normalized a pythonic manner.
+   On failure, an exception is set and -1 is returned. */
+static Py_ssize_t
+index_from_seq(PyObject *sequence, Py_ssize_t j, Py_ssize_t length)
+{
+    PyObject *item;
+    Py_ssize_t i;
+
+    if ((item = PySequence_GetItem(sequence, j)) == NULL)
+        return -1;
+
+    i = PyNumber_AsSsize_t(item, PyExc_IndexError);
+    Py_DECREF(item);
+    if (i == -1 && PyErr_Occurred())
+        return -1;
+    if (i < 0)
+        i += length;
+    if (i < 0 || i >= length) {
+        PyErr_SetString(PyExc_IndexError, "bitarray index out of range");
+        return -1;
+    }
+    return i;
+}
+
+static PyObject *
+getitems(bitarrayobject *self, PyObject *seq)
+{
+    PyObject *res;
+    Py_ssize_t i, j, n;
+
+    n = PySequence_Size(seq);
+    res = newbitarrayobject(Py_TYPE(self), n, self->endian);
+    if (res == NULL)
+        return NULL;
+
+    for (j = 0; j < n; j++) {
+        if ((i = index_from_seq(seq, j, self->nbits)) < 0) {
+            Py_DECREF(res);
+            return NULL;
+        }
+        setbit((bitarrayobject *) res, j, getbit(self, i));
+    }
+    return res;
+}
+
 static PyObject *
 bitarray_subscr(bitarrayobject *self, PyObject *item)
 {
@@ -1987,9 +2033,12 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
     if (PySlice_Check(item))
         return getslice(self, item);
 
+    if (PySequence_Check(item))
+        return getitems(self, item);
+
     return PyErr_Format(PyExc_TypeError,
-                        "bitarray indices must be integers or slices, not %s",
-                        Py_TYPE(item)->tp_name);
+                        "bitarray index must be integer, slice or sequence, "
+                        "not %s", Py_TYPE(item)->tp_name);
 }
 
 /* The following functions, namely setslice_bitarray(), setslice_bool() and

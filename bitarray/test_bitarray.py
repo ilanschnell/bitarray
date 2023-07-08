@@ -887,7 +887,6 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEQUAL(a[:8:-1], bitarray('1000'))
 
         self.assertRaises(ValueError, a.__getitem__, slice(None, None, 0))
-        self.assertRaises(TypeError, a.__getitem__, (1, 2))
 
     def test_getslice_random(self):
         for a in self.randombitarrays(start=1):
@@ -1419,6 +1418,34 @@ class SliceTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist(), lst)
 
 tests.append(SliceTests)
+
+# ---------------------------------------------------------------------------
+
+class ItemsTests(unittest.TestCase, Util):
+
+    def test_getitems_basic(self):
+        a = bitarray('00110101 00')
+        self.assertEqual(a[[2, 4, -3, 9]], bitarray('1010'))
+        self.assertEqual(a[71 * [2, 4, 7]], 71 * bitarray('101'))
+        self.assertEqual(a[[-1]], bitarray('0'))
+        self.assertRaises(IndexError, a.__getitem__, [1, 10])
+        self.assertRaises(IndexError, a.__getitem__, [-11])
+
+    def test_getitems_types(self):
+        a = bitarray('11001101 01')
+        lst = [1, 3, -2]
+        for b in [tuple(lst), lst, array.array('i', lst)]:
+            self.assertEqual(a[b], bitarray('100'))
+
+    def test_getitems_random(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            lst = [randint(0, n - 1) for _ in range(n // 2)]
+            b = a[lst]
+            self.assertEqual(b, bitarray(a[i] for i in lst))
+            self.assertEqual(b.endian(), a.endian())
+
+tests.append(ItemsTests)
 
 # ---------------------------------------------------------------------------
 
