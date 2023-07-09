@@ -1434,8 +1434,11 @@ class SequenceTests(unittest.TestCase, Util):
     def test_get_types(self):
         a = bitarray('11001101 01')
         lst = [1, 3, -2]
-        for b in [tuple(lst), lst, array.array('i', lst)]:
+        for b in [lst, array.array('i', lst)]:
             self.assertEqual(a[b], bitarray('100'))
+
+        self.assertEqual(a[tuple(lst)], NotImplemented)
+        self.assertEqual(a[a], NotImplemented)
 
     def test_get_random(self):
         for a in self.randombitarrays():
@@ -1451,11 +1454,13 @@ class SequenceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('00110101 00'))
         a[[-1]] = True
         self.assertEqual(a, bitarray('00110101 01'))
-        a[(3, -1)] = 0
+        a[[3, -1]] = 0
         self.assertEqual(a, bitarray('00100101 00'))
         self.assertRaises(IndexError, a.__setitem__, [1, 10], 0)
         self.assertRaises(ValueError, a.__setitem__, [1], 2)
         self.assertRaises(TypeError, a.__setitem__, [1], "A")
+        self.assertRaises(TypeError, a.__setitem__, (3, -1))
+        self.assertRaises(TypeError, a.__setitem__, a)
 
     def test_set_bool_random(self):
         for a in self.randombitarrays():

@@ -2035,7 +2035,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
     if (PySlice_Check(item))
         return getslice(self, item);
 
-    if (bitarray_Check(item)) {
+    if (bitarray_Check(item) || PyTuple_Check(item)) {
         Py_INCREF(Py_NotImplemented);
         return Py_NotImplemented;
     }
@@ -2329,6 +2329,11 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject *item, PyObject *value)
 
     if (PySlice_Check(item))
         return assign_slice(self, item, value);
+
+    if (PyTuple_Check(item)) {
+        PyErr_SetString(PyExc_TypeError, "multiple dimensions not supported");
+        return -1;
+    }
 
     if (bitarray_Check(item)) {
         PyErr_SetString(PyExc_TypeError, "bitarray index cannot be bitarray");
