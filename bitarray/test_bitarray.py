@@ -1519,10 +1519,15 @@ class SequenceTests(unittest.TestCase, Util):
             n = len(a)
             lst = [randint(0, n - 1) for _ in range(n // 2)]
             b = a.copy()
+            c = a.copy()
             del a[lst]
             for i in sorted(set(lst), reverse=True):
                 del b[i]
             self.assertEqual(a, b)
+
+            lst = list(range(n))
+            del c[lst]
+            self.assertEqual(c, bitarray())
 
 tests.append(SequenceTests)
 
