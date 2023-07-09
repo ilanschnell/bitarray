@@ -2264,8 +2264,7 @@ delsequence(bitarrayobject *self, PyObject *seq)
     memset(t->ob_item, 0xff, (size_t) Py_SIZE(t));
 
     start = nbits;  /* smallest index in sequence */
-    stop = -1;
-
+    stop = -1;      /* largest index in sequence */
     for (j = 0; j < nseq; j++) {
         if ((i = index_from_seq(seq, j, nbits)) < 0) {
             Py_DECREF(t);
@@ -2284,7 +2283,7 @@ delsequence(bitarrayobject *self, PyObject *seq)
         if (getbit(t, i))  /* set items we want to keep */
             setbit(self, j++, getbit(self, i));
     }
-    assert(j <= nbits);
+    assert(j <= nbits && nbits - count(t, 0, nbits) == stop + 1 - j);
     if (delete_n(self, j, stop + 1 - j) < 0) {
         Py_DECREF(t);
         return -1;
