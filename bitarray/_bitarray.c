@@ -2239,14 +2239,50 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
     return res;
 }
 
+/* delete items in self, specified by sequence of indices */
+static int
+delsequence(bitarrayobject *self, PyObject *seq)
+{
+    bitarrayobject *t = NULL;  /* temporary bitarray marking items to keep */
+    Py_ssize_t nbits, n, i, j, start;
+
+    nbits = self->nbits;
+    /* create temporary bitarray - note that it's endianness is irrelevant */
+    t = (bitarrayobject *) newbitarrayobject(Py_TYPE(self), nbits,
+                                             self->endian);
+    if (t == NULL)
+        return -1;
+    memset(t->ob_item, 0xff, (size_t) Py_SIZE(t));
+
+    start = nbits;  /* smallest index in sequence */
+    n = PySequence_Size(seq);
+    for (j = 0; j < n; j++) {
+        if ((i = index_from_seq(seq, j, nbits)) < 0) {
+            Py_DECREF(t);
+            return -1;
+        }
+        if (i < start)
+            start = i;
+        setbit(t, i, 0);
+    }
+
+    for (i = j = start; i < nbits; i++) {
+        if (getbit(t, i))  /* set items we want to keep */
+            setbit(self, j++, getbit(self, i));
+    }
+    assert(j <= nbits);
+    resize(self, j);
+    Py_DECREF(t);
+    return 0;
+}
+
 /* assign sequence (of indices) of bitarray self to value */
 static int
 assign_sequence(bitarrayobject *self, PyObject *seq, PyObject *value)
 {
-    /*
     if (value == NULL)
         return delsequence(self, seq);
-    */
+
     if (bitarray_Check(value))
         return setseq_bitarray(self, seq, (bitarrayobject *) value);
 

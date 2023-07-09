@@ -1502,6 +1502,26 @@ class SequenceTests(unittest.TestCase, Util):
                 b[j] = c[i]
             self.assertEqual(a, b)
 
+    def test_del_basic(self):
+        a = bitarray('00110101 00')
+        #               ^ ^  ^  ^
+        del a[[2, 4, 7, 9]]
+        self.assertEqual(a, bitarray('001100'))
+        a = bitarray('00110101 00')
+        del a[71 * [2, 4, 7, 9]]
+        self.assertEqual(a, bitarray('001100'))
+        self.assertRaises(IndexError, a.__delitem__, [1, 10])
+
+    def test_delitems_random(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            lst = [randint(0, n - 1) for _ in range(n // 2)]
+            b = a.copy()
+            del a[lst]
+            for i in sorted(set(lst), reverse=True):
+                del b[i]
+            self.assertEqual(a, b)
+
 tests.append(SequenceTests)
 
 # ---------------------------------------------------------------------------
