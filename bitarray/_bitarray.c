@@ -2250,6 +2250,7 @@ delsequence(bitarrayobject *self, PyObject *seq)
 {
     bitarrayobject *t = NULL;  /* temporary bitarray marking items to keep */
     Py_ssize_t nbits, n, i, j, start;
+    int res = -1;
 
     nbits = self->nbits;
     /* create temporary bitarray - note that it's endianness is irrelevant */
@@ -2262,10 +2263,8 @@ delsequence(bitarrayobject *self, PyObject *seq)
     start = nbits;  /* smallest index in sequence */
     n = PySequence_Size(seq);
     for (j = 0; j < n; j++) {
-        if ((i = index_from_seq(seq, j, nbits)) < 0) {
-            Py_DECREF(t);
-            return -1;
-        }
+        if ((i = index_from_seq(seq, j, nbits)) < 0)
+            goto error;
         if (i < start)
             start = i;
         setbit(t, i, 0);
@@ -2276,9 +2275,12 @@ delsequence(bitarrayobject *self, PyObject *seq)
             setbit(self, j++, getbit(self, i));
     }
     assert(j <= nbits);
-    resize(self, j);
+    if (resize(self, j) < 0)
+        goto error;
+    res = 0;
+ error:
     Py_DECREF(t);
-    return 0;
+    return res;
 }
 
 /* assign sequence (of indices) of bitarray self to value */
