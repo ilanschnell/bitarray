@@ -2208,6 +2208,7 @@ static int
 setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
 {
     Py_ssize_t n, i, j;
+    int other_copied = 0, res = -1;
 
     n = PySequence_Size(seq);
     if (n != other->nbits) {
@@ -2216,13 +2217,26 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
                      n, other->nbits);
         return -1;
     }
+    /* Make a copy of other, in case the buffers overlap.  This is obviously
+       the case when self and other are the same object, but can also happen
+       when the two bitarrays share memory. */
+    if (buffers_overlap(self, other)) {
+        other = (bitarrayobject *) bitarray_copy(other);
+        if (other == NULL)
+            return -1;
+        other_copied = 1;
+    }
 
     for (j = 0; j < n; j++) {
         if ((i = index_from_seq(seq, j, self->nbits)) < 0)
-            return -1;
+            goto error;
         setbit(self, i, getbit(other, j));
     }
-    return 0;
+    res = 0;
+ error:
+    if (other_copied)
+        Py_DECREF(other);
+    return res;
 }
 
 /* assign sequence (of indices) of bitarray self to value */

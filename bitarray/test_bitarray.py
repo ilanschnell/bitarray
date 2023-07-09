@@ -12,7 +12,7 @@ import platform
 import unittest
 import shutil
 import tempfile
-from random import randint
+from random import randint, shuffle
 
 # imports needed inside tests
 import array
@@ -1445,7 +1445,7 @@ class SequenceTests(unittest.TestCase, Util):
             self.assertEqual(b, bitarray(a[i] for i in lst))
             self.assertEqual(b.endian(), a.endian())
 
-    def test_set_basic(self):
+    def test_set_bool_basic(self):
         a = zeros(10)
         a[[2, 3, 5, 7]] = 1
         self.assertEqual(a, bitarray('00110101 00'))
@@ -1457,16 +1457,7 @@ class SequenceTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.__setitem__, [1], 2)
         self.assertRaises(TypeError, a.__setitem__, [1], "A")
 
-    def test_set_bitarray(self):
-        a = zeros(10)
-        a[[2, 3, 5, 7]] = bitarray('1101')
-        self.assertEqual(a, bitarray('00110001 00'))
-        a[[5, -1]] = bitarray('11')
-        self.assertEqual(a, bitarray('00110101 01'))
-        self.assertRaises(IndexError, a.__setitem__, [1, 10], bitarray('11'))
-        self.assertRaises(ValueError, a.__setitem__, [1], bitarray())
-
-    def test_set_random(self):
+    def test_set_bool_random(self):
         for a in self.randombitarrays():
             n = len(a)
             lst = [randint(0, n - 1) for _ in range(n // 2)]
@@ -1476,6 +1467,40 @@ class SequenceTests(unittest.TestCase, Util):
                 for i in lst:
                     b[i] = v
                 self.assertEqual(a, b)
+
+    def test_set_bitarray_basic(self):
+        a = zeros(10)
+        a[[2, 3, 5, 7]] = bitarray('1101')
+        self.assertEqual(a, bitarray('00110001 00'))
+        a[[]] = bitarray()
+        a[[5, -1]] = bitarray('11')
+        self.assertEqual(a, bitarray('00110101 01'))
+        self.assertRaises(IndexError, a.__setitem__, [1, 10], bitarray('11'))
+        self.assertRaises(ValueError, a.__setitem__, [1], bitarray())
+
+    def test_set_bitarray_random(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            lst = [randint(0, n - 1) for _ in range(n // 2)]
+            c = urandom(len(lst))
+            b = a.copy()
+
+            a[lst] = c
+            for i, j in enumerate(lst):
+                b[j] = c[i]
+            self.assertEqual(a, b)
+
+    def test_set_bitarray_random_self(self):
+        for a in self.randombitarrays():
+            lst = list(range(len(a)))
+            shuffle(lst)
+            b = a.copy()
+            c = a.copy()
+
+            a[lst] = a
+            for i, j in enumerate(lst):
+                b[j] = c[i]
+            self.assertEqual(a, b)
 
 tests.append(SequenceTests)
 
