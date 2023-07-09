@@ -2035,6 +2035,11 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
     if (PySlice_Check(item))
         return getslice(self, item);
 
+    if (bitarray_Check(item)) {
+        Py_INCREF(Py_NotImplemented);
+        return Py_NotImplemented;
+    }
+
     if (PySequence_Check(item))
         return getsequence(self, item);
 
@@ -2314,12 +2319,16 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject *item, PyObject *value)
     if (PySlice_Check(item))
         return assign_slice(self, item, value);
 
+    if (bitarray_Check(item)) {
+        PyErr_SetString(PyExc_TypeError, "bitarray index cannot be bitarray");
+        return -1;
+    }
+
     if (PySequence_Check(item))
         return assign_sequence(self, item, value);
 
-    PyErr_Format(PyExc_TypeError,
-                 "bitarray indices must be integers or slices, not %s",
-                 Py_TYPE(item)->tp_name);
+    PyErr_Format(PyExc_TypeError, "bitarray indices must be integers, "
+                 "slices or sequences, not %s", Py_TYPE(item)->tp_name);
     return -1;
 }
 

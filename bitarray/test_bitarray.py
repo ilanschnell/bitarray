@@ -1507,6 +1507,8 @@ class SequenceTests(unittest.TestCase, Util):
         #               ^ ^  ^  ^
         del a[[2, 4, 7, 9]]
         self.assertEqual(a, bitarray('001100'))
+        del a[[]]
+        self.assertEqual(a, bitarray('001100'))
         a = bitarray('00110101 00')
         del a[71 * [2, 4, 7, 9]]
         self.assertEqual(a, bitarray('001100'))
