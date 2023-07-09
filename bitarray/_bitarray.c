@@ -2249,8 +2249,11 @@ static int
 delsequence(bitarrayobject *self, PyObject *seq)
 {
     bitarrayobject *t = NULL;  /* temporary bitarray marking items to keep */
-    Py_ssize_t nbits, n, i, j, start;
-    int res = -1;
+    Py_ssize_t nbits, nseq, i, j, start, stop;
+
+    nseq = PySequence_Size(seq);  /* sequence is empty, nothing to delete */
+    if (nseq == 0)
+        return 0;
 
     nbits = self->nbits;
     /* create temporary bitarray - note that it's endianness is irrelevant */
@@ -2261,26 +2264,33 @@ delsequence(bitarrayobject *self, PyObject *seq)
     memset(t->ob_item, 0xff, (size_t) Py_SIZE(t));
 
     start = nbits;  /* smallest index in sequence */
-    n = PySequence_Size(seq);
-    for (j = 0; j < n; j++) {
-        if ((i = index_from_seq(seq, j, nbits)) < 0)
-            goto error;
+    stop = -1;
+
+    for (j = 0; j < nseq; j++) {
+        if ((i = index_from_seq(seq, j, nbits)) < 0) {
+            Py_DECREF(t);
+            return -1;
+        }
         if (i < start)
             start = i;
+        if (i > stop)
+            stop = i;
         setbit(t, i, 0);
     }
+    assert(0 <= start && start < nbits);
+    assert(0 <= stop && stop < nbits && start <= stop);
 
-    for (i = j = start; i < nbits; i++) {
+    for (i = j = start; i <= stop; i++) {
         if (getbit(t, i))  /* set items we want to keep */
             setbit(self, j++, getbit(self, i));
     }
     assert(j <= nbits);
-    if (resize(self, j) < 0)
-        goto error;
-    res = 0;
- error:
+    if (delete_n(self, j, stop + 1 - j) < 0) {
+        Py_DECREF(t);
+        return -1;
+    }
     Py_DECREF(t);
-    return res;
+    return 0;
 }
 
 /* assign sequence (of indices) of bitarray self to value */
