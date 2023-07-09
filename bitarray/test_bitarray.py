@@ -1457,6 +1457,15 @@ class SequenceTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.__setitem__, [1], 2)
         self.assertRaises(TypeError, a.__setitem__, [1], "A")
 
+    def test_set_bitarray(self):
+        a = zeros(10)
+        a[[2, 3, 5, 7]] = bitarray('1101')
+        self.assertEqual(a, bitarray('00110001 00'))
+        a[[5, -1]] = bitarray('11')
+        self.assertEqual(a, bitarray('00110101 01'))
+        self.assertRaises(IndexError, a.__setitem__, [1, 10], bitarray('11'))
+        self.assertRaises(ValueError, a.__setitem__, [1], bitarray())
+
     def test_set_random(self):
         for a in self.randombitarrays():
             n = len(a)

@@ -2044,7 +2044,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
 }
 
 /* The following functions, namely setslice_bitarray(), setslice_bool() and
-   delslice(), are called from assign_slice (). */
+   delslice(), are called from assign_slice(). */
 
 /* set items in self, specified by slice, to other bitarray */
 static int
@@ -2203,6 +2203,28 @@ setseq_bool(bitarrayobject *self, PyObject *seq, PyObject *value)
     return 0;
 }
 
+/* assign sequence (of indices) of bitarray self to bitarray */
+static int
+setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
+{
+    Py_ssize_t n, i, j;
+
+    n = PySequence_Size(seq);
+    if (n != other->nbits) {
+        PyErr_Format(PyExc_ValueError, "attempt to assign sequence of "
+                     "size %zd to bitarray of size %zd",
+                     n, other->nbits);
+        return -1;
+    }
+
+    for (j = 0; j < n; j++) {
+        if ((i = index_from_seq(seq, j, self->nbits)) < 0)
+            return -1;
+        setbit(self, i, getbit(other, j));
+    }
+    return 0;
+}
+
 /* assign sequence (of indices) of bitarray self to value */
 static int
 assign_sequence(bitarrayobject *self, PyObject *seq, PyObject *value)
@@ -2210,10 +2232,10 @@ assign_sequence(bitarrayobject *self, PyObject *seq, PyObject *value)
     /*
     if (value == NULL)
         return delsequence(self, seq);
-
-    if (bitarray_Check(value))
-        return setslice_bitarray(self, slice, (bitarrayobject *) value);
     */
+    if (bitarray_Check(value))
+        return setseq_bitarray(self, seq, (bitarrayobject *) value);
+
     if (PyIndex_Check(value))
         return setseq_bool(self, seq, value);
 
