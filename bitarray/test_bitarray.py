@@ -1421,7 +1421,7 @@ tests.append(SliceTests)
 
 # ---------------------------------------------------------------------------
 
-class SequenceTests(unittest.TestCase, Util):
+class SequenceIndexTests(unittest.TestCase, Util):
 
     def test_get_basic(self):
         a = bitarray('00110101 00')
@@ -1478,10 +1478,12 @@ class SequenceTests(unittest.TestCase, Util):
         a[[2, 3, 5, 7]] = bitarray('1101')
         self.assertEqual(a, bitarray('00110001 00'))
         a[[]] = bitarray()
+        self.assertEqual(a, bitarray('00110001 00'))
         a[[5, -1]] = bitarray('11')
         self.assertEqual(a, bitarray('00110101 01'))
         self.assertRaises(IndexError, a.__setitem__, [1, 10], bitarray('11'))
         self.assertRaises(ValueError, a.__setitem__, [1], bitarray())
+        self.assertRaises(ValueError, a.__setitem__, [1, 2], bitarray('001'))
 
     def test_set_bitarray_random(self):
         for a in self.randombitarrays():
@@ -1518,6 +1520,8 @@ class SequenceTests(unittest.TestCase, Util):
         del a[71 * [2, 4, 7, 9]]
         self.assertEqual(a, bitarray('001100'))
         self.assertRaises(IndexError, a.__delitem__, [1, 10])
+        self.assertRaises(TypeError, a.__delitem__, (1, 3))
+        self.assertRaises(TypeError, a.__delitem__, a)
 
     def test_delitems_random(self):
         for a in self.randombitarrays():
@@ -1534,7 +1538,7 @@ class SequenceTests(unittest.TestCase, Util):
             del c[lst]
             self.assertEqual(c, bitarray())
 
-tests.append(SequenceTests)
+tests.append(SequenceIndexTests)
 
 # ---------------------------------------------------------------------------
 

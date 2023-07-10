@@ -268,6 +268,7 @@ def main():
     testfile('./README.rst')
     testfile('./doc/buffer.rst')
     testfile('./doc/canonical.rst')
+    testfile('./doc/indexing.rst')
     testfile('./doc/represent.rst')
     testfile('./doc/sparse_compression.rst')
     testfile('./doc/variable_length.rst')
