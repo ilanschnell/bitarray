@@ -1535,8 +1535,9 @@ class SequenceIndexTests(unittest.TestCase, Util):
             self.assertEqual(a, b)
 
             lst = list(range(n))
+            shuffle(lst)
             del c[lst]
-            self.assertEqual(c, bitarray())
+            self.assertEqual(len(c), 0)
 
 tests.append(SequenceIndexTests)
 

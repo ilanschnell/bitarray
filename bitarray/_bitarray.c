@@ -2253,17 +2253,17 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
 static int
 delsequence(bitarrayobject *self, PyObject *seq)
 {
-    bitarrayobject *t = NULL;  /* temporary bitarray marking items to keep */
+    bitarrayobject *t;  /* temporary bitarray marking items to keep */
     Py_ssize_t nbits, nseq, i, j, start, stop;
 
-    nseq = PySequence_Size(seq);  /* sequence is empty, nothing to delete */
-    if (nseq == 0)
+    nseq = PySequence_Size(seq);
+    if (nseq == 0)      /* sequence is empty, nothing to delete */
         return 0;
 
     nbits = self->nbits;
     /* create temporary bitarray - note that it's endianness is irrelevant */
     t = (bitarrayobject *) newbitarrayobject(Py_TYPE(self), nbits,
-                                             self->endian);
+                                             ENDIAN_LITTLE);
     if (t == NULL)
         return -1;
     memset(t->ob_item, 0xff, (size_t) Py_SIZE(t));
