@@ -35,3 +35,6 @@ and work as they do with single indices or slices For example:
     >>> del a[[0, 1, 5, 8, 9]]
     >>> a
     bitarray('1111101')
+    >>> a[[1, 2, 4]] = bitarray('010')  # assign indices to elements
+    >>> a
+    bitarray('1011001')
