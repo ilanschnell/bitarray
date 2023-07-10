@@ -1437,8 +1437,8 @@ class SequenceIndexTests(unittest.TestCase, Util):
         for b in [lst, array.array('i', lst)]:
             self.assertEqual(a[b], bitarray('100'))
 
-        self.assertEqual(a[tuple(lst)], NotImplemented)
-        self.assertEqual(a[a], NotImplemented)
+        self.assertRaises(TypeError, a.__getitem__, tuple(lst))
+        self.assertRaises(TypeError, a.__getitem__, a)
 
     def test_get_random(self):
         for a in self.randombitarrays():

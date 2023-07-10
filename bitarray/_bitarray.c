@@ -2035,9 +2035,14 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
     if (PySlice_Check(item))
         return getslice(self, item);
 
-    if (bitarray_Check(item) || PyTuple_Check(item)) {
-        Py_INCREF(Py_NotImplemented);
-        return Py_NotImplemented;
+    if (PyTuple_Check(item)) {
+        PyErr_SetString(PyExc_TypeError, "multiple dimensions not supported");
+        return NULL;
+    }
+
+    if (bitarray_Check(item)) {
+        PyErr_SetString(PyExc_TypeError, "bitarray index cannot be bitarray");
+        return NULL;
     }
 
     if (PySequence_Check(item))
