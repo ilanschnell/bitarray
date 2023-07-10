@@ -18,11 +18,12 @@ indexing and assignment:
     bitarray('100110001001')
 
 
-Arbitrary indexing
-------------------
+Integer sequence indexing
+-------------------------
 
-As of bitarray version 2.8, indices may also be list of arbitrary indices.
-For example:
+As of bitarray version 2.8, indices may also be list of arbitrary
+indices (like in NumPy).  Negative values are permitted in the index list
+and work as they do with single indices or slices For example:
 
 .. code-block:: python
 
