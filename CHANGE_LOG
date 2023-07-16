@@ -1,6 +1,7 @@
 2023-XX-XX   2.8.0:
 -------------------
-  * allow indexing by list of indices, see #204 (addresses #156 and #190)
+  * allow [indexing](indexing.rst) by list of indices,
+    see #204 (addresses #156 and #190)
   * improve `.bytereverse()` docstring, see issue #202
 
 

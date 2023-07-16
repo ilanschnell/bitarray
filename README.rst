@@ -180,6 +180,9 @@ is setting ranges:
     >>> a
     bitarray('000000000011111111111111100000')
 
+As of bitarray version 2.8, indices may also be lists of arbitrary
+indices (like in NumPy), see `Bitarray indexing <https://github.com/ilanschnell/bitarray/blob/master/doc/indexing.rst>`__.
+
 
 Bitwise operators
 -----------------
