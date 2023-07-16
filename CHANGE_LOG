@@ -1,5 +1,6 @@
-2023-XX-XX   2.7.7:
+2023-XX-XX   2.8.0:
 -------------------
+  * allow indexing by list of indices, see #204 (addresses #156 and #190)
   * imrpove `.bytereverse()` docstring, see issue #202
 
 
