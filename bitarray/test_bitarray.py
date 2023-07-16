@@ -12,7 +12,7 @@ import platform
 import unittest
 import shutil
 import tempfile
-from random import randint
+from random import randint, shuffle
 
 # imports needed inside tests
 import array
@@ -887,7 +887,6 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEQUAL(a[:8:-1], bitarray('1000'))
 
         self.assertRaises(ValueError, a.__getitem__, slice(None, None, 0))
-        self.assertRaises(TypeError, a.__getitem__, (1, 2))
 
     def test_getslice_random(self):
         for a in self.randombitarrays(start=1):
@@ -1419,6 +1418,128 @@ class SliceTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist(), lst)
 
 tests.append(SliceTests)
+
+# ---------------------------------------------------------------------------
+
+class SequenceIndexTests(unittest.TestCase, Util):
+
+    def test_get_basic(self):
+        a = bitarray('00110101 00')
+        self.assertEqual(a[[2, 4, -3, 9]], bitarray('1010'))
+        self.assertEqual(a[71 * [2, 4, 7]], 71 * bitarray('101'))
+        self.assertEqual(a[[-1]], bitarray('0'))
+        self.assertRaises(IndexError, a.__getitem__, [1, 10])
+        self.assertRaises(IndexError, a.__getitem__, [-11])
+
+    def test_get_types(self):
+        a = bitarray('11001101 01')
+        lst = [1, 3, -2]
+        for b in [lst, array.array('i', lst)]:
+            self.assertEqual(a[b], bitarray('100'))
+
+        self.assertRaises(TypeError, a.__getitem__, tuple(lst))
+        self.assertRaises(TypeError, a.__getitem__, a)
+
+    def test_get_random(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            lst = [randint(0, n - 1) for _ in range(n // 2)]
+            b = a[lst]
+            self.assertEqual(b, bitarray(a[i] for i in lst))
+            self.assertEqual(b.endian(), a.endian())
+
+    def test_set_bool_basic(self):
+        a = zeros(10)
+        a[[2, 3, 5, 7]] = 1
+        self.assertEqual(a, bitarray('00110101 00'))
+        a[[-1]] = True
+        self.assertEqual(a, bitarray('00110101 01'))
+        a[[3, -1]] = 0
+        self.assertEqual(a, bitarray('00100101 00'))
+        self.assertRaises(IndexError, a.__setitem__, [1, 10], 0)
+        self.assertRaises(ValueError, a.__setitem__, [1], 2)
+        self.assertRaises(TypeError, a.__setitem__, [1], "A")
+        self.assertRaises(TypeError, a.__setitem__, (3, -1))
+        self.assertRaises(TypeError, a.__setitem__, a)
+
+    def test_set_bool_random(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            lst = [randint(0, n - 1) for _ in range(n // 2)]
+            b = a.copy()
+            for v in 0, 1:
+                a[lst] = v
+                for i in lst:
+                    b[i] = v
+                self.assertEqual(a, b)
+
+    def test_set_bitarray_basic(self):
+        a = zeros(10)
+        a[[2, 3, 5, 7]] = bitarray('1101')
+        self.assertEqual(a, bitarray('00110001 00'))
+        a[[]] = bitarray()
+        self.assertEqual(a, bitarray('00110001 00'))
+        a[[5, -1]] = bitarray('11')
+        self.assertEqual(a, bitarray('00110101 01'))
+        self.assertRaises(IndexError, a.__setitem__, [1, 10], bitarray('11'))
+        self.assertRaises(ValueError, a.__setitem__, [1], bitarray())
+        self.assertRaises(ValueError, a.__setitem__, [1, 2], bitarray('001'))
+
+    def test_set_bitarray_random(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            lst = [randint(0, n - 1) for _ in range(n // 2)]
+            c = urandom(len(lst))
+            b = a.copy()
+
+            a[lst] = c
+            for i, j in enumerate(lst):
+                b[j] = c[i]
+            self.assertEqual(a, b)
+
+    def test_set_bitarray_random_self(self):
+        for a in self.randombitarrays():
+            lst = list(range(len(a)))
+            shuffle(lst)
+            b = a.copy()
+            c = a.copy()
+
+            a[lst] = a
+            for i, j in enumerate(lst):
+                b[j] = c[i]
+            self.assertEqual(a, b)
+
+    def test_del_basic(self):
+        a = bitarray('00110101 00')
+        #               ^ ^  ^  ^
+        del a[[2, 4, 7, 9]]
+        self.assertEqual(a, bitarray('001100'))
+        del a[[]]
+        self.assertEqual(a, bitarray('001100'))
+        a = bitarray('00110101 00')
+        del a[71 * [2, 4, 7, 9]]
+        self.assertEqual(a, bitarray('001100'))
+        self.assertRaises(IndexError, a.__delitem__, [1, 10])
+        self.assertRaises(TypeError, a.__delitem__, (1, 3))
+        self.assertRaises(TypeError, a.__delitem__, a)
+
+    def test_delitems_random(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            lst = [randint(0, n - 1) for _ in range(n // 2)]
+            b = a.copy()
+            c = a.copy()
+            del a[lst]
+            for i in sorted(set(lst), reverse=True):
+                del b[i]
+            self.assertEqual(a, b)
+
+            lst = list(range(n))
+            shuffle(lst)
+            del c[lst]
+            self.assertEqual(len(c), 0)
+
+tests.append(SequenceIndexTests)
 
 # ---------------------------------------------------------------------------
 

@@ -1970,6 +1970,54 @@ getslice(bitarrayobject *self, PyObject *slice)
     return res;
 }
 
+/* Return j-th item from sequence.  The item is considered an index into
+   an array with given length, and is normalized a pythonic manner.
+   On failure, an exception is set and -1 is returned. */
+static Py_ssize_t
+index_from_seq(PyObject *sequence, Py_ssize_t j, Py_ssize_t length)
+{
+    PyObject *item;
+    Py_ssize_t i;
+
+    if ((item = PySequence_GetItem(sequence, j)) == NULL)
+        return -1;
+
+    i = PyNumber_AsSsize_t(item, PyExc_IndexError);
+    Py_DECREF(item);
+    if (i == -1 && PyErr_Occurred())
+        return -1;
+    if (i < 0)
+        i += length;
+    if (i < 0 || i >= length) {
+        PyErr_SetString(PyExc_IndexError, "bitarray index out of range");
+        return -1;
+    }
+    return i;
+}
+
+/* return a new bitarray with items from 'self' listed by
+   sequence (of indices) 'seq' */
+static PyObject *
+getsequence(bitarrayobject *self, PyObject *seq)
+{
+    PyObject *res;
+    Py_ssize_t i, j, n;
+
+    n = PySequence_Size(seq);
+    res = newbitarrayobject(Py_TYPE(self), n, self->endian);
+    if (res == NULL)
+        return NULL;
+
+    for (j = 0; j < n; j++) {
+        if ((i = index_from_seq(seq, j, self->nbits)) < 0) {
+            Py_DECREF(res);
+            return NULL;
+        }
+        setbit((bitarrayobject *) res, j, getbit(self, i));
+    }
+    return res;
+}
+
 static PyObject *
 bitarray_subscr(bitarrayobject *self, PyObject *item)
 {
@@ -1987,15 +2035,26 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
     if (PySlice_Check(item))
         return getslice(self, item);
 
+    if (PyTuple_Check(item)) {
+        PyErr_SetString(PyExc_TypeError, "multiple dimensions not supported");
+        return NULL;
+    }
+
+    if (bitarray_Check(item)) {
+        PyErr_SetString(PyExc_TypeError, "bitarray index cannot be bitarray");
+        return NULL;
+    }
+
+    if (PySequence_Check(item))
+        return getsequence(self, item);
+
     return PyErr_Format(PyExc_TypeError,
-                        "bitarray indices must be integers or slices, not %s",
-                        Py_TYPE(item)->tp_name);
+                        "bitarray index must be integer, slice or sequence, "
+                        "not %s", Py_TYPE(item)->tp_name);
 }
 
 /* The following functions, namely setslice_bitarray(), setslice_bool() and
-   delslice(), are called from bitarray_ass_subscr().  Having all this
-   functionality inside bitarray_ass_subscr() would make the function
-   incomprehensibly long. */
+   delslice(), are called from assign_slice(). */
 
 /* set items in self, specified by slice, to other bitarray */
 static int
@@ -2135,6 +2194,128 @@ assign_slice(bitarrayobject *self, PyObject *slice, PyObject *value)
     return -1;
 }
 
+/* assign sequence (of indices) of bitarray self to Boolean value */
+static int
+setseq_bool(bitarrayobject *self, PyObject *seq, PyObject *value)
+{
+    Py_ssize_t n, i, j;
+    int vi;
+
+    if (!conv_pybit(value, &vi))
+        return -1;
+
+    n = PySequence_Size(seq);
+    for (j = 0; j < n; j++) {
+        if ((i = index_from_seq(seq, j, self->nbits)) < 0)
+            return -1;
+        setbit(self, i, vi);
+    }
+    return 0;
+}
+
+/* assign sequence (of indices) of bitarray self to bitarray */
+static int
+setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
+{
+    Py_ssize_t n, i, j;
+    int other_copied = 0, res = -1;
+
+    n = PySequence_Size(seq);
+    if (n != other->nbits) {
+        PyErr_Format(PyExc_ValueError, "attempt to assign sequence of "
+                     "size %zd to bitarray of size %zd",
+                     n, other->nbits);
+        return -1;
+    }
+    /* Make a copy of other, in case the buffers overlap.  This is obviously
+       the case when self and other are the same object, but can also happen
+       when the two bitarrays share memory. */
+    if (buffers_overlap(self, other)) {
+        other = (bitarrayobject *) bitarray_copy(other);
+        if (other == NULL)
+            return -1;
+        other_copied = 1;
+    }
+
+    for (j = 0; j < n; j++) {
+        if ((i = index_from_seq(seq, j, self->nbits)) < 0)
+            goto error;
+        setbit(self, i, getbit(other, j));
+    }
+    res = 0;
+ error:
+    if (other_copied)
+        Py_DECREF(other);
+    return res;
+}
+
+/* delete items in self, specified by sequence of indices */
+static int
+delsequence(bitarrayobject *self, PyObject *seq)
+{
+    bitarrayobject *t;  /* temporary bitarray marking items to keep */
+    Py_ssize_t nbits, nseq, i, j, start, stop;
+
+    nseq = PySequence_Size(seq);
+    if (nseq == 0)      /* sequence is empty, nothing to delete */
+        return 0;
+
+    nbits = self->nbits;
+    /* create temporary bitarray - note that it's endianness is irrelevant */
+    t = (bitarrayobject *) newbitarrayobject(Py_TYPE(self), nbits,
+                                             ENDIAN_LITTLE);
+    if (t == NULL)
+        return -1;
+    memset(t->ob_item, 0xff, (size_t) Py_SIZE(t));
+
+    start = nbits;  /* smallest index in sequence */
+    stop = -1;      /* largest index in sequence */
+    for (j = 0; j < nseq; j++) {
+        if ((i = index_from_seq(seq, j, nbits)) < 0) {
+            Py_DECREF(t);
+            return -1;
+        }
+        if (i < start)
+            start = i;
+        if (i > stop)
+            stop = i;
+        setbit(t, i, 0);
+    }
+    assert(0 <= start && start < nbits);
+    assert(0 <= stop && stop < nbits && start <= stop);
+
+    for (i = j = start; i <= stop; i++) {
+        if (getbit(t, i))  /* set items we want to keep */
+            setbit(self, j++, getbit(self, i));
+    }
+    assert(j <= nbits && nbits - count(t, 0, nbits) == stop + 1 - j);
+    if (delete_n(self, j, stop + 1 - j) < 0) {
+        Py_DECREF(t);
+        return -1;
+    }
+    Py_DECREF(t);
+    return 0;
+}
+
+/* assign sequence (of indices) of bitarray self to value */
+static int
+assign_sequence(bitarrayobject *self, PyObject *seq, PyObject *value)
+{
+    if (value == NULL)
+        return delsequence(self, seq);
+
+    if (bitarray_Check(value))
+        return setseq_bitarray(self, seq, (bitarrayobject *) value);
+
+    if (PyIndex_Check(value))
+        return setseq_bool(self, seq, value);
+
+    PyErr_Format(PyExc_TypeError,
+                 "bitarray or int expected for sequence assignment, not %s",
+                 Py_TYPE(value)->tp_name);
+    return -1;
+}
+
 static int
 bitarray_ass_subscr(bitarrayobject *self, PyObject *item, PyObject *value)
 {
@@ -2154,9 +2335,21 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject *item, PyObject *value)
     if (PySlice_Check(item))
         return assign_slice(self, item, value);
 
-    PyErr_Format(PyExc_TypeError,
-                 "bitarray indices must be integers or slices, not %s",
-                 Py_TYPE(item)->tp_name);
+    if (PyTuple_Check(item)) {
+        PyErr_SetString(PyExc_TypeError, "multiple dimensions not supported");
+        return -1;
+    }
+
+    if (bitarray_Check(item)) {
+        PyErr_SetString(PyExc_TypeError, "bitarray index cannot be bitarray");
+        return -1;
+    }
+
+    if (PySequence_Check(item))
+        return assign_sequence(self, item, value);
+
+    PyErr_Format(PyExc_TypeError, "bitarray indices must be integers, "
+                 "slices or sequences, not %s", Py_TYPE(item)->tp_name);
     return -1;
 }
 
