@@ -1,7 +1,7 @@
 2023-XX-XX   2.8.0:
 -------------------
   * allow indexing by list of indices, see #204 (addresses #156 and #190)
-  * imrpove `.bytereverse()` docstring, see issue #202
+  * improve `.bytereverse()` docstring, see issue #202
 
 
 2023-06-24   2.7.6:
