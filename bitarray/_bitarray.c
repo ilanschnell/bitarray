@@ -2297,6 +2297,8 @@ delsequence(bitarrayobject *self, PyObject *seq)
        errors here */
     for (j = 0; j < nseq; j++)
         setbit(t, index_from_seq(seq, j, nbits) - start, 1);
+    /* by construction the first and last items of the temp bitarray are 1 */
+    assert(getbit(t, 0) == 1 && getbit(t, t->nbits - 1) == 1);
 
     for (i = j = start; i <= stop; i++) {
         if (getbit(t, i - start) == 0)  /* set items we want to keep */

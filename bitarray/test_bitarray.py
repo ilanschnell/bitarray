@@ -1428,6 +1428,7 @@ class SequenceIndexTests(unittest.TestCase, Util):
         self.assertEqual(a[[2, 4, -3, 9]], bitarray('1010'))
         self.assertEqual(a[71 * [2, 4, 7]], 71 * bitarray('101'))
         self.assertEqual(a[[-1]], bitarray('0'))
+        self.assertEqual(a[[]], bitarray())
         self.assertRaises(IndexError, a.__getitem__, [1, 10])
         self.assertRaises(IndexError, a.__getitem__, [-11])
 
@@ -1451,6 +1452,8 @@ class SequenceIndexTests(unittest.TestCase, Util):
     def test_set_bool_basic(self):
         a = zeros(10)
         a[[2, 3, 5, 7]] = 1
+        self.assertEqual(a, bitarray('00110101 00'))
+        a[[]] = 1
         self.assertEqual(a, bitarray('00110101 00'))
         a[[-1]] = True
         self.assertEqual(a, bitarray('00110101 01'))
@@ -1514,7 +1517,7 @@ class SequenceIndexTests(unittest.TestCase, Util):
         #               ^ ^  ^  ^
         del a[[2, 4, 7, 9]]
         self.assertEqual(a, bitarray('001100'))
-        del a[[]]
+        del a[[]]  # delete nothing
         self.assertEqual(a, bitarray('001100'))
         a = bitarray('00110101 00')
         del a[71 * [2, 4, 7, 9]]
