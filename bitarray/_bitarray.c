@@ -2292,6 +2292,9 @@ delsequence(bitarrayobject *self, PyObject *seq)
         return -1;
     memset(t->ob_item, 0x00, (size_t) Py_SIZE(t));
 
+    /* set indices from sequence in t (offset by start) - as we already
+       scanned the sequence (in seq_minmax()), we don't need to check for
+       errors here */
     for (j = 0; j < nseq; j++)
         setbit(t, index_from_seq(seq, j, nbits) - start, 1);
 
