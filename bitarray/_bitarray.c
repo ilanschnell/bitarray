@@ -2018,6 +2018,21 @@ getsequence(bitarrayobject *self, PyObject *seq)
     return res;
 }
 
+static void
+subscr_set_exception(PyObject *item)
+{
+    if (PyTuple_Check(item)) {
+        PyErr_SetString(PyExc_TypeError, "multiple dimensions not supported");
+        return;
+    }
+    if (bitarray_Check(item)) {
+        PyErr_SetString(PyExc_TypeError, "bitarray index cannot be bitarray");
+        return;
+    }
+    PyErr_Format(PyExc_TypeError, "bitarray indices must be integers, "
+                 "slices or sequences, not '%s'", Py_TYPE(item)->tp_name);
+}
+
 static PyObject *
 bitarray_subscr(bitarrayobject *self, PyObject *item)
 {
@@ -2035,22 +2050,15 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
     if (PySlice_Check(item))
         return getslice(self, item);
 
-    if (PyTuple_Check(item)) {
-        PyErr_SetString(PyExc_TypeError, "multiple dimensions not supported");
-        return NULL;
-    }
-
-    if (bitarray_Check(item)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray index cannot be bitarray");
-        return NULL;
-    }
+    if (PyTuple_Check(item) || bitarray_Check(item))
+        goto wrong_type;
 
     if (PySequence_Check(item))
         return getsequence(self, item);
 
-    return PyErr_Format(PyExc_TypeError,
-                        "bitarray index must be integer, slice or sequence, "
-                        "not %s", Py_TYPE(item)->tp_name);
+ wrong_type:
+    subscr_set_exception(item);
+    return NULL;
 }
 
 /* The following functions, namely setslice_bitarray(), setslice_bool() and
@@ -2351,21 +2359,14 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject *item, PyObject *value)
     if (PySlice_Check(item))
         return assign_slice(self, item, value);
 
-    if (PyTuple_Check(item)) {
-        PyErr_SetString(PyExc_TypeError, "multiple dimensions not supported");
-        return -1;
-    }
-
-    if (bitarray_Check(item)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray index cannot be bitarray");
-        return -1;
-    }
+    if (PyTuple_Check(item) || bitarray_Check(item))
+        goto wrong_type;
 
     if (PySequence_Check(item))
         return assign_sequence(self, item, value);
 
-    PyErr_Format(PyExc_TypeError, "bitarray indices must be integers, "
-                 "slices or sequences, not %s", Py_TYPE(item)->tp_name);
+ wrong_type:
+    subscr_set_exception(item);
     return -1;
 }
 
