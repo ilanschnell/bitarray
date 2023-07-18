@@ -2018,19 +2018,23 @@ getsequence(bitarrayobject *self, PyObject *seq)
     return res;
 }
 
-static void
-subscr_set_exception(PyObject *item)
+static int
+subscr_seq_check(PyObject *item)
 {
     if (PyTuple_Check(item)) {
         PyErr_SetString(PyExc_TypeError, "multiple dimensions not supported");
-        return;
+        return -1;
     }
     if (bitarray_Check(item)) {
         PyErr_SetString(PyExc_TypeError, "bitarray index cannot be bitarray");
-        return;
+        return -1;
     }
+    if (PySequence_Check(item))
+        return 0;
+
     PyErr_Format(PyExc_TypeError, "bitarray indices must be integers, "
                  "slices or sequences, not '%s'", Py_TYPE(item)->tp_name);
+    return -1;
 }
 
 static PyObject *
@@ -2050,15 +2054,10 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
     if (PySlice_Check(item))
         return getslice(self, item);
 
-    if (PyTuple_Check(item) || bitarray_Check(item))
-        goto wrong_type;
+    if (subscr_seq_check(item) < 0)
+        return NULL;
 
-    if (PySequence_Check(item))
-        return getsequence(self, item);
-
- wrong_type:
-    subscr_set_exception(item);
-    return NULL;
+    return getsequence(self, item);
 }
 
 /* The following functions, namely setslice_bitarray(), setslice_bool() and
@@ -2359,15 +2358,10 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject *item, PyObject *value)
     if (PySlice_Check(item))
         return assign_slice(self, item, value);
 
-    if (PyTuple_Check(item) || bitarray_Check(item))
-        goto wrong_type;
+    if (subscr_seq_check(item) < 0)
+        return -1;
 
-    if (PySequence_Check(item))
-        return assign_sequence(self, item, value);
-
- wrong_type:
-    subscr_set_exception(item);
-    return -1;
+    return assign_sequence(self, item, value);
 }
 
 static PyMappingMethods bitarray_as_mapping = {

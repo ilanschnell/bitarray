@@ -1486,7 +1486,9 @@ class SequenceIndexTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('00110101 01'))
         self.assertRaises(IndexError, a.__setitem__, [1, 10], bitarray('11'))
         self.assertRaises(ValueError, a.__setitem__, [1], bitarray())
-        self.assertRaises(ValueError, a.__setitem__, [1, 2], bitarray('001'))
+        msg = "attempt to assign sequence of size 2 to bitarray of size 3"
+        self.assertRaisesMessage(ValueError, msg,
+                                 a.__setitem__, [1, 2], bitarray('001'))
 
     def test_set_bitarray_random(self):
         for a in self.randombitarrays():
@@ -1541,6 +1543,18 @@ class SequenceIndexTests(unittest.TestCase, Util):
             shuffle(lst)
             del c[lst]
             self.assertEqual(len(c), 0)
+
+    def test_type_messages(self):
+        for item, msg in [
+                (bitarray('01'), "bitarray index cannot be bitarray"),
+                (tuple([1, 2]), "multiple dimensions not supported"),
+                (None, "bitarray indices must be integers, slices or "
+                       "sequences, not 'NoneType'"),
+        ]:
+            a = bitarray('10111')
+            self.assertRaisesMessage(TypeError, msg, a.__getitem__, item)
+            self.assertRaisesMessage(TypeError, msg, a.__setitem__, item, 1)
+            self.assertRaisesMessage(TypeError, msg, a.__delitem__, item)
 
 tests.append(SequenceIndexTests)
 
