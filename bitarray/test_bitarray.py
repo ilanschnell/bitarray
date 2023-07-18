@@ -1437,7 +1437,13 @@ class SequenceIndexTests(unittest.TestCase, Util):
         lst = [1, 3, -2]
         for b in [lst, array.array('i', lst)]:
             self.assertEqual(a[b], bitarray('100'))
+        lst[2] += len(a)
+        self.assertEqual(a[bytearray(lst)], bitarray('100'))
+        if is_py3k:
+            self.assertEqual(a[bytes(lst)], bitarray('100'))
 
+        self.assertRaises(TypeError, a.__getitem__, [2, "B"])
+        self.assertRaises(TypeError, a.__getitem__, [2, 1.2])
         self.assertRaises(TypeError, a.__getitem__, tuple(lst))
         self.assertRaises(TypeError, a.__getitem__, a)
 
@@ -1550,6 +1556,8 @@ class SequenceIndexTests(unittest.TestCase, Util):
                 (tuple([1, 2]), "multiple dimensions not supported"),
                 (None, "bitarray indices must be integers, slices or "
                        "sequences, not 'NoneType'"),
+                (0.12, "bitarray indices must be integers, slices or "
+                       "sequences, not 'float'"),
         ]:
             a = bitarray('10111')
             self.assertRaisesMessage(TypeError, msg, a.__getitem__, item)
