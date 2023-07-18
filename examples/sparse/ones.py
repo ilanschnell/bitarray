@@ -135,8 +135,7 @@ class SparseBitarray(Common):
     def to_bitarray(self):
         a = bitarray(self.n)
         a.setall(0)
-        for k in self.ones:
-            a[k] = 1
+        a[self.ones] = 1
         return a
 
     def insert(self, k, value):

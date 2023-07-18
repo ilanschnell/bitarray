@@ -1249,8 +1249,7 @@ class SliceTests(unittest.TestCase, Util):
             a = zeros(N)
             a[s] = 1
             b = zeros(N)
-            for i in range(s.start, s.stop, s.step):
-                b[i] = 1
+            b[list(range(s.start, s.stop, s.step))] = 1
             self.assertEqual(a, b)
 
     def test_setslice_bool_range(self):
@@ -1265,8 +1264,7 @@ class SliceTests(unittest.TestCase, Util):
             a[::step] = v
 
             b.setall(not v)
-            for i in range(0, N, abs(step)):
-                b[i] = v
+            b[list(range(0, N, abs(step)))] = v
             if step < 0:
                 b.reverse()
             self.assertEqual(a, b)
@@ -3023,8 +3021,7 @@ class CountTests(unittest.TestCase, Util):
         N = 65536
         a = zeros(N)
         indices = set(randint(0, N - 1) for _ in range(256))
-        for i in indices:
-            a[i] = 1
+        a[list(indices)] = 1
         self.assertEqual(a.count(1), len(indices))
         self.assertEqual(a.count(0), N - len(indices))
 
@@ -3363,13 +3360,11 @@ class SearchTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             b = a.copy()
             b.setall(0)
-            for i in a.itersearch(1):
-                b[i] = 1
+            b[a.search(1)] = 1
             self.assertEQUAL(b, a)
 
             b.setall(1)
-            for i in a.itersearch(0):
-                b[i] = 0
+            b[a.search(0)] = 0
             self.assertEQUAL(b, a)
 
             s = set(a.search(0) + a.search(1))

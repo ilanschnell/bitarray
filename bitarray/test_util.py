@@ -319,8 +319,7 @@ class TestsRIndex(unittest.TestCase, Util):
         n = 2000
         a = zeros(n)
         indices = [randint(0, n - 1) for _ in range(100)]
-        for i in indices:
-            a[i] = 1
+        a[indices] = 1
         for _ in range(100):
             start = randint(0, n)
             stop = randint(0, n)
@@ -339,8 +338,7 @@ class TestsRIndex(unittest.TestCase, Util):
             a = bitarray(n)
             a.setall(not v)
             lst = [randint(0, n - 1) for _ in range(100)]
-            for i in lst:
-                a[i] = v
+            a[lst] = v
             self.assertEqual(rindex(a, v), max(lst))
 
     def test_one_set(self):
@@ -1343,8 +1341,7 @@ class SC_Tests(unittest.TestCase, Util):
             b.append(0)  # stop byte
 
             a.setall(0)
-            for p in positions:
-                a[p] = 1
+            a[positions] = 1
             self.assertEqual(sc_decode(b), a)
 
             # in order to recreate the block sc_encode generates, we need
