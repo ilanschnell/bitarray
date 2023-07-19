@@ -1970,6 +1970,30 @@ getslice(bitarrayobject *self, PyObject *slice)
     return res;
 }
 
+/* return a new bitarray with items from 'self' masked by bitarray 'mask' */
+static PyObject *
+getmasked(bitarrayobject *self, bitarrayobject *mask)
+{
+    PyObject *res;
+    Py_ssize_t i, j, n;
+
+    if (self->nbits != mask->nbits)
+        return PyErr_Format(PyExc_IndexError, "bitarray length is %zd, but "
+                            "mask has length %zd", self->nbits, mask->nbits);
+
+    n = count(mask, 0, mask->nbits);
+    res = newbitarrayobject(Py_TYPE(self), n, self->endian);
+    if (res == NULL)
+        return NULL;
+
+    for (i = j = 0; i < mask->nbits; i++) {
+        if (getbit(mask, i))
+            setbit((bitarrayobject *) res, j++, getbit(self, i));
+    }
+    assert(j == n);
+    return res;
+}
+
 /* Return j-th item from sequence.  The item is considered an index into
    an array with given length, and is normalized a pythonic manner.
    On failure, an exception is set and -1 is returned. */
@@ -2025,10 +2049,6 @@ subscr_seq_check(PyObject *item)
         PyErr_SetString(PyExc_TypeError, "multiple dimensions not supported");
         return -1;
     }
-    if (bitarray_Check(item)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray index cannot be bitarray");
-        return -1;
-    }
     if (PySequence_Check(item))
         return 0;
 
@@ -2053,6 +2073,9 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
 
     if (PySlice_Check(item))
         return getslice(self, item);
+
+    if (bitarray_Check(item))
+        return getmasked(self, (bitarrayobject *) item);
 
     if (subscr_seq_check(item) < 0)
         return NULL;

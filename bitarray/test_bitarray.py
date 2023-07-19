@@ -1419,6 +1419,30 @@ tests.append(SliceTests)
 
 # ---------------------------------------------------------------------------
 
+class MaskedIndexTests(unittest.TestCase, Util):
+
+    def test_get_basic(self):
+        a =    bitarray('1001001')
+        mask = bitarray('1010111')
+        self.assertEqual(a[mask], bitarray('10001'))
+        self.assertRaises(IndexError, a.__getitem__, bitarray('1011'))
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            self.assertEqual(a[a], a.count() * bitarray('1'))
+            mask = zeros(n)
+            self.assertEqual(a[mask], bitarray())
+            mask.setall(1)
+            self.assertEqual(a[mask], a)
+            mask = urandom(n)
+            res = bitarray(a[i] for i in range(n) if mask[i])
+            self.assertEqual(a[mask], res)
+
+tests.append(MaskedIndexTests)
+
+# ---------------------------------------------------------------------------
+
 class SequenceIndexTests(unittest.TestCase, Util):
 
     def test_get_basic(self):
@@ -1443,7 +1467,6 @@ class SequenceIndexTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.__getitem__, [2, "B"])
         self.assertRaises(TypeError, a.__getitem__, [2, 1.2])
         self.assertRaises(TypeError, a.__getitem__, tuple(lst))
-        self.assertRaises(TypeError, a.__getitem__, a)
 
     def test_get_random(self):
         for a in self.randombitarrays():
@@ -1530,7 +1553,6 @@ class SequenceIndexTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('001100'))
         self.assertRaises(IndexError, a.__delitem__, [1, 10])
         self.assertRaises(TypeError, a.__delitem__, (1, 3))
-        self.assertRaises(TypeError, a.__delitem__, a)
 
     def test_delitems_random(self):
         for a in self.randombitarrays():
@@ -1550,7 +1572,6 @@ class SequenceIndexTests(unittest.TestCase, Util):
 
     def test_type_messages(self):
         for item, msg in [
-                (bitarray('01'), "bitarray index cannot be bitarray"),
                 (tuple([1, 2]), "multiple dimensions not supported"),
                 (None, "bitarray indices must be integers, slices or "
                        "sequences, not 'NoneType'"),
