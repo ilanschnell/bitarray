@@ -40,8 +40,7 @@ class BloomFilter(object):
         return -float(self.m) / self.k * log(1.0 - float(count) / self.m)
 
     def add(self, key):
-        for i in self._hashes(key):
-            self.array[i] = 1
+        self.array[list(self._hashes(key))] = 1
 
     def __contains__(self, key):
         return all(self.array[i] for i in self._hashes(key))
