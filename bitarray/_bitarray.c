@@ -1970,6 +1970,17 @@ getslice(bitarrayobject *self, PyObject *slice)
     return res;
 }
 
+static int
+check_mask_length(bitarrayobject *self, bitarrayobject *mask)
+{
+    if (self->nbits != mask->nbits) {
+        PyErr_Format(PyExc_IndexError, "bitarray length is %zd, but "
+                     "mask has length %zd", self->nbits, mask->nbits);
+        return -1;
+    }
+    return 0;
+}
+
 /* return a new bitarray with items from 'self' masked by bitarray 'mask' */
 static PyObject *
 getmasked(bitarrayobject *self, bitarrayobject *mask)
@@ -1977,9 +1988,8 @@ getmasked(bitarrayobject *self, bitarrayobject *mask)
     PyObject *res;
     Py_ssize_t i, j, n;
 
-    if (self->nbits != mask->nbits)
-        return PyErr_Format(PyExc_IndexError, "bitarray length is %zd, but "
-                            "mask has length %zd", self->nbits, mask->nbits);
+    if (check_mask_length(self, mask) < 0)
+        return NULL;
 
     n = count(mask, 0, mask->nbits);
     res = newbitarrayobject(Py_TYPE(self), n, self->endian);
@@ -2224,6 +2234,45 @@ assign_slice(bitarrayobject *self, PyObject *slice, PyObject *value)
     return -1;
 }
 
+/* delete items in self, specified by mask */
+static int
+delmask(bitarrayobject *self, bitarrayobject *mask)
+{
+    Py_ssize_t i, j;
+
+    if (check_mask_length(self, mask) < 0)
+        return -1;
+
+    for (i = j = 0; i < mask->nbits; i++) {
+        if (getbit(mask, i) == 0)  /* set items we want to keep */
+            setbit(self, j++, getbit(self, i));
+    }
+    assert(j == mask->nbits - count(mask, 0, mask->nbits));
+    if (delete_n(self, j, self->nbits - j) < 0)
+        return -1;
+
+    return 0;
+}
+
+/* assign mask of bitarray self to value */
+static int
+assign_mask(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
+{
+    if (value == NULL)
+        return delmask(self, mask);
+    /*
+    if (bitarray_Check(value))
+        return setmask_bitarray(self, mask, (bitarrayobject *) value);
+
+    if (PyIndex_Check(value))
+        return setmask_bool(self, mask, value);
+    */
+    PyErr_Format(PyExc_TypeError,
+                 "bitarray or int expected for mask assignment, not %s",
+                 Py_TYPE(value)->tp_name);
+    return -1;
+}
+
 /* assign sequence (of indices) of bitarray self to Boolean value */
 static int
 setseq_bool(bitarrayobject *self, PyObject *seq, PyObject *value)
@@ -2380,6 +2429,9 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject *item, PyObject *value)
 
     if (PySlice_Check(item))
         return assign_slice(self, item, value);
+
+    if (bitarray_Check(item))
+        return assign_mask(self, (bitarrayobject *) item, value);
 
     if (subscr_seq_check(item) < 0)
         return -1;

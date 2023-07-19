@@ -1439,6 +1439,13 @@ class MaskedIndexTests(unittest.TestCase, Util):
             res = bitarray(a[i] for i in range(n) if mask[i])
             self.assertEqual(a[mask], res)
 
+    def test_del_basic(self):
+        a =    bitarray('1001001')
+        mask = bitarray('1010111')
+        del a[mask]
+        self.assertEqual(a, bitarray('01'))
+        self.assertRaises(IndexError, a.__delitem__, bitarray('101'))
+
 tests.append(MaskedIndexTests)
 
 # ---------------------------------------------------------------------------
