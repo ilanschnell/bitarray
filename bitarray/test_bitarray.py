@@ -1427,14 +1427,17 @@ class MaskedIndexTests(unittest.TestCase, Util):
         self.assertEqual(a[mask], bitarray('10001'))
         self.assertRaises(IndexError, a.__getitem__, bitarray('1011'))
 
-    def test_random(self):
+    def test_get_random(self):
         for a in self.randombitarrays():
             n = len(a)
             self.assertEqual(a[a], a.count() * bitarray('1'))
+
             mask = zeros(n)
             self.assertEqual(a[mask], bitarray())
+
             mask.setall(1)
             self.assertEqual(a[mask], a)
+
             mask = urandom(n)
             res = bitarray(a[i] for i in range(n) if mask[i])
             self.assertEqual(a[mask], res)
@@ -1445,6 +1448,28 @@ class MaskedIndexTests(unittest.TestCase, Util):
         del a[mask]
         self.assertEqual(a, bitarray('01'))
         self.assertRaises(IndexError, a.__delitem__, bitarray('101'))
+
+    def test_del_random(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            b = a.copy()
+            del b[n * bitarray('0')]
+            self.assertEqual(b, a)
+
+            b = a.copy()
+            del b[n * bitarray('1')]
+            self.assertEqual(b, bitarray())
+
+            b = a.copy()
+            del b[b]
+            self.assertEqual(b, a.count(0) * bitarray('0'))
+
+            b = a.copy()
+            mask = urandom(n)
+            res = bitarray(a[i] for i in range(n) if not mask[i])
+            del b[mask]
+            self.assertEqual(b, res)
+
 
 tests.append(MaskedIndexTests)
 

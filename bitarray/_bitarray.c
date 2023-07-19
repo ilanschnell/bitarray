@@ -2247,7 +2247,7 @@ delmask(bitarrayobject *self, bitarrayobject *mask)
         if (getbit(mask, i) == 0)  /* set items we want to keep */
             setbit(self, j++, getbit(self, i));
     }
-    assert(j == mask->nbits - count(mask, 0, mask->nbits));
+    assert(self == mask || j == mask->nbits - count(mask, 0, mask->nbits));
     if (delete_n(self, j, self->nbits - j) < 0)
         return -1;
 
