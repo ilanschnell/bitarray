@@ -57,7 +57,7 @@ considered masks.  For example:
     >>> mask = bitarray('1010111')
     >>> a[mask]  # create bitarray with items from `a` whose mask is 1
     bitarray('10001')
-    >>> del a[mask]  # deletion items in `a` whose mask is 1
+    >>> del a[mask]  # delete items in `a` whose mask is 1
     >>> a
     bitarray('01')
 

@@ -1458,22 +1458,30 @@ class MaskedIndexTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             n = len(a)
             b = a.copy()
-            del b[n * bitarray('0')]
+            # mask has only zeros - nothing will be removed
+            mask = zeros(n)
+            del b[mask]
             self.assertEqual(b, a)
 
             b = a.copy()
-            del b[n * bitarray('1')]
+            # mask has only ones - everything will be removed
+            mask.setall(1)
+            del b[mask]
             self.assertEqual(b, bitarray())
 
             b = a.copy()
+            # mask is bitarray itself - all 1 items are removed -
+            # only all the 0's remain
             del b[b]
-            self.assertEqual(b, a.count(0) * bitarray('0'))
+            self.assertEqual(b, zeros(a.count(0)))
 
             b = a.copy()
             mask = urandom(n)
             res = bitarray(a[i] for i in range(n) if not mask[i])
             del b[mask]
             self.assertEqual(b, res)
+            # `del a[mask]` is equivalent to the in-place version of
+            # selecting the reverse mask `a = a[~mask]`
             self.assertEqual(a[~mask], b)
 
 tests.append(MaskedIndexTests)
