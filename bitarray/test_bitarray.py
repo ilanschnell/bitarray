@@ -1474,7 +1474,7 @@ class MaskedIndexTests(unittest.TestCase, Util):
             res = bitarray(a[i] for i in range(n) if not mask[i])
             del b[mask]
             self.assertEqual(b, res)
-
+            self.assertEqual(a[~mask], b)
 
 tests.append(MaskedIndexTests)
 
