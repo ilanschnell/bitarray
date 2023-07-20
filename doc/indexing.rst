@@ -43,3 +43,20 @@ and work as they do with single indices or slices.  For example:
     >>> a[[1, 2, 4]] = bitarray('010')  # assign indices to elements
     >>> a
     bitarray('1010000')
+
+
+Masked indexing
+---------------
+
+Also, as of bitarray version 2.8, indices may be bitarrays which are
+considered masks.  For example:
+
+.. code-block:: python
+
+    >>> a =    bitarray('1001001')
+    >>> mask = bitarray('1010111')
+    >>> a[mask]  # create bitarray with items from `a` whos mask is 1
+    bitarray('10001')
+    >>> del a[mask]  # deletion items in `a` whos mask is 1
+    >>> a
+    bitarray('01')
