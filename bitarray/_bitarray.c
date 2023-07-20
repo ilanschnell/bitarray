@@ -2333,8 +2333,8 @@ delsequence(bitarrayobject *self, PyObject *seq)
     if (nseq == 0)      /* sequence is empty, nothing to delete */
         return 0;
 
-    /* create temporary bitarray - note that it's endianness is irrelevant */
-    mask = (bitarrayobject *) newbitarrayobject(Py_TYPE(self), self->nbits,
+    /* create mask bitarray - note that it's endianness is irrelevant */
+    mask = (bitarrayobject *) newbitarrayobject(&Bitarray_Type, self->nbits,
                                                 ENDIAN_LITTLE);
     if (mask == NULL)
         return -1;
