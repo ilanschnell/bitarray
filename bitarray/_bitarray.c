@@ -2321,68 +2321,35 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
     return res;
 }
 
-/* get min and max value of sequence */
-static int
-seq_minmax(PyObject *sequence, Py_ssize_t nbits,
-           Py_ssize_t *minv, Py_ssize_t *maxv)
-{
-    Py_ssize_t n = PySequence_Size(sequence), i, j;
-
-    *minv = PY_SSIZE_T_MAX;  /* smallest number in sequence */
-    *maxv = -1;              /* largest number in sequence */
-    for (j = 0; j < n; j++) {
-        if ((i = index_from_seq(sequence, j, nbits)) < 0)
-            return -1;
-        if (i < *minv)
-            *minv = i;
-        if (i > *maxv)
-            *maxv = i;
-    }
-    assert(0 <= *minv && *minv < nbits);
-    assert(0 <= *maxv && *maxv < nbits && *minv <= *maxv);
-    return 0;
-}
-
 /* delete items in self, specified by sequence of indices */
 static int
 delsequence(bitarrayobject *self, PyObject *seq)
 {
-    bitarrayobject *t;  /* temporary bitarray marking items to remove */
-    Py_ssize_t nbits = self->nbits, nseq, i, j, start, stop;
+    bitarrayobject *mask;  /* temporary bitarray masking items to remove */
+    Py_ssize_t nseq, i, j;
+    int res = -1;
 
     nseq = PySequence_Size(seq);
     if (nseq == 0)      /* sequence is empty, nothing to delete */
         return 0;
 
-    if (seq_minmax(seq, nbits, &start, &stop) < 0)
-        return -1;
-
     /* create temporary bitarray - note that it's endianness is irrelevant */
-    t = (bitarrayobject *) newbitarrayobject(Py_TYPE(self), stop + 1 - start,
-                                             ENDIAN_LITTLE);
-    if (t == NULL)
+    mask = (bitarrayobject *) newbitarrayobject(Py_TYPE(self), self->nbits,
+                                                ENDIAN_LITTLE);
+    if (mask == NULL)
         return -1;
-    memset(t->ob_item, 0x00, (size_t) Py_SIZE(t));
+    memset(mask->ob_item, 0x00, (size_t) Py_SIZE(mask));
 
-    /* set indices from sequence in t (offset by start) - as we already
-       scanned the sequence (in seq_minmax()), we don't need to check for
-       errors here */
-    for (j = 0; j < nseq; j++)
-        setbit(t, index_from_seq(seq, j, nbits) - start, 1);
-    /* by construction the first and last items of the temp bitarray are 1 */
-    assert(getbit(t, 0) == 1 && getbit(t, t->nbits - 1) == 1);
-
-    for (i = j = start; i <= stop; i++) {
-        if (getbit(t, i - start) == 0)  /* set items we want to keep */
-            setbit(self, j++, getbit(self, i));
+    /* set indices from sequence in mask */
+    for (j = 0; j < nseq; j++) {
+        if ((i = index_from_seq(seq, j, self->nbits)) < 0)
+            goto error;
+        setbit(mask, i, 1);
     }
-    assert(j <= nbits && count(t, 0, t->nbits) == stop + 1 - j);
-    if (delete_n(self, j, stop + 1 - j) < 0) {
-        Py_DECREF(t);
-        return -1;
-    }
-    Py_DECREF(t);
-    return 0;
+    res = delmask(self, mask);  /* do actual work here */
+ error:
+    Py_DECREF(mask);
+    return res;
 }
 
 /* assign sequence (of indices) of bitarray self to value */
