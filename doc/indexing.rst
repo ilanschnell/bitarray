@@ -55,14 +55,14 @@ considered masks.  For example:
 
     >>> a =    bitarray('1001001')
     >>> mask = bitarray('1010111')
-    >>> a[mask]  # create bitarray with items from `a` whos mask is 1
+    >>> a[mask]  # create bitarray with items from `a` whose mask is 1
     bitarray('10001')
-    >>> del a[mask]  # deletion items in `a` whos mask is 1
+    >>> del a[mask]  # deletion items in `a` whose mask is 1
     >>> a
     bitarray('01')
 
-Note that ``del a[mask]`` is equivalent to in-place version of selecting the
-nverse mask ``a = a[~mask]``.
+Note that ``del a[mask]`` is equivalent to the in-place version of
+selecting the reverse mask ``a = a[~mask]``.
 
 Also note that masked assignment is not implemented,
 as ``a[mask] = 1`` would be equivalent to the bitwise operation ``a |= mask``.
