@@ -60,3 +60,10 @@ considered masks.  For example:
     >>> del a[mask]  # deletion items in `a` whos mask is 1
     >>> a
     bitarray('01')
+
+Note that ``del a[mask]`` is equivalent to in-place version of selecting the
+nverse mask ``a = a[~mask]``.
+
+Also note that masked assignment is not implemented,
+as ``a[mask] = 1`` would be equivalent to the bitwise operation ``a |= mask``.
+And ``a[mask] = 0`` would be equivalent to ``a &= ~mask``.
