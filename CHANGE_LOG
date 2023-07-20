@@ -1,7 +1,9 @@
-2023-XX-XX   2.8.0:
+2023-07-XX   2.8.0:
 -------------------
-  * allow [indexing](indexing.rst) by list of indices,
+  * allow [sequential indexing](indexing.rst) by list of indices,
     see #204 (addresses #156 and #190)
+  * add [masked indexing](indexing.rst) by bitarray masks,
+    see #205 (addresses #190)
   * improve `.bytereverse()` docstring, see issue #202
 
 
