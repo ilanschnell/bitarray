@@ -2248,10 +2248,8 @@ delmask(bitarrayobject *self, bitarrayobject *mask)
             setbit(self, j++, getbit(self, i));
     }
     assert(self == mask || j == mask->nbits - count(mask, 0, mask->nbits));
-    if (delete_n(self, j, self->nbits - j) < 0)
-        return -1;
 
-    return 0;
+    return resize(self, j);
 }
 
 /* assign mask of bitarray self to value */
