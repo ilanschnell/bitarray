@@ -1,6 +1,6 @@
 2023-07-XX   2.8.0:
 -------------------
-  * allow [sequential indexing](indexing.rst) by list of indices,
+  * allow [integer sequence indexing](indexing.rst) by list of indices,
     see #204 (addresses #156 and #190)
   * add [masked indexing](indexing.rst) by bitarray masks,
     see #205 (addresses #190)
