@@ -2229,7 +2229,7 @@ assign_slice(bitarrayobject *self, PyObject *slice, PyObject *value)
         return setslice_bool(self, slice, value);
 
     PyErr_Format(PyExc_TypeError,
-                 "bitarray or int expected for slice assignment, not %s",
+                 "bitarray or int expected for slice assignment, not '%s'",
                  Py_TYPE(value)->tp_name);
     return -1;
 }
@@ -2364,7 +2364,7 @@ assign_sequence(bitarrayobject *self, PyObject *seq, PyObject *value)
         return setseq_bool(self, seq, value);
 
     PyErr_Format(PyExc_TypeError,
-                 "bitarray or int expected for sequence assignment, not %s",
+                 "bitarray or int expected for sequence assignment, not '%s'",
                  Py_TYPE(value)->tp_name);
     return -1;
 }
@@ -2653,7 +2653,7 @@ static int
 check_codedict(PyObject *codedict)
 {
     if (!PyDict_Check(codedict)) {
-        PyErr_Format(PyExc_TypeError, "dict expected, got %s",
+        PyErr_Format(PyExc_TypeError, "dict expected, got '%s'",
                      Py_TYPE(codedict)->tp_name);
         return -1;
     }
