@@ -2238,18 +2238,18 @@ assign_slice(bitarrayobject *self, PyObject *slice, PyObject *value)
 static int
 delmask(bitarrayobject *self, bitarrayobject *mask)
 {
-    Py_ssize_t i, j;
+    Py_ssize_t n = 0, i;
 
     if (check_mask_length(self, mask) < 0)
         return -1;
 
-    for (i = j = 0; i < mask->nbits; i++) {
+    for (i = 0; i < mask->nbits; i++) {
         if (getbit(mask, i) == 0)  /* set items we want to keep */
-            setbit(self, j++, getbit(self, i));
+            setbit(self, n++, getbit(self, i));
     }
-    assert(self == mask || j == mask->nbits - count(mask, 0, mask->nbits));
+    assert(self == mask || n == mask->nbits - count(mask, 0, mask->nbits));
 
-    return resize(self, j);
+    return resize(self, n);
 }
 
 /* assign mask of bitarray self to value */
