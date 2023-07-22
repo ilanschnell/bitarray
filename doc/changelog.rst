@@ -1,6 +1,15 @@
 Change log
 ==========
 
+**2.8.0** (2023-07-22):
+
+* allow `integer sequence indexing <indexing.rst>`__ by list of indices,
+  see `#204 <https://github.com/ilanschnell/bitarray/issues/204>`__ (addresses `#156 <https://github.com/ilanschnell/bitarray/issues/156>`__ and `#190 <https://github.com/ilanschnell/bitarray/issues/190>`__)
+* add `masked indexing <indexing.rst>`__ by bitarray masks,
+  see `#205 <https://github.com/ilanschnell/bitarray/issues/205>`__ (addresses `#190 <https://github.com/ilanschnell/bitarray/issues/190>`__)
+* improve ``.bytereverse()`` docstring, see issue `#202 <https://github.com/ilanschnell/bitarray/issues/202>`__
+
+
 **2.7.6** (2023-06-24):
 
 * remove caching hash value, fixes issue `#201 <https://github.com/ilanschnell/bitarray/issues/201>`__

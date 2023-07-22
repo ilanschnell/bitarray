@@ -1,4 +1,4 @@
-2023-07-XX   2.8.0:
+2023-07-22   2.8.0:
 -------------------
   * allow [integer sequence indexing](indexing.rst) by list of indices,
     see #204 (addresses #156 and #190)

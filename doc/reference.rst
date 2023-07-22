@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.7.6 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.8.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -69,7 +69,8 @@ bitarray methods:
    For each byte in byte-range(start, stop) reverse the bit order in-place.
    The start and stop indices are given in terms of bytes (not bits).
    Also note that this method only changes the buffer; it does not change the
-   endianness of the bitarray object.
+   endianness of the bitarray object.  Padbits are left unchanged such that
+   two consecutive calls will always leave the bitarray unchanged.
 
    New in version 2.2.5: optional start and stop arguments.
 
