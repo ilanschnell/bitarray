@@ -1264,10 +1264,7 @@ bitarray_reverse(bitarrayobject *self)
 
         /* remove the p pad bits at the end of the original bitarray that
            are now the leading p bits */
-        copy_n(self, 0, self, p, nbits);
-
-        /* restore number of bits */
-        self->nbits = nbits;
+        delete_n(self, 0, p);
         assert_nbits(self);
     }
     Py_RETURN_NONE;
