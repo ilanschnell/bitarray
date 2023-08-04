@@ -1164,7 +1164,7 @@ bitarray_reduce(bitarrayobject *self)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
     static PyObject *reconstructor = NULL;
-    PyObject *dict, *bytes, *result = NULL;
+    PyObject *dict, *bytes, *result;
 
     if (reconstructor == NULL) {
         PyObject *bitarray_module;
@@ -1196,6 +1196,7 @@ bitarray_reduce(bitarrayobject *self)
         "O(OnOsi)O", reconstructor, Py_TYPE(self), self->nbits, bytes,
         ENDIAN_STR(self->endian), self->readonly, dict);
     Py_DECREF(dict);
+    Py_DECREF(bytes);
     return result;
 }
 
@@ -4040,8 +4041,11 @@ reconstructor(PyObject *module, PyObject *args)
         return NULL;
     memcpy(((bitarrayobject *) res)->ob_item, PyBytes_AS_STRING(bytes),
            (size_t) nbytes);
-    if (readonly)
-        ((bitarrayobject *) res)->readonly = 1;
+    if (readonly) {
+        PyObject *ret;
+        ret = bitarray_freeze((bitarrayobject *) res);
+        Py_DECREF(ret);   /* drop None */
+    }
     return res;
 }
 
