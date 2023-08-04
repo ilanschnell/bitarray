@@ -3700,7 +3700,6 @@ class FileTests(unittest.TestCase, Util):
     def assertFileSize(self, size):
         self.assertEqual(os.path.getsize(self.tmpfname), size)
 
-
     def test_pickle(self):
         d1 = {i: a for i, a in enumerate(self.randombitarrays())}
         with open(self.tmpfname, 'wb') as fo:
@@ -3731,12 +3730,14 @@ class FileTests(unittest.TestCase, Util):
             self.assertEqual(b.to01(), s)
             self.assertEqual(b.endian(), end)
             self.assertIsType(b, 'bitarray')
+            self.assertFalse(b.readonly)
             self.check_obj(b)
 
             f = d['f%d' % i]
             self.assertEqual(f.to01(), s)
             self.assertEqual(f.endian(), end)
             self.assertIsType(f, 'frozenbitarray')
+            self.assertTrue(f.readonly)
             self.check_obj(f)
 
     @skipIf(pyodide)   # pyodide has no dbm module
@@ -4889,13 +4890,16 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
     def test_pickle(self):
         for a in self.randombitarrays():
             f = frozenbitarray(a)
+            f.foo = 42  # unlike bitarray itself, we can have attributes
             g = pickle.loads(pickle.dumps(f))
             self.assertEqual(f, g)
             self.assertEqual(f.endian(), g.endian())
             self.assertTrue(str(g).startswith('frozenbitarray'))
+            self.assertTrue(g.readonly)
             self.check_obj(a)
             self.check_obj(f)
             self.check_obj(g)
+            self.assertEqual(g.foo, 42)
 
 tests.append(TestsFrozenbitarray)
 
