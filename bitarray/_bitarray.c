@@ -1163,8 +1163,20 @@ static PyObject *
 bitarray_reduce(bitarrayobject *self)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
-    PyObject *dict, *repr = NULL, *result = NULL;
-    char *str;
+    static PyObject *reconstructor = NULL;
+    PyObject *dict, *bytes, *result = NULL;
+
+    if (reconstructor == NULL) {
+        PyObject *bitarray_module;
+
+        if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
+            return NULL;
+        reconstructor = PyObject_GetAttrString(bitarray_module,
+                                               "_bitarray_reconstructor");
+        Py_DECREF(bitarray_module);
+        if (reconstructor == NULL)
+            return NULL;
+    }
 
     dict = PyObject_GetAttrString((PyObject *) self, "__dict__");
     if (dict == NULL) {
@@ -1173,21 +1185,17 @@ bitarray_reduce(bitarrayobject *self)
         Py_INCREF(dict);
     }
 
-    repr = PyBytes_FromStringAndSize(NULL, nbytes + 1);
-    if (repr == NULL)
-        goto error;
+    bytes = PyBytes_FromStringAndSize(NULL, nbytes);
+    if (bytes == NULL) {
+        Py_DECREF(dict);
+        return NULL;
+    }
+    memcpy(PyBytes_AsString(bytes), self->ob_item, (size_t) nbytes);
 
-    str = PyBytes_AsString(repr);
-    /* first byte contains the number of pad bits */
-    *str = (char) set_padbits(self);
-    /* remaining bytes contain buffer */
-    memcpy(str + 1, self->ob_item, (size_t) nbytes);
-
-    result = Py_BuildValue("O(Os)O", Py_TYPE(self),
-                           repr, ENDIAN_STR(self->endian), dict);
- error:
+    result = Py_BuildValue(
+        "O(OnOsi)O", reconstructor, Py_TYPE(self), self->nbits, bytes,
+        ENDIAN_STR(self->endian), self->readonly, dict);
     Py_DECREF(dict);
-    Py_XDECREF(repr);
     return result;
 }
 
@@ -4002,6 +4010,45 @@ static PyTypeObject Bitarray_Type = {
 /***************************** Module functions ***************************/
 
 static PyObject *
+reconstructor(PyObject *module, PyObject *args)
+{
+    PyTypeObject *type;
+    Py_ssize_t nbits, nbytes;
+    PyObject *res, *bytes;
+    char *endian_str;
+    int endian, readonly;
+
+    if (!PyArg_ParseTuple(args, "OnOsi:_bitarray_reconstructor",
+                          &type, &nbits, &bytes, &endian_str, &readonly))
+        return NULL;
+
+    if ((endian = endian_from_string(endian_str)) < 0)
+        return NULL;
+
+    if (!PyBytes_Check(bytes))
+        return PyErr_Format(PyExc_TypeError, "bytes expected, got '%s'",
+                            Py_TYPE(bytes)->tp_name);
+
+    nbytes = PyBytes_GET_SIZE(bytes);
+    if (nbytes != BYTES(nbits))
+        return PyErr_Format(PyExc_ValueError,
+                            "size mismatch: %zd != %zd (%zd bits)",
+                            nbytes, BYTES(nbits), nbits);
+
+    res = newbitarrayobject(type, nbits, endian);
+    if (res == NULL)
+        return NULL;
+    memcpy(((bitarrayobject *) res)->ob_item, PyBytes_AS_STRING(bytes),
+           (size_t) nbytes);
+    if (readonly)
+        ((bitarrayobject *) res)->readonly = 1;
+    return res;
+}
+
+PyDoc_STRVAR(reconstructor_doc, "Internal. Used for pickling support.");
+
+
+static PyObject *
 get_default_endian(PyObject *module)
 {
     return Py_BuildValue("s", ENDIAN_STR(default_endian));
@@ -4079,6 +4126,9 @@ Return tuple containing:\n\
 
 
 static PyMethodDef module_functions[] = {
+    {"_bitarray_reconstructor",
+                            (PyCFunction) reconstructor,      METH_VARARGS,
+     reconstructor_doc},
     {"get_default_endian",  (PyCFunction) get_default_endian, METH_NOARGS,
      get_default_endian_doc},
     {"_set_default_endian", (PyCFunction) set_default_endian, METH_VARARGS,
