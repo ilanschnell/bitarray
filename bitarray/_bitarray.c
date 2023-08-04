@@ -1162,7 +1162,6 @@ When the optional `index` is given, only invert the single bit at index.");
 static PyObject *
 bitarray_reduce(bitarrayobject *self)
 {
-    const Py_ssize_t nbytes = Py_SIZE(self);
     static PyObject *reconstructor = NULL;
     PyObject *dict, *bytes, *result;
 
@@ -1185,12 +1184,11 @@ bitarray_reduce(bitarrayobject *self)
         Py_INCREF(dict);
     }
 
-    bytes = PyBytes_FromStringAndSize(NULL, nbytes);
+    bytes = PyBytes_FromStringAndSize(self->ob_item, Py_SIZE(self));
     if (bytes == NULL) {
         Py_DECREF(dict);
         return NULL;
     }
-    memcpy(PyBytes_AsString(bytes), self->ob_item, (size_t) nbytes);
 
     result = Py_BuildValue("O(OOsii)O", reconstructor, Py_TYPE(self), bytes,
                            ENDIAN_STR(self->endian), PADBITS(self),
