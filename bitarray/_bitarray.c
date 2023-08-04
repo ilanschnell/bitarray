@@ -1184,6 +1184,7 @@ bitarray_reduce(bitarrayobject *self)
         Py_INCREF(dict);
     }
 
+    set_padbits(self);
     bytes = PyBytes_FromStringAndSize(self->ob_item, Py_SIZE(self));
     if (bytes == NULL) {
         Py_DECREF(dict);
@@ -3645,7 +3646,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (PyIndex_Check(initial))
         return newbitarray_from_index(type, initial, endian);
 
-    /* bytes (for pickling) - must have head byte (0x00 .. 0x07) */
+    /* bytes (for pickling) - to be removed, see #206 */
     if (PyBytes_Check(initial) && PyBytes_GET_SIZE(initial) > 0) {
         char head = *PyBytes_AS_STRING(initial);
         if ((head & 0xf8) == 0)
