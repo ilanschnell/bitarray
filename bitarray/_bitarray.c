@@ -1192,15 +1192,15 @@ bitarray_reduce(bitarrayobject *self)
     }
     memcpy(PyBytes_AsString(bytes), self->ob_item, (size_t) nbytes);
 
-    result = Py_BuildValue(
-        "O(OnOsi)O", reconstructor, Py_TYPE(self), self->nbits, bytes,
-        ENDIAN_STR(self->endian), self->readonly, dict);
+    result = Py_BuildValue("O(OOsii)O", reconstructor, Py_TYPE(self), bytes,
+                           ENDIAN_STR(self->endian), PADBITS(self),
+                           self->readonly, dict);
     Py_DECREF(dict);
     Py_DECREF(bytes);
     return result;
 }
 
-PyDoc_STRVAR(reduce_doc, "state information for pickling");
+PyDoc_STRVAR(reduce_doc, "Internal. Used for pickling support.");
 
 
 static PyObject *
@@ -4014,13 +4014,13 @@ static PyObject *
 reconstructor(PyObject *module, PyObject *args)
 {
     PyTypeObject *type;
-    Py_ssize_t nbits, nbytes;
+    Py_ssize_t nbytes;
     PyObject *res, *bytes;
     char *endian_str;
-    int endian, readonly;
+    int endian, padbits, readonly;
 
-    if (!PyArg_ParseTuple(args, "OnOsi:_bitarray_reconstructor",
-                          &type, &nbits, &bytes, &endian_str, &readonly))
+    if (!PyArg_ParseTuple(args, "OOsii:_bitarray_reconstructor",
+                          &type, &bytes, &endian_str, &padbits, &readonly))
         return NULL;
 
     if ((endian = endian_from_string(endian_str)) < 0)
@@ -4030,26 +4030,22 @@ reconstructor(PyObject *module, PyObject *args)
         return PyErr_Format(PyExc_TypeError, "bytes expected, got '%s'",
                             Py_TYPE(bytes)->tp_name);
 
-    nbytes = PyBytes_GET_SIZE(bytes);
-    if (nbytes != BYTES(nbits))
-        return PyErr_Format(PyExc_ValueError,
-                            "size mismatch: %zd != %zd (%zd bits)",
-                            nbytes, BYTES(nbits), nbits);
+    if (padbits < 0 || padbits >= 8)
+        return PyErr_Format(PyExc_ValueError, "padbits = %d", padbits);
 
-    res = newbitarrayobject(type, nbits, endian);
+    nbytes = PyBytes_GET_SIZE(bytes);
+    res = newbitarrayobject(type, 8 * nbytes - padbits, endian);
     if (res == NULL)
         return NULL;
-    memcpy(((bitarrayobject *) res)->ob_item, PyBytes_AS_STRING(bytes),
-           (size_t) nbytes);
+#define rr  ((bitarrayobject *) res)
+    memcpy(rr->ob_item, PyBytes_AS_STRING(bytes), (size_t) nbytes);
     if (readonly) {
-        PyObject *ret;
-        ret = bitarray_freeze((bitarrayobject *) res);
-        Py_DECREF(ret);   /* drop None */
+        set_padbits(rr);
+        rr->readonly = 1;
     }
+#undef rr
     return res;
 }
-
-PyDoc_STRVAR(reconstructor_doc, "Internal. Used for pickling support.");
 
 
 static PyObject *
@@ -4132,7 +4128,7 @@ Return tuple containing:\n\
 static PyMethodDef module_functions[] = {
     {"_bitarray_reconstructor",
                             (PyCFunction) reconstructor,      METH_VARARGS,
-     reconstructor_doc},
+     reduce_doc},
     {"get_default_endian",  (PyCFunction) get_default_endian, METH_NOARGS,
      get_default_endian_doc},
     {"_set_default_endian", (PyCFunction) set_default_endian, METH_VARARGS,
