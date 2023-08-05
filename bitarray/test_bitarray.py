@@ -1800,6 +1800,37 @@ tests.append(MiscTests)
 
 class PickleTests(unittest.TestCase, Util):
 
+    def test_attributes(self):
+        a = frozenbitarray("00110")
+        # as a is a subclass of bitarray, we can have attributes
+        a.x = "bar"
+        a.y = "baz"
+
+        b = pickle.loads(pickle.dumps(a))
+        self.assertEqual(b, a)
+        self.assertEqual(b.x, "bar")
+        self.assertEqual(b.y, "baz")
+
+    def test_readonly(self):
+        a = bitarray(buffer=b'A')
+        self.assertTrue(a.readonly)
+        b = pickle.loads(pickle.dumps(a))
+        self.assertTrue(b.readonly)
+
+    def test_endian(self):
+        for endian in 'little', 'big':
+            a = bitarray(endian=endian)
+            b = pickle.loads(pickle.dumps(a))
+            self.assertEqual(b.endian(), endian)
+
+    def test_reduce(self):
+        for a in self.randombitarrays():
+            self.assertEqual(a.__reduce__(), (
+                _bitarray_reconstructor,
+                (bitarray, a.tobytes(), a.endian(),
+                 a.padbits, int(a.readonly)),
+                None))
+
     def test_reconstructor_empty(self):
         a = _bitarray_reconstructor(bitarray, b'', 'little', 0, 0)
         self.assertEqual(len(a), 0)
