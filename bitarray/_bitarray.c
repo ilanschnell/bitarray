@@ -1029,16 +1029,16 @@ bits (ignoring whitespace and underscore).");
 static PyObject *
 bitarray_fill(bitarrayobject *self)
 {
-    long p;
+    Py_ssize_t p = PADBITS(self);  /* number of pad bits */
 
     RAISE_IF_READONLY(self, NULL);
-    p = set_padbits(self);
+    set_padbits(self);
     /* there is no reason to call resize() - .fill() will not raise
        BufferError when buffer is imported or exported */
     self->nbits += p;
 
     assert(self->nbits == 8 * Py_SIZE(self));
-    return PyLong_FromLong(p);
+    return PyLong_FromSsize_t(p);
 }
 
 PyDoc_STRVAR(fill_doc,

@@ -169,18 +169,14 @@ zlw(bitarrayobject *self)       /* zlw = zeroed last word */
     return res;
 }
 
-/* Unless buffer is readonly, zero out pad bits.
-   Always return the number of pad bits - leave self->nbits unchanged */
-static inline int
+/* unless buffer is readonly, zero out pad bits - self->nbits is unchanged */
+static inline void
 set_padbits(bitarrayobject *self)
 {
     const int r = self->nbits % 8;     /* index into mask table */
 
-    if (r == 0)
-        return 0;
-    if (self->readonly == 0)
+    if (self->readonly == 0 && r)
         self->ob_item[Py_SIZE(self) - 1] &= ones_table[IS_BE(self)][r];
-    return 8 - r;
 }
 
 /* Population count: count the number of 1's in 'x'. */
