@@ -37,7 +37,7 @@ else:
 
 from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian,
-                      _sysinfo, __version__)
+                      _bitarray_reconstructor, _sysinfo, __version__)
 
 def skipIf(condition):
     "Skip a test if the condition is true."
@@ -1747,13 +1747,6 @@ class MiscTests(unittest.TestCase, Util):
         self.assertEqual(b.tobytes(), b' ')
         self.assertNotEqual(a, b)
 
-    def test_pickle(self):
-        for a in self.randombitarrays():
-            b = pickle.loads(pickle.dumps(a))
-            self.assertFalse(b is a)
-            self.assertEQUAL(a, b)
-            self.check_obj(b)
-
     @skipIf(is_pypy)
     def test_overflow(self):
         a = bitarray(1)
@@ -1802,6 +1795,104 @@ class MiscTests(unittest.TestCase, Util):
 
 
 tests.append(MiscTests)
+
+# ---------------------------------------------------------------------------
+
+class PickleTests(unittest.TestCase, Util):
+
+    def test_reconstructor_empty(self):
+        a = _bitarray_reconstructor(bitarray, b'', 'little', 0, 0)
+        self.assertEqual(len(a), 0)
+        self.assertEqual(a.endian(), 'little')
+
+    def test_reconstructor_simple(self):
+        a = _bitarray_reconstructor(bitarray, b'\x0f', 'big', 1, 0)
+        self.assertEqual(a, bitarray("0000111"))
+        self.assertEqual(a.endian(), 'big')
+
+    def test_reconstructor_invalid_args(self):
+        self.assertRaisesMessage(
+            TypeError,
+            "first argument must be a type object, got 'str'",
+            _bitarray_reconstructor,
+            "foo", b'', 'big', 0, 0)
+
+        self.assertRaisesMessage(
+            TypeError,
+            "'list' is not a subtype of bitarray",
+            _bitarray_reconstructor,
+            list, b'', 'big', 0, 0)
+
+        if is_py3k:
+            self.assertRaisesMessage(
+                TypeError,
+                "second argument must be bytes, got 'str'",
+                _bitarray_reconstructor,
+                bitarray, "", 'big', 0, 0)
+
+        self.assertRaisesMessage(
+            ValueError,
+            "bit endianness must be either 'little' or 'big', not 'small'",
+            _bitarray_reconstructor,
+            bitarray, b"", "small", 0, 0)
+
+        self.assertRaisesMessage(
+            ValueError,
+            "padbits not in range(0, 8), got 8",
+            _bitarray_reconstructor,
+            bitarray, b"", "big", 8, 0)
+
+    def test_reconstructor_overflow(self):
+        self.assertRaisesMessage(
+            OverflowError,
+            "new bitarray -1",
+            _bitarray_reconstructor,
+            bitarray, b"", "big", 1, 0)
+
+    def check_file(self, fn):
+        path = os.path.join(os.path.dirname(__file__), fn)
+        with open(path, 'rb') as fi:
+            d = pickle.load(fi)
+
+        for i, (s, end) in enumerate([
+                # 0x03
+                ('110', 'little'),
+                # 0x60
+                ('011', 'big'),
+                # 0x07    0x12    0x00    0x40
+                ('1110000001001000000000000000001', 'little'),
+                # 0x27    0x80    0x00    0x02
+                ('0010011110000000000000000000001', 'big'),
+        ]):
+            b = d['b%d' % i]
+            self.assertEqual(b.to01(), s)
+            self.assertEqual(b.endian(), end)
+            self.assertIsType(b, 'bitarray')
+            self.assertFalse(b.readonly)
+            self.check_obj(b)
+
+            f = d['f%d' % i]
+            self.assertEqual(f.to01(), s)
+            self.assertEqual(f.endian(), end)
+            self.assertIsType(f, 'frozenbitarray')
+            self.assertTrue(f.readonly)
+            self.check_obj(f)
+
+    @skipIf(sys.version_info[0] == 2)
+    def test_load(self):
+        # test data file was created using bitarray 1.5.0 / Python 3.5.5
+        self.check_file('test_150.pickle')
+        # using bitarray 2.8.1 / Python 3.5.5 (_bitarray_reconstructor)
+        self.check_file('test_281.pickle')
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            b = pickle.loads(pickle.dumps(a))
+            self.assertFalse(b is a)
+            self.assertEQUAL(a, b)
+            self.check_obj(b)
+
+tests.append(PickleTests)
 
 # ---------------------------------------------------------------------------
 
@@ -3708,42 +3799,6 @@ class FileTests(unittest.TestCase, Util):
             d2 = pickle.load(fi)
         for key in d1.keys():
             self.assertEQUAL(d1[key], d2[key])
-
-    def check_file(self, fn):
-        path = os.path.join(os.path.dirname(__file__), fn)
-        with open(path, 'rb') as fi:
-            d = pickle.load(fi)
-
-        for i, (s, end) in enumerate([
-                # 0x03
-                ('110', 'little'),
-                # 0x60
-                ('011', 'big'),
-                # 0x07    0x12    0x00    0x40
-                ('1110000001001000000000000000001', 'little'),
-                # 0x27    0x80    0x00    0x02
-                ('0010011110000000000000000000001', 'big'),
-        ]):
-            b = d['b%d' % i]
-            self.assertEqual(b.to01(), s)
-            self.assertEqual(b.endian(), end)
-            self.assertIsType(b, 'bitarray')
-            self.assertFalse(b.readonly)
-            self.check_obj(b)
-
-            f = d['f%d' % i]
-            self.assertEqual(f.to01(), s)
-            self.assertEqual(f.endian(), end)
-            self.assertIsType(f, 'frozenbitarray')
-            self.assertTrue(f.readonly)
-            self.check_obj(f)
-
-    @skipIf(sys.version_info[0] == 2)
-    def test_pickle_load(self):
-        # test data file was created using bitarray 1.5.0 / Python 3.5.5
-        self.check_file('test_150.pickle')
-        # using bitarray 2.8.1 / Python 3.5.5 (_bitarray_reconstructor)
-        self.check_file('test_281.pickle')
 
     @skipIf(pyodide)   # pyodide has no dbm module
     def test_shelve(self):

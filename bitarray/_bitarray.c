@@ -4022,14 +4022,18 @@ reconstructor(PyObject *module, PyObject *args)
                           &type, &bytes, &endian_str, &padbits, &readonly))
         return NULL;
 
-    if (type->tp_new != &bitarray_new) {
-        PyErr_SetString(PyExc_TypeError, "bitarray expected");
-        return NULL;
-    }
+    if (!PyType_Check(type))
+        return PyErr_Format(PyExc_TypeError,
+                            "first argument must be a type object, got '%s'",
+                            Py_TYPE(type)->tp_name);
+
+    if (!PyType_IsSubtype(type, &Bitarray_Type))
+        return PyErr_Format(PyExc_TypeError,
+                     "'%s' is not a subtype of bitarray", type->tp_name);
 
     if (!PyBytes_Check(bytes))
-        return PyErr_Format(PyExc_TypeError, "bytes expected, got '%s'",
-                            Py_TYPE(bytes)->tp_name);
+        return PyErr_Format(PyExc_TypeError, "second argument must be bytes, "
+                            "got '%s'", Py_TYPE(bytes)->tp_name);
 
     if ((endian = endian_from_string(endian_str)) < 0)
         return NULL;
