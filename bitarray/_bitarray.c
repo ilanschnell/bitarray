@@ -4022,15 +4022,16 @@ reconstructor(PyObject *module, PyObject *args)
                           &type, &bytes, &endian_str, &padbits, &readonly))
         return NULL;
 
-    if ((endian = endian_from_string(endian_str)) < 0)
-        return NULL;
-
     if (!PyBytes_Check(bytes))
         return PyErr_Format(PyExc_TypeError, "bytes expected, got '%s'",
                             Py_TYPE(bytes)->tp_name);
 
+    if ((endian = endian_from_string(endian_str)) < 0)
+        return NULL;
+
     if (padbits < 0 || padbits >= 8)
-        return PyErr_Format(PyExc_ValueError, "padbits = %d", padbits);
+        return PyErr_Format(PyExc_ValueError,
+                            "padbits not in range(0, 8), got %d", padbits);
 
     nbytes = PyBytes_GET_SIZE(bytes);
     res = newbitarrayobject(type, 8 * nbytes - padbits, endian);
