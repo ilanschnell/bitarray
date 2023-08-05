@@ -1830,11 +1830,17 @@ class PickleTests(unittest.TestCase, Util):
     @skipIf(is_pypy)
     def test_reduce(self):
         for a in self.randombitarrays():
-            self.assertEqual(a.__reduce__(), (
+            res = (
                 _bitarray_reconstructor,
-                (bitarray, a.tobytes(), a.endian(),
-                 a.padbits, int(a.readonly)),
-                None))
+                (
+                    bitarray,
+                    a.tobytes(),
+                    a.endian(),
+                    a.padbits,
+                    int(a.readonly)
+                ),
+                None)
+            self.assertEqual(a.__reduce__(), res)
 
     def test_reconstructor_empty(self):
         a = _bitarray_reconstructor(bitarray, b'', 'little', 0, 0)
