@@ -1162,9 +1162,20 @@ When the optional `index` is given, only invert the single bit at index.");
 static PyObject *
 bitarray_reduce(bitarrayobject *self)
 {
-    const Py_ssize_t nbytes = Py_SIZE(self);
-    PyObject *dict, *repr = NULL, *result = NULL;
-    char *str;
+    static PyObject *reconstructor = NULL;
+    PyObject *dict, *bytes, *result;
+
+    if (reconstructor == NULL) {
+        PyObject *bitarray_module;
+
+        if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
+            return NULL;
+        reconstructor = PyObject_GetAttrString(bitarray_module,
+                                               "_bitarray_reconstructor");
+        Py_DECREF(bitarray_module);
+        if (reconstructor == NULL)
+            return NULL;
+    }
 
     dict = PyObject_GetAttrString((PyObject *) self, "__dict__");
     if (dict == NULL) {
@@ -1173,25 +1184,22 @@ bitarray_reduce(bitarrayobject *self)
         Py_INCREF(dict);
     }
 
-    repr = PyBytes_FromStringAndSize(NULL, nbytes + 1);
-    if (repr == NULL)
-        goto error;
+    set_padbits(self);
+    bytes = PyBytes_FromStringAndSize(self->ob_item, Py_SIZE(self));
+    if (bytes == NULL) {
+        Py_DECREF(dict);
+        return NULL;
+    }
 
-    str = PyBytes_AsString(repr);
-    /* first byte contains the number of pad bits */
-    *str = (char) set_padbits(self);
-    /* remaining bytes contain buffer */
-    memcpy(str + 1, self->ob_item, (size_t) nbytes);
-
-    result = Py_BuildValue("O(Os)O", Py_TYPE(self),
-                           repr, ENDIAN_STR(self->endian), dict);
- error:
+    result = Py_BuildValue("O(OOsii)O", reconstructor, Py_TYPE(self), bytes,
+                           ENDIAN_STR(self->endian), PADBITS(self),
+                           self->readonly, dict);
     Py_DECREF(dict);
-    Py_XDECREF(repr);
+    Py_DECREF(bytes);
     return result;
 }
 
-PyDoc_STRVAR(reduce_doc, "state information for pickling");
+PyDoc_STRVAR(reduce_doc, "Internal. Used for pickling support.");
 
 
 static PyObject *
@@ -3638,7 +3646,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (PyIndex_Check(initial))
         return newbitarray_from_index(type, initial, endian);
 
-    /* bytes (for pickling) - must have head byte (0x00 .. 0x07) */
+    /* bytes (for pickling) - to be removed, see #206 */
     if (PyBytes_Check(initial) && PyBytes_GET_SIZE(initial) > 0) {
         char head = *PyBytes_AS_STRING(initial);
         if ((head & 0xf8) == 0)
@@ -4002,6 +4010,45 @@ static PyTypeObject Bitarray_Type = {
 /***************************** Module functions ***************************/
 
 static PyObject *
+reconstructor(PyObject *module, PyObject *args)
+{
+    PyTypeObject *type;
+    Py_ssize_t nbytes;
+    PyObject *res, *bytes;
+    char *endian_str;
+    int endian, padbits, readonly;
+
+    if (!PyArg_ParseTuple(args, "OOsii:_bitarray_reconstructor",
+                          &type, &bytes, &endian_str, &padbits, &readonly))
+        return NULL;
+
+    if (!PyBytes_Check(bytes))
+        return PyErr_Format(PyExc_TypeError, "bytes expected, got '%s'",
+                            Py_TYPE(bytes)->tp_name);
+
+    if ((endian = endian_from_string(endian_str)) < 0)
+        return NULL;
+
+    if (padbits < 0 || padbits >= 8)
+        return PyErr_Format(PyExc_ValueError,
+                            "padbits not in range(0, 8), got %d", padbits);
+
+    nbytes = PyBytes_GET_SIZE(bytes);
+    res = newbitarrayobject(type, 8 * nbytes - padbits, endian);
+    if (res == NULL)
+        return NULL;
+#define rr  ((bitarrayobject *) res)
+    memcpy(rr->ob_item, PyBytes_AS_STRING(bytes), (size_t) nbytes);
+    if (readonly) {
+        set_padbits(rr);
+        rr->readonly = 1;
+    }
+#undef rr
+    return res;
+}
+
+
+static PyObject *
 get_default_endian(PyObject *module)
 {
     return Py_BuildValue("s", ENDIAN_STR(default_endian));
@@ -4079,6 +4126,9 @@ Return tuple containing:\n\
 
 
 static PyMethodDef module_functions[] = {
+    {"_bitarray_reconstructor",
+                            (PyCFunction) reconstructor,      METH_VARARGS,
+     reduce_doc},
     {"get_default_endian",  (PyCFunction) get_default_endian, METH_NOARGS,
      get_default_endian_doc},
     {"_set_default_endian", (PyCFunction) set_default_endian, METH_VARARGS,

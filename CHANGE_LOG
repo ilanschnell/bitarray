@@ -1,5 +1,6 @@
 2023-XX-XX   2.8.1:
 -------------------
+  * use reconstructor function for pickling, see #207
 
 
 2023-07-22   2.8.0:
