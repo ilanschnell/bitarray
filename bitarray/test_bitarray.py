@@ -1813,9 +1813,13 @@ class PickleTests(unittest.TestCase, Util):
 
     def test_readonly(self):
         a = bitarray(buffer=b'A')
+        # readonly (because buffer is readonly), but not frozenbitarray
         self.assertTrue(a.readonly)
+        self.assertIsType(a, 'bitarray')
+
         b = pickle.loads(pickle.dumps(a))
         self.assertTrue(b.readonly)
+        self.assertIsType(b, 'bitarray')
 
     def test_endian(self):
         for endian in 'little', 'big':
@@ -1919,6 +1923,7 @@ class PickleTests(unittest.TestCase, Util):
     def test_random(self):
         for a in self.randombitarrays():
             b = pickle.loads(pickle.dumps(a))
+            self.assertFalse(b.readonly)
             self.assertFalse(b is a)
             self.assertEQUAL(a, b)
             self.check_obj(b)
