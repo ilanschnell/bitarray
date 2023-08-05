@@ -1827,6 +1827,7 @@ class PickleTests(unittest.TestCase, Util):
             b = pickle.loads(pickle.dumps(a))
             self.assertEqual(b.endian(), endian)
 
+    @skipIf(is_pypy)
     def test_reduce(self):
         for a in self.randombitarrays():
             self.assertEqual(a.__reduce__(), (
