@@ -3709,10 +3709,8 @@ class FileTests(unittest.TestCase, Util):
         for key in d1.keys():
             self.assertEQUAL(d1[key], d2[key])
 
-    @skipIf(sys.version_info[0] == 2)
-    def test_pickle_load(self):
-        # the test data file was created using bitarray 1.5.0 / Python 3.5.5
-        path = os.path.join(os.path.dirname(__file__), 'test_data.pickle')
+    def check_file(self, fn):
+        path = os.path.join(os.path.dirname(__file__), fn)
         with open(path, 'rb') as fi:
             d = pickle.load(fi)
 
@@ -3739,6 +3737,13 @@ class FileTests(unittest.TestCase, Util):
             self.assertIsType(f, 'frozenbitarray')
             self.assertTrue(f.readonly)
             self.check_obj(f)
+
+    @skipIf(sys.version_info[0] == 2)
+    def test_pickle_load(self):
+        # test data file was created using bitarray 1.5.0 / Python 3.5.5
+        self.check_file('test_150.pickle')
+        # using bitarray 2.8.1 / Python 3.5.5 (_bitarray_reconstructor)
+        self.check_file('test_281.pickle')
 
     @skipIf(pyodide)   # pyodide has no dbm module
     def test_shelve(self):
