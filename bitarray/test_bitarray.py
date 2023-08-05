@@ -1833,13 +1833,13 @@ class PickleTests(unittest.TestCase, Util):
             res = (
                 _bitarray_reconstructor,
                 (
-                    bitarray,
-                    a.tobytes(),
-                    a.endian(),
-                    a.padbits,
-                    int(a.readonly)
+                    bitarray,        # type object
+                    a.tobytes(),     # buffer
+                    a.endian(),      # endianness
+                    a.padbits,       # number of pad bits
+                    int(a.readonly)  # readonly
                 ),
-                None)
+                None)  # __dict__
             self.assertEqual(a.__reduce__(), res)
 
     def test_reconstructor_empty(self):
@@ -1853,6 +1853,7 @@ class PickleTests(unittest.TestCase, Util):
         self.assertEqual(a.endian(), 'big')
 
     def test_reconstructor_invalid_args(self):
+        # argument 1 - type object
         self.assertRaisesMessage(
             TypeError,
             "first argument must be a type object, got 'str'",
@@ -1865,24 +1866,34 @@ class PickleTests(unittest.TestCase, Util):
             _bitarray_reconstructor,
             list, b'', 'big', 0, 0)
 
-        if is_py3k:
-            self.assertRaisesMessage(
-                TypeError,
-                "second argument must be bytes, got 'str'",
-                _bitarray_reconstructor,
-                bitarray, "", 'big', 0, 0)
+        # argument 2 - buffer
+        self.assertRaisesMessage(
+            TypeError,
+            "second argument must be bytes, got 'int'",
+            _bitarray_reconstructor,
+            bitarray, 123, 'big', 0, 0)
 
+        # argument 3 - endianness
+        self.assertRaises(TypeError, _bitarray_reconstructor,
+                          bitarray, b'\x0f', 123, 1, 0)
         self.assertRaisesMessage(
             ValueError,
             "bit endianness must be either 'little' or 'big', not 'small'",
             _bitarray_reconstructor,
             bitarray, b"", "small", 0, 0)
 
+        # argument 4 - number of pad bits
+        self.assertRaises(TypeError, _bitarray_reconstructor,
+                          bitarray, b'\x0f', 'big', 0.0, 0)
         self.assertRaisesMessage(
             ValueError,
             "padbits not in range(0, 8), got 8",
             _bitarray_reconstructor,
             bitarray, b"", "big", 8, 0)
+
+        # argument 5 - readonly
+        self.assertRaises(TypeError, _bitarray_reconstructor,
+                          bitarray, b'\x0f', 'big', 1, 'foo')
 
     def test_reconstructor_overflow(self):
         self.assertRaisesMessage(
