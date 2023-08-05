@@ -4022,6 +4022,11 @@ reconstructor(PyObject *module, PyObject *args)
                           &type, &bytes, &endian_str, &padbits, &readonly))
         return NULL;
 
+    if (type->tp_new != &bitarray_new) {
+        PyErr_SetString(PyExc_TypeError, "bitarray expected");
+        return NULL;
+    }
+
     if (!PyBytes_Check(bytes))
         return PyErr_Format(PyExc_TypeError, "bytes expected, got '%s'",
                             Py_TYPE(bytes)->tp_name);
