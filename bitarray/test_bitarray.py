@@ -1827,6 +1827,14 @@ class PickleTests(unittest.TestCase, Util):
             b = pickle.loads(pickle.dumps(a))
             self.assertEqual(b.endian(), endian)
 
+    def test_reduce_explicit(self):
+        a = frozenbitarray('11001111 01001', 'little')
+        a.quux = 12
+        res = (_bitarray_reconstructor,
+               (frozenbitarray, b'\xf3\x12', 'little', 3, 1),
+               {'quux': 12})
+        self.assertEqual(a.__reduce__(), res)
+
     def check_reduce(self, a):
         try:
             attrs = a.__dict__
@@ -1850,9 +1858,10 @@ class PickleTests(unittest.TestCase, Util):
         self.assertEqual(type(a), type(b))
         self.assertEqual(a.endian(), b.endian())
         self.assertEqual(a.readonly, b.readonly)
+        self.check_obj(b)
 
     @skipIf(is_pypy)
-    def test_reduce(self):
+    def test_reduce_random(self):
         for a in self.randombitarrays():
             self.check_reduce(a)
             b = frozenbitarray(a)
@@ -1860,15 +1869,16 @@ class PickleTests(unittest.TestCase, Util):
             b.foo = 42
             self.check_reduce(b)
 
-    def test_reconstructor_empty(self):
+    def test_reconstructor_explicit(self):
         a = _bitarray_reconstructor(bitarray, b'', 'little', 0, 0)
         self.assertEqual(len(a), 0)
         self.assertEqual(a.endian(), 'little')
+        self.check_obj(a)
 
-    def test_reconstructor_simple(self):
         a = _bitarray_reconstructor(bitarray, b'\x0f', 'big', 1, 0)
         self.assertEqual(a, bitarray("0000111"))
         self.assertEqual(a.endian(), 'big')
+        self.check_obj(a)
 
     def test_reconstructor_invalid_args(self):
         # argument 1 - type object
