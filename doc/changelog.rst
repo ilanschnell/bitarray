@@ -1,6 +1,12 @@
 Change log
 ==========
 
+**2.8.1** (2023-08-06):
+
+* use reconstructor function for pickling, see `#207 <https://github.com/ilanschnell/bitarray/issues/207>`__
+* simplify implementation of ``.reverse()``
+
+
 **2.8.0** (2023-07-22):
 
 * allow `integer sequence indexing <indexing.rst>`__ by list of indices,
