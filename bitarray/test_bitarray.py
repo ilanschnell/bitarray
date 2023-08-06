@@ -1827,20 +1827,38 @@ class PickleTests(unittest.TestCase, Util):
             b = pickle.loads(pickle.dumps(a))
             self.assertEqual(b.endian(), endian)
 
+    def check_reduce(self, a):
+        try:
+            attrs = a.__dict__
+        except AttributeError:
+            attrs = None
+
+        res = (
+            _bitarray_reconstructor,
+            (
+                type(a),         # type object
+                a.tobytes(),     # buffer
+                a.endian(),      # endianness
+                a.padbits,       # number of pad bits
+                int(a.readonly)  # readonly
+            ),
+            attrs)  # __dict__ or None
+        self.assertEqual(a.__reduce__(), res)
+
+        b = _bitarray_reconstructor(*res[1])
+        self.assertEqual(a, b)
+        self.assertEqual(type(a), type(b))
+        self.assertEqual(a.endian(), b.endian())
+        self.assertEqual(a.readonly, b.readonly)
+
     @skipIf(is_pypy)
     def test_reduce(self):
         for a in self.randombitarrays():
-            res = (
-                _bitarray_reconstructor,
-                (
-                    bitarray,        # type object
-                    a.tobytes(),     # buffer
-                    a.endian(),      # endianness
-                    a.padbits,       # number of pad bits
-                    int(a.readonly)  # readonly
-                ),
-                None)  # __dict__
-            self.assertEqual(a.__reduce__(), res)
+            self.check_reduce(a)
+            b = frozenbitarray(a)
+            self.check_reduce(b)
+            b.foo = 42
+            self.check_reduce(b)
 
     def test_reconstructor_empty(self):
         a = _bitarray_reconstructor(bitarray, b'', 'little', 0, 0)
