@@ -4023,13 +4023,12 @@ reconstructor(PyObject *module, PyObject *args)
         return NULL;
 
     if (!PyType_Check(type))
-        return PyErr_Format(PyExc_TypeError,
-                            "first argument must be a type object, got '%s'",
-                            Py_TYPE(type)->tp_name);
+        return PyErr_Format(PyExc_TypeError, "first argument must be a type "
+                            "object, got '%s'", Py_TYPE(type)->tp_name);
 
     if (!PyType_IsSubtype(type, &Bitarray_Type))
-        return PyErr_Format(PyExc_TypeError,
-                     "'%s' is not a subtype of bitarray", type->tp_name);
+        return PyErr_Format(PyExc_TypeError, "'%s' is not a subtype of "
+                            "bitarray", type->tp_name);
 
     if (!PyBytes_Check(bytes))
         return PyErr_Format(PyExc_TypeError, "second argument must be bytes, "
@@ -4038,11 +4037,11 @@ reconstructor(PyObject *module, PyObject *args)
     if ((endian = endian_from_string(endian_str)) < 0)
         return NULL;
 
-    if (padbits < 0 || padbits >= 8)
-        return PyErr_Format(PyExc_ValueError,
-                            "padbits not in range(0, 8), got %d", padbits);
-
     nbytes = PyBytes_GET_SIZE(bytes);
+    if (padbits < 0 || padbits >= 8 || (nbytes == 0 && padbits != 0))
+        return PyErr_Format(PyExc_ValueError,
+                            "invalid number of padbits: %d", padbits);
+
     res = newbitarrayobject(type, 8 * nbytes - padbits, endian);
     if (res == NULL)
         return NULL;

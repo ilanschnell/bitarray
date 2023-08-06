@@ -1855,23 +1855,17 @@ class PickleTests(unittest.TestCase, Util):
     def test_reconstructor_invalid_args(self):
         # argument 1 - type object
         self.assertRaisesMessage(
-            TypeError,
-            "first argument must be a type object, got 'str'",
-            _bitarray_reconstructor,
-            "foo", b'', 'big', 0, 0)
+            TypeError, "first argument must be a type object, got 'str'",
+            _bitarray_reconstructor, "foo", b'', 'big', 0, 0)
 
         self.assertRaisesMessage(
-            TypeError,
-            "'list' is not a subtype of bitarray",
-            _bitarray_reconstructor,
-            list, b'', 'big', 0, 0)
+            TypeError, "'list' is not a subtype of bitarray",
+            _bitarray_reconstructor, list, b'', 'big', 0, 0)
 
         # argument 2 - buffer
         self.assertRaisesMessage(
-            TypeError,
-            "second argument must be bytes, got 'int'",
-            _bitarray_reconstructor,
-            bitarray, 123, 'big', 0, 0)
+            TypeError, "second argument must be bytes, got 'int'",
+            _bitarray_reconstructor, bitarray, 123, 'big', 0, 0)
 
         # argument 3 - endianness
         self.assertRaises(TypeError, _bitarray_reconstructor,
@@ -1879,28 +1873,22 @@ class PickleTests(unittest.TestCase, Util):
         self.assertRaisesMessage(
             ValueError,
             "bit endianness must be either 'little' or 'big', not 'small'",
-            _bitarray_reconstructor,
-            bitarray, b"", "small", 0, 0)
+            _bitarray_reconstructor, bitarray, b"", "small", 0, 0)
 
         # argument 4 - number of pad bits
         self.assertRaises(TypeError, _bitarray_reconstructor,
                           bitarray, b'\x0f', 'big', 0.0, 0)
         self.assertRaisesMessage(
-            ValueError,
-            "padbits not in range(0, 8), got 8",
-            _bitarray_reconstructor,
-            bitarray, b"", "big", 8, 0)
+            ValueError, "invalid number of padbits: 8",
+            _bitarray_reconstructor, bitarray, b"A", "big", 8, 0)
+        self.assertRaisesMessage(
+            # the number of bytes is 0 zero, so padbits cannot be 1
+            ValueError, "invalid number of padbits: 1",
+            _bitarray_reconstructor, bitarray, b"", "big", 1, 0)
 
         # argument 5 - readonly
         self.assertRaises(TypeError, _bitarray_reconstructor,
                           bitarray, b'\x0f', 'big', 1, 'foo')
-
-    def test_reconstructor_overflow(self):
-        self.assertRaisesMessage(
-            OverflowError,
-            "new bitarray -1",
-            _bitarray_reconstructor,
-            bitarray, b"", "big", 1, 0)
 
     def check_file(self, fn):
         path = os.path.join(os.path.dirname(__file__), fn)
