@@ -1192,7 +1192,7 @@ bitarray_reduce(bitarrayobject *self)
     }
 
     result = Py_BuildValue("O(OOsii)O", reconstructor, Py_TYPE(self), bytes,
-                           ENDIAN_STR(self->endian), PADBITS(self),
+                           ENDIAN_STR(self->endian), (int) PADBITS(self),
                            self->readonly, dict);
     Py_DECREF(dict);
     Py_DECREF(bytes);
