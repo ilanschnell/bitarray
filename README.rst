@@ -90,8 +90,8 @@ all tests ran successfully by:
     assert bitarray.test().wasSuccessful()
 
 
-Using the module
-----------------
+Usage
+-----
 
 As mentioned above, bitarray objects behave very much like lists, so
 there is not too much to learn.  The biggest difference from list
