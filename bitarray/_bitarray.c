@@ -2233,9 +2233,7 @@ delmask(bitarrayobject *self, bitarrayobject *mask)
 {
     Py_ssize_t n = 0, i;
 
-    if (check_mask_length(self, mask) < 0)
-        return -1;
-
+    assert(self->nbits == mask->nbits);
     for (i = 0; i < mask->nbits; i++) {
         if (getbit(mask, i) == 0)  /* set items we want to keep */
             setbit(self, n++, getbit(self, i));
@@ -2249,6 +2247,9 @@ delmask(bitarrayobject *self, bitarrayobject *mask)
 static int
 assign_mask(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
 {
+    if (check_mask_length(self, mask) < 0)
+        return -1;
+
     if (value == NULL)
         return delmask(self, mask);
 
