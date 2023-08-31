@@ -2348,6 +2348,8 @@ delsequence(bitarrayobject *self, PyObject *seq)
 static int
 assign_sequence(bitarrayobject *self, PyObject *seq, PyObject *value)
 {
+    assert(PySequence_Check(seq));
+
     if (value == NULL)
         return delsequence(self, seq);
 
