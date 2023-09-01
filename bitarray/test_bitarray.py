@@ -1446,6 +1446,33 @@ class MaskedIndexTests(unittest.TestCase, Util):
         a =    bitarray('1001001')
         mask = bitarray('1010111')
         self.assertRaises(NotImplementedError, a.__setitem__, mask, 1)
+        b = bitarray('01110')
+        a[mask] = b
+        self.assertEqual(a.to01(), '0011110')
+        b = bitarray('0111')
+        self.assertRaisesMessage(
+            IndexError,
+            "attempt to assign mask of size 5 to bitarray of size 4",
+            a.__setitem__, mask, b)
+
+    def test_set_random(self):
+        for a in self.randombitarrays():
+            b = a.copy()
+            n = len(a)
+            mask = zeros(n)
+            a[mask] = bitarray()
+            self.assertEqual(a, b)
+
+            mask.setall(1)
+            a[mask] = a
+            self.assertEqual(a, b)
+
+            mask = urandom(n)
+            other = urandom(mask.count())
+            a[mask] = other
+            b[mask.search(1)] = other
+            self.assertEqual(a, b)
+            self.assertEqual(len(a), n)
 
     def test_del_basic(self):
         a =    bitarray('1001001')

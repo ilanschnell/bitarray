@@ -2243,6 +2243,29 @@ delmask(bitarrayobject *self, bitarrayobject *mask)
     return resize(self, n);
 }
 
+/* assign mask of bitarray self to bitarray other */
+static int
+setmask_bitarray(bitarrayobject *self, bitarrayobject *mask,
+                 bitarrayobject *other)
+{
+    Py_ssize_t n, i, j;
+
+    assert(self->nbits == mask->nbits);
+    n = count(mask, 0, mask->nbits);
+    if (n != other->nbits) {
+        PyErr_Format(PyExc_IndexError, "attempt to assign mask of size %zd "
+                     "to bitarray of size %zd", n, other->nbits);
+        return -1;
+    }
+
+    for (i = j = 0; i < mask->nbits; i++) {
+        if (getbit(mask, i))
+            setbit(self, i, getbit(other, j++));
+    }
+    assert(j == n);
+    return 0;
+}
+
 /* assign mask of bitarray self to value */
 static int
 assign_mask(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
@@ -2253,11 +2276,8 @@ assign_mask(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
     if (value == NULL)
         return delmask(self, mask);
 
-    if (bitarray_Check(value)) {
-        PyErr_SetString(PyExc_NotImplementedError,
-                        "mask assignment to bitarrays not implemented");
-        return -1;
-    }
+    if (bitarray_Check(value))
+        return setmask_bitarray(self, mask, (bitarrayobject *) value);
 
     if (PyIndex_Check(value)) {
         int vi;
