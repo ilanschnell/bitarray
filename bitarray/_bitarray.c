@@ -2253,8 +2253,25 @@ assign_mask(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
     if (value == NULL)
         return delmask(self, mask);
 
-    PyErr_SetString(PyExc_NotImplementedError, "masked assignment "
-                    "not implemented - use bitwise operations");
+    if (bitarray_Check(value)) {
+        PyErr_SetString(PyExc_NotImplementedError,
+                        "mask assignment to bitarrays not implemented");
+        return -1;
+    }
+
+    if (PyIndex_Check(value)) {
+        int vi;
+        if (!conv_pybit(value, &vi))
+            return -1;
+
+        PyErr_SetString(PyExc_NotImplementedError, "mask assignment to "
+                        "Booleans not implemented - use bitwise operations");
+        return -1;
+    }
+
+    PyErr_Format(PyExc_TypeError,
+                 "bitarray or int expected for mask assignment, not '%s'",
+                 Py_TYPE(value)->tp_name);
     return -1;
 }
 
