@@ -749,9 +749,8 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 
     if (PyBytes_Check(obj)) {                             /* bytes 01 */
 #if IS_PY3K
-        PyErr_SetString(PyExc_TypeError,
-                        "cannot extend bitarray with 'bytes', "
-                        "use .pack() or .frombytes() instead");
+        PyErr_SetString(PyExc_TypeError, "cannot extend bitarray with "
+                        "'bytes', use .pack() or .frombytes() instead");
         return -1;
 #else
         return extend_bytes01(self, obj);
@@ -2300,8 +2299,7 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
     n = PySequence_Size(seq);
     if (n != other->nbits) {
         PyErr_Format(PyExc_ValueError, "attempt to assign sequence of "
-                     "size %zd to bitarray of size %zd",
-                     n, other->nbits);
+                     "size %zd to bitarray of size %zd", n, other->nbits);
         return -1;
     }
     /* Make a copy of other, in case the buffers overlap.  This is obviously
@@ -2372,9 +2370,8 @@ assign_sequence(bitarrayobject *self, PyObject *seq, PyObject *value)
     if (PyIndex_Check(value))
         return setseq_bool(self, seq, value);
 
-    PyErr_Format(PyExc_TypeError,
-                 "bitarray or int expected for sequence assignment, not '%s'",
-                 Py_TYPE(value)->tp_name);
+    PyErr_Format(PyExc_TypeError, "bitarray or int expected for sequence "
+                 "assignment, not '%s'", Py_TYPE(value)->tp_name);
     return -1;
 }
 
@@ -2677,8 +2674,7 @@ static int
 check_value(PyObject *value)
 {
      if (!bitarray_Check(value)) {
-         PyErr_SetString(PyExc_TypeError,
-                         "bitarray expected for dict value");
+         PyErr_SetString(PyExc_TypeError, "bitarray expected for dict value");
          return -1;
      }
      if (((bitarrayobject *) value)->nbits == 0) {
