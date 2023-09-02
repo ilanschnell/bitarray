@@ -2260,10 +2260,6 @@ assign_mask(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
     }
 
     if (PyIndex_Check(value)) {
-        int vi;
-        if (!conv_pybit(value, &vi))
-            return -1;
-
         PyErr_SetString(PyExc_NotImplementedError, "mask assignment to "
                         "Booleans not implemented - use bitwise operations");
         return -1;
