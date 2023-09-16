@@ -4979,7 +4979,6 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
 # ---------------------------------------------------------------------------
 
 def run(verbosity=1):
-    import bitarray.test_bitarray
     import bitarray.test_util
 
     default_endian = get_default_endian()
@@ -4993,9 +4992,9 @@ def run(verbosity=1):
     print('__clang__ or __GNUC__ defined: %s' % SYSINFO[5])
     print('PY_LITTLE_ENDIAN (use word shift): %s' % SYSINFO[7])
     print('DEBUG: %s' % DEBUG)
-    suite = unittest.TestSuite()
     loader = unittest.TestLoader()
-    suite.addTests(loader.loadTestsFromModule(bitarray.test_bitarray))
+    suite = unittest.TestSuite()
+    suite.addTests(loader.loadTestsFromModule(sys.modules[__name__]))
     suite.addTests(loader.loadTestsFromModule(bitarray.test_util))
 
     runner = unittest.TextTestRunner(verbosity=verbosity)
