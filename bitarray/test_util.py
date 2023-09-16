@@ -2365,20 +2365,5 @@ tests.append(TestsCanonicalHuffman)
 
 # ---------------------------------------------------------------------------
 
-def run(verbosity=1):
-    import bitarray
-
-    print('bitarray.util is installed in: %s' % os.path.dirname(__file__))
-    print('bitarray version: %s' % bitarray.__version__)
-    print('Python version: %s' % sys.version)
-
-    suite = unittest.TestSuite()
-    for cls in tests:
-        suite.addTest(unittest.makeSuite(cls))
-
-    runner = unittest.TextTestRunner(verbosity=verbosity)
-    return runner.run(suite)
-
-
 if __name__ == '__main__':
-    run()
+    unittest.main()
