@@ -5037,8 +5037,6 @@ tests.append(TestsFrozenbitarray)
 
 def run(verbosity=1, repeat=1):
     import bitarray.test_util
-    all_tests = list(tests)
-    all_tests.extend(bitarray.test_util.tests)
 
     default_endian = get_default_endian()
     print('bitarray is installed in: %s' % os.path.dirname(__file__))
@@ -5052,9 +5050,11 @@ def run(verbosity=1, repeat=1):
     print('PY_LITTLE_ENDIAN (use word shift): %s' % SYSINFO[7])
     print('DEBUG: %s' % DEBUG)
     suite = unittest.TestSuite()
-    for cls in all_tests:
+    loader = unittest.TestLoader()
+    for cls in tests:
         for _ in range(repeat):
-            suite.addTest(unittest.TestLoader().loadTestsFromTestCase(cls))
+            suite.addTest(loader.loadTestsFromTestCase(cls))
+    suite.addTests(loader.loadTestsFromModule(bitarray.test_util))
 
     runner = unittest.TextTestRunner(verbosity=verbosity)
     result = runner.run(suite)

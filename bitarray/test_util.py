@@ -39,8 +39,6 @@ if sys.version_info[0] == 3:
 else:
     from io import BytesIO as StringIO
 
-tests = []  # type: list
-
 # ---------------------------------------------------------------------------
 
 class TestsZeros(unittest.TestCase):
@@ -79,8 +77,6 @@ class TestsZeros(unittest.TestCase):
             self.assertRaises(TypeError, zeros, 0, x)
         # endian wrong string
         self.assertRaises(ValueError, zeros, 0, 'foo')
-
-tests.append(TestsZeros)
 
 # ---------------------------------------------------------------------------
 
@@ -121,8 +117,6 @@ class TestsURandom(unittest.TestCase):
 
         self.assertRaises(TypeError, urandom, 0, 1)
         self.assertRaises(ValueError, urandom, 0, 'foo')
-
-tests.append(TestsURandom)
 
 # ---------------------------------------------------------------------------
 
@@ -195,8 +189,6 @@ class TestsPPrint(unittest.TestCase):
         finally:
             shutil.rmtree(tmpdir)
 
-tests.append(TestsPPrint)
-
 # ---------------------------------------------------------------------------
 
 class TestsMakeEndian(unittest.TestCase, Util):
@@ -241,8 +233,6 @@ class TestsMakeEndian(unittest.TestCase, Util):
                 if a.endian() == endian:
                     self.assertTrue(b is a)
             self.assertEQUAL(a, aa)
-
-tests.append(TestsMakeEndian)
 
 # ---------------------------------------------------------------------------
 
@@ -349,8 +339,6 @@ class TestsRIndex(unittest.TestCase, Util):
             a[randint(0, N - 1)] = 1
             self.assertEqual(rindex(a), a.index(1))
 
-tests.append(TestsRIndex)
-
 # ---------------------------------------------------------------------------
 
 class TestsStrip(unittest.TestCase, Util):
@@ -412,8 +400,6 @@ class TestsStrip(unittest.TestCase, Util):
             a[randint(0, n - 1)] = 1
             self.assertEqual(strip(a, 'both'), bitarray('1'))
             self.assertEqual(len(a), n)
-
-tests.append(TestsStrip)
 
 # ---------------------------------------------------------------------------
 
@@ -568,8 +554,6 @@ class TestsCount_N(unittest.TestCase, Util):
                 # n = 0 -> count_n always 0
                 self.assertEqual(count_n(a, 0, v), 0)
 
-tests.append(TestsCount_N)
-
 # ---------------------------------------------------------------------------
 
 class TestsBitwiseCount(unittest.TestCase, Util):
@@ -659,8 +643,6 @@ class TestsBitwiseCount(unittest.TestCase, Util):
             self.assertEqual(all(a ^ b), count_xor(a, b) == n)
             self.assertEqual(all(a ^ b), a == ~b)
 
-tests.append(TestsBitwiseCount)
-
 # ---------------------------------------------------------------------------
 
 class TestsBitwiseAny(unittest.TestCase, Util):
@@ -712,8 +694,6 @@ class TestsBitwiseAny(unittest.TestCase, Util):
             a[i] = 1
             self.assertEqual(b[i], any_and(a, b))
 
-tests.append(TestsBitwiseAny)
-
 # ---------------------------------------------------------------------------
 
 class TestsSubset(unittest.TestCase, Util):
@@ -763,8 +743,6 @@ class TestsSubset(unittest.TestCase, Util):
             a.setall(1)
             self.check(b, a, True)
 
-tests.append(TestsSubset)
-
 # ---------------------------------------------------------------------------
 
 class TestsCorrespondAll(unittest.TestCase, Util):
@@ -801,8 +779,6 @@ class TestsCorrespondAll(unittest.TestCase, Util):
             self.assertEqual(res[0], n - count_or(a, b))
             self.assertEqual(res[1] + res[2], count_xor(a, b))
             self.assertEqual(sum(res), n)
-
-tests.append(TestsCorrespondAll)
 
 # ---------------------------------------------------------------------------
 
@@ -841,8 +817,6 @@ class TestsParity(unittest.TestCase, Util):
             b = a.copy()
             self.assertEqual(parity(a), a.count() % 2)
             self.assertEqual(a, b)
-
-tests.append(TestsParity)
 
 # ---------------------------------------------------------------------------
 
@@ -903,8 +877,6 @@ class TestsIntervals(unittest.TestCase, Util):
                 v = not v
 
             self.assertEqual(a, b)
-
-tests.append(TestsIntervals)
 
 # ---------------------------------------------------------------------------
 
@@ -999,8 +971,6 @@ class TestsHexlify(unittest.TestCase, Util):
         b = bitarray(endian='big')
         b.frombytes(binascii.unhexlify(s))
         self.assertEQUAL(hex2ba(s, 'big'), b)
-
-tests.append(TestsHexlify)
 
 # ---------------------------------------------------------------------------
 
@@ -1159,8 +1129,6 @@ class TestsBase(unittest.TestCase, Util):
                 self.assertEQUAL(base2ba(n, ba2base(n, a), 'little'), a)
                 b = bitarray(a, 'big')
                 self.assertEQUAL(base2ba(n, ba2base(n, b), 'big'), b)
-
-tests.append(TestsBase)
 
 # ---------------------------------------------------------------------------
 
@@ -1457,8 +1425,6 @@ class SC_Tests(unittest.TestCase, Util):
                 seg_pop = a.count(1, segbits * i, segbits * (i + 1))
                 self.assertEqual(rts[i + 1] - rts[i], seg_pop)
 
-tests.append(SC_Tests)
-
 # ---------------------------------------------------------------------------
 
 class VLFTests(unittest.TestCase, Util):
@@ -1604,8 +1570,6 @@ class VLFTests(unittest.TestCase, Util):
     def test_random(self):
         for a in self.randombitarrays():
             self.round_trip(a)
-
-tests.append(VLFTests)
 
 # ---------------------------------------------------------------------------
 
@@ -1804,8 +1768,6 @@ class TestsIntegerization(unittest.TestCase, Util):
 
             self.assertEqual(i, self.twos_complement(j, len(a)))
 
-tests.append(TestsIntegerization)
-
 # ---------------------------------------------------------------------------
 
 class MixedTests(unittest.TestCase, Util):
@@ -1903,8 +1865,6 @@ class MixedTests(unittest.TestCase, Util):
         self.assertEqual(sieve.count(1, 4000, 5000), 119)
         # the 1000th prime is 7919
         self.assertEqual(count_n(sieve, 1000) - 1, 7919)
-
-tests.append(MixedTests)
 
 # ---------------------------------------------------------------------------
 
@@ -2004,8 +1964,6 @@ class TestsSerialization(unittest.TestCase, Util):
             self.assertEqual(a.endian(), c.endian())
             self.check_obj(c)
 
-tests.append(TestsSerialization)
-
 # ---------------------------------------------------------------------------
 
 class TestsHuffman(unittest.TestCase):
@@ -2100,8 +2058,6 @@ class TestsHuffman(unittest.TestCase):
             # create Huffman code for n symbols
             code = huffman_code({i: random() for i in range(n)})
             self.check_tree(code)
-
-tests.append(TestsHuffman)
 
 # ---------------------------------------------------------------------------
 
@@ -2360,8 +2316,6 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
             freq = {i: random() for i in range(n)}
             self.check_code(*canonical_huffman(freq))
 
-
-tests.append(TestsCanonicalHuffman)
 
 # ---------------------------------------------------------------------------
 
