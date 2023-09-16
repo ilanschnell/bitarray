@@ -67,10 +67,10 @@ Return the number of bytes necessary to store n bits.
     return (__n + 7) // 8
 
 
-def test(verbosity=1, repeat=1):
-    """test(verbosity=1, repeat=1) -> TextTestResult
+def test(verbosity=1):
+    """test(verbosity=1) -> TextTestResult
 
 Run self-test, and return unittest.runner.TextTestResult object.
 """
     from bitarray import test_bitarray
-    return test_bitarray.run(verbosity=verbosity, repeat=repeat)
+    return test_bitarray.run(verbosity=verbosity)

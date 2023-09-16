@@ -5035,7 +5035,7 @@ tests.append(TestsFrozenbitarray)
 
 # ---------------------------------------------------------------------------
 
-def run(verbosity=1, repeat=1):
+def run(verbosity=1):
     import bitarray.test_util
 
     default_endian = get_default_endian()
@@ -5052,8 +5052,7 @@ def run(verbosity=1, repeat=1):
     suite = unittest.TestSuite()
     loader = unittest.TestLoader()
     for cls in tests:
-        for _ in range(repeat):
-            suite.addTest(loader.loadTestsFromTestCase(cls))
+        suite.addTest(loader.loadTestsFromTestCase(cls))
     suite.addTests(loader.loadTestsFromModule(bitarray.test_util))
 
     runner = unittest.TextTestRunner(verbosity=verbosity)
