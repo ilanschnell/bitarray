@@ -5054,7 +5054,7 @@ def run(verbosity=1, repeat=1):
     suite = unittest.TestSuite()
     for cls in all_tests:
         for _ in range(repeat):
-            suite.addTest(unittest.makeSuite(cls))
+            suite.addTest(unittest.TestLoader().loadTestsFromTestCase(cls))
 
     runner = unittest.TextTestRunner(verbosity=verbosity)
     result = runner.run(suite)
