@@ -275,8 +275,6 @@ class TestsModuleFunctions(unittest.TestCase, Util):
                      (2**62, 2**59), (2**63-8, 2**60-1)]:
             self.assertEqual(bits2bytes(n), m)
 
-tests.append(TestsModuleFunctions)
-
 # ---------------------------------------------------------------------------
 
 class CreateObjectTests(unittest.TestCase, Util):
@@ -614,8 +612,6 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = None
         self.assertRaises(ReferenceError, len, b)
 
-tests.append(CreateObjectTests)
-
 # ---------------------------------------------------------------------------
 
 class ToObjectsTests(unittest.TestCase, Util):
@@ -633,8 +629,6 @@ class ToObjectsTests(unittest.TestCase, Util):
     def test_tuple(self):
         for a in self.randombitarrays():
             self.assertEqual(tuple(a), tuple(a.tolist()))
-
-tests.append(ToObjectsTests)
 
 # ---------------------------------------------------------------------------
 
@@ -663,10 +657,9 @@ class MetaDataTests(unittest.TestCase):
             a = bitarray(n)
             self.assertEqual(len(a), n)
 
-tests.append(MetaDataTests)
-
 # ---------------------------------------------------------------------------
 
+@skipIf(not DEBUG)
 class InternalTests(unittest.TestCase, Util):
 
     # Internal functionality exposed for the purpose of testing.
@@ -840,9 +833,6 @@ class InternalTests(unittest.TestCase, Util):
             x1[i1:j1] = 1
             x2[i2:j2] = 1
             self.check_overlap(b1, b2, (x1 & x2).any())
-
-if DEBUG:
-    tests.append(InternalTests)
 
 # ---------------------------------------------------------------------------
 
@@ -1415,8 +1405,6 @@ class SliceTests(unittest.TestCase, Util):
             del lst[::step]
             self.assertEqual(a.tolist(), lst)
 
-tests.append(SliceTests)
-
 # ---------------------------------------------------------------------------
 
 class MaskedIndexTests(unittest.TestCase, Util):
@@ -1483,8 +1471,6 @@ class MaskedIndexTests(unittest.TestCase, Util):
             # `del a[mask]` is equivalent to the in-place version of
             # selecting the reverse mask `a = a[~mask]`
             self.assertEqual(a[~mask], b)
-
-tests.append(MaskedIndexTests)
 
 # ---------------------------------------------------------------------------
 
@@ -1627,8 +1613,6 @@ class SequenceIndexTests(unittest.TestCase, Util):
             self.assertRaisesMessage(TypeError, msg, a.__getitem__, item)
             self.assertRaisesMessage(TypeError, msg, a.__setitem__, item, 1)
             self.assertRaisesMessage(TypeError, msg, a.__delitem__, item)
-
-tests.append(SequenceIndexTests)
 
 # ---------------------------------------------------------------------------
 
@@ -1792,9 +1776,6 @@ class MiscTests(unittest.TestCase, Util):
         self.assertIsInstance(a, abc.MutableSequence)
         if sys.platform != "win32":
             self.assertFalse(isinstance(a, abc.Hashable))
-
-
-tests.append(MiscTests)
 
 # ---------------------------------------------------------------------------
 
@@ -1962,8 +1943,6 @@ class PickleTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
             self.check_obj(b)
 
-tests.append(PickleTests)
-
 # ---------------------------------------------------------------------------
 
 class RichCompareTests(unittest.TestCase, Util):
@@ -2060,8 +2039,6 @@ class RichCompareTests(unittest.TestCase, Util):
                     b = frozenbitarray(b)
                 self.check(a, b, aa, bb)
                 self.check(a, b, aa, bb)
-
-tests.append(RichCompareTests)
 
 # ---------------------------------------------------------------------------
 
@@ -2181,8 +2158,6 @@ class SpecialMethodTests(unittest.TestCase, Util):
         self.assertTrue(size < 200)
         a = bitarray(8000)
         self.assertTrue(sys.getsizeof(a) > 1000)
-
-tests.append(SpecialMethodTests)
 
 # ---------------------------------------------------------------------------
 
@@ -2350,8 +2325,6 @@ class SequenceMethodsTests(unittest.TestCase, Util):
                      ('1', True), ('11', True), ('111', False),
                      ('011', True), ('0001', True), ('00011', False)]:
             self.assertEqual(bitarray(s) in a, r)
-
-tests.append(SequenceMethodsTests)
 
 # ---------------------------------------------------------------------------
 
@@ -2628,8 +2601,6 @@ class NumberTests(unittest.TestCase, Util):
         a >>= 4
         self.assertEqual(a, bitarray('0000001'))
 
-tests.append(NumberTests)
-
 # ---------------------------------------------------------------------------
 
 class ExtendTests(unittest.TestCase, Util):
@@ -2839,8 +2810,6 @@ class ExtendTests(unittest.TestCase, Util):
             self.assertEqual(a.endian(), endian)
             self.assertEqual(len(a), 2 * len(s))
             self.check_obj(a)
-
-tests.append(ExtendTests)
 
 # ---------------------------------------------------------------------------
 
@@ -3121,8 +3090,6 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a, bitarray(len(a) * [val]))
             self.check_obj(a)
 
-tests.append(MethodTests)
-
 # ---------------------------------------------------------------------------
 
 class ByteReverseTests(unittest.TestCase, Util):
@@ -3204,8 +3171,6 @@ class ByteReverseTests(unittest.TestCase, Util):
             a.bytereverse()
             a = bitarray(a, self.opposite_endian(a.endian()))
             self.assertEqual(a.tobytes(), b.tobytes())
-
-tests.append(ByteReverseTests)
 
 # ---------------------------------------------------------------------------
 
@@ -3337,8 +3302,6 @@ class CountTests(unittest.TestCase, Util):
                 for v in 0, 1:
                     self.assertEqual(a.count(v, i, j, step),
                                      a[i:j:step].count(v))
-
-tests.append(CountTests)
 
 # ---------------------------------------------------------------------------
 
@@ -3519,8 +3482,6 @@ class IndexTests(unittest.TestCase, Util):
                 else:
                     self.assertEqual(a.index(b, i, j), ref)
 
-tests.append(IndexTests)
-
 # ---------------------------------------------------------------------------
 
 class SearchTests(unittest.TestCase, Util):
@@ -3609,8 +3570,6 @@ class SearchTests(unittest.TestCase, Util):
                 self.assertEqual(a.search(b), plst)
                 for p in a.itersearch(b):
                     self.assertEqual(a[p:p + len(b)], b)
-
-tests.append(SearchTests)
 
 # ---------------------------------------------------------------------------
 
@@ -3818,8 +3777,6 @@ class BytesTests(unittest.TestCase, Util):
             self.assertRaises(TypeError, a.pack, '1')
         self.assertRaises(TypeError, a.pack, [1, 3])
 
-tests.append(BytesTests)
-
 # ---------------------------------------------------------------------------
 
 class DescriptorTests(unittest.TestCase, Util):
@@ -3840,8 +3797,6 @@ class DescriptorTests(unittest.TestCase, Util):
         b = frozenbitarray(a)
         self.assertTrue(b.readonly)
         self.assertIsInstance(b.readonly, bool)
-
-tests.append(DescriptorTests)
 
 # ---------------------------------------------------------------------------
 
@@ -4145,8 +4100,6 @@ class FileTests(unittest.TestCase, Util):
             self.assertEqual(a[:8 * 994], 994 * bitarray('1000 1001'))
             self.assertEqual(a[8 * 994:].tobytes(), b'Veedon')
 
-tests.append(FileTests)
-
 # ----------------------------- Decode Tree ---------------------------------
 
 alphabet_code = {
@@ -4249,8 +4202,6 @@ class DecodeTreeTests(unittest.TestCase, Util):
         self.assertEqual(t.todict(), d)
         self.assertEqual(t.nodes(), 2047)
         self.assertTrue(sys.getsizeof(t) > 10000)
-
-tests.append(DecodeTreeTests)
 
 # ------------------ variable length encoding and decoding ------------------
 
@@ -4512,8 +4463,6 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(''.join(a.iterdecode(t)), message)
         self.check_obj(a)
 
-tests.append(PrefixCodeTests)
-
 # --------------------------- Buffer Import ---------------------------------
 
 class BufferImportTests(unittest.TestCase, Util):
@@ -4732,8 +4681,6 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertRaises(BufferError, a.__delitem__, 0)
         self.check_obj(a)
 
-tests.append(BufferImportTests)
-
 # --------------------------- Buffer Export ---------------------------------
 
 class BufferExportTests(unittest.TestCase, Util):
@@ -4834,8 +4781,6 @@ class BufferExportTests(unittest.TestCase, Util):
         v[2] = 67
         self.assertEqual(a.tobytes(), b'\x00ABC\x00')
         self.check_obj(a)
-
-tests.append(BufferExportTests)
 
 # ---------------------------------------------------------------------------
 
@@ -5031,11 +4976,10 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
             self.check_obj(g)
             self.assertEqual(g.foo, 42)
 
-tests.append(TestsFrozenbitarray)
-
 # ---------------------------------------------------------------------------
 
 def run(verbosity=1):
+    import bitarray.test_bitarray
     import bitarray.test_util
 
     default_endian = get_default_endian()
@@ -5051,8 +4995,7 @@ def run(verbosity=1):
     print('DEBUG: %s' % DEBUG)
     suite = unittest.TestSuite()
     loader = unittest.TestLoader()
-    for cls in tests:
-        suite.addTest(loader.loadTestsFromTestCase(cls))
+    suite.addTests(loader.loadTestsFromModule(bitarray.test_bitarray))
     suite.addTests(loader.loadTestsFromModule(bitarray.test_util))
 
     runner = unittest.TextTestRunner(verbosity=verbosity)
