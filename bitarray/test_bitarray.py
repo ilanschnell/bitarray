@@ -5002,6 +5002,5 @@ def run(verbosity=1):
     _set_default_endian(default_endian)
     return result
 
-
 if __name__ == '__main__':
-    run()
+    unittest.main()

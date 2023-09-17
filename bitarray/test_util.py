@@ -2316,7 +2316,6 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
             freq = {i: random() for i in range(n)}
             self.check_code(*canonical_huffman(freq))
 
-
 # ---------------------------------------------------------------------------
 
 if __name__ == '__main__':
