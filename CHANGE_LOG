@@ -2,6 +2,8 @@
 -------------------
   * improve error messages for masked assignment
   * simplify test collection
+  * added `pytest.ini` to allow running pytest with no additional arguments,
+    see #208
 
 
 2023-08-06   2.8.1:
