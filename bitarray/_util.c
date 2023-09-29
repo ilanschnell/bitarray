@@ -1056,8 +1056,7 @@ byte_length(Py_ssize_t i)
    BSI(1) = 32 must be divisible by SEGSIZE.
    SEGSIZE must also be a multiple of the word size (sizeof(uint64_t) = 8).
    The size 32 is rooted in the fact that a bitarray of 32 bytes (256 bits)
-   can be indexed with one index byte (BSI(1) = 32).  Our entire 'sc' format
-   is constructed around this. */
+   can be indexed with one index byte (BSI(1) = 32). */
 #define SEGSIZE  32
 
 /* number of segments for given number of bits */
@@ -1323,9 +1322,8 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
    Notes:
 
    - 32 index bytes take up as much space as a raw buffer of 32 bytes.
-     Hence, we start by counting up to 32 bits in the first 32 bytes of the
-     bitarray buffer in order to decide whether a raw block (type 0) should
-     be used.
+     Hence, if the bit count of the first 32 bytes of the bitarray buffer
+     is greater or equal to 32, we choose a raw block (type 0).
 
    - If a raw block is used, we check if the next three 32 byte buffer
      blocks are also suitable for raw encoding, see write_raw_block().
