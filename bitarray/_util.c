@@ -1414,6 +1414,7 @@ sc_encode(PyObject *module, PyObject *obj)
     bitarrayobject *a;
     Py_ssize_t offset = 0;      /* block offset into bitarray `a` in bytes */
     Py_ssize_t *rts;            /* running totals for 256 bit segments */
+    Py_ssize_t tp;              /* total population count of bitarray `a` */
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
@@ -1430,7 +1431,8 @@ sc_encode(PyObject *module, PyObject *obj)
     str = PyBytes_AS_STRING(out);
     len += sc_encode_header(str, a);
 
-    while (offset < Py_SIZE(a)) {
+    tp = rts[NSEG(a->nbits)];
+    while (offset < Py_SIZE(a) && rts[offset / SEGSIZE] != tp) {
         Py_ssize_t allocated;   /* size (in bytes) of output buffer */
 
         /* Make sure we have enough space in output buffer for next block.

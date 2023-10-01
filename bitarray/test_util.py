@@ -1360,11 +1360,15 @@ class SC_Tests(unittest.TestCase, Util):
             a.setall(0)
             m = 2                            # head byte and stop byte
             m += bits2bytes(n.bit_length())  # size bytes
-            # For smaller or equal to 1 << 32, we have only one type 4 block.
-            m += bool(n > 0)                 # number of blocks (head bytes)
-            m += bool(n > 256)               # number of second block heads
-            b = sc_encode(a)
-            self.assertEqual(m, len(b))
+            #print(i, n, m, sc_encode(a))
+            self.assertEqual(m, len(sc_encode(a)))
+            self.round_trip(a)
+
+            a[0] = 1
+            m += 2                  # block head byte and one index byte
+            m += 2 * bool(n > 512)  # second block head and second index byte
+            m += bool(n > 65536)    # third index byte
+            self.assertEqual(m, len(sc_encode(a)))
             self.round_trip(a)
 
         a = zeros(1 << 25, 'big')

@@ -100,7 +100,7 @@ def test_sc_stat():
     assert stat['endian'] == 'little'
     assert stat['nbits'] == 1 << 33
     blocks = stat['blocks']
-    for i, n in enumerate([64, 754, 46, 48, 2]):
+    for i, n in enumerate([64, 754, 46, 48, 1]):
         print("         block type %d  %8d" % (i, blocks[i]))
         assert blocks[i] == n
     if sys.version_info[:2] >= (3, 10):
