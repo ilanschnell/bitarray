@@ -4,6 +4,8 @@
   * simplify test collection
   * added `pytest.ini` to allow running pytest with no additional arguments,
     see #208
+  * `util.sc_encode()`: avoid writing empty blocks at end of compressed stram,
+    ie. skip encoding when total population count is reached
 
 
 2023-08-06   2.8.1:
