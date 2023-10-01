@@ -1414,7 +1414,7 @@ sc_encode(PyObject *module, PyObject *obj)
     bitarrayobject *a;
     Py_ssize_t offset = 0;      /* block offset into bitarray `a` in bytes */
     Py_ssize_t *rts;            /* running totals for 256 bit segments */
-    Py_ssize_t tp;              /* total population count of bitarray `a` */
+    Py_ssize_t t;               /* total population count of bitarray `a` */
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
@@ -1431,15 +1431,18 @@ sc_encode(PyObject *module, PyObject *obj)
     str = PyBytes_AS_STRING(out);
     len += sc_encode_header(str, a);
 
-    tp = rts[NSEG(a->nbits)];
-    while (offset < Py_SIZE(a) && rts[offset / SEGSIZE] != tp) {
+    t = rts[NSEG(a->nbits)];
+    /* encode blocks as long as we haven't reached the end of the bitarray
+       and haven't reached the total population count yet */
+    while (offset < Py_SIZE(a) && rts[offset / SEGSIZE] != t) {
         Py_ssize_t allocated;   /* size (in bytes) of output buffer */
 
         /* Make sure we have enough space in output buffer for next block.
            The largest block possible is a type 4 block with 255 indices.
-           It's size is: 2 header bytes + 4 * 255 index bytes */
+           It's size is: 2 header bytes + 4 * 255 index bytes.
+           Plus, we also may have the stop byte. */
         allocated = PyBytes_GET_SIZE(out);
-        if (allocated < len + 2 + 4 * 255) {  /* increase allocation */
+        if (allocated < len + 2 + 4 * 255 + 1) {  /* increase allocation */
             if (_PyBytes_Resize(&out, allocated + 32768) < 0)
                 return NULL;
             str = PyBytes_AS_STRING(out);
