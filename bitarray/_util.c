@@ -1502,7 +1502,7 @@ sc_read_raw(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int k)
     char *buff = a->ob_item + offset;
     Py_ssize_t i;
 
-    assert(0 < k && k <= 128);
+    assert(1 <= k && k <= 128);
     if (offset + k > Py_SIZE(a)) {
         PyErr_Format(PyExc_ValueError, "decode error (raw): %zd + %d > %zd",
                      offset, k, Py_SIZE(a));
@@ -1565,7 +1565,7 @@ sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
     if (0xc2 <= head && head <= 0xc4) {    /* type 2 .. 4 - 0xc2 .. 0xc4 */
         int k;
 
-        if ((k = next_char(iter)) < 0)
+        if ((k = next_char(iter)) < 0)     /* index count byte */
             return -1;
 
         return sc_read_sparse(a, offset, iter, head - 0xc0, k);
