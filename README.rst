@@ -63,7 +63,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 2.8.1
+    bitarray version: 2.8.2
     sys.version: 3.11.0 (main, Oct 25 2022) [Clang 14.0.4]
     sys.prefix: /Users/ilan/Mini3/envs/py311
     pointer size: 64 bit
@@ -411,7 +411,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 2.8.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.8.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -701,7 +701,7 @@ Functions defined in the `bitarray` module:
    New in version 1.3.
 
 
-``test(verbosity=1, repeat=1)`` -> TextTestResult
+``test(verbosity=1)`` -> TextTestResult
    Run self-test, and return unittest.runner.TextTestResult object.
 
 

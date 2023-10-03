@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.8.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.8.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -291,7 +291,7 @@ Functions defined in the `bitarray` module:
    New in version 1.3.
 
 
-``test(verbosity=1, repeat=1)`` -> TextTestResult
+``test(verbosity=1)`` -> TextTestResult
    Run self-test, and return unittest.runner.TextTestResult object.
 
 

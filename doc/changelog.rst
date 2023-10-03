@@ -1,6 +1,17 @@
 Change log
 ==========
 
+**2.8.2** (2023-10-03):
+
+* update cibuildwheel to 2.16.1 in order to provide cp312 wheels on PyPI
+* improve error messages for masked assignment
+* simplify test collection
+* added ``pytest.ini`` to allow running pytest with no additional arguments,
+  see `#208 <https://github.com/ilanschnell/bitarray/issues/208>`__
+* ``util.sc_encode()``: avoid writing empty blocks at end of compressed
+  stream, ie. skip encoding when total population count is reached
+
+
 **2.8.1** (2023-08-06):
 
 * use reconstructor function for pickling, see `#207 <https://github.com/ilanschnell/bitarray/issues/207>`__
