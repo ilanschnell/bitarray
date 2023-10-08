@@ -1368,7 +1368,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
     }
 
     for (n = 1; n < 4; n++) {
-        Py_ssize_t next_count, size_a, size_b;
+        Py_ssize_t next_count, blocks, size_a, size_b;
 
         /* population for next block type n+1 */
         next_count = sc_count(a, rts, offset, n + 1);
@@ -1377,8 +1377,8 @@ sc_encode_block(char *str, Py_ssize_t *len,
             break;
 
         /* encoded size of (up to 256) blocks of type n */
-        size_a = ((n == 1 ? 1 : 2) * Py_MIN(256, (nbytes - 1) / BSI(n) + 1) +
-                  n * next_count);
+        blocks = Py_MIN(256, (nbytes - 1) / BSI(n) + 1);
+        size_a = (n == 1 ? 1 : 2) * blocks + n * next_count;
         /* encoded size of (a single) block of type n+1 */
         size_b = 2 + (n + 1) * next_count;
 
