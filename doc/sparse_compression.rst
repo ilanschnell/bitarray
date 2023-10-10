@@ -17,23 +17,26 @@ The lower the population count, the more efficient the compression will be:
     >>> assert sc_decode(blob) == a
 
 
-We binary blob consists of a header which encodes the bit endianness and the
+The binary blob consists of a header which encodes the bit endianness and the
 total length of the bitarray, i.e. the number of bits.  The header is followed
-by an arbitrary number of blocks and a final stop byte.  There are 5 block
-types.  Each block starts with a block header encoding the block type and
-specifying the size of the block data that follows.
+by an arbitrary number of blocks.  There are 5 block types.  Each block starts
+with a block header encoding the block type and specifying the size of the
+block data that follows.
 
 .. code-block::
 
    block    head         count    count   bytes             block size
    type     byte                  byte    per index   (encoded)     (decoded)
    --------------------------------------------------------------------------
-   stop     0x00                                            1
-   type 0   0x01..0x80   1..128   no      raw          2..129          1..128
+   type 0   0x00..0x80   0..128   no      raw          1..129          0..128
    type 1   0xa0..0xbf    0..31   no       1            1..32              32
    type 2   0xc2         0..255   yes      2           2..512           8,192
    type 3   0xc3         0..255   yes      3           2..767       2,097,152
    type 4   0xc4         0..255   yes      4          2..1022     536,870,912
+
+
+As the decoder stops whenever the decoded block size is 0,
+the head byte 0x00 (type 0 with no raw bytes) may be considered the stop byte.
 
 
 Speed

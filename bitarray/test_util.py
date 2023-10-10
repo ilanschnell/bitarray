@@ -1349,9 +1349,12 @@ class SC_Tests(unittest.TestCase, Util):
 
     def round_trip(self, a):
         c = a.copy()
-        b = sc_decode(sc_encode(a))
+        i = iter(sc_encode(a))
+        b = sc_decode(i)
         self.assertTrue(a == b == c)
         self.assertTrue(a.endian() == b.endian() == c.endian())
+        if sys.version_info[0] == 3:
+            self.assertEqual(bytes(i), b'')
 
     def test_encode_zeros(self):
         for i in range(18):
