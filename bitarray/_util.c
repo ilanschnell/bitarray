@@ -1496,17 +1496,18 @@ sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
     return 0;
 }
 
-/* Read k bytes from iter and set elements in bitarray.  Return the size of
-   the offset increment in bytes (i.e. just k), or -1 on failure. */
+/* Read k bytes from iter and set elements in bitarray.
+   Return the size of offset increment in bytes, or -1 on failure. */
 static Py_ssize_t
 sc_read_raw(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int k)
 {
     char *buff = a->ob_item + offset;
     Py_ssize_t i;
 
-    if (k == 0)                 /* stop byte */
+    if (k == 0)  /* skip range check, as offset may be out of buffer */
         return 0;
 
+    assert(1 <= k && k <= 128);
     if (offset + k > Py_SIZE(a)) {
         PyErr_Format(PyExc_ValueError, "decode error (raw): %zd + %d > %zd",
                      offset, k, Py_SIZE(a));
