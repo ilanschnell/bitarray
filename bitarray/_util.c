@@ -1501,9 +1501,6 @@ sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
 static Py_ssize_t
 sc_read_raw(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int k)
 {
-    char *buff = a->ob_item + offset;
-    Py_ssize_t i;
-
     if (k == 0)  /* skip range check, as offset may be out of buffer */
         return 0;
 
@@ -1513,14 +1510,17 @@ sc_read_raw(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int k)
                      offset, k, Py_SIZE(a));
         return -1;
     }
-    for (i = 0; i < k; i++) {
-        int c;
+    else {
+        char *buff = a->ob_item + offset;
+        int i, c;
 
-        if ((c = next_char(iter)) < 0)
-            return -1;
-        buff[i] = (char) c;
+        for (i = 0; i < k; i++) {
+            if ((c = next_char(iter)) < 0)
+                return -1;
+            buff[i] = (char) c;
+        }
+        return k;
     }
-    return k;
 }
 
 /* Read n * k bytes from iter and set elements in bitarray.
