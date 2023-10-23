@@ -12,7 +12,7 @@ import tempfile
 import unittest
 from array import array
 from string import hexdigits
-from random import choice, randrange, randint, random
+from random import choice, getrandbits, randrange, randint, random
 from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
@@ -293,7 +293,7 @@ class TestsRIndex(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            v = randrange(2)
+            v = getrandbits(1)
             try:
                 i = rindex(a, v)
             except ValueError:
@@ -324,7 +324,7 @@ class TestsRIndex(unittest.TestCase, Util):
     def test_many_set(self):
         for _ in range(10):
             n = randint(1, 10000)
-            v = randrange(2)
+            v = getrandbits(1)
             a = bitarray(n)
             a.setall(not v)
             lst = [randrange(n) for _ in range(100)]
@@ -529,7 +529,7 @@ class TestsCount_N(unittest.TestCase, Util):
         for _ in range(100):
             N = randint(100000, 250000)
             a = bitarray(N)
-            v = randrange(2)
+            v = getrandbits(1)
             a.setall(not v)
             for _ in range(randrange(100)):
                 a[randrange(N)] = v

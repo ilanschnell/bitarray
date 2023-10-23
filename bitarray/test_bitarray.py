@@ -12,7 +12,7 @@ import platform
 import unittest
 import shutil
 import tempfile
-from random import randrange, randint, shuffle
+from random import getrandbits, randrange, randint, shuffle
 
 # imports needed inside tests
 import array
@@ -84,7 +84,7 @@ class Util(object):
 
     @staticmethod
     def random_endian():
-        return ['little', 'big'][randrange(2)]
+        return ['little', 'big'][getrandbits(1)]
 
     def randombitarrays(self, start=0):
         for n in range(start, 130 if DEBUG else 26):
@@ -97,7 +97,7 @@ class Util(object):
 
     @staticmethod
     def rndsliceidx(length):
-        if randrange(2):
+        if getrandbits(1):
             return None
         else:
             return randint(-length - 5, length + 5)
@@ -388,7 +388,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, bitarray, [0, 1, None])
 
         for n in range(50):
-            lst = [bool(randrange(2)) for d in range(n)]
+            lst = [bool(getrandbits(1)) for d in range(n)]
             a = bitarray(lst)
             self.assertEqual(a.tolist(), lst)
             self.check_obj(a)
@@ -403,14 +403,14 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, bitarray, (0, 1, None))
 
         for n in range(50):
-            lst = [bool(randrange(2)) for d in range(n)]
+            lst = [bool(getrandbits(1)) for d in range(n)]
             a = bitarray(tuple(lst))
             self.assertEqual(a.tolist(), lst)
             self.check_obj(a)
 
     def test_iter1(self):
         for n in range(50):
-            lst = [bool(randrange(2)) for d in range(n)]
+            lst = [bool(getrandbits(1)) for d in range(n)]
             a = bitarray(iter(lst))
             self.assertEqual(a.tolist(), lst)
             self.check_obj(a)
@@ -442,7 +442,7 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.check_obj(a)
 
         for n in range(50):
-            lst = [bool(randrange(2)) for d in range(n)]
+            lst = [bool(getrandbits(1)) for d in range(n)]
             s = ''.join([['0', '1'][x] for x in lst])
             a = bitarray(s)
             self.assertEqual(a.tolist(), lst)
@@ -926,7 +926,7 @@ class SliceTests(unittest.TestCase, Util):
         for a in self.randombitarrays(start=1):
             i = randrange(len(a))
             aa = a.tolist()
-            val = bool(randrange(2))
+            val = bool(getrandbits(1))
             a[i] = val
             aa[i] = val
             self.assertEqual(a.tolist(), aa)
@@ -1249,7 +1249,7 @@ class SliceTests(unittest.TestCase, Util):
         for step in range(-N - 1, N):
             if step == 0:
                 continue
-            v = randrange(2)
+            v = getrandbits(1)
             a.setall(not v)
             a[::step] = v
 
@@ -1277,7 +1277,7 @@ class SliceTests(unittest.TestCase, Util):
             aa = a.tolist()
             step = self.rndsliceidx(n) or None
             s = slice(self.rndsliceidx(n), self.rndsliceidx(n), step)
-            v = randrange(2)
+            v = getrandbits(1)
             a[s] = v
             aa[s] = self.calc_slicelength(s, n) * [v]
             self.assertEqual(a.tolist(), aa)
@@ -2031,11 +2031,11 @@ class RichCompareTests(unittest.TestCase, Util):
     def test_random(self):
         for a in self.randombitarrays():
             aa = a.tolist()
-            if randrange(2):
+            if getrandbits(1):
                 a = frozenbitarray(a)
             for b in self.randombitarrays():
                 bb = b.tolist()
-                if randrange(2):
+                if getrandbits(1):
                     b = frozenbitarray(b)
                 self.check(a, b, aa, bb)
                 self.check(a, b, aa, bb)
@@ -3085,7 +3085,7 @@ class MethodTests(unittest.TestCase, Util):
 
     def test_setall_random(self):
         for a in self.randombitarrays():
-            val = randrange(2)
+            val = getrandbits(1)
             a.setall(val)
             self.assertEqual(a, bitarray(len(a) * [val]))
             self.check_obj(a)
@@ -3440,7 +3440,7 @@ class IndexTests(unittest.TestCase, Util):
     def test_random_2(self):
         for n in range(1, 70):
             a = bitarray(n)
-            i = randrange(2)
+            i = getrandbits(1)
             a.setall(i)
             for _ in range(randint(1, 4)):
                 a.invert(randint(0, n - 1))
