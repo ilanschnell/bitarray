@@ -52,11 +52,11 @@ class BloomFilter(object):
         """
         h = hashlib.new('md5')
         h.update(str(key).encode())
-        x = int(h.hexdigest(), 16)
-        for _unused in range(self.k):
+        x = int.from_bytes(h.digest())
+        for _ in range(self.k):
             if x < 1024 * self.m:
                 h.update(b'x')
-                x = int(h.hexdigest(), 16)
+                x = int.from_bytes(h.digest())
             x, y = divmod(x, self.m)
             yield y
 
