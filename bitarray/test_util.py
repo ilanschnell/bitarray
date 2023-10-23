@@ -12,7 +12,7 @@ import tempfile
 import unittest
 from array import array
 from string import hexdigits
-from random import choice, randint, random
+from random import choice, randrange, randint, random
 from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
@@ -293,7 +293,7 @@ class TestsRIndex(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            v = randint(0, 1)
+            v = randrange(2)
             try:
                 i = rindex(a, v)
             except ValueError:
@@ -308,7 +308,7 @@ class TestsRIndex(unittest.TestCase, Util):
     def test_random_start_stop(self):
         n = 2000
         a = zeros(n)
-        indices = [randint(0, n - 1) for _ in range(100)]
+        indices = [randrange(n) for _ in range(100)]
         a[indices] = 1
         for _ in range(100):
             start = randint(0, n)
@@ -324,10 +324,10 @@ class TestsRIndex(unittest.TestCase, Util):
     def test_many_set(self):
         for _ in range(10):
             n = randint(1, 10000)
-            v = randint(0, 1)
+            v = randrange(2)
             a = bitarray(n)
             a.setall(not v)
-            lst = [randint(0, n - 1) for _ in range(100)]
+            lst = [randrange(n) for _ in range(100)]
             a[lst] = v
             self.assertEqual(rindex(a, v), max(lst))
 
@@ -336,7 +336,7 @@ class TestsRIndex(unittest.TestCase, Util):
             N = randint(1, 10000)
             a = bitarray(N)
             a.setall(0)
-            a[randint(0, N - 1)] = 1
+            a[randrange(N)] = 1
             self.assertEqual(rindex(a), a.index(1))
 
 # ---------------------------------------------------------------------------
@@ -397,7 +397,7 @@ class TestsStrip(unittest.TestCase, Util):
             n = randint(1, 10000)
             a = bitarray(n)
             a.setall(0)
-            a[randint(0, n - 1)] = 1
+            a[randrange(n)] = 1
             self.assertEqual(strip(a, 'both'), bitarray('1'))
             self.assertEqual(len(a), n)
 
@@ -508,7 +508,7 @@ class TestsCount_N(unittest.TestCase, Util):
         self.assertRaises(ValueError, count_n, a, 1)
         for _ in range(20):
             a.setall(0)
-            i = randint(0, n - 1)
+            i = randrange(n)
             a[i] = 1
             self.assertEqual(count_n(a, 1), i + 1)
             self.assertRaises(ValueError, count_n, a, 2)
@@ -529,10 +529,10 @@ class TestsCount_N(unittest.TestCase, Util):
         for _ in range(100):
             N = randint(100000, 250000)
             a = bitarray(N)
-            v = randint(0, 1)
+            v = randrange(2)
             a.setall(not v)
-            for _ in range(randint(0, 100)):
-                a[randint(0, N - 1)] = v
+            for _ in range(randrange(100)):
+                a[randrange(N)] = v
             tc = a.count(v)      # total count
             i = count_n(a, tc, v)
             self.check_result(a, tc, i, v)
@@ -613,7 +613,7 @@ class TestsBitwiseCount(unittest.TestCase, Util):
 
     def test_random(self):
         for _ in range(100):
-            n = randint(0, 1000)
+            n = randrange(1000)
             a = urandom(n, self.random_endian())
             b = urandom(n, a.endian())
             self.assertEqual(count_and(a, b), (a & b).count())
@@ -690,7 +690,7 @@ class TestsBitwiseAny(unittest.TestCase, Util):
         for n in range(1, 300):
             a = zeros(n)
             b = urandom(n)
-            i = randint(0, n - 1)
+            i = randrange(n)
             a[i] = 1
             self.assertEqual(b[i], any_and(a, b))
 
@@ -735,7 +735,7 @@ class TestsSubset(unittest.TestCase, Util):
         for a in self.randombitarrays(start=1):
             b = a.copy()
             # we set one random bit in b to 1, so a is always a subset of b
-            b[randint(0, len(a) - 1)] == 1
+            b[randrange(len(a))] == 1
             self.check(a, b, True)
             # but b is only a subset when they are equal
             self.check(b, a, a == b)
@@ -1326,7 +1326,7 @@ class SC_Tests(unittest.TestCase, Util):
         # ensure random input doesn't crash the decoder
         cnt = 0
         for _ in range(5000):
-            n = randint(0, 20)
+            n = randrange(20)
             b = b'\x02\x00\x04' + os.urandom(n)
             try:
                 a = sc_decode(b)
@@ -1382,7 +1382,7 @@ class SC_Tests(unittest.TestCase, Util):
 
     def test_encode_ones(self):
         for _ in range(50):
-            n = randint(0, 10000)
+            n = randrange(10000)
             a = bitarray(n)
             a.setall(1)
             m = 2                            # head byte and stop byte
@@ -1394,7 +1394,7 @@ class SC_Tests(unittest.TestCase, Util):
 
     def test_random(self):
         for _ in range(10):
-            n = randint(0, 100000)
+            n = randrange(100000)
             endian = self.random_endian()
             a = bitarray(n, endian)
             a.setall(1)
@@ -1518,7 +1518,7 @@ class VLFTests(unittest.TestCase, Util):
         for bits in '', '0', '1', '', '11', '0000 1', '0011 01':
             self.assertEqual(vl_decode(stream), bitarray(bits))
 
-        arrays = [urandom(randint(0, 30)) for _ in range(1000)]
+        arrays = [urandom(randrange(30)) for _ in range(1000)]
         stream = iter(b''.join(vl_encode(a) for a in arrays))
         for a in arrays:
             self.assertEqual(vl_decode(stream), a)
@@ -1746,9 +1746,9 @@ class TestsIntegerization(unittest.TestCase, Util):
                 self.assertEqual(i.bit_length(), len(a))
             # add a few trailing / leading zeros to bitarray
             if endian == 'big':
-                a = zeros(randint(0, 3), endian) + a
+                a = zeros(randrange(4), endian) + a
             else:
-                a = a + zeros(randint(0, 3), endian)
+                a = a + zeros(randrange(4), endian)
             self.assertEqual(a.endian(), endian)
             self.assertEqual(ba2int(a), i)
 
@@ -2053,7 +2053,7 @@ class TestsHuffman(unittest.TestCase):
         self.check_tree(code)
 
     def test_random_list(self):
-        plain = [randint(0, 100) for _ in range(500)]
+        plain = [randrange(100) for _ in range(500)]
         code = huffman_code(Counter(plain))
         a = bitarray()
         a.encode(code, plain)
