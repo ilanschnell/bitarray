@@ -34,7 +34,7 @@ def russellrao(u, v):
     return (n - count_and(u, v)) / n
 
 def sokalmichener(u, v):
-    x = float(count_xor(u, v))
+    x = count_xor(u, v)
     return 2 * x / (len(u) + x)
 
 def sokalsneath(u, v):
