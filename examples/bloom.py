@@ -15,9 +15,9 @@ class BloomFilter(object):
         assert 0 < p < 1
         self.n = n
         # number of hash functions
-        self.k = int(ceil(-log2(p)))
+        self.k = ceil(-log2(p))
         # size of array
-        self.m = int(ceil(-n * log2(p) / log(2)))
+        self.m = ceil(-n * log2(p) / log(2))
         self.array = bitarray(self.m)
         self.array.setall(0)
 
@@ -28,7 +28,7 @@ class BloomFilter(object):
         different from the given `p`, because the integer value of `k`
         is being used.
         """
-        return pow(1.0 - exp(-float(self.k) * self.n / self.m), self.k)
+        return pow(1 - exp(-self.k * self.n / self.m), self.k)
 
     def approx_items(self):
         """
@@ -37,7 +37,7 @@ class BloomFilter(object):
         count = self.array.count()
         if count == 0:
             return 0.0
-        return -float(self.m) / self.k * log(1.0 - float(count) / self.m)
+        return -self.m / self.k * log(1 - count / self.m)
 
     def add(self, key):
         self.array[list(self._hashes(key))] = 1
