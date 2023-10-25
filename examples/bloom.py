@@ -50,15 +50,16 @@ class BloomFilter(object):
         generate k different hashes, each of which maps a key to one of
         the m array positions with a uniform random distribution
         """
+        nbits = self.m.bit_length()
         h = hashlib.new('md5')
         h.update(str(key).encode())
         x = int.from_bytes(h.digest())
         for _ in range(self.k):
-            if x < 1024 * self.m:
+            if x.bit_length() < nbits + 10:
                 h.update(b'x')
                 x = int.from_bytes(h.digest())
-            x, y = divmod(x, self.m)
-            yield y
+            yield x % self.m
+            x >>= nbits
 
 
 def test_bloom(n, p):
