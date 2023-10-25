@@ -12,33 +12,33 @@ import scipy.spatial.distance as distance  # type: ignore
 
 
 def dice(u, v):
-    x = float(count_xor(u, v))
-    return x / (2.0 * count_and(u, v) + x)
+    x = count_xor(u, v)
+    return x / (2 * count_and(u, v) + x)
 
 def hamming(u, v):
-    return float(count_xor(u, v)) / len(u)
+    return count_xor(u, v) / len(u)
 
 def jaccard(u, v):
-    x = float(count_xor(u, v))
+    x = count_xor(u, v)
     return x / (count_and(u, v) + x)
 
 def kulczynski1(u, v):
-    return float(count_and(u, v)) / count_xor(u, v)
+    return count_and(u, v) / count_xor(u, v)
 
 def rogerstanimoto(u, v):
-    x = float(count_xor(u, v))
-    return 2.0 * x / (len(u) + x)
+    x = count_xor(u, v)
+    return 2 * x / (len(u) + x)
 
 def russellrao(u, v):
-    n = float(len(u))
+    n = len(u)
     return (n - count_and(u, v)) / n
 
 def sokalmichener(u, v):
     x = float(count_xor(u, v))
-    return 2.0 * x / (len(u) + x)
+    return 2 * x / (len(u) + x)
 
 def sokalsneath(u, v):
-    R = 2.0 * count_xor(u, v)
+    R = 2 * count_xor(u, v)
     return R / (count_and(u, v) + R)
 
 def yule(u, v):
@@ -47,7 +47,7 @@ def yule(u, v):
     if half_R == 0:
         return 0.0
     else:
-        return 2.0 * half_R / (ntt * nff + half_R)
+        return 2 * half_R / (ntt * nff + half_R)
 
 
 def test(n):
