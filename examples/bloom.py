@@ -52,13 +52,13 @@ class BloomFilter(object):
         """
         n = 1 << self.m.bit_length()
         h = hashlib.new('sha1')
-        h.update(str(key).encode())
-        x = int.from_bytes(h.digest())
+        h.update(hash(key).to_bytes(8, 'little', signed=True))
+        x = int.from_bytes(h.digest(), 'little')
         i = 0
         while i < self.k:
             if x < n:
                 h.update(b'X')
-                x = int.from_bytes(h.digest())
+                x = int.from_bytes(h.digest(), 'little')
             x, y = divmod(x, n)
             if y < self.m:
                 yield y
