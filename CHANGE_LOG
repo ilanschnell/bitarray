@@ -1,6 +1,7 @@
 2023-XX-XX   2.8.3:
 -------------------
   * simplify implementation of `sc_encode()` and `sc_decode()`
+  * improve hash functions in Bloom filter example
 
 
 2023-10-03   2.8.2:
