@@ -75,6 +75,7 @@ def test_bloom(n, p):
     for i in range(n):
         b.add(i)
         assert i in b
+    print("population: %.2f%%" % (100.0 * b.array.count() / b.m))
     print("approx_items(): %.2f" % b.approx_items())
     print("calculate_p(): %.3f%%" % (100.0 * b.calculate_p()))
 
