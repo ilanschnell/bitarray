@@ -34,10 +34,10 @@ class BloomFilter(object):
         """
         Return the approximate number of items in the Bloom filter.
         """
-        count = self.array.count()
-        if count == 0:
+        x = self.array.count()
+        if x == 0:
             return 0.0
-        return -self.m / self.k * log(1 - count / self.m)
+        return -self.m / self.k * log(1 - x / self.m)
 
     def add(self, key):
         self.array[list(self._hashes(key))] = 1
@@ -51,7 +51,7 @@ class BloomFilter(object):
         the m array positions with a uniform random distribution
         """
         n = 1 << self.m.bit_length()
-        h = hashlib.new('md5')
+        h = hashlib.new('sha1')
         h.update(str(key).encode())
         x = int.from_bytes(h.digest())
         i = 0
