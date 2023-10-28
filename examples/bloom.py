@@ -52,7 +52,7 @@ class BloomFilter(object):
         """
         n = 1 << self.m.bit_length()
         h = hashlib.new('sha1')
-        h.update(hash(key).to_bytes(8, 'little', signed=True))
+        h.update(str(key).encode())
         x = int.from_bytes(h.digest(), 'little')
         i = 0
         while i < self.k:
