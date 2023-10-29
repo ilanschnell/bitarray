@@ -4,7 +4,7 @@ This is essentially a Python implementation of copy_n() with output of the
 different stages of the bitarray we copy into.
 For more details, see also: bitarray/copy_n.txt
 """
-from random import randint
+from random import getrandbits, randint
 from io import StringIO
 
 from bitarray import bitarray, bits2bytes
@@ -158,7 +158,7 @@ def copy_n(self, a, other, b, n):
 def test_copy_n():
 
     def random_endian():
-        return ['little', 'big'][randint(0, 1)]
+        return ['little', 'big'][getrandbits(1)]
 
     for N in range(1000):
         M = randint(0, 5 + 2 * N)

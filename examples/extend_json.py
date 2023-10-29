@@ -36,10 +36,10 @@ class JSONDecoder(json.JSONDecoder):
 
 
 def test():
-    from random import randint
+    from random import getrandbits
     from bitarray.util import urandom
 
-    a = [urandom(n * n, endian=['little', 'big'][randint(0, 1)])
+    a = [urandom(n * n, endian=['little', 'big'][getrandbits(1)])
          for n in range(12)]
     a.append({'key1': bitarray('010'),
               'key2': 'value2',

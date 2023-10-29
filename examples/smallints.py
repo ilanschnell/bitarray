@@ -27,14 +27,14 @@ class SmallIntArray(object):
 
 
 if __name__ == '__main__':
-    from random import randint
+    from random import randrange
 
     # define array with 1000 integers, each represented by 5 bits
     a = SmallIntArray(1000, 5)
 
     b = [] # store values, for assertion below
     for i in range(1000):
-        v = randint(0, 31)
+        v = randrange(32)
         b.append(v)
         a[i] = v
 

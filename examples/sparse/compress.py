@@ -8,7 +8,7 @@ import sys
 from time import perf_counter
 from collections import Counter
 from itertools import islice
-from random import random, randint
+from random import random, randrange
 
 from bitarray import bitarray
 from bitarray.util import (
@@ -124,12 +124,13 @@ def random_array(n, p=0.5):
 Generate random bitarray of length n.
 Each bit has a probability p of being 1.
 """
-    if p < 0.05:  # XXX what happens for small N?  N=0 crashes right now.
+    if p < 0.05:
+        # XXX what happens for small N?  N=0 crashes right now.
         # when the probability p is small, it is faster to randomly
         # set p * n elements
         a = zeros(n)
         for _ in range(int(p * n)):
-            a[randint(0, n - 1)] = 1
+            a[randrange(n)] = 1
         return a
 
     return bitarray((random() < p for _ in range(n)))

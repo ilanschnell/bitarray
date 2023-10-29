@@ -1,5 +1,5 @@
 import sys
-from random import randint
+from random import getrandbits, randint, randrange
 import unittest
 
 try:
@@ -81,8 +81,8 @@ class TestsSparse(unittest.TestCase, Util):
         for a in self.randombitarrays(start=1):
             s = BitArray(a)
             for _ in range(10):
-                i = randint(0, len(s) - 1)
-                v = randint(0, 1)
+                i = randrange(len(s))
+                v = getrandbits(1)
                 s[i] = a[i] = v
                 self.check(s, a)
 
@@ -92,14 +92,14 @@ class TestsSparse(unittest.TestCase, Util):
             for _ in range(10):
                 i = randint(0, len(s))
                 j = randint(0, len(s))
-                v = randint(0, 1)
+                v = getrandbits(1)
                 s[i:j] = a[i:j] = v
                 self.check(s, a)
 
     def test_delitem_index(self):
         for a in self.randombitarrays(start=1):
             s = BitArray(a)
-            i = randint(0, len(s) - 1)
+            i = randrange(len(s))
             del s[i]
             del a[i]
             self.check(s, a)
@@ -150,7 +150,7 @@ class TestsSparse(unittest.TestCase, Util):
         for a in self.randombitarrays():
             s = BitArray(a)
             i = randint(-2, len(s) + 2)
-            v = randint(0, 1)
+            v = getrandbits(1)
             s.insert(i, v)
             a.insert(i, v)
             self.check(s, a)
@@ -165,14 +165,14 @@ class TestsSparse(unittest.TestCase, Util):
     def test_pop(self):
         for a in self.randombitarrays(start=1):
             s = BitArray(a)
-            i = randint(-len(a), len(a) - 1)
+            i = randrange(-len(a), len(a))
             self.assertEqual(s.pop(i), a.pop(i))
             self.check(s, a)
 
     def test_remove(self):
         for a in self.randombitarrays():
             s = BitArray(a)
-            v = randint(0, 1)
+            v = getrandbits(1)
             error = 0
             try:
                 s.remove(v)

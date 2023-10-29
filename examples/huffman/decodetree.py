@@ -1,4 +1,4 @@
-from random import random, randint
+from random import random, randrange
 from time import perf_counter
 
 from bitarray import bitarray, decodetree
@@ -17,7 +17,7 @@ tree = decodetree(code)
 print('decodetree(code):  %9.6f ms' % (1000.0 * (perf_counter() - t0)))
 
 print(tree.nodes())
-plain = [randint(0, N - 1) for _ in range(100)]
+plain = [randrange(N) for _ in range(100)]
 
 a = bitarray()
 a.encode(code, plain)
