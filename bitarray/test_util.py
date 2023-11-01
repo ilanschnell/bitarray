@@ -1755,7 +1755,7 @@ class TestsIntegerization(unittest.TestCase, Util):
     def test_many(self):
         for i in range(20):
             self.check_round_trip(i)
-            self.check_round_trip(randint(0, 10 ** randint(3, 300)))
+            self.check_round_trip(randrange(10 ** randint(3, 300)))
 
     @staticmethod
     def twos_complement(i, num_bits):

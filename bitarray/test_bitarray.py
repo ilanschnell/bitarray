@@ -691,7 +691,7 @@ class InternalTests(unittest.TestCase, Util):
         for N in range(100):
             a = randint(0, N)
             b = randint(a, N)
-            n = randint(0, 7)
+            n = randrange(8)
             x = urandom(8 * N, self.random_endian())
             y = x.copy()
             x._shift_r8(a, b, n)
@@ -1153,7 +1153,7 @@ class SliceTests(unittest.TestCase, Util):
     def test_setslice_bitarray_random_same_length(self):
         for endian in 'little', 'big':
             for _ in range(100):
-                n = randint(0, 200)
+                n = randrange(200)
                 a = urandom(n, endian)
                 lst_a = a.tolist()
                 b = urandom(randint(0, n), self.random_endian())
@@ -1171,7 +1171,7 @@ class SliceTests(unittest.TestCase, Util):
 
     def test_setslice_bitarray_random_step_1(self):
         for _ in range(50):
-            n = randint(0, 300)
+            n = randrange(300)
             a = urandom(n, self.random_endian())
             lst_a = a.tolist()
             b = urandom(randint(0, 100), self.random_endian())
@@ -2854,7 +2854,7 @@ class MethodTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             aa = a.tolist()
             for _ in range(20):
-                item = randint(0, 1)
+                item = getrandbits(1)
                 pos = randint(-len(a) - 2, len(a) + 2)
                 a.insert(pos, item)
                 aa.insert(pos, item)
@@ -3049,7 +3049,7 @@ class MethodTests(unittest.TestCase, Util):
 
     def test_pop_random_2(self):
         for a in self.randombitarrays(start=1):
-            n = randint(-len(a), len(a)-1)
+            n = randrange(-len(a), len(a))
             aa = a.tolist()
             x = a.pop(n)
             self.assertBitEqual(x, aa[n])
@@ -3212,7 +3212,7 @@ class CountTests(unittest.TestCase, Util):
     def test_sparse(self):
         N = 65536
         a = zeros(N)
-        indices = set(randint(0, N - 1) for _ in range(256))
+        indices = set(randrange(N) for _ in range(256))
         a[list(indices)] = 1
         self.assertEqual(a.count(1), len(indices))
         self.assertEqual(a.count(0), N - len(indices))
@@ -3443,7 +3443,7 @@ class IndexTests(unittest.TestCase, Util):
             i = getrandbits(1)
             a.setall(i)
             for _ in range(randint(1, 4)):
-                a.invert(randint(0, n - 1))
+                a.invert(randrange(n))
             aa = a.tolist()
             for _ in range(10):
                 start = randint(-10, n + 10)
