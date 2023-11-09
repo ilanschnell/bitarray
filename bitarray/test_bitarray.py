@@ -4875,6 +4875,15 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.__ilshift__, 1)
         self.check_obj(a)
 
+    def test_copy(self):
+        a = frozenbitarray('101')
+        # not only .copy() creates new frozenbitarray which are read-only
+        for b in [a, a.copy(), 3 * a, 5 * a, a & bitarray('110'),
+                  a + bitarray(8*'1'), a[:], a[[0, 1]], a[bitarray('011')]]:
+            self.assertIsType(b, 'frozenbitarray')
+            self.assertTrue(b.readonly)
+            self.check_obj(b)
+
     def test_freeze(self):
         # not so much a test for frozenbitarray, but how it is initialized
         a = bitarray(78)
