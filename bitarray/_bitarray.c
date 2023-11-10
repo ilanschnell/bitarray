@@ -784,31 +784,6 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     return -1;
 }
 
-/* set the readonly member to 0 or 1 depending on whether self in an instance
-   of the frozenbitarray class - on error, return -1 and set an exception. */
-static int
-set_readonly(bitarrayobject *self)
-{
-    static PyObject *frozen = NULL;  /* frozenbitarray class object */
-    int is_frozen;
-
-    if (frozen == NULL) {
-        PyObject *bitarray_module;
-
-        if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
-            return -1;
-        frozen = PyObject_GetAttrString(bitarray_module, "frozenbitarray");
-        Py_DECREF(bitarray_module);
-        if (frozen == NULL)
-            return -1;
-    }
-    if ((is_frozen = PyObject_IsInstance((PyObject *) self, frozen)) < 0)
-        return -1;
-
-    self->readonly = is_frozen;
-    return 0;
-}
-
 /**************************************************************************
                      Implementation of bitarray methods
  **************************************************************************/
@@ -967,6 +942,32 @@ PyDoc_STRVAR(clear_doc,
 "clear()\n\
 \n\
 Remove all items from the bitarray.");
+
+
+/* Set the readonly member to 0 or 1 depending on whether self in an instance
+   of frozenbitarray.  On error, return -1 and set an exception. */
+static int
+set_readonly(bitarrayobject *self)
+{
+    static PyObject *frozen = NULL;  /* frozenbitarray class object */
+    int is_frozen;
+
+    if (frozen == NULL) {
+        PyObject *bitarray_module;
+
+        if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
+            return -1;
+        frozen = PyObject_GetAttrString(bitarray_module, "frozenbitarray");
+        Py_DECREF(bitarray_module);
+        if (frozen == NULL)
+            return -1;
+    }
+    if ((is_frozen = PyObject_IsInstance((PyObject *) self, frozen)) < 0)
+        return -1;
+
+    self->readonly = is_frozen;
+    return 0;
+}
 
 
 static PyObject *
