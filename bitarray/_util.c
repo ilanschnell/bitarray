@@ -1866,7 +1866,7 @@ chdi_new(PyObject *module, PyObject *args)
     it->array = NULL;
     Py_XDECREF(symbol);
     it->symbol = NULL;
-    Py_DECREF((PyObject *) it);
+    Py_DECREF(it);
     return NULL;
 }
 
