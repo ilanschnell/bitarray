@@ -2634,10 +2634,14 @@ bitarray_ ## name (PyObject *self, PyObject *other)    \
     }                                                  \
     else {                                             \
         res = bitarray_copy((bitarrayobject *) self);  \
+        ((bitarrayobject *) res)->readonly = 0;        \
         if (res == NULL)                               \
             return NULL;                               \
     }                                                  \
     shift((bitarrayobject *) res, n, *ostr == '>');    \
+    if (!inplace &&                                    \
+            set_readonly((bitarrayobject *) res))      \
+        return NULL;                                   \
     return res;                                        \
 }
 

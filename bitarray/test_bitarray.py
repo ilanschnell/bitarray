@@ -2601,6 +2601,11 @@ class NumberTests(unittest.TestCase, Util):
         a >>= 4
         self.assertEqual(a, bitarray('0000001'))
 
+    def test_frozenbitarray(self):
+        a = frozenbitarray('0010011')
+        self.assertEqual(a << 3, bitarray('0011000'))
+        self.assertRaises(TypeError, a.__ilshift__, 4)
+
 # ---------------------------------------------------------------------------
 
 class ExtendTests(unittest.TestCase, Util):
@@ -4562,7 +4567,7 @@ class BufferImportTests(unittest.TestCase, Util):
     def test_copy(self):
         a = bitarray(buffer=b'XA')
         self.assertTrue(a.readonly)
-        for b in [a.copy(), 3 * a, 5 * a, a & bitarray(16),
+        for b in [a.copy(), 3 * a, 5 * a, a & bitarray(16), a >> 2,
                   a + bitarray(8*'1'), a[:], a[[0, 1]], a[bitarray(16)]]:
             self.assertFalse(b.readonly)
             self.check_obj(b)
@@ -4886,7 +4891,7 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
     def test_copy(self):
         a = frozenbitarray('101')
         # not only .copy() creates new frozenbitarray which are read-only
-        for b in [a, a.copy(), 3 * a, 5 * a, a & bitarray('110'),
+        for b in [a, a.copy(), 3 * a, 5 * a, a & bitarray('110'), a >> 2,
                   a + bitarray(8*'1'), a[:], a[[0, 1]], a[bitarray('011')]]:
             self.assertIsType(b, 'frozenbitarray')
             self.assertTrue(b.readonly)
