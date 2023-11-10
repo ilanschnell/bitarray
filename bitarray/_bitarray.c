@@ -784,6 +784,31 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     return -1;
 }
 
+/* set the readonly member to 0 or 1 depending on whether self in an instance
+   of the frozenbitarray class - on error, return -1 and set an exception. */
+static int
+set_readonly(bitarrayobject *self)
+{
+    static PyObject *frozen = NULL;  /* frozenbitarray class object */
+    int is_frozen;
+
+    if (frozen == NULL) {
+        PyObject *bitarray_module;
+
+        if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
+            return -1;
+        frozen = PyObject_GetAttrString(bitarray_module, "frozenbitarray");
+        Py_DECREF(bitarray_module);
+        if (frozen == NULL)
+            return -1;
+    }
+    if ((is_frozen = PyObject_IsInstance((PyObject *) self, frozen)) < 0)
+        return -1;
+
+    self->readonly = is_frozen;
+    return 0;
+}
+
 /**************************************************************************
                      Implementation of bitarray methods
  **************************************************************************/
@@ -954,7 +979,9 @@ bitarray_copy(bitarrayobject *self)
         return NULL;
 
     memcpy(res->ob_item, self->ob_item, (size_t) Py_SIZE(self));
-    res->readonly = self->readonly;
+    if (set_readonly(res) < 0)
+        return NULL;
+
     return (PyObject *) res;
 }
 
@@ -1837,13 +1864,14 @@ bitarray_concat(bitarrayobject *self, PyObject *other)
     if (res == NULL)
         return NULL;
 
-    res->readonly = 0;
+    res->readonly = 0;  /* allow resize */
     if (extend_dispatch(res, other) < 0) {
         Py_DECREF(res);
         return NULL;
     }
     set_padbits(res);
-    res->readonly = self->readonly;
+    if (set_readonly(res) < 0)
+        return NULL;
 
     return (PyObject *) res;
 }
@@ -1857,13 +1885,14 @@ bitarray_repeat(bitarrayobject *self, Py_ssize_t n)
     if (res == NULL)
         return NULL;
 
-    res->readonly = 0;
+    res->readonly = 0;  /* allow resize */
     if (repeat(res, n) < 0) {
         Py_DECREF(res);
         return NULL;
     }
     set_padbits(res);
-    res->readonly = self->readonly;
+    if (set_readonly(res) < 0)
+        return NULL;
 
     return (PyObject *) res;
 }
@@ -1968,7 +1997,8 @@ getslice(bitarrayobject *self, PyObject *slice)
             setbit(res, i, getbit(self, j));
     }
     set_padbits(res);
-    res->readonly = self->readonly;
+    if (set_readonly(res) < 0)
+        return NULL;
 
     return (PyObject *) res;
 }
@@ -2004,7 +2034,8 @@ getmasked(bitarrayobject *self, bitarrayobject *mask)
             setbit(res, j++, getbit(self, i));
     }
     set_padbits(res);
-    res->readonly = self->readonly;
+    if (set_readonly(res) < 0)
+        return NULL;
     assert(j == n);
     return (PyObject *) res;
 }
@@ -2055,7 +2086,8 @@ getsequence(bitarrayobject *self, PyObject *seq)
         setbit(res, j, getbit(self, i));
     }
     set_padbits(res);
-    res->readonly = self->readonly;
+    if (set_readonly(res) < 0)
+        return NULL;
 
     return (PyObject *) res;
 }

@@ -4559,6 +4559,13 @@ class BufferImportTests(unittest.TestCase, Util):
         self.check_obj(a)
         self.check_obj(b)
 
+    def test_copy(self):
+        a = bitarray(buffer=b'XA')
+        self.assertTrue(a.readonly)
+        b = a.copy()
+        self.assertFalse(b.readonly)
+        self.check_obj(b)
+
     @skipIf(is_pypy)
     def test_bitarray_shared_sections(self):
         a = urandom(0x2000)
