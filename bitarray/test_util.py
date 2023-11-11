@@ -1182,7 +1182,7 @@ class SC_Tests(unittest.TestCase, Util):
                                      sc_decode,
                                      bytearray([c]))
         # invalid block head
-        for c in 0x81, 0x9f, 0xc0, 0xc1, 0xc5, 0xff:
+        for c in 0xc0, 0xc1, 0xc5, 0xff:
             self.assertRaisesMessage(ValueError,
                                      "invalid block head: 0x%02x" % c,
                                      sc_decode,
@@ -1282,24 +1282,6 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(a.to01(), '001')
 
     @skipIf(sys.version_info[0] == 2)
-    def test_raw_block(self):
-        a = bitarray(0, 'big')
-        for nbytes in range(1, 129):
-            nbits = 8 * nbytes
-            raw = nbytes * b'\xf7'
-            if nbits < 256:
-                b = bytearray([0x11, nbits])
-            else:
-                b = bytearray([0x12, nbits & 0xff, nbits >> 8])
-            b.append(nbytes)  # head byte
-            b.extend(raw)
-            b.append(0)       # stop byte
-
-            a.frombytes(b'\xf7')
-            self.assertEqual(sc_decode(b), a)
-            self.assertEqual(sc_encode(a), bytes(b))
-
-    @skipIf(sys.version_info[0] == 2)
     def test_sparse_block_type1(self):
         a = bitarray(256, 'little')
         for n in range(1, 32):
@@ -1382,13 +1364,16 @@ class SC_Tests(unittest.TestCase, Util):
 
     def test_encode_ones(self):
         for _ in range(50):
-            n = randrange(10000)
-            a = bitarray(n)
+            nbits = randrange(10000)
+            a = bitarray(nbits)
             a.setall(1)
-            m = 2                            # head byte and stop byte
-            m += bits2bytes(n.bit_length())  # size bytes
-            m += (n + 1023) // 1024          # number of blocks (head bytes)
-            m += bits2bytes(n)               # actual raw bytes
+            m = 2                                # head byte and stop byte
+            m += bits2bytes(nbits.bit_length())  # size bytes
+            nbytes = bits2bytes(nbits)
+            m += (nbytes // 32 + 127) // 128  # number of blocks (head bytes)
+            if nbytes % 32:
+                m += 1
+            m += nbytes                          # actual raw bytes
             self.assertEqual(m, len(sc_encode(a)))
             self.round_trip(a)
 

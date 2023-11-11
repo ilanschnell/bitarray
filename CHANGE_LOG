@@ -2,7 +2,8 @@
 -------------------
   * ensure readonly attribute is set correctly when creating new objects,
     see #211
-  * simplify implementation of `sc_encode()` and `sc_decode()`
+  * optimize sparse bitarray compression (`sc_encode()` and `sc_decode()`)
+    for raw block type
   * improve hash functions in Bloom filter example
 
 

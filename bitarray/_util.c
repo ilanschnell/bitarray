@@ -1202,9 +1202,12 @@ sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
     return rts[NSEG(nbits) + offset] - rts[offset];
 }
 
-/* Calculate number of bytes (1..128) of the raw block starting at offset,
+/* Calculate number of bytes (1..4096) of the raw block starting at offset,
    encode the block (write the header and copy the bytes into the encode
    buffer str), and return the number of raw bytes.
+   The header byte is in range(0x01, 0xa0).
+   range(0x01, 0x20) refers to the number of raw bytes directly.
+   range(0x20, 0xa0) refers to the number of (32 byte) segments.
    Note that the encoded block size is the return value + 1. */
 static int
 sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
@@ -1216,18 +1219,17 @@ sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
     if (k == 32) {
         /* We already know the first 32 bytes are better represented using
            raw bytes (otherwise this function wouldn't have been called).
-           Now also check the next 3 segments. */
-        while (k < 128 &&
-               Py_MIN(32, nbytes - k) <= sc_count(a, rts, offset + k, 1))
+           Now also check the next 127 segments. */
+        while (k < 32 * 128 && k + 32 <= nbytes &&
+               32 <= sc_count(a, rts, offset + k, 1))
             k += 32;
 
         assert(k % SEGSIZE == 0);
     }
-    k = Py_MIN(k, nbytes);
-    assert(0 < k && k <= 128 && k <= nbytes);
+    assert(0 < k && k <= 32 * 128 && k <= nbytes);
 
     /* block header */
-    *str = (char) k;
+    *str = (char) (k <= 32 ? k : (k / 32) + 31);
 
     /* block data */
     assert(offset + k <= Py_SIZE(a));
@@ -1325,9 +1327,9 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
      Hence, if the bit count of the first 32 bytes of the bitarray buffer
      is greater or equal to 32, we choose a raw block (type 0).
 
-   - If a raw block is used, we check if the next three 32 byte buffer
-     blocks are also suitable for raw encoding, see write_raw_block().
-     Therefore, we have type 0 blocks with up to 128 raw bytes.
+   - If a raw block is used, we check if the next 127 segments
+     are also suitable for raw encoding, see sc_write_raw().
+     Therefore, we have type 0 blocks with up to 128 * 32 = 4096 raw bytes.
 
    - Now we decide which sparse block type to use.  We do this by
      first calculating the population count for the bitarray buffer size of
@@ -1440,11 +1442,11 @@ sc_encode(PyObject *module, PyObject *obj)
         Py_ssize_t allocated;   /* size (in bytes) of output buffer */
 
         /* Make sure we have enough space in output buffer for next block.
-           The largest block possible is a type 4 block with 255 indices.
-           It's size is: 2 header bytes + 4 * 255 index bytes.
+           The largest block possible is a type 0 block with 128 segments.
+           It's size is: 1 head bytes + 128 * 32 raw bytes.
            Plus, we also may have the stop byte. */
         allocated = PyBytes_GET_SIZE(out);
-        if (allocated < len + 2 + 4 * 255 + 1) {  /* increase allocation */
+        if (allocated < len + 4098) {  /* increase allocation */
             if (_PyBytes_Resize(&out, allocated + 32768) < 0)
                 return NULL;
             str = PyBytes_AS_STRING(out);
@@ -1504,7 +1506,7 @@ sc_read_raw(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int k)
     char *buff = a->ob_item + offset;
     int i, c;
 
-    assert(1 <= k && k <= 128);
+    assert(1 <= k && k <= 4096);
     if (offset + k > Py_SIZE(a)) {
         PyErr_Format(PyExc_ValueError, "decode error (raw): %zd + %d > %zd",
                      offset, k, Py_SIZE(a));
@@ -1553,14 +1555,15 @@ sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
     if ((head = next_char(iter)) < 0)
         return -1;
 
-    if (head <= 0x80) {                    /* type 0 - 0x00 .. 0x80 */
+    if (head < 0xa0) {                     /* type 0 - 0x00 .. 0x9f */
         if (head == 0)  /* stop byte */
             return 0;
 
-        return sc_read_raw(a, offset, iter, head);
+        return sc_read_raw(a, offset, iter,
+                           head <= 32 ? head : 32 * (head - 31));
     }
 
-    if (0xa0 <= head && head < 0xc0)       /* type 1 - 0xa0 .. 0xbf */
+    if (head < 0xc0)                       /* type 1 - 0xa0 .. 0xbf */
         return sc_read_sparse(a, offset, iter, 1, head - 0xa0);
 
     if (0xc2 <= head && head <= 0xc4) {    /* type 2 .. 4 - 0xc2 .. 0xc4 */

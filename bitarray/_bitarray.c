@@ -2041,9 +2041,10 @@ getmasked(bitarrayobject *self, bitarrayobject *mask)
         if (getbit(mask, i))
             setbit(res, j++, getbit(self, i));
     }
+    assert(j == n);
     if (finalize_obj(res) < 0)
         return NULL;
-    assert(j == n);
+
     return (PyObject *) res;
 }
 

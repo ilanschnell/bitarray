@@ -40,10 +40,10 @@ def sc_decode_block(stream, stats):
     if head == 0:  # stop byte
         return False
 
-    if head <= 0x80:
+    if head < 0xa0:
         n = 0
-        k = head
-    elif 0xa0 <= head < 0xc0:
+        k = head if head <= 32 else 32 * (head - 31)
+    elif head < 0xc0:
         n = 1
         k = head - 0xa0
     elif 0xc2 <= head <= 0xc4:
@@ -100,23 +100,12 @@ def test_sc_stat():
     assert stat['endian'] == 'little'
     assert stat['nbits'] == 1 << 33
     blocks = stat['blocks']
-    for i, n in enumerate([64, 754, 46, 48, 1]):
+    for i, n in enumerate([2, 754, 46, 48, 1]):
         print("         block type %d  %8d" % (i, blocks[i]))
         assert blocks[i] == n
     if sys.version_info[:2] >= (3, 10):
         print("total number of blocks %8d" % blocks.total())
     assert a == sc_decode(b)
-
-def test_raw_block_size():
-    for n in range(10_000):
-        a = bitarray(n)
-        a.setall(1)
-        b = sc_encode(a)
-        stat = sc_stats(b)
-        assert stat['nbits'] == n
-        blocks = stat['blocks']
-        assert blocks[0] == (n + 1023) // 1024
-        assert sc_decode(b) == a
 
 def random_array(n, p=0.5):
     """random_array(n, p=0.5) -> bitarray
@@ -189,7 +178,6 @@ def compare():
 
 if __name__ == '__main__':
     test_sc_stat()
-    test_raw_block_size()
     #test_random_array()
     compare()
     p_range()
