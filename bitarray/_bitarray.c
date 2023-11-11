@@ -147,6 +147,18 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
     return obj;
 }
 
+static bitarrayobject *
+bitarray_cp(bitarrayobject *self)
+{
+    bitarrayobject *res;
+
+    res = newbitarrayobject(Py_TYPE(self), self->nbits, self->endian);
+    if (res == NULL)
+        return NULL;
+    memcpy(res->ob_item, self->ob_item, (size_t) Py_SIZE(self));
+    return res;
+}
+
 static void
 bitarray_dealloc(bitarrayobject *self)
 {
@@ -947,11 +959,12 @@ Remove all items from the bitarray.");
 /* Set the readonly member to 0 or 1 depending on whether self in an instance
    of frozenbitarray.  On error, return -1 and set an exception. */
 static int
-set_readonly(bitarrayobject *self)
+finalize_obj(bitarrayobject *self)
 {
     static PyObject *frozen = NULL;  /* frozenbitarray class object */
     int is_frozen;
 
+    assert(self->buffer == NULL);
     if (frozen == NULL) {
         PyObject *bitarray_module;
 
@@ -965,7 +978,10 @@ set_readonly(bitarrayobject *self)
     if ((is_frozen = PyObject_IsInstance((PyObject *) self, frozen)) < 0)
         return -1;
 
-    self->readonly = is_frozen;
+    if (is_frozen) {
+        set_padbits(self);
+        self->readonly = 1;
+    }
     return 0;
 }
 
@@ -975,12 +991,10 @@ bitarray_copy(bitarrayobject *self)
 {
     bitarrayobject *res;
 
-    res = newbitarrayobject(Py_TYPE(self), self->nbits, self->endian);
-    if (res == NULL)
+    if ((res = bitarray_cp(self)) == NULL)
         return NULL;
 
-    memcpy(res->ob_item, self->ob_item, (size_t) Py_SIZE(self));
-    if (set_readonly(res) < 0)
+    if (finalize_obj(res) < 0)
         return NULL;
 
     return (PyObject *) res;
@@ -1861,17 +1875,14 @@ bitarray_concat(bitarrayobject *self, PyObject *other)
 {
     bitarrayobject *res;
 
-    res = (bitarrayobject *) bitarray_copy(self);
-    if (res == NULL)
+    if ((res = bitarray_cp(self)) == NULL)
         return NULL;
 
-    res->readonly = 0;  /* allow resize */
     if (extend_dispatch(res, other) < 0) {
         Py_DECREF(res);
         return NULL;
     }
-    set_padbits(res);
-    if (set_readonly(res) < 0)
+    if (finalize_obj(res) < 0)
         return NULL;
 
     return (PyObject *) res;
@@ -1882,17 +1893,14 @@ bitarray_repeat(bitarrayobject *self, Py_ssize_t n)
 {
     bitarrayobject *res;
 
-    res = (bitarrayobject *) bitarray_copy(self);
-    if (res == NULL)
+    if ((res = bitarray_cp(self)) == NULL)
         return NULL;
 
-    res->readonly = 0;  /* allow resize */
     if (repeat(res, n) < 0) {
         Py_DECREF(res);
         return NULL;
     }
-    set_padbits(res);
-    if (set_readonly(res) < 0)
+    if (finalize_obj(res) < 0)
         return NULL;
 
     return (PyObject *) res;
@@ -1997,8 +2005,7 @@ getslice(bitarrayobject *self, PyObject *slice)
         for (i = 0, j = start; i < slicelength; i++, j += step)
             setbit(res, i, getbit(self, j));
     }
-    set_padbits(res);
-    if (set_readonly(res) < 0)
+    if (finalize_obj(res) < 0)
         return NULL;
 
     return (PyObject *) res;
@@ -2034,8 +2041,7 @@ getmasked(bitarrayobject *self, bitarrayobject *mask)
         if (getbit(mask, i))
             setbit(res, j++, getbit(self, i));
     }
-    set_padbits(res);
-    if (set_readonly(res) < 0)
+    if (finalize_obj(res) < 0)
         return NULL;
     assert(j == n);
     return (PyObject *) res;
@@ -2086,8 +2092,7 @@ getsequence(bitarrayobject *self, PyObject *seq)
         }
         setbit(res, j, getbit(self, i));
     }
-    set_padbits(res);
-    if (set_readonly(res) < 0)
+    if (finalize_obj(res) < 0)
         return NULL;
 
     return (PyObject *) res;
@@ -2157,8 +2162,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
        the case when self and other are the same object, but can also happen
        when the two bitarrays share memory. */
     if (buffers_overlap(self, other)) {
-        other = (bitarrayobject *) bitarray_copy(other);
-        if (other == NULL)
+        if ((other = bitarray_cp(other)) == NULL)
             return -1;
         other_copied = 1;
     }
@@ -2355,8 +2359,7 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
        the case when self and other are the same object, but can also happen
        when the two bitarrays share memory. */
     if (buffers_overlap(self, other)) {
-        other = (bitarrayobject *) bitarray_copy(other);
-        if (other == NULL)
+        if ((other = bitarray_cp(other)) == NULL)
             return -1;
         other_copied = 1;
     }
@@ -2462,14 +2465,16 @@ static PyMappingMethods bitarray_as_mapping = {
 static PyObject *
 bitarray_cpinvert(bitarrayobject *self)
 {
-    PyObject *result;
+    bitarrayobject *res;
 
-    result = bitarray_copy(self);
-    if (result == NULL)
+    if ((res = bitarray_cp(self)) == NULL)
         return NULL;
 
-    invert((bitarrayobject *) result);
-    return result;
+    invert(res);
+    if (finalize_obj(res) < 0)
+        return NULL;
+
+    return (PyObject *) res;
 }
 
 /* perform bitwise in-place operation */
@@ -2486,6 +2491,7 @@ bitwise(bitarrayobject *self, bitarrayobject *other, const char oper)
 
     assert(self->nbits == other->nbits);
     assert(self->endian == other->endian);
+    assert(self->readonly == 0);
     assert_nbits(self);
     switch (oper) {
     case '&':
@@ -2546,23 +2552,24 @@ bitwise_check(PyObject *a, PyObject *b, const char *ostr)
 static PyObject *                                      \
 bitarray_ ## name (PyObject *self, PyObject *other)    \
 {                                                      \
-    PyObject *res;                                     \
+    bitarrayobject *res;                               \
                                                        \
     if (bitwise_check(self, other, ostr) < 0)          \
         return NULL;                                   \
     if (inplace) {                                     \
         RAISE_IF_READONLY(self, NULL);                 \
-        res = self;                                    \
+        res = (bitarrayobject *) self;                 \
         Py_INCREF(res);                                \
     }                                                  \
     else {                                             \
-        res = bitarray_copy((bitarrayobject *) self);  \
+        res = bitarray_cp((bitarrayobject *) self);    \
         if (res == NULL)                               \
             return NULL;                               \
     }                                                  \
-    bitwise((bitarrayobject *) res,                    \
-            (bitarrayobject *) other, *ostr);          \
-    return res;                                        \
+    bitwise(res, (bitarrayobject *) other, *ostr);     \
+    if (!inplace && finalize_obj(res) < 0)             \
+        return NULL;                                   \
+    return (PyObject *) res;                           \
 }
 
 BITWISE_FUNC(and,  0, "&")   /* bitarray_and */
@@ -2622,27 +2629,25 @@ shift_check(PyObject *self, PyObject *other, const char *ostr)
 static PyObject *                                      \
 bitarray_ ## name (PyObject *self, PyObject *other)    \
 {                                                      \
-    PyObject *res;                                     \
+    bitarrayobject *res;                               \
     Py_ssize_t n;                                      \
                                                        \
     if ((n = shift_check(self, other, ostr)) < 0)      \
         return NULL;                                   \
     if (inplace) {                                     \
         RAISE_IF_READONLY(self, NULL);                 \
-        res = self;                                    \
+        res = (bitarrayobject *) self;                 \
         Py_INCREF(res);                                \
     }                                                  \
     else {                                             \
-        res = bitarray_copy((bitarrayobject *) self);  \
-        ((bitarrayobject *) res)->readonly = 0;        \
+        res = bitarray_cp((bitarrayobject *) self);    \
         if (res == NULL)                               \
             return NULL;                               \
     }                                                  \
     shift((bitarrayobject *) res, n, *ostr == '>');    \
-    if (!inplace &&                                    \
-            set_readonly((bitarrayobject *) res))      \
+    if (!inplace && finalize_obj(res) < 0)             \
         return NULL;                                   \
-    return res;                                        \
+    return (PyObject *) res;                           \
 }
 
 SHIFT_FUNC(lshift,  0, "<<")  /* bitarray_lshift */
@@ -2943,8 +2948,7 @@ binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
         bitarrayobject *t;      /* prefix of the two child nodes */
         int ret;
 
-        t = (bitarrayobject *) bitarray_copy(prefix);
-        if (t == NULL)
+        if ((t = bitarray_cp(prefix)) == NULL)
             return -1;
         if (resize(t, t->nbits + 1) < 0)
             return -1;

@@ -4567,8 +4567,9 @@ class BufferImportTests(unittest.TestCase, Util):
     def test_copy(self):
         a = bitarray(buffer=b'XA')
         self.assertTrue(a.readonly)
-        for b in [a.copy(), 3 * a, 5 * a, a & bitarray(16), a >> 2,
-                  a + bitarray(8*'1'), a[:], a[[0, 1]], a[bitarray(16)]]:
+        for b in [a.copy(), 3 * a, 5 * a, a & bitarray(16),
+                  a >> 2, ~a, a + bitarray(8*'1'),
+                  a[:], a[::2], a[[0, 1]], a[bitarray(16)]]:
             self.assertFalse(b.readonly)
             self.check_obj(b)
 
@@ -4891,8 +4892,9 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
     def test_copy(self):
         a = frozenbitarray('101')
         # not only .copy() creates new frozenbitarray which are read-only
-        for b in [a, a.copy(), 3 * a, 5 * a, a & bitarray('110'), a >> 2,
-                  a + bitarray(8*'1'), a[:], a[[0, 1]], a[bitarray('011')]]:
+        for b in [a, a.copy(), 3 * a, 5 * a, a & bitarray('110'),
+                  a >> 2, ~a, a + bitarray(8*'1'),
+                  a[:], a[::2], a[[0, 1]], a[bitarray('011')]]:
             self.assertIsType(b, 'frozenbitarray')
             self.assertTrue(b.readonly)
             self.check_obj(b)
