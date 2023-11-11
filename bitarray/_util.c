@@ -76,15 +76,14 @@ zeros(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "endian", NULL};
     PyObject *endian = Py_None;
-    bitarrayobject *a = NULL;
+    bitarrayobject *a;
     Py_ssize_t nbits;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "n|O:zeros", kwlist,
                                      &nbits, &endian))
         return NULL;
 
-    a = new_bitarray(nbits, endian);
-    if (a == NULL)
+    if ((a = new_bitarray(nbits, endian)) == NULL)
         return NULL;
 
     memset(a->ob_item, 0x00, (size_t) Py_SIZE(a));
@@ -1560,7 +1559,7 @@ sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
             return 0;
 
         return sc_read_raw(a, offset, iter,
-                           head <= 32 ? head : 32 * (head - 31));
+                           head <= 0x20 ? head : 32 * (head - 31));
     }
 
     if (head < 0xc0)                       /* type 1 - 0xa0 .. 0xbf */

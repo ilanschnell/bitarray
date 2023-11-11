@@ -956,33 +956,34 @@ PyDoc_STRVAR(clear_doc,
 Remove all items from the bitarray.");
 
 
-/* Set the readonly member to 0 or 1 depending on whether self in an instance
-   of frozenbitarray.  On error, return -1 and set an exception. */
-static int
+/* Set the readonly member to 0 or 1 depending on whether self in an
+   instance of frozenbitarray.  Return PyObject of self.
+   On error, return NULL and set an exception. */
+static PyObject *
 finalize_obj(bitarrayobject *self)
 {
     static PyObject *frozen = NULL;  /* frozenbitarray class object */
     int is_frozen;
 
-    assert(self->buffer == NULL);
+    assert(self->ob_exports == 0 && self->buffer == NULL);
     if (frozen == NULL) {
         PyObject *bitarray_module;
 
         if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
-            return -1;
+            return NULL;
         frozen = PyObject_GetAttrString(bitarray_module, "frozenbitarray");
         Py_DECREF(bitarray_module);
         if (frozen == NULL)
-            return -1;
+            return NULL;
     }
     if ((is_frozen = PyObject_IsInstance((PyObject *) self, frozen)) < 0)
-        return -1;
+        return NULL;
 
     if (is_frozen) {
         set_padbits(self);
         self->readonly = 1;
     }
-    return 0;
+    return (PyObject *) self;
 }
 
 
@@ -994,10 +995,7 @@ bitarray_copy(bitarrayobject *self)
     if ((res = bitarray_cp(self)) == NULL)
         return NULL;
 
-    if (finalize_obj(res) < 0)
-        return NULL;
-
-    return (PyObject *) res;
+    return finalize_obj(res);
 }
 
 PyDoc_STRVAR(copy_doc,
@@ -1882,10 +1880,7 @@ bitarray_concat(bitarrayobject *self, PyObject *other)
         Py_DECREF(res);
         return NULL;
     }
-    if (finalize_obj(res) < 0)
-        return NULL;
-
-    return (PyObject *) res;
+    return finalize_obj(res);
 }
 
 static PyObject *
@@ -1900,10 +1895,7 @@ bitarray_repeat(bitarrayobject *self, Py_ssize_t n)
         Py_DECREF(res);
         return NULL;
     }
-    if (finalize_obj(res) < 0)
-        return NULL;
-
-    return (PyObject *) res;
+    return finalize_obj(res);
 }
 
 static PyObject *
@@ -2005,10 +1997,7 @@ getslice(bitarrayobject *self, PyObject *slice)
         for (i = 0, j = start; i < slicelength; i++, j += step)
             setbit(res, i, getbit(self, j));
     }
-    if (finalize_obj(res) < 0)
-        return NULL;
-
-    return (PyObject *) res;
+    return finalize_obj(res);
 }
 
 static int
@@ -2042,10 +2031,7 @@ getmasked(bitarrayobject *self, bitarrayobject *mask)
             setbit(res, j++, getbit(self, i));
     }
     assert(j == n);
-    if (finalize_obj(res) < 0)
-        return NULL;
-
-    return (PyObject *) res;
+    return finalize_obj(res);
 }
 
 /* Return j-th item from sequence.  The item is considered an index into
@@ -2093,10 +2079,7 @@ getsequence(bitarrayobject *self, PyObject *seq)
         }
         setbit(res, j, getbit(self, i));
     }
-    if (finalize_obj(res) < 0)
-        return NULL;
-
-    return (PyObject *) res;
+    return finalize_obj(res);
 }
 
 static int
@@ -2472,10 +2455,7 @@ bitarray_cpinvert(bitarrayobject *self)
         return NULL;
 
     invert(res);
-    if (finalize_obj(res) < 0)
-        return NULL;
-
-    return (PyObject *) res;
+    return finalize_obj(res);
 }
 
 /* perform bitwise in-place operation */
@@ -2568,8 +2548,8 @@ bitarray_ ## name (PyObject *self, PyObject *other)    \
             return NULL;                               \
     }                                                  \
     bitwise(res, (bitarrayobject *) other, *ostr);     \
-    if (!inplace && finalize_obj(res) < 0)             \
-        return NULL;                                   \
+    if (!inplace)                                      \
+        return finalize_obj(res);                      \
     return (PyObject *) res;                           \
 }
 
@@ -2646,8 +2626,8 @@ bitarray_ ## name (PyObject *self, PyObject *other)    \
             return NULL;                               \
     }                                                  \
     shift((bitarrayobject *) res, n, *ostr == '>');    \
-    if (!inplace && finalize_obj(res) < 0)             \
-        return NULL;                                   \
+    if (!inplace)                                      \
+        return finalize_obj(res);                      \
     return (PyObject *) res;                           \
 }
 
