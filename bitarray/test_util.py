@@ -1364,16 +1364,15 @@ class SC_Tests(unittest.TestCase, Util):
 
     def test_encode_ones(self):
         for _ in range(50):
-            nbits = randrange(10000)
+            nbits = randrange(100000)
             a = bitarray(nbits)
             a.setall(1)
             m = 2                                # head byte and stop byte
             m += bits2bytes(nbits.bit_length())  # size bytes
             nbytes = bits2bytes(nbits)
             m += (nbytes // 32 + 127) // 128  # number of blocks (head bytes)
-            if nbytes % 32:
-                m += 1
-            m += nbytes                          # actual raw bytes
+            m += bool(nbytes % 32)            # block type 0 range(1, 32)
+            m += nbytes                       # actual raw bytes
             self.assertEqual(m, len(sc_encode(a)))
             self.round_trip(a)
 
