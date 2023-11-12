@@ -1,6 +1,14 @@
 Change log
 ==========
 
+**2.8.3** (2023-11-11):
+
+* ensure readonly attribute is set correctly when creating new objects,
+  see `#211 <https://github.com/ilanschnell/bitarray/issues/211>`__
+* optimize sparse bitarray compression for raw block type
+* improve hash functions in Bloom filter example
+
+
 **2.8.2** (2023-10-03):
 
 * update cibuildwheel to 2.16.1 in order to provide cp312 wheels on PyPI
