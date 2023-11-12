@@ -170,7 +170,7 @@ bitarray_dealloc(bitarrayobject *self)
         PyMem_Free(self->buffer);
     }
     else if (self->ob_item) {
-        /* only free the object's buffer - imported buffers CANNOT be freed */
+        /* only free object's buffer - imported buffers CANNOT be freed */
         PyMem_Free((void *) self->ob_item);
     }
 
@@ -832,7 +832,7 @@ bitarray_all(bitarrayobject *self)
 PyDoc_STRVAR(all_doc,
 "all() -> bool\n\
 \n\
-Return True when all bits in the array are True.\n\
+Return True when all bits in bitarray are True.\n\
 Note that `a.all()` is faster than `all(a)`.");
 
 
@@ -845,7 +845,7 @@ bitarray_any(bitarrayobject *self)
 PyDoc_STRVAR(any_doc,
 "any() -> bool\n\
 \n\
-Return True when any bit in the array is True.\n\
+Return True when any bit in bitaarray is True.\n\
 Note that `a.any()` is faster than `any(a)`.");
 
 
@@ -1036,7 +1036,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(count_doc,
 "count(value=1, start=0, stop=<end of array>, step=1, /) -> int\n\
 \n\
-Count the number of occurrences of `value` in the bitarray.");
+Count number of occurrences of `value` in the bitarray.");
 
 
 static PyObject *
@@ -1086,8 +1086,8 @@ bitarray_fill(bitarrayobject *self)
 PyDoc_STRVAR(fill_doc,
 "fill() -> int\n\
 \n\
-Add zeros to the end of the bitarray, such that the length of the bitarray\n\
-will be a multiple of 8, and return the number of bits added (0..7).");
+Add zeros to the end of the bitarray, such that the length will be\n\
+a multiple of 8, and return the number of bits added (0..7).");
 
 
 static PyObject *
@@ -1109,7 +1109,7 @@ bitarray_find(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(find_doc,
 "find(sub_bitarray, start=0, stop=<end of array>, /) -> int\n\
 \n\
-Return the lowest index where sub_bitarray is found, such that sub_bitarray\n\
+Return lowest index where sub_bitarray is found, such that sub_bitarray\n\
 is contained within `[start:stop]`.\n\
 Return -1 when sub_bitarray is not found.");
 
@@ -1140,7 +1140,7 @@ bitarray_index(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(index_doc,
 "index(sub_bitarray, start=0, stop=<end of array>, /) -> int\n\
 \n\
-Return the lowest index where sub_bitarray is found, such that sub_bitarray\n\
+Return lowest index where sub_bitarray is found, such that sub_bitarray\n\
 is contained within `[start:stop]`.\n\
 Raises `ValueError` when the sub_bitarray is not present.");
 
@@ -1166,7 +1166,7 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(insert_doc,
 "insert(index, value, /)\n\
 \n\
-Insert `value` into the bitarray before `index`.");
+Insert `value` into bitarray before `index`.");
 
 
 static PyObject *
@@ -1197,7 +1197,7 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(invert_doc,
 "invert(index=<all bits>, /)\n\
 \n\
-Invert all bits in the array (in-place).\n\
+Invert all bits in bitarray (in-place).\n\
 When the optional `index` is given, only invert the single bit at index.");
 
 
@@ -1311,7 +1311,7 @@ bitarray_reverse(bitarrayobject *self)
 PyDoc_STRVAR(reverse_doc,
 "reverse()\n\
 \n\
-Reverse all bits in the array (in-place).");
+Reverse all bits in bitarray (in-place).");
 
 
 /* given either an int (0 or 1) or a non-empty bitarray,
@@ -1385,7 +1385,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(search_doc,
 "search(sub_bitarray, limit=<none>, /) -> list\n\
 \n\
-Searches for the given sub_bitarray in self, and return the list of start\n\
+Searches for given sub_bitarray in self, and return list of start\n\
 positions.\n\
 The optional argument limits the number of search results to the integer\n\
 specified.  By default, all search results are returned.");
@@ -1407,7 +1407,7 @@ bitarray_setall(bitarrayobject *self, PyObject *value)
 PyDoc_STRVAR(setall_doc,
 "setall(value, /)\n\
 \n\
-Set all elements in the bitarray to `value`.\n\
+Set all elements in bitarray to `value`.\n\
 Note that `a.setall(value)` is equivalent to `a[:] = value`.");
 
 
@@ -1438,7 +1438,7 @@ bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
 PyDoc_STRVAR(sort_doc,
 "sort(reverse=False)\n\
 \n\
-Sort the bits in the array (in-place).");
+Sort all bits in bitarray (in-place).");
 
 
 static PyObject *
@@ -1509,7 +1509,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
 PyDoc_STRVAR(frombytes_doc,
 "frombytes(bytes, /)\n\
 \n\
-Extend the bitarray with raw bytes from a bytes-like object.\n\
+Extend bitarray with raw bytes from a bytes-like object.\n\
 Each added byte will add eight bits to the bitarray.");
 
 
@@ -1608,7 +1608,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
 PyDoc_STRVAR(tofile_doc,
 "tofile(f, /)\n\
 \n\
-Write the byte representation of the bitarray to the file object f.");
+Write byte representation of bitarray to file object f.");
 
 
 static PyObject *
@@ -1660,7 +1660,7 @@ PyDoc_STRVAR(unpack_doc,
 "unpack(zero=b'\\x00', one=b'\\x01') -> bytes\n\
 \n\
 Return bytes containing one character for each bit in the bitarray,\n\
-using the specified mapping.");
+using specified mapping.");
 
 
 static PyObject *
@@ -1688,7 +1688,7 @@ bitarray_pack(bitarrayobject *self, PyObject *buffer)
 PyDoc_STRVAR(pack_doc,
 "pack(bytes, /)\n\
 \n\
-Extend the bitarray from a bytes-like object, where each byte corresponds\n\
+Extend bitarray from a bytes-like object, where each byte corresponds\n\
 to a single bit.  The byte `b'\\x00'` maps to bit 0 and all other bytes\n\
 map to bit 1.");
 
@@ -1767,7 +1767,7 @@ bitarray_sizeof(bitarrayobject *self)
     return PyLong_FromSsize_t(res);
 }
 
-PyDoc_STRVAR(sizeof_doc, "Return the size of bitarray object in bytes.");
+PyDoc_STRVAR(sizeof_doc, "Return size of bitarray object in bytes.");
 
 
 /* private method - called only when frozenbitarray is initialized to
@@ -2123,8 +2123,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
     return getsequence(self, item);
 }
 
-/* The following functions, namely setslice_bitarray(), setslice_bool() and
-   delslice(), are called from assign_slice(). */
+/* The following functions are called from assign_slice(). */
 
 /* set items in self, specified by slice, to other bitarray */
 static int
@@ -2160,7 +2159,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
             if (delete_n(self, start + other->nbits, -increase) < 0)
                 goto error;
         }
-        /* copy the new values into self */
+        /* copy new values into self */
         copy_n(self, start, other, 0, other->nbits);
     }
     else {
@@ -2339,7 +2338,7 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
                      "size %zd to bitarray of size %zd", n, other->nbits);
         return -1;
     }
-    /* Make a copy of other, in case the buffers overlap.  This is obviously
+    /* Make a copy of other, in case buffers overlap.  This is obviously
        the case when self and other are the same object, but can also happen
        when the two bitarrays share memory. */
     if (buffers_overlap(self, other)) {
@@ -2567,6 +2566,7 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
 {
     const Py_ssize_t nbits = self->nbits;
 
+    assert(self->readonly == 0);
     if (n >= nbits) {
         memset(self->ob_item, 0x00, (size_t) Py_SIZE(self));
         return;
@@ -2583,7 +2583,7 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
     }
 }
 
-/* check shift arguments and return the shift count, -1 on error */
+/* check shift arguments and return shift count, -1 on error */
 static Py_ssize_t
 shift_check(PyObject *self, PyObject *other, const char *ostr)
 {
@@ -2771,8 +2771,8 @@ PyDoc_STRVAR(encode_doc,
 "encode(code, iterable, /)\n\
 \n\
 Given a prefix code (a dict mapping symbols to bitarrays),\n\
-iterate over the iterable object with symbols, and extend the bitarray\n\
-with the corresponding bitarray for each symbol.");
+iterate over the iterable object with symbols, and extend bitarray\n\
+with corresponding bitarray for each symbol.");
 
 /* ----------------------- binary tree (C-level) ----------------------- */
 
@@ -2812,7 +2812,7 @@ binode_delete(binode *nd)
     PyMem_Free((void *) nd);
 }
 
-/* insert symbol (mapping to ba) into the tree */
+/* insert symbol (mapping to ba) into tree */
 static int
 binode_insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
 {
@@ -2942,8 +2942,7 @@ binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
     return 0;
 }
 
-/* return whether the node is complete - has both children,
-   or is a symbol node */
+/* return whether node is complete (has both children or is a symbol node) */
 static int
 binode_complete(binode *nd)
 {
@@ -2960,7 +2959,7 @@ binode_complete(binode *nd)
             binode_complete(nd->child[1]));
 }
 
-/* return the number of nodes */
+/* return number of nodes */
 static Py_ssize_t
 binode_nodes(binode *nd)
 {
@@ -3045,7 +3044,7 @@ PyDoc_STRVAR(todict_doc,
 "todict() -> dict\n\
 \n\
 Return a dict mapping the symbols to bitarrays.  This dict is a\n\
-reconstruction of the code dict the `decodetree` was created with.");
+reconstruction of the code dict which the object was created with.");
 
 
 static PyObject *
@@ -3057,7 +3056,7 @@ decodetree_complete(decodetreeobject *self)
 PyDoc_STRVAR(complete_doc,
 "complete() -> bool\n\
 \n\
-Return whether the tree is complete.  That is, whether or not all\n\
+Return whether tree is complete.  That is, whether or not all\n\
 nodes have both children (unless they are symbols nodes).");
 
 
@@ -3070,7 +3069,7 @@ decodetree_nodes(decodetreeobject *self)
 PyDoc_STRVAR(nodes_doc,
 "nodes() -> int\n\
 \n\
-Return the number of nodes in the tree (internal and symbol nodes).");
+Return number of nodes in tree (internal and symbol nodes).");
 
 
 static PyObject *
@@ -3217,8 +3216,7 @@ PyDoc_STRVAR(decode_doc,
 "decode(code, /) -> list\n\
 \n\
 Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`\n\
-object), decode the content of the bitarray and return it as a list of\n\
-symbols.");
+object), decode content of bitarray and return it as a list of symbols.");
 
 /*********************** (bitarray) Decode Iterator ***********************/
 
@@ -3263,8 +3261,9 @@ PyDoc_STRVAR(iterdecode_doc,
 "iterdecode(code, /) -> iterator\n\
 \n\
 Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`\n\
-object), decode the content of the bitarray and return an iterator over\n\
+object), decode content of bitarray and return an iterator over\n\
 the symbols.");
+
 
 static PyObject *
 decodeiter_next(decodeiterobject *it)
@@ -3373,7 +3372,7 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
 PyDoc_STRVAR(itersearch_doc,
 "itersearch(sub_bitarray, /) -> iterator\n\
 \n\
-Searches for the given sub_bitarray in self, and return an iterator over\n\
+Searches for given sub_bitarray in self, and return an iterator over\n\
 the start positions where sub_bitarray matches self.");
 
 static PyObject *
@@ -3634,7 +3633,7 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, char *endian_str)
         return NULL;
     }
     if ((endian = endian_from_string(endian_str)) < 0)
-        /* cannot happen as we called check the string before */
+        /* cannot happen as we called the check string before */
         return NULL;
 
     assert(PyBytes_Check(bytes));
