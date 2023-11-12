@@ -57,7 +57,7 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian)
     return res;
 }
 
-/* Starting from word index `i`, count the remaining population in bitarray
+/* Starting from word index `i`, count remaining population in bitarray
    buffer.  Equivalent to:  a[64 * i:].count()  */
 static Py_ssize_t
 count_from_word(bitarrayobject *a, Py_ssize_t i)
@@ -99,10 +99,10 @@ endianness, which may be 'big', 'little'.");
 
 /* ------------------------------- count_n ----------------------------- */
 
-/* Return the smallest index i for which a.count(vi, 0, i) == n.
+/* Return smallest index i for which a.count(vi, 0, i) == n.
    When n exceeds the total count, the result is a negative
    number; the negative of the total count + 1, which is useful
-   for displaying the error message. */
+   for displaying error messages. */
 static Py_ssize_t
 count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
 {
@@ -197,7 +197,7 @@ find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     if (n <= 0)
         return -1;
 
-    /* the logic here is the same as in find_bit() in _bitarray.c */
+    /* logic here is same as in find_bit() in _bitarray.c */
     if (n > 64) {
         const Py_ssize_t wa = (a + 63) / 64;  /* word range(wa, wb) */
         const Py_ssize_t wb = b / 64;
@@ -259,8 +259,8 @@ r_index(PyObject *module, PyObject *args)
 PyDoc_STRVAR(rindex_doc,
 "rindex(bitarray, value=1, start=0, stop=<end of array>, /) -> int\n\
 \n\
-Return the rightmost (highest) index of `value` in bitarray.\n\
-Raises `ValueError` if the value is not present.");
+Return rightmost (highest) index of `value` in bitarray.\n\
+Raises `ValueError` if value is not present.");
 
 /* --------------------------- unary functions ------------------------- */
 
@@ -287,7 +287,7 @@ parity(PyObject *module, PyObject *obj)
 PyDoc_STRVAR(parity_doc,
 "parity(a, /) -> int\n\
 \n\
-Return the parity of bitarray `a`.\n\
+Return parity of bitarray `a`.\n\
 `parity(a)` is equivalent to `a.count() % 2` but more efficient.");
 
 /* --------------------------- binary functions ------------------------ */
@@ -631,7 +631,7 @@ hex2ba_core(bitarrayobject *a, PyObject *bytes)
         int y = hex_to_int(str[i + be]);
 
         if (x < 0 || y < 0) {
-            /* ignore the terminating NUL - happends when strsize is odd */
+            /* ignore terminating NUL - happends when strsize is odd */
             if (i + le == strsize) /* str[i+le] is NUL */
                 x = 0;
             if (i + be == strsize) /* str[i+be] is NUL */
@@ -825,10 +825,10 @@ standard base 64 alphabet is used.");
 
 
 /* Translate ASCII digits 'bytes' into bitarray buffer.
-   The arguments to this functions are:
+   Arguments to this functions are:
    - bitarray (of length m * len(s)) whose elements are overwritten
    - byte object s containing the ASCII digits
-   - bits per digit, that is the base length m  (1..6)
+   - bits per digit - the base length m  (1..6)
 */
 static int
 base2ba_core(bitarrayobject *a, PyObject *bytes, int m)
@@ -895,7 +895,7 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
 PyDoc_STRVAR(base2ba_doc,
 "base2ba(n, asciistr, /, endian=None) -> bitarray\n\
 \n\
-Bitarray of the base `n` ASCII representation.\n\
+Bitarray of base `n` ASCII representation.\n\
 Allowed values for `n` are 2, 4, 8, 16, 32 and 64.\n\
 For `n=16` (hexadecimal), `hex2ba()` will be much faster, as `base2ba()`\n\
 does not take advantage of byte level operations.\n\
@@ -956,7 +956,7 @@ resize_lite(bitarrayobject *self, Py_ssize_t nbits)
     return 0;
 }
 
-/* Consume one byte from the iteratior and return it's value as an integer
+/* Consume one byte from iteratior and return it's value as an integer
    in range(256).  On failure, set an exception and return -1.  */
 static int
 next_char(PyObject *iter)
@@ -989,7 +989,7 @@ next_char(PyObject *iter)
     return (int) c;
 }
 
-/* write n bytes (into buffer str) representing the integer i (using
+/* write n bytes (into buffer str) representing integer i (using
    little endian byte-order) */
 static void
 write_n(char *str, int n, Py_ssize_t i)
@@ -1004,7 +1004,7 @@ write_n(char *str, int n, Py_ssize_t i)
     assert(i == 0);
 }
 
-/* read n bytes from iter and return the corresponding positive integer,
+/* read n bytes from iter and return corresponding positive integer,
    using little endian byte-order */
 static Py_ssize_t
 read_n(int n, PyObject *iter)
@@ -1205,8 +1205,8 @@ sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
    encode the block (write the header and copy the bytes into the encode
    buffer str), and return the number of raw bytes.
    The header byte is in range(0x01, 0xa0).
-   range(0x01, 0x20) refers to the number of raw bytes directly.
-   range(0x20, 0xa0) refers to the number of (32 byte) segments.
+   range(0x01, 0x20) refers to number of raw bytes directly.
+   range(0x20, 0xa0) refers to number of (32 byte) segments.
    Note that the encoded block size is the return value + 1. */
 static int
 sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
@@ -1443,7 +1443,7 @@ sc_encode(PyObject *module, PyObject *obj)
            It's size is: 1 head bytes + 128 * 32 raw bytes.
            Plus, we also may have the stop byte. */
         allocated = PyBytes_GET_SIZE(out);
-        if (allocated < len + 4098) {  /* increase allocation */
+        if (allocated < len + 1 + 128 * 32 + 1) {  /* increase allocation */
             if (_PyBytes_Resize(&out, allocated + 32768) < 0)
                 return NULL;
             str = PyBytes_AS_STRING(out);
@@ -1503,7 +1503,7 @@ sc_read_raw(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int k)
     char *buff = a->ob_item + offset;
     int i, c;
 
-    assert(1 <= k && k <= 4096);
+    assert(1 <= k && k <= 32 * 128);
     if (offset + k > Py_SIZE(a)) {
         PyErr_Format(PyExc_ValueError, "decode error (raw): %zd + %d > %zd",
                      offset, k, Py_SIZE(a));
