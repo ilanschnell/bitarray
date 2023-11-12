@@ -1222,10 +1222,9 @@ sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
         while (k < 32 * 128 && k + 32 <= nbytes &&
                32 <= sc_count(a, rts, offset + k, 1))
             k += 32;
-
-        assert(k % SEGSIZE == 0);
     }
     assert(0 < k && k <= 32 * 128 && k <= nbytes);
+    assert((k >= 32 || k == nbytes) && (k <= 32 || k % 32 == 0));
 
     /* block header */
     *str = (char) (k <= 32 ? k : (k / 32) + 31);
@@ -1233,7 +1232,6 @@ sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
     /* block data */
     assert(offset + k <= Py_SIZE(a));
     memcpy(str + 1, a->ob_item + offset, (size_t) k);
-
     return (int) k;
 }
 
