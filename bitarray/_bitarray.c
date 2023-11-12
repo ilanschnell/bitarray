@@ -200,6 +200,7 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
+    assert(self->readonly == 0);
 
     for (buff = self->ob_item + a; a < b; a++, buff++)
         *buff = reverse_trans[(unsigned char) *buff];
@@ -380,7 +381,6 @@ invert(bitarrayobject *self)
     uint64_t *wbuff = WBUFF(self);
     Py_ssize_t i;
 
-    assert_nbits(self);
     assert(self->readonly == 0);
     for (i = 0; i < cwords; i++)
         wbuff[i] = ~wbuff[i];
