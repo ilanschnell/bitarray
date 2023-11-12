@@ -1,3 +1,7 @@
+2023-XX-XX   2.8.4:
+-------------------
+
+
 2023-11-11   2.8.3:
 -------------------
   * ensure readonly attribute is set correctly when creating new objects,
