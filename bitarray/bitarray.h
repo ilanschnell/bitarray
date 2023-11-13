@@ -73,7 +73,7 @@ typedef struct {
 #define IS_LE(self)  ((self)->endian == ENDIAN_LITTLE)
 #define IS_BE(self)  ((self)->endian == ENDIAN_BIG)
 
-/* the endianness string */
+/* endianness as string */
 #define ENDIAN_STR(endian)  ((endian) == ENDIAN_LITTLE ? "little" : "big")
 
 /* number of pad bits */
@@ -179,7 +179,7 @@ set_padbits(bitarrayobject *self)
         self->ob_item[Py_SIZE(self) - 1] &= ones_table[IS_BE(self)][r];
 }
 
-/* Population count: count the number of 1's in 'x'. */
+/* population count - number of 1's in uint64 */
 static inline int
 popcnt_64(uint64_t x)
 {
@@ -199,7 +199,7 @@ popcnt_64(uint64_t x)
 #endif  /* __GNUC__ */
 }
 
-/* population count of `n` words starting from `w` */
+/* population count of n words starting from at uint64_t pointer w */
 static inline Py_ssize_t
 popcnt_words(uint64_t *w, Py_ssize_t n)
 {
