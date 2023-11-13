@@ -54,7 +54,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     assert(self->ob_item != NULL || (size == 0 && allocated == 0));
     /* allocated == 0 implies size == 0 */
     assert(allocated != 0 || size == 0);
-    /* resize() is never called on readonly memory */
+    /* resize() is never called on read-only memory */
     assert(self->readonly == 0);
 
     if (newsize == size) {
@@ -845,7 +845,7 @@ bitarray_any(bitarrayobject *self)
 PyDoc_STRVAR(any_doc,
 "any() -> bool\n\
 \n\
-Return True when any bit in bitaarray is True.\n\
+Return True when any bit in bitarray is True.\n\
 Note that `a.any()` is faster than `any(a)`.");
 
 
@@ -1856,7 +1856,7 @@ static PyGetSetDef bitarray_getsets [] = {
     {"padbits", (getter) bitarray_get_padbits, NULL,
      PyDoc_STR("number of pad bits")},
     {"readonly", (getter) bitarray_get_readonly, NULL,
-     PyDoc_STR("bool indicating whether buffer is read only")},
+     PyDoc_STR("bool indicating whether buffer is read-only")},
     {NULL, NULL, NULL, NULL}
 };
 
@@ -4001,7 +4001,7 @@ The bit endianness effects the buffer representation of the bitarray.\n\
 \n\
 `buffer`: Any object which exposes a buffer.  When provided, `initializer`\n\
 cannot be present (or has to be `None`).  The imported buffer may be\n\
-readonly or writable, depending on the object type.");
+read-only or writable, depending on the object type.");
 
 
 static PyTypeObject Bitarray_Type = {
