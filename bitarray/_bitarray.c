@@ -2338,9 +2338,7 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
                      "size %zd to bitarray of size %zd", n, other->nbits);
         return -1;
     }
-    /* Make a copy of other, in case buffers overlap.  This is obviously
-       the case when self and other are the same object, but can also happen
-       when the two bitarrays share memory. */
+    /* Make a copy of other, see comment in setslice_bitarray(). */
     if (buffers_overlap(self, other)) {
         if ((other = bitarray_cp(other)) == NULL)
             return -1;
