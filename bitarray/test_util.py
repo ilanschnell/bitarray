@@ -1403,6 +1403,17 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertEqual(rts, [0, 5, 5, 8, 12])
 
     @skipIf(not DEBUG)
+    def test_rts_ones(self):
+        for n in range(2000):
+            a = bitarray(n)
+            a.setall(1)
+            rts = _sc_rts(a)
+            self.assertEqual(rts[0], 0)
+            self.assertEqual(rts[-1], n)
+            for i, v in enumerate(rts):
+                self.assertEqual(v, min(8 * _SEGSIZE * i, n))
+
+    @skipIf(not DEBUG)
     def test_rts_random(self):
         segbits = 8 * _SEGSIZE
         for n in range(2000):
@@ -1411,7 +1422,6 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(len(rts), (n + segbits - 1) // segbits + 1)
             self.assertEqual(rts[0], 0)
             self.assertEqual(rts[-1], a.count())
-
             for i in range(len(rts) - 1):
                 seg_pop = a.count(1, segbits * i, segbits * (i + 1))
                 self.assertEqual(rts[i + 1] - rts[i], seg_pop)
