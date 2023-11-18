@@ -31,8 +31,6 @@ from bitarray.util import (
 
 if DEBUG:
     from bitarray._util import _sc_rts, _SEGSIZE  # type: ignore
-else:
-    _SEGSIZE = -1
 
 if sys.version_info[0] == 3:
     from io import StringIO
@@ -1392,7 +1390,7 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertEqual(len(rts), 1)
         self.assertEqual(rts, [0])
 
-    @skipIf(_SEGSIZE != 32)
+    @skipIf(not DEBUG or _SEGSIZE != 32)
     def test_rts_example(self):
         # see example before sc_calc_rts() in _util.c
         a = zeros(987)
