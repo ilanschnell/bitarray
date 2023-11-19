@@ -268,17 +268,16 @@ static PyObject *
 parity(PyObject *module, PyObject *obj)
 {
     bitarrayobject *a;
-    uint64_t par = 0;
+    uint64_t par;
     Py_ssize_t i;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
     a = (bitarrayobject *) obj;
+    par = zlw(a);
     for (i = 0; i < a->nbits / 64; i++)
         par ^= WBUFF(a)[i];
-    if (a->nbits % 64)
-        par ^= zlw(a);
     for (i = 32; i > 0; i /= 2)
         par ^= par >> i;
     return PyLong_FromLong(par & 1);
