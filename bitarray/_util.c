@@ -2042,7 +2042,7 @@ init_util(void)
         goto error;
     Py_SET_TYPE(&CHDI_Type, &PyType_Type);
 
-#ifndef NDEBUG  /* expose segment size for testing */
+#ifndef NDEBUG  /* expose segment size in debug mode for testing */
     PyModule_AddObject(m, "_SEGSIZE", PyLong_FromSsize_t(SEGSIZE));
 #endif
 
