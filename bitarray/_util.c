@@ -285,7 +285,7 @@ parity(PyObject *module, PyObject *obj)
         x ^= x >> i;
     x &= 1;
 #endif
-    return PyLong_FromLong(x);
+    return PyLong_FromLong((long) x);
 }
 
 PyDoc_STRVAR(parity_doc,
