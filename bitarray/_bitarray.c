@@ -3630,9 +3630,8 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, char *endian_str)
         PyErr_SetString(PyExc_ValueError, "endianness missing for pickle");
         return NULL;
     }
-    if ((endian = endian_from_string(endian_str)) < 0)
-        /* cannot happen as we called the check string before */
-        return NULL;
+    endian = endian_from_string(endian_str);
+    assert(endian >= 0);           /* endian_str was checked before */
 
     assert(PyBytes_Check(bytes));
     nbytes = PyBytes_GET_SIZE(bytes);
@@ -3667,8 +3666,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
                                      kwlist, &initial, &endian_str, &buffer))
         return NULL;
 
-    endian = endian_from_string(endian_str);
-    if (endian < 0)
+    if ((endian = endian_from_string(endian_str)) < 0)
         return NULL;
 
     if (buffer != Py_None) {
