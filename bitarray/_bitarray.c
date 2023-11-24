@@ -1752,8 +1752,8 @@ bitarray_remove(bitarrayobject *self, PyObject *value)
 PyDoc_STRVAR(remove_doc,
 "remove(value, /)\n\
 \n\
-Remove the first occurrence of `value` in the bitarray.\n\
-Raises `ValueError` if item is not present.");
+Remove the first occurrence of `value`.\n\
+Raises `ValueError` if value is not present.");
 
 
 static PyObject *
