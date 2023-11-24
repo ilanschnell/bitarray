@@ -2982,6 +2982,7 @@ class MethodTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             b = a.copy()
             a.reverse()
+            self.assertEqual(a.tolist(), b.tolist()[::-1])
             self.assertEQUAL(a, bitarray(reversed(b), endian=a.endian()))
             self.assertEQUAL(a, b[::-1])
             self.check_obj(a)
