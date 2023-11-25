@@ -701,9 +701,15 @@ class InternalTests(unittest.TestCase, Util):
             b = randint(a, x.nbytes)
             n = randrange(8)
             y = x.copy()
+            if a < b:
+                z = x[:8 * a] + zeros(n) + x[8 * a : 8 * b - n] + x[8 * b:]
+                del z[N:]
+            else:
+                z = x.copy()
             x._shift_r8(a, b, n)
             y[8 * a : 8 * b] >>= n
             self.assertEQUAL(x, y)
+            self.assertEQUAL(x, z)
             self.assertEqual(len(x), N)
 
     def test_copy_n_explicit(self):
