@@ -293,7 +293,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         if (self->endian != other->endian)
             bytereverse(self, p1, p2 + 1);
 
-        if (m2)  /* restore bits not to be copied */
+        if (m2)  /* restore bits overwritten by highest copied byte */
             *cp2 = (*cp2 & m2) | (t2 & ~m2);
     }
     else if (n < 8) {                            /***** small n case *****/
