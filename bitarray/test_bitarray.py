@@ -703,7 +703,8 @@ class InternalTests(unittest.TestCase, Util):
             y = x.copy()
             if a < b:
                 z = x[:8 * a] + zeros(n) + x[8 * a : 8 * b - n] + x[8 * b:]
-                del z[N:]
+                if 8 * b > N:
+                    del z[N:]
             else:
                 z = x.copy()
             x._shift_r8(a, b, n)
