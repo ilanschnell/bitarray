@@ -744,11 +744,18 @@ class InternalTests(unittest.TestCase, Util):
         x = urandom(N, self.random_endian())
         x_lst = x.tolist()
         y = x if M < 0 else urandom(M, self.random_endian())
-        x_lst[a:a + n] = y.tolist()[b:b + n]
+        y_lst = y.tolist()
+        x_lst[a:a + n] = y_lst[b:b + n]
         x._copy_n(a, y, b, n)
         self.assertEqual(x, bitarray(x_lst))
         self.assertEqual(len(x), N)
         self.check_obj(x)
+
+        if M < 0:
+            return
+        self.assertEqual(y, bitarray(y_lst))
+        self.assertEqual(len(y), M)
+        self.check_obj(y)
 
     def test_copy_n_range(self):
         for a in range(8):
