@@ -26,7 +26,11 @@ def mark_range(i, j, c, text=''):
 
 
 def shift_r8(self, a, b, n):
-    assert a <= b and 0 <= n < 8
+    assert 0 <= n < 8
+    assert 0 <= a <= self.nbytes
+    assert 0 <= b <= self.nbytes
+    if n == 0 or a >= b:
+        return
     self[8 * a : 8 * b] >>= n
 
 def is_be(self):
@@ -43,9 +47,9 @@ ones_table = [
 ]
 
 def copy_n(self, a, other, b, n):
-    assert 0 <= a <= len(self)
-    assert 0 <= b <= len(other)
-    assert n >= 0
+    assert 0 <= n <= min(len(self), len(other))
+    assert 0 <= a <= len(self) - n
+    assert 0 <= b <= len(other) - n
     if n == 0 or (self is other and a == b):
         return
 
@@ -62,97 +66,95 @@ def copy_n(self, a, other, b, n):
         if self.endian() != other.endian():
             self.bytereverse(p1, p2 + 1)
 
-        if m2:
+        if m2:  # restore bits overwritten by highest copied byte
             memoryview(self)[p2] = (memoryview(self)[p2] & m2) | (t2 & ~m2)
-        return
 
-    if n < 8:                                # small n case
-        if a <= b:  # loop forward
+    elif n < 8:                              # small n case
+        if a <= b:  # loop forward (delete)
             for i in range(n):
                 self[i + a] = other[i + b]
-        else:       # loop backwards
+        else:       # loop backwards (insert)
             for i in range(n - 1, -1, -1):
                 self[i + a] = other[i + b]
-        return
 
-    # -------------------------------------- # general case
-    p1 = a // 8
-    p2 = (a + n - 1) // 8
-    p3 = b // 8
-    sa = a % 8
-    sb = -(b % 8)
-    m1 = ones_table[is_be(self)][sa]
-    m2 = ones_table[is_be(self)][(a + n) % 8]
+    else:                                    # general case
+        p1 = a // 8
+        p2 = (a + n - 1) // 8
+        p3 = b // 8
+        sa = a % 8
+        sb = -(b % 8)
+        m1 = ones_table[is_be(self)][sa]
+        m2 = ones_table[is_be(self)][(a + n) % 8]
 
-    assert n >= 8
-    assert a - sa == 8 * p1
-    assert b + sb == 8 * p3
-    assert a + n > 8 * p2
+        assert n >= 8 and p1 <= p2
+        assert a - sa == 8 * p1
+        assert b + sb == 8 * p3
+        assert a + n > 8 * p2
 
-    if verbose:
-        print('a =', a)
-        print('b =', b)
-        print('n =', n)
-        print('p1 =', p1)
-        print('p2 =', p2)
-        print('p3 =', p3)
-        print('sa =', sa)
-        print('sb =', sb)
-
-    t1 = memoryview(self)[p1]
-    t2 = memoryview(self)[p2]
-    t3 = memoryview(other)[p3]
-
-    if sa + sb < 0:
-        sb += 8
         if verbose:
-            print(' -> sb =', sb)
+            print('a =', a)
+            print('b =', b)
+            print('n =', n)
+            print('p1 =', p1)
+            print('p2 =', p2)
+            print('p3 =', p3)
+            print('sa =', sa)
+            print('sb =', sb)
 
-    if verbose:
-        print('other')
-        pprint(other)
-        mark_range_n(b, n, '^', 'b..b+n')
-        mark_range_n(b + sb, n - sb, '=')
-        mark_range_n(b, sb, '3')
+        t1 = memoryview(self)[p1]
+        t2 = memoryview(self)[p2]
+        t3 = memoryview(other)[p3]
 
-        print('self')
-        pprint(self)
-        mark_range_n(a, n, '^', 'a..a+n')
-        mark_range(8 * p1, a, '1')
-        mark_range(a + n, 8 * p2 + 8, '2')
+        if sa + sb < 0:
+            sb += 8
+            if verbose:
+                print(' -> sb =', sb)
 
-        print('copy_n')
-        mark_range_n(a - sa, n - sb, '=')
-
-    copy_n(self, a - sa, other, b + sb, n - sb)
-    if verbose:
-        pprint(self)
-
-        print('rshift', sa + sb)
-        mark_range(8 * p1, 8 * (p2 + 1), '>')
-
-    shift_r8(self, p1, p2 + 1, sa + sb)
-    if verbose:
-        pprint(self)
-        mark_range_n(8 * p1 + sa + sb, n - sb, '=', 'a..a+n')
-
-    if m1:
         if verbose:
+            print('other')
+            pprint(other)
+            mark_range_n(b, n, '^', 'b..b+n')
+            mark_range_n(b + sb, n - sb, '=')
+            mark_range_n(b, sb, '3')
+
+            print('self')
+            pprint(self)
+            mark_range_n(a, n, '^', 'a..a+n')
             mark_range(8 * p1, a, '1')
-        memoryview(self)[p1] = (memoryview(self)[p1] & ~m1) | (t1 & m1)
-
-    if m2 and sa + sb:
-        if verbose:
             mark_range(a + n, 8 * p2 + 8, '2')
-        memoryview(self)[p2] = (memoryview(self)[p2] & m2) | (t2 & ~m2)
 
-    if verbose:
-        mark_range_n(a, sb, '3')
-    for i in range(sb):
-        self[i + a] = bool(t3 & bitmask_table[is_be(other)][(i + b) % 8])
+            print('copy_n')
+            mark_range_n(a - sa, n - sb, '=')
 
-    if verbose:
-        pprint(self)
+        copy_n(self, a - sa, other, b + sb, n - sb)  # aligned copy
+        if verbose:
+            pprint(self)
+
+            print('rshift', sa + sb)
+            mark_range(8 * p1, 8 * (p2 + 1), '>')
+
+        shift_r8(self, p1, p2 + 1, sa + sb)          # right shift
+        if verbose:
+            pprint(self)
+            mark_range_n(8 * p1 + sa + sb, n - sb, '=', 'a..a+n')
+
+        if m1:               # restore bits at p1
+            if verbose:
+                mark_range(8 * p1, a, '1')
+            memoryview(self)[p1] = (memoryview(self)[p1] & ~m1) | (t1 & m1)
+
+        if m2 and sa + sb:   # if shifted, restore bits at p2
+            if verbose:
+                mark_range(a + n, 8 * p2 + 8, '2')
+            memoryview(self)[p2] = (memoryview(self)[p2] & m2) | (t2 & ~m2)
+
+        if verbose:
+            mark_range_n(a, sb, '3')
+        for i in range(sb):  # copy first bits missed by copy_n()
+            self[i + a] = bool(t3 & bitmask_table[is_be(other)][(i + b) % 8])
+
+        if verbose:
+            pprint(self)
 
 
 def test_copy_n():
