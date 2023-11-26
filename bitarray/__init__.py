@@ -37,7 +37,7 @@ and may therefore be used as a dictionary key.
     def __hash__(self):
         "Return hash(self)."
         # ensure hash is independent of endianness
-        a = self if self.endian() == 'big' else bitarray(self, 'big')
+        a = bitarray(self, 'big')
         return hash((len(a), a.tobytes()))
 
     # Technically the code below is not necessary, as all these methods will
