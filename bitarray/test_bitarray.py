@@ -764,6 +764,14 @@ class InternalTests(unittest.TestCase, Util):
                     self.check_copy_n(100,  -1, a, b, n)
                     self.check_copy_n(100, 100, a, b, n)
 
+    def test_copy_n_random_self_small(self):
+        for _ in range(1000):
+            N = randrange(10)
+            n = randint(0, N)
+            a = randint(0, N - n)
+            b = randint(0, N - n)
+            self.check_copy_n(N, -1, a, b, n)
+
     def test_copy_n_random_self(self):
         for _ in range(1000):
             N = randrange(200)

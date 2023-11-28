@@ -273,6 +273,8 @@ static void
 copy_n(bitarrayobject *self, Py_ssize_t a,
        bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
 {
+    int sa = a % 8, sb = -(b % 8);
+
     assert(0 <= n && n <= self->nbits && n <= other->nbits);
     assert(0 <= a && a <= self->nbits - n);
     assert(0 <= b && b <= other->nbits - n);
@@ -280,7 +282,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     if (n == 0 || (self == other && a == b))
         return;
 
-    if (a % 8 == 0 && b % 8 == 0) {              /***** aligned case *****/
+    if (sa == 0 && sb == 0) {                    /***** aligned case *****/
         Py_ssize_t p1 = a / 8;
         Py_ssize_t p2 = (a + n - 1) / 8;
         char *cp2 = self->ob_item + p2;
@@ -312,8 +314,6 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         Py_ssize_t p1 = a / 8;
         Py_ssize_t p2 = (a + n - 1) / 8;
         Py_ssize_t p3 = b / 8;
-        int sa = a % 8;
-        int sb = -(b % 8);
         char *cp1 = self->ob_item + p1;
         char *cp2 = self->ob_item + p2;
         char m1 = ones_table[IS_BE(self)][sa];

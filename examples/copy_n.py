@@ -47,13 +47,16 @@ ones_table = [
 ]
 
 def copy_n(self, a, other, b, n):
+    sa = a % 8
+    sb = -(b % 8)
+
     assert 0 <= n <= min(len(self), len(other))
     assert 0 <= a <= len(self) - n
     assert 0 <= b <= len(other) - n
     if n == 0 or (self is other and a == b):
         return
 
-    if a % 8 == 0 and b % 8 == 0:            # aligned case
+    if sa == 0 and sb == 0:                  # aligned case
         p1 = a // 8
         p2 = (a + n - 1) // 8
         m = bits2bytes(n)
@@ -81,8 +84,6 @@ def copy_n(self, a, other, b, n):
         p1 = a // 8
         p2 = (a + n - 1) // 8
         p3 = b // 8
-        sa = a % 8
-        sb = -(b % 8)
         m1 = ones_table[is_be(self)][sa]
         m2 = ones_table[is_be(self)][(a + n) % 8]
 
