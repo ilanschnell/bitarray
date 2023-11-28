@@ -47,6 +47,9 @@ ones_table = [
 ]
 
 def copy_n(self, a, other, b, n):
+    p1 = a // 8
+    p2 = (a + n - 1) // 8
+    p3 = b // 8
     sa = a % 8
     sb = -(b % 8)
 
@@ -57,15 +60,13 @@ def copy_n(self, a, other, b, n):
         return
 
     if sa == 0 and sb == 0:                  # aligned case
-        p1 = a // 8
-        p2 = (a + n - 1) // 8
         m = bits2bytes(n)
 
         assert p1 + m == p2 + 1
         m2 = ones_table[is_be(self)][(a + n) % 8]
         t2 = memoryview(self)[p2]
 
-        memoryview(self)[p1:p1 + m] = memoryview(other)[b // 8:b // 8 + m]
+        memoryview(self)[p1:p1 + m] = memoryview(other)[p3:p3 + m]
         if self.endian() != other.endian():
             self.bytereverse(p1, p2 + 1)
 
@@ -81,9 +82,6 @@ def copy_n(self, a, other, b, n):
                 self[i + a] = other[i + b]
 
     else:                                    # general case
-        p1 = a // 8
-        p2 = (a + n - 1) // 8
-        p3 = b // 8
         m1 = ones_table[is_be(self)][sa]
         m2 = ones_table[is_be(self)][(a + n) % 8]
 
