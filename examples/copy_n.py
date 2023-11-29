@@ -2,7 +2,38 @@
 The purpose of this script is to illustrate how copy_n() in _bitarray.c works.
 This is essentially a Python implementation of copy_n() with output of the
 different stages of the bitarray we copy into.
-For more details, see also: bitarray/copy_n.txt
+
+Sample output:
+a = 21
+b = 6
+n = 31
+p1 = 2
+p2 = 6
+p3 = 0
+sa = 5
+sb = -6
+ -> sb = 2
+other
+bitarray('00101110 11111001 01011101 11001011 10110000 01011110 011')
+b..b+n          ^^ ^^^^^^^^ ^^^^^^^^ ^^^^^^^^ ^^^^^
+                   ======== ======== ======== ========
+                33
+self
+bitarray('01011101 11100101 01110101 01011001 01110100 10001010 01111011')
+a..a+n                           ^^^ ^^^^^^^^ ^^^^^^^^ ^^^^^^^^ ^^^^
+                            11111
+                                                                    2222
+memmove 4
+                            ======== ======== ======== ========
+bitarray('01011101 11100101 11111001 01011101 11001011 10110000 01111011')
+rshift 7
+                            >>>>>>>> >>>>>>>> >>>>>>>> >>>>>>>> >>>>>>>>
+bitarray('01011101 11100101 00000001 11110010 10111011 10010111 01100000')
+                                   = ======== ======== ======== ========
+                            11111
+                                                                    2222
+                                 33
+bitarray('01011101 11100101 01110101 11110010 10111011 10010111 01101011')
 """
 from random import getrandbits, randrange, randint
 from io import StringIO
@@ -52,6 +83,7 @@ def copy_n(self, a, other, b, n):
     p3 = b // 8
     sa = a % 8
     sb = -(b % 8)
+    t3 = 0
 
     assert 0 <= n <= min(len(self), len(other))
     assert 0 <= a <= len(self) - n
@@ -59,101 +91,87 @@ def copy_n(self, a, other, b, n):
     if n == 0 or (self is other and a == b):
         return
 
-    if sa == 0 and sb == 0:                  # aligned case
-        m = bits2bytes(n)
+    if verbose:
+        print('a =', a)
+        print('b =', b)
+        print('n =', n)
+        print('p1 =', p1)
+        print('p2 =', p2)
+        print('p3 =', p3)
+        print('sa =', sa)
+        print('sb =', sb)
 
-        assert p1 + m == p2 + 1
-        m2 = ones_table[is_be(self)][(a + n) % 8]
-        t2 = memoryview(self)[p2]
-
-        memoryview(self)[p1:p1 + m] = memoryview(other)[p3:p3 + m]
-        if self.endian() != other.endian():
-            self.bytereverse(p1, p2 + 1)
-
-        if m2:  # restore bits overwritten by highest copied byte
-            memoryview(self)[p2] = (memoryview(self)[p2] & m2) | (t2 & ~m2)
-
-    elif n < 8:                              # small n case
-        if a <= b:  # loop forward (delete)
-            for i in range(n):
-                self[i + a] = other[i + b]
-        else:       # loop backwards (insert)
-            for i in range(n - 1, -1, -1):
-                self[i + a] = other[i + b]
-
-    else:                                    # general case
-        m1 = ones_table[is_be(self)][sa]
-        m2 = ones_table[is_be(self)][(a + n) % 8]
-
-        assert n >= 8 and p1 <= p2
-        assert a - sa == 8 * p1
-        assert b + sb == 8 * p3
-        assert a + n > 8 * p2
-
-        if verbose:
-            print('a =', a)
-            print('b =', b)
-            print('n =', n)
-            print('p1 =', p1)
-            print('p2 =', p2)
-            print('p3 =', p3)
-            print('sa =', sa)
-            print('sb =', sb)
-
-        t1 = memoryview(self)[p1]
-        t2 = memoryview(self)[p2]
+    if sa + sb < 0:
+        # In order to keep total right shift (sa + sb) positive, we
+        # increase the first byte to be copied from (p3) by one byte,
+        # such that memmove() will move all bytes one extra to the left.
         t3 = memoryview(other)[p3]
-
-        if sa + sb < 0:
-            sb += 8
-            if verbose:
-                print(' -> sb =', sb)
-
+        p3 += 1
+        sb += 8
         if verbose:
-            print('other')
-            pprint(other)
-            mark_range_n(b, n, '^', 'b..b+n')
-            mark_range_n(b + sb, n - sb, '=')
-            mark_range_n(b, sb, '3')
+            print(' -> sb =', sb)
 
-            print('self')
-            pprint(self)
-            mark_range_n(a, n, '^', 'a..a+n')
+    assert a - sa == 8 * p1 and b + sb == 8 * p3
+    assert p1 <= p2 and 8 * p2 < a + n <= 8 * (p2 + 1)
+
+    if verbose:
+        print('other')
+        pprint(other)
+        mark_range_n(b, n, '^', 'b..b+n')
+        if n > sb:
+            mark_range_n(8 * p3, 8 * bits2bytes(n - sb), '=')
+        mark_range_n(b, sb, '3')
+        print('self')
+        pprint(self)
+        mark_range_n(a, n, '^', 'a..a+n')
+        if n > sb:
             mark_range(8 * p1, a, '1')
             mark_range(a + n, 8 * p2 + 8, '2')
 
-            print('copy_n')
-            mark_range_n(a - sa, n - sb, '=')
+    if n > sb:
+        m = bits2bytes(n - sb)
+        m1 = ones_table[is_be(self)][sa]
+        m2 = ones_table[is_be(self)][(a + n) % 8]
+        t1 = memoryview(self)[p1]
+        t2 = memoryview(self)[p2]
 
-        copy_n(self, a - sa, other, b + sb, n - sb)  # aligned copy
+        assert p1 + m == p2 or p1 + m == p2 + 1
+        assert p1 + m <= self.nbytes and p3 + m <= other.nbytes
+
+        # aligned copy -- copy first sb bits (if any) later
+        memoryview(self)[p1:p1 + m] = memoryview(other)[p3:p3 + m]
+        if self.endian() != other.endian():
+            self.bytereverse(p1, p1 + m)
+
         if verbose:
+            print('memmove', m)
+            mark_range_n(8 * p1, 8 * m, '=')
             pprint(self)
-
             print('rshift', sa + sb)
             mark_range(8 * p1, 8 * (p2 + 1), '>')
 
         shift_r8(self, p1, p2 + 1, sa + sb)          # right shift
         if verbose:
             pprint(self)
-            mark_range_n(8 * p1 + sa + sb, n - sb, '=', 'a..a+n')
+            mark_range(8 * p1 + sa + sb, 8 * (p2 + 1), '=')
 
         if m1:               # restore bits at p1
             if verbose:
                 mark_range(8 * p1, a, '1')
             memoryview(self)[p1] = (memoryview(self)[p1] & ~m1) | (t1 & m1)
 
-        if m2 and sa + sb:   # if shifted, restore bits at p2
+        if m2:               # restore bits at p2
             if verbose:
                 mark_range(a + n, 8 * p2 + 8, '2')
             memoryview(self)[p2] = (memoryview(self)[p2] & m2) | (t2 & ~m2)
 
-        if verbose:
-            mark_range_n(a, sb, '3')
-        for i in range(sb):  # copy first bits missed by copy_n()
-            self[i + a] = bool(t3 & bitmask_table[is_be(other)][(i + b) % 8])
+    if verbose:
+        mark_range_n(a, sb, '3')
+    for i in range(min(sb, n)):  # copy first sb bits
+        self[i + a] = bool(t3 & bitmask_table[is_be(other)][(i + b) % 8])
 
-        if verbose:
-            pprint(self)
+    if verbose:
+        pprint(self)
 
 
 def test_copy_n():
@@ -196,3 +214,5 @@ if __name__ == '__main__':
     copy_n(self, 21, other, 6, 31)
     assert self == bitarray(
         '01011101 11100101 01110101 11110010 10111011 10010111 01101011')
+    #copy_n(self, 2, other, 12, 1)
+    #copy_n(self, 9, other, 17, 23)

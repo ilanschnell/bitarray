@@ -731,7 +731,7 @@ class InternalTests(unittest.TestCase, Util):
         self.assertEqual(x, y)
 
     def test_copy_n_example(self):
-        # example givin in bitarray/copy_n.txt
+        # example given in examples/copy_n.py
         y = bitarray(
             '00101110 11111001 01011101 11001011 10110000 01011110 011')
         x =  bitarray(
