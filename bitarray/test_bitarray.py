@@ -678,8 +678,8 @@ class InternalTests(unittest.TestCase, Util):
             self.assertEqual(a, b)
 
     def test_shift_r8_explicit(self):
-        x = bitarray('11000100 11111111 11100111 11111111 00001000')
-        y = bitarray('11000100 00000111 11111111 00111111 00001000')
+        x = bitarray('11000100 11111111 11100111 10111111 00001000')
+        y = bitarray('11000100 00000111 11111111 00111101 00001000')
         x._shift_r8(1, 4, 5)
         self.assertEqual(x, y)
 
@@ -701,16 +701,16 @@ class InternalTests(unittest.TestCase, Util):
             b = randint(a, x.nbytes)
             n = randrange(8)
             y = x.copy()
-            if a < b:
-                z = x[:8 * a] + zeros(n) + x[8 * a : 8 * b - n] + x[8 * b:]
-                if 8 * b > N:
-                    del z[N:]
-            else:
-                z = x.copy()
-            x._shift_r8(a, b, n)
             y[8 * a : 8 * b] >>= n
-            self.assertEQUAL(x, y)
-            self.assertEQUAL(x, z)
+            s = x.to01()
+            if a < b:
+                s = s[:8 * a] + n * "0" + s[8 * a : 8 * b - n] + s[8 * b:]
+                if 8 * b > N:
+                    s = s[:N]
+            x._shift_r8(a, b, n)
+            self.assertEqual(x.to01(), s)
+            self.assertEqual(x, y)
+            self.assertEqual(x.endian(), y.endian())
             self.assertEqual(len(x), N)
 
     def test_copy_n_explicit(self):
@@ -757,16 +757,9 @@ class InternalTests(unittest.TestCase, Util):
         self.assertEqual(len(y), M)
         self.check_obj(y)
 
-    def test_copy_n_range(self):
-        for a in range(8):
-            for b in range(8):
-                for n in range(90):
-                    self.check_copy_n(100,  -1, a, b, n)
-                    self.check_copy_n(100, 100, a, b, n)
-
     def test_copy_n_random_self_small(self):
-        for _ in range(1000):
-            N = randrange(10)
+        for _ in range(10000):
+            N = randrange(20)
             n = randint(0, N)
             a = randint(0, N - n)
             b = randint(0, N - n)
@@ -918,16 +911,16 @@ class SliceTests(unittest.TestCase, Util):
                 s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
                 self.assertEQUAL(a[s], bitarray(aa[s], endian=a.endian()))
 
-    def test_getslice_random2(self):
-        n = randint(1000, 2000)
-        a = urandom(n, self.random_endian())
-        sa = a.to01()
-        for _ in range(50):
+    def test_getslice_random_step1(self):
+        for _ in range(1000):
+            n = randrange(200)
+            a = urandom(n, self.random_endian())
+            sa = a.to01()
             i = randint(0, n)
-            j = randint(i, n)
+            j = randint(0, n)
             b = a[i:j]
             self.assertEqual(b.to01(), sa[i:j])
-            self.assertEqual(len(b), j - i)
+            self.assertEqual(len(b), max(j - i, 0))
             self.assertEqual(b.endian(), a.endian())
 
     def test_setitem_simple(self):

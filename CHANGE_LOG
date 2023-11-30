@@ -1,6 +1,6 @@
 2023-XX-XX   2.8.4:
 -------------------
-  * simplify implementation of `copy_n()` (remove special cases)
+  * simplify of `copy_n()` (remove special cases), see #d2d6fd53
   * improve documentation and testing
 
 
