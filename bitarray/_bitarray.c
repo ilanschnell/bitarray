@@ -273,10 +273,10 @@ static void
 copy_n(bitarrayobject *self, Py_ssize_t a,
        bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
 {
-    Py_ssize_t p1 = a / 8;            /* first byte to copied to */
-    Py_ssize_t p2 = (a + n - 1) / 8;  /* last byte to be copied to */
-    Py_ssize_t p3 = b / 8;            /* first byte to be copied from */
-    int sa = a % 8, sb = -(b % 8), be = IS_BE(self);
+    const Py_ssize_t p1 = a / 8;            /* first byte to copied to */
+    const Py_ssize_t p2 = (a + n - 1) / 8;  /* last byte to be copied to */
+    Py_ssize_t p3 = b / 8;             /* first byte to be memmoved from */
+    int sa = a % 8, sb = -(b % 8);
     char t3 = 0;  /* silence uninitialized warning on some compilers */
     Py_ssize_t i;
 
@@ -294,9 +294,10 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     assert(a - sa == 8 * p1 && b + sb == 8 * p3);
     assert(p1 <= p2 && 8 * p2 < a + n && a + n <= 8 * (p2 + 1));
     if (n > sb) {
-        Py_ssize_t m = BYTES(n - sb);
-        char *cp1 = self->ob_item + p1, m1 = ones_table[be][sa];
-        char *cp2 = self->ob_item + p2, m2 = ones_table[be][(a + n) % 8];
+        const char *table = ones_table[IS_BE(self)];
+        const Py_ssize_t m = BYTES(n - sb);
+        char *cp1 = self->ob_item + p1, m1 = table[sa];
+        char *cp2 = self->ob_item + p2, m2 = table[(a + n) % 8];
         char t1 = *cp1, t2 = *cp2;
 
         assert(p1 + m == p2 || p1 + m == p2 + 1);
