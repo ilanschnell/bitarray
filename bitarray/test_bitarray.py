@@ -757,30 +757,20 @@ class InternalTests(unittest.TestCase, Util):
         self.assertEqual(len(y), M)
         self.check_obj(y)
 
-    def test_copy_n_random_self_small(self):
-        for _ in range(10000):
-            N = randrange(20)
-            n = randint(0, N)
-            a = randint(0, N - n)
-            b = randint(0, N - n)
-            self.check_copy_n(N, -1, a, b, n)
+    def test_copy_n_random(self):
+        for repeat, max_size in (10000, 25), (1000, 200):
+            for _ in range(repeat):
+                N = randrange(max_size)
+                n = randint(0, N)
+                a = randint(0, N - n)
+                b = randint(0, N - n)
+                self.check_copy_n(N, -1, a, b, n)
 
-    def test_copy_n_random_self(self):
-        for _ in range(1000):
-            N = randrange(200)
-            n = randint(0, N)
-            a = randint(0, N - n)
-            b = randint(0, N - n)
-            self.check_copy_n(N, -1, a, b, n)
-
-    def test_copy_n_random_other(self):
-        for _ in range(1000):
-            N = randrange(200)
-            M = randrange(200)
-            n = randint(0, min(N, M))
-            a = randint(0, N - n)
-            b = randint(0, M - n)
-            self.check_copy_n(N, M, a, b, n)
+                M = randrange(max_size)
+                n = randint(0, min(N, M))
+                a = randint(0, N - n)
+                b = randint(0, M - n)
+                self.check_copy_n(N, M, a, b, n)
 
     @staticmethod
     def getslice(a, start, slicelength):
@@ -1078,7 +1068,7 @@ class SliceTests(unittest.TestCase, Util):
         # copied onto itself in reverse order.  So we need to make a copy
         # in setslice_bitarray().  However, since a and b are two distinct
         # objects, it is not enough to check for self == other, but rather
-        # self->ob_item == other->ob_item.
+        # check whether their buffers overlap.
         a = bitarray('11100000')
         b = bitarray(buffer=a)
         b[::-1] = a
@@ -3101,9 +3091,9 @@ class MethodTests(unittest.TestCase, Util):
         a.setall(True)
         self.assertRaises(ValueError, a.setall, -1)
         self.assertRaises(TypeError, a.setall, None)
-        self.assertEQUAL(a, bitarray('11111'))
+        self.assertEqual(a.to01(), '11111')
         a.setall(0)
-        self.assertEQUAL(a, bitarray('00000'))
+        self.assertEqual(a.to01(), '00000')
         self.check_obj(a)
 
     def test_setall_empty(self):
@@ -3115,9 +3105,11 @@ class MethodTests(unittest.TestCase, Util):
 
     def test_setall_random(self):
         for a in self.randombitarrays():
+            end = a.endian()
             val = getrandbits(1)
             a.setall(val)
-            self.assertEqual(a, bitarray(len(a) * [val]))
+            self.assertEqual(a.to01(), len(a) * str(val))
+            self.assertEqual(a.endian(), end)
             self.check_obj(a)
 
 # ---------------------------------------------------------------------------

@@ -177,6 +177,19 @@ bitarray_dealloc(bitarrayobject *self)
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
+/* return 1 when buffers overlap, 0 otherwise */
+static int
+buffers_overlap(bitarrayobject *self, bitarrayobject *other)
+{
+    if (Py_SIZE(self) == 0 || Py_SIZE(other) == 0)
+        return 0;
+
+/* is pointer in buffer? */
+#define PIB(a, ptr)  (a->ob_item <= ptr && ptr < a->ob_item + Py_SIZE(a))
+    return PIB(self, other->ob_item) || PIB(other, self->ob_item);
+#undef PIB
+}
+
 /* setup translation table, which maps each byte to it's reversed:
    reverse_trans = {0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, ..., 0xff} */
 static void
@@ -209,7 +222,7 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 /* Shift bits in byte-range(a, b) by n bits to right (using uint64 shifts
    when possible).
    The parameter (bebr = big endian byte reverse) is used to allow this
-   function to call itself without calling bytereverse().  Elsewhere, ie.
+   function to call itself without calling bytereverse().  Elsewhere, i.e.
    outside this function itself, it should always be called with bebr=1. */
 static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
@@ -268,7 +281,10 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 }
 
 /* copy n bits from other (starting at b) onto self (starting at a),
-   see also: examples/copy_n.py */
+   see also: examples/copy_n.py
+   other may equal self, i.e. copy a section of self onto itself.
+   However, when other and self are distinct objects, their buffers
+   may not overlap. */
 static void
 copy_n(bitarrayobject *self, Py_ssize_t a,
        bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
@@ -283,6 +299,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
     assert(0 <= n && n <= self->nbits && n <= other->nbits);
     assert(0 <= a && a <= self->nbits - n);
     assert(0 <= b && b <= other->nbits - n);
+    assert(self == other || !buffers_overlap(self, other));
     assert(self->readonly == 0);
     if (n == 0 || (self == other && a == b))
         return;
@@ -570,19 +587,6 @@ find_obj(bitarrayobject *self, PyObject *x, Py_ssize_t start, Py_ssize_t stop)
     PyErr_Format(PyExc_TypeError, "bitarray or int expected, "
                  "not '%s'", Py_TYPE(x)->tp_name);
     return -2;
-}
-
-/* return 1 when buffers overlap, 0 otherwise */
-static int
-buffers_overlap(bitarrayobject *self, bitarrayobject *other)
-{
-    if (Py_SIZE(self) == 0 || Py_SIZE(other) == 0)
-        return 0;
-
-/* is pointer in buffer? */
-#define PIB(a, ptr)  (a->ob_item <= ptr && ptr < a->ob_item + Py_SIZE(a))
-    return PIB(self, other->ob_item) || PIB(other, self->ob_item);
-#undef PIB
 }
 
 /* place self->nbits characters ('0', '1' corresponding to self) into str */
