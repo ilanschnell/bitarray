@@ -35,7 +35,6 @@ bitarray('01011101 11100101 00000001 11110010 10111011 10010111 01100000')
                                  33
 bitarray('01011101 11100101 01110101 11110010 10111011 10010111 01101011')
 """
-from random import getrandbits, randrange, randint
 from io import StringIO
 
 from bitarray import bitarray, bits2bytes
@@ -85,12 +84,6 @@ def copy_n(self, a, other, b, n):
     sb = -(b % 8)
     t3 = 0
 
-    assert 0 <= n <= min(len(self), len(other))
-    assert 0 <= a <= len(self) - n
-    assert 0 <= b <= len(other) - n
-    if n == 0 or (self is other and a == b):
-        return
-
     if verbose:
         print('a =', a)
         print('b =', b)
@@ -100,6 +93,12 @@ def copy_n(self, a, other, b, n):
         print('p3 =', p3)
         print('sa =', sa)
         print('sb =', sb)
+
+    assert 0 <= n <= min(len(self), len(other))
+    assert 0 <= a <= len(self) - n
+    assert 0 <= b <= len(other) - n
+    if n == 0 or (self is other and a == b):
+        return
 
     if sa + sb < 0:
         # In order to keep total right shift (sa + sb) positive, we
@@ -175,6 +174,7 @@ def copy_n(self, a, other, b, n):
 
 
 def test_copy_n():
+    from random import getrandbits, randrange, randint
 
     def random_endian():
         return ['little', 'big'][getrandbits(1)]

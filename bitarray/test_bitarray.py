@@ -831,21 +831,15 @@ class InternalTests(unittest.TestCase, Util):
         a = bitarray(8 * n)
         for _ in range(1000):
             i1 = randint(0, n)
-            j1 = randint(0, n)
-            if j1 < i1:
-                continue
-            i2 = randint(0, n)
-            j2 = randint(0, n)
-            if j2 < i2:
-                continue
-
+            j1 = randint(i1, n)
             b1 = bitarray(buffer=memoryview(a)[i1:j1])
+
+            i2 = randint(0, n)
+            j2 = randint(i2, n)
             b2 = bitarray(buffer=memoryview(a)[i2:j2])
 
-            x1 = zeros(n)
-            x2 = zeros(n)
-            x1[i1:j1] = 1
-            x2[i2:j2] = 1
+            x1, x2 = zeros(n), zeros(n)
+            x1[i1:j1] = x2[i2:j2] = 1
             self.check_overlap(b1, b2, (x1 & x2).any())
 
 # ---------------------------------------------------------------------------

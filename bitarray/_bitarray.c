@@ -282,9 +282,13 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
 
 /* copy n bits from other (starting at b) onto self (starting at a),
    see also: examples/copy_n.py
-   other may equal self, i.e. copy a section of self onto itself.
-   However, when other and self are distinct objects, their buffers
-   may not overlap. */
+
+   Notes:
+     - self and other may have opposite endianness
+     - other may equal self - copy a section of self onto self
+     - when other and self are distinct objects, their buffers
+       may not overlap
+*/
 static void
 copy_n(bitarrayobject *self, Py_ssize_t a,
        bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
