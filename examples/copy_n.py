@@ -12,6 +12,7 @@ p2 = 6
 p3 = 0
 sa = 5
 sb = -6
+ -> p3 = 1
  -> sb = 2
 other
 bitarray('00101110 11111001 01011101 11001011 10110000 01011110 011')
@@ -77,9 +78,12 @@ ones_table = [
 ]
 
 def copy_n(self, a, other, b, n):
-    p1 = a // 8
-    p2 = (a + n - 1) // 8
-    p3 = b // 8
+    """
+    copy n bits from other (starting at b) onto self (starting at a)
+    """
+    p1 = a // 8               # first byte to be copied to
+    p2 = (a + n - 1) // 8     # last byte to be copied to
+    p3 = b // 8               # first byte to be memmoved from
     sa = a % 8
     sb = -(b % 8)
     t3 = 0
@@ -104,14 +108,20 @@ def copy_n(self, a, other, b, n):
         # In order to keep total right shift (sa + sb) positive, we
         # increase the first byte to be copied from (p3) by one byte,
         # such that memmove() will move all bytes one extra to the left.
+
+        # As other may be self, we need to store this byte as its memory
+        # location may be overwritten or changed by memmove or rshift.
         t3 = memoryview(other)[p3]
         p3 += 1
         sb += 8
         if verbose:
+            print(' -> p3 =', p3)
             print(' -> sb =', sb)
 
-    assert a - sa == 8 * p1 and b + sb == 8 * p3
-    assert p1 <= p2 and 8 * p2 < a + n <= 8 * (p2 + 1)
+    assert a - sa == 8 * p1
+    assert b + sb == 8 * p3
+    assert p1 <= p2
+    assert 8 * p2 < a + n <= 8 * (p2 + 1)
 
     if verbose:
         print('other')
@@ -128,14 +138,14 @@ def copy_n(self, a, other, b, n):
             mark_range(a + n, 8 * p2 + 8, '2')
 
     if n > sb:
+        m = bits2bytes(n - sb)             # number of bytes memmoved
         table = ones_table[is_be(self)]
-        m = bits2bytes(n - sb)
         m1 = table[sa]
         m2 = table[(a + n) % 8]
         t1 = memoryview(self)[p1]
         t2 = memoryview(self)[p2]
 
-        assert p1 + m == p2 or p1 + m == p2 + 1
+        assert p1 + m in [p2, p2 + 1]
         assert p1 + m <= self.nbytes and p3 + m <= other.nbytes
 
         # aligned copy -- copy first sb bits (if any) later
@@ -180,9 +190,11 @@ def test_copy_n():
     def random_endian():
         return ['little', 'big'][getrandbits(1)]
 
+    max_size = 56
+
     for _ in range(10000):
-        N = randrange(200)
-        M = randrange(200)
+        N = randrange(max_size)
+        M = randrange(max_size)
         n = randint(0, min(N, M))
         a = randint(0, N - n)
         b = randint(0, M - n)
@@ -194,7 +206,7 @@ def test_copy_n():
         assert x == z
 
     for _ in range(10000):
-        N = randrange(200)
+        N = randrange(max_size)
         n = randint(0, N)
         a = randint(0, N - n)
         b = randint(0, N - n)

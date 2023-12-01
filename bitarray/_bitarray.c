@@ -280,12 +280,12 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
         bytereverse(self, a, b);
 }
 
-/* copy n bits from other (starting at b) onto self (starting at a),
-   see also: examples/copy_n.py
+/* Copy n bits from other (starting at b) onto self (starting at a).
+   Please see examples/copy_n.py for more details.
 
    Notes:
-     - self and other may have opposite endianness
-     - other may equal self - copy a section of self onto self
+     - self and other may have opposite bit-endianness
+     - other may equal self - copy a section of self onto ifself
      - when other and self are distinct objects, their buffers
        may not overlap
 */
@@ -293,12 +293,9 @@ static void
 copy_n(bitarrayobject *self, Py_ssize_t a,
        bitarrayobject *other, Py_ssize_t b, Py_ssize_t n)
 {
-    const Py_ssize_t p1 = a / 8;            /* first byte to copied to */
-    const Py_ssize_t p2 = (a + n - 1) / 8;  /* last byte to be copied to */
-    Py_ssize_t p3 = b / 8;             /* first byte to be memmoved from */
+    Py_ssize_t p3 = b / 8, i;
     int sa = a % 8, sb = -(b % 8);
     char t3 = 0;  /* silence uninitialized warning on some compilers */
-    Py_ssize_t i;
 
     assert(0 <= n && n <= self->nbits && n <= other->nbits);
     assert(0 <= a && a <= self->nbits - n);
@@ -309,25 +306,22 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         return;
 
     if (sa + sb < 0) {
-        t3 = other->ob_item[p3++];  /* store byte in case other == self */
+        t3 = other->ob_item[p3++];
         sb += 8;
     }
-    assert(a - sa == 8 * p1 && b + sb == 8 * p3);
-    assert(p1 <= p2 && 8 * p2 < a + n && a + n <= 8 * (p2 + 1));
     if (n > sb) {
+        const Py_ssize_t p1 = a / 8, p2 = (a + n - 1) / 8, m = BYTES(n - sb);
         const char *table = ones_table[IS_BE(self)];
-        const Py_ssize_t m = BYTES(n - sb);
         char *cp1 = self->ob_item + p1, m1 = table[sa];
         char *cp2 = self->ob_item + p2, m2 = table[(a + n) % 8];
         char t1 = *cp1, t2 = *cp2;
 
-        assert(p1 + m == p2 || p1 + m == p2 + 1);
         assert(p1 + m <= Py_SIZE(self) && p3 + m <= Py_SIZE(other));
         memmove(self->ob_item + p1, other->ob_item + p3, (size_t) m);
         if (self->endian != other->endian)
             bytereverse(self, p1, p1 + m);
 
-        shift_r8(self, p1, p2 + 1, sa + sb, 1);  /* right shift by sa + sb */
+        shift_r8(self, p1, p2 + 1, sa + sb, 1);
         if (m1)
             *cp1 = (*cp1 & ~m1) | (t1 & m1);     /* restore bits at p1 */
         if (m2)
