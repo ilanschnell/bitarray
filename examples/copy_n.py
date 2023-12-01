@@ -128,9 +128,10 @@ def copy_n(self, a, other, b, n):
             mark_range(a + n, 8 * p2 + 8, '2')
 
     if n > sb:
+        table = ones_table[is_be(self)]
         m = bits2bytes(n - sb)
-        m1 = ones_table[is_be(self)][sa]
-        m2 = ones_table[is_be(self)][(a + n) % 8]
+        m1 = table[sa]
+        m2 = table[(a + n) % 8]
         t1 = memoryview(self)[p1]
         t2 = memoryview(self)[p2]
 
