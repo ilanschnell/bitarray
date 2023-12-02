@@ -246,15 +246,14 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
         v = 8 * w;              /* number of bytes in those words */
         assert(0 <= k - v && k - v < 8);
     }
+
     /* shift bytes in byte-range(v, k) in reverse order - with offset
        this is byte-range(a + v, b) */
     for (i = k - 1; i >= v; i--) {
         ucbuff[i] <<= n;        /* shift byte (from highest to lowest) */
-        if (i != v)             /* add shifted next lower byte */
+        if (!(i == v && !w))    /* add shifted next lower byte */
             ucbuff[i] |= ucbuff[i - 1] >> m;
     }
-    if (w && k != v)            /* add byte from word below */
-        ucbuff[v] |= ucbuff[v - 1] >> m;
 
     /* shift words in word-range(0, w) in reverse order - with offset
        this is byte-range(a, a + v) */
@@ -410,7 +409,7 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     assert(self->readonly == 0);
 
     if (b >= a + 8) {
-        const Py_ssize_t byte_a = BYTES(a);  /* byte range(byte_a, byte_b) */
+        const Py_ssize_t byte_a = BYTES(a);  /* byte-range(byte_a, byte_b) */
         const Py_ssize_t byte_b = b / 8;
 
         assert(a + 8 > 8 * byte_a && 8 * byte_b + 8 > b);
@@ -439,7 +438,7 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         return 0;
 
     if (n >= 64) {
-        const Py_ssize_t wa = (a + 63) / 64;  /* word range(wa, ba) */
+        const Py_ssize_t wa = (a + 63) / 64;  /* word-range(wa, wa) */
         const Py_ssize_t wb = b / 64;
 
         assert(wa <= wb && 64 * wa - a < 64 && b - 64 * wb < 64);
@@ -449,7 +448,7 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         cnt += count(self, 64 * wb, b);
     }
     else if (n >= 8) {
-        const Py_ssize_t byte_a = BYTES(a);  /* byte range(byte_a, byte_b) */
+        const Py_ssize_t byte_a = BYTES(a);  /* byte-range(byte_a, byte_b) */
         const Py_ssize_t byte_b = b / 8;
 
         assert(8 * byte_a - a < 8 && b - 8 * byte_b < 8);
@@ -488,7 +487,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
        Note that we cannot check for n >= 64 here as the function could then
        go into an infinite recursive loop when a word is found. */
     if (n > 64) {
-        const Py_ssize_t wa = (a + 63) / 64;  /* word range(wa, wb) */
+        const Py_ssize_t wa = (a + 63) / 64;  /* word-range(wa, wb) */
         const Py_ssize_t wb = b / 64;
         const uint64_t *wbuff = WBUFF(self);
         const uint64_t w = vi ? 0 : ~0;
@@ -506,7 +505,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
 
     /* For the same reason as above, we cannot check for n >= 8 here. */
     if (n > 8) {
-        const Py_ssize_t byte_a = BYTES(a);  /* byte range(byte_a, byte_b) */
+        const Py_ssize_t byte_a = BYTES(a);  /* byte-range(byte_a, byte_b) */
         const Py_ssize_t byte_b = b / 8;
         const char *buff = self->ob_item;
         const char c = vi ? 0 : ~0;
