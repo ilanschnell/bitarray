@@ -1,6 +1,7 @@
-2023-XX-XX   2.8.4:
+2023-12-XX   2.8.4:
 -------------------
   * simplify `copy_n()` (remove special cases), see #d2d6fd53
+  * simplify `shift_r8()`
   * improve documentation and testing
 
 
