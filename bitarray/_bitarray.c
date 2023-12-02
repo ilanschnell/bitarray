@@ -242,16 +242,16 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
         bytereverse(self, a, b);
 
     if (PY_LITTLE_ENDIAN && k >= 8) {  /* use shift word */
-        w = k / 8;              /* number of words used for shifting */
-        v = 8 * w;              /* number of bytes in those words */
+        w = k / 8;                /* number of words used for shifting */
+        v = 8 * w;                /* number of bytes in those words */
         assert(0 <= k - v && k - v < 8);
     }
 
     /* shift bytes in byte-range(v, k) in reverse order - with offset
        this is byte-range(a + v, b) */
     for (i = k - 1; i >= v; i--) {
-        ucbuff[i] <<= n;        /* shift byte (from highest to lowest) */
-        if (!(i == v && !w))    /* add shifted next lower byte */
+        ucbuff[i] <<= n;          /* shift byte (from highest to lowest) */
+        if (!(i == v && w == 0))  /* add shifted next lower byte */
             ucbuff[i] |= ucbuff[i - 1] >> m;
     }
 
@@ -261,11 +261,11 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
         assert_byte_in_range(self, a + 8 * w + 7);
         /* shift word - assumes machine has little endian byteorder */
         ((uint64_t *) ucbuff)[w] <<= n;
-        if (w)                  /* add shifted byte from next lower word */
+        if (w)                    /* add shifted byte from next lower word */
             ucbuff[8 * w] |= ucbuff[8 * w - 1] >> m;
     }
 
-    if (IS_BE(self))  /* (re-) reverse bytes */
+    if (IS_BE(self))              /* (re-) reverse bytes */
         bytereverse(self, a, b);
 }
 
@@ -438,7 +438,7 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         return 0;
 
     if (n >= 64) {
-        const Py_ssize_t wa = (a + 63) / 64;  /* word-range(wa, wa) */
+        const Py_ssize_t wa = (a + 63) / 64;  /* word-range(wa, wb) */
         const Py_ssize_t wb = b / 64;
 
         assert(wa <= wb && 64 * wa - a < 64 && b - 64 * wb < 64);
