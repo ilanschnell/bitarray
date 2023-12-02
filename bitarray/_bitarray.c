@@ -244,14 +244,14 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
     if (PY_LITTLE_ENDIAN && k >= 8) {  /* use shift word */
         w = k / 8;                /* number of words used for shifting */
         v = 8 * w;                /* number of bytes in those words */
-        assert(0 <= k - v && k - v < 8);
+        assert(0 <= k - v && k - v < 8 && 0 <= v && v <= k);
     }
 
     /* shift bytes in byte-range(v, k) in reverse order - with offset
        this is byte-range(a + v, b) */
     for (i = k - 1; i >= v; i--) {
         ucbuff[i] <<= n;          /* shift byte (from highest to lowest) */
-        if (!(i == v && w == 0))  /* add shifted next lower byte */
+        if (w || i != v)          /* add shifted next lower byte */
             ucbuff[i] |= ucbuff[i - 1] >> m;
     }
 
