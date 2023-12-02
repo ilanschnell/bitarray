@@ -220,7 +220,18 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 }
 
 /* Shift bits in byte-range(a, b) by n bits to right (towards
-   higher addresses), using uint64 shifts when possible. */
+   higher addresses), using uint64 shifts when possible.
+
+   Notes:
+     - As we shift bits right, we need to start with the highest address
+       and loop downwards such that carry bytes are still unchanged.
+     - We apply the offset 'a' to our buffer and start by shifting the
+       top bytes and then all words below.
+     - Our shift word assumes that the machine has little-endian byte-order.
+     - As the big-endian (bit-order) representation has reversed bit
+       order in each byte, we reverse each byte, and (re-) reverse again
+       at the end.
+*/
 static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 {
@@ -236,30 +247,25 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
     if (n == 0 || k <= 0)
         return;
 
-    /* as the big-endian representation has reversed bit order in each
-       byte, we reverse each byte, and (re-) reverse again at the end */
-    if (IS_BE(self))
+    if (IS_BE(self))              /* reverse bytes */
         bytereverse(self, a, b);
 
-    if (PY_LITTLE_ENDIAN && k >= 8) {  /* use shift word */
+    if (PY_LITTLE_ENDIAN) {       /* use shift word */
         w = k / 8;                /* number of words used for shifting */
         v = 8 * w;                /* number of bytes in those words */
         assert(0 <= k - v && k - v < 8 && 0 <= v && v <= k);
     }
 
-    /* shift bytes in byte-range(v, k) in reverse order - with offset
-       this is byte-range(a + v, b) */
+    /* shift in byte-range(v, k) -> with offset byte-range(a + v, b) */
     for (i = k - 1; i >= v; i--) {
         ucbuff[i] <<= n;          /* shift byte (from highest to lowest) */
         if (w || i != v)          /* add shifted next lower byte */
             ucbuff[i] |= ucbuff[i - 1] >> m;
     }
 
-    /* shift words in word-range(0, w) in reverse order - with offset
-       this is byte-range(a, a + v) */
+    /* shift in word-range(0, w) -> with offset byte-range(a, a + v) */
     while (w--) {
         assert_byte_in_range(self, a + 8 * w + 7);
-        /* shift word - assumes machine has little endian byteorder */
         ((uint64_t *) ucbuff)[w] <<= n;
         if (w)                    /* add shifted byte from next lower word */
             ucbuff[8 * w] |= ucbuff[8 * w - 1] >> m;
