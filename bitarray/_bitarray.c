@@ -219,64 +219,54 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         *buff = reverse_trans[(unsigned char) *buff];
 }
 
-/* Shift bits in byte-range(a, b) by n bits to right (using uint64 shifts
-   when possible).
-   The parameter (bebr = big endian byte reverse) is used to allow this
-   function to call itself without calling bytereverse().  Elsewhere, i.e.
-   outside this function itself, it should always be called with bebr=1. */
+/* Shift bits in byte-range(a, b) by n bits to right (towards
+   higher addresses), using uint64 shifts when possible. */
 static void
-shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n, int bebr)
+shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 {
     const int m = 8 - n;
-    unsigned char *ucbuff = (unsigned char *) self->ob_item;
-    Py_ssize_t i;
+    unsigned char *ucbuff = (unsigned char *) self->ob_item + a;
+    Py_ssize_t k = b - a;    /* number of bytes to be shifted */
+    Py_ssize_t i, w = 0, v = 0;
 
     assert(0 <= n && n < 8);
     assert(0 <= a && a <= Py_SIZE(self));
     assert(0 <= b && b <= Py_SIZE(self));
     assert(self->readonly == 0);
-    if (n == 0 || a >= b)
+    if (n == 0 || k <= 0)
         return;
 
     /* as the big-endian representation has reversed bit order in each
        byte, we reverse each byte, and (re-) reverse again at the end */
-    if (bebr && IS_BE(self))
+    if (IS_BE(self))
         bytereverse(self, a, b);
 
-    if (PY_LITTLE_ENDIAN && b >= a + 8) {
-        const Py_ssize_t wa = (a + 7) / 8;  /* word range(wa, wb) */
-        const Py_ssize_t wb = b / 8;
-        const Py_ssize_t va = 8 * wa, vb = 8 * wb;
-
-        assert(wa <= wb && b - vb < 8 && va - a < 8);
-        assert(a <  vb && vb <= b);
-        assert(a <= va && va <  b);
-
-        shift_r8(self, vb, b, n, 0);
-        if (b != vb)  /* add byte from word below */
-            ucbuff[vb] |= ucbuff[vb - 1] >> m;
-
-        for (i = wb - 1; i >= wa; i--) {
-            assert_byte_in_range(self, 8 * i + 7);
-            /* shift word - assumes machine has little endian byteorder */
-            ((uint64_t *) ucbuff)[i] <<= n;
-            if (i != wa)    /* add shifted byte from next lower word */
-                ucbuff[8 * i] |= ucbuff[8 * i - 1] >> m;
-        }
-        if (a != va)  /* add byte from below */
-            ucbuff[va] |= ucbuff[va - 1] >> m;
-
-        shift_r8(self, a, va, n, 0);
+    if (PY_LITTLE_ENDIAN && k >= 8) {  /* use shift word */
+        w = k / 8;              /* number of words used for shifting */
+        v = 8 * w;              /* number of bytes in those words */
+        assert(0 <= k - v && k - v < 8);
     }
-    else {
-        for (i = b - 1; i >= a; i--) {
-            ucbuff[i] <<= n;    /* shift byte (from highest to lowest) */
-            if (i != a)      /* add shifted next lower byte */
-                ucbuff[i] |= ucbuff[i - 1] >> m;
-        }
+    /* shift bytes in byte-range(v, k) in reverse order - with offset
+       this is byte-range(a + v, b) */
+    for (i = k - 1; i >= v; i--) {
+        ucbuff[i] <<= n;        /* shift byte (from highest to lowest) */
+        if (i != v)             /* add shifted next lower byte */
+            ucbuff[i] |= ucbuff[i - 1] >> m;
+    }
+    if (w && k != v)            /* add byte from word below */
+        ucbuff[v] |= ucbuff[v - 1] >> m;
+
+    /* shift words in word-range(0, w) in reverse order - with offset
+       this is byte-range(a, a + v) */
+    while (w--) {
+        assert_byte_in_range(self, a + 8 * w + 7);
+        /* shift word - assumes machine has little endian byteorder */
+        ((uint64_t *) ucbuff)[w] <<= n;
+        if (w)                  /* add shifted byte from next lower word */
+            ucbuff[8 * w] |= ucbuff[8 * w - 1] >> m;
     }
 
-    if (bebr && IS_BE(self))  /* (re-) reverse bytes */
+    if (IS_BE(self))  /* (re-) reverse bytes */
         bytereverse(self, a, b);
 }
 
@@ -321,7 +311,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         if (self->endian != other->endian)
             bytereverse(self, p1, p1 + m);
 
-        shift_r8(self, p1, p2 + 1, sa + sb, 1);
+        shift_r8(self, p1, p2 + 1, sa + sb);
         if (m1)
             *cp1 = (*cp1 & ~m1) | (t1 & m1);     /* restore bits at p1 */
         if (m2)
@@ -1777,7 +1767,7 @@ bitarray_shift_r8(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "nni", &a, &b, &n))
         return NULL;
 
-    shift_r8(self, a, b, n, 1);
+    shift_r8(self, a, b, n);
     Py_RETURN_NONE;
 }
 
