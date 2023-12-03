@@ -21,8 +21,7 @@ The 3.0 release will:
 * make ``little`` the default bit-endianness, as it will make unaligned
   copying faster by default
 * remove hackish support for ``bitarray()`` handling unpickling,
-  see `use reconstructor function for unpickling <https://github.com/ilanschnell/bitarray/pull/207>`__
-
+  see `#207 <https://github.com/ilanschnell/bitarray/pull/207>`__
 
 
 Key features
