@@ -205,18 +205,13 @@ setup_reverse_trans(void)
     }
 }
 
-/* reverse each byte in byte-range(a, b) */
+/* starting at pointer p, reverse n bytes */
 static void
-bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
+bytereverse(char *p, Py_ssize_t n)
 {
-    char *buff;
-
-    assert(0 <= a && a <= Py_SIZE(self));
-    assert(0 <= b && b <= Py_SIZE(self));
-    assert(self->readonly == 0);
-
-    for (buff = self->ob_item + a; a < b; a++, buff++)
-        *buff = reverse_trans[(unsigned char) *buff];
+    assert(n >= 0);
+    while(n--)
+        p[n] = reverse_trans[(unsigned char) p[n]];
 }
 
 /* shift k bytes in buffer by n bits to right (towards higher addresses),
@@ -308,7 +303,7 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         assert(p1 + m <= Py_SIZE(self) && p3 + m <= Py_SIZE(other));
         memmove(self->ob_item + p1, other->ob_item + p3, (size_t) m);
         if (self->endian != other->endian)
-            bytereverse(self, p1, p1 + m);
+            bytereverse(self -> ob_item + p1, m);
 
         shift_r8(self, p1, p2 + 1, sa + sb);
         if (m1)
@@ -855,7 +850,8 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
         PyErr_SetString(PyExc_IndexError, "byte index out of range");
         return NULL;
     }
-    bytereverse(self, start, stop);
+    if (stop > start)
+        bytereverse(self -> ob_item + start, stop - start);
     Py_RETURN_NONE;
 }
 
@@ -1264,7 +1260,7 @@ bitarray_reverse(bitarrayobject *self)
         buff[j] = t;
     }
     /* reverse order of bits within each byte */
-    bytereverse(self, 0, nbytes);
+    bytereverse(self->ob_item, nbytes);
 
     /* remove the p pad bits at the end of the original bitarray that
        are now the leading p bits */
