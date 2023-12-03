@@ -228,15 +228,15 @@ shift_r8le(unsigned char *buff, Py_ssize_t k, int n)
 
     if (PY_LITTLE_ENDIAN) {       /* use shift word */
         w = k / 8;                /* number of words used for shifting */
-        k %= 8;                   /* number of additional bytes */
+        k %= 8;                   /* number of remaining bytes */
     }
-    while (k--) {
+    while (k--) {                 /* shift in byte-range(8 * w, k) */
         Py_ssize_t i = k + 8 * w;
         buff[i] <<= n;            /* shift byte (from highest to lowest) */
         if (k || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] >> (8 - n);
     }
-    while (w--) {
+    while (w--) {                 /* shift in word-range(0, w) */
         ((uint64_t *) buff)[w] <<= n;  /* shift word */
         if (w)                    /* add shifted byte from next lower word */
             buff[8 * w] |= buff[8 * w - 1] >> (8 - n);
@@ -247,7 +247,7 @@ shift_r8le(unsigned char *buff, Py_ssize_t k, int n)
 static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 {
-    unsigned char *ucbuff = (unsigned char *) self->ob_item + a;
+    unsigned char *buff = (unsigned char *) self->ob_item + a;
     Py_ssize_t k = b - a;    /* number of bytes to be shifted */
 
     assert(0 <= n && n < 8);
@@ -258,13 +258,13 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
         return;
 
     if (IS_LE(self)) {
-        shift_r8le(ucbuff, k, n);
+        shift_r8le(buff, k, n);
     }
-    else {  /* big-endian (only use byte shifts) */
+    else {  /* big-endian (use byte shifts only) */
         while (k--) {
-            ucbuff[k] >>= n;      /* shift byte (from highest to lowest) */
+            buff[k] >>= n;      /* shift byte (from highest to lowest) */
             if (k)                /* add shifted next lower byte */
-                ucbuff[k] |= ucbuff[k - 1] << (8 - n);
+                buff[k] |= buff[k - 1] << (8 - n);
         }
     }
 }
