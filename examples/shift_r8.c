@@ -1,7 +1,6 @@
 /*
    This C program implements the (slightly modified) function shift_r8() in
-   order to better illustrates how it works.  There are also more comments
-   and notes than in _bitarray.c .
+   order to better illustrate and document it.
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,9 +29,10 @@
        designed for little-endian bitarrays such that word shifts can
        be used on (more common) little-endian machines.
 
-     - In the production function bitarrays with big-endian (bit-order)
+     - In the production function, bitarrays with big-endian (bit-order)
        representation are byte reversed at the beginning, and (re-) reverse
-       again at the end.
+       again at the end.  This is not done here.  This function assumes
+       bitarrays with little-endian bit-endianness.
 
      - Also, in the production function, we apply the offset 'a' to the
        buffer.  For simplicity, we don't this here.
@@ -76,13 +76,13 @@ void display(unsigned char *buffer, int nbits, int endian)
 int main()
 {
     const int nbytes = 10;
-    unsigned char array[nbytes] =
-        {1, 15, 98, 149, 231, 36, 90, 255, 44, 145};
+    unsigned char array[nbytes] = {1, 15, 0, 131, 0, 255, 0, 7, 0, 1};
     int i;
 
     printf("machine byte-order: %d\n", PY_LITTLE_ENDIAN);
 
     for (i = 0; i < 30; i++) {
+        /* Try changing this to ENDIAN_BIG and see what happens! */
         display(array, 77, ENDIAN_LITTLE);
         shift_r8(array, nbytes, 1);
     }

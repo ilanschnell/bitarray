@@ -4,6 +4,7 @@
   * add [word shift example C program](../examples/shift_r8.c),
     and simplify `shift_r8()`
   * improve documentation and testing
+  * add [roadmap](https://github.com/ilanschnell/bitarray#roadmap)
 
 
 2023-11-11   2.8.3:
