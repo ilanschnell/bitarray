@@ -11,8 +11,8 @@ ability to import and export buffers.  This allows creating bitarrays that
 are mapped to other objects, including memory-mapped files.
 
 
-Future plans
-------------
+Roadmap
+-------
 
 In 2024 (probably around July), we are planning the release of bitarray 3.0.
 The 3.0 release will:
@@ -21,7 +21,7 @@ The 3.0 release will:
 * make ``little`` the default bit-endianness, as it will make unaligned
   copying faster by default
 * remove hackish support for ``bitarray()`` handling unpickling,
-  see `#207 <https://github.com/ilanschnell/bitarray/pull/207>`__
+  see detailed explaination in `#207 <https://github.com/ilanschnell/bitarray/pull/207>`__.  This will close `#206 <https://github.com/ilanschnell/bitarray/issues/206>`__
 
 
 Key features
