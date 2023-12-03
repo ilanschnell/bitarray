@@ -221,19 +221,7 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 
 /* Shift bits in byte-range(a, b) by n bits to right (towards
    higher addresses), using uint64 (word) shifts when possible.
-
-   Notes:
-     - As we shift bits right, we need to start with the highest address
-       and loop downwards such that carry bytes are still unchanged.
-     - We apply the offset 'a' to our buffer and start by shifting the
-       top bytes and then all words below.
-     - In order take advantage of word shifts, it is necessary that the
-       bit-order of the bitarray object is the same as the native
-       machine byte-order.  Hence, the core part of this function is
-       designed for little-endian bitarrays such that word shifts can
-       be used on (more common) little-endian machines.
-     - Bitarrays with big-endian (bit-order) representation are byte
-       reversed at the beginning, and (re-) reverse again at the end.
+   Please see examples/shift_r8.c for more details.
 */
 static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)

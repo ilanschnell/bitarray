@@ -1,7 +1,8 @@
 2023-12-XX   2.8.4:
 -------------------
   * simplify `copy_n()` (remove special cases), see #d2d6fd53
-  * simplify `shift_r8()`
+  * add [word shift example C program](../examples/shift_r8.c),
+    and simplify `shift_r8()`
   * improve documentation and testing
 
 
