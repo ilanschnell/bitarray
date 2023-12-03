@@ -61,7 +61,7 @@ void shift_r8le(unsigned char *buff, ssize_t k, int n)
     }
     while (k--) {                 /* shift in byte-range(8 * w, k) */
         ssize_t i = k + 8 * w;
-        buff[i] <<= n;            /* shift byte (from highest to lowest) */
+        buff[i] <<= n;            /* shift byte */
         if (k || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] >> (8 - n);
     }

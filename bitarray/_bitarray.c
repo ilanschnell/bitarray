@@ -227,7 +227,7 @@ shift_r8le(unsigned char *buff, Py_ssize_t k, int n)
     }
     while (k--) {                 /* shift in byte-range(8 * w, k) */
         Py_ssize_t i = k + 8 * w;
-        buff[i] <<= n;            /* shift byte (from highest to lowest) */
+        buff[i] <<= n;            /* shift byte */
         if (k || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] >> (8 - n);
     }
@@ -242,9 +242,9 @@ shift_r8le(unsigned char *buff, Py_ssize_t k, int n)
 static void
 shift_r8be(unsigned char *buff, Py_ssize_t k, int n)
 {
-    while (k--) {
-        buff[k] >>= n;        /* shift byte (from highest to lowest) */
-        if (k)                /* add shifted next lower byte */
+    while (k--) {          /* shift bytes (from highest to lowest) */
+        buff[k] >>= n;     /* shift byte */
+        if (k)             /* add shifted next lower byte */
             buff[k] |= buff[k - 1] << (8 - n);
     }
 }
