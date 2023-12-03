@@ -32,6 +32,7 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 
 /* machine byte-order */
 #define PY_LITTLE_ENDIAN  (*((uint64_t *) "\xff\0\0\0\0\0\0\0") == 0xff)
@@ -87,7 +88,7 @@ void display(unsigned char *buffer, ssize_t nbits, int endian)
 
 int main()
 {
-    const ssize_t nbytes = 10;
+#define nbytes  10
     unsigned char array[nbytes] = {1, 15, 0, 131, 0, 255, 0, 7, 0, 1};
     ssize_t i;
 
