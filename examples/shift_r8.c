@@ -30,12 +30,12 @@
        designed for little-endian bitarrays such that word shifts can
        be used on (more common) little-endian machines.
 
-     - Also, in the production function bitarrays with big-endian (bit-order)
+     - In the production function bitarrays with big-endian (bit-order)
        representation are byte reversed at the beginning, and (re-) reverse
        again at the end.
 
-     - In the production function, we apply the offset 'a' to the buffer.
-       For simplicity, we don't this here.
+     - Also, in the production function, we apply the offset 'a' to the
+       buffer.  For simplicity, we don't this here.
 */
 void shift_r8(unsigned char *ucbuff, int k, int n)
 {
@@ -61,13 +61,13 @@ void shift_r8(unsigned char *ucbuff, int k, int n)
     }
 }
 
-/* display first nbytes bytes of buffer given assumed bit-endianness
+/* display first nbits bytes of buffer given assumed bit-endianness
    to one line in stdout */
-void display(unsigned char *buffer, int nbytes, int endian)
+void display(unsigned char *buffer, int nbits, int endian)
 {
     int i;
 
-    for (i = 0; i < 8 * nbytes; i++)
+    for (i = 0; i < nbits; i++)
         printf("%d", (buffer[i / 8] & BITMASK(endian, i)) ? 1 : 0);
 
     printf("\n");
@@ -80,10 +80,10 @@ int main()
         {1, 15, 98, 149, 231, 36, 90, 255, 44, 145};
     int i;
 
-    printf("PY_LITTLE_ENDIAN: %d\n", PY_LITTLE_ENDIAN);
+    printf("machine byte-order: %d\n", PY_LITTLE_ENDIAN);
 
     for (i = 0; i < 30; i++) {
-        display(array, nbytes, ENDIAN_LITTLE);
+        display(array, 77, ENDIAN_LITTLE);
         shift_r8(array, nbytes, 1);
     }
     return 0;
