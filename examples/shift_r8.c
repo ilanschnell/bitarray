@@ -6,29 +6,27 @@
    bit-order of the bitarray object is the same as the native machine
    byte-order.
 
+   The function shift_r8() dispatches to shift_r8le() and shift_r8be().
+
    shift_r8le() assumes the buffer represents a bitarray with little-endian
    bit-endianness.  It takes advantage of word shifts on little-endian
    machines.
 
-   The function shift_r8() calls shift_r8le() for little-endian bitarrays
-   and performs byte shifts only for big-endian bitarrays.
-
+   shift_r8be() assumes the buffer represents a bitarray with big-endian
+   bit-endianness.  It performs byte shifts only.
    It would be possible to also take advantage of word shift for big-endian
-   bitarrays on big-endian machines - in a function shift_r8be() equivalent
-   to shift_r8le().  However, as big-endian machines are very rare, this is
-   not being done.
+   bitarrays on big-endian machines in this function.  However, as big-endian
+   machines are very rare, this is not being done.
+   Another approach to would be to the following function body:
 
-   Another approach to handle big-endian bitarrays would be to the following
-   code:
-
-       bytereverse(self, a, b);
+       bytereverse(buff, k);
        shift_r8le(buff, k, n);
-       bytereverse(self, a, b);
+       bytereverse(buff, k);
 
    While this takes advantage of word shifts of big-endian bitarrays on
    little-endian machines, it requires two bytereverse() calls.
-   There is no speed improved of this approach over performing byte shifts
-   for big-endian bitarrays.
+   There is no speed improvement of this approach over performing byte shifts
+   only.
 */
 #include <stdio.h>
 #include <stdlib.h>

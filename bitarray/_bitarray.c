@@ -238,6 +238,17 @@ shift_r8le(unsigned char *buff, Py_ssize_t k, int n)
     }
 }
 
+/* shift k bytes in buffer by n bits to right */
+static void
+shift_r8be(unsigned char *buff, Py_ssize_t k, int n)
+{
+    while (k--) {
+        buff[k] >>= n;        /* shift byte (from highest to lowest) */
+        if (k)                /* add shifted next lower byte */
+            buff[k] |= buff[k - 1] << (8 - n);
+    }
+}
+
 /* shift bits in byte-range(a, b) by n bits to right */
 static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
@@ -252,16 +263,10 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
     if (n == 0 || k <= 0)
         return;
 
-    if (IS_LE(self)) {
+    if (IS_LE(self))
         shift_r8le(buff, k, n);
-    }
-    else {  /* big-endian (use byte shifts only) */
-        while (k--) {
-            buff[k] >>= n;      /* shift byte (from highest to lowest) */
-            if (k)                /* add shifted next lower byte */
-                buff[k] |= buff[k - 1] << (8 - n);
-        }
-    }
+    else
+        shift_r8be(buff, k, n);
 }
 
 /* Copy n bits from other (starting at b) onto self (starting at a).
