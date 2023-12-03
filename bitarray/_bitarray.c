@@ -219,17 +219,36 @@ bytereverse(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         *buff = reverse_trans[(unsigned char) *buff];
 }
 
-/* Shift bits in byte-range(a, b) by n bits to right (towards
-   higher addresses), using uint64 (word) shifts when possible.
-   Please see examples/shift_r8.c for more details.
-*/
+/* shift k bytes in buffer by n bits to right (towards higher addresses),
+   using uint64 (word) shifts when possible, see also examples/shift_r8.c */
+static void
+shift_r8le(unsigned char *buff, Py_ssize_t k, int n)
+{
+    Py_ssize_t w = 0;
+
+    if (PY_LITTLE_ENDIAN) {       /* use shift word */
+        w = k / 8;                /* number of words used for shifting */
+        k %= 8;                   /* number of additional bytes */
+    }
+    while (k--) {
+        Py_ssize_t i = k + 8 * w;
+        buff[i] <<= n;            /* shift byte (from highest to lowest) */
+        if (k || w)               /* add shifted next lower byte */
+            buff[i] |= buff[i - 1] >> (8 - n);
+    }
+    while (w--) {
+        ((uint64_t *) buff)[w] <<= n;  /* shift word */
+        if (w)                    /* add shifted byte from next lower word */
+            buff[8 * w] |= buff[8 * w - 1] >> (8 - n);
+    }
+}
+
+/* shift bits in byte-range(a, b) by n bits to right */
 static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
 {
-    const int m = 8 - n;
     unsigned char *ucbuff = (unsigned char *) self->ob_item + a;
     Py_ssize_t k = b - a;    /* number of bytes to be shifted */
-    Py_ssize_t i, w = 0, v = 0;
 
     assert(0 <= n && n < 8);
     assert(0 <= a && a <= Py_SIZE(self));
@@ -238,32 +257,16 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int n)
     if (n == 0 || k <= 0)
         return;
 
-    if (IS_BE(self))              /* reverse bytes */
-        bytereverse(self, a, b);
-
-    if (PY_LITTLE_ENDIAN) {       /* use shift word */
-        w = k / 8;                /* number of words used for shifting */
-        v = 8 * w;                /* number of bytes in those words */
-        assert(0 <= k - v && k - v < 8 && 0 <= v && v <= k);
+    if (IS_LE(self)) {
+        shift_r8le(ucbuff, k, n);
     }
-
-    /* shift in byte-range(v, k) -> with offset byte-range(a + v, b) */
-    for (i = k - 1; i >= v; i--) {
-        ucbuff[i] <<= n;          /* shift byte (from highest to lowest) */
-        if (w || i != v)          /* add shifted next lower byte */
-            ucbuff[i] |= ucbuff[i - 1] >> m;
+    else {  /* big-endian (only use byte shifts) */
+        while (k--) {
+            ucbuff[k] >>= n;      /* shift byte (from highest to lowest) */
+            if (k)                /* add shifted next lower byte */
+                ucbuff[k] |= ucbuff[k - 1] << (8 - n);
+        }
     }
-
-    /* shift in word-range(0, w) -> with offset byte-range(a, a + v) */
-    while (w--) {
-        assert_byte_in_range(self, a + 8 * w + 7);
-        ((uint64_t *) ucbuff)[w] <<= n;
-        if (w)                    /* add shifted byte from next lower word */
-            ucbuff[8 * w] |= ucbuff[8 * w - 1] >> m;
-    }
-
-    if (IS_BE(self))              /* (re-) reverse bytes */
-        bytereverse(self, a, b);
 }
 
 /* Copy n bits from other (starting at b) onto self (starting at a).

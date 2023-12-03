@@ -1,6 +1,6 @@
 /*
-   This C program implements the (slightly modified) function shift_r8() in
-   order to better illustrate and document it.
+   This C program implements the function shift_r8le() in order to better
+   illustrate and document it.
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,8 +15,8 @@
 #define BITMASK(endian, i)  (((char) 1) << (endian == ENDIAN_LITTLE ? \
                                             ((i) % 8) : (7 - (i) % 8)))
 
-/* Shift bits in byte-range(0, k) by n bits to right (towards
-   higher addresses), using uint64 (word) shifts when possible.
+/* Shift k bytes in buffer by n bits to right (towards higher addresses),
+   using uint64 (word) shifts when possible.
 
    Notes:
 
@@ -37,27 +37,28 @@
      - Also, in the production function, we apply the offset 'a' to the
        buffer.  For simplicity, we don't this here.
 */
-void shift_r8(unsigned char *ucbuff, int k, int n)
+void shift_r8le(unsigned char *buff, int k, int n)
 {
-    int i, m = 8 - n, w = 0, v = 0;
+    int w = 0;
 
     if (PY_LITTLE_ENDIAN) {       /* use shift word */
         w = k / 8;                /* number of words used for shifting */
-        v = 8 * w;                /* number of bytes in those words */
+        k %= 8;                   /* number of additional bytes */
     }
 
-    /* shift in byte-range(v, k) -> with offset byte-range(a + v, b) */
-    for (i = k - 1; i >= v; i--) {
-        ucbuff[i] <<= n;          /* shift byte (from highest to lowest) */
-        if (w || i != v)          /* add shifted next lower byte */
-            ucbuff[i] |= ucbuff[i - 1] >> m;
+    /* shift in byte-range(8 * w, k) */
+    while (k--) {
+        int i = k + 8 * w;
+        buff[i] <<= n;            /* shift byte (from highest to lowest) */
+        if (k || w)               /* add shifted next lower byte */
+            buff[i] |= buff[i - 1] >> (8 - n);
     }
 
-    /* shift in word-range(0, w) -> with offset byte-range(a, a + v) */
+    /* shift in word-range(0, w) */
     while (w--) {
-        ((uint64_t *) ucbuff)[w] <<= n;
+        ((uint64_t *) buff)[w] <<= n;  /* shift word */
         if (w)                    /* add shifted byte from next lower word */
-            ucbuff[8 * w] |= ucbuff[8 * w - 1] >> m;
+            buff[8 * w] |= buff[8 * w - 1] >> (8 - n);
     }
 }
 
@@ -84,7 +85,7 @@ int main()
     for (i = 0; i < 30; i++) {
         /* Try changing this to ENDIAN_BIG and see what happens! */
         display(array, 77, ENDIAN_LITTLE);
-        shift_r8(array, nbytes, 1);
+        shift_r8le(array, nbytes, 1);
     }
     return 0;
 }
