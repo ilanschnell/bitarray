@@ -17,11 +17,11 @@ Roadmap
 In 2024 (probably around July), we are planning the release of bitarray 3.0.
 The 3.0 release will:
 
-* remove Python 2.7 support
-* make ``little`` the default bit-endianness, as it will make unaligned
-  copying faster by default
-* remove hackish support for ``bitarray()`` handling unpickling,
-  see detailed explaination in `#207 <https://github.com/ilanschnell/bitarray/pull/207>`__.  This will close `#206 <https://github.com/ilanschnell/bitarray/issues/206>`__
+* Remove Python 2.7 support.
+* Make ``little`` the default bit-endianness, as it will make unaligned
+  copying faster by default.
+* Remove hackish support for ``bitarray()`` handling unpickling,
+  see detailed explaination in `#207 <https://github.com/ilanschnell/bitarray/pull/207>`__.  This will close `#206 <https://github.com/ilanschnell/bitarray/issues/206>`__.
 
 
 Key features
