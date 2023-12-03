@@ -306,9 +306,9 @@ copy_n(bitarrayobject *self, Py_ssize_t a,
         char t1 = *cp1, t2 = *cp2;
 
         assert(p1 + m <= Py_SIZE(self) && p3 + m <= Py_SIZE(other));
-        memmove(self->ob_item + p1, other->ob_item + p3, (size_t) m);
+        memmove(cp1, other->ob_item + p3, (size_t) m);
         if (self->endian != other->endian)
-            bytereverse(self -> ob_item + p1, m);
+            bytereverse(cp1, m);
 
         shift_r8(self, p1, p2 + 1, sa + sb);
         if (m1)
