@@ -92,7 +92,7 @@ int main()
     unsigned char array[nbytes] = {1, 15, 0, 131, 0, 255, 0, 7, 0, 1};
     ssize_t i;
 
-    printf("machine byte-order: %d\n", PY_LITTLE_ENDIAN);
+    printf("machine byte-order: %s\n", PY_LITTLE_ENDIAN ? "little" : "big");
 
     for (i = 0; i < 30; i++) {
         /* Try changing this to ENDIAN_BIG and see what happens! */
