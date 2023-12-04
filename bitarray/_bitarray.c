@@ -210,8 +210,10 @@ static void
 bytereverse(char *p, Py_ssize_t n)
 {
     assert(n >= 0);
-    while(n--)
-        p[n] = reverse_trans[(unsigned char) p[n]];
+    while (n--) {
+        *p = reverse_trans[(unsigned char) *p];
+        p++;
+    }
 }
 
 /* shift k bytes in buffer by n bits to right (towards higher addresses),
