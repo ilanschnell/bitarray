@@ -76,7 +76,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 2.8.3
+    bitarray version: 2.8.4
     sys.version: 3.11.0 (main, Oct 25 2022) [Clang 14.0.4]
     sys.prefix: /Users/ilan/Mini3/envs/py311
     pointer size: 64 bit
@@ -424,7 +424,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 2.8.3 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.8.4 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -453,7 +453,7 @@ The bitarray object:
 
    ``buffer``: Any object which exposes a buffer.  When provided, ``initializer``
    cannot be present (or has to be ``None``).  The imported buffer may be
-   readonly or writable, depending on the object type.
+   read-only or writable, depending on the object type.
 
    New in version 2.3: optional ``buffer`` argument.
 
@@ -462,12 +462,12 @@ bitarray methods:
 -----------------
 
 ``all()`` -> bool
-   Return True when all bits in the array are True.
+   Return True when all bits in bitarray are True.
    Note that ``a.all()`` is faster than ``all(a)``.
 
 
 ``any()`` -> bool
-   Return True when any bit in the array is True.
+   Return True when any bit in bitarray is True.
    Note that ``a.any()`` is faster than ``any(a)``.
 
 
@@ -509,7 +509,7 @@ bitarray methods:
 
 
 ``count(value=1, start=0, stop=<end of array>, step=1, /)`` -> int
-   Count the number of occurrences of ``value`` in the bitarray.
+   Count number of occurrences of ``value`` in the bitarray.
 
    New in version 1.1.0: optional start and stop arguments.
 
@@ -518,14 +518,13 @@ bitarray methods:
 
 ``decode(code, /)`` -> list
    Given a prefix code (a dict mapping symbols to bitarrays, or ``decodetree``
-   object), decode the content of the bitarray and return it as a list of
-   symbols.
+   object), decode content of bitarray and return it as a list of symbols.
 
 
 ``encode(code, iterable, /)``
    Given a prefix code (a dict mapping symbols to bitarrays),
-   iterate over the iterable object with symbols, and extend the bitarray
-   with the corresponding bitarray for each symbol.
+   iterate over the iterable object with symbols, and extend bitarray
+   with corresponding bitarray for each symbol.
 
 
 ``endian()`` -> str
@@ -539,12 +538,12 @@ bitarray methods:
 
 
 ``fill()`` -> int
-   Add zeros to the end of the bitarray, such that the length of the bitarray
-   will be a multiple of 8, and return the number of bits added (0..7).
+   Add zeros to the end of the bitarray, such that the length will be
+   a multiple of 8, and return the number of bits added (0..7).
 
 
 ``find(sub_bitarray, start=0, stop=<end of array>, /)`` -> int
-   Return the lowest index where sub_bitarray is found, such that sub_bitarray
+   Return lowest index where sub_bitarray is found, such that sub_bitarray
    is contained within ``[start:stop]``.
    Return -1 when sub_bitarray is not found.
 
@@ -552,7 +551,7 @@ bitarray methods:
 
 
 ``frombytes(bytes, /)``
-   Extend the bitarray with raw bytes from a bytes-like object.
+   Extend bitarray with raw bytes from a bytes-like object.
    Each added byte will add eight bits to the bitarray.
 
    New in version 2.5.0: allow bytes-like argument.
@@ -568,17 +567,17 @@ bitarray methods:
 
 
 ``index(sub_bitarray, start=0, stop=<end of array>, /)`` -> int
-   Return the lowest index where sub_bitarray is found, such that sub_bitarray
+   Return lowest index where sub_bitarray is found, such that sub_bitarray
    is contained within ``[start:stop]``.
    Raises ``ValueError`` when the sub_bitarray is not present.
 
 
 ``insert(index, value, /)``
-   Insert ``value`` into the bitarray before ``index``.
+   Insert ``value`` into bitarray before ``index``.
 
 
 ``invert(index=<all bits>, /)``
-   Invert all bits in the array (in-place).
+   Invert all bits in bitarray (in-place).
    When the optional ``index`` is given, only invert the single bit at index.
 
    New in version 1.5.3: optional index argument.
@@ -586,17 +585,17 @@ bitarray methods:
 
 ``iterdecode(code, /)`` -> iterator
    Given a prefix code (a dict mapping symbols to bitarrays, or ``decodetree``
-   object), decode the content of the bitarray and return an iterator over
+   object), decode content of bitarray and return an iterator over
    the symbols.
 
 
 ``itersearch(sub_bitarray, /)`` -> iterator
-   Searches for the given sub_bitarray in self, and return an iterator over
+   Searches for given sub_bitarray in self, and return an iterator over
    the start positions where sub_bitarray matches self.
 
 
 ``pack(bytes, /)``
-   Extend the bitarray from a bytes-like object, where each byte corresponds
+   Extend bitarray from a bytes-like object, where each byte corresponds
    to a single bit.  The byte ``b'\x00'`` maps to bit 0 and all other bytes
    map to bit 1.
 
@@ -613,28 +612,28 @@ bitarray methods:
 
 
 ``remove(value, /)``
-   Remove the first occurrence of ``value`` in the bitarray.
-   Raises ``ValueError`` if item is not present.
+   Remove the first occurrence of ``value``.
+   Raises ``ValueError`` if value is not present.
 
 
 ``reverse()``
-   Reverse all bits in the array (in-place).
+   Reverse all bits in bitarray (in-place).
 
 
 ``search(sub_bitarray, limit=<none>, /)`` -> list
-   Searches for the given sub_bitarray in self, and return the list of start
+   Searches for given sub_bitarray in self, and return list of start
    positions.
    The optional argument limits the number of search results to the integer
    specified.  By default, all search results are returned.
 
 
 ``setall(value, /)``
-   Set all elements in the bitarray to ``value``.
+   Set all elements in bitarray to ``value``.
    Note that ``a.setall(value)`` is equivalent to ``a[:] = value``.
 
 
 ``sort(reverse=False)``
-   Sort the bits in the array (in-place).
+   Sort all bits in bitarray (in-place).
 
 
 ``to01()`` -> str
@@ -647,7 +646,7 @@ bitarray methods:
 
 
 ``tofile(f, /)``
-   Write the byte representation of the bitarray to the file object f.
+   Write byte representation of bitarray to file object f.
 
 
 ``tolist()`` -> list
@@ -661,7 +660,7 @@ bitarray methods:
 
 ``unpack(zero=b'\x00', one=b'\x01')`` -> bytes
    Return bytes containing one character for each bit in the bitarray,
-   using the specified mapping.
+   using specified mapping.
 
 
 bitarray data descriptors:
@@ -678,7 +677,7 @@ Data descriptors were added in version 2.6.
 
 
 ``readonly`` -> bool
-   bool indicating whether buffer is read only
+   bool indicating whether buffer is read-only
 
 
 Other objects:
@@ -755,8 +754,8 @@ This sub-module was added in version 1.2.
 
 
 ``rindex(bitarray, value=1, start=0, stop=<end of array>, /)`` -> int
-   Return the rightmost (highest) index of ``value`` in bitarray.
-   Raises ``ValueError`` if the value is not present.
+   Return rightmost (highest) index of ``value`` in bitarray.
+   Raises ``ValueError`` if value is not present.
 
    New in version 2.3.0: optional start and stop arguments.
 
@@ -774,7 +773,7 @@ This sub-module was added in version 1.2.
 
 
 ``parity(a, /)`` -> int
-   Return the parity of bitarray ``a``.
+   Return parity of bitarray ``a``.
    ``parity(a)`` is equivalent to ``a.count() % 2`` but more efficient.
 
    New in version 1.9.
@@ -843,7 +842,7 @@ This sub-module was added in version 1.2.
 
 
 ``base2ba(n, asciistr, /, endian=None)`` -> bitarray
-   Bitarray of the base ``n`` ASCII representation.
+   Bitarray of base ``n`` ASCII representation.
    Allowed values for ``n`` are 2, 4, 8, 16, 32 and 64.
    For ``n=16`` (hexadecimal), ``hex2ba()`` will be much faster, as ``base2ba()``
    does not take advantage of byte level operations.

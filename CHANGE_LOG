@@ -1,4 +1,4 @@
-2023-12-XX   2.8.4:
+2023-12-04   2.8.4:
 -------------------
   * simplify `copy_n()` (remove special cases), see #d2d6fd53
   * add [word shift example C program](../examples/shift_r8.c),

@@ -1,6 +1,15 @@
 Change log
 ==========
 
+**2.8.4** (2023-12-04):
+
+* simplify ``copy_n()`` (remove special cases), see `#d2d6fd53 <https://github.com/ilanschnell/bitarray/commit/d2d6fd53>`__
+* add `word shift example C program <../examples/shift_r8.c>`__,
+  and simplify ``shift_r8()``
+* improve documentation and testing
+* add `roadmap <https://github.com/ilanschnell/bitarray#roadmap>`__
+
+
 **2.8.3** (2023-11-11):
 
 * ensure readonly attribute is set correctly when creating new objects,
@@ -17,7 +26,7 @@ Change log
 * added ``pytest.ini`` to allow running pytest with no additional arguments,
   see `#208 <https://github.com/ilanschnell/bitarray/issues/208>`__
 * ``util.sc_encode()``: avoid writing empty blocks at end of compressed
-  stream, ie. skip encoding when total population count is reached
+  stream, i.e. skip encoding when total population count is reached
 
 
 **2.8.1** (2023-08-06):
@@ -389,7 +398,7 @@ Change log
 
 * add ``bitarray.util.urandom()``
 * raise TypeError when trying to extend bitarrays from bytes on Python 3,
-  ie. ``bitarray(b'011')`` and ``.extend(b'110')``.  (Deprecated since 1.4.1)
+  i.e. ``bitarray(b'011')`` and ``.extend(b'110')``.  (Deprecated since 1.4.1)
 
 
 **1.6.3** (2021-01-20):
