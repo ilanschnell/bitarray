@@ -19,9 +19,9 @@
    machines are very rare, this is not being done.
    Another approach to would be to the following function body:
 
-       bytereverse(buff, k);
-       shift_r8le(buff, k, n);
-       bytereverse(buff, k);
+       bytereverse((char *) buff, n);
+       shift_r8le(buff, n, k);
+       bytereverse((char *) buff, n);
 
    While this takes advantage of word shifts of big-endian bitarrays on
    little-endian machines, it requires two bytereverse() calls.
