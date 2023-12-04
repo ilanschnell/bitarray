@@ -221,6 +221,11 @@ class TestsModuleFunctions(unittest.TestCase, Util):
         for x in info:
             self.assertIsInstance(x, int)
 
+        self.assertEqual(info[0], tuple.__itemsize__)
+        self.assertEqual(info[7], int(sys.byteorder == 'little'))
+        self.assertEqual(info[8], int(sys.byteorder == 'big'))
+        self.assertEqual(info[7] + info[8], 1)
+
     def test_set_default_endian(self):
         self.assertRaises(TypeError, _set_default_endian, 0)
         self.assertRaises(TypeError, _set_default_endian, 'little', 0)
@@ -5022,7 +5027,8 @@ def run(verbosity=1):
     print('sizeof(size_t): %d' % SYSINFO[1])
     print('sizeof(bitarrayobject): %d' % SYSINFO[2])
     print('__clang__ or __GNUC__ defined: %s' % SYSINFO[5])
-    print('PY_LITTLE_ENDIAN (use word shift): %s' % SYSINFO[7])
+    print('default bit-endianness: %s' % default_endian)
+    print('machine byte-order: %s' % sys.byteorder)
     print('DEBUG: %s' % DEBUG)
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()

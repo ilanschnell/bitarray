@@ -205,7 +205,7 @@ setup_reverse_trans(void)
     }
 }
 
-/* starting at pointer p, reverse n bytes */
+/* reverse bits in first n characters of p */
 static void
 bytereverse(char *p, Py_ssize_t n)
 {
@@ -864,7 +864,7 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(bytereverse_doc,
 "bytereverse(start=0, stop=<end of buffer>, /)\n\
 \n\
-For each byte in byte-range(start, stop) reverse the bit order in-place.\n\
+For each byte in byte-range(start, stop) reverse bits in-place.\n\
 The start and stop indices are given in terms of bytes (not bits).\n\
 Also note that this method only changes the buffer; it does not change the\n\
 endianness of the bitarray object.  Padbits are left unchanged such that\n\
@@ -4110,7 +4110,7 @@ Set the default bit endianness for new bitarray objects being created.");
 static PyObject *
 sysinfo(PyObject *module)
 {
-    return Py_BuildValue("iiiiiiii",
+    return Py_BuildValue("iiiiiiiii",
                          (int) sizeof(void *),
                          (int) sizeof(size_t),
                          (int) sizeof(bitarrayobject),
@@ -4126,7 +4126,8 @@ sysinfo(PyObject *module)
 #else
                          0,
 #endif
-                         (int) PY_LITTLE_ENDIAN
+                         (int) PY_LITTLE_ENDIAN,
+                         (int) PY_BIG_ENDIAN
                          );
 }
 
@@ -4142,7 +4143,8 @@ Return tuple containing:\n\
 4. sizeof(binode)\n\
 5. __clang__ or __GNUC__ defined\n\
 6. NDEBUG not defined\n\
-7. PY_LITTLE_ENDIAN");
+7. PY_LITTLE_ENDIAN\n\
+8. PY_BIG_ENDIAN");
 
 
 static PyMethodDef module_functions[] = {
