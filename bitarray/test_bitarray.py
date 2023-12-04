@@ -675,6 +675,10 @@ class InternalTests(unittest.TestCase, Util):
         y = bitarray('11000100 00000111 11111111 00111101 00001000')
         x._shift_r8(1, 4, 5)
         self.assertEqual(x, y)
+        x._shift_r8(2, 1, 5)  # start > stop  --  do nothing
+        self.assertEqual(x, y)
+        x._shift_r8(0, 5, 0)  # shift = 0  --  do nothing
+        self.assertEqual(x, y)
 
         x = bitarray('11000100 11110')
         y = bitarray('00011000 10011')
@@ -691,7 +695,7 @@ class InternalTests(unittest.TestCase, Util):
             N = randrange(200)
             x = urandom(N, self.random_endian())
             a = randint(0, x.nbytes)
-            b = randint(0, x.nbytes)
+            b = randint(a, x.nbytes)
             n = randrange(8)
             y = x.copy()
             y[8 * a : 8 * b] >>= n
