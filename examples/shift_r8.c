@@ -44,7 +44,7 @@
 #define BITMASK(endian, i)  (((char) 1) << (endian == ENDIAN_LITTLE ? \
                                             ((i) % 8) : (7 - (i) % 8)))
 
-/* Shift k bytes in buffer by n bits to right (towards higher addresses),
+/* Shift n bytes in buffer by k bits to right (towards higher addresses),
    using uint64 (word) shifts when possible.
 
    As we shift bits right, we need to start with the highest address
@@ -53,24 +53,24 @@
    This function assumes that the buffer represents a bitarray with
    little-endian bit-endianness.
 */
-void shift_r8le(unsigned char *buff, Py_ssize_t k, int n)
+void shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
 {
     Py_ssize_t w = 0;
 
     if (PY_LITTLE_ENDIAN) {       /* use shift word */
-        w = k / 8;                /* number of words used for shifting */
-        k %= 8;                   /* number of remaining bytes */
+        w = n / 8;                /* number of words used for shifting */
+        n %= 8;                   /* number of remaining bytes */
     }
-    while (k--) {                 /* shift in byte-range(8 * w, k) */
-        Py_ssize_t i = k + 8 * w;
-        buff[i] <<= n;            /* shift byte */
-        if (k || w)               /* add shifted next lower byte */
-            buff[i] |= buff[i - 1] >> (8 - n);
+    while (n--) {                 /* shift in byte-range(8 * w, n) */
+        Py_ssize_t i = n + 8 * w;
+        buff[i] <<= k;            /* shift byte */
+        if (n || w)               /* add shifted next lower byte */
+            buff[i] |= buff[i - 1] >> (8 - k);
     }
     while (w--) {                 /* shift in word-range(0, w) */
-        ((uint64_t *) buff)[w] <<= n;  /* shift word */
+        ((uint64_t *) buff)[w] <<= k;  /* shift word */
         if (w)                    /* add shifted byte from next lower word */
-            buff[8 * w] |= buff[8 * w - 1] >> (8 - n);
+            buff[8 * w] |= buff[8 * w - 1] >> (8 - k);
     }
 }
 
