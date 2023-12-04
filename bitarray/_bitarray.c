@@ -243,11 +243,28 @@ shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
 static void
 shift_r8be(unsigned char *buff, Py_ssize_t n, int k)
 {
-    while (n--) {          /* shift bytes (from highest to lowest) */
-        buff[n] >>= k;     /* shift byte */
-        if (n)             /* add shifted next lower byte */
-            buff[n] |= buff[n - 1] << (8 - k);
+    Py_ssize_t w = 0;
+
+    if (PY_LITTLE_ENDIAN && IS_GNUC) {  /* use shift word */
+        w = n / 8;                /* number of words used for shifting */
+        n %= 8;                   /* number of remaining bytes */
     }
+    while (n--) {                 /* shift bytes (from highest to lowest) */
+        Py_ssize_t i = n + 8 * w;
+        buff[i] >>= k;            /* shift byte */
+        if (n || w)               /* add shifted next lower byte */
+            buff[i] |= buff[i - 1] << (8 - k);
+    }
+#if IS_GNUC
+    while (w--) {                 /* shift in word-range(0, w) */
+        uint64_t *p = ((uint64_t *) buff) + w;
+        *p = __builtin_bswap64(*p);    /* swap bytes in word  */
+        *p >>= k;                      /* shift word */
+        *p = __builtin_bswap64(*p);    /* swap bytes in word */
+        if (w)                    /* add shifted byte from next lower word */
+            buff[8 * w] |= buff[8 * w - 1] << (8 - k);
+    }
+#endif
 }
 
 /* shift bits in byte-range(a, b) by k bits to right */
@@ -4116,7 +4133,7 @@ sysinfo(PyObject *module)
                          (int) sizeof(bitarrayobject),
                          (int) sizeof(decodetreeobject),
                          (int) sizeof(binode),
-#if (defined(__clang__) || defined(__GNUC__))
+#if IS_GNUC
                          1,
 #else
                          0,
