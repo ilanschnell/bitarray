@@ -2777,15 +2777,15 @@ binode_delete(binode *nd)
     PyMem_Free((void *) nd);
 }
 
-/* insert symbol (mapping to ba) into tree */
+/* insert symbol (mapping to bitarray a) into tree */
 static int
-binode_insert_symbol(binode *tree, bitarrayobject *ba, PyObject *symbol)
+binode_insert_symbol(binode *tree, bitarrayobject *a, PyObject *symbol)
 {
     binode *nd = tree, *prev;
     Py_ssize_t i;
 
-    for (i = 0; i < ba->nbits; i++) {
-        int k = getbit(ba, i);
+    for (i = 0; i < a->nbits; i++) {
+        int k = getbit(a, i);
 
         prev = nd;
         nd = nd->child[k];
