@@ -22,6 +22,12 @@
 #define inline __inline
 #endif
 
+#if (defined(__clang__) || defined(__GNUC__))
+#define IS_GNUC  1
+#else
+#define IS_GNUC  0
+#endif
+
 /* --- definitions specific to Python --- */
 
 /* Py_UNREACHABLE was introduced in Python 3.7 */
@@ -180,7 +186,7 @@ set_padbits(bitarrayobject *self)
 static inline int
 popcnt_64(uint64_t x)
 {
-#if (defined(__clang__) || defined(__GNUC__))
+#if IS_GNUC
     return __builtin_popcountll(x);
 #else
     /* https://en.wikipedia.org/wiki/Hamming_weight popcount64c */
@@ -193,7 +199,7 @@ popcnt_64(uint64_t x)
     x = (x & m2) + ((x >> 2) & m2);
     x = (x + (x >> 4)) & m4;
     return (x * h01) >> 56;
-#endif  /* __GNUC__ */
+#endif
 }
 
 /* population count of n words starting from at uint64_t pointer w */

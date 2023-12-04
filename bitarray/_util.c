@@ -278,7 +278,7 @@ parity(PyObject *module, PyObject *obj)
     x = zlw(a);
     for (i = 0; i < a->nbits / 64; i++)
         x ^= WBUFF(a)[i];
-#if (defined(__clang__) || defined(__GNUC__))
+#if IS_GNUC
     x = __builtin_parityll(x);
 #else
     for (i = 32; i > 0; i /= 2)
