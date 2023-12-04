@@ -4,23 +4,34 @@ While bitarray itself still supports Python 2.7 and Python 3.5+, the examples
 usually require Python 3.
 
 
-base-n.py:
+base-n.py
     Simple illustration of ASCII encoding bitarrays to bases
     of 2, 4, 8, 16, 32 and 64.
 
 
-bloom.py:
+bloom.py
     Demonstrates the implementation of a "Bloom filter", see:
     http://en.wikipedia.org/wiki/Bloom_filter
 
 
-extend_json.py:
+copy_n.py
+    Illustrate how copy_n() in _bitarray.c works.  This is essentially
+    a Python implementation of copy_n() with output of the different stages
+    of the bitarray we copy into.
+
+
+distance.py
+    Implementation of distance functions and comparison to the
+    corresponding functions in the scipy.spatial.distance module.
+
+
+extend_json.py
     Demonstrates how to construct a json encoder and decoder (using the
     'json' standard library) which can handle extended Python data structures
     containing bitarrays.
 
 
-gene.py:
+gene.py
     Shows how gene sequences (ATGC) can be very easily and efficiently
     represented by bitarrays.
 
@@ -65,8 +76,12 @@ pbm.py
 
 
 puff/
-    DEFLATE decompression implemention based on Mark Adler's excellent Puff:
+    DEFLATE decompression implementation based on Mark Adler's excellent
     https://github.com/madler/zlib/blob/master/contrib/puff/puff.c
+
+
+shift_r8.c
+    C program is to illustrate and document shift_r8()
 
 
 sieve.py
