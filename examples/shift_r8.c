@@ -17,16 +17,16 @@
    It would be possible to also take advantage of word shift for big-endian
    bitarrays on big-endian machines in this function.  However, as big-endian
    machines are very rare, this is not being done.
-   Another approach to would be to the following function body:
+   Another approach would be to have basically the following function body:
 
-       bytereverse((char *) buff, n);
+       bytereverse(buff, n);
        shift_r8le(buff, n, k);
-       bytereverse((char *) buff, n);
+       bytereverse(buff, n);
 
    While this takes advantage of word shifts of big-endian bitarrays on
    little-endian machines, it requires two bytereverse() calls.
-   There is no speed improvement of this approach over performing byte shifts
-   only.
+   There is no speed improvement of this approach over the current
+   implementation (of performing byte shifts only).
 */
 #include <stdio.h>
 #include <stdlib.h>
