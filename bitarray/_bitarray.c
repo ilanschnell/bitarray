@@ -216,8 +216,7 @@ bytereverse(char *p, Py_ssize_t n)
     }
 }
 
-/* shift k bytes in buffer by n bits to right (towards higher addresses),
-   using uint64 (word) shifts when possible, see also examples/shift_r8.c */
+/* shift k bytes in buffer by n bits to right, see examples/shift_r8.c */
 static void
 shift_r8le(unsigned char *buff, Py_ssize_t k, int n)
 {
@@ -240,7 +239,7 @@ shift_r8le(unsigned char *buff, Py_ssize_t k, int n)
     }
 }
 
-/* shift k bytes in buffer by n bits to right */
+/* shift k bytes in buffer by n bits to right, see examples/shift_r8.c */
 static void
 shift_r8be(unsigned char *buff, Py_ssize_t k, int n)
 {

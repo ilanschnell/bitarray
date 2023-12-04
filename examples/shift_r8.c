@@ -32,6 +32,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 
+#define Py_ssize_t  ssize_t
+
 /* machine byte-order */
 #define PY_LITTLE_ENDIAN  (*((uint64_t *) "\xff\0\0\0\0\0\0\0") == 0xff)
 
@@ -42,25 +44,25 @@
 #define BITMASK(endian, i)  (((char) 1) << (endian == ENDIAN_LITTLE ? \
                                             ((i) % 8) : (7 - (i) % 8)))
 
-/* shift k bytes in buffer by n bits to right (towards higher addresses),
-   using uint64 (word) shifts when possible
+/* Shift k bytes in buffer by n bits to right (towards higher addresses),
+   using uint64 (word) shifts when possible.
 
    As we shift bits right, we need to start with the highest address
-   and loop downwards such that carry bytes are still unchanged.
+   and loop downwards such that "carry" bytes are still unaltered.
 
    This function assumes that the buffer represents a bitarray with
    little-endian bit-endianness.
 */
-void shift_r8le(unsigned char *buff, ssize_t k, int n)
+void shift_r8le(unsigned char *buff, Py_ssize_t k, int n)
 {
-    ssize_t w = 0;
+    Py_ssize_t w = 0;
 
     if (PY_LITTLE_ENDIAN) {       /* use shift word */
         w = k / 8;                /* number of words used for shifting */
         k %= 8;                   /* number of remaining bytes */
     }
     while (k--) {                 /* shift in byte-range(8 * w, k) */
-        ssize_t i = k + 8 * w;
+        Py_ssize_t i = k + 8 * w;
         buff[i] <<= n;            /* shift byte */
         if (k || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] >> (8 - n);
@@ -74,9 +76,9 @@ void shift_r8le(unsigned char *buff, ssize_t k, int n)
 
 /* display first nbits bytes of buffer given assumed bit-endianness
    to one line in stdout */
-void display(unsigned char *buffer, ssize_t nbits, int endian)
+void display(unsigned char *buffer, Py_ssize_t nbits, int endian)
 {
-    int i;
+    Py_ssize_t i;
 
     for (i = 0; i < nbits; i++)
         printf("%d", (buffer[i / 8] & BITMASK(endian, i)) ? 1 : 0);
@@ -86,8 +88,8 @@ void display(unsigned char *buffer, ssize_t nbits, int endian)
 
 int main()
 {
-#define nbytes  10
-    unsigned char array[nbytes] = {1, 15, 0, 131, 0, 255, 0, 7, 0, 1};
+#define NBYTES  10
+    unsigned char array[NBYTES] = {1, 15, 0, 131, 0, 255, 0, 7, 0, 1};
     ssize_t i;
 
     printf("machine byte-order: %s\n", PY_LITTLE_ENDIAN ? "little" : "big");
@@ -95,7 +97,7 @@ int main()
     for (i = 0; i < 30; i++) {
         /* Try changing this to ENDIAN_BIG and see what happens! */
         display(array, 77, ENDIAN_LITTLE);
-        shift_r8le(array, nbytes, 1);
+        shift_r8le(array, NBYTES, 1);
     }
     return 0;
 }
