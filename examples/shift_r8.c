@@ -17,7 +17,7 @@
 #endif
 
 /* machine byte-order */
-#define PY_LITTLE_ENDIAN  (*((uint64_t *) "\xff\0\0\0\0\0\0\0") == 0xff)
+#define PY_LITTLE_ENDIAN  1
 
 /* bit endianness */
 #define ENDIAN_LITTLE  0
@@ -26,23 +26,18 @@
 #define BITMASK(endian, i)  (((char) 1) << (endian == ENDIAN_LITTLE ? \
                                             ((i) % 8) : (7 - (i) % 8)))
 
-/* Shift n bytes in buffer by k bits to right (towards higher addresses),
-   using uint64 (word) shifts when possible.
-
-   As we shift bits right, we need to start with the highest address
+/* As we shift bits right, we need to start with the highest address
    and loop downwards such that "carry" bytes are still unaltered.
-
-   This function assumes that the buffer represents a bitarray with
-   little-endian bit-endianness.
 */
-void shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
+static void
+shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
 {
     Py_ssize_t w = 0;
 
-    if (PY_LITTLE_ENDIAN) {       /* use shift word */
-        w = n / 8;                /* number of words used for shifting */
-        n %= 8;                   /* number of remaining bytes */
-    }
+#if PY_LITTLE_ENDIAN              /* use shift word */
+    w = n / 8;                    /* number of words used for shifting */
+    n %= 8;                       /* number of remaining bytes */
+#endif
     while (n--) {                 /* shift in byte-range(8 * w, n) */
         Py_ssize_t i = n + 8 * w;
         buff[i] <<= k;            /* shift byte */
@@ -56,24 +51,15 @@ void shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
     }
 }
 
-/* Shift n bytes in buffer by k bits to right (towards higher addresses),
-   using uint64 (word) shifts when possible.
-
-   As we shift bits right, we need to start with the highest address
-   and loop downwards such that "carry" bytes are still unaltered.
-
-   This function assumes that the buffer represents a bitarray with
-   big-endian bit-endianness.
-*/
 static void
 shift_r8be(unsigned char *buff, Py_ssize_t n, int k)
 {
     Py_ssize_t w = 0;
 
-    if (PY_LITTLE_ENDIAN && IS_GNUC) {  /* use shift word */
-        w = n / 8;                /* number of words used for shifting */
-        n %= 8;                   /* number of remaining bytes */
-    }
+#if PY_LITTLE_ENDIAN && IS_GNUC   /* use shift word */
+    w = n / 8;                    /* number of words used for shifting */
+    n %= 8;                       /* number of remaining bytes */
+#endif
     while (n--) {                 /* shift bytes (from highest to lowest) */
         Py_ssize_t i = n + 8 * w;
         buff[i] >>= k;            /* shift byte */
@@ -110,10 +96,15 @@ int main()
     unsigned char array[NBYTES] = {1, 15, 0, 131, 0, 255, 0, 7, 0, 1};
     ssize_t i;
 
-    printf("machine byte-order: %s\n", PY_LITTLE_ENDIAN ? "little" : "big");
-
-    for (i = 0; i < 30; i++) {
-        /* Try changing this to ENDIAN_BIG and see what happens! */
+    if (PY_LITTLE_ENDIAN != (*((uint64_t *) "\xff\0\0\0\0\0\0\0") == 0xff)) {
+        printf("Error: wrong PY_LITTLE_ENDIAN\n");
+        return 1;
+    }
+    for (i = 0; i < 15; i++) {
+        display(array, 77, ENDIAN_LITTLE);
+        shift_r8le(array, NBYTES, 1);
+    }
+    for (i = 0; i < 15; i++) {
         display(array, 77, ENDIAN_BIG);
         shift_r8be(array, NBYTES, 1);
     }

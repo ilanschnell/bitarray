@@ -1,5 +1,6 @@
 import re
 import sys
+import platform
 
 if "test" in sys.argv:
     import bitarray
@@ -23,6 +24,9 @@ pat = re.compile(r'#define\s+BITARRAY_VERSION\s+"(\S+)"', re.M)
 data = open('bitarray/bitarray.h').read()
 kwds['version'] = pat.search(data).group(1)
 
+macros = []
+if platform.python_implementation() == 'PyPy' or sys.version_info[0] == 2:
+    macros.append(("PY_LITTLE_ENDIAN", str(int(sys.byteorder == 'little'))))
 
 setup(
     name = "bitarray",
@@ -55,6 +59,7 @@ setup(
                                  "py.typed",  # see PEP 561
                                  "*.pyi"]},
     ext_modules = [Extension(name = "bitarray._bitarray",
+                             define_macros = macros,
                              sources = ["bitarray/_bitarray.c"]),
                    Extension(name = "bitarray._util",
                              sources = ["bitarray/_util.c"])],

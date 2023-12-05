@@ -216,16 +216,19 @@ bytereverse(char *p, Py_ssize_t n)
     }
 }
 
-/* shift n bytes in buffer by k bits to right, see examples/shift_r8.c */
+/* The following two functions shift first n bytes in buffer by k bits to
+   right (towards higher addresses).
+   They operate on little-endian and bit-endian bitarrays respectively.
+   See also examples/shift_r8.c */
 static void
 shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
 {
     Py_ssize_t w = 0;
 
-    if (PY_LITTLE_ENDIAN) {       /* use shift word */
-        w = n / 8;                /* number of words used for shifting */
-        n %= 8;                   /* number of remaining bytes */
-    }
+#if PY_LITTLE_ENDIAN              /* use shift word */
+    w = n / 8;                    /* number of words used for shifting */
+    n %= 8;                       /* number of remaining bytes */
+#endif
     while (n--) {                 /* shift in byte-range(8 * w, n) */
         Py_ssize_t i = n + 8 * w;
         buff[i] <<= k;            /* shift byte */
@@ -239,16 +242,15 @@ shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
     }
 }
 
-/* shift n bytes in buffer by k bits to right, see examples/shift_r8.c */
 static void
 shift_r8be(unsigned char *buff, Py_ssize_t n, int k)
 {
     Py_ssize_t w = 0;
 
-    if (PY_LITTLE_ENDIAN && IS_GNUC) {  /* use shift word */
-        w = n / 8;                /* number of words used for shifting */
-        n %= 8;                   /* number of remaining bytes */
-    }
+#if PY_LITTLE_ENDIAN && IS_GNUC   /* use shift word */
+    w = n / 8;                    /* number of words used for shifting */
+    n %= 8;                       /* number of remaining bytes */
+#endif
     while (n--) {                 /* shift bytes (from highest to lowest) */
         Py_ssize_t i = n + 8 * w;
         buff[i] >>= k;            /* shift byte */
@@ -4127,7 +4129,7 @@ Set the default bit endianness for new bitarray objects being created.");
 static PyObject *
 sysinfo(PyObject *module)
 {
-    return Py_BuildValue("iiiiiiiii",
+    return Py_BuildValue("iiiiiiii",
                          (int) sizeof(void *),
                          (int) sizeof(size_t),
                          (int) sizeof(bitarrayobject),
@@ -4143,8 +4145,7 @@ sysinfo(PyObject *module)
 #else
                          0,
 #endif
-                         (int) PY_LITTLE_ENDIAN,
-                         (int) PY_BIG_ENDIAN
+                         (int) PY_LITTLE_ENDIAN
                          );
 }
 
@@ -4160,8 +4161,7 @@ Return tuple containing:\n\
 4. sizeof(binode)\n\
 5. __clang__ or __GNUC__ defined\n\
 6. NDEBUG not defined\n\
-7. PY_LITTLE_ENDIAN\n\
-8. PY_BIG_ENDIAN");
+7. PY_LITTLE_ENDIAN");
 
 
 static PyMethodDef module_functions[] = {
