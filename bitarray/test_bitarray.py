@@ -221,7 +221,8 @@ class TestsModuleFunctions(unittest.TestCase, Util):
         for x in info:
             self.assertIsInstance(x, int)
 
-        self.assertEqual(info[0], tuple.__itemsize__)
+        if not is_pypy:
+            self.assertEqual(info[0], tuple.__itemsize__)
         self.assertEqual(info[7], int(sys.byteorder == 'little'))
         self.assertEqual(info[8], int(sys.byteorder == 'big'))
         self.assertEqual(info[7] + info[8], 1)
