@@ -1,5 +1,7 @@
 2023-XX-XX   2.8.5:
 -------------------
+  * optimize unaligned copies for big-endian bitarrays by also taking
+    advantage of word shifts on little-endian machines (with GNU C compiler).
 
 
 2023-12-04   2.8.4:
