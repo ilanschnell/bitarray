@@ -16,6 +16,7 @@
 /* size used when reading / writing blocks from files (in bytes) */
 #define BLOCKSIZE  65536
 
+/* default bit-endianness */
 static int default_endian = ENDIAN_BIG;
 
 static PyTypeObject Bitarray_Type;
@@ -170,7 +171,7 @@ bitarray_dealloc(bitarrayobject *self)
         PyMem_Free(self->buffer);
     }
     else if (self->ob_item) {
-        /* only free object's buffer - imported buffers CANNOT be freed */
+        /* only free object's buffer - imported buffers cannot be freed */
         PyMem_Free((void *) self->ob_item);
     }
 
@@ -422,7 +423,7 @@ repeat(bitarrayobject *self, Py_ssize_t m)
     if (resize(self, q) < 0)
         return -1;
 
-    /* k (initially nbits): number of bits which have been copied so far */
+    /* k: number of bits which have been copied so far */
     while (k <= q / 2) {        /* double copies */
         copy_n(self, k, self, 0, k);
         k *= 2;
@@ -932,7 +933,7 @@ Return a tuple containing:\n\
 \n\
 0. memory address of buffer\n\
 1. buffer size (in bytes)\n\
-2. bit endianness as a string\n\
+2. bit-endianness as a string\n\
 3. number of pad bits\n\
 4. allocated memory for the buffer (in bytes)\n\
 5. memory is read-only\n\
@@ -1047,7 +1048,7 @@ bitarray_endian(bitarrayobject *self)
 PyDoc_STRVAR(endian_doc,
 "endian() -> str\n\
 \n\
-Return the bit endianness of the bitarray as a string (`little` or `big`).");
+Return the bit-endianness of the bitarray as a string (`little` or `big`).");
 
 
 static PyObject *
@@ -3547,7 +3548,7 @@ endian_from_string(const char *string)
     if (strcmp(string, "big") == 0)
         return ENDIAN_BIG;
 
-    PyErr_Format(PyExc_ValueError, "bit endianness must be either "
+    PyErr_Format(PyExc_ValueError, "bit-endianness must be either "
                                    "'little' or 'big', not '%s'", string);
     return -1;
 }
@@ -3990,9 +3991,9 @@ uninitialized.\n\
 \n\
 Optional keyword arguments:\n\
 \n\
-`endian`: Specifies the bit endianness of the created bitarray object.\n\
+`endian`: Specifies the bit-endianness of the created bitarray object.\n\
 Allowed values are `big` and `little` (the default is `big`).\n\
-The bit endianness effects the buffer representation of the bitarray.\n\
+The bit-endianness effects the buffer representation of the bitarray.\n\
 \n\
 `buffer`: Any object which exposes a buffer.  When provided, `initializer`\n\
 cannot be present (or has to be `None`).  The imported buffer may be\n\
@@ -4136,7 +4137,7 @@ set_default_endian(PyObject *module, PyObject *args)
 PyDoc_STRVAR(set_default_endian_doc,
 "_set_default_endian(endian, /)\n\
 \n\
-Set the default bit endianness for new bitarray objects being created.");
+Set the default bit-endianness for new bitarray objects being created.");
 
 
 static PyObject *

@@ -9,7 +9,8 @@
 
    Creating a macro from which both functions can be created is not possible,
    unless one replaces the existing preprocessor introductions with ordinary
-   if statements.
+   if statements.  For the sake of simplicity we do not want to do this here,
+   even though it would avoid the spammish repetition.
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +28,7 @@
 #define PY_LITTLE_ENDIAN  1
 #define PY_BIG_ENDIAN     0
 
-/* bit endianness */
+/* bit-endianness */
 #define ENDIAN_LITTLE  0
 #define ENDIAN_BIG     1
 
@@ -121,7 +122,7 @@ int main()
     if ((PY_LITTLE_ENDIAN != (*((uint64_t *) "\xff\0\0\0\0\0\0\0") == 0xff))
         ||
         (PY_BIG_ENDIAN != (*((uint64_t *) "\0\0\0\0\0\0\0\xff") == 0xff))) {
-        printf("Error: wrong PY_LITTLE_ENDIAN\n");
+        printf("Error: machine byte-order\n");
         return 1;
     }
     for (i = 0; i < 15; i++) {

@@ -52,7 +52,7 @@ def buffer_info(a, key=None):
     fields = (
         "address",    # 0. address of byte buffer
         "size",       # 1. buffer size in bytes
-        "endian",     # 2. bit endianness
+        "endian",     # 2. bit-endianness
         "padding",    # 3. number of pad bits
         "allocated",  # 4. allocated memory
         "readonly",   # 5. memory is read-only
@@ -323,7 +323,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, bitarray, endian='')
         self.assertRaisesMessage(
             ValueError,
-            "bit endianness must be either 'little' or 'big', not 'foo'",
+            "bit-endianness must be either 'little' or 'big', not 'foo'",
             bitarray, endian='foo')
         self.assertRaisesMessage(TypeError,
                                  "'ellipsis' object is not iterable",
@@ -1887,12 +1887,12 @@ class PickleTests(unittest.TestCase, Util):
             TypeError, "second argument must be bytes, got 'int'",
             _bitarray_reconstructor, bitarray, 123, 'big', 0, 0)
 
-        # argument 3 - endianness
+        # argument 3 - bit-endianness
         self.assertRaises(TypeError, _bitarray_reconstructor,
                           bitarray, b'\x0f', 123, 1, 0)
         self.assertRaisesMessage(
             ValueError,
-            "bit endianness must be either 'little' or 'big', not 'small'",
+            "bit-endianness must be either 'little' or 'big', not 'small'",
             _bitarray_reconstructor, bitarray, b"", "small", 0, 0)
 
         # argument 4 - number of pad bits

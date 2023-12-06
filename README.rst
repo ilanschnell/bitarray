@@ -25,7 +25,7 @@ The 3.0 release will:
 Key features
 ------------
 
-* The bit endianness can be specified for each bitarray object, see below.
+* The bit-endianness can be specified for each bitarray object, see below.
 * Sequence methods: slicing (including slice assignment and deletion),
   operations ``+``, ``*``, ``+=``, ``*=``, the ``in`` operator, ``len()``
 * Bitwise operations: ``~``, ``&``, ``|``, ``^``, ``<<``, ``>>`` (as well as
@@ -108,7 +108,7 @@ As mentioned above, bitarray objects behave very much like lists, so
 there is not too much to learn.  The biggest difference from list
 objects (except that bitarray are obviously homogeneous) is the ability
 to access the machine representation of the object.
-When doing so, the bit endianness is of importance; this issue is
+When doing so, the bit-endianness is of importance; this issue is
 explained in detail in the section below.  Here, we demonstrate the
 basic usage of bitarray objects:
 
@@ -231,17 +231,17 @@ This Python bitarray library specifies the behavior as follows:
 * shifts larger or equal to the length of the bitarray result in
   bitarrays with all values 0
 
-It is worth noting that (regardless of bit endianness) the bitarray left
+It is worth noting that (regardless of bit-endianness) the bitarray left
 shift (``<<``) always shifts towards lower indices, and the right
 shift (``>>``) always shifts towards higher indices.
 
 
-Bit endianness
+Bit-endianness
 --------------
 
 Unless explicitly converting to machine representation, using
 the ``.tobytes()``, ``.frombytes()``, ``.tofile()`` and ``.fromfile()``
-methods, as well as using ``memoryview``, the bit endianness will have no
+methods, as well as using ``memoryview``, the bit-endianness will have no
 effect on any computation, and one can skip this section.
 
 Since bitarrays allows addressing individual bits, where the machine
@@ -286,7 +286,7 @@ numeric significance corresponds to an increasing address.
 So ``a[0]`` is the lowest address and least significant bit,
 and ``a[7]`` is the highest address and most significant bit.
 
-The bit endianness is a property of the bitarray object.
+The bit-endianness is a property of the bitarray object.
 The endianness cannot be changed once a bitarray object is created.
 When comparing bitarray objects, the endianness (and hence the machine
 representation) is irrelevant; what matters is the mapping from indices
@@ -445,9 +445,9 @@ The bitarray object:
 
    Optional keyword arguments:
 
-   ``endian``: Specifies the bit endianness of the created bitarray object.
+   ``endian``: Specifies the bit-endianness of the created bitarray object.
    Allowed values are ``big`` and ``little`` (the default is ``big``).
-   The bit endianness effects the buffer representation of the bitarray.
+   The bit-endianness effects the buffer representation of the bitarray.
 
    ``buffer``: Any object which exposes a buffer.  When provided, ``initializer``
    cannot be present (or has to be ``None``).  The imported buffer may be
@@ -478,7 +478,7 @@ bitarray methods:
 
    0. memory address of buffer
    1. buffer size (in bytes)
-   2. bit endianness as a string
+   2. bit-endianness as a string
    3. number of pad bits
    4. allocated memory for the buffer (in bytes)
    5. memory is read-only
@@ -526,7 +526,7 @@ bitarray methods:
 
 
 ``endian()`` -> str
-   Return the bit endianness of the bitarray as a string (``little`` or ``big``).
+   Return the bit-endianness of the bitarray as a string (``little`` or ``big``).
 
 
 ``extend(iterable, /)``

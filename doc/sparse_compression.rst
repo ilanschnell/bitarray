@@ -17,7 +17,7 @@ The lower the population count, the more efficient the compression will be:
     >>> assert sc_decode(blob) == a
 
 
-The binary blob consists of a header which encodes the bit endianness and the
+The binary blob consists of a header which encodes the bit-endianness and the
 total length of the bitarray, i.e. the number of bits.  The header is followed
 by an arbitrary number of blocks.  There are 5 block types.  Each block starts
 with a block header encoding the block type and specifying the size of the

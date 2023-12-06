@@ -38,8 +38,8 @@ bitarrays.  However, this representation is not very human readable.
     >>> a.tobytes()  # raw buffer
     b'\xce\r\x1cxJ\xf1\xe0'
 
-Here, the number of pad bits within the last byte, as well as the bit
-endianness, is not part of the byte buffer itself.  Therefore, extra work
+Here, the number of pad bits within the last byte, as well as the
+bit-endianness, is not part of the byte buffer itself.  Therefore, extra work
 is required to store this information.  The utility function ``serialize()``
 adds this information to a header byte:
 
@@ -60,7 +60,7 @@ The header byte is structured the following way:
     19
     >>> x[0] % 16   # number of pad bits (0..7) within last byte
     3
-    >>> x[0] // 16  # bit endianness: 0 little, 1 big
+    >>> x[0] // 16  # bit-endianness: 0 little, 1 big
     1
 
 Hence, valid values for the header byte are in the ranges 0 .. 7

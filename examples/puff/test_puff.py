@@ -24,7 +24,7 @@ class TestState(unittest.TestCase):
         self.assertEqual(s.get_incnt(), 35)
 
     def test_read_uint(self):
-        # works for either bit endianness
+        # works for either bit-endianness
         inp = bitarray('11011100 1')
         out = bytearray()
         s = State(inp, out)
