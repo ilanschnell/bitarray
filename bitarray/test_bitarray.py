@@ -224,6 +224,8 @@ class TestsModuleFunctions(unittest.TestCase, Util):
         if not is_pypy:
             self.assertEqual(info[0], tuple.__itemsize__)
         self.assertEqual(info[7], int(sys.byteorder == 'little'))
+        self.assertEqual(info[8], int(sys.byteorder == 'big'))
+        self.assertEqual(info[7] + info[8], 1)
 
     def test_set_default_endian(self):
         self.assertRaises(TypeError, _set_default_endian, 0)

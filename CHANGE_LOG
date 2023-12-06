@@ -1,7 +1,8 @@
 2023-12-XX   2.8.5:
 -------------------
-  * speedup unaligned copies for big-endian bitarrays by also taking
-    advantage of word shifts on little-endian machines (with GNU C compiler)
+  * speedup unaligned copies by always using word shifts (in combination
+    with `__builtin_bswap64()` when available) when bit-endianness and
+    machine byte-order are opposite
 
 
 2023-12-04   2.8.4:

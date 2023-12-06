@@ -216,16 +216,20 @@ bytereverse(char *p, Py_ssize_t n)
     }
 }
 
-/* The following two functions shift first n bytes in buffer by k bits to
-   right (towards higher addresses).
+/* The following two functions operate on first n bytes in buffer.
+   Within this region, they shift all bits by k positions to right,
+   i.e. towards higher addresses.
    They operate on little-endian and bit-endian bitarrays respectively.
-   See also examples/shift_r8.c */
+   As we shift right, we need to start with the highest address and loop
+   downwards such that lower bytes are still unaltered.
+   See also examples/shift_r8.c
+*/
 static void
 shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
 {
     Py_ssize_t w = 0;
 
-#if PY_LITTLE_ENDIAN              /* use shift word */
+#if IS_GNUC || PY_LITTLE_ENDIAN   /* use shift word */
     w = n / 8;                    /* number of words used for shifting */
     n %= 8;                       /* number of remaining bytes */
 #endif
@@ -236,7 +240,14 @@ shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
             buff[i] |= buff[i - 1] >> (8 - k);
     }
     while (w--) {                 /* shift in word-range(0, w) */
-        ((uint64_t *) buff)[w] <<= k;  /* shift word */
+        uint64_t *p = ((uint64_t *) buff) + w;
+#if IS_GNUC && PY_BIG_ENDIAN
+        *p = __builtin_bswap64(*p);
+        *p <<= k;
+        *p = __builtin_bswap64(*p);
+#else
+        *p <<= k;
+#endif
         if (w)                    /* add shifted byte from next lower word */
             buff[8 * w] |= buff[8 * w - 1] >> (8 - k);
     }
@@ -247,26 +258,28 @@ shift_r8be(unsigned char *buff, Py_ssize_t n, int k)
 {
     Py_ssize_t w = 0;
 
-#if PY_LITTLE_ENDIAN && IS_GNUC   /* use shift word */
+#if IS_GNUC || PY_BIG_ENDIAN      /* use shift word */
     w = n / 8;                    /* number of words used for shifting */
     n %= 8;                       /* number of remaining bytes */
 #endif
-    while (n--) {                 /* shift bytes (from highest to lowest) */
+    while (n--) {                 /* shift in byte-range(8 * w, n) */
         Py_ssize_t i = n + 8 * w;
         buff[i] >>= k;            /* shift byte */
         if (n || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] << (8 - k);
     }
-#if IS_GNUC
     while (w--) {                 /* shift in word-range(0, w) */
         uint64_t *p = ((uint64_t *) buff) + w;
-        *p = __builtin_bswap64(*p);    /* swap bytes in word  */
-        *p >>= k;                      /* shift word */
-        *p = __builtin_bswap64(*p);    /* swap bytes in word */
+#if IS_GNUC && PY_LITTLE_ENDIAN
+        *p = __builtin_bswap64(*p);
+        *p >>= k;
+        *p = __builtin_bswap64(*p);
+#else
+        *p >>= k;
+#endif
         if (w)                    /* add shifted byte from next lower word */
             buff[8 * w] |= buff[8 * w - 1] << (8 - k);
     }
-#endif
 }
 
 /* shift bits in byte-range(a, b) by k bits to right */
@@ -4129,7 +4142,7 @@ Set the default bit endianness for new bitarray objects being created.");
 static PyObject *
 sysinfo(PyObject *module)
 {
-    return Py_BuildValue("iiiiiiii",
+    return Py_BuildValue("iiiiiiiii",
                          (int) sizeof(void *),
                          (int) sizeof(size_t),
                          (int) sizeof(bitarrayobject),
@@ -4145,7 +4158,8 @@ sysinfo(PyObject *module)
 #else
                          0,
 #endif
-                         (int) PY_LITTLE_ENDIAN
+                         (int) PY_LITTLE_ENDIAN,
+                         (int) PY_BIG_ENDIAN
                          );
 }
 
@@ -4161,7 +4175,8 @@ Return tuple containing:\n\
 4. sizeof(binode)\n\
 5. __clang__ or __GNUC__ defined\n\
 6. NDEBUG not defined\n\
-7. PY_LITTLE_ENDIAN");
+7. PY_LITTLE_ENDIAN\n\
+8. PY_BIG_ENDIAN");
 
 
 static PyMethodDef module_functions[] = {
