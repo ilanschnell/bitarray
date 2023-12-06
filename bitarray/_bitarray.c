@@ -172,6 +172,7 @@ bitarray_dealloc(bitarrayobject *self)
     }
     else if (self->ob_item) {
         /* only free object's buffer - imported buffers cannot be freed */
+        assert(self->buffer == NULL);
         PyMem_Free((void *) self->ob_item);
     }
 
@@ -185,7 +186,7 @@ buffers_overlap(bitarrayobject *self, bitarrayobject *other)
     if (Py_SIZE(self) == 0 || Py_SIZE(other) == 0)
         return 0;
 
-/* is pointer in buffer? */
+/* is pointer ptr in buffer of bitarray a */
 #define PIB(a, ptr)  (a->ob_item <= ptr && ptr < a->ob_item + Py_SIZE(a))
     return PIB(self, other->ob_item) || PIB(other, self->ob_item);
 #undef PIB
