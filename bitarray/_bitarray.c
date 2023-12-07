@@ -743,11 +743,9 @@ extend_unicode01(bitarrayobject *self, PyObject *unicode)
     int res;
 
     assert(PyUnicode_Check(unicode));
-    bytes = PyUnicode_AsASCIIString(unicode);
-    if (bytes == NULL)
+    if ((bytes = PyUnicode_AsASCIIString(unicode)) == NULL)
         return -1;
 
-    assert(PyBytes_Check(bytes));
     res = extend_bytes01(self, bytes);
     Py_DECREF(bytes);  /* drop bytes */
     return res;
@@ -1077,7 +1075,6 @@ bitarray_fill(bitarrayobject *self)
        BufferError when buffer is imported or exported */
     self->nbits += p;
 
-    assert(PADBITS(self) == 0);
     return PyLong_FromSsize_t(p);
 }
 
@@ -1288,7 +1285,6 @@ bitarray_reverse(bitarrayobject *self)
        later be the leading p bits.  To remove those p leading bits, we
        must have p extra bits at the end of the bitarray. */
     self->nbits += p;
-    assert(PADBITS(self) == 0);
 
     /* reverse order of bytes */
     for (i = 0, j = nbytes - 1; i < j; i++, j--) {
@@ -1302,7 +1298,7 @@ bitarray_reverse(bitarrayobject *self)
     /* remove the p pad bits at the end of the original bitarray that
        are now the leading p bits */
     delete_n(self, 0, p);
-    assert(self->nbits + p == 8 * nbytes);
+
     Py_RETURN_NONE;
 }
 
@@ -1487,7 +1483,6 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
     /* remove pad bits staring at previous bit length (8 * n - p) */
     if (delete_n(self, 8 * n - p, p) < 0)
         goto error;
-    assert(PADBITS(self) == p);
 
     PyBuffer_Release(&view);
     Py_RETURN_NONE;
@@ -2156,7 +2151,6 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
     else {
         Py_ssize_t i, j;
 
-        assert(step != 1);
         if (increase != 0) {
             PyErr_Format(PyExc_ValueError, "attempt to assign sequence of "
                          "size %zd to extended slice of size %zd",
