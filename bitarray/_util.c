@@ -268,23 +268,20 @@ static PyObject *
 parity(PyObject *module, PyObject *obj)
 {
     bitarrayobject *a;
-    uint64_t x;
+    uint64_t x, *wbuff;
     Py_ssize_t i;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
     a = (bitarrayobject *) obj;
+    wbuff = WBUFF(a);
     x = zlw(a);
     for (i = 0; i < a->nbits / 64; i++)
-        x ^= WBUFF(a)[i];
-#if IS_GNUC
-    x = __builtin_parityll(x);
-#else
+        x ^= *wbuff++;
     for (i = 32; i > 0; i /= 2)
         x ^= x >> i;
     x &= 1;
-#endif
     return PyLong_FromLong((long) x);
 }
 
