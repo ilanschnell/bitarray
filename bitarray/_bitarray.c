@@ -1080,7 +1080,7 @@ bitarray_fill(bitarrayobject *self)
        BufferError when buffer is imported or exported */
     self->nbits += p;
 
-    assert(self->nbits == 8 * Py_SIZE(self));
+    assert(PADBITS(self) == 0);
     return PyLong_FromSsize_t(p);
 }
 
@@ -1291,7 +1291,7 @@ bitarray_reverse(bitarrayobject *self)
        later be the leading p bits.  To remove those p leading bits, we
        must have p extra bits at the end of the bitarray. */
     self->nbits += p;
-    assert(0 <= p && p < 8 && self->nbits == 8 * nbytes);
+    assert(PADBITS(self) == 0);
 
     /* reverse order of bytes */
     for (i = 0, j = nbytes - 1; i < j; i++, j--) {
@@ -1305,7 +1305,7 @@ bitarray_reverse(bitarrayobject *self)
     /* remove the p pad bits at the end of the original bitarray that
        are now the leading p bits */
     delete_n(self, 0, p);
-    assert(self->nbits == 8 * nbytes - p);
+    assert(self->nbits + p == 8 * nbytes);
     Py_RETURN_NONE;
 }
 
@@ -2464,7 +2464,6 @@ bitwise(bitarrayobject *self, bitarrayobject *other, const char oper)
     assert(self->nbits == other->nbits);
     assert(self->endian == other->endian);
     assert(self->readonly == 0);
-    assert_nbits(self);
     switch (oper) {
     case '&':
         for (i = 0; i < cwords; i++)
