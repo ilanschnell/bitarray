@@ -1072,7 +1072,7 @@ bits (ignoring whitespace and underscore).");
 static PyObject *
 bitarray_fill(bitarrayobject *self)
 {
-    Py_ssize_t p = PADBITS(self);  /* number of pad bits */
+    const Py_ssize_t p = PADBITS(self);  /* number of pad bits */
 
     RAISE_IF_READONLY(self, NULL);
     set_padbits(self);
@@ -1473,31 +1473,24 @@ Return bitarray as list of integer items.\n\
 static PyObject *
 bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
 {
+    const Py_ssize_t n = Py_SIZE(self);  /* nbytes before extending */
+    const Py_ssize_t p = PADBITS(self);  /* number of pad bits */
     Py_buffer view;
-    Py_ssize_t t, p;
 
     RAISE_IF_READONLY(self, NULL);
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
         return NULL;
 
-    /* Before we extend the raw bytes with the new data, we need to store
-       the current size and pad bits, as the bitarray size might not be
-       a multiple of 8.  After extending, we remove the pad bits again.
-    */
-    t = self->nbits;          /* number of bits before extending */
-    p = PADBITS(self);        /* number of pad bits */
-    assert(0 <= p && p < 8 && t + p == 8 * Py_SIZE(self));
-
-    if (resize(self, t + p + 8 * view.len) < 0)
+    /* resize to accommodate new bytes */
+    if (resize(self, 8 * (n + view.len)) < 0)
         goto error;
-    assert(self->nbits == 8 * Py_SIZE(self));
 
-    memcpy(self->ob_item + (Py_SIZE(self) - view.len),
-           (char *) view.buf, (size_t) view.len);
+    memcpy(self->ob_item + n, (char *) view.buf, (size_t) view.len);
 
-    if (delete_n(self, t, p) < 0)  /* remove pad bits */
+    /* remove pad bits staring at previous bit length (8 * n - p) */
+    if (delete_n(self, 8 * n - p, p) < 0)
         goto error;
-    assert(self->nbits == t + 8 * view.len);
+    assert(PADBITS(self) == p);
 
     PyBuffer_Release(&view);
     Py_RETURN_NONE;
