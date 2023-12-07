@@ -782,11 +782,8 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         return extend_iter(self, obj);
 
     /* finally, try to get the iterator of the object */
-    iter = PyObject_GetIter(obj);
-    if (iter) {
-        int res;
-
-        res = extend_iter(self, iter);
+    if ((iter = PyObject_GetIter(obj))) {
+        int res = extend_iter(self, iter);
         Py_DECREF(iter);
         return res;
     }
@@ -4112,17 +4109,16 @@ static PyObject *
 set_default_endian(PyObject *module, PyObject *args)
 {
     char *endian_str;
-    int tmp;
+    int t;
 
     if (!PyArg_ParseTuple(args, "s:_set_default_endian", &endian_str))
         return NULL;
 
     /* As endian_from_string() might return -1, we have to store its value
        in a temporary variable BEFORE setting default_endian. */
-    tmp = endian_from_string(endian_str);
-    if (tmp < 0)
+    if ((t = endian_from_string(endian_str)) < 0)
         return NULL;
-    default_endian = tmp;
+    default_endian = t;
 
     Py_RETURN_NONE;
 }
