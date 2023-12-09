@@ -76,7 +76,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 2.8.4
+    bitarray version: 2.8.5
     sys.version: 3.11.0 (main, Oct 25 2022) [Clang 14.0.4]
     sys.prefix: /Users/ilan/Mini3/envs/py311
     pointer size: 64 bit
@@ -425,7 +425,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 2.8.4 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.8.5 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -490,7 +490,7 @@ bitarray methods:
 
 
 ``bytereverse(start=0, stop=<end of buffer>, /)``
-   For each byte in byte-range(start, stop) reverse the bit order in-place.
+   For each byte in byte-range(start, stop) reverse bits in-place.
    The start and stop indices are given in terms of bytes (not bits).
    Also note that this method only changes the buffer; it does not change the
    endianness of the bitarray object.  Padbits are left unchanged such that
@@ -540,7 +540,7 @@ bitarray methods:
 
 ``fill()`` -> int
    Add zeros to the end of the bitarray, such that the length will be
-   a multiple of 8, and return the number of bits added (0..7).
+   a multiple of 8, and return the number of bits added [0..7].
 
 
 ``find(sub_bitarray, start=0, stop=<end of array>, /)`` -> int

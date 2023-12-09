@@ -1,6 +1,16 @@
 Change log
 ==========
 
+**2.8.5** (2023-12-09):
+
+* speedup unaligned copies by always using word shifts (in combination
+  with builtin byte swap 64 when available) when bit-endianness and
+  machine byte-order are opposite
+* add ``HAVE_BUILTIN_BSWAP64`` to header
+* avoid misaligned pointers when casting to ``(uint64_t *)``
+* add tests
+
+
 **2.8.4** (2023-12-04):
 
 * simplify ``copy_n()`` (remove special cases), see `#d2d6fd53 <https://github.com/ilanschnell/bitarray/commit/d2d6fd53>`__
@@ -356,7 +366,7 @@ Change log
 
 * fix crash caused by unsupported types in binary operations, `#116 <https://github.com/ilanschnell/bitarray/issues/116>`__
 * speedup initializing or extending a bitarray from another with different
-  bit endianness
+  bit-endianness
 * add formatting options to ``bitarray.util.pprint()``
 * add documentation on `bitarray representations <represent.rst>`__
 * add and improve tests (all 291 tests run in less than half a second on
@@ -375,7 +385,7 @@ Change log
 * allow whitespace (ignore space and ``\n\r\t\v``) in input strings,
   e.g. ``bitarray('01 11')`` or ``a += '10 00'``
 * add ``bitarray.util.pprint()``
-* When initializing a bitarray from another with different bit endianness,
+* When initializing a bitarray from another with different bit-endianness,
   e.g. ``a = bitarray('110', 'little')`` and ``b = bitarray(a, 'big')``,
   the buffer used to be simply copied, with consequence that ``a == b`` would
   result in ``False``.  This is fixed now, that is ``a == b`` will always
@@ -773,7 +783,7 @@ Change log
 
 **0.2.0** (2008-09-02):
 
-* Added bit endianness property to the bitarray object
+* Added bit-endianness property to the bitarray object
 * Added the examples to the release package.
 
 

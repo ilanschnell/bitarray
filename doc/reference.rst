@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 2.8.4 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.8.5 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -24,9 +24,9 @@ The bitarray object:
 
    Optional keyword arguments:
 
-   ``endian``: Specifies the bit endianness of the created bitarray object.
+   ``endian``: Specifies the bit-endianness of the created bitarray object.
    Allowed values are ``big`` and ``little`` (the default is ``big``).
-   The bit endianness effects the buffer representation of the bitarray.
+   The bit-endianness effects the buffer representation of the bitarray.
 
    ``buffer``: Any object which exposes a buffer.  When provided, ``initializer``
    cannot be present (or has to be ``None``).  The imported buffer may be
@@ -57,7 +57,7 @@ bitarray methods:
 
    0. memory address of buffer
    1. buffer size (in bytes)
-   2. bit endianness as a string
+   2. bit-endianness as a string
    3. number of pad bits
    4. allocated memory for the buffer (in bytes)
    5. memory is read-only
@@ -66,7 +66,7 @@ bitarray methods:
 
 
 ``bytereverse(start=0, stop=<end of buffer>, /)``
-   For each byte in byte-range(start, stop) reverse the bit order in-place.
+   For each byte in byte-range(start, stop) reverse bits in-place.
    The start and stop indices are given in terms of bytes (not bits).
    Also note that this method only changes the buffer; it does not change the
    endianness of the bitarray object.  Padbits are left unchanged such that
@@ -105,7 +105,7 @@ bitarray methods:
 
 
 ``endian()`` -> str
-   Return the bit endianness of the bitarray as a string (``little`` or ``big``).
+   Return the bit-endianness of the bitarray as a string (``little`` or ``big``).
 
 
 ``extend(iterable, /)``
@@ -116,7 +116,7 @@ bitarray methods:
 
 ``fill()`` -> int
    Add zeros to the end of the bitarray, such that the length will be
-   a multiple of 8, and return the number of bits added (0..7).
+   a multiple of 8, and return the number of bits added [0..7].
 
 
 ``find(sub_bitarray, start=0, stop=<end of array>, /)`` -> int
