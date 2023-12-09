@@ -241,7 +241,7 @@ shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
         if (n || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] >> (8 - k);
     }
-    assert(w == 0 || to_alligned((void *) buff) == 0);
+    assert(w == 0 || to_aligned((void *) buff) == 0);
     while (w--) {                 /* shift in word-range(0, w) */
         uint64_t *p = ((uint64_t *) buff) + w;
 #if HAVE_BUILTIN_BSWAP64 && PY_BIG_ENDIAN
@@ -271,7 +271,7 @@ shift_r8be(unsigned char *buff, Py_ssize_t n, int k)
         if (n || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] << (8 - k);
     }
-    assert(w == 0 || to_alligned((void *) buff) == 0);
+    assert(w == 0 || to_aligned((void *) buff) == 0);
     while (w--) {                 /* shift in word-range(0, w) */
         uint64_t *p = ((uint64_t *) buff) + w;
 #if HAVE_BUILTIN_BSWAP64 && PY_LITTLE_ENDIAN
@@ -301,11 +301,10 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int k)
         return;
 
     if (n >= 8) {
-        s = to_alligned((void *) buff);
-        buff += s;
+        s = to_aligned((void *) buff);
+        buff += s;  /* align pointer for casting to (uint64_t *) */
         n -= s;
     }
-    assert(n < 8 || to_alligned((void *) buff) == 0);
 
     if (IS_LE(self)) {
         shift_r8le(buff, n, k);
@@ -493,7 +492,7 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 
     if (n >= 64) {
         Py_ssize_t p = BYTES(a), w;  /* first full byte  */
-        p += to_alligned((void *) (self->ob_item + p));
+        p += to_aligned((void *) (self->ob_item + p));  /* align pointer */
         w = ((b / 8 - p) / 8);       /* number of (full) words to count */
 
         assert(8 * p - a < 64 && b - (8 * (p + 8 * w)) < 64 && w >= 0);

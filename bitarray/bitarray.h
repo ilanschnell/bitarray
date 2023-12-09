@@ -216,9 +216,12 @@ builtin_bswap64(uint64_t word)
 #endif
 }
 
-/* return distance (0..3) to next aligned pointer */
+/* Return distance (0..3) to next aligned pointer.
+   While on modern compilers uint64_t pointers may be misaligned, it may
+   cause problems on older ones.  Moreover, it may lead to slowdown (even
+   on modern compilers). */
 static inline int
-to_alligned(void *p)
+to_aligned(void *p)
 {
     int r = ((uintptr_t) p) % 4;
     return r ? 4 - r : 0;
@@ -230,7 +233,7 @@ popcnt_words(uint64_t *w, Py_ssize_t n)
 {
     Py_ssize_t cnt = 0;
 
-    assert(n >= 0 && to_alligned((void *) w) == 0);
+    assert(n >= 0 && to_aligned((void *) w) == 0);
     while (n--)
         cnt += popcnt_64(*w++);
     return cnt;
