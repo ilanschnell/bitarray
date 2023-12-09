@@ -753,7 +753,7 @@ digit_to_int(int n, char c)
     return -1;
 }
 
-/* return m = log2(n) for m = 1..6 */
+/* return m = log2(n) for m in [1..6] */
 static int
 base_to_length(int n)
 {
@@ -829,7 +829,7 @@ standard base 64 alphabet is used.");
    Arguments to this functions are:
    - bitarray (of length m * len(s)) whose elements are overwritten
    - byte object s containing the ASCII digits
-   - bits per digit - the base length m  (1..6)
+   - bits per digit - the base length m  [1..6]
 */
 static int
 base2ba_core(bitarrayobject *a, PyObject *bytes, int m)
@@ -1202,7 +1202,7 @@ sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
     return rts[NSEG(nbits) + offset] - rts[offset];
 }
 
-/* Calculate number of bytes (1..4096) of the raw block starting at offset,
+/* Calculate number of bytes [1..4096] of the raw block starting at offset,
    encode the block (write the header and copy the bytes into the encode
    buffer str), and return the number of raw bytes.
    The header byte is in range(0x01, 0xa0).

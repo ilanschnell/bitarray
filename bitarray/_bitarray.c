@@ -1100,7 +1100,7 @@ PyDoc_STRVAR(fill_doc,
 "fill() -> int\n\
 \n\
 Add zeros to the end of the bitarray, such that the length will be\n\
-a multiple of 8, and return the number of bits added (0..7).");
+a multiple of 8, and return the number of bits added [0..7].");
 
 
 static PyObject *

@@ -7,12 +7,12 @@
 #define BITARRAY_VERSION  "2.8.5"
 
 #ifdef STDC_HEADERS
-#include <stddef.h>
-#else  /* !STDC_HEADERS */
-#ifdef HAVE_SYS_TYPES_H
-#include <sys/types.h>      /* For size_t */
-#endif /* HAVE_SYS_TYPES_H */
-#endif /* !STDC_HEADERS */
+#  include <stddef.h>
+#else
+#  ifdef HAVE_SYS_TYPES_H
+#    include <sys/types.h>      /* For size_t */
+#  endif
+#endif
 
 /* Compatibility with Visual Studio 2013 and older which don't support
    the inline keyword in C (only in C++): use __inline instead.
@@ -212,11 +212,10 @@ builtin_bswap64(uint64_t word)
 #else
 #  define HAVE_BUILTIN_BSWAP64  0
     Py_UNREACHABLE();
-    return 0;
 #endif
 }
 
-/* Return distance (0..3) to next aligned pointer.
+/* Return distance [0..3] to next aligned pointer.
    While on modern compilers uint64_t pointers may be misaligned, it may
    cause problems on older ones.  Moreover, it may lead to slowdown (even
    on modern compilers). */
