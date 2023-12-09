@@ -492,30 +492,30 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         return 0;
 
     if (n >= 64) {
-        const Py_ssize_t wa = (a + 63) / 64;  /* word-range(wa, wb) */
-        const Py_ssize_t wb = b / 64;
+        Py_ssize_t p = BYTES(a), w;  /* first full byte  */
+        p += to_alligned((void *) (self->ob_item + p));
+        w = ((b / 8 - p) / 8);       /* number of (full) words to count */
 
-        assert(wa <= wb && 64 * wa - a < 64 && b - 64 * wb < 64);
+        assert(8 * p - a < 64 && b - (8 * (p + 8 * w)) < 64 && w >= 0);
 
-        cnt += count(self, a, 64 * wa);
-        cnt += popcnt_words(WBUFF(self) + wa, wb - wa);
-        cnt += count(self, 64 * wb, b);
+        cnt += count(self, a, 8 * p);
+        cnt += popcnt_words((uint64_t *) (self->ob_item + p), w);
+        cnt += count(self, 8 * (p + 8 * w), b);
     }
     else if (n >= 8) {
-        const Py_ssize_t byte_a = BYTES(a);  /* byte-range(byte_a, byte_b) */
-        const Py_ssize_t byte_b = b / 8;
+        const Py_ssize_t p = BYTES(a);   /* first full byte */
+        const Py_ssize_t m = b / 8 - p;  /* number of full bytes to count */
 
-        assert(8 * byte_a - a < 8 && b - 8 * byte_b < 8);
-        assert(byte_a <= byte_b && byte_b - byte_a < 8);
+        assert(8 * p - a < 8 && b - 8 * (p + m) < 8 && 0 <= m && m < 8);
 
-        cnt += count(self, a, 8 * byte_a);
-        if (byte_b > byte_a) {
+        cnt += count(self, a, 8 * p);
+        if (m) {                         /* starting at p count in m bytes */
             uint64_t tmp = 0;
             /* copy bytes we want to count into tmp word */
-            memcpy((char *) &tmp, self->ob_item + byte_a, byte_b - byte_a);
+            memcpy((char *) &tmp, self->ob_item + p, m);
             cnt += popcnt_64(tmp);
         }
-        cnt += count(self, 8 * byte_b, b);
+        cnt += count(self, 8 * (p + m), b);
     }
     else {
         while (a < b)

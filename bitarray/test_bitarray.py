@@ -3322,6 +3322,14 @@ class CountTests(unittest.TestCase, Util):
                     self.assertEqual(a.count(v, i, j, step),
                                      a[i:j:step].count(v))
 
+    def test_offest_buffer(self):
+        # this tests if words are aligned in popcnt_words()
+        N = 1 << 16
+        for i in range(20):
+            a = urandom(N, 'little')
+            b = bitarray(buffer=memoryview(a)[i:], endian='little')
+            self.assertEqual(b.count(), a.count(1, 8 * i))
+
 # ---------------------------------------------------------------------------
 
 class IndexTests(unittest.TestCase, Util):
