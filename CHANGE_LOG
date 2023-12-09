@@ -3,6 +3,8 @@
   * speedup unaligned copies by always using word shifts (in combination
     with `__builtin_bswap64()` when available) when bit-endianness and
     machine byte-order are opposite
+  * avoid misaligned pointers when casting to `(uint64_t *)`
+  * add tests
 
 
 2023-12-04   2.8.4:

@@ -80,14 +80,15 @@ Once you have installed the package, you may want to test it:
     pointer size: 64 bit
     sizeof(size_t): 8
     sizeof(bitarrayobject): 80
-    __clang__ or __GNUC__ defined: 1
-    PY_LITTLE_ENDIAN (use word shift): 1
+    HAVE_BUILTIN_BSWAP64: 1
+    default bit-endianness: big
+    machine byte-order: little
     DEBUG: 0
     .........................................................................
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 494 tests in 0.461s
+    Ran 495 tests in 0.459s
 
     OK
 
