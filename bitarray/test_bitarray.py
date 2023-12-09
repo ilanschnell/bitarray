@@ -5027,7 +5027,7 @@ def run(verbosity=1):
     print('pointer size: %d bit' % (8 * SYSINFO[0]))
     print('sizeof(size_t): %d' % SYSINFO[1])
     print('sizeof(bitarrayobject): %d' % SYSINFO[2])
-    print('__clang__ or __GNUC__ defined: %s' % SYSINFO[5])
+    print('HAVE_BUILTIN_BSWAP64: %d' % SYSINFO[5])
     print('default bit-endianness: %s' % default_endian)
     print('machine byte-order: %s' % sys.byteorder)
     print('DEBUG: %s' % DEBUG)

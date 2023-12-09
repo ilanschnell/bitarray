@@ -231,7 +231,7 @@ shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
 {
     Py_ssize_t w = 0;
 
-#if IS_GNUC || PY_LITTLE_ENDIAN   /* use shift word */
+#if HAVE_BUILTIN_BSWAP64 || PY_LITTLE_ENDIAN   /* use shift word */
     w = n / 8;                    /* number of words used for shifting */
     n %= 8;                       /* number of remaining bytes */
 #endif
@@ -243,10 +243,10 @@ shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
     }
     while (w--) {                 /* shift in word-range(0, w) */
         uint64_t *p = ((uint64_t *) buff) + w;
-#if IS_GNUC && PY_BIG_ENDIAN
-        *p = __builtin_bswap64(*p);
+#if HAVE_BUILTIN_BSWAP64 && PY_BIG_ENDIAN
+        *p = builtin_bswap64(*p);
         *p <<= k;
-        *p = __builtin_bswap64(*p);
+        *p = builtin_bswap64(*p);
 #else
         *p <<= k;
 #endif
@@ -260,7 +260,7 @@ shift_r8be(unsigned char *buff, Py_ssize_t n, int k)
 {
     Py_ssize_t w = 0;
 
-#if IS_GNUC || PY_BIG_ENDIAN      /* use shift word */
+#if HAVE_BUILTIN_BSWAP64 || PY_BIG_ENDIAN      /* use shift word */
     w = n / 8;                    /* number of words used for shifting */
     n %= 8;                       /* number of remaining bytes */
 #endif
@@ -272,10 +272,10 @@ shift_r8be(unsigned char *buff, Py_ssize_t n, int k)
     }
     while (w--) {                 /* shift in word-range(0, w) */
         uint64_t *p = ((uint64_t *) buff) + w;
-#if IS_GNUC && PY_LITTLE_ENDIAN
-        *p = __builtin_bswap64(*p);
+#if HAVE_BUILTIN_BSWAP64 && PY_LITTLE_ENDIAN
+        *p = builtin_bswap64(*p);
         *p >>= k;
-        *p = __builtin_bswap64(*p);
+        *p = builtin_bswap64(*p);
 #else
         *p >>= k;
 #endif
@@ -4132,11 +4132,7 @@ sysinfo(PyObject *module)
                          (int) sizeof(bitarrayobject),
                          (int) sizeof(decodetreeobject),
                          (int) sizeof(binode),
-#if IS_GNUC
-                         1,
-#else
-                         0,
-#endif
+                         (int) HAVE_BUILTIN_BSWAP64,
 #ifndef NDEBUG
                          1,
 #else
@@ -4157,7 +4153,7 @@ Return tuple containing:\n\
 2. sizeof(bitarrayobject)\n\
 3. sizeof(decodetreeobject)\n\
 4. sizeof(binode)\n\
-5. __clang__ or __GNUC__ defined\n\
+5. HAVE_BUILTIN_BSWAP64\n\
 6. NDEBUG not defined\n\
 7. PY_LITTLE_ENDIAN\n\
 8. PY_BIG_ENDIAN");

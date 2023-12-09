@@ -22,10 +22,8 @@
 #define inline __inline
 #endif
 
-#if (defined(__clang__) || defined(__GNUC__))
-#define IS_GNUC  1
-#else
-#define IS_GNUC  0
+#ifdef _MSC_VER
+#include <intrin.h>    /* For _byteswap_uint64() */
 #endif
 
 /* --- definitions specific to Python --- */
@@ -183,7 +181,7 @@ set_padbits(bitarrayobject *self)
 static inline int
 popcnt_64(uint64_t x)
 {
-#if IS_GNUC
+#if (defined(__clang__) || defined(__GNUC__))
     return __builtin_popcountll(x);
 #else
     /* https://en.wikipedia.org/wiki/Hamming_weight popcount64c */
@@ -196,6 +194,25 @@ popcnt_64(uint64_t x)
     x = (x & m2) + ((x >> 2) & m2);
     x = (x + (x >> 4)) & m4;
     return (x * h01) >> 56;
+#endif
+}
+
+static inline uint64_t
+builtin_bswap64(uint64_t word)
+{
+#if (defined(__clang__) ||                                                 \
+      (defined(__GNUC__)                                                   \
+        && ((__GNUC__ >= 5) || (__GNUC__ == 4) && (__GNUC_MINOR__ >= 3))))
+    /* __builtin_bswap64() is available since GCC 4.3. */
+#  define HAVE_BUILTIN_BSWAP64  1
+    return __builtin_bswap64(word);
+#elif defined(_MSC_VER)
+#  define HAVE_BUILTIN_BSWAP64  1
+    return _byteswap_uint64(word);
+#else
+#  define HAVE_BUILTIN_BSWAP64  0
+    Py_UNREACHABLE();
+    return 0;
 #endif
 }
 
