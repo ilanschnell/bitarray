@@ -216,13 +216,21 @@ builtin_bswap64(uint64_t word)
 #endif
 }
 
+/* return distance (0..3) to next aligned pointer */
+static inline int
+to_alligned(void *p)
+{
+    int r = ((uintptr_t) p) % 4;
+    return r ? 4 - r : 0;
+}
+
 /* population count of n words starting from at uint64_t pointer w */
 static inline Py_ssize_t
 popcnt_words(uint64_t *w, Py_ssize_t n)
 {
     Py_ssize_t cnt = 0;
 
-    assert(n >= 0);
+    assert(n >= 0 && to_alligned((void *) w) == 0);
     while (n--)
         cnt += popcnt_64(*w++);
     return cnt;

@@ -241,6 +241,7 @@ shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
         if (n || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] >> (8 - k);
     }
+    assert(w == 0 || to_alligned((void *) buff) == 0);
     while (w--) {                 /* shift in word-range(0, w) */
         uint64_t *p = ((uint64_t *) buff) + w;
 #if HAVE_BUILTIN_BSWAP64 && PY_BIG_ENDIAN
@@ -270,6 +271,7 @@ shift_r8be(unsigned char *buff, Py_ssize_t n, int k)
         if (n || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] << (8 - k);
     }
+    assert(w == 0 || to_alligned((void *) buff) == 0);
     while (w--) {                 /* shift in word-range(0, w) */
         uint64_t *p = ((uint64_t *) buff) + w;
 #if HAVE_BUILTIN_BSWAP64 && PY_LITTLE_ENDIAN
@@ -289,7 +291,7 @@ static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int k)
 {
     unsigned char *buff = (unsigned char *) self->ob_item + a;
-    Py_ssize_t n = b - a;    /* number of bytes to be shifted */
+    Py_ssize_t s = 0, n = b - a;  /* number of bytes to be shifted */
 
     assert(0 <= k && k < 8);
     assert(0 <= a && a <= Py_SIZE(self));
@@ -298,10 +300,27 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int k)
     if (k == 0 || n <= 0)
         return;
 
-    if (IS_LE(self))
+    if (n >= 8) {
+        s = to_alligned((void *) buff);
+        buff += s;
+        n -= s;
+    }
+    assert(n < 8 || to_alligned((void *) buff) == 0);
+
+    if (IS_LE(self)) {
         shift_r8le(buff, n, k);
-    else
+        if (s) {
+            buff[0] |= buff[-1] >> (8 - k);
+            shift_r8le(buff - s, s, k);
+        }
+    }
+    else {
         shift_r8be(buff, n, k);
+        if (s) {
+            buff[0] |= buff[-1] << (8 - k);
+            shift_r8be(buff - s, s, k);
+        }
+    }
 }
 
 /* Copy n bits from other (starting at b) onto self (starting at a).
