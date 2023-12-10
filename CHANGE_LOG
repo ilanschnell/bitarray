@@ -1,3 +1,7 @@
+20XX-XX-XX   2.8.6:
+-------------------
+
+
 2023-12-09   2.8.5:
 -------------------
   * speedup unaligned copies by always using word shifts (in combination
