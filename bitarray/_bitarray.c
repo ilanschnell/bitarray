@@ -587,8 +587,6 @@ static Py_ssize_t
 find_sub(bitarrayobject *self, bitarrayobject *xa,
          Py_ssize_t start, Py_ssize_t stop)
 {
-    Py_ssize_t i;
-
     assert(0 <= start && start <= self->nbits);
     assert(0 <= stop && stop <= self->nbits);
 
@@ -596,8 +594,9 @@ find_sub(bitarrayobject *self, bitarrayobject *xa,
         return find_bit(self, getbit(xa, 0), start, stop);
 
     while (start <= stop - xa->nbits) {
-        for (i = 0; i < xa->nbits; i++)
-            if (getbit(self, start + i) != getbit(xa, i))
+        Py_ssize_t k;
+        for (k = 0; k < xa->nbits; k++)
+            if (getbit(self, start + k) != getbit(xa, k))
                 goto next;
 
         return start;
@@ -613,6 +612,9 @@ find_sub(bitarrayobject *self, bitarrayobject *xa,
 static Py_ssize_t
 find_obj(bitarrayobject *self, PyObject *x, Py_ssize_t start, Py_ssize_t stop)
 {
+    assert(0 <= start && start <= self->nbits);
+    assert(0 <= stop && stop <= self->nbits);
+
     if (PyIndex_Check(x)) {
         int vi;
 
@@ -624,8 +626,8 @@ find_obj(bitarrayobject *self, PyObject *x, Py_ssize_t start, Py_ssize_t stop)
     if (bitarray_Check(x))
         return find_sub(self, (bitarrayobject *) x, start, stop);
 
-    PyErr_Format(PyExc_TypeError, "bitarray or int expected, "
-                 "not '%s'", Py_TYPE(x)->tp_name);
+    PyErr_Format(PyExc_TypeError, "bitarray or int expected, not '%s'",
+                 Py_TYPE(x)->tp_name);
     return -2;
 }
 
@@ -1326,57 +1328,46 @@ PyDoc_STRVAR(reverse_doc,
 Reverse all bits in bitarray (in-place).");
 
 
-/* given either an int (0 or 1) or a non-empty bitarray,
-   return a bitarrayobject (with a new reference) */
-static bitarrayobject *
-searcharg(PyObject *x)
+/* check search argument - either an int (0 or 1) or a non-empty bitarray */
+static int
+check_searcharg(PyObject *x)
 {
-    bitarrayobject *xa;
-
     if (PyIndex_Check(x)) {
         int vi;
+        return conv_pybit(x, &vi) - 1;
+    }
 
-        if (!conv_pybit(x, &vi))
-            return NULL;
-        xa = newbitarrayobject(&Bitarray_Type, 1, ENDIAN_LITTLE);
-        if (xa == NULL)
-            return NULL;
-        setbit(xa, 0, vi);
-        return xa;
-    }
     if (bitarray_Check(x)) {
-        xa = (bitarrayobject *) x;
-        if (xa->nbits == 0) {
+        if (((bitarrayobject *) x)->nbits == 0) {
             PyErr_SetString(PyExc_ValueError,
-                            "can't search for empty bitarray");
-            return NULL;
+                            "cannot search for empty bitarray");
+            return -1;
         }
-        Py_INCREF(xa);
-        return xa;
+        return 0;
     }
+
     PyErr_Format(PyExc_TypeError, "bitarray or int expected, not '%s'",
                  Py_TYPE(x)->tp_name);
-    return NULL;
+    return -1;
 }
-
 
 static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
     PyObject *list = NULL, *item = NULL, *x;
     Py_ssize_t limit = PY_SSIZE_T_MAX, p = 0;
-    bitarrayobject *xa;
 
     if (!PyArg_ParseTuple(args, "O|n:search", &x, &limit))
         return NULL;
 
-    if ((xa = searcharg(x)) == NULL)
+    if (check_searcharg(x) < 0)
         return NULL;
 
     if ((list = PyList_New(0)) == NULL)
         goto error;
 
-    while ((p = find_sub(self, xa, p, self->nbits)) >= 0) {
+    while ((p = find_obj(self, x, p, self->nbits)) >= 0) {
+        assert(p > -2);  /* we called check_searcharg() before */
         if (PyList_Size(list) >= limit)
             break;
         item = PyLong_FromSsize_t(p++);
@@ -1384,13 +1375,11 @@ bitarray_search(bitarrayobject *self, PyObject *args)
             goto error;
         Py_DECREF(item);
     }
-    Py_DECREF(xa);
     return list;
 
  error:
     Py_XDECREF(item);
     Py_XDECREF(list);
-    Py_DECREF(xa);
     return NULL;
 }
 
@@ -3339,9 +3328,9 @@ static PyTypeObject DecodeIter_Type = {
 
 typedef struct {
     PyObject_HEAD
-    bitarrayobject *bao;        /* bitarray we're searching in */
-    bitarrayobject *xa;         /* bitarray being searched for */
-    Py_ssize_t p;               /* current search position */
+    bitarrayobject *bao;    /* bitarray we're searching in */
+    PyObject *x;            /* Object (bitarray or int) being searched for */
+    Py_ssize_t p;           /* current search position */
 } searchiterobject;
 
 static PyTypeObject SearchIter_Type;
@@ -3351,9 +3340,8 @@ static PyObject *
 bitarray_itersearch(bitarrayobject *self, PyObject *x)
 {
     searchiterobject *it;  /* iterator to be returned */
-    bitarrayobject *xa;
 
-    if ((xa = searcharg(x)) == NULL)
+    if (check_searcharg(x) < 0)
         return NULL;
 
     it = PyObject_GC_New(searchiterobject, &SearchIter_Type);
@@ -3362,8 +3350,8 @@ bitarray_itersearch(bitarrayobject *self, PyObject *x)
 
     Py_INCREF(self);
     it->bao = self;
-    /* searcharg() returns a new reference, so no Py_INCREF here */
-    it->xa = xa;
+    Py_INCREF(x);
+    it->x = x;
     it->p = 0;                  /* start search at position 0 */
     PyObject_GC_Track(it);
     return (PyObject *) it;
@@ -3380,7 +3368,8 @@ searchiter_next(searchiterobject *it)
 {
     Py_ssize_t p;
 
-    p = find_sub(it->bao, it->xa, it->p, it->bao->nbits);
+    p = find_obj(it->bao, it->x, it->p, it->bao->nbits);
+    assert(p > -2);  /* we called check_searcharg before */
     if (p < 0)  /* no more positions -- stop iteration */
         return NULL;
     it->p = p + 1;  /* next search position */
@@ -3392,7 +3381,7 @@ searchiter_dealloc(searchiterobject *it)
 {
     PyObject_GC_UnTrack(it);
     Py_DECREF(it->bao);
-    Py_DECREF(it->xa);
+    Py_DECREF(it->x);
     PyObject_GC_Del(it);
 }
 
