@@ -587,15 +587,14 @@ static Py_ssize_t
 find_sub(bitarrayobject *self, bitarrayobject *xa,
          Py_ssize_t start, Py_ssize_t stop)
 {
-    assert(0 <= start && start <= self->nbits);
-    assert(0 <= stop && stop <= self->nbits);
+    Py_ssize_t xbits = xa->nbits;
 
-    if (xa->nbits == 1)         /* faster for sparse bitarrays */
+    if (xbits == 1)         /* faster for sparse bitarrays */
         return find_bit(self, getbit(xa, 0), start, stop);
 
-    while (start <= stop - xa->nbits) {
+    while (start <= stop - xbits) {
         Py_ssize_t k;
-        for (k = 0; k < xa->nbits; k++)
+        for (k = 0; k < xbits; k++)
             if (getbit(self, start + k) != getbit(xa, k))
                 goto next;
 
