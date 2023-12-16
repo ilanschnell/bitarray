@@ -3278,7 +3278,7 @@ object), decode content of bitarray and return it as a list of symbols.");
 
 typedef struct {
     PyObject_HEAD
-    bitarrayobject *bao;        /* bitarray we're decoding */
+    bitarrayobject *self;       /* bitarray we're decoding */
     binode *tree;               /* prefix tree containing symbols */
     Py_ssize_t index;           /* current index in bitarray */
     PyObject *decodetree;       /* decodetree or NULL */
@@ -3304,7 +3304,7 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
     }
 
     Py_INCREF(self);
-    it->bao = self;
+    it->self = self;
     it->tree = tree;
     it->index = 0;
     it->decodetree = DecodeTree_Check(obj) ? obj : NULL;
@@ -3326,7 +3326,7 @@ decodeiter_next(decodeiterobject *it)
 {
     PyObject *symbol;
 
-    symbol = binode_traverse(it->tree, it->bao, &(it->index));
+    symbol = binode_traverse(it->tree, it->self, &(it->index));
     if (symbol == NULL)  /* stop iteration OR error occured */
         return NULL;
     Py_INCREF(symbol);
@@ -3342,14 +3342,14 @@ decodeiter_dealloc(decodeiterobject *it)
         binode_delete(it->tree);
 
     PyObject_GC_UnTrack(it);
-    Py_DECREF(it->bao);
+    Py_DECREF(it->self);
     PyObject_GC_Del(it);
 }
 
 static int
 decodeiter_traverse(decodeiterobject *it, visitproc visit, void *arg)
 {
-    Py_VISIT(it->bao);
+    Py_VISIT(it->self);
     Py_VISIT(it->decodetree);
     return 0;
 }
@@ -3889,7 +3889,7 @@ richcompare(PyObject *v, PyObject *w, int op)
 
 typedef struct {
     PyObject_HEAD
-    bitarrayobject *bao;        /* bitarray we're iterating over */
+    bitarrayobject *self;            /* bitarray we're iterating over */
     Py_ssize_t index;                /* current index in bitarray */
 } bitarrayiterobject;
 
@@ -3907,7 +3907,7 @@ bitarray_iter(bitarrayobject *self)
         return NULL;
 
     Py_INCREF(self);
-    it->bao = self;
+    it->self = self;
     it->index = 0;
     PyObject_GC_Track(it);
     return (PyObject *) it;
@@ -3918,8 +3918,8 @@ bitarrayiter_next(bitarrayiterobject *it)
 {
     long vi;
 
-    if (it->index < it->bao->nbits) {
-        vi = getbit(it->bao, it->index);
+    if (it->index < it->self->nbits) {
+        vi = getbit(it->self, it->index);
         it->index++;
         return PyLong_FromLong(vi);
     }
@@ -3930,14 +3930,14 @@ static void
 bitarrayiter_dealloc(bitarrayiterobject *it)
 {
     PyObject_GC_UnTrack(it);
-    Py_DECREF(it->bao);
+    Py_DECREF(it->self);
     PyObject_GC_Del(it);
 }
 
 static int
 bitarrayiter_traverse(bitarrayiterobject *it, visitproc visit, void *arg)
 {
-    Py_VISIT(it->bao);
+    Py_VISIT(it->self);
     return 0;
 }
 
