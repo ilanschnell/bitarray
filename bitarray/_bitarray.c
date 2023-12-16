@@ -1111,6 +1111,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
         Py_ssize_t cnt = count_slice(self, start, stop, step);
         return PyLong_FromSsize_t(vi ? cnt : slicelength - cnt);
     }
+
     assert(bitarray_Check(sub) && vi == 2);  /* sub-bitarray count */
     if (step != 1) {
         PyErr_SetString(PyExc_ValueError,
@@ -1414,29 +1415,6 @@ PyDoc_STRVAR(reverse_doc,
 Reverse all bits in bitarray (in-place).");
 
 
-/* check search argument - either an int (0 or 1) or a non-empty bitarray */
-static int
-check_searcharg(PyObject *x)
-{
-    if (PyIndex_Check(x)) {
-        int vi;
-        return conv_pybit(x, &vi) - 1;
-    }
-
-    if (bitarray_Check(x)) {
-        if (((bitarrayobject *) x)->nbits == 0) {
-            PyErr_SetString(PyExc_ValueError,
-                            "cannot search for empty bitarray");
-            return -1;
-        }
-        return 0;
-    }
-
-    PyErr_Format(PyExc_TypeError, "bitarray or int expected, not '%s'",
-                 Py_TYPE(x)->tp_name);
-    return -1;
-}
-
 static PyObject *
 bitarray_search(bitarrayobject *self, PyObject *args)
 {
@@ -1446,14 +1424,17 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O|n:search", &x, &limit))
         return NULL;
 
-    if (check_searcharg(x) < 0)
+    if (value_sub(x) < 0)
         return NULL;
+    if (bitarray_Check(x) && ((bitarrayobject *) x)->nbits == 0) {
+        PyErr_SetString(PyExc_ValueError, "cannot search for empty bitarray");
+        return NULL;
+    }
 
     if ((list = PyList_New(0)) == NULL)
         goto error;
 
     while ((p = find_obj(self, x, p, self->nbits, 0)) >= 0) {
-        assert(p > -2);  /* we called check_searcharg() before */
         if (PyList_Size(list) >= limit)
             break;
         item = PyLong_FromSsize_t(p++);
@@ -3414,67 +3395,97 @@ static PyTypeObject DecodeIter_Type = {
 
 typedef struct {
     PyObject_HEAD
-    bitarrayobject *bao;    /* bitarray we're searching in */
-    PyObject *x;            /* Object (bitarray or int) being searched for */
-    Py_ssize_t p;           /* current search position */
+    bitarrayobject *self;   /* bitarray we're searching in */
+    PyObject *sub;          /* object (bitarray or int) being searched for */
+    Py_ssize_t start;
+    Py_ssize_t stop;
+    int right;
 } searchiterobject;
 
 static PyTypeObject SearchIter_Type;
 
 /* create a new initialized bitarray search iterator object */
 static PyObject *
-bitarray_itersearch(bitarrayobject *self, PyObject *x)
+bitarray_itersearch(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
+    static char *kwlist[] = {"", "", "", "right", NULL};
+    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX;
+    int right = 0;
+    PyObject *sub;
     searchiterobject *it;  /* iterator to be returned */
 
-    if (check_searcharg(x) < 0)
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|nni", kwlist,
+                                     &sub, &start, &stop, &right))
         return NULL;
+
+    if (value_sub(sub) < 0)
+        return NULL;
+
+    adjust_indices(self->nbits, &start, &stop, 1);
 
     it = PyObject_GC_New(searchiterobject, &SearchIter_Type);
     if (it == NULL)
         return NULL;
 
     Py_INCREF(self);
-    it->bao = self;
-    Py_INCREF(x);
-    it->x = x;
-    it->p = 0;                  /* start search at position 0 */
+    it->self = self;
+    Py_INCREF(sub);
+    it->sub = sub;
+    it->start = start;
+    it->stop = stop;
+    it->right = right;
     PyObject_GC_Track(it);
     return (PyObject *) it;
 }
 
 PyDoc_STRVAR(itersearch_doc,
-"itersearch(sub_bitarray, /) -> iterator\n\
+"itersearch(sub_bitarray, start=0, stop=<end>, /, right=0) -> iterator\n\
 \n\
-Searches for given sub_bitarray in self, and return an iterator over\n\
-the start positions where sub_bitarray matches self.");
+Return iterator over indices where sub_bitarray is found, such that\n\
+sub_bitarray is contained within `[start:stop]`.\n\
+The indices are iterated in ascending order (from lowest to highest),\n\
+unless `right=1`, which will iterate in descending oder (starting with\n\
+rightmost match).");
 
 static PyObject *
 searchiter_next(searchiterobject *it)
 {
-    Py_ssize_t p;
+    Py_ssize_t pos;
 
-    p = find_obj(it->bao, it->x, it->p, it->bao->nbits, 0);
-    assert(p > -2);  /* we called check_searcharg before */
-    if (p < 0)  /* no more positions -- stop iteration */
+    /* range checks necessary in case self changed during iteration */
+    if (it->start < 0 || it->start > it->self->nbits ||
+            it->stop < 0 || it->stop > it->self->nbits) {
+        return NULL;        /* stop iteration */
+    }
+
+    pos = find_obj(it->self, it->sub, it->start, it->stop, it->right);
+    assert(pos > -2);  /* cannot happen - we called check_searcharg before */
+    if (pos < 0)  /* no more positions -- stop iteration */
         return NULL;
-    it->p = p + 1;  /* next search position */
-    return PyLong_FromSsize_t(p);
+
+    /* update start / stop for next iteration */
+    if (it->right)
+        it->stop = pos + (bitarray_Check(it->sub) ?
+                          ((bitarrayobject *) it->sub)->nbits : 1) - 1;
+    else
+        it->start = pos + 1;
+
+    return PyLong_FromSsize_t(pos);
 }
 
 static void
 searchiter_dealloc(searchiterobject *it)
 {
     PyObject_GC_UnTrack(it);
-    Py_DECREF(it->bao);
-    Py_DECREF(it->x);
+    Py_DECREF(it->self);
+    Py_DECREF(it->sub);
     PyObject_GC_Del(it);
 }
 
 static int
 searchiter_traverse(searchiterobject *it, visitproc visit, void *arg)
 {
-    Py_VISIT(it->bao);
+    Py_VISIT(it->self);
     return 0;
 }
 
@@ -3570,7 +3581,8 @@ static PyMethodDef bitarray_methods[] = {
      reverse_doc},
     {"search",       (PyCFunction) bitarray_search,      METH_VARARGS,
      search_doc},
-    {"itersearch",   (PyCFunction) bitarray_itersearch,  METH_O,
+    {"itersearch",   (PyCFunction) bitarray_itersearch,  METH_VARARGS |
+                                                         METH_KEYWORDS,
      itersearch_doc},
     {"setall",       (PyCFunction) bitarray_setall,      METH_O,
      setall_doc},

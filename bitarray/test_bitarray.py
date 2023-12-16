@@ -3534,8 +3534,6 @@ class SearchTests(unittest.TestCase, Util):
 
     def test_itersearch(self):
         a = bitarray('10011')
-        self.assertRaises(ValueError, a.itersearch, bitarray())
-        self.assertRaises(TypeError, a.itersearch, 1, 0)
         self.assertRaises(TypeError, a.itersearch, '')
         it = a.itersearch(1)
         self.assertIsType(it, 'searchiterator')
