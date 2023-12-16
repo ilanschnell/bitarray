@@ -8,7 +8,7 @@
   * `.itersearch()`: add start and stop argument, and keyword
     argument `right` (for descending order - starting with rightmost match)
   * deprecate `util.rindex()` (will be removed in 3.0 release),
-    use `.index(..., right=1)` instead
+    use `.index(..., right=True)` instead
   * deprecate `util.make_endian()` (will be removed in 3.0 release),
     use `bitarray(..., endian=...)` instead
 

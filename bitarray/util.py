@@ -64,13 +64,13 @@ Raises `ValueError` when the sub_bitarray is not present.
     from warnings import warn
 
     warn("rindex() is deprecated and will be removed in bitarray 3.0 - "
-         "use .index(..., right=1) method instead.",
+         "use .index(..., right=True) method instead.",
          DeprecationWarning, stacklevel=1)
 
     if not isinstance(__a, bitarray):
         raise TypeError("bitarray expected, got '%s'" % type(__a).__name__)
 
-    return __a.index(__sub_bitarray, __start, __stop, right=1)
+    return __a.index(__sub_bitarray, __start, __stop, right=True)
 
 
 def pprint(__a, stream=None, group=8, indent=4, width=80):

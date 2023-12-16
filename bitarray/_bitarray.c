@@ -1233,10 +1233,10 @@ bitarray_find(bitarrayobject *self, PyObject *args, PyObject *kwds)
 }
 
 PyDoc_STRVAR(find_doc,
-"find(sub_bitarray, start=0, stop=<end>, /, right=0) -> int\n\
+"find(sub_bitarray, start=0, stop=<end>, /, right=False) -> int\n\
 \n\
-Return lowest (or rightmost when `right=1`) index where sub_bitarray is\n\
-found, such that sub_bitarray is contained within `[start:stop]`.\n\
+Return lowest (or rightmost when `right=True`) index where sub_bitarray\n\
+is found, such that sub_bitarray is contained within `[start:stop]`.\n\
 Return -1 when sub_bitarray is not found.");
 
 
@@ -1264,10 +1264,10 @@ bitarray_index(bitarrayobject *self, PyObject *args, PyObject *kwds)
 }
 
 PyDoc_STRVAR(index_doc,
-"index(sub_bitarray, start=0, stop=<end>, /, right=0) -> int\n\
+"index(sub_bitarray, start=0, stop=<end>, /, right=False) -> int\n\
 \n\
-Return lowest (or rightmost when `right=1`) index where sub_bitarray is\n\
-found, such that sub_bitarray is contained within `[start:stop]`.\n\
+Return lowest (or rightmost when `right=True`) index where sub_bitarray\n\
+is found, such that sub_bitarray is contained within `[start:stop]`.\n\
 Raises `ValueError` when the sub_bitarray is not present.");
 
 
@@ -3464,12 +3464,12 @@ bitarray_itersearch(bitarrayobject *self, PyObject *args, PyObject *kwds)
 }
 
 PyDoc_STRVAR(itersearch_doc,
-"itersearch(sub_bitarray, start=0, stop=<end>, /, right=0) -> iterator\n\
+"itersearch(sub_bitarray, start=0, stop=<end>, /, right=False) -> iterator\n\
 \n\
 Return iterator over indices where sub_bitarray is found, such that\n\
 sub_bitarray is contained within `[start:stop]`.\n\
 The indices are iterated in ascending order (from lowest to highest),\n\
-unless `right=1`, which will iterate in descending oder (starting with\n\
+unless `right=True`, which will iterate in descending oder (starting with\n\
 rightmost match).");
 
 static PyObject *
