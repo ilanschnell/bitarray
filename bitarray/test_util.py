@@ -20,7 +20,7 @@ from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
 from bitarray.test_bitarray import Util, skipIf, SYSINFO, DEBUG
 
 from bitarray.util import (
-    zeros, urandom, pprint, make_endian, rindex, strip, count_n,
+    zeros, ones, urandom, pprint, make_endian, rindex, strip, count_n,
     parity, count_and, count_or, count_xor, any_and, subset, _correspond_all,
     intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
@@ -39,13 +39,14 @@ else:
 
 # ---------------------------------------------------------------------------
 
-class TestsZeros(unittest.TestCase):
+class TestsZerosOnes(unittest.TestCase):
 
     def test_basic(self):
         for default_endian in 'big', 'little':
             _set_default_endian(default_endian)
 
-            for a in zeros(0), zeros(0, None), zeros(0, endian=None):
+            for a in (zeros(0), zeros(0, None), zeros(0, endian=None),
+                      ones(0), ones(0, None), ones(0, endian=None)):
                 self.assertEqual(a, bitarray())
                 self.assertEqual(a.endian(), default_endian)
 
@@ -56,25 +57,35 @@ class TestsZeros(unittest.TestCase):
                 self.assertEqual(a.count(1), 0)
                 self.assertEqual(a, bitarray(n * '0'))
                 self.assertIsInstance(a, bitarray)
+                b = ones(n)
+                self.assertEqual(len(b), n)
+                self.assertTrue(b.all())
+                self.assertEqual(b.count(0), 0)
+                self.assertEqual(b, bitarray(n * '1'))
+                self.assertIsInstance(b, bitarray)
 
             for endian in 'big', 'little':
                 for a in zeros(3, endian), zeros(3, endian=endian):
                     self.assertEqual(a, bitarray('000'))
                     self.assertEqual(a.endian(), endian)
+                for b in ones(3, endian), ones(3, endian=endian):
+                    self.assertEqual(b, bitarray('111'))
+                    self.assertEqual(b.endian(), endian)
 
     def test_wrong_args(self):
-        self.assertRaises(TypeError, zeros) # no argument
-        self.assertRaises(TypeError, zeros, '')
-        self.assertRaises(TypeError, zeros, bitarray())
-        self.assertRaises(TypeError, zeros, [])
-        self.assertRaises(TypeError, zeros, 1.0)
-        self.assertRaises(ValueError, zeros, -1)
+        for f in zeros, ones:
+            self.assertRaises(TypeError, f) # no argument
+            self.assertRaises(TypeError, f, '')
+            self.assertRaises(TypeError, f, bitarray())
+            self.assertRaises(TypeError, f, [])
+            self.assertRaises(TypeError, f, 1.0)
+            self.assertRaises(ValueError, f, -1)
 
-        # endian not string
-        for x in 0, 1, {}, [], False, True:
-            self.assertRaises(TypeError, zeros, 0, x)
-        # endian wrong string
-        self.assertRaises(ValueError, zeros, 0, 'foo')
+            # endian not string
+            for x in 0, 1, {}, [], False, True:
+                self.assertRaises(TypeError, f, 0, x)
+            # endian wrong string
+            self.assertRaises(ValueError, f, 0, 'foo')
 
 # ---------------------------------------------------------------------------
 
@@ -356,7 +367,7 @@ class TestsStrip(unittest.TestCase, Util):
             self.assertEqual(c, bitarray('1011'))
             self.assertIsType(c, 'frozenbitarray')
 
-    def test_zeros(self):
+    def test_zeros_ones(self):
         for n in range(10):
             for mode in 'left', 'right', 'both':
                 a = zeros(n)
@@ -369,6 +380,10 @@ class TestsStrip(unittest.TestCase, Util):
                 c = strip(b, mode)
                 self.assertIsType(c, 'frozenbitarray')
                 self.assertEqual(c, bitarray())
+
+                a.setall(1)
+                c = strip(a, mode)
+                self.assertEqual(c, ones(n))
 
     def test_random(self):
         for a in self.randombitarrays():

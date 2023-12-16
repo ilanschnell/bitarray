@@ -13,7 +13,7 @@ import sys
 from bitarray import bitarray, bits2bytes
 
 from bitarray._util import (
-    zeros, count_n, rindex, parity,
+    zeros, ones, count_n, parity,
     count_and, count_or, count_xor, any_and, subset,
     _correspond_all,
     serialize, deserialize,
@@ -25,7 +25,8 @@ from bitarray._util import (
 )
 
 __all__ = [
-    'zeros', 'urandom', 'pprint', 'make_endian', 'rindex', 'strip', 'count_n',
+    'zeros', 'ones', 'urandom',
+    'pprint', 'make_endian', 'rindex', 'strip', 'count_n',
     'parity', 'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
     'intervals',
     'ba2hex', 'hex2ba',
@@ -50,6 +51,24 @@ Return a bitarray of `length` random bits (uses `os.urandom`).
     a.frombytes(os.urandom(bits2bytes(__length)))
     del a[__length:]
     return a
+
+
+def rindex(__a, __value=1, __start=0, __stop=sys.maxsize):
+    """rindex(bitarray, value=1, start=0, stop=<end>, /) -> int
+
+Return rightmost (highest) index of `value` in bitarray.\n\
+Raises `ValueError` if value is not present.");
+"""
+    from warnings import warn
+
+    warn("rindex() is deprecated and will be removed in bitarray 3.0 - "
+         "use .index(..., right=1) method instead.",
+         DeprecationWarning, stacklevel=1)
+
+    if not isinstance(__a, bitarray):
+        raise TypeError("bitarray expected, got '%s'" % type(__a).__name__)
+
+    return __a.index(__value, __start, __stop, right=1)
 
 
 def pprint(__a, stream=None, group=8, indent=4, width=80):
@@ -117,6 +136,12 @@ as the original bitarray.
 Otherwise (endianness is already `endian`) the original bitarray is returned
 unchanged.
 """
+    from warnings import warn
+
+    warn("make_endian() is deprecated and will be removed in bitarray 3.0 - "
+         "use bitarray(..., endian=...) instead",
+         DeprecationWarning, stacklevel=1)
+
     if not isinstance(__a, bitarray):
         raise TypeError("bitarray expected, got '%s'" % type(__a).__name__)
 
@@ -137,22 +162,11 @@ Allowed values for mode are the strings: `left`, `right`, `both`
     if mode not in ('left', 'right', 'both'):
         raise ValueError("mode must be 'left', 'right' or 'both', got %r" %
                          mode)
-    if mode == 'right':
-        start = None
-    else:
-        try:
-            start = __a.index(1)
-        except ValueError:
-            return __a[:0]
 
-    if mode == 'left':
-        stop = None
-    else:
-        try:
-            stop = rindex(__a) + 1
-        except ValueError:
-            return __a[:0]
-
+    start = None if mode == 'right' else __a.find(1)
+    if start == -1:
+        return __a[:0]
+    stop = None if mode == 'left' else __a.find(1, right=1) + 1
     return __a[start:stop]
 
 
