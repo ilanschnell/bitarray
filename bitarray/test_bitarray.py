@@ -3206,6 +3206,7 @@ class CountTests(unittest.TestCase, Util):
         self.assertEqual(a.count(False), 2)
         self.assertEqual(a.count(1), 3)
         self.assertEqual(a.count(0), 2)
+        self.assertEqual(a.count(0, 5, 0, -1), 2)
         self.assertEqual(a.count(bitarray('0')), 2)
         self.assertEqual(a.count(bitarray('00')), 1)
         self.assertRaises(ValueError, a.count, 2)
@@ -3227,8 +3228,12 @@ class CountTests(unittest.TestCase, Util):
         self.assertEqual(a.count(bitarray('000'), 8), 1)
         self.assertEqual(a.count(bitarray('000'), -3), 1)
         self.assertEqual(a.count(bitarray('000'), -4), 1)
+        self.assertEqual(a.count(bitarray('000'), 4, -1), 2)
         self.assertEqual(a.count(bitarray('00'), -3), 1)
         self.assertEqual(a.count(bitarray('00'), -4), 2)
+        self.assertRaises(ValueError, a.count, bitarray(''), 0, 15, 2)
+        self.assertRaises(ValueError, a.count, bitarray('11'), 0, 15, 2)
+        self.assertRaises(ValueError, a.count, bitarray('11'), 15, 0, -1)
 
     def test_random_sub(self):
         for _ in range(10000):
