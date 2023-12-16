@@ -523,12 +523,12 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     return cnt;
 }
 
-/* return index of first occurrence of vi in self[a:b], -1 when not found */
+/* return first/rightmost occurrence of vi in self[a:b], -1 when not found */
 static Py_ssize_t
-find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
+find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
 {
     const Py_ssize_t n = b - a;
-    Py_ssize_t res, i;
+    Py_ssize_t res, i, step;
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
@@ -539,44 +539,47 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
     /* When the search range is greater than 64 bits, we skip uint64 words.
        Note that we cannot check for n >= 64 here as the function could then
        go into an infinite recursive loop when a word is found. */
-    if (n > 64) {
+    if (!right && n > 64) {
         const Py_ssize_t wa = (a + 63) / 64;  /* word-range(wa, wb) */
         const Py_ssize_t wb = b / 64;
         const uint64_t *wbuff = WBUFF(self);
         const uint64_t w = vi ? 0 : ~0;
 
-        if ((res = find_bit(self, vi, a, 64 * wa)) >= 0)
+        if ((res = find_bit(self, vi, a, 64 * wa, 0)) >= 0)
             return res;
 
         for (i = wa; i < wb; i++) {  /* skip uint64 words */
             assert_byte_in_range(self, 8 * i + 7);
             if (w ^ wbuff[i])
-                return find_bit(self, vi, 64 * i, 64 * i + 64);
+                return find_bit(self, vi, 64 * i, 64 * i + 64, 0);
         }
-        return find_bit(self, vi, 64 * wb, b);
+        return find_bit(self, vi, 64 * wb, b, 0);
     }
 
-    /* For the same reason as above, we cannot check for n >= 8 here. */
-    if (n > 8) {
+       /* For the same reason as above, we cannot check for n >= 8 here. */
+    if (!right && n > 8) {
         const Py_ssize_t byte_a = BYTES(a);  /* byte-range(byte_a, byte_b) */
         const Py_ssize_t byte_b = b / 8;
         const char *buff = self->ob_item;
         const char c = vi ? 0 : ~0;
 
-        if ((res = find_bit(self, vi, a, 8 * byte_a)) >= 0)
+        if ((res = find_bit(self, vi, a, 8 * byte_a, 0)) >= 0)
             return res;
 
         for (i = byte_a; i < byte_b; i++) {  /* skip bytes */
             assert_byte_in_range(self, i);
             if (c ^ buff[i])
-                return find_bit(self, vi, 8 * i, 8 * i + 8);
+                return find_bit(self, vi, 8 * i, 8 * i + 8, 0);
         }
-        return find_bit(self, vi, 8 * byte_b, b);
+        return find_bit(self, vi, 8 * byte_b, b, 0);
     }
 
-    for (i = a; i < b; i++) {
+    i = right ? b - 1 : a;
+    step = right ? -1 : 1;
+    while (a <= i && i < b) {
         if (getbit(self, i) == vi)
             return i;
+        i += step;
     }
     return -1;
 }
@@ -590,7 +593,7 @@ find_sub(bitarrayobject *self, bitarrayobject *xa,
     Py_ssize_t xbits = xa->nbits;
 
     if (xbits == 1)         /* faster for sparse bitarrays */
-        return find_bit(self, getbit(xa, 0), start, stop);
+        return find_bit(self, getbit(xa, 0), start, stop, 0);
 
     while (start <= stop - xbits) {
         Py_ssize_t k;
@@ -619,7 +622,7 @@ find_obj(bitarrayobject *self, PyObject *x, Py_ssize_t start, Py_ssize_t stop)
 
         if (!conv_pybit(x, &vi))
             return -2;
-        return find_bit(self, vi, start, stop);
+        return find_bit(self, vi, start, stop, 0);
     }
 
     if (bitarray_Check(x))
@@ -840,7 +843,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 static PyObject *
 bitarray_all(bitarrayobject *self)
 {
-    return PyBool_FromLong(find_bit(self, 0, 0, self->nbits) == -1);
+    return PyBool_FromLong(find_bit(self, 0, 0, self->nbits, 0) == -1);
 }
 
 PyDoc_STRVAR(all_doc,
@@ -853,7 +856,7 @@ Note that `a.all()` is faster than `all(a)`.");
 static PyObject *
 bitarray_any(bitarrayobject *self)
 {
-    return PyBool_FromLong(find_bit(self, 1, 0, self->nbits) >= 0);
+    return PyBool_FromLong(find_bit(self, 1, 0, self->nbits, 0) >= 0);
 }
 
 PyDoc_STRVAR(any_doc,
@@ -1731,7 +1734,7 @@ bitarray_remove(bitarrayobject *self, PyObject *value)
     if (!conv_pybit(value, &vi))
         return NULL;
 
-    i = find_bit(self, vi, 0, self->nbits);
+    i = find_bit(self, vi, 0, self->nbits, 0);
     if (i < 0)
         return PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
 
