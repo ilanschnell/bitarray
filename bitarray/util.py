@@ -53,11 +53,13 @@ Return a bitarray of `length` random bits (uses `os.urandom`).
     return a
 
 
-def rindex(__a, __value=1, __start=0, __stop=sys.maxsize):
-    """rindex(bitarray, value=1, start=0, stop=<end>, /) -> int
+def rindex(__a, __sub_bitarray=1, __start=0, __stop=sys.maxsize):
+    """rindex(bitarray, sub_bitarray=1, start=0, stop=<end>, /) -> int
 
-Return rightmost (highest) index of `value` in bitarray.\n\
-Raises `ValueError` if value is not present.");
+Return rightmost (highest) index where sub_bitarray (or item - defaults
+to 1) is found in bitarray (a), such that sub_bitarray is contained
+within `a[start:stop]`.
+Raises `ValueError` when the sub_bitarray is not present.
 """
     from warnings import warn
 
@@ -68,7 +70,7 @@ Raises `ValueError` if value is not present.");
     if not isinstance(__a, bitarray):
         raise TypeError("bitarray expected, got '%s'" % type(__a).__name__)
 
-    return __a.index(__value, __start, __stop, right=1)
+    return __a.index(__sub_bitarray, __start, __stop, right=1)
 
 
 def pprint(__a, stream=None, group=8, indent=4, width=80):
