@@ -556,7 +556,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
         return find_bit(self, vi, 64 * wb, b, 0);
     }
 
-       /* For the same reason as above, we cannot check for n >= 8 here. */
+    /* For the same reason as above, we cannot check for n >= 8 here. */
     if (!right && n > 8) {
         const Py_ssize_t byte_a = BYTES(a);  /* byte-range(byte_a, byte_b) */
         const Py_ssize_t byte_b = b / 8;
@@ -584,26 +584,26 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
     return -1;
 }
 
-/* Return first occurrence of (sub) bitarray xa (in self), such that xa is
-   contained within self[start:stop], or -1 when xa is not found. */
+/* Return first/rightmost occurrence of sub-bitarray (in self), such that
+   sub is contained within self[start:stop], or -1 when sub is not found. */
 static Py_ssize_t
-find_sub(bitarrayobject *self, bitarrayobject *xa,
-         Py_ssize_t start, Py_ssize_t stop)
+find_sub(bitarrayobject *self, bitarrayobject *sub,
+         Py_ssize_t start, Py_ssize_t stop, int right)
 {
-    Py_ssize_t xbits = xa->nbits;
+    const Py_ssize_t sbits = sub->nbits;
+    Py_ssize_t i, k, step = right ? -1 : 1;
 
-    if (xbits == 1)         /* faster for sparse bitarrays */
-        return find_bit(self, getbit(xa, 0), start, stop, 0);
+    stop -= sbits - 1;
+    i = right ? stop - 1 : start;
 
-    while (start <= stop - xbits) {
-        Py_ssize_t k;
-        for (k = 0; k < xbits; k++)
-            if (getbit(self, start + k) != getbit(xa, k))
+    while (start <= i && i < stop) {
+        for (k = 0; k < sbits; k++)
+            if (getbit(self, i + k) != getbit(sub, k))
                 goto next;
 
-        return start;
+        return i;
     next:
-        start++;
+        i += step;
     }
     return -1;
 }
@@ -626,7 +626,7 @@ find_obj(bitarrayobject *self, PyObject *x, Py_ssize_t start, Py_ssize_t stop)
     }
 
     if (bitarray_Check(x))
-        return find_sub(self, (bitarrayobject *) x, start, stop);
+        return find_sub(self, (bitarrayobject *) x, start, stop, 0);
 
     PyErr_Format(PyExc_TypeError, "bitarray or int expected, not '%s'",
                  Py_TYPE(x)->tp_name);
