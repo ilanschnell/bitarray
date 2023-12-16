@@ -203,86 +203,6 @@ PyDoc_STRVAR(count_n_doc,
 Return lowest index `i` for which `a[:i].count(value) == n`.\n\
 Raises `ValueError` when `n` exceeds total count (`a.count(value)`).");
 
-/* ----------------------------- right index --------------------------- */
-
-/* return index of highest occurrence of vi in self[a:b], -1 when not found */
-static Py_ssize_t
-find_last(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b)
-{
-    const Py_ssize_t n = b - a;
-    Py_ssize_t res, i;
-
-    assert(0 <= a && a <= self->nbits);
-    assert(0 <= b && b <= self->nbits);
-    assert(0 <= vi && vi <= 1);
-    if (n <= 0)
-        return -1;
-
-    /* logic here is same as in find_bit() in _bitarray.c */
-    if (n > 64) {
-        const Py_ssize_t wa = (a + 63) / 64;  /* word-range(wa, wb) */
-        const Py_ssize_t wb = b / 64;
-        const uint64_t *wbuff = WBUFF(self);
-        const uint64_t w = vi ? 0 : ~0;
-
-        if ((res = find_last(self, vi, 64 * wb, b)) >= 0)
-            return res;
-
-        for (i = wb - 1; i >= wa; i--) {  /* skip uint64 words */
-            if (w ^ wbuff[i])
-                return find_last(self, vi, 64 * i, 64 * i + 64);
-        }
-        return find_last(self, vi, a, 64 * wa);
-    }
-
-    if (n > 8) {
-        const Py_ssize_t byte_a = BYTES(a);  /* byte-range(byte_a, byte_b) */
-        const Py_ssize_t byte_b = b / 8;
-        const char *buff = self->ob_item;
-        const char c = vi ? 0 : ~0;
-
-        if ((res = find_last(self, vi, 8 * byte_b, b)) >= 0)
-            return res;
-
-        for (i = byte_b - 1; i >= byte_a; i--) {  /* skip bytes */
-            assert_byte_in_range(self, i);
-            if (c ^ buff[i])
-                return find_last(self, vi, 8 * i, 8 * i + 8);
-        }
-        return find_last(self, vi, a, 8 * byte_a);
-    }
-
-    for (i = b - 1; i >= a; i--) {
-        if (getbit(self, i) == vi)
-            return i;
-    }
-    return -1;
-}
-
-static PyObject *
-r_index(PyObject *module, PyObject *args)
-{
-    bitarrayobject *a;
-    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, res;
-    int vi = 1;
-
-    if (!PyArg_ParseTuple(args, "O!|O&nn:rindex", bitarray_type_obj,
-                          (PyObject *) &a, conv_pybit, &vi, &start, &stop))
-        return NULL;
-
-    adjust_indices(a->nbits, &start, &stop, 1);
-    if ((res = find_last(a, vi, start, stop)) < 0)
-        return PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
-
-    return PyLong_FromSsize_t(res);
-}
-
-PyDoc_STRVAR(rindex_doc,
-"rindex(bitarray, value=1, start=0, stop=<end of array>, /) -> int\n\
-\n\
-Return rightmost (highest) index of `value` in bitarray.\n\
-Raises `ValueError` if value is not present.");
-
 /* --------------------------- unary functions ------------------------- */
 
 static PyObject *
@@ -1996,7 +1916,6 @@ static PyMethodDef module_functions[] = {
     {"ones",      (PyCFunction) ones,      METH_KEYWORDS |
                                            METH_VARARGS, ones_doc},
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
-    {"rindex",    (PyCFunction) r_index,   METH_VARARGS, rindex_doc},
     {"parity",    (PyCFunction) parity,    METH_O,       parity_doc},
     {"count_and", (PyCFunction) count_and, METH_VARARGS, count_and_doc},
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
