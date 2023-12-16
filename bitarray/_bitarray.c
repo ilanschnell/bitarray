@@ -584,6 +584,30 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
     return -1;
 }
 
+/* Returns:
+   -1: on error and sets exception
+ 0, 1: value of integer sub or first item of sub if bitarray of length 1
+    2: when sub is bitarray of length 0, 2, 3, ...
+ */
+static int
+value_sub(PyObject *sub)
+{
+    if (PyIndex_Check(sub)) {
+        int vi;
+        return conv_pybit(sub, &vi) ? vi : -1;
+    }
+
+    if (bitarray_Check(sub)) {
+#define ss  ((bitarrayobject *) sub)
+        return (ss->nbits == 1) ? getbit(ss, 0) : 2;
+#undef ss
+    }
+
+    PyErr_Format(PyExc_TypeError, "bitarray or int expected, not '%s'",
+                 Py_TYPE(sub)->tp_name);
+    return -1;
+}
+
 /* Return first/rightmost occurrence of sub-bitarray (in self), such that
    sub is contained within self[start:stop], or -1 when sub is not found. */
 static Py_ssize_t
@@ -608,29 +632,26 @@ find_sub(bitarrayobject *self, bitarrayobject *sub,
     return -1;
 }
 
-/* Return first occurrence of either a bit or a (sub) bitarray (depending
-   on the type of object x) contained within self[start:stop], or -1 when
-   not found.  On Error, set exception and return -2. */
+/* Return first/rightmost occurrence of bit or sub-bitarray (depending
+   on type of sub) contained within self[start:stop], or -1 when not found.
+   On Error, set exception and return -2. */
 static Py_ssize_t
-find_obj(bitarrayobject *self, PyObject *x, Py_ssize_t start, Py_ssize_t stop)
+find_obj(bitarrayobject *self, PyObject *sub,
+         Py_ssize_t start, Py_ssize_t stop, int right)
 {
+    int vi;
+
     assert(0 <= start && start <= self->nbits);
     assert(0 <= stop && stop <= self->nbits);
 
-    if (PyIndex_Check(x)) {
-        int vi;
+    if ((vi = value_sub(sub)) < 0)
+        return -2;
 
-        if (!conv_pybit(x, &vi))
-            return -2;
-        return find_bit(self, vi, start, stop, 0);
-    }
+    if (vi < 2)
+        return find_bit(self, vi, start, stop, right);
 
-    if (bitarray_Check(x))
-        return find_sub(self, (bitarrayobject *) x, start, stop, 0);
-
-    PyErr_Format(PyExc_TypeError, "bitarray or int expected, not '%s'",
-                 Py_TYPE(x)->tp_name);
-    return -2;
+    assert(bitarray_Check(sub) && vi == 2);
+    return find_sub(self, (bitarrayobject *) sub, start, stop, right);
 }
 
 /* place self->nbits characters ('0', '1' corresponding to self) into str */
@@ -1118,7 +1139,7 @@ bitarray_find(bitarrayobject *self, PyObject *args)
 
     adjust_indices(self->nbits, &start, &stop, 1);
 
-    if ((pos = find_obj(self, x, start, stop)) == -2)
+    if ((pos = find_obj(self, x, start, stop, 0)) == -2)
         return NULL;
     return PyLong_FromSsize_t(pos);
 }
@@ -1368,7 +1389,7 @@ bitarray_search(bitarrayobject *self, PyObject *args)
     if ((list = PyList_New(0)) == NULL)
         goto error;
 
-    while ((p = find_obj(self, x, p, self->nbits)) >= 0) {
+    while ((p = find_obj(self, x, p, self->nbits, 0)) >= 0) {
         assert(p > -2);  /* we called check_searcharg() before */
         if (PyList_Size(list) >= limit)
             break;
@@ -1926,7 +1947,7 @@ bitarray_contains(bitarrayobject *self, PyObject *value)
 {
     Py_ssize_t pos;
 
-    if ((pos = find_obj(self, value, 0, self->nbits)) == -2)
+    if ((pos = find_obj(self, value, 0, self->nbits, 0)) == -2)
         return -1;
 
     return pos >= 0;
@@ -3370,7 +3391,7 @@ searchiter_next(searchiterobject *it)
 {
     Py_ssize_t p;
 
-    p = find_obj(it->bao, it->x, it->p, it->bao->nbits);
+    p = find_obj(it->bao, it->x, it->p, it->bao->nbits, 0);
     assert(p > -2);  /* we called check_searcharg before */
     if (p < 0)  /* no more positions -- stop iteration */
         return NULL;
