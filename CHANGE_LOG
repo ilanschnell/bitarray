@@ -1,5 +1,7 @@
-20XX-XX-XX   2.8.6:
+2023-12-XX   2.9.0:
 -------------------
+  * `bitarray(n)` for integer initializer `n` will always return a bitarray
+    of length `n` with all items initialized to `0`
 
 
 2023-12-09   2.8.5:

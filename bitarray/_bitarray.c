@@ -3583,6 +3583,7 @@ newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
 static PyObject *
 newbitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
 {
+    bitarrayobject *res;
     Py_ssize_t nbits;
 
     assert(PyIndex_Check(index));
@@ -3595,7 +3596,11 @@ newbitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
         return NULL;
     }
 
-    return (PyObject *) newbitarrayobject(type, nbits, endian);
+    if ((res = newbitarrayobject(type, nbits, endian)) == NULL)
+        return NULL;
+    memset(res->ob_item, 0x00, (size_t) Py_SIZE(res));
+
+    return (PyObject *) res;
 }
 
 /* Return a new bitarray from pickle bytes (created by .__reduce__()).
@@ -3652,8 +3657,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     int endian;
     static char *kwlist[] = {"", "endian", "buffer", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OzO:bitarray",
-                                     kwlist, &initial, &endian_str, &buffer))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OzO:bitarray", kwlist,
+                                     &initial, &endian_str, &buffer))
         return NULL;
 
     if ((endian = endian_from_string(endian_str)) < 0)
@@ -3973,7 +3978,7 @@ the optional initial object, and endianness.\n\
 The initializer may be of the following types:\n\
 \n\
 `int`: Create a bitarray of given integer length.  The initial values are\n\
-uninitialized.\n\
+all `0`.\n\
 \n\
 `str`: Create bitarray from a string of `0` and `1`.\n\
 \n\
