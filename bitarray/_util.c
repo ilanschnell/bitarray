@@ -69,32 +69,53 @@ count_from_word(bitarrayobject *a, Py_ssize_t i)
     return popcnt_words(WBUFF(a) + i, a->nbits / 64 - i) + popcnt_64(zlw(a));
 }
 
-/* -------------------------------- zeros ------------------------------ */
+/* ---------------------------- zeros / ones --------------------------- */
 
 static PyObject *
 zeros(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "endian", NULL};
     PyObject *endian = Py_None;
-    bitarrayobject *a;
     Py_ssize_t nbits;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "n|O:zeros", kwlist,
                                      &nbits, &endian))
         return NULL;
 
-    if ((a = new_bitarray(nbits, endian)) == NULL)
-        return NULL;
-
-    memset(a->ob_item, 0x00, (size_t) Py_SIZE(a));
-
-    return (PyObject *) a;
+    return (PyObject *) new_bitarray(nbits, endian);
 }
 
 PyDoc_STRVAR(zeros_doc,
 "zeros(length, /, endian=None) -> bitarray\n\
 \n\
 Create a bitarray of length, with all values 0, and optional\n\
+endianness, which may be 'big', 'little'.");
+
+
+static PyObject *
+ones(PyObject *module, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"", "endian", NULL};
+    PyObject *endian = Py_None;
+    bitarrayobject *a;
+    Py_ssize_t nbits;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "n|O:ones", kwlist,
+                                     &nbits, &endian))
+        return NULL;
+
+    if ((a = new_bitarray(nbits, endian)) == NULL)
+        return NULL;
+
+    memset(a->ob_item, 0xff, (size_t) Py_SIZE(a));
+
+    return (PyObject *) a;
+}
+
+PyDoc_STRVAR(ones_doc,
+"ones(length, /, endian=None) -> bitarray\n\
+\n\
+Create a bitarray of length, with all values 1, and optional\n\
 endianness, which may be 'big', 'little'.");
 
 /* ------------------------------- count_n ----------------------------- */
@@ -1972,6 +1993,8 @@ static PyTypeObject CHDI_Type = {
 static PyMethodDef module_functions[] = {
     {"zeros",     (PyCFunction) zeros,     METH_KEYWORDS |
                                            METH_VARARGS, zeros_doc},
+    {"ones",      (PyCFunction) ones,      METH_KEYWORDS |
+                                           METH_VARARGS, ones_doc},
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
     {"rindex",    (PyCFunction) r_index,   METH_VARARGS, rindex_doc},
     {"parity",    (PyCFunction) parity,    METH_O,       parity_doc},
