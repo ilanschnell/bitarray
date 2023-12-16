@@ -3,6 +3,7 @@
   * `bitarray(n)` for integer initializer `n` will always return a bitarray
     of length `n` with all items initialized to `0`
   * add `util.ones()`
+  * `.find()` and `.index()`: add keyword argument `right` for rightmost index
 
 
 2023-12-09   2.8.5:

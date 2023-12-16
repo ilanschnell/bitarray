@@ -1129,35 +1129,44 @@ a multiple of 8, and return the number of bits added [0..7].");
 
 
 static PyObject *
-bitarray_find(bitarrayobject *self, PyObject *args)
+bitarray_find(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
+    static char *kwlist[] = {"", "", "", "right", NULL};
     Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, pos;
-    PyObject *x;
+    int right = 0;
+    PyObject *sub;
 
-    if (!PyArg_ParseTuple(args, "O|nn", &x, &start, &stop))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|nni", kwlist,
+                                     &sub, &start, &stop, &right))
         return NULL;
+
+    if (start > self->nbits)
+        /* cannot find anything (including empty sub-bitarray) */
+        return PyLong_FromSsize_t(-1);
 
     adjust_indices(self->nbits, &start, &stop, 1);
 
-    if ((pos = find_obj(self, x, start, stop, 0)) == -2)
+    pos = find_obj(self, sub, start, stop, right);
+    if (pos == -2)
         return NULL;
+
     return PyLong_FromSsize_t(pos);
 }
 
 PyDoc_STRVAR(find_doc,
-"find(sub_bitarray, start=0, stop=<end of array>, /) -> int\n\
+"find(sub_bitarray, start=0, stop=<end>, /, right=0) -> int\n\
 \n\
-Return lowest index where sub_bitarray is found, such that sub_bitarray\n\
-is contained within `[start:stop]`.\n\
+Return lowest (or rightmost when `right=1`) index where sub_bitarray is\n\
+found, such that sub_bitarray is contained within `[start:stop]`.\n\
 Return -1 when sub_bitarray is not found.");
 
 
 static PyObject *
-bitarray_index(bitarrayobject *self, PyObject *args)
+bitarray_index(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     PyObject *result;
 
-    result = bitarray_find(self, args);
+    result = bitarray_find(self, args, kwds);
     if (result == NULL)
         return NULL;
 
@@ -1176,10 +1185,10 @@ bitarray_index(bitarrayobject *self, PyObject *args)
 }
 
 PyDoc_STRVAR(index_doc,
-"index(sub_bitarray, start=0, stop=<end of array>, /) -> int\n\
+"index(sub_bitarray, start=0, stop=<end>, /, right=0) -> int\n\
 \n\
-Return lowest index where sub_bitarray is found, such that sub_bitarray\n\
-is contained within `[start:stop]`.\n\
+Return lowest (or rightmost when `right=1`) index where sub_bitarray is\n\
+found, such that sub_bitarray is contained within `[start:stop]`.\n\
 Raises `ValueError` when the sub_bitarray is not present.");
 
 
@@ -3483,13 +3492,15 @@ static PyMethodDef bitarray_methods[] = {
      extend_doc},
     {"fill",         (PyCFunction) bitarray_fill,        METH_NOARGS,
      fill_doc},
-    {"find",         (PyCFunction) bitarray_find,        METH_VARARGS,
+    {"find",         (PyCFunction) bitarray_find,        METH_VARARGS |
+                                                         METH_KEYWORDS,
      find_doc},
     {"frombytes",    (PyCFunction) bitarray_frombytes,   METH_O,
      frombytes_doc},
     {"fromfile",     (PyCFunction) bitarray_fromfile,    METH_VARARGS,
      fromfile_doc},
-    {"index",        (PyCFunction) bitarray_index,       METH_VARARGS,
+    {"index",        (PyCFunction) bitarray_index,       METH_VARARGS |
+                                                         METH_KEYWORDS,
      index_doc},
     {"insert",       (PyCFunction) bitarray_insert,      METH_VARARGS,
      insert_doc},

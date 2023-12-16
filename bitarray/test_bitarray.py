@@ -3344,13 +3344,11 @@ class IndexTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.find)
         self.assertRaises(TypeError, a.find, 1, 'a')
         self.assertRaises(TypeError, a.find, 1, 0, 'a')
-        self.assertRaises(TypeError, a.find, 1, 0, 100, 1)
 
         self.assertRaises(ValueError, a.index, True)
         self.assertRaises(TypeError, a.index)
         self.assertRaises(TypeError, a.index, 1, 'a')
         self.assertRaises(TypeError, a.index, 1, 0, 'a')
-        self.assertRaises(TypeError, a.index, 1, 0, 100, 1)
 
         a[20] = a[27] = 1
         for i in 1, True, bitarray('1'), bitarray('10'):
