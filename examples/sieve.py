@@ -2,7 +2,7 @@
 Demonstrates the implementation of "Sieve of Eratosthenes" algorithm for
 finding all prime numbers up to any given limit.
 """
-from math import ceil, sqrt
+from math import isqrt
 
 from bitarray import bitarray
 from bitarray.util import count_n
@@ -16,7 +16,7 @@ a.setall(True)
 # Zero and one are not prime
 a[:2] = False
 # Perform sieve
-for i in range(2, ceil(sqrt(N))):
+for i in range(2, isqrt(N) + 1):
     if a[i]:  # i is prime, so all multiples are not
         a[i*i::i] = False
 
@@ -28,7 +28,7 @@ print('there are %d primes up to %d' % (a.count(), N))
 
 # The number of twin primes up to 100 million is 440,312
 print('number of twin primes up to %d is %d' %
-      (N, len(a.search(bitarray('101')))))
+      (N, sum(1 for _ in a.itersearch(bitarray('101')))))
 
 # The 1 millionth prime number is 15,485,863
 m = 1_000_000
