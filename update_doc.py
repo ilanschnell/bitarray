@@ -163,6 +163,8 @@ bitarray version: %s -- `change log <%s>`__
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
 
+Also, ``sub_bitarray`` refers to either a bitarray, or an item.
+
 
 The bitarray object:
 --------------------

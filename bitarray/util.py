@@ -57,7 +57,7 @@ def rindex(__a, __sub_bitarray=1, __start=0, __stop=sys.maxsize):
     """rindex(bitarray, sub_bitarray=1, start=0, stop=<end>, /) -> int
 
 Return rightmost (highest) index where sub_bitarray (or item - defaults
-to 1) is found in bitarray (a), such that sub_bitarray is contained
+to 1) is found in bitarray (`a`), such that sub_bitarray is contained
 within `a[start:stop]`.
 Raises `ValueError` when the sub_bitarray is not present.
 """
