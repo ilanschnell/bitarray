@@ -40,7 +40,7 @@ Key features
 * Immutable ``frozenbitarray`` objects which are hashable
 * Sequential search
 * Type hinting
-* Extensive test suite with over 400 unittests.
+* Extensive test suite with about 500 unittests.
 * Utility module ``bitarray.util``:
 
   * conversion to and from hexadecimal strings
@@ -90,7 +90,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 495 tests in 0.459s
+    Ran 500 tests in 0.534s
 
     OK
 

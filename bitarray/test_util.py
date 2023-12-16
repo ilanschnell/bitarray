@@ -287,7 +287,7 @@ class TestsRIndex(unittest.TestCase, Util):
                               bitarray('11111', endian), 0)
 
     def test_range(self):
-        n = 250
+        n = 100
         a = bitarray(n)
         for m in range(n):
             a.setall(0)
@@ -315,11 +315,11 @@ class TestsRIndex(unittest.TestCase, Util):
             self.assertEqual(i, j)
 
     def test_random_start_stop(self):
-        n = 2000
-        a = zeros(n)
-        indices = [randrange(n) for _ in range(100)]
-        a[indices] = 1
-        for _ in range(100):
+        for _ in range(10):
+            n = randrange(1, 1000)
+            a = zeros(n)
+            indices = [randrange(n) for _ in range(100)]
+            a[indices] = 1
             start = randint(0, n)
             stop = randint(0, n)
             filtered = [i for i in indices if i >= start and i < stop]

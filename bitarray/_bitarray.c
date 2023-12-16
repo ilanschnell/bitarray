@@ -559,7 +559,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
             if ((res = find_bit(self, vi, a, 64 * wa, 0)) >= 0)
                 return res;
 
-            for (i = wa; i < wb; i++) {  /* skip uint64 words */
+            for (i = wa; i < wb; i++) {       /* skip uint64 words */
                 if (w ^ wbuff[i])
                     return find_bit(self, vi, 64 * i, 64 * i + 64, 0);
             }
@@ -589,7 +589,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
             if ((res = find_bit(self, vi, a, 8 * byte_a, 0)) >= 0)
                 return res;
 
-            for (i = byte_a; i < byte_b; i++) {  /* skip bytes */
+            for (i = byte_a; i < byte_b; i++) {       /* skip bytes */
                 assert_byte_in_range(self, i);
                 if (c ^ buff[i])
                     return find_bit(self, vi, 8 * i, 8 * i + 8, 0);

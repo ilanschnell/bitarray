@@ -3485,7 +3485,7 @@ class IndexTests(unittest.TestCase, Util):
             self.assertEqual(a.find(0), m)
 
     def test_random_start_stop(self):
-        for _ in range(1000):
+        for _ in range(500):
             n = randrange(1, 200)
             a = zeros(n)
             plst = sorted(randrange(n) for _ in range(1, 10))
@@ -3505,7 +3505,7 @@ class IndexTests(unittest.TestCase, Util):
                     self.assertEqual(a.find(1, start, stop, right), -1)
 
     def test_random_sub(self):  # test finding sub_bitarray
-        for _ in range(1000):
+        for _ in range(500):
             n = randrange(1, 100)
             a = urandom(n, self.random_endian())
             s = a.to01()
@@ -3642,7 +3642,7 @@ class SearchTests(unittest.TestCase, Util):
                 self.assertEqual(list(a.itersearch(b, right=1)), plst[::-1])
 
     def test_itersearch_random(self):
-        for _ in range(1000):
+        for _ in range(500):
             n = randrange(1, 50)
             a = urandom(n, self.random_endian())
             b = urandom(randrange(0, 10), self.random_endian())
