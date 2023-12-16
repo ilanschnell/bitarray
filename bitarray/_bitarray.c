@@ -654,6 +654,28 @@ find_obj(bitarrayobject *self, PyObject *sub,
     return find_sub(self, (bitarrayobject *) sub, start, stop, right);
 }
 
+/* return the number of non-overlapping occurrences of sub-bitarray within
+   self[start:stop] */
+static Py_ssize_t
+count_sub(bitarrayobject *self, bitarrayobject *sub,
+          Py_ssize_t start, Py_ssize_t stop)
+{
+    const Py_ssize_t sbits = sub->nbits;
+    Py_ssize_t pos, cnt = 0;
+
+    assert(0 <= start && start <= self->nbits);
+    assert(0 <= stop && stop <= self->nbits);
+
+    if (sbits == 0)
+        return start <= stop ? stop - start + 1 : 0;
+
+    while ((pos = find_sub(self, sub, start, stop, 0)) >= 0) {
+        start = pos + sbits;
+        cnt++;
+    }
+    return cnt;
+}
+
 /* place self->nbits characters ('0', '1' corresponding to self) into str */
 static void
 setstr01(bitarrayobject *self, char *str)
@@ -1043,39 +1065,71 @@ PyDoc_STRVAR(copy_doc,
 Return a copy of the bitarray.");
 
 
+static Py_ssize_t
+count_slice(bitarrayobject *self,
+            Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
+{
+    Py_ssize_t cnt = 0, i;
+
+    assert(step > 0);
+
+    if (step == 1)
+        cnt = count(self, start, stop);
+    else
+        for (i = start; i < stop; i += step)
+            cnt += getbit(self, i);
+
+    return cnt;
+}
+
 static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
-    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, step = 1;
-    Py_ssize_t cnt = 0, slicelength;
-    int vi = 1;
+    PyObject *sub = Py_None;
+    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, step = 1, slicelength;
+    int vi;
 
-    if (!PyArg_ParseTuple(args, "|O&nnn:count",
-                          conv_pybit, &vi, &start, &stop, &step))
+    if (!PyArg_ParseTuple(args, "|Onnn:count",
+                          &sub , &start, &stop, &step))
         return NULL;
+
+    vi = (sub == Py_None) ? 1 : value_sub(sub);
+    if (vi < 0)
+        return NULL;
+
     if (step == 0) {
-        PyErr_SetString(PyExc_ValueError, "count step cannot be zero");
+        PyErr_SetString(PyExc_ValueError, "step cannot be zero");
         return NULL;
     }
+    if (step > 0 && start > self->nbits)
+        return PyLong_FromSsize_t(0);
+
     slicelength = adjust_indices(self->nbits, &start, &stop, step);
     adjust_step_positive(slicelength, &start, &stop, &step);
 
-    if (step == 1) {
-        cnt = count(self, start, stop);
+    if (vi < 2) {                            /* value count */
+        Py_ssize_t cnt = count_slice(self, start, stop, step);
+        return PyLong_FromSsize_t(vi ? cnt : slicelength - cnt);
     }
-    else {
-        Py_ssize_t i;
-
-        for (i = start; i < stop; i += step)
-            cnt += getbit(self, i);
+    assert(bitarray_Check(sub) && vi == 2);  /* sub-bitarray count */
+    if (step != 1) {
+        PyErr_SetString(PyExc_ValueError,
+                        "step must be 1 for sub-bitarray count");
+        return NULL;
     }
-    return PyLong_FromSsize_t(vi ? cnt : slicelength - cnt);
+    return PyLong_FromSsize_t(count_sub(self, (bitarrayobject *) sub,
+                                        start, stop));
 }
 
 PyDoc_STRVAR(count_doc,
-"count(value=1, start=0, stop=<end of array>, step=1, /) -> int\n\
+"count(value=1, start=0, stop=<end>, step=1, /) -> int\n\
 \n\
-Count number of occurrences of `value` in the bitarray.");
+Number of occurrences of `value` bitarray within `[start:stop:step]`.\n\
+Optional arguments `start`, `stop` and `step` are interpreted in\n\
+slice notation, meaning `a.count(value, start, stop, step)` equals\n\
+`a[start:stop:step].count(value)`.\n\
+The `value` may also be a sub-bitarray.  In this case non-overlapping\n\
+occurrences are counted within `[start:stop]`, and `step` must be 1.");
 
 
 static PyObject *

@@ -2,6 +2,7 @@
 -------------------
   * `bitarray(n)` for integer initializer `n` will always return a bitarray
     of length `n` with all items initialized to `0`
+  * allow sub-bitarray in `.count()`
   * add `util.ones()`
   * `.find()` and `.index()`: add keyword argument `right` for rightmost index
 
