@@ -3465,11 +3465,11 @@ rightmost match).");
 static PyObject *
 searchiter_next(searchiterobject *it)
 {
-    Py_ssize_t pos;
+    Py_ssize_t nbits = it->self->nbits, pos;
 
     /* range checks necessary in case self changed during iteration */
-    if (it->start < 0 || it->start > it->self->nbits ||
-            it->stop < 0 || it->stop > it->self->nbits) {
+    assert(it->start >= 0);
+    if (it->start > nbits || it->stop < 0 || it->stop > nbits) {
         return NULL;        /* stop iteration */
     }
 
