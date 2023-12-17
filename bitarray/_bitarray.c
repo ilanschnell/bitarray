@@ -627,8 +627,8 @@ value_sub(PyObject *sub)
 #undef ss
     }
 
-    PyErr_Format(PyExc_TypeError, "bitarray or int expected, not '%s'",
-                 Py_TYPE(sub)->tp_name);
+    PyErr_Format(PyExc_TypeError, "sub_bitarray must the bitarray or int, "
+                 "not '%s'", Py_TYPE(sub)->tp_name);
     return -1;
 }
 
@@ -1862,8 +1862,8 @@ bitarray_freeze(bitarrayobject *self)
     if (self->buffer) {
         assert(self->buffer->readonly == self->readonly);
         if (self->readonly == 0) {
-            PyErr_SetString(PyExc_TypeError, "cannot import writable buffer "
-                            "into frozenbitarray");
+            PyErr_SetString(PyExc_TypeError, "cannot import writable "
+                            "buffer into frozenbitarray");
             return NULL;
         }
     }

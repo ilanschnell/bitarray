@@ -3615,11 +3615,11 @@ class SearchTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             b = a.copy()
             b.setall(0)
-            b[a.search(1)] = 1
+            b[list(a.itersearch(1))] = 1
             self.assertEQUAL(b, a)
 
             b.setall(1)
-            b[a.search(0)] = 0
+            b[list(a.itersearch(0))] = 0
             self.assertEQUAL(b, a)
 
             s = set(a.search(0) + a.search(1))
@@ -3661,6 +3661,7 @@ class SearchTests(unittest.TestCase, Util):
             else:  # empty sub-bitarray
                 plst = list(range(i, j + 1))
 
+            self.assertEqual(sorted(plst), plst)
             self.assertEqual(list(a.itersearch(b, i, j)), plst)
 
             if len(b) == 1:  # test sub-bitarray being int
