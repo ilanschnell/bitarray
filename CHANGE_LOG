@@ -1,5 +1,8 @@
-2023-12-XX   2.9.0:
+2023-12-17   2.9.0:
 -------------------
+  * deprecate support for Python 2 - Python 2.7 support will be removed
+    in bitarray version 3.0,
+    see [roadmap](https://github.com/ilanschnell/bitarray#roadmap)
   * `bitarray(n)` for integer initializer `n` will always return a bitarray
     of length `n` with all items initialized to `0`, see #212
   * allow sub-bitarray in `.count()`, #212
@@ -7,8 +10,6 @@
   * `.find()` and `.index()`: add keyword argument `right` for rightmost index
   * `.itersearch()`: add start and stop argument, and keyword
     argument `right` (for descending order - starting with rightmost match)
-  * deprecate support for Python 2 - Python 2 support will be removed in
-    bitarray version 3.0
   * deprecate `util.rindex()` (will be removed in 3.0 release),
     use `.index(..., right=True)` instead
   * deprecate `util.make_endian()` (will be removed in 3.0 release),

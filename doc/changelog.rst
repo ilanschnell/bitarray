@@ -1,6 +1,24 @@
 Change log
 ==========
 
+**2.9.0** (2023-12-17):
+
+* deprecate support for Python 2 - Python 2.7 support will be removed
+  in bitarray version 3.0,
+  see `roadmap <https://github.com/ilanschnell/bitarray#roadmap>`__
+* ``bitarray(n)`` for integer initializer ``n`` will always return a bitarray
+  of length ``n`` with all items initialized to ``0``, see `#212 <https://github.com/ilanschnell/bitarray/issues/212>`__
+* allow sub-bitarray in ``.count()``, `#212 <https://github.com/ilanschnell/bitarray/issues/212>`__
+* add ``util.ones()``
+* ``.find()`` and ``.index()``: add keyword argument ``right`` for rightmost index
+* ``.itersearch()``: add start and stop argument, and keyword
+  argument ``right`` (for descending order - starting with rightmost match)
+* deprecate ``util.rindex()`` (will be removed in 3.0 release),
+  use ``.index(..., right=True)`` instead
+* deprecate ``util.make_endian()`` (will be removed in 3.0 release),
+  use ``bitarray(..., endian=...)`` instead
+
+
 **2.8.5** (2023-12-09):
 
 * speedup unaligned copies by always using word shifts (in combination

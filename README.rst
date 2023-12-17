@@ -78,7 +78,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 2.8.5
+    bitarray version: 2.9.0
     sys.version: 3.11.0 (main, Oct 25 2022) [Clang 14.0.4]
     sys.prefix: /Users/ilan/Mini3/envs/py311
     pointer size: 64 bit
@@ -427,10 +427,12 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 2.8.5 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.9.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
+
+Also, ``sub_bitarray`` refers to either a bitarray, or an ``item``.
 
 
 The bitarray object:
@@ -442,7 +444,7 @@ The bitarray object:
    The initializer may be of the following types:
 
    ``int``: Create a bitarray of given integer length.  The initial values are
-   uninitialized.
+   all ``0``.
 
    ``str``: Create bitarray from a string of ``0`` and ``1``.
 
@@ -511,12 +513,19 @@ bitarray methods:
    Return a copy of the bitarray.
 
 
-``count(value=1, start=0, stop=<end of array>, step=1, /)`` -> int
-   Count number of occurrences of ``value`` in the bitarray.
+``count(value=1, start=0, stop=<end>, step=1, /)`` -> int
+   Number of occurrences of ``value`` bitarray within ``[start:stop:step]``.
+   Optional arguments ``start``, ``stop`` and ``step`` are interpreted in
+   slice notation, meaning ``a.count(value, start, stop, step)`` equals
+   ``a[start:stop:step].count(value)``.
+   The ``value`` may also be a sub-bitarray.  In this case non-overlapping
+   occurrences are counted within ``[start:stop]`` (``step`` must be 1).
 
    New in version 1.1.0: optional start and stop arguments.
 
    New in version 2.3.7: optional step argument.
+
+   New in version 2.9: add non-overlapping sub-bitarray count.
 
 
 ``decode(code, /)`` -> list
@@ -545,12 +554,14 @@ bitarray methods:
    a multiple of 8, and return the number of bits added [0..7].
 
 
-``find(sub_bitarray, start=0, stop=<end of array>, /)`` -> int
-   Return lowest index where sub_bitarray is found, such that sub_bitarray
-   is contained within ``[start:stop]``.
+``find(sub_bitarray, start=0, stop=<end>, /, right=False)`` -> int
+   Return lowest (or rightmost when ``right=True``) index where sub_bitarray
+   is found, such that sub_bitarray is contained within ``[start:stop]``.
    Return -1 when sub_bitarray is not found.
 
    New in version 2.1.
+
+   New in version 2.9: add optional keyword argument ``right``.
 
 
 ``frombytes(bytes, /)``
@@ -569,10 +580,12 @@ bitarray methods:
    is still read and appended).
 
 
-``index(sub_bitarray, start=0, stop=<end of array>, /)`` -> int
-   Return lowest index where sub_bitarray is found, such that sub_bitarray
-   is contained within ``[start:stop]``.
+``index(sub_bitarray, start=0, stop=<end>, /, right=False)`` -> int
+   Return lowest (or rightmost when ``right=True``) index where sub_bitarray
+   is found, such that sub_bitarray is contained within ``[start:stop]``.
    Raises ``ValueError`` when the sub_bitarray is not present.
+
+   New in version 2.9: add optional keyword argument ``right``.
 
 
 ``insert(index, value, /)``
@@ -592,9 +605,14 @@ bitarray methods:
    the symbols.
 
 
-``itersearch(sub_bitarray, /)`` -> iterator
-   Searches for given sub_bitarray in self, and return an iterator over
-   the start positions where sub_bitarray matches self.
+``itersearch(sub_bitarray, start=0, stop=<end>, /, right=False)`` -> iterator
+   Return iterator over indices where sub_bitarray is found, such that
+   sub_bitarray is contained within ``[start:stop]``.
+   The indices are iterated in ascending order (from lowest to highest),
+   unless ``right=True``, which will iterate in descending oder (starting with
+   rightmost match).
+
+   New in version 2.9: optional start and stop arguments - add optional keyword argument ``right``.
 
 
 ``pack(bytes, /)``
@@ -730,6 +748,13 @@ This sub-module was added in version 1.2.
    endianness, which may be 'big', 'little'.
 
 
+``ones(length, /, endian=None)`` -> bitarray
+   Create a bitarray of length, with all values 1, and optional
+   endianness, which may be 'big', 'little'.
+
+   New in version 2.9.
+
+
 ``urandom(length, /, endian=None)`` -> bitarray
    Return a bitarray of ``length`` random bits (uses ``os.urandom``).
 
@@ -755,12 +780,18 @@ This sub-module was added in version 1.2.
 
    New in version 1.3.
 
+   New in version 2.9: deprecated - use ``bitarray()``.
 
-``rindex(bitarray, value=1, start=0, stop=<end of array>, /)`` -> int
-   Return rightmost (highest) index of ``value`` in bitarray.
-   Raises ``ValueError`` if value is not present.
+
+``rindex(bitarray, sub_bitarray=1, start=0, stop=<end>, /)`` -> int
+   Return rightmost (highest) index where sub_bitarray (or item - defaults
+   to 1) is found in bitarray (``a``), such that sub_bitarray is contained
+   within ``a[start:stop]``.
+   Raises ``ValueError`` when the sub_bitarray is not present.
 
    New in version 2.3.0: optional start and stop arguments.
+
+   New in version 2.9: deprecated - use ``.index(..., right=1)``.
 
 
 ``strip(bitarray, /, mode='right')`` -> bitarray
