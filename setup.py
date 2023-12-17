@@ -2,6 +2,15 @@ import re
 import sys
 import platform
 
+
+if sys.version_info[0] == 2:
+    print("""\
+**************************************************************************
+* Python 2 support of bitarray is deprecated (as of bitarray version 2.9)
+* and will be removed in bitarray version 3.0.
+**************************************************************************
+""")
+
 if "test" in sys.argv:
     import bitarray
     # when test was successful, return 0 (hence not)
