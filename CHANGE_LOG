@@ -1,8 +1,8 @@
 2023-12-XX   2.9.0:
 -------------------
   * `bitarray(n)` for integer initializer `n` will always return a bitarray
-    of length `n` with all items initialized to `0`
-  * allow sub-bitarray in `.count()`
+    of length `n` with all items initialized to `0`, see #212
+  * allow sub-bitarray in `.count()`, #212
   * add `util.ones()`
   * `.find()` and `.index()`: add keyword argument `right` for rightmost index
   * `.itersearch()`: add start and stop argument, and keyword

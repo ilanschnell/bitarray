@@ -2592,20 +2592,10 @@ bitwise_check(PyObject *a, PyObject *b, const char *ostr)
                      ostr, Py_TYPE(a)->tp_name, Py_TYPE(b)->tp_name);
         return -1;
     }
-#define aa  ((bitarrayobject *) a)
-#define bb  ((bitarrayobject *) b)
-    if (aa->nbits != bb->nbits) {
-        PyErr_Format(PyExc_ValueError,
-                     "bitarrays of equal length expected for '%s'", ostr);
+
+    if (!equal_size_and_endian((bitarrayobject *) a, (bitarrayobject *) b))
         return -1;
-    }
-    if (aa->endian != bb->endian) {
-        PyErr_Format(PyExc_ValueError,
-                     "bitarrays of equal endianness expected for '%s'", ostr);
-        return -1;
-    }
-#undef aa
-#undef bb
+
     return 0;
 }
 

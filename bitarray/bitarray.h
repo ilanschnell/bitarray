@@ -316,3 +316,21 @@ conv_pybit(PyObject *value, int *vi)
     *vi = (int) n;
     return 1;
 }
+
+/* return 1 if a and b have equal length and bit-endianness, otherwise 0
+   and set exception */
+static inline int
+equal_size_and_endian(bitarrayobject *a, bitarrayobject *b)
+{
+    if (a->nbits != b->nbits) {
+        PyErr_SetString(PyExc_ValueError,
+                        "bitarrays of equal length expected");
+        return 0;
+    }
+    if (a->endian != b->endian) {
+        PyErr_SetString(PyExc_ValueError,
+                        "bitarrays of equal bit-endianness expected");
+        return 0;
+    }
+    return 1;
+}
