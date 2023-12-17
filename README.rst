@@ -125,7 +125,7 @@ basic usage of bitarray objects:
     >>> a.extend([1, 0])
     >>> a
     bitarray('110')
-    >>> x = bitarray(2 ** 20)  # bitarray of length 1048576 (uninitialized)
+    >>> x = bitarray(2 ** 20)  # bitarray of length 1048576 (initialized to 0)
     >>> len(x)
     1048576
     >>> bitarray('1001 011')   # initialize from string (whitespace is ignored)

@@ -32,7 +32,7 @@ ensure_bitarray(PyObject *obj)
     return 0;
 }
 
-/* return new bitarray of length `nbits` (with uninitialized buffer) and
+/* return new bitarray of length `nbits` (buffer initialized to 0) and
    endianness given by the PyObject 'endian' (which may be Py_None) */
 static bitarrayobject *
 new_bitarray(Py_ssize_t nbits, PyObject *endian)
@@ -450,7 +450,7 @@ deserialize(PyObject *module, PyObject *buffer)
         PyErr_Format(PyExc_ValueError, "invalid header byte: 0x%02x", head);
         goto error;
     }
-    /* create bitarray of desired length (buffer uninitialized) */
+    /* create bitarray of desired length */
     a = new_bitarray(8 * (view.len - 1) - ((Py_ssize_t) (head & 0x07)),
                      Py_None);
     if (a == NULL)
@@ -1516,12 +1516,11 @@ sc_decode(PyObject *module, PyObject *obj)
     if (sc_decode_header(iter, &endian, &nbits) < 0)
         goto error;
 
-    /* create bitarray of length 'nbits' and set all elements to 0 */
+    /* create bitarray of length nbits */
     a = new_bitarray(nbits, Py_None);
     if (a == NULL)
         goto error;
     a->endian = endian;
-    memset(a->ob_item, 0x00, (size_t) Py_SIZE(a));
 
     /* consume blocks until stop byte is encountered */
     while ((increase = sc_decode_block(a, offset, iter))) {
