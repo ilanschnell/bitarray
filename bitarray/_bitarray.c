@@ -608,9 +608,9 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
     return -1;
 }
 
-/* Returns:
-   -1: on error and sets exception
- 0, 1: value of integer sub or first item of sub if bitarray of length 1
+/* Given sub_bitarray, return:
+   -1: on error (after setting exception)
+ 0, 1: value of integer sub or single item of sub if bitarray of length 1
     2: when sub is bitarray of length 0, 2, 3, ...
  */
 static int
@@ -2593,7 +2593,7 @@ bitwise_check(PyObject *a, PyObject *b, const char *ostr)
         return -1;
     }
 
-    if (unequal_size_or_endian((bitarrayobject *) a, (bitarrayobject *) b))
+    if (ensure_eq_size_endian((bitarrayobject *) a, (bitarrayobject *) b) < 0)
         return -1;
 
     return 0;

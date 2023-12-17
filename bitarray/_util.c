@@ -246,7 +246,7 @@ binary_function(PyObject *args, const char *format, const char oper)
                           bitarray_type_obj, (PyObject *) &a,
                           bitarray_type_obj, (PyObject *) &b))
         return NULL;
-    if (unequal_size_or_endian(a, b))
+    if (ensure_eq_size_endian(a, b) < 0)
         return NULL;
 
     wbuff_a = WBUFF(a);
@@ -352,7 +352,7 @@ correspond_all(PyObject *module, PyObject *args)
                           bitarray_type_obj, (PyObject *) &a,
                           bitarray_type_obj, (PyObject *) &b))
         return NULL;
-    if (unequal_size_or_endian(a, b))
+    if (ensure_eq_size_endian(a, b) < 0)
         return NULL;
 
     cwords = a->nbits / 64;     /* complete 64-bit words */
