@@ -19,7 +19,7 @@ The 3.0 release will:
 
 * Remove Python 2.7 support.
 * Rename ``.itersearch()`` to ``.search()`` and ``.iterdecode()``
-  to ``.decode()`` (and remove their non-iterator versions).
+  to ``.decode()`` (and remove their non-iterator counterpart).
 * Remove ``util.rindex()``, use ``.index(..., right=1)`` instead
 * Remove ``util.make_endian()``, use ``bitarray(..., endian=...)`` instead
 * Remove hackish support for ``bitarray()`` handling unpickling,

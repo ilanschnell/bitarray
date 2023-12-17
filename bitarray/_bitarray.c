@@ -2593,7 +2593,7 @@ bitwise_check(PyObject *a, PyObject *b, const char *ostr)
         return -1;
     }
 
-    if (!equal_size_and_endian((bitarrayobject *) a, (bitarrayobject *) b))
+    if (unequal_size_or_endian((bitarrayobject *) a, (bitarrayobject *) b))
         return -1;
 
     return 0;
