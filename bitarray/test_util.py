@@ -41,7 +41,22 @@ else:
 
 class TestsZerosOnes(unittest.TestCase):
 
-    def test_basic(self):
+    def test_range(self):
+        for n in range(100):
+            a = zeros(n)
+            self.assertEqual(len(a), n)
+            self.assertFalse(a.any())
+            self.assertEqual(a.count(0), n)
+            self.assertEqual(a.count(1), 0)
+            self.assertIsInstance(a, bitarray)
+            b = ones(n)
+            self.assertEqual(len(b), n)
+            self.assertTrue(b.all())
+            self.assertEqual(b.count(0), 0)
+            self.assertEqual(b.count(1), n)
+            self.assertIsInstance(b, bitarray)
+
+    def test_endian(self):
         for default_endian in 'big', 'little':
             _set_default_endian(default_endian)
 
@@ -49,20 +64,6 @@ class TestsZerosOnes(unittest.TestCase):
                       ones(0), ones(0, None), ones(0, endian=None)):
                 self.assertEqual(a, bitarray())
                 self.assertEqual(a.endian(), default_endian)
-
-            for n in range(100):
-                a = zeros(n)
-                self.assertEqual(len(a), n)
-                self.assertFalse(a.any())
-                self.assertEqual(a.count(1), 0)
-                self.assertEqual(a, bitarray(n * '0'))
-                self.assertIsInstance(a, bitarray)
-                b = ones(n)
-                self.assertEqual(len(b), n)
-                self.assertTrue(b.all())
-                self.assertEqual(b.count(0), 0)
-                self.assertEqual(b, bitarray(n * '1'))
-                self.assertIsInstance(b, bitarray)
 
             for endian in 'big', 'little':
                 for a in zeros(3, endian), zeros(3, endian=endian):

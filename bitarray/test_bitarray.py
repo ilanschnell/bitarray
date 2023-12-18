@@ -364,7 +364,13 @@ class CreateObjectTests(unittest.TestCase, Util):
         for n in range(50):
             a = bitarray(n)
             self.assertEqual(len(a), n)
-            self.assertEqual(a.tolist(), n * [0])
+            self.assertFalse(a.any())
+            self.assertEqual(a.to01(), n * '0')
+            self.check_obj(a)
+
+            # uninitialized buffer
+            a = bitarray(n, buffer=Ellipsis)
+            self.assertEqual(len(a), n)
             self.check_obj(a)
 
         if not is_py3k:
