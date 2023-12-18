@@ -4760,7 +4760,7 @@ class BufferImportTests(unittest.TestCase, Util):
 
     def test_invalid_buffer(self):
         # these objects do not expose a buffer
-        for arg in (123, 1.23, Ellipsis, [1, 2, 3], (1, 2, 3), {1: 2},
+        for arg in (123, 1.23, [1, 2, 3], (1, 2, 3), {1: 2},
                     set([1, 2, 3]),):
             self.assertRaises(TypeError, bitarray, buffer=arg)
 

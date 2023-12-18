@@ -32,26 +32,34 @@ ensure_bitarray(PyObject *obj)
     return 0;
 }
 
-/* return new bitarray of length `nbits` (buffer initialized to 0) and
-   endianness given by the PyObject 'endian' (which may be Py_None) */
+/* Return new bitarray of length 'nbits', endianness given by the PyObject
+   'endian' (which may be Py_None).
+   Unless -1, 'init_chr' is placed into all characters of buffer. */
 static bitarrayobject *
-new_bitarray(Py_ssize_t nbits, PyObject *endian)
+new_bitarray(Py_ssize_t nbits, PyObject *endian, int init_chr)
 {
     PyObject *args;             /* args for bitarray() */
     bitarrayobject *res;
 
-    if ((args = PyTuple_New(2)) == NULL)
+    if ((args = PyTuple_New(3)) == NULL)
         return NULL;
 
     /* PyTuple_SET_ITEM "steals" a reference to item */
     PyTuple_SET_ITEM(args, 0, PyLong_FromSsize_t(nbits));
     Py_INCREF(endian);
     PyTuple_SET_ITEM(args, 1, endian);
+    Py_INCREF(Py_Ellipsis);
+    PyTuple_SET_ITEM(args, 2, Py_Ellipsis);
 
     res = (bitarrayobject *) PyObject_CallObject(bitarray_type_obj, args);
     Py_DECREF(args);
     if (res == NULL)
         return NULL;
+
+    assert(-1 <= init_chr && init_chr < 256);
+    if (init_chr >= 0)
+        memset(res->ob_item, init_chr, (size_t) Py_SIZE(res));
+
     assert(res->nbits == nbits && res->readonly == 0 && res->buffer == NULL);
 
     return res;
@@ -82,7 +90,7 @@ zeros(PyObject *module, PyObject *args, PyObject *kwds)
                                      &nbits, &endian))
         return NULL;
 
-    return (PyObject *) new_bitarray(nbits, endian);
+    return (PyObject *) new_bitarray(nbits, endian, 0);
 }
 
 PyDoc_STRVAR(zeros_doc,
@@ -97,19 +105,13 @@ ones(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "endian", NULL};
     PyObject *endian = Py_None;
-    bitarrayobject *a;
     Py_ssize_t nbits;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "n|O:ones", kwlist,
                                      &nbits, &endian))
         return NULL;
 
-    if ((a = new_bitarray(nbits, endian)) == NULL)
-        return NULL;
-
-    memset(a->ob_item, 0xff, (size_t) Py_SIZE(a));
-
-    return (PyObject *) a;
+    return (PyObject *) new_bitarray(nbits, endian, 0xff);
 }
 
 PyDoc_STRVAR(ones_doc,
@@ -452,7 +454,7 @@ deserialize(PyObject *module, PyObject *buffer)
     }
     /* create bitarray of desired length */
     a = new_bitarray(8 * (view.len - 1) - ((Py_ssize_t) (head & 0x07)),
-                     Py_None);
+                     Py_None, -1);
     if (a == NULL)
         goto error;
     /* set bit-endianness and buffer */
@@ -614,7 +616,7 @@ hex2ba(PyObject *module, PyObject *args, PyObject *kwds)
     if ((bytes = anystr_to_bytes(obj)) == NULL)
         return NULL;
 
-    a = new_bitarray(4 * PyBytes_GET_SIZE(bytes), endian);
+    a = new_bitarray(4 * PyBytes_GET_SIZE(bytes), endian, -1);
     if (a == NULL)
         goto error;
 
@@ -803,7 +805,7 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
     if ((bytes = anystr_to_bytes(obj)) == NULL)
         return NULL;
 
-    a = new_bitarray(m * PyBytes_GET_SIZE(bytes), endian);
+    a = new_bitarray(m * PyBytes_GET_SIZE(bytes), endian, -1);
     if (a == NULL)
         goto error;
 
@@ -1517,7 +1519,7 @@ sc_decode(PyObject *module, PyObject *obj)
         goto error;
 
     /* create bitarray of length nbits */
-    a = new_bitarray(nbits, Py_None);
+    a = new_bitarray(nbits, Py_None, 0);
     if (a == NULL)
         goto error;
     a->endian = endian;
@@ -1611,7 +1613,7 @@ vl_decode(PyObject *module, PyObject *args, PyObject *kwds)
         return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
                             Py_TYPE(obj)->tp_name);
 
-    a = new_bitarray(32, endian);
+    a = new_bitarray(32, endian, -1);
     if (a == NULL)
         goto error;
 

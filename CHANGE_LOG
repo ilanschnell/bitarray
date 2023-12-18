@@ -1,5 +1,7 @@
 20XX-XX-XX   2.9.1:
 -------------------
+  * avoid buffer being initialized more than once when functions in `util`
+    module are called
 
 
 2023-12-17   2.9.0:

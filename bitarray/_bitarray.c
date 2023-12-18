@@ -3696,8 +3696,11 @@ newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
     return (PyObject *) obj;
 }
 
+/* return new bitarray of length 'index', and endian,
+   'init_zero' (initialize buffer with zeros) */
 static PyObject *
-newbitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
+newbitarray_from_index(PyTypeObject *type, PyObject *index,
+                       int endian, int init_zero)
 {
     bitarrayobject *res;
     Py_ssize_t nbits;
@@ -3714,7 +3717,9 @@ newbitarray_from_index(PyTypeObject *type, PyObject *index, int endian)
 
     if ((res = newbitarrayobject(type, nbits, endian)) == NULL)
         return NULL;
-    memset(res->ob_item, 0x00, (size_t) Py_SIZE(res));
+
+    if (init_zero)
+        memset(res->ob_item, 0x00, (size_t) Py_SIZE(res));
 
     return (PyObject *) res;
 }
@@ -3781,7 +3786,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return NULL;
 
     /* import buffer */
-    if (buffer != Py_None) {
+    if (buffer != Py_None && buffer != Py_Ellipsis) {
         if (initial != Py_None) {
             PyErr_SetString(PyExc_TypeError,
                             "buffer requires no initial argument");
@@ -3802,7 +3807,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* index (a number) */
     if (PyIndex_Check(initial))
-        return newbitarray_from_index(type, initial, endian);
+        return newbitarray_from_index(type, initial, endian,
+                                      buffer == Py_None);
 
     /* bytes (for pickling) - to be removed, see #206 */
     if (PyBytes_Check(initial) && PyBytes_GET_SIZE(initial) > 0) {
