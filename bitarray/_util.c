@@ -504,10 +504,9 @@ ba2hex(PyObject *module, PyObject *obj)
         return NULL;
 
     a = (bitarrayobject *) obj;
-    if (a->nbits % 4) {
-        PyErr_SetString(PyExc_ValueError, "bitarray length not multiple of 4");
-        return NULL;
-    }
+    if (a->nbits % 4)
+        return PyErr_Format(PyExc_ValueError, "bitarray length %zd not "
+                            "multiple of 4", a->nbits);
 
     /* We want strsize to be even, such that we can transform the entire
        bitarray buffer at once.  Hence, we don't use a->nbits / 4 here, as
@@ -521,7 +520,6 @@ ba2hex(PyObject *module, PyObject *obj)
     be = IS_BE(a);
     for (i = 0; i < strsize; i += 2) {
         unsigned char c = a->ob_item[i / 2];
-
         str[i + le] = hexdigits[c >> 4];
         str[i + be] = hexdigits[0x0f & c];
     }
@@ -540,7 +538,7 @@ the bitarray (which has to be multiple of 4 in length).");
 
 /* Translate hexadecimal digits 'bytes' into the bitarray 'a' buffer.
    Each digit corresponds to 4 bits in the bitarray.
-   The number of digits may be odd. */
+   Note that the number of hexadecimal digits may be odd. */
 static int
 hex2ba_core(bitarrayobject *a, PyObject *bytes)
 {
