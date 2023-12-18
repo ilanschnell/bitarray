@@ -3769,6 +3769,12 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, char *endian_str)
     return (PyObject *) res;
 }
 
+/* As of bitarray version 2.9.0, "bitarray(nbits)" will initialize all items
+   to 0 (previously, the buffer was be uninitialized).
+   However, for speed, one might want to create an uninitialized bitarray.
+   In 2.9.1, we added the ability to created uninitialized bitarrays again,
+   using "bitarray(nbits, endian, Ellipsis)".
+*/
 static PyObject *
 bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
