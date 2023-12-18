@@ -51,7 +51,7 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian, int c)
     Py_INCREF(Py_Ellipsis);
     PyTuple_SET_ITEM(args, 2, Py_Ellipsis);
 
-    /* equivalent to (e.g.): res = bitarray(800, "little", Ellipsis) */
+    /* equivalent to: res = bitarray(nbits, endian, Ellipsis) */
     res = (bitarrayobject *) PyObject_CallObject(bitarray_type_obj, args);
     Py_DECREF(args);
     if (res == NULL)
@@ -65,7 +65,7 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian, int c)
     return res;
 }
 
-/* Starting from word index `i`, count remaining population in bitarray
+/* Starting from word index 'i', count remaining population in bitarray
    buffer.  Equivalent to:  a[64 * i:].count()  */
 static Py_ssize_t
 count_from_word(bitarrayobject *a, Py_ssize_t i)
@@ -1163,8 +1163,8 @@ sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
     return (int) k;
 }
 
-/* Write `k` indices (of `n` bytes each) into buffer `str`.
-   Note that `n` (which is also the block type) has been selected
+/* Write 'k' indices (of 'n' bytes each) into buffer 'str'.
+   Note that 'n' (which is also the block type) has been selected
    (in sc_encode_block()) such that:
 
        k = sc_count(a, rts, offset, n) < 256
@@ -1173,7 +1173,7 @@ static void
 sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
                  Py_ssize_t offset, int n, int k)
 {
-    const char *str_stop = str + n * k;  /* stop position in buffer `str` */
+    const char *str_stop = str + n * k;  /* stop position in buffer 'str' */
     const char *buff = a->ob_item + offset;
     Py_ssize_t m, i;
 
@@ -1215,8 +1215,8 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
     Py_UNREACHABLE();
 }
 
-/* Write one sparse block (from `offset`, and up to `k` one bits).
-   Return number of bytes written to buffer `str` (encoded block size). */
+/* Write one sparse block (from 'offset', and up to 'k' one bits) of type 'n'.
+   Return number of bytes written to buffer 'str' (encoded block size). */
 static Py_ssize_t
 sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
                 Py_ssize_t offset, int n, int k)
@@ -1231,14 +1231,14 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
         assert(k < 32);
         str[len++] = (char) (0xa0 + k);
     }
-    else {                 /* type 2, 3, 4 - `n` bytes for each positions */
+    else {                   /* type 2, 3, 4 - n bytes for each positions */
         str[len++] = (char) (0xc0 + n);
         str[len++] = (char) k;
     }
     if (k == 0)  /* no index bytes */
         return len;
 
-    /* write block data - `k` indices, `n` bytes per index */
+    /* write block data - k indices, n bytes per index */
     sc_write_indices(str + len, a, rts, offset, n, k);
     return len + n * k;
 }
@@ -1341,9 +1341,9 @@ sc_encode(PyObject *module, PyObject *obj)
     char *str;                  /* output buffer */
     Py_ssize_t len = 0;         /* bytes written into output buffer */
     bitarrayobject *a;
-    Py_ssize_t offset = 0;      /* block offset into bitarray `a` in bytes */
+    Py_ssize_t offset = 0;      /* block offset into bitarray a in bytes */
     Py_ssize_t *rts;            /* running totals for 256 bit segments */
-    Py_ssize_t t;               /* total population count of bitarray `a` */
+    Py_ssize_t t;               /* total population count of bitarray a */
 
     if (ensure_bitarray(obj) < 0)
         return NULL;

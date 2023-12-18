@@ -3696,7 +3696,7 @@ newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
     return (PyObject *) obj;
 }
 
-/* return new bitarray of length 'index', and endian,
+/* return new bitarray of length 'index', 'endian', and
    'init_zero' (initialize buffer with zeros) */
 static PyObject *
 newbitarray_from_index(PyTypeObject *type, PyObject *index,
