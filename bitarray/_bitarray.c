@@ -3780,6 +3780,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if ((endian = endian_from_string(endian_str)) < 0)
         return NULL;
 
+    /* import buffer */
     if (buffer != Py_None) {
         if (initial != Py_None) {
             PyErr_SetString(PyExc_TypeError,
