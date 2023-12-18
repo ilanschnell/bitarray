@@ -34,14 +34,14 @@ ensure_bitarray(PyObject *obj)
 
 /* Return new bitarray of length 'nbits', endianness given by the PyObject
    'endian' (which may be Py_None).
-   Unless -1, 'init_chr' is placed into all characters of buffer. */
+   Unless -1, 'c' is placed into all characters of buffer. */
 static bitarrayobject *
-new_bitarray(Py_ssize_t nbits, PyObject *endian, int init_chr)
+new_bitarray(Py_ssize_t nbits, PyObject *endian, int c)
 {
     PyObject *args;             /* args for bitarray() */
     bitarrayobject *res;
 
-    if ((args = PyTuple_New(3)) == NULL)
+    if ((args = PyTuple_New(3)) == NULL)  /* arguments for bitarray() */
         return NULL;
 
     /* PyTuple_SET_ITEM "steals" a reference to item */
@@ -51,16 +51,16 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian, int init_chr)
     Py_INCREF(Py_Ellipsis);
     PyTuple_SET_ITEM(args, 2, Py_Ellipsis);
 
+    /* equivalent to (e.g.): res = bitarray(800, "little", Ellipsis) */
     res = (bitarrayobject *) PyObject_CallObject(bitarray_type_obj, args);
     Py_DECREF(args);
     if (res == NULL)
         return NULL;
 
-    assert(-1 <= init_chr && init_chr < 256);
-    if (init_chr >= 0)
-        memset(res->ob_item, init_chr, (size_t) Py_SIZE(res));
-
     assert(res->nbits == nbits && res->readonly == 0 && res->buffer == NULL);
+    assert(-1 <= c && c < 256);
+    if (c >= 0)
+        memset(res->ob_item, c, (size_t) Py_SIZE(res));
 
     return res;
 }

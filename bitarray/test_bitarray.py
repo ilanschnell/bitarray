@@ -360,6 +360,14 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray(None, 'little', None)
         self.assertEQUAL(a, bitarray(0, 'little'))
 
+    def test_none(self):
+        for a in [bitarray(None),
+                  bitarray(None, buffer=None),
+                  bitarray(None, buffer=Ellipsis),
+                  bitarray(None, None, None),
+                  bitarray(None, None, Ellipsis)]:
+            self.assertEqual(len(a), 0)
+
     def test_int(self):
         for n in range(50):
             a = bitarray(n)
