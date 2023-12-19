@@ -5,16 +5,17 @@ finding all prime numbers up to any given limit.
 from math import isqrt
 
 from bitarray import bitarray
-from bitarray.util import count_n
+from bitarray.util import ones, count_n
 
 
 N = 100_000_000
 
 # Each bit a[i] corresponds to whether or not i is a prime
-a = bitarray(N)
-a.setall(True)
+a = ones(N)
+
 # Zero and one are not prime
 a[:2] = False
+
 # Perform sieve
 for i in range(2, isqrt(N) + 1):
     if a[i]:  # i is prime, so all multiples are not

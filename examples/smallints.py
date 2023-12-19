@@ -4,7 +4,7 @@ from bitarray.util import int2ba, ba2int, pprint
 
 class SmallIntArray(object):
     """
-    A class which allows efficiently storeing an array of integers
+    Class which allows efficiently storing an array of integers
     represented by a specified number of bits.
     For example, an array with 1000 5 bit integers can be created,
     allowing each element in the array to take values form 0 to 31,
