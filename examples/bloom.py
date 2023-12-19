@@ -1,7 +1,7 @@
 import hashlib
 from math import ceil, exp, log, log2
 
-from bitarray import bitarray
+from bitarray.util import zeros
 
 
 class BloomFilter(object):
@@ -18,8 +18,7 @@ class BloomFilter(object):
         self.k = ceil(-log2(p))
         # size of array
         self.m = ceil(-n * log2(p) / log(2))
-        self.array = bitarray(self.m)
-        self.array.setall(0)
+        self.array = zeros(self.m)
 
     def calculate_p(self):
         """
