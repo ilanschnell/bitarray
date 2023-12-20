@@ -1030,9 +1030,8 @@ byte_length(Py_ssize_t i)
 static Py_ssize_t *
 sc_calc_rts(bitarrayobject *a)
 {
-    /* total number of segments - number of complete segments */
-    const Py_ssize_t n_seg = NSEG(a->nbits);
-    const Py_ssize_t c_seg = a->nbits / (8 * SEGSIZE);
+    const Py_ssize_t n_seg = NSEG(a->nbits);  /* total number of segments */
+    const Py_ssize_t c_seg = a->nbits / (8 * SEGSIZE); /* complete segments */
     char zeros[SEGSIZE];                      /* segment with only zeros */
     Py_ssize_t cnt = 0;                       /* current count */
     char *buff;                               /* buffer in current segment */

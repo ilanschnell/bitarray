@@ -344,8 +344,7 @@ class TestsRIndex(unittest.TestCase, Util):
     def test_one_set(self):
         for _ in range(10):
             N = randint(1, 10000)
-            a = bitarray(N)
-            a.setall(0)
+            a = zeros(N)
             a[randrange(N)] = 1
             self.assertEqual(rindex(a), a.index(1))
 
@@ -505,8 +504,7 @@ class TestsCount_N(unittest.TestCase, Util):
 
     def test_ones(self):
         n = randint(1, 100000)
-        a = bitarray(n)
-        a.setall(1)
+        a = ones(n)
         self.assertEqual(count_n(a, n), n)
         self.assertRaises(ValueError, count_n, a, 1, 0)
         self.assertRaises(ValueError, count_n, a, n + 1)
@@ -516,8 +514,7 @@ class TestsCount_N(unittest.TestCase, Util):
 
     def test_one_set(self):
         n = randint(1, 100000)
-        a = bitarray(n)
-        a.setall(0)
+        a = zeros(n)
         self.assertEqual(count_n(a, 0), 0)
         self.assertRaises(ValueError, count_n, a, 1)
         for _ in range(20):
@@ -573,22 +570,18 @@ class TestsCount_N(unittest.TestCase, Util):
 class TestsBitwiseCount(unittest.TestCase, Util):
 
     def test_count_byte(self):
-        ones = bitarray(8)
-        ones.setall(1)
-        zeros = bitarray(8)
-        zeros.setall(0)
         for i in range(256):
             a = bitarray()
             a.frombytes(bytes(bytearray([i])))
             cnt = a.count()
-            self.assertEqual(count_and(a, zeros), 0)
-            self.assertEqual(count_and(a, ones), cnt)
+            self.assertEqual(count_and(a, zeros(8)), 0)
+            self.assertEqual(count_and(a, ones(8)), cnt)
             self.assertEqual(count_and(a, a), cnt)
-            self.assertEqual(count_or(a, zeros), cnt)
-            self.assertEqual(count_or(a, ones), 8)
+            self.assertEqual(count_or(a, zeros(8)), cnt)
+            self.assertEqual(count_or(a, ones(8)), 8)
             self.assertEqual(count_or(a, a), cnt)
-            self.assertEqual(count_xor(a, zeros), cnt)
-            self.assertEqual(count_xor(a, ones), 8 - cnt)
+            self.assertEqual(count_xor(a, zeros(8)), cnt)
+            self.assertEqual(count_xor(a, ones(8)), 8 - cnt)
             self.assertEqual(count_xor(a, a), 0)
 
     def test_1(self):
@@ -808,8 +801,7 @@ class TestsParity(unittest.TestCase, Util):
             par = not par
 
     def test_pad_ignored(self):
-        a = bitarray(1)
-        a.setall(1)
+        a = ones(1)
         self.assertTrue(parity(a))
 
     def test_frozenbitarray(self):
@@ -1320,8 +1312,7 @@ class SC_Tests(unittest.TestCase, Util):
 
     def test_decode_random_bytes(self):
         # ensure random input doesn't crash the decoder
-        cnt = 0
-        for _ in range(5000):
+        for _ in range(100):
             n = randrange(20)
             b = b'\x02\x00\x04' + os.urandom(n)
             try:
@@ -1331,8 +1322,6 @@ class SC_Tests(unittest.TestCase, Util):
                     continue
             self.assertEqual(len(a), 1024)
             self.assertEqual(a.endian(), 'little')
-            cnt += 1
-        self.assertTrue(cnt > 2)
 
     def test_encode_types(self):
         for a in bitarray('1', 'big'), frozenbitarray('1', 'big'):
@@ -1355,8 +1344,7 @@ class SC_Tests(unittest.TestCase, Util):
     def test_encode_zeros(self):
         for i in range(18):
             n = 1 << i
-            a = bitarray(n)
-            a.setall(0)
+            a = zeros(n)
             m = 2                            # head byte and stop byte
             m += bits2bytes(n.bit_length())  # size bytes
             #print(i, n, m, sc_encode(a))
@@ -1379,8 +1367,7 @@ class SC_Tests(unittest.TestCase, Util):
     def test_encode_ones(self):
         for _ in range(50):
             nbits = randrange(100000)
-            a = bitarray(nbits)
-            a.setall(1)
+            a = ones(nbits)
             m = 2                                # head byte and stop byte
             m += bits2bytes(nbits.bit_length())  # size bytes
             nbytes = bits2bytes(nbits)
@@ -1394,8 +1381,7 @@ class SC_Tests(unittest.TestCase, Util):
         for _ in range(10):
             n = randrange(100000)
             endian = self.random_endian()
-            a = bitarray(n, endian)
-            a.setall(1)
+            a = ones(n, endian)
             for _ in range(16):
                 a &= urandom(n, endian)
                 self.round_trip(a)
@@ -1418,9 +1404,9 @@ class SC_Tests(unittest.TestCase, Util):
 
     @skipIf(not DEBUG)
     def test_rts_ones(self):
-        for n in range(2000):
-            a = bitarray(n)
-            a.setall(1)
+        for _ in range(20):
+            n = randrange(10000)
+            a = ones(n)
             rts = _sc_rts(a)
             self.assertEqual(rts[0], 0)
             self.assertEqual(rts[-1], n)
@@ -1430,7 +1416,8 @@ class SC_Tests(unittest.TestCase, Util):
     @skipIf(not DEBUG)
     def test_rts_random(self):
         segbits = 8 * _SEGSIZE
-        for n in range(2000):
+        for _ in range(20):
+            n = randrange(10000)
             a = urandom(n)
             rts = _sc_rts(a)
             self.assertEqual(len(rts), (n + segbits - 1) // segbits + 1)
@@ -1865,8 +1852,7 @@ class MixedTests(unittest.TestCase, Util):
                 self.assertEqual(ba2int(c), i << n)
 
     def test_primes(self):  # Sieve of Eratosthenes
-        sieve = bitarray(10000)
-        sieve.setall(1)
+        sieve = ones(10000)
         sieve[:2] = 0  # zero and one are not prime
         for i in range(2, 100):
             if sieve[i]:

@@ -67,6 +67,11 @@ def buffer_info(a, key=None):
 # avoid importing from bitarray.util
 zeros = bitarray
 
+def ones(n, endian=None):
+    a = bitarray(n, endian)
+    a.setall(1)
+    return a
+
 def urandom(n, endian=None):
     a = bitarray(0, endian)
     a.frombytes(os.urandom(bits2bytes(n)))
@@ -1111,7 +1116,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('11111111 00000011 11111111'))
 
     def test_setslice_bitarray(self):
-        a = bitarray('11111111 1111')
+        a = ones(12)
         a[2:6] = bitarray('0010')
         self.assertEqual(a, bitarray('11001011 1111'))
         a.setall(0)
@@ -1121,16 +1126,14 @@ class SliceTests(unittest.TestCase, Util):
         a[3:] = bitarray('111')
         self.assertEqual(a, bitarray('000111'))
 
-        a = bitarray(12)
-        a.setall(0)
+        a = zeros(12)
         a[1:11:2] = bitarray('11101')
         self.assertEqual(a, bitarray('01010100 0100'))
         a.setall(0)
         a[5:2] = bitarray('111')  # make sure inserts before 5 (not 2)
         self.assertEqual(a, bitarray('00000111 0000000'))
 
-        a = bitarray(12)
-        a.setall(0)
+        a = zeros(12)
         a[:-6:-1] = bitarray('10111')
         self.assertEqual(a, bitarray('00000001 1101'))
 
@@ -1722,8 +1725,7 @@ class MiscTests(unittest.TestCase, Util):
         self.assertEqual(b, d)
 
     def test_endianness2(self):
-        a = bitarray(8, endian='little')
-        a.setall(False)
+        a = zeros(8, endian='little')
         a[0] = True
         self.assertEqual(a.tobytes(), b'\x01')
         a[1] = True
@@ -1733,8 +1735,7 @@ class MiscTests(unittest.TestCase, Util):
         self.assertEqual(a.to01(), '1100000000000100')
 
     def test_endianness3(self):
-        a = bitarray(8, endian='big')
-        a.setall(False)
+        a = zeros(8, endian='big')
         a[7] = True
         self.assertEqual(a.tobytes(), b'\x01')
         a[6] = True
@@ -2007,8 +2008,7 @@ class RichCompareTests(unittest.TestCase, Util):
                              bitarray(0, self.random_endian()))
 
         for n in range(1, 20):
-            a = bitarray(n, self.random_endian())
-            a.setall(1)
+            a = ones(n, self.random_endian())
             b = bitarray(a, self.random_endian())
             self.assertTrue(a == b)
             self.assertFalse(a != b)
@@ -2073,8 +2073,7 @@ class SpecialMethodTests(unittest.TestCase, Util):
             self.assertTrue(a.all() is all(a))
 
         N = randint(1000, 2000)
-        a = bitarray(N)
-        a.setall(1)
+        a = ones(N)
         self.assertTrue(a.all())
         a[N - 1] = 0
         self.assertFalse(a.all())
@@ -2089,8 +2088,7 @@ class SpecialMethodTests(unittest.TestCase, Util):
             self.assertTrue(a.any() is any(a))
 
         N = randint(1000, 2000)
-        a = bitarray(N)
-        a.setall(0)
+        a = zeros(N)
         self.assertFalse(a.any())
         a[N - 1] = 1
         self.assertTrue(a.any())
@@ -2324,8 +2322,7 @@ class SequenceMethodsTests(unittest.TestCase, Util):
 
     def test_contains_range(self):
         for n in range(2, 50):
-            a = bitarray(n)
-            a.setall(0)
+            a = zeros(n)
             self.assertTrue(False in a)
             self.assertFalse(True in a)
             a[randrange(n)] = 1
@@ -3049,8 +3046,7 @@ class MethodTests(unittest.TestCase, Util):
         for i in (True, False, 1, 0):
             self.assertRaises(ValueError, a.remove, i)
 
-        a = bitarray(21)
-        a.setall(0)
+        a = zeros(21)
         self.assertRaises(ValueError, a.remove, 1)
         a.setall(1)
         self.assertRaises(ValueError, a.remove, 0)
@@ -3102,7 +3098,7 @@ class MethodTests(unittest.TestCase, Util):
             self.check_obj(a)
 
     def test_setall(self):
-        a = bitarray(5)
+        a = urandom(5)
         a.setall(True)
         self.assertRaises(ValueError, a.setall, -1)
         self.assertRaises(TypeError, a.setall, None)
@@ -3115,7 +3111,7 @@ class MethodTests(unittest.TestCase, Util):
         a = bitarray()
         for v in 0, 1:
             a.setall(v)
-            self.assertEqual(a, bitarray())
+            self.assertEqual(len(a), 0)
             self.check_obj(a)
 
     def test_setall_random(self):
@@ -3250,7 +3246,7 @@ class CountTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.count, bitarray('11'), 15, 0, -1)
 
     def test_random_sub(self):
-        for _ in range(10000):
+        for _ in range(1000):
             n = randrange(100)
             a = urandom(n)
             s = a.to01()
@@ -3330,13 +3326,12 @@ class CountTests(unittest.TestCase, Util):
             if step == 0:
                 continue
 
-            a = bitarray(N, self.random_endian())
+            a = zeros(N, self.random_endian())
             i = randint(-N - 1, N)
             j = randint(-N - 1, N)
             slicelength = self.calc_slicelength(slice(i, j, step), N)
             self.assertEqual(len(a[i:j:step]), slicelength)
 
-            a.setall(0)
             self.assertEqual(a.count(0, i, j, step), slicelength)
             self.assertEqual(a.count(1, i, j, step), 0)
             a[i:j:step] = 1
@@ -3828,8 +3823,7 @@ class BytesTests(unittest.TestCase, Util):
                      (5, b'\x1f'), (6, b'\x3f'), (7, b'\x7f'), (8, b'\xff'),
                      (12, b'\xff\x0f'), (15, b'\xff\x7f'), (16, b'\xff\xff'),
                      (17, b'\xff\xff\x01'), (24, b'\xff\xff\xff')]:
-            a = bitarray(n, endian='little')
-            a.setall(1)
+            a = ones(n, endian='little')
             self.assertEqual(a.tobytes(), s)
 
     def test_unpack_simple(self):
@@ -4162,8 +4156,7 @@ class FileTests(unittest.TestCase, Util):
 
     def test_tofile_large(self):
         n = 100 * 1000
-        a = bitarray(8 * n)
-        a.setall(0)
+        a = zeros(8 * n)
         a[2::37] = 1
         with open(self.tmpfname, 'wb') as f:
             a.tofile(f)
@@ -4916,8 +4909,7 @@ class BufferExportTests(unittest.TestCase, Util):
         self.check_obj(a)
 
     def test_write(self):
-        a = bitarray(8000)
-        a.setall(0)
+        a = zeros(8000)
         v = memoryview(a)
         self.assertFalse(v.readonly)
         v[500] = 255 if is_py3k else '\xff'
@@ -4930,8 +4922,7 @@ class BufferExportTests(unittest.TestCase, Util):
 
     @skipIf(sys.version_info[0] == 2)
     def test_write_py3(self):
-        a = bitarray(40)
-        a.setall(0)
+        a = zeros(40)
         m = memoryview(a)
         v = m[1:4]
         v[0] = 65

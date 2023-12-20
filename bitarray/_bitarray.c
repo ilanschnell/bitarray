@@ -2120,7 +2120,7 @@ getmasked(bitarrayobject *self, bitarrayobject *mask)
 }
 
 /* Return j-th item from sequence.  The item is considered an index into
-   an array with given length, and is normalized a pythonic manner.
+   an array with given length, and is normalized pythonically.
    On failure, an exception is set and -1 is returned. */
 static Py_ssize_t
 index_from_seq(PyObject *sequence, Py_ssize_t j, Py_ssize_t length)
