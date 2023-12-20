@@ -3970,7 +3970,7 @@ class FileTests(unittest.TestCase, Util):
             self.assertEQUAL(d1[key], d2[key])
 
     # pyodide has no dbm module
-    @skipIf(pyodide or hasattr(sys, 'gettotalrefcount'))
+    @skipIf(pyodide)
     def test_shelve(self):
         d1 = shelve.open(self.tmpfname)
         stored = []
