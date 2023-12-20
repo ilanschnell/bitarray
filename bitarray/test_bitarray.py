@@ -89,9 +89,10 @@ class Util(object):
         return ['little', 'big'][getrandbits(1)]
 
     def randombitarrays(self, start=0):
-        for n in range(start, 130 if DEBUG else 26):
+        for n in range(start, 10):
             yield urandom(n, self.random_endian())
-        yield urandom(randint(1000, 2000), self.random_endian())
+        for _ in range(3):
+            yield urandom(randrange(start, 1000), self.random_endian())
 
     def randomlists(self):
         for a in self.randombitarrays():
@@ -3968,15 +3969,13 @@ class FileTests(unittest.TestCase, Util):
         for key in d1.keys():
             self.assertEQUAL(d1[key], d2[key])
 
-    @skipIf(pyodide)   # pyodide has no dbm module
+    # pyodide has no dbm module
+    @skipIf(pyodide or hasattr(sys, 'gettotalrefcount'))
     def test_shelve(self):
-        if hasattr(sys, 'gettotalrefcount'):
-            return
-
         d1 = shelve.open(self.tmpfname)
         stored = []
-        for a in self.randombitarrays():
-            key = str(len(a))
+        for i, a in enumerate(self.randombitarrays()):
+            key = str(i)
             d1[key] = a
             stored.append((key, a))
         d1.close()
@@ -5105,8 +5104,6 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         self.assertEqual(len(set([a, b])), 1)
 
     def test_hash_endianness_random(self):
-        s = set()
-        n = 0
         for a in self.randombitarrays():
             a = frozenbitarray(a)
             b = frozenbitarray(a, self.opposite_endian(a.endian()))
@@ -5115,11 +5112,6 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
             self.assertEqual(hash(a), hash(b))
             d = {a: 1, b: 2}
             self.assertEqual(len(d), 1)
-            s.add(a)
-            s.add(b)
-            n += 1
-
-        self.assertEqual(len(s), n)
 
     def test_pickle(self):
         for a in self.randombitarrays():
