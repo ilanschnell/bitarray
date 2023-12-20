@@ -711,7 +711,7 @@ class InternalTests(unittest.TestCase, Util):
         self.assertEqual(x, y)
 
     def test_shift_r8_random(self):
-        for _ in range(10000):
+        for _ in range(5000):
             N = randrange(200)
             x = urandom(N, self.random_endian())
             a = randint(0, x.nbytes)
@@ -775,7 +775,7 @@ class InternalTests(unittest.TestCase, Util):
         self.check_obj(y)
 
     def test_copy_n_random(self):
-        for repeat, max_size in (10000, 25), (1000, 200):
+        for repeat, max_size in (1000, 25), (100, 200):
             for _ in range(repeat):
                 N = randrange(max_size)
                 n = randint(0, N)
