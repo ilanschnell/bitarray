@@ -21,7 +21,7 @@ def pprint(a: Any, stream: BinaryIO = ...,
 
 def make_endian(a: bitarray, endian: str) -> bitarray: ...
 def rindex(a: bitarray,
-           value: int = ...,
+           sub_bitarray: Union[bitarray, int] = ...,
            start: int = ...,
            stop: int = ...) -> int: ...
 

@@ -2,6 +2,7 @@
 -------------------
   * avoid buffer being unnecessarily initialized with 0s in several
     functions of the `bitarray.util` module
+  * improve testing
 
 
 2023-12-17   2.9.0:
