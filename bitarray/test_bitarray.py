@@ -80,7 +80,6 @@ def urandom(n, endian=None):
 
 WHITESPACE = ' \n\r\t\v'
 
-tests = []  # type: list
 
 class Util(object):
 

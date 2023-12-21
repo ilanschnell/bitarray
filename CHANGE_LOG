@@ -2,6 +2,7 @@
 -------------------
   * avoid buffer being unnecessarily initialized with 0s in several
     functions of the `bitarray.util` module
+  * fix `.count()` type hint in pyi-file
   * improve testing
 
 
