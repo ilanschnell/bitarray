@@ -26,12 +26,19 @@ it = a.itersearch(1)
 print([next(it) for _ in range(20)])
 
 # There are 5,761,455 primes up to 100 million
-print('there are %d primes up to %d' % (a.count(), N))
+x = a.count()
+print('there are %d primes up to %d' % (x, N))
+assert x == 5_761_455 or N != 100_000_000
 
 # The number of twin primes up to 100 million is 440,312
-print('number of twin primes up to %d is %d' %
-      (N, sum(1 for _ in a.itersearch(bitarray('101')))))
+# we need to add 1 as .count() only counts non-overlapping sub_bitarrays
+# and (3, 5) as well as (5, 7) are both twin primes
+x = a.count(bitarray('101')) + 1
+print('number of twin primes up to %d is %d' % (N, x))
+assert x == 440_312 or N != 100_000_000
 
 # The 1 millionth prime number is 15,485,863
 m = 1_000_000
-print('the %dth prime is %d' % (m, count_n(a, m) - 1))
+x = count_n(a, m) - 1
+print('the %dth prime is %d' % (m, x))
+assert x == 15_485_863
