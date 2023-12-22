@@ -18,11 +18,23 @@
 
 #define Py_ssize_t  ssize_t
 
-#if (defined(__clang__) || defined(__GNUC__))
-#define IS_GNUC  1
+static inline uint64_t
+builtin_bswap64(uint64_t word)
+{
+#if (defined(__clang__) ||                                                 \
+      (defined(__GNUC__)                                                   \
+        && ((__GNUC__ >= 5) || (__GNUC__ == 4) && (__GNUC_MINOR__ >= 3))))
+    /* __builtin_bswap64() is available since GCC 4.3. */
+#  define HAVE_BUILTIN_BSWAP64  1
+    return __builtin_bswap64(word);
+#elif defined(_MSC_VER)
+#  define HAVE_BUILTIN_BSWAP64  1
+    return _byteswap_uint64(word);
 #else
-#define IS_GNUC  0
+#  define HAVE_BUILTIN_BSWAP64  0
+    abort()
 #endif
+}
 
 /* machine byte-order */
 #define PY_LITTLE_ENDIAN  1
@@ -48,7 +60,7 @@ shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
 {
     Py_ssize_t w = 0;
 
-#if IS_GNUC || PY_LITTLE_ENDIAN   /* use shift word */
+#if HAVE_BUILTIN_BSWAP64 || PY_LITTLE_ENDIAN   /* use shift word */
     w = n / 8;                    /* number of words used for shifting */
     n %= 8;                       /* number of remaining bytes */
 #endif
@@ -60,10 +72,10 @@ shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
     }
     while (w--) {                 /* shift in word-range(0, w) */
         uint64_t *p = ((uint64_t *) buff) + w;
-#if IS_GNUC && PY_BIG_ENDIAN
-        *p = __builtin_bswap64(*p);
+#if HAVE_BUILTIN_BSWAP64 && PY_BIG_ENDIAN
+        *p = builtin_bswap64(*p);
         *p <<= k;
-        *p = __builtin_bswap64(*p);
+        *p = builtin_bswap64(*p);
 #else
         *p <<= k;
 #endif
@@ -77,7 +89,7 @@ shift_r8be(unsigned char *buff, Py_ssize_t n, int k)
 {
     Py_ssize_t w = 0;
 
-#if IS_GNUC || PY_BIG_ENDIAN      /* use shift word */
+#if HAVE_BUILTIN_BSWAP64 || PY_BIG_ENDIAN      /* use shift word */
     w = n / 8;                    /* number of words used for shifting */
     n %= 8;                       /* number of remaining bytes */
 #endif
@@ -89,10 +101,10 @@ shift_r8be(unsigned char *buff, Py_ssize_t n, int k)
     }
     while (w--) {                 /* shift in word-range(0, w) */
         uint64_t *p = ((uint64_t *) buff) + w;
-#if IS_GNUC && PY_LITTLE_ENDIAN
-        *p = __builtin_bswap64(*p);
+#if HAVE_BUILTIN_BSWAP64 && PY_LITTLE_ENDIAN
+        *p = builtin_bswap64(*p);
         *p >>= k;
-        *p = __builtin_bswap64(*p);
+        *p = builtin_bswap64(*p);
 #else
         *p >>= k;
 #endif
