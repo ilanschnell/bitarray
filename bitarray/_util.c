@@ -24,6 +24,7 @@ ensure_bitarray(PyObject *obj)
     t = PyObject_IsInstance(obj, bitarray_type_obj);
     if (t < 0)
         return -1;
+
     if (t == 0) {
         PyErr_Format(PyExc_TypeError, "bitarray expected, not '%s'",
                      Py_TYPE(obj)->tp_name);

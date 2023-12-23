@@ -1,6 +1,14 @@
 Change log
 ==========
 
+**2.9.1** (2023-12-23):
+
+* avoid buffer being unnecessarily initialized with 0s in several
+  functions of the ``bitarray.util`` module
+* fix ``.count()`` type hint in pyi-file
+* improve testing
+
+
 **2.9.0** (2023-12-17):
 
 * deprecate support for Python 2 - Python 2.7 support will be removed
