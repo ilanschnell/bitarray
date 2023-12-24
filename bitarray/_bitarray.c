@@ -1059,9 +1059,8 @@ PyDoc_STRVAR(clear_doc,
 Remove all items from the bitarray.");
 
 
-/* Set the readonly member to 0 or 1 depending on whether self in an
-   instance of frozenbitarray.  Return PyObject of self.
-   On error, return NULL and set an exception. */
+/* Set readonly member to 1 if self is an instance of frozenbitarray.
+   Return PyObject of self.  On error, set exception and return NULL. */
 static PyObject *
 freeze_if_frozen(bitarrayobject *self)
 {
