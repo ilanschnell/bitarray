@@ -523,6 +523,24 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     return cnt;
 }
 
+/* return number of 1 bits in self[start:stop:step] */
+static Py_ssize_t
+count_slice(bitarrayobject *self,
+            Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
+{
+    Py_ssize_t cnt = 0, i;
+
+    assert(step > 0);
+
+    if (step == 1)
+        cnt = count(self, start, stop);
+    else
+        for (i = start; i < stop; i += step)
+            cnt += getbit(self, i);
+
+    return cnt;
+}
+
 /* return first/rightmost occurrence of vi in self[a:b], -1 when not found */
 static Py_ssize_t
 find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
@@ -1088,23 +1106,6 @@ PyDoc_STRVAR(copy_doc,
 \n\
 Return a copy of the bitarray.");
 
-
-static Py_ssize_t
-count_slice(bitarrayobject *self,
-            Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
-{
-    Py_ssize_t cnt = 0, i;
-
-    assert(step > 0);
-
-    if (step == 1)
-        cnt = count(self, start, stop);
-    else
-        for (i = start; i < stop; i += step)
-            cnt += getbit(self, i);
-
-    return cnt;
-}
 
 static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
