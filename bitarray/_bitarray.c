@@ -493,7 +493,7 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     if (n >= 64) {
         Py_ssize_t p = BYTES(a), w;  /* first full byte  */
         p += to_aligned((void *) (self->ob_item + p));  /* align pointer */
-        w = ((b / 8 - p) / 8);       /* number of (full) words to count */
+        w = (b / 8 - p) / 8;         /* number of (full) words to count */
 
         assert(8 * p - a < 64 && b - (8 * (p + 8 * w)) < 64 && w >= 0);
 
@@ -528,17 +528,16 @@ static Py_ssize_t
 count_slice(bitarrayobject *self,
             Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 {
-    Py_ssize_t cnt = 0, i;
-
-    assert(step > 0);
-
-    if (step == 1)
-        cnt = count(self, start, stop);
-    else
+    if (step == 1) {
+        return count(self, start, stop);
+    }
+    else {
+        Py_ssize_t cnt = 0, i;
+        assert(step > 0);
         for (i = start; i < stop; i += step)
             cnt += getbit(self, i);
-
-    return cnt;
+        return cnt;
+    }
 }
 
 /* return first/rightmost occurrence of vi in self[a:b], -1 when not found */
@@ -1624,7 +1623,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         nbytes = PY_SSIZE_T_MAX;
 
     while (nread < nbytes) {
-        PyObject *ret;         /* return object from frombytes call */
+        PyObject *ret;   /* return object from bitarray_frombytes() */
         Py_ssize_t nblock = Py_MIN(nbytes - nread, BLOCKSIZE);
         int not_enough_bytes;
 
@@ -1636,7 +1635,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
             PyErr_SetString(PyExc_TypeError, "read() didn't return bytes");
             return NULL;
         }
-        not_enough_bytes = (PyBytes_GET_SIZE(bytes) < nblock);
+        not_enough_bytes = PyBytes_GET_SIZE(bytes) < nblock;
         nread += PyBytes_GET_SIZE(bytes);
         assert(nread >= 0 && nread <= nbytes);
 
@@ -1644,7 +1643,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         Py_DECREF(bytes);
         if (ret == NULL)
             return NULL;
-        Py_DECREF(ret);  /* drop frombytes result */
+        Py_DECREF(ret);  /* drop bitarray_frombytes() result (None) */
 
         if (not_enough_bytes) {
             if (nbytes == PY_SSIZE_T_MAX)  /* read till EOF */
