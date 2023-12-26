@@ -159,7 +159,7 @@ zlw(bitarrayobject *self)       /* zlw = zeroed last word */
     uint64_t res = 0;
 
     assert(nw + nr == nbits / 8 && nw + nr <= Py_SIZE(self));
-    memcpy((char *) &res, self->ob_item + nw, nr);
+    memcpy((char *) &res, self->ob_item + nw, (size_t) nr);
     if (nbits % 8)
         *(((char *) &res) + nr) = zlc(self);
 
