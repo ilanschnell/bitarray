@@ -652,7 +652,8 @@ find_sub(bitarrayobject *self, bitarrayobject *sub,
          Py_ssize_t start, Py_ssize_t stop, int right)
 {
     const Py_ssize_t sbits = sub->nbits;
-    Py_ssize_t i, k, step = right ? -1 : 1;
+    const Py_ssize_t step = right ? -1 : 1;
+    Py_ssize_t i, k;
 
     stop -= sbits - 1;
     i = right ? stop - 1 : start;
@@ -2081,7 +2082,7 @@ getslice(bitarrayobject *self, PyObject *slice)
 }
 
 static int
-check_mask_length(bitarrayobject *self, bitarrayobject *mask)
+ensure_mask_size(bitarrayobject *self, bitarrayobject *mask)
 {
     if (self->nbits != mask->nbits) {
         PyErr_Format(PyExc_IndexError, "bitarray length is %zd, but "
@@ -2098,7 +2099,7 @@ getmasked(bitarrayobject *self, bitarrayobject *mask)
     bitarrayobject *res;
     Py_ssize_t i, j, n;
 
-    if (check_mask_length(self, mask) < 0)
+    if (ensure_mask_size(self, mask) < 0)
         return NULL;
 
     n = count(mask, 0, mask->nbits);
@@ -2335,9 +2336,8 @@ assign_slice(bitarrayobject *self, PyObject *slice, PyObject *value)
     if (PyIndex_Check(value))
         return setslice_bool(self, slice, value);
 
-    PyErr_Format(PyExc_TypeError,
-                 "bitarray or int expected for slice assignment, not '%s'",
-                 Py_TYPE(value)->tp_name);
+    PyErr_Format(PyExc_TypeError, "bitarray or int expected for slice "
+                 "assignment, not '%s'", Py_TYPE(value)->tp_name);
     return -1;
 }
 
@@ -2361,7 +2361,7 @@ delmask(bitarrayobject *self, bitarrayobject *mask)
 static int
 assign_mask(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
 {
-    if (check_mask_length(self, mask) < 0)
+    if (ensure_mask_size(self, mask) < 0)
         return -1;
 
     if (value == NULL)
@@ -2375,13 +2375,12 @@ assign_mask(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
 
     if (PyIndex_Check(value)) {
         PyErr_SetString(PyExc_NotImplementedError, "mask assignment to "
-                        "Booleans not implemented - use bitwise operations");
+                        "bool not implemented - use bitwise operations");
         return -1;
     }
 
-    PyErr_Format(PyExc_TypeError,
-                 "bitarray or int expected for mask assignment, not '%s'",
-                 Py_TYPE(value)->tp_name);
+    PyErr_Format(PyExc_TypeError, "bitarray or int expected for mask "
+                 "assignment, not '%s'", Py_TYPE(value)->tp_name);
     return -1;
 }
 
@@ -3633,24 +3632,24 @@ static PyMethodDef bitarray_methods[] = {
 
 /* ------------------------ bitarray initialization -------------------- */
 
-/* Given a string, return an integer representing the endianness.
+/* Given string s, return an integer representing the endianness.
    If the string is invalid, set exception and return -1. */
 static int
-endian_from_string(const char *string)
+endian_from_string(const char *s)
 {
     assert(default_endian == ENDIAN_LITTLE || default_endian == ENDIAN_BIG);
 
-    if (string == NULL)
+    if (s == NULL)
         return default_endian;
 
-    if (strcmp(string, "little") == 0)
+    if (strcmp(s, "little") == 0)
         return ENDIAN_LITTLE;
 
-    if (strcmp(string, "big") == 0)
+    if (strcmp(s, "big") == 0)
         return ENDIAN_BIG;
 
     PyErr_Format(PyExc_ValueError, "bit-endianness must be either "
-                                   "'little' or 'big', not '%s'", string);
+                                   "'little' or 'big', not '%s'", s);
     return -1;
 }
 
