@@ -545,7 +545,7 @@ static Py_ssize_t
 find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
 {
     const Py_ssize_t n = b - a;
-    Py_ssize_t res, i, step;
+    Py_ssize_t res, i;
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
@@ -583,9 +583,8 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
             return find_bit(self, vi, 64 * wb, b, 0);
         }
     }
-
     /* For the same reason as above, we cannot check for n >= 8 here. */
-    if (n > 8) {
+    else if (n > 8) {
         const Py_ssize_t byte_a = BYTES(a);  /* byte-range(byte_a, byte_b) */
         const Py_ssize_t byte_b = b / 8;
         const char *buff = self->ob_item;
@@ -614,15 +613,15 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
             return find_bit(self, vi, 8 * byte_b, b, 0);
         }
     }
+    else {
+        const Py_ssize_t step = right ? -1 : 1;
 
-    i = right ? b - 1 : a;
-    step = right ? -1 : 1;
-    while (a <= i && i < b) {
-        if (getbit(self, i) == vi)
-            return i;
-        i += step;
+        for (i = right ? b - 1 : a; a <= i && i < b; i += step)
+            if (getbit(self, i) == vi)
+                return i;
+
+        return -1;
     }
-    return -1;
 }
 
 /* Given sub_bitarray, return:
