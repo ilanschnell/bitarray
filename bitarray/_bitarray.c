@@ -3229,20 +3229,13 @@ static PyTypeObject DecodeTree_Type = {
 static binode *
 get_tree(PyObject *obj)
 {
-    binode *tree;
+    if (DecodeTree_Check(obj))
+        return ((decodetreeobject *) obj)->tree;
 
-    if (DecodeTree_Check(obj)) {
-        tree = ((decodetreeobject *) obj)->tree;
-    }
-    else {
-        if (check_codedict(obj) < 0)
-            return NULL;
+    if (check_codedict(obj) < 0)
+        return NULL;
 
-        tree = binode_make_tree(obj);
-        if (tree == NULL)
-            return NULL;
-    }
-    return tree;
+    return binode_make_tree(obj);
 }
 
 static PyObject *
