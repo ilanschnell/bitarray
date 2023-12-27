@@ -3056,8 +3056,7 @@ static PyObject *
 decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     binode *tree;
-    PyObject *codedict;
-    decodetreeobject *obj;
+    PyObject *codedict, *obj;
 
     if (!PyArg_ParseTuple(args, "O:decodetree", &codedict))
         return NULL;
@@ -3069,14 +3068,14 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (tree == NULL)
         return NULL;
 
-    obj = (decodetreeobject *) type->tp_alloc(type, 0);
+    obj = type->tp_alloc(type, 0);
     if (obj == NULL) {
         binode_delete(tree);
         return NULL;
     }
-    obj->tree = tree;
+    ((decodetreeobject *) obj)->tree = tree;
 
-    return (PyObject *) obj;
+    return obj;
 }
 
 static PyObject *
