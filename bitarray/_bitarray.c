@@ -1727,7 +1727,7 @@ bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
         return NULL;
 
     res = PyBytes_FromStringAndSize(NULL, self->nbits);
-    if (res  == NULL)
+    if (res == NULL)
         return NULL;
 
     str = PyBytes_AsString(res);
@@ -2799,8 +2799,7 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
     if (check_codedict(codedict) < 0)
         return NULL;
 
-    iter = PyObject_GetIter(iterable);
-    if (iter == NULL)
+    if ((iter = PyObject_GetIter(iterable)) == NULL)
         return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
                             Py_TYPE(iterable)->tp_name);
 
@@ -3084,8 +3083,7 @@ decodetree_todict(decodetreeobject *self)
     PyObject *dict;
     bitarrayobject *prefix;
 
-    dict = PyDict_New();
-    if (dict == NULL)
+    if ((dict = PyDict_New()) == NULL)
         return NULL;
 
     prefix = newbitarrayobject(&Bitarray_Type, 0, default_endian);
@@ -3460,7 +3458,7 @@ searchiter_next(searchiterobject *it)
     }
 
     pos = find_obj(it->self, it->sub, it->start, it->stop, it->right);
-    assert(pos > -2);  /* cannot happen - we called check_searcharg before */
+    assert(pos > -2);  /* cannot happen - we called value_sub() before */
     if (pos < 0)  /* no more positions -- stop iteration */
         return NULL;
 
