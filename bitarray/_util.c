@@ -581,24 +581,17 @@ hex2ba_core(bitarrayobject *a, PyObject *bytes)
 static PyObject *
 anystr_to_bytes(PyObject *obj)
 {
-    PyObject *bytes;
+    if (PyUnicode_Check(obj))
+        return PyUnicode_AsASCIIString(obj);
 
-    if (PyUnicode_Check(obj)) {
-        bytes = PyUnicode_AsASCIIString(obj);
-        if (bytes == NULL)
-            return NULL;
-    }
-    else if (PyBytes_Check(obj)) {
-        bytes = obj;
+    if (PyBytes_Check(obj)) {
+        PyObject *bytes = obj;
         Py_INCREF(bytes);
+        return bytes;
     }
-    else {
-        PyErr_Format(PyExc_TypeError, "str or bytes expected, got '%s'",
-                     Py_TYPE(obj)->tp_name);
-        return NULL;
-    }
-    assert(PyBytes_Check(bytes));
-    return bytes;
+
+    return PyErr_Format(PyExc_TypeError, "str or bytes expected, got '%s'",
+                        Py_TYPE(obj)->tp_name);
 }
 
 static PyObject *
