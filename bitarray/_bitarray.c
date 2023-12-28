@@ -837,6 +837,7 @@ extend_bytes01(bitarrayobject *self, PyObject *bytes)
         }
         setbit(self, i++, vi);
     }
+    /* if we have ignored characters we over-sized earlier */
     return resize(self, i);
 }
 
