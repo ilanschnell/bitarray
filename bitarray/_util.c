@@ -722,10 +722,9 @@ For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the\n\
 standard base 64 alphabet is used.");
 
 
-/* Translate ASCII digits from 'asciistr' into bitarray buffer.
-   Arguments to this functions are:
-   - bitarray (of length m * len(s)) whose elements are overwritten
-   - byte object s containing the ASCII digits
+/* Translate ASCII digits from str into bitarray buffer.  Arguments are:
+   - bitarray (of length m * len(str)) whose elements are overwritten
+   - string containing ASCII digits
    - bits per digit - the base length m  [1..6]
 */
 static int
@@ -756,28 +755,27 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "", "endian", NULL};
     PyObject *endian = Py_None;
-    Py_buffer asciistr;
+    Py_ssize_t strsize;
+    char *str;
     bitarrayobject *a = NULL;
     int n, m;                   /* n = 2^m */
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "is*|O:base2ba", kwlist,
-                                     &n, &asciistr, &endian))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "is#|O:base2ba", kwlist,
+                                     &n, &str, &strsize, &endian))
         return NULL;
 
     if ((m = base_to_length(n)) < 0)
         goto error;
 
-    a = new_bitarray(m * asciistr.len, endian, -1);
+    a = new_bitarray(m * strsize, endian, -1);
     if (a == NULL)
         goto error;
 
-    if (base2ba_core(a, asciistr.buf, m) < 0)
+    if (base2ba_core(a, str, m) < 0)
         goto error;
 
-    PyBuffer_Release(&asciistr);
     return (PyObject *) a;
  error:
-    PyBuffer_Release(&asciistr);
     Py_XDECREF((PyObject *) a);
     return NULL;
 }
