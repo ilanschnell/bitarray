@@ -537,14 +537,15 @@ Return a string containing the hexadecimal representation of\n\
 the bitarray (which has to be multiple of 4 in length).");
 
 
-/* Translate hexadecimal digits 'bytes' into the bitarray 'a' buffer.
+/* Translate hexadecimal digits from 'hexstr' into the bitarray 'a' buffer.
    Each digit corresponds to 4 bits in the bitarray.
    Note that the number of hexadecimal digits may be odd. */
 static int
-hex2ba_core(bitarrayobject *a, const char *str)
+hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
 {
-    const Py_ssize_t strsize = strlen(str);
+    const Py_ssize_t strsize = hexstr.len;
     const int le = IS_LE(a), be = IS_BE(a);
+    const char *str = hexstr.buf;
     Py_ssize_t i;
 
     assert(a->nbits == 4 * strsize);
@@ -573,49 +574,29 @@ hex2ba_core(bitarrayobject *a, const char *str)
     return 0;
 }
 
-/* Return new reference to bytes object from either ASCII str (unicode) or
-   bytes.  On failure, set exception and return NULL. */
-static PyObject *
-anystr_to_bytes(PyObject *obj)
-{
-    if (PyUnicode_Check(obj))
-        return PyUnicode_AsASCIIString(obj);
-
-    if (PyBytes_Check(obj)) {
-        PyObject *bytes = obj;
-        Py_INCREF(bytes);
-        return bytes;
-    }
-
-    return PyErr_Format(PyExc_TypeError, "str or bytes expected, got '%s'",
-                        Py_TYPE(obj)->tp_name);
-}
-
 static PyObject *
 hex2ba(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "endian", NULL};
-    PyObject *obj, *bytes, *endian = Py_None;
+    PyObject *endian = Py_None;
+    Py_buffer hexstr;
     bitarrayobject *a;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O:hex2ba", kwlist,
-                                     &obj, &endian))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s*|O:hex2ba", kwlist,
+                                     &hexstr, &endian))
         return NULL;
 
-    if ((bytes = anystr_to_bytes(obj)) == NULL)
-        return NULL;
-
-    a = new_bitarray(4 * PyBytes_GET_SIZE(bytes), endian, -1);
+    a = new_bitarray(4 * hexstr.len, endian, -1);
     if (a == NULL)
         goto error;
 
-    if (hex2ba_core(a, PyBytes_AS_STRING(bytes)) < 0)
+    if (hex2ba_core(a, hexstr) < 0)
         goto error;
 
-    Py_DECREF(bytes);
+    PyBuffer_Release(&hexstr);
     return (PyObject *) a;
  error:
-    Py_DECREF(bytes);
+    PyBuffer_Release(&hexstr);
     Py_XDECREF((PyObject *) a);
     return NULL;
 }
@@ -741,22 +722,22 @@ For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the\n\
 standard base 64 alphabet is used.");
 
 
-/* Translate ASCII digits 'bytes' into bitarray buffer.
+/* Translate ASCII digits from 'asciistr' into bitarray buffer.
    Arguments to this functions are:
    - bitarray (of length m * len(s)) whose elements are overwritten
    - byte object s containing the ASCII digits
    - bits per digit - the base length m  [1..6]
 */
 static int
-base2ba_core(bitarrayobject *a, const char *str, int m)
+base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
 {
-    const Py_ssize_t strsize = strlen(str);
+    const char *str = asciistr.buf;
     const int le = IS_LE(a), n = 1 << m;
     Py_ssize_t i;
 
-    assert(a->nbits == m * strsize);
+    assert(a->nbits == m * asciistr.len);
 
-    for (i = 0; i < strsize; i++) {
+    for (i = 0; i < asciistr.len; i++) {
         int j, d = digit_to_int(n, str[i]);
 
         if (d < 0) {
@@ -777,31 +758,29 @@ static PyObject *
 base2ba(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "", "endian", NULL};
-    PyObject *obj, *bytes, *endian = Py_None;
-    bitarrayobject *a;
+    PyObject *endian = Py_None;
+    Py_buffer asciistr;
+    bitarrayobject *a = NULL;
     int n, m;                   /* n = 2^m */
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iO|O:base2ba", kwlist,
-                                     &n, &obj, &endian))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "is*|O:base2ba", kwlist,
+                                     &n, &asciistr, &endian))
         return NULL;
 
     if ((m = base_to_length(n)) < 0)
-        return NULL;
+        goto error;
 
-    if ((bytes = anystr_to_bytes(obj)) == NULL)
-        return NULL;
-
-    a = new_bitarray(m * PyBytes_GET_SIZE(bytes), endian, -1);
+    a = new_bitarray(m * asciistr.len, endian, -1);
     if (a == NULL)
         goto error;
 
-    if (base2ba_core(a, PyBytes_AS_STRING(bytes), m) < 0)
+    if (base2ba_core(a, asciistr, m) < 0)
         goto error;
 
-    Py_DECREF(bytes);
+    PyBuffer_Release(&asciistr);
     return (PyObject *) a;
  error:
-    Py_DECREF(bytes);
+    PyBuffer_Release(&asciistr);
     Py_XDECREF((PyObject *) a);
     return NULL;
 }
