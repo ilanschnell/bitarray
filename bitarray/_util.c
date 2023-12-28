@@ -755,27 +755,29 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "", "endian", NULL};
     PyObject *endian = Py_None;
-    Py_ssize_t strsize;
-    char *str;
+    Py_buffer asciistr;
     bitarrayobject *a = NULL;
     int n, m;                   /* n = 2^m */
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "is#|O:base2ba", kwlist,
-                                     &n, &str, &strsize, &endian))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "is*|O:base2ba", kwlist,
+                                     &n, &asciistr, &endian))
         return NULL;
 
     if ((m = base_to_length(n)) < 0)
         goto error;
 
-    a = new_bitarray(m * strsize, endian, -1);
+    a = new_bitarray(m * asciistr.len, endian, -1);
     if (a == NULL)
         goto error;
 
-    if (base2ba_core(a, str, m) < 0)
+    if ((m == 4 && hex2ba_core(a, asciistr) < 0) ||
+            base2ba_core(a, asciistr.buf, m) < 0)
         goto error;
 
+    PyBuffer_Release(&asciistr);
     return (PyObject *) a;
  error:
+    PyBuffer_Release(&asciistr);
     Py_XDECREF((PyObject *) a);
     return NULL;
 }
@@ -785,8 +787,6 @@ PyDoc_STRVAR(base2ba_doc,
 \n\
 Bitarray of base `n` ASCII representation.\n\
 Allowed values for `n` are 2, 4, 8, 16, 32 and 64.\n\
-For `n=16` (hexadecimal), `hex2ba()` will be much faster, as `base2ba()`\n\
-does not take advantage of byte level operations.\n\
 For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the\n\
 standard base 64 alphabet is used.");
 
