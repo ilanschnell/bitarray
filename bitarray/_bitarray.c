@@ -806,13 +806,16 @@ extend_sequence(bitarrayobject *self, PyObject *sequence)
 static int
 extend_bytes01(bitarrayobject *self, PyObject *bytes)
 {
-    const Py_ssize_t original_nbits = self->nbits;
+    const Py_ssize_t nbits = self->nbits;
+    Py_ssize_t i = nbits;  /* current index */
     unsigned char c;
     char *str;
     int vi = 0;  /* silence uninitialized warning on some compilers */
 
     assert(PyBytes_Check(bytes));
     str = PyBytes_AS_STRING(bytes);
+    if (resize(self, nbits + PyBytes_GET_SIZE(bytes)) < 0)
+        return -1;
 
     while ((c = *str++)) {
         switch (c) {
@@ -829,14 +832,12 @@ extend_bytes01(bitarrayobject *self, PyObject *bytes)
             PyErr_Format(PyExc_ValueError, "expected '0' or '1' "
                          "(or whitespace, or underscore), got '%c' (0x%02x)",
                          c, c);
-            resize(self, original_nbits);  /* no bits added on error */
+            resize(self, nbits);  /* no bits added on error */
             return -1;
         }
-        if (resize(self, self->nbits + 1) < 0)
-            return -1;
-        setbit(self, self->nbits - 1, vi);
+        setbit(self, i++, vi);
     }
-    return 0;
+    return resize(self, i);
 }
 
 static int
