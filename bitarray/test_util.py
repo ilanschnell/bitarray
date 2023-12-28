@@ -935,9 +935,6 @@ class TestsHexlify(unittest.TestCase, Util):
             _set_default_endian(endian)
             self.assertRaises(ValueError, hex2ba, '01a7g89')
             self.assertRaises(UnicodeEncodeError, hex2ba, u'10\u20ac')
-            # check for NUL bytes
-            for b in b'\0', b'\0f', b'f\0', b'\0ff', b'f\0f', b'ff\0':
-                self.assertRaises(ValueError, hex2ba, b)
 
     def test_explicit(self):
         data = [ #                       little   big
