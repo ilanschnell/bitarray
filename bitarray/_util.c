@@ -541,15 +541,11 @@ the bitarray (which has to be multiple of 4 in length).");
    Each digit corresponds to 4 bits in the bitarray.
    Note that the number of hexadecimal digits may be odd. */
 static int
-hex2ba_core(bitarrayobject *a, PyObject *bytes)
+hex2ba_core(bitarrayobject *a, const char *str, Py_ssize_t strsize)
 {
-    Py_ssize_t strsize, i;
-    char *str;
+    Py_ssize_t i;
     int le = IS_LE(a), be = IS_BE(a);
 
-    assert(PyBytes_Check(bytes));
-    str = PyBytes_AS_STRING(bytes);
-    strsize = PyBytes_GET_SIZE(bytes);
     assert(a->nbits == 4 * strsize);
     assert(le + be == 1 && str[strsize] == 0);
 
@@ -612,7 +608,7 @@ hex2ba(PyObject *module, PyObject *args, PyObject *kwds)
     if (a == NULL)
         goto error;
 
-    if (hex2ba_core(a, bytes) < 0)  /* do translation here */
+    if (hex2ba_core(a, PyBytes_AS_STRING(bytes), PyBytes_GET_SIZE(bytes)) < 0)
         goto error;
 
     Py_DECREF(bytes);
@@ -751,15 +747,11 @@ standard base 64 alphabet is used.");
    - bits per digit - the base length m  [1..6]
 */
 static int
-base2ba_core(bitarrayobject *a, PyObject *bytes, int m)
+base2ba_core(bitarrayobject *a, const char *str, Py_ssize_t strsize, int m)
 {
-    Py_ssize_t strsize, i;
-    char *str;
+    Py_ssize_t i;
     int le = IS_LE(a), n = 1 << m;
 
-    assert(PyBytes_Check(bytes));
-    str = PyBytes_AS_STRING(bytes);
-    strsize = PyBytes_GET_SIZE(bytes);
     assert(a->nbits == m * strsize);
 
     for (i = 0; i < strsize; i++) {
@@ -801,7 +793,8 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
     if (a == NULL)
         goto error;
 
-    if (base2ba_core(a, bytes, m) < 0)  /* do translation here */
+    if (base2ba_core(a, PyBytes_AS_STRING(bytes),
+                     PyBytes_GET_SIZE(bytes), m) < 0)
         goto error;
 
     Py_DECREF(bytes);
