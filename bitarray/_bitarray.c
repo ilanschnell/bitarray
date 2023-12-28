@@ -808,13 +808,13 @@ extend_bytes01(bitarrayobject *self, PyObject *bytes)
 {
     const Py_ssize_t original_nbits = self->nbits;
     unsigned char c;
-    char *data;
+    char *str;
     int vi = 0;  /* silence uninitialized warning on some compilers */
 
     assert(PyBytes_Check(bytes));
-    data = PyBytes_AS_STRING(bytes);
+    str = PyBytes_AS_STRING(bytes);
 
-    while ((c = *data++)) {
+    while ((c = *str++)) {
         switch (c) {
         case '0': vi = 0; break;
         case '1': vi = 1; break;
@@ -3622,24 +3622,24 @@ static PyMethodDef bitarray_methods[] = {
 
 /* ------------------------ bitarray initialization -------------------- */
 
-/* Given string s, return an integer representing the endianness.
+/* Given string 'str', return an integer representing the endianness.
    If the string is invalid, set exception and return -1. */
 static int
-endian_from_string(const char *s)
+endian_from_string(const char *str)
 {
     assert(default_endian == ENDIAN_LITTLE || default_endian == ENDIAN_BIG);
 
-    if (s == NULL)
+    if (str == NULL)
         return default_endian;
 
-    if (strcmp(s, "little") == 0)
+    if (strcmp(str, "little") == 0)
         return ENDIAN_LITTLE;
 
-    if (strcmp(s, "big") == 0)
+    if (strcmp(str, "big") == 0)
         return ENDIAN_BIG;
 
     PyErr_Format(PyExc_ValueError, "bit-endianness must be either "
-                                   "'little' or 'big', not '%s'", s);
+                                   "'little' or 'big', not '%s'", str);
     return -1;
 }
 
@@ -3722,7 +3722,7 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, char *endian_str)
 {
     bitarrayobject *res;
     Py_ssize_t nbytes;
-    char *data;
+    char *str;
     unsigned char head;
     int endian;
 
@@ -3736,8 +3736,8 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, char *endian_str)
     assert(PyBytes_Check(bytes));
     nbytes = PyBytes_GET_SIZE(bytes);
     assert(nbytes > 0);            /* verified in bitarray_new() */
-    data = PyBytes_AS_STRING(bytes);
-    head = *data;
+    str = PyBytes_AS_STRING(bytes);
+    head = *str;
     assert((head & 0xf8) == 0);    /* verified in bitarray_new() */
 
     if (nbytes == 1 && head)
@@ -3749,7 +3749,7 @@ newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, char *endian_str)
                             endian);
     if (res == NULL)
         return NULL;
-    memcpy(res->ob_item, data + 1, (size_t) nbytes - 1);
+    memcpy(res->ob_item, str + 1, (size_t) nbytes - 1);
     return (PyObject *) res;
 }
 
