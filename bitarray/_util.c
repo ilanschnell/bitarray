@@ -543,9 +543,9 @@ the bitarray (which has to be multiple of 4 in length).");
 static int
 hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
 {
+    const char *str = hexstr.buf;
     const Py_ssize_t strsize = hexstr.len;
     const int le = IS_LE(a), be = IS_BE(a);
-    const char *str = hexstr.buf;
     Py_ssize_t i;
 
     assert(a->nbits == 4 * strsize);
@@ -729,26 +729,23 @@ standard base 64 alphabet is used.");
    - bits per digit - the base length m  [1..6]
 */
 static int
-base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
+base2ba_core(bitarrayobject *a, const char *str, int m)
 {
-    const char *str = asciistr.buf;
     const int le = IS_LE(a), n = 1 << m;
-    Py_ssize_t i;
+    unsigned char c;
+    Py_ssize_t i = 0;
 
-    assert(a->nbits == m * asciistr.len);
-
-    for (i = 0; i < asciistr.len; i++) {
-        int j, d = digit_to_int(n, str[i]);
+    while ((c = *str++)) {
+        int j, d = digit_to_int(n, c);
 
         if (d < 0) {
-            unsigned char c = str[i];
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
                          "base %d, got '%c' (0x%02x)", n, c, c);
             return -1;
         }
         for (j = 0; j < m; j++) {
             int k = le ? j : (m - j - 1);
-            setbit(a, i * m + k, d & (1 << j));
+            setbit(a, i++, d & (1 << k));
         }
     }
     return 0;
@@ -774,7 +771,7 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
     if (a == NULL)
         goto error;
 
-    if (base2ba_core(a, asciistr, m) < 0)
+    if (base2ba_core(a, asciistr.buf, m) < 0)
         goto error;
 
     PyBuffer_Release(&asciistr);
