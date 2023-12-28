@@ -1,5 +1,7 @@
 20XX-XX-XX   2.9.2:
 -------------------
+  * optimize `util.hex2ba()` and util.base2ba()` by avoiding unnecessary
+    copies
 
 
 2023-12-23   2.9.1:
