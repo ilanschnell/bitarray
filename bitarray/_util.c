@@ -492,6 +492,7 @@ hex_to_int(char c)
     return -1;
 }
 
+/* create hexadecimal string from bitarray */
 static char *
 ba2hex_core(bitarrayobject *a)
 {
@@ -501,6 +502,8 @@ ba2hex_core(bitarrayobject *a)
     size_t strsize = 2 * Py_SIZE(a), i;
     char *str;
     int le = IS_LE(a), be = IS_BE(a);
+
+    assert(le + be == 1 && a->nbits % 4 == 0);
 
     str = (char *) PyMem_Malloc(strsize);
     if (str == NULL)
@@ -673,6 +676,7 @@ base_to_length(int n)
     return -1;
 }
 
+/* create ASCII string from bitarray and base length */
 static char *
 ba2base_core(bitarrayobject *a, int m)
 {
@@ -680,6 +684,8 @@ ba2base_core(bitarrayobject *a, int m)
     const char *alphabet;
     size_t strsize = a->nbits / m, i;
     char *str;
+
+    assert(a->nbits % m == 0);
 
     switch (m) {
     case 5: alphabet = base32_alphabet; break;
@@ -741,11 +747,7 @@ For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the\n\
 standard base 64 alphabet is used.");
 
 
-/* Translate ASCII digits from str into bitarray buffer.  Arguments are:
-   - bitarray (of length m * len(str)) whose elements are overwritten
-   - string containing ASCII digits
-   - bits per digit - the base length m  [1..6]
-*/
+/* translate ASCII digits (with base length m) into bitarray buffer */
 static int
 base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
 {
