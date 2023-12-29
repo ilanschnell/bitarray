@@ -503,7 +503,7 @@ ba2hex_core(bitarrayobject *a)
     char *str;
     int le = IS_LE(a), be = IS_BE(a);
 
-    assert(le + be == 1 && a->nbits % 4 == 0);
+    assert(a->nbits % 4 == 0 && (size_t) a->nbits / 4 <= strsize);
 
     str = (char *) PyMem_Malloc(strsize);
     if (str == NULL)
@@ -514,7 +514,6 @@ ba2hex_core(bitarrayobject *a)
         str[i + le] = hexdigits[c >> 4];
         str[i + be] = hexdigits[0x0f & c];
     }
-    assert((size_t) a->nbits / 4 <= strsize);
     return str;
 }
 
@@ -676,7 +675,7 @@ base_to_length(int n)
     return -1;
 }
 
-/* create ASCII string from bitarray and base length */
+/* create ASCII string from bitarray and base length m */
 static char *
 ba2base_core(bitarrayobject *a, int m)
 {
@@ -685,7 +684,7 @@ ba2base_core(bitarrayobject *a, int m)
     size_t strsize = a->nbits / m, i;
     char *str;
 
-    assert(a->nbits % m == 0);
+    assert(1 <= m && m <= 6 && a->nbits % m == 0);
 
     switch (m) {
     case 5: alphabet = base32_alphabet; break;

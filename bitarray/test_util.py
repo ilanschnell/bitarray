@@ -934,7 +934,7 @@ class TestsHexlify(unittest.TestCase, Util):
         for endian in 'little', 'big':
             _set_default_endian(endian)
             self.assertRaises(ValueError, hex2ba, '01a7g89')
-            self.assertRaises(ValueError, hex2ba, u'10\u20ac')
+            self.assertRaises(ValueError, hex2ba, u'0\u20ac')
             # check for NUL bytes
             for b in b'\0', b'\0f', b'f\0', b'\0ff', b'f\0f', b'ff\0':
                 self.assertRaises(ValueError, hex2ba, b)
@@ -1042,7 +1042,8 @@ class TestsBase(unittest.TestCase, Util):
         self.assertRaises(TypeError, base2ba, 32, None)
 
         for i in 2, 4, 8, 16, 32, 64:
-            self.assertRaises(ValueError, base2ba, i, u'10\u20ac')
+            self.assertRaises(ValueError, base2ba, i, 60 * u'\u20ac')
+            self.assertRaises(ValueError, base2ba, i, 60 * b'\0')
 
     def test_binary(self):
         a = base2ba(2, '1011')
