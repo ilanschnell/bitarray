@@ -1133,7 +1133,9 @@ class TestsBase(unittest.TestCase, Util):
             n = 1 << m
             for length in range(0, 100, m):
                 a = urandom(length, 'little')
-                self.assertEQUAL(base2ba(n, ba2base(n, a), 'little'), a)
+                s = ba2base(n, a)
+                self.assertIsInstance(s, str)
+                self.assertEQUAL(base2ba(n, s, 'little'), a)
                 b = bitarray(a, 'big')
                 self.assertEQUAL(base2ba(n, ba2base(n, b), 'big'), b)
 
