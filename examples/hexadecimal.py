@@ -1,7 +1,7 @@
 from time import perf_counter
 
 from bitarray import bitarray, get_default_endian
-from bitarray.util import urandom, ba2hex, hex2ba, ba2base, base2ba
+from bitarray.util import urandom, ba2hex, hex2ba
 
 
 # ----- conversion using prefix codes
@@ -27,14 +27,6 @@ def prefix_hex2ba(s, endian=None):
     a.encode(CODEDICT[a.endian()], s)
     return a
 
-# ----- conversion using ba2base (element based utility function)
-
-def ba2_base16(a):
-    return ba2base(16, a)
-
-def base16_2ba(s, endian=None):
-    return base2ba(16, s, endian)
-
 # ----- test
 
 def test_round(f, g, n, endian):
@@ -51,10 +43,10 @@ def test_round(f, g, n, endian):
     assert b == a
 
 if __name__ == '__main__':
-    n = 1000 * 1000 + 4
+    n = 100_000_004
     for endian in 'little', 'big':
         print('%s-endian:' % endian)
-        for f in ba2hex, ba2_base16, prefix_ba2hex:
-            for g in hex2ba, base16_2ba, prefix_hex2ba:
+        for f in ba2hex, prefix_ba2hex:
+            for g in hex2ba, prefix_hex2ba:
                 test_round(f, g, n, endian)
-            print()
+        print()
