@@ -496,25 +496,25 @@ hex_to_int(char c)
 static char *
 ba2hex_core(bitarrayobject *a)
 {
-    /* We want strsize to be even, such that we can transform the entire
-       bitarray buffer at once.  Hence, we don't use a->nbits / 4 here.
-       However, when terminating the string we use a->nbits / 4 */
-    Py_ssize_t strsize = 2 * Py_SIZE(a), i;
+    const int le = IS_LE(a), be = IS_BE(a);
+    const size_t strsize = a->nbits / 4;
+    Py_ssize_t i;
     char *str;
-    int le = IS_LE(a), be = IS_BE(a);
 
-    assert(a->nbits % 4 == 0 && strsize - 1 <= a->nbits / 4);
+    assert(a->nbits % 4 == 0);
+    assert(2 * (Py_SIZE(a) - 1) + 1 <= (Py_ssize_t) strsize);
 
-    str = (char *) PyMem_Malloc((size_t) a->nbits / 4 + 1);
+    str = (char *) PyMem_Malloc(strsize + 1);
     if (str == NULL)
         return NULL;
 
-    for (i = 0; i < strsize; i += 2) {
+    /* translate entire bitarray buffer, even when we have 4 padbits */
+    for (i = 0; i < 2 * Py_SIZE(a); i += 2) {
         unsigned char c = a->ob_item[i / 2];
         str[i + le] = hexdigits[c >> 4];
         str[i + be] = hexdigits[0x0f & c];
     }
-    str[a->nbits / 4] = 0;  /* NUL terminate string */
+    str[strsize] = 0;  /* terminate string */
     return str;
 }
 
@@ -681,8 +681,9 @@ static char *
 ba2base_core(bitarrayobject *a, int m)
 {
     const int le = IS_LE(a);
+    const size_t strsize = a->nbits / m;
     const char *alphabet;
-    size_t strsize = a->nbits / m, i;
+    size_t i;
     char *str;
 
     assert(1 <= m && m <= 6 && a->nbits % m == 0);
@@ -706,7 +707,7 @@ ba2base_core(bitarrayobject *a, int m)
         }
         str[i] = alphabet[x];
     }
-    str[strsize] = 0;
+    str[strsize] = 0;  /* terminate string */
     return str;
 }
 
