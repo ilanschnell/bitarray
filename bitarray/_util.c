@@ -492,14 +492,35 @@ hex_to_int(char c)
     return -1;
 }
 
+static char *
+ba2hex_core(bitarrayobject *a)
+{
+    /* We want strsize to be even, such that we can transform the entire
+       bitarray buffer at once.  Hence, we don't use a->nbits / 4 here, as
+       is could make strsize odd. */
+    size_t strsize = 2 * Py_SIZE(a), i;
+    char *str;
+    int le = IS_LE(a), be = IS_BE(a);
+
+    str = (char *) PyMem_Malloc(strsize);
+    if (str == NULL)
+        return NULL;
+
+    for (i = 0; i < strsize; i += 2) {
+        unsigned char c = a->ob_item[i / 2];
+        str[i + le] = hexdigits[c >> 4];
+        str[i + be] = hexdigits[0x0f & c];
+    }
+    assert((size_t) a->nbits / 4 <= strsize);
+    return str;
+}
+
 static PyObject *
 ba2hex(PyObject *module, PyObject *obj)
 {
     PyObject *result;
     bitarrayobject *a;
-    size_t i, strsize;
     char *str;
-    int le, be;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
@@ -509,22 +530,9 @@ ba2hex(PyObject *module, PyObject *obj)
         return PyErr_Format(PyExc_ValueError, "bitarray length %zd not "
                             "multiple of 4", a->nbits);
 
-    /* We want strsize to be even, such that we can transform the entire
-       bitarray buffer at once.  Hence, we don't use a->nbits / 4 here, as
-       is could make strsize odd. */
-    strsize = 2 * Py_SIZE(obj);
-    str = (char *) PyMem_Malloc(strsize);
-    if (str == NULL)
+    if ((str = ba2hex_core(a)) == NULL)
         return PyErr_NoMemory();
 
-    le = IS_LE(a);
-    be = IS_BE(a);
-    for (i = 0; i < strsize; i += 2) {
-        unsigned char c = a->ob_item[i / 2];
-        str[i + le] = hexdigits[c >> 4];
-        str[i + be] = hexdigits[0x0f & c];
-    }
-    assert((size_t) a->nbits / 4 <= strsize);
     result = Py_BuildValue("s#", str, a->nbits / 4);
     PyMem_Free((void *) str);
     return result;
@@ -665,37 +673,24 @@ base_to_length(int n)
     return -1;
 }
 
-static PyObject *
-ba2base(PyObject *module, PyObject *args)
+static char *
+ba2base_core(bitarrayobject *a, int m)
 {
+    const int le = IS_LE(a);
     const char *alphabet;
-    bitarrayobject *a;
-    PyObject *result;
-    size_t i, strsize;
+    size_t strsize = a->nbits / m, i;
     char *str;
-    int n, m, le;
 
-    if (!PyArg_ParseTuple(args, "iO!:ba2base", &n,
-                          bitarray_type_obj, (PyObject *) &a))
-        return NULL;
-    if ((m = base_to_length(n)) < 0)
-        return NULL;
-
-    switch (n) {
-    case 32: alphabet = base32_alphabet; break;
-    case 64: alphabet = base64_alphabet; break;
+    switch (m) {
+    case 5: alphabet = base32_alphabet; break;
+    case 6: alphabet = base64_alphabet; break;
     default: alphabet = hexdigits;
     }
 
-    if (a->nbits % m)
-        return PyErr_Format(PyExc_ValueError,
-                            "bitarray length must be multiple of %d", m);
+    str = (char *) PyMem_Malloc(strsize);
+    if (str == NULL)
+        return NULL;
 
-    strsize = a->nbits / m;
-    if ((str = (char *) PyMem_Malloc(strsize)) == NULL)
-        return PyErr_NoMemory();
-
-    le = IS_LE(a);
     for (i = 0; i < strsize; i++) {
         int j, x = 0;
 
@@ -705,7 +700,33 @@ ba2base(PyObject *module, PyObject *args)
         }
         str[i] = alphabet[x];
     }
-    result = Py_BuildValue("s#", str, strsize);
+    return str;
+}
+
+static PyObject *
+ba2base(PyObject *module, PyObject *args)
+{
+    bitarrayobject *a;
+    PyObject *result;
+    char *str;
+    int n, m;
+
+    if (!PyArg_ParseTuple(args, "iO!:ba2base", &n,
+                          bitarray_type_obj, (PyObject *) &a))
+        return NULL;
+
+    if ((m = base_to_length(n)) < 0)
+        return NULL;
+
+    if (a->nbits % m)
+        return PyErr_Format(PyExc_ValueError,
+                            "bitarray length must be multiple of %d", m);
+
+    str = m == 4 ? ba2hex_core(a) : ba2base_core(a, m);
+    if (str == NULL)
+        return PyErr_NoMemory();
+
+    result = Py_BuildValue("s#", str, a->nbits / m);
     PyMem_Free((void *) str);
     return result;
 }
@@ -716,8 +737,6 @@ PyDoc_STRVAR(ba2base_doc,
 Return a string containing the base `n` ASCII representation of\n\
 the bitarray.  Allowed values for `n` are 2, 4, 8, 16, 32 and 64.\n\
 The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.\n\
-For `n=16` (hexadecimal), `ba2hex()` will be much faster, as `ba2base()`\n\
-does not take advantage of byte level operations.\n\
 For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the\n\
 standard base 64 alphabet is used.");
 
@@ -728,13 +747,14 @@ standard base 64 alphabet is used.");
    - bits per digit - the base length m  [1..6]
 */
 static int
-base2ba_core(bitarrayobject *a, const char *str, int m)
+base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
 {
+    const char *str = asciistr.buf;
     const int le = IS_LE(a), n = 1 << m;
-    unsigned char c;
-    Py_ssize_t i = 0;
+    Py_ssize_t i = 0, j;
 
-    while ((c = *str++)) {
+    for (j = 0; j < asciistr.len; j++) {
+        unsigned char c = str[j];
         int j, d = digit_to_int(n, c);
 
         if (d < 0) {
@@ -757,7 +777,7 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
     PyObject *endian = Py_None;
     Py_buffer asciistr;
     bitarrayobject *a = NULL;
-    int n, m;                   /* n = 2^m */
+    int m, n, t;                   /* n = 2^m */
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "is*|O:base2ba", kwlist,
                                      &n, &asciistr, &endian))
@@ -770,8 +790,8 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
     if (a == NULL)
         goto error;
 
-    if ((m == 4 && hex2ba_core(a, asciistr) < 0) ||
-            base2ba_core(a, asciistr.buf, m) < 0)
+    t = m == 4 ? hex2ba_core(a, asciistr) : base2ba_core(a, asciistr, m);
+    if (t < 0)
         goto error;
 
     PyBuffer_Release(&asciistr);

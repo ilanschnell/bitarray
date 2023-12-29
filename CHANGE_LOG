@@ -1,8 +1,9 @@
 20XX-XX-XX   2.9.2:
 -------------------
   * optimize initialization from strings by not constantly resizing buffer
-  * optimize `util.hex2ba()` and util.base2ba()` by avoiding unnecessary
+  * optimize `util.hex2ba()` and `util.base2ba()` by avoiding unnecessary
     copies
+  * optimize `util.base2ba()` and `util.ba2base()` for `n=16` (hexadecimal)
 
 
 2023-12-23   2.9.1:
