@@ -497,15 +497,15 @@ static char *
 ba2hex_core(bitarrayobject *a)
 {
     /* We want strsize to be even, such that we can transform the entire
-       bitarray buffer at once.  Hence, we don't use a->nbits / 4 here, as
-       is could make strsize odd. */
+       bitarray buffer at once.  Hence, we don't use a->nbits / 4 here.
+       However, when terminating the string we use a->nbits / 4 */
     size_t strsize = 2 * Py_SIZE(a), i;
     char *str;
     int le = IS_LE(a), be = IS_BE(a);
 
     assert(a->nbits % 4 == 0 && (size_t) a->nbits / 4 <= strsize);
 
-    str = (char *) PyMem_Malloc(strsize);
+    str = (char *) PyMem_Malloc(strsize + 1);
     if (str == NULL)
         return NULL;
 
@@ -514,6 +514,7 @@ ba2hex_core(bitarrayobject *a)
         str[i + le] = hexdigits[c >> 4];
         str[i + be] = hexdigits[0x0f & c];
     }
+    str[a->nbits / 4] = 0;  /* NUL terminate string */
     return str;
 }
 
@@ -535,7 +536,7 @@ ba2hex(PyObject *module, PyObject *obj)
     if ((str = ba2hex_core(a)) == NULL)
         return PyErr_NoMemory();
 
-    result = Py_BuildValue("s#", str, a->nbits / 4);
+    result = Py_BuildValue("s", str);
     PyMem_Free((void *) str);
     return result;
 }
@@ -622,7 +623,7 @@ Bitarray of hexadecimal representation.  hexstr may contain any number\n\
 /* RFC 4648 Base32 alphabet */
 static const char base32_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
-/* standard base 64 alphabet */
+/* standard base 64 alphabet - also described on RFC 4648 */
 static const char base64_alphabet[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
@@ -692,7 +693,7 @@ ba2base_core(bitarrayobject *a, int m)
     default: alphabet = hexdigits;
     }
 
-    str = (char *) PyMem_Malloc(strsize);
+    str = (char *) PyMem_Malloc(strsize + 1);
     if (str == NULL)
         return NULL;
 
@@ -705,6 +706,7 @@ ba2base_core(bitarrayobject *a, int m)
         }
         str[i] = alphabet[x];
     }
+    str[strsize] = 0;
     return str;
 }
 
@@ -731,7 +733,7 @@ ba2base(PyObject *module, PyObject *args)
     if (str == NULL)
         return PyErr_NoMemory();
 
-    result = Py_BuildValue("s#", str, a->nbits / m);
+    result = Py_BuildValue("s", str);
     PyMem_Free((void *) str);
     return result;
 }
@@ -753,6 +755,8 @@ base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
     const char *str = asciistr.buf;
     const int le = IS_LE(a), n = 1 << m;
     Py_ssize_t i = 0, j;
+
+    assert(a->nbits == asciistr.len * m && 1 <= m && m <= 6);
 
     for (j = 0; j < asciistr.len; j++) {
         unsigned char c = str[j];
