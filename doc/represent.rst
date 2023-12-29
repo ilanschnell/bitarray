@@ -119,8 +119,8 @@ The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively:
 
     >>> from bitarray.util import ba2base, base2ba
     >>> a = bitarray('001010011010100000111011100110110001111100101110000100010010')
-    >>> len(a) == 60    # divisible by 2, 3, 4, 5 and 6
-    True
+    >>> len(a)          # divisible by 2, 3, 4, 5 and 6
+    60
     >>> ba2base(2, a)   # binary
     '001010011010100000111011100110110001111100101110000100010010'
     >>> ba2base(4, a)   # quaternary
