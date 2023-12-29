@@ -499,13 +499,13 @@ ba2hex_core(bitarrayobject *a)
     /* We want strsize to be even, such that we can transform the entire
        bitarray buffer at once.  Hence, we don't use a->nbits / 4 here.
        However, when terminating the string we use a->nbits / 4 */
-    size_t strsize = 2 * Py_SIZE(a), i;
+    Py_ssize_t strsize = 2 * Py_SIZE(a), i;
     char *str;
     int le = IS_LE(a), be = IS_BE(a);
 
-    assert(a->nbits % 4 == 0 && (size_t) a->nbits / 4 <= strsize);
+    assert(a->nbits % 4 == 0 && strsize - 1 <= a->nbits / 4);
 
-    str = (char *) PyMem_Malloc(strsize + 1);
+    str = (char *) PyMem_Malloc((size_t) a->nbits / 4 + 1);
     if (str == NULL)
         return NULL;
 
