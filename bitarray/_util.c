@@ -42,15 +42,9 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian, int c)
     PyObject *args;             /* args for bitarray() */
     bitarrayobject *res;
 
-    if ((args = PyTuple_New(3)) == NULL)  /* arguments for bitarray() */
+    args = Py_BuildValue("nOO", nbits, endian, Py_Ellipsis);
+    if (args == NULL)
         return NULL;
-
-    /* PyTuple_SET_ITEM "steals" a reference to item */
-    PyTuple_SET_ITEM(args, 0, PyLong_FromSsize_t(nbits));
-    Py_INCREF(endian);
-    PyTuple_SET_ITEM(args, 1, endian);
-    Py_INCREF(Py_Ellipsis);
-    PyTuple_SET_ITEM(args, 2, Py_Ellipsis);
 
     /* equivalent to: res = bitarray(nbits, endian, Ellipsis) */
     res = (bitarrayobject *) PyObject_CallObject(bitarray_type_obj, args);
