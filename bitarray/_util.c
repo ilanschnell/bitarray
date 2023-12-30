@@ -563,7 +563,7 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
         int y = hex_to_int(str[i + be]);
 
         if (x < 0 || y < 0) {
-#define CIC(j, z)                                             \
+#define ITNC(z, j)                                            \
             if (j == strsize)  /* ignore terminating NUL */   \
                 z = 0;                                        \
             if (z < 0) {  /* invalid character */             \
@@ -573,9 +573,9 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
                              "got '%c' (0x%02x)", c, c);      \
                 return -1;                                    \
             }
-            CIC(i + le, x);
-            CIC(i + be, y);
-#undef CIC
+            ITNC(x, i + le);
+            ITNC(y, i + be);
+#undef ITNC
         }
         assert(0 <= x && x < 16 && 0 <= y && y < 16);
         a->ob_item[i / 2] = x << 4 | y;
