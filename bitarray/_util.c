@@ -563,17 +563,19 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
         int y = hex_to_int(str[i + be]);
 
         if (x < 0 || y < 0) {
-            /* ignore terminating NUL - happends when strsize is odd */
-            if (i + le == strsize) /* str[i+le] is NUL */
-                x = 0;
-            if (i + be == strsize) /* str[i+be] is NUL */
-                y = 0;
-            /* there is an invalid byte - or (non-terminating) NUL */
-            if (x < 0 || y < 0) {
-                PyErr_SetString(PyExc_ValueError,
-                                "non-hexadecimal digit found");
-                return -1;
+#define CIC(j, z)                                             \
+            if (j == strsize)  /* ignore terminating NUL */   \
+                z = 0;                                        \
+            if (z < 0) {  /* invalid character */             \
+                unsigned char c = str[j];                     \
+                PyErr_Format(PyExc_ValueError,                \
+                             "non-hexadecimal digit found, "  \
+                             "got '%c' (0x%02x)", c, c);      \
+                return -1;                                    \
             }
+            CIC(i + le, x);
+            CIC(i + be, y);
+#undef CIC
         }
         assert(0 <= x && x < 16 && 0 <= y && y < 16);
         a->ob_item[i / 2] = x << 4 | y;

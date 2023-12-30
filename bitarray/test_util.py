@@ -935,9 +935,17 @@ class TestsHexlify(unittest.TestCase, Util):
             _set_default_endian(endian)
             self.assertRaises(ValueError, hex2ba, '01a7g89')
             self.assertRaises(ValueError, hex2ba, u'0\u20ac')
+
+            for s in 'g', 'ag', 'aag' 'aaaga', 'ag':
+                msg = "non-hexadecimal digit found, got 'g' (0x67)"
+                self.assertRaisesMessage(ValueError, msg, hex2ba, s, endian)
+
             # check for NUL bytes
             for b in b'\0', b'\0f', b'f\0', b'\0ff', b'f\0f', b'ff\0':
-                self.assertRaises(ValueError, hex2ba, b)
+                msg = "non-hexadecimal digit found, got '\0' (0x00)"
+                if sys.version_info[0] == 2:
+                    msg = msg.replace("0x00", "0x0")
+                self.assertRaisesMessage(ValueError, msg, hex2ba, b, endian)
 
     def test_explicit(self):
         data = [ #                       little   big
@@ -1024,7 +1032,12 @@ class TestsBase(unittest.TestCase, Util):
     def test_invalid_characters(self):
         for n, s in ((2, '2'), (4, '4'), (8, '8'), (16, 'g'), (32, '8'),
                      (32, '1'), (32, 'a'), (64, '-'), (64, '_')):
-            self.assertRaises(ValueError, base2ba, n, s)
+            if n == 16:
+                msg = "non-hexadecimal digit found, got 'g' (0x67)"
+            else:
+                msg = ("invalid digit found for base %d, "
+                       "got '%s' (0x%02x)" % (n, s, ord(s)))
+            self.assertRaisesMessage(ValueError, msg, base2ba, n, s)
 
     def test_invalid_args(self):
         a = bitarray()
