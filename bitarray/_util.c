@@ -501,8 +501,7 @@ ba2hex_core(bitarrayobject *a)
     Py_ssize_t i;
     char *str;
 
-    assert(a->nbits % 4 == 0);
-    assert(2 * (Py_SIZE(a) - 1) + 1 <= (Py_ssize_t) strsize);
+    assert(a->nbits % 4 == 0 && 2 * Py_SIZE(a) - 1 <= (Py_ssize_t) strsize);
 
     str = (char *) PyMem_Malloc(strsize + 1);
     if (str == NULL)
@@ -536,7 +535,11 @@ ba2hex(PyObject *module, PyObject *obj)
     if ((str = ba2hex_core(a)) == NULL)
         return PyErr_NoMemory();
 
+#if IS_PY3K
+    result = PyUnicode_FromString(str);
+#else
     result = Py_BuildValue("s", str);
+#endif
     PyMem_Free((void *) str);
     return result;
 }
@@ -559,8 +562,7 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
     const int le = IS_LE(a), be = IS_BE(a);
     Py_ssize_t i;
 
-    assert(a->nbits == 4 * strsize);
-    assert(le + be == 1 && str[strsize] == 0);
+    assert(a->nbits == 4 * strsize && str[strsize] == 0);
 
     for (i = 0; i < strsize; i += 2) {
         int x = hex_to_int(str[i + le]);
@@ -734,7 +736,11 @@ ba2base(PyObject *module, PyObject *args)
     if (str == NULL)
         return PyErr_NoMemory();
 
+#if IS_PY3K
+    result = PyUnicode_FromString(str);
+#else
     result = Py_BuildValue("s", str);
+#endif
     PyMem_Free((void *) str);
     return result;
 }
