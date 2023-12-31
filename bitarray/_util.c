@@ -559,24 +559,24 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
     assert(a->nbits == 4 * strsize && str[strsize] == 0);
 
     for (i = 0; i < strsize; i += 2) {
-        int x = hex_to_int(str[i + le]);
-        int y = hex_to_int(str[i + be]);
+        int x, y;
 
-        if (x < 0 || y < 0) {
-#define ITNC(z, j)                                            \
-            if (j == strsize)  /* ignore terminating NUL */   \
+#define GETHEX(z, j)                                          \
+        z = hex_to_int(str[j]);                               \
+        if (z < 0) {                                          \
+            if (j == strsize) { /* ignore terminating NUL */  \
                 z = 0;                                        \
-            if (z < 0) {  /* invalid character */             \
+            } else { /* invalid character */                  \
                 unsigned char c = str[j];                     \
                 PyErr_Format(PyExc_ValueError,                \
                              "non-hexadecimal digit found, "  \
                              "got '%c' (0x%02x)", c, c);      \
                 return -1;                                    \
-            }
-            ITNC(x, i + le);
-            ITNC(y, i + be);
-#undef ITNC
+            }                                                 \
         }
+        GETHEX(x, i + le);
+        GETHEX(y, i + be);
+#undef GETHEX
         assert(0 <= x && x < 16 && 0 <= y && y < 16);
         a->ob_item[i / 2] = x << 4 | y;
     }
