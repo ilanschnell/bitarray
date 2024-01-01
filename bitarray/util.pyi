@@ -1,4 +1,4 @@
-# Copyright (c) 2021 - 2023, Ilan Schnell; All Rights Reserved
+# Copyright (c) 2021 - 2024, Ilan Schnell; All Rights Reserved
 
 from collections import Counter
 from collections.abc import Iterable, Iterator, Sequence

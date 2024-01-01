@@ -1,6 +1,14 @@
 Change log
 ==========
 
+**2.9.2** (2024-01-01):
+
+* optimize initialization from strings by not constantly resizing buffer
+* optimize ``util.hex2ba()`` and ``util.base2ba()`` by avoiding unnecessary
+  copies
+* optimize ``util.base2ba()`` and ``util.ba2base()`` for ``n=16`` (hexadecimal)
+
+
 **2.9.1** (2023-12-23):
 
 * avoid buffer being unnecessarily initialized with 0s in several

@@ -78,7 +78,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 2.9.1
+    bitarray version: 2.9.2
     sys.version: 3.11.0 (main, Oct 25 2022) [Clang 14.0.4]
     sys.prefix: /Users/ilan/Mini3/envs/py311
     pointer size: 64 bit
@@ -427,7 +427,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 2.9.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.9.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -865,8 +865,6 @@ This sub-module was added in version 1.2.
    Return a string containing the base ``n`` ASCII representation of
    the bitarray.  Allowed values for ``n`` are 2, 4, 8, 16, 32 and 64.
    The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.
-   For ``n=16`` (hexadecimal), ``ba2hex()`` will be much faster, as ``ba2base()``
-   does not take advantage of byte level operations.
    For ``n=32`` the RFC 4648 Base32 alphabet is used, and for ``n=64`` the
    standard base 64 alphabet is used.
 
@@ -878,8 +876,6 @@ This sub-module was added in version 1.2.
 ``base2ba(n, asciistr, /, endian=None)`` -> bitarray
    Bitarray of base ``n`` ASCII representation.
    Allowed values for ``n`` are 2, 4, 8, 16, 32 and 64.
-   For ``n=16`` (hexadecimal), ``hex2ba()`` will be much faster, as ``base2ba()``
-   does not take advantage of byte level operations.
    For ``n=32`` the RFC 4648 Base32 alphabet is used, and for ``n=64`` the
    standard base 64 alphabet is used.
 

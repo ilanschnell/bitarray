@@ -1,4 +1,4 @@
-20XX-XX-XX   2.9.2:
+2024-01-01   2.9.2:
 -------------------
   * optimize initialization from strings by not constantly resizing buffer
   * optimize `util.hex2ba()` and `util.base2ba()` by avoiding unnecessary
