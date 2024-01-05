@@ -552,33 +552,23 @@ static int
 hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
 {
     const char *str = hexstr.buf;
-    const Py_ssize_t strsize = hexstr.len;
-    const int le = IS_LE(a), be = IS_BE(a);
+    const int be = IS_BE(a);
     Py_ssize_t i;
 
-    assert(a->nbits == 4 * strsize && str[strsize] == 0);
+    assert(a->nbits == 4 * hexstr.len);
 
-    for (i = 0; i < strsize; i += 2) {
-        int x, y;
+    memset(a->ob_item, 0, Py_SIZE(a));
+    for (i = 0; i < hexstr.len; i++) {
+        unsigned char c = str[i];
+        int x = hex_to_int(c);
 
-#define GETHEX(z, j)                                          \
-        z = hex_to_int(str[j]);                               \
-        if (z < 0) {                                          \
-            if (j == strsize) { /* ignore terminating NUL */  \
-                z = 0;                                        \
-            } else { /* invalid character */                  \
-                unsigned char c = str[j];                     \
-                PyErr_Format(PyExc_ValueError,                \
-                             "non-hexadecimal digit found, "  \
-                             "got '%c' (0x%02x)", c, c);      \
-                return -1;                                    \
-            }                                                 \
+        if (x < 0) {
+            PyErr_Format(PyExc_ValueError, "non-hexadecimal digit found, "
+                         "got '%c' (0x%02x)", c, c);
+            return -1;
         }
-        GETHEX(x, i + le);
-        GETHEX(y, i + be);
-#undef GETHEX
-        assert(0 <= x && x < 16 && 0 <= y && y < 16);
-        a->ob_item[i / 2] = x << 4 | y;
+        assert(0 <= x && x < 16);
+        a->ob_item[i / 2] |= ((i % 2) ^ be) ? x << 4 : x;
     }
     return 0;
 }
