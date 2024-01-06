@@ -492,8 +492,8 @@ ba2hex_core(bitarrayobject *a)
 {
     const int le = IS_LE(a), be = IS_BE(a);
     const size_t strsize = a->nbits / 4;
+    char *buff = a->ob_item, *str;
     Py_ssize_t i;
-    char *str;
 
     assert(a->nbits % 4 == 0 && 2 * Py_SIZE(a) - 1 <= (Py_ssize_t) strsize);
 
@@ -503,7 +503,7 @@ ba2hex_core(bitarrayobject *a)
 
     /* translate entire bitarray buffer, even when we have 4 padbits */
     for (i = 0; i < 2 * Py_SIZE(a); i += 2) {
-        unsigned char c = a->ob_item[i / 2];
+        unsigned char c = *buff++;
         str[i + le] = hexdigits[c >> 4];
         str[i + be] = hexdigits[0x0f & c];
     }
@@ -568,7 +568,7 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
             return -1;
         }
         assert(0 <= x && x < 16);
-        a->ob_item[i / 2] |= ((i % 2) ^ be) ? x << 4 : x;
+        a->ob_item[i / 2] |= x << 4 * ((i + be) % 2);
     }
     return 0;
 }
