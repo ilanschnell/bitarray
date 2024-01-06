@@ -493,7 +493,7 @@ ba2hex_core(bitarrayobject *a)
     const int le = IS_LE(a), be = IS_BE(a);
     const size_t strsize = a->nbits / 4;
     char *buff = a->ob_item, *str;
-    Py_ssize_t i;
+    size_t i;
 
     assert(a->nbits % 4 == 0 && 2 * Py_SIZE(a) - 1 <= (Py_ssize_t) strsize);
 
@@ -502,7 +502,7 @@ ba2hex_core(bitarrayobject *a)
         return NULL;
 
     /* translate entire bitarray buffer, even when we have 4 padbits */
-    for (i = 0; i < 2 * Py_SIZE(a); i += 2) {
+    for (i = 0; i < strsize; i += 2) {
         unsigned char c = *buff++;
         str[i + le] = hexdigits[c >> 4];
         str[i + be] = hexdigits[0x0f & c];
@@ -687,11 +687,11 @@ ba2base_core(bitarrayobject *a, int m)
         return NULL;
 
     for (i = 0; i < strsize; i++) {
-        int j, x = 0;
+        int k, x = 0;
 
-        for (j = 0; j < m; j++) {
-            int k = le ? j : (m - j - 1);
-            x |= getbit(a, i * m + k) << j;
+        for (k = 0; k < m; k++) {
+            int q = le ? k : (m - k - 1);
+            x |= getbit(a, i * m + q) << k;
         }
         str[i] = alphabet[x];
     }
@@ -753,16 +753,16 @@ base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
 
     for (j = 0; j < asciistr.len; j++) {
         unsigned char c = str[j];
-        int j, d = digit_to_int(n, c);
+        int k, d = digit_to_int(n, c);
 
         if (d < 0) {
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
                          "base %d, got '%c' (0x%02x)", n, c, c);
             return -1;
         }
-        for (j = 0; j < m; j++) {
-            int k = le ? j : (m - j - 1);
-            setbit(a, i++, d & (1 << k));
+        for (k = 0; k < m; k++) {
+            int q = le ? k : (m - k - 1);
+            setbit(a, i++, d & (1 << q));
         }
     }
     return 0;
