@@ -671,7 +671,7 @@ ba2base_core(bitarrayobject *a, int m)
     const int le = IS_LE(a);
     const size_t strsize = a->nbits / m;
     const char *alphabet;
-    size_t i;
+    size_t i = 0, j;
     char *str;
 
     assert(1 <= m && m <= 6 && a->nbits % m == 0);
@@ -686,14 +686,14 @@ ba2base_core(bitarrayobject *a, int m)
     if (str == NULL)
         return NULL;
 
-    for (i = 0; i < strsize; i++) {
+    for (j = 0; j < strsize; j++) {
         int k, x = 0;
 
         for (k = 0; k < m; k++) {
             int q = le ? k : (m - k - 1);
-            x |= getbit(a, i * m + q) << k;
+            x |= getbit(a, i++) << q;
         }
-        str[i] = alphabet[x];
+        str[j] = alphabet[x];
     }
     str[strsize] = 0;  /* terminate string */
     return str;
@@ -753,16 +753,16 @@ base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
 
     for (j = 0; j < asciistr.len; j++) {
         unsigned char c = str[j];
-        int k, d = digit_to_int(n, c);
+        int k, x = digit_to_int(n, c);
 
-        if (d < 0) {
+        if (x < 0) {
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
                          "base %d, got '%c' (0x%02x)", n, c, c);
             return -1;
         }
         for (k = 0; k < m; k++) {
             int q = le ? k : (m - k - 1);
-            setbit(a, i++, d & (1 << q));
+            setbit(a, i++, x & (1 << q));
         }
     }
     return 0;
