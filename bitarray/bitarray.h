@@ -35,7 +35,6 @@
 
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K  1
-#define BYTES_SIZE_FMT  "y#"
 #else
 #define IS_PY3K  0
 /* the Py_MIN and Py_MAX macros were introduced in Python 3.3 */
@@ -45,7 +44,6 @@
     PySlice_GetIndicesEx(((PySliceObject *) slice),                      \
                          (len), (start), (stop), (step), (slicelength))
 #define PyLong_FromLong  PyInt_FromLong
-#define BYTES_SIZE_FMT  "s#"
 #endif
 
 /* --- bitarrayobject --- */

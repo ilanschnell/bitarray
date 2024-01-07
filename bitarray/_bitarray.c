@@ -1690,7 +1690,12 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
 
         assert(size >= 0 && offset + size <= nbytes);
         /* basically: f.write(memoryview(self)[offset:offset + size] */
-        ret = PyObject_CallMethod(f, "write", BYTES_SIZE_FMT,
+        ret = PyObject_CallMethod(f, "write",
+#if IS_PY3K
+                                  "y#",
+#else
+                                  "s#",
+#endif
                                   self->ob_item + offset, size);
         if (ret == NULL)
             return NULL;
