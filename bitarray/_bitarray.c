@@ -1158,7 +1158,11 @@ occurrences are counted within `[start:stop]` (`step` must be 1).");
 static PyObject *
 bitarray_endian(bitarrayobject *self)
 {
+#if IS_PY3K
+    return PyUnicode_FromString(ENDIAN_STR(self->endian));
+#else
     return Py_BuildValue("s", ENDIAN_STR(self->endian));
+#endif
 }
 
 PyDoc_STRVAR(endian_doc,
@@ -1376,7 +1380,11 @@ bitarray_repr(bitarrayobject *self)
     char *str;
 
     if (self->nbits == 0)
+#if IS_PY3K
+        return PyUnicode_FromString("bitarray()");
+#else
         return Py_BuildValue("s", "bitarray()");
+#endif
 
     strsize = self->nbits + 12;  /* 12 is the length of "bitarray('')" */
     if (strsize > PY_SSIZE_T_MAX) {
@@ -1394,7 +1402,11 @@ bitarray_repr(bitarrayobject *self)
     str[strsize - 2] = '\'';
     str[strsize - 1] = ')';     /* no terminating '\0' */
 
+#if IS_PY3K
+    result = PyUnicode_FromStringAndSize(str, strsize);
+#else
     result = Py_BuildValue("s#", str, (Py_ssize_t) strsize);
+#endif
     PyMem_Free((void *) str);
     return result;
 }
@@ -1704,7 +1716,11 @@ bitarray_to01(bitarrayobject *self)
         return PyErr_NoMemory();
 
     setstr01(self, str);
+#if IS_PY3K
+    result = PyUnicode_FromStringAndSize(str, self->nbits);
+#else
     result = Py_BuildValue("s#", str, self->nbits);
+#endif
     PyMem_Free((void *) str);
     return result;
 }
@@ -4214,7 +4230,11 @@ reconstructor(PyObject *module, PyObject *args)
 static PyObject *
 get_default_endian(PyObject *module)
 {
+#if IS_PY3K
+    return PyUnicode_FromString(ENDIAN_STR(default_endian));
+#else
     return Py_BuildValue("s", ENDIAN_STR(default_endian));
+#endif
 }
 
 PyDoc_STRVAR(get_default_endian_doc,
@@ -4379,7 +4399,12 @@ init_bitarray(void)
     Py_SET_TYPE(&SearchIter_Type, &PyType_Type);
 
     PyModule_AddObject(m, "__version__",
+#if IS_PY3K
+                       PyUnicode_FromString(BITARRAY_VERSION));
+#else
                        Py_BuildValue("s", BITARRAY_VERSION));
+#endif
+
 #if IS_PY3K
     return m;
  error:

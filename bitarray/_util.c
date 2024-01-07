@@ -495,7 +495,7 @@ ba2hex_core(bitarrayobject *a)
     char *buff = a->ob_item, *str;
     size_t i;
 
-    assert(a->nbits % 4 == 0 && 2 * Py_SIZE(a) - 1 <= (Py_ssize_t) strsize);
+    assert(a->nbits % 4 == 0);
 
     str = (char *) PyMem_Malloc(strsize + 1);
     if (str == NULL)
