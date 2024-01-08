@@ -991,7 +991,7 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
         return NULL;
     }
     if (stop > start)
-        bytereverse(self -> ob_item + start, stop - start);
+        bytereverse(self->ob_item + start, stop - start);
     Py_RETURN_NONE;
 }
 
