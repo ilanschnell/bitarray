@@ -2610,10 +2610,7 @@ bitwise_check(PyObject *a, PyObject *b, const char *ostr)
         return -1;
     }
 
-    if (ensure_eq_size_endian((bitarrayobject *) a, (bitarrayobject *) b) < 0)
-        return -1;
-
-    return 0;
+    return ensure_eq_size_endian((bitarrayobject *) a, (bitarrayobject *) b);
 }
 
 #define BITWISE_FUNC(name, inplace, ostr)              \
