@@ -640,7 +640,7 @@ value_sub(PyObject *sub)
 #undef ss
     }
 
-    PyErr_Format(PyExc_TypeError, "sub_bitarray must the bitarray or int, "
+    PyErr_Format(PyExc_TypeError, "sub_bitarray must be bitarray or int, "
                  "not '%s'", Py_TYPE(sub)->tp_name);
     return -1;
 }
