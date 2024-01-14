@@ -895,8 +895,8 @@ next_char(PyObject *iter)
     return (int) c;
 }
 
-/* write n bytes (into buffer str) representing integer i (using
-   little endian byte-order) */
+/* write n bytes (into buffer str) representing non-negative integer i,
+   using little endian byte-order */
 static void
 write_n(char *str, int n, Py_ssize_t i)
 {
@@ -910,7 +910,7 @@ write_n(char *str, int n, Py_ssize_t i)
     assert(i == 0);
 }
 
-/* read n bytes from iter and return corresponding positive integer,
+/* read n bytes from iter and return corresponding non-negative integer,
    using little endian byte-order */
 static Py_ssize_t
 read_n(int n, PyObject *iter)
@@ -932,7 +932,7 @@ read_n(int n, PyObject *iter)
     return i;
 }
 
-/* return number of bytes necessary to represent i */
+/* return number of bytes necessary to represent non-negative integer i */
 static int
 byte_length(Py_ssize_t i)
 {
