@@ -4,11 +4,6 @@ While bitarray itself still supports Python 2.7 and Python 3.5+, the examples
 usually require Python 3.
 
 
-base-n.py
-    Simple illustration of ASCII encoding bitarrays to bases
-    of 2, 4, 8, 16, 32 and 64.
-
-
 bloom.py
     Demonstrates the implementation of a "Bloom filter", see:
     http://en.wikipedia.org/wiki/Bloom_filter
