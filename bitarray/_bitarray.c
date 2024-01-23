@@ -3004,9 +3004,7 @@ binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
 
     if (nd->symbol) {
         assert(nd->child[0] == NULL && nd->child[1] == NULL);
-        if (PyDict_SetItem(dict, nd->symbol, (PyObject *) prefix) < 0)
-            return -1;
-        return 0;
+        return PyDict_SetItem(dict, nd->symbol, (PyObject *) prefix);
     }
 
     for (k = 0; k < 2; k++) {
@@ -3473,9 +3471,8 @@ searchiter_next(searchiterobject *it)
 
     /* range checks necessary in case self changed during iteration */
     assert(it->start >= 0);
-    if (it->start > nbits || it->stop < 0 || it->stop > nbits) {
+    if (it->start > nbits || it->stop < 0 || it->stop > nbits)
         return NULL;        /* stop iteration */
-    }
 
     pos = find_obj(it->self, it->sub, it->start, it->stop, it->right);
     assert(pos > -2);  /* cannot happen - we called value_sub() before */
