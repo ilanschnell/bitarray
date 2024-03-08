@@ -36,10 +36,10 @@ def test_round(f, g, n, endian):
     a = urandom(n, endian)
     t0 = perf_counter()
     s = f(a)
-    print('%s:  %6.3f ms' % (f.__name__, 1000.0 * (perf_counter() - t0)))
+    print(f'{f.__name__}:  {1000.0 * (perf_counter() - t0):6.3f} ms')
     t0 = perf_counter()
     b = g(s, endian)
-    print('%s:  %6.3f ms' % (g.__name__, 1000.0 * (perf_counter() - t0)))
+    print(f'{g.__name__}:  {1000.0 * (perf_counter() - t0):6.3f} ms')
     assert b == a
 
 if __name__ == '__main__':

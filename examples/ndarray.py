@@ -2,7 +2,6 @@
 # This example illusatrates how binary data can be efficiently be passed
 # between a bitarray object and an ndarray with dtype bool
 #
-from __future__ import print_function
 
 import bitarray
 import numpy  # type: ignore

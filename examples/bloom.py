@@ -4,7 +4,7 @@ from math import ceil, exp, log, log2
 from bitarray.util import zeros
 
 
-class BloomFilter(object):
+class BloomFilter:
     """
     Implementation of a Bloom filter.  An instance is initialized by
     it's capacity `n` and error rate `p`.  The capacity tells how many

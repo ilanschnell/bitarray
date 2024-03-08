@@ -5,7 +5,6 @@
 """
 Useful utilities for working with bitarrays.
 """
-from __future__ import absolute_import
 
 import os
 import sys
@@ -114,7 +113,7 @@ function `pprint.pprint()`.
     else:
         quotes = ""
 
-    stream.write("%s(%s" % (type_name, quotes))
+    stream.write(f"{type_name}({quotes}")
     for i, b in enumerate(__a):
         if multiline and i % epl == 0:
             stream.write('\n%s' % (indent * ' '))
@@ -299,7 +298,7 @@ and return its root node.
 """
     from heapq import heappush, heappop
 
-    class Node(object):
+    class Node:
         """
         A Node instance will either have a 'symbol' (leaf node) or
         a 'child' (a tuple with both children) attribute.

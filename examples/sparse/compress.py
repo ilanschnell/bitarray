@@ -122,7 +122,7 @@ Each bit has a probability p of being 1.
             a[randrange(n)] = 1
         return a
 
-    return bitarray((random() < p for _ in range(n)))
+    return bitarray(random() < p for _ in range(n))
 
 def test_random_array():
     n = 10_000_000
@@ -130,7 +130,7 @@ def test_random_array():
     while p < 1.0:
         a = random_array(n, p)
         cnt = a.count()
-        print("%10.7f  %10.7f  %10.7f" % (p, cnt / n, abs(p - cnt / n)))
+        print(f"{p:10.7f}  {cnt / n:10.7f}  {abs(p - cnt / n):10.7f}")
         p *= 1.4
 
 def p_range():

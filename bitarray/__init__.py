@@ -9,7 +9,6 @@ Please find a description of this package at:
 
 Author: Ilan Schnell
 """
-from __future__ import absolute_import
 
 from bitarray._bitarray import (bitarray, decodetree, _sysinfo,
                                 _bitarray_reconstructor,

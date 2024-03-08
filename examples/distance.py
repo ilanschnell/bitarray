@@ -64,13 +64,13 @@ def test(n):
         t0 = perf_counter()
         x1 = f1(a, b)
         t1 = perf_counter() - t0
-        print('%.14f  %6.3f ms  %s' % (x1, 1000.0 * t1, name))
+        print(f'{x1:.14f}  {1000.0 * t1:6.3f} ms  {name}')
 
         f2 = getattr(distance, name)  # scipy.spatial.distance function
         t0 = perf_counter()
         x2 = f2(aa, bb)
         t2 = perf_counter() - t0
-        print('%.14f  %6.3f ms  %9.2f' % (x2, 1000.0 * t2, t2 / t1))
+        print(f'{x2:.14f}  {1000.0 * t2:6.3f} ms  {t2 / t1:9.2f}')
 
         assert abs(x1 - x2) < 1E-14
 

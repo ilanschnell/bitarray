@@ -25,7 +25,7 @@ except ImportError:
 kwds = {}
 try:
     kwds['long_description'] = open('README.rst').read()
-except IOError:
+except OSError:
     pass
 
 # Read version from bitarray/bitarray.h

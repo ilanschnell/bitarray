@@ -113,7 +113,7 @@ def get_doc(name):
     lines = obj.__doc__.splitlines()
 
     if len(lines) == 1:
-        sig = '``%s`` -> %s' % (obj.__name__, GETSET[name])
+        sig = f'``{obj.__name__}`` -> {GETSET[name]}'
         return sig, lines
 
     m = sig_pat.match(lines[0])
@@ -143,7 +143,7 @@ def write_doc(fo, name):
     if link:
         title, filename = DOCS[link]
         url = BASE_URL + '/blob/master/doc/' + filename
-        fo.write("\n   See also: `%s <%s>`__\n" % (title, url))
+        fo.write(f"\n   See also: `{title} <{url}>`__\n")
 
     new_in = NEW_IN.get(name)
     if new_in:
@@ -158,7 +158,7 @@ def write_reference(fo):
 Reference
 =========
 
-bitarray version: %s -- `change log <%s>`__
+bitarray version: {} -- `change log <{}>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -169,7 +169,7 @@ Also, ``sub_bitarray`` refers to either a bitarray, or an ``item``.
 The bitarray object:
 --------------------
 
-""" % (bitarray.__version__, BASE_URL + "/blob/master/doc/changelog.rst"))
+""".format(bitarray.__version__, BASE_URL + "/blob/master/doc/changelog.rst"))
     write_doc(fo, 'bitarray')
 
     fo.write("bitarray methods:\n"
@@ -212,7 +212,7 @@ The bitarray object:
 def update_readme(path):
     ver_pat = re.compile(r'(bitarray.+?)\s(\d+\.\d+\.\d+)')
 
-    with open(path, 'r') as fi:
+    with open(path) as fi:
         data = fi.read()
 
     with StringIO() as fo:
@@ -242,10 +242,10 @@ def write_changelog(fo):
         if len(group1) >= 7:
             if len(group1) != 8:
                 print("Warning: commit hash length != 8, got", len(group1))
-            url = "%s/commit/%s" % (BASE_URL, group1)
+            url = f"{BASE_URL}/commit/{group1}"
         else:
             url = "%s/issues/%d" % (BASE_URL, int(group1))
-        return "`%s <%s>`__" % (match.group(0), url)
+        return f"`{match.group(0)} <{url}>`__"
 
     fo.write("Change log\n"
              "==========\n\n")

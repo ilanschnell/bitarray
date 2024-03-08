@@ -2,7 +2,7 @@ from bitarray import bitarray
 from bitarray.util import int2ba, ba2int, pprint
 
 
-class SmallIntArray(object):
+class SmallIntArray:
     """
     Class which allows efficiently storing an array of integers
     represented by a specified number of bits.

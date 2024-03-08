@@ -1,7 +1,6 @@
 """
 Tests for bitarray.util module
 """
-from __future__ import absolute_import
 
 import os
 import sys
@@ -193,7 +192,7 @@ class TestsPPrint(unittest.TestCase):
         try:
             with open(tmpfile, 'w') as fo:
                 pprint(a, fo)
-            with open(tmpfile, 'r') as fi:
+            with open(tmpfile) as fi:
                 b = eval(fi.read())
             self.assertEqual(a, b)
         finally:
@@ -914,7 +913,7 @@ class TestsHexlify(unittest.TestCase, Util):
     def test_hex2ba(self):
         _set_default_endian('big')
         self.assertEqual(hex2ba(''), bitarray())
-        for c in 'e', 'E', b'e', b'E', u'e', u'E':
+        for c in 'e', 'E', b'e', b'E', 'e', 'E':
             a = hex2ba(c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
@@ -934,7 +933,7 @@ class TestsHexlify(unittest.TestCase, Util):
         for endian in 'little', 'big':
             _set_default_endian(endian)
             self.assertRaises(ValueError, hex2ba, '01a7g89')
-            self.assertRaises(ValueError, hex2ba, u'0\u20ac')
+            self.assertRaises(ValueError, hex2ba, '0\u20ac')
 
             for s in 'g', 'ag', 'aag' 'aaaga', 'ag':
                 msg = "non-hexadecimal digit found, got 'g' (0x67)"
@@ -996,7 +995,7 @@ class TestsBase(unittest.TestCase, Util):
 
     def test_base2ba(self):
         _set_default_endian('big')
-        for c in 'e', 'E', b'e', b'E', u'e', u'E':
+        for c in 'e', 'E', b'e', b'E', 'e', 'E':
             a = base2ba(16, c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
@@ -1055,7 +1054,7 @@ class TestsBase(unittest.TestCase, Util):
         self.assertRaises(TypeError, base2ba, 32, None)
 
         for i in 2, 4, 8, 16, 32, 64:
-            self.assertRaises(ValueError, base2ba, i, 60 * u'\u20ac')
+            self.assertRaises(ValueError, base2ba, i, 60 * '\u20ac')
             self.assertRaises(ValueError, base2ba, i, 60 * b'\0')
 
     def test_binary(self):
@@ -1919,7 +1918,7 @@ class TestsSerialization(unittest.TestCase, Util):
             self.assertEqual(serialize(a), b'\x14\x70')
 
     def test_deserialize_args(self):
-        for x in 0, 1, False, True, None, u'', u'01', 0.0, [0, 1]:
+        for x in 0, 1, False, True, None, '', '01', 0.0, [0, 1]:
             self.assertRaises(TypeError, deserialize, x)
         # no arguments
         self.assertRaises(TypeError, deserialize)

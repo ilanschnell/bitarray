@@ -65,7 +65,7 @@ class SparseBitarray(Common):
             del self.ones[i:j]
             if value == 0:
                 return
-            self.ones.extend((range(start, stop)))
+            self.ones.extend(range(start, stop))
             self.ones.sort()
 
         elif isinstance(key, int):
