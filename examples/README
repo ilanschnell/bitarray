@@ -46,16 +46,16 @@ lexico.py
     lexicographical permutations of bitarrays.
 
 
-mapped-file.py
-    Demonstrates how to memory map a file into a bitarray.
-
-
 mandel.py
     Generates a .ppm image file of size 4000 x 3000 of the Mandelbrot set.
     Despite its size, the output image file has only a size of slightly
     over 1.5 Million bytes (uncompressed) because each pixel is stored in
     one bit.
     Requires: numba
+
+
+mmapped-file.py
+    Demonstrates how to memory map a file into a bitarray.
 
 
 ndarray.py
