@@ -12,6 +12,7 @@ import platform
 import unittest
 import shutil
 import tempfile
+from io import BytesIO
 from random import getrandbits, randrange, randint, shuffle
 
 # imports needed inside tests
@@ -24,15 +25,8 @@ import shelve
 import weakref
 
 
-is_py3k = bool(sys.version_info[0] == 3)
 pyodide = bool(platform.machine() == 'wasm32')
 is_pypy = bool(platform.python_implementation() == 'PyPy')
-
-if is_py3k:
-    from io import BytesIO
-else:
-    from cStringIO import StringIO as BytesIO  # type: ignore
-    range = xrange  # type: ignore
 
 
 from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
@@ -189,9 +183,7 @@ class Util(object):
 
     def assertIsType(self, a, b):
         self.assertEqual(type(a).__name__, b)
-        self.assertEqual(
-            repr(type(a)), "<%s 'bitarray.%s'>" %
-            ('class' if is_py3k or b == 'frozenbitarray' else 'type', b))
+        self.assertEqual(repr(type(a)), "<%s 'bitarray.%s'>" % ('class', b))
 
     def assertBitEqual(self, x, y):
         for z in x, y:
@@ -386,10 +378,6 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(len(a), n)
             self.check_obj(a)
 
-        if not is_py3k:
-            a = bitarray(long(29))
-            self.assertEqual(len(a), 29)
-
         self.assertRaises(ValueError, bitarray, -1)
         self.assertRaises(ValueError, bitarray, -924)
 
@@ -398,10 +386,6 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray(lst)
         self.assertEqual(a, bitarray('0101'))
         self.check_obj(a)
-
-        if not is_py3k:
-            a = bitarray([long(1), long(0)])
-            self.assertEqual(a, bitarray('10'))
 
         self.assertRaises(ValueError, bitarray, [0, 1, 2])
         self.assertRaises(TypeError, bitarray, [0, 1, None])
@@ -505,12 +489,8 @@ class CreateObjectTests(unittest.TestCase, Util):
     def test_rawbytes_invalid(self):
         msg3 = ("cannot extend bitarray with 'bytes', "
                 "use .pack() or .frombytes() instead")
-        if is_py3k:
-            # no bytes will cause TypeError
-            self.assertRaisesMessage(TypeError, msg3, bitarray, b'')
-        else:
-            # no bytes are interpreted as an empty string on Python 2
-            self.assertEqual(bitarray(b''), bitarray())
+        # no bytes will cause TypeError
+        self.assertRaisesMessage(TypeError, msg3, bitarray, b'')
 
         for blob in b'\x00', b'\x07\x80':
             self.assertRaisesMessage(ValueError,
@@ -523,25 +503,14 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertRaises(ValueError, bitarray, b, 'big')
             # Python 2: PyErr_Format() seems to handle "0x%02x"
             # incorrectly.  E.g. instead of "0x01", I get "0x1"
-            if is_py3k:
-                self.assertRaisesMessage(ValueError,
+            self.assertRaisesMessage(ValueError,
                             "invalid pickle header byte: 0x%02x" % b[0],
                             bitarray, b, 'big')
 
         for i in range(8, 256):
             b = bytes(bytearray([i]))
-            if is_py3k:
-                # we don't allow bitarrays being created from bytes
-                self.assertRaises(TypeError, bitarray, b)
-                continue
-
-            # on Python 2
-            if b in WHITESPACE + '_01':
-                # character is valid
-                self.assertEqual(len(bitarray(b)), 1 if b in '01' else 0)
-            else:
-                # character is invalid
-                self.assertRaises(ValueError, bitarray, b)
+            # we don't allow bitarrays being created from bytes
+            self.assertRaises(TypeError, bitarray, b)
 
     def test_bitarray_simple(self):
         for n in range(10):
@@ -601,19 +570,13 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(len(a), 0)
             self.assertEQUAL(a, bitarray())
 
-        if is_py3k:
-            self.assertRaises(TypeError, bitarray, b'')
-        else:
-            self.assertEqual(bitarray(b''), bitarray())
+        self.assertRaises(TypeError, bitarray, b'')
 
     def test_wrong_args(self):
         # wrong types
         for x in False, True, Ellipsis, slice(0), 0.0, 0 + 0j:
             self.assertRaises(TypeError, bitarray, x)
-        if is_py3k:
-            self.assertRaises(TypeError, bitarray, b'10')
-        else:
-            self.assertEQUAL(bitarray(b'10'), bitarray('10'))
+        self.assertRaises(TypeError, bitarray, b'10')
         # wrong values
         for x in -1, 'A':
             self.assertRaises(ValueError, bitarray, x)
@@ -1514,8 +1477,7 @@ class SequenceIndexTests(unittest.TestCase, Util):
             self.assertEqual(a[b], bitarray('100'))
         lst[2] += len(a)
         self.assertEqual(a[bytearray(lst)], bitarray('100'))
-        if is_py3k:
-            self.assertEqual(a[bytes(lst)], bitarray('100'))
+        self.assertEqual(a[bytes(lst)], bitarray('100'))
 
         self.assertRaises(TypeError, a.__getitem__, [2, "B"])
         self.assertRaises(TypeError, a.__getitem__, [2, 1.2])
@@ -2131,9 +2093,6 @@ class SpecialMethodTests(unittest.TestCase, Util):
         self.assertTrue(b == a)
         self.assertFalse(a != b)
         self.assertFalse(b != a)
-        if not is_py3k:
-            self.assertEqual(0, cmp(a, b))
-            self.assertEqual(0, cmp(b, a))
 
     def assertReallyNotEqual(self, a, b):
         # assertNotEqual first, because it will have a good message if the
@@ -2144,9 +2103,6 @@ class SpecialMethodTests(unittest.TestCase, Util):
         self.assertFalse(b == a)
         self.assertTrue(a != b)
         self.assertTrue(b != a)
-        if not is_py3k:
-            self.assertNotEqual(0, cmp(a, b))
-            self.assertNotEqual(0, cmp(b, a))
 
     def test_equality(self):
         self.assertReallyEqual(bitarray(''), bitarray(''))
@@ -2171,7 +2127,7 @@ class SpecialMethodTests(unittest.TestCase, Util):
         a = bitarray()
         size = sys.getsizeof(a)
         self.assertEqual(size, a.__sizeof__())
-        self.assertIsInstance(size, int if is_py3k else (int, long))
+        self.assertIsInstance(size, int)
         self.assertTrue(size < 200)
         a = bitarray(8000)
         self.assertTrue(sys.getsizeof(a) > 1000)
@@ -2194,10 +2150,7 @@ class SequenceMethodsTests(unittest.TestCase, Util):
         self.assertEQUAL(a, bitarray('001'))
 
         self.assertRaises(TypeError, a.__add__, 42)
-        if is_py3k:
-            self.assertRaises(TypeError, a.__add__, b'1101')
-        else:
-            self.assertEqual(a + b'10', bitarray('00110'))
+        self.assertRaises(TypeError, a.__add__, b'1101')
 
         for a in self.randombitarrays():
             aa = a.copy()
@@ -2228,11 +2181,7 @@ class SequenceMethodsTests(unittest.TestCase, Util):
 
         self.assertRaises(TypeError, a.__iadd__, 42)
         b = b'101'
-        if is_py3k:
-            self.assertRaises(TypeError, a.__iadd__, b)
-        else:
-            a += b
-            self.assertEqual(a, bitarray('110101'))
+        self.assertRaises(TypeError, a.__iadd__, b)
 
         for a in self.randombitarrays():
             for b in self.randombitarrays():
@@ -2302,9 +2251,6 @@ class SequenceMethodsTests(unittest.TestCase, Util):
         a.append(True)
         self.assertTrue(0 in a)
         self.assertTrue(1 in a)
-        if not is_py3k:
-            self.assertTrue(long(0) in a)
-            self.assertTrue(long(1) in a)
 
     def test_contains_errors(self):
         a = bitarray()
@@ -2317,8 +2263,6 @@ class SequenceMethodsTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.__contains__, 'asdf')
         self.assertRaises(ValueError, a.__contains__, 2)
         self.assertRaises(ValueError, a.__contains__, -1)
-        if not is_py3k:
-            self.assertRaises(ValueError, a.__contains__, long(2))
 
     def test_contains_range(self):
         for n in range(2, 50):
@@ -2820,11 +2764,7 @@ class ExtendTests(unittest.TestCase, Util):
     def test_bytes(self):
         a = bitarray()
         b = b'10110'
-        if is_py3k:
-            self.assertRaises(TypeError, a.extend, b)
-        else:
-            a.extend(b)
-            self.assertEqual(a, bitarray('10110'))
+        self.assertRaises(TypeError, a.extend, b)
         self.check_obj(a)
 
     def test_self(self):
@@ -2911,8 +2851,7 @@ class MethodTests(unittest.TestCase, Util):
         v = memoryview(a)
         self.assertEqual(a.fill(), 3)
         self.assertEqual(a, b)
-        if is_py3k:
-            self.assertEqual(v.nbytes, 1)
+        self.assertEqual(v.nbytes, 1)
 
     def test_fill_random(self):
         for a in self.randombitarrays():
@@ -3745,9 +3684,8 @@ class BytesTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('01000001 11111110 01000011'))
 
         a.clear()
-        if is_py3k:  # Python 2's array cannot be used as buffer
-            a.frombytes(array.array('B', [5, 255, 192]))
-            self.assertEqual(a, bitarray('00000101 11111111 11000000'))
+        a.frombytes(array.array('B', [5, 255, 192]))
+        self.assertEqual(a, bitarray('00000101 11111111 11000000'))
 
         self.check_obj(a)
 
@@ -3857,10 +3795,9 @@ class BytesTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.unpack, b'a', zero=b'b')
         self.assertRaises(TypeError, a.unpack, foo=b'b')
         self.assertRaises(TypeError, a.unpack, one=b'aa', zero=b'b')
-        if is_py3k:
-            self.assertRaises(TypeError, a.unpack, '0')
-            self.assertRaises(TypeError, a.unpack, one='a')
-            self.assertRaises(TypeError, a.unpack, b'0', '1')
+        self.assertRaises(TypeError, a.unpack, '0')
+        self.assertRaises(TypeError, a.unpack, one='a')
+        self.assertRaises(TypeError, a.unpack, b'0', '1')
 
     def test_pack_simple(self):
         for endian in 'little', 'big':
@@ -3887,9 +3824,8 @@ class BytesTests(unittest.TestCase, Util):
         a.pack(memoryview(b'\x02\0'))            # memoryview
         self.assertEqual(a, bitarray('01 01 10'))
 
-        if is_py3k:  # Python 2's array cannot be used as buffer
-            a.pack(array.array('B', [0, 255, 192]))
-            self.assertEqual(a, bitarray('01 01 10 011'))
+        a.pack(array.array('B', [0, 255, 192]))
+        self.assertEqual(a, bitarray('01 01 10 011'))
 
         self.check_obj(a)
 
@@ -3916,8 +3852,7 @@ class BytesTests(unittest.TestCase, Util):
     def test_pack_errors(self):
         a = bitarray()
         self.assertRaises(TypeError, a.pack, 0)
-        if is_py3k:
-            self.assertRaises(TypeError, a.pack, '1')
+        self.assertRaises(TypeError, a.pack, '1')
         self.assertRaises(TypeError, a.pack, [1, 3])
 
 # ---------------------------------------------------------------------------
@@ -3928,9 +3863,8 @@ class DescriptorTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             self.assertEqual(a.nbytes, bits2bytes(len(a)))
             self.assertEqual(a.padbits, 8 * a.nbytes - len(a))
-            if is_py3k:
-                self.assertIsInstance(a.nbytes, int)
-                self.assertIsInstance(a.padbits, int)
+            self.assertIsInstance(a.nbytes, int)
+            self.assertIsInstance(a.padbits, int)
 
     def test_readonly(self):
         a = bitarray('110')
@@ -4030,9 +3964,8 @@ class FileTests(unittest.TestCase, Util):
         with open(self.tmpfname, 'wb') as fi:
             self.assertRaises(Exception, a.fromfile, fi)
 
-        if is_py3k:
-            with open(self.tmpfname, 'r') as fi:
-                self.assertRaises(TypeError, a.fromfile, fi)
+        with open(self.tmpfname, 'r') as fi:
+            self.assertRaises(TypeError, a.fromfile, fi)
 
     def test_from_large_files(self):
         for N in range(65534, 65538):
@@ -4145,9 +4078,8 @@ class FileTests(unittest.TestCase, Util):
         # write to closed file
         self.assertRaises(ValueError, a.tofile, f)
 
-        if is_py3k:
-            with open(self.tmpfname, 'w') as f:
-                self.assertRaises(TypeError, a.tofile, f)
+        with open(self.tmpfname, 'w') as f:
+            self.assertRaises(TypeError, a.tofile, f)
 
         with open(self.tmpfname, 'rb') as f:
             self.assertRaises(Exception, a.tofile, f)
@@ -4383,9 +4315,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
         a.encode(d, 'is')
         self.assertEqual(a, bitarray('1011 1100'))
         self.assertRaises(ValueError, a.encode, d, 'ilAn')
-        msg = "symbol not defined in prefix code"
-        if is_py3k:
-            msg += ": None"
+        msg = "symbol not defined in prefix code: None"
         self.assertRaisesMessage(ValueError, msg, a.encode, d, [None, 2])
 
     def test_encode_not_iterable(self):
@@ -4840,7 +4770,7 @@ class BufferExportTests(unittest.TestCase, Util):
         self.assertFalse(v.readonly)
         self.assertEqual(buffer_info(a, 'exports'), 1)
         self.assertEqual(len(v), 3)
-        self.assertEqual(v[0], 65 if is_py3k else 'A')
+        self.assertEqual(v[0], 65)
         self.assertEqual(v.tobytes(), b'ABC')
         a[13] = 1
         self.assertEqual(v.tobytes(), b'AFC')
@@ -4910,7 +4840,7 @@ class BufferExportTests(unittest.TestCase, Util):
         a = zeros(8000)
         v = memoryview(a)
         self.assertFalse(v.readonly)
-        v[500] = 255 if is_py3k else '\xff'
+        v[500] = 255
         self.assertEqual(a[3999:4009], bitarray('0111111110'))
         a[4003] = 0
         self.assertEqual(a[3999:4009], bitarray('0111011110'))
