@@ -2697,9 +2697,6 @@ static PyNumberMethods bitarray_as_number = {
     0,                                   /* nb_add */
     0,                                   /* nb_subtract */
     0,                                   /* nb_multiply */
-#if PY_MAJOR_VERSION == 2
-    0,                                   /* nb_divide */
-#endif
     0,                                   /* nb_remainder */
     0,                                   /* nb_divmod */
     0,                                   /* nb_power */
@@ -2713,22 +2710,12 @@ static PyNumberMethods bitarray_as_number = {
     (binaryfunc) bitarray_and,           /* nb_and */
     (binaryfunc) bitarray_xor,           /* nb_xor */
     (binaryfunc) bitarray_or,            /* nb_or */
-#if PY_MAJOR_VERSION == 2
-    0,                                   /* nb_coerce */
-#endif
     0,                                   /* nb_int */
     0,                                   /* nb_reserved (was nb_long) */
     0,                                   /* nb_float */
-#if PY_MAJOR_VERSION == 2
-    0,                                   /* nb_oct */
-    0,                                   /* nb_hex */
-#endif
     0,                                   /* nb_inplace_add */
     0,                                   /* nb_inplace_subtract */
     0,                                   /* nb_inplace_multiply */
-#if PY_MAJOR_VERSION == 2
-    0,                                   /* nb_inplace_divide */
-#endif
     0,                                   /* nb_inplace_remainder */
     0,                                   /* nb_inplace_power */
     (binaryfunc) bitarray_ilshift,       /* nb_inplace_lshift */
@@ -2740,9 +2727,7 @@ static PyNumberMethods bitarray_as_number = {
     0,                                   /* nb_true_divide */
     0,                                   /* nb_inplace_floor_divide */
     0,                                   /* nb_inplace_true_divide */
-#if PY_MAJOR_VERSION == 3
     0,                                   /* nb_index */
-#endif
 };
 
 /**************************************************************************
@@ -3982,60 +3967,7 @@ bitarray_releasebuffer(bitarrayobject *self, Py_buffer *view)
     self->ob_exports--;
 }
 
-#if PY_MAJOR_VERSION == 2       /* old buffer protocol */
-static Py_ssize_t
-bitarray_buffer_getreadbuf(bitarrayobject *self,
-                           Py_ssize_t index, const void **ptr)
-{
-    if (index != 0) {
-        PyErr_SetString(PyExc_SystemError, "accessing non-existent segment");
-        return -1;
-    }
-    *ptr = (void *) self->ob_item;
-    return Py_SIZE(self);
-}
-
-static Py_ssize_t
-bitarray_buffer_getwritebuf(bitarrayobject *self,
-                            Py_ssize_t index, const void **ptr)
-{
-    if (index != 0) {
-        PyErr_SetString(PyExc_SystemError, "accessing non-existent segment");
-        return -1;
-    }
-    *ptr = (void *) self->ob_item;
-    return Py_SIZE(self);
-}
-
-static Py_ssize_t
-bitarray_buffer_getsegcount(bitarrayobject *self, Py_ssize_t *lenp)
-{
-    if (lenp)
-        *lenp = Py_SIZE(self);
-    return 1;
-}
-
-static Py_ssize_t
-bitarray_buffer_getcharbuf(bitarrayobject *self,
-                           Py_ssize_t index, const char **ptr)
-{
-    if (index != 0) {
-        PyErr_SetString(PyExc_SystemError, "accessing non-existent segment");
-        return -1;
-    }
-    *ptr = self->ob_item;
-    return Py_SIZE(self);
-}
-#endif  /* old buffer protocol */
-
-
 static PyBufferProcs bitarray_as_buffer = {
-#if PY_MAJOR_VERSION == 2       /* old buffer protocol */
-    (readbufferproc) bitarray_buffer_getreadbuf,
-    (writebufferproc) bitarray_buffer_getwritebuf,
-    (segcountproc) bitarray_buffer_getsegcount,
-    (charbufferproc) bitarray_buffer_getcharbuf,
-#endif
     (getbufferproc) bitarray_getbuffer,
     (releasebufferproc) bitarray_releasebuffer,
 };
@@ -4088,12 +4020,7 @@ static PyTypeObject Bitarray_Type = {
     PyObject_GenericGetAttr,                  /* tp_getattro */
     0,                                        /* tp_setattro */
     &bitarray_as_buffer,                      /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE
-#if PY_MAJOR_VERSION == 2
-    | Py_TPFLAGS_HAVE_WEAKREFS
-    | Py_TPFLAGS_HAVE_NEWBUFFER | Py_TPFLAGS_CHECKTYPES
-#endif
-    ,                                         /* tp_flags */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
     bitarraytype_doc,                         /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
