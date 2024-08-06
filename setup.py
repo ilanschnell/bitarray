@@ -4,10 +4,10 @@ import platform
 
 
 if sys.version_info[0] == 2:
-    print("""\
+    sys.exit("""\
 ****************************************************************************
-*   Python 2 support of bitarray is deprecated (as of bitarray version 2.9)
-*   and will be removed in bitarray version 3.0.
+*   Python 2 support of bitarray has now been removed.
+*   The last version supporting Python 2 is bitarray 2.9.2.
 ****************************************************************************
 """)
 
@@ -50,8 +50,6 @@ setup(
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
         "Programming Language :: C",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",

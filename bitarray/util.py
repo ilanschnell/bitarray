@@ -26,7 +26,7 @@ from bitarray._util import (
 
 __all__ = [
     'zeros', 'ones', 'urandom',
-    'pprint', 'make_endian', 'rindex', 'strip', 'count_n',
+    'pprint', 'strip', 'count_n',
     'parity', 'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
     'intervals',
     'ba2hex', 'hex2ba',
@@ -39,9 +39,6 @@ __all__ = [
 ]
 
 
-_is_py2 = bool(sys.version_info[0] == 2)
-
-
 def urandom(__length, endian=None):
     """urandom(length, /, endian=None) -> bitarray
 
@@ -51,26 +48,6 @@ Return a bitarray of `length` random bits (uses `os.urandom`).
     a.frombytes(os.urandom(bits2bytes(__length)))
     del a[__length:]
     return a
-
-
-def rindex(__a, __sub_bitarray=1, __start=0, __stop=sys.maxsize):
-    """rindex(bitarray, sub_bitarray=1, start=0, stop=<end>, /) -> int
-
-Return rightmost (highest) index where sub_bitarray (or item - defaults
-to 1) is found in bitarray (`a`), such that sub_bitarray is contained
-within `a[start:stop]`.
-Raises `ValueError` when the sub_bitarray is not present.
-"""
-    from warnings import warn
-
-    warn("rindex() is deprecated and will be removed in bitarray 3.0 - "
-         "use .index(..., right=True) method instead.",
-         DeprecationWarning, stacklevel=1)
-
-    if not isinstance(__a, bitarray):
-        raise TypeError("bitarray expected, got '%s'" % type(__a).__name__)
-
-    return __a.index(__sub_bitarray, __start, __stop, right=True)
 
 
 def pprint(__a, stream=None, group=8, indent=4, width=80):
@@ -127,30 +104,6 @@ function `pprint.pprint()`.
 
     stream.write("%s)\n" % quotes)
     stream.flush()
-
-
-def make_endian(__a, endian):
-    """make_endian(bitarray, /, endian) -> bitarray
-
-When the endianness of the given bitarray is different from `endian`,
-return a new bitarray, with endianness `endian` and the same elements
-as the original bitarray.
-Otherwise (endianness is already `endian`) the original bitarray is returned
-unchanged.
-"""
-    from warnings import warn
-
-    warn("make_endian() is deprecated and will be removed in bitarray 3.0 - "
-         "use bitarray(..., endian=...) instead",
-         DeprecationWarning, stacklevel=1)
-
-    if not isinstance(__a, bitarray):
-        raise TypeError("bitarray expected, got '%s'" % type(__a).__name__)
-
-    if __a.endian() == endian:
-        return __a
-
-    return bitarray(__a, endian)
 
 
 def strip(__a, mode='right'):
@@ -215,13 +168,7 @@ The bit-endianness of the bitarray is respected.
         pad = zeros(__a.padbits, __a.endian())
         __a = __a + pad if le else pad + __a
 
-    if _is_py2:
-        a = bitarray(__a, 'big')
-        if le:
-            a.reverse()
-        res = int(ba2hex(a), 16)
-    else: # py3
-        res = int.from_bytes(__a.tobytes(), byteorder=__a.endian())
+    res = int.from_bytes(__a.tobytes(), byteorder=__a.endian())
 
     if signed and res >= 1 << (length - 1):
         res -= 1 << length
@@ -238,7 +185,7 @@ if the integer is not representable with the given number of bits.
 `signed` determines whether two's complement is used to represent the integer,
 and requires `length` to be provided.
 """
-    if not isinstance(__i, (int, long) if _is_py2 else int):
+    if not isinstance(__i, int):
         raise TypeError("int expected, got '%s'" % type(__i).__name__)
     if length is not None:
         if not isinstance(length, int):
@@ -268,14 +215,8 @@ and requires `length` to be provided.
 
     a = bitarray(0, endian)
     le = bool(a.endian() == 'little')
-    if _is_py2:
-        s = hex(__i)[2:].rstrip('L')
-        a.extend(hex2ba(s, 'big'))
-        if le:
-            a.reverse()
-    else: # py3
-        b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian())
-        a.frombytes(b)
+    b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian())
+    a.frombytes(b)
 
     if length is None:
         return strip(a, 'right' if le else 'left')

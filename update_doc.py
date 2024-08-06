@@ -1,7 +1,5 @@
-import sys
-assert sys.version_info[0] == 3, "This program requires Python 3"
-
 import re
+import sys
 from doctest import testfile
 from io import StringIO
 

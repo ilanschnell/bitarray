@@ -529,11 +529,7 @@ ba2hex(PyObject *module, PyObject *obj)
     if ((str = ba2hex_core(a)) == NULL)
         return PyErr_NoMemory();
 
-#if IS_PY3K
     result = PyUnicode_FromString(str);
-#else
-    result = Py_BuildValue("s", str);
-#endif
     PyMem_Free((void *) str);
     return result;
 }
@@ -722,11 +718,7 @@ ba2base(PyObject *module, PyObject *args)
     if (str == NULL)
         return PyErr_NoMemory();
 
-#if IS_PY3K
     result = PyUnicode_FromString(str);
-#else
-    result = Py_BuildValue("s", str);
-#endif
     PyMem_Free((void *) str);
     return result;
 }
@@ -878,13 +870,9 @@ next_char(PyObject *iter)
         return -1;
     }
 
-#if IS_PY3K
-    if (PyLong_Check(item))
+    if (PyLong_Check(item)) {
         c = (unsigned char) PyLong_AsLong(item);
-#else
-    if (PyBytes_Check(item))
-        c = (unsigned char) *PyBytes_AS_STRING(item);
-#endif
+    }
     else {
         PyErr_Format(PyExc_TypeError, "int iterator expected, "
                      "got '%s' element", Py_TYPE(item)->tp_name);
@@ -1834,12 +1822,7 @@ chdi_traverse(chdi_obj *it, visitproc visit, void *arg)
 }
 
 static PyTypeObject CHDI_Type = {
-#if IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
-#else
-    PyObject_HEAD_INIT(NULL)
-    0,                                        /* ob_size */
-#endif
     "bitarray.util.canonical_decodeiter",     /* tp_name */
     sizeof(chdi_obj),                         /* tp_basicsize */
     0,                                        /* tp_itemsize */
@@ -1913,18 +1896,12 @@ static PyMethodDef module_functions[] = {
 
 /******************************* Install Module ***************************/
 
-#if IS_PY3K
 static PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT, "_util", 0, -1, module_functions,
 };
-#endif
 
 PyMODINIT_FUNC
-#if IS_PY3K
 PyInit__util(void)
-#else
-init_util(void)
-#endif
 {
     PyObject *m, *bitarray_module;
 
@@ -1935,11 +1912,7 @@ init_util(void)
     if (bitarray_type_obj == NULL)
         goto error;
 
-#if IS_PY3K
     m = PyModule_Create(&moduledef);
-#else
-    m = Py_InitModule3("_util", module_functions, 0);
-#endif
     if (m == NULL)
         goto error;
 
@@ -1951,12 +1924,7 @@ init_util(void)
     PyModule_AddObject(m, "_SEGSIZE", PyLong_FromSsize_t(SEGSIZE));
 #endif
 
-#if IS_PY3K
     return m;
  error:
     return NULL;
-#else
- error:
-    return;
-#endif
 }
