@@ -26,7 +26,7 @@ from bitarray._util import (
 
 __all__ = [
     'zeros', 'ones', 'urandom',
-    'pprint', 'make_endian', 'rindex', 'strip', 'count_n',
+    'pprint', 'make_endian', 'strip', 'count_n',
     'parity', 'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
     'intervals',
     'ba2hex', 'hex2ba',
@@ -48,26 +48,6 @@ Return a bitarray of `length` random bits (uses `os.urandom`).
     a.frombytes(os.urandom(bits2bytes(__length)))
     del a[__length:]
     return a
-
-
-def rindex(__a, __sub_bitarray=1, __start=0, __stop=sys.maxsize):
-    """rindex(bitarray, sub_bitarray=1, start=0, stop=<end>, /) -> int
-
-Return rightmost (highest) index where sub_bitarray (or item - defaults
-to 1) is found in bitarray (`a`), such that sub_bitarray is contained
-within `a[start:stop]`.
-Raises `ValueError` when the sub_bitarray is not present.
-"""
-    from warnings import warn
-
-    warn("rindex() is deprecated and will be removed in bitarray 3.0 - "
-         "use .index(..., right=True) method instead.",
-         DeprecationWarning, stacklevel=1)
-
-    if not isinstance(__a, bitarray):
-        raise TypeError("bitarray expected, got '%s'" % type(__a).__name__)
-
-    return __a.index(__sub_bitarray, __start, __stop, right=True)
 
 
 def pprint(__a, stream=None, group=8, indent=4, width=80):

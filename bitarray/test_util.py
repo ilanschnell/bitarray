@@ -21,7 +21,7 @@ from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
 from bitarray.test_bitarray import Util, skipIf, SYSINFO, DEBUG
 
 from bitarray.util import (
-    zeros, ones, urandom, pprint, make_endian, rindex, strip, count_n,
+    zeros, ones, urandom, pprint, make_endian, strip, count_n,
     parity, count_and, count_or, count_xor, any_and, subset, _correspond_all,
     intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
@@ -239,110 +239,6 @@ class TestsMakeEndian(unittest.TestCase, Util):
                 if a.endian() == endian:
                     self.assertTrue(b is a)
             self.assertEQUAL(a, aa)
-
-# ---------------------------------------------------------------------------
-
-class TestsRIndex(unittest.TestCase, Util):
-
-    def test_simple(self):
-        self.assertRaises(TypeError, rindex)
-        self.assertRaises(TypeError, rindex, None)
-        self.assertRaises(ValueError, rindex, bitarray(), 1)
-        for endian in 'big', 'little':
-            a = bitarray('00010110 000', endian)
-            self.assertEqual(rindex(a), 6)
-            self.assertEqual(rindex(a, 1), 6)
-            self.assertEqual(rindex(a, 1, 3), 6)
-            self.assertEqual(rindex(a, 1, 3, 8), 6)
-            self.assertEqual(rindex(a, 1, -20, 20), 6)
-            self.assertEqual(rindex(a, 1, 0, 5), 3)
-            self.assertEqual(rindex(a, 1, 0, -6), 3)
-            self.assertEqual(rindex(a, 1, 0, -5), 5)
-            self.assertRaises(TypeError, rindex, a, 'A')
-            self.assertRaises(ValueError, rindex, a, 2)
-            self.assertRaises(ValueError, rindex, a, 1, 7)
-            self.assertRaises(ValueError, rindex, a, 1, 10, 3)
-            self.assertRaises(ValueError, rindex, a, 1, -1, 0)
-            self.assertRaises(TypeError, rindex, a, 1, 10, 3, 4)
-
-            a = bitarray('00010110 111', endian)
-            self.assertEqual(rindex(a, 0), 7)
-            self.assertEqual(rindex(a, 0, 0, 4), 2)
-            self.assertEqual(rindex(a, False), 7)
-
-            a = frozenbitarray('00010110 111', endian)
-            self.assertEqual(rindex(a, 0), 7)
-            self.assertRaises(TypeError, rindex, a, None)
-            self.assertRaises(ValueError, rindex, a, 7)
-
-            for v in 0, 1:
-                self.assertRaises(ValueError, rindex,
-                                  bitarray(0, endian), v)
-            self.assertRaises(ValueError, rindex,
-                              bitarray('000', endian), 1)
-            self.assertRaises(ValueError, rindex,
-                              bitarray('11111', endian), 0)
-
-    def test_range(self):
-        n = 100
-        a = bitarray(n)
-        for m in range(n):
-            a.setall(0)
-            self.assertRaises(ValueError, rindex, a, 1)
-            a[m] = 1
-            self.assertEqual(rindex(a, 1), m)
-
-            a.setall(1)
-            self.assertRaises(ValueError, rindex, a, 0)
-            a[m] = 0
-            self.assertEqual(rindex(a, 0), m)
-
-    def test_random(self):
-        for a in self.randombitarrays():
-            v = getrandbits(1)
-            try:
-                i = rindex(a, v)
-            except ValueError:
-                i = None
-            s = a.to01()
-            try:
-                j = s.rindex(str(v))
-            except ValueError:
-                j = None
-            self.assertEqual(i, j)
-
-    def test_random_start_stop(self):
-        for _ in range(10):
-            n = randrange(1, 1000)
-            a = zeros(n)
-            indices = [randrange(n) for _ in range(100)]
-            a[indices] = 1
-            start = randint(0, n)
-            stop = randint(0, n)
-            filtered = [i for i in indices if i >= start and i < stop]
-            ref = max(filtered) if filtered else -1
-            try:
-                res = rindex(a, 1, start, stop)
-            except ValueError:
-                res = -1
-            self.assertEqual(res, ref)
-
-    def test_many_set(self):
-        for _ in range(10):
-            n = randint(1, 10000)
-            v = getrandbits(1)
-            a = bitarray(n)
-            a.setall(not v)
-            lst = [randrange(n) for _ in range(100)]
-            a[lst] = v
-            self.assertEqual(rindex(a, v), max(lst))
-
-    def test_one_set(self):
-        for _ in range(10):
-            N = randint(1, 10000)
-            a = zeros(N)
-            a[randrange(N)] = 1
-            self.assertEqual(rindex(a), a.index(1))
 
 # ---------------------------------------------------------------------------
 
