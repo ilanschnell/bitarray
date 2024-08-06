@@ -10,6 +10,7 @@ import binascii
 import shutil
 import tempfile
 import unittest
+from io import StringIO
 from array import array
 from string import hexdigits
 from random import choice, getrandbits, randrange, randint, random
@@ -31,11 +32,6 @@ from bitarray.util import (
 
 if DEBUG:
     from bitarray._util import _sc_rts, _SEGSIZE  # type: ignore
-
-if sys.version_info[0] == 3:
-    from io import StringIO
-else:
-    from io import BytesIO as StringIO
 
 # ---------------------------------------------------------------------------
 
@@ -943,8 +939,6 @@ class TestsHexlify(unittest.TestCase, Util):
             # check for NUL bytes
             for b in b'\0', b'\0f', b'f\0', b'\0ff', b'f\0f', b'ff\0':
                 msg = "non-hexadecimal digit found, got '\0' (0x00)"
-                if sys.version_info[0] == 2:
-                    msg = msg.replace("0x00", "0x0")
                 self.assertRaisesMessage(ValueError, msg, hex2ba, b, endian)
 
     def test_explicit(self):
@@ -1184,7 +1178,6 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(len(a), n)
             self.assertFalse(a.any())
 
-    @skipIf(sys.version_info[0] == 2)
     def test_decode_untouch(self):
         stream = iter(b'\x01\x03\x01\x03\0XYZ')
         self.assertEqual(sc_decode(stream), bitarray('110'))
@@ -1195,7 +1188,6 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertTrue(next(stream) is None)
         self.assertEqual(next(stream), 'foo')
 
-    @skipIf(sys.version_info[0] == 2)
     def test_decode_header_errors(self):
         # invalid header
         for c in 0x20, 0x21, 0x40, 0x80, 0xc0, 0xf0, 0xff:
@@ -1274,7 +1266,6 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertRaisesMessage(ValueError, "unexpected end of stream",
                                      sc_decode, stream)
 
-    @skipIf(sys.version_info[0] == 2)
     def test_decode_types(self):
         blob = b'\x11\x03\x01\x20\0'
         for b in blob, bytearray(blob), list(blob), array('B', blob):
@@ -1303,7 +1294,6 @@ class SC_Tests(unittest.TestCase, Util):
             a = sc_decode(b)
             self.assertEqual(a.to01(), '001')
 
-    @skipIf(sys.version_info[0] == 2)
     def test_sparse_block_type1(self):
         a = bitarray(256, 'little')
         for n in range(1, 32):
@@ -1354,8 +1344,7 @@ class SC_Tests(unittest.TestCase, Util):
         b = sc_decode(i)
         self.assertTrue(a == b == c)
         self.assertTrue(a.endian() == b.endian() == c.endian())
-        if sys.version_info[0] == 3:
-            self.assertEqual(bytes(i), b'')
+        self.assertEqual(bytes(i), b'')
 
     def test_encode_zeros(self):
         for i in range(18):
@@ -1469,10 +1458,9 @@ class VLFTests(unittest.TestCase, Util):
             self.assertEqual(s, b'\xd3\x20')
 
     def test_decode_args(self):
-        if sys.version_info[0] == 3:
-            self.assertRaises(TypeError, vl_decode, 'foo')
-            # item not integer
-            self.assertRaises(TypeError, vl_decode, iter([b'\x40']))
+        self.assertRaises(TypeError, vl_decode, 'foo')
+        # item not integer
+        self.assertRaises(TypeError, vl_decode, iter([b'\x40']))
 
         self.assertRaises(TypeError, vl_decode, b'\x40', 'big', 3)
         self.assertRaises(ValueError, vl_decode, b'\x40', 'foo')
@@ -1485,9 +1473,8 @@ class VLFTests(unittest.TestCase, Util):
 
         b = b'\xd3\x20'
         lst = [b, iter(b), memoryview(b)]
-        if sys.version_info[0] == 3:
-            lst.append(iter([0xd3, 0x20]))
-            lst.append(bytearray(b))
+        lst.append(iter([0xd3, 0x20]))
+        lst.append(bytearray(b))
         for s in lst:
             a = vl_decode(s, endian=self.random_endian())
             self.assertIsType(a, 'bitarray')
@@ -1515,8 +1502,7 @@ class VLFTests(unittest.TestCase, Util):
                         (b'\xe0\x40A', '00001')]:
             stream = iter(s)
             self.assertEqual(vl_decode(stream), bitarray(bits))
-            self.assertEqual(next(stream),
-                             b'A' if sys.version_info[0] == 2 else 65)
+            self.assertEqual(next(stream), 65)
 
     def test_decode_ambiguity(self):
         for s in b'\x40', b'\x4f', b'\x45':
@@ -1545,7 +1531,6 @@ class VLFTests(unittest.TestCase, Util):
         for s in b'\x80', b'\x80\x80':
             self.assertRaises(ValueError, vl_decode, s)
 
-    @skipIf(sys.version_info[0] == 2)
     def test_decode_invalid_stream(self):
         N = 100
         s = iter(N * (3 * [0x80] + ['XX']) + ['end.'])
@@ -1573,7 +1558,7 @@ class VLFTests(unittest.TestCase, Util):
         LEN_PAD_BITS = 3
         self.assertEqual(len(s), (len(a) + LEN_PAD_BITS + 6) // 7)
 
-        head = ord(s[0]) if sys.version_info[0] == 2 else s[0]
+        head = s[0]
         padding = (head & 0x70) >> 4
         self.assertEqual(len(a) + padding, 7 * len(s) - LEN_PAD_BITS)
 
@@ -1800,7 +1785,6 @@ class MixedTests(unittest.TestCase, Util):
             self.assertEqual(t, s)
             self.assertEqual(eval(t), i)
 
-    @skipIf(sys.version_info[0] == 2)
     def test_oct(self):
         for i in range(1000):
             s = oct(i)
@@ -1940,9 +1924,8 @@ class TestsSerialization(unittest.TestCase, Util):
         def check_msg(b):
             # Python 2: PyErr_Format() seems to handle "0x%02x"
             # incorrectly.  E.g. instead of "0x01", I get "0x1"
-            if sys.version_info[0] == 3:
-                msg = "invalid header byte: 0x%02x" % b[0]
-                self.assertRaisesMessage(ValueError, msg, deserialize, b)
+            msg = "invalid header byte: 0x%02x" % b[0]
+            self.assertRaisesMessage(ValueError, msg, deserialize, b)
 
         for i in range(256):
             b = bytes(bytearray([i]))
@@ -2166,8 +2149,7 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         self.assertEqual(list(canonical_decode(a, cnt, s)), s)
         self.assertEqual(list(canonical_decode(a, cnt, bytearray(s))), s)
         self.assertEqual(list(canonical_decode(a, cnt, tuple(s))), s)
-        if sys.version_info[0] == 3:
-            self.assertEqual(list(canonical_decode(a, cnt, bytes(s))), s)
+        self.assertEqual(list(canonical_decode(a, cnt, bytes(s))), s)
         # Implementation Note:
         #   The symbol can even be an iterable.  This was done because we
         #   want to use PySequence_Fast in order to convert sequence
