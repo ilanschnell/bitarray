@@ -21,7 +21,7 @@ from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
 from bitarray.test_bitarray import Util, skipIf, SYSINFO, DEBUG
 
 from bitarray.util import (
-    zeros, ones, urandom, pprint, make_endian, strip, count_n,
+    zeros, ones, urandom, pprint, strip, count_n,
     parity, count_and, count_or, count_xor, any_and, subset, _correspond_all,
     intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
@@ -194,51 +194,6 @@ class TestsPPrint(unittest.TestCase):
             self.assertEqual(a, b)
         finally:
             shutil.rmtree(tmpdir)
-
-# ---------------------------------------------------------------------------
-
-class TestsMakeEndian(unittest.TestCase, Util):
-
-    def test_simple(self):
-        a = bitarray('1110001', endian='big')
-        b = make_endian(a, 'big')
-        self.assertTrue(b is a)
-        c = make_endian(a, endian='little')
-        self.assertTrue(c == a)
-        self.assertEqual(c.endian(), 'little')
-        self.assertIsType(c, 'bitarray')
-
-        # wrong arguments
-        self.assertRaises(TypeError, make_endian, '', 'big')
-        self.assertRaises(TypeError, make_endian, bitarray(), 1)
-        self.assertRaises(ValueError, make_endian, bitarray(), 'foo')
-
-    def test_empty(self):
-        a = bitarray(endian='little')
-        b = make_endian(a, 'big')
-        self.assertTrue(b == a)
-        self.assertEqual(len(b), 0)
-        self.assertEqual(b.endian(), 'big')
-
-    def test_from_frozen(self):
-        a = frozenbitarray('1101111', 'big')
-        b = make_endian(a, 'big')
-        self.assertTrue(b is a)
-        c = make_endian(a, 'little')
-        self.assertTrue(c == a)
-        self.assertEqual(c.endian(), 'little')
-        #self.assertIsType(c, 'frozenbitarray')
-
-    def test_random(self):
-        for a in self.randombitarrays():
-            aa = a.copy()
-            for endian in 'big', 'little':
-                b = make_endian(a, endian)
-                self.assertEqual(a, b)
-                self.assertEqual(b.endian(), endian)
-                if a.endian() == endian:
-                    self.assertTrue(b is a)
-            self.assertEQUAL(a, aa)
 
 # ---------------------------------------------------------------------------
 

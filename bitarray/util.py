@@ -26,7 +26,7 @@ from bitarray._util import (
 
 __all__ = [
     'zeros', 'ones', 'urandom',
-    'pprint', 'make_endian', 'strip', 'count_n',
+    'pprint', 'strip', 'count_n',
     'parity', 'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
     'intervals',
     'ba2hex', 'hex2ba',
@@ -104,30 +104,6 @@ function `pprint.pprint()`.
 
     stream.write("%s)\n" % quotes)
     stream.flush()
-
-
-def make_endian(__a, endian):
-    """make_endian(bitarray, /, endian) -> bitarray
-
-When the endianness of the given bitarray is different from `endian`,
-return a new bitarray, with endianness `endian` and the same elements
-as the original bitarray.
-Otherwise (endianness is already `endian`) the original bitarray is returned
-unchanged.
-"""
-    from warnings import warn
-
-    warn("make_endian() is deprecated and will be removed in bitarray 3.0 - "
-         "use bitarray(..., endian=...) instead",
-         DeprecationWarning, stacklevel=1)
-
-    if not isinstance(__a, bitarray):
-        raise TypeError("bitarray expected, got '%s'" % type(__a).__name__)
-
-    if __a.endian() == endian:
-        return __a
-
-    return bitarray(__a, endian)
 
 
 def strip(__a, mode='right'):
