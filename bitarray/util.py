@@ -39,9 +39,6 @@ __all__ = [
 ]
 
 
-_is_py2 = bool(sys.version_info[0] == 2)
-
-
 def urandom(__length, endian=None):
     """urandom(length, /, endian=None) -> bitarray
 
@@ -215,13 +212,7 @@ The bit-endianness of the bitarray is respected.
         pad = zeros(__a.padbits, __a.endian())
         __a = __a + pad if le else pad + __a
 
-    if _is_py2:
-        a = bitarray(__a, 'big')
-        if le:
-            a.reverse()
-        res = int(ba2hex(a), 16)
-    else: # py3
-        res = int.from_bytes(__a.tobytes(), byteorder=__a.endian())
+    res = int.from_bytes(__a.tobytes(), byteorder=__a.endian())
 
     if signed and res >= 1 << (length - 1):
         res -= 1 << length
@@ -238,7 +229,7 @@ if the integer is not representable with the given number of bits.
 `signed` determines whether two's complement is used to represent the integer,
 and requires `length` to be provided.
 """
-    if not isinstance(__i, (int, long) if _is_py2 else int):
+    if not isinstance(__i, int):
         raise TypeError("int expected, got '%s'" % type(__i).__name__)
     if length is not None:
         if not isinstance(length, int):
@@ -268,14 +259,8 @@ and requires `length` to be provided.
 
     a = bitarray(0, endian)
     le = bool(a.endian() == 'little')
-    if _is_py2:
-        s = hex(__i)[2:].rstrip('L')
-        a.extend(hex2ba(s, 'big'))
-        if le:
-            a.reverse()
-    else: # py3
-        b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian())
-        a.frombytes(b)
+    b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian())
+    a.frombytes(b)
 
     if length is None:
         return strip(a, 'right' if le else 'left')
