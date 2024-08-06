@@ -1749,7 +1749,6 @@ class MiscTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, hash, a)
         self.assertRaises(TypeError, dict, [(a, 'foo')])
 
-    @skipIf(sys.version_info[0] == 2)
     def test_abc(self):
         from collections import abc
 
@@ -1910,7 +1909,6 @@ class PickleTests(unittest.TestCase, Util):
             self.assertTrue(f.readonly)
             self.check_obj(f)
 
-    @skipIf(sys.version_info[0] == 2)
     def test_load(self):
         # test data file was created using bitarray 1.5.0 / Python 3.5.5
         self.check_file('test_150.pickle')
@@ -4120,7 +4118,7 @@ class FileTests(unittest.TestCase, Util):
             a.tofile(f)
             self.assertEqual(f.getvalue(), data)
 
-    @skipIf(sys.version_info[0] == 2 or is_pypy)
+    @skipIf(is_pypy)
     def test_mmap(self):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(1000 * b'\0')
@@ -4140,7 +4138,7 @@ class FileTests(unittest.TestCase, Util):
         self.assertEqual(self.read_file(), 1000 * b'\x55')
 
     # pyodide hits emscripten mmap bug
-    @skipIf(sys.version_info[0] == 2 or pyodide or is_pypy)
+    @skipIf(pyodide or is_pypy)
     def test_mmap_2(self):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(1000 * b'\x22')
@@ -4155,7 +4153,7 @@ class FileTests(unittest.TestCase, Util):
 
         self.assertEqual(self.read_file(), 1000 * b'\x33')
 
-    @skipIf(sys.version_info[0] == 2 or is_pypy)
+    @skipIf(is_pypy)
     def test_mmap_readonly(self):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(994 * b'\x89' + b'Veedon')
@@ -4580,7 +4578,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.check_obj(a)
 
     # Python 2's array cannot be used as buffer
-    @skipIf(sys.version_info[0] == 2 or is_pypy)
+    @skipIf(is_pypy)
     def test_array(self):
         a = array.array('B', [0, 255, 64])
         b = bitarray(None, 'little', a)
@@ -4848,7 +4846,6 @@ class BufferExportTests(unittest.TestCase, Util):
         self.assertEqual(a[300 * 8 : 305 * 8].tobytes(), b'\x00ABC\x00')
         self.check_obj(a)
 
-    @skipIf(sys.version_info[0] == 2)
     def test_write_py3(self):
         a = zeros(40)
         m = memoryview(a)
