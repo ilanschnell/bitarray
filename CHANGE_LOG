@@ -3,6 +3,7 @@
   * remove Python 2.7 support
   * remove `util.rindex()`, use `.index(..., right=1)` instead
   * remove `util.make_endian()`, use `bitarray(..., endian=...)` instead
+  * rename `.itersearch()` -> `.search()` (and remove `.search()`)
   * update cibuildwheel to 2.18.0
   * minor simplifications
   * fix some typos
