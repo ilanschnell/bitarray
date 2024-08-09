@@ -33,6 +33,19 @@
 #define Py_UNREACHABLE() abort()
 #endif
 
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K  1
+#else
+#define IS_PY3K  0
+/* the Py_MIN and Py_MAX macros were introduced in Python 3.3 */
+#define Py_MIN(x, y)  (((x) > (y)) ? (y) : (x))
+#define Py_MAX(x, y)  (((x) > (y)) ? (x) : (y))
+#define PySlice_GetIndicesEx(slice, len, start, stop, step, slicelength) \
+    PySlice_GetIndicesEx(((PySliceObject *) slice),                      \
+                         (len), (start), (stop), (step), (slicelength))
+#define PyLong_FromLong  PyInt_FromLong
+#endif
+
 /* --- bitarrayobject --- */
 
 /* .ob_size is buffer size (in bytes), not the number of elements.
@@ -41,7 +54,7 @@ typedef struct {
     PyObject_VAR_HEAD
     char *ob_item;              /* buffer */
     Py_ssize_t allocated;       /* allocated buffer size (in bytes) */
-    Py_ssize_t nbits;           /* length of bitarray, i.e. elements */
+   Py_ssize_t nbits;           /* length of bitarray, i.e. elements */
     int endian;                 /* bit-endianness of bitarray */
     int ob_exports;             /* how many buffer exports */
     PyObject *weakreflist;      /* list of weak references */
