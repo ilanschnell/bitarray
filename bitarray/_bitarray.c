@@ -1430,50 +1430,6 @@ Reverse all bits in bitarray (in-place).");
 
 
 static PyObject *
-bitarray_search(bitarrayobject *self, PyObject *args)
-{
-    PyObject *list = NULL, *item = NULL, *x;
-    Py_ssize_t limit = PY_SSIZE_T_MAX, p = 0;
-
-    if (!PyArg_ParseTuple(args, "O|n:search", &x, &limit))
-        return NULL;
-
-    if (value_sub(x) < 0)
-        return NULL;
-    if (bitarray_Check(x) && ((bitarrayobject *) x)->nbits == 0) {
-        PyErr_SetString(PyExc_ValueError, "cannot search for empty bitarray");
-        return NULL;
-    }
-
-    if ((list = PyList_New(0)) == NULL)
-        goto error;
-
-    while ((p = find_obj(self, x, p, self->nbits, 0)) >= 0) {
-        if (PyList_Size(list) >= limit)
-            break;
-        item = PyLong_FromSsize_t(p++);
-        if (item == NULL || PyList_Append(list, item) < 0)
-            goto error;
-        Py_DECREF(item);
-    }
-    return list;
-
- error:
-    Py_XDECREF(item);
-    Py_XDECREF(list);
-    return NULL;
-}
-
-PyDoc_STRVAR(search_doc,
-"search(sub_bitarray, limit=<none>, /) -> list\n\
-\n\
-Searches for given sub_bitarray in self, and return list of start\n\
-positions.\n\
-The optional argument limits the number of search results to the integer\n\
-specified.  By default, all search results are returned.");
-
-
-static PyObject *
 bitarray_setall(bitarrayobject *self, PyObject *value)
 {
     int vi;
@@ -3392,8 +3348,8 @@ bitarray_itersearch(bitarrayobject *self, PyObject *args, PyObject *kwds)
     return (PyObject *) it;
 }
 
-PyDoc_STRVAR(itersearch_doc,
-"itersearch(sub_bitarray, start=0, stop=<end>, /, right=False) -> iterator\n\
+PyDoc_STRVAR(search_doc,
+"search(sub_bitarray, start=0, stop=<end>, /, right=False) -> iterator\n\
 \n\
 Return iterator over indices where sub_bitarray is found, such that\n\
 sub_bitarray is contained within `[start:stop]`.\n\
@@ -3527,11 +3483,9 @@ static PyMethodDef bitarray_methods[] = {
      remove_doc},
     {"reverse",      (PyCFunction) bitarray_reverse,     METH_NOARGS,
      reverse_doc},
-    {"search",       (PyCFunction) bitarray_search,      METH_VARARGS,
-     search_doc},
-    {"itersearch",   (PyCFunction) bitarray_itersearch,  METH_VARARGS |
+    {"search",       (PyCFunction) bitarray_itersearch,  METH_VARARGS |
                                                          METH_KEYWORDS,
-     itersearch_doc},
+     search_doc},
     {"setall",       (PyCFunction) bitarray_setall,      METH_O,
      setall_doc},
     {"sort",         (PyCFunction) bitarray_sort,        METH_VARARGS |

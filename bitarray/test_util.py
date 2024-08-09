@@ -1708,9 +1708,9 @@ class MixedTests(unittest.TestCase, Util):
         for i in range(2, 100):
             if sieve[i]:
                 sieve[i * i::i] = 0
-        # the first 15 primes
-        self.assertEqual(sieve.search(1, 15), [2, 3, 5, 7, 11, 13, 17, 19,
-                                               23, 29, 31, 37, 41, 43, 47])
+        # the primes up to 40
+        self.assertEqual(list(sieve.search(1, 0, 40)),
+                         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37])
         # there are 1229 primes between 1 and 10000
         self.assertEqual(sieve.count(1), 1229)
         # there are 119 primes between 4000 and 5000
