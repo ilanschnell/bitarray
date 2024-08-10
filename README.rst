@@ -63,7 +63,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 2.9.2
+    bitarray version: 3.0.0
     sys.version: 3.10.14 (main, Oct 25 2022) [Clang 16.0.6]
     sys.prefix: /Users/ilan/miniforge3
     pointer size: 64 bit
@@ -358,7 +358,7 @@ return a list of the symbols:
 
 .. code-block:: python
 
-    >>> a.decode(d)
+    >>> list(a.decode(d))
     ['H', 'e', 'l', 'l', 'o']
     >>> ''.join(a.decode(d))
     'Hello'
@@ -381,9 +381,7 @@ of passing the prefix code dictionary to those methods itself:
     >>> from bitarray import bitarray, decodetree
     >>> t = decodetree({'a': bitarray('0'), 'b': bitarray('1')})
     >>> a = bitarray('0110')
-    >>> a.decode(t)
-    ['a', 'b', 'b', 'a']
-    >>> ''.join(a.iterdecode(t))
+    >>> ''.join(a.decode(t))
     'abba'
 
 The sole purpose of the immutable ``decodetree`` object is to be passed
@@ -412,7 +410,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 2.9.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.0.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -513,9 +511,12 @@ bitarray methods:
    New in version 2.9: add non-overlapping sub-bitarray count.
 
 
-``decode(code, /)`` -> list
+``decode(code, /)`` -> iterator
    Given a prefix code (a dict mapping symbols to bitarrays, or ``decodetree``
-   object), decode content of bitarray and return it as a list of symbols.
+   object), decode content of bitarray and return an iterator over
+   the symbols.
+
+   New in version 3.0: changed to return iterator, was ``.iterdecode()``.
 
 
 ``encode(code, iterable, /)``
@@ -584,22 +585,6 @@ bitarray methods:
    New in version 1.5.3: optional index argument.
 
 
-``iterdecode(code, /)`` -> iterator
-   Given a prefix code (a dict mapping symbols to bitarrays, or ``decodetree``
-   object), decode content of bitarray and return an iterator over
-   the symbols.
-
-
-``itersearch(sub_bitarray, start=0, stop=<end>, /, right=False)`` -> iterator
-   Return iterator over indices where sub_bitarray is found, such that
-   sub_bitarray is contained within ``[start:stop]``.
-   The indices are iterated in ascending order (from lowest to highest),
-   unless ``right=True``, which will iterate in descending oder (starting with
-   rightmost match).
-
-   New in version 2.9: optional start and stop arguments - add optional keyword argument ``right``.
-
-
 ``pack(bytes, /)``
    Extend bitarray from a bytes-like object, where each byte corresponds
    to a single bit.  The byte ``b'\x00'`` maps to bit 0 and all other bytes
@@ -626,11 +611,16 @@ bitarray methods:
    Reverse all bits in bitarray (in-place).
 
 
-``search(sub_bitarray, limit=<none>, /)`` -> list
-   Searches for given sub_bitarray in self, and return list of start
-   positions.
-   The optional argument limits the number of search results to the integer
-   specified.  By default, all search results are returned.
+``search(sub_bitarray, start=0, stop=<end>, /, right=False)`` -> iterator
+   Return iterator over indices where sub_bitarray is found, such that
+   sub_bitarray is contained within ``[start:stop]``.
+   The indices are iterated in ascending order (from lowest to highest),
+   unless ``right=True``, which will iterate in descending oder (starting with
+   rightmost match).
+
+   New in version 2.9: optional start and stop arguments - add optional keyword argument ``right``.
+
+   New in version 3.0: changed to return iterator, was ``.itersearch()``.
 
 
 ``setall(value, /)``
@@ -699,7 +689,7 @@ Other objects:
 
 ``decodetree(code, /)`` -> decodetree
    Given a prefix code (a dict mapping symbols to bitarrays),
-   create a binary tree object to be passed to ``.decode()`` or ``.iterdecode()``.
+   create a binary tree object to be passed to ``.decode()``.
 
    New in version 1.6.
 
@@ -754,29 +744,6 @@ This sub-module was added in version 1.2.
    function ``pprint.pprint()``.
 
    New in version 1.8.
-
-
-``make_endian(bitarray, /, endian)`` -> bitarray
-   When the endianness of the given bitarray is different from ``endian``,
-   return a new bitarray, with endianness ``endian`` and the same elements
-   as the original bitarray.
-   Otherwise (endianness is already ``endian``) the original bitarray is returned
-   unchanged.
-
-   New in version 1.3.
-
-   New in version 2.9: deprecated - use ``bitarray()``.
-
-
-``rindex(bitarray, sub_bitarray=1, start=0, stop=<end>, /)`` -> int
-   Return rightmost (highest) index where sub_bitarray (or item - defaults
-   to 1) is found in bitarray (``a``), such that sub_bitarray is contained
-   within ``a[start:stop]``.
-   Raises ``ValueError`` when the sub_bitarray is not present.
-
-   New in version 2.3.0: optional start and stop arguments.
-
-   New in version 2.9: deprecated - use ``.index(..., right=1)``.
 
 
 ``strip(bitarray, /, mode='right')`` -> bitarray

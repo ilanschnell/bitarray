@@ -1,6 +1,20 @@
 Change log
 ==========
 
+2024-XX-XX   3.0.0:
+
+* remove Python 2.7 support
+* remove ``util.rindex()``, use ``.index(..., right=1)`` instead
+* remove ``util.make_endian()``, use ``bitarray(..., endian=...)`` instead
+* rename ``.itersearch()`` -> ``.search()`` (and remove ``.search()``)
+* rename ``.iterdecode()`` -> ``.decode()`` (and remove ``.decode()``)
+* remove hackish support for ``bitarray()`` handling unpickling,
+  see detailed explaination in `#207 <https://github.com/ilanschnell/bitarray/issues/207>`__, closes `#206 <https://github.com/ilanschnell/bitarray/issues/206>`__
+* update cibuildwheel to 2.18.0
+* minor simplifications
+* fix some typos
+
+
 **2.9.2** (2024-01-01):
 
 * optimize initialization from strings by not constantly resizing buffer
