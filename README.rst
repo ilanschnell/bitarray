@@ -11,17 +11,6 @@ ability to import and export buffers.  This allows creating bitarrays that
 are mapped to other objects, including memory-mapped files.
 
 
-Roadmap
--------
-
-In 2024 (probably around August), we are planning the release of bitarray 3.0.
-The 3.0 release will:
-
-* Remove Python 2.7 support.
-* Remove hackish support for ``bitarray()`` handling unpickling,
-  see detailed explaination in `#207 <https://github.com/ilanschnell/bitarray/pull/207>`__.  This will close `#206 <https://github.com/ilanschnell/bitarray/issues/206>`__.
-
-
 Key features
 ------------
 

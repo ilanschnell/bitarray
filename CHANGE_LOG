@@ -5,6 +5,8 @@
   * remove `util.make_endian()`, use `bitarray(..., endian=...)` instead
   * rename `.itersearch()` -> `.search()` (and remove `.search()`)
   * rename `.iterdecode()` -> `.decode()` (and remove `.decode()`)
+  * remove hackish support for `bitarray()` handling unpickling,
+    see detailed explaination in #207, closes #206
   * update cibuildwheel to 2.18.0
   * minor simplifications
   * fix some typos
