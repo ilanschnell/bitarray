@@ -3572,51 +3572,6 @@ newbitarray_from_index(PyTypeObject *type, PyObject *index,
     return (PyObject *) res;
 }
 
-/* Return a new bitarray from pickle bytes (created by .__reduce__()).
-   The head byte specifies the number of pad bits, the remaining bytes
-   consist of the buffer itself.  As the bit-endianness must be known,
-   we pass this function the actual argument endian_str (and not just
-   endian, which would default to the default bit-endianness).  This way,
-   we can raise an exception when the endian argument was not provided to
-   bitarray().  Also, we only call this function with a non-empty PyBytes
-   object.
- */
-static PyObject *
-newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, char *endian_str)
-{
-    bitarrayobject *res;
-    Py_ssize_t nbytes;
-    char *str;
-    unsigned char head;
-    int endian;
-
-    if (endian_str == NULL) {
-        PyErr_SetString(PyExc_ValueError, "endianness missing for pickle");
-        return NULL;
-    }
-    endian = endian_from_string(endian_str);
-    assert(endian >= 0);           /* endian_str was checked before */
-
-    assert(PyBytes_Check(bytes));
-    nbytes = PyBytes_GET_SIZE(bytes);
-    assert(nbytes > 0);            /* verified in bitarray_new() */
-    str = PyBytes_AS_STRING(bytes);
-    head = *str;
-    assert((head & 0xf8) == 0);    /* verified in bitarray_new() */
-
-    if (nbytes == 1 && head)
-        return PyErr_Format(PyExc_ValueError,
-                            "invalid pickle header byte: 0x%02x", head);
-
-    res = newbitarrayobject(type,
-                            8 * (nbytes - 1) - ((Py_ssize_t) head),
-                            endian);
-    if (res == NULL)
-        return NULL;
-    memcpy(res->ob_item, str + 1, (size_t) nbytes - 1);
-    return (PyObject *) res;
-}
-
 /* As of bitarray version 2.9.0, "bitarray(nbits)" will initialize all items
    to 0 (previously, the buffer was be uninitialized).
    However, for speed, one might want to create an uninitialized bitarray.
@@ -3663,13 +3618,6 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (PyIndex_Check(initial))
         return newbitarray_from_index(type, initial, endian,
                                       buffer == Py_None);
-
-    /* bytes (for pickling) - to be removed, see #206 */
-    if (PyBytes_Check(initial) && PyBytes_GET_SIZE(initial) > 0) {
-        char head = *PyBytes_AS_STRING(initial);
-        if ((head & 0xf8) == 0)
-            return newbitarray_from_pickle(type, initial, endian_str);
-    }
 
     /* bitarray: use its endianness (when endian argument missing) */
     if (bitarray_Check(initial) && endian_str == NULL)

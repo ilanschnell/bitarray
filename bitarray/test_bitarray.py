@@ -471,46 +471,11 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray(' 0\n1\r0\t1\v0 ')
         self.assertEqual(a, bitarray('01010'))
 
-    def test_rawbytes(self):  # representation used for pickling
-        for blob, endian, s in [
-                (b'\x00',         'little', ''),
-                (b'\x07\x01',     'little', '1'),
-                (b'\x07\x80',     'big',    '1'),
-                (b'\x03\xff',     'big',    '11111'),
-                (b'\x00\x0f',     'little', '11110000'),
-                (b'\x00\xf0',     'big',    '11110000'),
-                (b'\x02\x87\xda', 'big',    '10000111 110110')
-        ]:
-            a = bitarray(blob, endian)
-            self.assertEqual(a, bitarray(s))
-            self.assertEqual(a.endian(), endian)
-            self.check_obj(a)
-
     def test_rawbytes_invalid(self):
         msg3 = ("cannot extend bitarray with 'bytes', "
                 "use .pack() or .frombytes() instead")
-        # no bytes will cause TypeError
-        self.assertRaisesMessage(TypeError, msg3, bitarray, b'')
-
-        for blob in b'\x00', b'\x07\x80':
-            self.assertRaisesMessage(ValueError,
-                                     "endianness missing for pickle",
-                                     bitarray, blob)
-
-        for i in range(1, 8):
-            b = bytes(bytearray([i]))
-            # this error is raised in newbitarray_from_pickle()
-            self.assertRaises(ValueError, bitarray, b, 'big')
-            # Python 2: PyErr_Format() seems to handle "0x%02x"
-            # incorrectly.  E.g. instead of "0x01", I get "0x1"
-            self.assertRaisesMessage(ValueError,
-                            "invalid pickle header byte: 0x%02x" % b[0],
-                            bitarray, b, 'big')
-
-        for i in range(8, 256):
-            b = bytes(bytearray([i]))
-            # we don't allow bitarrays being created from bytes
-            self.assertRaises(TypeError, bitarray, b)
+        for blob in b'', b'\x00', b'\x07\x80', b'\xff':
+            self.assertRaisesMessage(TypeError, msg3, bitarray, blob)
 
     def test_bitarray_simple(self):
         for n in range(10):
@@ -1910,8 +1875,6 @@ class PickleTests(unittest.TestCase, Util):
             self.check_obj(f)
 
     def test_load(self):
-        # test data file was created using bitarray 1.5.0 / Python 3.5.5
-        self.check_file('test_150.pickle')
         # using bitarray 2.8.1 / Python 3.5.5 (_bitarray_reconstructor)
         self.check_file('test_281.pickle')
 
