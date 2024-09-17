@@ -14,7 +14,7 @@ are mapped to other objects, including memory-mapped files.
 Roadmap
 -------
 
-In 2024 (probably around August), we are planning the release of bitarray 3.0.
+In 2024 (probably around October), we are planning the release of bitarray 3.0.
 The 3.0 release will:
 
 * Remove Python 2.7 support.
