@@ -34,7 +34,7 @@ data = open('bitarray/bitarray.h').read()
 kwds['version'] = pat.search(data).group(1)
 
 macros = []
-if platform.python_implementation() == 'PyPy' or sys.version_info[0] == 2:
+if platform.python_implementation() == 'PyPy':
     macros.append(("PY_LITTLE_ENDIAN", str(int(sys.byteorder == 'little'))))
     macros.append(("PY_BIG_ENDIAN", str(int(sys.byteorder == 'big'))))
 
