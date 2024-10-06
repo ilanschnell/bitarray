@@ -1,8 +1,4 @@
-import sys
 from os.path import dirname
-
-if sys.version_info[:2] < (3, 6):
-    sys.exit("This example requires Python 3.6 or higher")
 
 try:
     from setuptools import setup, Extension
