@@ -10,7 +10,7 @@ test: bitarray/_bitarray.so
 
 
 install:
-	$(PYTHON) setup.py install
+	$(PYTHON) -m pip install -vv .
 
 
 doc: bitarray/_bitarray.so
