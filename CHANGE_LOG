@@ -3,6 +3,8 @@
   * remove Python 2.7 support
   * remove `util.rindex()`, use `.index(..., right=1)` instead
   * remove `util.make_endian()`, use `bitarray(..., endian=...)` instead
+  * Remove hackish support for `bitarray()` handling unpickling,
+    see detailed explaination in #207.  This will close #206.
   * update cibuildwheel to 2.18.0
   * bump actions/download-artifact from 2 to 4.1.7, #218
   * minor simplifications
