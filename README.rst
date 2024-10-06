@@ -17,7 +17,6 @@ Roadmap
 In 2024 (probably around October), we are planning the release of bitarray 3.0.
 The 3.0 release will:
 
-* Remove Python 2.7 support.
 * Rename ``.itersearch()`` to ``.search()`` and ``.iterdecode()``
   to ``.decode()`` (and remove their non-iterator counterpart).
 
@@ -74,7 +73,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 2.9.2
+    bitarray version: 2.9.3
     sys.version: 3.10.14 (main, Oct 25 2022) [Clang 16.0.6]
     sys.prefix: /Users/ilan/miniforge3
     pointer size: 64 bit
@@ -88,7 +87,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 502 tests in 0.187s
+    Ran 491 tests in 0.187s
 
     OK
 
@@ -423,7 +422,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 2.9.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 2.9.3 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -765,29 +764,6 @@ This sub-module was added in version 1.2.
    function ``pprint.pprint()``.
 
    New in version 1.8.
-
-
-``make_endian(bitarray, /, endian)`` -> bitarray
-   When the endianness of the given bitarray is different from ``endian``,
-   return a new bitarray, with endianness ``endian`` and the same elements
-   as the original bitarray.
-   Otherwise (endianness is already ``endian``) the original bitarray is returned
-   unchanged.
-
-   New in version 1.3.
-
-   New in version 2.9: deprecated - use ``bitarray()``.
-
-
-``rindex(bitarray, sub_bitarray=1, start=0, stop=<end>, /)`` -> int
-   Return rightmost (highest) index where sub_bitarray (or item - defaults
-   to 1) is found in bitarray (``a``), such that sub_bitarray is contained
-   within ``a[start:stop]``.
-   Raises ``ValueError`` when the sub_bitarray is not present.
-
-   New in version 2.3.0: optional start and stop arguments.
-
-   New in version 2.9: deprecated - use ``.index(..., right=1)``.
 
 
 ``strip(bitarray, /, mode='right')`` -> bitarray
