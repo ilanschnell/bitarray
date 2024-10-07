@@ -3447,6 +3447,11 @@ class IndexTests(unittest.TestCase, Util):
 
 class SearchTests(unittest.TestCase, Util):
 
+    def test_func_equal(self):
+        a = bitarray()
+        # as of bitarray 3.0, these methods are identical
+        self.assertEqual(a.search, a.itersearch)
+
     def test_simple(self):
         a = bitarray()
         for s in 0, 1, False, True, bitarray('0'), bitarray('1'):
