@@ -3447,6 +3447,7 @@ class IndexTests(unittest.TestCase, Util):
 
 class SearchTests(unittest.TestCase, Util):
 
+    @skipIf(is_pypy)
     def test_func_equal(self):
         a = bitarray()
         # as of bitarray 3.0, these methods are identical
