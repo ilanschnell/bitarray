@@ -1,6 +1,7 @@
 2024-XX-XX   3.0.0:
 -------------------
   * remove Python 2.7 support
+  * `.decode()` now returns iterator - equivalent to `.iterdecode()`
   * `.search()` now returns iterator - equivalent to `.itersearch()`
   * remove `util.rindex()`, use `.index(..., right=1)` instead
   * remove `util.make_endian()`, use `bitarray(..., endian=...)` instead

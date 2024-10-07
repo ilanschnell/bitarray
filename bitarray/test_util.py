@@ -1853,10 +1853,9 @@ class TestsHuffman(unittest.TestCase):
             a = bitarray()
             a.encode(code, msg)
             self.assertEqual(a.to01(), n * '0')
-            self.assertEqual(a.decode(code), msg)
+            self.assertEqual(list(a.decode(code)), msg)
             a.append(1)
-            self.assertRaises(ValueError, a.decode, code)
-            self.assertRaises(ValueError, list, a.iterdecode(code))
+            self.assertRaises(ValueError, list, a.decode(code))
 
     def check_tree(self, code):
         n = len(code)
@@ -1901,7 +1900,7 @@ class TestsHuffman(unittest.TestCase):
         code = huffman_code(Counter(plain))
         a = bitarray()
         a.encode(code, plain)
-        self.assertEqual(a.decode(code), plain)
+        self.assertEqual(list(a.decode(code)), plain)
         self.check_tree(code)
 
     def test_random_freq(self):

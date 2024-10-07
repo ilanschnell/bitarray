@@ -15,17 +15,20 @@ NEW_IN = {
     'bitarray.count':        ['1.1.0: optional start and stop arguments',
                               '2.3.7: optional step argument',
                               '2.9: add non-overlapping sub-bitarray count'],
+    'bitarray.decode':        '3.0: returns iterator - equivalent '
+                                   'to `.iterdecode()`',
     'bitarray.find':         ['2.1',
                               '2.9: add optional keyword argument `right`'],
     'bitarray.frombytes':     '2.5.0: allow bytes-like argument',
     'bitarray.index':        ['2.9: add optional keyword argument `right`'],
+    'bitarray.iterdecode':    '3.0: deprecated, use `.decode()`',
     'bitarray.itersearch':   ['2.9: optional start and stop arguments - '
-                              'add optional keyword argument `right`',
+                                   'add optional keyword argument `right`',
                               '3.0: deprecated, use `.search()`'],
     'bitarray.invert':        '1.5.3: optional index argument',
     'bitarray.pack':          '2.5.0: allow bytes-like argument',
     'bitarray.search':        '3.0: returns iterator - equivalent '
-                              'to `.itersearch()`',
+                                   'to `.itersearch()`',
     'decodetree':             '1.6',
     'frozenbitarray':         '1.1',
     'get_default_endian':     '1.3',
