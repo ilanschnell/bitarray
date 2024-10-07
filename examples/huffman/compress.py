@@ -56,10 +56,10 @@ def decode(filename):
     with open(filename, 'rb') as fi:
         stream = iter(fi.read())
     code = decode_code(stream)
-    a = deserialize(stream)
+    a = deserialize(bytes(stream))
 
     with open(filename[:-5] + '.out', 'wb') as fo:
-        fo.write(bytearray(a.iterdecode(code)))
+        fo.write(bytearray(a.decode(code)))
 
 def main():
     p = OptionParser("usage: %prog [options] FILE")

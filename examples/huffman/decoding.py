@@ -63,7 +63,7 @@ def main():
 
     # Time the decode method which is implemented in C
     t0 = perf_counter()
-    res = bytearray(a.iterdecode(code))
+    res = bytearray(a.decode(code))
     C_time = perf_counter() - t0
     print('C decode:  %9.3f ms' % (1000.0 * C_time))
     assert res == plain
