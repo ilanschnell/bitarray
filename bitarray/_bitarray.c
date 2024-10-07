@@ -3166,7 +3166,7 @@ static PyTypeObject DecodeIter_Type;
 
 /* create a new initialized bitarray decode iterator object */
 static PyObject *
-bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
+bitarray_decode(bitarrayobject *self, PyObject *obj)
 {
     decodeiterobject *it;       /* iterator to be returned */
     binode *tree;
@@ -3284,7 +3284,7 @@ static PyTypeObject SearchIter_Type;
 
 /* create a new initialized bitarray search iterator object */
 static PyObject *
-bitarray_itersearch(bitarrayobject *self, PyObject *args, PyObject *kwds)
+bitarray_search(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "", "", "right", NULL};
     Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX;
@@ -3423,9 +3423,9 @@ static PyMethodDef bitarray_methods[] = {
      copy_doc},
     {"count",        (PyCFunction) bitarray_count,       METH_VARARGS,
      count_doc},
-    {"decode",       (PyCFunction) bitarray_iterdecode,  METH_O,
+    {"decode",       (PyCFunction) bitarray_decode,      METH_O,
      decode_doc},
-    {"iterdecode",   (PyCFunction) bitarray_iterdecode,  METH_O,
+    {"iterdecode",   (PyCFunction) bitarray_decode,      METH_O,
      iterdecode_doc},
     {"encode",       (PyCFunction) bitarray_encode,      METH_VARARGS,
      encode_doc},
@@ -3457,10 +3457,10 @@ static PyMethodDef bitarray_methods[] = {
      remove_doc},
     {"reverse",      (PyCFunction) bitarray_reverse,     METH_NOARGS,
      reverse_doc},
-    {"search",       (PyCFunction) bitarray_itersearch,  METH_VARARGS |
+    {"search",       (PyCFunction) bitarray_search,      METH_VARARGS |
                                                          METH_KEYWORDS,
      search_doc},
-    {"itersearch",   (PyCFunction) bitarray_itersearch,  METH_VARARGS |
+    {"itersearch",   (PyCFunction) bitarray_search,      METH_VARARGS |
                                                          METH_KEYWORDS,
      itersearch_doc},
     {"setall",       (PyCFunction) bitarray_setall,      METH_O,
