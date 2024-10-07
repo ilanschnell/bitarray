@@ -66,10 +66,10 @@ class bitarray:
                    code: Union[CodeDict, decodetree]) -> Iterator: ...
 
     def search(self,
-                   sub_bitarray: Union[bitarray, int],
-                   start: int = ...,
-                   stop: int = ...,
-                   right: int = ...) -> Iterator[int]: ...
+               sub_bitarray: Union[bitarray, int],
+               start: int = ...,
+               stop: int = ...,
+               right: int = ...) -> Iterator[int]: ...
     def itersearch(self,
                    sub_bitarray: Union[bitarray, int],
                    start: int = ...,
