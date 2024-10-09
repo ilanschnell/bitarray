@@ -11,16 +11,6 @@ ability to import and export buffers.  This allows creating bitarrays that
 are mapped to other objects, including memory-mapped files.
 
 
-Roadmap
--------
-
-In 2024 (probably around October), we are planning the release of bitarray 3.0.
-The 3.0 release will:
-
-* Rename ``.itersearch()`` to ``.search()`` and ``.iterdecode()``
-  to ``.decode()`` (and remove their non-iterator counterpart).
-
-
 Key features
 ------------
 

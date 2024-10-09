@@ -3201,7 +3201,7 @@ the symbols.");
 PyDoc_STRVAR(iterdecode_doc,
 "iterdecode(code, /) -> iterator\n\
 \n\
-Alias for `.decode()`.");
+alias for `.decode()` - deprecated since bitarray 3.0.0");
 
 
 static PyObject *
@@ -3328,7 +3328,7 @@ rightmost match).");
 PyDoc_STRVAR(itersearch_doc,
 "itersearch(sub_bitarray, start=0, stop=<end>, /, right=False) -> iterator\n\
 \n\
-Alias for `.search()`.");
+alias for `.search()` - deprecated since bitarray 3.0.0");
 
 
 static PyObject *
