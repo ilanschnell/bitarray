@@ -1,12 +1,13 @@
-2024-XX-XX   3.0.0:
+2024-10-XX   3.0.0:
 -------------------
   * remove Python 2.7 support
   * `.decode()` now returns iterator - equivalent to `.iterdecode()`
   * `.search()` now returns iterator - equivalent to `.itersearch()`
   * remove `util.rindex()`, use `.index(..., right=1)` instead
   * remove `util.make_endian()`, use `bitarray(..., endian=...)` instead
-  * Remove hackish support for `bitarray()` handling unpickling,
+  * remove hackish support for `bitarray()` handling unpickling,
     see detailed explaination in #207 - closes #206
+  * deprecate `.iterdecode()` and `.itersearch()`
   * update cibuildwheel to 2.18.0
   * bump actions/download-artifact from 2 to 4.1.7, #218
   * minor simplifications
