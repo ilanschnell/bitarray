@@ -10,6 +10,7 @@ import binascii
 import shutil
 import tempfile
 import unittest
+from io import StringIO
 from array import array
 from string import hexdigits
 from random import choice, getrandbits, randrange, randint, random
@@ -20,7 +21,7 @@ from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
 from bitarray.test_bitarray import Util, skipIf, SYSINFO, DEBUG
 
 from bitarray.util import (
-    zeros, ones, urandom, pprint, make_endian, rindex, strip, count_n,
+    zeros, ones, urandom, pprint, strip, count_n,
     parity, count_and, count_or, count_xor, any_and, subset, _correspond_all,
     intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
@@ -31,11 +32,6 @@ from bitarray.util import (
 
 if DEBUG:
     from bitarray._util import _sc_rts, _SEGSIZE  # type: ignore
-
-if sys.version_info[0] == 3:
-    from io import StringIO
-else:
-    from io import BytesIO as StringIO
 
 # ---------------------------------------------------------------------------
 
@@ -198,155 +194,6 @@ class TestsPPrint(unittest.TestCase):
             self.assertEqual(a, b)
         finally:
             shutil.rmtree(tmpdir)
-
-# ---------------------------------------------------------------------------
-
-class TestsMakeEndian(unittest.TestCase, Util):
-
-    def test_simple(self):
-        a = bitarray('1110001', endian='big')
-        b = make_endian(a, 'big')
-        self.assertTrue(b is a)
-        c = make_endian(a, endian='little')
-        self.assertTrue(c == a)
-        self.assertEqual(c.endian(), 'little')
-        self.assertIsType(c, 'bitarray')
-
-        # wrong arguments
-        self.assertRaises(TypeError, make_endian, '', 'big')
-        self.assertRaises(TypeError, make_endian, bitarray(), 1)
-        self.assertRaises(ValueError, make_endian, bitarray(), 'foo')
-
-    def test_empty(self):
-        a = bitarray(endian='little')
-        b = make_endian(a, 'big')
-        self.assertTrue(b == a)
-        self.assertEqual(len(b), 0)
-        self.assertEqual(b.endian(), 'big')
-
-    def test_from_frozen(self):
-        a = frozenbitarray('1101111', 'big')
-        b = make_endian(a, 'big')
-        self.assertTrue(b is a)
-        c = make_endian(a, 'little')
-        self.assertTrue(c == a)
-        self.assertEqual(c.endian(), 'little')
-        #self.assertIsType(c, 'frozenbitarray')
-
-    def test_random(self):
-        for a in self.randombitarrays():
-            aa = a.copy()
-            for endian in 'big', 'little':
-                b = make_endian(a, endian)
-                self.assertEqual(a, b)
-                self.assertEqual(b.endian(), endian)
-                if a.endian() == endian:
-                    self.assertTrue(b is a)
-            self.assertEQUAL(a, aa)
-
-# ---------------------------------------------------------------------------
-
-class TestsRIndex(unittest.TestCase, Util):
-
-    def test_simple(self):
-        self.assertRaises(TypeError, rindex)
-        self.assertRaises(TypeError, rindex, None)
-        self.assertRaises(ValueError, rindex, bitarray(), 1)
-        for endian in 'big', 'little':
-            a = bitarray('00010110 000', endian)
-            self.assertEqual(rindex(a), 6)
-            self.assertEqual(rindex(a, 1), 6)
-            self.assertEqual(rindex(a, 1, 3), 6)
-            self.assertEqual(rindex(a, 1, 3, 8), 6)
-            self.assertEqual(rindex(a, 1, -20, 20), 6)
-            self.assertEqual(rindex(a, 1, 0, 5), 3)
-            self.assertEqual(rindex(a, 1, 0, -6), 3)
-            self.assertEqual(rindex(a, 1, 0, -5), 5)
-            self.assertRaises(TypeError, rindex, a, 'A')
-            self.assertRaises(ValueError, rindex, a, 2)
-            self.assertRaises(ValueError, rindex, a, 1, 7)
-            self.assertRaises(ValueError, rindex, a, 1, 10, 3)
-            self.assertRaises(ValueError, rindex, a, 1, -1, 0)
-            self.assertRaises(TypeError, rindex, a, 1, 10, 3, 4)
-
-            a = bitarray('00010110 111', endian)
-            self.assertEqual(rindex(a, 0), 7)
-            self.assertEqual(rindex(a, 0, 0, 4), 2)
-            self.assertEqual(rindex(a, False), 7)
-
-            a = frozenbitarray('00010110 111', endian)
-            self.assertEqual(rindex(a, 0), 7)
-            self.assertRaises(TypeError, rindex, a, None)
-            self.assertRaises(ValueError, rindex, a, 7)
-
-            for v in 0, 1:
-                self.assertRaises(ValueError, rindex,
-                                  bitarray(0, endian), v)
-            self.assertRaises(ValueError, rindex,
-                              bitarray('000', endian), 1)
-            self.assertRaises(ValueError, rindex,
-                              bitarray('11111', endian), 0)
-
-    def test_range(self):
-        n = 100
-        a = bitarray(n)
-        for m in range(n):
-            a.setall(0)
-            self.assertRaises(ValueError, rindex, a, 1)
-            a[m] = 1
-            self.assertEqual(rindex(a, 1), m)
-
-            a.setall(1)
-            self.assertRaises(ValueError, rindex, a, 0)
-            a[m] = 0
-            self.assertEqual(rindex(a, 0), m)
-
-    def test_random(self):
-        for a in self.randombitarrays():
-            v = getrandbits(1)
-            try:
-                i = rindex(a, v)
-            except ValueError:
-                i = None
-            s = a.to01()
-            try:
-                j = s.rindex(str(v))
-            except ValueError:
-                j = None
-            self.assertEqual(i, j)
-
-    def test_random_start_stop(self):
-        for _ in range(10):
-            n = randrange(1, 1000)
-            a = zeros(n)
-            indices = [randrange(n) for _ in range(100)]
-            a[indices] = 1
-            start = randint(0, n)
-            stop = randint(0, n)
-            filtered = [i for i in indices if i >= start and i < stop]
-            ref = max(filtered) if filtered else -1
-            try:
-                res = rindex(a, 1, start, stop)
-            except ValueError:
-                res = -1
-            self.assertEqual(res, ref)
-
-    def test_many_set(self):
-        for _ in range(10):
-            n = randint(1, 10000)
-            v = getrandbits(1)
-            a = bitarray(n)
-            a.setall(not v)
-            lst = [randrange(n) for _ in range(100)]
-            a[lst] = v
-            self.assertEqual(rindex(a, v), max(lst))
-
-    def test_one_set(self):
-        for _ in range(10):
-            N = randint(1, 10000)
-            a = zeros(N)
-            a[randrange(N)] = 1
-            self.assertEqual(rindex(a), a.index(1))
 
 # ---------------------------------------------------------------------------
 
@@ -943,8 +790,6 @@ class TestsHexlify(unittest.TestCase, Util):
             # check for NUL bytes
             for b in b'\0', b'\0f', b'f\0', b'\0ff', b'f\0f', b'ff\0':
                 msg = "non-hexadecimal digit found, got '\0' (0x00)"
-                if sys.version_info[0] == 2:
-                    msg = msg.replace("0x00", "0x0")
                 self.assertRaisesMessage(ValueError, msg, hex2ba, b, endian)
 
     def test_explicit(self):
@@ -1184,7 +1029,6 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(len(a), n)
             self.assertFalse(a.any())
 
-    @skipIf(sys.version_info[0] == 2)
     def test_decode_untouch(self):
         stream = iter(b'\x01\x03\x01\x03\0XYZ')
         self.assertEqual(sc_decode(stream), bitarray('110'))
@@ -1195,7 +1039,6 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertTrue(next(stream) is None)
         self.assertEqual(next(stream), 'foo')
 
-    @skipIf(sys.version_info[0] == 2)
     def test_decode_header_errors(self):
         # invalid header
         for c in 0x20, 0x21, 0x40, 0x80, 0xc0, 0xf0, 0xff:
@@ -1274,7 +1117,6 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertRaisesMessage(ValueError, "unexpected end of stream",
                                      sc_decode, stream)
 
-    @skipIf(sys.version_info[0] == 2)
     def test_decode_types(self):
         blob = b'\x11\x03\x01\x20\0'
         for b in blob, bytearray(blob), list(blob), array('B', blob):
@@ -1303,7 +1145,6 @@ class SC_Tests(unittest.TestCase, Util):
             a = sc_decode(b)
             self.assertEqual(a.to01(), '001')
 
-    @skipIf(sys.version_info[0] == 2)
     def test_sparse_block_type1(self):
         a = bitarray(256, 'little')
         for n in range(1, 32):
@@ -1354,8 +1195,7 @@ class SC_Tests(unittest.TestCase, Util):
         b = sc_decode(i)
         self.assertTrue(a == b == c)
         self.assertTrue(a.endian() == b.endian() == c.endian())
-        if sys.version_info[0] == 3:
-            self.assertEqual(bytes(i), b'')
+        self.assertEqual(bytes(i), b'')
 
     def test_encode_zeros(self):
         for i in range(18):
@@ -1469,10 +1309,9 @@ class VLFTests(unittest.TestCase, Util):
             self.assertEqual(s, b'\xd3\x20')
 
     def test_decode_args(self):
-        if sys.version_info[0] == 3:
-            self.assertRaises(TypeError, vl_decode, 'foo')
-            # item not integer
-            self.assertRaises(TypeError, vl_decode, iter([b'\x40']))
+        self.assertRaises(TypeError, vl_decode, 'foo')
+        # item not integer
+        self.assertRaises(TypeError, vl_decode, iter([b'\x40']))
 
         self.assertRaises(TypeError, vl_decode, b'\x40', 'big', 3)
         self.assertRaises(ValueError, vl_decode, b'\x40', 'foo')
@@ -1485,9 +1324,8 @@ class VLFTests(unittest.TestCase, Util):
 
         b = b'\xd3\x20'
         lst = [b, iter(b), memoryview(b)]
-        if sys.version_info[0] == 3:
-            lst.append(iter([0xd3, 0x20]))
-            lst.append(bytearray(b))
+        lst.append(iter([0xd3, 0x20]))
+        lst.append(bytearray(b))
         for s in lst:
             a = vl_decode(s, endian=self.random_endian())
             self.assertIsType(a, 'bitarray')
@@ -1515,8 +1353,7 @@ class VLFTests(unittest.TestCase, Util):
                         (b'\xe0\x40A', '00001')]:
             stream = iter(s)
             self.assertEqual(vl_decode(stream), bitarray(bits))
-            self.assertEqual(next(stream),
-                             b'A' if sys.version_info[0] == 2 else 65)
+            self.assertEqual(next(stream), 65)
 
     def test_decode_ambiguity(self):
         for s in b'\x40', b'\x4f', b'\x45':
@@ -1545,7 +1382,6 @@ class VLFTests(unittest.TestCase, Util):
         for s in b'\x80', b'\x80\x80':
             self.assertRaises(ValueError, vl_decode, s)
 
-    @skipIf(sys.version_info[0] == 2)
     def test_decode_invalid_stream(self):
         N = 100
         s = iter(N * (3 * [0x80] + ['XX']) + ['end.'])
@@ -1573,7 +1409,7 @@ class VLFTests(unittest.TestCase, Util):
         LEN_PAD_BITS = 3
         self.assertEqual(len(s), (len(a) + LEN_PAD_BITS + 6) // 7)
 
-        head = ord(s[0]) if sys.version_info[0] == 2 else s[0]
+        head = s[0]
         padding = (head & 0x70) >> 4
         self.assertEqual(len(a) + padding, 7 * len(s) - LEN_PAD_BITS)
 
@@ -1800,7 +1636,6 @@ class MixedTests(unittest.TestCase, Util):
             self.assertEqual(t, s)
             self.assertEqual(eval(t), i)
 
-    @skipIf(sys.version_info[0] == 2)
     def test_oct(self):
         for i in range(1000):
             s = oct(i)
@@ -1873,9 +1708,9 @@ class MixedTests(unittest.TestCase, Util):
         for i in range(2, 100):
             if sieve[i]:
                 sieve[i * i::i] = 0
-        # the first 15 primes
-        self.assertEqual(sieve.search(1, 15), [2, 3, 5, 7, 11, 13, 17, 19,
-                                               23, 29, 31, 37, 41, 43, 47])
+        # primes up to 40
+        self.assertEqual(list(sieve.search(1, 0, 40)),
+                         [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37])
         # there are 1229 primes between 1 and 10000
         self.assertEqual(sieve.count(1), 1229)
         # there are 119 primes between 4000 and 5000
@@ -1940,9 +1775,8 @@ class TestsSerialization(unittest.TestCase, Util):
         def check_msg(b):
             # Python 2: PyErr_Format() seems to handle "0x%02x"
             # incorrectly.  E.g. instead of "0x01", I get "0x1"
-            if sys.version_info[0] == 3:
-                msg = "invalid header byte: 0x%02x" % b[0]
-                self.assertRaisesMessage(ValueError, msg, deserialize, b)
+            msg = "invalid header byte: 0x%02x" % b[0]
+            self.assertRaisesMessage(ValueError, msg, deserialize, b)
 
         for i in range(256):
             b = bytes(bytearray([i]))
@@ -2019,10 +1853,9 @@ class TestsHuffman(unittest.TestCase):
             a = bitarray()
             a.encode(code, msg)
             self.assertEqual(a.to01(), n * '0')
-            self.assertEqual(a.decode(code), msg)
+            self.assertEqual(list(a.decode(code)), msg)
             a.append(1)
-            self.assertRaises(ValueError, a.decode, code)
-            self.assertRaises(ValueError, list, a.iterdecode(code))
+            self.assertRaises(ValueError, list, a.decode(code))
 
     def check_tree(self, code):
         n = len(code)
@@ -2067,7 +1900,7 @@ class TestsHuffman(unittest.TestCase):
         code = huffman_code(Counter(plain))
         a = bitarray()
         a.encode(code, plain)
-        self.assertEqual(a.decode(code), plain)
+        self.assertEqual(list(a.decode(code)), plain)
         self.check_tree(code)
 
     def test_random_freq(self):
@@ -2166,8 +1999,7 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         self.assertEqual(list(canonical_decode(a, cnt, s)), s)
         self.assertEqual(list(canonical_decode(a, cnt, bytearray(s))), s)
         self.assertEqual(list(canonical_decode(a, cnt, tuple(s))), s)
-        if sys.version_info[0] == 3:
-            self.assertEqual(list(canonical_decode(a, cnt, bytes(s))), s)
+        self.assertEqual(list(canonical_decode(a, cnt, bytes(s))), s)
         # Implementation Note:
         #   The symbol can even be an iterable.  This was done because we
         #   want to use PySequence_Fast in order to convert sequence

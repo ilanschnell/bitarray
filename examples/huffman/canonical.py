@@ -40,7 +40,7 @@ def main():
 
     a = bitarray()
     a.encode(code, plain)
-    assert bytearray(a.iterdecode(code)) == plain
+    assert bytearray(a.decode(code)) == plain
     assert bytearray(canonical_decode(a, count, symbol)) == plain
 
 

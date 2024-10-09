@@ -866,13 +866,9 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         return extend_bitarray(self, (bitarrayobject *) obj);
 
     if (PyBytes_Check(obj)) {                             /* bytes 01 */
-#if IS_PY3K
         PyErr_SetString(PyExc_TypeError, "cannot extend bitarray with "
                         "'bytes', use .pack() or .frombytes() instead");
         return -1;
-#else
-        return extend_bytes01(self, obj);
-#endif
     }
 
     if (PyUnicode_Check(obj))                           /* unicode 01 */
@@ -1158,11 +1154,7 @@ occurrences are counted within `[start:stop]` (`step` must be 1).");
 static PyObject *
 bitarray_endian(bitarrayobject *self)
 {
-#if IS_PY3K
     return PyUnicode_FromString(ENDIAN_STR(self->endian));
-#else
-    return Py_BuildValue("s", ENDIAN_STR(self->endian));
-#endif
 }
 
 PyDoc_STRVAR(endian_doc,
@@ -1254,12 +1246,8 @@ bitarray_index(bitarrayobject *self, PyObject *args, PyObject *kwds)
     assert(PyLong_Check(result));
     if (PyLong_AsSsize_t(result) < 0) {
         Py_DECREF(result);
-#if IS_PY3K
         PyErr_Format(PyExc_ValueError, "%A not in bitarray",
                      PyTuple_GET_ITEM(args, 0));
-#else
-        PyErr_SetString(PyExc_ValueError, "item not in bitarray");
-#endif
         return NULL;
     }
     return result;
@@ -1380,11 +1368,7 @@ bitarray_repr(bitarrayobject *self)
     char *str;
 
     if (self->nbits == 0)
-#if IS_PY3K
         return PyUnicode_FromString("bitarray()");
-#else
-        return Py_BuildValue("s", "bitarray()");
-#endif
 
     strsize = self->nbits + 12;  /* 12 is the length of "bitarray('')" */
     if (strsize > PY_SSIZE_T_MAX) {
@@ -1402,11 +1386,7 @@ bitarray_repr(bitarrayobject *self)
     str[strsize - 2] = '\'';
     str[strsize - 1] = ')';     /* no terminating '\0' */
 
-#if IS_PY3K
     result = PyUnicode_FromStringAndSize(str, strsize);
-#else
-    result = Py_BuildValue("s#", str, (Py_ssize_t) strsize);
-#endif
     PyMem_Free((void *) str);
     return result;
 }
@@ -1447,50 +1427,6 @@ PyDoc_STRVAR(reverse_doc,
 "reverse()\n\
 \n\
 Reverse all bits in bitarray (in-place).");
-
-
-static PyObject *
-bitarray_search(bitarrayobject *self, PyObject *args)
-{
-    PyObject *list = NULL, *item = NULL, *x;
-    Py_ssize_t limit = PY_SSIZE_T_MAX, p = 0;
-
-    if (!PyArg_ParseTuple(args, "O|n:search", &x, &limit))
-        return NULL;
-
-    if (value_sub(x) < 0)
-        return NULL;
-    if (bitarray_Check(x) && ((bitarrayobject *) x)->nbits == 0) {
-        PyErr_SetString(PyExc_ValueError, "cannot search for empty bitarray");
-        return NULL;
-    }
-
-    if ((list = PyList_New(0)) == NULL)
-        goto error;
-
-    while ((p = find_obj(self, x, p, self->nbits, 0)) >= 0) {
-        if (PyList_Size(list) >= limit)
-            break;
-        item = PyLong_FromSsize_t(p++);
-        if (item == NULL || PyList_Append(list, item) < 0)
-            goto error;
-        Py_DECREF(item);
-    }
-    return list;
-
- error:
-    Py_XDECREF(item);
-    Py_XDECREF(list);
-    return NULL;
-}
-
-PyDoc_STRVAR(search_doc,
-"search(sub_bitarray, limit=<none>, /) -> list\n\
-\n\
-Searches for given sub_bitarray in self, and return list of start\n\
-positions.\n\
-The optional argument limits the number of search results to the integer\n\
-specified.  By default, all search results are returned.");
 
 
 static PyObject *
@@ -1690,12 +1626,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
 
         assert(size >= 0 && offset + size <= nbytes);
         /* basically: f.write(memoryview(self)[offset:offset + size] */
-        ret = PyObject_CallMethod(f, "write",
-#if IS_PY3K
-                                  "y#",
-#else
-                                  "s#",
-#endif
+        ret = PyObject_CallMethod(f, "write", "y#",
                                   self->ob_item + offset, size);
         if (ret == NULL)
             return NULL;
@@ -1721,11 +1652,7 @@ bitarray_to01(bitarrayobject *self)
         return PyErr_NoMemory();
 
     setstr01(self, str);
-#if IS_PY3K
     result = PyUnicode_FromStringAndSize(str, self->nbits);
-#else
-    result = Py_BuildValue("s#", str, self->nbits);
-#endif
     PyMem_Free((void *) str);
     return result;
 }
@@ -2726,9 +2653,6 @@ static PyNumberMethods bitarray_as_number = {
     0,                                   /* nb_add */
     0,                                   /* nb_subtract */
     0,                                   /* nb_multiply */
-#if PY_MAJOR_VERSION == 2
-    0,                                   /* nb_divide */
-#endif
     0,                                   /* nb_remainder */
     0,                                   /* nb_divmod */
     0,                                   /* nb_power */
@@ -2742,22 +2666,12 @@ static PyNumberMethods bitarray_as_number = {
     (binaryfunc) bitarray_and,           /* nb_and */
     (binaryfunc) bitarray_xor,           /* nb_xor */
     (binaryfunc) bitarray_or,            /* nb_or */
-#if PY_MAJOR_VERSION == 2
-    0,                                   /* nb_coerce */
-#endif
     0,                                   /* nb_int */
     0,                                   /* nb_reserved (was nb_long) */
     0,                                   /* nb_float */
-#if PY_MAJOR_VERSION == 2
-    0,                                   /* nb_oct */
-    0,                                   /* nb_hex */
-#endif
     0,                                   /* nb_inplace_add */
     0,                                   /* nb_inplace_subtract */
     0,                                   /* nb_inplace_multiply */
-#if PY_MAJOR_VERSION == 2
-    0,                                   /* nb_inplace_divide */
-#endif
     0,                                   /* nb_inplace_remainder */
     0,                                   /* nb_inplace_power */
     (binaryfunc) bitarray_ilshift,       /* nb_inplace_lshift */
@@ -2769,9 +2683,7 @@ static PyNumberMethods bitarray_as_number = {
     0,                                   /* nb_true_divide */
     0,                                   /* nb_inplace_floor_divide */
     0,                                   /* nb_inplace_true_divide */
-#if PY_MAJOR_VERSION == 3
     0,                                   /* nb_index */
-#endif
 };
 
 /**************************************************************************
@@ -2828,13 +2740,8 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
         value = PyDict_GetItem(codedict, symbol);
         Py_DECREF(symbol);
         if (value == NULL) {
-#if IS_PY3K
             PyErr_Format(PyExc_ValueError,
                          "symbol not defined in prefix code: %A", symbol);
-#else
-            PyErr_SetString(PyExc_ValueError,
-                            "symbol not defined in prefix code");
-#endif
             goto error;
         }
         if (check_value(value) < 0 ||
@@ -2929,11 +2836,7 @@ binode_insert_symbol(binode *tree, bitarrayobject *a, PyObject *symbol)
     return 0;
 
  ambiguity:
-#if IS_PY3K
     PyErr_Format(PyExc_ValueError, "prefix code ambiguous: %A", symbol);
-#else
-    PyErr_SetString(PyExc_ValueError, "prefix code ambiguous");
-#endif
     return -1;
 }
 
@@ -3190,12 +3093,7 @@ Given a prefix code (a dict mapping symbols to bitarrays),\n\
 create a binary tree object to be passed to `.decode()` or `.iterdecode()`.");
 
 static PyTypeObject DecodeTree_Type = {
-#if IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
-#else
-    PyObject_HEAD_INIT(NULL)
-    0,                                        /* ob_size */
-#endif
     "bitarray.decodetree",                    /* tp_name */
     sizeof(decodetreeobject),                 /* tp_basicsize */
     0,                                        /* tp_itemsize */
@@ -3254,43 +3152,6 @@ get_tree(PyObject *obj)
     return binode_make_tree(obj);
 }
 
-static PyObject *
-bitarray_decode(bitarrayobject *self, PyObject *obj)
-{
-    binode *tree;
-    PyObject *list, *symbol;
-    Py_ssize_t index = 0;
-
-    if ((tree = get_tree(obj)) == NULL)
-        return NULL;
-
-    if ((list = PyList_New(0)) == NULL)
-        goto error;
-
-    while ((symbol = binode_traverse(tree, self, &index))) {
-        if (PyList_Append(list, symbol) < 0)
-            goto error;
-    }
-    if (PyErr_Occurred())
-        goto error;
-
-    if (!DecodeTree_Check(obj))
-        binode_delete(tree);
-    return list;
-
- error:
-    if (!DecodeTree_Check(obj))
-        binode_delete(tree);
-    Py_XDECREF(list);
-    return NULL;
-}
-
-PyDoc_STRVAR(decode_doc,
-"decode(code, /) -> list\n\
-\n\
-Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`\n\
-object), decode content of bitarray and return it as a list of symbols.");
-
 /*********************** (bitarray) Decode Iterator ***********************/
 
 typedef struct {
@@ -3305,7 +3166,7 @@ static PyTypeObject DecodeIter_Type;
 
 /* create a new initialized bitarray decode iterator object */
 static PyObject *
-bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
+bitarray_decode(bitarrayobject *self, PyObject *obj)
 {
     decodeiterobject *it;       /* iterator to be returned */
     binode *tree;
@@ -3330,12 +3191,17 @@ bitarray_iterdecode(bitarrayobject *self, PyObject *obj)
     return (PyObject *) it;
 }
 
-PyDoc_STRVAR(iterdecode_doc,
-"iterdecode(code, /) -> iterator\n\
+PyDoc_STRVAR(decode_doc,
+"decode(code, /) -> iterator\n\
 \n\
 Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`\n\
 object), decode content of bitarray and return an iterator over\n\
 the symbols.");
+
+PyDoc_STRVAR(iterdecode_doc,
+"iterdecode(code, /) -> iterator\n\
+\n\
+alias for `.decode()` - deprecated since bitarray 3.0.0");
 
 
 static PyObject *
@@ -3372,12 +3238,7 @@ decodeiter_traverse(decodeiterobject *it, visitproc visit, void *arg)
 }
 
 static PyTypeObject DecodeIter_Type = {
-#if IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
-#else
-    PyObject_HEAD_INIT(NULL)
-    0,                                        /* ob_size */
-#endif
     "bitarray.decodeiterator",                /* tp_name */
     sizeof(decodeiterobject),                 /* tp_basicsize */
     0,                                        /* tp_itemsize */
@@ -3423,7 +3284,7 @@ static PyTypeObject SearchIter_Type;
 
 /* create a new initialized bitarray search iterator object */
 static PyObject *
-bitarray_itersearch(bitarrayobject *self, PyObject *args, PyObject *kwds)
+bitarray_search(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "", "", "right", NULL};
     Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX;
@@ -3455,14 +3316,20 @@ bitarray_itersearch(bitarrayobject *self, PyObject *args, PyObject *kwds)
     return (PyObject *) it;
 }
 
-PyDoc_STRVAR(itersearch_doc,
-"itersearch(sub_bitarray, start=0, stop=<end>, /, right=False) -> iterator\n\
+PyDoc_STRVAR(search_doc,
+"search(sub_bitarray, start=0, stop=<end>, /, right=False) -> iterator\n\
 \n\
 Return iterator over indices where sub_bitarray is found, such that\n\
 sub_bitarray is contained within `[start:stop]`.\n\
 The indices are iterated in ascending order (from lowest to highest),\n\
 unless `right=True`, which will iterate in descending oder (starting with\n\
 rightmost match).");
+
+PyDoc_STRVAR(itersearch_doc,
+"itersearch(sub_bitarray, start=0, stop=<end>, /, right=False) -> iterator\n\
+\n\
+alias for `.search()` - deprecated since bitarray 3.0.0");
+
 
 static PyObject *
 searchiter_next(searchiterobject *it)
@@ -3506,12 +3373,7 @@ searchiter_traverse(searchiterobject *it, visitproc visit, void *arg)
 }
 
 static PyTypeObject SearchIter_Type = {
-#if IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
-#else
-    PyObject_HEAD_INIT(NULL)
-    0,                                        /* ob_size */
-#endif
     "bitarray.searchiterator",                /* tp_name */
     sizeof(searchiterobject),                 /* tp_basicsize */
     0,                                        /* tp_itemsize */
@@ -3563,7 +3425,7 @@ static PyMethodDef bitarray_methods[] = {
      count_doc},
     {"decode",       (PyCFunction) bitarray_decode,      METH_O,
      decode_doc},
-    {"iterdecode",   (PyCFunction) bitarray_iterdecode,  METH_O,
+    {"iterdecode",   (PyCFunction) bitarray_decode,      METH_O,
      iterdecode_doc},
     {"encode",       (PyCFunction) bitarray_encode,      METH_VARARGS,
      encode_doc},
@@ -3595,9 +3457,10 @@ static PyMethodDef bitarray_methods[] = {
      remove_doc},
     {"reverse",      (PyCFunction) bitarray_reverse,     METH_NOARGS,
      reverse_doc},
-    {"search",       (PyCFunction) bitarray_search,      METH_VARARGS,
+    {"search",       (PyCFunction) bitarray_search,      METH_VARARGS |
+                                                         METH_KEYWORDS,
      search_doc},
-    {"itersearch",   (PyCFunction) bitarray_itersearch,  METH_VARARGS |
+    {"itersearch",   (PyCFunction) bitarray_search,      METH_VARARGS |
                                                          METH_KEYWORDS,
      itersearch_doc},
     {"setall",       (PyCFunction) bitarray_setall,      METH_O,
@@ -3725,51 +3588,6 @@ newbitarray_from_index(PyTypeObject *type, PyObject *index,
     return (PyObject *) res;
 }
 
-/* Return a new bitarray from pickle bytes (created by .__reduce__()).
-   The head byte specifies the number of pad bits, the remaining bytes
-   consist of the buffer itself.  As the bit-endianness must be known,
-   we pass this function the actual argument endian_str (and not just
-   endian, which would default to the default bit-endianness).  This way,
-   we can raise an exception when the endian argument was not provided to
-   bitarray().  Also, we only call this function with a non-empty PyBytes
-   object.
- */
-static PyObject *
-newbitarray_from_pickle(PyTypeObject *type, PyObject *bytes, char *endian_str)
-{
-    bitarrayobject *res;
-    Py_ssize_t nbytes;
-    char *str;
-    unsigned char head;
-    int endian;
-
-    if (endian_str == NULL) {
-        PyErr_SetString(PyExc_ValueError, "endianness missing for pickle");
-        return NULL;
-    }
-    endian = endian_from_string(endian_str);
-    assert(endian >= 0);           /* endian_str was checked before */
-
-    assert(PyBytes_Check(bytes));
-    nbytes = PyBytes_GET_SIZE(bytes);
-    assert(nbytes > 0);            /* verified in bitarray_new() */
-    str = PyBytes_AS_STRING(bytes);
-    head = *str;
-    assert((head & 0xf8) == 0);    /* verified in bitarray_new() */
-
-    if (nbytes == 1 && head)
-        return PyErr_Format(PyExc_ValueError,
-                            "invalid pickle header byte: 0x%02x", head);
-
-    res = newbitarrayobject(type,
-                            8 * (nbytes - 1) - ((Py_ssize_t) head),
-                            endian);
-    if (res == NULL)
-        return NULL;
-    memcpy(res->ob_item, str + 1, (size_t) nbytes - 1);
-    return (PyObject *) res;
-}
-
 /* As of bitarray version 2.9.0, "bitarray(nbits)" will initialize all items
    to 0 (previously, the buffer was be uninitialized).
    However, for speed, one might want to create an uninitialized bitarray.
@@ -3816,13 +3634,6 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (PyIndex_Check(initial))
         return newbitarray_from_index(type, initial, endian,
                                       buffer == Py_None);
-
-    /* bytes (for pickling) - to be removed, see #206 */
-    if (PyBytes_Check(initial) && PyBytes_GET_SIZE(initial) > 0) {
-        char head = *PyBytes_AS_STRING(initial);
-        if ((head & 0xf8) == 0)
-            return newbitarray_from_pickle(type, initial, endian_str);
-    }
 
     /* bitarray: use its endianness (when endian argument missing) */
     if (bitarray_Check(initial) && endian_str == NULL)
@@ -3971,12 +3782,7 @@ bitarrayiter_traverse(bitarrayiterobject *it, visitproc visit, void *arg)
 }
 
 static PyTypeObject BitarrayIter_Type = {
-#if IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
-#else
-    PyObject_HEAD_INIT(NULL)
-    0,                                        /* ob_size */
-#endif
     "bitarray.bitarrayiterator",              /* tp_name */
     sizeof(bitarrayiterobject),               /* tp_basicsize */
     0,                                        /* tp_itemsize */
@@ -4040,60 +3846,7 @@ bitarray_releasebuffer(bitarrayobject *self, Py_buffer *view)
     self->ob_exports--;
 }
 
-#if PY_MAJOR_VERSION == 2       /* old buffer protocol */
-static Py_ssize_t
-bitarray_buffer_getreadbuf(bitarrayobject *self,
-                           Py_ssize_t index, const void **ptr)
-{
-    if (index != 0) {
-        PyErr_SetString(PyExc_SystemError, "accessing non-existent segment");
-        return -1;
-    }
-    *ptr = (void *) self->ob_item;
-    return Py_SIZE(self);
-}
-
-static Py_ssize_t
-bitarray_buffer_getwritebuf(bitarrayobject *self,
-                            Py_ssize_t index, const void **ptr)
-{
-    if (index != 0) {
-        PyErr_SetString(PyExc_SystemError, "accessing non-existent segment");
-        return -1;
-    }
-    *ptr = (void *) self->ob_item;
-    return Py_SIZE(self);
-}
-
-static Py_ssize_t
-bitarray_buffer_getsegcount(bitarrayobject *self, Py_ssize_t *lenp)
-{
-    if (lenp)
-        *lenp = Py_SIZE(self);
-    return 1;
-}
-
-static Py_ssize_t
-bitarray_buffer_getcharbuf(bitarrayobject *self,
-                           Py_ssize_t index, const char **ptr)
-{
-    if (index != 0) {
-        PyErr_SetString(PyExc_SystemError, "accessing non-existent segment");
-        return -1;
-    }
-    *ptr = self->ob_item;
-    return Py_SIZE(self);
-}
-#endif  /* old buffer protocol */
-
-
 static PyBufferProcs bitarray_as_buffer = {
-#if PY_MAJOR_VERSION == 2       /* old buffer protocol */
-    (readbufferproc) bitarray_buffer_getreadbuf,
-    (writebufferproc) bitarray_buffer_getwritebuf,
-    (segcountproc) bitarray_buffer_getsegcount,
-    (charbufferproc) bitarray_buffer_getcharbuf,
-#endif
     (getbufferproc) bitarray_getbuffer,
     (releasebufferproc) bitarray_releasebuffer,
 };
@@ -4126,12 +3879,7 @@ read-only or writable, depending on the object type.");
 
 
 static PyTypeObject Bitarray_Type = {
-#if IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
-#else
-    PyObject_HEAD_INIT(NULL)
-    0,                                        /* ob_size */
-#endif
     "bitarray.bitarray",                      /* tp_name */
     sizeof(bitarrayobject),                   /* tp_basicsize */
     0,                                        /* tp_itemsize */
@@ -4151,12 +3899,7 @@ static PyTypeObject Bitarray_Type = {
     PyObject_GenericGetAttr,                  /* tp_getattro */
     0,                                        /* tp_setattro */
     &bitarray_as_buffer,                      /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE
-#if PY_MAJOR_VERSION == 2
-    | Py_TPFLAGS_HAVE_WEAKREFS
-    | Py_TPFLAGS_HAVE_NEWBUFFER | Py_TPFLAGS_CHECKTYPES
-#endif
-    ,                                         /* tp_flags */
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /* tp_flags */
     bitarraytype_doc,                         /* tp_doc */
     0,                                        /* tp_traverse */
     0,                                        /* tp_clear */
@@ -4229,11 +3972,7 @@ reconstructor(PyObject *module, PyObject *args)
 static PyObject *
 get_default_endian(PyObject *module)
 {
-#if IS_PY3K
     return PyUnicode_FromString(ENDIAN_STR(default_endian));
-#else
-    return Py_BuildValue("s", ENDIAN_STR(default_endian));
-#endif
 }
 
 PyDoc_STRVAR(get_default_endian_doc,
@@ -4319,7 +4058,6 @@ static PyMethodDef module_functions[] = {
 
 /******************************* Install Module ***************************/
 
-#if IS_PY3K
 /* register bitarray as collections.abc.MutableSequence */
 static int
 register_abc(void)
@@ -4347,24 +4085,15 @@ register_abc(void)
 static PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT, "_bitarray", 0, -1, module_functions,
 };
-#endif
 
 PyMODINIT_FUNC
-#if IS_PY3K
 PyInit__bitarray(void)
-#else
-init_bitarray(void)
-#endif
 {
     PyObject *m;
 
     setup_reverse_trans();
 
-#if IS_PY3K
     m = PyModule_Create(&moduledef);
-#else
-    m = Py_InitModule3("_bitarray", module_functions, 0);
-#endif
     if (m == NULL)
         goto error;
 
@@ -4374,10 +4103,8 @@ init_bitarray(void)
     Py_INCREF((PyObject *) &Bitarray_Type);
     PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type);
 
-#if IS_PY3K
     if (register_abc() < 0)
         goto error;
-#endif
 
     if (PyType_Ready(&DecodeTree_Type) < 0)
         goto error;
@@ -4398,18 +4125,9 @@ init_bitarray(void)
     Py_SET_TYPE(&SearchIter_Type, &PyType_Type);
 
     PyModule_AddObject(m, "__version__",
-#if IS_PY3K
                        PyUnicode_FromString(BITARRAY_VERSION));
-#else
-                       Py_BuildValue("s", BITARRAY_VERSION));
-#endif
 
-#if IS_PY3K
     return m;
  error:
     return NULL;
-#else
- error:
-    return;
-#endif
 }
