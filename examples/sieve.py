@@ -22,8 +22,7 @@ for i in range(2, isqrt(N) + 1):
         a[i*i::i] = False
 
 print('the first few primes are:')
-it = a.search(1)
-print([next(it) for _ in range(20)])
+print(list(a.search(1, 0, 50)))
 
 # There are 5,761,455 primes up to 100 million
 x = a.count()
