@@ -63,7 +63,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 2.9.3
+    bitarray version: 3.0.0
     sys.version: 3.10.14 (main, Oct 25 2022) [Clang 16.0.6]
     sys.prefix: /Users/ilan/miniforge3
     pointer size: 64 bit
@@ -77,7 +77,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 491 tests in 0.187s
+    Ran 493 tests in 0.187s
 
     OK
 
@@ -354,17 +354,16 @@ found while iterating.  For example:
 Note that the string ``'Hello'`` is an iterable, but the symbols are not
 limited to characters, in fact any immutable Python object can be a symbol.
 Taking the same dictionary, we can apply the ``.decode()`` method which will
-return a list of the symbols:
+return an iterable of the symbols:
 
 .. code-block:: python
 
-    >>> a.decode(d)
+    >>> list(a.decode(d))
     ['H', 'e', 'l', 'l', 'o']
     >>> ''.join(a.decode(d))
     'Hello'
 
-Since symbols are not limited to being characters, it is necessary to return
-them as elements of a list, rather than simply returning the joined string.
+Symbols are not limited to being characters.
 The above dictionary ``d`` can be efficiently constructed using the function
 ``bitarray.util.huffman_code()``.  I also wrote `Huffman coding in Python
 using bitarray <http://ilan.schnell-web.net/prog/huffman/>`__ for more
@@ -373,21 +372,19 @@ background information.
 When the codes are large, and you have many decode calls, most time will
 be spent creating the (same) internal decode tree objects.  In this case,
 it will be much faster to create a ``decodetree`` object, which can be
-passed to bitarray's ``.decode()`` and ``.iterdecode()`` methods, instead
-of passing the prefix code dictionary to those methods itself:
+passed to bitarray's ``.decode()`` method, instead of passing the prefix
+code dictionary to those methods itself:
 
 .. code-block:: python
 
     >>> from bitarray import bitarray, decodetree
     >>> t = decodetree({'a': bitarray('0'), 'b': bitarray('1')})
     >>> a = bitarray('0110')
-    >>> a.decode(t)
+    >>> list(a.decode(t))
     ['a', 'b', 'b', 'a']
-    >>> ''.join(a.iterdecode(t))
-    'abba'
 
 The sole purpose of the immutable ``decodetree`` object is to be passed
-to bitarray's ``.decode()`` and ``.iterdecode()`` methods.
+to bitarray's ``.decode()`` method.
 
 
 Frozenbitarrays
@@ -412,7 +409,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 2.9.3 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.0.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -513,9 +510,12 @@ bitarray methods:
    New in version 2.9: add non-overlapping sub-bitarray count.
 
 
-``decode(code, /)`` -> list
+``decode(code, /)`` -> iterator
    Given a prefix code (a dict mapping symbols to bitarrays, or ``decodetree``
-   object), decode content of bitarray and return it as a list of symbols.
+   object), decode content of bitarray and return an iterator over
+   the symbols.
+
+   New in version 3.0: returns iterator - equivalent to ``.iterdecode()``.
 
 
 ``encode(code, iterable, /)``
@@ -585,19 +585,17 @@ bitarray methods:
 
 
 ``iterdecode(code, /)`` -> iterator
-   Given a prefix code (a dict mapping symbols to bitarrays, or ``decodetree``
-   object), decode content of bitarray and return an iterator over
-   the symbols.
+   alias for ``.decode()`` - deprecated since bitarray 3.0.0
+
+   New in version 3.0: deprecated, use ``.decode()``.
 
 
 ``itersearch(sub_bitarray, start=0, stop=<end>, /, right=False)`` -> iterator
-   Return iterator over indices where sub_bitarray is found, such that
-   sub_bitarray is contained within ``[start:stop]``.
-   The indices are iterated in ascending order (from lowest to highest),
-   unless ``right=True``, which will iterate in descending oder (starting with
-   rightmost match).
+   alias for ``.search()`` - deprecated since bitarray 3.0.0
 
    New in version 2.9: optional start and stop arguments - add optional keyword argument ``right``.
+
+   New in version 3.0: deprecated, use ``.search()``.
 
 
 ``pack(bytes, /)``
@@ -626,11 +624,14 @@ bitarray methods:
    Reverse all bits in bitarray (in-place).
 
 
-``search(sub_bitarray, limit=<none>, /)`` -> list
-   Searches for given sub_bitarray in self, and return list of start
-   positions.
-   The optional argument limits the number of search results to the integer
-   specified.  By default, all search results are returned.
+``search(sub_bitarray, start=0, stop=<end>, /, right=False)`` -> iterator
+   Return iterator over indices where sub_bitarray is found, such that
+   sub_bitarray is contained within ``[start:stop]``.
+   The indices are iterated in ascending order (from lowest to highest),
+   unless ``right=True``, which will iterate in descending oder (starting with
+   rightmost match).
+
+   New in version 3.0: returns iterator - equivalent to ``.itersearch()``.
 
 
 ``setall(value, /)``
