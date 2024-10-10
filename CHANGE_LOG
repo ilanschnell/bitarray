@@ -1,4 +1,4 @@
-2024-XX-XX   2.9.3:
+2024-10-10   2.9.3:
 -------------------
   * add official Python 3.13 support
   * update cibuildwheel to 2.21.3

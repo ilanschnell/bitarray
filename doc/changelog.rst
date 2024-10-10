@@ -1,6 +1,14 @@
 Change log
 ==========
 
+**2.9.3** (2024-10-10):
+
+* add official Python 3.13 support
+* update cibuildwheel to 2.21.3
+* minor simplifications
+* fix some typos
+
+
 **2.9.2** (2024-01-01):
 
 * optimize initialization from strings by not constantly resizing buffer
