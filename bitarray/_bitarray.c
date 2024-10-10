@@ -3090,7 +3090,7 @@ PyDoc_STRVAR(decodetree_doc,
 "decodetree(code, /) -> decodetree\n\
 \n\
 Given a prefix code (a dict mapping symbols to bitarrays),\n\
-create a binary tree object to be passed to `.decode()` or `.iterdecode()`.");
+create a binary tree object to be passed to `.decode()`.");
 
 static PyTypeObject DecodeTree_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
