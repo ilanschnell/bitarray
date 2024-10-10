@@ -63,7 +63,7 @@ Encode a message using this code:
     >>> a.encode(codedict, msg)
     >>> a
     bitarray('01011001110011110101100')
-    >>> assert ''.join(a.iterdecode(codedict)) == msg
+    >>> assert ''.join(a.decode(codedict)) == msg
 
 And now decode using not ``codedict``, but the canonical decoding
 tables ``count`` and ``symbol`` instead:
