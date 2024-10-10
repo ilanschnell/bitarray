@@ -7,7 +7,7 @@ if sys.version_info[0] == 2:
     sys.exit("""\
 ****************************************************************************
 *   Python 2 support of bitarray has now been removed.
-*   The last version supporting Python 2 is bitarray 2.9.2.
+*   The last version supporting Python 2 is bitarray 2.9.3.
 ****************************************************************************
 """)
 
@@ -59,6 +59,7 @@ setup(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
+        "Programming Language :: Python :: 3.13",
         "Topic :: Utilities",
     ],
     description = "efficient arrays of booleans -- C extension",

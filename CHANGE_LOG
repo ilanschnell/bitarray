@@ -8,9 +8,12 @@
   * remove hackish support for `bitarray()` handling unpickling,
     see detailed explaination in #207 - closes #206
   * deprecate `.iterdecode()` and `.itersearch()`
+
+
+2024-10-10   2.9.3:
+-------------------
   * add official Python 3.13 support
   * update cibuildwheel to 2.21.3
-  * bump actions/download-artifact from 2 to 4.1.7, #218
   * minor simplifications
   * fix some typos
 
