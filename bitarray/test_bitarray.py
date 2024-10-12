@@ -3468,24 +3468,24 @@ class SearchTests(unittest.TestCase, Util):
 
         self.assertRaises(TypeError, a.search, '010')
 
-    def test_itersearch_next(self):
+    def test_search_next(self):
         a = bitarray('10011')
-        self.assertRaises(TypeError, a.itersearch, '')
-        it = a.itersearch(1)
+        self.assertRaises(TypeError, a.search, '')
+        it = a.search(1)
         self.assertIsType(it, 'searchiterator')
         self.assertEqual(next(it), 0)
         self.assertEqual(next(it), 3)
         self.assertEqual(next(it), 4)
         self.assertStopIteration(it)
         x = bitarray('11')
-        it = a.itersearch(x)
+        it = a.search(x)
         del a, x
         self.assertEqual(next(it), 3)
 
-    def test_itersearch_empty(self):
+    def test_search_empty(self):
         a = bitarray('10011')
         empty = bitarray()
-        self.assertEqual(list(a.itersearch(empty)), [0, 1, 2, 3, 4, 5])
+        self.assertEqual(list(a.search(empty)), [0, 1, 2, 3, 4, 5])
         for start, stop, right, res in [
                 (-9,  9, 0, [0, 1, 2, 3, 4, 5]),
                 ( 1,  4, 0, [1, 2, 3, 4]),
@@ -3496,7 +3496,7 @@ class SearchTests(unittest.TestCase, Util):
                 ( 2,  2, 1, [2]),
                 ( 2,  1, 1, []),
         ]:
-            self.assertEqual(list(a.itersearch(empty, start, stop, right)),
+            self.assertEqual(list(a.search(empty, start, stop, right)),
                              res)
 
     def test_explicit_1(self):
@@ -3518,17 +3518,16 @@ class SearchTests(unittest.TestCase, Util):
                        ('100', [0, 9, 16])]:
             b = bitarray(s)
             self.assertEqual(list(a.search(b)), res)
-            self.assertEqual(list(a.itersearch(b)), res)
 
     def test_bool_random(self):
         for a in self.randombitarrays():
             b = a.copy()
             b.setall(0)
-            b[list(a.itersearch(1))] = 1
+            b[list(a.search(1))] = 1
             self.assertEQUAL(b, a)
 
             b.setall(1)
-            b[list(a.itersearch(0))] = 0
+            b[list(a.search(0))] = 0
             self.assertEQUAL(b, a)
 
             s = set(a.search(0)) | set(a.search(1))
@@ -3539,23 +3538,22 @@ class SearchTests(unittest.TestCase, Util):
             if a:
                 # search for a in itself
                 self.assertEqual(list(a.search(a)), [0])
-                self.assertEqual(list(a.itersearch(a)), [0])
-                self.assertEqual(list(a.itersearch(a, right=1)), [0])
+                self.assertEqual(list(a.search(a, right=1)), [0])
 
             for sub in '0', '1', '01', '01', '11', '101', '1101', '01100':
                 b = bitarray(sub, self.random_endian())
                 plst = [i for i in range(len(a)) if a[i:i + len(b)] == b]
                 self.assertEqual(list(a.search(b)), plst)
 
-                for p in a.itersearch(b):
+                for p in a.search(b):
                     self.assertEqual(a[p:p + len(b)], b)
-                self.assertEqual(list(a.itersearch(b)), plst)
+                self.assertEqual(list(a.search(b)), plst)
 
-                for p in a.itersearch(b, right=1):
+                for p in a.search(b, right=1):
                     self.assertEqual(a[p:p + len(b)], b)
-                self.assertEqual(list(a.itersearch(b, right=1)), plst[::-1])
+                self.assertEqual(list(a.search(b, right=1)), plst[::-1])
 
-    def test_itersearch_random(self):
+    def test_search_random(self):
         for _ in range(500):
             n = randrange(1, 50)
             a = urandom(n, self.random_endian())
@@ -3571,20 +3569,20 @@ class SearchTests(unittest.TestCase, Util):
                 plst = list(range(i, j + 1))
 
             self.assertEqual(sorted(plst), plst)
-            self.assertEqual(list(a.itersearch(b, i, j)), plst)
+            self.assertEqual(list(a.search(b, i, j)), plst)
 
             if len(b) == 1:  # test sub-bitarray being int
-                self.assertEqual(list(a.itersearch(b[0], i, j)), plst)
+                self.assertEqual(list(a.search(b[0], i, j)), plst)
 
             if plst:  # test first and last using .find()
                 self.assertEqual(a.find(b, i, j, 0), plst[0])
                 self.assertEqual(a.find(b, i, j, 1), plst[-1])
 
             plst.reverse()
-            self.assertEqual(list(a.itersearch(b, i, j, 1)), plst)
+            self.assertEqual(list(a.search(b, i, j, 1)), plst)
 
             if len(b) == 1:  # test sub-bitarray being int
-                self.assertEqual(list(a.itersearch(b[0], i, j, 1)), plst)
+                self.assertEqual(list(a.search(b[0], i, j, 1)), plst)
 
             # test contains
             self.assertEqual(b in aa, bool(plst) if b else True)
@@ -3598,7 +3596,7 @@ class SearchTests(unittest.TestCase, Util):
             a = zeros(100)
             b = zeros(10)
             c = 0
-            for i, x in enumerate(a.itersearch(b, right=right)):
+            for i, x in enumerate(a.search(b, right=right)):
                 if i == 40:
                     a.clear()
                 c += 1
@@ -3609,7 +3607,7 @@ class SearchTests(unittest.TestCase, Util):
             a = zeros(100)
             b = zeros(0)
             c = 0
-            for i, x in enumerate(a.itersearch(b, right=right)):
+            for i, x in enumerate(a.search(b, right=right)):
                 if i == 20:
                     b.append(1)
                 c += 1
