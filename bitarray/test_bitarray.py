@@ -4297,19 +4297,12 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(len(a), 0)
 
     def test_check_codedict_decode(self):
-        a = bitarray('101')
+        a = bitarray('1100101')
         self.assertRaises(TypeError, a.decode, 0)
         self.assertRaises(ValueError, a.decode, {})
         self.assertRaises(TypeError, a.decode, {'a': 42})
+        self.assertRaises(TypeError, a.decode, {'a': []})
         self.assertRaises(ValueError, a.decode, {'a': bitarray()})
-        self.assertEqual(a, bitarray('101'))
-
-    def test_check_codedict_iterdecode(self):
-        a = bitarray('1100101')
-        self.assertRaises(TypeError, a.iterdecode, 0)
-        self.assertRaises(ValueError, a.iterdecode, {})
-        self.assertRaises(TypeError, a.iterdecode, {'a': []})
-        self.assertRaises(ValueError, a.iterdecode, {'a': bitarray()})
         self.assertEqual(a, bitarray('1100101'))
 
     @skipIf(is_pypy)
@@ -4325,26 +4318,25 @@ class PrefixCodeTests(unittest.TestCase, Util):
         a = bitarray('101001000')
         res = list("Ilan")
         self.assertEqual(list(a.decode(d)), res)
-        self.assertEqual(list(a.iterdecode(d)), res)
         self.assertEqual(d, dcopy)
         self.assertEqual(a, bitarray('101001000'))
 
-    def test_iterdecode_type(self):
+    def test_decode_type(self):
         a = bitarray('0110')
-        it = a.iterdecode(alphabet_code)
+        it = a.decode(alphabet_code)
         self.assertIsType(it, 'decodeiterator')
         self.assertEqual(list(it), ['a'])
 
-    def test_iterdecode_remove(self):
+    def test_decode_remove(self):
         d = {'I': bitarray('1'),   'l': bitarray('01'),
              'a': bitarray('001'), 'n': bitarray('000')}
         t = decodetree(d)
         a = bitarray('101001000')
-        it = a.iterdecode(t)
+        it = a.decode(t)
         del t  # remove tree
         self.assertEqual(''.join(it), "Ilan")
 
-        it = a.iterdecode(d)
+        it = a.decode(d)
         del a
         self.assertEqual(''.join(it), "Ilan")
 
@@ -4353,9 +4345,6 @@ class PrefixCodeTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertEqual(list(a.decode(d)), [])
         self.assertEqual(d, {'a': bitarray('1')})
-        # test decode iterator
-        self.assertEqual(list(a.iterdecode(d)), [])
-        self.assertEqual(d, {'a': bitarray('1')})
         self.assertEqual(len(a), 0)
 
     def test_decode_incomplete(self):
@@ -4363,7 +4352,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
         a = bitarray('00011')
         msg = "incomplete prefix code at position 3"
         self.assertRaisesMessage(ValueError, msg, list, a.decode(d))
-        it = a.iterdecode(d)
+        it = a.decode(d)
         self.assertIsType(it, 'decodeiterator')
         self.assertRaisesMessage(ValueError, msg, list, it)
         t = decodetree(d)
@@ -4382,6 +4371,16 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertRaisesMessage(ValueError, msg,
                                  list, a.decode(alphabet_code))
 
+    def test_decode_no_term(self):
+        d = {'a': bitarray('0'), 'b': bitarray('111')}
+        a = bitarray('011')
+        it = a.decode(d)
+        self.assertEqual(next(it), 'a')
+        self.assertRaisesMessage(ValueError,
+                                 "incomplete prefix code at position 1",
+                                 next, it)
+        self.assertEqual(a, bitarray('011'))
+
     def test_decode_buggybitarray(self):
         d = dict(alphabet_code)
         #             i    s    t
@@ -4394,25 +4393,15 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.check_obj(a)
         self.assertEqual(t.todict(), d)
 
-    def test_iterdecode_no_term(self):
-        d = {'a': bitarray('0'), 'b': bitarray('111')}
-        a = bitarray('011')
-        it = a.iterdecode(d)
-        self.assertEqual(next(it), 'a')
-        self.assertRaisesMessage(ValueError,
-                                 "incomplete prefix code at position 1",
-                                 next, it)
-        self.assertEqual(a, bitarray('011'))
-
-    def test_iterdecode_buggybitarray(self):
+    def test_decode_buggybitarray2(self):
         d = {'a': bitarray('0')}
         a = bitarray('1')
-        it = a.iterdecode(d)
+        it = a.decode(d)
         self.assertRaises(ValueError, next, it)
         self.assertEqual(a, bitarray('1'))
         self.assertEqual(d, {'a': bitarray('0')})
 
-    def test_decode_buggybitarray2(self):
+    def test_decode_buggybitarray3(self):
         d = {'a': bitarray('00'), 'b': bitarray('01')}
         a = bitarray('1')
         self.assertRaises(ValueError, next, a.decode(d))
@@ -4452,7 +4441,6 @@ class PrefixCodeTests(unittest.TestCase, Util):
         ]:
             a = bitarray()
             self.assertRaises(ValueError, a.decode, d)
-            self.assertRaises(ValueError, a.iterdecode, d)
             self.check_obj(a)
 
     def test_miscitems(self):
@@ -4466,7 +4454,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('00110111010011'))
         self.assertEqual(list(a.decode(d)), [None, 0, 1, '', 2])
         # iterator
-        it = a.iterdecode(d)
+        it = a.decode(d)
         self.assertEqual(next(it), None)
         self.assertEqual(next(it), 0)
         self.assertEqual(next(it), 1)
@@ -4490,10 +4478,8 @@ class PrefixCodeTests(unittest.TestCase, Util):
             # d     o    g      .
             '01011 1000 101000 0101010'))
         self.assertEqual(''.join(a.decode(alphabet_code)), message)
-        self.assertEqual(''.join(a.iterdecode(alphabet_code)), message)
         t = decodetree(alphabet_code)
         self.assertEqual(''.join(a.decode(t)), message)
-        self.assertEqual(''.join(a.iterdecode(t)), message)
         self.check_obj(a)
 
 # --------------------------- Buffer Import ---------------------------------
