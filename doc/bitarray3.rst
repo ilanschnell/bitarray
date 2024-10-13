@@ -20,3 +20,8 @@ In the following table, ``a`` is assumed to a bitarray object.
 +----------------------+----------------------+
 | ``a.search()``       | ``list(a.search()``  |
 +----------------------+----------------------+
+
+Aside from these changes which will make bitarray 3 more pythonic, there
+are a few other minor changes (see changelog).  It should be emphasized
+that all in most common use cases the bitarray 3 transition will not require
+any code changes, or at least very minor ones.
