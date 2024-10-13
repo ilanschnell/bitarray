@@ -1,13 +1,14 @@
 2024-10-XX   3.0.0:
 -------------------
+  * see [Bitarray 3 transition](bitarray3.rst)
   * remove Python 2.7 support
   * `.decode()` now returns iterator - equivalent to `.iterdecode()`
   * `.search()` now returns iterator - equivalent to `.itersearch()`
+  * remove `.iterdecode()` and `.itersearch()`
   * remove `util.rindex()`, use `.index(..., right=1)` instead
   * remove `util.make_endian()`, use `bitarray(..., endian=...)` instead
   * remove hackish support for `bitarray()` handling unpickling,
     see detailed explaination in #207 - closes #206
-  * deprecate `.iterdecode()` and `.itersearch()`
 
 
 2024-10-10   2.9.3:
