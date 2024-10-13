@@ -1921,7 +1921,7 @@ class TestsCanonicalHuffman(unittest.TestCase, Util):
         self.assertIsInstance(symbol, list)
         a = bitarray()
         a.encode(chc, plain)
-        self.assertEqual(bytearray(a.iterdecode(chc)), plain)
+        self.assertEqual(bytearray(a.decode(chc)), plain)
         self.assertEqual(bytearray(canonical_decode(a, count, symbol)), plain)
 
     def test_canonical_huffman_errors(self):

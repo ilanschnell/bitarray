@@ -3198,11 +3198,6 @@ Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`\n\
 object), decode content of bitarray and return an iterator over\n\
 the symbols.");
 
-PyDoc_STRVAR(iterdecode_doc,
-"iterdecode(code, /) -> iterator\n\
-\n\
-alias for `.decode()` - deprecated since bitarray 3.0.0");
-
 
 static PyObject *
 decodeiter_next(decodeiterobject *it)
@@ -3325,11 +3320,6 @@ The indices are iterated in ascending order (from lowest to highest),\n\
 unless `right=True`, which will iterate in descending oder (starting with\n\
 rightmost match).");
 
-PyDoc_STRVAR(itersearch_doc,
-"itersearch(sub_bitarray, start=0, stop=<end>, /, right=False) -> iterator\n\
-\n\
-alias for `.search()` - deprecated since bitarray 3.0.0");
-
 
 static PyObject *
 searchiter_next(searchiterobject *it)
@@ -3425,8 +3415,6 @@ static PyMethodDef bitarray_methods[] = {
      count_doc},
     {"decode",       (PyCFunction) bitarray_decode,      METH_O,
      decode_doc},
-    {"iterdecode",   (PyCFunction) bitarray_decode,      METH_O,
-     iterdecode_doc},
     {"encode",       (PyCFunction) bitarray_encode,      METH_VARARGS,
      encode_doc},
     {"endian",       (PyCFunction) bitarray_endian,      METH_NOARGS,
@@ -3460,9 +3448,6 @@ static PyMethodDef bitarray_methods[] = {
     {"search",       (PyCFunction) bitarray_search,      METH_VARARGS |
                                                          METH_KEYWORDS,
      search_doc},
-    {"itersearch",   (PyCFunction) bitarray_search,      METH_VARARGS |
-                                                         METH_KEYWORDS,
-     itersearch_doc},
     {"setall",       (PyCFunction) bitarray_setall,      METH_O,
      setall_doc},
     {"sort",         (PyCFunction) bitarray_sort,        METH_VARARGS |

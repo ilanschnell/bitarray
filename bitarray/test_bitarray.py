@@ -3447,11 +3447,10 @@ class IndexTests(unittest.TestCase, Util):
 
 class SearchTests(unittest.TestCase, Util):
 
-    @skipIf(is_pypy)
-    def test_func_equal(self):
+    def test_no_itersearch(self):
         a = bitarray()
-        # as of bitarray 3.0, these methods are identical
-        self.assertEqual(a.search, a.itersearch)
+        # as of bitarray 3.0, .itersearch() has been removed
+        self.assertFalse('itersearch' in dir(a))
 
     def test_simple(self):
         a = bitarray()
@@ -3508,7 +3507,6 @@ class SearchTests(unittest.TestCase, Util):
                        ('10011', [0]),     ('100111', [])]:
             b = bitarray(s, self.random_endian())
             self.assertEqual(list(a.search(b)), res)
-            self.assertEqual(list(a.itersearch(b)), res)
 
     def test_explicit_2(self):
         a = bitarray('10010101 11001111 1001011')
@@ -4219,10 +4217,9 @@ class DecodeTreeTests(unittest.TestCase, Util):
         t = decodetree(alphabet_code)
         a = bitarray('1011 01110 0110 1001')
         self.assertEqual(list(a.decode(t)), ['i', 'l', 'a', 'n'])
-        self.assertEqual(''.join(a.iterdecode(t)), 'ilan')
+        self.assertEqual(''.join(a.decode(t)), 'ilan')
         a = bitarray()
         self.assertEqual(list(a.decode(t)), [])
-        self.assertEqual(''.join(a.iterdecode(t)), '')
         self.check_obj(a)
 
     @skipIf(is_pypy)
@@ -4303,11 +4300,10 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.decode, {'a': bitarray()})
         self.assertEqual(a, bitarray('1100101'))
 
-    @skipIf(is_pypy)
-    def test_decode_func_equal(self):
+    def test_no_iterdecode(self):
         a = bitarray()
-        # as of bitarray 3.0, these methods are identical
-        self.assertEqual(a.decode, a.iterdecode)
+        # as of bitarray 3.0, .iterdecode() has been removed
+        self.assertFalse('iterdecode' in dir(a))
 
     def test_decode_simple(self):
         d = {'I': bitarray('1'),   'l': bitarray('01'),
