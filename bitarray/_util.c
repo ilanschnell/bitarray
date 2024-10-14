@@ -870,15 +870,14 @@ next_char(PyObject *iter)
         return -1;
     }
 
-    if (PyLong_Check(item)) {
-        c = (unsigned char) PyLong_AsLong(item);
-    }
-    else {
+    if (!PyLong_Check(item)) {
         PyErr_Format(PyExc_TypeError, "int iterator expected, "
                      "got '%s' element", Py_TYPE(item)->tp_name);
         Py_DECREF(item);
         return -1;
     }
+
+    c = (unsigned char) PyLong_AsLong(item);
     Py_DECREF(item);
     return (int) c;
 }
