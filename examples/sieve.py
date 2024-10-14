@@ -21,8 +21,9 @@ for i in range(2, isqrt(N) + 1):
     if a[i]:  # i is prime, so all multiples are not
         a[i*i::i] = False
 
-print('the first few primes are:')
-print(list(a.search(1, 0, 50)))
+stop = 50
+print('primes up to %d are:' % stop)
+print(list(a.search(1, 0, stop)))
 
 # There are 5,761,455 primes up to 100 million
 x = a.count()
