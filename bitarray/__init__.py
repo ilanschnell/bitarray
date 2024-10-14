@@ -59,7 +59,6 @@ def bits2bytes(__n):
 
 Return the number of bytes necessary to store n bits.
 """
-    import sys
     if not isinstance(__n, int):
         raise TypeError("integer expected")
     if __n < 0:
