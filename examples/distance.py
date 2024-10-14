@@ -1,7 +1,7 @@
 """
 In this module, we implement distance functions and compare them to the
 corresponding functions in the scipy.spatial.distance module.
-The functions in this module are typically around 10 to 50 times faster.
+The functions using bitarray are typically around 50 to 200 times faster.
 """
 from time import perf_counter
 
