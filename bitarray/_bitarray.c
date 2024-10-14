@@ -3196,7 +3196,7 @@ PyDoc_STRVAR(decode_doc,
 \n\
 Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`\n\
 object), decode content of bitarray and return an iterator over\n\
-the symbols.");
+corresponding symbols.");
 
 
 static PyObject *
