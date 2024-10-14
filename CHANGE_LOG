@@ -5,8 +5,10 @@
   * `.decode()` now returns iterator (equivalent to past `.iterdecode()`)
   * `.search()` now returns iterator (equivalent to past `.itersearch()`)
   * remove `.iterdecode()` and `.itersearch()`
-  * remove `util.rindex()`, use `.index(..., right=1)` instead
-  * remove `util.make_endian()`, use `bitarray(..., endian=...)` instead
+  * remove `util.rindex()`, use `.index(..., right=1)` instead,
+    deprecated since 2.9
+  * remove `util.make_endian()`, use `bitarray(..., endian=...)` instead,
+    deprecated since 2.9
   * remove hackish support for `bitarray()` handling unpickling,
     see detailed explaination in #207 - closes #206
 
