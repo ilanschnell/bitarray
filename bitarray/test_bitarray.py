@@ -3449,8 +3449,8 @@ class SearchTests(unittest.TestCase, Util):
 
     def test_no_itersearch(self):
         a = bitarray()
-        # as of bitarray 3.0, .itersearch() has been removed
-        self.assertFalse('itersearch' in dir(a))
+        # removed in bitarray 3.0
+        self.assertRaises(AttributeError, a.__getattribute__, 'itersearch')
 
     def test_simple(self):
         a = bitarray()
@@ -4302,8 +4302,8 @@ class PrefixCodeTests(unittest.TestCase, Util):
 
     def test_no_iterdecode(self):
         a = bitarray()
-        # as of bitarray 3.0, .iterdecode() has been removed
-        self.assertFalse('iterdecode' in dir(a))
+        # removed in bitarray 3.0
+        self.assertRaises(AttributeError, a.__getattribute__, 'iterdecode')
 
     def test_decode_simple(self):
         d = {'I': bitarray('1'),   'l': bitarray('01'),
