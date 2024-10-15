@@ -1,6 +1,29 @@
 Change log
 ==========
 
+**3.0.0** (2024-10-15):
+
+* see `Bitarray 3 transition <bitarray3.rst>`__
+* remove Python 2.7 support
+* ``.decode()`` now returns iterator (equivalent to past ``.iterdecode()``)
+* ``.search()`` now returns iterator (equivalent to past ``.itersearch()``)
+* remove ``.iterdecode()`` and ``.itersearch()``
+* remove ``util.rindex()``, use ``.index(..., right=1)`` instead,
+  deprecated since 2.9
+* remove ``util.make_endian()``, use ``bitarray(..., endian=...)`` instead,
+  deprecated since 2.9
+* remove hackish support for ``bitarray()`` handling unpickling,
+  see detailed explaination in `#207 <https://github.com/ilanschnell/bitarray/issues/207>`__ - closes `#206 <https://github.com/ilanschnell/bitarray/issues/206>`__
+
+
+**2.9.3** (2024-10-10):
+
+* add official Python 3.13 support
+* update cibuildwheel to 2.21.3
+* minor simplifications
+* fix some typos
+
+
 **2.9.2** (2024-01-01):
 
 * optimize initialization from strings by not constantly resizing buffer

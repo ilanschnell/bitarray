@@ -1,4 +1,4 @@
-2024-10-XX   3.0.0:
+2024-10-15   3.0.0:
 -------------------
   * see [Bitarray 3 transition](bitarray3.rst)
   * remove Python 2.7 support

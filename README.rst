@@ -513,9 +513,11 @@ bitarray methods:
 ``decode(code, /)`` -> iterator
    Given a prefix code (a dict mapping symbols to bitarrays, or ``decodetree``
    object), decode content of bitarray and return an iterator over
-   the symbols.
+   corresponding symbols.
 
-   New in version 3.0: returns iterator - equivalent to ``.iterdecode()``.
+   See also: `Bitarray 3 transition <https://github.com/ilanschnell/bitarray/blob/master/doc/bitarray3.rst>`__
+
+   New in version 3.0: returns iterator (equivalent to past ``.iterdecode()``).
 
 
 ``encode(code, iterable, /)``
@@ -584,20 +586,6 @@ bitarray methods:
    New in version 1.5.3: optional index argument.
 
 
-``iterdecode(code, /)`` -> iterator
-   alias for ``.decode()`` - deprecated since bitarray 3.0.0
-
-   New in version 3.0: deprecated, use ``.decode()``.
-
-
-``itersearch(sub_bitarray, start=0, stop=<end>, /, right=False)`` -> iterator
-   alias for ``.search()`` - deprecated since bitarray 3.0.0
-
-   New in version 2.9: optional start and stop arguments - add optional keyword argument ``right``.
-
-   New in version 3.0: deprecated, use ``.search()``.
-
-
 ``pack(bytes, /)``
    Extend bitarray from a bytes-like object, where each byte corresponds
    to a single bit.  The byte ``b'\x00'`` maps to bit 0 and all other bytes
@@ -631,7 +619,11 @@ bitarray methods:
    unless ``right=True``, which will iterate in descending oder (starting with
    rightmost match).
 
-   New in version 3.0: returns iterator - equivalent to ``.itersearch()``.
+   See also: `Bitarray 3 transition <https://github.com/ilanschnell/bitarray/blob/master/doc/bitarray3.rst>`__
+
+   New in version 2.9: optional start and stop arguments - add optional keyword argument ``right``.
+
+   New in version 3.0: returns iterator (equivalent to past ``.itersearch()``).
 
 
 ``setall(value, /)``
@@ -700,7 +692,7 @@ Other objects:
 
 ``decodetree(code, /)`` -> decodetree
    Given a prefix code (a dict mapping symbols to bitarrays),
-   create a binary tree object to be passed to ``.decode()`` or ``.iterdecode()``.
+   create a binary tree object to be passed to ``.decode()``.
 
    New in version 1.6.
 
