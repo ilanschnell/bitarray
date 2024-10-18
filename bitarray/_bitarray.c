@@ -3317,7 +3317,7 @@ PyDoc_STRVAR(search_doc,
 Return iterator over indices where sub_bitarray is found, such that\n\
 sub_bitarray is contained within `[start:stop]`.\n\
 The indices are iterated in ascending order (from lowest to highest),\n\
-unless `right=True`, which will iterate in descending oder (starting with\n\
+unless `right=True`, which will iterate in descending order (starting with\n\
 rightmost match).");
 
 
