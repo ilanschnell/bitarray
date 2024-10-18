@@ -616,7 +616,7 @@ bitarray methods:
    Return iterator over indices where sub_bitarray is found, such that
    sub_bitarray is contained within ``[start:stop]``.
    The indices are iterated in ascending order (from lowest to highest),
-   unless ``right=True``, which will iterate in descending oder (starting with
+   unless ``right=True``, which will iterate in descending order (starting with
    rightmost match).
 
    See also: `Bitarray 3 transition <https://github.com/ilanschnell/bitarray/blob/master/doc/bitarray3.rst>`__
