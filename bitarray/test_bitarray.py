@@ -185,9 +185,6 @@ class Util(object):
         self.assertEqual(type(a).__name__, b)
         self.assertEqual(repr(type(a)), "<%s 'bitarray.%s'>" % ('class', b))
 
-    def assertStopIteration(self, it):
-        self.assertRaises(StopIteration, next, it)
-
     def assertRaisesMessage(self, excClass, msg, callable, *args, **kwargs):
         try:
             callable(*args, **kwargs)
@@ -1594,7 +1591,7 @@ class MiscTests(unittest.TestCase, Util):
         self.assertEqual(next(it), 0)
         self.assertEqual(next(it), 1)
         self.assertEqual(next(it), 1)
-        self.assertStopIteration(it)
+        self.assertRaises(StopIteration, next, it)
 
     def test_iter2(self):
         for a in self.randombitarrays():
@@ -3470,7 +3467,7 @@ class SearchTests(unittest.TestCase, Util):
         self.assertEqual(next(it), 0)
         self.assertEqual(next(it), 3)
         self.assertEqual(next(it), 4)
-        self.assertStopIteration(it)
+        self.assertRaises(StopIteration, next, it)
         x = bitarray('11')
         it = a.search(x)
         del a, x
@@ -4449,7 +4446,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(next(it), 1)
         self.assertEqual(next(it), '')
         self.assertEqual(next(it), 2)
-        self.assertStopIteration(it)
+        self.assertRaises(StopIteration, next, it)
 
     def test_quick_example(self):
         a = bitarray()
