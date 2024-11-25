@@ -185,11 +185,6 @@ class Util(object):
         self.assertEqual(type(a).__name__, b)
         self.assertEqual(repr(type(a)), "<%s 'bitarray.%s'>" % ('class', b))
 
-    def assertBitEqual(self, x, y):
-        for z in x, y:
-            self.assertEqual('01'[z], repr(z))
-        self.assertEqual(x, y)
-
     def assertStopIteration(self, it):
         self.assertRaises(StopIteration, next, it)
 
@@ -794,13 +789,13 @@ class SliceTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertRaises(IndexError, a.__getitem__,  0)
         a.append(True)
-        self.assertBitEqual(a[0], 1)
-        self.assertBitEqual(a[-1], 1)
+        self.assertEqual(a[0], 1)
+        self.assertEqual(a[-1], 1)
         self.assertRaises(IndexError, a.__getitem__,  1)
         self.assertRaises(IndexError, a.__getitem__, -2)
         a.append(False)
-        self.assertBitEqual(a[1], 0)
-        self.assertBitEqual(a[-1], 0)
+        self.assertEqual(a[1], 0)
+        self.assertEqual(a[-1], 0)
         self.assertRaises(IndexError, a.__getitem__,  2)
         self.assertRaises(IndexError, a.__getitem__, -3)
         self.assertRaises(TypeError, a.__getitem__, 1.5)
@@ -810,8 +805,8 @@ class SliceTests(unittest.TestCase, Util):
     def test_getitem_2(self):
         a = bitarray('1100010')
         for i, b in enumerate(a):
-            self.assertBitEqual(a[i], b)
-            self.assertBitEqual(a[i - 7], b)
+            self.assertEqual(a[i], b)
+            self.assertEqual(a[i - 7], b)
         self.assertRaises(IndexError, a.__getitem__,  7)
         self.assertRaises(IndexError, a.__getitem__, -8)
 
@@ -1596,9 +1591,9 @@ class MiscTests(unittest.TestCase, Util):
     def test_iter1(self):
         it = iter(bitarray('011'))
         self.assertIsType(it, 'bitarrayiterator')
-        self.assertBitEqual(next(it), 0)
-        self.assertBitEqual(next(it), 1)
-        self.assertBitEqual(next(it), 1)
+        self.assertEqual(next(it), 0)
+        self.assertEqual(next(it), 1)
+        self.assertEqual(next(it), 1)
         self.assertStopIteration(it)
 
     def test_iter2(self):
@@ -2983,10 +2978,10 @@ class MethodTests(unittest.TestCase, Util):
             n = randrange(-len(a), len(a))
             aa = a.tolist()
             x = a.pop(n)
-            self.assertBitEqual(x, aa[n])
+            self.assertEqual(x, aa[n])
             y = aa.pop(n)
             self.assertEqual(a, bitarray(aa))
-            self.assertBitEqual(x, y)
+            self.assertEqual(x, y)
             self.check_obj(a)
 
     def test_clear(self):
