@@ -728,8 +728,7 @@ class InternalTests(unittest.TestCase, Util):
     def check_overlap(self, a, b, res):
         r1 = a._overlap(b)
         r2 = b._overlap(a)
-        self.assertIsInstance(r1, bool)
-        self.assertTrue(r1 == r2 == res)
+        self.assertTrue(r1 is r2 and r1 is res)
         self.check_obj(a)
         self.check_obj(b)
 
