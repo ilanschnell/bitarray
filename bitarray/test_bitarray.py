@@ -787,6 +787,7 @@ class SliceTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__getitem__,  0)
         a.append(True)
         self.assertEqual(a[0], 1)
+        self.assertIsInstance(a[0], int)
         self.assertEqual(a[-1], 1)
         self.assertRaises(IndexError, a.__getitem__,  1)
         self.assertRaises(IndexError, a.__getitem__, -2)
@@ -803,6 +804,7 @@ class SliceTests(unittest.TestCase, Util):
         a = bitarray('1100010')
         for i, b in enumerate(a):
             self.assertEqual(a[i], b)
+            self.assertIsInstance(a[i], int)
             self.assertEqual(a[i - 7], b)
         self.assertRaises(IndexError, a.__getitem__,  7)
         self.assertRaises(IndexError, a.__getitem__, -8)
@@ -1588,8 +1590,8 @@ class MiscTests(unittest.TestCase, Util):
     def test_iter1(self):
         it = iter(bitarray('011'))
         self.assertIsType(it, 'bitarrayiterator')
-        self.assertEqual(next(it), 0)
-        self.assertEqual(next(it), 1)
+        self.assertTrue(next(it) is 0)
+        self.assertTrue(next(it) is 1)
         self.assertEqual(next(it), 1)
         self.assertRaises(StopIteration, next, it)
 
@@ -2976,6 +2978,7 @@ class MethodTests(unittest.TestCase, Util):
             aa = a.tolist()
             x = a.pop(n)
             self.assertEqual(x, aa[n])
+            self.assertIsInstance(x, int)
             y = aa.pop(n)
             self.assertEqual(a, bitarray(aa))
             self.assertEqual(x, y)

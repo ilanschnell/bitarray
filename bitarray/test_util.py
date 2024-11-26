@@ -639,7 +639,7 @@ class TestsParity(unittest.TestCase, Util):
 
     def test_bitarray(self):
         a = bitarray()
-        self.assertEqual(parity(a), 0)
+        self.assertTrue(parity(a) is 0)
         par = False
         for _ in range(1000):
             self.assertEqual(parity(a), par)
