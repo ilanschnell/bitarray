@@ -1905,18 +1905,18 @@ PyInit__util(void)
     PyObject *m, *bitarray_module;
 
     if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
-        goto error;
+        return NULL;
     bitarray_type_obj = PyObject_GetAttrString(bitarray_module, "bitarray");
     Py_DECREF(bitarray_module);
     if (bitarray_type_obj == NULL)
-        goto error;
+        return NULL;
 
     m = PyModule_Create(&moduledef);
     if (m == NULL)
-        goto error;
+        return NULL;
 
     if (PyType_Ready(&CHDI_Type) < 0)
-        goto error;
+        return NULL;
     Py_SET_TYPE(&CHDI_Type, &PyType_Type);
 
 #ifndef NDEBUG  /* expose segment size in debug mode for testing */
@@ -1924,6 +1924,4 @@ PyInit__util(void)
 #endif
 
     return m;
- error:
-    return NULL;
 }

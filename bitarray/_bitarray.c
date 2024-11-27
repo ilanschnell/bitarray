@@ -4072,39 +4072,37 @@ PyInit__bitarray(void)
 
     m = PyModule_Create(&moduledef);
     if (m == NULL)
-        goto error;
+        return NULL;
 
     if (PyType_Ready(&Bitarray_Type) < 0)
-        goto error;
+        return NULL;
     Py_SET_TYPE(&Bitarray_Type, &PyType_Type);
     Py_INCREF((PyObject *) &Bitarray_Type);
     PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type);
 
     if (register_abc() < 0)
-        goto error;
+        return NULL;
 
     if (PyType_Ready(&DecodeTree_Type) < 0)
-        goto error;
+        return NULL;
     Py_SET_TYPE(&DecodeTree_Type, &PyType_Type);
     Py_INCREF((PyObject *) &DecodeTree_Type);
     PyModule_AddObject(m, "decodetree", (PyObject *) &DecodeTree_Type);
 
     if (PyType_Ready(&DecodeIter_Type) < 0)
-        goto error;
+        return NULL;
     Py_SET_TYPE(&DecodeIter_Type, &PyType_Type);
 
     if (PyType_Ready(&BitarrayIter_Type) < 0)
-        goto error;
+        return NULL;
     Py_SET_TYPE(&BitarrayIter_Type, &PyType_Type);
 
     if (PyType_Ready(&SearchIter_Type) < 0)
-        goto error;
+        return NULL;
     Py_SET_TYPE(&SearchIter_Type, &PyType_Type);
 
     PyModule_AddObject(m, "__version__",
                        PyUnicode_FromString(BITARRAY_VERSION));
 
     return m;
- error:
-    return NULL;
 }
