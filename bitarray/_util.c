@@ -459,6 +459,7 @@ deserialize(PyObject *module, PyObject *buffer)
 
     PyBuffer_Release(&view);
     return (PyObject *) a;
+
  error:
     PyBuffer_Release(&view);
     return NULL;
@@ -590,6 +591,7 @@ hex2ba(PyObject *module, PyObject *args, PyObject *kwds)
 
     PyBuffer_Release(&hexstr);
     return (PyObject *) a;
+
  error:
     PyBuffer_Release(&hexstr);
     Py_XDECREF((PyObject *) a);
@@ -786,6 +788,7 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
 
     PyBuffer_Release(&asciistr);
     return (PyObject *) a;
+
  error:
     PyBuffer_Release(&asciistr);
     Py_XDECREF((PyObject *) a);
@@ -1586,6 +1589,7 @@ vl_decode(PyObject *module, PyObject *args, PyObject *kwds)
 
     Py_DECREF(iter);
     return (PyObject *) a;
+
  error:
     Py_DECREF(iter);
     Py_XDECREF((PyObject *) a);

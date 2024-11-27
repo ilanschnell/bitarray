@@ -770,6 +770,7 @@ extend_iter(bitarrayobject *self, PyObject *iter)
         return -1;
 
     return 0;
+
  error:
     Py_DECREF(item);
     /* ignore resize() return value as we fail anyhow */
