@@ -811,7 +811,7 @@ extend_unicode01(bitarrayobject *self, PyObject *unicode)
     PyObject *bytes;
     unsigned char c;
     char *str;
-    int vi = 0;  /* silence uninitialized warning on some compilers */
+    int res = -1, vi = 0;
 
     assert(PyUnicode_Check(unicode));
     if ((bytes = PyUnicode_AsASCIIString(unicode)) == NULL)
@@ -841,11 +841,10 @@ extend_unicode01(bitarrayobject *self, PyObject *unicode)
         }
         setbit(self, i++, vi);
     }
-    Py_DECREF(bytes);  /* drop bytes */
-    return resize(self, i);  /* in case we ignored characters */
+    res = resize(self, i);  /* in case we ignored characters */
  error:
     Py_DECREF(bytes);  /* drop bytes */
-    return -1;
+    return res;
 }
 
 static int
