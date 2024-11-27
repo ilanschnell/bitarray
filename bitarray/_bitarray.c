@@ -804,18 +804,22 @@ extend_sequence(bitarrayobject *self, PyObject *sequence)
 }
 
 static int
-extend_bytes01(bitarrayobject *self, PyObject *bytes)
+extend_unicode01(bitarrayobject *self, PyObject *unicode)
 {
     const Py_ssize_t nbits = self->nbits;
     Py_ssize_t i = nbits;  /* current index */
+    PyObject *bytes;
     unsigned char c;
     char *str;
     int vi = 0;  /* silence uninitialized warning on some compilers */
 
-    assert(PyBytes_Check(bytes));
+    assert(PyUnicode_Check(unicode));
+    if ((bytes = PyUnicode_AsASCIIString(unicode)) == NULL)
+        return -1;
+
     str = PyBytes_AS_STRING(bytes);
     if (resize(self, nbits + PyBytes_GET_SIZE(bytes)) < 0)
-        return -1;
+        goto error;
 
     while ((c = *str++)) {
         switch (c) {
@@ -833,27 +837,15 @@ extend_bytes01(bitarrayobject *self, PyObject *bytes)
                          "(or whitespace, or underscore), got '%c' (0x%02x)",
                          c, c);
             resize(self, nbits);  /* no bits added on error */
-            return -1;
+            goto error;
         }
         setbit(self, i++, vi);
     }
-    /* in case we ignored characters we over-sized earlier */
-    return resize(self, i);
-}
-
-static int
-extend_unicode01(bitarrayobject *self, PyObject *unicode)
-{
-    PyObject *bytes;
-    int res;
-
-    assert(PyUnicode_Check(unicode));
-    if ((bytes = PyUnicode_AsASCIIString(unicode)) == NULL)
-        return -1;
-
-    res = extend_bytes01(self, bytes);
     Py_DECREF(bytes);  /* drop bytes */
-    return res;
+    return resize(self, i);  /* in case we ignored characters */
+ error:
+    Py_DECREF(bytes);  /* drop bytes */
+    return -1;
 }
 
 static int
