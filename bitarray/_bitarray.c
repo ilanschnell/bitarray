@@ -21,7 +21,7 @@ static int default_endian = ENDIAN_BIG;
 
 static PyTypeObject Bitarray_Type;
 
-/* translation table  - setup during module initialization */
+/* translation table - setup during module initialization */
 static char reverse_trans[256];
 
 #define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarray_Type)
@@ -3644,7 +3644,7 @@ ssize_richcompare(Py_ssize_t v, Py_ssize_t w, int op)
 static PyObject *
 richcompare(PyObject *v, PyObject *w, int op)
 {
-    Py_ssize_t i = 0, vs, ws, c;
+    Py_ssize_t i, vs, ws, c;
     bitarrayobject *va, *wa;
     char *vb, *wb;
 
@@ -3677,6 +3677,7 @@ richcompare(PyObject *v, PyObject *w, int op)
 
     /* search for the first index where items are different */
     c = Py_MIN(vs, ws) / 8;  /* common buffer size */
+    i = 0;                   /* byte index */
     if (va->endian == wa->endian) {
         /* equal endianness - skip ahead by comparing bytes directly */
         while (i < c && vb[i] == wb[i])
@@ -3970,7 +3971,7 @@ set_default_endian(PyObject *module, PyObject *args)
         return NULL;
 
     /* As endian_from_string() might return -1, we have to store its value
-       in a temporary variable BEFORE setting default_endian. */
+       in a temporary variable before setting default_endian. */
     if ((t = endian_from_string(endian_str)) < 0)
         return NULL;
     default_endian = t;
