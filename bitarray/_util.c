@@ -1915,8 +1915,7 @@ PyInit__util(void)
     if (bitarray_type_obj == NULL)
         return NULL;
 
-    m = PyModule_Create(&moduledef);
-    if (m == NULL)
+    if ((m = PyModule_Create(&moduledef)) == NULL)
         return NULL;
 
     if (PyType_Ready(&CHDI_Type) < 0)

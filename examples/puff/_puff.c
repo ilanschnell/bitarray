@@ -615,7 +615,7 @@ static PyMethodDef state_methods[] = {
     {"copy",           (PyCFunction) state_copy,           METH_VARARGS, 0},
     {"get_incnt",      (PyCFunction) state_get_incnt,      METH_NOARGS,  0},
     {"read_uint",      (PyCFunction) state_read_uint,      METH_O,       0},
-    {NULL,           NULL}  /* sentinel */
+    {NULL,             NULL}  /* sentinel */
 };
 
 static void
@@ -655,8 +655,7 @@ PyMODINIT_FUNC PyInit__puff(void)
     if (bitarray_type_obj == NULL)
         return NULL;
 
-    m = PyModule_Create(&moduledef);
-    if (m == NULL)
+    if ((m = PyModule_Create(&moduledef)) == NULL)
         return NULL;
 
     Py_SET_TYPE(&state_type, &PyType_Type);

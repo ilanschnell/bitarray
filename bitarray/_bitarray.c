@@ -3075,7 +3075,7 @@ static PyMethodDef decodetree_methods[] = {
     {"todict",     (PyCFunction) decodetree_todict,   METH_NOARGS,
      todict_doc},
     {"__sizeof__", (PyCFunction) decodetree_sizeof,   METH_NOARGS, 0},
-    {NULL,          NULL}  /* sentinel */
+    {NULL,         NULL}  /* sentinel */
 };
 
 PyDoc_STRVAR(decodetree_doc,
@@ -4031,7 +4031,7 @@ static PyMethodDef module_functions[] = {
      set_default_endian_doc},
     {"_sysinfo",            (PyCFunction) sysinfo,            METH_NOARGS,
      sysinfo_doc},
-    {NULL, NULL}  /* sentinel */
+    {NULL,                  NULL}  /* sentinel */
 };
 
 /******************************* Install Module ***************************/
@@ -4071,8 +4071,7 @@ PyInit__bitarray(void)
 
     setup_reverse_trans();
 
-    m = PyModule_Create(&moduledef);
-    if (m == NULL)
+    if ((m = PyModule_Create(&moduledef)) == NULL)
         return NULL;
 
     if (PyType_Ready(&Bitarray_Type) < 0)
