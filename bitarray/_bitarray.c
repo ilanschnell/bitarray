@@ -291,7 +291,8 @@ static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int k)
 {
     unsigned char *buff = (unsigned char *) self->ob_item + a;
-    Py_ssize_t s = 0, n = b - a;  /* number of bytes to be shifted */
+    Py_ssize_t n = b - a;       /* number of bytes to be shifted */
+    Py_ssize_t s = 0;           /* distance to next aligned pointer */
 
     assert(0 <= k && k < 8);
     assert(0 <= a && a <= Py_SIZE(self));
@@ -306,14 +307,14 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int k)
         n -= s;
     }
 
-    if (IS_LE(self)) {
+    if (IS_LE(self)) {          /* little endian */
         shift_r8le(buff, n, k);
         if (s) {
             buff[0] |= buff[-1] >> (8 - k);
             shift_r8le(buff - s, s, k);
         }
     }
-    else {
+    else {                      /* big endian */
         shift_r8be(buff, n, k);
         if (s) {
             buff[0] |= buff[-1] << (8 - k);
