@@ -31,6 +31,9 @@ from bitarray.util import (
 
 if DEBUG:
     from bitarray._util import _sc_rts, _SEGSIZE  # type: ignore
+    SEGBITS = 8 * _SEGSIZE
+else:
+    SEGBITS = -1
 
 # ---------------------------------------------------------------------------
 
@@ -1241,45 +1244,46 @@ class SC_Tests(unittest.TestCase, Util):
                 a &= urandom(n, endian)
                 self.round_trip(a)
 
-    @skipIf(not DEBUG)
+@skipIf(not DEBUG)
+class RTS_Tests(unittest.TestCase):
+
     def test_rts_empty(self):
         rts = _sc_rts(bitarray())
         self.assertEqual(len(rts), 1)
         self.assertEqual(rts, [0])
 
-    @skipIf(not DEBUG or _SEGSIZE != 32)
+    @skipIf(SEGBITS != 256)
     def test_rts_example(self):
         # see example before sc_calc_rts() in _util.c
         a = zeros(987)
         a[:5] = a[512:515] = a[768:772] = 1
         self.assertEqual(a.count(), 12)
         rts = _sc_rts(a)
+        self.assertIsInstance(rts, list)
         self.assertEqual(len(rts), 5)
         self.assertEqual(rts, [0, 5, 5, 8, 12])
 
-    @skipIf(not DEBUG)
     def test_rts_ones(self):
         for _ in range(20):
             n = randrange(10000)
             a = ones(n)
             rts = _sc_rts(a)
+            self.assertEqual(len(rts), (n + SEGBITS - 1) // SEGBITS + 1)
             self.assertEqual(rts[0], 0)
             self.assertEqual(rts[-1], n)
             for i, v in enumerate(rts):
-                self.assertEqual(v, min(8 * _SEGSIZE * i, n))
+                self.assertEqual(v, min(SEGBITS * i, n))
 
-    @skipIf(not DEBUG)
     def test_rts_random(self):
-        segbits = 8 * _SEGSIZE
         for _ in range(20):
             n = randrange(10000)
             a = urandom(n)
             rts = _sc_rts(a)
-            self.assertEqual(len(rts), (n + segbits - 1) // segbits + 1)
+            self.assertEqual(len(rts), (n + SEGBITS - 1) // SEGBITS + 1)
             self.assertEqual(rts[0], 0)
             self.assertEqual(rts[-1], a.count())
             for i in range(len(rts) - 1):
-                seg_pop = a.count(1, segbits * i, segbits * (i + 1))
+                seg_pop = a.count(1, SEGBITS * i, SEGBITS * (i + 1))
                 self.assertEqual(rts[i + 1] - rts[i], seg_pop)
 
 # ---------------------------------------------------------------------------
