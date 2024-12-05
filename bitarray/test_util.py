@@ -1244,8 +1244,17 @@ class SC_Tests(unittest.TestCase, Util):
                 a &= urandom(n, endian)
                 self.round_trip(a)
 
+# ---------------------------------------------------------------------------
+
 @skipIf(not DEBUG)
 class RTS_Tests(unittest.TestCase):
+
+    # Internal functionality exposed for the purpose of testing.
+    # This class will only be part of the test suite in debug mode.
+
+    def test_segsize(self):
+        self.assertIsInstance(_SEGSIZE, int)
+        self.assertTrue(_SEGSIZE in [8, 16, 32])
 
     def test_rts_empty(self):
         rts = _sc_rts(bitarray())
