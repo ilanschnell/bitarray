@@ -1047,18 +1047,21 @@ sc_rts(PyObject *module, PyObject *obj)
         return NULL;
 
     if ((list = PyList_New(NSEG(a->nbits) + 1)) == NULL)
-        return NULL;
+        goto error;
 
     for (i = 0; i <= NSEG(a->nbits); i++) {
         PyObject *item = PyLong_FromSsize_t(rts[i]);
         if (item == NULL) {
             Py_DECREF(list);
-            return NULL;
+            goto error;
         }
         PyList_SET_ITEM(list, i, item);
     }
     PyMem_Free(rts);
     return list;
+ error:
+    PyMem_Free(rts);
+    return NULL;
 }
 #endif  /* NDEBUG */
 
@@ -1322,7 +1325,7 @@ sc_encode(PyObject *module, PyObject *obj)
 
     out = PyBytes_FromStringAndSize(NULL, 32768);
     if (out == NULL)
-        return NULL;
+        goto error;
 
     str = PyBytes_AS_STRING(out);
     len += sc_encode_header(str, a);
@@ -1340,7 +1343,7 @@ sc_encode(PyObject *module, PyObject *obj)
         allocated = PyBytes_GET_SIZE(out);
         if (allocated < len + 1 + 128 * 32 + 1) {  /* increase allocation */
             if (_PyBytes_Resize(&out, allocated + 32768) < 0)
-                return NULL;
+                goto error;
             str = PyBytes_AS_STRING(out);
         }
         offset += sc_encode_block(str, &len, a, rts, offset);
@@ -1352,6 +1355,9 @@ sc_encode(PyObject *module, PyObject *obj)
         return NULL;
 
     return out;
+ error:
+    PyMem_Free(rts);
+    return NULL;
 }
 
 PyDoc_STRVAR(sc_encode_doc,
