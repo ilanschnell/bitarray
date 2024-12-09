@@ -33,7 +33,7 @@ if DEBUG:
     from bitarray._util import _sc_rts, _SEGSIZE  # type: ignore
     SEGBITS = 8 * _SEGSIZE
 else:
-    SEGBITS = -1
+    SEGBITS = None
 
 # ---------------------------------------------------------------------------
 
