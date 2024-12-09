@@ -6,7 +6,7 @@ import platform
 if sys.version_info[0] == 2:
     sys.exit("""\
 ****************************************************************************
-*   Python 2 support of bitarray has now been removed.
+*   Python 2 support of bitarray has been removed.
 *   The last version supporting Python 2 is bitarray 2.9.3.
 ****************************************************************************
 """)
