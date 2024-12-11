@@ -14,14 +14,14 @@ trans = {
     "C": bitarray("11")
 }
 
-N = 10000
+N = 10_000
 seq = [choice("ATGC") for _ in range(N)]
 
 arr = bitarray()
 arr.encode(trans, seq)
 
-assert arr.decode(trans) == seq
+assert list(arr.decode(trans)) == seq
 
 # decodage
-t = timeit(lambda: arr.decode(trans), number=1000)
+t = timeit(lambda: list(arr.decode(trans)), number=1000)
 print(t)
