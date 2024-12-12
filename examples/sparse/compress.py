@@ -114,7 +114,7 @@ Generate random bitarray of length n.
 Each bit has a probability p of being 1.
 """
     if p < 0.05:
-        # XXX what happens for small N?  N=0 crashes right now.
+        # XXX what happens for small n?
         # when the probability p is small, it is faster to randomly
         # set p * n elements
         a = zeros(n)
@@ -128,6 +128,7 @@ def test_random_array():
     n = 10_000_000
     p = 1e-6
     while p < 1.0:
+        assert random_array(0, p) == bitarray()
         a = random_array(n, p)
         cnt = a.count()
         print("%10.7f  %10.7f  %10.7f" % (p, cnt / n, abs(p - cnt / n)))
