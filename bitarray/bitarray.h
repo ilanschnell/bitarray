@@ -4,7 +4,7 @@
 
    Author: Ilan Schnell
 */
-#define BITARRAY_VERSION  "3.0.1"
+#define BITARRAY_VERSION  "3.1.0"
 
 #ifdef STDC_HEADERS
 #  include <stddef.h>
