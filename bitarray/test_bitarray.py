@@ -1629,9 +1629,10 @@ class MiscTests(unittest.TestCase, Util):
     def test_iter1(self):
         it = iter(bitarray('011'))
         self.assertIsType(it, 'bitarrayiterator')
-        self.assertTrue(next(it) is 0)
-        self.assertTrue(next(it) is 1)
-        self.assertEqual(next(it), 1)
+        for res in 0, 1, 1:
+            item = next(it)
+            self.assertIsInstance(item, int)
+            self.assertEqual(item, res)
         self.assertRaises(StopIteration, next, it)
 
     def test_iter2(self):
