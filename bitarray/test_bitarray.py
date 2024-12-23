@@ -1536,24 +1536,49 @@ class SequenceIndexTests(unittest.TestCase, Util):
         a[b] = c
         self.assertEqual(a, bitarray('1000100'))
 
-    def test_mask_assign_random(self):
+    def test_zeros_mask_assign(self):
         for a in self.randombitarrays():
             b = a.copy()
-            n = len(a)
-            mask = zeros(n)
+            mask = zeros(len(a))
             a[mask] = bitarray()
             self.assertEqual(a, b)
 
-            mask.setall(1)
-            a[mask] = a
-            self.assertEqual(a, b)
+    def test_ones_mask_assign(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            mask = ones(n)
+            c = urandom(n)
+            a[mask] = c
+            self.assertEqual(a, c)
 
-            mask = urandom(n)
+    def test_random_mask_assign_random(self):
+        for a in self.randombitarrays():
+            b = a.copy()
+            mask = urandom(len(a))
             other = urandom(mask.count())
             a[mask] = other
             b[list(mask.search(1))] = other
             self.assertEqual(a, b)
-            self.assertEqual(len(a), n)
+
+    def test_random_mask_assign_zeros(self):
+        for a in self.randombitarrays():
+            b = a.copy()
+            mask = urandom(len(a), endian=b.endian())
+            a[mask] = zeros(mask.count())
+            # a[mask] = 0 is not implemented because it is equivalent to
+            # a &= ~mask
+            b &= ~mask
+            self.assertEqual(a, b)
+
+    def test_random_mask_assign_ones(self):
+        for a in self.randombitarrays():
+            b = a.copy()
+            mask = urandom(len(a), endian=b.endian())
+            a[mask] = ones(mask.count())
+            # a[mask] = 1 is not implemented because it is equivalent to
+            # a |= mask
+            b |= mask
+            self.assertEqual(a, b)
 
     def test_del_basic(self):
         a = bitarray('00110101 00')
