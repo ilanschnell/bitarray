@@ -1515,25 +1515,26 @@ class SequenceIndexTests(unittest.TestCase, Util):
             self.assertEqual(a, b)
 
     def test_mask_assign_basic(self):
-        # example from issue #225
-        a = bitarray('0000000')
-        b = bitarray('1100110')
-        c = bitarray('1010')
-        a[b] = c
-        self.assertEqual(a, bitarray('1000100'))
-
         a =    bitarray('1001001')
         mask = bitarray('1010111')
-        c =    bitarray("0 1 110")
+        val =  bitarray("0 1 110")
         res =  bitarray("0011110")
         self.assertRaises(NotImplementedError, a.__setitem__, mask, 1)
-        a[mask] = c
+        a[mask] = val
         self.assertEqual(a, res)
         b = bitarray('0111')
         self.assertRaisesMessage(
             IndexError,
             "attempt to assign mask of size 5 to bitarray of size 4",
             a.__setitem__, mask, b)
+
+    def test_mask_assign_issue225(self):
+        # example from issue #225
+        a = bitarray('0000000')
+        b = bitarray('1100110')
+        c = bitarray('1010')
+        a[b] = c
+        self.assertEqual(a, bitarray('1000100'))
 
     def test_mask_assign_random(self):
         for a in self.randombitarrays():
