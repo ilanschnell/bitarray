@@ -1422,21 +1422,27 @@ class MaskedIndexTests(unittest.TestCase, Util):
 
     def test_random_mask_set_zeros(self):
         for a in self.randombitarrays():
+            mask = urandom(len(a), endian=a.endian())
             b = a.copy()
-            mask = urandom(len(a), endian=b.endian())
+            self.assertRaisesMessage(
+                NotImplementedError,
+                "mask assignment to bool not implemented;\n"
+                "`a[mask] = 0` equivalent to `a &= ~mask`",
+                a.__setitem__, mask, 0)
             a[mask] = zeros(mask.count())
-            # a[mask] = 0 is not implemented because it is equivalent to
-            # a &= ~mask
             b &= ~mask
             self.assertEqual(a, b)
 
     def test_random_mask_set_ones(self):
         for a in self.randombitarrays():
+            mask = urandom(len(a), endian=a.endian())
             b = a.copy()
-            mask = urandom(len(a), endian=b.endian())
+            self.assertRaisesMessage(
+                NotImplementedError,
+                "mask assignment to bool not implemented;\n"
+                "`a[mask] = 1` equivalent to `a |= mask`",
+                a.__setitem__, mask, 1)
             a[mask] = ones(mask.count())
-            # a[mask] = 1 is not implemented because it is equivalent to
-            # a |= mask
             b |= mask
             self.assertEqual(a, b)
 
