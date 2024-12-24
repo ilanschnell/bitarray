@@ -2318,8 +2318,14 @@ setmask_bool(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
     if (!conv_pybit(value, &vi))
         return -1;
 
-    PyErr_SetString(PyExc_NotImplementedError, "mask assignment to "
-                    "bool not implemented - use bitwise operations");
+#define MSG1  "mask assignment to bool not implemented;\n"
+    if (vi)
+        PyErr_SetString(PyExc_NotImplementedError, MSG1
+                        "`a[mask] = 1` equivalent to `a |= mask`");
+    else
+        PyErr_SetString(PyExc_NotImplementedError, MSG1
+                        "`a[mask] = 0` equivalent to `a &= ~mask`");
+#undef MSG1
     return -1;
 }
 
