@@ -2284,22 +2284,6 @@ assign_slice(bitarrayobject *self, PyObject *slice, PyObject *value)
     return -1;
 }
 
-/* delete items in self, specified by mask */
-static int
-delmask(bitarrayobject *self, bitarrayobject *mask)
-{
-    Py_ssize_t n = 0, i;
-
-    assert(self->nbits == mask->nbits);
-    for (i = 0; i < mask->nbits; i++) {
-        if (getbit(mask, i) == 0)  /* set items we want to keep */
-            setbit(self, n++, getbit(self, i));
-    }
-    assert(self == mask || n == mask->nbits - count(mask, 0, mask->nbits));
-
-    return resize(self, n);
-}
-
 /* assign mask of bitarray self to bitarray other */
 static int
 setmask_bitarray(bitarrayobject *self, bitarrayobject *mask,
@@ -2321,6 +2305,22 @@ setmask_bitarray(bitarrayobject *self, bitarrayobject *mask,
     }
     assert(j == n);
     return 0;
+}
+
+/* delete items in self, specified by mask */
+static int
+delmask(bitarrayobject *self, bitarrayobject *mask)
+{
+    Py_ssize_t n = 0, i;
+
+    assert(self->nbits == mask->nbits);
+    for (i = 0; i < mask->nbits; i++) {
+        if (getbit(mask, i) == 0)  /* set items we want to keep */
+            setbit(self, n++, getbit(self, i));
+    }
+    assert(self == mask || n == mask->nbits - count(mask, 0, mask->nbits));
+
+    return resize(self, n);
 }
 
 /* assign mask of bitarray self to value */
