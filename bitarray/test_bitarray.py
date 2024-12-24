@@ -1379,6 +1379,7 @@ class MaskedIndexTests(unittest.TestCase, Util):
         val =  bitarray("0 1 110")
         res =  bitarray("0011110")
         self.assertRaises(NotImplementedError, a.__setitem__, mask, 1)
+        self.assertRaises(ValueError, a.__setitem__, mask, 2)
         a[mask] = val
         self.assertEqual(a, res)
         b = bitarray('0111')

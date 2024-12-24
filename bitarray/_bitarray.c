@@ -2284,6 +2284,8 @@ assign_slice(bitarrayobject *self, PyObject *slice, PyObject *value)
     return -1;
 }
 
+/* The following functions are called from assign_mask(). */
+
 /* assign mask of bitarray self to bitarray other */
 static int
 setmask_bitarray(bitarrayobject *self, bitarrayobject *mask,
@@ -2305,6 +2307,20 @@ setmask_bitarray(bitarrayobject *self, bitarrayobject *mask,
     }
     assert(j == n);
     return 0;
+}
+
+/* assign mask of bitarray self to boolean value */
+static int
+setmask_bool(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
+{
+    int vi;
+
+    if (!conv_pybit(value, &vi))
+        return -1;
+
+    PyErr_SetString(PyExc_NotImplementedError, "mask assignment to "
+                    "bool not implemented - use bitwise operations");
+    return -1;
 }
 
 /* delete items in self, specified by mask */
@@ -2336,35 +2352,15 @@ assign_mask(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
     if (bitarray_Check(value))
         return setmask_bitarray(self, mask, (bitarrayobject *) value);
 
-    if (PyIndex_Check(value)) {
-        PyErr_SetString(PyExc_NotImplementedError, "mask assignment to "
-                        "bool not implemented - use bitwise operations");
-        return -1;
-    }
+    if (PyIndex_Check(value))
+        return setmask_bool(self, mask, value);
 
     PyErr_Format(PyExc_TypeError, "bitarray or int expected for mask "
                  "assignment, not '%s'", Py_TYPE(value)->tp_name);
     return -1;
 }
 
-/* assign sequence (of indices) of bitarray self to Boolean value */
-static int
-setseq_bool(bitarrayobject *self, PyObject *seq, PyObject *value)
-{
-    Py_ssize_t n, i, j;
-    int vi;
-
-    if (!conv_pybit(value, &vi))
-        return -1;
-
-    n = PySequence_Size(seq);
-    for (j = 0; j < n; j++) {
-        if ((i = index_from_seq(seq, j, self->nbits)) < 0)
-            return -1;
-        setbit(self, i, vi);
-    }
-    return 0;
-}
+/* The following functions are called from assign_sequence(). */
 
 /* assign sequence (of indices) of bitarray self to bitarray */
 static int
@@ -2396,6 +2392,25 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
     if (other_copied)
         Py_DECREF(other);
     return res;
+}
+
+/* assign sequence (of indices) of bitarray self to Boolean value */
+static int
+setseq_bool(bitarrayobject *self, PyObject *seq, PyObject *value)
+{
+    Py_ssize_t n, i, j;
+    int vi;
+
+    if (!conv_pybit(value, &vi))
+        return -1;
+
+    n = PySequence_Size(seq);
+    for (j = 0; j < n; j++) {
+        if ((i = index_from_seq(seq, j, self->nbits)) < 0)
+            return -1;
+        setbit(self, i, vi);
+    }
+    return 0;
 }
 
 /* delete items in self, specified by sequence of indices */
