@@ -2313,8 +2313,8 @@ setmask_bitarray(bitarrayobject *self, bitarrayobject *mask,
 static int
 setmask_bool(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
 {
-    const char expr[2][11] = {"a &= ~mask",  /* a[mask] = 0 */
-                              "a |= mask"};  /* a[mask] = 1 */
+    static char *expr[] = {"a &= ~mask",  /* a[mask] = 0 */
+                           "a |= mask"};  /* a[mask] = 1 */
     int vi;
 
     if (!conv_pybit(value, &vi))
