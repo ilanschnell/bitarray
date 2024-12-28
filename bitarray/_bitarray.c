@@ -622,9 +622,9 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
     return -1;
 }
 
-/* Given sub_bitarray, return:
+/* Given sub-bitarray, return:
    -1: on error (after setting exception)
- 0, 1: value of integer sub or single item of sub if bitarray of length 1
+ 0, 1: value of integer sub or sub[0] if sub-bitarray has length 1
     2: when sub is bitarray of length 0, 2, 3, ...
  */
 static int
