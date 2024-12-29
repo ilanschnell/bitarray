@@ -223,7 +223,7 @@ popcnt_words(uint64_t *w, Py_ssize_t n)
     return cnt;
 }
 
-/* adjust index a manner consistent with the handling of normal slices */
+/* adjust index in a manner consistent with the handling of normal slices */
 static inline void
 adjust_index(Py_ssize_t length, Py_ssize_t *i, Py_ssize_t step)
 {
@@ -242,7 +242,7 @@ static inline Py_ssize_t
 adjust_indices(Py_ssize_t length, Py_ssize_t *start, Py_ssize_t *stop,
                Py_ssize_t step)
 {
-#if PY_VERSION_HEX > 0x03060100
+#if PY_VERSION_HEX >= 0x03060100
     return PySlice_AdjustIndices(length, start, stop, step);
 #else
     assert(step != 0);
