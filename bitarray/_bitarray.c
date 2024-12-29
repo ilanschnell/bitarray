@@ -678,12 +678,12 @@ static Py_ssize_t
 find_obj(bitarrayobject *self, PyObject *sub,
          Py_ssize_t start, Py_ssize_t stop, int right)
 {
-    int vi;
+    int vi = value_sub(sub);
 
     assert(0 <= start && start <= self->nbits);
     assert(0 <= stop && stop <= self->nbits);
 
-    if ((vi = value_sub(sub)) < 0)
+    if (vi < 0)
         return -2;
 
     if (vi < 2)
