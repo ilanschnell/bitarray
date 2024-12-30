@@ -1719,22 +1719,22 @@ map to bit 1.");
 static PyObject *
 bitarray_pop(bitarrayobject *self, PyObject *args)
 {
-    Py_ssize_t i = -1;
+    Py_ssize_t nbits = self->nbits, i = -1;
     long vi;
 
     RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|n:pop", &i))
         return NULL;
 
-    if (self->nbits == 0) {
+    if (nbits == 0) {
         /* special case -- most common failure cause */
         PyErr_SetString(PyExc_IndexError, "pop from empty bitarray");
         return NULL;
     }
     if (i < 0)
-        i += self->nbits;
+        i += nbits;
 
-    if (i < 0 || i >= self->nbits) {
+    if (i < 0 || i >= nbits) {
         PyErr_SetString(PyExc_IndexError, "pop index out of range");
         return NULL;
     }
