@@ -858,13 +858,13 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     if (bitarray_Check(obj))                              /* bitarray */
         return extend_bitarray(self, (bitarrayobject *) obj);
 
-    if (PyBytes_Check(obj)) {                             /* bytes 01 */
+    if (PyBytes_Check(obj)) {                                /* bytes */
         PyErr_SetString(PyExc_TypeError, "cannot extend bitarray with "
                         "'bytes', use .pack() or .frombytes() instead");
         return -1;
     }
 
-    if (PyUnicode_Check(obj))                           /* unicode 01 */
+    if (PyUnicode_Check(obj))                     /* unicode (string) */
         return extend_unicode01(self, obj);
 
     if (PySequence_Check(obj))                            /* sequence */
