@@ -3363,7 +3363,7 @@ searchiter_next(searchiterobject *it)
         return NULL;        /* stop iteration */
 
     pos = find_obj(it->self, it->sub, it->start, it->stop, it->right);
-    assert(pos > -2);  /* cannot happen - we called value_sub() before */
+    assert(pos > -2);  /* pos cannot be -2 as we called value_sub() before */
     if (pos < 0)  /* no more positions -- stop iteration */
         return NULL;
 
