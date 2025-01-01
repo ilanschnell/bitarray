@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2008 - 2024, Ilan Schnell; All Rights Reserved
+   Copyright (c) 2008 - 2025, Ilan Schnell; All Rights Reserved
    bitarray is published under the PSF license.
 
    This file is the C part of the bitarray package.

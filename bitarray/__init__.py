@@ -1,4 +1,4 @@
-# Copyright (c) 2008 - 2024, Ilan Schnell; All Rights Reserved
+# Copyright (c) 2008 - 2025, Ilan Schnell; All Rights Reserved
 """
 This package defines an object type which can efficiently represent
 a bitarray.  Bitarrays are sequence types and behave very much like lists.
