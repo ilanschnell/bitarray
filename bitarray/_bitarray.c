@@ -821,7 +821,7 @@ extend_unicode01(bitarrayobject *self, PyObject *unicode)
 
     str = PyBytes_AS_STRING(bytes);
     if (resize(self, nbits + PyBytes_GET_SIZE(bytes)) < 0)
-        goto error;
+        goto finish;
 
     while ((c = *str++)) {
         switch (c) {
@@ -839,12 +839,12 @@ extend_unicode01(bitarrayobject *self, PyObject *unicode)
                          "(or whitespace, or underscore), got '%c' (0x%02x)",
                          c, c);
             resize(self, nbits);  /* no bits added on error */
-            goto error;
+            goto finish;
         }
         setbit(self, i++, vi);
     }
     res = resize(self, i);  /* in case we ignored characters */
- error:
+ finish:
     Py_DECREF(bytes);  /* drop bytes */
     return res;
 }
