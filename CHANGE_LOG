@@ -1,6 +1,7 @@
 2024-XX-XX   3.1.0:
 -------------------
   * allow mask assignment to bitarrays, see #225
+  * add missing masked operations to pyi-file
   * fix some typos
   * minor simplifications
   * update gene example
