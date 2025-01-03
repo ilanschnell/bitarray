@@ -1051,16 +1051,15 @@ sc_rts(PyObject *module, PyObject *obj)
 
     for (i = 0; i <= NSEG(a->nbits); i++) {
         PyObject *item = PyLong_FromSsize_t(rts[i]);
-        if (item == NULL) {
-            Py_DECREF(list);
+        if (item == NULL)
             goto error;
-        }
         PyList_SET_ITEM(list, i, item);
     }
     PyMem_Free(rts);
     return list;
 
  error:
+    Py_XDECREF(list);
     PyMem_Free(rts);
     return NULL;
 }
