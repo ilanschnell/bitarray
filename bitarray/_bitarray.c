@@ -2177,11 +2177,11 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
     if (step == 1) {
         if (increase > 0) {        /* increase self */
             if (insert_n(self, start + slicelength, increase) < 0)
-                goto error;
+                goto finish;
         }
         if (increase < 0) {        /* decrease self */
             if (delete_n(self, start + other->nbits, -increase) < 0)
-                goto error;
+                goto finish;
         }
         /* copy new values into self */
         copy_n(self, start, other, 0, other->nbits);
@@ -2193,14 +2193,14 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
             PyErr_Format(PyExc_ValueError, "attempt to assign sequence of "
                          "size %zd to extended slice of size %zd",
                          other->nbits, slicelength);
-            goto error;
+            goto finish;
         }
         for (i = 0, j = start; i < slicelength; i++, j += step)
             setbit(self, j, getbit(other, i));
     }
 
     res = 0;
- error:
+ finish:
     if (other_copied)
         Py_DECREF(other);
     return res;
@@ -2387,11 +2387,11 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
 
     for (j = 0; j < n; j++) {
         if ((i = index_from_seq(seq, j, self->nbits)) < 0)
-            goto error;
+            goto finish;
         setbit(self, i, getbit(other, j));
     }
     res = 0;
- error:
+ finish:
     if (other_copied)
         Py_DECREF(other);
     return res;
@@ -2437,11 +2437,11 @@ delsequence(bitarrayobject *self, PyObject *seq)
     /* set indices from sequence in mask */
     for (j = 0; j < nseq; j++) {
         if ((i = index_from_seq(seq, j, self->nbits)) < 0)
-            goto error;
+            goto finish;
         setbit(mask, i, 1);
     }
     res = delmask(self, mask);  /* do actual work here */
- error:
+ finish:
     Py_DECREF(mask);
     return res;
 }

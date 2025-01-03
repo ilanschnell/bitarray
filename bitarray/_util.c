@@ -1059,6 +1059,7 @@ sc_rts(PyObject *module, PyObject *obj)
     }
     PyMem_Free(rts);
     return list;
+
  error:
     PyMem_Free(rts);
     return NULL;
@@ -1355,6 +1356,7 @@ sc_encode(PyObject *module, PyObject *obj)
         return NULL;
 
     return out;
+
  error:
     PyMem_Free(rts);
     return NULL;
