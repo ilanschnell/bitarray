@@ -156,10 +156,11 @@ zlw(bitarrayobject *self)       /* zlw = zeroed last word */
 static inline void
 set_padbits(bitarrayobject *self)
 {
-    const int r = self->nbits % 8;     /* index into mask table */
-
-    if (self->readonly == 0 && r)
-        self->ob_item[Py_SIZE(self) - 1] &= ones_table[IS_BE(self)][r];
+    if (self->readonly == 0) {
+        int r = self->nbits % 8;     /* index into mask table */
+        if (r)
+            self->ob_item[Py_SIZE(self) - 1] &= ones_table[IS_BE(self)][r];
+    }
 }
 
 /* population count - number of 1's in uint64 */
