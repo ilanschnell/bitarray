@@ -3651,13 +3651,12 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return newbitarray_from_index(type, initial, endian,
                                       buffer == Py_None);
 
-    /* bitarray: use its endianness (when endian argument missing) */
+    /* bitarray: use its endianness when endian argument is missing */
     if (bitarray_Check(initial) && endian_str == NULL)
         endian = ((bitarrayobject *) initial)->endian;
 
     /* leave remaining type dispatch to extend method */
-    res = newbitarrayobject(type, 0, endian);
-    if (res == NULL)
+    if ((res = newbitarrayobject(type, 0, endian)) == NULL)
         return NULL;
     if (extend_dispatch(res, initial) < 0) {
         Py_DECREF(res);
