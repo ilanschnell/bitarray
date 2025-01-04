@@ -2885,12 +2885,7 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(len(b) % 8, 0)
             self.assertEqual(b.endian(), a.endian())
             self.check_obj(b)
-            if len(a) % 8 == 0:
-                self.assertEqual(b, a)
-            else:
-                self.assertNotEqual(b, a)
-                self.assertEqual(b[:len(a)], a)
-                self.assertEqual(b[len(a):], zeros(len(b) - len(a)))
+            self.assertEqual(b, a + zeros(res))
 
     def test_invert_simple(self):
         a = bitarray()
