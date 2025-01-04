@@ -2881,12 +2881,13 @@ class MethodTests(unittest.TestCase, Util):
             b = a.copy()
             res = b.fill()
             self.assertTrue(0 <= res < 8)
+            self.assertTrue(b.padbits == 0)
+            self.assertEqual(len(b) % 8, 0)
             self.assertEqual(b.endian(), a.endian())
             self.check_obj(b)
             if len(a) % 8 == 0:
                 self.assertEqual(b, a)
             else:
-                self.assertEqual(len(b) % 8, 0)
                 self.assertNotEqual(b, a)
                 self.assertEqual(b[:len(a)], a)
                 self.assertEqual(b[len(a):], zeros(len(b) - len(a)))
