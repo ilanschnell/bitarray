@@ -178,7 +178,7 @@ The bit-endianness of the bitarray is respected.
 def int2ba(__i, length=None, endian=None, signed=False):
     """int2ba(int, /, length=None, endian=None, signed=False) -> bitarray
 
-Convert the given integer to a bitarray (with given endianness,
+Convert the given integer to a bitarray (with given bit-endianness,
 and no leading (big-endian) / trailing (little-endian) zeros), unless
 the `length` of the bitarray is provided.  An `OverflowError` is raised
 if the integer is not representable with the given number of bits.
@@ -276,7 +276,7 @@ def huffman_code(__freq_map, endian=None):
 
 Given a frequency map, a dictionary mapping symbols to their frequency,
 calculate the Huffman code, i.e. a dict mapping those symbols to
-bitarrays (with given endianness).  Note that the symbols are not limited
+bitarrays (with given bit-endianness).  Note that the symbols are not limited
 to being strings.  Symbols may be any hashable object (such as `None`).
 """
     if not isinstance(__freq_map, dict):

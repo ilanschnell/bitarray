@@ -986,8 +986,8 @@ PyDoc_STRVAR(bytereverse_doc,
 For each byte in byte-range(start, stop) reverse bits in-place.\n\
 The start and stop indices are given in terms of bytes (not bits).\n\
 Also note that this method only changes the buffer; it does not change the\n\
-endianness of the bitarray object.  Padbits are left unchanged such that\n\
-two consecutive calls will always leave the bitarray unchanged.");
+bit-endianness of the bitarray object.  Padbits are left unchanged such\n\
+that two consecutive calls will always leave the bitarray unchanged.");
 
 
 static PyObject *
@@ -2423,7 +2423,7 @@ delsequence(bitarrayobject *self, PyObject *seq)
     if (nseq == 0)   /* shortcut - sequence is empty - nothing to delete */
         return 0;
 
-    /* create mask bitarray - note that it's endianness is irrelevant */
+    /* create mask bitarray - note that it's bit-endianness is irrelevant */
     mask = newbitarrayobject(&Bitarray_Type, self->nbits, ENDIAN_LITTLE);
     if (mask == NULL)
         return -1;
@@ -2552,7 +2552,7 @@ bitwise(bitarrayobject *self, bitarrayobject *other, const char oper)
 }
 
 /* Return 0 if both a and b are bitarray objects with same length and
-   endianness.  Otherwise, set exception and return -1. */
+   bit-endianness.  Otherwise, set exception and return -1. */
 static int
 bitwise_check(PyObject *a, PyObject *b, const char *ostr)
 {
@@ -3513,7 +3513,7 @@ static PyMethodDef bitarray_methods[] = {
 
 /* ------------------------ bitarray initialization -------------------- */
 
-/* Given string 'str', return an integer representing the endianness.
+/* Given string 'str', return an integer representing the bit-endianness.
    If the string is invalid, set exception and return -1. */
 static int
 endian_from_string(const char *str)
@@ -3646,7 +3646,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return newbitarray_from_index(type, initial, endian,
                                       buffer == Py_None);
 
-    /* bitarray: use its endianness when endian argument is missing */
+    /* bitarray: use its bit-endianness when endian argument is missing */
     if (bitarray_Check(initial) && endian_str == NULL)
         endian = ((bitarrayobject *) initial)->endian;
 
@@ -3864,7 +3864,7 @@ PyDoc_STRVAR(bitarraytype_doc,
 "bitarray(initializer=0, /, endian='big', buffer=None) -> bitarray\n\
 \n\
 Return a new bitarray object whose items are bits initialized from\n\
-the optional initial object, and endianness.\n\
+the optional initial object, and bit-endianness.\n\
 The initializer may be of the following types:\n\
 \n\
 `int`: Create a bitarray of given integer length.  The initial values are\n\
@@ -3985,9 +3985,9 @@ get_default_endian(PyObject *module)
 PyDoc_STRVAR(get_default_endian_doc,
 "get_default_endian() -> str\n\
 \n\
-Return the default endianness for new bitarray objects being created.\n\
-Unless `_set_default_endian('little')` was called, the default endianness\n\
-is `big`.");
+Return the default bit-endianness for new bitarray objects being created.\n\
+Unless `_set_default_endian('little')` was called, the default\n\
+bit-endianness is `big`.");
 
 
 static PyObject *
