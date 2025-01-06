@@ -782,22 +782,20 @@ extend_iter(bitarrayobject *self, PyObject *iter)
 static int
 extend_sequence(bitarrayobject *self, PyObject *sequence)
 {
-    const Py_ssize_t original_nbits = self->nbits;
-    PyObject *item;
+    const Py_ssize_t nbits = self->nbits;
     Py_ssize_t n, i;
 
-    n = PySequence_Size(sequence);
-    if (n < 0)
+    if ((n = PySequence_Size(sequence)) < 0)
         return -1;
 
-    if (resize(self, self->nbits + n) < 0)
+    if (resize(self, nbits + n) < 0)
         return -1;
 
     for (i = 0; i < n; i++) {
-        item = PySequence_GetItem(sequence, i);
-        if (item == NULL || set_item(self, self->nbits - n + i, item) < 0) {
+        PyObject *item = PySequence_GetItem(sequence, i);
+        if (item == NULL || set_item(self, nbits + i, item) < 0) {
             Py_XDECREF(item);
-            resize(self, original_nbits);
+            resize(self, nbits);
             return -1;
         }
         Py_DECREF(item);
