@@ -1235,9 +1235,8 @@ bitarray_index(bitarrayobject *self, PyObject *args, PyObject *kwds)
     assert(PyLong_Check(result));
     if (PyLong_AsSsize_t(result) < 0) {
         Py_DECREF(result);
-        PyErr_Format(PyExc_ValueError, "%A not in bitarray",
-                     PyTuple_GET_ITEM(args, 0));
-        return NULL;
+        return PyErr_Format(PyExc_ValueError, "%A not in bitarray",
+                            PyTuple_GET_ITEM(args, 0));
     }
     return result;
 }
