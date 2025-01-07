@@ -35,7 +35,7 @@
 
 /* --- bitarrayobject --- */
 
-/* .ob_size is buffer size (in bytes), not the number of elements.
+/* .ob_size is the buffer size (in bytes), not the number of elements.
    The number of elements (bits) is .nbits. */
 typedef struct {
     PyObject_VAR_HEAD

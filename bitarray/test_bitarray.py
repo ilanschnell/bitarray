@@ -47,7 +47,7 @@ def buffer_info(a, key=None):
         "address",    # 0. address of byte buffer
         "size",       # 1. buffer size in bytes
         "endian",     # 2. bit-endianness
-        "padding",    # 3. number of pad bits
+        "padbits",    # 3. number of pad bits
         "allocated",  # 4. allocated memory
         "readonly",   # 5. memory is read-only
         "imported",   # 6. buffer is imported
@@ -135,35 +135,32 @@ class Util(object):
     def check_obj(self, a):
         self.assertIsInstance(a, bitarray)
 
-        ptr, size, endian, padbits, alloc, readonly, buf, exports = \
+        ptr, nbytes, endian, padbits, alloc, readonly, buf, exports = \
                                                           a.buffer_info()
-
-        self.assertEqual(size, bits2bytes(len(a)))
-        self.assertEqual(padbits, 8 * size - len(a))
+        self.assertEqual(nbytes, bits2bytes(len(a)))
         self.assertTrue(0 <= padbits < 8)
         self.assertEqual(endian, a.endian())
         self.assertTrue(endian in ('little', 'big'))
-
-        self.assertEqual(a.nbytes, size)
+        self.assertEqual(a.nbytes, nbytes)
         self.assertEqual(a.padbits, padbits)
         self.assertEqual(a.readonly, readonly)
-        self.assertEqual(len(a) + a.padbits, 8 * a.nbytes)
+        self.assertEqual(len(a) + padbits, 8 * nbytes)
 
         if buf:
             # imported buffer implies that no extra memory is allocated
             self.assertEqual(alloc, 0)
             # an imported buffer will always have a multiple of 8 bits
             self.assertEqual(len(a) % 8, 0)
-            self.assertEqual(len(a), 8 * size)
+            self.assertEqual(len(a), 8 * nbytes)
             self.assertEqual(padbits, 0)
         else:
             # the allocated memory is always larger than the buffer size
-            self.assertTrue(alloc >= size)
+            self.assertTrue(alloc >= nbytes)
 
         if ptr == 0:
             # the buffer being a NULL pointer implies that the buffer size
             # and the allocated memory size are 0
-            self.assertEqual(size, 0)
+            self.assertEqual(nbytes, 0)
             self.assertEqual(alloc, 0)
 
         if type(a).__name__ == 'frozenbitarray':
@@ -1480,7 +1477,7 @@ class MaskedIndexTests(unittest.TestCase, Util):
             del b[mask]
             self.assertEqual(b, res)
             # `del a[mask]` is equivalent to the in-place version of
-            # selecting the inverse mask `a = a[~mask]`
+            # selecting the inverted mask `a = a[~mask]`
             self.assertEqual(a[~mask], b)
 
 # ---------------------------------------------------------------------------
@@ -2627,7 +2624,6 @@ class ExtendTests(unittest.TestCase, Util):
                 self.check_obj(c)
                 # ensure b hasn't changed
                 self.assertEQUAL(b, bb)
-                self.check_obj(b)
 
     def test_list(self):
         a = bitarray()
@@ -2883,9 +2879,9 @@ class MethodTests(unittest.TestCase, Util):
             self.assertTrue(0 <= res < 8)
             self.assertTrue(b.padbits == 0)
             self.assertEqual(len(b) % 8, 0)
+            self.assertEqual(b, a + zeros(res))
             self.assertEqual(b.endian(), a.endian())
             self.check_obj(b)
-            self.assertEqual(b, a + zeros(res))
 
     def test_invert_simple(self):
         a = bitarray()
@@ -3879,6 +3875,7 @@ class DescriptorTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             self.assertEqual(a.nbytes, bits2bytes(len(a)))
             self.assertEqual(a.padbits, 8 * a.nbytes - len(a))
+            self.assertTrue(0 <= a.padbits < 8)
             self.assertIsInstance(a.nbytes, int)
             self.assertIsInstance(a.padbits, int)
 
