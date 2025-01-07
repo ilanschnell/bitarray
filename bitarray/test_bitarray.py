@@ -1480,7 +1480,7 @@ class MaskedIndexTests(unittest.TestCase, Util):
             del b[mask]
             self.assertEqual(b, res)
             # `del a[mask]` is equivalent to the in-place version of
-            # selecting the reverse mask `a = a[~mask]`
+            # selecting the inverse mask `a = a[~mask]`
             self.assertEqual(a[~mask], b)
 
 # ---------------------------------------------------------------------------
