@@ -389,8 +389,9 @@ Return tuple with counts of: ~a & ~b, ~a & b, a & ~b, a & b");
 
 /*
   The binary format used here is similar to the one used for pickling
-  bitarray objects.  This format encodes the bit-endianness in the head byte,
-  whereas the binary pickle blob does not.
+  bitarray objects.  However, this format has a head byte which encodes both
+  the bit-endianness and the number of padbits, whereas the binary pickle
+  blob does not.
 */
 
 static PyObject *
@@ -431,6 +432,7 @@ deserialize(PyObject *module, PyObject *buffer)
     Py_buffer view;
     bitarrayobject *a;
     unsigned char head;
+    Py_ssize_t nbits;
 
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
         return NULL;
@@ -448,9 +450,8 @@ deserialize(PyObject *module, PyObject *buffer)
         goto error;
     }
     /* create bitarray of desired length */
-    a = new_bitarray(8 * (view.len - 1) - ((Py_ssize_t) (head & 0x07)),
-                     Py_None, -1);
-    if (a == NULL)
+    nbits = 8 * (view.len - 1) - ((Py_ssize_t) (head & 0x07));
+    if ((a = new_bitarray(nbits, Py_None, -1)) == NULL)
         goto error;
     /* set bit-endianness and buffer */
     a->endian = head & 0x10 ? ENDIAN_BIG : ENDIAN_LITTLE;
