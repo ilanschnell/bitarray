@@ -3822,7 +3822,7 @@ static PyTypeObject BitarrayIter_Type = {
 /******************** bitarray buffer export interface ********************/
 /*
    Here we create bitarray_as_buffer for exporting bitarray buffers.
-   Buffer imports, are handled in newbitarray_from_buffer().
+   Buffer imports are handled in newbitarray_from_buffer().
 */
 
 static int
