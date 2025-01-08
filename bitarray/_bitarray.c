@@ -69,7 +69,6 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
        then proceed with the reallocation to shrink the bitarray.
     */
     if (allocated >= newsize && newsize >= (allocated >> 1)) {
-        assert(self->ob_item != NULL || newsize == 0);
         Py_SET_SIZE(self, newsize);
         self->nbits = nbits;
         return 0;
