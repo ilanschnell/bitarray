@@ -43,6 +43,10 @@ void resize(bitarrayobject *self, int nbits)
     new_allocated = (newsize + (newsize >> 4) +
                      (newsize < 8 ? 3 : 7)) & ~(int) 3;
 
+#if 0
+    printf("size = %d  newsize = %d  allocated = %d  new_allocated = %d\n",
+           size, newsize, allocated, new_allocated);
+#endif
     if (newsize - size > new_allocated - newsize)
         new_allocated = (newsize + 3) & ~(int) 3;
 
@@ -76,5 +80,15 @@ int main()
     resize(&x, 0);       SHOW;
     resize(&x, 0);       SHOW;
     resize(&x, 80000);   SHOW;
+    resize(&x, 2000);    SHOW;
+
+    for (size = 2000; size >= 0; size--) {
+        if (prev_alloc != x.allocated)
+            SHOW;
+        prev_alloc = x.allocated;
+        resize(&x, size);
+    }
+    SHOW;
+
     return 0;
 }
