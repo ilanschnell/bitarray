@@ -23,7 +23,7 @@ while len(a) < 1_000_000:
 # get a decreasing allocation
 a = bitarray(10_000_000)
 prev = get_alloc(a)
-for _ in range(100):
+while a:
     del a[-100_000:]
     alloc = a.buffer_info()[4]
     assert alloc <= prev
