@@ -53,8 +53,6 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     assert(allocated >= size && size == BYTES(self->nbits));
     /* ob_item == NULL implies ob_size == allocated == 0 */
     assert(self->ob_item != NULL || (size == 0 && allocated == 0));
-    /* allocated == 0 implies size == 0 */
-    assert(allocated != 0 || size == 0);
     /* resize() is never called on read-only memory */
     assert(self->readonly == 0);
 
