@@ -8,7 +8,9 @@ def get_alloc(a):
 
 def show(a):
     info = a.buffer_info()
-    print('%18d %10d %10d' % (info[0], info[1], info[4]))
+    size = info[1]
+    alloc = info[4]
+    print('%d  %d' % (size, alloc))
 
 
 class ResizeTests(unittest.TestCase):
