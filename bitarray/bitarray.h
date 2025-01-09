@@ -218,7 +218,7 @@ popcnt_words(uint64_t *w, Py_ssize_t n)
 {
     Py_ssize_t cnt = 0;
 
-    assert(n >= 0 && to_aligned((void *) w) == 0);
+    assert(n >= 0 && ((uintptr_t) w) % 4 == 0);
     while (n--)
         cnt += popcnt_64(*w++);
     return cnt;
