@@ -56,16 +56,15 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     /* resize() is never called on read-only memory */
     assert(self->readonly == 0);
 
+    /* Bypass everything when buffer size hasn't changed. */
     if (newsize == size) {
-        /* buffer size hasn't changed - bypass everything */
         self->nbits = nbits;
         return 0;
     }
 
     /* Bypass reallocation when a allocation is large enough to accommodate
        the newsize.  If the newsize falls lower than half the allocated size,
-       then proceed with the reallocation to shrink the bitarray.
-    */
+       then proceed with the reallocation to shrink the bitarray. */
     if (allocated >= newsize && newsize >= (allocated >> 1)) {
         Py_SET_SIZE(self, newsize);
         self->nbits = nbits;
