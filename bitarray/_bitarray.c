@@ -91,7 +91,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
 
     /* Do not overallocate if the new size is closer to overallocated size
        than to the old size. */
-    if (newsize - size > (Py_ssize_t) new_allocated - newsize)
+    if (newsize - size > (Py_ssize_t) (new_allocated - newsize))
         new_allocated = ((size_t) newsize + 3) & ~(size_t) 3;
 
     assert(new_allocated >= (size_t) newsize);
