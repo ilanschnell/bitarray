@@ -59,7 +59,7 @@ void resize(bitarrayobject *self, int nbits)
 
 int main()
 {
-    int size, prev_alloc = -1;
+    int nbits, prev_alloc = -1;
     bitarrayobject x;
 
     x.size = 0;
@@ -67,11 +67,11 @@ int main()
 
 #define SHOW  printf("%d  %d\n", x.size, x.allocated)
 
-    for (size = 0; size < 2000; size++) {
+    for (nbits = 0; nbits < 2000; nbits++) {
         if (prev_alloc != x.allocated)
             SHOW;
         prev_alloc = x.allocated;
-        resize(&x, size);
+        resize(&x, nbits);
     }
 
     resize(&x, 800000);  SHOW;
@@ -82,11 +82,11 @@ int main()
     resize(&x, 80000);   SHOW;
     resize(&x, 2000);    SHOW;
 
-    for (size = 2000; size >= 0; size--) {
+    for (nbits = 2000; nbits >= 0; nbits--) {
         if (prev_alloc != x.allocated)
             SHOW;
         prev_alloc = x.allocated;
-        resize(&x, size);
+        resize(&x, nbits);
     }
     SHOW;
 
