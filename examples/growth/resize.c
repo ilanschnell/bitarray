@@ -20,12 +20,10 @@ void resize(bitarrayobject *self, int nbits)
 
     newsize = BYTES(nbits);
     if (newsize == size) {
-        /* the memory size hasn't changed - bypass almost everything */
         self->nbits = nbits;
         return;
     }
 
-    /* Bypass realloc() ... */
     if (allocated >= newsize && newsize >= (allocated >> 1)) {
         self->size = newsize;
         self->nbits = nbits;
@@ -40,8 +38,7 @@ void resize(bitarrayobject *self, int nbits)
         return;
     }
 
-    new_allocated = (newsize + (newsize >> 4) +
-                     (newsize < 8 ? 3 : 7)) & ~(int) 3;
+    new_allocated = (newsize + (newsize >> 4) + (newsize < 8 ? 3 : 7)) & ~3;
 
 #if 0
     printf("size = %d  newsize = %d  allocated = %d  new_allocated = %d\n",
