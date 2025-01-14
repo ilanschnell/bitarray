@@ -843,7 +843,7 @@ resize_lite(bitarrayobject *self, Py_ssize_t nbits)
     new_allocated = ((size_t) newsize + (newsize >> 4) +
                      (newsize < 8 ? 3 : 7)) & ~(size_t) 3;
 
-    if (newsize - size > (Py_ssize_t) new_allocated - newsize)
+    if (newsize - size > (Py_ssize_t) (new_allocated - newsize))
         new_allocated = ((size_t) newsize + 3) & ~(size_t) 3;
 
     assert(new_allocated >= (size_t) newsize);
