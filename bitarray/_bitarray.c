@@ -2599,13 +2599,11 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
 {
     const Py_ssize_t nbits = self->nbits;
 
-    assert(self->readonly == 0);
-    if (n >= nbits) {
-        memset(self->ob_item, 0x00, (size_t) Py_SIZE(self));
-        return;
-    }
+    assert(n >= 0 && self->readonly == 0);
+    if (n > nbits)
+        n = nbits;
 
-    assert(0 <= n && n < nbits);
+    assert(n <= nbits);
     if (right) {                /* rshift */
         copy_n(self, n, self, 0, nbits - n);
         setrange(self, 0, n, 0);
