@@ -39,12 +39,10 @@ class ResizeTests(unittest.TestCase):
     def test_no_overalloc(self):
         # initalizing a bitarray from a list or bitarray does not overallocate
         for n in range(1000):
-            alloc = (n + 3) & ~3
-            self.assertTrue(n <= alloc < n + 4 and alloc % 4 == 0)
             a = bitarray(8 * n * [1])
-            self.assertEqual(get_alloc(a), alloc)
+            self.assertEqual(get_alloc(a), n)
             b = bitarray(a)
-            self.assertEqual(get_alloc(b), alloc)
+            self.assertEqual(get_alloc(b), n)
             c = bitarray(8 * n)
             self.assertEqual(get_alloc(c), n)
 

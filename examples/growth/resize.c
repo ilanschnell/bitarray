@@ -24,12 +24,6 @@ void resize(bitarrayobject *self, int nbits)
         return;
     }
 
-    if (allocated >= newsize && newsize >= (allocated >> 1)) {
-        self->size = newsize;
-        self->nbits = nbits;
-        return;
-    }
-
     if (newsize == 0) {
         /* free(self->ob_item) */
         self->size = 0;
@@ -38,14 +32,21 @@ void resize(bitarrayobject *self, int nbits)
         return;
     }
 
-    new_allocated = (newsize + (newsize >> 4) + (newsize < 8 ? 3 : 7)) & ~3;
-
-#if 0
-    printf("size = %d  newsize = %d  allocated = %d  new_allocated = %d\n",
-           size, newsize, allocated, new_allocated);
-#endif
-    if (newsize - size > new_allocated - newsize)
-        new_allocated = (newsize + 3) & ~(int) 3;
+    if (allocated >= newsize) {
+        if (newsize >= allocated / 2) {
+            self->size = newsize;
+            self->nbits = nbits;
+            return;
+        }
+        new_allocated = newsize;
+    }
+    else {
+        new_allocated = newsize;
+        if (size != 0 && newsize / 2 <= allocated) {
+            new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
+            new_allocated &= ~3;
+        }
+    }
 
     /* realloc(self->ob_item) */
     self->size = newsize;
@@ -59,12 +60,20 @@ int main()
     int nbits, prev_alloc = -1;
     bitarrayobject x;
 
-    x.size = 0;
-    x.allocated = 0;
-
 #define SHOW  printf("%d  %d\n", x.size, x.allocated)
 
-    for (nbits = 0; nbits < 2000; nbits++) {
+    x.size = 0;
+    x.allocated = 0;
+    for (nbits = 0; nbits < 20000000; nbits += 8 * 65536) {
+        if (prev_alloc != x.allocated)
+            SHOW;
+        prev_alloc = x.allocated;
+        resize(&x, nbits);
+    }
+
+    x.size = 0;
+    x.allocated = 0;
+    for (nbits = 0; nbits < 1000; nbits++) {
         if (prev_alloc != x.allocated)
             SHOW;
         prev_alloc = x.allocated;
@@ -86,6 +95,13 @@ int main()
         resize(&x, nbits);
     }
     SHOW;
+
+    for (nbits = 0; nbits < 100; nbits += 8) {
+        x.size = 0;
+        x.allocated = 0;
+        resize(&x, nbits);
+        SHOW;
+    }
 
     return 0;
 }

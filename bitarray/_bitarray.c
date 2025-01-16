@@ -62,15 +62,6 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
         return 0;
     }
 
-    /* Bypass reallocation when a allocation is large enough to accommodate
-       the newsize.  If the newsize falls lower than half the allocated size,
-       then proceed with the reallocation to shrink the bitarray. */
-    if (allocated >= newsize && newsize >= (allocated >> 1)) {
-        Py_SET_SIZE(self, newsize);
-        self->nbits = nbits;
-        return 0;
-    }
-
     if (newsize == 0) {
         PyMem_Free(self->ob_item);
         self->ob_item = NULL;
@@ -80,19 +71,29 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
         return 0;
     }
 
-    /* Overallocate proportional to the bitarray size.
-       Add padding to make the allocated size multiple of 4.
-       The growth pattern is:  0, 4, 8, 16, 24, 32, 40, 48, 56, 64, 76, ...
-       The pattern starts out the same as for lists but then grows at a
-       smaller rate so that larger bitarrays only overallocate by 1/16th,
-       as bitarrays are assumed to be memory critical. */
-    new_allocated = ((size_t) newsize + (newsize >> 4) +
-                     (newsize < 8 ? 3 : 7)) & ~(size_t) 3;
-
-    /* Do not overallocate if the new size is closer to overallocated size
-       than to the old size. */
-    if (newsize - size > (Py_ssize_t) (new_allocated - newsize))
-        new_allocated = ((size_t) newsize + 3) & ~(size_t) 3;
+    if (allocated >= newsize) {
+        /* current buffer is large enough to host the requested size */
+        if (newsize >= allocated / 2) {
+            /* minor downsize, bypass reallocation */
+            Py_SET_SIZE(self, newsize);
+            self->nbits = nbits;
+            return 0;
+        }
+        /* major downsize, resize down to exact size */
+        new_allocated = newsize;
+    }
+    else {
+        /* need to grow buffer */
+        new_allocated = newsize;
+        /* overallocate when previous size isn't zero and when growth
+           is moderate */
+        if (size != 0 && newsize / 2 <= allocated) {
+            /* overallocate proportional to the bitarray size and
+               add padding to make the allocated size multiple of 4 */
+            new_allocated += (size_t) (newsize >> 4) + (newsize < 8 ? 3 : 7);
+            new_allocated &= ~(size_t) 3;
+        }
+    }
 
     assert(new_allocated >= (size_t) newsize);
     self->ob_item = PyMem_Realloc(self->ob_item, new_allocated);
