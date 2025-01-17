@@ -123,11 +123,11 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
     if (obj == NULL)
         return NULL;
 
-    Py_SET_SIZE(obj, nbytes);
     if (nbytes == 0) {
         obj->ob_item = NULL;
     }
     else {
+        /* allocate exact size */
         obj->ob_item = (char *) PyMem_Malloc((size_t) nbytes);
         if (obj->ob_item == NULL) {
             PyObject_Del(obj);
@@ -135,7 +135,8 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
             return NULL;
         }
     }
-    obj->allocated = nbytes;
+    Py_SET_SIZE(obj, nbytes);
+    obj->allocated = nbytes;  /* no overallocation */
     obj->nbits = nbits;
     obj->endian = endian;
     obj->ob_exports = 0;
