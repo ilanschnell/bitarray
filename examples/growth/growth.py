@@ -3,10 +3,11 @@ from bitarray import bitarray
 from test_resize import get_alloc, resize, show
 
 
-def bbs(s=290797):
-    while True:
-        s = pow(s, 2, 50515093)
-        yield s % 1000
+s = 290797
+def bbs():
+    global s
+    s = pow(s, 2, 50515093)
+    return s % 8000
 
 a = bitarray()
 prev = -1
@@ -17,11 +18,8 @@ while len(a) < 1_000:
     prev = alloc
     a.append(1)
 
-for i in 800_000, 400_000, 399_992, 0, 0, 80_000, 2_000:
-    if len(a) < i:
-        a.extend(bitarray(i - len(a)))
-    else:
-        del a[i:]
+for i in 800_000, 400_000, 399_992, 500_000, 0, 0, 10_000, 400, 600, 2_000:
+    resize(a, i)
     assert len(a) == i
     show(a)
 
@@ -39,7 +37,6 @@ for nbits in range(0, 100, 8):
     a.extend(bitarray(nbits))
     show(a)
 
-t = bbs()
 for _ in range(100_000):
-    resize(a, 8 * next(t))
+    resize(a, bbs())
     show(a)

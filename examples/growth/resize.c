@@ -18,7 +18,7 @@ int bbs(void)
 {
     s *= s;
     s %= 50515093;
-    return s % 1000;
+    return s % 8000;
 }
 
 void resize(bitarrayobject *self, int nbits)
@@ -82,10 +82,13 @@ int main()
     resize(&x, 800000);  SHOW;
     resize(&x, 400000);  SHOW;
     resize(&x, 399992);  SHOW;
+    resize(&x, 500000);  SHOW;
     resize(&x, 0);       SHOW;
     resize(&x, 0);       SHOW;
-    resize(&x, 80000);   SHOW;
-    resize(&x, 2000);    SHOW;
+    resize(&x, 10000);   SHOW;
+    resize(&x,   400);   SHOW;
+    resize(&x,   600);   SHOW;
+    resize(&x,  2000);   SHOW;
 
     for (nbits = 2000; nbits >= 0; nbits--) {
         if (prev_alloc != x.allocated)
@@ -103,8 +106,7 @@ int main()
     }
 
     for (i = 0; i < 100000; i++) {
-        nbits = 8 * bbs();
-        resize(&x, nbits);
+        resize(&x, bbs());
         SHOW;
     }
 
