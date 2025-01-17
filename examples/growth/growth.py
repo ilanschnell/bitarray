@@ -3,14 +3,16 @@ from bitarray import bitarray
 from test_resize import get_alloc, show
 
 
-a = bitarray()
-prev = -1
-while len(a) < 19_000_000:
-    alloc = get_alloc(a)
-    if prev != alloc:
-        show(a)
-    prev = alloc
-    a.extend(bitarray(8 * 65536))
+def resize(a, n):
+    if len(a) < n:
+        a.extend(bitarray(n - len(a)))
+    else:
+        del a[n:]
+
+def bbs(s=290797):
+    while True:
+        s = pow(s, 2, 50515093)
+        yield s % 1000
 
 a = bitarray()
 prev = -1
@@ -41,4 +43,9 @@ show(a)
 for nbits in range(0, 100, 8):
     a = bitarray()
     a.extend(bitarray(nbits))
+    show(a)
+
+t = bbs()
+for _ in range(100_000):
+    resize(a, 8 * next(t))
     show(a)

@@ -12,6 +12,14 @@ typedef struct {
 /* number of bytes necessary to store given bits */
 #define BYTES(bits)  (((bits) + 7) >> 3)
 
+uint64_t s = 290797;
+
+int bbs(void)
+{
+    s *= s;
+    s %= 50515093;
+    return s % 1000;
+}
 
 void resize(bitarrayobject *self, int nbits)
 {
@@ -57,19 +65,10 @@ void resize(bitarrayobject *self, int nbits)
 
 int main()
 {
-    int nbits, prev_alloc = -1;
+    int i, nbits, prev_alloc = -1;
     bitarrayobject x;
 
 #define SHOW  printf("%d  %d\n", x.size, x.allocated)
-
-    x.size = 0;
-    x.allocated = 0;
-    for (nbits = 0; nbits < 20000000; nbits += 8 * 65536) {
-        if (prev_alloc != x.allocated)
-            SHOW;
-        prev_alloc = x.allocated;
-        resize(&x, nbits);
-    }
 
     x.size = 0;
     x.allocated = 0;
@@ -99,6 +98,12 @@ int main()
     for (nbits = 0; nbits < 100; nbits += 8) {
         x.size = 0;
         x.allocated = 0;
+        resize(&x, nbits);
+        SHOW;
+    }
+
+    for (i = 0; i < 100000; i++) {
+        nbits = 8 * bbs();
         resize(&x, nbits);
         SHOW;
     }
