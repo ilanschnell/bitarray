@@ -1424,7 +1424,9 @@ bitarray_setall(bitarrayobject *self, PyObject *value)
     if (!conv_pybit(value, &vi))
         return NULL;
 
-    memset(self->ob_item, vi ? 0xff : 0x00, (size_t) Py_SIZE(self));
+    if (self->ob_item)
+        memset(self->ob_item, vi ? 0xff : 0x00, (size_t) Py_SIZE(self));
+
     Py_RETURN_NONE;
 }
 
@@ -3588,7 +3590,7 @@ newbitarray_from_index(PyTypeObject *type, PyObject *index,
     if ((res = newbitarrayobject(type, nbits, endian)) == NULL)
         return NULL;
 
-    if (init_zero)
+    if (init_zero && nbits)
         memset(res->ob_item, 0x00, (size_t) Py_SIZE(res));
 
     return (PyObject *) res;

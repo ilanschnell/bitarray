@@ -54,7 +54,7 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian, int c)
 
     assert(res->nbits == nbits && res->readonly == 0 && res->buffer == NULL);
     assert(-1 <= c && c < 256);
-    if (c >= 0)
+    if (c >= 0 && nbits)
         memset(res->ob_item, c, (size_t) Py_SIZE(res));
 
     return res;
@@ -555,7 +555,9 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
 
     assert(a->nbits == 4 * hexstr.len);
 
-    memset(a->ob_item, 0, Py_SIZE(a));
+    if (a->ob_item)
+        memset(a->ob_item, 0, Py_SIZE(a));
+
     for (i = 0; i < hexstr.len; i++) {
         unsigned char c = str[i];
         int x = hex_to_int(c);
