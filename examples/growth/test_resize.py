@@ -6,6 +6,13 @@ from bitarray import bitarray
 def get_alloc(a):
     return a.buffer_info()[4]
 
+def resize(a, n):
+    increase = n - len(a)
+    if increase > 0:
+        a.extend(bitarray(increase))
+    elif increase < 0:
+        del a[n:]
+
 def show(a):
     info = a.buffer_info()
     size = info[1]

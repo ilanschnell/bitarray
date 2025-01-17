@@ -1,13 +1,7 @@
 from bitarray import bitarray
 
-from test_resize import get_alloc, show
+from test_resize import get_alloc, resize, show
 
-
-def resize(a, n):
-    if len(a) < n:
-        a.extend(bitarray(n - len(a)))
-    else:
-        del a[n:]
 
 def bbs(s=290797):
     while True:
