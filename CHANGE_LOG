@@ -5,6 +5,7 @@
   * make `resize()` more readable
   * fix some typos
   * minor simplifications
+  * rename `growth/` example to `resize/` and add tests for `resize()`
   * update gene example
   * add comments
 

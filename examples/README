@@ -31,11 +31,6 @@ gene.py
     represented by bitarrays.
 
 
-growth/
-    Things to study the bitarray growth pattern, including tests for the
-    current implementation.
-
-
 huffman/
     Directory containing a library and examples for working with Huffman
     trees and codes.
@@ -73,6 +68,11 @@ pbm.py
 puff/
     DEFLATE decompression implementation based on Mark Adler's excellent
     https://github.com/madler/zlib/blob/master/contrib/puff/puff.c
+
+
+resize/
+    Things to study the bitarray resize function, including the growth
+    pattern it creates and tests for the current implementation.
 
 
 shift_r8.c
