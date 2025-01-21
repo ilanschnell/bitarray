@@ -62,7 +62,7 @@ typedef struct {
 /* number of pad bits */
 #define PADBITS(self)  (8 * Py_SIZE(self) - (self)->nbits)
 
-/* number of bytes necessary to store given bits */
+/* number of bytes necessary to store given nunmber of bits */
 #define BYTES(bits)  (((bits) + 7) >> 3)
 
 /* we're not using bitmask_table here, as it is actually slower */
