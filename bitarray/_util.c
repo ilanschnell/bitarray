@@ -812,23 +812,17 @@ standard base 64 alphabet is used.");
 static int
 resize_lite(bitarrayobject *self, Py_ssize_t nbits)
 {
-    const Py_ssize_t allocated = self->allocated, size = Py_SIZE(self);
-    const Py_ssize_t newsize = BYTES(nbits);
+    const size_t size = Py_SIZE(self);
+    const size_t allocated = self->allocated;
+    const size_t newsize = BYTES((size_t) nbits);
     size_t new_allocated;
 
-    assert(allocated >= size && size == BYTES(self->nbits));
+    assert(allocated >= size && size == BYTES((size_t) self->nbits));
+    assert(self->readonly == 0);
     assert(self->ob_exports == 0);
     assert(self->buffer == NULL);
-    assert(self->readonly == 0);
 
     if (newsize == size) {
-        self->nbits = nbits;
-        return 0;
-    }
-
-    if (allocated >= newsize && newsize >= (allocated >> 1)) {
-        assert(self->ob_item != NULL || newsize == 0);
-        Py_SET_SIZE(self, newsize);
         self->nbits = nbits;
         return 0;
     }
@@ -842,13 +836,23 @@ resize_lite(bitarrayobject *self, Py_ssize_t nbits)
         return 0;
     }
 
-    new_allocated = ((size_t) newsize + (newsize >> 4) +
-                     (newsize < 8 ? 3 : 7)) & ~(size_t) 3;
+    if (allocated >= newsize) {
+        if (newsize >= allocated / 2) {
+            Py_SET_SIZE(self, newsize);
+            self->nbits = nbits;
+            return 0;
+        }
+        new_allocated = newsize;
+    }
+    else {
+        new_allocated = newsize;
+        if (size != 0 && newsize / 2 <= allocated) {
+            new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
+            new_allocated &= ~(size_t) 3;
+        }
+    }
 
-    if (newsize - size > (Py_ssize_t) (new_allocated - newsize))
-        new_allocated = ((size_t) newsize + 3) & ~(size_t) 3;
-
-    assert(new_allocated >= (size_t) newsize);
+    assert(new_allocated >= newsize);
     self->ob_item = PyMem_Realloc(self->ob_item, new_allocated);
     if (self->ob_item == NULL) {
         PyErr_NoMemory();
