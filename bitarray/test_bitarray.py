@@ -1737,10 +1737,10 @@ class MiscTests(unittest.TestCase, Util):
         self.assertEqual(b.tobytes(), b' ')
         self.assertNotEqual(a, b)
 
-    @skipIf(is_pypy or DEBUG)
+    @skipIf(is_pypy)
     def test_overflow(self):
         a = bitarray(1)
-        for i in -7, -1, 0, 1:
+        for i in 0, 1:
             n = 2 ** 63 + i
             self.assertRaises(OverflowError, a.__imul__, n)
             self.assertRaises(OverflowError, bitarray, n)
@@ -1748,15 +1748,14 @@ class MiscTests(unittest.TestCase, Util):
         a = bitarray(2 ** 10)
         self.assertRaises(OverflowError, a.__imul__, 2 ** 53)
 
-        if SYSINFO[0] == 8:
-            return
-
+    @skipIf(SYSINFO[0] != 4 or is_pypy)
+    def test_overflow_32bit(self):
         a = bitarray(10 ** 6)
         self.assertRaises(OverflowError, a.__imul__, 17180)
-        for i in -7, -1, 0, 1:
+        for i in 0, 1:
             self.assertRaises(OverflowError, bitarray, 2 ** 31 + i)
         try:
-            a = bitarray(2 ** 31 - 8);
+            a = bitarray(2 ** 31 - 1);
         except MemoryError:
             return
         self.assertRaises(OverflowError, bitarray.append, a, True)

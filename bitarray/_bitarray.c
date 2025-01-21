@@ -30,8 +30,9 @@ static char reverse_trans[256];
 static int
 resize(bitarrayobject *self, Py_ssize_t nbits)
 {
-    const Py_ssize_t allocated = self->allocated, size = Py_SIZE(self);
-    const Py_ssize_t newsize = BYTES(nbits);
+    const size_t size = Py_SIZE(self);
+    const size_t allocated = self->allocated;
+    const size_t newsize = BYTES((size_t) nbits);
     size_t new_allocated;
 
     if (self->ob_exports > 0) {
@@ -45,18 +46,18 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
         return -1;
     }
 
-    if (nbits < 0 || newsize < 0) {
+    if (nbits < 0) {
         PyErr_Format(PyExc_OverflowError, "bitarray resize %zd", nbits);
         return -1;
     }
 
-    assert(allocated >= size && size == BYTES(self->nbits));
+    assert(allocated >= size && size == BYTES((size_t) self->nbits));
     /* ob_item == NULL implies ob_size == allocated == 0 */
     assert(self->ob_item != NULL || (size == 0 && allocated == 0));
     /* resize() is never called on read-only memory */
     assert(self->readonly == 0);
 
-    /* Bypass everything when buffer size hasn't changed. */
+    /* bypass everything when buffer size hasn't changed */
     if (newsize == size) {
         self->nbits = nbits;
         return 0;
@@ -90,12 +91,12 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
         if (size != 0 && newsize / 2 <= allocated) {
             /* overallocate proportional to the bitarray size and
                add padding to make the allocated size multiple of 4 */
-            new_allocated += (size_t) (newsize >> 4) + (newsize < 8 ? 3 : 7);
+            new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
             new_allocated &= ~(size_t) 3;
         }
     }
 
-    assert(new_allocated >= (size_t) newsize);
+    assert(new_allocated >= newsize);
     self->ob_item = PyMem_Realloc(self->ob_item, new_allocated);
     if (self->ob_item == NULL) {
         PyErr_NoMemory();
@@ -111,13 +112,10 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
 static bitarrayobject *
 newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
 {
-    const Py_ssize_t nbytes = BYTES(nbits);
+    const size_t nbytes = BYTES((size_t) nbits);
     bitarrayobject *obj;
 
-    if (nbits < 0 || nbytes < 0) {
-        PyErr_Format(PyExc_OverflowError, "new bitarray %zd", nbits);
-        return NULL;
-    }
+    assert(nbits >= 0);
 
     obj = (bitarrayobject *) type->tp_alloc(type, 0);
     if (obj == NULL)
@@ -128,7 +126,7 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
     }
     else {
         /* allocate exact size */
-        obj->ob_item = (char *) PyMem_Malloc((size_t) nbytes);
+        obj->ob_item = (char *) PyMem_Malloc(nbytes);
         if (obj->ob_item == NULL) {
             PyObject_Del(obj);
             PyErr_NoMemory();
