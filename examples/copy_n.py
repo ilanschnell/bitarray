@@ -1,7 +1,7 @@
 """
 The purpose of this script is to illustrate how copy_n() in _bitarray.c works.
-This is essentially a Python implementation of copy_n() with output of the
-different stages of the bitarray we copy into.
+This is a Python implementation of copy_n() with output of the different
+stages of the bitarray we copy into.
 
 Sample output:
 a = 21
@@ -39,7 +39,7 @@ bitarray('01011101 11100101 01110101 11110010 10111011 10010111 01101011')
 from io import StringIO
 
 from bitarray import bitarray, bits2bytes
-from bitarray.util import pprint, urandom
+from bitarray.util import pprint
 
 
 verbose = False
@@ -186,13 +186,14 @@ def copy_n(self, a, other, b, n):
 
 def test_copy_n():
     from random import getrandbits, randrange, randint
+    from bitarray.util import urandom
 
     def random_endian():
         return ['little', 'big'][getrandbits(1)]
 
     max_size = 56
 
-    for _ in range(10000):
+    for _ in range(10_000):
         N = randrange(max_size)
         M = randrange(max_size)
         n = randint(0, min(N, M))
@@ -205,7 +206,7 @@ def test_copy_n():
         z[a:a + n] = y[b:b + n]
         assert x == z
 
-    for _ in range(10000):
+    for _ in range(10_000):
         N = randrange(max_size)
         n = randint(0, N)
         a = randint(0, N - n)
