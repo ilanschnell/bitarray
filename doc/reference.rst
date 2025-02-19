@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 3.0.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.1.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -14,7 +14,7 @@ The bitarray object:
 
 ``bitarray(initializer=0, /, endian='big', buffer=None)`` -> bitarray
    Return a new bitarray object whose items are bits initialized from
-   the optional initial object, and endianness.
+   the optional initial object, and bit-endianness.
    The initializer may be of the following types:
 
    ``int``: Create a bitarray of given integer length.  The initial values are
@@ -71,8 +71,8 @@ bitarray methods:
    For each byte in byte-range(start, stop) reverse bits in-place.
    The start and stop indices are given in terms of bytes (not bits).
    Also note that this method only changes the buffer; it does not change the
-   endianness of the bitarray object.  Padbits are left unchanged such that
-   two consecutive calls will always leave the bitarray unchanged.
+   bit-endianness of the bitarray object.  Pad bits are left unchanged such
+   that two consecutive calls will always leave the bitarray unchanged.
 
    New in version 2.2.5: optional start and stop arguments.
 
@@ -208,7 +208,7 @@ bitarray methods:
    Return iterator over indices where sub_bitarray is found, such that
    sub_bitarray is contained within ``[start:stop]``.
    The indices are iterated in ascending order (from lowest to highest),
-   unless ``right=True``, which will iterate in descending oder (starting with
+   unless ``right=True``, which will iterate in descending order (starting with
    rightmost match).
 
    See also: `Bitarray 3 transition <https://github.com/ilanschnell/bitarray/blob/master/doc/bitarray3.rst>`__
@@ -297,9 +297,9 @@ Functions defined in the `bitarray` module:
 
 
 ``get_default_endian()`` -> str
-   Return the default endianness for new bitarray objects being created.
-   Unless ``_set_default_endian('little')`` was called, the default endianness
-   is ``big``.
+   Return the default bit-endianness for new bitarray objects being created.
+   Unless ``_set_default_endian('little')`` was called, the default
+   bit-endianness is ``big``.
 
    New in version 1.3.
 
@@ -315,12 +315,12 @@ This sub-module was added in version 1.2.
 
 ``zeros(length, /, endian=None)`` -> bitarray
    Create a bitarray of length, with all values 0, and optional
-   endianness, which may be 'big', 'little'.
+   bit-endianness, which may be 'big', 'little'.
 
 
 ``ones(length, /, endian=None)`` -> bitarray
    Create a bitarray of length, with all values 1, and optional
-   endianness, which may be 'big', 'little'.
+   bit-endianness, which may be 'big', 'little'.
 
    New in version 2.9.
 
@@ -438,7 +438,7 @@ This sub-module was added in version 1.2.
 
 
 ``int2ba(int, /, length=None, endian=None, signed=False)`` -> bitarray
-   Convert the given integer to a bitarray (with given endianness,
+   Convert the given integer to a bitarray (with given bit-endianness,
    and no leading (big-endian) / trailing (little-endian) zeros), unless
    the ``length`` of the bitarray is provided.  An ``OverflowError`` is raised
    if the integer is not representable with the given number of bits.
@@ -511,8 +511,8 @@ This sub-module was added in version 1.2.
 ``huffman_code(dict, /, endian=None)`` -> dict
    Given a frequency map, a dictionary mapping symbols to their frequency,
    calculate the Huffman code, i.e. a dict mapping those symbols to
-   bitarrays (with given endianness).  Note that the symbols are not limited
-   to being strings.  Symbols may may be any hashable object (such as ``None``).
+   bitarrays (with given bit-endianness).  Note that the symbols are not limited
+   to being strings.  Symbols may be any hashable object (such as ``None``).
 
 
 ``canonical_huffman(dict, /)`` -> tuple

@@ -1,6 +1,19 @@
 Change log
 ==========
 
+**3.1.0** (2025-02-19):
+
+* allow mask assignment to bitarrays, see `#225 <https://github.com/ilanschnell/bitarray/issues/225>`__
+* add missing masked operations to pyi-file
+* refactor ``resize()`` and avoid overallocation when downsizing buffer
+* update ``build_wheels.yml``
+* fix some typos
+* minor simplifications
+* rename ``growth/`` example to ``resize/`` and add tests for ``resize()``
+* update gene example
+* add comments
+
+
 **3.0.0** (2024-10-15):
 
 * see `Bitarray 3 transition <bitarray3.rst>`__
@@ -194,7 +207,7 @@ Change log
 * add data descriptions: ``.nbytes``, ``.padbits``, ``.readonly``
 * allow optional ``endian`` argument to be ``None`` when creating bitarrays
 * fix type annotation for ``canonical_decode()``, `#178 <https://github.com/ilanschnell/bitarray/issues/178>`__
-* frozenbitarray's padbits are now guaranteed to be zero
+* frozenbitarray's pad bits are now guaranteed to be zero
 * add tests
 
 
