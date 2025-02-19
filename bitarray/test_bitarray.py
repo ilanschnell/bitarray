@@ -1892,11 +1892,11 @@ class PickleTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, _bitarray_reconstructor,
                           bitarray, b'\x0f', 'big', 0.0, 0)
         self.assertRaisesMessage(
-            ValueError, "invalid number of padbits: 8",
+            ValueError, "invalid number of pad bits: 8",
             _bitarray_reconstructor, bitarray, b"A", "big", 8, 0)
         self.assertRaisesMessage(
-            # the number of bytes is 0 zero, so padbits cannot be 1
-            ValueError, "invalid number of padbits: 1",
+            # the number of bytes is 0 zero, so pad bits cannot be 1
+            ValueError, "invalid number of pad bits: 1",
             _bitarray_reconstructor, bitarray, b"", "big", 1, 0)
 
         # argument 5 - readonly
@@ -4116,7 +4116,7 @@ class FileTests(unittest.TestCase, Util):
 
             raw = self.read_file()
             self.assertEqual(len(raw), a.nbytes)
-            # when we fill the padbits in a, we can compare
+            # when we fill the pad bits in a, we can compare
             a.fill()
             b = bitarray(endian='little')
             b.frombytes(raw)
@@ -4660,7 +4660,7 @@ class BufferImportTests(unittest.TestCase, Util):
         for n in range(100):
             a = urandom(n, self.random_endian())
             b = bitarray(buffer=a, endian=a.endian())
-            # an imported buffer will never have padbits
+            # an imported buffer will never have any pad bits
             self.assertEqual(b.padbits, 0)
             self.assertEqual(len(b) % 8, 0)
             self.assertEQUAL(b[:n], a)

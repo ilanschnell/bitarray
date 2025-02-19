@@ -390,7 +390,7 @@ Return tuple with counts of: ~a & ~b, ~a & b, a & ~b, a & b");
 /*
   The binary format used here is similar to the one used for pickling
   bitarray objects.  However, this format has a head byte which encodes both
-  the bit-endianness and the number of padbits, whereas the binary pickle
+  the bit-endianness and the number of pad bits, whereas the binary pickle
   blob does not.
 */
 
@@ -503,7 +503,7 @@ ba2hex_core(bitarrayobject *a)
     if (str == NULL)
         return NULL;
 
-    /* translate entire bitarray buffer, even when we have 4 padbits */
+    /* translate entire bitarray buffer, even when we have 4 pad bits */
     for (i = 0; i < strsize; i += 2) {
         unsigned char c = *buff++;
         str[i + le] = hexdigits[c >> 4];

@@ -982,7 +982,7 @@ PyDoc_STRVAR(bytereverse_doc,
 For each byte in byte-range(start, stop) reverse bits in-place.\n\
 The start and stop indices are given in terms of bytes (not bits).\n\
 Also note that this method only changes the buffer; it does not change the\n\
-bit-endianness of the bitarray object.  Padbits are left unchanged such\n\
+bit-endianness of the bitarray object.  Pad bits are left unchanged such\n\
 that two consecutive calls will always leave the bitarray unchanged.");
 
 
@@ -3957,7 +3957,7 @@ reconstructor(PyObject *module, PyObject *args)
     nbytes = PyBytes_GET_SIZE(bytes);
     if (padbits < 0 || padbits >= 8 || (nbytes == 0 && padbits != 0))
         return PyErr_Format(PyExc_ValueError,
-                            "invalid number of padbits: %d", padbits);
+                            "invalid number of pad bits: %d", padbits);
 
     res = newbitarrayobject(type, 8 * nbytes - padbits, endian);
     if (res == NULL)

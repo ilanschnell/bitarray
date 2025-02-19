@@ -3,7 +3,7 @@
   * allow mask assignment to bitarrays, see #225
   * add missing masked operations to pyi-file
   * refactor `resize()` and avoid overallocation when downsizing buffer
-  * update build_wheels.yml
+  * update `build_wheels.yml`
   * fix some typos
   * minor simplifications
   * rename `growth/` example to `resize/` and add tests for `resize()`
@@ -204,7 +204,7 @@
   * add data descriptions: `.nbytes`, `.padbits`, `.readonly`
   * allow optional `endian` argument to be `None` when creating bitarrays
   * fix type annotation for `canonical_decode()`, #178
-  * frozenbitarray's padbits are now guaranteed to be zero
+  * frozenbitarray's pad bits are now guaranteed to be zero
   * add tests
 
 
