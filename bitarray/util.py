@@ -163,10 +163,9 @@ The bit-endianness of the bitarray is respected.
     if length == 0:
         raise ValueError("non-empty bitarray expected")
 
-    le = bool(__a.endian() == 'little')
     if __a.padbits:
         pad = zeros(__a.padbits, __a.endian())
-        __a = __a + pad if le else pad + __a
+        __a = __a + pad if __a.endian() == "little" else pad + __a
 
     res = int.from_bytes(__a.tobytes(), byteorder=__a.endian())
 
@@ -214,10 +213,10 @@ and requires `length` to be provided.
                                 "got %d" % (1 << length, __i))
 
     a = bitarray(0, endian)
-    le = bool(a.endian() == 'little')
     b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian())
     a.frombytes(b)
 
+    le = bool(a.endian() == "little")
     if length is None:
         return strip(a, 'right' if le else 'left')
 
