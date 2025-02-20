@@ -216,17 +216,15 @@ and requires `length` to be provided.
     b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian())
     a.frombytes(b)
 
-    le = bool(a.endian() == "little")
     if length is None:
-        return strip(a, 'right' if le else 'left')
+        return strip(a, 'right' if a.endian() == "little" else 'left')
 
     la = len(a)
     if la > length:
-        a = a[:length] if le else a[-length:]
-    if la < length:
+        a = a[:length] if a.endian() == "little" else a[-length:]
+    elif la < length:
         pad = zeros(length - la, a.endian())
-        a = a + pad if le else pad + a
-    assert len(a) == length
+        a = a + pad if a.endian() == "little" else pad + a
     return a
 
 # ------------------------------ Huffman coding -----------------------------
