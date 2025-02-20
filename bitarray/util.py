@@ -219,13 +219,13 @@ and requires `length` to be provided.
     if length is None:
         return strip(a, 'right' if a.endian() == "little" else 'left')
 
-    la = len(a)
-    if la > length:
-        a = a[:length] if a.endian() == "little" else a[-length:]
-    elif la < length:
-        pad = zeros(length - la, a.endian())
-        a = a + pad if a.endian() == "little" else pad + a
-    return a
+    if len(a) > length:
+        return a[:length] if a.endian() == "little" else a[-length:]
+    if len(a) == length:
+        return a
+    # len(a) < length, we need padding
+    pad = zeros(length - len(a), a.endian())
+    return a + pad if a.endian() == "little" else pad + a
 
 # ------------------------------ Huffman coding -----------------------------
 
