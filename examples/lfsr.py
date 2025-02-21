@@ -11,9 +11,10 @@ for _ in range(20):
 print()
 
 state = bitarray("1001")
+tabs =  bitarray("1100")
 for _ in range(20):
     print(state[0], end='')
-    newbit = parity(state[[0, 1]])
+    newbit = parity(state & tabs)
     state <<= 1
     state[-1] = newbit
 print()
