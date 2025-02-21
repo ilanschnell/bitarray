@@ -14,6 +14,6 @@ state = bitarray("1001")
 for _ in range(20):
     print(state[0], end='')
     newbit = parity(state[[0, 1]])
-    state.pop(0)
-    state.append(newbit)
+    state <<= 1
+    state[-1] = newbit
 print()
