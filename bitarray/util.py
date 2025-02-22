@@ -216,16 +216,17 @@ and requires `length` to be provided.
     b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian())
     a.frombytes(b)
 
+    le = bool(a.endian() == 'little')
     if length is None:
-        return strip(a, 'right' if a.endian() == "little" else 'left')
+        return strip(a, 'right' if le else 'left')
 
     if len(a) > length:
-        return a[:length] if a.endian() == "little" else a[-length:]
+        return a[:length] if le else a[-length:]
     if len(a) == length:
         return a
     # len(a) < length, we need padding
     pad = zeros(length - len(a), a.endian())
-    return a + pad if a.endian() == "little" else pad + a
+    return a + pad if le else pad + a
 
 # ------------------------------ Huffman coding -----------------------------
 
