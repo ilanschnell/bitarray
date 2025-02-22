@@ -640,17 +640,33 @@ class TestsCorrespondAll(unittest.TestCase, Util):
 
 class TestsParity(unittest.TestCase, Util):
 
-    def test_bitarray(self):
+    def test_empty(self):
         a = bitarray()
         ret = parity(a)
         self.assertIsInstance(ret, int)
         self.assertEqual(ret, 0)
 
+    def test_zeros_ones(self):
+        a = bitarray()  # zeros
+        b = bitarray()  # ones
+        for n in range(4000):
+            self.assertTrue(len(a) == len(b) == n)
+            self.assertFalse(a.any())
+            self.assertTrue(b.all())
+            self.assertEqual(parity(a), 0)
+            self.assertEqual(parity(b), n % 2)
+            a.append(0)
+            b.append(1)
+
+    def test_random(self):
+        a = bitarray()
         par = False
-        for _ in range(1000):
+        for _ in range(4000):
             self.assertEqual(parity(a), par)
-            a.append(1)
-            par = not par
+            v = getrandbits(1)
+            a.append(v)
+            if v:
+                par = not par
 
     def test_pad_ignored(self):
         a = ones(1)
@@ -664,13 +680,7 @@ class TestsParity(unittest.TestCase, Util):
         self.assertRaises(TypeError, parity, '')
         self.assertRaises(TypeError, bitarray(), 1)
 
-    def test_byte(self):
-        for i in range(256):
-            a = bitarray()
-            a.frombytes(bytes(bytearray([i])))
-            self.assertEqual(parity(a), a.count() % 2)
-
-    def test_random(self):
+    def test_random2(self):
         for a in self.randombitarrays():
             b = a.copy()
             self.assertEqual(parity(a), a.count() % 2)

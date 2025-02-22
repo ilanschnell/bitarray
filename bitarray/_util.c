@@ -215,7 +215,8 @@ parity(PyObject *module, PyObject *obj)
     a = (bitarrayobject *) obj;
     wbuff = WBUFF(a);
     x = zlw(a);
-    for (i = 0; i < a->nbits / 64; i++)
+    i = a->nbits / 64;
+    while (i--)
         x ^= *wbuff++;
     for (i = 32; i > 0; i /= 2)
         x ^= x >> i;
