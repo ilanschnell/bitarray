@@ -218,7 +218,14 @@ parity(PyObject *module, PyObject *obj)
     i = a->nbits / 64;
     while (i--)
         x ^= *wbuff++;
-    return PyLong_FromLong(popcnt_64(x) & 1);
+#if (defined(__clang__) || defined(__GNUC__))
+    x = __builtin_parityll(x);
+#else
+    for (i = 32; i > 0; i /= 2)
+        x ^= x >> i;
+    x &= 1;
+#endif
+    return PyLong_FromLong(x);
 }
 
 PyDoc_STRVAR(parity_doc,
