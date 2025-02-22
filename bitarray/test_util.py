@@ -655,13 +655,12 @@ class TestsParity(unittest.TestCase, Util):
 
     def test_random(self):
         a = bitarray()
-        par = False
+        par = 0
         for _ in range(2000):
             self.assertEqual(parity(a), par)
             v = getrandbits(1)
             a.append(v)
-            if v:
-                par = not par
+            par ^= v
 
     def test_frozenbitarray(self):
         for s, p in [('', 0), ('0010011', 1), ('10100110', 0)]:
