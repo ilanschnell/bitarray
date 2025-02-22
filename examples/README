@@ -41,6 +41,10 @@ lexico.py
     lexicographical permutations of bitarrays.
 
 
+lfsr.py
+    Linear Feedback Shift Register
+
+
 mandel.py
     Generates a .ppm image file of size 4000 x 3000 of the Mandelbrot set.
     Despite its size, the output image file has only a size of slightly

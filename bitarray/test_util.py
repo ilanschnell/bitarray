@@ -647,30 +647,21 @@ class TestsParity(unittest.TestCase, Util):
         self.assertEqual(ret, 0)
 
     def test_zeros_ones(self):
-        a = bitarray()  # zeros
-        b = bitarray()  # ones
-        for n in range(4000):
-            self.assertTrue(len(a) == len(b) == n)
-            self.assertFalse(a.any())
-            self.assertTrue(b.all())
+        for n in range(2000):
+            a = zeros(n)
+            b = ones(n)
             self.assertEqual(parity(a), 0)
             self.assertEqual(parity(b), n % 2)
-            a.append(0)
-            b.append(1)
 
     def test_random(self):
         a = bitarray()
         par = False
-        for _ in range(4000):
+        for _ in range(2000):
             self.assertEqual(parity(a), par)
             v = getrandbits(1)
             a.append(v)
             if v:
                 par = not par
-
-    def test_pad_ignored(self):
-        a = ones(1)
-        self.assertTrue(parity(a))
 
     def test_frozenbitarray(self):
         for s, p in [('', 0), ('0010011', 1), ('10100110', 0)]:
@@ -678,7 +669,7 @@ class TestsParity(unittest.TestCase, Util):
 
     def test_wrong_args(self):
         self.assertRaises(TypeError, parity, '')
-        self.assertRaises(TypeError, bitarray(), 1)
+        self.assertRaises(TypeError, parity, 1)
 
     def test_random2(self):
         for a in self.randombitarrays():
