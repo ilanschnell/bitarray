@@ -189,7 +189,7 @@ builtin_bswap64(uint64_t word)
 #if (defined(__clang__) ||                                                 \
       (defined(__GNUC__)                                                   \
         && ((__GNUC__ >= 5) || (__GNUC__ == 4) && (__GNUC_MINOR__ >= 3))))
-    /* __builtin_bswap64() is available since GCC 4.3. */
+    /* __builtin_bswap64() is available since GCC 4.3 */
 #  define HAVE_BUILTIN_BSWAP64  1
     return __builtin_bswap64(word);
 #elif defined(_MSC_VER)

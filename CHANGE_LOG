@@ -1,6 +1,6 @@
 2025-XX-XX   3.1.1:
 -------------------
-  * fallback on `__builtin_parityll()` in `util.parity()`
+  * use `__builtin_parityll()` when available in `util.parity()`
   * add LFSR example
 
 
