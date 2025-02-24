@@ -640,18 +640,15 @@ class TestsCorrespondAll(unittest.TestCase, Util):
 
 class TestsParity(unittest.TestCase, Util):
 
-    def test_empty(self):
-        a = bitarray()
-        ret = parity(a)
-        self.assertIsInstance(ret, int)
-        self.assertEqual(ret, 0)
+    def test_explitcit(self):
+        for s, res in [('', 0), ('1', 1), ('0010011', 1), ('10100110', 0)]:
+            self.assertTrue(parity(bitarray(s)) is res)
+            self.assertTrue(parity(frozenbitarray(s)) is res)
 
     def test_zeros_ones(self):
         for n in range(2000):
-            a = zeros(n)
-            b = ones(n)
-            self.assertEqual(parity(a), 0)
-            self.assertEqual(parity(b), n % 2)
+            self.assertEqual(parity(zeros(n)), 0)
+            self.assertEqual(parity(ones(n)), n % 2)
 
     def test_random(self):
         a = bitarray()
@@ -661,10 +658,6 @@ class TestsParity(unittest.TestCase, Util):
             v = getrandbits(1)
             a.append(v)
             par ^= v
-
-    def test_frozenbitarray(self):
-        for s, p in [('', 0), ('0010011', 1), ('10100110', 0)]:
-            self.assertEqual(parity(frozenbitarray(s)), p)
 
     def test_wrong_args(self):
         self.assertRaises(TypeError, parity, '')
@@ -725,7 +718,7 @@ class TestsIntervals(unittest.TestCase, Util):
     def test_runs(self):
         for a in self.randombitarrays():
             first = a[0] if a else None
-            # list runs of alternating bits
+            # list of length of runs of alternating bits
             runs = [stop - start for _, start, stop in intervals(a)]
 
             b = bitarray()
@@ -766,7 +759,7 @@ class TestsHexlify(unittest.TestCase, Util):
     def test_hex2ba(self):
         _set_default_endian('big')
         self.assertEqual(hex2ba(''), bitarray())
-        for c in 'e', 'E', b'e', b'E', u'e', u'E':
+        for c in 'e', 'E', b'e', b'E':
             a = hex2ba(c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
@@ -846,7 +839,7 @@ class TestsBase(unittest.TestCase, Util):
 
     def test_base2ba(self):
         _set_default_endian('big')
-        for c in 'e', 'E', b'e', b'E', u'e', u'E':
+        for c in 'e', 'E', b'e', b'E':
             a = base2ba(16, c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
@@ -875,9 +868,6 @@ class TestsBase(unittest.TestCase, Util):
             a = base2ba(n, '')
             self.assertEqual(a, bitarray())
             self.assertEqual(ba2base(n, a), '')
-
-    def test_upper(self):
-        self.assertEqual(base2ba(16, 'F'), bitarray('1111'))
 
     def test_invalid_characters(self):
         for n, s in ((2, '2'), (4, '4'), (8, '8'), (16, 'g'), (32, '8'),
@@ -1769,7 +1759,7 @@ class TestsSerialization(unittest.TestCase, Util):
             self.assertEqual(serialize(a), b'\x14\x70')
 
     def test_deserialize_args(self):
-        for x in 0, 1, False, True, None, u'', u'01', 0.0, [0, 1]:
+        for x in 0, 1, False, True, None, '', '01', 0.0, [0, 1]:
             self.assertRaises(TypeError, deserialize, x)
         # no arguments
         self.assertRaises(TypeError, deserialize)

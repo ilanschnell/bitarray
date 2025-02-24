@@ -1389,9 +1389,10 @@ class MaskedIndexTests(unittest.TestCase, Util):
         # example from issue #225
         a = bitarray('0000000')
         b = bitarray('1100110')
-        c = bitarray('1010')
+        c = bitarray('10  10 ')
         a[b] = c
-        self.assertEqual(a, bitarray('1000100'))
+        self.assertEqual(a,
+            bitarray('1000100'))
 
     def test_zeros_mask_set(self):
         for a in self.randombitarrays():
@@ -2765,7 +2766,7 @@ class ExtendTests(unittest.TestCase, Util):
 
     def test_unicode(self):
         a = bitarray()
-        a.extend(u'')
+        a.extend('')
         self.assertEqual(a, bitarray())
         self.assertRaises(ValueError, a.extend, u'0011201')
         # ensure no bits got added after error was raised
@@ -2773,7 +2774,7 @@ class ExtendTests(unittest.TestCase, Util):
         self.check_obj(a)
 
         a = bitarray()
-        a.extend(u'001 011_')
+        a.extend('001 011_')
         self.assertEqual(a, bitarray('001011'))
         self.assertRaises(UnicodeEncodeError, a.extend, u'1\u2605 0')
         self.assertEqual(a, bitarray('001011'))
@@ -3700,7 +3701,7 @@ class BytesTests(unittest.TestCase, Util):
 
         self.check_obj(a)
 
-        for x in u'', 0, 1, False, True, None, []:
+        for x in '', 0, 1, False, True, None, []:
             self.assertRaises(TypeError, a.frombytes, x)
 
     def test_frombytes_bitarray(self):
