@@ -183,6 +183,19 @@ popcnt_64(uint64_t x)
 #endif
 }
 
+static inline int
+parity_64(uint64_t x)
+{
+#if (defined(__clang__) || defined(__GNUC__))
+    return __builtin_parityll(x);
+#else
+    int i;
+    for (i = 32; i > 0; i /= 2)
+        x ^= x >> i;
+    return x & 1;
+#endif
+}
+
 static inline uint64_t
 builtin_bswap64(uint64_t word)
 {
