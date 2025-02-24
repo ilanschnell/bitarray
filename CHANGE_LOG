@@ -1,6 +1,7 @@
 2025-XX-XX   3.1.1:
 -------------------
   * use `__builtin_parityll()` when available in `util.parity()`
+  * add `parity_64()` to header
   * add LFSR example
 
 
