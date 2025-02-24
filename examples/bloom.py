@@ -38,6 +38,12 @@ class BloomFilter(object):
             return 0.0
         return -self.m / self.k * log(1 - x / self.m)
 
+    def population(self):
+        """
+        Return the current relative array population as a float.
+        """
+        return self.array.count() / self.m
+
     def add(self, key):
         self.array[list(self._hashes(key))] = 1
 
@@ -74,7 +80,7 @@ def test_bloom(n, p):
     for i in range(n):
         b.add(i)
         assert i in b
-    print("population: %.2f%%" % (100.0 * b.array.count() / b.m))
+    print("population: %.2f%%" % (100.0 * b.population()))
     print("approx_items(): %.2f" % b.approx_items())
     print("calculate_p(): %.3f%%" % (100.0 * b.calculate_p()))
 
