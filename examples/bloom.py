@@ -52,7 +52,7 @@ class BloomFilter(object):
         n = 1 << self.m.bit_length()
         h = hashlib.new('sha1')
         h.update(str(key).encode())
-        x = int.from_bytes(h.digest(), 'little')
+        x = 0
         i = 0
         while i < self.k:
             if x < n:
@@ -78,13 +78,13 @@ def test_bloom(n, p):
     print("approx_items(): %.2f" % b.approx_items())
     print("calculate_p(): %.3f%%" % (100.0 * b.calculate_p()))
 
-    N = 100000
+    N = 100_000
     false_pos = sum(i in b for i in range(n, n + N))
     print("experimental : %.3f%%\n" % (100.0 * false_pos / N))
 
 
 if __name__ == '__main__':
-    test_bloom(5000, 0.05)
-    test_bloom(10000, 0.01)
-    test_bloom(50000, 0.005)
-    test_bloom(100000, 0.002)
+    test_bloom(  5_000, 0.05)
+    test_bloom( 10_000, 0.01)
+    test_bloom( 50_000, 0.005)
+    test_bloom(100_000, 0.002)
