@@ -662,6 +662,8 @@ class TestsParity(unittest.TestCase, Util):
     def test_wrong_args(self):
         self.assertRaises(TypeError, parity, '')
         self.assertRaises(TypeError, parity, 1)
+        self.assertRaises(TypeError, parity)
+        self.assertRaises(TypeError, parity, bitarray("110"), 1)
 
     def test_random2(self):
         for a in self.randombitarrays():
