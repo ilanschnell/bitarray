@@ -1233,7 +1233,7 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
    - Now we decide which sparse block type to use.  We do this by
      first calculating the population count for the bitarray buffer size of
-     the NEXT block type.  If the this count is larger than 255 (too large
+     the *next* block type.  If the this count is larger than 255 (too large
      for the count byte) we have to stick with the current type.
      Otherwise we compare the encoded sizes of (a) sticking with the current
      type n, and (b) moving to the next type n+1.  These sizes are calculated
@@ -1241,14 +1241,12 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
      (a) Although we consider sticking with the current type n, we are
          looking at the population for the next type block size.  We
-         have to calculate the encoded size of ALL the type n blocks
-         which would otherwise just be a single type n+1 block.  This
-         size is:
+         calculate the encoded size of *all* the type n blocks which wold
+         otherwise just be a single type n+1 block:
 
              header size  *  number of blocks   +   n  *  population
 
-     (b) Calculating the encoded size of a single block of type n+1 is
-         much easier:
+     (b) The encoded size of a single block of type n+1 is:
 
              header size   +   (n + 1)  *  population
 
@@ -1277,7 +1275,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
 
         /* population for next block type n+1 */
         next_count = sc_count(a, rts, offset, n + 1);
-        if (next_count >= 256)
+        if (next_count > 0xff)
             /* too many index bytes for next block type n+1 */
             break;
 
