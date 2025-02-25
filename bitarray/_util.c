@@ -1271,20 +1271,22 @@ sc_encode_block(char *str, Py_ssize_t *len,
     }
 
     for (n = 1; n < 4; n++) {
-        Py_ssize_t next_count, size_a, size_b;
+        Py_ssize_t next_count, nblocks, cost_a, cost_b;
 
         /* population for next block type n+1 */
         next_count = sc_count(a, rts, offset, n + 1);
-        if (next_count > 0xff)
+        if (next_count > 255)
             /* too many index bytes for next block type n+1 */
             break;
 
-        /* encoded size of (up to 256) blocks of type n */
-        size_a = (n == 1 ? 1 : 2) * Py_MIN(256, (nbytes - 1) / BSI(n) + 1);
-        /* encoded size of (a single) block of type n+1 */
-        size_b = 2 + next_count;
+        /* number of blocks of type n (up to 256) */
+        nblocks = Py_MIN(256, (nbytes - 1) / BSI(n) + 1);
+        /* cost of nblocks blocks of type n */
+        cost_a = (n == 1 ? 1 : 2) * nblocks;
+        /* cost of a single block of type n+1 */
+        cost_b = 2 + next_count;
 
-        if (size_a <= size_b)
+        if (cost_a <= cost_b)
             /* next block type n+1 is not smaller - use block type n */
             break;
 
