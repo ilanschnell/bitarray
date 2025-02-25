@@ -1092,7 +1092,7 @@ sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
            nbits = Py_MIN(8 * BSI(n), a->nbits - 8 * offset);
 
        However, on 32-bit machines this will fail for n=4 because 8 * BSI(4)
-       is 1 << 32.  This is problematic, as 32-bit machines can address
+       equals 1 << 32.  This is problematic, as 32-bit machines can address
        at least partially filled type 4 blocks).  Therefore, we first
        limit BSI(n) by the buffer size before multiplying 8. */
     nbits = Py_MIN(8 * Py_MIN(BSI(n), Py_SIZE(a)), a->nbits - 8 * offset);
@@ -1245,12 +1245,12 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
          which would otherwise just be a single type n+1 block.  This
          size is:
 
-             header size  *  number of blocks  +  n  *  population
+             header size  *  number of blocks   +   n  *  population
 
      (b) Calculating the encoded size of a single block of type n+1 is
          much easier:
 
-             header size  +  (n + 1)  *  population
+             header size   +   (n + 1)  *  population
 
      As we only need to know which of these sizes is bigger, we can
      substract n * population from both sizes.
