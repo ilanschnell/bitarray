@@ -1170,7 +1170,7 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
         for (i = m * SEGSIZE;; i++) {  /* loop bytes in segment */
             assert(i < (m + 1) * SEGSIZE && i + offset < Py_SIZE(a));
-            if (buff[i] == 0)
+            if (buff[i] == 0x00)
                 continue;
 
             for (j = 0; j < 8; j++) {  /* loop bits */
