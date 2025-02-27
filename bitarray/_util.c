@@ -1172,7 +1172,8 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
             if (buff[i] == 0)
                 continue;
 
-            for (j = 0; j < 8; j++)  /* loop bits */
+            for (j = 0; j < 8; j++) {  /* loop bits */
+                assert(8 * (offset + i) + j < a->nbits);
                 if (buff[i] & BITMASK(a, j)) {
                     write_n(str, n, 8 * i + j);
                     str += n;
@@ -1183,6 +1184,7 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
                         goto next_segment;
                     }
                 }
+            }
         }
     next_segment:
         m++;
