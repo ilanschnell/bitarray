@@ -1160,7 +1160,8 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
     rts += offset / SEGSIZE;   /* rts index relative to offset now */
 
     for (m = 0;;) {  /* loop segments */
-        int i, j, ni;
+        Py_ssize_t i;
+        int j, ni;
 
         assert(m + offset / SEGSIZE < NSEG(a->nbits));
         ni = (int) (rts[m + 1] - rts[m]);  /* indices in this segment */
