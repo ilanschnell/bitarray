@@ -1150,7 +1150,7 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
 {
     const char *str_stop = str + n * k;  /* stop position in buffer 'str' */
     const char *buff = a->ob_item + offset;
-    Py_ssize_t m, i;
+    Py_ssize_t m;
 
     assert(1 <= n && n <= 4);
     assert(0 < k && k < 256);  /* note that k cannot be 0 in this function */
@@ -1160,7 +1160,7 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
     rts += offset / SEGSIZE;   /* rts index relative to offset now */
 
     for (m = 0;;) {  /* loop segments */
-        int j, ni;
+        int i, j, ni;
 
         assert(m + offset / SEGSIZE < NSEG(a->nbits));
         ni = (int) (rts[m + 1] - rts[m]);  /* indices in this segment */
