@@ -1,8 +1,9 @@
 2025-03-XX   3.1.1:
 -------------------
-  * ppdated `pythoncapi_compat.h` for pypy3.11 support, see #227
+  * updated `pythoncapi_compat.h` for pypy3.11 support, see #227
   * use `__builtin_parityll()` when available in `util.parity()`
   * add `parity_64()` to header
+  * simplify some tests
   * add LFSR example
 
 
