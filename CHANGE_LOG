@@ -1,4 +1,4 @@
-2025-03-XX   3.1.1:
+2025-03-06   3.1.1:
 -------------------
   * updated `pythoncapi_compat.h` for pypy3.11 support, see #227
   * use `__builtin_parityll()` when available in `util.parity()`

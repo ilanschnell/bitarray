@@ -1,6 +1,15 @@
 Change log
 ==========
 
+**3.1.1** (2025-03-06):
+
+* updated ``pythoncapi_compat.h`` for pypy3.11 support, see `#227 <https://github.com/ilanschnell/bitarray/issues/227>`__
+* use ``__builtin_parityll()`` when available in ``util.parity()``
+* add ``parity_64()`` to header
+* simplify some tests
+* add LFSR example
+
+
 **3.1.0** (2025-02-19):
 
 * allow mask assignment to bitarrays, see `#225 <https://github.com/ilanschnell/bitarray/issues/225>`__
