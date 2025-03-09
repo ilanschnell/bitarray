@@ -2825,16 +2825,12 @@ class AppendTests(unittest.TestCase, Util):
         self.check_obj(a)
 
     def test_random(self):
-        endian = self.random_endian()
-        a = bitarray(endian=endian)
-        aa = []
-        for n in range(1, 1000):
-            v = getrandbits(1)
-            a.append(v)
-            self.assertEqual(len(a), n)
-            aa.append(v)
-            self.assertEQUAL(a, bitarray(aa, endian=endian))
-        self.check_obj(a)
+        a = urandom(1000)
+        b = bitarray(endian=a.endian())
+        for i in range(len(a)):
+            b.append(a[i])
+            self.assertEQUAL(b, a[:i+1])
+        self.check_obj(b)
 
 # ---------------------------------------------------------------------------
 
