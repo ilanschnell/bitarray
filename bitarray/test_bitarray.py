@@ -2803,9 +2803,9 @@ class ExtendTests(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class MethodTests(unittest.TestCase, Util):
+class AppendTests(unittest.TestCase, Util):
 
-    def test_append_simple(self):
+    def test_simple(self):
         a = bitarray()
         a.append(True)
         a.append(False)
@@ -2814,20 +2814,31 @@ class MethodTests(unittest.TestCase, Util):
         a.append(0)
         a.append(1)
         self.assertEQUAL(a, bitarray('10001'))
+        self.check_obj(a)
+
+    def test_wrong_args(self):
+        a = bitarray("10001")
         self.assertRaises(ValueError, a.append, 2)
         self.assertRaises(TypeError, a.append, None)
         self.assertRaises(TypeError, a.append, '')
         self.assertEQUAL(a, bitarray('10001'))
         self.check_obj(a)
 
-    def test_append_random(self):
-        for a in self.randombitarrays():
-            aa = a.tolist()
-            a.append(1)
-            self.assertEQUAL(a, bitarray(aa + [1], endian=a.endian()))
-            a.append(0)
-            self.assertEQUAL(a, bitarray(aa + [1, 0], endian=a.endian()))
-            self.check_obj(a)
+    def test_random(self):
+        endian = self.random_endian()
+        a = bitarray(endian=endian)
+        aa = []
+        for n in range(1, 1000):
+            v = getrandbits(1)
+            a.append(v)
+            self.assertEqual(len(a), n)
+            aa.append(v)
+            self.assertEQUAL(a, bitarray(aa, endian=endian))
+        self.check_obj(a)
+
+# ---------------------------------------------------------------------------
+
+class MethodTests(unittest.TestCase, Util):
 
     def test_insert(self):
         a = bitarray('111100')
