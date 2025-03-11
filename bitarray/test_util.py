@@ -684,6 +684,12 @@ class TestsXoredIndices(unittest.TestCase, Util):
             a = bitarray(s)
             self.assertEqual(xor_indices(a), r)
 
+    def test_wrong_args(self):
+        self.assertRaises(TypeError, parity, '')
+        self.assertRaises(TypeError, parity, 1)
+        self.assertRaises(TypeError, parity)
+        self.assertRaises(TypeError, parity, bitarray("110"), 1)
+
     def test_random(self):
         for a in self.randombitarrays():
             indices = [i for i, v in enumerate(a) if v]
