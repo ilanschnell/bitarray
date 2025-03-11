@@ -40,10 +40,10 @@ class Hamming:
         a.invert(c)
         del a[[0] + self.indices]
 
-        if p == 0:
-            return 0 if c == 0 else 2
-        else:
+        if p:
             return 1
+        # in case the parity is zero, we have to check the corrected index
+        return 2 if c else 0
 
 # ---------------------------------------------------------------------------
 
