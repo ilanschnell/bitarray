@@ -1,7 +1,7 @@
 All files under this 'examples/' directory are unsupported.
 
-While bitarray itself still supports Python 2.7 and Python 3.5+, the examples
-usually require Python 3.
+While bitarray itself supports Python 3.5+, some examples may require
+a later Python versoin.
 
 
 bloom.py
@@ -29,6 +29,11 @@ extend_json.py
 gene.py
     Shows how gene sequences (ATGC) can be very easily and efficiently
     represented by bitarrays.
+
+
+hamming.py
+    Implementation of Hamming codes for error correction with send
+    and receive functionality.
 
 
 huffman/
