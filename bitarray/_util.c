@@ -225,6 +225,31 @@ PyDoc_STRVAR(parity_doc,
 Return parity of bitarray `a`.\n\
 `parity(a)` is equivalent to `a.count() % 2` but more efficient.");
 
+
+static PyObject *
+xor_indices(PyObject *module, PyObject *obj)
+{
+    bitarrayobject *a;
+    Py_ssize_t res = 0, nbits, i;
+
+    if (ensure_bitarray(obj) < 0)
+        return NULL;
+
+    a = (bitarrayobject *) obj;
+    nbits = a->nbits;
+    for (i = 1; i < nbits; i++) {
+        if (getbit(a, i))
+            res ^= i;
+    }
+    return PyLong_FromSsize_t(res);
+}
+
+PyDoc_STRVAR(xor_indices_doc,
+"xor_indices_doc(a, /) -> int\n\
+\n\
+Return xor'ed indices of all 1 bits in bitarray `a`.  This is basically\n\
+equivalent to `reduce(operator.xor, [i for i, v in enumerate(a) if v]`.");
+
 /* --------------------------- binary functions ------------------------ */
 
 static PyObject *
@@ -1878,6 +1903,9 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, ones_doc},
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
     {"parity",    (PyCFunction) parity,    METH_O,       parity_doc},
+    {"xor_indices",
+                  (PyCFunction) xor_indices,
+                                           METH_O,       xor_indices_doc},
     {"count_and", (PyCFunction) count_and, METH_VARARGS, count_and_doc},
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
