@@ -39,6 +39,7 @@ NEW_IN = {
     'util.intervals':         '2.7',
     'util.ones':              '2.9',
     'util.parity':            '1.9',
+    'util.xor_indices':       '3.2',
     'util.pprint':            '1.8',
     'util.serialize':         '1.8',
     'util.urandom':           '1.7',

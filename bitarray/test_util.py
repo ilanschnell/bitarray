@@ -6,11 +6,13 @@ from __future__ import absolute_import
 import os
 import base64
 import binascii
+import operator
 import shutil
 import tempfile
 import unittest
 from io import StringIO
 from array import array
+from functools import reduce
 from string import hexdigits
 from random import choice, getrandbits, randrange, randint, random
 from collections import Counter
@@ -21,7 +23,8 @@ from bitarray.test_bitarray import Util, skipIf, SYSINFO, DEBUG
 
 from bitarray.util import (
     zeros, ones, urandom, pprint, strip, count_n,
-    parity, count_and, count_or, count_xor, any_and, subset, _correspond_all,
+    parity, xor_indices,
+    count_and, count_or, count_xor, any_and, subset, _correspond_all,
     intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
     ba2int, int2ba,
@@ -670,6 +673,45 @@ class TestsParity(unittest.TestCase, Util):
             b = a.copy()
             self.assertEqual(parity(a), a.count() % 2)
             self.assertEqual(a, b)
+
+# ---------------------------------------------------------------------------
+
+class TestsXoredIndices(unittest.TestCase, Util):
+
+    def test_explicit(self):
+        for s, r in [("", 0), ("0", 0), ("1", 0), ("11", 1),
+                     ("011", 3), ("001", 2), ("0001100", 7)]:
+            a = bitarray(s)
+            self.assertEqual(xor_indices(a), r)
+
+    def test_wrong_args(self):
+        self.assertRaises(TypeError, parity, '')
+        self.assertRaises(TypeError, parity, 1)
+        self.assertRaises(TypeError, parity)
+        self.assertRaises(TypeError, parity, bitarray("110"), 1)
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            indices = [i for i, v in enumerate(a) if v]
+            if len(indices) == 0:
+                c = 0
+            elif len(indices) == 1:
+                c = indices[0]
+            else:
+                c = reduce(operator.xor, indices)
+            self.assertEqual(xor_indices(a), c)
+
+    def test_error_correct(self):
+        indices = [1, 2, 4, 8, 16, 32, 64, 128]
+        a = urandom(256)
+        a[indices] = 0
+        c = xor_indices(a)
+        a[indices] = int2ba(c, length=8, endian="little")
+        for i in range(0, 256):
+            self.assertEqual(xor_indices(a), 0)
+            a.invert(i)
+            self.assertEqual(xor_indices(a), i)
+            a.invert(i)
 
 # ---------------------------------------------------------------------------
 
