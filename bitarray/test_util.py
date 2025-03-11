@@ -701,6 +701,18 @@ class TestsXoredIndices(unittest.TestCase, Util):
                 c = reduce(operator.xor, indices)
             self.assertEqual(xor_indices(a), c)
 
+    def test_error_correct(self):
+        indices = [1, 2, 4, 8, 16, 32, 64, 128]
+        a = urandom(256)
+        a[indices] = 0
+        c = xor_indices(a)
+        a[indices] = int2ba(c, length=8, endian="little")
+        for i in range(0, 256):
+            self.assertEqual(xor_indices(a), 0)
+            a.invert(i)
+            self.assertEqual(xor_indices(a), i)
+            a.invert(i)
+
 # ---------------------------------------------------------------------------
 
 class TestsIntervals(unittest.TestCase, Util):
