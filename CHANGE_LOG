@@ -1,6 +1,6 @@
 2025-03-XX   3.2.0:
 -------------------
-  * add `util.xor_indices()`
+  * add `util.xor_indices()`, #229
 
 
 2025-03-06   3.1.1:
