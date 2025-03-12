@@ -24,7 +24,7 @@ class Hamming:
 
         c = xor_indices(a)
         a[self.parity_bits[1:]] = int2ba(c, length=self.r, endian="little")
-        a[0] ^= parity(a)
+        a[0] = parity(a)
 
     def is_well_prepared(self, a):
         if len(a) != self.n:
