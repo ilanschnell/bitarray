@@ -10,20 +10,20 @@ class Hamming:
         self.n = 1 << r          # block length
         self.k = self.n - r - 1  # message length
 
-        self.indices = []
+        self.parity_bits = [0]  # the 0th bit is to make overall parity 0
         i = 1
         while i < self.n:
-            self.indices.append(i)
+            self.parity_bits.append(i)
             i <<= 1
 
     def send(self, a):
         if len(a) != self.k:
             raise ValueError("expected bitarray of message length %d" % self.k)
-        for i in [0] + self.indices:
+        for i in self.parity_bits:
             a.insert(i, 0)
 
         c = xor_indices(a)
-        a[self.indices] = int2ba(c, length=self.r, endian="little")
+        a[self.parity_bits[1:]] = int2ba(c, length=self.r, endian="little")
         a[0] ^= parity(a)
 
     def is_well_prepared(self, a):
@@ -38,12 +38,15 @@ class Hamming:
         p = parity(a)
         c = xor_indices(a)
         a.invert(c)
-        del a[[0] + self.indices]
+        del a[self.parity_bits]
 
-        if p:
+        if p:  # overall parity is wrong, so we have a 1 bit error
             return 1
-        # in case the parity is zero, we have to check the corrected index
-        return 2 if c else 0
+        if c:  # overall parity is ok, but since we have wrong partial
+               # parities, there must have been 2 bit errors
+            return 2
+        # overall parity as well as partial parities as fine, so no error
+        return 0
 
 # ---------------------------------------------------------------------------
 
@@ -69,7 +72,7 @@ class HammingTests(unittest.TestCase, Util):
             self.assertEqual(h.r, r)
             self.assertEqual(h.n, n)
             self.assertEqual(h.k, k)
-            self.assertEqual(len(h.indices), h.r)
+            self.assertEqual(len(h.parity_bits), h.r + 1)
 
     def test_send(self):
         for _ in range(1000):

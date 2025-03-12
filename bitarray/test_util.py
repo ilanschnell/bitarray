@@ -702,15 +702,16 @@ class TestsXoredIndices(unittest.TestCase, Util):
             self.assertEqual(xor_indices(a), c)
 
     def test_error_correct(self):
-        indices = [1, 2, 4, 8, 16, 32, 64, 128]
+        parity_bits = [1, 2, 4, 8, 16, 32, 64, 128]  # parity bit positions
         a = urandom(256)
-        a[indices] = 0
+        a[parity_bits] = 0
         c = xor_indices(a)
-        a[indices] = int2ba(c, length=8, endian="little")
+        # set parity bits such that block is well prepared
+        a[parity_bits] = int2ba(c, length=8, endian="little")
         for i in range(0, 256):
-            self.assertEqual(xor_indices(a), 0)
+            self.assertEqual(xor_indices(a), 0)  # ensure well prepared
             a.invert(i)
-            self.assertEqual(xor_indices(a), i)
+            self.assertEqual(xor_indices(a), i)  # index of the flipped bit!
             a.invert(i)
 
 # ---------------------------------------------------------------------------
