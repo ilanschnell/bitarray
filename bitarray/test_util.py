@@ -701,6 +701,15 @@ class TestsXoredIndices(unittest.TestCase, Util):
                 c = reduce(operator.xor, indices)
             self.assertEqual(xor_indices(a), c)
 
+    def test_flips(self):
+        a = bitarray(128)
+        c = 0
+        for _ in range(1000):
+            self.assertEqual(xor_indices(a), c)
+            i = randint(0, len(a) - 1)
+            a.invert(i)
+            c ^= i
+
     def test_error_correct(self):
         parity_bits = [1, 2, 4, 8, 16, 32, 64, 128]  # parity bit positions
         a = urandom(256)
