@@ -10,7 +10,7 @@ class Hamming:
         self.n = 1 << r          # block length
         self.k = self.n - r - 1  # message length
 
-        self.parity_bits = [0]  # the 0th bit is to make overall parity 0
+        self.parity_bits = [0]   # the 0th bit is to make overall parity 0
         i = 1
         while i < self.n:
             self.parity_bits.append(i)
@@ -53,6 +53,7 @@ class Hamming:
 from random import getrandbits, randint
 import unittest
 
+from bitarray import bitarray
 from bitarray.util import urandom, count_xor
 from bitarray.test_bitarray import Util
 
@@ -73,6 +74,20 @@ class HammingTests(unittest.TestCase, Util):
             self.assertEqual(h.n, n)
             self.assertEqual(h.k, k)
             self.assertEqual(len(h.parity_bits), h.r + 1)
+
+    def test_example(self):
+        a = bitarray("   0  010  111 0110")
+        c = a.copy()
+        #             012  4    8
+        b = bitarray("1100 1010 1111 0110")
+        #             012  4    8
+        h = Hamming(4)
+        h.is_well_prepared(b)
+        h.send(a)
+        self.assertEqual(a, b)
+        a.invert(10)
+        self.assertEqual(h.receive(a), 1)
+        self.assertEqual(a, c)
 
     def test_send(self):
         for _ in range(1000):
