@@ -247,8 +247,9 @@ xor_indices(PyObject *module, PyObject *obj)
 PyDoc_STRVAR(xor_indices_doc,
 "xor_indices_doc(a, /) -> int\n\
 \n\
-Return xor'ed indices of all 1 bits in bitarray `a`.  This is basically\n\
-equivalent to `reduce(operator.xor, [i for i, v in enumerate(a) if v])`.");
+Return xor reduced indices of all active bits in bitarray `a`.\n\
+This is essentially equivalent to\n\
+`reduce(operator.xor, [i for i, v in enumerate(a) if v])`.");
 
 /* --------------------------- binary functions ------------------------ */
 

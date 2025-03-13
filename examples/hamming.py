@@ -77,8 +77,8 @@ class HammingTests(unittest.TestCase, Util):
 
     def test_example(self):
         a = bitarray("   0  010  111 0110")
-        c = a.copy()
         #             012  4    8
+        c = a.copy()
         b = bitarray("1100 1010 1111 0110")
         #             012  4    8
         h = Hamming(4)
