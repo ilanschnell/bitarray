@@ -17,11 +17,13 @@ class Hamming:
             i <<= 1
 
     def send(self, a):
+        "encode message inplace"
         if len(a) != self.k:
             raise ValueError("expected bitarray of message length %d" % self.k)
         for i in self.parity_bits:
             a.insert(i, 0)
 
+        # prepare block
         c = xor_indices(a)
         a[self.parity_bits[1:]] = int2ba(c, length=self.r, endian="little")
         a[0] = parity(a)
@@ -32,7 +34,7 @@ class Hamming:
             raise ValueError("expected bitarray of block length %d" % self.n)
         p = parity(a)
         c = xor_indices(a)
-        a.invert(c)
+        a.invert(c)  # fix bit error
         del a[self.parity_bits]
 
         if p:  # overall parity is wrong, so we have a 1 bit error
