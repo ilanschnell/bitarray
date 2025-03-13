@@ -26,11 +26,6 @@ class Hamming:
         a[self.parity_bits[1:]] = int2ba(c, length=self.r, endian="little")
         a[0] = parity(a)
 
-    def is_well_prepared(self, a):
-        if len(a) != self.n:
-            raise ValueError("expected bitarray of block length %d" % self.n)
-        return xor_indices(a) == 0 and parity(a) == 0
-
     def receive(self, a):
         "decode inplace and return number of bit errors"
         if len(a) != self.n:
@@ -75,6 +70,12 @@ class HammingTests(unittest.TestCase, Util):
             self.assertEqual(h.k, k)
             self.assertEqual(len(h.parity_bits), h.r + 1)
 
+    def check_well_prepared(self, a):
+        n = len(a)
+        self.assertEqual(n & (n - 1), 0)     # n is power of 2
+        self.assertEqual(xor_indices(a), 0)  # partial parity bits are 0
+        self.assertEqual(parity(a), 0)       # overall parity is 0
+
     def test_example(self):
         a = bitarray("   0  010  111 0110")
         #             012  4    8
@@ -82,7 +83,7 @@ class HammingTests(unittest.TestCase, Util):
         b = bitarray("1100 1010 1111 0110")
         #             012  4    8
         h = Hamming(4)
-        h.is_well_prepared(b)
+        self.check_well_prepared(b)
         h.send(a)
         self.assertEqual(a, b)
         a.invert(10)
@@ -95,7 +96,7 @@ class HammingTests(unittest.TestCase, Util):
             a = urandom(h.k)
             h.send(a)
             self.assertEqual(len(a), h.n)
-            self.assertTrue(h.is_well_prepared(a))
+            self.check_well_prepared(a)
 
     def test_receive(self):
         for _ in range(1000):
@@ -108,12 +109,11 @@ class HammingTests(unittest.TestCase, Util):
                 a.invert(getrandbits(h.r))
             dist = count_xor(a, t)
             self.assertTrue(0 <= dist <= 2)
-            is_well = h.is_well_prepared(a)
 
             res = h.receive(a)
             self.assertEqual(len(a), h.k)
             if dist <= 1:
-                self.assertEqual(is_well, dist == 0)
+                self.check_well_prepared(t)
                 self.assertEqual(a, b)
             self.assertEqual(res, dist)
 
