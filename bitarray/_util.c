@@ -245,7 +245,7 @@ xor_indices(PyObject *module, PyObject *obj)
 }
 
 PyDoc_STRVAR(xor_indices_doc,
-"xor_indices_doc(a, /) -> int\n\
+"xor_indices(a, /) -> int\n\
 \n\
 Return xor reduced indices of all active bits in bitarray `a`.\n\
 This is essentially equivalent to\n\

@@ -122,7 +122,7 @@ def get_doc(name):
     if m is None:
         raise Exception("signature invalid: %r" % lines[0])
     sig = '``%s``' %  m.group(1)
-    assert m.group(2) == obj.__name__
+    assert m.group(2) == obj.__name__, lines[0]
     if m.group(4):
         sig += ' -> %s' % m.group(4)
     assert lines[1] == ''
