@@ -1554,6 +1554,7 @@ This function consumes only one bitarray and leaves the remaining stream\n\
 untouched.  Use `sc_encode()` for compressing (encoding).");
 
 #undef BSI
+#undef NSEG
 
 /* ------------------- variable length bitarray format ----------------- */
 
@@ -1691,6 +1692,8 @@ PyDoc_STRVAR(vl_encode_doc,
 Return variable length binary representation of bitarray.\n\
 This representation is useful for efficiently storing small bitarray\n\
 in a binary stream.  Use `vl_decode()` for decoding.");
+
+#undef LEN_PAD_BITS
 
 /* ----------------------- canonical Huffman decoder ------------------- */
 
@@ -1862,6 +1865,8 @@ chdi_traverse(chdi_obj *it, visitproc visit, void *arg)
     Py_VISIT(it->symbol);
     return 0;
 }
+
+#undef MAXBITS
 
 static PyTypeObject CHDI_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
