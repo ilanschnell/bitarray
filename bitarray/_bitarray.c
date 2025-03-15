@@ -632,9 +632,8 @@ value_sub(PyObject *sub)
     }
 
     if (bitarray_Check(sub)) {
-#define ss  ((bitarrayobject *) sub)
-        return (ss->nbits == 1) ? getbit(ss, 0) : 2;
-#undef ss
+        bitarrayobject *s = (bitarrayobject *) sub;
+        return (s->nbits == 1) ? getbit(s, 0) : 2;
     }
 
     PyErr_Format(PyExc_TypeError, "sub_bitarray must be bitarray or int, "
