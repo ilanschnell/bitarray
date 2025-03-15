@@ -417,26 +417,26 @@ Return tuple with counts of: ~a & ~b, ~a & b, a & ~b, a & b");
 */
 
 static PyObject *
-serialize(PyObject *module, PyObject *a)
+serialize(PyObject *module, PyObject *obj)
 {
+    bitarrayobject *a;
     PyObject *result;
     Py_ssize_t nbytes;
     char *str;
 
-    if (ensure_bitarray(a) < 0)
+    if (ensure_bitarray(obj) < 0)
         return NULL;
 
+    a = (bitarrayobject *) obj;
     nbytes = Py_SIZE(a);
     result = PyBytes_FromStringAndSize(NULL, nbytes + 1);
     if (result == NULL)
         return NULL;
 
     str = PyBytes_AsString(result);
-#define aa  ((bitarrayobject *) a)
-    set_padbits(aa);
-    *str = (IS_BE(aa) ? 0x10 : 0x00) | ((char) PADBITS(aa));
-    memcpy(str + 1, aa->ob_item, (size_t) nbytes);
-#undef aa
+    set_padbits(a);
+    *str = (IS_BE(a) ? 0x10 : 0x00) | ((char) PADBITS(a));
+    memcpy(str + 1, a->ob_item, (size_t) nbytes);
     return result;
 }
 
