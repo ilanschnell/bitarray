@@ -1593,7 +1593,7 @@ PyDoc_STRVAR(fromfile_doc,
 Extend bitarray with up to `n` bytes read from file object `f` (or any\n\
 other binary stream what supports a `.read()` method, e.g. `io.BytesIO`).\n\
 Each read byte will add eight bits to the bitarray.  When `n` is omitted or\n\
-negative, all bytes until EOF are read.  When `n` is non-negative but\n\
+negative, all bytes until EOF is reached.  When `n` is non-negative but\n\
 exceeds the data available, `EOFError` is raised (but the available data\n\
 is still read and appended).");
 
