@@ -690,6 +690,11 @@ class TestsXoredIndices(unittest.TestCase, Util):
         self.assertRaises(TypeError, parity)
         self.assertRaises(TypeError, parity, bitarray("110"), 1)
 
+    def test_ones(self):
+        # OEIS A003815
+        lst = [0, 1, 3, 0, 4, 1, 7, 0, 8, 1, 11, 0, 12, 1, 15, 0, 16, 1, 19]
+        self.assertEqual([xor_indices(ones(i)) for i in range(1, 20)], lst)
+
     def test_random(self):
         for a in self.randombitarrays():
             indices = [i for i, v in enumerate(a) if v]
