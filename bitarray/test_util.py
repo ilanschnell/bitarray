@@ -694,6 +694,14 @@ class TestsXoredIndices(unittest.TestCase, Util):
         # OEIS A003815
         lst = [0, 1, 3, 0, 4, 1, 7, 0, 8, 1, 11, 0, 12, 1, 15, 0, 16, 1, 19]
         self.assertEqual([xor_indices(ones(i)) for i in range(1, 20)], lst)
+        a = bitarray()
+        x = 0
+        for i in range(1000):
+            a.append(1)
+            x ^= i
+            self.assertEqual(xor_indices(a), x)
+            if i < 19:
+                self.assertEqual(lst[i], x)
 
     def test_random(self):
         for a in self.randombitarrays():
