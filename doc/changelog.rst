@@ -1,6 +1,12 @@
 Change log
 ==========
 
+**3.2.0** (2025-03-19):
+
+* add ``util.xor_indices()``, `#229 <https://github.com/ilanschnell/bitarray/issues/229>`__
+* add Hamming code example
+
+
 **3.1.1** (2025-03-06):
 
 * updated ``pythoncapi_compat.h`` for pypy3.11 support, see `#227 <https://github.com/ilanschnell/bitarray/issues/227>`__

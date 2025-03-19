@@ -63,7 +63,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 3.1.1
+    bitarray version: 3.2.0
     sys.version: 3.10.14 (main, Oct 25 2022) [Clang 16.0.6]
     sys.prefix: /Users/ilan/miniforge3
     pointer size: 64 bit
@@ -409,7 +409,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.1.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.2.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -562,7 +562,7 @@ bitarray methods:
    Extend bitarray with up to ``n`` bytes read from file object ``f`` (or any
    other binary stream what supports a ``.read()`` method, e.g. ``io.BytesIO``).
    Each read byte will add eight bits to the bitarray.  When ``n`` is omitted or
-   negative, all bytes until EOF are read.  When ``n`` is non-negative but
+   negative, all bytes until EOF is reached.  When ``n`` is non-negative but
    exceeds the data available, ``EOFError`` is raised (but the available data
    is still read and appended).
 
@@ -766,6 +766,14 @@ This sub-module was added in version 1.2.
    ``parity(a)`` is equivalent to ``a.count() % 2`` but more efficient.
 
    New in version 1.9.
+
+
+``xor_indices(a, /)`` -> int
+   Return xor reduced indices of all active bits in bitarray ``a``.
+   This is essentially equivalent to
+   ``reduce(operator.xor, [i for i, v in enumerate(a) if v])``.
+
+   New in version 3.2.
 
 
 ``count_and(a, b, /)`` -> int

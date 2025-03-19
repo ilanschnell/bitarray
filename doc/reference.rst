@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 3.1.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.2.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -154,7 +154,7 @@ bitarray methods:
    Extend bitarray with up to ``n`` bytes read from file object ``f`` (or any
    other binary stream what supports a ``.read()`` method, e.g. ``io.BytesIO``).
    Each read byte will add eight bits to the bitarray.  When ``n`` is omitted or
-   negative, all bytes until EOF are read.  When ``n`` is non-negative but
+   negative, all bytes until EOF is reached.  When ``n`` is non-negative but
    exceeds the data available, ``EOFError`` is raised (but the available data
    is still read and appended).
 
@@ -358,6 +358,14 @@ This sub-module was added in version 1.2.
    ``parity(a)`` is equivalent to ``a.count() % 2`` but more efficient.
 
    New in version 1.9.
+
+
+``xor_indices(a, /)`` -> int
+   Return xor reduced indices of all active bits in bitarray ``a``.
+   This is essentially equivalent to
+   ``reduce(operator.xor, [i for i, v in enumerate(a) if v])``.
+
+   New in version 3.2.
 
 
 ``count_and(a, b, /)`` -> int
