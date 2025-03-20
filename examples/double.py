@@ -57,7 +57,7 @@ class Double:
 # ---------------------------------------------------------------------------
 
 from math import pi, inf, nan, isnan
-from random import getrandbits
+from random import getrandbits, randint
 import unittest
 
 from bitarray.util import urandom
@@ -110,17 +110,32 @@ class DoubleTests(unittest.TestCase):
             self.assertEqual(str(d), s)
             self.assertTrue(isnan(float(d)))
 
+    def test_nan_msg(self):
+        msg = urandom(52)
+        d = Double()
+        d.exponent = 1024
+        d.fraction = msg
+        x = float(d)
+        self.assertIsInstance(x, float)
+        self.assertTrue(isnan(x))
+        e = Double(x)
+        self.assertEqual(e.exponent, 1024)
+        self.assertEqual(e.fraction, msg)
+
     def test_exponent52(self):
         for _ in range(1000):
             d = Double()
             d.fraction = urandom(52, endian="little")
             d.exponent = 52
+            d.sign = getrandbits(1)
             i = (1 << 52) + ba2int(d.fraction)
+            if d.sign:
+                i = -i
             self.assertEqual(float(d), i)
 
     def test_exact_ints(self):
         for _ in range(1000):
-            i = getrandbits(53)
+            i = getrandbits(randint(1, 53))
             if i == 0:
                 continue
 
