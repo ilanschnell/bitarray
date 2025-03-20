@@ -7,8 +7,8 @@ from bitarray.util import ba2int, int2ba
 class Double:
 
     def __init__(self, x=0.0):
-        if isinstance(x, float):
-            self.from_float(x)
+        if isinstance(x, (float, int)):
+            self.from_float(float(x))
         elif isinstance(x, str):
             self.from_string(x)
         else:
@@ -106,7 +106,7 @@ EXAMPLES = [
     (  pi, "0 10000000000 "
        "1001001000011111101101010100010001000010110100011000"),
     # largest number exactly representated as integer
-    (2 ** 53 - 1.0, "0 10000110011 " + 52 * "1"),
+    (2 ** 53 - 1, "0 10000110011 " + 52 * "1"),
 ]
 
 class DoubleTests(unittest.TestCase):
@@ -160,7 +160,7 @@ class DoubleTests(unittest.TestCase):
             if i == 0:
                 continue
 
-            d = Double(float(i))
+            d = Double(i)
             self.assertEqual(d.sign, 0)
 
             a = int2ba(i, endian="little")
@@ -175,7 +175,7 @@ if __name__ == '__main__':
     import sys
     if len(sys.argv) > 1:
         for arg in sys.argv[1:]:
-            d = Double(float(eval(arg)))
+            d = Double(eval(arg))
             d.info()
     else:
         unittest.main()
