@@ -53,6 +53,26 @@ class Double:
         a.append(self.sign)
         return a
 
+    def info(self):
+        print("float: %r" % float(self))
+        print(str(self))
+        print("sign     = %d" % self.sign)
+        print("exponent = %d" % self.exponent)
+        d = Double()
+        d.exponent = 0
+        d.fraction = self.fraction
+        x = float(d)
+        if self.exponent == -1023:
+            x -= 1
+        print("fraction = %.17f" % x)
+        exponent = self.exponent
+        if exponent == -1023:
+            exponent = -1022
+        x *= pow(2.0, exponent)
+        if self.sign:
+            x = -x
+        print("  --> %r" % x)
+
 
 # ---------------------------------------------------------------------------
 
@@ -66,6 +86,7 @@ from bitarray.util import urandom
 EXAMPLES = [
     ( 0.0, "0 00000000000 " + 52 * "0"),
     ( 1.0, "0 01111111111 " + 52 * "0"),
+    ( 1.5, "0 01111111111 1" + 51 * "0"),
     ( 2.0, "0 10000000000 " + 52 * "0"),
     ( 5.0, "0 10000000001 01" + 50 * "0"),
     (-5.0, "1 10000000001 01" + 50 * "0"),
@@ -151,4 +172,10 @@ class DoubleTests(unittest.TestCase):
             self.assertEqual(d.fraction, a)
 
 if __name__ == '__main__':
-    unittest.main()
+    import sys
+    if len(sys.argv) > 1:
+        for arg in sys.argv[1:]:
+            d = Double(float(eval(arg)))
+            d.info()
+    else:
+        unittest.main()
