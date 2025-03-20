@@ -1,6 +1,7 @@
 from struct import pack, unpack
 
 from bitarray import bitarray
+from bitarray.util import ba2int, int2ba
 
 
 class Double:
@@ -13,26 +14,38 @@ class Double:
         else:
             raise TypeError("float or str expected")
 
+    def __float__(self):
+        a = self.to_bitarray()
+        return unpack("<d", a.tobytes())[0]
+
+    def __str__(self):
+        a = self.to_bitarray()[::-1]
+        return "%s %s %s" % (a[0], a[1:12].to01(), a[12:].to01())
+
+    def __repr__(self):
+        return 'Double("%s")' % str(self)
+
     def from_float(self, x):
-        self.a = bitarray(endian="little")
-        self.a.frombytes(pack("<d", x))
+        a = bitarray(endian="little")
+        a.frombytes(pack("<d", x))
+        self.from_bitarray(a)
 
     def from_string(self, s):
         a = bitarray(s, endian="little")
         if len(a) != 64:
             raise ValueError("64 bits expected")
-        a.reverse()
-        self.a = a
+        self.from_bitarray(a[::-1])
 
-    def __float__(self):
-        return unpack("<d", self.a.tobytes())[0]
+    def from_bitarray(self, a):
+        self.sign = a[63]
+        self.exponent = ba2int(a[52:63]) - 1023
+        self.fraction = a[0:52]
 
-    def __str__(self):
-        a = self.a[::-1]
-        return "%s %s %s" % (a[0], a[1:12].to01(), a[12:].to01())
-
-    def __repr__(self):
-        return 'Double("%s")' % str(self)
+    def to_bitarray(self):
+        a = bitarray([self.sign], endian="little")
+        a.extend(int2ba(self.exponent + 1023, length=11, endian="big"))
+        a.extend(self.fraction[::-1])
+        return a[::-1]
 
 
 # ---------------------------------------------------------------------------
@@ -65,8 +78,10 @@ class DoubleTests(unittest.TestCase):
 
     def test_zero(self):
         d = Double()
-        self.assertEqual(d.a, bitarray(64))
         self.assertEqual(float(d), 0.0)
+        self.assertEqual(d.sign, 0)
+        self.assertEqual(d.exponent, -1023)
+        self.assertEqual(d.fraction, bitarray(52))
 
     def test_examples(self):
         for x, s in EXAMPLES:
