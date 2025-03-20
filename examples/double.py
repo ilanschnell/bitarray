@@ -9,7 +9,7 @@ class Double:
         if isinstance(x, float):
             self.from_float(x)
         elif isinstance(x, str):
-            self.from_str(x)
+            self.from_string(x)
         else:
             raise TypeError("float or str expected")
 
@@ -17,16 +17,10 @@ class Double:
         self.a = bitarray(endian="little")
         self.a.frombytes(pack("<d", x))
 
-    def from_str(self, s):
-        sign, expo, frac = s.split()
-        a = bitarray(endian="little")
-        a.append(int(sign))
-        a.extend(expo)
-        if len(a) != 12:
-            raise ValueError("11 bits in exponent expected")
-        a.extend(frac)
+    def from_string(self, s):
+        a = bitarray(s, endian="little")
         if len(a) != 64:
-            raise ValueError("52 bits in fraction expected")
+            raise ValueError("64 bits expected")
         a.reverse()
         self.a = a
 
@@ -43,7 +37,7 @@ class Double:
 
 # ---------------------------------------------------------------------------
 
-from math import inf, nan, isnan
+from math import pi, inf, nan, isnan
 import unittest
 
 
@@ -58,13 +52,22 @@ class DoubleTests(unittest.TestCase):
         for x, s in [
                 ( 0.0, "0 00000000000 " + 52 * "0"),
                 ( 1.0, "0 01111111111 " + 52 * "0"),
+                ( 2.0, "0 10000000000 " + 52 * "0"),
                 ( 5.0, "0 10000000001 0100" + 48 * "0"),
                 (-5.0, "1 10000000001 0100" + 48 * "0"),
-                ( 1/3, "0 01111111101 " + 26 * "01"),
+                # minimal subnormal double
+                (4.9406564584124654e-324, "0 00000000000 " + 51 * "0" + "1"),
+                # maximal subnormal double
+                (2.2250738585072009e-308, "0 00000000000 " + 52 * "1"),
+                # minimal normal double
+                (2.2250738585072014e-308, "0 00000000001 " + 52 * "0"),
+                # maximal (normal) double
+                (1.7976931348623157e+308, "0 11111111110 " + 52 * "1"),
                 ( inf, "0 11111111111 " + 52 * "0"),
                 (-inf, "1 11111111111 " + 52 * "0"),
-                (2.225073858507201e-308, "0 00000000000 " + 52 * "1"),
-                (4.940656458412465e-324, "0 00000000000 " + 51 * "0" + "1"),
+                ( 1/3, "0 01111111101 " + 26 * "01"),
+                (  pi, "0 10000000000 "
+                   "1001001000011111101101010100010001000010110100011000"),
         ]:
             for d in Double(x), Double(s):
                 self.assertEqual(float(d), x)
