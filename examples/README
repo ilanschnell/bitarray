@@ -20,6 +20,11 @@ distance.py
     corresponding functions in the scipy.spatial.distance module.
 
 
+double.py
+    Functionality to analyze double precision floating point numbers
+    (IEEE 754 binary64).
+
+
 extend_json.py
     Demonstrates how to construct a json encoder and decoder (using the
     'json' standard library) which can handle extended Python data structures
