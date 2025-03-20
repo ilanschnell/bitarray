@@ -19,7 +19,8 @@ class Double:
         return unpack("<d", a.tobytes())[0]
 
     def __str__(self):
-        a = self.to_bitarray()[::-1]
+        a = self.to_bitarray()
+        a.reverse()
         return "%s %s %s" % (a[0], a[1:12].to01(), a[12:].to01())
 
     def __repr__(self):
@@ -34,31 +35,42 @@ class Double:
         a = bitarray(s, endian="little")
         if len(a) != 64:
             raise ValueError("64 bits expected")
-        self.from_bitarray(a[::-1])
+        a.reverse()
+        self.from_bitarray(a)
 
     def from_bitarray(self, a):
+        if len(a) != 64 or a.endian() != "little":
+            raise ValueError("litten endian bitarray of length 64 expected")
         self.sign = a[63]
         self.exponent = ba2int(a[52:63]) - 1023
         self.fraction = a[0:52]
 
     def to_bitarray(self):
-        a = bitarray([self.sign], endian="little")
-        a.extend(int2ba(self.exponent + 1023, length=11, endian="big"))
-        a.extend(self.fraction[::-1])
-        return a[::-1]
+        if len(self.fraction) != 52:
+            raise ValueError("fraction must be a bitarray of length 52")
+        a = bitarray(self.fraction, endian="little")
+        a.extend(int2ba(self.exponent + 1023, length=11, endian="little"))
+        a.append(self.sign)
+        return a
 
 
 # ---------------------------------------------------------------------------
 
 from math import pi, inf, nan, isnan
+from random import getrandbits
 import unittest
+
+from bitarray.util import urandom
+
 
 EXAMPLES = [
     ( 0.0, "0 00000000000 " + 52 * "0"),
     ( 1.0, "0 01111111111 " + 52 * "0"),
     ( 2.0, "0 10000000000 " + 52 * "0"),
-    ( 5.0, "0 10000000001 0100" + 48 * "0"),
-    (-5.0, "1 10000000001 0100" + 48 * "0"),
+    ( 5.0, "0 10000000001 01" + 50 * "0"),
+    (-5.0, "1 10000000001 01" + 50 * "0"),
+    # smallest number > 1
+    (1.0000000000000002, "0 01111111111 " + 51 * "0" + "1"),
     # minimal subnormal double
     (4.9406564584124654e-324, "0 00000000000 " + 51 * "0" + "1"),
     # maximal subnormal double
@@ -72,6 +84,8 @@ EXAMPLES = [
     ( 1/3, "0 01111111101 " + 26 * "01"),
     (  pi, "0 10000000000 "
        "1001001000011111101101010100010001000010110100011000"),
+    # largest number exactly representated as integer
+    (2 ** 53 - 1.0, "0 10000110011 " + 52 * "1"),
 ]
 
 class DoubleTests(unittest.TestCase):
@@ -90,12 +104,36 @@ class DoubleTests(unittest.TestCase):
                 self.assertEqual(str(d), s)
 
     def test_nan(self):
-        s = "0 11111111111 1000" + 48 * "0"
+        s = "0 11111111111 1" + 51 * "0"
         for x in nan, s:
             d = Double(x)
             self.assertEqual(str(d), s)
             self.assertTrue(isnan(float(d)))
 
+    def test_exponent52(self):
+        for _ in range(1000):
+            d = Double()
+            d.fraction = urandom(52, endian="little")
+            d.exponent = 52
+            i = (1 << 52) + ba2int(d.fraction)
+            self.assertEqual(float(d), i)
+
+    def test_exact_ints(self):
+        for _ in range(1000):
+            i = getrandbits(53)
+            if i == 0:
+                continue
+
+            d = Double(float(i))
+            self.assertEqual(d.sign, 0)
+
+            a = int2ba(i, endian="little")
+            a.pop()
+            n = len(a)
+            self.assertEqual(d.exponent, n)
+
+            a = bitarray(52 - n, endian="little") + a
+            self.assertEqual(d.fraction, a)
 
 if __name__ == '__main__':
     unittest.main()
