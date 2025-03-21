@@ -1627,17 +1627,49 @@ Write byte representation of bitarray to file object f.");
 
 
 static PyObject *
-bitarray_to01(bitarrayobject *self)
+bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
+    static char *kwlist[] = {"group", "sep", NULL};
+    size_t m = self->nbits;     /* size of output buffer */
+    Py_ssize_t group = 0;
     PyObject *result;
-    char *str;
+    char *sep = " ", *str;
 
-    str = (char *) PyMem_Malloc((size_t) self->nbits);
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ns:to01", kwlist,
+                                     &group, &sep))
+        return NULL;
+
+    if (group < 0)
+        return PyErr_Format(PyExc_ValueError, "non-negative integer expected, "
+                            "got: %zd", group);
+
+    if (strlen(sep) != 1)
+        return PyErr_Format(PyExc_ValueError, "string of length 1 expected, "
+                            "got: '%s'", sep);
+
+    if (group && m)
+        m += (m + group - 1) / group - 1;
+
+    str = (char *) PyMem_Malloc(m);
     if (str == NULL)
         return PyErr_NoMemory();
 
-    setstr01(self, str);
-    result = PyUnicode_FromStringAndSize(str, self->nbits);
+    if (group) {
+        Py_ssize_t i;
+        size_t j = 0;
+
+        for (i = 0; i < self->nbits; i++) {
+            if (i && i % group == 0)
+                str[j++] = *sep;
+            str[j++] = getbit(self, i) + '0';
+        }
+        assert(j == m);
+    }
+    else {
+        setstr01(self, str);
+    }
+
+    result = PyUnicode_FromStringAndSize(str, m);
     PyMem_Free((void *) str);
     return result;
 }
@@ -3473,7 +3505,8 @@ static PyMethodDef bitarray_methods[] = {
     {"sort",         (PyCFunction) bitarray_sort,        METH_VARARGS |
                                                          METH_KEYWORDS,
      sort_doc},
-    {"to01",         (PyCFunction) bitarray_to01,        METH_NOARGS,
+    {"to01",         (PyCFunction) bitarray_to01,        METH_VARARGS |
+                                                         METH_KEYWORDS,
      to01_doc},
     {"tobytes",      (PyCFunction) bitarray_tobytes,     METH_NOARGS,
      tobytes_doc},

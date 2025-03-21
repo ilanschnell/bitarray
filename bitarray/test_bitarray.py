@@ -3091,7 +3091,7 @@ class To01Tests(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            b = bitarray(a.to01())
+            b = bitarray(a.to01(group=randint(0, 5)))
             self.assertEqual(a, b)
 
 # ---------------------------------------------------------------------------
