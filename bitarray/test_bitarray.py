@@ -3106,7 +3106,9 @@ class To01Tests(unittest.TestCase, Util):
         a = bitarray("1101100")
         self.assertRaises(TypeError, a.to01, None)
         self.assertRaises(ValueError, a.to01, -1)
-        self.assertRaises(TypeError, a.to01, 0, None)
+        self.assertRaises(TypeError, a.to01, foo=4)
+        self.assertRaises(TypeError, a.to01, 2, None)
+        self.assertRaises(TypeError, a.to01, 4, b"_")
 
     def test_random(self):
         for a in self.randombitarrays():

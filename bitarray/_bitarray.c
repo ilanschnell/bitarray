@@ -1630,7 +1630,7 @@ static PyObject *
 bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"group", "sep", NULL};
-    size_t strsize = self->nbits, j = 0, nsep;
+    size_t strsize = self->nbits, j = 0, nsep = 0;
     Py_ssize_t group = 0, i;
     PyObject *result;
     char *sep = " ", *str;
@@ -1642,10 +1642,10 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
         return PyErr_Format(PyExc_ValueError, "non-negative integer expected, "
                             "got: %zd", group);
 
-    nsep = group && strsize ? strlen(sep) : 0;
-    if (nsep)
+    if (group && strsize) {
+        nsep = strlen(sep);
         strsize += nsep * ((strsize + group - 1) / group - 1);
-
+    }
     if (strsize > PY_SSIZE_T_MAX) {
         PyErr_SetString(PyExc_OverflowError,
                         "bitarray too large to represent");
