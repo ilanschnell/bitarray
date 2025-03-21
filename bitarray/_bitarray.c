@@ -1630,52 +1630,48 @@ static PyObject *
 bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"group", "sep", NULL};
-    size_t m = self->nbits;     /* size of output buffer */
-    Py_ssize_t group = 0;
+    size_t strsize = self->nbits, j = 0;
+    Py_ssize_t group = 0, i;
     PyObject *result;
     char *sep = " ", *str;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ns:to01", kwlist,
                                      &group, &sep))
         return NULL;
-
     if (group < 0)
         return PyErr_Format(PyExc_ValueError, "non-negative integer expected, "
                             "got: %zd", group);
-
     if (strlen(sep) != 1)
         return PyErr_Format(PyExc_ValueError, "string of length 1 expected, "
                             "got: '%s'", sep);
 
-    if (group && m)
-        m += (m + group - 1) / group - 1;
+    if (group && strsize)
+        strsize += (strsize + group - 1) / group - 1;
 
-    str = (char *) PyMem_Malloc(m);
+    if (strsize > PY_SSIZE_T_MAX) {
+        PyErr_SetString(PyExc_OverflowError,
+                        "bitarray too large to represent");
+        return NULL;
+    }
+
+    str = (char *) PyMem_Malloc(strsize);
     if (str == NULL)
         return PyErr_NoMemory();
 
-    if (group) {
-        Py_ssize_t i;
-        size_t j = 0;
-
-        for (i = 0; i < self->nbits; i++) {
-            if (i && i % group == 0)
-                str[j++] = *sep;
-            str[j++] = getbit(self, i) + '0';
-        }
-        assert(j == m);
+    for (i = 0; i < self->nbits; i++) {
+        if (group && i && i % group == 0)
+            str[j++] = *sep;
+        str[j++] = getbit(self, i) + '0';
     }
-    else {
-        setstr01(self, str);
-    }
+    assert(j == strsize);
 
-    result = PyUnicode_FromStringAndSize(str, m);
+    result = PyUnicode_FromStringAndSize(str, strsize);
     PyMem_Free((void *) str);
     return result;
 }
 
 PyDoc_STRVAR(to01_doc,
-"to01() -> str\n\
+"to01(group=0, sep=' ') -> str\n\
 \n\
 Return a string containing '0's and '1's, representing the bits in the\n\
 bitarray.");

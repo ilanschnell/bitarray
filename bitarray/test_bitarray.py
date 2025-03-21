@@ -3089,6 +3089,24 @@ class To01Tests(unittest.TestCase, Util):
         self.assertEqual(a.to01(), '101')
         self.assertIsInstance(a.to01(), str)
 
+    def test_simple(self):
+        a = bitarray("0000 1111 0011 0101")
+        for s in a.to01(), a.to01(0), a.to01(0, "X"), a.to01(sep="X"):
+            self.assertEqual(s, "0000111100110101")
+        self.assertEqual(a.to01(1, "-"), "0-0-0-0-1-1-1-1-0-0-1-1-0-1-0-1")
+        self.assertEqual(a.to01(2, sep='+'), "00+00+11+11+00+11+01+01")
+        self.assertEqual(a.to01(3), "000 011 110 011 010 1")
+        self.assertEqual(a.to01(group=4, sep="_"), "0000_1111_0011_0101")
+        self.assertEqual(a.to01(group=5, sep='.'), "00001.11100.11010.1")
+
+    def test_wrong_args(self):
+        a = bitarray("1101100")
+        self.assertRaises(TypeError, a.to01, None)
+        self.assertRaises(ValueError, a.to01, -1)
+        self.assertRaises(TypeError, a.to01, 0, None)
+        self.assertRaises(ValueError, a.to01, 1, "")
+        self.assertRaises(ValueError, a.to01, 2, "aa")
+
     def test_random(self):
         for a in self.randombitarrays():
             b = bitarray(a.to01(group=randint(0, 5)))
