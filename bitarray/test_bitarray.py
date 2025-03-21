@@ -1636,15 +1636,6 @@ class MiscTests(unittest.TestCase, Util):
         self.assertEqual(bool(bitarray('0')), True)
         self.assertEqual(bool(bitarray('1')), True)
 
-    def test_to01(self):
-        a = bitarray()
-        self.assertEqual(a.to01(), '')
-        self.assertIsInstance(a.to01(), str)
-
-        a = bitarray('101')
-        self.assertEqual(a.to01(), '101')
-        self.assertIsInstance(a.to01(), str)
-
     def test_iterate(self):
         for lst in self.randomlists():
             acc = []
@@ -3084,6 +3075,24 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a.to01(), len(a) * str(val))
             self.assertEqual(a.endian(), end)
             self.check_obj(a)
+
+# ---------------------------------------------------------------------------
+
+class To01Tests(unittest.TestCase, Util):
+
+    def test_basic(self):
+        a = bitarray()
+        self.assertEqual(a.to01(), '')
+        self.assertIsInstance(a.to01(), str)
+
+        a = bitarray('101')
+        self.assertEqual(a.to01(), '101')
+        self.assertIsInstance(a.to01(), str)
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            b = bitarray(a.to01())
+            self.assertEqual(a, b)
 
 # ---------------------------------------------------------------------------
 
