@@ -1630,7 +1630,7 @@ static PyObject *
 bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"group", "sep", NULL};
-    size_t strsize = self->nbits, j = 0;
+    size_t strsize = self->nbits, j = 0, nsep;
     Py_ssize_t group = 0, i;
     PyObject *result;
     char *sep = " ", *str;
@@ -1641,12 +1641,10 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
     if (group < 0)
         return PyErr_Format(PyExc_ValueError, "non-negative integer expected, "
                             "got: %zd", group);
-    if (strlen(sep) != 1)
-        return PyErr_Format(PyExc_ValueError, "string of length 1 expected, "
-                            "got: '%s'", sep);
 
-    if (group && strsize)
-        strsize += (strsize + group - 1) / group - 1;
+    nsep = group && strsize ? strlen(sep) : 0;
+    if (nsep)
+        strsize += nsep * ((strsize + group - 1) / group - 1);
 
     if (strsize > PY_SSIZE_T_MAX) {
         PyErr_SetString(PyExc_OverflowError,
@@ -1659,8 +1657,10 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
         return PyErr_NoMemory();
 
     for (i = 0; i < self->nbits; i++) {
-        if (group && i && i % group == 0)
-            str[j++] = *sep;
+        if (nsep && i && i % group == 0) {
+            memcpy(str + j, sep, nsep);
+            j += nsep;
+        }
         str[j++] = getbit(self, i) + '0';
     }
     assert(j == strsize);
