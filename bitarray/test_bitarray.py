@@ -3080,15 +3080,6 @@ class MethodTests(unittest.TestCase, Util):
 
 class To01Tests(unittest.TestCase, Util):
 
-    def test_basic(self):
-        a = bitarray()
-        self.assertEqual(a.to01(), '')
-        self.assertIsInstance(a.to01(), str)
-
-        a = bitarray('101')
-        self.assertEqual(a.to01(), '101')
-        self.assertIsInstance(a.to01(), str)
-
     def test_no_grouping(self):
         a = bitarray()
         self.assertEqual(a.to01(1), "")
@@ -3096,10 +3087,11 @@ class To01Tests(unittest.TestCase, Util):
         a = bitarray("100011110")
         for s in [a.to01(), a.to01(0), a.to01(0, "X"), a.to01(1, ""),
                   a.to01(group=0), a.to01(sep="X"), a.to01(group=2, sep="")]:
+            self.assertIsInstance(s, str)
             self.assertEqual(len(s), len(a))
             self.assertEqual(s, "100011110")
 
-    def test_simple(self):
+    def test_examples(self):
         a = bitarray("0000 1111 0011 0101")
         self.assertEqual(a.to01(1, "-"), "0-0-0-0-1-1-1-1-0-0-1-1-0-1-0-1")
         self.assertEqual(a.to01(2, sep='+'), "00+00+11+11+00+11+01+01")
@@ -3109,6 +3101,7 @@ class To01Tests(unittest.TestCase, Util):
         self.assertEqual(a.to01(group=6), "000011 110011 0101")
         self.assertEqual(a.to01(7), "0000111 1001101 01")
         self.assertEqual(a.to01(8, ", "), "00001111, 00110101")
+        self.assertEqual(a.to01(9, "ABC"), "000011110ABC0110101")
 
     def test_wrong_args(self):
         a = bitarray("1101100")
@@ -3120,8 +3113,14 @@ class To01Tests(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            b = bitarray(a.to01(group=randint(0, 5)))
-            self.assertEqual(a, b)
+            n = len(a)
+            group = randint(0, 5)
+            s = a.to01(group)
+            self.assertEqual(a, bitarray(s))
+            nspace = s.count(" ")
+            self.assertEqual(len(s), n + nspace)
+            if group and n:
+                self.assertEqual(nspace, (n - 1) // group)
 
 # ---------------------------------------------------------------------------
 
