@@ -3111,15 +3111,23 @@ class To01Tests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.to01, 2, None)
         self.assertRaises(TypeError, a.to01, 4, b"_")
 
+    def test_sep(self):
+        for a in self.randombitarrays():
+            sep = "".join(chr(randint(32, 126))
+                              for _ in range(randint(0, 10)))
+            self.assertEqual(a.to01(1, sep), sep.join(str(v) for v in a))
+
     def test_random(self):
         for a in self.randombitarrays():
             n = len(a)
-            group = randint(0, 5)
-            s = a.to01(group)
+            group = randint(0, 10)
+            nsep = randint(0, 5)
+            s = a.to01(group, nsep * " ")
             self.assertEqual(a, bitarray(s))
             nspace = s.count(" ")
             self.assertEqual(len(s), n + nspace)
-            self.assertEqual(nspace, (n - 1) // group if group and n else 0)
+            self.assertEqual(nspace,
+                             nsep * ((n - 1) // group) if group and n else 0)
 
 # ---------------------------------------------------------------------------
 
