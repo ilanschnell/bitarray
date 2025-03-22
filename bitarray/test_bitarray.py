@@ -3089,10 +3089,18 @@ class To01Tests(unittest.TestCase, Util):
         self.assertEqual(a.to01(), '101')
         self.assertIsInstance(a.to01(), str)
 
+    def test_no_grouping(self):
+        a = bitarray()
+        self.assertEqual(a.to01(1), "")
+
+        a = bitarray("100011110")
+        for s in [a.to01(), a.to01(0), a.to01(0, "X"), a.to01(1, ""),
+                  a.to01(group=0), a.to01(sep="X"), a.to01(group=2, sep="")]:
+            self.assertEqual(len(s), len(a))
+            self.assertEqual(s, "100011110")
+
     def test_simple(self):
         a = bitarray("0000 1111 0011 0101")
-        for s in a.to01(), a.to01(0), a.to01(0, "X"), a.to01(1, ""):
-            self.assertEqual(s, "0000111100110101")
         self.assertEqual(a.to01(1, "-"), "0-0-0-0-1-1-1-1-0-0-1-1-0-1-0-1")
         self.assertEqual(a.to01(2, sep='+'), "00+00+11+11+00+11+01+01")
         self.assertEqual(a.to01(3), "000 011 110 011 010 1")

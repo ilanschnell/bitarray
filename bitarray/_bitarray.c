@@ -1630,7 +1630,7 @@ static PyObject *
 bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"group", "sep", NULL};
-    size_t strsize = self->nbits, j, nsep;
+    size_t size = self->nbits, j, nsep;
     Py_ssize_t group = 0, i;
     PyObject *result;
     char *sep = " ", *str;
@@ -1642,17 +1642,17 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
         return PyErr_Format(PyExc_ValueError, "non-negative integer "
                             "expected, got: %zd", group);
 
-    nsep = group && strsize ? strlen(sep) : 0;  /* 0 indicates no grouping */
+    nsep = (group && size) ? strlen(sep) : 0;  /* 0 means no grouping */
     if (nsep)
-        strsize += nsep * ((strsize - 1) / group);
+        size += nsep * ((size - 1) / group);
 
-    if (strsize > PY_SSIZE_T_MAX) {
+    if (size > PY_SSIZE_T_MAX) {
         PyErr_SetString(PyExc_OverflowError,
                         "bitarray too large to represent");
         return NULL;
     }
 
-    str = (char *) PyMem_Malloc(strsize);
+    str = (char *) PyMem_Malloc(size);
     if (str == NULL)
         return PyErr_NoMemory();
 
@@ -1663,9 +1663,9 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
         }
         str[j++] = getbit(self, i) + '0';
     }
-    assert(j == strsize);
+    assert(j == size);
 
-    result = PyUnicode_FromStringAndSize(str, strsize);
+    result = PyUnicode_FromStringAndSize(str, size);
     PyMem_Free((void *) str);
     return result;
 }
