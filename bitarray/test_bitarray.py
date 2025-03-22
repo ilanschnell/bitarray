@@ -3117,6 +3117,11 @@ class To01Tests(unittest.TestCase, Util):
                               for _ in range(randint(0, 10)))
             self.assertEqual(a.to01(1, sep), sep.join(str(v) for v in a))
 
+        a = bitarray("11100111")
+        # use unicode character black star as separator
+        s = a.to01(3, "\u2605")
+        self.assertEqual(s, "111\u2605001\u260511")
+
     def test_random(self):
         for a in self.randombitarrays():
             n = len(a)
