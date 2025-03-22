@@ -27,7 +27,7 @@ Key features
 * Immutable ``frozenbitarray`` objects which are hashable
 * Sequential search
 * Type hinting
-* Extensive test suite with about 500 unittests.
+* Extensive test suite with over 500 unittests
 * Utility module ``bitarray.util``:
 
   * conversion to and from hexadecimal strings
@@ -63,7 +63,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 3.2.0
+    bitarray version: 3.2.1
     sys.version: 3.10.14 (main, Oct 25 2022) [Clang 16.0.6]
     sys.prefix: /Users/ilan/miniforge3
     pointer size: 64 bit
@@ -77,7 +77,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 503 tests in 0.187s
+    Ran 507 tests in 0.187s
 
     OK
 
