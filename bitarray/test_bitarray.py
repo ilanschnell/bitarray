@@ -3119,8 +3119,7 @@ class To01Tests(unittest.TestCase, Util):
             self.assertEqual(a, bitarray(s))
             nspace = s.count(" ")
             self.assertEqual(len(s), n + nspace)
-            if group and n:
-                self.assertEqual(nspace, (n - 1) // group)
+            self.assertEqual(nspace, (n - 1) // group if group and n else 0)
 
 # ---------------------------------------------------------------------------
 
