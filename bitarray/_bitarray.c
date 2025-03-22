@@ -1673,8 +1673,10 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
 PyDoc_STRVAR(to01_doc,
 "to01(group=0, sep=' ') -> str\n\
 \n\
-Return a string containing '0's and '1's, representing the bits in the\n\
-bitarray.");
+Return bitarray as string of '0's and '1's.\n\
+The bits are grouped into `group` bits (default is no grouping).\n\
+When grouped, the string `sep` is inserted between the groups,\n\
+default is a space.");
 
 
 static PyObject *
