@@ -1627,26 +1627,56 @@ Write byte representation of bitarray to file object f.");
 
 
 static PyObject *
-bitarray_to01(bitarrayobject *self)
+bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
+    static char *kwlist[] = {"group", "sep", NULL};
+    size_t size = self->nbits, j, nsep;
+    Py_ssize_t group = 0, i;
     PyObject *result;
-    char *str;
+    char *sep = " ", *str;
 
-    str = (char *) PyMem_Malloc((size_t) self->nbits);
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ns:to01", kwlist,
+                                     &group, &sep))
+        return NULL;
+    if (group < 0)
+        return PyErr_Format(PyExc_ValueError, "non-negative integer "
+                            "expected, got: %zd", group);
+
+    nsep = (group && size) ? strlen(sep) : 0;  /* 0 means no grouping */
+    if (nsep)
+        size += nsep * ((size - 1) / group);
+
+    if (size > PY_SSIZE_T_MAX) {
+        PyErr_SetString(PyExc_OverflowError,
+                        "bitarray too large to represent");
+        return NULL;
+    }
+
+    str = (char *) PyMem_Malloc(size);
     if (str == NULL)
         return PyErr_NoMemory();
 
-    setstr01(self, str);
-    result = PyUnicode_FromStringAndSize(str, self->nbits);
+    for (i = j = 0; i < self->nbits; i++) {
+        if (nsep && i && i % group == 0) {
+            memcpy(str + j, sep, nsep);
+            j += nsep;
+        }
+        str[j++] = getbit(self, i) + '0';
+    }
+    assert(j == size);
+
+    result = PyUnicode_FromStringAndSize(str, size);
     PyMem_Free((void *) str);
     return result;
 }
 
 PyDoc_STRVAR(to01_doc,
-"to01() -> str\n\
+"to01(group=0, sep=' ') -> str\n\
 \n\
-Return a string containing '0's and '1's, representing the bits in the\n\
-bitarray.");
+Return bitarray as string of '0's and '1's.\n\
+The bits are grouped into `group` bits (default is no grouping).\n\
+When grouped, the string `sep` is inserted between the groups,\n\
+default is a space.");
 
 
 static PyObject *
@@ -3473,7 +3503,8 @@ static PyMethodDef bitarray_methods[] = {
     {"sort",         (PyCFunction) bitarray_sort,        METH_VARARGS |
                                                          METH_KEYWORDS,
      sort_doc},
-    {"to01",         (PyCFunction) bitarray_to01,        METH_NOARGS,
+    {"to01",         (PyCFunction) bitarray_to01,        METH_VARARGS |
+                                                         METH_KEYWORDS,
      to01_doc},
     {"tobytes",      (PyCFunction) bitarray_tobytes,     METH_NOARGS,
      tobytes_doc},

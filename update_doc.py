@@ -27,6 +27,7 @@ NEW_IN = {
                                    'add optional keyword argument `right`',
                               '3.0: returns iterator (equivalent to past '
                                    '`.itersearch()`)'],
+    'bitarray.to01':          '3.2.1: optional `group` and `sep` arguments',
     'decodetree':             '1.6',
     'frozenbitarray':         '1.1',
     'get_default_endian':     '1.3',

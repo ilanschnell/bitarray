@@ -1,5 +1,6 @@
 2025-XX-XX   3.2.1:
 -------------------
+  * add optional `group` and `sep` arguments' to `.to01()`, #230
   * add double precision floating point number example
 
 
