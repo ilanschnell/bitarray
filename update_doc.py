@@ -205,7 +205,7 @@ The bitarray object:
     fo.write("Functions defined in `bitarray.util` module:\n"
              "--------------------------------------------\n\n"
              "This sub-module was added in version 1.2.\n\n")
-    for func in bitarray.util.__all__:
+    for func in sorted(bitarray.util.__all__):
         write_doc(fo, 'util.%s' % func)
 
     for name in list(NEW_IN) + list(DOC_LINKS):
