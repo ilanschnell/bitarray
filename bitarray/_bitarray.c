@@ -1695,7 +1695,7 @@ bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
 PyDoc_STRVAR(unpack_doc,
 "unpack(zero=b'\\x00', one=b'\\x01') -> bytes\n\
 \n\
-Return bytes containing one character for each bit in the bitarray,\n\
+Return bytes that contain one byte for each bit in the bitarray,\n\
 using specified mapping.");
 
 
