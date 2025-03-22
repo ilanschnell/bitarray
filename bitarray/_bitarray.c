@@ -710,16 +710,6 @@ count_sub(bitarrayobject *self, bitarrayobject *sub,
     return cnt;
 }
 
-/* place self->nbits characters ('0', '1' corresponding to self) into str */
-static void
-setstr01(bitarrayobject *self, char *str)
-{
-    Py_ssize_t i;
-
-    for (i = 0; i < self->nbits; i++)
-        str[i] = getbit(self, i) + '0';
-}
-
 /* set item i in self to given value */
 static int
 set_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
@@ -1347,13 +1337,13 @@ static PyObject *
 bitarray_repr(bitarrayobject *self)
 {
     PyObject *result;
-    size_t strsize;
+    size_t nbits = self->nbits, strsize, i;
     char *str;
 
-    if (self->nbits == 0)
+    if (nbits == 0)
         return PyUnicode_FromString("bitarray()");
 
-    strsize = self->nbits + 12;  /* 12 is the length of "bitarray('')" */
+    strsize = nbits + 12;  /* 12 is the length of "bitarray('')" */
     if (strsize > PY_SSIZE_T_MAX) {
         PyErr_SetString(PyExc_OverflowError,
                         "bitarray too large to represent");
@@ -1365,7 +1355,8 @@ bitarray_repr(bitarrayobject *self)
         return PyErr_NoMemory();
 
     strcpy(str, "bitarray('");  /* has length 10 */
-    setstr01(self, str + 10);
+    for (i = 0; i < nbits; i++)
+        str[i + 10] = getbit(self, i) + '0';
     str[strsize - 2] = '\'';
     str[strsize - 1] = ')';     /* no terminating '\0' */
 
