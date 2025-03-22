@@ -151,7 +151,7 @@ def write_doc(fo, name):
     new_in = NEW_IN.get(name)
     if new_in:
         for line in new_in if isinstance(new_in, list) else [new_in]:
-            fo.write("\n   New in version %s.\n" % line.replace('`', '``'))
+            fo.write("\n   New in version %s\n" % line.replace('`', '``'))
 
     fo.write('\n\n')
 

@@ -34,7 +34,7 @@ The bitarray object:
    cannot be present (or has to be ``None``).  The imported buffer may be
    read-only or writable, depending on the object type.
 
-   New in version 2.3: optional ``buffer`` argument.
+   New in version 2.3: optional ``buffer`` argument
 
 
 bitarray methods:
@@ -74,13 +74,13 @@ bitarray methods:
    bit-endianness of the bitarray object.  Pad bits are left unchanged such
    that two consecutive calls will always leave the bitarray unchanged.
 
-   New in version 2.2.5: optional start and stop arguments.
+   New in version 2.2.5: optional start and stop arguments
 
 
 ``clear()``
    Remove all items from the bitarray.
 
-   New in version 1.4.
+   New in version 1.4
 
 
 ``copy()`` -> bitarray
@@ -95,11 +95,11 @@ bitarray methods:
    The ``value`` may also be a sub-bitarray.  In this case non-overlapping
    occurrences are counted within ``[start:stop]`` (``step`` must be 1).
 
-   New in version 1.1.0: optional start and stop arguments.
+   New in version 1.1.0: optional start and stop arguments
 
-   New in version 2.3.7: optional step argument.
+   New in version 2.3.7: optional step argument
 
-   New in version 2.9: add non-overlapping sub-bitarray count.
+   New in version 2.9: add non-overlapping sub-bitarray count
 
 
 ``decode(code, /)`` -> iterator
@@ -109,7 +109,7 @@ bitarray methods:
 
    See also: `Bitarray 3 transition <https://github.com/ilanschnell/bitarray/blob/master/doc/bitarray3.rst>`__
 
-   New in version 3.0: returns iterator (equivalent to past ``.iterdecode()``).
+   New in version 3.0: returns iterator (equivalent to past ``.iterdecode()``)
 
 
 ``encode(code, iterable, /)``
@@ -138,16 +138,16 @@ bitarray methods:
    is found, such that sub_bitarray is contained within ``[start:stop]``.
    Return -1 when sub_bitarray is not found.
 
-   New in version 2.1.
+   New in version 2.1
 
-   New in version 2.9: add optional keyword argument ``right``.
+   New in version 2.9: add optional keyword argument ``right``
 
 
 ``frombytes(bytes, /)``
    Extend bitarray with raw bytes from a bytes-like object.
    Each added byte will add eight bits to the bitarray.
 
-   New in version 2.5.0: allow bytes-like argument.
+   New in version 2.5.0: allow bytes-like argument
 
 
 ``fromfile(f, n=-1, /)``
@@ -164,7 +164,7 @@ bitarray methods:
    is found, such that sub_bitarray is contained within ``[start:stop]``.
    Raises ``ValueError`` when the sub_bitarray is not present.
 
-   New in version 2.9: add optional keyword argument ``right``.
+   New in version 2.9: add optional keyword argument ``right``
 
 
 ``insert(index, value, /)``
@@ -175,7 +175,7 @@ bitarray methods:
    Invert all bits in bitarray (in-place).
    When the optional ``index`` is given, only invert the single bit at index.
 
-   New in version 1.5.3: optional index argument.
+   New in version 1.5.3: optional index argument
 
 
 ``pack(bytes, /)``
@@ -187,7 +187,7 @@ bitarray methods:
    transfer of data between bitarray objects to other Python objects (for
    example NumPy's ndarray object) which have a different memory view.
 
-   New in version 2.5.0: allow bytes-like argument.
+   New in version 2.5.0: allow bytes-like argument
 
 
 ``pop(index=-1, /)`` -> item
@@ -213,9 +213,9 @@ bitarray methods:
 
    See also: `Bitarray 3 transition <https://github.com/ilanschnell/bitarray/blob/master/doc/bitarray3.rst>`__
 
-   New in version 2.9: optional start and stop arguments - add optional keyword argument ``right``.
+   New in version 2.9: optional start and stop arguments - add optional keyword argument ``right``
 
-   New in version 3.0: returns iterator (equivalent to past ``.itersearch()``).
+   New in version 3.0: returns iterator (equivalent to past ``.itersearch()``)
 
 
 ``setall(value, /)``
@@ -233,7 +233,7 @@ bitarray methods:
    When grouped, the string ``sep`` is inserted between the groups,
    default is a space.
 
-   New in version 3.2.1: optional ``group`` and ``sep`` arguments.
+   New in version 3.2.1: optional ``group`` and ``sep`` arguments
 
 
 ``tobytes()`` -> bytes
@@ -283,14 +283,14 @@ Other objects:
    object is initialized.  A ``frozenbitarray`` is immutable and hashable,
    and may therefore be used as a dictionary key.
 
-   New in version 1.1.
+   New in version 1.1
 
 
 ``decodetree(code, /)`` -> decodetree
    Given a prefix code (a dict mapping symbols to bitarrays),
    create a binary tree object to be passed to ``.decode()``.
 
-   New in version 1.6.
+   New in version 1.6
 
 
 Functions defined in the `bitarray` module:
@@ -305,7 +305,7 @@ Functions defined in the `bitarray` module:
    Unless ``_set_default_endian('little')`` was called, the default
    bit-endianness is ``big``.
 
-   New in version 1.3.
+   New in version 1.3
 
 
 ``test(verbosity=1)`` -> TextTestResult
@@ -320,7 +320,7 @@ This sub-module was added in version 1.2.
 ``any_and(a, b, /)`` -> bool
    Efficient implementation of ``any(a & b)``.
 
-   New in version 2.7.
+   New in version 2.7
 
 
 ``ba2base(n, bitarray, /)`` -> str
@@ -332,7 +332,7 @@ This sub-module was added in version 1.2.
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
-   New in version 1.9.
+   New in version 1.9
 
 
 ``ba2hex(bitarray, /)`` -> hexstr
@@ -354,7 +354,7 @@ This sub-module was added in version 1.2.
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
-   New in version 1.9.
+   New in version 1.9
 
 
 ``canonical_decode(bitarray, count, symbol, /)`` -> iterator
@@ -364,7 +364,7 @@ This sub-module was added in version 1.2.
 
    See also: `Canonical Huffman Coding <https://github.com/ilanschnell/bitarray/blob/master/doc/canonical.rst>`__
 
-   New in version 2.5.
+   New in version 2.5
 
 
 ``canonical_huffman(dict, /)`` -> tuple
@@ -379,7 +379,7 @@ This sub-module was added in version 1.2.
 
    See also: `Canonical Huffman Coding <https://github.com/ilanschnell/bitarray/blob/master/doc/canonical.rst>`__
 
-   New in version 2.5.
+   New in version 2.5
 
 
 ``count_and(a, b, /)`` -> int
@@ -391,7 +391,7 @@ This sub-module was added in version 1.2.
    Return lowest index ``i`` for which ``a[:i].count(value) == n``.
    Raises ``ValueError`` when ``n`` exceeds total count (``a.count(value)``).
 
-   New in version 2.3.6: optional value argument.
+   New in version 2.3.6: optional value argument
 
 
 ``count_or(a, b, /)`` -> int
@@ -412,9 +412,9 @@ This sub-module was added in version 1.2.
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
-   New in version 1.8.
+   New in version 1.8
 
-   New in version 2.5.0: allow bytes-like argument.
+   New in version 2.5.0: allow bytes-like argument
 
 
 ``hex2ba(hexstr, /, endian=None)`` -> bitarray
@@ -443,21 +443,21 @@ This sub-module was added in version 1.2.
    iterator over tuples ``(value, start, stop)``.  The intervals are guaranteed
    to be in order, and their size is always non-zero (``stop - start > 0``).
 
-   New in version 2.7.
+   New in version 2.7
 
 
 ``ones(length, /, endian=None)`` -> bitarray
    Create a bitarray of length, with all values 1, and optional
    bit-endianness, which may be 'big', 'little'.
 
-   New in version 2.9.
+   New in version 2.9
 
 
 ``parity(a, /)`` -> int
    Return parity of bitarray ``a``.
    ``parity(a)`` is equivalent to ``a.count() % 2`` but more efficient.
 
-   New in version 1.9.
+   New in version 1.9
 
 
 ``pprint(bitarray, /, stream=None, group=8, indent=4, width=80)``
@@ -467,7 +467,7 @@ This sub-module was added in version 1.2.
    Non-bitarray objects are printed by the standard library
    function ``pprint.pprint()``.
 
-   New in version 1.8.
+   New in version 1.8
 
 
 ``sc_decode(stream)`` -> bitarray
@@ -478,7 +478,7 @@ This sub-module was added in version 1.2.
 
    See also: `Compression of sparse bitarrays <https://github.com/ilanschnell/bitarray/blob/master/doc/sparse_compression.rst>`__
 
-   New in version 2.7.
+   New in version 2.7
 
 
 ``sc_encode(bitarray, /)`` -> bytes
@@ -488,7 +488,7 @@ This sub-module was added in version 1.2.
 
    See also: `Compression of sparse bitarrays <https://github.com/ilanschnell/bitarray/blob/master/doc/sparse_compression.rst>`__
 
-   New in version 2.7.
+   New in version 2.7
 
 
 ``serialize(bitarray, /)`` -> bytes
@@ -498,7 +498,7 @@ This sub-module was added in version 1.2.
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
-   New in version 1.8.
+   New in version 1.8
 
 
 ``strip(bitarray, /, mode='right')`` -> bitarray
@@ -516,7 +516,7 @@ This sub-module was added in version 1.2.
 ``urandom(length, /, endian=None)`` -> bitarray
    Return a bitarray of ``length`` random bits (uses ``os.urandom``).
 
-   New in version 1.7.
+   New in version 1.7
 
 
 ``vl_decode(stream, /, endian=None)`` -> bitarray
@@ -526,7 +526,7 @@ This sub-module was added in version 1.2.
 
    See also: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__
 
-   New in version 2.2.
+   New in version 2.2
 
 
 ``vl_encode(bitarray, /)`` -> bytes
@@ -536,7 +536,7 @@ This sub-module was added in version 1.2.
 
    See also: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__
 
-   New in version 2.2.
+   New in version 2.2
 
 
 ``xor_indices(a, /)`` -> int
@@ -544,7 +544,7 @@ This sub-module was added in version 1.2.
    This is essentially equivalent to
    ``reduce(operator.xor, [i for i, v in enumerate(a) if v])``.
 
-   New in version 3.2.
+   New in version 3.2
 
 
 ``zeros(length, /, endian=None)`` -> bitarray
