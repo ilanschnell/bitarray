@@ -1644,7 +1644,7 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
 
     nsep = group && strsize ? strlen(sep) : 0;  /* 0 indicates no grouping */
     if (nsep)
-        strsize += nsep * ((strsize + group - 1) / group - 1);
+        strsize += nsep * ((strsize - 1) / group);
 
     if (strsize > PY_SSIZE_T_MAX) {
         PyErr_SetString(PyExc_OverflowError,
