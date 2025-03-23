@@ -72,6 +72,62 @@ count_from_word(bitarrayobject *a, Py_ssize_t i)
     return popcnt_words(WBUFF(a) + i, a->nbits / 64 - i) + popcnt_64(zlw(a));
 }
 
+/* basically resize() but without importing and exporting buffer checks */
+static int
+resize_lite(bitarrayobject *self, Py_ssize_t nbits)
+{
+    const size_t size = Py_SIZE(self);
+    const size_t allocated = self->allocated;
+    const size_t newsize = BYTES((size_t) nbits);
+    size_t new_allocated;
+
+    assert(allocated >= size && size == BYTES((size_t) self->nbits));
+    assert(self->readonly == 0);
+    assert(self->ob_exports == 0);
+    assert(self->buffer == NULL);
+
+    if (newsize == size) {
+        self->nbits = nbits;
+        return 0;
+    }
+
+    if (newsize == 0) {
+        PyMem_Free(self->ob_item);
+        self->ob_item = NULL;
+        Py_SET_SIZE(self, 0);
+        self->allocated = 0;
+        self->nbits = 0;
+        return 0;
+    }
+
+    if (allocated >= newsize) {
+        if (newsize >= allocated / 2) {
+            Py_SET_SIZE(self, newsize);
+            self->nbits = nbits;
+            return 0;
+        }
+        new_allocated = newsize;
+    }
+    else {
+        new_allocated = newsize;
+        if (size != 0 && newsize / 2 <= allocated) {
+            new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
+            new_allocated &= ~(size_t) 3;
+        }
+    }
+
+    assert(new_allocated >= newsize);
+    self->ob_item = PyMem_Realloc(self->ob_item, new_allocated);
+    if (self->ob_item == NULL) {
+        PyErr_NoMemory();
+        return -1;
+    }
+    Py_SET_SIZE(self, newsize);
+    self->allocated = new_allocated;
+    self->nbits = nbits;
+    return 0;
+}
+
 /* ---------------------------- zeros / ones --------------------------- */
 
 static PyObject *
@@ -829,62 +885,6 @@ For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the\n\
 standard base 64 alphabet is used.");
 
 /* ------------------------ utility C functions ------------------------ */
-
-/* like resize() */
-static int
-resize_lite(bitarrayobject *self, Py_ssize_t nbits)
-{
-    const size_t size = Py_SIZE(self);
-    const size_t allocated = self->allocated;
-    const size_t newsize = BYTES((size_t) nbits);
-    size_t new_allocated;
-
-    assert(allocated >= size && size == BYTES((size_t) self->nbits));
-    assert(self->readonly == 0);
-    assert(self->ob_exports == 0);
-    assert(self->buffer == NULL);
-
-    if (newsize == size) {
-        self->nbits = nbits;
-        return 0;
-    }
-
-    if (newsize == 0) {
-        PyMem_Free(self->ob_item);
-        self->ob_item = NULL;
-        Py_SET_SIZE(self, 0);
-        self->allocated = 0;
-        self->nbits = 0;
-        return 0;
-    }
-
-    if (allocated >= newsize) {
-        if (newsize >= allocated / 2) {
-            Py_SET_SIZE(self, newsize);
-            self->nbits = nbits;
-            return 0;
-        }
-        new_allocated = newsize;
-    }
-    else {
-        new_allocated = newsize;
-        if (size != 0 && newsize / 2 <= allocated) {
-            new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
-            new_allocated &= ~(size_t) 3;
-        }
-    }
-
-    assert(new_allocated >= newsize);
-    self->ob_item = PyMem_Realloc(self->ob_item, new_allocated);
-    if (self->ob_item == NULL) {
-        PyErr_NoMemory();
-        return -1;
-    }
-    Py_SET_SIZE(self, newsize);
-    self->allocated = new_allocated;
-    self->nbits = nbits;
-    return 0;
-}
 
 /* Consume one byte from iteratior and return it's value as an integer
    in range(256).  On failure, set an exception and return -1.  */
