@@ -621,7 +621,8 @@ Return a string containing the hexadecimal representation of\n\
 the bitarray (which has to be multiple of 4 in length).");
 
 
-/* Translate hexadecimal digits from 'hexstr' into the bitarray 'a' buffer.
+/* Translate hexadecimal digits from 'hexstr' into the bitarray 'a' buffer,
+   which msu be initalized to zeros.
    Each digit corresponds to 4 bits in the bitarray.
    Note that the number of hexadecimal digits may be odd. */
 static int
@@ -632,9 +633,6 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
     Py_ssize_t i = 0, j;
 
     assert(a->nbits == 4 * hexstr.len);
-
-    if (a->ob_item)
-        memset(a->ob_item, 0, Py_SIZE(a));
 
     for (j = 0; j < hexstr.len; j++) {
         unsigned char c = str[j];
@@ -664,7 +662,7 @@ hex2ba(PyObject *module, PyObject *args, PyObject *kwds)
                                      &hexstr, &endian))
         return NULL;
 
-    a = new_bitarray(4 * hexstr.len, endian, -1);
+    a = new_bitarray(4 * hexstr.len, endian, 0);
     if (a == NULL)
         goto error;
 
@@ -860,7 +858,7 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
     if ((m = base_to_length(n)) < 0)
         goto error;
 
-    a = new_bitarray(m * asciistr.len, endian, -1);
+    a = new_bitarray(m * asciistr.len, endian, m == 4 ? 0 : -1);
     if (a == NULL)
         goto error;
 
