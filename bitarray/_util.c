@@ -622,7 +622,7 @@ the bitarray (which has to be multiple of 4 in length).");
 
 
 /* Translate hexadecimal digits from 'hexstr' into the bitarray 'a' buffer,
-   which msu be initalized to zeros.
+   which must be initalized to zeros.
    Each digit corresponds to 4 bits in the bitarray.
    Note that the number of hexadecimal digits may be odd. */
 static int
