@@ -629,15 +629,15 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
 {
     const char *str = hexstr.buf;
     const int be = IS_BE(a);
-    Py_ssize_t i;
+    Py_ssize_t i = 0, j;
 
     assert(a->nbits == 4 * hexstr.len);
 
     if (a->ob_item)
         memset(a->ob_item, 0, Py_SIZE(a));
 
-    for (i = 0; i < hexstr.len; i++) {
-        unsigned char c = str[i];
+    for (j = 0; j < hexstr.len; j++) {
+        unsigned char c = str[j];
         int x = hex_to_int(c);
 
         if (x < 0) {
@@ -647,6 +647,7 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
         }
         assert(0 <= x && x < 16);
         a->ob_item[i / 2] |= x << 4 * ((i + be) % 2);
+        i++;
     }
     return 0;
 }
