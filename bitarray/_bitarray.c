@@ -1639,7 +1639,7 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
 
     if (strsize > PY_SSIZE_T_MAX) {
         PyErr_SetString(PyExc_OverflowError,
-                        "bitarray too large to represent");
+                        "bitarray too large to convert to string");
         return NULL;
     }
 
