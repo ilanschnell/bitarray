@@ -1629,6 +1629,7 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ns:to01", kwlist,
                                      &group, &sep))
         return NULL;
+
     if (group < 0)
         return PyErr_Format(PyExc_ValueError, "non-negative integer "
                             "expected, got: %zd", group);
@@ -1643,8 +1644,7 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    str = (char *) PyMem_Malloc(strsize);
-    if (str == NULL)
+    if ((str = (char *) PyMem_Malloc(strsize)) == NULL)
         return PyErr_NoMemory();
 
     for (i = j = 0; i < self->nbits; i++) {
