@@ -566,6 +566,15 @@ hex_to_int(char c)
     return -1;
 }
 
+static int
+is_whitespace(char c)
+{
+    if (c)
+        return strchr(" \n\r\t\v", c) ? 1 : 0;
+    else  /* NUL character is not whitespace */
+        return 0;
+}
+
 /* create hexadecimal string from bitarray */
 static char *
 ba2hex_core(bitarrayobject *a)
@@ -639,6 +648,8 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
         int x = hex_to_int(c);
 
         if (x < 0) {
+            if (is_whitespace(c))
+                continue;
             PyErr_Format(PyExc_ValueError, "non-hexadecimal digit found, "
                          "got '%c' (0x%02x)", c, c);
             return -1;
@@ -647,7 +658,7 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
         a->ob_item[i / 2] |= x << 4 * ((i + be) % 2);
         i++;
     }
-    return 0;
+    return resize_lite(a, 4 * i);  /* in case we ignored characters */
 }
 
 static PyObject *
@@ -682,7 +693,8 @@ PyDoc_STRVAR(hex2ba_doc,
 "hex2ba(hexstr, /, endian=None) -> bitarray\n\
 \n\
 Bitarray of hexadecimal representation.  hexstr may contain any number\n\
-(including odd numbers) of hex digits (upper or lower case).");
+(including odd numbers) of hex digits (upper or lower case).\n\
+Whitespace is ignored.");
 
 /* ----------------------- base 2, 4, 8, 16, 32, 64 -------------------- */
 
@@ -830,6 +842,8 @@ base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
         int k, x = digit_to_int(n, c);
 
         if (x < 0) {
+            if (is_whitespace(c))
+                continue;
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
                          "base %d, got '%c' (0x%02x)", n, c, c);
             return -1;
@@ -839,7 +853,7 @@ base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
             setbit(a, i++, x & (1 << q));
         }
     }
-    return 0;
+    return resize_lite(a, i);  /* in case we ignored characters */
 }
 
 static PyObject *
@@ -881,7 +895,7 @@ PyDoc_STRVAR(base2ba_doc,
 Bitarray of base `n` ASCII representation.\n\
 Allowed values for `n` are 2, 4, 8, 16, 32 and 64.\n\
 For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the\n\
-standard base 64 alphabet is used.");
+standard base 64 alphabet is used.  Whitespace is ignored.");
 
 /* ------------------------ utility C functions ------------------------ */
 

@@ -19,7 +19,7 @@ from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       _set_default_endian)
-from bitarray.test_bitarray import Util, skipIf, SYSINFO, DEBUG
+from bitarray.test_bitarray import Util, skipIf, SYSINFO, DEBUG, WHITESPACE
 
 from bitarray.util import (
     zeros, ones, urandom, pprint, strip, count_n,
@@ -840,6 +840,15 @@ class TestsHexlify(unittest.TestCase, Util):
         self.assertEQUAL(hex2ba(b'10aF', 'little'),
                          bitarray('1000 0000 0101 1111', 'little'))
 
+    def test_hex2ba_whitespace(self):
+        _set_default_endian('big')
+        self.assertEqual(hex2ba("F1 F2 %s f3 c0" % WHITESPACE),
+                         bitarray("11110001 11110010 11110011 11000000"))
+        self.assertEQUAL(hex2ba(b' a F ', 'big'),
+                         bitarray('1010 1111', 'big'))
+        self.assertEQUAL(hex2ba(860 * " " + '0  1D' + 590 * " ", 'little'),
+                         bitarray('0000 1000 1011', 'little'))
+
     def test_hex2ba_errors(self):
         self.assertRaises(TypeError, hex2ba, 0)
 
@@ -911,6 +920,17 @@ class TestsBase(unittest.TestCase, Util):
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
             self.assertIsType(a, 'bitarray')
+
+    def test_base2ba_whitespace(self):
+        for n in 2, 4, 8, 16, 32, 64:
+            a = base2ba(n, WHITESPACE)
+            self.assertEqual(a, bitarray())
+            a = urandom(60)
+            c = list(ba2base(n, a))
+            for _ in range(randint(0, 80)):
+                c.insert(randint(0, len(c)), choice(WHITESPACE))
+            s = ''.join(c)
+            self.assertEqual(base2ba(n, s), a)
 
     def test_explicit(self):
         data = [ #              n  little   big
