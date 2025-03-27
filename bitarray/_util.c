@@ -577,45 +577,60 @@ is_whitespace(char c)
 
 /* create hexadecimal string from bitarray */
 static char *
-ba2hex_core(bitarrayobject *a)
+ba2hex_core(bitarrayobject *a, Py_ssize_t group, char *sep)
 {
-    const int le = IS_LE(a), be = IS_BE(a);
-    const size_t strsize = a->nbits / 4;
+    const int be = IS_BE(a);
+    size_t strsize = a->nbits / 4, j, nsep;
+    Py_ssize_t i;
     char *buff = a->ob_item, *str;
-    size_t i;
 
-    assert(a->nbits % 4 == 0);
+    nsep = (group && strsize) ? strlen(sep) : 0;  /* 0 means no grouping */
+    if (nsep)
+        strsize += nsep * ((strsize - 1) / group);
 
-    str = (char *) PyMem_Malloc(strsize + 1);
-    if (str == NULL)
+    if ((str = (char *) PyMem_Malloc(strsize + 1)) == NULL)
         return NULL;
 
-    /* translate entire bitarray buffer, even when we have 4 pad bits */
-    for (i = 0; i < strsize; i += 2) {
-        unsigned char c = *buff++;
-        str[i + le] = hexdigits[c >> 4];
-        str[i + be] = hexdigits[0x0f & c];
+    for (i = j = 0; i < a->nbits / 4; i++) {
+        unsigned char c = buff[i / 2];
+
+        if (nsep && i && i % group == 0) {
+            memcpy(str + j, sep, nsep);
+            j += nsep;
+        }
+        str[j++] = hexdigits[(i + be) % 2 ? c >> 4 : 0x0f & c];
     }
+    assert(j == strsize);
     str[strsize] = 0;  /* terminate string */
     return str;
 }
 
 static PyObject *
-ba2hex(PyObject *module, PyObject *obj)
+ba2hex(PyObject *module, PyObject *args, PyObject *kwds)
 {
+    static char *kwlist[] = {"", "group", "sep", NULL};
     PyObject *result;
     bitarrayobject *a;
-    char *str;
+    Py_ssize_t group = 0;
+    char *sep = " ", *str;
 
-    if (ensure_bitarray(obj) < 0)
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|ns:ba2hex", kwlist,
+                                     bitarray_type_obj, (PyObject *) &a,
+                                     &group, &sep))
         return NULL;
 
-    a = (bitarrayobject *) obj;
-    if (a->nbits % 4)
-        return PyErr_Format(PyExc_ValueError, "bitarray length %zd not "
-                            "multiple of 4", a->nbits);
+    if (a->nbits % 4) {
+        PyErr_Format(PyExc_ValueError, "bitarray length %zd not "
+                     "multiple of 4", a->nbits);
+        return NULL;
+    }
+    if (group < 0) {
+        PyErr_Format(PyExc_ValueError, "non-negative integer "
+                     "expected for group, got: %zd", group);
+        return NULL;
+    }
 
-    if ((str = ba2hex_core(a)) == NULL)
+    if ((str = ba2hex_core(a, group, sep)) == NULL)
         return PyErr_NoMemory();
 
     result = PyUnicode_FromString(str);
@@ -756,12 +771,12 @@ base_to_length(int n)
 
 /* create ASCII string from bitarray and base length m */
 static char *
-ba2base_core(bitarrayobject *a, int m)
+ba2base_core(bitarrayobject *a, int m, Py_ssize_t group, char *sep)
 {
     const int le = IS_LE(a);
-    const size_t strsize = a->nbits / m;
     const char *alphabet;
-    size_t i = 0, j;
+    size_t strsize = a->nbits / m, j, nsep;
+    Py_ssize_t i;
     char *str;
 
     assert(1 <= m && m <= 6 && a->nbits % m == 0);
@@ -772,43 +787,65 @@ ba2base_core(bitarrayobject *a, int m)
     default: alphabet = hexdigits;
     }
 
-    str = (char *) PyMem_Malloc(strsize + 1);
-    if (str == NULL)
+    nsep = (group && strsize) ? strlen(sep) : 0;  /* 0 means no grouping */
+    if (nsep)
+        strsize += nsep * ((strsize - 1) / group);
+
+    if ((str = (char *) PyMem_Malloc(strsize + 1)) == NULL)
         return NULL;
 
-    for (j = 0; j < strsize; j++) {
+    for (i = j = 0; i < a->nbits / m; i++) {
         int k, x = 0;
 
+        if (nsep && i && i % group == 0) {
+            memcpy(str + j, sep, nsep);
+            j += nsep;
+        }
         for (k = 0; k < m; k++) {
             int q = le ? k : (m - k - 1);
-            x |= getbit(a, i++) << q;
+            x |= getbit(a, i * m + k) << q;
         }
-        str[j] = alphabet[x];
+        str[j++] = alphabet[x];
     }
+    assert(j == strsize);
     str[strsize] = 0;  /* terminate string */
     return str;
 }
 
 static PyObject *
-ba2base(PyObject *module, PyObject *args)
+ba2base(PyObject *module, PyObject *args, PyObject *kwds)
 {
+    static char *kwlist[] = {"", "", "group", "sep", NULL};
     bitarrayobject *a;
     PyObject *result;
-    char *str;
+    Py_ssize_t group = 0;
+    char *sep = " ", *str;
     int n, m;
 
-    if (!PyArg_ParseTuple(args, "iO!:ba2base", &n,
-                          bitarray_type_obj, (PyObject *) &a))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "iO!|ns:ba2base", kwlist,
+                                     &n, bitarray_type_obj, (PyObject *) &a,
+                                     &group, &sep))
         return NULL;
 
     if ((m = base_to_length(n)) < 0)
         return NULL;
 
-    if (a->nbits % m)
-        return PyErr_Format(PyExc_ValueError,
-                            "bitarray length must be multiple of %d", m);
+    if (a->nbits % m) {
+        PyErr_Format(PyExc_ValueError, "bitarray length %zd not "
+                     "multiple of %d", a->nbits, m);
+        return NULL;
+    }
+    if (group < 0) {
+        PyErr_Format(PyExc_ValueError, "non-negative integer "
+                     "expected for group, got: %zd", group);
+        return NULL;
+    }
 
-    str = m == 4 ? ba2hex_core(a) : ba2base_core(a, m);
+    if (m == 4)
+        str = ba2hex_core(a, group, sep);
+    else
+        str = ba2base_core(a, m, group, sep);
+
     if (str == NULL)
         return PyErr_NoMemory();
 
@@ -1937,10 +1974,12 @@ static PyMethodDef module_functions[] = {
     {"deserialize",
                   (PyCFunction) deserialize,
                                            METH_O,       deserialize_doc},
-    {"ba2hex",    (PyCFunction) ba2hex,    METH_O,       ba2hex_doc},
+    {"ba2hex",    (PyCFunction) ba2hex,    METH_KEYWORDS |
+                                           METH_VARARGS, ba2hex_doc},
     {"hex2ba",    (PyCFunction) hex2ba,    METH_KEYWORDS |
                                            METH_VARARGS, hex2ba_doc},
-    {"ba2base",   (PyCFunction) ba2base,   METH_VARARGS, ba2base_doc},
+    {"ba2base",   (PyCFunction) ba2base,   METH_KEYWORDS |
+                                           METH_VARARGS, ba2base_doc},
     {"base2ba",   (PyCFunction) base2ba,   METH_KEYWORDS |
                                            METH_VARARGS, base2ba_doc},
     {"sc_encode", (PyCFunction) sc_encode, METH_O,       sc_encode_doc},

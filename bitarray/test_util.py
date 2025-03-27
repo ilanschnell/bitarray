@@ -823,6 +823,24 @@ class TestsHexlify(unittest.TestCase, Util):
             # ensure original object wasn't altered
             self.assertEQUAL(a, b)
 
+    def test_ba2hex_group(self):
+        a = bitarray('1000 0000 0101 1111', 'little')
+        self.assertEqual(ba2hex(a), "10af")
+        self.assertEqual(ba2hex(a, 0), "10af")
+        self.assertEqual(ba2hex(a, 1, ""), "10af")
+        self.assertEqual(ba2hex(a, 1), "1 0 a f")
+        self.assertEqual(ba2hex(a, group=2), "10 af")
+        self.assertEqual(ba2hex(a, 2, "-"), "10-af")
+        self.assertEqual(ba2hex(a, group=3, sep="_"), "10a_f")
+
+    def test_ba2hex_errors(self):
+        a = bitarray('1000 0000 0101 1111', 'little')
+        self.assertRaises(ValueError, ba2hex, a, -1)
+        self.assertRaises(ValueError, ba2hex, a, group=-1)
+        self.assertRaises(TypeError, ba2hex, a, 1, b" ")
+        # embedded null character
+        self.assertRaises(ValueError, ba2hex, a, 2, "\0")
+
     def test_hex2ba(self):
         _set_default_endian('big')
         self.assertEqual(hex2ba(''), bitarray())
@@ -922,6 +940,7 @@ class TestsBase(unittest.TestCase, Util):
             self.assertIsType(a, 'bitarray')
 
     def test_base2ba_whitespace(self):
+        self.assertEqual(base2ba(32, "7 A"), bitarray("1111100000"))
         for n in 2, 4, 8, 16, 32, 64:
             a = base2ba(n, WHITESPACE)
             self.assertEqual(a, bitarray())
@@ -931,6 +950,21 @@ class TestsBase(unittest.TestCase, Util):
                 c.insert(randint(0, len(c)), choice(WHITESPACE))
             s = ''.join(c)
             self.assertEqual(base2ba(n, s), a)
+
+    def test_ba2base_group(self):
+        a = bitarray("001 011 100 111", "little")
+        self.assertEqual(ba2base(8, a, group=2), "46 17")
+        for n, s, group, sep, res in [
+                (2, '10100', 2, '-', '10-10-0'),
+                (4, '10 11 00 01', 1, "_", "2_3_0_1"),
+                (8, "101 100 011 101 001 010", 3, "  ", "543  512"),
+                (8, "101 100 011 101 001 010", 3, "", "543512"),
+                (16, '1011 0001 1101 1010 1111', 4, "+", "b1da+f"),
+                (32, "10110 00111 01101 01111", 2, ", ", "WH, NP"),
+                (64, "101100 011101 101011 111110 101110", 2, ".", "sd.r+.u"),
+                ]:
+            a = bitarray(s, "big")
+            self.assertEqual(ba2base(n, a, group, sep), res)
 
     def test_explicit(self):
         data = [ #              n  little   big
@@ -1073,7 +1107,7 @@ class TestsBase(unittest.TestCase, Util):
             n = 1 << m
             for length in range(0, 100, m):
                 a = urandom(length, 'little')
-                s = ba2base(n, a)
+                s = ba2base(n, a, group=randint(0, 5))
                 self.assertIsInstance(s, str)
                 self.assertEQUAL(base2ba(n, s, 'little'), a)
                 b = bitarray(a, 'big')
