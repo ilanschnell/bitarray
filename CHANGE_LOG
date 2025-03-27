@@ -1,8 +1,7 @@
 2025-XX-XX   3.2.1:
 -------------------
-  * add optional `group` and `sep` arguments' to `.to01()`, #230
-  * also, add optional `group` and `sep` arguments to `util.ba2hex()`
-    and `util.ba2base()`
+  * add optional `group` and `sep` arguments' to `.to01()`, #230 -
+    as well as `util.ba2hex()` and `util.ba2base()`
   * ignore whitespace in `util.base2ba()` and `util.hex2ba()`
   * add double precision floating point number example
 
