@@ -647,21 +647,18 @@ When grouped, the string `sep` is inserted between groups\n\
 of `group` characters, default is a space.");
 
 
-/* Translate hexadecimal digits from 'hexstr' into the bitarray 'a' buffer,
+/* Translate hexadecimal digits from 'str' into the bitarray 'a' buffer,
    which must be initalized to zeros.
    Each digit corresponds to 4 bits in the bitarray.
    Note that the number of hexadecimal digits may be odd. */
 static int
-hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
+hex2ba_core(bitarrayobject *a, char *str)
 {
-    const char *str = hexstr.buf;
     const int be = IS_BE(a);
-    Py_ssize_t i = 0, j;
+    Py_ssize_t i = 0;
+    unsigned char c;
 
-    assert(a->nbits == 4 * hexstr.len);
-
-    for (j = 0; j < hexstr.len; j++) {
-        unsigned char c = str[j];
+    while ((c = *str++)) {
         int x = hex_to_int(c);
 
         if (x < 0) {
@@ -683,27 +680,22 @@ hex2ba(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "endian", NULL};
     PyObject *endian = Py_None;
-    Py_buffer hexstr;
+    char *hexstr;
     bitarrayobject *a;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s*|O:hex2ba", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|O:hex2ba", kwlist,
                                      &hexstr, &endian))
         return NULL;
 
-    a = new_bitarray(4 * hexstr.len, endian, 0);
+    a = new_bitarray(4 * strlen(hexstr), endian, 0);
     if (a == NULL)
-        goto error;
+        return NULL;
 
-    if (hex2ba_core(a, hexstr) < 0)
-        goto error;
-
-    PyBuffer_Release(&hexstr);
+    if (hex2ba_core(a, hexstr) < 0) {
+        Py_DECREF((PyObject *) a);
+        return NULL;
+    }
     return (PyObject *) a;
-
- error:
-    PyBuffer_Release(&hexstr);
-    Py_XDECREF((PyObject *) a);
-    return NULL;
 }
 
 PyDoc_STRVAR(hex2ba_doc,
@@ -869,16 +861,15 @@ of `group` characters, default is a space.");
 
 /* translate ASCII digits (with base length m) into bitarray buffer */
 static int
-base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
+base2ba_core(bitarrayobject *a, char *str, int m)
 {
-    const char *str = asciistr.buf;
     const int le = IS_LE(a), n = 1 << m;
-    Py_ssize_t i = 0, j;
+    Py_ssize_t i = 0;
+    unsigned char c;
 
-    assert(a->nbits == asciistr.len * m && 1 <= m && m <= 6);
+    assert((size_t) a->nbits == strlen(str) * m && 1 <= m && m <= 6);
 
-    for (j = 0; j < asciistr.len; j++) {
-        unsigned char c = str[j];
+    while ((c = *str++)) {
         int k, x = digit_to_int(n, c);
 
         if (x < 0) {
@@ -901,32 +892,27 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "", "endian", NULL};
     PyObject *endian = Py_None;
-    Py_buffer asciistr;
+    char *asciistr;
     bitarrayobject *a = NULL;
     int m, n, t;                   /* n = 2^m */
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "is*|O:base2ba", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "is|O:base2ba", kwlist,
                                      &n, &asciistr, &endian))
         return NULL;
 
     if ((m = base_to_length(n)) < 0)
-        goto error;
+        return NULL;
 
-    a = new_bitarray(m * asciistr.len, endian, m == 4 ? 0 : -1);
+    a = new_bitarray(m * strlen(asciistr), endian, m == 4 ? 0 : -1);
     if (a == NULL)
-        goto error;
+        return NULL;
 
     t = m == 4 ? hex2ba_core(a, asciistr) : base2ba_core(a, asciistr, m);
-    if (t < 0)
-        goto error;
-
-    PyBuffer_Release(&asciistr);
+    if (t < 0) {
+        Py_DECREF((PyObject *) a);
+        return NULL;
+    }
     return (PyObject *) a;
-
- error:
-    PyBuffer_Release(&asciistr);
-    Py_XDECREF((PyObject *) a);
-    return NULL;
 }
 
 PyDoc_STRVAR(base2ba_doc,
