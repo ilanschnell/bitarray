@@ -672,6 +672,7 @@ hex2ba_core(bitarrayobject *a, char *str)
         a->ob_item[i / 2] |= x << 4 * ((i + be) % 2);
         i++;
     }
+    assert(i <= a->nbits);
     return resize_lite(a, 4 * i);  /* in case we ignored characters */
 }
 
@@ -884,6 +885,7 @@ base2ba_core(bitarrayobject *a, char *str, int m)
             setbit(a, i++, x & (1 << q));
         }
     }
+    assert(i <= a->nbits);
     return resize_lite(a, i);  /* in case we ignored characters */
 }
 
