@@ -1666,8 +1666,8 @@ PyDoc_STRVAR(to01_doc,
 \n\
 Return bitarray as string of '0's and '1's.\n\
 The bits are grouped into `group` bits (default is no grouping).\n\
-When grouped, the string `sep` is inserted between the groups,\n\
-default is a space.");
+When grouped, the string `sep` is inserted between groups\n\
+of `group` characters, default is a space.");
 
 
 static PyObject *

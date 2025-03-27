@@ -639,10 +639,12 @@ ba2hex(PyObject *module, PyObject *args, PyObject *kwds)
 }
 
 PyDoc_STRVAR(ba2hex_doc,
-"ba2hex(bitarray, /) -> hexstr\n\
+"ba2hex(bitarray, /, group=0, sep=' ') -> hexstr\n\
 \n\
 Return a string containing the hexadecimal representation of\n\
-the bitarray (which has to be multiple of 4 in length).");
+the bitarray (which has to be multiple of 4 in length).\n\
+When grouped, the string `sep` is inserted between groups\n\
+of `group` characters, default is a space.");
 
 
 /* Translate hexadecimal digits from 'hexstr' into the bitarray 'a' buffer,
@@ -855,14 +857,15 @@ ba2base(PyObject *module, PyObject *args, PyObject *kwds)
 }
 
 PyDoc_STRVAR(ba2base_doc,
-"ba2base(n, bitarray, /) -> str\n\
+"ba2base(n, bitarray, /, group=0, sep=' ') -> str\n\
 \n\
 Return a string containing the base `n` ASCII representation of\n\
 the bitarray.  Allowed values for `n` are 2, 4, 8, 16, 32 and 64.\n\
 The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.\n\
 For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the\n\
-standard base 64 alphabet is used.");
-
+standard base 64 alphabet is used.\n\
+When grouped, the string `sep` is inserted between groups\n\
+of `group` characters, default is a space.");
 
 /* translate ASCII digits (with base length m) into bitarray buffer */
 static int
