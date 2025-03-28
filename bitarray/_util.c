@@ -711,7 +711,7 @@ Whitespace is ignored.");
 /* RFC 4648 Base32 alphabet */
 static const char base32_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
-/* standard base 64 alphabet - also described on RFC 4648 */
+/* standard base 64 alphabet - also described in RFC 4648 */
 static const char base64_alphabet[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
