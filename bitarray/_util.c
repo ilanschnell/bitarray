@@ -770,6 +770,7 @@ ba2base_core(bitarrayobject *a, int m, Py_ssize_t group, char *sep)
 {
     const int le = IS_LE(a);
     const char *alphabet;
+    const unsigned short low = (1 << m) - 1;
     size_t strsize = a->nbits / m, j, nsep;
     Py_ssize_t i;
     char *str;
@@ -789,17 +790,32 @@ ba2base_core(bitarrayobject *a, int m, Py_ssize_t group, char *sep)
     if ((str = (char *) PyMem_Malloc(strsize + 1)) == NULL)
         return NULL;
 
-    for (i = j = 0; i < a->nbits / m; i++) {
-        int k, x = 0;
+    for (i = j = 0; i < a->nbits; i += m) {
+        Py_ssize_t b = i / 8;
+        unsigned int x = 0;
 
-        if (nsep && i && i % group == 0) {
+        if (nsep && i && (i / m) % group == 0) {
             memcpy(str + j, sep, nsep);
             j += nsep;
         }
-        for (k = 0; k < m; k++) {
-            int q = le ? k : (m - k - 1);
-            x |= getbit(a, i * m + k) << q;
+        if (le) {
+            *((char *) &x) = a->ob_item[b];
+            if (i % 8 + m > 8)
+                *(((char *) &x) + 1) = a->ob_item[b + 1];
+            x >>= i % 8;
         }
+        else {
+            if (i % 8 + m > 8) {
+                *(((char *) &x) + 0) = a->ob_item[b + 1];
+                *(((char *) &x) + 1) = a->ob_item[b + 0];
+                x >>= 16 - m - i % 8;
+            }
+            else {
+                *((char *) &x) = a->ob_item[b];
+                x >>= 8 - m - i % 8;
+            }
+        }
+        x &= low;
         str[j++] = alphabet[x];
     }
     assert(j == strsize);
@@ -836,10 +852,7 @@ ba2base(PyObject *module, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    if (m == 4)
-        str = ba2hex_core(a, group, sep);
-    else
-        str = ba2base_core(a, m, group, sep);
+    str = ba2base_core(a, m, group, sep);
 
     if (str == NULL)
         return PyErr_NoMemory();
