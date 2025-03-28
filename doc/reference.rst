@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 3.2.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.3.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -230,10 +230,10 @@ bitarray methods:
 ``to01(group=0, sep=' ')`` -> str
    Return bitarray as string of '0's and '1's.
    The bits are grouped into ``group`` bits (default is no grouping).
-   When grouped, the string ``sep`` is inserted between the groups,
-   default is a space.
+   When grouped, the string ``sep`` is inserted between groups
+   of ``group`` characters, default is a space.
 
-   New in version 3.2.1: optional ``group`` and ``sep`` arguments
+   New in version 3.3: optional ``group`` and ``sep`` arguments
 
 
 ``tobytes()`` -> bytes
@@ -323,21 +323,29 @@ This sub-module was added in version 1.2.
    New in version 2.7
 
 
-``ba2base(n, bitarray, /)`` -> str
+``ba2base(n, bitarray, /, group=0, sep=' ')`` -> str
    Return a string containing the base ``n`` ASCII representation of
    the bitarray.  Allowed values for ``n`` are 2, 4, 8, 16, 32 and 64.
    The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.
    For ``n=32`` the RFC 4648 Base32 alphabet is used, and for ``n=64`` the
    standard base 64 alphabet is used.
+   When grouped, the string ``sep`` is inserted between groups
+   of ``group`` characters, default is a space.
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
    New in version 1.9
 
+   New in version 3.3: optional ``group`` and ``sep`` arguments
 
-``ba2hex(bitarray, /)`` -> hexstr
+
+``ba2hex(bitarray, /, group=0, sep=' ')`` -> hexstr
    Return a string containing the hexadecimal representation of
    the bitarray (which has to be multiple of 4 in length).
+   When grouped, the string ``sep`` is inserted between groups
+   of ``group`` characters, default is a space.
+
+   New in version 3.3: optional ``group`` and ``sep`` arguments
 
 
 ``ba2int(bitarray, /, signed=False)`` -> int
@@ -350,11 +358,13 @@ This sub-module was added in version 1.2.
    Bitarray of base ``n`` ASCII representation.
    Allowed values for ``n`` are 2, 4, 8, 16, 32 and 64.
    For ``n=32`` the RFC 4648 Base32 alphabet is used, and for ``n=64`` the
-   standard base 64 alphabet is used.
+   standard base 64 alphabet is used.  Whitespace is ignored.
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
    New in version 1.9
+
+   New in version 3.3: ignore whitespace
 
 
 ``canonical_decode(bitarray, count, symbol, /)`` -> iterator
@@ -420,6 +430,9 @@ This sub-module was added in version 1.2.
 ``hex2ba(hexstr, /, endian=None)`` -> bitarray
    Bitarray of hexadecimal representation.  hexstr may contain any number
    (including odd numbers) of hex digits (upper or lower case).
+   Whitespace is ignored.
+
+   New in version 3.3: ignore whitespace
 
 
 ``huffman_code(dict, /, endian=None)`` -> dict
