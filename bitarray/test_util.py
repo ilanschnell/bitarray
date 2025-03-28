@@ -838,7 +838,7 @@ class TestsHexlify(unittest.TestCase, Util):
         self.assertRaises(ValueError, ba2hex, a, -1)
         self.assertRaises(ValueError, ba2hex, a, group=-1)
         self.assertRaises(TypeError, ba2hex, a, 1, b" ")
-        # embedded null character
+        # embedded null character in sep
         self.assertRaises(ValueError, ba2hex, a, 2, "\0")
 
     def test_hex2ba(self):
@@ -880,6 +880,7 @@ class TestsHexlify(unittest.TestCase, Util):
                 msg = "non-hexadecimal digit found, got 'g' (0x67)"
                 self.assertRaisesMessage(ValueError, msg, hex2ba, s, endian)
 
+            # embedded null character
             self.assertRaises(ValueError, hex2ba, "ff\0", endian)
 
     def test_explicit(self):
@@ -898,6 +899,13 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertEQUAL(hex2ba(hex_le, 'little'), a_le)
             self.assertEqual(ba2hex(a_be), hex_be)
             self.assertEqual(ba2hex(a_le), hex_le)
+
+    def test_random(self):
+        for _ in range(100):
+            a = urandom(4 * randint(0, 100), self.random_endian())
+            s = ba2hex(a, group=randint(0, 10), sep=randint(0, 4) * " ")
+            b = hex2ba(s, endian=a.endian())
+            self.assertEqual(a, b)
 
     def test_hexdigits(self):
         for default_endian in 'big', 'little':
