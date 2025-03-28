@@ -673,7 +673,7 @@ hex2ba_core(bitarrayobject *a, char *str)
         i++;
     }
     assert(i <= a->nbits);
-    return resize_lite(a, 4 * i);  /* in case we ignored characters */
+    return resize_lite(a, 4 * i);  /* in case we ignored whitespace */
 }
 
 static PyObject *
@@ -886,7 +886,7 @@ base2ba_core(bitarrayobject *a, char *str, int m)
         }
     }
     assert(i <= a->nbits);
-    return resize_lite(a, i);  /* in case we ignored characters */
+    return resize_lite(a, i);  /* in case we ignored whitespace */
 }
 
 static PyObject *
