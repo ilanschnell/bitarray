@@ -844,7 +844,7 @@ class TestsHexlify(unittest.TestCase, Util):
     def test_hex2ba(self):
         _set_default_endian('big')
         self.assertEqual(hex2ba(''), bitarray())
-        for c in 'e', 'E':
+        for c in 'e', 'E', b'e', b'E':
             a = hex2ba(c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
@@ -855,21 +855,20 @@ class TestsHexlify(unittest.TestCase, Util):
         self.assertEQUAL(hex2ba('aD'), bitarray('1010 1101', 'big'))
         self.assertEQUAL(hex2ba('10aF'),
                          bitarray('0001 0000 1010 1111', 'big'))
-        self.assertEQUAL(hex2ba('10aF', 'little'),
+        self.assertEQUAL(hex2ba(b'10aF\0xyz', 'little'),
                          bitarray('1000 0000 0101 1111', 'little'))
 
     def test_hex2ba_whitespace(self):
         _set_default_endian('big')
         self.assertEqual(hex2ba("F1 F2 %s f3 c0" % WHITESPACE),
                          bitarray("11110001 11110010 11110011 11000000"))
-        self.assertEQUAL(hex2ba(' a F ', 'big'),
+        self.assertEQUAL(hex2ba(b' a F ', 'big'),
                          bitarray('1010 1111', 'big'))
         self.assertEQUAL(hex2ba(860 * " " + '0  1D' + 590 * " ", 'little'),
                          bitarray('0000 1000 1011', 'little'))
 
     def test_hex2ba_errors(self):
         self.assertRaises(TypeError, hex2ba, 0)
-        self.assertRaises(TypeError, hex2ba, b"ff")  # bytes-like object
 
         for endian in 'little', 'big':
             _set_default_endian(endian)
@@ -879,9 +878,6 @@ class TestsHexlify(unittest.TestCase, Util):
             for s in 'g', 'ag', 'aag' 'aaaga', 'ag':
                 msg = "non-hexadecimal digit found, got 'g' (0x67)"
                 self.assertRaisesMessage(ValueError, msg, hex2ba, s, endian)
-
-            # embedded null character
-            self.assertRaises(ValueError, hex2ba, "ff\0", endian)
 
     def test_explicit(self):
         data = [ #                       little   big
@@ -939,14 +935,15 @@ class TestsBase(unittest.TestCase, Util):
 
     def test_base2ba(self):
         _set_default_endian('big')
-        for c in 'e', 'E':
+        for c in 'e', 'E', b'e', b'E':
             a = base2ba(16, c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian(), 'big')
             self.assertIsType(a, 'bitarray')
 
     def test_base2ba_whitespace(self):
-        self.assertEqual(base2ba(32, "7 A"), bitarray("1111100000"))
+        self.assertEqual(base2ba(32, "7 A"), bitarray("11111 00000"))
+        self.assertEqual(base2ba(64, b"A /\0:"), bitarray("000000 111111"))
         for n in 2, 4, 8, 16, 32, 64:
             a = base2ba(n, WHITESPACE)
             self.assertEqual(a, bitarray())
@@ -1023,7 +1020,7 @@ class TestsBase(unittest.TestCase, Util):
 
         for i in 2, 4, 8, 16, 32, 64:
             self.assertRaises(ValueError, base2ba, i, 60 * u'\u20ac')
-            self.assertRaises(TypeError, base2ba, i, b"")  # byte-like object
+            self.assertRaises(TypeError, base2ba, i, None)
 
     def test_binary(self):
         a = base2ba(2, '1011')

@@ -681,22 +681,27 @@ hex2ba(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "endian", NULL};
     PyObject *endian = Py_None;
-    char *hexstr;
+    Py_buffer hexstr;
     bitarrayobject *a;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s|O:hex2ba", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "s*|O:hex2ba", kwlist,
                                      &hexstr, &endian))
         return NULL;
 
-    a = new_bitarray(4 * strlen(hexstr), endian, 0);
+    a = new_bitarray(4 * hexstr.len, endian, 0);
     if (a == NULL)
-        return NULL;
+        goto error;
 
-    if (hex2ba_core(a, hexstr) < 0) {
-        Py_DECREF((PyObject *) a);
-        return NULL;
-    }
+    if (hex2ba_core(a, hexstr.buf) < 0)
+        goto error;
+
+    PyBuffer_Release(&hexstr);
     return (PyObject *) a;
+
+ error:
+    PyBuffer_Release(&hexstr);
+    Py_XDECREF((PyObject *) a);
+    return NULL;
 }
 
 PyDoc_STRVAR(hex2ba_doc,
@@ -868,8 +873,6 @@ base2ba_core(bitarrayobject *a, char *str, int m)
     Py_ssize_t i = 0;
     unsigned char c;
 
-    assert((size_t) a->nbits == strlen(str) * m && 1 <= m && m <= 6);
-
     while ((c = *str++)) {
         int k, x = digit_to_int(n, c);
 
@@ -894,27 +897,35 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "", "endian", NULL};
     PyObject *endian = Py_None;
-    char *asciistr;
+    Py_buffer asciistr;
     bitarrayobject *a = NULL;
     int m, n, t;                   /* n = 2^m */
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "is|O:base2ba", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "is*|O:base2ba", kwlist,
                                      &n, &asciistr, &endian))
         return NULL;
 
     if ((m = base_to_length(n)) < 0)
-        return NULL;
+        goto error;
 
-    a = new_bitarray(m * strlen(asciistr), endian, m == 4 ? 0 : -1);
+    a = new_bitarray(m * asciistr.len, endian, m == 4 ? 0 : -1);
     if (a == NULL)
-        return NULL;
+        goto error;
 
-    t = m == 4 ? hex2ba_core(a, asciistr) : base2ba_core(a, asciistr, m);
-    if (t < 0) {
-        Py_DECREF((PyObject *) a);
-        return NULL;
-    }
+    if (m == 4)
+        t = hex2ba_core(a, asciistr.buf);
+    else
+        t = base2ba_core(a, asciistr.buf, m);
+    if (t < 0)
+        goto error;
+
+    PyBuffer_Release(&asciistr);
     return (PyObject *) a;
+
+ error:
+    PyBuffer_Release(&asciistr);
+    Py_XDECREF((PyObject *) a);
+    return NULL;
 }
 
 PyDoc_STRVAR(base2ba_doc,
