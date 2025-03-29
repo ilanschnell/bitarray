@@ -447,12 +447,6 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray(WHITESPACE)
         self.assertEqual(a, bitarray())
 
-        # For Python 2 (where strings are bytes), we are in the lucky
-        # position that none of the valid characters ('\t'=9, '\n'=10,
-        # '\v'=11, '\r'=13, ' '=32, '0'=48 and '1'=49) are valid pickle
-        # header bytes (0..7).
-        # Therefore a string of '0's and '1'a can start with any whitespace
-        # character, as well as '0' or '1' (obviously).
         for c in WHITESPACE:
             a = bitarray(c + '1101110001')
             self.assertEqual(a, bitarray('1101110001'))
@@ -532,7 +526,7 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertRaises(TypeError, bitarray, x)
         self.assertRaises(TypeError, bitarray, b'10')
         # wrong values
-        for x in -1, 'A':
+        for x in -1, 'A', '\0', '010\0 11':
             self.assertRaises(ValueError, bitarray, x)
         # test second (endian) argument
         self.assertRaises(TypeError, bitarray, 0, 0)
@@ -2735,7 +2729,8 @@ class ExtendTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('0110111'))
 
         a = bitarray()
-        self.assertRaises(ValueError, a.extend, 1000 * '01' + '.')
+        self.assertRaises(ValueError, a.extend, 100 * '01' + '.')
+        self.assertRaises(ValueError, a.extend, 100 * '01' + '\0')
         self.assertEqual(a, bitarray())
 
         for a in self.randomlists():

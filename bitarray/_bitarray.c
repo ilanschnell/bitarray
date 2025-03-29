@@ -790,9 +790,9 @@ static int
 extend_unicode01(bitarrayobject *self, PyObject *unicode)
 {
     const Py_ssize_t nbits = self->nbits;
-    Py_ssize_t i = nbits;  /* current index */
+    Py_ssize_t i = nbits;  /* current index in self */
+    Py_ssize_t strsize, j;
     PyObject *bytes;
-    unsigned char c;
     char *str;
     int res = -1, vi = 0;
 
@@ -801,10 +801,12 @@ extend_unicode01(bitarrayobject *self, PyObject *unicode)
         return -1;
 
     str = PyBytes_AS_STRING(bytes);
-    if (resize(self, nbits + PyBytes_GET_SIZE(bytes)) < 0)
+    strsize = PyBytes_GET_SIZE(bytes);
+    if (resize(self, nbits + strsize) < 0)
         goto finish;
 
-    while ((c = *str++)) {
+    for (j = 0; j < strsize; j++) {
+        unsigned char c = str[j];
         switch (c) {
         case '0': vi = 0; break;
         case '1': vi = 1; break;
