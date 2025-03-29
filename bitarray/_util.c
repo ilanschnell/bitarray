@@ -722,37 +722,28 @@ static const char base64_alphabet[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static int
-digit_to_int(int n, char c)
+digit_to_int(int m, unsigned char c)
 {
+    static char table[2][256];
+    static int setup = 0;
     int i;
 
-    switch (n) {
-    case 32:                    /* base 32 */
-        if ('A' <= c && c <= 'Z')
-            return c - 'A';
-        if ('2' <= c && c <= '7')
-            return c - '2' + 26;
-        break;
-
-    case 64:                    /* base 64 */
-        if ('A' <= c && c <= 'Z')
-            return c - 'A';
-        if ('a' <= c && c <= 'z')
-            return c - 'a' + 26;
-        if ('0' <= c && c <= '9')
-            return c - '0' + 52;
-        if (c == '+')
-            return 62;
-        if (c == '/')
-            return 63;
-        break;
-
-    default:                    /* base 2, 4, 8, 16 */
+    if (m <= 4) {                               /* base 2, 4, 8, 16 */
         i = hex_to_int(c);
-        if (i < n)
+        if (i < (1 << m))
             return i;
+        return -1;
     }
-    return -1;
+    if (!setup) {
+        for (i = 0; i < 256; i++)
+            table[0][i] = table[1][i] = -1;
+        for (i = 0; i < 32; i++)
+            table[0][(unsigned char) base32_alphabet[i]] = i;
+        for (i = 0; i < 64; i++)
+            table[1][(unsigned char) base64_alphabet[i]] = i;
+        setup = 1;
+    }
+    return table[m - 5][c];                     /* base 32, 64 */
 }
 
 /* return m = log2(n) for m in [1..6] */
@@ -871,19 +862,19 @@ of `group` characters, default is a space.");
 static int
 base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
 {
-    const int le = IS_LE(a), n = 1 << m;
+    const int le = IS_LE(a);
     const char *str = asciistr.buf;
     Py_ssize_t i = 0, j;
 
     for (j = 0; j < asciistr.len; j++) {
         unsigned char c = str[j];
-        int k, x = digit_to_int(n, c);
+        int k, x = digit_to_int(m, c);
 
         if (x < 0) {
             if (is_whitespace(c))
                 continue;
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
-                         "base %d, got '%c' (0x%02x)", n, c, c);
+                         "base %d, got '%c' (0x%02x)", 1 << m, c, c);
             return -1;
         }
         for (k = 0; k < m; k++) {
