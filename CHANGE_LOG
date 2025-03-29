@@ -3,6 +3,8 @@
   * add optional `group` and `sep` arguments' to `.to01()`, #230 -
     as well as `util.ba2hex()` and `util.ba2base()`
   * ignore whitespace in `util.base2ba()` and `util.hex2ba()`
+  * check for embedded nul characters when extending (and initializing)
+    bitarray from string
   * add double precision floating point number example
 
 
