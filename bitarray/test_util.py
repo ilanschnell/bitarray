@@ -940,7 +940,7 @@ class TestsBase(unittest.TestCase, Util):
             self.assertIsType(a, 'bitarray')
 
     def test_base2ba_whitespace(self):
-        self.assertEqual(base2ba(8, bytearray(b"170"), "little"),
+        self.assertEqual(base2ba(8, bytearray(b"17 0"), "little"),
                          bitarray("100 111 000"))
         self.assertEqual(base2ba(32, "7 A"), bitarray("11111 00000"))
         self.assertEqual(base2ba(64, b"A /"), bitarray("000000 111111"))
@@ -1019,7 +1019,7 @@ class TestsBase(unittest.TestCase, Util):
         self.assertRaises(TypeError, base2ba, 32, None)
 
         for i in 2, 4, 8, 16, 32, 64:
-            for s in ' \u20ac ', ' \0 ', b'\x00':
+            for s in '_', '@', '[', '$', '\u20ac', '\0',  b'\0':
                 self.assertRaises(ValueError, base2ba, i, s)
 
     def test_binary(self):
