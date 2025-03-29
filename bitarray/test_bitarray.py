@@ -214,7 +214,7 @@ class TestsModuleFunctions(unittest.TestCase, Util):
         self.assertRaises(TypeError, _set_default_endian, 0)
         self.assertRaises(TypeError, _set_default_endian, 'little', 0)
         self.assertRaises(ValueError, _set_default_endian, 'foo')
-        for default_endian in 'big', 'little', u'big', u'little':
+        for default_endian in 'big', 'little':
             _set_default_endian(default_endian)
             a = bitarray()
             self.assertEqual(a.endian(), default_endian)
@@ -427,8 +427,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, bitarray, range(0, 3))
 
     def test_string01(self):
-        for s in ('0010111', u'0010111', '0010 111', u'0010 111',
-                  '0010_111', u'0010_111'):
+        for s in '0010111', '0010 111', '0010_111':
             a = bitarray(s)
             self.assertEqual(a.tolist(), [0, 0, 1, 0, 1, 1, 1])
             self.check_obj(a)
@@ -441,7 +440,7 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.check_obj(a)
 
         self.assertRaises(ValueError, bitarray, '01021')
-        self.assertRaises(UnicodeEncodeError, bitarray, u'1\u26050')
+        self.assertRaises(UnicodeEncodeError, bitarray, '1\u26050')
 
     def test_string01_whitespace(self):
         a = bitarray(WHITESPACE)
@@ -470,7 +469,7 @@ class CreateObjectTests(unittest.TestCase, Util):
     def test_bitarray_endian(self):
         # Test creating a new bitarray with different endianness from an
         # existing bitarray.
-        for endian in 'little', 'big', u'little', u'big':
+        for endian in 'little', 'big':
             a = bitarray(endian=endian)
             b = bitarray(a)
             self.assertFalse(a is b)
@@ -512,7 +511,7 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertIsType(a, 'bitarray')
 
     def test_create_empty(self):
-        for x in (None, 0, '', list(), tuple(), set(), dict(), u'',
+        for x in (None, 0, '', list(), tuple(), set(), dict(),
                   bitarray(), frozenbitarray()):
             a = bitarray(x)
             self.assertEqual(len(a), 0)
@@ -1746,13 +1745,6 @@ class MiscTests(unittest.TestCase, Util):
             return
         self.assertRaises(OverflowError, bitarray.append, a, True)
 
-    def test_unicode_create(self):
-        a = bitarray(u'')
-        self.assertEqual(a, bitarray())
-
-        a = bitarray(u'111001')
-        self.assertEqual(a, bitarray('111001'))
-
     def test_unhashable(self):
         a = bitarray()
         self.assertRaises(TypeError, hash, a)
@@ -2748,22 +2740,6 @@ class ExtendTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('010101'))
         a += '_ 1\n0\r1\t0\v'
         self.assertEqual(a, bitarray('010101 1010'))
-        self.check_obj(a)
-
-    def test_unicode(self):
-        a = bitarray()
-        a.extend('')
-        self.assertEqual(a, bitarray())
-        self.assertRaises(ValueError, a.extend, u'0011201')
-        # ensure no bits got added after error was raised
-        self.assertEqual(a, bitarray())
-        self.check_obj(a)
-
-        a = bitarray()
-        a.extend('001 011_')
-        self.assertEqual(a, bitarray('001011'))
-        self.assertRaises(UnicodeEncodeError, a.extend, u'1\u2605 0')
-        self.assertEqual(a, bitarray('001011'))
         self.check_obj(a)
 
     def test_bytes(self):
