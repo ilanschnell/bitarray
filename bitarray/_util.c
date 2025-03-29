@@ -655,7 +655,7 @@ static int
 hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
 {
     const int be = IS_BE(a);
-    char *str = hexstr.buf;
+    const char *str = hexstr.buf;
     Py_ssize_t i = 0, j;
 
     for (j = 0; j < hexstr.len; j++) {
@@ -872,7 +872,7 @@ static int
 base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
 {
     const int le = IS_LE(a), n = 1 << m;
-    char *str = asciistr.buf;
+    const char *str = asciistr.buf;
     Py_ssize_t i = 0, j;
 
     for (j = 0; j < asciistr.len; j++) {
