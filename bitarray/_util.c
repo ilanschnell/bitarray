@@ -647,18 +647,19 @@ When grouped, the string `sep` is inserted between groups\n\
 of `group` characters, default is a space.");
 
 
-/* Translate hexadecimal digits from 'str' into the bitarray 'a' buffer,
+/* Translate hexadecimal digits from 'hexstr' into the bitarray 'a' buffer,
    which must be initalized to zeros.
    Each digit corresponds to 4 bits in the bitarray.
    Note that the number of hexadecimal digits may be odd. */
 static int
-hex2ba_core(bitarrayobject *a, char *str)
+hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
 {
     const int be = IS_BE(a);
-    Py_ssize_t i = 0;
-    unsigned char c;
+    char *str = hexstr.buf;
+    Py_ssize_t i = 0, j;
 
-    while ((c = *str++)) {
+    for (j = 0; j < hexstr.len; j++) {
+        unsigned char c = str[j];
         int x = hex_to_int(c);
 
         if (x < 0) {
@@ -692,7 +693,7 @@ hex2ba(PyObject *module, PyObject *args, PyObject *kwds)
     if (a == NULL)
         goto error;
 
-    if (hex2ba_core(a, hexstr.buf) < 0)
+    if (hex2ba_core(a, hexstr) < 0)
         goto error;
 
     PyBuffer_Release(&hexstr);
@@ -865,15 +866,17 @@ standard base 64 alphabet is used.\n\
 When grouped, the string `sep` is inserted between groups\n\
 of `group` characters, default is a space.");
 
+
 /* translate ASCII digits (with base length m) into bitarray buffer */
 static int
-base2ba_core(bitarrayobject *a, char *str, int m)
+base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
 {
     const int le = IS_LE(a), n = 1 << m;
-    Py_ssize_t i = 0;
-    unsigned char c;
+    char *str = asciistr.buf;
+    Py_ssize_t i = 0, j;
 
-    while ((c = *str++)) {
+    for (j = 0; j < asciistr.len; j++) {
+        unsigned char c = str[j];
         int k, x = digit_to_int(n, c);
 
         if (x < 0) {
@@ -912,10 +915,7 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
     if (a == NULL)
         goto error;
 
-    if (m == 4)
-        t = hex2ba_core(a, asciistr.buf);
-    else
-        t = base2ba_core(a, asciistr.buf, m);
+    t = (m == 4) ? hex2ba_core(a, asciistr) : base2ba_core(a, asciistr, m);
     if (t < 0)
         goto error;
 
