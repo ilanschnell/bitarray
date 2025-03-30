@@ -881,6 +881,7 @@ base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
                          "base %d, got '%c' (0x%02x)", n, c, c);
             return -1;
         }
+        assert(0 <= x && x < n);
         for (k = 0; k < m; k++) {
             int q = le ? k : (m - k - 1);
             setbit(a, i++, x & (1 << q));
