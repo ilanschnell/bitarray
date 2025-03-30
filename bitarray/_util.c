@@ -658,6 +658,8 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
     const char *str = hexstr.buf;
     Py_ssize_t i = 0, j;
 
+    assert(a->nbits == 4 * hexstr.len);
+
     for (j = 0; j < hexstr.len; j++) {
         unsigned char c = str[j];
         int x = hex_to_int(c);
@@ -862,9 +864,11 @@ of `group` characters, default is a space.");
 static int
 base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
 {
-    const int le = IS_LE(a), n = 1 << m;
     const char *str = asciistr.buf;
+    const int le = IS_LE(a), n = 1 << m;
     Py_ssize_t i = 0, j;
+
+    assert(a->nbits == asciistr.len * m && 1 <= m && m <= 6);
 
     for (j = 0; j < asciistr.len; j++) {
         unsigned char c = str[j];
