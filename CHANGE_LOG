@@ -5,6 +5,7 @@
   * ignore whitespace in `util.base2ba()` and `util.hex2ba()`
   * check for embedded nul characters when extending (and initializing)
     bitarray from string
+  * improve testing
   * add double precision floating point number example
 
 

@@ -825,6 +825,7 @@ class TestsHexlify(unittest.TestCase, Util):
         self.assertEqual(ba2hex(a, group=2), "10 af")
         self.assertEqual(ba2hex(a, 2, "-"), "10-af")
         self.assertEqual(ba2hex(a, group=3, sep="_"), "10a_f")
+        self.assertEqual(ba2hex(a, 3, sep=", "), "10a, f")
 
     def test_ba2hex_errors(self):
         a = bitarray('1000 0000 0101 1111', 'little')
@@ -922,9 +923,9 @@ class TestsHexlify(unittest.TestCase, Util):
 class TestsBase(unittest.TestCase, Util):
 
     def test_ba2base(self):
-        c = ba2base(16, bitarray('1101 0100', 'big'))
-        self.assertIsInstance(c, str)
-        self.assertEqual(c, 'd4')
+        s = ba2base(16, bitarray('1101 0100', 'big'))
+        self.assertIsInstance(s, str)
+        self.assertEqual(s, 'd4')
 
     def test_base2ba(self):
         _set_default_endian('big')
