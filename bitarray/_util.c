@@ -722,7 +722,7 @@ static const char base64_alphabet[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static int
-digit_to_int(int m, unsigned char c)
+digit_to_int(int m, char c)
 {
     static char table[2][256];
     static int setup = 0;
@@ -743,7 +743,7 @@ digit_to_int(int m, unsigned char c)
             table[1][(unsigned char) base64_alphabet[i]] = i;
         setup = 1;
     }
-    return (int) table[m - 5][c];               /* base 32, 64 */
+    return table[m - 5][(unsigned char) c];     /* base 32, 64 */
 }
 
 /* return m = log2(n) for m in [1..6] */
