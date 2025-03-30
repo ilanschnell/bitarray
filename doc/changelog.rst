@@ -1,6 +1,17 @@
 Change log
 ==========
 
+**3.3.0** (2025-03-30):
+
+* add optional ``group`` and ``sep`` arguments' to ``.to01()``, `#230 <https://github.com/ilanschnell/bitarray/issues/230>`__ -
+  as well as ``util.ba2hex()`` and ``util.ba2base()``
+* ignore whitespace in ``util.base2ba()`` and ``util.hex2ba()``
+* check for embedded nul characters when extending (and initializing)
+  bitarray from string
+* improve testing
+* add double precision floating point number example
+
+
 **3.2.0** (2025-03-19):
 
 * add ``util.xor_indices()``, `#229 <https://github.com/ilanschnell/bitarray/issues/229>`__
