@@ -722,15 +722,15 @@ static const char base64_alphabet[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static int
-digit_to_int(int m, char c)
+digit_to_int(int n, char c)
 {
     static signed char table[2][256];
     static int setup = 0;
     int i;
 
-    if (m <= 4) {                               /* base 2, 4, 8, 16 */
+    if (n <= 16) {                               /* base 2, 4, 8, 16 */
         i = hex_to_int(c);
-        if (i < (1 << m))
+        if (i < n)
             return i;
         return -1;
     }
@@ -743,7 +743,7 @@ digit_to_int(int m, char c)
             table[1][(unsigned char) base64_alphabet[i]] = i;
         setup = 1;
     }
-    return table[m - 5][(unsigned char) c];     /* base 32, 64 */
+    return table[n / 64][(unsigned char) c];     /* base 32, 64 */
 }
 
 /* return m = log2(n) for m in [1..6] */
@@ -862,19 +862,19 @@ of `group` characters, default is a space.");
 static int
 base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
 {
-    const int le = IS_LE(a);
+    const int le = IS_LE(a), n = 1 << m;
     const char *str = asciistr.buf;
     Py_ssize_t i = 0, j;
 
     for (j = 0; j < asciistr.len; j++) {
         unsigned char c = str[j];
-        int k, x = digit_to_int(m, c);
+        int k, x = digit_to_int(n, c);
 
         if (x < 0) {
             if (is_whitespace(c))
                 continue;
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
-                         "base %d, got '%c' (0x%02x)", 1 << m, c, c);
+                         "base %d, got '%c' (0x%02x)", n, c, c);
             return -1;
         }
         for (k = 0; k < m; k++) {
