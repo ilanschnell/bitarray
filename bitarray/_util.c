@@ -724,7 +724,7 @@ static const char base64_alphabet[] =
 static int
 digit_to_int(int m, char c)
 {
-    static char table[2][256];
+    static signed char table[2][256];
     static int setup = 0;
     int i;
 
