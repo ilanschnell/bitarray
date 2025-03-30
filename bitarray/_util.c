@@ -667,8 +667,8 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
         if (x < 0) {
             if (is_whitespace(c))
                 continue;
-            PyErr_Format(PyExc_ValueError, "non-hexadecimal digit found, "
-                         "got '%c' (0x%02x)", c, c);
+            PyErr_Format(PyExc_ValueError, "invalid digit found for "
+                         "base 16, got '%c' (0x%02x)", c, c);
             return -1;
         }
         assert(0 <= x && x < 16);

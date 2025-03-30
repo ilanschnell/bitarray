@@ -874,7 +874,7 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertRaises(ValueError, hex2ba, s)
 
         for s in 'g', 'ag', 'aag' 'aaaga', 'ag':
-            msg = "non-hexadecimal digit found, got 'g' (0x67)"
+            msg = "invalid digit found for base 16, got 'g' (0x67)"
             self.assertRaisesMessage(ValueError, msg, hex2ba, s, 'big')
 
     def test_explicit(self):
@@ -996,12 +996,15 @@ class TestsBase(unittest.TestCase, Util):
     def test_invalid_characters(self):
         for n, s in ((2, '2'), (4, '4'), (8, '8'), (16, 'g'), (32, '8'),
                      (32, '1'), (32, 'a'), (64, '-'), (64, '_')):
-            if n == 16:
-                msg = "non-hexadecimal digit found, got 'g' (0x67)"
-            else:
-                msg = ("invalid digit found for base %d, "
-                       "got '%s' (0x%02x)" % (n, s, ord(s)))
+            msg = ("invalid digit found for base %d, "
+                   "got '%s' (0x%02x)" % (n, s, ord(s)))
             self.assertRaisesMessage(ValueError, msg, base2ba, n, s)
+
+        for n in 2, 4, 8, 16, 32, 64:
+            for s in '_', '@', '[', '$', '\u20ac', '\0',  b'\0', b'\x80', b'\xff':
+                self.assertRaises(ValueError, base2ba, n, s)
+            msg = "invalid digit found for base %d, got '|' (0x7c)" % n
+            self.assertRaisesMessage(ValueError, msg, base2ba, n, '|')
 
     def test_invalid_args(self):
         a = bitarray()
@@ -1017,10 +1020,6 @@ class TestsBase(unittest.TestCase, Util):
 
         self.assertRaises(TypeError, ba2base, 32, None)
         self.assertRaises(TypeError, base2ba, 32, None)
-
-        for i in 2, 4, 8, 16, 32, 64:
-            for s in '_', '@', '[', '$', '\u20ac', '\0',  b'\0':
-                self.assertRaises(ValueError, base2ba, i, s)
 
     def test_binary(self):
         a = base2ba(2, '1011')
