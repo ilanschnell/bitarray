@@ -4605,7 +4605,6 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertEqual(a, 800 * bitarray('1'))
         self.check_obj(a)
 
-    # Python 2's array cannot be used as buffer
     @skipIf(is_pypy)
     def test_array(self):
         a = array.array('B', [0, 255, 64])

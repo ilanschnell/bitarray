@@ -1902,8 +1902,6 @@ class TestsSerialization(unittest.TestCase, Util):
         self.assertRaises(ValueError, deserialize, b'')
 
         def check_msg(b):
-            # Python 2: PyErr_Format() seems to handle "0x%02x"
-            # incorrectly.  E.g. instead of "0x01", I get "0x1"
             msg = "invalid header byte: 0x%02x" % b[0]
             self.assertRaisesMessage(ValueError, msg, deserialize, b)
 
