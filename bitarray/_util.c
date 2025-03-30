@@ -668,7 +668,7 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
             if (is_whitespace(c))
                 continue;
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
-                         "base 16, got '%c' (0x%02x)", c, c);
+                         "base16, got '%c' (0x%02x)", c, c);
             return -1;
         }
         assert(0 <= x && x < 16);
@@ -878,7 +878,7 @@ base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
             if (is_whitespace(c))
                 continue;
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
-                         "base %d, got '%c' (0x%02x)", n, c, c);
+                         "base%d, got '%c' (0x%02x)", n, c, c);
             return -1;
         }
         assert(0 <= x && x < n);

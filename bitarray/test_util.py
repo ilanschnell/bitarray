@@ -874,7 +874,7 @@ class TestsHexlify(unittest.TestCase, Util):
             self.assertRaises(ValueError, hex2ba, s)
 
         for s in 'g', 'ag', 'aag' 'aaaga', 'ag':
-            msg = "invalid digit found for base 16, got 'g' (0x67)"
+            msg = "invalid digit found for base16, got 'g' (0x67)"
             self.assertRaisesMessage(ValueError, msg, hex2ba, s, 'big')
 
     def test_explicit(self):
@@ -996,15 +996,15 @@ class TestsBase(unittest.TestCase, Util):
     def test_invalid_characters(self):
         for n, s in ((2, '2'), (4, '4'), (8, '8'), (16, 'g'), (32, '8'),
                      (32, '1'), (32, 'a'), (64, '-'), (64, '_')):
-            msg = ("invalid digit found for base %d, "
+            msg = ("invalid digit found for base%d, "
                    "got '%s' (0x%02x)" % (n, s, ord(s)))
             self.assertRaisesMessage(ValueError, msg, base2ba, n, s)
 
         for n in 2, 4, 8, 16, 32, 64:
             for s in '_', '@', '[', '$', '\u20ac', '\0',  b'\0', b'\x80', b'\xff':
                 self.assertRaises(ValueError, base2ba, n, s)
-            msg = "invalid digit found for base %d, got '|' (0x7c)" % n
-            self.assertRaisesMessage(ValueError, msg, base2ba, n, '|')
+            msg = "invalid digit found for base%d, got '{' (0x7b)" % n
+            self.assertRaisesMessage(ValueError, msg, base2ba, n, '{')
 
     def test_invalid_args(self):
         a = bitarray()
@@ -1091,6 +1091,14 @@ class TestsBase(unittest.TestCase, Util):
                 for endian in 'big', 'little':
                     self.assertEqual(ba2int(base2ba(n, c, endian)), i)
                     self.assertEqual(ba2base(n, int2ba(i, m, endian)), c)
+
+            for i in range(256):
+                c = chr(i)
+                if c in alpabet or c in WHITESPACE:
+                    continue
+                if n == 16 and c in "ABCDEF":
+                    continue
+                self.assertRaises(ValueError, base2ba, n, c)
 
     def test_random(self):
         for a in self.randombitarrays():
