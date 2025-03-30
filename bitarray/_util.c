@@ -743,7 +743,7 @@ digit_to_int(int m, unsigned char c)
             table[1][(unsigned char) base64_alphabet[i]] = i;
         setup = 1;
     }
-    return table[m - 5][c];                     /* base 32, 64 */
+    return (int) table[m - 5][c];               /* base 32, 64 */
 }
 
 /* return m = log2(n) for m in [1..6] */
