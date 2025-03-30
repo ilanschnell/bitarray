@@ -4312,6 +4312,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
         t = decodetree(d)
         self.assertEqual(t.todict(), d)
         self.assertEqual(t.nodes(), 2047)
+        self.assertTrue(t.complete())
         self.assertTrue(sys.getsizeof(t) > 10000)
 
 # ------------------ variable length encoding and decoding ------------------
