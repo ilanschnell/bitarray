@@ -10,13 +10,13 @@
   * check for embedded nul characters when extending (and initializing)
     bitarray from string
   * improve testing
-  * add double precision floating point number example
+  * add [double precision floating point number example](../examples/double.py)
 
 
 2025-03-19   3.2.0:
 -------------------
   * add `util.xor_indices()`, #229
-  * add Hamming code example
+  * add [Hamming code example](../examples/hamming.py)
 
 
 2025-03-06   3.1.1:
@@ -25,7 +25,7 @@
   * use `__builtin_parityll()` when available in `util.parity()`
   * add `parity_64()` to header
   * simplify some tests
-  * add LFSR example
+  * add [LFSR example](../examples/lfsr.py)
 
 
 2025-02-19   3.1.0:

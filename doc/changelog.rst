@@ -9,13 +9,13 @@ Change log
 * check for embedded nul characters when extending (and initializing)
   bitarray from string
 * improve testing
-* add double precision floating point number example
+* add `double precision floating point number example <../examples/double.py>`__
 
 
 **3.2.0** (2025-03-19):
 
 * add ``util.xor_indices()``, `#229 <https://github.com/ilanschnell/bitarray/issues/229>`__
-* add Hamming code example
+* add `Hamming code example <../examples/hamming.py>`__
 
 
 **3.1.1** (2025-03-06):
@@ -24,7 +24,7 @@ Change log
 * use ``__builtin_parityll()`` when available in ``util.parity()``
 * add ``parity_64()`` to header
 * simplify some tests
-* add LFSR example
+* add `LFSR example <../examples/lfsr.py>`__
 
 
 **3.1.0** (2025-02-19):
