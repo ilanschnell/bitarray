@@ -726,7 +726,7 @@ static const char base64_alphabet[] =
 static int
 digit_to_int(int n, char c)
 {
-    static signed char table[2][256];
+    static signed char table[2][128];
     static int setup = 0;
     int i;
 
@@ -736,8 +736,12 @@ digit_to_int(int n, char c)
             return i;
         return -1;
     }
+
+    if (0x80 & c)  /* non-ASCII */
+        return -1;
+
     if (!setup) {
-        memset(table, -1, sizeof table);
+        memset(table, 0xff, sizeof table);  /* (signed char) 0xff -> 1 */
         for (i = 0; i < 32; i++)
             table[0][(unsigned char) base32_alphabet[i]] = i;
         for (i = 0; i < 64; i++)
