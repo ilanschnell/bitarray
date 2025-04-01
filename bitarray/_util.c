@@ -737,8 +737,7 @@ digit_to_int(int n, char c)
         return -1;
     }
     if (!setup) {
-        for (i = 0; i < 256; i++)
-            table[0][i] = table[1][i] = -1;
+        memset(table, -1, sizeof table);
         for (i = 0; i < 32; i++)
             table[0][(unsigned char) base32_alphabet[i]] = i;
         for (i = 0; i < 64; i++)
