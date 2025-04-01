@@ -43,9 +43,8 @@ setup(
     author = "Ilan Schnell",
     author_email = "ilanschnell@gmail.com",
     url = "https://github.com/ilanschnell/bitarray",
-    license = "PSF",
+    license = "PSF-2.0",
     classifiers = [
-        "License :: OSI Approved :: Python Software Foundation License",
         "Development Status :: 6 - Mature",
         "Intended Audience :: Developers",
         "Operating System :: OS Independent",
