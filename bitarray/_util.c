@@ -964,7 +964,7 @@ next_char(PyObject *iter)
     Py_DECREF(item);
     if (v < 0 || v > 255) {
         PyErr_Format(PyExc_ValueError,
-                     "int not in range(0, 256) expected, got: %d", v);
+                     "byte must be in range(0, 256), got: %d", v);
         return -1;
     }
     return v;
