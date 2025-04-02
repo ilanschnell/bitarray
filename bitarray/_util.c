@@ -724,17 +724,15 @@ static const char base64_alphabet[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 static int
-digit_to_int(int n, char c)
+digit_to_int(int m, char c)
 {
     static signed char table[2][128];
     static int setup = 0;
     int i;
 
-    if (n <= 16) {                               /* base 2, 4, 8, 16 */
+    if (m < 5) {                                 /* base 2, 4, 8, 16 */
         i = hex_to_int(c);
-        if (i < n)
-            return i;
-        return -1;
+        return i >> m ? -1 : i;
     }
 
     if (0x80 & c)  /* non-ASCII */
@@ -748,7 +746,7 @@ digit_to_int(int n, char c)
             table[1][(unsigned char) base64_alphabet[i]] = i;
         setup = 1;
     }
-    return table[n / 64][(unsigned char) c];     /* base 32, 64 */
+    return table[m - 5][(unsigned char) c];      /* base 32, 64 */
 }
 
 /* return m = log2(n) for m in [1..6] */
@@ -868,23 +866,23 @@ static int
 base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
 {
     const char *str = asciistr.buf;
-    const int le = IS_LE(a), n = 1 << m;
+    const int le = IS_LE(a);
     Py_ssize_t i = 0, j;
 
     assert(a->nbits == asciistr.len * m && 1 <= m && m <= 6);
 
     for (j = 0; j < asciistr.len; j++) {
         unsigned char c = str[j];
-        int k, x = digit_to_int(n, c);
+        int k, x = digit_to_int(m, c);
 
         if (x < 0) {
             if (is_whitespace(c))
                 continue;
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
-                         "base%d, got '%c' (0x%02x)", n, c, c);
+                         "base%d, got '%c' (0x%02x)", 1 << m, c, c);
             return -1;
         }
-        assert(0 <= x && x < n);
+        assert(x >> m == 0);
         for (k = 0; k < m; k++) {
             int q = le ? k : (m - k - 1);
             setbit(a, i++, x & (1 << q));
