@@ -3978,7 +3978,7 @@ reconstructor(PyObject *module, PyObject *args)
         return NULL;
 
     nbytes = PyBytes_GET_SIZE(bytes);
-    if (padbits < 0 || padbits >= 8 || (nbytes == 0 && padbits != 0))
+    if (padbits >> 3 || (nbytes == 0 && padbits))
         return PyErr_Format(PyExc_ValueError,
                             "invalid number of pad bits: %d", padbits);
 

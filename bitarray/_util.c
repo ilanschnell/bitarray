@@ -958,9 +958,9 @@ next_char(PyObject *iter)
     if (v == -1 && PyErr_Occurred())
         return -1;
 
-    if (v < 0 || v > 255) {
+    if (v >> 8) {
         PyErr_Format(PyExc_ValueError,
-                     "byte must be in range(0, 256), got: %d", v);
+                     "byte must be in range(0, 256), got: %zd", v);
         return -1;
     }
     return (int) v;

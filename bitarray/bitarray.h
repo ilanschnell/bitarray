@@ -308,7 +308,7 @@ conv_pybit(PyObject *value, int *vi)
     if (n == -1 && PyErr_Occurred())
         return 0;
 
-    if (n < 0 || n > 1) {
+    if (n >> 1) {
         PyErr_Format(PyExc_ValueError, "bit must be 0 or 1, got %zd", n);
         return 0;
     }
