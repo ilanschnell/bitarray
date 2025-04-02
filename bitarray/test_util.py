@@ -1244,6 +1244,12 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(a.endian(), 'big')
             self.assertEqual(a.to01(), '001')
 
+        a = [17, 3, 1, 32, 0]
+        self.assertEqual(sc_decode(a), bitarray("001"))
+        for x in 256, -1:
+            a[-1] = x
+            self.assertRaises(ValueError, sc_decode, a)
+
         self.assertRaises(TypeError, sc_decode, [0x02, None])
         for x in None, 3, 3.2, Ellipsis:
             self.assertRaises(TypeError, sc_decode, x)
@@ -1510,6 +1516,11 @@ class VLFTests(unittest.TestCase, Util):
         # high bit set, but no terminating byte
         for s in b'\x80', b'\x80\x80':
             self.assertRaises(ValueError, vl_decode, s)
+        # decode list with out of range items
+        for i in -1, 256:
+            self.assertRaises(ValueError, vl_decode, [i])
+        # wrong type
+        self.assertRaises(TypeError, vl_decode, [None])
 
     def test_decode_invalid_stream(self):
         N = 100

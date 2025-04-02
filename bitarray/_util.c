@@ -943,7 +943,7 @@ static int
 next_char(PyObject *iter)
 {
     PyObject *item;
-    unsigned char c;
+    int v;
 
     item = PyIter_Next(iter);
     if (item == NULL) {
@@ -954,15 +954,20 @@ next_char(PyObject *iter)
     }
 
     if (!PyLong_Check(item)) {
-        PyErr_Format(PyExc_TypeError, "int iterator expected, "
-                     "got '%s' element", Py_TYPE(item)->tp_name);
+        PyErr_Format(PyExc_TypeError, "int expected, got '%s' element",
+                     Py_TYPE(item)->tp_name);
         Py_DECREF(item);
         return -1;
     }
 
-    c = (unsigned char) PyLong_AsLong(item);
+    v = (int) PyLong_AsLong(item);
     Py_DECREF(item);
-    return (int) c;
+    if (v < 0 || v > 255) {
+        PyErr_Format(PyExc_ValueError,
+                     "int not in range(0, 256) expected, got: %d", v);
+        return -1;
+    }
+    return v;
 }
 
 /* write n bytes (into buffer str) representing non-negative integer i,
