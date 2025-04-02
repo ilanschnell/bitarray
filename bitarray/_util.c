@@ -671,7 +671,7 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
                          "base16, got '%c' (0x%02x)", c, c);
             return -1;
         }
-        assert(0 <= x && x < 16);
+        assert(x >> 4 == 0);
         a->ob_item[i / 2] |= x << 4 * ((i + be) % 2);
         i++;
     }
@@ -739,7 +739,7 @@ digit_to_int(int m, char c)
         return -1;
 
     if (!setup) {
-        memset(table, 0xff, sizeof table);  /* (signed char) 0xff -> 1 */
+        memset(table, 0xff, sizeof table);  /* (signed char) 0xff -> -1 */
         for (i = 0; i < 32; i++)
             table[0][(unsigned char) base32_alphabet[i]] = i;
         for (i = 0; i < 64; i++)
