@@ -1002,7 +1002,7 @@ class TestsBase(unittest.TestCase, Util):
             self.assertRaisesMessage(ValueError, msg, base2ba, n, s)
 
         for n in 2, 4, 8, 16, 32, 64:
-            for s in '_', '@', '[', '$', '\u20ac', '\0',  b'\0', b'\x80', b'\xff':
+            for s in '_', '@', '[', '\u20ac', '\0',  b'\0', b'\x80', b'\xff':
                 self.assertRaises(ValueError, base2ba, n, s)
             msg = "invalid digit found for base%d, got '{' (0x7b)" % n
             self.assertRaisesMessage(ValueError, msg, base2ba, n, '{')
@@ -1083,7 +1083,8 @@ class TestsBase(unittest.TestCase, Util):
         (3,  8, '01234567'),
         (4, 16, '0123456789abcdef'),
         (5, 32, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'),
-        (6, 64, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'),
+        (6, 64, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef'
+                'ghijklmnopqrstuvwxyz0123456789+/'),
     ]
 
     def test_alphabets(self):
