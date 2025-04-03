@@ -723,9 +723,9 @@ static const char base32_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 static const char base64_alphabet[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-/* Given the length of the base 'm' (in range(1, 7)) and a character 'c',
-   return its position in the base 2^m alphabet , or -1 if when 'c' is
-   not included in the alphabet. */
+/* Given the length of the base m in [1..6] and a character c, return
+   its position in the base 2^m alphabet , or -1 if when c is not included
+   in the alphabet.  Note: i >> m checks if i is in [0 .. 2^m-1] */
 static int
 digit_to_int(int m, char c)
 {
