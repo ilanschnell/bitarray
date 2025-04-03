@@ -803,6 +803,7 @@ ba2base_core(bitarrayobject *a, int m, Py_ssize_t group, char *sep)
             int q = le ? k : (m - k - 1);
             x |= getbit(a, i * m + k) << q;
         }
+        assert(x >> m == 0);
         str[j++] = alphabet[x];
     }
     assert(j == strsize);
