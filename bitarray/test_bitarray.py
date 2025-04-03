@@ -2865,9 +2865,9 @@ class FillTests(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class MethodTests(unittest.TestCase, Util):
+class InvertTests(unittest.TestCase, Util):
 
-    def test_invert_simple(self):
+    def test_simple(self):
         a = bitarray()
         a.invert()
         self.assertEQUAL(a, bitarray())
@@ -2881,20 +2881,26 @@ class MethodTests(unittest.TestCase, Util):
         a.invert(-1)
         self.assertEQUAL(a, bitarray('00001'))
 
-    def test_invert_errors(self):
+    def test_errors(self):
         a = bitarray(5)
         self.assertRaises(IndexError, a.invert, 5)
         self.assertRaises(IndexError, a.invert, -6)
         self.assertRaises(TypeError, a.invert, "A")
         self.assertRaises(TypeError, a.invert, 0, 1)
+        self.assertFalse(a.any())
+        self.check_obj(a)
 
-    def test_invert_random(self):
+    def test_random(self):
         for a in self.randombitarrays(start=1):
             b = a.copy()
             i = randrange(len(a))
             b.invert(i)
             a[i] = not a[i]
             self.assertEQUAL(a, b)
+
+# ---------------------------------------------------------------------------
+
+class MethodTests(unittest.TestCase, Util):
 
     def test_sort_simple(self):
         a = bitarray('1101000')
