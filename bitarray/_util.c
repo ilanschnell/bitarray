@@ -724,8 +724,8 @@ static const char base64_alphabet[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /* Given the length of the base m in [1..6] and a character c, return
-   its index in the base 2^m alphabet , or -1 if when c is not included.
-   Note: i >> m checks if i is in [0 .. 2^m-1] */
+   its index in the base 2**m alphabet , or -1 if when c is not included.
+   Note: i >> m checks if i is in range(0, 2**m) */
 static int
 digit_to_int(int m, char c)
 {
@@ -903,7 +903,7 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
     PyObject *endian = Py_None;
     Py_buffer asciistr;
     bitarrayobject *a = NULL;
-    int m, n, t;                   /* n = 2^m */
+    int m, n, t;                   /* n = 2**m */
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "is*|O:base2ba", kwlist,
                                      &n, &asciistr, &endian))
@@ -1091,8 +1091,8 @@ sc_calc_rts(bitarrayobject *a)
     Py_ssize_t *res, m;
 
     memset(zeros, 0x00, SEGSIZE);
-    res = (Py_ssize_t *) PyMem_Malloc((size_t)
-                                      sizeof(Py_ssize_t) * (n_seg + 1));
+    res = (Py_ssize_t *) PyMem_Malloc((size_t) sizeof(Py_ssize_t) *
+                                      (n_seg + 1));
     if (res == NULL)
         return (Py_ssize_t *) PyErr_NoMemory();
 
@@ -1208,7 +1208,7 @@ sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
     assert((k >= 32 || k == nbytes) && (k <= 32 || k % 32 == 0));
 
     /* block header */
-    *str = (char) (k <= 32 ? k : (k / 32) + 31);
+    *str = (char) (k <= 32 ? k : k / 32 + 31);
 
     /* block data */
     assert(offset + k <= Py_SIZE(a));
