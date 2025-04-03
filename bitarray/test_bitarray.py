@@ -2829,9 +2829,9 @@ class InsertTests(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class MethodTests(unittest.TestCase, Util):
+class FillTests(unittest.TestCase, Util):
 
-    def test_fill_simple(self):
+    def test_simple(self):
         for endian in 'little', 'big':
             a = bitarray(endian=endian)
             self.assertEqual(a.fill(), 0)
@@ -2844,7 +2844,7 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(a, bitarray('10100000'))
             self.check_obj(a)
 
-    def test_fill_exported(self):
+    def test_exported(self):
         a = bitarray('11101')
         b = bitarray(buffer=a)
         v = memoryview(a)
@@ -2852,7 +2852,7 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEqual(a, b)
         self.assertEqual(v.nbytes, 1)
 
-    def test_fill_random(self):
+    def test_random(self):
         for a in self.randombitarrays():
             b = a.copy()
             res = b.fill()
@@ -2862,6 +2862,10 @@ class MethodTests(unittest.TestCase, Util):
             self.assertEqual(b, a + zeros(res))
             self.assertEqual(b.endian(), a.endian())
             self.check_obj(b)
+
+# ---------------------------------------------------------------------------
+
+class MethodTests(unittest.TestCase, Util):
 
     def test_invert_simple(self):
         a = bitarray()
