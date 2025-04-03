@@ -2796,20 +2796,27 @@ class AppendTests(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class MethodTests(unittest.TestCase, Util):
+class InsertTests(unittest.TestCase, Util):
 
-    def test_insert(self):
+    def test_basic(self):
+        a = bitarray('00111')
+        a.insert(0, 1)
+        self.assertEqual(a, bitarray('1 00111'))
+        a.insert(0, 0)
+        self.assertEqual(a, bitarray('01 00111'))
+        a.insert(2, 1)
+        self.assertEqual(a, bitarray('011 00111'))
+
+    def test_errors(self):
         a = bitarray('111100')
-        a.insert(3, False)
-        self.assertEqual(a, bitarray('1110100'))
         self.assertRaises(ValueError, a.insert, 0, 2)
         self.assertRaises(TypeError, a.insert, 0, None)
         self.assertRaises(TypeError, a.insert)
         self.assertRaises(TypeError, a.insert, None)
-        self.assertEqual(a, bitarray('1110100'))
+        self.assertEqual(a, bitarray('111100'))
         self.check_obj(a)
 
-    def test_insert_random(self):
+    def test_random(self):
         for a in self.randombitarrays():
             aa = a.tolist()
             for _ in range(20):
@@ -2819,6 +2826,10 @@ class MethodTests(unittest.TestCase, Util):
                 aa.insert(pos, item)
             self.assertEqual(a.tolist(), aa)
             self.check_obj(a)
+
+# ---------------------------------------------------------------------------
+
+class MethodTests(unittest.TestCase, Util):
 
     def test_fill_simple(self):
         for endian in 'little', 'big':
