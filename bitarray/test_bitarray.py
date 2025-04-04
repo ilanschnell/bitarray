@@ -2032,6 +2032,7 @@ class SpecialMethodTests(unittest.TestCase, Util):
         self.assertIsInstance(r, str)
 
         for a in self.randombitarrays():
+            self.assertEqual(repr(a), str(a))
             b = eval(repr(a))
             self.assertFalse(b is a)
             self.assertEqual(a, b)
@@ -2982,33 +2983,105 @@ class PopTests(unittest.TestCase, Util):
             self.assertEqual(x, y)
             self.check_obj(a)
 
-# ---------------------------------------------------------------------------
+class ReverseTests(unittest.TestCase, Util):
 
-class MethodTests(unittest.TestCase, Util):
-
-    def test_reverse_explicit(self):
+    def test_explicit(self):
         for x, y in [('', ''), ('1', '1'), ('10', '01'), ('001', '100'),
                      ('1110', '0111'), ('11100', '00111'),
                      ('011000', '000110'), ('1101100', '0011011'),
                      ('11110000', '00001111'),
-                     ('11111000011', '11000011111'),
-                     ('11011111 00100000 000111',
-                      '111000 00000100 11111011')]:
+                     ('11111000011', '11000011111')]:
             a = bitarray(x)
             a.reverse()
             self.assertEQUAL(a, bitarray(y))
             self.check_obj(a)
 
-        self.assertRaises(TypeError, bitarray().reverse, 42)
+    def test_argument(self):
+        a = bitarray(3)
+        self.assertRaisesMessage(
+            TypeError,
+            "bitarray.reverse() takes no arguments (1 given)",
+            a.reverse, 42)
 
-    def test_reverse_random(self):
+    def test_random(self):
         for a in self.randombitarrays():
             b = a.copy()
             a.reverse()
-            self.assertEqual(a.tolist(), b.tolist()[::-1])
+            self.assertEqual(a.to01(), b.to01()[::-1])
             self.assertEQUAL(a, bitarray(reversed(b), endian=a.endian()))
             self.assertEQUAL(a, b[::-1])
             self.check_obj(a)
+
+class RemoveTests(unittest.TestCase, Util):
+
+    def test_explicit(self):
+        a = bitarray('1010110')
+        for val, res in [(False, '110110'), (True, '10110'),
+                         (1, '0110'), (1, '010'), (0, '10'),
+                         (0, '1'), (1, '')]:
+            a.remove(val)
+            self.assertEQUAL(a, bitarray(res))
+            self.check_obj(a)
+
+    def test_errors(self):
+        a = bitarray('0010011')
+        a.remove(1)
+        self.assertEQUAL(a, bitarray('000011'))
+        self.assertRaises(TypeError, a.remove, 'A')
+        self.assertRaises(ValueError, a.remove, 21)
+        self.assertEQUAL(a, bitarray('000011'))
+
+        a = bitarray()
+        for i in (True, False, 1, 0):
+            self.assertRaises(ValueError, a.remove, i)
+
+        a = zeros(21)
+        self.assertRaises(ValueError, a.remove, 1)
+        a.setall(1)
+        self.assertRaises(ValueError, a.remove, 0)
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            b = a.tolist()
+            v = getrandbits(1)
+            if v not in a:
+                continue
+            a.remove(v)
+            b.remove(v)
+            self.assertEqual(a.tolist(), b)
+            self.check_obj(a)
+
+class SetallTests(unittest.TestCase, Util):
+
+    def test_explicit(self):
+        a = urandom(5)
+        a.setall(True)
+        self.assertRaises(ValueError, a.setall, -1)
+        self.assertRaises(TypeError, a.setall, None)
+        self.assertEqual(a.to01(), '11111')
+        a.setall(0)
+        self.assertEqual(a.to01(), '00000')
+        self.check_obj(a)
+
+    def test_empty(self):
+        a = bitarray()
+        for v in 0, 1:
+            a.setall(v)
+            self.assertEqual(len(a), 0)
+            self.check_obj(a)
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            end = a.endian()
+            val = getrandbits(1)
+            a.setall(val)
+            self.assertEqual(a.to01(), len(a) * str(val))
+            self.assertEqual(a.endian(), end)
+            self.check_obj(a)
+
+# ---------------------------------------------------------------------------
+
+class MethodTests(unittest.TestCase, Util):
 
     def test_tolist(self):
         a = bitarray()
@@ -3025,64 +3098,12 @@ class MethodTests(unittest.TestCase, Util):
             a = bitarray(lst)
             self.assertEqual(a.tolist(), lst)
 
-    def test_remove(self):
-        a = bitarray('1010110')
-        for val, res in [(False, '110110'), (True, '10110'),
-                         (1, '0110'), (1, '010'), (0, '10'),
-                         (0, '1'), (1, '')]:
-            a.remove(val)
-            self.assertEQUAL(a, bitarray(res))
-            self.check_obj(a)
-
-        a = bitarray('0010011')
-        a.remove(1)
-        self.assertEQUAL(a, bitarray('000011'))
-        self.assertRaises(TypeError, a.remove, 'A')
-        self.assertRaises(ValueError, a.remove, 21)
-        self.assertEQUAL(a, bitarray('000011'))
-
-    def test_remove_errors(self):
-        a = bitarray()
-        for i in (True, False, 1, 0):
-            self.assertRaises(ValueError, a.remove, i)
-
-        a = zeros(21)
-        self.assertRaises(ValueError, a.remove, 1)
-        a.setall(1)
-        self.assertRaises(ValueError, a.remove, 0)
-
     def test_clear(self):
         for a in self.randombitarrays():
             endian = a.endian()
             a.clear()
             self.assertEqual(len(a), 0)
             self.assertEqual(a.endian(), endian)
-            self.check_obj(a)
-
-    def test_setall(self):
-        a = urandom(5)
-        a.setall(True)
-        self.assertRaises(ValueError, a.setall, -1)
-        self.assertRaises(TypeError, a.setall, None)
-        self.assertEqual(a.to01(), '11111')
-        a.setall(0)
-        self.assertEqual(a.to01(), '00000')
-        self.check_obj(a)
-
-    def test_setall_empty(self):
-        a = bitarray()
-        for v in 0, 1:
-            a.setall(v)
-            self.assertEqual(len(a), 0)
-            self.check_obj(a)
-
-    def test_setall_random(self):
-        for a in self.randombitarrays():
-            end = a.endian()
-            val = getrandbits(1)
-            a.setall(val)
-            self.assertEqual(a.to01(), len(a) * str(val))
-            self.assertEqual(a.endian(), end)
             self.check_obj(a)
 
 # ---------------------------------------------------------------------------
