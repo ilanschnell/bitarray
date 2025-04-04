@@ -2976,7 +2976,7 @@ class PackTests(unittest.TestCase, Util):
     def test_pack_allbytes(self):
         a = bitarray()
         a.pack(bytearray(range(256)))
-        self.assertEqual(a, bitarray('0' + 255 * '1'))
+        self.assertEqual(a.to01(), '0' + 255 * '1')
         self.check_obj(a)
 
     def test_pack_errors(self):
@@ -3168,35 +3168,6 @@ class SetallTests(unittest.TestCase, Util):
             self.assertEqual(a.endian(), end)
             self.check_obj(a)
 
-# ---------------------------------------------------------------------------
-
-class MethodTests(unittest.TestCase, Util):
-
-    def test_tolist(self):
-        a = bitarray()
-        self.assertEqual(a.tolist(), [])
-
-        a = bitarray('110')
-        lst = a.tolist()
-        self.assertIsInstance(lst, list)
-        self.assertEqual(lst, [1, 1, 0])
-        for item in lst:
-            self.assertIsInstance(item, int)
-
-        for lst in self.randomlists():
-            a = bitarray(lst)
-            self.assertEqual(a.tolist(), lst)
-
-    def test_clear(self):
-        for a in self.randombitarrays():
-            endian = a.endian()
-            a.clear()
-            self.assertEqual(len(a), 0)
-            self.assertEqual(a.endian(), endian)
-            self.check_obj(a)
-
-# ---------------------------------------------------------------------------
-
 class To01Tests(unittest.TestCase, Util):
 
     def test_no_grouping(self):
@@ -3252,8 +3223,6 @@ class To01Tests(unittest.TestCase, Util):
             self.assertEqual(len(s), n + nspace)
             self.assertEqual(nspace,
                              nsep * ((n - 1) // group) if group and n else 0)
-
-# ---------------------------------------------------------------------------
 
 class ByteReverseTests(unittest.TestCase, Util):
 
@@ -3334,6 +3303,32 @@ class ByteReverseTests(unittest.TestCase, Util):
             a.bytereverse()
             a = bitarray(a, self.opposite_endian(a.endian()))
             self.assertEqual(a.tobytes(), b.tobytes())
+
+class OtherMethodTests(unittest.TestCase, Util):
+
+    def test_tolist(self):
+        a = bitarray()
+        self.assertEqual(a.tolist(), [])
+
+        a = bitarray('110')
+        lst = a.tolist()
+        self.assertIsInstance(lst, list)
+        self.assertEqual(lst, [1, 1, 0])
+        for item in lst:
+            self.assertIsInstance(item, int)
+
+        for lst in self.randomlists():
+            a = bitarray(lst)
+            self.assertEqual(a.tolist(), lst)
+
+    def test_clear(self):
+        for a in self.randombitarrays():
+            endian = a.endian()
+            a.clear()
+            self.assertFalse(a)
+            self.assertEqual(len(a), 0)
+            self.assertEqual(a.endian(), endian)
+            self.check_obj(a)
 
 # ---------------------------------------------------------------------------
 
