@@ -2998,10 +2998,7 @@ class ReverseTests(unittest.TestCase, Util):
 
     def test_argument(self):
         a = bitarray(3)
-        self.assertRaisesMessage(
-            TypeError,
-            "bitarray.reverse() takes no arguments (1 given)",
-            a.reverse, 42)
+        self.assertRaises(TypeError, a.reverse, 42)
 
     def test_random(self):
         for a in self.randombitarrays():
