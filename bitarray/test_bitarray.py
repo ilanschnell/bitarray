@@ -3025,7 +3025,9 @@ class MethodTests(unittest.TestCase, Util):
         a = bitarray('110')
         lst = a.tolist()
         self.assertIsInstance(lst, list)
-        self.assertEqual(repr(lst), '[1, 1, 0]')
+        self.assertEqual(lst, [1, 1, 0])
+        for item in lst:
+            self.assertIsInstance(item, int)
 
         for lst in self.randomlists():
             a = bitarray(lst)
@@ -3045,6 +3047,7 @@ class MethodTests(unittest.TestCase, Util):
         self.assertEQUAL(a, bitarray('000011'))
         self.assertRaises(TypeError, a.remove, 'A')
         self.assertRaises(ValueError, a.remove, 21)
+        self.assertEQUAL(a, bitarray('000011'))
 
     def test_remove_errors(self):
         a = bitarray()
@@ -4917,7 +4920,7 @@ class BufferExportTests(unittest.TestCase, Util):
         self.assertEqual(a[300 * 8 : 305 * 8].tobytes(), b'\x00ABC\x00')
         self.check_obj(a)
 
-    def test_write_py3(self):
+    def test_write_memoryview_slice(self):
         a = zeros(40)
         m = memoryview(a)
         v = m[1:4]
@@ -4925,6 +4928,8 @@ class BufferExportTests(unittest.TestCase, Util):
         v[1] = 66
         v[2] = 67
         self.assertEqual(a.tobytes(), b'\x00ABC\x00')
+        m[1:4] = b'XYZ'
+        self.assertEqual(a.tobytes(), b'\x00XYZ\x00')
         self.check_obj(a)
 
 # ---------------------------------------------------------------------------
