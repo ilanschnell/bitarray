@@ -2022,36 +2022,6 @@ class RichCompareTests(unittest.TestCase, Util):
 
 class SpecialMethodTests(unittest.TestCase, Util):
 
-    def test_all(self):
-        a = bitarray()
-        self.assertTrue(a.all())
-        for s, r in ('0', False), ('1', True), ('01', False):
-            self.assertTrue(bitarray(s).all() is r)
-
-        for a in self.randombitarrays():
-            self.assertTrue(a.all() is all(a))
-
-        N = randint(1000, 2000)
-        a = ones(N)
-        self.assertTrue(a.all())
-        a[N - 1] = 0
-        self.assertFalse(a.all())
-
-    def test_any(self):
-        a = bitarray()
-        self.assertFalse(a.any())
-        for s, r in ('0', False), ('1', True), ('01', True):
-            self.assertTrue(bitarray(s).any() is r)
-
-        for a in self.randombitarrays():
-            self.assertTrue(a.any() is any(a))
-
-        N = randint(1000, 2000)
-        a = zeros(N)
-        self.assertFalse(a.any())
-        a[N - 1] = 1
-        self.assertTrue(a.any())
-
     def test_repr(self):
         r = repr(bitarray())
         self.assertEqual(r, "bitarray()")
@@ -2763,7 +2733,39 @@ class ExtendTests(unittest.TestCase, Util):
             self.assertEqual(len(a), 2 * len(s))
             self.check_obj(a)
 
-# ---------------------------------------------------------------------------
+# ------------------------ Tests for bitarray methods -----------------------
+
+class AllAnyTests(unittest.TestCase, Util):
+
+    def test_all(self):
+        a = bitarray()
+        self.assertTrue(a.all())
+        for s, r in ('0', False), ('1', True), ('01', False):
+            self.assertTrue(bitarray(s).all() is r)
+
+        for a in self.randombitarrays():
+            self.assertTrue(a.all() is all(a))
+
+        N = randint(1000, 2000)
+        a = ones(N)
+        self.assertTrue(a.all())
+        a[N - 1] = 0
+        self.assertFalse(a.all())
+
+    def test_any(self):
+        a = bitarray()
+        self.assertFalse(a.any())
+        for s, r in ('0', False), ('1', True), ('01', True):
+            self.assertTrue(bitarray(s).any() is r)
+
+        for a in self.randombitarrays():
+            self.assertTrue(a.any() is any(a))
+
+        N = randint(1000, 2000)
+        a = zeros(N)
+        self.assertFalse(a.any())
+        a[N - 1] = 1
+        self.assertTrue(a.any())
 
 class AppendTests(unittest.TestCase, Util):
 
@@ -2793,8 +2795,6 @@ class AppendTests(unittest.TestCase, Util):
             b.append(a[i])
             self.assertEQUAL(b, a[:i+1])
         self.check_obj(b)
-
-# ---------------------------------------------------------------------------
 
 class InsertTests(unittest.TestCase, Util):
 
@@ -2826,8 +2826,6 @@ class InsertTests(unittest.TestCase, Util):
                 aa.insert(pos, item)
             self.assertEqual(a.tolist(), aa)
             self.check_obj(a)
-
-# ---------------------------------------------------------------------------
 
 class FillTests(unittest.TestCase, Util):
 
@@ -2863,8 +2861,6 @@ class FillTests(unittest.TestCase, Util):
             self.assertEqual(b.endian(), a.endian())
             self.check_obj(b)
 
-# ---------------------------------------------------------------------------
-
 class InvertTests(unittest.TestCase, Util):
 
     def test_simple(self):
@@ -2898,8 +2894,6 @@ class InvertTests(unittest.TestCase, Util):
             a[i] = not a[i]
             self.assertEQUAL(a, b)
 
-# ---------------------------------------------------------------------------
-
 class SortTests(unittest.TestCase, Util):
 
     def test_simple(self):
@@ -2932,8 +2926,6 @@ class SortTests(unittest.TestCase, Util):
                     a.sort(reverse=rev)
                 self.assertEqual(a, bitarray(lst))
                 self.check_obj(a)
-
-# ---------------------------------------------------------------------------
 
 class PopTests(unittest.TestCase, Util):
 
