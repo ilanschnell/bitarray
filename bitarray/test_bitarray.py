@@ -2928,6 +2928,98 @@ class SortTests(unittest.TestCase, Util):
                 self.assertEqual(a, bitarray(lst))
                 self.check_obj(a)
 
+class PackTests(unittest.TestCase, Util):
+
+    def test_pack_simple(self):
+        for endian in 'little', 'big':
+            _set_default_endian(endian)
+            a = bitarray()
+            a.pack(bytes())
+            self.assertEQUAL(a, bitarray())
+            a.pack(b'\x00')
+            self.assertEQUAL(a, bitarray('0'))
+            a.pack(b'\xff')
+            self.assertEQUAL(a, bitarray('01'))
+            a.pack(b'\x01\x00\x7a')
+            self.assertEQUAL(a, bitarray('01101'))
+            a.pack(bytearray([0x01, 0x00, 0xff, 0xa7]))
+            self.assertEQUAL(a, bitarray('01101 1011'))
+            self.check_obj(a)
+
+    def test_pack_types(self):
+        a = bitarray()
+        a.pack(b'\0\x01')                        # bytes
+        self.assertEqual(a, bitarray('01'))
+        a.pack(bytearray([0, 2]))                # bytearray
+        self.assertEqual(a, bitarray('01 01'))
+        a.pack(memoryview(b'\x02\0'))            # memoryview
+        self.assertEqual(a, bitarray('01 01 10'))
+
+        a.pack(array.array('B', [0, 255, 192]))
+        self.assertEqual(a, bitarray('01 01 10 011'))
+        self.check_obj(a)
+
+    def test_pack_bitarray(self):
+        b = bitarray("00000000 00000001 10000000 11111111 00000000")
+        a = bitarray()
+        a.pack(bitarray(b))
+        self.assertEqual(a, bitarray('01110'))
+        self.check_obj(a)
+
+    def test_pack_self(self):
+        a = bitarray()
+        self.assertRaisesMessage(
+            BufferError,
+            "cannot resize bitarray that is exporting buffers",
+            a.pack, a)
+
+    def test_pack_allbytes(self):
+        a = bitarray()
+        a.pack(bytearray(range(256)))
+        self.assertEqual(a, bitarray('0' + 255 * '1'))
+        self.check_obj(a)
+
+    def test_pack_errors(self):
+        a = bitarray()
+        self.assertRaises(TypeError, a.pack, 0)
+        self.assertRaises(TypeError, a.pack, '1')
+        self.assertRaises(TypeError, a.pack, [1, 3])
+
+    def test_unpack_simple(self):
+        a = bitarray('01')
+        self.assertIsInstance(a.unpack(), bytes)
+        self.assertEqual(a.unpack(), b'\x00\x01')
+        self.assertEqual(a.unpack(b'A'), b'A\x01')
+        self.assertEqual(a.unpack(b'0', b'1'), b'01')
+        self.assertEqual(a.unpack(one=b'\xff'), b'\x00\xff')
+        self.assertEqual(a.unpack(zero=b'A'), b'A\x01')
+        self.assertEqual(a.unpack(one=b't', zero=b'f'), b'ft')
+
+    def test_unpack_random(self):
+        for a in self.randombitarrays():
+            self.assertEqual(a.unpack(b'0', b'1'),
+                             a.to01().encode())
+            # round trip
+            b = bitarray()
+            b.pack(a.unpack())
+            self.assertEqual(b, a)
+            # round trip with invert
+            b = bitarray()
+            b.pack(a.unpack(b'\x01', b'\x00'))
+            b.invert()
+            self.assertEqual(b, a)
+
+    def test_unpack_errors(self):
+        a = bitarray('01')
+        self.assertRaises(TypeError, a.unpack, b'')
+        self.assertRaises(TypeError, a.unpack, b'0', b'')
+        self.assertRaises(TypeError, a.unpack, b'a', zero=b'b')
+        self.assertRaises(TypeError, a.unpack, foo=b'b')
+        self.assertRaises(TypeError, a.unpack, one=b'aa', zero=b'b')
+        self.assertRaises(TypeError, a.unpack, '0')
+        self.assertRaises(TypeError, a.unpack, one='a')
+        self.assertRaises(TypeError, a.unpack, b'0', '1')
+
 class PopTests(unittest.TestCase, Util):
 
     def test_basic(self):
@@ -3858,97 +3950,6 @@ class BytesTests(unittest.TestCase, Util):
                      (17, b'\xff\xff\x01'), (24, b'\xff\xff\xff')]:
             a = ones(n, endian='little')
             self.assertEqual(a.tobytes(), s)
-
-    def test_unpack_simple(self):
-        a = bitarray('01')
-        self.assertIsInstance(a.unpack(), bytes)
-        self.assertEqual(a.unpack(), b'\x00\x01')
-        self.assertEqual(a.unpack(b'A'), b'A\x01')
-        self.assertEqual(a.unpack(b'0', b'1'), b'01')
-        self.assertEqual(a.unpack(one=b'\xff'), b'\x00\xff')
-        self.assertEqual(a.unpack(zero=b'A'), b'A\x01')
-        self.assertEqual(a.unpack(one=b't', zero=b'f'), b'ft')
-
-    def test_unpack_random(self):
-        for a in self.randombitarrays():
-            self.assertEqual(a.unpack(b'0', b'1'),
-                             a.to01().encode())
-            # round trip
-            b = bitarray()
-            b.pack(a.unpack())
-            self.assertEqual(b, a)
-            # round trip with invert
-            b = bitarray()
-            b.pack(a.unpack(b'\x01', b'\x00'))
-            b.invert()
-            self.assertEqual(b, a)
-
-    def test_unpack_errors(self):
-        a = bitarray('01')
-        self.assertRaises(TypeError, a.unpack, b'')
-        self.assertRaises(TypeError, a.unpack, b'0', b'')
-        self.assertRaises(TypeError, a.unpack, b'a', zero=b'b')
-        self.assertRaises(TypeError, a.unpack, foo=b'b')
-        self.assertRaises(TypeError, a.unpack, one=b'aa', zero=b'b')
-        self.assertRaises(TypeError, a.unpack, '0')
-        self.assertRaises(TypeError, a.unpack, one='a')
-        self.assertRaises(TypeError, a.unpack, b'0', '1')
-
-    def test_pack_simple(self):
-        for endian in 'little', 'big':
-            _set_default_endian(endian)
-            a = bitarray()
-            a.pack(bytes())
-            self.assertEQUAL(a, bitarray())
-            a.pack(b'\x00')
-            self.assertEQUAL(a, bitarray('0'))
-            a.pack(b'\xff')
-            self.assertEQUAL(a, bitarray('01'))
-            a.pack(b'\x01\x00\x7a')
-            self.assertEQUAL(a, bitarray('01101'))
-            a.pack(bytearray([0x01, 0x00, 0xff, 0xa7]))
-            self.assertEQUAL(a, bitarray('01101 1011'))
-            self.check_obj(a)
-
-    def test_pack_types(self):
-        a = bitarray()
-        a.pack(b'\0\x01')                        # bytes
-        self.assertEqual(a, bitarray('01'))
-        a.pack(bytearray([0, 2]))                # bytearray
-        self.assertEqual(a, bitarray('01 01'))
-        a.pack(memoryview(b'\x02\0'))            # memoryview
-        self.assertEqual(a, bitarray('01 01 10'))
-
-        a.pack(array.array('B', [0, 255, 192]))
-        self.assertEqual(a, bitarray('01 01 10 011'))
-
-        self.check_obj(a)
-
-    def test_pack_bitarray(self):
-        b = bitarray("00000000 00000001 10000000 11111111 00000000")
-        a = bitarray()
-        a.pack(bitarray(b))
-        self.assertEqual(a, bitarray('01110'))
-        self.check_obj(a)
-
-    def test_pack_self(self):
-        a = bitarray()
-        self.assertRaisesMessage(
-            BufferError,
-            "cannot resize bitarray that is exporting buffers",
-            a.pack, a)
-
-    def test_pack_allbytes(self):
-        a = bitarray()
-        a.pack(bytearray(range(256)))
-        self.assertEqual(a, bitarray('0' + 255 * '1'))
-        self.check_obj(a)
-
-    def test_pack_errors(self):
-        a = bitarray()
-        self.assertRaises(TypeError, a.pack, 0)
-        self.assertRaises(TypeError, a.pack, '1')
-        self.assertRaises(TypeError, a.pack, [1, 3])
 
 # ---------------------------------------------------------------------------
 
