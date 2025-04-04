@@ -1,6 +1,12 @@
 Change log
 ==========
 
+**3.3.1** (2025-04-04):
+
+* remove ``License`` classifier in favor of a SPDX license expression, `#231 <https://github.com/ilanschnell/bitarray/issues/231>`__
+* reorganize and cleanup many tests
+
+
 **3.3.0** (2025-03-30):
 
 * add optional ``group`` and ``sep`` arguments' to ``.to01()``, `#230 <https://github.com/ilanschnell/bitarray/issues/230>`__ -
