@@ -2900,9 +2900,9 @@ class InvertTests(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class MethodTests(unittest.TestCase, Util):
+class SortTests(unittest.TestCase, Util):
 
-    def test_sort_simple(self):
+    def test_simple(self):
         a = bitarray('1101000')
         a.sort()
         self.assertEqual(a, bitarray('0000111'))
@@ -2920,7 +2920,7 @@ class MethodTests(unittest.TestCase, Util):
 
         self.assertRaises(TypeError, a.sort, 'A')
 
-    def test_sort_random(self):
+    def test_random(self):
         for rev in False, True, 0, 1, 7, -1, -7, None:
             for a in self.randombitarrays():
                 lst = a.tolist()
@@ -2932,6 +2932,67 @@ class MethodTests(unittest.TestCase, Util):
                     a.sort(reverse=rev)
                 self.assertEqual(a, bitarray(lst))
                 self.check_obj(a)
+
+# ---------------------------------------------------------------------------
+
+class PopTests(unittest.TestCase, Util):
+
+    def test_basic(self):
+        a = bitarray('01')
+        self.assertRaisesMessage(IndexError, "pop index out of range",
+                                 a.pop, 2)
+        self.assertEqual(a.pop(), True)
+        self.assertEqual(a.pop(), False)
+        self.assertEqual(a, bitarray())
+        # pop from empty bitarray
+        self.assertRaisesMessage(IndexError, "pop from empty bitarray", a.pop)
+
+    def test_simple(self):
+        for x, n, r, y in [('1',       0, 1, ''),
+                           ('0',      -1, 0, ''),
+                           ('0011100', 3, 1, '001100')]:
+            a = bitarray(x)
+            self.assertTrue(a.pop(n) is r)
+            self.assertEqual(a, bitarray(y))
+            self.check_obj(a)
+
+    def test_reverse(self):
+        for a in self.randombitarrays():
+            c = a.copy()
+            b = bitarray()
+            while a:
+                b.append(a.pop())
+            self.assertEqual(a, bitarray())
+            b.reverse()
+            self.assertEqual(b, c)
+
+    def test_random_1(self):
+        for a in self.randombitarrays():
+            self.assertRaises(IndexError, a.pop, len(a))
+            self.assertRaises(IndexError, a.pop, -len(a) - 1)
+            if len(a) == 0:
+                continue
+            aa = a.tolist()
+            enda = a.endian()
+            self.assertEqual(a.pop(), aa[-1])
+            self.check_obj(a)
+            self.assertEqual(a.endian(), enda)
+
+    def test_random_2(self):
+        for a in self.randombitarrays(start=1):
+            n = randrange(-len(a), len(a))
+            aa = a.tolist()
+            x = a.pop(n)
+            self.assertEqual(x, aa[n])
+            self.assertIsInstance(x, int)
+            y = aa.pop(n)
+            self.assertEqual(a, bitarray(aa))
+            self.assertEqual(x, y)
+            self.check_obj(a)
+
+# ---------------------------------------------------------------------------
+
+class MethodTests(unittest.TestCase, Util):
 
     def test_reverse_explicit(self):
         for x, y in [('', ''), ('1', '1'), ('10', '01'), ('001', '100'),
@@ -2994,45 +3055,6 @@ class MethodTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.remove, 1)
         a.setall(1)
         self.assertRaises(ValueError, a.remove, 0)
-
-    def test_pop_simple(self):
-        for x, n, r, y in [('1',       0, 1, ''),
-                           ('0',      -1, 0, ''),
-                           ('0011100', 3, 1, '001100')]:
-            a = bitarray(x)
-            self.assertTrue(a.pop(n) is r)
-            self.assertEqual(a, bitarray(y))
-            self.check_obj(a)
-
-        a = bitarray('01')
-        self.assertEqual(a.pop(), True)
-        self.assertEqual(a.pop(), False)
-        # pop from empty bitarray
-        self.assertRaises(IndexError, a.pop)
-
-    def test_pop_random_1(self):
-        for a in self.randombitarrays():
-            self.assertRaises(IndexError, a.pop, len(a))
-            self.assertRaises(IndexError, a.pop, -len(a) - 1)
-            if len(a) == 0:
-                continue
-            aa = a.tolist()
-            enda = a.endian()
-            self.assertEqual(a.pop(), aa[-1])
-            self.check_obj(a)
-            self.assertEqual(a.endian(), enda)
-
-    def test_pop_random_2(self):
-        for a in self.randombitarrays(start=1):
-            n = randrange(-len(a), len(a))
-            aa = a.tolist()
-            x = a.pop(n)
-            self.assertEqual(x, aa[n])
-            self.assertIsInstance(x, int)
-            y = aa.pop(n)
-            self.assertEqual(a, bitarray(aa))
-            self.assertEqual(x, y)
-            self.check_obj(a)
 
     def test_clear(self):
         for a in self.randombitarrays():
