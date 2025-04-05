@@ -3304,12 +3304,13 @@ class ByteReverseTests(unittest.TestCase, Util):
             a = bitarray(a, self.opposite_endian(a.endian()))
             self.assertEqual(a.tobytes(), b.tobytes())
 
-class OtherMethodTests(unittest.TestCase, Util):
+class ToListTests(unittest.TestCase, Util):
 
-    def test_tolist(self):
+    def test_empty(self):
         a = bitarray()
         self.assertEqual(a.tolist(), [])
 
+    def test_simple(self):
         a = bitarray('110')
         lst = a.tolist()
         self.assertIsInstance(lst, list)
@@ -3317,11 +3318,19 @@ class OtherMethodTests(unittest.TestCase, Util):
         for item in lst:
             self.assertIsInstance(item, int)
 
+    def test_random(self):
         for lst in self.randomlists():
             a = bitarray(lst)
             self.assertEqual(a.tolist(), lst)
 
-    def test_clear(self):
+class ClearTests(unittest.TestCase, Util):
+
+    def test_simple(self):
+        a = bitarray("1110000001001000011111")
+        a.clear()
+        self.assertEqual(len(a), 0)
+
+    def test_random(self):
         for a in self.randombitarrays():
             endian = a.endian()
             a.clear()
