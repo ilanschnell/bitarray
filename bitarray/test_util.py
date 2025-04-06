@@ -40,7 +40,7 @@ else:
 
 # ---------------------------------------------------------------------------
 
-class TestsZerosOnes(unittest.TestCase):
+class sZerosOnesTests(unittest.TestCase):
 
     def test_range(self):
         for n in range(100):
@@ -91,7 +91,7 @@ class TestsZerosOnes(unittest.TestCase):
 
 # ---------------------------------------------------------------------------
 
-class TestsURandom(unittest.TestCase):
+class URandomTests(unittest.TestCase):
 
     def test_basic(self):
         for default_endian in 'big', 'little':
@@ -131,7 +131,7 @@ class TestsURandom(unittest.TestCase):
 
 # ---------------------------------------------------------------------------
 
-class TestsPPrint(unittest.TestCase):
+class PPrintTests(unittest.TestCase):
 
     @staticmethod
     def get_code_string(a):
@@ -202,7 +202,7 @@ class TestsPPrint(unittest.TestCase):
 
 # ---------------------------------------------------------------------------
 
-class TestsStrip(unittest.TestCase, Util):
+class StripTests(unittest.TestCase, Util):
 
     def test_simple(self):
         self.assertRaises(TypeError, strip, '0110')
@@ -268,7 +268,7 @@ class TestsStrip(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class TestsCount_N(unittest.TestCase, Util):
+class CountN_Tests(unittest.TestCase, Util):
 
     @staticmethod
     def count_n(a, n):
@@ -419,7 +419,7 @@ class TestsCount_N(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class TestsBitwiseCount(unittest.TestCase, Util):
+class BitwiseCountTests(unittest.TestCase, Util):
 
     def test_count_byte(self):
         for i in range(256):
@@ -504,7 +504,7 @@ class TestsBitwiseCount(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class TestsBitwiseAny(unittest.TestCase, Util):
+class BitwiseAnyTests(unittest.TestCase, Util):
 
     def test_basic(self):
         a = frozenbitarray('0101')
@@ -555,7 +555,7 @@ class TestsBitwiseAny(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class TestsSubset(unittest.TestCase, Util):
+class SubsetTests(unittest.TestCase, Util):
 
     def test_basic(self):
         a = frozenbitarray('0101')
@@ -604,7 +604,7 @@ class TestsSubset(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class TestsCorrespondAll(unittest.TestCase, Util):
+class CorrespondAllTests(unittest.TestCase, Util):
 
     def test_basic(self):
         a = frozenbitarray('0101')
@@ -641,7 +641,7 @@ class TestsCorrespondAll(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class TestsParity(unittest.TestCase, Util):
+class ParityTests(unittest.TestCase, Util):
 
     def test_explitcit(self):
         for s, res in [('', 0), ('1', 1), ('0010011', 1), ('10100110', 0)]:
@@ -676,7 +676,7 @@ class TestsParity(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class TestsXoredIndices(unittest.TestCase, Util):
+class XoredIndicesTests(unittest.TestCase, Util):
 
     def test_explicit(self):
         for s, r in [("", 0), ("0", 0), ("1", 0), ("11", 1),
@@ -738,7 +738,7 @@ class TestsXoredIndices(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class TestsIntervals(unittest.TestCase, Util):
+class IntervalsTests(unittest.TestCase, Util):
 
     def test_explicit(self):
         for s, lst in [
@@ -798,7 +798,7 @@ class TestsIntervals(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class TestsHexlify(unittest.TestCase, Util):
+class HexlifyTests(unittest.TestCase, Util):
 
     def test_ba2hex(self):
         self.assertEqual(ba2hex(bitarray(0, 'big')), '')
@@ -920,7 +920,7 @@ class TestsHexlify(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class TestsBase(unittest.TestCase, Util):
+class BaseTests(unittest.TestCase, Util):
 
     def test_ba2base(self):
         s = ba2base(16, bitarray('1101 0100', 'big'))
@@ -1568,7 +1568,7 @@ class VLFTests(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class TestsIntegerization(unittest.TestCase, Util):
+class IntegerizationTests(unittest.TestCase, Util):
 
     def test_ba2int(self):
         self.assertEqual(ba2int(bitarray('0')), 0)
@@ -1662,6 +1662,13 @@ class TestsIntegerization(unittest.TestCase, Util):
                              bitarray(s, 'little'))
             self.assertEQUAL(int2ba(i, len_s, 'big', signed=1),
                              bitarray(s[::-1], 'big'))
+
+    def test_negative_one(self):
+        for n in range(1, 100):
+            a = int2ba(-1, length=n, signed=True)
+            b = bitarray(n * '1')
+            self.assertEqual(a, b)
+            self.assertEqual(ba2int(b, signed=True), -1)
 
     def test_int2ba_overflow(self):
         self.assertRaises(OverflowError, int2ba, -1)
@@ -1861,7 +1868,7 @@ class MixedTests(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class TestsSerialization(unittest.TestCase, Util):
+class SerializationTests(unittest.TestCase, Util):
 
     def test_explicit(self):
         for blob, endian, bits in [
@@ -1956,7 +1963,7 @@ class TestsSerialization(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class TestsHuffman(unittest.TestCase):
+class HuffmanTests(unittest.TestCase):
 
     def test_simple(self):
         freq = {0: 10, 'as': 2, None: 1.6}
@@ -2050,7 +2057,7 @@ class TestsHuffman(unittest.TestCase):
 
 # ---------------------------------------------------------------------------
 
-class TestsCanonicalHuffman(unittest.TestCase, Util):
+class CanonicalHuffmanTests(unittest.TestCase, Util):
 
     def test_basic(self):
         plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
