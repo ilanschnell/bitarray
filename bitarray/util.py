@@ -207,9 +207,7 @@ and requires `length` to be provided.
         if __i < 0:
             __i += 1 << length
     else:  # unsigned
-        if __i < 0:
-            raise OverflowError("unsigned integer not positive, got %d" % __i)
-        if length and __i >= (1 << length):
+        if length and __i >> length:
             raise OverflowError("unsigned integer not in range(0, %d), "
                                 "got %d" % (1 << length, __i))
 
