@@ -559,6 +559,15 @@ class ToObjectsTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             self.assertEqual(tuple(a), tuple(a.tolist()))
 
+    def test_bytes(self):
+        for n in range(20):
+            a = urandom(8 * n)
+            self.assertEqual(bytes(a), a.tobytes())
+
+    def test_set(self):
+        for a in self.randombitarrays():
+            self.assertEqual(set(a), set(a.tolist()))
+
 # ---------------------------------------------------------------------------
 
 class MetaDataTests(unittest.TestCase):
@@ -580,11 +589,6 @@ class MetaDataTests(unittest.TestCase):
         for endian in 'big', 'little':
             a = bitarray(endian=endian)
             self.assertEqual(a.endian(), endian)
-
-    def test_len(self):
-        for n in range(100):
-            a = bitarray(n)
-            self.assertEqual(len(a), n)
 
 # ---------------------------------------------------------------------------
 
@@ -2102,7 +2106,12 @@ class SpecialMethodTests(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class SequenceMethodsTests(unittest.TestCase, Util):
+class SequenceTests(unittest.TestCase, Util):
+
+    def test_len(self):
+        for n in range(100):
+            a = bitarray(n)
+            self.assertEqual(len(a), n)
 
     def test_concat(self):
         a = bitarray('001')
