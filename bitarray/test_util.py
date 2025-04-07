@@ -40,7 +40,7 @@ else:
 
 # ---------------------------------------------------------------------------
 
-class sZerosOnesTests(unittest.TestCase):
+class ZerosOnesTests(unittest.TestCase):
 
     def test_range(self):
         for n in range(100):
