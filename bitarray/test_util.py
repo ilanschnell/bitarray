@@ -1663,12 +1663,24 @@ class IntegerizationTests(unittest.TestCase, Util):
             self.assertEQUAL(int2ba(i, len_s, 'big', signed=1),
                              bitarray(s[::-1], 'big'))
 
+    def test_zero(self):
+        for endian in "little", "big":
+            a = int2ba(0, endian=endian)
+            self.assertEQUAL(a, bitarray('0', endian=endian))
+            for n in range(1, 100):
+                a = int2ba(0, length=n, endian=endian, signed=True)
+                b = bitarray(n * '0', endian)
+                self.assertEQUAL(a, b)
+                for signed in 0, 1:
+                    self.assertEqual(ba2int(b, signed=signed), 0)
+
     def test_negative_one(self):
-        for n in range(1, 100):
-            a = int2ba(-1, length=n, signed=True)
-            b = bitarray(n * '1')
-            self.assertEqual(a, b)
-            self.assertEqual(ba2int(b, signed=True), -1)
+        for endian in "little", "big":
+            for n in range(1, 100):
+                a = int2ba(-1, length=n, endian=endian, signed=True)
+                b = bitarray(n * '1', endian)
+                self.assertEQUAL(a, b)
+                self.assertEqual(ba2int(b, signed=True), -1)
 
     def test_int2ba_overflow(self):
         self.assertRaises(OverflowError, int2ba, -1)

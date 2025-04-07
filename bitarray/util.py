@@ -189,17 +189,13 @@ and requires `length` to be provided.
         raise TypeError("int expected, got '%s'" % type(__i).__name__)
     if length is not None:
         if not isinstance(length, int):
-            raise TypeError("int expected for length")
+            raise TypeError("int expected for argument 'length'")
         if length <= 0:
             raise ValueError("length must be > 0")
-    if signed and length is None:
-        raise TypeError("signed requires length")
-
-    if __i == 0:
-        # there are special cases for 0 which we'd rather not deal with below
-        return zeros(length or 1, endian)
 
     if signed:
+        if length is None:
+            raise TypeError("signed requires argument 'length'")
         m = 1 << (length - 1)
         if not (-m <= __i < m):
             raise OverflowError("signed integer not in range(%d, %d), "
@@ -217,7 +213,7 @@ and requires `length` to be provided.
 
     le = bool(a.endian() == 'little')
     if length is None:
-        return strip(a, 'right' if le else 'left')
+        return strip(a, 'right' if le else 'left') if a else a + '0'
 
     if len(a) > length:
         return a[:length] if le else a[-length:]
