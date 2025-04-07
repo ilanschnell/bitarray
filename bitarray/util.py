@@ -275,9 +275,6 @@ to being strings.  Symbols may be any hashable object (such as `None`).
     if not isinstance(__freq_map, dict):
         raise TypeError("dict expected, got '%s'" % type(__freq_map).__name__)
 
-    b0 = bitarray('0', endian)
-    b1 = bitarray('1', endian)
-
     if len(__freq_map) < 2:
         if len(__freq_map) == 0:
             raise ValueError("cannot create Huffman code with no symbols")
@@ -287,7 +284,7 @@ to being strings.  Symbols may be any hashable object (such as `None`).
         # So we represent the symbol by a single code of length one, in
         # particular one 0 bit.  This is an incomplete code, since if a 1 bit
         # is received, it has no meaning and will result in an error.
-        return {list(__freq_map)[0]: b0}
+        return {list(__freq_map)[0]: bitarray('0', endian)}
 
     result = {}
 
@@ -295,8 +292,8 @@ to being strings.  Symbols may be any hashable object (such as `None`).
         try:                    # leaf
             result[nd.symbol] = prefix
         except AttributeError:  # parent, so traverse each of the children
-            traverse(nd.child[0], prefix + b0)
-            traverse(nd.child[1], prefix + b1)
+            traverse(nd.child[0], prefix + '0')
+            traverse(nd.child[1], prefix + '1')
 
     traverse(_huffman_tree(__freq_map))
     return result
