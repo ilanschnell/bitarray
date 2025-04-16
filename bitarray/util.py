@@ -170,7 +170,7 @@ The bit-endianness of the bitarray is respected.
 
     res = int.from_bytes(__a.tobytes(), byteorder=__a.endian())
 
-    if signed and res >= 1 << (length - 1):
+    if signed and res >> length - 1:
         res -= 1 << length
     return res
 
@@ -196,7 +196,7 @@ and requires `length` to be provided.
     if signed:
         if length is None:
             raise TypeError("signed requires argument 'length'")
-        m = 1 << (length - 1)
+        m = 1 << length - 1
         if not (-m <= __i < m):
             raise OverflowError("signed integer not in range(%d, %d), "
                                 "got %d" % (-m, m, __i))
