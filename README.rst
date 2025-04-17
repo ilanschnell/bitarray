@@ -63,8 +63,8 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 3.3.1
-    sys.version: 3.10.14 (main, Oct 25 2022) [Clang 16.0.6]
+    bitarray version: 3.3.2
+    sys.version: 3.10.14 (main, Mar 20 2024) [Clang 16.0.6]
     sys.prefix: /Users/ilan/miniforge3
     pointer size: 64 bit
     sizeof(size_t): 8
@@ -77,7 +77,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 516 tests in 0.187s
+    Ran 523 tests in 0.193s
 
     OK
 
