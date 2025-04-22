@@ -29,7 +29,7 @@ from bitarray.util import (
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
     ba2int, int2ba,
     sc_encode, sc_decode, vl_encode, vl_decode,
-    huffman_code, canonical_huffman, canonical_decode,
+    _huffman_tree, huffman_code, canonical_huffman, canonical_decode,
 )
 
 if DEBUG:
@@ -1974,6 +1974,29 @@ class SerializationTests(unittest.TestCase, Util):
             self.check_obj(c)
 
 # ---------------------------------------------------------------------------
+
+class HuffmanTreeTests(unittest.TestCase):  # tests for _huffman_tree()
+
+    def test_empty(self):
+        freq = {}
+        self.assertRaises(IndexError, _huffman_tree, freq)
+
+    def test_one_symbol(self):
+        freq = {"A": 1}
+        tree = _huffman_tree(freq)
+        self.assertEqual(tree.symbol, "A")
+        self.assertEqual(tree.freq, 1)
+        self.assertRaises(AttributeError, getattr, tree, 'child')
+
+    def test_two_symbols(self):
+        freq = {"A": 1, "B": 1}
+        tree = _huffman_tree(freq)
+        self.assertRaises(AttributeError, getattr, tree, 'symbol')
+        self.assertEqual(tree.child[0].symbol, "A")
+        self.assertEqual(tree.child[0].freq, 1)
+        self.assertEqual(tree.child[1].symbol, "B")
+        self.assertEqual(tree.child[1].freq, 1)
+
 
 class HuffmanTests(unittest.TestCase):
 

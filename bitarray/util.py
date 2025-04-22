@@ -235,9 +235,9 @@ and return its root node.
 
     class Node(object):
         """
-        A Node instance will either have a 'symbol' (leaf node) or
-        a 'child' (a tuple with both children) attribute.
-        The 'freq' attribute will always be present.
+        There are to tyes of Node instances (both have 'freq' attribute):
+          * leaf node: has 'symbol' attribute
+          * parent node: has 'child' attribute (tuple with both children)
         """
         def __lt__(self, other):
             # heapq needs to be able to compare the nodes
@@ -254,7 +254,7 @@ and return its root node.
     # repeat the process until only one node remains
     while len(minheap) > 1:
         # take the two nodes with lowest frequencies from the queue
-        # to construct a new node and push it onto the queue
+        # to construct a new parent node and push it onto the queue
         parent = Node()
         parent.child = heappop(minheap), heappop(minheap)
         parent.freq = parent.child[0].freq + parent.child[1].freq
