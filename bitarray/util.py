@@ -291,7 +291,7 @@ to being strings.  Symbols may be any hashable object (such as `None`).
     def traverse(nd, prefix=bitarray(0, endian)):
         try:                    # leaf
             result[nd.symbol] = prefix
-        except AttributeError:  # parent, so traverse each of the children
+        except AttributeError:  # parent, so traverse each child
             traverse(nd.child[0], prefix + '0')
             traverse(nd.child[1], prefix + '1')
 
@@ -328,7 +328,7 @@ Note: the two lists may be used as input for `canonical_decode()`.
         # now just simply record the length for reaching each symbol
         try:                    # leaf
             code_length[nd.symbol] = length
-        except AttributeError:  # parent, so traverse each of the children
+        except AttributeError:  # parent, so traverse each child
             traverse(nd.child[0], length + 1)
             traverse(nd.child[1], length + 1)
 
