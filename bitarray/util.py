@@ -334,9 +334,9 @@ Note: the two lists may be used as input for `canonical_decode()`.
 
     traverse(_huffman_tree(__freq_map))
 
-    # we now have a mapping of symbols to their code length,
-    # which is all we need
-
+    # We now have a mapping of symbols to their code length, which is all we
+    # need to construct a list of tuples (symbols, code length) sorted by
+    # code length:
     table = sorted(code_length.items(), key=lambda item: (item[1], item[0]))
 
     maxbits = max(item[1] for item in table)
