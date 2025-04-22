@@ -2116,6 +2116,10 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
                                     'r': bitarray('110')})
         self.assertEqual(count, [0, 1, 1, 1, 2])
         self.assertEqual(symbol, ['a', 'b', 'r', 'c', 'd'])
+        a = bitarray('01011001110011110101100')
+        msg = "abracadabra"
+        self.assertEqual(''.join(a.decode(codedict)), msg)
+        self.assertEqual(''.join(canonical_decode(a, count, symbol)), msg)
 
     def test_canonical_huffman_errors(self):
         self.assertRaises(TypeError, canonical_huffman, [])
