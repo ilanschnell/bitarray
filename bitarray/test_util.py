@@ -1992,6 +1992,7 @@ class HuffmanTreeTests(unittest.TestCase):  # tests for _huffman_tree()
         freq = {"A": 1, "B": 1}
         tree = _huffman_tree(freq)
         self.assertRaises(AttributeError, getattr, tree, 'symbol')
+        self.assertEqual(tree.freq, 2)
         self.assertEqual(tree.child[0].symbol, "A")
         self.assertEqual(tree.child[0].freq, 1)
         self.assertEqual(tree.child[1].symbol, "B")
@@ -2104,6 +2105,17 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         a.encode(chc, plain)
         self.assertEqual(bytearray(a.decode(chc)), plain)
         self.assertEqual(bytearray(canonical_decode(a, count, symbol)), plain)
+
+    def test_example(self):
+        cnt = {'a': 5, 'b': 3, 'c': 1, 'd': 1, 'r': 2}
+        codedict, count, symbol = canonical_huffman(cnt)
+        self.assertEqual(codedict, {'a': bitarray('0'),
+                                    'b': bitarray('10'),
+                                    'c': bitarray('1110'),
+                                    'd': bitarray('1111'),
+                                    'r': bitarray('110')})
+        self.assertEqual(count, [0, 1, 1, 1, 2])
+        self.assertEqual(symbol, ['a', 'b', 'r', 'c', 'd'])
 
     def test_canonical_huffman_errors(self):
         self.assertRaises(TypeError, canonical_huffman, [])
