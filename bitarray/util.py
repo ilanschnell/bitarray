@@ -284,7 +284,8 @@ to being strings.  Symbols may be any hashable object (such as `None`).
         # So we represent the symbol by a single code of length one, in
         # particular one 0 bit.  This is an incomplete code, since if a 1 bit
         # is received, it has no meaning and will result in an error.
-        return {list(__freq_map)[0]: bitarray('0', endian)}
+        sym = list(__freq_map)[0]
+        return {sym: bitarray('0', endian)}
 
     result = {}
 
