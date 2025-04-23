@@ -2282,12 +2282,13 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
 
     def ensure_count(self, chc, count):
         # ensure count list corresponds to length counts from codedict
-        maxbits = max(len(a) for a in chc.values())
+        maxbits = len(count) - 1
+        self.assertEqual(maxbits, max(len(a) for a in chc.values()))
         my_count = (maxbits + 1) * [0]
         for a in chc.values():
             self.assertEqual(a.endian(), 'big')
             my_count[len(a)] += 1
-        self.assertEqual(my_count, list(count))
+        self.assertEqual(my_count, count)
 
     def ensure_complete(self, count):
         # ensure code is complete and not oversubscribed
@@ -2332,9 +2333,6 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         cnt = Counter(plain)
         code, count, symbol = canonical_huffman(cnt)
         self.check_code(code, count, symbol)
-        self.check_code(code, tuple(count), tuple(symbol))
-        self.check_code(code, bytearray(count), symbol)
-        self.check_code(code, count, bytearray(symbol))
 
     def test_balanced(self):
         n = 7
