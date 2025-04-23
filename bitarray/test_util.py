@@ -2269,16 +2269,16 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
             self.assertTrue(ba2int(a) < ba2int(b))
 
     def ensure_consecutive(self, chc, count, symbol):
-        first = 0
+        start = 0
         for nbits, cnt in enumerate(count):
-            for i in range(first, first + cnt - 1):
+            for i in range(start, start + cnt - 1):
                 # ensure two consecutive codes (with same bit length) have
                 # consecutive integer values
                 a = chc[symbol[i]]
                 b = chc[symbol[i + 1]]
                 self.assertTrue(len(a) == len(b) == nbits)
                 self.assertEqual(ba2int(a) + 1, ba2int(b))
-            first += cnt
+            start += cnt
 
     def ensure_count(self, chc, count):
         # ensure count list corresponds to length counts from codedict
