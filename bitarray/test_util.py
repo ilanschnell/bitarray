@@ -2292,9 +2292,9 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
 
     def ensure_complete(self, count):
         # ensure code is complete and not oversubscribed
-        maxbits = len(count)
-        x = sum(count[i] << (maxbits - i) for i in range(1, maxbits))
-        self.assertEqual(x, 1 << maxbits)
+        len_c = len(count)
+        x = sum(count[i] << (len_c - i) for i in range(1, len_c))
+        self.assertEqual(x, 1 << len_c)
 
     def ensure_complete_2(self, chc):
         # ensure code is complete
