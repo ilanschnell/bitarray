@@ -2150,8 +2150,6 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, canonical_decode, a, [0, 1.0], s)
         # count element overflow
         self.assertRaises(OverflowError, canonical_decode, a, [0, 1 << 65], s)
-        # negative count
-        self.assertRaises(ValueError, canonical_decode, a, [0, -1], s)
         # symbol not sequence
         self.assertRaises(TypeError, canonical_decode, a, [0, 1], 43)
 
@@ -2160,10 +2158,14 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         self.assertRaisesMessage(ValueError,
                                  "sum(count) = 3, but len(symbol) = 4",
                                  canonical_decode, a, [0, 1, 2], symbol)
+        # negative count
+        self.assertRaisesMessage(ValueError,
+                      "count[1] cannot be negative or larger than 2, got -1",
+                      canonical_decode, a, [0, -1, 3], symbol)
         # count[i] > 1 << i
         self.assertRaisesMessage(ValueError,
-                        "count[2] cannot be negative or larger than 4, got 5",
-                        canonical_decode, a, [0, 2, 5], symbol)
+                      "count[2] cannot be negative or larger than 4, got 5",
+                      canonical_decode, a, [0, 2, 5], symbol)
         # count list too long
         self.assertRaisesMessage(ValueError,
                                  "len(count) cannot be larger than 31",
