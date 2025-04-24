@@ -2086,7 +2086,7 @@ class HuffmanTests(unittest.TestCase):
         self.check_tree(code)
 
     def test_random_freq(self):
-        for n in 2, 3, 5, randint(50, 200):
+        for n in 2, 3, 4, randint(5, 200):
             # create Huffman code for n symbols
             code = huffman_code({i: random() for i in range(n)})
             self.check_tree(code)
@@ -2331,8 +2331,11 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
     def test_simple_counter(self):
         plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
         cnt = Counter(plain)
-        code, count, symbol = canonical_huffman(cnt)
-        self.check_code(code, count, symbol)
+        self.check_code(*canonical_huffman(cnt))
+
+    def test_no_comp(self):
+        freq = {None: 1, "A": 1}  # None and "A" are not comparable
+        self.check_code(*canonical_huffman(freq))
 
     def test_balanced(self):
         n = 7
@@ -2352,11 +2355,11 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         code = canonical_huffman(freq)[0]
         self.assertEqual(len(code), n)
         for i in range(n):
-            self.assertEqual(len(code[i]), n - (1 if i <= 1 else i))
+            self.assertEqual(len(code[i]), n - max(1, i))
         self.check_code(*canonical_huffman(freq))
 
     def test_random_freq(self):
-        for n in 2, 3, 5, randint(50, 200):
+        for n in 2, 3, 4, randint(5, 200):
             freq = {i: random() for i in range(n)}
             self.check_code(*canonical_huffman(freq))
 

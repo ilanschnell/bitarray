@@ -338,7 +338,7 @@ Note: the two lists may be used as input for `canonical_decode()`.
     # We now have a mapping of symbols to their code length, which is all we
     # need to construct a list of tuples (symbol, code length) sorted by
     # code length:
-    table = sorted(code_length.items(), key=lambda item: (item[1], item[0]))
+    table = sorted(code_length.items(), key=lambda item: item[1])
 
     maxbits = table[-1][1]
     codedict = {}
