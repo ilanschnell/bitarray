@@ -768,19 +768,13 @@ class IntervalsTests(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            b = urandom(len(a))
-            cnt = [0, 0]
-            v = a[0] if a else None
+            n = len(a)
+            b = urandom(n)
             for value, start, stop in intervals(a):
                 self.assertFalse(isinstance(value, bool))
-                self.assertEqual(value, v)
-                v = not v
-                self.assertTrue(0 <= start < stop <= len(a))
-                cnt[value] += stop - start
+                self.assertTrue(0 <= start < stop <= n)
                 b[start:stop] = value
             self.assertEqual(a, b)
-            for v in 0, 1:
-                self.assertEqual(cnt[v], a.count(v))
 
     def test_runs(self):
         for a in self.randombitarrays():

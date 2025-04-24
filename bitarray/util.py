@@ -270,7 +270,7 @@ def huffman_code(__freq_map, endian=None):
 Given a frequency map, a dictionary mapping symbols to their frequency,
 calculate the Huffman code, i.e. a dict mapping those symbols to
 bitarrays (with given bit-endianness).  Note that the symbols are not limited
-to being strings.  Symbols may be any hashable object (such as `None`).
+to being strings.  Symbols may be any hashable object.
 """
     if not isinstance(__freq_map, dict):
         raise TypeError("dict expected, got '%s'" % type(__freq_map).__name__)
