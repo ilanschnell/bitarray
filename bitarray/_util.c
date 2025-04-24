@@ -1774,11 +1774,10 @@ static PyTypeObject CHDI_Type;
 static Py_ssize_t
 set_count(int *count, PyObject *sequence)
 {
-    Py_ssize_t n, c, res = 0;
+    Py_ssize_t n, res = 0;
     int i;
 
-    n = PySequence_Size(sequence);
-    if (n < 0)
+    if ((n = PySequence_Size(sequence)) < 0)
         return -1;
 
     if (n > MAXBITS) {
@@ -1787,23 +1786,23 @@ set_count(int *count, PyObject *sequence)
         return -1;
     }
 
-    for (i = 1; i <= MAXBITS; i++) {
-        c = 0;
-        if (i < n) {
-            PyObject *item = PySequence_GetItem(sequence, i);
-            Py_ssize_t maxcount = ((Py_ssize_t) 1) << i;
+    for (i = 0; i <= MAXBITS; i++)
+        count[i] = 0;
 
-            if (item == NULL)
-                return -1;
-            c = PyNumber_AsSsize_t(item, PyExc_OverflowError);
-            Py_DECREF(item);
-            if (c == -1 && PyErr_Occurred())
-                return -1;
-            if (c < 0 || c > maxcount) {
-                PyErr_Format(PyExc_ValueError, "count[%d] cannot be negative"
-                             " or larger than %zd, got %zd", i, maxcount, c);
-                return -1;
-            }
+    for (i = 1; i < n; i++) {
+        PyObject *item = PySequence_GetItem(sequence, i);
+        Py_ssize_t maxcount = ((Py_ssize_t) 1) << i, c;
+
+        if (item == NULL)
+            return -1;
+        c = PyNumber_AsSsize_t(item, PyExc_OverflowError);
+        Py_DECREF(item);
+        if (c == -1 && PyErr_Occurred())
+            return -1;
+        if (c < 0 || c > maxcount) {
+            PyErr_Format(PyExc_ValueError, "count[%d] cannot be negative "
+                         "or larger than %zd, got %zd", i, maxcount, c);
+            return -1;
         }
         count[i] = (int) c;
         res += c;
