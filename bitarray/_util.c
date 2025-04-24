@@ -1786,9 +1786,6 @@ set_count(int *count, PyObject *sequence)
         return -1;
     }
 
-    for (i = 0; i <= MAXBITS; i++)
-        count[i] = 0;
-
     for (i = 1; i < n; i++) {
         PyObject *item = PySequence_GetItem(sequence, i);
         Py_ssize_t maxcount = ((Py_ssize_t) 1) << i, c;
@@ -1807,6 +1804,9 @@ set_count(int *count, PyObject *sequence)
         count[i] = (int) c;
         res += c;
     }
+    for (i = n; i <= MAXBITS; i++)
+        count[i] = 0;
+
     return res;
 }
 

@@ -2152,8 +2152,6 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         self.assertRaises(OverflowError, canonical_decode, a, [0, 1 << 65], s)
         # negative count
         self.assertRaises(ValueError, canonical_decode, a, [0, -1], s)
-        # count list too long
-        self.assertRaises(ValueError, canonical_decode, a, 32 * [0], s)
         # symbol not sequence
         self.assertRaises(TypeError, canonical_decode, a, [0, 1], 43)
 
@@ -2166,6 +2164,10 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         self.assertRaisesMessage(ValueError,
                         "count[2] cannot be negative or larger than 4, got 5",
                         canonical_decode, a, [0, 2, 5], symbol)
+        # count list too long
+        self.assertRaisesMessage(ValueError,
+                                 "len(count) cannot be larger than 31",
+                                 canonical_decode, a, 32 * [0], symbol)
 
     def test_canonical_decode_simple(self):
         # symbols can be anything, they do not even have to be hashable here
@@ -2183,7 +2185,7 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         # the element count[0] is unused
         self.assertEqual(list(canonical_decode(a, [-47, 0, 4], s)), s)
         # in fact it can be anything, as it is entirely ignored
-        self.assertEqual(list(canonical_decode(a, [s, 0, 4], s)), s)
+        self.assertEqual(list(canonical_decode(a, [None, 0, 4], s)), s)
 
         # the symbol argument can be any sequence object
         s = [65, 66, 67, 98]
