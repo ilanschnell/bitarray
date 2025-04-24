@@ -2053,14 +2053,14 @@ class HuffmanTests(unittest.TestCase):
         self.check_tree(code)
 
     def test_unbalanced(self):
-        N = 27
+        n = 27
         freq = {}
-        for i in range(N):
+        for i in range(n):
             freq[i] = 2 ** i
         code = huffman_code(freq)
-        self.assertEqual(len(code), N)
-        for i in range(N):
-            self.assertEqual(len(code[i]), N - max(1, i))
+        self.assertEqual(len(code), n)
+        for i in range(n):
+            self.assertEqual(len(code[i]), n - max(1, i))
         self.check_tree(code)
 
     def test_counter(self):
@@ -2168,8 +2168,8 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
                       canonical_decode, a, [0, 2, 5], symbol)
         # count list too long
         self.assertRaisesMessage(ValueError,
-                                 "len(count) cannot be larger than 31",
-                                 canonical_decode, a, 32 * [0], symbol)
+                                 "len(count) cannot be larger than 32",
+                                 canonical_decode, a, 33 * [0], symbol)
 
     def test_canonical_decode_simple(self):
         # symbols can be anything, they do not even have to be hashable here
@@ -2346,7 +2346,7 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         self.check_code(code, count, sym)
 
     def test_unbalanced(self):
-        n = 29
+        n = 32
         freq = {}
         for i in range(n):
             freq[i] = 2 ** i

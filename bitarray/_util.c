@@ -1758,7 +1758,7 @@ in a binary stream.  Use `vl_decode()` for decoding.");
    - symbol is a Python sequence of the symbols in canonical order
      where the number of entries is the sum of the counts in count[].
  */
-#define MAXBITS  31                  /* maximum bits in a code */
+#define MAXBITS  31                  /* maximum bit length in a code */
 
 typedef struct {
     PyObject_HEAD
@@ -1780,12 +1780,13 @@ set_count(int *count, PyObject *sequence)
     if ((n = PySequence_Size(sequence)) < 0)
         return -1;
 
-    if (n > MAXBITS) {
+    if (n > MAXBITS + 1) {
         PyErr_Format(PyExc_ValueError, "len(count) cannot be larger than %d",
-                     MAXBITS);
+                     MAXBITS + 1);
         return -1;
     }
 
+    memset(count, 0, sizeof(int) * (MAXBITS + 1));
     for (i = 1; i < n; i++) {
         PyObject *item = PySequence_GetItem(sequence, i);
         Py_ssize_t maxcount = ((Py_ssize_t) 1) << i, c;
@@ -1804,8 +1805,6 @@ set_count(int *count, PyObject *sequence)
         count[i] = (int) c;
         res += c;
     }
-    for (i = n; i <= MAXBITS; i++)
-        count[i] = 0;
 
     return res;
 }
