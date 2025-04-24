@@ -2066,7 +2066,7 @@ class HuffmanTests(unittest.TestCase):
         code = huffman_code(freq)
         self.assertEqual(len(code), N)
         for i in range(N):
-            self.assertEqual(len(code[i]), N - (1 if i <= 1 else i))
+            self.assertEqual(len(code[i]), N - max(1, i))
         self.check_tree(code)
 
     def test_counter(self):
