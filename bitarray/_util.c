@@ -1789,7 +1789,8 @@ set_count(int *count, PyObject *sequence)
     memset(count, 0, sizeof(int) * (MAXBITS + 1));
     for (i = 1; i < n; i++) {
         PyObject *item = PySequence_GetItem(sequence, i);
-        Py_ssize_t maxcount = ((Py_ssize_t) 1) << i, c;
+        size_t maxcount = ((size_t) 1) << i;
+        Py_ssize_t c;
 
         if (item == NULL)
             return -1;
@@ -1797,15 +1798,14 @@ set_count(int *count, PyObject *sequence)
         Py_DECREF(item);
         if (c == -1 && PyErr_Occurred())
             return -1;
-        if (c < 0 || c > maxcount) {
+        if (c < 0 || ((size_t) c) > maxcount) {
             PyErr_Format(PyExc_ValueError, "count[%d] cannot be negative "
-                         "or larger than %zd, got %zd", i, maxcount, c);
+                         "or larger than %zu, got %zd", i, maxcount, c);
             return -1;
         }
         count[i] = (int) c;
         res += c;
     }
-
     return res;
 }
 
