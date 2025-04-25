@@ -2170,6 +2170,9 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
                                      (i, 1 << i),
                 canonical_decode, a, count, [])
 
+            if i == 31 and SYSINFO[1] == 4:
+                continue
+
             count[i] = (1 << i) + 1
             self.assertRaisesMessage(ValueError,
                 "count[%d] cannot be negative or larger than %d, got %d" %
