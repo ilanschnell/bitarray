@@ -1788,8 +1788,10 @@ set_count(int *count, PyObject *sequence)
 
     memset(count, 0, sizeof(int) * (MAXBITS + 1));
     for (i = 1; i < n; i++) {
-        PyObject *item = PySequence_GetItem(sequence, i);
+        /* on 32-bit machines ((Py_ssize_t) 1) << 31 equals -2147483648,
+           so use size_t */
         size_t maxcount = ((size_t) 1) << i;
+        PyObject *item = PySequence_GetItem(sequence, i);
         Py_ssize_t c;
 
         if (item == NULL)
