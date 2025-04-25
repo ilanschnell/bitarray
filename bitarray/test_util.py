@@ -2170,14 +2170,20 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
                                      (i, 1 << i),
                 canonical_decode, a, count, [])
 
-            count[i] = (1 << i) + 1
+            m = 1 << i
+            count[i] = m + 1
             if i == 31 and SYSINFO[1] == 4:
                 self.assertRaises(OverflowError,
                                   canonical_decode, a, count, [])
                 continue
             self.assertRaisesMessage(ValueError,
                 "count[%d] cannot be negative or larger than %d, got %d" %
-                                     (i, 1 << i, count[i]),
+                                     (i, m, count[i]),
+                canonical_decode, a, count, [])
+
+            count[i] = m
+            self.assertRaisesMessage(ValueError,
+                "sum(count) = %d, but len(symbol) = 0" % m,
                 canonical_decode, a, count, [])
 
         # count list too long
