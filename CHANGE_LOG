@@ -1,6 +1,8 @@
 2025-XX-XX   3.3.2:
 -------------------
   * simplify `util.int2ba()`
+  * fix off-by-one-error in check for length of count argument
+    in `util.canonical_decode()`
   * add tests
 
 

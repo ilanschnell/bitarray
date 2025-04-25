@@ -2188,6 +2188,9 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
                 "count[%d] not in [0..%d], got %d" % (i, maxbits, count[i]),
                 canonical_decode, a, count, [])
 
+        iter = canonical_decode(a, 32 * [0], [])
+        self.assertEqual(list(iter), [])
+
     def test_canonical_decode_simple(self):
         # symbols can be anything, they do not even have to be hashable here
         cnt = [0, 0, 4]
