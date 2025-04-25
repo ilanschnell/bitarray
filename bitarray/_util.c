@@ -1799,8 +1799,8 @@ set_count(int *count, PyObject *sequence)
         if (c == -1 && PyErr_Occurred())
             return -1;
         if (c >> i && (c - 1) >> i) {
-            PyErr_Format(PyExc_ValueError, "count[%d] cannot be negative or "
-                         "larger than %zu, got %zd", i, ((size_t) 1) << i, c);
+            PyErr_Format(PyExc_ValueError, "count[%d] not in [0..%zu], "
+                         "got %zd", i, ((size_t) 1) << i, c);
             return -1;
         }
         count[i] = (int) c;

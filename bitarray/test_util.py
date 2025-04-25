@@ -2166,8 +2166,7 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
             # negative count
             count[i] = -1
             self.assertRaisesMessage(ValueError,
-                "count[%d] cannot be negative or larger than %d, got -1" %
-                                     (i, 1 << i),
+                "count[%d] not in [0..%d], got -1" % (i, 1 << i),
                 canonical_decode, a, count, [])
 
             m = 1 << i
@@ -2177,8 +2176,7 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
                                   canonical_decode, a, count, [])
                 continue
             self.assertRaisesMessage(ValueError,
-                "count[%d] cannot be negative or larger than %d, got %d" %
-                                     (i, m, count[i]),
+                "count[%d] not in [0..%d], got %d" % (i, m, count[i]),
                 canonical_decode, a, count, [])
 
             count[i] = m
