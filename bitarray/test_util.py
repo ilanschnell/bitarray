@@ -2158,8 +2158,12 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         self.assertRaisesMessage(ValueError,
                                  "sum(count) = 3, but len(symbol) = 4",
                                  canonical_decode, a, [0, 1, 2], symbol)
+        # count list too long
+        self.assertRaisesMessage(ValueError,
+                                 "len(count) cannot be larger than 32",
+                                 canonical_decode, a, 33 * [0], symbol)
 
-    def test_canonical_decode_errors_count(self):
+    def test_canonical_decode_count_range(self):
         a = bitarray()
         for i in range(1, 32):
             count = 32 * [0]
@@ -2169,25 +2173,20 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
                 "count[%d] not in [0..%d], got -1" % (i, 1 << i),
                 canonical_decode, a, count, [])
 
-            m = 1 << i
-            count[i] = m + 1
+            maxbits = 1 << i
+            count[i] = maxbits
             if i == 31 and SYSINFO[1] == 4:
                 self.assertRaises(OverflowError,
                                   canonical_decode, a, count, [])
                 continue
             self.assertRaisesMessage(ValueError,
-                "count[%d] not in [0..%d], got %d" % (i, m, count[i]),
+                "sum(count) = %d, but len(symbol) = 0" % maxbits,
                 canonical_decode, a, count, [])
 
-            count[i] = m
+            count[i] = maxbits + 1
             self.assertRaisesMessage(ValueError,
-                "sum(count) = %d, but len(symbol) = 0" % m,
+                "count[%d] not in [0..%d], got %d" % (i, maxbits, count[i]),
                 canonical_decode, a, count, [])
-
-        # count list too long
-        self.assertRaisesMessage(ValueError,
-                                 "len(count) cannot be larger than 32",
-                                 canonical_decode, a, 33 * [0], [])
 
     def test_canonical_decode_simple(self):
         # symbols can be anything, they do not even have to be hashable here
