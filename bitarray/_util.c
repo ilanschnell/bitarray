@@ -1770,7 +1770,8 @@ typedef struct {
 
 static PyTypeObject CHDI_Type;
 
-/* set elements in count (from seq) and return their sum, or -1 on error */
+/* set elements in count (from sequence) and return their sum,
+   or -1 on error after setting exception */
 static Py_ssize_t
 set_count(int *count, PyObject *sequence)
 {
@@ -1788,21 +1789,18 @@ set_count(int *count, PyObject *sequence)
 
     memset(count, 0, sizeof(int) * (MAXBITS + 1));
     for (i = 1; i < n; i++) {
-        /* on 32-bit machines ((Py_ssize_t) 1) << 31 equals -2147483648,
-           so use size_t */
-        size_t maxcount = ((size_t) 1) << i;
-        PyObject *item = PySequence_GetItem(sequence, i);
+        PyObject *item;
         Py_ssize_t c;
 
-        if (item == NULL)
+        if ((item = PySequence_GetItem(sequence, i)) == NULL)
             return -1;
         c = PyNumber_AsSsize_t(item, PyExc_OverflowError);
         Py_DECREF(item);
         if (c == -1 && PyErr_Occurred())
             return -1;
-        if (c < 0 || ((size_t) c) > maxcount) {
-            PyErr_Format(PyExc_ValueError, "count[%d] cannot be negative "
-                         "or larger than %zu, got %zd", i, maxcount, c);
+        if (c >> i && (c - 1) >> i) {
+            PyErr_Format(PyExc_ValueError, "count[%d] cannot be negative or "
+                         "larger than %zu, got %zd", i, ((size_t) 1) << i, c);
             return -1;
         }
         count[i] = (int) c;
