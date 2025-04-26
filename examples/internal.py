@@ -9,8 +9,8 @@ class InternalTests(unittest.TestCase):
 
     def test_range_check(self):
         # used in various places in C code
-        for k in range(-10, 2000):
-            for i in range(0, 11):
+        for i in range(0, 11):
+            for k in range(-10, 2000):
                 res1 = k not in range(0, 1 << i)
                 # simply shift i to right and see if anything remains
                 res2 = bool(k >> i)
@@ -18,10 +18,10 @@ class InternalTests(unittest.TestCase):
 
     def test_range_check_2(self):
         # this is used in _util.c in set_count()
-        for k in range(-10, 2000):
-            for i in range(0, 11):
+        for i in range(0, 11):
+            for k in range(-10, 2000):
                 res1 = k not in range(0, (1 << i) + 1)
-                # simply shift i to right and see if anything remains
+                # same as above but combined with k substracted by 1
                 res2 = bool(k >> i) and bool((k - 1) >> i)
                 self.assertEqual(res1, res2)
 
