@@ -1,6 +1,6 @@
 """
-This file contains some "hacks" which are used in the C implementation of
-bitarray.
+This file contains some tricks and verifications for some code which is
+used in the C implementation of bitarray.
 """
 from random import randint
 import unittest
@@ -36,17 +36,19 @@ class InternalTests(unittest.TestCase):
         for _ in range(10_000):
             start = randint(-20, 100)
             stop = randint(-20, 100)
-            step = randint(-20, -1)
+            step = randint(-20, 20)
+            if step == 0:
+                continue
             r = range(start, stop, step)
             slicelength = len(r)
 
-            # from adjust_step_positive():
-            stop = start + 1
-            start = stop + step * (slicelength - 1) - 1
-            step = -step
+            if step < 0:
+                stop = start + 1
+                start = stop + step * (slicelength - 1) - 1
+                step = -step
+                r = r[::-1]
 
-            self.assertEqual(range(start, stop, step),
-                             r[::-1])
+            self.assertEqual(range(start, stop, step), r)
 
 
 if __name__ == '__main__':
