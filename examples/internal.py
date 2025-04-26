@@ -2,6 +2,7 @@
 This file contains some "hacks" which are used in the C implementation of
 bitarray.
 """
+from random import randint
 import unittest
 
 
@@ -30,6 +31,22 @@ class InternalTests(unittest.TestCase):
                 # same as above but combined with k substracted by 1
                 res3 = bool(k >> i) and bool((k - 1) >> i)
                 self.assertEqual(res1, res3)
+
+    def test_adjust_step_positive(self):
+        for _ in range(10_000):
+            start = randint(-20, 100)
+            stop = randint(-20, 100)
+            step = randint(-20, -1)
+            r = range(start, stop, step)
+            slicelength = len(r)
+
+            # from adjust_step_positive():
+            stop = start + 1
+            start = stop + step * (slicelength - 1) - 1
+            step = -step
+
+            self.assertEqual(range(start, stop, step),
+                             r[::-1])
 
 
 if __name__ == '__main__':
