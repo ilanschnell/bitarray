@@ -771,6 +771,9 @@ class InternalTests(unittest.TestCase, Util):
             x1[i1:j1] = x2[i2:j2] = 1
             self.check_overlap(b1, b2, (x1 & x2).any())
 
+            r1, r2 = range(i1, j1), range(i2, j2)
+            self.check_overlap(b1, b2, bool(set(r1) & set(r2)))
+
 # ---------------------------------------------------------------------------
 
 class SliceTests(unittest.TestCase, Util):
