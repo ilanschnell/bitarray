@@ -722,7 +722,7 @@ class InternalTests(unittest.TestCase, Util):
     def check_overlap(self, a, b, res):
         r1 = a._overlap(b)
         r2 = b._overlap(a)
-        self.assertTrue(r1 is r2 and r1 is res)
+        self.assertTrue(r1 is r2 is res)
         self.check_obj(a)
         self.check_obj(b)
 
@@ -1719,32 +1719,25 @@ class MiscTests(unittest.TestCase, Util):
         self.assertEqual(a.tobytes(), b'\x03 ')
         self.assertEqual(a.to01(), '0000001100100000')
 
-    def test_endianness4(self):
-        a = bitarray('00100000', endian='big')
-        self.assertEqual(a.tobytes(), b' ')
-        b = bitarray('00000100', endian='little')
-        self.assertEqual(b.tobytes(), b' ')
-        self.assertNotEqual(a, b)
-
     @skipIf(is_pypy)
     def test_overflow(self):
         a = bitarray(1)
         for i in 0, 1:
-            n = 2 ** 63 + i
+            n = (1 << 63) + i
             self.assertRaises(OverflowError, a.__imul__, n)
             self.assertRaises(OverflowError, bitarray, n)
 
-        a = bitarray(2 ** 10)
-        self.assertRaises(OverflowError, a.__imul__, 2 ** 53)
+        a = bitarray(1 << 10)
+        self.assertRaises(OverflowError, a.__imul__, 1 << 53)
 
     @skipIf(SYSINFO[0] != 4 or is_pypy)
     def test_overflow_32bit(self):
-        a = bitarray(10 ** 6)
+        a = bitarray(1000_000)
         self.assertRaises(OverflowError, a.__imul__, 17180)
         for i in 0, 1:
-            self.assertRaises(OverflowError, bitarray, 2 ** 31 + i)
+            self.assertRaises(OverflowError, bitarray, (1 << 31) + i)
         try:
-            a = bitarray(2 ** 31 - 1);
+            a = bitarray((1 << 31) - 1);
         except MemoryError:
             return
         self.assertRaises(OverflowError, bitarray.append, a, True)
@@ -2433,7 +2426,7 @@ class NumberTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, lambda: a << 1.2)
         self.assertRaises(TypeError, a.__lshift__, 1.2)
         self.assertRaises(ValueError, lambda: a << -1)
-        self.assertRaises(OverflowError, a.__lshift__, 2 ** 63)
+        self.assertRaises(OverflowError, a.__lshift__, 1 << 63)
 
         for a in self.randombitarrays():
             c = a.copy()

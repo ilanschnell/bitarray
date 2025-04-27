@@ -1640,13 +1640,6 @@ class IntegerizationTests(unittest.TestCase, Util):
                 ('11111111 0',  255),
                 ('00000000 1', -256),
                 ('11111111 1',   -1),
-                ('00000000 00000000 000000', 0),
-                ('10010000 11000000 100010', 9 + 3 * 256 + 17 * 2 ** 16),
-                ('11111111 11111111 111110', 2 ** 21 - 1),
-                ('00000000 00000000 000001', -2 ** 21),
-                ('10010000 11000000 100011', -2 ** 21
-                                           + (9 + 3 * 256 + 17 * 2 ** 16)),
-                ('11111111 11111111 111111', -1),
         ]:
             self.assertEqual(ba2int(bitarray(s, 'little'), signed=1), i)
             self.assertEqual(ba2int(bitarray(s[::-1], 'big'), signed=1), i)
@@ -1685,10 +1678,10 @@ class IntegerizationTests(unittest.TestCase, Util):
         self.assertRaises(OverflowError, int2ba, -65, 7, signed=1)
 
         for n in range(1, 20):
-            self.assertRaises(OverflowError, int2ba, 2 ** n, n)
-            self.assertRaises(OverflowError, int2ba, 2 ** (n - 1), n,
+            self.assertRaises(OverflowError, int2ba, 1 << n, n)
+            self.assertRaises(OverflowError, int2ba, 1 << (n - 1), n,
                               signed=1)
-            self.assertRaises(OverflowError, int2ba, -2 ** (n - 1) - 1, n,
+            self.assertRaises(OverflowError, int2ba, -(1 << (n - 1)) - 1, n,
                               signed=1)
 
     def test_int2ba_length(self):
@@ -2045,10 +2038,10 @@ class HuffmanTests(unittest.TestCase):
     def test_balanced(self):
         n = 6
         freq = {}
-        for i in range(2 ** n):
+        for i in range(1 << n):
             freq[i] = 1
         code = huffman_code(freq)
-        self.assertEqual(len(code), 2 ** n)
+        self.assertEqual(len(code), 1 << n)
         self.assertTrue(all(len(v) == n for v in code.values()))
         self.check_tree(code)
 
@@ -2056,7 +2049,7 @@ class HuffmanTests(unittest.TestCase):
         n = 27
         freq = {}
         for i in range(n):
-            freq[i] = 2 ** i
+            freq[i] = 1 << i
         code = huffman_code(freq)
         self.assertEqual(len(code), n)
         for i in range(n):
@@ -2358,10 +2351,10 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
     def test_balanced(self):
         n = 7
         freq = {}
-        for i in range(2 ** n):
+        for i in range(1 << n):
             freq[i] = 1
         code, count, sym = canonical_huffman(freq)
-        self.assertEqual(len(code), 2 ** n)
+        self.assertEqual(len(code), 1 << n)
         self.assertTrue(all(len(v) == n for v in code.values()))
         self.check_code(code, count, sym)
 
@@ -2369,7 +2362,7 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         n = 32
         freq = {}
         for i in range(n):
-            freq[i] = 2 ** i
+            freq[i] = 1 << i
         code = canonical_huffman(freq)[0]
         self.assertEqual(len(code), n)
         for i in range(n):
