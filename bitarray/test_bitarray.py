@@ -769,10 +769,14 @@ class InternalTests(unittest.TestCase, Util):
 
             x1, x2 = zeros(n), zeros(n)
             x1[i1:j1] = x2[i2:j2] = 1
-            self.check_overlap(b1, b2, (x1 & x2).any())
+            res1 = (x1 & x2).any()
+            self.check_overlap(b1, b2, res1)
 
             r1, r2 = range(i1, j1), range(i2, j2)
-            self.check_overlap(b1, b2, bool(set(r1) & set(r2)))
+            res2 = bool(set(r1) & set(r2))
+            self.assertEqual(res1, res2)
+            res3 = bool(r1) and bool(r2) and (i2 in r1 or i1 in r2)
+            self.assertEqual(res1, res3)
 
 # ---------------------------------------------------------------------------
 
