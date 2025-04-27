@@ -3,6 +3,7 @@
   * simplify `util.int2ba()`
   * fix off-by-one-error in check for length of count argument
     in `util.canonical_decode()`
+  * add [tricks example](../examples/tricks.py)
   * add tests
 
 
