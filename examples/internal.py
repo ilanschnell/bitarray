@@ -34,8 +34,8 @@ class InternalTests(unittest.TestCase):
 
     def test_adjust_step_positive(self):
         for _ in range(10_000):
-            start = randint(-20, 100)
-            stop = randint(-20, 100)
+            start = randint(-100, 100)
+            stop = randint(-100, 100)
             step = randint(-20, 20)
             if step == 0:
                 continue
@@ -49,6 +49,11 @@ class InternalTests(unittest.TestCase):
                 r = r[::-1]
 
             self.assertEqual(range(start, stop, step), r)
+            self.assertTrue(step > 0)
+            if slicelength == 0:
+                self.assertTrue(stop <= start)
+            elif step == 1:
+                self.assertEqual(stop - start, slicelength)
 
 
 if __name__ == '__main__':
