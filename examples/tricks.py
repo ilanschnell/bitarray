@@ -11,11 +11,14 @@ from bitarray.util import any_and
 
 class InternalTests(unittest.TestCase):
 
-    def test_range_check(self):
-        # used in various places in C code
+    def test_range_check_simple(self):
+        r = range(0, 256)
         for k in range(-10, 300):
             self.assertEqual(k < 0 or k > 0xff, bool(k >> 8))
+            self.assertEqual(k not in r, bool(k >> 8))
 
+    def test_range_check(self):
+        # used in various places in C code
         for i in range(0, 11):
             m = 1 << i
             for k in range(-10, 2000):
