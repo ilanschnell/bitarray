@@ -13,9 +13,12 @@ class InternalTests(unittest.TestCase):
 
     def test_range_check(self):
         # used in various places in C code
+        for k in range(-10, 300):
+            self.assertEqual(k < 0 or k > 0xff, bool(k >> 8))
+
         for i in range(0, 11):
+            m = 1 << i
             for k in range(-10, 2000):
-                m = 1 << i
                 res1 = k not in range(0, m)
                 res2 = k < 0 or k >= m
                 self.assertEqual(res1, res2)
@@ -26,8 +29,8 @@ class InternalTests(unittest.TestCase):
     def test_range_check_2(self):
         # this is used in _util.c in set_count()
         for i in range(0, 11):
+            m = 1 << i
             for k in range(-10, 2000):
-                m = 1 << i
                 res1 = k not in range(0, m + 1)
                 res2 = k < 0 or k > m
                 self.assertEqual(res1, res2)
