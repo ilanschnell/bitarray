@@ -1239,14 +1239,20 @@ Raises `ValueError` when the sub_bitarray is not present.");
 static PyObject *
 bitarray_insert(bitarrayobject *self, PyObject *args)
 {
-    Py_ssize_t i;
+    Py_ssize_t n = self->nbits, i;
     int vi;
 
     RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "nO&:insert", &i, conv_pybit, &vi))
         return NULL;
 
-    adjust_index(self->nbits, &i, 1);
+    if (i < 0) {
+        i += n;
+        if (i < 0)
+            i = 0;
+    }
+    if (i > n)
+        i = n;
 
     if (insert_n(self, i, 1) < 0)
         return NULL;
