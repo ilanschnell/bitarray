@@ -112,7 +112,7 @@ append_byte(state_obj *s, int byte)
 {
     char *cp;
 
-    if (byte < 0 || byte > 0xff) {
+    if (byte >> 8) {
         PyErr_Format(PyExc_ValueError, "invalid byte: %d", byte);
         return -1;
     }
@@ -339,7 +339,7 @@ state_extend_block(state_obj *self, PyObject *value)
     nbytes = PyNumber_AsSsize_t(value, NULL);
     if (nbytes == -1 && PyErr_Occurred())
         return NULL;
-    if (nbytes < 0 || nbytes > 0xffff)
+    if (nbytes >> 16)
         return PyErr_Format(PyExc_ValueError, "invalid block size: %zd",
                             nbytes);
     if (self->incnt % 8 != 0) {
