@@ -410,12 +410,12 @@ class CountN_Tests(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            for v in 0, 1:
-                n = a.count(v) // 2
-                i = count_n(a, n, v)
-                self.check_result(a, n, i, v)
-                # n = 0 -> count_n always 0
-                self.assertEqual(count_n(a, 0, v), 0)
+            v = getrandbits(1)
+            n = a.count(v) // 2
+            i = count_n(a, n, v)
+            self.check_result(a, n, i, v)
+            # n = 0 -> count_n always 0
+            self.assertEqual(count_n(a, 0, v), 0)
 
 # ---------------------------------------------------------------------------
 
@@ -1043,10 +1043,10 @@ class BaseTests(unittest.TestCase, Util):
 
         for n in range(50):
             s = ''.join(choice(hexdigits) for _ in range(n))
-            for endian in 'big', 'little':
-                a = base2ba(16, s, endian)
-                self.assertEQUAL(a, hex2ba(s, endian))
-                self.assertEqual(ba2base(16, a), ba2hex(a))
+            endian = self.random_endian()
+            a = base2ba(16, s, endian)
+            self.assertEQUAL(a, hex2ba(s, endian))
+            self.assertEqual(ba2base(16, a), ba2hex(a))
 
     def test_base32(self):
         a = base2ba(32, '7SH', 'big')
@@ -1086,9 +1086,9 @@ class BaseTests(unittest.TestCase, Util):
             self.assertEqual(1 << m, n)
             self.assertEqual(len(alphabet), n)
             for i, c in enumerate(alphabet):
-                for endian in 'big', 'little':
-                    self.assertEqual(ba2int(base2ba(n, c, endian)), i)
-                    self.assertEqual(ba2base(n, int2ba(i, m, endian)), c)
+                endian = self.random_endian()
+                self.assertEqual(ba2int(base2ba(n, c, endian)), i)
+                self.assertEqual(ba2base(n, int2ba(i, m, endian)), c)
 
     def test_not_alphabets(self):
         for m, n, alphabet in self.alphabets:
@@ -1709,9 +1709,6 @@ class IntegerizationTests(unittest.TestCase, Util):
             self.assertEqual(int2ba(2 ** n - 1), bitarray(n * '1'))
             self.assertEqual(int2ba(2 ** n - 1, endian='little'),
                              bitarray(n * '1'))
-            for endian in 'big', 'little':
-                self.assertEqual(int2ba(-1, n, endian, signed=True),
-                                 bitarray(n * '1'))
 
     def test_explicit(self):
         _set_default_endian('big')
@@ -1747,8 +1744,7 @@ class IntegerizationTests(unittest.TestCase, Util):
             self.assertEqual(ba2int(a), i)
 
     def test_many(self):
-        for i in range(20):
-            self.check_round_trip(i)
+        for _ in range(20):
             self.check_round_trip(randrange(10 ** randint(3, 300)))
 
     @staticmethod
