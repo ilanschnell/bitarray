@@ -1147,19 +1147,19 @@ class SliceTests(unittest.TestCase, Util):
 
     def test_setslice_bool_simple(self):
         for _ in range(100):
-            N = randint(100, 2000)
-            s = slice(randint(0, 20), randint(N - 20, N), randint(1, 20))
-            a = zeros(N)
+            n = randint(100, 2000)
+            s = slice(randint(0, 20), randint(n - 20, n), randint(1, 20))
+            a = bitarray(n)
             a[s] = 1
-            b = zeros(N)
+            b = bitarray(n)
             b[list(range(s.start, s.stop, s.step))] = 1
             self.assertEqual(a, b)
 
     def test_setslice_bool_range(self):
-        N = 200
-        a = bitarray(N, self.random_endian())
-        b = bitarray(N)
-        for step in range(-N - 1, N):
+        n = 200
+        a = bitarray(n, self.random_endian())
+        b = bitarray(n)
+        for step in range(-n - 1, n):
             if step == 0:
                 continue
             v = getrandbits(1)
@@ -1167,21 +1167,21 @@ class SliceTests(unittest.TestCase, Util):
             a[::step] = v
 
             b.setall(not v)
-            b[list(range(0, N, abs(step)))] = v
+            b[list(range(0, n, abs(step)))] = v
             if step < 0:
                 b.reverse()
             self.assertEqual(a, b)
 
     def test_setslice_bool_random(self):
-        N = 100
-        a = bitarray(N)
+        n = 100
+        a = bitarray(n)
         for _ in range(100):
             a.setall(0)
             aa = a.tolist()
-            step = self.rndsliceidx(N) or None
-            s = slice(self.rndsliceidx(N), self.rndsliceidx(N), step)
+            step = self.rndsliceidx(n) or None
+            s = slice(self.rndsliceidx(n), self.rndsliceidx(n), step)
             a[s] = 1
-            aa[s] = self.calc_slicelength(s, N) * [1]
+            aa[s] = self.calc_slicelength(s, n) * [1]
             self.assertEqual(a.tolist(), aa)
 
     def test_setslice_bool_random2(self):
@@ -1308,11 +1308,11 @@ class SliceTests(unittest.TestCase, Util):
             self.check_obj(b)
 
     def test_delslice_range_step(self):
-        N = 200
-        for step in range(-N - 1, N):
+        n = 200
+        for step in range(-n - 1, n):
             if step == 0:
                 continue
-            a = urandom(N, self.random_endian())
+            a = urandom(n, self.random_endian())
             lst = a.tolist()
             del a[::step]
             del lst[::step]
@@ -1509,11 +1509,11 @@ class SequenceIndexTests(unittest.TestCase, Util):
             n = len(a)
             lst = [randrange(n) for _ in range(n // 2)]
             b = a.copy()
-            for v in 0, 1:
-                a[lst] = v
-                for i in lst:
-                    b[i] = v
-                self.assertEqual(a, b)
+            v = getrandbits(1)
+            a[lst] = v
+            for i in lst:
+                b[i] = v
+            self.assertEqual(a, b)
 
     def test_set_bitarray_basic(self):
         a = zeros(10)
@@ -3628,8 +3628,8 @@ class IndexTests(unittest.TestCase, Util):
                 self.assertEqual(a.find(1, start, stop, 0), plst2[0])
                 self.assertEqual(a.find(1, start, stop, 1), plst2[-1])
             else:
-                for right in 0, 1:
-                    self.assertEqual(a.find(1, start, stop, right), -1)
+                right = getrandbits(1)
+                self.assertEqual(a.find(1, start, stop, right), -1)
 
     def test_random_sub(self):  # test finding sub_bitarray
         for _ in range(500):
@@ -3799,8 +3799,8 @@ class SearchTests(unittest.TestCase, Util):
             self.assertEqual(b in aa, bool(plst) if b else True)
 
             if not plst:  # test .find() not found
-                for right in 0, 1:
-                    self.assertEqual(a.find(b, i, j, right), -1)
+                right = getrandbits(1)
+                self.assertEqual(a.find(b, i, j, right), -1)
 
     def test_iterator_change(self):
         for right in 0, 1:
