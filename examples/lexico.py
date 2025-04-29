@@ -2,7 +2,7 @@
 # http://www-graphics.stanford.edu/~seander/bithacks.html#NextBitPermutation
 
 from bitarray import bitarray, get_default_endian
-from bitarray.util import ba2int, int2ba, zeros
+from bitarray.util import ba2int, int2ba
 
 from math import comb
 
@@ -21,7 +21,7 @@ in lexicographical order.
         raise ValueError("number of set bits must be in range(0, n + 1)")
 
     if k == 0:
-        yield zeros(n, endian)
+        yield bitarray(n, endian)
         return
 
     v = (1 << k) - 1

@@ -12,7 +12,7 @@ from random import random, randrange
 
 from bitarray import bitarray
 from bitarray.util import (
-    zeros, urandom,
+    urandom,
     serialize, deserialize,
     sc_encode, sc_decode,
     vl_encode, vl_decode,
@@ -117,7 +117,7 @@ Each bit has a probability p of being 1.
         # XXX what happens for small n?
         # when the probability p is small, it is faster to randomly
         # set p * n elements
-        a = zeros(n)
+        a = bitarray(n)
         for _ in range(int(p * n)):
             a[randrange(n)] = 1
         return a
