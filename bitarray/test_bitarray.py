@@ -3544,9 +3544,9 @@ class IndexTests(unittest.TestCase, Util):
             return -1
         s = slice(start, stop, 1)
         start, stop, stride = s.indices(n)
-        stop += 1
-        i = stop - 1 if right else start
-        return i if start <= i < stop else -1
+        if start > stop:
+            return -1
+        return stop if right else start
 
     def test_find_empty(self):
         # test staticmethod .find_empty() against Python builtins
