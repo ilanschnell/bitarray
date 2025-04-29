@@ -1,10 +1,10 @@
 2025-XX-XX   3.3.2:
 -------------------
-  * simplify `util.int2ba()`
   * fix off-by-one-error in check for length of count argument
     in `util.canonical_decode()`
-  * add [tricks example](../examples/tricks.py)
+  * simplify `util.int2ba()`
   * add tests
+  * add [tricks example](../examples/tricks.py)
 
 
 2025-04-04   3.3.1:
