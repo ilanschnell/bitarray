@@ -110,27 +110,7 @@ class Util(object):
         start, stop, step = s.indices(length)
         assert step < 0 or (start >= 0 and stop >= 0)
         assert step > 0 or (start >= -1 and stop >= -1)
-
-        # This implementation works because Python's floor division (a // b)
-        # always rounds to the lowest integer, even when a or b are negative.
-        res1 = (stop - start + (1 if step < 0 else -1)) // step + 1
-        if res1 < 0:
-            res1 = 0
-
-        # The above implementation is not used in C.
-        # In C's a / b, if either a or b is negative, the result depends on
-        # the compiler.  Therefore, we use the implementation below (where
-        # both a and b are always positive).
-        res2 = 0
-        if step < 0:
-            if stop < start:
-                res2 = (start - stop - 1) // (-step) + 1
-        else:
-            if start < stop:
-                res2 = (stop - start - 1) // step + 1
-
-        assert res1 == res2
-        return res1
+        return len(range(start, stop, step))
 
     def check_obj(self, a):
         self.assertIsInstance(a, bitarray)
