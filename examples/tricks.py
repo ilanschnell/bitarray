@@ -1,6 +1,6 @@
 """
-This file contains some tricks and verifications for some code which is
-used in the C implementation of bitarray.
+This file contains some little tricks and verifications for some code which
+is used in the C implementation of bitarray.
 """
 from random import randint
 import unittest
