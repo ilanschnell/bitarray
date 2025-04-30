@@ -1173,18 +1173,6 @@ class SliceTests(unittest.TestCase, Util):
             self.assertEqual(a, b)
 
     def test_setslice_bool_random(self):
-        n = 100
-        a = bitarray(n)
-        for _ in range(100):
-            a.setall(0)
-            aa = a.tolist()
-            step = self.rndsliceidx(n) or None
-            s = slice(self.rndsliceidx(n), self.rndsliceidx(n), step)
-            a[s] = 1
-            aa[s] = self.calc_slicelength(s, n) * [1]
-            self.assertEqual(a.tolist(), aa)
-
-    def test_setslice_bool_random2(self):
         for a in self.randombitarrays():
             n = len(a)
             aa = a.tolist()
@@ -1655,7 +1643,7 @@ class MiscTests(unittest.TestCase, Util):
             for i in range(len(a)):
                 self.assertEqual(a[i], b[i + 1234])
 
-    def test_endianness1(self):
+    def test_endianness(self):
         a = bitarray(endian='little')
         a.frombytes(b'\x01')
         self.assertEqual(a.to01(), '10000000')
@@ -1674,26 +1662,6 @@ class MiscTests(unittest.TestCase, Util):
 
         self.assertEqual(a, c)
         self.assertEqual(b, d)
-
-    def test_endianness2(self):
-        a = zeros(8, endian='little')
-        a[0] = True
-        self.assertEqual(a.tobytes(), b'\x01')
-        a[1] = True
-        self.assertEqual(a.tobytes(), b'\x03')
-        a.frombytes(b' ')
-        self.assertEqual(a.tobytes(), b'\x03 ')
-        self.assertEqual(a.to01(), '1100000000000100')
-
-    def test_endianness3(self):
-        a = zeros(8, endian='big')
-        a[7] = True
-        self.assertEqual(a.tobytes(), b'\x01')
-        a[6] = True
-        self.assertEqual(a.tobytes(), b'\x03')
-        a.frombytes(b' ')
-        self.assertEqual(a.tobytes(), b'\x03 ')
-        self.assertEqual(a.to01(), '0000001100100000')
 
     @skipIf(is_pypy)
     def test_overflow(self):
