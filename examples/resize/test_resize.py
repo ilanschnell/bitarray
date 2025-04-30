@@ -2,6 +2,7 @@ import unittest
 
 from bitarray import bitarray
 
+PATTERN = [0, 1, 4, 8, 16, 24, 32, 40, 48, 56, 64, 76, 88, 100, 112, 124, 136]
 
 def get_alloc(a):
     return a.buffer_info()[4]
@@ -22,11 +23,23 @@ def show(a):
 
 class ResizeTests(unittest.TestCase):
 
+    def test_pattern(self):
+        pat = []
+        a = bitarray()
+        prev = -1
+        while len(a) < 1000:
+            alloc = get_alloc(a)
+            if prev != alloc:
+                pat.append(alloc)
+            prev = alloc
+            a.append(0)
+        self.assertEqual(pat, PATTERN)
+
     def test_increase(self):
         # make sure sequence of appends will always increase allocated size
         a = bitarray()
         prev = -1
-        while len(a) < 1_000_000:
+        while len(a) < 100_000:
             alloc = get_alloc(a)
             self.assertTrue(prev <= alloc)
             prev = alloc
