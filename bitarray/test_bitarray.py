@@ -3794,21 +3794,14 @@ class SearchTests(unittest.TestCase, Util):
 
 class BytesTests(unittest.TestCase, Util):
 
-    @staticmethod
-    def randombytes():
-        for n in range(1, 20):
-            yield os.urandom(n)
-
     def test_frombytes_simple(self):
-        a = bitarray(endian='big')
+        a = bitarray("110", "big")
         a.frombytes(b'A')
-        self.assertEqual(a, bitarray('01000001'))
+        self.assertEqual(a, bitarray('110 01000001'))
 
-        b = a
-        b.frombytes(b'BC')
-        self.assertEQUAL(b, bitarray('01000001 01000010 01000011',
+        a.frombytes(b'BC')
+        self.assertEQUAL(a, bitarray('110 01000001 01000010 01000011',
                                      endian='big'))
-        self.assertTrue(b is a)
 
     def test_frombytes_types(self):
         a = bitarray(endian='big')
@@ -3829,17 +3822,16 @@ class BytesTests(unittest.TestCase, Util):
             self.assertRaises(TypeError, a.frombytes, x)
 
     def test_frombytes_bitarray(self):
-        for endian in 'little', 'big':
-            # endianness doesn't matter here as we're writting the buffer
-            # from bytes, and then getting the memoryview
-            b = bitarray(0, endian)
-            b.frombytes(b'ABC')
+        # endianness doesn't matter here as we're writting the buffer
+        # from bytes, and then getting the memoryview
+        b = bitarray(0, self.random_endian())
+        b.frombytes(b'ABC')
 
-            a = bitarray(0, 'big')
-            a.frombytes(bitarray(b))
-            self.assertEqual(a.endian(), 'big')
-            self.assertEqual(a, bitarray('01000001 01000010 01000011'))
-            self.check_obj(a)
+        a = bitarray(0, 'big')
+        a.frombytes(bitarray(b))
+        self.assertEqual(a.endian(), 'big')
+        self.assertEqual(a, bitarray('01000001 01000010 01000011'))
+        self.check_obj(a)
 
     def test_frombytes_self(self):
         a = bitarray()
@@ -3865,32 +3857,33 @@ class BytesTests(unittest.TestCase, Util):
         self.check_obj(a)
 
     def test_frombytes_random(self):
-        for b in self.randombitarrays():
-            for s in self.randombytes():
-                a = bitarray(endian=b.endian())
-                a.frombytes(s)
-                c = b.copy()
-                b.frombytes(s)
-                self.assertEQUAL(b[-len(a):], a)
-                self.assertEQUAL(b[:-len(a)], c)
-                self.assertEQUAL(b, c + a)
-                self.check_obj(a)
+        for n in range(20):
+            s = os.urandom(n)
+            b = bitarray(0, self.random_endian())
+            b.frombytes(s)
+            self.assertEqual(len(b), 8 * n)
+            for a in self.randombitarrays():
+                c = bitarray(a, b.endian())
+                c.frombytes(s)
+                self.assertEqual(c, a + b)
+                self.check_obj(c)
 
     def test_tobytes_empty(self):
         a = bitarray()
         self.assertEqual(a.tobytes(), b'')
 
     def test_tobytes_endian(self):
-        for end in ('big', 'little'):
-            a = bitarray(endian=end)
-            a.frombytes(b'foo')
-            self.assertEqual(a.tobytes(), b'foo')
+        a = bitarray(endian=self.random_endian())
+        a.frombytes(b'foo')
+        self.assertEqual(a.tobytes(), b'foo')
 
-            for s in self.randombytes():
-                a = bitarray(endian=end)
-                a.frombytes(s)
-                self.assertEqual(a.tobytes(), s)
-                self.check_obj(a)
+        for n in range(20):
+            s = os.urandom(n)
+            a = bitarray(endian=self.random_endian())
+            a.frombytes(s)
+            self.assertEqual(len(a), 8 * n)
+            self.assertEqual(a.tobytes(), s)
+            self.check_obj(a)
 
     def test_tobytes_explicit_ones(self):
         for n, s in [(1, b'\x01'), (2, b'\x03'), (3, b'\x07'), (4, b'\x0f'),
