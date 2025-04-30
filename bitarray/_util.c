@@ -135,13 +135,13 @@ zeros(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "endian", NULL};
     PyObject *endian = Py_None;
-    Py_ssize_t nbits;
+    Py_ssize_t n;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "n|O:zeros", kwlist,
-                                     &nbits, &endian))
+                                     &n, &endian))
         return NULL;
 
-    return (PyObject *) new_bitarray(nbits, endian, 0);
+    return (PyObject *) new_bitarray(n, endian, 0);
 }
 
 PyDoc_STRVAR(zeros_doc,
@@ -156,13 +156,13 @@ ones(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "endian", NULL};
     PyObject *endian = Py_None;
-    Py_ssize_t nbits;
+    Py_ssize_t n;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "n|O:ones", kwlist,
-                                     &nbits, &endian))
+                                     &n, &endian))
         return NULL;
 
-    return (PyObject *) new_bitarray(nbits, endian, 0xff);
+    return (PyObject *) new_bitarray(n, endian, 0xff);
 }
 
 PyDoc_STRVAR(ones_doc,
@@ -286,14 +286,14 @@ static PyObject *
 xor_indices(PyObject *module, PyObject *obj)
 {
     bitarrayobject *a;
-    Py_ssize_t res = 0, nbits, i;
+    Py_ssize_t res = 0, n, i;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
     a = (bitarrayobject *) obj;
-    nbits = a->nbits;
-    for (i = 1; i < nbits; i++) {
+    n = a->nbits;
+    for (i = 1; i < n; i++) {
         if (getbit(a, i))
             res ^= i;
     }
