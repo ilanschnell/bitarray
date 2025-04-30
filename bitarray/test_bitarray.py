@@ -3541,8 +3541,8 @@ class IndexTests(unittest.TestCase, Util):
                                  self.find_empty(n, start, stop, 1))
 
     def test_empty(self):
-        # now that we have the tested staticmethod .find_empty(), we use it
-        # to test .find() with an empty bitarray
+        # now that we have the established .find_empty(), we use it to
+        # test .find() with an empty bitarray
         empty = bitarray()
         for _ in range(50):
             n = randint(0, 5)
@@ -4124,7 +4124,7 @@ class FileTests(unittest.TestCase, Util):
             self.assertRaises(Exception, a.tofile, f)
 
     def test_tofile_large(self):
-        n = 100 * 1000
+        n = 100_000
         a = zeros(8 * n)
         a[2::37] = 1
         with open(self.tmpfname, 'wb') as f:
