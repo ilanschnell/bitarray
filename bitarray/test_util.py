@@ -719,7 +719,7 @@ class XoredIndicesTests(unittest.TestCase, Util):
         c = 0
         for _ in range(1000):
             self.assertEqual(xor_indices(a), c)
-            i = randint(0, len(a) - 1)
+            i = randrange(len(a))
             a.invert(i)
             c ^= i
 
@@ -884,8 +884,8 @@ class HexlifyTests(unittest.TestCase, Util):
 
     def test_random(self):
         for _ in range(100):
-            a = urandom(4 * randint(0, 100), self.random_endian())
-            s = ba2hex(a, group=randint(0, 10), sep=randint(0, 4) * " ")
+            a = urandom(4 * randrange(100), self.random_endian())
+            s = ba2hex(a, group=randrange(10), sep=randrange(5) * " ")
             b = hex2ba(s, endian=a.endian())
             self.assertEQUAL(a, b)
             self.check_obj(b)
@@ -939,7 +939,7 @@ class BaseTests(unittest.TestCase, Util):
             self.assertEqual(a, bitarray())
             a = urandom(60)
             c = list(ba2base(n, a))
-            for _ in range(randint(0, 80)):
+            for _ in range(randrange(80)):
                 c.insert(randint(0, len(c)), choice(WHITESPACE))
             s = ''.join(c)
             self.assertEqual(base2ba(n, s), a)
@@ -1103,10 +1103,10 @@ class BaseTests(unittest.TestCase, Util):
     def test_random(self):
         for _ in range(100):
             m = randint(1, 6)
-            a = urandom(m * randint(0, 100), self.random_endian())
+            a = urandom(m * randrange(100), self.random_endian())
             self.assertEqual(len(a) % m, 0)
             n = 1 << m
-            s = ba2base(n, a, group=randint(0, 10), sep=randint(0, 4) * " ")
+            s = ba2base(n, a, group=randrange(10), sep=randrange(5) * " ")
             b = base2ba(n, s, a.endian())
             self.assertEQUAL(a, b)
             self.check_obj(b)

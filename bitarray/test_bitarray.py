@@ -2167,14 +2167,12 @@ class SequenceTests(unittest.TestCase, Util):
     def test_repeat_random(self):
         for a in self.randombitarrays():
             b = a.copy()
-            for m in list(range(-3, 5)) + [randint(100, 200)]:
+            for m in list(range(-3, 5)) + [randint(5, 200)]:
                 res = bitarray(m * a.to01(), endian=a.endian())
                 self.assertEqual(len(res), len(a) * max(0, m))
 
-                c = a * m
-                self.assertEQUAL(c, res)
-                c = m * a
-                self.assertEQUAL(c, res)
+                self.assertEQUAL(a * m, res)
+                self.assertEQUAL(m * a, res)
 
                 c = a.copy()
                 c *= m
@@ -3181,7 +3179,7 @@ class To01Tests(unittest.TestCase, Util):
     def test_sep(self):
         for a in self.randombitarrays():
             sep = "".join(chr(randint(32, 126))
-                              for _ in range(randint(0, 10)))
+                              for _ in range(randrange(10)))
             self.assertEqual(a.to01(1, sep), sep.join(str(v) for v in a))
 
         a = bitarray("11100111")
@@ -3192,8 +3190,8 @@ class To01Tests(unittest.TestCase, Util):
     def test_random(self):
         for a in self.randombitarrays():
             n = len(a)
-            group = randint(0, 10)
-            nsep = randint(0, 5)
+            group = randrange(10)
+            nsep = randrange(6)
             s = a.to01(group, nsep * " ")
             self.assertEqual(a, bitarray(s))
             nspace = s.count(" ")
