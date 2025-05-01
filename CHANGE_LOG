@@ -4,6 +4,7 @@
     in `util.canonical_decode()`
   * simplify `util.int2ba()`
   * add tests
+  * add [masked indexing example](../examples/masked.py)
   * add [tricks example](../examples/tricks.py)
 
 
