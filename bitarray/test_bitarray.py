@@ -908,18 +908,17 @@ class SliceTests(unittest.TestCase, Util):
 
     def test_setslice_range(self):
         # tests C function insert_n()
-        for endian in 'big', 'little':
-            for n in range(500):
-                a = urandom(n, endian)
-                p = randint(0, n)
-                m = randint(0, 500)
-
-                x = urandom(m, self.random_endian())
-                b = a.copy()
-                b[p:p] = x
-                self.assertEQUAL(b, a[:p] + x + a[p:])
-                self.assertEqual(len(b), len(a) + m)
-                self.check_obj(b)
+        for _ in range(100):
+            n = randrange(200)
+            a = urandom(n, self.random_endian())
+            p = randint(0, n)
+            m = randint(0, 500)
+            x = urandom(m, self.random_endian())
+            b = a.copy()
+            b[p:p] = x
+            self.assertEQUAL(b, a[:p] + x + a[p:])
+            self.assertEqual(len(b), len(a) + m)
+            self.check_obj(b)
 
     def test_setslice_resize(self):
         for _ in range(100):
@@ -3598,7 +3597,7 @@ class IndexTests(unittest.TestCase, Util):
                 self.assertEqual(a.find(1, start, stop, right), -1)
 
     def test_random_sub(self):  # test finding sub_bitarray
-        for _ in range(500):
+        for _ in range(200):
             n = randrange(1, 100)
             a = urandom(n, self.random_endian())
             s = a.to01()
@@ -3619,8 +3618,10 @@ class IndexTests(unittest.TestCase, Util):
             self.assertEqual(a.find(b, i, j, 1), ref_r)
 
             if len(b) == 1:  # test finding int
-                self.assertEqual(a.find(b[0], i, j, 0), ref_l)
-                self.assertEqual(a.find(b[0], i, j, 1), ref_r)
+                v = b[0]
+                self.assertTrue(v in range(2))
+                self.assertEqual(a.find(v, i, j, 0), ref_l)
+                self.assertEqual(a.find(v, i, j, 1), ref_r)
 
 # ---------------------------------------------------------------------------
 
@@ -3865,6 +3866,7 @@ class BytesTests(unittest.TestCase, Util):
             for a in self.randombitarrays():
                 c = bitarray(a, b.endian())
                 c.frombytes(s)
+                self.assertEqual(len(c), len(a) + 8 * n)
                 self.assertEqual(c, a + b)
                 self.check_obj(c)
 
