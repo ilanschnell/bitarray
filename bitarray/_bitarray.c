@@ -1098,7 +1098,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     if (step > 0 && start > self->nbits)
         return PyLong_FromSsize_t(0);
 
-    slicelength = adjust_indices(self->nbits, &start, &stop, step);
+    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
 
     if (vi < 2) {                            /* value count */
         adjust_step_positive(slicelength, &start, &stop, &step);
@@ -1193,7 +1193,7 @@ bitarray_find(bitarrayobject *self, PyObject *args, PyObject *kwds)
         /* cannot find anything (including empty sub-bitarray) */
         return PyLong_FromSsize_t(-1);
 
-    adjust_indices(self->nbits, &start, &stop, 1);
+    PySlice_AdjustIndices(self->nbits, &start, &stop, 1);
 
     pos = find_obj(self, sub, start, stop, right);
     if (pos == -2)
@@ -3343,7 +3343,7 @@ bitarray_search(bitarrayobject *self, PyObject *args, PyObject *kwds)
     if (value_sub(sub) < 0)
         return NULL;
 
-    adjust_indices(self->nbits, &start, &stop, 1);
+    PySlice_AdjustIndices(self->nbits, &start, &stop, 1);
 
     it = PyObject_GC_New(searchiterobject, &SearchIter_Type);
     if (it == NULL)
