@@ -409,7 +409,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.3.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.3.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -847,7 +847,7 @@ This sub-module was added in version 1.2.
    Given a frequency map, a dictionary mapping symbols to their frequency,
    calculate the Huffman code, i.e. a dict mapping those symbols to
    bitarrays (with given bit-endianness).  Note that the symbols are not limited
-   to being strings.  Symbols may be any hashable object (such as ``None``).
+   to being strings.  Symbols may be any hashable object.
 
 
 ``int2ba(int, /, length=None, endian=None, signed=False)`` -> bitarray

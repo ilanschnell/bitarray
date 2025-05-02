@@ -1,6 +1,16 @@
 Change log
 ==========
 
+**3.3.2** (2025-05-02):
+
+* fix off-by-one-error in check for length of count argument
+  in ``util.canonical_decode()``
+* simplify ``util.int2ba()``
+* add tests
+* add `masked indexing example <../examples/masked.py>`__
+* add `tricks example <../examples/tricks.py>`__
+
+
 **3.3.1** (2025-04-04):
 
 * remove ``License`` classifier in favor of a SPDX license expression, `#231 <https://github.com/ilanschnell/bitarray/issues/231>`__
