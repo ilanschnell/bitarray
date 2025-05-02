@@ -1,6 +1,7 @@
 2025-05-XX   3.4.0:
 -------------------
   * drop Python 3.5 support
+  * remove adjust_indices() from header
 
 
 2025-05-02   3.3.2:
