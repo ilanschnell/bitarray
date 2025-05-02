@@ -3057,6 +3057,14 @@ class ReverseTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b[::-1])
             self.check_obj(a)
 
+    def test_imported(self):
+        a = bytearray([0, 1, 2, 3, 255])
+        b = bitarray(buffer=a)
+        # reversing an imported (writable) buffer
+        self.assertFalse(b.readonly)
+        b.reverse()
+        self.assertEqual(a, bytearray([255, 192, 64, 128, 0]))
+
 class RemoveTests(unittest.TestCase, Util):
 
     def test_explicit(self):

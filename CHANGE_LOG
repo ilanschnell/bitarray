@@ -2,6 +2,7 @@
 -------------------
   * drop Python 3.5 support
   * remove adjust_indices() from header
+  * allow .reverse() on imported buffer
 
 
 2025-05-02   3.3.2:

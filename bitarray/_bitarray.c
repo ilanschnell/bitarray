@@ -1398,9 +1398,13 @@ bitarray_reverse(bitarrayobject *self)
     /* reverse order of bits within each byte */
     bytereverse(self->ob_item, nbytes);
 
-    /* remove the p pad bits at the end of the original bitarray that
-       are now the leading p bits */
-    delete_n(self, 0, p);
+    /* Remove the p pad bits at the end of the original bitarray that
+       are now the leading p bits.
+       The reason why we don't just call delete_n(self, 0, p) here is that
+       it calls resize(), and we want to allow reversing an imported
+       writable buffer. */
+    copy_n(self, 0, self, p, self->nbits - p);
+    self->nbits -= p;
 
     Py_RETURN_NONE;
 }
