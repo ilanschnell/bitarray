@@ -1,3 +1,8 @@
+2025-05-XX   3.4.0:
+-------------------
+  * drop Python 3.5 support
+
+
 2025-05-02   3.3.2:
 -------------------
   * fix off-by-one-error in check for length of count argument

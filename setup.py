@@ -3,10 +3,10 @@ import sys
 import platform
 
 
-if sys.version_info[0] == 2:
+if sys.version_info[:3] < (3, 6, 1):
     sys.exit("""\
 ****************************************************************************
-*   Python 2 support of bitarray has been removed.
+*   bitarray requires Python 3.6.1 or later.
 *   The last version supporting Python 2 is bitarray 2.9.3.
 ****************************************************************************
 """)
@@ -50,7 +50,6 @@ setup(
         "Operating System :: OS Independent",
         "Programming Language :: C",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
