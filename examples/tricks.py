@@ -9,7 +9,7 @@ from bitarray import bitarray
 from bitarray.util import any_and
 
 
-class InternalTests(unittest.TestCase):
+class TricksTests(unittest.TestCase):
 
     def test_range_check_simple(self):
         r = range(0, 256)
