@@ -2569,8 +2569,8 @@ class NumberTests(unittest.TestCase, Util):
         self.assertEqual(a, bytearray([0xfc, 0x88, 0x11, 0xe1]))
         b[16:] &= bitarray("1111 0000 1111 0000")
         self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0xe0]))
-        b[8:24] >>= 8
-        self.assertEqual(a, bytearray([0xfc, 0x00, 0x88, 0xe0]))
+        b >>= 8
+        self.assertEqual(a, bytearray([0x00, 0xfc, 0x88, 0x10]))
 
 # ---------------------------------------------------------------------------
 
