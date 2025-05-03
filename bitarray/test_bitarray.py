@@ -2556,6 +2556,22 @@ class NumberTests(unittest.TestCase, Util):
         self.assertEqual(a << 3, bitarray('0011000'))
         self.assertRaises(TypeError, a.__ilshift__, 4)
 
+    def test_imported(self):
+        a = bytearray([0xf0, 0x01, 0x02, 0x0f])
+        b = bitarray(endian="big", buffer=a)
+        self.assertFalse(b.readonly)
+        # operate on imported (writable) buffer
+        b[8:24] <<= 3
+        self.assertEqual(a, bytearray([0xf0, 0x08, 0x10, 0x0f]))
+        b[0:9] |= bitarray("0000 1100 1")
+        self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0x0f]))
+        b[23:] ^= bitarray("1 1110 1110")
+        self.assertEqual(a, bytearray([0xfc, 0x88, 0x11, 0xe1]))
+        b[16:] &= bitarray("1111 0000 1111 0000")
+        self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0xe0]))
+        b[8:24] >>= 8
+        self.assertEqual(a, bytearray([0xfc, 0x00, 0x88, 0xe0]))
+
 # ---------------------------------------------------------------------------
 
 class ExtendTests(unittest.TestCase, Util):
