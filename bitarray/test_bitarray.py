@@ -3057,6 +3057,7 @@ class ReverseTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b[::-1])
             self.check_obj(a)
 
+    @skipIf(is_pypy)
     def test_imported(self):
         a = bytearray([0, 1, 2, 3, 255])
         b = bitarray(buffer=a)
