@@ -2450,14 +2450,13 @@ delsequence(bitarrayobject *self, PyObject *seq)
     int res = -1;
 
     nseq = PySequence_Size(seq);
-    if (nseq == 0)   /* shortcut - sequence is empty - nothing to delete */
-        return 0;
 
     /* create mask bitarray - note that it's bit-endianness is irrelevant */
     mask = newbitarrayobject(&Bitarray_Type, self->nbits, ENDIAN_LITTLE);
     if (mask == NULL)
         return -1;
-    memset(mask->ob_item, 0x00, (size_t) Py_SIZE(mask));
+    if (self->ob_item)
+        memset(mask->ob_item, 0x00, (size_t) Py_SIZE(mask));
 
     /* set indices from sequence in mask */
     for (j = 0; j < nseq; j++) {

@@ -1196,6 +1196,21 @@ class SliceTests(unittest.TestCase, Util):
             aa[s] = self.calc_slicelength(s, n) * [v]
             self.assertEqual(a.tolist(), aa)
 
+    @skipIf(is_pypy)
+    def test_set_imported(self):
+        a = bytearray([5, 1, 2, 3])
+        b = bitarray(endian="little", buffer=a)
+        self.assertFalse(b.readonly)
+        # operate on imported (writable) buffer
+        b[8:-8] = 1
+        self.assertEqual(a, bytearray([5, 0xff, 0xff, 3]))
+        b[8:-8:2] = 0
+        self.assertEqual(a, bytearray([5, 0xaa, 0xaa, 3]))
+        b[8:20] = bitarray('11110000 0011')
+        self.assertEqual(a, bytearray([5, 0x0f, 0xac, 3]))
+        b[-1] = 1
+        self.assertEqual(a, bytearray([5, 0x0f, 0xac, 0x83]))
+
     def test_setslice_to_int(self):
         a = bitarray('11111111')
         a[::2] = 0 #  ^ ^ ^ ^
@@ -1319,6 +1334,16 @@ class SliceTests(unittest.TestCase, Util):
             del lst[::step]
             self.assertEqual(a.tolist(), lst)
 
+    @skipIf(is_pypy)
+    def test_del_imported(self):
+        a = bytearray([5, 1, 2, 3])
+        b = bitarray(buffer=a)
+        self.assertFalse(b.readonly)
+        self.assertRaises(BufferError, b.__delitem__, 3)
+        self.assertRaises(BufferError, b.__delitem__, slice(3, 21))
+        # even though we don't delete anything, raise error
+        self.assertRaises(BufferError, b.__delitem__, slice(3, 3))
+
 # ---------------------------------------------------------------------------
 
 class MaskedIndexTests(unittest.TestCase, Util):
@@ -1367,6 +1392,15 @@ class MaskedIndexTests(unittest.TestCase, Util):
         a[b] = c
         self.assertEqual(a,
             bitarray('1000100'))
+
+    @skipIf(is_pypy)
+    def test_set_imported(self):
+        a = bytearray([0, 0xff])
+        #             00000000 11111111
+        b = bitarray(endian="big", buffer=a)
+        c = bitarray('00001111 00110011')
+        b[c] = bitarray(' 1001   01  10')
+        self.assertEqual(a, bytearray([0b00001001, 0b11011110]))
 
     def test_zeros_mask_set(self):
         for a in self.randombitarrays():
@@ -1454,6 +1488,16 @@ class MaskedIndexTests(unittest.TestCase, Util):
             # `del a[mask]` is equivalent to the in-place version of
             # selecting the inverted mask `a = a[~mask]`
             self.assertEqual(a[~mask], b)
+
+    @skipIf(is_pypy)
+    def test_del_imported(self):
+        a = bytearray([5, 3])
+        b = bitarray(buffer=a)
+        self.assertFalse(b.readonly)
+        self.assertRaises(BufferError, b.__delitem__,
+                          bitarray('00001111 00110011'))
+        # even though we don't delete anything, raise error
+        self.assertRaises(BufferError, b.__delitem__, bitarray(16))
 
 # ---------------------------------------------------------------------------
 
@@ -1554,6 +1598,17 @@ class SequenceIndexTests(unittest.TestCase, Util):
                 b[j] = c[i]
             self.assertEqual(a, b)
 
+    @skipIf(is_pypy)
+    def test_set_imported(self):
+        a = bytearray([0, 1, 2, 3])
+        b = bitarray(endian="big", buffer=a)
+        self.assertFalse(b.readonly)
+        # operate on imported (writable) buffer
+        b[range(0, 32, 8)] = 1
+        self.assertEqual(a, bytearray([0x80, 0x81, 0x82, 0x83]))
+        b[range(0, 10)] = bitarray("00001111 01", "little")
+        self.assertEqual(a, bytearray([0x0f, 0x41, 0x82, 0x83]))
+
     def test_del_basic(self):
         a = bitarray('00110101 00')
         #               ^ ^  ^  ^
@@ -1595,6 +1650,16 @@ class SequenceIndexTests(unittest.TestCase, Util):
             self.assertRaisesMessage(TypeError, msg, a.__getitem__, item)
             self.assertRaisesMessage(TypeError, msg, a.__setitem__, item, 1)
             self.assertRaisesMessage(TypeError, msg, a.__delitem__, item)
+
+    @skipIf(is_pypy)
+    def test_del_imported(self):
+        a = bytearray([0, 1, 2, 3])
+        b = bitarray(buffer=a)
+        self.assertFalse(b.readonly)
+        # operate on imported (writable) buffer
+        self.assertRaises(BufferError, b.__delitem__, range(0, 32, 8))
+        # even though we don't delete anything, raise error
+        self.assertRaises(BufferError, b.__delitem__, range(0))
 
 # ---------------------------------------------------------------------------
 
@@ -2851,6 +2916,15 @@ class InvertTests(unittest.TestCase, Util):
             a[i] = not a[i]
             self.assertEQUAL(a, b)
 
+    @skipIf(is_pypy)
+    def test_imported(self):
+        a = bytearray([0, 1, 2, 3, 32, 255])
+        b = bitarray(buffer=a)
+        # operate on imported (writable) buffer
+        self.assertFalse(b.readonly)
+        b.invert()
+        self.assertEqual(a, bytearray([255, 254, 253, 252, 223, 0]))
+
 class SortTests(unittest.TestCase, Util):
 
     def test_simple(self):
@@ -2883,6 +2957,16 @@ class SortTests(unittest.TestCase, Util):
                     a.sort(reverse=rev)
                 self.assertEqual(a, bitarray(lst))
                 self.check_obj(a)
+
+    @skipIf(is_pypy)
+    def test_imported(self):
+        a = bytearray([0x6f, 0xa5])
+        b = bitarray(endian="big", buffer=a)
+        self.assertFalse(b.readonly)
+        # operate on imported (writable) buffer
+        b.sort()
+        self.assertEqual(b.count(), 10)
+        self.assertEqual(a, bytearray([0x03, 0xff]))
 
 class PackTests(unittest.TestCase, Util):
 
@@ -3133,6 +3217,15 @@ class SetallTests(unittest.TestCase, Util):
             self.assertEqual(a.endian(), end)
             self.check_obj(a)
 
+    @skipIf(is_pypy)
+    def test_imported(self):
+        a = bytearray([0, 1, 2, 3])
+        b = bitarray(buffer=a)
+        self.assertFalse(b.readonly)
+        # operate on imported (writable) buffer
+        b.setall(1)
+        self.assertEqual(a, bytearray([0xff, 0xff, 0xff, 0xff]))
+
 class To01Tests(unittest.TestCase, Util):
 
     def test_no_grouping(self):
@@ -3268,6 +3361,15 @@ class ByteReverseTests(unittest.TestCase, Util):
             a.bytereverse()
             a = bitarray(a, self.opposite_endian(a.endian()))
             self.assertEqual(a.tobytes(), b.tobytes())
+
+    @skipIf(is_pypy)
+    def test_imported(self):
+        a = bytearray([0, 1, 2, 3, 255])
+        b = bitarray(buffer=a)
+        # operate on imported (writable) buffer
+        self.assertFalse(b.readonly)
+        b.bytereverse()
+        self.assertEqual(a, bytearray([0, 128, 64, 192, 255]))
 
 class ToListTests(unittest.TestCase, Util):
 
