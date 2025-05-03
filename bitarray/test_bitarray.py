@@ -2556,6 +2556,7 @@ class NumberTests(unittest.TestCase, Util):
         self.assertEqual(a << 3, bitarray('0011000'))
         self.assertRaises(TypeError, a.__ilshift__, 4)
 
+    @skipIf(is_pypy)
     def test_imported(self):
         a = bytearray([0xf0, 0x01, 0x02, 0x0f])
         b = bitarray(endian="big", buffer=a)
