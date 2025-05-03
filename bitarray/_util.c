@@ -423,7 +423,7 @@ correspond_all(PyObject *module, PyObject *args)
     uint64_t u, v, not_u, not_v;
     int rbits;
 
-    if (!PyArg_ParseTuple(args, "O!O!:_correspond_all",
+    if (!PyArg_ParseTuple(args, "O!O!:correspond_all",
                           bitarray_type_obj, (PyObject *) &a,
                           bitarray_type_obj, (PyObject *) &b))
         return NULL;

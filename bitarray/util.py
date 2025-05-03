@@ -29,7 +29,7 @@ __all__ = [
     'pprint', 'strip', 'count_n',
     'parity', 'xor_indices',
     'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
-    'intervals',
+    'correspond_all', 'intervals',
     'ba2hex', 'hex2ba',
     'ba2base', 'base2ba',
     'ba2int', 'int2ba',
