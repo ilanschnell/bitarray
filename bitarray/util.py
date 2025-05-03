@@ -15,7 +15,7 @@ from bitarray import bitarray, bits2bytes
 from bitarray._util import (
     zeros, ones, count_n, parity, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
-    _correspond_all,
+    correspond_all,
     serialize, deserialize,
     ba2hex, hex2ba,
     ba2base, base2ba,

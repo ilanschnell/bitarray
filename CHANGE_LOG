@@ -1,5 +1,6 @@
 2025-05-XX   3.4.0:
 -------------------
+  * add `util.correspond_all()`
   * drop Python 3.5 support
   * remove adjust_indices() from header
   * fix `.reverse()` on imported buffer

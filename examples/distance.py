@@ -5,7 +5,7 @@ The functions using bitarray are typically around 50 to 200 times faster.
 """
 from time import perf_counter
 
-from bitarray.util import _correspond_all, count_and, count_xor, urandom
+from bitarray.util import correspond_all, count_and, count_xor, urandom
 
 import numpy
 import scipy.spatial.distance as distance  # type: ignore
@@ -42,7 +42,7 @@ def sokalsneath(u, v):
     return R / (count_and(u, v) + R)
 
 def yule(u, v):
-    nff, nft, ntf, ntt = _correspond_all(u, v)
+    nff, nft, ntf, ntt = correspond_all(u, v)
     half_R = ntf * nft
     if half_R == 0:
         return 0.0

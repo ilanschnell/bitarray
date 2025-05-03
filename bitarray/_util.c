@@ -459,7 +459,7 @@ correspond_all(PyObject *module, PyObject *args)
 }
 
 PyDoc_STRVAR(correspond_all_doc,
-"_correspond_all(a, b, /) -> tuple\n\
+"correspond_all(a, b, /) -> tuple\n\
 \n\
 Return tuple with counts of: ~a & ~b, ~a & b, a & ~b, a & b");
 
@@ -1969,7 +1969,7 @@ static PyMethodDef module_functions[] = {
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
     {"any_and",   (PyCFunction) any_and,   METH_VARARGS, any_and_doc},
     {"subset",    (PyCFunction) subset,    METH_VARARGS, subset_doc},
-    {"_correspond_all",
+    {"correspond_all",
                   (PyCFunction) correspond_all,
                                            METH_VARARGS, correspond_all_doc},
     {"serialize", (PyCFunction) serialize, METH_O,       serialize_doc},

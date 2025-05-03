@@ -24,7 +24,7 @@ from bitarray.test_bitarray import Util, skipIf, SYSINFO, DEBUG, WHITESPACE
 from bitarray.util import (
     zeros, ones, urandom, pprint, strip, count_n,
     parity, xor_indices,
-    count_and, count_or, count_xor, any_and, subset, _correspond_all,
+    count_and, count_or, count_xor, any_and, subset, correspond_all,
     intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
     ba2int, int2ba,
@@ -609,11 +609,11 @@ class CorrespondAllTests(unittest.TestCase, Util):
     def test_basic(self):
         a = frozenbitarray('0101')
         b = bitarray('0111')
-        self.assertTrue(_correspond_all(a, b), (1, 1, 1, 1))
-        self.assertRaises(TypeError, _correspond_all)
+        self.assertTrue(correspond_all(a, b), (1, 1, 1, 1))
+        self.assertRaises(TypeError, correspond_all)
         b.append(1)
-        self.assertRaises(ValueError, _correspond_all, a, b)
-        self.assertRaises(ValueError, _correspond_all,
+        self.assertRaises(ValueError, correspond_all, a, b)
+        self.assertRaises(ValueError, correspond_all,
                           bitarray('01', 'little'),
                           bitarray('11', 'big'))
 
@@ -623,13 +623,13 @@ class CorrespondAllTests(unittest.TestCase, Util):
                 ('0000011111',
                  '0000100111', (4, 1, 2, 3)),
             ]:
-            self.assertEqual(_correspond_all(bitarray(a), bitarray(b)), res)
+            self.assertEqual(correspond_all(bitarray(a), bitarray(b)), res)
 
     def test_random(self):
         for a in self.randombitarrays():
             n = len(a)
             b = urandom(n, a.endian())
-            res = _correspond_all(a, b)
+            res = correspond_all(a, b)
             self.assertEqual(res[0], count_and(~a, ~b))
             self.assertEqual(res[1], count_and(~a, b))
             self.assertEqual(res[2], count_and(a, ~b))
