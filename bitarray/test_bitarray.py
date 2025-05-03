@@ -437,7 +437,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         msg = ("cannot extend bitarray with 'bytes', "
                "use .pack() or .frombytes() instead")
         for blob in b'', b'\x00', b'\x07\x80':
-            self.assertRaisesMessage(TypeError, msg, bitarray, b'')
+            self.assertRaisesMessage(TypeError, msg, bitarray, blob)
 
     def test_bitarray_simple(self):
         for n in range(10):
