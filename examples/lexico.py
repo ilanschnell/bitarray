@@ -1,7 +1,7 @@
 # issue 6
 # http://www-graphics.stanford.edu/~seander/bithacks.html#NextBitPermutation
 
-from bitarray import bitarray, get_default_endian
+from bitarray import bitarray
 from bitarray.util import ba2int, int2ba
 
 from math import comb
@@ -26,8 +26,7 @@ in lexicographical order.
 
     v = (1 << k) - 1
     for _ in range(comb(n, k)):
-        yield int2ba(v, length=n,
-                endian=get_default_endian() if endian is None else endian)
+        yield int2ba(v, length=n, endian=endian)
         t = (v | (v - 1)) + 1
         v = t | ((((t & -t) // (v & -v)) >> 1) - 1)
 
