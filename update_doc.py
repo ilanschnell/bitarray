@@ -17,6 +17,7 @@ NEW_IN = {
                               '2.9: add non-overlapping sub-bitarray count'],
     'bitarray.decode':        '3.0: returns iterator (equivalent to past '
                                    '`.iterdecode()`)',
+    'bitarray.endian':        '3.4: replaces former `.endian()` method',
     'bitarray.find':         ['2.1',
                               '2.9: add optional keyword argument `right`'],
     'bitarray.frombytes':     '2.5.0: allow bytes-like argument',
