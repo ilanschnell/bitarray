@@ -1150,7 +1150,7 @@ class SC_Tests(unittest.TestCase, Util):
 
         stream = iter([0x11, 0x05, 0x01, 0xff, 0, None, 'foo'])
         self.assertEqual(sc_decode(stream), bitarray('11111'))
-        self.assertTrue(next(stream) is None)
+        self.assertIsNone(next(stream))
         self.assertEqual(next(stream), 'foo')
 
     def test_decode_header_errors(self):
@@ -1526,7 +1526,7 @@ class VLFTests(unittest.TestCase, Util):
                 a = vl_decode(s)
             except TypeError:
                 pass
-            self.assertTrue(a is None)
+            self.assertIsNone(a)
         self.assertEqual(next(s), 'end.')
 
     def test_explicit_zeros(self):

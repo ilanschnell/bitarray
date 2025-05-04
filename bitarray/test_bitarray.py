@@ -1114,7 +1114,7 @@ class SliceTests(unittest.TestCase, Util):
                 lst_a = None
 
             if a is None:
-                self.assertTrue(lst_a is None)
+                self.assertIsNone(lst_a)
             else:
                 self.assertEqual(a.tolist(), lst_a)
                 self.check_obj(a)
@@ -4676,7 +4676,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(list(a.decode(d)), [None, 0, 1, '', 2])
         # iterator
         it = a.decode(d)
-        self.assertEqual(next(it), None)
+        self.assertIsNone(next(it))
         self.assertEqual(next(it), 0)
         self.assertEqual(next(it), 1)
         self.assertEqual(next(it), '')
