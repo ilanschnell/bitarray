@@ -537,11 +537,11 @@ byteswap(PyObject *module, PyObject *args)
 PyDoc_STRVAR(byteswap_doc,
 "byteswap(a, /, n=<buffer size>)\n\
 \n\
-Reverse all groups of `n` bytes of `a` in-place.\n\
-By default, all bytes (considered a single group) are reversed.\n\
-Note that `n` is not limited to 2, 4 and 8; any positive int is allowed.\n\
+Reverse every `n` consecutive bytes of `a` in-place.\n\
+By default, all bytes are reversed.  Note that `n` is not limited to 2, 4\n\
+or 8, but any positive integer is allowed.\n\
 Also, `a` may be any object that exposes a writeable buffer.\n\
-There is nothing bitarray object specific about this function.");
+Nothing about this function is specific to bitarray objects.");
 
 /* ---------------------------- serialization -------------------------- */
 

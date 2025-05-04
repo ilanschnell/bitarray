@@ -4,6 +4,7 @@ Tests for bitarray.util module
 from __future__ import absolute_import
 
 import os
+import array
 import base64
 import binascii
 import operator
@@ -11,7 +12,6 @@ import shutil
 import tempfile
 import unittest
 from io import StringIO
-from array import array
 from functools import reduce
 from string import hexdigits
 from random import choice, getrandbits, randrange, randint, random
@@ -669,10 +669,10 @@ class ByteswapTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray("11110000 1111"))
 
     def test_basic_array(self):
-        r = os.urandom(512)
-        for typecode in 'bhfq':
-            a = array(typecode, r)
-            self.assertEqual(len(a) * a.itemsize, 512)
+        r = os.urandom(64)
+        for typecode in array.typecodes:
+            a = array.array(typecode, r)
+            self.assertEqual(len(a) * a.itemsize, 64)
             a.byteswap()
             byteswap(a, a.itemsize)
             self.assertEqual(a.tobytes(), r)
@@ -1308,7 +1308,7 @@ class SC_Tests(unittest.TestCase, Util):
 
     def test_decode_types(self):
         blob = b'\x11\x03\x01\x20\0'
-        for b in blob, bytearray(blob), list(blob), array('B', blob):
+        for b in blob, bytearray(blob), list(blob), array.array('B', blob):
             a = sc_decode(b)
             self.assertIsType(a, 'bitarray')
             self.assertEqual(a.endian(), 'big')
