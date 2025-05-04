@@ -677,6 +677,14 @@ class ByteswapTests(unittest.TestCase, Util):
             byteswap(a, a.itemsize)
             self.assertEqual(a.tobytes(), r)
 
+    def test_empty(self):
+        a = bytearray()
+        byteswap(a)
+        self.assertEqual(a, bytearray())
+        for n in range(10):
+            byteswap(a, n)
+            self.assertEqual(a, bytearray())
+
     def test_errors(self):
         for a in b"AB", frozenbitarray(16):
             self.assertRaises(BufferError, byteswap, a)
@@ -688,7 +696,7 @@ class ByteswapTests(unittest.TestCase, Util):
             self.assertRaises(ValueError, byteswap, b, n)
 
     def test_range(self):
-        for n in range(1, 20):
+        for n in range(20):
             for m in range(20):
                 r = os.urandom(m * n)
                 a = bytearray(r)
