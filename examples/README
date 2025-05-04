@@ -1,6 +1,6 @@
 All files under this 'examples/' directory are unsupported.
 
-While bitarray itself supports Python 3.5+, some examples may require
+While bitarray itself supports Python 3.6+, some examples may require
 a later Python versoin.
 
 
