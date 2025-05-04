@@ -185,11 +185,11 @@ def copy_n(self, a, other, b, n):
 
 
 def test_copy_n():
-    from random import getrandbits, randrange, randint
+    from random import choice, randrange, randint
     from bitarray.util import urandom
 
     def random_endian():
-        return ['little', 'big'][getrandbits(1)]
+        return choice(['little', 'big'])
 
     max_size = 56
 

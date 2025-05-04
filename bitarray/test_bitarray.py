@@ -13,7 +13,7 @@ import unittest
 import shutil
 import tempfile
 from io import BytesIO
-from random import getrandbits, randrange, randint, shuffle
+from random import choice, getrandbits, randrange, randint, shuffle
 
 # imports needed inside tests
 import array
@@ -79,7 +79,7 @@ class Util(object):
 
     @staticmethod
     def random_endian():
-        return ['little', 'big'][getrandbits(1)]
+        return choice(['little', 'big'])
 
     def randombitarrays(self, start=0):
         for n in range(start, 10):
