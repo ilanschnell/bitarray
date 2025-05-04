@@ -463,6 +463,86 @@ PyDoc_STRVAR(correspond_all_doc,
 \n\
 Return tuple with counts of: ~a & ~b, ~a & b, a & ~b, a & b");
 
+
+static void
+byteswap_core(Py_buffer view, Py_ssize_t n)
+{
+    char *buff = view.buf;
+    Py_ssize_t m = view.len / n, k;
+
+    assert(n >= 1 && n * m == view.len);
+
+    if (n == 8 && HAVE_BUILTIN_BSWAP64) {
+        uint64_t *w = (uint64_t *) buff;
+        for (k = 0; k < m; k++)
+            w[k] = builtin_bswap64(w[k]);
+    }
+    else if (n == 4 && HAVE_BUILTIN_BSWAP32) {
+        uint32_t *w = (uint32_t *) buff;
+        for (k = 0; k < m; k++)
+            w[k] = builtin_bswap32(w[k]);
+    }
+    else if (n == 2 && HAVE_BUILTIN_BSWAP16) {
+        uint16_t *w = (uint16_t *) buff;
+        for (k = 0; k < m; k++)
+            w[k] = builtin_bswap16(w[k]);
+    }
+    else if (n >= 2) {
+        for (k = 0; k < view.len; k += n) {
+            Py_ssize_t i, j;
+            for (i = k, j = k + n - 1; i < j; i++, j--) {
+                char t = buff[i];
+                buff[i] = buff[j];
+                buff[j] = t;
+            }
+        }
+    }
+}
+
+static PyObject *
+byteswap(PyObject *module, PyObject *args)
+{
+    PyObject *obj;
+    Py_buffer view;
+    Py_ssize_t n = 0;
+
+    if (!PyArg_ParseTuple(args, "O|n:byteswap", &obj, &n))
+        return NULL;
+
+    if (PyObject_GetBuffer(obj, &view, PyBUF_SIMPLE | PyBUF_WRITABLE) < 0)
+        return NULL;
+
+    if (n == 0)
+        n = Py_MAX(1, view.len);
+
+    if (n < 1) {
+        PyErr_Format(PyExc_ValueError, "positive int expect, got %zd", n);
+        goto error;
+    }
+    if (view.len % n) {
+        PyErr_Format(PyExc_ValueError, "buffer size %zd not multiple of %zd",
+                     view.len, n);
+        goto error;
+    }
+
+    byteswap_core(view, n);
+
+    PyBuffer_Release(&view);
+    Py_RETURN_NONE;
+ error:
+    PyBuffer_Release(&view);
+    return NULL;
+}
+
+PyDoc_STRVAR(byteswap_doc,
+"byteswap(a, /, n=<buffer size>)\n\
+\n\
+Reverse all groups of `n` bytes of `a` in-place.\n\
+By default, all bytes (considered a single group) are reversed.\n\
+Note that `n` is not limited to 2, 4 and 8; any positive int is allowed.\n\
+Also, `a` may be any object that exposes a writeable buffer.\n\
+There is nothing bitarray object specific about this function.");
+
 /* ---------------------------- serialization -------------------------- */
 
 /*
@@ -1972,6 +2052,7 @@ static PyMethodDef module_functions[] = {
     {"correspond_all",
                   (PyCFunction) correspond_all,
                                            METH_VARARGS, correspond_all_doc},
+    {"byteswap",  (PyCFunction) byteswap,  METH_VARARGS, byteswap_doc},
     {"serialize", (PyCFunction) serialize, METH_O,       serialize_doc},
     {"deserialize",
                   (PyCFunction) deserialize,

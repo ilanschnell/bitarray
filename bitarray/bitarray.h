@@ -214,6 +214,30 @@ builtin_bswap64(uint64_t word)
 #endif
 }
 
+static inline uint32_t
+builtin_bswap32(uint32_t word)
+{
+#if (defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >= 5)))
+#  define HAVE_BUILTIN_BSWAP32  1
+    return __builtin_bswap32(word);
+#else
+#  define HAVE_BUILTIN_BSWAP32  0
+    Py_UNREACHABLE();
+#endif
+}
+
+static inline uint16_t
+builtin_bswap16(uint16_t word)
+{
+#if (defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >= 5)))
+#  define HAVE_BUILTIN_BSWAP16  1
+    return __builtin_bswap16(word);
+#else
+#  define HAVE_BUILTIN_BSWAP16  0
+    Py_UNREACHABLE();
+#endif
+}
+
 /* Return distance [0..3] to next aligned pointer.
    While on modern compilers uint64_t pointers may be misaligned, it may
    cause problems on older ones.  Moreover, it may lead to slowdown (even

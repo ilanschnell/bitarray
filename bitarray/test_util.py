@@ -19,13 +19,14 @@ from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       _set_default_endian)
-from bitarray.test_bitarray import Util, skipIf, SYSINFO, DEBUG, WHITESPACE
+from bitarray.test_bitarray import (Util, skipIf, is_pypy,
+                                    SYSINFO, DEBUG, WHITESPACE)
 
 from bitarray.util import (
     zeros, ones, urandom, pprint, strip, count_n,
     parity, xor_indices,
-    count_and, count_or, count_xor, any_and, subset, correspond_all,
-    intervals,
+    count_and, count_or, count_xor, any_and, subset,
+    correspond_all, byteswap, intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
     ba2int, int2ba,
     sc_encode, sc_decode, vl_encode, vl_decode,
@@ -638,6 +639,80 @@ class CorrespondAllTests(unittest.TestCase, Util):
             self.assertEqual(res[0], n - count_or(a, b))
             self.assertEqual(res[1] + res[2], count_xor(a, b))
             self.assertEqual(sum(res), n)
+
+# ---------------------------------------------------------------------------
+
+@skipIf(is_pypy)
+class ByteswapTests(unittest.TestCase, Util):
+
+    def test_basic_bytearray(self):
+        a = bytearray([1, 2, 3, 4])
+        byteswap(a, 2)
+        self.assertEqual(a, bytearray([2, 1, 4, 3]))
+        byteswap(a)
+        self.assertEqual(a, bytearray([3, 4, 1, 2]))
+
+        a = bytearray([1, 2, 3, 4, 5, 6])
+        byteswap(a, 3)
+        self.assertEqual(a, bytearray([3, 2, 1, 6, 5, 4]))
+        byteswap(a, 1)
+        self.assertEqual(a, bytearray([3, 2, 1, 6, 5, 4]))
+
+    def test_basic_bitarray(self):
+        a = bitarray("11110000 01010101")
+        byteswap(a)
+        self.assertEqual(a, bitarray("01010101 11110000"))
+
+        a = bitarray("11110000 1111")
+        byteswap(a)
+        byteswap(a)
+        self.assertEqual(a, bitarray("11110000 1111"))
+
+    def test_basic_array(self):
+        r = os.urandom(512)
+        for typecode in 'bhfq':
+            a = array(typecode, r)
+            self.assertEqual(len(a) * a.itemsize, 512)
+            a.byteswap()
+            byteswap(a, a.itemsize)
+            self.assertEqual(a.tobytes(), r)
+
+    def test_errors(self):
+        for a in b"AB", frozenbitarray(16):
+            self.assertRaises(BufferError, byteswap, a)
+
+        a = bytearray([1, 2, 3, 4])
+        b = bitarray(32)
+        for n in -1, 3, 5, 6:
+            self.assertRaises(ValueError, byteswap, a, n)
+            self.assertRaises(ValueError, byteswap, b, n)
+
+    def test_range(self):
+        for n in range(1, 20):
+            for m in range(20):
+                r = os.urandom(m * n)
+                a = bytearray(r)
+                byteswap(a, n)
+                lst = []
+                for i in range(m):
+                    x = r[i * n:i * n + n]
+                    lst.extend(x[::-1])
+                self.assertEqual(a, bytearray(lst))
+
+    def test_reverse_bytearray(self):
+        for n in range(100):
+            r = os.urandom(n)
+            a = bytearray(r)
+            byteswap(a)
+            self.assertEqual(a, bytearray(r[::-1]))
+
+    def test_reverse_bitarray(self):
+        for n in range(100):
+            a = urandom(8 * n)
+            b = a.copy()
+            byteswap(a)
+            a.bytereverse()
+            self.assertEqual(a, b[::-1])
 
 # ---------------------------------------------------------------------------
 
