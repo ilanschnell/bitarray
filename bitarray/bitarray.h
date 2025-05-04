@@ -214,30 +214,6 @@ builtin_bswap64(uint64_t word)
 #endif
 }
 
-static inline uint32_t
-builtin_bswap32(uint32_t word)
-{
-#if (defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >= 5)))
-#  define HAVE_BUILTIN_BSWAP32  1
-    return __builtin_bswap32(word);
-#else
-#  define HAVE_BUILTIN_BSWAP32  0
-    Py_UNREACHABLE();
-#endif
-}
-
-static inline uint16_t
-builtin_bswap16(uint16_t word)
-{
-#if (defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >= 5)))
-#  define HAVE_BUILTIN_BSWAP16  1
-    return __builtin_bswap16(word);
-#else
-#  define HAVE_BUILTIN_BSWAP16  0
-    Py_UNREACHABLE();
-#endif
-}
-
 static inline void
 reverse_n_bytes(char *buff, Py_ssize_t n)
 {

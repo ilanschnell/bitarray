@@ -477,16 +477,18 @@ byteswap_core(Py_buffer view, Py_ssize_t n)
         for (k = 0; k < m; k++)
             w[k] = builtin_bswap64(w[k]);
     }
-    else if (n == 4 && HAVE_BUILTIN_BSWAP32) {
+#if (defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >= 5)))
+    else if (n == 4) {
         uint32_t *w = (uint32_t *) buff;
         for (k = 0; k < m; k++)
-            w[k] = builtin_bswap32(w[k]);
+            w[k] = __builtin_bswap32(w[k]);
     }
-    else if (n == 2 && HAVE_BUILTIN_BSWAP16) {
+    else if (n == 2) {
         uint16_t *w = (uint16_t *) buff;
         for (k = 0; k < m; k++)
-            w[k] = builtin_bswap16(w[k]);
+            w[k] = __builtin_bswap16(w[k]);
     }
+#endif
     else if (n >= 2) {
         for (k = 0; k < view.len; k += n)
             reverse_n_bytes(buff + k, n);
