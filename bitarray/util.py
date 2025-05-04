@@ -165,10 +165,10 @@ The bit-endianness of the bitarray is respected.
         raise ValueError("non-empty bitarray expected")
 
     if __a.padbits:
-        pad = zeros(__a.padbits, __a.endian())
-        __a = __a + pad if __a.endian() == "little" else pad + __a
+        pad = zeros(__a.padbits, __a.endian)
+        __a = __a + pad if __a.endian == "little" else pad + __a
 
-    res = int.from_bytes(__a.tobytes(), byteorder=__a.endian())
+    res = int.from_bytes(__a.tobytes(), byteorder=__a.endian)
 
     if signed and res >> length - 1:
         res -= 1 << length
@@ -208,10 +208,10 @@ and requires `length` to be provided.
                                 "got %d" % (1 << length, __i))
 
     a = bitarray(0, endian)
-    b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian())
+    b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian)
     a.frombytes(b)
 
-    le = bool(a.endian() == 'little')
+    le = bool(a.endian == 'little')
     if length is None:
         return strip(a, 'right' if le else 'left') if a else a + '0'
 
@@ -220,7 +220,7 @@ and requires `length` to be provided.
     if len(a) == length:
         return a
     # len(a) < length, we need padding
-    pad = zeros(length - len(a), a.endian())
+    pad = zeros(length - len(a), a.endian)
     return a + pad if le else pad + a
 
 # ------------------------------ Huffman coding -----------------------------

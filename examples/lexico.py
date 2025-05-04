@@ -45,7 +45,7 @@ which case the lowest lexicographical permutation will be returned).
     t = (v | (v - 1)) + 1
     w = t | ((((t & -t) // (v & -v)) >> 1) - 1)
     try:
-        return int2ba(w, length=len(a), endian=a.endian())
+        return int2ba(w, length=len(a), endian=a.endian)
     except OverflowError:
         return a[::-1]
 
@@ -110,7 +110,7 @@ class PermTests(unittest.TestCase, Util):
             coll.add(frozenbitarray(a))
             self.assertEqual(len(a), len(s))
             self.assertEqual(a.count(), s1)
-            self.assertEqual(a.endian(), s.endian())
+            self.assertEqual(a.endian, s.endian)
             n += 1
             if a == s:
                 break
@@ -129,14 +129,14 @@ class PermTests(unittest.TestCase, Util):
             for endian in 'little', 'big':
                 a = bitarray(s, endian)
                 self.check_all_perm(a)
-                a.sort(a.endian() == 'little')
+                a.sort(a.endian == 'little')
                 self.check_order(a)
 
     def test_random(self):
         for n in range(1, 10):
             a = urandom(n, self.random_endian())
             self.check_all_perm(a)
-            a.sort(a.endian() == 'little')
+            a.sort(a.endian == 'little')
             self.check_order(a)
 
     def test_all_perm_explicit(self):

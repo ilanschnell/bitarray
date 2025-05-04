@@ -20,11 +20,11 @@ for k, v in CODEDICT['big'].items(): # type: ignore
     CODEDICT['little'][k] = v[::-1]  # type: ignore
 
 def prefix_ba2hex(a):
-    return ''.join(a.decode(CODEDICT[a.endian()]))
+    return ''.join(a.decode(CODEDICT[a.endian]))
 
 def prefix_hex2ba(s, endian=None):
     a = bitarray(0, endian or get_default_endian())
-    a.encode(CODEDICT[a.endian()], s)
+    a.encode(CODEDICT[a.endian], s)
     return a
 
 # ----- test

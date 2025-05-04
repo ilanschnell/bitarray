@@ -1128,18 +1128,6 @@ occurrences are counted within `[start:stop]` (`step` must be 1).");
 
 
 static PyObject *
-bitarray_endian(bitarrayobject *self)
-{
-    return PyUnicode_FromString(ENDIAN_STR(self->endian));
-}
-
-PyDoc_STRVAR(endian_doc,
-"endian() -> str\n\
-\n\
-Return the bit-endianness of the bitarray as a string (`little` or `big`).");
-
-
-static PyObject *
 bitarray_extend(bitarrayobject *self, PyObject *obj)
 {
     RAISE_IF_READONLY(self, NULL);
@@ -1876,6 +1864,12 @@ bitarray_overlap(bitarrayobject *self, PyObject *other)
 /* ---------------------- bitarray getset members ---------------------- */
 
 static PyObject *
+bitarray_get_endian(bitarrayobject *self, void *Py_UNUSED(ignored))
+{
+    return PyUnicode_FromString(ENDIAN_STR(self->endian));
+}
+
+static PyObject *
 bitarray_get_nbytes(bitarrayobject *self, void *Py_UNUSED(ignored))
 {
     return PyLong_FromSsize_t(Py_SIZE(self));
@@ -1894,6 +1888,8 @@ bitarray_get_readonly(bitarrayobject *self, void *Py_UNUSED(ignored))
 }
 
 static PyGetSetDef bitarray_getsets [] = {
+    {"endian", (getter) bitarray_get_endian, NULL,
+     PyDoc_STR("bit-endianness as string")},
     {"nbytes", (getter) bitarray_get_nbytes, NULL,
      PyDoc_STR("buffer size in bytes")},
     {"padbits", (getter) bitarray_get_padbits, NULL,
@@ -3464,8 +3460,6 @@ static PyMethodDef bitarray_methods[] = {
      decode_doc},
     {"encode",       (PyCFunction) bitarray_encode,      METH_VARARGS,
      encode_doc},
-    {"endian",       (PyCFunction) bitarray_endian,      METH_NOARGS,
-     endian_doc},
     {"extend",       (PyCFunction) bitarray_extend,      METH_O,
      extend_doc},
     {"fill",         (PyCFunction) bitarray_fill,        METH_NOARGS,

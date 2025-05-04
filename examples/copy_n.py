@@ -65,7 +65,7 @@ def shift_r8(self, a, b, n):
     self[8 * a : 8 * b] >>= n
 
 def is_be(self):
-    return self.endian() == 'big'
+    return self.endian == 'big'
 
 bitmask_table = [
     [0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80],  # little endian
@@ -150,7 +150,7 @@ def copy_n(self, a, other, b, n):
 
         # aligned copy -- copy first sb bits (if any) later
         memoryview(self)[p1:p1 + m] = memoryview(other)[p3:p3 + m]
-        if self.endian() != other.endian():
+        if self.endian != other.endian:
             self.bytereverse(p1, p1 + m)
 
         if verbose:

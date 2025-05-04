@@ -39,7 +39,7 @@ class Double:
         self.from_bitarray(a)
 
     def from_bitarray(self, a):
-        if len(a) != 64 or a.endian() != "little":
+        if len(a) != 64 or a.endian != "little":
             raise ValueError("litten endian bitarray of length 64 expected")
         self.sign = a[63]
         self.exponent = ba2int(a[52:63]) - 1023

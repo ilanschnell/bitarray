@@ -119,7 +119,7 @@ class Util(object):
                                                           a.buffer_info()
         self.assertEqual(nbytes, bits2bytes(len(a)))
         self.assertTrue(0 <= padbits < 8)
-        self.assertEqual(endian, a.endian())
+        self.assertEqual(endian, a.endian)
         self.assertTrue(endian in ('little', 'big'))
         self.assertEqual(a.nbytes, nbytes)
         self.assertEqual(a.padbits, padbits)
@@ -156,7 +156,7 @@ class Util(object):
 
     def assertEQUAL(self, a, b):
         self.assertEqual(a, b)
-        self.assertEqual(a.endian(), b.endian())
+        self.assertEqual(a.endian, b.endian)
 
     def assertIsType(self, a, b):
         self.assertEqual(type(a).__name__, b)
@@ -197,20 +197,20 @@ class TestsModuleFunctions(unittest.TestCase, Util):
         for default_endian in 'big', 'little':
             _set_default_endian(default_endian)
             a = bitarray()
-            self.assertEqual(a.endian(), default_endian)
+            self.assertEqual(a.endian, default_endian)
             for x in None, 0, 64, '10111', [1, 0]:
                 a = bitarray(x)
-                self.assertEqual(a.endian(), default_endian)
+                self.assertEqual(a.endian, default_endian)
 
             for endian in 'big', 'little', None:
                 a = bitarray(endian=endian)
-                self.assertEqual(a.endian(),
+                self.assertEqual(a.endian,
                                  default_endian if endian is None else endian)
 
             # make sure that calling _set_default_endian wrong does not
             # change the default endianness
             self.assertRaises(ValueError, _set_default_endian, 'foobar')
-            self.assertEqual(bitarray().endian(), default_endian)
+            self.assertEqual(bitarray().endian, default_endian)
 
     def test_get_default_endian(self):
         # takes no arguments
@@ -258,14 +258,14 @@ class CreateObjectTests(unittest.TestCase, Util):
     def test_endian(self):
         a = bitarray(endian='little')
         a.frombytes(b'ABC')
-        self.assertEqual(a.endian(), 'little')
-        self.assertIsInstance(a.endian(), str)
+        self.assertEqual(a.endian, 'little')
+        self.assertIsInstance(a.endian, str)
         self.check_obj(a)
 
         b = bitarray(endian='big')
         b.frombytes(b'ABC')
-        self.assertEqual(b.endian(), 'big')
-        self.assertIsInstance(a.endian(), str)
+        self.assertEqual(b.endian, 'big')
+        self.assertIsInstance(a.endian, str)
         self.check_obj(b)
 
         self.assertNotEqual(a, b)
@@ -278,8 +278,8 @@ class CreateObjectTests(unittest.TestCase, Util):
         a_little = bitarray()
         _set_default_endian('big')
 
-        self.assertEqual(a_big.endian(), 'big')
-        self.assertEqual(a_little.endian(), 'little')
+        self.assertEqual(a_big.endian, 'big')
+        self.assertEqual(a_little.endian, 'little')
 
     def test_endian_wrong(self):
         self.assertRaises(TypeError, bitarray, endian=0)
@@ -299,7 +299,7 @@ class CreateObjectTests(unittest.TestCase, Util):
 
             _set_default_endian(endian)
             a = bitarray(buffer=b'A')
-            self.assertEqual(a.endian(), endian)
+            self.assertEqual(a.endian, endian)
             self.assertEqual(len(a), 8)
 
     def test_buffer_readonly(self):
@@ -457,15 +457,15 @@ class CreateObjectTests(unittest.TestCase, Util):
 
             endian2 = self.opposite_endian(endian)
             b = bitarray(a, endian2)
-            self.assertEqual(b.endian(), endian2)
+            self.assertEqual(b.endian, endian2)
             self.assertEqual(a, b)
 
         for a in self.randombitarrays():
-            endian2 = self.opposite_endian(a.endian())
+            endian2 = self.opposite_endian(a.endian)
             b = bitarray(a, endian2)
             self.assertEqual(a, b)
-            self.assertEqual(b.endian(), endian2)
-            self.assertNotEqual(a.endian(), b.endian())
+            self.assertEqual(b.endian, endian2)
+            self.assertNotEqual(a.endian, b.endian)
 
     def test_bitarray_endianness(self):
         a = bitarray('11100001', endian='little')
@@ -568,7 +568,7 @@ class MetaDataTests(unittest.TestCase):
     def test_endian(self):
         for endian in 'big', 'little':
             a = bitarray(endian=endian)
-            self.assertEqual(a.endian(), endian)
+            self.assertEqual(a.endian, endian)
 
 # ---------------------------------------------------------------------------
 
@@ -620,7 +620,7 @@ class InternalTests(unittest.TestCase, Util):
             x._shift_r8(a, b, n)
             self.assertEqual(x.to01(), s)
             self.assertEqual(x, y)
-            self.assertEqual(x.endian(), y.endian())
+            self.assertEqual(x.endian, y.endian)
             self.assertEqual(len(x), N)
 
     def test_copy_n_explicit(self):
@@ -684,7 +684,7 @@ class InternalTests(unittest.TestCase, Util):
     @staticmethod
     def getslice(a, start, slicelength):
         # this is the Python eqivalent of __getitem__ for slices with step=1
-        b = bitarray(slicelength, a.endian())
+        b = bitarray(slicelength, a.endian)
         b._copy_n(0, a, start, slicelength)
         return b
 
@@ -803,7 +803,7 @@ class SliceTests(unittest.TestCase, Util):
             for _ in range(10):
                 step = self.rndsliceidx(la) or None
                 s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
-                self.assertEQUAL(a[s], bitarray(aa[s], endian=a.endian()))
+                self.assertEQUAL(a[s], bitarray(aa[s], endian=a.endian))
 
     def test_getslice_random_step1(self):
         for _ in range(1000):
@@ -815,7 +815,7 @@ class SliceTests(unittest.TestCase, Util):
             b = a[i:j]
             self.assertEqual(b.to01(), sa[i:j])
             self.assertEqual(len(b), max(j - i, 0))
-            self.assertEqual(b.endian(), a.endian())
+            self.assertEqual(b.endian, a.endian)
 
     def test_setitem_simple(self):
         a = bitarray('0')
@@ -1309,7 +1309,7 @@ class SliceTests(unittest.TestCase, Util):
                 self.check_obj(c)
                 c_lst = a.tolist()
                 del c_lst[s]
-                self.assertEQUAL(c, bitarray(c_lst, endian=c.endian()))
+                self.assertEQUAL(c, bitarray(c_lst, endian=c.endian))
 
     def test_delslice_range(self):
         # tests C function delete_n()
@@ -1428,7 +1428,7 @@ class MaskedIndexTests(unittest.TestCase, Util):
 
     def test_random_mask_set_zeros(self):
         for a in self.randombitarrays():
-            mask = urandom(len(a), endian=a.endian())
+            mask = urandom(len(a), endian=a.endian)
             b = a.copy()
             self.assertRaisesMessage(
                 NotImplementedError,
@@ -1441,7 +1441,7 @@ class MaskedIndexTests(unittest.TestCase, Util):
 
     def test_random_mask_set_ones(self):
         for a in self.randombitarrays():
-            mask = urandom(len(a), endian=a.endian())
+            mask = urandom(len(a), endian=a.endian)
             b = a.copy()
             self.assertRaisesMessage(
                 NotImplementedError,
@@ -1531,7 +1531,7 @@ class SequenceIndexTests(unittest.TestCase, Util):
             lst = [randrange(n) for _ in range(n // 2)]
             b = a[lst]
             self.assertEqual(b, bitarray(a[i] for i in lst))
-            self.assertEqual(b.endian(), a.endian())
+            self.assertEqual(b.endian, a.endian)
 
     def test_set_bool_basic(self):
         a = zeros(10)
@@ -1807,7 +1807,7 @@ class PickleTests(unittest.TestCase, Util):
         for endian in 'little', 'big':
             a = bitarray(endian=endian)
             b = pickle.loads(pickle.dumps(a))
-            self.assertEqual(b.endian(), endian)
+            self.assertEqual(b.endian, endian)
 
     def test_reduce_explicit(self):
         a = frozenbitarray('11001111 01001', 'little')
@@ -1828,7 +1828,7 @@ class PickleTests(unittest.TestCase, Util):
             (
                 type(a),         # type object
                 a.tobytes(),     # buffer
-                a.endian(),      # endianness
+                a.endian,      # endianness
                 a.padbits,       # number of pad bits
                 int(a.readonly)  # readonly
             ),
@@ -1838,7 +1838,7 @@ class PickleTests(unittest.TestCase, Util):
         b = _bitarray_reconstructor(*res[1])
         self.assertEqual(a, b)
         self.assertEqual(type(a), type(b))
-        self.assertEqual(a.endian(), b.endian())
+        self.assertEqual(a.endian, b.endian)
         self.assertEqual(a.readonly, b.readonly)
         self.check_obj(b)
 
@@ -1854,12 +1854,12 @@ class PickleTests(unittest.TestCase, Util):
     def test_reconstructor_explicit(self):
         a = _bitarray_reconstructor(bitarray, b'', 'little', 0, 0)
         self.assertEqual(len(a), 0)
-        self.assertEqual(a.endian(), 'little')
+        self.assertEqual(a.endian, 'little')
         self.check_obj(a)
 
         a = _bitarray_reconstructor(bitarray, b'\x0f', 'big', 1, 0)
         self.assertEqual(a, bitarray("0000111"))
-        self.assertEqual(a.endian(), 'big')
+        self.assertEqual(a.endian, 'big')
         self.check_obj(a)
 
     def test_reconstructor_invalid_args(self):
@@ -1917,14 +1917,14 @@ class PickleTests(unittest.TestCase, Util):
         ]):
             b = d['b%d' % i]
             self.assertEqual(b.to01(), s)
-            self.assertEqual(b.endian(), end)
+            self.assertEqual(b.endian, end)
             self.assertIsType(b, 'bitarray')
             self.assertFalse(b.readonly)
             self.check_obj(b)
 
             f = d['f%d' % i]
             self.assertEqual(f.to01(), s)
-            self.assertEqual(f.endian(), end)
+            self.assertEqual(f.endian, end)
             self.assertIsType(f, 'frozenbitarray')
             self.assertTrue(f.readonly)
             self.check_obj(f)
@@ -2150,7 +2150,7 @@ class SequenceTests(unittest.TestCase, Util):
                 bb = b.copy()
                 c = a + b
                 self.assertEqual(c, bitarray(a.tolist() + b.tolist()))
-                self.assertEqual(c.endian(), a.endian())
+                self.assertEqual(c.endian, a.endian)
                 self.check_obj(c)
 
                 self.assertEQUAL(a, aa)
@@ -2183,7 +2183,7 @@ class SequenceTests(unittest.TestCase, Util):
                 self.assertEqual(d, a + b)
                 self.assertTrue(c is d)
                 self.assertEQUAL(c, d)
-                self.assertEqual(d.endian(), a.endian())
+                self.assertEqual(d.endian, a.endian)
                 self.check_obj(d)
 
     def test_repeat_explicit(self):
@@ -2214,7 +2214,7 @@ class SequenceTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             b = a.copy()
             for m in list(range(-3, 5)) + [randint(5, 200)]:
-                res = bitarray(m * a.to01(), endian=a.endian())
+                res = bitarray(m * a.to01(), endian=a.endian)
                 self.assertEqual(len(res), len(a) * max(0, m))
 
                 self.assertEQUAL(a * m, res)
@@ -2398,7 +2398,7 @@ class NumberTests(unittest.TestCase, Util):
             aa = a.copy()
             self.assertEQUAL(a & a, aa)
             self.assertEQUAL(a | a, aa)
-            self.assertEQUAL(a ^ a, zeros(len(aa), aa.endian()))
+            self.assertEQUAL(a ^ a, zeros(len(aa), aa.endian))
             self.assertEQUAL(a, aa)
 
     def test_bitwise_inplace_self(self):
@@ -2409,7 +2409,7 @@ class NumberTests(unittest.TestCase, Util):
             a |= a
             self.assertEQUAL(a, aa)
             a ^= a
-            self.assertEqual(a, zeros(len(aa), aa.endian()))
+            self.assertEqual(a, zeros(len(aa), aa.endian))
 
     def test_invert(self):
         a = bitarray('11011')
@@ -2430,12 +2430,12 @@ class NumberTests(unittest.TestCase, Util):
     @staticmethod
     def shift(a, n, direction):
         if n >= len(a):
-            return zeros(len(a), a.endian())
+            return zeros(len(a), a.endian)
 
         if direction == 'right':
-            return zeros(n, a.endian()) + a[:len(a)-n]
+            return zeros(n, a.endian) + a[:len(a)-n]
         elif direction == 'left':
-            return a[n:] + zeros(n, a.endian())
+            return a[n:] + zeros(n, a.endian)
         else:
             raise ValueError("invalid direction: %s" % direction)
 
@@ -2534,7 +2534,7 @@ class NumberTests(unittest.TestCase, Util):
         # ensure shifts with len(a) (or larger) result in all zero bitarrays
         for a in self.randombitarrays():
             c = a.copy()
-            z = zeros(len(a), a.endian())
+            z = zeros(len(a), a.endian)
             n = randint(len(a), len(a) + 10)
             self.assertEQUAL(a << n, z)
             self.assertEQUAL(a >> n, z)
@@ -2606,7 +2606,7 @@ class ExtendTests(unittest.TestCase, Util):
                 c = bitarray(a)
                 c.extend(b)
                 self.assertEqual(c.to01(), sa + bb.to01())
-                self.assertEqual(c.endian(), a.endian())
+                self.assertEqual(c.endian, a.endian)
                 self.assertEqual(len(c), len(a) + len(b))
                 self.check_obj(c)
                 # ensure b hasn't changed
@@ -2765,11 +2765,11 @@ class ExtendTests(unittest.TestCase, Util):
             self.assertEqual(a, bitarray(2 * s))
 
         for a in self.randombitarrays():
-            endian = a.endian()
+            endian = a.endian
             s = a.to01()
             a.extend(a)
             self.assertEqual(a.to01(), 2 * s)
-            self.assertEqual(a.endian(), endian)
+            self.assertEqual(a.endian, endian)
             self.assertEqual(len(a), 2 * len(s))
             self.check_obj(a)
 
@@ -2830,7 +2830,7 @@ class AppendTests(unittest.TestCase, Util):
 
     def test_random(self):
         a = urandom(1000)
-        b = bitarray(endian=a.endian())
+        b = bitarray(endian=a.endian)
         for i in range(len(a)):
             b.append(a[i])
             self.assertEQUAL(b, a[:i+1])
@@ -2897,7 +2897,7 @@ class FillTests(unittest.TestCase, Util):
             self.assertTrue(b.padbits == 0)
             self.assertEqual(len(b) % 8, 0)
             self.assertEqual(b, a + zeros(res))
-            self.assertEqual(b.endian(), a.endian())
+            self.assertEqual(b.endian, a.endian)
             self.check_obj(b)
 
 class InvertTests(unittest.TestCase, Util):
@@ -3115,10 +3115,10 @@ class PopTests(unittest.TestCase, Util):
             if len(a) == 0:
                 continue
             aa = a.tolist()
-            enda = a.endian()
+            enda = a.endian
             self.assertEqual(a.pop(), aa[-1])
             self.check_obj(a)
-            self.assertEqual(a.endian(), enda)
+            self.assertEqual(a.endian, enda)
 
     def test_random_2(self):
         for a in self.randombitarrays(start=1):
@@ -3154,7 +3154,7 @@ class ReverseTests(unittest.TestCase, Util):
             b = a.copy()
             a.reverse()
             self.assertEqual(a.to01(), b.to01()[::-1])
-            self.assertEQUAL(a, bitarray(reversed(b), endian=a.endian()))
+            self.assertEQUAL(a, bitarray(reversed(b), endian=a.endian))
             self.assertEQUAL(a, b[::-1])
             self.check_obj(a)
 
@@ -3227,11 +3227,11 @@ class SetallTests(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            end = a.endian()
+            end = a.endian
             val = getrandbits(1)
             a.setall(val)
             self.assertEqual(a.to01(), len(a) * str(val))
-            self.assertEqual(a.endian(), end)
+            self.assertEqual(a.endian, end)
             self.check_obj(a)
 
     @skipIf(is_pypy)
@@ -3376,7 +3376,7 @@ class ByteReverseTests(unittest.TestCase, Util):
             a = urandom(8 * n, self.random_endian())
             b = a.copy()
             a.bytereverse()
-            a = bitarray(a, self.opposite_endian(a.endian()))
+            a = bitarray(a, self.opposite_endian(a.endian))
             self.assertEqual(a.tobytes(), b.tobytes())
 
     @skipIf(is_pypy)
@@ -3416,11 +3416,11 @@ class ClearTests(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            endian = a.endian()
+            endian = a.endian
             a.clear()
             self.assertFalse(a)
             self.assertEqual(len(a), 0)
-            self.assertEqual(a.endian(), endian)
+            self.assertEqual(a.endian, endian)
             self.check_obj(a)
 
 # ---------------------------------------------------------------------------
@@ -3972,7 +3972,7 @@ class BytesTests(unittest.TestCase, Util):
 
         a = bitarray(0, 'big')
         a.frombytes(bitarray(b))
-        self.assertEqual(a.endian(), 'big')
+        self.assertEqual(a.endian, 'big')
         self.assertEqual(a, bitarray('01000001 01000010 01000011'))
         self.check_obj(a)
 
@@ -4006,7 +4006,7 @@ class BytesTests(unittest.TestCase, Util):
             b.frombytes(s)
             self.assertEqual(len(b), 8 * n)
             for a in self.randombitarrays():
-                c = bitarray(a, b.endian())
+                c = bitarray(a, b.endian)
                 c.frombytes(s)
                 self.assertEqual(len(c), len(a) + 8 * n)
                 self.assertEqual(c, a + b)
@@ -4830,7 +4830,7 @@ class BufferImportTests(unittest.TestCase, Util):
     def test_bitarray_range(self):
         for n in range(100):
             a = urandom(n, self.random_endian())
-            b = bitarray(buffer=a, endian=a.endian())
+            b = bitarray(buffer=a, endian=a.endian)
             # an imported buffer will never have any pad bits
             self.assertEqual(b.padbits, 0)
             self.assertEqual(len(b) % 8, 0)
@@ -5048,11 +5048,11 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
 
         for endian in 'big', 'little':
             a = frozenbitarray(0, endian)
-            self.assertEqual(a.endian(), endian)
+            self.assertEqual(a.endian, endian)
             self.assertIsType(a, 'frozenbitarray')
 
             a = frozenbitarray(bitarray(0, endian))
-            self.assertEqual(a.endian(), endian)
+            self.assertEqual(a.endian, endian)
             self.assertIsType(a, 'frozenbitarray')
 
     def test_methods(self):
@@ -5205,9 +5205,9 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
     def test_hash_endianness_random(self):
         for a in self.randombitarrays():
             a = frozenbitarray(a)
-            b = frozenbitarray(a, self.opposite_endian(a.endian()))
+            b = frozenbitarray(a, self.opposite_endian(a.endian))
             self.assertEqual(a, b)
-            self.assertNotEqual(a.endian(), b.endian())
+            self.assertNotEqual(a.endian, b.endian)
             self.assertEqual(hash(a), hash(b))
             d = {a: 1, b: 2}
             self.assertEqual(len(d), 1)
@@ -5218,7 +5218,7 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
             f.foo = 42  # unlike bitarray itself, we can have attributes
             g = pickle.loads(pickle.dumps(f))
             self.assertEqual(f, g)
-            self.assertEqual(f.endian(), g.endian())
+            self.assertEqual(f.endian, g.endian)
             self.assertTrue(str(g).startswith('frozenbitarray'))
             self.assertTrue(g.readonly)
             self.check_obj(a)
