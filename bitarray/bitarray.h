@@ -238,6 +238,17 @@ builtin_bswap16(uint16_t word)
 #endif
 }
 
+static inline void
+reverse_n_bytes(char *buff, Py_ssize_t n)
+{
+    Py_ssize_t i, j;
+    for (i = 0, j = n - 1; i < j; i++, j--) {
+        char t = buff[i];
+        buff[i] = buff[j];
+        buff[j] = t;
+    }
+}
+
 /* Return distance [0..3] to next aligned pointer.
    While on modern compilers uint64_t pointers may be misaligned, it may
    cause problems on older ones.  Moreover, it may lead to slowdown (even

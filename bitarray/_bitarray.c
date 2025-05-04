@@ -1377,10 +1377,8 @@ bitarray_repr(bitarrayobject *self)
 static PyObject *
 bitarray_reverse(bitarrayobject *self)
 {
-    const Py_ssize_t nbytes = Py_SIZE(self);
     const Py_ssize_t p = PADBITS(self);  /* number of pad bits */
     char *buff = self->ob_item;
-    Py_ssize_t i, j;
 
     RAISE_IF_READONLY(self, NULL);
 
@@ -1390,13 +1388,10 @@ bitarray_reverse(bitarrayobject *self)
     self->nbits += p;
 
     /* reverse order of bytes */
-    for (i = 0, j = nbytes - 1; i < j; i++, j--) {
-        char t = buff[i];
-        buff[i] = buff[j];
-        buff[j] = t;
-    }
+    reverse_n_bytes(buff, Py_SIZE(self));
+
     /* reverse order of bits within each byte */
-    bytereverse(self->ob_item, nbytes);
+    bytereverse(self->ob_item, Py_SIZE(self));
 
     /* Remove the p pad bits at the end of the original bitarray that
        are now the leading p bits.

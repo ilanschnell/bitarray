@@ -488,14 +488,8 @@ byteswap_core(Py_buffer view, Py_ssize_t n)
             w[k] = builtin_bswap16(w[k]);
     }
     else if (n >= 2) {
-        for (k = 0; k < view.len; k += n) {
-            Py_ssize_t i, j;
-            for (i = k, j = k + n - 1; i < j; i++, j--) {
-                char t = buff[i];
-                buff[i] = buff[j];
-                buff[j] = t;
-            }
-        }
+        for (k = 0; k < view.len; k += n)
+            reverse_n_bytes(buff + k, n);
     }
 }
 
