@@ -77,7 +77,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 538 tests in 0.182s
+    Ran 546 tests in 0.182s
 
     OK
 
@@ -669,6 +669,8 @@ Data descriptors were added in version 2.6.
 
 ``endian`` -> str
    bit-endianness as string
+
+   New in version 3.4: replaces former ``.endian()`` method
 
 
 ``nbytes`` -> int
