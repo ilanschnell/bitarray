@@ -491,7 +491,7 @@ byteswap_core(Py_buffer view, Py_ssize_t n)
 #endif
     else if (n >= 2) {
         for (k = 0; k < view.len; k += n)
-            reverse_n_bytes(buff + k, n);
+            swap_bytes(buff + k, n);
     }
 }
 

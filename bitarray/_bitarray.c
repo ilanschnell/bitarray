@@ -1388,7 +1388,7 @@ bitarray_reverse(bitarrayobject *self)
     self->nbits += p;
 
     /* reverse order of bytes */
-    reverse_n_bytes(buff, Py_SIZE(self));
+    swap_bytes(buff, Py_SIZE(self));
 
     /* reverse order of bits within each byte */
     bytereverse(self->ob_item, Py_SIZE(self));

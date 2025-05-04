@@ -214,14 +214,15 @@ builtin_bswap64(uint64_t word)
 #endif
 }
 
+/* reverse order of first n bytes of p */
 static inline void
-reverse_n_bytes(char *buff, Py_ssize_t n)
+swap_bytes(char *p , Py_ssize_t n)
 {
     Py_ssize_t i, j;
     for (i = 0, j = n - 1; i < j; i++, j--) {
-        char t = buff[i];
-        buff[i] = buff[j];
-        buff[j] = t;
+        char t = p[i];
+        p[i] = p[j];
+        p[j] = t;
     }
 }
 
