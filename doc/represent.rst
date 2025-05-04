@@ -50,7 +50,7 @@ adds this information to a header byte:
     >>> x
     b'\x13\xce\r\x1cxJ\xf1\xe0'
     >>> b = deserialize(x)
-    >>> assert a == b and a.endian() == b.endian()
+    >>> assert a == b and a.endian == b.endian
 
 The header byte is structured the following way:
 
@@ -95,11 +95,11 @@ endianness changes:
 
 .. code-block:: python
 
-    >>> a.endian()
+    >>> a.endian
     'big'
     >>> b = bitarray(a, 'little')
     >>> assert a == b
-    >>> b.endian()
+    >>> b.endian
     'little'
     >>> ba2hex(b)
     '3785c1f'

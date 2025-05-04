@@ -63,7 +63,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 3.3.2
+    bitarray version: 3.4.0
     sys.version: 3.10.14 (main, Mar 20 2024) [Clang 16.0.6]
     sys.prefix: /Users/ilan/miniforge3
     pointer size: 64 bit
@@ -246,7 +246,7 @@ By default, bitarrays use big-endian representation:
 .. code-block:: python
 
     >>> a = bitarray()
-    >>> a.endian()
+    >>> a.endian
     'big'
     >>> a.frombytes(b'A')
     >>> a
@@ -268,7 +268,7 @@ specified explicitly:
     >>> a.frombytes(b'A')
     >>> a
     bitarray('10000010')
-    >>> a.endian()
+    >>> a.endian
     'little'
 
 Here, the low-bit comes first because little-endian means that increasing
@@ -409,7 +409,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.3.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.4.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -524,10 +524,6 @@ bitarray methods:
    Given a prefix code (a dict mapping symbols to bitarrays),
    iterate over the iterable object with symbols, and extend bitarray
    with corresponding bitarray for each symbol.
-
-
-``endian()`` -> str
-   Return the bit-endianness of the bitarray as a string (``little`` or ``big``).
 
 
 ``extend(iterable, /)``
@@ -671,6 +667,10 @@ bitarray data descriptors:
 
 Data descriptors were added in version 2.6.
 
+``endian`` -> str
+   bit-endianness as string
+
+
 ``nbytes`` -> int
    buffer size in bytes
 
@@ -775,6 +775,16 @@ This sub-module was added in version 1.2.
    New in version 3.3: ignore whitespace
 
 
+``byteswap(a, /, n=<buffer size>)``
+   Reverse every ``n`` consecutive bytes of ``a`` in-place.
+   By default, all bytes are reversed.  Note that ``n`` is not limited to 2, 4
+   or 8, but any positive integer is allowed.
+   Also, ``a`` may be any object that exposes a writeable buffer.
+   Nothing about this function is specific to bitarray objects.
+
+   New in version 3.4
+
+
 ``canonical_decode(bitarray, count, symbol, /)`` -> iterator
    Decode bitarray using canonical Huffman decoding tables
    where ``count`` is a sequence containing the number of symbols of each length
@@ -798,6 +808,12 @@ This sub-module was added in version 1.2.
    See also: `Canonical Huffman Coding <https://github.com/ilanschnell/bitarray/blob/master/doc/canonical.rst>`__
 
    New in version 2.5
+
+
+``correspond_all(a, b, /)`` -> tuple
+   Return tuple with counts of: ~a & ~b, ~a & b, a & ~b, a & b
+
+   New in version 3.4
 
 
 ``count_and(a, b, /)`` -> int

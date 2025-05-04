@@ -96,6 +96,7 @@ NOTES = {
 }
 
 GETSET = {
+    'bitarray.endian':     'str',
     'bitarray.nbytes':     'int',
     'bitarray.padbits':    'int',
     'bitarray.readonly':   'bool',
