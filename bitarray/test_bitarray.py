@@ -492,9 +492,13 @@ class CreateObjectTests(unittest.TestCase, Util):
 
     def test_wrong_args(self):
         # wrong types
-        for x in False, True, Ellipsis, slice(0), 0.0, 0 + 0j:
+        for x in (False, True, Ellipsis, slice(0), 0.0, 0 + 0j, b'\0',
+                  bytearray(b'\x00\x01'), array.array('b', b"\x00\x01")):
             self.assertRaises(TypeError, bitarray, x)
-        self.assertRaises(TypeError, bitarray, b'10')
+        self.assertRaisesMessage(
+            TypeError,
+            "cannot create bitarray from bytes-like object 'bytes'",
+            bitarray, b'')
         # wrong values
         for x in -1, 'A', '\0', '010\0 11':
             self.assertRaises(ValueError, bitarray, x)
@@ -2574,6 +2578,11 @@ class ExtendTests(unittest.TestCase, Util):
         for x in [None, 1, True, 24, 1.0, b'01', bytearray([0, 1]),
                   array.array('b', b"01")]:
             self.assertRaises(TypeError, a.extend, x)
+        self.assertRaisesMessage(
+            TypeError,
+            "cannot extend bitarray with bytes-like object 'bytes', "
+            "use .frombytes() or .pack() instead",
+            a.extend, b'')
         self.assertEqual(len(a), 0)
         self.check_obj(a)
 
