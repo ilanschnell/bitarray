@@ -3625,14 +3625,14 @@ newbitarray_from_index(PyTypeObject *type, PyObject *index,
 static PyObject *
 bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    PyObject *initial = Py_None, *buffer = Py_None;
+    static char *kwlist[] = {"", "endian", "buffer", NULL};
+    PyObject *initializer = Py_None, *buffer = Py_None;
     bitarrayobject *res;
     char *endian_str = NULL;
     int endian;
-    static char *kwlist[] = {"", "endian", "buffer", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OzO:bitarray", kwlist,
-                                     &initial, &endian_str, &buffer))
+                                     &initializer, &endian_str, &buffer))
         return NULL;
 
     if ((endian = endian_from_string(endian_str)) < 0)
@@ -3640,44 +3640,44 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* import buffer */
     if (buffer != Py_None && buffer != Py_Ellipsis) {
-        if (initial != Py_None) {
+        if (initializer != Py_None) {
             PyErr_SetString(PyExc_TypeError,
-                            "buffer requires no initial argument");
+                            "buffer requires no initializer argument");
             return NULL;
         }
         return newbitarray_from_buffer(type, buffer, endian);
     }
 
     /* no arg / None */
-    if (initial == Py_None)
+    if (initializer == Py_None)
         return (PyObject *) newbitarrayobject(type, 0, endian);
 
     /* bool */
-    if (PyBool_Check(initial)) {
+    if (PyBool_Check(initializer)) {
         PyErr_SetString(PyExc_TypeError,
                         "cannot create bitarray from 'bool' object");
         return NULL;
     }
 
     /* index (a number) */
-    if (PyIndex_Check(initial))
-        return newbitarray_from_index(type, initial, endian,
+    if (PyIndex_Check(initializer))
+        return newbitarray_from_index(type, initializer, endian,
                                       buffer == Py_None);
 
-    /* bytes-like object */
-    if (PyObject_CheckBuffer(initial) && !bitarray_Check(initial))
+    /* bytes-like object, but not bitarray */
+    if (PyObject_CheckBuffer(initializer) && !bitarray_Check(initializer))
         return PyErr_Format(PyExc_TypeError, "cannot create bitarray from "
                             "bytes-like object '%s'",
-                            Py_TYPE(initial)->tp_name);
+                            Py_TYPE(initializer)->tp_name);
 
     /* bitarray: use its bit-endianness when endian argument is missing */
-    if (bitarray_Check(initial) && endian_str == NULL)
-        endian = ((bitarrayobject *) initial)->endian;
+    if (bitarray_Check(initializer) && endian_str == NULL)
+        endian = ((bitarrayobject *) initializer)->endian;
 
     /* leave remaining type dispatch to extend method */
     if ((res = newbitarrayobject(type, 0, endian)) == NULL)
         return NULL;
-    if (extend_dispatch(res, initial) < 0) {
+    if (extend_dispatch(res, initializer) < 0) {
         Py_DECREF(res);
         return NULL;
     }
@@ -3888,15 +3888,12 @@ PyDoc_STRVAR(bitarraytype_doc,
 "bitarray(initializer=0, /, endian='big', buffer=None) -> bitarray\n\
 \n\
 Return a new bitarray object whose items are bits initialized from\n\
-the optional initial object, and bit-endianness.\n\
-The initializer may be of the following types:\n\
+the optional initializer, and bit-endianness.\n\
+The initializer may be one of the following types:\n\
 \n\
-`int`: Create a bitarray of given integer length.  The initial values are\n\
-all `0`.\n\
-\n\
-`str`: Create bitarray from a string of `0` and `1`.\n\
-\n\
-`iterable`: Create bitarray from iterable (or sequence) of integers 0 or 1.\n\
+* `int`: Create bitarray (initialized to zeros) of given length.\n\
+* `str`: Unicode string of `0` and `1`.\n\
+* iterable of integers 0 or 1.\n\
 \n\
 Optional keyword arguments:\n\
 \n\

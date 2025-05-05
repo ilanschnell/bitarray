@@ -422,15 +422,12 @@ The bitarray object:
 
 ``bitarray(initializer=0, /, endian='big', buffer=None)`` -> bitarray
    Return a new bitarray object whose items are bits initialized from
-   the optional initial object, and bit-endianness.
-   The initializer may be of the following types:
+   the optional initializer, and bit-endianness.
+   The initializer may be one of the following types:
 
-   ``int``: Create a bitarray of given integer length.  The initial values are
-   all ``0``.
-
-   ``str``: Create bitarray from a string of ``0`` and ``1``.
-
-   ``iterable``: Create bitarray from iterable or sequence of integers 0 or 1.
+   * ``int``: Create bitarray (initialized to zeros) of given length.
+   * ``str``: Unicode string of ``0`` and ``1``.
+   * iterable of integers 0 or 1.
 
    Optional keyword arguments:
 
@@ -530,6 +527,8 @@ bitarray methods:
    Append all items from ``iterable`` to the end of the bitarray.
    If the iterable is a string, each ``0`` and ``1`` are appended as
    bits (ignoring whitespace and underscore).
+
+   New in version 3.4: raise ``TypeError`` for bytes-like object
 
 
 ``fill()`` -> int
@@ -780,7 +779,7 @@ This sub-module was added in version 1.2.
 ``byteswap(a, /, n=<buffer size>)``
    Reverse every ``n`` consecutive bytes of ``a`` in-place.
    By default, all bytes are reversed.  Note that ``n`` is not limited to 2, 4
-   or 8, but any positive integer is allowed.
+   or 8, but can be any positive integer.
    Also, ``a`` may be any object that exposes a writeable buffer.
    Nothing about this function is specific to bitarray objects.
 
@@ -885,9 +884,9 @@ This sub-module was added in version 1.2.
    New in version 2.7
 
 
-``ones(length, /, endian=None)`` -> bitarray
-   Create a bitarray of length, with all values 1, and optional
-   bit-endianness, which may be 'big', 'little'.
+``ones(n, /, endian=None)`` -> bitarray
+   Create a bitarray of length ``n``, with all values ``1``, and optional
+   bit-endianness (``little`` or ``big``).
 
    New in version 2.9
 
@@ -986,8 +985,8 @@ This sub-module was added in version 1.2.
    New in version 3.2
 
 
-``zeros(length, /, endian=None)`` -> bitarray
-   Create a bitarray of length, with all values 0, and optional
-   bit-endianness, which may be 'big', 'little'.
+``zeros(n, /, endian=None)`` -> bitarray
+   Create a bitarray of length ``n``, with all values ``0``, and optional
+   bit-endianness (``little`` or ``big``).
 
 
