@@ -841,7 +841,7 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     if (bitarray_Check(obj))                              /* bitarray */
         return extend_bitarray(self, (bitarrayobject *) obj);
 
-    if (PyUnicode_Check(obj))                     /* unicode (string) */
+    if (PyUnicode_Check(obj))                       /* Unicode string */
         return extend_unicode01(self, obj);
 
     if (PyObject_CheckBuffer(obj)) {                    /* bytes-like */
