@@ -845,9 +845,9 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         return extend_unicode01(self, obj);
 
     if (PyObject_CheckBuffer(obj)) {                    /* bytes-like */
-        PyErr_Format(PyExc_TypeError, "cannot extend bitarray with bytes-"
-                     "like object '%s', use .frombytes() or .pack() instead",
-                     Py_TYPE(obj)->tp_name);
+        PyErr_Format(PyExc_TypeError, "cannot extend bitarray with "
+                     "bytes-like object '%s', use .frombytes() or .pack() "
+                     "instead", Py_TYPE(obj)->tp_name);
         return -1;
     }
 
@@ -3664,7 +3664,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return newbitarray_from_index(type, initial, endian,
                                       buffer == Py_None);
 
-    /* byte-like object */
+    /* bytes-like object */
     if (PyObject_CheckBuffer(initial) && !bitarray_Check(initial))
         return PyErr_Format(PyExc_TypeError, "cannot create bitarray from "
                             "bytes-like object '%s'",
