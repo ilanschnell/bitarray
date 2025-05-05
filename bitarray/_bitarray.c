@@ -1133,8 +1133,8 @@ bitarray_extend(bitarrayobject *self, PyObject *obj)
 PyDoc_STRVAR(extend_doc,
 "extend(iterable, /)\n\
 \n\
-Append all items from `iterable` to the end of the bitarray.\n\
-If the iterable is a string, each `0` and `1` are appended as\n\
+Append items from to the end of the bitarray.\n\
+If `iterable` is a Unicode string, each `0` and `1` are appended as\n\
 bits (ignoring whitespace and underscore).");
 
 
