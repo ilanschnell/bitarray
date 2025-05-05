@@ -3,9 +3,9 @@
   * remove `.endian()` method in favor of data descriptor `.endian`
   * add `util.byteswap()`
   * add `util.correspond_all()`
-  * drop Python 3.5 support
   * fix `.reverse()` for imported buffer
-  * remove adjust_indices() from header
+  * remove `adjust_indices()` from header
+  * drop Python 3.5 support
   * add tests
 
 
