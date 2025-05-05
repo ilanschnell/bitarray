@@ -844,13 +844,6 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     if (PyUnicode_Check(obj))                       /* Unicode string */
         return extend_unicode01(self, obj);
 
-    if (PyObject_CheckBuffer(obj)) {                    /* bytes-like */
-        PyErr_Format(PyExc_TypeError, "cannot extend bitarray with "
-                     "bytes-like object '%s', use .frombytes() or .pack() "
-                     "instead", Py_TYPE(obj)->tp_name);
-        return -1;
-    }
-
     if (PySequence_Check(obj))                            /* sequence */
         return extend_sequence(self, obj);
 

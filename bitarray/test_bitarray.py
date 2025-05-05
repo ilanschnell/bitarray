@@ -2137,7 +2137,7 @@ class SequenceTests(unittest.TestCase, Util):
         self.assertEQUAL(a, bitarray('001'))
 
         self.assertRaises(TypeError, a.__add__, 42)
-        self.assertRaises(TypeError, a.__add__, b'1101')
+        self.assertRaises(ValueError, a.__add__, b'1101')
 
         for a in self.randombitarrays():
             aa = a.copy()
@@ -2167,8 +2167,7 @@ class SequenceTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('110'))
 
         self.assertRaises(TypeError, a.__iadd__, 42)
-        b = b'101'
-        self.assertRaises(TypeError, a.__iadd__, b)
+        self.assertRaises(ValueError, a.__iadd__, b'101')
 
         for a in self.randombitarrays():
             for b in self.randombitarrays():
@@ -2575,14 +2574,8 @@ class ExtendTests(unittest.TestCase, Util):
     def test_wrong_args(self):
         a = bitarray()
         self.assertRaises(TypeError, a.extend)
-        for x in [None, 1, True, 24, 1.0, b'01', bytearray([0, 1]),
-                  array.array('b', b"01")]:
+        for x in None, 1, True, 24, 1.0:
             self.assertRaises(TypeError, a.extend, x)
-        self.assertRaisesMessage(
-            TypeError,
-            "cannot extend bitarray with bytes-like object 'bytes', "
-            "use .frombytes() or .pack() instead",
-            a.extend, b'')
         self.assertEqual(len(a), 0)
         self.check_obj(a)
 
@@ -2630,13 +2623,29 @@ class ExtendTests(unittest.TestCase, Util):
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
 
+    def test_range(self):
+        a = bitarray()
+        a.extend(range(2))
+        self.assertEqual(a, bitarray('01'))
+        self.check_obj(a)
+
     def test_sequence(self):
-        r = range(2)
-        for x in r, list(r), tuple(r):
-            self.assertEqual(len(x), 2)  # sequences have len, iterables not
+        lst = [0, 1, 0, 1, 1]
+        for x in [lst, tuple(lst), bytes(lst), bytearray(lst),
+                  array.array('b', lst)]:
+            self.assertEqual(len(x), 5)  # sequences have len, iterables not
             a = bitarray()
             a.extend(x)
-            self.assertEqual(a, bitarray('01'))
+            self.assertEqual(a, bitarray("01011"))
+            self.check_obj(a)
+
+        lst.append(2)  # will raise ValueError
+        for x in [lst, tuple(lst), bytes(lst), bytearray(lst),
+                  array.array('b', lst)]:
+            self.assertEqual(len(x), 6)
+            a = bitarray()
+            self.assertRaises(ValueError, a.extend, x)
+            self.assertEqual(len(a), 0)
             self.check_obj(a)
 
     def test_generator_1(self):
