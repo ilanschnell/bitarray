@@ -509,6 +509,7 @@ byteswap(PyObject *module, PyObject *args)
         return NULL;
 
     if (n == 0)
+        /* avoid n = 0 as 0 % n fails on some compilers */
         n = Py_MAX(1, view.len);
 
     if (n < 1) {
