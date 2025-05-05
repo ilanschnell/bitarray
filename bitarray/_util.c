@@ -536,7 +536,7 @@ PyDoc_STRVAR(byteswap_doc,
 \n\
 Reverse every `n` consecutive bytes of `a` in-place.\n\
 By default, all bytes are reversed.  Note that `n` is not limited to 2, 4\n\
-or 8, but any positive integer is allowed.\n\
+or 8, but can be any positive integer.\n\
 Also, `a` may be any object that exposes a writeable buffer.\n\
 Nothing about this function is specific to bitarray objects.");
 
