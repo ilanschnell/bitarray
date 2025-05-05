@@ -366,11 +366,11 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.check_obj(a)
 
     def test_sequence(self):
-        lst = [0, 1, 1, 0, 0]
-        for x in lst, tuple(lst), bytearray(lst), array.array('b', lst):
-            self.assertEqual(len(x), 5)  # sequences have len, iterables not
+        r = range(2)
+        for x in r, list(r), tuple(r):
+            self.assertEqual(len(x), 2)  # sequences have len, iterables not
             a = bitarray(x)
-            self.assertEqual(a, bitarray('01100'))
+            self.assertEqual(a, bitarray('01'))
             self.check_obj(a)
 
     def test_iter1(self):
@@ -427,8 +427,8 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('01010'))
 
     def test_rawbytes_invalid(self):
-        msg = ("cannot extend bitarray with 'bytes', "
-               "use .pack() or .frombytes() instead")
+        msg = ("cannot use .extend() with bytes-like object 'bytes', "
+               "use .frombytes() or .pack() instead")
         for blob in b'', b'\x00', b'\x07\x80':
             self.assertRaisesMessage(TypeError, msg, bitarray, blob)
 
@@ -2745,11 +2745,11 @@ class ExtendTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('010101 1010'))
         self.check_obj(a)
 
-    def test_bytes(self):
+    def test_bytes_like(self):
         a = bitarray()
-        b = b'10110'
-        self.assertRaises(TypeError, a.extend, b)
-        self.check_obj(a)
+        for b in b'01', bytearray([0, 1]), array.array('b', b"01"):
+            self.assertRaises(TypeError, a.extend, b)
+            self.check_obj(a)
 
     def test_self(self):
         for s in '', '1', '110', '00110111':
@@ -3951,7 +3951,6 @@ class BytesTests(unittest.TestCase, Util):
         a.clear()
         a.frombytes(array.array('B', [5, 255, 192]))
         self.assertEqual(a, bitarray('00000101 11111111 11000000'))
-
         self.check_obj(a)
 
         for x in '', 0, 1, False, True, None, []:
@@ -3959,14 +3958,14 @@ class BytesTests(unittest.TestCase, Util):
 
     def test_frombytes_bitarray(self):
         # endianness doesn't matter here as we're writting the buffer
-        # from bytes, and then getting the memoryview
+        # from bytes, and then extend from buffer bytes again
         b = bitarray(0, self.random_endian())
         b.frombytes(b'ABC')
 
         a = bitarray(0, 'big')
-        a.frombytes(bitarray(b))
+        a.frombytes(bitarray(b))  # get bytes from bitarray buffer
         self.assertEqual(a.endian, 'big')
-        self.assertEqual(a, bitarray('01000001 01000010 01000011'))
+        self.assertEqual(a.tobytes(), b'ABC')
         self.check_obj(a)
 
     def test_frombytes_self(self):

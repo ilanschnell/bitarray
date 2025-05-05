@@ -4,6 +4,8 @@
   * add `util.byteswap()`
   * add `util.correspond_all()`
   * fix `.reverse()` for imported buffer
+  * `.extend()` now raises `TypeError` for any byte-like object (previously
+    only `bytes` object)
   * remove `adjust_indices()` from header
   * drop Python 3.5 support
   * add tests
