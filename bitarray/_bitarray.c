@@ -3654,7 +3654,8 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     /* bool */
     if (PyBool_Check(initial)) {
-        PyErr_SetString(PyExc_TypeError, "cannot create bitarray from bool");
+        PyErr_SetString(PyExc_TypeError,
+                        "cannot create bitarray from 'bool' object");
         return NULL;
     }
 
@@ -3895,7 +3896,7 @@ all `0`.\n\
 \n\
 `str`: Create bitarray from a string of `0` and `1`.\n\
 \n\
-`iterable`: Create bitarray from sequence or iterable of integers 0 or 1.\n\
+`iterable`: Create bitarray from iterable (or sequence) of integers 0 or 1.\n\
 \n\
 Optional keyword arguments:\n\
 \n\
