@@ -365,19 +365,12 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist(), lst)
             self.check_obj(a)
 
-    def test_tuple(self):
-        tup = (0, True, False, 1)
-        a = bitarray(tup)
-        self.assertEqual(a, bitarray('0101'))
-        self.check_obj(a)
-
-        self.assertRaises(ValueError, bitarray, (0, 1, 2))
-        self.assertRaises(TypeError, bitarray, (0, 1, None))
-
-        for n in range(50):
-            lst = [bool(getrandbits(1)) for d in range(n)]
-            a = bitarray(tuple(lst))
-            self.assertEqual(a.tolist(), lst)
+    def test_sequence(self):
+        lst = [0, 1, 1, 0, 0]
+        for x in lst, tuple(lst), bytearray(lst), array.array('b', lst):
+            self.assertEqual(len(x), 5)  # sequences have len, iterables not
+            a = bitarray(x)
+            self.assertEqual(a, bitarray('01100'))
             self.check_obj(a)
 
     def test_iter1(self):
