@@ -114,7 +114,8 @@ Return a new bitarray with zeros stripped from left, right or both ends.
 Allowed values for mode are the strings: `left`, `right`, `both`
 """
     if not isinstance(mode, str):
-        raise TypeError("str expected for mode, got '%s'" % type(__a).__name__)
+        raise TypeError("str expected for mode, got '%s'" %
+                        type(__a).__name__)
     if mode not in ('left', 'right', 'both'):
         raise ValueError("mode must be 'left', 'right' or 'both', got %r" %
                          mode)
@@ -208,10 +209,9 @@ and requires `length` to be provided.
                                 "got %d" % (1 << length, __i))
 
     a = bitarray(0, endian)
-    b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian)
-    a.frombytes(b)
-
-    le = bool(a.endian == 'little')
+    a.frombytes(__i.to_bytes(bits2bytes(__i.bit_length()),
+                             byteorder=a.endian))
+    le = a.endian == 'little'
     if length is None:
         return strip(a, 'right' if le else 'left') if a else a + '0'
 

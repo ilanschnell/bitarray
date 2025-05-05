@@ -646,17 +646,17 @@ class CorrespondAllTests(unittest.TestCase, Util):
 class ByteswapTests(unittest.TestCase, Util):
 
     def test_basic_bytearray(self):
-        a = bytearray([1, 2, 3, 4])
+        a = bytearray(b"ABCD")
         byteswap(a, 2)
-        self.assertEqual(a, bytearray([2, 1, 4, 3]))
+        self.assertEqual(a, bytearray(b"BADC"))
         byteswap(a)
-        self.assertEqual(a, bytearray([3, 4, 1, 2]))
+        self.assertEqual(a, bytearray(b"CDAB"))
 
-        a = bytearray([1, 2, 3, 4, 5, 6])
+        a = bytearray(b"ABCDEF")
         byteswap(a, 3)
-        self.assertEqual(a, bytearray([3, 2, 1, 6, 5, 4]))
+        self.assertEqual(a, bytearray(b"CBAFED"))
         byteswap(a, 1)
-        self.assertEqual(a, bytearray([3, 2, 1, 6, 5, 4]))
+        self.assertEqual(a, bytearray(b"CBAFED"))
 
     def test_basic_bitarray(self):
         a = bitarray("11110000 01010101")
@@ -685,11 +685,19 @@ class ByteswapTests(unittest.TestCase, Util):
             byteswap(a, n)
             self.assertEqual(a, bytearray())
 
+    def test_one_byte(self):
+        a = bytearray(b'\xab')
+        byteswap(a)
+        self.assertEqual(a, bytearray(b'\xab'))
+        for n in range(2):
+            byteswap(a, n)
+            self.assertEqual(a, bytearray(b'\xab'))
+
     def test_errors(self):
         for a in b"AB", frozenbitarray(16):
             self.assertRaises(BufferError, byteswap, a)
 
-        a = bytearray([1, 2, 3, 4])
+        a = bytearray(b"ABCD")
         b = bitarray(32)
         for n in -1, 3, 5, 6:
             self.assertRaises(ValueError, byteswap, a, n)
