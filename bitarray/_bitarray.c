@@ -3663,6 +3663,12 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return newbitarray_from_index(type, initial, endian,
                                       buffer == Py_None);
 
+    /* byte-like object */
+    if (PyObject_CheckBuffer(initial) && !bitarray_Check(initial))
+        return PyErr_Format(PyExc_TypeError, "cannot create bitarray from "
+                            "bytes-like object '%s'",
+                            Py_TYPE(initial)->tp_name);
+
     /* bitarray: use its bit-endianness when endian argument is missing */
     if (bitarray_Check(initial) && endian_str == NULL)
         endian = ((bitarrayobject *) initial)->endian;

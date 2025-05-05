@@ -426,11 +426,9 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray(' 0\n1\r0\t1\v0 ')
         self.assertEqual(a, bitarray('01010'))
 
-    def test_rawbytes_invalid(self):
-        msg = ("cannot use .extend() with bytes-like object 'bytes', "
-               "use .frombytes() or .pack() instead")
-        for blob in b'', b'\x00', b'\x07\x80':
-            self.assertRaisesMessage(TypeError, msg, bitarray, blob)
+    def test_bytes_like(self):
+        for x in b'\x00', bytearray(b'\x07\x80'), array.array('b', b""):
+            self.assertRaises(TypeError, bitarray, x)
 
     def test_bitarray_simple(self):
         for n in range(10):
