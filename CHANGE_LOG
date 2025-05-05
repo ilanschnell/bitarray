@@ -4,8 +4,8 @@
   * add `util.byteswap()`
   * add `util.correspond_all()`
   * fix `.reverse()` for imported buffer
-  * `.extend()` now raises `TypeError` for any bytes-like object, except
-    bitarray itself (previously only `bytes` object raised an exception)
+  * allow calling `.extend()` with `bytes` object (which may only
+    contain 0 and 1 bytes (`\x00` and `\x01`))
   * remove `adjust_indices()` from header
   * drop Python 3.5 support
   * add tests
