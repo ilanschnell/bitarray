@@ -145,10 +145,10 @@ zeros(PyObject *module, PyObject *args, PyObject *kwds)
 }
 
 PyDoc_STRVAR(zeros_doc,
-"zeros(length, /, endian=None) -> bitarray\n\
+"zeros(n, /, endian=None) -> bitarray\n\
 \n\
-Create a bitarray of length, with all values 0, and optional\n\
-bit-endianness, which may be 'big', 'little'.");
+Create a bitarray of length `n`, with all values `0`, and optional\n\
+bit-endianness (`little` or `big`).");
 
 
 static PyObject *
@@ -166,10 +166,10 @@ ones(PyObject *module, PyObject *args, PyObject *kwds)
 }
 
 PyDoc_STRVAR(ones_doc,
-"ones(length, /, endian=None) -> bitarray\n\
+"ones(n, /, endian=None) -> bitarray\n\
 \n\
-Create a bitarray of length, with all values 1, and optional\n\
-bit-endianness, which may be 'big', 'little'.");
+Create a bitarray of length `n`, with all values `1`, and optional\n\
+bit-endianness (`little` or `big`).");
 
 /* ------------------------------- count_n ----------------------------- */
 
