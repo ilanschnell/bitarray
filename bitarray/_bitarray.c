@@ -845,8 +845,8 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
         return extend_unicode01(self, obj);
 
     if (PyObject_CheckBuffer(obj)) {                    /* bytes-like */
-        PyErr_Format(PyExc_TypeError, "cannot use .extend() with bytes-like "
-                     "object '%s', use .frombytes() or .pack() instead",
+        PyErr_Format(PyExc_TypeError, "cannot extend bitarray with bytes-"
+                     "like object '%s', use .frombytes() or .pack() instead",
                      Py_TYPE(obj)->tp_name);
         return -1;
     }
@@ -3895,7 +3895,7 @@ all `0`.\n\
 \n\
 `str`: Create bitarray from a string of `0` and `1`.\n\
 \n\
-`iterable`: Create bitarray from iterable or sequence of integers 0 or 1.\n\
+`iterable`: Create bitarray from sequence or iterable of integers 0 or 1.\n\
 \n\
 Optional keyword arguments:\n\
 \n\

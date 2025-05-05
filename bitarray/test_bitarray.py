@@ -2568,13 +2568,14 @@ class NumberTests(unittest.TestCase, Util):
 
 class ExtendTests(unittest.TestCase, Util):
 
-    def test_wrongArgs(self):
+    def test_wrong_args(self):
         a = bitarray()
         self.assertRaises(TypeError, a.extend)
-        self.assertRaises(TypeError, a.extend, None)
-        self.assertRaises(TypeError, a.extend, True)
-        self.assertRaises(TypeError, a.extend, 24)
-        self.assertRaises(TypeError, a.extend, 1.0)
+        for x in [None, 1, True, 24, 1.0, b'01', bytearray([0, 1]),
+                  array.array('b', b"01")]:
+            self.assertRaises(TypeError, a.extend, x)
+        self.assertEqual(len(a), 0)
+        self.check_obj(a)
 
     def test_bitarray(self):
         a = bitarray()
@@ -2583,7 +2584,7 @@ class ExtendTests(unittest.TestCase, Util):
         a.extend(bitarray('110'))
         self.assertEqual(a, bitarray('110'))
         a.extend(bitarray('1110'))
-        self.assertEqual(a, bitarray('1101110'))
+        self.assertEqual(a, bitarray('110 1110'))
 
         a = bitarray('00001111', endian='little')
         a.extend(bitarray('00100111', endian='big'))
@@ -2620,22 +2621,14 @@ class ExtendTests(unittest.TestCase, Util):
                 self.assertEqual(c.tolist(), a + b)
                 self.check_obj(c)
 
-    def test_tuple(self):
-        a = bitarray()
-        a.extend(tuple())
-        self.assertEqual(a, bitarray())
-        a.extend((0, 1, True, 0, False))
-        self.assertEqual(a, bitarray('01100'))
-        self.assertRaises(ValueError, a.extend, (0, 1, 2))
-        self.assertRaises(TypeError, a.extend, (0, 1, 'a'))
-        self.assertEqual(a, bitarray('01100'))
-
-        for a in self.randomlists():
-            for b in self.randomlists():
-                c = bitarray(a)
-                c.extend(tuple(b))
-                self.assertEqual(c.tolist(), a + b)
-                self.check_obj(c)
+    def test_sequence(self):
+        r = range(2)
+        for x in r, list(r), tuple(r):
+            self.assertEqual(len(x), 2)  # sequences have len, iterables not
+            a = bitarray()
+            a.extend(x)
+            self.assertEqual(a, bitarray('01'))
+            self.check_obj(a)
 
     def test_generator_1(self):
         def gen(lst):
@@ -2671,12 +2664,9 @@ class ExtendTests(unittest.TestCase, Util):
                     raise KeyError
                 yield i % 2
 
-        a = bitarray()
-        self.assertRaises(KeyError, a.extend, gen())
-        self.assertEqual(a, bitarray('0101'))
-        a = []
-        self.assertRaises(KeyError, a.extend, gen())
-        self.assertEqual(a, [0, 1, 0, 1])
+        for a in bitarray(), []:
+            self.assertRaises(KeyError, a.extend, gen())
+            self.assertEqual(list(a), [0, 1, 0, 1])
 
     def test_iterator_1(self):
         a = bitarray()
@@ -2742,12 +2732,6 @@ class ExtendTests(unittest.TestCase, Util):
         a += '_ 1\n0\r1\t0\v'
         self.assertEqual(a, bitarray('010101 1010'))
         self.check_obj(a)
-
-    def test_bytes_like(self):
-        a = bitarray()
-        for b in b'01', bytearray([0, 1]), array.array('b', b"01"):
-            self.assertRaises(TypeError, a.extend, b)
-            self.check_obj(a)
 
     def test_self(self):
         for s in '', '1', '110', '00110111':
