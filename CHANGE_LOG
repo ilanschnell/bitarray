@@ -1,3 +1,7 @@
+2025-XX-XX   3.4.1:
+-------------------
+
+
 2025-05-06   3.4.0:
 -------------------
   * remove `.endian()` method in favor of data descriptor `.endian`
