@@ -77,7 +77,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 547 tests in 0.182s
+    Ran 548 tests in 0.182s
 
     OK
 
@@ -651,8 +651,8 @@ bitarray methods:
 
 
 ``tolist()`` -> list
-   Return bitarray as list of integer items.
-   ``a.tolist()`` is equal to ``list(a)``.
+   Return bitarray as list of integers.
+   ``a.tolist()`` equals ``list(a)``.
 
    Note that the list object being created will require 32 or 64 times more
    memory (depending on the machine architecture) than the bitarray object,

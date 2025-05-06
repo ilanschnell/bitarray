@@ -3062,6 +3062,10 @@ class PackTests(unittest.TestCase, Util):
             b.pack(a.unpack(b'\x01', b'\x00'))
             b.invert()
             self.assertEqual(b, a)
+            # use .extend() to pack
+            b = bitarray()
+            b.extend(a.unpack())
+            self.assertEqual(b, a)
 
     def test_unpack_errors(self):
         a = bitarray('01')

@@ -3619,7 +3619,8 @@ newbitarray_from_bytes(PyTypeObject *type, PyObject *buffer, int endian)
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
         return NULL;
 
-    if ((res = newbitarrayobject(type, 8 * view.len, endian)) == NULL) {
+    res = newbitarrayobject(type, 8 * view.len, endian);
+    if (res == NULL) {
         PyBuffer_Release(&view);
         return NULL;
     }
