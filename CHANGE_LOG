@@ -1,13 +1,12 @@
 2025-05-XX   3.4.0:
 -------------------
   * remove `.endian()` method in favor of data descriptor `.endian`
-  * add `util.byteswap()`
-  * add `util.correspond_all()`
-  * fix `.reverse()` for imported buffer
   * allow bitarray initializer `bytes` or `bytearray` to set buffer directly
   * allow calling `.extend()` with `bytes` object (although the only
     valid bytes are 0x00 and 0x01)
-  * remove `adjust_indices()` from header
+  * add `util.byteswap()`
+  * add `util.correspond_all()`
+  * fix `.reverse()` for imported buffer
   * drop Python 3.5 support
   * add tests
 

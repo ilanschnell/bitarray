@@ -1827,7 +1827,7 @@ class PickleTests(unittest.TestCase, Util):
             (
                 type(a),         # type object
                 a.tobytes(),     # buffer
-                a.endian,      # endianness
+                a.endian,        # endianness
                 a.padbits,       # number of pad bits
                 int(a.readonly)  # readonly
             ),
@@ -3955,8 +3955,12 @@ class BytesTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('01000001 11111110 01000011'))
 
         a.clear()
-        a.frombytes(array.array('B', [5, 255, 192]))
-        self.assertEqual(a, bitarray('00000101 11111111 11000000'))
+        a.frombytes(array.array('H', [0x0105, 0xff]))
+        if sys.byteorder == 'big':
+            b = bitarray('00000001 00000101 00000000 11111111')
+        if sys.byteorder == 'little':
+            b = bitarray('00000101 00000001 11111111 00000000')
+        self.assertEqual(a, b)
         self.check_obj(a)
 
         for x in '', 0, 1, False, True, None, []:
