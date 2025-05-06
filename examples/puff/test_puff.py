@@ -41,8 +41,7 @@ class TestState(unittest.TestCase):
         self.assertEqual(len(out), 0)                  # nothing in output
 
     def test_read_uint32(self):
-        a = bitarray(endian='little')
-        a.frombytes(b'\x7e\xae\xd4\xbb')
+        a = bitarray(b'\x7e\xae\xd4\xbb', endian='little')
         s = State(a, bytearray())
         self.assertEqual(s.read_uint(32), 0xbbd4ae7e)
         self.assertEqual(s.get_incnt(), 32)
@@ -77,8 +76,7 @@ class TestState(unittest.TestCase):
         self.assertEqual(bytes(out), b'\0\xff')
 
     def test_extend_block(self):
-        a = bitarray()
-        a.frombytes(b'ABCDEF')
+        a = bitarray(b'ABCDEF')
         b = bytearray()
         s = State(a, b)
 
@@ -226,8 +224,7 @@ class TestPuff(unittest.TestCase):
     def round_trip(self, data, level=-1):
         compressed = zlib.compress(data, level=level)
 
-        a = bitarray(0, 'little')
-        a.frombytes(compressed)
+        a = bitarray(compressed, 'little')
         out = bytearray()
         p = Puff(a, out)
         # check zlib header

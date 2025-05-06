@@ -27,8 +27,7 @@ class Double:
         return 'Double("%s")' % str(self)
 
     def from_float(self, x):
-        a = bitarray(endian="little")
-        a.frombytes(pack("<d", x))
+        a = bitarray(pack("<d", x), endian="little")
         self.from_bitarray(a)
 
     def from_string(self, s):

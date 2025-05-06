@@ -7,9 +7,8 @@ from bitarray.util import ba2int, pprint
 def code_point(u):
     print('character:', u)
     b = u.encode('utf-8')
-    print('hexadecimal:', ' '.join('%02x' % i for i in bytearray(b)))
-    a = bitarray(endian='big')
-    a.frombytes(b)
+    print('hexadecimal:', ' '.join('%02x' % i for i in b))
+    a = bitarray(b, endian='big')
     pprint(a)
 
     # calculate binary code point from binary UTF-8 representation
