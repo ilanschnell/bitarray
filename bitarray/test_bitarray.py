@@ -3955,12 +3955,12 @@ class BytesTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('01000001 11111110 01000011'))
 
         a.clear()
-        a.frombytes(array.array('H', [0x0105, 0xff]))  # array
-        if sys.byteorder == 'big':
-            b = bitarray('00000001 00000101 00000000 11111111')
-        if sys.byteorder == 'little':
-            b = bitarray('00000101 00000001 11111111 00000000')
-        self.assertEqual(a, b)
+        arr = array.array('H', [0x010f, 0xff])      # array
+        self.assertEqual(arr.itemsize, 2)
+        if sys.byteorder == "big":
+            arr.byteswap()
+        a.frombytes(arr)
+        self.assertEqual(a, bitarray("00001111 00000001 11111111 00000000"))
         self.check_obj(a)
 
         for x in '', 0, 1, False, True, None, []:
