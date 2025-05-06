@@ -9,7 +9,8 @@ from typing import Any, BinaryIO, Dict, Union, overload
 
 
 CodeDict = Dict[Any, bitarray]
-BytesLike = Union[bytes, Iterable[int]]
+# Python 3.12 has abc.Buffer which should be used instead
+BytesLike = Union[bytes, bytearray]
 
 
 class decodetree:
