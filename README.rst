@@ -427,6 +427,7 @@ The bitarray object:
 
    * ``int``: Create bitarray (initialized to zeros) of given length.
    * ``str``: Unicode string of ``0`` and ``1``.
+   * ``bytes``, ``bytearray``: initialize raw buffer.
    * iterable of integers 0 or 1.
 
    Optional keyword arguments:
@@ -440,6 +441,8 @@ The bitarray object:
    read-only or writable, depending on the object type.
 
    New in version 2.3: optional ``buffer`` argument
+
+   New in version 3.4: allow initializer ``bytes`` or ``bytearray`` to set buffer directly
 
 
 bitarray methods:
@@ -524,11 +527,11 @@ bitarray methods:
 
 
 ``extend(iterable, /)``
-   Append all items from ``iterable`` to the end of the bitarray.
-   If the iterable is a string, each ``0`` and ``1`` are appended as
+   Append items from to the end of the bitarray.
+   If ``iterable`` is a Unicode string, each ``0`` and ``1`` are appended as
    bits (ignoring whitespace and underscore).
 
-   New in version 3.4: raise ``TypeError`` for bytes-like object
+   New in version 3.4: allow ``bytes`` object
 
 
 ``fill()`` -> int
