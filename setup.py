@@ -23,10 +23,7 @@ except ImportError:
 
 
 kwds = {}
-try:
-    kwds['long_description'] = open('README.rst').read()
-except IOError:
-    pass
+kwds['long_description'] = open('README.rst').read()
 
 # Read version from bitarray/bitarray.h
 pat = re.compile(r'#define\s+BITARRAY_VERSION\s+"(\S+)"', re.M)
