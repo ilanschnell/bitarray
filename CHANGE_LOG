@@ -1,4 +1,4 @@
-2025-05-XX   3.4.0:
+2025-05-06   3.4.0:
 -------------------
   * remove `.endian()` method in favor of data descriptor `.endian`
   * allow bitarray initializer `bytes` or `bytearray` to set buffer directly

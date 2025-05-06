@@ -700,7 +700,7 @@ class ByteswapTests(unittest.TestCase, Util):
         a = bytearray(b"ABCD")
         b = bitarray(32)
         for n in -1, 3, 5, 6:
-            # byte zise not multiple of n
+            # byte size not multiple of n
             self.assertRaises(ValueError, byteswap, a, n)
             self.assertRaises(ValueError, byteswap, b, n)
 

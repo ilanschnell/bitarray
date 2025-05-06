@@ -1,6 +1,19 @@
 Change log
 ==========
 
+**3.4.0** (2025-05-06):
+
+* remove ``.endian()`` method in favor of data descriptor ``.endian``
+* allow bitarray initializer ``bytes`` or ``bytearray`` to set buffer directly
+* allow calling ``.extend()`` with ``bytes`` object (although the only
+  valid bytes are 0x00 and 0x01)
+* add ``util.byteswap()``
+* add ``util.correspond_all()``
+* fix ``.reverse()`` for imported buffer
+* drop Python 3.5 support
+* add tests
+
+
 **3.3.2** (2025-05-02):
 
 * fix off-by-one-error in check for length of count argument
@@ -246,7 +259,7 @@ Change log
 
 **2.6.0** (2022-07-19):
 
-* add data descriptions: ``.nbytes``, ``.padbits``, ``.readonly``
+* add data descriptors: ``.nbytes``, ``.padbits``, ``.readonly``
 * allow optional ``endian`` argument to be ``None`` when creating bitarrays
 * fix type annotation for ``canonical_decode()``, `#178 <https://github.com/ilanschnell/bitarray/issues/178>`__
 * frozenbitarray's pad bits are now guaranteed to be zero

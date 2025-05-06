@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 3.3.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.4.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -14,15 +14,12 @@ The bitarray object:
 
 ``bitarray(initializer=0, /, endian='big', buffer=None)`` -> bitarray
    Return a new bitarray object whose items are bits initialized from
-   the optional initial object, and bit-endianness.
-   The initializer may be of the following types:
-
-   ``int``: Create a bitarray of given integer length.  The initial values are
-   all ``0``.
-
-   ``str``: Create bitarray from a string of ``0`` and ``1``.
-
-   ``iterable``: Create bitarray from iterable or sequence of integers 0 or 1.
+   the optional initializer, and bit-endianness.
+   The initializer may be one of the following types:
+   a.) ``int`` bitarray, initialized to zeros, of given length
+   b.) ``bytes`` or ``bytearray`` to initialize buffer directly
+   c.) ``str`` of 0s and 1s, ignoring whitespace and "_"
+   d.) iterable of integers 0 or 1.
 
    Optional keyword arguments:
 
@@ -35,6 +32,8 @@ The bitarray object:
    read-only or writable, depending on the object type.
 
    New in version 2.3: optional ``buffer`` argument
+
+   New in version 3.4: allow initializer ``bytes`` or ``bytearray`` to set buffer directly
 
 
 bitarray methods:
@@ -59,7 +58,7 @@ bitarray methods:
 
    0. memory address of buffer
    1. buffer size (in bytes)
-   2. bit-endianness as a string
+   2. bit-endianness as a Unicode string
    3. number of pad bits
    4. allocated memory for the buffer (in bytes)
    5. memory is read-only
@@ -118,14 +117,12 @@ bitarray methods:
    with corresponding bitarray for each symbol.
 
 
-``endian()`` -> str
-   Return the bit-endianness of the bitarray as a string (``little`` or ``big``).
-
-
 ``extend(iterable, /)``
-   Append all items from ``iterable`` to the end of the bitarray.
-   If the iterable is a string, each ``0`` and ``1`` are appended as
+   Append items from to the end of the bitarray.
+   If ``iterable`` is a Unicode string, each ``0`` and ``1`` are appended as
    bits (ignoring whitespace and underscore).
+
+   New in version 3.4: allow ``bytes`` object
 
 
 ``fill()`` -> int
@@ -228,7 +225,7 @@ bitarray methods:
 
 
 ``to01(group=0, sep=' ')`` -> str
-   Return bitarray as string of '0's and '1's.
+   Return bitarray as Unicode string of '0's and '1's.
    The bits are grouped into ``group`` bits (default is no grouping).
    When grouped, the string ``sep`` is inserted between groups
    of ``group`` characters, default is a space.
@@ -245,8 +242,8 @@ bitarray methods:
 
 
 ``tolist()`` -> list
-   Return bitarray as list of integer items.
-   ``a.tolist()`` is equal to ``list(a)``.
+   Return bitarray as list of integers.
+   ``a.tolist()`` equals ``list(a)``.
 
    Note that the list object being created will require 32 or 64 times more
    memory (depending on the machine architecture) than the bitarray object,
@@ -262,6 +259,12 @@ bitarray data descriptors:
 --------------------------
 
 Data descriptors were added in version 2.6.
+
+``endian`` -> str
+   bit-endianness as Unicode string
+
+   New in version 3.4: replaces former ``.endian()`` method
+
 
 ``nbytes`` -> int
    buffer size in bytes
@@ -367,6 +370,16 @@ This sub-module was added in version 1.2.
    New in version 3.3: ignore whitespace
 
 
+``byteswap(a, /, n=<buffer size>)``
+   Reverse every ``n`` consecutive bytes of ``a`` in-place.
+   By default, all bytes are reversed.  Note that ``n`` is not limited to 2, 4
+   or 8, but can be any positive integer.
+   Also, ``a`` may be any object that exposes a writeable buffer.
+   Nothing about this function is specific to bitarray objects.
+
+   New in version 3.4
+
+
 ``canonical_decode(bitarray, count, symbol, /)`` -> iterator
    Decode bitarray using canonical Huffman decoding tables
    where ``count`` is a sequence containing the number of symbols of each length
@@ -390,6 +403,12 @@ This sub-module was added in version 1.2.
    See also: `Canonical Huffman Coding <https://github.com/ilanschnell/bitarray/blob/master/doc/canonical.rst>`__
 
    New in version 2.5
+
+
+``correspond_all(a, b, /)`` -> tuple
+   Return tuple with counts of: ~a & ~b, ~a & b, a & ~b, a & b
+
+   New in version 3.4
 
 
 ``count_and(a, b, /)`` -> int
@@ -459,9 +478,9 @@ This sub-module was added in version 1.2.
    New in version 2.7
 
 
-``ones(length, /, endian=None)`` -> bitarray
-   Create a bitarray of length, with all values 1, and optional
-   bit-endianness, which may be 'big', 'little'.
+``ones(n, /, endian=None)`` -> bitarray
+   Create a bitarray of length ``n``, with all values ``1``, and optional
+   bit-endianness (``little`` or ``big``).
 
    New in version 2.9
 
@@ -560,8 +579,8 @@ This sub-module was added in version 1.2.
    New in version 3.2
 
 
-``zeros(length, /, endian=None)`` -> bitarray
-   Create a bitarray of length, with all values 0, and optional
-   bit-endianness, which may be 'big', 'little'.
+``zeros(n, /, endian=None)`` -> bitarray
+   Create a bitarray of length ``n``, with all values ``0``, and optional
+   bit-endianness (``little`` or ``big``).
 
 
