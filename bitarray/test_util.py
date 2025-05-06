@@ -693,12 +693,14 @@ class ByteswapTests(unittest.TestCase, Util):
             self.assertEqual(a, bytearray(b'\xab'))
 
     def test_errors(self):
+        # buffer not writable
         for a in b"AB", frozenbitarray(16):
             self.assertRaises(BufferError, byteswap, a)
 
         a = bytearray(b"ABCD")
         b = bitarray(32)
         for n in -1, 3, 5, 6:
+            # byte zise not multiple of n
             self.assertRaises(ValueError, byteswap, a, n)
             self.assertRaises(ValueError, byteswap, b, n)
 

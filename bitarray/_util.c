@@ -498,14 +498,14 @@ byteswap_core(Py_buffer view, Py_ssize_t n)
 static PyObject *
 byteswap(PyObject *module, PyObject *args)
 {
-    PyObject *obj;
+    PyObject *buffer;
     Py_buffer view;
     Py_ssize_t n = 0;
 
-    if (!PyArg_ParseTuple(args, "O|n:byteswap", &obj, &n))
+    if (!PyArg_ParseTuple(args, "O|n:byteswap", &buffer, &n))
         return NULL;
 
-    if (PyObject_GetBuffer(obj, &view, PyBUF_SIMPLE | PyBUF_WRITABLE) < 0)
+    if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE | PyBUF_WRITABLE) < 0)
         return NULL;
 
     if (n == 0)
