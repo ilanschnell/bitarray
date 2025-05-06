@@ -3955,7 +3955,7 @@ class BytesTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('01000001 11111110 01000011'))
 
         a.clear()
-        a.frombytes(array.array('H', [0x0105, 0xff]))
+        a.frombytes(array.array('H', [0x0105, 0xff]))  # array
         if sys.byteorder == 'big':
             b = bitarray('00000001 00000101 00000000 11111111')
         if sys.byteorder == 'little':
