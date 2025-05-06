@@ -1000,7 +1000,7 @@ Return a tuple containing:\n\
 \n\
 0. memory address of buffer\n\
 1. buffer size (in bytes)\n\
-2. bit-endianness as a string\n\
+2. bit-endianness as a Unicode string\n\
 3. number of pad bits\n\
 4. allocated memory for the buffer (in bytes)\n\
 5. memory is read-only\n\
@@ -1629,7 +1629,7 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
 
     if (strsize > PY_SSIZE_T_MAX) {
         PyErr_SetString(PyExc_OverflowError,
-                        "bitarray too large to convert to string");
+                        "bitarray too large to convert to 'str'");
         return NULL;
     }
 
@@ -1653,7 +1653,7 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
 PyDoc_STRVAR(to01_doc,
 "to01(group=0, sep=' ') -> str\n\
 \n\
-Return bitarray as string of '0's and '1's.\n\
+Return bitarray as Unicode string of '0's and '1's.\n\
 The bits are grouped into `group` bits (default is no grouping).\n\
 When grouped, the string `sep` is inserted between groups\n\
 of `group` characters, default is a space.");
@@ -1883,7 +1883,7 @@ bitarray_get_readonly(bitarrayobject *self, void *Py_UNUSED(ignored))
 
 static PyGetSetDef bitarray_getsets [] = {
     {"endian", (getter) bitarray_get_endian, NULL,
-     PyDoc_STR("bit-endianness as string")},
+     PyDoc_STR("bit-endianness as Unicode string")},
     {"nbytes", (getter) bitarray_get_nbytes, NULL,
      PyDoc_STR("buffer size in bytes")},
     {"padbits", (getter) bitarray_get_padbits, NULL,
@@ -3902,9 +3902,9 @@ Return a new bitarray object whose items are bits initialized from\n\
 the optional initializer, and bit-endianness.\n\
 The initializer may be one of the following types:\n\
 \n\
-* `int`: Create bitarray (initialized to zeros) of given length.\n\
-* `str`: Unicode string of `0` and `1`.\n\
-* `bytes`, `bytearray`: initialize raw buffer.\n\
+* `int`: create bitarray (initialized to zeros) of given length\n\
+* `str`: Unicode string of `0`s and `1`s.\n\
+* `bytes`, `bytearray`: initialize buffer directly\n\
 * iterable of integers 0 or 1.\n\
 \n\
 Optional keyword arguments:\n\

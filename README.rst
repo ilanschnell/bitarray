@@ -425,9 +425,9 @@ The bitarray object:
    the optional initializer, and bit-endianness.
    The initializer may be one of the following types:
 
-   * ``int``: Create bitarray (initialized to zeros) of given length.
-   * ``str``: Unicode string of ``0`` and ``1``.
-   * ``bytes``, ``bytearray``: initialize raw buffer.
+   * ``int``: create bitarray (initialized to zeros) of given length
+   * ``str``: Unicode string of ``0``s and ``1``s.
+   * ``bytes``, ``bytearray``: initialize buffer directly
    * iterable of integers 0 or 1.
 
    Optional keyword arguments:
@@ -467,7 +467,7 @@ bitarray methods:
 
    0. memory address of buffer
    1. buffer size (in bytes)
-   2. bit-endianness as a string
+   2. bit-endianness as a Unicode string
    3. number of pad bits
    4. allocated memory for the buffer (in bytes)
    5. memory is read-only
@@ -634,7 +634,7 @@ bitarray methods:
 
 
 ``to01(group=0, sep=' ')`` -> str
-   Return bitarray as string of '0's and '1's.
+   Return bitarray as Unicode string of '0's and '1's.
    The bits are grouped into ``group`` bits (default is no grouping).
    When grouped, the string ``sep`` is inserted between groups
    of ``group`` characters, default is a space.
@@ -670,7 +670,7 @@ bitarray data descriptors:
 Data descriptors were added in version 2.6.
 
 ``endian`` -> str
-   bit-endianness as string
+   bit-endianness as Unicode string
 
    New in version 3.4: replaces former ``.endian()`` method
 
