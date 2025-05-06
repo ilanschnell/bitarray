@@ -45,8 +45,7 @@ def urandom(__length, endian=None):
 
 Return a bitarray of `length` random bits (uses `os.urandom`).
 """
-    a = bitarray(0, endian)
-    a.frombytes(os.urandom(bits2bytes(__length)))
+    a = bitarray(os.urandom(bits2bytes(__length)), endian)
     del a[__length:]
     return a
 
@@ -209,8 +208,8 @@ and requires `length` to be provided.
                                 "got %d" % (1 << length, __i))
 
     a = bitarray(0, endian)
-    a.frombytes(__i.to_bytes(bits2bytes(__i.bit_length()),
-                             byteorder=a.endian))
+    b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian)
+    a.frombytes(b)
     le = a.endian == 'little'
     if length is None:
         return strip(a, 'right' if le else 'left') if a else a + '0'

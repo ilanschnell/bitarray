@@ -424,8 +424,7 @@ class BitwiseCountTests(unittest.TestCase, Util):
 
     def test_count_byte(self):
         for i in range(256):
-            a = bitarray()
-            a.frombytes(bytes(bytearray([i])))
+            a = bitarray(bytearray([i]))
             cnt = a.count()
             self.assertEqual(count_and(a, zeros(8)), 0)
             self.assertEqual(count_and(a, ones(8)), cnt)
@@ -999,8 +998,7 @@ class HexlifyTests(unittest.TestCase, Util):
         a = urandom(80, 'big')
         s = binascii.hexlify(a.tobytes()).decode()
         self.assertEqual(ba2hex(a), s)
-        b = bitarray(endian='big')
-        b.frombytes(binascii.unhexlify(s))
+        b = bitarray(binascii.unhexlify(s), endian='big')
         self.assertEQUAL(hex2ba(s, 'big'), b)
 
 # ---------------------------------------------------------------------------
@@ -1996,8 +1994,7 @@ class SerializationTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, deserialize, b'\x00', 1)
 
         blob = b'\x03\x06'
-        x = bitarray()  # we can deserialize a bitarray as it has a buffer
-        x.frombytes(blob)
+        x = bitarray(blob)
         for s in blob, bytearray(blob), memoryview(blob), x:
             a = deserialize(s)
             self.assertEqual(a.to01(), '01100')

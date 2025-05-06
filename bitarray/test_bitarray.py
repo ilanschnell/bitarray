@@ -67,8 +67,7 @@ def ones(n, endian=None):
     return a
 
 def urandom(n, endian=None):
-    a = bitarray(0, endian)
-    a.frombytes(os.urandom(bits2bytes(n)))
+    a = bitarray(os.urandom(bits2bytes(n)), endian)
     del a[n:]
     return a
 
@@ -147,8 +146,7 @@ class Util(object):
             # frozenbitarray have read-only memory
             self.assertEqual(readonly, 1)
             if padbits:  # ensure padbits are zero
-                b = bitarray(endian=endian)
-                b.frombytes(a.tobytes()[-1:])
+                b = bitarray(a.tobytes()[-1:], endian=endian)
                 self.assertFalse(b[-padbits:].any())
         elif not buf:
             # otherwise, unless the buffer is imported, it is writable
@@ -256,14 +254,12 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.check_obj(a)
 
     def test_endian(self):
-        a = bitarray(endian='little')
-        a.frombytes(b'ABC')
+        a = bitarray(b"ABC", endian='little')
         self.assertEqual(a.endian, 'little')
         self.assertIsInstance(a.endian, str)
         self.check_obj(a)
 
-        b = bitarray(endian='big')
-        b.frombytes(b'ABC')
+        b = bitarray(b"ABC", endian='big')
         self.assertEqual(b.endian, 'big')
         self.assertIsInstance(a.endian, str)
         self.check_obj(b)
@@ -1720,20 +1716,16 @@ class MiscTests(unittest.TestCase, Util):
                 self.assertEqual(a[i], b[i + 1234])
 
     def test_endianness(self):
-        a = bitarray(endian='little')
-        a.frombytes(b'\x01')
+        a = bitarray(b'\x01', endian='little')
         self.assertEqual(a.to01(), '10000000')
 
-        b = bitarray(endian='little')
-        b.frombytes(b'\x80')
+        b = bitarray(b'\x80', endian='little')
         self.assertEqual(b.to01(), '00000001')
 
-        c = bitarray(endian='big')
-        c.frombytes(b'\x80')
+        c = bitarray(b'\x80', endian='big')
         self.assertEqual(c.to01(), '10000000')
 
-        d = bitarray(endian='big')
-        d.frombytes(b'\x01')
+        d = bitarray(b'\x01', endian='big')
         self.assertEqual(d.to01(), '00000001')
 
         self.assertEqual(a, c)
@@ -3331,8 +3323,7 @@ class ByteReverseTests(unittest.TestCase, Util):
 
     def test_byte(self):
         for i in range(256):
-            a = bitarray()
-            a.frombytes(bytearray([i]))
+            a = bitarray(bytearray([i]))
             self.assertEqual(len(a), 8)
             b = a.copy()
             b.bytereverse()
@@ -3351,8 +3342,7 @@ class ByteReverseTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
 
     def test_random(self):
-        t = bitarray(endian=self.random_endian())
-        t.frombytes(bytearray(range(256)))
+        t = bitarray(bytearray(range(256)), self.random_endian())
         t.bytereverse()
         table = t.tobytes()  # translation table
         self.assertEqual(table[:9], b'\x00\x80\x40\xc0\x20\xa0\x60\xe0\x10')
@@ -3472,8 +3462,7 @@ class CountTests(unittest.TestCase, Util):
 
     def test_byte(self):
         for i in range(256):
-            a = bitarray()
-            a.frombytes(bytearray([i]))
+            a = bitarray(bytearray([i]))
             self.assertEqual(len(a), 8)
             self.assertEqual(a.count(), bin(i)[2:].count('1'))
 
@@ -4173,8 +4162,7 @@ class FileTests(unittest.TestCase, Util):
             self.check_obj(a)
 
     def test_fromfile_n(self):
-        a = bitarray()
-        a.frombytes(b'ABCDEFGHIJ')
+        a = bitarray(b'ABCDEFGHIJ')
         with open(self.tmpfname, 'wb') as fo:
             a.tofile(fo)
         self.assertFileSize(10)
@@ -4284,15 +4272,13 @@ class FileTests(unittest.TestCase, Util):
             self.assertEqual(len(raw), a.nbytes)
             # when we fill the pad bits in a, we can compare
             a.fill()
-            b = bitarray(endian='little')
-            b.frombytes(raw)
+            b = bitarray(raw, endian='little')
             self.assertEqual(a, b)
 
     def test_tofile_BytesIO(self):
         for n in list(range(10)) + list(range(65534, 65538)):
             data = os.urandom(n)
-            a = bitarray(0, 'big')
-            a.frombytes(data)
+            a = bitarray(data, 'big')
             self.assertEqual(a.nbytes, n)
             f = BytesIO()
             a.tofile(f)
@@ -4965,8 +4951,7 @@ class BufferExportTests(unittest.TestCase, Util):
             self.check_obj(a)
 
     def test_read_random(self):
-        a = bitarray()
-        a.frombytes(os.urandom(100))
+        a = bitarray(os.urandom(100))
         v = memoryview(a)
         self.assertEqual(len(v), 100)
         b = a[34 * 8 : 67 * 8]
