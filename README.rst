@@ -425,10 +425,10 @@ The bitarray object:
    the optional initializer, and bit-endianness.
    The initializer may be one of the following types:
 
-   * ``int``: create bitarray (initialized to zeros) of given length
-   * ``str``: Unicode string of ``0``s and ``1``s.
-   * ``bytes``, ``bytearray``: initialize buffer directly
-   * iterable of integers 0 or 1.
+   ``int`` - create bitarray (initialized to zeros) of given length
+   ``str`` - Unicode string of ``0``s and ``1``s
+   ``bytes``, ``bytearray`` - initialize buffer directly
+   iterable of integers 0 or 1
 
    Optional keyword arguments:
 

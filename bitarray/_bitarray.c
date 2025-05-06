@@ -3904,10 +3904,10 @@ Return a new bitarray object whose items are bits initialized from\n\
 the optional initializer, and bit-endianness.\n\
 The initializer may be one of the following types:\n\
 \n\
-* `int`: create bitarray (initialized to zeros) of given length\n\
-* `str`: Unicode string of `0`s and `1`s.\n\
-* `bytes`, `bytearray`: initialize buffer directly\n\
-* iterable of integers 0 or 1.\n\
+`int` - create bitarray (initialized to zeros) of given length\n\
+`str` - Unicode string of `0`s and `1`s\n\
+`bytes`, `bytearray` - initialize buffer directly\n\
+iterable of integers 0 or 1\n\
 \n\
 Optional keyword arguments:\n\
 \n\
