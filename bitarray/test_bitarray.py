@@ -1527,6 +1527,15 @@ class SequenceIndexTests(unittest.TestCase, Util):
             self.assertEqual(b, bitarray(a[i] for i in lst))
             self.assertEqual(b.endian, a.endian)
 
+    def test_get_range(self):
+        for a in self.randombitarrays():
+            n = len(a)
+            s = slice(randint(0, n),
+                      randint(0, n),
+                      randint(1, 5))
+            r = range(s.start, s.stop, s.step)
+            self.assertEQUAL(a[r], a[s])
+
     def test_set_bool_basic(self):
         a = zeros(10)
         a[[2, 3, 5, 7]] = 1
@@ -2732,7 +2741,7 @@ class ExtendTests(unittest.TestCase, Util):
         for a in self.randomlists():
             for b in self.randomlists():
                 c = bitarray(a)
-                c.extend(''.join(['0', '1'][x] for x in b))
+                c.extend(''.join(str(x) for x in b))
                 self.assertEqual(c, bitarray(a + b))
                 self.check_obj(c)
 
@@ -3389,9 +3398,10 @@ class ToListTests(unittest.TestCase, Util):
             self.assertIsInstance(item, int)
 
     def test_random(self):
-        for lst in self.randomlists():
-            a = bitarray(lst)
-            self.assertEqual(a.tolist(), lst)
+        for a in self.randombitarrays():
+            res = a.tolist()
+            self.assertEqual(res, list(a))
+            self.assertEqual(res, [int(v) for v in a.to01()])
 
 class ClearTests(unittest.TestCase, Util):
 

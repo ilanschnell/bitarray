@@ -1468,8 +1468,8 @@ bitarray_tolist(bitarrayobject *self)
 PyDoc_STRVAR(tolist_doc,
 "tolist() -> list\n\
 \n\
-Return bitarray as list of integer items.\n\
-`a.tolist()` is equal to `list(a)`.");
+Return bitarray as list of integers.\n\
+`a.tolist()` equals `list(a)`.");
 
 
 static PyObject *
@@ -1487,6 +1487,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
     if (resize(self, 8 * (n + view.len)) < 0)
         goto error;
 
+    assert(Py_SIZE(self) == n + view.len);
     memcpy(self->ob_item + n, (char *) view.buf, (size_t) view.len);
 
     /* remove pad bits staring at previous bit length (8 * n - p) */
@@ -1495,7 +1496,6 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
 
     PyBuffer_Release(&view);
     Py_RETURN_NONE;
-
  error:
     PyBuffer_Release(&view);
     return NULL;
@@ -3623,6 +3623,7 @@ newbitarray_from_bytes(PyTypeObject *type, PyObject *buffer, int endian)
         PyBuffer_Release(&view);
         return NULL;
     }
+    assert(Py_SIZE(res) == view.len);
     memcpy(res->ob_item, (char *) view.buf, (size_t) view.len);
 
     PyBuffer_Release(&view);
@@ -3681,7 +3682,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (PyBytes_Check(initializer) || PyByteArray_Check(initializer))
         return newbitarray_from_bytes(type, initializer, endian);
 
-    /* bitarray: use its bit-endianness when endian argument is missing */
+    /* bitarray: use its bit-endianness when endian argument is None */
     if (bitarray_Check(initializer) && endian_str == NULL)
         endian = ((bitarrayobject *) initializer)->endian;
 
@@ -4000,6 +4001,7 @@ reconstructor(PyObject *module, PyObject *args)
     res = newbitarrayobject(type, 8 * nbytes - padbits, endian);
     if (res == NULL)
         return NULL;
+    assert(Py_SIZE(res) == nbytes);
     memcpy(res->ob_item, PyBytes_AS_STRING(bytes), (size_t) nbytes);
     if (readonly) {
         set_padbits(res);
