@@ -533,10 +533,12 @@ class ToObjectsTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             self.assertEqual(tuple(a), tuple(a.tolist()))
 
-    def test_bytes(self):
+    def test_bytes_bytearray(self):
         for n in range(20):
             a = urandom(8 * n)
+            self.assertEqual(a.padbits, 0)
             self.assertEqual(bytes(a), a.tobytes())
+            self.assertEqual(bytearray(a), a.tobytes())
 
     def test_set(self):
         for a in self.randombitarrays():
@@ -4025,8 +4027,7 @@ class BytesTests(unittest.TestCase, Util):
 
         for n in range(20):
             s = os.urandom(n)
-            a = bitarray(endian=self.random_endian())
-            a.frombytes(s)
+            a = bitarray(s, endian=self.random_endian())
             self.assertEqual(len(a), 8 * n)
             self.assertEqual(a.tobytes(), s)
             self.check_obj(a)
@@ -4739,7 +4740,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertRaises(BufferError, a.pop)
         a[8:16] = bitarray('10000010', endian='big')
         self.assertEqual(b, bytearray([255, 65] + 98 * [255]))
-        self.assertEqual(a.tobytes(), bytes(b))
+        self.assertEqual(a.tobytes(), b)
         for n in 7, 9:
             self.assertRaises(BufferError, a.__setitem__, slice(8, 16),
                               bitarray(n))
@@ -5147,7 +5148,7 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, v.__setitem__, 0, 255)
 
     def test_buffer_import_readonly(self):
-        b = bytes(bytearray([15, 95, 128]))
+        b = bytes([15, 95, 128])
         a = frozenbitarray(buffer=b, endian='big')
         self.assertEQUAL(a, bitarray('00001111 01011111 10000000', 'big'))
         info = buffer_info(a)
