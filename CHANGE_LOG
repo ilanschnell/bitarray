@@ -4,8 +4,9 @@
   * add `util.byteswap()`
   * add `util.correspond_all()`
   * fix `.reverse()` for imported buffer
-  * allow calling `.extend()` with `bytes` object (which may only
-    contain 0 and 1 bytes (`\x00` and `\x01`))
+  * allow bitarray initializer `bytes` or `bytearray` to set raw buffer
+  * allow calling `.extend()` with `bytes` object (although the only
+    valid bytes are 0x00 and 0x01)
   * remove `adjust_indices()` from header
   * drop Python 3.5 support
   * add tests

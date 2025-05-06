@@ -366,11 +366,11 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.check_obj(a)
 
     def test_sequence(self):
-        r = range(2)
-        for x in r, list(r), tuple(r):
-            self.assertEqual(len(x), 2)  # sequences have len, iterables not
+        lst = [0, 1, 1, 1, 0]
+        for x in lst, tuple(lst), array.array('i', lst):
+            self.assertEqual(len(x), 5)  # sequences have len, iterables not
             a = bitarray(x)
-            self.assertEqual(a, bitarray('01'))
+            self.assertEqual(a, bitarray('01110'))
             self.check_obj(a)
 
     def test_iter1(self):
@@ -426,9 +426,19 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray(' 0\n1\r0\t1\v0 ')
         self.assertEqual(a, bitarray('01010'))
 
-    def test_bytes_like(self):
-        for x in b'\x00', bytearray(b'\x07\x80'), array.array('b', b""):
-            self.assertRaises(TypeError, bitarray, x)
+    def test_bytes_bytearray(self):
+        for x in b'\x80', bytearray(b'\x80'):
+            a = bitarray(x, 'little')
+            self.assertEqual(len(a), 8 * len(x))
+            self.assertEqual(a.tobytes(), x)
+            self.assertEqual(a.to01(), '00000001')
+            self.check_obj(a)
+
+        for n in range(100):
+            x = os.urandom(n)
+            a = bitarray(x)
+            self.assertEqual(len(a), 8 * n)
+            self.assertEqual(memoryview(a), x)
 
     def test_bitarray_simple(self):
         for n in range(10):
@@ -482,23 +492,16 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertIsType(a, 'bitarray')
 
     def test_create_empty(self):
-        for x in (None, 0, '', list(), tuple(), set(), dict(),
-                  bitarray(), frozenbitarray()):
+        for x in (None, 0, '', list(), tuple(), set(), dict(), bytes(),
+                  bytearray(), bitarray(), frozenbitarray()):
             a = bitarray(x)
             self.assertEqual(len(a), 0)
             self.assertEQUAL(a, bitarray())
 
-        self.assertRaises(TypeError, bitarray, b'')
-
     def test_wrong_args(self):
         # wrong types
-        for x in (False, True, Ellipsis, slice(0), 0.0, 0 + 0j, b'\0',
-                  bytearray(b'\x00\x01'), array.array('b', b"\x00\x01")):
+        for x in False, True, Ellipsis, slice(0), 0.0, 0 + 0j:
             self.assertRaises(TypeError, bitarray, x)
-        self.assertRaisesMessage(
-            TypeError,
-            "cannot create bitarray from bytes-like object 'bytes'",
-            bitarray, b'')
         # wrong values
         for x in -1, 'A', '\0', '010\0 11':
             self.assertRaises(ValueError, bitarray, x)
@@ -1510,7 +1513,7 @@ class SequenceIndexTests(unittest.TestCase, Util):
     def test_get_types(self):
         a = bitarray('11001101 01')
         lst = [1, 3, -2]
-        for b in [lst, array.array('i', lst)]:
+        for b in lst, array.array('i', lst):
             self.assertEqual(a[b], bitarray('100'))
         lst[2] += len(a)
         self.assertEqual(a[bytearray(lst)], bitarray('100'))
@@ -5023,7 +5026,7 @@ class BufferExportTests(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class TestsFrozenbitarray(unittest.TestCase, Util):
+class FrozenbitarrayTests(unittest.TestCase, Util):
 
     def test_init(self):
         a = frozenbitarray('110')
@@ -5078,6 +5081,9 @@ class TestsFrozenbitarray(unittest.TestCase, Util):
         for obj in list(tup), tup, iter(tup), bitarray(tup):
             a = frozenbitarray(obj)
             self.assertEqual(a, bitarray(tup))
+        a = frozenbitarray(b'AB', "big")
+        self.assertEqual(a.to01(), "0100000101000010")
+        self.assertEqual(a.endian, "big")
 
     def test_repr(self):
         a = frozenbitarray()

@@ -3609,6 +3609,26 @@ newbitarray_from_index(PyTypeObject *type, PyObject *index,
     return (PyObject *) res;
 }
 
+/* return new bitarray from bytes-like object */
+static PyObject *
+newbitarray_from_bytes(PyTypeObject *type, PyObject *buffer, int endian)
+{
+    bitarrayobject *res;
+    Py_buffer view;
+
+    if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
+        return NULL;
+
+    if ((res = newbitarrayobject(type, 8 * view.len, endian)) == NULL) {
+        PyBuffer_Release(&view);
+        return NULL;
+    }
+    memcpy(res->ob_item, (char *) view.buf, (size_t) view.len);
+
+    PyBuffer_Release(&view);
+    return (PyObject *) res;
+}
+
 /* As of bitarray version 2.9.0, "bitarray(nbits)" will initialize all items
    to 0 (previously, the buffer was be uninitialized).
    However, for speed, one might want to create an uninitialized bitarray.
@@ -3657,11 +3677,9 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return newbitarray_from_index(type, initializer, endian,
                                       buffer == Py_None);
 
-    /* bytes-like object, but not bitarray */
-    if (PyObject_CheckBuffer(initializer) && !bitarray_Check(initializer))
-        return PyErr_Format(PyExc_TypeError, "cannot create bitarray from "
-                            "bytes-like object '%s'",
-                            Py_TYPE(initializer)->tp_name);
+    /* bytes or bytearray */
+    if (PyBytes_Check(initializer) || PyByteArray_Check(initializer))
+        return newbitarray_from_bytes(type, initializer, endian);
 
     /* bitarray: use its bit-endianness when endian argument is missing */
     if (bitarray_Check(initializer) && endian_str == NULL)
@@ -3886,6 +3904,7 @@ The initializer may be one of the following types:\n\
 \n\
 * `int`: Create bitarray (initialized to zeros) of given length.\n\
 * `str`: Unicode string of `0` and `1`.\n\
+* `bytes`, `bytearray`: initialize raw buffer.\n\
 * iterable of integers 0 or 1.\n\
 \n\
 Optional keyword arguments:\n\

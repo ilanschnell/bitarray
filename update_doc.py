@@ -9,7 +9,9 @@ import bitarray.util
 BASE_URL = "https://github.com/ilanschnell/bitarray"
 
 NEW_IN = {
-    'bitarray':               '2.3: optional `buffer` argument',
+    'bitarray':              ['2.3: optional `buffer` argument',
+                              '3.4: allow initializer `bytes` or `bytearray` '
+                                   'to set raw buffer'],
     'bitarray.bytereverse':   '2.2.5: optional start and stop arguments',
     'bitarray.clear':         '1.4',
     'bitarray.count':        ['1.1.0: optional start and stop arguments',
