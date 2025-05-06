@@ -424,10 +424,10 @@ The bitarray object:
    Return a new bitarray object whose items are bits initialized from
    the optional initializer, and bit-endianness.
    The initializer may be one of the following types:
-   (a) ``int`` bitarray (initialized to zeros) of given length
-   (b) ``bytes`` or ``bytearray`` to initialize buffer directly
-   (c) ``str`` of 0s and 1s (ignoring whitespace and ``_``)
-   (d) iterable of integers 0 or 1.
+   a.) ``int`` bitarray, initialized to zeros, of given length
+   b.) ``bytes`` or ``bytearray`` to initialize buffer directly
+   c.) ``str`` of 0s and 1s, ignoring whitespace and "_"
+   d.) iterable of integers 0 or 1.
 
    Optional keyword arguments:
 

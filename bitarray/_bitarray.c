@@ -3903,10 +3903,10 @@ PyDoc_STRVAR(bitarraytype_doc,
 Return a new bitarray object whose items are bits initialized from\n\
 the optional initializer, and bit-endianness.\n\
 The initializer may be one of the following types:\n\
-(a) `int` bitarray (initialized to zeros) of given length\n\
-(b) `bytes` or `bytearray` to initialize buffer directly\n\
-(c) `str` of 0s and 1s (ignoring whitespace and `_`)\n\
-(d) iterable of integers 0 or 1.\n\
+a.) `int` bitarray, initialized to zeros, of given length\n\
+b.) `bytes` or `bytearray` to initialize buffer directly\n\
+c.) `str` of 0s and 1s, ignoring whitespace and \"_\"\n\
+d.) iterable of integers 0 or 1.\n\
 \n\
 Optional keyword arguments:\n\
 \n\
