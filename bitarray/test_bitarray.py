@@ -3552,24 +3552,19 @@ class CountTests(unittest.TestCase, Util):
             self.assertEqual(b.count(1), c1)
 
     def test_slicelength(self):
-        for N in range(100):
-            step = randint(-N - 1, N)
-            if step == 0:
-                continue
+        for n in range(100):
+            a = bitarray(n, self.random_endian())
+            s = self.random_slice(n)
+            slicelength = len(range(n)[s])
+            self.assertEqual(len(a[s]), slicelength)
 
-            a = zeros(N, self.random_endian())
-            i = randint(-N - 1, N)
-            j = randint(-N - 1, N)
-            slicelength = len(range(N)[i:j:step])
-            self.assertEqual(len(a[i:j:step]), slicelength)
-
-            self.assertEqual(a.count(0, i, j, step), slicelength)
-            self.assertEqual(a.count(1, i, j, step), 0)
-            a[i:j:step] = 1
-            self.assertEqual(a.count(0), N - slicelength)
+            self.assertEqual(a.count(0, s.start, s.stop, s.step), slicelength)
+            self.assertEqual(a.count(1, s.start, s.stop, s.step), 0)
+            a[s] = 1
+            self.assertEqual(a.count(0), n - slicelength)
             self.assertEqual(a.count(1), slicelength)
-            del a[i:j:step]
-            self.assertEqual(len(a), N - slicelength)
+            del a[s]
+            self.assertEqual(len(a), n - slicelength)
             self.assertFalse(a.any())
 
     def test_explicit(self):
