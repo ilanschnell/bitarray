@@ -173,7 +173,7 @@ class Util(object):
 
 # ---------------------------------------------------------------------------
 
-class TestsModuleFunctions(unittest.TestCase, Util):
+class ModuleFunctionsTests(unittest.TestCase, Util):
 
     def test_version_string(self):
         # the version string is not a function, but test it here anyway
@@ -1533,12 +1533,10 @@ class SequenceIndexTests(unittest.TestCase, Util):
             self.assertEqual(b.endian, a.endian)
 
     def test_get_range(self):
-        for a in self.randombitarrays():
-            n = len(a)
-            s = slice(randint(0, n),
-                      randint(0, n),
-                      randint(1, 5))
-            r = range(s.start, s.stop, s.step)
+        for n in range(200):
+            s = slice(randint(-n, n), randint(-n, n), randint(-5, 5) or 1)
+            r = range(*s.indices(n))
+            a = urandom(n, self.random_endian())
             self.assertEQUAL(a[r], a[s])
 
     def test_set_bool_basic(self):
@@ -2561,8 +2559,9 @@ class NumberTests(unittest.TestCase, Util):
 
     @skipIf(is_pypy)
     def test_imported(self):
+        _set_default_endian("big")
         a = bytearray([0xf0, 0x01, 0x02, 0x0f])
-        b = bitarray(endian="big", buffer=a)
+        b = bitarray(buffer=a)
         self.assertFalse(b.readonly)
         # operate on imported (writable) buffer
         b[8:24] <<= 3
