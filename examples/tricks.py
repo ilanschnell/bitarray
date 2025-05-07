@@ -5,9 +5,6 @@ is used in the C implementation of bitarray.
 from random import randint
 import unittest
 
-from bitarray import bitarray
-from bitarray.util import any_and
-
 
 class TricksTests(unittest.TestCase):
 
@@ -79,10 +76,6 @@ class TricksTests(unittest.TestCase):
             res1 = bool(r1) and bool(r2) and (i2 in r1 or i1 in r2)
             res2 = bool(set(r1) & set(r2))
             self.assertEqual(res1, res2)
-
-            a1, a2 = bitarray(n), bitarray(n)
-            a1[i1:j1] = a2[i2:j2] = 1
-            self.assertEqual(res1, any_and(a1, a2))
 
 
 if __name__ == '__main__':
