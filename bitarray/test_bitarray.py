@@ -1519,26 +1519,26 @@ class SequenceIndexTests(unittest.TestCase, Util):
             self.assertEqual(b, bitarray(a[i] for i in lst))
             self.assertEqual(b.endian, a.endian)
 
-    def test_get_range(self):
+    def test_range_get(self):
         for n, s, r in self.random_slices():
             a = urandom(n, self.random_endian())
             self.assertEQUAL(a[r], a[s])
 
-    def test_set_bool_range(self):
+    def test_range_set_bool(self):
         for n, s, r in self.random_slices():
             a = urandom(n, self.random_endian())
             b = a.copy()
             a[s] = b[r] = getrandbits(1)
             self.assertEQUAL(a, b)
 
-    def test_set_bitarray_range(self):
+    def test_range_set_bitarray(self):
         for n, s, r in self.random_slices():
             a = urandom(n, self.random_endian())
             b = a.copy()
             a[s] = b[r] = urandom(len(r), self.random_endian())
             self.assertEQUAL(a, b)
 
-    def test_del_range(self):
+    def test_range_del(self):
         for n, s, r in self.random_slices():
             a = urandom(n, self.random_endian())
             b = a.copy()
@@ -3697,17 +3697,17 @@ class IndexTests(unittest.TestCase, Util):
         for _ in range(50):
             n = randint(0, 5)
             z = bitarray(n)
-            r = getrandbits(1)
-            self.assertEqual(z.find(empty, right=r),
-                             self.find_empty(n, right=r))
+            right = getrandbits(1)
+            self.assertEqual(z.find(empty, right=right),
+                             self.find_empty(n, right=right))
 
             start = randint(-5, 5)
-            self.assertEqual(z.find(empty, start, right=r),
-                             self.find_empty(n, start, right=r))
+            self.assertEqual(z.find(empty, start, right=right),
+                             self.find_empty(n, start, right=right))
 
             stop = randint(-5, 5)
-            self.assertEqual(z.find(empty, start, stop, r),
-                             self.find_empty(n, start, stop, r))
+            self.assertEqual(z.find(empty, start, stop, right),
+                             self.find_empty(n, start, stop, right))
 
     def test_range_explicit(self):
         n = 150
