@@ -3977,12 +3977,11 @@ bits2bytes(PyObject *module, PyObject *n)
     zero = PyLong_FromLong(0);
     if ((cmp_res = PyObject_RichCompareBool(n, zero, Py_LT)) < 0)
         return NULL;
+    Py_DECREF(zero);
     if (cmp_res) {
-        Py_DECREF(zero);
         PyErr_SetString(PyExc_ValueError, "non-negative int expected");
         return NULL;
     }
-    Py_DECREF(zero);
 
     seven = PyLong_FromLong(7);
     a = PyNumber_Add(n, seven);          /* a = n + 7 */
