@@ -3975,9 +3975,10 @@ bits2bytes(PyObject *module, PyObject *n)
                             "got '%s'", Py_TYPE(n)->tp_name);
 
     zero = PyLong_FromLong(0);
-    if ((cmp_res = PyObject_RichCompareBool(n, zero, Py_LT)) < 0)
-        return NULL;
+    cmp_res = PyObject_RichCompareBool(n, zero, Py_LT);
     Py_DECREF(zero);
+    if (cmp_res < 0)
+        return NULL;
     if (cmp_res) {
         PyErr_SetString(PyExc_ValueError, "non-negative int expected");
         return NULL;
