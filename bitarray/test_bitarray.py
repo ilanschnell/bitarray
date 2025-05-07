@@ -238,12 +238,8 @@ class ModuleFunctionsTests(unittest.TestCase, Util):
             self.assertEqual(m, (n - 1) // 8 + 1)
             self.assertIsInstance(m, int)
 
-        for n, m in [(0, 0), (1, 1), (2, 1), (7, 1), (8, 1), (9, 2),
-                     (10, 2), (15, 2), (16, 2), (64, 8), (65, 9),
-                     (2**31, 2**28), (2**32, 2**29), (2**34, 2**31),
-                     (2**34+793, 2**31+100), (2**35-8, 2**32-1),
-                     (2**62, 2**59), (2**63-8, 2**60-1)]:
-            self.assertEqual(bits2bytes(n), m)
+            k = (1 << n) + randrange(1000)
+            self.assertEqual(bits2bytes(k), (k - 1) // 8 + 1)
 
 # ---------------------------------------------------------------------------
 

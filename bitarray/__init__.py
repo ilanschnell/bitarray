@@ -12,7 +12,7 @@ Author: Ilan Schnell
 from __future__ import absolute_import
 
 from bitarray._bitarray import (bitarray, decodetree, _sysinfo,
-                                _bitarray_reconstructor,
+                                bits2bytes, _bitarray_reconstructor,
                                 get_default_endian, _set_default_endian,
                                 __version__)
 
@@ -52,18 +52,6 @@ and may therefore be used as a dictionary key.
     remove = reverse = setall = sort = __setitem__ = __delitem__
     __iadd__ = __iand__ = __imul__ = __ior__ = __ixor__ = __delitem__
     __ilshift__ = __irshift__ = __delitem__
-
-
-def bits2bytes(__n):
-    """bits2bytes(n, /) -> int
-
-Return the number of bytes necessary to store n bits.
-"""
-    if not isinstance(__n, int):
-        raise TypeError("integer expected")
-    if __n < 0:
-        raise ValueError("non-negative integer expected")
-    return (__n + 7) // 8
 
 
 def test(verbosity=1):

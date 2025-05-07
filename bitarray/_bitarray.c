@@ -3965,6 +3965,46 @@ static PyTypeObject Bitarray_Type = {
 /***************************** Module functions ***************************/
 
 static PyObject *
+bits2bytes(PyObject *module, PyObject *n)
+{
+    PyObject *zero, *seven, *eight, *a, *b;
+    int cmp_res;
+
+    if (!PyLong_Check(n))
+        return PyErr_Format(PyExc_TypeError, "'int' object expected, "
+                            "got '%s'", Py_TYPE(n)->tp_name);
+
+    zero = PyLong_FromLong(0);
+    if ((cmp_res = PyObject_RichCompareBool(n, zero, Py_LT)) < 0)
+        return NULL;
+    if (cmp_res) {
+        Py_DECREF(zero);
+        PyErr_SetString(PyExc_ValueError, "non-negative int expected");
+        return NULL;
+    }
+    Py_DECREF(zero);
+
+    seven = PyLong_FromLong(7);
+    a = PyNumber_Add(n, seven);          /* a = n + 7 */
+    Py_DECREF(seven);
+    if (a == NULL)
+        return NULL;
+
+    eight = PyLong_FromLong(8);
+    b = PyNumber_FloorDivide(a, eight);  /* b = a // 8 */
+    Py_DECREF(eight);
+    Py_DECREF(a);
+
+    return b;
+}
+
+PyDoc_STRVAR(bits2bytes_doc,
+"bits2bytes(n, /) -> int\n\
+\n\
+Return the number of bytes necessary to store n bits.");
+
+
+static PyObject *
 reconstructor(PyObject *module, PyObject *args)
 {
     PyTypeObject *type;
@@ -4086,6 +4126,8 @@ Return tuple containing:\n\
 
 
 static PyMethodDef module_functions[] = {
+    {"bits2bytes",          (PyCFunction) bits2bytes,         METH_O,
+     bits2bytes_doc},
     {"_bitarray_reconstructor",
                             (PyCFunction) reconstructor,      METH_VARARGS,
      reduce_doc},
