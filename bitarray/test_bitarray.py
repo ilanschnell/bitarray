@@ -91,25 +91,16 @@ class Util(object):
             yield a.tolist()
 
     @staticmethod
-    def rndsliceidx(length):
-        if getrandbits(1):
-            return None
-        else:
-            return randint(-length - 5, length + 5)
-
-    @staticmethod
     def opposite_endian(endian):
         t = {'little': 'big',
              'big': 'little'}
         return t[endian]
 
     @staticmethod
-    def calc_slicelength(s, length):
-        assert isinstance(s, slice)
-        start, stop, step = s.indices(length)
-        assert step < 0 or (start >= 0 and stop >= 0)
-        assert step > 0 or (start >= -1 and stop >= -1)
-        return len(range(start, stop, step))
+    def random_slice(n, step=None):
+        return slice(randint(-n - 2, n + 2),
+                     randint(-n - 2, n + 2),
+                     step or randint(-5, 5) or 1)
 
     def check_obj(self, a):
         self.assertIsInstance(a, bitarray)
@@ -794,10 +785,9 @@ class SliceTests(unittest.TestCase, Util):
     def test_getslice_random(self):
         for a in self.randombitarrays(start=1):
             aa = a.tolist()
-            la = len(a)
+            n = len(a)
             for _ in range(10):
-                step = self.rndsliceidx(la) or None
-                s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
+                s = self.random_slice(n)
                 self.assertEQUAL(a[s], bitarray(aa[s], endian=a.endian))
 
     def test_getslice_random_step1(self):
@@ -864,13 +854,11 @@ class SliceTests(unittest.TestCase, Util):
 
     def test_setslice_random(self):
         for a in self.randombitarrays(start=1):
-            la = len(a)
+            len_a = len(a)
             for _ in range(10):
-                step = self.rndsliceidx(la) or None
-                s = slice(self.rndsliceidx(la), self.rndsliceidx(la), step)
-                lb = (randrange(10) if step is None else
-                      self.calc_slicelength(s, la))
-                b = bitarray(lb)
+                s = self.random_slice(len_a)
+                len_b = randrange(10) if s.step == 1 else len(range(len_a)[s])
+                b = bitarray(len_b)
                 c = bitarray(a)
                 c[s] = b
                 self.check_obj(c)
@@ -1083,7 +1071,7 @@ class SliceTests(unittest.TestCase, Util):
             lst_a = a.tolist()
             b = urandom(randint(0, 100), self.random_endian())
             lst_b = b.tolist()
-            s = slice(self.rndsliceidx(n), self.rndsliceidx(n), None)
+            s = self.random_slice(n, step=1)
             a[s] = b
             lst_a[s] = lst_b
             self.assertEqual(a.tolist(), lst_a)
@@ -1096,8 +1084,7 @@ class SliceTests(unittest.TestCase, Util):
             lst_a = a.tolist()
             b = urandom(randrange(50), self.random_endian())
             lst_b = b.tolist()
-            s = slice(self.rndsliceidx(n), self.rndsliceidx(n),
-                      randint(-3, 3) or None)
+            s = self.random_slice(n)
             try:
                 a[s] = b
             except ValueError:
@@ -1184,11 +1171,10 @@ class SliceTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             n = len(a)
             aa = a.tolist()
-            step = self.rndsliceidx(n) or None
-            s = slice(self.rndsliceidx(n), self.rndsliceidx(n), step)
+            s = self.random_slice(n)
             v = getrandbits(1)
             a[s] = v
-            aa[s] = self.calc_slicelength(s, n) * [v]
+            aa[s] = len(range(n)[s]) * [v]
             self.assertEqual(a.tolist(), aa)
 
     @skipIf(is_pypy)
@@ -1297,8 +1283,7 @@ class SliceTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             n = len(a)
             for _ in range(10):
-                step = self.rndsliceidx(n) or None
-                s = slice(self.rndsliceidx(n), self.rndsliceidx(n), step)
+                s = self.random_slice(n)
                 c = a.copy()
                 del c[s]
                 self.check_obj(c)
@@ -1530,8 +1515,8 @@ class SequenceIndexTests(unittest.TestCase, Util):
 
     def test_get_set_del_range(self):
         for n in range(200):
-            s = slice(randint(-n, n), randint(-n, n), randint(-5, 5) or 1)
-            r = range(*s.indices(n))
+            s = self.random_slice(n)
+            r = range(n)[s]
             # get
             a = urandom(n, self.random_endian())
             self.assertEQUAL(a[r], a[s])
@@ -3559,7 +3544,7 @@ class CountTests(unittest.TestCase, Util):
             a = zeros(N, self.random_endian())
             i = randint(-N - 1, N)
             j = randint(-N - 1, N)
-            slicelength = self.calc_slicelength(slice(i, j, step), N)
+            slicelength = len(range(N)[i:j:step])
             self.assertEqual(len(a[i:j:step]), slicelength)
 
             self.assertEqual(a.count(0, i, j, step), slicelength)

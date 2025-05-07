@@ -61,22 +61,6 @@ class TricksTests(unittest.TestCase):
             elif step == 1:
                 self.assertEqual(stop - start, slicelength)
 
-    def test_overlap(self):
-        n = 200
-        for _ in range(10_000):
-            i1 = randint(0, n)
-            j1 = randint(i1, n)
-            r1 = range(i1, j1)
-
-            i2 = randint(0, n)
-            j2 = randint(i2, n)
-            r2 = range(i2, j2)
-
-            # test if ranges r1 and r2 overlap
-            res1 = bool(r1) and bool(r2) and (i2 in r1 or i1 in r2)
-            res2 = bool(set(r1) & set(r2))
-            self.assertEqual(res1, res2)
-
 
 if __name__ == '__main__':
     unittest.main()

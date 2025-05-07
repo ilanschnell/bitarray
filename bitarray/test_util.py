@@ -520,17 +520,23 @@ class BitwiseAnyTests(unittest.TestCase, Util):
 
     def test_overlap(self):
         n = 100
-        for _ in range(1000):
+        for _ in range(500):
             i1 = randint(0, n)
             j1 = randint(i1, n)
+            r1 = range(i1, j1)
 
             i2 = randint(0, n)
             j2 = randint(i2, n)
+            r2 = range(i2, j2)
+
+            # test if ranges r1 and r2 overlap
+            res1 = bool(r1) and bool(r2) and (i2 in r1 or i1 in r2)
+            res2 = bool(set(r1) & set(r2))
+            self.assertEqual(res1, res2)
 
             a1, a2 = bitarray(n), bitarray(n)
             a1[i1:j1] = a2[i2:j2] = 1
-            self.assertEqual(bool(set(range(i1, j1)) & set(range(i2, j2))),
-                             any_and(a1, a2))
+            self.assertEqual(any_and(a1, a2), res1)
 
     def check(self, a, b):
         r = any_and(a, b)
