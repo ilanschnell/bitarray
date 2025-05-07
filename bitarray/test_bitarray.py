@@ -1532,12 +1532,25 @@ class SequenceIndexTests(unittest.TestCase, Util):
             self.assertEqual(b, bitarray(a[i] for i in lst))
             self.assertEqual(b.endian, a.endian)
 
-    def test_get_range(self):
+    def test_get_set_del_range(self):
         for n in range(200):
             s = slice(randint(-n, n), randint(-n, n), randint(-5, 5) or 1)
             r = range(*s.indices(n))
+            # get
             a = urandom(n, self.random_endian())
             self.assertEQUAL(a[r], a[s])
+            # set bool
+            b = a.copy()
+            a[s] = b[r] = getrandbits(1)
+            self.assertEQUAL(a, b)
+            # set bitarray
+            a = urandom(n, self.random_endian())
+            b = a.copy()
+            a[s] = b[r] = urandom(len(r), self.random_endian())
+            self.assertEQUAL(a, b)
+            # del
+            del a[s], b[r]
+            self.assertEQUAL(a, b)
 
     def test_set_bool_basic(self):
         a = zeros(10)
