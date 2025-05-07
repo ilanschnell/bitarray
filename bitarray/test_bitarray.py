@@ -102,6 +102,12 @@ class Util(object):
                      randint(-n - 2, n + 2),
                      step or randint(-5, 5) or 1)
 
+    def random_slices(self, max_len=100, count=1000):
+        for _ in range(count):
+            n = randint(0, max_len)
+            s = self.random_slice(n)
+            yield n, s, range(n)[s]
+
     def check_obj(self, a):
         self.assertIsInstance(a, bitarray)
 
@@ -1513,23 +1519,29 @@ class SequenceIndexTests(unittest.TestCase, Util):
             self.assertEqual(b, bitarray(a[i] for i in lst))
             self.assertEqual(b.endian, a.endian)
 
-    def test_get_set_del_range(self):
-        for n in range(200):
-            s = self.random_slice(n)
-            r = range(n)[s]
-            # get
+    def test_get_range(self):
+        for n, s, r in self.random_slices():
             a = urandom(n, self.random_endian())
             self.assertEQUAL(a[r], a[s])
-            # set bool
+
+    def test_set_bool_range(self):
+        for n, s, r in self.random_slices():
+            a = urandom(n, self.random_endian())
             b = a.copy()
             a[s] = b[r] = getrandbits(1)
             self.assertEQUAL(a, b)
-            # set bitarray
+
+    def test_set_bitarray_range(self):
+        for n, s, r in self.random_slices():
             a = urandom(n, self.random_endian())
             b = a.copy()
             a[s] = b[r] = urandom(len(r), self.random_endian())
             self.assertEQUAL(a, b)
-            # del
+
+    def test_del_range(self):
+        for n, s, r in self.random_slices():
+            a = urandom(n, self.random_endian())
+            b = a.copy()
             del a[s], b[r]
             self.assertEQUAL(a, b)
 
