@@ -19,7 +19,7 @@ from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       _set_default_endian)
-from bitarray.test_bitarray import (Util, skipIf, is_pypy,
+from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
                                     SYSINFO, DEBUG, WHITESPACE)
 
 from bitarray.util import (
@@ -473,7 +473,7 @@ class BitwiseCountTests(unittest.TestCase, Util):
     def test_random(self):
         for _ in range(100):
             n = randrange(1000)
-            a = urandom(n, self.random_endian())
+            a = urandom_2(n)
             b = urandom(n, a.endian)
             self.assertEqual(count_and(a, b), (a & b).count())
             self.assertEqual(count_or(a, b),  (a | b).count())
@@ -996,7 +996,7 @@ class HexlifyTests(unittest.TestCase, Util):
 
     def test_random(self):
         for _ in range(100):
-            a = urandom(4 * randrange(100), self.random_endian())
+            a = urandom_2(4 * randrange(100))
             s = ba2hex(a, group=randrange(10), sep=randrange(5) * " ")
             b = hex2ba(s, endian=a.endian)
             self.assertEQUAL(a, b)
@@ -1214,7 +1214,7 @@ class BaseTests(unittest.TestCase, Util):
     def test_random(self):
         for _ in range(100):
             m = randint(1, 6)
-            a = urandom(m * randrange(100), self.random_endian())
+            a = urandom_2(m * randrange(100))
             self.assertEqual(len(a) % m, 0)
             n = 1 << m
             s = ba2base(n, a, group=randrange(10), sep=randrange(5) * " ")
@@ -1704,7 +1704,7 @@ class IntegerizationTests(unittest.TestCase, Util):
 
     def test_ba2int_bytes(self):
         for n in range(1, 50):
-            a = urandom(8 * n, self.random_endian())
+            a = urandom_2(8 * n)
             c = bytearray(a.tobytes())
             i = 0
             for x in (c if a.endian == 'big' else reversed(c)):

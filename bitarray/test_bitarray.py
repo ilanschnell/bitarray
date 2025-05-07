@@ -3759,7 +3759,7 @@ class IndexTests(unittest.TestCase, Util):
             self.assertEqual(a.find(a), 0)
 
             n = len(a)
-            b = bitarray(randrange(0, 10), self.random_endian())
+            b = bitarray(randrange(10), self.random_endian())
             t = b.to01()
             self.assertEqual(a.find(b), s.find(t))
 
@@ -3890,7 +3890,7 @@ class SearchTests(unittest.TestCase, Util):
         for _ in range(500):
             n = randrange(1, 50)
             a = urandom_2(n)
-            b = urandom_2(randrange(0, 10))
+            b = urandom_2(randrange(10))
             i = randrange(n)
             j = randrange(n)
             aa = a[i:j]
