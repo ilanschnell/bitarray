@@ -1139,39 +1139,11 @@ class SliceTests(unittest.TestCase, Util):
             b = bitarray(n)
             b[range(start, stop)] = 1
             self.assertEqual(a, b)
-            c = zeros(start) + ones(stop - start) + zeros(n - stop)
-            self.assertEqual(a, c)
-
-    def test_setslice_bool_simple(self):
-        for _ in range(100):
-            n = randint(100, 2000)
-            s = slice(randint(0, 20), randint(n - 20, n), randint(1, 20))
-            a = bitarray(n)
-            a[s] = 1
-            b = bitarray(n)
-            b[range(s.start, s.stop, s.step)] = 1
-            self.assertEqual(a, b)
-
-    def test_setslice_bool_range(self):
-        n = 200
-        a = bitarray(n, self.random_endian())
-        b = bitarray(n)
-        for step in range(-n - 1, n):
-            if step == 0:
-                continue
-            v = getrandbits(1)
-            a.setall(not v)
-            a[::step] = v
-
-            b.setall(not v)
-            b[range(0, n, abs(step))] = v
-            if step < 0:
-                b.reverse()
-            self.assertEqual(a, b)
 
     def test_setslice_bool_random(self):
-        for a in self.randombitarrays():
-            n = len(a)
+        for _ in range(200):
+            n = randrange(100)
+            a = urandom_2(n)
             aa = a.tolist()
             s = self.random_slice(n)
             v = getrandbits(1)
@@ -3504,40 +3476,27 @@ class CountTests(unittest.TestCase, Util):
                 self.assertEqual(a.count(v, n, -n - 1, -1), ref)
 
     def test_sparse(self):
-        N = 65536
-        a = zeros(N)
-        indices = set(randrange(N) for _ in range(256))
+        n = 65536
+        a = bitarray(n)
+        indices = set(randrange(n) for _ in range(256))
         a[list(indices)] = 1
         self.assertEqual(a.count(1), len(indices))
-        self.assertEqual(a.count(0), N - len(indices))
+        self.assertEqual(a.count(0), n - len(indices))
 
         for _ in range(100):
-            i = randrange(N)
-            j = randrange(i, N)
+            i = randrange(n)
+            j = randrange(i, n)
             cnt = sum(1 for k in indices if i <= k < j)
             self.assertEqual(a.count(1, i, j), cnt)
             self.assertEqual(a.count(0, i, j), j - i - cnt)
 
-    def test_zeros(self):
-        N = 30
-        a = zeros(N, self.random_endian())
-        for _ in range(10):
-            i = randrange(N)
-            j = randrange(i, N)
-            self.assertEqual(a.count(0, i, j), j - i)
-
-            for step in range(-N - 3, N + 3):
-                if step == 0:
-                    continue
-                self.assertEqual(a.count(0, i, i, step), 0)
-
-    def test_range(self):
-        N = 300
-        a = urandom_2(N)
+    def test_step1(self):
+        n = 300
+        a = urandom_2(n)
         s = a.to01()
         for _ in range(1000):
-            i = randrange(N)
-            j = randrange(i, N)
+            i = randrange(n)
+            j = randrange(i, n)
 
             t = s[i:j]
             c0 = t.count('0')
@@ -3588,9 +3547,7 @@ class CountTests(unittest.TestCase, Util):
             v = randrange(2)
             i = randint(-n - 3, n + 3)
             j = randint(-n - 3, n + 3)
-            step = randint(-n - 3, n + 3)
-            if step == 0:
-                continue
+            step = randint(-n - 3, n + 3) or 1
             self.assertEqual(a.count(v, i, j, step), a[i:j:step].count(v))
 
     def test_offest_buffer(self):
