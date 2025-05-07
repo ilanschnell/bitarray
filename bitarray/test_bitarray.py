@@ -4842,18 +4842,16 @@ class BufferImportTests(unittest.TestCase, Util):
             self.check_obj(b)
 
     def test_bitarray_chain(self):
-        a = urandom(64)
-        d = {0: a}
+        d = [urandom(64)]
         for n in range(1, 100):
-            d[n] = bitarray(buffer=d[n - 1])
+            d.append(bitarray(buffer=d[n - 1]))
 
-        self.assertEqual(d[99], a)
-        a.setall(0)
-        self.assertEqual(d[99], zeros(64))
-        a[:] = 1
-        self.assertTrue(d[99].all())
-        for c in d.values():
-            self.check_obj(c)
+        self.assertEqual(d[99], d[0])
+        d[0].setall(1)
+        for a in d:
+            self.assertEqual(len(a), 64)
+            self.assertTrue(a.all())
+            self.check_obj(a)
 
     def test_frozenbitarray(self):
         a = frozenbitarray('10011011 011')
