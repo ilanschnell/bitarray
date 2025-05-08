@@ -1320,17 +1320,17 @@ class DelSliceTests(unittest.TestCase, Util):
         # even though we don't delete anything, raise error
         self.assertRaises(BufferError, b.__delitem__, slice(3, 3))
 
-# ---------------------------------------------------------------------------
+# ----------------------------- Masked index tests --------------------------
 
-class MaskedIndexTests(unittest.TestCase, Util):
+class GetMaskedTests(unittest.TestCase, Util):
 
-    def test_get_basic(self):
+    def test_basic(self):
         a =    bitarray('1001001')
         mask = bitarray('1010111')
         self.assertEqual(a[mask], bitarray('10001'))
         self.assertRaises(IndexError, a.__getitem__, bitarray('1011'))
 
-    def test_get_random(self):
+    def test_random(self):
         for a in self.randombitarrays():
             n = len(a)
             self.assertEqual(a[a], a.count() * bitarray('1'))
@@ -1345,7 +1345,9 @@ class MaskedIndexTests(unittest.TestCase, Util):
             res = bitarray(a[i] for i in range(n) if mask[i])
             self.assertEqual(a[mask], res)
 
-    def test_set_basic(self):
+class SetMaskedTests(unittest.TestCase, Util):
+
+    def test_basic(self):
         a =    bitarray('1001001')
         mask = bitarray('1010111')
         val =  bitarray("0 1 110")
@@ -1360,7 +1362,7 @@ class MaskedIndexTests(unittest.TestCase, Util):
             "attempt to assign mask of size 5 to bitarray of size 4",
             a.__setitem__, mask, b)
 
-    def test_set_issue225(self):
+    def test_issue225(self):
         # example from issue #225
         a = bitarray('0000000')
         b = bitarray('1100110')
@@ -1369,23 +1371,14 @@ class MaskedIndexTests(unittest.TestCase, Util):
         self.assertEqual(a,
             bitarray('1000100'))
 
-    @skipIf(is_pypy)
-    def test_set_imported(self):
-        a = bytearray([0, 0xff])
-        #             00000000 11111111
-        b = bitarray(endian="big", buffer=a)
-        c = bitarray('00001111 00110011')
-        b[c] = bitarray(' 1001   01  10')
-        self.assertEqual(a, bytearray([0b00001001, 0b11011110]))
-
-    def test_zeros_mask_set(self):
+    def test_zeros_mask(self):
         for a in self.randombitarrays():
             b = a.copy()
             mask = zeros(len(a))
             a[mask] = bitarray()
             self.assertEqual(a, b)
 
-    def test_ones_mask_set(self):
+    def test_ones_mask(self):
         for a in self.randombitarrays():
             n = len(a)
             mask = ones(n)
@@ -1428,14 +1421,25 @@ class MaskedIndexTests(unittest.TestCase, Util):
             b |= mask
             self.assertEqual(a, b)
 
-    def test_del_basic(self):
+    @skipIf(is_pypy)
+    def test_imported(self):
+        a = bytearray([0, 0xff])
+        #             00000000 11111111
+        b = bitarray(endian="big", buffer=a)
+        c = bitarray('00001111 00110011')
+        b[c] = bitarray(' 1001   01  10')
+        self.assertEqual(a, bytearray([0b00001001, 0b11011110]))
+
+class DelMaskedTests(unittest.TestCase, Util):
+
+    def test_basic(self):
         a =    bitarray('1001001')
         mask = bitarray('1010111')
         del a[mask]
         self.assertEqual(a, bitarray('01'))
         self.assertRaises(IndexError, a.__delitem__, bitarray('101'))
 
-    def test_del_random(self):
+    def test_random(self):
         for a in self.randombitarrays():
             n = len(a)
             b = a.copy()
@@ -1466,7 +1470,7 @@ class MaskedIndexTests(unittest.TestCase, Util):
             self.assertEqual(a[~mask], b)
 
     @skipIf(is_pypy)
-    def test_del_imported(self):
+    def test_imported(self):
         a = bytearray([5, 3])
         b = bitarray(buffer=a)
         self.assertFalse(b.readonly)
