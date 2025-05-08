@@ -6,15 +6,17 @@ from random import randint
 import unittest
 
 
-class TricksTests(unittest.TestCase):
+# ---------------------------- Range checks ---------------------------------
 
-    def test_range_check_simple(self):
+class RangeTests(unittest.TestCase):
+
+    def test_check_simple(self):
         r = range(0, 256)
         for k in range(-10, 300):
             self.assertEqual(k < 0 or k > 0xff, bool(k >> 8))
             self.assertEqual(k not in r, bool(k >> 8))
 
-    def test_range_check(self):
+    def test_check(self):
         # used in various places in C code
         for i in range(0, 11):
             m = 1 << i
@@ -26,7 +28,7 @@ class TricksTests(unittest.TestCase):
                 res3 = bool(k >> i)
                 self.assertEqual(res1, res3)
 
-    def test_range_check_2(self):
+    def test_check_2(self):
         # this is used in _util.c in set_count()
         for i in range(0, 11):
             m = 1 << i
@@ -38,6 +40,7 @@ class TricksTests(unittest.TestCase):
                 res3 = bool(k >> i) and bool((k - 1) >> i)
                 self.assertEqual(res1, res3)
 
+# ------------------------------ Slicing ------------------------------------
 
 def adjust_step_positive(slicelength, start, stop, step):
     """
