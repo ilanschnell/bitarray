@@ -2430,14 +2430,14 @@ setseq_bool(bitarrayobject *self, PyObject *seq, PyObject *value)
 static int
 delsequence(bitarrayobject *self, PyObject *seq)
 {
+    const Py_ssize_t nbits = self->nbits;
+    const Py_ssize_t nseq = PySequence_Size(seq);
     bitarrayobject *mask;  /* temporary bitarray masking items to remove */
-    Py_ssize_t nseq, i, j;
+    Py_ssize_t i, j;
     int res = -1;
 
-    nseq = PySequence_Size(seq);
-
     /* create mask bitarray - note that it's bit-endianness is irrelevant */
-    mask = newbitarrayobject(&Bitarray_Type, self->nbits, ENDIAN_LITTLE);
+    mask = newbitarrayobject(&Bitarray_Type, nbits, ENDIAN_LITTLE);
     if (mask == NULL)
         return -1;
     if (self->ob_item)
@@ -2445,7 +2445,7 @@ delsequence(bitarrayobject *self, PyObject *seq)
 
     /* set indices from sequence in mask */
     for (j = 0; j < nseq; j++) {
-        if ((i = index_from_seq(seq, j, self->nbits)) < 0)
+        if ((i = index_from_seq(seq, j, nbits)) < 0)
             goto finish;
         setbit(mask, i, 1);
     }
