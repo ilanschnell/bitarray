@@ -139,8 +139,11 @@ class ListSliceTests(unittest.TestCase):
 
             start, stop, step = adjust_step_positive(len(r), *s.indices(n))
 
-            self.assertTrue(step > 0)
             self.assertEqual(range(start, stop, step), r)
+            self.assertTrue(step > 0)
+            if r:
+                self.assertTrue(0 <= start < n)
+                self.assertTrue(0 < stop <= n)
 
     def test_slicelength(self):
         for n, s, r in self.random_slices():
