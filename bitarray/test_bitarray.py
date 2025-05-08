@@ -1677,27 +1677,39 @@ class DelSequenceIndexTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('001100'))
         del a[[]]  # delete nothing
         self.assertEqual(a, bitarray('001100'))
+        del a[[2]]
+        self.assertEqual(a, bitarray('00100'))
         a = bitarray('00110101 00')
         del a[71 * [2, 4, 7, 9]]
         self.assertEqual(a, bitarray('001100'))
         self.assertRaises(IndexError, a.__delitem__, [1, 10])
+        self.assertRaises(IndexError, a.__delitem__, [10])
         self.assertRaises(TypeError, a.__delitem__, (1, 3))
 
-    def test_random(self):
-        for a in self.randombitarrays():
-            n = len(a)
-            lst = [randrange(n) for _ in range(n // 2)]
+    def test_delete_one(self):
+        for a in self.randombitarrays(start=1):
             b = a.copy()
-            c = a.copy()
+            i = randrange(len(a))
+            del a[i], b[[i]]
+            self.assertEqual(a, b)
+
+    def test_random(self):
+        for n in range(100):
+            a = urandom_2(n)
+            lst = [randrange(n) for _ in range(randint(0, n))]
+            b = a.copy()
             del a[lst]
+            self.assertEqual(len(a), n - len(set(lst)))
             for i in sorted(set(lst), reverse=True):
                 del b[i]
             self.assertEqual(a, b)
 
-            lst = list(range(n))
+    def test_shuffle(self):
+        for a in self.randombitarrays():
+            lst = list(range(len(a)))
             shuffle(lst)
-            del c[lst]
-            self.assertEqual(len(c), 0)
+            del a[lst]
+            self.assertEqual(len(a), 0)
 
     def test_range(self):
         for n in range(100):
