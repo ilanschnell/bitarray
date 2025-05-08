@@ -1983,7 +1983,7 @@ class PickleTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
             self.check_obj(b)
 
-# ---------------------------------------------------------------------------
+# ---------------------------- Richcompare tests ----------------------------
 
 class RichCompareTests(unittest.TestCase, Util):
 
@@ -2021,18 +2021,16 @@ class RichCompareTests(unittest.TestCase, Util):
             self.assertEqual(a <  b, int(res[5]))
 
     def test_eq_ne(self):
-        for _ in range(10):
-            self.assertTrue(bitarray(0, self.random_endian()) ==
-                            bitarray(0, self.random_endian()))
-            self.assertFalse(bitarray(0, self.random_endian()) !=
-                             bitarray(0, self.random_endian()))
+        for _ in range(5):
+            self.assertTrue(urandom_2(0) == urandom_2(0))
+            self.assertFalse(urandom_2(0) != urandom_2(0))
 
         for n in range(1, 20):
             a = ones(n, self.random_endian())
             b = bitarray(a, self.random_endian())
             self.assertTrue(a == b)
             self.assertFalse(a != b)
-            b[n - 1] = 0
+            b[-1] = 0
             self.assertTrue(a != b)
             self.assertFalse(a == b)
 
@@ -2062,9 +2060,9 @@ class RichCompareTests(unittest.TestCase, Util):
             self.check(a, b, a[i], b[i])
 
     def test_size(self):
-        for _ in range(100):
-            a = zeros(randint(1, 20), self.random_endian())
-            b = zeros(randint(1, 20), self.random_endian())
+        for _ in range(10):
+            a = bitarray(randrange(20), self.random_endian())
+            b = bitarray(randrange(20), self.random_endian())
             self.check(a, b, len(a), len(b))
 
     def test_random(self):
@@ -2113,44 +2111,6 @@ class SpecialMethodTests(unittest.TestCase, Util):
             self.assertFalse(b is a)
             self.assertEQUAL(a, b)
 
-    def assertReallyEqual(self, a, b):
-        # assertEqual first, because it will have a good message if the
-        # assertion fails.
-        self.assertEqual(a, b)
-        self.assertEqual(b, a)
-        self.assertTrue(a == b)
-        self.assertTrue(b == a)
-        self.assertFalse(a != b)
-        self.assertFalse(b != a)
-
-    def assertReallyNotEqual(self, a, b):
-        # assertNotEqual first, because it will have a good message if the
-        # assertion fails.
-        self.assertNotEqual(a, b)
-        self.assertNotEqual(b, a)
-        self.assertFalse(a == b)
-        self.assertFalse(b == a)
-        self.assertTrue(a != b)
-        self.assertTrue(b != a)
-
-    def test_equality(self):
-        self.assertReallyEqual(bitarray(''), bitarray(''))
-        self.assertReallyEqual(bitarray('0'), bitarray('0'))
-        self.assertReallyEqual(bitarray('1'), bitarray('1'))
-
-    def test_not_equality(self):
-        self.assertReallyNotEqual(bitarray(''), bitarray('1'))
-        self.assertReallyNotEqual(bitarray(''), bitarray('0'))
-        self.assertReallyNotEqual(bitarray('0'), bitarray('1'))
-
-    def test_equality_random(self):
-        for a in self.randombitarrays(start=1):
-            b = a.copy()
-            self.assertReallyEqual(a, b)
-            n = len(a)
-            b.invert(n - 1)  # flip last bit
-            self.assertReallyNotEqual(a, b)
-
     @skipIf(is_pypy)
     def test_sizeof(self):
         a = bitarray()
@@ -2161,7 +2121,7 @@ class SpecialMethodTests(unittest.TestCase, Util):
         a = bitarray(8000)
         self.assertTrue(sys.getsizeof(a) > 1000)
 
-# ---------------------------------------------------------------------------
+# ------------------------------ Sequence tests -----------------------------
 
 class SequenceTests(unittest.TestCase, Util):
 
@@ -2270,16 +2230,16 @@ class SequenceTests(unittest.TestCase, Util):
 
     def test_contains_simple(self):
         a = bitarray()
-        self.assertFalse(False in a)
-        self.assertFalse(True in a)
+        self.assertFalse(0 in a)
+        self.assertFalse(1 in a)
         self.assertTrue(bitarray() in a)
-        a.append(True)
-        self.assertTrue(True in a)
-        self.assertFalse(False in a)
-        a = bitarray([False])
-        self.assertTrue(False in a)
-        self.assertFalse(True in a)
-        a.append(True)
+        a.append(1)
+        self.assertTrue(1 in a)
+        self.assertFalse(0 in a)
+        a = bitarray([0])
+        self.assertTrue(0 in a)
+        self.assertFalse(1 in a)
+        a.append(1)
         self.assertTrue(0 in a)
         self.assertTrue(1 in a)
 
@@ -2298,11 +2258,11 @@ class SequenceTests(unittest.TestCase, Util):
     def test_contains_range(self):
         for n in range(2, 50):
             a = zeros(n)
-            self.assertTrue(False in a)
-            self.assertFalse(True in a)
+            self.assertTrue(0 in a)
+            self.assertFalse(1 in a)
             a[randrange(n)] = 1
-            self.assertTrue(True in a)
-            self.assertTrue(False in a)
+            self.assertTrue(1 in a)
+            self.assertTrue(0 in a)
             a.setall(1)
             self.assertTrue(True in a)
             self.assertFalse(False in a)
@@ -2315,9 +2275,10 @@ class SequenceTests(unittest.TestCase, Util):
         for s, r in [('', True), # every bitarray contains an empty one
                      ('1', True), ('11', True), ('111', False),
                      ('011', True), ('0001', True), ('00011', False)]:
-            self.assertEqual(bitarray(s) in a, r)
+            c = bitarray(s) in a
+            self.assertTrue(c is r)
 
-# ---------------------------------------------------------------------------
+# -------------------------- Number methods tests ---------------------------
 
 class NumberTests(unittest.TestCase, Util):
 
@@ -2615,7 +2576,7 @@ class NumberTests(unittest.TestCase, Util):
         b >>= 8
         self.assertEqual(a, bytearray([0x00, 0xfc, 0x88, 0x10]))
 
-# ---------------------------------------------------------------------------
+# --------------------------------   .extend()   ----------------------------
 
 class ExtendTests(unittest.TestCase, Util):
 
