@@ -341,8 +341,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, bitarray, -924)
 
     def test_list(self):
-        lst = [0, 1, False, True]
-        a = bitarray(lst)
+        a = bitarray([0, 1, False, True])
         self.assertEqual(a, bitarray('0101'))
         self.check_obj(a)
 
@@ -2121,7 +2120,7 @@ class SpecialMethodTests(unittest.TestCase, Util):
         a = bitarray(8000)
         self.assertTrue(sys.getsizeof(a) > 1000)
 
-# ------------------------------ Sequence tests -----------------------------
+# -------------------------- Sequence methods tests -------------------------
 
 class SequenceTests(unittest.TestCase, Util):
 
@@ -2987,6 +2986,8 @@ class SortTests(unittest.TestCase, Util):
         self.assertEqual(b.count(), 10)
         self.assertEqual(a, bytearray([0x03, 0xff]))
 
+# -----------------------   .pack()   .unpack()   ---------------------------
+
 class PackTests(unittest.TestCase, Util):
 
     def test_pack_simple(self):
@@ -3212,7 +3213,7 @@ class RemoveTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist(), b)
             self.check_obj(a)
 
-class SetallTests(unittest.TestCase, Util):
+class SetAllTests(unittest.TestCase, Util):
 
     def test_explicit(self):
         a = urandom_2(5)
@@ -3233,11 +3234,11 @@ class SetallTests(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            end = a.endian
+            endian = a.endian
             val = getrandbits(1)
             a.setall(val)
             self.assertEqual(a.to01(), len(a) * str(val))
-            self.assertEqual(a.endian, end)
+            self.assertEqual(a.endian, endian)
             self.check_obj(a)
 
     @skipIf(is_pypy)
@@ -3577,7 +3578,7 @@ class CountTests(unittest.TestCase, Util):
             b = bitarray(buffer=memoryview(a)[i:], endian='little')
             self.assertEqual(b.count(), a.count(1, 8 * i))
 
-# -------------------------- .find() and . index() --------------------------
+# -------------------------- .find() and .index() ---------------------------
 
 class IndexTests(unittest.TestCase, Util):
 
@@ -5122,7 +5123,7 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
         a = frozenbitarray('01000001 01000010', 'big')
         v = memoryview(a)
         self.assertEqual(v.tobytes(), b'AB')
-        self.assertRaises(TypeError, v.__setitem__, 0, 255)
+        self.assertRaises(TypeError, v.__setitem__, 0, 0x7c)
 
     def test_buffer_import_readonly(self):
         b = bytes([15, 95, 128])
@@ -5140,7 +5141,7 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
             "cannot import writable buffer into frozenbitarray",
             frozenbitarray, buffer=c)
 
-    def test_set(self):
+    def test_as_set(self):
         a = frozenbitarray('1')
         b = frozenbitarray('11')
         c = frozenbitarray('01')
@@ -5150,18 +5151,18 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
         self.assertTrue(d in s)
         self.assertFalse(frozenbitarray('0') in s)
 
-    def test_dictkey(self):
+    def test_as_dictkey(self):
         a = frozenbitarray('01')
         b = frozenbitarray('1001')
         d = {a: 123, b: 345}
         self.assertEqual(d[frozenbitarray('01')], 123)
         self.assertEqual(d[frozenbitarray(b)], 345)
 
-    def test_dictkey2(self):  # taken slightly modified from issue #74
-        a1 = frozenbitarray([True, False])
-        a2 = frozenbitarray([False, False])
+    def test_as_dictkey2(self):  # taken slightly modified from issue #74
+        a1 = frozenbitarray("10")
+        a2 = frozenbitarray("00")
         dct = {a1: "one", a2: "two"}
-        a3 = frozenbitarray([True, False])
+        a3 = frozenbitarray("10")
         self.assertEqual(a3, a1)
         self.assertEqual(dct[a3], 'one')
 

@@ -538,6 +538,19 @@ class BitwiseAnyTests(unittest.TestCase, Util):
             a1[i1:j1] = a2[i2:j2] = 1
             self.assertEqual(any_and(a1, a2), res1)
 
+    def test_common(self):
+        n = 100
+        for _ in range(500):
+            s1 = self.random_slice(n)
+            s2 = self.random_slice(n)
+            r1 = range(n)[s1]
+            r2 = range(n)[s2]
+            # test if ranges r1 and r2 have common items
+            a1, a2 = bitarray(n), bitarray(n)
+            a1[r1] = a2[r2] = 1
+            res = any_and(a1, a2)
+            self.assertEqual(res, bool(set(r1) & set(r2)))
+
     def check(self, a, b):
         r = any_and(a, b)
         self.assertIsInstance(r, bool)
