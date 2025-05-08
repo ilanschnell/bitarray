@@ -95,7 +95,9 @@ class ListSliceTests(unittest.TestCase):
     def test_list_get(self):
         for n, s, r in self.random_slices():
             a = list(range(n))
-            self.assertEqual(a[s], list(r))
+            b = a[s]
+            self.assertEqual(len(b), len(r))
+            self.assertEqual(b, list(r))
 
     def test_list_set(self):
         for n, s, r in self.random_slices(20):
@@ -111,6 +113,7 @@ class ListSliceTests(unittest.TestCase):
             a = list(range(n))
             b = list(a)
             del a[s]
+            self.assertEqual(len(a), n - len(r))
             for i in sorted(r, reverse=True):
                 del b[i]
             self.assertEqual(a, b)

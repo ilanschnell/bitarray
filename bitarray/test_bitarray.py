@@ -820,6 +820,17 @@ class SetItemTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist(), aa)
             self.check_obj(a)
 
+    @skipIf(is_pypy)
+    def test_imported(self):
+        a = bytearray([5, 1, 2, 3])
+        b = bitarray(endian="little", buffer=a)
+        self.assertFalse(b.readonly)
+        # operate on imported (writable) buffer
+        b[7] = 1
+        self.assertEqual(a, bytearray([0x85, 1, 2, 3]))
+        b[-2] = 1
+        self.assertEqual(a, bytearray([0x85, 1, 2, 0x43]))
+
 class DelItemTests(unittest.TestCase, Util):
 
     def test_simple(self):
@@ -840,6 +851,13 @@ class DelItemTests(unittest.TestCase, Util):
             self.assertEQUAL(b, a[:i] + a[i + 1:])
             self.assertEqual(len(b), n - 1)
             self.check_obj(b)
+
+    @skipIf(is_pypy)
+    def test_imported(self):
+        a = bytearray([5, 11, 7])
+        b = bitarray(buffer=a)
+        self.assertFalse(b.readonly)
+        self.assertRaises(BufferError, b.__delitem__, 13)
 
 # -------------------------- Slice index tests ------------------------------
 
@@ -1258,8 +1276,6 @@ class SetSliceTests(unittest.TestCase, Util):
         self.assertEqual(a, bytearray([5, 0xaa, 0xaa, 3]))
         b[8:20] = bitarray('11110000 0011')
         self.assertEqual(a, bytearray([5, 0x0f, 0xac, 3]))
-        b[-1] = 1
-        self.assertEqual(a, bytearray([5, 0x0f, 0xac, 0x83]))
 
 class DelSliceTests(unittest.TestCase, Util):
 
@@ -1337,7 +1353,6 @@ class DelSliceTests(unittest.TestCase, Util):
         a = bytearray([5, 1, 2, 3])
         b = bitarray(buffer=a)
         self.assertFalse(b.readonly)
-        self.assertRaises(BufferError, b.__delitem__, 3)
         self.assertRaises(BufferError, b.__delitem__, slice(3, 21))
         # even though we don't delete anything, raise error
         self.assertRaises(BufferError, b.__delitem__, slice(3, 3))
