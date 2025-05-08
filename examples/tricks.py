@@ -62,5 +62,67 @@ class TricksTests(unittest.TestCase):
                 self.assertEqual(stop - start, slicelength)
 
 
+class ListSliceTests(unittest.TestCase):
+
+    def random_slices(self, max_len=100, repeat=10_000):
+        for _ in range(repeat):
+            n = randint(0, max_len)
+            s = slice(randint(-n - 2, n + 2),
+                      randint(-n - 2, n + 2),
+                      randint(-5, 5) or 1)
+            yield n, s, range(n)[s]
+
+    def test_basic(self):
+        for n, s, r in self.random_slices():
+            self.assertEqual(range(*s.indices(n)), r)
+
+    def test_indices(self):
+        for n, s, r in self.random_slices():
+            start, stop, step = s.indices(n)
+            self.assertNotEqual(step, 0)
+            if step > 0:
+                self.assertTrue(0 <= start <= n)
+                self.assertTrue(0 <= stop <= n)
+            else:
+                self.assertTrue(-1 <= start < n)
+                self.assertTrue(-1 <= stop < n)
+            self.assertEqual(range(start, stop, step), r)
+
+    def test_list_get(self):
+        for n, s, r in self.random_slices():
+            a = list(range(n))
+            self.assertEqual(a[s], list(r))
+
+    def test_list_set(self):
+        for n, s, r in self.random_slices(20):
+            a = n * [None]
+            b = list(a)
+            a[s] = range(len(r))
+            for i, j in enumerate(r):
+                b[j] = i
+            self.assertEqual(a, b)
+
+    def test_list_del(self):
+        for n, s, r in self.random_slices():
+            a = list(range(n))
+            b = list(a)
+            del a[s]
+            for i in sorted(r, reverse=True):
+                del b[i]
+            self.assertEqual(a, b)
+
+    def test_slicelength(self):
+        for n, s, r in self.random_slices():
+            start, stop, step = s.indices(n)
+            slicelength = 0
+            if step < 0:
+                if stop < start:
+                    slicelength = (start - stop - 1) // (-step) + 1
+            else:
+                if start < stop:
+                    slicelength = (stop - start - 1) // step + 1
+            self.assertEqual(slicelength, len(r))
+
+
 if __name__ == '__main__':
     unittest.main()
