@@ -79,6 +79,10 @@ class ListSliceTests(unittest.TestCase):
     def test_indices(self):
         for n, s, r in self.random_slices():
             start, stop, step = s.indices(n)
+            self.assertEqual(start, r.start)
+            self.assertEqual(stop, r.stop)
+            self.assertEqual(step, r.step)
+
             self.assertNotEqual(step, 0)
             if step > 0:
                 self.assertTrue(0 <= start <= n)
@@ -110,18 +114,6 @@ class ListSliceTests(unittest.TestCase):
             for i in sorted(r, reverse=True):
                 del b[i]
             self.assertEqual(a, b)
-
-    def test_slicelength(self):
-        for n, s, r in self.random_slices():
-            start, stop, step = s.indices(n)
-            slicelength = 0
-            if step < 0:
-                if stop < start:
-                    slicelength = (start - stop - 1) // (-step) + 1
-            else:
-                if start < stop:
-                    slicelength = (stop - start - 1) // step + 1
-            self.assertEqual(slicelength, len(r))
 
 
 if __name__ == '__main__':
