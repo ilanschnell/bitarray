@@ -2436,6 +2436,18 @@ delsequence(bitarrayobject *self, PyObject *seq)
     Py_ssize_t i, j;
     int res = -1;
 
+    /* shortcuts for removing 0 or 1 items in order to avoid creating mask */
+    if (nseq < 2) {
+        if (nseq == 0)
+            /* use resize to check for BufferError */
+            return resize(self, nbits);
+
+        assert(nseq == 1);
+        if ((i = index_from_seq(seq, 0, nbits)) < 0)
+            return -1;
+        return delete_n(self, i, 1);
+    }
+
     /* create mask bitarray - note that it's bit-endianness is irrelevant */
     mask = newbitarrayobject(&Bitarray_Type, nbits, ENDIAN_LITTLE);
     if (mask == NULL)

@@ -1680,7 +1680,8 @@ class DelSequenceIndexTests(unittest.TestCase, Util):
         del a[[2]]
         self.assertEqual(a, bitarray('00100'))
         a = bitarray('00110101 00')
-        del a[71 * [2, 4, 7, 9]]
+        # same as earlier, but list is not ordered and has repeated indices
+        del a[[7, 9, 2, 2, 4, 7]]
         self.assertEqual(a, bitarray('001100'))
         self.assertRaises(IndexError, a.__delitem__, [1, 10])
         self.assertRaises(IndexError, a.__delitem__, [10])
