@@ -134,12 +134,10 @@ class ListSliceTests(unittest.TestCase):
 
     def test_adjust_step_positive(self):
         for n, s, r in self.random_slices():
-            slicelength = len(r)
             if s.step < 0:
                 r = r[::-1]
 
-            start, stop, step = adjust_step_positive(slicelength,
-                                                     *s.indices(n))
+            start, stop, step = adjust_step_positive(len(r), *s.indices(n))
 
             self.assertTrue(step > 0)
             self.assertEqual(range(start, stop, step), r)
