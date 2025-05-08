@@ -3441,7 +3441,7 @@ class ClearTests(unittest.TestCase, Util):
             self.assertEqual(a.endian, endian)
             self.check_obj(a)
 
-# ---------------------------------------------------------------------------
+# -------------------------------- .count() ---------------------------------
 
 class CountTests(unittest.TestCase, Util):
 
@@ -3590,7 +3590,7 @@ class CountTests(unittest.TestCase, Util):
             b = bitarray(buffer=memoryview(a)[i:], endian='little')
             self.assertEqual(b.count(), a.count(1, 8 * i))
 
-# ---------------------------------------------------------------------------
+# -------------------------- .find() and . index() --------------------------
 
 class IndexTests(unittest.TestCase, Util):
 
@@ -3762,7 +3762,7 @@ class IndexTests(unittest.TestCase, Util):
                 self.assertEqual(a.find(v, i, j, 0), ref_l)
                 self.assertEqual(a.find(v, i, j, 1), ref_r)
 
-# ---------------------------------------------------------------------------
+# ----------------------------- .search() -----------------------------------
 
 class SearchTests(unittest.TestCase, Util):
 
@@ -3930,7 +3930,7 @@ class SearchTests(unittest.TestCase, Util):
                 c += 1
             self.assertEqual(c, 21)
 
-# ---------------------------------------------------------------------------
+# ------------------------ .frombytes() and .tobytes() ----------------------
 
 class BytesTests(unittest.TestCase, Util):
 
@@ -3979,8 +3979,7 @@ class BytesTests(unittest.TestCase, Util):
     def test_frombytes_self(self):
         a = bitarray()
         self.assertRaisesMessage(
-            BufferError,
-            "cannot resize bitarray that is exporting buffers",
+            BufferError, "cannot resize bitarray that is exporting buffers",
             a.frombytes, a)
 
     def test_frombytes_empty(self):
@@ -4036,7 +4035,7 @@ class BytesTests(unittest.TestCase, Util):
             a = ones(n, endian='little')
             self.assertEqual(a.tobytes(), s)
 
-# ---------------------------------------------------------------------------
+# -------------------------- test attributes --------------------------------
 
 class DescriptorTests(unittest.TestCase, Util):
 

@@ -1,6 +1,7 @@
-2025-XX-XX   3.4.1:
+2025-05-XX   3.4.1:
 -------------------
   * implement `bits2bytes()` in C
+  * organize tests
 
 
 2025-05-06   3.4.0:
