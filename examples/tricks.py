@@ -62,6 +62,23 @@ class TricksTests(unittest.TestCase):
                 self.assertEqual(stop - start, slicelength)
 
 
+"""
+This is the slicelength implementation from PySlice_AdjustIndices().
+
+a / b does integer division.  If either a or b is negative, the result
+depends on the compiler (rounding can go toward 0 or negative infinity).
+Therefore, we are careful that both a and b are always positive.
+"""
+def slicelength(start, stop, step):
+    if step < 0:
+        if stop < start:
+            return (start - stop - 1) // (-step) + 1
+    else:
+        if start < stop:
+            return (stop - start - 1) // step + 1
+    return 0
+
+
 class ListSliceTests(unittest.TestCase):
 
     def random_slices(self, max_len=100, repeat=10_000):
@@ -117,6 +134,10 @@ class ListSliceTests(unittest.TestCase):
             for i in sorted(r, reverse=True):
                 del b[i]
             self.assertEqual(a, b)
+
+    def test_slicelength(self):
+        for n, s, r in self.random_slices():
+            self.assertEqual(slicelength(r.start, r.stop, r.step), len(r))
 
 
 if __name__ == '__main__':
