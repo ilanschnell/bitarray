@@ -38,38 +38,35 @@ class TricksTests(unittest.TestCase):
                 res3 = bool(k >> i) and bool((k - 1) >> i)
                 self.assertEqual(res1, res3)
 
-    def test_adjust_step_positive(self):
-        for _ in range(10_000):
-            start = randint(-100, 100)
-            stop = randint(-100, 100)
-            step = randint(-20, 20)
-            if step == 0:
-                continue
-            r = range(start, stop, step)
-            slicelength = len(r)
 
-            if step < 0:
-                stop = start + 1
-                start = stop + step * (slicelength - 1) - 1
-                step = -step
-                r = r[::-1]
+def adjust_step_positive(slicelength, start, stop, step):
+    """
+    This is the adjust_step_positive() implementation from bitarray.h.
+    """
+    if step < 0:
+        stop = start + 1
+        start = stop + step * (slicelength - 1) - 1
+        step = -step
 
-            self.assertEqual(range(start, stop, step), r)
-            self.assertTrue(step > 0)
-            if slicelength == 0:
-                self.assertTrue(stop <= start)
-            elif step == 1:
-                self.assertEqual(stop - start, slicelength)
+    assert start >= 0 and stop >= 0
+    assert step > 0
+    assert slicelength >= 0
+    if slicelength == 0:
+        assert stop <= start
+    elif step == 1:
+        assert stop - start == slicelength
+
+    return start, stop, step
 
 
-"""
-This is the slicelength implementation from PySlice_AdjustIndices().
-
-a / b does integer division.  If either a or b is negative, the result
-depends on the compiler (rounding can go toward 0 or negative infinity).
-Therefore, we are careful that both a and b are always positive.
-"""
 def slicelength(start, stop, step):
+    """
+    This is the slicelength implementation from PySlice_AdjustIndices().
+
+    a / b does integer division.  If either a or b is negative, the result
+    depends on the compiler (rounding can go toward 0 or negative infinity).
+    Therefore, we are careful that both a and b are always positive.
+    """
     if step < 0:
         if stop < start:
             return (start - stop - 1) // (-step) + 1
@@ -134,6 +131,18 @@ class ListSliceTests(unittest.TestCase):
             for i in sorted(r, reverse=True):
                 del b[i]
             self.assertEqual(a, b)
+
+    def test_adjust_step_positive(self):
+        for n, s, r in self.random_slices():
+            slicelength = len(r)
+            if s.step < 0:
+                r = r[::-1]
+
+            start, stop, step = adjust_step_positive(slicelength,
+                                                     *s.indices(n))
+
+            self.assertTrue(step > 0)
+            self.assertEqual(range(start, stop, step), r)
 
     def test_slicelength(self):
         for n, s, r in self.random_slices():
