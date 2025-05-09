@@ -1442,11 +1442,12 @@ class SetMaskedIndexTests(unittest.TestCase, Util):
     def test_random_slice_mask(self):
         for n in range(100):
             s = self.random_slice(n, randint(1, 5))
+            slicelength = len(range(n)[s])
             a = urandom_2(n)
             b = a.copy()
             mask = zeros(n)
             mask[s] = 1
-            other = urandom_2(len(range(n)[s]))
+            other = urandom_2(slicelength)
             a[mask] = b[s] = other
             self.assertEQUAL(a, b)
 
