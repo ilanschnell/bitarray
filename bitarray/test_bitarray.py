@@ -1475,35 +1475,40 @@ class DelMaskedIndexTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('01'))
         self.assertRaises(IndexError, a.__delitem__, bitarray('101'))
 
-    def test_random(self):
+    def test_zeros_mask(self):
         for a in self.randombitarrays():
-            n = len(a)
             b = a.copy()
             # mask has only zeros - nothing will be removed
-            mask = zeros(n)
+            mask = zeros(len(a))
             del b[mask]
             self.assertEqual(b, a)
 
-            b = a.copy()
+    def test_ones_mask(self):
+        for a in self.randombitarrays():
             # mask has only ones - everything will be removed
-            mask.setall(1)
-            del b[mask]
-            self.assertEqual(b, bitarray())
+            mask = ones(len(a))
+            del a[mask]
+            self.assertEqual(a, bitarray())
 
-            b = a.copy()
+    def test_self_mask(self):
+        for a in self.randombitarrays():
+            cnt0 = a.count(0)
             # mask is bitarray itself - all 1 items are removed -
             # only all the 0's remain
-            del b[b]
-            self.assertEqual(b, zeros(a.count(0)))
+            del a[a]
+            self.assertEqual(a, zeros(cnt0))
 
+    def test_random_mask(self):
+        for a in self.randombitarrays():
+            n = len(a)
             b = a.copy()
             mask = urandom_2(n)
-            res = bitarray(a[i] for i in range(n) if not mask[i])
             del b[mask]
-            self.assertEqual(b, res)
+            self.assertEqual(b,
+                             bitarray(a[i] for i in range(n) if not mask[i]))
             # `del a[mask]` is equivalent to the in-place version of
             # selecting the inverted mask `a = a[~mask]`
-            self.assertEqual(a[~mask], b)
+            self.assertEqual(b, a[~mask])
 
     @skipIf(is_pypy)
     def test_imported(self):
