@@ -2265,10 +2265,10 @@ delslice(bitarrayobject *self, PyObject *slice)
     adjust_step_positive(slicelength, &start, &stop, &step);
 
     if (step > 1) {
-        Py_ssize_t i, j;
-
         /* set items not to be removed (up to stop) */
-        for (i = j = start; i < stop; i++) {
+        Py_ssize_t i = start + 1, j = start;
+
+        for (; i < stop; i++) {
             if ((i - start) % step != 0)
                 setbit(self, j++, getbit(self, i));
         }
