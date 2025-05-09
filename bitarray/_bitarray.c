@@ -2047,7 +2047,7 @@ ensure_mask_size(bitarrayobject *self, bitarrayobject *mask)
 
 /* return a new bitarray with items from 'self' masked by bitarray 'mask' */
 static PyObject *
-getmasked(bitarrayobject *self, bitarrayobject *mask)
+getmask(bitarrayobject *self, bitarrayobject *mask)
 {
     bitarrayobject *res;
     Py_ssize_t i, j, n;
@@ -2149,7 +2149,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
         return getslice(self, item);
 
     if (bitarray_Check(item))
-        return getmasked(self, (bitarrayobject *) item);
+        return getmask(self, (bitarrayobject *) item);
 
     if (subscr_seq_check(item) < 0)
         return NULL;

@@ -1,7 +1,7 @@
 2025-05-XX   3.4.1:
 -------------------
   * implement `bits2bytes()` in C
-  * optimize `delslice()` when `step` is more than a few
+  * optimize `delslice()` when `step` is larger than about 5
   * organize tests
 
 
