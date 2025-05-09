@@ -2272,6 +2272,7 @@ delslice(bitarrayobject *self, PyObject *slice)
             if ((i - start) % step != 0)
                 setbit(self, j++, getbit(self, i));
         }
+        assert(slicelength == 0 || j == stop - slicelength);
     }
     return delete_n(self, stop - slicelength, slicelength);
 }
