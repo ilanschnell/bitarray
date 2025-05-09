@@ -1381,6 +1381,16 @@ class GetMaskedIndexTests(unittest.TestCase, Util):
             res = bitarray(a[i] for i in range(n) if mask[i])
             self.assertEqual(a[mask], res)
 
+    def test_random_slice_mask(self):
+        for n in range(100):
+            s = self.random_slice(n)
+            if s.step < 0:
+                continue
+            a = urandom_2(n)
+            mask = zeros(n)
+            mask[s] = 1
+            self.assertEQUAL(a[mask], a[s])
+
 class SetMaskedIndexTests(unittest.TestCase, Util):
 
     def test_basic(self):
@@ -1430,6 +1440,19 @@ class SetMaskedIndexTests(unittest.TestCase, Util):
             a[mask] = other
             b[list(mask.search(1))] = other
             self.assertEqual(a, b)
+
+    def test_random_slice_mask(self):
+        for n in range(100):
+            s = self.random_slice(n)
+            if s.step < 0:
+                continue
+            a = urandom_2(n)
+            b = a.copy()
+            mask = zeros(n)
+            mask[s] = 1
+            other = urandom_2(len(range(n)[s]))
+            a[mask] = b[s] = other
+            self.assertEQUAL(a, b)
 
     def test_random_mask_set_zeros(self):
         for a in self.randombitarrays():
@@ -1509,6 +1532,16 @@ class DelMaskedIndexTests(unittest.TestCase, Util):
             # `del a[mask]` is equivalent to the in-place version of
             # selecting the inverted mask `a = a[~mask]`
             self.assertEqual(b, a[~mask])
+
+    def test_random_slice_mask(self):
+        for n in range(100):
+            s = self.random_slice(n)
+            a = urandom_2(n)
+            b = a.copy()
+            mask = zeros(n)
+            mask[s] = 1
+            del a[mask], b[s]
+            self.assertEQUAL(a, b)
 
     @skipIf(is_pypy)
     def test_imported(self):
