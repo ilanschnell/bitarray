@@ -1383,9 +1383,7 @@ class GetMaskedIndexTests(unittest.TestCase, Util):
 
     def test_random_slice_mask(self):
         for n in range(100):
-            s = self.random_slice(n)
-            if s.step < 0:
-                continue
+            s = self.random_slice(n, step=randint(1, 5))
             a = urandom_2(n)
             mask = zeros(n)
             mask[s] = 1
@@ -1443,9 +1441,7 @@ class SetMaskedIndexTests(unittest.TestCase, Util):
 
     def test_random_slice_mask(self):
         for n in range(100):
-            s = self.random_slice(n)
-            if s.step < 0:
-                continue
+            s = self.random_slice(n, randint(1, 5))
             a = urandom_2(n)
             b = a.copy()
             mask = zeros(n)
