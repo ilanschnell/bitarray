@@ -1369,6 +1369,7 @@ class GetMaskedIndexTests(unittest.TestCase, Util):
     def test_random(self):
         for a in self.randombitarrays():
             n = len(a)
+            # select items from a wehre a is 1  ->  all 1 items
             self.assertEqual(a[a], a.count() * bitarray('1'))
 
             mask = zeros(n)
@@ -1378,8 +1379,8 @@ class GetMaskedIndexTests(unittest.TestCase, Util):
             self.assertEqual(a[mask], a)
 
             mask = urandom_2(n)
-            res = bitarray(a[i] for i in range(n) if mask[i])
-            self.assertEqual(a[mask], res)
+            self.assertEqual(list(a[mask]),
+                             [a[i] for i in range(n) if mask[i]])
 
     def test_random_slice_mask(self):
         for n in range(100):
