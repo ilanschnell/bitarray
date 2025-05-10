@@ -864,31 +864,26 @@ class XoredIndicesTests(unittest.TestCase, Util):
 
 class IntervalsTests(unittest.TestCase, Util):
 
+    def runs(self, a):
+        # return number of uninterrupted intervals of 1s and 0s
+        if not a:
+            return 0
+        res = 1
+        res += sum(1 for _ in a.search(bitarray('01')))
+        res += sum(1 for _ in a.search(bitarray('10')))
+        return res
+
     def test_explicit(self):
-        for s, lst in [
-                ('', []),
-                ('0', [(0, 0, 1)]),
-                ('1', [(1, 0, 1)]),
-                ('00111100 00000111 00',
-                 [(0, 0, 2), (1, 2, 6), (0, 6, 13), (1, 13, 16), (0, 16, 18)]),
+        for s, lst, runs in [
+                ('', [], 0),
+                ('0', [(0, 0, 1)], 1),
+                ('1', [(1, 0, 1)], 1),
+                ('00111100 0000011',
+                 [(0, 0, 2), (1, 2, 6), (0, 6, 13), (1, 13, 15)], 4),
             ]:
             a = bitarray(s)
             self.assertEqual(list(intervals(a)), lst)
-
-    def test_count(self):
-        for s, res in [
-                ('', 0),
-                ('0', 1),
-                ('1', 1),
-                ('00', 1),
-                ('01', 2),
-                ('10', 2),
-                ('11', 1),
-                ('0011110000000', 3),
-            ]:
-            a = bitarray(s)
-            self.assertEqual(res, len(list(intervals(a))))
-            self.assertEqual(res, sum(1 for _ in intervals(a)))
+            self.assertEqual(self.runs(a), runs)
 
     def test_random(self):
         for a in self.randombitarrays():
@@ -900,14 +895,14 @@ class IntervalsTests(unittest.TestCase, Util):
                 b[start:stop] = value
             self.assertEqual(a, b)
 
-    def test_runs(self):
+    def test_list_runs(self):
         for a in self.randombitarrays():
-            first = a[0] if a else None
             # list of length of runs of alternating bits
             runs = [stop - start for _, start, stop in intervals(a)]
+            self.assertEqual(len(runs), self.runs(a))
 
             b = bitarray()
-            v = first
+            v = a[0] if a else None  # value of first run
             for length in runs:
                 b.extend(length * bitarray([v]))
                 v = not v
