@@ -869,7 +869,7 @@ class IntervalsTests(unittest.TestCase, Util):
         n = len(a)
         if n < 2:
             return n
-        return 1 + sum(a[i] ^ a[i + 1] for i in range(n - 1))
+        return 1 + count_xor(a[:-1], a[1:])
 
     def test_explicit(self):
         for s, lst in [
@@ -882,6 +882,18 @@ class IntervalsTests(unittest.TestCase, Util):
             a = bitarray(s)
             self.assertEqual(list(intervals(a)), lst)
             self.assertEqual(self.runs(a), len(lst))
+
+    def test_empty(self):
+        a = bitarray(endian=self.random_endian())
+        self.assertEqual(list(intervals(a)), [])
+        self.assertEqual(self.runs(a), 0)
+
+    def test_uniform(self):
+        for n in range(1, 100):
+            for v in 0, 1:
+                a = n * bitarray([v], self.random_endian())
+                self.assertEqual(list(intervals(a)), [(v, 0, n)])
+                self.assertEqual(self.runs(a), 1)
 
     def test_random(self):
         for a in self.randombitarrays():
@@ -905,7 +917,6 @@ class IntervalsTests(unittest.TestCase, Util):
                 self.assertTrue(length > 0)
                 b.extend(length * bitarray([v]))
                 v = not v
-
             self.assertEqual(a, b)
 
 # ---------------------------------------------------------------------------
