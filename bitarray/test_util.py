@@ -866,24 +866,22 @@ class IntervalsTests(unittest.TestCase, Util):
 
     def runs(self, a):
         # return number of uninterrupted intervals of 1s and 0s
-        if not a:
-            return 0
-        res = 1
-        res += sum(1 for _ in a.search(bitarray('01')))
-        res += sum(1 for _ in a.search(bitarray('10')))
-        return res
+        n = len(a)
+        if n < 2:
+            return n
+        return 1 + sum(a[i] ^ a[i + 1] for i in range(n - 1))
 
     def test_explicit(self):
-        for s, lst, runs in [
-                ('', [], 0),
-                ('0', [(0, 0, 1)], 1),
-                ('1', [(1, 0, 1)], 1),
+        for s, lst in [
+                ('', []),
+                ('0', [(0, 0, 1)]),
+                ('1', [(1, 0, 1)]),
                 ('00111100 0000011',
-                 [(0, 0, 2), (1, 2, 6), (0, 6, 13), (1, 13, 15)], 4),
+                 [(0, 0, 2), (1, 2, 6), (0, 6, 13), (1, 13, 15)]),
             ]:
             a = bitarray(s)
             self.assertEqual(list(intervals(a)), lst)
-            self.assertEqual(self.runs(a), runs)
+            self.assertEqual(self.runs(a), len(lst))
 
     def test_random(self):
         for a in self.randombitarrays():
@@ -904,6 +902,7 @@ class IntervalsTests(unittest.TestCase, Util):
             b = bitarray()
             v = a[0] if a else None  # value of first run
             for length in runs:
+                self.assertTrue(length > 0)
                 b.extend(length * bitarray([v]))
                 v = not v
 
