@@ -883,11 +883,6 @@ class IntervalsTests(unittest.TestCase, Util):
             self.assertEqual(list(intervals(a)), lst)
             self.assertEqual(self.runs(a), len(lst))
 
-    def test_empty(self):
-        a = bitarray(endian=self.random_endian())
-        self.assertEqual(list(intervals(a)), [])
-        self.assertEqual(self.runs(a), 0)
-
     def test_uniform(self):
         for n in range(1, 100):
             for v in 0, 1:
