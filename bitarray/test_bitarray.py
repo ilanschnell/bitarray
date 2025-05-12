@@ -2988,10 +2988,12 @@ class InvertTests(unittest.TestCase, Util):
 
     def test_all(self):
         for a in self.randombitarrays():
-            a = urandom_2(len(a))
-            b = bitarray([not v for v in a])
-            a.invert(slice(0, None))
-            self.assertEqual(a, b)
+            res = bitarray([not v for v in a])
+            b = a.copy()
+            a.invert(slice(None))
+            self.assertEqual(a, res)
+            b.invert()
+            self.assertEqual(b, res)
 
     def test_span(self):
         for a in self.randombitarrays():
