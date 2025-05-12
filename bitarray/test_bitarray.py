@@ -1228,9 +1228,9 @@ class SetSliceTests(unittest.TestCase, Util):
             self.assertEqual(a.count(1), slicelength)
 
     def test_setslice_bool_step(self):
-        for _ in range(200):
+        for _ in range(500):
             n = randint(200, 300)
-            a = bitarray(n, self.random_endian())
+            a = urandom_2(n)
             aa = a.tolist()
             start = randrange(0, n // 2)
             s = slice(start, randint(start + 1, n), randint(1, 20))
