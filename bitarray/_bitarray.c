@@ -437,6 +437,22 @@ invert(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     }
 }
 
+/* invert bits self[start:stop:step] in-place */
+static void
+invert_slice(bitarrayobject *self,
+             Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
+{
+    if (step == 1) {
+        invert(self, start, stop);
+    }
+    else {
+        Py_ssize_t i;
+        assert(step > 1);
+        for (i = start; i < stop; i += step)
+            self->ob_item[i / 8] ^= BITMASK(self, i);
+    }
+}
+
 /* repeat self m times (negative m is treated as 0) */
 static int
 repeat(bitarrayobject *self, Py_ssize_t m)
@@ -1304,15 +1320,7 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
                             Py_TYPE(arg)->tp_name);
     }
 
-    if (step == 1) {
-        invert(self, start, stop);
-    }
-    else {
-        Py_ssize_t i;
-        assert(step > 1);
-        for (i = start; i < stop; i += step)
-            self->ob_item[i / 8] ^= BITMASK(self, i);
-    }
+    invert_slice(self, start, stop, step);
     Py_RETURN_NONE;
 }
 
