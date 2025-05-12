@@ -2986,30 +2986,27 @@ class InvertTests(unittest.TestCase, Util):
             c.invert(slice(i, i + 1))
             self.assertEQUAL(c, a)
 
-    def test_random_all(self):
-        for s in [slice(None, None, None), slice(None, None, -1),
-                  slice(0, None, 1), slice(-9999, 9999, 1)]:
-            for n in range(100):
-                a = urandom_2(n)
-                b = bitarray([not v for v in a])
-                a.invert(s)
-                self.assertEqual(a, b)
+    def test_all(self):
+        for a in self.randombitarrays():
+            a = urandom_2(len(a))
+            b = bitarray([not v for v in a])
+            a.invert(slice(0, None))
+            self.assertEqual(a, b)
 
-    def test_range(self):
-        for n in range(200):
-            a = bitarray(n, endian=self.random_endian())
+    def test_span(self):
+        for a in self.randombitarrays():
+            n = len(a)
             b = a.copy()
             for _ in range(10):
                 i = randint(0, n)
                 j = randint(i, n)
                 a.invert(slice(i, j))
-                for k in range(i, j):
-                    b[k] = not b[k]
+                b[i:j] = ~b[i:j]
                 self.assertEqual(a, b)
 
     def test_random_slice(self):
-        for n in range(200):
-            a = bitarray(n, endian=self.random_endian())
+        for a in self.randombitarrays():
+            n = len(a)
             b = a.copy()
             for _ in range(10):
                 s = self.random_slice(n)
