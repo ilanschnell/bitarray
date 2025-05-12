@@ -437,7 +437,7 @@ repeat(bitarrayobject *self, Py_ssize_t m)
 
 /* the following functions xyz_span, xyz_range operate on bitarray items:
      - xyz_span: contiguous bits - self[a:b] (step=1)
-     - xyz_range: self[start:stop:step]
+     - xyz_range: self[start:stop:step]      (step > 0 is required)
  */
 
 /* invert bits self[a:b] in-place */
