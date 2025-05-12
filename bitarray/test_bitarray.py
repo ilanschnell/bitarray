@@ -1211,7 +1211,7 @@ class SetSliceTests(unittest.TestCase, Util):
             b[range(start, stop)] = 1
             self.assertEqual(a, b)
 
-    def test_setslice_bool_random(self):
+    def test_setslice_bool_random_slice(self):
         for _ in range(200):
             n = randrange(100)
             a = urandom_2(n)
@@ -1226,6 +1226,20 @@ class SetSliceTests(unittest.TestCase, Util):
             a.setall(0)
             a[s] = 1
             self.assertEqual(a.count(1), slicelength)
+
+    def test_setslice_bool_step(self):
+        for _ in range(200):
+            n = randint(200, 300)
+            a = bitarray(n, self.random_endian())
+            aa = a.tolist()
+            start = randrange(0, n // 2)
+            s = slice(start, randint(start + 1, n), randint(1, 20))
+            slicelength = len(range(n)[s])
+            self.assertTrue(slicelength > 0)
+            v = getrandbits(1)
+            a[s] = v
+            aa[s] = slicelength * [v]
+            self.assertEqual(a.tolist(), aa)
 
     def test_to_int(self):
         a = bitarray('11111111')
