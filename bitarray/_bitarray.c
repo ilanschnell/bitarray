@@ -402,7 +402,7 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
 
 /* invert bits self[a:b] in-place */
 static void
-invert(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
+invert_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
     const Py_ssize_t n = b - a;  /* number of bits to invert */
     Py_ssize_t i;
@@ -416,20 +416,20 @@ invert(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         const Py_ssize_t wb = b / 64;
         uint64_t *wbuff = WBUFF(self);
 
-        invert(self, a, 64 * wa);
+        invert_span(self, a, 64 * wa);
         for (i = wa; i < wb; i++)
             wbuff[i] = ~wbuff[i];
-        invert(self, 64 * wb, b);
+        invert_span(self, 64 * wb, b);
     }
     else if (n >= 8) {
         const Py_ssize_t ca = BYTES(a);       /* char-range(ca, cb) */
         const Py_ssize_t cb = b / 8;
         char *buff = self->ob_item;
 
-        invert(self, a, 8 * ca);
+        invert_span(self, a, 8 * ca);
         for (i = ca; i < cb; i++)
             buff[i] = ~buff[i];
-        invert(self, 8 * cb, b);
+        invert_span(self, 8 * cb, b);
     }
     else {
         for (i = a; i < b; i++)
@@ -442,8 +442,10 @@ static void
 invert_slice(bitarrayobject *self,
              Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 {
+    assert(step > 0);
+
     if (step == 1) {
-        invert(self, start, stop);
+        invert_span(self, start, stop);
     }
     else {
         Py_ssize_t i;
@@ -487,9 +489,9 @@ repeat(bitarrayobject *self, Py_ssize_t m)
     return 0;
 }
 
-/* set bits in range(a, b) in self to vi */
+/* set bits self[a:b] to vi */
 static void
-setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
+set_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 {
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
@@ -501,10 +503,10 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 
         assert(a + 8 > 8 * ca && 8 * cb + 8 > b);
 
-        setrange(self, a, 8 * ca, vi);
+        set_span(self, a, 8 * ca, vi);
         memset(self->ob_item + ca, vi ? 0xff : 0x00,
                (size_t) (cb - ca));
-        setrange(self, 8 * cb, b, vi);
+        set_span(self, 8 * cb, b, vi);
     }
     else {
         while (a < b)
@@ -512,9 +514,34 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     }
 }
 
+static void
+set_slice(bitarrayobject *self,
+          Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step, int vi)
+{
+    assert(step > 0);
+
+    if (step == 1) {
+        set_span(self, start, stop, vi);
+    }
+    else {
+        const char *table = bitmask_table[IS_BE(self)];
+        char *buff = self->ob_item;
+        Py_ssize_t i;
+
+        if (vi) {
+            for (i = start; i < stop; i += step)
+                buff[i >> 3] |= table[i & 7];
+        }
+        else {
+            for (i = start; i < stop; i += step)
+                buff[i >> 3] &= ~table[i & 7];
+        }
+    }
+}
+
 /* return number of 1 bits in self[a:b] */
 static Py_ssize_t
-count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
+count_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
     const Py_ssize_t n = b - a;
     Py_ssize_t cnt = 0;
@@ -531,9 +558,9 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 
         assert(8 * p - a < 64 && b - (8 * (p + 8 * w)) < 64 && w >= 0);
 
-        cnt += count(self, a, 8 * p);
+        cnt += count_span(self, a, 8 * p);
         cnt += popcnt_words((uint64_t *) (self->ob_item + p), w);
-        cnt += count(self, 8 * (p + 8 * w), b);
+        cnt += count_span(self, 8 * (p + 8 * w), b);
     }
     else if (n >= 8) {
         const Py_ssize_t ca = BYTES(a);   /* char-range(ca, cb) */
@@ -541,14 +568,14 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 
         assert(8 * ca - a < 8 && b - 8 * cb < 8 && 0 <= m && m < 8);
 
-        cnt += count(self, a, 8 * ca);
+        cnt += count_span(self, a, 8 * ca);
         if (m) {                /* starting at ca count in m bytes */
             uint64_t tmp = 0;
             /* copy bytes we want to count into tmp word */
             memcpy((char *) &tmp, self->ob_item + ca, (size_t) m);
             cnt += popcnt_64(tmp);
         }
-        cnt += count(self, 8 * cb, b);
+        cnt += count_span(self, 8 * cb, b);
     }
     else {
         while (a < b)
@@ -562,8 +589,10 @@ static Py_ssize_t
 count_slice(bitarrayobject *self,
             Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 {
+    assert(step > 0);
+
     if (step == 1) {
-        return count(self, start, stop);
+        return count_span(self, start, stop);
     }
     else {
         Py_ssize_t cnt = 0, i;
@@ -1476,15 +1505,15 @@ bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:sort", kwlist, &reverse))
         return NULL;
 
-    cnt1 = count(self, 0, nbits);
+    cnt1 = count_span(self, 0, nbits);
     if (reverse) {
-        setrange(self, 0, cnt1, 1);
-        setrange(self, cnt1, nbits, 0);
+        set_span(self, 0, cnt1, 1);
+        set_span(self, cnt1, nbits, 0);
     }
     else {
         Py_ssize_t cnt0 = nbits - cnt1;
-        setrange(self, 0, cnt0, 0);
-        setrange(self, cnt0, nbits, 1);
+        set_span(self, 0, cnt0, 0);
+        set_span(self, cnt0, nbits, 1);
     }
     Py_RETURN_NONE;
 }
@@ -2106,7 +2135,7 @@ getmask(bitarrayobject *self, bitarrayobject *mask)
     if (ensure_mask_size(self, mask) < 0)
         return NULL;
 
-    n = count(mask, 0, mask->nbits);
+    n = count_span(mask, 0, mask->nbits);
     res = newbitarrayobject(Py_TYPE(self), n, self->endian);
     if (res == NULL)
         return NULL;
@@ -2283,23 +2312,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
         return -1;
     adjust_step_positive(slicelength, &start, &stop, &step);
 
-    if (step == 1) {
-        setrange(self, start, stop, vi);
-    }
-    else {
-        const char *table = bitmask_table[IS_BE(self)];
-        char *buff = self->ob_item;
-        Py_ssize_t i;
-
-        if (vi) {
-            for (i = start; i < stop; i += step)
-                buff[i >> 3] |= table[i & 7];
-        }
-        else {
-            for (i = start; i < stop; i += step)
-                buff[i >> 3] &= ~table[i & 7];
-        }
-    }
+    set_slice(self, start, stop, step, vi);
     return 0;
 }
 
@@ -2365,7 +2378,7 @@ setmask_bitarray(bitarrayobject *self, bitarrayobject *mask,
     Py_ssize_t n, i, j;
 
     assert(self->nbits == mask->nbits);
-    n = count(mask, 0, mask->nbits);  /* mask size */
+    n = count_span(mask, 0, mask->nbits);  /* mask size */
     if (n != other->nbits) {
         PyErr_Format(PyExc_IndexError, "attempt to assign mask of size %zd "
                      "to bitarray of size %zd", n, other->nbits);
@@ -2408,7 +2421,8 @@ delmask(bitarrayobject *self, bitarrayobject *mask)
         if (getbit(mask, i) == 0)  /* set items we want to keep */
             setbit(self, n++, getbit(self, i));
     }
-    assert(self == mask || n == mask->nbits - count(mask, 0, mask->nbits));
+    assert(self == mask ||
+           n == mask->nbits - count_span(mask, 0, mask->nbits));
 
     return resize(self, n);
 }
@@ -2592,7 +2606,7 @@ bitarray_cpinvert(bitarrayobject *self)
     if ((res = bitarray_cp(self)) == NULL)
         return NULL;
 
-    invert(res, 0, res->nbits);
+    invert_span(res, 0, res->nbits);
     return freeze_if_frozen(res);
 }
 
@@ -2697,11 +2711,11 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
     assert(n <= nbits);
     if (right) {                /* rshift */
         copy_n(self, n, self, 0, nbits - n);
-        setrange(self, 0, n, 0);
+        set_span(self, 0, n, 0);
     }
     else {                      /* lshift */
         copy_n(self, 0, self, n, nbits - n);
-        setrange(self, nbits - n, nbits, 0);
+        set_span(self, nbits - n, nbits, 0);
     }
 }
 
