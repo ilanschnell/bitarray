@@ -251,9 +251,8 @@ popcnt_words(uint64_t *w, Py_ssize_t n)
 
 /* Adjust slice parameters such that step is always positive.
    This produces simpler loops over elements when their order is irrelevant.
-   Moreover, for step = -1, we can now use:
-     - setrange() in setslice_bool()
-     - count() in count_slice()
+   Moreover, for step = -1, we can now use set_span() in set_range() and
+   count_span() in count_range().
 */
 static inline void
 adjust_step_positive(Py_ssize_t slicelength,
