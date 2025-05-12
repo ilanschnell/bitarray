@@ -56,13 +56,16 @@ def mark_range(i, j, c, text=''):
     mark_range_n(i, j - i, c, text)
 
 
-def shift_r8(self, a, b, n):
-    assert 0 <= n < 8
+def shift_r8(self, a, b, k):
+    """
+    shift bits in byte-range(a, b) by k bits to right (in-place)
+    """
+    assert 0 <= k < 8
     assert 0 <= a <= self.nbytes
     assert 0 <= b <= self.nbytes
-    if n == 0 or a >= b:
+    if k == 0 or a >= b:
         return
-    self[8 * a : 8 * b] >>= n
+    self[8 * a : 8 * b] >>= k
 
 def is_be(self):
     return self.endian == 'big'

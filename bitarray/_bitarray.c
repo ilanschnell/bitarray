@@ -480,15 +480,15 @@ setrange(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     assert(self->readonly == 0);
 
     if (b >= a + 8) {
-        const Py_ssize_t byte_a = BYTES(a);  /* byte-range(byte_a, byte_b) */
-        const Py_ssize_t byte_b = b / 8;
+        const Py_ssize_t ca = BYTES(a);  /* char-range(ca, cb) */
+        const Py_ssize_t cb = b / 8;
 
-        assert(a + 8 > 8 * byte_a && 8 * byte_b + 8 > b);
+        assert(a + 8 > 8 * ca && 8 * cb + 8 > b);
 
-        setrange(self, a, 8 * byte_a, vi);
-        memset(self->ob_item + byte_a, vi ? 0xff : 0x00,
-               (size_t) (byte_b - byte_a));
-        setrange(self, 8 * byte_b, b, vi);
+        setrange(self, a, 8 * ca, vi);
+        memset(self->ob_item + ca, vi ? 0xff : 0x00,
+               (size_t) (cb - ca));
+        setrange(self, 8 * cb, b, vi);
     }
     else {
         while (a < b)
@@ -520,19 +520,19 @@ count(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         cnt += count(self, 8 * (p + 8 * w), b);
     }
     else if (n >= 8) {
-        const Py_ssize_t p = BYTES(a);   /* first full byte */
-        const Py_ssize_t m = b / 8 - p;  /* number of full bytes to count */
+        const Py_ssize_t ca = BYTES(a);   /* char-range(ca, cb) */
+        const Py_ssize_t cb = b / 8, m = cb - ca;
 
-        assert(8 * p - a < 8 && b - 8 * (p + m) < 8 && 0 <= m && m < 8);
+        assert(8 * ca - a < 8 && b - 8 * cb < 8 && 0 <= m && m < 8);
 
-        cnt += count(self, a, 8 * p);
-        if (m) {                         /* starting at p count in m bytes */
+        cnt += count(self, a, 8 * ca);
+        if (m) {                /* starting at ca count in m bytes */
             uint64_t tmp = 0;
             /* copy bytes we want to count into tmp word */
-            memcpy((char *) &tmp, self->ob_item + p, (size_t) m);
+            memcpy((char *) &tmp, self->ob_item + ca, (size_t) m);
             cnt += popcnt_64(tmp);
         }
-        cnt += count(self, 8 * (p + m), b);
+        cnt += count(self, 8 * cb, b);
     }
     else {
         while (a < b)
@@ -603,32 +603,32 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
     }
     /* For the same reason as above, we cannot check for n >= 8 here. */
     if (n > 8) {
-        const Py_ssize_t byte_a = BYTES(a);  /* byte-range(byte_a, byte_b) */
-        const Py_ssize_t byte_b = b / 8;
+        const Py_ssize_t ca = BYTES(a);  /* char-range(ca, cb) */
+        const Py_ssize_t cb = b / 8;
         const char *buff = self->ob_item;
         const char c = vi ? 0 : ~0;
 
         if (right) {
-            if ((res = find_bit(self, vi, 8 * byte_b, b, 1)) >= 0)
+            if ((res = find_bit(self, vi, 8 * cb, b, 1)) >= 0)
                 return res;
 
-            for (i = byte_b - 1; i >= byte_a; i--) {  /* skip bytes */
+            for (i = cb - 1; i >= ca; i--) {  /* skip bytes */
                 assert_byte_in_range(self, i);
                 if (c ^ buff[i])
                     return find_bit(self, vi, 8 * i, 8 * i + 8, 1);
             }
-            return find_bit(self, vi, a, 8 * byte_a, 1);
+            return find_bit(self, vi, a, 8 * ca, 1);
         }
         else {
-            if ((res = find_bit(self, vi, a, 8 * byte_a, 0)) >= 0)
+            if ((res = find_bit(self, vi, a, 8 * ca, 0)) >= 0)
                 return res;
 
-            for (i = byte_a; i < byte_b; i++) {       /* skip bytes */
+            for (i = ca; i < cb; i++) {       /* skip bytes */
                 assert_byte_in_range(self, i);
                 if (c ^ buff[i])
                     return find_bit(self, vi, 8 * i, 8 * i + 8, 0);
             }
-            return find_bit(self, vi, 8 * byte_b, b, 0);
+            return find_bit(self, vi, 8 * cb, b, 0);
         }
     }
     /* finally, search for the desired bit by stepping one-by-one */
