@@ -483,11 +483,12 @@ invert_slice(bitarrayobject *self,
         invert_span(self, start, stop);
     }
     else {
+        const char *table = bitmask_table[IS_BE(self)];
         char *buff = self->ob_item;
         Py_ssize_t i;
 
         for (i = start; i < stop; i += step)
-            buff[i / 8] ^= BITMASK(self, i);
+            buff[i >> 3] ^= table[i & 7];
     }
 }
 
@@ -597,7 +598,7 @@ count_slice(bitarrayobject *self,
     }
     else {
         Py_ssize_t cnt = 0, i;
-        assert(step > 0);
+
         for (i = start; i < stop; i += step)
             cnt += getbit(self, i);
         return cnt;
