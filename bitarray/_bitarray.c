@@ -400,20 +400,41 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     return 0;
 }
 
+/* invert bits self[a:b] in-place */
 static void
-invert(bitarrayobject *self)
+invert(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
-    const Py_ssize_t nbytes = Py_SIZE(self);
-    const Py_ssize_t cwords = nbytes / 8;      /* complete 64-bit words */
-    char *buff = self->ob_item;
-    uint64_t *wbuff = WBUFF(self);
+    const Py_ssize_t n = b - a;  /* number of bits to invert */
     Py_ssize_t i;
 
+    assert(0 <= a && a <= self->nbits);
+    assert(0 <= b && b <= self->nbits);
     assert(self->readonly == 0);
-    for (i = 0; i < cwords; i++)
-        wbuff[i] = ~wbuff[i];
-    for (i = 8 * cwords; i < nbytes; i++)
-        buff[i] = ~buff[i];
+
+    if (n >= 64) {
+        const Py_ssize_t wa = (a + 63) / 64;  /* word-range(wa, wb) */
+        const Py_ssize_t wb = b / 64;
+        uint64_t *wbuff = WBUFF(self);
+
+        invert(self, a, 64 * wa);
+        for (i = wa; i < wb; i++)
+            wbuff[i] = ~wbuff[i];
+        invert(self, 64 * wb, b);
+    }
+    else if (n >= 8) {
+        const Py_ssize_t ca = BYTES(a);       /* char-range(ca, cb) */
+        const Py_ssize_t cb = b / 8;
+        char *buff = self->ob_item;
+
+        invert(self, a, 8 * ca);
+        for (i = ca; i < cb; i++)
+            buff[i] = ~buff[i];
+        invert(self, 8 * cb, b);
+    }
+    else {
+        for (i = a; i < b; i++)
+            self->ob_item[i / 8] ^= BITMASK(self, i);
+    }
 }
 
 /* repeat self m times (negative m is treated as 0) */
@@ -1251,25 +1272,47 @@ Insert `value` into bitarray before `index`.");
 static PyObject *
 bitarray_invert(bitarrayobject *self, PyObject *args)
 {
-    Py_ssize_t i = PY_SSIZE_T_MAX;
+    PyObject *arg = Py_None;
+    Py_ssize_t start = 0, stop = self->nbits, step = 1;
 
     RAISE_IF_READONLY(self, NULL);
-    if (!PyArg_ParseTuple(args, "|n:invert", &i))
+    if (!PyArg_ParseTuple(args, "|O:invert", &arg))
         return NULL;
 
-    if (i == PY_SSIZE_T_MAX) {  /* default - invert all bits */
-        invert(self);
-        Py_RETURN_NONE;
+    if (PyIndex_Check(arg)) {
+        start = PyNumber_AsSsize_t(arg, NULL);
+        if (start == -1 && PyErr_Occurred())
+            return NULL;
+
+        if (start < 0)
+            start += self->nbits;
+        if (start < 0 || start >= self->nbits) {
+            PyErr_SetString(PyExc_IndexError, "index out of range");
+            return NULL;
+        }
+        stop = start + 1;
+    }
+    else if (PySlice_Check(arg)) {
+        Py_ssize_t slicelength;
+        if (PySlice_GetIndicesEx(arg, self->nbits,
+                                 &start, &stop, &step, &slicelength) < 0)
+            return NULL;
+        adjust_step_positive(slicelength, &start, &stop, &step);
+    }
+    else if (arg != Py_None) {
+        return PyErr_Format(PyExc_TypeError, "index expect, not '%s' object",
+                            Py_TYPE(arg)->tp_name);
     }
 
-    if (i < 0)
-        i += self->nbits;
-
-    if (i < 0 || i >= self->nbits) {
-        PyErr_SetString(PyExc_IndexError, "index out of range");
-        return NULL;
+    if (step == 1) {
+        invert(self, start, stop);
     }
-    self->ob_item[i / 8] ^= BITMASK(self, i);
+    else {
+        Py_ssize_t i;
+        assert(step > 1);
+        for (i = start; i < stop; i += step)
+            self->ob_item[i / 8] ^= BITMASK(self, i);
+    }
     Py_RETURN_NONE;
 }
 
@@ -2541,7 +2584,7 @@ bitarray_cpinvert(bitarrayobject *self)
     if ((res = bitarray_cp(self)) == NULL)
         return NULL;
 
-    invert(res);
+    invert(res, 0, res->nbits);
     return freeze_if_frozen(res);
 }
 

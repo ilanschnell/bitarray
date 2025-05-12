@@ -2978,10 +2978,44 @@ class InvertTests(unittest.TestCase, Util):
     def test_random(self):
         for a in self.randombitarrays(start=1):
             b = a.copy()
+            c = a.copy()
             i = randrange(len(a))
-            b.invert(i)
             a[i] = not a[i]
-            self.assertEQUAL(a, b)
+            b.invert(i)
+            self.assertEQUAL(b, a)
+            c.invert(slice(i, i + 1))
+            self.assertEQUAL(c, a)
+
+    def test_random_all(self):
+        for s in [slice(None, None, None), slice(None, None, -1),
+                  slice(0, None, 1), slice(-9999, 9999, 1)]:
+            for n in range(100):
+                a = urandom_2(n)
+                b = bitarray([not v for v in a])
+                a.invert(s)
+                self.assertEqual(a, b)
+
+    def test_range(self):
+        for n in range(200):
+            a = bitarray(n, endian=self.random_endian())
+            b = a.copy()
+            for _ in range(10):
+                i = randint(0, n)
+                j = randint(i, n)
+                a.invert(slice(i, j))
+                for k in range(i, j):
+                    b[k] = not b[k]
+                self.assertEqual(a, b)
+
+    def test_random_slice(self):
+        for n in range(200):
+            a = bitarray(n, endian=self.random_endian())
+            b = a.copy()
+            for _ in range(10):
+                s = self.random_slice(n)
+                a.invert(s)
+                b[s] = ~b[s]
+                self.assertEQUAL(a, b)
 
     @skipIf(is_pypy)
     def test_imported(self):
