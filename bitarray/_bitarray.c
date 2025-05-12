@@ -401,6 +401,40 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     return 0;
 }
 
+/* repeat self m times (negative m is treated as 0) */
+static int
+repeat(bitarrayobject *self, Py_ssize_t m)
+{
+    Py_ssize_t q, k = self->nbits;
+
+    assert(self->readonly == 0);
+    if (k == 0 || m == 1)       /* nothing to do */
+        return 0;
+
+    if (m <= 0)                 /* clear */
+        return resize(self, 0);
+
+    assert(m > 1 && k > 0);
+    if (k >= PY_SSIZE_T_MAX / m) {
+        PyErr_Format(PyExc_OverflowError,
+                     "cannot repeat bitarray (of size %zd) %zd times", k, m);
+        return -1;
+    }
+    q = k * m;  /* number of resulting bits */
+    if (resize(self, q) < 0)
+        return -1;
+
+    /* k: number of bits which have been copied so far */
+    while (k <= q / 2) {        /* double copies */
+        copy_n(self, k, self, 0, k);
+        k *= 2;
+    }
+    assert(q / 2 < k && k <= q);
+
+    copy_n(self, k, self, 0, q - k);  /* copy remaining bits */
+    return 0;
+}
+
 /* invert bits self[a:b] in-place */
 static void
 invert_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
@@ -455,40 +489,6 @@ invert_slice(bitarrayobject *self,
         for (i = start; i < stop; i += step)
             buff[i / 8] ^= BITMASK(self, i);
     }
-}
-
-/* repeat self m times (negative m is treated as 0) */
-static int
-repeat(bitarrayobject *self, Py_ssize_t m)
-{
-    Py_ssize_t q, k = self->nbits;
-
-    assert(self->readonly == 0);
-    if (k == 0 || m == 1)       /* nothing to do */
-        return 0;
-
-    if (m <= 0)                 /* clear */
-        return resize(self, 0);
-
-    assert(m > 1 && k > 0);
-    if (k >= PY_SSIZE_T_MAX / m) {
-        PyErr_Format(PyExc_OverflowError,
-                     "cannot repeat bitarray (of size %zd) %zd times", k, m);
-        return -1;
-    }
-    q = k * m;  /* number of resulting bits */
-    if (resize(self, q) < 0)
-        return -1;
-
-    /* k: number of bits which have been copied so far */
-    while (k <= q / 2) {        /* double copies */
-        copy_n(self, k, self, 0, k);
-        k *= 2;
-    }
-    assert(q / 2 < k && k <= q);
-
-    copy_n(self, k, self, 0, q - k);  /* copy remaining bits */
-    return 0;
 }
 
 /* set bits self[a:b] to vi */
@@ -551,8 +551,6 @@ count_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
-    if (n <= 0)
-        return 0;
 
     if (n >= 64) {
         Py_ssize_t p = BYTES(a), w;  /* first full byte  */
