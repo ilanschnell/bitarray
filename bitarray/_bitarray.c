@@ -435,6 +435,11 @@ repeat(bitarrayobject *self, Py_ssize_t m)
     return 0;
 }
 
+/* the following functions xyz_span, xyz_range operate on bitarray items:
+     - xyz_span: contiguous bits - self[a:b] (step=1)
+     - xyz_range: self[start:stop:step]
+ */
+
 /* invert bits self[a:b] in-place */
 static void
 invert_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
@@ -474,7 +479,7 @@ invert_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 
 /* invert bits self[start:stop:step] in-place */
 static void
-invert_slice(bitarrayobject *self,
+invert_range(bitarrayobject *self,
              Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 {
     assert(step > 0);
@@ -519,7 +524,7 @@ set_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 
 /* set bits self[start:stop:step] to vi */
 static void
-set_slice(bitarrayobject *self,
+set_range(bitarrayobject *self,
           Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step, int vi)
 {
     assert(step > 0);
@@ -588,7 +593,7 @@ count_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 
 /* return number of 1 bits in self[start:stop:step] */
 static Py_ssize_t
-count_slice(bitarrayobject *self,
+count_range(bitarrayobject *self,
             Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 {
     assert(step > 0);
@@ -1165,7 +1170,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
 
     if (vi < 2) {                            /* value count */
         adjust_step_positive(slicelength, &start, &stop, &step);
-        cnt = count_slice(self, start, stop, step);
+        cnt = count_range(self, start, stop, step);
         return PyLong_FromSsize_t(vi ? cnt : slicelength - cnt);
     }
 
@@ -1352,7 +1357,7 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
                             Py_TYPE(arg)->tp_name);
     }
 
-    invert_slice(self, start, stop, step);
+    invert_range(self, start, stop, step);
     Py_RETURN_NONE;
 }
 
@@ -2315,7 +2320,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
         return -1;
     adjust_step_positive(slicelength, &start, &stop, &step);
 
-    set_slice(self, start, stop, step, vi);
+    set_range(self, start, stop, step, vi);
     return 0;
 }
 
