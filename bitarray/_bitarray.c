@@ -144,6 +144,7 @@ newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
     return obj;
 }
 
+/* return new copy of bitarray object self */
 static bitarrayobject *
 bitarray_cp(bitarrayobject *self)
 {
@@ -182,7 +183,7 @@ buffers_overlap(bitarrayobject *self, bitarrayobject *other)
     if (Py_SIZE(self) == 0 || Py_SIZE(other) == 0)
         return 0;
 
-/* is pointer ptr in buffer of bitarray a */
+/* is pointer ptr in buffer of bitarray a ? */
 #define PIB(a, ptr)  (a->ob_item <= ptr && ptr < a->ob_item + Py_SIZE(a))
     return PIB(self, other->ob_item) || PIB(other, self->ob_item);
 #undef PIB
@@ -448,10 +449,11 @@ invert_slice(bitarrayobject *self,
         invert_span(self, start, stop);
     }
     else {
+        char *buff = self->ob_item;
         Py_ssize_t i;
-        assert(step > 1);
+
         for (i = start; i < stop; i += step)
-            self->ob_item[i / 8] ^= BITMASK(self, i);
+            buff[i / 8] ^= BITMASK(self, i);
     }
 }
 
@@ -514,6 +516,7 @@ set_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     }
 }
 
+/* set bits self[start:stop:step] to vi */
 static void
 set_slice(bitarrayobject *self,
           Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step, int vi)
@@ -603,7 +606,8 @@ count_slice(bitarrayobject *self,
     }
 }
 
-/* return first/rightmost occurrence of vi in self[a:b], -1 when not found */
+/* return first (or rightmost in case right=1) occurrence
+   of vi in self[a:b], -1 when not found */
 static Py_ssize_t
 find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
 {
