@@ -3612,22 +3612,6 @@ class CountTests(unittest.TestCase, Util):
             self.assertEqual(b.count(0), c0)
             self.assertEqual(b.count(1), c1)
 
-    def test_slicelength(self):
-        for n in range(100):
-            a = bitarray(n, self.random_endian())
-            s = self.random_slice(n)
-            slicelength = len(range(n)[s])
-            self.assertEqual(len(a[s]), slicelength)
-
-            self.assertEqual(a.count(0, s.start, s.stop, s.step), slicelength)
-            self.assertEqual(a.count(1, s.start, s.stop, s.step), 0)
-            a[s] = 1
-            self.assertEqual(a.count(0), n - slicelength)
-            self.assertEqual(a.count(1), slicelength)
-            del a[s]
-            self.assertEqual(len(a), n - slicelength)
-            self.assertFalse(a.any())
-
     def test_explicit(self):
         a = bitarray('01001100 01110011 01')
         self.assertEqual(a.count(), 9)
@@ -3642,15 +3626,13 @@ class CountTests(unittest.TestCase, Util):
         self.assertEqual(a.count(1, 1, -1), 8)
         self.assertEqual(a.count(1, 17, 14), 0)
 
-    def test_random(self):
-        for _ in range(1000):
-            n = randrange(200)
+    def test_random_slice(self):
+        for n in range(500):
             a = urandom_2(n)
             v = randrange(2)
-            i = randint(-n - 3, n + 3)
-            j = randint(-n - 3, n + 3)
-            step = randint(-n - 3, n + 3) or 1
-            self.assertEqual(a.count(v, i, j, step), a[i:j:step].count(v))
+            s = self.random_slice(n)
+            self.assertEqual(a.count(v, s.start, s.stop, s.step),
+                             a[s].count(v))
 
     def test_offest_buffer(self):
         # this tests if words are aligned in popcnt_words()
