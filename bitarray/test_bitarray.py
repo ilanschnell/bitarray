@@ -1228,18 +1228,23 @@ class SetSliceTests(unittest.TestCase, Util):
             self.assertEqual(a.count(1), slicelength)
 
     def test_setslice_bool_step(self):
+        # this test exercises set_range() when stop is much larger than start
+        cnt = 0
         for _ in range(500):
-            n = randint(200, 300)
+            n = randrange(3000, 4000)
             a = urandom_2(n)
             aa = a.tolist()
-            start = randrange(0, n // 2)
-            s = slice(start, randint(start + 1, n), randint(1, 20))
+            start = randrange(1000)
+            s = slice(start, randrange(1000, n), randint(1, 100))
+            self.assertTrue(s.stop - s.start >= 0)
+            cnt += s.stop - s.start >= 1024
             slicelength = len(range(n)[s])
             self.assertTrue(slicelength > 0)
             v = getrandbits(1)
             a[s] = v
             aa[s] = slicelength * [v]
             self.assertEqual(a.tolist(), aa)
+        self.assertTrue(cnt > 300)
 
     def test_to_int(self):
         a = bitarray('11111111')
