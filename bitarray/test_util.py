@@ -860,16 +860,16 @@ class XoredIndicesTests(unittest.TestCase, Util):
             self.assertEqual(xor_indices(a), i)  # index of the flipped bit!
             a.invert(i)
 
-# ---------------------------------------------------------------------------
+# ------------------   intervals of uninterrupted runs   --------------------
+
+def runs(a):
+    "return number of uninterrupted intervals of 1s and 0s"
+    n = len(a)
+    if n < 2:
+        return n
+    return 1 + count_xor(a[:-1], a[1:])
 
 class IntervalsTests(unittest.TestCase, Util):
-
-    def runs(self, a):
-        # return number of uninterrupted intervals of 1s and 0s
-        n = len(a)
-        if n < 2:
-            return n
-        return 1 + count_xor(a[:-1], a[1:])
 
     def test_explicit(self):
         for s, lst in [
@@ -881,14 +881,14 @@ class IntervalsTests(unittest.TestCase, Util):
             ]:
             a = bitarray(s)
             self.assertEqual(list(intervals(a)), lst)
-            self.assertEqual(self.runs(a), len(lst))
+            self.assertEqual(runs(a), len(lst))
 
     def test_uniform(self):
         for n in range(1, 100):
             for v in 0, 1:
                 a = n * bitarray([v], self.random_endian())
                 self.assertEqual(list(intervals(a)), [(v, 0, n)])
-                self.assertEqual(self.runs(a), 1)
+                self.assertEqual(runs(a), 1)
 
     def test_random(self):
         for a in self.randombitarrays():
@@ -903,12 +903,12 @@ class IntervalsTests(unittest.TestCase, Util):
     def test_list_runs(self):
         for a in self.randombitarrays():
             # list of length of runs of alternating bits
-            runs = [stop - start for _, start, stop in intervals(a)]
-            self.assertEqual(len(runs), self.runs(a))
+            alt_runs = [stop - start for _, start, stop in intervals(a)]
+            self.assertEqual(len(alt_runs), runs(a))
 
             b = bitarray()
             v = a[0] if a else None  # value of first run
-            for length in runs:
+            for length in alt_runs:
                 self.assertTrue(length > 0)
                 b.extend(length * bitarray([v]))
                 v = not v
