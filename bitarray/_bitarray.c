@@ -539,7 +539,7 @@ set_range_opt(bitarrayobject *self,
     char *buff = self->ob_item;
     Py_ssize_t i;
 
-    assert(step >= 2 && 8 * ca - start >= 0 && 8 * cb - start >= 0);
+    assert(step >= 2 && m > 0 && 8 * ca - start >= 0 && 8 * cb - start >= 0);
 
 /* Next x in range(start, maxsize, step) - see examples/tricks.py */
 #define NXIR(x)  ((step - (((x) - start) % step)) % step)
@@ -551,7 +551,7 @@ set_range_opt(bitarrayobject *self,
     setbit(mask, NXIR(8 * ca), vi);
     if (repeat(mask, (m - 1) / step + 1) < 0)
         goto error;
-    assert(Py_SIZE(mask) >= cb - ca);
+    assert(Py_SIZE(mask) >= m / 8);
 
     if (set_range(self, start, 8 * ca, step, vi) < 0)
         goto error;

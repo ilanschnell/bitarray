@@ -175,20 +175,18 @@ class NXIR_Tests(unittest.TestCase):
                 return (step - (((x) - start) % step)) % step
 
             self.assertEqual(nxir(start), 0)
-            self.assertTrue(start + nxir(start) in r)
             for i in range(10):
                 x = start + i * step
                 self.assertEqual(nxir(x), 0)
-                self.assertTrue(x + nxir(x) in r)
 
             x = randrange(start, start + 100)
             self.assertTrue(x >= start)
 
-            a = nxir(x)
-            self.assertTrue(a in range(0, step))
-            self.assertEqual((x + a) % step, start % step)
-            self.assertTrue((x + a) in r)
-            self.assertEqual((x + a - start) % step, 0)
+            nx = nxir(x)
+            self.assertTrue(nx in range(0, step))
+            self.assertEqual((x + nx) % step, start % step)
+            self.assertTrue((x + nx) in r)
+            self.assertEqual((x + nx - start) % step, 0)
 
 
 if __name__ == '__main__':
