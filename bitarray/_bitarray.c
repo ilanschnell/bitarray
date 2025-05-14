@@ -522,6 +522,14 @@ set_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     }
 }
 
+/* Next x in range(start, maxsize, step) - see examples/tricks.py */
+static inline Py_ssize_t
+nxir(Py_ssize_t x, Py_ssize_t start, Py_ssize_t step)
+{
+    assert(x >= start && step > 0);
+    return (step - (((x) - start) % step)) % step;
+}
+
 static int
 set_range(bitarrayobject *self,
           Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step, int vi);
@@ -541,14 +549,12 @@ set_range_opt(bitarrayobject *self,
 
     assert(step >= 2 && m > 0 && 8 * ca - start >= 0 && 8 * cb - start >= 0);
 
-/* Next x in range(start, maxsize, step) - see examples/tricks.py */
-#define NXIR(x)  ((step - (((x) - start) % step)) % step)
     mask = newbitarrayobject(&Bitarray_Type, step, self->endian);
     if (mask == NULL)
         return -1;
 
     memset(mask->ob_item, vi ? 0x00 : 0xff, (size_t) Py_SIZE(mask));
-    setbit(mask, NXIR(8 * ca), vi);
+    setbit(mask, nxir(8 * ca, start, step), vi);
     if (repeat(mask, (m - 1) / step + 1) < 0)
         goto error;
     assert(Py_SIZE(mask) >= m / 8);
@@ -565,9 +571,9 @@ set_range_opt(bitarrayobject *self,
         for (i = ca; i < cb; i++)
             buff[i] &= *mbuff++;
     }
-    if (set_range(self, 8 * cb + NXIR(8 * cb), stop, step, vi) < 0)
+    if (set_range(self, 8 * cb + nxir(8 * cb, start, step),
+                  stop, step, vi) < 0)
         goto error;
-#undef NXIR
 
     Py_DECREF(mask);
     return 0;
