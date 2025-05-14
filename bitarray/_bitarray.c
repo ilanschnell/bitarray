@@ -522,7 +522,14 @@ set_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     }
 }
 
-/* Next x in range(start, maxsize, step) - see examples/tricks.py */
+/* Next x in range(start, maxsize, step) - NXIR
+   Return distance to next (or current) index in
+   range(start, maxsize, step), such that:
+
+       (x + nxir(x)) in range(start, sys.maxsize, step)
+   or
+       (x + nxir(x) - start) % step == 0
+*/
 static inline Py_ssize_t
 nxir(Py_ssize_t x, Py_ssize_t start, Py_ssize_t step)
 {
@@ -2006,6 +2013,18 @@ bitarray_overlap(bitarrayobject *self, PyObject *other)
     }
     return PyBool_FromLong(buffers_overlap(self, (bitarrayobject *) other));
 }
+
+static PyObject *
+module_nxir(PyObject *module, PyObject *args)
+{
+    Py_ssize_t x, start, step;
+
+    if (!PyArg_ParseTuple(args, "nnn", &x, &start, &step))
+        return NULL;
+
+    return PyLong_FromSsize_t(nxir(x, start, step));
+}
+
 
 #endif  /* NDEBUG */
 
@@ -4297,6 +4316,12 @@ static PyMethodDef module_functions[] = {
      set_default_endian_doc},
     {"_sysinfo",            (PyCFunction) sysinfo,            METH_NOARGS,
      sysinfo_doc},
+
+#ifndef NDEBUG
+    /* functions exposed in debug mode for testing */
+    {"_nxir",               (PyCFunction) module_nxir,    METH_VARARGS, 0},
+#endif
+
     {NULL,                  NULL}  /* sentinel */
 };
 

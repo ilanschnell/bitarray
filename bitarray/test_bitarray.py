@@ -42,6 +42,10 @@ def skipIf(condition):
 SYSINFO = _sysinfo()
 DEBUG = SYSINFO[6]
 
+if DEBUG:
+    from bitarray._bitarray import _nxir
+
+
 def buffer_info(a, key=None):
     fields = (
         "address",    # 0. address of byte buffer
@@ -747,6 +751,30 @@ class InternalTests(unittest.TestCase, Util):
             r1, r2 = range(i1, j1), range(i2, j2)
             res = bool(r1) and bool(r2) and (i2 in r1 or i1 in r2)
             self.check_overlap(b1, b2, res)
+
+    def test_nxir(self):
+        for _ in range(1000):
+            start = randrange(100)
+            step = randrange(1, 20)
+            r = range(start, sys.maxsize, step)
+
+            self.assertEqual(_nxir(start, start, step), 0)
+            for i in range(10):
+                x = start + i * step
+                self.assertEqual(_nxir(x, start, step), 0)
+
+            x = randrange(start, start + 100)
+            self.assertTrue(x >= start)
+            # it would be easier to implement nxir() using this, but
+            # in C this doesn't work, see example in above test
+            self.assertEqual(_nxir(x, start, step), (start - x) % step)
+
+            nx = _nxir(x, start, step)
+            self.assertTrue(nx in range(0, step))
+            self.assertEqual((x + nx) % step, start % step)
+            self.assertTrue((x + nx) in r)
+            self.assertEqual((x + nx - start) % step, 0)
+
 
 # -------------------------- (Number) index tests ---------------------------
 

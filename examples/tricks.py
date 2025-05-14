@@ -154,20 +154,7 @@ class ListSliceTests(unittest.TestCase):
             self.assertEqual(slicelength(r.start, r.stop, r.step), len(r))
 
 
-def nxir(x, start, step):  # used in set_range_opt()
-    """
-    return distance to next (or current) index in
-    range(start, maxsize, step), such that:
-
-          (x + nxir(x)) in range(start, sys.maxsize, step)
-    or
-          (x + nxir(x) - start) % step == 0
-    """
-    assert x >= start
-    return (step - (((x) - start) % step)) % step
-
-
-class NXIR_Tests(unittest.TestCase):
+class RemainerTests(unittest.TestCase):
 
     def test_remainder(self):
         for _ in range(1000):
@@ -189,35 +176,12 @@ class NXIR_Tests(unittest.TestCase):
             r = a % b
             # note that even though a is negative, the remainder is positive
             self.assertTrue(r >= 0)
-            # this is now we can implement a % b in C when a <= 0
+            # this is how we can implement a % b in C when a <= 0
             s = (b - (-a) % b) % b
             self.assertEqual(s, r)
             # here % always operates on positive numerator
             self.assertTrue(-a >= 0)
             self.assertTrue(b - (-a) % b > 0)
-
-    def test_nxir(self):
-        for _ in range(1000):
-            start = randrange(100)
-            step = randrange(1, 20)
-            r = range(start, sys.maxsize, step)
-
-            self.assertEqual(nxir(start, start, step), 0)
-            for i in range(10):
-                x = start + i * step
-                self.assertEqual(nxir(x, start, step), 0)
-
-            x = randrange(start, start + 100)
-            self.assertTrue(x >= start)
-            # it would be easier to implement nxir() using this, but
-            # in C this doesn't work, see example in above test
-            self.assertEqual(nxir(x, start, step), (start - x) % step)
-
-            nx = nxir(x, start, step)
-            self.assertTrue(nx in range(0, step))
-            self.assertEqual((x + nx) % step, start % step)
-            self.assertTrue((x + nx) in r)
-            self.assertEqual((x + nx - start) % step, 0)
 
 
 if __name__ == '__main__':
