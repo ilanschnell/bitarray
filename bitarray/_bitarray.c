@@ -522,8 +522,62 @@ set_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     }
 }
 
+static int
+set_range(bitarrayobject *self,
+          Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step, int vi);
+
+/* optimizeed version of set_range() for step >= 2 */
+static int
+set_range_opt(bitarrayobject *self,
+              Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step, int vi)
+{
+    const Py_ssize_t ca = BYTES(start);  /* char-range(ca, cb) */
+    const Py_ssize_t cb = stop / 8;
+    const Py_ssize_t m = (cb - ca) * 8;  /* mask size in bits */
+    bitarrayobject *mask;
+    char *mbuff;
+    char *buff = self->ob_item;
+    Py_ssize_t i;
+
+    assert(step >= 2 && 8 * ca - start >= 0 && 8 * cb - start >= 0);
+
+/* Next x in range(start, maxsize, step) - see examples/tricks.py */
+#define NXIR(x)  ((step - (((x) - start) % step)) % step)
+    mask = newbitarrayobject(&Bitarray_Type, step, self->endian);
+    if (mask == NULL)
+        return -1;
+
+    memset(mask->ob_item, vi ? 0x00 : 0xff, (size_t) Py_SIZE(mask));
+    setbit(mask, NXIR(8 * ca), vi);
+    if (repeat(mask, (m - 1) / step + 1) < 0)
+        goto error;
+    assert(Py_SIZE(mask) >= cb - ca);
+
+    if (set_range(self, start, 8 * ca, step, vi) < 0)
+        goto error;
+
+    mbuff = mask->ob_item;
+    if (vi) {
+        for (i = ca; i < cb; i++)
+            buff[i] |= *mbuff++;
+    }
+    else {
+        for (i = ca; i < cb; i++)
+            buff[i] &= *mbuff++;
+    }
+    if (set_range(self, 8 * cb + NXIR(8 * cb), stop, step, vi) < 0)
+        goto error;
+#undef NXIR
+
+    Py_DECREF(mask);
+    return 0;
+ error:
+    Py_DECREF(mask);
+    return -1;
+}
+
 /* set bits self[start:stop:step] to vi */
-static void
+static int
 set_range(bitarrayobject *self,
           Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step, int vi)
 {
@@ -533,19 +587,25 @@ set_range(bitarrayobject *self,
         set_span(self, start, stop, vi);
     }
     else {
-        const char *table = bitmask_table[IS_BE(self)];
-        char *buff = self->ob_item;
-        Py_ssize_t i;
-
-        if (vi) {
-            for (i = start; i < stop; i += step)
-                buff[i >> 3] |= table[i & 7];
+        if (vi && stop - start > 64) {
+            return set_range_opt(self, start, stop, step, vi);
         }
         else {
-            for (i = start; i < stop; i += step)
-                buff[i >> 3] &= ~table[i & 7];
+            const char *table = bitmask_table[IS_BE(self)];
+            char *buff = self->ob_item;
+            Py_ssize_t i;
+
+            if (vi) {
+                for (i = start; i < stop; i += step)
+                    buff[i >> 3] |= table[i & 7];
+            }
+            else {
+                for (i = start; i < stop; i += step)
+                    buff[i >> 3] &= ~table[i & 7];
+            }
         }
     }
+    return 0;
 }
 
 /* return number of 1 bits in self[a:b] */
@@ -2320,8 +2380,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
         return -1;
     adjust_step_positive(slicelength, &start, &stop, &step);
 
-    set_range(self, start, stop, step, vi);
-    return 0;
+    return set_range(self, start, stop, step, vi);
 }
 
 /* delete items in self, specified by slice */

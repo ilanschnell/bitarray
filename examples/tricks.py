@@ -2,7 +2,8 @@
 This file contains some little tricks and verifications for some code which
 is used in the C implementation of bitarray.
 """
-from random import randint
+import sys
+from random import randint, randrange
 import unittest
 
 
@@ -151,6 +152,43 @@ class ListSliceTests(unittest.TestCase):
     def test_slicelength(self):
         for n, s, r in self.random_slices():
             self.assertEqual(slicelength(r.start, r.stop, r.step), len(r))
+
+
+class NXIR_Tests(unittest.TestCase):
+
+    def test_nxir(self):
+        for _ in range(1000):
+            start = randrange(100)
+            step = randrange(1, 20)
+            r = range(start, sys.maxsize, step)
+
+            def nxir(x): # set_range_opt() NXIR macro
+                """
+                return distance to next (or current) index in
+                range(start, maxsize, step), such that:
+
+                    (x + nxir(x)) in range(start, sys.maxsize, step)
+                or
+                    (x + nxir(x) - start) % step == 0
+                """
+                assert x - start >= 0
+                return (step - (((x) - start) % step)) % step
+
+            self.assertEqual(nxir(start), 0)
+            self.assertTrue(start + nxir(start) in r)
+            for i in range(10):
+                x = start + i * step
+                self.assertEqual(nxir(x), 0)
+                self.assertTrue(x + nxir(x) in r)
+
+            x = randrange(start, start + 100)
+            self.assertTrue(x >= start)
+
+            a = nxir(x)
+            self.assertTrue(a in range(0, step))
+            self.assertEqual((x + a) % step, start % step)
+            self.assertTrue((x + a) in r)
+            self.assertEqual((x + a - start) % step, 0)
 
 
 if __name__ == '__main__':
