@@ -766,7 +766,7 @@ class InternalTests(unittest.TestCase, Util):
             x = randrange(start, start + 100)
             self.assertTrue(x >= start)
             # it would be easier to implement nxir() using this, but
-            # in C this doesn't work, see example in above test
+            # in C this doesn't work, see examples/tricks.py
             self.assertEqual(_nxir(x, start, step), (start - x) % step)
 
             nx = _nxir(x, start, step)

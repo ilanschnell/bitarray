@@ -522,13 +522,13 @@ set_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
     }
 }
 
-/* Next x in range(start, maxsize, step) - NXIR
+/* Next x in range(start, sys.maxsize, step) - NXIR
    Return distance to next (or current) index in
    range(start, maxsize, step), such that:
 
-       (x + nxir(x)) in range(start, sys.maxsize, step)
+       (x + nxir(x, start, step)) in range(start, sys.maxsize, step)
    or
-       (x + nxir(x) - start) % step == 0
+       (x + nxir(x, start, step) - start) % step == 0
 */
 static inline Py_ssize_t
 nxir(Py_ssize_t x, Py_ssize_t start, Py_ssize_t step)

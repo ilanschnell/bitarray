@@ -170,18 +170,23 @@ class RemainerTests(unittest.TestCase):
             self.assertTrue(0 <= r < b)
 
     def test_avoid_neg_a(self):
+        #
+        # the equality   a % b = (b - (-a) % b) % b   is used in nxir(x)
+        #
         for _ in range(1000):
-            a = randint(-20, 0)
+            a = randint(-20, 20)
             b = randint(1, 20)
             r = a % b
-            # note that even though a is negative, the remainder is positive
+            # note that even though a may be negative, the remainder is
+            # always positive
             self.assertTrue(r >= 0)
             # this is how we can implement a % b in C when a <= 0
             s = (b - (-a) % b) % b
             self.assertEqual(s, r)
             # here % always operates on positive numerator
-            self.assertTrue(-a >= 0)
-            self.assertTrue(b - (-a) % b > 0)
+            if a <= 0:
+                self.assertTrue(-a >= 0)
+                self.assertTrue(b - (-a) % b > 0)
 
 
 if __name__ == '__main__':
