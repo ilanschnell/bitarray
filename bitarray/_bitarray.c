@@ -556,7 +556,7 @@ set_range_opt(bitarrayobject *self,
     char *buff = self->ob_item;
     Py_ssize_t i;
 
-    assert(step >= 2 && m > 0 && 8 * ca - start >= 0 && 8 * cb - start >= 0);
+    assert(step >= 2 && m > 0);
 
     mask = newbitarrayobject(&Bitarray_Type, step, self->endian);
     if (mask == NULL)

@@ -17,7 +17,9 @@ def set_range_opt(self, start, stop, step, value):
     m = (cb - ca) * 8
 
     assert m >= 0
-    
+    assert 0 <= 8 * ca - start < 8
+    assert 0 <= stop - 8 * cb < 8
+
     mask = bitarray(step, self.endian)
     mask.setall(not value)
     mask[nxir(8 * ca, start, step)] = value
@@ -50,7 +52,7 @@ class Tests(unittest.TestCase):
             set_range_opt(a, s.start, s.stop, s.step, v)
             aa[s] = slicelength * [v]
             self.assertEqual(a.tolist(), aa)
-    
+
 
 if __name__ == '__main__':
     unittest.main()
