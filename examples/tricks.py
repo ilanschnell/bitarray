@@ -171,7 +171,7 @@ class RemainerTests(unittest.TestCase):
 
     def test_avoid_neg_a(self):
         #
-        # the equality   a % b = (b - (-a) % b) % b   is used in nxir(x)
+        # equality:   a % b = (b - (-a) % b) % b
         #
         for _ in range(1000):
             a = randint(-20, 20)

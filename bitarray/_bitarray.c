@@ -523,7 +523,7 @@ set_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
 }
 
 /* Next x in range(start, sys.maxsize, step) - NXIR
-   Return distance to next (or current) index in
+   Return distance to next (larger or equal) element in
    range(start, maxsize, step), such that:
 
        (x + nxir(x, start, step)) in range(start, sys.maxsize, step)
@@ -541,21 +541,9 @@ static int
 set_range(bitarrayobject *self,
           Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step, int vi);
 
-/* Optimizeed version of set_range() for step >= 2.
-   Basically equivalent to the Python code:
-
-    mask = bitarray(step, self.endian)
-    mask.setall(not value)
-    mask[nxir(8 * ca, start, step)] = value
-    mask *= (m - 1) // step + 1
-
-    self[start : 8 * ca : step] = value
-    if value:
-        self[8 * ca : 8 * cb] |= mask
-    else:
-        self[8 * ca : 8 * cb] &= mask
-    self[8 * cb + nxir(8 * cb, start, step) : stop : step] = value
- */
+/* Optimized version of set_range() for step >= 2 and large stop - start.
+   See Python version of this function in: examples/set_range_opt.py
+*/
 static int
 set_range_opt(bitarrayobject *self,
               Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step, int vi)

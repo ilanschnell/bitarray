@@ -770,7 +770,7 @@ class InternalTests(unittest.TestCase, Util):
             self.assertEqual(_nxir(x, start, step), (start - x) % step)
 
             nx = _nxir(x, start, step)
-            self.assertTrue(nx in range(0, step))
+            self.assertTrue(0 <= nx < step)
             self.assertEqual((x + nx) % step, start % step)
             self.assertTrue((x + nx) in r)
             self.assertEqual((x + nx - start) % step, 0)
