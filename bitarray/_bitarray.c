@@ -541,7 +541,21 @@ static int
 set_range(bitarrayobject *self,
           Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step, int vi);
 
-/* optimizeed version of set_range() for step >= 2 */
+/* Optimizeed version of set_range() for step >= 2.
+   Basically equivalent to the Python code:
+
+    mask = bitarray(step, self.endian)
+    mask.setall(not value)
+    mask[nxir(8 * ca, start, step)] = value
+    mask *= (m - 1) // step + 1
+
+    self[start : 8 * ca : step] = value
+    if value:
+        self[8 * ca : 8 * cb] |= mask
+    else:
+        self[8 * ca : 8 * cb] &= mask
+    self[8 * cb + nxir(8 * cb, start, step) : stop : step] = value
+ */
 static int
 set_range_opt(bitarrayobject *self,
               Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step, int vi)
