@@ -156,6 +156,33 @@ class ListSliceTests(unittest.TestCase):
 
 class NXIR_Tests(unittest.TestCase):
 
+    def test_remainder(self):
+        for _ in range(1000):
+            a = randint(-20, 20)
+            b = randint(1, 20)
+            # integer division in Python returns the floor of the result
+            # instead of truncating towards zero like C
+            q = a // b
+            if a < 0:
+                self.assertTrue(q < 0)
+            r = a % b
+            self.assertEqual(b * q + r, a)
+            self.assertTrue(0 <= r < b)
+
+    def test_avoid_neg_a(self):
+        for _ in range(1000):
+            a = randint(-20, 0)
+            b = randint(1, 20)
+            r = a % b
+            # note that even though a is negative, the remainder is positive
+            self.assertTrue(r >= 0)
+            # this is now we can implement a % b in C when a <= 0
+            # here % always operates on positive numerator
+            s = (b - (-a) % b) % b
+            self.assertEqual(s, r)
+            self.assertTrue(-a >= 0)
+            self.assertTrue(b - (-a) % b > 0)
+
     def test_nxir(self):
         for _ in range(1000):
             start = randrange(100)
@@ -181,6 +208,9 @@ class NXIR_Tests(unittest.TestCase):
 
             x = randrange(start, start + 100)
             self.assertTrue(x >= start)
+            # it would be easier to implement nxir() using this, but
+            # in C this doesn't work, see example in above test
+            self.assertEqual(nxir(x), (start - x) % step)
 
             nx = nxir(x)
             self.assertTrue(nx in range(0, step))
