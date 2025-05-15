@@ -512,8 +512,7 @@ set_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
         assert(a + 8 > 8 * ca && 8 * cb + 8 > b);
 
         set_span(self, a, 8 * ca, vi);
-        memset(self->ob_item + ca, vi ? 0xff : 0x00,
-               (size_t) (cb - ca));
+        memset(self->ob_item + ca, vi ? 0xff : 0x00, (size_t) (cb - ca));
         set_span(self, 8 * cb, b, vi);
     }
     else {
@@ -4231,8 +4230,7 @@ module_zlw(PyObject *module, PyObject *obj)
 
     a = (bitarrayobject *) obj;
     w = zlw(a);
-    res = newbitarrayobject(&Bitarray_Type, 64, a->endian);
-    if (res == NULL)
+    if ((res = newbitarrayobject(&Bitarray_Type, 64, a->endian)) == NULL)
         return NULL;
     memcpy(res->ob_item, &w, 8);
     return (PyObject *) res;

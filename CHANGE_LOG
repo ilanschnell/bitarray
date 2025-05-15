@@ -3,7 +3,7 @@
   * add `pyproject.toml`, see #233
   * implement `bits2bytes()` in C
   * optimize `delslice()` when `step` is larger than about 5
-  * organize tests
+  * organize and add tests
 
 
 2025-05-06   3.4.0:
