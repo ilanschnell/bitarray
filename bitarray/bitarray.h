@@ -234,7 +234,7 @@ static inline int
 to_aligned(void *p)
 {
     int r = ((uintptr_t) p) % 4;
-    return r ? 4 - r : 0;
+    return (4 - r) % 4;
 }
 
 /* population count of n words starting from at uint64_t pointer w */
