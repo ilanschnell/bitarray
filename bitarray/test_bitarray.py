@@ -42,6 +42,10 @@ def skipIf(condition):
 SYSINFO = _sysinfo()
 DEBUG = SYSINFO[6]
 
+if DEBUG:
+    from bitarray._bitarray import _zlw
+
+
 def buffer_info(a, key=None):
     fields = (
         "address",    # 0. address of byte buffer
@@ -753,6 +757,32 @@ class Overlap_Tests(unittest.TestCase, Util):
             r1, r2 = range(i1, j1), range(i2, j2)
             res = bool(r1) and bool(r2) and (i2 in r1 or i1 in r2)
             self.check_overlap(b1, b2, res)
+
+@skipIf(not DEBUG)
+class ZLW_Tests(unittest.TestCase, Util):
+
+    def test_zeros(self):
+        for n in range(200):
+            a = zeros(n, "little")
+            self.assertEqual(_zlw(a), 0)
+
+    @skipIf(sys.byteorder == "big")
+    def test_ones(self):
+        for n in range(200):
+            a = ones(n, "little")
+            res = (1 << n % 64) - 1
+            self.assertEqual(_zlw(a), res)
+
+    @skipIf(sys.byteorder == "big")
+    def test_random(self):
+        for n in range(200):
+            a =  urandom_2(n, "little")
+            nw = 64 * (n // 64) # bits in complete words
+            res = 0
+            for i in range(n % 64):
+                if a[i + nw]:
+                    res += 1 << i
+            self.assertEqual(_zlw(a), res)
 
 # -------------------------- (Number) index tests ---------------------------
 

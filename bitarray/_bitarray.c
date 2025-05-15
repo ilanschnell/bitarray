@@ -1941,6 +1941,15 @@ bitarray_overlap(bitarrayobject *self, PyObject *other)
     return PyBool_FromLong(buffers_overlap(self, (bitarrayobject *) other));
 }
 
+static PyObject *
+module_zlw(PyObject *module, PyObject *obj)
+{
+    bitarrayobject *a;
+
+    a = (bitarrayobject *) obj;
+    return PyLong_FromUnsignedLongLong(zlw(a));
+}
+
 #endif  /* NDEBUG */
 
 /* ---------------------- bitarray getset members ---------------------- */
@@ -4232,6 +4241,12 @@ static PyMethodDef module_functions[] = {
      set_default_endian_doc},
     {"_sysinfo",            (PyCFunction) sysinfo,            METH_NOARGS,
      sysinfo_doc},
+
+#ifndef NDEBUG
+    /* functions exposed in debug mode for testing */
+    {"_zlw",                (PyCFunction) module_zlw,         METH_O,  0},
+#endif
+
     {NULL,                  NULL}  /* sentinel */
 };
 
