@@ -3017,10 +3017,12 @@ class InvertTests(unittest.TestCase, Util):
         a = bitarray('11011')
         a.invert()
         self.assertEQUAL(a, bitarray('00100'))
-        a.invert(2)
-        self.assertEQUAL(a, bitarray('00000'))
-        a.invert(-1)
-        self.assertEQUAL(a, bitarray('00001'))
+        for i, res in [( 0, '10100'),
+                       ( 2, '10000'),
+                       (-1, '10001'),
+                       (-5, '00001')]:
+            a.invert(i)
+            self.assertEqual(a.to01(), res)
 
     def test_errors(self):
         a = bitarray(5)
