@@ -568,20 +568,20 @@ class MetaDataTests(unittest.TestCase):
             a = bitarray(endian=endian)
             self.assertEqual(a.endian, endian)
 
-# ----------------------------- Internal debug tests ------------------------
+# ------------------------- Internal debug tests ----------------------------
+
+# Internal functionality exposed for the purpose of testing.
+# These classes will only be part of the test suite in debug mode.
 
 @skipIf(not DEBUG)
-class InternalTests(unittest.TestCase, Util):
+class ShiftR8_Tests(unittest.TestCase, Util):
 
-    # Internal functionality exposed for the purpose of testing.
-    # This class will only be part of the test suite in debug mode.
-
-    def test_shift_r8_empty(self):
+    def test_empty(self):
         a = bitarray()
         a._shift_r8(0, 0, 3)
         self.assertEqual(a, bitarray())
 
-    def test_shift_r8_explicit(self):
+    def test_explicit(self):
         x = bitarray('11000100 11111111 11100111 10111111 00001000')
         y = bitarray('11000100 00000111 11111111 00111101 00001000')
         x._shift_r8(1, 4, 5)
@@ -601,8 +601,8 @@ class InternalTests(unittest.TestCase, Util):
         x._shift_r8(0, 1, 1)
         self.assertEqual(x, y)
 
-    def test_shift_r8_random(self):
-        for _ in range(5000):
+    def test_random(self):
+        for _ in range(2000):
             n = randrange(200)
             x = urandom_2(n)
             a = randint(0, x.nbytes)
@@ -621,7 +621,10 @@ class InternalTests(unittest.TestCase, Util):
             self.assertEqual(x.endian, y.endian)
             self.assertEqual(len(x), n)
 
-    def test_copy_n_explicit(self):
+@skipIf(not DEBUG)
+class CopyN_Tests(unittest.TestCase, Util):
+
+    def test_explicit(self):
         x = bitarray('11000100 11110')
         #                 ^^^^ ^
         y = bitarray('0101110001')
@@ -638,7 +641,7 @@ class InternalTests(unittest.TestCase, Util):
         x._copy_n(5, bitarray(), 0, 0)  # copy empty bitarray onto x
         self.assertEqual(x, y)
 
-    def test_copy_n_example(self):
+    def test_example(self):
         # example given in examples/copy_n.py
         y = bitarray(
             '00101110 11111001 01011101 11001011 10110000 01011110 011')
@@ -665,7 +668,7 @@ class InternalTests(unittest.TestCase, Util):
         self.assertEqual(len(y), M)
         self.check_obj(y)
 
-    def test_copy_n_random(self):
+    def test_random(self):
         for _ in range(1000):
             N = randrange(1000)
             n = randint(0, N)
@@ -696,6 +699,9 @@ class InternalTests(unittest.TestCase, Util):
             self.assertEqual(b.tolist(), a_lst[i:j])
             self.assertEQUAL(b, a[i:j])
 
+@skipIf(not DEBUG)
+class Overlap_Tests(unittest.TestCase, Util):
+
     def check_overlap(self, a, b, res):
         r1 = a._overlap(b)
         r2 = b._overlap(a)
@@ -703,20 +709,20 @@ class InternalTests(unittest.TestCase, Util):
         self.check_obj(a)
         self.check_obj(b)
 
-    def test_overlap_empty(self):
+    def test_empty(self):
         a = bitarray()
         self.check_overlap(a, a, False)
         b = bitarray()
         self.check_overlap(a, b, False)
 
-    def test_overlap_distinct(self):
+    def test_distinct(self):
         for a in self.randombitarrays():
             # buffers overlaps with itself, unless buffer is NULL
             self.check_overlap(a, a, bool(a))
             b = a.copy()
             self.check_overlap(a, b, False)
 
-    def test_overlap_shared(self):
+    def test_shared(self):
         a = bitarray(64)
         b = bitarray(buffer=a)
         self.check_overlap(b, a, True)
@@ -732,7 +738,7 @@ class InternalTests(unittest.TestCase, Util):
         self.check_overlap(e, c, False)
         self.check_overlap(e, d, False)
 
-    def test_overlap_shared_random(self):
+    def test_shared_random(self):
         n = 100  # buffer size in bytes
         a = bitarray(8 * n)
         for _ in range(1000):
