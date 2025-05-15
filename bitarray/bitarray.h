@@ -138,13 +138,13 @@ zlc(bitarrayobject *self)       /* zlc = zeroed last char */
 static inline uint64_t
 zlw(bitarrayobject *self)       /* zlw = zeroed last word */
 {
-    const Py_ssize_t nbits = self->nbits;
-    const Py_ssize_t nw = 8 * (nbits / 64);  /* bytes in complete words */
-    const int nr = (nbits % 64) / 8;         /* complete remaining bytes */
+    const size_t nbits = self->nbits;
+    const size_t nw = (nbits / 64) * 8;   /* bytes in complete words */
+    const size_t nr = (nbits % 64) / 8;   /* complete remaining bytes */
     uint64_t res = 0;
 
-    assert(nw + nr == nbits / 8 && nw + nr <= Py_SIZE(self));
-    memcpy((char *) &res, self->ob_item + nw, (size_t) nr);
+    assert(nw + nr == nbits / 8 && 8 * (nw + nr) + nbits % 8 == nbits);
+    memcpy((char *) &res, self->ob_item + nw, nr);
     if (nbits % 8)
         *(((char *) &res) + nr) = zlc(self);
 
