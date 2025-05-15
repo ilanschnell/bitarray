@@ -2,7 +2,8 @@
 This file contains some little tricks and verifications for some code which
 is used in the C implementation of bitarray.
 """
-from random import randint
+import sys
+from random import randint, randrange
 import unittest
 
 
@@ -151,6 +152,41 @@ class ListSliceTests(unittest.TestCase):
     def test_slicelength(self):
         for n, s, r in self.random_slices():
             self.assertEqual(slicelength(r.start, r.stop, r.step), len(r))
+
+
+class ModularTests(unittest.TestCase):
+
+    def test_remainder(self):
+        for _ in range(1000):
+            a = randint(-20, 20)
+            b = randint(1, 20)
+            # integer division in Python returns the floor of the result
+            # instead of truncating towards zero like C
+            q = a // b
+            if a < 0:
+                self.assertTrue(q < 0)
+            r = a % b
+            self.assertEqual(b * q + r, a)
+            self.assertTrue(0 <= r < b)
+
+    def test_avoid_neg_numerator(self):
+        #
+        # equality:   a % b = (b - (-a) % b) % b
+        #
+        for _ in range(1000):
+            a = randint(-20, 20)
+            b = randint(1, 20)
+            r = a % b
+            # note that even though a may be negative, the remainder is
+            # always positive
+            self.assertTrue(r >= 0)
+            # this is how we can implement a % b in C when a <= 0
+            s = (b - (-a) % b) % b
+            self.assertEqual(s, r)
+            # here % always operates on positive numerator
+            if a <= 0:
+                self.assertTrue(-a >= 0)
+                self.assertTrue(b - (-a) % b > 0)
 
 
 if __name__ == '__main__':
