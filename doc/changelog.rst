@@ -1,6 +1,16 @@
 Change log
 ==========
 
+**3.4.1** (2025-05-15):
+
+* add ``pyproject.toml``, see `#233 <https://github.com/ilanschnell/bitarray/issues/233>`__
+* implement ``bits2bytes()`` in C
+* optimize ``delslice()`` when ``step`` is larger than about 5
+* consistently name ``*_span()`` and ``*_range()`` in C for
+  invert, set and count
+* organize and add tests
+
+
 **3.4.0** (2025-05-06):
 
 * remove ``.endian()`` method in favor of data descriptor ``.endian``

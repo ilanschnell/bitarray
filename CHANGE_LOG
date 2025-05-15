@@ -1,4 +1,4 @@
-2025-05-XX   3.4.1:
+2025-05-15   3.4.1:
 -------------------
   * add `pyproject.toml`, see #233
   * implement `bits2bytes()` in C
