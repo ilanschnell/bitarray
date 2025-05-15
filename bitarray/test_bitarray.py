@@ -3018,9 +3018,10 @@ class InvertTests(unittest.TestCase, Util):
         a.invert()
         self.assertEQUAL(a, bitarray('00100'))
         for i, res in [( 0, '10100'),
-                       ( 2, '10000'),
-                       (-1, '10001'),
-                       (-5, '00001')]:
+                       ( 4, '10101'),
+                       ( 2, '10001'),
+                       (-1, '10000'),
+                       (-5, '00000')]:
             a.invert(i)
             self.assertEqual(a.to01(), res)
 
@@ -3035,14 +3036,13 @@ class InvertTests(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays(start=1):
+            n = len(a)
             b = a.copy()
             c = a.copy()
-            i = randrange(len(a))
+            i = randint(-n, n - 1)
             a[i] = not a[i]
             b.invert(i)
             self.assertEQUAL(b, a)
-            c.invert(slice(i, i + 1))
-            self.assertEQUAL(c, a)
 
     def test_all(self):
         for a in self.randombitarrays():
