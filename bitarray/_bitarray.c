@@ -1325,39 +1325,44 @@ static PyObject *
 bitarray_invert(bitarrayobject *self, PyObject *args)
 {
     PyObject *arg = Py_None;
-    Py_ssize_t start = 0, stop = self->nbits, step = 1;
 
     RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|O:invert", &arg))
         return NULL;
 
     if (PyIndex_Check(arg)) {
-        start = PyNumber_AsSsize_t(arg, NULL);
-        if (start == -1 && PyErr_Occurred())
+        Py_ssize_t i;
+
+        i = PyNumber_AsSsize_t(arg, NULL);
+        if (i == -1 && PyErr_Occurred())
             return NULL;
 
-        if (start < 0)
-            start += self->nbits;
-        if (start < 0 || start >= self->nbits) {
+        if (i < 0)
+            i += self->nbits;
+        if (i < 0 || i >= self->nbits) {
             PyErr_SetString(PyExc_IndexError, "index out of range");
             return NULL;
         }
-        stop = start + 1;
+        invert_span(self, i, i + 1);
+        Py_RETURN_NONE;
     }
-    else if (PySlice_Check(arg)) {
-        Py_ssize_t slicelength;
+    if (PySlice_Check(arg)) {
+        Py_ssize_t start, stop, step, slicelength;
+
         if (PySlice_GetIndicesEx(arg, self->nbits,
                                  &start, &stop, &step, &slicelength) < 0)
             return NULL;
         adjust_step_positive(slicelength, &start, &stop, &step);
+        invert_range(self, start, stop, step);
+        Py_RETURN_NONE;
     }
-    else if (arg != Py_None) {
-        return PyErr_Format(PyExc_TypeError, "index expect, not '%s' object",
-                            Py_TYPE(arg)->tp_name);
+    if (arg == Py_None) {
+        invert_span(self, 0, self->nbits);
+        Py_RETURN_NONE;
     }
 
-    invert_range(self, start, stop, step);
-    Py_RETURN_NONE;
+    return PyErr_Format(PyExc_TypeError, "index expect, not '%s' object",
+                        Py_TYPE(arg)->tp_name);
 }
 
 PyDoc_STRVAR(invert_doc,
