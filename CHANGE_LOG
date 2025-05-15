@@ -3,6 +3,8 @@
   * add `pyproject.toml`, see #233
   * implement `bits2bytes()` in C
   * optimize `delslice()` when `step` is larger than about 5
+  * consistently name `*_span()` and `*_range()` in C for
+    invert, set and count
   * organize and add tests
 
 

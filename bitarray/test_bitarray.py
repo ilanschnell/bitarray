@@ -43,7 +43,7 @@ SYSINFO = _sysinfo()
 DEBUG = SYSINFO[6]
 
 if DEBUG:
-    from bitarray._bitarray import _zlw
+    from bitarray._bitarray import _zlw  # type: ignore
 
 
 def buffer_info(a, key=None):
