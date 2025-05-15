@@ -1901,7 +1901,7 @@ bitarray_freeze(bitarrayobject *self)
     Py_RETURN_NONE;
 }
 
-/* ---------- functionality exposed in debug mode for testing ---------- */
+/* -------- bitarray methods exposed in debug mode for testing ---------- */
 
 #ifndef NDEBUG
 
@@ -1939,15 +1939,6 @@ bitarray_overlap(bitarrayobject *self, PyObject *other)
         return NULL;
     }
     return PyBool_FromLong(buffers_overlap(self, (bitarrayobject *) other));
-}
-
-static PyObject *
-module_zlw(PyObject *module, PyObject *obj)
-{
-    bitarrayobject *a;
-
-    a = (bitarrayobject *) obj;
-    return PyLong_FromUnsignedLongLong(zlw(a));
 }
 
 #endif  /* NDEBUG */
@@ -4227,6 +4218,27 @@ Return tuple containing:\n\
 6. NDEBUG not defined\n\
 7. PY_LITTLE_ENDIAN\n\
 8. PY_BIG_ENDIAN");
+
+/* ---------- module functions exposed in debug mode for testing ------- */
+
+#ifndef NDEBUG
+
+static PyObject *
+module_zlw(PyObject *module, PyObject *obj)
+{
+    bitarrayobject *a, *res;
+    uint64_t w;
+
+    a = (bitarrayobject *) obj;
+    w = zlw(a);
+    res = newbitarrayobject(&Bitarray_Type, 64, a->endian);
+    if (res == NULL)
+        return NULL;
+    memcpy(res->ob_item, &w, 8);
+    return (PyObject *) res;
+}
+
+#endif  /* NDEBUG */
 
 
 static PyMethodDef module_functions[] = {

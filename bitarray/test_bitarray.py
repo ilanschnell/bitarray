@@ -758,26 +758,32 @@ class Overlap_Tests(unittest.TestCase, Util):
             res = bool(r1) and bool(r2) and (i2 in r1 or i1 in r2)
             self.check_overlap(b1, b2, res)
 
-@skipIf(not (DEBUG and sys.byteorder == "little"))
+@skipIf(not DEBUG)
 class ZLW_Tests(unittest.TestCase, Util):
 
     def test_zeros(self):
         for n in range(200):
             a = zeros(n, "little")
-            self.assertEqual(_zlw(a), 0)
+            b = _zlw(a)
+            self.assertEqual(b, zeros(64))
 
     def test_ones(self):
         for n in range(200):
             a = ones(n, "little")
-            res = (1 << n % 64) - 1
-            self.assertEqual(_zlw(a), res)
+            b = _zlw(a)
+            m = n % 64
+            self.assertEqual(len(b), 64)
+            self.assertEqual(b, ones(m) + zeros(64 - m))
+            self.assertEqual(b[63], 0)  # last bit is always 0
 
     def test_random(self):
         for n in range(200):
             a =  urandom_2(n, "little")
+            b = _zlw(a)
             nw = 64 * (n // 64)  # bits in complete words
-            res = sum(1 << i for i in range(n % 64) if a[i + nw])
-            self.assertEqual(_zlw(a), res)
+            m = n % 64
+            self.assertEqual(len(b), 64)
+            self.assertEqual(b, a[nw:nw + m] + zeros(64 - m))
 
 # -------------------------- (Number) index tests ---------------------------
 
