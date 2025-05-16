@@ -1343,7 +1343,7 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
             PyErr_SetString(PyExc_IndexError, "index out of range");
             return NULL;
         }
-        invert_span(self, i, i + 1);
+        self->ob_item[i / 8] ^= BITMASK(self, i);
         Py_RETURN_NONE;
     }
     if (PySlice_Check(arg)) {
