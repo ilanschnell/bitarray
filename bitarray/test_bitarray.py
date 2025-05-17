@@ -3043,15 +3043,16 @@ class InvertTests(unittest.TestCase, Util):
             a[i] = not a[i]
             b.invert(i)
             self.assertEQUAL(b, a)
+            self.check_obj(b)
 
     def test_all(self):
         for a in self.randombitarrays():
-            res = bitarray([not v for v in a])
             b = a.copy()
-            a.invert(slice(None))
-            self.assertEqual(a, res)
-            b.invert()
-            self.assertEqual(b, res)
+            a.invert()
+            self.assertEqual(a, bitarray([not v for v in b]))
+            self.assertEqual(a.endian, b.endian)
+            self.check_obj(a)
+            self.assertEQUAL(b, ~a)
 
     def test_span(self):
         for a in self.randombitarrays():
