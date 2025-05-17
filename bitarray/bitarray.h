@@ -133,8 +133,8 @@ zlc(bitarrayobject *self)       /* zlc = zeroed last char */
 /* Return a uint64_t word representing the last (up to 63) remaining bits
    of the buffer.  All missing bytes (to complete the word) and padbits are
    treated as zeros.
-   If the length of the bitarray is a multiple of 64 (which includes an empty
-   bitarray), 0 is returned. */
+   If the length of the bitarray is a multiple of 64 (which also includes
+   an empty bitarray), 0 is returned. */
 static inline uint64_t
 zlw(bitarrayobject *self)       /* zlw = zeroed last word */
 {
@@ -148,7 +148,6 @@ zlw(bitarrayobject *self)       /* zlw = zeroed last word */
     if (nbits % 8)
         *(((char *) &res) + nr) = zlc(self);
 
-    assert(nbits % 64 || res == 0);
     return res;
 }
 
