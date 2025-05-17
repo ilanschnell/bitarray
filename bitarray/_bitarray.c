@@ -4227,6 +4227,9 @@ Return tuple containing:\n\
 
 #ifndef NDEBUG
 
+/* Return zlw(a) as a new bitarray, rather than an int object.
+   This makes testing easier, because the int result would depend
+   on the machine byteorder. */
 static PyObject *
 module_zlw(PyObject *module, PyObject *obj)
 {

@@ -177,14 +177,15 @@ class ModularTests(unittest.TestCase):
             a = randint(-20, 20)
             b = randint(1, 20)
             r = a % b
-            # note that even though a may be negative, the remainder is
-            # always positive
+            # Note that even though a may be negative, the remainder is
+            # always positive:
             self.assertTrue(r >= 0)
-            # this is how we can implement a % b in C when a <= 0
+            # The following equality:
             s = (b - (-a) % b) % b
             self.assertEqual(s, r)
-            # here % always operates on positive numerator
+            # can be used to implement a % b in C when a <= 0
             if a <= 0:
+                # here % always operates on positive numerator
                 self.assertTrue(-a >= 0)
                 self.assertTrue(b - (-a) % b > 0)
 
