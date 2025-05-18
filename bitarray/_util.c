@@ -1052,7 +1052,7 @@ write_n(char *str, int n, Py_ssize_t i)
 {
     int len = 0;
 
-    assert(n <= 8);
+    assert(n <= 8 && i >= 0);
     while (len < n) {
         str[len++] = (char) i & 0xff;
         i >>= 8;
@@ -1063,7 +1063,7 @@ write_n(char *str, int n, Py_ssize_t i)
 /* read n bytes from iter and return corresponding non-negative integer,
    using little endian byte-order */
 static Py_ssize_t
-read_n(int n, PyObject *iter)
+read_n(PyObject *iter, int n)
 {
     Py_ssize_t i = 0;
     int j, c;
@@ -1554,7 +1554,7 @@ sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
                      (int) sizeof(Py_ssize_t), len);
         return -1;
     }
-    if ((*nbits = read_n(len, iter)) < 0)
+    if ((*nbits = read_n(iter, len)) < 0)
         return -1;
 
     return 0;
@@ -1592,7 +1592,7 @@ sc_read_sparse(bitarrayobject *a, Py_ssize_t offset, PyObject *iter,
     while (k--) {
         Py_ssize_t i;
 
-        if ((i = read_n(n, iter)) < 0)
+        if ((i = read_n(iter, n)) < 0)
             return -1;
 
         i += 8 * offset;
