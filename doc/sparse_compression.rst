@@ -1,8 +1,18 @@
 Compression of sparse bitarrays
 ===============================
 
-The two utility functions ``sc_encode()`` and ``sc_decode()`` provide
-functionality to efficiently compress and decompress sparse bitarrays.
+In a ``bitarray`` object each byte in memory represents eight bits.
+While this representation is very compact and efficient when dealing with
+most data, there are situations when this representation is inefficient.
+One such situation are sparsely populated bitarray.
+That is, bitarray in which only a few bits are 1, but most bits are 0.
+In this situation, one might consider using a data structure which stores
+the indices of the 1 bits and not use the ``bitarray`` object at all.
+However, having all of bitarray's functionality is very convenient.
+It may be desired to convert ``bitarray`` objects into a more compact (index
+based) format when storing objects on disk or sending them over the network.
+This is the use case of the utility functions ``sc_encode()``
+and ``sc_decode()``.
 The lower the population count, the more efficient the compression will be:
 
 .. code-block:: python
@@ -16,6 +26,33 @@ The lower the population count, the more efficient the compression will be:
     b'\x04\x00\x00\x00\x01\xc3\x03\xaa\x00\x00\xcc\xbb\x00\xff\xee\xdd\x00'
     >>> assert sc_decode(blob) == a
 
+
+How it works
+------------
+
+Consider a ``bitarray`` of length 256, that is 32 bytes of memory.
+If we represent this object by the indices of 1 bits as one byte each,
+the object will be represent more efficiently when the population (number
+of 1 bits) is less than 32.  In this case, based on the population, the
+function ``sc_encode()`` chooses to represent the object as either raw bytes
+or as bytes of indices of 1 bits.  These are the block types 0 and 1.
+
+Next, we consider a ``bitarray`` of length 65536.  When each section of 256
+bits has a population below 32, it would be stored as 256 blocks of type 1.
+That is, we need 256 block headers and one (index) byte for each 1 bit.
+However, when the total population is below 256, we could also introduce
+a new block type 2 in which each index is represented by two bytes and
+stop the entire bitarray as a single block (of type 2).
+This saves us the 256 block headers (of type 1).
+Similarly, with even less populated bitarrays, it will become more efficient
+to move to blocks representing each index using 3 or more bytes.
+
+The encoding algorithm starts at the front of the ``bitarray``, inspects
+the population and decides which block type to use to encode the following
+bits.  Once the first block is written, the algorithm moves on to inspecting
+the remaining population, and so on.
+This way, a large bitarray with densly and sparsely populated areas will
+be compressed efficiently using different block types.
 
 The binary blob consists of a header which encodes the bit-endianness and the
 total length of the bitarray, i.e. the number of bits.  The header is followed
