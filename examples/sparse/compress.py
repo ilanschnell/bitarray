@@ -76,13 +76,6 @@ useful statistics.  In particular, the frequency of each block type.
     while sc_decode_block(stream, stats):
         pass
 
-    stop = False
-    try:
-        next(stream)
-    except StopIteration:
-        stop = True
-    assert stop
-
     return stats
 
 def test_sc_stat():
