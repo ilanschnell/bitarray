@@ -4,15 +4,13 @@
 
 import bz2
 import gzip
-import sys
 from time import perf_counter
-from collections import Counter
 from itertools import islice
 from random import random, randrange
 
 from bitarray import bitarray
 from bitarray.util import (
-    urandom,
+    ones, urandom,
     serialize, deserialize,
     sc_encode, sc_decode,
     vl_encode, vl_decode,
@@ -72,7 +70,7 @@ useful statistics.  In particular, the frequency of each block type.
     stats = {
         'endian': endian,
         'nbits': nbits,
-        'blocks': Counter()
+        'blocks': 5 * [0]
     }
 
     while sc_decode_block(stream, stats):
@@ -89,7 +87,6 @@ useful statistics.  In particular, the frequency of each block type.
 
 def test_sc_stat():
     a = bitarray(1<<33, 'little')
-    a.setall(0)
     a[:1<<16] = 1
     a[:1<<18:1<<4] = 1
     a[:1<<22:1<<12] = 1
@@ -103,8 +100,7 @@ def test_sc_stat():
     for i, n in enumerate([2, 754, 46, 48, 1]):
         print("         block type %d  %8d" % (i, blocks[i]))
         assert blocks[i] == n
-    if sys.version_info[:2] >= (3, 10):
-        print("total number of blocks %8d" % blocks.total())
+    print("total number of blocks %8d" % sum(blocks))
     assert a == sc_decode(b)
 
 def random_array(n, p=0.5):
@@ -153,8 +149,7 @@ def p_range():
 def compare():
     n = 1 << 26
     # create random bitarray with p = 1 / 2^9 = 1 / 512 = 0.195 %
-    a = bitarray(n)
-    a.setall(1)
+    a = ones(n)
     for i in range(10):
         a &= urandom(n)
 
