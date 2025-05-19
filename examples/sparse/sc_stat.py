@@ -70,11 +70,42 @@ each block type.
 class Tests(unittest.TestCase):
 
     def test_empty(self):
-        a = bitarray(0, 'big')
-        self.assertEqual(sc_stat(sc_encode(a)),
-                         {'endian': 'big',
+        self.assertEqual(sc_stat(b"\x01\x00\x00"),
+                         {'endian': 'little',
                           'nbits': 0,
                           'blocks': [0, 0, 0, 0, 0]})
+
+    def test_explitcit(self):
+        for blob, blocks in [
+                (b"\x11\x08\x00",         [0, 0, 0, 0, 0]),
+                (b"\x11\x08\x01\x00\x00", [1, 0, 0, 0, 0]),
+                (b"\x11\x08\xa0\x00",     [0, 1, 0, 0, 0]),
+                (b"\x11\x08\xc2\x00\x00", [0, 0, 1, 0, 0]),
+                (b"\x11\x08\xc3\x00\x00", [0, 0, 0, 1, 0]),
+                (b"\x11\x08\xc4\x00\x00", [0, 0, 0, 0, 1]),
+        ]:
+            stat = sc_stat(blob)
+            self.assertEqual(stat['blocks'], blocks)
+
+    def test_untouch(self):
+        stream = iter(b"\x01\x03\x01\x03\0XYZ")
+        sc_decode(stream)
+        self.assertEqual(next(stream), ord('X'))
+
+    def test_end_of_stream(self):
+        for blob in [b'', b'\x00', b'\x01', b'\x02\x77',
+                     b'\x01\x04\x01', b'\x01\x04\xa1', b'\x01\x04\xa0']:
+            self.assertRaises(StopIteration, sc_stat, blob)
+
+    def test_values(self):
+        b = [0x11, 3, 1, 32, 0]
+        self.assertEqual(sc_decode(b), bitarray("001"))
+        self.assertEqual(sc_stat(b), {'endian': 'big',
+                                      'nbits': 3,
+                                      'blocks': [1, 0, 0, 0, 0]})
+        for x in -1, 256:
+            b[-1] = x
+            self.assertRaises(ValueError, sc_stat, b)
 
     def test_example(self):
         a = bitarray(1 << 33, 'little')
