@@ -1,8 +1,4 @@
 from itertools import islice
-import unittest
-
-from bitarray import bitarray
-from bitarray.util import sc_encode, sc_decode
 
 
 def read_n(n, stream):
@@ -65,6 +61,13 @@ each block type.
         pass
 
     return stats
+
+# ---------------------------------------------------------------------------
+
+import unittest
+
+from bitarray import bitarray
+from bitarray.util import sc_encode, sc_decode
 
 
 class Tests(unittest.TestCase):
