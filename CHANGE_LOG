@@ -14,7 +14,7 @@
   * optimize `delslice()` when `step` is larger than about 5
   * consistently name `*_span()` and `*_range()` in C for
     invert, set and count
-  * organize and add tests
+  * organize and add tests (including debug mode tests for `zlw()`)
 
 
 2025-05-06   3.4.0:
@@ -303,7 +303,7 @@
   * optimize `delslice()` for cases like `del a[1:17:2]` when `a` is large
   * fix `examples/huffman/compress.py` to handle files with 0 or 1 characters,
     see also #172
-  * add `skipIF` decorator for skipping tests
+  * add `skipIf` decorator for skipping tests
   * add tests
 
 
