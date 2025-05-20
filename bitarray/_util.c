@@ -1068,6 +1068,7 @@ read_n(PyObject *iter, int n)
     Py_ssize_t i = 0;
     int j, c;
 
+    assert(PyIter_Check(iter));
     assert(n <= 8);
     for (j = 0; j < n; j++) {
         if ((c = next_char(iter)) < 0)
@@ -2047,6 +2048,23 @@ module_read_n(PyObject *module, PyObject *args)
     return PyLong_FromSsize_t(i);
 }
 
+static PyObject *
+module_write_n(PyObject *module, PyObject *args)
+{
+    PyObject *result;
+    char *str;
+    Py_ssize_t i;
+    int n;
+
+    if (!PyArg_ParseTuple(args, "in", &n, &i))
+        return NULL;
+    if ((result = PyBytes_FromStringAndSize(NULL, n)) == NULL)
+        return NULL;
+    str = PyBytes_AsString(result);
+    write_n(str, n, i);
+    return result;
+}
+
 #endif  /* NDEBUG */
 
 
@@ -2091,8 +2109,9 @@ static PyMethodDef module_functions[] = {
 
 #ifndef NDEBUG
     /* functions exposed in debug mode for testing */
-    {"_read_n",   (PyCFunction) module_read_n, METH_VARARGS, 0},
-    {"_sc_rts",   (PyCFunction) sc_rts,    METH_O,       0},
+    {"_read_n",   (PyCFunction) module_read_n,  METH_VARARGS, 0},
+    {"_write_n",  (PyCFunction) module_write_n, METH_VARARGS, 0},
+    {"_sc_rts",   (PyCFunction) sc_rts,         METH_O,       0},
 #endif
 
     {NULL,        NULL}  /* sentinel */

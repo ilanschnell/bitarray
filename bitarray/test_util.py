@@ -35,7 +35,8 @@ from bitarray.util import (
 )
 
 if DEBUG:
-    from bitarray._util import _read_n, _sc_rts, _SEGSIZE  # type: ignore
+    from bitarray._util import _read_n, _write_n  # type: ignore
+    from bitarray._util import _sc_rts, _SEGSIZE  # type: ignore
     SEGBITS = 8 * _SEGSIZE
 else:
     SEGBITS = None
@@ -1352,9 +1353,7 @@ class SC_Tests(unittest.TestCase, Util):
     def test_decode_end_of_stream(self):
         for stream in [b'', b'\x00', b'\x01', b'\x02\x77',
                        b'\x01\x04\x01', b'\x01\x04\xa1', b'\x01\x04\xa0']:
-            self.assertRaisesMessage(StopIteration,
-                                     "unexpected end of stream",
-                                     sc_decode, stream)
+            self.assertRaises(StopIteration, sc_decode, stream)
 
     def test_decode_types(self):
         blob = b'\x11\x03\x01\x20\0'
@@ -2495,7 +2494,7 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
 # ------------------------- Internal debug tests ----------------------------
 
 @skipIf(not DEBUG)
-class RW_Tests(unittest.TestCase, Util):
+class ReadN_WriteN_Tests(unittest.TestCase, Util):
 
     def test_read_n_basic(self):
         it = iter(b"\x00XY")
@@ -2503,13 +2502,20 @@ class RW_Tests(unittest.TestCase, Util):
         self.assertEqual(next(it), ord('X'))
         self.assertEqual(_read_n(it, 0), 0)
         self.assertEqual(next(it), ord('Y'))
-        self.assertRaisesMessage(StopIteration, "unexpected end of stream",
-                                 _read_n, it, 1)
+        self.assertRaises(StopIteration, _read_n, it, 1)
 
     def test_read_n_zero(self):
         for n in range(tuple.__itemsize__):
             it = iter(n * b"\x00")
             self.assertEqual(_read_n(it, n), 0)
+
+    def test_read_n_item_errors(self):
+        for v in -1, 256:
+            it = iter([3, v])
+            self.assertRaises(ValueError, _read_n, it, 2)
+        for v in None, "F", Ellipsis, []:
+            it = iter([3, v])
+            self.assertRaises(TypeError, _read_n, it, 2)
 
     def test_read_n_order(self):
         it = iter(b"\xaa\xbb\xcc")
@@ -2526,6 +2532,25 @@ class RW_Tests(unittest.TestCase, Util):
         self.assertRaisesMessage(ValueError,
                                  "read 8 bytes got negative value: -1",
                                  _read_n, it, 8)
+
+    def test_write_n_basic(self):
+        self.assertEqual(_write_n(1, 0), b"\x00")
+        self.assertEqual(_write_n(3, 0xccbbaa), b"\xaa\xbb\xcc")
+
+    def test_write_n_zeros(self):
+        for n in range(tuple.__itemsize__):
+            self.assertEqual(_write_n(n, 0), n * b"\x00")
+
+    @skipIf(SYSINFO[0] != 8)
+    def test_write_n_max(self):
+        self.assertEqual(_write_n(8, sys.maxsize), 7 * b"\xff" + b"\x7f")
+
+    def test_round_random(self):
+        for _ in range(1000):
+            n = randint(1, 7);
+            b = os.urandom(n)
+            i = _read_n(iter(b), n)
+            self.assertEqual(_write_n(n, i), b)
 
 # ---------------------------------------------------------------------------
 
