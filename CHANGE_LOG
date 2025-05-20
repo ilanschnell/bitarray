@@ -2,6 +2,7 @@
 -------------------
   * extend documentation of
     [compression of sparse bitarrays](sparse_compression.rst)
+  * add debug mode tests for `read_n()`
 
 
 2025-05-15   3.4.1:

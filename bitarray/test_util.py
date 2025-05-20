@@ -4,6 +4,7 @@ Tests for bitarray.util module
 from __future__ import absolute_import
 
 import os
+import sys
 import array
 import base64
 import binascii
@@ -34,7 +35,7 @@ from bitarray.util import (
 )
 
 if DEBUG:
-    from bitarray._util import _sc_rts, _SEGSIZE  # type: ignore
+    from bitarray._util import _read_n, _sc_rts, _SEGSIZE  # type: ignore
     SEGBITS = 8 * _SEGSIZE
 else:
     SEGBITS = None
@@ -2490,6 +2491,41 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         for n in 2, 3, 4, randint(5, 200):
             freq = {i: random() for i in range(n)}
             self.check_code(*canonical_huffman(freq))
+
+# ------------------------- Internal debug tests ----------------------------
+
+@skipIf(not DEBUG)
+class RW_Tests(unittest.TestCase, Util):
+
+    def test_read_n_basic(self):
+        it = iter(b"\x00XY")
+        self.assertEqual(_read_n(it, 1), 0)
+        self.assertEqual(next(it), ord('X'))
+        self.assertEqual(_read_n(it, 0), 0)
+        self.assertEqual(next(it), ord('Y'))
+        self.assertRaisesMessage(ValueError, "unexpected end of stream",
+                                 _read_n, it, 1)
+
+    def test_read_n_zero(self):
+        for n in range(tuple.__itemsize__):
+            it = iter(n * b"\x00")
+            self.assertEqual(_read_n(it, n), 0)
+
+    def test_read_n_order(self):
+        it = iter(b"\xaa\xbb\xcc")
+        self.assertEqual(_read_n(it, 3), 0xccbbaa)
+
+    @skipIf(SYSINFO[0] != 8)
+    def test_read_n_max(self):
+        it = iter(7 * b"\xff" + b"\x7f")
+        self.assertEqual(_read_n(it, 8), sys.maxsize)
+
+    @skipIf(SYSINFO[0] != 8)
+    def test_read_n_negative(self):
+        it = iter(8 * b"\xff")
+        self.assertRaisesMessage(ValueError,
+                                 "read 8 bytes got negative value: -1",
+                                 _read_n, it, 8)
 
 # ---------------------------------------------------------------------------
 

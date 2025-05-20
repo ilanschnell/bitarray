@@ -2029,7 +2029,26 @@ static PyTypeObject CHDI_Type = {
     0,                                        /* tp_methods */
 };
 
-/* -------------------------  module functions  ------------------------ */
+/* ---------- module functions exposed in debug mode for testing ------- */
+
+#ifndef NDEBUG
+
+static PyObject *
+module_read_n(PyObject *module, PyObject *args)
+{
+    PyObject *iter;
+    Py_ssize_t i;
+    int n;
+
+    if (!PyArg_ParseTuple(args, "Oi", &iter, &n))
+        return NULL;
+    if ((i = read_n(iter, n)) < 0)
+        return NULL;
+    return PyLong_FromSsize_t(i);
+}
+
+#endif  /* NDEBUG */
+
 
 static PyMethodDef module_functions[] = {
     {"zeros",     (PyCFunction) zeros,     METH_KEYWORDS |
@@ -2072,6 +2091,7 @@ static PyMethodDef module_functions[] = {
 
 #ifndef NDEBUG
     /* functions exposed in debug mode for testing */
+    {"_read_n",   (PyCFunction) module_read_n, METH_VARARGS, 0},
     {"_sc_rts",   (PyCFunction) sc_rts,    METH_O,       0},
 #endif
 
