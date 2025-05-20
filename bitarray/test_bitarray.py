@@ -193,6 +193,9 @@ class ModuleFunctionsTests(unittest.TestCase, Util):
     def test_ptrsize(self):
         self.assertEqual(PTRSIZE, tuple.__itemsize__)
 
+    def test_maxsize(self):
+        self.assertEqual(sys.maxsize, 2 ** (PTRSIZE * 8 - 1) - 1)
+
     def test_set_default_endian(self):
         self.assertRaises(TypeError, _set_default_endian, 0)
         self.assertRaises(TypeError, _set_default_endian, 'little', 0)
