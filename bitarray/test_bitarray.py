@@ -40,6 +40,7 @@ def skipIf(condition):
     return lambda f: f
 
 SYSINFO = _sysinfo()
+PTRSIZE = SYSINFO[0]
 DEBUG = SYSINFO[6]
 
 if DEBUG:
@@ -178,6 +179,9 @@ class ModuleFunctionsTests(unittest.TestCase, Util):
 
     def test_sysinfo(self):
         info = _sysinfo()
+        self.assertEqual(info[0], PTRSIZE)
+        self.assertEqual(info[1], PTRSIZE)
+
         self.assertIsInstance(info, tuple)
         for x in info:
             self.assertIsInstance(x, int)
@@ -1894,7 +1898,7 @@ class MiscTests(unittest.TestCase, Util):
         a = bitarray(1 << 10)
         self.assertRaises(OverflowError, a.__imul__, 1 << 53)
 
-    @skipIf(SYSINFO[0] != 4 or is_pypy)
+    @skipIf(PTRSIZE != 4 or is_pypy)
     def test_overflow_32bit(self):
         a = bitarray(1000_000)
         self.assertRaises(OverflowError, a.__imul__, 17180)
