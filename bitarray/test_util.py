@@ -2518,9 +2518,10 @@ class ReadN_WriteN_Tests(unittest.TestCase, Util):
 
     def test_max(self):
         blob = (PTRSIZE - 1) * b"\xff" + b"\x7f"
-        self.assertEqual(len(blob), PTRSIZE)
-        self.assertEqual(_read_n(iter(blob), 8), sys.maxsize)
-        self.assertEqual(_write_n(8, sys.maxsize), blob)
+        n = len(blob)
+        self.assertEqual(n, PTRSIZE)
+        self.assertEqual(_read_n(iter(blob), n), sys.maxsize)
+        self.assertEqual(_write_n(n, sys.maxsize), blob)
 
     def test_round_trip_random(self):
         for _ in range(1000):
