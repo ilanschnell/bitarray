@@ -73,31 +73,29 @@ from bitarray.util import sc_encode, sc_decode
 class Tests(unittest.TestCase):
 
     def test_empty(self):
-        blob = b"\x01\x00\x00"
+        blob = b"\x01\x00\0"
         self.assertEqual(sc_stat(blob),
                          {'endian': 'little',
                           'nbits': 0,
                           'blocks': [0, 0, 0, 0, 0]})
         self.assertEqual(sc_decode(blob), bitarray())
 
-    def test_explitcit(self):
+    def test_zeros_explitcit(self):
         for blob, blocks in [
-                (b"\x11\x08\x00",         [0, 0, 0, 0, 0]),
-                (b"\x11\x08\x01\x00\x00", [1, 0, 0, 0, 0]),
-                (b"\x11\x08\xa0\x00",     [0, 1, 0, 0, 0]),
-                (b"\x11\x08\xc2\x00\x00", [0, 0, 1, 0, 0]),
-                (b"\x11\x08\xc3\x00\x00", [0, 0, 0, 1, 0]),
-                (b"\x11\x08\xc4\x00\x00", [0, 0, 0, 0, 1]),
+                (b"\x11\x08\0",         [0, 0, 0, 0, 0]),
+                (b"\x11\x08\x01\x00\0", [1, 0, 0, 0, 0]),
+                (b"\x11\x08\xa0\0",     [0, 1, 0, 0, 0]),
+                (b"\x11\x08\xc2\x00\0", [0, 0, 1, 0, 0]),
+                (b"\x11\x08\xc3\x00\0", [0, 0, 0, 1, 0]),
+                (b"\x11\x08\xc4\x00\0", [0, 0, 0, 0, 1]),
         ]:
             stat = sc_stat(blob)
             self.assertEqual(stat['blocks'], blocks)
-            a = sc_decode(blob)
-            self.assertEqual(len(a), 8)
-            self.assertFalse(a.any())
+            self.assertEqual(sc_decode(blob), bitarray(8))
 
     def test_untouch(self):
-        stream = iter(b"\x01\x03\x01\x03\0XYZ")
-        sc_decode(stream)
+        stream = iter(b"\x01\x07\x01\x73\0XYZ")
+        self.assertEqual(sc_decode(stream), bitarray("1100111"))
         self.assertEqual(next(stream), ord('X'))
 
     def test_end_of_stream(self):
