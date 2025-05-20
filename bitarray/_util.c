@@ -1028,7 +1028,7 @@ next_char(PyObject *iter)
     if (item == NULL) {
         if (PyErr_Occurred())   /* from PyIter_Next() */
             return -1;
-        PyErr_SetString(PyExc_ValueError, "unexpected end of stream");
+        PyErr_SetString(PyExc_StopIteration, "unexpected end of stream");
         return -1;
     }
 

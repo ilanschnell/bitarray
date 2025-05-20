@@ -1352,7 +1352,8 @@ class SC_Tests(unittest.TestCase, Util):
     def test_decode_end_of_stream(self):
         for stream in [b'', b'\x00', b'\x01', b'\x02\x77',
                        b'\x01\x04\x01', b'\x01\x04\xa1', b'\x01\x04\xa0']:
-            self.assertRaisesMessage(ValueError, "unexpected end of stream",
+            self.assertRaisesMessage(StopIteration,
+                                     "unexpected end of stream",
                                      sc_decode, stream)
 
     def test_decode_types(self):
@@ -1418,9 +1419,8 @@ class SC_Tests(unittest.TestCase, Util):
             b = b'\x02\x00\x04' + os.urandom(n)
             try:
                 a = sc_decode(b)
-            except ValueError as e:
-                if e != 'unexpected end of stream':
-                    continue
+            except (StopIteration, ValueError):
+                continue
             self.assertEqual(len(a), 1024)
             self.assertEqual(a.endian, 'little')
 
@@ -1625,15 +1625,15 @@ class VLFTests(unittest.TestCase, Util):
             self.assertEqual(vl_decode(stream), a)
 
     def test_decode_errors(self):
-        # decode empty bits
-        self.assertRaises(ValueError, vl_decode, b'')
+        # decode empty bytes
+        self.assertRaises(StopIteration, vl_decode, b'')
         # invalid number of padding bits
         for s in b'\x50', b'\x60', b'\x70':
             self.assertRaises(ValueError, vl_decode, s)
         self.assertRaises(ValueError, vl_decode, b'\xf0')
         # high bit set, but no terminating byte
         for s in b'\x80', b'\x80\x80':
-            self.assertRaises(ValueError, vl_decode, s)
+            self.assertRaises(StopIteration, vl_decode, s)
         # decode list with out of range items
         for i in -1, 256:
             self.assertRaises(ValueError, vl_decode, [i])
@@ -2503,7 +2503,7 @@ class RW_Tests(unittest.TestCase, Util):
         self.assertEqual(next(it), ord('X'))
         self.assertEqual(_read_n(it, 0), 0)
         self.assertEqual(next(it), ord('Y'))
-        self.assertRaisesMessage(ValueError, "unexpected end of stream",
+        self.assertRaisesMessage(StopIteration, "unexpected end of stream",
                                  _read_n, it, 1)
 
     def test_read_n_zero(self):

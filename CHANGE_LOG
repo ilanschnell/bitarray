@@ -2,6 +2,8 @@
 -------------------
   * extend documentation of
     [compression of sparse bitarrays](sparse_compression.rst)
+  * `util.sc_decode()` and `util.vl_decode()` now raise `StopIteration`
+    instead of `ValueError` when unexpected end of stream is encountered
   * add debug mode tests for `read_n()`
 
 
