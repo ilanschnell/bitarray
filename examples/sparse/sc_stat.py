@@ -102,6 +102,7 @@ class Tests(unittest.TestCase):
         for blob in [b'', b'\x00', b'\x01', b'\x02\x77',
                      b'\x01\x04\x01', b'\x01\x04\xa1', b'\x01\x04\xa0']:
             self.assertRaises(StopIteration, sc_stat, blob)
+            self.assertRaises(StopIteration, sc_decode, blob)
 
     def test_values(self):
         b = [0x11, 3, 1, 32, 0]

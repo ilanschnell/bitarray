@@ -2496,7 +2496,31 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
 @skipIf(not DEBUG)
 class ReadN_WriteN_Tests(unittest.TestCase, Util):
 
-    def test_read_n_basic(self):
+    def test_explicit(self):
+        for blob, x in [(b"", 0),
+                        (b"\x00", 0),
+                        (b"\x01", 1),
+                        (b"\xff", 255),
+                        (b"\xff\x00", 255),
+                        (b"\xaa\xbb\xcc", 0xccbbaa)]:
+            n = len(blob)
+            self.assertEqual(_read_n(iter(blob), n), x)
+            self.assertEqual(_write_n(n, x), blob)
+
+    def test_zeros(self):
+        for n in range(tuple.__itemsize__):
+            blob = n * b"\x00"
+            self.assertEqual(_read_n(iter(blob), n), 0)
+            self.assertEqual(_write_n(n, 0), blob)
+
+    @skipIf(SYSINFO[0] != 8)
+    def test_max(self):
+        blob = 7 * b"\xff" + b"\x7f"
+        self.assertEqual(len(blob), tuple.__itemsize__)
+        self.assertEqual(_read_n(iter(blob), 8), sys.maxsize)
+        self.assertEqual(_write_n(8, sys.maxsize), blob)
+
+    def test_read_n_untouch(self):
         it = iter(b"\x00XY")
         self.assertEqual(_read_n(it, 1), 0)
         self.assertEqual(next(it), ord('X'))
@@ -2504,53 +2528,26 @@ class ReadN_WriteN_Tests(unittest.TestCase, Util):
         self.assertEqual(next(it), ord('Y'))
         self.assertRaises(StopIteration, _read_n, it, 1)
 
-    def test_read_n_zero(self):
-        for n in range(tuple.__itemsize__):
-            it = iter(n * b"\x00")
-            self.assertEqual(_read_n(it, n), 0)
-
     def test_read_n_item_errors(self):
         for v in -1, 256:
-            it = iter([3, v])
-            self.assertRaises(ValueError, _read_n, it, 2)
+            self.assertRaises(ValueError, _read_n, iter([3, v]), 2)
+
         for v in None, "F", Ellipsis, []:
-            it = iter([3, v])
-            self.assertRaises(TypeError, _read_n, it, 2)
+            self.assertRaises(TypeError, _read_n, iter([3, v]), 2)
 
-    def test_read_n_order(self):
-        it = iter(b"\xaa\xbb\xcc")
-        self.assertEqual(_read_n(it, 3), 0xccbbaa)
-
-    @skipIf(SYSINFO[0] != 8)
-    def test_read_n_max(self):
-        it = iter(7 * b"\xff" + b"\x7f")
-        self.assertEqual(_read_n(it, 8), sys.maxsize)
-
-    @skipIf(SYSINFO[0] != 8)
     def test_read_n_negative(self):
-        it = iter(8 * b"\xff")
+        n = tuple.__itemsize__
+        it = iter(n * b"\xff")
         self.assertRaisesMessage(ValueError,
-                                 "read 8 bytes got negative value: -1",
-                                 _read_n, it, 8)
-
-    def test_write_n_basic(self):
-        self.assertEqual(_write_n(1, 0), b"\x00")
-        self.assertEqual(_write_n(3, 0xccbbaa), b"\xaa\xbb\xcc")
-
-    def test_write_n_zeros(self):
-        for n in range(tuple.__itemsize__):
-            self.assertEqual(_write_n(n, 0), n * b"\x00")
-
-    @skipIf(SYSINFO[0] != 8)
-    def test_write_n_max(self):
-        self.assertEqual(_write_n(8, sys.maxsize), 7 * b"\xff" + b"\x7f")
+                                 "read %d bytes got negative value: -1" % n,
+                                 _read_n, it, n)
 
     def test_round_random(self):
         for _ in range(1000):
-            n = randint(1, 7);
-            b = os.urandom(n)
-            i = _read_n(iter(b), n)
-            self.assertEqual(_write_n(n, i), b)
+            n = randint(1, tuple.__itemsize__ - 1);
+            blob = os.urandom(n)
+            i = _read_n(iter(blob), n)
+            self.assertEqual(_write_n(n, i), blob)
 
 # ---------------------------------------------------------------------------
 
