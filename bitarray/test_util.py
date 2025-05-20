@@ -2519,6 +2519,13 @@ class ReadN_WriteN_Tests(unittest.TestCase, Util):
         self.assertEqual(_read_n(iter(blob), 8), sys.maxsize)
         self.assertEqual(_write_n(8, sys.maxsize), blob)
 
+    def test_round_trip_random(self):
+        for _ in range(1000):
+            n = randint(1, PTRSIZE - 1);
+            blob = os.urandom(n)
+            i = _read_n(iter(blob), n)
+            self.assertEqual(_write_n(n, i), blob)
+
     def test_read_n_untouch(self):
         it = iter(b"\x00XY")
         self.assertEqual(_read_n(it, 1), 0)
@@ -2540,13 +2547,6 @@ class ReadN_WriteN_Tests(unittest.TestCase, Util):
             ValueError,
             "read %d bytes got negative value: -1" % PTRSIZE,
             _read_n, it, PTRSIZE)
-
-    def test_round_random(self):
-        for _ in range(1000):
-            n = randint(1, PTRSIZE - 1);
-            blob = os.urandom(n)
-            i = _read_n(iter(blob), n)
-            self.assertEqual(_write_n(n, i), blob)
 
 # ---------------------------------------------------------------------------
 
