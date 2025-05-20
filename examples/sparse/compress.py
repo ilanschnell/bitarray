@@ -51,9 +51,8 @@ def p_range():
         a = random_array(n, p)
         b = sc_encode(a)
         blocks = sc_stat(b)['blocks']
-        print('  %11.8f  %11.8f  %8d  %8d  %8d  %8d  %8d' % (
-            p, len(b) / (n / 8),
-            blocks[0], blocks[1], blocks[2], blocks[3], blocks[4]))
+        print('  %11.8f  %11.8f  %8d  %8d  %8d  %8d  %8d' %
+              tuple([p, len(b) / (n / 8)] + blocks))
         assert a == sc_decode(b)
         p *= 1.8
 
