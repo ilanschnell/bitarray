@@ -1300,7 +1300,7 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertRaisesMessage(
             ValueError,
             "read %d bytes got negative value: -1" % nbytes,
-            sc_decode, bytes(bytearray([nbytes] + nbytes * [0xff])))
+            sc_decode, bytearray([nbytes] + nbytes * [0xff]))
 
         if nbytes == 4:
             self.assertRaisesMessage(
@@ -1408,7 +1408,7 @@ class SC_Tests(unittest.TestCase, Util):
             b.append(0)  # stop
 
             self.assertEqual(sc_decode(b), a)
-            self.assertEqual(sc_encode(a), bytes(b))
+            self.assertEqual(sc_encode(a), b)
 
     def test_decode_random_bytes(self):
         # ensure random input doesn't crash the decoder
@@ -1438,7 +1438,7 @@ class SC_Tests(unittest.TestCase, Util):
         b = sc_decode(i)
         self.assertTrue(a == b == c)
         self.assertTrue(a.endian == b.endian == c.endian)
-        self.assertEqual(bytes(i), b'')
+        self.assertEqual(list(i), [])
 
     def test_encode_zeros(self):
         for i in range(18):
@@ -1459,9 +1459,8 @@ class SC_Tests(unittest.TestCase, Util):
 
         a = zeros(1 << 25, 'big')
         a[0] = 1
-        self.assertEqual(
-            sc_encode(a),
-            b'\x14\x00\x00\x00\x02\xc4\x01\x00\x00\x00\x00\x00')
+        self.assertEqual(sc_encode(a),
+                         b'\x14\x00\x00\x00\x02\xc4\x01\x00\x00\x00\x00\x00')
 
     def test_encode_ones(self):
         for _ in range(50):
