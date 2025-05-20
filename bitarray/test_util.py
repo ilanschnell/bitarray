@@ -21,7 +21,7 @@ from collections import Counter
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       _set_default_endian)
 from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
-                                    SYSINFO, DEBUG, WHITESPACE)
+                                    PTRSIZE, DEBUG, WHITESPACE)
 
 from bitarray.util import (
     zeros, ones, urandom, pprint, strip, count_n,
@@ -1293,7 +1293,7 @@ class SC_Tests(unittest.TestCase, Util):
                                      bytearray([0x01, 0x10, c]))
 
     def test_decode_header_overflow(self):
-        nbytes = SYSINFO[1]
+        nbytes = PTRSIZE
         self.assertRaisesMessage(
             OverflowError,
             "sizeof(Py_ssize_t) = %d: cannot read 9 bytes" % nbytes,
@@ -1334,7 +1334,7 @@ class SC_Tests(unittest.TestCase, Util):
             ValueError, "decode error (n=3): 32768 >= 32768",
             sc_decode, b"\x02\x00\x80\xc3\x01\x00\x80\x00\0")
 
-        if SYSINFO[1] == 4:
+        if PTRSIZE == 4:
             msg = "read 4 bytes got negative value: -2147483648"
         else:
             msg = "decode error (n=4): 2147483648 >= 16"
@@ -1342,7 +1342,7 @@ class SC_Tests(unittest.TestCase, Util):
             ValueError, msg,
             sc_decode, b"\x01\x10\xc4\x01\x00\x00\x00\x80\0")
 
-        if SYSINFO[1] == 4:
+        if PTRSIZE == 4:
             msg = "read 4 bytes got negative value: -1"
         else:
             msg = "decode error (n=4): 4294967295 >= 16"
@@ -2285,7 +2285,7 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
 
             maxbits = 1 << i
             count[i] = maxbits
-            if i == 31 and SYSINFO[1] == 4:
+            if i == 31 and PTRSIZE == 4:
                 self.assertRaises(OverflowError,
                                   canonical_decode, a, count, [])
                 continue
@@ -2508,15 +2508,14 @@ class ReadN_WriteN_Tests(unittest.TestCase, Util):
             self.assertEqual(_write_n(n, x), blob)
 
     def test_zeros(self):
-        for n in range(tuple.__itemsize__):
+        for n in range(PTRSIZE):
             blob = n * b"\x00"
             self.assertEqual(_read_n(iter(blob), n), 0)
             self.assertEqual(_write_n(n, 0), blob)
 
-    @skipIf(SYSINFO[0] != 8)
     def test_max(self):
-        blob = 7 * b"\xff" + b"\x7f"
-        self.assertEqual(len(blob), tuple.__itemsize__)
+        blob = (PTRSIZE - 1) * b"\xff" + b"\x7f"
+        self.assertEqual(len(blob), PTRSIZE)
         self.assertEqual(_read_n(iter(blob), 8), sys.maxsize)
         self.assertEqual(_write_n(8, sys.maxsize), blob)
 
@@ -2536,15 +2535,15 @@ class ReadN_WriteN_Tests(unittest.TestCase, Util):
             self.assertRaises(TypeError, _read_n, iter([3, v]), 2)
 
     def test_read_n_negative(self):
-        n = tuple.__itemsize__
-        it = iter(n * b"\xff")
-        self.assertRaisesMessage(ValueError,
-                                 "read %d bytes got negative value: -1" % n,
-                                 _read_n, it, n)
+        it = iter(PTRSIZE * b"\xff")
+        self.assertRaisesMessage(
+            ValueError,
+            "read %d bytes got negative value: -1" % PTRSIZE,
+            _read_n, it, PTRSIZE)
 
     def test_round_random(self):
         for _ in range(1000):
-            n = randint(1, tuple.__itemsize__ - 1);
+            n = randint(1, PTRSIZE - 1);
             blob = os.urandom(n)
             i = _read_n(iter(blob), n)
             self.assertEqual(_write_n(n, i), blob)

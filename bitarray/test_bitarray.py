@@ -40,7 +40,7 @@ def skipIf(condition):
     return lambda f: f
 
 SYSINFO = _sysinfo()
-PTRSIZE = SYSINFO[0]
+PTRSIZE = SYSINFO[0]  # pointer size in bytes
 DEBUG = SYSINFO[6]
 
 if DEBUG:
@@ -186,11 +186,12 @@ class ModuleFunctionsTests(unittest.TestCase, Util):
         for x in info:
             self.assertIsInstance(x, int)
 
-        if not is_pypy:
-            self.assertEqual(info[0], tuple.__itemsize__)
         self.assertEqual(info[7], int(sys.byteorder == 'little'))
         self.assertEqual(info[8], int(sys.byteorder == 'big'))
-        self.assertEqual(info[7] + info[8], 1)
+
+    @skipIf(is_pypy)  # PyPy doesn't have tuple.__itemsize__
+    def test_ptrsize(self):
+        self.assertEqual(PTRSIZE, tuple.__itemsize__)
 
     def test_set_default_endian(self):
         self.assertRaises(TypeError, _set_default_endian, 0)
