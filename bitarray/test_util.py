@@ -2496,6 +2496,9 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
 @skipIf(not DEBUG)
 class ReadN_WriteN_Tests(unittest.TestCase, Util):
 
+    # Regardless of machine byte-order, read_n() and write_n() use
+    # little endian byte-order.
+
     def test_explicit(self):
         for blob, x in [(b"", 0),
                         (b"\x00", 0),
