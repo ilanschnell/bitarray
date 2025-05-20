@@ -20,18 +20,18 @@ def sc_decode_header(stream):
 
 def sc_decode_block(stream, stats):
     head = next(stream)
-    if head == 0:  # stop byte
-        return False
 
-    if head < 0xa0:
+    if head < 0xa0:                          # type 0 - 0x00 -- 0x9f
+        if head == 0:  # stop byte
+            return False
         n = 0
         k = head if head <= 32 else 32 * (head - 31)
-    elif head < 0xc0:
+    elif head < 0xc0:                        # type 1 - 0xa0 .. 0xbf
         n = 1
         k = head - 0xa0
-    elif 0xc2 <= head <= 0xc4:
+    elif 0xc2 <= head <= 0xc4:               # type 2 .. 4 - 0xc2 .. 0xc4
         n = head - 0xc0
-        k = next(stream)
+        k = next(stream)                     # index count byte
     else:
         raise ValueError("Invalid block head: 0x%02x" % head)
 
