@@ -2,8 +2,7 @@
 This file contains some little tricks and verifications for some code which
 is used in the C implementation of bitarray.
 """
-import sys
-from random import randint, randrange
+from random import randint
 import unittest
 
 
