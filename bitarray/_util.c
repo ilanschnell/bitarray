@@ -2029,7 +2029,7 @@ static PyTypeObject CHDI_Type = {
     0,                                        /* tp_methods */
 };
 
-/* --------------------------------------------------------------------- */
+/* -------------------------  module functions  ------------------------ */
 
 static PyMethodDef module_functions[] = {
     {"zeros",     (PyCFunction) zeros,     METH_KEYWORDS |
@@ -2069,10 +2069,12 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, vl_decode_doc},
     {"canonical_decode",
                   (PyCFunction) chdi_new,  METH_VARARGS, chdi_doc},
+
 #ifndef NDEBUG
-    /* functionality exposed in debug mode for testing */
+    /* functions exposed in debug mode for testing */
     {"_sc_rts",   (PyCFunction) sc_rts,    METH_O,       0},
 #endif
+
     {NULL,        NULL}  /* sentinel */
 };
 

@@ -1484,7 +1484,7 @@ class SC_Tests(unittest.TestCase, Util):
                 a &= urandom(n, endian)
                 self.round_trip(a)
 
-# ---------------------------------------------------------------------------
+# -----------------------  _sc_rts()   (running totals)  --------------------
 
 @skipIf(not DEBUG)
 class RTS_Tests(unittest.TestCase):
@@ -2041,14 +2041,14 @@ class SerializationTests(unittest.TestCase, Util):
             self.assertRaisesMessage(ValueError, msg, deserialize, b)
 
         for i in range(256):
-            b = bytes(bytearray([i]))
+            b = bytearray([i])
             if i == 0 or i == 16:
                 self.assertEqual(deserialize(b), bitarray())
             else:
                 self.assertRaises(ValueError, deserialize, b)
                 check_msg(b)
 
-            b += b'\0'
+            b.append(0)
             if i < 32 and i % 16 < 8:
                 self.assertEqual(deserialize(b), zeros(8 - i % 8))
             else:
