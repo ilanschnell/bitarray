@@ -1,6 +1,15 @@
 Change log
 ==========
 
+**3.4.2** (2025-05-21):
+
+* extend documentation of
+  `compression of sparse bitarrays <sparse_compression.rst>`__
+* ``util.sc_decode()`` and ``util.vl_decode()`` now raise ``StopIteration``
+  instead of ``ValueError`` when unexpected end of stream is encountered
+* add debug mode tests for ``read_n()``, ``write_n()`` and ``count_from_word()``
+
+
 **3.4.1** (2025-05-15):
 
 * add ``pyproject.toml``, see `#233 <https://github.com/ilanschnell/bitarray/issues/233>`__
@@ -8,7 +17,7 @@ Change log
 * optimize ``delslice()`` when ``step`` is larger than about 5
 * consistently name ``*_span()`` and ``*_range()`` in C for
   invert, set and count
-* organize and add tests
+* organize and add tests (including debug mode tests for ``zlw()``)
 
 
 **3.4.0** (2025-05-06):
@@ -297,7 +306,7 @@ Change log
 * optimize ``delslice()`` for cases like ``del a[1:17:2]`` when ``a`` is large
 * fix ``examples/huffman/compress.py`` to handle files with 0 or 1 characters,
   see also `#172 <https://github.com/ilanschnell/bitarray/issues/172>`__
-* add ``skipIF`` decorator for skipping tests
+* add ``skipIf`` decorator for skipping tests
 * add tests
 
 
