@@ -1379,7 +1379,7 @@ class SC_Tests(unittest.TestCase, Util):
         for b in [
                 # raw:
                 b'\x11\x03\x01\x20\0',    # this is what sc_encode gives us
-                b'\x11\x03\x01\x2f\0',    # some pad bits are 1
+                b'\x11\x03\x01\x3f\0',    # but we can set the pad bits to 1
                 # sparse:
                 b'\x11\x03\xa1\x02\0',                  # using block type 1
                 b'\x11\x03\xc2\x01\x02\x00\0',          # using block type 2

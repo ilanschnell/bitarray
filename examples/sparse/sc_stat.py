@@ -5,8 +5,6 @@ def read_n(n, stream):
     i = 0
     for j in range(n):
         i |= next(stream) << 8 * j
-    if i < 0:
-        raise ValueError("read %d bytes got negative value: %d" % (n, i))
     return i
 
 def sc_decode_header(stream):
@@ -113,6 +111,9 @@ class Tests(unittest.TestCase):
         for x in -1, 256:
             b[-1] = x
             self.assertRaises(ValueError, sc_stat, b)
+        for x in None, "F", Ellipsis, []:
+            b[-1] = x
+            self.assertRaises(TypeError, sc_stat, b)
 
     def test_example(self):
         n = 1 << 26
