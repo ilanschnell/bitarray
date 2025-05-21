@@ -35,8 +35,9 @@ from bitarray.util import (
 )
 
 if DEBUG:
-    from bitarray._util import _read_n, _write_n  # type: ignore
-    from bitarray._util import _sc_rts, _SEGSIZE  # type: ignore
+    from bitarray._util import (  # type: ignore
+        _count_from_word, _read_n, _write_n, _sc_rts, _SEGSIZE,
+    )
     SEGBITS = 8 * _SEGSIZE
 else:
     SEGBITS = None
@@ -2492,6 +2493,28 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
             self.check_code(*canonical_huffman(freq))
 
 # ------------------------- Internal debug tests ----------------------------
+
+@skipIf(not DEBUG)
+class CountFromWord_Tests(unittest.TestCase, Util):
+
+    def test_ones_zeros(self):
+        for _ in range(1000):
+            n = randrange(1024)
+            a = ones(n)
+            i = randrange(16)
+            self.assertEqual(_count_from_word(a, i), max(0, n - i * 64))
+            a.setall(0)
+            self.assertEqual(_count_from_word(a, i), 0)
+
+    def test_random(self):
+        for _ in range(1000):
+            n = randrange(1024)
+            a = urandom_2(n)
+            i = randrange(16)
+            res = _count_from_word(a, i)
+            self.assertEqual(res, a[64 * i:].count())
+            self.assertEqual(res, a.count(1, 64 * i))
+
 
 @skipIf(not DEBUG)
 class ReadN_WriteN_Tests(unittest.TestCase, Util):

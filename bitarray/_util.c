@@ -65,11 +65,18 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian, int c)
 static Py_ssize_t
 count_from_word(bitarrayobject *a, Py_ssize_t i)
 {
+    const Py_ssize_t nbits = a->nbits;
+    const Py_ssize_t nw = nbits / 64 - i;  /* complete words to count */
+    Py_ssize_t cnt;
+
     assert(i >= 0);
-    if (64 * i >= a->nbits)
+    if (nw < 0)
         return 0;
 
-    return popcnt_words(WBUFF(a) + i, a->nbits / 64 - i) + popcnt_64(zlw(a));
+    cnt = popcnt_words(WBUFF(a) + i, nw);  /* complete words */
+    if (nbits % 64)
+        cnt += popcnt_64(zlw(a));          /* remaining bits */
+    return cnt;
 }
 
 /* basically resize() but without importing and exporting buffer checks */
@@ -2035,6 +2042,18 @@ static PyTypeObject CHDI_Type = {
 #ifndef NDEBUG
 
 static PyObject *
+module_cfw(PyObject *module, PyObject *args)  /* count_from_word() */
+{
+    bitarrayobject *a;
+    Py_ssize_t i;
+
+    if (!PyArg_ParseTuple(args, "O!n",
+                          bitarray_type_obj, (PyObject *) &a, &i))
+        return NULL;
+    return PyLong_FromSsize_t(count_from_word(a, i));
+}
+
+static PyObject *
 module_read_n(PyObject *module, PyObject *args)
 {
     PyObject *iter;
@@ -2109,9 +2128,10 @@ static PyMethodDef module_functions[] = {
 
 #ifndef NDEBUG
     /* functions exposed in debug mode for testing */
-    {"_read_n",   (PyCFunction) module_read_n,  METH_VARARGS, 0},
-    {"_write_n",  (PyCFunction) module_write_n, METH_VARARGS, 0},
-    {"_sc_rts",   (PyCFunction) sc_rts,         METH_O,       0},
+    {"_count_from_word", (PyCFunction) module_cfw,     METH_VARARGS, 0},
+    {"_read_n",          (PyCFunction) module_read_n,  METH_VARARGS, 0},
+    {"_write_n",         (PyCFunction) module_write_n, METH_VARARGS, 0},
+    {"_sc_rts",          (PyCFunction) sc_rts,         METH_O,       0},
 #endif
 
     {NULL,        NULL}  /* sentinel */

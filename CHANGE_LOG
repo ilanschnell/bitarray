@@ -4,7 +4,7 @@
     [compression of sparse bitarrays](sparse_compression.rst)
   * `util.sc_decode()` and `util.vl_decode()` now raise `StopIteration`
     instead of `ValueError` when unexpected end of stream is encountered
-  * add debug mode tests for `read_n()` and `write_n()`
+  * add debug mode tests for `read_n()`, `write_n()` and `count_from_word()`
 
 
 2025-05-15   3.4.1:
