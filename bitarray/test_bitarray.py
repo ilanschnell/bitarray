@@ -1279,8 +1279,7 @@ class SetSliceTests(unittest.TestCase, Util):
             n = randrange(3000, 4000)
             a = urandom_2(n)
             aa = a.tolist()
-            start = randrange(1000)
-            s = slice(start, randrange(1000, n), randint(1, 100))
+            s = slice(randrange(1000), randrange(1000, n), randint(1, 100))
             self.assertTrue(s.stop - s.start >= 0)
             cnt += s.stop - s.start >= 1024
             slicelength = len(range(n)[s])

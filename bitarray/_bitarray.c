@@ -1973,7 +1973,7 @@ bitarray_get_readonly(bitarrayobject *self, void *Py_UNUSED(ignored))
     return PyBool_FromLong(self->readonly);
 }
 
-static PyGetSetDef bitarray_getsets [] = {
+static PyGetSetDef bitarray_getsets[] = {
     {"endian", (getter) bitarray_get_endian, NULL,
      PyDoc_STR("bit-endianness as Unicode string")},
     {"nbytes", (getter) bitarray_get_nbytes, NULL,
