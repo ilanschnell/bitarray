@@ -66,16 +66,15 @@ static Py_ssize_t
 count_from_word(bitarrayobject *a, Py_ssize_t i)
 {
     const Py_ssize_t nbits = a->nbits;
-    const Py_ssize_t nw = nbits / 64 - i;  /* complete words to count */
     Py_ssize_t cnt;
 
     assert(i >= 0);
-    if (nw < 0)
+    if (64 * i >= nbits)
         return 0;
 
-    cnt = popcnt_words(WBUFF(a) + i, nw);  /* complete words */
+    cnt = popcnt_words(WBUFF(a) + i, nbits / 64 - i);  /* complete words */
     if (nbits % 64)
-        cnt += popcnt_64(zlw(a));          /* remaining bits */
+        cnt += popcnt_64(zlw(a));                      /* remaining bits */
     return cnt;
 }
 
