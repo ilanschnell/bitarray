@@ -8,7 +8,7 @@ from bitarray.util import urandom
 
 def nxir(x, start, step):
     assert x >= start and step > 0
-    # in Python we can use a simler expression than in C
+    # in Python we can use a simpler expression than in C
     return (start - x) % step
 
 
@@ -25,7 +25,7 @@ def set_range_opt(self, start, stop, step, value):
     mask.setall(not value)
     mask[nxir(8 * ca, start, step)] = value
     mask *= (m - 1) // step + 1
-    del mask[m:]  # in the C version we don't bother
+    del mask[m:]  # in the C version we wouldn't bother
     assert len(mask) % 8 == 0
 
     self[start : 8 * ca : step] = value
@@ -53,8 +53,7 @@ class Tests(unittest.TestCase):
             n = randrange(3000, 4000)
             a = urandom(n)
             aa = a.tolist()
-            start = randrange(1000)
-            s = slice(start, randrange(1000, n), randint(1, 100))
+            s = slice(randrange(1000), randrange(1000, n), randint(1, 100))
             self.assertTrue(s.stop - s.start >= 0)
             slicelength = len(range(n)[s])
             self.assertTrue(slicelength > 0)
