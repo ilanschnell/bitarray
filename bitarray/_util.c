@@ -65,11 +65,17 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian, int c)
 static Py_ssize_t
 count_from_word(bitarrayobject *a, Py_ssize_t i)
 {
+    const Py_ssize_t nbits = a->nbits;
+    Py_ssize_t cnt;
+
     assert(i >= 0);
-    if (64 * i >= a->nbits)
+    if (64 * i >= nbits)
         return 0;
 
-    return popcnt_words(WBUFF(a) + i, a->nbits / 64 - i) + popcnt_64(zlw(a));
+    cnt = popcnt_words(WBUFF(a) + i, nbits / 64 - i);  /* complete words */
+    if (nbits % 64)
+        cnt += popcnt_64(zlw(a));                      /* remaining bits */
+    return cnt;
 }
 
 /* basically resize() but without importing and exporting buffer checks */
@@ -1028,7 +1034,7 @@ next_char(PyObject *iter)
     if (item == NULL) {
         if (PyErr_Occurred())   /* from PyIter_Next() */
             return -1;
-        PyErr_SetString(PyExc_ValueError, "unexpected end of stream");
+        PyErr_SetString(PyExc_StopIteration, "unexpected end of stream");
         return -1;
     }
 
@@ -1052,7 +1058,7 @@ write_n(char *str, int n, Py_ssize_t i)
 {
     int len = 0;
 
-    assert(n <= 8);
+    assert(n <= 8 && i >= 0);
     while (len < n) {
         str[len++] = (char) i & 0xff;
         i >>= 8;
@@ -1063,11 +1069,12 @@ write_n(char *str, int n, Py_ssize_t i)
 /* read n bytes from iter and return corresponding non-negative integer,
    using little endian byte-order */
 static Py_ssize_t
-read_n(int n, PyObject *iter)
+read_n(PyObject *iter, int n)
 {
     Py_ssize_t i = 0;
     int j, c;
 
+    assert(PyIter_Check(iter));
     assert(n <= 8);
     for (j = 0; j < n; j++) {
         if ((c = next_char(iter)) < 0)
@@ -1554,7 +1561,7 @@ sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
                      (int) sizeof(Py_ssize_t), len);
         return -1;
     }
-    if ((*nbits = read_n(len, iter)) < 0)
+    if ((*nbits = read_n(iter, len)) < 0)
         return -1;
 
     return 0;
@@ -1592,7 +1599,7 @@ sc_read_sparse(bitarrayobject *a, Py_ssize_t offset, PyObject *iter,
     while (k--) {
         Py_ssize_t i;
 
-        if ((i = read_n(n, iter)) < 0)
+        if ((i = read_n(iter, n)) < 0)
             return -1;
 
         i += 8 * offset;
@@ -2029,7 +2036,55 @@ static PyTypeObject CHDI_Type = {
     0,                                        /* tp_methods */
 };
 
-/* --------------------------------------------------------------------- */
+/* ---------- module functions exposed in debug mode for testing ------- */
+
+#ifndef NDEBUG
+
+static PyObject *
+module_cfw(PyObject *module, PyObject *args)  /* count_from_word() */
+{
+    bitarrayobject *a;
+    Py_ssize_t i;
+
+    if (!PyArg_ParseTuple(args, "O!n",
+                          bitarray_type_obj, (PyObject *) &a, &i))
+        return NULL;
+    return PyLong_FromSsize_t(count_from_word(a, i));
+}
+
+static PyObject *
+module_read_n(PyObject *module, PyObject *args)
+{
+    PyObject *iter;
+    Py_ssize_t i;
+    int n;
+
+    if (!PyArg_ParseTuple(args, "Oi", &iter, &n))
+        return NULL;
+    if ((i = read_n(iter, n)) < 0)
+        return NULL;
+    return PyLong_FromSsize_t(i);
+}
+
+static PyObject *
+module_write_n(PyObject *module, PyObject *args)
+{
+    PyObject *result;
+    char *str;
+    Py_ssize_t i;
+    int n;
+
+    if (!PyArg_ParseTuple(args, "in", &n, &i))
+        return NULL;
+    if ((result = PyBytes_FromStringAndSize(NULL, n)) == NULL)
+        return NULL;
+    str = PyBytes_AsString(result);
+    write_n(str, n, i);
+    return result;
+}
+
+#endif  /* NDEBUG */
+
 
 static PyMethodDef module_functions[] = {
     {"zeros",     (PyCFunction) zeros,     METH_KEYWORDS |
@@ -2069,10 +2124,15 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, vl_decode_doc},
     {"canonical_decode",
                   (PyCFunction) chdi_new,  METH_VARARGS, chdi_doc},
+
 #ifndef NDEBUG
-    /* functionality exposed in debug mode for testing */
-    {"_sc_rts",   (PyCFunction) sc_rts,    METH_O,       0},
+    /* functions exposed in debug mode for testing */
+    {"_count_from_word", (PyCFunction) module_cfw,     METH_VARARGS, 0},
+    {"_read_n",          (PyCFunction) module_read_n,  METH_VARARGS, 0},
+    {"_write_n",         (PyCFunction) module_write_n, METH_VARARGS, 0},
+    {"_sc_rts",          (PyCFunction) sc_rts,         METH_O,       0},
 #endif
+
     {NULL,        NULL}  /* sentinel */
 };
 

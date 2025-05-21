@@ -1,5 +1,6 @@
-from random import getrandbits, randint, randrange
 import unittest
+from random import getrandbits, randint, randrange
+from time import perf_counter
 
 from bitarray import bitarray
 from bitarray.util import urandom
@@ -37,6 +38,15 @@ def set_range_opt(self, start, stop, step, value):
 
 class Tests(unittest.TestCase):
 
+    def test_nxir(self):
+        for _ in range(1000):
+            start = randrange(100)
+            step = randrange(1, 20)
+            x = randrange(start, start + 100)
+            nx = nxir(x, start, step)
+            self.assertTrue(0 <= nx < step)
+            self.assertEqual((x + nx) % step, start % step)
+
     def test_setslice_bool_step(self):
         # this test exercises set_range() when stop is much larger than start
         for _ in range(5000):
@@ -54,5 +64,22 @@ class Tests(unittest.TestCase):
             self.assertEqual(a.tolist(), aa)
 
 
+def speed_cmp():
+    n = 1_000_000
+    print("n=%d\ntimes in micro seconds\n" % n)
+    print('%8s %12s %12s' % ("step", "this-code", "native"))
+    for step in range(1, 20):
+        a = bitarray(n)
+        b = bitarray(n)
+        t0 = perf_counter()
+        set_range_opt(a, 0, n, step, 1)
+        t1 = perf_counter()
+        b[::step] = 1
+        t2 = perf_counter()
+        print('%8d %12.3f %12.3f' % (step, 1E6 * (t1 - t0), 1E6 * (t2 - t1)))
+        assert a == b
+
+
 if __name__ == '__main__':
+    speed_cmp()
     unittest.main()

@@ -2,8 +2,7 @@
 This file contains some little tricks and verifications for some code which
 is used in the C implementation of bitarray.
 """
-import sys
-from random import randint, randrange
+from random import randint
 import unittest
 
 
@@ -154,7 +153,7 @@ class ListSliceTests(unittest.TestCase):
             self.assertEqual(slicelength(r.start, r.stop, r.step), len(r))
 
 
-class RemainerTests(unittest.TestCase):
+class ModularTests(unittest.TestCase):
 
     def test_remainder(self):
         for _ in range(1000):
@@ -169,7 +168,7 @@ class RemainerTests(unittest.TestCase):
             self.assertEqual(b * q + r, a)
             self.assertTrue(0 <= r < b)
 
-    def test_avoid_neg_a(self):
+    def test_avoid_neg_numerator(self):
         #
         # equality:   a % b = (b - (-a) % b) % b
         #
@@ -177,14 +176,15 @@ class RemainerTests(unittest.TestCase):
             a = randint(-20, 20)
             b = randint(1, 20)
             r = a % b
-            # note that even though a may be negative, the remainder is
-            # always positive
+            # Note that even though a may be negative, the remainder is
+            # always positive:
             self.assertTrue(r >= 0)
-            # this is how we can implement a % b in C when a <= 0
+            # The following equality:
             s = (b - (-a) % b) % b
             self.assertEqual(s, r)
-            # here % always operates on positive numerator
+            # can be used to implement a % b in C when a <= 0
             if a <= 0:
+                # here % always operates on positive numerator
                 self.assertTrue(-a >= 0)
                 self.assertTrue(b - (-a) % b > 0)
 

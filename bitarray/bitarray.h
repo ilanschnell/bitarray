@@ -4,7 +4,7 @@
 
    Author: Ilan Schnell
 */
-#define BITARRAY_VERSION  "3.4.1"
+#define BITARRAY_VERSION  "3.4.3"
 
 #ifdef STDC_HEADERS
 #  include <stddef.h>
@@ -133,22 +133,21 @@ zlc(bitarrayobject *self)       /* zlc = zeroed last char */
 /* Return a uint64_t word representing the last (up to 63) remaining bits
    of the buffer.  All missing bytes (to complete the word) and padbits are
    treated as zeros.
-   If the length of the bitarray is a multiple of 64 (which includes an empty
-   bitarray), 0 is returned. */
+   If the length of the bitarray is a multiple of 64 (which also includes
+   an empty bitarray), 0 is returned. */
 static inline uint64_t
 zlw(bitarrayobject *self)       /* zlw = zeroed last word */
 {
-    const Py_ssize_t nbits = self->nbits;
-    const Py_ssize_t nw = 8 * (nbits / 64);  /* bytes in complete words */
-    const int nr = (nbits % 64) / 8;         /* complete remaining bytes */
+    const size_t nbits = self->nbits;
+    const size_t nw = (nbits / 64) * 8;   /* bytes in complete words */
+    const size_t nr = (nbits % 64) / 8;   /* complete remaining bytes */
     uint64_t res = 0;
 
-    assert(nw + nr == nbits / 8 && nw + nr <= Py_SIZE(self));
-    memcpy((char *) &res, self->ob_item + nw, (size_t) nr);
+    assert(nw + nr == nbits / 8 && 8 * (nw + nr) + nbits % 8 == nbits);
+    memcpy((char *) &res, self->ob_item + nw, nr);
     if (nbits % 8)
         *(((char *) &res) + nr) = zlc(self);
 
-    assert(nbits % 64 || res == 0);
     return res;
 }
 
@@ -234,7 +233,7 @@ static inline int
 to_aligned(void *p)
 {
     int r = ((uintptr_t) p) % 4;
-    return r ? 4 - r : 0;
+    return (4 - r) % 4;
 }
 
 /* population count of n words starting from at uint64_t pointer w */

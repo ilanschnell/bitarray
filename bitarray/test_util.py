@@ -4,6 +4,7 @@ Tests for bitarray.util module
 from __future__ import absolute_import
 
 import os
+import sys
 import array
 import base64
 import binascii
@@ -20,7 +21,7 @@ from collections import Counter
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       _set_default_endian)
 from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
-                                    SYSINFO, DEBUG, WHITESPACE)
+                                    PTRSIZE, DEBUG, WHITESPACE)
 
 from bitarray.util import (
     zeros, ones, urandom, pprint, strip, count_n,
@@ -34,7 +35,9 @@ from bitarray.util import (
 )
 
 if DEBUG:
-    from bitarray._util import _sc_rts, _SEGSIZE  # type: ignore
+    from bitarray._util import (  # type: ignore
+        _count_from_word, _read_n, _write_n, _sc_rts, _SEGSIZE,
+    )
     SEGBITS = 8 * _SEGSIZE
 else:
     SEGBITS = None
@@ -1291,7 +1294,7 @@ class SC_Tests(unittest.TestCase, Util):
                                      bytearray([0x01, 0x10, c]))
 
     def test_decode_header_overflow(self):
-        nbytes = SYSINFO[1]
+        nbytes = PTRSIZE
         self.assertRaisesMessage(
             OverflowError,
             "sizeof(Py_ssize_t) = %d: cannot read 9 bytes" % nbytes,
@@ -1300,7 +1303,7 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertRaisesMessage(
             ValueError,
             "read %d bytes got negative value: -1" % nbytes,
-            sc_decode, bytes(bytearray([nbytes] + nbytes * [0xff])))
+            sc_decode, bytearray([nbytes] + nbytes * [0xff]))
 
         if nbytes == 4:
             self.assertRaisesMessage(
@@ -1332,7 +1335,7 @@ class SC_Tests(unittest.TestCase, Util):
             ValueError, "decode error (n=3): 32768 >= 32768",
             sc_decode, b"\x02\x00\x80\xc3\x01\x00\x80\x00\0")
 
-        if SYSINFO[1] == 4:
+        if PTRSIZE == 4:
             msg = "read 4 bytes got negative value: -2147483648"
         else:
             msg = "decode error (n=4): 2147483648 >= 16"
@@ -1340,7 +1343,7 @@ class SC_Tests(unittest.TestCase, Util):
             ValueError, msg,
             sc_decode, b"\x01\x10\xc4\x01\x00\x00\x00\x80\0")
 
-        if SYSINFO[1] == 4:
+        if PTRSIZE == 4:
             msg = "read 4 bytes got negative value: -1"
         else:
             msg = "decode error (n=4): 4294967295 >= 16"
@@ -1351,8 +1354,7 @@ class SC_Tests(unittest.TestCase, Util):
     def test_decode_end_of_stream(self):
         for stream in [b'', b'\x00', b'\x01', b'\x02\x77',
                        b'\x01\x04\x01', b'\x01\x04\xa1', b'\x01\x04\xa0']:
-            self.assertRaisesMessage(ValueError, "unexpected end of stream",
-                                     sc_decode, stream)
+            self.assertRaises(StopIteration, sc_decode, stream)
 
     def test_decode_types(self):
         blob = b'\x11\x03\x01\x20\0'
@@ -1378,7 +1380,7 @@ class SC_Tests(unittest.TestCase, Util):
         for b in [
                 # raw:
                 b'\x11\x03\x01\x20\0',    # this is what sc_encode gives us
-                b'\x11\x03\x01\x2f\0',    # some pad bits are 1
+                b'\x11\x03\x01\x3f\0',    # but we can set the pad bits to 1
                 # sparse:
                 b'\x11\x03\xa1\x02\0',                  # using block type 1
                 b'\x11\x03\xc2\x01\x02\x00\0',          # using block type 2
@@ -1408,7 +1410,7 @@ class SC_Tests(unittest.TestCase, Util):
             b.append(0)  # stop
 
             self.assertEqual(sc_decode(b), a)
-            self.assertEqual(sc_encode(a), bytes(b))
+            self.assertEqual(sc_encode(a), b)
 
     def test_decode_random_bytes(self):
         # ensure random input doesn't crash the decoder
@@ -1417,9 +1419,8 @@ class SC_Tests(unittest.TestCase, Util):
             b = b'\x02\x00\x04' + os.urandom(n)
             try:
                 a = sc_decode(b)
-            except ValueError as e:
-                if e != 'unexpected end of stream':
-                    continue
+            except (StopIteration, ValueError):
+                continue
             self.assertEqual(len(a), 1024)
             self.assertEqual(a.endian, 'little')
 
@@ -1438,7 +1439,7 @@ class SC_Tests(unittest.TestCase, Util):
         b = sc_decode(i)
         self.assertTrue(a == b == c)
         self.assertTrue(a.endian == b.endian == c.endian)
-        self.assertEqual(bytes(i), b'')
+        self.assertEqual(list(i), [])
 
     def test_encode_zeros(self):
         for i in range(18):
@@ -1459,9 +1460,8 @@ class SC_Tests(unittest.TestCase, Util):
 
         a = zeros(1 << 25, 'big')
         a[0] = 1
-        self.assertEqual(
-            sc_encode(a),
-            b'\x14\x00\x00\x00\x02\xc4\x01\x00\x00\x00\x00\x00')
+        self.assertEqual(sc_encode(a),
+                         b'\x14\x00\x00\x00\x02\xc4\x01\x00\x00\x00\x00\x00')
 
     def test_encode_ones(self):
         for _ in range(50):
@@ -1485,7 +1485,7 @@ class SC_Tests(unittest.TestCase, Util):
                 a &= urandom(n, endian)
                 self.round_trip(a)
 
-# ---------------------------------------------------------------------------
+# -----------------------  _sc_rts()   (running totals)  --------------------
 
 @skipIf(not DEBUG)
 class RTS_Tests(unittest.TestCase):
@@ -1625,15 +1625,15 @@ class VLFTests(unittest.TestCase, Util):
             self.assertEqual(vl_decode(stream), a)
 
     def test_decode_errors(self):
-        # decode empty bits
-        self.assertRaises(ValueError, vl_decode, b'')
+        # decode empty bytes
+        self.assertRaises(StopIteration, vl_decode, b'')
         # invalid number of padding bits
         for s in b'\x50', b'\x60', b'\x70':
             self.assertRaises(ValueError, vl_decode, s)
         self.assertRaises(ValueError, vl_decode, b'\xf0')
         # high bit set, but no terminating byte
         for s in b'\x80', b'\x80\x80':
-            self.assertRaises(ValueError, vl_decode, s)
+            self.assertRaises(StopIteration, vl_decode, s)
         # decode list with out of range items
         for i in -1, 256:
             self.assertRaises(ValueError, vl_decode, [i])
@@ -2042,14 +2042,14 @@ class SerializationTests(unittest.TestCase, Util):
             self.assertRaisesMessage(ValueError, msg, deserialize, b)
 
         for i in range(256):
-            b = bytes(bytearray([i]))
+            b = bytearray([i])
             if i == 0 or i == 16:
                 self.assertEqual(deserialize(b), bitarray())
             else:
                 self.assertRaises(ValueError, deserialize, b)
                 check_msg(b)
 
-            b += b'\0'
+            b.append(0)
             if i < 32 and i % 16 < 8:
                 self.assertEqual(deserialize(b), zeros(8 - i % 8))
             else:
@@ -2286,7 +2286,7 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
 
             maxbits = 1 << i
             count[i] = maxbits
-            if i == 31 and SYSINFO[1] == 4:
+            if i == 31 and PTRSIZE == 4:
                 self.assertRaises(OverflowError,
                                   canonical_decode, a, count, [])
                 continue
@@ -2491,6 +2491,89 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         for n in 2, 3, 4, randint(5, 200):
             freq = {i: random() for i in range(n)}
             self.check_code(*canonical_huffman(freq))
+
+# ------------------------- Internal debug tests ----------------------------
+
+@skipIf(not DEBUG)
+class CountFromWord_Tests(unittest.TestCase, Util):
+
+    def test_ones_zeros_empty(self):
+        for _ in range(1000):
+            n = randrange(1024)
+            a = ones(n)
+            i = randrange(16)
+            self.assertEqual(_count_from_word(a, i), max(0, n - i * 64))
+            a.setall(0)
+            self.assertEqual(_count_from_word(a, i), 0)
+            a.clear()
+            self.assertEqual(_count_from_word(a, i), 0)
+
+    def test_random(self):
+        for _ in range(1000):
+            n = randrange(1024)
+            a = urandom_2(n)
+            i = randrange(16)
+            res = _count_from_word(a, i)
+            self.assertEqual(res, a[64 * i:].count())
+            self.assertEqual(res, a.count(1, 64 * i))
+
+
+@skipIf(not DEBUG)
+class ReadN_WriteN_Tests(unittest.TestCase, Util):
+
+    # Regardless of machine byte-order, read_n() and write_n() use
+    # little endian byte-order.
+
+    def test_explicit(self):
+        for blob, x in [(b"", 0),
+                        (b"\x00", 0),
+                        (b"\x01", 1),
+                        (b"\xff", 255),
+                        (b"\xff\x00", 255),
+                        (b"\xaa\xbb\xcc", 0xccbbaa)]:
+            n = len(blob)
+            self.assertEqual(_read_n(iter(blob), n), x)
+            self.assertEqual(_write_n(n, x), blob)
+
+    def test_zeros(self):
+        for n in range(PTRSIZE):
+            blob = n * b"\x00"
+            self.assertEqual(_read_n(iter(blob), n), 0)
+            self.assertEqual(_write_n(n, 0), blob)
+
+    def test_max(self):
+        blob = (PTRSIZE - 1) * b"\xff" + b"\x7f"
+        self.assertEqual(_read_n(iter(blob), PTRSIZE), sys.maxsize)
+        self.assertEqual(_write_n(PTRSIZE, sys.maxsize), blob)
+
+    def test_round_trip_random(self):
+        for _ in range(1000):
+            n = randint(1, PTRSIZE - 1);
+            blob = os.urandom(n)
+            i = _read_n(iter(blob), n)
+            self.assertEqual(_write_n(n, i), blob)
+
+    def test_read_n_untouch(self):
+        it = iter(b"\x00XY")
+        self.assertEqual(_read_n(it, 1), 0)
+        self.assertEqual(next(it), ord('X'))
+        self.assertEqual(_read_n(it, 0), 0)
+        self.assertEqual(next(it), ord('Y'))
+        self.assertRaises(StopIteration, _read_n, it, 1)
+
+    def test_read_n_item_errors(self):
+        for v in -1, 256:
+            self.assertRaises(ValueError, _read_n, iter([3, v]), 2)
+
+        for v in None, "F", Ellipsis, []:
+            self.assertRaises(TypeError, _read_n, iter([3, v]), 2)
+
+    def test_read_n_negative(self):
+        it = iter(PTRSIZE * b"\xff")
+        self.assertRaisesMessage(
+            ValueError,
+            "read %d bytes got negative value: -1" % PTRSIZE,
+            _read_n, it, PTRSIZE)
 
 # ---------------------------------------------------------------------------
 
