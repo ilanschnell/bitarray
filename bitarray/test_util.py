@@ -2497,13 +2497,15 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
 @skipIf(not DEBUG)
 class CountFromWord_Tests(unittest.TestCase, Util):
 
-    def test_ones_zeros(self):
+    def test_ones_zeros_empty(self):
         for _ in range(1000):
             n = randrange(1024)
             a = ones(n)
             i = randrange(16)
             self.assertEqual(_count_from_word(a, i), max(0, n - i * 64))
             a.setall(0)
+            self.assertEqual(_count_from_word(a, i), 0)
+            a.clear()
             self.assertEqual(_count_from_word(a, i), 0)
 
     def test_random(self):
