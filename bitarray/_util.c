@@ -1175,9 +1175,10 @@ sc_rts(bitarrayobject *a)
     memset(zeros, 0x00, SEGSIZE);
     res = (Py_ssize_t *) PyMem_Malloc((size_t) sizeof(Py_ssize_t) *
                                       (n_seg + 1));
-    if (res == NULL)
-        return (Py_ssize_t *) PyErr_NoMemory();
-
+    if (res == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
     for (m = 0; m < c_seg; m++) {  /* loop all complete segments */
         res[m] = cnt;
         buff = a->ob_item + m * SEGSIZE;
@@ -1243,7 +1244,7 @@ sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
     const Py_ssize_t j = Py_MIN(i + BSI(n) / SEGSIZE, NSEG(a));
 
     assert(offset % SEGSIZE == 0 && 1 <= n && n <= 4);
-    assert(i <= j && j <= NSEG(a));
+    assert(0 <= i && i <= j && j <= NSEG(a));
     return rts[j] - rts[i];
 }
 
