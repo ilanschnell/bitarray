@@ -19,10 +19,10 @@
 /* default bit-endianness */
 static int default_endian = ENDIAN_BIG;
 
-static PyTypeObject Bitarray_Type;
-
 /* translation table - setup during module initialization */
 static char reverse_trans[256];
+
+static PyTypeObject Bitarray_Type;
 
 #define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarray_Type)
 
@@ -1938,10 +1938,7 @@ bitarray_copy_n(bitarrayobject *self, PyObject *args)
 static PyObject *
 bitarray_overlap(bitarrayobject *self, PyObject *other)
 {
-    if (!bitarray_Check(other)) {
-        PyErr_SetString(PyExc_TypeError, "bitarray expected");
-        return NULL;
-    }
+    assert(bitarray_Check(other));
     return PyBool_FromLong(buffers_overlap(self, (bitarrayobject *) other));
 }
 
@@ -4236,6 +4233,7 @@ module_zlw(PyObject *module, PyObject *obj)
     bitarrayobject *a, *res;
     uint64_t w;
 
+    assert(bitarray_Check(obj));
     a = (bitarrayobject *) obj;
     w = zlw(a);
     if ((res = newbitarrayobject(&Bitarray_Type, 64, a->endian)) == NULL)

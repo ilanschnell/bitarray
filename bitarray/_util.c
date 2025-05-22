@@ -15,11 +15,13 @@
 /* set during module initialization */
 static PyTypeObject *bitarray_type;
 
+#define bitarray_Check(obj)  PyObject_TypeCheck((obj), bitarray_type)
+
 /* Return 0 if obj is bitarray.  If not, set exception and return -1. */
 static int
 ensure_bitarray(PyObject *obj)
 {
-    if (PyObject_TypeCheck(obj, bitarray_type))
+    if (bitarray_Check(obj))
         return 0;
 
     PyErr_Format(PyExc_TypeError, "bitarray expected, not '%s'",
@@ -1200,9 +1202,7 @@ module_sc_rts(PyObject *module, PyObject *obj)
     bitarrayobject *a;
     Py_ssize_t *rts, i;
 
-    if (ensure_bitarray(obj) < 0)
-        return NULL;
-
+    assert(bitarray_Check(obj));
     a = (bitarrayobject *) obj;
     if ((rts = sc_rts(a)) == NULL)
         return NULL;
