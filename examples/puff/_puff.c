@@ -131,7 +131,7 @@ append_byte(state_obj *s, int byte)
 static int
 dist_len_copy(state_obj *s, int dist, int len)
 {
-    char *out;
+    char *str;
 
     if (len < 0) {
         PyErr_SetString(PyExc_ValueError, "length cannot be negative");
@@ -150,9 +150,9 @@ dist_len_copy(state_obj *s, int dist, int len)
         return -1;
     }
 
-    out = PyByteArray_AS_STRING(s->out);
+    str = PyByteArray_AS_STRING(s->out);
     while (len--) {
-        out[s->outcnt] = out[s->outcnt - dist];
+        str[s->outcnt] = str[s->outcnt - dist];
         s->outcnt++;
     }
 
@@ -265,23 +265,7 @@ codes(state_obj *s, const struct huffman *lencode,
 /* ------------------------ State Python interface ------------------ */
 
 /* set during module init */
-static PyObject *bitarray_type_obj;
-
-/* Return 0 if obj is bitarray.  If not, return -1 and set an exception. */
-static int
-ensure_bitarray(PyObject *obj)
-{
-    int t;
-
-    t = PyObject_IsInstance(obj, bitarray_type_obj);
-    if (t < 0)
-        return -1;
-    if (t == 0) {
-        PyErr_SetString(PyExc_TypeError, "bitarray expected");
-        return -1;
-    }
-    return 0;
-}
+static PyTypeObject *bitarray_type;
 
 /* create a new initialized canonical Huffman decode iterator object */
 static PyObject *
@@ -292,8 +276,11 @@ state_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     if (!PyArg_ParseTuple(args, "OO:State", &in, &out))
         return NULL;
-    if (ensure_bitarray(in) < 0)
+
+    if (!PyObject_TypeCheck((in), bitarray_type)) {
+        PyErr_SetString(PyExc_TypeError, "bitarray expected");
         return NULL;
+    }
     if (!PyByteArray_Check(out)) {
         PyErr_SetString(PyExc_TypeError, "bytearary expected");
         return NULL;
@@ -650,9 +637,10 @@ PyMODINIT_FUNC PyInit__puff(void)
 
     if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
         return NULL;
-    bitarray_type_obj = PyObject_GetAttrString(bitarray_module, "bitarray");
+    bitarray_type = (PyTypeObject *)
+            PyObject_GetAttrString(bitarray_module, "bitarray");
     Py_DECREF(bitarray_module);
-    if (bitarray_type_obj == NULL)
+    if (bitarray_type == NULL)
         return NULL;
 
     if ((m = PyModule_Create(&moduledef)) == NULL)
