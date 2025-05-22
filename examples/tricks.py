@@ -152,6 +152,7 @@ class ListSliceTests(unittest.TestCase):
         for n, s, r in self.random_slices():
             self.assertEqual(slicelength(r.start, r.stop, r.step), len(r))
 
+# ------------------------- Modular Arithmetic ------------------------------
 
 class ModularTests(unittest.TestCase):
 
@@ -187,6 +188,32 @@ class ModularTests(unittest.TestCase):
                 # here % always operates on positive numerator
                 self.assertTrue(-a >= 0)
                 self.assertTrue(b - (-a) % b > 0)
+
+# ----------------------------- Segments ------------------------------------
+
+class SegmentTests(unittest.TestCase):
+
+    def test_nseg(self):
+        SEGSIZE = 32  # segment size in bytes
+        SEGBITS = 8 * SEGSIZE
+        for nbits in range(1000):
+            nbytes = (nbits + 7) // 8
+            # number of segments in terms of bytes
+            nseg = (nbytes + SEGSIZE - 1) // SEGSIZE
+            # and in terms of bits
+            self.assertEqual((nbits + SEGBITS - 1) // SEGBITS, nseg)
+            # number of complete segments
+            cseg = nbits // SEGBITS
+            self.assertTrue(cseg <= nseg)
+            # remaining bits
+            rbits = nbits % SEGBITS
+            self.assertEqual(cseg * SEGBITS + rbits, nbits)
+            if cseg == nseg:
+                self.assertEqual(rbits, 0)
+                self.assertEqual(nbytes % SEGSIZE, 0)
+            else:
+                self.assertEqual(nseg, cseg + 1)
+                self.assertTrue(rbits > 0)
 
 
 if __name__ == '__main__':

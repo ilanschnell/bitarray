@@ -1122,7 +1122,7 @@ byte_length(Py_ssize_t i)
 #define SEGSIZE  32
 
 /* number of segments for given bitarray */
-#define NSEG(self)  (((self)->nbits + 8 * SEGSIZE - 1) / (8 * SEGSIZE))
+#define NSEG(self)  ((Py_SIZE(a) + SEGSIZE - 1) / SEGSIZE)
 
 /* Calculate an array with the running totals (rts) for 256 bit segments.
    Note that we call these "segments", as opposed to "blocks", in order to
@@ -1243,7 +1243,7 @@ static Py_ssize_t
 sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
 {
     Py_ssize_t i = offset / SEGSIZE;     /* indices into array rts[] */
-    Py_ssize_t j = Py_MIN((BSI(n) + offset) / SEGSIZE, NSEG(a));
+    Py_ssize_t j = Py_MIN(i + BSI(n) / SEGSIZE, NSEG(a));
 
     assert(offset % SEGSIZE == 0 && 1 <= n && n <= 4 && i <= j);
     return rts[j] - rts[i];
