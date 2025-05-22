@@ -1121,8 +1121,8 @@ byte_length(Py_ssize_t i)
    can be indexed with one index byte (BSI(1) = 32). */
 #define SEGSIZE  32
 
-/* number of segments for given number of bits */
-#define NSEG(nbits)  (((nbits) + 8 * SEGSIZE - 1) / (8 * SEGSIZE))
+/* number of segments for given bitarray */
+#define NSEG(self)  (((self)->nbits + 8 * SEGSIZE - 1) / (8 * SEGSIZE))
 
 /* Calculate an array with the running totals (rts) for 256 bit segments.
    Note that we call these "segments", as opposed to "blocks", in order to
@@ -1138,16 +1138,16 @@ byte_length(Py_ssize_t i)
 
    In this example we have a bitarray of length nbits = 987.  Note that:
 
-     * The number of segments is given by NSEG(nbits).
-       Here we have 4 segments: NSEG(nbits) = NSEG(987) = 4
+     * The number of segments is given by NSEG(self).
+       Here we have 4 segments: NSEG(self) = 4
 
-     * The rts array has always NSEG(nbits) + 1 elements, such that
-       last element is always indexed by NSEG(nbits).
+     * The rts array has always NSEG(self) + 1 elements, such that
+       last element is always indexed by NSEG(self).
 
      * The element rts[0] is always zero.
 
-     * The last element rts[NSEG(nbits)] is always the total count.
-       Here: rts[NSEG(nbits)] = rts[NSEG(987)] = rts[4] = 12
+     * The last element rts[NSEG(self)] is always the total count.
+       Here: rts[NSEG(self)] = rts[4] = 12
 
      * The last segment may be partial.  In that case, it's size it given
        by nbits % 256.  Here: nbits % 256 = 987 % 256 = 219
@@ -1167,7 +1167,7 @@ byte_length(Py_ssize_t i)
 static Py_ssize_t *
 sc_rts(bitarrayobject *a)
 {
-    const Py_ssize_t n_seg = NSEG(a->nbits);  /* total number of segments */
+    const Py_ssize_t n_seg = NSEG(a);         /* total number of segments */
     const Py_ssize_t c_seg = a->nbits / (8 * SEGSIZE); /* complete segments */
     char zeros[SEGSIZE];                      /* segment with only zeros */
     Py_ssize_t cnt = 0;                       /* current count */
@@ -1213,10 +1213,10 @@ module_sc_rts(PyObject *module, PyObject *obj)
     if ((rts = sc_rts(a)) == NULL)
         return NULL;
 
-    if ((list = PyList_New(NSEG(a->nbits) + 1)) == NULL)
+    if ((list = PyList_New(NSEG(a) + 1)) == NULL)
         goto error;
 
-    for (i = 0; i <= NSEG(a->nbits); i++) {
+    for (i = 0; i <= NSEG(a); i++) {
         PyObject *item = PyLong_FromSsize_t(rts[i]);
         if (item == NULL)
             goto error;
@@ -1242,8 +1242,8 @@ module_sc_rts(PyObject *module, PyObject *obj)
 static Py_ssize_t
 sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
 {
-    Py_ssize_t i = offset / SEGSIZE;             /* indices into rts[] */
-    Py_ssize_t j = Py_MIN((BSI(n) + offset) / SEGSIZE, NSEG(a->nbits));
+    Py_ssize_t i = offset / SEGSIZE;     /* indices into array rts[] */
+    Py_ssize_t j = Py_MIN((BSI(n) + offset) / SEGSIZE, NSEG(a));
 
     assert(offset % SEGSIZE == 0 && 1 <= n && n <= 4 && i <= j);
     return rts[j] - rts[i];
@@ -1308,7 +1308,7 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
         Py_ssize_t i;
         int j, ni;
 
-        assert(m + offset / SEGSIZE < NSEG(a->nbits));
+        assert(m + offset / SEGSIZE < NSEG(a));
         ni = (int) (rts[m + 1] - rts[m]);  /* indices in this segment */
         if (ni == 0)
             goto next_segment;
@@ -1483,7 +1483,7 @@ sc_encode(PyObject *module, PyObject *obj)
     str = PyBytes_AS_STRING(out);
     len += sc_encode_header(str, a);
 
-    total = rts[NSEG(a->nbits)];
+    total = rts[NSEG(a)];
     /* encode blocks as long as we haven't reached the end of the bitarray
        and haven't reached the total population count yet */
     while (offset < Py_SIZE(a) && rts[offset / SEGSIZE] != total) {
