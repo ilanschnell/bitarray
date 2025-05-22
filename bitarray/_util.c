@@ -1242,17 +1242,11 @@ module_sc_rts(PyObject *module, PyObject *obj)
 static Py_ssize_t
 sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
 {
-    Py_ssize_t nbytes = Py_SIZE(a) - offset;  /* remaining bytes */
+    Py_ssize_t i = offset / SEGSIZE;             /* indices into rts[] */
+    Py_ssize_t j = Py_MIN((BSI(n) + offset) / SEGSIZE, NSEG(a->nbits));
 
-    assert(offset % SEGSIZE == 0 && nbytes > 0 && 1 <= n && n <= 4);
-
-    /* number of bytes to count up to (limited by remaining ones) */
-    nbytes = Py_MIN(BSI(n), nbytes);
-
-    assert(NSEG(8 * nbytes + offset) <= NSEG(a->nbits));
-    assert(offset / SEGSIZE == NSEG(8 * offset));
-
-    return rts[NSEG(8 * (nbytes + offset))] - rts[offset / SEGSIZE];
+    assert(offset % SEGSIZE == 0 && 1 <= n && n <= 4 && i <= j);
+    return rts[j] - rts[i];
 }
 
 /* Calculate number of bytes [1..4096] of the raw block starting at offset,
