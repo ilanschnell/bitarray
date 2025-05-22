@@ -1514,7 +1514,7 @@ class RTS_Tests(unittest.TestCase):
         self.assertEqual(rts, [0, 5, 5, 8, 12])
 
     def test_rts_ones(self):
-        for _ in range(20):
+        for _ in range(200):
             n = randrange(10000)
             a = ones(n)
             rts = _sc_rts(a)
@@ -1525,9 +1525,9 @@ class RTS_Tests(unittest.TestCase):
                 self.assertEqual(v, min(SEGBITS * i, n))
 
     def test_rts_random(self):
-        for _ in range(20):
+        for _ in range(200):
             n = randrange(10000)
-            a = urandom(n)
+            a = urandom_2(n)
             rts = _sc_rts(a)
             self.assertEqual(len(rts), (n + SEGBITS - 1) // SEGBITS + 1)
             self.assertEqual(rts[0], 0)

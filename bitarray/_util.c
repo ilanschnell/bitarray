@@ -1233,7 +1233,7 @@ module_sc_rts(PyObject *module, PyObject *obj)
 #endif  /* NDEBUG */
 
 
-/* Equivalent to the Python expression:
+/* Roughly equivalent to the Python expression:
 
       a.count(1, 8 * offset, 8 * offset + (1 << (8 * n)))
 
@@ -1249,10 +1249,10 @@ sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
     /* number of bytes to count up to (limited by remaining ones) */
     nbytes = Py_MIN(BSI(n), nbytes);
 
-    offset /= SEGSIZE;               /* offset in terms of segments now */
-    assert(NSEG(8 * nbytes) + offset <= NSEG(a->nbits));
+    assert(NSEG(8 * nbytes + offset) <= NSEG(a->nbits));
+    assert(offset / SEGSIZE == NSEG(8 * offset));
 
-    return rts[NSEG(8 * nbytes) + offset] - rts[offset];
+    return rts[NSEG(8 * (nbytes + offset))] - rts[offset / SEGSIZE];
 }
 
 /* Calculate number of bytes [1..4096] of the raw block starting at offset,
