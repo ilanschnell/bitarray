@@ -1458,10 +1458,21 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(m, len(sc_encode(a)))
             self.round_trip(a)
 
-        a = zeros(1 << 25, 'big')
-        a[0] = 1
-        self.assertEqual(sc_encode(a),
-                         b'\x14\x00\x00\x00\x02\xc4\x01\x00\x00\x00\x00\x00')
+    def test_encode_type4(self):
+        a = zeros(1 << 26, 'big')
+        self.assertEqual(
+            sc_encode(a),
+            b'\x14\x00\x00\x00\x04\0')
+
+        a[0xccbbaa] = 1
+        self.assertEqual(
+            sc_encode(a),
+            b'\x14\x00\x00\x00\x04\xc4\x01\xaa\xbb\xcc\x00\0')
+
+        a[0x3ffeedd] = 1
+        self.assertEqual(
+            sc_encode(a),
+            b'\x14\x00\x00\x00\x04\xc4\x02\xaa\xbb\xcc\x00\xdd\xee\xff\x03\0')
 
     def test_encode_ones(self):
         for _ in range(50):
