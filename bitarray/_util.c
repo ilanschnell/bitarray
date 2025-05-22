@@ -13,24 +13,18 @@
 #include "bitarray.h"
 
 /* set during module initialization */
-static PyObject *bitarray_type_obj;
+static PyTypeObject *bitarray_type;
 
 /* Return 0 if obj is bitarray.  If not, set exception and return -1. */
 static int
 ensure_bitarray(PyObject *obj)
 {
-    int t;
+    if (PyObject_TypeCheck(obj, bitarray_type))
+        return 0;
 
-    t = PyObject_IsInstance(obj, bitarray_type_obj);
-    if (t < 0)
-        return -1;
-
-    if (t == 0) {
-        PyErr_Format(PyExc_TypeError, "bitarray expected, not '%s'",
-                     Py_TYPE(obj)->tp_name);
-        return -1;
-    }
-    return 0;
+    PyErr_Format(PyExc_TypeError, "bitarray expected, not '%s'",
+                 Py_TYPE(obj)->tp_name);
+    return -1;
 }
 
 /* Return new bitarray of length 'nbits', endianness given by the PyObject
@@ -47,7 +41,8 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian, int c)
         return NULL;
 
     /* equivalent to: res = bitarray(nbits, endian, Ellipsis) */
-    res = (bitarrayobject *) PyObject_CallObject(bitarray_type_obj, args);
+    res = (bitarrayobject *)
+            PyObject_CallObject((PyObject *) bitarray_type, args);
     Py_DECREF(args);
     if (res == NULL)
         return NULL;
@@ -235,7 +230,7 @@ count_n(PyObject *module, PyObject *args)
     Py_ssize_t n, i;
     int vi = 1;
 
-    if (!PyArg_ParseTuple(args, "O!n|O&:count_n", bitarray_type_obj,
+    if (!PyArg_ParseTuple(args, "O!n|O&:count_n", bitarray_type,
                           (PyObject *) &a, &n, conv_pybit, &vi))
         return NULL;
     if (n < 0) {
@@ -324,8 +319,8 @@ binary_function(PyObject *args, const char *format, const char oper)
     int rbits;
 
     if (!PyArg_ParseTuple(args, format,
-                          bitarray_type_obj, (PyObject *) &a,
-                          bitarray_type_obj, (PyObject *) &b))
+                          bitarray_type, (PyObject *) &a,
+                          bitarray_type, (PyObject *) &b))
         return NULL;
     if (ensure_eq_size_endian(a, b) < 0)
         return NULL;
@@ -430,8 +425,8 @@ correspond_all(PyObject *module, PyObject *args)
     int rbits;
 
     if (!PyArg_ParseTuple(args, "O!O!:correspond_all",
-                          bitarray_type_obj, (PyObject *) &a,
-                          bitarray_type_obj, (PyObject *) &b))
+                          bitarray_type, (PyObject *) &a,
+                          bitarray_type, (PyObject *) &b))
         return NULL;
     if (ensure_eq_size_endian(a, b) < 0)
         return NULL;
@@ -698,7 +693,7 @@ ba2hex(PyObject *module, PyObject *args, PyObject *kwds)
     char *sep = " ", *str;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|ns:ba2hex", kwlist,
-                                     bitarray_type_obj, (PyObject *) &a,
+                                     bitarray_type, (PyObject *) &a,
                                      &group, &sep))
         return NULL;
 
@@ -905,7 +900,7 @@ ba2base(PyObject *module, PyObject *args, PyObject *kwds)
     int n, m;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "iO!|ns:ba2base", kwlist,
-                                     &n, bitarray_type_obj, (PyObject *) &a,
+                                     &n, bitarray_type, (PyObject *) &a,
                                      &group, &sep))
         return NULL;
 
@@ -1884,7 +1879,7 @@ chdi_new(PyObject *module, PyObject *args)
     chdi_obj *it;       /* iterator object to be returned */
 
     if (!PyArg_ParseTuple(args, "O!OO:canonical_decode",
-                          bitarray_type_obj, &a, &count, &symbol))
+                          bitarray_type, &a, &count, &symbol))
         return NULL;
     if (!PySequence_Check(count))
         return PyErr_Format(PyExc_TypeError, "count expected to be sequence, "
@@ -2029,7 +2024,7 @@ module_cfw(PyObject *module, PyObject *args)  /* count_from_word() */
     Py_ssize_t i;
 
     if (!PyArg_ParseTuple(args, "O!n",
-                          bitarray_type_obj, (PyObject *) &a, &i))
+                          bitarray_type, (PyObject *) &a, &i))
         return NULL;
     return PyLong_FromSsize_t(count_from_word(a, i));
 }
@@ -2131,9 +2126,10 @@ PyInit__util(void)
 
     if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
         return NULL;
-    bitarray_type_obj = PyObject_GetAttrString(bitarray_module, "bitarray");
+    bitarray_type = (PyTypeObject *)
+            PyObject_GetAttrString(bitarray_module, "bitarray");
     Py_DECREF(bitarray_module);
-    if (bitarray_type_obj == NULL)
+    if (bitarray_type == NULL)
         return NULL;
 
     if ((m = PyModule_Create(&moduledef)) == NULL)
