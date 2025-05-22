@@ -1242,28 +1242,17 @@ module_sc_rts(PyObject *module, PyObject *obj)
 static Py_ssize_t
 sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
 {
-    Py_ssize_t nbits;
+    Py_ssize_t nbytes = Py_SIZE(a) - offset;  /* remaining bytes */
 
-    assert(offset % SEGSIZE == 0 && n > 0);
-    if (offset >= Py_SIZE(a))
-        return 0;
+    assert(offset % SEGSIZE == 0 && nbytes > 0 && 1 <= n && n <= 4);
 
-    /* The desired number of bits to count up to (limited by remaining
-       bitarray size) is given by:
-
-           nbits = Py_MIN(8 * BSI(n), a->nbits - 8 * offset);
-
-       However, on 32-bit machines this will fail for n=4 because 8 * BSI(4)
-       equals 1 << 32.  This is problematic, as 32-bit machines can address
-       at least partially filled type 4 blocks).  Therefore, we first
-       limit BSI(n) by the buffer size before multiplying 8. */
-    nbits = Py_MIN(8 * Py_MIN(BSI(n), Py_SIZE(a)), a->nbits - 8 * offset);
-    assert(nbits >= 0);
+    /* number of bytes to count up to (limited by remaining ones) */
+    nbytes = Py_MIN(BSI(n), nbytes);
 
     offset /= SEGSIZE;               /* offset in terms of segments now */
-    assert(NSEG(nbits) + offset <= NSEG(a->nbits));
+    assert(NSEG(8 * nbytes) + offset <= NSEG(a->nbits));
 
-    return rts[NSEG(nbits) + offset] - rts[offset];
+    return rts[NSEG(8 * nbytes) + offset] - rts[offset];
 }
 
 /* Calculate number of bytes [1..4096] of the raw block starting at offset,
