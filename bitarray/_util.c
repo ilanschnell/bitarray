@@ -1165,7 +1165,7 @@ byte_length(Py_ssize_t i)
    soon as the count the current segment is reached.
 */
 static Py_ssize_t *
-sc_calc_rts(bitarrayobject *a)
+sc_rts(bitarrayobject *a)
 {
     const Py_ssize_t n_seg = NSEG(a->nbits);  /* total number of segments */
     const Py_ssize_t c_seg = a->nbits / (8 * SEGSIZE); /* complete segments */
@@ -1197,10 +1197,10 @@ sc_calc_rts(bitarrayobject *a)
     return res;
 }
 
-/* expose sc_calc_rts() to Python during debug mode for testing */
+/* expose sc_rts() to Python during debug mode for testing */
 #ifndef NDEBUG
 static PyObject *
-sc_rts(PyObject *module, PyObject *obj)
+module_sc_rts(PyObject *module, PyObject *obj)
 {
     PyObject *list;
     bitarrayobject *a;
@@ -1210,7 +1210,7 @@ sc_rts(PyObject *module, PyObject *obj)
         return NULL;
 
     a = (bitarrayobject *) obj;
-    if ((rts = sc_calc_rts(a)) == NULL)
+    if ((rts = sc_rts(a)) == NULL)
         return NULL;
 
     if ((list = PyList_New(NSEG(a->nbits) + 1)) == NULL)
@@ -1490,7 +1490,7 @@ sc_encode(PyObject *module, PyObject *obj)
 
     a = (bitarrayobject *) obj;
     set_padbits(a);
-    if ((rts = sc_calc_rts(a)) == NULL)
+    if ((rts = sc_rts(a)) == NULL)
         return NULL;
 
     out = PyBytes_FromStringAndSize(NULL, 32768);
@@ -2130,7 +2130,7 @@ static PyMethodDef module_functions[] = {
     {"_count_from_word", (PyCFunction) module_cfw,     METH_VARARGS, 0},
     {"_read_n",          (PyCFunction) module_read_n,  METH_VARARGS, 0},
     {"_write_n",         (PyCFunction) module_write_n, METH_VARARGS, 0},
-    {"_sc_rts",          (PyCFunction) sc_rts,         METH_O,       0},
+    {"_sc_rts",          (PyCFunction) module_sc_rts,  METH_O,       0},
 #endif
 
     {NULL,        NULL}  /* sentinel */
