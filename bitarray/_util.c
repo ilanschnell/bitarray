@@ -1114,15 +1114,13 @@ byte_length(Py_ssize_t i)
 #define BSI(n)  (((Py_ssize_t) 1) << (8 * (n) - 3))
 
 /* segment size in bytes - Although of little practical value, the code
-   below will also work for SEGSIZE values of: 8, 16 and 32
+   will work for values of SEGSIZE of: 8, 16, 32
    BSI(1) = 32 must be divisible by SEGSIZE.
-   SEGSIZE must also be a multiple of the word size (sizeof(uint64_t) = 8).
-   The size 32 is rooted in the fact that a bitarray of 32 bytes (256 bits)
-   can be indexed with one index byte (BSI(1) = 32). */
+   SEGSIZE must also be divisible by the word size sizeof(uint64_t) = 8. */
 #define SEGSIZE  32
 
 /* number of segments for given bitarray */
-#define NSEG(self)  ((Py_SIZE(a) + SEGSIZE - 1) / SEGSIZE)
+#define NSEG(self)  ((Py_SIZE(self) + SEGSIZE - 1) / SEGSIZE)
 
 /* Calculate an array with the running totals (rts) for 256 bit segments.
    Note that we call these "segments", as opposed to "blocks", in order to
@@ -1224,7 +1222,6 @@ module_sc_rts(PyObject *module, PyObject *obj)
     }
     PyMem_Free(rts);
     return list;
-
  error:
     Py_XDECREF(list);
     PyMem_Free(rts);
@@ -1242,10 +1239,11 @@ module_sc_rts(PyObject *module, PyObject *obj)
 static Py_ssize_t
 sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
 {
-    Py_ssize_t i = offset / SEGSIZE;     /* indices into array rts[] */
-    Py_ssize_t j = Py_MIN(i + BSI(n) / SEGSIZE, NSEG(a));
+    const Py_ssize_t i = offset / SEGSIZE;     /* indices into rts[] */
+    const Py_ssize_t j = Py_MIN(i + BSI(n) / SEGSIZE, NSEG(a));
 
-    assert(offset % SEGSIZE == 0 && 1 <= n && n <= 4 && i <= j);
+    assert(offset % SEGSIZE == 0 && 1 <= n && n <= 4);
+    assert(i <= j && j <= NSEG(a));
     return rts[j] - rts[i];
 }
 
@@ -1465,8 +1463,8 @@ sc_encode(PyObject *module, PyObject *obj)
     Py_ssize_t len = 0;         /* bytes written into output buffer */
     bitarrayobject *a;
     Py_ssize_t offset = 0;      /* block offset into bitarray a in bytes */
-    Py_ssize_t *rts;            /* running totals for 256 bit segments */
-    Py_ssize_t total;           /* total population count of bitarray a */
+    Py_ssize_t *rts;            /* running totals of segments */
+    Py_ssize_t total;           /* total population count of bitarray */
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
@@ -1486,7 +1484,7 @@ sc_encode(PyObject *module, PyObject *obj)
     total = rts[NSEG(a)];
     /* encode blocks as long as we haven't reached the end of the bitarray
        and haven't reached the total population count yet */
-    while (offset < Py_SIZE(a) && rts[offset / SEGSIZE] != total) {
+    while (offset < Py_SIZE(a) && rts[offset / SEGSIZE] < total) {
         Py_ssize_t allocated;   /* size (in bytes) of output buffer */
 
         /* Make sure we have enough space in output buffer for next block.
