@@ -5192,10 +5192,20 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
         tup = 0, 1, 0, 1, 1, False, True
         for obj in list(tup), tup, iter(tup), bitarray(tup):
             a = frozenbitarray(obj)
+            self.assertIsInstance(a, frozenbitarray)
             self.assertEqual(a, bitarray(tup))
         a = frozenbitarray(b'AB', "big")
         self.assertEqual(a.to01(), "0100000101000010")
         self.assertEqual(a.endian, "big")
+
+    def test_init_bytes_bytearray(self):
+        for x in b'\x80ABCD', bytearray(b'\x80ABCD'):
+            a = frozenbitarray(x, 'little')
+            self.assertIsInstance(a, frozenbitarray)
+            self.assertEqual(len(a), 8 * len(x))
+            self.assertEqual(a.tobytes(), x)
+            self.assertEqual(a[:8].to01(), '00000001')
+            self.check_obj(a)
 
     def test_repr(self):
         a = frozenbitarray()

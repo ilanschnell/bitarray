@@ -43,8 +43,8 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian, int c)
         return NULL;
 
     /* equivalent to: res = bitarray(nbits, endian, Ellipsis) */
-    res = (bitarrayobject *)
-            PyObject_CallObject((PyObject *) bitarray_type, args);
+    res = (bitarrayobject *) PyObject_CallObject((PyObject *) bitarray_type,
+                                                 args);
     Py_DECREF(args);
     if (res == NULL)
         return NULL;
@@ -2126,8 +2126,8 @@ PyInit__util(void)
 
     if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
         return NULL;
-    bitarray_type = (PyTypeObject *)
-            PyObject_GetAttrString(bitarray_module, "bitarray");
+    bitarray_type = (PyTypeObject *) PyObject_GetAttrString(bitarray_module,
+                                                            "bitarray");
     Py_DECREF(bitarray_module);
     if (bitarray_type == NULL)
         return NULL;
