@@ -1496,25 +1496,22 @@ class SC_Tests(unittest.TestCase, Util):
                 a &= urandom(n, endian)
                 self.round_trip(a)
 
-# -----------------------  _sc_rts()   (running totals)  --------------------
+# -----------------  _sc_rts()   (running totals debug test)  ---------------
 
 @skipIf(not DEBUG)
 class RTS_Tests(unittest.TestCase):
-
-    # Internal functionality exposed for the purpose of testing.
-    # This class will only be part of the test suite in debug mode.
 
     def test_segsize(self):
         self.assertIsInstance(_SEGSIZE, int)
         self.assertTrue(_SEGSIZE in [8, 16, 32])
 
-    def test_rts_empty(self):
+    def test_empty(self):
         rts = _sc_rts(bitarray())
         self.assertEqual(len(rts), 1)
         self.assertEqual(rts, [0])
 
     @skipIf(SEGBITS != 256)
-    def test_rts_example(self):
+    def test_example(self):
         # see example before sc_calc_rts() in _util.c
         a = zeros(987)
         a[:5] = a[512:515] = a[768:772] = 1
@@ -1524,26 +1521,31 @@ class RTS_Tests(unittest.TestCase):
         self.assertEqual(len(rts), 5)
         self.assertEqual(rts, [0, 5, 5, 8, 12])
 
-    def test_rts_ones(self):
-        for _ in range(200):
-            n = randrange(10000)
+    def nseg(self, a):
+        # number of segments in terms of bytes
+        res = (a.nbytes + _SEGSIZE - 1) // _SEGSIZE
+        # and in terms of bits
+        self.assertEqual((len(a) + SEGBITS - 1) // SEGBITS, res)
+        return res
+
+    def test_ones(self):
+        for n in range(1000):
             a = ones(n)
             rts = _sc_rts(a)
-            self.assertEqual(len(rts), (n + SEGBITS - 1) // SEGBITS + 1)
+            self.assertEqual(len(rts), self.nseg(a) + 1)
             self.assertEqual(rts[0], 0)
             self.assertEqual(rts[-1], n)
             for i, v in enumerate(rts):
                 self.assertEqual(v, min(SEGBITS * i, n))
 
-    def test_rts_random(self):
+    def test_random(self):
         for _ in range(200):
-            n = randrange(10000)
-            a = urandom_2(n)
+            a = urandom_2(randrange(10000))
             rts = _sc_rts(a)
-            self.assertEqual(len(rts), (n + SEGBITS - 1) // SEGBITS + 1)
+            self.assertEqual(len(rts), self.nseg(a) + 1)
             self.assertEqual(rts[0], 0)
             self.assertEqual(rts[-1], a.count())
-            for i in range(len(rts) - 1):
+            for i in range(self.nseg(a)):
                 seg_pop = a.count(1, SEGBITS * i, SEGBITS * (i + 1))
                 self.assertEqual(rts[i + 1] - rts[i], seg_pop)
 
