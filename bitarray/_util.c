@@ -1382,9 +1382,9 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
      as follows:
 
      (a) Although we consider sticking with the current type n, we are
-         looking at the population for the next type block size.  We
-         calculate the encoded size of *all* the type n blocks which wold
-         otherwise just be a single type n+1 block:
+         looking at the population for the next type block size.
+         We calculate the encoded size of *all* the type n blocks (that
+         would otherwise just be a single type n+1 block):
 
              header size  *  number of blocks   +   n  *  population
 
@@ -1393,7 +1393,7 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
              header size   +   (n + 1)  *  population
 
      As we only need to know which of these sizes is bigger, we can
-     substract n * population from both sizes.
+     substract (n * population) from both sizes.
  */
 static Py_ssize_t
 sc_encode_block(char *str, Py_ssize_t *len,
@@ -1418,7 +1418,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
         /* population for next block type n+1 */
         next_count = sc_count(a, rts, offset, n + 1);
         if (next_count > 255)
-            /* too many index bytes for next block type n+1 */
+            /* too many index bytes for next block type n+1 - use type n */
             break;
 
         /* number of blocks of type n (up to 256) */
@@ -1432,6 +1432,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
             /* next block type n+1 is not smaller - use block type n */
             break;
 
+        /* we proceed with type n+1 - we already calculated the population */
         count = (int) next_count;
     }
 
