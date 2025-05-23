@@ -1369,28 +1369,34 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
      Hence, if the bit count of the first 32 bytes of the bitarray buffer
      is greater or equal to 32, we choose a raw block (type 0).
 
-   - If a raw block is used, we check if the next 127 segments
+   - If a raw block is used, we check if up to the next 127 (32-bit) segments
      are also suitable for raw encoding, see sc_write_raw().
      Therefore, we have type 0 blocks with up to 128 * 32 = 4096 raw bytes.
 
-   - Now we decide which sparse block type to use.  We do this by
-     first calculating the population count for the bitarray buffer size of
-     the *next* block type.  If the this count is larger than 255 (too large
-     for the count byte) we have to stick with the current type.
-     Otherwise we compare the encoded sizes of (a) sticking with the current
-     type n, and (b) moving to the next type n+1.  These sizes are calculated
-     as follows:
+   - If no raw block was used, we move on to deciding which type of sparse
+     representation to use.  Starting at type n = 1, we do this by first
+     calculating the population count for the bitarray buffer size of
+     the *next* block type n+1.
+     If this population is larger than 255 (too large for the count byte) we
+     have to stick with type n.
+     Otherwise we compare the encoded sizes of (a) sticking with
+     many (up to 256) blocks of type n, and (b) moving to a single block of
+     type n+1.  These sizes are calculated as follows:
 
-     (a) Although we consider sticking with the current type n, we are
-         looking at the population for the next type block size.
-         We calculate the encoded size of *all* the type n blocks (that
-         would otherwise just be a single type n+1 block):
+     (a) The encoded size of many blocks of type n is given by:
 
-             header size  *  number of blocks   +   n  *  population
+             header_size  *  number_of_blocks   +   n  *  population
+
+         Regardless of the exact index count for each block, the total size
+         of the index bytes is (n * population), as all blocks are of type n.
+         The number_of_blocks is 256 or limited by the buffer size.
+         The header_size is only 1 byte for type 1 and 2 bytes otherwise.
 
      (b) The encoded size of a single block of type n+1 is:
 
-             header size   +   (n + 1)  *  population
+             header_size   +   (n + 1)  *  population
+
+         Note that the header_size will is always 2 bytes here.
 
      As we only need to know which of these sizes is bigger, we can
      substract (n * population) from both sizes.
@@ -1432,7 +1438,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
             /* next block type n+1 is not smaller - use block type n */
             break;
 
-        /* we proceed with type n+1 - we already calculated the population */
+        /* we proceed with type n+1 - we already calculated its population */
         count = (int) next_count;
     }
 
