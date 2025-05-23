@@ -198,13 +198,25 @@ class SegmentTests(unittest.TestCase):
         SEGBITS = 8 * SEGSIZE
         for nbits in range(1000):
             nbytes = (nbits + 7) // 8
+
             # number of segments in terms of bytes
             nseg = (nbytes + SEGSIZE - 1) // SEGSIZE
+
             # and in terms of bits
             self.assertEqual((nbits + SEGBITS - 1) // SEGBITS, nseg)
+
             # number of complete segments
             cseg = nbits // SEGBITS
             self.assertTrue(cseg <= nseg)
+
+            # The number of complete segments cannot be calculated in terms
+            # of bytes, as it isn't possible to tell how many bits are
+            # actually in use by the last byte in each segment
+            if (nbits % SEGBITS > SEGBITS - 8):
+                self.assertNotEqual(nbytes // SEGSIZE, cseg)
+            else:
+                self.assertEqual(nbytes // SEGSIZE, cseg)
+
             # remaining bits
             rbits = nbits % SEGBITS
             self.assertEqual(cseg * SEGBITS + rbits, nbits)
