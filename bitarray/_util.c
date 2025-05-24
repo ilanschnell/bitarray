@@ -1304,7 +1304,8 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
         int j, ni;
 
         assert(m + offset / SEGSIZE < NSEG(a));
-        ni = (int) (rts[m + 1] - rts[m]);  /* indices in this segment */
+        /* number of indices in this segment, i.e. the segment population */
+        ni = (int) (rts[m + 1] - rts[m]);
         if (ni == 0)
             goto next_segment;
 
@@ -1390,7 +1391,7 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
          Regardless of the exact index count for each block, the total size
          of the index bytes is (n * population), as all blocks are of type n.
-         The number_of_blocks is 256 (unless limited by the buffer size).
+         The number_of_blocks is 256 (unless limited by the bitarray size).
          The header_size is only 1 byte for type 1 and 2 bytes otherwise.
 
      (b) The encoded size of a single block of type n+1 is:
@@ -1399,12 +1400,14 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
          As n >= 1, the header_size will is always 2 bytes here.
 
-     As we only need to know which of these sizes is bigger, we can
+   - As we only need to know which of these sizes is bigger, we can
      substract (n * population) from both sizes.  Hence, the costs are:
-     (a)  header_size * number_of_blocks
-     (b)  header_size + population
-     The question is really whether additional byte for each index is less
-     expensive than having additional headers.
+       (a)  header_size * number_of_blocks
+       (b)  header_size + population
+
+     The question of whether to choose type n or type n+1 ultimately comes
+     down to whether the additional byte for each index is less expensive than
+     having additional headers.
  */
 static Py_ssize_t
 sc_encode_block(char *str, Py_ssize_t *len,
