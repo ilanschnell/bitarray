@@ -57,18 +57,19 @@ new_bitarray(Py_ssize_t nbits, PyObject *endian, int c)
     return res;
 }
 
-/* Starting from word index i, count remaining population in bitarray a.
-   Negative i are not allowed.  Equivalent to: a[64 * i:].count() */
+/* Starting from 64-bit word index i, count remaining population
+   in bitarray a.  Negative i are treated as 0.
+   Equivalent to: a[64 * max(0, i):].count() */
 static Py_ssize_t
 count_from_word(bitarrayobject *a, Py_ssize_t i)
 {
     const Py_ssize_t nbits = a->nbits;
     Py_ssize_t cnt;
 
-    assert(i >= 0);
     if (64 * i >= nbits)
         return 0;
-
+    if (i < 0)
+        i = 0;
     cnt = popcnt_words(WBUFF(a) + i, nbits / 64 - i);  /* complete words */
     if (nbits % 64)
         cnt += popcnt_64(zlw(a));                      /* remaining bits */

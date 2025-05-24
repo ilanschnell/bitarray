@@ -2514,8 +2514,9 @@ class CountFromWord_Tests(unittest.TestCase, Util):
         for _ in range(1000):
             n = randrange(1024)
             a = ones(n)
-            i = randrange(16)
-            self.assertEqual(_count_from_word(a, i), max(0, n - i * 64))
+            i = randrange(-16, 16)
+            self.assertEqual(_count_from_word(a, i),
+                             max(0, n - max(0, i) * 64))
             a.setall(0)
             self.assertEqual(_count_from_word(a, i), 0)
             a.clear()
@@ -2527,8 +2528,9 @@ class CountFromWord_Tests(unittest.TestCase, Util):
             a = urandom_2(n)
             i = randrange(16)
             res = _count_from_word(a, i)
-            self.assertEqual(res, a[64 * i:].count())
-            self.assertEqual(res, a.count(1, 64 * i))
+            if i <= 0:
+                self.assertEqual(res, a.count())
+            self.assertEqual(res, a[64 * max(0, i):].count())
 
 
 @skipIf(not DEBUG)
