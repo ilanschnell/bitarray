@@ -1,6 +1,7 @@
 2025-XX-XX   3.4.3:
 -------------------
-  * greatly simplify `sc_count()` C function
+  * simplify `sc_count()` C function
+  * add more comments to `sc_encode_block()`
 
 
 2025-05-21   3.4.2:

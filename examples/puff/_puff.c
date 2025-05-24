@@ -637,8 +637,8 @@ PyMODINIT_FUNC PyInit__puff(void)
 
     if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
         return NULL;
-    bitarray_type = (PyTypeObject *)
-            PyObject_GetAttrString(bitarray_module, "bitarray");
+    bitarray_type = (PyTypeObject *) PyObject_GetAttrString(bitarray_module,
+                                                            "bitarray");
     Py_DECREF(bitarray_module);
     if (bitarray_type == NULL)
         return NULL;
