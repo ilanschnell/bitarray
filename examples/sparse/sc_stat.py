@@ -122,10 +122,12 @@ class Tests(unittest.TestCase):
         for i in range(2, 1 << 16):
             a[n // i] = 1
         b = sc_encode(a)
-        self.assertEqual(sc_stat(b),
-                         {'endian': 'little',
-                          'nbits': n,
-                          'blocks': [2, 147, 3, 1, 1]})
+        self.assertEqual(sc_stat(b)['blocks'], [2, 147, 3, 1, 1])
+        self.assertEqual(a, sc_decode(b))
+
+        a.reverse()
+        b = sc_encode(a)
+        self.assertEqual(sc_stat(b)['blocks'], [2, 256, 254, 3, 0])
         self.assertEqual(a, sc_decode(b))
 
 
