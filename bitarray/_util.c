@@ -1126,7 +1126,7 @@ byte_length(Py_ssize_t i)
 
    Although of little practical value, the code will work for
    values of SEGSIZE of: 8, 16, 32
-   BSI(1) = 32 must be divisible by SEGSIZE.
+   BSI(n) must be divisible by SEGSIZE.  So, 32 must be divisible by SEGSIZE.
    SEGSIZE must also be divisible by the word size sizeof(uint64_t) = 8. */
 #define SEGSIZE  32
 
@@ -1238,7 +1238,8 @@ module_sc_rts(PyObject *module, PyObject *obj)
 #endif  /* NDEBUG */
 
 
-/* Roughly equivalent to the Python expression:
+/* Return population count for the decoded block size of type n.
+   Roughly equivalent to the Python expression:
 
       a.count(1, 8 * offset, 8 * offset + (1 << (8 * n)))
 
@@ -1374,8 +1375,9 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
     return len + n * k;
 }
 
-/* Encode one block (starting at offset) and return offset increment.
-   The output is written into str buffer and len is increased.
+/* Encode one block (starting at offset) and return offset increment,
+   i.e. the decoded block size.
+   The output is written into buffer 'str' and 'len' is increased.
 
    Notes:
 
@@ -1389,7 +1391,7 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
    - If no raw block was used, we move on to deciding which type of sparse
      representation to use.  Starting at type n = 1, we do this by first
-     calculating the population count for the decoded buffer size of
+     calculating the population count for the decoded block size of
      the *next* block type n+1.
      If this population is larger than 255 (too large for the count byte) we
      have to stick with type n.
@@ -1618,8 +1620,8 @@ sc_read_sparse(bitarrayobject *a, Py_ssize_t offset, PyObject *iter,
     return BSI(n);
 }
 
-/* Decode one block: consume iter and set bitarray buffer at offset.
-   Return size of offset increment in bytes, or -1 on failure. */
+/* Decode one block: consume iter and set bitarray buffer starting at
+   offset.  Return decoded block size, or -1 on failure. */
 static Py_ssize_t
 sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
 {
