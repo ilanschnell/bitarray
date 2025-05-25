@@ -1243,8 +1243,8 @@ module_sc_rts(PyObject *module, PyObject *obj)
 
       a.count(1, 8 * offset, 8 * offset + (1 << (8 * n)))
 
-   The offset is required to be multiple of 32 (the segment size), as this
-   functions makes use of running totals (stored in Py_ssize_t array rts). */
+   The offset must be divisible by SEGSIZE, as this functions makes use of
+   running totals, stored in rts[]. */
 static Py_ssize_t
 sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
 {
@@ -1271,15 +1271,15 @@ sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
 
     assert(nbytes > 0);
     if (k == 32) {
-        /* We already know the first 32 bytes are better represented using
-           raw bytes (otherwise this function wouldn't have been called).
-           Now also check the next 127 segments. */
+        /* The first 32 bytes are better represented using raw bytes.
+           Now check up to the next 127 segments. */
         while (k < 32 * 128 && k + 32 <= nbytes &&
                32 <= sc_count(a, rts, offset + k, 1))
             k += 32;
     }
     assert(0 < k && k <= 32 * 128 && k <= nbytes);
-    assert((k >= 32 || k == nbytes) && (k <= 32 || k % 32 == 0));
+    assert(k >= 32 || k == nbytes);
+    assert(k <= 32 || k % 32 == 0);
 
     /* block header */
     *str = (char) (k <= 32 ? k : k / 32 + 31);
@@ -1359,15 +1359,15 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
     assert(0 <= k && k < 256);
 
     /* write block header */
-    if (n == 1) {               /* type 1 - single byte for each position */
+    if (n == 1) {                        /* type 1 - one header byte */
         assert(k < 32);
-        str[len++] = (char) (0xa0 + k);
+        str[len++] = (char) (0xa0 + k);  /* index count in 0xa0 .. 0xbf */
     }
-    else {                   /* type 2, 3, 4 - n bytes for each positions */
-        str[len++] = (char) (0xc0 + n);
-        str[len++] = (char) k;
+    else {                               /* type 2, 3, 4 - two header bytes */
+        str[len++] = (char) (0xc0 + n);  /* block type */
+        str[len++] = (char) k;           /* index count */
     }
-    if (k == 0)  /* no index bytes */
+    if (k == 0)  /* no index bytes - sc_write_sparse() does not allow k = 0 */
         return len;
 
     /* write block data - k indices, n bytes per index */
