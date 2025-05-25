@@ -1158,7 +1158,7 @@ byte_length(Py_ssize_t i)
 
    The function sc_write_indices() also takes advantage of the running
    totals array.  It loops over segments and skips to the next segment as
-   soon as the count the current segment is reached.
+   soon as the index count (population) of the current segment is reached.
 */
 static Py_ssize_t *
 sc_rts(bitarrayobject *a)
@@ -1167,7 +1167,6 @@ sc_rts(bitarrayobject *a)
     const Py_ssize_t c_seg = a->nbits / (8 * SEGSIZE); /* complete segments */
     char zeros[SEGSIZE];                      /* segment with only zeros */
     Py_ssize_t cnt = 0;                       /* current count */
-    char *buff;                               /* buffer in current segment */
     Py_ssize_t *res, m;
 
     memset(zeros, 0x00, SEGSIZE);
@@ -1178,10 +1177,9 @@ sc_rts(bitarrayobject *a)
         return NULL;
     }
     for (m = 0; m < c_seg; m++) {  /* loop all complete segments */
+        char *buff = a->ob_item + m * SEGSIZE;
         res[m] = cnt;
-        buff = a->ob_item + m * SEGSIZE;
         assert((m + 1) * SEGSIZE <= Py_SIZE(a));
-
         if (memcmp(buff, zeros, SEGSIZE))  /* segment has not only zeros */
             cnt += popcnt_words((uint64_t *) buff, SEGSIZE / 8);
     }
@@ -1311,7 +1309,7 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
         for (i = m * SEGSIZE;; i++) {  /* loop bytes in segment */
             assert(i < (m + 1) * SEGSIZE && i + offset < Py_SIZE(a));
-            if (buff[i] == 0x00)
+            if (!buff[i])
                 continue;
 
             for (j = 0; j < 8; j++) {  /* loop bits */
