@@ -3,8 +3,9 @@ Variable length bitarray format
 
 In some cases, it is useful to represent bitarrays in a binary format that
 is "self terminating" (in the same way that C strings are NUL terminated).
-That is, when a bitarray of unknown length is encountered in a stream of
-binary data, the format lets you know when the end of a bitarray is reached.
+That is, when an encoded bitarray of unknown length is encountered in a
+stream of binary data, the format lets us know when the end of the encoded
+bitarray is reached.
 Such a "variable length format" (most memory efficient for small bitarrays)
 is implemented in ``vl_encode()`` and ``vl_decode()``:
 
