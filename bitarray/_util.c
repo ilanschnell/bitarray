@@ -1166,6 +1166,7 @@ sc_rts(bitarrayobject *a)
     const Py_ssize_t n_seg = NSEG(a);         /* total number of segments */
     const Py_ssize_t c_seg = a->nbits / (8 * SEGSIZE); /* complete segments */
     char zeros[SEGSIZE];                      /* segment with only zeros */
+    char *buff = a->ob_item;                  /* buffer in current segment */
     Py_ssize_t cnt = 0;                       /* current count */
     Py_ssize_t *res, m;
 
@@ -1176,10 +1177,9 @@ sc_rts(bitarrayobject *a)
         PyErr_NoMemory();
         return NULL;
     }
-    for (m = 0; m < c_seg; m++) {  /* loop all complete segments */
-        char *buff = a->ob_item + m * SEGSIZE;
+    for (m = 0; m < c_seg; m++, buff += SEGSIZE) {  /* complete segments */
         res[m] = cnt;
-        assert((m + 1) * SEGSIZE <= Py_SIZE(a));
+        assert(buff + SEGSIZE <= a->ob_item + Py_SIZE(a));
         if (memcmp(buff, zeros, SEGSIZE))  /* segment has not only zeros */
             cnt += popcnt_words((uint64_t *) buff, SEGSIZE / 8);
     }
