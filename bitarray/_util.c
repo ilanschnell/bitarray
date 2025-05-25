@@ -1101,7 +1101,7 @@ byte_length(Py_ssize_t i)
     return n;
 }
 
-/* ---------------------- sparse compressed bitarray -------------------
+/* ---------------------  sparse bitarray compression  -----------------
  *
  * see also: doc/sparse_compression.rst
  */
@@ -1110,7 +1110,7 @@ byte_length(Py_ssize_t i)
 
    A sparse block of type n uses n bytes to index each bit.
    The decoded block size, that is the bitarray buffer size corresponding
-   to a sparse block of type n, is given by BSI(n).  Using 1 byte you can
+   to a sparse block of type n, is given by BSI(n).  Using 1 byte we can
    index 256 bits which have a decoded block size of 32 bytes:
 
        BSI(1) = 32
@@ -1323,7 +1323,7 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
         for (i = m * SEGSIZE;; i++) {  /* loop bytes in segment */
             assert(i < (m + 1) * SEGSIZE && i + offset < Py_SIZE(a));
-            if (!buff[i])
+            if (buff[i] == 0x00)
                 continue;
 
             for (j = 0; j < 8; j++) {  /* loop bits */
@@ -1509,7 +1509,7 @@ sc_encode(PyObject *module, PyObject *obj)
     total = rts[NSEG(a)];
     /* encode blocks as long as we haven't reached the end of the bitarray
        and haven't reached the total population count yet */
-    while (offset < Py_SIZE(a) && rts[offset / SEGSIZE] < total) {
+    while (offset < Py_SIZE(a) && rts[offset / SEGSIZE] != total) {
         Py_ssize_t allocated;   /* size (in bytes) of output buffer */
 
         /* Make sure we have enough space in output buffer for next block.

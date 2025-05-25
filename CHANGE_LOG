@@ -1,7 +1,12 @@
 2025-XX-XX   3.4.3:
 -------------------
-  * simplify `sc_count()` C function
-  * add more comments to `sc_encode_block()`
+  * minor updates to documentation
+  * C-level:
+      - use `PyTypeObject` for bitarray type object in `_util.c` to
+        be consistent with `_bitarray.c`
+      - add and improve comments to implementation of sparse bitarray
+        compression
+      - simplified `sc_count()`
 
 
 2025-05-21   3.4.2:
