@@ -33,7 +33,7 @@ How it works
 Consider a ``bitarray`` of length 256, that is 32 bytes of memory.
 If we represent this object by the indices of 1 bits as one byte each,
 the object will be represent more efficiently when the population (number
-of 1 bits) is less than 32.  In this case, based on the population, the
+of 1 bits) is less than 32.  Based on the population, the
 function ``sc_encode()`` chooses to represent the object as either raw bytes
 or as bytes of indices of 1 bits.  These are the block types 0 and 1.
 
@@ -42,7 +42,7 @@ bits has a population below 32, it would be stored as 256 blocks of type 1.
 That is, we need 256 block headers and one (index) byte for each 1 bit.
 However, when the total population is below 256, we could also introduce
 a new block type 2 in which each index is represented by two bytes and
-stop the entire bitarray as a single block (of type 2).
+represent the entire bitarray as a single block (of type 2).
 This saves us the 256 block headers (of type 1).
 Similarly, with even less populated bitarrays, it will become more efficient
 to move to blocks representing each index using 3 or more bytes.

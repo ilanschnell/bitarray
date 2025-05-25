@@ -1106,13 +1106,26 @@ byte_length(Py_ssize_t i)
  * see also: doc/sparse_compression.rst
  */
 
-/* Bitarray buffer size (in bytes) that can be indexed by n bytes.  E.g.:
-   with 1 byte you can index 256 bits which have a buffer size of 32 bytes.
-   BSI(1) = 32, BSI(2) = 8_192, BSI(3) = 2_097_152, BSI(4) = 536_870_912 */
+/* Bitarray buffer size (in bytes) that can be indexed by n bytes.
+
+   A sparse block of type n uses n bytes to index each bit.
+   The decoded block size, that is the bitarray buffer size corresponding
+   to a sparse block of type n, is given by BSI(n).  Using 1 byte you can
+   index 256 bits which have a decoded block size of 32 bytes:
+
+       BSI(1) = 32
+
+   Moving from block type n to n + 1 multiplies the decoded block size
+   by a factor of 256 (as the extra byte can index 256 times as much):
+
+       BSI(n + 1) = 256 * BSI(n)
+*/
 #define BSI(n)  (((Py_ssize_t) 1) << (8 * (n) - 3))
 
-/* segment size in bytes - Although of little practical value, the code
-   will work for values of SEGSIZE of: 8, 16, 32
+/* segment size in bytes (not to be confused with block size, see below)
+
+   Although of little practical value, the code will work for
+   values of SEGSIZE of: 8, 16, 32
    BSI(1) = 32 must be divisible by SEGSIZE.
    SEGSIZE must also be divisible by the word size sizeof(uint64_t) = 8. */
 #define SEGSIZE  32
@@ -1333,7 +1346,8 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
 }
 
 /* Write one sparse block (from 'offset', and up to 'k' one bits) of type 'n'.
-   Return number of bytes written to buffer 'str' (encoded block size). */
+   Return number of bytes written to buffer 'str' (encoded block size).
+   Note that the decoded block size is always BSI(n). */
 static Py_ssize_t
 sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
                 Py_ssize_t offset, int n, int k)
@@ -1375,7 +1389,7 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
    - If no raw block was used, we move on to deciding which type of sparse
      representation to use.  Starting at type n = 1, we do this by first
-     calculating the population count for the bitarray buffer size of
+     calculating the population count for the decoded buffer size of
      the *next* block type n+1.
      If this population is larger than 255 (too large for the count byte) we
      have to stick with type n.
