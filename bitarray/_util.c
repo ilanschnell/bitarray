@@ -1304,10 +1304,8 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
     const char *buff = a->ob_item + offset;
     Py_ssize_t m;
 
-    assert(1 <= n && n <= 4);
     assert(0 < k && k < 256);  /* note that k cannot be 0 in this function */
     assert(k == sc_count(a, rts, offset, n));   /* see above */
-    assert(offset % SEGSIZE == 0);
 
     rts += offset / SEGSIZE;   /* rts index relative to offset now */
 
@@ -1316,8 +1314,7 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
         assert(m + offset / SEGSIZE < NSEG(a));
         /* number of indices in this segment, i.e. the segment population */
-        ni = rts[m + 1] - rts[m];
-        if (ni == 0)
+        if ((ni = rts[m + 1] - rts[m]) == 0)
             goto next_segment;
 
         for (i = m * SEGSIZE;; i++) {  /* loop bytes in segment */
