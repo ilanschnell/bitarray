@@ -1312,16 +1312,17 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
     rts += offset / SEGSIZE;   /* rts index relative to offset now */
 
     for (m = 0;;) {  /* loop segments */
-        Py_ssize_t i;
-        int j, ni;
+        Py_ssize_t i, ni;
 
         assert(m + offset / SEGSIZE < NSEG(a));
         /* number of indices in this segment, i.e. the segment population */
-        ni = (int) (rts[m + 1] - rts[m]);
+        ni = rts[m + 1] - rts[m];
         if (ni == 0)
             goto next_segment;
 
         for (i = m * SEGSIZE;; i++) {  /* loop bytes in segment */
+            int j;
+
             assert(i < (m + 1) * SEGSIZE && i + offset < Py_SIZE(a));
             if (buff[i] == 0x00)
                 continue;
