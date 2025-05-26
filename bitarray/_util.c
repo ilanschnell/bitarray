@@ -1390,6 +1390,8 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
      So why did we pick 32 here?  We pick 32, as a bitarray with a 32 byte
      buffer has 256 items (bits), and these 256 bits can be addressed using
      one index byte.  That is, BSI(1) = 32, see above.
+     This is also the reason, why the index count of type 1 blocks is limited
+     to below 32.
 
    - If a raw block is used, we check if up to the next 127 32-byte segments
      are also suitable for raw encoding, see sc_write_raw().
