@@ -1441,8 +1441,8 @@ sc_encode_block(char *str, Py_ssize_t *len,
     assert(nbytes > 0);
 
     count = (int) sc_count(a, rts, offset, 1);
-    /* are there fewer or equal raw bytes than index bytes */
-    if (Py_MIN(32, nbytes) <= count) {           /* type 0 - raw bytes */
+    /* the number of index bytes exceeds the number of raw bytes */
+    if (count >= Py_MIN(32, nbytes)) {           /* type 0 - raw bytes */
         int k = sc_write_raw(str + *len, a, rts, offset);
         *len += 1 + k;
         return k;
@@ -1464,8 +1464,8 @@ sc_encode_block(char *str, Py_ssize_t *len,
         /* cost of a single block of type n+1 */
         cost_b = 2 + next_count;
 
-        if (cost_a <= cost_b)
-            /* next block type n+1 is not smaller - use block type n */
+        if (cost_b >= cost_a)
+            /* block type n+1 is equally or more expensive - use type n */
             break;
 
         /* we proceed with type n+1 - we already calculated its population */
