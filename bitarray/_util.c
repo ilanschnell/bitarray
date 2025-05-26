@@ -1386,10 +1386,10 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
      Hence, if the bit count of the first 32 bytes of the bitarray buffer
      is greater or equal to 32, we choose a raw block (type 0).
 
-     Arguably, n index bytes always take up as much space as n raw bytes.
-     So why did we pick 32 here?  We pick 32, as a bitarray with a 32 byte
-     buffer has 256 items (bits), and these 256 bits can be addressed using
-     one index byte.  That is, BSI(1) = 32, see above.
+   - Arguably, n index bytes always take up as much space as n raw bytes.
+     So what makes 32 special here?  A bitarray with a 32 byte buffer has
+     256 items (bits), and these 256 bits can be addressed using one
+     index byte.  That is, BSI(1) = 32, see above.
      This is also the reason, why the index count of type 1 blocks is limited
      to below 32.
 
