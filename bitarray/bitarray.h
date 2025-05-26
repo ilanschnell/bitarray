@@ -30,7 +30,7 @@
 
 /* Py_UNREACHABLE was introduced in Python 3.7 */
 #ifndef Py_UNREACHABLE
-#define Py_UNREACHABLE() abort()
+#define Py_UNREACHABLE()  assert(0)
 #endif
 
 /* --- bitarrayobject --- */
