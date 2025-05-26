@@ -1113,7 +1113,7 @@ byte_length(Py_ssize_t i)
    to a sparse block of type n, is given by BSI(n).  Using 1 byte we can
    index 256 bits which have a decoded block size of 32 bytes:
 
-       BSI(1) = 32
+       BSI(1) = 32                         (BSI = Buffer Size Indexable)
 
    Moving from block type n to n + 1 multiplies the decoded block size
    by a factor of 256 (as the extra byte can index 256 times as much):
@@ -1340,6 +1340,7 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
                 }
             }
         }
+        Py_UNREACHABLE();
     next_segment:
         m++;
     }
