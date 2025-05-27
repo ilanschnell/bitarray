@@ -530,6 +530,7 @@ byteswap(PyObject *module, PyObject *args)
 
     PyBuffer_Release(&view);
     Py_RETURN_NONE;
+
  error:
     PyBuffer_Release(&view);
     return NULL;
@@ -1516,13 +1517,12 @@ sc_encode(PyObject *module, PyObject *obj)
     /* encode blocks as long as we haven't reached the end of the bitarray
        and haven't reached the total population count yet */
     while (offset < Py_SIZE(a) && rts[offset / SEGSIZE] != total) {
-        Py_ssize_t allocated;   /* size (in bytes) of output buffer */
+        Py_ssize_t allocated = PyBytes_GET_SIZE(out);
 
-        /* Make sure we have enough space in output buffer for next block.
+        /* Make sure we have enough memory in output buffer for next block.
            The largest block possible is a type 0 block with 128 segments.
            It's size is: 1 head bytes + 128 * 32 raw bytes.
            Plus, we also may have the stop byte. */
-        allocated = PyBytes_GET_SIZE(out);
         if (allocated < len + 1 + 128 * 32 + 1) {  /* increase allocation */
             if (_PyBytes_Resize(&out, allocated + 32768) < 0)
                 goto error;
