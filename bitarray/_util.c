@@ -1257,13 +1257,12 @@ sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
     return rts[j] - rts[i];
 }
 
-/* Calculate number of bytes [1..4096] of the raw block starting at offset,
-   encode the block (write the header and copy the bytes into the encode
-   buffer str), and return the number of raw bytes.
+/* Write a raw block, and return number of bytes copied.
+   Note that the encoded block size is the return value + 1 (the head byte).
+
    The header byte is in range(0x01, 0xa0).
-   range(0x01, 0x20) refers to number of raw bytes directly.
-   range(0x20, 0xa0) refers to number of (32 byte) segments.
-   Note that the encoded block size is the return value + 1. */
+     * range(0x01, 0x20) refers to number of raw bytes directly
+     * range(0x20, 0xa0) refers to 32-byte segments */
 static int
 sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
 {
@@ -1346,7 +1345,7 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
     Py_UNREACHABLE();
 }
 
-/* Write one sparse block (from 'offset', and up to 'k' one bits) of type 'n'.
+/* Write a sparse block (from 'offset', and up to 'k' one bits) of type 'n'.
    Return number of bytes written to buffer 'str' (encoded block size).
    Note that the decoded block size is always BSI(n). */
 static Py_ssize_t
