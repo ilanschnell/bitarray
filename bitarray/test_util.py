@@ -1481,9 +1481,10 @@ class SC_Tests(unittest.TestCase, Util):
             m = 2                                # head byte and stop byte
             m += bits2bytes(nbits.bit_length())  # size bytes
             nbytes = bits2bytes(nbits)
-            m += (nbytes // 32 + 127) // 128  # number of blocks (head bytes)
-            m += bool(nbytes % 32)            # block type 0 range(1, 32)
             m += nbytes                       # actual raw bytes
+            # number of head bytes, all of block type 0:
+            m += bool(nbytes % 32)            # number in 0x01 .. 0x1f
+            m += (nbytes // 32 + 127) // 128  # number in 0x20 .. 0xbf
             self.assertEqual(m, len(sc_encode(a)))
             self.round_trip(a)
 
