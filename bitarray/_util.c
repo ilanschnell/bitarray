@@ -1272,9 +1272,9 @@ sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
     assert(nbytes > 0);
     if (k == 32) {
         /* The first 32 bytes are better represented using raw bytes.
-           Now check up to the next 127 segments. */
-        while (k < 32 * 128 && k + 32 <= nbytes &&
-               32 <= sc_count(a, rts, offset + k, 1))
+           Now check up to the next 127 (32-byte) segments. */
+        Py_ssize_t kmax = Py_MIN(32 * 128, nbytes);
+        while (k + 32 <= kmax && sc_count(a, rts, offset + k, 1) >= 32)
             k += 32;
     }
     assert(0 < k && k <= 32 * 128 && k <= nbytes);
