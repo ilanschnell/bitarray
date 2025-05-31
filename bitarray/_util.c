@@ -1261,8 +1261,8 @@ sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
    Note that the encoded block size is the return value + 1 (the head byte).
 
    The header byte is in range(0x01, 0xa0).
-     * range(0x01, 0x20) refers to number of raw bytes directly
-     * range(0x20, 0xa0) refers to 32-byte segments */
+     * range(0x01, 0x20) number of raw bytes
+     * range(0x20, 0xa0) number of 32-byte segments */
 static int
 sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
 {
@@ -1273,7 +1273,7 @@ sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
     if (k == 32) {
         /* The first 32 bytes are better represented using raw bytes.
            Now check up to the next 127 (32-byte) segments. */
-        Py_ssize_t kmax = Py_MIN(32 * 128, nbytes);
+        const Py_ssize_t kmax = Py_MIN(32 * 128, nbytes);
         while (k + 32 <= kmax && sc_count(a, rts, offset + k, 1) >= 32)
             k += 32;
     }
