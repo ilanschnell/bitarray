@@ -1343,7 +1343,7 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
     Py_UNREACHABLE();
 }
 
-/* Write a sparse block (from 'offset', and up to 'k' one bits) of type 'n'.
+/* Write a sparse block of type 'n' with 'k' indices.
    Return number of bytes written to buffer 'str' (encoded block size).
    Note that the decoded block size is always BSI(n). */
 static Py_ssize_t
