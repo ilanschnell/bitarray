@@ -965,7 +965,11 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 static PyObject *
 bitarray_all(bitarrayobject *self)
 {
-    return PyBool_FromLong(find_bit(self, 0, 0, self->nbits, 0) == -1);
+    Py_ssize_t errind = -1;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    errind = find_bit(self, 0, 0, self->nbits, 0);
+    Py_END_CRITICAL_SECTION();
+    return PyBool_FromLong( errind == -1);
 }
 
 PyDoc_STRVAR(all_doc,
@@ -978,7 +982,11 @@ Note that `a.all()` is faster than `all(a)`.");
 static PyObject *
 bitarray_any(bitarrayobject *self)
 {
-    return PyBool_FromLong(find_bit(self, 1, 0, self->nbits, 0) >= 0);
+    Py_ssize_t errind = -1;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    errind = find_bit(self, 1, 0, self->nbits, 0);
+    Py_END_CRITICAL_SECTION();
+    return PyBool_FromLong(errind >= 0);
 }
 
 PyDoc_STRVAR(any_doc,
