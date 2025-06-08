@@ -784,7 +784,7 @@ class ZLW_Tests(unittest.TestCase, Util):
 
     def test_random(self):
         for n in range(200):
-            a =  urandom_2(n)
+            a = urandom_2(n)
             b = _zlw(a)
             nw = 64 * (n // 64)  # bits in complete words
             m = n % 64
@@ -2124,12 +2124,13 @@ class RichCompareTests(unittest.TestCase, Util):
         ]:
             a = bitarray(sa, self.random_endian())
             b = bitarray(sb, self.random_endian())
-            self.assertEqual(a == b, int(res[0]))
-            self.assertEqual(a != b, int(res[1]))
-            self.assertEqual(a >= b, int(res[2]))
-            self.assertEqual(a >  b, int(res[3]))
-            self.assertEqual(a <= b, int(res[4]))
-            self.assertEqual(a <  b, int(res[5]))
+            r = bitarray(res)
+            self.assertEqual(a == b, r[0])
+            self.assertEqual(a != b, r[1])
+            self.assertEqual(a >= b, r[2])
+            self.assertEqual(a >  b, r[3])
+            self.assertEqual(a <= b, r[4])
+            self.assertEqual(a <  b, r[5])
 
     def test_eq_ne(self):
         for _ in range(5):
@@ -3045,7 +3046,6 @@ class InvertTests(unittest.TestCase, Util):
         for a in self.randombitarrays(start=1):
             n = len(a)
             b = a.copy()
-            c = a.copy()
             i = randint(-n, n - 1)
             a[i] = not a[i]
             b.invert(i)

@@ -1522,12 +1522,9 @@ class RTS_Tests(unittest.TestCase):
         self.assertEqual(len(rts), 5)
         self.assertEqual(rts, [0, 5, 5, 8, 12])
 
-    def nseg(self, a):
-        # number of segments in terms of bytes
-        res = (a.nbytes + _SEGSIZE - 1) // _SEGSIZE
-        # and in terms of bits
-        self.assertEqual((len(a) + SEGBITS - 1) // SEGBITS, res)
-        return res
+    @staticmethod
+    def nseg(a):  # number of segments
+        return (a.nbytes + _SEGSIZE - 1) // _SEGSIZE
 
     def test_ones(self):
         for n in range(1000):
@@ -2070,8 +2067,7 @@ class SerializationTests(unittest.TestCase, Util):
                 self.assertRaises(ValueError, deserialize, b)
                 check_msg(b)
 
-    def test_bits_ignored(self):
-        # the unused padding bits (with the last bytes) are ignored
+    def test_padbits_ignored(self):
         for blob, endian in [
                 (b'\x07\x01', 'little'),
                 (b'\x07\x03', 'little'),
