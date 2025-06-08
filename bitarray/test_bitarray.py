@@ -87,7 +87,8 @@ class Util(object):
     def random_endian():
         return choice(['little', 'big'])
 
-    def randombitarrays(self, start=0):
+    @staticmethod
+    def randombitarrays(start=0):
         for n in range(start, 10):
             yield urandom_2(n)
         for _ in range(3):
@@ -161,7 +162,8 @@ class Util(object):
         self.assertEqual(type(a).__name__, b)
         self.assertEqual(repr(type(a)), "<%s 'bitarray.%s'>" % ('class', b))
 
-    def assertRaisesMessage(self, excClass, msg, callable, *args, **kwargs):
+    @staticmethod
+    def assertRaisesMessage(excClass, msg, callable, *args, **kwargs):
         try:
             callable(*args, **kwargs)
             raise AssertionError("%s not raised" % excClass.__name__)
@@ -406,8 +408,7 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist(), [0, 0, 1, 0, 1, 1, 1])
             self.check_obj(a)
 
-        for n in range(50):
-            lst = [bool(getrandbits(1)) for d in range(n)]
+        for lst in self.randomlists():
             s = ''.join([['0', '1'][x] for x in lst])
             a = bitarray(s)
             self.assertEqual(a.tolist(), lst)
@@ -2667,7 +2668,9 @@ class NumberTests(unittest.TestCase, Util):
 
     def test_frozenbitarray(self):
         a = frozenbitarray('0010011')
-        self.assertEqual(a << 3, bitarray('0011000'))
+        b = a << 3
+        self.assertEqual(b, bitarray('0011000'))
+        self.assertIsInstance(b, frozenbitarray)
         self.assertRaises(TypeError, a.__ilshift__, 4)
 
     @skipIf(is_pypy)
@@ -3205,8 +3208,7 @@ class PackTests(unittest.TestCase, Util):
 
     def test_unpack_random(self):
         for a in self.randombitarrays():
-            self.assertEqual(a.unpack(b'0', b'1'),
-                             a.to01().encode())
+            self.assertEqual(a.unpack(b'0', b'1'), a.to01().encode())
             # round trip
             b = bitarray()
             b.pack(a.unpack())
