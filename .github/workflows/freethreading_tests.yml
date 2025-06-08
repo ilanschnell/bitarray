@@ -40,6 +40,7 @@ jobs:
       - name: Editable build
         run: |
           uv pip install -v -e .
+          python -m pip install unittest-ft
       - name: Run Tests
         run: |
-          uv run --no-project python -m unittest-ft -r -f -s bitarray.test_bitarray
+          unittest-ft -r -f -s bitarray.test_bitarray
