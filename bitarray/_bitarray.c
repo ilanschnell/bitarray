@@ -4335,5 +4335,9 @@ PyInit__bitarray(void)
     PyModule_AddObject(m, "__version__",
                        PyUnicode_FromString(BITARRAY_VERSION));
 
+#ifdef Py_GIL_DISABLED
+    PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED);
+#endif
+
     return m;
 }

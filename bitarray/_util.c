@@ -2105,5 +2105,9 @@ PyInit__util(void)
     PyModule_AddObject(m, "_SEGSIZE", PyLong_FromSsize_t(SEGSIZE));
 #endif
 
+#ifdef Py_GIL_DISABLED
+    PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED);
+#endif
+
     return m;
 }
