@@ -1472,6 +1472,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
     return BSI(n);
 }
 
+/* write header and return number or bytes written to buffer 'str' */
 static int
 sc_encode_header(char *str, bitarrayobject *a)
 {
@@ -1520,7 +1521,7 @@ sc_encode(PyObject *module, PyObject *obj)
            The largest block possible is a type 0 block with 128 segments.
            It's size is: 1 head bytes + 128 * 32 raw bytes.
            Plus, we also may have the stop byte. */
-        if (allocated < len + 1 + 128 * 32 + 1) {  /* increase allocation */
+        if (allocated < len + 1 + 128 * 32 + 1) {
             if (_PyBytes_Resize(&out, allocated + 32768) < 0)
                 goto error;
             str = PyBytes_AS_STRING(out);
@@ -1548,6 +1549,8 @@ This representation is useful for efficiently storing sparse bitarrays.\n\
 Use `sc_decode()` for decompressing (decoding).");
 
 
+/* read header from 'iter' and set 'endian' and 'nbits', return 0 on success
+   and -1 of failure (after setting exception) */
 static int
 sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
 {
