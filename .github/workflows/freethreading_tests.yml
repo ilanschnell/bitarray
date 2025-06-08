@@ -42,4 +42,4 @@ jobs:
           uv pip install -v -e .
       - name: Run Tests
         run: |
-          uv run --no-project python -m unittest-ft bitarray.test_bitarray
+          uv run --no-project python -m unittest-ft -r -f -s bitarray.test_bitarray
