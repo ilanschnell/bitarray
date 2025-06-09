@@ -540,7 +540,7 @@ PyDoc_STRVAR(byteswap_doc,
 Reverse every `n` consecutive bytes of `a` in-place.\n\
 By default, all bytes are reversed.  Note that `n` is not limited to 2, 4\n\
 or 8, but can be any positive integer.\n\
-Also, `a` may be any object that exposes a writeable buffer.\n\
+Also, `a` may be any object that exposes a writable buffer.\n\
 Nothing about this function is specific to bitarray objects.");
 
 /* ---------------------------- serialization -------------------------- */
@@ -1100,7 +1100,7 @@ byte_length(Py_ssize_t i)
     return n;
 }
 
-/* ---------------------  sparse bitarray compression  -----------------
+/***********************  sparse bitarray compression  *****************
  *
  * see also: doc/sparse_compression.rst
  */
@@ -1419,7 +1419,7 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
          As n >= 1, the header_size will is always 2 bytes here.
 
    - As we only need to know which of these sizes is bigger, we can
-     substract (n * population) from both sizes.  Hence, the costs are:
+     subtract (n * population) from both sizes.  Hence, the costs are:
        (a)  header_size * number_of_blocks
        (b)  header_size + population
 

@@ -154,5 +154,5 @@ See `variable length format <./variable_length.rst>`__ for this representation.
 
 Another representation
 are `compressed sparse bitarrays <./sparse_compression.rst>`,
-whos format is also "self terminating", but only efficient for large sparsely
+whose format is also "self terminating", but only efficient for large sparsely
 populated bitarrays.

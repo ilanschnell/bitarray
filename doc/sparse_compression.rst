@@ -51,7 +51,7 @@ The encoding algorithm starts at the front of the ``bitarray``, inspects
 the population and decides which block type to use to encode the following
 bits.  Once the first block is written, the algorithm moves on to inspecting
 the remaining population, and so on.
-This way, a large bitarray with densly and sparsely populated areas will
+This way, a large bitarray with densely and sparsely populated areas will
 be compressed efficiently using different block types.
 
 The binary blob consists of a header which encodes the bit-endianness and the

@@ -211,7 +211,7 @@ class SegmentTests(unittest.TestCase):
 
             # The number of complete segments cannot be calculated in terms
             # of bytes, as it isn't possible to tell how many bits are
-            # actually in use by the last byte in each segment
+            # actually used within the last byte of each segment.
             if (nbits % SEGBITS > SEGBITS - 8):
                 self.assertNotEqual(nbytes // SEGSIZE, cseg)
             else:

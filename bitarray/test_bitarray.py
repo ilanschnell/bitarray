@@ -315,7 +315,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.check_obj(a)
 
     @skipIf(is_pypy)
-    def test_buffer_writeable(self):
+    def test_buffer_writable(self):
         a = bitarray(buffer=bytearray([65]))
         self.assertFalse(a.readonly)
         a[6] = 1
