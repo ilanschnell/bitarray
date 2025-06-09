@@ -325,7 +325,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int k)
 
    Notes:
      - self and other may have opposite bit-endianness
-     - other may equal self - copy a section of self onto ifself
+     - other may equal self - copy a section of self onto itself
      - when other and self are distinct objects, their buffers
        may not overlap
 */
@@ -471,7 +471,7 @@ invert_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
             buff[i] = ~buff[i];
         invert_span(self, 8 * cb, b);
     }
-    else {
+    else {                                    /* (bit-) range(a, b) */
         for (i = a; i < b; i++)
             self->ob_item[i / 8] ^= BITMASK(self, i);
     }
@@ -515,7 +515,7 @@ set_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int vi)
         memset(self->ob_item + ca, vi ? 0xff : 0x00, (size_t) (cb - ca));
         set_span(self, 8 * cb, b, vi);
     }
-    else {
+    else {                               /* (bit-) range(a, b) */
         while (a < b)
             setbit(self, a++, vi);
     }
@@ -583,7 +583,7 @@ count_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         }
         cnt += count_span(self, 8 * cb, b);
     }
-    else {
+    else {                                /* (bit-) range(a, b) */
         while (a < b)
             cnt += getbit(self, a++);
     }
