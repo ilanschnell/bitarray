@@ -728,7 +728,7 @@ of `group` characters, default is a space.");
 
 
 /* Translate hexadecimal digits from 'hexstr' into the bitarray 'a' buffer,
-   which must be initalized to zeros.
+   which must be initialized to zeros.
    Each digit corresponds to 4 bits in the bitarray.
    Note that the number of hexadecimal digits may be odd. */
 static int
@@ -1019,8 +1019,8 @@ standard base 64 alphabet is used.  Whitespace is ignored.");
 
 /* ------------------------ utility C functions ------------------------ */
 
-/* Consume one byte from iteratior and return it's value as an integer
-   in range(256).  On failure, set an exception and return -1.  */
+/* Consume one byte from iterator and return it's value as an integer
+   in range(256).  On failure, set an exception and return -1. */
 static int
 next_char(PyObject *iter)
 {
