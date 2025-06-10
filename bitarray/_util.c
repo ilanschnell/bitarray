@@ -240,7 +240,7 @@ count_n(PyObject *module, PyObject *args)
     }
     if (n > a->nbits)
         return PyErr_Format(PyExc_ValueError, "n = %zd larger than bitarray "
-                            "size (len(a) = %zd)", n, a->nbits);
+                            "length %zd", n, a->nbits);
 
     i = count_n_core(a, n, vi);        /* do actual work here */
     if (i < 0)

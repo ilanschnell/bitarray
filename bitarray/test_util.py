@@ -300,7 +300,7 @@ class CountN_Tests(unittest.TestCase, Util):
         self.assertRaises(TypeError, count_n, a, 7.0)
         self.assertRaises(ValueError, count_n, a, 0, 2)
         self.assertRaisesMessage(ValueError, "n = 1 larger than bitarray "
-                                 "size (len(a) = 0)", count_n, a, 1)
+                                 "length 0", count_n, a, 1)
 
     def test_simple(self):
         a = bitarray('111110111110111110111110011110111110111110111000')
@@ -317,7 +317,7 @@ class CountN_Tests(unittest.TestCase, Util):
                                  count_n, a, -1, 0)
         # n > len(a)
         self.assertRaisesMessage(ValueError, "n = 49 larger than bitarray "
-                                 "size (len(a) = 48)", count_n, a, 49, 0)
+                                 "length 48", count_n, a, 49, 0)
         # n > a.count(0)
         self.assertRaisesMessage(ValueError, "n = 12 exceeds total count "
                                  "(a.count(0) = 11)",
@@ -332,7 +332,7 @@ class CountN_Tests(unittest.TestCase, Util):
                                  count_n, a, -1)
         # n > len(a)
         self.assertRaisesMessage(ValueError, "n = 49 larger than bitarray "
-                                 "size (len(a) = 48)", count_n, a, 49)
+                                 "length 48", count_n, a, 49)
         # n > a.count(1)
         self.assertRaisesMessage(ValueError, "n = 38 exceeds total count "
                                  "(a.count(1) = 37)", count_n, a, 38)
@@ -387,7 +387,7 @@ class CountN_Tests(unittest.TestCase, Util):
             self.assertEqual(a.count(), 1)
             self.assertEqual(count_n(a, 1), N)
             if N == 1:
-                msg = "n = 2 larger than bitarray size (len(a) = 1)"
+                msg = "n = 2 larger than bitarray length 1"
             else:
                 msg = "n = 2 exceeds total count (a.count(1) = 1)"
             self.assertRaisesMessage(ValueError, msg, count_n, a, 2)
