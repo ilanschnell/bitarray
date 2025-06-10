@@ -14,7 +14,7 @@ filesize = 10_000_000
 with open(filename, 'wb') as fo:
     fo.write(filesize * b'\0')
 
-# open the file in binary read-write mode for mapping into a bitarray
+# open file in binary read-write mode for mapping into bitarray
 with open(filename, 'r+b') as f:
     mapping = mmap.mmap(f.fileno(), 0)
     a = bitarray(buffer=mapping, endian='little')

@@ -74,7 +74,7 @@ count_from_word(bitarrayobject *a, Py_ssize_t i)
     return cnt;
 }
 
-/* basically resize() but without importing and exporting buffer checks */
+/* basically resize() but without buffer import and export checks */
 static int
 resize_lite(bitarrayobject *self, Py_ssize_t nbits)
 {

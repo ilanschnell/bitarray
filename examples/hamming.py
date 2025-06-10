@@ -39,7 +39,7 @@ class Hamming:
 
         if p:  # overall parity is wrong, so we have a 1 bit error
             return 1
-        if c:  # overall parity is ok, but since we have wrong partial
+        if c:  # overall parity is OK, but since we have wrong partial
                # parities, there must have been 2 bit errors
             return 2
         # overall parity as well as partial parities as fine, so no error
