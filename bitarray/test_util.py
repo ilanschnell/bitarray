@@ -309,21 +309,10 @@ class CountN_Tests(unittest.TestCase, Util):
         self.assertEqual(a.count(), 37)
         self.assertEqual(a.count(0), 11)
 
+        self.assertEqual(count_n(a, 0), 0)
         self.assertEqual(count_n(a, 0, 0), 0)
         self.assertEqual(count_n(a, 2, 0), 12)
         self.assertEqual(count_n(a, 10, 0), 47)
-        # n < 0
-        self.assertRaisesMessage(ValueError, "non-negative integer expected",
-                                 count_n, a, -1, 0)
-        # n > len(a)
-        self.assertRaisesMessage(ValueError, "n = 49 larger than bitarray "
-                                 "length 48", count_n, a, 49, 0)
-        # n > a.count(0)
-        self.assertRaisesMessage(ValueError, "n = 12 exceeds total count "
-                                 "(a.count(0) = 11)",
-                                 count_n, a, 12, 0)
-
-        self.assertEqual(count_n(a, 0), 0)
         self.assertEqual(count_n(a, 20), 23)
         self.assertEqual(count_n(a, 20, 1), 23)
         self.assertEqual(count_n(a, 37), 45)
@@ -333,9 +322,12 @@ class CountN_Tests(unittest.TestCase, Util):
         # n > len(a)
         self.assertRaisesMessage(ValueError, "n = 49 larger than bitarray "
                                  "length 48", count_n, a, 49)
+        # n > a.count(0)
+        self.assertRaisesMessage(ValueError, "n = 12 exceeds total count "
+                                 "(a.count(0) = 11)", count_n, a, 12, 0)
         # n > a.count(1)
         self.assertRaisesMessage(ValueError, "n = 38 exceeds total count "
-                                 "(a.count(1) = 37)", count_n, a, 38)
+                                 "(a.count(1) = 37)", count_n, a, 38, 1)
 
         for v in 0, 1:
             for n in range(a.count(v) + 1):
@@ -345,7 +337,7 @@ class CountN_Tests(unittest.TestCase, Util):
                 self.assertEqual(i, self.count_n(a if v else ~a, n))
         self.assertEQUAL(a, b)
 
-    def test_frozen(self):
+    def test_frozenbitarray(self):
         a = frozenbitarray('001111101111101111101111100111100')
         self.assertEqual(len(a), 33)
         self.assertEqual(a.count(), 24)
@@ -384,7 +376,6 @@ class CountN_Tests(unittest.TestCase, Util):
         for N in range(1, 1000):
             a = zeros(N)
             a[-1] = 1
-            self.assertEqual(a.count(), 1)
             self.assertEqual(count_n(a, 1), N)
             if N == 1:
                 msg = "n = 2 larger than bitarray length 1"
@@ -411,15 +402,6 @@ class CountN_Tests(unittest.TestCase, Util):
                 n = randint(0, tc)
                 i = count_n(a, n, v)
                 self.check_result(a, n, i, v)
-
-    def test_random(self):
-        for a in self.randombitarrays():
-            v = getrandbits(1)
-            n = a.count(v) // 2
-            i = count_n(a, n, v)
-            self.check_result(a, n, i, v)
-            # n = 0 -> count_n always 0
-            self.assertEqual(count_n(a, 0, v), 0)
 
 # ---------------------------------------------------------------------------
 
