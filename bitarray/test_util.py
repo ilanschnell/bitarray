@@ -351,7 +351,7 @@ class CountN_Tests(unittest.TestCase, Util):
             self.check_result(a, n, count_n(a, n))
 
     def test_ones(self):
-        n = randint(1, 100000)
+        n = randint(1, 100_000)
         a = ones(n)
         self.assertEqual(count_n(a, n), n)
         self.assertRaises(ValueError, count_n, a, 1, 0)
@@ -361,7 +361,7 @@ class CountN_Tests(unittest.TestCase, Util):
             self.assertEqual(count_n(a, i), i)
 
     def test_one_set(self):
-        n = randint(1, 100000)
+        n = randint(1, 100_000)
         a = zeros(n)
         self.assertEqual(count_n(a, 0), 0)
         self.assertRaises(ValueError, count_n, a, 1)
@@ -385,7 +385,7 @@ class CountN_Tests(unittest.TestCase, Util):
 
     def test_large(self):
         for _ in range(100):
-            N = randint(100000, 250000)
+            N = randint(100_000, 250_000)
             a = bitarray(N)
             v = getrandbits(1)
             a.setall(not v)
