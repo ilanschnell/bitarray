@@ -277,7 +277,7 @@ state_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (!PyArg_ParseTuple(args, "OO:State", &in, &out))
         return NULL;
 
-    if (!PyObject_TypeCheck((in), bitarray_type)) {
+    if (!PyObject_TypeCheck(in, bitarray_type)) {
         PyErr_SetString(PyExc_TypeError, "bitarray expected");
         return NULL;
     }
