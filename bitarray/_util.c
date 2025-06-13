@@ -510,11 +510,10 @@ byteswap(PyObject *module, PyObject *args)
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE | PyBUF_WRITABLE) < 0)
         return NULL;
 
-    if (n == 0) {
-        n = view.len;
-        if (n == 0)  /* avoid division by zero below */
-            Py_RETURN_NONE;
-    }
+    if (n == 0)
+        /* avoid division by zero below when view.len = 0 */
+        n = Py_MAX(1, view.len);
+
     if (n < 1) {
         PyErr_Format(PyExc_ValueError, "positive int expect, got %zd", n);
         goto error;
