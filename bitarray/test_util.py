@@ -679,10 +679,13 @@ class ByteswapTests(unittest.TestCase, Util):
         byteswap(a)
         self.assertEqual(a, bitarray("01010101 11110000"))
 
-        a = bitarray("11110000 1111")
+        a = bitarray("01111000 1001")
+        b = a.copy()
+        a.tobytes()  # clear padbits
         byteswap(a)
+        self.assertEqual(a, bitarray("10010000 0111"))
         byteswap(a)
-        self.assertEqual(a, bitarray("11110000 1111"))
+        self.assertEqual(a, b)
 
     def test_basic_array(self):
         r = os.urandom(64)
