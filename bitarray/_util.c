@@ -652,7 +652,8 @@ is_whitespace(char c)
         return 0;
 }
 
-/* create hexadecimal string from bitarray */
+/* return hexadecimal string from bitarray,
+   on failure set exception and return NULL */
 static char *
 ba2hex_core(bitarrayobject *a, Py_ssize_t group, char *sep)
 {
@@ -666,9 +667,10 @@ ba2hex_core(bitarrayobject *a, Py_ssize_t group, char *sep)
         strsize += nsep * ((strsize - 1) / group);
 
     str = PyMem_New(char, strsize + 1);
-    if (str == NULL)
+    if (str == NULL) {
+        PyErr_NoMemory();
         return NULL;
-
+    }
     for (i = j = 0; i < a->nbits / 4; i++) {
         unsigned char c = buff[i / 2];
 
@@ -708,8 +710,9 @@ ba2hex(PyObject *module, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
-    if ((str = ba2hex_core(a, group, sep)) == NULL)
-        return PyErr_NoMemory();
+    str = ba2hex_core(a, group, sep);
+    if (str == NULL)
+        return NULL;
 
     result = PyUnicode_FromString(str);
     PyMem_Free((void *) str);
@@ -845,7 +848,8 @@ base_to_length(int n)
     return -1;
 }
 
-/* create ASCII string from bitarray and base length m */
+/* return ASCII string from bitarray and base length m,
+   on failure set exception and return NULL */
 static char *
 ba2base_core(bitarrayobject *a, int m, Py_ssize_t group, char *sep)
 {
@@ -868,9 +872,10 @@ ba2base_core(bitarrayobject *a, int m, Py_ssize_t group, char *sep)
         strsize += nsep * ((strsize - 1) / group);
 
     str = PyMem_New(char, strsize + 1);
-    if (str == NULL)
+    if (str == NULL) {
+        PyErr_NoMemory();
         return NULL;
-
+    }
     for (i = j = 0; i < a->nbits / m; i++) {
         int k, x = 0;
 
@@ -925,7 +930,7 @@ ba2base(PyObject *module, PyObject *args, PyObject *kwds)
         str = ba2base_core(a, m, group, sep);
 
     if (str == NULL)
-        return PyErr_NoMemory();
+        return NULL;
 
     result = PyUnicode_FromString(str);
     PyMem_Free((void *) str);
