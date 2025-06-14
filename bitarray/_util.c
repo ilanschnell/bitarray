@@ -507,6 +507,10 @@ byteswap(PyObject *module, PyObject *args)
     if (!PyArg_ParseTuple(args, "O|n:byteswap", &buffer, &n))
         return NULL;
 
+    if (n < 0)
+        return PyErr_Format(PyExc_ValueError,
+                            "positive int expect, got %zd", n);
+
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE | PyBUF_WRITABLE) < 0)
         return NULL;
 
@@ -514,24 +518,17 @@ byteswap(PyObject *module, PyObject *args)
         /* avoid division by zero below when view.len = 0 */
         n = Py_MAX(1, view.len);
 
-    if (n < 1) {
-        PyErr_Format(PyExc_ValueError, "positive int expect, got %zd", n);
-        goto error;
-    }
     if (view.len % n) {
         PyErr_Format(PyExc_ValueError, "buffer size %zd not multiple of %zd",
                      view.len, n);
-        goto error;
+        PyBuffer_Release(&view);
+        return NULL;
     }
 
     byteswap_core(view, n);
 
     PyBuffer_Release(&view);
     Py_RETURN_NONE;
-
- error:
-    PyBuffer_Release(&view);
-    return NULL;
 }
 
 PyDoc_STRVAR(byteswap_doc,
@@ -1504,8 +1501,7 @@ sc_encode(PyObject *module, PyObject *obj)
     if ((rts = sc_rts(a)) == NULL)
         return NULL;
 
-    out = PyBytes_FromStringAndSize(NULL, 32768);
-    if (out == NULL)
+    if ((out = PyBytes_FromStringAndSize(NULL, 32768)) == NULL)
         goto error;
 
     str = PyBytes_AS_STRING(out);
@@ -1666,8 +1662,7 @@ sc_decode(PyObject *module, PyObject *obj)
     Py_ssize_t offset = 0, increase, nbits;
     int endian;
 
-    iter = PyObject_GetIter(obj);
-    if (iter == NULL)
+    if ((iter = PyObject_GetIter(obj)) == NULL)
         return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
                             Py_TYPE(obj)->tp_name);
 
@@ -1675,8 +1670,7 @@ sc_decode(PyObject *module, PyObject *obj)
         goto error;
 
     /* create bitarray of length nbits */
-    a = new_bitarray(nbits, Py_None, 0);
-    if (a == NULL)
+    if ((a = new_bitarray(nbits, Py_None, 0)) == NULL)
         goto error;
     a->endian = endian;
 
