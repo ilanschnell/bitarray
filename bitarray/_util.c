@@ -1024,8 +1024,7 @@ next_char(PyObject *iter)
     PyObject *item;
     Py_ssize_t v;
 
-    item = PyIter_Next(iter);
-    if (item == NULL) {
+    if ((item = PyIter_Next(iter)) == NULL) {
         if (PyErr_Occurred())   /* from PyIter_Next() */
             return -1;
         PyErr_SetString(PyExc_StopIteration, "unexpected end of stream");
@@ -1564,9 +1563,8 @@ sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
     len = head & 0x0f;
 
     if (len > (int) sizeof(Py_ssize_t)) {
-        PyErr_Format(PyExc_OverflowError,
-                     "sizeof(Py_ssize_t) = %d: cannot read %d bytes",
-                     (int) sizeof(Py_ssize_t), len);
+        PyErr_Format(PyExc_OverflowError, "sizeof(Py_ssize_t) = %d: cannot "
+                     "read %d bytes", (int) sizeof(Py_ssize_t), len);
         return -1;
     }
     if ((*nbits = read_n(iter, len)) < 0)
