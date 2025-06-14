@@ -665,7 +665,8 @@ ba2hex_core(bitarrayobject *a, Py_ssize_t group, char *sep)
     if (nsep)
         strsize += nsep * ((strsize - 1) / group);
 
-    if ((str = (char *) PyMem_Malloc(strsize + 1)) == NULL)
+    str = PyMem_New(char, strsize + 1);
+    if (str == NULL)
         return NULL;
 
     for (i = j = 0; i < a->nbits / 4; i++) {
@@ -866,7 +867,8 @@ ba2base_core(bitarrayobject *a, int m, Py_ssize_t group, char *sep)
     if (nsep)
         strsize += nsep * ((strsize - 1) / group);
 
-    if ((str = (char *) PyMem_Malloc(strsize + 1)) == NULL)
+    str = PyMem_New(char, strsize + 1);
+    if (str == NULL)
         return NULL;
 
     for (i = j = 0; i < a->nbits / m; i++) {
@@ -1179,8 +1181,7 @@ sc_rts(bitarrayobject *a)
     Py_ssize_t *res, m;
 
     memset(zeros, 0x00, SEGSIZE);
-    res = (Py_ssize_t *) PyMem_Malloc((size_t) sizeof(Py_ssize_t) *
-                                      (n_seg + 1));
+    res = PyMem_New(Py_ssize_t, n_seg + 1);
     if (res == NULL) {
         PyErr_NoMemory();
         return NULL;

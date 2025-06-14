@@ -1426,13 +1426,7 @@ bitarray_repr(bitarrayobject *self)
         return PyUnicode_FromString("bitarray()");
 
     strsize = nbits + 12;  /* 12 is the length of "bitarray('')" */
-    if (strsize > PY_SSIZE_T_MAX) {
-        PyErr_SetString(PyExc_OverflowError,
-                        "bitarray too large to represent");
-        return NULL;
-    }
-
-    str = (char *) PyMem_Malloc(strsize);
+    str = PyMem_New(char, strsize);
     if (str == NULL)
         return PyErr_NoMemory();
 
@@ -1719,13 +1713,8 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
     if (nsep)
         strsize += nsep * ((strsize - 1) / group);
 
-    if (strsize > PY_SSIZE_T_MAX) {
-        PyErr_SetString(PyExc_OverflowError,
-                        "bitarray too large to convert to 'str'");
-        return NULL;
-    }
-
-    if ((str = (char *) PyMem_Malloc(strsize)) == NULL)
+    str = PyMem_New(char, strsize);
+    if (str == NULL)
         return PyErr_NoMemory();
 
     for (i = j = 0; i < self->nbits; i++) {
@@ -2913,7 +2902,7 @@ binode_new(void)
 {
     binode *nd;
 
-    nd = (binode *) PyMem_Malloc(sizeof(binode));
+    nd = PyMem_New(binode, 1);
     if (nd == NULL) {
         PyErr_NoMemory();
         return NULL;
@@ -3666,7 +3655,7 @@ newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
     obj->weakreflist = NULL;
     obj->readonly = view.readonly;
 
-    obj->buffer = (Py_buffer *) PyMem_Malloc(sizeof(Py_buffer));
+    obj->buffer = PyMem_New(Py_buffer, 1);
     if (obj->buffer == NULL) {
         PyObject_Del(obj);
         PyBuffer_Release(&view);
