@@ -863,10 +863,9 @@ static int
 extend_unicode01(bitarrayobject *self, PyObject *unicode)
 {
     const Py_ssize_t nbits = self->nbits;
-    Py_ssize_t i = nbits;  /* current index in self */
-    Py_ssize_t length, j;
+    const Py_ssize_t length = PyUnicode_GET_LENGTH(unicode);
+    Py_ssize_t i = nbits, j;  /* i is the current index in self */
 
-    length = PyUnicode_GET_LENGTH(unicode);
     if (resize(self, nbits + length) < 0)
         return -1;
 
