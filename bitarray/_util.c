@@ -643,15 +643,6 @@ hex_to_int(char c)
     return -1;
 }
 
-static int
-is_whitespace(char c)
-{
-    if (c)
-        return strchr(" \n\r\t\v", c) ? 1 : 0;
-    else  /* NUL character is not whitespace */
-        return 0;
-}
-
 /* return hexadecimal string from bitarray,
    on failure set exception and return NULL */
 static char *
@@ -746,7 +737,7 @@ hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
         int x = hex_to_int(c);
 
         if (x < 0) {
-            if (is_whitespace(c))
+            if (Py_UNICODE_ISSPACE(c))
                 continue;
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
                          "base16, got '%c' (0x%02x)", c, c);
@@ -964,7 +955,7 @@ base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
         int k, x = digit_to_int(m, c);
 
         if (x < 0) {
-            if (is_whitespace(c))
+            if (Py_UNICODE_ISSPACE(c))
                 continue;
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
                          "base%d, got '%c' (0x%02x)", 1 << m, c, c);

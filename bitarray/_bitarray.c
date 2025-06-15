@@ -870,23 +870,20 @@ extend_unicode01(bitarrayobject *self, PyObject *unicode)
         return -1;
 
     for (j = 0; j < length; j++) {
-        Py_UCS4 c = PyUnicode_READ_CHAR(unicode, j);
-        switch (c) {
+        Py_UCS4 ch = PyUnicode_READ_CHAR(unicode, j);
+        if (Py_UNICODE_ISSPACE(ch))
+            continue;
+        switch (ch) {
         case '0':
         case '1':
-            setbit(self, i++, c - '0');
+            setbit(self, i++, ch - '0');
             break;
         case '_':
-        case ' ':
-        case '\n':
-        case '\r':
-        case '\t':
-        case '\v':
             break;
         default:
             PyErr_Format(PyExc_ValueError, "expected '0' or '1' "
                          "(or whitespace, or underscore), got '%c' (0x%02x)",
-                         c, c);
+                         ch, ch);
             resize(self, nbits);  /* no bits added on error */
             return -1;
         }
