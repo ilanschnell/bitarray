@@ -877,9 +877,9 @@ extend_unicode01(bitarrayobject *self, PyObject *unicode)
         case '0':
         case '1':
             setbit(self, i++, ch - '0');
-            break;
+            continue;
         case '_':
-            break;
+            continue;
         default:
             PyErr_Format(PyExc_ValueError, "expected '0' or '1' "
                          "(or whitespace, or underscore), got '%c' (0x%02x)",
@@ -887,6 +887,7 @@ extend_unicode01(bitarrayobject *self, PyObject *unicode)
             resize(self, nbits);  /* no bits added on error */
             return -1;
         }
+        Py_UNREACHABLE();
     }
     return resize(self, i);  /* in case we ignored characters */
 }
