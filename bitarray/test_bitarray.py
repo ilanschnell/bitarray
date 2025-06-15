@@ -414,8 +414,9 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist(), lst)
             self.check_obj(a)
 
-        self.assertRaises(ValueError, bitarray, '01021')
-        self.assertRaises(ValueError, bitarray, '1\u26050')
+        self.assertRaises(ValueError, bitarray, '01021')        # UCS1
+        self.assertRaises(ValueError, bitarray, '1\u26050')     # UCS2
+        self.assertRaises(ValueError, bitarray, '0\U00010348')  # UCS4
 
     def test_string01_whitespace(self):
         a = bitarray(WHITESPACE)
