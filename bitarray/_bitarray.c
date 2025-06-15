@@ -864,45 +864,35 @@ extend_unicode01(bitarrayobject *self, PyObject *unicode)
 {
     const Py_ssize_t nbits = self->nbits;
     Py_ssize_t i = nbits;  /* current index in self */
-    Py_ssize_t strsize, j;
-    PyObject *bytes;
-    char *str;
-    int res = -1, vi = 0;
+    Py_ssize_t length, j;
 
-    assert(PyUnicode_Check(unicode));
-    if ((bytes = PyUnicode_AsASCIIString(unicode)) == NULL)
+    length = PyUnicode_GET_LENGTH(unicode);
+    if (resize(self, nbits + length) < 0)
         return -1;
 
-    str = PyBytes_AS_STRING(bytes);
-    strsize = PyBytes_GET_SIZE(bytes);
-    if (resize(self, nbits + strsize) < 0)
-        goto finish;
-
-    for (j = 0; j < strsize; j++) {
-        unsigned char c = str[j];
+    for (j = 0; j < length; j++) {
+        Py_UCS4 c = PyUnicode_READ_CHAR(unicode, j);
         switch (c) {
-        case '0': vi = 0; break;
-        case '1': vi = 1; break;
+        case '0':
+        case '1':
+            setbit(self, i++, c - '0');
+            break;
         case '_':
         case ' ':
         case '\n':
         case '\r':
         case '\t':
         case '\v':
-            continue;
+            break;
         default:
             PyErr_Format(PyExc_ValueError, "expected '0' or '1' "
                          "(or whitespace, or underscore), got '%c' (0x%02x)",
                          c, c);
             resize(self, nbits);  /* no bits added on error */
-            goto finish;
+            return -1;
         }
-        setbit(self, i++, vi);
     }
-    res = resize(self, i);  /* in case we ignored characters */
- finish:
-    Py_DECREF(bytes);  /* drop bytes */
-    return res;
+    return resize(self, i);  /* in case we ignored characters */
 }
 
 static int

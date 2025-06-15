@@ -415,7 +415,7 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.check_obj(a)
 
         self.assertRaises(ValueError, bitarray, '01021')
-        self.assertRaises(UnicodeEncodeError, bitarray, '1\u26050')
+        self.assertRaises(ValueError, bitarray, '1\u26050')
 
     def test_string01_whitespace(self):
         a = bitarray(WHITESPACE)
