@@ -1411,7 +1411,7 @@ bitarray_repr(bitarrayobject *self)
     if (nbits == 0)
         return PyUnicode_FromString("bitarray()");
 
-    strsize = nbits + 12;  /* 12 is the length of "bitarray('')" */
+    strsize = nbits + 12;  /* 12 is length of "bitarray('')" */
     str = PyMem_New(char, strsize);
     if (str == NULL)
         return PyErr_NoMemory();
@@ -1420,8 +1420,8 @@ bitarray_repr(bitarrayobject *self)
     for (i = 0; i < nbits; i++)
         str[i + 10] = getbit(self, i) + '0';
     str[strsize - 2] = '\'';
-    str[strsize - 1] = ')';     /* no terminating '\0' */
-
+    str[strsize - 1] = ')';
+    /* we know the string length beforehand - not null-terminated */
     result = PyUnicode_FromStringAndSize(str, strsize);
     PyMem_Free((void *) str);
     return result;
