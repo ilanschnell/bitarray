@@ -9,7 +9,7 @@ advantages and disadvantages.
 Binary representation
 ---------------------
 
-The most common representation of bitarrays is it's native binary string
+The most common representation of bitarrays is its native binary string
 representation, which is great for interactively analyzing bitarray objects:
 
 .. code-block:: python

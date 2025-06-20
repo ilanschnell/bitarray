@@ -7,7 +7,7 @@ from bitarray import bitarray
 class BloomFilter(object):
     """
     Implementation of a Bloom filter.  An instance is initialized by
-    it's capacity `n` and error rate `p`.  The capacity tells how many
+    its capacity `n` and error rate `p`.  The capacity tells how many
     elements can be stored while maintaining no more than `p` false
     positives.
     """

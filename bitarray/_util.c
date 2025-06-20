@@ -1014,7 +1014,7 @@ standard base 64 alphabet is used.  Whitespace is ignored.");
 
 /* ------------------------ utility C functions ------------------------ */
 
-/* Consume one byte from iterator and return it's value as an integer
+/* Consume one item from iterator and return its value as an integer
    in range(256).  On failure, set an exception and return -1. */
 static int
 next_char(PyObject *iter)
@@ -1151,7 +1151,7 @@ byte_length(Py_ssize_t i)
      * The last element rts[NSEG(self)] is always the total count.
        Here: rts[NSEG(self)] = rts[4] = 12
 
-     * The last segment may be partial.  In that case, it's size it given
+     * The last segment may be partial.  In that case, its size it given
        by nbits % 256.  Here: nbits % 256 = 987 % 256 = 219
 
    As each segment (at large) covers 256 bits (32 bytes), and each element
@@ -1511,7 +1511,7 @@ sc_encode(PyObject *module, PyObject *obj)
 
         /* Make sure we have enough memory in output buffer for next block.
            The largest block possible is a type 0 block with 128 segments.
-           It's size is: 1 head bytes + 128 * 32 raw bytes.
+           Its size is: 1 head bytes + 128 * 32 raw bytes.
            Plus, we also may have the stop byte. */
         if (allocated < len + 1 + 128 * 32 + 1) {
             if (_PyBytes_Resize(&out, allocated + 32768) < 0)

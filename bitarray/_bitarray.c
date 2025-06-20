@@ -189,7 +189,7 @@ buffers_overlap(bitarrayobject *self, bitarrayobject *other)
 #undef PIB
 }
 
-/* setup translation table, which maps each byte to it's reversed:
+/* setup translation table, which maps each byte to its reversed:
    reverse_trans = {0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, ..., 0xff} */
 static void
 setup_reverse_trans(void)
@@ -2495,7 +2495,7 @@ delsequence(bitarrayobject *self, PyObject *seq)
     Py_ssize_t i, j;
     int res = -1;
 
-    /* shortcuts for removing 0 or 1 items in order to avoid creating mask */
+    /* shortcuts for removing 0 or 1 items to avoid creating mask */
     if (nseq < 2) {
         if (nseq == 0)
             /* use resize to check for BufferError */
@@ -2507,7 +2507,7 @@ delsequence(bitarrayobject *self, PyObject *seq)
         return delete_n(self, i, 1);
     }
 
-    /* create mask bitarray - note that it's bit-endianness is irrelevant */
+    /* create mask bitarray - note that its bit-endianness is irrelevant */
     mask = newbitarrayobject(&Bitarray_Type, nbits, ENDIAN_LITTLE);
     if (mask == NULL)
         return -1;
