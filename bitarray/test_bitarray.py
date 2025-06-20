@@ -774,26 +774,24 @@ class ZLW_Tests(unittest.TestCase, Util):
     def test_zeros(self):
         for n in range(200):
             a = zeros(n, self.random_endian())
-            b = _zlw(a)
-            self.assertEqual(b, zeros(64))
+            self.assertEqual(_zlw(a), zeros(64))
 
     def test_ones(self):
         for n in range(200):
             a = ones(n, self.random_endian())
             b = _zlw(a)
-            m = n % 64
-            self.assertEqual(b, ones(m) + zeros(64 - m))
+            r = n % 64
+            self.assertEqual(b, ones(r) + zeros(64 - r))
 
     def test_random(self):
         for n in range(200):
             a = urandom_2(n)
             b = _zlw(a)
-            nw = 64 * (n // 64)  # bits in complete words
-            m = n % 64
             self.assertEqual(len(b), 64)
             self.assertEqual(a.endian, b.endian)
-            self.assertEqual(b, a[nw:nw + m] + zeros(64 - m))
             self.assertEqual(b[63], 0)  # last bit is always 0
+            q, r = divmod(n, 64)
+            self.assertEqual(b, a[64 * q:] + zeros(64 - r))
 
 # -------------------------- (Number) index tests ---------------------------
 
