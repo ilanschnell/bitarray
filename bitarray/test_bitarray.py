@@ -4267,6 +4267,15 @@ class FileTests(unittest.TestCase, Util):
         with open(self.tmpfname, 'r') as fi:
             self.assertRaises(TypeError, a.fromfile, fi)
 
+    def test_frombytes_invalid_reader(self):
+        class Reader:
+            def read(self, n):
+                return 12
+        a = bitarray()
+        f = Reader()
+        self.assertRaisesMessage(TypeError, "read() didn't return bytes",
+                                 a.fromfile, f)
+
     def test_from_large_files(self):
         for N in range(65534, 65538):
             data = os.urandom(N)
