@@ -4273,7 +4273,7 @@ class FileTests(unittest.TestCase, Util):
                 return 12
         a = bitarray()
         f = Reader()
-        self.assertRaisesMessage(TypeError, "read() didn't return bytes",
+        self.assertRaisesMessage(TypeError, ".read() didn't return bytes",
                                  a.fromfile, f)
 
     def test_from_large_files(self):

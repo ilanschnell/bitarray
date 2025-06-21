@@ -1608,20 +1608,19 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
 
     while (nread < nbytes) {
         PyObject *bytes, *ret;
-        Py_ssize_t nblock = Py_MIN(nbytes - nread, BLOCKSIZE);
-        int not_enough_bytes;
+        Py_ssize_t nblock = Py_MIN(nbytes - nread, BLOCKSIZE), size;
 
         bytes = PyObject_CallMethod(f, "read", "n", nblock);
         if (bytes == NULL)
             return NULL;
         if (!PyBytes_Check(bytes)) {
             Py_DECREF(bytes);
-            PyErr_SetString(PyExc_TypeError, "read() didn't return bytes");
+            PyErr_SetString(PyExc_TypeError, ".read() didn't return bytes");
             return NULL;
         }
-        not_enough_bytes = PyBytes_GET_SIZE(bytes) < nblock;
-        nread += PyBytes_GET_SIZE(bytes);
-        assert(nread >= 0 && nread <= nbytes);
+        size = PyBytes_GET_SIZE(bytes);
+        nread += size;
+        assert(size <= nblock && 0 <= nread && nread <= nbytes);
 
         ret = bitarray_frombytes(self, bytes);
         Py_DECREF(bytes);
@@ -1629,7 +1628,7 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
             return NULL;
         Py_DECREF(ret);
 
-        if (not_enough_bytes) {
+        if (size < nblock) {
             if (nbytes == PY_SSIZE_T_MAX)  /* read till EOF */
                 break;
             PyErr_SetString(PyExc_EOFError, "not enough bytes to read");
