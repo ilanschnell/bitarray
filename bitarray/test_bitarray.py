@@ -4723,7 +4723,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
         msg = "prefix code unrecognized in bitarray at position 12 .. 21"
         self.assertRaisesMessage(ValueError, msg, list, a.decode(d))
         t = decodetree(d)
-        self.assertRaisesMessage(ValueError, msg, list, a.decode(d))
+        self.assertRaisesMessage(ValueError, msg, list, a.decode(t))
 
         self.check_obj(a)
         self.assertEqual(t.todict(), d)

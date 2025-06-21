@@ -1320,20 +1320,16 @@ class SC_Tests(unittest.TestCase, Util):
             ValueError, "decode error (n=3): 32768 >= 32768",
             sc_decode, b"\x02\x00\x80\xc3\x01\x00\x80\x00\0")
 
-        if PTRSIZE == 4:
-            msg = "read 4 bytes got negative value: -2147483648"
-        else:
-            msg = "decode error (n=4): 2147483648 >= 16"
+        msg = {4: "read 4 bytes got negative value: -2147483648",
+               8: "decode error (n=4): 2147483648 >= 16"}
         self.assertRaisesMessage(
-            ValueError, msg,
+            ValueError, msg[PTRSIZE],
             sc_decode, b"\x01\x10\xc4\x01\x00\x00\x00\x80\0")
 
-        if PTRSIZE == 4:
-            msg = "read 4 bytes got negative value: -1"
-        else:
-            msg = "decode error (n=4): 4294967295 >= 16"
+        msg = {4: "read 4 bytes got negative value: -1",
+               8: "decode error (n=4): 4294967295 >= 16"}
         self.assertRaisesMessage(
-            ValueError, msg,
+            ValueError, msg[PTRSIZE],
             sc_decode, b"\x01\x10\xc4\x01\xff\xff\xff\xff\0")
 
     def test_decode_end_of_stream(self):
