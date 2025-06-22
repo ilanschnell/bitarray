@@ -12,7 +12,7 @@ import platform
 import unittest
 import shutil
 import tempfile
-from io import BytesIO
+from io import BytesIO, UnsupportedOperation
 from random import choice, getrandbits, randrange, randint, shuffle
 
 # imports needed inside tests
@@ -4247,11 +4247,11 @@ class FileTests(unittest.TestCase, Util):
     def test_fromfile_wrong_args(self):
         a = bitarray()
         self.assertRaises(TypeError, a.fromfile)
-        self.assertRaises(Exception, a.fromfile, 42)
-        self.assertRaises(Exception, a.fromfile, 'bar')
+        self.assertRaises(AttributeError, a.fromfile, 42)
+        self.assertRaises(AttributeError, a.fromfile, 'bar')
 
         with open(self.tmpfname, 'wb') as fo:
-            pass
+            fo.write(b"ABC")
         with open(self.tmpfname, 'rb') as fi:
             self.assertRaises(TypeError, a.fromfile, fi, None)
 
@@ -4262,7 +4262,8 @@ class FileTests(unittest.TestCase, Util):
 
         a = bitarray()
         with open(self.tmpfname, 'wb') as fi:
-            self.assertRaises(Exception, a.fromfile, fi)
+            self.assertRaisesMessage(UnsupportedOperation, "read",
+                                     a.fromfile, fi)
 
         with open(self.tmpfname, 'r') as fi:
             self.assertRaisesMessage(TypeError, ".read() did not return "
