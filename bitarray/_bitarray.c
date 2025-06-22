@@ -1544,16 +1544,16 @@ Return bitarray as list of integers.\n\
 `a.tolist()` equals `list(a)`.");
 
 
-static PyObject *
-bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
+/* Extend bitarray with raw bytes from a bytes-like object. */
+static int
+extend_from_bytes(bitarrayobject *self, PyObject *buffer)
 {
     const Py_ssize_t n = Py_SIZE(self);  /* nbytes before extending */
     const Py_ssize_t p = PADBITS(self);  /* number of pad bits */
     Py_buffer view;
 
-    RAISE_IF_READONLY(self, NULL);
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
-        return NULL;
+        return -1;
 
     /* resize to accommodate new bytes */
     if (resize(self, 8 * (n + view.len)) < 0)
@@ -1567,10 +1567,20 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
         goto error;
 
     PyBuffer_Release(&view);
-    Py_RETURN_NONE;
+    return 0;
  error:
     PyBuffer_Release(&view);
-    return NULL;
+    return -1;
+}
+
+static PyObject *
+bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
+{
+    RAISE_IF_READONLY(self, NULL);
+    if (extend_from_bytes(self, buffer) < 0)
+        return NULL;
+
+    Py_RETURN_NONE;
 }
 
 PyDoc_STRVAR(frombytes_doc,
@@ -1607,26 +1617,27 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         nbytes = PY_SSIZE_T_MAX;
 
     while (nread < nbytes) {
-        PyObject *bytes, *ret;
+        PyObject *bytes;
         Py_ssize_t nblock = Py_MIN(nbytes - nread, BLOCKSIZE), size;
+        int ret;
 
         bytes = PyObject_CallMethod(f, "read", "n", nblock);
         if (bytes == NULL)
             return NULL;
         if (!PyBytes_Check(bytes)) {
             Py_DECREF(bytes);
-            PyErr_SetString(PyExc_TypeError, ".read() didn't return bytes");
+            PyErr_Format(PyExc_TypeError, ".read() did not return 'bytes', "
+                         "got '%s'", Py_TYPE(bytes)->tp_name);
             return NULL;
         }
         size = PyBytes_GET_SIZE(bytes);
         nread += size;
         assert(size <= nblock && 0 <= nread && nread <= nbytes);
 
-        ret = bitarray_frombytes(self, bytes);
+        ret = extend_from_bytes(self, bytes);
         Py_DECREF(bytes);
-        if (ret == NULL)
+        if (ret < 0)
             return NULL;
-        Py_DECREF(ret);
 
         if (size < nblock) {
             if (nbytes == PY_SSIZE_T_MAX)  /* read till EOF */
@@ -1643,10 +1654,10 @@ PyDoc_STRVAR(fromfile_doc,
 \n\
 Extend bitarray with up to `n` bytes read from file object `f` (or any\n\
 other binary stream what supports a `.read()` method, e.g. `io.BytesIO`).\n\
-Each read byte will add eight bits to the bitarray.  When `n` is omitted or\n\
-negative, all bytes (till EOF) are read.  When `n` is non-negative but\n\
-exceeds the data available, `EOFError` is raised (but the available data\n\
-is still read and appended).");
+Each read byte will add eight bits to the bitarray.  When `n` is omitted\n\
+or negative, reads and extends all data until EOF.\n\
+When `n` is non-negative but exceeds the available data, `EOFError` is\n\
+raised.  However, the available data is still read and extended).");
 
 
 static PyObject *
