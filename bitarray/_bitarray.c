@@ -1544,16 +1544,16 @@ Return bitarray as list of integers.\n\
 `a.tolist()` equals `list(a)`.");
 
 
-/* Extend bitarray with raw bytes from a bytes-like object. */
-static int
-extend_from_bytes(bitarrayobject *self, PyObject *buffer)
+static PyObject *
+bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
 {
     const Py_ssize_t n = Py_SIZE(self);  /* nbytes before extending */
     const Py_ssize_t p = PADBITS(self);  /* number of pad bits */
     Py_buffer view;
 
+    RAISE_IF_READONLY(self, NULL);
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
-        return -1;
+        return NULL;
 
     /* resize to accommodate new bytes */
     if (resize(self, 8 * (n + view.len)) < 0)
@@ -1567,20 +1567,10 @@ extend_from_bytes(bitarrayobject *self, PyObject *buffer)
         goto error;
 
     PyBuffer_Release(&view);
-    return 0;
+    Py_RETURN_NONE;
  error:
     PyBuffer_Release(&view);
-    return -1;
-}
-
-static PyObject *
-bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
-{
-    RAISE_IF_READONLY(self, NULL);
-    if (extend_from_bytes(self, buffer) < 0)
-        return NULL;
-
-    Py_RETURN_NONE;
+    return NULL;
 }
 
 PyDoc_STRVAR(frombytes_doc,
@@ -1617,9 +1607,8 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         nbytes = PY_SSIZE_T_MAX;
 
     while (nread < nbytes) {
-        PyObject *bytes;
+        PyObject *bytes, *ret;
         Py_ssize_t nblock = Py_MIN(nbytes - nread, BLOCKSIZE), size;
-        int ret;
 
         bytes = PyObject_CallMethod(f, "read", "n", nblock);
         if (bytes == NULL)
@@ -1634,10 +1623,11 @@ bitarray_fromfile(bitarrayobject *self, PyObject *args)
         nread += size;
         assert(size <= nblock && 0 <= nread && nread <= nbytes);
 
-        ret = extend_from_bytes(self, bytes);
+        ret = bitarray_frombytes(self, bytes);
         Py_DECREF(bytes);
-        if (ret < 0)
+        if (ret == NULL)
             return NULL;
+        Py_DECREF(ret);
 
         if (size < nblock) {
             if (nbytes == PY_SSIZE_T_MAX)  /* read till EOF */
