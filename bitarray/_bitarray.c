@@ -1593,44 +1593,59 @@ PyDoc_STRVAR(tobytes_doc,
 Return the bitarray buffer in bytes (pad bits are set to zero).");
 
 
+/* Extend self with bytes from f.read(n).  Return number of bytes actually
+   read and extended, or -1 on failure (after setting exception). */
+static Py_ssize_t
+extend_fread(bitarrayobject *self, PyObject *f, Py_ssize_t n)
+{
+    PyObject *bytes, *ret;
+    Py_ssize_t res;             /* result (size or -1) */
+
+    bytes = PyObject_CallMethod(f, "read", "n", n);
+    if (bytes == NULL)
+        return -1;
+    if (!PyBytes_Check(bytes)) {
+        Py_DECREF(bytes);
+        PyErr_Format(PyExc_TypeError, ".read() did not return 'bytes', "
+                     "got '%s'", Py_TYPE(bytes)->tp_name);
+        return -1;
+    }
+    res = PyBytes_GET_SIZE(bytes);
+    assert(0 <= res && res <= n);
+
+    ret = bitarray_frombytes(self, bytes);
+    Py_DECREF(bytes);
+    if (ret == NULL)
+        res = -1;
+    Py_DECREF(ret);
+    return res;
+}
+
 static PyObject *
 bitarray_fromfile(bitarrayobject *self, PyObject *args)
 {
     PyObject *f;
-    Py_ssize_t nread = 0, nbytes = -1;
+    Py_ssize_t nread = 0, n = -1;
 
     RAISE_IF_READONLY(self, NULL);
-    if (!PyArg_ParseTuple(args, "O|n:fromfile", &f, &nbytes))
+    if (!PyArg_ParseTuple(args, "O|n:fromfile", &f, &n))
         return NULL;
 
-    if (nbytes < 0)  /* read till EOF */
-        nbytes = PY_SSIZE_T_MAX;
+    if (n < 0)  /* read till EOF */
+        n = PY_SSIZE_T_MAX;
 
-    while (nread < nbytes) {
-        PyObject *bytes, *ret;
-        Py_ssize_t nblock = Py_MIN(nbytes - nread, BLOCKSIZE), size;
+    while (nread < n) {
+        Py_ssize_t nblock = Py_MIN(n - nread, BLOCKSIZE), size;
 
-        bytes = PyObject_CallMethod(f, "read", "n", nblock);
-        if (bytes == NULL)
+        size = extend_fread(self, f, nblock);
+        if (size < 0)
             return NULL;
-        if (!PyBytes_Check(bytes)) {
-            Py_DECREF(bytes);
-            PyErr_Format(PyExc_TypeError, ".read() did not return 'bytes', "
-                         "got '%s'", Py_TYPE(bytes)->tp_name);
-            return NULL;
-        }
-        size = PyBytes_GET_SIZE(bytes);
+
         nread += size;
-        assert(size <= nblock && 0 <= nread && nread <= nbytes);
-
-        ret = bitarray_frombytes(self, bytes);
-        Py_DECREF(bytes);
-        if (ret == NULL)
-            return NULL;
-        Py_DECREF(ret);
+        assert(size <= nblock && nread <= n);
 
         if (size < nblock) {
-            if (nbytes == PY_SSIZE_T_MAX)  /* read till EOF */
+            if (n == PY_SSIZE_T_MAX)  /* read till EOF */
                 break;
             PyErr_SetString(PyExc_EOFError, "not enough bytes to read");
             return NULL;
