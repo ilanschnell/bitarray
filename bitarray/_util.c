@@ -74,25 +74,21 @@ count_from_word(bitarrayobject *a, Py_ssize_t i)
     return cnt;
 }
 
-/* basically resize() but without buffer import and export checks */
+/* like resize() but without over-allocation or buffer import/export checks */
 static int
 resize_lite(bitarrayobject *self, Py_ssize_t nbits)
 {
-    const size_t size = Py_SIZE(self);
-    const size_t allocated = self->allocated;
-    const size_t newsize = BYTES((size_t) nbits);
-    size_t new_allocated;
+    const Py_ssize_t newsize = BYTES(nbits);
 
-    assert(allocated >= size && size == BYTES((size_t) self->nbits));
+    assert(self->allocated >= Py_SIZE(self));
     assert(self->readonly == 0);
     assert(self->ob_exports == 0);
     assert(self->buffer == NULL);
 
-    if (newsize == size) {
+    if (newsize == Py_SIZE(self)) {
         self->nbits = nbits;
         return 0;
     }
-
     if (newsize == 0) {
         PyMem_Free(self->ob_item);
         self->ob_item = NULL;
@@ -101,31 +97,13 @@ resize_lite(bitarrayobject *self, Py_ssize_t nbits)
         self->nbits = 0;
         return 0;
     }
-
-    if (allocated >= newsize) {
-        if (newsize >= allocated / 2) {
-            Py_SET_SIZE(self, newsize);
-            self->nbits = nbits;
-            return 0;
-        }
-        new_allocated = newsize;
-    }
-    else {
-        new_allocated = newsize;
-        if (size != 0 && newsize / 2 <= allocated) {
-            new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
-            new_allocated &= ~(size_t) 3;
-        }
-    }
-
-    assert(new_allocated >= newsize);
-    self->ob_item = PyMem_Realloc(self->ob_item, new_allocated);
+    self->ob_item = PyMem_Realloc(self->ob_item, newsize);
     if (self->ob_item == NULL) {
         PyErr_NoMemory();
         return -1;
     }
     Py_SET_SIZE(self, newsize);
-    self->allocated = new_allocated;
+    self->allocated = newsize;
     self->nbits = nbits;
     return 0;
 }
@@ -1732,7 +1710,7 @@ vl_decode_core(bitarrayobject *a, PyObject *iter)
         if ((c = next_char(iter)) < 0)
             return -1;
 
-        if (resize_lite(a, i + 7) < 0)
+        if (a->nbits < i + 7 && resize_lite(a, a->nbits + 1024) < 0)
             return -1;
         assert(i + 6 < a->nbits);
 
@@ -1759,7 +1737,7 @@ vl_decode(PyObject *module, PyObject *args, PyObject *kwds)
         return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
                             Py_TYPE(obj)->tp_name);
 
-    a = new_bitarray(32, endian, -1);
+    a = new_bitarray(1024, endian, -1);
     if (a == NULL)
         goto error;
 

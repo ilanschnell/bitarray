@@ -1662,7 +1662,7 @@ other binary stream what supports a `.read()` method, e.g. `io.BytesIO`).\n\
 Each read byte will add eight bits to the bitarray.  When `n` is omitted\n\
 or negative, reads and extends all data until EOF.\n\
 When `n` is non-negative but exceeds the available data, `EOFError` is\n\
-raised.  However, the available data is still read and extended).");
+raised.  However, the available data is still read and extended.");
 
 
 static PyObject *

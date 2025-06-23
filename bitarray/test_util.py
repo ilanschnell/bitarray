@@ -1655,6 +1655,7 @@ class VLFTests(unittest.TestCase, Util):
         c = a.copy()
         s = vl_encode(a)
         b = vl_decode(s)
+        self.check_obj(b)
         self.assertTrue(a == b == c)
         LEN_PAD_BITS = 3
         self.assertEqual(len(s), (len(a) + LEN_PAD_BITS + 6) // 7)
@@ -1663,13 +1664,10 @@ class VLFTests(unittest.TestCase, Util):
         padding = (head & 0x70) >> 4
         self.assertEqual(len(a) + padding, 7 * len(s) - LEN_PAD_BITS)
 
-    def test_range(self):
-        for n in range(500):
-            self.round_trip(urandom(n))
-
     def test_large(self):
-        a = urandom(randint(50000, 100000))
-        self.round_trip(a)
+        for _ in range(10):
+            a = urandom(randrange(100_000))
+            self.round_trip(a)
 
     def test_random(self):
         for a in self.randombitarrays():
