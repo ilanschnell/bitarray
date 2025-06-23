@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 3.4.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.4.3 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -150,10 +150,10 @@ bitarray methods:
 ``fromfile(f, n=-1, /)``
    Extend bitarray with up to ``n`` bytes read from file object ``f`` (or any
    other binary stream what supports a ``.read()`` method, e.g. ``io.BytesIO``).
-   Each read byte will add eight bits to the bitarray.  When ``n`` is omitted or
-   negative, all bytes until EOF is reached.  When ``n`` is non-negative but
-   exceeds the data available, ``EOFError`` is raised (but the available data
-   is still read and appended).
+   Each read byte will add eight bits to the bitarray.  When ``n`` is omitted
+   or negative, reads and extends all data until EOF.
+   When ``n`` is non-negative but exceeds the available data, ``EOFError`` is
+   raised.  However, the available data is still read and extended.
 
 
 ``index(sub_bitarray, start=0, stop=<end>, /, right=False)`` -> int
@@ -374,7 +374,7 @@ This sub-module was added in version 1.2.
    Reverse every ``n`` consecutive bytes of ``a`` in-place.
    By default, all bytes are reversed.  Note that ``n`` is not limited to 2, 4
    or 8, but can be any positive integer.
-   Also, ``a`` may be any object that exposes a writeable buffer.
+   Also, ``a`` may be any object that exposes a writable buffer.
    Nothing about this function is specific to bitarray objects.
 
    New in version 3.4

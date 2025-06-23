@@ -1,6 +1,19 @@
 Change log
 ==========
 
+**3.4.3** (2025-06-23):
+
+* minor updates to documentation
+* C-level:
+    - simplify and speedup ``extend_unicode01()``
+    - customize ``resize_lite()`` - avoid unused code
+    - use ``PyTypeObject`` for bitarray type object in ``_util.c`` to
+      be consistent with ``_bitarray.c``
+    - add and improve comments to implementation of sparse bitarray
+      compression
+    - simplify ``sc_count()``
+
+
 **3.4.2** (2025-05-21):
 
 * extend documentation of
