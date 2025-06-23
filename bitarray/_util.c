@@ -85,10 +85,12 @@ resize_lite(bitarrayobject *self, Py_ssize_t nbits)
     assert(self->ob_exports == 0);
     assert(self->buffer == NULL);
 
+    /* bypass everything when buffer size hasn't changed */
     if (newsize == Py_SIZE(self)) {
         self->nbits = nbits;
         return 0;
     }
+
     if (newsize == 0) {
         PyMem_Free(self->ob_item);
         self->ob_item = NULL;
@@ -97,6 +99,7 @@ resize_lite(bitarrayobject *self, Py_ssize_t nbits)
         self->nbits = 0;
         return 0;
     }
+
     self->ob_item = PyMem_Realloc(self->ob_item, newsize);
     if (self->ob_item == NULL) {
         PyErr_NoMemory();
@@ -1710,6 +1713,7 @@ vl_decode_core(bitarrayobject *a, PyObject *iter)
         if ((c = next_char(iter)) < 0)
             return -1;
 
+        /* ensure bitarray is large enough to accommodate seven more bits */
         if (a->nbits < i + 7 && resize_lite(a, a->nbits + 1024) < 0)
             return -1;
         assert(i + 6 < a->nbits);
