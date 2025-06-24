@@ -1702,7 +1702,7 @@ vl_decode_core(bitarrayobject *a, PyObject *iter)
 
     padding = (c & 0x70) >> 4;
     if (padding == 7 || ((c & 0x80) == 0 && padding > 4)) {
-        PyErr_Format(PyExc_ValueError, "invalid header byte: 0x%02x", c);
+        PyErr_Format(PyExc_ValueError, "invalid head byte: 0x%02x", c);
         return -1;
     }
     for (k = 0; k < 4; k++)
@@ -1780,7 +1780,6 @@ vl_encode(PyObject *module, PyObject *obj)
     nbits = a->nbits;
     n = (nbits + LEN_PAD_BITS + 6) / 7;  /* number of resulting bytes */
     padding = 7 * n - LEN_PAD_BITS - nbits;
-    assert(0 <= padding && padding < 7);
 
     result = PyBytes_FromStringAndSize(NULL, n);
     if (result == NULL)

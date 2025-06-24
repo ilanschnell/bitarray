@@ -1619,10 +1619,14 @@ class VLFTests(unittest.TestCase, Util):
     def test_decode_errors(self):
         # decode empty bytes
         self.assertRaises(StopIteration, vl_decode, b'')
-        # invalid number of padding bits
-        for s in b'\x50', b'\x60', b'\x70':
-            self.assertRaises(ValueError, vl_decode, s)
-        self.assertRaises(ValueError, vl_decode, b'\xf0')
+        # invalid head byte
+        for s in [
+                b'\x70', b'\xf0',           # padding = 7
+                b'\x50', b'\x60', b'\x70',  # no second byte, but padding > 4
+        ]:
+            self.assertRaisesMessage(ValueError,
+                                     "invalid head byte: 0x%02x" % s[0],
+                                     vl_decode, s)
         # high bit set, but no terminating byte
         for s in b'\x80', b'\x80\x80':
             self.assertRaises(StopIteration, vl_decode, s)
