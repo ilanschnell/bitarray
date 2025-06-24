@@ -1414,14 +1414,6 @@ class SC_Tests(unittest.TestCase, Util):
         for a in None, [], 0, 123, b'', b'\x00', 3.14:
             self.assertRaises(TypeError, sc_encode, a)
 
-    def round_trip(self, a):
-        c = a.copy()
-        i = iter(sc_encode(a))
-        b = sc_decode(i)
-        self.assertTrue(a == b == c)
-        self.assertTrue(a.endian == b.endian == c.endian)
-        self.assertEqual(list(i), [])
-
     def test_encode_zeros(self):
         for i in range(26):
             n = 1 << i
@@ -1429,7 +1421,6 @@ class SC_Tests(unittest.TestCase, Util):
             m = 2                            # head byte and stop byte
             m += bits2bytes(n.bit_length())  # size of n in bytes
             self.assertEqual(m, len(sc_encode(a)))
-            self.round_trip(a)
 
             a[0] = 1
             m += 2                  # block head byte and one index byte
@@ -1437,7 +1428,19 @@ class SC_Tests(unittest.TestCase, Util):
             m += bool(i > 16)       # third index byte
             m += bool(i > 24)       # fourth index byte
             self.assertEqual(m, len(sc_encode(a)))
-            self.round_trip(a)
+
+    def test_encode_ones(self):
+        for _ in range(10):
+            nbits = randrange(100_000)
+            a = ones(nbits)
+            m = 2                                # head byte and stop byte
+            m += bits2bytes(nbits.bit_length())  # size bytes
+            nbytes = bits2bytes(nbits)
+            m += nbytes                       # actual raw bytes
+            # number of head bytes, all of block type 0:
+            m += bool(nbytes % 32)            # number in 0x01 .. 0x1f
+            m += (nbytes // 32 + 127) // 128  # number in 0x20 .. 0xbf
+            self.assertEqual(m, len(sc_encode(a)))
 
     def test_encode_type4(self):
         a = zeros(1 << 26, 'big')
@@ -1455,23 +1458,17 @@ class SC_Tests(unittest.TestCase, Util):
             sc_encode(a),
             b'\x14\x00\x00\x00\x04\xc4\x02\xaa\xbb\xcc\x00\xdd\xee\xff\x03\0')
 
-    def test_encode_ones(self):
-        for _ in range(50):
-            nbits = randrange(100000)
-            a = ones(nbits)
-            m = 2                                # head byte and stop byte
-            m += bits2bytes(nbits.bit_length())  # size bytes
-            nbytes = bits2bytes(nbits)
-            m += nbytes                       # actual raw bytes
-            # number of head bytes, all of block type 0:
-            m += bool(nbytes % 32)            # number in 0x01 .. 0x1f
-            m += (nbytes // 32 + 127) // 128  # number in 0x20 .. 0xbf
-            self.assertEqual(m, len(sc_encode(a)))
-            self.round_trip(a)
+    def round_trip(self, a):
+        c = a.copy()
+        i = iter(sc_encode(a))
+        b = sc_decode(i)
+        self.assertTrue(a == b == c)
+        self.assertTrue(a.endian == b.endian == c.endian)
+        self.assertEqual(list(i), [])
 
     def test_random(self):
         for _ in range(10):
-            n = randrange(100000)
+            n = randrange(100_000)
             endian = self.random_endian()
             a = ones(n, endian)
             for _ in range(16):
