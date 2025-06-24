@@ -237,6 +237,8 @@ class VLFTests(unittest.TestCase):
             n = (nbits + LEN_PAD_BITS + 6) // 7  # number of resulting bytes
             padding = 7 * n - LEN_PAD_BITS - nbits
             self.assertTrue(0 <= padding < 7)
+            self.assertEqual(divmod(nbits + padding + LEN_PAD_BITS, 7),
+                             (n, 0))
 
             # alternative equation for padding
             padding_2 = (7 - (nbits + LEN_PAD_BITS) % 7) % 7
