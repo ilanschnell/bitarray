@@ -227,6 +227,19 @@ class SegmentTests(unittest.TestCase):
                 self.assertEqual(nseg, cseg + 1)
                 self.assertTrue(rbits > 0)
 
+# ------------------------ Variable Length Format ---------------------------
+
+class VLFTests(unittest.TestCase):
+
+    def test_padding(self):
+        LEN_PAD_BITS = 3
+        for nbits in range(1000):
+            n = (nbits + LEN_PAD_BITS + 6) // 7  # number of resulting bytes
+            padding = 7 * n - LEN_PAD_BITS - nbits
+            self.assertTrue(0 <= padding < 7)
+            # alternative equation for padding
+            padding_2 = (7 - (nbits + 3) % 7) % 7
+            self.assertEqual(padding_2, padding)
 
 if __name__ == '__main__':
     unittest.main()
