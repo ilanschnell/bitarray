@@ -1373,23 +1373,22 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(a.to01(), '001')
 
     def test_sparse_block_type1(self):
-        a = bitarray(256, 'little')
         for n in range(1, 32):
-            positions = os.urandom(n)
+            indices = os.urandom(n)  # active indices
             b = bytearray([0x02, 0x00, 0x01, 0xa0 + n])
-            b.extend(positions)
+            b.extend(indices)
             b.append(0)  # stop byte
 
-            a.setall(0)
-            a[positions] = 1
+            a = bitarray(256, 'little')
+            a[indices] = 1
             self.assertEqual(sc_decode(b), a)
 
             # in order to recreate the block sc_encode generates, we need
-            # a sorted list of the positions with no duplicates
-            lst = sorted(set(positions))
-            b = bytearray([0x02, 0x00, 0x01, 0xa0 + len(lst)])
-            b.extend(lst)
-            b.append(0)  # stop
+            # a sorted list of the indices with no duplicates
+            indices = sorted(set(indices))
+            b = bytearray([0x02, 0x00, 0x01, 0xa0 + len(indices)])
+            b.extend(indices)
+            b.append(0)  # stop byte
 
             self.assertEqual(sc_decode(b), a)
             self.assertEqual(sc_encode(a), b)
@@ -1424,19 +1423,19 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertEqual(list(i), [])
 
     def test_encode_zeros(self):
-        for i in range(18):
+        for i in range(26):
             n = 1 << i
             a = zeros(n)
             m = 2                            # head byte and stop byte
-            m += bits2bytes(n.bit_length())  # size bytes
-            #print(i, n, m, sc_encode(a))
+            m += bits2bytes(n.bit_length())  # size of n in bytes
             self.assertEqual(m, len(sc_encode(a)))
             self.round_trip(a)
 
             a[0] = 1
             m += 2                  # block head byte and one index byte
-            m += 2 * bool(n > 512)  # second block head and second index byte
-            m += bool(n > 65536)    # third index byte
+            m += 2 * bool(i > 9)    # count byte and second index byte
+            m += bool(i > 16)       # third index byte
+            m += bool(i > 24)       # fourth index byte
             self.assertEqual(m, len(sc_encode(a)))
             self.round_trip(a)
 
