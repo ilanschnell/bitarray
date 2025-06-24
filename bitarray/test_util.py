@@ -1533,25 +1533,36 @@ class RTS_Tests(unittest.TestCase):
 class VLFTests(unittest.TestCase, Util):
 
     def test_explicit(self):
-        for s, bits in [
+        for blob, s in [
                 (b'\x40', ''),
                 (b'\x30', '0'),
                 (b'\x38', '1'),
                 (b'\x00', '0000'),
                 (b'\x01', '0001'),
+                (b'\xd3\x20', '001101'),
                 (b'\xe0\x40', '0000 1'),
                 (b'\x90\x02', '0000 000001'),
                 (b'\xb5\xa7\x18', '0101 0100111 0011'),
+                (b'\x95\xb7\x1c', '0101 0110111 001110'),
         ]:
-            a = bitarray(bits)
-            self.assertEqual(vl_encode(a), s)
-            self.assertEqual(vl_decode(s), a)
+            default_endian = self.random_endian()
+            _set_default_endian(default_endian)
 
-    def test_encode(self):
-        for endian in 'big', 'little':
-            s = vl_encode(bitarray('001101', endian))
-            self.assertIsInstance(s, bytes)
-            self.assertEqual(s, b'\xd3\x20')
+            a = bitarray(s)
+            self.assertEqual(vl_encode(a), blob)
+            c = vl_decode(blob)
+            self.assertEqual(c, a)
+            self.assertEqual(c.endian, default_endian)
+
+            for endian in 'big', 'little', None:
+                a = bitarray(s, endian)
+                c = vl_encode(a)
+                self.assertIsInstance(c, bytes)
+                self.assertEqual(c, blob)
+
+                c = vl_decode(blob, endian)
+                self.assertEqual(c, a)
+                self.assertEqual(c.endian, endian or default_endian)
 
     def test_decode_args(self):
         self.assertRaises(TypeError, vl_decode, 'foo')
@@ -1568,30 +1579,11 @@ class VLFTests(unittest.TestCase, Util):
             self.assertRaises(TypeError, vl_decode, iter([0x95, item]))
 
         b = b'\xd3\x20'
-        lst = [b, iter(b), memoryview(b)]
-        lst.append(iter([0xd3, 0x20]))
-        lst.append(bytearray(b))
+        lst = [b, iter(b), memoryview(b), iter([0xd3, 0x20]), bytearray(b)]
         for s in lst:
             a = vl_decode(s, endian=self.random_endian())
             self.assertIsType(a, 'bitarray')
             self.assertEqual(a, bitarray('0011 01'))
-
-    def test_decode_endian(self):
-        blob = b'\xd3\x20'
-        res = bitarray('0011 01')
-
-        for default_endian in 'little', 'big':
-            _set_default_endian(default_endian)
-
-            for endian in 'little', 'big', None:
-                a = vl_decode(blob, endian)
-                self.assertEqual(a, res)
-                self.assertEqual(a.endian,
-                                 endian if endian else default_endian)
-
-            a = vl_decode(blob)
-            self.assertEqual(a, res)
-            self.assertEqual(a.endian, default_endian)
 
     def test_decode_trailing(self):
         for s, bits in [(b'\x40ABC', ''),
@@ -1602,9 +1594,9 @@ class VLFTests(unittest.TestCase, Util):
 
     def test_decode_ambiguity(self):
         for s in b'\x40', b'\x4f', b'\x45':
-            self.assertEqual(vl_decode(iter(s)), bitarray())
+            self.assertEqual(vl_decode(s), bitarray())
         for s in b'\x1e', b'\x1f':
-            self.assertEqual(vl_decode(iter(s)), bitarray('111'))
+            self.assertEqual(vl_decode(s), bitarray('111'))
 
     def test_decode_stream(self):
         stream = iter(b'\x40\x30\x38\x40\x2c\xe0\x40\xd3\x20')
