@@ -1443,9 +1443,7 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(sc_encode(a), b)
 
     def test_sparse_block_type2(self):
-        # The reason we don't loop all the way up to 255 is because for such
-        # high values sc_encode() finds better compression with type 1 blocks.
-        for n in range(1, 250):
+        for n in range(1, 256):
             indices = [getrandbits(16) for _ in range(n)]
             b = bytearray([0x03, 0x00, 0x00, 0x01, 0xc2, n])
             for i in indices:
@@ -1462,7 +1460,11 @@ class SC_Tests(unittest.TestCase, Util):
                 b.extend(struct.pack("<H", i))
             b.append(0)  # stop byte
             self.assertEqual(sc_decode(b), a)
-            self.assertEqual(sc_encode(a), b)
+            if n < 250:
+                # We cannot compare for the highest populations, as for
+                # such high values sc_encode() may find better compression
+                # with type 1 blocks.
+                self.assertEqual(sc_encode(a), b)
 
     def test_decode_random_bytes(self):
         # ensure random input doesn't crash the decoder
