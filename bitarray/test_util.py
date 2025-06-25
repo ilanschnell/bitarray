@@ -1286,7 +1286,7 @@ class SC_Tests(unittest.TestCase, Util):
                 (b'\x01\x10\x02\xf0\x0f\0', '00001111 11110000', 'little'),
                 (b'\x11\x10\xa1\x0c\0',     '00000000 00001000', 'big'),
                 (b'\x11\x09\xa1\x08\0',     '00000000 1',        'big'),
-                (b'\x01E\xa3ABD\0',         65 * '0' + '1101',   'little'),
+                (b'\x01g\xa4abde\0',        97 * '0' + '110110', 'little'),
         ]:
             a = bitarray(bits, endian)
             self.assertEqual(sc_encode(a), b)
@@ -1321,14 +1321,12 @@ class SC_Tests(unittest.TestCase, Util):
         for c in 0x20, 0x21, 0x40, 0x80, 0xc0, 0xf0, 0xff:
             self.assertRaisesMessage(ValueError,
                                      "invalid header: 0x%02x" % c,
-                                     sc_decode,
-                                     bytearray([c]))
+                                     sc_decode, [c])
         # invalid block head
         for c in 0xc0, 0xc1, 0xc5, 0xff:
             self.assertRaisesMessage(ValueError,
                                      "invalid block head: 0x%02x" % c,
-                                     sc_decode,
-                                     bytearray([0x01, 0x10, c]))
+                                     sc_decode, [0x01, 0x10, c])
 
     def test_decode_header_overflow(self):
         nbytes = PTRSIZE
@@ -1340,7 +1338,7 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertRaisesMessage(
             ValueError,
             "read %d bytes got negative value: -1" % nbytes,
-            sc_decode, bytearray([nbytes] + nbytes * [0xff]))
+            sc_decode, [nbytes] + nbytes * [0xff])
 
         if nbytes == 4:
             self.assertRaisesMessage(
@@ -1559,7 +1557,7 @@ class SC_Tests(unittest.TestCase, Util):
             n = randrange(100_000)
             endian = self.random_endian()
             a = ones(n, endian)
-            for _ in range(16):
+            while a.count():
                 a &= urandom(n, endian)
                 self.round_trip(a)
 
@@ -1599,6 +1597,21 @@ class VLFTests(unittest.TestCase, Util):
                 self.assertEqual(c, a)
                 self.assertEqual(c.endian, endian or default_endian)
 
+    def test_encode_types(self):
+        s = "0011 01"
+        for a in bitarray(s), frozenbitarray(s):
+            b = vl_encode(a)
+            self.assertIsInstance(b, bytes)
+            self.assertEqual(b, b'\xd3\x20')
+
+    def test_decode_types(self):
+        b = b'\xd3\x20'
+        lst = [b, iter(b), memoryview(b), iter([0xd3, 0x20]), bytearray(b)]
+        for s in lst:
+            a = vl_decode(s, endian=self.random_endian())
+            self.assertIsType(a, 'bitarray')
+            self.assertEqual(a, bitarray('0011 01'))
+
     def test_decode_args(self):
         self.assertRaises(TypeError, vl_decode, 'foo')
         # item not integer
@@ -1612,13 +1625,6 @@ class VLFTests(unittest.TestCase, Util):
         # these items cannot be interpreted as ints
         for item in None, 2.34, Ellipsis:
             self.assertRaises(TypeError, vl_decode, iter([0x95, item]))
-
-        b = b'\xd3\x20'
-        lst = [b, iter(b), memoryview(b), iter([0xd3, 0x20]), bytearray(b)]
-        for s in lst:
-            a = vl_decode(s, endian=self.random_endian())
-            self.assertIsType(a, 'bitarray')
-            self.assertEqual(a, bitarray('0011 01'))
 
     def test_decode_trailing(self):
         for s, bits in [(b'\x40ABC', ''),
