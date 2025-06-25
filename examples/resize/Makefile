@@ -3,7 +3,7 @@ resize: resize.c
 
 test: resize
 	./resize >pattern-c.txt
-	python growth.py >pattern-py.txt
+	python resize.py >pattern-py.txt
 	diff pattern-c.txt pattern-py.txt
 	python test_resize.py
 

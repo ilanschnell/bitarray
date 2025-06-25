@@ -23,10 +23,9 @@ int bbs(void)
 
 void resize(bitarrayobject *self, int nbits)
 {
-    int new_allocated, allocated = self->allocated, size = self->size;
-    int newsize;
+    int size = self->size, allocated = self->allocated;
+    int newsize = BYTES(nbits), new_allocated;
 
-    newsize = BYTES(nbits);
     if (newsize == size) {
         self->nbits = nbits;
         return;
@@ -52,7 +51,7 @@ void resize(bitarrayobject *self, int nbits)
         new_allocated = newsize;
         if (size != 0 && newsize / 2 <= allocated) {
             new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
-            new_allocated &= ~3;
+            new_allocated &= ~(int) 3;
         }
     }
 

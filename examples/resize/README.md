@@ -1,7 +1,7 @@
-The bitarray growth pattern
-===========================
+The bitarray resize function and growth pattern
+===============================================
 
-Running `python growth.py` will display the bitarray growth pattern.
+Running `python resize.py` will display the bitarray growth pattern.
 This is done by appending one bit to a bitarray in a loop, and displaying
 the allocated size of the bitarray object each time it changes.
 
