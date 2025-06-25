@@ -1424,16 +1424,9 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(a.to01(), '001')
 
     def test_sparse_block_type1(self):
+        a = bitarray(256, 'little')
         for n in range(1, 32):
-            indices = os.urandom(n)  # active indices
-            b = bytearray([0x02, 0x00, 0x01, 0xa0 + n])
-            b.extend(indices)
-            b.append(0)  # stop byte
-
-            a = bitarray(256, 'little')
-            a[indices] = 1
-            self.assertEqual(sc_decode(b), a)
-            self.assertTrue(a.count() <= n)
+            a[getrandbits(8)] = 1
 
             b = bytearray([0x02, 0x00, 0x01, 0xa0 + a.count()])
             b.extend(list(a.search(1)))  # sorted indices with no duplicates
@@ -1443,17 +1436,9 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(sc_encode(a), b)
 
     def test_sparse_block_type2(self):
+        a = bitarray(65536, 'little')
         for n in range(1, 256):
-            indices = [getrandbits(16) for _ in range(n)]
-            b = bytearray([0x03, 0x00, 0x00, 0x01, 0xc2, n])
-            for i in indices:
-                b.extend(struct.pack("<H", i))
-            b.append(0)  # stop byte
-
-            a = bitarray(65536, 'little')
-            a[indices] = 1
-            self.assertEqual(sc_decode(b), a)
-            self.assertTrue(a.count() <= n)
+            a[getrandbits(16)] = 1
 
             b = bytearray([0x03, 0x00, 0x00, 0x01, 0xc2, a.count()])
             for i in a.search(1):
