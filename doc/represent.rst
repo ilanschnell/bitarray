@@ -157,7 +157,7 @@ Compressed sparse bitarrays
 ---------------------------
 
 Another representation
-is `compressed sparse bitarrays <./sparse_compression.rst>`,
+is `compressed sparse bitarrays <./sparse_compression.rst>`__,
 whose format is also "self terminating".  This, format actually uses different
 representations dependent on how sparsely the population of the bitarray (even
 sections of the bitarray) is.
