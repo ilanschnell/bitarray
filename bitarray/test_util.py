@@ -1423,7 +1423,7 @@ class SC_Tests(unittest.TestCase, Util):
             a = sc_decode(b)
             self.assertEqual(a.to01(), '001')
 
-    def test_sparse_block_type1(self):
+    def test_block_type1(self):
         a = bitarray(256, 'little')
         for n in range(1, 32):
             a[getrandbits(8)] = 1
@@ -1435,7 +1435,7 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(sc_decode(b), a)
             self.assertEqual(sc_encode(a), b)
 
-    def test_sparse_block_type2(self):
+    def test_block_type2(self):
         a = bitarray(65536, 'little')
         for n in range(1, 256):
             a[getrandbits(16)] = 1
@@ -1450,6 +1450,24 @@ class SC_Tests(unittest.TestCase, Util):
                 # such high values sc_encode() may find better compression
                 # with type 1 blocks.
                 self.assertEqual(sc_encode(a), b)
+
+    def test_block_type3(self):
+        a = bitarray(16777216, 'little')
+        a[[getrandbits(24) for _ in range(255)]] = 1
+        b = bytearray([0x04, 0x00, 0x00, 0x00, 0x01, 0xc3, a.count()])
+        for i in a.search(1):
+            b.extend(struct.pack("<I", i)[:3])
+        b.append(0)  # stop byte
+        self.assertEqual(sc_decode(b), a)
+        self.assertEqual(sc_encode(a), b)
+
+    def test_block_type4(self):
+        a = sc_decode(b'\x14\x00\x00\x00\x04\0')
+        self.assertEqual(len(a), 1 << 26)
+        a[0x00ccbbaa] = a[0x03ffeedd] = 1
+        self.assertEqual(
+            sc_encode(a),
+            b'\x14\x00\x00\x00\x04\xc4\x02\xaa\xbb\xcc\x00\xdd\xee\xff\x03\0')
 
     def test_decode_random_bytes(self):
         # ensure random input doesn't crash the decoder
@@ -1504,22 +1522,6 @@ class SC_Tests(unittest.TestCase, Util):
             m += bool(nbytes % 32)            # number in 0x01 .. 0x1f
             m += (nbytes // 32 + 127) // 128  # number in 0x20 .. 0xbf
             self.check_blob_length(a, m)
-
-    def test_encode_type4(self):
-        a = zeros(1 << 26, 'big')
-        self.assertEqual(
-            sc_encode(a),
-            b'\x14\x00\x00\x00\x04\0')
-
-        a[0xccbbaa] = 1
-        self.assertEqual(
-            sc_encode(a),
-            b'\x14\x00\x00\x00\x04\xc4\x01\xaa\xbb\xcc\x00\0')
-
-        a[0x3ffeedd] = 1
-        self.assertEqual(
-            sc_encode(a),
-            b'\x14\x00\x00\x00\x04\xc4\x02\xaa\xbb\xcc\x00\xdd\xee\xff\x03\0')
 
     def round_trip(self, a):
         c = a.copy()
