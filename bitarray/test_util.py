@@ -1462,9 +1462,11 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertEqual(sc_encode(a), b)
 
     def test_block_type4(self):
-        N = 1 << 26
-        indices = sorted(set(randrange(N) for _ in range(5)))
-        a = bitarray(N, 'little')
+        a = bitarray(1 << 26, 'little')
+        # To understand why we cannot have a population larger than 5 for
+        # an array size 4 times the size of a type 3 block, take a look
+        # at the cost compression in sc_encode_block().
+        indices = sorted(set(randrange(len(a)) for _ in range(5)))
         a[indices] = 1
         b = bytearray(b'\x04\x00\x00\x00\x04\xc4')
         b.append(len(indices))
