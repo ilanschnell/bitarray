@@ -1462,9 +1462,15 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertEqual(sc_encode(a), b)
 
     def test_block_type4(self):
-        a = bitarray(1 << 26, 'little')
-        a[0x00ccbbaa] = a[0x03ffeedd] = 1
-        b = b'\x04\x00\x00\x00\x04\xc4\x02\xaa\xbb\xcc\x00\xdd\xee\xff\x03\0'
+        N = 1 << 26
+        indices = sorted(set(randrange(N) for _ in range(5)))
+        a = bitarray(N, 'little')
+        a[indices] = 1
+        b = bytearray(b'\x04\x00\x00\x00\x04\xc4')
+        b.append(len(indices))
+        for i in indices:
+            b.extend(struct.pack("<I", i))
+        b.append(0)  # stop byte
         self.assertEqual(sc_decode(b), a)
         self.assertEqual(sc_encode(a), b)
 
