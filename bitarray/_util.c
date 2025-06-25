@@ -2108,10 +2108,10 @@ static PyMethodDef module_functions[] = {
 
 #ifndef NDEBUG
     /* functions exposed in debug mode for testing */
-    {"_count_from_word", (PyCFunction) module_cfw,     METH_VARARGS, 0},
-    {"_read_n",          (PyCFunction) module_read_n,  METH_VARARGS, 0},
-    {"_write_n",         (PyCFunction) module_write_n, METH_VARARGS, 0},
-    {"_sc_rts",          (PyCFunction) module_sc_rts,  METH_O,       0},
+    {"_cfw",      (PyCFunction) module_cfw,     METH_VARARGS, 0},
+    {"_read_n",   (PyCFunction) module_read_n,  METH_VARARGS, 0},
+    {"_write_n",  (PyCFunction) module_write_n, METH_VARARGS, 0},
+    {"_sc_rts",   (PyCFunction) module_sc_rts,  METH_O,       0},
 #endif
 
     {NULL,        NULL}  /* sentinel */
@@ -2128,7 +2128,8 @@ PyInit__util(void)
 {
     PyObject *m, *bitarray_module;
 
-    if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
+    bitarray_module = PyImport_ImportModule("bitarray");
+    if (bitarray_module == NULL)
         return NULL;
     bitarray_type = (PyTypeObject *) PyObject_GetAttrString(bitarray_module,
                                                             "bitarray");
