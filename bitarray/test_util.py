@@ -1450,6 +1450,8 @@ class SC_Tests(unittest.TestCase, Util):
                 # such high values sc_encode() may find better compression
                 # with type 1 blocks.
                 self.assertEqual(sc_encode(a), b)
+            else:
+                self.assertTrue(len(sc_encode(a)) <= len(b))
 
     def test_block_type3(self):
         a = bitarray(16_777_216, 'little')
@@ -1465,7 +1467,7 @@ class SC_Tests(unittest.TestCase, Util):
         a = bitarray(1 << 26, 'little')
         # To understand why we cannot have a population larger than 5 for
         # an array size 4 times the size of a type 3 block, take a look
-        # at the cost compression in sc_encode_block().
+        # at the cost comparison in sc_encode_block().  (2 + 6 >= 2 * 4)
         indices = sorted(set(randrange(len(a)) for _ in range(5)))
         a[indices] = 1
         b = bytearray(b'\x04\x00\x00\x00\x04\xc4')
