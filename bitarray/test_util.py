@@ -1222,7 +1222,57 @@ class BaseTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
             self.check_obj(b)
 
-# ---------------------------------------------------------------------------
+# -----------------  _sc_rts()   (running totals debug test)  ---------------
+
+@skipIf(not DEBUG)
+class RTS_Tests(unittest.TestCase):
+
+    def test_segsize(self):
+        self.assertIsInstance(_SEGSIZE, int)
+        self.assertTrue(_SEGSIZE in [8, 16, 32])
+
+    def test_empty(self):
+        rts = _sc_rts(bitarray())
+        self.assertEqual(len(rts), 1)
+        self.assertEqual(rts, [0])
+
+    @skipIf(SEGBITS != 256)
+    def test_example(self):
+        # see example before sc_calc_rts() in _util.c
+        a = zeros(987)
+        a[:5] = a[512:515] = a[768:772] = 1
+        self.assertEqual(a.count(), 12)
+        rts = _sc_rts(a)
+        self.assertIsInstance(rts, list)
+        self.assertEqual(len(rts), 5)
+        self.assertEqual(rts, [0, 5, 5, 8, 12])
+
+    @staticmethod
+    def nseg(a):  # number of segments
+        return (a.nbytes + _SEGSIZE - 1) // _SEGSIZE
+
+    def test_ones(self):
+        for n in range(1000):
+            a = ones(n)
+            rts = _sc_rts(a)
+            self.assertEqual(len(rts), self.nseg(a) + 1)
+            self.assertEqual(rts[0], 0)
+            self.assertEqual(rts[-1], n)
+            for i, v in enumerate(rts):
+                self.assertEqual(v, min(SEGBITS * i, n))
+
+    def test_random(self):
+        for _ in range(200):
+            a = urandom_2(randrange(10000))
+            rts = _sc_rts(a)
+            self.assertEqual(len(rts), self.nseg(a) + 1)
+            self.assertEqual(rts[0], 0)
+            self.assertEqual(rts[-1], a.count())
+            for i in range(self.nseg(a)):
+                seg_pop = a.count(1, SEGBITS * i, SEGBITS * (i + 1))
+                self.assertEqual(rts[i + 1] - rts[i], seg_pop)
+
+# --------------------------- sparse compression ----------------------------
 
 class SC_Tests(unittest.TestCase, Util):
 
@@ -1382,12 +1432,10 @@ class SC_Tests(unittest.TestCase, Util):
             a = bitarray(256, 'little')
             a[indices] = 1
             self.assertEqual(sc_decode(b), a)
+            self.assertTrue(a.count() <= n)
 
-            # in order to recreate the block sc_encode generates, we need
-            # a sorted list of the indices with no duplicates
-            indices = sorted(set(indices))
-            b = bytearray([0x02, 0x00, 0x01, 0xa0 + len(indices)])
-            b.extend(indices)
+            b = bytearray([0x02, 0x00, 0x01, 0xa0 + a.count()])
+            b.extend(list(a.search(1)))  # sorted indices with no duplicates
             b.append(0)  # stop byte
 
             self.assertEqual(sc_decode(b), a)
@@ -1414,20 +1462,25 @@ class SC_Tests(unittest.TestCase, Util):
         for a in None, [], 0, 123, b'', b'\x00', 3.14:
             self.assertRaises(TypeError, sc_encode, a)
 
+    def check_blob_length(self, a, m):
+        blob = sc_encode(a)
+        self.assertEqual(len(blob), m)
+        self.assertEqual(sc_decode(blob), a)
+
     def test_encode_zeros(self):
         for i in range(26):
             n = 1 << i
             a = zeros(n)
             m = 2                            # head byte and stop byte
             m += bits2bytes(n.bit_length())  # size of n in bytes
-            self.assertEqual(m, len(sc_encode(a)))
+            self.check_blob_length(a, m)
 
             a[0] = 1
             m += 2                  # block head byte and one index byte
             m += 2 * bool(i > 9)    # count byte and second index byte
             m += bool(i > 16)       # third index byte
             m += bool(i > 24)       # fourth index byte
-            self.assertEqual(m, len(sc_encode(a)))
+            self.check_blob_length(a, m)
 
     def test_encode_ones(self):
         for _ in range(10):
@@ -1440,7 +1493,7 @@ class SC_Tests(unittest.TestCase, Util):
             # number of head bytes, all of block type 0:
             m += bool(nbytes % 32)            # number in 0x01 .. 0x1f
             m += (nbytes // 32 + 127) // 128  # number in 0x20 .. 0xbf
-            self.assertEqual(m, len(sc_encode(a)))
+            self.check_blob_length(a, m)
 
     def test_encode_type4(self):
         a = zeros(1 << 26, 'big')
@@ -1474,56 +1527,6 @@ class SC_Tests(unittest.TestCase, Util):
             for _ in range(16):
                 a &= urandom(n, endian)
                 self.round_trip(a)
-
-# -----------------  _sc_rts()   (running totals debug test)  ---------------
-
-@skipIf(not DEBUG)
-class RTS_Tests(unittest.TestCase):
-
-    def test_segsize(self):
-        self.assertIsInstance(_SEGSIZE, int)
-        self.assertTrue(_SEGSIZE in [8, 16, 32])
-
-    def test_empty(self):
-        rts = _sc_rts(bitarray())
-        self.assertEqual(len(rts), 1)
-        self.assertEqual(rts, [0])
-
-    @skipIf(SEGBITS != 256)
-    def test_example(self):
-        # see example before sc_calc_rts() in _util.c
-        a = zeros(987)
-        a[:5] = a[512:515] = a[768:772] = 1
-        self.assertEqual(a.count(), 12)
-        rts = _sc_rts(a)
-        self.assertIsInstance(rts, list)
-        self.assertEqual(len(rts), 5)
-        self.assertEqual(rts, [0, 5, 5, 8, 12])
-
-    @staticmethod
-    def nseg(a):  # number of segments
-        return (a.nbytes + _SEGSIZE - 1) // _SEGSIZE
-
-    def test_ones(self):
-        for n in range(1000):
-            a = ones(n)
-            rts = _sc_rts(a)
-            self.assertEqual(len(rts), self.nseg(a) + 1)
-            self.assertEqual(rts[0], 0)
-            self.assertEqual(rts[-1], n)
-            for i, v in enumerate(rts):
-                self.assertEqual(v, min(SEGBITS * i, n))
-
-    def test_random(self):
-        for _ in range(200):
-            a = urandom_2(randrange(10000))
-            rts = _sc_rts(a)
-            self.assertEqual(len(rts), self.nseg(a) + 1)
-            self.assertEqual(rts[0], 0)
-            self.assertEqual(rts[-1], a.count())
-            for i in range(self.nseg(a)):
-                seg_pop = a.count(1, SEGBITS * i, SEGBITS * (i + 1))
-                self.assertEqual(rts[i + 1] - rts[i], seg_pop)
 
 # ---------------------------------------------------------------------------
 
