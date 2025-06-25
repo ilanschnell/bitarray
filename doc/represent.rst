@@ -152,6 +152,10 @@ stream of binary data, the format lets us know when the end of the encoded
 bitarray is reached.
 See `variable length format <./variable_length.rst>`__ for this representation.
 
+
+Compressed sparse bitarrays
+---------------------------
+
 Another representation
 is `compressed sparse bitarrays <./sparse_compression.rst>`,
 whose format is also "self terminating".  This, format actually uses different
