@@ -153,6 +153,10 @@ bitarray is reached.
 See `variable length format <./variable_length.rst>`__ for this representation.
 
 Another representation
-are `compressed sparse bitarrays <./sparse_compression.rst>`,
-whose format is also "self terminating", but only efficient for large sparsely
+is `compressed sparse bitarrays <./sparse_compression.rst>`,
+whose format is also "self terminating".  This, format actually uses different
+representations dependent on how sparsely the population of the bitarray (even
+sections of the bitarray) is.
+For large sparse bitarrays, the format reduces (compresses) the amount of data
+very efficiently, while only requiring a very tiny overhead for non-sparsely
 populated bitarrays.
