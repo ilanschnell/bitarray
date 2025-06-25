@@ -1604,6 +1604,9 @@ class VLFTests(unittest.TestCase, Util):
             self.assertIsInstance(b, bytes)
             self.assertEqual(b, b'\xd3\x20')
 
+        for a in None, [], 0, 123, b'', b'\x00', 3.14:
+            self.assertRaises(TypeError, vl_encode, a)
+
     def test_decode_types(self):
         b = b'\xd3\x20'
         lst = [b, iter(b), memoryview(b), iter([0xd3, 0x20]), bytearray(b)]
