@@ -1779,7 +1779,7 @@ vl_encode(PyObject *module, PyObject *obj)
     a = (bitarrayobject *) obj;
     nbits = a->nbits;
     n = (nbits + LEN_PAD_BITS + 6) / 7;  /* number of resulting bytes */
-    padding = 7 * n - LEN_PAD_BITS - nbits;
+    padding = (int) (7 * n - LEN_PAD_BITS - nbits);
 
     result = PyBytes_FromStringAndSize(NULL, n);
     if (result == NULL)
