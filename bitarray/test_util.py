@@ -1452,7 +1452,7 @@ class SC_Tests(unittest.TestCase, Util):
                 self.assertEqual(sc_encode(a), b)
 
     def test_block_type3(self):
-        a = bitarray(16777216, 'little')
+        a = bitarray(16_777_216, 'little')
         a[[getrandbits(24) for _ in range(255)]] = 1
         b = bytearray([0x04, 0x00, 0x00, 0x00, 0x01, 0xc3, a.count()])
         for i in a.search(1):
@@ -1462,12 +1462,11 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertEqual(sc_encode(a), b)
 
     def test_block_type4(self):
-        a = sc_decode(b'\x14\x00\x00\x00\x04\0')
-        self.assertEqual(len(a), 1 << 26)
+        a = bitarray(1 << 26, 'little')
         a[0x00ccbbaa] = a[0x03ffeedd] = 1
-        self.assertEqual(
-            sc_encode(a),
-            b'\x14\x00\x00\x00\x04\xc4\x02\xaa\xbb\xcc\x00\xdd\xee\xff\x03\0')
+        b = b'\x04\x00\x00\x00\x04\xc4\x02\xaa\xbb\xcc\x00\xdd\xee\xff\x03\0'
+        self.assertEqual(sc_decode(b), a)
+        self.assertEqual(sc_encode(a), b)
 
     def test_decode_random_bytes(self):
         # ensure random input doesn't crash the decoder
