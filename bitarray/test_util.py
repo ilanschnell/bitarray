@@ -1423,6 +1423,20 @@ class SC_Tests(unittest.TestCase, Util):
             a = sc_decode(b)
             self.assertEqual(a.to01(), '001')
 
+    def test_block_type0(self):
+        for k in range(0x01, 0xa0):
+            nbytes = k if k <= 32 else 32 * (k - 31)
+            nbits = 8 * nbytes
+            a = ones(nbits, "little")
+            b = bytearray([0x01, nbits] if nbits < 256 else
+                          [0x02, nbits % 256, nbits // 256])
+            b.append(k)
+            b.extend(a.tobytes())
+            b.append(0)  # stop byte
+
+            self.assertEqual(sc_decode(b), a)
+            self.assertEqual(sc_encode(a), b)
+
     def test_block_type1(self):
         a = bitarray(256, 'little')
         for n in range(1, 32):
