@@ -1,9 +1,7 @@
 import bz2
 import gzip
 from time import perf_counter
-from random import random, randrange
 
-from bitarray import bitarray
 from bitarray.util import (
     ones, urandom,
     serialize, deserialize,
@@ -14,47 +12,21 @@ from bitarray.util import (
 from sc_stat import sc_stat
 
 
-def random_array(n, p=0.5):
-    """random_array(n, p=0.5) -> bitarray
-
-Generate random bitarray of length n.
-Each bit has a probability p of being 1.
-"""
-    if p < 0.05:
-        # XXX what happens for small n?
-        # when the probability p is small, it is faster to randomly
-        # set p * n elements
-        a = bitarray(n)
-        for _ in range(int(p * n)):
-            a[randrange(n)] = 1
-        return a
-
-    return bitarray((random() < p for _ in range(n)))
-
-def test_random_array():
-    n = 10_000_000
-    p = 1e-6
-    while p < 1.0:
-        assert random_array(0, p) == bitarray()
-        a = random_array(n, p)
-        cnt = a.count()
-        print("%10.7f  %10.7f  %10.7f" % (p, cnt / n, abs(p - cnt / n)))
-        p *= 1.4
-
 def p_range():
     n = 1 << 28
-    p = 1e-8
+    p = 1.0
+    a = ones(n)
     print("        p          ratio         raw"
           "    type 1    type 2    type 3    type 4")
     print("   " + 73 *'-')
-    while p < 1.0:
-        a = random_array(n, p)
+    while p > 1e-8:
         b = sc_encode(a)
         blocks = sc_stat(b)['blocks']
         print('  %11.8f  %11.8f  %8d  %8d  %8d  %8d  %8d' %
               tuple([p, len(b) / (n / 8)] + blocks))
         assert a == sc_decode(b)
-        p *= 1.8
+        a &= urandom(n)
+        p /= 2
 
 def compare():
     n = 1 << 26
@@ -83,6 +55,5 @@ def compare():
         assert c == x
 
 if __name__ == '__main__':
-    #test_random_array()
     compare()
     p_range()
