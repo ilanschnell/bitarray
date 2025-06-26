@@ -1292,6 +1292,33 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(sc_encode(a), b)
             self.assertEQUAL(sc_decode(b), a)
 
+    def test_encode_types(self):
+        for a in bitarray('1', 'big'), frozenbitarray('1', 'big'):
+            b = sc_encode(a)
+            self.assertIsInstance(b, bytes)
+            self.assertEqual(b, b'\x11\x01\x01\x80\0')
+
+        for a in None, [], 0, 123, b'', b'\x00', 3.14:
+            self.assertRaises(TypeError, sc_encode, a)
+
+    def test_decode_types(self):
+        blob = b'\x11\x03\x01\x20\0'
+        for b in blob, bytearray(blob), list(blob), array.array('B', blob):
+            a = sc_decode(b)
+            self.assertIsType(a, 'bitarray')
+            self.assertEqual(a.endian, 'big')
+            self.assertEqual(a.to01(), '001')
+
+        a = [17, 3, 1, 32, 0]
+        self.assertEqual(sc_decode(a), bitarray("001"))
+        for x in 256, -1:
+            a[-1] = x
+            self.assertRaises(ValueError, sc_decode, a)
+
+        self.assertRaises(TypeError, sc_decode, [0x02, None])
+        for x in None, 3, 3.2, Ellipsis, 'foo':
+            self.assertRaises(TypeError, sc_decode, x)
+
     def test_decode_header_nbits(self):
         for b, n in [
                 (b'\x00\0', 0),
@@ -1329,18 +1356,17 @@ class SC_Tests(unittest.TestCase, Util):
                                      sc_decode, [0x01, 0x10, c])
 
     def test_decode_header_overflow(self):
-        nbytes = PTRSIZE
         self.assertRaisesMessage(
             OverflowError,
-            "sizeof(Py_ssize_t) = %d: cannot read 9 bytes" % nbytes,
+            "sizeof(Py_ssize_t) = %d: cannot read 9 bytes" % PTRSIZE,
             sc_decode, b'\x09' + 9 * b'\x00')
 
         self.assertRaisesMessage(
             ValueError,
-            "read %d bytes got negative value: -1" % nbytes,
-            sc_decode, [nbytes] + nbytes * [0xff])
+            "read %d bytes got negative value: -1" % PTRSIZE,
+            sc_decode, [PTRSIZE] + PTRSIZE * [0xff])
 
-        if nbytes == 4:
+        if PTRSIZE == 4:
             self.assertRaisesMessage(
                 OverflowError,
                 "sizeof(Py_ssize_t) = 4: cannot read 5 bytes",
@@ -1359,6 +1385,7 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertRaisesMessage(
             ValueError, "decode error (raw): 32 + 3 > 34",
             sc_decode, b"\x02\x0f\x01\xa0\x03\xff\xff\xff\0")
+
         # sparse index too high
         self.assertRaisesMessage(
             ValueError, "decode error (n=1): 128 >= 128",
@@ -1387,36 +1414,16 @@ class SC_Tests(unittest.TestCase, Util):
                        b'\x01\x04\x01', b'\x01\x04\xa1', b'\x01\x04\xa0']:
             self.assertRaises(StopIteration, sc_decode, stream)
 
-    def test_decode_types(self):
-        blob = b'\x11\x03\x01\x20\0'
-        for b in blob, bytearray(blob), list(blob), array.array('B', blob):
-            a = sc_decode(b)
-            self.assertIsType(a, 'bitarray')
-            self.assertEqual(a.endian, 'big')
-            self.assertEqual(a.to01(), '001')
-
-        a = [17, 3, 1, 32, 0]
-        self.assertEqual(sc_decode(a), bitarray("001"))
-        for x in 256, -1:
-            a[-1] = x
-            self.assertRaises(ValueError, sc_decode, a)
-
-        self.assertRaises(TypeError, sc_decode, [0x02, None])
-        for x in None, 3, 3.2, Ellipsis:
-            self.assertRaises(TypeError, sc_decode, x)
-        for _ in range(10):
-            self.assertRaises(TypeError, sc_decode, [0x00, None])
-
     def test_decode_ambiguity(self):
         for b in [
                 # raw:
                 b'\x11\x03\x01\x20\0',    # this is what sc_encode gives us
                 b'\x11\x03\x01\x3f\0',    # but we can set the pad bits to 1
                 # sparse:
-                b'\x11\x03\xa1\x02\0',                  # using block type 1
-                b'\x11\x03\xc2\x01\x02\x00\0',          # using block type 2
-                b'\x11\x03\xc3\x01\x02\x00\x00\0',      # using block type 3
-                b'\x11\x03\xc4\x01\x02\x00\x00\x00\0',  # using block type 4
+                b'\x11\x03\xa1\x02\0',                  # block type 1
+                b'\x11\x03\xc2\x01\x02\x00\0',          # block type 2
+                b'\x11\x03\xc3\x01\x02\x00\x00\0',      # block type 3
+                b'\x11\x03\xc4\x01\x02\x00\x00\x00\0',  # block type 4
         ]:
             a = sc_decode(b)
             self.assertEqual(a.to01(), '001')
@@ -1501,15 +1508,6 @@ class SC_Tests(unittest.TestCase, Util):
                 continue
             self.assertEqual(len(a), 1024)
             self.assertEqual(a.endian, 'little')
-
-    def test_encode_types(self):
-        for a in bitarray('1', 'big'), frozenbitarray('1', 'big'):
-            b = sc_encode(a)
-            self.assertIsInstance(b, bytes)
-            self.assertEqual(b, b'\x11\x01\x01\x80\0')
-
-        for a in None, [], 0, 123, b'', b'\x00', 3.14:
-            self.assertRaises(TypeError, sc_encode, a)
 
     def check_blob_length(self, a, m):
         blob = sc_encode(a)
@@ -1608,26 +1606,26 @@ class VLFTests(unittest.TestCase, Util):
             self.assertRaises(TypeError, vl_encode, a)
 
     def test_decode_types(self):
-        b = b'\xd3\x20'
-        lst = [b, iter(b), memoryview(b), iter([0xd3, 0x20]), bytearray(b)]
-        for s in lst:
+        blob = b'\xd3\x20'
+        for s in (blob, iter(blob), memoryview(blob), iter([0xd3, 0x20]),
+                  bytearray(blob)):
             a = vl_decode(s, endian=self.random_endian())
             self.assertIsType(a, 'bitarray')
             self.assertEqual(a, bitarray('0011 01'))
 
+        # these objects are not iterable
+        for arg in None, 0, 1, 0.0:
+            self.assertRaises(TypeError, vl_decode, arg)
+        # these items cannot be interpreted as ints
+        for item in None, 2.34, Ellipsis, 'foo':
+            self.assertRaises(TypeError, vl_decode, iter([0x95, item]))
+
     def test_decode_args(self):
-        self.assertRaises(TypeError, vl_decode, 'foo')
         # item not integer
         self.assertRaises(TypeError, vl_decode, iter([b'\x40']))
 
         self.assertRaises(TypeError, vl_decode, b'\x40', 'big', 3)
         self.assertRaises(ValueError, vl_decode, b'\x40', 'foo')
-        # these objects are not iterable
-        for arg in None, 0, 1, 0.0:
-            self.assertRaises(TypeError, vl_decode, arg)
-        # these items cannot be interpreted as ints
-        for item in None, 2.34, Ellipsis:
-            self.assertRaises(TypeError, vl_decode, iter([0x95, item]))
 
     def test_decode_trailing(self):
         for s, bits in [(b'\x40ABC', ''),
