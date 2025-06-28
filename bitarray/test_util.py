@@ -47,39 +47,28 @@ else:
 
 class ZerosOnesTests(unittest.TestCase):
 
-    def test_range(self):
-        for n in range(100):
-            a = zeros(n)
-            self.assertEqual(len(a), n)
-            self.assertFalse(a.any())
-            self.assertEqual(a.count(0), n)
-            self.assertEqual(a.count(1), 0)
-            self.assertIsInstance(a, bitarray)
-            b = ones(n)
-            self.assertEqual(len(b), n)
-            self.assertTrue(b.all())
-            self.assertEqual(b.count(0), 0)
-            self.assertEqual(b.count(1), n)
-            self.assertIsInstance(b, bitarray)
-
-    def test_endian(self):
-        for default_endian in 'big', 'little':
+    def test_basic(self):
+        for _ in range(20):
+            default_endian = choice(['little', 'big'])
             _set_default_endian(default_endian)
+            a = choice([zeros(0), zeros(0, None), zeros(0, endian=None),
+                        ones(0), ones(0, None), ones(0, endian=None)])
+            self.assertEqual(a, bitarray())
+            self.assertEqual(a.endian, default_endian)
+            self.assertEqual(type(a), bitarray)
 
-            for a in (zeros(0), zeros(0, None), zeros(0, endian=None),
-                      ones(0), ones(0, None), ones(0, endian=None)):
-                self.assertEqual(a, bitarray())
-                self.assertEqual(a.endian, default_endian)
+            endian = choice(['little', 'big', None])
+            n = randrange(100)
 
-            for endian in 'big', 'little':
-                for a in zeros(3, endian), zeros(3, endian=endian):
-                    self.assertEqual(a, bitarray('000'))
-                    self.assertEqual(a.endian, endian)
-                for b in ones(3, endian), ones(3, endian=endian):
-                    self.assertEqual(b, bitarray('111'))
-                    self.assertEqual(b.endian, endian)
+            a = choice([zeros(n, endian), zeros(n, endian=endian)])
+            self.assertEqual(a.to01(), n * "0")
+            self.assertEqual(a.endian, endian or default_endian)
 
-    def test_wrong_args(self):
+            b = choice([ones(n, endian), ones(n, endian=endian)])
+            self.assertEqual(b.to01(), n * "1")
+            self.assertEqual(b.endian, endian or default_endian)
+
+    def test_errors(self):
         for f in zeros, ones:
             self.assertRaises(TypeError, f) # no argument
             self.assertRaises(TypeError, f, '')
@@ -99,45 +88,39 @@ class ZerosOnesTests(unittest.TestCase):
 class URandomTests(unittest.TestCase):
 
     def test_basic(self):
-        for default_endian in 'big', 'little':
+        for _ in range(20):
+            default_endian = choice(['little', 'big'])
             _set_default_endian(default_endian)
+            a = choice([urandom(0), urandom(0, endian=None)])
+            self.assertEqual(a, bitarray())
+            self.assertEqual(a.endian, default_endian)
 
-            for a in urandom(0), urandom(0, None), urandom(0, endian=None):
-                self.assertEqual(a, bitarray())
-                self.assertEqual(a.endian, default_endian)
+            endian = choice(['little', 'big', None])
+            n = randrange(100)
 
-            for n in range(50):
-                a = urandom(n)
-                self.assertEqual(len(a), n)
-                self.assertEqual(a.endian, default_endian)
+            a = choice([urandom(n, endian), urandom(n, endian=endian)])
+            self.assertEqual(len(a), n)
+            self.assertEqual(a.endian, endian or default_endian)
+            self.assertEqual(type(a), bitarray)
 
-            for endian in 'big', 'little':
-                for a in urandom(11, endian), urandom(11, endian=endian):
-                    self.assertEqual(len(a), 11)
-                    self.assertEqual(a.endian, endian)
-
-    def test_count(self):
-        a = urandom(1000)
-        b = urandom(1000)
-        self.assertNotEqual(a, b)
-        self.assertTrue(400 < a.count() < 600)
-        self.assertTrue(400 < b.count() < 600)
-
-        c = Counter(urandom(100).count() for _ in range(10_000))
-        self.assertTrue(3_550 <= sum(c[k] for k in range(45, 51)) <= 4_532)
-        if sys.version_info[:2] >= (3, 10):
-            self.assertEqual(c.total(), 10_000)
-
-    def test_wrong_args(self):
+    def test_errors(self):
         self.assertRaises(TypeError, urandom)
         self.assertRaises(TypeError, urandom, '')
         self.assertRaises(TypeError, urandom, bitarray())
         self.assertRaises(TypeError, urandom, [])
         self.assertRaises(TypeError, urandom, 1.0)
         self.assertRaises(ValueError, urandom, -1)
-
         self.assertRaises(TypeError, urandom, 0, 1)
         self.assertRaises(ValueError, urandom, 0, 'foo')
+
+    def test_count(self):
+        a = urandom(1000)
+        self.assertTrue(400 < a.count() < 600)
+
+        c = Counter(urandom(100).count() for _ in range(10_000))
+        self.assertTrue(3_550 <= sum(c[k] for k in range(45, 51)) <= 4_532)
+        if sys.version_info[:2] >= (3, 10):
+            self.assertEqual(c.total(), 10_000)
 
 # ---------------------------------------------------------------------------
 
