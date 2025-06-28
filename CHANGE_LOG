@@ -1,5 +1,6 @@
-2025-XX-XX   3.4.4:
+2025-XX-XX   3.5.0:
 -------------------
+  * add `util.random_p()`
   * improve sparse compression testing
 
 

@@ -25,7 +25,7 @@ from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
                                     PTRSIZE, DEBUG, WHITESPACE)
 
 from bitarray.util import (
-    zeros, ones, urandom, pprint, strip, count_n,
+    zeros, ones, urandom, random_p, pprint, strip, count_n,
     parity, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
     correspond_all, byteswap, intervals,
@@ -138,6 +138,47 @@ class URandomTests(unittest.TestCase):
 
         self.assertRaises(TypeError, urandom, 0, 1)
         self.assertRaises(ValueError, urandom, 0, 'foo')
+
+# ---------------------------------------------------------------------------
+
+class Random_P_Tests(unittest.TestCase):
+
+    def test_inputs_and_edge_cases(self):
+        self.assertRaises(TypeError, random_p, 0.25)
+        self.assertRaises(TypeError, random_p, 1, "0.5")
+        self.assertRaises(ValueError, random_p, -1)
+        self.assertRaises(ValueError, random_p, 1, -0.5)
+        self.assertRaises(ValueError, random_p, 1, 1.5)
+        self.assertEqual(random_p(0), bitarray())
+        for n in range(20):
+            self.assertEqual(random_p(n, 0), zeros(n))
+            self.assertEqual(random_p(n, 1), ones(n))
+
+    def test_args_and_types(self):
+        for _ in range(500):
+            default_endian = choice(['little', 'big'])
+            _set_default_endian(default_endian)
+            endian = choice(['little', 'big', None])
+            # cover all code path - having 1e-18 is important for Python
+            # versions below 3.12
+            n = randrange(20)
+            p = choice([0.0, 1e-18, 0.0001, 0.2, 0.5, 0.9, 1.0])
+            a = random_p(n, p, endian)
+            self.assertTrue(type(a), bitarray)
+            self.assertEqual(len(a), n)
+            self.assertEqual(a.endian, endian or default_endian)
+
+    def test_n_p(self):
+        for _ in range(100):
+            n = choice([100, 1000, 10_000])
+            p = choice([0.0001, 0.001, 0.0099, 0.01, 0.0101, 0.25, 0.375,
+                        0.5, 0.8, 0.9])
+            mu = n * p
+            if mu < 1.0:
+                continue
+            sigma = (mu * (1.0 - p)) ** 0.5
+            a = random_p(n, p)
+            self.assertTrue(abs(a.count() - mu) < 10 * sigma)
 
 # ---------------------------------------------------------------------------
 

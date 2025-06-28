@@ -9,6 +9,7 @@ from __future__ import absolute_import
 
 import os
 import sys
+import random
 
 from bitarray import bitarray, bits2bytes
 
@@ -25,7 +26,7 @@ from bitarray._util import (
 )
 
 __all__ = [
-    'zeros', 'ones', 'urandom',
+    'zeros', 'ones', 'urandom', 'random_p',
     'pprint', 'strip', 'count_n',
     'parity', 'xor_indices',
     'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
@@ -48,6 +49,65 @@ Return a bitarray of `length` random bits (uses `os.urandom`).
     a = bitarray(os.urandom(bits2bytes(__length)), endian)
     del a[__length:]
     return a
+
+
+def random_p(__n, p=0.5, endian=None):
+    """random_p(n, /, p=0.5, endian=None) -> bitarray
+
+Return random bitarray of length `n`, where each bit has probability `p` of
+being 1.
+Equivalent to: `bitarray((random() < p for _ in range(n)), endian)`
+
+This function uses a significant speedup for `p < 0.01`, which is only
+available on Python 3.12+.
+"""
+    # error check inputs and handle edge cases
+    if __n < 0:
+        raise ValueError("n must be non-negative")
+    if p <= 0.0 or p >= 1.0:
+        if p == 0.0:
+            return zeros(__n, endian)
+        if p == 1.0:
+            return ones(__n, endian)
+        raise ValueError("p must be in range 0.0 <= p <= 1.0")
+
+    # for small n use literal definition
+    if __n < 10:
+        return bitarray((random.random() < p for _ in range(__n)), endian)
+
+    # exploit symmetry to establish: p <= 0.5
+    if p > 0.5:
+        return ~random_p(__n, 1.0 - p, endian)
+
+    # for small p set randomly bits - uses random.binomialvariate, which was
+    # added in Python 3.12 - the speedup is significant
+    if p < 0.01 and sys.version_info[:2] >= (3, 12):
+        res = zeros(__n, endian)
+        c = random.binomialvariate(__n, p)
+        for _ in range(c):
+            while 1:
+                i = random.randrange(__n)
+                if not res[i]:
+                    res[i] = 1
+                    break
+        return res
+
+    m = 32
+    i = int(p * (1 << m) + 0.5)
+    if i == 0:
+        return zeros(__n, endian)
+    a = int2ba(i, length=m, endian="little")
+    a = strip(a, mode="left")
+    assert a[0]
+    del a[0]
+
+    res = urandom(__n, endian)
+    for v in a:
+        if v:
+            res |= urandom(__n, endian)
+        else:
+            res &= urandom(__n, endian)
+    return res
 
 
 def pprint(__a, stream=None, group=8, indent=4, width=80):
