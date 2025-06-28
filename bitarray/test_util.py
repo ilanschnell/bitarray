@@ -123,6 +123,11 @@ class URandomTests(unittest.TestCase):
         self.assertTrue(400 < a.count() < 600)
         self.assertTrue(400 < b.count() < 600)
 
+        c = Counter(urandom(100).count() for _ in range(10_000))
+        self.assertTrue(3_550 <= sum(c[k] for k in range(45, 51)) <= 4_532)
+        if sys.version_info[:2] >= (3, 10):
+            self.assertEqual(c.total(), 10_000)
+
     def test_wrong_args(self):
         self.assertRaises(TypeError, urandom)
         self.assertRaises(TypeError, urandom, '')
