@@ -52,10 +52,9 @@ import unittest
 
 from bitarray import bitarray
 from bitarray.util import urandom, count_xor
-from bitarray.test_bitarray import Util
 
 
-class HammingTests(unittest.TestCase, Util):
+class HammingTests(unittest.TestCase):
 
     def test_init(self):
         for r, n, k in [

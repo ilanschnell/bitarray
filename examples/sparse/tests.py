@@ -1,19 +1,12 @@
 import sys
-from random import getrandbits, randint, randrange
 import unittest
-
-try:
-    from itertools import pairwise  # type: ignore
-except ImportError:
-    from itertools import tee
-    def pairwise(iterable):  # type: ignore
-        a, b = tee(iterable)
-        next(b, None)
-        return zip(a, b)
+from itertools import pairwise
+from random import getrandbits, randint, randrange
 
 from bitarray import bitarray
 from bitarray.util import intervals
 from bitarray.test_bitarray import Util
+
 
 if len(sys.argv) != 2 or sys.argv[1] not in ('flips', 'ones', '-'):
     sys.exit("Argument 'flips' or 'ones' expected.")
