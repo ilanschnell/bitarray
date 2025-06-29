@@ -114,13 +114,16 @@ class URandomTests(unittest.TestCase):
         self.assertRaises(ValueError, urandom, 0, 'foo')
 
     def test_count(self):
-        a = urandom(1000)
-        self.assertTrue(400 < a.count() < 600)
+        a = urandom(10_000_000)
+        self.assertTrue(4_980_000 <= a.count() <= 5_020_000)
 
         c = Counter(urandom(100).count() for _ in range(10_000))
-        self.assertTrue(3_550 <= sum(c[k] for k in range(45, 51)) <= 4_532)
+        self.assertTrue(set(c) <= set(range(1001)))
         if sys.version_info[:2] >= (3, 10):
             self.assertEqual(c.total(), 10_000)
+        x = sum(c[k] for k in range(46, 51))
+        # expected mean = 3556.938   stdev = 47.872
+        self.assertTrue((x - 3557) <= 479)
 
 # ---------------------------------------------------------------------------
 
@@ -156,12 +159,9 @@ class Random_P_Tests(unittest.TestCase):
             n = choice([100, 1000, 10_000])
             p = choice([0.0001, 0.001, 0.0099, 0.01, 0.0101, 0.25, 0.375,
                         0.5, 0.8, 0.9])
-            mu = n * p
-            if mu < 1.0:
-                continue
-            sigma = (mu * (1.0 - p)) ** 0.5
+            sigma = max(0.5, (n * p * (1.0 - p)) ** 0.5)
             a = random_p(n, p)
-            self.assertTrue(abs(a.count() - mu) < 10 * sigma)
+            self.assertTrue(abs(a.count() - n * p) < 10 * sigma, sigma)
 
 # ---------------------------------------------------------------------------
 
