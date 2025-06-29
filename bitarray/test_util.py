@@ -159,9 +159,9 @@ class Random_P_Tests(unittest.TestCase):
             n = choice([10, 100, 1000, 10_000])
             p = choice([0.0001, 0.001, 0.0099, 0.01, 0.0101, 0.25, 0.375,
                         0.5, 0.8, 0.9])
-            sigma = max(0.5, (n * p * (1.0 - p)) ** 0.5)
+            sigma = (n * p * (1.0 - p)) ** 0.5
             a = random_p(n, p)
-            self.assertTrue(abs(a.count() - n * p) < 10 * sigma, sigma)
+            self.assertTrue(abs(a.count() - n * p) < max(4, 10 * sigma))
 
 # ---------------------------------------------------------------------------
 
@@ -251,7 +251,7 @@ class StripTests(unittest.TestCase, Util):
             b = frozenbitarray('00010110000')
             c = strip(b, 'both')
             self.assertEqual(c, bitarray('1011'))
-            self.assertIsType(c, 'frozenbitarray')
+            self.assertEqual(type(c), frozenbitarray)
 
     def test_zeros_ones(self):
         for _ in range(50):
@@ -284,12 +284,12 @@ class StripTests(unittest.TestCase, Util):
             ]:
                 c = strip(a, mode)
                 self.assertEQUAL(c, res)
-                self.assertIsType(c, 'bitarray')
+                self.assertEqual(type(c), bitarray)
                 self.assertEQUAL(a, b)
 
                 c = strip(f, mode)
                 self.assertEQUAL(c, res)
-                self.assertIsType(c, 'frozenbitarray')
+                self.assertEqual(type(c), frozenbitarray)
                 self.assertEQUAL(f, b)
 
     def test_one_set(self):
@@ -568,7 +568,7 @@ class BitwiseAnyTests(unittest.TestCase, Util):
 
     def check(self, a, b):
         r = any_and(a, b)
-        self.assertIsInstance(r, bool)
+        self.assertEqual(type(r), bool)
         self.assertEqual(r, any_and(b, a))  # symmetry
         self.assertEqual(r, any(a & b))
         self.assertEqual(r, (a & b).any())
@@ -622,7 +622,7 @@ class SubsetTests(unittest.TestCase, Util):
 
     def check(self, a, b, res):
         r = subset(a, b)
-        self.assertIsInstance(r, bool)
+        self.assertEqual(type(r), bool)
         self.assertEqual(r, res)
         self.assertEqual(a | b == b, res)
         self.assertEqual(a & b == a, res)
@@ -951,7 +951,7 @@ class HexlifyTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, ba2hex, '101')
 
         c = ba2hex(bitarray('1101', 'big'))
-        self.assertIsInstance(c, str)
+        self.assertEqual(type(c), str)
 
     def test_ba2hex_group(self):
         a = bitarray('1000 0000 0101 1111', 'little')
@@ -979,7 +979,7 @@ class HexlifyTests(unittest.TestCase, Util):
             a = hex2ba(c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian, 'big')
-            self.assertIsType(a, 'bitarray')
+            self.assertEqual(type(a), bitarray)
         self.assertEQUAL(hex2ba('01'), bitarray('0000 0001', 'big'))
         self.assertEQUAL(hex2ba('08', 'little'),
                          bitarray('0000 0001', 'little'))
@@ -1039,12 +1039,12 @@ class HexlifyTests(unittest.TestCase, Util):
             a = hex2ba(hexdigits)
             self.assertEqual(len(a) % 4, 0)
             self.assertEqual(a.endian, default_endian)
-            self.assertIsType(a, 'bitarray')
+            self.assertEqual(type(a), bitarray)
             self.check_obj(a)
 
             t = ba2hex(a)
             self.assertEqual(t, hexdigits.lower())
-            self.assertIsInstance(t, str)
+            self.assertEqual(type(t), str)
             self.assertEQUAL(a, hex2ba(t, default_endian))
 
     def test_binascii(self):
@@ -1060,7 +1060,7 @@ class BaseTests(unittest.TestCase, Util):
 
     def test_ba2base(self):
         s = ba2base(16, bitarray('1101 0100', 'big'))
-        self.assertIsInstance(s, str)
+        self.assertEqual(type(s), str)
         self.assertEqual(s, 'd4')
 
     def test_base2ba(self):
@@ -1069,7 +1069,7 @@ class BaseTests(unittest.TestCase, Util):
             a = base2ba(16, c)
             self.assertEqual(a.to01(), '1110')
             self.assertEqual(a.endian, 'big')
-            self.assertIsType(a, 'bitarray')
+            self.assertEqual(type(a), bitarray)
 
     def test_base2ba_whitespace(self):
         self.assertEqual(base2ba(8, bytearray(b"17 0"), "little"),
@@ -1103,7 +1103,7 @@ class BaseTests(unittest.TestCase, Util):
                 ]:
             a = bitarray(s, "big")
             s = ba2base(n, a, group, sep)
-            self.assertIsInstance(s, str)
+            self.assertEqual(type(s), str)
             self.assertEqual(s, res)
 
     def test_explicit(self):
@@ -1259,7 +1259,7 @@ class BaseTests(unittest.TestCase, Util):
 class RTS_Tests(unittest.TestCase):
 
     def test_segsize(self):
-        self.assertIsInstance(_SEGSIZE, int)
+        self.assertEqual(type(_SEGSIZE), int)
         self.assertTrue(_SEGSIZE in [8, 16, 32])
 
     def test_empty(self):
@@ -1274,7 +1274,7 @@ class RTS_Tests(unittest.TestCase):
         a[:5] = a[512:515] = a[768:772] = 1
         self.assertEqual(a.count(), 12)
         rts = _sc_rts(a)
-        self.assertIsInstance(rts, list)
+        self.assertEqual(type(rts), list)
         self.assertEqual(len(rts), 5)
         self.assertEqual(rts, [0, 5, 5, 8, 12])
 
@@ -1325,7 +1325,7 @@ class SC_Tests(unittest.TestCase, Util):
     def test_encode_types(self):
         for a in bitarray('1', 'big'), frozenbitarray('1', 'big'):
             b = sc_encode(a)
-            self.assertIsInstance(b, bytes)
+            self.assertEqual(type(b), bytes)
             self.assertEqual(b, b'\x11\x01\x01\x80\0')
 
         for a in None, [], 0, 123, b'', b'\x00', 3.14:
@@ -1335,7 +1335,7 @@ class SC_Tests(unittest.TestCase, Util):
         blob = b'\x11\x03\x01\x20\0'
         for b in blob, bytearray(blob), list(blob), array.array('B', blob):
             a = sc_decode(b)
-            self.assertIsType(a, 'bitarray')
+            self.assertEqual(type(a), bitarray)
             self.assertEqual(a.endian, 'big')
             self.assertEqual(a.to01(), '001')
 
@@ -1370,7 +1370,7 @@ class SC_Tests(unittest.TestCase, Util):
 
         stream = iter([0x11, 0x05, 0x01, 0xff, 0, None, 'foo'])
         self.assertEqual(sc_decode(stream), bitarray('11111'))
-        self.assertIsNone(next(stream))
+        self.assertTrue(next(stream) is None)
         self.assertEqual(next(stream), 'foo')
 
     def test_decode_header_errors(self):
@@ -1618,7 +1618,7 @@ class VLFTests(unittest.TestCase, Util):
             for endian in 'big', 'little', None:
                 a = bitarray(s, endian)
                 c = vl_encode(a)
-                self.assertIsInstance(c, bytes)
+                self.assertEqual(type(c), bytes)
                 self.assertEqual(c, blob)
 
                 c = vl_decode(blob, endian)
@@ -1629,7 +1629,7 @@ class VLFTests(unittest.TestCase, Util):
         s = "0011 01"
         for a in bitarray(s), frozenbitarray(s):
             b = vl_encode(a)
-            self.assertIsInstance(b, bytes)
+            self.assertEqual(type(b), bytes)
             self.assertEqual(b, b'\xd3\x20')
 
         for a in None, [], 0, 123, b'', b'\x00', 3.14:
@@ -1640,7 +1640,7 @@ class VLFTests(unittest.TestCase, Util):
         for s in (blob, iter(blob), memoryview(blob), iter([0xd3, 0x20]),
                   bytearray(blob)):
             a = vl_decode(s, endian=self.random_endian())
-            self.assertIsType(a, 'bitarray')
+            self.assertEqual(type(a), bitarray)
             self.assertEqual(a, bitarray('0011 01'))
 
         # these objects are not iterable
@@ -1709,7 +1709,7 @@ class VLFTests(unittest.TestCase, Util):
                 a = vl_decode(s)
             except TypeError:
                 pass
-            self.assertIsNone(a)
+            self.assertTrue(a is None)
         self.assertEqual(next(s), 'end.')
 
     def test_explicit_zeros(self):
@@ -2059,12 +2059,12 @@ class SerializationTests(unittest.TestCase, Util):
             a = bitarray(bits, endian)
             s = serialize(a)
             self.assertEqual(blob, s)
-            self.assertIsInstance(s, bytes)
+            self.assertEqual(type(s), bytes)
 
             b = deserialize(blob)
             self.assertEqual(b, a)
             self.assertEqual(b.endian, endian)
-            self.assertIsType(b, 'bitarray')
+            self.assertEqual(type(b), bitarray)
 
     def test_serialize_args(self):
         for x in '0', 0, 1, b'\x00', 0.0, [0, 1], bytearray([0]):
@@ -2260,9 +2260,9 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
     def test_basic(self):
         plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
         chc, count, symbol = canonical_huffman(Counter(plain))
-        self.assertIsInstance(chc, dict)
-        self.assertIsInstance(count, list)
-        self.assertIsInstance(symbol, list)
+        self.assertEqual(type(chc), dict)
+        self.assertEqual(type(count), list)
+        self.assertEqual(type(symbol), list)
         a = bitarray()
         a.encode(chc, plain)
         self.assertEqual(bytearray(a.decode(chc)), plain)
