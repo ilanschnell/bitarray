@@ -55,10 +55,9 @@ import unittest
 
 from bitarray import frozenbitarray
 from bitarray.util import urandom
-from bitarray.test_bitarray import Util
 
 
-class PermTests(unittest.TestCase, Util):
+class PermTests(unittest.TestCase):
 
     def test_explicit_1(self):
         a = bitarray('00010011', 'big')
@@ -133,11 +132,12 @@ class PermTests(unittest.TestCase, Util):
                 self.check_order(a)
 
     def test_random(self):
-        for n in range(1, 10):
-            a = urandom(n, self.random_endian())
-            self.check_all_perm(a)
-            a.sort(a.endian == 'little')
-            self.check_order(a)
+        for endian in "little", "big":
+            for n in range(1, 10):
+                a = urandom(n, endian)
+                self.check_all_perm(a)
+                a.sort(a.endian == 'little')
+                self.check_order(a)
 
     def test_all_perm_explicit(self):
         for n, k, res in [
@@ -156,7 +156,7 @@ class PermTests(unittest.TestCase, Util):
         c = 0
         s = set()
         for a in all_perm(n, k, 'little'):
-            self.assertIsType(a, 'bitarray')
+            self.assertEqual(type(a), bitarray)
             self.assertEqual(len(a), n)
             self.assertEqual(a.count(), k)
             s.add(frozenbitarray(a))
