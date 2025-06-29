@@ -136,7 +136,7 @@ class DoubleTests(unittest.TestCase):
         d.exponent = 1024
         d.fraction = msg
         x = float(d)
-        self.assertIsInstance(x, float)
+        self.assertEqual(type(x), float)
         self.assertTrue(isnan(x))
         e = Double(x)
         self.assertEqual(e.exponent, 1024)

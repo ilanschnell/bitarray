@@ -141,8 +141,7 @@ class Util(object):
             self.assertEqual(nbytes, 0)
             self.assertEqual(alloc, 0)
 
-        if type(a).__name__ == 'frozenbitarray':
-            self.assertIsInstance(a, frozenbitarray)
+        if type(a) == frozenbitarray:
             # frozenbitarray have read-only memory
             self.assertEqual(readonly, 1)
             if padbits:  # ensure padbits are zero
@@ -177,16 +176,16 @@ class ModuleFunctionsTests(unittest.TestCase, Util):
 
     def test_version_string(self):
         # the version string is not a function, but test it here anyway
-        self.assertIsInstance(__version__, str)
+        self.assertEqual(type(__version__), str)
 
     def test_sysinfo(self):
         info = _sysinfo()
         self.assertEqual(info[0], PTRSIZE)
         self.assertEqual(info[1], PTRSIZE)
 
-        self.assertIsInstance(info, tuple)
+        self.assertEqual(type(info), tuple)
         for x in info:
-            self.assertIsInstance(x, int)
+            self.assertEqual(type(x), int)
 
         self.assertEqual(info[7], int(sys.byteorder == 'little'))
         self.assertEqual(info[8], int(sys.byteorder == 'big'))
@@ -227,7 +226,7 @@ class ModuleFunctionsTests(unittest.TestCase, Util):
             _set_default_endian(default_endian)
             endian = get_default_endian()
             self.assertEqual(endian, default_endian)
-            self.assertIsInstance(endian, str)
+            self.assertEqual(type(endian), str)
 
     def test_bits2bytes(self):
         for arg in 'foo', [], None, {}, 187.0, -4.0:
@@ -245,7 +244,7 @@ class ModuleFunctionsTests(unittest.TestCase, Util):
         for n in range(1, 200):
             m = bits2bytes(n)
             self.assertEqual(m, (n - 1) // 8 + 1)
-            self.assertIsInstance(m, int)
+            self.assertEqual(type(m), int)
 
             k = (1 << n) + randrange(1000)
             self.assertEqual(bits2bytes(k), (k - 1) // 8 + 1)
@@ -258,18 +257,18 @@ class CreateObjectTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertEqual(len(a), 0)
         self.assertEqual(a.tolist(), [])
-        self.assertIsType(a, 'bitarray')
+        self.assertEqual(type(a), bitarray)
         self.check_obj(a)
 
     def test_endian(self):
         a = bitarray(b"ABC", endian='little')
         self.assertEqual(a.endian, 'little')
-        self.assertIsInstance(a.endian, str)
+        self.assertEqual(type(a.endian), str)
         self.check_obj(a)
 
         b = bitarray(b"ABC", endian='big')
         self.assertEqual(b.endian, 'big')
-        self.assertIsInstance(a.endian, str)
+        self.assertEqual(type(a.endian), str)
         self.check_obj(b)
 
         self.assertNotEqual(a, b)
@@ -496,12 +495,12 @@ class CreateObjectTests(unittest.TestCase, Util):
     def test_frozenbitarray(self):
         a = bitarray(frozenbitarray())
         self.assertEQUAL(a, bitarray())
-        self.assertIsType(a, 'bitarray')
+        self.assertEqual(type(a), bitarray)
 
         for endian in 'little', 'big':
             a = bitarray(frozenbitarray('011', endian=endian))
             self.assertEQUAL(a, bitarray('011', endian))
-            self.assertIsType(a, 'bitarray')
+            self.assertEqual(type(a), bitarray)
 
     def test_create_empty(self):
         for x in (None, 0, '', list(), tuple(), set(), dict(), bytes(),
@@ -569,13 +568,13 @@ class MetaDataTests(unittest.TestCase):
         self.assertEqual(a.buffer_info()[1:4], (2, 'little', 3))
 
         info = a.buffer_info()
-        self.assertIsInstance(info, tuple)
+        self.assertEqual(type(info), tuple)
         self.assertEqual(len(info), 8)
         for i, item in enumerate(info):
             if i == 2:
-                self.assertIsInstance(item, str)
+                self.assertEqual(type(item), str)
                 continue
-            self.assertIsInstance(item, int)
+            self.assertEqual(type(item), int)
 
     def test_endian(self):
         for endian in 'big', 'little':
@@ -818,7 +817,7 @@ class GetItemTests(unittest.TestCase, Util):
         a = bitarray('1100010')
         for i, v in enumerate(a):
             self.assertEqual(a[i], v)
-            self.assertIsInstance(a[i], int)
+            self.assertEqual(type(a[i]), int)
             self.assertEqual(a[-7 + i], v)
         self.assertRaises(IndexError, a.__getitem__,  7)
         self.assertRaises(IndexError, a.__getitem__, -8)
@@ -1155,14 +1154,14 @@ class SetSliceTests(unittest.TestCase, Util):
         b = frozenbitarray('0000')
         a[2:6] = b
         self.assertEqual(a, bitarray('11000011 1111'))
-        self.assertIsType(b, 'frozenbitarray')
+        self.assertEqual(type(b), frozenbitarray)
         self.assertEqual(b, bitarray('0000'))
 
         b = frozenbitarray('011100')
         a[::2] = b
         self.assertEqual(a, bitarray('01101011 0101'))
         self.check_obj(a)
-        self.assertIsType(b, 'frozenbitarray')
+        self.assertEqual(type(b), frozenbitarray)
         self.assertEqual(b, bitarray('011100'))
 
     def test_setslice_bitarray_random_same_length(self):
@@ -1214,7 +1213,7 @@ class SetSliceTests(unittest.TestCase, Util):
                 lst_a = None
 
             if a is None:
-                self.assertIsNone(lst_a)
+                self.assertTrue(lst_a is None)
             else:
                 self.assertEqual(a.tolist(), lst_a)
                 self.check_obj(a)
@@ -1856,7 +1855,7 @@ class MiscTests(unittest.TestCase, Util):
         self.assertIsType(it, 'bitarrayiterator')
         for res in 0, 1, 1:
             item = next(it)
-            self.assertIsInstance(item, int)
+            self.assertEqual(type(item), int)
             self.assertEqual(item, res)
         self.assertRaises(StopIteration, next, it)
 
@@ -1950,11 +1949,11 @@ class PickleTests(unittest.TestCase, Util):
         a = bitarray(buffer=b'A')
         # readonly (because buffer is readonly), but not frozenbitarray
         self.assertTrue(a.readonly)
-        self.assertIsType(a, 'bitarray')
+        self.assertEqual(type(a), bitarray)
 
         b = pickle.loads(pickle.dumps(a))
         self.assertTrue(b.readonly)
-        self.assertIsType(b, 'bitarray')
+        self.assertEqual(type(b), bitarray)
 
     def test_endian(self):
         for endian in 'little', 'big':
@@ -2071,14 +2070,14 @@ class PickleTests(unittest.TestCase, Util):
             b = d['b%d' % i]
             self.assertEqual(b.to01(), s)
             self.assertEqual(b.endian, end)
-            self.assertIsType(b, 'bitarray')
+            self.assertEqual(type(b), bitarray)
             self.assertFalse(b.readonly)
             self.check_obj(b)
 
             f = d['f%d' % i]
             self.assertEqual(f.to01(), s)
             self.assertEqual(f.endian, end)
-            self.assertIsType(f, 'frozenbitarray')
+            self.assertEqual(type(f), frozenbitarray)
             self.assertTrue(f.readonly)
             self.check_obj(f)
 
@@ -2196,11 +2195,11 @@ class SpecialMethodTests(unittest.TestCase, Util):
     def test_repr(self):
         r = repr(bitarray())
         self.assertEqual(r, "bitarray()")
-        self.assertIsInstance(r, str)
+        self.assertEqual(type(r), str)
 
         r = repr(bitarray('10111'))
         self.assertEqual(r, "bitarray('10111')")
-        self.assertIsInstance(r, str)
+        self.assertEqual(type(r), str)
 
         for a in self.randombitarrays():
             self.assertEqual(repr(a), str(a))
@@ -2228,7 +2227,7 @@ class SpecialMethodTests(unittest.TestCase, Util):
         a = bitarray()
         size = sys.getsizeof(a)
         self.assertEqual(size, a.__sizeof__())
-        self.assertIsInstance(size, int)
+        self.assertEqual(type(size), int)
         self.assertTrue(size < 200)
         a = bitarray(8000)
         self.assertTrue(sys.getsizeof(a) > 1000)
@@ -2669,7 +2668,7 @@ class NumberTests(unittest.TestCase, Util):
         a = frozenbitarray('0010011')
         b = a << 3
         self.assertEqual(b, bitarray('0011000'))
-        self.assertIsInstance(b, frozenbitarray)
+        self.assertEqual(type(b), frozenbitarray)
         self.assertRaises(TypeError, a.__ilshift__, 4)
 
     @skipIf(is_pypy)
@@ -3197,7 +3196,7 @@ class PackTests(unittest.TestCase, Util):
 
     def test_unpack_simple(self):
         a = bitarray('01')
-        self.assertIsInstance(a.unpack(), bytes)
+        self.assertEqual(type(a.unpack()), bytes)
         self.assertEqual(a.unpack(), b'\x00\x01')
         self.assertEqual(a.unpack(b'A'), b'A\x01')
         self.assertEqual(a.unpack(b'0', b'1'), b'01')
@@ -3282,7 +3281,7 @@ class PopTests(unittest.TestCase, Util):
             aa = a.tolist()
             x = a.pop(n)
             self.assertEqual(x, aa[n])
-            self.assertIsInstance(x, int)
+            self.assertEqual(type(x), int)
             y = aa.pop(n)
             self.assertEqual(a, bitarray(aa))
             self.assertEqual(x, y)
@@ -3408,7 +3407,7 @@ class To01Tests(unittest.TestCase, Util):
         a = bitarray("100011110")
         for s in [a.to01(), a.to01(0), a.to01(0, "X"), a.to01(1, ""),
                   a.to01(group=0), a.to01(sep="X"), a.to01(group=2, sep="")]:
-            self.assertIsInstance(s, str)
+            self.assertEqual(type(s), str)
             self.assertEqual(len(s), len(a))
             self.assertEqual(s, "100011110")
 
@@ -3551,10 +3550,10 @@ class ToListTests(unittest.TestCase, Util):
     def test_simple(self):
         a = bitarray('110')
         lst = a.tolist()
-        self.assertIsInstance(lst, list)
+        self.assertEqual(type(lst), list)
         self.assertEqual(lst, [1, 1, 0])
         for item in lst:
-            self.assertIsInstance(item, int)
+            self.assertEqual(type(item), int)
 
     def test_random(self):
         for a in self.randombitarrays():
@@ -4163,17 +4162,17 @@ class DescriptorTests(unittest.TestCase, Util):
             self.assertEqual(a.nbytes, bits2bytes(len(a)))
             self.assertEqual(a.padbits, 8 * a.nbytes - len(a))
             self.assertTrue(0 <= a.padbits < 8)
-            self.assertIsInstance(a.nbytes, int)
-            self.assertIsInstance(a.padbits, int)
+            self.assertEqual(type(a.nbytes), int)
+            self.assertEqual(type(a.padbits), int)
 
     def test_readonly(self):
         a = bitarray('110')
         self.assertFalse(a.readonly)
-        self.assertIsInstance(a.readonly, bool)
+        self.assertEqual(type(a.readonly), bool)
 
         b = frozenbitarray(a)
         self.assertTrue(b.readonly)
-        self.assertIsInstance(b.readonly, bool)
+        self.assertEqual(type(b.readonly), bool)
 
 # ---------------------------------------------------------------------------
 
@@ -4503,8 +4502,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
 
     def test_create(self):
         dt = decodetree(alphabet_code)
-        self.assertIsType(dt, 'decodetree')
-        self.assertIsInstance(dt, decodetree)
+        self.assertEqual(type(dt), decodetree)
         self.assertRaises(TypeError, decodetree, None)
         self.assertRaises(TypeError, decodetree, 'foo')
         d = dict(alphabet_code)
@@ -4542,7 +4540,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
 
     def test_complete(self):
         dt = decodetree({'.': bitarray('1')})
-        self.assertIsInstance(dt.complete(), bool)
+        self.assertEqual(type(dt.complete()), bool)
         self.assertFalse(dt.complete())
 
         dt = decodetree({'a': bitarray('0'),
@@ -4561,7 +4559,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
     def test_todict(self):
         t = decodetree(alphabet_code)
         d = t.todict()
-        self.assertIsInstance(d, dict)
+        self.assertEqual(type(d), dict)
         self.assertEqual(d, alphabet_code)
 
     def test_decode(self):
@@ -4801,7 +4799,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(list(a.decode(d)), [None, 0, 1, '', 2])
         # iterator
         it = a.decode(d)
-        self.assertIsNone(next(it))
+        self.assertTrue(next(it) is None)
         self.assertEqual(next(it), 0)
         self.assertEqual(next(it), 1)
         self.assertEqual(next(it), '')
@@ -5157,22 +5155,22 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
         self.assertEqual(a, bitarray('110'))
         self.assertEqual(a.to01(), '110')
         self.assertIsInstance(a, bitarray)
-        self.assertIsType(a, 'frozenbitarray')
+        self.assertEqual(type(a), frozenbitarray)
         self.assertTrue(a.readonly)
         self.check_obj(a)
 
         a = frozenbitarray(bitarray())
         self.assertEQUAL(a, frozenbitarray())
-        self.assertIsType(a, 'frozenbitarray')
+        self.assertEqual(type(a), frozenbitarray)
 
         for endian in 'big', 'little':
             a = frozenbitarray(0, endian)
             self.assertEqual(a.endian, endian)
-            self.assertIsType(a, 'frozenbitarray')
+            self.assertEqual(type(a), frozenbitarray)
 
             a = frozenbitarray(bitarray(0, endian))
             self.assertEqual(a.endian, endian)
-            self.assertIsType(a, 'frozenbitarray')
+            self.assertEqual(type(a), frozenbitarray)
 
     def test_methods(self):
         # test a few methods which do not raise the TypeError
@@ -5204,7 +5202,7 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
         tup = 0, 1, 0, 1, 1, False, True
         for obj in list(tup), tup, iter(tup), bitarray(tup):
             a = frozenbitarray(obj)
-            self.assertIsInstance(a, frozenbitarray)
+            self.assertEqual(type(a), frozenbitarray)
             self.assertEqual(a, bitarray(tup))
         a = frozenbitarray(b'AB', "big")
         self.assertEqual(a.to01(), "0100000101000010")
@@ -5213,7 +5211,7 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
     def test_init_bytes_bytearray(self):
         for x in b'\x80ABCD', bytearray(b'\x80ABCD'):
             a = frozenbitarray(x, 'little')
-            self.assertIsInstance(a, frozenbitarray)
+            self.assertEqual(type(a), frozenbitarray)
             self.assertEqual(len(a), 8 * len(x))
             self.assertEqual(a.tobytes(), x)
             self.assertEqual(a[:8].to01(), '00000001')
@@ -5260,7 +5258,7 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
         for b in [a, a.copy(), 3 * a, 5 * a, a & bitarray('110'),
                   a >> 2, ~a, a + bitarray(8*'1'),
                   a[:], a[::2], a[[0, 1]], a[bitarray('011')]]:
-            self.assertIsType(b, 'frozenbitarray')
+            self.assertEqual(type(b), frozenbitarray)
             self.assertTrue(b.readonly)
             self.check_obj(b)
 
