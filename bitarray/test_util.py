@@ -155,8 +155,8 @@ class Random_P_Tests(unittest.TestCase):
             self.assertEqual(a.endian, endian or default_endian)
 
     def test_n_p(self):
-        for _ in range(100):
-            n = choice([100, 1000, 10_000])
+        for _ in range(500):
+            n = choice([10, 100, 1000, 10_000])
             p = choice([0.0001, 0.001, 0.0099, 0.01, 0.0101, 0.25, 0.375,
                         0.5, 0.8, 0.9])
             sigma = max(0.5, (n * p * (1.0 - p)) ** 0.5)
@@ -254,22 +254,23 @@ class StripTests(unittest.TestCase, Util):
             self.assertIsType(c, 'frozenbitarray')
 
     def test_zeros_ones(self):
-        for n in range(10):
-            for mode in 'left', 'right', 'both':
-                a = zeros(n)
-                c = strip(a, mode)
-                self.assertIsType(c, 'bitarray')
-                self.assertEqual(c, bitarray())
-                self.assertEqual(a, zeros(n))
+        for _ in range(50):
+            n = randrange(10)
+            mode = choice(['left', 'right', 'both'])
+            a = zeros(n)
+            c = strip(a, mode)
+            self.assertEqual(type(c), bitarray)
+            self.assertEqual(len(c), 0)
+            self.assertEqual(a, zeros(n))
 
-                b = frozenbitarray(a)
-                c = strip(b, mode)
-                self.assertIsType(c, 'frozenbitarray')
-                self.assertEqual(c, bitarray())
+            b = frozenbitarray(a)
+            c = strip(b, mode)
+            self.assertEqual(type(c), frozenbitarray)
+            self.assertEqual(len(c), 0)
 
-                a.setall(1)
-                c = strip(a, mode)
-                self.assertEqual(c, ones(n))
+            a.setall(1)
+            c = strip(a, mode)
+            self.assertEqual(c, ones(n))
 
     def test_random(self):
         for a in self.randombitarrays():
