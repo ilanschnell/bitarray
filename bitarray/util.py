@@ -79,20 +79,21 @@ available on Python 3.12+.
     if p > 0.5:
         return ~random_p(__n, 1.0 - p, endian)
 
-    # for small p set randomly bits - uses random.binomialvariate, which was
-    # added in Python 3.12 - the speedup is significant
+    # for small p set randomly 'c' bits - uses random.binomialvariate, which
+    # was added in Python 3.12 - the speedup is significant
     if p < 0.01 and sys.version_info[:2] >= (3, 12):
         res = zeros(__n, endian)
-        c = random.binomialvariate(__n, p)
+        c = random.binomialvariate(__n, p)  # number of bits to set to 1
         for _ in range(c):
             while 1:
                 i = random.randrange(__n)
                 if not res[i]:
                     res[i] = 1
                     break
+        # assert res.count() == c
         return res
 
-    m = 32
+    m = 32  # maximal number of urandom calls below
     i = int(p * (1 << m) + 0.5)
     if i == 0:
         return zeros(__n, endian)
