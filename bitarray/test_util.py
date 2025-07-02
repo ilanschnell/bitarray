@@ -169,7 +169,15 @@ class Random_P_Tests(unittest.TestCase):
                         0.5 - 1e-15, 0.5, 0.8, 0.9, random()])
             sigma = sqrt(n * p * (1.0 - p))
             a = random_p(n, p)
+            self.assertEqual(len(a), n)
             self.assertTrue(abs(a.count() - n * p) < max(4, 10 * sigma))
+
+    def test_stat(self):
+        c = Counter(random_p(100, p=0.7).count() for _ in range(1000))
+        if sys.version_info[:2] >= (3, 10):
+            self.assertEqual(c.total(), 1000)
+        x = sum(c[k] for k in range(60, 71))
+        self.assertTrue(abs(x - 525) <= 158)
 
 # ---------------------------------------------------------------------------
 
