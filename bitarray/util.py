@@ -57,7 +57,8 @@ def random_p(__n, p=0.5, endian=None):
 Return random bitarray of length `n`.  Each bit has probability `p` of
 being 1.  Equivalent to: `bitarray((random() < p for _ in range(n)), endian)`
 
-This function requires Python 3.12 or higher.
+This function is only implemented when using Python 3.12 or higher, as it
+requires the standard library function `random.binomialvariate()`.
 """
     if sys.version_info[:2] < (3, 12):
         raise NotImplementedError("bitarray.util.random_p() requires "
