@@ -95,8 +95,11 @@ requires the standard library function `random.binomialvariate()`.
         # assert res.count() == c
         return res
 
-    # combine random bitarrays using bitwise & and | operations
-    m = 8  # maximal number of urandom calls below
+    # Combine random bitarrays using bitwise & and | operations.
+    # This will give us a random bitarray with probability q in
+    # intervals of 2**-m (where m is the maximal calls to urandom()).
+
+    m = 8  # maximal number of urandom() calls
     i = int((1 << m) * p)
     assert i > 0
     a = int2ba(i, length=m, endian="little")
