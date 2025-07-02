@@ -125,8 +125,17 @@ class URandomTests(unittest.TestCase):
         # expected mean = 3556.938   stdev = 47.872
         self.assertTrue((x - 3557) <= 479)
 
-# ---------------------------------------------------------------------------
+# ---------------------------- .random_p() ----------------------------------
 
+HAVE_BINOMIALVARIATE = sys.version_info[:2] >= (3, 12)
+
+@skipIf(HAVE_BINOMIALVARIATE)
+class Random_P_Not_Implemented(unittest.TestCase):
+
+    def test_not_implemented(self):
+        self.assertRaises(NotImplementedError, random_p, 100, 0.25)
+
+@skipIf(not HAVE_BINOMIALVARIATE)
 class Random_P_Tests(unittest.TestCase):
 
     def test_inputs_and_edge_cases(self):

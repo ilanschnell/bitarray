@@ -54,13 +54,15 @@ Return a bitarray of `length` random bits (uses `os.urandom`).
 def random_p(__n, p=0.5, endian=None):
     """random_p(n, /, p=0.5, endian=None) -> bitarray
 
-Return random bitarray of length `n`, where each bit has probability `p` of
-being 1.
-Equivalent to: `bitarray((random() < p for _ in range(n)), endian)`
+Return random bitarray of length `n`.  Each bit has probability `p` of
+being 1.  Equivalent to: `bitarray((random() < p for _ in range(n)), endian)`
 
-This function uses a significant speedup for `p < 0.01`, which is only
-available on Python 3.12+.
+This function requires Python 3.12 or higher.
 """
+    if sys.version_info[:2] < (3, 12):
+        raise NotImplementedError("bitarray.util.random_p() requires "
+                                  "Python 3.12 or higher")
+
     # error check inputs and handle edge cases
     if __n < 0:
         raise ValueError("n must be non-negative")
@@ -79,9 +81,8 @@ available on Python 3.12+.
     if p > 0.5:
         return ~random_p(__n, 1.0 - p, endian)
 
-    # for small p set randomly 'c' bits - uses random.binomialvariate, which
-    # was added in Python 3.12 - the speedup is significant
-    if p < 0.01 and sys.version_info[:2] >= (3, 12):
+    # for small p set randomly individual bits, which is much faster
+    if p < 0.01:
         res = zeros(__n, endian)
         c = random.binomialvariate(__n, p)  # number of bits to set to 1
         for _ in range(c):
@@ -93,21 +94,33 @@ available on Python 3.12+.
         # assert res.count() == c
         return res
 
-    m = 32  # maximal number of urandom calls below
-    i = int(p * (1 << m) + 0.5)
-    if i == 0:
-        return zeros(__n, endian)
+    m = 8  # maximal number of urandom calls below
+    i = int((1 << m) * p)
+    assert i > 0
     a = int2ba(i, length=m, endian="little")
     a = strip(a, mode="left")
     assert a[0]
     del a[0]
 
     res = urandom(__n, endian)
+    q = 0.5
     for v in a:
         if v:
             res |= urandom(__n, endian)
+            q += 0.5 * (1.0 - q)   # q = 1 - (1 - q) * (1 - 0.5)
         else:
             res &= urandom(__n, endian)
+            q *= 0.5
+    assert 0.0 <= p - q < 1.0 / (1 << m)
+
+    if q < p:
+        x = (p - q) / (1.0 - q)
+        # ensure we hit the small p case when calling random_p itself
+        assert x < 0.01, x
+        res |= random_p(__n, x, endian)
+        q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
+
+    assert abs(q - p) < 1e-16
     return res
 
 
