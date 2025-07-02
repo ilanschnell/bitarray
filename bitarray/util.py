@@ -82,7 +82,7 @@ requires the standard library function `random.binomialvariate()`.
     if p > 0.5:
         return ~random_p(__n, 1.0 - p, endian)
 
-    # for small p set randomly individual bits, which is much faster
+    # for small p, set randomly individual bits
     if p < 0.01:
         res = zeros(__n, endian)
         c = random.binomialvariate(__n, p)  # number of bits to set to 1
@@ -95,6 +95,7 @@ requires the standard library function `random.binomialvariate()`.
         # assert res.count() == c
         return res
 
+    # combine random bitarrays using bitwise & and | operations
     m = 8  # maximal number of urandom calls below
     i = int((1 << m) * p)
     assert i > 0
@@ -104,7 +105,7 @@ requires the standard library function `random.binomialvariate()`.
     del a[0]
 
     res = urandom(__n, endian)
-    q = 0.5
+    q = 0.5  # current probability of 1s in 'res' (resulting) bitarray
     for v in a:
         if v:
             res |= urandom(__n, endian)
@@ -115,13 +116,15 @@ requires the standard library function `random.binomialvariate()`.
     assert 0.0 <= p - q < 1.0 / (1 << m)
 
     if q < p:
+        # increase desired probability q by "oring" random bitarray with
+        # probability x
         x = (p - q) / (1.0 - q)
         # ensure we hit the small p case when calling random_p itself
         assert x < 0.01, x
         res |= random_p(__n, x, endian)
         q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
 
-    assert abs(q - p) < 1e-16
+    assert abs(q - p) < 1e-16  # ensure desired probability q is p
     return res
 
 
