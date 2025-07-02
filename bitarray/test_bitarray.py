@@ -5181,7 +5181,7 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
         self.assertEqual(a.index(0), 2)
         b = a.copy()
         self.assertEqual(b, a)
-        self.assertIsType(b, 'frozenbitarray')
+        self.assertEqual(type(b), frozenbitarray)
         self.assertEqual(len(b), 7)
         self.assertFalse(b.all())
         self.assertTrue(b.any())

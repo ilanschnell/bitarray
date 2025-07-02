@@ -80,7 +80,9 @@ requires the standard library function `random.binomialvariate()`.
 
     # exploit symmetry to establish: p <= 0.5
     if p > 0.5:
-        return ~random_p(__n, 1.0 - p, endian)
+        res = random_p(__n, 1.0 - p, endian)
+        res.invert()
+        return res
 
     # for small p, set randomly individual bits
     if p < 0.01:
