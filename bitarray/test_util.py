@@ -148,7 +148,7 @@ class Random_P_Tests(unittest.TestCase):
         self.assertEqual(random_p(0), bitarray())
         for n in range(20):
             self.assertEqual(random_p(n, 0), zeros(n))
-            self.assertEqual(random_p(n, 1), ones(n))
+            self.assertEqual(random_p(n, p=1.0), ones(n))
 
     def test_args_and_types(self):
         for _ in range(500):
