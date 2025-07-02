@@ -154,8 +154,6 @@ class Random_P_Tests(unittest.TestCase):
             default_endian = choice(['little', 'big'])
             _set_default_endian(default_endian)
             endian = choice(['little', 'big', None])
-            # cover all code path - having 1e-18 is important for Python
-            # versions below 3.12
             n = randrange(20)
             p = choice([0.0, 1e-18, 0.0001, 0.2, 0.5, 0.9, 1.0])
             a = random_p(n, p, endian)
@@ -167,7 +165,7 @@ class Random_P_Tests(unittest.TestCase):
         for _ in range(500):
             n = choice([10, 100, 1000, 10_000])
             p = choice([0.0001, 0.001, 0.0099, 0.01, 0.0101, 0.25, 0.375,
-                        0.5, 0.8, 0.9])
+                        0.5 - 1e-16, 0.5, 0.8, 0.9])
             sigma = (n * p * (1.0 - p)) ** 0.5
             a = random_p(n, p)
             self.assertTrue(abs(a.count() - n * p) < max(4, 10 * sigma))

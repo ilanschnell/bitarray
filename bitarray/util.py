@@ -66,13 +66,13 @@ requires the standard library function `random.binomialvariate()`.
 
     # error check inputs and handle edge cases
     if __n < 0:
-        raise ValueError("n must be non-negative")
+        raise ValueError("n must be non-negative, got %s" % __n)
     if p <= 0.0 or p >= 1.0:
         if p == 0.0:
             return zeros(__n, endian)
         if p == 1.0:
             return ones(__n, endian)
-        raise ValueError("p must be in range 0.0 <= p <= 1.0")
+        raise ValueError("p must be in range 0.0 <= p <= 1.0, got %s" % p)
 
     # for small n use literal definition
     if __n < 10:
