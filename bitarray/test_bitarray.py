@@ -159,7 +159,7 @@ class Util(object):
 
     def assertIsType(self, a, b):
         self.assertEqual(type(a).__name__, b)
-        self.assertEqual(repr(type(a)), "<%s 'bitarray.%s'>" % ('class', b))
+        self.assertEqual(repr(type(a)), "<class 'bitarray.%s'>" % b)
 
     @staticmethod
     def assertRaisesMessage(excClass, msg, callable, *args, **kwargs):
