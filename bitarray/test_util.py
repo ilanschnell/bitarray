@@ -123,7 +123,7 @@ class URandomTests(unittest.TestCase):
         if sys.version_info[:2] >= (3, 10):
             self.assertEqual(c.total(), 10_000)
         x = sum(c[k] for k in range(46, 51))
-        # expected mean = 3556.938   stdev = 47.872
+        # p = 0.355694   mean = 3556.938100   stdev = 47.872301
         self.assertTrue((x - 3557) <= 479)
 
 # ---------------------------- .random_p() ----------------------------------
@@ -177,6 +177,7 @@ class Random_P_Tests(unittest.TestCase):
         if sys.version_info[:2] >= (3, 10):
             self.assertEqual(c.total(), 1000)
         x = sum(c[k] for k in range(60, 71))
+        # p = 0.525162   mean = 525.161857   stdev = 15.791355
         self.assertTrue(abs(x - 525) <= 158)
 
 # ---------------------------------------------------------------------------

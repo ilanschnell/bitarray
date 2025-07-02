@@ -123,7 +123,7 @@ requires the standard library function `random.binomialvariate()`.
         # probability x.  x is calculated such that q will equal to p.
         x = (p - q) / (1.0 - q)
         # Ensure we hit the small p case when calling random_p() itself.
-        # Using m=8 and considering p = 0.5-1e-16, we have q = 127/256,
+        # Using m = 8 and considering p = 0.5-1e-16, we have q = 127/256,
         # so the maximal x = (0.5 - q) / (1 - q) = 0.0077519 < 0.01
         assert x < 0.01, x
         res |= random_p(__n, x, endian)
