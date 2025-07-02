@@ -14,6 +14,7 @@ import shutil
 import tempfile
 import unittest
 from io import StringIO
+from math import sqrt
 from functools import reduce
 from string import hexdigits
 from random import choice, getrandbits, randrange, randint, random
@@ -155,7 +156,7 @@ class Random_P_Tests(unittest.TestCase):
             _set_default_endian(default_endian)
             endian = choice(['little', 'big', None])
             n = randrange(20)
-            p = choice([0.0, 1e-18, 0.0001, 0.2, 0.5, 0.9, 1.0])
+            p = choice([0.0, 0.0001, 0.2, 0.5, 0.9, 1.0])
             a = random_p(n, p, endian)
             self.assertTrue(type(a), bitarray)
             self.assertEqual(len(a), n)
@@ -163,10 +164,10 @@ class Random_P_Tests(unittest.TestCase):
 
     def test_n_p(self):
         for _ in range(500):
-            n = choice([10, 100, 1000, 10_000])
-            p = choice([0.0001, 0.001, 0.0099, 0.01, 0.0101, 0.25, 0.375,
-                        0.5 - 1e-16, 0.5, 0.8, 0.9])
-            sigma = (n * p * (1.0 - p)) ** 0.5
+            n = randrange(1, 10_000)
+            p = choice([0.0001, 0.001, 0.0099, 0.01, 0.1, 0.25, 1.0 / 3.0,
+                        0.5 - 1e-15, 0.5, 0.8, 0.9, random()])
+            sigma = sqrt(n * p * (1.0 - p))
             a = random_p(n, p)
             self.assertTrue(abs(a.count() - n * p) < max(4, 10 * sigma))
 

@@ -74,7 +74,7 @@ requires the standard library function `random.binomialvariate()`.
             return ones(__n, endian)
         raise ValueError("p must be in range 0.0 <= p <= 1.0, got %s" % p)
 
-    # for small n use literal definition
+    # for small n, use literal definition
     if __n < 10:
         return bitarray((random.random() < p for _ in range(__n)), endian)
 
@@ -116,10 +116,10 @@ requires the standard library function `random.binomialvariate()`.
     assert 0.0 <= p - q < 1.0 / (1 << m)
 
     if q < p:
-        # increase desired probability q by "oring" random bitarray with
-        # probability x
+        # Increase desired probability q by "oring" random bitarray with
+        # probability x.  x is calculated such that q will equal to p.
         x = (p - q) / (1.0 - q)
-        # ensure we hit the small p case when calling random_p itself
+        # ensure we hit the small p case when calling random_p() itself
         assert x < 0.01, x
         res |= random_p(__n, x, endian)
         q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
