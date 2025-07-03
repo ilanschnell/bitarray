@@ -80,43 +80,43 @@ requires the standard library function `random.binomialvariate()`.
 
     # exploit symmetry to establish: p <= 0.5
     if p > 0.5:
-        res = random_p(__n, 1.0 - p, endian)
-        res.invert()
-        return res
+        a = random_p(__n, 1.0 - p, endian)
+        a.invert()
+        return a
 
     # for small p, set randomly individual bits
     if p < 0.01:
-        res = zeros(__n, endian)
+        a = zeros(__n, endian)
         c = random.binomialvariate(__n, p)  # number of bits to set to 1
         for _ in range(c):
             while 1:
                 i = random.randrange(__n)
-                if not res[i]:
-                    res[i] = 1
+                if not a[i]:
+                    a[i] = 1
                     break
         # assert res.count() == c
-        return res
+        return a
 
-    # Combine random bitarrays using bitwise & and | operations.
+    # Combine random bitarrays using bitwise | and & operations.
     # This will give us a random bitarray with probability q in
     # intervals of 2**-m (where m is the maximal calls to urandom()).
 
     m = 8  # maximal number of urandom() calls
     i = int((1 << m) * p)
     assert i > 0
-    a = int2ba(i, length=m, endian="little")
-    a = strip(a, mode="left")
-    assert a[0]
-    del a[0]
+    so = int2ba(i, length=m, endian="little")  # sequence of |, & operations
+    so = strip(so, mode="left")
+    assert so[0]
+    del so[0]
 
-    res = urandom(__n, endian)
+    a = urandom(__n, endian)
     q = 0.5  # current probability of 1s in 'res' (resulting) bitarray
-    for v in a:
+    for v in so:
         if v:
-            res |= urandom(__n, endian)
+            a |= urandom(__n, endian)
             q += 0.5 * (1.0 - q)   # q = 1 - (1 - q) * (1 - 0.5)
         else:
-            res &= urandom(__n, endian)
+            a &= urandom(__n, endian)
             q *= 0.5
     assert 0.0 <= p - q < 1.0 / (1 << m)
 
@@ -128,11 +128,11 @@ requires the standard library function `random.binomialvariate()`.
         # Using m = 8 and considering p = 0.5-1e-16, we have q = 127/256,
         # so the maximal x = (0.5 - q) / (1 - q) = 0.0077519 < 0.01
         assert x < 0.01, x
-        res |= random_p(__n, x, endian)
+        a |= random_p(__n, x, endian)
         q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
 
     assert abs(q - p) < 1e-16  # ensure desired probability q is p
-    return res
+    return a
 
 
 def pprint(__a, stream=None, group=8, indent=4, width=80):
