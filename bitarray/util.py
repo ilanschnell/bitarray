@@ -97,22 +97,23 @@ requires the standard library function `random.binomialvariate()`.
         # assert res.count() == c
         return a
 
-    # Combine random bitarrays using bitwise | and & operations.
+    # Combine random bitarrays using bitwise & and | operations.
     # This will give us a random bitarray with probability q in
     # intervals of 2**-m (where m is the maximal calls to urandom()).
 
     m = 8  # maximal number of urandom() calls
     i = int((1 << m) * p)
     assert i > 0
-    so = int2ba(i, length=m, endian="little")  # sequence of |, & operations
-    so = strip(so, mode="left")
-    assert so[0]
-    del so[0]
+    # sequence of &, | operations - least significant operations come first
+    s = int2ba(i, length=m, endian="little")
+    s = strip(s, mode="left")
+    assert s[0]
+    del s[0]
 
     a = urandom(__n, endian)
     q = 0.5  # current probability of 1s in 'res' (resulting) bitarray
-    for v in so:
-        if v:
+    for op in s:
+        if op:
             a |= urandom(__n, endian)
             q += 0.5 * (1.0 - q)   # q = 1 - (1 - q) * (1 - 0.5)
         else:
