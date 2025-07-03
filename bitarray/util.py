@@ -42,9 +42,9 @@ __all__ = [
 
 
 def urandom(__length, endian=None):
-    """urandom(length, /, endian=None) -> bitarray
+    """urandom(n, /, endian=None) -> bitarray
 
-Return a bitarray of `length` random bits (uses `os.urandom`).
+Return random bitarray of length `n` (uses `os.urandom()`).
 """
     a = bitarray(os.urandom(bits2bytes(__length)), endian)
     del a[__length:]
@@ -54,8 +54,10 @@ Return a bitarray of `length` random bits (uses `os.urandom`).
 def random_p(__n, p=0.5, endian=None):
     """random_p(n, /, p=0.5, endian=None) -> bitarray
 
-Return random bitarray of length `n`.  Each bit has probability `p` of
-being 1.  Equivalent to: `bitarray((random() < p for _ in range(n)), endian)`
+Return pseudo-random bitarray of length `n`.  Each bit has probability `p` of
+being 1.  Equivalent to `bitarray((random() < p for _ in range(n)), endian)`.
+The bitarrays are reproducible when calling Python's `random.seed()` with a
+specific seed value.
 
 This function is only implemented when using Python 3.12 or higher, as it
 requires the standard library function `random.binomialvariate()`.
@@ -78,7 +80,13 @@ requires the standard library function `random.binomialvariate()`.
     if __n < 10:
         return bitarray((random.random() < p for _ in range(__n)), endian)
 
-    # exploit symmetry to establish: p <= 0.5
+    # use randbytes() for reproducibility (not urandom())
+    if p == 0.5:
+        a = bitarray(random.randbytes(bits2bytes(__n)), endian)
+        del a[__n:]
+        return a
+
+    # exploit symmetry to establish: p < 0.5
     if p > 0.5:
         a = random_p(__n, 1.0 - p, endian)
         a.invert()
@@ -110,14 +118,14 @@ requires the standard library function `random.binomialvariate()`.
     assert s[0]
     del s[0]
 
-    a = urandom(__n, endian)
+    a = random_p(__n, 0.5, endian)
     q = 0.5  # current probability of ones in resulting bitarray a
     for op in s:
         if op:
-            a |= urandom(__n, endian)
+            a |= random_p(__n, 0.5, endian)
             q += 0.5 * (1.0 - q)   # q = 1 - (1 - q) * (1 - 0.5)
         else:
-            a &= urandom(__n, endian)
+            a &= random_p(__n, 0.5, endian)
             q *= 0.5
     assert 0.0 <= p - q < 1.0 / (1 << m)
     assert abs((1 << m) * q - i) < 1e-16

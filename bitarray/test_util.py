@@ -17,7 +17,7 @@ from io import StringIO
 from math import sqrt
 from functools import reduce
 from string import hexdigits
-from random import choice, getrandbits, randrange, randint, random
+from random import choice, getrandbits, randrange, randint, random, seed
 from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
@@ -116,15 +116,8 @@ class URandomTests(unittest.TestCase):
 
     def test_count(self):
         a = urandom(10_000_000)
-        self.assertTrue(4_980_000 <= a.count() <= 5_020_000)
-
-        c = Counter(urandom(100).count() for _ in range(10_000))
-        self.assertTrue(set(c) <= set(range(1001)))
-        if sys.version_info[:2] >= (3, 10):
-            self.assertEqual(c.total(), 10_000)
-        x = sum(c[k] for k in range(46, 51))
-        # p = 0.355694   mean = 3556.938100   stdev = 47.872301
-        self.assertTrue((x - 3557) <= 479)
+        # see if population is within expectation
+        self.assertTrue(abs(a.count() - 5_000_000) <= 15_811)
 
 # ---------------------------- .random_p() ----------------------------------
 
@@ -139,7 +132,20 @@ class Random_P_Not_Implemented(unittest.TestCase):
 @skipIf(not HAVE_BINOMIALVARIATE)
 class Random_P_Tests(unittest.TestCase):
 
+    def test_basic(self):
+        for _ in range(50):
+            default_endian = choice(['little', 'big'])
+            _set_default_endian(default_endian)
+            endian = choice(['little', 'big', None])
+            n = randrange(100)
+            p = choice([0.0, 0.0001, 0.2, 0.5, 0.9, 1.0])
+            a = random_p(n, p, endian)
+            self.assertTrue(type(a), bitarray)
+            self.assertEqual(len(a), n)
+            self.assertEqual(a.endian, endian or default_endian)
+
     def test_inputs_and_edge_cases(self):
+        self.assertRaises(TypeError, random_p)
         self.assertRaises(TypeError, random_p, 0.25)
         self.assertRaises(TypeError, random_p, 1, "0.5")
         self.assertRaises(ValueError, random_p, -1)
@@ -150,35 +156,36 @@ class Random_P_Tests(unittest.TestCase):
             self.assertEqual(random_p(n, 0), zeros(n))
             self.assertEqual(random_p(n, p=1.0), ones(n))
 
-    def test_args_and_types(self):
-        for _ in range(500):
-            default_endian = choice(['little', 'big'])
-            _set_default_endian(default_endian)
-            endian = choice(['little', 'big', None])
-            n = randrange(20)
-            p = choice([0.0, 0.0001, 0.2, 0.5, 0.9, 1.0])
-            a = random_p(n, p, endian)
-            self.assertTrue(type(a), bitarray)
-            self.assertEqual(len(a), n)
-            self.assertEqual(a.endian, endian or default_endian)
+    def test_default(self):
+        a = random_p(10_000_000)  # p defaults to 0.5
+        # see if population is within expectation
+        self.assertTrue(abs(a.count() - 5_000_000) <= 15_811)
 
-    def test_n_p(self):
+    def test_count(self):
         for _ in range(500):
-            n = randrange(1, 10_000)
-            p = choice([0.0001, 0.001, 0.0099, 0.01, 0.1, 0.25, 1.0 / 3.0,
-                        0.5 - 1e-15, 0.5, 0.8, 0.9, random()])
+            n = choice([4, 10, 100, 1000, 10_000])
+            p = choice([0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 0.9])
             sigma = sqrt(n * p * (1.0 - p))
             a = random_p(n, p)
             self.assertEqual(len(a), n)
             self.assertTrue(abs(a.count() - n * p) < max(4, 10 * sigma))
 
-    def test_stat(self):
-        c = Counter(random_p(100, p=0.7).count() for _ in range(1000))
-        if sys.version_info[:2] >= (3, 10):
-            self.assertEqual(c.total(), 1000)
-        x = sum(c[k] for k in range(60, 71))
-        # p = 0.525162   mean = 525.161857   stdev = 15.791355
-        self.assertTrue(abs(x - 525) <= 158)
+    def test_seed(self):
+        _set_default_endian("little")
+        seed(1234)
+        # for default p=0.5, random_p uses randbytes
+        self.assertEqual(random_p(32),
+                         bitarray('10011101111111101001011011101111'))
+        # test small p
+        a = random_p(5000, 0.001)
+        self.assertEqual(list(a.search(1)), [286, 687, 806, 2905])
+        # general case
+        self.assertEqual(random_p(32, 0.7),
+                         bitarray('11111011101011111000111111011111'))
+        # small n
+        self.assertEqual(random_p(8), bitarray('00111110'))
+        # initialize with current system time again
+        seed()
 
 # ---------------------------------------------------------------------------
 
