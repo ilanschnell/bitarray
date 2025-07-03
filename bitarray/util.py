@@ -94,7 +94,7 @@ requires the standard library function `random.binomialvariate()`.
                 if not a[i]:
                     a[i] = 1
                     break
-        # assert res.count() == c
+        # assert a.count() == c
         return a
 
     # Combine random bitarrays using bitwise & and | operations.
@@ -103,7 +103,7 @@ requires the standard library function `random.binomialvariate()`.
 
     m = 8  # maximal number of urandom() calls
     i = int((1 << m) * p)
-    assert i > 0
+    assert 0 < i <= (1 << (m - 1))  # as p <= 0.5
     # sequence of &, | operations - least significant operations come first
     s = int2ba(i, length=m, endian="little")
     s = strip(s, mode="left")
@@ -111,7 +111,7 @@ requires the standard library function `random.binomialvariate()`.
     del s[0]
 
     a = urandom(__n, endian)
-    q = 0.5  # current probability of 1s in 'res' (resulting) bitarray
+    q = 0.5  # current probability of ones in resulting bitarray a
     for op in s:
         if op:
             a |= urandom(__n, endian)
@@ -120,6 +120,7 @@ requires the standard library function `random.binomialvariate()`.
             a &= urandom(__n, endian)
             q *= 0.5
     assert 0.0 <= p - q < 1.0 / (1 << m)
+    assert abs((1 << m) * q - i) < 1e-16
 
     if q < p:
         # Increase desired probability q by "oring" random bitarray with
