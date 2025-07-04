@@ -51,35 +51,105 @@ Return random bitarray of length `n` (uses `os.urandom()`).
     return a
 
 
-_MAX_CALLS = 8  # maximal number of calls to random_p() in operations below
-_INTERVALS = 1 << _MAX_CALLS  # number of probability intervals
-_OPERS = [bitarray.__iand__, bitarray.__ior__]
+class _RandomP:
 
-def _get_op_seq(i):
-    """
-    Return operator sequence of bitwise & and | operations, necessary to
-    obtain a bitarray with ones having probability (i / _INTERVALS).
-    """
-    assert 0 < i < _INTERVALS / 2  # as p < 0.5
-    # sequence of &, | operations - least significant operations come first
-    s = int2ba(i, length=_MAX_CALLS, endian="little")
-    s = strip(s, mode="left")
-    assert s[0]
-    del s[0]
-    return s
+    # maximal number of calls to random_p() in operations sequence
+    max_calls = 8
 
-def _set_randomly(a, m):
-    """
-    Set randomly m bits in a to 1.  Attempting to set too many bits may
-    take a long time, or even cause an infinite loop.
-    """
-    n = len(a)
-    for _ in range(m):
-        while 1:
-            i = random.randrange(n)
-            if not a[i]:
-                a[i] = 1
-                break
+    # number of probability intervals
+    intervals = 1 << max_calls
+
+    # limit for setting individual bits randomly
+    small_p = 0.01
+
+    # operators in sequence
+    opers = [bitarray.__iand__, bitarray.__ior__]
+
+    def __init__(self, n=1, endian=None):
+        if sys.version_info[:2] < (3, 12):
+            raise NotImplementedError("bitarray.util.random_p() requires "
+                                      "Python 3.12 or higher")
+        self.n = n
+        self.nbytes = bits2bytes(n)
+        self.endian = endian
+
+    def get_op_seq(self, i):
+        """
+        Return operator sequence of bitwise & and | operations, necessary to
+        obtain a bitarray with ones having probability (i / _INTERVALS).
+        """
+        assert 0 < i < self.intervals / 2  # as p < 0.5
+        # sequence of &, | operations - least significant operations come first
+        s = int2ba(i, length=self.max_calls, endian="little")
+        s = strip(s, mode="left")
+        assert s[0]
+        del s[0]
+        return s
+
+    def set_randomly(self, a, m):
+        """
+        Set randomly m bits in a to 1.  Attempting to set too many bits may
+        take a long time, or even cause an infinite loop.
+        """
+        for _ in range(m):
+            while 1:
+                i = random.randrange(self.n)
+                if not a[i]:
+                    a[i] = 1
+                    break
+
+    def random_half(self):
+        """
+        Return bitarray with each bit having probability 1/2 of being 1.
+        """
+        # use randbytes() for reproducibility (not urandom())
+        a = bitarray(random.randbytes(self.nbytes), self.endian)
+        del a[self.n:]
+        return a
+
+    def random_p(self, p):
+        # error check inputs and handle edge cases
+        if p <= 0.0 or p >= 1.0:
+            if p == 0.0:
+                return zeros(self.n, self.endian)
+            if p == 1.0:
+                return ones(self.n, self.endian)
+            raise ValueError("p must be in range 0.0 <= p <= 1.0, got %s" % p)
+
+        # for small n, use literal definition
+        if self.n < 10:
+            return bitarray((random.random() < p for _ in range(self.n)),
+                            self.endian)
+
+        # uses randbytes() for reproducibility
+        if p == 0.5:
+            return self.random_half()
+
+        # exploit symmetry to establish: p < 0.5
+        if p > 0.5:
+            a = self.random_p(1.0 - p)
+            a.invert()
+            return a
+
+        # for small p, set randomly individual bits
+        if p < self.small_p:
+            a = zeros(self.n, self.endian)
+            self.set_randomly(a, random.binomialvariate(self.n, p))
+            return a
+
+        # combine random bitarrays using bitwise & and | operations
+        i = int(p * self.intervals)
+        a = self.random_half()
+        for k in self.get_op_seq(i):
+            self.opers[k](a, self.random_half())
+        q = i / self.intervals  # probability of ones in bitarray a
+
+        if q < p:
+            # increase probability q by "oring" with probability x
+            x = (p - q) / (1.0 - q)
+            a |= self.random_p(x)
+
+        return a
 
 def random_p(__n, p=0.5, endian=None):
     """random_p(n, /, p=0.5, endian=None) -> bitarray
@@ -92,64 +162,8 @@ specific seed value.
 This function is only implemented when using Python 3.12 or higher, as it
 requires the standard library function `random.binomialvariate()`.
 """
-    if sys.version_info[:2] < (3, 12):
-        raise NotImplementedError("bitarray.util.random_p() requires "
-                                  "Python 3.12 or higher")
-
-    # error check inputs and handle edge cases
-    if __n < 0:
-        raise ValueError("n must be non-negative, got %s" % __n)
-    if p <= 0.0 or p >= 1.0:
-        if p == 0.0:
-            return zeros(__n, endian)
-        if p == 1.0:
-            return ones(__n, endian)
-        raise ValueError("p must be in range 0.0 <= p <= 1.0, got %s" % p)
-
-    # for small n, use literal definition
-    if __n < 10:
-        return bitarray((random.random() < p for _ in range(__n)), endian)
-
-    # use randbytes() for reproducibility (not urandom())
-    if p == 0.5:
-        a = bitarray(random.randbytes(bits2bytes(__n)), endian)
-        del a[__n:]
-        return a
-
-    # exploit symmetry to establish: p < 0.5
-    if p > 0.5:
-        a = random_p(__n, 1.0 - p, endian)
-        a.invert()
-        return a
-
-    # for small p, set randomly individual bits
-    if p < 0.01:
-        a = zeros(__n, endian)
-        _set_randomly(a, random.binomialvariate(__n, p))
-        return a
-
-    # Combine random bitarrays using bitwise & and | operations.
-    i = int(p * _INTERVALS)
-    a = random_p(__n, 0.5, endian)
-    for k in _get_op_seq(i):
-        _OPERS[k](a, random_p(__n, 0.5, endian))
-
-    q = i / _INTERVALS  # probability of ones in bitarray a
-    assert 0.0 <= p - q < 1.0 / _INTERVALS
-
-    if q < p:
-        # Increase desired probability q by "oring" random bitarray with
-        # probability x.  x is calculated such that q will equal to p.
-        x = (p - q) / (1.0 - q)
-        # Ensure we hit the small p case when calling random_p() itself.
-        # Using m = 8 and considering p = 0.5-1e-16, we have q = 127/256,
-        # so the maximal x = (0.5 - q) / (1 - q) = 1 / 129 = 0.0077519 < 0.01
-        assert x < 0.01, x
-        a |= random_p(__n, x, endian)
-        q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
-
-    assert abs(q - p) < 1e-16  # ensure desired probability q is p
-    return a
+    r = _RandomP(__n, endian)
+    return r.random_p(p)
 
 
 def pprint(__a, stream=None, group=8, indent=4, width=80):

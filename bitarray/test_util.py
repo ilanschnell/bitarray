@@ -27,7 +27,7 @@ from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
 
 from bitarray.util import (
     zeros, ones, urandom, pprint, strip, count_n,
-    _MAX_CALLS, _INTERVALS, _get_op_seq, _set_randomly, random_p,
+    _RandomP, random_p,
     parity, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
     correspond_all, byteswap, intervals,
@@ -171,8 +171,11 @@ class Random_P_Tests(unittest.TestCase):
             self.assertEqual(len(a), n)
             self.assertTrue(abs(a.count() - n * p) < max(4, 10 * sigma))
 
-    @skipIf(_INTERVALS != 256)
     def test_seed(self):
+        r = _RandomP()
+        if r.max_calls != 8:
+            return
+
         _set_default_endian("little")
         seed(1234)
         # for default p=0.5, random_p uses randbytes
@@ -190,14 +193,14 @@ class Random_P_Tests(unittest.TestCase):
         seed()
 
     def test_get_op_seq(self):
-        self.assertEqual(1 << _MAX_CALLS, _INTERVALS)
+        r = _RandomP()
 
-        for i in 0, _INTERVALS // 2:
-            self.assertRaises(AssertionError, _get_op_seq, i)
+        for i in 0, r.intervals // 2:
+            self.assertRaises(AssertionError, r.get_op_seq, i)
 
-        for i in range(1, _INTERVALS // 2):
-            s = _get_op_seq(i)
-            self.assertTrue(0 < len(s) < _MAX_CALLS)
+        for i in range(1, r.intervals // 2):
+            s = r.get_op_seq(i)
+            self.assertTrue(0 < len(s) < r.max_calls)
             # The sequence of bitwise operations s will achieve that the
             # probability q is exactly (i / _INTERVALS).
             q = 0.5                    # a = random_p(p=0.5)
@@ -206,25 +209,50 @@ class Random_P_Tests(unittest.TestCase):
                     q = 0.5 * (q + 1)  # a |= random_p(p=0.5)
                 else:
                     q *= 0.5           # a &= random_p(p=0.5)
-            self.assertAlmostEqual(q, i / _INTERVALS, delta=1e-16)
+            self.assertAlmostEqual(q, i / r.intervals, delta=1e-16)
+
+    def test_final_oring(self):
+        r = _RandomP()
+
+        for _ in range(10_000):
+            p = 0.5 * random()  # 0.0 <= p < 0.5
+            i = int(p * r.intervals)
+            q = i / r.intervals  # probability of ones in bitarray a
+            self.assertTrue(0.0 <= p - q < 1.0 / r.intervals)
+
+            if q < p:
+                # calculated such that q will equal to p
+                x = (p - q) / (1.0 - q)
+                # Ensure we hit the small p case when calling random_p()
+                # itself.  Considering p = 0.5-1e-16, we have q = 127/256,
+                # so the maximal:
+                # x = (0.5 - q) / (1 - q) = 1 / 129 = 0.0077519 < 0.01
+                self.assertTrue(x < r.small_p, x)
+                q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
+
+            # ensure desired probability q is p
+            self.assertAlmostEqual(q, p,  delta=1e-16)
 
     def test_set_randomly_active(self):
         # test if all bits are active
         n = 250
+        r = _RandomP(n)
         cum = zeros(n)
         for _ in range(100):
             a = zeros(n)
             m = randrange(n // 2)
-            _set_randomly(a, m)
+            r.set_randomly(a, m)
             self.assertEqual(a.count(), m)
             cum |= a
         self.assertTrue(cum.all())
 
     def test_set_randomly_1_bit(self):
+        n = 100
+        r = _RandomP(n)
         lower = 0  # number of indices below 50
         for _ in range(1000):
-            a = zeros(100)
-            _set_randomly(a, 1)
+            a = zeros(n)
+            r.set_randomly(a, 1)
             self.assertEqual(a.count(), 1)
             if a.find(1) < 50:
                 lower += 1
