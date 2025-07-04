@@ -214,15 +214,26 @@ class Random_P_Tests(unittest.TestCase):
                     q = 0.5 * (q + 1)  # a |= random_half()
                 else:
                     q *= 0.5           # a &= random_half()
-            self.assertAlmostEqual(q, i / self.intervals, delta=1e-16)
+            self.assertEqual(q, i / self.intervals)
 
     def test_combine(self):
-        a, q = self.r.combine(0.5)
-        self.assertEqual(type(a), bitarray)
-        self.assertEqual(q, 0.5)
+        C = self.r.combine
+
+        for p in 0.5, 0.375, 0.125:
+            a, q = C(p)
+            self.assertEqual(type(a), bitarray)
+            self.assertEqual(q, p)
+
+        a, q = C(0.5 - 1e-16)
+        self.assertEqual(q, 0.5 - 1 / self.intervals)
+
+        for _ in range(1000):
+            p = self.small_p + (0.5 - self.small_p) * random()
+            _, q = C(p)
+            self.assertTrue(0.0 <= p - q < 1.0 / self.intervals)
 
     def test_final_oring(self):
-        for _ in range(10_000):
+        for _ in range(1000):
             p = 0.5 * random()  # 0.0 <= p < 0.5
             i = int(p * self.intervals)
             q = i / self.intervals  # probability of ones in bitarray a
@@ -239,7 +250,7 @@ class Random_P_Tests(unittest.TestCase):
                 q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
 
             # ensure desired probability q is p
-            self.assertAlmostEqual(q, p,  delta=1e-16)
+            self.assertAlmostEqual(q, p, delta=1e-16)
 
     def test_set_randomly_active(self):
         # test if all bits are active
