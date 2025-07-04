@@ -107,7 +107,7 @@ requires the standard library function `random.binomialvariate()`.
 
     # Combine random bitarrays using bitwise & and | operations.
     # This will give us a random bitarray with probability q in
-    # intervals of 2**-m (where m is the maximal calls to urandom()).
+    # intervals of 2**-m (where m is the maximal calls to random_p()).
 
     m = 8  # maximal number of urandom() calls
     i = int((1 << m) * p)
@@ -118,12 +118,10 @@ requires the standard library function `random.binomialvariate()`.
     assert s[0]
     del s[0]
 
+    ops = [bitarray.__iand__, bitarray.__ior__]
     a = random_p(__n, 0.5, endian)
-    for op in s:
-        if op:
-            a |= random_p(__n, 0.5, endian)
-        else:
-            a &= random_p(__n, 0.5, endian)
+    for k in s:
+        ops[k](a, random_p(__n, 0.5, endian))
 
     q = i / (1 << m)  # probability of ones in bitarray a
     assert 0.0 <= p - q < 1.0 / (1 << m)
