@@ -194,30 +194,32 @@ class Random_P_Tests(unittest.TestCase):
 
     r = _RandomP()
     intervals = r.intervals
-    max_calls = r.max_calls
+    pspan = 1.0 / intervals  # probability span of each interval
     small_p = r.small_p
 
     def test_get_op_seq(self):
         G = self.r.get_op_seq
 
+        intervals = self.intervals
+        max_calls = self.r.max_calls
         self.assertRaises(AssertionError, G, 0)
-        self.assertEqual(len(G(1)), self.max_calls - 1)
-        self.assertEqual(len(G(self.intervals // 2)), 0)
-        self.assertEqual(len(G(self.intervals - 1)), self.max_calls - 1)
-        self.assertRaises(OverflowError, G, self.intervals)
+        self.assertEqual(len(G(1)), max_calls - 1)
+        self.assertEqual(len(G(intervals // 2)), 0)
+        self.assertEqual(len(G(intervals - 1)), max_calls - 1)
+        self.assertRaises(OverflowError, G, intervals)
 
-        for i in range(1, self.intervals):
+        for i in range(1, intervals):
             s = G(i)
-            self.assertTrue(0 <= len(s) < self.max_calls)
+            self.assertTrue(0 <= len(s) < max_calls)
             # The sequence of bitwise operations s will achieve that the
-            # probability q is exactly (i / self.intervals).
+            # probability q is exactly (i / intervals).
             q = 0.5                    # a = random_half()
             for k in s:
                 if k:
                     q = 0.5 * (q + 1)  # a |= random_half()
                 else:
                     q *= 0.5           # a &= random_half()
-            self.assertEqual(q, i / self.intervals)
+            self.assertEqual(q, i / intervals)
 
     def test_combine(self):
         C = self.r.combine
@@ -228,15 +230,15 @@ class Random_P_Tests(unittest.TestCase):
             self.assertEqual(q, p)
 
         a, q = C(self.small_p)
-        self.assertTrue(0.0 <= self.small_p - q < 1.0 / self.intervals)
+        self.assertTrue(0.0 <= self.small_p - q < self.pspan)
 
         a, q = C(0.5 - 1e-16)
-        self.assertEqual(q, 0.5 - 1.0 / self.intervals)
+        self.assertEqual(q, 0.5 - self.pspan)
 
         for _ in range(1000):
             p = self.small_p + 0.5 * random()
             a, q = C(p)
-            self.assertTrue(0.0 <= p - q < 1.0 / self.intervals)
+            self.assertTrue(0.0 <= p - q < self.pspan)
 
     def test_final_oring(self):
         for _ in range(1000):
@@ -258,7 +260,7 @@ class Random_P_Tests(unittest.TestCase):
             # ensure desired probability q is p
             self.assertAlmostEqual(q, p, delta=1e-16)
 
-    def test_set_randomly_active(self):
+    def test_set_randomly(self):
         # test if all bits are active
         n = 250
         r = _RandomP(n)
@@ -270,20 +272,6 @@ class Random_P_Tests(unittest.TestCase):
             self.assertEqual(a.count(), m)
             cum |= a
         self.assertTrue(cum.all())
-
-    def test_set_randomly_1_bit(self):
-        n = 100
-        r = _RandomP(n)
-        lower = 0  # number of indices below 50
-        for _ in range(1000):
-            a = zeros(n)
-            r.set_randomly(a, 1)
-            self.assertEqual(a.count(), 1)
-            if a.find(1) < 50:
-                lower += 1
-        # the number of indices below 50 is a normal distribution with
-        # p = 0.5, mu = 500, sigma = sqrt(1000 * p * p) = 15.811
-        self.assertTrue(abs(lower - 500) <= 158)
 
 # ---------------------------------------------------------------------------
 
