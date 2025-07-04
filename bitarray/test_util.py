@@ -27,7 +27,7 @@ from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
 
 from bitarray.util import (
     zeros, ones, urandom, pprint, strip, count_n,
-    _INTERVALS, _get_op_seq, random_p,
+    _MAX_CALLS, _INTERVALS, _get_op_seq, random_p,
     parity, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
     correspond_all, byteswap, intervals,
@@ -190,15 +190,21 @@ class Random_P_Tests(unittest.TestCase):
         seed()
 
     def test_get_op_seq(self):
+        self.assertEqual(1 << _MAX_CALLS, _INTERVALS)
+
+        for i in 0, _INTERVALS // 2:
+            self.assertRaises(AssertionError, _get_op_seq, i)
+
         for i in range(1, _INTERVALS // 2):
             s = _get_op_seq(i)
+            self.assertTrue(0 < len(s) < _MAX_CALLS)
             q = 0.5
             for k in s:
                 if k:
-                    # a |= random_p(0.5)
+                    # a |= random_p(p=0.5)
                     q = 1.0 - (1.0 - q) * (1.0 - 0.5)
                 else:
-                    # a &= random_p(0.5)
+                    # a &= random_p(p=0.5)
                     q *= 0.5
             self.assertAlmostEqual(q, i / _INTERVALS, delta=1e-16)
 
