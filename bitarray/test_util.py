@@ -27,7 +27,7 @@ from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
 
 from bitarray.util import (
     zeros, ones, urandom, pprint, strip, count_n,
-    _MAX_CALLS, _INTERVALS, _get_op_seq, random_p,
+    _MAX_CALLS, _INTERVALS, _get_op_seq, _set_randomly, random_p,
     parity, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
     correspond_all, byteswap, intervals,
@@ -207,6 +207,30 @@ class Random_P_Tests(unittest.TestCase):
                     # a &= random_p(p=0.5)
                     q *= 0.5
             self.assertAlmostEqual(q, i / _INTERVALS, delta=1e-16)
+
+    def test_set_randomly_active(self):
+        # test if all bits are active
+        n = 250
+        cum = zeros(n)
+        for _ in range(100):
+            a = zeros(n)
+            m = randrange(n // 2)
+            _set_randomly(a, m)
+            self.assertEqual(a.count(), m)
+            cum |= a
+        self.assertTrue(cum.all())
+
+    def test_set_randomly_1_bit(self):
+        lower = 0  # number of indices below 50
+        for _ in range(1000):
+            a = zeros(100)
+            _set_randomly(a, 1)
+            self.assertEqual(a.count(), 1)
+            if a.find(1) < 50:
+                lower += 1
+        # we expect the number of indices below 50 to be normally distributed
+        # with: p = 0.5, mu = 500, sigma = sqrt(1000 * p * p) = 15.811
+        self.assertTrue(abs(lower - 500) < 158)
 
 # ---------------------------------------------------------------------------
 

@@ -52,10 +52,14 @@ Return random bitarray of length `n` (uses `os.urandom()`).
 
 
 _MAX_CALLS = 8  # maximal number of calls to random_p() in operations below
-_INTERVALS = 1 << _MAX_CALLS  # number of interval in probability
+_INTERVALS = 1 << _MAX_CALLS  # number of probability intervals
 _OPERS = [bitarray.__iand__, bitarray.__ior__]
 
 def _get_op_seq(i):
+    """
+    Return operator sequence of bitwise & and | operations, necessary to
+    obtain a bitarray with ones having probability (i / _INTERVALS).
+    """
     assert 0 < i < _INTERVALS / 2  # as p < 0.5
     # sequence of &, | operations - least significant operations come first
     s = int2ba(i, length=_MAX_CALLS, endian="little")
@@ -63,6 +67,19 @@ def _get_op_seq(i):
     assert s[0]
     del s[0]
     return s
+
+def _set_randomly(a, m):
+    """
+    Set randomly m bits in a to 1.  Attempting to set too many bits may
+    take a long time, or even cause an infinite loop.
+    """
+    n = len(a)
+    for _ in range(m):
+        while 1:
+            i = random.randrange(n)
+            if not a[i]:
+                a[i] = 1
+                break
 
 def random_p(__n, p=0.5, endian=None):
     """random_p(n, /, p=0.5, endian=None) -> bitarray
@@ -108,20 +125,10 @@ requires the standard library function `random.binomialvariate()`.
     # for small p, set randomly individual bits
     if p < 0.01:
         a = zeros(__n, endian)
-        c = random.binomialvariate(__n, p)  # number of bits to set to 1
-        for _ in range(c):
-            while 1:
-                i = random.randrange(__n)
-                if not a[i]:
-                    a[i] = 1
-                    break
-        # assert a.count() == c
+        _set_randomly(a, random.binomialvariate(__n, p))
         return a
 
     # Combine random bitarrays using bitwise & and | operations.
-    # This will give us a random bitarray with probability q in
-    # intervals of 2**-8 (where 8 is the maximal calls to random_p()).
-
     i = int(p * _INTERVALS)
     a = random_p(__n, 0.5, endian)
     for k in _get_op_seq(i):
