@@ -51,6 +51,19 @@ Return random bitarray of length `n` (uses `os.urandom()`).
     return a
 
 
+_MAX_CALLS = 8  # maximal number of calls to random_p() in operations below
+_INTERVALS = 1 << _MAX_CALLS  # number of interval in probability
+_OPERS = [bitarray.__iand__, bitarray.__ior__]
+
+def _get_op_seq(i):
+    assert 0 < i < _INTERVALS / 2  # as p < 0.5
+    # sequence of &, | operations - least significant operations come first
+    s = int2ba(i, length=_MAX_CALLS, endian="little")
+    s = strip(s, mode="left")
+    assert s[0]
+    del s[0]
+    return s
+
 def random_p(__n, p=0.5, endian=None):
     """random_p(n, /, p=0.5, endian=None) -> bitarray
 
@@ -107,24 +120,15 @@ requires the standard library function `random.binomialvariate()`.
 
     # Combine random bitarrays using bitwise & and | operations.
     # This will give us a random bitarray with probability q in
-    # intervals of 2**-m (where m is the maximal calls to random_p()).
+    # intervals of 2**-8 (where 8 is the maximal calls to random_p()).
 
-    m = 8  # maximal number of urandom() calls
-    i = int((1 << m) * p)
-    assert 0 < i < (1 << (m - 1))  # as p < 0.5
-    # sequence of &, | operations - least significant operations come first
-    s = int2ba(i, length=m, endian="little")
-    s = strip(s, mode="left")
-    assert s[0]
-    del s[0]
-
-    ops = [bitarray.__iand__, bitarray.__ior__]
+    i = int(p * _INTERVALS)
     a = random_p(__n, 0.5, endian)
-    for k in s:
-        ops[k](a, random_p(__n, 0.5, endian))
+    for k in _get_op_seq(i):
+        _OPERS[k](a, random_p(__n, 0.5, endian))
 
-    q = i / (1 << m)  # probability of ones in bitarray a
-    assert 0.0 <= p - q < 1.0 / (1 << m)
+    q = i / _INTERVALS  # probability of ones in bitarray a
+    assert 0.0 <= p - q < 1.0 / _INTERVALS
 
     if q < p:
         # Increase desired probability q by "oring" random bitarray with

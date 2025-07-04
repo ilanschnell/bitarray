@@ -26,7 +26,8 @@ from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
                                     PTRSIZE, DEBUG, WHITESPACE)
 
 from bitarray.util import (
-    zeros, ones, urandom, random_p, pprint, strip, count_n,
+    zeros, ones, urandom, pprint, strip, count_n,
+    _INTERVALS, _get_op_seq, random_p,
     parity, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
     correspond_all, byteswap, intervals,
@@ -170,6 +171,7 @@ class Random_P_Tests(unittest.TestCase):
             self.assertEqual(len(a), n)
             self.assertTrue(abs(a.count() - n * p) < max(4, 10 * sigma))
 
+    @skipIf(_INTERVALS != 256)
     def test_seed(self):
         _set_default_endian("little")
         seed(1234)
@@ -186,6 +188,19 @@ class Random_P_Tests(unittest.TestCase):
         self.assertEqual(random_p(8), bitarray('00111110'))
         # initialize with current system time again
         seed()
+
+    def test_get_op_seq(self):
+        for i in range(1, _INTERVALS // 2):
+            s = _get_op_seq(i)
+            q = 0.5
+            for k in s:
+                if k:
+                    # a |= random_p(0.5)
+                    q = 1.0 - (1.0 - q) * (1.0 - 0.5)
+                else:
+                    # a &= random_p(0.5)
+                    q *= 0.5
+            self.assertAlmostEqual(q, i / _INTERVALS, delta=1e-16)
 
 # ---------------------------------------------------------------------------
 
