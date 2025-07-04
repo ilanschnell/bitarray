@@ -198,14 +198,14 @@ class Random_P_Tests(unittest.TestCase):
         for i in range(1, _INTERVALS // 2):
             s = _get_op_seq(i)
             self.assertTrue(0 < len(s) < _MAX_CALLS)
-            q = 0.5
+            # The sequence of bitwise operations s will achieve that the
+            # probability q is exactly (i / _INTERVALS).
+            q = 0.5                    # a = random_p(p=0.5)
             for k in s:
                 if k:
-                    # a |= random_p(p=0.5)
-                    q = 1.0 - (1.0 - q) * (1.0 - 0.5)
+                    q = 0.5 * (q + 1)  # a |= random_p(p=0.5)
                 else:
-                    # a &= random_p(p=0.5)
-                    q *= 0.5
+                    q *= 0.5           # a &= random_p(p=0.5)
             self.assertAlmostEqual(q, i / _INTERVALS, delta=1e-16)
 
     def test_set_randomly_active(self):
@@ -228,9 +228,9 @@ class Random_P_Tests(unittest.TestCase):
             self.assertEqual(a.count(), 1)
             if a.find(1) < 50:
                 lower += 1
-        # we expect the number of indices below 50 to be normally distributed
-        # with: p = 0.5, mu = 500, sigma = sqrt(1000 * p * p) = 15.811
-        self.assertTrue(abs(lower - 500) < 158)
+        # the number of indices below 50 is a normal distribution with
+        # p = 0.5, mu = 500, sigma = sqrt(1000 * p * p) = 15.811
+        self.assertTrue(abs(lower - 500) <= 158)
 
 # ---------------------------------------------------------------------------
 
