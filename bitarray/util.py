@@ -53,7 +53,7 @@ Return random bitarray of length `n` (uses `os.urandom()`).
 
 class _RandomP:
 
-    # maximal number of calls to random_p() in operations sequence
+    # maximal number of calls to .random_half() in .combine()
     max_calls = 8
 
     # number of probability intervals
@@ -61,9 +61,6 @@ class _RandomP:
 
     # limit for setting individual bits randomly
     small_p = 0.01
-
-    # operators in sequence
-    opers = [bitarray.__iand__, bitarray.__ior__]
 
     def __init__(self, n=1, endian=None):
         self.n = n
@@ -75,13 +72,23 @@ class _RandomP:
         Return operator sequence of bitwise & and | operations, necessary to
         obtain a bitarray with ones having probability (i / _INTERVALS).
         """
-        assert 0 < i < self.intervals / 2  # as p < 0.5
+        assert 0 < i <= self.intervals / 2  # as p <= 0.5
         # sequence of &, | operations - least significant operations come first
         s = int2ba(i, length=self.max_calls, endian="little")
         s = strip(s, mode="left")
         assert s[0]
         del s[0]
         return s
+
+    def combine(self, i):
+        a = self.random_half()
+        for k in self.get_op_seq(i):
+            b = self.random_half()
+            if k:
+                a |= b
+            else:
+                a &= b
+        return a
 
     def set_randomly(self, a, m):
         """
@@ -118,11 +125,7 @@ class _RandomP:
             return bitarray((random.random() < p for _ in range(self.n)),
                             self.endian)
 
-        # uses randbytes() for reproducibility
-        if p == 0.5:
-            return self.random_half()
-
-        # exploit symmetry to establish: p < 0.5
+        # exploit symmetry to establish: p <= 0.5
         if p > 0.5:
             a = self.random_p(1.0 - p)
             a.invert()
@@ -136,9 +139,7 @@ class _RandomP:
 
         # combine random bitarrays using bitwise & and | operations
         i = int(p * self.intervals)
-        a = self.random_half()
-        for k in self.get_op_seq(i):
-            self.opers[k](a, self.random_half())
+        a = self.combine(i)
         q = i / self.intervals  # probability of ones in bitarray a
 
         if q < p:

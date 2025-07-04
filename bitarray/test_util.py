@@ -192,20 +192,20 @@ class Random_P_Tests(unittest.TestCase):
     def test_get_op_seq(self):
         r = _RandomP()
 
-        for i in 0, r.intervals // 2:
-            self.assertRaises(AssertionError, r.get_op_seq, i)
+        self.assertRaises(AssertionError, r.get_op_seq, 0)
+        self.assertEqual(len(r.get_op_seq(r.intervals // 2)), 0)
 
-        for i in range(1, r.intervals // 2):
+        for i in range(1, r.intervals // 2 + 1):
             s = r.get_op_seq(i)
-            self.assertTrue(0 < len(s) < r.max_calls)
+            self.assertTrue(0 <= len(s) < r.max_calls)
             # The sequence of bitwise operations s will achieve that the
             # probability q is exactly (i / _INTERVALS).
-            q = 0.5                    # a = random_p(p=0.5)
+            q = 0.5                    # a = random_half()
             for k in s:
                 if k:
-                    q = 0.5 * (q + 1)  # a |= random_p(p=0.5)
+                    q = 0.5 * (q + 1)  # a |= random_half()
                 else:
-                    q *= 0.5           # a &= random_p(p=0.5)
+                    q *= 0.5           # a &= random_half()
             self.assertAlmostEqual(q, i / r.intervals, delta=1e-16)
 
     def test_final_oring(self):
