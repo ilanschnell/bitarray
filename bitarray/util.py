@@ -111,7 +111,7 @@ requires the standard library function `random.binomialvariate()`.
 
     m = 8  # maximal number of urandom() calls
     i = int((1 << m) * p)
-    assert 0 < i <= (1 << (m - 1))  # as p <= 0.5
+    assert 0 < i < (1 << (m - 1))  # as p < 0.5
     # sequence of &, | operations - least significant operations come first
     s = int2ba(i, length=m, endian="little")
     s = strip(s, mode="left")
@@ -119,16 +119,14 @@ requires the standard library function `random.binomialvariate()`.
     del s[0]
 
     a = random_p(__n, 0.5, endian)
-    q = 0.5  # current probability of ones in resulting bitarray a
     for op in s:
         if op:
             a |= random_p(__n, 0.5, endian)
-            q += 0.5 * (1.0 - q)   # q = 1 - (1 - q) * (1 - 0.5)
         else:
             a &= random_p(__n, 0.5, endian)
-            q *= 0.5
+
+    q = i / (1 << m)  # probability of ones in bitarray a
     assert 0.0 <= p - q < 1.0 / (1 << m)
-    assert abs((1 << m) * q - i) < 1e-16
 
     if q < p:
         # Increase desired probability q by "oring" random bitarray with
@@ -136,7 +134,7 @@ requires the standard library function `random.binomialvariate()`.
         x = (p - q) / (1.0 - q)
         # Ensure we hit the small p case when calling random_p() itself.
         # Using m = 8 and considering p = 0.5-1e-16, we have q = 127/256,
-        # so the maximal x = (0.5 - q) / (1 - q) = 0.0077519 < 0.01
+        # so the maximal x = (0.5 - q) / (1 - q) = 1 / 129 = 0.0077519 < 0.01
         assert x < 0.01, x
         a |= random_p(__n, x, endian)
         q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
