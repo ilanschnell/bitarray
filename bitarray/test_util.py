@@ -146,16 +146,17 @@ class Random_P_Tests(unittest.TestCase):
             self.assertEqual(a.endian, endian or default_endian)
 
     def test_inputs_and_edge_cases(self):
-        self.assertRaises(TypeError, random_p)
-        self.assertRaises(TypeError, random_p, 0.25)
-        self.assertRaises(TypeError, random_p, 1, "0.5")
-        self.assertRaises(ValueError, random_p, -1)
-        self.assertRaises(ValueError, random_p, 1, -0.5)
-        self.assertRaises(ValueError, random_p, 1, 1.5)
-        self.assertEqual(random_p(0), bitarray())
+        R = random_p
+        self.assertRaises(TypeError, R)
+        self.assertRaises(TypeError, R, 0.25)
+        self.assertRaises(TypeError, R, 1, "0.5")
+        self.assertRaises(ValueError, R, -1)
+        self.assertRaises(ValueError, R, 1, -0.5)
+        self.assertRaises(ValueError, R, 1, 1.5)
+        self.assertEqual(R(0), bitarray())
         for n in range(20):
-            self.assertEqual(random_p(n, 0), zeros(n))
-            self.assertEqual(random_p(n, p=1.0), ones(n))
+            self.assertEqual(R(n, 0), zeros(n))
+            self.assertEqual(R(n, p=1.0), ones(n))
 
     def test_default(self):
         a = random_p(10_000_000)  # p defaults to 0.5
@@ -189,39 +190,43 @@ class Random_P_Tests(unittest.TestCase):
         # initialize with current system time again
         seed()
 
+    # ---------------- tests for internal _RandomP methods ------------------
+
+    r = _RandomP()
+    intervals = r.intervals
+    max_calls = r.max_calls
+    small_p = r.small_p
+
     def test_get_op_seq(self):
-        r = _RandomP()
+        G = self.r.get_op_seq
 
-        self.assertRaises(AssertionError, r.get_op_seq, 0)
-        self.assertEqual(len(r.get_op_seq(r.intervals // 2)), 0)
+        self.assertRaises(AssertionError, G, 0)
+        self.assertEqual(len(G(self.intervals // 2)), 0)
 
-        for i in range(1, r.intervals // 2 + 1):
-            s = r.get_op_seq(i)
-            self.assertTrue(0 <= len(s) < r.max_calls)
+        for i in range(1, self.intervals // 2 + 1):
+            s = G(i)
+            self.assertTrue(0 <= len(s) < self.max_calls)
             # The sequence of bitwise operations s will achieve that the
-            # probability q is exactly (i / _INTERVALS).
+            # probability q is exactly (i / self.intervals).
             q = 0.5                    # a = random_half()
             for k in s:
                 if k:
                     q = 0.5 * (q + 1)  # a |= random_half()
                 else:
                     q *= 0.5           # a &= random_half()
-            self.assertAlmostEqual(q, i / r.intervals, delta=1e-16)
+            self.assertAlmostEqual(q, i / self.intervals, delta=1e-16)
 
     def test_combine(self):
-        r = _RandomP()
-        a, q = r.combine(0.5)
+        a, q = self.r.combine(0.5)
         self.assertEqual(type(a), bitarray)
         self.assertEqual(q, 0.5)
 
     def test_final_oring(self):
-        r = _RandomP()
-
         for _ in range(10_000):
             p = 0.5 * random()  # 0.0 <= p < 0.5
-            i = int(p * r.intervals)
-            q = i / r.intervals  # probability of ones in bitarray a
-            self.assertTrue(0.0 <= p - q < 1.0 / r.intervals)
+            i = int(p * self.intervals)
+            q = i / self.intervals  # probability of ones in bitarray a
+            self.assertTrue(0.0 <= p - q < 1.0 / self.intervals)
 
             if q < p:
                 # calculated such that q will equal to p
@@ -230,7 +235,7 @@ class Random_P_Tests(unittest.TestCase):
                 # itself.  Considering p = 0.5-1e-16, we have q = 127/256,
                 # so the maximal:
                 # x = (0.5 - q) / (1 - q) = 1 / 129 = 0.0077519 < 0.01
-                self.assertTrue(x < r.small_p, x)
+                self.assertTrue(x < self.small_p, x)
                 q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
 
             # ensure desired probability q is p
