@@ -62,7 +62,7 @@ class _RandomP:
     # limit for setting individual bits randomly
     small_p = 0.01
 
-    def __init__(self, n=1, endian=None):
+    def __init__(self, n=0, endian=None):
         self.n = n
         self.nbytes = bits2bytes(n)
         self.endian = endian
@@ -70,7 +70,7 @@ class _RandomP:
     def get_op_seq(self, i):
         """
         Return operator sequence of bitwise & and | operations, necessary to
-        obtain a bitarray with ones having probability (i / _INTERVALS).
+        obtain a bitarray with ones having probability (i / self.intervals).
         """
         assert 0 < i <= self.intervals / 2  # as p <= 0.5
         # sequence of &, | operations - least significant operations come first
@@ -80,7 +80,14 @@ class _RandomP:
         del s[0]
         return s
 
-    def combine(self, i):
+    def combine(self, p):
+        """
+        Using a sequence of bitwise & and | operations, calculate a random
+        bitarray p.  Return the bitarray, and the actual probability (limit
+        by self.max_calls) as a tuple.
+        """
+        assert self.small_p <= p <= 0.5
+        i = int(p * self.intervals)
         a = self.random_half()
         for k in self.get_op_seq(i):
             b = self.random_half()
@@ -88,7 +95,7 @@ class _RandomP:
                 a |= b
             else:
                 a &= b
-        return a
+        return a, i / self.intervals
 
     def set_randomly(self, a, m):
         """
@@ -138,9 +145,7 @@ class _RandomP:
             return a
 
         # combine random bitarrays using bitwise & and | operations
-        i = int(p * self.intervals)
-        a = self.combine(i)
-        q = i / self.intervals  # probability of ones in bitarray a
+        a, q = self.combine(p)
 
         if q < p:
             # increase probability q by "oring" with probability x

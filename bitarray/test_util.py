@@ -208,6 +208,12 @@ class Random_P_Tests(unittest.TestCase):
                     q *= 0.5           # a &= random_half()
             self.assertAlmostEqual(q, i / r.intervals, delta=1e-16)
 
+    def test_combine(self):
+        r = _RandomP()
+        a, q = r.combine(0.5)
+        self.assertEqual(type(a), bitarray)
+        self.assertEqual(q, 0.5)
+
     def test_final_oring(self):
         r = _RandomP()
 
