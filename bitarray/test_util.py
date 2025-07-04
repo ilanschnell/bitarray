@@ -186,7 +186,7 @@ class Random_P_Tests(unittest.TestCase):
         self.assertEqual(random_p(32, 0.7),
                          bitarray('11111011101011111000111111011111'))
         # small n
-        self.assertEqual(random_p(8), bitarray('00111110'))
+        self.assertEqual(random_p(8), bitarray('11111001'))
         # initialize with current system time again
         seed()
 
@@ -201,9 +201,12 @@ class Random_P_Tests(unittest.TestCase):
         G = self.r.get_op_seq
 
         self.assertRaises(AssertionError, G, 0)
+        self.assertEqual(len(G(1)), self.max_calls - 1)
         self.assertEqual(len(G(self.intervals // 2)), 0)
+        self.assertEqual(len(G(self.intervals - 1)), self.max_calls - 1)
+        self.assertRaises(OverflowError, G, self.intervals)
 
-        for i in range(1, self.intervals // 2 + 1):
+        for i in range(1, self.intervals):
             s = G(i)
             self.assertTrue(0 <= len(s) < self.max_calls)
             # The sequence of bitwise operations s will achieve that the
@@ -219,17 +222,20 @@ class Random_P_Tests(unittest.TestCase):
     def test_combine(self):
         C = self.r.combine
 
-        for p in 0.5, 0.375, 0.125:
+        for p in 0.5, 0.375, 0.25, 0.5625:
             a, q = C(p)
             self.assertEqual(type(a), bitarray)
             self.assertEqual(q, p)
 
+        a, q = C(self.small_p)
+        self.assertTrue(0.0 <= self.small_p - q < 1.0 / self.intervals)
+
         a, q = C(0.5 - 1e-16)
-        self.assertEqual(q, 0.5 - 1 / self.intervals)
+        self.assertEqual(q, 0.5 - 1.0 / self.intervals)
 
         for _ in range(1000):
-            p = self.small_p + (0.5 - self.small_p) * random()
-            _, q = C(p)
+            p = self.small_p + 0.5 * random()
+            a, q = C(p)
             self.assertTrue(0.0 <= p - q < 1.0 / self.intervals)
 
     def test_final_oring(self):

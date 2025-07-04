@@ -72,11 +72,10 @@ class _RandomP:
         Return operator sequence of bitwise & and | operations, necessary to
         obtain a bitarray with ones having probability (i / self.intervals).
         """
-        assert 0 < i <= self.intervals / 2  # as p <= 0.5
-        # sequence of &, | operations - least significant operations come first
+        assert i > 0
+        # sequence of &, | operations - least significant operations first
         s = int2ba(i, length=self.max_calls, endian="little")
         s = strip(s, mode="left")
-        assert s[0]
         del s[0]
         return s
 
@@ -86,7 +85,6 @@ class _RandomP:
         bitarray p.  Return the bitarray, and the actual probability (limit
         by self.max_calls) as a tuple.
         """
-        assert self.small_p <= p <= 0.5
         i = int(p * self.intervals)
         a = self.random_half()
         for k in self.get_op_seq(i):
@@ -120,9 +118,11 @@ class _RandomP:
 
     def random_p(self, p):
         # error check inputs and handle edge cases
-        if p <= 0.0 or p >= 1.0:
+        if p <= 0.0 or p >= 1.0 or p == 0.5:
             if p == 0.0:
                 return zeros(self.n, self.endian)
+            if p == 0.5:
+                return self.random_half()
             if p == 1.0:
                 return ones(self.n, self.endian)
             raise ValueError("p must be in range 0.0 <= p <= 1.0, got %s" % p)
