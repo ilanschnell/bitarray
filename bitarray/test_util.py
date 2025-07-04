@@ -171,11 +171,8 @@ class Random_P_Tests(unittest.TestCase):
             self.assertEqual(len(a), n)
             self.assertTrue(abs(a.count() - n * p) < max(4, 10 * sigma))
 
+    @skipIf(_RandomP().max_calls != 8)
     def test_seed(self):
-        r = _RandomP()
-        if r.max_calls != 8:
-            return
-
         _set_default_endian("little")
         seed(1234)
         # for default p=0.5, random_p uses randbytes

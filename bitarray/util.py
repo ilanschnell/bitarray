@@ -66,9 +66,6 @@ class _RandomP:
     opers = [bitarray.__iand__, bitarray.__ior__]
 
     def __init__(self, n=1, endian=None):
-        if sys.version_info[:2] < (3, 12):
-            raise NotImplementedError("bitarray.util.random_p() requires "
-                                      "Python 3.12 or higher")
         self.n = n
         self.nbytes = bits2bytes(n)
         self.endian = endian
@@ -162,6 +159,9 @@ specific seed value.
 This function is only implemented when using Python 3.12 or higher, as it
 requires the standard library function `random.binomialvariate()`.
 """
+    if sys.version_info[:2] < (3, 12):
+        raise NotImplementedError("bitarray.util.random_p() requires "
+                                  "Python 3.12 or higher")
     r = _RandomP(__n, endian)
     return r.random_p(p)
 
