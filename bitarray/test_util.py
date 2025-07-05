@@ -185,8 +185,8 @@ class Random_P_Tests(unittest.TestCase):
         # general case
         self.assertEqual(random_p(32, 0.7),
                          bitarray('11111011101011111000111111011111'))
-        # small n
-        self.assertEqual(random_p(8), bitarray('11111001'))
+        # small n (note that p=0.4 will call the "literal definition" case)
+        self.assertEqual(random_p(9, 0.4), bitarray('001111001'))
         # initialize with current system time again
         seed()
 
@@ -197,16 +197,16 @@ class Random_P_Tests(unittest.TestCase):
     small_p = r.small_p
 
     def test_constants(self):
+        """
+        The purpose of this test function is to establish that for things
+        to work:
+                        small_p   >       1.0 / intervals
+        and
+                        small_p   >   1.0 / (intervals // 2 + 1)
+        """
         intervals = self.intervals
         small_p = self.small_p
-
-        # The purpose of this test function is to establish that for things
-        # to work:
-        #                small_p   >       1.0 / intervals
-        # and:
-        #                small_p   >   1.0 / (intervals // 2 + 1)
-        #
-        #print(1 / intervals, 1.0 / (intervals // 2 + 1))
+        #print(1.0 / intervals, 1.0 / (intervals // 2 + 1))
 
         # Ensure the small p case filters out i = 0 for get_op_seq().
         i = int(small_p * intervals)
@@ -228,9 +228,14 @@ class Random_P_Tests(unittest.TestCase):
         self.assertTrue(small_p > 1.0 / (intervals // 2 + 1))
 
     def test_final_oring(self):
-        for _ in range(1000):
-            p = 0.5 * random()  # 0.0 <= p < 0.5
+        special_p = [0.0, self.small_p, 0.25 - 1e-16, 0.25, 0.5 - 1e-16, 0.5]
+        for j in range(1000):
+            try:
+                p = special_p[j]
+            except IndexError:
+                p = 0.5 * random()  # 0.0 <= p < 0.5
             q = int(p * self.intervals) / self.intervals
+            self.assertTrue(q <= p)
             self.assertTrue(0.0 <= p - q < 1.0 / self.intervals)
             if q < p:
                 # calculated such that q will equal to p

@@ -118,7 +118,7 @@ class _RandomP:
 
     def random_p(self, p):
         # error check inputs and handle edge cases
-        if p <= 0.0 or p >= 1.0 or p == 0.5:
+        if p <= 0.0 or p == 0.5 or p >= 1.0:
             if p == 0.0:
                 return zeros(self.n, self.endian)
             if p == 0.5:
