@@ -51,6 +51,23 @@ Return random bitarray of length `n` (uses `os.urandom()`).
     return a
 
 
+def random_p(__n, p=0.5, endian=None):
+    """random_p(n, /, p=0.5, endian=None) -> bitarray
+
+Return pseudo-random bitarray of length `n`.  Each bit has probability `p` of
+being 1.  Equivalent to `bitarray((random() < p for _ in range(n)), endian)`.
+The bitarrays are reproducible when calling Python's `random.seed()` with a
+specific seed value.
+
+This function is only implemented when using Python 3.12 or higher, as it
+requires the standard library function `random.binomialvariate()`.
+"""
+    if sys.version_info[:2] < (3, 12):
+        raise NotImplementedError("bitarray.util.random_p() requires "
+                                  "Python 3.12 or higher")
+    r = _RandomP(__n, endian)
+    return r.random_p(p)
+
 class _RandomP:
 
     # maximal number of calls to .random_half() in .combine()
@@ -151,23 +168,6 @@ class _RandomP:
             a |= self.random_p(x)
 
         return a
-
-def random_p(__n, p=0.5, endian=None):
-    """random_p(n, /, p=0.5, endian=None) -> bitarray
-
-Return pseudo-random bitarray of length `n`.  Each bit has probability `p` of
-being 1.  Equivalent to `bitarray((random() < p for _ in range(n)), endian)`.
-The bitarrays are reproducible when calling Python's `random.seed()` with a
-specific seed value.
-
-This function is only implemented when using Python 3.12 or higher, as it
-requires the standard library function `random.binomialvariate()`.
-"""
-    if sys.version_info[:2] < (3, 12):
-        raise NotImplementedError("bitarray.util.random_p() requires "
-                                  "Python 3.12 or higher")
-    r = _RandomP(__n, endian)
-    return r.random_p(p)
 
 
 def pprint(__a, stream=None, group=8, indent=4, width=80):
