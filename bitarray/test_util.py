@@ -196,30 +196,36 @@ class Random_P_Tests(unittest.TestCase):
     intervals = r.intervals
     small_p = r.small_p
 
-    def test_parameters(self):
+    def test_constants(self):
+        intervals = self.intervals
+        small_p = self.small_p
 
-        def get_level(p):
-            return int(p * self.intervals) / self.intervals
+        # The purpose of this test function is to establish that for things
+        # to work:
+        #                small_p   >       1.0 / intervals
+        # and:
+        #                small_p   >   1.0 / (intervals // 2 + 1)
+        #
+        #print(1 / intervals, 1.0 / (intervals // 2 + 1))
 
-        # probability span of each interval
-        pspan = 1.0 / self.intervals
-
-        for p in 0.5, 0.375, 0.25, 0.5625:
-            q = get_level(p)
-            self.assertEqual(q, p)
-
-        # ensure the small p case filters out i = 0
-        self.assertTrue(self.small_p > pspan)
-        i = int(self.small_p * self.intervals)
+        # Ensure the small p case filters out i = 0 for get_op_seq().
+        i = int(small_p * intervals)
         self.assertTrue(i > 0)
+        # So small_p must the larger than the (each) interval span:
+        self.assertTrue(small_p > 1.0 / intervals)
 
-        # ensure we hit the small p case when calling random_p() itself
+        # Ensure we hit the small p case when calling random_p() itself.
+        # This would be problematic as it could cause a self recursive loop.
+        # We consider p just below 1/2
         p = 0.5 - 1e-16
-        q = get_level(p)
-        self.assertEqual(q, 0.5 - pspan)
+        q = int(p * intervals) / intervals
+        self.assertEqual(q, 0.5 - 1.0 / intervals)
+        self.assertEqual(q, (intervals // 2 - 1) / intervals)
         x = (0.5 - q) / (1.0 - q)  # see below
-        self.assertAlmostEqual(x, 1.0 / (self.intervals // 2 + 1))
-        self.assertTrue(x < self.small_p, x)
+        self.assertAlmostEqual(x, 1.0 / (intervals // 2 + 1))
+        self.assertTrue(x < small_p)
+        # So small_p must the larger than:
+        self.assertTrue(small_p > 1.0 / (intervals // 2 + 1))
 
     def test_final_oring(self):
         for _ in range(1000):
