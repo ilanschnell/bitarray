@@ -194,8 +194,50 @@ class Random_P_Tests(unittest.TestCase):
 
     r = _RandomP()
     intervals = r.intervals
-    pspan = 1.0 / intervals  # probability span of each interval
     small_p = r.small_p
+
+    def test_parameters(self):
+
+        def get_level(p):
+            return int(p * self.intervals) / self.intervals
+
+        # probability span of each interval
+        pspan = 1.0 / self.intervals
+
+        for p in 0.5, 0.375, 0.25, 0.5625:
+            q = get_level(p)
+            self.assertEqual(q, p)
+
+        # ensure the small p case filters out i = 0
+        self.assertTrue(self.small_p > pspan)
+        i = int(self.small_p * self.intervals)
+        self.assertTrue(i > 0)
+
+        # ensure we hit the small p case when calling random_p() itself
+        p = 0.5 - 1e-16
+        q = get_level(p)
+        self.assertEqual(q, 0.5 - pspan)
+        x = (0.5 - q) / (1.0 - q)  # see below
+        self.assertAlmostEqual(x, 1.0 / (self.intervals // 2 + 1))
+        self.assertTrue(x < self.small_p, x)
+
+    def test_final_oring(self):
+        for _ in range(1000):
+            p = 0.5 * random()  # 0.0 <= p < 0.5
+            q = int(p * self.intervals) / self.intervals
+            self.assertTrue(0.0 <= p - q < 1.0 / self.intervals)
+            if q < p:
+                # calculated such that q will equal to p
+                x = (p - q) / (1.0 - q)
+                # Ensure we hit the small p case when calling random_p()
+                # itself.  Considering p = 0.5-1e-16, we have q = 127/256,
+                # so the maximal:
+                # x = (0.5 - q) / (1 - q) = 1 / 129 = 0.0077519 < 0.01
+                self.assertTrue(x < self.small_p, x)
+                q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
+
+            # ensure desired probability q is p
+            self.assertAlmostEqual(q, p, delta=1e-16)
 
     def test_get_op_seq(self):
         G = self.r.get_op_seq
@@ -220,45 +262,6 @@ class Random_P_Tests(unittest.TestCase):
                 else:
                     q *= 0.5           # a &= random_half()
             self.assertEqual(q, i / intervals)
-
-    def test_combine(self):
-        C = self.r.combine
-
-        for p in 0.5, 0.375, 0.25, 0.5625:
-            a, q = C(p)
-            self.assertEqual(type(a), bitarray)
-            self.assertEqual(q, p)
-
-        a, q = C(self.small_p)
-        self.assertTrue(0.0 <= self.small_p - q < self.pspan)
-
-        a, q = C(0.5 - 1e-16)
-        self.assertEqual(q, 0.5 - self.pspan)
-
-        for _ in range(1000):
-            p = self.small_p + 0.5 * random()
-            a, q = C(p)
-            self.assertTrue(0.0 <= p - q < self.pspan)
-
-    def test_final_oring(self):
-        for _ in range(1000):
-            p = 0.5 * random()  # 0.0 <= p < 0.5
-            i = int(p * self.intervals)
-            q = i / self.intervals  # probability of ones in bitarray a
-            self.assertTrue(0.0 <= p - q < 1.0 / self.intervals)
-
-            if q < p:
-                # calculated such that q will equal to p
-                x = (p - q) / (1.0 - q)
-                # Ensure we hit the small p case when calling random_p()
-                # itself.  Considering p = 0.5-1e-16, we have q = 127/256,
-                # so the maximal:
-                # x = (0.5 - q) / (1 - q) = 1 / 129 = 0.0077519 < 0.01
-                self.assertTrue(x < self.small_p, x)
-                q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
-
-            # ensure desired probability q is p
-            self.assertAlmostEqual(q, p, delta=1e-16)
 
     def test_set_randomly(self):
         # test if all bits are active

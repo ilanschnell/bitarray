@@ -93,7 +93,7 @@ class _RandomP:
                 a |= b
             else:
                 a &= b
-        return a, i / self.intervals
+        return a
 
     def set_randomly(self, a, m):
         """
@@ -145,8 +145,8 @@ class _RandomP:
             return a
 
         # combine random bitarrays using bitwise & and | operations
-        a, q = self.combine(p)
-
+        a = self.combine(p)
+        q = int(p * self.intervals) / self.intervals
         if q < p:
             # increase probability q by "oring" with probability x
             x = (p - q) / (1.0 - q)
