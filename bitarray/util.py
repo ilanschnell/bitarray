@@ -87,7 +87,7 @@ class _RandomP:
     def get_op_seq(self, i):
         """
         Return operator sequence of bitwise & and | operations, necessary to
-        obtain a bitarray with ones having probability (i / K).
+        obtain a bitarray with ones having probability q = i / K.
         """
         assert i > 0
         # sequence of &, | operations - least significant operations first
@@ -99,7 +99,7 @@ class _RandomP:
     def combine(self, p):
         """
         Using a sequence of bitwise & and | operations, calculate a random
-        bitarray with probability (int(p * K) / K) for each bit being 1.
+        bitarray with probability q = int(p * K) / K for each bit being 1.
         """
         a = self.random_half()
         for k in self.get_op_seq(int(p * self.K)):

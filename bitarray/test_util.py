@@ -26,8 +26,7 @@ from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
                                     PTRSIZE, DEBUG, WHITESPACE)
 
 from bitarray.util import (
-    zeros, ones, urandom, pprint, strip, count_n,
-    _RandomP, random_p,
+    zeros, ones, urandom, random_p, pprint, strip, count_n,
     parity, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
     correspond_all, byteswap, intervals,
@@ -36,6 +35,8 @@ from bitarray.util import (
     sc_encode, sc_decode, vl_encode, vl_decode,
     _huffman_tree, huffman_code, canonical_huffman, canonical_decode,
 )
+
+from bitarray.util import _RandomP  # type: ignore
 
 if DEBUG:
     from bitarray._util import (  # type: ignore
@@ -193,17 +194,16 @@ class Random_P_Tests(unittest.TestCase):
     # ---------------- tests for internal _RandomP methods ------------------
 
     r = _RandomP()
-    SMALL_P = r.SMALL_P
 
     def test_constants(self):
-        # The purpose of this test function is to establish that:
+        # The purpose of this test function is to establish that
         #
-        #                SMALL_P   >       1.0 / K
-        # and
-        #                SMALL_P   >   1.0 / (K / 2 + 1)
+        #     SMALL_P  >  1.0 / K   and   SMALL_P  >  1.0 / (K / 2 + 1)
+        #
+        # where K is the number of probability intervals (K = 1 << M).
 
         K = self.r.K
-        SMALL_P = self.SMALL_P
+        SMALL_P = self.r.SMALL_P
         #print(1.0 / K, 1.0 / (K / 2 + 1))
 
         # Ensure the small p case filters out i = 0 for get_op_seq().
@@ -227,8 +227,10 @@ class Random_P_Tests(unittest.TestCase):
 
     def test_final_oring(self):
         K = self.r.K
+        SMALL_P = self.r.SMALL_P
 
-        special_p = [0.0, self.SMALL_P, 0.25 - 1e-16, 0.25, 0.5 - 1e-16, 0.5]
+        special_p = [0.0, 1e-16, SMALL_P - 1e-16, SMALL_P, 0.25 - 1e-16,
+                     0.25, 1.0 / 3, 0.5 - 1e-16, 0.5]
         for j in range(1000):
             try:
                 p = special_p[j]
@@ -238,9 +240,11 @@ class Random_P_Tests(unittest.TestCase):
             q = int(p * K) / K
             self.assertTrue(q <= p)
             self.assertTrue(0.0 <= p - q < 1.0 / K)
+
             r = math.fmod(p, 1.0 / K)  # remainder
             self.assertEqual(q + r, p)
             self.assertEqual(bool(r), q < p)
+
             if q < p:
                 # calculated such that q will equal to p
                 x = (p - q) / (1.0 - q)
@@ -248,7 +252,7 @@ class Random_P_Tests(unittest.TestCase):
                 # itself.  Considering p = 0.5-1e-16, we have q = 127/256,
                 # so the maximal:
                 # x = (0.5 - q) / (1 - q) = 1 / 129 = 0.0077519 < 0.01
-                self.assertTrue(x < self.SMALL_P, x)
+                self.assertTrue(x < SMALL_P, x)
                 q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
 
             # ensure desired probability q is p
@@ -261,9 +265,9 @@ class Random_P_Tests(unittest.TestCase):
 
         # special cases
         self.assertRaises(AssertionError, G, 0)
-        self.assertEqual(len(G(1)), M - 1)
-        self.assertEqual(len(G(K // 2)), 0)
-        self.assertEqual(len(G(K - 1)), M - 1)
+        self.assertEqual(G(1), (M - 1) * bitarray("0"))
+        self.assertEqual(G(K // 2), bitarray())
+        self.assertEqual(G(K - 1), (M - 1) * bitarray("1"))
         self.assertRaises(OverflowError, G, K)
 
         # examples
