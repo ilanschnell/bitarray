@@ -5,6 +5,7 @@ from __future__ import absolute_import
 
 import os
 import sys
+import math
 import array
 import base64
 import binascii
@@ -14,7 +15,6 @@ import shutil
 import tempfile
 import unittest
 from io import StringIO
-from math import sqrt
 from functools import reduce
 from string import hexdigits
 from random import choice, getrandbits, randrange, randint, random, seed
@@ -167,7 +167,7 @@ class Random_P_Tests(unittest.TestCase):
         for _ in range(500):
             n = choice([4, 10, 100, 1000, 10_000])
             p = choice([0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 0.9])
-            sigma = sqrt(n * p * (1.0 - p))
+            sigma = math.sqrt(n * p * (1.0 - p))
             a = random_p(n, p)
             self.assertEqual(len(a), n)
             self.assertTrue(abs(a.count() - n * p) < max(4, 10 * sigma))
@@ -234,9 +234,13 @@ class Random_P_Tests(unittest.TestCase):
                 p = special_p[j]
             except IndexError:
                 p = 0.5 * random()  # 0.0 <= p < 0.5
+
             q = int(p * self.intervals) / self.intervals
             self.assertTrue(q <= p)
             self.assertTrue(0.0 <= p - q < 1.0 / self.intervals)
+            r = math.fmod(p, 1.0 / self.intervals)  # remainder
+            self.assertEqual(q + r, p)
+            self.assertEqual(bool(r), q < p)
             if q < p:
                 # calculated such that q will equal to p
                 x = (p - q) / (1.0 - q)
