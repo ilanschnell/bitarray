@@ -172,7 +172,7 @@ class Random_P_Tests(unittest.TestCase):
             self.assertEqual(len(a), n)
             self.assertTrue(abs(a.count() - n * p) < max(4, 10 * sigma))
 
-    @skipIf(_RandomP().max_calls != 8)
+    @skipIf(_RandomP().M != 8)
     def test_seed(self):
         _set_default_endian("little")
         seed(1234)
@@ -193,41 +193,41 @@ class Random_P_Tests(unittest.TestCase):
     # ---------------- tests for internal _RandomP methods ------------------
 
     r = _RandomP()
-    intervals = r.intervals
     small_p = r.small_p
 
     def test_constants(self):
-        """
-        The purpose of this test function is to establish that for things
-        to work:
-                        small_p   >       1.0 / intervals
-        and
-                        small_p   >   1.0 / (intervals // 2 + 1)
-        """
-        intervals = self.intervals
+        # The purpose of this test function is to establish that:
+        #
+        #                small_p   >       1.0 / K
+        # and
+        #                small_p   >   1.0 / (K / 2 + 1)
+
+        K = self.r.K
         small_p = self.small_p
-        #print(1.0 / intervals, 1.0 / (intervals // 2 + 1))
+        #print(1.0 / K, 1.0 / (K / 2 + 1))
 
         # Ensure the small p case filters out i = 0 for get_op_seq().
-        i = int(small_p * intervals)
+        i = int(small_p * K)
         self.assertTrue(i > 0)
         # So small_p must the larger than the (each) interval span:
-        self.assertTrue(small_p > 1.0 / intervals)
+        self.assertTrue(small_p > 1.0 / K)
 
         # Ensure we hit the small p case when calling random_p() itself.
         # This would be problematic as it could cause a self recursive loop.
         # We consider p just below 1/2
         p = 0.5 - 1e-16
-        q = int(p * intervals) / intervals
-        self.assertEqual(q, 0.5 - 1.0 / intervals)
-        self.assertEqual(q, (intervals // 2 - 1) / intervals)
+        q = int(p * K) / K
+        self.assertEqual(q, 0.5 - 1.0 / K)
+        self.assertEqual(q, (K / 2 - 1) / K)
         x = (0.5 - q) / (1.0 - q)  # see below
-        self.assertAlmostEqual(x, 1.0 / (intervals // 2 + 1))
+        self.assertAlmostEqual(x, 1.0 / (K / 2 + 1))
         self.assertTrue(x < small_p)
         # So small_p must the larger than:
-        self.assertTrue(small_p > 1.0 / (intervals // 2 + 1))
+        self.assertTrue(small_p > 1.0 / (K / 2 + 1))
 
     def test_final_oring(self):
+        K = self.r.K
+
         special_p = [0.0, self.small_p, 0.25 - 1e-16, 0.25, 0.5 - 1e-16, 0.5]
         for j in range(1000):
             try:
@@ -235,10 +235,10 @@ class Random_P_Tests(unittest.TestCase):
             except IndexError:
                 p = 0.5 * random()  # 0.0 <= p < 0.5
 
-            q = int(p * self.intervals) / self.intervals
+            q = int(p * K) / K
             self.assertTrue(q <= p)
-            self.assertTrue(0.0 <= p - q < 1.0 / self.intervals)
-            r = math.fmod(p, 1.0 / self.intervals)  # remainder
+            self.assertTrue(0.0 <= p - q < 1.0 / K)
+            r = math.fmod(p, 1.0 / K)  # remainder
             self.assertEqual(q + r, p)
             self.assertEqual(bool(r), q < p)
             if q < p:
@@ -256,16 +256,15 @@ class Random_P_Tests(unittest.TestCase):
 
     def test_get_op_seq(self):
         G = self.r.get_op_seq
-
-        intervals = self.intervals
-        max_calls = self.r.max_calls
+        K = self.r.K
+        M = self.r.M
 
         # special cases
         self.assertRaises(AssertionError, G, 0)
-        self.assertEqual(len(G(1)), max_calls - 1)
-        self.assertEqual(len(G(intervals // 2)), 0)
-        self.assertEqual(len(G(intervals - 1)), max_calls - 1)
-        self.assertRaises(OverflowError, G, intervals)
+        self.assertEqual(len(G(1)), M - 1)
+        self.assertEqual(len(G(K // 2)), 0)
+        self.assertEqual(len(G(K - 1)), M - 1)
+        self.assertRaises(OverflowError, G, K)
 
         # examples
         for p, s in [
@@ -276,21 +275,21 @@ class Random_P_Tests(unittest.TestCase):
                 (0.6875,   '101'),
                 (0.75,       '1'),
         ]:
-            i = int(p * intervals)
+            i = int(p * K)
             self.assertEqual(G(i).to01(), s)
 
-        for i in range(1, intervals):
+        for i in range(1, K):
             s = G(i)
-            self.assertTrue(0 <= len(s) < max_calls)
+            self.assertTrue(0 <= len(s) < M)
             # The sequence of bitwise operations s will achieve that the
-            # probability q is exactly (i / intervals).
+            # probability q is exactly (i / K).
             q = 0.5                    # a = random_half()
             for k in s:
                 if k:
                     q = 0.5 * (q + 1)  # a |= random_half()
                 else:
                     q *= 0.5           # a &= random_half()
-            self.assertEqual(q, i / intervals)
+            self.assertEqual(q, i / K)
 
     def test_set_randomly(self):
         # test if all bits are active

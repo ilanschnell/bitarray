@@ -54,10 +54,10 @@ Return random bitarray of length `n` (uses `os.urandom()`).
 class _RandomP:
 
     # maximal number of calls to .random_half() in .combine()
-    max_calls = 8
+    M = 8
 
-    # number of probability intervals
-    intervals = 1 << max_calls
+    # number of resulting probability intervals
+    K = 1 << M
 
     # limit for setting individual bits randomly
     small_p = 0.01
@@ -70,11 +70,11 @@ class _RandomP:
     def get_op_seq(self, i):
         """
         Return operator sequence of bitwise & and | operations, necessary to
-        obtain a bitarray with ones having probability (i / self.intervals).
+        obtain a bitarray with ones having probability (i / K).
         """
         assert i > 0
         # sequence of &, | operations - least significant operations first
-        s = int2ba(i, length=self.max_calls, endian="little")
+        s = int2ba(i, length=self.M, endian="little")
         s = strip(s, mode="left")
         del s[0]
         return s
@@ -82,12 +82,10 @@ class _RandomP:
     def combine(self, p):
         """
         Using a sequence of bitwise & and | operations, calculate a random
-        bitarray p.  Return the bitarray, and the actual probability (limit
-        by self.max_calls) as a tuple.
+        bitarray with probability (int(p * K) / K) for each bit being 1.
         """
-        i = int(p * self.intervals)
         a = self.random_half()
-        for k in self.get_op_seq(i):
+        for k in self.get_op_seq(int(p * self.K)):
             b = self.random_half()
             if k:
                 a |= b
@@ -109,7 +107,7 @@ class _RandomP:
 
     def random_half(self):
         """
-        Return bitarray with each bit having probability 1/2 of being 1.
+        Return bitarray with each bit having probability p = 1/2 of being 1.
         """
         # use randbytes() for reproducibility (not urandom())
         a = bitarray(random.randbytes(self.nbytes), self.endian)
@@ -146,7 +144,7 @@ class _RandomP:
 
         # combine random bitarrays using bitwise & and | operations
         a = self.combine(p)
-        q = int(p * self.intervals) / self.intervals
+        q = int(p * self.K) / self.K
         if q < p:
             # increase probability q by "oring" with probability x
             x = (p - q) / (1.0 - q)
