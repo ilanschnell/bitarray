@@ -193,24 +193,24 @@ class Random_P_Tests(unittest.TestCase):
     # ---------------- tests for internal _RandomP methods ------------------
 
     r = _RandomP()
-    small_p = r.small_p
+    SMALL_P = r.SMALL_P
 
     def test_constants(self):
         # The purpose of this test function is to establish that:
         #
-        #                small_p   >       1.0 / K
+        #                SMALL_P   >       1.0 / K
         # and
-        #                small_p   >   1.0 / (K / 2 + 1)
+        #                SMALL_P   >   1.0 / (K / 2 + 1)
 
         K = self.r.K
-        small_p = self.small_p
+        SMALL_P = self.SMALL_P
         #print(1.0 / K, 1.0 / (K / 2 + 1))
 
         # Ensure the small p case filters out i = 0 for get_op_seq().
-        i = int(small_p * K)
+        i = int(SMALL_P * K)
         self.assertTrue(i > 0)
-        # So small_p must the larger than the (each) interval span:
-        self.assertTrue(small_p > 1.0 / K)
+        # So SMALL_P must the larger than the (each) interval span:
+        self.assertTrue(SMALL_P > 1.0 / K)
 
         # Ensure we hit the small p case when calling random_p() itself.
         # This would be problematic as it could cause a self recursive loop.
@@ -221,14 +221,14 @@ class Random_P_Tests(unittest.TestCase):
         self.assertEqual(q, (K / 2 - 1) / K)
         x = (0.5 - q) / (1.0 - q)  # see below
         self.assertAlmostEqual(x, 1.0 / (K / 2 + 1))
-        self.assertTrue(x < small_p)
-        # So small_p must the larger than:
-        self.assertTrue(small_p > 1.0 / (K / 2 + 1))
+        self.assertTrue(x < SMALL_P)
+        # So SMALL_P must the larger than:
+        self.assertTrue(SMALL_P > 1.0 / (K / 2 + 1))
 
     def test_final_oring(self):
         K = self.r.K
 
-        special_p = [0.0, self.small_p, 0.25 - 1e-16, 0.25, 0.5 - 1e-16, 0.5]
+        special_p = [0.0, self.SMALL_P, 0.25 - 1e-16, 0.25, 0.5 - 1e-16, 0.5]
         for j in range(1000):
             try:
                 p = special_p[j]
@@ -248,7 +248,7 @@ class Random_P_Tests(unittest.TestCase):
                 # itself.  Considering p = 0.5-1e-16, we have q = 127/256,
                 # so the maximal:
                 # x = (0.5 - q) / (1 - q) = 1 / 129 = 0.0077519 < 0.01
-                self.assertTrue(x < self.small_p, x)
+                self.assertTrue(x < self.SMALL_P, x)
                 q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
 
             # ensure desired probability q is p

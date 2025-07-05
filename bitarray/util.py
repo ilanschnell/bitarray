@@ -77,7 +77,7 @@ class _RandomP:
     K = 1 << M
 
     # limit for setting individual bits randomly
-    small_p = 0.01
+    SMALL_P = 0.01
 
     def __init__(self, n=0, endian=None):
         self.n = n
@@ -154,7 +154,7 @@ class _RandomP:
             return a
 
         # for small p, set randomly individual bits
-        if p < self.small_p:
+        if p < self.SMALL_P:
             a = zeros(self.n, self.endian)
             self.set_randomly(a, random.binomialvariate(self.n, p))
             return a
