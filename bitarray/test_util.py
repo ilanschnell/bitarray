@@ -255,11 +255,25 @@ class Random_P_Tests(unittest.TestCase):
 
         intervals = self.intervals
         max_calls = self.r.max_calls
+
+        # special cases
         self.assertRaises(AssertionError, G, 0)
         self.assertEqual(len(G(1)), max_calls - 1)
         self.assertEqual(len(G(intervals // 2)), 0)
         self.assertEqual(len(G(intervals - 1)), max_calls - 1)
         self.assertRaises(OverflowError, G, intervals)
+
+        # examples
+        for p, s in [
+                (0.15625, '0100'),
+                (0.25,       '0'),
+                (0.375,     '10'),
+                (0.5,         ''),
+                (0.6875,   '101'),
+                (0.75,       '1'),
+        ]:
+            i = int(p * intervals)
+            self.assertEqual(G(i).to01(), s)
 
         for i in range(1, intervals):
             s = G(i)
