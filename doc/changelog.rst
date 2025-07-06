@@ -1,6 +1,12 @@
 Change log
 ==========
 
+**3.5.0** (2025-07-06):
+
+* add ``util.random_p()``
+* improve sparse compression testing
+
+
 **3.4.3** (2025-06-23):
 
 * minor updates to documentation

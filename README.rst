@@ -901,8 +901,9 @@ This sub-module was added in version 1.2.
    The bitarrays are reproducible when calling Python's ``random.seed()`` with a
    specific seed value.
 
-   This function is only implemented when using Python 3.12 or higher, as it
-   requires the standard library function ``random.binomialvariate()``.
+   This function requires Python 3.12 or higher, as it depends on the standard
+   library function ``random.binomialvariate()``.  Raises ``NotImplementedError``
+   when Python version is too low.
 
    New in version 3.5
 
