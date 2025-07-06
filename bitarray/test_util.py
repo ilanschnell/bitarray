@@ -198,7 +198,7 @@ class Random_P_Tests(unittest.TestCase):
     def test_constants(self):
         # The purpose of this test function is to establish that
         #
-        #     SMALL_P  >  1.0 / K   and   SMALL_P  >  1.0 / (K / 2 + 1)
+        #     SMALL_P  >  1.0 / (K / 2 + 1)
         #
         # where K is the number of probability intervals (K = 1 << M).
 
@@ -209,8 +209,9 @@ class Random_P_Tests(unittest.TestCase):
         # Ensure the small p case filters out i = 0 for get_op_seq().
         i = int(SMALL_P * K)
         self.assertTrue(i > 0)
-        # So SMALL_P must the larger than the (each) interval span:
+        # So SMALL_P must the larger than the interval span:
         self.assertTrue(SMALL_P > 1.0 / K)
+        # However, this limit is exceeded by the following.
 
         # Ensure we hit the small p case when calling random_p() itself.
         # This would be problematic as it could cause a self recursive loop.
@@ -266,34 +267,34 @@ class Random_P_Tests(unittest.TestCase):
 
         # special cases
         self.assertRaises(AssertionError, G, 0)
-        self.assertEqual(G(1), (M - 1) * bitarray("0"))
+        self.assertEqual(G(1), zeros(M - 1))
         self.assertEqual(G(K // 2), bitarray())
-        self.assertEqual(G(K - 1), (M - 1) * bitarray("1"))
+        self.assertEqual(G(K - 1), ones(M - 1))
         self.assertRaises(AssertionError, G, K)
 
         # examples
         for p, s in [
                 (0.15625, '0100'),
-                (0.25,       '0'),
-                (0.375,     '10'),
+                (0.25,       '0'),  # 1/2   and ->   1/4
+                (0.375,     '10'),  # 1/2   or ->   3/4   and ->   3/8
                 (0.5,         ''),
+                (0.625,     '01'),  # 1/2   and ->   1/4   or ->   5/8
                 (0.6875,   '101'),
-                (0.75,       '1'),
+                (0.75,       '1'),  # 1/2   or ->   3/4
         ]:
-            i = int(p * K)
-            self.assertEqual(G(i).to01(), s)
+            seq = G(int(p * K))
+            self.assertEqual(seq.to01(), s)
 
         for i in range(1, K):
-            s = G(i)
+            seq = G(i)
             self.assertTrue(0 <= len(s) < M)
-            # The sequence of bitwise operations s will achieve that the
-            # probability q is exactly (i / K).
-            q = 0.5                    # a = random_half()
-            for k in s:
+            q = 0.5                        # a = random_half()
+            for k in seq:
+                # k=0: and operation    k=1: or operation
                 if k:
-                    q = 0.5 * (q + 1)  # a |= random_half()
+                    q += 0.5 * (1.0 - q)   # a |= random_half()
                 else:
-                    q *= 0.5           # a &= random_half()
+                    q *= 0.5               # a &= random_half()
             self.assertEqual(q, i / K)
 
     def test_random_m_basic(self):
@@ -302,12 +303,10 @@ class Random_P_Tests(unittest.TestCase):
             self.assertRaises(AssertionError, r.random_m, m)
 
         for n in range(10):
-            endian = choice(["little", "big"])
-            r = _RandomP(n, endian)
+            r = _RandomP(n)
             m = randint(0, n)
             a = r.random_m(m)
             self.assertEqual(len(a), n)
-            self.assertEqual(a.endian, endian)
             self.assertEqual(a.count(), m)
 
     def test_random_m_active(self):
