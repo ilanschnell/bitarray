@@ -98,7 +98,7 @@ class _RandomP:
         Return operator sequence of bitwise & and | operations, necessary to
         obtain a bitarray with ones having probability q = i / K.
         """
-        assert i > 0
+        assert 0 < i < self.K
         # sequence of &, | operations - least significant operations first
         s = int2ba(i, length=self.M, endian="little")
         s = strip(s, mode="left")
@@ -122,12 +122,9 @@ class _RandomP:
     def random_m(self, m):
         """
         Return a bitarray (of length n) with m bits randomly set to 1.
-        Attempting to set close to n bits may take a long time.
-        When m >= n, return bitarray with all elements 1.
+        Designed for small m (compared to n).
         """
-        if m >= self.n:
-            return ones(self.n, self.endian)
-
+        assert 0 <= m <= self.n
         a = zeros(self.n, self.endian)
         for _ in range(m):
             while 1:

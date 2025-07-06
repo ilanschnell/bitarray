@@ -269,7 +269,7 @@ class Random_P_Tests(unittest.TestCase):
         self.assertEqual(G(1), (M - 1) * bitarray("0"))
         self.assertEqual(G(K // 2), bitarray())
         self.assertEqual(G(K - 1), (M - 1) * bitarray("1"))
-        self.assertRaises(OverflowError, G, K)
+        self.assertRaises(AssertionError, G, K)
 
         # examples
         for p, s in [
@@ -297,14 +297,18 @@ class Random_P_Tests(unittest.TestCase):
             self.assertEqual(q, i / K)
 
     def test_random_m_basic(self):
+        r = _RandomP(7)
+        for m in -1, 8:
+            self.assertRaises(AssertionError, r.random_m, m)
+
         for n in range(10):
             endian = choice(["little", "big"])
             r = _RandomP(n, endian)
-            m = randrange(n + 3)
+            m = randint(0, n)
             a = r.random_m(m)
             self.assertEqual(len(a), n)
             self.assertEqual(a.endian, endian)
-            self.assertEqual(a.count(), min(n, m))
+            self.assertEqual(a.count(), m)
 
     def test_random_m_active(self):
         # test if all bits are active
