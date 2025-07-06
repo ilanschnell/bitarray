@@ -135,7 +135,7 @@ class Random_P_Not_Implemented(unittest.TestCase):
 class Random_P_Tests(unittest.TestCase):
 
     def test_basic(self):
-        for _ in range(50):
+        for _ in range(250):
             default_endian = choice(['little', 'big'])
             _set_default_endian(default_endian)
             endian = choice(['little', 'big', None])
@@ -296,19 +296,20 @@ class Random_P_Tests(unittest.TestCase):
                     q *= 0.5           # a &= random_half()
             self.assertEqual(q, i / K)
 
-    def test_random_m(self):
-        n = 250
-        r = _RandomP(n)
-        a = r.random_m(0)
-        self.assertEqual(len(a), n)
-        self.assertFalse(a.any())
-
-        for m in range(n, n + 3):
+    def test_random_m_basic(self):
+        for n in range(10):
+            endian = choice(["little", "big"])
+            r = _RandomP(n, endian)
+            m = randrange(n + 3)
             a = r.random_m(m)
             self.assertEqual(len(a), n)
-            self.assertTrue(a.all())
+            self.assertEqual(a.endian, endian)
+            self.assertEqual(a.count(), min(n, m))
 
+    def test_random_m_active(self):
         # test if all bits are active
+        n = 250
+        r = _RandomP(n)
         cum = zeros(n)
         for _ in range(100):
             m = randrange(n // 2)
