@@ -59,8 +59,9 @@ being 1.  Equivalent to `bitarray((random() < p for _ in range(n)), endian)`.
 The bitarrays are reproducible when calling Python's `random.seed()` with a
 specific seed value.
 
-This function is only implemented when using Python 3.12 or higher, as it
-requires the standard library function `random.binomialvariate()`.
+This function requires Python 3.12 or higher, as it depends on the standard
+library function `random.binomialvariate()`.  Raises `NotImplementedError`
+when Python version is too low.
 """
     if sys.version_info[:2] < (3, 12):
         raise NotImplementedError("bitarray.util.random_p() requires "
