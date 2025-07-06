@@ -51,7 +51,7 @@ else:
 class ZerosOnesTests(unittest.TestCase):
 
     def test_basic(self):
-        for _ in range(20):
+        for _ in range(50):
             default_endian = choice(['little', 'big'])
             _set_default_endian(default_endian)
             a = choice([zeros(0), zeros(0, None), zeros(0, endian=None),
@@ -107,14 +107,15 @@ class URandomTests(unittest.TestCase):
             self.assertEqual(type(a), bitarray)
 
     def test_errors(self):
-        self.assertRaises(TypeError, urandom)
-        self.assertRaises(TypeError, urandom, '')
-        self.assertRaises(TypeError, urandom, bitarray())
-        self.assertRaises(TypeError, urandom, [])
-        self.assertRaises(TypeError, urandom, 1.0)
-        self.assertRaises(ValueError, urandom, -1)
-        self.assertRaises(TypeError, urandom, 0, 1)
-        self.assertRaises(ValueError, urandom, 0, 'foo')
+        U = urandom
+        self.assertRaises(TypeError, U)
+        self.assertRaises(TypeError, U, '')
+        self.assertRaises(TypeError, U, bitarray())
+        self.assertRaises(TypeError, U, [])
+        self.assertRaises(TypeError, U, 1.0)
+        self.assertRaises(ValueError, U, -1)
+        self.assertRaises(TypeError, U, 0, 1)
+        self.assertRaises(ValueError, U, 0, 'foo')
 
     def test_count(self):
         a = urandom(10_000_000)
@@ -153,7 +154,9 @@ class Random_P_Tests(unittest.TestCase):
         self.assertRaises(TypeError, R, 1, "0.5")
         self.assertRaises(ValueError, R, -1)
         self.assertRaises(ValueError, R, 1, -0.5)
-        self.assertRaises(ValueError, R, 1, 1.5)
+        self.assertRaises(ValueError, R, 1, p=1.5)
+        self.assertRaises(ValueError, R, 1, 0.15, 'foo')
+        self.assertRaises(ValueError, R, 10, 0.5, endian='foo')
         self.assertEqual(R(0), bitarray())
         for n in range(20):
             self.assertEqual(R(n, 0), zeros(n))
@@ -211,11 +214,11 @@ class Random_P_Tests(unittest.TestCase):
         self.assertTrue(i > 0)
         # So SMALL_P must the larger than the interval span:
         self.assertTrue(SMALL_P > 1.0 / K)
-        # However, this limit is exceeded by the following.
+        # However, this limit is exceeded by the following (larger) limit.
 
         # Ensure we hit the small p case when calling random_p() itself.
         # This would be problematic as it could cause a self recursive loop.
-        # We consider p just below 1/2
+        # We consider p just below 1/2:
         p = 0.5 - 1e-16
         q = int(p * K) / K
         self.assertEqual(q, 0.5 - 1.0 / K)
