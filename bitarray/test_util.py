@@ -296,15 +296,24 @@ class Random_P_Tests(unittest.TestCase):
                     q *= 0.5           # a &= random_half()
             self.assertEqual(q, i / K)
 
-    def test_set_randomly(self):
-        # test if all bits are active
+    def test_random_m(self):
         n = 250
         r = _RandomP(n)
+        a = r.random_m(0)
+        self.assertEqual(len(a), n)
+        self.assertFalse(a.any())
+
+        for m in range(n, n + 3):
+            a = r.random_m(m)
+            self.assertEqual(len(a), n)
+            self.assertTrue(a.all())
+
+        # test if all bits are active
         cum = zeros(n)
         for _ in range(100):
-            a = zeros(n)
             m = randrange(n // 2)
-            r.set_randomly(a, m)
+            a = r.random_m(m)
+            self.assertEqual(len(a), n)
             self.assertEqual(a.count(), m)
             cum |= a
         self.assertTrue(cum.all())

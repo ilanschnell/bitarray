@@ -119,16 +119,23 @@ class _RandomP:
                 a &= b
         return a
 
-    def set_randomly(self, a, m):
+    def random_m(self, m):
         """
-        Set randomly m bits in a to 1.
+        Return a bitarray (of length n) with m bits randomly set to 1.
+        Attempting to set close to n bits may take a long time.
+        When m >= n, return bitarray with all elements 1.
         """
+        if m >= self.n:
+            return ones(self.n, self.endian)
+
+        a = zeros(self.n, self.endian)
         for _ in range(m):
             while 1:
                 i = random.randrange(self.n)
                 if not a[i]:
                     a[i] = 1
                     break
+        return a
 
     def random_p(self, p):
         # error check inputs and handle edge cases
@@ -154,9 +161,7 @@ class _RandomP:
 
         # for small p, set randomly individual bits
         if p < self.SMALL_P:
-            a = zeros(self.n, self.endian)
-            self.set_randomly(a, random.binomialvariate(self.n, p))
-            return a
+            return self.random_m(random.binomialvariate(self.n, p))
 
         # combine random bitarrays using bitwise & and | operations
         a = self.random_combine(p)
