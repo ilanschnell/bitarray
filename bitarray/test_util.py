@@ -204,7 +204,7 @@ class Random_P_Tests(unittest.TestCase):
 
         K = self.r.K
         SMALL_P = self.r.SMALL_P
-        #print(1.0 / K, 1.0 / (K / 2 + 1))
+        #print(1.0 / (K / 2 + 1))
 
         # Ensure the small p case filters out i = 0 for get_op_seq().
         i = int(SMALL_P * K)
@@ -248,6 +248,7 @@ class Random_P_Tests(unittest.TestCase):
             if q < p:
                 # calculated such that q will equal to p
                 x = (p - q) / (1.0 - q)
+                self.assertAlmostEqual(r / (1.0 - p + r), x, delta=1e-16)
                 # Ensure we hit the small p case when calling random_p()
                 # itself.  Considering p = 0.5-1e-16, we have q = 127/256,
                 # so the maximal:

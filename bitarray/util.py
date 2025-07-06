@@ -84,6 +84,15 @@ class _RandomP:
         self.nbytes = bits2bytes(n)
         self.endian = endian
 
+    def random_half(self):
+        """
+        Return bitarray with each bit having probability p = 1/2 of being 1.
+        """
+        # use randbytes() for reproducibility (not urandom())
+        a = bitarray(random.randbytes(self.nbytes), self.endian)
+        del a[self.n:]
+        return a
+
     def get_op_seq(self, i):
         """
         Return operator sequence of bitwise & and | operations, necessary to
@@ -96,10 +105,10 @@ class _RandomP:
         del s[0]
         return s
 
-    def combine(self, p):
+    def random_combine(self, p):
         """
-        Using a sequence of bitwise & and | operations, calculate a random
-        bitarray with probability q = int(p * K) / K for each bit being 1.
+        Given a desired probability p, return a random bitarray with
+        actual probability q = int(p * K) / K for each bit being 1.
         """
         a = self.random_half()
         for k in self.get_op_seq(int(p * self.K)):
@@ -112,8 +121,7 @@ class _RandomP:
 
     def set_randomly(self, a, m):
         """
-        Set randomly m bits in a to 1.  Attempting to set too many bits may
-        take a long time, or even cause an infinite loop.
+        Set randomly m bits in a to 1.
         """
         for _ in range(m):
             while 1:
@@ -121,15 +129,6 @@ class _RandomP:
                 if not a[i]:
                     a[i] = 1
                     break
-
-    def random_half(self):
-        """
-        Return bitarray with each bit having probability p = 1/2 of being 1.
-        """
-        # use randbytes() for reproducibility (not urandom())
-        a = bitarray(random.randbytes(self.nbytes), self.endian)
-        del a[self.n:]
-        return a
 
     def random_p(self, p):
         # error check inputs and handle edge cases
@@ -160,7 +159,7 @@ class _RandomP:
             return a
 
         # combine random bitarrays using bitwise & and | operations
-        a = self.combine(p)
+        a = self.random_combine(p)
         q = int(p * self.K) / self.K
         if q < p:
             # increase probability q by "oring" with probability x
