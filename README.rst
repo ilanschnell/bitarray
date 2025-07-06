@@ -77,7 +77,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 571 tests in 0.169s
+    Ran 578 tests in 0.162s
 
     OK
 
@@ -394,7 +394,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.4.3 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.5.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -895,6 +895,18 @@ This sub-module was added in version 1.2.
    New in version 1.8
 
 
+``random_p(n, /, p=0.5, endian=None)`` -> bitarray
+   Return pseudo-random bitarray of length ``n``.  Each bit has probability ``p`` of
+   being 1.  Equivalent to ``bitarray((random() < p for _ in range(n)), endian)``.
+   The bitarrays are reproducible when calling Python's ``random.seed()`` with a
+   specific seed value.
+
+   This function is only implemented when using Python 3.12 or higher, as it
+   requires the standard library function ``random.binomialvariate()``.
+
+   New in version 3.5
+
+
 ``sc_decode(stream)`` -> bitarray
    Decompress binary stream (an integer iterator, or bytes-like object) of a
    sparse compressed (``sc``) bitarray, and return the decoded  bitarray.
@@ -938,8 +950,8 @@ This sub-module was added in version 1.2.
    iteration is stopped as soon as one mismatch is found.
 
 
-``urandom(length, /, endian=None)`` -> bitarray
-   Return a bitarray of ``length`` random bits (uses ``os.urandom``).
+``urandom(n, /, endian=None)`` -> bitarray
+   Return random bitarray of length ``n`` (uses ``os.urandom()``).
 
    New in version 1.7
 
