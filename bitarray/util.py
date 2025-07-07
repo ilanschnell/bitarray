@@ -164,7 +164,7 @@ class _RandomP:
         i = int(p * self.K)
         q = i / self.K
         seq = self.get_op_seq(i)
-        if self.nbytes < len(seq) + 2 * bool(q < p) + 1:
+        if self.n < 100 and self.nbytes < len(seq) + 2 * bool(q < p) + 1:
             # when n is small compared to number of operator, also use literal
             return bitarray((random.random() < p for _ in range(self.n)),
                             self.endian)
