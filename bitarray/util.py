@@ -103,10 +103,8 @@ class _RandomP:
         """
         assert 0 < i < self.K
         # sequence of &, | operations - least significant operations first
-        seq = int2ba(i, length=self.M, endian="little")
-        seq = strip(seq, mode="left")
-        del seq[0]
-        return seq
+        a = bitarray(i.to_bytes(2, byteorder='little'), "little")
+        return a[a.find(1) + 1 : self.M]
 
     def random_combine(self, p):
         """
