@@ -103,7 +103,7 @@ class _RandomP:
         """
         assert 0 < i < self.K
         # sequence of &, | operations - least significant operations first
-        a = bitarray(i.to_bytes(2, byteorder='little'), "little")
+        a = bitarray(i.to_bytes(2, byteorder="little"), "little")
         return a[a.index(1) + 1 : self.M]
 
     def random_combine(self, seq):
@@ -146,7 +146,7 @@ class _RandomP:
             raise ValueError("p must be in range 0.0 <= p <= 1.0, got %s" % p)
 
         # for small n, use literal definition
-        if self.n < 10:
+        if self.n < 16:
             return bitarray((random.random() < p for _ in range(self.n)),
                             self.endian)
 
@@ -162,11 +162,15 @@ class _RandomP:
 
         # calculate operator sequence
         i = int(p * self.K)
+        q = i / self.K
         seq = self.get_op_seq(i)
+        if self.nbytes < len(seq) + 2 * bool(q < p) + 1:
+            # when n is small compared to number of operator, also use literal
+            return bitarray((random.random() < p for _ in range(self.n)),
+                            self.endian)
 
         # combine random bitarrays using bitwise & and | operations
         a = self.random_combine(seq)
-        q = i / self.K
         if q < p:
             # increase probability q by "oring" with probability x
             x = (p - q) / (1.0 - q)

@@ -169,7 +169,7 @@ class Random_P_Tests(unittest.TestCase):
 
     def test_count(self):
         for _ in range(500):
-            n = choice([4, 10, 100, 1000, 10_000])
+            n = choice([9, 21, 43, 67, 100, 1000, 10_000])
             p = choice([0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 0.9])
             sigma = math.sqrt(n * p * (1.0 - p))
             a = random_p(n, p)
@@ -187,10 +187,10 @@ class Random_P_Tests(unittest.TestCase):
         a = random_p(5000, 0.001)
         self.assertEqual(list(a.search(1)), [286, 687, 806, 2905])
         # general case
-        self.assertEqual(random_p(32, 0.7),
-                         bitarray('11111011101011111000111111011111'))
+        self.assertEqual(random_p(100, 0.7)[:32],
+                         bitarray('10101111001010110010111111000111'))
         # small n (note that p=0.4 will call the "literal definition" case)
-        self.assertEqual(random_p(9, 0.4), bitarray('001111001'))
+        self.assertEqual(random_p(15, 0.4), bitarray('00010100 0110001'))
         # initialize with current system time again
         seed()
 
