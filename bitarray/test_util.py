@@ -140,7 +140,7 @@ class Random_P_Tests(unittest.TestCase):
             default_endian = choice(['little', 'big'])
             _set_default_endian(default_endian)
             endian = choice(['little', 'big', None])
-            n = randrange(100)
+            n = randrange(120)
             p = choice([0.0, 0.0001, 0.2, 0.5, 0.9, 1.0])
             a = random_p(n, p, endian)
             self.assertTrue(type(a), bitarray)
@@ -169,7 +169,7 @@ class Random_P_Tests(unittest.TestCase):
 
     def test_count(self):
         for _ in range(500):
-            n = choice([9, 21, 43, 67, 100, 1000, 10_000])
+            n = choice([randrange(4, 120), randrange(100, 1000)])
             p = choice([0.0001, 0.001, 0.01, 0.1, 0.25, 0.5, 0.9])
             sigma = math.sqrt(n * p * (1.0 - p))
             a = random_p(n, p)
