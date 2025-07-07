@@ -104,7 +104,7 @@ class _RandomP:
         assert 0 < i < self.K
         # sequence of &, | operations - least significant operations first
         a = bitarray(i.to_bytes(2, byteorder='little'), "little")
-        return a[a.find(1) + 1 : self.M]
+        return a[a.index(1) + 1 : self.M]
 
     def random_combine(self, p):
         """
