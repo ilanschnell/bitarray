@@ -207,7 +207,6 @@ class Random_P_Tests(unittest.TestCase):
 
         K = self.r.K
         SMALL_P = self.r.SMALL_P
-        #print(1.0 / (K / 2 + 1))
 
         # Ensure the small p case filters out i = 0 for get_op_seq().
         i = int(SMALL_P * K)
@@ -225,7 +224,7 @@ class Random_P_Tests(unittest.TestCase):
         self.assertEqual(q, (K / 2 - 1) / K)
         x = (0.5 - q) / (1.0 - q)  # see below
         self.assertAlmostEqual(x, 1.0 / (K / 2 + 1))
-        self.assertTrue(x < SMALL_P)
+        self.assertTrue(x < SMALL_P, x)
         # So SMALL_P must the larger than:
         self.assertTrue(SMALL_P > 1.0 / (K / 2 + 1))
 
