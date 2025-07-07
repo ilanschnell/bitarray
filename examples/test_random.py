@@ -14,7 +14,8 @@ from collections import Counter
 from random import randrange, random
 
 from bitarray import bitarray
-from bitarray.util import zeros, urandom, random_p, _RandomP
+from bitarray.util import zeros, urandom, random_p
+from bitarray.util import _RandomP  # type: ignore
 
 
 SMALL_P = _RandomP().SMALL_P
