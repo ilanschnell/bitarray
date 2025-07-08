@@ -79,17 +79,17 @@ class UtilTests(Util):
         self.assertEqual(c[3], 1)
 
     def test_check_probability(self):
-        C = self.check_probability
         N = 1000_000
 
-        C(zeros(N), 0.0)
-        C(ones(N), 1.0)
+        self.check_probability(zeros(N), 0.0)
+        self.check_probability(ones(N), 1.0)
 
         a = zeros(N)
         a[::2] = 1
         self.assertEqual(a.count(), N // 2)
-        C(a, 0.501)
-        C(a, 0.499)
+        self.check_probability(a, 0.501)
+        self.check_probability(a, 0.499)
+        C = self.check_probability
         self.assertRaises(AssertionError, C, a, 0.506)
         self.assertRaises(AssertionError, C, a, 0.494)
 
@@ -155,11 +155,11 @@ class Random_P_Tests(Util):
         self.check_normal_dist(Nhalf, 0.5, half)
         self.check_normal_dist(Neven, 0.5, even)
 
-    def test_uniform(self):
+    def test_elements_uniform(self):
         arrays = [random_p(100_000, 0.3) for _ in range(100)]
         for a in arrays:
             # for each bitarray see if population is within expectation
-            self.check_normal_dist(100_000, 0.3, a.count())
+            self.check_probability(a, 0.3)
 
         c = self.count_ith(arrays)
         self.assertTrue(abs(c[30] - 8_678) <= 890)
