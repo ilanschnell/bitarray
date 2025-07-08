@@ -299,6 +299,17 @@ class Random_P_Tests(unittest.TestCase):
                     q *= 0.5               # a &= random_half()
             self.assertEqual(q, i / K)
 
+    def test_random_combine(self):
+        r = _RandomP(1_000_000)
+        for seq, mean in [
+                ([],     500_000),  # tests .random_half()
+                ([0],    250_000),
+                ([1],    750_000),
+                ([1, 0], 375_000),
+        ]:
+            a = r.random_combine(seq)
+            self.assertTrue(abs(a.count() - mean) < 5_000)
+
     def test_random_m_basic(self):
         r = _RandomP(7)
         for m in -1, 8:

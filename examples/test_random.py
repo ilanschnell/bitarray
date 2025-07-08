@@ -1,5 +1,5 @@
 """
-Statistical Tests for random functions in bitarray.util
+Statistical Tests for Random Functions in bitarray.util
 -------------------------------------------------------
 
 These are statistical tests.  They do not test any basic functionality of
@@ -126,6 +126,7 @@ class Random_P_Tests(Util):
                 c += 1
             if d1 > d2:
                 d += 1
+
         self.check_normal_dist(N, 0.5, c)
         self.check_normal_dist(N, 0.5, d)
 
@@ -148,19 +149,24 @@ class Random_P_Tests(Util):
                 a = random_p(n, p)
                 self.assertTrue(a.count() <= 1)
 
-    def test_n4(self):
+    def test_literal(self):
         # test "literal definition" case
         c = Counter(random_p(4, 0.25).count() for _ in range(100_000))
-        self.assertTrue(abs(c[0] - 31_641) <=  1_471)
-        self.assertTrue(abs(c[1] - 42_188) <=  1_562)
-        self.assertTrue(abs(c[2] - 21_094) <=  1_290)
+        self.assertTrue(abs(c[0] - 31_641) <= 1_471)
+        self.assertTrue(abs(c[1] - 42_188) <= 1_562)
+        self.assertTrue(abs(c[2] - 21_094) <= 1_290)
         self.assertEqual(c.total(), 100_000)
 
-    def test_n10_p005(self):
+    def test_small_p(self):
         # test small p case
-        c = Counter(random_p(10, 0.005).count() for _ in range(100_000))
-        self.assertTrue(abs(c[0] - 95_111) <=    682)
-        self.assertTrue(abs(c[1] -  4_779) <=    675)
+        c = Counter(random_p(50, p=0.005).count() for _ in range(100_000))
+        self.assertTrue(abs(c[0] - 77_831) <= 1_314)
+        self.assertTrue(abs(c[1] - 19_556) <= 1_254)
+        self.assertEqual(c.total(), 100_000)
+        # same as above - exploiting symmetry
+        c = Counter(random_p(50, p=0.995).count() for _ in range(100_000))
+        self.assertTrue(abs(c[49] - 19_556) <= 1_254)
+        self.assertTrue(abs(c[50] - 77_831) <= 1_314)
         self.assertEqual(c.total(), 100_000)
 
     def test_n100_p375(self):
