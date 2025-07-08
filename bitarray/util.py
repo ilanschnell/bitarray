@@ -71,6 +71,10 @@ when Python version is too low.
 
 class _RandomP:
 
+    # The main reason for this class it to enable testing functionality
+    # individually in the test class Random_P_Tests in 'test_util.py'.
+    # The test class also contains many comments and explanations.
+
     # maximal number of calls to .random_half() in .combine()
     M = 8
 

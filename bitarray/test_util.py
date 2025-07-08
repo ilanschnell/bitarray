@@ -160,7 +160,8 @@ class Random_P_Tests(unittest.TestCase):
         self.assertEqual(R(0), bitarray())
         for n in range(20):
             self.assertEqual(R(n, 0), zeros(n))
-            self.assertEqual(R(n, p=1.0), ones(n))
+            self.assertEqual(len(R(n, 0.5)), n)
+            self.assertEqual(R(n, p=1), ones(n))
 
     def test_default(self):
         a = random_p(10_000_000)  # p defaults to 0.5
@@ -223,17 +224,20 @@ class Random_P_Tests(unittest.TestCase):
         self.assertEqual(q, 0.5 - 1.0 / K)
         self.assertEqual(q, (K / 2 - 1) / K)
         x = (0.5 - q) / (1.0 - q)  # see below
-        self.assertAlmostEqual(x, 1.0 / (K / 2 + 1))
+        self.assertEqual(x, 1.0 / (K / 2 + 1))
         self.assertTrue(x < SMALL_P, x)
         # So SMALL_P must the larger than:
         self.assertTrue(SMALL_P > 1.0 / (K / 2 + 1))
 
     def test_final_oring(self):
+        # The purpose of this test function is to ensure the final oring step
+        # in .random_p() always gives us the correct probability.
+
         K = self.r.K
         SMALL_P = self.r.SMALL_P
 
-        special_p = [0.0, 1e-16, SMALL_P - 1e-16, SMALL_P, 0.25 - 1e-16,
-                     0.25, 1.0 / 3, 0.5 - 1e-16, 0.5]
+        special_p = [0.0, 1e-16, SMALL_P - 1e-16, SMALL_P,
+                     0.25 - 1e-16, 0.25, 1.0 / 3, 0.5 - 1e-16, 0.5]
         for j in range(1000):
             try:
                 p = special_p[j]
@@ -244,14 +248,14 @@ class Random_P_Tests(unittest.TestCase):
             self.assertTrue(q <= p)
             self.assertTrue(0.0 <= p - q < 1.0 / K)
 
-            r = math.fmod(p, 1.0 / K)  # remainder
+            r = math.fmod(p, 1.0 / K)  # remainder (not used in util.py)
             self.assertEqual(q + r, p)
             self.assertEqual(bool(r), q < p)
 
             if q < p:
                 # calculated such that q will equal to p
                 x = (p - q) / (1.0 - q)
-                self.assertAlmostEqual(r / (1.0 - p + r), x, delta=1e-16)
+                self.assertEqual(r / (1.0 - p + r), x)
                 # Ensure we hit the small p case when calling random_p()
                 # itself.  Considering p = 0.5-1e-16, we have q = 127/256,
                 # so the maximal:
@@ -260,7 +264,7 @@ class Random_P_Tests(unittest.TestCase):
                 q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
 
             # ensure desired probability q is p
-            self.assertAlmostEqual(q, p, delta=1e-16)
+            self.assertEqual(q, p)
 
     def test_get_op_seq(self):
         G = self.r.get_op_seq
@@ -302,10 +306,10 @@ class Random_P_Tests(unittest.TestCase):
     def test_random_combine(self):
         r = _RandomP(1_000_000)
         for seq, mean in [
-                ([],     500_000),  # tests .random_half()
-                ([0],    250_000),
-                ([1],    750_000),
-                ([1, 0], 375_000),
+                ([],     500_000),  # .random_half() itself
+                ([0],    250_000),  # and
+                ([1],    750_000),  # or
+                ([1, 0], 375_000),  # or followed by and
         ]:
             a = r.random_combine(seq)
             self.assertTrue(abs(a.count() - mean) < 5_000)
