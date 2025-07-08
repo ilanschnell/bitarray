@@ -24,8 +24,6 @@ SMALL_P = _RandomP().SMALL_P
 class Util(unittest.TestCase):
 
     def check_normal_dist(self, n, p, x):
-        if n < 10 or p * (1.0 - p) < 0.01:
-            return
         mu = n * p
         sigma = sqrt(n * p * (1.0 - p))
         msg = "n=%d  p=%f  mu=%f  sigma=%f  x=%f" % (
@@ -96,7 +94,8 @@ class Random_P_Tests(Util):
             cum = zeros(n)
             for i in range(15):
                 a = random_p(n, p)
-                self.check_normal_dist(n, p, a.count())
+                if n > 10 and p * (1.0 - p) > 0.01:
+                    self.check_normal_dist(n, p, a.count())
                 cum |= a
             self.assertEqual(len(cum), n)
             self.assertTrue(cum.all())
@@ -134,7 +133,7 @@ class Random_P_Tests(Util):
         arrays = [random_p(100_000, 0.3) for _ in range(100)]
         for a in arrays:
             # for each bitarray see if population is within expectation
-            self.assertTrue(abs(a.count() - 30_000) < 1_449)
+            self.check_normal_dist(100_000, 0.3, a.count())
 
         c = self.count_ith(arrays)
         self.assertTrue(abs(c[30] - 8_678) <= 890)
@@ -184,6 +183,27 @@ class Random_P_Tests(Util):
         # p = 0.516672   mean = 51667.168798   stdev = 158.025965
         self.assertTrue(abs(x - 51_667) <= 1_580)
         self.assertEqual(c.total(), 100_000)
+
+    def test_operations(self):
+        values = [0.0, 0.1, 0.2, 0.3, 0.5, 0.7, 0.8, 1.0]
+        n = 1_000_000
+        for p in values:
+            a = random_p(n, p)
+            for q in values:
+                b = random_p(n, q)
+                for c, v in [
+                        (~a,     1 - p),
+                        (a & b,  p * q),
+                        (a | b,  p + q - p * q),
+                        (a ^ b,  p + q - 2 * p * q),
+                ]:
+                    cnt = c.count()
+                    if v == 0:
+                        self.assertEqual(cnt, 0)
+                    elif v == 1:
+                        self.assertEqual(cnt, n)
+                    else:
+                        self.check_normal_dist(n, v, cnt)
 
 
 if __name__ == '__main__':
