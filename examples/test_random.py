@@ -14,7 +14,7 @@ from collections import Counter
 from random import randrange, random
 
 from bitarray import bitarray
-from bitarray.util import zeros, urandom, random_p
+from bitarray.util import zeros, ones, urandom, random_p
 from bitarray.util import _RandomP  # type: ignore
 
 
@@ -29,6 +29,16 @@ class Util(unittest.TestCase):
         msg = "n=%d  p=%f  mu=%f  sigma=%f  x=%f" % (
             n, p, mu, sigma, x)
         self.assertTrue(abs(x - mu) < 10.0 * sigma, msg)
+
+    def check_probability(self, a, p):
+        n = len(a)
+        c = a.count()
+        if p == 0:
+            self.assertEqual(c, 0)
+        elif p == 1:
+            self.assertEqual(c, n)
+        else:
+            self.check_normal_dist(n, p, c)
 
     def count_ith(self, arrays):
         """
@@ -68,12 +78,18 @@ class UtilTests(Util):
         self.assertEqual(c[2], 4)
         self.assertEqual(c[3], 1)
 
+    def test_check_probability(self):
+        n = 100_000
+        self.check_probability(zeros(n), 0.0)
+        self.check_probability(urandom(n), 0.5)
+        self.check_probability(ones(n), 1.0)
+
 
 class URandomTests(Util):
 
     def test_count(self):
         a = urandom(10_000_000)
-        self.assertTrue(4_980_000 <= a.count() <= 5_020_000)
+        self.check_probability(a, 0.5)
 
     def test_stat(self):
         c = Counter(urandom(100).count() for _ in range(10_000))
@@ -186,31 +202,21 @@ class Random_P_Tests(Util):
 
     def test_operations(self):
         n = 1_000_000
-
-        def check_probability(a, p):
-            cnt = a.count()
-            if p == 0:
-                self.assertEqual(cnt, 0)
-            elif p == 1:
-                self.assertEqual(cnt, n)
-            else:
-                self.check_normal_dist(n, p, cnt)
-
         values = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
 
         for p in values:
             a = random_p(n, p)
-            check_probability(a, p)
+            self.check_probability(a, p)
             for q in values:
                 b = random_p(n, q)
-                check_probability(b, q)
+                self.check_probability(b, q)
                 for c, v in [
                         (~a,     1 - p),
                         (a & b,  p * q),
                         (a | b,  p + q - p * q),
                         (a ^ b,  p + q - 2 * p * q),
                 ]:
-                    check_probability(c, v)
+                    self.check_probability(c, v)
 
 
 if __name__ == '__main__':
