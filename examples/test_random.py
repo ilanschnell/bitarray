@@ -79,18 +79,19 @@ class UtilTests(Util):
         self.assertEqual(c[3], 1)
 
     def test_check_probability(self):
-        n = 1000_000
+        C = self.check_probability
+        N = 1000_000
 
-        self.check_probability(zeros(n), 0.0)
-        self.check_probability(ones(n), 1.0)
+        C(zeros(N), 0.0)
+        C(ones(N), 1.0)
 
-        a = zeros(n)
-        a[:n // 2] = 1
-        self.assertEqual(a.count(), 500_000)
-        self.check_probability(a, 0.501)
-        self.check_probability(a, 0.499)
-        self.assertRaises(AssertionError, self.check_probability, a, 0.506)
-        self.assertRaises(AssertionError, self.check_probability, a, 0.494)
+        a = zeros(N)
+        a[::2] = 1
+        self.assertEqual(a.count(), N // 2)
+        C(a, 0.501)
+        C(a, 0.499)
+        self.assertRaises(AssertionError, C, a, 0.506)
+        self.assertRaises(AssertionError, C, a, 0.494)
 
 
 class URandomTests(Util):
@@ -126,7 +127,8 @@ class Random_P_Tests(Util):
 
     def test_bits_evenly(self):
         n = 4000
-        c = d = N = 0
+        Nhalf = half = 0
+        Neven = even = 0
         for _ in range(25_000):
             p = 1.5 * SMALL_P * random()
             a = random_p(n, p)
@@ -137,23 +139,21 @@ class Random_P_Tests(Util):
             c1 = a.count(1, 0, n // 2)  # bits in lower half
             c2 = a.count(1, n // 2, n)  #         upper
             self.assertEqual(c1 + c2, tot)
-            if c1 == c2:
-                continue
+            if c1 != c2:
+                Nhalf += 1
+                if c1 > c2:
+                    half += 1
 
-            d1 = a.count(1, 0, n, 2)  # bits in even positions
-            d2 = a.count(1, 1, n, 2)  #         odd
-            self.assertEqual(d1 + d2, tot)
-            if d1 == d2:
-                continue
+            c1 = a.count(1, 0, n, 2)  # bits in even positions
+            c2 = a.count(1, 1, n, 2)  #         odd
+            self.assertEqual(c1 + c2, tot)
+            if c1 != c2:
+                Neven += 1
+                if c1 > c2:
+                    even += 1
 
-            N += 1
-            if c1 > c2:
-                c += 1
-            if d1 > d2:
-                d += 1
-
-        self.check_normal_dist(N, 0.5, c)
-        self.check_normal_dist(N, 0.5, d)
+        self.check_normal_dist(Nhalf, 0.5, half)
+        self.check_normal_dist(Neven, 0.5, even)
 
     def test_uniform(self):
         arrays = [random_p(100_000, 0.3) for _ in range(100)]
