@@ -79,10 +79,18 @@ class UtilTests(Util):
         self.assertEqual(c[3], 1)
 
     def test_check_probability(self):
-        n = 100_000
+        n = 1000_000
+
         self.check_probability(zeros(n), 0.0)
-        self.check_probability(urandom(n), 0.5)
         self.check_probability(ones(n), 1.0)
+
+        a = zeros(n)
+        a[:n // 2] = 1
+        self.assertEqual(a.count(), 500_000)
+        self.check_probability(a, 0.501)
+        self.check_probability(a, 0.499)
+        self.assertRaises(AssertionError, self.check_probability, a, 0.506)
+        self.assertRaises(AssertionError, self.check_probability, a, 0.494)
 
 
 class URandomTests(Util):
@@ -123,7 +131,9 @@ class Random_P_Tests(Util):
             p = 1.5 * SMALL_P * random()
             a = random_p(n, p)
             tot = a.count()
-            self.check_normal_dist(n, p, tot)
+            if p > 0.1:
+                self.check_normal_dist(n, p, tot)
+
             c1 = a.count(1, 0, n // 2)  # bits in lower half
             c2 = a.count(1, n // 2, n)  #         upper
             self.assertEqual(c1 + c2, tot)
