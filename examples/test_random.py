@@ -23,13 +23,13 @@ SMALL_P = _RandomP().SMALL_P
 
 def count_each_index(arrays):
     """
-    Given an iterable of bitarrays, return the sums of all bits at each
-    index as a list.
-    For example, a returned list [2, 3, 7] means that the sum of all
-    bitarrays at index 0 is 2, at index 1 is 3 and at index 2 is 7.
+    Given an iterable of bitarrays, count the sums of all bits at each
+    index and return those counts in a Counter object.
+    For example, for a returned Counter c, c[3] = 7 means that a sum of 7
+    across all bitarrays occurs at 3 indices.
     """
     b = bitarray()
-    n = None
+    n = None         # length of each bitarray
     for a in arrays:
         if n is None:
             n = len(a)
@@ -37,8 +37,8 @@ def count_each_index(arrays):
             raise ValueError("bitarrays of same lenght expected")
         b.extend(a)
     if n is None:
-        return []
-    return [b.count(1, i, len(b), n) for i in range(n)]
+        return Counter()
+    return Counter(b.count(1, i, len(b), n) for i in range(n))
 
 
 class CountEachIndexTests(unittest.TestCase):
@@ -49,7 +49,11 @@ class CountEachIndexTests(unittest.TestCase):
                   bitarray("1011001")]
         #             sums: 2032202
         c = count_each_index(arrays)
-        self.assertEqual(c, [2, 0, 3, 2, 2, 0, 2])
+        self.assertEqual(c.total(), 7)  # lenght of each bitarray
+        self.assertEqual(c[0], 2)
+        self.assertEqual(c[1], 0)
+        self.assertEqual(c[2], 4)
+        self.assertEqual(c[3], 1)
 
     def test_random(self):
         for _ in range(1000):
@@ -57,7 +61,9 @@ class CountEachIndexTests(unittest.TestCase):
             n = randrange(10) if m else 0
             arrays = [urandom(n) for _ in range(m)]
             c1 = count_each_index(arrays)
-            c2 = [sum(arrays[j][i] for j in range(m)) for i in range(n)]
+            self.assertEqual(c1.total(), n)
+            c2 = Counter(sum(arrays[j][i] for j in range(m))
+                         for i in range(n))
             self.assertEqual(c1, c2)
 
             # generator
@@ -68,7 +74,7 @@ class CountEachIndexTests(unittest.TestCase):
     def test_empty(self):
         arrays = []
         for m in range(10):
-            self.assertEqual(count_each_index(arrays), [])
+            self.assertEqual(count_each_index(arrays), Counter())
             arrays.append(bitarray())
 
     def test_errors(self):
@@ -182,7 +188,7 @@ class Random_P_Tests(Util):
             # for each bitarray see if population is within expectation
             self.check_probability(a, 0.3)
 
-        c = Counter(count_each_index(arrays))
+        c = count_each_index(arrays)
         self.assertTrue(abs(c[30] - 8_678) <= 890)
         x = sum(c[k] for k in range(20, 31))
         # p = 0.540236   mean = 54023.639245   stdev = 157.601089
