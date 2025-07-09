@@ -21,13 +21,36 @@ from bitarray.util import _RandomP  # type: ignore
 SMALL_P = _RandomP().SMALL_P
 
 
+def count_indices(arrays):
+    """
+    Given a list of bitarrays, count sums of the i-th elements
+    in each bitarray and return them in a Counter object.
+    """
+    m = len(arrays)     # number of bitarrays
+    if m == 0:
+        raise ValueError("list with at least one element expected")
+    n = len(arrays[0])  # lenght of each bitarray
+
+    b = bitarray()
+    for a in arrays:
+        if len(a) != n:
+            raise ValueError("all bitarrays must have equal length")
+        b.extend(a)
+
+    c = Counter()
+    for i in range(n):
+        sm = b.count(1, i, m * n, n)
+        c[sm] += 1
+
+    return c
+
+
 class Util(unittest.TestCase):
 
     def check_normal_dist(self, n, p, x):
         mu = n * p
         sigma = sqrt(n * p * (1.0 - p))
-        msg = "n=%d  p=%f  mu=%f  sigma=%f  x=%f" % (
-            n, p, mu, sigma, x)
+        msg = "n=%d  p=%f  mu=%f  sigma=%f  x=%f" % (n, p, mu, sigma, x)
         self.assertTrue(abs(x - mu) < 10.0 * sigma, msg)
 
     def check_probability(self, a, p):
@@ -40,43 +63,25 @@ class Util(unittest.TestCase):
         else:
             self.check_normal_dist(n, p, c)
 
-    def count_ith(self, arrays):
-        """
-        Given a list of bitarrays, count sums of the i-th elements
-        in each bitarray and return them in a Counter object.
-        """
-        m = len(arrays)     # number of bitarrays
-        self.assertTrue(m > 0)
-        n = len(arrays[0])  # lenght of each bitarray
-
-        b = bitarray()
-        for a in arrays:
-            self.assertEqual(len(a), n)
-            b.extend(a)
-        self.assertEqual(len(b), m * n)
-
-        c = Counter()
-        for i in range(n):
-            #sm = sum(arrays[j][i] for j in range(m))
-            sm = b.count(1, i, m * n, n)
-            c[sm] += 1
-        self.assertEqual(c.total(), n)
-        return c
-
 
 class UtilTests(Util):
 
-    def test_count_ith(self):
+    def test_count_indices(self):
         arrays = [bitarray("0011101"),
                   bitarray("1010100"),
                   bitarray("1011001")]
         #             sums: 2032202
-        c = self.count_ith(arrays)
+        c = count_indices(arrays)
         self.assertEqual(c.total(), 7)  # lenght of each bitarray
         self.assertEqual(c[0], 2)
         self.assertEqual(c[1], 0)
         self.assertEqual(c[2], 4)
         self.assertEqual(c[3], 1)
+
+        self.assertRaises(ValueError, count_indices, "ABC")
+        self.assertRaises(ValueError, count_indices, [])
+        self.assertRaises(TypeError, count_indices, [0, 1])
+        self.assertRaises(ValueError, count_indices, [bitarray("01"), []])
 
     def test_check_probability(self):
         N = 1000_000
@@ -161,7 +166,7 @@ class Random_P_Tests(Util):
             # for each bitarray see if population is within expectation
             self.check_probability(a, 0.3)
 
-        c = self.count_ith(arrays)
+        c = count_indices(arrays)
         self.assertTrue(abs(c[30] - 8_678) <= 890)
         x = sum(c[k] for k in range(20, 31))
         # p = 0.540236   mean = 54023.639245   stdev = 157.601089
