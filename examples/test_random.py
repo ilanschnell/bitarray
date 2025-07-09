@@ -24,11 +24,11 @@ SMALL_P = _RandomP().SMALL_P
 def count_indices(arrays):
     """
     Given a list of bitarrays, count sums of the i-th elements
-    in each bitarray and return them in a Counter object.
+    in each bitarray and return them in a collections.Counter object().
     """
     m = len(arrays)     # number of bitarrays
     if m == 0:
-        raise ValueError("list with at least one element expected")
+        raise ValueError("non-empty sequence expected")
     n = len(arrays[0])  # lenght of each bitarray
 
     b = bitarray()
@@ -37,12 +37,7 @@ def count_indices(arrays):
             raise ValueError("all bitarrays must have equal length")
         b.extend(a)
 
-    c = Counter()
-    for i in range(n):
-        sm = b.count(1, i, m * n, n)
-        c[sm] += 1
-
-    return c
+    return Counter(b.count(1, i, m * n, n) for i in range(n))
 
 
 class Util(unittest.TestCase):
@@ -84,7 +79,7 @@ class UtilTests(Util):
         self.assertRaises(ValueError, count_indices, [bitarray("01"), []])
 
     def test_check_probability(self):
-        N = 1000_000
+        N = 1_000_000
 
         self.check_probability(zeros(N), 0.0)
         self.check_probability(ones(N), 1.0)
