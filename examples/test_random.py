@@ -41,6 +41,43 @@ def count_each_index(arrays):
     return [b.count(1, i, len(b), n) for i in range(n)]
 
 
+class CountEachIndexTests(unittest.TestCase):
+
+    def test_example(self):
+        arrays = [bitarray("0011101"),
+                  bitarray("1010100"),
+                  bitarray("1011001")]
+        #             sums: 2032202
+        c = count_each_index(arrays)
+        self.assertEqual(c, [2, 0, 3, 2, 2, 0, 2])
+
+    def test_random(self):
+        for _ in range(1000):
+            m = randrange(10)
+            n = randrange(10) if m else 0
+            arrays = [urandom(n) for _ in range(m)]
+            c1 = count_each_index(arrays)
+            c2 = [sum(arrays[j][i] for j in range(m)) for i in range(n)]
+            self.assertEqual(c1, c2)
+
+            # generator
+            gen = (arrays[j] for j in range(m))
+            self.assertEqual(count_each_index(gen), c2)
+            self.assertEqual(list(gen), [])
+
+    def test_empty(self):
+        arrays = []
+        for m in range(10):
+            self.assertEqual(count_each_index(arrays), [])
+            arrays.append(bitarray())
+
+    def test_errors(self):
+        C = count_each_index
+        self.assertRaises(ValueError, C, "ABC")
+        self.assertRaises(TypeError, C, [0, 1])
+        self.assertRaises(ValueError, C, [bitarray("01"), bitarray("1")])
+
+
 class Util(unittest.TestCase):
 
     def check_normal_dist(self, n, p, x):
@@ -61,23 +98,6 @@ class Util(unittest.TestCase):
 
 
 class UtilTests(Util):
-
-    def test_count_each_index(self):
-        arrays = [bitarray("0011101"),
-                  bitarray("1010100"),
-                  bitarray("1011001")]
-        #             sums: 2032202
-        c = Counter(count_each_index(arrays))
-        self.assertEqual(c.total(), 7)  # lenght of each bitarray
-        self.assertEqual(c[0], 2)
-        self.assertEqual(c[1], 0)
-        self.assertEqual(c[2], 4)
-        self.assertEqual(c[3], 1)
-
-        C = count_each_index
-        self.assertRaises(ValueError, C, "ABC")
-        self.assertRaises(TypeError, C, [0, 1])
-        self.assertRaises(ValueError, C, [bitarray("01"), []])
 
     def test_check_probability(self):
         N = 1_000_000
