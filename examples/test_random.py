@@ -25,8 +25,8 @@ def count_each_index(arrays):
     """
     Given an iterable of bitarrays, count the sums of all bits at each
     index and return those counts in a Counter object.
-    For example, for a returned Counter c, c[3] = 7 means that a sum of 7
-    across all bitarrays occurs at 3 indices.
+    For example, for a returned Counter c, c[2] = 4 means that a sum of 2
+    across all bitarrays occurs at 4 indices.
     """
     b = bitarray()
     n = None         # length of each bitarray
@@ -56,19 +56,22 @@ class CountEachIndexTests(unittest.TestCase):
         self.assertEqual(c[3], 1)
 
     def test_random(self):
-        for _ in range(1000):
+        for _ in range(1_000):
             m = randrange(10)
             n = randrange(10) if m else 0
             arrays = [urandom(n) for _ in range(m)]
-            c1 = count_each_index(arrays)
-            self.assertEqual(c1.total(), n)
+            c = count_each_index(arrays)
+            self.assertEqual(c.total(), n)
+            for j in range(m + 1):
+                self.assertTrue(0 <= c[j] <= n)
+
             c2 = Counter(sum(arrays[j][i] for j in range(m))
                          for i in range(n))
-            self.assertEqual(c1, c2)
+            self.assertEqual(c, c2)
 
             # generator
             gen = (arrays[j] for j in range(m))
-            self.assertEqual(count_each_index(gen), c2)
+            self.assertEqual(count_each_index(gen), c)
             self.assertEqual(list(gen), [])
 
     def test_empty(self):
@@ -76,6 +79,16 @@ class CountEachIndexTests(unittest.TestCase):
         for m in range(10):
             self.assertEqual(count_each_index(arrays), Counter())
             arrays.append(bitarray())
+
+    def test_zeros_ones(self):
+        for _ in range(1_000):
+            m = randrange(10)
+            n = randrange(10) if m else 0
+            c = count_each_index(zeros(n) for _ in range(m))
+            self.assertEqual(c[0], n)
+
+            c = count_each_index(ones(n) for _ in range(m))
+            self.assertEqual(c[m], n)
 
     def test_errors(self):
         C = count_each_index
