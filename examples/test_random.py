@@ -7,7 +7,6 @@ random functions.  Those are already tested in the regular utility tests.
 Therefore, and because these tests take longer to run, we decided to put
 them in a separate file.
 """
-import sys
 import unittest
 from math import sqrt
 from collections import Counter
@@ -141,13 +140,15 @@ class URandomTests(Util):
         self.check_probability(a, 0.5)
 
     def test_stat(self):
-        c = Counter(urandom(100).count() for _ in range(10_000))
-        self.assertTrue(set(c) <= set(range(1001)))
-        if sys.version_info[:2] >= (3, 10):
-            self.assertEqual(c.total(), 10_000)
-        x = sum(c[k] for k in range(46, 51))
-        # p = 0.355694   mean = 3556.938100   stdev = 47.872301
-        self.assertTrue((x - 3557) <= 479)
+        for c in [
+                Counter(urandom(100).count() for _ in range(100_000)),
+                count_each_index(urandom(100_000) for _ in range(100)),
+        ]:
+            self.assertTrue(set(c) <= set(range(101)))
+            self.assertEqual(c.total(), 100_000)
+            x = sum(c[k] for k in range(40, 51))
+            # p = 0.522195   mean = 52219.451858   stdev = 157.958033
+            self.assertTrue(abs(x - 52_219) <= 1_580)
 
 
 class Random_P_Tests(Util):
