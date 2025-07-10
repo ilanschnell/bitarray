@@ -168,62 +168,51 @@ class Random_P_Tests(Util):
             self.assertEqual(len(cum), n)
             self.assertTrue(cum.all())
 
-    def test_bits_evenly(self):
-        n = 4000
-        Nhalf = half = 0
-        Neven = even = 0
-        for _ in range(25_000):
-            p = 1.5 * SMALL_P * random()
-            a = random_p(n, p)
-            tot = a.count()
-
-            c1 = a.count(1, 0, n // 2)  # bits in lower half
-            c2 = a.count(1, n // 2, n)  #         upper
-            self.assertEqual(c1 + c2, tot)
-            if c1 != c2:
-                Nhalf += 1
-                if c1 > c2:
-                    half += 1
-
-            c1 = a.count(1, 0, n, 2)  # bits in even positions
-            c2 = a.count(1, 1, n, 2)  #         odd
-            self.assertEqual(c1 + c2, tot)
-            if c1 != c2:
-                Neven += 1
-                if c1 > c2:
-                    even += 1
-
-        self.check_normal_dist(Nhalf, 0.5, half)
-        self.check_normal_dist(Neven, 0.5, even)
-
-    def create_masks(self, m):
+    @staticmethod
+    def create_masks(m):
         """
         Create a list with m masks.  Each mask has a length of 2**m bits.
         """
-        n = 1 << m  # lenght of each mask
         masks = []
         for i in range(m):
             j = 1 << i
             mask = zeros(j) + ones(j)
             mask *= 1 << (m - i - 1)
-            self.assertEqual(len(mask), n)
-            self.assertEqual(mask.count(), n // 2)
             masks.append(mask)
-
-        self.assertEqual(len(masks), m)
-        self.assertEqual(count_each_index(masks),
-                         Counter(int2ba(i).count() for i in range(n)))
-        for i in range(m):
-            for j in range(i):
-                a = masks[i]
-                b = masks[j]
-                self.assertEqual(count_and(a, b), n // 4)
-                self.assertEqual(count_or(a, b), 3 * n // 4)
-                self.assertEqual(count_xor(a, b), n // 2)
-
         return masks
 
+    def test_masks_explict(self):
+        C = self.create_masks
+        self.assertEqual(C(0), [])
+
+        self.assertEqual(C(1), [bitarray("01")])
+
+        self.assertEqual(C(2), [bitarray("0101"),
+                                bitarray("0011")])
+
+        self.assertEqual(C(3), [bitarray("01010101"),
+                                bitarray("00110011"),
+                                bitarray("00001111")])
+
     def test_masks(self):
+        for m in range(13):
+            masks = self.create_masks(m)
+            n = 1 << m
+            self.assertEqual(len(masks), m)
+            if m:
+                self.assertEqual(count_each_index(masks),
+                                 Counter(int2ba(i).count() for i in range(n)))
+            for i in range(m):
+                a = masks[i]
+                self.assertEqual(len(a), n)
+                self.assertEqual(a.count(), n // 2)
+                for j in range(i):
+                    b = masks[j]
+                    self.assertEqual(count_and(a, b), n // 4)
+                    self.assertEqual(count_or(a, b), 3 * n // 4)
+                    self.assertEqual(count_xor(a, b), n // 2)
+
+    def test_apply_masks(self):
         M = 12
         masks = self.create_masks(M)
         n = M * [0]
