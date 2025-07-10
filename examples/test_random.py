@@ -259,22 +259,22 @@ class Random_P_Tests(Util):
         self.assertEqual(c.total(), 100_000)
 
     def test_operations(self):
+        C = self.check_probability
         n = 1_000_000
-        values = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+        values = (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
 
         for p in values:
             a = random_p(n, p)
-            self.check_probability(a, p)
+            C(a, p)
+            C(~a, 1 - p)
+
             for q in values:
                 b = random_p(n, q)
-                self.check_probability(b, q)
-                for c, v in [
-                        (~a,     1 - p),
-                        (a & b,  p * q),
-                        (a | b,  p + q - p * q),
-                        (a ^ b,  p + q - 2 * p * q),
-                ]:
-                    self.check_probability(c, v)
+                C(b, q)
+
+                C(a & b, p * q)
+                C(a | b, p + q - p * q)
+                C(a ^ b, p + q - 2 * p * q)
 
 
 if __name__ == '__main__':
