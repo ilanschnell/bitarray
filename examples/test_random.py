@@ -13,7 +13,9 @@ from collections import Counter
 from random import randrange, random
 
 from bitarray import bitarray
-from bitarray.util import zeros, ones, urandom, random_p
+from bitarray.util import (
+    zeros, ones, urandom, random_p, int2ba, count_and, count_or, count_xor
+)
 from bitarray.util import _RandomP  # type: ignore
 
 
@@ -174,8 +176,6 @@ class Random_P_Tests(Util):
             p = 1.5 * SMALL_P * random()
             a = random_p(n, p)
             tot = a.count()
-            if p > 0.1:
-                self.check_normal_dist(n, p, tot)
 
             c1 = a.count(1, 0, n // 2)  # bits in lower half
             c2 = a.count(1, n // 2, n)  #         upper
@@ -195,6 +195,55 @@ class Random_P_Tests(Util):
 
         self.check_normal_dist(Nhalf, 0.5, half)
         self.check_normal_dist(Neven, 0.5, even)
+
+    def create_masks(self, m):
+        """
+        Create a list with m masks.  Each mask has a length of 2**m bits.
+        """
+        n = 1 << m  # lenght of each mask
+        masks = []
+        for i in range(m):
+            j = 1 << i
+            mask = zeros(j) + ones(j)
+            mask *= 1 << (m - i - 1)
+            self.assertEqual(len(mask), n)
+            self.assertEqual(mask.count(), n // 2)
+            masks.append(mask)
+
+        self.assertEqual(len(masks), m)
+        self.assertEqual(count_each_index(masks),
+                         Counter(int2ba(i).count() for i in range(n)))
+        for i in range(m):
+            for j in range(i):
+                a = masks[i]
+                b = masks[j]
+                self.assertEqual(count_and(a, b), n // 4)
+                self.assertEqual(count_or(a, b), 3 * n // 4)
+                self.assertEqual(count_xor(a, b), n // 2)
+
+        return masks
+
+    def test_masks(self):
+        M = 12
+        masks = self.create_masks(M)
+        n = M * [0]
+        c = M * [0]
+        for _ in range(25_000):
+            p = 1.5 * SMALL_P * random()
+            a = random_p(1 << M, p)
+            tot = a.count()
+            for i in range(M):
+                c1 = count_and(a, masks[i])
+                c0 = count_and(a, ~masks[i])
+                self.assertEqual(c0 + c1, tot)
+                if c0 != c1:
+                    n[i] += 1
+                    if c0 > c1:
+                        c[i] += 1
+
+        for i in range(M):
+            #print(n[i], c[i])
+            self.check_normal_dist(n[i], 0.5, c[i])
 
     def test_elements_uniform(self):
         arrays = [random_p(100_000, 0.3) for _ in range(100)]
