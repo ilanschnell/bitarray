@@ -1459,6 +1459,10 @@ sc_encode_header(char *str, bitarrayobject *a)
     return 1 + len;
 }
 
+/* initial size of output buffer, and amount by which we increase our
+   allocation if we run out */
+#define ALLOC_SIZE  32768
+
 static PyObject *
 sc_encode(PyObject *module, PyObject *obj)
 {
@@ -1478,7 +1482,7 @@ sc_encode(PyObject *module, PyObject *obj)
     if ((rts = sc_rts(a)) == NULL)
         return NULL;
 
-    if ((out = PyBytes_FromStringAndSize(NULL, 32768)) == NULL)
+    if ((out = PyBytes_FromStringAndSize(NULL, ALLOC_SIZE)) == NULL)
         goto error;
 
     str = PyBytes_AS_STRING(out);
@@ -1495,7 +1499,7 @@ sc_encode(PyObject *module, PyObject *obj)
            Its size is: 1 head bytes + 128 * 32 raw bytes.
            Plus, we also may have the stop byte. */
         if (allocated < len + 1 + 128 * 32 + 1) {
-            if (_PyBytes_Resize(&out, allocated + 32768) < 0)
+            if (_PyBytes_Resize(&out, allocated + ALLOC_SIZE) < 0)
                 goto error;
             str = PyBytes_AS_STRING(out);
         }
@@ -1513,6 +1517,7 @@ sc_encode(PyObject *module, PyObject *obj)
     PyMem_Free(rts);
     return NULL;
 }
+#undef ALLOC_SIZE
 
 PyDoc_STRVAR(sc_encode_doc,
 "sc_encode(bitarray, /) -> bytes\n\
@@ -1689,6 +1694,10 @@ untouched.  Use `sc_encode()` for compressing (encoding).");
  */
 #define LEN_PAD_BITS  3
 
+/* initial number of bits we allocate in vl_decode(), and amount by which
+   we increase our allocation by in vl_decode_core() if we run out */
+#define ALLOC_BITS  1024
+
 /* Consume 'iter' while extending bitarray 'a'.
    Return 0 on success.  On failure, set exception and return -1. */
 static int
@@ -1713,7 +1722,7 @@ vl_decode_core(bitarrayobject *a, PyObject *iter)
             return -1;
 
         /* ensure bitarray is large enough to accommodate seven more bits */
-        if (a->nbits < i + 7 && resize_lite(a, a->nbits + 1024) < 0)
+        if (a->nbits < i + 7 && resize_lite(a, a->nbits + ALLOC_BITS) < 0)
             return -1;
         assert(i + 6 < a->nbits);
 
@@ -1740,7 +1749,7 @@ vl_decode(PyObject *module, PyObject *args, PyObject *kwds)
         return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
                             Py_TYPE(obj)->tp_name);
 
-    a = new_bitarray(1024, endian, -1);
+    a = new_bitarray(ALLOC_BITS, endian, -1);
     if (a == NULL)
         goto error;
 
@@ -1755,6 +1764,7 @@ vl_decode(PyObject *module, PyObject *args, PyObject *kwds)
     Py_XDECREF((PyObject *) a);
     return NULL;
 }
+#undef ALLOC_BITS
 
 PyDoc_STRVAR(vl_decode_doc,
 "vl_decode(stream, /, endian=None) -> bitarray\n\
