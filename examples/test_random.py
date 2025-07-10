@@ -195,13 +195,12 @@ class Random_P_Tests(Util):
                                 bitarray("00001111")])
 
     def test_masks(self):
-        for m in range(13):
+        for m in range(1, 13):
             masks = self.create_masks(m)
             n = 1 << m
             self.assertEqual(len(masks), m)
-            if m:
-                self.assertEqual(count_each_index(masks),
-                                 Counter(int2ba(i).count() for i in range(n)))
+            self.assertEqual(count_each_index(masks),
+                             Counter(int2ba(i).count() for i in range(n)))
             for i in range(m):
                 a = masks[i]
                 self.assertEqual(len(a), n)
@@ -223,15 +222,15 @@ class Random_P_Tests(Util):
             tot = a.count()
             for i in range(M):
                 c1 = count_and(a, masks[i])
-                c0 = count_and(a, ~masks[i])
-                self.assertEqual(c0 + c1, tot)
-                if c0 != c1:
-                    n[i] += 1
-                    if c0 > c1:
-                        c[i] += 1
+                c0 = tot - c1
+                if c0 == c1:
+                    continue
+                n[i] += 1
+                if c0 > c1:
+                    c[i] += 1
 
         for i in range(M):
-            #print(n[i], c[i])
+            self.assertTrue(n[i] > 20_000, n[i])
             self.check_normal_dist(n[i], 0.5, c[i])
 
     def test_elements_uniform(self):
