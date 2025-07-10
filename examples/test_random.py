@@ -98,6 +98,52 @@ class CountEachIndexTests(unittest.TestCase):
         self.assertRaises(ValueError, C, [bitarray("01"), bitarray("1")])
 
 
+def create_masks(m):
+    """
+    Create a list with m masks.  Each mask has a length of 2**m bits.
+    """
+    masks = []
+    for i in range(m):
+        j = 1 << i
+        mask = zeros(j) + ones(j)
+        mask *= 1 << (m - i - 1)
+        masks.append(mask)
+    return masks
+
+
+class CreateMasksTests(unittest.TestCase):
+
+    def test_explict(self):
+        C = create_masks
+        self.assertEqual(C(0), [])
+
+        self.assertEqual(C(1), [bitarray("01")])
+
+        self.assertEqual(C(2), [bitarray("0101"),
+                                bitarray("0011")])
+
+        self.assertEqual(C(3), [bitarray("01010101"),
+                                bitarray("00110011"),
+                                bitarray("00001111")])
+
+    def test_11(self):
+        m = 11
+        masks = create_masks(m)
+        n = 1 << m
+        self.assertEqual(len(masks), m)
+        self.assertEqual(count_each_index(masks),
+                         Counter(int2ba(i).count() for i in range(n)))
+        for i in range(m):
+            a = masks[i]
+            self.assertEqual(len(a), n)
+            self.assertEqual(a.count(), n // 2)
+            for j in range(i):
+                b = masks[j]
+                self.assertEqual(count_and(a, b), n // 4)
+                self.assertEqual(count_or(a, b), 3 * n // 4)
+                self.assertEqual(count_xor(a, b), n // 2)
+
+
 class Util(unittest.TestCase):
 
     def check_normal_dist(self, n, p, x):
@@ -168,52 +214,9 @@ class Random_P_Tests(Util):
             self.assertEqual(len(cum), n)
             self.assertTrue(cum.all())
 
-    @staticmethod
-    def create_masks(m):
-        """
-        Create a list with m masks.  Each mask has a length of 2**m bits.
-        """
-        masks = []
-        for i in range(m):
-            j = 1 << i
-            mask = zeros(j) + ones(j)
-            mask *= 1 << (m - i - 1)
-            masks.append(mask)
-        return masks
-
-    def test_masks_explict(self):
-        C = self.create_masks
-        self.assertEqual(C(0), [])
-
-        self.assertEqual(C(1), [bitarray("01")])
-
-        self.assertEqual(C(2), [bitarray("0101"),
-                                bitarray("0011")])
-
-        self.assertEqual(C(3), [bitarray("01010101"),
-                                bitarray("00110011"),
-                                bitarray("00001111")])
-
-    def test_masks(self):
-        for m in range(1, 13):
-            masks = self.create_masks(m)
-            n = 1 << m
-            self.assertEqual(len(masks), m)
-            self.assertEqual(count_each_index(masks),
-                             Counter(int2ba(i).count() for i in range(n)))
-            for i in range(m):
-                a = masks[i]
-                self.assertEqual(len(a), n)
-                self.assertEqual(a.count(), n // 2)
-                for j in range(i):
-                    b = masks[j]
-                    self.assertEqual(count_and(a, b), n // 4)
-                    self.assertEqual(count_or(a, b), 3 * n // 4)
-                    self.assertEqual(count_xor(a, b), n // 2)
-
     def test_apply_masks(self):
         M = 12
-        masks = self.create_masks(M)
+        masks = create_masks(M)
         n = M * [0]
         c = M * [0]
         for _ in range(25_000):
