@@ -228,10 +228,18 @@ class Random_P_Tests(Util):
         self.assertTrue(abs(c[0] - 77_831) <= 1_314)
         self.assertTrue(abs(c[1] - 19_556) <= 1_254)
         self.assertEqual(c.total(), 100_000)
+
+    def test_small_p_symmetry(self):
         # same as above - exploiting symmetry
         c = Counter(random_p(50, p=0.995).count() for _ in range(100_000))
         self.assertTrue(abs(c[49] - 19_556) <= 1_254)
         self.assertTrue(abs(c[50] - 77_831) <= 1_314)
+        self.assertEqual(c.total(), 100_000)
+
+    def test_small_p_uniform(self):
+        c = count_each_index(random_p(100_000, 0.005) for _ in range(50))
+        self.assertTrue(abs(c[0] - 77_831) <= 1_314)
+        self.assertTrue(abs(c[1] - 19_556) <= 1_254)
         self.assertEqual(c.total(), 100_000)
 
     def test_n100_p375(self):
