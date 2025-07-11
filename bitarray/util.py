@@ -54,10 +54,11 @@ Return random bitarray of length `n` (uses `os.urandom()`).
 def random_p(__n, p=0.5, endian=None):
     """random_p(n, /, p=0.5, endian=None) -> bitarray
 
-Return pseudo-random bitarray of length `n`.  Each bit has probability `p` of
-being 1.  Equivalent to `bitarray((random() < p for _ in range(n)), endian)`.
-The bitarrays are reproducible when calling Python's `random.seed()` with a
-specific seed value.
+Return (pseudo-) random bitarray of length `n`.  Each bit has probability `p`
+of being one (independent of any other bits).  Mathematically equivalent
+to `bitarray((random() < p for _ in range(n)), endian)`, but much faster
+for large `n`.  The random bitarrays are reproducible when giving
+Python's `random.seed()` with a specific seed value.
 
 This function requires Python 3.12 or higher, as it depends on the standard
 library function `random.binomialvariate()`.  Raises `NotImplementedError`
@@ -125,13 +126,13 @@ class _RandomP:
 
     def random_m(self, m):
         """
-        Return a bitarray (of length n) with m bits randomly set to 1.
-        Designed for small m (compared to n).
+        Return a bitarray (of length self.n) with m bits randomly set to 1.
+        Designed for small m (compared to self.n).
         """
         assert 0 <= m <= self.n
         a = zeros(self.n, self.endian)
         for _ in range(m):
-            while 1:
+            while True:
                 i = random.randrange(self.n)
                 if not a[i]:
                     a[i] = 1
