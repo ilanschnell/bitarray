@@ -303,7 +303,7 @@ class Random_P_Tests(unittest.TestCase):
                     q *= 0.5               # a &= random_half()
             self.assertEqual(q, i / K)
 
-    def test_random_combine(self):
+    def test_combine_half(self):
         r = _RandomP(1_000_000)
         for seq, mean in [
                 ([],     500_000),  # .random_half() itself
@@ -311,29 +311,32 @@ class Random_P_Tests(unittest.TestCase):
                 ([1],    750_000),  # or
                 ([1, 0], 375_000),  # or followed by and
         ]:
-            a = r.random_combine(seq)
+            a = r.combine_half(seq)
             self.assertTrue(abs(a.count() - mean) < 5_000)
 
-    def test_random_k_basic(self):
+    def test_random_pop_basic(self):
         r = _RandomP(7)
+        a = r.random_pop(3)
+        self.assertEqual(len(a), 7)
+        self.assertEqual(a.count(), 3)
         for m in -1, 8:
-            self.assertRaises(AssertionError, r.random_k, m)
+            self.assertRaises(AssertionError, r.random_pop, m)
 
         for n in range(10):
             r = _RandomP(n)
             k = randint(0, n)
-            a = r.random_k(k)
+            a = r.random_pop(k)
             self.assertEqual(len(a), n)
             self.assertEqual(a.count(), k)
 
-    def test_random_k_active(self):
+    def test_random_pop_active(self):
         # test if all bits are active
         n = 250
         r = _RandomP(n)
         cum = zeros(n)
         for _ in range(100):
             k = randrange(n // 2)
-            a = r.random_k(k)
+            a = r.random_pop(k)
             self.assertEqual(len(a), n)
             self.assertEqual(a.count(), k)
             cum |= a
