@@ -216,9 +216,12 @@ class Random_P_Tests(Util):
 
     def test_apply_masks(self):
         M = 12
+        # Create masks for selecting half elements in the random bitarray a.
+        # For example, masks[0] selects y'all odd elements, and masks[-1]
+        # selects the upper half of a.
         masks = create_masks(M)
-        n = M * [0]
-        c = M * [0]
+        n = M * [0]  # sample size for each mask
+        c = M * [0]  # count for each mask
         for _ in range(25_000):
             p = 1.5 * SMALL_P * random()
             a = random_p(1 << M, p)
@@ -226,9 +229,12 @@ class Random_P_Tests(Util):
             for i in range(M):
                 c1 = count_and(a, masks[i])
                 c0 = tot - c1
-                if c0 == c1:
-                    continue
+                if c0 == c1:  # counts are equal ->
+                    continue  # ignore this mask for this bitarray a
                 n[i] += 1
+                # counts are not equal, the probability for having more,
+                # e.g. even than odd (masks[0]) elements should be 1/2,
+                # or having more bits in upper vs lower half (mask(-1))
                 if c0 > c1:
                     c[i] += 1
 
