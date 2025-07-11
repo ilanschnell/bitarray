@@ -314,28 +314,28 @@ class Random_P_Tests(unittest.TestCase):
             a = r.random_combine(seq)
             self.assertTrue(abs(a.count() - mean) < 5_000)
 
-    def test_random_m_basic(self):
+    def test_random_k_basic(self):
         r = _RandomP(7)
         for m in -1, 8:
-            self.assertRaises(AssertionError, r.random_m, m)
+            self.assertRaises(AssertionError, r.random_k, m)
 
         for n in range(10):
             r = _RandomP(n)
-            m = randint(0, n)
-            a = r.random_m(m)
+            k = randint(0, n)
+            a = r.random_k(k)
             self.assertEqual(len(a), n)
-            self.assertEqual(a.count(), m)
+            self.assertEqual(a.count(), k)
 
-    def test_random_m_active(self):
+    def test_random_k_active(self):
         # test if all bits are active
         n = 250
         r = _RandomP(n)
         cum = zeros(n)
         for _ in range(100):
-            m = randrange(n // 2)
-            a = r.random_m(m)
+            k = randrange(n // 2)
+            a = r.random_k(k)
             self.assertEqual(len(a), n)
-            self.assertEqual(a.count(), m)
+            self.assertEqual(a.count(), k)
             cum |= a
         self.assertTrue(cum.all())
 

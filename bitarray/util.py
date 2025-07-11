@@ -124,19 +124,19 @@ class _RandomP:
                 a &= b
         return a
 
-    def random_m(self, m):
+    def random_k(self, k):
         """
-        Return a bitarray (of length self.n) with m bits randomly set to 1.
-        Designed for small m (compared to self.n).
+        Return a bitarray (of length n) with m bits randomly set to 1.
+        Designed for small k (compared to n).
         """
-        assert 0 <= m <= self.n
+        randrange = random.randrange
+        assert 0 <= k <= self.n
         a = zeros(self.n, self.endian)
-        for _ in range(m):
-            while True:
-                i = random.randrange(self.n)
-                if not a[i]:
-                    a[i] = 1
-                    break
+        for _ in range(k):
+            i = randrange(self.n)
+            while a[i]:
+                i = randrange(self.n)
+            a[i] = 1
         return a
 
     def random_p(self, p):
@@ -163,7 +163,7 @@ class _RandomP:
 
         # for small p, set randomly individual bits
         if p < self.SMALL_P:
-            return self.random_m(random.binomialvariate(self.n, p))
+            return self.random_k(random.binomialvariate(self.n, p))
 
         # calculate operator sequence
         i = int(p * self.K)
