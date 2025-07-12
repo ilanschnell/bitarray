@@ -7,7 +7,7 @@ probability ``p`` of being one.  This is mathematically equivalent to:
 
 .. code-block:: python
 
-    bitarray(random.random() < p for _ in range(n))
+    bitarray(random() < p for _ in range(n))
 
 While this expression work well for small ``n``, it is quite slow when ``n``
 is large.  In the following we focus on the case of ``n`` being large.
@@ -20,7 +20,7 @@ which is exactly what we need to to determine the bitarray's population.
 When ``p == 0.5``, we use ``random.randbytes()`` to initialize our bitarray
 buffer.  It should be noted that ``util.urandom()`` uses ``os.urandom()``,
 but since ``util.random_p()`` is designed to give reproducible pseudo-random
-bitarray, it uses ``random.randbytes()``.
+bitarray, it uses ``randbytes()``.
 
 Taking two (independent) such bitarrays and combining them
 using the bitwise "and" operation, gives us a random bitarray with
@@ -74,11 +74,11 @@ values of ``p`` for ``n=100_000_000``:
    127/256    174.9    8    0.0         priciest pure combinations case
 
    small p:
-   0.009999   192.3    0                priciest small p case
-   0.001       18.7    0
-   0.0001       2.2    0
+   0.009999   192.3    0      -         priciest small p case
+   0.001       18.7    0      -
+   0.0001       2.2    0      -
 
-   mixed cases:
+   mixed:
    0.01       194.3    7    0.00220472  smallest p for mixed case
    0.1        223.4    8    0.00259740
    0.2        194.7    8    0.00097561
@@ -86,8 +86,11 @@ values of ``p`` for ``n=100_000_000``:
    0.4        203.3    7    0.00259740
    0.4999999  316.8    8    0.00775192  priciest case overall (x=1/129)
 
+   literal:
+   any       3690.2    -      -         (random() < p for _ in range(n))
 
-Using the literal definition where one always uses ``n`` calls
-to ``randrange()``, regardless of ``p``, we find t/ms = 3690.
+
+Using the literal definition one always uses ``n`` calls to ``randrange()``,
+regardless of ``p``.
 For 1000 random values of ``p`` (between 0 and 1), we get an average speedup
 of about 19.
