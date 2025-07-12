@@ -106,7 +106,8 @@ class _RandomP:
         After applying the sequence (see .random_combine()), we
         obtain a bitarray with probability  q = i / K
         """
-        assert 0 < i < self.K
+        if not 0 < i < self.K:
+            raise ValueError("0 < i < %d, got i = %d" % (self.K, i))
         # sequence of &, | operations - least significant operations first
         a = bitarray(i.to_bytes(2, byteorder="little"), "little")
         return a[a.index(1) + 1 : self.M]
@@ -130,8 +131,9 @@ class _RandomP:
         Return a random bitarray of length self.n and population count k.
         Designed for small k (compared to self.n).
         """
+        if not 0 <= k <= self.n:
+            raise ValueError("0 <= k <= %d, got k = %d" % (self.n, k))
         randrange = random.randrange
-        assert 0 <= k <= self.n
         a = zeros(self.n, self.endian)
         for _ in range(k):
             i = randrange(self.n)

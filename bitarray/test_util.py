@@ -272,11 +272,11 @@ class Random_P_Tests(unittest.TestCase):
         M = self.r.M
 
         # special cases
-        self.assertRaises(AssertionError, G, 0)
+        self.assertRaises(ValueError, G, 0)
         self.assertEqual(G(1), zeros(M - 1))
         self.assertEqual(G(K // 2), bitarray())
         self.assertEqual(G(K - 1), ones(M - 1))
-        self.assertRaises(AssertionError, G, K)
+        self.assertRaises(ValueError, G, K)
 
         # examples
         for p, s in [
@@ -320,7 +320,7 @@ class Random_P_Tests(unittest.TestCase):
         self.assertEqual(len(a), 7)
         self.assertEqual(a.count(), 3)
         for m in -1, 8:
-            self.assertRaises(AssertionError, r.random_pop, m)
+            self.assertRaises(ValueError, r.random_pop, m)
 
         for n in range(10):
             r = _RandomP(n)

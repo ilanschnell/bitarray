@@ -1,4 +1,4 @@
-Implementation of ``util.random_p()``
+Random bitarrays: ``util.random_p()``
 =====================================
 
 Bitarray 3.5 introduced the utility function ``util.random_p(n, p=0.5)``.
@@ -43,3 +43,7 @@ be verified that:
 It should also be noted that ``x`` is always small such that we can always
 use the "small p case" which, unlike the combinations, gives us an bitarray
 with exact probabilities.
+
+
+Performance
+-----------
