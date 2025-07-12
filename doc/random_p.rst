@@ -66,15 +66,23 @@ values of ``p`` for ``n=100_000_000``:
 
       p        t/ms    k      x         notes
    -----------------------------------------------------------------------
+   edge cases:
+     0.0        0.4    0      -
+     0.5       21.7    1      -
+     1.0        0.4    0      -
+
    pure combinations:
-     1/2       21.7    1    0.0         actually no combinations - edge case
-     1/4       44.6    2    0.0
-     1/16      88.7    4    0.0
-     1/64     132.4    6    0.0
-   127/256    174.9    8    0.0         priciest pure combinations case
+     1/4       44.6    2      -
+     1/8       65.2    3      -
+     1/16      88.7    4      -
+     1/32     108.6    5      -
+     1/64     132.4    6      -
+    63/128    151.9    7      -
+   127/256    174.9    8      -         priciest pure combinations case
 
    small p:
    0.009999   192.3    0      -         priciest small p case
+   0.007752   142.3    0      -         p=1/129 - highest p from mixed case
    0.001       18.7    0      -
    0.0001       2.2    0      -
 

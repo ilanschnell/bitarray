@@ -67,6 +67,7 @@ DOCS = {
     'ba3': ('Bitarray 3 transition', 'bitarray3.rst'),
     'chc': ('Canonical Huffman Coding', 'canonical.rst'),
     'rep': ('Bitarray representations', 'represent.rst'),
+    'rnd': ('Random Bitarrays', 'random_p.rst'),
     'sc':  ('Compression of sparse bitarrays', 'sparse_compression.rst'),
     'vlf': ('Variable length bitarray format', 'variable_length.rst'),
 }
@@ -79,6 +80,7 @@ DOC_LINKS = {
     'util.ba2base':            'rep',
     'util.base2ba':            'rep',
     'util.deserialize':        'rep',
+    'util.random_p':           'rnd',
     'util.serialize':          'rep',
     'util.sc_decode':          'sc',
     'util.sc_encode':          'sc',
