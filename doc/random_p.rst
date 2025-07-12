@@ -65,9 +65,9 @@ values of ``p`` for ``n=100_000_000``:
 .. code-block::
 
       p        t/ms    k      x         notes
-   ---------------------------------------------------------------------
+   -----------------------------------------------------------------------
    pure combinations:
-     1/2       21.7    1    0.0         cheapest pure combinations case
+     1/2       21.7    1    0.0         actually no combinations - edge case
      1/4       44.6    2    0.0
      1/16      88.7    4    0.0
      1/64     132.4    6    0.0
@@ -94,3 +94,8 @@ Using the literal definition one always uses ``n`` calls to ``randrange()``,
 regardless of ``p``.
 For 1000 random values of ``p`` (between 0 and 1), we get an average speedup
 of about 19.
+
+In summary: Even in the worst case ``random_p()`` performs more than 10 times
+better than the literal definition for large ``n``, while on average we get
+a speedup up about 19.  For very small ``p``, and for special values of ``p``
+the speedup is much bigger.
