@@ -64,17 +64,27 @@ values of ``p`` for ``n=100_000_000``:
 
 .. code-block::
 
-      p        t/ms    k      x       notes
+      p        t/ms    k      x         notes
    ---------------------------------------------------------------------
-     1/2       21.7    1      0       cheapest "combinations only" case
-     1/4       44.6    2      0
-     1/32     108.5    5      0
-   127/256    176.9    8      0       priciest "combinations only" case
-   0.01       196.5                   smallest p for "mixed" case
-   0.009999   189.3    0              priciest "small p" case
+   pure combinations:
+     1/2       21.7    1    0.0         cheapest pure combinations case
+     1/4       44.6    2    0.0
+     1/16      88.7    4    0.0
+     1/64     132.4    6    0.0
+   127/256    174.9    8    0.0         priciest pure combinations case
+
+   small p:
+   0.009999   192.3    0                priciest small p case
    0.001       18.7    0
-   0.0001       2.1    0
-   0.499999   322.3    8   0.007752   priciest case overall
+   0.0001       2.2    0
+
+   mixed cases:
+   0.01       194.3    7    0.00220472  smallest p for mixed case
+   0.1        223.4    8    0.00259740
+   0.2        194.7    8    0.00097561
+   0.3        213.7    6    0.00444444
+   0.4        203.3    7    0.00259740
+   0.4999999  316.8    8    0.00775192  priciest case overall (x=1/129)
 
 
 Using the literal definition where one always uses ``n`` calls
