@@ -34,7 +34,7 @@ The required sequence of "or" and "and" operations is calculated from
 the desired probability ``p`` and ``M``.
 
 Once we have calculated our sequence, and obtained a bitarray with
-probability ``q = i / 256``, we perform a final "or" operation with
+probability ``q = i / 2**M``, we perform a final "or" operation with
 a random bitarray of probability ``x``.
 In order to arrive at exactly the requested probability ``p``, it can
 be verified that:
@@ -44,7 +44,7 @@ be verified that:
     x = (p - q) / (1.0 - q)
 
 It should also be noted that ``x`` is always small such that we can always
-use the "small p case" which, unlike the combinations, gives us an bitarray
+use the "small p" case which, unlike the combinations, gives us an bitarray
 with exact probabilities.
 
 
@@ -52,28 +52,32 @@ Speedup
 -------
 
 The speedup is largest, when the number of number of random numbers our
-algorithm uses is smallest.  There are two cases for this:
-
-a. ``p`` is very small, such that only few random indices have to be computed
-b. ``p=0.5`` when only we call ``randbytes()`` just once.
-
-In general, for arbitrary ``p``, we are using combinations of ``randbytes()``
-in conjunction with the small ``p`` case.
+algorithm uses is smallest.
+In the following, let ``k`` be the number of calls to ``randbytes()``.
+For example, when ``p=0.5`` we have ``k=1``.
+When ``p`` is below our limit for using the procedure of setting individual
+bits, we call this limit ``small_p``, we have ``k=0``.
 
 In our implementation, we are using ``M=8`` and value of ``small_p=0.01``.
-That is we have at most 8 calls to ``randbytes()``, and when ``p`` is below
-1%, we set random indices.
-The following table shows some speedups (compared to the literal definition
-case which always uses ``n`` calls to ``randrange()``:
+The following table shows execution times (in milliseconds) for different
+values of ``p`` for ``n=100_000_000``:
 
 .. code-block::
 
-      p        speedup   notes
-   ----------------------------------------------------------------------
-     1/2        112.35   1 call to randbytes()
-   127/256       20.20   8 calls to randbytes()
-   0.01          19.02
-   0.009999      20.43   most expensive "small p" case
-   0.001        205.76
-   0.0001      1825.62
-   0.499999      11.64   most expensive of all: 8 randbytes(), x=0.007752
+      p        t/ms    k      x       notes
+   ---------------------------------------------------------------------
+     1/2       21.7    1      0       cheapest "combinations only" case
+     1/4       44.6    2      0
+     1/32     108.5    5      0
+   127/256    176.9    8      0       priciest "combinations only" case
+   0.01       196.5                   smallest p for "mixed" case
+   0.009999   189.3    0              priciest "small p" case
+   0.001       18.7    0
+   0.0001       2.1    0
+   0.499999   322.3    8   0.007752   priciest case overall
+
+
+Using the literal definition where one always uses ``n`` calls
+to ``randrange()``, regardless of ``p``, we find t/ms = 3690.
+For 1000 random values of ``p`` (between 0 and 1), we get an average speedup
+of about 19.

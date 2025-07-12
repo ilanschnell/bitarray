@@ -1,6 +1,7 @@
 2025-XX-XX   3.5.1:
 -------------------
   * optimize `util.random_p()` for `n < 100`
+  * add [Random Bitarrays](random_p.rst) documentation
   * add [statistical tests for random functions](../examples/test_random.py)
 
 
