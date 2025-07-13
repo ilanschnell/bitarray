@@ -31,11 +31,12 @@ Key features
 * Utility module ``bitarray.util``:
 
   * conversion to and from hexadecimal strings
-  * (de-) serialization
+  * generating random bitarrays
   * pretty printing
   * conversion to and from integers
   * creating Huffman codes
   * compression of sparse bitarrays
+  * (de-) serialization
   * various count functions
   * other helpful functions
 
