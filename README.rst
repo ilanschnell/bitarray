@@ -63,7 +63,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 3.5.0
+    bitarray version: 3.5.1
     sys.version: 3.13.5 (main, Jun 16 2025) [Clang 18.1.8]
     sys.prefix: /Users/ilan/miniforge
     pointer size: 64 bit
@@ -77,7 +77,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 578 tests in 0.162s
+    Ran 579 tests in 0.162s
 
     OK
 
@@ -394,7 +394,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.5.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.5.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -896,14 +896,17 @@ This sub-module was added in version 1.2.
 
 
 ``random_p(n, /, p=0.5, endian=None)`` -> bitarray
-   Return pseudo-random bitarray of length ``n``.  Each bit has probability ``p`` of
-   being 1.  Equivalent to ``bitarray((random() < p for _ in range(n)), endian)``.
-   The bitarrays are reproducible when calling Python's ``random.seed()`` with a
-   specific seed value.
+   Return (pseudo-) random bitarray of length ``n``.  Each bit has probability ``p``
+   of being one (independent of any other bits).  Mathematically equivalent
+   to ``bitarray((random() < p for _ in range(n)), endian)``, but much faster
+   for large ``n``.  The random bitarrays are reproducible when giving
+   Python's ``random.seed()`` with a specific seed value.
 
    This function requires Python 3.12 or higher, as it depends on the standard
    library function ``random.binomialvariate()``.  Raises ``NotImplementedError``
    when Python version is too low.
+
+   See also: `Random Bitarrays <https://github.com/ilanschnell/bitarray/blob/master/doc/random_p.rst>`__
 
    New in version 3.5
 
