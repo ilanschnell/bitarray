@@ -1,6 +1,7 @@
 import re
 import sys
 from doctest import testfile
+from glob import glob
 from io import StringIO
 
 import bitarray.util
@@ -293,12 +294,8 @@ def main():
         write_changelog(fo)
 
     testfile('./README.rst')
-    testfile('./doc/buffer.rst')
-    testfile('./doc/canonical.rst')
-    testfile('./doc/indexing.rst')
-    testfile('./doc/represent.rst')
-    testfile('./doc/sparse_compression.rst')
-    testfile('./doc/variable_length.rst')
+    for path in glob("./doc/*.rst"):
+        testfile(path)
 
 
 if __name__ == '__main__':
