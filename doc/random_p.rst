@@ -77,8 +77,8 @@ values of ``p`` for ``n=100_000_000``:
      1/16      88.7    4
      1/32     108.6    5
      1/64     132.4    6
-    63/128    151.9    7
-   127/256    174.9    8    priciest pure combinations case
+    63/128    151.9    7    p = 1/128 < small_p, so we take different p
+   127/256    174.9    8    priciest pure combinations cases
 
    small p:
    0.009999   192.3    0    priciest small p case
