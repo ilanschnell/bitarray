@@ -60,9 +60,11 @@ For example, when ``p=0.5`` we have ``k=1``.
 When ``p`` is below our limit for using the procedure of setting individual
 bits, we call this limit ``small_p``, we have ``k=0``.
 
-In our implementation, we are using ``M=8`` and value of ``small_p=0.01``.
-The following table shows execution times (in milliseconds) for different
-values of ``p`` for ``n=100_000_000``:
+In our implementation, we are using ``M=8`` and ``small_p=0.01``.
+These parameters have carefully been selected to optimize the average (with
+respect to ``p``) execution time.
+The following table shows execution times (in milliseconds) of ``random_p()``
+for different values of ``p`` for ``n=100_000_000``:
 
 .. code-block::
 
