@@ -13,7 +13,7 @@ While this expression work well for small ``n``, it is quite slow when ``n``
 is large.  In the following we focus on the case of ``n`` being large.
 
 When ``p`` is small, a fast implementation of ``random_p()`` is to first
-calculating the population of the bitarray, and then randomly set the
+calculate the population of the bitarray, and then randomly set the
 required number of bits.  Python 3.12 introduced ``random.binomialvariate()``
 which is exactly what we need to to determine the bitarray's population.
 
@@ -82,7 +82,7 @@ values of ``p`` for ``n=100_000_000``:
 
    small p:
    0.009999   192.3    0    priciest small p case
-   0.007752   142.3    0    p=1/129 - highest x from mixed case
+   0.007752   142.3    0    p = 1/129 - highest x from mixed case
    0.001       18.7    0
    0.0001       2.2    0
 
@@ -92,7 +92,7 @@ values of ``p`` for ``n=100_000_000``:
    0.2        194.7    8    0.00097561
    0.3        213.7    6    0.00444444
    0.4        203.3    7    0.00259740
-   0.4999999  316.8    8    0.00775192  priciest case overall (x=1/129)
+   0.4999999  316.8    8    0.00775192  priciest case overall (x = 1/129)
 
    literal:
    any       3690.2    -    bitarray(random() < p for _ in range(n))
@@ -105,5 +105,5 @@ of about 19.
 
 In summary: Even in the worst case ``random_p()`` performs more than 10 times
 better than the literal definition for large ``n``, while on average we get
-a speedup up about 19.  For very small ``p``, and for special values of ``p``
+a speedup of about 19.  For very small ``p``, and for special values of ``p``
 the speedup is much bigger.
