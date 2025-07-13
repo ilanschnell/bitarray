@@ -12,8 +12,8 @@ probability ``p`` of being one.  This is mathematically equivalent to:
 While this expression work well for small ``n``, it is quite slow when ``n``
 is large.  In the following we focus on the case of ``n`` being large.
 
-When ``p`` is small, a fast implementation of ``random_p()`` is to first
-calculate the population of the bitarray, and then randomly set the
+When ``p`` is small, a fast implementation of ``random_p()`` is to (a)
+calculate the population of the bitarray, and then (b) randomly set the
 required number of bits.  Python 3.12 introduced ``random.binomialvariate()``
 which is exactly what we need to to determine the bitarray's population.
 
