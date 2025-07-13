@@ -260,9 +260,9 @@ class Random_P_Tests(unittest.TestCase):
                 self.assertEqual(r / (1.0 - p + r), x)
                 # Ensure we hit the small p case when calling random_p()
                 # itself.  Considering p = 0.5-1e-16, we have q = 127/256,
-                # so the maximal:
+                # so the maximal x is given by:
                 # x = (0.5 - q) / (1 - q) = 1 / 129 = 0.0077519 < 0.01
-                self.assertTrue(0 < x < SMALL_P, x)
+                self.assertTrue(0.0 < x < SMALL_P, x)
                 q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
 
             # ensure desired probability q is p
