@@ -84,7 +84,7 @@ values of ``p`` for ``n=100_000_000``:
 
    small p:
    0.009999999  192.3    0    priciest small p case
-   0.007752     142.3    0    p = 1/129 - highest x from mixed case
+   0.007751938  142.3    0    p = 1/129 - largest x in mixed case
    0.001         18.7    0
    0.0001         2.2    0
 
@@ -107,5 +107,5 @@ of about 19.
 
 In summary: Even in the worst case ``random_p()`` performs more than 10 times
 better than the literal definition for large ``n``, while on average we get
-a speedup of about 19.  For very small ``p``, and for special values of ``p``
-the speedup is much bigger.
+a speedup of almost 20.  For very small ``p``, and for special values of ``p``
+the speedup is significantly higher.
