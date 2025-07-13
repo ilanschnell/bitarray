@@ -197,6 +197,8 @@ class Random_P_Tests(unittest.TestCase):
 
     # ---------------- tests for internal _RandomP methods ------------------
 
+    # To better understand how the algorithm works, see ./doc/random_p.rst
+
     r = _RandomP()
 
     def test_constants(self):
@@ -229,8 +231,8 @@ class Random_P_Tests(unittest.TestCase):
         # So SMALL_P must the larger than:
         self.assertTrue(SMALL_P > 1.0 / (K / 2 + 1))
 
-    def test_final_oring(self):
-        # The purpose of this test function is to ensure the final oring step
+    def test_final_OR(self):
+        # The purpose of this test function is to ensure the final OR step
         # in .random_p() always gives us the correct probability.
 
         K = self.r.K
@@ -281,12 +283,12 @@ class Random_P_Tests(unittest.TestCase):
         # examples
         for p, s in [
                 (0.15625, '0100'),
-                (0.25,       '0'),  # 1/2   and ->   1/4
-                (0.375,     '10'),  # 1/2   or ->   3/4   and ->   3/8
+                (0.25,       '0'),  # 1/2   AND ->   1/4
+                (0.375,     '10'),  # 1/2   OR ->   3/4   AND ->   3/8
                 (0.5,         ''),
-                (0.625,     '01'),  # 1/2   and ->   1/4   or ->   5/8
+                (0.625,     '01'),  # 1/2   AND ->   1/4   OR ->   5/8
                 (0.6875,   '101'),
-                (0.75,       '1'),  # 1/2   or ->   3/4
+                (0.75,       '1'),  # 1/2   OR ->   3/4
         ]:
             seq = G(int(p * K))
             self.assertEqual(seq.to01(), s)
@@ -307,9 +309,9 @@ class Random_P_Tests(unittest.TestCase):
         r = _RandomP(1_000_000)
         for seq, mean in [
                 ([],     500_000),  # .random_half() itself
-                ([0],    250_000),  # and
-                ([1],    750_000),  # or
-                ([1, 0], 375_000),  # or followed by and
+                ([0],    250_000),  # AND
+                ([1],    750_000),  # OR
+                ([1, 0], 375_000),  # OR followed by AND
         ]:
             a = r.combine_half(seq)
             self.assertTrue(abs(a.count() - mean) < 5_000)

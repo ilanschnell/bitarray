@@ -24,18 +24,18 @@ but since ``util.random_p()`` is designed to give reproducible pseudo-random
 bitarrays, it uses ``randbytes()``.
 
 Taking two (independent) such bitarrays and combining them
-using the bitwise "and" operation, gives us a random bitarray with
+using the bitwise AND operation, gives us a random bitarray with
 probability 1/4.
-Likewise, taking two bitwise "or" operation gives us probability 3/4.
+Likewise, taking two bitwise OR operation gives us probability 3/4.
 Without going into too much further detail, it is possible to combine
 more than two "randbytes" bitarray to get probabilities ``i / 2**M``,
 where ``M`` is the maximal number of "randbytes" bitarrays we combine,
 and ``i`` is an integer.
-The required sequence of "or" and "and" operations is calculated from
+The required sequence of AND and OR operations is calculated from
 the desired probability ``p`` and ``M``.
 
 Once we have calculated our sequence, and obtained a bitarray with
-probability ``q = i / 2**M``, we perform a final "or" operation with
+probability ``q = i / 2**M``, we perform a final OR operation with
 a random bitarray of probability ``x``.
 In order to arrive at exactly the requested probability ``p``, it can
 be verified that:
@@ -79,8 +79,8 @@ values of ``p`` for ``n=100_000_000``:
      1/16      88.7    4
      1/32     108.6    5
      1/64     132.4    6
-    63/128    151.9    7    p = 1/128 < small_p, so we take different p
-   127/256    174.9    8    priciest pure combinations cases
+     3/128    151.9    7    p = 1/128 < small_p, so we take different p
+   127/256    174.9    8    priciest pure combinations case(s)
 
    small p:
    0.009999   192.3    0    priciest small p case
@@ -88,7 +88,7 @@ values of ``p`` for ``n=100_000_000``:
    0.001       18.7    0
    0.0001       2.2    0
 
-   mixed:                     x
+   mixed:                     x  (final OR)
    0.01       194.3    7    0.00220472  smallest p for mixed case
    0.1        223.4    8    0.00259740
    0.2        194.7    8    0.00097561

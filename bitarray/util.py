@@ -75,6 +75,7 @@ class _RandomP:
     # The main reason for this class it to enable testing functionality
     # individually in the test class Random_P_Tests in 'test_util.py'.
     # The test class also contains many comments and explanations.
+    # To better understand how the algorithm works, see ./doc/random_p.rst
 
     # maximal number of calls to .random_half() in .combine()
     M = 8
@@ -102,7 +103,7 @@ class _RandomP:
     def get_op_seq(self, i):
         """
         Return bitarray containing operator sequence.
-        Each item represents a bitwise operation:   0: and   1: or
+        Each item represents a bitwise operation:   0: AND   1: OR
         After applying the sequence (see .random_combine()), we
         obtain a bitarray with probability  q = i / K
         """
@@ -178,10 +179,10 @@ class _RandomP:
             return bitarray((random.random() < p for _ in range(self.n)),
                             self.endian)
 
-        # combine random bitarrays using bitwise & and | operations
+        # combine random bitarrays using bitwise AND and OR operations
         a = self.combine_half(seq)
         if q < p:
-            # increase probability q by "oring" with probability x
+            # increase probability q by ORing with probability x
             x = (p - q) / (1.0 - q)
             a |= self.random_p(x)
 
