@@ -262,7 +262,7 @@ class Random_P_Tests(unittest.TestCase):
                 # itself.  Considering p = 0.5-1e-16, we have q = 127/256,
                 # so the maximal:
                 # x = (0.5 - q) / (1 - q) = 1 / 129 = 0.0077519 < 0.01
-                self.assertTrue(x < SMALL_P, x)
+                self.assertTrue(0 < x < SMALL_P, x)
                 q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
 
             # ensure desired probability q is p

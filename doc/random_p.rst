@@ -66,38 +66,38 @@ values of ``p`` for ``n=100_000_000``:
 
 .. code-block::
 
-      p        t/ms    k    notes
+      p          t/ms    k    notes
    -----------------------------------------------------------------------
    edge cases:
-     0.0        0.4    0
-     0.5       21.7    1
-     1.0        0.4    0
+     0.0          0.4    0
+     0.5         21.7    1
+     1.0          0.4    0
 
    pure combinations:
-     1/4       44.6    2
-     1/8       65.2    3
-     1/16      88.7    4
-     1/32     108.6    5
-     1/64     132.4    6
-     3/128    151.9    7    p = 1/128 < small_p, so we take different p
-   127/256    174.9    8    priciest pure combinations case(s)
+     1/4         44.6    2
+     1/8         65.2    3
+     1/16        88.7    4
+     1/32       108.6    5
+     1/64       132.4    6
+     3/128      151.9    7    p = 1/128 < small_p, so we take different p
+   127/256      174.9    8    priciest pure combinations case(s)
 
    small p:
-   0.009999   192.3    0    priciest small p case
-   0.007752   142.3    0    p = 1/129 - highest x from mixed case
-   0.001       18.7    0
-   0.0001       2.2    0
+   0.009999999  192.3    0    priciest small p case
+   0.007752     142.3    0    p = 1/129 - highest x from mixed case
+   0.001         18.7    0
+   0.0001         2.2    0
 
    mixed:                     x  (final OR)
-   0.01       194.3    7    0.00220472  smallest p for mixed case
-   0.1        223.4    8    0.00259740
-   0.2        194.7    8    0.00097561
-   0.3        213.7    6    0.00444444
-   0.4        203.3    7    0.00259740
-   0.4999999  316.8    8    0.00775192  priciest case overall (x = 1/129)
+   0.01         194.3    7    0.00220472  smallest p for mixed case
+   0.1          223.4    8    0.00259740
+   0.2          194.7    8    0.00097561
+   0.3          213.7    6    0.00444444
+   0.4          203.3    7    0.00259740
+   0.499999999  316.8    8    0.00775194  priciest case overall (x = 1/129)
 
    literal:
-   any       3690.2    -    bitarray(random() < p for _ in range(n))
+   any         3690.2    -    bitarray(random() < p for _ in range(n))
 
 
 Using the literal definition one always uses ``n`` calls to ``random()``,
