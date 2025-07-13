@@ -200,15 +200,15 @@ Bitarray objects support the bitwise operators ``~``, ``&``, ``|``, ``^``,
     >>> ~a  # invert
     bitarray('010001110')
     >>> b = bitarray('111001011')
-    >>> a ^ b
+    >>> a ^ b  # bitwise XOR
     bitarray('010111010')
-    >>> a &= b
+    >>> a &= b  # inplace AND
     >>> a
     bitarray('101000001')
-    >>> a <<= 2   # in-place left shift by 2
+    >>> a <<= 2  # in-place left-shift by 2
     >>> a
     bitarray('100000100')
-    >>> b >> 1
+    >>> b >> 1  # return b right-shifted by 1
     bitarray('011100101')
 
 The C language does not specify the behavior of negative shifts and
