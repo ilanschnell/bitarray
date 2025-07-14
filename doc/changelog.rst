@@ -1,6 +1,13 @@
 Change log
 ==========
 
+**3.5.1** (2025-07-14):
+
+* optimize ``util.random_p()`` for ``n < 100``
+* add `Random Bitarrays <random_p.rst>`__ documentation
+* add `statistical tests for random functions <../examples/test_random.py>`__
+
+
 **3.5.0** (2025-07-06):
 
 * add ``util.random_p()``
