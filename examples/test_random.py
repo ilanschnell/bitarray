@@ -8,6 +8,7 @@ Therefore, and because these tests take longer to run, we decided to put
 them in a separate file.
 """
 import unittest
+from copy import deepcopy
 from math import sqrt
 from collections import Counter
 from random import randrange, random
@@ -308,20 +309,29 @@ class Random_P_Tests(Util):
     def test_operations(self):
         C = self.check_probability
         n = 1_000_000
-        values = (0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0)
+        values = [i / 16.0 for i in range(17)]
+        arrays0, arrays1 = ([(random_p(n, p), p) for p in values]
+                            for _ in range(2))
 
-        for p in values:
-            a = random_p(n, p)
+        for a, p in arrays0:
             C(a, p)
-            C(~a, 1 - p)
+            C(~a, 1.0 - p)                   # invert
 
-            for q in values:
-                b = random_p(n, q)
+            for b, q in arrays1:
                 C(b, q)
 
-                C(a & b, p * q)
-                C(a | b, p + q - p * q)
-                C(a ^ b, p + q - 2 * p * q)
+                C(a & b, p * q)              # AND
+                C(a | b, p + q - p * q)      # OR
+                C(a ^ b, p + q - 2 * p * q)  # XOR
+
+        for b, q in arrays0:
+            C(b, q)
+            for a, p in deepcopy(arrays1):
+                C(a, p)
+
+                a |= b                       # in-place OR
+                p += q * (1.0 - p)
+                C(a, p)
 
 
 if __name__ == '__main__':
