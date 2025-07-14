@@ -306,6 +306,9 @@ class Random_P_Tests(Util):
         self.assertTrue(abs(x - 51_667) <= 1_580)
         self.assertEqual(c.total(), 100_000)
 
+
+class VerificationTests(Util):
+
     def test_operations(self):
         C = self.check_probability
         n = 1_000_000
@@ -326,6 +329,13 @@ class Random_P_Tests(Util):
 
         for b, q in arrays0:
             C(b, q)
+            for a, p in deepcopy(arrays1):
+                C(a, p)
+
+                a &= b                       # in-place AND
+                p *= q
+                C(a, p)
+
             for a, p in deepcopy(arrays1):
                 C(a, p)
 
