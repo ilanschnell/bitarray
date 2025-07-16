@@ -35,17 +35,19 @@ The required sequence of AND and OR operations is calculated from
 the desired probability ``p`` and ``M``.
 
 Once we have calculated our sequence, and obtained a bitarray with
-probability ``q = i / 2**M``, we perform a final OR operation with
+probability ``q = i / 2**M``, we perform a final OR or AND operation with
 a random bitarray of probability ``x``.
 In order to arrive at exactly the requested probability ``p``, it can
 be verified that:
 
 .. code-block:: python
 
-    x = (p - q) / (1.0 - q)
+    x = (p - q) / (1.0 - q)  # OR
+    x = p / q                # AND
 
-It should be noted that ``x`` is always small such that we can always
-use the "small p" case.  Unlike the combinations, this gives us a bitarray
+It should be noted that ``x`` is always small (once symmetry is applyed in
+case of AND) such that it always uses the "small p" case.
+Unlike the combinations, this gives us a bitarray
 with exact probability ``x``.  Therefore, the requested probability ``p``
 is exactly obtained.
 
@@ -86,20 +88,22 @@ for different values of ``p`` for ``n=100_000_000``:
 
    small p:
    0.009999999  192.3    0    priciest small p case
-   0.007751938  142.3    0    p = 1/129 - largest x in mixed case
+   0.003891051   72.9    0    p = 1/257 - largest x in mixed case
    0.001         18.7    0
    0.0001         2.2    0
 
-   mixed:                     x  (final OR)
-   0.01         194.3    7    0.00220472  smallest p for mixed case
-   0.1          223.4    8    0.00259740
-   0.2          194.7    8    0.00097561
-   0.3          213.7    6    0.00444444
-   0.4          203.3    7    0.00259740
-   0.499999999  316.8    8    0.00775194  priciest case overall (x = 1/129)
+   mixed:                     x  (final operation)
+   0.01         194.3    7    0.002204724  OR   smallest p for mixed case
+   0.1          223.4    8    0.002597403  OR
+   0.2          194.7    8    0.000975610  OR
+   0.3          213.7    8    0.997402597  AND
+   0.4          203.3    7    0.002597403  OR
+   0.252918288  118.7    2    0.003891051  OR   p=65/257
+   0.494163425  249.5    8    0.996108951  AND  priciest mixed case(s)
+   0.499999999   22.4    1    0.999999998  AND  cheapest mixed case
 
    literal:
-   any         3690.2    -    bitarray(random() < p for _ in range(n))
+   any         3740.2    -    bitarray(random() < p for _ in range(n))
 
 
 Using the literal definition one always uses ``n`` calls to ``random()``,
@@ -107,7 +111,7 @@ regardless of ``p``.
 For 1000 random values of ``p`` (between 0 and 1), we get an average speedup
 of about 19.
 
-In summary: Even in the worst case ``random_p()`` performs more than 10 times
+In summary: Even in the worst case ``random_p()`` performs about 15 times
 better than the literal definition for large ``n``, while on average we get
 a speedup of almost 20.  For very small ``p``, and for special values of ``p``
 the speedup is significantly higher.

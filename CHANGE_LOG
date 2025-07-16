@@ -1,5 +1,6 @@
-2025-XX-XX   3.5.2:
+2025-07-XX   3.5.2:
 -------------------
+  * optimize `util.random_p()` by also using bitwise AND in final step
 
 
 2025-07-14   3.5.1:

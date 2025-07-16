@@ -187,8 +187,8 @@ class Random_P_Tests(unittest.TestCase):
         # small n (note that p=0.4 will call the "literal definition" case)
         res.append(random_p(15, 0.4))
         # general cases
-        for _ in range(100):
-            res.append(random_p(150, p=random()))
+        for p in 0.1, 0.2, 0.375, 0.4999, 0.7:
+            res.append(random_p(150, p))
         return res
 
     def test_seed(self):
@@ -197,10 +197,11 @@ class Random_P_Tests(unittest.TestCase):
         # these results will not change in future versions of bitarray.
         _set_default_endian("little")
         a = []
-        for val in 12345, 123456, 12345:
+        for val in 123456, 123457, 123456, 123457:
             seed(val)
             a.append(self.collect_code_branches())
         self.assertEqual(a[0], a[2])
+        self.assertEqual(a[1], a[3])
         self.assertNotEqual(a[0], a[1])
         # initialize seed with current system time again
         seed()
@@ -214,7 +215,7 @@ class Random_P_Tests(unittest.TestCase):
     def test_constants(self):
         # The purpose of this test function is to establish that
         #
-        #     SMALL_P  >  1.0 / (K / 2 + 1)
+        #     SMALL_P  >  1.0 / (K + 1)
         #
         # where K is the number of probability intervals (K = 1 << M).
 
@@ -223,57 +224,56 @@ class Random_P_Tests(unittest.TestCase):
 
         # Ensure the small p case filters out i = 0 for get_op_seq().
         i = int(SMALL_P * K)
-        self.assertTrue(i > 0)
-        # So SMALL_P must the larger than the interval span:
-        self.assertTrue(SMALL_P > 1.0 / K)
-        # However, this limit is exceeded by the following (larger) limit.
-
-        # Ensure we hit the small p case when calling random_p() itself.
-        # This would be problematic as it could cause a self recursive loop.
-        # We consider p just below 1/2:
-        p = 0.5 - 1e-16
-        q = int(p * K) / K
-        self.assertEqual(q, 0.5 - 1.0 / K)
-        self.assertEqual(q, (K / 2 - 1) / K)
-        x = (0.5 - q) / (1.0 - q)  # see below
-        self.assertEqual(x, 1.0 / (K / 2 + 1))
-        self.assertTrue(x < SMALL_P, x)
+        self.assertTrue(SMALL_P * (K + 1) > 1)
         # So SMALL_P must the larger than:
-        self.assertTrue(SMALL_P > 1.0 / (K / 2 + 1))
+        self.assertTrue(SMALL_P > 1.0 / (K + 1))
 
-    def test_final_OR(self):
-        # The purpose of this test function is to ensure the final OR step
+        for j in range(1, K):
+            # probabilities for which final AND and OR result in equal x
+            p = j / (K + 1)
+            i = int(p * K)
+            self.assertEqual(p * (K + 1), i + 1)
+            q = i / K
+            x = (p - q) / (1.0 - q)    # OR
+            y = 1.0 - p * K / (i + 1)  # AND   y = 1 - p / next q
+            self.assertAlmostEqual(x, y)
+            self.assertAlmostEqual(x, 1 / (K + 1))
+
+        # So again, we must have:
+        self.assertTrue(SMALL_P > 1 / (K + 1))
+
+    def test_final_op(self):
+        # The purpose of this test function is to ensure the final operation
         # in .random_p() always gives us the correct probability.
 
         K = self.r.K
-        SMALL_P = self.r.SMALL_P
+        L = 1.0 / (K + 1) + 1e-12
 
-        special_p = [0.0, 1e-16, SMALL_P - 1e-16, SMALL_P,
-                     0.25 - 1e-16, 0.25, 1.0 / 3, 0.5 - 1e-16, 0.5]
+        special_p = [0.0, 1e-12, 0.25, 1 / 3, 3 / 8, 0.5, 17 / 257]
         for j in range(1000):
             try:
                 p = special_p[j]
             except IndexError:
                 p = 0.5 * random()  # 0.0 <= p < 0.5
 
-            q = int(p * K) / K
+            i = int(p * K)
+            q = i / K
             self.assertTrue(q <= p)
-            self.assertTrue(0.0 <= p - q < 1.0 / K)
+            if q < p and p * (K + 1) > i + 1:
+                i += 1
+                q = i / K
 
-            r = math.fmod(p, 1.0 / K)  # remainder (not used in util.py)
-            self.assertEqual(q + r, p)
-            self.assertEqual(bool(r), q < p)
+            self.assertTrue(abs(p - q) < 1 / K)
 
             if q < p:
                 # calculated such that q will equal to p
                 x = (p - q) / (1.0 - q)
-                self.assertEqual(r / (1.0 - p + r), x)
-                # Ensure we hit the small p case when calling random_p()
-                # itself.  Considering p = 0.5-1e-16, we have q = 127/256,
-                # so the maximal x is given by:
-                # x = (0.5 - q) / (1 - q) = 1 / 129 = 0.0077519 < 0.01
-                self.assertTrue(0.0 < x < SMALL_P, x)
-                q += x * (1.0 - q)   # q = 1 - (1 - q) * (1 - x)
+                self.assertTrue(0.0 < x < L)
+                q += x * (1.0 - q)        # OR
+            elif q > p:
+                x = p / q
+                self.assertTrue(0.0 < 1.0 - x < L)
+                q *= x                    # AND
 
             # ensure desired probability q is p
             self.assertEqual(q, p)

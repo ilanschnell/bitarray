@@ -120,11 +120,10 @@ class _RandomP:
         """
         a = self.random_half()
         for k in seq:
-            b = self.random_half()
             if k:
-                a |= b
+                a |= self.random_half()
             else:
-                a &= b
+                a &= self.random_half()
         return a
 
     def random_pop(self, k):
@@ -172,19 +171,24 @@ class _RandomP:
         # calculate operator sequence
         i = int(p * self.K)
         q = i / self.K
+        if q < p and p * (self.K + 1) > i + 1:
+            i += 1
+            q = i / self.K
         seq = self.get_op_seq(i)
 
         # when n is small compared to number of operations, also use literal
-        if self.n < 100 and self.nbytes <= len(seq) + 2 * bool(q < p):
+        if self.n < 100 and self.nbytes <= len(seq) + 3 * bool(q != p):
             return bitarray((random.random() < p for _ in range(self.n)),
                             self.endian)
 
         # combine random bitarrays using bitwise AND and OR operations
         a = self.combine_half(seq)
-        if q < p:
-            # increase probability q by ORing with probability x
-            x = (p - q) / (1.0 - q)
+        if q < p:  # increase q by OR
+            x = (p - q) / (1.0 - q)  # x is close to 0.0
             a |= self.random_p(x)
+        elif q > p:  # decrease q by AND
+            x = p / q  # x is close to 1.0
+            a &= self.random_p(x)
 
         return a
 
