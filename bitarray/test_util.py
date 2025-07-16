@@ -177,22 +177,32 @@ class Random_P_Tests(unittest.TestCase):
             self.assertEqual(len(a), n)
             self.assertTrue(abs(a.count() - n * p) < max(4, 10 * sigma))
 
-    @skipIf(_RandomP().M != 8)
-    def test_seed(self):
-        _set_default_endian("little")
-        seed(1234)
+    def collect_code_branches(self):
+        # return list of bitarrays from all code branches of random_p()
+        res = []
         # for default p=0.5, random_p uses randbytes
-        self.assertEqual(random_p(32),
-                         bitarray('10011101111111101001011011101111'))
+        res.append(random_p(32))
         # test small p
-        a = random_p(5000, 0.001)
-        self.assertEqual(list(a.search(1)), [286, 687, 806, 2905])
-        # general case
-        self.assertEqual(random_p(100, 0.7)[:32],
-                         bitarray('10101111001010110010111111000111'))
+        res.append(random_p(5_000, 0.002))
         # small n (note that p=0.4 will call the "literal definition" case)
-        self.assertEqual(random_p(15, 0.4), bitarray('00010100 0110001'))
-        # initialize with current system time again
+        res.append(random_p(15, 0.4))
+        # general cases
+        for _ in range(100):
+            res.append(random_p(150, p=random()))
+        return res
+
+    def test_seed(self):
+        # We ensure that after setting a seed value, random_p() will always
+        # return the same random bitarrays.  However, we do not ensure that
+        # these results will not change in future versions of bitarray.
+        _set_default_endian("little")
+        a = []
+        for val in 12345, 123456, 12345:
+            seed(val)
+            a.append(self.collect_code_branches())
+        self.assertEqual(a[0], a[2])
+        self.assertNotEqual(a[0], a[1])
+        # initialize seed with current system time again
         seed()
 
     # ---------------- tests for internal _RandomP methods ------------------
