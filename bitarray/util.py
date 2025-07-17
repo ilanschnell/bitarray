@@ -100,7 +100,7 @@ class _RandomP:
         del a[self.n:]
         return a
 
-    def get_op_seq(self, i):
+    def op_seq(self, i):
         """
         Return bitarray containing operator sequence.
         Each item represents a bitwise operation:   0: AND   1: OR
@@ -171,9 +171,9 @@ class _RandomP:
         # calculate operator sequence
         i = int(p * self.K)
         if p * (self.K + 1) > i + 1:
-            i += 1  # use next i in sequence; q > p; use final AND
+            i += 1
         q = i / self.K
-        seq = self.get_op_seq(i)
+        seq = self.op_seq(i)
 
         # when n is small compared to number of operations, also use literal
         if self.n < 100 and self.nbytes <= len(seq) + 3 * bool(q != p):

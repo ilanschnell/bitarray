@@ -222,7 +222,7 @@ class Random_P_Tests(unittest.TestCase):
         K = self.r.K
         SMALL_P = self.r.SMALL_P
 
-        # Ensure the small p case filters out i = 0 for get_op_seq().
+        # Ensure the small p case filters out i = 0 for .op_seq().
         i = int(SMALL_P * K)
         if SMALL_P * (K + 1) > i + 1:  # see if we should use AND
             i += 1
@@ -239,13 +239,13 @@ class Random_P_Tests(unittest.TestCase):
             self.assertEqual(i, j - 1)  # as K / (K + 1) < 1
             self.assertEqual(p * (K + 1), i + 1)  # used in check for AND
             q = i / K
-            x1 = (p - q) / (1.0 - q)    # OR
-            x2 = 1.0 - p * K / (i + 1)  # AND   x2 = 1 - p / next q
+            x1 = (p - q) / (1.0 - q)      # OR
+            x2 = 1.0 - p / (q + 1.0 / K)  # AND   x2 = 1 - p / next q
             self.assertAlmostEqual(x1, x2)
-            self.assertAlmostEqual(x1, 1 / (K + 1))
+            self.assertAlmostEqual(x1, 1.0 / (K + 1))
 
         # So again, we must have:
-        self.assertTrue(SMALL_P > 1 / (K + 1))
+        self.assertTrue(SMALL_P > 1.0 / (K + 1))
 
     def test_final_op(self):
         # The purpose of this test function is to ensure the final operation
@@ -262,15 +262,15 @@ class Random_P_Tests(unittest.TestCase):
                 p = 0.5 * random()  # 0.0 <= p < 0.5
 
             i = int(p * K)
-            if p * (K + 1) > i + 1:
-                i += 1
+            if p * (K + 1) > i + 1:  # equates x1 > x2 (see above)
+                i += 1  # use next i; q += 1 / K; q > p; use AND
+                self.assertTrue(i / K > p)
             q = i / K
 
-            self.assertTrue(abs(p - q) < 1 / K)
+            self.assertTrue(abs(p - q) < 1.0 / K)
             self.assertEqual(bool(q != p), bool(math.fmod(p, 1.0 / K)))
 
             if q < p:
-                # calculated such that q will equal to p
                 x = (p - q) / (1.0 - q)
                 self.assertTrue(0.0 < x < limit)
                 q += x * (1.0 - q)        # OR
@@ -282,8 +282,8 @@ class Random_P_Tests(unittest.TestCase):
             # ensure desired probability q is p
             self.assertEqual(q, p)
 
-    def test_get_op_seq(self):
-        G = self.r.get_op_seq
+    def test_op_seq(self):
+        G = self.r.op_seq
         K = self.r.K
         M = self.r.M
 
@@ -312,7 +312,7 @@ class Random_P_Tests(unittest.TestCase):
             self.assertTrue(0 <= len(s) < M)
             q = 0.5                        # a = random_half()
             for k in seq:
-                # k=0: and operation    k=1: or operation
+                # k=0: AND    k=1: OR
                 if k:
                     q += 0.5 * (1.0 - q)   # a |= random_half()
                 else:
