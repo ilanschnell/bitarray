@@ -236,12 +236,13 @@ class Random_P_Tests(unittest.TestCase):
             # probabilities for which final AND and OR result in equal x
             p = j / (K + 1)
             i = int(p * K)
+            self.assertEqual(i, j - 1)  # as K / (K + 1) < 1
             self.assertEqual(p * (K + 1), i + 1)  # used in check for AND
             q = i / K
-            x = (p - q) / (1.0 - q)    # OR
-            y = 1.0 - p * K / (i + 1)  # AND   y = 1 - p / next q
-            self.assertAlmostEqual(x, y)
-            self.assertAlmostEqual(x, 1 / (K + 1))
+            x1 = (p - q) / (1.0 - q)    # OR
+            x2 = 1.0 - p * K / (i + 1)  # AND   x2 = 1 - p / next q
+            self.assertAlmostEqual(x1, x2)
+            self.assertAlmostEqual(x1, 1 / (K + 1))
 
         # So again, we must have:
         self.assertTrue(SMALL_P > 1 / (K + 1))
@@ -251,7 +252,7 @@ class Random_P_Tests(unittest.TestCase):
         # in .random_p() always gives us the correct probability.
 
         K = self.r.K
-        L = 1.0 / (K + 1) + 1e-12
+        limit = 1.0 / (K + 1) + 1e-12
 
         special_p = [0.0, 1e-12, 0.25, 1/3, 3/8, 127/257, 0.5 - 1e-12, 0.5]
         for j in range(1000):
@@ -261,22 +262,21 @@ class Random_P_Tests(unittest.TestCase):
                 p = 0.5 * random()  # 0.0 <= p < 0.5
 
             i = int(p * K)
-            q = i / K
-            self.assertTrue(q <= p)
-            if q < p and p * (K + 1) > i + 1:
+            if p * (K + 1) > i + 1:
                 i += 1
-                q = i / K
+            q = i / K
 
             self.assertTrue(abs(p - q) < 1 / K)
+            self.assertEqual(bool(q != p), bool(math.fmod(p, 1.0 / K)))
 
             if q < p:
                 # calculated such that q will equal to p
                 x = (p - q) / (1.0 - q)
-                self.assertTrue(0.0 < x < L)
+                self.assertTrue(0.0 < x < limit)
                 q += x * (1.0 - q)        # OR
             elif q > p:
                 x = p / q
-                self.assertTrue(0.0 < 1.0 - x < L)
+                self.assertTrue(0.0 < 1.0 - x < limit)
                 q *= x                    # AND
 
             # ensure desired probability q is p

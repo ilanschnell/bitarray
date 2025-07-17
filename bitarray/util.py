@@ -170,10 +170,9 @@ class _RandomP:
 
         # calculate operator sequence
         i = int(p * self.K)
-        q = i / self.K
-        if q < p and p * (self.K + 1) > i + 1:
+        if p * (self.K + 1) > i + 1:
             i += 1  # use next i in sequence; q > p; use final AND
-            q = i / self.K
+        q = i / self.K
         seq = self.get_op_seq(i)
 
         # when n is small compared to number of operations, also use literal
