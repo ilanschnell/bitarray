@@ -172,7 +172,7 @@ class _RandomP:
         i = int(p * self.K)
         q = i / self.K
         if q < p and p * (self.K + 1) > i + 1:
-            i += 1
+            i += 1  # use next i in sequence; q > p; use final AND
             q = i / self.K
         seq = self.get_op_seq(i)
 
@@ -183,11 +183,11 @@ class _RandomP:
 
         # combine random bitarrays using bitwise AND and OR operations
         a = self.combine_half(seq)
-        if q < p:  # increase q by OR
-            x = (p - q) / (1.0 - q)  # x is close to 0.0
+        if q < p:  # increase probability using OR
+            x = (p - q) / (1.0 - q)  # x close to 0.0
             a |= self.random_p(x)
-        elif q > p:  # decrease q by AND
-            x = p / q  # x is close to 1.0
+        elif q > p:  # decrease probability using AND
+            x = p / q  # x close to 1.0
             a &= self.random_p(x)
 
         return a

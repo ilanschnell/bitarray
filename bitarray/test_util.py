@@ -224,15 +224,19 @@ class Random_P_Tests(unittest.TestCase):
 
         # Ensure the small p case filters out i = 0 for get_op_seq().
         i = int(SMALL_P * K)
+        if SMALL_P * (K + 1) > i + 1:  # see if we should use AND
+            i += 1
+        self.assertNotEqual(i, 0)
+        # Hence:
         self.assertTrue(SMALL_P * (K + 1) > 1)
-        # So SMALL_P must the larger than:
+        # So SMALL_P must be larger than:
         self.assertTrue(SMALL_P > 1.0 / (K + 1))
 
         for j in range(1, K):
             # probabilities for which final AND and OR result in equal x
             p = j / (K + 1)
             i = int(p * K)
-            self.assertEqual(p * (K + 1), i + 1)
+            self.assertEqual(p * (K + 1), i + 1)  # used in check for AND
             q = i / K
             x = (p - q) / (1.0 - q)    # OR
             y = 1.0 - p * K / (i + 1)  # AND   y = 1 - p / next q
@@ -249,7 +253,7 @@ class Random_P_Tests(unittest.TestCase):
         K = self.r.K
         L = 1.0 / (K + 1) + 1e-12
 
-        special_p = [0.0, 1e-12, 0.25, 1 / 3, 3 / 8, 0.5, 17 / 257]
+        special_p = [0.0, 1e-12, 0.25, 1/3, 3/8, 127/257, 0.5 - 1e-12, 0.5]
         for j in range(1000):
             try:
                 p = special_p[j]

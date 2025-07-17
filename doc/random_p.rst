@@ -45,7 +45,7 @@ be verified that:
     x = (p - q) / (1.0 - q)  # OR
     x = p / q                # AND
 
-It should be noted that ``x`` is always small (once symmetry is applyed in
+It should be noted that ``x`` is always small (once symmetry is applied in
 case of AND) such that it always uses the "small p" case.
 Unlike the combinations, this gives us a bitarray
 with exact probability ``x``.  Therefore, the requested probability ``p``
@@ -111,7 +111,7 @@ regardless of ``p``.
 For 1000 random values of ``p`` (between 0 and 1), we get an average speedup
 of about 19.
 
-In summary: Even in the worst case ``random_p()`` performs about 15 times
+In summary: Even in the worst cases ``random_p()`` performs about 15 times
 better than the literal definition for large ``n``, while on average we get
 a speedup of almost 20.  For very small ``p``, and for special values of ``p``
 the speedup is significantly higher.
