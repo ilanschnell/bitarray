@@ -262,7 +262,9 @@ class Random_P_Tests(unittest.TestCase):
                 p = 0.5 * random()  # 0.0 <= p < 0.5
 
             i = int(p * K)
+            self.assertTrue(i / K <= p)
             if p * (K + 1) > i + 1:  # equates x1 > x2 (see above)
+                self.assertTrue(i / K < p)
                 i += 1  # use next i; q += 1 / K; q > p; use AND
                 self.assertTrue(i / K > p)
             q = i / K

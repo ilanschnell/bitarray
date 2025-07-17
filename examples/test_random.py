@@ -306,6 +306,15 @@ class Random_P_Tests(Util):
         self.assertTrue(abs(x - 51_667) <= 1_580)
         self.assertEqual(c.total(), 100_000)
 
+    def test_mid_p(self):
+        n = 100_000_000
+        p = 65 / 257 - 1e-9
+        a = random_p(n, p)
+        self.check_probability(a, p)  # final OR
+        p = 65 / 257 + 1e-9
+        a = random_p(n, p)
+        self.check_probability(a, p)  # final AND
+
 
 class VerificationTests(Util):
 
