@@ -7,6 +7,7 @@ random functions.  Those are already tested in the regular utility tests.
 Therefore, and because these tests take longer to run, we decided to put
 them in a separate file.
 """
+import sys
 import unittest
 from copy import deepcopy
 from math import sqrt
@@ -18,6 +19,9 @@ from bitarray.util import (
     zeros, ones, urandom, random_p, int2ba, count_and, count_or, count_xor
 )
 from bitarray.util import _RandomP  # type: ignore
+
+
+HEAVY = False   # set True for heavy testing
 
 
 SMALL_P = _RandomP().SMALL_P
@@ -306,14 +310,23 @@ class Random_P_Tests(Util):
         self.assertTrue(abs(x - 51_667) <= 1_580)
         self.assertEqual(c.total(), 100_000)
 
-    def test_mid_p(self):
+    def test_probabilities(self):
         n = 100_000_000
-        p = 65 / 257 - 1e-9
-        a = random_p(n, p)
-        self.check_probability(a, p)  # final OR
-        p = 65 / 257 + 1e-9
-        a = random_p(n, p)
-        self.check_probability(a, p)  # final AND
+        special_p = [
+            65 / 257 - 1e-9,  # largest x for OR
+            65 / 257 + 1e-9,  # largest x for AND
+            0.0, 1e-12, 0.25, 1/3, 3/8, 127/257, 0.5,
+        ]
+        for j in range(100 if HEAVY else 2):
+            sys.stdout.write('.')
+            sys.stdout.flush()
+            try:
+                p = special_p[j]
+            except IndexError:
+                p = random()
+
+            a = random_p(n, p)
+            self.check_probability(a, p)
 
 
 class VerificationTests(Util):
