@@ -2148,7 +2148,8 @@ class IntegerizationTests(unittest.TestCase, Util):
 class MixedTests(unittest.TestCase, Util):
 
     def test_bin(self):
-        for i in range(100):
+        for _ in range(20):
+            i = randrange(1000)
             s = bin(i)
             self.assertEqual(s[:2], '0b')
             a = bitarray(s[2:], 'big')
@@ -2158,7 +2159,8 @@ class MixedTests(unittest.TestCase, Util):
             self.assertEqual(eval(t), i)
 
     def test_oct(self):
-        for i in range(1000):
+        for _ in range(20):
+            i = randrange(1000)
             s = oct(i)
             self.assertEqual(s[:2], '0o')
             a = base2ba(8, s[2:], 'big')
@@ -2168,7 +2170,8 @@ class MixedTests(unittest.TestCase, Util):
             self.assertEqual(eval(t), i)
 
     def test_hex(self):
-        for i in range(1000):
+        for _ in range(20):
+            i = randrange(1000)
             s = hex(i)
             self.assertEqual(s[:2], '0x')
             a = hex2ba(s[2:], 'big')

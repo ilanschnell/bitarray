@@ -24,7 +24,10 @@ from bitarray.util import _RandomP  # type: ignore
 HEAVY = False   # set True for heavy testing
 
 
-SMALL_P = _RandomP().SMALL_P
+r = _RandomP()
+M = r.M
+K = r.K
+SMALL_P = r.SMALL_P
 
 
 def count_each_index(arrays):
@@ -366,5 +369,70 @@ class VerificationTests(Util):
                 C(a, p)
 
 
+class DummyRanomPTests(unittest.TestCase):
+
+    # Unlike random_p(), the method .random_p() returns the desired
+    # probability q itself, and not a random bitarray.  The point of this
+    # method it to illustrate how random_p() essentially works.
+    # Instead of actual bitarray operations, we change q accordingly.
+    # This method is unconcerned with: bitarray length n and endianness
+
+    def random_p(self, p=0.5):
+        # error check inputs and handle edge cases
+        if p <= 0.0 or p == 0.5 or p >= 1.0:
+            if p in (0.0, 0.5, 1.0):
+                return p
+            raise ValueError("p must be in range 0.0 <= p <= 1.0")
+
+        # exploit symmetry to establish: p <= 0.5
+        if p > 0.5:
+            return 1.0 - self.random_p(1.0 - p)
+
+        # for small p set randomly individual bits, which is much faster
+        if p < SMALL_P:
+            return p  # random.binomialvariate() and .random_pop()
+
+        # calculate operator sequence
+        i = int(p * K)
+        if p * (K + 1) > i + 1:
+            i += 1
+        a = bitarray(i.to_bytes(2, byteorder="little"), "little")
+        seq = a[a.index(1) + 1 : M]
+
+        # combine random bitarrays using bitwise AND and OR operations
+        q = 0.5  # start with randbytes()
+        for k in seq:
+            if k:
+                q += 0.5 * (1.0 - q)  # OR
+            else:
+                q *= 0.5              # AND
+        self.assertEqual(q, i / K)
+
+        if q < p:
+            x = (p - q) / (1.0 - q)
+            self.assertTrue(0.0 < x < SMALL_P)
+            q += x * (1.0 - q)        # OR
+        elif q > p:
+            x = p / q
+            self.assertTrue(0.0 < 1.0 - x < SMALL_P)
+            q *= x                    # AND
+
+        self.assertEqual(q, p)
+        return q
+
+    def test_random_p(self):
+        special_p = [0.0, 1e-12, 0.25, 1/3, 3/8, 65/257, 0.5, 1.0]
+
+        for j in range(10_000):
+            try:
+                p = special_p[j]
+            except IndexError:
+                p = random()
+            self.assertEqual(self.random_p(p), p)
+
+
 if __name__ == '__main__':
+    if "--heavy" in sys.argv:
+        HEAVY = True
+        sys.argv.remove("--heavy")
     unittest.main(verbosity=2)
