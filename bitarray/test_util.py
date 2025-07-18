@@ -918,6 +918,9 @@ class ByteswapTests(unittest.TestCase, Util):
     def test_basic_array(self):
         r = os.urandom(64)
         for typecode in array.typecodes:
+            # type code 'u' is deprecated and will be removed in Python 3.16
+            if typecode == 'u':
+                continue
             a = array.array(typecode, r)
             self.assertEqual(len(a) * a.itemsize, 64)
             a.byteswap()
