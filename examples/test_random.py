@@ -368,6 +368,13 @@ class VerificationTests(Util):
                 p += q * (1.0 - p)
                 C(a, p)
 
+            for a, p in deepcopy(arrays1):
+                C(a, p)
+
+                a ^= b                       # in-place XOR
+                p += q * (1.0 - 2 * p)
+                C(a, p)
+
 
 class DummyRanomPTests(unittest.TestCase):
 
@@ -396,6 +403,7 @@ class DummyRanomPTests(unittest.TestCase):
         i = int(p * K)
         if p * (K + 1) > i + 1:
             i += 1
+        self.assertTrue(0 < i <= K // 2)
         a = bitarray(i.to_bytes(2, byteorder="little"), "little")
         seq = a[a.index(1) + 1 : M]
 
@@ -435,4 +443,4 @@ if __name__ == '__main__':
     if "--heavy" in sys.argv:
         HEAVY = True
         sys.argv.remove("--heavy")
-    unittest.main(verbosity=2)
+    unittest.main()

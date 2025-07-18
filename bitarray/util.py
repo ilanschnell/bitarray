@@ -158,7 +158,7 @@ class _RandomP:
             return bitarray((random.random() < p for _ in range(self.n)),
                             self.endian)
 
-        # exploit symmetry to establish: p <= 0.5
+        # exploit symmetry to establish: p < 0.5
         if p > 0.5:
             a = self.random_p(1.0 - p)
             a.invert()
@@ -172,8 +172,8 @@ class _RandomP:
         i = int(p * self.K)
         if p * (self.K + 1) > i + 1:
             i += 1
-        q = i / self.K
         seq = self.op_seq(i)
+        q = i / self.K
 
         # when n is small compared to number of operations, also use literal
         if self.n < 100 and self.nbytes <= len(seq) + 3 * bool(q != p):
