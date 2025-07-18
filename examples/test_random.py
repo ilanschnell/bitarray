@@ -393,7 +393,7 @@ class DummyRanomPTests(unittest.TestCase):
 
         # exploit symmetry to establish: p < 0.5
         if p > 0.5:
-            return 1.0 - self.random_p(1.0 - p)
+            return 1.0 - self.random_p(1.0 - p, verbose)
 
         # for small p set randomly individual bits, which is much faster
         if p < SMALL_P:
@@ -442,15 +442,16 @@ class DummyRanomPTests(unittest.TestCase):
             self.assertEqual(self.random_p(p), p)
 
 def disp():
-    dum = DummyRanomPTests()
-    for p in [
-            # pure combinations
-            1/4, 1/8, 1/16, 1/32, 1/64, 3/128, 127/256,
-            # mixed
-            SMALL_P, 0.1, 0.2, 0.3, 0.4,
-            65/257, 127/257 + 1e-9, 0.5 - 1e-9,
-    ]:
-        dum.random_p(p, True)
+    i = sys.argv.index('--disp')
+    args = sys.argv[i + 1:]
+    if args:
+        plist = [eval(s) for s in args]
+    else:
+        plist = [1/4, 1/8, 1/16, 1/32, 1/64, 3/128, 127/256,
+                 SMALL_P, 0.1, 0.2, 0.3, 0.4,
+                 65/257, 127/257 + 1e-9, 0.5 - 1e-9]
+    for p in plist:
+        DummyRanomPTests().random_p(p, True)
 
 
 if __name__ == '__main__':
