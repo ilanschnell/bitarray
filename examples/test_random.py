@@ -8,9 +8,9 @@ Therefore, and because these tests take longer to run, we decided to put
 them in a separate file.
 """
 import sys
+import math
 import unittest
 from copy import deepcopy
-from math import sqrt
 from collections import Counter
 from random import randrange, random
 
@@ -156,7 +156,7 @@ class Util(unittest.TestCase):
 
     def check_normal_dist(self, n, p, x):
         mu = n * p
-        sigma = sqrt(n * p * (1.0 - p))
+        sigma = math.sqrt(n * p * (1.0 - p))
         msg = "n=%d  p=%f  mu=%f  sigma=%f  x=%f" % (n, p, mu, sigma, x)
         self.assertTrue(abs(x - mu) < 10.0 * sigma, msg)
 
@@ -317,7 +317,7 @@ class Random_P_Tests(Util):
         n = 100_000_000
         special_p = [
             65 / 257 - 1e-9,  # largest x for OR
-            65 / 257 + 1e-9,  # largest x for AND
+            65 / 257 + 1e-9,  # smallest x for AND
             0.0, 1e-12, 0.25, 1/3, 3/8, 127/257, 0.5,
         ]
         for j in range(100 if HEAVY else 2):
@@ -375,16 +375,111 @@ class VerificationTests(Util):
                 p += q * (1.0 - 2 * p)
                 C(a, p)
 
+    def test_equal_x(self):
+        """
+        Verify that the probabilities p for which final AND and OR result in
+        equal x are:  p = j / (K + 1)    j in range(1, K)
+        Also, verify these x are all:  x = 1 / (K + 1)
+        These are also the maximal x.
+        """
+        for j in range(1, K):
+            # probabilities p for which final AND and OR result in equal x
+            p = j / (K + 1)
+            i = int(p * K)
+            self.assertEqual(i, j - 1)  # as K / (K + 1) < 1
+            self.assertEqual(p * (K + 1), i + 1)
+            q = i / K
+            x1 = (p - q) / (1.0 - q)      # OR
+            x2 = 1.0 - p / (q + 1.0 / K)  # AND   x2 = 1 - p / next q
+            self.assertAlmostEqual(x1, x2)
+            self.assertAlmostEqual(x1, 1.0 / (K + 1))
 
-class DummyRanomPTests(unittest.TestCase):
+    def special_p(self):
+        """
+        generate special test values of p < 0.5
+        """
+        EPS = 1e-12
 
-    # Unlike random_p(), the method .random_p() returns the desired
-    # probability q itself, and not a random bitarray.  The point of this
-    # method it to illustrate how random_p() essentially works.
-    # Instead of actual bitarray operations, we change q accordingly.
-    # This method is unconcerned with: bitarray length n and endianness
+        for j in range(1, K // 2 + 1):
+            # probabilities for which final AND and OR result in equal x
+            p = j / (K + 1)
+            for e in -EPS, EPS:
+                yield p + e
 
-    def random_p(self, p=0.5, verbose=False):
+        for j in range(1, K // 2):
+            # probabilities for which no final AND or OR is not necessary
+            p = j / K
+            for e in -EPS, 0.0, EPS:
+                yield p + e
+
+        for p in 0.0, EPS, 0.5 - EPS:
+            yield p
+
+        for e in -EPS, 0.0, EPS:
+            yield SMALL_P + e
+
+        for _ in range(10_000):
+            yield 0.5 * random()
+
+    def test_decide_on_i(self):
+        """
+        Verify that `x1 > x2` equates to `p * (K + 1) > i + 1`.
+        """
+        for p in self.special_p():
+            self.assertTrue(0 <= p < 0.5, p)
+
+            i = int(p * K)
+            q = i / K
+            self.assertTrue(q <= p)
+            x1 = (p - q) / (1.0 - q)      # OR
+            x2 = 1.0 - p / (q + 1.0 / K)  # AND   x2 = 1 - p / next q
+            # decided whether to use next i (level of q)
+            self.assertEqual(x1 > x2,
+                             p * (K + 1) > i + 1)
+
+    def test_final_op(self):
+        """
+        Verify final operation always gives us the correct probability,
+        and establish lower limit for p.
+        """
+        limit = 1.0 / (K + 1)
+
+        for p in self.special_p():
+            i = int(p * K)
+            self.assertTrue(i / K <= p)
+            if p * (K + 1) > i + 1:  # implies q != p
+                self.assertTrue(i / K < p)
+                i += 1
+                self.assertTrue(i / K > p)
+
+            if p > limit:
+                self.assertNotEqual(i, 0)
+            self.assertTrue(i <= K // 2)
+
+            q = i / K
+            self.assertTrue(abs(p - q) < limit)
+            self.assertEqual(bool(q != p), bool(math.fmod(p, 1.0 / K)))
+
+            if q < p:
+                x = (p - q) / (1.0 - q)
+                # ensure small p case is called
+                self.assertTrue(0.0 < x < limit)
+                q += x * (1.0 - q)   # OR
+            elif q > p:
+                x = p / q
+                # ensure small p case is called (after symmetry is exploited)
+                self.assertTrue(0.0 < 1.0 - x < limit)
+                q *= x               # AND
+            self.assertEqual(q, p)
+
+    def dummp_random_p(self, p=0.5, verbose=False):
+        """
+        Unlike random_p(), this function returns the desired probability q
+        itself, and not a random bitarray.  The point of this function is to
+        illustrate how random_p() essentially works.
+        Instead of actual bitarray operations, we change q accordingly.
+        This method is not concerned with: bitarray length n and endianness
+        """
         # error check inputs and handle edge cases
         if p <= 0.0 or p == 0.5 or p >= 1.0:
             if p in (0.0, 0.5, 1.0):
@@ -393,7 +488,7 @@ class DummyRanomPTests(unittest.TestCase):
 
         # exploit symmetry to establish: p < 0.5
         if p > 0.5:
-            return 1.0 - self.random_p(1.0 - p, verbose)
+            return 1.0 - self.dummp_random_p(1.0 - p, verbose)
 
         # for small p set randomly individual bits, which is much faster
         if p < SMALL_P:
@@ -431,27 +526,21 @@ class DummyRanomPTests(unittest.TestCase):
         self.assertEqual(q, p)
         return q
 
-    def test_random_p(self):
-        special_p = [0.0, 1e-12, 0.25, 1/3, 3/8, 65/257, 0.5, 1.0]
-
-        for j in range(10_000):
-            try:
-                p = special_p[j]
-            except IndexError:
-                p = random()
-            self.assertEqual(self.random_p(p), p)
+    def test_dummy_random_p(self):
+        for p in self.special_p():
+            self.assertEqual(self.dummp_random_p(p), p)
 
 def disp():
     i = sys.argv.index('--disp')
     args = sys.argv[i + 1:]
     if args:
-        plist = [eval(s) for s in args]
+        plist = [float(eval(s)) for s in args]
     else:
         plist = [1/4, 1/8, 1/16, 1/32, 1/64, 3/128, 127/256,
                  SMALL_P, 0.1, 0.2, 0.3, 0.4,
                  65/257, 127/257 + 1e-9, 0.5 - 1e-9]
     for p in plist:
-        DummyRanomPTests().random_p(p, True)
+        VerificationTests().dummp_random_p(p, True)
 
 
 if __name__ == '__main__':
