@@ -384,14 +384,14 @@ class DummyRanomPTests(unittest.TestCase):
     # Instead of actual bitarray operations, we change q accordingly.
     # This method is unconcerned with: bitarray length n and endianness
 
-    def random_p(self, p=0.5):
+    def random_p(self, p=0.5, verbose=False):
         # error check inputs and handle edge cases
         if p <= 0.0 or p == 0.5 or p >= 1.0:
             if p in (0.0, 0.5, 1.0):
                 return p
             raise ValueError("p must be in range 0.0 <= p <= 1.0")
 
-        # exploit symmetry to establish: p <= 0.5
+        # exploit symmetry to establish: p < 0.5
         if p > 0.5:
             return 1.0 - self.random_p(1.0 - p)
 
@@ -416,6 +416,7 @@ class DummyRanomPTests(unittest.TestCase):
                 q *= 0.5              # AND
         self.assertEqual(q, i / K)
 
+        x = 0.0
         if q < p:
             x = (p - q) / (1.0 - q)
             self.assertTrue(0.0 < x < SMALL_P)
@@ -425,6 +426,8 @@ class DummyRanomPTests(unittest.TestCase):
             self.assertTrue(0.0 < 1.0 - x < SMALL_P)
             q *= x                    # AND
 
+        if verbose:
+            print("%15.9f  %9d  %15.9f" % (p, len(seq) + 1, x))
         self.assertEqual(q, p)
         return q
 
@@ -438,8 +441,22 @@ class DummyRanomPTests(unittest.TestCase):
                 p = random()
             self.assertEqual(self.random_p(p), p)
 
+def disp():
+    dum = DummyRanomPTests()
+    for p in [
+            # pure combinations
+            1/4, 1/8, 1/16, 1/32, 1/64, 3/128, 127/256,
+            # mixed
+            SMALL_P, 0.1, 0.2, 0.3, 0.4,
+            65/257, 127/257 + 1e-9, 0.5 - 1e-9,
+    ]:
+        dum.random_p(p, True)
+
 
 if __name__ == '__main__':
+    if '--disp' in sys.argv:
+        disp()
+        sys.exit()
     if "--heavy" in sys.argv:
         HEAVY = True
         sys.argv.remove("--heavy")
