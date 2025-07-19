@@ -7,9 +7,9 @@ random functions.  Those are already tested in the regular utility tests.
 Therefore, and because these tests take longer to run, we decided to put
 them in a separate file.
 
-Also, this file contains some important verification tests that don't test
-actual functionality in random_p(), but rather verify some of the logic and
-establish some tricky equations.
+In addition, this file contains some important verification tests that don't
+test actual functionality in random_p(), but rather verify some of the logic
+and establish some tricky equations.
 """
 import sys
 import math
@@ -478,13 +478,37 @@ class VerificationTests(Util):
                 q *= x               # AND
             self.assertEqual(q, p)
 
-    def dummp_random_p(self, p=0.5, verbose=False):
+    def test_i_not_0(self):
+        """
+        Verify that lower limit for p filters out i = 0 for .op_seq().
+        """
+        EPS = 1e-12
+        limit = 1.0 / (K + 1)  # lower limit for p
+
+        for e, res in [
+                (-EPS, 0),
+                ( 0.0, 0),
+                (+EPS, 1),
+        ]:
+            p = limit + e
+            i = int(p * K)
+            self.assertEqual(i, 0)
+            if p * (K + 1) > i + 1:
+                i += 1
+            # So for i not be zero we must have:
+            #     p * (K + 1) > 1
+            # or
+            #     p > 1 / (K + 1) = limit        p > limit    q.e.d.
+            self.assertEqual(i, res)
+
+    def dummy_random_p(self, p=0.5, verbose=False):
         """
         Unlike random_p(), this function returns the desired probability q
         itself, and not a random bitarray.  The point of this function is to
         illustrate how random_p() essentially works.
         Instead of actual bitarray operations, we change q accordingly.
-        This method is not concerned with: bitarray length n and endianness
+        This method is neither concerned with the bitarray length n nor
+        endianness.
         """
         # error check inputs and handle edge cases
         if p <= 0.0 or p == 0.5 or p >= 1.0:
@@ -494,7 +518,7 @@ class VerificationTests(Util):
 
         # exploit symmetry to establish: p < 0.5
         if p > 0.5:
-            return 1.0 - self.dummp_random_p(1.0 - p, verbose)
+            return 1.0 - self.dummy_random_p(1.0 - p, verbose)
 
         # for small p set randomly individual bits, which is much faster
         if p < SMALL_P:
@@ -534,7 +558,7 @@ class VerificationTests(Util):
 
     def test_dummy_random_p(self):
         for p in self.special_p():
-            self.assertEqual(self.dummp_random_p(p), p)
+            self.assertEqual(self.dummy_random_p(p), p)
 
 def disp():
     i = sys.argv.index('--disp')
@@ -546,7 +570,7 @@ def disp():
                  SMALL_P, 0.1, 0.2, 0.3, 0.4,
                  65/257, 127/257 + 1e-9, 0.5 - 1e-9]
     for p in plist:
-        VerificationTests().dummp_random_p(p, True)
+        VerificationTests().dummy_random_p(p, True)
 
 
 if __name__ == '__main__':
