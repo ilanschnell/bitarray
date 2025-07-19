@@ -454,11 +454,11 @@ class VerificationTests(Util):
         for p in self.special_p():
             i = int(p * K)
             self.assertTrue(i / K <= p)
-            if p * (K + 1) > i + 1:
+            if p * (K + 1) > i + 1:  # see above
                 i += 1
                 self.assertTrue(i / K > p)
 
-            if p > limit:
+            if p > limit:  # see below
                 self.assertNotEqual(i, 0)
             self.assertTrue(i <= K // 2)
 
@@ -480,7 +480,7 @@ class VerificationTests(Util):
 
     def test_i_not_0(self):
         """
-        Verify that lower limit for p filters out i = 0 for .op_seq().
+        Verify that `p > limit` filters out i = 0 for .op_seq().
         """
         EPS = 1e-12
         limit = 1.0 / (K + 1)  # lower limit for p
@@ -498,7 +498,7 @@ class VerificationTests(Util):
             # So for i not be zero we must have:
             #     p * (K + 1) > 1
             # or
-            #     p > 1 / (K + 1) = limit        p > limit    q.e.d.
+            #     p > 1 / (K + 1) = limit        q.e.d.
             self.assertEqual(i, res)
 
     def dummy_random_p(self, p=0.5, verbose=False):
