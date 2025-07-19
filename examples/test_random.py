@@ -440,7 +440,7 @@ class VerificationTests(Util):
             # decided whether to use next i (level of q)
             self.assertEqual(x1 > x2,
                              p * (K + 1) > i + 1)
-            # note that the latter implies q != p
+            # this implies q != p
             if p * (K + 1) > i + 1:
                 self.assertNotEqual(q, p)
 
@@ -494,7 +494,7 @@ class VerificationTests(Util):
         ]:
             p = limit + e
             i = int(p * K)
-            self.assertEqual(i, 0)
+            self.assertEqual(i, 0)  # as K / (K + 1) < 1
             if p * (K + 1) > i + 1:
                 i += 1
             # So for i not be zero we must have:

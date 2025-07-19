@@ -110,6 +110,7 @@ class _RandomP:
         """
         if not 0 < i < self.K:
             raise ValueError("0 < i < %d, got i = %d" % (self.K, i))
+
         # sequence of &, | operations - least significant operations first
         a = bitarray(i.to_bytes(2, byteorder="little"), "little")
         return a[a.index(1) + 1 : self.M]
@@ -132,14 +133,17 @@ class _RandomP:
         Return a random bitarray of length self.n and population count k.
         Designed for small k (compared to self.n).
         """
-        if not 0 <= k <= self.n:
-            raise ValueError("0 <= k <= %d, got k = %d" % (self.n, k))
         randrange = random.randrange
-        a = zeros(self.n, self.endian)
+        n = self.n
+
+        if not 0 <= k <= n:
+            raise ValueError("0 <= k <= %d, got k = %d" % (n, k))
+
+        a = bitarray(n, self.endian)
         for _ in range(k):
-            i = randrange(self.n)
+            i = randrange(n)
             while a[i]:
-                i = randrange(self.n)
+                i = randrange(n)
             a[i] = 1
         return a
 
@@ -162,7 +166,7 @@ class _RandomP:
         # exploit symmetry to establish: p < 0.5
         if p > 0.5:
             a = self.random_p(1.0 - p)
-            a.invert()
+            a.invert()  # use in-place to avoid copying
             return a
 
         # for small p, set randomly individual bits
@@ -171,7 +175,7 @@ class _RandomP:
 
         # calculate operator sequence
         i = int(p * self.K)
-        if p * (self.K + 1) > i + 1:
+        if p * (self.K + 1) > i + 1: # see ./examples/test_random.py
             i += 1
         seq = self.op_seq(i)
         q = i / self.K
