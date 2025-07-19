@@ -447,7 +447,7 @@ class VerificationTests(Util):
     def test_final_op(self):
         """
         Verify final operation always gives us the correct probability,
-        and establish lower limit for p.
+        and establish a lower limit for p.
         """
         limit = 1.0 / (K + 1)  # lower limit for p
 
@@ -480,7 +480,9 @@ class VerificationTests(Util):
 
     def test_i_not_0(self):
         """
-        Verify that `p > limit` filters out i = 0 for .op_seq().
+        Verify that for `p > limit`, we will always have `i > 0`.
+        Is is important, as the small p case has to "filter out" `i = 0`,
+        as the sequence of operations do not handle `i = 0`.
         """
         EPS = 1e-12
         limit = 1.0 / (K + 1)  # lower limit for p
@@ -514,7 +516,7 @@ class VerificationTests(Util):
         if p <= 0.0 or p == 0.5 or p >= 1.0:
             if p in (0.0, 0.5, 1.0):
                 return p
-            raise ValueError("p must be in range 0.0 <= p <= 1.0")
+            raise ValueError("p must be in range 0.0 <= p <= 1.0, got %f", p)
 
         # exploit symmetry to establish: p < 0.5
         if p > 0.5:
@@ -552,7 +554,7 @@ class VerificationTests(Util):
             q *= x                    # AND
 
         if verbose:
-            print("%15.9f  %9d  %15.9f" % (p, len(seq) + 1, x))
+            print("%15.9f  %9d  %9d  %15.9f" % (p, len(seq) + 1, i, x))
         self.assertEqual(q, p)
         return q
 
@@ -569,6 +571,8 @@ def disp():
         plist = [1/4, 1/8, 1/16, 1/32, 1/64, 3/128, 127/256,
                  SMALL_P, 0.1, 0.2, 0.3, 0.4,
                  65/257, 127/257 + 1e-9, 0.5 - 1e-9]
+    print("      p                  k          i        x")
+    print(55 * '-')
     for p in plist:
         VerificationTests().dummy_random_p(p, True)
 

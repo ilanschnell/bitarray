@@ -89,10 +89,10 @@ for different values of ``p`` for ``n=100_000_000``:
    127/256      174.9    8    priciest pure combinations case(s)
 
    small p:
-   0.009999999  192.3    0    priciest small p case
-   0.003891051   72.9    0    p = 1/257 - largest x in mixed case
-   0.001         18.7    0
    0.0001         2.2    0
+   0.001         18.7    0
+   0.003891051   72.9    0    p = 1/257 - largest x in mixed case
+   0.009999999  192.3    0    priciest small p case
 
    mixed:                     x  (final operation)
    0.01         194.3    7    0.002204724  OR   smallest p for mixed case
