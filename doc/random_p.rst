@@ -50,6 +50,8 @@ case of AND) such that it always uses the "small p" case.
 Unlike the combinations, this gives us a bitarray
 with exact probability ``x``.  Therefore, the requested probability ``p``
 is exactly obtained.
+For more details, see ``VerificationTests`` in the
+additional `random tests <../examples/test_random.py>`__.
 
 
 Speedup

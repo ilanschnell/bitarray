@@ -395,8 +395,8 @@ class VerificationTests(Util):
             q = i / K
             x1 = (p - q) / (1.0 - q)      # OR
             x2 = 1.0 - p / (q + 1.0 / K)  # AND   x2 = 1 - p / next q
-            self.assertAlmostEqual(x1, x2)
-            self.assertAlmostEqual(x1, 1.0 / (K + 1))
+            self.assertAlmostEqual(x1, x2, delta=1e-14)
+            self.assertAlmostEqual(x1, 1.0 / (K + 1), delta=1e-14)
 
     def special_p(self):
         """
@@ -466,12 +466,12 @@ class VerificationTests(Util):
             self.assertTrue(abs(p - q) < limit)
             self.assertEqual(bool(q != p), bool(math.fmod(p, 1.0 / K)))
 
-            if q < p:
+            if q < p:  # increase probability
                 x = (p - q) / (1.0 - q)
                 # ensure small p case is called
                 self.assertTrue(0.0 < x < limit)
                 q += x * (1.0 - q)   # OR
-            elif q > p:
+            elif q > p:  # decrease probability
                 x = p / q
                 # ensure small p case is called (after symmetry is exploited)
                 self.assertTrue(0.0 < 1.0 - x < limit)
@@ -542,11 +542,11 @@ class VerificationTests(Util):
         self.assertEqual(q, i / K)
 
         x = 0.0
-        if q < p:
+        if q < p:  # increase probability
             x = (p - q) / (1.0 - q)
             self.assertTrue(0.0 < x < SMALL_P)
             q += x * (1.0 - q)        # OR
-        elif q > p:
+        elif q > p:  # decrease probability
             x = p / q
             self.assertTrue(0.0 < 1.0 - x < SMALL_P)
             q *= x                    # AND

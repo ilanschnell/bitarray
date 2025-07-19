@@ -76,6 +76,7 @@ class _RandomP:
     # individually in the test class Random_P_Tests in 'test_util.py'.
     # The test class also contains many comments and explanations.
     # To better understand how the algorithm works, see ./doc/random_p.rst
+    # See also, VerificationTests in ./examples/test_random.py
 
     # maximal number of calls to .random_half() in .combine()
     M = 8
@@ -182,11 +183,11 @@ class _RandomP:
 
         # combine random bitarrays using bitwise AND and OR operations
         a = self.combine_half(seq)
-        if q < p:  # increase probability using OR
-            x = (p - q) / (1.0 - q)  # x close to 0.0
+        if q < p:
+            x = (p - q) / (1.0 - q)
             a |= self.random_p(x)
-        elif q > p:  # decrease probability using AND
-            x = p / q  # x close to 1.0
+        elif q > p:
+            x = p / q
             a &= self.random_p(x)
 
         return a
