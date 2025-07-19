@@ -64,7 +64,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 3.5.1
+    bitarray version: 3.5.2
     sys.version: 3.13.5 (main, Jun 16 2025) [Clang 18.1.8]
     sys.prefix: /Users/ilan/miniforge
     pointer size: 64 bit
@@ -78,7 +78,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 579 tests in 0.162s
+    Ran 578 tests in 0.162s
 
     OK
 
@@ -395,7 +395,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.5.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.5.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
