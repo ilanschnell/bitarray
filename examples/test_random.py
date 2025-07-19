@@ -6,6 +6,10 @@ These are statistical tests.  They do not test any basic functionality of
 random functions.  Those are already tested in the regular utility tests.
 Therefore, and because these tests take longer to run, we decided to put
 them in a separate file.
+
+Also, this file contains some important verification tests that don't test
+actual functionality in random_p(), but rather verify some of the logic and
+establish some tricky equations.
 """
 import sys
 import math
@@ -24,10 +28,10 @@ from bitarray.util import _RandomP  # type: ignore
 HEAVY = False   # set True for heavy testing
 
 
-r = _RandomP()
-M = r.M
-K = r.K
-SMALL_P = r.SMALL_P
+_r = _RandomP()
+M = _r.M
+K = _r.K
+SMALL_P = _r.SMALL_P
 
 
 def count_each_index(arrays):
@@ -421,7 +425,7 @@ class VerificationTests(Util):
         for _ in range(10_000):
             yield 0.5 * random()
 
-    def test_decide_on_i(self):
+    def test_decide_on_operation(self):
         """
         Verify that `x1 > x2` equates to `p * (K + 1) > i + 1`.
         """
@@ -436,19 +440,21 @@ class VerificationTests(Util):
             # decided whether to use next i (level of q)
             self.assertEqual(x1 > x2,
                              p * (K + 1) > i + 1)
+            # note that the latter implies q != p
+            if p * (K + 1) > i + 1:
+                self.assertNotEqual(q, p)
 
     def test_final_op(self):
         """
         Verify final operation always gives us the correct probability,
         and establish lower limit for p.
         """
-        limit = 1.0 / (K + 1)
+        limit = 1.0 / (K + 1)  # lower limit for p
 
         for p in self.special_p():
             i = int(p * K)
             self.assertTrue(i / K <= p)
-            if p * (K + 1) > i + 1:  # implies q != p
-                self.assertTrue(i / K < p)
+            if p * (K + 1) > i + 1:
                 i += 1
                 self.assertTrue(i / K > p)
 

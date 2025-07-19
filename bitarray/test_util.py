@@ -212,77 +212,13 @@ class Random_P_Tests(unittest.TestCase):
 
     r = _RandomP()
 
-    def test_constants(self):
-        # The purpose of this test function is to establish that
-        #
-        #     SMALL_P  >  1.0 / (K + 1)
-        #
-        # where K is the number of probability intervals (K = 1 << M).
-
+    def test_small_p_limit(self):
         K = self.r.K
         SMALL_P = self.r.SMALL_P
 
-        # Ensure the small p case filters out i = 0 for .op_seq().
-        i = int(SMALL_P * K)
-        if SMALL_P * (K + 1) > i + 1:  # see if we should use AND
-            i += 1
-        self.assertNotEqual(i, 0)
-        # Hence:
-        self.assertTrue(SMALL_P * (K + 1) > 1)
-        # So SMALL_P must be larger than:
-        self.assertTrue(SMALL_P > 1.0 / (K + 1))
-
-        for j in range(1, K):
-            # probabilities for which final AND and OR result in equal x
-            p = j / (K + 1)
-            i = int(p * K)
-            self.assertEqual(i, j - 1)  # as K / (K + 1) < 1
-            self.assertEqual(p * (K + 1), i + 1)  # used in check for AND
-            q = i / K
-            x1 = (p - q) / (1.0 - q)      # OR
-            x2 = 1.0 - p / (q + 1.0 / K)  # AND   x2 = 1 - p / next q
-            self.assertAlmostEqual(x1, x2)
-            self.assertAlmostEqual(x1, 1.0 / (K + 1))
-
-        # So again, we must have:
-        self.assertTrue(SMALL_P > 1.0 / (K + 1))
-
-    def test_final_op(self):
-        # The purpose of this test function is to ensure the final operation
-        # in .random_p() always gives us the correct probability.
-
-        K = self.r.K
-        limit = 1.0 / (K + 1) + 1e-12
-
-        special_p = [0.0, 1e-12, 0.25, 1/3, 3/8, 127/257, 0.5 - 1e-12, 0.5]
-        for j in range(1000):
-            try:
-                p = special_p[j]
-            except IndexError:
-                p = 0.5 * random()  # 0.0 <= p < 0.5
-
-            i = int(p * K)
-            self.assertTrue(i / K <= p)
-            if p * (K + 1) > i + 1:  # equates x1 > x2 (see above)
-                self.assertTrue(i / K < p)
-                i += 1  # use next i; q += 1 / K; q > p; use AND
-                self.assertTrue(i / K > p)
-            q = i / K
-
-            self.assertTrue(abs(p - q) < 1.0 / K)
-            self.assertEqual(bool(q != p), bool(math.fmod(p, 1.0 / K)))
-
-            if q < p:
-                x = (p - q) / (1.0 - q)
-                self.assertTrue(0.0 < x < limit)
-                q += x * (1.0 - q)        # OR
-            elif q > p:
-                x = p / q
-                self.assertTrue(0.0 < 1.0 - x < limit)
-                q *= x                    # AND
-
-            # ensure desired probability q is p
-            self.assertEqual(q, p)
+        # see VerificationTests in ./examples/test_random.py
+        limit = 1.0 / (K + 1)  # lower limit for p
+        self.assertTrue(SMALL_P > limit)
 
     def test_op_seq(self):
         G = self.r.op_seq
