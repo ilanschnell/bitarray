@@ -579,6 +579,11 @@ class VerificationTests(Util):
         for p in self.special_p():
             self.assertEqual(self.dummy_random_p(p), p)
 
+        # test 0 <= p < 1; self.special_p() only gives us 0 <= p < 0.5
+        for _ in range(10_000):
+            p = random()
+            self.assertEqual(self.dummy_random_p(p), p)
+
 def disp():
     i = sys.argv.index('--disp')
     args = sys.argv[i + 1:]
