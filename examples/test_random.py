@@ -443,6 +443,10 @@ class VerificationTests(Util):
                              p * (K + 1) > i + 1)
 
     def test_decision_limit(self):
+        # limit = 1/(K+1) is slightly smaller than 1/K:
+        self.assertEqual(limit, 1.0 / K - 1.0 / (K * (K + 1)))
+        self.assertTrue(1.0 / K - limit < K ** -2 == 1.0 / (1 << (2 * M)))
+
         for p in self.special_p():
             i = int(p * K)
             q0 = q = i / K
