@@ -31,6 +31,7 @@ HEAVY = False   # set True for heavy testing
 _r = _RandomP()
 M = _r.M
 K = _r.K
+limit = 1.0 / (K + 1)  # lower limit for p
 SMALL_P = _r.SMALL_P
 
 
@@ -383,7 +384,7 @@ class VerificationTests(Util):
         """
         Verify that the probabilities p for which final AND and OR result in
         equal x are:  p = j / (K + 1)    j in range(1, K)
-        Also, verify these x are all:  x = 1 / (K + 1)
+        Also, verify these x are all:  x = 1 / (K + 1) = limit
         These are also the maximal x.
         """
         for j in range(1, K):
@@ -396,7 +397,7 @@ class VerificationTests(Util):
             x1 = (p - q) / (1.0 - q)      # OR
             x2 = 1.0 - p / (q + 1.0 / K)  # AND   x2 = 1 - p / next q
             self.assertAlmostEqual(x1, x2, delta=1e-14)
-            self.assertAlmostEqual(x1, 1.0 / (K + 1), delta=1e-14)
+            self.assertAlmostEqual(x1, limit, delta=1e-14)
 
     def special_p(self):
         """
@@ -437,26 +438,38 @@ class VerificationTests(Util):
             self.assertTrue(q <= p)
             x1 = (p - q) / (1.0 - q)      # OR
             x2 = 1.0 - p / (q + 1.0 / K)  # AND   x2 = 1 - p / next q
-            # decided whether to use next i (level of q)
+            # decided whether to use next i (next q)
             self.assertEqual(x1 > x2,
                              p * (K + 1) > i + 1)
-            # this implies q != p
+
+    def test_decision_limit(self):
+        for p in self.special_p():
+            i = int(p * K)
+            q0 = q = i / K
+            q1 = (i + 1) / K
+            self.assertTrue(q0 <= p < q1)
+            self.assertTrue(q0 + 0.5 * limit < q1 - 0.5 * limit)
+
             if p * (K + 1) > i + 1:
-                self.assertNotEqual(q, p)
+                self.assertTrue(q1 - 0.5 * limit < p < q1)
+                # implies:
+                self.assertNotEqual(q0, p)
+                q = q1
+            else:
+                self.assertTrue(q0 <= p < q0 + limit)
+
+            self.assertTrue(p - limit < q < p + 0.5 * limit)
+            self.assertTrue(abs(p - q) < limit)
 
     def test_final_op(self):
         """
         Verify final operation always gives us the correct probability,
         and establish a lower limit for p.
         """
-        limit = 1.0 / (K + 1)  # lower limit for p
-
         for p in self.special_p():
             i = int(p * K)
-            self.assertTrue(i / K <= p)
             if p * (K + 1) > i + 1:  # see above
                 i += 1
-                self.assertTrue(i / K > p)
 
             if p > limit:  # see below
                 self.assertNotEqual(i, 0)
@@ -485,7 +498,6 @@ class VerificationTests(Util):
         as the sequence of operations do not handle `i = 0`.
         """
         EPS = 1e-12
-        limit = 1.0 / (K + 1)  # lower limit for p
 
         for e, res in [
                 (-EPS, 0),
