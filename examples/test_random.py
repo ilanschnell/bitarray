@@ -448,6 +448,7 @@ class VerificationTests(Util):
             q0 = q = i / K
             q1 = (i + 1) / K
             self.assertTrue(q0 <= p < q1)
+            self.assertTrue(q1 - q0 == 1.0 / K > limit)
             self.assertTrue(q0 + 0.5 * limit < q1 - 0.5 * limit)
 
             if p * (K + 1) > i + 1:
