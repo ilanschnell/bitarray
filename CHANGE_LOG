@@ -2,6 +2,8 @@
 -------------------
   * optimize `util.random_p()` by also using bitwise AND in final step
   * fix DeprecationWarning regarding `u` type code
+  * add [verification tests](../examples/test_random.py) for internals
+    of `util.random_p()`
 
 
 2025-07-14   3.5.1:
