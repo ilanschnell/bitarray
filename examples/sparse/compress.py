@@ -3,7 +3,7 @@ import gzip
 from time import perf_counter
 
 from bitarray.util import (
-    ones, urandom,
+    ones, urandom, random_p,
     serialize, deserialize,
     sc_encode, sc_decode,
     vl_encode, vl_decode,
@@ -30,10 +30,7 @@ def p_range():
 
 def compare():
     n = 1 << 26
-    # create random bitarray with p = 1 / 2^9 = 1 / 512 = 0.195 %
-    a = ones(n)
-    for i in range(10):
-        a &= urandom(n)
+    a = random_p(n, 1.0 / 1024)
 
     raw = a.tobytes()
     print(20 * ' ' +  "compress (ms)   decompress (ms)             ratio")
