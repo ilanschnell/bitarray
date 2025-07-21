@@ -1,9 +1,10 @@
 import bz2
 import gzip
+import random
 from time import perf_counter
 
 from bitarray.util import (
-    ones, urandom, random_p,
+    ones, random_p,
     serialize, deserialize,
     sc_encode, sc_decode,
     vl_encode, vl_decode,
@@ -25,7 +26,7 @@ def p_range():
         print('  %11.8f  %11.8f  %8d  %8d  %8d  %8d  %8d' %
               tuple([p, len(b) / (n / 8)] + blocks))
         assert a == sc_decode(b)
-        a &= urandom(n)
+        a &= random_p(n)
         p /= 2
 
 def compare():
@@ -52,5 +53,6 @@ def compare():
         assert c == x
 
 if __name__ == '__main__':
+    random.seed(123)
     compare()
     p_range()
