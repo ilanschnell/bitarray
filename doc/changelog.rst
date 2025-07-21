@@ -1,6 +1,14 @@
 Change log
 ==========
 
+**3.5.2** (2025-07-21):
+
+* optimize ``util.random_p()`` by also using bitwise AND in final step
+* fix DeprecationWarning regarding ``u`` type code
+* add `verification tests <../examples/test_random.py>`__ for internals
+  of ``util.random_p()``
+
+
 **3.5.1** (2025-07-14):
 
 * optimize ``util.random_p()`` for ``n < 100``
