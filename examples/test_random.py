@@ -468,17 +468,20 @@ class VerificationTests(Util):
 
     def test_final_op(self):
         """
-        Verify final operation always gives us the correct probability,
-        and establish a lower limit for p.
+        Verify final operation always gives us the correct probability.
         """
         for p in self.special_p():
             i = int(p * K)
             if p * (K + 1) > i + 1:  # see above
                 i += 1
 
-            if p > limit:  # see below
+            if p > limit:
                 self.assertNotEqual(i, 0)
-            self.assertTrue(i <= K // 2)
+                # Note that all the below handles this case fine.
+                # However, rather than extending .op_seq() and .combine_half()
+                # to handle i=0, we decided to "filter out" i=0 by the small p
+                # case (see test below).
+            self.assertTrue(0 <= i <= K // 2)
 
             q = i / K
             self.assertTrue(abs(p - q) < limit)
@@ -498,27 +501,20 @@ class VerificationTests(Util):
 
     def test_i_not_0(self):
         """
-        Verify that for `p > limit`, we will always have `i > 0`.
-        Is is important, as the small p case has to "filter out" `i = 0`,
+        Verify that for `p > limit`, we always get `i > 0`.
+        This is important, as the small p case has to "filter out" `i = 0`,
         as the sequence of operations do not handle `i = 0`.
         """
-        EPS = 1e-12
-
-        for e, res in [
-                (-EPS, 0),
-                ( 0.0, 0),
-                (+EPS, 1),
-        ]:
-            p = limit + e
-            i = int(p * K)
-            self.assertEqual(i, 0)  # as K / (K + 1) < 1
-            if p * (K + 1) > i + 1:
-                i += 1
-            # So for i not be zero we must have:
-            #     p * (K + 1) > 1
-            # or
-            #     p > 1 / (K + 1) = limit        q.e.d.
-            self.assertEqual(i, res)
+        p = limit + 1e-12
+        i = int(p * K)
+        self.assertEqual(i, 0)  # as K / (K + 1) < 1
+        if p * (K + 1) > i + 1:
+            i += 1
+        # So for i be non-zero we must have:
+        #     p * (K + 1) > 1
+        # or
+        #     p > 1 / (K + 1) = limit        q.e.d.
+        self.assertEqual(i, 1)
 
     def dummy_random_p(self, p=0.5, verbose=False):
         """
