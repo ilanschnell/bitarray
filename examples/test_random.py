@@ -443,13 +443,17 @@ class VerificationTests(Util):
                              p * (K + 1) > i + 1)
 
     def test_decision_limit(self):
+        """
+        Verify that decision operation works as desired, and that resulting
+        probability q is within limit of p.
+        """
         # limit = 1/(K+1) is slightly smaller than 1/K:
         self.assertEqual(limit, 1.0 / K - 1.0 / (K * (K + 1)))
         self.assertTrue(1.0 / K - limit < K ** -2 == 1.0 / (1 << (2 * M)))
 
         for p in self.special_p():
             i = int(p * K)
-            q0 = q = i / K
+            q0 = i / K
             q1 = (i + 1) / K
             self.assertTrue(q0 <= p < q1)
             self.assertTrue(q1 - q0 == 1.0 / K > limit)
@@ -460,11 +464,15 @@ class VerificationTests(Util):
                 # implies:
                 self.assertNotEqual(q0, p)
                 q = q1
+                self.assertTrue(q > p)      # use AND operation
             else:
                 self.assertTrue(q0 <= p < q0 + limit)
+                q = q0
+                self.assertTrue(q <= p)     # use OR operation
 
             self.assertTrue(p - limit < q < p + 0.5 * limit)
             self.assertTrue(abs(p - q) < limit)
+            self.assertEqual(bool(q != p), bool(math.fmod(p, 1.0 / K)))
 
     def test_final_op(self):
         """
@@ -484,15 +492,14 @@ class VerificationTests(Util):
             self.assertTrue(0 <= i <= K // 2)
 
             q = i / K
-            self.assertTrue(abs(p - q) < limit)
-            self.assertEqual(bool(q != p), bool(math.fmod(p, 1.0 / K)))
+            self.assertTrue(abs(p - q) < limit)  # see above
 
-            if q < p:  # increase probability
+            if q < p:  # increase probability - OR
                 x = (p - q) / (1.0 - q)
                 # ensure small p case is called
                 self.assertTrue(0.0 < x < limit)
                 q += x * (1.0 - q)   # OR
-            elif q > p:  # decrease probability
+            elif q > p:  # decrease probability - AND
                 x = p / q
                 # ensure small p case is called (after symmetry is exploited)
                 self.assertTrue(0.0 < 1.0 - x < limit)
