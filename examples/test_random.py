@@ -48,7 +48,7 @@ def count_each_index(arrays):
         if n is None:
             n = len(a)
         elif len(a) != n:
-            raise ValueError("bitarrays of same lenght expected")
+            raise ValueError("bitarrays of same length expected")
         b.extend(a)
     if n is None:
         return Counter()
@@ -63,7 +63,7 @@ class CountEachIndexTests(unittest.TestCase):
                   bitarray("1011001")]
         #             sums: 2032202
         c = count_each_index(arrays)
-        self.assertEqual(c.total(), 7)  # lenght of each bitarray
+        self.assertEqual(c.total(), 7)  # length of each bitarray
         self.assertEqual(c[0], 2)
         self.assertEqual(c[1], 0)
         self.assertEqual(c[2], 4)
