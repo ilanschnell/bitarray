@@ -36,7 +36,7 @@ from bitarray.util import (
     _huffman_tree, huffman_code, canonical_huffman, canonical_decode,
 )
 
-from bitarray.util import _RandomP  # type: ignore
+from bitarray.util import _Random  # type: ignore
 
 if DEBUG:
     from bitarray._util import (  # type: ignore
@@ -206,11 +206,11 @@ class Random_P_Tests(unittest.TestCase):
         # initialize seed with current system time again
         seed()
 
-    # ---------------- tests for internal _RandomP methods ------------------
+    # ---------------- tests for internal _Random methods -------------------
 
     # To better understand how the algorithm works, see ./doc/random_p.rst
 
-    r = _RandomP()
+    r = _Random()
 
     def test_small_p_limit(self):
         K = self.r.K
@@ -258,7 +258,7 @@ class Random_P_Tests(unittest.TestCase):
             self.assertEqual(q, i / K)
 
     def test_combine_half(self):
-        r = _RandomP(1_000_000)
+        r = _Random(1_000_000)
         for seq, mean in [
                 ([],     500_000),  # .random_half() itself
                 ([0],    250_000),  # AND
@@ -269,7 +269,7 @@ class Random_P_Tests(unittest.TestCase):
             self.assertTrue(abs(a.count() - mean) < 5_000)
 
     def test_random_pop_basic(self):
-        r = _RandomP(7)
+        r = _Random(7)
         a = r.random_pop(3)
         self.assertEqual(len(a), 7)
         self.assertEqual(a.count(), 3)
@@ -277,7 +277,7 @@ class Random_P_Tests(unittest.TestCase):
             self.assertRaises(ValueError, r.random_pop, m)
 
         for n in range(10):
-            r = _RandomP(n)
+            r = _Random(n)
             k = randint(0, n)
             a = r.random_pop(k)
             self.assertEqual(len(a), n)
@@ -286,7 +286,7 @@ class Random_P_Tests(unittest.TestCase):
     def test_random_pop_active(self):
         # test if all bits are active
         n = 250
-        r = _RandomP(n)
+        r = _Random(n)
         cum = zeros(n)
         for _ in range(100):
             k = randrange(n // 2)

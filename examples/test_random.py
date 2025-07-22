@@ -22,13 +22,13 @@ from bitarray import bitarray
 from bitarray.util import (
     zeros, ones, urandom, random_p, int2ba, count_and, count_or, count_xor
 )
-from bitarray.util import _RandomP  # type: ignore
+from bitarray.util import _Random  # type: ignore
 
 
 HEAVY = False   # set True for heavy testing
 
 
-_r = _RandomP()
+_r = _Random()
 M = _r.M
 K = _r.K
 limit = 1.0 / (K + 1)  # lower limit for p

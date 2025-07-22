@@ -67,10 +67,10 @@ when Python version is too low.
     if sys.version_info[:2] < (3, 12):
         raise NotImplementedError("bitarray.util.random_p() requires "
                                   "Python 3.12 or higher")
-    r = _RandomP(__n, endian)
+    r = _Random(__n, endian)
     return r.random_p(p)
 
-class _RandomP:
+class _Random:
 
     # The main reason for this class it to enable testing functionality
     # individually in the test class Random_P_Tests in 'test_util.py'.
