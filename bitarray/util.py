@@ -166,7 +166,7 @@ class _Random:
             a.invert()  # use in-place to avoid copying
             return a
 
-        # decide on sequence
+        # decide on sequence, see VerificationTests ./examples/test_random.py
         if k < 16 or k * self.K < 3 * n:
             i = 0
         else:

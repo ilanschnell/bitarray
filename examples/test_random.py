@@ -16,7 +16,7 @@ import math
 import unittest
 from copy import deepcopy
 from collections import Counter
-from random import randrange, random, binomialvariate
+from random import randint, randrange, random, binomialvariate
 
 from bitarray import bitarray, frozenbitarray
 from bitarray.util import (
@@ -471,6 +471,53 @@ class VerificationTests(Util):
                 a ^= b                       # in-place XOR
                 p += q * (1.0 - 2 * p)
                 C(a, p)
+
+    # ------------- verifications relevant for random_sample() --------------
+
+    def test_decide_on_sequence(self):
+        N = 100_000
+        cdiff = Counter()
+
+        for _ in range(N):
+            n = randrange(1, 10_000)
+            k = randint(0, n // 2)
+            self.assertTrue(0 <= k <= n // 2)
+
+            if k < 16 or k * K < 3 * n:
+                # for small k, we increase the count of a zeros(n) bitarray
+                i = 0
+            else:
+                # We could simply have `i = int(k / n * K)`.  However,
+                # when k is small, many reselections are required to
+                # decrease the count.  On the other hand, for k near n/2,
+                # increasing and decreasing the count is equally expensive.
+                p = k / n  # p <= 0.5
+                # As the standard deviation of the .combine_half() bitarrays
+                # gets smaller with larger n, we divide by sqrt(n).
+                p -= (0.2 - 0.4 * p) / math.sqrt(n)
+                # Note that we divide by K+1.  This will round towards the
+                # nearest probability as we get closer to p = 1/2.
+                i = int(p * (K + 1))
+
+            if i < 3:
+                # a = zeros(n), count is 0
+                diff = -k
+            else:
+                self.assertTrue(k >= 16)
+                self.assertTrue(n >= 32)
+                self.assertTrue(3 <= i <= K // 2)
+                # a = self.combine_half(self.op_seq(i))
+                # count is given by binomialvariate(n, i / K)
+                diff = binomialvariate(n, i / K) - k
+
+            cdiff[diff] += 1
+
+        self.assertEqual(cdiff.total(), N)
+        # count the number of cases where the count needs to be decreased
+        above = sum(cdiff[i] for i in range(1, max(cdiff) + 1))
+        self.assertTrue(0.28 < above / N < 0.34)
+
+    # ---------------- verifications relevant for random_p() ----------------
 
     def test_equal_x(self):
         """
