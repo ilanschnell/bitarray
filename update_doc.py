@@ -55,6 +55,7 @@ NEW_IN = {
     'util.pprint':            '1.8',
     'util.serialize':         '1.8',
     'util.urandom':           '1.7',
+    'util.random_k':          '3.6',
     'util.random_p':          '3.5',
     'util.sc_encode':         '2.7',
     'util.sc_decode':         '2.7',

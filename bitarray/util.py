@@ -9,6 +9,7 @@ from __future__ import absolute_import
 
 import os
 import sys
+import math
 import random
 
 from bitarray import bitarray, bits2bytes
@@ -26,7 +27,7 @@ from bitarray._util import (
 )
 
 __all__ = [
-    'zeros', 'ones', 'urandom', 'random_p',
+    'zeros', 'ones', 'urandom', 'random_k', 'random_p',
     'pprint', 'strip', 'count_n',
     'parity', 'xor_indices',
     'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
@@ -51,13 +52,33 @@ Return random bitarray of length `n` (uses `os.urandom()`).
     return a
 
 
+def random_k(__n, k, endian=None):
+    """random_k(n, /, k, endian=None) -> bitarray
+
+Return (pseudo-) random bitarray of length `n` with `k` elements
+set to one.  Mathematically equivalent to setting (in a bitarray of
+length `n') all bits at indices `random.sample(range(n), k)` to one.
+If the sample size `k` is larger than the bitarray length `n`,
+a `ValueError` is raised.
+
+This function requires Python 3.9 or higher, as it depends on the standard
+library function ``random.randbytes()``.  Raises ``NotImplementedError``
+when Python version is too low.
+"""
+    if sys.version_info[:2] < (3, 9):
+        raise NotImplementedError("bitarray.util.random_k() requires "
+                                  "Python 3.9 or higher")
+    r = _Random(__n, endian)
+    return r.random_k(k)
+
+
 def random_p(__n, p=0.5, endian=None):
     """random_p(n, /, p=0.5, endian=None) -> bitarray
 
-Return (pseudo-) random bitarray of length `n`.  Each bit has probability `p`
-of being one (independent of any other bits).  Mathematically equivalent
-to `bitarray((random() < p for _ in range(n)), endian)`, but much faster
-for large `n`.  The random bitarrays are reproducible when giving
+Return (pseudo-) random bitarray of length `n`, where each bit has
+probability `p` of being one (independent of any other bits).  Mathematically
+equivalent to `bitarray((random() < p for _ in range(n)), endian)`, but much
+faster for large `n`.  The random bitarrays are reproducible when giving
 Python's `random.seed()` with a specific seed value.
 
 This function requires Python 3.12 or higher, as it depends on the standard
@@ -128,23 +149,52 @@ class _Random:
                 a &= self.random_half()
         return a
 
-    def random_pop(self, k):
-        """
-        Return a random bitarray of length self.n and population count k.
-        Designed for small k (compared to self.n).
-        """
-        randrange = random.randrange
+    def random_k(self, k):
         n = self.n
+        # error check inputs and handle edge cases
+        if k <= 0 or k >= n:
+            if k == 0:
+                return zeros(n, self.endian)
+            if k == n:
+                return ones(n, self.endian)
+            raise ValueError("k must be in range 0 <= k <= n, got %s" % k)
 
-        if not 0 <= k <= n:
-            raise ValueError("0 <= k <= %d, got k = %d" % (n, k))
+        # exploit symmetry to establish: k <= n // 2
+        if k > n // 2:
+            a = self.random_k(n - k)
+            a.invert()  # use in-place to avoid copying
+            return a
 
-        a = bitarray(n, self.endian)
-        for _ in range(k):
-            i = randrange(n)
-            while a[i]:
+        # decide on sequence, see VerificationTests ./examples/test_random.py
+        if k < 16 or k * self.K < 3 * n:
+            i = 0
+        else:
+            p = k / n  # p <= 0.5
+            p -= (0.2 - 0.4 * p) / math.sqrt(n)
+            i = int(p * (self.K + 1))
+
+        # combine random bitarrays using bitwise AND and OR operations
+        if i < 3:
+            a = zeros(n, self.endian)
+            diff = -k
+        else:
+            a = self.combine_half(self.op_seq(i))
+            diff = a.count() - k
+
+        randrange = random.randrange
+        if diff < 0:  # not enough bits 1 - increase count
+            for _ in range(-diff):
                 i = randrange(n)
-            a[i] = 1
+                while a[i]:
+                    i = randrange(n)
+                a[i] = 1
+        elif diff > 0:  # too many bits 1 - decrease count
+            for _ in range(diff):
+                i = randrange(n)
+                while not a[i]:
+                    i = randrange(n)
+                a[i] = 0
+
         return a
 
     def random_p(self, p):
@@ -171,7 +221,7 @@ class _Random:
 
         # for small p, set randomly individual bits
         if p < self.SMALL_P:
-            return self.random_pop(random.binomialvariate(self.n, p))
+            return self.random_k(random.binomialvariate(self.n, p))
 
         # calculate operator sequence
         i = int(p * self.K)
