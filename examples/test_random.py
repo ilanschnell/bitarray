@@ -16,7 +16,7 @@ import math
 import unittest
 from copy import deepcopy
 from collections import Counter
-from random import randint, randrange, random
+from random import randrange, random, binomialvariate
 
 from bitarray import bitarray, frozenbitarray
 from bitarray.util import (
@@ -286,14 +286,23 @@ class RandomSampleTests(Util):
                     break
         self.assertEqual(total, 2 ** n)
 
-    def test_count(self):
-        n = 100_000_000
-        for j in range(50 if HEAVY else 2):
-            sys.stdout.write('.')
-            sys.stdout.flush()
-            k = randint(0, n)
-            a = random_sample(n, k)
-            self.assertEqual(a.count(), k)
+    def random_p_alt(self, n, p=0.5):
+        """
+        Alternative implementation of random_p().  While the performance is
+        about the same for large n, we found that for smaller n the handling
+        of special cases leads to better overall performance in the current
+        implementation.
+        """
+        k = binomialvariate(n, p)
+        self.assertTrue(0 <= k <= n)
+        return random_sample(n, k)
+
+    def test_random_p_alt(self):
+        n = 1_000_000
+        for _ in range(100):
+            p = random()
+            a = self.random_p_alt(n, p)
+            self.check_probability(a, p)
 
 
 class Random_P_Tests(Util):
