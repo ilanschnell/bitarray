@@ -146,8 +146,8 @@ class Random_K_Tests(unittest.TestCase):
             a = random_k(n, k, endian)
             self.assertTrue(type(a), bitarray)
             self.assertEqual(len(a), n)
-            self.assertEqual(a.endian, endian or default_endian)
             self.assertEqual(a.count(), k)
+            self.assertEqual(a.endian, endian or default_endian)
 
     def test_inputs_and_edge_cases(self):
         R = random_k
@@ -156,8 +156,8 @@ class Random_K_Tests(unittest.TestCase):
         self.assertRaises(TypeError, R, 1, "0.5")
         self.assertRaises(TypeError, R, 1, p=1)
         self.assertRaises(ValueError, R, -1, 0)
-        self.assertRaises(ValueError, R, 10, -1)  # k < 0
-        self.assertRaises(ValueError, R, 10, 11)  # k > n
+        for k in -1, 11:  # k is not 0 <= k <= n
+            self.assertRaises(ValueError, R, 10, k)
         self.assertRaises(ValueError, R, 10, 7, 'foo')
         self.assertRaises(ValueError, R, 10, 7, endian='foo')
         for n in range(20):
@@ -179,7 +179,6 @@ class Random_K_Tests(unittest.TestCase):
         for _ in range(1000):
             k = randint(30, 40)
             a = random_k(n, k)
-            self.assertEqual(len(a), n)
             self.assertEqual(a.count(), k)
             cum |= a
             if cum.all():
@@ -202,7 +201,6 @@ class Random_K_Tests(unittest.TestCase):
                     break
             else:
                 self.fail()
-
         self.assertEqual(total, 2 ** n)
 
     def collect_code_branches(self):

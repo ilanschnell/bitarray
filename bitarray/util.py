@@ -55,8 +55,8 @@ Return random bitarray of length `n` (uses `os.urandom()`).
 def random_k(__n, k, endian=None):
     """random_k(n, /, k, endian=None) -> bitarray
 
-Return (pseudo-) random bitarray of length `n`, where `k` elements are
-randomly set to one.  Mathematically equivalent to setting (in a bitarray of
+Return (pseudo-) random bitarray of length `n` with `k` elements
+set to one.  Mathematically equivalent to setting (in a bitarray of
 length `n') all bits at indices `random.sample(range(n), k)` to one.
 If the sample size `k` is larger than the bitarray length `n`,
 a `ValueError` is raised.
