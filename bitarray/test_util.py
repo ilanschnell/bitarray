@@ -26,7 +26,7 @@ from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
                                     PTRSIZE, DEBUG, WHITESPACE)
 
 from bitarray.util import (
-    zeros, ones, urandom, random_p, pprint, strip, count_n,
+    zeros, ones, urandom, random_p, random_sample, pprint, strip, count_n,
     parity, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
     correspond_all, byteswap, intervals,
@@ -122,6 +122,93 @@ class URandomTests(unittest.TestCase):
         # see if population is within expectation
         self.assertTrue(abs(a.count() - 5_000_000) <= 15_811)
 
+# -------------------------- .random_sample() -------------------------------
+
+HAVE_RANDBYTES = sys.version_info[:2] >= (3, 9)
+
+@skipIf(HAVE_RANDBYTES)
+class RandomSample_Not_Implemented(unittest.TestCase):
+
+    def test_not_implemented(self):
+        self.assertRaises(NotImplementedError, random_sample, 100, 60)
+
+
+@skipIf(not HAVE_RANDBYTES)
+class RandomSampleTests(unittest.TestCase):
+
+    def test_basic(self):
+        for _ in range(250):
+            default_endian = choice(['little', 'big'])
+            _set_default_endian(default_endian)
+            endian = choice(['little', 'big', None])
+            n = randrange(120)
+            k = randint(0, n)
+            a = random_sample(n, k, endian)
+            self.assertTrue(type(a), bitarray)
+            self.assertEqual(len(a), n)
+            self.assertEqual(a.endian, endian or default_endian)
+            self.assertEqual(a.count(), k)
+
+    def test_inputs_and_edge_cases(self):
+        R = random_sample
+        self.assertRaises(TypeError, R)
+        self.assertRaises(TypeError, R, 4)
+        self.assertRaises(TypeError, R, 1, "0.5")
+        self.assertRaises(TypeError, R, 1, p=1)
+        self.assertRaises(ValueError, R, -1, 0)
+        self.assertRaises(ValueError, R, 10, -1)  # k < 0
+        self.assertRaises(ValueError, R, 10, 11)  # k > n
+        self.assertRaises(ValueError, R, 10, 7, 'foo')
+        self.assertRaises(ValueError, R, 10, 7, endian='foo')
+        for n in range(20):
+            self.assertEqual(R(n, k=0), zeros(n))
+            self.assertEqual(R(n, k=n), ones(n))
+
+    def test_count(self):
+        for _ in range(100):
+            n = randrange(10_000)
+            k = randint(0, n)
+            a = random_sample(n, k)
+            self.assertEqual(len(a), n)
+            self.assertEqual(a.count(), k)
+
+    def test_active_bits(self):
+        # test if all bits are active
+        n = 250
+        cum = zeros(n)
+        for _ in range(100):
+            k = randrange(n // 2)
+            a = random_sample(n, k)
+            self.assertEqual(len(a), n)
+            self.assertEqual(a.count(), k)
+            cum |= a
+        self.assertTrue(cum.all())
+
+    def collect_code_branches(self):
+        # return list of bitarrays from all code branches of random_sample()
+        res = []
+        # test small k (no .combine_half())
+        res.append(random_sample(300, 10))
+        # general cases
+        for k in 100, 500, 2_500, 4_000:
+            res.append(random_sample(5_000, k))
+        return res
+
+    def test_seed(self):
+        # We ensure that after setting a seed value, random_sample() will
+        # always return the same random bitarrays.  However, we do not ensure
+        # that these results will not change in future versions of bitarray.
+        _set_default_endian("little")
+        a = []
+        for val in 654321, 654322, 654321, 654322:
+            seed(val)
+            a.append(self.collect_code_branches())
+        self.assertEqual(a[0], a[2])
+        self.assertEqual(a[1], a[3])
+        self.assertNotEqual(a[0], a[1])
+        # initialize seed with current system time again
+        seed()
+
 # ---------------------------- .random_p() ----------------------------------
 
 HAVE_BINOMIALVARIATE = sys.version_info[:2] >= (3, 12)
@@ -131,6 +218,7 @@ class Random_P_Not_Implemented(unittest.TestCase):
 
     def test_not_implemented(self):
         self.assertRaises(NotImplementedError, random_p, 100, 0.25)
+
 
 @skipIf(not HAVE_BINOMIALVARIATE)
 class Random_P_Tests(unittest.TestCase):
@@ -267,34 +355,6 @@ class Random_P_Tests(unittest.TestCase):
         ]:
             a = r.combine_half(seq)
             self.assertTrue(abs(a.count() - mean) < 5_000)
-
-    def test_random_pop_basic(self):
-        r = _Random(7)
-        a = r.random_pop(3)
-        self.assertEqual(len(a), 7)
-        self.assertEqual(a.count(), 3)
-        for m in -1, 8:
-            self.assertRaises(ValueError, r.random_pop, m)
-
-        for n in range(10):
-            r = _Random(n)
-            k = randint(0, n)
-            a = r.random_pop(k)
-            self.assertEqual(len(a), n)
-            self.assertEqual(a.count(), k)
-
-    def test_random_pop_active(self):
-        # test if all bits are active
-        n = 250
-        r = _Random(n)
-        cum = zeros(n)
-        for _ in range(100):
-            k = randrange(n // 2)
-            a = r.random_pop(k)
-            self.assertEqual(len(a), n)
-            self.assertEqual(a.count(), k)
-            cum |= a
-        self.assertTrue(cum.all())
 
 # ---------------------------------------------------------------------------
 

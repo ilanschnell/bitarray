@@ -16,11 +16,12 @@ import math
 import unittest
 from copy import deepcopy
 from collections import Counter
-from random import randrange, random
+from random import randint, randrange, random
 
 from bitarray import bitarray
 from bitarray.util import (
-    zeros, ones, urandom, random_p, int2ba, count_and, count_or, count_xor
+    zeros, ones, urandom, random_sample, random_p,
+    int2ba, count_and, count_or, count_xor
 )
 from bitarray.util import _Random  # type: ignore
 
@@ -212,6 +213,57 @@ class URandomTests(Util):
             self.assertTrue(abs(x - 52_219) <= 1_580)
 
 
+class RandomSampleTests(Util):
+
+    def test_apply_masks(self):
+        M = 12
+        # Create masks for selecting half elements in the random bitarray a.
+        # For example, masks[0] selects all odd elements, and masks[-1]
+        # selects the upper half of a.
+        masks = create_masks(M)
+        c = M * [0]  # count for each mask
+        for _ in range(25_000):
+            n = 1 << M
+            k = 1 + 2 * randrange(n // 2)  # k is odd
+            a = random_sample(n, k)
+            self.assertEqual(a.count(), k)
+            for i in range(M):
+                c1 = count_and(a, masks[i])
+                c0 = k - c1
+                # counts cannot be equal because k is odd
+                self.assertNotEqual(c0, c1)
+                # the probability for having more, e.g. even than
+                # odd (masks[0]) elements should be 1/2, or having more bits
+                # in upper vs lower half (mask(-1))
+                if c0 > c1:
+                    c[i] += 1
+
+        for i in range(M):
+            self.check_normal_dist(25_000, 0.5, c[i])
+
+    def test_elements_uniform(self):
+        arrays = [random_sample(100_000, 30_000) for _ in range(100)]
+        for a in arrays:
+            # for each bitarray check sample size k
+            self.assertEqual(a.count(), 30_000)
+
+        c = count_each_index(arrays)
+        self.assertTrue(abs(c[30] - 8_678) <= 890)
+        x = sum(c[k] for k in range(20, 31))
+        # p = 0.540236   mean = 54023.639245   stdev = 157.601089
+        self.assertTrue(abs(x - 54_024) <= 1_576)
+        self.assertEqual(c.total(), 100_000)
+
+    def test_count(self):
+        n = 100_000_000
+        for j in range(50 if HEAVY else 2):
+            sys.stdout.write('.')
+            sys.stdout.flush()
+            k = randint(0, n)
+            a = random_sample(n, k)
+            self.assertEqual(a.count(), k)
+
+
 class Random_P_Tests(Util):
 
     def test_all_bits_active(self):
@@ -230,7 +282,7 @@ class Random_P_Tests(Util):
     def test_apply_masks(self):
         M = 12
         # Create masks for selecting half elements in the random bitarray a.
-        # For example, masks[0] selects y'all odd elements, and masks[-1]
+        # For example, masks[0] selects all odd elements, and masks[-1]
         # selects the upper half of a.
         masks = create_masks(M)
         n = M * [0]  # sample size for each mask
@@ -303,7 +355,7 @@ class Random_P_Tests(Util):
         self.assertEqual(c.total(), 100_000)
 
     def test_n100_p375(self):
-        # test random_combine()
+        # test .combine_half()
         c = Counter(random_p(100, 0.375).count() for _ in range(100_000))
         x = sum(c[k] for k in range(37, 49))
         # p = 0.566139   mean = 56613.946454   stdev = 156.724462
