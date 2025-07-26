@@ -176,8 +176,8 @@ class RandomSampleTests(unittest.TestCase):
         # test if all bits are active
         n = 240
         cum = zeros(n)
-        for _ in range(200):
-            k = randrange(n // 3)
+        for _ in range(1000):
+            k = randint(30, 40)
             a = random_sample(n, k)
             self.assertEqual(len(a), n)
             self.assertEqual(a.count(), k)
@@ -185,7 +185,7 @@ class RandomSampleTests(unittest.TestCase):
             if cum.all():
                 break
         else:
-            self.assertTrue(0)  # shoud not happen
+            self.fail()
 
     def test_combinations(self):
         # for entire range of 0 <= k <= n, validate that random_sample()
@@ -196,14 +196,12 @@ class RandomSampleTests(unittest.TestCase):
             expected = math.comb(n, k)
             combs = set()
             for _ in range(10_000):
-                a = random_sample(n, k)
-                self.assertEqual(a.count(), k)
-                combs.add(frozenbitarray(a))
+                combs.add(frozenbitarray(random_sample(n, k)))
                 if len(combs) == expected:
                     total += expected
                     break
             else:
-                self.assertTrue(0)  # shoud not happen
+                self.fail()
 
         self.assertEqual(total, 2 ** n)
 

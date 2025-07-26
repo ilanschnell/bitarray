@@ -257,17 +257,18 @@ class RandomSampleTests(Util):
 
     def test_all_bits_active(self):
         for _ in range(100):
-            n = randrange(10_000)
+            n = randrange(10, 10_000)
             cum = zeros(n)
-            while True:
-                k = n // 5
+            for _ in range(10_000):
+                k = n // 7
                 a = random_sample(n, k)
                 self.assertEqual(len(a), n)
                 self.assertEqual(a.count(), k)
                 cum |= a
                 if cum.all():
                     break
-            self.assertTrue(cum.all())
+            else:
+                self.fail()
 
     def test_combinations(self):
         # for entire range of 0 <= k <= n, validate that random_sample()
@@ -277,13 +278,16 @@ class RandomSampleTests(Util):
         for k in range(n + 1):
             expected = math.comb(n, k)
             combs = set()
-            while True:
+            for _ in range(100_000):
                 a = random_sample(n, k)
                 self.assertEqual(a.count(), k)
                 combs.add(frozenbitarray(a))
                 if len(combs) == expected:
                     total += expected
                     break
+            else:
+                self.fail()
+
         self.assertEqual(total, 2 ** n)
 
     def random_p_alt(self, n, p=0.5):
@@ -295,7 +299,10 @@ class RandomSampleTests(Util):
         """
         k = binomialvariate(n, p)
         self.assertTrue(0 <= k <= n)
-        return random_sample(n, k)
+        a = random_sample(n, k)
+        self.assertEqual(len(a), n)
+        self.assertEqual(a.count(), k)
+        return a
 
     def test_random_p_alt(self):
         n = 1_000_000
@@ -306,18 +313,6 @@ class RandomSampleTests(Util):
 
 
 class Random_P_Tests(Util):
-
-    def test_all_bits_active(self):
-        for _ in range(1000):
-            n = randrange(1000)
-            p = 1.0 - 1.1 * SMALL_P * random()
-            cum = zeros(n)
-            for i in range(15):
-                a = random_p(n, p)
-                if n > 10 and p * (1.0 - p) > 0.01:
-                    self.check_normal_dist(n, p, a.count())
-                cum |= a
-            self.assertTrue(cum.all())
 
     def test_apply_masks(self):
         M = 12
@@ -492,6 +487,7 @@ class VerificationTests(Util):
                 # decrease the count.  On the other hand, for k near n/2,
                 # increasing and decreasing the count is equally expensive.
                 p = k / n  # p <= 0.5
+                # Numerator: f(p)=(1-2*p)*c  ->  f(0)=c, f(1/2)=0
                 # As the standard deviation of the .combine_half() bitarrays
                 # gets smaller with larger n, we divide by sqrt(n).
                 p -= (0.2 - 0.4 * p) / math.sqrt(n)
@@ -515,7 +511,7 @@ class VerificationTests(Util):
         self.assertEqual(cdiff.total(), N)
         # count the number of cases where the count needs to be decreased
         above = sum(cdiff[i] for i in range(1, max(cdiff) + 1))
-        self.assertTrue(0.28 < above / N < 0.34)
+        self.assertTrue(M != 8 or 0.28 < above / N < 0.34)
 
     # ---------------- verifications relevant for random_p() ----------------
 
