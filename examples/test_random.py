@@ -18,7 +18,7 @@ from copy import deepcopy
 from collections import Counter
 from random import randint, randrange, random
 
-from bitarray import bitarray
+from bitarray import bitarray, frozenbitarray
 from bitarray.util import (
     zeros, ones, urandom, random_sample, random_p,
     int2ba, count_and, count_or, count_xor
@@ -217,15 +217,16 @@ class RandomSampleTests(Util):
 
     def test_apply_masks(self):
         M = 12
+        N = 1 << M  # size of each mask
         # Create masks for selecting half elements in the random bitarray a.
         # For example, masks[0] selects all odd elements, and masks[-1]
         # selects the upper half of a.
         masks = create_masks(M)
         c = M * [0]  # count for each mask
         for _ in range(25_000):
-            n = 1 << M
-            k = 1 + 2 * randrange(n // 2)  # k is odd
-            a = random_sample(n, k)
+            k = 1 + 2 * randrange(N // 2)  # k is odd
+            a = random_sample(N, k)
+            self.assertEqual(len(a), N)
             self.assertEqual(a.count(), k)
             for i in range(M):
                 c1 = count_and(a, masks[i])
@@ -254,6 +255,37 @@ class RandomSampleTests(Util):
         self.assertTrue(abs(x - 54_024) <= 1_576)
         self.assertEqual(c.total(), 100_000)
 
+    def test_all_bits_active(self):
+        for _ in range(100):
+            n = randrange(10_000)
+            cum = zeros(n)
+            while True:
+                k = n // 5
+                a = random_sample(n, k)
+                self.assertEqual(len(a), n)
+                self.assertEqual(a.count(), k)
+                cum |= a
+                if cum.all():
+                    break
+            self.assertTrue(cum.all())
+
+    def test_combinations(self):
+        # for entire range of 0 <= k <= n, validate that random_sample()
+        # generates all possible combinations
+        n = 12
+        total = 0
+        for k in range(n + 1):
+            expected = math.comb(n, k)
+            combs = set()
+            while True:
+                a = random_sample(n, k)
+                self.assertEqual(a.count(), k)
+                combs.add(frozenbitarray(a))
+                if len(combs) == expected:
+                    total += expected
+                    break
+        self.assertEqual(total, 2 ** n)
+
     def test_count(self):
         n = 100_000_000
         for j in range(50 if HEAVY else 2):
@@ -276,7 +308,6 @@ class Random_P_Tests(Util):
                 if n > 10 and p * (1.0 - p) > 0.01:
                     self.check_normal_dist(n, p, a.count())
                 cum |= a
-            self.assertEqual(len(cum), n)
             self.assertTrue(cum.all())
 
     def test_apply_masks(self):
