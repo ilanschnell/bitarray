@@ -230,7 +230,7 @@ class Random_P_Tests(Util):
     def test_apply_masks(self):
         M = 12
         # Create masks for selecting half elements in the random bitarray a.
-        # For example, masks[0] selects y'all odd elements, and masks[-1]
+        # For example, masks[0] selects all odd elements, and masks[-1]
         # selects the upper half of a.
         masks = create_masks(M)
         n = M * [0]  # sample size for each mask
@@ -303,7 +303,7 @@ class Random_P_Tests(Util):
         self.assertEqual(c.total(), 100_000)
 
     def test_n100_p375(self):
-        # test random_combine()
+        # test .combine_half()
         c = Counter(random_p(100, 0.375).count() for _ in range(100_000))
         x = sum(c[k] for k in range(37, 49))
         # p = 0.566139   mean = 56613.946454   stdev = 156.724462

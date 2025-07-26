@@ -105,7 +105,7 @@ class _Random:
         """
         Return bitarray containing operator sequence.
         Each item represents a bitwise operation:   0: AND   1: OR
-        After applying the sequence (see .random_combine()), we
+        After applying the sequence (see .combine_half()), we
         obtain a bitarray with probability  q = i / K
         """
         if not 0 < i < self.K:
