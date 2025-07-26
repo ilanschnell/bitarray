@@ -242,6 +242,23 @@ class Random_K_Tests(Util):
         for i in range(M):
             self.check_normal_dist(25_000, 0.5, c[i])
 
+    def test_random_masks(self):
+        n = 7_000
+        k = 3_507
+        a = random_k(n, k)
+        c = 0
+        for _ in range(20_000):
+            # test a against different masks
+            mask = random_k(n, n // 2)
+            self.assertEqual(mask.count(), n // 2)
+            c1 = count_and(a, mask)
+            c0 = k - c1
+            # counts cannot be equal because k is odd
+            self.assertNotEqual(c0, c1)
+            if c0 > c1:
+                c += 1
+        self.check_normal_dist(20_000, 0.5, c)
+
     def test_elements_uniform(self):
         arrays = [random_k(100_000, 30_000) for _ in range(100)]
         for a in arrays:
@@ -287,7 +304,6 @@ class Random_K_Tests(Util):
                     break
             else:
                 self.fail()
-
         self.assertEqual(total, 2 ** n)
 
     def random_p_alt(self, n, p=0.5):
