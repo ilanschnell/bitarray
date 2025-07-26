@@ -16,11 +16,12 @@ import math
 import unittest
 from copy import deepcopy
 from collections import Counter
-from random import randrange, random
+from random import randint, randrange, random, binomialvariate
 
-from bitarray import bitarray
+from bitarray import bitarray, frozenbitarray
 from bitarray.util import (
-    zeros, ones, urandom, random_p, int2ba, count_and, count_or, count_xor
+    zeros, ones, urandom, random_k, random_p,
+    int2ba, count_and, count_or, count_xor
 )
 from bitarray.util import _Random  # type: ignore
 
@@ -212,20 +213,106 @@ class URandomTests(Util):
             self.assertTrue(abs(x - 52_219) <= 1_580)
 
 
-class Random_P_Tests(Util):
+class Random_K_Tests(Util):
+
+    def test_apply_masks(self):
+        M = 12
+        N = 1 << M  # size of each mask
+        # Create masks for selecting half elements in the random bitarray a.
+        # For example, masks[0] selects all odd elements, and masks[-1]
+        # selects the upper half of a.
+        masks = create_masks(M)
+        c = M * [0]  # count for each mask
+        for _ in range(25_000):
+            k = 1 + 2 * randrange(N // 2)  # k is odd
+            a = random_k(N, k)
+            self.assertEqual(len(a), N)
+            self.assertEqual(a.count(), k)
+            for i in range(M):
+                c1 = count_and(a, masks[i])
+                c0 = k - c1
+                # counts cannot be equal because k is odd
+                self.assertNotEqual(c0, c1)
+                # the probability for having more, e.g. even than
+                # odd (masks[0]) elements should be 1/2, or having more bits
+                # in upper vs lower half (mask(-1))
+                if c0 > c1:
+                    c[i] += 1
+
+        for i in range(M):
+            self.check_normal_dist(25_000, 0.5, c[i])
+
+    def test_elements_uniform(self):
+        arrays = [random_k(100_000, 30_000) for _ in range(100)]
+        for a in arrays:
+            # for each bitarray check sample size k
+            self.assertEqual(a.count(), 30_000)
+
+        c = count_each_index(arrays)
+        self.assertTrue(abs(c[30] - 8_678) <= 890)
+        x = sum(c[k] for k in range(20, 31))
+        # p = 0.540236   mean = 54023.639245   stdev = 157.601089
+        self.assertTrue(abs(x - 54_024) <= 1_576)
+        self.assertEqual(c.total(), 100_000)
 
     def test_all_bits_active(self):
-        for _ in range(1000):
-            n = randrange(1000)
-            p = 1.0 - 1.1 * SMALL_P * random()
+        for _ in range(100):
+            n = randrange(10, 10_000)
             cum = zeros(n)
-            for i in range(15):
-                a = random_p(n, p)
-                if n > 10 and p * (1.0 - p) > 0.01:
-                    self.check_normal_dist(n, p, a.count())
+            for _ in range(10_000):
+                k = n // 7
+                a = random_k(n, k)
+                self.assertEqual(len(a), n)
+                self.assertEqual(a.count(), k)
                 cum |= a
-            self.assertEqual(len(cum), n)
-            self.assertTrue(cum.all())
+                if cum.all():
+                    break
+            else:
+                self.fail()
+
+    def test_combinations(self):
+        # for entire range of 0 <= k <= n, validate that random_k()
+        # generates all possible combinations
+        n = 12
+        total = 0
+        for k in range(n + 1):
+            expected = math.comb(n, k)
+            combs = set()
+            for _ in range(100_000):
+                a = random_k(n, k)
+                self.assertEqual(a.count(), k)
+                combs.add(frozenbitarray(a))
+                if len(combs) == expected:
+                    total += expected
+                    break
+            else:
+                self.fail()
+
+        self.assertEqual(total, 2 ** n)
+
+    def random_p_alt(self, n, p=0.5):
+        """
+        Alternative implementation of random_p().  While the performance is
+        about the same for large n, we found that for smaller n the handling
+        of special cases leads to better overall performance in the current
+        implementation.
+        """
+        k = binomialvariate(n, p)
+        self.assertTrue(0 <= k <= n)
+        a = random_k(n, k)
+        self.assertEqual(len(a), n)
+        self.assertEqual(a.count(), k)
+        return a
+
+    def test_random_p_alt(self):
+        n = 1_000_000
+        for _ in range(100):
+            p = random()
+            a = self.random_p_alt(n, p)
+            self.check_probability(a, p)
+
+
+class Random_P_Tests(Util):
 
     def test_apply_masks(self):
         M = 12
@@ -379,6 +466,54 @@ class VerificationTests(Util):
                 a ^= b                       # in-place XOR
                 p += q * (1.0 - 2 * p)
                 C(a, p)
+
+    # ---------------- verifications relevant for random_k() ----------------
+
+    def test_decide_on_sequence(self):
+        N = 100_000
+        cdiff = Counter()
+
+        for _ in range(N):
+            n = randrange(1, 10_000)
+            k = randint(0, n // 2)
+            self.assertTrue(0 <= k <= n // 2)
+
+            if k < 16 or k * K < 3 * n:
+                # for small k, we increase the count of a zeros(n) bitarray
+                i = 0
+            else:
+                # We could simply have `i = int(k / n * K)`.  However,
+                # when k is small, many reselections are required to
+                # decrease the count.  On the other hand, for k near n/2,
+                # increasing and decreasing the count is equally expensive.
+                p = k / n  # p <= 0.5
+                # Numerator: f(p)=(1-2*p)*c  ->  f(0)=c, f(1/2)=0
+                # As the standard deviation of the .combine_half() bitarrays
+                # gets smaller with larger n, we divide by sqrt(n).
+                p -= (0.2 - 0.4 * p) / math.sqrt(n)
+                # Note that we divide by K+1.  This will round towards the
+                # nearest probability as we get closer to p = 1/2.
+                i = int(p * (K + 1))
+
+            if i < 3:
+                # a = zeros(n), count is 0
+                diff = -k
+            else:
+                self.assertTrue(k >= 16)
+                self.assertTrue(n >= 32)
+                self.assertTrue(3 <= i <= K // 2)
+                # a = self.combine_half(self.op_seq(i))
+                # count is given by binomialvariate(n, i / K)
+                diff = binomialvariate(n, i / K) - k
+
+            cdiff[diff] += 1
+
+        self.assertEqual(cdiff.total(), N)
+        # count the number of cases where the count needs to be decreased
+        above = sum(cdiff[i] for i in range(1, max(cdiff) + 1))
+        self.assertTrue(M != 8 or 0.28 < above / N < 0.34)
+
+    # ---------------- verifications relevant for random_p() ----------------
 
     def test_equal_x(self):
         """
