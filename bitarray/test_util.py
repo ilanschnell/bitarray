@@ -26,7 +26,7 @@ from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
                                     PTRSIZE, DEBUG, WHITESPACE)
 
 from bitarray.util import (
-    zeros, ones, urandom, random_p, random_sample, pprint, strip, count_n,
+    zeros, ones, urandom, random_k, random_p, pprint, strip, count_n,
     parity, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
     correspond_all, byteswap, intervals,
@@ -122,19 +122,19 @@ class URandomTests(unittest.TestCase):
         # see if population is within expectation
         self.assertTrue(abs(a.count() - 5_000_000) <= 15_811)
 
-# -------------------------- .random_sample() -------------------------------
+# ---------------------------- .random_k() ----------------------------------
 
 HAVE_RANDBYTES = sys.version_info[:2] >= (3, 9)
 
 @skipIf(HAVE_RANDBYTES)
-class RandomSample_Not_Implemented(unittest.TestCase):
+class Random_K_Not_Implemented(unittest.TestCase):
 
     def test_not_implemented(self):
-        self.assertRaises(NotImplementedError, random_sample, 100, 60)
+        self.assertRaises(NotImplementedError, random_k, 100, 60)
 
 
 @skipIf(not HAVE_RANDBYTES)
-class RandomSampleTests(unittest.TestCase):
+class Random_K_Tests(unittest.TestCase):
 
     def test_basic(self):
         for _ in range(250):
@@ -143,14 +143,14 @@ class RandomSampleTests(unittest.TestCase):
             endian = choice(['little', 'big', None])
             n = randrange(120)
             k = randint(0, n)
-            a = random_sample(n, k, endian)
+            a = random_k(n, k, endian)
             self.assertTrue(type(a), bitarray)
             self.assertEqual(len(a), n)
             self.assertEqual(a.endian, endian or default_endian)
             self.assertEqual(a.count(), k)
 
     def test_inputs_and_edge_cases(self):
-        R = random_sample
+        R = random_k
         self.assertRaises(TypeError, R)
         self.assertRaises(TypeError, R, 4)
         self.assertRaises(TypeError, R, 1, "0.5")
@@ -168,7 +168,7 @@ class RandomSampleTests(unittest.TestCase):
         for _ in range(100):
             n = randrange(10_000)
             k = randint(0, n)
-            a = random_sample(n, k)
+            a = random_k(n, k)
             self.assertEqual(len(a), n)
             self.assertEqual(a.count(), k)
 
@@ -178,7 +178,7 @@ class RandomSampleTests(unittest.TestCase):
         cum = zeros(n)
         for _ in range(1000):
             k = randint(30, 40)
-            a = random_sample(n, k)
+            a = random_k(n, k)
             self.assertEqual(len(a), n)
             self.assertEqual(a.count(), k)
             cum |= a
@@ -188,7 +188,7 @@ class RandomSampleTests(unittest.TestCase):
             self.fail()
 
     def test_combinations(self):
-        # for entire range of 0 <= k <= n, validate that random_sample()
+        # for entire range of 0 <= k <= n, validate that random_k()
         # generates all possible combinations
         n = 7
         total = 0
@@ -196,7 +196,7 @@ class RandomSampleTests(unittest.TestCase):
             expected = math.comb(n, k)
             combs = set()
             for _ in range(10_000):
-                combs.add(frozenbitarray(random_sample(n, k)))
+                combs.add(frozenbitarray(random_k(n, k)))
                 if len(combs) == expected:
                     total += expected
                     break
@@ -206,17 +206,17 @@ class RandomSampleTests(unittest.TestCase):
         self.assertEqual(total, 2 ** n)
 
     def collect_code_branches(self):
-        # return list of bitarrays from all code branches of random_sample()
+        # return list of bitarrays from all code branches of random_k()
         res = []
         # test small k (no .combine_half())
-        res.append(random_sample(300, 10))
+        res.append(random_k(300, 10))
         # general cases
         for k in 100, 500, 2_500, 4_000:
-            res.append(random_sample(5_000, k))
+            res.append(random_k(5_000, k))
         return res
 
     def test_seed(self):
-        # We ensure that after setting a seed value, random_sample() will
+        # We ensure that after setting a seed value, random_k() will
         # always return the same random bitarrays.  However, we do not ensure
         # that these results will not change in future versions of bitarray.
         _set_default_endian("little")

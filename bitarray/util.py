@@ -27,7 +27,7 @@ from bitarray._util import (
 )
 
 __all__ = [
-    'zeros', 'ones', 'urandom', 'random_p', 'random_sample',
+    'zeros', 'ones', 'urandom', 'random_k', 'random_p',
     'pprint', 'strip', 'count_n',
     'parity', 'xor_indices',
     'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
@@ -52,8 +52,8 @@ Return random bitarray of length `n` (uses `os.urandom()`).
     return a
 
 
-def random_sample(__n, k, endian=None):
-    """random_sample(n, /, k, endian=None) -> bitarray
+def random_k(__n, k, endian=None):
+    """random_k(n, /, k, endian=None) -> bitarray
 
 Return (pseudo-) random bitarray of length `n`, where a sample of `k` bits
 are one.
@@ -67,10 +67,10 @@ library function ``random.randbytes()``.  Raises ``NotImplementedError``
 when Python version is too low.
 """
     if sys.version_info[:2] < (3, 9):
-        raise NotImplementedError("bitarray.util.random_sample() requires "
+        raise NotImplementedError("bitarray.util.random_k() requires "
                                   "Python 3.9 or higher")
     r = _Random(__n, endian)
-    return r.random_sample(k)
+    return r.random_k(k)
 
 
 def random_p(__n, p=0.5, endian=None):
@@ -150,7 +150,7 @@ class _Random:
                 a &= self.random_half()
         return a
 
-    def random_sample(self, k):
+    def random_k(self, k):
         n = self.n
         # error check inputs and handle edge cases
         if k <= 0 or k >= n:
@@ -162,7 +162,7 @@ class _Random:
 
         # exploit symmetry to establish: k <= n // 2
         if k > n // 2:
-            a = self.random_sample(n - k)
+            a = self.random_k(n - k)
             a.invert()  # use in-place to avoid copying
             return a
 
@@ -222,7 +222,7 @@ class _Random:
 
         # for small p, set randomly individual bits
         if p < self.SMALL_P:
-            return self.random_sample(random.binomialvariate(self.n, p))
+            return self.random_k(random.binomialvariate(self.n, p))
 
         # calculate operator sequence
         i = int(p * self.K)

@@ -20,7 +20,7 @@ from random import randint, randrange, random, binomialvariate
 
 from bitarray import bitarray, frozenbitarray
 from bitarray.util import (
-    zeros, ones, urandom, random_sample, random_p,
+    zeros, ones, urandom, random_k, random_p,
     int2ba, count_and, count_or, count_xor
 )
 from bitarray.util import _Random  # type: ignore
@@ -213,7 +213,7 @@ class URandomTests(Util):
             self.assertTrue(abs(x - 52_219) <= 1_580)
 
 
-class RandomSampleTests(Util):
+class Random_K_Tests(Util):
 
     def test_apply_masks(self):
         M = 12
@@ -225,7 +225,7 @@ class RandomSampleTests(Util):
         c = M * [0]  # count for each mask
         for _ in range(25_000):
             k = 1 + 2 * randrange(N // 2)  # k is odd
-            a = random_sample(N, k)
+            a = random_k(N, k)
             self.assertEqual(len(a), N)
             self.assertEqual(a.count(), k)
             for i in range(M):
@@ -243,7 +243,7 @@ class RandomSampleTests(Util):
             self.check_normal_dist(25_000, 0.5, c[i])
 
     def test_elements_uniform(self):
-        arrays = [random_sample(100_000, 30_000) for _ in range(100)]
+        arrays = [random_k(100_000, 30_000) for _ in range(100)]
         for a in arrays:
             # for each bitarray check sample size k
             self.assertEqual(a.count(), 30_000)
@@ -261,7 +261,7 @@ class RandomSampleTests(Util):
             cum = zeros(n)
             for _ in range(10_000):
                 k = n // 7
-                a = random_sample(n, k)
+                a = random_k(n, k)
                 self.assertEqual(len(a), n)
                 self.assertEqual(a.count(), k)
                 cum |= a
@@ -271,7 +271,7 @@ class RandomSampleTests(Util):
                 self.fail()
 
     def test_combinations(self):
-        # for entire range of 0 <= k <= n, validate that random_sample()
+        # for entire range of 0 <= k <= n, validate that random_k()
         # generates all possible combinations
         n = 12
         total = 0
@@ -279,7 +279,7 @@ class RandomSampleTests(Util):
             expected = math.comb(n, k)
             combs = set()
             for _ in range(100_000):
-                a = random_sample(n, k)
+                a = random_k(n, k)
                 self.assertEqual(a.count(), k)
                 combs.add(frozenbitarray(a))
                 if len(combs) == expected:
@@ -299,7 +299,7 @@ class RandomSampleTests(Util):
         """
         k = binomialvariate(n, p)
         self.assertTrue(0 <= k <= n)
-        a = random_sample(n, k)
+        a = random_k(n, k)
         self.assertEqual(len(a), n)
         self.assertEqual(a.count(), k)
         return a
@@ -467,7 +467,7 @@ class VerificationTests(Util):
                 p += q * (1.0 - 2 * p)
                 C(a, p)
 
-    # ------------- verifications relevant for random_sample() --------------
+    # ---------------- verifications relevant for random_k() ----------------
 
     def test_decide_on_sequence(self):
         N = 100_000
