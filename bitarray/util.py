@@ -55,12 +55,11 @@ Return random bitarray of length `n` (uses `os.urandom()`).
 def random_k(__n, k, endian=None):
     """random_k(n, /, k, endian=None) -> bitarray
 
-Return (pseudo-) random bitarray of length `n`, where a sample of `k` bits
-are one.
-This function is mathematically equivalent to setting (in a bitarray of
+Return (pseudo-) random bitarray of length `n`, where `k` elements are
+randomly set to one.  Mathematically equivalent to setting (in a bitarray of
 length `n') all bits at indices `random.sample(range(n), k)` to one.
-If the sample size `k` is larger than the bitarray
-length (population size) `n` size, a `ValueError` is raised.
+If the sample size `k` is larger than the bitarray length `n`,
+a `ValueError` is raised.
 
 This function requires Python 3.9 or higher, as it depends on the standard
 library function ``random.randbytes()``.  Raises ``NotImplementedError``
@@ -76,10 +75,10 @@ when Python version is too low.
 def random_p(__n, p=0.5, endian=None):
     """random_p(n, /, p=0.5, endian=None) -> bitarray
 
-Return (pseudo-) random bitarray of length `n`.  Each bit has probability `p`
-of being one (independent of any other bits).  Mathematically equivalent
-to `bitarray((random() < p for _ in range(n)), endian)`, but much faster
-for large `n`.  The random bitarrays are reproducible when giving
+Return (pseudo-) random bitarray of length `n`, where each bit has
+probability `p` of being one (independent of any other bits).  Mathematically
+equivalent to `bitarray((random() < p for _ in range(n)), endian)`, but much
+faster for large `n`.  The random bitarrays are reproducible when giving
 Python's `random.seed()` with a specific seed value.
 
 This function requires Python 3.12 or higher, as it depends on the standard
