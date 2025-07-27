@@ -16,6 +16,7 @@ import math
 import unittest
 from copy import deepcopy
 from collections import Counter
+from statistics import fmean, stdev
 from random import randint, randrange, random, binomialvariate
 
 from bitarray import bitarray, frozenbitarray
@@ -227,7 +228,7 @@ class Random_K_Tests(Util):
         masks = create_masks(M)
         cm = M * [0]  # counter for each mask
         for _ in range(Na):
-            k = 1 + 2 * randrange(N // 2)  # k is odd
+            k = randrange(1, N, 2)  # k is odd
             a = random_k(N, k)
             self.assertEqual(len(a), N)
             self.assertTrue(parity(a))  # count is odd
@@ -250,15 +251,22 @@ class Random_K_Tests(Util):
         Nm = 500_000 if HEAVY else 25_000  # number of masks
         n = 7000  # bitarray length
         # count for each array
-        ka = [1 + 2 * randrange(n//2) for _ in range(Na)]
+        ka = [randrange(1, n, 2) for _ in range(Na)]
         arrays = [random_k(n, k) for k in ka]
+
+        for k, a in zip(ka, arrays):  # sanity check arrays
+            self.assertEqual(len(a), n)
+            self.assertEqual(a.count(), k)
+            self.assertTrue(parity(a))
+
         ca = Na * [0]  # counter for each array
         for _ in range(Nm):
-            # test each array against different masks
+            # each mask has exactly half elements set to 1
             mask = random_k(n, n//2)
-            self.assertEqual(mask.count(), n//2)
+            self.assertEqual(mask.count(0), mask.count(1))
+
+            # test each array against this masks
             for i in range(Na):
-                self.assertEqual(ka[i] % 2, 1)  # k is odd
                 c1 = count_and(arrays[i], mask)
                 c0 = ka[i] - c1
                 # counts cannot be equal because k is odd
@@ -315,6 +323,30 @@ class Random_K_Tests(Util):
             else:
                 self.fail()
         self.assertEqual(total, 2 ** n)
+
+    def test_evenly(self):
+        # Calculate random_k(n, k) N times, and count each specific outcome.
+        # We know that there are m=comb(n, k) possible outcomes, so each one
+        # has a probability 1/m and the mean of the count should be N/m.
+        N = 100_000
+        n = 9
+        k = 3
+        m = math.comb(n, k)
+        c = Counter()
+        for _ in range(N):
+            a = frozenbitarray(random_k(n, k))
+            c[a] += 1
+        self.assertEqual(c.total(), N)
+        self.assertEqual(len(c), m)
+        p = 1.0 / m
+        self.assertAlmostEqual(fmean(c.values()), N * p)
+        if 0:
+            print(m)
+            print(N * p)
+            print(math.sqrt(N * p * (1.0 - p)))
+            print(stdev(c.values()))
+        for x in c.values():
+            self.check_normal_dist(N, p, x)
 
     def random_p_alt(self, n, p=0.5):
         """
