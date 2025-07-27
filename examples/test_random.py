@@ -218,21 +218,42 @@ class URandomTests(Util):
 
 class Random_K_Tests(Util):
 
+    def test_mean(self):
+        for _ in range(5_000):
+            n = randrange(10_000)
+            k = randint(0, n)
+            a = random_k(n, k)
+            self.assertEqual(len(a), n)
+            self.assertEqual(a.count(), k)
+            values = list(a.search(1))
+            self.assertEqual(len(values), k)
+            if k < 10:
+                continue
+            mean = fmean(values)
+            # the standard deviation of the values is n/sqrt(12)
+            if 0:
+                print("        ", stdev(values), n / math.sqrt(12))
+            # standard error of mean is standard deviation of the values
+            # divided by the square root of the sample size k:
+            # n/sqrt(12) / sqrt(k) = n / sqrt(12 * k)
+            stderr = n / math.sqrt(12 * k)
+            self.assertTrue(abs(mean - n / 2) < 6.0 * stderr)
+
     def test_apply_masks(self):
         Na = 25_000  # number of bitarrays to test against masks
-        M = 12
-        N = 1 << M  # size of each mask
+        Nm = 12      # number of masks
+        n = 1 << Nm  # length of each mask
         # Create masks for selecting half elements in random bitarray a.
         # For example, masks[0] selects all odd elements, and masks[-1]
         # selects the upper half of a.
-        masks = create_masks(M)
-        cm = M * [0]  # counter for each mask
+        masks = create_masks(Nm)
+        cm = Nm * [0]  # counter for each mask
         for _ in range(Na):
-            k = randrange(1, N, 2)  # k is odd
-            a = random_k(N, k)
-            self.assertEqual(len(a), N)
+            k = randrange(1, n, 2)  # k is odd
+            a = random_k(n, k)
+            self.assertEqual(len(a), n)
             self.assertTrue(parity(a))  # count is odd
-            for i in range(M):
+            for i in range(Nm):
                 c1 = count_and(a, masks[i])
                 c0 = k - c1
                 # counts cannot be equal because k is odd
@@ -373,7 +394,7 @@ class Random_K_Tests(Util):
 class Random_P_Tests(Util):
 
     def test_apply_masks(self):
-        M = 12
+        M = 12  # number of masks
         # Create masks for selecting half elements in the random bitarray a.
         # For example, masks[0] selects all odd elements, and masks[-1]
         # selects the upper half of a.
