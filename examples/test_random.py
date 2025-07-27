@@ -180,17 +180,19 @@ class Util(unittest.TestCase):
 class UtilTests(Util):
 
     def test_check_probability(self):
+        C = self.check_probability
         N = 1_000_000
 
-        self.check_probability(zeros(N), 0.0)
-        self.check_probability(ones(N), 1.0)
-
         a = zeros(N)
-        a[::2] = 1
+        C(a, 0.0)
+
+        a.setall(1)
+        C(a, 1.0)
+
+        a[::2] = 0
         self.assertEqual(a.count(), N // 2)
-        self.check_probability(a, 0.501)
-        self.check_probability(a, 0.499)
-        C = self.check_probability
+        C(a, 0.501)
+        C(a, 0.499)
         self.assertRaises(AssertionError, C, a, 0.506)
         self.assertRaises(AssertionError, C, a, 0.494)
 
