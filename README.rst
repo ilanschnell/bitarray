@@ -395,7 +395,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.5.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.6.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -896,11 +896,25 @@ This sub-module was added in version 1.2.
    New in version 1.8
 
 
+``random_k(n, /, k, endian=None)`` -> bitarray
+   Return (pseudo-) random bitarray of length ``n`` with ``k`` elements
+   set to one.  Mathematically equivalent to setting (in a bitarray of
+   length ``n') all bits at indices ``random.sample(range(n), k)`` to one.
+   If the sample size ``k`` is larger than the bitarray length ``n``,
+   a ``ValueError`` is raised.
+
+   This function requires Python 3.9 or higher, as it depends on the standard
+   library function ````random.randbytes()````.  Raises ````NotImplementedError````
+   when Python version is too low.
+
+   New in version 3.6
+
+
 ``random_p(n, /, p=0.5, endian=None)`` -> bitarray
-   Return (pseudo-) random bitarray of length ``n``.  Each bit has probability ``p``
-   of being one (independent of any other bits).  Mathematically equivalent
-   to ``bitarray((random() < p for _ in range(n)), endian)``, but much faster
-   for large ``n``.  The random bitarrays are reproducible when giving
+   Return (pseudo-) random bitarray of length ``n``, where each bit has
+   probability ``p`` of being one (independent of any other bits).  Mathematically
+   equivalent to ``bitarray((random() < p for _ in range(n)), endian)``, but much
+   faster for large ``n``.  The random bitarrays are reproducible when giving
    Python's ``random.seed()`` with a specific seed value.
 
    This function requires Python 3.12 or higher, as it depends on the standard
