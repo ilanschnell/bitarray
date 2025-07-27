@@ -21,7 +21,7 @@ from random import randint, randrange, random, binomialvariate
 from bitarray import bitarray, frozenbitarray
 from bitarray.util import (
     zeros, ones, urandom, random_k, random_p,
-    int2ba, count_and, count_or, count_xor
+    int2ba, count_and, count_or, count_xor, parity,
 )
 from bitarray.util import _Random  # type: ignore
 
@@ -216,18 +216,19 @@ class URandomTests(Util):
 class Random_K_Tests(Util):
 
     def test_apply_masks(self):
+        Na = 25_000  # number of bitarrays to test against masks
         M = 12
         N = 1 << M  # size of each mask
-        # Create masks for selecting half elements in the random bitarray a.
+        # Create masks for selecting half elements in random bitarray a.
         # For example, masks[0] selects all odd elements, and masks[-1]
         # selects the upper half of a.
         masks = create_masks(M)
-        c = M * [0]  # count for each mask
-        for _ in range(25_000):
+        cm = M * [0]  # counter for each mask
+        for _ in range(Na):
             k = 1 + 2 * randrange(N // 2)  # k is odd
             a = random_k(N, k)
             self.assertEqual(len(a), N)
-            self.assertEqual(a.count(), k)
+            self.assertTrue(parity(a))  # count is odd
             for i in range(M):
                 c1 = count_and(a, masks[i])
                 c0 = k - c1
@@ -237,27 +238,34 @@ class Random_K_Tests(Util):
                 # odd (masks[0]) elements should be 1/2, or having more bits
                 # in upper vs lower half (mask(-1))
                 if c0 > c1:
-                    c[i] += 1
+                    cm[i] += 1
 
-        for i in range(M):
-            self.check_normal_dist(25_000, 0.5, c[i])
+        for c in cm:  # for each mask, check counter
+            self.check_normal_dist(Na, 0.5, c)
 
     def test_random_masks(self):
-        n = 7_000
-        k = 3_507
-        a = random_k(n, k)
-        c = 0
-        for _ in range(20_000):
-            # test a against different masks
-            mask = random_k(n, n // 2)
-            self.assertEqual(mask.count(), n // 2)
-            c1 = count_and(a, mask)
-            c0 = k - c1
-            # counts cannot be equal because k is odd
-            self.assertNotEqual(c0, c1)
-            if c0 > c1:
-                c += 1
-        self.check_normal_dist(20_000, 0.5, c)
+        Na = 10  # number of arrays to test
+        Nm = 500_000 if HEAVY else 25_000  # number of masks
+        n = 7000  # bitarray length
+        # count for each array
+        ka = [1 + 2 * randrange(n//2) for _ in range(Na)]
+        arrays = [random_k(n, k) for k in ka]
+        ca = Na * [0]  # counter for each array
+        for _ in range(Nm):
+            # test each array against different masks
+            mask = random_k(n, n//2)
+            self.assertEqual(mask.count(), n//2)
+            for i in range(Na):
+                self.assertEqual(ka[i] % 2, 1)  # k is odd
+                c1 = count_and(arrays[i], mask)
+                c0 = ka[i] - c1
+                # counts cannot be equal because k is odd
+                self.assertNotEqual(c0, c1)
+                if c0 > c1:
+                    ca[i] += 1
+
+        for c in ca:  # for each array, check counter
+            self.check_normal_dist(Nm, 0.5, c)
 
     def test_elements_uniform(self):
         arrays = [random_k(100_000, 30_000) for _ in range(100)]
