@@ -899,12 +899,12 @@ This sub-module was added in version 1.2.
 ``random_k(n, /, k, endian=None)`` -> bitarray
    Return (pseudo-) random bitarray of length ``n`` with ``k`` elements
    set to one.  Mathematically equivalent to setting (in a bitarray of
-   length ``n') all bits at indices ``random.sample(range(n), k)`` to one.
-   If the sample size ``k`` is larger than the bitarray length ``n``,
-   a ``ValueError`` is raised.
+   length ``n``) all bits at indices ``random.sample(range(n), k)`` to one.
+   The random bitarrays are reproducible when giving Python's ``random.seed()``
+   with a specific seed value.
 
    This function requires Python 3.9 or higher, as it depends on the standard
-   library function ````random.randbytes()````.  Raises ````NotImplementedError````
+   library function ``random.randbytes()``.  Raises ``NotImplementedError``
    when Python version is too low.
 
    New in version 3.6
