@@ -266,6 +266,31 @@ Return parity of bitarray `a`.\n\
 
 
 static PyObject *
+sum_indices(PyObject *module, PyObject *obj)
+{
+    bitarrayobject *a;
+    Py_ssize_t res = 0, n, i;
+
+    if (ensure_bitarray(obj) < 0)
+        return NULL;
+
+    a = (bitarrayobject *) obj;
+    n = a->nbits;
+    for (i = 1; i < n; i++) {
+        if (getbit(a, i))
+            res += i;
+    }
+    return PyLong_FromSsize_t(res);
+}
+
+PyDoc_STRVAR(sum_indices_doc,
+"sum_indices(a, /) -> int\n\
+\n\
+Return sum of indices of all active bits in bitarray `a`.\n\
+This is equivalent to `sum(i for i in range(len(a)) if a[i])`.");
+
+
+static PyObject *
 xor_indices(PyObject *module, PyObject *obj)
 {
     bitarrayobject *a;
@@ -2084,6 +2109,9 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, ones_doc},
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
     {"parity",    (PyCFunction) parity,    METH_O,       parity_doc},
+    {"sum_indices",
+                  (PyCFunction) sum_indices,
+                                           METH_O,       sum_indices_doc},
     {"xor_indices",
                   (PyCFunction) xor_indices,
                                            METH_O,       xor_indices_doc},

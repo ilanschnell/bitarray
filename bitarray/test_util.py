@@ -27,7 +27,7 @@ from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
 
 from bitarray.util import (
     zeros, ones, urandom, random_k, random_p, pprint, strip, count_n,
-    parity, xor_indices,
+    parity, sum_indices, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
     correspond_all, byteswap, intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
@@ -1027,6 +1027,41 @@ class ParityTests(unittest.TestCase, Util):
             b = a.copy()
             self.assertEqual(parity(a), a.count() % 2)
             self.assertEqual(a, b)
+
+# ---------------------------------------------------------------------------
+
+class SumIndicesTests(unittest.TestCase, Util):
+
+    def test_explicit(self):
+        for s, r in [("", 0), ("0", 0), ("1", 0), ("11", 1),
+                     ("011", 3), ("001", 2), ("0001100", 7)]:
+            a = bitarray(s)
+            self.assertEqual(sum_indices(a), r)
+
+    def test_wrong_args(self):
+        S = sum_indices
+        self.assertRaises(TypeError, S, '')
+        self.assertRaises(TypeError, S, 1)
+        self.assertRaises(TypeError, S)
+        self.assertRaises(TypeError, S, bitarray("110"), 1)
+
+    def test_ones_small(self):
+        a = bitarray()
+        sm = 0
+        for i in range(1000):
+            a.append(1)
+            sm += i
+            self.assertEqual(sum_indices(a), sm)
+
+    def test_ones_large(self):
+        n = 100_000
+        a = ones(n)
+        self.assertEqual(sum_indices(a), n * (n - 1) // 2)
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            res = sum(i for i in range(len(a)) if a[i])
+            self.assertEqual(sum_indices(a), res)
 
 # ---------------------------------------------------------------------------
 

@@ -15,7 +15,7 @@ import random
 from bitarray import bitarray, bits2bytes
 
 from bitarray._util import (
-    zeros, ones, count_n, parity, xor_indices,
+    zeros, ones, count_n, parity, sum_indices, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
     correspond_all, byteswap,
     serialize, deserialize,
@@ -29,7 +29,7 @@ from bitarray._util import (
 __all__ = [
     'zeros', 'ones', 'urandom', 'random_k', 'random_p',
     'pprint', 'strip', 'count_n',
-    'parity', 'xor_indices',
+    'parity', 'sum_indices', 'xor_indices',
     'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
     'correspond_all', 'byteswap', 'intervals',
     'ba2hex', 'hex2ba',
