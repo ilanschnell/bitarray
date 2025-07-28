@@ -279,22 +279,42 @@ add_size_t(PyObject *number, uint64_t i)
 static PyObject *
 sum_indices(PyObject *module, PyObject *obj)
 {
+    static signed char table[2][256];
+    static int setup = 0;
     PyObject *res;
     bitarrayobject *a;
-    Py_ssize_t n, i;
+    Py_ssize_t nbytes, i;
     uint64_t sm = 0;
+    int le;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
+    if (!setup) {
+        int j, k;
+
+        memset(table, 0, sizeof table);
+        for (k = 0; k < 256; k++) {
+            for (j = 0; j < 8; j++) {
+                if (k & 128 >> j) /* big endian */
+                    table[0][k] += j;
+                if (k & 1 << j) /* little endian */
+                    table[1][k] += j;
+            }
+        }
+        setup = 1;
+    }
+
     res = PyLong_FromLong(0);
     a = (bitarrayobject *) obj;
-    n = a->nbits;
+    le = IS_LE(a);
+    nbytes = Py_SIZE(a);
+    set_padbits(a);
 
-    for (i = 1; i < n; i++) {
-        if (getbit(a, i))
-            sm += i;
-
+    for (i = 0; i < nbytes; i++) {
+        unsigned char c = a->ob_item[i];
+        sm += 8 * i * popcnt_64((uint64_t) c);
+        sm += table[le][c];
         if (sm > ((uint64_t ) 1) << 63) {
             if ((res = add_size_t(res, sm)) == NULL)
                 return NULL;
