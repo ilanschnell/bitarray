@@ -1062,8 +1062,9 @@ class SumIndicesTests(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            self.assertEqual(sum_indices(a),
-                             sum(i for i in range(len(a)) if a[i]))
+            res = sum_indices(a)
+            self.assertEqual(res, sum(i for i in range(len(a)) if a[i]))
+            self.assertEqual(res, sum(a.search(1)))
 
 # ---------------------------------------------------------------------------
 
