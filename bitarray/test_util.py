@@ -27,7 +27,7 @@ from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
 
 from bitarray.util import (
     zeros, ones, urandom, random_k, random_p, pprint, strip, count_n,
-    parity, xor_indices,
+    parity, sum_indices, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
     correspond_all, byteswap, intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
@@ -1030,22 +1030,61 @@ class ParityTests(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class XoredIndicesTests(unittest.TestCase, Util):
+class SumIndicesTests(unittest.TestCase, Util):
 
     def test_explicit(self):
         for s, r in [("", 0), ("0", 0), ("1", 0), ("11", 1),
                      ("011", 3), ("001", 2), ("0001100", 7),
+                     ("00001111", 22), ("01100111 1101", 49)]:
+            a = bitarray(s, self.random_endian())
+            self.assertEqual(sum_indices(a), r)
+
+    def test_wrong_args(self):
+        S = sum_indices
+        self.assertRaises(TypeError, S, '')
+        self.assertRaises(TypeError, S, 1)
+        self.assertRaises(TypeError, S)
+        self.assertRaises(TypeError, S, bitarray("110"), 1)
+
+    def test_ones_small(self):
+        a = bitarray()
+        sm = 0
+        for i in range(1000):
+            a.append(1)
+            sm += i
+            self.assertEqual(sum_indices(a), sm)
+
+    def test_large(self):
+        # Note that this will also work on 32-bit machines, even though
+        # for n=100_000, we get: n*(n-1)/2 = 4999950000 > 2**32
+        n = 100_000
+        a = bitarray(n)
+        self.assertEqual(sum_indices(a), 0)
+        a.setall(1)
+        self.assertEqual(sum_indices(a), n * (n - 1) // 2)
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            res = sum_indices(a)
+            self.assertEqual(res, sum(i for i in range(len(a)) if a[i]))
+            self.assertEqual(res, sum(a.search(1)))
+
+# ---------------------------------------------------------------------------
+
+class XoredIndicesTests(unittest.TestCase, Util):
+
+    def test_explicit(self):
+        for s, r in [("", 0), ("0", 0), ("1", 0), ("11", 1),
                      ("011", 3), ("001", 2), ("0001100", 7),
                      ("01100111 1101", 13)]:
             a = bitarray(s, self.random_endian())
             self.assertEqual(xor_indices(a), r)
 
     def test_wrong_args(self):
-        X = xor_indices
-        self.assertRaises(TypeError, X, '')
-        self.assertRaises(TypeError, X, 1)
-        self.assertRaises(TypeError, X)
-        self.assertRaises(TypeError, X, bitarray("110"), 1)
+        self.assertRaises(TypeError, parity, '')
+        self.assertRaises(TypeError, parity, 1)
+        self.assertRaises(TypeError, parity)
+        self.assertRaises(TypeError, parity, bitarray("110"), 1)
 
     def test_ones(self):
         # OEIS A003815

@@ -1,6 +1,7 @@
 2025-XX-XX   3.6.0:
 -------------------
   * add `util.random_k()`, see #237
+  * add `util.sum_indices()`
   * optimize `util.xor_indices()`
 
 
