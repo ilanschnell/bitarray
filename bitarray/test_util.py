@@ -1039,10 +1039,11 @@ class XoredIndicesTests(unittest.TestCase, Util):
             self.assertEqual(xor_indices(a), r)
 
     def test_wrong_args(self):
-        self.assertRaises(TypeError, parity, '')
-        self.assertRaises(TypeError, parity, 1)
-        self.assertRaises(TypeError, parity)
-        self.assertRaises(TypeError, parity, bitarray("110"), 1)
+        X = xor_indices
+        self.assertRaises(TypeError, X, '')
+        self.assertRaises(TypeError, X, 1)
+        self.assertRaises(TypeError, X)
+        self.assertRaises(TypeError, X, bitarray("110"), 1)
 
     def test_ones(self):
         # OEIS A003815
