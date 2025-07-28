@@ -14,14 +14,17 @@ and establish some tricky equations.
 import sys
 import math
 import unittest
+import operator
 from copy import deepcopy
 from collections import Counter
+from functools import reduce
 from statistics import fmean, stdev
-from random import randint, randrange, random, binomialvariate
+from random import choice, randint, randrange, random, binomialvariate
 
 from bitarray import bitarray, frozenbitarray
 from bitarray.util import (
     zeros, ones, urandom, random_k, random_p,
+    sum_indices, xor_indices,
     int2ba, count_and, count_or, count_xor, parity,
 )
 from bitarray.util import _Random  # type: ignore
@@ -214,6 +217,15 @@ class URandomTests(Util):
             x = sum(c[k] for k in range(40, 51))
             # p = 0.522195   mean = 52219.451858   stdev = 157.958033
             self.assertTrue(abs(x - 52_219) <= 1_580)
+
+    def test_sums(self):
+        # not so much a test for urandom itself, but for sum_indices()
+        # and xor_indices() for large bitarray
+        n = 10_000_000
+        a = urandom(n, choice(["little", "big"]))
+        indices = [i for i in range(n) if a[i]]
+        self.assertEqual(sum_indices(a), sum(indices))
+        self.assertEqual(xor_indices(a), reduce(operator.xor, indices))
 
 
 class Random_K_Tests(Util):

@@ -295,9 +295,9 @@ sum_indices(PyObject *module, PyObject *obj)
         memset(table, 0, sizeof table);
         for (k = 0; k < 256; k++) {
             for (j = 1; j < 8; j++) {
-                if (k & 128 >> j) /* big endian */
+                if (k & 0x80 >> j) /* big endian */
                     table[0][k] += j;
-                if (k & 1 << j) /* little endian */
+                if (k & 0x01 << j) /* little endian */
                     table[1][k] += j;
             }
         }
@@ -350,9 +350,9 @@ xor_indices(PyObject *module, PyObject *obj)
         memset(table, 0, sizeof table);
         for (k = 0; k < 256; k++) {
             for (j = 1; j < 8; j++) {
-                if (k & 128 >> j) /* big endian */
+                if (k & 0x80 >> j) /* big endian */
                     table[0][k] ^= j;
-                if (k & 1 << j) /* little endian */
+                if (k & 0x01 << j) /* little endian */
                     table[1][k] ^= j;
             }
         }
@@ -366,7 +366,9 @@ xor_indices(PyObject *module, PyObject *obj)
 
     for (i = 0; i < nbytes; i++) {
         unsigned char c = a->ob_item[i];
-        res ^= (i << 3) * parity_64((uint64_t) c) + table[le][c];
+        if (parity_64(c))
+            res ^= i << 3;
+        res ^= table[le][c];
     }
     return PyLong_FromSsize_t(res);
 }
