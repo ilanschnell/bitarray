@@ -1053,15 +1053,17 @@ class SumIndicesTests(unittest.TestCase, Util):
             sm += i
             self.assertEqual(sum_indices(a), sm)
 
-    def test_ones_large(self):
-        n = 100_000
-        a = ones(n)
-        self.assertEqual(sum_indices(a), n * (n - 1) // 2)
+    def test_large(self):
+        for n in 100_000, randrange(1_000_000):
+            a = bitarray(n)
+            self.assertEqual(sum_indices(a), 0)
+            a.setall(1)
+            self.assertEqual(sum_indices(a), n * (n - 1) // 2)
 
     def test_random(self):
         for a in self.randombitarrays():
-            res = sum(i for i in range(len(a)) if a[i])
-            self.assertEqual(sum_indices(a), res)
+            self.assertEqual(sum_indices(a),
+                             sum(i for i in range(len(a)) if a[i]))
 
 # ---------------------------------------------------------------------------
 
