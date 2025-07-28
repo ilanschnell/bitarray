@@ -292,10 +292,9 @@ sum_indices(PyObject *module, PyObject *obj)
 
     if (!setup) {
         int j, k;
-
         memset(table, 0, sizeof table);
         for (k = 0; k < 256; k++) {
-            for (j = 0; j < 8; j++) {
+            for (j = 1; j < 8; j++) {
                 if (k & 128 >> j) /* big endian */
                     table[0][k] += j;
                 if (k & 1 << j) /* little endian */
@@ -313,6 +312,8 @@ sum_indices(PyObject *module, PyObject *obj)
 
     for (i = 0; i < nbytes; i++) {
         unsigned char c = a->ob_item[i];
+        if (!c)
+            continue;
         sm += 8 * i * popcnt_64((uint64_t) c);
         sm += table[le][c];
         if (sm > ((uint64_t ) 1) << 63) {

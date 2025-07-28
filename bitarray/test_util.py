@@ -1035,8 +1035,8 @@ class SumIndicesTests(unittest.TestCase, Util):
     def test_explicit(self):
         for s, r in [("", 0), ("0", 0), ("1", 0), ("11", 1),
                      ("011", 3), ("001", 2), ("0001100", 7),
-                     ("01100111 1101", 49)]:
-            a = bitarray(s)
+                     ("00001111", 22), ("01100111 1101", 49)]:
+            a = bitarray(s, self.random_endian())
             self.assertEqual(sum_indices(a), r)
 
     def test_wrong_args(self):
