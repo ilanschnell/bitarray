@@ -333,7 +333,7 @@ PyDoc_STRVAR(sum_indices_doc,
 "sum_indices(a, /) -> int\n\
 \n\
 Return sum of indices of all active bits in bitarray `a`.\n\
-This is equivalent to `sum(i for i in range(len(a)) if a[i])`.");
+This is equivalent to `sum(i for i, v in enumerate(a) if v)`.");
 
 
 static PyObject *
@@ -381,7 +381,7 @@ PyDoc_STRVAR(xor_indices_doc,
 \n\
 Return xor reduced indices of all active bits in bitarray `a`.\n\
 This is essentially equivalent to\n\
-`reduce(operator.xor, [i for i, v in enumerate(a) if v])`.");
+`reduce(operator.xor, (i for i, v in enumerate(a) if v))`.");
 
 /* --------------------------- binary functions ------------------------ */
 

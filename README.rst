@@ -78,7 +78,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 582 tests in 0.165s
+    Ran 587 tests in 0.162s
 
     OK
 
@@ -969,6 +969,13 @@ This sub-module was added in version 1.2.
    iteration is stopped as soon as one mismatch is found.
 
 
+``sum_indices(a, /)`` -> int
+   Return sum of indices of all active bits in bitarray ``a``.
+   This is equivalent to ``sum(i for i, v in enumerate(a) if v)``.
+
+   New in version 3.6
+
+
 ``urandom(n, /, endian=None)`` -> bitarray
    Return random bitarray of length ``n`` (uses ``os.urandom()``).
 
@@ -998,7 +1005,7 @@ This sub-module was added in version 1.2.
 ``xor_indices(a, /)`` -> int
    Return xor reduced indices of all active bits in bitarray ``a``.
    This is essentially equivalent to
-   ``reduce(operator.xor, [i for i, v in enumerate(a) if v])``.
+   ``reduce(operator.xor, (i for i, v in enumerate(a) if v))``.
 
    New in version 3.2
 

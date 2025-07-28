@@ -223,7 +223,7 @@ class URandomTests(Util):
         # and xor_indices() for large bitarray
         n = 10_000_000
         a = urandom(n, choice(["little", "big"]))
-        indices = [i for i in range(n) if a[i]]
+        indices = [i for i, v in enumerate(a) if v]
         self.assertEqual(sum_indices(a), sum(indices))
         self.assertEqual(xor_indices(a), reduce(operator.xor, indices))
 
