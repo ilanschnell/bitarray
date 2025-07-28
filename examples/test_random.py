@@ -12,13 +12,13 @@ test actual functionality in random_p(), but rather verify some of the logic
 and establish some tricky equations.
 """
 import sys
-import math
 import unittest
 import operator
 from copy import deepcopy
 from collections import Counter
 from functools import reduce
-from statistics import fmean, stdev
+from math import comb, fmod, sqrt
+from statistics import fmean, stdev, pstdev
 from random import choice, randint, randrange, random, binomialvariate
 
 from bitarray import bitarray, frozenbitarray
@@ -166,7 +166,7 @@ class Util(unittest.TestCase):
 
     def check_normal_dist(self, n, p, x):
         mu = n * p
-        sigma = math.sqrt(n * p * (1.0 - p))
+        sigma = sqrt(n * p * (1.0 - p))
         msg = "n=%d  p=%f  mu=%f  sigma=%f  x=%f" % (n, p, mu, sigma, x)
         self.assertTrue(abs(x - mu) < 10.0 * sigma, msg)
 
@@ -231,24 +231,36 @@ class URandomTests(Util):
 class Random_K_Tests(Util):
 
     def test_mean(self):
-        for _ in range(5_000):
-            n = randrange(10_000)
-            k = randint(0, n)
+        for _ in range(100):
+            n = randrange(10, 10_000)
+            k = randint(10, n)
             a = random_k(n, k)
             self.assertEqual(len(a), n)
             self.assertEqual(a.count(), k)
             values = list(a.search(1))
             self.assertEqual(len(values), k)
-            if k < 10:
-                continue
             mean = fmean(values)
+            self.assertEqual(mean, sum_indices(a) / k)
             # the standard deviation of the values is n/sqrt(12)
             if 0:
-                print("        ", stdev(values), n / math.sqrt(12))
+                print("        ", stdev(values), n / sqrt(12))
             # standard error of mean is standard deviation of the values
             # divided by the square root of the sample size k:
             # n/sqrt(12) / sqrt(k) = n / sqrt(12 * k)
-            stderr = n / math.sqrt(12 * k)
+            stderr = n / sqrt(12 * k)
+            self.assertTrue(abs(mean - n / 2) < 6.0 * stderr)
+
+    def test_mean_2(self):
+        for _ in range(100):
+            n = randrange(1_000_000)
+            k = randint(0, n)
+            a = random_k(n, k)
+            self.assertEqual(len(a), n)
+            self.assertEqual(a.count(), k)
+            if k < 10:
+                continue
+            mean = sum_indices(a) / k
+            stderr = n / sqrt(12 * k)
             self.assertTrue(abs(mean - n / 2) < 6.0 * stderr)
 
     def test_apply_masks(self):
@@ -344,7 +356,7 @@ class Random_K_Tests(Util):
         n = 12
         total = 0
         for k in range(n + 1):
-            expected = math.comb(n, k)
+            expected = comb(n, k)
             combs = set()
             for _ in range(100_000):
                 a = random_k(n, k)
@@ -364,7 +376,7 @@ class Random_K_Tests(Util):
         N = 100_000
         n = 9
         k = 3
-        m = math.comb(n, k)
+        m = comb(n, k)
         c = Counter()
         for _ in range(N):
             a = frozenbitarray(random_k(n, k))
@@ -376,7 +388,7 @@ class Random_K_Tests(Util):
         if 0:
             print(m)
             print(N * p)
-            print(math.sqrt(N * p * (1.0 - p)))
+            print(sqrt(N * p * (1.0 - p)))
             print(stdev(c.values()))
         for x in c.values():
             self.check_normal_dist(N, p, x)
@@ -517,6 +529,15 @@ class Random_P_Tests(Util):
 
 class VerificationTests(Util):
 
+    def test_uniform_stdev(self):
+        # verify that the standard deviation of a uniform distribution
+        # of population size n is given by: n / sqrt(12)
+        for _ in range(100):
+            n = randrange(10, 10_000)
+            pop = list(range(n))
+            self.assertEqual(fmean(pop), (n - 1) / 2)
+            self.assertAlmostEqual(pstdev(pop), n / sqrt(12), delta=0.1)
+
     def test_operations(self):
         C = self.check_probability
         n = 1_000_000
@@ -581,7 +602,7 @@ class VerificationTests(Util):
                 # Numerator: f(p)=(1-2*p)*c  ->  f(0)=c, f(1/2)=0
                 # As the standard deviation of the .combine_half() bitarrays
                 # gets smaller with larger n, we divide by sqrt(n).
-                p -= (0.2 - 0.4 * p) / math.sqrt(n)
+                p -= (0.2 - 0.4 * p) / sqrt(n)
                 # Note that we divide by K+1.  This will round towards the
                 # nearest probability as we get closer to p = 1/2.
                 i = int(p * (K + 1))
@@ -698,7 +719,7 @@ class VerificationTests(Util):
 
             self.assertTrue(p - limit < q < p + 0.5 * limit)
             self.assertTrue(abs(p - q) < limit)
-            self.assertEqual(bool(q != p), bool(math.fmod(p, 1.0 / K)))
+            self.assertEqual(bool(q != p), bool(fmod(p, 1.0 / K)))
 
     def test_final_op(self):
         """

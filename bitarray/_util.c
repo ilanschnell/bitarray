@@ -284,7 +284,7 @@ sum_indices(PyObject *module, PyObject *obj)
     PyObject *res;
     bitarrayobject *a;
     Py_ssize_t nbytes, i;
-    uint64_t sm = 0;
+    uint64_t sm = 0;            /* accumulated sum */
     int le;
 
     if (ensure_bitarray(obj) < 0)
@@ -314,10 +314,13 @@ sum_indices(PyObject *module, PyObject *obj)
         unsigned char c = a->ob_item[i];
         if (!c)
             continue;
-        sm += ((uint64_t) i) * ((uint64_t) (8 * popcnt_64((uint64_t) c)));
+        sm += ((uint64_t) i) * ((uint64_t) (8 * popcnt_64(c)));
         sm += table[le][c];
 
         if (sm > ((uint64_t ) 1) << 63) {
+            /* Flush accumulated sum into Python number object.
+               For ones(n) this will already happen when n > 2**32.
+               printf("%llu  %30zd\n", sm, i);  */
             if ((res = add_size_t(res, sm)) == NULL)
                 return NULL;
             sm = 0;
