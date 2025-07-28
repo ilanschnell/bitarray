@@ -1034,7 +1034,8 @@ class SumIndicesTests(unittest.TestCase, Util):
 
     def test_explicit(self):
         for s, r in [("", 0), ("0", 0), ("1", 0), ("11", 1),
-                     ("011", 3), ("001", 2), ("0001100", 7)]:
+                     ("011", 3), ("001", 2), ("0001100", 7),
+                     ("01100111 1101", 49)]:
             a = bitarray(s)
             self.assertEqual(sum_indices(a), r)
 
@@ -1054,11 +1055,13 @@ class SumIndicesTests(unittest.TestCase, Util):
             self.assertEqual(sum_indices(a), sm)
 
     def test_large(self):
-        for n in 100_000, randrange(1_000_000):
-            a = bitarray(n)
-            self.assertEqual(sum_indices(a), 0)
-            a.setall(1)
-            self.assertEqual(sum_indices(a), n * (n - 1) // 2)
+        # Note that this will also work on 32-bit machines, even though
+        # for n=100_000, we get: n*(n-1)/2 = 4999950000 > 2**32
+        n = 100_000
+        a = bitarray(n)
+        self.assertEqual(sum_indices(a), 0)
+        a.setall(1)
+        self.assertEqual(sum_indices(a), n * (n - 1) // 2)
 
     def test_random(self):
         for a in self.randombitarrays():
@@ -1072,7 +1075,8 @@ class XoredIndicesTests(unittest.TestCase, Util):
 
     def test_explicit(self):
         for s, r in [("", 0), ("0", 0), ("1", 0), ("11", 1),
-                     ("011", 3), ("001", 2), ("0001100", 7)]:
+                     ("011", 3), ("001", 2), ("0001100", 7),
+                     ("01100111 1101", 13)]:
             a = bitarray(s)
             self.assertEqual(xor_indices(a), r)
 
