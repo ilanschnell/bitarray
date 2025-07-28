@@ -268,19 +268,35 @@ Return parity of bitarray `a`.\n\
 static PyObject *
 sum_indices(PyObject *module, PyObject *obj)
 {
+    PyObject *res;
     bitarrayobject *a;
-    Py_ssize_t res = 0, n, i;
+    size_t n, i, sm = 0;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
+    res = PyLong_FromLong(0);
+    assert(PyIndex_Check(res));
     a = (bitarrayobject *) obj;
     n = a->nbits;
+
     for (i = 1; i < n; i++) {
         if (getbit(a, i))
-            res += i;
+            sm += i;
+
+        if (sm + i >= PY_SSIZE_T_MAX || i == n - 1) {
+            PyObject *o1 = res, *o2 = PyLong_FromSize_t(sm);
+
+            res = PyNumber_Add(o1, o2);
+            if (res == NULL)
+                return NULL;
+            Py_DECREF(o1);
+            Py_DECREF(o2);
+            sm = 0;
+        }
     }
-    return PyLong_FromSsize_t(res);
+
+    return res;
 }
 
 PyDoc_STRVAR(sum_indices_doc,
