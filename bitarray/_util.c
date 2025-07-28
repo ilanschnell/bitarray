@@ -266,9 +266,9 @@ Return parity of bitarray `a`.\n\
 
 
 static PyObject *
-add_size_t(PyObject *number, size_t i)
+add_size_t(PyObject *number, uint64_t i)
 {
-    PyObject *res, *tmp = PyLong_FromSize_t(i);
+    PyObject *res, *tmp = PyLong_FromUnsignedLongLong(i);
 
     res = PyNumber_Add(number, tmp);
     Py_DECREF(tmp);
@@ -281,7 +281,8 @@ sum_indices(PyObject *module, PyObject *obj)
 {
     PyObject *res;
     bitarrayobject *a;
-    size_t n, i, sm = 0;
+    Py_ssize_t n, i;
+    uint64_t sm = 0;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
@@ -294,7 +295,7 @@ sum_indices(PyObject *module, PyObject *obj)
         if (getbit(a, i))
             sm += i;
 
-        if (sm + i >= PY_SSIZE_T_MAX) {
+        if (sm > ((uint64_t ) 1) << 63) {
             if ((res = add_size_t(res, sm)) == NULL)
                 return NULL;
             sm = 0;
