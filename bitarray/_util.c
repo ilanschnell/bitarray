@@ -314,8 +314,9 @@ sum_indices(PyObject *module, PyObject *obj)
         unsigned char c = a->ob_item[i];
         if (!c)
             continue;
-        sm += 8 * i * popcnt_64((uint64_t) c);
+        sm += ((uint64_t) i) * ((uint64_t) (8 * popcnt_64((uint64_t) c)));
         sm += table[le][c];
+
         if (sm > ((uint64_t ) 1) << 63) {
             if ((res = add_size_t(res, sm)) == NULL)
                 return NULL;
@@ -335,17 +336,37 @@ This is equivalent to `sum(i for i in range(len(a)) if a[i])`.");
 static PyObject *
 xor_indices(PyObject *module, PyObject *obj)
 {
+    static signed char table[2][256];
+    static int setup = 0;
     bitarrayobject *a;
-    Py_ssize_t res = 0, n, i;
+    Py_ssize_t res = 0, nbytes, i;
+    int le;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
+    if (!setup) {
+        int j, k;
+        memset(table, 0, sizeof table);
+        for (k = 0; k < 256; k++) {
+            for (j = 1; j < 8; j++) {
+                if (k & 128 >> j) /* big endian */
+                    table[0][k] ^= j;
+                if (k & 1 << j) /* little endian */
+                    table[1][k] ^= j;
+            }
+        }
+        setup = 1;
+    }
+
     a = (bitarrayobject *) obj;
-    n = a->nbits;
-    for (i = 1; i < n; i++) {
-        if (getbit(a, i))
-            res ^= i;
+    le = IS_LE(a);
+    nbytes = Py_SIZE(a);
+    set_padbits(a);
+
+    for (i = 0; i < nbytes; i++) {
+        unsigned char c = a->ob_item[i];
+        res ^= (i << 3) * parity_64((uint64_t) c) + table[le][c];
     }
     return PyLong_FromSsize_t(res);
 }
