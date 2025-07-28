@@ -1034,8 +1034,10 @@ class XoredIndicesTests(unittest.TestCase, Util):
 
     def test_explicit(self):
         for s, r in [("", 0), ("0", 0), ("1", 0), ("11", 1),
-                     ("011", 3), ("001", 2), ("0001100", 7)]:
-            a = bitarray(s)
+                     ("011", 3), ("001", 2), ("0001100", 7),
+                     ("011", 3), ("001", 2), ("0001100", 7),
+                     ("01100111 1101", 13)]:
+            a = bitarray(s, self.random_endian())
             self.assertEqual(xor_indices(a), r)
 
     def test_wrong_args(self):
