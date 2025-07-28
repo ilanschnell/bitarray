@@ -266,15 +266,13 @@ Return parity of bitarray `a`.\n\
 
 
 static PyObject *
-add_inplace(PyObject *number, size_t i)
+add_size_t(PyObject *number, size_t i)
 {
-    PyObject *res, *o1 = number, *o2 = PyLong_FromSize_t(i);
+    PyObject *res, *tmp = PyLong_FromSize_t(i);
 
-    res = PyNumber_Add(o1, o2);
-    if (res == NULL)
-        return NULL;
-    Py_DECREF(o1);
-    Py_DECREF(o2);
+    res = PyNumber_Add(number, tmp);
+    Py_DECREF(tmp);
+    Py_DECREF(number);
     return res;
 }
 
@@ -297,12 +295,12 @@ sum_indices(PyObject *module, PyObject *obj)
             sm += i;
 
         if (sm + i >= PY_SSIZE_T_MAX) {
-            if ((res = add_inplace(res, sm)) == NULL)
+            if ((res = add_size_t(res, sm)) == NULL)
                 return NULL;
             sm = 0;
         }
     }
-    return add_inplace(res, sm);
+    return add_size_t(res, sm);
 }
 
 PyDoc_STRVAR(sum_indices_doc,
