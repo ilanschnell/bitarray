@@ -266,7 +266,7 @@ Return parity of bitarray `a`.\n\
 
 
 static PyObject *
-add_size_t(PyObject *number, uint64_t i)
+add_uint64(PyObject *number, uint64_t i)
 {
     PyObject *res, *tmp = PyLong_FromUnsignedLongLong(i);
 
@@ -279,54 +279,52 @@ add_size_t(PyObject *number, uint64_t i)
 static PyObject *
 sum_indices(PyObject *module, PyObject *obj)
 {
-    static signed char table[2][256];
-    static int setup = 0;
+    static signed char table[256];
+    static int setup = -1;      /* endianness of table */
     PyObject *res;
     bitarrayobject *a;
     Py_ssize_t nbytes, i;
     uint64_t sm = 0;            /* accumulated sum */
-    int le;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
-    if (!setup) {
+    res = PyLong_FromLong(0);
+    a = (bitarrayobject *) obj;
+    nbytes = Py_SIZE(a);
+    set_padbits(a);
+
+    if (setup != a->endian) {
         int j, k;
         memset(table, 0, sizeof table);
         for (k = 0; k < 256; k++) {
             for (j = 1; j < 8; j++) {
-                if (k & 0x80 >> j) /* big endian */
-                    table[0][k] += j;
-                if (k & 0x01 << j) /* little endian */
-                    table[1][k] += j;
+                if (IS_LE(a) && k & 0x01 << j)  /* little endian */
+                    table[k] += j;
+                if (IS_BE(a) && k & 0x80 >> j)  /* big endian */
+                    table[k] += j;
             }
         }
-        setup = 1;
+        setup = a->endian;
     }
-
-    res = PyLong_FromLong(0);
-    a = (bitarrayobject *) obj;
-    le = IS_LE(a);
-    nbytes = Py_SIZE(a);
-    set_padbits(a);
 
     for (i = 0; i < nbytes; i++) {
         unsigned char c = a->ob_item[i];
         if (!c)
             continue;
         sm += ((uint64_t) i) * ((uint64_t) (8 * popcnt_64(c)));
-        sm += table[le][c];
+        sm += table[c];
 
         if (sm > ((uint64_t ) 1) << 63) {
             /* Flush accumulated sum into Python number object.
                For ones(n) this will already happen when n > 2**32.
                printf("%llu  %30zd\n", sm, i);  */
-            if ((res = add_size_t(res, sm)) == NULL)
+            if ((res = add_uint64(res, sm)) == NULL)
                 return NULL;
             sm = 0;
         }
     }
-    return add_size_t(res, sm);
+    return add_uint64(res, sm);
 }
 
 PyDoc_STRVAR(sum_indices_doc,
@@ -339,39 +337,37 @@ This is equivalent to `sum(i for i, v in enumerate(a) if v)`.");
 static PyObject *
 xor_indices(PyObject *module, PyObject *obj)
 {
-    static signed char table[2][256];
-    static int setup = 0;
+    static signed char table[256];
+    static int setup = -1;      /* endianness of table */
     bitarrayobject *a;
     Py_ssize_t res = 0, nbytes, i;
-    int le;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
-    if (!setup) {
+    a = (bitarrayobject *) obj;
+    nbytes = Py_SIZE(a);
+    set_padbits(a);
+
+    if (setup != a->endian) {
         int j, k;
         memset(table, 0, sizeof table);
         for (k = 0; k < 256; k++) {
             for (j = 1; j < 8; j++) {
-                if (k & 0x80 >> j) /* big endian */
-                    table[0][k] ^= j;
-                if (k & 0x01 << j) /* little endian */
-                    table[1][k] ^= j;
+                if (IS_LE(a) && k & 0x01 << j)  /* little endian */
+                    table[k] ^= j;
+                if (IS_BE(a) && k & 0x80 >> j)  /* big endian */
+                    table[k] ^= j;
             }
         }
-        setup = 1;
+        setup = a->endian;
     }
-
-    a = (bitarrayobject *) obj;
-    le = IS_LE(a);
-    nbytes = Py_SIZE(a);
-    set_padbits(a);
 
     for (i = 0; i < nbytes; i++) {
         unsigned char c = a->ob_item[i];
         if (parity_64(c))
             res ^= i << 3;
-        res ^= table[le][c];
+        res ^= table[c];
     }
     return PyLong_FromSsize_t(res);
 }
