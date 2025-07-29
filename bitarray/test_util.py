@@ -23,7 +23,7 @@ from collections import Counter
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       _set_default_endian)
 from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
-                                    PTRSIZE, DEBUG, WHITESPACE)
+                                    PTRSIZE, WHITESPACE)
 
 from bitarray.util import (
     zeros, ones, urandom, random_k, random_p, pprint, strip, count_n,
@@ -37,14 +37,6 @@ from bitarray.util import (
 )
 
 from bitarray.util import _Random  # type: ignore
-
-if DEBUG:
-    from bitarray._util import (  # type: ignore
-        _cfw, _read_n, _write_n, _sc_rts, _SEGSIZE,
-    )
-    SEGBITS = 8 * _SEGSIZE
-else:
-    SEGBITS = None
 
 # ---------------------------------------------------------------------------
 
@@ -1507,56 +1499,6 @@ class BaseTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
             self.check_obj(b)
 
-# -----------------  _sc_rts()   (running totals debug test)  ---------------
-
-@skipIf(not DEBUG)
-class RTS_Tests(unittest.TestCase):
-
-    def test_segsize(self):
-        self.assertEqual(type(_SEGSIZE), int)
-        self.assertTrue(_SEGSIZE in [8, 16, 32])
-
-    def test_empty(self):
-        rts = _sc_rts(bitarray())
-        self.assertEqual(len(rts), 1)
-        self.assertEqual(rts, [0])
-
-    @skipIf(SEGBITS != 256)
-    def test_example(self):
-        # see example before sc_calc_rts() in _util.c
-        a = zeros(987)
-        a[:5] = a[512:515] = a[768:772] = 1
-        self.assertEqual(a.count(), 12)
-        rts = _sc_rts(a)
-        self.assertEqual(type(rts), list)
-        self.assertEqual(len(rts), 5)
-        self.assertEqual(rts, [0, 5, 5, 8, 12])
-
-    @staticmethod
-    def nseg(a):  # number of segments
-        return (a.nbytes + _SEGSIZE - 1) // _SEGSIZE
-
-    def test_ones(self):
-        for n in range(1000):
-            a = ones(n)
-            rts = _sc_rts(a)
-            self.assertEqual(len(rts), self.nseg(a) + 1)
-            self.assertEqual(rts[0], 0)
-            self.assertEqual(rts[-1], n)
-            for i, v in enumerate(rts):
-                self.assertEqual(v, min(SEGBITS * i, n))
-
-    def test_random(self):
-        for _ in range(200):
-            a = urandom_2(randrange(10000))
-            rts = _sc_rts(a)
-            self.assertEqual(len(rts), self.nseg(a) + 1)
-            self.assertEqual(rts[0], 0)
-            self.assertEqual(rts[-1], a.count())
-            for i in range(self.nseg(a)):
-                seg_pop = a.count(1, SEGBITS * i, SEGBITS * (i + 1))
-                self.assertEqual(rts[i + 1] - rts[i], seg_pop)
-
 # --------------------------- sparse compression ----------------------------
 
 class SC_Tests(unittest.TestCase, Util):
@@ -2805,88 +2747,6 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         for n in 2, 3, 4, randint(5, 200):
             freq = {i: random() for i in range(n)}
             self.check_code(*canonical_huffman(freq))
-
-# ------------------------- Internal debug tests ----------------------------
-
-@skipIf(not DEBUG)
-class CountFromWord_Tests(unittest.TestCase, Util):
-
-    def test_ones_zeros_empty(self):
-        for _ in range(1000):
-            n = randrange(1024)
-            a = ones(n)
-            i = randrange(16)
-            self.assertEqual(_cfw(a, i), max(0, n - i * 64))
-            a.setall(0)
-            self.assertEqual(_cfw(a, i), 0)
-            a.clear()
-            self.assertEqual(_cfw(a, i), 0)
-
-    def test_random(self):
-        for _ in range(1000):
-            n = randrange(1024)
-            a = urandom_2(n)
-            i = randrange(16)
-            res = _cfw(a, i)
-            self.assertEqual(res, a[64 * i:].count())
-
-
-@skipIf(not DEBUG)
-class ReadN_WriteN_Tests(unittest.TestCase, Util):
-
-    # Regardless of machine byte-order, read_n() and write_n() use
-    # little endian byte-order.
-
-    def test_explicit(self):
-        for blob, x in [(b"", 0),
-                        (b"\x00", 0),
-                        (b"\x01", 1),
-                        (b"\xff", 255),
-                        (b"\xff\x00", 255),
-                        (b"\xaa\xbb\xcc", 0xccbbaa)]:
-            n = len(blob)
-            self.assertEqual(_read_n(iter(blob), n), x)
-            self.assertEqual(_write_n(n, x), blob)
-
-    def test_zeros(self):
-        for n in range(PTRSIZE):
-            blob = n * b"\x00"
-            self.assertEqual(_read_n(iter(blob), n), 0)
-            self.assertEqual(_write_n(n, 0), blob)
-
-    def test_max(self):
-        blob = (PTRSIZE - 1) * b"\xff" + b"\x7f"
-        self.assertEqual(_read_n(iter(blob), PTRSIZE), sys.maxsize)
-        self.assertEqual(_write_n(PTRSIZE, sys.maxsize), blob)
-
-    def test_round_trip_random(self):
-        for _ in range(1000):
-            n = randint(1, PTRSIZE - 1);
-            blob = os.urandom(n)
-            i = _read_n(iter(blob), n)
-            self.assertEqual(_write_n(n, i), blob)
-
-    def test_read_n_untouch(self):
-        it = iter(b"\x00XY")
-        self.assertEqual(_read_n(it, 1), 0)
-        self.assertEqual(next(it), ord('X'))
-        self.assertEqual(_read_n(it, 0), 0)
-        self.assertEqual(next(it), ord('Y'))
-        self.assertRaises(StopIteration, _read_n, it, 1)
-
-    def test_read_n_item_errors(self):
-        for v in -1, 256:
-            self.assertRaises(ValueError, _read_n, iter([3, v]), 2)
-
-        for v in None, "F", Ellipsis, []:
-            self.assertRaises(TypeError, _read_n, iter([3, v]), 2)
-
-    def test_read_n_negative(self):
-        it = iter(PTRSIZE * b"\xff")
-        self.assertRaisesMessage(
-            ValueError,
-            "read %d bytes got negative value: -1" % PTRSIZE,
-            _read_n, it, PTRSIZE)
 
 # ---------------------------------------------------------------------------
 
