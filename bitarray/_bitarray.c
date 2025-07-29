@@ -4199,6 +4199,19 @@ Return tuple containing:\n\
 
 #ifndef NDEBUG
 
+static PyObject *
+module_setup_table(PyObject *module, PyObject *obj)
+{
+    char table[256], *str;
+
+    assert(PyBytes_Check(obj));
+    assert(PyBytes_GET_SIZE(obj) == 1);
+    str = PyBytes_AS_STRING(obj);
+
+    setup_table(table, *str);
+    return PyBytes_FromStringAndSize(table, 256);
+}
+
 /* Return zlw(a) as a new bitarray, rather than an int object.
    This makes testing easier, because the int result would depend
    on the machine byteorder. */
@@ -4235,6 +4248,7 @@ static PyMethodDef module_functions[] = {
 
 #ifndef NDEBUG
     /* functions exposed in debug mode for testing */
+    {"_setup_table",        (PyCFunction) module_setup_table, METH_O,  0},
     {"_zlw",                (PyCFunction) module_zlw,         METH_O,  0},
 #endif
 

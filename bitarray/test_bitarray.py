@@ -44,7 +44,7 @@ PTRSIZE = SYSINFO[0]  # pointer size in bytes
 DEBUG = SYSINFO[6]
 
 if DEBUG:
-    from bitarray._bitarray import _zlw  # type: ignore
+    from bitarray._bitarray import _setup_table, _zlw  # type: ignore
 
 
 def buffer_info(a, key=None):
@@ -766,6 +766,44 @@ class Overlap_Tests(unittest.TestCase, Util):
             r1, r2 = range(i1, j1), range(i2, j2)
             res = bool(r1) and bool(r2) and (i2 in r1 or i1 in r2)
             self.check_overlap(b1, b2, res)
+
+@skipIf(not DEBUG)
+class SetupTableTests(unittest.TestCase):
+
+    def test_common(self):
+        for kop in b'a', b'A', b'x', b'X', b'r':
+            table = _setup_table(kop)
+            self.assertEqual(type(table), bytes)
+            self.assertEqual(len(table), 256)
+            self.assertEqual(table[0], 0)  # all tables start with 0
+
+    def test_add(self):
+        table = _setup_table(b'a')
+        self.assertEqual(max(table), 28)
+        self.assertTrue(table[255] == sum(range(8)) == 28)
+
+    def test_xor(self):
+        table = _setup_table(b'x')
+        self.assertEqual(max(table), 7)  # max index is 7
+        self.assertTrue(table[255] == 0^1^2^3^4^5^6^7 == 0)
+
+    def test_reverse(self):
+        table = _setup_table(b'r')
+        self.assertEqual(max(table), 255)
+        self.assertEqual(table[255], 255)  # reversed is still 255
+        self.assertEqual(table[1], 128)
+        for i in range(256):
+            self.assertEqual(table[table[i]], i)
+
+    def test_endian(self):
+        reverse_trans = _setup_table(b'r')
+        for c1, c2 in [(b'a', b'A'),
+                       (b'x', b'X')]:
+            a = _setup_table(c1)
+            b = _setup_table(c2)
+            for i in range(256):
+                j = reverse_trans[i]
+                self.assertEqual(a[i], b[j])
 
 @skipIf(not DEBUG)
 class ZLW_Tests(unittest.TestCase, Util):
