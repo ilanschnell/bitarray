@@ -53,7 +53,6 @@ builtin_bswap64(uint64_t word)
    They operate on little-endian and bit-endian bitarrays respectively.
    As we shift right, we need to start with the highest address and loop
    downwards such that lower bytes are still unaltered.
-   See also examples/shift_r8.c
 */
 static void
 shift_r8le(unsigned char *buff, Py_ssize_t n, int k)

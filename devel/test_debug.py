@@ -166,7 +166,7 @@ class CopyN_Tests(unittest.TestCase, Util):
         self.assertEqual(x, y)
 
     def test_example(self):
-        # example given in examples/copy_n.py
+        # example given in devel/copy_n.py
         y = bitarray(
             '00101110 11111001 01011101 11001011 10110000 01011110 011')
         x =  bitarray(

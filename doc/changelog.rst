@@ -1,11 +1,19 @@
 Change log
 ==========
 
+2025-XX-XX   3.6.0:
+
+* add ``util.random_k()``, see `#237 <https://github.com/ilanschnell/bitarray/issues/237>`__
+* add ``util.sum_indices()``
+* optimize ``util.xor_indices()``
+* move development files from ``examples/`` to ``devel/``
+
+
 **3.5.2** (2025-07-21):
 
 * optimize ``util.random_p()`` by also using bitwise AND in final step
 * fix DeprecationWarning regarding ``u`` type code
-* add `verification tests <../examples/test_random.py>`__ for internals
+* add `verification tests <../devel/test_random.py>`__ for internals
   of ``util.random_p()``
 
 
@@ -13,7 +21,7 @@ Change log
 
 * optimize ``util.random_p()`` for ``n < 100``
 * add `Random Bitarrays <random_p.rst>`__ documentation
-* add `statistical tests for random functions <../examples/test_random.py>`__
+* add `statistical tests for random functions <../devel/test_random.py>`__
 
 
 **3.5.0** (2025-07-06):
@@ -192,7 +200,7 @@ Change log
 **2.8.4** (2023-12-04):
 
 * simplify ``copy_n()`` (remove special cases), see `#d2d6fd53 <https://github.com/ilanschnell/bitarray/commit/d2d6fd53>`__
-* add `word shift example C program <../examples/shift_r8.c>`__,
+* add `word shift example C program <../devel/shift_r8.c>`__,
   and simplify ``shift_r8()``
 * improve documentation and testing
 * add `roadmap <https://github.com/ilanschnell/bitarray#roadmap>`__
@@ -428,7 +436,7 @@ Change log
   a speedup for ``.find()``, ``.index()``, ``.search()`` and ``util.rindex()``
 * add optional start and stop arguments to ``.bytereverse()``
 * add example to illustrate how
-  `unaligned copying <../examples/copy_n.py>`__ works internally
+  `unaligned copying <../devel/copy_n.py>`__ works internally
 * add documentation
 * add tests
 

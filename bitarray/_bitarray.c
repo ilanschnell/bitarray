@@ -206,7 +206,7 @@ bytereverse(char *p, Py_ssize_t n)
    They operate on little-endian and bit-endian bitarrays respectively.
    As we shift right, we need to start with the highest address and loop
    downwards such that lower bytes are still unaltered.
-   See also examples/shift_r8.c
+   See also devel/shift_r8.c
 */
 static void
 shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
@@ -306,7 +306,7 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int k)
 }
 
 /* Copy n bits from other (starting at b) onto self (starting at a).
-   Please see examples/copy_n.py for more details.
+   Please see devel/copy_n.py for more details.
 
    Notes:
      - self and other may have opposite bit-endianness

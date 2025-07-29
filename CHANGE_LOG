@@ -3,6 +3,7 @@
   * add `util.random_k()`, see #237
   * add `util.sum_indices()`
   * optimize `util.xor_indices()`
+  * move development files from `examples/` to `devel/`
 
 
 2025-07-21   3.5.2:
@@ -196,7 +197,7 @@
 2023-12-04   2.8.4:
 -------------------
   * simplify `copy_n()` (remove special cases), see #d2d6fd53
-  * add [word shift example C program](../examples/shift_r8.c),
+  * add [word shift example C program](../devel/shift_r8.c),
     and simplify `shift_r8()`
   * improve documentation and testing
   * add [roadmap](https://github.com/ilanschnell/bitarray#roadmap)
@@ -432,7 +433,7 @@
     a speedup for `.find()`, `.index()`, `.search()` and `util.rindex()`
   * add optional start and stop arguments to `.bytereverse()`
   * add example to illustrate how
-    [unaligned copying](../examples/copy_n.py) works internally
+    [unaligned copying](../devel/copy_n.py) works internally
   * add documentation
   * add tests
 
