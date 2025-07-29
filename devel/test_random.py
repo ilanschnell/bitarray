@@ -218,15 +218,6 @@ class URandomTests(Util):
             # p = 0.522195   mean = 52219.451858   stdev = 157.958033
             self.assertTrue(abs(x - 52_219) <= 1_580)
 
-    def test_sums(self):
-        # not so much a test for urandom itself, but for sum_indices()
-        # and xor_indices() for large bitarray
-        n = 10_000_000
-        a = urandom(n, choice(["little", "big"]))
-        indices = [i for i, v in enumerate(a) if v]
-        self.assertEqual(sum_indices(a), sum(indices))
-        self.assertEqual(xor_indices(a), reduce(operator.xor, indices))
-
 
 class Random_K_Tests(Util):
 

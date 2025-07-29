@@ -1046,7 +1046,7 @@ class SumIndicesTests(unittest.TestCase, Util):
             sm += i
             self.assertEqual(sum_indices(a), sm)
 
-    def test_large(self):
+    def test_large_ones(self):
         # Note that this will also work on 32-bit machines, even though
         # for n=100_000, we get: n*(n-1)/2 = 4999950000 > 2**32
         n = 100_000
@@ -1054,6 +1054,12 @@ class SumIndicesTests(unittest.TestCase, Util):
         self.assertEqual(sum_indices(a), 0)
         a.setall(1)
         self.assertEqual(sum_indices(a), n * (n - 1) // 2)
+
+    def test_large_random(self):
+        n = 100_000
+        a = urandom_2(n)
+        self.assertEqual(sum_indices(a),
+                         sum(i for i, v in enumerate(a) if v))
 
     def test_random(self):
         for a in self.randombitarrays():
@@ -1091,6 +1097,14 @@ class XoredIndicesTests(unittest.TestCase, Util):
             self.assertEqual(xor_indices(a), x)
             if i < 19:
                 self.assertEqual(lst[i], x)
+
+    def test_large_random(self):
+        n = 100_000
+        a = urandom_2(n)
+        self.assertEqual(
+            xor_indices(a),
+            reduce(operator.xor, (i for i, v in enumerate(a) if v))
+        )
 
     def test_random(self):
         for a in self.randombitarrays():

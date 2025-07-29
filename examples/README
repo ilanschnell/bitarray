@@ -82,11 +82,6 @@ puff/
     https://github.com/madler/zlib/blob/master/contrib/puff/puff.c
 
 
-resize/
-    Things to study the bitarray resize function, including the growth
-    pattern it creates and tests for the current implementation.
-
-
 sieve.py
     Demonstrates the "Sieve of Eratosthenes" algorithm for finding all prime
     numbers up to a specified integer.
