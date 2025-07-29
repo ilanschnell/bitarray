@@ -1,7 +1,7 @@
 Change log
 ==========
 
-2025-XX-XX   3.6.0:
+**3.6.0** (2025-07-29):
 
 * add ``util.random_k()``, see `#237 <https://github.com/ilanschnell/bitarray/issues/237>`__
 * add ``util.sum_indices()``
@@ -82,7 +82,7 @@ Change log
 * simplify ``util.int2ba()``
 * add tests
 * add `masked indexing example <../examples/masked.py>`__
-* add `tricks example <../examples/tricks.py>`__
+* add `tricks example <../devel/tricks.py>`__
 
 
 **3.3.1** (2025-04-04):

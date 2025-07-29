@@ -1,4 +1,4 @@
-2025-XX-XX   3.6.0:
+2025-07-29   3.6.0:
 -------------------
   * add `util.random_k()`, see #237
   * add `util.sum_indices()`
@@ -79,7 +79,7 @@
   * simplify `util.int2ba()`
   * add tests
   * add [masked indexing example](../examples/masked.py)
-  * add [tricks example](../examples/tricks.py)
+  * add [tricks example](../devel/tricks.py)
 
 
 2025-04-04   3.3.1:
