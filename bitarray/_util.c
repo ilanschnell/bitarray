@@ -295,7 +295,7 @@ sum_indices(PyObject *module, PyObject *obj)
     set_padbits(a);
 
     if (setup != a->endian) {
-        setup_table(table, IS_LE(a), 'a');
+        setup_table(table, IS_LE(a) ? 'a' : 'A');
         setup = a->endian;
     }
 
@@ -341,7 +341,7 @@ xor_indices(PyObject *module, PyObject *obj)
     set_padbits(a);
 
     if (setup != a->endian) {
-        setup_table(table, IS_LE(a), 'x');
+        setup_table(table, IS_LE(a) ? 'x' : 'X');
         setup = a->endian;
     }
 

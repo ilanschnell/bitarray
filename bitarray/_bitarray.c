@@ -4278,7 +4278,7 @@ PyInit__bitarray(void)
 
     /* setup translation table, which maps each byte to its reversed:
        reverse_trans = {0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, ..., 0xff} */
-    setup_table(reverse_trans, 0, 'r');
+    setup_table(reverse_trans, 'r');
 
     if ((m = PyModule_Create(&moduledef)) == NULL)
         return NULL;
