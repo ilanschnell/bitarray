@@ -1,8 +1,6 @@
 import os
 import sys
 import unittest
-import operator
-from functools import reduce
 from random import randint, randrange
 
 from bitarray import bitarray
@@ -59,14 +57,10 @@ class SetupTableTests(unittest.TestCase):
             t = _setup_table(kop)
             for i in range(256):
                 a = int2ba(i, 8, endian)
-                if a.count() == 0:
-                    res = 0
-                elif a.count() == 1:
-                    res = a.index(1)
-                else:
-                    res = reduce(operator.xor,
-                                 (i for i, v in enumerate(a) if v))
-                self.assertEqual(t[i], res)
+                c = 0
+                for j, v in enumerate(a):
+                    c ^= j * v
+                self.assertEqual(t[i], c)
 
     def test_reverse(self):
         table = _setup_table('r')

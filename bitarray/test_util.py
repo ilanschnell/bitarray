@@ -1108,13 +1108,9 @@ class XoredIndicesTests(unittest.TestCase, Util):
 
     def test_random(self):
         for a in self.randombitarrays():
-            cnt = a.count()
-            if cnt == 0:
-                c = 0
-            elif cnt == 1:
-                c = a.index(1)
-            else:
-                c = reduce(operator.xor, (i for i, v in enumerate(a) if v))
+            c = 0
+            for i, v in enumerate(a):
+                c ^= i * v
             self.assertEqual(xor_indices(a), c)
 
     def test_flips(self):

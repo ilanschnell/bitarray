@@ -308,7 +308,9 @@ sum_indices(PyObject *module, PyObject *obj)
 
         if (sm > ((uint64_t ) 1) << 63) {
             /* Flush accumulated sum into Python number object.
-               For ones(n) this will already happen when n > 2**32.
+               For ones(n) this will already happen when n > 2**32 = 4 Gbit.
+               As the maximum bitarray size on 32-bit machines is 2 Gbit, this
+               can only happen on 64-bit machines.
                printf("%llu  %30zd\n", sm, i);  */
             if ((res = add_uint64(res, sm)) == NULL)
                 return NULL;
@@ -2156,12 +2158,8 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, ones_doc},
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
     {"parity",    (PyCFunction) parity,    METH_O,       parity_doc},
-    {"sum_indices",
-                  (PyCFunction) sum_indices,
-                                           METH_O,       sum_indices_doc},
-    {"xor_indices",
-                  (PyCFunction) xor_indices,
-                                           METH_O,       xor_indices_doc},
+    {"sum_indices", (PyCFunction) sum_indices, METH_O,   sum_indices_doc},
+    {"xor_indices", (PyCFunction) xor_indices, METH_O,   xor_indices_doc},
     {"count_and", (PyCFunction) count_and, METH_VARARGS, count_and_doc},
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
@@ -2171,10 +2169,8 @@ static PyMethodDef module_functions[] = {
                   (PyCFunction) correspond_all,
                                            METH_VARARGS, correspond_all_doc},
     {"byteswap",  (PyCFunction) byteswap,  METH_VARARGS, byteswap_doc},
-    {"serialize", (PyCFunction) serialize, METH_O,       serialize_doc},
-    {"deserialize",
-                  (PyCFunction) deserialize,
-                                           METH_O,       deserialize_doc},
+    {"serialize",   (PyCFunction) serialize,   METH_O,   serialize_doc},
+    {"deserialize", (PyCFunction) deserialize, METH_O,   deserialize_doc},
     {"ba2hex",    (PyCFunction) ba2hex,    METH_KEYWORDS |
                                            METH_VARARGS, ba2hex_doc},
     {"hex2ba",    (PyCFunction) hex2ba,    METH_KEYWORDS |
