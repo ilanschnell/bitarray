@@ -189,21 +189,6 @@ buffers_overlap(bitarrayobject *self, bitarrayobject *other)
 #undef PIB
 }
 
-/* setup translation table, which maps each byte to its reversed:
-   reverse_trans = {0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, ..., 0xff} */
-static void
-setup_reverse_trans(void)
-{
-    int j, k;
-
-    for (k = 0; k < 256; k++) {
-        reverse_trans[k] = 0x00;
-        for (j = 0; j < 8; j++)
-            if (k & 128 >> j)
-                reverse_trans[k] |= 1 << j;
-    }
-}
-
 /* reverse bits in first n characters of p */
 static void
 bytereverse(char *p, Py_ssize_t n)
@@ -4291,7 +4276,9 @@ PyInit__bitarray(void)
 {
     PyObject *m;
 
-    setup_reverse_trans();
+    /* setup translation table, which maps each byte to its reversed:
+       reverse_trans = {0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, ..., 0xff} */
+    setup_table(reverse_trans, 0, 'r');
 
     if ((m = PyModule_Create(&moduledef)) == NULL)
         return NULL;

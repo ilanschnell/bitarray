@@ -265,25 +265,6 @@ Return parity of bitarray `a`.\n\
 `parity(a)` is equivalent to `a.count() % 2` but more efficient.");
 
 
-static void
-setup_table(char *table, int le, char op)
-{
-    int j, k;
-
-    memset(table, 0, 256);
-    for (k = 0; k < 256; k++) {
-        for (j = 1; j < 8; j++) {
-            if (( le && k & 0x01 << j) ||  /* little endian */
-                (!le && k & 0x80 >> j))    /* big endian */
-                switch (op) {
-                case 'a': table[k] += j; break;
-                case 'x': table[k] ^= j; break;
-                default: Py_UNREACHABLE();
-                }
-        }
-    }
-}
-
 static PyObject *
 add_uint64(PyObject *number, uint64_t i)
 {
@@ -876,6 +857,7 @@ digit_to_int(int m, char c)
     static int setup = 0;
     int i;
 
+    assert(1 <= m && m <= 6);
     if (m < 5) {                                 /* base 2, 4, 8, 16 */
         i = hex_to_int(c);
         return i >> m ? -1 : i;

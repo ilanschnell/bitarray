@@ -225,6 +225,26 @@ swap_bytes(char *p, Py_ssize_t n)
     }
 }
 
+/* write 256 characters into table for given endianness, kernel operation */
+static inline void
+setup_table(char *table, int le, char kop)
+{
+    int j, k;
+    for (k = 0; k < 256; k++) {
+        table[k] = 0;
+        for (j = 0; j < 8; j++) {
+            if (( le && k & 0x01 << j) ||  /* little endian */
+                (!le && k & 0x80 >> j))    /* big endian */
+                switch (kop) {
+                case 'a': table[k] += j; break;
+                case 'x': table[k] ^= j; break;
+                case 'r': table[k] |= 1 << j; break;
+                default: Py_UNREACHABLE();
+                }
+        }
+    }
+}
+
 /* Return distance [0..3] to next aligned pointer.
    While on modern compilers uint64_t pointers may be misaligned, it may
    cause problems on older ones.  Moreover, it may lead to slowdown (even
