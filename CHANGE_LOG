@@ -9,7 +9,7 @@
 -------------------
   * optimize `util.random_p()` by also using bitwise AND in final step
   * fix DeprecationWarning regarding `u` type code
-  * add [verification tests](../examples/test_random.py) for internals
+  * add [verification tests](../devel/test_random.py) for internals
     of `util.random_p()`
 
 
@@ -17,7 +17,7 @@
 -------------------
   * optimize `util.random_p()` for `n < 100`
   * add [Random Bitarrays](random_p.rst) documentation
-  * add [statistical tests for random functions](../examples/test_random.py)
+  * add [statistical tests for random functions](../devel/test_random.py)
 
 
 2025-07-06   3.5.0:

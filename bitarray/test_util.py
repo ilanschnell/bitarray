@@ -358,7 +358,7 @@ class Random_P_Tests(unittest.TestCase):
 
     def test_small_p_limit(self):
         # For understanding how the algorithm works, see ./doc/random_p.rst
-        # Also, see VerificationTests in ./examples/test_random.py
+        # Also, see VerificationTests in ./devel/test_random.py
         r = _Random()
         limit = 1.0 / (r.K + 1)  # lower limit for p
         self.assertTrue(r.SMALL_P > limit)

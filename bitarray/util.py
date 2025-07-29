@@ -97,7 +97,7 @@ class _Random:
     # individually in the test class Random_P_Tests in 'test_util.py'.
     # The test class also contains many comments and explanations.
     # To better understand how the algorithm works, see ./doc/random_p.rst
-    # See also, VerificationTests in ./examples/test_random.py
+    # See also, VerificationTests in ./devel/test_random.py
 
     # maximal number of calls to .random_half() in .combine()
     M = 8
@@ -165,7 +165,7 @@ class _Random:
             a.invert()  # use in-place to avoid copying
             return a
 
-        # decide on sequence, see VerificationTests ./examples/test_random.py
+        # decide on sequence, see VerificationTests ./devel/test_random.py
         if k < 16 or k * self.K < 3 * n:
             i = 0
         else:
@@ -225,7 +225,7 @@ class _Random:
 
         # calculate operator sequence
         i = int(p * self.K)
-        if p * (self.K + 1) > i + 1: # see ./examples/test_random.py
+        if p * (self.K + 1) > i + 1: # see ./devel/test_random.py
             i += 1
         seq = self.op_seq(i)
         q = i / self.K
