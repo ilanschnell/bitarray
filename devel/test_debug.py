@@ -1,17 +1,17 @@
-# ------------------------- Internal debug tests ----------------------------
-
-# Internal functionality exposed for the purpose of testing.
-# These tests will only work when bitarray is compiled in debug mode.
-
 import os
 import sys
 import unittest
 from random import randint, randrange
 
 from bitarray import bitarray
-from bitarray.util import zeros, ones
+from bitarray.util import zeros, ones, int2ba
 
 from bitarray.test_bitarray import Util, urandom_2, skipIf, PTRSIZE
+
+# ------------------------- Internal debug tests ----------------------------
+
+# Internal functionality exposed for the purpose of testing.
+# These tests will only work when bitarray is compiled in debug mode.
 
 from bitarray._bitarray import _setup_table, _zlw
 
@@ -23,36 +23,50 @@ SEGBITS = 8 * _SEGSIZE
 class SetupTableTests(unittest.TestCase):
 
     def test_common(self):
-        for kop in b'a', b'A', b'x', b'X', b'r':
+        for kop in 'aAxXr':
             table = _setup_table(kop)
             self.assertEqual(type(table), bytes)
             self.assertEqual(len(table), 256)
             self.assertEqual(table[0], 0)  # all tables start with 0
 
     def test_add(self):
-        table = _setup_table(b'a')
+        table = _setup_table('a')
         self.assertEqual(max(table), 28)
         self.assertTrue(table[255] == sum(range(8)) == 28)
+        self.assertEqual(table[15], 0+1+2+3)
+        for i in range(256):
+            a = int2ba(i, 8, 'little')
+            self.assertEqual(table[i], sum(i for i, v in enumerate(a) if v))
+
+        table = _setup_table('A')
+        self.assertEqual(table[15], 4+5+6+7)
+        for i in range(256):
+            a = int2ba(i, 8, 'big')
+            self.assertEqual(table[i], sum(i for i, v in enumerate(a) if v))
 
     def test_xor(self):
-        table = _setup_table(b'x')
+        table = _setup_table('x')
         self.assertEqual(max(table), 7)  # max index is 7
         self.assertTrue(table[255] == 0^1^2^3^4^5^6^7 == 0)
+        self.assertTrue(table[6] == 1^2 == 3)
+        self.assertTrue(table[29] == table[0b11101] == 0^2^3^4 == 5)
+        self.assertTrue(table[34] == 1^5 == 4)
 
     def test_reverse(self):
-        table = _setup_table(b'r')
+        table = _setup_table('r')
         self.assertEqual(max(table), 255)
         self.assertEqual(table[255], 255)  # reversed is still 255
         self.assertEqual(table[1], 128)
         for i in range(256):
-            self.assertEqual(table[table[i]], i)
+            j = table[i]
+            self.assertEqual(table[j], i)
+            self.assertEqual(int2ba(i, 8, 'little'), int2ba(j, 8, 'big'))
 
     def test_endian(self):
-        reverse_trans = _setup_table(b'r')
-        for c1, c2 in [(b'a', b'A'),
-                       (b'x', b'X')]:
-            a = _setup_table(c1)
-            b = _setup_table(c2)
+        reverse_trans = _setup_table('r')
+        for kop1, kop2 in 'aA', 'xX':
+            a = _setup_table(kop1)
+            b = _setup_table(kop2)
             for i in range(256):
                 j = reverse_trans[i]
                 self.assertEqual(a[i], b[j])

@@ -4202,13 +4202,14 @@ Return tuple containing:\n\
 static PyObject *
 module_setup_table(PyObject *module, PyObject *obj)
 {
-    char table[256], *str;
+    char table[256];
+    Py_UCS4 ch;
 
-    assert(PyBytes_Check(obj));
-    assert(PyBytes_GET_SIZE(obj) == 1);
-    str = PyBytes_AS_STRING(obj);
+    assert(PyUnicode_Check(obj));
+    assert(PyUnicode_GET_LENGTH(obj) == 1);
+    ch = PyUnicode_READ_CHAR(obj, 0);
 
-    setup_table(table, *str);
+    setup_table(table, ch);
     return PyBytes_FromStringAndSize(table, 256);
 }
 
