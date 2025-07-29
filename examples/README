@@ -9,12 +9,6 @@ bloom.py
     http://en.wikipedia.org/wiki/Bloom_filter
 
 
-copy_n.py
-    Illustrate how copy_n() in _bitarray.c works.  This is essentially
-    a Python implementation of copy_n() with output of the different stages
-    of the bitarray we copy into.
-
-
 distance.py
     Implementation of distance functions and comparison to the
     corresponding functions in the scipy.spatial.distance module.
@@ -91,10 +85,6 @@ puff/
 resize/
     Things to study the bitarray resize function, including the growth
     pattern it creates and tests for the current implementation.
-
-
-shift_r8.c
-    C program is to illustrate and document shift_r8()
 
 
 sieve.py
