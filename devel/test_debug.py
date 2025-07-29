@@ -1,6 +1,8 @@
 import os
 import sys
 import unittest
+import operator
+from functools import reduce
 from random import randint, randrange
 
 from bitarray import bitarray
@@ -8,10 +10,7 @@ from bitarray.util import zeros, ones, int2ba
 
 from bitarray.test_bitarray import Util, urandom_2, skipIf, PTRSIZE
 
-# ------------------------- Internal debug tests ----------------------------
-
-# Internal functionality exposed for the purpose of testing.
-# These tests will only work when bitarray is compiled in debug mode.
+# --------------------- internal C-level debug tests ------------------------
 
 from bitarray._bitarray import _setup_table, _zlw
 
@@ -34,23 +33,40 @@ class SetupTableTests(unittest.TestCase):
         self.assertEqual(max(table), 28)
         self.assertTrue(table[255] == sum(range(8)) == 28)
         self.assertEqual(table[15], 0+1+2+3)
-        for i in range(256):
-            a = int2ba(i, 8, 'little')
-            self.assertEqual(table[i], sum(i for i, v in enumerate(a) if v))
 
         table = _setup_table('A')
         self.assertEqual(table[15], 4+5+6+7)
-        for i in range(256):
-            a = int2ba(i, 8, 'big')
-            self.assertEqual(table[i], sum(i for i, v in enumerate(a) if v))
+
+        for kop, endian in ('a', 'little'), ('A', 'big'):
+            t = _setup_table(kop)
+            for i in range(256):
+                a = int2ba(i, 8, endian)
+                self.assertEqual(t[i], sum(i for i, v in enumerate(a) if v))
 
     def test_xor(self):
         table = _setup_table('x')
         self.assertEqual(max(table), 7)  # max index is 7
         self.assertTrue(table[255] == 0^1^2^3^4^5^6^7 == 0)
+        self.assertTrue(table[2] == 1)
         self.assertTrue(table[6] == 1^2 == 3)
         self.assertTrue(table[29] == table[0b11101] == 0^2^3^4 == 5)
         self.assertTrue(table[34] == 1^5 == 4)
+
+        table = _setup_table('X')
+        self.assertTrue(table[2] == 6)
+
+        for kop, endian in ('x', 'little'), ('X', 'big'):
+            t = _setup_table(kop)
+            for i in range(256):
+                a = int2ba(i, 8, endian)
+                if a.count() == 0:
+                    res = 0
+                elif a.count() == 1:
+                    res = a.index(1)
+                else:
+                    res = reduce(operator.xor,
+                                 (i for i, v in enumerate(a) if v))
+                self.assertEqual(t[i], res)
 
     def test_reverse(self):
         table = _setup_table('r')
@@ -96,7 +112,7 @@ class ZLW_Tests(unittest.TestCase, Util):
             q, r = divmod(n, 64)
             self.assertEqual(b, a[64 * q:] + zeros(64 - r))
 
-# ---------------------------- _bitarray.c   --------------------------------
+# ----------------------------  _bitarray.c  --------------------------------
 
 class ShiftR8_Tests(unittest.TestCase, Util):
 
@@ -328,7 +344,7 @@ class RTS_Tests(unittest.TestCase):
         self.assertEqual(rts, [0, 5, 5, 8, 12])
 
     @staticmethod
-    def nseg(a):  # number of segments
+    def nseg(a):  # number of segments, see also SegmentTests in tricks.py
         return (a.nbytes + _SEGSIZE - 1) // _SEGSIZE
 
     def test_ones(self):

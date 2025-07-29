@@ -15,3 +15,19 @@ resize/
 
 shift_r8.c
     C program is to illustrate and document shift_r8()
+
+
+test_debug.py
+    Tests for internal C code which is exposed in debug builds.
+    These tests will only work when bitarray is compiled in debug mode.
+
+
+test_random.py
+    * statistical tests for random functions in bitarray.util
+    * verification of some statistical equations
+    * verification of code used in random_k() and random_p()
+
+
+tricks.py
+    Some little tricks and verifications for some code which is used
+    mostly in the C implementation of bitarray.
