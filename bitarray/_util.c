@@ -265,6 +265,25 @@ Return parity of bitarray `a`.\n\
 `parity(a)` is equivalent to `a.count() % 2` but more efficient.");
 
 
+static void
+setup_table(char *table, int le, char op)
+{
+    int j, k;
+
+    memset(table, 0, 256);
+    for (k = 0; k < 256; k++) {
+        for (j = 1; j < 8; j++) {
+            if (( le && k & 0x01 << j) ||  /* little endian */
+                (!le && k & 0x80 >> j))    /* big endian */
+                switch (op) {
+                case 'a': table[k] += j; break;
+                case 'x': table[k] ^= j; break;
+                default: Py_UNREACHABLE();
+                }
+        }
+    }
+}
+
 static PyObject *
 add_uint64(PyObject *number, uint64_t i)
 {
@@ -279,7 +298,7 @@ add_uint64(PyObject *number, uint64_t i)
 static PyObject *
 sum_indices(PyObject *module, PyObject *obj)
 {
-    static signed char table[256];
+    static char table[256];
     static int setup = -1;      /* endianness of table */
     PyObject *res;
     bitarrayobject *a;
@@ -295,16 +314,7 @@ sum_indices(PyObject *module, PyObject *obj)
     set_padbits(a);
 
     if (setup != a->endian) {
-        int j, k;
-        memset(table, 0, sizeof table);
-        for (k = 0; k < 256; k++) {
-            for (j = 1; j < 8; j++) {
-                if (IS_LE(a) && k & 0x01 << j)  /* little endian */
-                    table[k] += j;
-                if (IS_BE(a) && k & 0x80 >> j)  /* big endian */
-                    table[k] += j;
-            }
-        }
+        setup_table(table, IS_LE(a), 'a');
         setup = a->endian;
     }
 
@@ -337,7 +347,7 @@ This is equivalent to `sum(i for i, v in enumerate(a) if v)`.");
 static PyObject *
 xor_indices(PyObject *module, PyObject *obj)
 {
-    static signed char table[256];
+    static char table[256];
     static int setup = -1;      /* endianness of table */
     bitarrayobject *a;
     Py_ssize_t res = 0, nbytes, i;
@@ -350,16 +360,7 @@ xor_indices(PyObject *module, PyObject *obj)
     set_padbits(a);
 
     if (setup != a->endian) {
-        int j, k;
-        memset(table, 0, sizeof table);
-        for (k = 0; k < 256; k++) {
-            for (j = 1; j < 8; j++) {
-                if (IS_LE(a) && k & 0x01 << j)  /* little endian */
-                    table[k] ^= j;
-                if (IS_BE(a) && k & 0x80 >> j)  /* big endian */
-                    table[k] ^= j;
-            }
-        }
+        setup_table(table, IS_LE(a), 'x');
         setup = a->endian;
     }
 
