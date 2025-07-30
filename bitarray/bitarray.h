@@ -229,20 +229,22 @@ swap_bytes(char *p, Py_ssize_t n)
 static inline void
 setup_table(char *table, char kop)
 {
-    int j, k;
+    int k;
     for (k = 0; k < 256; k++) {
-        table[k] = 0;
+        char t = 0, j;
         for (j = 0; j < 8; j++) {
             if (k & 1 << j)
+                /* j are the indices of active bits in k (little endian) */
                 switch (kop) {
-                case 'a': table[k] += j;        break;
-                case 'A': table[k] += 7 - j;    break;
-                case 'x': table[k] ^= j;        break;
-                case 'X': table[k] ^= 7 - j;    break;
-                case 'r': table[k] |= 128 >> j; break;
+                case 'a': t += j;        break;
+                case 'A': t += 7 - j;    break;
+                case 'x': t ^= j;        break;
+                case 'X': t ^= 7 - j;    break;
+                case 'r': t |= 128 >> j; break;
                 default: Py_UNREACHABLE();
                 }
         }
+        table[k] = t;
     }
 }
 
