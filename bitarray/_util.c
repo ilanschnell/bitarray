@@ -2108,13 +2108,42 @@ static PyTypeObject CHDI_Type = {
 #ifndef NDEBUG
 
 static PyObject *
+module_setup_table(PyObject *module, PyObject *obj)
+{
+    char table[256];
+
+    assert(PyUnicode_Check(obj));
+    assert(PyUnicode_GET_LENGTH(obj) == 1);
+    setup_table(table, PyUnicode_READ_CHAR(obj, 0));
+    return PyBytes_FromStringAndSize(table, 256);
+}
+
+/* Return zlw(a) as a new bitarray, rather than an int object.
+   This makes testing easier, because the int result would depend
+   on the machine byteorder. */
+static PyObject *
+module_zlw(PyObject *module, PyObject *obj)
+{
+    bitarrayobject *a, *res;
+    uint64_t w;
+
+    assert(bitarray_Check(obj));
+    a = (bitarrayobject *) obj;
+    w = zlw(a);
+    if ((res = new_bitarray(64, Py_None, -1)) == NULL)
+        return NULL;
+    res->endian = a->endian;
+    memcpy(res->ob_item, &w, 8);
+    return (PyObject *) res;
+}
+
+static PyObject *
 module_cfw(PyObject *module, PyObject *args)  /* count_from_word() */
 {
     bitarrayobject *a;
     Py_ssize_t i;
 
-    if (!PyArg_ParseTuple(args, "O!n",
-                          bitarray_type, (PyObject *) &a, &i))
+    if (!PyArg_ParseTuple(args, "O!n", bitarray_type, (PyObject *) &a, &i))
         return NULL;
     return PyLong_FromSsize_t(count_from_word(a, i));
 }
@@ -2191,10 +2220,12 @@ static PyMethodDef module_functions[] = {
 
 #ifndef NDEBUG
     /* functions exposed in debug mode for testing */
-    {"_cfw",      (PyCFunction) module_cfw,     METH_VARARGS, 0},
-    {"_read_n",   (PyCFunction) module_read_n,  METH_VARARGS, 0},
-    {"_write_n",  (PyCFunction) module_write_n, METH_VARARGS, 0},
-    {"_sc_rts",   (PyCFunction) module_sc_rts,  METH_O,       0},
+    {"_setup_table", (PyCFunction) module_setup_table, METH_O,       0},
+    {"_zlw",         (PyCFunction) module_zlw,         METH_O,       0},
+    {"_cfw",         (PyCFunction) module_cfw,         METH_VARARGS, 0},
+    {"_read_n",      (PyCFunction) module_read_n,      METH_VARARGS, 0},
+    {"_write_n",     (PyCFunction) module_write_n,     METH_VARARGS, 0},
+    {"_sc_rts",      (PyCFunction) module_sc_rts,      METH_O,       0},
 #endif
 
     {NULL,        NULL}  /* sentinel */

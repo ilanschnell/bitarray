@@ -4195,44 +4195,6 @@ Return tuple containing:\n\
 7. PY_LITTLE_ENDIAN\n\
 8. PY_BIG_ENDIAN");
 
-/* ---------- module functions exposed in debug mode for testing ------- */
-
-#ifndef NDEBUG
-
-static PyObject *
-module_setup_table(PyObject *module, PyObject *obj)
-{
-    char table[256];
-    Py_UCS4 ch;
-
-    assert(PyUnicode_Check(obj));
-    assert(PyUnicode_GET_LENGTH(obj) == 1);
-    ch = PyUnicode_READ_CHAR(obj, 0);
-
-    setup_table(table, ch);
-    return PyBytes_FromStringAndSize(table, 256);
-}
-
-/* Return zlw(a) as a new bitarray, rather than an int object.
-   This makes testing easier, because the int result would depend
-   on the machine byteorder. */
-static PyObject *
-module_zlw(PyObject *module, PyObject *obj)
-{
-    bitarrayobject *a, *res;
-    uint64_t w;
-
-    assert(bitarray_Check(obj));
-    a = (bitarrayobject *) obj;
-    w = zlw(a);
-    if ((res = newbitarrayobject(&Bitarray_Type, 64, a->endian)) == NULL)
-        return NULL;
-    memcpy(res->ob_item, &w, 8);
-    return (PyObject *) res;
-}
-
-#endif  /* NDEBUG */
-
 
 static PyMethodDef module_functions[] = {
     {"bits2bytes",          (PyCFunction) bits2bytes,         METH_O,
@@ -4246,13 +4208,6 @@ static PyMethodDef module_functions[] = {
      set_default_endian_doc},
     {"_sysinfo",            (PyCFunction) sysinfo,            METH_NOARGS,
      sysinfo_doc},
-
-#ifndef NDEBUG
-    /* functions exposed in debug mode for testing */
-    {"_setup_table",        (PyCFunction) module_setup_table, METH_O,  0},
-    {"_zlw",                (PyCFunction) module_zlw,         METH_O,  0},
-#endif
-
     {NULL,                  NULL}  /* sentinel */
 };
 

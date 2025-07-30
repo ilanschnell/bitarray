@@ -10,9 +10,10 @@ from bitarray.test_bitarray import Util, urandom_2, skipIf, PTRSIZE
 
 # --------------------- internal C-level debug tests ------------------------
 
-from bitarray._bitarray import _setup_table, _zlw
-
-from bitarray._util import _cfw, _read_n, _write_n, _sc_rts, _SEGSIZE
+from bitarray._util import (
+    _setup_table, _zlw,                          # defined in bitarray.h
+    _cfw, _read_n, _write_n, _sc_rts, _SEGSIZE,  # defined in _util.h
+)
 SEGBITS = 8 * _SEGSIZE
 
 # ---------------------------- bitarray.h -----------------------------------
