@@ -22,6 +22,11 @@ test_debug.py
     These tests will only work when bitarray is compiled in debug mode.
 
 
+test_sum_indices.py
+    Test sum_indices() for very large n, to test if accumulated sum is
+    flushed into a Python number object correctly.
+
+
 test_random.py
     * statistical tests for random functions in bitarray.util
     * verification of some statistical equations
