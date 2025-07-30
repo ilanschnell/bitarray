@@ -13,18 +13,15 @@ and establish some tricky equations.
 """
 import sys
 import unittest
-import operator
 from copy import deepcopy
 from collections import Counter
-from functools import reduce
 from math import comb, fmod, sqrt
 from statistics import fmean, stdev, pstdev
-from random import choice, randint, randrange, random, binomialvariate
+from random import randint, randrange, random, binomialvariate
 
 from bitarray import bitarray, frozenbitarray
 from bitarray.util import (
-    zeros, ones, urandom, random_k, random_p,
-    sum_indices, xor_indices,
+    zeros, ones, urandom, random_k, random_p, sum_indices,
     int2ba, count_and, count_or, count_xor, parity,
 )
 from bitarray.util import _Random  # type: ignore
