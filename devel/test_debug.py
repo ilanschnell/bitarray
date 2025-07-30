@@ -46,13 +46,14 @@ class SetupTableTests(unittest.TestCase):
         table = _setup_table('x')
         self.assertEqual(max(table), 7)  # max index is 7
         self.assertTrue(table[255] == 0^1^2^3^4^5^6^7 == 0)
-        self.assertTrue(table[2] == 1)
-        self.assertTrue(table[6] == 1^2 == 3)
+        self.assertEqual(table[2], 1)
         self.assertTrue(table[29] == table[0b11101] == 0^2^3^4 == 5)
-        self.assertTrue(table[34] == 1^5 == 4)
+        self.assertTrue(table[34] == table[0b100010] == 1^5 == 4)
+        self.assertTrue(table[157] == table[0b10011101] == 2^3^4^7 == 2)
 
         table = _setup_table('X')
-        self.assertTrue(table[2] == 6)
+        self.assertEqual(table[2], 6)
+        self.assertTrue(table[157] == 3^4^5^7 == 5)
 
         for kop, endian in ('x', 'little'), ('X', 'big'):
             t = _setup_table(kop)
@@ -317,19 +318,19 @@ class CountFromWord_Tests(unittest.TestCase, Util):
     def test_ones_zeros_empty(self):
         for _ in range(1000):
             n = randrange(1024)
-            a = ones(n)
-            i = randrange(16)
+            a = ones(n)  # ones
+            i = randrange(20)
             self.assertEqual(_cfw(a, i), max(0, n - i * 64))
-            a.setall(0)
+            a.setall(0)  # zeros
             self.assertEqual(_cfw(a, i), 0)
-            a.clear()
+            a.clear()    # empty
             self.assertEqual(_cfw(a, i), 0)
 
     def test_random(self):
         for _ in range(1000):
             n = randrange(1024)
             a = urandom_2(n)
-            i = randrange(16)
+            i = randrange(20)
             res = _cfw(a, i)
             self.assertEqual(res, a[64 * i:].count())
 
