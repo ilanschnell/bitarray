@@ -279,8 +279,8 @@ add_uint64(PyObject *number, uint64_t i)
 static PyObject *
 sum_indices(PyObject *module, PyObject *obj)
 {
-    static char table[256];
-    static int setup = -1;      /* endianness of table */
+    static char count_table[256], sum_table[256];
+    static int setup = -1;      /* endianness of sum_table */
     PyObject *res;
     bitarrayobject *a;
     Py_ssize_t nbytes, i;
@@ -295,7 +295,8 @@ sum_indices(PyObject *module, PyObject *obj)
     set_padbits(a);
 
     if (setup != a->endian) {
-        setup_table(table, IS_LE(a) ? 'a' : 'A');
+        setup_table(sum_table, IS_LE(a) ? 'a' : 'A');
+        setup_table(count_table, 'c');
         setup = a->endian;
     }
 
@@ -303,8 +304,8 @@ sum_indices(PyObject *module, PyObject *obj)
         unsigned char c = a->ob_item[i];
         if (!c)
             continue;
-        sm += ((uint64_t) i) * ((uint64_t) (8 * popcnt_64(c)));
-        sm += table[c];
+        sm += ((uint64_t) i) * ((uint64_t) (8 * count_table[c]));
+        sm += sum_table[c];
 
         if (sm > ((uint64_t ) 1) << 63) {
             /* Flush accumulated sum into Python number object.
@@ -330,8 +331,8 @@ This is equivalent to `sum(i for i, v in enumerate(a) if v)`.");
 static PyObject *
 xor_indices(PyObject *module, PyObject *obj)
 {
-    static char table[256];
-    static int setup = -1;      /* endianness of table */
+    static char parity_table[256], xor_table[256];
+    static int setup = -1;      /* endianness of xor_table */
     bitarrayobject *a;
     Py_ssize_t res = 0, nbytes, i;
 
@@ -343,15 +344,16 @@ xor_indices(PyObject *module, PyObject *obj)
     set_padbits(a);
 
     if (setup != a->endian) {
-        setup_table(table, IS_LE(a) ? 'x' : 'X');
+        setup_table(xor_table, IS_LE(a) ? 'x' : 'X');
+        setup_table(parity_table, 'p');
         setup = a->endian;
     }
 
     for (i = 0; i < nbytes; i++) {
         unsigned char c = a->ob_item[i];
-        if (parity_64(c))
+        if (parity_table[c])
             res ^= i << 3;
-        res ^= table[c];
+        res ^= xor_table[c];
     }
     return PyLong_FromSsize_t(res);
 }

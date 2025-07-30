@@ -236,11 +236,13 @@ setup_table(char *table, char kop)
             if (k & 1 << j)
                 /* j are the indices of active bits in k (little endian) */
                 switch (kop) {
-                case 'a': t += j;        break;
-                case 'A': t += 7 - j;    break;
-                case 'x': t ^= j;        break;
-                case 'X': t ^= 7 - j;    break;
-                case 'r': t |= 128 >> j; break;
+                case 'a': t += j;        break;  /* add active indices */
+                case 'A': t += 7 - j;    break;  /* 'a' for big endian */
+                case 'x': t ^= j;        break;  /* xor active indices */
+                case 'X': t ^= 7 - j;    break;  /* 'x' for big endian */
+                case 'c': t++;           break;  /* bit count */
+                case 'p': t ^= 1;        break;  /* parity */
+                case 'r': t |= 128 >> j; break;  /* reverse bits */
                 default: Py_UNREACHABLE();
                 }
         }

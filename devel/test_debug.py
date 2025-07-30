@@ -4,7 +4,7 @@ import unittest
 from random import randint, randrange
 
 from bitarray import bitarray
-from bitarray.util import zeros, ones, int2ba
+from bitarray.util import zeros, ones, int2ba, parity
 
 from bitarray.test_bitarray import Util, urandom_2, skipIf, PTRSIZE
 
@@ -20,7 +20,7 @@ SEGBITS = 8 * _SEGSIZE
 class SetupTableTests(unittest.TestCase):
 
     def test_common(self):
-        for kop in 'aAxXr':
+        for kop in 'aAxXcpr':
             table = _setup_table(kop)
             self.assertEqual(type(table), bytes)
             self.assertEqual(len(table), 256)
@@ -61,6 +61,26 @@ class SetupTableTests(unittest.TestCase):
                 for j, v in enumerate(a):
                     c ^= j * v
                 self.assertEqual(t[i], c)
+
+    def test_count(self):
+        table = _setup_table('c')
+        self.assertEqual(max(table), 8)  # 8 active bits the most
+        self.assertEqual(table[255], 8)
+        self.assertTrue(table[29] == table[0b11101] == 4)
+        for endian in 'little', 'big':
+            for i in range(256):
+                a = int2ba(i, 8, endian)
+                self.assertEqual(table[i], a.count())
+
+    def test_parity(self):
+        table = _setup_table('p')
+        self.assertEqual(max(table), 1)
+        self.assertEqual(table[254], 1)
+        self.assertEqual(table[255], 0)
+        for endian in 'little', 'big':
+            for i in range(256):
+                a = int2ba(i, 8, endian)
+                self.assertEqual(table[i], parity(a))
 
     def test_reverse(self):
         table = _setup_table('r')
