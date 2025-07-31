@@ -17,7 +17,8 @@ import unittest
 from io import StringIO
 from functools import reduce
 from string import hexdigits
-from random import choice, getrandbits, randrange, randint, random, seed
+from random import (choice, getrandbits, randrange, randint, random, sample,
+                    seed)
 from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
@@ -1060,6 +1061,15 @@ class SumIndicesTests(unittest.TestCase, Util):
         a = urandom_2(n)
         self.assertEqual(sum_indices(a),
                          sum(i for i, v in enumerate(a) if v))
+
+    def test_large_sparse(self):
+        n = 1_000_000
+        k = 1_000
+        indices = sample(range(n), k)
+        a = zeros(n)
+        a[indices] = 1
+        self.assertEqual(a.count(), k)
+        self.assertEqual(sum_indices(a), sum(indices))
 
     def test_random(self):
         for a in self.randombitarrays():
