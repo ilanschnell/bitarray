@@ -161,7 +161,7 @@ class CreateMasksTests(unittest.TestCase):
 
 class Util(unittest.TestCase):
 
-    def check_normal_dist(self, n, p, x):
+    def check_binomial_dist(self, n, p, x):
         mu = n * p
         sigma = sqrt(n * p * (1.0 - p))
         msg = "n=%d  p=%f  mu=%f  sigma=%f  x=%f" % (n, p, mu, sigma, x)
@@ -175,7 +175,7 @@ class Util(unittest.TestCase):
         elif p == 1:
             self.assertEqual(c, n)
         else:
-            self.check_normal_dist(n, p, c)
+            self.check_binomial_dist(n, p, c)
 
 
 class UtilTests(Util):
@@ -219,37 +219,25 @@ class URandomTests(Util):
 class Random_K_Tests(Util):
 
     def test_mean(self):
-        for _ in range(100):
-            n = randrange(10, 10_000)
-            k = randint(10, n)
-            a = random_k(n, k)
-            self.assertEqual(len(a), n)
-            self.assertEqual(a.count(), k)
-            values = list(a.search(1))
-            self.assertEqual(len(values), k)
-            mean = fmean(values)
-            self.assertEqual(mean, sum_indices(a) / k)
-            # the standard deviation of the values is n/sqrt(12)
-            if 0:
-                print("        ", stdev(values), n / sqrt(12))
-            # standard error of mean is standard deviation of the values
-            # divided by the square root of the sample size k:
-            # n/sqrt(12) / sqrt(k) = n / sqrt(12 * k)
-            stderr = n / sqrt(12 * k)
-            self.assertTrue(abs(mean - n / 2) < 6.0 * stderr)
+        ranges = [
+            (499.5, 510.0, 0.37485434835892995),
+            (510.0, 520.0, 0.11274679237288754),
+            (505.0, 515.0, 0.22868292135280432),
+        ]
+        M = 100_000  # number of trails
+        N = 1_000
+        K = 500
+        C = Counter()
+        for _ in range(M):
+            a = random_k(N, K)
+            self.assertEqual(a.count(), K)
+            x = sum_indices(a) / K
+            for i, (x1, x2, _) in enumerate(ranges):
+                if x1 < x < x2:
+                    C[i] += 1
 
-    def test_mean_2(self):
-        for _ in range(100):
-            n = randrange(1_000_000)
-            k = randint(0, n)
-            a = random_k(n, k)
-            self.assertEqual(len(a), n)
-            self.assertEqual(a.count(), k)
-            if k < 10:
-                continue
-            mean = sum_indices(a) / k
-            stderr = n / sqrt(12 * k)
-            self.assertTrue(abs(mean - n / 2) < 6.0 * stderr)
+        for i, (_, _, p) in enumerate(ranges):
+            self.check_binomial_dist(M, p, C[i])
 
     def test_apply_masks(self):
         Na = 25_000  # number of bitarrays to test against masks
@@ -277,7 +265,7 @@ class Random_K_Tests(Util):
                     cm[i] += 1
 
         for c in cm:  # for each mask, check counter
-            self.check_normal_dist(Na, 0.5, c)
+            self.check_binomial_dist(Na, 0.5, c)
 
     def test_random_masks(self):
         Na = 10  # number of arrays to test
@@ -308,7 +296,7 @@ class Random_K_Tests(Util):
                     ca[i] += 1
 
         for c in ca:  # for each array, check counter
-            self.check_normal_dist(Nm, 0.5, c)
+            self.check_binomial_dist(Nm, 0.5, c)
 
     def test_elements_uniform(self):
         arrays = [random_k(100_000, 30_000) for _ in range(100)]
@@ -379,7 +367,7 @@ class Random_K_Tests(Util):
             print(sqrt(N * p * (1.0 - p)))
             print(stdev(c.values()))
         for x in c.values():
-            self.check_normal_dist(N, p, x)
+            self.check_binomial_dist(N, p, x)
 
     def random_p_alt(self, n, p=0.5):
         """
@@ -431,7 +419,7 @@ class Random_P_Tests(Util):
 
         for i in range(M):
             self.assertTrue(n[i] > 20_000, n[i])
-            self.check_normal_dist(n[i], 0.5, c[i])
+            self.check_binomial_dist(n[i], 0.5, c[i])
 
     def test_elements_uniform(self):
         arrays = [random_p(100_000, 0.3) for _ in range(100)]
