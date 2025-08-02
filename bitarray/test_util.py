@@ -158,6 +158,12 @@ class Random_K_Tests(unittest.TestCase):
             self.assertEqual(R(n, k=n), ones(n))
 
     def test_count(self):
+        for n in range(10):  # test explicitly for small n
+            for k in range(n + 1):
+                a = random_k(n, k)
+                self.assertEqual(len(a), n)
+                self.assertEqual(a.count(), k)
+
         for _ in range(100):
             n = randrange(10_000)
             k = randint(0, n)
