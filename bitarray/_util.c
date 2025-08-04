@@ -268,51 +268,59 @@ Return parity of bitarray `a`.\n\
 static PyObject *
 add_uint64(PyObject *number, uint64_t i)
 {
-    PyObject *res, *tmp = PyLong_FromUnsignedLongLong(i);
+    PyObject *result, *i_obj = PyLong_FromUnsignedLongLong(i);
 
-    res = PyNumber_Add(number, tmp);
-    Py_DECREF(tmp);
+    result = PyNumber_Add(number, i_obj);
+    Py_DECREF(i_obj);
     Py_DECREF(number);
-    return res;
+    return result;
 }
 
 static PyObject *
-sum_indices(PyObject *module, PyObject *obj)
+sum_indices(PyObject *module, PyObject *args)
 {
-    static char count_table[256], sum_table[256];
-    static int setup = -1;      /* endianness of sum_table */
+    static char count_table[256], sum_table[256], sum_sqr_table[256];
+    static int setup = -1;      /* endianness of tables */
     PyObject *res;
     bitarrayobject *a;
-    Py_ssize_t nbytes, i;
+    uint64_t nbytes, i;
     uint64_t sm = 0;            /* accumulated sum */
+    int mode = 1;
 
-    if (ensure_bitarray(obj) < 0)
+    if (!PyArg_ParseTuple(args, "O!|i:sum_indices", bitarray_type,
+                          (PyObject *) &a, &mode))
         return NULL;
+    if (mode < 1 || mode > 2)
+        return PyErr_Format(PyExc_ValueError, "unexpected mode %d", mode);
 
-    res = PyLong_FromLong(0);
-    a = (bitarrayobject *) obj;
     nbytes = Py_SIZE(a);
-    set_padbits(a);
+    if (mode == 2 && nbytes > ((uint64_t ) 1) << 27)
+        return PyErr_Format(PyExc_OverflowError, "%llu", nbytes);
 
     if (setup != a->endian) {
-        setup_table(sum_table, IS_LE(a) ? 'a' : 'A');
         setup_table(count_table, 'c');
+        setup_table(sum_table, IS_LE(a) ? 'a' : 'A');
+        setup_table(sum_sqr_table, IS_LE(a) ? 's' : 'S');
         setup = a->endian;
     }
 
+    set_padbits(a);
+    res = PyLong_FromLong(0);
     for (i = 0; i < nbytes; i++) {
         unsigned char c = a->ob_item[i];
         if (!c)
             continue;
-        sm += ((uint64_t) i) * ((uint64_t) (8 * count_table[c]));
-        sm += sum_table[c];
+        if (mode == 1) {
+            sm += 8 * i * count_table[c];
+            sm += sum_table[c];
+        } else {
+            sm += 64 * i * i * count_table[c];
+            sm += 16 * i * sum_table[c];
+            sm += (unsigned char) sum_sqr_table[c];
+        }
 
         if (sm > ((uint64_t ) 1) << 63) {
-            /* Flush accumulated sum into Python number object.
-               For ones(n) this will already happen when n > 2**32 = 4 Gbit.
-               As the maximum bitarray size on 32-bit machines is 2 Gbit, this
-               can only happen on 64-bit machines.
-               printf("%llu  %30zd\n", sm, i);  */
+            /* Flush accumulated sum into Python number object. */
             if ((res = add_uint64(res, sm)) == NULL)
                 return NULL;
             sm = 0;
@@ -2189,8 +2197,8 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, ones_doc},
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
     {"parity",    (PyCFunction) parity,    METH_O,       parity_doc},
-    {"sum_indices", (PyCFunction) sum_indices, METH_O,   sum_indices_doc},
-    {"xor_indices", (PyCFunction) xor_indices, METH_O,   xor_indices_doc},
+    {"sum_indices", (PyCFunction) sum_indices, METH_VARARGS, sum_indices_doc},
+    {"xor_indices", (PyCFunction) xor_indices, METH_O,       xor_indices_doc},
     {"count_and", (PyCFunction) count_and, METH_VARARGS, count_and_doc},
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},

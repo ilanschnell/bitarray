@@ -1032,26 +1032,33 @@ class ParityTests(unittest.TestCase, Util):
 class SumIndicesTests(unittest.TestCase, Util):
 
     def test_explicit(self):
-        for s, r in [("", 0), ("0", 0), ("1", 0), ("11", 1),
-                     ("011", 3), ("001", 2), ("0001100", 7),
-                     ("00001111", 22), ("01100111 1101", 49)]:
+        for s, r1, r2 in [
+                ("", 0, 0), ("0", 0, 0), ("1", 0, 0), ("11", 1, 1),
+                ("011", 3, 5), ("001", 2, 4), ("0001100", 7, 25),
+                ("00001111", 22, 126), ("01100111 1101", 49, 381),
+        ]:
             a = bitarray(s, self.random_endian())
-            self.assertEqual(sum_indices(a), r)
+            self.assertEqual(sum_indices(a), r1)
+            self.assertEqual(sum_indices(a, 2), r2)
 
     def test_wrong_args(self):
         S = sum_indices
         self.assertRaises(TypeError, S, '')
-        self.assertRaises(TypeError, S, 1)
+        self.assertRaises(TypeError, S, 1.0)
         self.assertRaises(TypeError, S)
-        self.assertRaises(TypeError, S, bitarray("110"), 1)
+        for mode in -1, 0, 3, 4:
+            self.assertRaises(ValueError, S, bitarray("110"), mode)
+        self.assertRaises(OverflowError, S, bitarray((8 << 27) + 1), 2)
 
     def test_ones_small(self):
         a = bitarray()
-        sm = 0
+        sm1 = sm2 = 0
         for i in range(1000):
             a.append(1)
-            sm += i
-            self.assertEqual(sum_indices(a), sm)
+            sm1 += i
+            sm2 += i * i
+            self.assertEqual(sum_indices(a, 1), sm1)
+            self.assertEqual(sum_indices(a, 2), sm2)
 
     def test_large_ones(self):
         # Note that this will also work on 32-bit machines, even though
@@ -1059,14 +1066,18 @@ class SumIndicesTests(unittest.TestCase, Util):
         n = 100_000
         a = bitarray(n)
         self.assertEqual(sum_indices(a), 0)
+        self.assertEqual(sum_indices(a, 2), 0)
         a.setall(1)
         self.assertEqual(sum_indices(a), n * (n - 1) // 2)
+        self.assertEqual(sum_indices(a, 2), n * (n-1) * (2*n-1) // 6)
 
     def test_large_random(self):
         n = 100_000
         a = urandom_2(n)
         self.assertEqual(sum_indices(a),
                          sum(i for i, v in enumerate(a) if v))
+        self.assertEqual(sum_indices(a, 2),
+                         sum(i * i for i, v in enumerate(a) if v))
 
     def test_large_sparse(self):
         n = 1_000_000
@@ -1076,12 +1087,16 @@ class SumIndicesTests(unittest.TestCase, Util):
         a[indices] = 1
         self.assertEqual(a.count(), k)
         self.assertEqual(sum_indices(a), sum(indices))
+        self.assertEqual(sum_indices(a, 2), sum(i*i for i in indices))
 
     def test_random(self):
         for a in self.randombitarrays():
             res = sum_indices(a)
             self.assertEqual(res, sum(i for i, v in enumerate(a) if v))
             self.assertEqual(res, sum(a.search(1)))
+            res = sum_indices(a, 2)
+            self.assertEqual(res, sum(i*i for i, v in enumerate(a) if v))
+            self.assertEqual(res, sum(i*i for i in a.search(1)))
 
 # ---------------------------------------------------------------------------
 
