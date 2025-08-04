@@ -247,6 +247,39 @@ class _Random:
         return a
 
 
+def _sum_sqr_indices(__a):
+    """_sum_sqr_indices(a, /) -> int
+
+Return sum of squares of indices of all active bits in bitarray `a`.
+Equivalent to `sum(i * i for i, v in enumerate(a) if v)`.
+"""
+    nbits = len(__a)
+    block_bytes = 1 << 16         # 64 KBytes
+    block_bits = 8 * block_bytes  # 512 Kbits
+    nblocks = (nbits + block_bits - 1) // block_bits
+    if nblocks <= 1:
+        return sum_indices(__a, 2)
+    sm = 0
+    for i in range(nblocks):
+        if i == nblocks - 1 and nbits % 8:
+            b = __a[8 * i * block_bytes:]
+        else:
+            v = memoryview(__a)[i * block_bytes : (i + 1) * block_bytes]
+            b = bitarray(endian=__a.endian, buffer=v)
+        sm += (block_bits * i) ** 2 * b.count()
+        sm += 2 * block_bits * i * sum_indices(b)
+        sm += sum_indices(b, 2)
+    return sm
+
+
+def _variance(__a, mu=None):
+    si = sum_indices(__a)
+    k = __a.count()
+    if mu is None:
+        mu = si / k
+    return (_sum_sqr_indices(__a) - 2 * mu * si) / k + mu * mu
+
+
 def pprint(__a, stream=None, group=8, indent=4, width=80):
     """pprint(bitarray, /, stream=None, group=8, indent=4, width=80)
 

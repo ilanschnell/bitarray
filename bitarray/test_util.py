@@ -37,7 +37,7 @@ from bitarray.util import (
     _huffman_tree, huffman_code, canonical_huffman, canonical_decode,
 )
 
-from bitarray.util import _Random  # type: ignore
+from bitarray.util import _Random, _sum_sqr_indices, _variance # type: ignore
 
 # ---------------------------------------------------------------------------
 
@@ -1048,7 +1048,6 @@ class SumIndicesTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, S)
         for mode in -1, 0, 3, 4:
             self.assertRaises(ValueError, S, bitarray("110"), mode)
-        self.assertRaises(OverflowError, S, bitarray((8 << 27) + 1), 2)
 
     def test_ones_small(self):
         a = bitarray()
@@ -1097,6 +1096,32 @@ class SumIndicesTests(unittest.TestCase, Util):
             res = sum_indices(a, 2)
             self.assertEqual(res, sum(i*i for i, v in enumerate(a) if v))
             self.assertEqual(res, sum(i*i for i in a.search(1)))
+
+
+class SumSqrIndicesTests(unittest.TestCase):
+
+    def test_sum_sqr_indices(self):
+        n = 1_000_000
+        k = 1_000
+        indices = sample(range(n), k)
+        a = zeros(n)
+        a[indices] = 1
+        self.assertEqual(a.count(), k)
+        self.assertEqual(_sum_sqr_indices(a), sum(i*i for i in indices))
+
+    def test_variance(self):
+        for _ in range(100):
+            n = randrange(1, 20)
+            k = randint(1, n)
+            indices = sample(range(n), k)
+            a = zeros(n)
+            a[indices] = 1
+            mean = sum(indices) / len(indices)
+            self.assertAlmostEqual(_variance(a),
+                                   sum((x - mean) ** 2 for x in indices) / k)
+            mean = 20.5
+            self.assertAlmostEqual(_variance(a, mean),
+                                   sum((x - mean) ** 2 for x in indices) / k)
 
 # ---------------------------------------------------------------------------
 
