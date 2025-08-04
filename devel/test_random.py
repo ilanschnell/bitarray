@@ -15,6 +15,7 @@ import sys
 import unittest
 from copy import deepcopy
 from collections import Counter
+from itertools import pairwise
 from math import comb, fmod, sqrt
 from statistics import fmean, stdev, pstdev
 from random import randint, randrange, random, binomialvariate
@@ -219,25 +220,42 @@ class URandomTests(Util):
 class Random_K_Tests(Util):
 
     def test_mean(self):
-        ranges = [
-            (499.5, 510.0, 0.37485434835892995),
-            (510.0, 520.0, 0.11274679237288754),
-            (505.0, 515.0, 0.22868292135280432),
-        ]
         M = 100_000  # number of trails
-        N = 1_000
-        K = 500
+        N = 1_000    # bitarray length
+        K = 500      # sample size
         C = Counter()
+        ranges = [0.0, 500.0, 510.0, 520.0, 1000.0]
         for _ in range(M):
-            a = random_k(N, K)
-            self.assertEqual(a.count(), K)
-            x = sum_indices(a) / K
-            for i, (x1, x2, _) in enumerate(ranges):
-                if x1 < x < x2:
+            x = sum_indices(random_k(N, K)) / K
+            for i, (x1, x2) in enumerate(pairwise(ranges)):
+                if x1 <= x < x2:
                     C[i] += 1
 
-        for i, (_, _, p) in enumerate(ranges):
-            self.check_binomial_dist(M, p, C[i])
+        self.assertEqual(C.total(), M)
+        # python random/sample.py 100_000 1000 500 0 500 510 520 1000
+        self.assertTrue(abs(C[0] - 52_183) <= 1_580)  # p = 0.521829
+        self.assertTrue(abs(C[1] - 35_303) <= 1_511)  # p = 0.353025
+        self.assertTrue(abs(C[2] - 11_275) <= 1_000)  # p = 0.112747
+        self.assertTrue(abs(C[3] -  1_240) <=   350)  # p = 0.012399
+
+    def test_mean_2(self):
+        M = 100_000  # number of trails
+        N = 500      # bitarray length
+        K = 400      # sample size
+        C = Counter()
+        ranges = [200.0, 249.5, 251.0, 255.0, 260.0, 300.0]
+        for _ in range(M):
+            x = sum_indices(random_k(N, K)) / K
+            for i, (x1, x2) in enumerate(pairwise(ranges)):
+                if x1 <= x < x2:
+                    C[i] += 1
+
+        self.assertEqual(C.total(), M)
+        # python random/sample.py 100_000 500 400 200 249.5 251 255 260 300
+        self.assertTrue(abs(C[0] - 50_000) <= 1_581)  # p = 0.500000
+        self.assertTrue(abs(C[1] - 17_878) <= 1_212)  # p = 0.178781
+        self.assertTrue(abs(C[2] - 27_688) <= 1_415)  # p = 0.276879
+        self.assertTrue(abs(C[3] -  4_376) <=   647)  # p = 0.043762
 
     def test_apply_masks(self):
         Na = 25_000  # number of bitarrays to test against masks
@@ -441,48 +459,60 @@ class Random_P_Tests(Util):
                 self.assertTrue(a.count() <= 1)
 
     def test_literal(self):
-        # test "literal definition" case
-        c = Counter(random_p(4, 0.25).count() for _ in range(100_000))
-        self.assertTrue(abs(c[0] - 31_641) <= 1_471)
-        self.assertTrue(abs(c[1] - 42_188) <= 1_562)
-        self.assertTrue(abs(c[2] - 21_094) <= 1_290)
-        self.assertEqual(c.total(), 100_000)
+        # test "literal definition" case, n = 5
+        M = 250_000  # number of trails
+        C = Counter(random_p(5, 0.3).count() for _ in range(M))
+        self.assertEqual(C.total(), M)
+        # python random/binomial.py 250_000 5 0.3
+        self.assertTrue(abs(C[0] - 42_017) <=  1_870)  # p = 0.168070
+        self.assertTrue(abs(C[1] - 90_037) <=  2_400)  # p = 0.360150
+        self.assertTrue(abs(C[2] - 77_175) <=  2_310)  # p = 0.308700
+        self.assertTrue(abs(C[3] - 33_075) <=  1_694)  # p = 0.132300
+        self.assertTrue(abs(C[4] -  7_087) <=    830)  # p = 0.028350
 
     def test_small_p(self):
         # test small p case
-        c = Counter(random_p(50, p=0.005).count() for _ in range(100_000))
-        self.assertTrue(abs(c[0] - 77_831) <= 1_314)
-        self.assertTrue(abs(c[1] - 19_556) <= 1_254)
-        self.assertEqual(c.total(), 100_000)
+        C = Counter(random_p(50, p=0.005).count() for _ in range(100_000))
+        self.assertEqual(C.total(), 100_000)
+        # python random/binomial.py 100_000 50 .005
+        self.assertTrue(abs(C[0] - 77_831) <=  1_314)  # p = 0.778313
+        self.assertTrue(abs(C[1] - 19_556) <=  1_254)  # p = 0.195556
 
     def test_small_p_symmetry(self):
         # same as above - exploiting symmetry
-        c = Counter(random_p(50, p=0.995).count() for _ in range(100_000))
-        self.assertTrue(abs(c[49] - 19_556) <= 1_254)
-        self.assertTrue(abs(c[50] - 77_831) <= 1_314)
-        self.assertEqual(c.total(), 100_000)
+        C = Counter(random_p(50, p=0.995).count() for _ in range(100_000))
+        self.assertEqual(C.total(), 100_000)
+        self.assertTrue(abs(C[49] - 19_556) <= 1_254)
+        self.assertTrue(abs(C[50] - 77_831) <= 1_314)
 
     def test_small_p_uniform(self):
-        c = count_each_index(random_p(100_000, 0.005) for _ in range(50))
-        self.assertTrue(abs(c[0] - 77_831) <= 1_314)
-        self.assertTrue(abs(c[1] - 19_556) <= 1_254)
-        self.assertEqual(c.total(), 100_000)
+        C = count_each_index(random_p(100_000, 0.005) for _ in range(50))
+        self.assertEqual(C.total(), 100_000)
+        self.assertTrue(abs(C[0] - 77_831) <= 1_314)
+        self.assertTrue(abs(C[1] - 19_556) <= 1_254)
 
-    def test_n100_p375(self):
+    def test_p375(self):
         # test .combine_half()
-        c = Counter(random_p(100, 0.375).count() for _ in range(100_000))
-        x = sum(c[k] for k in range(37, 49))
-        # p = 0.566139   mean = 56613.946454   stdev = 156.724462
-        self.assertTrue(abs(x - 56_614) <= 1_567)
-        self.assertEqual(c.total(), 100_000)
+        M = 100_000  # number of trails
+        C = Counter(random_p(100, 0.375).count() for _ in range(M))
+        self.assertEqual(C.total(), M)
+        # python random/binomial.py 100_000 100 .375 37..48
+        self.assertTrue(abs(C[36] -  7_898) <=    853)  # p = 0.078977
+        self.assertTrue(abs(C[37] -  8_196) <=    867)  # p = 0.081965
+        self.assertTrue(abs(C[38] -  8_153) <=    865)  # p = 0.081533
+        self.assertTrue(abs(C[39] -  7_777) <=    847)  # p = 0.077770
+        x = sum(C[k] for k in range(37, 49))
+        self.assertTrue(abs(x - 56_614) <=  1_567)  # p = 0.566139
 
-    def test_n100_p7(self):
-        # general case
-        c = Counter(random_p(100, p=0.7).count() for _ in range(100_000))
-        x = sum(c[k] for k in range(61, 71))
-        # p = 0.516672   mean = 51667.168798   stdev = 158.025965
-        self.assertTrue(abs(x - 51_667) <= 1_580)
-        self.assertEqual(c.total(), 100_000)
+    def test_ne5(self):
+        M = 25_000  # number of trails
+        C = Counter(random_p(100_000, 0.5).count() for _ in range(M))
+        self.assertEqual(C.total(), M)
+        # python binomial.py 25_000 100_000 .5 48_000..50_000 50_000..50_200
+        x = sum(C[k] for k in range(48000, 50001))
+        self.assertTrue(abs(x - 12_532) <=    791)  # p = 0.501262
+        x = sum(C[k] for k in range(50000, 50201))
+        self.assertTrue(abs(x -  9_972) <=    774)  # p = 0.398876
 
     def test_probabilities(self):
         n = 100_000_000
