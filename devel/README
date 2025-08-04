@@ -8,6 +8,10 @@ copy_n.py
     of the bitarray we copy into.
 
 
+random/
+    development files for statistical tests
+
+
 resize/
     Things to study the bitarray resize function, including the growth
     pattern it creates and tests for the current implementation.
