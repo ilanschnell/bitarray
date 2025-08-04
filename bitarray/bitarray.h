@@ -238,6 +238,10 @@ setup_table(char *table, char kop)
                 switch (kop) {
                 case 'a': t += j;        break;  /* add active indices */
                 case 'A': t += 7 - j;    break;  /* 'a' for big endian */
+                case 's': t += j * j;    /* add squares of active indices */
+                    break;
+                case 'S': t += (7-j) * (7-j);    /* 's' for big endian */
+                    break;
                 case 'x': t ^= j;        break;  /* xor active indices */
                 case 'X': t ^= 7 - j;    break;  /* 'x' for big endian */
                 case 'c': t++;           break;  /* bit count */

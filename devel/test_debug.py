@@ -21,7 +21,7 @@ SEGBITS = 8 * _SEGSIZE
 class SetupTableTests(unittest.TestCase):
 
     def test_common(self):
-        for kop in 'aAxXcpr':
+        for kop in 'aAsSxXcpr':
             table = _setup_table(kop)
             self.assertEqual(type(table), bytes)
             self.assertEqual(len(table), 256)
@@ -41,6 +41,16 @@ class SetupTableTests(unittest.TestCase):
             for i in range(256):
                 a = int2ba(i, 8, endian)
                 self.assertEqual(t[i], sum(i for i, v in enumerate(a) if v))
+
+    def test_add_sqr(self):
+        table = _setup_table('s')
+        self.assertEqual(max(table), 140)
+        for kop, endian in ('s', 'little'), ('S', 'big'):
+            t = _setup_table(kop)
+            for i in range(256):
+                a = int2ba(i, 8, endian)
+                self.assertEqual(t[i],
+                                 sum(i * i for i, v in enumerate(a) if v))
 
     def test_xor(self):
         table = _setup_table('x')
