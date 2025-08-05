@@ -1084,9 +1084,12 @@ class SumIndicesTests(unittest.TestCase, Util):
         indices = sample(range(n), k)
         a = zeros(n)
         a[indices] = 1
+        c = a.copy()
         self.assertEqual(a.count(), k)
         self.assertEqual(sum_indices(a), sum(indices))
         self.assertEqual(sum_indices(a, 2), sum(i*i for i in indices))
+        # ensure a wasn't changed
+        self.assertEqual(a, c)
 
     def test_random(self):
         for a in self.randombitarrays():
@@ -1098,16 +1101,28 @@ class SumIndicesTests(unittest.TestCase, Util):
             self.assertEqual(res, sum(i*i for i in a.search(1)))
 
 
-class SumSqrIndicesTests(unittest.TestCase):
+class SumSqrIndicesTests(unittest.TestCase, Util):
+
+    def test_explicit(self):
+        for s, r in [
+                ("", 0), ("0", 0), ("1", 0), ("11", 1),
+                ("011", 5), ("001", 4), ("0001100", 25),
+                ("00001111", 126), ("01100111 1101", 381),
+        ]:
+            a = bitarray(s, self.random_endian())
+            self.assertEqual(_sum_sqr_indices(a), r)
 
     def test_sum_sqr_indices(self):
-        n = 1_000_000
+        n = 1_000_003
         k = 1_000
         indices = sample(range(n), k)
         a = zeros(n)
         a[indices] = 1
+        c = a.copy()
         self.assertEqual(a.count(), k)
         self.assertEqual(_sum_sqr_indices(a), sum(i*i for i in indices))
+        # ensure a wasn't changed
+        self.assertEqual(a, c)
 
     def test_variance(self):
         for _ in range(100):
