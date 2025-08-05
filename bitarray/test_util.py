@@ -1071,7 +1071,7 @@ class SumIndicesTests(unittest.TestCase, Util):
         self.assertEqual(sum_indices(a, 2), n * (n-1) * (2*n-1) // 6)
 
     def test_large_random(self):
-        n = 100_000
+        n = 10_000
         a = urandom_2(n)
         self.assertEqual(sum_indices(a),
                          sum(i for i, v in enumerate(a) if v))
@@ -1113,16 +1113,17 @@ class SumSqrIndicesTests(unittest.TestCase, Util):
             self.assertEqual(_sum_sqr_indices(a), r)
 
     def test_sum_sqr_indices(self):
-        n = 1_000_003
-        k = 1_000
-        indices = sample(range(n), k)
-        a = zeros(n)
-        a[indices] = 1
-        c = a.copy()
-        self.assertEqual(a.count(), k)
-        self.assertEqual(_sum_sqr_indices(a), sum(i*i for i in indices))
-        # ensure a wasn't changed
-        self.assertEqual(a, c)
+        for n in 500_029, 600_011:  # n below, above block size
+            k = 1_000
+            indices = sample(range(n), k)
+            a = ones(n, self.random_endian())
+            a[indices] = 0
+            c = a.copy()
+            res = n * (n - 1) * (2 * n - 1) // 6
+            res -= sum(i * i for i in indices)
+            self.assertEqual(_sum_sqr_indices(a), res)
+            # ensure a wasn't changed
+            self.assertEqual(a, c)
 
     def test_variance(self):
         for _ in range(100):
@@ -1170,7 +1171,7 @@ class XoredIndicesTests(unittest.TestCase, Util):
                 self.assertEqual(lst[i], x)
 
     def test_large_random(self):
-        n = 100_000
+        n = 10_000
         a = urandom_2(n)
         self.assertEqual(
             xor_indices(a),

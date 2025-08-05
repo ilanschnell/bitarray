@@ -253,27 +253,27 @@ def _sum_sqr_indices(__a):
 Return sum of squares of indices of all active bits in bitarray `a`.
 Equivalent to `sum(i * i for i, v in enumerate(a) if v)`.
 """
-    block_bytes = 1 << 16         # 64 KBytes
-    block_bits = 8 * block_bytes  # 512 Kbits
-    nblocks = (len(__a) + block_bits - 1) // block_bits
-    if nblocks <= 1:
+    nbits = len(__a)
+    block_bits = 1 << 19           # 512 Kbits
+    if nbits <= block_bits:        # shortcut for single block
         return sum_indices(__a, 2)
 
+    block_bytes = block_bits // 8  # 64 KBytes
+    nblocks = (nbits + block_bits - 1) // block_bits
+    padbits = __a.padbits
     sm = 0
     for i in range(nblocks):
-        if i == nblocks - 1 and __a.padbits:
-            # copy last block when padding is used
-            b = __a[i * block_bits:]
-        else:
-            # use memoryview to avoid copying memory
-            v = memoryview(__a)[i * block_bytes : (i + 1) * block_bytes]
-            b = bitarray(endian=__a.endian, buffer=v)
+        # use memoryview to avoid copying memory
+        v = memoryview(__a)[i * block_bytes : (i + 1) * block_bytes]
+        block = bitarray(None, __a.endian, v)
+        if padbits and i == nblocks - 1:
+            block[-padbits:] = 0
 
-        k = b.count()
+        k = block.count()
         if k:
             sm += (block_bits * i) ** 2 * k
-            sm += 2 * block_bits * i * sum_indices(b)
-            sm += sum_indices(b, 2)
+            sm += 2 * block_bits * i * sum_indices(block)
+            sm += sum_indices(block, 2)
 
     return sm
 

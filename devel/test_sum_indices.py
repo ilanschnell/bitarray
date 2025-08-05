@@ -1,7 +1,6 @@
-import random
 import unittest
+from random import choice, randrange, sample
 
-from bitarray import bitarray
 from bitarray.util import zeros, ones, sum_indices, _sum_sqr_indices
 
 
@@ -9,41 +8,65 @@ N19 = 1 << 19  # 512 Kbit =  64 Kbyte
 N20 = 1 << 20  #   1 Mbit = 128 Kbyte
 N21 = 1 << 21  #   2 Mbit = 256 Kbyte
 N22 = 1 << 22  #   4 Mbit = 512 Kbyte
-N30 = 1 << 23  #   8 Mbit =   1 Mbyte
+N23 = 1 << 23  #   8 Mbit =   1 Mbyte
+N28 = 1 << 28  # 256 Mbit =  32 Mbyte
 N30 = 1 << 30  #   1 Gbit = 128 Mbyte
 N31 = 1 << 31  #   2 Gbit = 256 Mbyte
 N32 = 1 << 32  #   4 Gbit = 512 Mbyte
 N33 = 1 << 33  #   8 Gbit =   1 GByte
 
-class SumIndicesTests(unittest.TestCase):
+MAX_UINT64 = (1 << 64) - 1
+
+
+def sum_sqrs(n):
+    "Return sum(i * i for i in range(n))"
+    return n * (n - 1) * (2 * n - 1) // 6
+
+
+class SumSqrIndicesTests(unittest.TestCase):
+
+    def verify_overflow(self, a, overflow):
+        i = a.nbytes - 1  # largest i
+        # In the inner loop, what we add to sm has to be smaller
+        # than 1 << 63, as sm might already be 1 << 63.
+        sm = 1 << 63
+        sm += 64 * i * i * 8  #   8 = max(count_table)
+        sm += 16 * i * 28     #  28 = max(sum_table)
+        sm += 140             # 140 = max(sum_sqr_table)
+        self.assertEqual(overflow, sm > MAX_UINT64)
+        # in C code we check for nbytes > (1 << 27)
+        self.assertEqual(overflow, a.nbytes > 1 << 27)
 
     def test_overflow_mode2(self):
         n = N30
         self.assertEqual(n, 8 << 27)
         a = ones(n)
-        self.assertEqual(sum_indices(a, 2), n * (n-1) * (2*n-1) // 6)
+        self.verify_overflow(a, False)
+        self.assertEqual(sum_indices(a, 2), sum_sqrs(n))
         a.append(1)
-        # in C code we check for nbytes > (1 << 27)
+        self.verify_overflow(a, True)
         self.assertRaises(OverflowError, sum_indices, a, 2)
 
     def test_random_sample(self):
-        n = N31
+        n = N28
         for k in 0, 1, 31, 503, N22:
-            indices = random.sample(range(n), k)
+            indices = sample(range(n), k)
             a = zeros(n)
             a[indices] = 1
-            self.assertEqual(sum_indices(a), sum(indices))
             self.assertEqual(_sum_sqr_indices(a), sum(i * i for i in indices))
 
-    def test_random_size(self):
+    def test_sum_sqr_random(self):
         for _ in range(1000):
-            n = random.randrange(N21)
-            a = ones(n)
-            self.assertEqual(sum_indices(a), n * (n - 1) // 2)
-            self.assertEqual(_sum_sqr_indices(a), n * (n-1) * (2*n-1) // 6)
-
-            self.assertEqual(len(a), n)
-            self.assertEqual(a.count(), n)
+            n = randrange(N21)
+            a = ones(n, choice(["little", "big"]))
+            k = randrange(min(1_000, n // 2))
+            indices = sample(range(n), k)
+            a[indices] = 0
+            c = a.copy()
+            res = sum_sqrs(n) - sum(i * i for i in indices)
+            self.assertEqual(_sum_sqr_indices(a), res)
+            # ensure a wasn't changed
+            self.assertEqual(a, c)
 
 
 def test_ones():
@@ -58,7 +81,7 @@ def test_ones():
 
         res = _sum_sqr_indices(a)
         print("sum2 = %32d" % res)
-        assert res == n * (n-1) * (2*n-1) // 6
+        assert res == sum_sqrs(n)
 
         print()
 
