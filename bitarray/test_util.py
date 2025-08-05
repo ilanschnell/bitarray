@@ -1060,29 +1060,26 @@ class SumIndicesTests(unittest.TestCase, Util):
             self.assertEqual(sum_indices(a, 2), sm2)
 
     def test_large_ones(self):
-        # Note that this will also work on 32-bit machines, even though
-        # for n=100_000, we get: n*(n-1)/2 = 4999950000 > 2**32
-        n = 100_000
-        a = bitarray(n)
-        self.assertEqual(sum_indices(a), 0)
-        self.assertEqual(sum_indices(a, 2), 0)
-        a.setall(1)
-        self.assertEqual(sum_indices(a), n * (n - 1) // 2)
-        self.assertEqual(sum_indices(a, 2), n * (n-1) * (2*n-1) // 6)
+        n = 100_003
+        for a in ones(n), frozenbitarray(ones(n)):
+            self.assertEqual(sum_indices(a), n * (n - 1) // 2)
+            self.assertEqual(sum_indices(a, 2), n * (n-1) * (2*n-1) // 6)
 
     def test_large_random(self):
-        n = 10_000
-        a = urandom_2(n)
-        self.assertEqual(sum_indices(a),
-                         sum(i for i, v in enumerate(a) if v))
-        self.assertEqual(sum_indices(a, 2),
-                         sum(i * i for i, v in enumerate(a) if v))
+        n = 10_037
+        for a in urandom_2(n), frozenbitarray(urandom_2(n)):
+            self.assertEqual(sum_indices(a),
+                             sum(i for i, v in enumerate(a) if v))
+            self.assertEqual(sum_indices(a, 2),
+                             sum(i * i for i, v in enumerate(a) if v))
 
     def test_large_sparse(self):
-        n = 1_000_000
+        n = 1_000_003
         k = 1_000
         indices = sample(range(n), k)
         a = zeros(n)
+        self.assertEqual(sum_indices(a), 0)
+        self.assertEqual(sum_indices(a, 2), 0)
         a[indices] = 1
         c = a.copy()
         self.assertEqual(a.count(), k)
@@ -1116,14 +1113,17 @@ class SumSqrIndicesTests(unittest.TestCase, Util):
         for n in 500_029, 600_011:  # n below, above block size
             k = 1_000
             indices = sample(range(n), k)
-            a = ones(n, self.random_endian())
-            a[indices] = 0
-            c = a.copy()
-            res = n * (n - 1) * (2 * n - 1) // 6
-            res -= sum(i * i for i in indices)
-            self.assertEqual(_sum_sqr_indices(a), res)
-            # ensure a wasn't changed
-            self.assertEqual(a, c)
+            for freeze in False, True:
+                a = ones(n, self.random_endian())
+                a[indices] = 0
+                if freeze:
+                    a = frozenbitarray(a)
+                c = a.copy()
+                res = n * (n - 1) * (2 * n - 1) // 6
+                res -= sum(i * i for i in indices)
+                self.assertEqual(_sum_sqr_indices(a), res)
+                # ensure a wasn't changed
+                self.assertEqual(a, c)
 
     def test_variance(self):
         for _ in range(100):

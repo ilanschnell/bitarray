@@ -1,6 +1,7 @@
 import unittest
-from random import choice, randrange, sample
+from random import choice, getrandbits, randrange, sample
 
+from bitarray import frozenbitarray
 from bitarray.util import zeros, ones, sum_indices, _sum_sqr_indices
 
 
@@ -49,7 +50,7 @@ class SumSqrIndicesTests(unittest.TestCase):
 
     def test_random_sample(self):
         n = N28
-        for k in 0, 1, 31, 503, N22:
+        for k in 0, 1, 31, 503:
             indices = sample(range(n), k)
             a = zeros(n)
             a[indices] = 1
@@ -62,6 +63,8 @@ class SumSqrIndicesTests(unittest.TestCase):
             k = randrange(min(1_000, n // 2))
             indices = sample(range(n), k)
             a[indices] = 0
+            if getrandbits(1):
+                a = frozenbitarray(a)
             c = a.copy()
             res = sum_sqrs(n) - sum(i * i for i in indices)
             self.assertEqual(_sum_sqr_indices(a), res)

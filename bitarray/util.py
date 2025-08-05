@@ -11,7 +11,6 @@ import os
 import sys
 import math
 import random
-import platform
 
 from bitarray import bitarray, bits2bytes
 
@@ -268,8 +267,7 @@ Equivalent to `sum(i * i for i, v in enumerate(a) if v)`.
         v = memoryview(__a)[i * block_bytes : (i + 1) * block_bytes]
         block = bitarray(None, __a.endian, buffer=v)
         if padbits and i == nblocks - 1:
-            if platform.python_implementation() == 'PyPy':
-                # on PyPy memoryviews are read-only, so make copy
+            if block.readonly:
                 block = bitarray(block)
             block[-padbits:] = 0
 
