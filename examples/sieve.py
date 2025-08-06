@@ -5,7 +5,7 @@ finding all prime numbers up to any given limit.
 from math import isqrt
 
 from bitarray import bitarray
-from bitarray.util import ones, count_n
+from bitarray.util import ones, count_n, sum_indices
 
 
 N = 100_000_000
@@ -42,3 +42,9 @@ m = 1_000_000
 x = count_n(a, m) - 1
 print('the {:,d}-th prime is {:,d}'.format(m, x))
 assert x == 15_485_863
+
+# The sum of all prime numbers below one million is 37,550,402,023.
+m = 1_000_000
+x = sum_indices(a[:m])
+print('the sum of prime numbers below {:,d} is {:,d}'.format(m, x))
+assert x == 37_550_402_023
