@@ -15,7 +15,7 @@ import random
 from bitarray import bitarray, bits2bytes
 
 from bitarray._util import (
-    zeros, ones, count_n, parity, sum_indices, xor_indices,
+    zeros, ones, count_n, parity, _ssqi, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
     correspond_all, byteswap,
     serialize, deserialize,
@@ -247,24 +247,31 @@ class _Random:
         return a
 
 
-def _sum_sqr_indices(__a):
-    """_sum_sqr_indices(a, /) -> int
+class _C: # Constants
+    n = 1 << 19       # 512 Kbits
+    m = n // 8        # 64 KBytes
+    n2 = n * n
+    n3 = n * n2
+    o1 = n * (n - 1) // 2
+    o2 = n2 * (n - 1)
+    o3 = n * (n - 1) * (2 * n - 1) // 6
 
-Return sum of squares of indices of all active bits in bitarray `a`.
-Equivalent to `sum(i * i for i, v in enumerate(a) if v)`.
+def sum_indices(__a, __mode=1):
+    """sum_indices(a, /) -> int
+
+Return sum of indices of all active bits in bitarray `a`.
+Equivalent to `sum(i for i, v in enumerate(a) if v)`.
 """
     nbits = len(__a)
-    block_bits = 1 << 19           # 512 Kbits
-    if nbits <= block_bits:        # shortcut for single block
-        return sum_indices(__a, 2)
+    if nbits <= _C.n:        # shortcut for single block
+        return _ssqi(__a, __mode)
 
-    block_bytes = block_bits // 8  # 64 KBytes
-    nblocks = (nbits + block_bits - 1) // block_bits
+    nblocks = (nbits + _C.n - 1) // _C.n
     padbits = __a.padbits
     sm = 0
     for i in range(nblocks):
         # use memoryview to avoid copying memory
-        v = memoryview(__a)[i * block_bytes : (i + 1) * block_bytes]
+        v = memoryview(__a)[i * _C.m : (i + 1) * _C.m]
         block = bitarray(None, __a.endian, buffer=v)
         if padbits and i == nblocks - 1:
             if block.readonly:
@@ -272,13 +279,32 @@ Equivalent to `sum(i * i for i, v in enumerate(a) if v)`.
             block[-padbits:] = 0
 
         k = block.count()
-        if k:
-            sm += (block_bits * i) ** 2 * k
-            sm += 2 * block_bits * i * sum_indices(block)
-            sm += sum_indices(block, 2)
+        if not k:
+            continue
+
+        if __mode == 1:
+            if k == _C.n:
+                sm += _C.n2 * i + _C.o1
+            else:
+                sm += _C.n * k * i + _ssqi(block)
+        elif __mode == 2:
+            if k == _C.n:
+                sm += (_C.n3 * i + _C.o2) * i + _C.o3
+            else:
+                sm += (_C.n2 * k * i + 2 * _C.n * _ssqi(block)) * i
+                sm += _ssqi(block, 2)
+        else:
+            raise ValueError("unexpected mode %s", __mode)
 
     return sm
 
+def _sum_sqr_indices(__a):
+    """_sum_sqr_indices(a, /) -> int
+
+Return sum of squares of indices of all active bits in bitarray `a`.
+Equivalent to `sum(i * i for i, v in enumerate(a) if v)`.
+"""
+    return sum_indices(__a, 2)
 
 def _variance(__a, mu=None):
     si = sum_indices(__a)

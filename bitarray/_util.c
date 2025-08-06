@@ -266,35 +266,22 @@ Return parity of bitarray `a`.\n\
 
 
 static PyObject *
-add_uint64(PyObject *number, uint64_t i)
-{
-    PyObject *result, *i_obj = PyLong_FromUnsignedLongLong(i);
-
-    result = PyNumber_Add(number, i_obj);
-    Py_DECREF(i_obj);
-    Py_DECREF(number);
-    return result;
-}
-
-static PyObject *
-sum_indices(PyObject *module, PyObject *args)
+ssqi(PyObject *module, PyObject *args)
 {
     static char count_table[256], sum_table[256], sum_sqr_table[256];
     static int setup = -1;      /* endianness of tables */
-    PyObject *res;
     bitarrayobject *a;
     uint64_t nbytes, i;
     uint64_t sm = 0;            /* accumulated sum */
     int mode = 1;
 
-    if (!PyArg_ParseTuple(args, "O!|i:sum_indices", bitarray_type,
+    if (!PyArg_ParseTuple(args, "O!|i", bitarray_type,
                           (PyObject *) &a, &mode))
         return NULL;
     if (mode < 1 || mode > 2)
         return PyErr_Format(PyExc_ValueError, "unexpected mode %d", mode);
-
     nbytes = Py_SIZE(a);
-    if (mode == 2 && nbytes > ((uint64_t ) 1) << 27)
+    if (nbytes > (mode == 1 ? 759250125LLU : 476347LLU))
         return PyErr_Format(PyExc_OverflowError, "%llu", nbytes);
 
     if (setup != a->endian) {
@@ -305,35 +292,21 @@ sum_indices(PyObject *module, PyObject *args)
     }
 
     set_padbits(a);
-    res = PyLong_FromLong(0);
     for (i = 0; i < nbytes; i++) {
         unsigned char c = a->ob_item[i];
         if (!c)
             continue;
         if (mode == 1) {
-            sm += 8 * i * count_table[c];
+            sm += 8LLU * i * count_table[c];
             sm += sum_table[c];
-        } else {
-            sm += 64 * i * i * count_table[c];
-            sm += 16 * i * sum_table[c];
+        }
+        else {
+            sm += (64LLU * i * count_table[c] + 16LLU * sum_table[c]) * i;
             sm += (unsigned char) sum_sqr_table[c];
         }
-
-        if (sm > ((uint64_t ) 1) << 63) {
-            /* Flush accumulated sum into Python number object. */
-            if ((res = add_uint64(res, sm)) == NULL)
-                return NULL;
-            sm = 0;
-        }
     }
-    return add_uint64(res, sm);
+    return PyLong_FromUnsignedLongLong(sm);
 }
-
-PyDoc_STRVAR(sum_indices_doc,
-"sum_indices(a, /) -> int\n\
-\n\
-Return sum of indices of all active bits in bitarray `a`.\n\
-This is equivalent to `sum(i for i, v in enumerate(a) if v)`.");
 
 
 static PyObject *
@@ -2197,7 +2170,7 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, ones_doc},
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
     {"parity",    (PyCFunction) parity,    METH_O,       parity_doc},
-    {"sum_indices", (PyCFunction) sum_indices, METH_VARARGS, sum_indices_doc},
+    {"_ssqi",     (PyCFunction) ssqi,      METH_VARARGS, 0},
     {"xor_indices", (PyCFunction) xor_indices, METH_O,       xor_indices_doc},
     {"count_and", (PyCFunction) count_and, METH_VARARGS, count_and_doc},
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},

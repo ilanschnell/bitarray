@@ -2,8 +2,9 @@ import unittest
 from random import choice, getrandbits, randrange, sample
 
 from bitarray import frozenbitarray
-from bitarray.util import zeros, ones, urandom, sum_indices, _sum_sqr_indices
-
+from bitarray.util import (
+    zeros, ones, urandom, _ssqi, sum_indices, _sum_sqr_indices
+)
 
 N19 = 1 << 19  # 512 Kbit =  64 KB
 N20 = 1 << 20  #   1 Mbit = 128 KB
@@ -41,6 +42,27 @@ class SumRangeTests(unittest.TestCase):
 
 class SumIndicesTests(unittest.TestCase):
 
+    def verify_overflow(self, a, overflow):
+        # We want sm to be smaller than 1 << 64, so in case we have all ones,
+        # sum_range() needs to be smaller than 1 << 64.
+        sm = sum_range(len(a))
+        self.assertEqual(overflow, sm > MAX_UINT64)
+        # in C code we check for nbytes > 759250125
+        self.assertEqual(overflow, a.nbytes > 759_250_125)
+
+    def test_overflow_mode1(self):
+        # _ssqi(..., 1) is limit to bitarrays of about 6 Gbit.
+        # This limit is never reached because _sum_indices() uses a
+        # much smaller block size for practical reasons.
+        n = 6_074_001_000
+        self.assertEqual(n, 8 * 759_250_125)
+        a = ones(n)
+        self.verify_overflow(a, False)
+        self.assertEqual(_ssqi(a, 1), sum_range(n))
+        a.append(1)
+        self.verify_overflow(a, True)
+        self.assertRaises(OverflowError, _ssqi, a, 1)
+
     def test_random_sample(self):
         n = N31
         for k in 0, 1, 31, 503:
@@ -68,7 +90,7 @@ class SumIndicesTests(unittest.TestCase):
 
 class SumSqrIndicesTests(unittest.TestCase):
 
-    # In both _util.c (sum_indices() mode=2) and util.py (_sum_sqr_indices()),
+    # In both _util.c (_ssqi() mode=2) and util.py (_sum_sqr_indices()),
     # we use the same trick but for different reasons: (a) in _util.c, we want
     # to loop over bytes for speed (b) in util.py we loop over smaller
     # bitarrays in order to keep the sum in _util.c from overflowing.
@@ -98,14 +120,14 @@ class SumSqrIndicesTests(unittest.TestCase):
 
     def sum_sqr_indices(self, a):
         nbits = len(a)
-        block_bits = 512
-        nblocks = (nbits + block_bits - 1) // block_bits
+        block_size = 128  # block size in bits
+        nblocks = (nbits + block_size - 1) // block_size  # number of blocks
         sm = 0
         for i in range(nblocks):
-            block = a[i * block_bits : (i + 1) * block_bits]
-            sm += (block_bits * i) ** 2 * block.count()
-            sm += 2 * block_bits * i * sum_indices(block)
-            sm += sum_indices(block, 2)
+            block = a[i * block_size : (i + 1) * block_size]
+            sm += (block_size * i) ** 2 * block.count()
+            sm += 2 * block_size * i * sum_indices(block)
+            sm += _sum_sqr_indices(block)
         return sm
 
     def test_demo(self):
@@ -115,30 +137,25 @@ class SumSqrIndicesTests(unittest.TestCase):
             self.assertEqual(self.sum_sqr_indices(a), _sum_sqr_indices(a))
 
     def verify_overflow(self, a, overflow):
-        i = a.nbytes - 1  # largest i
-        # In the inner loop, what we add to sm has to be smaller
-        # than 1 << 63, as sm might already be 1 << 63.
-        sm = 1 << 63
-        sm += 64 * i * i * 8  #   8 = max(count_table)
-        sm += 16 * i * 28     #  28 = max(sum_table)
-        sm += 140             # 140 = max(sum_sqr_table)
+        # We want sm to be smaller than 1 << 64, so in case we have all ones,
+        # sum_sqr_range() needs to be smaller than 1 << 64.
+        sm = sum_sqr_range(len(a))
         self.assertEqual(overflow, sm > MAX_UINT64)
-        # in C code we check for nbytes > (1 << 27)
-        self.assertEqual(overflow, a.nbytes > 1 << 27)
+        # in C code we check for nbytes > 476347
+        self.assertEqual(overflow, a.nbytes > 476_347)
 
     def test_overflow_mode2(self):
-        # sum_indices(..., 2) is limit to bitarrays of size n = 1 Gbit.
+        # _ssqi(..., 2) is limit to bitarrays of about 4 Mbit.
         # This limit is never reached because _sum_sqr_indices() uses
-        # a much smaller block size (512 Kbit = 64 KB) for practical
-        # reasons.
-        n = N30
-        self.assertEqual(n, 8 << 27)
+        # a much smaller block size for practical reasons.
+        n = 3_810_776
+        self.assertEqual(n, 8 * 476_347)
         a = ones(n)
         self.verify_overflow(a, False)
-        self.assertEqual(sum_indices(a, 2), sum_sqr_range(n))
-        a.append(1)
+        self.assertEqual(_ssqi(a, 2), sum_sqr_range(n))
+        a.extend(ones(3))
         self.verify_overflow(a, True)
-        self.assertRaises(OverflowError, sum_indices, a, 2)
+        self.assertRaises(OverflowError, _ssqi, a, 2)
 
     def test_random_sample(self):
         n = N31
