@@ -68,6 +68,29 @@ class SumIndicesTests(unittest.TestCase):
 
 class SumSqrIndicesTests(unittest.TestCase):
 
+    # In both _util.c (sum_indices() mode=2) and util.py (_sum_sqr_indices()),
+    # we use the same trick but for different reasons: (a) in _util.c, we want
+    # to loop over bytes for speed (b) in util.py we loop over smaller
+    # bitarrays in order to keep the sum in _util.c from overflowing.
+    # The trick is to write for each byte / block:
+    #
+    #     sum x_j**2            j is the index within the block
+    #
+    # as (using x_j = y + z_j, where y is constant within the block):
+    #
+    #     y**2 * sum 1  +  2 * y * sum z_j  +  sum z_j**2
+    #
+    # y is the block size times i (the block index)
+    #
+    #               (a)                  (b)
+    # ---------------------------------------------------------
+    # block         c (char)             block (bitarray)
+    # i             byte index           block index
+    # y             8 * i                len(block) * i
+    # sum 1         count_table[c]       block.count()
+    # sum z_j       sum_table[c]         sum_indices(block)
+    # sum z_j**2    sum_sqr_table[c]     sum_indices(block, 2)
+
     def verify_overflow(self, a, overflow):
         i = a.nbytes - 1  # largest i
         # In the inner loop, what we add to sm has to be smaller
