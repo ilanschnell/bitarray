@@ -2,19 +2,19 @@ import unittest
 from random import choice, getrandbits, randrange, sample
 
 from bitarray import frozenbitarray
-from bitarray.util import zeros, ones, sum_indices, _sum_sqr_indices
+from bitarray.util import zeros, ones, urandom, sum_indices, _sum_sqr_indices
 
 
-N19 = 1 << 19  # 512 Kbit =  64 Kbyte
-N20 = 1 << 20  #   1 Mbit = 128 Kbyte
-N21 = 1 << 21  #   2 Mbit = 256 Kbyte
-N22 = 1 << 22  #   4 Mbit = 512 Kbyte
-N23 = 1 << 23  #   8 Mbit =   1 Mbyte
-N28 = 1 << 28  # 256 Mbit =  32 Mbyte
-N30 = 1 << 30  #   1 Gbit = 128 Mbyte
-N31 = 1 << 31  #   2 Gbit = 256 Mbyte
-N32 = 1 << 32  #   4 Gbit = 512 Mbyte
-N33 = 1 << 33  #   8 Gbit =   1 GByte
+N19 = 1 << 19  # 512 Kbit =  64 KB
+N20 = 1 << 20  #   1 Mbit = 128 KB
+N21 = 1 << 21  #   2 Mbit = 256 KB
+N22 = 1 << 22  #   4 Mbit = 512 KB
+N23 = 1 << 23  #   8 Mbit =   1 MB
+N28 = 1 << 28  # 256 Mbit =  32 MB
+N30 = 1 << 30  #   1 Gbit = 128 MB
+N31 = 1 << 31  #   2 Gbit = 256 MB
+N32 = 1 << 32  #   4 Gbit = 512 MB
+N33 = 1 << 33  #   8 Gbit =   1 GB
 
 MAX_UINT64 = (1 << 64) - 1
 
@@ -76,20 +76,43 @@ class SumSqrIndicesTests(unittest.TestCase):
     #
     #     sum x_j**2            j is the index within the block
     #
-    # as (using x_j = y + z_j, where y is constant within the block):
+    # Using x_j = y_j + z_j, where y_j:
     #
-    #     y**2 * sum 1  +  2 * y * sum z_j  +  sum z_j**2
+    #     y_j  =  y  :if bit j is active
+    #             0  :otherwise
     #
-    # y is the block size times i (the block index)
+    # We get:
+    #
+    #     y**2 * bit_count  +  2 * y * sum z_j  +  sum z_j**2
+    #
     #
     #               (a)                  (b)
     # ---------------------------------------------------------
     # block         c (char)             block (bitarray)
+    # block size    8                    len(block)
     # i             byte index           block index
     # y             8 * i                len(block) * i
-    # sum 1         count_table[c]       block.count()
+    # bit_count     count_table[c]       block.count()
     # sum z_j       sum_table[c]         sum_indices(block)
     # sum z_j**2    sum_sqr_table[c]     sum_indices(block, 2)
+
+    def sum_sqr_indices(self, a):
+        nbits = len(a)
+        block_bits = 512
+        nblocks = (nbits + block_bits - 1) // block_bits
+        sm = 0
+        for i in range(nblocks):
+            block = a[i * block_bits : (i + 1) * block_bits]
+            sm += (block_bits * i) ** 2 * block.count()
+            sm += 2 * block_bits * i * sum_indices(block)
+            sm += sum_indices(block, 2)
+        return sm
+
+    def test_demo(self):
+        for _ in range(1_000):
+            n = randrange(100_000)
+            a = urandom(n)
+            self.assertEqual(self.sum_sqr_indices(a), _sum_sqr_indices(a))
 
     def verify_overflow(self, a, overflow):
         i = a.nbytes - 1  # largest i
@@ -104,6 +127,10 @@ class SumSqrIndicesTests(unittest.TestCase):
         self.assertEqual(overflow, a.nbytes > 1 << 27)
 
     def test_overflow_mode2(self):
+        # sum_indices(..., 2) is limit to bitarrays of size n = 1 Gbit.
+        # This limit is never reached because _sum_sqr_indices() uses
+        # a much smaller block size (512 Kbit = 64 KB) for practical
+        # reasons.
         n = N30
         self.assertEqual(n, 8 << 27)
         a = ones(n)
@@ -144,7 +171,7 @@ def test_ones():
 
     for n in [N30, N31, N32, N33, 2 * N33]:
         a = ones(n)
-        print("n =    %32d  %6.2f Gbit    %6.2f GByte" % (n, n / N30, n / N33))
+        print("n =    %32d  %6.2f Gbit    %6.2f GB" % (n, n / N30, n / N33))
         print("2^63 = %32d" % (1 << 63))
         res = sum_indices(a)
         print("sum =  %32d" % res)
