@@ -1037,9 +1037,10 @@ class SumIndicesTests(unittest.TestCase, Util):
                 ("011", 3, 5), ("001", 2, 4), ("0001100", 7, 25),
                 ("00001111", 22, 126), ("01100111 1101", 49, 381),
         ]:
-            a = bitarray(s, self.random_endian())
-            self.assertEqual(sum_indices(a), r1)
-            self.assertEqual(sum_indices(a, 2), r2)
+            for a in [bitarray(s, self.random_endian()),
+                      frozenbitarray(s, self.random_endian())]:
+                self.assertEqual(sum_indices(a), r1)
+                self.assertEqual(sum_indices(a, 2), r2)
 
     def test_wrong_args(self):
         S = sum_indices
@@ -1106,8 +1107,9 @@ class SumSqrIndicesTests(unittest.TestCase, Util):
                 ("011", 5), ("001", 4), ("0001100", 25),
                 ("00001111", 126), ("01100111 1101", 381),
         ]:
-            a = bitarray(s, self.random_endian())
-            self.assertEqual(_sum_sqr_indices(a), r)
+            for a in [bitarray(s, self.random_endian()),
+                      frozenbitarray(s, self.random_endian())]:
+                self.assertEqual(_sum_sqr_indices(a), r)
 
     def test_sum_sqr_indices(self):
         for n in 500_029, 600_011:  # n below, above block size
@@ -1147,8 +1149,9 @@ class XoredIndicesTests(unittest.TestCase, Util):
         for s, r in [("", 0), ("0", 0), ("1", 0), ("11", 1),
                      ("011", 3), ("001", 2), ("0001100", 7),
                      ("01100111 1101", 13)]:
-            a = bitarray(s, self.random_endian())
-            self.assertEqual(xor_indices(a), r)
+            for a in [bitarray(s, self.random_endian()),
+                      frozenbitarray(s, self.random_endian())]:
+                self.assertEqual(xor_indices(a), r)
 
     def test_wrong_args(self):
         X = xor_indices
@@ -1171,12 +1174,12 @@ class XoredIndicesTests(unittest.TestCase, Util):
                 self.assertEqual(lst[i], x)
 
     def test_large_random(self):
-        n = 10_000
-        a = urandom_2(n)
-        self.assertEqual(
-            xor_indices(a),
-            reduce(operator.xor, (i for i, v in enumerate(a) if v))
-        )
+        n = 10_037
+        for a in [urandom_2(n), frozenbitarray(urandom_2(n))]:
+            res = reduce(operator.xor, (i for i, v in enumerate(a) if v))
+            b = a.copy()
+            self.assertEqual(xor_indices(a), res)
+            self.assertEqual(a, b)
 
     def test_random(self):
         for a in self.randombitarrays():
