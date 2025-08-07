@@ -133,7 +133,7 @@ class SSQI_Tests(unittest.TestCase):
         self.assertEqual(overflow, a.nbytes > limit)
 
     def test_overflow_mode1(self):
-        # ssqi(..., 1) is limit to bitarrays of about 6 Gbit.
+        # _ssqi(..., 1) is limited to bitarrays of about 6 Gbit.
         # This limit is never reached because _sum_indices() uses
         # a much smaller block size for practical reasons.
         n = 6_074_001_000
@@ -172,9 +172,16 @@ class SumIndicesTests(SumIndicesUtil):
             inv = getrandbits(1)
             self.check_sparse(sum_indices, n, k, mode, freeze, inv)
 
+    def test_ones(self):
+        for m in range(19, 32):
+            n = randrange(1 << m)
+            mode = randint(1, 2)
+            freeze = getrandbits(1)
+            self.check_sparse(sum_indices, n, 0, mode, freeze, inv=True)
+
     def test_sum_random(self):
-        for _ in range(1000):
-            n = randrange(N21)
+        for _  in range(50):
+            n = randrange(1 << randrange(19, 32))
             k = randrange(min(1_000, n // 2))
             mode = randint(1, 2)
             freeze = getrandbits(1)
