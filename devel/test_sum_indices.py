@@ -73,6 +73,15 @@ class SumRangeTests(unittest.TestCase):
         for n in range(1000):
             self.assertEqual(sum_sqr_range(n), sum(i * i for i in range(n)))
 
+    def test_mode(self):
+        for n in range(1000):
+            for mode, f in [(1, sum_range),
+                            (2, sum_sqr_range)]:
+                sum_ones = 3 if mode == 1 else 2 * n - 1
+                sum_ones *= n * (n - 1)
+                sum_ones //= 6
+                self.assertEqual(sum_ones, f(n))
+
 
 class DemoTests(unittest.TestCase):
 
@@ -103,7 +112,7 @@ class SSQI_Tests(unittest.TestCase):
 
     # Note carefully that the limits that are calculated and tested here
     # are limits used in internal function _ssqi().
-    # The public Python function sum_indices() itself imposes no limit
+    # The public Python function sum_indices() does not impose a limit
     # on the size of bitarrays it can compute.
 
     def test_limits(self):
@@ -134,7 +143,7 @@ class SSQI_Tests(unittest.TestCase):
 
     def test_overflow_mode1(self):
         # _ssqi(..., 1) is limited to bitarrays of about 6 Gbit.
-        # This limit is never reached because _sum_indices() uses
+        # This limit is never reached because sum_indices(..., 1) uses
         # a much smaller block size for practical reasons.
         n = 6_074_001_000
         self.assertEqual(n, 8 * 759_250_125)

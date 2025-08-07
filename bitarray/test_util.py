@@ -1066,7 +1066,7 @@ class SumIndicesUtil(unittest.TestCase):
 
         if inv:
             a.invert()
-            sum_ones = 3 if mode == 1 else (2 * n - 1)
+            sum_ones = 3 if mode == 1 else 2 * n - 1
             sum_ones *= n * (n - 1)
             sum_ones //= 6
             res = sum_ones - res
@@ -1106,13 +1106,12 @@ class SSQI_Tests(SumIndicesUtil):
         self.check_urandom(_ssqi, 10_037)
 
     def test_sparse(self):
-        n = 1_000_003
-        k = 400
         for _ in range(5):
             mode = randint(1, 2)
             freeze = getrandbits(1)
             inv = getrandbits(1)
-            self.check_sparse(_ssqi, n, k, mode, freeze, inv)
+            self.check_sparse(_ssqi, n=1_000_003, k=400,
+                              mode=mode, freeze=freeze, inv=inv)
 
 
 class SumIndicesTests(SumIndicesUtil):
@@ -1125,8 +1124,10 @@ class SumIndicesTests(SumIndicesUtil):
     def test_wrong_args(self):
         self.check_wrong_args(sum_indices)
 
-    def test_urandom(self):
-        self.check_urandom(sum_indices, 10_037)
+    def test_ones(self):
+        for mode in 1, 2:
+            self.check_sparse(sum_indices, n=1_600_037, k=0,
+                              mode=mode, freeze=True, inv=True)
 
     def test_sparse(self):
         for _ in range(20):
