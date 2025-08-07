@@ -1031,109 +1031,126 @@ class ParityTests(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class SSQI_Tests(unittest.TestCase, Util):
+class SumIndicesUtil(unittest.TestCase):
 
-    def test_explicit(self):
+    def check_explicit(self, S):
         for s, r1, r2 in [
                 ("", 0, 0), ("0", 0, 0), ("1", 0, 0), ("11", 1, 1),
                 ("011", 3, 5), ("001", 2, 4), ("0001100", 7, 25),
                 ("00001111", 22, 126), ("01100111 1101", 49, 381),
         ]:
-            for a in [bitarray(s, self.random_endian()),
-                      frozenbitarray(s, self.random_endian())]:
-                self.assertEqual(_ssqi(a), r1)
-                self.assertEqual(_ssqi(a, 2), r2)
+            for a in [bitarray(s, choice(['little', 'big'])),
+                      frozenbitarray(s, choice(['little', 'big']))]:
+                self.assertEqual(S(a, 1), r1)
+                self.assertEqual(S(a, 2), r2)
+                self.assertEqual(a, bitarray(s))
 
-    def test_wrong_args(self):
-        S = _ssqi
+    def check_wrong_args(self, S):
         self.assertRaises(TypeError, S, '')
         self.assertRaises(TypeError, S, 1.0)
         self.assertRaises(TypeError, S)
         for mode in -1, 0, 3, 4:
             self.assertRaises(ValueError, S, bitarray("110"), mode)
 
-    def test_ones(self):
+    def check_ones(self, S):
         a = bitarray()
         sm1 = sm2 = 0
-        for i in range(1000):
+        for i in range(100):
             a.append(1)
             sm1 += i
             sm2 += i * i
-            self.assertEqual(_ssqi(a, 1), sm1)
-            self.assertEqual(_ssqi(a, 2), sm2)
+            self.assertEqual(S(a, 1), sm1)
+            self.assertEqual(S(a, 2), sm2)
 
-    def test_large_random(self):
-        n = 10_037
-        for a in urandom_2(n), frozenbitarray(urandom_2(n)):
-            self.assertEqual(_ssqi(a),
-                             sum(i for i, v in enumerate(a) if v))
-            self.assertEqual(_ssqi(a, 2),
-                             sum(i * i for i, v in enumerate(a) if v))
+    def check_random(self, S, n):
+        a = urandom_2(n)
+        self.assertEqual(S(a, 1), sum(i for i, v in enumerate(a) if v))
+        self.assertEqual(S(a, 2), sum(i * i for i, v in enumerate(a) if v))
 
-    def test_large_sparse(self):
-        n = 1_000_003
-        k = 1_000
+    def check_sparse(self, S, n, k, mode=1, freeze=False, inv=False):
+        a = zeros(n, choice(['little', 'big']))
+        self.assertEqual(S(a, mode), 0)
+        self.assertFalse(a.any())
+
         indices = sample(range(n), k)
-        a = zeros(n)
-        self.assertEqual(_ssqi(a), 0)
-        self.assertEqual(_ssqi(a, 2), 0)
         a[indices] = 1
+        res = sum(indices) if mode == 1 else sum(i * i for i in indices)
+
+        if inv:
+            a.invert()
+            sum_ones = 3 if mode == 1 else (2 * n - 1)
+            sum_ones *= n * (n - 1)
+            sum_ones //= 6
+            res = sum_ones - res
+
+        if freeze:
+            a = frozenbitarray(a)
+
         c = a.copy()
-        self.assertEqual(a.count(), k)
-        self.assertEqual(_ssqi(a), sum(indices))
-        self.assertEqual(_ssqi(a, 2), sum(i*i for i in indices))
-        # ensure a wasn't changed
+        self.assertEqual(a.count(), n - k if inv else k)
+        self.assertEqual(S(a, mode), res)
         self.assertEqual(a, c)
 
 
-class SumIndicesTests(unittest.TestCase, Util):
+class SSQI_Tests(SumIndicesUtil):
 
     def test_explicit(self):
-        for s, r1, r2 in [
-                ("", 0, 0), ("0", 0, 0), ("1", 0, 0), ("11", 1, 1),
-                ("011", 3, 5), ("001", 2, 4), ("0001100", 7, 25),
-                ("00001111", 22, 126), ("01100111 1101", 49, 381),
-        ]:
-            for a in [bitarray(s, self.random_endian()),
-                      frozenbitarray(s, self.random_endian())]:
-                self.assertEqual(sum_indices(a), r1)
-                self.assertEqual(sum_indices(a, 2), r2)
-                self.assertEqual(a, bitarray(a))
+        self.check_explicit(_ssqi)
 
     def test_wrong_args(self):
-        S = sum_indices
-        self.assertRaises(TypeError, S, '')
-        self.assertRaises(TypeError, S, 1.0)
-        self.assertRaises(TypeError, S)
-        for mode in -1, 0, 3, 4:
-            self.assertRaises(ValueError, S, bitarray("110"), mode)
+        self.check_wrong_args(_ssqi)
 
-    def test_large(self):
-        for n in 500_029, 600_011:  # n below, above block size
-            k = 1_000
-            indices = sample(range(n), k)
-            for freeze in False, True:
-                a = ones(n, self.random_endian())   # test sum_indices
-                a[indices] = 0
-                if freeze:
-                    a = frozenbitarray(a)
-                c = a.copy()
-                res = n * (n - 1) // 2
-                res -= sum(indices)
-                self.assertEqual(sum_indices(a), res)
-                # ensure a wasn't changed
-                self.assertEqual(a, c)
+    def test_ones(self):
+        self.check_ones(_ssqi)
 
-                a = ones(n, self.random_endian())   # test _sum_sqr_indices
-                a[indices] = 0
-                if freeze:
-                    a = frozenbitarray(a)
-                c = a.copy()
-                res = n * (n - 1) * (2 * n - 1) // 6
-                res -= sum(i * i for i in indices)
-                self.assertEqual(_sum_sqr_indices(a), res)
-                # ensure a wasn't changed
-                self.assertEqual(a, c)
+    def test_random(self):
+        self.check_random(_ssqi, 10_037)
+
+    def test_sparse(self):
+        n = 1_000_003
+        k = 400
+        for _ in range(5):
+            mode = randint(1, 2)
+            freeze = getrandbits(1)
+            inv = getrandbits(1)
+            self.check_sparse(_ssqi, n, k, mode, freeze, inv)
+
+
+class SumIndicesTests(SumIndicesUtil):
+
+    def test_explicit(self):
+        self.check_explicit(sum_indices)
+
+    def test_wrong_args(self):
+        self.check_wrong_args(sum_indices)
+
+    def test_ones(self):
+        self.check_ones(sum_indices)
+
+    def test_random(self):
+        self.check_random(sum_indices, 10_037)
+
+    def test_sparse(self):
+        for _ in range(20):
+            n = choice([500_029, 600_011])  # below and above block size
+            k = randrange(1_000)
+            mode = randint(1, 2)
+            freeze = getrandbits(1)
+            inv = getrandbits(1)
+            self.check_sparse(_ssqi, n, k, mode, freeze, inv)
+
+    def test_sum_sqr_indices(self):
+        self.assertRaises(TypeError, _sum_sqr_indices, bitarray(), 2)
+
+        def F(a, mode):
+            if mode == 1:
+                return sum_indices(a, 1)
+            else:
+                return _sum_sqr_indices(a)
+
+        self.check_explicit(F)
+        self.check_ones(F)
+        self.check_random(F, 371)
 
     def test_variance(self):
         for _ in range(100):

@@ -247,31 +247,32 @@ class _Random:
         return a
 
 
-class _C: # Constants
-    n = 1 << 19       # 512 Kbits
-    m = n // 8        # 64 KBytes
-    n2 = n * n
-    n3 = n * n2
-    o1 = n * (n - 1) // 2
-    o2 = n2 * (n - 1)
-    o3 = n * (n - 1) * (2 * n - 1) // 6
-
 def sum_indices(__a, __mode=1):
     """sum_indices(a, /) -> int
 
 Return sum of indices of all active bits in bitarray `a`.
 Equivalent to `sum(i for i, v in enumerate(a) if v)`.
 """
+    n = 1 << 19  # block size  512 Kbits
     nbits = len(__a)
-    if nbits <= _C.n:        # shortcut for single block
+    if nbits <= n:  # shortcut for single block
         return _ssqi(__a, __mode)
 
-    nblocks = (nbits + _C.n - 1) // _C.n
+    # Constants
+    m = n // 8  # block size in bytes
+    n2 = n * n
+    o1 = n * (n - 1) // 2
+    if __mode == 2:
+        n3 = n * n2
+        o2 = 2 * n * o1
+        o3 = o1 * (2 * n - 1) // 3
+
+    nblocks = (nbits + n - 1) // n
     padbits = __a.padbits
     sm = 0
     for i in range(nblocks):
         # use memoryview to avoid copying memory
-        v = memoryview(__a)[i * _C.m : (i + 1) * _C.m]
+        v = memoryview(__a)[i * m : (i + 1) * m]
         block = bitarray(None, __a.endian, buffer=v)
         if padbits and i == nblocks - 1:
             if block.readonly:
@@ -283,15 +284,15 @@ Equivalent to `sum(i for i, v in enumerate(a) if v)`.
             continue
 
         if __mode == 1:
-            if k == _C.n:
-                sm += _C.n2 * i + _C.o1
+            if k == n:
+                sm += n2 * i + o1
             else:
-                sm += _C.n * k * i + _ssqi(block)
+                sm += n * k * i + _ssqi(block)
         elif __mode == 2:
-            if k == _C.n:
-                sm += (_C.n3 * i + _C.o2) * i + _C.o3
+            if k == n:
+                sm += (n3 * i + o2) * i + o3
             else:
-                sm += (_C.n2 * k * i + 2 * _C.n * _ssqi(block)) * i
+                sm += (n2 * k * i + 2 * n * _ssqi(block)) * i
                 sm += _ssqi(block, 2)
         else:
             raise ValueError("unexpected mode %s", __mode)
