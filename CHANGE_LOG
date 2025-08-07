@@ -1,7 +1,8 @@
-2025-XX-XX   3.6.1:
+2025-08-XX   3.6.1:
 -------------------
   * add development files for statistical tests in `devel/random/`
   * optimize `util.sum_indices()`
+  * add `devel/test_sum_indices.py`
 
 
 2025-07-29   3.6.0:

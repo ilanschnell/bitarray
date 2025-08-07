@@ -27,8 +27,8 @@ test_debug.py
 
 
 test_sum_indices.py
-    Test sum_indices() for very large n, to test if accumulated sum is
-    flushed into a Python number object correctly.
+    Additional tests for util.sum_indices() for very large n, as well as
+    some verifications and test for the internal function _ssqi().
 
 
 test_random.py
