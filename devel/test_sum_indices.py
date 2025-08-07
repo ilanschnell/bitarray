@@ -101,6 +101,22 @@ class DemoTests(unittest.TestCase):
 
 class SSQI_Tests(unittest.TestCase):
 
+    def test_limits(self):
+        # calculation of limits used in ssqi() (in _util.c)
+        for f, res in [(sum_range, 6_074_001_000),
+                       (sum_sqr_range, 3_810_778)]:
+            lo = 0
+            hi = MAX_UINT64
+            while hi > lo + 1:
+                n = (lo + hi) // 2
+                if f(n) > MAX_UINT64:
+                    hi = n
+                else:
+                    lo = n
+            self.assertTrue(f(n) < MAX_UINT64)
+            self.assertTrue(f(n + 1) > MAX_UINT64)
+            self.assertEqual(n, res)
+
     def verify_overflow(self, a, mode, overflow):
         # We want sm to be smaller than 1 << 64, so in case we have all ones,
         # sum_range() / sum_sqr_range() needs to be smaller than 1 << 64.
