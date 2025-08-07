@@ -265,6 +265,9 @@ Return parity of bitarray `a`.\n\
 `parity(a)` is equivalent to `a.count() % 2` but more efficient.");
 
 
+/* Internal functions, like sum_indices(), but bitarrays are limited in
+   size.  For details see: devel/test_sum_indices.py
+*/
 static PyObject *
 ssqi(PyObject *module, PyObject *args)
 {

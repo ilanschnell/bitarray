@@ -34,9 +34,9 @@ sum z_j       sum_table[c]         sum_indices(block)
 sum z_j**2    sum_sqr_table[c]     sum_indices(block, 2)
 """
 import unittest
-from random import getrandbits, randint, randrange
+from random import getrandbits, randint, randrange, sample
 
-from bitarray.util import ones, urandom, _ssqi, sum_indices
+from bitarray.util import zeros, ones, urandom, _ssqi, sum_indices
 from bitarray.test_util import SumIndicesUtil
 
 
@@ -101,6 +101,11 @@ class DemoTests(unittest.TestCase):
 
 class SSQI_Tests(unittest.TestCase):
 
+    # Note carefully that the limits that are calculated and tested here
+    # are limits used in internal function _ssqi().
+    # The public Python function sum_indices() itself imposes no limit
+    # on the size of bitarrays it can compute.
+
     def test_limits(self):
         # calculation of limits used in ssqi() (in _util.c)
         for f, res in [(sum_range, 6_074_001_000),
@@ -156,6 +161,9 @@ class SSQI_Tests(unittest.TestCase):
 
 class SumIndicesTests(SumIndicesUtil):
 
+    def test_urandom(self):
+        self.check_urandom(sum_indices, 1_000_003)
+
     def test_random_sample(self):
         n = N31
         for k in 1, 31, 503:
@@ -172,6 +180,38 @@ class SumIndicesTests(SumIndicesUtil):
             freeze = getrandbits(1)
             inv = getrandbits(1)
             self.check_sparse(sum_indices, n, k, mode, freeze, inv)
+
+
+class VarianceTests(unittest.TestCase):
+
+    def variance(self, a, mu=None):
+        si = sum_indices(a)
+        k = a.count()
+        if mu is None:
+            mu = si / k
+        return (sum_indices(a, 2) - 2 * mu * si) / k + mu * mu
+
+    def variance_values(self, values, mu=None):
+        k = len(values)
+        if mu is None:
+            mu = sum(values) / k
+        return sum((x - mu) ** 2 for x in values) / k
+
+    def test_variance(self):
+        for _ in range(1_000):
+            n = randrange(1, 1_000)
+            k = randint(1, max(1, n // 2))
+            indices = sample(range(n), k)
+            a = zeros(n)
+            a[indices] = 1
+            mean = sum(indices) / len(indices)
+            self.assertAlmostEqual(self.variance(a),
+                                   self.variance_values(indices))
+            self.assertAlmostEqual(self.variance(a, mean),
+                                   self.variance_values(indices, mean))
+            mean = 20.5
+            self.assertAlmostEqual(self.variance(a, mean),
+                                   self.variance_values(indices, mean))
 
 
 def test_ones():

@@ -37,9 +37,7 @@ from bitarray.util import (
     _huffman_tree, huffman_code, canonical_huffman, canonical_decode,
 )
 
-from bitarray.util import (
-    _Random, _ssqi, _sum_sqr_indices, _variance  # type: ignore
-)
+from bitarray.util import _Random, _ssqi  # type: ignore
 
 # ---------------------------------------------------------------------------
 
@@ -367,7 +365,7 @@ class Random_P_Tests(unittest.TestCase):
 
     def test_small_p_limit(self):
         # For understanding how the algorithm works, see ./doc/random_p.rst
-        # Also, see VerificationTests in ./devel/test_random.py
+        # Also, see VerificationTests in devel/test_random.py
         r = _Random()
         limit = 1.0 / (r.K + 1)  # lower limit for p
         self.assertTrue(r.SMALL_P > limit)
@@ -1052,17 +1050,7 @@ class SumIndicesUtil(unittest.TestCase):
         for mode in -1, 0, 3, 4:
             self.assertRaises(ValueError, S, bitarray("110"), mode)
 
-    def check_ones(self, S):
-        a = bitarray()
-        sm1 = sm2 = 0
-        for i in range(100):
-            a.append(1)
-            sm1 += i
-            sm2 += i * i
-            self.assertEqual(S(a, 1), sm1)
-            self.assertEqual(S(a, 2), sm2)
-
-    def check_random(self, S, n):
+    def check_urandom(self, S, n):
         a = urandom_2(n)
         self.assertEqual(S(a, 1), sum(i for i, v in enumerate(a) if v))
         self.assertEqual(S(a, 2), sum(i * i for i, v in enumerate(a) if v))
@@ -1094,17 +1082,28 @@ class SumIndicesUtil(unittest.TestCase):
 
 class SSQI_Tests(SumIndicesUtil):
 
+    # Additional tests for _ssqi() in: devel/test_sum_indices.py
+
     def test_explicit(self):
         self.check_explicit(_ssqi)
 
     def test_wrong_args(self):
         self.check_wrong_args(_ssqi)
 
-    def test_ones(self):
-        self.check_ones(_ssqi)
+    def test_small(self):
+        a = bitarray()
+        sm1 = sm2 = 0
+        for i in range(100):
+            v = getrandbits(1)
+            a.append(v)
+            if v:
+                sm1 += i
+                sm2 += i * i
+            self.assertEqual(_ssqi(a, 1), sm1)
+            self.assertEqual(_ssqi(a, 2), sm2)
 
-    def test_random(self):
-        self.check_random(_ssqi, 10_037)
+    def test_urandom(self):
+        self.check_urandom(_ssqi, 10_037)
 
     def test_sparse(self):
         n = 1_000_003
@@ -1118,17 +1117,16 @@ class SSQI_Tests(SumIndicesUtil):
 
 class SumIndicesTests(SumIndicesUtil):
 
+    # Additional tests in: devel/test_sum_indices.py
+
     def test_explicit(self):
         self.check_explicit(sum_indices)
 
     def test_wrong_args(self):
         self.check_wrong_args(sum_indices)
 
-    def test_ones(self):
-        self.check_ones(sum_indices)
-
-    def test_random(self):
-        self.check_random(sum_indices, 10_037)
+    def test_urandom(self):
+        self.check_urandom(sum_indices, 10_037)
 
     def test_sparse(self):
         for _ in range(20):
@@ -1137,34 +1135,7 @@ class SumIndicesTests(SumIndicesUtil):
             mode = randint(1, 2)
             freeze = getrandbits(1)
             inv = getrandbits(1)
-            self.check_sparse(_ssqi, n, k, mode, freeze, inv)
-
-    def test_sum_sqr_indices(self):
-        self.assertRaises(TypeError, _sum_sqr_indices, bitarray(), 2)
-
-        def F(a, mode):
-            if mode == 1:
-                return sum_indices(a, 1)
-            else:
-                return _sum_sqr_indices(a)
-
-        self.check_explicit(F)
-        self.check_ones(F)
-        self.check_random(F, 371)
-
-    def test_variance(self):
-        for _ in range(100):
-            n = randrange(1, 20)
-            k = randint(1, n)
-            indices = sample(range(n), k)
-            a = zeros(n)
-            a[indices] = 1
-            mean = sum(indices) / len(indices)
-            self.assertAlmostEqual(_variance(a),
-                                   sum((x - mean) ** 2 for x in indices) / k)
-            mean = 20.5
-            self.assertAlmostEqual(_variance(a, mean),
-                                   sum((x - mean) ** 2 for x in indices) / k)
+            self.check_sparse(sum_indices, n, k, mode, freeze, inv)
 
 # ---------------------------------------------------------------------------
 

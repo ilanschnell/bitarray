@@ -97,7 +97,7 @@ class _Random:
     # individually in the test class Random_P_Tests in 'test_util.py'.
     # The test class also contains many comments and explanations.
     # To better understand how the algorithm works, see ./doc/random_p.rst
-    # See also, VerificationTests in ./devel/test_random.py
+    # See also, VerificationTests in devel/test_random.py
 
     # maximal number of calls to .random_half() in .combine()
     M = 8
@@ -165,7 +165,7 @@ class _Random:
             a.invert()  # use in-place to avoid copying
             return a
 
-        # decide on sequence, see VerificationTests ./devel/test_random.py
+        # decide on sequence, see VerificationTests devel/test_random.py
         if k < 16 or k * self.K < 3 * n:
             i = 0
         else:
@@ -225,7 +225,7 @@ class _Random:
 
         # calculate operator sequence
         i = int(p * self.K)
-        if p * (self.K + 1) > i + 1: # see ./devel/test_random.py
+        if p * (self.K + 1) > i + 1: # see devel/test_random.py
             i += 1
         seq = self.op_seq(i)
         q = i / self.K
@@ -253,6 +253,7 @@ def sum_indices(__a, __mode=1):
 Return sum of indices of all active bits in bitarray `a`.
 Equivalent to `sum(i for i, v in enumerate(a) if v)`.
 """
+    # For details see: devel/test_sum_indices.py
     n = 1 << 19  # block size  512 Kbits
     nbits = len(__a)
     if nbits <= n:  # shortcut for single block
@@ -298,21 +299,6 @@ Equivalent to `sum(i for i, v in enumerate(a) if v)`.
             raise ValueError("unexpected mode %s", __mode)
 
     return sm
-
-def _sum_sqr_indices(__a):
-    """_sum_sqr_indices(a, /) -> int
-
-Return sum of squares of indices of all active bits in bitarray `a`.
-Equivalent to `sum(i * i for i, v in enumerate(a) if v)`.
-"""
-    return sum_indices(__a, 2)
-
-def _variance(__a, mu=None):
-    si = sum_indices(__a)
-    k = __a.count()
-    if mu is None:
-        mu = si / k
-    return (_sum_sqr_indices(__a) - 2 * mu * si) / k + mu * mu
 
 
 def pprint(__a, stream=None, group=8, indent=4, width=80):
