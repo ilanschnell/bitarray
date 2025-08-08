@@ -130,7 +130,7 @@ class SSQI_Tests(unittest.TestCase):
 
     # Note carefully that the limits that are calculated and tested here
     # are limits used in internal function _ssqi().
-    # The public Python function sum_indices() does not impose a limit
+    # The public Python function sum_indices() does NOT impose any limits
     # on the size of bitarrays it can compute.
 
     def test_limits(self):
@@ -149,41 +149,18 @@ class SSQI_Tests(unittest.TestCase):
             self.assertTrue(f(n + 1) > MAX_UINT64)
             self.assertEqual(n, res)
 
-    def verify_overflow(self, a, mode, overflow):
-        # We want sm to be smaller than 1 << 64, so in case we have all ones,
-        # sum_range() / sum_sqr_range() needs to be smaller than 1 << 64.
-        n = len(a)
-        sm = sum_range(n) if mode == 1 else sum_sqr_range(n)
-        self.assertEqual(overflow, sm > MAX_UINT64)
-        # in C code we check for nbytes > limit
-        limit = 759_250_125 if mode == 1 else 476_347
-        self.assertEqual(overflow, a.nbytes > limit)
-
     def test_overflow_mode1(self):
-        # _ssqi(..., 1) is limited to bitarrays of about 6 Gbit.
-        # This limit is never reached because sum_indices(..., 1) uses
+        # _ssqi() is limited to bitarrays of about 6 Gbit (4 Mbit mode=2).
+        # This limit is never reached because sum_indices() uses
         # a much smaller block size for practical reasons.
-        n = 6_074_001_000
-        self.assertEqual(n, 8 * 759_250_125)
-        a = ones(n)
-        self.verify_overflow(a, 1, False)
-        self.assertEqual(_ssqi(a, 1), sum_range(n))
-        a.append(1)
-        self.verify_overflow(a, 1, True)
-        self.assertRaises(OverflowError, _ssqi, a, 1)
-
-    def test_overflow_mode2(self):
-        # _ssqi(..., 2) is limit to bitarrays of about 4 Mbit.
-        # This limit is never reached because sum_indices(..., 2) uses
-        # a smaller block size for practical reasons.
-        n = 3_810_776
-        self.assertEqual(n, 8 * 476_347)
-        a = ones(n)
-        self.verify_overflow(a, 2, False)
-        self.assertEqual(_ssqi(a, 2), sum_sqr_range(n))
-        a.extend(ones(3))
-        self.verify_overflow(a, 2, True)
-        self.assertRaises(OverflowError, _ssqi, a, 2)
+        for mode, f, n in [(1, sum_range, 6_074_001_000),
+                           (2, sum_sqr_range, 3_810_778)]:
+            a = ones(n)
+            self.assertTrue(f(len(a)) <= MAX_UINT64)
+            self.assertEqual(_ssqi(a, mode), f(n))
+            a.append(1)
+            self.assertTrue(f(len(a)) > MAX_UINT64)
+            self.assertRaises(OverflowError, _ssqi, a, mode)
 
 
 class SumIndicesTests(SumIndicesUtil):

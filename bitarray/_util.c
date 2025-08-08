@@ -283,9 +283,8 @@ ssqi(PyObject *module, PyObject *args)
         return NULL;
     if (mode < 1 || mode > 2)
         return PyErr_Format(PyExc_ValueError, "unexpected mode %d", mode);
-    nbytes = Py_SIZE(a);
-    if (nbytes > (mode == 1 ? 759250125LLU : 476347LLU))
-        return PyErr_Format(PyExc_OverflowError, "%llu", nbytes);
+    if (((uint64_t) a->nbits) > (mode == 1 ? 6074001000LLU : 3810778LLU))
+        return PyErr_Format(PyExc_OverflowError, "ssqi %zd", a->nbits);
 
     if (setup != a->endian) {
         setup_table(count_table, 'c');
@@ -294,6 +293,7 @@ ssqi(PyObject *module, PyObject *args)
         setup = a->endian;
     }
 
+    nbytes = Py_SIZE(a);
     set_padbits(a);
     for (i = 0; i < nbytes; i++) {
         unsigned char c = a->ob_item[i];
