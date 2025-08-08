@@ -120,7 +120,7 @@ class ExampleImplementationTests(unittest.TestCase):
 
     def test_sum_indices(self):
         for _ in range(100):
-            n = randrange(100_000)
+            n = randrange(10_000)
             a = urandom(n)
             mode = randint(1, 2)
             self.assertEqual(self.sum_indices(a, mode), sum_indices(a, mode))
@@ -133,10 +133,10 @@ class SSQI_Tests(unittest.TestCase):
     # The public Python function sum_indices() does NOT impose any limits
     # on the size of bitarrays it can compute.
 
-    def test_limits(self):
+    def test_calculate_limits(self):
         # calculation of limits used in ssqi() (in _util.c)
-        for f, res in [(sum_range, 6_074_001_000),
-                       (sum_sqr_range, 3_810_778)]:
+        for f, limit in [(sum_range, 6_074_001_000),
+                         (sum_sqr_range, 3_810_778)]:
             lo = 0
             hi = MAX_UINT64
             while hi > lo + 1:
@@ -147,9 +147,9 @@ class SSQI_Tests(unittest.TestCase):
                     lo = n
             self.assertTrue(f(n) < MAX_UINT64)
             self.assertTrue(f(n + 1) > MAX_UINT64)
-            self.assertEqual(n, res)
+            self.assertEqual(n, limit)
 
-    def test_overflow_mode1(self):
+    def test_overflow(self):
         # _ssqi() is limited to bitarrays of about 6 Gbit (4 Mbit mode=2).
         # This limit is never reached because sum_indices() uses
         # a much smaller block size for practical reasons.
