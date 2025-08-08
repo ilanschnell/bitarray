@@ -82,6 +82,13 @@ class SumRangeTests(unittest.TestCase):
                 sum_ones //= 6
                 self.assertEqual(sum_ones, f(n))
 
+    def test_o2(self):
+        for n in range(1000):
+            o1 = n * (n - 1) // 2
+            o2, r = divmod(o1 * (2 * n - 1), 3)
+            self.assertEqual(r, 0)
+            self.assertEqual(o2, sum_sqr_range(n))
+
 
 class DemoTests(unittest.TestCase):
 
