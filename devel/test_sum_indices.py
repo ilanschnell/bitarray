@@ -3,7 +3,7 @@ In both _util.c (ssqi() mode=2) and util.py (sum_indices()), we use the
 same trick but for different reasons:
 
   (a) in _util.c, we want to loop over bytes for speed and create
-      lookup tablea (for sum z_j (**2))
+      lookup tables (for sum z_j (**2))
 
   (b) in util.py we loop over smaller bitarrays in order to keep the sum
       in _util.c from overflowing
@@ -13,7 +13,7 @@ The trick is to write
     x_j = y_j + z_j        where  y_j = y  : if bit j is active
                                         0  : otherwise
 
-for each byte / block.
+for each byte / block, and j in range(block_size).
 Using the above, we get:
 
     sum x_j   =   y * bit_count  +  sum z_j
@@ -90,25 +90,36 @@ class SumRangeTests(unittest.TestCase):
             self.assertEqual(o2, sum_sqr_range(n))
 
 
-class DemoTests(unittest.TestCase):
+class ExampleImplementationTests(unittest.TestCase):
 
     def sum_indices(self, a, mode=1):
         nbits = len(a)
-        block_size = 512  # block size in bits
+        block_size = 503  # block size in bits
         nblocks = (nbits + block_size - 1) // block_size  # number of blocks
         sm = 0
         for i in range(nblocks):
             y = block_size * i
             block = a[y : y + block_size]
             if mode == 1:
-                sm += y * block.count() + sum_indices(block)
+                z = sum_indices(block)
+                self.assertEqual(
+                    # Note that j are indices within each block.
+                    # Also note that we use len(block) instead of block_size,
+                    # as the last block may be truncated.
+                    z, sum(j for j in range(len(block)) if block[j]))
+
+                x = y * block.count() + z
+                self.assertEqual(
+                    # Note that k are indices of the full bitarray a.
+                    x, sum(k for k in range(y, y + len(block)) if a[k]))
             else:
-                sm += (y * block.count() + 2 * sum_indices(block)) * y
-                sm += sum_indices(block, 2)
+                z = sum_indices(block, 2)
+                x = y * y * block.count() + 2 * y * sum_indices(block) + z
+            sm += x
         return sm
 
     def test_sum_indices(self):
-        for _ in range(1_000):
+        for _ in range(100):
             n = randrange(100_000)
             a = urandom(n)
             mode = randint(1, 2)
