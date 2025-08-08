@@ -936,7 +936,11 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 static PyObject *
 bitarray_all(bitarrayobject *self)
 {
-    return PyBool_FromLong(find_bit(self, 0, 0, self->nbits, 0) == -1);
+    Py_ssize_t errind = -1;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    errind = find_bit(self, 0, 0, self->nbits, 0);
+    Py_END_CRITICAL_SECTION();
+    return PyBool_FromLong( errind == -1);
 }
 
 PyDoc_STRVAR(all_doc,
@@ -949,7 +953,11 @@ Note that `a.all()` is faster than `all(a)`.");
 static PyObject *
 bitarray_any(bitarrayobject *self)
 {
-    return PyBool_FromLong(find_bit(self, 1, 0, self->nbits, 0) >= 0);
+    Py_ssize_t errind = -1;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    errind = find_bit(self, 1, 0, self->nbits, 0);
+    Py_END_CRITICAL_SECTION();
+    return PyBool_FromLong(errind >= 0);
 }
 
 PyDoc_STRVAR(any_doc,
@@ -971,7 +979,9 @@ bitarray_append(bitarrayobject *self, PyObject *value)
 
     if (resize(self, self->nbits + 1) < 0)
         return NULL;
+    Py_BEGIN_CRITICAL_SECTION(self);
     setbit(self, self->nbits - 1, vi);
+    Py_END_CRITICAL_SECTION();
     Py_RETURN_NONE;
 }
 
@@ -1314,7 +1324,9 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
             PyErr_SetString(PyExc_IndexError, "index out of range");
             return NULL;
         }
+        Py_BEGIN_CRITICAL_SECTION(self);
         self->ob_item[i / 8] ^= BITMASK(self, i);
+        Py_END_CRITICAL_SECTION();
         Py_RETURN_NONE;
     }
     if (PySlice_Check(arg)) {
@@ -1323,12 +1335,18 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
         if (PySlice_GetIndicesEx(arg, self->nbits,
                                  &start, &stop, &step, &slicelength) < 0)
             return NULL;
+        Py_BEGIN_CRITICAL_SECTION(self);
         adjust_step_positive(slicelength, &start, &stop, &step);
+        Py_END_CRITICAL_SECTION();
+        Py_BEGIN_CRITICAL_SECTION(self);
         invert_range(self, start, stop, step);
+        Py_END_CRITICAL_SECTION();
         Py_RETURN_NONE;
     }
     if (arg == Py_None) {
+        Py_BEGIN_CRITICAL_SECTION(self);
         invert_span(self, 0, self->nbits);
+        Py_END_CRITICAL_SECTION();
         Py_RETURN_NONE;
     }
 
@@ -4282,6 +4300,10 @@ PyInit__bitarray(void)
 
     PyModule_AddObject(m, "__version__",
                        PyUnicode_FromString(BITARRAY_VERSION));
+
+#ifdef Py_GIL_DISABLED
+    PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED);
+#endif
 
     return m;
 }
