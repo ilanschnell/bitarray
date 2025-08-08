@@ -261,12 +261,8 @@ Equivalent to `sum(i for i, v in enumerate(a) if v)`.
 
     # Constants
     m = n // 8  # block size in bytes
-    n2 = n * n
     o1 = n * (n - 1) // 2
-    if __mode == 2:
-        n3 = n * n2
-        o2 = 2 * n * o1
-        o3 = o1 * (2 * n - 1) // 3
+    o2 = o1 * (2 * n - 1) // 3
 
     nblocks = (nbits + n - 1) // n
     padbits = __a.padbits
@@ -284,17 +280,13 @@ Equivalent to `sum(i for i, v in enumerate(a) if v)`.
         if not k:
             continue
 
+        y = n * i
+        z1 = o1 if k == n else _ssqi(block)
         if __mode == 1:
-            if k == n:
-                sm += n2 * i + o1
-            else:
-                sm += n * k * i + _ssqi(block)
+            sm += y * k + z1
         elif __mode == 2:
-            if k == n:
-                sm += (n3 * i + o2) * i + o3
-            else:
-                sm += (n2 * k * i + 2 * n * _ssqi(block)) * i
-                sm += _ssqi(block, 2)
+            z2 = o2 if k == n else _ssqi(block, 2)
+            sm += (y * k + 2 * z1) * y + z2
         else:
             raise ValueError("unexpected mode %s", __mode)
 
