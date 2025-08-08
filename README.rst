@@ -51,20 +51,13 @@ versions.  Which means you can simply:
 
     $ pip install bitarray
 
-In addition, conda packages are available (both the default Anaconda
-repository as well as conda-forge support bitarray):
-
-.. code-block:: shell-session
-
-    $ conda install bitarray
-
 Once you have installed the package, you may want to test it:
 
 .. code-block:: shell-session
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 3.6.0
+    bitarray version: 3.6.1
     sys.version: 3.13.5 (main, Jun 16 2025) [Clang 18.1.8]
     sys.prefix: /Users/ilan/miniforge
     pointer size: 64 bit
@@ -78,7 +71,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 589 tests in 0.163s
+    Ran 591 tests in 0.163s
 
     OK
 
@@ -395,7 +388,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.6.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.6.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -971,7 +964,7 @@ This sub-module was added in version 1.2.
 
 ``sum_indices(a, /)`` -> int
    Return sum of indices of all active bits in bitarray ``a``.
-   This is equivalent to ``sum(i for i, v in enumerate(a) if v)``.
+   Equivalent to ``sum(i for i, v in enumerate(a) if v)``.
 
    New in version 3.6
 
