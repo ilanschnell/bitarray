@@ -126,7 +126,7 @@ class ExampleImplementationTests(unittest.TestCase):
             self.assertEqual(self.sum_indices(a, mode), sum_indices(a, mode))
 
 
-class SSQI_Tests(unittest.TestCase):
+class SSQI_Tests(SumIndicesUtil):
 
     # Note carefully that the limits that are calculated and tested here
     # are limits used in internal function _ssqi().
@@ -161,6 +161,15 @@ class SSQI_Tests(unittest.TestCase):
             a.append(1)
             self.assertTrue(f(len(a)) > MAX_UINT64)
             self.assertRaises(OverflowError, _ssqi, a, mode)
+
+    def test_sparse(self):
+        for _  in range(500):
+            n = randint(2, 3_810_778)
+            k = randrange(min(1_000, n // 2))
+            mode = randint(1, 2)
+            freeze = getrandbits(1)
+            inv = getrandbits(1)
+            self.check_sparse(_ssqi, n, k, mode, freeze, inv)
 
 
 class SumIndicesTests(SumIndicesUtil):
