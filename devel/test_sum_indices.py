@@ -232,10 +232,14 @@ class VarianceTests(unittest.TestCase):
 
 def test_ones():
 
-    for n in [N30, N31, N32, N33, 2 * N33]:
+    for n in [3_810_778,
+              3_810_779,
+              6_074_001_000,
+              6_074_001_001,
+              N33, 2 * N33]:
         a = ones(n)
         print("n =    %32d  %6.2f Gbit    %6.2f GB" % (n, n / N30, n / N33))
-        print("2^63 = %32d" % (1 << 63))
+        print("2^64 = %32d" % (1 << 64))
         res = sum_indices(a)
         print("sum =  %32d" % res)
         assert res == sum_range(n)
