@@ -297,15 +297,15 @@ ssqi(PyObject *module, PyObject *args)
     set_padbits(a);
     for (i = 0; i < nbytes; i++) {
         unsigned char c = a->ob_item[i];
-        if (!c)
-            continue;
-        if (mode == 1) {
-            sm += 8LLU * i * count_table[c];
-            sm += sum_table[c];
-        }
-        else {
-            sm += (64LLU * i * count_table[c] + 16LLU * sum_table[c]) * i;
-            sm += (unsigned char) sum_sqr_table[c];
+        if (c) {
+            uint64_t k = count_table[c], z1 = sum_table[c];
+            if (mode == 1) {
+                sm += k * 8LLU * i + z1;
+            }
+            else {
+                uint64_t z2 = (unsigned char) sum_sqr_table[c];
+                sm += (k * 64LLU * i + 16LLU * z1) * i + z2;
+            }
         }
     }
     return PyLong_FromUnsignedLongLong(sm);

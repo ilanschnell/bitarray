@@ -100,22 +100,27 @@ class ExampleImplementationTests(unittest.TestCase):
         for i in range(nblocks):
             y = block_size * i
             block = a[y : y + block_size]
-            if mode == 1:
-                z = sum_indices(block)
-                self.assertEqual(
-                    # Note that j are indices within each block.
-                    # Also note that we use len(block) instead of block_size,
-                    # as the last block may be truncated.
-                    z, sum(j for j in range(len(block)) if block[j]))
 
-                x = y * block.count() + z
-                self.assertEqual(
-                    # Note that k are indices of the full bitarray a.
-                    x, sum(k for k in range(y, y + len(block)) if a[k]))
+            k = block.count()
+            z1 = sum_indices(block)
+            self.assertEqual(
+                # Note that j are indices within each block.
+                # Also note that we use len(block) instead of block_size,
+                # as the last block may be truncated.
+                z1, sum(j for j in range(len(block)) if block[j]))
+
+            if mode == 1:
+                x = k * y + z1
             else:
-                z = sum_indices(block, 2)
-                x = y * y * block.count() + 2 * y * sum_indices(block) + z
+                z2 = sum_indices(block, 2)
+                x = (k * y + 2 * z1) * y + z2
+
+            self.assertEqual(
+                # Note that here j are indices of the full bitarray a.
+                x, sum(j ** mode for j in range(y, y + len(block)) if a[j]))
+
             sm += x
+
         return sm
 
     def test_sum_indices(self):

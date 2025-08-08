@@ -277,18 +277,16 @@ Equivalent to `sum(i for i, v in enumerate(a) if v)`.
             block[-padbits:] = 0
 
         k = block.count()
-        if not k:
-            continue
-
-        y = n * i
-        z1 = o1 if k == n else _ssqi(block)
-        if __mode == 1:
-            sm += y * k + z1
-        elif __mode == 2:
-            z2 = o2 if k == n else _ssqi(block, 2)
-            sm += (y * k + 2 * z1) * y + z2
-        else:
-            raise ValueError("unexpected mode %s", __mode)
+        if k:
+            y = n * i
+            z1 = o1 if k == n else _ssqi(block)
+            if __mode == 1:
+                sm += k * y + z1
+            elif __mode == 2:
+                z2 = o2 if k == n else _ssqi(block, 2)
+                sm += (k * y + 2 * z1) * y + z2
+            else:
+                raise ValueError("unexpected mode %s" % __mode)
 
     return sm
 
