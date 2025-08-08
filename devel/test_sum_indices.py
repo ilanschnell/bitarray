@@ -87,12 +87,12 @@ class DemoTests(unittest.TestCase):
 
     def sum_indices(self, a, mode=1):
         nbits = len(a)
-        block_size = 128  # block size in bits
+        block_size = 512  # block size in bits
         nblocks = (nbits + block_size - 1) // block_size  # number of blocks
         sm = 0
         for i in range(nblocks):
-            block = a[i * block_size : (i + 1) * block_size]
             y = block_size * i
+            block = a[y : y + block_size]
             if mode == 1:
                 sm += y * block.count() + sum_indices(block)
             else:
