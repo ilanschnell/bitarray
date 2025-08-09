@@ -2,7 +2,7 @@
 # http://www-graphics.stanford.edu/~seander/bithacks.html#NextBitPermutation
 
 from bitarray import bitarray
-from bitarray.util import ba2int, int2ba
+from bitarray.util import zeros, ones, ba2int, int2ba
 
 from math import comb
 
@@ -13,16 +13,18 @@ def all_perm(n, k, endian=None):
 Return an iterator over all bitarrays of length `n` with `k` bits set to 1
 in lexicographical order.
 """
-    n = int(n)
     if n < 0:
         raise ValueError("length must be >= 0")
-    k = int(k)
-    if k < 0 or k > n:
-        raise ValueError("number of set bits must be in range(0, n + 1)")
 
-    if k == 0:
-        yield bitarray(n, endian)
-        return
+    # error check inputs and handle edge cases
+    if k <= 0 or k > n:
+        if k == 0:
+            yield zeros(n, endian)
+            return
+        if k == n:
+            yield ones(n, endian)
+            return
+        raise ValueError("k must be in range 0 <= k <= n, got %s" % k)
 
     v = (1 << k) - 1
     for _ in range(comb(n, k)):
@@ -146,7 +148,11 @@ class PermTests(unittest.TestCase):
                 (1, 1, ['1']),
                 (2, 0, ['00']),
                 (2, 1, ['01', '10']),
+                (2, 2, ['11']),
+                (3, 0, ['000']),
+                (3, 1, ['001', '010', '100']),
                 (3, 2, ['011', '101', '110']),
+                (3, 3, ['111']),
                 ]:
             self.assertEqual(list(all_perm(n, k, 'big')),
                              [bitarray(s) for s in res])
