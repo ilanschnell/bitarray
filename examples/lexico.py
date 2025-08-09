@@ -2,15 +2,13 @@
 # http://www-graphics.stanford.edu/~seander/bithacks.html#NextBitPermutation
 
 from bitarray import bitarray
-from bitarray.util import zeros, ones, ba2int, int2ba
-
-from math import comb
+from bitarray.util import zeros, ba2int, int2ba
 
 
 def all_perm(n, k, endian=None):
     """all_perm(n, k, endian=None) -> iterator
 
-Return an iterator over all bitarrays of length `n` with `k` bits set to 1
+Return an iterator over all bitarrays of length `n` with `k` bits set to one
 in lexicographical order.
 """
     if n < 0:
@@ -21,14 +19,14 @@ in lexicographical order.
         if k == 0:
             yield zeros(n, endian)
             return
-        if k == n:
-            yield ones(n, endian)
-            return
         raise ValueError("k must be in range 0 <= k <= n, got %s" % k)
 
     v = (1 << k) - 1
-    for _ in range(comb(n, k)):
-        yield int2ba(v, length=n, endian=endian)
+    while True:
+        try:
+            yield int2ba(v, length=n, endian=endian)
+        except OverflowError:
+            return
         t = (v | (v - 1)) + 1
         v = t | ((((t & -t) // (v & -v)) >> 1) - 1)
 
@@ -45,18 +43,21 @@ which case the lowest lexicographical permutation will be returned).
     if v == 0:
         return a
     t = (v | (v - 1)) + 1
-    w = t | ((((t & -t) // (v & -v)) >> 1) - 1)
+    v = t | ((((t & -t) // (v & -v)) >> 1) - 1)
     try:
-        return int2ba(w, length=len(a), endian=a.endian)
+        return int2ba(v, length=len(a), endian=a.endian)
     except OverflowError:
         return a[::-1]
 
 # ---------------------------------------------------------------------------
 
 import unittest
+from math import comb
+from random import choice, getrandbits, randrange
+from itertools import pairwise
 
 from bitarray import frozenbitarray
-from bitarray.util import urandom
+from bitarray.util import random_k
 
 
 class PermTests(unittest.TestCase):
@@ -69,77 +70,65 @@ class PermTests(unittest.TestCase):
             self.assertEqual(a.count(), 3)
             self.assertEqual(a, bitarray(s, 'big'))
 
-    def test_explicit_2(self):
-        for seq in (['0'], ['1'], ['00'], ['11'], ['01', '10'],
-                    ['001', '010', '100'], ['011', '101', '110'],
-                    ['0011', '0101', '0110', '1001', '1010', '1100']):
-            a = bitarray(seq[0], 'big')
-            for i in range(20):
-                self.assertEqual(a, bitarray(seq[i % len(seq)]))
-                a = next_perm(a)
+    def test_zeros_ones(self):
+        for n in range(1, 30):
+            endian = choice(["little", "big"])
+            v = getrandbits(1)
 
-    def test_all_same(self):
-        for endian in 'little', 'big':
-            for n in range(1, 30):
-                for v in 0, 1:
-                    a = bitarray(n, endian)
-                    a.setall(v)
-                    self.assertEqual(next_perm(a), a)
+            lst = list(all_perm(n, v * n, endian))
+            self.assertEqual(len(lst), 1)
+            a = lst[0]
+            c = a.copy()
+            self.assertEqual(a.endian, endian)
+            self.assertEqual(len(a), n)
+            if v:
+                self.assertTrue(a.all())
+            else:
+                self.assertFalse(a.any())
+            self.assertEqual(next_perm(a), a)
+            self.assertEqual(a, c)
 
     def test_turnover(self):
         for a in [bitarray('11111110000', 'big'),
                   bitarray('0000001111111', 'little')]:
             self.assertEqual(next_perm(a), a[::-1])
 
-    def test_large(self):
-        a = bitarray('10010101010100100110010101110100111100101111', 'big')
-        b = next_perm(a)
-        c = bitarray('10010101010100100110010101110100111100110111')
-        self.assertEqual(b, c)
+    def test_next_perm_random(self):
+        for _ in range(100):
+            n = randrange(2, 1_000_000)
+            k = randrange(1, n)
+            a = random_k(n, k, endian=choice(["little", "big"]))
+            b = next_perm(a)
+            self.assertEqual(len(b), n)
+            self.assertEqual(b.count(), k)
+            self.assertEqual(b.endian, a.endian)
+            self.assertNotEqual(a, b)
+            if ba2int(a) > ba2int(b):
+                c = a.copy()
+                c.sort(c.endian == 'big')
+                self.assertEqual(a, c)
+                self.assertEqual(b, a[::-1])
 
     def test_errors(self):
         self.assertRaises(ValueError, next_perm, bitarray())
         self.assertRaises(TypeError, next_perm, '1')
 
-    def check_all_perm(self, s):
-        s1 = s.count(1)
-        n = 0
-        a = bitarray(s)
+    def check_perm_cycle(self, start):
+        n, k = len(start), start.count()
+        a = bitarray(start)
         coll = set()
-        while 1:
+        c = 0
+        while True:
             a = next_perm(a)
             coll.add(frozenbitarray(a))
-            self.assertEqual(len(a), len(s))
-            self.assertEqual(a.count(), s1)
-            self.assertEqual(a.endian, s.endian)
-            n += 1
-            if a == s:
+            self.assertEqual(len(a), n)
+            self.assertEqual(a.count(), k)
+            self.assertEqual(a.endian, start.endian)
+            c += 1
+            if a == start:
                 break
-        self.assertEqual(n, comb(len(s), s1))
-        self.assertEqual(len(coll), n)
-
-    def check_order(self, a):
-        i = -1
-        for _ in range(comb(len(a), a.count())):
-            i, j = ba2int(a), i
-            self.assertTrue(i > j)
-            a = next_perm(a)
-
-    def test_few(self):
-        for s in '0', '1', '00', '01', '111', '0011', '01011', '000000011':
-            for endian in 'little', 'big':
-                a = bitarray(s, endian)
-                self.check_all_perm(a)
-                a.sort(a.endian == 'little')
-                self.check_order(a)
-
-    def test_random(self):
-        for endian in "little", "big":
-            for n in range(1, 10):
-                a = urandom(n, endian)
-                self.check_all_perm(a)
-                a.sort(a.endian == 'little')
-                self.check_order(a)
+        self.assertEqual(c, comb(n, k))
+        self.assertEqual(len(coll), c)
 
     def test_all_perm_explicit(self):
         for n, k, res in [
@@ -153,24 +142,56 @@ class PermTests(unittest.TestCase):
                 (3, 1, ['001', '010', '100']),
                 (3, 2, ['011', '101', '110']),
                 (3, 3, ['111']),
-                ]:
-            self.assertEqual(list(all_perm(n, k, 'big')),
-                             [bitarray(s) for s in res])
+                (4, 2, ['0011', '0101', '0110', '1001', '1010', '1100']),
+        ]:
+            lst = list(all_perm(n, k, 'big'))
+            self.assertEqual(len(lst), comb(n, k))
+            self.assertEqual(lst, [bitarray(s) for s in res])
+            if n == 0:
+                continue
+            a = lst[0]
+            for i in range(20):
+                self.assertEqual(a, bitarray(res[i % len(lst)]))
+                a = next_perm(a)
 
-    def test_all_perm_1(self):
-        n, k = 10, 5
-        c = 0
-        s = set()
-        for a in all_perm(n, k, 'little'):
+    def test_all_perm(self):
+        n, k = 17, 5
+        endian=choice(["little", "big"])
+
+        prev = None
+        cnt = 0
+        coll = set()
+        for a in all_perm(n, k, endian):
             self.assertEqual(type(a), bitarray)
             self.assertEqual(len(a), n)
             self.assertEqual(a.count(), k)
-            s.add(frozenbitarray(a))
-            c += 1
-        self.assertEqual(c, comb(n, k))
-        self.assertEqual(len(s), comb(n, k))
+            self.assertEqual(a.endian, endian)
+            coll.add(frozenbitarray(a))
+            if prev is None:
+                first = a.copy()
+                c = a.copy()
+                c.sort(c.endian == "little")
+                self.assertEqual(a, c)
+            else:
+                self.assertEqual(next_perm(prev), a)
+                self.assertTrue(ba2int(prev) < ba2int(a))
+            prev = a
+            cnt += 1
 
-# ---------------------------------------------------------------------------
+        self.assertEqual(cnt, comb(n, k))
+        self.assertEqual(len(coll), cnt)
+
+        # a is now the last permutation
+        last = a.copy()
+        self.assertTrue(ba2int(first) < ba2int(last))
+        self.assertEqual(last, first[::-1])
+
+    def test_all_perm_order(self):
+        n, k = 10, 5
+        for a, b in pairwise(all_perm(n, k, 'little')):
+            self.assertTrue(ba2int(b) > ba2int(a))
+            self.assertEqual(next_perm(a), b)
+
 
 if __name__ == '__main__':
     unittest.main()
