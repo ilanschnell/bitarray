@@ -148,6 +148,7 @@ class Random_K_Tests(unittest.TestCase):
         self.assertRaises(TypeError, R, 4)
         self.assertRaises(TypeError, R, 1, "0.5")
         self.assertRaises(TypeError, R, 1, p=1)
+        self.assertRaises(TypeError, R, 11, 5.5)  # see issue #239
         self.assertRaises(ValueError, R, -1, 0)
         for k in -1, 11:  # k is not 0 <= k <= n
             self.assertRaises(ValueError, R, 10, k)

@@ -1,5 +1,6 @@
 2025-08-XX   3.6.1:
 -------------------
+  * fix RecursionError in `util.random_k()`, see #239
   * add development files for statistical tests in `devel/random/`
   * optimize `util.sum_indices()`
   * add `devel/test_sum_indices.py`

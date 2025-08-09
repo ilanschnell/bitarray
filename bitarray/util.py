@@ -69,6 +69,9 @@ when Python version is too low.
         raise NotImplementedError("bitarray.util.random_k() requires "
                                   "Python 3.9 or higher")
     r = _Random(__n, endian)
+    if not isinstance(k, int):
+        raise TypeError("int expected, got '%s'" % type(k).__name__)
+
     return r.random_k(k)
 
 
