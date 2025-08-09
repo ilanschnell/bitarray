@@ -8,8 +8,8 @@ from bitarray.util import zeros, ba2int, int2ba
 def all_perm(n, k, endian=None):
     """all_perm(n, k, endian=None) -> iterator
 
-Return an iterator over all bitarrays of length `n` with `k` bits set to one
-in lexicographical order.
+Return an iterator over all bitarrays of length `n` and
+population count `k` in lexicographical order.
 """
     if n < 0:
         raise ValueError("length must be >= 0")
@@ -31,23 +31,25 @@ in lexicographical order.
         v = t | ((((t & -t) // (v & -v)) >> 1) - 1)
 
 
-def next_perm(a):
-    """next_perm(bitarray) -> bitarray
+def next_perm(__a):
+    """next_perm(a, /) -> bitarray
 
-Return the next lexicographical permutation.  The length and the number
-of 1 bits in the bitarray is unchanged.  The integer value (`ba2int`) of the
-next permutation will always increase, except when the cycle is completed (in
-which case the lowest lexicographical permutation will be returned).
+Return the next lexicographical permutation of bitarray `a`.  The length
+and population count of the result is that of `a`.  The integer
+value (`ba2int()`) of the next permutation will always increase, except
+when the cycle is completed.  In that case, the lowest lexicographical
+permutation will be returned.
 """
-    v = ba2int(a)
+    v = ba2int(__a)
     if v == 0:
-        return a
+        return __a
+
     t = (v | (v - 1)) + 1
     v = t | ((((t & -t) // (v & -v)) >> 1) - 1)
     try:
-        return int2ba(v, length=len(a), endian=a.endian)
+        return int2ba(v, length=len(__a), endian=__a.endian)
     except OverflowError:
-        return a[::-1]
+        return __a[::-1]
 
 # ---------------------------------------------------------------------------
 
@@ -62,13 +64,25 @@ from bitarray.util import random_k
 
 class PermTests(unittest.TestCase):
 
-    def test_explicit_1(self):
-        a = bitarray('00010011', 'big')
-        for s in ['00010101', '00010110', '00011001',
-                  '00011010', '00011100', '00100011']:
-            a = next_perm(a)
-            self.assertEqual(a.count(), 3)
-            self.assertEqual(a, bitarray(s, 'big'))
+    def test_errors(self):
+        N = next_perm
+        self.assertRaises(TypeError, N)
+        self.assertRaises(TypeError, N, bitarray('1'), 1)
+        self.assertRaises(TypeError, N, '1')
+        self.assertRaises(ValueError, N, bitarray())
+
+        A = all_perm
+        self.assertRaises(TypeError, A)
+        self.assertRaises(TypeError, A, 4)
+        self.assertRaises(TypeError, next, A("4", 2))
+        self.assertRaises(TypeError, next, A(1, "0.5"))
+        self.assertRaises(TypeError, A, 1, p=1)
+        self.assertRaises(TypeError, next, A(11, 5.5))
+        self.assertRaises(ValueError, next, A(-1, 0))
+        for k in -1, 11:  # k is not 0 <= k <= n
+            self.assertRaises(ValueError, next, A(10, k))
+        self.assertRaises(ValueError, next, A(10, 7, 'foo'))
+        self.assertRaises(ValueError, next, A(10, 7, endian='foo'))
 
     def test_zeros_ones(self):
         for n in range(1, 30):
@@ -88,7 +102,15 @@ class PermTests(unittest.TestCase):
             self.assertEqual(next_perm(a), a)
             self.assertEqual(a, c)
 
-    def test_turnover(self):
+    def test_next_perm_explicit(self):
+        a = bitarray('00010011', 'big')
+        for s in ['00010101', '00010110', '00011001',
+                  '00011010', '00011100', '00100011']:
+            a = next_perm(a)
+            self.assertEqual(a.count(), 3)
+            self.assertEqual(a, bitarray(s, 'big'))
+
+    def test_next_perm_turnover(self):
         for a in [bitarray('11111110000', 'big'),
                   bitarray('0000001111111', 'little')]:
             self.assertEqual(next_perm(a), a[::-1])
@@ -104,14 +126,11 @@ class PermTests(unittest.TestCase):
             self.assertEqual(b.endian, a.endian)
             self.assertNotEqual(a, b)
             if ba2int(a) > ba2int(b):
+                print(n)
                 c = a.copy()
                 c.sort(c.endian == 'big')
                 self.assertEqual(a, c)
                 self.assertEqual(b, a[::-1])
-
-    def test_errors(self):
-        self.assertRaises(ValueError, next_perm, bitarray())
-        self.assertRaises(TypeError, next_perm, '1')
 
     def check_perm_cycle(self, start):
         n, k = len(start), start.count()
@@ -173,6 +192,7 @@ class PermTests(unittest.TestCase):
                 c.sort(c.endian == "little")
                 self.assertEqual(a, c)
             else:
+                self.assertNotEqual(a, first)
                 self.assertEqual(next_perm(prev), a)
                 self.assertTrue(ba2int(prev) < ba2int(a))
             prev = a
