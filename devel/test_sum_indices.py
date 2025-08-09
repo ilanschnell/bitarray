@@ -1,37 +1,41 @@
 """
-In both _util.c (ssqi() mode=2) and util.py (sum_indices()), we use the
-same trick but for different reasons:
+In both ssqi() (in _util.c) and sum_indices() (in util.py), we divide our
+bitarray into equally sized blocks in order to calculate the sum of active
+indices.  We use the same trick but for different reasons:
 
-  (a) in _util.c, we want to loop over bytes for speed and create
-      lookup tables (for sum z_j (**2))
+  (a) in ssqi(), we want to loop over bytes (blocks of 8 bits) and use
+      lookup tables (for sum z_j [**2])
 
-  (b) in util.py we loop over smaller bitarrays in order to keep the sum
-      in _util.c from overflowing
+  (b) in sum_indices() we want to loop over blocks of smaller bitarrays
+      in order to keep the summation in ssqi() from overflowing
 
 The trick is to write
 
     x_j = y_j + z_j        where  y_j = y  : if bit j is active
                                         0  : otherwise
 
-for each byte / block, and j in range(block_size).
+for each block.  Here, j is the index within each block.
+That is, j is in range(block size).
 Using the above, we get:
 
-    sum x_j   =   y * bit_count  +  sum z_j
+    sum x_j   =   k * y  +  sum z_j
 
-and
+where k is the bit count (per block).  And:
 
-    sum x_j**2   =   y**2 * bit_count  +  2 * y * sum z_j  +  sum z_j**2
+    sum x_j**2   =   k * y**2  +  2 * sum z_j * y  +  sum z_j**2
 
+These are the sums for each block and their sum (over all blocks) is what
+we are interested in.
 
-              (a)                  (b)
----------------------------------------------------------
-block         c (char)             block (bitarray)
-block size    8                    len(block)
-i             byte index           block index
-y             8 * i                len(block) * i
-bit_count     count_table[c]       block.count()
-sum z_j       sum_table[c]         sum_indices(block)
-sum z_j**2    sum_sqr_table[c]     sum_indices(block, 2)
+                   (a)  ssqi()          (b)  sum_indices()
+------------------------------------------------------------
+block              c (char)             block (bitarray)
+block size         8                    n
+i                  byte index           block index
+y                  8 * i                n * i
+k                  count_table[c]       block.count()
+z1 = sum z_j       sum_table[c]         _ssqi(block)
+z2 = sum z_j**2    sum_sqr_table[c]     _ssqi(block, 2)
 """
 import unittest
 from random import getrandbits, randint, randrange, sample
@@ -93,16 +97,15 @@ class SumRangeTests(unittest.TestCase):
 class ExampleImplementationTests(unittest.TestCase):
 
     def sum_indices(self, a, mode=1):
-        nbits = len(a)
-        block_size = 503  # block size in bits
-        nblocks = (nbits + block_size - 1) // block_size  # number of blocks
+        n = 503  # block size in bits
+        nblocks = (len(a) + n - 1) // n  # number of blocks
         sm = 0
         for i in range(nblocks):
-            y = block_size * i
-            block = a[y : y + block_size]
+            y = n * i
+            block = a[y : y + n]
 
             k = block.count()
-            z1 = sum_indices(block)
+            z1 = _ssqi(block)
             self.assertEqual(
                 # Note that j are indices within each block.
                 # Also note that we use len(block) instead of block_size,
@@ -112,12 +115,13 @@ class ExampleImplementationTests(unittest.TestCase):
             if mode == 1:
                 x = k * y + z1
             else:
-                z2 = sum_indices(block, 2)
+                z2 = _ssqi(block, 2)
                 x = (k * y + 2 * z1) * y + z2
 
+            # x is the sum [of squares] of indices for each block
             self.assertEqual(
-                # Note that here j are indices of the full bitarray a.
-                x, sum(j ** mode for j in range(y, y + len(block)) if a[j]))
+                # Note that here t are indices of the full bitarray a.
+                x, sum(t ** mode for t in range(y, y + len(block)) if a[t]))
 
             sm += x
 
