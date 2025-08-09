@@ -253,10 +253,12 @@ def sum_indices(__a, __mode=1):
 Return sum of indices of all active bits in bitarray `a`.
 Equivalent to `sum(i for i, v in enumerate(a) if v)`.
 """
+    if __mode not in (1, 2):
+        raise ValueError("unexpected mode %r" % __mode)
+
     # For details see: devel/test_sum_indices.py
     n = 1 << 19  # block size  512 Kbits
-    nbits = len(__a)
-    if nbits <= n:  # shortcut for single block
+    if len(__a) <= n:  # shortcut for single block
         return _ssqi(__a, __mode)
 
     # Constants
@@ -264,7 +266,7 @@ Equivalent to `sum(i for i, v in enumerate(a) if v)`.
     o1 = n * (n - 1) // 2
     o2 = o1 * (2 * n - 1) // 3
 
-    nblocks = (nbits + n - 1) // n
+    nblocks = (len(__a) + n - 1) // n
     padbits = __a.padbits
     sm = 0
     for i in range(nblocks):
@@ -282,11 +284,9 @@ Equivalent to `sum(i for i, v in enumerate(a) if v)`.
             z1 = o1 if k == n else _ssqi(block)
             if __mode == 1:
                 sm += k * y + z1
-            elif __mode == 2:
+            else:
                 z2 = o2 if k == n else _ssqi(block, 2)
                 sm += (k * y + 2 * z1) * y + z2
-            else:
-                raise ValueError("unexpected mode %s" % __mode)
 
     return sm
 
