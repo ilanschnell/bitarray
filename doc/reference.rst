@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 3.6.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.6.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -577,7 +577,7 @@ This sub-module was added in version 1.2.
 
 ``sum_indices(a, /)`` -> int
    Return sum of indices of all active bits in bitarray ``a``.
-   This is equivalent to ``sum(i for i, v in enumerate(a) if v)``.
+   Equivalent to ``sum(i for i, v in enumerate(a) if v)``.
 
    New in version 3.6
 

@@ -1,6 +1,14 @@
 Change log
 ==========
 
+**3.6.1** (2025-08-12):
+
+* add development files for statistical tests in ``devel/random/``
+* optimize ``util.sum_indices()``
+* fix RecursionError in ``util.random_k()``, see `#239 <https://github.com/ilanschnell/bitarray/issues/239>`__
+* add ``devel/test_sum_indices.py``
+
+
 **3.6.0** (2025-07-29):
 
 * add ``util.random_k()``, see `#237 <https://github.com/ilanschnell/bitarray/issues/237>`__
