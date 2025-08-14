@@ -428,15 +428,17 @@ class PrimeTests(unittest.TestCase):
         self.assertEqual(gen_primes(N), c)
 
     def test_count(self):
-        for n, res in [
-                (    10,    4),
-                (   100,   25),
-                ( 1_000,  168),
-                (10_000, 1229),
+        for n, count, sum_p, sum_sqr_p in [
+                (    10,    4,        17,             87),
+                (   100,   25,     1_060,         65_796),
+                ( 1_000,  168,    76_127,     49_345_379),
+                (10_000, 1229, 5_736_396, 37_546_387_960),
         ]:
             a = gen_primes(n)
             self.assertEqual(len(a), n)
-            self.assertEqual(a.count(), res)
+            self.assertEqual(a.count(), count)
+            self.assertEqual(sum_indices(a), sum_p)
+            self.assertEqual(sum_indices(a, 2), sum_sqr_p)
 
 # ---------------------------------------------------------------------------
 
@@ -1188,6 +1190,9 @@ class SumIndicesTests(SumIndicesUtil):
 
     def test_explicit(self):
         self.check_explicit(sum_indices)
+        a = gen_primes(100)
+        self.assertEqual(sum_indices(a, mode=1),  1_060)
+        self.assertEqual(sum_indices(a, mode=2), 65_796)
 
     def test_wrong_args(self):
         self.check_wrong_args(sum_indices)
