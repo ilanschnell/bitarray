@@ -19,6 +19,12 @@ double.py
     (IEEE 754 binary64).
 
 
+dubner.rst
+    We show how bitarrays can be used to calculate twin primes
+    and "middle numbers" very efficiently, and verify the some
+    conjectures in: https://oeis.org/A007534/a007534.pdf
+
+
 extend_json.py
     Demonstrates how to construct a json encoder and decoder (using the
     'json' standard library) which can handle extended Python data structures
