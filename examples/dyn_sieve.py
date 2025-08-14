@@ -14,9 +14,8 @@ class Sieve:
     for i in 2, 3, 5, 7:
         a[::i] = 0
 
-    def __init__(self, n=210):
+    def __init__(self):
         self.data = bitarray(0)
-        self.extend(n)
 
     def extend(self, n):
         n = int(n)
@@ -30,11 +29,10 @@ class Sieve:
         if n <= len(self.data):
             return
 
-        fresh_data = False
-        if not self.data:
+        fresh_data = not self.data
+        if fresh_data:
             self.data = self.a.copy()
             self.data[:8] = bitarray("00110101")
-            fresh_data = True
 
         a = self.data
         n1 = len(a)
@@ -107,11 +105,8 @@ class SieveTests(unittest.TestCase):
 
     def test_errors(self):
         S = Sieve
-        self.assertRaises(TypeError, S, 3, 1)
-        self.assertRaises(ValueError, S, "1.0")
-        self.assertRaises(ValueError, S, -1)
+        self.assertRaises(TypeError, S, 3)
         self.assertRaises(TypeError, S, 8, 4)
-        self.assertRaises(TypeError, S, 8, foo="big")
 
     def check_data(self, s, n):
         if n == 0:
