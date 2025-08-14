@@ -40,7 +40,7 @@ z2 = sum z_j**2    sum_sqr_table[c]     _ssqi(block, 2)
 import unittest
 from random import getrandbits, randint, randrange, sample
 
-from bitarray.util import zeros, ones, urandom, _ssqi, sum_indices
+from bitarray.util import zeros, ones, gen_primes, urandom, _ssqi, sum_indices
 from bitarray.test_util import SumIndicesUtil
 
 
@@ -171,6 +171,12 @@ class SSQI_Tests(SumIndicesUtil):
             self.assertTrue(f(len(a)) > MAX_UINT64)
             self.assertRaises(OverflowError, _ssqi, a, mode)
 
+    def test_primes(self):
+        n = 3_800_000
+        a = gen_primes(n)
+        self.assertEqual(_ssqi(a, 1),           493_187_952_850)
+        self.assertEqual(_ssqi(a, 2), 1_234_421_634_142_352_974)
+
     def test_sparse(self):
         for _  in range(500):
             n = randint(2, 3_810_778)
@@ -193,6 +199,12 @@ class SumIndicesTests(SumIndicesUtil):
             freeze = getrandbits(1)
             inv = getrandbits(1)
             self.check_sparse(sum_indices, n, k, mode, freeze, inv)
+
+    def test_primes(self):
+        n = 10_000_000
+        a = gen_primes(n)
+        self.assertEqual(sum_indices(a, 1),          3_203_324_994_356)
+        self.assertEqual(sum_indices(a, 2), 21_113_978_675_102_768_574)
 
     def test_ones(self):
         for m in range(19, 32):
