@@ -95,7 +95,8 @@ class Sieve:
 # ---------------------------------------------------------------------------
 
 import unittest
-from itertools import islice
+from collections import Counter
+from itertools import islice, pairwise
 from random import randrange
 
 from bitarray.util import gen_primes
@@ -127,8 +128,32 @@ class SieveTests(unittest.TestCase):
 
     def test_iter(self):
         s = Sieve()
-        it = islice(s, 10)
-        self.assertEqual(list(it), [2, 3, 5, 7, 11, 13, 17, 19, 23, 29])
+        a = []
+        for i in s:
+            if len(a) >= 168:
+                break
+            a.append(i)
+        self.assertEqual(a[-1], 997)
+        self.assertEqual(a, list(s.primerange(0, 1000)))
+
+    def test_islice(self):
+        s = Sieve()
+        it = islice(s, 3, 10)
+        self.assertEqual(list(it), [7, 11, 13, 17, 19, 23, 29])
+        it = islice(s, 168)
+        self.assertEqual(sum(it), 76_127)
+
+    def test_pairwiase(self):
+        s = Sieve()
+        C = Counter()
+        for a, b in pairwise(s):
+            C[b - a] += 1
+            if b > 540:
+                break
+        self.assertEqual(C[1],  1) # 3 - 2
+        self.assertEqual(C[2], 25) # twins
+        self.assertEqual(C[4], 26) # cousin
+        self.assertEqual(C[6], 25) # sexy
 
     def test_is_prime(self):
         s = Sieve()

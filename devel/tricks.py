@@ -5,8 +5,6 @@ is used in the C implementation of bitarray.
 from random import randint
 import unittest
 
-from bitarray.util import ones
-
 
 # ---------------------------- Range checks ---------------------------------
 
@@ -251,6 +249,7 @@ class VLFTests(unittest.TestCase):
 class SieveTests(unittest.TestCase):
 
     def test_a(self):
+        from bitarray.util import ones
         # used in util.gen_primes()
         a = ones(210)
         for i in 2, 3, 5, 7:
