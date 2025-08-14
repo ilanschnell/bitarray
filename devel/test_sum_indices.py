@@ -38,7 +38,7 @@ z1 = sum z_j       sum_table[c]         _ssqi(block)
 z2 = sum z_j**2    sum_sqr_table[c]     _ssqi(block, 2)
 """
 import unittest
-from random import getrandbits, randint, randrange, sample
+from random import choice, getrandbits, randint, randrange, sample
 
 from bitarray.util import zeros, ones, gen_primes, urandom, _ssqi, sum_indices
 from bitarray.test_util import SumIndicesUtil
@@ -173,7 +173,8 @@ class SSQI_Tests(SumIndicesUtil):
 
     def test_primes(self):
         n = 3_800_000
-        a = gen_primes(n)
+        endian = choice(['little', 'big'])
+        a = gen_primes(n, endian)
         self.assertEqual(_ssqi(a, 1),           493_187_952_850)
         self.assertEqual(_ssqi(a, 2), 1_234_421_634_142_352_974)
 
@@ -202,7 +203,8 @@ class SumIndicesTests(SumIndicesUtil):
 
     def test_primes(self):
         n = 10_000_000
-        a = gen_primes(n)
+        endian = choice(['little', 'big'])
+        a = gen_primes(n, endian)
         self.assertEqual(sum_indices(a, 1),          3_203_324_994_356)
         self.assertEqual(sum_indices(a, 2), 21_113_978_675_102_768_574)
 
