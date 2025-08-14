@@ -25,6 +25,11 @@ dubner.rst
     conjectures in: https://oeis.org/A007534/a007534.pdf
 
 
+dyn_sieve.py
+    Prime numbers, implemented as a dynamically growing sieve of Eratosthenes.
+    Similar to prime number sieve in SymPy, but implemented using a bitarray.
+
+
 extend_json.py
     Demonstrates how to construct a json encoder and decoder (using the
     'json' standard library) which can handle extended Python data structures
