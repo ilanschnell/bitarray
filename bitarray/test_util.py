@@ -1243,6 +1243,17 @@ class XoredIndicesTests(unittest.TestCase, Util):
             if i < 19:
                 self.assertEqual(lst[i], x)
 
+    def test_primes(self):
+        # OEIS A126084
+        lst = [0, 2, 1, 4, 3, 8, 5, 20, 7, 16, 13, 18, 55, 30, 53, 26, 47]
+        primes = gen_primes(1000)
+        x = 0
+        for i, p in enumerate(primes.search(1)):
+            self.assertEqual(xor_indices(primes[:p]), x)
+            if i < 17:
+                self.assertEqual(lst[i], x)
+            x ^= p
+
     def test_large_random(self):
         n = 10_037
         for a in [urandom_2(n), frozenbitarray(urandom_2(n))]:

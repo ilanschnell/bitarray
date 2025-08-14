@@ -75,6 +75,8 @@ of two middle numbers (greater than 4):
     >>> [6 * i for i in mark.search(0, 2)]
     [96, 402, 516, 786, 906, 1116, 1146, 1266, 1356, 3246, 4206]
 
+This is `sequence A179825 <https://oeis.org/A179825>`__, the multiples of 6
+which are not the sum of a pair of twin primes.
 None of the above values are middle numbers themselves (this would
 contradict Conjecture 1):
 
