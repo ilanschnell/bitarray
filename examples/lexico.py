@@ -5,8 +5,8 @@ from bitarray import bitarray
 from bitarray.util import zeros, ba2int, int2ba
 
 
-def all_perm(n, k, endian=None):
-    """all_perm(n, k, endian=None) -> iterator
+def lexico_all(n, k, endian=None):
+    """lexico_all(n, k, endian=None) -> iterator
 
 Return an iterator over all bitarrays of length `n` and
 population count `k` in lexicographical order.
@@ -31,8 +31,8 @@ population count `k` in lexicographical order.
         v = t | ((((t & -t) // (v & -v)) >> 1) - 1)
 
 
-def next_perm(__a):
-    """next_perm(a, /) -> bitarray
+def lexico_next(__a):
+    """lexico_next(a, /) -> bitarray
 
 Return the next lexicographical permutation of bitarray `a`.  The length
 and population count of the result is that of `a`.  The integer
@@ -65,13 +65,13 @@ from bitarray.util import random_k
 class PermTests(unittest.TestCase):
 
     def test_errors(self):
-        N = next_perm
+        N = lexico_next
         self.assertRaises(TypeError, N)
         self.assertRaises(TypeError, N, bitarray('1'), 1)
         self.assertRaises(TypeError, N, '1')
         self.assertRaises(ValueError, N, bitarray())
 
-        A = all_perm
+        A = lexico_all
         self.assertRaises(TypeError, A)
         self.assertRaises(TypeError, A, 4)
         self.assertRaises(TypeError, next, A("4", 2))
@@ -89,7 +89,7 @@ class PermTests(unittest.TestCase):
             endian = choice(["little", "big"])
             v = getrandbits(1)
 
-            lst = list(all_perm(n, v * n, endian))
+            lst = list(lexico_all(n, v * n, endian))
             self.assertEqual(len(lst), 1)
             a = lst[0]
             c = a.copy()
@@ -99,28 +99,28 @@ class PermTests(unittest.TestCase):
                 self.assertTrue(a.all())
             else:
                 self.assertFalse(a.any())
-            self.assertEqual(next_perm(a), a)
+            self.assertEqual(lexico_next(a), a)
             self.assertEqual(a, c)
 
-    def test_next_perm_explicit(self):
+    def test_next_explicit(self):
         a = bitarray('00010011', 'big')
         for s in ['00010101', '00010110', '00011001',
                   '00011010', '00011100', '00100011']:
-            a = next_perm(a)
+            a = lexico_next(a)
             self.assertEqual(a.count(), 3)
             self.assertEqual(a, bitarray(s, 'big'))
 
-    def test_next_perm_turnover(self):
+    def test_next_turnover(self):
         for a in [bitarray('11111110000', 'big'),
                   bitarray('0000001111111', 'little')]:
-            self.assertEqual(next_perm(a), a[::-1])
+            self.assertEqual(lexico_next(a), a[::-1])
 
-    def test_next_perm_random(self):
+    def test_next_random(self):
         for _ in range(100):
             n = randrange(2, 1_000_000)
             k = randrange(1, n)
             a = random_k(n, k, endian=choice(["little", "big"]))
-            b = next_perm(a)
+            b = lexico_next(a)
             self.assertEqual(len(b), n)
             self.assertEqual(b.count(), k)
             self.assertEqual(b.endian, a.endian)
@@ -138,7 +138,7 @@ class PermTests(unittest.TestCase):
         coll = set()
         c = 0
         while True:
-            a = next_perm(a)
+            a = lexico_next(a)
             coll.add(frozenbitarray(a))
             self.assertEqual(len(a), n)
             self.assertEqual(a.count(), k)
@@ -149,7 +149,7 @@ class PermTests(unittest.TestCase):
         self.assertEqual(c, comb(n, k))
         self.assertEqual(len(coll), c)
 
-    def test_all_perm_explicit(self):
+    def test_all_explicit(self):
         for n, k, res in [
                 (0, 0, ['']),
                 (1, 0, ['0']),
@@ -163,7 +163,7 @@ class PermTests(unittest.TestCase):
                 (3, 3, ['111']),
                 (4, 2, ['0011', '0101', '0110', '1001', '1010', '1100']),
         ]:
-            lst = list(all_perm(n, k, 'big'))
+            lst = list(lexico_all(n, k, 'big'))
             self.assertEqual(len(lst), comb(n, k))
             self.assertEqual(lst, [bitarray(s) for s in res])
             if n == 0:
@@ -171,7 +171,7 @@ class PermTests(unittest.TestCase):
             a = lst[0]
             for i in range(20):
                 self.assertEqual(a, bitarray(res[i % len(lst)]))
-                a = next_perm(a)
+                a = lexico_next(a)
 
     def test_all_perm(self):
         n, k = 17, 5
@@ -180,7 +180,7 @@ class PermTests(unittest.TestCase):
         prev = None
         cnt = 0
         coll = set()
-        for a in all_perm(n, k, endian):
+        for a in lexico_all(n, k, endian):
             self.assertEqual(type(a), bitarray)
             self.assertEqual(len(a), n)
             self.assertEqual(a.count(), k)
@@ -193,7 +193,7 @@ class PermTests(unittest.TestCase):
                 self.assertEqual(a, c)
             else:
                 self.assertNotEqual(a, first)
-                self.assertEqual(next_perm(prev), a)
+                self.assertEqual(lexico_next(prev), a)
                 self.assertTrue(ba2int(prev) < ba2int(a))
             prev = a
             cnt += 1
@@ -206,11 +206,11 @@ class PermTests(unittest.TestCase):
         self.assertTrue(ba2int(first) < ba2int(last))
         self.assertEqual(last, first[::-1])
 
-    def test_all_perm_order(self):
+    def test_all_order(self):
         n, k = 10, 5
-        for a, b in pairwise(all_perm(n, k, 'little')):
+        for a, b in pairwise(lexico_all(n, k, 'little')):
             self.assertTrue(ba2int(b) > ba2int(a))
-            self.assertEqual(next_perm(a), b)
+            self.assertEqual(lexico_next(a), b)
 
 
 if __name__ == '__main__':
