@@ -27,7 +27,7 @@ from bitarray._util import (
 )
 
 __all__ = [
-    'zeros', 'ones', 'urandom', 'random_k', 'random_p',
+    'zeros', 'ones', 'urandom', 'random_k', 'random_p', 'gen_primes',
     'pprint', 'strip', 'count_n',
     'parity', 'sum_indices', 'xor_indices',
     'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
@@ -248,6 +248,36 @@ class _Random:
             a &= self.random_p(x)
 
         return a
+
+
+def gen_primes(__n, endian=None):
+    """gen_primes(n, /) -> bitarray
+
+Generate a bitarray of length `n` in which all active indices are prime
+numbers.
+"""
+    n = int(__n)
+    if n < 0:
+        raise ValueError("bitarray length must be >= 0")
+
+    a = ones(210, endian)  # 210 = 2 * 3 * 5 * 7
+    for i in 2, 3, 5, 7:
+        a[::i] = 0
+
+    b = bitarray("00110101", endian)
+    if n <= 121:  # 121 is not a prime - this is fixed in the sieve below
+        a[:8] = b
+        return a[:n]
+
+    # repeating the array many times is faster than setting the multiples
+    # of the primes 2, 3, 5, 7 to 0
+    a *= (n + 210 - 1) // 210
+    a[:8] = b
+    del a[n:]
+    # perform sieve starting at 11
+    for i in a.search(1, 11, int(math.sqrt(n) + 1.0)):
+        a[i * i :: i] = 0
+    return a
 
 
 def sum_indices(__a, __mode=1):

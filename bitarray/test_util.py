@@ -28,7 +28,7 @@ from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
 
 from bitarray.util import (
     zeros, ones, urandom, random_k, random_p, pprint, strip, count_n,
-    parity, sum_indices, xor_indices,
+    parity, gen_primes, sum_indices, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
     correspond_all, byteswap, intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
@@ -370,6 +370,73 @@ class Random_P_Tests(unittest.TestCase):
         r = _Random()
         limit = 1.0 / (r.K + 1)  # lower limit for p
         self.assertTrue(r.SMALL_P > limit)
+
+# ---------------------------------------------------------------------------
+
+class PrimeTests(unittest.TestCase):
+
+    def test_errors(self):
+        P = gen_primes
+        self.assertRaises(TypeError, P, 3, 1)
+        self.assertRaises(ValueError, P, "1.0")
+        self.assertRaises(ValueError, P, -1)
+        self.assertRaises(TypeError, P, 8, 4)
+        self.assertRaises(TypeError, P, 8, foo="big")
+        self.assertRaises(ValueError, P, 8, "foo")
+        self.assertRaises(ValueError, P, 8, endian="foo")
+
+    def test_explitcit(self):
+        c = bitarray(
+            "00110 10100"  # 2, 3, 5, 7
+            "01010 00101"  # 11, 13, 17, 19
+            "00010 00001"  # 23, 29
+            "01000 00100"  # 31, 37
+            "01010 00100"  # 41, 43, 47
+            "00010 00001"  # 53, 59
+            "01000 00100"  # 61, 67
+            "01010 00001"  # 71, 73, 79
+            "00010 00001"  # 83, 89
+            "00000 00100"  # 97
+        )
+        for n in range(len(c)):
+            default_endian = choice(['little', 'big'])
+            _set_default_endian(default_endian)
+            endian = choice(["little", "big", None])
+            a = gen_primes(n, endian)
+            self.assertEqual(len(a), n)
+            self.assertEqual(a.endian, endian or default_endian)
+            self.assertEqual(a, c[:n])
+
+    def test_cmp(self):
+        N = 10_000
+        c = ones(N)
+        c[:2] = 0
+        for i in range(int(math.sqrt(N) + 1.0)):
+            if c[i]:
+                c[i * i :: i] = 0
+
+        for _ in range(100):
+            n = randrange(N)
+            endian = choice(["little", "big"])
+            a = gen_primes(n, endian=endian)
+            self.assertEqual(a, c[:n])
+            self.assertEqual(a.endian, endian)
+        for i in range(10, 100):
+            for x in -1, 0, 1:
+                n = i * i + x
+                self.assertEqual(gen_primes(n), c[:n])
+        self.assertEqual(gen_primes(N), c)
+
+    def test_count(self):
+        for n, res in [
+                (    10,    4),
+                (   100,   25),
+                ( 1_000,  168),
+                (10_000, 1229),
+        ]:
+            a = gen_primes(n)
+            self.assertEqual(len(a), n)
+            self.assertEqual(a.count(), res)
 
 # ---------------------------------------------------------------------------
 

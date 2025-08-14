@@ -20,6 +20,7 @@ def random_p(n: int,
 def random_k(n: int,
              k: int,
              endian: Optional[str] = ...) -> bitarray: ...
+def gen_primes(n: int, endian: Optional[str] = ...) -> bitarray: ...
 
 def pprint(a: Any, stream: BinaryIO = ...,
            group: int = ...,
