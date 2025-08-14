@@ -17,6 +17,9 @@ class Sieve:
     def __init__(self):
         self.data = bitarray(0)
 
+    def __len__(self):
+        return len(self.data)
+
     def extend(self, n):
         n = int(n)
         if n < 0:
@@ -26,7 +29,7 @@ class Sieve:
             self.data = bitarray(0)
             return
 
-        if n <= len(self.data):
+        if n <= len(self):
             return
 
         fresh_data = not self.data
@@ -49,13 +52,21 @@ class Sieve:
     def extend_to_no(self, n):
         self.extend(1)
         while self.data.count() < n:
-            self.extend(int(len(self.data) * 1.5))
+            self.extend(int(len(self) * 1.5))
 
     def __contains__(self, p):
         if p < 0:
             raise ValueError("positive integer expected")
         self.extend(p + 1)
         return self.data[p]
+
+    def __iter__(self):
+        i = 1
+        while True:
+            self.extend(i + 1)
+            if self.data[i]:
+                yield i
+            i += 1
 
     def __getitem__(self, n):
         "return n-th prime"
@@ -84,6 +95,7 @@ class Sieve:
 # ---------------------------------------------------------------------------
 
 import unittest
+from itertools import islice
 from random import randrange
 
 from bitarray.util import gen_primes
@@ -95,27 +107,14 @@ PRIMES = gen_primes(N)
 
 class SieveTests(unittest.TestCase):
 
-    def get_n(self, n):
-        return 210 * ((n + 210 - 1) // 210)
-
-    def test_n(self):
-        for n, res in [(0, 0), (1, 210), (209, 210), (210, 210),
-                       (211, 420)]:
-            self.assertEqual(self.get_n(n), res)
-
-    def test_errors(self):
-        S = Sieve
-        self.assertRaises(TypeError, S, 3)
-        self.assertRaises(TypeError, S, 8, 4)
-
     def check_data(self, s, n):
         if n == 0:
-            self.assertEqual(len(s.data), 0)
+            self.assertEqual(len(s), 0)
             return
-        if n <= len(s.data):
-            n = len(s.data)
-        n = self.get_n(n)
-        self.assertEqual(len(s.data), n)
+        if n <= len(s):
+            n = len(s)
+        n = 210 * ((n + 210 - 1) // 210)
+        self.assertEqual(len(s), n)
         self.assertEqual(s.data, PRIMES[:n])
 
     def test_random(self):
@@ -124,7 +123,12 @@ class SieveTests(unittest.TestCase):
             n = randrange(1000) if randrange(10) else 0
             s.extend(n)
             self.check_data(s, n)
-            #print(n, len(s.data))
+            #print(n, len(s))
+
+    def test_iter(self):
+        s = Sieve()
+        it = islice(s, 10)
+        self.assertEqual(list(it), [2, 3, 5, 7, 11, 13, 17, 19, 23, 29])
 
     def test_is_prime(self):
         s = Sieve()
