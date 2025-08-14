@@ -2,6 +2,9 @@
 -------------------
   * add `util.gen_primes()`, a function to generate bitarrays in which all
     active indices are prime numbers
+  * add optional `mode` argument to `util.sum_indices()`
+  * add [Dubner's conjecture](../examples/dubner.rst) (in memory of Harvey
+    Dubner)
 
 
 2025-08-12   3.6.1:

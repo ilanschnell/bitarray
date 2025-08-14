@@ -300,6 +300,8 @@ def main():
     testfile('./README.rst')
     for path in glob("./doc/*.rst"):
         testfile(path)
+    for path in glob("./examples/*.rst"):
+        testfile(path)
 
 
 if __name__ == '__main__':
