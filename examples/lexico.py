@@ -34,10 +34,10 @@ population count `k` in lexicographical order.
 def lexico_next(__a):
     """lexico_next(a, /) -> bitarray
 
-Return the next lexicographical permutation of bitarray `a`.  The length
-and population count of the result is that of `a`.  The integer
-value (`ba2int()`) of the next permutation will always increase, except
-when the cycle is completed.  In that case, the lowest lexicographical
+Return the next lexicographical permutation of bitarray `a`.
+The length and population count of the result remains unchanged.
+The integer value (`ba2int()`) of the next permutation will always increase,
+except when the cycle is completed.  In that case, the lowest lexicographical
 permutation will be returned.
 """
     v = ba2int(__a)
