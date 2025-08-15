@@ -57,7 +57,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 3.6.1
+    bitarray version: 3.7.0
     sys.version: 3.13.5 (main, Jun 16 2025) [Clang 18.1.8]
     sys.prefix: /Users/ilan/miniforge
     pointer size: 64 bit
@@ -71,7 +71,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 591 tests in 0.163s
+    Ran 596 tests in 0.166s
 
     OK
 
@@ -388,7 +388,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.6.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.7.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -833,6 +833,13 @@ This sub-module was added in version 1.2.
    New in version 2.5.0: allow bytes-like argument
 
 
+``gen_primes(n, /)`` -> bitarray
+   Generate a bitarray of length ``n`` in which all active indices are prime
+   numbers.
+
+   New in version 3.7
+
+
 ``hex2ba(hexstr, /, endian=None)`` -> bitarray
    Bitarray of hexadecimal representation.  hexstr may contain any number
    (including odd numbers) of hex digits (upper or lower case).
@@ -962,11 +969,14 @@ This sub-module was added in version 1.2.
    iteration is stopped as soon as one mismatch is found.
 
 
-``sum_indices(a, /)`` -> int
+``sum_indices(a, /, mode=1)`` -> int
    Return sum of indices of all active bits in bitarray ``a``.
    Equivalent to ``sum(i for i, v in enumerate(a) if v)``.
+   ``mode=2`` sums square of indices.
 
    New in version 3.6
+
+   New in version 3.7: add optional mode argument
 
 
 ``urandom(n, /, endian=None)`` -> bitarray
