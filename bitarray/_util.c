@@ -572,7 +572,7 @@ byteswap(PyObject *module, PyObject *args)
 }
 
 PyDoc_STRVAR(byteswap_doc,
-"byteswap(a, /, n=<buffer size>)\n\
+"byteswap(a, n=<buffer size>, /)\n\
 \n\
 Reverse every `n` consecutive bytes of `a` in-place.\n\
 By default, all bytes are reversed.  Note that `n` is not limited to 2, 4\n\
@@ -1731,7 +1731,7 @@ sc_decode(PyObject *module, PyObject *obj)
 }
 
 PyDoc_STRVAR(sc_decode_doc,
-"sc_decode(stream) -> bitarray\n\
+"sc_decode(stream, /) -> bitarray\n\
 \n\
 Decompress binary stream (an integer iterator, or bytes-like object) of a\n\
 sparse compressed (`sc`) bitarray, and return the decoded  bitarray.\n\

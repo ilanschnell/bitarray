@@ -57,7 +57,7 @@ and may therefore be used as a dictionary key.
 def test(verbosity=1):
     """test(verbosity=1) -> TextTestResult
 
-Run self-test, and return unittest.runner.TextTestResult object.
+Run self-test, and return `unittest.runner.TextTestResult` object.
 """
     from bitarray import test_bitarray
     return test_bitarray.run(verbosity=verbosity)

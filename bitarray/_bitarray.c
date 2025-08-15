@@ -942,8 +942,8 @@ bitarray_all(bitarrayobject *self)
 PyDoc_STRVAR(all_doc,
 "all() -> bool\n\
 \n\
-Return True when all bits in bitarray are True.\n\
-Note that `a.all()` is faster than `all(a)`.");
+Return `True` when all bits in bitarray are 1.\n\
+`a.all()` is a faster version of `all(a)`.");
 
 
 static PyObject *
@@ -955,8 +955,8 @@ bitarray_any(bitarrayobject *self)
 PyDoc_STRVAR(any_doc,
 "any() -> bool\n\
 \n\
-Return True when any bit in bitarray is True.\n\
-Note that `a.any()` is faster than `any(a)`.");
+Return `True` when any bit in bitarray is 1.\n\
+`a.any()` is a faster version of `any(a)`.");
 
 
 static PyObject *
@@ -1008,7 +1008,7 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(bytereverse_doc,
 "bytereverse(start=0, stop=<end of buffer>, /)\n\
 \n\
-For each byte in byte-range(start, stop) reverse bits in-place.\n\
+For each byte in byte-range(`start`, `stop`) reverse bits in-place.\n\
 The start and stop indices are given in terms of bytes (not bits).\n\
 Also note that this method only changes the buffer; it does not change the\n\
 bit-endianness of the bitarray object.  Pad bits are left unchanged such\n\
@@ -1064,7 +1064,7 @@ bitarray_clear(bitarrayobject *self)
 PyDoc_STRVAR(clear_doc,
 "clear()\n\
 \n\
-Remove all items from the bitarray.");
+Remove all items from bitarray.");
 
 
 /* Set readonly member to 1 if self is an instance of frozenbitarray.
@@ -1111,7 +1111,7 @@ bitarray_copy(bitarrayobject *self)
 PyDoc_STRVAR(copy_doc,
 "copy() -> bitarray\n\
 \n\
-Return a copy of the bitarray.");
+Return copy of bitarray (with same bit-endianness).");
 
 
 static PyObject *
@@ -1178,7 +1178,7 @@ PyDoc_STRVAR(extend_doc,
 "extend(iterable, /)\n\
 \n\
 Append items from to the end of the bitarray.\n\
-If `iterable` is a Unicode string, each `0` and `1` are appended as\n\
+If `iterable` is a (Unicode) string, each `0` and `1` are appended as\n\
 bits (ignoring whitespace and underscore).");
 
 
@@ -1259,7 +1259,7 @@ PyDoc_STRVAR(index_doc,
 \n\
 Return lowest (or rightmost when `right=True`) index where sub_bitarray\n\
 is found, such that sub_bitarray is contained within `[start:stop]`.\n\
-Raises `ValueError` when the sub_bitarray is not present.");
+Raises `ValueError` when sub_bitarray is not present.");
 
 
 static PyObject *
@@ -1340,7 +1340,7 @@ PyDoc_STRVAR(invert_doc,
 "invert(index=<all bits>, /)\n\
 \n\
 Invert all bits in bitarray (in-place).\n\
-When the optional `index` is given, only invert the single bit at index.");
+When the optional `index` is given, only invert the single bit at `index`.");
 
 
 static PyObject *
@@ -1575,7 +1575,7 @@ bitarray_tobytes(bitarrayobject *self)
 PyDoc_STRVAR(tobytes_doc,
 "tobytes() -> bytes\n\
 \n\
-Return the bitarray buffer in bytes (pad bits are set to zero).");
+Return the bitarray buffer (pad bits are set to zero).");
 
 
 /* Extend self with bytes from f.read(n).  Return number of bytes actually
@@ -1675,7 +1675,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
 PyDoc_STRVAR(tofile_doc,
 "tofile(f, /)\n\
 \n\
-Write byte representation of bitarray to file object f.");
+Write bitarray buffer to file object `f`.");
 
 
 static PyObject *
@@ -1720,7 +1720,7 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
 PyDoc_STRVAR(to01_doc,
 "to01(group=0, sep=' ') -> str\n\
 \n\
-Return bitarray as Unicode string of '0's and '1's.\n\
+Return bitarray as (Unicode) string of `0`s and `1`s.\n\
 The bits are grouped into `group` bits (default is no grouping).\n\
 When grouped, the string `sep` is inserted between groups\n\
 of `group` characters, default is a space.");

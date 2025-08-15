@@ -251,7 +251,7 @@ class _Random:
 
 
 def gen_primes(__n, endian=None):
-    """gen_primes(n, /) -> bitarray
+    """gen_primes(n, /, endian=None) -> bitarray
 
 Generate a bitarray of length `n` in which all active indices are prime
 numbers.
