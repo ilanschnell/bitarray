@@ -1,6 +1,10 @@
 """
 Demonstrates the implementation of "Sieve of Eratosthenes" algorithm for
 finding all prime numbers up to any given limit.
+
+It should be noted that bitarray version 3.7 added util.gen_primes().
+The library function basically uses an optimized version of the same
+algorithm.
 """
 from math import isqrt
 
