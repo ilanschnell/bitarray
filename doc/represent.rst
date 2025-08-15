@@ -117,29 +117,28 @@ The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively:
 
 .. code-block:: python
 
-    >>> from bitarray.util import ba2base, base2ba
-    >>> a = bitarray('001010011010100000111011100110110001111100101110000100010010')
+    >>> from bitarray.util import ba2base
+    >>> a = bitarray('001010111111100000111011100110110001111100101110111110010010')
     >>> len(a)          # divisible by 2, 3, 4, 5 and 6
     60
     >>> ba2base(2, a)   # binary
-    '001010011010100000111011100110110001111100101110000100010010'
+    '001010111111100000111011100110110001111100101110111110010010'
     >>> ba2base(4, a)   # quaternary
-    '022122200323212301330232010102'
+    '022333200323212301330232332102'
     >>> ba2base(8, a)   # octal
-    '12324073466174560422'
+    '12774073466174567622'
     >>> ba2base(16, a)  # hexadecimal
-    '29a83b9b1f2e112'
+    '2bf83b9b1f2ef92'
     >>> ba2base(32, a)  # base 32 (using RFC 4648 Base32 alphabet)
-    'FGUDXGY7FYIS'
+    'FP4DXGY7F34S'
     >>> ba2base(64, a)  # base 64 (using standard base 64 alphabet)
-    'Kag7mx8uES'
+    'K/g7mx8u+S'
 
 Note that ``ba2base(2, a)`` is equivalent to ``a.to01()`` and
 that ``ba2base(16, a)`` is equivalent to ``ba2hex(a)``.
 Unlike ``ba2hex()``, ``ba2base()`` does not take advantage of byte level
-operations and is therefore a lot slower, although still implemented in C.
+operations and is therefore a slower, although it is still implemented in C.
 The inverse function is called ``base2ba()``.
-See also `this example <../examples/base-n.py>`__.
 
 
 Variable length representation
