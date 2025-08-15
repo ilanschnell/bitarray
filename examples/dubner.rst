@@ -85,6 +85,6 @@ contradict Conjecture 1):
     >>> any(middles[m] for m in mark.search(0, 2))
     False
 
-As `A007534 <https://oeis.org/A007534>`, is the sequence of positive even
+As `A007534 <https://oeis.org/A007534>`__, is the sequence of positive even
 numbers that are not the sum of a pair of twin primes (not just multiples
 of 6), A179825 is a subset of A007534.
