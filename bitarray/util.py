@@ -254,7 +254,7 @@ def gen_primes(__n, endian=None):
     """gen_primes(n, /, endian=None) -> bitarray
 
 Generate a bitarray of length `n` in which all active indices are prime
-numbers.
+numbers.  Note that the largest index is `n-1`.
 """
     n = int(__n)
     if n < 0:
@@ -274,9 +274,10 @@ numbers.
     a *= (n + 210 - 1) // 210
     a[:8] = b
     del a[n:]
-    # perform sieve starting at 11
+    # perform sieve starting at 11 - as i*i will always be odd, and the
+    # even bits are already set to 0, we can use step 2*i
     for i in a.search(1, 11, int(math.sqrt(n) + 1.0)):
-        a[i * i :: i] = 0
+        a[i * i :: 2 * i] = 0
     return a
 
 
@@ -328,11 +329,9 @@ Equivalent to `sum(i for i, v in enumerate(a) if v)`.
 def pprint(__a, stream=None, group=8, indent=4, width=80):
     """pprint(bitarray, /, stream=None, group=8, indent=4, width=80)
 
-Prints the formatted representation of object on `stream` (which defaults
-to `sys.stdout`).  By default, elements are grouped in bytes (8 elements),
-and 8 bytes (64 elements) per line.
-Non-bitarray objects are printed by the standard library
-function `pprint.pprint()`.
+Pretty-print bitarray object to `stream`, defaults is `sys.stdout`.
+By default, bits are grouped in bytes (8 bits), and 64 bits per line.
+Non-bitarray objects are printed using `pprint.pprint()`.
 """
     if stream is None:
         stream = sys.stdout
