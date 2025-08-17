@@ -375,6 +375,15 @@ class Random_P_Tests(unittest.TestCase):
 
 class PrimeTests(unittest.TestCase):
 
+    primes = [
+        2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61,
+        67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137,
+        139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211,
+        223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283,
+        293, 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373, 379,
+        383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 449, 457, 461,
+    ]
+
     def test_errors(self):
         P = gen_primes
         self.assertRaises(TypeError, P, 3, 1)
@@ -386,26 +395,19 @@ class PrimeTests(unittest.TestCase):
         self.assertRaises(ValueError, P, 8, endian="foo")
 
     def test_explitcit(self):
-        c = bitarray(
-            "00110 10100"  # 2, 3, 5, 7
-            "01010 00101"  # 11, 13, 17, 19
-            "00010 00001"  # 23, 29
-            "01000 00100"  # 31, 37
-            "01010 00100"  # 41, 43, 47
-            "00010 00001"  # 53, 59
-            "01000 00100"  # 61, 67
-            "01010 00001"  # 71, 73, 79
-            "00010 00001"  # 83, 89
-            "00000 00100"  # 97
-        )
-        for n in range(len(c)):
+        for n in range(230):
             default_endian = choice(['little', 'big'])
             _set_default_endian(default_endian)
             endian = choice(["little", "big", None])
-            a = gen_primes(n, endian)
+            odd = getrandbits(1)
+            a = gen_primes(n, endian, odd)
             self.assertEqual(len(a), n)
             self.assertEqual(a.endian, endian or default_endian)
-            self.assertEqual(a, c[:n])
+            if odd:
+                lst = [2] + [2 * i + 1 for i in a.search(1)]
+            else:
+                lst = [i for i in a.search(1)]
+            self.assertEqual(lst, self.primes[:len(lst)])
 
     def test_cmp(self):
         N = 10_000
@@ -414,6 +416,7 @@ class PrimeTests(unittest.TestCase):
         for i in range(int(math.sqrt(N) + 1.0)):
             if c[i]:
                 c[i * i :: i] = 0
+        self.assertEqual(list(c.search(1, 0, 462)), self.primes)
 
         for _ in range(100):
             n = randrange(N)
@@ -421,11 +424,19 @@ class PrimeTests(unittest.TestCase):
             a = gen_primes(n, endian=endian)
             self.assertEqual(a, c[:n])
             self.assertEqual(a.endian, endian)
+
+            b = gen_primes(n // 2, endian, odd=True)
+            self.assertEqual(b, a[1::2])
+            self.assertEqual(b, c[1:n:2])
+
         for i in range(10, 100):
             for x in -1, 0, 1:
                 n = i * i + x
                 self.assertEqual(gen_primes(n), c[:n])
+                self.assertEqual(gen_primes(n // 2, odd=1), c[1:n:2])
+
         self.assertEqual(gen_primes(N), c)
+        self.assertEqual(gen_primes(N // 2, odd=1), c[1::2])
 
     def test_count(self):
         for n, count, sum_p, sum_sqr_p in [
@@ -439,6 +450,10 @@ class PrimeTests(unittest.TestCase):
             self.assertEqual(a.count(), count)
             self.assertEqual(sum_indices(a), sum_p)
             self.assertEqual(sum_indices(a, 2), sum_sqr_p)
+            b = gen_primes(n // 2, odd=1)
+            self.assertEqual(len(b), n // 2)
+            self.assertEqual(b.count() + 1, count)
+            self.assertEqual(b, a[1::2])
 
 # ---------------------------------------------------------------------------
 

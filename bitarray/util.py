@@ -250,34 +250,43 @@ class _Random:
         return a
 
 
-def gen_primes(__n, endian=None):
-    """gen_primes(n, /, endian=None) -> bitarray
+def gen_primes(__n, endian=None, odd=False):
+    """gen_primes(n, /, endian=None, odd=False) -> bitarray
 
-Generate a bitarray of length `n` in which all active indices are prime
-numbers.  Note that the largest index is `n-1`.
+Generate a bitarray of length `n` in which active indices are prime numbers.
+When `odd` is True, only odd prime numbers are represented in the resulting
+bitarray.  Index `i` corresponds `2*i+1` being prime or not.
 """
     n = int(__n)
     if n < 0:
         raise ValueError("bitarray length must be >= 0")
 
-    a = ones(210, endian)  # 210 = 2 * 3 * 5 * 7
-    for i in 2, 3, 5, 7:
-        a[::i] = 0
-
-    b = bitarray("00110101", endian)
-    if n <= 121:  # 121 is not a prime - this is fixed in the sieve below
-        a[:8] = b
-        return a[:n]
+    if odd:
+        a = ones(105, endian)  # 105 = 3 * 5 * 7
+        a[1::3] = 0
+        a[2::5] = 0
+        a[3::7] = 0
+        f = "01110110"
+    else:
+        a = ones(210, endian)  # 210 = 2 * 3 * 5 * 7
+        for i in 2, 3, 5, 7:
+            a[::i] = 0
+        f = "00110101"
 
     # repeating the array many times is faster than setting the multiples
-    # of the primes 2, 3, 5, 7 to 0
-    a *= (n + 210 - 1) // 210
-    a[:8] = b
+    # of the low primes to 0
+    a *= (n + len(a) - 1) // len(a)
+    a[:8] = bitarray(f, endian)
     del a[n:]
-    # perform sieve starting at 11 - as i*i will always be odd, and the
-    # even bits are already set to 0, we can use step 2*i
-    for i in a.search(1, 11, int(math.sqrt(n) + 1.0)):
-        a[i * i :: 2 * i] = 0
+    # perform sieve starting at 11
+    if odd:
+        for i in a.search(1, 5, int(math.sqrt(n // 2) + 1.0)):  # 11//2 = 5
+            j = 2 * i + 1
+            a[(j * j) // 2 :: j] = 0
+    else:
+        # i*i is always odd, and even bits are already set to 0: use step 2*i
+        for i in a.search(1, 11, int(math.sqrt(n) + 1.0)):
+            a[i * i :: 2 * i] = 0
     return a
 
 
