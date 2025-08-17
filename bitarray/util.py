@@ -254,8 +254,9 @@ def gen_primes(__n, endian=None, odd=False):
     """gen_primes(n, /, endian=None, odd=False) -> bitarray
 
 Generate a bitarray of length `n` in which active indices are prime numbers.
-When `odd` is True, only odd prime numbers are represented in the resulting
-bitarray.  Index `i` corresponds `2*i+1` being prime or not.
+By default (`odd=False`), active indices correspond to prime numbers directly.
+When `odd=True`, only odd prime numbers are represented in the resulting
+bitarray `a`, and `a[i]` corresponds to `2*i+1` being prime or not.
 """
     n = int(__n)
     if n < 0:

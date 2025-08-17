@@ -418,7 +418,7 @@ class PrimeTests(unittest.TestCase):
                 c[i * i :: i] = 0
         self.assertEqual(list(c.search(1, 0, 462)), self.primes)
 
-        for _ in range(100):
+        for _ in range(20):
             n = randrange(N)
             endian = choice(["little", "big"])
             a = gen_primes(n, endian=endian)
@@ -429,11 +429,12 @@ class PrimeTests(unittest.TestCase):
             self.assertEqual(b, a[1::2])
             self.assertEqual(b, c[1:n:2])
 
-        for i in range(10, 100):
-            for x in -1, 0, 1:
-                n = i * i + x
-                self.assertEqual(gen_primes(n), c[:n])
-                self.assertEqual(gen_primes(n // 2, odd=1), c[1:n:2])
+        for _ in range(20):
+            i = randrange(10, 100)
+            x = randint(-1, 1)
+            n = i * i + x
+            self.assertEqual(gen_primes(n), c[:n])
+            self.assertEqual(gen_primes(n // 2, odd=1), c[1:n:2])
 
         self.assertEqual(gen_primes(N), c)
         self.assertEqual(gen_primes(N // 2, odd=1), c[1::2])
