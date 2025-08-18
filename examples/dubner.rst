@@ -88,3 +88,8 @@ contradict Conjecture 1):
 As `A007534 <https://oeis.org/A007534>`__, is the sequence of positive even
 numbers that are not the sum of a pair of twin primes (not just multiples
 of 6), A179825 is a subset of A007534.
+
+.. image:: https://github.com/ilanschnell/visual/blob/master/dubner/image.png?raw=true
+   :alt: visualization of middle numbers
+   :width: 1290px
+   :height: 680px
