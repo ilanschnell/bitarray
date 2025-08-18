@@ -91,5 +91,3 @@ of 6), A179825 is a subset of A007534.
 
 .. image:: https://github.com/ilanschnell/visual/blob/master/dubner/image.png?raw=true
    :alt: visualization of middle numbers
-   :width: 1290px
-   :height: 680px
