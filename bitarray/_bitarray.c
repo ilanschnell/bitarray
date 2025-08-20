@@ -1022,12 +1022,7 @@ bitarray_buffer_info(bitarrayobject *self)
     PyObject *res, *args, *ptr, *readonly, *imported;
 
     if (info == NULL) {
-        PyObject *bitarray_module;
-
-        if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
-            return NULL;
-        info = PyObject_GetAttrString(bitarray_module, "BufferInfo");
-        Py_DECREF(bitarray_module);
+        info = bitarray_module_attr("BufferInfo");
         if (info == NULL)
             return NULL;
     }
@@ -1095,12 +1090,7 @@ freeze_if_frozen(bitarrayobject *self)
 
     assert(self->ob_exports == 0 && self->buffer == NULL);
     if (frozen == NULL) {
-        PyObject *bitarray_module;
-
-        if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
-            return NULL;
-        frozen = PyObject_GetAttrString(bitarray_module, "frozenbitarray");
-        Py_DECREF(bitarray_module);
+        frozen = bitarray_module_attr("frozenbitarray");
         if (frozen == NULL)
             return NULL;
     }
@@ -1368,13 +1358,7 @@ bitarray_reduce(bitarrayobject *self)
     PyObject *dict, *bytes, *result;
 
     if (reconstructor == NULL) {
-        PyObject *bitarray_module;
-
-        if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
-            return NULL;
-        reconstructor = PyObject_GetAttrString(bitarray_module,
-                                               "_bitarray_reconstructor");
-        Py_DECREF(bitarray_module);
+        reconstructor = bitarray_module_attr("_bitarray_reconstructor");
         if (reconstructor == NULL)
             return NULL;
     }

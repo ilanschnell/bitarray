@@ -440,17 +440,19 @@ bitarray methods:
    Append ``item`` to the end of the bitarray.
 
 
-``buffer_info()`` -> tuple
-   Return a tuple containing:
+``buffer_info()`` -> BufferInfo
+   Return named tuple with following fields:
 
-   0. memory address of buffer
-   1. buffer size (in bytes)
-   2. bit-endianness as a Unicode string
-   3. number of pad bits
-   4. allocated memory for the buffer (in bytes)
-   5. memory is read-only
-   6. buffer is imported
-   7. number of buffer exports
+   0. ``address``: memory address of buffer
+   1. ``nbytes``: buffer size (in bytes)
+   2. ``endian``: bit-endianness as a string
+   3. ``padbits``: number of pad bits
+   4. ``alloc``: allocated memory for buffer (in bytes)
+   5. ``readonly``: memory is read-only (bool)
+   6. ``imported``: buffer is imported (bool)
+   7. ``exports``: number of buffer exports
+
+   New in version 3.7: return ``BufferInfo`` (named tuple)
 
 
 ``bytereverse(start=0, stop=<end of buffer>, /)``
@@ -833,9 +835,11 @@ This sub-module was added in version 1.2.
    New in version 2.5.0: allow bytes-like argument
 
 
-``gen_primes(n, /, endian=None)`` -> bitarray
-   Generate a bitarray of length ``n`` in which all active indices are prime
-   numbers.
+``gen_primes(n, /, endian=None, odd=False)`` -> bitarray
+   Generate a bitarray of length ``n`` in which active indices are prime numbers.
+   By default (``odd=False``), active indices correspond to prime numbers directly.
+   When ``odd=True``, only odd prime numbers are represented in the resulting
+   bitarray ``a``, and ``a[i]`` corresponds to ``2*i+1`` being prime or not.
 
    New in version 3.7
 
@@ -887,11 +891,9 @@ This sub-module was added in version 1.2.
 
 
 ``pprint(bitarray, /, stream=None, group=8, indent=4, width=80)``
-   Prints the formatted representation of object on ``stream`` (which defaults
-   to ``sys.stdout``).  By default, elements are grouped in bytes (8 elements),
-   and 8 bytes (64 elements) per line.
-   Non-bitarray objects are printed by the standard library
-   function ``pprint.pprint()``.
+   Pretty-print bitarray object to ``stream``, defaults is ``sys.stdout``.
+   By default, bits are grouped in bytes (8 bits), and 64 bits per line.
+   Non-bitarray objects are printed using ``pprint.pprint()``.
 
    New in version 1.8
 

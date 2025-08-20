@@ -334,3 +334,15 @@ ensure_eq_size_endian(bitarrayobject *a, bitarrayobject *b)
     }
     return 0;
 }
+
+static inline PyObject *
+bitarray_module_attr(char *name)
+{
+    PyObject *result, *bitarray_module;
+
+    if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
+        return NULL;
+    result = PyObject_GetAttrString(bitarray_module, name);
+    Py_DECREF(bitarray_module);
+    return result;
+}

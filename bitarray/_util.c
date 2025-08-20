@@ -2224,14 +2224,9 @@ static PyModuleDef moduledef = {
 PyMODINIT_FUNC
 PyInit__util(void)
 {
-    PyObject *m, *bitarray_module;
+    PyObject *m;
 
-    bitarray_module = PyImport_ImportModule("bitarray");
-    if (bitarray_module == NULL)
-        return NULL;
-    bitarray_type = (PyTypeObject *) PyObject_GetAttrString(bitarray_module,
-                                                            "bitarray");
-    Py_DECREF(bitarray_module);
+    bitarray_type = (PyTypeObject *) bitarray_module_attr("bitarray");
     if (bitarray_type == NULL)
         return NULL;
 
