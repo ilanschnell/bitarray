@@ -66,7 +66,7 @@ Once you have installed the package, you may want to test it:
     HAVE_BUILTIN_BSWAP64: 1
     default bit-endianness: big
     machine byte-order: little
-    DEBUG: 0
+    debug build: 0
     .........................................................................
     .........................................................................
     ................................................................
@@ -452,7 +452,7 @@ bitarray methods:
    6. ``imported``: buffer is imported (bool)
    7. ``exports``: number of buffer exports
 
-   New in version 3.7: return ``BufferInfo`` (named tuple)
+   New in version 3.7: return named tuple
 
 
 ``bytereverse(start=0, stop=<end of buffer>, /)``

@@ -4165,7 +4165,7 @@ Set the default bit-endianness for new bitarray objects being created.");
 static PyObject *
 sysinfo(PyObject *module)
 {
-    return Py_BuildValue("iiiiiiiii",
+    return Py_BuildValue("iiiiiii",
                          (int) sizeof(void *),
                          (int) sizeof(size_t),
                          (int) sizeof(bitarrayobject),
@@ -4173,12 +4173,10 @@ sysinfo(PyObject *module)
                          (int) sizeof(binode),
                          (int) HAVE_BUILTIN_BSWAP64,
 #ifndef NDEBUG
-                         1,
+                         1
 #else
-                         0,
+                         0
 #endif
-                         (int) PY_LITTLE_ENDIAN,
-                         (int) PY_BIG_ENDIAN
                          );
 }
 
@@ -4193,9 +4191,7 @@ Return tuple containing:\n\
 3. sizeof(decodetreeobject)\n\
 4. sizeof(binode)\n\
 5. HAVE_BUILTIN_BSWAP64\n\
-6. NDEBUG not defined\n\
-7. PY_LITTLE_ENDIAN\n\
-8. PY_BIG_ENDIAN");
+6. NDEBUG not defined");
 
 
 static PyMethodDef module_functions[] = {

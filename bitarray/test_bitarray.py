@@ -42,8 +42,6 @@ def skipIf(condition):
 
 SYSINFO = _sysinfo()
 PTRSIZE = SYSINFO[0]  # pointer size in bytes
-DEBUG = SYSINFO[6]
-
 
 # avoid importing from bitarray.util
 zeros = bitarray
@@ -166,9 +164,6 @@ class ModuleFunctionsTests(unittest.TestCase, Util):
         self.assertEqual(type(info), tuple)
         for x in info:
             self.assertEqual(type(x), int)
-
-        self.assertEqual(info[7], int(sys.byteorder == 'little'))
-        self.assertEqual(info[8], int(sys.byteorder == 'big'))
 
     @skipIf(is_pypy)  # PyPy doesn't have tuple.__itemsize__
     def test_ptrsize(self):
@@ -5161,7 +5156,7 @@ def run(verbosity=1):
     print('HAVE_BUILTIN_BSWAP64: %d' % SYSINFO[5])
     print('default bit-endianness: %s' % default_endian)
     print('machine byte-order: %s' % sys.byteorder)
-    print('DEBUG: %s' % DEBUG)
+    print('debug build: %s' % SYSINFO[6])
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
     suite.addTests(loader.loadTestsFromModule(sys.modules[__name__]))
