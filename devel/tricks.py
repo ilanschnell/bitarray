@@ -244,24 +244,6 @@ class VLFTests(unittest.TestCase):
             padding_2 = (7 - (nbits + LEN_PAD_BITS) % 7) % 7
             self.assertEqual(padding_2, padding)
 
-# ------------------------- Sieve of Eratosthenes ---------------------------
-
-class SieveTests(unittest.TestCase):
-
-    def test_a(self):
-        from bitarray.util import ones
-        # used in util.gen_primes()
-        a = ones(210)
-        for i in 2, 3, 5, 7:
-            a[::i] = 0
-
-        # let us show how repeating this bitarray behaves
-        a *= 10
-        b = ones(2100)
-        for i in 2, 3, 5, 7:
-            b[::i] = 0
-        self.assertEqual(a, b)
-
 
 if __name__ == '__main__':
     unittest.main()
