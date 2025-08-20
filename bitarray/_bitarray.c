@@ -1019,7 +1019,7 @@ static PyObject *
 bitarray_buffer_info(bitarrayobject *self)
 {
     static PyObject *info = NULL;   /* BufferInfo object */
-    PyObject *res, *args, *ptr, *readonly, *imported;
+    PyObject *res, *args, *address, *readonly, *imported;
 
     if (info == NULL) {
         info = bitarray_module_attr("BufferInfo");
@@ -1027,14 +1027,14 @@ bitarray_buffer_info(bitarrayobject *self)
             return NULL;
     }
 
-    ptr = PyLong_FromVoidPtr((void *) self->ob_item);
-    if (ptr == NULL)
-        return NULL;
+    address = PyLong_FromVoidPtr((void *) self->ob_item);
     readonly = PyBool_FromLong(self->readonly);
     imported = PyBool_FromLong(self->buffer ? 1 : 0);
+    if (address == NULL || readonly == NULL || imported == NULL)
+        return NULL;
 
     args = Py_BuildValue("OnsnnOOi",
-                         ptr,
+                         address,
                          Py_SIZE(self),
                          ENDIAN_STR(self->endian),
                          PADBITS(self),
@@ -1042,7 +1042,7 @@ bitarray_buffer_info(bitarrayobject *self)
                          readonly,
                          imported,
                          self->ob_exports);
-    Py_DECREF(ptr);
+    Py_DECREF(address);
     Py_DECREF(readonly);
     Py_DECREF(imported);
     res = PyObject_CallObject(info, args);
