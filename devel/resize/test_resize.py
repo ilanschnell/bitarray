@@ -5,7 +5,8 @@ from bitarray import bitarray
 PATTERN = [0, 1, 4, 8, 16, 24, 32, 40, 48, 56, 64, 76, 88, 100, 112, 124, 136]
 
 def get_alloc(a):
-    return a.buffer_info()[4]
+    info = a.buffer_info()
+    return info.alloc
 
 def resize(a, n):
     increase = n - len(a)
@@ -16,9 +17,7 @@ def resize(a, n):
 
 def show(a):
     info = a.buffer_info()
-    size = info[1]
-    alloc = info[4]
-    print('%d  %d' % (size, alloc))
+    print('%d  %d' % (info.nbytes, info.alloc))
 
 
 class ResizeTests(unittest.TestCase):
@@ -52,7 +51,7 @@ class ResizeTests(unittest.TestCase):
         prev = get_alloc(a)
         while a:
             del a[-100_000:]
-            alloc = a.buffer_info()[4]
+            alloc = get_alloc(a)
             self.assertTrue(alloc <= prev)
             prev = alloc
 

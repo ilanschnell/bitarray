@@ -13,7 +13,7 @@ NEW_IN = {
     'bitarray':              ['2.3: optional `buffer` argument',
                               '3.4: allow initializer `bytes` or `bytearray` '
                                    'to set buffer directly'],
-    'bitarray.buffer_info':   '3.7: return `BufferInfo` (named tuple)',
+    'bitarray.buffer_info':   '3.7: return named tuple',
     'bitarray.bytereverse':   '2.2.5: optional start and stop arguments',
     'bitarray.clear':         '1.4',
     'bitarray.count':        ['1.1.0: optional start and stop arguments',

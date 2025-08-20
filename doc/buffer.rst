@@ -88,11 +88,14 @@ The bytearray ``c`` is now exporting its buffer twice:
 to big-endian bitarray ``a``, and a little-endian bitarray ``b``.
 At this point all three object ``a``, ``b`` and ``c`` share the same buffer.
 Using the ``.buffer_info()`` method, we can actually verify that the
-bitarrays ``a`` and ``b`` point to the same buffer address:
+bitarrays ``a`` and ``b`` point to the same address:
 
 .. code-block:: python
 
-    >>> assert a.buffer_info()[0] == b.buffer_info()[0]
+    >>> def address(a):
+    ...     info = a.buffer_info()
+    ...     return info[0]
+    >>> assert address(a) == address(b)
 
 As bitarray's expose their buffer, we can also directly create a bitarray
 which imports the buffer from another bitarray:
@@ -102,7 +105,7 @@ which imports the buffer from another bitarray:
     >>> a = bitarray(32)
     >>> b = bitarray(buffer=a)
     >>> # the buffer address is the same
-    >>> assert a.buffer_info()[0] == b.buffer_info()[0]
+    >>> assert address(a) == address(b)
     >>> a.setall(0)
     >>> assert a == b
     >>> b[::7] = 1
@@ -119,9 +122,9 @@ of ``a``'s buffer:
     >>> a = bitarray(1 << 23)
     >>> a.setall(0)
     >>> b = bitarray(buffer=memoryview(a)[0x10000:0x30000])
-    >>> assert a.buffer_info()[0] + 0x10000 == b.buffer_info()[0]
+    >>> assert address(a) + 0x10000 == address(b)
     >>> c = bitarray(buffer=memoryview(a)[0x20000:0x50000])
-    >>> assert a.buffer_info()[0] + 0x20000 == c.buffer_info()[0]
+    >>> assert address(a) + 0x20000 == address(c)
     >>> c[0] = 1
     >>> assert b[8 * 0x10000] == 1
     >>> assert a[8 * 0x20000] == 1

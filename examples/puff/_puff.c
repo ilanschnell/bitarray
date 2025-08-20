@@ -26,7 +26,6 @@
 */
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
-#include "pythoncapi_compat.h"
 #include "bitarray.h"
 
 
@@ -633,13 +632,9 @@ static PyModuleDef moduledef = {
 
 PyMODINIT_FUNC PyInit__puff(void)
 {
-    PyObject *m, *bitarray_module;
+    PyObject *m;
 
-    if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
-        return NULL;
-    bitarray_type = (PyTypeObject *) PyObject_GetAttrString(bitarray_module,
-                                                            "bitarray");
-    Py_DECREF(bitarray_module);
+    bitarray_type = (PyTypeObject *) bitarray_module_attr("bitarray");
     if (bitarray_type == NULL)
         return NULL;
 

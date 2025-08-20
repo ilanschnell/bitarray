@@ -36,7 +36,7 @@ def encode(filename):
 
     if len(plain) > 0:
         print('Bits: %d / %d' % (len(a), 8 * len(plain)))
-        print('Ratio =%6.2f%%' % (100.0 * a.buffer_info()[1] / len(plain)))
+        print('Ratio =%6.2f%%' % (100.0 * a.nbytes / len(plain)))
 
 def decode(filename):
     assert filename.endswith('.huff2')
