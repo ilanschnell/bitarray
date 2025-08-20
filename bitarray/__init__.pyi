@@ -2,7 +2,6 @@
 #
 # This stub, as well as util.pyi, are tested with Python 3.10 and mypy 1.11.2
 
-from collections import namedtuple
 from collections.abc import Iterable, Iterator, Sequence
 from unittest.runner import TextTestResult
 
