@@ -1018,22 +1018,40 @@ that two consecutive calls will always leave the bitarray unchanged.");
 static PyObject *
 bitarray_buffer_info(bitarrayobject *self)
 {
-    PyObject *res, *ptr;
+    static PyObject *bi_obj = NULL;   /* BufferInfo object */
+    PyObject *res, *args, *ptr, *readonly, *imported;
+
+    if (bi_obj == NULL) {
+        PyObject *bitarray_module;
+
+        if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
+            return NULL;
+        bi_obj = PyObject_GetAttrString(bitarray_module, "BufferInfo");
+        Py_DECREF(bitarray_module);
+        if (bi_obj == NULL)
+            return NULL;
+    }
 
     ptr = PyLong_FromVoidPtr((void *) self->ob_item);
     if (ptr == NULL)
         return NULL;
+    readonly = PyBool_FromLong(self->readonly);
+    imported = PyBool_FromLong(self->buffer ? 1 : 0);
 
-    res = Py_BuildValue("Onsnniii",
-                        ptr,
-                        Py_SIZE(self),
-                        ENDIAN_STR(self->endian),
-                        PADBITS(self),
-                        self->allocated,
-                        self->readonly,
-                        self->buffer ? 1 : 0,
-                        self->ob_exports);
+    args = Py_BuildValue("OnsnnOOi",
+                         ptr,
+                         Py_SIZE(self),
+                         ENDIAN_STR(self->endian),
+                         PADBITS(self),
+                         self->allocated,
+                         readonly,
+                         imported,
+                         self->ob_exports);
     Py_DECREF(ptr);
+    Py_DECREF(readonly);
+    Py_DECREF(imported);
+    res = PyObject_CallObject(bi_obj, args);
+    Py_DECREF(args);
     return res;
 }
 

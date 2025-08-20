@@ -2,15 +2,27 @@
 #
 # This stub, as well as util.pyi, are tested with Python 3.10 and mypy 1.11.2
 
+from collections import namedtuple
 from collections.abc import Iterable, Iterator, Sequence
 from unittest.runner import TextTestResult
 
-from typing import Any, BinaryIO, Dict, Union, overload
+from typing import Any, BinaryIO, Dict, Union, overload, NamedTuple
 
 
 CodeDict = Dict[Any, bitarray]
 # Python 3.12 has abc.Buffer which should be used instead
 BytesLike = Union[bytes, bytearray]
+
+
+class BufferInfo(NamedTuple):
+    address: int
+    nbytes: int
+    endian: str
+    padbits: int
+    alloc: int
+    readonly: bool
+    imported: bool
+    exports: int
 
 
 class decodetree:

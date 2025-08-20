@@ -31,7 +31,8 @@ is_pypy = bool(platform.python_implementation() == 'PyPy')
 
 from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian,
-                      _bitarray_reconstructor, _sysinfo, __version__)
+                      _bitarray_reconstructor, _sysinfo, BufferInfo,
+                      __version__)
 
 def skipIf(condition):
     "Skip a test if the condition is true."
@@ -565,13 +566,25 @@ class MetaDataTests(unittest.TestCase):
         self.assertEqual(a.buffer_info()[1:4], (2, 'little', 3))
 
         info = a.buffer_info()
-        self.assertEqual(type(info), tuple)
+        self.assertTrue(isinstance(info, tuple))
+        self.assertEqual(type(info), BufferInfo)
+        self.assertEqual(type(info.address), int)
+        self.assertEqual(type(info.nbytes), int)
+        self.assertEqual(type(info.endian), str)
+        self.assertEqual(type(info.padbits), int)
+        self.assertEqual(type(info.alloc), int)
+        self.assertEqual(type(info.readonly), bool)
+        self.assertEqual(type(info.imported), bool)
+        self.assertEqual(type(info.exports), int)
         self.assertEqual(len(info), 8)
         for i, item in enumerate(info):
             if i == 2:
-                self.assertEqual(type(item), str)
-                continue
-            self.assertEqual(type(item), int)
+                tp = str
+            elif i in (5, 6):
+                tp = bool
+            else:
+                tp = int
+            self.assertEqual(type(item), tp)
 
     def test_endian(self):
         for endian in 'big', 'little':
