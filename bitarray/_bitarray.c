@@ -1018,17 +1018,17 @@ that two consecutive calls will always leave the bitarray unchanged.");
 static PyObject *
 bitarray_buffer_info(bitarrayobject *self)
 {
-    static PyObject *bi_obj = NULL;   /* BufferInfo object */
+    static PyObject *info = NULL;   /* BufferInfo object */
     PyObject *res, *args, *ptr, *readonly, *imported;
 
-    if (bi_obj == NULL) {
+    if (info == NULL) {
         PyObject *bitarray_module;
 
         if ((bitarray_module = PyImport_ImportModule("bitarray")) == NULL)
             return NULL;
-        bi_obj = PyObject_GetAttrString(bitarray_module, "BufferInfo");
+        info = PyObject_GetAttrString(bitarray_module, "BufferInfo");
         Py_DECREF(bitarray_module);
-        if (bi_obj == NULL)
+        if (info == NULL)
             return NULL;
     }
 
@@ -1050,24 +1050,24 @@ bitarray_buffer_info(bitarrayobject *self)
     Py_DECREF(ptr);
     Py_DECREF(readonly);
     Py_DECREF(imported);
-    res = PyObject_CallObject(bi_obj, args);
+    res = PyObject_CallObject(info, args);
     Py_DECREF(args);
     return res;
 }
 
 PyDoc_STRVAR(buffer_info_doc,
-"buffer_info() -> tuple\n\
+"buffer_info() -> BufferInfo\n\
 \n\
-Return a tuple containing:\n\
+Return named tuple with following fields:\n\
 \n\
-0. memory address of buffer\n\
-1. buffer size (in bytes)\n\
-2. bit-endianness as a Unicode string\n\
-3. number of pad bits\n\
-4. allocated memory for the buffer (in bytes)\n\
-5. memory is read-only\n\
-6. buffer is imported\n\
-7. number of buffer exports");
+0. `address`: memory address of buffer\n\
+1. `nbytes`: buffer size (in bytes)\n\
+2. `endian`: bit-endianness as a string\n\
+3. `padbits`: number of pad bits\n\
+4. `alloc`: allocated memory for buffer (in bytes)\n\
+5. `readonly`: memory is read-only (bool)\n\
+6. `imported`: buffer is imported (bool)\n\
+7. `exports`: number of buffer exports");
 
 
 static PyObject *

@@ -45,22 +45,6 @@ PTRSIZE = SYSINFO[0]  # pointer size in bytes
 DEBUG = SYSINFO[6]
 
 
-def buffer_info(a, key=None):
-    fields = (
-        "address",    # 0. address of byte buffer
-        "size",       # 1. buffer size in bytes
-        "endian",     # 2. bit-endianness
-        "padbits",    # 3. number of pad bits
-        "allocated",  # 4. allocated memory
-        "readonly",   # 5. memory is read-only
-        "imported",   # 6. buffer is imported
-        "exports",    # 7. number of buffer exports
-    )
-    info = a.buffer_info()
-    res = dict(zip(fields, info))
-    return res if key is None else res[key]
-
-
 # avoid importing from bitarray.util
 zeros = bitarray
 
@@ -111,45 +95,43 @@ class Util(object):
     def check_obj(self, a):
         self.assertIsInstance(a, bitarray)
 
-        ptr, nbytes, endian, padbits, alloc, readonly, buf, exports = \
-                                                          a.buffer_info()
-        self.assertEqual(nbytes, bits2bytes(len(a)))
-        self.assertTrue(0 <= padbits < 8)
-        self.assertEqual(endian, a.endian)
-        self.assertTrue(endian in ('little', 'big'))
-        self.assertEqual(a.nbytes, nbytes)
-        self.assertEqual(a.padbits, padbits)
-        self.assertEqual(a.readonly, readonly)
-        self.assertEqual(len(a) + padbits, 8 * nbytes)
+        info = a.buffer_info()
+        self.assertEqual(info.nbytes, bits2bytes(len(a)))
+        self.assertTrue(0 <= info.padbits == a.padbits < 8)
+        self.assertEqual(info.endian, a.endian)
+        self.assertTrue(info.endian in ('little', 'big'))
+        self.assertEqual(info.nbytes, a.nbytes)
+        self.assertEqual(info.readonly, a.readonly)
+        self.assertEqual(len(a) + a.padbits, 8 * a.nbytes)
 
-        if buf:
+        if info.imported:
             # imported buffer implies that no extra memory is allocated
-            self.assertEqual(alloc, 0)
+            self.assertEqual(info.alloc, 0)
             # an imported buffer will always have a multiple of 8 bits
             self.assertEqual(len(a) % 8, 0)
-            self.assertEqual(len(a), 8 * nbytes)
-            self.assertEqual(padbits, 0)
+            self.assertEqual(len(a), 8 * a.nbytes)
+            self.assertEqual(a.padbits, 0)
         else:
             # the allocated memory is always larger than the buffer size
-            self.assertTrue(alloc >= nbytes)
+            self.assertTrue(info.alloc >= info.nbytes)
 
-        if ptr == 0:
+        if info.address == 0:
             # the buffer being a NULL pointer implies that the buffer size
             # and the allocated memory size are 0
-            self.assertEqual(nbytes, 0)
-            self.assertEqual(alloc, 0)
+            self.assertEqual(info.nbytes, 0)
+            self.assertEqual(info.alloc, 0)
 
         if type(a) == frozenbitarray:
             # frozenbitarray have read-only memory
-            self.assertEqual(readonly, 1)
-            if padbits:  # ensure padbits are zero
-                b = bitarray(bytes(a)[-1:], endian=endian)[-padbits:]
-                self.assertEqual(len(b), padbits)
+            self.assertEqual(a.readonly, 1)
+            if a.padbits:  # ensure padbits are zero
+                b = bitarray(bytes(a)[-1:], endian=a.endian)[-a.padbits:]
+                self.assertEqual(len(b), a.padbits)
                 self.assertEqual(b.count(), 0)
-        elif not buf:
+        elif not info.imported:
             self.assertFalse(isinstance(a, frozenbitarray))
             # otherwise, unless the buffer is imported, it is writable
-            self.assertEqual(readonly, 0)
+            self.assertFalse(a.readonly)
 
     def assertEQUAL(self, a, b):
         self.assertEqual(a, b)
@@ -559,7 +541,7 @@ class ToObjectsTests(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
-class MetaDataTests(unittest.TestCase):
+class BufferInfoTests(unittest.TestCase):
 
     def test_buffer_info(self):
         a = bitarray(13, endian='little')
@@ -568,28 +550,20 @@ class MetaDataTests(unittest.TestCase):
         info = a.buffer_info()
         self.assertTrue(isinstance(info, tuple))
         self.assertEqual(type(info), BufferInfo)
-        self.assertEqual(type(info.address), int)
-        self.assertEqual(type(info.nbytes), int)
-        self.assertEqual(type(info.endian), str)
-        self.assertEqual(type(info.padbits), int)
-        self.assertEqual(type(info.alloc), int)
-        self.assertEqual(type(info.readonly), bool)
-        self.assertEqual(type(info.imported), bool)
-        self.assertEqual(type(info.exports), int)
         self.assertEqual(len(info), 8)
-        for i, item in enumerate(info):
-            if i == 2:
-                tp = str
-            elif i in (5, 6):
-                tp = bool
-            else:
-                tp = int
-            self.assertEqual(type(item), tp)
 
-    def test_endian(self):
-        for endian in 'big', 'little':
-            a = bitarray(endian=endian)
-            self.assertEqual(a.endian, endian)
+        for i, (item, tp) in enumerate([
+                (info.address, int),
+                (info.nbytes, int),
+                (info.endian, str),
+                (info.padbits, int),
+                (info.alloc, int),
+                (info.readonly, bool),
+                (info.imported, bool),
+                (info.exports, int),
+        ]):
+            self.assertEqual(type(item), tp)
+            self.assertEqual(info[i], item)
 
 # -------------------------- (Number) index tests ---------------------------
 
@@ -3956,12 +3930,21 @@ class BytesTests(unittest.TestCase, Util):
 
 class DescriptorTests(unittest.TestCase, Util):
 
+    def test_endian(self):
+        for endian in "little", "big":
+            a = bitarray('1101100', endian)
+            self.assertEqual(a.endian, endian)
+            self.assertEqual(type(a.endian), str)
+
     def test_nbytes_padbits(self):
-        for a in self.randombitarrays():
-            self.assertEqual(a.nbytes, bits2bytes(len(a)))
-            self.assertEqual(a.padbits, 8 * a.nbytes - len(a))
-            self.assertTrue(0 <= a.padbits < 8)
+        for n in range(50):
+            a = bitarray(n)
+            # .nbytes
+            self.assertEqual(a.nbytes, bits2bytes(n))
             self.assertEqual(type(a.nbytes), int)
+            # .padbits
+            self.assertEqual(a.padbits, 8 * a.nbytes - n)
+            self.assertTrue(0 <= a.padbits < 8)
             self.assertEqual(type(a.padbits), int)
 
     def test_readonly(self):
@@ -4086,7 +4069,7 @@ class FileTests(unittest.TestCase, Util):
             with open(self.tmpfname, 'rb') as fi:
                 a.fromfile(fi)
             self.assertEqual(len(a), 8 * N)
-            self.assertEqual(buffer_info(a, 'size'), N)
+            self.assertEqual(a.buffer_info().nbytes, N)
             self.assertEqual(a.tobytes(), data)
             self.check_obj(a)
 
@@ -4234,9 +4217,9 @@ class FileTests(unittest.TestCase, Util):
         with open(self.tmpfname, 'r+b') as f:  # see issue #141
             with mmap.mmap(f.fileno(), 0) as mapping:
                 a = bitarray(buffer=mapping, endian='little')
-                info = buffer_info(a)
-                self.assertFalse(info['readonly'])
-                self.assertTrue(info['imported'])
+                info = a.buffer_info()
+                self.assertFalse(info.readonly)
+                self.assertTrue(info.imported)
                 self.assertEqual(a, zeros(8000))
                 a[::2] = True
                 # not sure this is necessary, without 'del a', I get:
@@ -4253,9 +4236,9 @@ class FileTests(unittest.TestCase, Util):
 
         with open(self.tmpfname, 'r+b') as f:
             a = bitarray(buffer=mmap.mmap(f.fileno(), 0), endian='little')
-            info = buffer_info(a)
-            self.assertFalse(info['readonly'])
-            self.assertTrue(info['imported'])
+            info = a.buffer_info()
+            self.assertFalse(info.readonly)
+            self.assertTrue(info.imported)
             self.assertEqual(a, 1000 * bitarray('0100 0100'))
             a[::4] = 1
 
@@ -4269,9 +4252,9 @@ class FileTests(unittest.TestCase, Util):
         with open(self.tmpfname, 'rb') as fi:  # readonly
             m = mmap.mmap(fi.fileno(), 0, access=mmap.ACCESS_READ)
             a = bitarray(buffer=m, endian='big')
-            info = buffer_info(a)
-            self.assertTrue(info['readonly'])
-            self.assertTrue(info['imported'])
+            info = a.buffer_info()
+            self.assertTrue(info.readonly)
+            self.assertTrue(info.imported)
             self.assertRaisesMessage(TypeError,
                                      "cannot modify read-only memory",
                                      a.__setitem__, 0, 1)
@@ -4633,10 +4616,10 @@ class BufferImportTests(unittest.TestCase, Util):
         b = 100 * b'\0'
         a = bitarray(buffer=b)
 
-        info = buffer_info(a)
-        self.assertFalse(info['allocated'])
-        self.assertTrue(info['readonly'])
-        self.assertTrue(info['imported'])
+        info = a.buffer_info()
+        self.assertFalse(info.alloc)
+        self.assertTrue(info.readonly)
+        self.assertTrue(info.imported)
 
         self.assertRaises(TypeError, a.setall, 1)
         self.assertRaises(TypeError, a.clear)
@@ -4648,10 +4631,10 @@ class BufferImportTests(unittest.TestCase, Util):
         b = bytearray(100 * [0])
         a = bitarray(buffer=b, endian='little')
 
-        info = buffer_info(a)
-        self.assertFalse(info['allocated'])
-        self.assertFalse(info['readonly'])
-        self.assertTrue(info['imported'])
+        info = a.buffer_info()
+        self.assertFalse(info.alloc)
+        self.assertFalse(info.readonly)
+        self.assertTrue(info.imported)
 
         a[0] = 1
         self.assertEqual(b[0], 1)
@@ -4688,14 +4671,14 @@ class BufferImportTests(unittest.TestCase, Util):
         # a and b are two distinct bitarrays that share the same buffer now
         self.assertFalse(a is b)
 
-        a_info = buffer_info(a)
-        self.assertFalse(a_info['imported'])
-        self.assertEqual(a_info['exports'], 1)
-        b_info = buffer_info(b)
-        self.assertTrue(b_info['imported'])
-        self.assertEqual(b_info['exports'], 0)
+        a_info = a.buffer_info()
+        self.assertFalse(a_info.imported)
+        self.assertEqual(a_info.exports, 1)
+        b_info = b.buffer_info()
+        self.assertTrue(b_info.imported)
+        self.assertEqual(b_info.exports, 0)
         # buffer address is the same
-        self.assertEqual(a_info['address'], b_info['address'])
+        self.assertEqual(a_info.address, b_info.address)
 
         self.assertFalse(a is b)
         self.assertEqual(a, b)
@@ -4730,11 +4713,11 @@ class BufferImportTests(unittest.TestCase, Util):
     def test_bitarray_shared_sections(self):
         a = urandom_2(0x2000, 'big')
         b = bitarray(buffer=memoryview(a)[0x100:0x300])
-        self.assertEqual(buffer_info(b, 'address'),
-                         buffer_info(a, 'address') + 0x100)
+        self.assertEqual(b.buffer_info().address,
+                         a.buffer_info().address + 0x100)
         c = bitarray(buffer=memoryview(a)[0x200:0x800])
-        self.assertEqual(buffer_info(c, 'address'),
-                         buffer_info(a, 'address') + 0x200)
+        self.assertEqual(c.buffer_info().address,
+                         a.buffer_info().address + 0x200)
         self.assertEqual(a[8 * 0x100 : 8 * 0x300], b)
         self.assertEqual(a[8 * 0x200 : 8 * 0x800], c)
         a.setall(0)
@@ -4798,9 +4781,9 @@ class BufferImportTests(unittest.TestCase, Util):
     @skipIf(is_pypy)
     def test_readonly_errors(self):
         a = bitarray(buffer=b'A')
-        info = buffer_info(a)
-        self.assertTrue(info['readonly'])
-        self.assertTrue(info['imported'])
+        info = a.buffer_info()
+        self.assertTrue(info.readonly)
+        self.assertTrue(info.imported)
 
         self.assertRaises(TypeError, a.append, True)
         self.assertRaises(TypeError, a.bytereverse)
@@ -4830,9 +4813,9 @@ class BufferImportTests(unittest.TestCase, Util):
     @skipIf(is_pypy)
     def test_resize_errors(self):
         a = bitarray(buffer=bytearray([123]))
-        info = buffer_info(a)
-        self.assertFalse(info['readonly'])
-        self.assertTrue(info['imported'])
+        info = a.buffer_info()
+        self.assertFalse(info.readonly)
+        self.assertTrue(info.imported)
 
         self.assertRaises(BufferError, a.append, True)
         self.assertRaises(BufferError, a.clear)
@@ -4854,7 +4837,7 @@ class BufferExportTests(unittest.TestCase, Util):
         a = bitarray('01000001 01000010 01000011', endian='big')
         v = memoryview(a)
         self.assertFalse(v.readonly)
-        self.assertEqual(buffer_info(a, 'exports'), 1)
+        self.assertEqual(a.buffer_info().exports, 1)
         self.assertEqual(len(v), 3)
         self.assertEqual(v[0], 65)
         self.assertEqual(v.tobytes(), b'ABC')
@@ -4863,7 +4846,7 @@ class BufferExportTests(unittest.TestCase, Util):
 
         w = memoryview(a)  # a second buffer export
         self.assertFalse(w.readonly)
-        self.assertEqual(buffer_info(a, 'exports'), 2)
+        self.assertEqual(a.buffer_info().exports, 2)
         self.check_obj(a)
 
     def test_many_exports(self):
@@ -4871,7 +4854,7 @@ class BufferExportTests(unittest.TestCase, Util):
         d = {}  # put bitarrays in dict to key object around
         for n in range(1, 20):
             d[n] = bitarray(buffer=a)
-            self.assertEqual(buffer_info(a, 'exports'), n)
+            self.assertEqual(a.buffer_info().exports, n)
             self.assertEqual(len(d[n]), 16)
         self.check_obj(a)
 
@@ -4880,10 +4863,10 @@ class BufferExportTests(unittest.TestCase, Util):
             a = bitarray(n)
             v = memoryview(a)
             self.assertEqual(len(v), a.nbytes)
-            info = buffer_info(a)
-            self.assertFalse(info['readonly'])
-            self.assertFalse(info['imported'])
-            self.assertEqual(info['exports'], 1)
+            info = a.buffer_info()
+            self.assertFalse(info.readonly)
+            self.assertFalse(info.imported)
+            self.assertEqual(info.exports, 1)
             self.check_obj(a)
 
     def test_read_random(self):
@@ -5078,9 +5061,9 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
         b = bytes([15, 95, 128])
         a = frozenbitarray(buffer=b, endian='big')
         self.assertEQUAL(a, bitarray('00001111 01011111 10000000', 'big'))
-        info = buffer_info(a)
-        self.assertTrue(info['readonly'])
-        self.assertTrue(info['imported'])
+        info = a.buffer_info()
+        self.assertTrue(info.readonly)
+        self.assertTrue(info.imported)
 
     @skipIf(is_pypy)
     def test_buffer_import_writable(self):
