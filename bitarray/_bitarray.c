@@ -4174,11 +4174,13 @@ sysinfo(PyObject *module, PyObject *args)
     if (strcmp(key, k) == 0)                \
         return PyLong_FromLong((long) (v))
 
-    R("void", sizeof(void *));
+    R("void*", sizeof(void *));
     R("size_t", sizeof(size_t));
     R("bitarrayobject", sizeof(bitarrayobject));
     R("decodetreeobject", sizeof(decodetreeobject));
     R("binode", sizeof(binode));
+    R("PY_LITTLE_ENDIAN", PY_LITTLE_ENDIAN);
+    R("PY_BIG_ENDIAN", PY_BIG_ENDIAN);
     R("HAVE_BUILTIN_BSWAP64", HAVE_BUILTIN_BSWAP64);
 #ifndef NDEBUG
     R("DEBUG", 1);
@@ -4186,7 +4188,7 @@ sysinfo(PyObject *module, PyObject *args)
     R("DEBUG", 0);
 #endif
 
-    return PyErr_Format(PyExc_ValueError, "unexpected key '%s'", key);
+    return PyErr_Format(PyExc_KeyError, "%s", key);
 #undef R
 }
 

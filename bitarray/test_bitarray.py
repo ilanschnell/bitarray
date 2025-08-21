@@ -40,7 +40,7 @@ def skipIf(condition):
         return lambda f: None
     return lambda f: f
 
-PTRSIZE = sysinfo("void")  # pointer size in bytes
+PTRSIZE = sysinfo("void*")  # pointer size in bytes
 
 # avoid importing from bitarray.util
 zeros = bitarray
@@ -156,17 +156,19 @@ class ModuleFunctionsTests(unittest.TestCase, Util):
         self.assertEqual(type(__version__), str)
 
     def test_sysinfo(self):
-        self.assertEqual(sysinfo("void"), PTRSIZE)
+        self.assertEqual(sysinfo("void*"), PTRSIZE)
         self.assertEqual(sysinfo("size_t"), PTRSIZE)
 
-        for key in ["void", "size_t", "bitarrayobject", "decodetreeobject",
-                    "binode", "HAVE_BUILTIN_BSWAP64", "DEBUG"]:
+        for key in ["void*", "size_t", "bitarrayobject", "decodetreeobject",
+                    "binode", "HAVE_BUILTIN_BSWAP64", "PY_LITTLE_ENDIAN",
+                    "PY_BIG_ENDIAN", "DEBUG"]:
             res = sysinfo(key)
             self.assertEqual(type(res), int)
 
+    def test_sysinfo_errors(self):
         self.assertRaises(TypeError, sysinfo)
-        self.assertRaises(TypeError, sysinfo, b"void")
-        self.assertRaises(ValueError, sysinfo, "foo")
+        self.assertRaises(TypeError, sysinfo, b"void*")
+        self.assertRaises(KeyError, sysinfo, "foo")
 
     @skipIf(is_pypy)  # PyPy doesn't have tuple.__itemsize__
     def test_itemsize(self):
@@ -175,10 +177,13 @@ class ModuleFunctionsTests(unittest.TestCase, Util):
     def test_maxsize(self):
         self.assertEqual(sys.maxsize, 2 ** (8 * PTRSIZE - 1) - 1)
 
+    def test_byteorder(self):
+        self.assertEqual(sys.byteorder == "little",
+                         sysinfo("PY_LITTLE_ENDIAN"))
+        self.assertEqual(sys.byteorder == "big",
+                         sysinfo("PY_BIG_ENDIAN"))
+
     def test_set_default_endian(self):
-        self.assertRaises(TypeError, _set_default_endian, 0)
-        self.assertRaises(TypeError, _set_default_endian, 'little', 0)
-        self.assertRaises(ValueError, _set_default_endian, 'foo')
         for default_endian in 'big', 'little':
             _set_default_endian(default_endian)
             a = bitarray()
@@ -192,10 +197,15 @@ class ModuleFunctionsTests(unittest.TestCase, Util):
                 self.assertEqual(a.endian,
                                  default_endian if endian is None else endian)
 
-            # make sure that calling _set_default_endian wrong does not
+            # make sure that wrong calling _set_default_endian() does not
             # change the default endianness
             self.assertRaises(ValueError, _set_default_endian, 'foobar')
             self.assertEqual(bitarray().endian, default_endian)
+
+    def test_set_default_endian_errors(self):
+        self.assertRaises(TypeError, _set_default_endian, 0)
+        self.assertRaises(TypeError, _set_default_endian, 'little', 0)
+        self.assertRaises(ValueError, _set_default_endian, 'foo')
 
     def test_get_default_endian(self):
         # takes no arguments
