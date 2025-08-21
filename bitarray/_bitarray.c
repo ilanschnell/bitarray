@@ -4170,30 +4170,30 @@ sysinfo(PyObject *module, PyObject *args)
     if (!PyArg_ParseTuple(args, "s:_sysinfo", &key))
         return NULL;
 
-#define RK(k, v)                            \
+#define R(k, v)                             \
     if (strcmp(key, k) == 0)                \
         return PyLong_FromLong((long) (v))
 
-    RK("void", sizeof(void *));
-    RK("size_t", sizeof(size_t));
-    RK("bitarrayobject", sizeof(bitarrayobject));
-    RK("decodetree", sizeof(decodetreeobject));
-    RK("binode", sizeof(binode));
-    RK("HAVE_BUILTIN_BSWAP64", HAVE_BUILTIN_BSWAP64);
+    R("void", sizeof(void *));
+    R("size_t", sizeof(size_t));
+    R("bitarrayobject", sizeof(bitarrayobject));
+    R("decodetreeobject", sizeof(decodetreeobject));
+    R("binode", sizeof(binode));
+    R("HAVE_BUILTIN_BSWAP64", HAVE_BUILTIN_BSWAP64);
 #ifndef NDEBUG
-    RK("DEBUG", 1);
+    R("DEBUG", 1);
 #else
-    RK("DEBUG", 0);
+    R("DEBUG", 0);
 #endif
 
     return PyErr_Format(PyExc_ValueError, "unexpected key '%s'", key);
-#undef RK
+#undef R
 }
 
 PyDoc_STRVAR(sysinfo_doc,
 "_sysinfo(key) -> int\n\
 \n\
-Return system specific information given a key.");
+Return system and compile specific information given a key.");
 
 
 static PyMethodDef module_functions[] = {

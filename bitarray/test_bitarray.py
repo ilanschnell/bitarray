@@ -159,20 +159,21 @@ class ModuleFunctionsTests(unittest.TestCase, Util):
         self.assertEqual(sysinfo("void"), PTRSIZE)
         self.assertEqual(sysinfo("size_t"), PTRSIZE)
 
-        for key in ["void", "size_t", "bitarrayobject", "decodetree",
+        for key in ["void", "size_t", "bitarrayobject", "decodetreeobject",
                     "binode", "HAVE_BUILTIN_BSWAP64", "DEBUG"]:
             res = sysinfo(key)
             self.assertEqual(type(res), int)
 
+        self.assertRaises(TypeError, sysinfo)
         self.assertRaises(TypeError, sysinfo, b"void")
         self.assertRaises(ValueError, sysinfo, "foo")
 
     @skipIf(is_pypy)  # PyPy doesn't have tuple.__itemsize__
-    def test_ptrsize(self):
+    def test_itemsize(self):
         self.assertEqual(PTRSIZE, tuple.__itemsize__)
 
     def test_maxsize(self):
-        self.assertEqual(sys.maxsize, 2 ** (PTRSIZE * 8 - 1) - 1)
+        self.assertEqual(sys.maxsize, 2 ** (8 * PTRSIZE - 1) - 1)
 
     def test_set_default_endian(self):
         self.assertRaises(TypeError, _set_default_endian, 0)
