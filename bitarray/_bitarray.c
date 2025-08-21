@@ -4163,35 +4163,37 @@ Set the default bit-endianness for new bitarray objects being created.");
 
 
 static PyObject *
-sysinfo(PyObject *module)
+sysinfo(PyObject *module, PyObject *args)
 {
-    return Py_BuildValue("iiiiiii",
-                         (int) sizeof(void *),
-                         (int) sizeof(size_t),
-                         (int) sizeof(bitarrayobject),
-                         (int) sizeof(decodetreeobject),
-                         (int) sizeof(binode),
-                         (int) HAVE_BUILTIN_BSWAP64,
+    char *key;
+
+    if (!PyArg_ParseTuple(args, "s:_sysinfo", &key))
+        return NULL;
+
+#define RK(k, v)                            \
+    if (strcmp(key, k) == 0)                \
+        return PyLong_FromLong((long) (v))
+
+    RK("void", sizeof(void *));
+    RK("size_t", sizeof(size_t));
+    RK("bitarrayobject", sizeof(bitarrayobject));
+    RK("decodetree", sizeof(decodetreeobject));
+    RK("binode", sizeof(binode));
+    RK("HAVE_BUILTIN_BSWAP64", HAVE_BUILTIN_BSWAP64);
 #ifndef NDEBUG
-                         1
+    RK("DEBUG", 1);
 #else
-                         0
+    RK("DEBUG", 0);
 #endif
-                         );
+
+    return PyErr_Format(PyExc_ValueError, "unexpected key '%s'", key);
+#undef RK
 }
 
 PyDoc_STRVAR(sysinfo_doc,
-"_sysinfo() -> tuple\n\
+"_sysinfo(key) -> int\n\
 \n\
-Return tuple containing:\n\
-\n\
-0. sizeof(void *)\n\
-1. sizeof(size_t)\n\
-2. sizeof(bitarrayobject)\n\
-3. sizeof(decodetreeobject)\n\
-4. sizeof(binode)\n\
-5. HAVE_BUILTIN_BSWAP64\n\
-6. NDEBUG not defined");
+Return system specific information given a key.");
 
 
 static PyMethodDef module_functions[] = {
@@ -4204,7 +4206,7 @@ static PyMethodDef module_functions[] = {
      get_default_endian_doc},
     {"_set_default_endian", (PyCFunction) set_default_endian, METH_VARARGS,
      set_default_endian_doc},
-    {"_sysinfo",            (PyCFunction) sysinfo,            METH_NOARGS,
+    {"_sysinfo",            (PyCFunction) sysinfo,            METH_VARARGS,
      sysinfo_doc},
     {NULL,                  NULL}  /* sentinel */
 };

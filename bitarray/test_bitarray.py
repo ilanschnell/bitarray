@@ -31,8 +31,8 @@ is_pypy = bool(platform.python_implementation() == 'PyPy')
 
 from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian,
-                      _bitarray_reconstructor, _sysinfo, BufferInfo,
-                      __version__)
+                      _bitarray_reconstructor, _sysinfo as sysinfo,
+                      BufferInfo, __version__)
 
 def skipIf(condition):
     "Skip a test if the condition is true."
@@ -40,8 +40,7 @@ def skipIf(condition):
         return lambda f: None
     return lambda f: f
 
-SYSINFO = _sysinfo()
-PTRSIZE = SYSINFO[0]  # pointer size in bytes
+PTRSIZE = sysinfo("void")  # pointer size in bytes
 
 # avoid importing from bitarray.util
 zeros = bitarray
@@ -157,13 +156,16 @@ class ModuleFunctionsTests(unittest.TestCase, Util):
         self.assertEqual(type(__version__), str)
 
     def test_sysinfo(self):
-        info = _sysinfo()
-        self.assertEqual(info[0], PTRSIZE)
-        self.assertEqual(info[1], PTRSIZE)
+        self.assertEqual(sysinfo("void"), PTRSIZE)
+        self.assertEqual(sysinfo("size_t"), PTRSIZE)
 
-        self.assertEqual(type(info), tuple)
-        for x in info:
-            self.assertEqual(type(x), int)
+        for key in ["void", "size_t", "bitarrayobject", "decodetree",
+                    "binode", "HAVE_BUILTIN_BSWAP64", "DEBUG"]:
+            res = sysinfo(key)
+            self.assertEqual(type(res), int)
+
+        self.assertRaises(TypeError, sysinfo, b"void")
+        self.assertRaises(ValueError, sysinfo, "foo")
 
     @skipIf(is_pypy)  # PyPy doesn't have tuple.__itemsize__
     def test_ptrsize(self):
@@ -5150,13 +5152,13 @@ def run(verbosity=1):
     print('bitarray version: %s' % __version__)
     print('sys.version: %s' % sys.version)
     print('sys.prefix: %s' % sys.prefix)
-    print('pointer size: %d bit' % (8 * SYSINFO[0]))
-    print('sizeof(size_t): %d' % SYSINFO[1])
-    print('sizeof(bitarrayobject): %d' % SYSINFO[2])
-    print('HAVE_BUILTIN_BSWAP64: %d' % SYSINFO[5])
+    print('pointer size: %d bit' % (8 * PTRSIZE))
+    print('sizeof(size_t): %d' % sysinfo("size_t"));
+    print('sizeof(bitarrayobject): %d' % sysinfo("bitarrayobject"))
+    print('HAVE_BUILTIN_BSWAP64: %d' % sysinfo("HAVE_BUILTIN_BSWAP64"))
     print('default bit-endianness: %s' % default_endian)
     print('machine byte-order: %s' % sys.byteorder)
-    print('debug build: %s' % SYSINFO[6])
+    print('DEBUG: %s' % sysinfo("DEBUG"))
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
     suite.addTests(loader.loadTestsFromModule(sys.modules[__name__]))
