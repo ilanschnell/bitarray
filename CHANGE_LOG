@@ -4,6 +4,7 @@
     prime numbers
   * improve `.buffer_info()` to return named tuple
   * add optional `mode` argument to `util.sum_indices()`
+  * improve internal `_sysinfo()` to include `Py_DEBUG`
   * add [Dubner's conjecture](../examples/dubner.rst) (in memory of Harvey
     Dubner)
   * add [dynamically growing sieve](../examples/dyn_sieve.rst)

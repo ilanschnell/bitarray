@@ -147,37 +147,32 @@ class Util(object):
             if msg != str(e):
                 raise AssertionError("message: %s\n got: %s" % (msg, e))
 
-# ---------------------------------------------------------------------------
+# --------------------------  Module Functions  -----------------------------
 
-class ModuleFunctionsTests(unittest.TestCase, Util):
+class ModuleFunctionsTests(unittest.TestCase):
 
     def test_version_string(self):
         # the version string is not a function, but test it here anyway
         self.assertEqual(type(__version__), str)
 
     def test_sysinfo(self):
-        self.assertEqual(sysinfo("void*"), PTRSIZE)
-        self.assertEqual(sysinfo("size_t"), PTRSIZE)
-
         for key in ["void*", "size_t", "bitarrayobject", "decodetreeobject",
                     "binode", "HAVE_BUILTIN_BSWAP64", "PY_LITTLE_ENDIAN",
-                    "PY_BIG_ENDIAN", "DEBUG"]:
+                    "PY_BIG_ENDIAN", "Py_DEBUG", "DEBUG"]:
             res = sysinfo(key)
             self.assertEqual(type(res), int)
 
-    def test_sysinfo_errors(self):
         self.assertRaises(TypeError, sysinfo)
         self.assertRaises(TypeError, sysinfo, b"void*")
         self.assertRaises(KeyError, sysinfo, "foo")
 
-    @skipIf(is_pypy)  # PyPy doesn't have tuple.__itemsize__
-    def test_itemsize(self):
-        self.assertEqual(PTRSIZE, tuple.__itemsize__)
-
-    def test_maxsize(self):
+    def test_sysinfo_values(self):
+        self.assertEqual(sysinfo("void*"), PTRSIZE)
+        self.assertEqual(sysinfo("size_t"), PTRSIZE)
         self.assertEqual(sys.maxsize, 2 ** (8 * PTRSIZE - 1) - 1)
+        if not is_pypy:  # PyPy doesn't have tuple.__itemsize__
+            self.assertEqual(PTRSIZE, tuple.__itemsize__)
 
-    def test_byteorder(self):
         self.assertEqual(sys.byteorder == "little",
                          sysinfo("PY_LITTLE_ENDIAN"))
         self.assertEqual(sys.byteorder == "big",
@@ -546,32 +541,6 @@ class ToObjectsTests(unittest.TestCase, Util):
     def test_set(self):
         for a in self.randombitarrays():
             self.assertEqual(set(a), set(a.tolist()))
-
-# ---------------------------------------------------------------------------
-
-class BufferInfoTests(unittest.TestCase):
-
-    def test_buffer_info(self):
-        a = bitarray(13, endian='little')
-        self.assertEqual(a.buffer_info()[1:4], (2, 'little', 3))
-
-        info = a.buffer_info()
-        self.assertTrue(isinstance(info, tuple))
-        self.assertEqual(type(info), BufferInfo)
-        self.assertEqual(len(info), 8)
-
-        for i, (item, tp) in enumerate([
-                (info.address, int),
-                (info.nbytes, int),
-                (info.endian, str),
-                (info.padbits, int),
-                (info.alloc, int),
-                (info.readonly, bool),
-                (info.imported, bool),
-                (info.exports, int),
-        ]):
-            self.assertEqual(type(item), tp)
-            self.assertEqual(info[i], item)
 
 # -------------------------- (Number) index tests ---------------------------
 
@@ -2731,6 +2700,30 @@ class AppendTests(unittest.TestCase, Util):
             b.append(a[i])
             self.assertEQUAL(b, a[:i+1])
         self.check_obj(b)
+
+class BufferInfoTests(unittest.TestCase):
+
+    def test_buffer_info(self):
+        a = bitarray(13, endian='little')
+        self.assertEqual(a.buffer_info()[1:4], (2, 'little', 3))
+
+        info = a.buffer_info()
+        self.assertTrue(isinstance(info, tuple))
+        self.assertEqual(type(info), BufferInfo)
+        self.assertEqual(len(info), 8)
+
+        for i, (item, tp) in enumerate([
+                (info.address, int),
+                (info.nbytes, int),
+                (info.endian, str),
+                (info.padbits, int),
+                (info.alloc, int),
+                (info.readonly, bool),
+                (info.imported, bool),
+                (info.exports, int),
+        ]):
+            self.assertEqual(type(item), tp)
+            self.assertEqual(info[i], item)
 
 class InsertTests(unittest.TestCase, Util):
 
@@ -5169,6 +5162,7 @@ def run(verbosity=1):
     print('HAVE_BUILTIN_BSWAP64: %d' % sysinfo("HAVE_BUILTIN_BSWAP64"))
     print('default bit-endianness: %s' % default_endian)
     print('machine byte-order: %s' % sys.byteorder)
+    print('Py_DEBUG: %s' % sysinfo("Py_DEBUG"))
     print('DEBUG: %s' % sysinfo("DEBUG"))
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()

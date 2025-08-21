@@ -4182,7 +4182,12 @@ sysinfo(PyObject *module, PyObject *args)
     R("PY_LITTLE_ENDIAN", PY_LITTLE_ENDIAN);
     R("PY_BIG_ENDIAN", PY_BIG_ENDIAN);
     R("HAVE_BUILTIN_BSWAP64", HAVE_BUILTIN_BSWAP64);
-#ifndef NDEBUG
+#ifdef Py_DEBUG          /* Python configured using --with-pydebug  */
+    R("Py_DEBUG", 1);
+#else
+    R("Py_DEBUG", 0);
+#endif
+#ifndef NDEBUG           /* bitarray compiled without -DNDEBUG */
     R("DEBUG", 1);
 #else
     R("DEBUG", 0);
