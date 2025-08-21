@@ -3,7 +3,7 @@ import sys
 import unittest
 from random import randint, randrange
 
-from bitarray import bitarray
+from bitarray import bitarray, _sysinfo
 from bitarray.util import zeros, ones, int2ba, parity
 
 from bitarray.test_bitarray import Util, urandom_2, skipIf, PTRSIZE
@@ -139,6 +139,12 @@ class ZLW_Tests(unittest.TestCase, Util):
             self.assertEqual(b, a[64 * q:] + zeros(64 - r))
 
 # ----------------------------  _bitarray.c  --------------------------------
+
+class SysInfo_Tests(unittest.TestCase):
+
+    def test_debug(self):
+        self.assertTrue(_sysinfo("DEBUG"))
+
 
 class ShiftR8_Tests(unittest.TestCase, Util):
 
