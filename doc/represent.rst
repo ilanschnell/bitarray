@@ -137,7 +137,7 @@ The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively:
 Note that ``ba2base(2, a)`` is equivalent to ``a.to01()`` and
 that ``ba2base(16, a)`` is equivalent to ``ba2hex(a)``.
 Unlike ``ba2hex()``, ``ba2base()`` does not take advantage of byte level
-operations and is therefore a slower, although it is still implemented in C.
+operations and is therefore slower, although it is also implemented in C.
 The inverse function is called ``base2ba()``.
 
 
