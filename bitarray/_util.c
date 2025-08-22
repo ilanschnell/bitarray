@@ -869,14 +869,18 @@ digit_to_int(int m, char c)
 static int
 base_to_length(int n)
 {
-    int m;
+    int m = 0;
 
-    for (m = 1; m < 7; m++) {
-        if (n == (1 << m))
-            return m;
+    if (!n || n & (n - 1)) {
+        PyErr_SetString(PyExc_ValueError, "base must be a power of 2");
+        return -1;
     }
-    PyErr_Format(PyExc_ValueError,
-                 "base must be 2, 4, 8, 16, 32 or 64, not %d", n);
+    while (n >>= 1)
+        m++;
+    if (1 <= m && m <= 6)
+        return m;
+
+    PyErr_SetString(PyExc_ValueError, "base must be 2, 4, 8, 16, 32 or 64");
     return -1;
 }
 
