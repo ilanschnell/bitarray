@@ -94,7 +94,7 @@ bitarrays ``a`` and ``b`` point to the same address:
 
     >>> def address(a):
     ...     info = a.buffer_info()
-    ...     return info[0]
+    ...     return info[0]  # using bitarray 3.7, we can also: info.address
     >>> assert address(a) == address(b)
 
 As bitarray's expose their buffer, we can also directly create a bitarray
