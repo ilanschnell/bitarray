@@ -1577,34 +1577,17 @@ class BaseTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, base2ba, None, '')
         self.assertRaises(TypeError, ba2base, 16.0, a)
         self.assertRaises(TypeError, base2ba, 16.0, '')
-        for i in range(-10, 100):
-            if i in (2, 4, 8, 16, 32, 64):
-                continue
-            self.assertRaises(ValueError, ba2base, i, a)
-            self.assertRaises(ValueError, base2ba, i, '')
+        for values, msg in [
+                ([-1023, -16, -1, 0, 3, 5, 31, 48, 63, 129, 511, 4123],
+                 "base must be a power of 2"),
+                ([1, 128, 256, 512, 1024, 2048, 4096, 8192],
+                 "base must be 2, 4, 8, 16, 32 or 64")]:
+            for i in values:
+                self.assertRaisesMessage(ValueError, msg, ba2base, i, a)
+                self.assertRaisesMessage(ValueError, msg, base2ba, i, '')
 
         self.assertRaises(TypeError, ba2base, 32, None)
         self.assertRaises(TypeError, base2ba, 32, None)
-
-    def test_binary(self):
-        a = base2ba(2, '1011')
-        self.assertEqual(a, bitarray('1011'))
-        self.assertEqual(ba2base(2, a), '1011')
-
-        for a in self.randombitarrays():
-            s = ba2base(2, a)
-            self.assertEqual(s, a.to01())
-            self.assertEQUAL(base2ba(2, s, a.endian), a)
-
-    def test_quaternary(self):
-        a = base2ba(4, '0123', 'big')
-        self.assertEqual(a, bitarray('00 01 10 11'))
-        self.assertEqual(ba2base(4, a), '0123')
-
-    def test_octal(self):
-        a = base2ba(8, '0147', 'big')
-        self.assertEqual(a, bitarray('000 001 100 111'))
-        self.assertEqual(ba2base(8, a), '0147')
 
     def test_hexadecimal(self):
         a = base2ba(16, 'F61', 'big')
@@ -1619,10 +1602,6 @@ class BaseTests(unittest.TestCase, Util):
             self.assertEqual(ba2base(16, a), ba2hex(a))
 
     def test_base32(self):
-        a = base2ba(32, '7SH', 'big')
-        self.assertEqual(a, bitarray('11111 10010 00111'))
-        self.assertEqual(ba2base(32, a), '7SH')
-
         msg = os.urandom(randint(10, 100) * 5)
         s = base64.b32encode(msg).decode()
         a = base2ba(32, s, 'big')
@@ -1630,15 +1609,36 @@ class BaseTests(unittest.TestCase, Util):
         self.assertEqual(ba2base(32, a), s)
 
     def test_base64(self):
-        a = base2ba(64, '/jH', 'big')
-        self.assertEqual(a, bitarray('111111 100011 000111'))
-        self.assertEqual(ba2base(64, a), '/jH')
-
         msg = os.urandom(randint(10, 100) * 3)
         s = base64.standard_b64encode(msg).decode()
         a = base2ba(64, s, 'big')
         self.assertEqual(a.tobytes(), msg)
         self.assertEqual(ba2base(64, a), s)
+
+    def test_primes(self):
+        primes = gen_primes(60, odd=True)
+        base_2 = primes.to01()
+        for n, endian, rep in [
+                ( 2, "little", base_2),
+                ( 2, "big",    base_2),
+                ( 4, "little", "232132030132012122122010132110"),
+                ( 4, "big",    "131231030231021211211020231220"),
+                ( 8, "little", "65554155441515405550"),
+                ( 8, "big",    "35551455114545105550"),
+                (16, "little", "e6bc4b46a921d61"),
+                (16, "big",    "76d32d265948b68"),
+                (32, "little", "O3SJLSJTSI3C"),
+                (32, "big",    "O3JS2JSZJC3I"),
+                (64, "little", "utMtkppEtF"),
+                (64, "big",    "dtMtJllIto"),
+        ]:
+            a = bitarray(primes, endian)
+            s = ba2base(n, a)
+            self.assertEqual(type(s), str)
+            self.assertEqual(s, rep)
+            b = base2ba(n, rep, endian)
+            self.assertEqual(b, a)
+            self.assertEqual(b.endian, endian)
 
     alphabets = [
     #    m   n  alphabet
