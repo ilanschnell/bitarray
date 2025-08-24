@@ -1,3 +1,7 @@
+2025-XX-XX   3.7.1:
+-------------------
+
+
 2025-08-24   3.7.0:
 -------------------
   * add `util.gen_primes()`, generate bitarrays in which active indices are
