@@ -40,6 +40,9 @@ The integer value (`ba2int()`) of the next permutation will always increase,
 except when the cycle is completed.  In that case, the lowest lexicographical
 permutation will be returned.
 """
+    if not __a:
+        return __a
+
     v = ba2int(__a)
     if v == 0:
         return __a
@@ -51,10 +54,10 @@ permutation will be returned.
     except OverflowError:
         return __a[::-1]
 
-# ---------------------------------------------------------------------------
+# ---------------------- lexicographical permutations -----------------------
 
+import math
 import unittest
-from math import comb
 from random import choice, getrandbits, randrange
 from itertools import pairwise
 
@@ -62,14 +65,13 @@ from bitarray import frozenbitarray
 from bitarray.util import random_k
 
 
-class PermTests(unittest.TestCase):
+class LexicoTests(unittest.TestCase):
 
     def test_errors(self):
         N = lexico_next
         self.assertRaises(TypeError, N)
         self.assertRaises(TypeError, N, bitarray('1'), 1)
         self.assertRaises(TypeError, N, '1')
-        self.assertRaises(ValueError, N, bitarray())
 
         A = lexico_all
         self.assertRaises(TypeError, A)
@@ -85,69 +87,81 @@ class PermTests(unittest.TestCase):
         self.assertRaises(ValueError, next, A(10, 7, endian='foo'))
 
     def test_zeros_ones(self):
-        for n in range(1, 30):
+        for n in range(30):
             endian = choice(["little", "big"])
-            v = getrandbits(1)
-
-            lst = list(lexico_all(n, v * n, endian))
-            self.assertEqual(len(lst), 1)
-            a = lst[0]
-            c = a.copy()
-            self.assertEqual(a.endian, endian)
-            self.assertEqual(len(a), n)
-            if v:
-                self.assertTrue(a.all())
-            else:
-                self.assertFalse(a.any())
-            self.assertEqual(lexico_next(a), a)
-            self.assertEqual(a, c)
+            a = bitarray(n, endian)
+            a.setall(getrandbits(1))
+            b = lexico_next(a)
+            self.assertEqual(b.endian, endian)
+            # nothing to permute
+            self.assertEqual(b, a)
 
     def test_next_explicit(self):
-        a = bitarray('00010011', 'big')
-        for s in ['00010101', '00010110', '00011001',
-                  '00011010', '00011100', '00100011']:
-            a = lexico_next(a)
-            self.assertEqual(a.count(), 3)
-            self.assertEqual(a, bitarray(s, 'big'))
+        for perm, endian in [
+                (['100', '010', '001', '100'], 'little'),
+                (['00001', '00010', '00100', '01000', '10000'], 'big'),
+                (['0011', '0101', '0110', '1001', '1010',
+                  '1100', '0011'], 'big'),
+                (['0000111', '1110000'], 'little'),
+        ]:
+            a = bitarray(perm[0], endian)
+            for s in perm[1:]:
+                a = lexico_next(a)
+                self.assertEqual(a, bitarray(s))
 
-    def test_next_turnover(self):
-        for a in [bitarray('11111110000', 'big'),
-                  bitarray('0000001111111', 'little')]:
-            self.assertEqual(lexico_next(a), a[::-1])
+    def check_cycle(self, n, k):
+        endian = choice(["little", "big"])
+        a0 = bitarray(n, endian)
+        a0[:k] = 1
+        if endian == "big":
+            a0.reverse()
 
-    def test_next_random(self):
-        for _ in range(100):
-            n = randrange(2, 1_000_000)
-            k = randrange(1, n)
-            a = random_k(n, k, endian=choice(["little", "big"]))
+        ncycle = math.comb(n, k)  # cycle length
+        self.assertTrue(ncycle >= 2)
+        coll = set()
+        a = a0.copy()
+        for i in range(ncycle):
+            coll.add(frozenbitarray(a))
             b = lexico_next(a)
             self.assertEqual(len(b), n)
             self.assertEqual(b.count(), k)
-            self.assertEqual(b.endian, a.endian)
+            self.assertEqual(b.endian, endian)
+            self.assertNotEqual(a, b)
+            if b == a0:
+                self.assertEqual(i, ncycle - 1)
+                self.assertTrue(ba2int(b) < ba2int(a))
+                break
+            self.assertTrue(ba2int(b) > ba2int(a))
+            a = b
+        else:
+            self.fail()
+
+        self.assertEqual(len(coll), ncycle)
+
+    def test_cycle(self):
+        for _ in range(20):
+            n = randrange(2, 10)
+            k = randrange(1, n)
+            self.check_cycle(n, k)
+
+    def test_next_random(self):
+        for _ in range(100):
+            endian = choice(["little", "big"])
+            n = randrange(2, 1_000)
+            k = randrange(1, n)
+            a = random_k(n, k, endian)
+            b = lexico_next(a)
+            self.assertEqual(len(b), n)
+            self.assertEqual(b.count(), k)
+            self.assertEqual(b.endian, endian)
             self.assertNotEqual(a, b)
             if ba2int(a) > ba2int(b):
-                print(n)
                 c = a.copy()
-                c.sort(c.endian == 'big')
+                c.sort(endian == 'big')
                 self.assertEqual(a, c)
                 self.assertEqual(b, a[::-1])
 
-    def check_perm_cycle(self, start):
-        n, k = len(start), start.count()
-        a = bitarray(start)
-        coll = set()
-        c = 0
-        while True:
-            a = lexico_next(a)
-            coll.add(frozenbitarray(a))
-            self.assertEqual(len(a), n)
-            self.assertEqual(a.count(), k)
-            self.assertEqual(a.endian, start.endian)
-            c += 1
-            if a == start:
-                break
-        self.assertEqual(c, comb(n, k))
-        self.assertEqual(len(coll), c)
+    # -------------------  lexico_all  -------------------
 
     def test_all_explicit(self):
         for n, k, res in [
@@ -164,7 +178,7 @@ class PermTests(unittest.TestCase):
                 (4, 2, ['0011', '0101', '0110', '1001', '1010', '1100']),
         ]:
             lst = list(lexico_all(n, k, 'big'))
-            self.assertEqual(len(lst), comb(n, k))
+            self.assertEqual(len(lst), math.comb(n, k))
             self.assertEqual(lst, [bitarray(s) for s in res])
             if n == 0:
                 continue
@@ -198,7 +212,7 @@ class PermTests(unittest.TestCase):
             prev = a
             cnt += 1
 
-        self.assertEqual(cnt, comb(n, k))
+        self.assertEqual(cnt, math.comb(n, k))
         self.assertEqual(len(coll), cnt)
 
         # a is now the last permutation
