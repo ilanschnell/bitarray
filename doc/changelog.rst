@@ -1,6 +1,19 @@
 Change log
 ==========
 
+**3.7.0** (2025-08-24):
+
+* add ``util.gen_primes()``, generate bitarrays in which active indices are
+  prime numbers
+* improve ``.buffer_info()`` to return named tuple
+* add optional ``mode`` argument to ``util.sum_indices()`` to sum square of
+  active indices
+* improve internal ``_sysinfo()`` to include ``Py_DEBUG``
+* add `Dubner's conjecture <../examples/dubner.rst>`__ (in memory of Harvey
+  Dubner)
+* add `dynamically growing sieve <../examples/dyn_sieve.rst>`__
+
+
 **3.6.1** (2025-08-12):
 
 * add development files for statistical tests in ``devel/random/``

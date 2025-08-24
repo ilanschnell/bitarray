@@ -27,7 +27,7 @@ Key features
 * Immutable ``frozenbitarray`` objects which are hashable
 * Sequential search
 * Type hinting
-* Extensive test suite with over 500 unittests
+* Extensive test suite with about 600 unittests
 * Utility module ``bitarray.util``:
 
   * conversion to and from hexadecimal strings
@@ -66,12 +66,13 @@ Once you have installed the package, you may want to test it:
     HAVE_BUILTIN_BSWAP64: 1
     default bit-endianness: big
     machine byte-order: little
-    debug build: 0
+    Py_DEBUG: 0
+    DEBUG: 0
     .........................................................................
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 596 tests in 0.166s
+    Ran 599 tests in 0.166s
 
     OK
 

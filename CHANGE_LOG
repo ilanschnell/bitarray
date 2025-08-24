@@ -1,9 +1,10 @@
-2025-08-XX   3.7.0:
+2025-08-24   3.7.0:
 -------------------
   * add `util.gen_primes()`, generate bitarrays in which active indices are
     prime numbers
   * improve `.buffer_info()` to return named tuple
-  * add optional `mode` argument to `util.sum_indices()`
+  * add optional `mode` argument to `util.sum_indices()` to sum square of
+    active indices
   * improve internal `_sysinfo()` to include `Py_DEBUG`
   * add [Dubner's conjecture](../examples/dubner.rst) (in memory of Harvey
     Dubner)

@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 3.6.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.7.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -40,34 +40,36 @@ bitarray methods:
 -----------------
 
 ``all()`` -> bool
-   Return True when all bits in bitarray are True.
-   Note that ``a.all()`` is faster than ``all(a)``.
+   Return ``True`` when all bits in bitarray are 1.
+   ``a.all()`` is a faster version of ``all(a)``.
 
 
 ``any()`` -> bool
-   Return True when any bit in bitarray is True.
-   Note that ``a.any()`` is faster than ``any(a)``.
+   Return ``True`` when any bit in bitarray is 1.
+   ``a.any()`` is a faster version of ``any(a)``.
 
 
 ``append(item, /)``
    Append ``item`` to the end of the bitarray.
 
 
-``buffer_info()`` -> tuple
-   Return a tuple containing:
+``buffer_info()`` -> BufferInfo
+   Return named tuple with following fields:
 
-   0. memory address of buffer
-   1. buffer size (in bytes)
-   2. bit-endianness as a Unicode string
-   3. number of pad bits
-   4. allocated memory for the buffer (in bytes)
-   5. memory is read-only
-   6. buffer is imported
-   7. number of buffer exports
+   0. ``address``: memory address of buffer
+   1. ``nbytes``: buffer size (in bytes)
+   2. ``endian``: bit-endianness as a string
+   3. ``padbits``: number of pad bits
+   4. ``alloc``: allocated memory for buffer (in bytes)
+   5. ``readonly``: memory is read-only (bool)
+   6. ``imported``: buffer is imported (bool)
+   7. ``exports``: number of buffer exports
+
+   New in version 3.7: return named tuple
 
 
 ``bytereverse(start=0, stop=<end of buffer>, /)``
-   For each byte in byte-range(start, stop) reverse bits in-place.
+   For each byte in byte-range(``start``, ``stop``) reverse bits in-place.
    The start and stop indices are given in terms of bytes (not bits).
    Also note that this method only changes the buffer; it does not change the
    bit-endianness of the bitarray object.  Pad bits are left unchanged such
@@ -77,13 +79,13 @@ bitarray methods:
 
 
 ``clear()``
-   Remove all items from the bitarray.
+   Remove all items from bitarray.
 
    New in version 1.4
 
 
 ``copy()`` -> bitarray
-   Return a copy of the bitarray.
+   Return copy of bitarray (with same bit-endianness).
 
 
 ``count(value=1, start=0, stop=<end>, step=1, /)`` -> int
@@ -119,7 +121,7 @@ bitarray methods:
 
 ``extend(iterable, /)``
    Append items from to the end of the bitarray.
-   If ``iterable`` is a Unicode string, each ``0`` and ``1`` are appended as
+   If ``iterable`` is a (Unicode) string, each ``0`` and ``1`` are appended as
    bits (ignoring whitespace and underscore).
 
    New in version 3.4: allow ``bytes`` object
@@ -159,7 +161,7 @@ bitarray methods:
 ``index(sub_bitarray, start=0, stop=<end>, /, right=False)`` -> int
    Return lowest (or rightmost when ``right=True``) index where sub_bitarray
    is found, such that sub_bitarray is contained within ``[start:stop]``.
-   Raises ``ValueError`` when the sub_bitarray is not present.
+   Raises ``ValueError`` when sub_bitarray is not present.
 
    New in version 2.9: add optional keyword argument ``right``
 
@@ -170,7 +172,7 @@ bitarray methods:
 
 ``invert(index=<all bits>, /)``
    Invert all bits in bitarray (in-place).
-   When the optional ``index`` is given, only invert the single bit at index.
+   When the optional ``index`` is given, only invert the single bit at ``index``.
 
    New in version 1.5.3: optional index argument
 
@@ -225,7 +227,7 @@ bitarray methods:
 
 
 ``to01(group=0, sep=' ')`` -> str
-   Return bitarray as Unicode string of '0's and '1's.
+   Return bitarray as (Unicode) string of ``0``s and ``1``s.
    The bits are grouped into ``group`` bits (default is no grouping).
    When grouped, the string ``sep`` is inserted between groups
    of ``group`` characters, default is a space.
@@ -234,11 +236,11 @@ bitarray methods:
 
 
 ``tobytes()`` -> bytes
-   Return the bitarray buffer in bytes (pad bits are set to zero).
+   Return the bitarray buffer (pad bits are set to zero).
 
 
 ``tofile(f, /)``
-   Write byte representation of bitarray to file object f.
+   Write bitarray buffer to file object ``f``.
 
 
 ``tolist()`` -> list
@@ -312,7 +314,7 @@ Functions defined in the `bitarray` module:
 
 
 ``test(verbosity=1)`` -> TextTestResult
-   Run self-test, and return unittest.runner.TextTestResult object.
+   Run self-test, and return ``unittest.runner.TextTestResult`` object.
 
 
 Functions defined in `bitarray.util` module:
@@ -370,7 +372,7 @@ This sub-module was added in version 1.2.
    New in version 3.3: ignore whitespace
 
 
-``byteswap(a, /, n=<buffer size>)``
+``byteswap(a, n=<buffer size>, /)``
    Reverse every ``n`` consecutive bytes of ``a`` in-place.
    By default, all bytes are reversed.  Note that ``n`` is not limited to 2, 4
    or 8, but can be any positive integer.
@@ -446,6 +448,15 @@ This sub-module was added in version 1.2.
    New in version 2.5.0: allow bytes-like argument
 
 
+``gen_primes(n, /, endian=None, odd=False)`` -> bitarray
+   Generate a bitarray of length ``n`` in which active indices are prime numbers.
+   By default (``odd=False``), active indices correspond to prime numbers directly.
+   When ``odd=True``, only odd prime numbers are represented in the resulting
+   bitarray ``a``, and ``a[i]`` corresponds to ``2*i+1`` being prime or not.
+
+   New in version 3.7
+
+
 ``hex2ba(hexstr, /, endian=None)`` -> bitarray
    Bitarray of hexadecimal representation.  hexstr may contain any number
    (including odd numbers) of hex digits (upper or lower case).
@@ -493,11 +504,9 @@ This sub-module was added in version 1.2.
 
 
 ``pprint(bitarray, /, stream=None, group=8, indent=4, width=80)``
-   Prints the formatted representation of object on ``stream`` (which defaults
-   to ``sys.stdout``).  By default, elements are grouped in bytes (8 elements),
-   and 8 bytes (64 elements) per line.
-   Non-bitarray objects are printed by the standard library
-   function ``pprint.pprint()``.
+   Pretty-print bitarray object to ``stream``, defaults is ``sys.stdout``.
+   By default, bits are grouped in bytes (8 bits), and 64 bits per line.
+   Non-bitarray objects are printed using ``pprint.pprint()``.
 
    New in version 1.8
 
@@ -532,7 +541,7 @@ This sub-module was added in version 1.2.
    New in version 3.5
 
 
-``sc_decode(stream)`` -> bitarray
+``sc_decode(stream, /)`` -> bitarray
    Decompress binary stream (an integer iterator, or bytes-like object) of a
    sparse compressed (``sc``) bitarray, and return the decoded  bitarray.
    This function consumes only one bitarray and leaves the remaining stream
@@ -575,11 +584,14 @@ This sub-module was added in version 1.2.
    iteration is stopped as soon as one mismatch is found.
 
 
-``sum_indices(a, /)`` -> int
+``sum_indices(a, /, mode=1)`` -> int
    Return sum of indices of all active bits in bitarray ``a``.
    Equivalent to ``sum(i for i, v in enumerate(a) if v)``.
+   ``mode=2`` sums square of indices.
 
    New in version 3.6
+
+   New in version 3.7: add optional mode argument
 
 
 ``urandom(n, /, endian=None)`` -> bitarray
