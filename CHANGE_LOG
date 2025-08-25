@@ -1,5 +1,6 @@
 2025-XX-XX   3.7.1:
 -------------------
+  * add [bit-endianness](endianness.rst) documentation
 
 
 2025-08-24   3.7.0:
@@ -12,7 +13,7 @@
   * improve internal `_sysinfo()` to include `Py_DEBUG`
   * add [Dubner's conjecture](../examples/dubner.rst) (in memory of Harvey
     Dubner)
-  * add [dynamically growing sieve](../examples/dyn_sieve.rst)
+  * add [dynamically growing sieve](../examples/dyn_sieve.py)
 
 
 2025-08-12   3.6.1:

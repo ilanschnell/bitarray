@@ -11,7 +11,7 @@ Change log
 * improve internal ``_sysinfo()`` to include ``Py_DEBUG``
 * add `Dubner's conjecture <../examples/dubner.rst>`__ (in memory of Harvey
   Dubner)
-* add `dynamically growing sieve <../examples/dyn_sieve.rst>`__
+* add `dynamically growing sieve <../examples/dyn_sieve.py>`__
 
 
 **3.6.1** (2025-08-12):
