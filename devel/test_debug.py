@@ -370,14 +370,14 @@ class DigitToInt_Tests(unittest.TestCase):
         for m, alphabet in self.alphabets:
             self.assertEqual(len(alphabet), 1 << m)
             for i, c in enumerate(alphabet):
-                self.assertEqual(_d2i(m, bytearray([c])), i)
+                self.assertEqual(_d2i(m, bytes([c])), i)
 
     def test_not_alphabets(self):
         for m, alphabet in self.alphabets:
             for c in range(256):
                 if c in alphabet or (m == 4 and c in b'abcdefABCDEF'):
                     continue
-                self.assertEqual(_d2i(m, bytearray([c])), -1)
+                self.assertEqual(_d2i(m, bytes([c])), -1)
 
 
 class RTS_Tests(unittest.TestCase):

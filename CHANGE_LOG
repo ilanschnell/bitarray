@@ -1,5 +1,6 @@
 2025-XX-XX   3.7.1:
 -------------------
+  * fix type hinting for memoryviews, see #241
   * add [bit-endianness](endianness.rst) documentation
 
 
