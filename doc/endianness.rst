@@ -1,0 +1,83 @@
+Bit-endianness
+--------------
+
+Unless explicitly converting to machine representation, i.e. initializing
+the buffer directly, using ``.tobytes()``, ``.frombytes()``, ``.tofile()``
+or ``.fromfile()``, as well as using ``memoryview()``, the bit-endianness
+will have no effect on any computation, and one can skip this section.
+
+Since bitarrays allows addressing individual bits, where the machine
+represents 8 bits in one byte, there are two obvious choices for this
+mapping: little-endian and big-endian.
+
+When dealing with the machine representation of bitarray objects, it is
+recommended to always explicitly specify the endianness.
+
+By default, bitarrays use big-endian representation:
+
+.. code-block:: python
+
+    >>> from bitarray import bitarray
+    >>> a = bitarray(b'A')
+    >>> a.endian
+    'big'
+    >>> a
+    bitarray('01000001')
+    >>> a[6] = 1
+    >>> a.tobytes()
+    b'C'
+
+Big-endian means that the most-significant bit comes first.
+Here, ``a[0]`` is the lowest address (index) and most significant bit,
+and ``a[7]`` is the highest address and least significant bit.
+
+When creating a new bitarray object, the endianness can always be
+specified explicitly:
+
+.. code-block:: python
+
+    >>> a = bitarray(b'A', endian='little')
+    >>> a
+    bitarray('10000010')
+    >>> a.endian
+    'little'
+
+Here, the low-bit comes first because little-endian means that increasing
+numeric significance corresponds to an increasing address.
+So ``a[0]`` is the lowest address and least significant bit,
+and ``a[7]`` is the highest address and most significant bit.
+
+The bit-endianness is a property of the bitarray object.
+The endianness cannot be changed once a bitarray object has been created.
+When comparing bitarray objects, the endianness (and hence the machine
+representation) is irrelevant; what matters is the mapping from indices
+to bits:
+
+.. code-block:: python
+
+    >>> bitarray('11001', endian='big') == bitarray('11001', endian='little')
+    True
+    >>> a = bitarray(b'\x01', endian='little')
+    >>> b = bitarray(b'\x80', endian='big')
+    >>> a == b
+    True
+    >>> a.tobytes() == b.tobytes()
+    False
+
+Bitwise operations (``|``, ``^``, ``&=``, ``|=``, ``^=``, ``~``) are
+implemented efficiently using the corresponding byte operations in C, i.e. the
+operators act on the machine representation of the bitarray objects.
+Therefore, it is not possible to perform bitwise operators on bitarrays
+with different endianness.
+
+As mentioned above, the endianness can not be changed once an object is
+created.  However, you can create a new bitarray with different endianness:
+
+.. code-block:: python
+
+    >>> a = bitarray('111000', endian='little')
+    >>> b = bitarray(a, endian='big')
+    >>> b
+    bitarray('111000')
+    >>> a == b
+    True
