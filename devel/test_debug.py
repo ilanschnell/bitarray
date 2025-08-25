@@ -12,7 +12,7 @@ from bitarray.test_bitarray import Util, urandom_2, skipIf, PTRSIZE
 
 from bitarray._util import (
     _setup_table, _zlw,                          # defined in bitarray.h
-    _cfw, _read_n, _write_n, _sc_rts, _SEGSIZE,  # defined in _util.h
+    _cfw, _d2i, _read_n, _write_n, _sc_rts, _SEGSIZE,       # _util.h
 )
 SEGBITS = 8 * _SEGSIZE
 
@@ -349,6 +349,35 @@ class CountFromWord_Tests(unittest.TestCase, Util):
             i = randrange(20)
             res = _cfw(a, i)
             self.assertEqual(res, a[64 * i:].count())
+
+
+class DigitToInt_Tests(unittest.TestCase):
+
+    # digit_to_int()
+
+    alphabets = [
+        (1, b'01'),
+        (2, b'0123'),
+        (3, b'01234567'),
+        (4, b'0123456789abcdef'),
+        (4, b'0123456789ABCDEF'),
+        (5, b'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'),
+        (6, b'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef'
+            b'ghijklmnopqrstuvwxyz0123456789+/'),
+    ]
+
+    def test_alphabets(self):
+        for m, alphabet in self.alphabets:
+            self.assertEqual(len(alphabet), 1 << m)
+            for i, c in enumerate(alphabet):
+                self.assertEqual(_d2i(m, bytearray([c])), i)
+
+    def test_not_alphabets(self):
+        for m, alphabet in self.alphabets:
+            for c in range(256):
+                if c in alphabet or (m == 4 and c in b'abcdefABCDEF'):
+                    continue
+                self.assertEqual(_d2i(m, bytearray([c])), -1)
 
 
 class RTS_Tests(unittest.TestCase):

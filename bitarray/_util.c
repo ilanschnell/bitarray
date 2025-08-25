@@ -837,7 +837,7 @@ static const char base64_alphabet[] =
 
 /* Given the length of the base m in [1..6] and a character c, return
    its index in the base 2**m alphabet , or -1 if when c is not included.
-   Note: i >> m checks if i is in range(0, 2**m) */
+   Note: i >> m is true when i is not in range(0, 2**m) */
 static int
 digit_to_int(int m, char c)
 {
@@ -2137,6 +2137,17 @@ module_cfw(PyObject *module, PyObject *args)  /* count_from_word() */
 }
 
 static PyObject *
+module_d2i(PyObject *module, PyObject *args)
+{
+    int m;
+    char c;
+
+    if (!PyArg_ParseTuple(args, "ic", &m, &c))
+        return NULL;
+    return PyLong_FromLong(digit_to_int(m, c));
+}
+
+static PyObject *
 module_read_n(PyObject *module, PyObject *args)
 {
     PyObject *iter;
@@ -2211,6 +2222,7 @@ static PyMethodDef module_functions[] = {
     {"_setup_table", (PyCFunction) module_setup_table, METH_O,       0},
     {"_zlw",         (PyCFunction) module_zlw,         METH_O,       0},
     {"_cfw",         (PyCFunction) module_cfw,         METH_VARARGS, 0},
+    {"_d2i",         (PyCFunction) module_d2i,         METH_VARARGS, 0},
     {"_read_n",      (PyCFunction) module_read_n,      METH_VARARGS, 0},
     {"_write_n",     (PyCFunction) module_write_n,     METH_VARARGS, 0},
     {"_sc_rts",      (PyCFunction) module_sc_rts,      METH_O,       0},
