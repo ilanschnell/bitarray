@@ -104,9 +104,9 @@ class SetupTableTests(unittest.TestCase):
             self.assertEqual(table[j], i)
             self.assertEqual(int2ba(i, 8, 'little'), int2ba(j, 8, 'big'))
 
-    def test_endian(self):
+    def test_opposite_endian(self):
         reverse_trans = _setup_table('r')
-        for kop1, kop2 in 'aA', 'xX':
+        for kop1, kop2 in 'aA', 'xX', 'sS':
             a = _setup_table(kop1)
             b = _setup_table(kop2)
             for i in range(256):
