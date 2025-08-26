@@ -16,15 +16,14 @@ import tempfile
 import unittest
 from io import StringIO
 from functools import reduce
-from string import hexdigits
 from random import (choice, getrandbits, randrange, randint, random, sample,
                     seed)
+from string import hexdigits, whitespace
 from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       _set_default_endian)
-from bitarray.test_bitarray import (Util, skipIf, is_pypy, urandom_2,
-                                    PTRSIZE, WHITESPACE)
+from bitarray.test_bitarray import Util, skipIf, is_pypy, urandom_2, PTRSIZE
 
 from bitarray.util import (
     zeros, ones, urandom, random_k, random_p, pprint, strip, count_n,
@@ -1419,8 +1418,8 @@ class HexlifyTests(unittest.TestCase, Util):
 
     def test_hex2ba_whitespace(self):
         _set_default_endian('big')
-        self.assertEqual(hex2ba("F1 F2 %s f3 c0" % WHITESPACE),
-                         bitarray("11110001 11110010 11110011 11000000"))
+        self.assertEqual(hex2ba("F1 FA %s f3 c0" % whitespace),
+                         bitarray("11110001 11111010 11110011 11000000"))
         self.assertEQUAL(hex2ba(b' a F ', 'big'),
                          bitarray('1010 1111', 'big'))
         self.assertEQUAL(hex2ba(860 * " " + '0  1D' + 590 * " ", 'little'),
@@ -1505,12 +1504,12 @@ class BaseTests(unittest.TestCase, Util):
         self.assertEqual(base2ba(32, "7 A"), bitarray("11111 00000"))
         self.assertEqual(base2ba(64, b"A /"), bitarray("000000 111111"))
         for n in 2, 4, 8, 16, 32, 64:
-            a = base2ba(n, WHITESPACE)
+            a = base2ba(n, whitespace)
             self.assertEqual(a, bitarray())
             a = urandom(60)
             c = list(ba2base(n, a))
             for _ in range(randrange(80)):
-                c.insert(randint(0, len(c)), choice(WHITESPACE))
+                c.insert(randint(0, len(c)), choice(whitespace))
             s = ''.join(c)
             self.assertEqual(base2ba(n, s), a)
 
