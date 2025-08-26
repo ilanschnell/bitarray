@@ -106,11 +106,15 @@ the same result:
 However, this is only true because big-endian is the default bit-endianness.
 When explicitly requesting a little-endian bitarray, we get:
 
+.. code-block:: python
+
     >>> int2ba(12, endian="little")
     bitarray('0011')
 
 Similarly, the function ``ba2int()`` takes into account the bit-endianness of
 the bitarray it is provided with:
+
+.. code-block:: python
 
     >>> a = bitarray("11001", "little")
     >>> ba2int(a)
