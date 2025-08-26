@@ -1,5 +1,5 @@
 Bit-endianness
---------------
+==============
 
 Unless explicitly converting to machine representation, i.e. initializing
 the buffer directly, using ``.tobytes()``, ``.frombytes()``, ``.tofile()``
@@ -81,3 +81,42 @@ created.  However, you can create a new bitarray with different endianness:
     bitarray('111000')
     >>> a == b
     True
+
+
+Utility functions
+-----------------
+
+A number of utility functions take into the bit-endianness into account.
+For example consider:
+
+.. code-block:: python
+
+    >>> from bitarray.util import ba2int, int2ba
+    >>> int2ba(12)
+    bitarray('1100')
+
+This is what one would normally expect, as Python's built-in ``bin()`` gives
+the same result:
+
+.. code-block:: python
+
+    >>> bin(12)
+    '0b1100'
+
+However, this is only true because big-endian is the default bit-endianness.
+When explicitly requesting a little-endian bitarray, we get:
+
+    >>> int2ba(12, endian="little")
+    bitarray('0011')
+
+Similarly, the function ``ba2int()`` takes into account the bit-endianness of
+the bitarray it is provided with:
+
+    >>> a = bitarray("11001", "little")
+    >>> ba2int(a)
+    19
+    >>> ba2int(bitarray(a, "big"))
+    25
+
+The same behavior is valid for ``hex2ba()``, ``ba2hex()``, ``base2ba()``
+and ``ba2base()``.
