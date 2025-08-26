@@ -1364,21 +1364,21 @@ class IntervalsTests(unittest.TestCase, Util):
 
 class HexlifyTests(unittest.TestCase, Util):
 
-    def test_ba2hex(self):
-        self.assertEqual(ba2hex(bitarray(0, 'big')), '')
-        self.assertEqual(ba2hex(bitarray('1110', 'big')), 'e')
-        self.assertEqual(ba2hex(bitarray('1110', 'little')), '7')
-        self.assertEqual(ba2hex(bitarray('0000 0001', 'big')), '01')
-        self.assertEqual(ba2hex(bitarray('1000 0000', 'big')), '80')
-        self.assertEqual(ba2hex(bitarray('0000 0001', 'little')), '08')
-        self.assertEqual(ba2hex(bitarray('1000 0000', 'little')), '10')
-        self.assertEqual(ba2hex(frozenbitarray('1100 0111', 'big')), 'c7')
-        # length not multiple of 4
-        self.assertRaises(ValueError, ba2hex, bitarray('10'))
-        self.assertRaises(TypeError, ba2hex, '101')
-
-        c = ba2hex(bitarray('1101', 'big'))
-        self.assertEqual(type(c), str)
+    def test_explicit(self):
+        data = [ #                  little   big
+            ('',                    '',      ''),
+            ('1000',                '1',     '8'),
+            ('0101 0110',           'a6',    '56'),
+            ('0100 1001 1101',      '29b',   '49d'),
+            ('0000 1100 1110 1111', '037f',  '0cef'),
+        ]
+        for bs, hex_le, hex_be in data:
+            a_be = bitarray(bs, 'big')
+            a_le = bitarray(bs, 'little')
+            self.assertEQUAL(hex2ba(hex_be, 'big'), a_be)
+            self.assertEQUAL(hex2ba(hex_le, 'little'), a_le)
+            self.assertEqual(ba2hex(a_be), hex_be)
+            self.assertEqual(ba2hex(a_le), hex_le)
 
     def test_ba2hex_group(self):
         a = bitarray('1000 0000 0101 1111', 'little')
@@ -1392,29 +1392,20 @@ class HexlifyTests(unittest.TestCase, Util):
         self.assertEqual(ba2hex(a, 3, sep=", "), "10a, f")
 
     def test_ba2hex_errors(self):
+        self.assertRaises(TypeError, ba2hex)
+        self.assertRaises(TypeError, ba2hex, None)
+        self.assertRaises(TypeError, ba2hex, '101')
+
+        # length not multiple of 4
+        self.assertRaises(ValueError, ba2hex, bitarray('10'))
+
         a = bitarray('1000 0000 0101 1111', 'little')
         self.assertRaises(ValueError, ba2hex, a, -1)
         self.assertRaises(ValueError, ba2hex, a, group=-1)
+        # sep not str
         self.assertRaises(TypeError, ba2hex, a, 1, b" ")
         # embedded null character in sep
-        self.assertRaises(ValueError, ba2hex, a, 2, "\0")
-
-    def test_hex2ba(self):
-        _set_default_endian('big')
-        self.assertEqual(hex2ba(''), bitarray())
-        for c in 'e', 'E', b'e', b'E', bytearray(b'e'), bytearray(b'E'):
-            a = hex2ba(c)
-            self.assertEqual(a.to01(), '1110')
-            self.assertEqual(a.endian, 'big')
-            self.assertEqual(type(a), bitarray)
-        self.assertEQUAL(hex2ba('01'), bitarray('0000 0001', 'big'))
-        self.assertEQUAL(hex2ba('08', 'little'),
-                         bitarray('0000 0001', 'little'))
-        self.assertEQUAL(hex2ba('aD'), bitarray('1010 1101', 'big'))
-        self.assertEQUAL(hex2ba('10aF'),
-                         bitarray('0001 0000 1010 1111', 'big'))
-        self.assertEQUAL(hex2ba(b'10 aF', 'little'),
-                         bitarray('1000 0000 0101 1111', 'little'))
+        self.assertRaises(ValueError, ba2hex, a, 2, " \0")
 
     def test_hex2ba_whitespace(self):
         _set_default_endian('big')
@@ -1427,6 +1418,8 @@ class HexlifyTests(unittest.TestCase, Util):
 
     def test_hex2ba_errors(self):
         self.assertRaises(TypeError, hex2ba, 0)
+        self.assertRaises(TypeError, hex2ba, "F", 1)
+        self.assertRaises(ValueError, hex2ba, "F", "foo")
 
         for s in '01a7g89', '0\u20ac', '0 \0', b'\x00':
             self.assertRaises(ValueError, hex2ba, s)
@@ -1435,44 +1428,35 @@ class HexlifyTests(unittest.TestCase, Util):
             msg = "invalid digit found for base16, got 'g' (0x67)"
             self.assertRaisesMessage(ValueError, msg, hex2ba, s, 'big')
 
-    def test_explicit(self):
-        data = [ #                       little   big
-            ('',                         '',      ''),
-            ('1000',                     '1',     '8'),
-            ('1000 1100',                '13',    '8c'),
-            ('1000 1100 1110',           '137',   '8ce'),
-            ('1000 1100 1110 1111' ,     '137f',  '8cef'),
-            ('1000 1100 1110 1111 0100', '137f2', '8cef4'),
-        ]
-        for bs, hex_le, hex_be in data:
-            a_be = bitarray(bs, 'big')
-            a_le = bitarray(bs, 'little')
-            self.assertEQUAL(hex2ba(hex_be, 'big'), a_be)
-            self.assertEQUAL(hex2ba(hex_le, 'little'), a_le)
-            self.assertEqual(ba2hex(a_be), hex_be)
-            self.assertEqual(ba2hex(a_le), hex_le)
+    def test_hex2ba_types(self):
+        for c in 'e', 'E', b'e', b'E', bytearray(b'e'), bytearray(b'E'):
+            a = hex2ba(c, "big")
+            self.assertEqual(a.to01(), '1110')
+            self.assertEqual(a.endian, 'big')
+            self.assertEqual(type(a), bitarray)
 
     def test_random(self):
         for _ in range(100):
-            a = urandom_2(4 * randrange(100))
-            s = ba2hex(a, group=randrange(10), sep=randrange(5) * " ")
-            b = hex2ba(s, endian=a.endian)
-            self.assertEQUAL(a, b)
+            default_endian = self.random_endian()
+            _set_default_endian(default_endian)
+            endian = choice(["little", "big", None])
+            a = urandom_2(4 * randrange(100), endian)
+            s = ba2hex(a, group=randrange(10), sep=choice(whitespace))
+            b = hex2ba(s, endian)
+            self.assertEqual(b.endian, endian or default_endian)
+            self.assertEqual(a, b)
             self.check_obj(b)
 
     def test_hexdigits(self):
-        for default_endian in 'big', 'little':
-            _set_default_endian(default_endian)
-            a = hex2ba(hexdigits)
-            self.assertEqual(len(a) % 4, 0)
-            self.assertEqual(a.endian, default_endian)
-            self.assertEqual(type(a), bitarray)
-            self.check_obj(a)
+        a = hex2ba(hexdigits)
+        self.assertEqual(len(a), 4 * len(hexdigits))
+        self.assertEqual(type(a), bitarray)
+        self.check_obj(a)
 
-            t = ba2hex(a)
-            self.assertEqual(t, hexdigits.lower())
-            self.assertEqual(type(t), str)
-            self.assertEQUAL(a, hex2ba(t, default_endian))
+        t = ba2hex(a)
+        self.assertEqual(t, hexdigits.lower())
+        self.assertEqual(type(t), str)
+        self.assertEQUAL(a, hex2ba(t))
 
     def test_binascii(self):
         a = urandom(80, 'big')
@@ -1485,16 +1469,11 @@ class HexlifyTests(unittest.TestCase, Util):
 
 class BaseTests(unittest.TestCase, Util):
 
-    def test_ba2base(self):
-        s = ba2base(16, bitarray('1101 0100', 'big'))
-        self.assertEqual(type(s), str)
-        self.assertEqual(s, 'd4')
-
-    def test_base2ba(self):
+    def test_base2ba_default_endian(self):
         _set_default_endian('big')
-        for c in 'e', 'E', b'e', b'E':
+        for c in '3e', '3E', b'3e', b'3E':
             a = base2ba(16, c)
-            self.assertEqual(a.to01(), '1110')
+            self.assertEqual(a.to01(), '00111110')
             self.assertEqual(a.endian, 'big')
             self.assertEqual(type(a), bitarray)
 
@@ -1576,6 +1555,9 @@ class BaseTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, base2ba, None, '')
         self.assertRaises(TypeError, ba2base, 16.0, a)
         self.assertRaises(TypeError, base2ba, 16.0, '')
+        self.assertRaises(TypeError, ba2base, 32, None)
+        self.assertRaises(TypeError, base2ba, 32, None)
+
         for values, msg in [
                 ([-1023, -16, -1, 0, 3, 5, 31, 48, 63, 129, 511, 4123],
                  "base must be a power of 2"),
@@ -1585,8 +1567,10 @@ class BaseTests(unittest.TestCase, Util):
                 self.assertRaisesMessage(ValueError, msg, ba2base, i, a)
                 self.assertRaisesMessage(ValueError, msg, base2ba, i, '')
 
-        self.assertRaises(TypeError, ba2base, 32, None)
-        self.assertRaises(TypeError, base2ba, 32, None)
+        a = bitarray(29)
+        for m in range(2, 7):
+            msg = "bitarray length 29 not multiple of %d" % m
+            self.assertRaisesMessage(ValueError, msg, ba2base, 1 << m, a)
 
     def test_hexadecimal(self):
         a = base2ba(16, 'F61', 'big')
@@ -1637,6 +1621,7 @@ class BaseTests(unittest.TestCase, Util):
             self.assertEqual(s, rep)
             b = base2ba(n, rep, endian)
             self.assertEqual(b, a)
+            self.assertEqual(type(b), bitarray)
             self.assertEqual(b.endian, endian)
 
     alphabets = [
@@ -1645,6 +1630,7 @@ class BaseTests(unittest.TestCase, Util):
         (2,  4, '0123'),
         (3,  8, '01234567'),
         (4, 16, '0123456789abcdef'),
+        (4, 16, '0123456789ABCDEF'),
         (5, 32, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'),
         (6, 64, 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef'
                 'ghijklmnopqrstuvwxyz0123456789+/'),
@@ -1657,6 +1643,8 @@ class BaseTests(unittest.TestCase, Util):
             for i, c in enumerate(alphabet):
                 endian = self.random_endian()
                 self.assertEqual(ba2int(base2ba(n, c, endian)), i)
+                if m == 4 and c in "ABCDEF":
+                    c = chr(ord(c) + 32)
                 self.assertEqual(ba2base(n, int2ba(i, m, endian)), c)
 
     def test_not_alphabets(self):
@@ -1665,7 +1653,7 @@ class BaseTests(unittest.TestCase, Util):
                 c = chr(i)
                 if c in alphabet or c.isspace():
                     continue
-                if n == 16 and c in "ABCDEF":
+                if n == 16 and c in hexdigits:
                     continue
                 self.assertRaises(ValueError, base2ba, n, c)
 
@@ -1673,9 +1661,12 @@ class BaseTests(unittest.TestCase, Util):
         for _ in range(100):
             m = randint(1, 6)
             a = urandom_2(m * randrange(100))
-            self.assertEqual(len(a) % m, 0)
             n = 1 << m
             s = ba2base(n, a, group=randrange(10), sep=randrange(5) * " ")
+            if m == 4 and getrandbits(1):
+                s = s.upper()
+            if getrandbits(1):
+                s = s.encode()
             b = base2ba(n, s, a.endian)
             self.assertEQUAL(a, b)
             self.check_obj(b)
