@@ -105,6 +105,11 @@ NOTES = {
    memory (depending on the machine architecture) than the bitarray object,
    which may cause a memory error if the bitarray is very large.""",
 
+    'util.gen_primes': """\
+   Apart from working with prime numbers, this function is useful for
+   testing, as it provides a simple way to create a well-defined bitarray
+   of any length.""",
+
     'util.count_xor': "   This is also known as the Hamming distance."
 }
 
