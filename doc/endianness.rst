@@ -124,13 +124,22 @@ the bitarray it is provided with:
 
 The same behavior is valid for ``hex2ba()``, ``ba2hex()``, ``base2ba()``
 and ``ba2base()``.  Regardless of bit-endianness, these are always
-inverse functions to each other:
+inverse functions of each other:
 
 .. code-block:: python
 
     >>> from bitarray.util import ba2hex, hex2ba, ba2base, base2ba
     >>> for endian in "little", "big":
     ...     a = bitarray("1010 0011 1110", endian)
-    ...     assert hex2ba(ba2hex(a), endian) == a
-    ...     assert base2ba(64, ba2base(64, a), endian) == a
-    ...     assert int2ba(ba2int(a), len(a), endian) == a
+    ...     assert int2ba(ba2int(a), len(a), a.endian) == a
+    ...     assert hex2ba(ba2hex(a), a.endian) == a
+    ...     assert base2ba(64, ba2base(64, a), a.endian) == a
+
+or:
+
+.. code-block:: python
+
+    >>> for endian in "little", "big":
+    ...     assert ba2int(int2ba(29, endian=endian)) == 29
+    ...     assert ba2hex(hex2ba("e7a", endian)) == "e7a"
+    ...     assert ba2base(64, base2ba(64, "h+E7", endian)) == "h+E7"
