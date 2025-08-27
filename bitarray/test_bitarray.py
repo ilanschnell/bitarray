@@ -1,3 +1,7 @@
+# Copyright (c) 2008 - 2025, Ilan Schnell; All Rights Reserved
+# bitarray is published under the PSF license.
+#
+# Author: Ilan Schnell
 """
 Tests for bitarray
 

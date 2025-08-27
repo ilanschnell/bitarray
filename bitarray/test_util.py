@@ -1,3 +1,7 @@
+# Copyright (c) 2019 - 2025, Ilan Schnell; All Rights Reserved
+# bitarray is published under the PSF license.
+#
+# Author: Ilan Schnell
 """
 Tests for bitarray.util module
 """
@@ -526,7 +530,7 @@ class PPrintTests(unittest.TestCase):
         finally:
             shutil.rmtree(tmpdir)
 
-# ---------------------------------------------------------------------------
+# -----------------------------  strip()  -----------------------------------
 
 class StripTests(unittest.TestCase, Util):
 
@@ -593,7 +597,7 @@ class StripTests(unittest.TestCase, Util):
             self.assertEqual(strip(a, 'both'), bitarray('1'))
             self.assertEqual(len(a), n)
 
-# ---------------------------------------------------------------------------
+# -----------------------------  count_n()  ---------------------------------
 
 class CountN_Tests(unittest.TestCase, Util):
 
@@ -710,9 +714,10 @@ class CountN_Tests(unittest.TestCase, Util):
         a = gen_primes(10_000)
         # there are 1229 primes below 10,000
         self.assertEqual(a.count(), 1229)
-        n = count_n(a, 1_000) - 1
-        # the thousandth prime number is 7919
-        self.assertEqual(n, 7919)
+        for n, p in [(  10,   29),   # the 10th prime number is 29
+                     ( 100,  541),   # the 100th prime number is 541
+                     (1000, 7919)]:  # the 1000th prime number is 7919
+            self.assertEqual(count_n(a, n) - 1, p)
 
     def test_large(self):
         for _ in range(100):
@@ -818,7 +823,7 @@ class BitwiseCountTests(unittest.TestCase, Util):
             self.assertEqual(all(a ^ b), count_xor(a, b) == n)
             self.assertEqual(all(a ^ b), a == ~b)
 
-# ---------------------------------------------------------------------------
+# ---------------------------  any_and()  -----------------------------------
 
 class BitwiseAnyTests(unittest.TestCase, Util):
 
@@ -901,7 +906,7 @@ class BitwiseAnyTests(unittest.TestCase, Util):
             a[i] = 1
             self.assertEqual(b[i], any_and(a, b))
 
-# ---------------------------------------------------------------------------
+# ----------------------------  subset()  -----------------------------------
 
 class SubsetTests(unittest.TestCase, Util):
 
@@ -950,7 +955,7 @@ class SubsetTests(unittest.TestCase, Util):
             a.setall(1)
             self.check(b, a, True)
 
-# ---------------------------------------------------------------------------
+# -------------------------  correspond_all()  ------------------------------
 
 class CorrespondAllTests(unittest.TestCase):
 
@@ -988,10 +993,10 @@ class CorrespondAllTests(unittest.TestCase):
             self.assertEqual(res[1] + res[2], count_xor(a, b))
             self.assertEqual(sum(res), n)
 
-# ---------------------------------------------------------------------------
+# -----------------------------  byteswap()  --------------------------------
 
 @skipIf(is_pypy)
-class ByteswapTests(unittest.TestCase):
+class ByteSwapTests(unittest.TestCase):
 
     def test_basic_bytearray(self):
         a = bytearray(b"ABCD")
@@ -1086,7 +1091,7 @@ class ByteswapTests(unittest.TestCase):
             a.bytereverse()
             self.assertEqual(a, b[::-1])
 
-# ---------------------------------------------------------------------------
+# ------------------------------  parity()  ---------------------------------
 
 class ParityTests(unittest.TestCase):
 
@@ -1119,7 +1124,7 @@ class ParityTests(unittest.TestCase):
         self.assertRaises(TypeError, parity)
         self.assertRaises(TypeError, parity, bitarray("110"), 1)
 
-# ---------------------------------------------------------------------------
+# ----------------------------  sum_indices()  ------------------------------
 
 class SumIndicesUtil(unittest.TestCase):
 
@@ -2404,7 +2409,7 @@ class MixedTests(unittest.TestCase, Util):
                 c <<= n
                 self.assertEqual(ba2int(c), i << n)
 
-# ---------------------------------------------------------------------------
+# ----------------------  serialize()  deserialize()  -----------------------
 
 class SerializationTests(unittest.TestCase, Util):
 
