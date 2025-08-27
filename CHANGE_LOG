@@ -2,6 +2,7 @@
 -------------------
   * fix type hinting for memoryviews, see #241
   * add [bit-endianness](endianness.rst) documentation
+  * improve testing, including debug mode test for `digit_to_int()`
 
 
 2025-08-24   3.7.0:
