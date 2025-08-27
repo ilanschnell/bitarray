@@ -706,6 +706,14 @@ class CountN_Tests(unittest.TestCase, Util):
                 msg = "n = 2 exceeds total count (a.count(1) = 1)"
             self.assertRaisesMessage(ValueError, msg, count_n, a, 2)
 
+    def test_primes(self):
+        a = gen_primes(10_000)
+        # there are 1229 primes below 10,000
+        self.assertEqual(a.count(), 1229)
+        n = count_n(a, 1_000) - 1
+        # the thousandth prime number is 7919
+        self.assertEqual(n, 7919)
+
     def test_large(self):
         for _ in range(100):
             N = randint(100_000, 250_000)
