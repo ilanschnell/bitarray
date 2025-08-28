@@ -57,7 +57,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 3.7.0
+    bitarray version: 3.7.1
     sys.version: 3.13.5 (main, Jun 16 2025) [Clang 18.1.8]
     sys.prefix: /Users/ilan/miniforge
     pointer size: 64 bit
@@ -72,7 +72,7 @@ Once you have installed the package, you may want to test it:
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 599 tests in 0.166s
+    Ran 597 tests in 0.165s
 
     OK
 
@@ -319,7 +319,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.7.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.7.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -771,6 +771,10 @@ This sub-module was added in version 1.2.
    By default (``odd=False``), active indices correspond to prime numbers directly.
    When ``odd=True``, only odd prime numbers are represented in the resulting
    bitarray ``a``, and ``a[i]`` corresponds to ``2*i+1`` being prime or not.
+
+   Apart from working with prime numbers, this function is useful for
+   testing, as it provides a simple way to create a well-defined bitarray
+   of any length.
 
    New in version 3.7
 

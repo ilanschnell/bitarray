@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 3.7.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.7.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -453,6 +453,10 @@ This sub-module was added in version 1.2.
    By default (``odd=False``), active indices correspond to prime numbers directly.
    When ``odd=True``, only odd prime numbers are represented in the resulting
    bitarray ``a``, and ``a[i]`` corresponds to ``2*i+1`` being prime or not.
+
+   Apart from working with prime numbers, this function is useful for
+   testing, as it provides a simple way to create a well-defined bitarray
+   of any length.
 
    New in version 3.7
 

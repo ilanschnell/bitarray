@@ -1,6 +1,13 @@
 Change log
 ==========
 
+**3.7.1** (2025-08-28):
+
+* fix type hinting for memoryviews, see `#241 <https://github.com/ilanschnell/bitarray/issues/241>`__
+* add `bit-endianness <endianness.rst>`__ documentation
+* improve testing, including debug mode test for ``digit_to_int()``
+
+
 **3.7.0** (2025-08-24):
 
 * add ``util.gen_primes()``, generate bitarrays in which active indices are
