@@ -22,9 +22,6 @@ def jaccard(u, v):
     x = count_xor(u, v)
     return x / (count_and(u, v) + x)
 
-def kulczynski1(u, v):
-    return count_and(u, v) / count_xor(u, v)
-
 def rogerstanimoto(u, v):
     x = count_xor(u, v)
     return 2 * x / (len(u) + x)
@@ -32,10 +29,6 @@ def rogerstanimoto(u, v):
 def russellrao(u, v):
     n = len(u)
     return (n - count_and(u, v)) / n
-
-def sokalmichener(u, v):
-    x = count_xor(u, v)
-    return 2 * x / (len(u) + x)
 
 def sokalsneath(u, v):
     R = 2 * count_xor(u, v)
@@ -56,8 +49,7 @@ def test(n):
     aa = numpy.frombuffer(a.unpack(), dtype=bool)
     bb = numpy.frombuffer(b.unpack(), dtype=bool)
 
-    for name in ['dice', 'hamming', 'jaccard', 'kulczynski1',
-                 'rogerstanimoto', 'russellrao', 'sokalmichener',
+    for name in ['dice', 'hamming', 'jaccard', 'rogerstanimoto', 'russellrao',
                  'sokalsneath', 'yule']:
 
         f1 = eval(name)               # function defined above
@@ -74,4 +66,6 @@ def test(n):
 
         assert abs(x1 - x2) < 1E-14
 
-test(2 ** 20 + 67)
+
+if __name__ == "__main__":
+    test(2 ** 22 + 67)
