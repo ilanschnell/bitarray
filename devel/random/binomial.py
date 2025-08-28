@@ -60,10 +60,7 @@ class BinomialDistTests(unittest.TestCase):
     def test_pmf_sum(self):
         for n in 10, 100, 1_000, 10_000:
             b = BinomialDist(n, 0.5)
-            tot = 0
-            for k in range(n + 1):
-                tot += b.pmf(k)
-            self.assertAlmostEqual(tot, 1.0)
+            self.assertAlmostEqual(sum(b.pmf(k) for k in range(n + 1)), 1.0)
 
     def test_pmf(self):
         for n in 10, 50, 100, 250:

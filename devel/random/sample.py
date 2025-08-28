@@ -75,11 +75,8 @@ class SampleMeanDistTests(unittest.TestCase):
         smd = SampleMeanDist(n, k)
         N = 1000
         dx = n / N
-        p = 0.0
-        for i in range(N + 1):
-            x = i * dx
-            p += smd.pdf(x) * dx
-        self.assertAlmostEqual(p, 1.0)
+        self.assertAlmostEqual(
+            sum(smd.pdf(i * dx) * dx for i in range(N + 1)), 1.0)
 
     def test_cdf(self):
         smd = SampleMeanDist(100, 30)
