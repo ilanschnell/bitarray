@@ -1,7 +1,7 @@
 All files under this 'examples/' directory are unsupported.
 
 While bitarray itself supports Python 3.6+, some examples may require
-a later Python versoin.
+higher Python versions.
 
 
 bloom.py
