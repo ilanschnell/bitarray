@@ -37,6 +37,7 @@ k                  count_table[c]       block.count()
 z1 = sum z_j       sum_table[c]         _ssqi(block)
 z2 = sum z_j**2    sum_sqr_table[c]     _ssqi(block, 2)
 """
+import math
 import unittest
 from random import choice, getrandbits, randint, randrange, sample
 
@@ -223,6 +224,11 @@ class SumIndicesTests(SumIndicesUtil):
             freeze = getrandbits(1)
             inv = getrandbits(1)
             self.check_sparse(sum_indices, n, k, mode, freeze, inv)
+
+    def test_hypot(self):
+        a = urandom(10_000)
+        self.assertAlmostEqual(math.sqrt(sum_indices(a, 2)),
+                               math.hypot(*list(a.search(1))))
 
 
 class VarianceTests(unittest.TestCase):
