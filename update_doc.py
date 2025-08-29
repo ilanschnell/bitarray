@@ -105,6 +105,12 @@ NOTES = {
    memory (depending on the machine architecture) than the bitarray object,
    which may cause a memory error if the bitarray is very large.""",
 
+    'util.byteswap': """\
+   We should mention that Python's ``array.array`` object has a
+   method ``.byteswap()`` with similar functionality.  However, unlike
+   bitarray's ``util.byteswap()`` function, this method is limited to
+   swapping 2, 4, or 8 consecutive bytes.""",
+
     'util.gen_primes': """\
    Apart from working with prime numbers, this function is useful for
    testing, as it provides a simple way to create a well-defined bitarray
