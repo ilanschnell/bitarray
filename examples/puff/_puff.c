@@ -645,9 +645,11 @@ PyMODINIT_FUNC PyInit__puff(void)
     Py_INCREF((PyObject *) &state_type);
     PyModule_AddObject(m, "State", (PyObject *) &state_type);
 
-    PyModule_AddObject(m, "MAXLCODES", PyLong_FromSsize_t(MAXLCODES));
-    PyModule_AddObject(m, "MAXDCODES", PyLong_FromSsize_t(MAXDCODES));
-    PyModule_AddObject(m, "FIXLCODES", PyLong_FromSsize_t(FIXLCODES));
+#define D(n)  if ((PyModule_AddIntConstant(m, #n, n) < 0)) return NULL
+    D(MAXLCODES);
+    D(MAXDCODES);
+    D(FIXLCODES);
+#undef D
 
     return m;
 }
