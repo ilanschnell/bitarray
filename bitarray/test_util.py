@@ -227,7 +227,8 @@ class Random_K_Tests(unittest.TestCase):
             a.append(self.collect_code_branches())
         self.assertEqual(a[0], a[2])
         self.assertEqual(a[1], a[3])
-        self.assertNotEqual(a[0], a[1])
+        for item0, item1 in zip(a[0], a[1]):
+            self.assertNotEqual(item0, item1)
         # initialize seed with current system time again
         seed()
 
@@ -363,7 +364,8 @@ class Random_P_Tests(unittest.TestCase):
             a.append(self.collect_code_branches())
         self.assertEqual(a[0], a[2])
         self.assertEqual(a[1], a[3])
-        self.assertNotEqual(a[0], a[1])
+        for item0, item1 in zip(a[0], a[1]):
+            self.assertNotEqual(item0, item1)
         # initialize seed with current system time again
         seed()
 
