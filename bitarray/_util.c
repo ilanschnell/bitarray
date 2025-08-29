@@ -2254,7 +2254,8 @@ PyInit__util(void)
     Py_SET_TYPE(&CHDI_Type, &PyType_Type);
 
 #ifndef NDEBUG  /* expose segment size in debug mode for testing */
-    PyModule_AddObject(m, "_SEGSIZE", PyLong_FromSsize_t(SEGSIZE));
+    if (PyModule_AddIntConstant(m, "_SEGSIZE", SEGSIZE) < 0)
+        return NULL;
 #endif
 
     return m;

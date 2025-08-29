@@ -12,11 +12,11 @@ Author: Ilan Schnell
 from __future__ import absolute_import
 from collections import namedtuple
 
-from bitarray._bitarray import (bitarray, decodetree, _sysinfo,
-                                bits2bytes, _bitarray_reconstructor,
-                                get_default_endian, _set_default_endian,
-                                __version__)
-
+from bitarray._bitarray import (
+    bitarray, decodetree, bits2bytes, _bitarray_reconstructor,
+    get_default_endian, _set_default_endian, _sysinfo,
+    BITARRAY_VERSION as __version__
+)
 
 __all__ = ['bitarray', 'frozenbitarray', 'decodetree', 'bits2bytes']
 

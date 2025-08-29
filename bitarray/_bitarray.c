@@ -4287,8 +4287,8 @@ PyInit__bitarray(void)
         return NULL;
     Py_SET_TYPE(&SearchIter_Type, &PyType_Type);
 
-    PyModule_AddObject(m, "__version__",
-                       PyUnicode_FromString(BITARRAY_VERSION));
+    if (PyModule_AddStringMacro(m, BITARRAY_VERSION) < 0)
+        return NULL;
 
     return m;
 }
