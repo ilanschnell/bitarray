@@ -5,7 +5,7 @@ import unittest
 
 from bitarray import bitarray
 
-from puff import State, Puff, FIXLCODES, MAXDCODES, FIXED_LENGTHS
+from puff import State, Puff, FIXLCODES, MAXDCODES, MAXLCODES, FIXED_LENGTHS
 
 
 class TestState(unittest.TestCase):
@@ -208,6 +208,8 @@ class TestFixedBlock(unittest.TestCase):
 class TestPuff(unittest.TestCase):
 
     def test_constants(self):
+        for x in MAXDCODES, MAXLCODES, FIXLCODES:
+            self.assertEqual(type(x), int)
         self.assertEqual(len(FIXED_LENGTHS), FIXLCODES + MAXDCODES)
 
     def test_align_byte_boundary(self):

@@ -32,7 +32,7 @@
 #define MAXBITS    15           /* maximum bits in a code */
 #define MAXLCODES 286           /* maximum number of literal/length codes */
 #define MAXDCODES  30           /* maximum number of distance codes */
-#define MAXCODES (MAXLCODES+MAXDCODES)  /* maximum codes lengths to read */
+#define MAXCODES (MAXLCODES + MAXDCODES)  /* maximum codes lengths to read */
 #define FIXLCODES 288           /* number of fixed literal/length codes */
 
 
@@ -74,11 +74,11 @@ static int
 decode(state_obj *s, const struct huffman *h)
 {
     Py_ssize_t nbits = s->in->nbits;
-    int len;            /* current number of bits in code */
-    int code;           /* len bits being decoded */
-    int first;          /* first code of length len */
-    int count;          /* number of codes of length len */
-    int index;          /* index of first code of length len in symbol table */
+    int len;          /* current number of bits in code */
+    int code;         /* len bits being decoded */
+    int first;        /* first code of length len */
+    int count;        /* number of codes of length len */
+    int index;        /* index of first code of length len in symbol table */
 
     if (s->incnt >= nbits) {
         PyErr_SetString(PyExc_ValueError, "no more bits to decode");
@@ -167,15 +167,15 @@ construct(struct huffman *h, const short *length, int n)
     int symbol;         /* current symbol when stepping through length[] */
     int len;            /* current length when stepping through h->count[] */
     int left;           /* number of possible codes left of current length */
-    short offs[MAXBITS+1];      /* offsets in symbol table for each length */
+    short offs[MAXBITS + 1];    /* offsets in symbol table for each length */
 
     /* count number of codes of each length */
     for (len = 0; len <= MAXBITS; len++)
         h->count[len] = 0;
     for (symbol = 0; symbol < n; symbol++)
-        (h->count[length[symbol]])++;   /* assumes lengths are within bounds */
-    if (h->count[0] == n)               /* no codes! */
-        return 0;                       /* complete, but decode() will fail */
+        (h->count[length[symbol]])++;  /* assumes lengths are within bounds */
+    if (h->count[0] == n)              /* no codes! */
+        return 0;                      /* complete, but decode() will fail */
 
     /* check for an over-subscribed or incomplete set of lengths */
     left = 1;                           /* one possible code of zero length */
@@ -328,7 +328,7 @@ state_extend_block(state_obj *self, PyObject *value)
     if (nbytes >> 16)
         return PyErr_Format(PyExc_ValueError, "invalid block size: %zd",
                             nbytes);
-    if (self->incnt % 8 != 0) {
+    if (self->incnt % 8) {
         PyErr_SetString(PyExc_ValueError, "bits not aligned");
         return NULL;
     }
@@ -428,8 +428,8 @@ state_decode_block(state_obj *self, PyObject *args)
     distcode.symbol = distsym;
     err = construct(&distcode, lengths + nlen, ndist);
     /* Fixed distance codes also have two invalid symbols that should result
-       in an error if received.  This can be implemented as an incomplete code,
-       which is why the error is ignored for fixed codes. */
+       in an error if received.  This can be implemented as an incomplete
+       code, which is why the error is ignored for fixed codes. */
     if (nlen != FIXLCODES &&
         err && (err < 0 || ndist != distcode.count[0] + distcode.count[1])) {
         PyErr_SetString(PyExc_ValueError, "incomplete distance code");
@@ -646,8 +646,8 @@ PyMODINIT_FUNC PyInit__puff(void)
     PyModule_AddObject(m, "State", (PyObject *) &state_type);
 
 #define D(n)  if ((PyModule_AddIntConstant(m, #n, n) < 0)) return NULL
-    D(MAXLCODES);
     D(MAXDCODES);
+    D(MAXLCODES);
     D(FIXLCODES);
 #undef D
 
