@@ -5,8 +5,6 @@
 """
 Useful utilities for working with bitarrays.
 """
-from __future__ import absolute_import
-
 import os
 import sys
 import math

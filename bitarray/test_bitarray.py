@@ -7,8 +7,6 @@ Tests for bitarray
 
 Author: Ilan Schnell
 """
-from __future__ import absolute_import
-
 import re
 import os
 import sys

@@ -9,7 +9,6 @@ Please find a description of this package at:
 
 Author: Ilan Schnell
 """
-from __future__ import absolute_import
 from collections import namedtuple
 
 from bitarray._bitarray import (
