@@ -18,7 +18,7 @@ from collections import Counter
 from itertools import pairwise
 from math import comb, fmod, sqrt
 from statistics import fmean, stdev, pstdev
-from random import randint, randrange, random, binomialvariate
+from random import choices, randint, randrange, random, binomialvariate
 
 from bitarray import bitarray, frozenbitarray
 from bitarray.util import (
@@ -290,7 +290,7 @@ class Random_K_Tests(Util):
         Nm = 500_000 if HEAVY else 25_000  # number of masks
         n = 7000  # bitarray length
         # count for each array
-        ka = [randrange(1, n, 2) for _ in range(Na)]
+        ka = choices(range(1, n, 2), k=Na)
         arrays = [random_k(n, k) for k in ka]
 
         for k, a in zip(ka, arrays):  # sanity check arrays
