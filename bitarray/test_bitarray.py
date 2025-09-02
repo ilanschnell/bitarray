@@ -15,7 +15,7 @@ import unittest
 import shutil
 import tempfile
 from io import BytesIO, UnsupportedOperation
-from random import choice, getrandbits, randrange, randint, shuffle
+from random import choice, choices, getrandbits, randrange, randint, shuffle
 from string import whitespace
 
 # imports needed inside tests
@@ -1407,7 +1407,7 @@ class GetSequenceIndexTests(unittest.TestCase, Util):
     def test_random(self):
         for a in self.randombitarrays():
             n = len(a)
-            lst = [randrange(n) for _ in range(n // 2)]
+            lst = choices(range(n), k=n//2)
             b = a[lst]
             self.assertEqual(b, bitarray(a[i] for i in lst))
             self.assertEqual(b.endian, a.endian)
@@ -1440,7 +1440,7 @@ class SetSequenceIndexTests(unittest.TestCase, Util):
     def test_bool_random(self):
         for a in self.randombitarrays():
             n = len(a)
-            lst = [randrange(n) for _ in range(n // 2)]
+            lst = choices(range(n), k=n//2)
             b = a.copy()
             v = getrandbits(1)
             a[lst] = v
@@ -1474,7 +1474,7 @@ class SetSequenceIndexTests(unittest.TestCase, Util):
     def test_bitarray_random(self):
         for a in self.randombitarrays():
             n = len(a)
-            lst = [randrange(n) for _ in range(n // 2)]
+            lst = choices(range(n), k=n//2)
             c = urandom_2(len(lst))
             b = a.copy()
 
@@ -1545,7 +1545,7 @@ class DelSequenceIndexTests(unittest.TestCase, Util):
     def test_random(self):
         for n in range(100):
             a = urandom_2(n)
-            lst = [randrange(n) for _ in range(randint(0, n))]
+            lst = choices(range(n), k=randint(0, n))
             b = a.copy()
             del a[lst]
             self.assertEqual(len(a), n - len(set(lst)))
@@ -3231,7 +3231,7 @@ class To01Tests(unittest.TestCase, Util):
     def test_sep(self):
         for a in self.randombitarrays():
             sep = "".join(chr(randint(32, 126))
-                              for _ in range(randrange(10)))
+                          for _ in range(randrange(10)))
             self.assertEqual(a.to01(1, sep), sep.join(str(v) for v in a))
 
         a = bitarray("11100111")
@@ -3443,7 +3443,7 @@ class CountTests(unittest.TestCase, Util):
     def test_sparse(self):
         n = 65536
         a = bitarray(n)
-        indices = set(randrange(n) for _ in range(256))
+        indices = set(choices(range(n), k=256))
         a[list(indices)] = 1
         self.assertEqual(a.count(1), len(indices))
         self.assertEqual(a.count(0), n - len(indices))
@@ -3634,7 +3634,7 @@ class IndexTests(unittest.TestCase, Util):
         for _ in range(500):
             n = randrange(1, 200)
             a = zeros(n)
-            plst = sorted(randrange(n) for _ in range(1, 10))
+            plst = sorted(choices(range(n), k=9))
             a[plst] = 1
             # test without start and stop
             self.assertEqual(a.find(1, right=0), plst[0])

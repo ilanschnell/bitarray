@@ -18,8 +18,8 @@ import tempfile
 import unittest
 from io import StringIO
 from functools import reduce
-from random import (choice, getrandbits, randrange, randint, random, sample,
-                    seed)
+from random import (choice, choices, getrandbits, randrange, randint, random,
+                    sample, seed)
 from string import hexdigits, whitespace
 from collections import Counter
 
@@ -1588,7 +1588,7 @@ class BaseTests(unittest.TestCase, Util):
         self.assertEqual(ba2base(16, a), 'f61')
 
         for n in range(50):
-            s = ''.join(choice(hexdigits) for _ in range(n))
+            s = ''.join(choices(hexdigits, k=n))
             endian = self.random_endian()
             a = base2ba(16, s, endian)
             self.assertEQUAL(a, hex2ba(s, endian))
@@ -1884,7 +1884,7 @@ class SC_Tests(unittest.TestCase, Util):
 
     def test_block_type3(self):
         a = bitarray(16_777_216, 'little')
-        a[[getrandbits(24) for _ in range(255)]] = 1
+        a[choices(range(1 << 24), k=255)] = 1
         b = bytearray([0x04, 0x00, 0x00, 0x00, 0x01, 0xc3, a.count()])
         for i in a.search(1):
             b.extend(struct.pack("<I", i)[:3])
@@ -1897,7 +1897,7 @@ class SC_Tests(unittest.TestCase, Util):
         # To understand why we cannot have a population larger than 5 for
         # an array size 4 times the size of a type 3 block, take a look
         # at the cost comparison in sc_encode_block().  (2 + 6 >= 2 * 4)
-        indices = sorted(set(randrange(len(a)) for _ in range(5)))
+        indices = sorted(set(choices(range(len(a)), k=5)))
         a[indices] = 1
         b = bytearray(b'\x04\x00\x00\x00\x04\xc4')
         b.append(len(indices))
@@ -2607,7 +2607,7 @@ class HuffmanTests(unittest.TestCase):
         self.check_tree(code)
 
     def test_random_list(self):
-        plain = [randrange(100) for _ in range(500)]
+        plain = choices(range(100), k=500)
         code = huffman_code(Counter(plain))
         a = bitarray()
         a.encode(code, plain)
@@ -2856,7 +2856,7 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
 
     def ensure_round_trip(self, chc, count, symbol):
         # create a short test message, encode and decode
-        msg = [choice(symbol) for _ in range(10)]
+        msg = choices(symbol, k=10)
         a = bitarray()
         a.encode(chc, msg)
         it = canonical_decode(a, count, symbol)
