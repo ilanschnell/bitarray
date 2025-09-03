@@ -1323,9 +1323,8 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
             return NULL;
         }
         self->ob_item[i / 8] ^= BITMASK(self, i);
-        Py_RETURN_NONE;
     }
-    if (PySlice_Check(arg)) {
+    else if (PySlice_Check(arg)) {
         Py_ssize_t start, stop, step, slicelength;
 
         if (PySlice_GetIndicesEx(arg, self->nbits,
@@ -1333,15 +1332,15 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
             return NULL;
         adjust_step_positive(slicelength, &start, &stop, &step);
         invert_range(self, start, stop, step);
-        Py_RETURN_NONE;
     }
-    if (arg == Py_None) {
+    else if (arg == Py_None) {
         invert_span(self, 0, self->nbits);
-        Py_RETURN_NONE;
     }
-
-    return PyErr_Format(PyExc_TypeError, "index expect, not '%s' object",
-                        Py_TYPE(arg)->tp_name);
+    else {
+        return PyErr_Format(PyExc_TypeError, "index expect, not '%s' object",
+                            Py_TYPE(arg)->tp_name);
+    }
+    Py_RETURN_NONE;
 }
 
 PyDoc_STRVAR(invert_doc,
@@ -3613,7 +3612,7 @@ endian_from_string(const char *str)
         return ENDIAN_BIG;
 
     PyErr_Format(PyExc_ValueError, "bit-endianness must be either "
-                                   "'little' or 'big', not '%s'", str);
+                 "'little' or 'big', not '%s'", str);
     return -1;
 }
 
@@ -4193,7 +4192,8 @@ sysinfo(PyObject *module, PyObject *args)
     R("DEBUG", 0);
 #endif
 
-    return PyErr_Format(PyExc_KeyError, "%s", key);
+    PyErr_SetString(PyExc_KeyError, key);
+    return NULL;
 #undef R
 }
 
