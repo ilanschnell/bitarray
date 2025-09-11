@@ -7,7 +7,7 @@ if sys.version_info[:3] < (3, 6, 1):
     sys.exit("""\
 ****************************************************************************
 *   bitarray requires Python 3.6.1 or later.
-*   The last version supporting Python 2 is bitarray 2.9.3.
+*   The last bitarray version supporting Python 2.7 is bitarray 2.9.3.
 ****************************************************************************
 """)
 
