@@ -35,5 +35,5 @@ def code_point(u):
     print()
 
 
-for u in u'\u0024 \u00a2 \u20ac \ud55c \U00010348 \U0010ffff'.split():
+for u in '\u0024 \u00a2 \u20ac \ud55c \U00010348 \U0010ffff'.split():
     code_point(u)
