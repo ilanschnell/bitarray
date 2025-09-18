@@ -177,6 +177,8 @@ class Random_K_Tests(unittest.TestCase):
         else:
             self.fail()
 
+    # test uses math.comb, added in 3.8
+    @skipIf(sys.version_info[:2] < (3, 8))
     def test_combinations(self):
         # for entire range of 0 <= k <= n, validate that random_k()
         # generates all possible combinations
