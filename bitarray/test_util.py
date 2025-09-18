@@ -118,16 +118,6 @@ class URandomTests(unittest.TestCase):
 
 # ----------------------------  random_k()  ---------------------------------
 
-HAVE_RANDBYTES = sys.version_info[:2] >= (3, 9)
-
-@skipIf(HAVE_RANDBYTES)
-class Random_K_Not_Implemented(unittest.TestCase):
-
-    def test_not_implemented(self):
-        self.assertRaises(NotImplementedError, random_k, 100, 60)
-
-
-@skipIf(not HAVE_RANDBYTES)
 class Random_K_Tests(unittest.TestCase):
 
     def test_basic(self):
@@ -340,7 +330,7 @@ class Random_P_Tests(unittest.TestCase):
     def collect_code_branches(self):
         # return list of bitarrays from all code branches of random_p()
         res = []
-        # for default p=0.5, random_p uses randbytes
+        # for default p=0.5, random_p uses getrandbits
         res.append(random_p(32))
         # test small p
         res.append(random_p(5_000, 0.002))

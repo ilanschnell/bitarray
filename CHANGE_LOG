@@ -1,5 +1,6 @@
 2025-XX-XX   3.7.2:
 -------------------
+  * enable `util.random_k()` for all Python versions (3.9+ previously)
 
 
 2025-08-28   3.7.1:
