@@ -808,7 +808,7 @@ class VerificationTests(Util):
         seq = a[a.index(1) + 1 : M]
 
         # combine random bitarrays using bitwise AND and OR operations
-        q = 0.5  # start with randbytes()
+        q = 0.5
         for k in seq:
             if k:
                 q += 0.5 * (1.0 - q)  # OR

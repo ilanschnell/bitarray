@@ -18,18 +18,18 @@ number of bits, using ``random.randrange()`` for each bit.
 Python 3.12 introduced ``random.binomialvariate()`` which is exactly what we
 need to determine the bitarray's population.
 
-When ``p == 0.5``, we use ``random.randbytes()`` to initialize our bitarray
+When ``p == 0.5``, we use ``random.getrandbits()`` to initialize our bitarray
 buffer.  It should be noted that ``util.urandom()`` uses ``os.urandom()``,
 but since ``util.random_p()`` is designed to give reproducible pseudo-random
-bitarrays, it uses ``randbytes()``.
+bitarrays, it uses ``getrandbits()``.
 
 Taking two (independent) such bitarrays and combining them
 using the bitwise AND operation, gives us a random bitarray with
 probability 1/4.
 Likewise, taking two bitwise OR operation gives us probability 3/4.
 Without going into too much further detail, it is possible to combine
-more than two "randbytes" bitarray to get probabilities ``i / 2**M``,
-where ``M`` is the maximal number of "randbytes" bitarrays we combine,
+more than two "getrandbits" bitarray to get probabilities ``i / 2**M``,
+where ``M`` is the maximal number of "getrandbits" bitarrays we combine,
 and ``i`` is an integer.
 The required sequence of AND and OR operations is calculated from
 the desired probability ``p`` and ``M``.
@@ -59,7 +59,7 @@ Speedup
 
 The speedup is largest, when the number of number of random numbers our
 algorithm uses is smallest.
-In the following, let ``k`` be the number of calls to ``randbytes()``.
+In the following, let ``k`` be the number of calls to ``getrandbits()``.
 For example, when ``p=0.5`` we have ``k=1``.
 When ``p`` is below our limit for using the procedure of setting individual
 bits, we call this limit ``small_p``, we have ``k=0``.
