@@ -57,7 +57,7 @@ Return (pseudo-) random bitarray of length `n` with `k` elements
 set to one.  Mathematically equivalent to setting (in a bitarray of
 length `n`) all bits at indices `random.sample(range(n), k)` to one.
 The random bitarrays are reproducible when giving Python's `random.seed()`
-with a specific seed value.
+a specific seed value.
 """
     r = _Random(__n, endian)
     if not isinstance(k, int):
