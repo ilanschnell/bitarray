@@ -59,13 +59,17 @@ class ResizeTests(unittest.TestCase):
     def test_no_overalloc(self):
         # initalizing a bitarray does not overallocate
         for n in range(1000):
-            a = bitarray(8 * n * [1])
-            self.assertEqual(get_alloc(a), n)
-            b = bitarray(a)
-            self.assertEqual(get_alloc(b), n)
-            for c in [bitarray(8 * n), bitarray(n * b'A'),
-                      bitarray(bytearray(n * b'A'))]:
-                self.assertEqual(get_alloc(c), n)
+            blob = n * b'A'
+            for a in [
+                    bitarray(8 * n),
+                    bitarray(8 * n * [1]),
+                    bitarray(bitarray(8 * n)),
+                    bitarray(n * "00001111"),
+                    bitarray(blob),
+                    bitarray(bytearray(blob)),
+            ]:
+                self.assertEqual(len(a), 8 * n)
+                self.assertEqual(get_alloc(a), n)
 
     def test_no_overalloc_large(self):
         # starting from a large bitarray, make we sure we don't realloc each
