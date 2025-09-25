@@ -2,6 +2,7 @@ import unittest
 
 from bitarray import bitarray
 
+
 PATTERN = [0, 1, 4, 8, 16, 24, 32, 40, 48, 56, 64, 76, 88, 100, 112, 124, 136]
 
 def get_alloc(a):
@@ -56,14 +57,15 @@ class ResizeTests(unittest.TestCase):
             prev = alloc
 
     def test_no_overalloc(self):
-        # initalizing a bitarray from a list or bitarray does not overallocate
+        # initalizing a bitarray does not overallocate
         for n in range(1000):
             a = bitarray(8 * n * [1])
             self.assertEqual(get_alloc(a), n)
             b = bitarray(a)
             self.assertEqual(get_alloc(b), n)
-            c = bitarray(8 * n)
-            self.assertEqual(get_alloc(c), n)
+            for c in [bitarray(8 * n), bitarray(n * b'A'),
+                      bitarray(bytearray(n * b'A'))]:
+                self.assertEqual(get_alloc(c), n)
 
     def test_no_overalloc_large(self):
         # starting from a large bitarray, make we sure we don't realloc each
