@@ -44,7 +44,7 @@ Key features
 Installation
 ------------
 
-Python wheels are are available on PyPI for all mayor platforms and Python
+Python wheels are are available on PyPI for all major platforms and Python
 versions.  Which means you can simply:
 
 .. code-block:: shell-session
