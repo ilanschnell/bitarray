@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 3.7.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.7.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -379,6 +379,11 @@ This sub-module was added in version 1.2.
    Also, ``a`` may be any object that exposes a writable buffer.
    Nothing about this function is specific to bitarray objects.
 
+   We should mention that Python's ``array.array`` object has a
+   method ``.byteswap()`` with similar functionality.  However, unlike
+   bitarray's ``util.byteswap()`` function, this method is limited to
+   swapping 2, 4, or 8 consecutive bytes.
+
    New in version 3.4
 
 
@@ -520,11 +525,7 @@ This sub-module was added in version 1.2.
    set to one.  Mathematically equivalent to setting (in a bitarray of
    length ``n``) all bits at indices ``random.sample(range(n), k)`` to one.
    The random bitarrays are reproducible when giving Python's ``random.seed()``
-   with a specific seed value.
-
-   This function requires Python 3.9 or higher, as it depends on the standard
-   library function ``random.randbytes()``.  Raises ``NotImplementedError``
-   when Python version is too low.
+   a specific seed value.
 
    New in version 3.6
 

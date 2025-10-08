@@ -1,4 +1,4 @@
-2025-XX-XX   3.7.2:
+2025-10-08   3.7.2:
 -------------------
   * enable `util.random_k()` for all supported Python versions,
     previously this functions required Python 3.9 or higher

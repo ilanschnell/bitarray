@@ -1,6 +1,14 @@
 Change log
 ==========
 
+**3.7.2** (2025-10-08):
+
+* enable ``util.random_k()`` for all supported Python versions,
+  previously this functions required Python 3.9 or higher
+* add official Python 3.14 support
+* update cibuildwheel to 3.2.0
+
+
 **3.7.1** (2025-08-28):
 
 * fix type hinting for memoryviews, see `#241 <https://github.com/ilanschnell/bitarray/issues/241>`__
