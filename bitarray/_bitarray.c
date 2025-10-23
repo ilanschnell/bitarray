@@ -17,7 +17,7 @@
 #define BLOCKSIZE  65536
 
 /* default bit-endianness */
-static int default_endian = ENDIAN_BIG;
+static PyObject* default_endian;
 
 /* translation table - setup during module initialization */
 static char reverse_trans[256];
@@ -3107,6 +3107,9 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     return obj;
 }
 
+// forward declaration
+static int get_c_default_endian(void);
+
 static PyObject *
 decodetree_todict(decodetreeobject *self)
 {
@@ -3116,7 +3119,7 @@ decodetree_todict(decodetreeobject *self)
     if ((dict = PyDict_New()) == NULL)
         return NULL;
 
-    prefix = newbitarrayobject(&Bitarray_Type, 0, default_endian);
+    prefix = newbitarrayobject(&Bitarray_Type, 0, get_c_default_endian());
     if (prefix == NULL)
         goto error;
 
@@ -3595,15 +3598,27 @@ static PyMethodDef bitarray_methods[] = {
 
 /* ------------------------ bitarray initialization -------------------- */
 
+static int
+get_c_default_endian(void)
+{
+    PyObject *current_default_endian;
+    if (PyContextVar_Get(default_endian, NULL, &current_default_endian) < 0)
+    {
+        return -1;
+    }
+    return (int)PyLong_AsLong(current_default_endian);
+}
+
 /* Given string 'str', return an integer representing the bit-endianness.
    If the string is invalid, set exception and return -1. */
 static int
 endian_from_string(const char *str)
 {
-    assert(default_endian == ENDIAN_LITTLE || default_endian == ENDIAN_BIG);
+    int c_default_endian = get_c_default_endian();
+    assert(c_default_endian == ENDIAN_LITTLE || c_default_endian == ENDIAN_BIG);
 
     if (str == NULL)
-        return default_endian;
+        return c_default_endian;
 
     if (strcmp(str, "little") == 0)
         return ENDIAN_LITTLE;
@@ -4126,7 +4141,7 @@ reconstructor(PyObject *module, PyObject *args)
 static PyObject *
 get_default_endian(PyObject *module)
 {
-    return PyUnicode_FromString(ENDIAN_STR(default_endian));
+    return PyUnicode_FromString(ENDIAN_STR(get_c_default_endian()));
 }
 
 PyDoc_STRVAR(get_default_endian_doc,
@@ -4150,8 +4165,15 @@ set_default_endian(PyObject *module, PyObject *args)
        in a temporary variable before setting default_endian. */
     if ((t = endian_from_string(endian_str)) < 0)
         return NULL;
-    default_endian = t;
+    PyObject *py_t = PyLong_FromLong(t);
+    if (py_t == NULL)
+        return NULL;
 
+    if (PyContextVar_Set(default_endian, py_t) == NULL) {
+        return NULL;
+    }
+
+    Py_DECREF(py_t);
     Py_RETURN_NONE;
 }
 
@@ -4264,7 +4286,13 @@ PyInit__bitarray(void)
         return NULL;
     Py_SET_TYPE(&Bitarray_Type, &PyType_Type);
     Py_INCREF((PyObject *) &Bitarray_Type);
-    PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type);
+    PyModule_AddObject(m, "bitarray", (PyObject *)&Bitarray_Type);
+
+    PyObject *Py_ENDIAN_BIG = PyLong_FromLong(ENDIAN_BIG);
+
+    default_endian = PyContextVar_New("default_endian", Py_ENDIAN_BIG);
+
+    Py_DECREF(Py_ENDIAN_BIG);
 
     if (register_abc() < 0)
         return NULL;

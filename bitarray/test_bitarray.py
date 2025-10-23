@@ -20,11 +20,14 @@ from string import whitespace
 
 # imports needed inside tests
 import array
+import asyncio
+import concurrent.futures
 import copy
 import itertools
 import mmap
 import pickle
 import shelve
+import threading
 import weakref
 
 
@@ -1534,6 +1537,59 @@ class DelSequenceIndexTests(unittest.TestCase, Util):
         self.assertRaises(IndexError, a.__delitem__, [1, 10])
         self.assertRaises(IndexError, a.__delitem__, [10])
         self.assertRaises(TypeError, a.__delitem__, (1, 3))
+
+    # asyncio.Barrier was introduced in Python 3.11
+    @skipIf(sys.version_info < (3, 11))
+    def test_default_endian_async_safe(self):
+        endian_start = get_default_endian()
+        b = asyncio.Barrier(2)
+
+        async def big():
+            _set_default_endian('big')
+            await b.wait()
+            endian = get_default_endian()
+            assert endian == 'big'
+
+        async def little():
+            _set_default_endian('little')
+            await b.wait()
+            endian = get_default_endian()
+            assert endian == 'little'
+
+        async def main():
+            await asyncio.gather(
+                big(), big(), big(), big(), big(),
+                little(), little(), little(), little(), little()
+            )
+
+        loop = asyncio.new_event_loop()
+        asyncio.run(main())
+        loop.close()
+        assert get_default_endian() == endian_start
+
+    def test_default_endian_thread_safe(self):
+        endian_start = get_default_endian()
+        b = threading.Barrier(2)
+
+        def big():
+            _set_default_endian('big')
+            b.wait()
+            endian = get_default_endian()
+            assert endian == 'big'
+
+        def little():
+            _set_default_endian('little')
+            b.wait()
+            endian = get_default_endian()
+            assert endian == 'little'
+
+        tpe = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+        futures = [tpe.submit(func) for func in [big]*5 + [little]*5]
+        for f in futures:
+            f.result()
+
+        assert get_default_endian() == endian_start
+
 
     def test_delete_one(self):
         for a in self.randombitarrays(start=1):
