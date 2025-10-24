@@ -1542,7 +1542,7 @@ class DelSequenceIndexTests(unittest.TestCase, Util):
     @skipIf(sys.version_info < (3, 11))
     def test_default_endian_async_safe(self):
         endian_start = get_default_endian()
-        b = asyncio.Barrier(2)
+        b = asyncio.Barrier(10)
 
         async def big():
             _set_default_endian('big')
@@ -1569,21 +1569,21 @@ class DelSequenceIndexTests(unittest.TestCase, Util):
 
     def test_default_endian_thread_safe(self):
         endian_start = get_default_endian()
-        b = threading.Barrier(2)
+        b = threading.Barrier(10)
 
         def big():
-            _set_default_endian('big')
             b.wait()
+            _set_default_endian('big')
             endian = get_default_endian()
             assert endian == 'big'
 
         def little():
-            _set_default_endian('little')
             b.wait()
+            _set_default_endian('little')
             endian = get_default_endian()
             assert endian == 'little'
 
-        tpe = concurrent.futures.ThreadPoolExecutor(max_workers=4)
+        tpe = concurrent.futures.ThreadPoolExecutor(max_workers=10)
         futures = [tpe.submit(func) for func in [big]*5 + [little]*5]
         for f in futures:
             f.result()
