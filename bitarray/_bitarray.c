@@ -3606,7 +3606,9 @@ get_c_default_endian(void)
     {
         return -1;
     }
-    return (int)PyLong_AsLong(current_default_endian);
+    int ret = (int)PyLong_AsLong(current_default_endian);
+    Py_DECREF(current_default_endian);
+    return ret;
 }
 
 /* Given string 'str', return an integer representing the bit-endianness.
