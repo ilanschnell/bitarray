@@ -538,6 +538,13 @@ class ToObjectsTests(unittest.TestCase, Util):
             self.assertEqual(bytes(a), a.tobytes())
             self.assertEqual(bytearray(a), a.tobytes())
 
+    def test_bytes_bytearray_pad(self):
+        for endian, res in ("little", b"\x01"), ("big", b"\x80"):
+            a = bitarray("1", endian)
+            self.assertEqual(a.tobytes(), res)
+            a = bitarray("1", endian)
+            self.assertEqual(bytes(a), res)
+
     def test_set(self):
         for a in self.randombitarrays():
             self.assertEqual(set(a), set(a.tolist()))

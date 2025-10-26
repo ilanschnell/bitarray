@@ -1576,7 +1576,8 @@ bitarray_tobytes(bitarrayobject *self)
 PyDoc_STRVAR(tobytes_doc,
 "tobytes() -> bytes\n\
 \n\
-Return the bitarray buffer (pad bits are set to zero).");
+Return the bitarray buffer (pad bits are set to zero).\n\
+`a.tobytes()` is equivalent to `bytes(a)`");
 
 
 /* Extend self with bytes from f.read(n).  Return number of bytes actually
@@ -3564,6 +3565,8 @@ static PyMethodDef bitarray_methods[] = {
                                                          METH_KEYWORDS,
      to01_doc},
     {"tobytes",      (PyCFunction) bitarray_tobytes,     METH_NOARGS,
+     tobytes_doc},
+    {"__bytes__",    (PyCFunction) bitarray_tobytes,     METH_NOARGS,
      tobytes_doc},
     {"tofile",       (PyCFunction) bitarray_tofile,      METH_O,
      tofile_doc},
