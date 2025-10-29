@@ -1606,7 +1606,6 @@ class DelSequenceIndexTests(unittest.TestCase, Util):
 
         assert get_default_endian() == endian_start
 
-
     def test_delete_one(self):
         for a in self.randombitarrays(start=1):
             b = a.copy()
@@ -2493,23 +2492,23 @@ class NumberTests(unittest.TestCase, Util):
         self.assertEqual(type(b), frozenbitarray)
         self.assertRaises(TypeError, a.__ilshift__, 4)
 
+    @default_endian("big")
     @skipIf(is_pypy)
     def test_imported(self):
         a = bytearray([0xf0, 0x01, 0x02, 0x0f])
-        with default_endian('big'):
-            b = bitarray(buffer=a)
-            self.assertFalse(b.readonly)
-            # operate on imported (writable) buffer
-            b[8:24] <<= 3
-            self.assertEqual(a, bytearray([0xf0, 0x08, 0x10, 0x0f]))
-            b[0:9] |= bitarray("0000 1100 1")
-            self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0x0f]))
-            b[23:] ^= bitarray("1 1110 1110")
-            self.assertEqual(a, bytearray([0xfc, 0x88, 0x11, 0xe1]))
-            b[16:] &= bitarray("1111 0000 1111 0000")
-            self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0xe0]))
-            b >>= 8
-            self.assertEqual(a, bytearray([0x00, 0xfc, 0x88, 0x10]))
+        b = bitarray(buffer=a)
+        self.assertFalse(b.readonly)
+        # operate on imported (writable) buffer
+        b[8:24] <<= 3
+        self.assertEqual(a, bytearray([0xf0, 0x08, 0x10, 0x0f]))
+        b[0:9] |= bitarray("0000 1100 1")
+        self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0x0f]))
+        b[23:] ^= bitarray("1 1110 1110")
+        self.assertEqual(a, bytearray([0xfc, 0x88, 0x11, 0xe1]))
+        b[16:] &= bitarray("1111 0000 1111 0000")
+        self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0xe0]))
+        b >>= 8
+        self.assertEqual(a, bytearray([0x00, 0xfc, 0x88, 0x10]))
 
 # --------------------------------   .extend()   ----------------------------
 
