@@ -307,10 +307,8 @@ Functions defined in the `bitarray` module:
 
 ``get_default_endian()`` -> str
    Return the default bit-endianness for new bitarray objects being created.
-   Unless the code is executing inside a ``default_endian('little')`` context,
-   the default bit-endianness is ``big``. Older versions of bitarray suggested
-   using ``_set_default_endian('little')`` and this is still possible but
-   discouraged.
+   Unless ``_set_default_endian('little')`` was called, the default
+   bit-endianness is ``big``.
 
    New in version 1.3
 
