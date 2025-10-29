@@ -73,7 +73,7 @@ ENDIANNESS_MAPPING = {'little': 0, 'big': 1}
 
 @contextlib.contextmanager
 def default_endian(endian):
-    """
+    """default_endian(endian, /) -> str
     Context manager for controlling the default endianness for bitarrays.
 
     Set the default endianness for the scope of a ``with`` block and restore the
@@ -89,6 +89,6 @@ def default_endian(endian):
             f"default endianness must be 'big' or 'little', got {endian}")
     token = _default_endian_contextvar.set(ENDIANNESS_MAPPING[endian])
     try:
-        yield _default_endian_contextvar.get()
+        yield endian
     finally:
         _default_endian_contextvar.reset(token)

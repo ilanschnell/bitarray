@@ -180,7 +180,8 @@ class ModuleFunctionsTests(unittest.TestCase):
 
     def test_set_default_endian(self):
         for default in 'big', 'little':
-            with default_endian(default):
+            with default_endian(default) as used_endian:
+                assert used_endian == default
                 a = bitarray()
                 self.assertEqual(a.endian, default)
                 for x in None, 0, 64, '10111', [1, 0]:
