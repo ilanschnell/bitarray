@@ -9,12 +9,13 @@ Please find a description of this package at:
 
 Author: Ilan Schnell
 """
+import contextlib
 from collections import namedtuple
 
 from bitarray._bitarray import (
     bitarray, decodetree, bits2bytes, _bitarray_reconstructor,
     get_default_endian, _set_default_endian, _sysinfo,
-    BITARRAY_VERSION as __version__
+    BITARRAY_VERSION as __version__, _default_endian_contextvar
 )
 
 __all__ = ['bitarray', 'frozenbitarray', 'decodetree', 'bits2bytes']
@@ -64,3 +65,30 @@ Run self-test, and return `unittest.runner.TextTestResult` object.
 """
     from bitarray import test_bitarray
     return test_bitarray.run(verbosity=verbosity)
+
+# from bitarray.h:
+# #define ENDIAN_LITTLE  0
+# #define ENDIAN_BIG     1
+ENDIANNESS_MAPPING = {'little': 0, 'big': 1}
+
+@contextlib.contextmanager
+def default_endian(endian):
+    """
+    Context manager for controlling the default endianness for bitarrays.
+
+    Set the default endianness for the scope of a ``with`` block and restore the
+    original default endianness at the end. Possible values are 'big' and 'little'.
+    """
+    if not isinstance(endian, str):
+        raise TypeError(
+            f"default endianness must be 'big' or 'little', got {endian}"
+            f"with type {type(endian)}"
+        )
+    if endian not in ['big', 'little']:
+        raise ValueError(
+            f"default endianness must be 'big' or 'little', got {endian}")
+    token = _default_endian_contextvar.set(ENDIANNESS_MAPPING[endian])
+    try:
+        yield _default_endian_contextvar.get()
+    finally:
+        _default_endian_contextvar.reset(token)

@@ -4296,6 +4296,8 @@ PyInit__bitarray(void)
 
     Py_DECREF(Py_ENDIAN_BIG);
 
+    PyModule_AddObject(m, "_default_endian_contextvar", default_endian);
+
     if (register_abc() < 0)
         return NULL;
 

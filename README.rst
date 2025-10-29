@@ -625,11 +625,19 @@ Functions defined in the `bitarray` module:
 
 ``get_default_endian()`` -> str
    Return the default bit-endianness for new bitarray objects being created.
-   Unless ``_set_default_endian('little')`` was called, the default
-   bit-endianness is ``big``.
+   Unless the code is executing inside a ``default_endian('little')`` context,
+   the default bit-endianness is ``big``. Older versions of bitarray suggested
+   using ``_set_default_endian('little')`` and this is still possible but
+   discouraged.
 
    New in version 1.3
 
+``default_endian(endian, /)`` -> int
+  Context manager for controlling the default bit-endianness within the scope
+  of a ``with`` statement. Can be used as a decorator to change the default
+  bit-endianness inside the scope of a function.
+
+  New in version 3.8.0
 
 ``test(verbosity=1)`` -> TextTestResult
    Run self-test, and return ``unittest.runner.TextTestResult`` object.

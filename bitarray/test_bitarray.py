@@ -38,7 +38,7 @@ is_pypy = bool(platform.python_implementation() == 'PyPy')
 from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       get_default_endian, _set_default_endian,
                       _bitarray_reconstructor, _sysinfo as sysinfo,
-                      BufferInfo, __version__)
+                      BufferInfo, __version__, default_endian)
 
 def skipIf(condition):
     "Skip a test if the condition is true."
@@ -179,35 +179,51 @@ class ModuleFunctionsTests(unittest.TestCase):
                          sysinfo("PY_BIG_ENDIAN"))
 
     def test_set_default_endian(self):
-        for default_endian in 'big', 'little':
-            _set_default_endian(default_endian)
-            a = bitarray()
-            self.assertEqual(a.endian, default_endian)
-            for x in None, 0, 64, '10111', [1, 0]:
-                a = bitarray(x)
-                self.assertEqual(a.endian, default_endian)
+        for default in 'big', 'little':
+            with default_endian(default):
+                a = bitarray()
+                self.assertEqual(a.endian, default)
+                for x in None, 0, 64, '10111', [1, 0]:
+                    a = bitarray(x)
+                    self.assertEqual(a.endian, default)
 
-            for endian in 'big', 'little', None:
-                a = bitarray(endian=endian)
-                self.assertEqual(a.endian,
-                                 default_endian if endian is None else endian)
+                for endian in 'big', 'little', None:
+                    a = bitarray(endian=endian)
+                    self.assertEqual(a.endian,
+                                     default if endian is None else endian)
 
-            # make sure that wrong calling _set_default_endian() does not
-            # change the default endianness
-            self.assertRaises(ValueError, _set_default_endian, 'foobar')
-            self.assertEqual(bitarray().endian, default_endian)
+                # make sure that wrong calling _set_default_endian() does not
+                # change the default endianness
+                self.assertRaises(ValueError, _set_default_endian, 'foobar')
+                self.assertEqual(bitarray().endian, default)
 
     def test_set_default_endian_errors(self):
         self.assertRaises(TypeError, _set_default_endian, 0)
         self.assertRaises(TypeError, _set_default_endian, 'little', 0)
         self.assertRaises(ValueError, _set_default_endian, 'foo')
 
+    def test_default_endian_errors(self):
+        def integer_arg():
+            with default_endian(0):
+                pass
+        self.assertRaises(TypeError, integer_arg)
+
+        def too_many_args():
+            with default_endian('little', 0):
+                pass
+        self.assertRaises(TypeError, too_many_args)
+
+        def invalid_string_arg():
+            with default_endian('foo'):
+                pass
+        self.assertRaises(ValueError, invalid_string_arg)
+
     def test_get_default_endian(self):
-        for default_endian in 'big', 'little':
-            _set_default_endian(default_endian)
-            endian = get_default_endian()
-            self.assertEqual(endian, default_endian)
-            self.assertEqual(type(endian), str)
+        for default in 'big', 'little':
+            with default_endian(default):
+                endian = get_default_endian()
+                self.assertEqual(endian, default)
+                self.assertEqual(type(endian), str)
 
     def test_get_default_endian_errors(self):
         # takes no arguments
@@ -261,11 +277,10 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertEqual(a.tobytes(), b.tobytes())
 
     def test_endian_default(self):
-        _set_default_endian('big')
-        a_big = bitarray()
-        _set_default_endian('little')
-        a_little = bitarray()
-        _set_default_endian('big')
+        with default_endian('big'):
+            a_big = bitarray()
+        with default_endian('little'):
+            a_little = bitarray()
 
         self.assertEqual(a_big.endian, 'big')
         self.assertEqual(a_little.endian, 'little')
@@ -286,8 +301,8 @@ class CreateObjectTests(unittest.TestCase, Util):
             a = bitarray(buffer=b'', endian=endian)
             self.assertEQUAL(a, bitarray(0, endian))
 
-            _set_default_endian(endian)
-            a = bitarray(buffer=b'A')
+            with default_endian(endian):
+                a = bitarray(buffer=b'A')
             self.assertEqual(a.endian, endian)
             self.assertEqual(len(a), 8)
 
@@ -2479,21 +2494,21 @@ class NumberTests(unittest.TestCase, Util):
 
     @skipIf(is_pypy)
     def test_imported(self):
-        _set_default_endian("big")
         a = bytearray([0xf0, 0x01, 0x02, 0x0f])
-        b = bitarray(buffer=a)
-        self.assertFalse(b.readonly)
-        # operate on imported (writable) buffer
-        b[8:24] <<= 3
-        self.assertEqual(a, bytearray([0xf0, 0x08, 0x10, 0x0f]))
-        b[0:9] |= bitarray("0000 1100 1")
-        self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0x0f]))
-        b[23:] ^= bitarray("1 1110 1110")
-        self.assertEqual(a, bytearray([0xfc, 0x88, 0x11, 0xe1]))
-        b[16:] &= bitarray("1111 0000 1111 0000")
-        self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0xe0]))
-        b >>= 8
-        self.assertEqual(a, bytearray([0x00, 0xfc, 0x88, 0x10]))
+        with default_endian('big'):
+            b = bitarray(buffer=a)
+            self.assertFalse(b.readonly)
+            # operate on imported (writable) buffer
+            b[8:24] <<= 3
+            self.assertEqual(a, bytearray([0xf0, 0x08, 0x10, 0x0f]))
+            b[0:9] |= bitarray("0000 1100 1")
+            self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0x0f]))
+            b[23:] ^= bitarray("1 1110 1110")
+            self.assertEqual(a, bytearray([0xfc, 0x88, 0x11, 0xe1]))
+            b[16:] &= bitarray("1111 0000 1111 0000")
+            self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0xe0]))
+            b >>= 8
+            self.assertEqual(a, bytearray([0x00, 0xfc, 0x88, 0x10]))
 
 # --------------------------------   .extend()   ----------------------------
 
@@ -2994,19 +3009,19 @@ class PackTests(unittest.TestCase, Util):
 
     def test_pack_simple(self):
         for endian in 'little', 'big':
-            _set_default_endian(endian)
-            a = bitarray()
-            a.pack(bytes())
-            self.assertEQUAL(a, bitarray())
-            a.pack(b'\x00')
-            self.assertEQUAL(a, bitarray('0'))
-            a.pack(b'\xff')
-            self.assertEQUAL(a, bitarray('01'))
-            a.pack(b'\x01\x00\x7a')
-            self.assertEQUAL(a, bitarray('01101'))
-            a.pack(bytearray([0x01, 0x00, 0xff, 0xa7]))
-            self.assertEQUAL(a, bitarray('01101 1011'))
-            self.check_obj(a)
+            with default_endian(endian):
+                a = bitarray()
+                a.pack(bytes())
+                self.assertEQUAL(a, bitarray())
+                a.pack(b'\x00')
+                self.assertEQUAL(a, bitarray('0'))
+                a.pack(b'\xff')
+                self.assertEQUAL(a, bitarray('01'))
+                a.pack(b'\x01\x00\x7a')
+                self.assertEQUAL(a, bitarray('01101'))
+                a.pack(bytearray([0x01, 0x00, 0xff, 0xa7]))
+                self.assertEQUAL(a, bitarray('01101 1011'))
+                self.check_obj(a)
 
     def test_pack_types(self):
         a = bitarray()
