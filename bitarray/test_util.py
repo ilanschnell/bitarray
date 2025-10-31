@@ -24,7 +24,7 @@ from string import hexdigits, whitespace
 from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
-                      _set_default_endian)
+                      get_default_endian)
 from bitarray.test_bitarray import Util, skipIf, is_pypy, urandom_2, PTRSIZE
 
 from bitarray.util import (
@@ -46,12 +46,10 @@ class ZerosOnesTests(unittest.TestCase):
 
     def test_basic(self):
         for _ in range(50):
-            default_endian = choice(['little', 'big'])
-            _set_default_endian(default_endian)
             a = choice([zeros(0), zeros(0, None), zeros(0, endian=None),
                         ones(0), ones(0, None), ones(0, endian=None)])
             self.assertEqual(a, bitarray())
-            self.assertEqual(a.endian, default_endian)
+            self.assertEqual(a.endian, get_default_endian())
             self.assertEqual(type(a), bitarray)
 
             endian = choice(['little', 'big', None])
@@ -59,11 +57,11 @@ class ZerosOnesTests(unittest.TestCase):
 
             a = choice([zeros(n, endian), zeros(n, endian=endian)])
             self.assertEqual(a.to01(), n * "0")
-            self.assertEqual(a.endian, endian or default_endian)
+            self.assertEqual(a.endian, endian or get_default_endian())
 
             b = choice([ones(n, endian), ones(n, endian=endian)])
             self.assertEqual(b.to01(), n * "1")
-            self.assertEqual(b.endian, endian or default_endian)
+            self.assertEqual(b.endian, endian or get_default_endian())
 
     def test_errors(self):
         for f in zeros, ones:
@@ -86,18 +84,16 @@ class URandomTests(unittest.TestCase):
 
     def test_basic(self):
         for _ in range(20):
-            default_endian = choice(['little', 'big'])
-            _set_default_endian(default_endian)
             a = choice([urandom(0), urandom(0, endian=None)])
             self.assertEqual(a, bitarray())
-            self.assertEqual(a.endian, default_endian)
+            self.assertEqual(a.endian, get_default_endian())
 
             endian = choice(['little', 'big', None])
             n = randrange(100)
 
             a = choice([urandom(n, endian), urandom(n, endian=endian)])
             self.assertEqual(len(a), n)
-            self.assertEqual(a.endian, endian or default_endian)
+            self.assertEqual(a.endian, endian or get_default_endian())
             self.assertEqual(type(a), bitarray)
 
     def test_errors(self):
@@ -122,8 +118,6 @@ class Random_K_Tests(unittest.TestCase):
 
     def test_basic(self):
         for _ in range(250):
-            default_endian = choice(['little', 'big'])
-            _set_default_endian(default_endian)
             endian = choice(['little', 'big', None])
             n = randrange(120)
             k = randint(0, n)
@@ -131,7 +125,7 @@ class Random_K_Tests(unittest.TestCase):
             self.assertTrue(type(a), bitarray)
             self.assertEqual(len(a), n)
             self.assertEqual(a.count(), k)
-            self.assertEqual(a.endian, endian or default_endian)
+            self.assertEqual(a.endian, endian or get_default_endian())
 
     def test_inputs_and_edge_cases(self):
         R = random_k
@@ -210,7 +204,6 @@ class Random_K_Tests(unittest.TestCase):
         # We ensure that after setting a seed value, random_k() will
         # always return the same random bitarrays.  However, we do not ensure
         # that these results will not change in future versions of bitarray.
-        _set_default_endian("little")
         a = []
         for val in 654321, 654322, 654321, 654322:
             seed(val)
@@ -289,15 +282,13 @@ class Random_P_Tests(unittest.TestCase):
 
     def test_basic(self):
         for _ in range(250):
-            default_endian = choice(['little', 'big'])
-            _set_default_endian(default_endian)
             endian = choice(['little', 'big', None])
             n = randrange(120)
             p = choice([0.0, 0.0001, 0.2, 0.5, 0.9, 1.0])
             a = random_p(n, p, endian)
             self.assertTrue(type(a), bitarray)
             self.assertEqual(len(a), n)
-            self.assertEqual(a.endian, endian or default_endian)
+            self.assertEqual(a.endian, endian or get_default_endian())
 
     def test_inputs_and_edge_cases(self):
         R = random_p
@@ -347,7 +338,6 @@ class Random_P_Tests(unittest.TestCase):
         # We ensure that after setting a seed value, random_p() will always
         # return the same random bitarrays.  However, we do not ensure that
         # these results will not change in future versions of bitarray.
-        _set_default_endian("little")
         a = []
         for val in 123456, 123457, 123456, 123457:
             seed(val)
@@ -391,13 +381,11 @@ class PrimeTests(unittest.TestCase):
 
     def test_explitcit(self):
         for n in range(230):
-            default_endian = choice(['little', 'big'])
-            _set_default_endian(default_endian)
             endian = choice(["little", "big", None])
             odd = getrandbits(1)
             a = gen_primes(n, endian, odd)
             self.assertEqual(len(a), n)
-            self.assertEqual(a.endian, endian or default_endian)
+            self.assertEqual(a.endian, endian or get_default_endian())
             if odd:
                 lst = [2] + [2 * i + 1 for i in a.search(1)]
             else:
@@ -530,16 +518,15 @@ class StripTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, strip, '0110')
         self.assertRaises(TypeError, strip, bitarray(), 123)
         self.assertRaises(ValueError, strip, bitarray(), 'up')
-        for default_endian in 'big', 'little':
-            _set_default_endian(default_endian)
-            a = bitarray('00010110000')
-            self.assertEQUAL(strip(a), bitarray('0001011'))
-            self.assertEQUAL(strip(a, 'left'), bitarray('10110000'))
-            self.assertEQUAL(strip(a, 'both'), bitarray('1011'))
-            b = frozenbitarray('00010110000')
-            c = strip(b, 'both')
-            self.assertEqual(c, bitarray('1011'))
-            self.assertEqual(type(c), frozenbitarray)
+
+        a = bitarray('00010110000')
+        self.assertEQUAL(strip(a), bitarray('0001011'))
+        self.assertEQUAL(strip(a, 'left'), bitarray('10110000'))
+        self.assertEQUAL(strip(a, 'both'), bitarray('1011'))
+        b = frozenbitarray('00010110000')
+        c = strip(b, 'both')
+        self.assertEqual(c, bitarray('1011'))
+        self.assertEqual(type(c), frozenbitarray)
 
     def test_zeros_ones(self):
         for _ in range(50):
@@ -1412,7 +1399,6 @@ class HexlifyTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, ba2hex, a, 2, " \0")
 
     def test_hex2ba_whitespace(self):
-        _set_default_endian('big')
         self.assertEqual(hex2ba("F1 FA %s f3 c0" % whitespace),
                          bitarray("11110001 11111010 11110011 11000000"))
         self.assertEQUAL(hex2ba(b' a F ', 'big'),
@@ -1441,13 +1427,11 @@ class HexlifyTests(unittest.TestCase, Util):
 
     def test_random(self):
         for _ in range(100):
-            default_endian = self.random_endian()
-            _set_default_endian(default_endian)
             endian = choice(["little", "big", None])
             a = urandom_2(4 * randrange(100), endian)
             s = ba2hex(a, group=randrange(10), sep=choice(whitespace))
             b = hex2ba(s, endian)
-            self.assertEqual(b.endian, endian or default_endian)
+            self.assertEqual(b.endian, endian or get_default_endian())
             self.assertEqual(a, b)
             self.check_obj(b)
 
@@ -1978,14 +1962,11 @@ class VLFTests(unittest.TestCase, Util):
                 (b'\xb5\xa7\x18', '0101 0100111 0011'),
                 (b'\x95\xb7\x1c', '0101 0110111 001110'),
         ]:
-            default_endian = self.random_endian()
-            _set_default_endian(default_endian)
-
             a = bitarray(s)
             self.assertEqual(vl_encode(a), blob)
             c = vl_decode(blob)
             self.assertEqual(c, a)
-            self.assertEqual(c.endian, default_endian)
+            self.assertEqual(c.endian, get_default_endian())
 
             for endian in 'big', 'little', None:
                 a = bitarray(s, endian)
@@ -1995,7 +1976,7 @@ class VLFTests(unittest.TestCase, Util):
 
                 c = vl_decode(blob, endian)
                 self.assertEqual(c, a)
-                self.assertEqual(c.endian, endian or default_endian)
+                self.assertEqual(c.endian, endian or get_default_endian())
 
     def test_encode_types(self):
         s = "0011 01"
@@ -2264,7 +2245,6 @@ class IntegerizationTests(unittest.TestCase, Util):
                              bitarray(n * '1'))
 
     def test_explicit(self):
-        _set_default_endian('big')
         for i, sa in [( 0,     '0'),    (1,         '1'),
                       ( 2,    '10'),    (3,        '11'),
                       (25, '11001'),  (265, '100001001'),

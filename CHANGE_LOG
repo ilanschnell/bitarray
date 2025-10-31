@@ -1,6 +1,7 @@
 2025-XX-XX   3.7.3:
 -------------------
   * add `.__bytes__()`, see #246
+  * remove `_set_default_endian()`
 
 
 2025-10-08   3.7.2:

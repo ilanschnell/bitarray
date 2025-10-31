@@ -33,7 +33,7 @@ is_pypy = bool(platform.python_implementation() == 'PyPy')
 
 
 from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
-                      get_default_endian, _set_default_endian,
+                      get_default_endian,
                       _bitarray_reconstructor, _sysinfo as sysinfo,
                       BufferInfo, __version__)
 
@@ -175,36 +175,10 @@ class ModuleFunctionsTests(unittest.TestCase):
         self.assertEqual(sys.byteorder == "big",
                          sysinfo("PY_BIG_ENDIAN"))
 
-    def test_set_default_endian(self):
-        for default_endian in 'big', 'little':
-            _set_default_endian(default_endian)
-            a = bitarray()
-            self.assertEqual(a.endian, default_endian)
-            for x in None, 0, 64, '10111', [1, 0]:
-                a = bitarray(x)
-                self.assertEqual(a.endian, default_endian)
-
-            for endian in 'big', 'little', None:
-                a = bitarray(endian=endian)
-                self.assertEqual(a.endian,
-                                 default_endian if endian is None else endian)
-
-            # make sure that wrong calling _set_default_endian() does not
-            # change the default endianness
-            self.assertRaises(ValueError, _set_default_endian, 'foobar')
-            self.assertEqual(bitarray().endian, default_endian)
-
-    def test_set_default_endian_errors(self):
-        self.assertRaises(TypeError, _set_default_endian, 0)
-        self.assertRaises(TypeError, _set_default_endian, 'little', 0)
-        self.assertRaises(ValueError, _set_default_endian, 'foo')
-
     def test_get_default_endian(self):
-        for default_endian in 'big', 'little':
-            _set_default_endian(default_endian)
-            endian = get_default_endian()
-            self.assertEqual(endian, default_endian)
-            self.assertEqual(type(endian), str)
+        endian = get_default_endian()
+        self.assertTrue(endian in ('little', 'big'))
+        self.assertEqual(type(endian), str)
 
     def test_get_default_endian_errors(self):
         # takes no arguments
@@ -257,16 +231,6 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertNotEqual(a, b)
         self.assertEqual(a.tobytes(), b.tobytes())
 
-    def test_endian_default(self):
-        _set_default_endian('big')
-        a_big = bitarray()
-        _set_default_endian('little')
-        a_little = bitarray()
-        _set_default_endian('big')
-
-        self.assertEqual(a_big.endian, 'big')
-        self.assertEqual(a_little.endian, 'little')
-
     def test_endian_wrong(self):
         self.assertRaises(TypeError, bitarray, endian=0)
         self.assertRaises(ValueError, bitarray, endian='')
@@ -283,10 +247,9 @@ class CreateObjectTests(unittest.TestCase, Util):
             a = bitarray(buffer=b'', endian=endian)
             self.assertEQUAL(a, bitarray(0, endian))
 
-            _set_default_endian(endian)
-            a = bitarray(buffer=b'A')
-            self.assertEqual(a.endian, endian)
-            self.assertEqual(len(a), 8)
+        a = bitarray(buffer=b'A')
+        self.assertEqual(a.endian, "big")
+        self.assertEqual(len(a), 8)
 
     def test_buffer_readonly(self):
         a = bitarray(buffer=b'\xf0', endian='little')
@@ -2430,7 +2393,6 @@ class NumberTests(unittest.TestCase, Util):
 
     @skipIf(is_pypy)
     def test_imported(self):
-        _set_default_endian("big")
         a = bytearray([0xf0, 0x01, 0x02, 0x0f])
         b = bitarray(buffer=a)
         self.assertFalse(b.readonly)
@@ -2944,20 +2906,18 @@ class SortTests(unittest.TestCase, Util):
 class PackTests(unittest.TestCase, Util):
 
     def test_pack_simple(self):
-        for endian in 'little', 'big':
-            _set_default_endian(endian)
-            a = bitarray()
-            a.pack(bytes())
-            self.assertEQUAL(a, bitarray())
-            a.pack(b'\x00')
-            self.assertEQUAL(a, bitarray('0'))
-            a.pack(b'\xff')
-            self.assertEQUAL(a, bitarray('01'))
-            a.pack(b'\x01\x00\x7a')
-            self.assertEQUAL(a, bitarray('01101'))
-            a.pack(bytearray([0x01, 0x00, 0xff, 0xa7]))
-            self.assertEQUAL(a, bitarray('01101 1011'))
-            self.check_obj(a)
+        a = bitarray()
+        a.pack(bytes())
+        self.assertEQUAL(a, bitarray())
+        a.pack(b'\x00')
+        self.assertEQUAL(a, bitarray('0'))
+        a.pack(b'\xff')
+        self.assertEQUAL(a, bitarray('01'))
+        a.pack(b'\x01\x00\x7a')
+        self.assertEQUAL(a, bitarray('01101'))
+        a.pack(bytearray([0x01, 0x00, 0xff, 0xa7]))
+        self.assertEQUAL(a, bitarray('01101 1011'))
+        self.check_obj(a)
 
     def test_pack_types(self):
         a = bitarray()
@@ -5181,7 +5141,6 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
 def run(verbosity=1):
     import bitarray.test_util
 
-    default_endian = get_default_endian()
     print('bitarray is installed in: %s' % os.path.dirname(__file__))
     print('bitarray version: %s' % __version__)
     print('sys.version: %s' % sys.version)
@@ -5190,7 +5149,7 @@ def run(verbosity=1):
     print('sizeof(size_t): %d' % sysinfo("size_t"));
     print('sizeof(bitarrayobject): %d' % sysinfo("bitarrayobject"))
     print('HAVE_BUILTIN_BSWAP64: %d' % sysinfo("HAVE_BUILTIN_BSWAP64"))
-    print('default bit-endianness: %s' % default_endian)
+    print('default bit-endianness: %s' % get_default_endian())
     print('machine byte-order: %s' % sys.byteorder)
     print('Py_DEBUG: %s' % sysinfo("Py_DEBUG"))
     print('DEBUG: %s' % sysinfo("DEBUG"))
@@ -5201,7 +5160,6 @@ def run(verbosity=1):
 
     runner = unittest.TextTestRunner(verbosity=verbosity)
     result = runner.run(suite)
-    _set_default_endian(default_endian)
     return result
 
 if __name__ == '__main__':

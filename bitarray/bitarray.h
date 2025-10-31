@@ -52,6 +52,8 @@ typedef struct {
 /* --- bit-endianness --- */
 #define ENDIAN_LITTLE  0
 #define ENDIAN_BIG     1
+/* default bit-endianness */
+#define ENDIAN_DEFAULT  ENDIAN_BIG
 
 #define IS_LE(self)  ((self)->endian == ENDIAN_LITTLE)
 #define IS_BE(self)  ((self)->endian == ENDIAN_BIG)
