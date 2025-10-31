@@ -5151,6 +5151,7 @@ def run(verbosity=1):
     print('HAVE_BUILTIN_BSWAP64: %d' % sysinfo("HAVE_BUILTIN_BSWAP64"))
     print('default bit-endianness: %s' % get_default_endian())
     print('machine byte-order: %s' % sys.byteorder)
+    print('Py_GIL_DISABLED: %s' % sysinfo("Py_GIL_DISABLED"))
     print('Py_DEBUG: %s' % sysinfo("Py_DEBUG"))
     print('DEBUG: %s' % sysinfo("DEBUG"))
     loader = unittest.TestLoader()
