@@ -4153,6 +4153,11 @@ sysinfo(PyObject *module, PyObject *args)
     R("PY_LITTLE_ENDIAN", PY_LITTLE_ENDIAN);
     R("PY_BIG_ENDIAN", PY_BIG_ENDIAN);
     R("HAVE_BUILTIN_BSWAP64", HAVE_BUILTIN_BSWAP64);
+#ifdef Py_GIL_DISABLED   /* Python configured using --disable-gil */
+    R("Py_GIL_DISABLED", 1);
+#else
+    R("Py_GIL_DISABLED", 0);
+#endif
 #ifdef Py_DEBUG          /* Python configured using --with-pydebug  */
     R("Py_DEBUG", 1);
 #else
