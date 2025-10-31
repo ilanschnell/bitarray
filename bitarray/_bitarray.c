@@ -4230,6 +4230,10 @@ PyInit__bitarray(void)
     if ((m = PyModule_Create(&moduledef)) == NULL)
         return NULL;
 
+#ifdef Py_GIL_DISABLED
+    PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED);
+#endif
+
     if (PyType_Ready(&Bitarray_Type) < 0)
         return NULL;
     Py_SET_TYPE(&Bitarray_Type, &PyType_Type);
