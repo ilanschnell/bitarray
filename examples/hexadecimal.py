@@ -1,6 +1,6 @@
 from time import perf_counter
 
-from bitarray import bitarray, get_default_endian
+from bitarray import bitarray
 from bitarray.util import urandom, ba2hex, hex2ba
 
 
@@ -23,7 +23,7 @@ def prefix_ba2hex(a):
     return ''.join(a.decode(CODEDICT[a.endian]))
 
 def prefix_hex2ba(s, endian=None):
-    a = bitarray(0, endian or get_default_endian())
+    a = bitarray(0, endian)
     a.encode(CODEDICT[a.endian], s)
     return a
 
