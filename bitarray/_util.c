@@ -2249,6 +2249,10 @@ PyInit__util(void)
     if ((m = PyModule_Create(&moduledef)) == NULL)
         return NULL;
 
+#ifdef Py_GIL_DISABLED
+    PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED);
+#endif
+
     if (PyType_Ready(&CHDI_Type) < 0)
         return NULL;
     Py_SET_TYPE(&CHDI_Type, &PyType_Type);
