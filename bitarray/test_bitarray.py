@@ -152,10 +152,19 @@ class ModuleFunctionsTests(unittest.TestCase):
 
     def test_sysinfo(self):
         for key in ["void*", "size_t", "bitarrayobject", "decodetreeobject",
-                    "binode", "HAVE_BUILTIN_BSWAP64", "PY_LITTLE_ENDIAN",
-                    "PY_BIG_ENDIAN", "Py_DEBUG", "DEBUG"]:
+                    "binode", "HAVE_BUILTIN_BSWAP64",
+                    "PY_LITTLE_ENDIAN", "PY_BIG_ENDIAN",
+                    "Py_GIL_DISABLED", "Py_DEBUG", "DEBUG"]:
             res = sysinfo(key)
             self.assertEqual(type(res), int)
+
+    @skipIf(sys.version_info[:2] < (3, 14))
+    def test_gil_disabled(self):
+        self.assertEqual(sysinfo("Py_GIL_DISABLED"),
+                         "free-threading" in sys.version)
+        # see if GIL is actually disabled in free-threading build
+        if sysinfo("Py_GIL_DISABLED"):
+            self.assertFalse(sys._is_gil_enabled())
 
     def test_sysinfo_errors(self):
         self.assertRaises(TypeError, sysinfo)
@@ -179,6 +188,8 @@ class ModuleFunctionsTests(unittest.TestCase):
         endian = get_default_endian()
         self.assertTrue(endian in ('little', 'big'))
         self.assertEqual(type(endian), str)
+        a = bitarray()
+        self.assertEqual(a.endian, endian)
 
     def test_get_default_endian_errors(self):
         # takes no arguments
@@ -5145,6 +5156,8 @@ def run(verbosity=1):
     print('bitarray version: %s' % __version__)
     print('sys.version: %s' % sys.version)
     print('sys.prefix: %s' % sys.prefix)
+    if sys.version_info[:2] >= (3, 14):
+        print('sys._is_gil_enabled(): %s' % sys._is_gil_enabled())
     print('pointer size: %d bit' % (8 * PTRSIZE))
     print('sizeof(size_t): %d' % sysinfo("size_t"));
     print('sizeof(bitarrayobject): %d' % sysinfo("bitarrayobject"))
