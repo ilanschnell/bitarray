@@ -1,3 +1,7 @@
+2025-XX-XX   3.8.1:
+-------------------
+
+
 2025-11-02   3.8.0:
 -------------------
   * add experimental support for free-threaded builds (GIL disabled), #234
