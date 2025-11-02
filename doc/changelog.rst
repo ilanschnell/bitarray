@@ -1,6 +1,13 @@
 Change log
 ==========
 
+**3.8.0** (2025-11-02):
+
+* add experimental support for free-threaded builds (GIL disabled), `#234 <https://github.com/ilanschnell/bitarray/issues/234>`__
+* remove ``_set_default_endian()``
+* add ``.__bytes__()``, see `#246 <https://github.com/ilanschnell/bitarray/issues/246>`__
+
+
 **3.7.2** (2025-10-08):
 
 * enable ``util.random_k()`` for all supported Python versions,

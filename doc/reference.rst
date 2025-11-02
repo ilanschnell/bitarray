@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 3.7.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.8.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -237,6 +237,7 @@ bitarray methods:
 
 ``tobytes()`` -> bytes
    Return the bitarray buffer (pad bits are set to zero).
+   ``a.tobytes()`` is equivalent to ``bytes(a)``
 
 
 ``tofile(f, /)``
@@ -307,8 +308,6 @@ Functions defined in the `bitarray` module:
 
 ``get_default_endian()`` -> str
    Return the default bit-endianness for new bitarray objects being created.
-   Unless ``_set_default_endian('little')`` was called, the default
-   bit-endianness is ``big``.
 
    New in version 1.3
 

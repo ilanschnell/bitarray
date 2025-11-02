@@ -1,6 +1,6 @@
-2025-11-XX   3.8.0:
+2025-11-02   3.8.0:
 -------------------
-  * add experimental support for free-threaded builds (GIL disabled)
+  * add experimental support for free-threaded builds (GIL disabled), #234
   * remove `_set_default_endian()`
   * add `.__bytes__()`, see #246
 
