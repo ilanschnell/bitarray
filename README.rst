@@ -57,7 +57,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 3.7.2
+    bitarray version: 3.8.0
     sys.version: 3.13.5 (main, Jun 16 2025) [Clang 18.1.8]
     sys.prefix: /Users/ilan/miniforge
     pointer size: 64 bit
@@ -66,13 +66,14 @@ Once you have installed the package, you may want to test it:
     HAVE_BUILTIN_BSWAP64: 1
     default bit-endianness: big
     machine byte-order: little
+    Py_GIL_DISABLED: 0
     Py_DEBUG: 0
     DEBUG: 0
     .........................................................................
     .........................................................................
     ................................................................
     ----------------------------------------------------------------------
-    Ran 597 tests in 0.165s
+    Ran 595 tests in 0.165s
 
     OK
 
@@ -319,7 +320,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.7.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.8.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -555,6 +556,7 @@ bitarray methods:
 
 ``tobytes()`` -> bytes
    Return the bitarray buffer (pad bits are set to zero).
+   ``a.tobytes()`` is equivalent to ``bytes(a)``
 
 
 ``tofile(f, /)``
@@ -625,8 +627,6 @@ Functions defined in the `bitarray` module:
 
 ``get_default_endian()`` -> str
    Return the default bit-endianness for new bitarray objects being created.
-   Unless ``_set_default_endian('little')`` was called, the default
-   bit-endianness is ``big``.
 
    New in version 1.3
 
