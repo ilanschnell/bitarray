@@ -259,7 +259,7 @@ class CreateObjectTests(unittest.TestCase, Util):
             self.assertEQUAL(a, bitarray(0, endian))
 
         a = bitarray(buffer=b'A')
-        self.assertEqual(a.endian, "big")
+        self.assertEqual(a.endian, get_default_endian())
         self.assertEqual(len(a), 8)
 
     def test_buffer_readonly(self):
@@ -2405,16 +2405,16 @@ class NumberTests(unittest.TestCase, Util):
     @skipIf(is_pypy)
     def test_imported(self):
         a = bytearray([0xf0, 0x01, 0x02, 0x0f])
-        b = bitarray(buffer=a)
+        b = bitarray(buffer=a, endian='big')
         self.assertFalse(b.readonly)
         # operate on imported (writable) buffer
         b[8:24] <<= 3
         self.assertEqual(a, bytearray([0xf0, 0x08, 0x10, 0x0f]))
-        b[0:9] |= bitarray("0000 1100 1")
+        b[0:9] |= bitarray("0000 1100 1", 'big')
         self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0x0f]))
-        b[23:] ^= bitarray("1 1110 1110")
+        b[23:] ^= bitarray("1 1110 1110", 'big')
         self.assertEqual(a, bytearray([0xfc, 0x88, 0x11, 0xe1]))
-        b[16:] &= bitarray("1111 0000 1111 0000")
+        b[16:] &= bitarray("1111 0000 1111 0000", 'big')
         self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0xe0]))
         b >>= 8
         self.assertEqual(a, bytearray([0x00, 0xfc, 0x88, 0x10]))
@@ -4714,10 +4714,10 @@ class BufferImportTests(unittest.TestCase, Util):
     @skipIf(is_pypy)
     def test_bitarray_shared_sections(self):
         a = urandom_2(0x2000, 'big')
-        b = bitarray(buffer=memoryview(a)[0x100:0x300])
+        b = bitarray(buffer=memoryview(a)[0x100:0x300], endian='big')
         self.assertEqual(b.buffer_info().address,
                          a.buffer_info().address + 0x100)
-        c = bitarray(buffer=memoryview(a)[0x200:0x800])
+        c = bitarray(buffer=memoryview(a)[0x200:0x800], endian='big')
         self.assertEqual(c.buffer_info().address,
                          a.buffer_info().address + 0x200)
         self.assertEqual(a[8 * 0x100 : 8 * 0x300], b)

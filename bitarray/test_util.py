@@ -1400,7 +1400,9 @@ class HexlifyTests(unittest.TestCase, Util):
 
     def test_hex2ba_whitespace(self):
         self.assertEqual(hex2ba("F1 FA %s f3 c0" % whitespace),
-                         bitarray("11110001 11111010 11110011 11000000"))
+                         bitarray("11110001 11111010 11110011 11000000"
+                                  if get_default_endian() == "big" else
+                                  "11111000 11110101 11111100 00110000"))
         self.assertEQUAL(hex2ba(b' a F ', 'big'),
                          bitarray('1010 1111', 'big'))
         self.assertEQUAL(hex2ba(860 * " " + '0  1D' + 590 * " ", 'little'),
@@ -2251,7 +2253,8 @@ class IntegerizationTests(unittest.TestCase, Util):
                       (3691038, '1110000101001000011110')]:
             ab = bitarray(sa, 'big')
             al = bitarray(sa[::-1], 'little')
-            self.assertEQUAL(int2ba(i), ab)
+            self.assertEQUAL(int2ba(i),
+                             ab if get_default_endian() == 'big' else al)
             self.assertEQUAL(int2ba(i, endian='big'), ab)
             self.assertEQUAL(int2ba(i, endian='little'), al)
             self.assertEqual(ba2int(ab), ba2int(al), i)
