@@ -1,4 +1,4 @@
-# Copyright (c) 2021 - 2025, Ilan Schnell; All Rights Reserved
+# Copyright (c) 2021 - 2026, Ilan Schnell; All Rights Reserved
 #
 # This stub, as well as util.pyi, are tested with Python 3.10 and mypy 1.11.2
 
