@@ -64,6 +64,17 @@ considered masks.  For example:
 Note that ``del a[mask]`` is equivalent to the in-place version of
 selecting the reverse mask ``a = a[~mask]``.
 
-Also note that masked assignment is not implemented,
+As of bitarray version 3.1, masked assignment to bitarrays is also
+supported:
+
+.. code-block:: python
+
+    >>> a =    bitarray('1001001')
+    >>> mask = bitarray('1010111')
+    >>> a[mask] = bitarray("11100")
+    >>> a
+    bitarray('1011100')
+
+However, masked assignment to Booleans is not implemented,
 as ``a[mask] = 1`` would be equivalent to the bitwise operation ``a |= mask``.
 And ``a[mask] = 0`` would be equivalent to ``a &= ~mask``.
