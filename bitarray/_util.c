@@ -1154,7 +1154,8 @@ byte_length(Py_ssize_t i)
        BSI(1) = 32                         (BSI = Buffer Size Indexable)
 
    Moving from block type n to n + 1 multiplies the decoded block size
-   by a factor of 256 (as the extra byte can index 256 times as much):
+   by a factor of 256 (as one extra byte can index 256 times as much
+   address space):
 
        BSI(n + 1) = 256 * BSI(n)
 */
