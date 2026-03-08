@@ -107,7 +107,16 @@ class Tests(unittest.TestCase):
             self.assertEqual(sc_decode(blob), bitarray(8))
 
     def test_untouch(self):
-        stream = iter(b"\x01\x07\x01\x73\0XYZ")
+        blob = b"\x01\x07\x01\x73\0XYZ"
+        stream = iter(blob)
+        stat = sc_stat(stream, count=True)
+        self.assertEqual(stat,
+                         {'endian': 'little',
+                          'nbits': 7,
+                          'blocks': [1, 0, 0, 0, 0],
+                          'count': [5, 0, 0, 0, 0]})
+        self.assertEqual(next(stream), ord('X'))
+        stream = iter(blob)
         self.assertEqual(sc_decode(stream), bitarray("1100111"))
         self.assertEqual(next(stream), ord('X'))
 
