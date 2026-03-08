@@ -1281,7 +1281,8 @@ module_sc_rts(PyObject *module, PyObject *obj)
       a.count(1, 8 * offset, 8 * offset + (1 << (8 * n)))
 
    The offset must be divisible by SEGSIZE, as this functions makes use of
-   running totals, stored in rts[]. */
+   running totals, stored in rts[].
+   Here, and in the following, 'offset' is in units of bytes. */
 static Py_ssize_t
 sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
 {
