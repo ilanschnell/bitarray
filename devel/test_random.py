@@ -797,7 +797,7 @@ class VerificationTests(Util):
 
         # for small p set randomly individual bits, which is much faster
         if p < SMALL_P:
-            return p  # random.binomialvariate() and .random_pop()
+            return p  # random.binomialvariate() and .random_k()
 
         # calculate operator sequence
         i = int(p * K)
