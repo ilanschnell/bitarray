@@ -1600,7 +1600,7 @@ extend_fread(bitarrayobject *self, PyObject *f, Py_ssize_t n)
     ret = bitarray_frombytes(self, bytes);
     Py_DECREF(bytes);
     if (ret == NULL)
-        res = -1;
+        return -1;
     Py_DECREF(ret);
     return res;
 }

@@ -4038,7 +4038,7 @@ class FileTests(unittest.TestCase, Util):
         with open(self.tmpfname, 'rb') as fi:
             self.assertRaises(TypeError, a.fromfile, fi, None)
 
-    def test_fromfile_erros(self):
+    def test_fromfile_errors(self):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(b'0123456789')
         self.assertFileSize(10)
@@ -4051,6 +4051,13 @@ class FileTests(unittest.TestCase, Util):
         with open(self.tmpfname, 'r') as fi:
             self.assertRaisesMessage(TypeError, ".read() did not return "
                                      "'bytes', got 'str'", a.fromfile, fi)
+
+    def test_fromfile_exported_buffer(self):
+        a = bitarray()
+        v = memoryview(a)  # export buffer — prevents resize/frombytes
+        f = BytesIO(b'\x00' * 100)
+        msg = "cannot resize bitarray that is exporting buffers"
+        self.assertRaisesMessage(BufferError, msg, a.fromfile, f)
 
     def test_frombytes_invalid_reader(self):
         class Reader:
