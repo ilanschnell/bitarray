@@ -1039,6 +1039,8 @@ bitarray_buffer_info(bitarrayobject *self)
                          readonly,
                          imported,
                          self->ob_exports);
+    if (args == NULL)
+        return NULL;
     Py_DECREF(address);
     Py_DECREF(readonly);
     Py_DECREF(imported);
