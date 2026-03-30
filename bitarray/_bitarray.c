@@ -2844,8 +2844,9 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
 
     /* extend self with the bitarrays from codedict */
     while ((symbol = PyIter_Next(iter))) {
-        value = PyDict_GetItem(codedict, symbol);
-        Py_DECREF(symbol);
+        if (PyDict_GetItemRef(codedict, symbol, &value) < 0)
+            goto error;
+
         if (value == NULL) {
             PyErr_Format(PyExc_ValueError,
                          "symbol not defined in prefix code: %A", symbol);
@@ -2854,6 +2855,9 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
         if (check_value(value) < 0 ||
                 extend_bitarray(self, (bitarrayobject *) value) < 0)
             goto error;
+
+        Py_DECREF(symbol);
+        Py_DECREF(value);
     }
     Py_DECREF(iter);
     if (PyErr_Occurred())       /* from PyIter_Next() */
@@ -2862,6 +2866,8 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
 
  error:
     Py_DECREF(iter);
+    Py_DECREF(symbol);
+    Py_XDECREF(value);
     return NULL;
 }
 

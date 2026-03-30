@@ -4408,6 +4408,26 @@ class PrefixCodeTests(unittest.TestCase, Util):
         msg = "symbol not defined in prefix code: None"
         self.assertRaisesMessage(ValueError, msg, a.encode, d, [None, 2])
 
+    def test_encode_symbol_ref_count(self):
+        a = bitarray()
+        codedict = {'a': bitarray('0')}
+        # Generator yields a fresh object with refcount 1
+        def gen():
+            yield type('X', (), {
+                '__hash__': lambda s: 42,
+                '__repr__': lambda s: 'X()'
+            })()
+        self.assertRaises(ValueError, a.encode, codedict, gen())
+
+    def test_encode_swallowed_exception(self):
+        a = bitarray()
+        codedict = {'a': bitarray('0')}
+        class Unhashable:
+            def __hash__(self):
+                raise MemoryError("OOM in __hash__")
+        # MemoryError is not swallowed by ValueError
+        self.assertRaises(MemoryError, a.encode, codedict, [Unhashable()])
+
     def test_encode_not_iterable(self):
         d = {'a': bitarray('0'), 'b': bitarray('1')}
         a = bitarray()
