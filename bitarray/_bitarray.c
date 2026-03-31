@@ -3477,6 +3477,7 @@ static int
 searchiter_traverse(searchiterobject *it, visitproc visit, void *arg)
 {
     Py_VISIT(it->self);
+    Py_VISIT(it->sub);
     return 0;
 }
 
