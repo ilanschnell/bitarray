@@ -1973,8 +1973,10 @@ chdi_new(PyObject *module, PyObject *args)
         return NULL;
 
     it = PyObject_GC_New(chdi_obj, &CHDI_Type);
-    if (it == NULL)
-        goto error;
+    if (it == NULL) {
+        Py_DECREF(symbol);
+        return NULL;
+    }
 
     if ((count_sum = set_count(it->count, count)) < 0)
         goto error;
@@ -1995,7 +1997,7 @@ chdi_new(PyObject *module, PyObject *args)
 
  error:
     it->array = NULL;
-    Py_XDECREF(symbol);
+    Py_DECREF(symbol);
     it->symbol = NULL;
     Py_DECREF(it);
     return NULL;
