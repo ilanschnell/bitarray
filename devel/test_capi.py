@@ -28,6 +28,7 @@ class Tests(unittest.TestCase):
     def test_finding9(self):
         got_here = False
         a = bitarray('1' * 1000)
+        self.assertEqual(len(a), 1000)
         _testcapi.set_nomemory(5, 0)  # fail from 5th allocation
         try:
             a.extend(bitarray('0' * 10_000_000))
@@ -40,6 +41,7 @@ class Tests(unittest.TestCase):
                 got_here = True
 
         self.assertTrue(got_here)
+        self.assertEqual(len(a), 0)
 
 # ---------------------------------------------------------------------------
 
