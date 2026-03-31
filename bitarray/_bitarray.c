@@ -96,6 +96,9 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     assert(new_allocated >= newsize);
     self->ob_item = PyMem_Realloc(self->ob_item, new_allocated);
     if (self->ob_item == NULL) {
+        Py_SET_SIZE(self, 0);
+        self->allocated = 0;
+        self->nbits = 0;
         PyErr_NoMemory();
         return -1;
     }
