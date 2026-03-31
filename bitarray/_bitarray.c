@@ -3332,12 +3332,12 @@ decodeiter_next(decodeiterobject *it)
 static void
 decodeiter_dealloc(decodeiterobject *it)
 {
+    PyObject_GC_UnTrack(it);
     if (it->decodetree)
         Py_DECREF(it->decodetree);
     else       /* when decodeiter was created from dict - free tree */
         binode_delete(it->tree);
 
-    PyObject_GC_UnTrack(it);
     Py_DECREF(it->self);
     PyObject_GC_Del(it);
 }
