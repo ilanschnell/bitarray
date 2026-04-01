@@ -4065,7 +4065,8 @@ bits2bytes(PyObject *module, PyObject *n)
         return PyErr_Format(PyExc_TypeError, "'int' object expected, "
                             "got '%s'", Py_TYPE(n)->tp_name);
 
-    zero = PyLong_FromLong(0);
+    if ((zero = PyLong_FromLong(0)) == NULL)
+        return NULL;
     cmp_res = PyObject_RichCompareBool(n, zero, Py_LT);
     Py_DECREF(zero);
     if (cmp_res < 0)
@@ -4075,13 +4076,17 @@ bits2bytes(PyObject *module, PyObject *n)
         return NULL;
     }
 
-    seven = PyLong_FromLong(7);
+    if ((seven = PyLong_FromLong(7)) == NULL)
+        return NULL;
     a = PyNumber_Add(n, seven);          /* a = n + 7 */
     Py_DECREF(seven);
     if (a == NULL)
         return NULL;
 
-    eight = PyLong_FromLong(8);
+    if ((eight = PyLong_FromLong(8)) == NULL) {
+        Py_DECREF(a);
+        return NULL;
+    }
     b = PyNumber_FloorDivide(a, eight);  /* b = a // 8 */
     Py_DECREF(eight);
     Py_DECREF(a);
