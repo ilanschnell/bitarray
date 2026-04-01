@@ -3041,8 +3041,10 @@ binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
 
         if ((t = bitarray_cp(prefix)) == NULL)
             return -1;
-        if (resize(t, t->nbits + 1) < 0)
+        if (resize(t, t->nbits + 1) < 0) {
+            Py_DECREF(t);
             return -1;
+        }
         setbit(t, t->nbits - 1, k);
         ret = binode_to_dict(nd->child[k], dict, t);
         Py_DECREF(t);
