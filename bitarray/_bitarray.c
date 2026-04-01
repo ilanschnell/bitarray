@@ -1031,7 +1031,7 @@ bitarray_buffer_info(bitarrayobject *self)
     readonly = PyBool_FromLong(self->readonly);
     imported = PyBool_FromLong(self->buffer ? 1 : 0);
     if (address == NULL || readonly == NULL || imported == NULL)
-        return NULL;
+        goto error;
 
     args = Py_BuildValue("OnsnnOOi",
                          address,
@@ -1043,13 +1043,20 @@ bitarray_buffer_info(bitarrayobject *self)
                          imported,
                          self->ob_exports);
     if (args == NULL)
-        return NULL;
+        goto error;
+
     Py_DECREF(address);
     Py_DECREF(readonly);
     Py_DECREF(imported);
     res = PyObject_CallObject(info, args);
     Py_DECREF(args);
     return res;
+
+ error:
+    Py_XDECREF(address);
+    Py_XDECREF(readonly);
+    Py_XDECREF(imported);
+    return NULL;
 }
 
 PyDoc_STRVAR(buffer_info_doc,
