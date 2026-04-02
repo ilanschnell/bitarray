@@ -1,7 +1,7 @@
-2025-XX-XX   3.8.1:
+2026-04-02   3.8.1:
 -------------------
   * fixed critial findings in C Extension Analysis Report, see #250
-  * add tests
+  * add tests, in particular `devel/test_capi.py`
 
 
 2025-11-02   3.8.0:

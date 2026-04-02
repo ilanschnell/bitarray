@@ -1,6 +1,12 @@
 Change log
 ==========
 
+**3.8.1** (2026-04-02):
+
+* fixed critial findings in C Extension Analysis Report, see `#250 <https://github.com/ilanschnell/bitarray/issues/250>`__
+* add tests, in particular ``devel/test_capi.py``
+
+
 **3.8.0** (2025-11-02):
 
 * add experimental support for free-threaded builds (GIL disabled), `#234 <https://github.com/ilanschnell/bitarray/issues/234>`__
