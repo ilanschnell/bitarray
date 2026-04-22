@@ -10,7 +10,7 @@ probability ``p`` of being one.  This is mathematically equivalent to:
     bitarray(random() < p for _ in range(n))
 
 While this expression work well for small ``n``, it is quite slow when ``n``
-is large.  In the following we focus on the case of ``n`` being large.
+is large.  In the following we focus on the case of large ``n``.
 
 When ``p`` is small, a fast implementation of ``random_p()`` is to (a)
 calculate the population of the bitarray, and then (b) set the required
@@ -19,9 +19,10 @@ Python 3.12 introduced ``random.binomialvariate()`` which is exactly what we
 need to determine the bitarray's population.
 
 When ``p == 0.5``, we use ``random.getrandbits()`` to initialize our bitarray
-buffer.  It should be noted that ``util.urandom()`` uses ``os.urandom()``,
+buffer.  It should be noted that ``bitarray.util.urandom()``
+uses ``os.urandom()``,
 but since ``util.random_p()`` is designed to give reproducible pseudo-random
-bitarrays, it uses ``getrandbits()``.
+bitarrays, it uses ``random.getrandbits()``.
 
 Taking two (independent) such bitarrays and combining them
 using the bitwise AND operation, gives us a random bitarray with
