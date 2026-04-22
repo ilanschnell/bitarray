@@ -48,9 +48,8 @@ be verified that:
 
 It should be noted that ``x`` is always small (once symmetry is applied in
 case of AND) such that it always uses the "small p" case.
-Unlike the combinations, this gives us a bitarray
-with exact probability ``x``.  Therefore, the requested probability ``p``
-is exactly obtained.
+Therefore, the bitarray has exactly probability ``x``, and hence
+the requested probability ``p`` is exact.
 For more details, see ``VerificationTests`` in the
 additional `random tests <../devel/test_random.py>`__.
 
