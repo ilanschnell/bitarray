@@ -397,7 +397,7 @@ class RTS_Tests(unittest.TestCase):
     def test_example(self):
         # see example before sc_calc_rts() in _util.c
         a = zeros(987)
-        a[:5] = a[512:515] = a[768:772] = 1
+        a[[0, 17, 31, 149, 255, 512, 637, 767, 768, 813, 899, 986]] = 1
         self.assertEqual(a.count(), 12)
         rts = _sc_rts(a)
         self.assertEqual(type(rts), list)
