@@ -125,6 +125,8 @@ class ZLW_Tests(unittest.TestCase, Util):
         for n in range(200):
             a = ones(n, self.random_endian())
             b = _zlw(a)
+            self.assertEqual(len(b), 64)
+            self.assertEqual(b.endian, a.endian)
             r = n % 64
             self.assertEqual(b, ones(r) + zeros(64 - r))
 
@@ -347,8 +349,7 @@ class CountFromWord_Tests(unittest.TestCase, Util):
             n = randrange(1024)
             a = urandom_2(n)
             i = randrange(20)
-            res = _cfw(a, i)
-            self.assertEqual(res, a[64 * i:].count())
+            self.assertEqual(_cfw(a, i), a[64 * i:].count())
 
 
 class DigitToInt_Tests(unittest.TestCase):
@@ -426,8 +427,8 @@ class RTS_Tests(unittest.TestCase):
             self.assertEqual(rts[0], 0)
             self.assertEqual(rts[-1], a.count())
             for i in range(self.nseg(a)):
-                seg_pop = a.count(1, SEGBITS * i, SEGBITS * (i + 1))
-                self.assertEqual(rts[i + 1] - rts[i], seg_pop)
+                self.assertEqual(rts[i + 1] - rts[i],
+                                 a.count(1, SEGBITS * i, SEGBITS * (i + 1)))
 
 
 class ReadN_WriteN_Tests(unittest.TestCase, Util):
