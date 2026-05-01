@@ -126,6 +126,8 @@ class DoubleTests(unittest.TestCase):
     def test_numberphile(self):
         # https://www.youtube.com/watch?v=c066hLi78B0
         d = Double(0.41468_25098_51111_66024)
+        self.assertEqual(d.sign, 0)
+        self.assertEqual(d.exponent, -2)
         self.assertEqual(d.fraction[::-1], gen_primes(55)[3:])
 
     def test_nan(self):
