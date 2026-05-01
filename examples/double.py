@@ -79,7 +79,7 @@ from math import pi, inf, nan, isnan
 from random import getrandbits, randint
 import unittest
 
-from bitarray.util import urandom
+from bitarray.util import urandom, gen_primes
 
 
 EXAMPLES = [
@@ -122,6 +122,11 @@ class DoubleTests(unittest.TestCase):
             for d in Double(x), Double(s):
                 self.assertEqual(float(d), x)
                 self.assertEqual(str(d), s)
+
+    def test_numberphile(self):
+        # https://www.youtube.com/watch?v=c066hLi78B0
+        d = Double(0.41468_25098_51111_66024)
+        self.assertEqual(d.fraction[::-1], gen_primes(55)[3:])
 
     def test_nan(self):
         s = "0 11111111111 1" + 51 * "0"
