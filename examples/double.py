@@ -112,6 +112,13 @@ EXAMPLES = [
     (2 ** 53 - 1, "0 10000110011 " + 52 * "1"),
 ]
 
+PAT = re.compile(r"""
+\(
+   (\d+)     # multiplier
+   \*        # literal *
+   ([01]+)   # bit string
+\)""", re.X)
+
 def repl(match):
     return int(match.group(1)) * match.group(2)
 
@@ -125,9 +132,8 @@ class DoubleTests(unittest.TestCase):
         self.assertEqual(d.fraction, bitarray(52))
 
     def test_examples(self):
-        p = re.compile(r'\((\d+)\*([01]+)\)')
         for x, s in EXAMPLES:
-            s = p.sub(repl, s)
+            s = PAT.sub(repl, s)
             for d in Double(x), Double(s):
                 self.assertEqual(float(d), x)
                 self.assertEqual(str(d), s)
