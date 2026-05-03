@@ -109,20 +109,33 @@ EXAMPLES = [
     (  pi, "0 10000000000 "
        "1001001000011111101101010100010001000010110100011000"),
     # largest number exactly representated as integer
-    (2 ** 53 - 1, "0 10000110011 " + 52 * "1"),
+    (2 ** 53 - 1, "0 10000110011 (52*1)"),
 ]
 
-PAT = re.compile(r"""
-\(
-   (\d+)     # multiplier
-   \*        # literal *
-   ([01]+)   # bit string
-\)""", re.X)
+def expand_str(s):
+    pat = re.compile(r"""
+    \(
+        (\d+)     # multiplier
+        \*        # literal *
+        ([01]+)   # bit string
+    \)""", re.X)
 
-def repl(match):
-    return int(match.group(1)) * match.group(2)
+    def repl(match):
+        return int(match.group(1)) * match.group(2)
+
+    return pat.sub(repl, s)
+
 
 class DoubleTests(unittest.TestCase):
+
+    def test_expand_str(self):
+        for s, res in [
+                ("(0*0)(0*1)", ""),
+                ("(1*1)(1*0)", "10"),
+                ("(3*1100)", "110011001100"),
+                ("(2*10) (3*1)", "1010 111"),
+        ]:
+            self.assertEqual(expand_str(s), res)
 
     def test_zero(self):
         d = Double()
@@ -133,7 +146,7 @@ class DoubleTests(unittest.TestCase):
 
     def test_examples(self):
         for x, s in EXAMPLES:
-            s = PAT.sub(repl, s)
+            s = expand_str(s)
             for d in Double(x), Double(s):
                 self.assertEqual(float(d), x)
                 self.assertEqual(str(d), s)
