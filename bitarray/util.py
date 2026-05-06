@@ -179,13 +179,13 @@ class _Random:
             diff = a.count() - k
 
         randrange = random.randrange
-        if diff < 0:  # not enough bits 1 - increase count
+        if diff < 0:  # not enough 1 bits - increase count
             for _ in range(-diff):
                 i = randrange(n)
                 while a[i]:
                     i = randrange(n)
                 a[i] = 1
-        elif diff > 0:  # too many bits 1 - decrease count
+        elif diff > 0:  # too many 1 bits - decrease count
             for _ in range(diff):
                 i = randrange(n)
                 while not a[i]:
