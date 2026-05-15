@@ -12,11 +12,12 @@ Author: Ilan Schnell
 from collections import namedtuple
 
 from bitarray._bitarray import (
-    bitarray, decodetree, bits2bytes, _bitarray_reconstructor,
+    bitarray, decodetree, bits2bytes, decodeiterator, _bitarray_reconstructor,
     get_default_endian, _sysinfo, BITARRAY_VERSION as __version__
 )
 
-__all__ = ['bitarray', 'frozenbitarray', 'decodetree', 'bits2bytes']
+__all__ = ['bitarray', 'frozenbitarray', 'decodetree', 'bits2bytes',
+           'decodeiterator']
 
 BufferInfo = namedtuple('BufferInfo',
                         ['address', 'nbytes', 'endian', 'padbits',

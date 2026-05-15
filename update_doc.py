@@ -34,6 +34,8 @@ NEW_IN = {
                               '3.0: returns iterator (equivalent to past '
                                    '`.itersearch()`)'],
     'bitarray.to01':          '3.3: optional `group` and `sep` arguments',
+    'decodeiterator.index':   '3.8.2',
+    'decodeiterator.skipbits':'3.8.2',
     'decodetree':             '1.6',
     'frozenbitarray':         '1.1',
     'get_default_endian':     '1.3',
@@ -124,6 +126,7 @@ GETSET = {
     'bitarray.nbytes':     'int',
     'bitarray.padbits':    'int',
     'bitarray.readonly':   'bool',
+    'decodeiterator.index':'int',
 }
 
 _NAMES = set()
@@ -146,7 +149,7 @@ def get_doc(name):
 
     lines = obj.__doc__.splitlines()
 
-    if len(lines) == 1:
+    if name in GETSET:
         sig = '``%s`` -> %s' % (obj.__name__, GETSET[name])
         return sig, lines
 
@@ -187,6 +190,27 @@ def write_doc(fo, name):
     fo.write('\n\n')
 
 
+def write_reference_for_class(fo, cl):
+    class_name = cl.__name__
+    heading = "%s methods:" % class_name
+    fo.write("%s\n%s\n\n" % (heading, '-' * len(heading)))
+    for method in sorted(dir(cl)):
+        if method.startswith('_'):
+            continue
+        name = '%s.%s' % (class_name, method)
+        if name not in GETSET:
+            write_doc(fo, name)
+
+    heading = "%s data descriptors:" % class_name
+    fo.write("%s\n%s\n\n" % (heading, '-' * len(heading)))
+    if class_name == "bitarray":
+        fo.write("Data descriptors were added in version 2.6.\n\n")
+    for getset in sorted(dir(bitarray.bitarray)):
+        name = '%s.%s' % (class_name, getset)
+        if name in GETSET:
+            write_doc(fo, name)
+
+
 def write_reference(fo):
     fo.write("""\
 Reference
@@ -206,22 +230,8 @@ The bitarray object:
 """ % (bitarray.__version__, BASE_URL + "/blob/master/doc/changelog.rst"))
     write_doc(fo, 'bitarray')
 
-    fo.write("bitarray methods:\n"
-             "-----------------\n\n")
-    for method in sorted(dir(bitarray.bitarray)):
-        if method.startswith('_'):
-            continue
-        name = 'bitarray.%s' % method
-        if name not in GETSET:
-            write_doc(fo, name)
-
-    fo.write("bitarray data descriptors:\n"
-             "--------------------------\n\n"
-             "Data descriptors were added in version 2.6.\n\n")
-    for getset in sorted(dir(bitarray.bitarray)):
-        name = 'bitarray.%s' % getset
-        if name in GETSET:
-            write_doc(fo, name)
+    write_reference_for_class(fo, bitarray.bitarray)
+    write_reference_for_class(fo, bitarray.decodeiterator)
 
     fo.write("Other objects:\n"
              "--------------\n\n")

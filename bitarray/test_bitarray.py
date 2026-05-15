@@ -4480,7 +4480,9 @@ class PrefixCodeTests(unittest.TestCase, Util):
         a = bitarray('0110')
         it = a.decode(alphabet_code)
         self.assertIsType(it, 'decodeiterator')
+        self.assertEqual(it.index, 0)
         self.assertEqual(list(it), ['a'])
+        self.assertEqual(it.index, len(a))
 
     def test_decode_remove(self):
         d = {'I': bitarray('1'),   'l': bitarray('01'),
@@ -4597,6 +4599,29 @@ class PrefixCodeTests(unittest.TestCase, Util):
             a = bitarray()
             self.assertRaises(ValueError, a.decode, d)
             self.check_obj(a)
+
+    def test_decode_skipbits(self):
+        d = {'a': bitarray('0'), 'b': bitarray('10'), 'c': bitarray('11')}
+        a = bitarray('0 10 0 11 10101 0110')
+        it = a.decode(d)
+        self.assertEqual(it.index, 0)
+        self.assertEqual(next(it), 'a')
+        self.assertEqual(it.index, 1)
+        self.assertEqual(next(it), 'b')
+        self.assertEqual(it.index, 3)
+        self.assertEqual(it.skipbits(), bitarray('0'))
+        self.assertEqual(it.index, 4)
+        self.assertEqual(next(it), 'c')
+        self.assertEqual(it.index, 6)
+        self.assertEqual(it.skipbits(5), bitarray('10101'))
+        self.assertEqual(it.index, 11)
+        self.assertRaises(ValueError, it.skipbits, -1)
+        self.assertRaises(ValueError, it.skipbits, 5)
+        self.assertEqual(it.index, 11)
+        self.assertEqual(it.skipbits(4), bitarray('0110'))
+        self.assertEqual(it.index, 15)
+        self.assertRaises(StopIteration, next, it)
+        self.assertEqual(it.index, 15)
 
     def test_miscitems(self):
         d = {None : bitarray('00'),

@@ -11,6 +11,7 @@
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
 #include "pythoncapi_compat.h"
+#include "structmember.h"
 #include "bitarray.h"
 
 /* size used when reading / writing blocks from files (in bytes) */
@@ -2081,17 +2082,12 @@ static PySequenceMethods bitarray_as_sequence = {
 
 /* ----------------------- bitarray_as_mapping ------------------------- */
 
-/* return new bitarray with item in self, specified by slice */
+/* return new bitarray with item in self, specified by slice indices */
 static PyObject *
-getslice(bitarrayobject *self, PyObject *slice)
+getslice_indices(bitarrayobject *self, Py_ssize_t start, Py_ssize_t step,
+                 Py_ssize_t slicelength)
 {
-    Py_ssize_t start, stop, step, slicelength;
     bitarrayobject *res;
-
-    assert(PySlice_Check(slice));
-    if (PySlice_GetIndicesEx(slice, self->nbits,
-                             &start, &stop, &step, &slicelength) < 0)
-        return NULL;
 
     res = newbitarrayobject(Py_TYPE(self), slicelength, self->endian);
     if (res == NULL)
@@ -2107,6 +2103,20 @@ getslice(bitarrayobject *self, PyObject *slice)
             setbit(res, i, getbit(self, j));
     }
     return freeze_if_frozen(res);
+}
+
+/* return new bitarray with item in self, specified by slice */
+static PyObject *
+getslice(bitarrayobject *self, PyObject *slice)
+{
+    Py_ssize_t start, stop, step, slicelength;
+
+    assert(PySlice_Check(slice));
+    if (PySlice_GetIndicesEx(slice, self->nbits,
+                             &start, &stop, &step, &slicelength) < 0)
+        return NULL;
+
+    return getslice_indices(self, start, step, slicelength);
 }
 
 static int
@@ -3319,7 +3329,7 @@ bitarray_decode(bitarrayobject *self, PyObject *obj)
 }
 
 PyDoc_STRVAR(decode_doc,
-"decode(code, /) -> iterator\n\
+"decode(code, /) -> decodeiterator\n\
 \n\
 Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`\n\
 object), decode content of bitarray and return an iterator over\n\
@@ -3359,6 +3369,52 @@ decodeiter_traverse(decodeiterobject *it, visitproc visit, void *arg)
     return 0;
 }
 
+static PyObject *
+decodeiter_skipbits(decodeiterobject *it, PyObject *args)
+{
+    Py_ssize_t count = 1;
+    if (!PyArg_ParseTuple(args, "|n:skipbits", &count)) {
+        return NULL;
+    }
+
+    if (count < 0) {
+        return PyErr_Format(PyExc_ValueError, "negative skip count %zd", count);
+    }
+
+    Py_ssize_t new_index = it->index + count;
+    if (new_index > it->self->nbits) {
+        return PyErr_Format(PyExc_ValueError,
+                            "new index %zd out of range %zd",
+                            new_index, it->self->nbits);
+    }
+
+    PyObject *skipped = getslice_indices(it->self, it->index, 1, count);
+    it->index = new_index;
+    return skipped;
+}
+
+PyDoc_STRVAR(decodeiter_skipbits_doc,
+"skipbits(count=1, /) -> bitarray\n\
+\n\
+Skips over the next `count` bits (default 1) and returns them.\n\
+Raises `ValueError` if count is out of range.");
+
+static PyMethodDef decodeiter_methods[] = {
+    {"skipbits",    (PyCFunction) decodeiter_skipbits, METH_VARARGS,
+     decodeiter_skipbits_doc},
+    {NULL}
+};
+
+PyDoc_STRVAR(decodeiter_index_doc,
+"The position in the underlying bitarray to be decoded by the subsequent\n"
+"call to `next`.");
+
+static PyMemberDef decodeiter_members[] = {
+    {"index", Py_T_PYSSIZET, offsetof(decodeiterobject, index), Py_READONLY,
+     decodeiter_index_doc},
+    {NULL}
+};
+
 static PyTypeObject DecodeIter_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "bitarray.decodeiterator",                /* tp_name */
@@ -3388,7 +3444,8 @@ static PyTypeObject DecodeIter_Type = {
     0,                                        /* tp_weaklistoffset */
     PyObject_SelfIter,                        /* tp_iter */
     (iternextfunc) decodeiter_next,           /* tp_iternext */
-    0,                                        /* tp_methods */
+    decodeiter_methods,                       /* tp_methods */
+    decodeiter_members,                       /* tp_members */
 };
 
 /*********************** (Bitarray) Search Iterator ***********************/
@@ -4283,6 +4340,8 @@ PyInit__bitarray(void)
     if (PyType_Ready(&DecodeIter_Type) < 0)
         return NULL;
     Py_SET_TYPE(&DecodeIter_Type, &PyType_Type);
+    Py_INCREF((PyObject *) &DecodeIter_Type);
+    PyModule_AddObject(m, "decodeiterator", (PyObject *) &DecodeIter_Type);
 
     if (PyType_Ready(&BitarrayIter_Type) < 0)
         return NULL;
