@@ -1341,7 +1341,6 @@ static void
 sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
                  Py_ssize_t offset, int n, int k)
 {
-    const char *str_stop = str + n * k;  /* stop position in buffer 'str' */
     const char *buff = a->ob_item + offset;
     Py_ssize_t m;
 
@@ -1370,12 +1369,13 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
                 if (buff[i] & BITMASK(a, j)) {
                     write_n(str, n, 8 * i + j);
                     str += n;
-                    if (--ni == 0) {
+                    if (--k == 0)
+                        /* we have encountered all indices */
+                        return;
+
+                    if (--ni == 0)
                         /* we have encountered all indices in this segment */
-                        if (str == str_stop)
-                            return;
                         goto next_segment;
-                    }
                 }
             }
         }
