@@ -3,7 +3,7 @@
 
       https://github.com/madler/zlib/blob/master/contrib/puff
 
-  This is Marks's copyright notice:
+  This is Mark's copyright notice:
 
   Copyright (C) 2002-2013 Mark Adler, all rights reserved
   version 2.3, 21 Jan 2013
@@ -32,7 +32,7 @@
 #define MAXBITS    15           /* maximum bits in a code */
 #define MAXLCODES 286           /* maximum number of literal/length codes */
 #define MAXDCODES  30           /* maximum number of distance codes */
-#define MAXCODES (MAXLCODES + MAXDCODES)  /* maximum codes lengths to read */
+#define MAXCODES (MAXLCODES + MAXDCODES)  /* maximum code lengths to read */
 #define FIXLCODES 288           /* number of fixed literal/length codes */
 
 
@@ -228,7 +228,6 @@ codes(state_obj *s, const struct huffman *lencode,
             return -1;
 
         if (symbol < 256) {             /* literal: symbol is the byte */
-            /* write out the literal */
             if (append_byte(s, symbol) < 0)
                 return -1;
         }
@@ -266,7 +265,7 @@ codes(state_obj *s, const struct huffman *lencode,
 /* set during module init */
 static PyTypeObject *bitarray_type;
 
-/* create a new initialized canonical Huffman decode iterator object */
+/* create a new initialized State object */
 static PyObject *
 state_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
@@ -392,7 +391,7 @@ set_lengths(PyObject *sequence, Py_ssize_t n, short *array)
         return PyErr_Format(PyExc_ValueError,                          \
               "size of length list too large: %zd > %d", n, maxcodes)
 
-/* given the liter/lengths and distance lengths as one big list,
+/* given the literal/lengths and distance lengths as one big list,
    decode literal/length and distance codes until an end-of-block code */
 static PyObject *
 state_decode_block(state_obj *self, PyObject *args)
@@ -466,7 +465,7 @@ list_from_shorts(const short *array, Py_ssize_t n)
 }
 
 /* given the code length code lengths (always 19 of them),
-   decode the liter/lengths and distance lengths into one big list */
+   decode the literal/lengths and distance lengths into one big list */
 static PyObject *
 state_decode_lengths(state_obj *self, PyObject *args)
 {
@@ -511,7 +510,7 @@ state_decode_lengths(state_obj *self, PyObject *args)
             lengths[index++] = symbol;
         else {                          /* repeat instruction */
             int len = 0;  /* last length to repeat, assume repeating zeros */
-            int n;                      /* time to repeat last length */
+            int n;        /* number of time to repeat last length */
 
             if (symbol == 16) {         /* repeat last length 3..6 times */
                 if (index == 0) {
@@ -544,9 +543,9 @@ state_decode_lengths(state_obj *self, PyObject *args)
     return list_from_shorts(lengths, ncode);
 }
 
-/* copy 'len' bytes starting at 'dist' bytes ago in self->out,
-   if the count 'len' exceeds the distance 'dist, then some of the output
-   data will be a copy of data that was copied earlier in the process */
+/* Copy 'len' bytes starting at 'dist' bytes ago in self->out.
+   If the count 'len' exceeds the distance 'dist, then some of the output
+   data will be a copy of data that was copied earlier in the process. */
 static PyObject *
 state_copy(state_obj *self, PyObject *args)
 {
@@ -607,6 +606,8 @@ static PyMethodDef state_methods[] = {
 static void
 state_dealloc(state_obj *self)
 {
+    Py_DECREF(self->in);
+    Py_DECREF(self->out);
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
