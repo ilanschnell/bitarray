@@ -203,7 +203,7 @@ bytereverse(char *p, Py_ssize_t n)
 /* The following two functions operate on first n bytes in buffer.
    Within this region, they shift all bits by k positions to right,
    i.e. towards higher addresses.
-   They operate on little-endian and bit-endian bitarrays respectively.
+   They operate on little-endian and big-endian bitarrays respectively.
    As we shift right, we need to start with the highest address and loop
    downwards such that lower bytes are still unaltered.
    See also devel/shift_r8.c
@@ -1194,7 +1194,7 @@ bitarray_extend(bitarrayobject *self, PyObject *obj)
 PyDoc_STRVAR(extend_doc,
 "extend(iterable, /)\n\
 \n\
-Append items from to the end of the bitarray.\n\
+Append items from iterable to the end of the bitarray.\n\
 If `iterable` is a (Unicode) string, each `0` and `1` are appended as\n\
 bits (ignoring whitespace and underscore).");
 
@@ -1346,7 +1346,8 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
         invert_span(self, 0, self->nbits);
     }
     else {
-        return PyErr_Format(PyExc_TypeError, "index expect, not '%s' object",
+        return PyErr_Format(PyExc_TypeError,
+                            "index expected, not '%s' object",
                             Py_TYPE(arg)->tp_name);
     }
     Py_RETURN_NONE;
@@ -1355,8 +1356,9 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(invert_doc,
 "invert(index=<all bits>, /)\n\
 \n\
-Invert all bits in bitarray (in-place).\n\
-When the optional `index` is given, only invert the single bit at `index`.");
+Invert bits in-place.  When `index` is omitted, invert all bits.\n\
+When `index` is an integer, invert the single bit at index.\n\
+When `index` is a slice, invert the selected bits.");
 
 
 static PyObject *
@@ -1557,7 +1559,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
     assert(Py_SIZE(self) == n + view.len);
     memcpy(self->ob_item + n, (char *) view.buf, (size_t) view.len);
 
-    /* remove pad bits staring at previous bit length (8 * n - p) */
+    /* remove pad bits starting at previous bit length (8 * n - p) */
     if (delete_n(self, 8 * n - p, p) < 0)
         goto error;
 
@@ -1654,7 +1656,7 @@ PyDoc_STRVAR(fromfile_doc,
 "fromfile(f, n=-1, /)\n\
 \n\
 Extend bitarray with up to `n` bytes read from file object `f` (or any\n\
-other binary stream what supports a `.read()` method, e.g. `io.BytesIO`).\n\
+other binary stream that supports a `.read()` method, e.g. `io.BytesIO`).\n\
 Each read byte will add eight bits to the bitarray.  When `n` is omitted\n\
 or negative, reads and extends all data until EOF.\n\
 When `n` is non-negative but exceeds the available data, `EOFError` is\n\
@@ -1673,7 +1675,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
         Py_ssize_t size = Py_MIN(nbytes - offset, BLOCKSIZE);
 
         assert(size >= 0 && offset + size <= nbytes);
-        /* basically: f.write(memoryview(self)[offset:offset + size] */
+        /* basically: f.write(memoryview(self)[offset:offset + size]) */
         ret = PyObject_CallMethod(f, "write", "y#",
                                   self->ob_item + offset, size);
         if (ret == NULL)
@@ -1763,7 +1765,7 @@ PyDoc_STRVAR(unpack_doc,
 "unpack(zero=b'\\x00', one=b'\\x01') -> bytes\n\
 \n\
 Return bytes that contain one byte for each bit in the bitarray,\n\
-using specified mapping.");
+using the specified mapping.");
 
 
 static PyObject *
@@ -3167,7 +3169,7 @@ PyDoc_STRVAR(complete_doc,
 "complete() -> bool\n\
 \n\
 Return whether tree is complete.  That is, whether or not all\n\
-nodes have both children (unless they are symbols nodes).");
+nodes have both children (unless they are symbol nodes).");
 
 
 static PyObject *
@@ -3332,7 +3334,7 @@ decodeiter_next(decodeiterobject *it)
     PyObject *symbol;
 
     symbol = binode_traverse(it->tree, it->self, &(it->index));
-    if (symbol == NULL)  /* stop iteration OR error occured */
+    if (symbol == NULL)  /* stop iteration OR error occurred */
         return NULL;
     Py_INCREF(symbol);
     return symbol;
@@ -3723,9 +3725,9 @@ newbitarray_from_bytes(PyTypeObject *type, PyObject *buffer, int endian)
 }
 
 /* As of bitarray version 2.9.0, "bitarray(nbits)" will initialize all items
-   to 0 (previously, the buffer was be uninitialized).
+   to 0 (previously, the buffer was uninitialized).
    However, for speed, one might want to create an uninitialized bitarray.
-   In 2.9.1, we added the ability to created uninitialized bitarrays again,
+   In 2.9.1, we added the ability to create uninitialized bitarrays again,
    using "bitarray(nbits, endian, Ellipsis)".
 */
 static PyObject *
@@ -4003,7 +4005,7 @@ Optional keyword arguments:\n\
 \n\
 `endian`: Specifies the bit-endianness of the created bitarray object.\n\
 Allowed values are `big` and `little` (the default is `big`).\n\
-The bit-endianness effects the buffer representation of the bitarray.\n\
+The bit-endianness affects the buffer representation of the bitarray.\n\
 \n\
 `buffer`: Any object which exposes a buffer.  When provided, `initializer`\n\
 cannot be present (or has to be `None`).  The imported buffer may be\n\
@@ -4203,7 +4205,7 @@ sysinfo(PyObject *module, PyObject *args)
 PyDoc_STRVAR(sysinfo_doc,
 "_sysinfo(key) -> int\n\
 \n\
-Return system and compile specific information given a key.");
+Return system- and compile-specific information given a key.");
 
 
 static PyMethodDef module_functions[] = {
