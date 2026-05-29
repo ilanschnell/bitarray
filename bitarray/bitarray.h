@@ -64,7 +64,7 @@ typedef struct {
 /* number of pad bits */
 #define PADBITS(self)  ((8 - (self)->nbits % 8) % 8)
 
-/* number of bytes necessary to store given nunmber of bits */
+/* number of bytes necessary to store given number of bits */
 #define BYTES(bits)  (((bits) + 7) >> 3)
 
 /* we're not using bitmask_table here, as it is actually slower */
@@ -268,7 +268,7 @@ to_aligned(void *p)
     return (4 - r) % 4;
 }
 
-/* population count of n words starting from at uint64_t pointer w */
+/* population count of n words starting at uint64_t pointer w */
 static inline Py_ssize_t
 popcnt_words(uint64_t *w, Py_ssize_t n)
 {
@@ -301,7 +301,7 @@ adjust_step_positive(Py_ssize_t slicelength,
     assert(*step != 1 || slicelength == 0 || *stop - *start == slicelength);
 }
 
-/* convert Python object to C int and set value at address -
+/* convert Python object to C int at address *vi -
    return 1 on success, 0 on failure (and set exception) */
 static inline int
 conv_pybit(PyObject *value, int *vi)
