@@ -26,9 +26,9 @@ We can now use ``canonical_huffman()`` to create a canonical Huffman code:
     >>> symbol
     ['a', 'b', 'r', 'c', 'd']
 
-The output is tuple with the following elements:
+The output is a tuple with the following elements:
 
-* A dictionary mapping each symbols to a ``bitarray``
+* A dictionary mapping each symbol to a ``bitarray``
 * A list containing the number of symbols for each code length,
   e.g. `count[3] = 1` because there is one symbol (``r``) with
   code length ``3``.
@@ -65,7 +65,7 @@ Encode a message using this code:
     bitarray('01011001110011110101100')
     >>> assert ''.join(a.decode(codedict)) == msg
 
-And now decode using not ``codedict``, but the canonical decoding
+And now decode using the canonical decoding
 tables ``count`` and ``symbol`` instead:
 
 .. code-block:: python

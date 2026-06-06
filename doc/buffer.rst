@@ -58,7 +58,7 @@ Importing buffers
 -----------------
 
 As of bitarray version 2.3, it is also possible to import the buffer
-from an object which exposes its buffer.  Here the bytearray:
+from an object that exposes its buffer.  Here a ``bytearray`` object:
 
 .. code-block:: python
 
@@ -73,9 +73,9 @@ from an object which exposes its buffer.  Here the bytearray:
     >>> a
     bitarray('000011111111100000001111')
 
-Again, the shared buffer can be represented and modify by either object ``a``
-and ``c``.  When importing a buffer into a bitarray, the length of the
-bitarray will always be multiple of 8 bits, as buffers are bases on bytes.
+Again, the shared buffer can be represented and modified by either object
+``a`` or ``c``.  When importing a buffer into a bitarray, the length of the
+bitarray will always be a multiple of 8 bits, as buffers are based on bytes.
 Also, we may specify the endianness of the bitarray:
 
 .. code-block:: python
@@ -86,7 +86,7 @@ Also, we may specify the endianness of the bitarray:
 
 The bytearray ``c`` is now exporting its buffer twice:
 to big-endian bitarray ``a``, and a little-endian bitarray ``b``.
-At this point all three object ``a``, ``b`` and ``c`` share the same buffer.
+At this point all three objects ``a``, ``b`` and ``c`` share the same buffer.
 Using the ``.buffer_info()`` method, we can actually verify that the
 bitarrays ``a`` and ``b`` point to the same address:
 
@@ -97,7 +97,7 @@ bitarrays ``a`` and ``b`` point to the same address:
     ...     return info[0]  # using bitarray 3.7, we can also: info.address
     >>> assert address(a) == address(b)
 
-As bitarray's expose their buffer, we can also directly create a bitarray
+As bitarrays expose their buffer, we can also directly create a bitarray
 which imports the buffer from another bitarray:
 
 .. code-block:: python

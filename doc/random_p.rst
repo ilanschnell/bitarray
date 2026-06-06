@@ -9,7 +9,7 @@ probability ``p`` of being one.  This is mathematically equivalent to:
 
     bitarray(random() < p for _ in range(n))
 
-While this expression work well for small ``n``, it is quite slow when ``n``
+While this expression works well for small ``n``, it is quite slow when ``n``
 is large.  In the following we focus on the case of large ``n``.
 
 When ``p`` is small, a fast implementation of ``random_p()`` is to (a)
@@ -27,9 +27,10 @@ bitarrays, it uses ``random.getrandbits()``.
 Taking two (independent) such bitarrays and combining them
 using the bitwise AND operation, gives us a random bitarray with
 probability 1/4.
-Likewise, taking two bitwise OR operation gives us probability 3/4.
+Likewise, applying a bitwise OR operation to two such bitarrays gives us
+probability 3/4.
 Without going into too much further detail, it is possible to combine
-more than two "getrandbits" bitarray to get probabilities ``i / 2**M``,
+more than two "getrandbits" bitarrays to get probabilities ``i / 2**M``,
 where ``M`` is the maximal number of "getrandbits" bitarrays we combine,
 and ``i`` is an integer.
 The required sequence of AND and OR operations is calculated from
@@ -57,7 +58,7 @@ additional `random tests <../devel/test_random.py>`__.
 Speedup
 -------
 
-The speedup is largest, when the number of number of random numbers our
+The speedup is largest when the number of random numbers our
 algorithm uses is smallest.
 In the following, let ``k`` be the number of calls to ``getrandbits()``.
 For example, when ``p=0.5`` we have ``k=1``.

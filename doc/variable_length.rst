@@ -2,11 +2,11 @@ Variable length bitarray format
 ===============================
 
 In some cases, it is useful to represent bitarrays in a binary format that
-is "self terminating" (in the same way that C strings are NUL terminated).
+is "self-terminating" (in the same way that C strings are NUL terminated).
 That is, when an encoded bitarray of unknown length is encountered in a
 stream of binary data, the format lets us know when the end of the encoded
 bitarray is reached.
-Such a "variable length format" (most memory efficient for small bitarrays)
+Such a "variable-length format" (most memory-efficient for small bitarrays)
 is implemented in ``vl_encode()`` and ``vl_decode()``:
 
 .. code-block:: python
@@ -26,9 +26,9 @@ is implemented in ``vl_encode()`` and ``vl_decode()``:
     >>> bytes(stream)
     b'other stuff'
 
-The variable length format is similar to LEB128.  A single byte can store
-bitarrays up to 4 element, every additional byte stores up to 7 more elements.
-The most significant bit of each byte indicated whether more bytes follow.
+The variable-length format is similar to LEB128.  A single byte can store
+bitarrays up to 4 elements; every additional byte stores up to 7 more elements.
+The most significant bit of each byte indicates whether more bytes follow.
 In addition, the first byte contains 3 bits which indicate the number of
 padding bits at the end of the stream.  Here is an example of
 encoding ``bitarray('01010110111001110')``:
