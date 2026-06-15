@@ -24,6 +24,34 @@ static PyTypeObject Bitarray_Type;
 #define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarray_Type)
 
 
+static size_t
+new_allocation(size_t size, size_t allocated, size_t newsize)
+{
+    assert(allocated >= size);
+    assert(newsize > 0);
+
+    if (allocated >= newsize) {
+        /* current buffer is large enough to host the requested size */
+        if (newsize >= allocated / 2)
+            return allocated;  /* minor downsize - keep current allocation */
+
+        return newsize;  /* major downsize - shrink to exact size */
+    }
+    else {
+          /* need to grow buffer */
+          size_t new_alloc = newsize;
+          /* overallocate when previous size isn't zero and when growth
+             is moderate */
+          if (size != 0 && newsize / 2 <= allocated) {
+              /* overallocate proportional to the bitarray size and
+                 add padding to make the allocated size multiple of 4 */
+              new_alloc += (newsize >> 4) + (newsize < 8 ? 3 : 7);
+              new_alloc &= ~(size_t) 3;
+          }
+          return new_alloc;
+    }
+}
+
 static int
 resize(bitarrayobject *self, Py_ssize_t nbits)
 {
@@ -69,28 +97,13 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
         return 0;
     }
 
-    if (allocated >= newsize) {
-        /* current buffer is large enough to host the requested size */
-        if (newsize >= allocated / 2) {
-            /* minor downsize, bypass reallocation */
-            Py_SET_SIZE(self, newsize);
-            self->nbits = nbits;
-            return 0;
-        }
-        /* major downsize, resize down to exact size */
-        new_allocated = newsize;
-    }
-    else {
-        /* need to grow buffer */
-        new_allocated = newsize;
-        /* overallocate when previous size isn't zero and when growth
-           is moderate */
-        if (size != 0 && newsize / 2 <= allocated) {
-            /* overallocate proportional to the bitarray size and
-               add padding to make the allocated size multiple of 4 */
-            new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
-            new_allocated &= ~(size_t) 3;
-        }
+    new_allocated = new_allocation(size, allocated, newsize);
+
+    if (new_allocated == allocated) {
+        /* bypass reallocation */
+        Py_SET_SIZE(self, newsize);
+        self->nbits = nbits;
+        return 0;
     }
 
     assert(new_allocated >= newsize);
