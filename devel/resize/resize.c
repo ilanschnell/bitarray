@@ -3,9 +3,9 @@
 
 
 typedef struct {
-    int size;
-    int nbits;
-    int allocated;
+    size_t size;
+    size_t nbits;
+    size_t allocated;
 } bitarrayobject;
 
 
@@ -21,10 +21,34 @@ int bbs(void)
     return s % 8000;
 }
 
-void resize(bitarrayobject *self, int nbits)
+size_t new_allocation(size_t size, size_t allocated, size_t newsize)
 {
-    int size = self->size, allocated = self->allocated;
-    int newsize = BYTES(nbits), new_allocated;
+    if (allocated >= newsize) {
+        /* current buffer is large enough to host the requested size */
+        if (newsize >= allocated / 2)
+            return allocated;  /* minor downsize - keep current allocation */
+
+        return newsize;  /* major downsize - shrink to exact size */
+    }
+    else {
+          /* need to grow buffer */
+          size_t new_alloc = newsize;
+          /* overallocate when previous size isn't zero and when growth
+             is moderate */
+          if (size != 0 && newsize / 2 <= allocated) {
+              /* overallocate proportional to the bitarray size and
+                 add padding to make the allocated size multiple of 4 */
+              new_alloc += (newsize >> 4) + (newsize < 8 ? 3 : 7);
+              new_alloc &= ~(size_t) 3;
+          }
+          return new_alloc;
+    }
+}
+
+void resize(bitarrayobject *self, size_t nbits)
+{
+    size_t size = self->size, allocated = self->allocated;
+    size_t newsize = BYTES(nbits), new_allocated;
 
     if (newsize == size) {
         self->nbits = nbits;
@@ -39,20 +63,13 @@ void resize(bitarrayobject *self, int nbits)
         return;
     }
 
-    if (allocated >= newsize) {
-        if (newsize >= allocated / 2) {
-            self->size = newsize;
-            self->nbits = nbits;
-            return;
-        }
-        new_allocated = newsize;
-    }
-    else {
-        new_allocated = newsize;
-        if (size != 0 && newsize / 2 <= allocated) {
-            new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
-            new_allocated &= ~(int) 3;
-        }
+    new_allocated = new_allocation(size, allocated, newsize);
+
+    if (new_allocated == allocated) {
+        /* bypass reallocation */
+        self->size = newsize;
+        self->nbits = nbits;
+        return;
     }
 
     /* realloc(self->ob_item) */
@@ -67,7 +84,7 @@ int main()
     int i, nbits, prev_alloc = -1;
     bitarrayobject x;
 
-#define SHOW  printf("%d  %d\n", x.size, x.allocated)
+#define SHOW  printf("%lu  %lu\n", x.size, x.allocated)
 
     x.size = 0;
     x.allocated = 0;
