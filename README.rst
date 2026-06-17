@@ -57,7 +57,7 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 3.8.1
+    bitarray version: 3.8.2
     sys.version: 3.13.5 (main, Jun 16 2025) [Clang 18.1.8]
     sys.prefix: /Users/ilan/miniforge
     pointer size: 64 bit
@@ -320,7 +320,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.8.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.8.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -344,7 +344,7 @@ The bitarray object:
 
    ``endian``: Specifies the bit-endianness of the created bitarray object.
    Allowed values are ``big`` and ``little`` (the default is ``big``).
-   The bit-endianness effects the buffer representation of the bitarray.
+   The bit-endianness affects the buffer representation of the bitarray.
 
    ``buffer``: Any object which exposes a buffer.  When provided, ``initializer``
    cannot be present (or has to be ``None``).  The imported buffer may be
@@ -439,7 +439,7 @@ bitarray methods:
 
 
 ``extend(iterable, /)``
-   Append items from to the end of the bitarray.
+   Append items from iterable to the end of the bitarray.
    If ``iterable`` is a (Unicode) string, each ``0`` and ``1`` are appended as
    bits (ignoring whitespace and underscore).
 
@@ -470,7 +470,7 @@ bitarray methods:
 
 ``fromfile(f, n=-1, /)``
    Extend bitarray with up to ``n`` bytes read from file object ``f`` (or any
-   other binary stream what supports a ``.read()`` method, e.g. ``io.BytesIO``).
+   other binary stream that supports a ``.read()`` method, e.g. ``io.BytesIO``).
    Each read byte will add eight bits to the bitarray.  When ``n`` is omitted
    or negative, reads and extends all data until EOF.
    When ``n`` is non-negative but exceeds the available data, ``EOFError`` is
@@ -490,8 +490,9 @@ bitarray methods:
 
 
 ``invert(index=<all bits>, /)``
-   Invert all bits in bitarray (in-place).
-   When the optional ``index`` is given, only invert the single bit at ``index``.
+   Invert bits in-place.  When ``index`` is omitted, invert all bits.
+   When ``index`` is an integer, invert the single bit at index.
+   When ``index`` is a slice, invert the selected bits.
 
    New in version 1.5.3: optional index argument
 
@@ -574,7 +575,7 @@ bitarray methods:
 
 ``unpack(zero=b'\x00', one=b'\x01')`` -> bytes
    Return bytes that contain one byte for each bit in the bitarray,
-   using specified mapping.
+   using the specified mapping.
 
 
 bitarray data descriptors:
@@ -649,7 +650,8 @@ This sub-module was added in version 1.2.
 ``ba2base(n, bitarray, /, group=0, sep=' ')`` -> str
    Return a string containing the base ``n`` ASCII representation of
    the bitarray.  Allowed values for ``n`` are 2, 4, 8, 16, 32 and 64.
-   The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.
+   The bitarray has to have a length divisible by 1, 2, 3, 4, 5 or 6
+   respectively.
    For ``n=32`` the RFC 4648 Base32 alphabet is used, and for ``n=64`` the
    standard base 64 alphabet is used.
    When grouped, the string ``sep`` is inserted between groups

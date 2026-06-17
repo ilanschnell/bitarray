@@ -1,6 +1,13 @@
 Change log
 ==========
 
+**3.8.2** (2026-06-17):
+
+* clarity/wording improvements throughout project
+* add ``new_allocation()`` to simplify ``resize()``
+* drop Python 3.6 support
+
+
 **3.8.1** (2026-04-02):
 
 * fixed critial findings in C Extension Analysis Report, see `#250 <https://github.com/ilanschnell/bitarray/issues/250>`__

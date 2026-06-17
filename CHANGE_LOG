@@ -1,4 +1,4 @@
-2026-XX-XX   3.8.2:
+2026-06-17   3.8.2:
 -------------------
   * clarity/wording improvements throughout project
   * add `new_allocation()` to simplify `resize()`
