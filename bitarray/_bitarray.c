@@ -610,10 +610,77 @@ count_range(bitarrayobject *self,
 /* return first (or rightmost in case right=1) occurrence
    of vi in self[a:b], -1 when not found */
 static Py_ssize_t
+find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right);
+
+static Py_ssize_t
+find_bit_words(bitarrayobject *self, int vi,
+               Py_ssize_t a, Py_ssize_t b, int right)
+{
+    const Py_ssize_t wa = (a + 63) / 64;  /* word-range(wa, wb) */
+    const Py_ssize_t wb = b / 64;
+    const uint64_t *wbuff = WBUFF(self);
+    const uint64_t w = vi ? 0 : ~0;
+    Py_ssize_t res, i;
+
+    if (right) {
+        if ((res = find_bit(self, vi, 64 * wb, b, 1)) >= 0)
+            return res;
+
+        for (i = wb - 1; i >= wa; i--) {  /* skip uint64 words */
+            if (w ^ wbuff[i])
+                return find_bit(self, vi, 64 * i, 64 * i + 64, 1);
+        }
+        return find_bit(self, vi, a, 64 * wa, 1);
+    }
+    else {
+        if ((res = find_bit(self, vi, a, 64 * wa, 0)) >= 0)
+            return res;
+
+        for (i = wa; i < wb; i++) {       /* skip uint64 words */
+            if (w ^ wbuff[i])
+                return find_bit(self, vi, 64 * i, 64 * i + 64, 0);
+        }
+        return find_bit(self, vi, 64 * wb, b, 0);
+    }
+}
+
+static Py_ssize_t
+find_bit_bytes(bitarrayobject *self, int vi,
+               Py_ssize_t a, Py_ssize_t b, int right)
+{
+    const Py_ssize_t ca = BYTES(a);  /* char-range(ca, cb) */
+    const Py_ssize_t cb = b / 8;
+    const char *buff = self->ob_item;
+    const char c = vi ? 0 : ~0;
+    Py_ssize_t res, i;
+
+    if (right) {
+        if ((res = find_bit(self, vi, 8 * cb, b, 1)) >= 0)
+            return res;
+
+        for (i = cb - 1; i >= ca; i--) {  /* skip bytes */
+            if (c ^ buff[i])
+                return find_bit(self, vi, 8 * i, 8 * i + 8, 1);
+        }
+        return find_bit(self, vi, a, 8 * ca, 1);
+    }
+    else {
+        if ((res = find_bit(self, vi, a, 8 * ca, 0)) >= 0)
+            return res;
+
+        for (i = ca; i < cb; i++) {       /* skip bytes */
+            if (c ^ buff[i])
+                return find_bit(self, vi, 8 * i, 8 * i + 8, 0);
+        }
+        return find_bit(self, vi, 8 * cb, b, 0);
+    }
+}
+
+static Py_ssize_t
 find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
 {
     const Py_ssize_t n = b - a;
-    Py_ssize_t res, i;
+    Py_ssize_t i;
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
@@ -624,63 +691,13 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
     /* When the search range is greater than 64 bits, we skip uint64 words.
        Note that we cannot check for n >= 64 here as the function could then
        go into an infinite recursive loop when a word is found. */
-    if (n > 64) {
-        const Py_ssize_t wa = (a + 63) / 64;  /* word-range(wa, wb) */
-        const Py_ssize_t wb = b / 64;
-        const uint64_t *wbuff = WBUFF(self);
-        const uint64_t w = vi ? 0 : ~0;
+    if (n > 64)
+        return find_bit_words(self, vi, a, b, right);
 
-        if (right) {
-            if ((res = find_bit(self, vi, 64 * wb, b, 1)) >= 0)
-                return res;
-
-            for (i = wb - 1; i >= wa; i--) {  /* skip uint64 words */
-                if (w ^ wbuff[i])
-                    return find_bit(self, vi, 64 * i, 64 * i + 64, 1);
-            }
-            return find_bit(self, vi, a, 64 * wa, 1);
-        }
-        else {
-            if ((res = find_bit(self, vi, a, 64 * wa, 0)) >= 0)
-                return res;
-
-            for (i = wa; i < wb; i++) {       /* skip uint64 words */
-                if (w ^ wbuff[i])
-                    return find_bit(self, vi, 64 * i, 64 * i + 64, 0);
-            }
-            return find_bit(self, vi, 64 * wb, b, 0);
-        }
-    }
     /* For the same reason as above, we cannot check for n >= 8 here. */
-    if (n > 8) {
-        const Py_ssize_t ca = BYTES(a);  /* char-range(ca, cb) */
-        const Py_ssize_t cb = b / 8;
-        const char *buff = self->ob_item;
-        const char c = vi ? 0 : ~0;
+    if (n > 8)
+        return find_bit_bytes(self, vi, a, b, right);
 
-        if (right) {
-            if ((res = find_bit(self, vi, 8 * cb, b, 1)) >= 0)
-                return res;
-
-            for (i = cb - 1; i >= ca; i--) {  /* skip bytes */
-                assert_byte_in_range(self, i);
-                if (c ^ buff[i])
-                    return find_bit(self, vi, 8 * i, 8 * i + 8, 1);
-            }
-            return find_bit(self, vi, a, 8 * ca, 1);
-        }
-        else {
-            if ((res = find_bit(self, vi, a, 8 * ca, 0)) >= 0)
-                return res;
-
-            for (i = ca; i < cb; i++) {       /* skip bytes */
-                assert_byte_in_range(self, i);
-                if (c ^ buff[i])
-                    return find_bit(self, vi, 8 * i, 8 * i + 8, 0);
-            }
-            return find_bit(self, vi, 8 * cb, b, 0);
-        }
-    }
     /* finally, search for the desired bit by stepping one-by-one */
     for (i = right ? b - 1 : a; a <= i && i < b; i += right ? -1 : 1)
         if (getbit(self, i) == vi)
