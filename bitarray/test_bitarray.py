@@ -940,7 +940,7 @@ class SetSliceTests(unittest.TestCase, Util):
                 lst_a = None
 
             if a is None:
-                self.assertTrue(lst_a is None)
+                self.assertIsNone(lst_a)
             else:
                 self.assertEqual(a.tolist(), lst_a)
                 self.check_obj(a)
@@ -2020,9 +2020,7 @@ class SequenceTests(unittest.TestCase, Util):
                 d = c
                 d += b
                 self.assertEqual(d, a + b)
-                self.assertTrue(c is d)
-                self.assertEQUAL(c, d)
-                self.assertEqual(d.endian, a.endian)
+                self.assertIs(c, d)
                 self.check_obj(d)
 
     def test_repeat_explicit(self):
@@ -2114,7 +2112,7 @@ class SequenceTests(unittest.TestCase, Util):
                      ('1', True), ('11', True), ('111', False),
                      ('011', True), ('0001', True), ('00011', False)]:
             c = bitarray(s) in a
-            self.assertTrue(c is r)
+            self.assertIs(c, r)
 
 # -------------------------- Number methods tests ---------------------------
 
@@ -2133,11 +2131,11 @@ class NumberTests(unittest.TestCase, Util):
 
     def test_bool(self):
         a = bitarray()
-        self.assertTrue(bool(a) is False)
+        self.assertIs(bool(a), False)
         a.append(0)
-        self.assertTrue(bool(a) is True)
+        self.assertIs(bool(a), True)
         a.append(1)
-        self.assertTrue(bool(a) is True)
+        self.assertIs(bool(a), True)
 
     def test_size_error(self):
         a = bitarray('11001')
@@ -2625,7 +2623,7 @@ class AllAnyTests(unittest.TestCase, Util):
             self.assertTrue(bitarray(s).all() is r)
 
         for a in self.randombitarrays():
-            self.assertTrue(a.all() is all(a))
+            self.assertIs(a.all(), all(a))
 
         N = randint(1000, 2000)
         a = ones(N)
@@ -2637,10 +2635,10 @@ class AllAnyTests(unittest.TestCase, Util):
         a = bitarray()
         self.assertFalse(a.any())
         for s, r in ('0', False), ('1', True), ('01', True):
-            self.assertTrue(bitarray(s).any() is r)
+            self.assertIs(bitarray(s).any(), r)
 
         for a in self.randombitarrays():
-            self.assertTrue(a.any() is any(a))
+            self.assertIs(a.any(), any(a))
 
         N = randint(1000, 2000)
         a = zeros(N)
@@ -2722,7 +2720,7 @@ class BufferInfoTests(unittest.TestCase):
                 (info.exports, int),
         ]):
             self.assertEqual(type(item), tp)
-            self.assertTrue(info[i] is item)
+            self.assertIs(info[i], item)
 
 class InsertTests(unittest.TestCase, Util):
 
@@ -2782,7 +2780,7 @@ class FillTests(unittest.TestCase, Util):
             b = a.copy()
             res = b.fill()
             self.assertTrue(0 <= res < 8)
-            self.assertTrue(b.padbits == 0)
+            self.assertEqual(b.padbits, 0)
             self.assertEqual(len(b) % 8, 0)
             self.assertEqual(b, a + zeros(res))
             self.assertEqual(b.endian, a.endian)
@@ -3020,7 +3018,7 @@ class PopTests(unittest.TestCase, Util):
                            ('0',      -1, 0, ''),
                            ('0011100', 3, 1, '001100')]:
             a = bitarray(x)
-            self.assertTrue(a.pop(n) is r)
+            self.assertIs(a.pop(n), r)
             self.assertEqual(a, bitarray(y))
             self.check_obj(a)
 
@@ -4605,7 +4603,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(list(a.decode(d)), [None, 0, 1, '', 2])
         # iterator
         it = a.decode(d)
-        self.assertTrue(next(it) is None)
+        self.assertIsNone(next(it))
         self.assertEqual(next(it), 0)
         self.assertEqual(next(it), 1)
         self.assertEqual(next(it), '')
