@@ -25,7 +25,7 @@ from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       get_default_endian)
-from bitarray.test_bitarray import Util, skipIf, is_pypy, urandom_2, PTRSIZE
+from bitarray.test_bitarray import Util, is_pypy, urandom_2, PTRSIZE
 
 from bitarray.util import (
     zeros, ones, urandom, random_k, random_p, pprint, strip, count_n,
@@ -171,8 +171,7 @@ class Random_K_Tests(unittest.TestCase):
         else:
             self.fail()
 
-    # test uses math.comb, added in 3.8
-    @skipIf(sys.version_info[:2] < (3, 8))
+    @unittest.skipIf(sys.version_info[:2] < (3, 8), "math.comb added in 3.8")
     def test_combinations(self):
         # for entire range of 0 <= k <= n, validate that random_k()
         # generates all possible combinations
@@ -270,14 +269,7 @@ class Random_K_Tests(unittest.TestCase):
 
 HAVE_BINOMIALVARIATE = sys.version_info[:2] >= (3, 12)
 
-@skipIf(HAVE_BINOMIALVARIATE)
-class Random_P_Not_Implemented(unittest.TestCase):
-
-    def test_not_implemented(self):
-        self.assertRaises(NotImplementedError, random_p, 100, 0.25)
-
-
-@skipIf(not HAVE_BINOMIALVARIATE)
+@unittest.skipIf(not HAVE_BINOMIALVARIATE, "Python 3.12+ required")
 class Random_P_Tests(unittest.TestCase):
 
     def test_basic(self):
@@ -974,7 +966,7 @@ class CorrespondAllTests(unittest.TestCase):
 
 # -----------------------------  byteswap()  --------------------------------
 
-@skipIf(is_pypy)
+@unittest.skipIf(is_pypy, "skip test on PyPy")
 class ByteSwapTests(unittest.TestCase):
 
     def test_basic_bytearray(self):

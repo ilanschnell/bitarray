@@ -6,7 +6,7 @@ from random import randint, randrange
 from bitarray import bitarray, _sysinfo
 from bitarray.util import zeros, ones, int2ba, parity
 
-from bitarray.test_bitarray import Util, urandom_2, skipIf, PTRSIZE
+from bitarray.test_bitarray import Util, urandom_2, PTRSIZE
 
 # --------------------- internal C-level debug tests ------------------------
 
@@ -394,7 +394,7 @@ class RTS_Tests(unittest.TestCase):
         self.assertEqual(len(rts), 1)
         self.assertEqual(rts, [0])
 
-    @skipIf(SEGBITS != 256)
+    @unittest.skipIf(SEGBITS != 256, "SEGBITS mismatch")
     def test_example(self):
         # see example before sc_calc_rts() in _util.c
         a = zeros(987)

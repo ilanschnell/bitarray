@@ -37,11 +37,6 @@ from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       _bitarray_reconstructor, _sysinfo as sysinfo,
                       BufferInfo, __version__)
 
-def skipIf(condition):
-    "Skip a test if the condition is true."
-    if condition:
-        return lambda f: None
-    return lambda f: f
 
 PTRSIZE = sysinfo("void*")  # pointer size in bytes
 
@@ -61,7 +56,7 @@ def urandom_2(n, endian="<RAND>"):
     return a
 
 
-class Util(object):
+class Util:
 
     @staticmethod
     def random_endian():
@@ -158,7 +153,8 @@ class ModuleFunctionsTests(unittest.TestCase):
             res = sysinfo(key)
             self.assertEqual(type(res), int)
 
-    @skipIf(sys.version_info[:2] < (3, 14))
+    @unittest.skipIf(sys.version_info[:2] < (3, 14),
+                     "free-threading not supported")
     def test_gil_disabled(self):
         self.assertEqual(sysinfo("Py_GIL_DISABLED"),
                          "free-threading" in sys.version)
@@ -270,7 +266,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         self.assertEQUAL(a, bitarray('00001111', 'little'))
         self.check_obj(a)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_buffer_writable(self):
         a = bitarray(buffer=bytearray([65]))
         self.assertFalse(a.readonly)
@@ -479,7 +475,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         # too many args
         self.assertRaises(TypeError, bitarray, 0, 'big', 0)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_weakref(self):
         a = bitarray('0100')
         b = weakref.proxy(a)
@@ -594,7 +590,7 @@ class SetItemTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist(), aa)
             self.check_obj(a)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([5, 1, 2, 3])
         b = bitarray(endian="little", buffer=a)
@@ -626,7 +622,7 @@ class DelItemTests(unittest.TestCase, Util):
             self.assertEqual(len(b), n - 1)
             self.check_obj(b)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([5, 11, 7])
         b = bitarray(buffer=a)
@@ -823,7 +819,7 @@ class SetSliceTests(unittest.TestCase, Util):
         a[15:7:-1] = b
         self.assertEqual(a, bitarray('11111111 00000011 00000000'))
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_self_shared_buffer_3(self):
         # Requires to check for (in setslice_bitarray()):
         #
@@ -1056,7 +1052,7 @@ class SetSliceTests(unittest.TestCase, Util):
             a.__setitem__, slice(None, None, -1), bitarray('0001000'))
         self.assertEqual(a, bitarray('11000011'))
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([5, 1, 2, 3])
         b = bitarray(endian="little", buffer=a)
@@ -1140,7 +1136,7 @@ class DelSliceTests(unittest.TestCase, Util):
             del lst[::step]
             self.assertEqual(a.tolist(), lst)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([5, 1, 2, 3])
         b = bitarray(buffer=a)
@@ -1271,7 +1267,7 @@ class SetMaskedIndexTests(unittest.TestCase, Util):
             b |= mask
             self.assertEqual(a, b)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([0, 0xff])
         #             00000000 11111111
@@ -1334,7 +1330,7 @@ class DelMaskedIndexTests(unittest.TestCase, Util):
             del a[mask], b[s]
             self.assertEQUAL(a, b)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([5, 3])
         b = bitarray(buffer=a)
@@ -1486,7 +1482,7 @@ class SetSequenceIndexTests(unittest.TestCase, Util):
                 b[j] = c[i]
             self.assertEqual(a, b)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([0, 1, 2, 3])
         b = bitarray(endian="big", buffer=a)
@@ -1550,7 +1546,7 @@ class DelSequenceIndexTests(unittest.TestCase, Util):
             del a[s], b[r]
             self.assertEQUAL(a, b)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([0, 1, 2, 3])
         b = bitarray(buffer=a)
@@ -1620,7 +1616,7 @@ class MiscTests(unittest.TestCase, Util):
             for i in range(len(a)):
                 self.assertEqual(a[i], b[i + 1234])
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_overflow(self):
         a = bitarray(1)
         for i in 0, 1:
@@ -1631,7 +1627,7 @@ class MiscTests(unittest.TestCase, Util):
         a = bitarray(1 << 10)
         self.assertRaises(OverflowError, a.__imul__, 1 << 53)
 
-    @skipIf(PTRSIZE != 4 or is_pypy)
+    @unittest.skipIf(PTRSIZE != 4 or is_pypy, "test requires 32-bit")
     def test_overflow_32bit(self):
         a = bitarray(1000_000)
         self.assertRaises(OverflowError, a.__imul__, 17180)
@@ -1725,7 +1721,7 @@ class PickleTests(unittest.TestCase, Util):
         self.assertEqual(a.readonly, b.readonly)
         self.check_obj(b)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_reduce_random(self):
         for a in self.randombitarrays():
             self.check_reduce(a)
@@ -1953,7 +1949,7 @@ class SpecialMethodTests(unittest.TestCase, Util):
             self.assertFalse(b is a)
             self.assertEQUAL(a, b)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_sizeof(self):
         a = bitarray()
         size = sys.getsizeof(a)
@@ -2402,7 +2398,7 @@ class NumberTests(unittest.TestCase, Util):
         self.assertEqual(type(b), frozenbitarray)
         self.assertRaises(TypeError, a.__ilshift__, 4)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([0xf0, 0x01, 0x02, 0x0f])
         b = bitarray(buffer=a, endian='big')
@@ -2860,7 +2856,7 @@ class InvertTests(unittest.TestCase, Util):
                 b[s] = ~b[s]
                 self.assertEQUAL(a, b)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([0, 1, 2, 3, 32, 255])
         b = bitarray(buffer=a)
@@ -2902,7 +2898,7 @@ class SortTests(unittest.TestCase, Util):
                 self.assertEqual(a, bitarray(lst))
                 self.check_obj(a)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([0x6f, 0xa5])
         b = bitarray(endian="big", buffer=a)
@@ -3088,7 +3084,7 @@ class ReverseTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b[::-1])
             self.check_obj(a)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([0, 1, 2, 3, 255])
         b = bitarray(buffer=a)
@@ -3164,7 +3160,7 @@ class SetAllTests(unittest.TestCase, Util):
             self.assertEqual(a.endian, endian)
             self.check_obj(a)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([0, 1, 2, 3])
         b = bitarray(buffer=a)
@@ -3307,7 +3303,7 @@ class ByteReverseTests(unittest.TestCase, Util):
             a = bitarray(a, self.opposite_endian(a.endian))
             self.assertEqual(a.tobytes(), b.tobytes())
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([0, 1, 2, 3, 255])
         b = bitarray(buffer=a)
@@ -3985,8 +3981,7 @@ class FileTests(unittest.TestCase, Util):
         for key in d1.keys():
             self.assertEQUAL(d1[key], d2[key])
 
-    # pyodide has no dbm module
-    @skipIf(pyodide)
+    @unittest.skipIf(pyodide, "pyodide has no dbm module")
     def test_shelve(self):
         d1 = shelve.open(self.tmpfname)
         stored = []
@@ -4218,7 +4213,7 @@ class FileTests(unittest.TestCase, Util):
             a.tofile(f)
             self.assertEqual(f.getvalue(), data)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_mmap(self):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(1000 * b'\0')
@@ -4238,7 +4233,7 @@ class FileTests(unittest.TestCase, Util):
         self.assertEqual(self.read_file(), 1000 * b'\x55')
 
     # pyodide hits emscripten mmap bug
-    @skipIf(pyodide or is_pypy)
+    @unittest.skipIf(pyodide or is_pypy, "skip if Pyodide or PyPy")
     def test_mmap_2(self):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(1000 * b'\x22')
@@ -4253,7 +4248,7 @@ class FileTests(unittest.TestCase, Util):
 
         self.assertEqual(self.read_file(), 1000 * b'\x33')
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_mmap_readonly(self):
         with open(self.tmpfname, 'wb') as fo:
             fo.write(994 * b'\x89' + b'Veedon')
@@ -4309,7 +4304,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
         ]:
             self.assertRaises(ValueError, decodetree, d)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_sizeof(self):
         dt = decodetree({'.': bitarray('1')})
         self.assertTrue(0 < sys.getsizeof(dt) < 100)
@@ -4362,7 +4357,7 @@ class DecodeTreeTests(unittest.TestCase, Util):
         self.assertEqual(list(a.decode(t)), [])
         self.check_obj(a)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_large(self):
         d = {i: bitarray(bool((1 << j) & i) for j in range(10))
              for i in range(1024)}
@@ -4655,7 +4650,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertEqual(a, zeros(800))
         self.check_obj(a)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_bytearray(self):
         b = bytearray(100 * [0])
         a = bitarray(buffer=b, endian='little')
@@ -4683,7 +4678,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertEqual(a, 800 * bitarray('1'))
         self.check_obj(a)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_array(self):
         a = array.array('B', [0, 255, 64])
         b = bitarray(None, 'little', a)
@@ -4738,7 +4733,7 @@ class BufferImportTests(unittest.TestCase, Util):
             self.assertFalse(b.readonly)
             self.check_obj(b)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_bitarray_shared_sections(self):
         a = urandom_2(0x2000, 'big')
         b = bitarray(buffer=memoryview(a)[0x100:0x300], endian='big')
@@ -4797,7 +4792,7 @@ class BufferImportTests(unittest.TestCase, Util):
                     set([1, 2, 3]),):
             self.assertRaises(TypeError, bitarray, buffer=arg)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_del_import_object(self):
         b = bytearray(100 * [0])
         a = bitarray(buffer=b)
@@ -4807,7 +4802,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertTrue(a.all())
         self.check_obj(a)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_readonly_errors(self):
         a = bitarray(buffer=b'A')
         info = a.buffer_info()
@@ -4839,7 +4834,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.__ilshift__, 1)
         self.check_obj(a)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_resize_errors(self):
         a = bitarray(buffer=bytearray([123]))
         info = a.buffer_info()
@@ -5094,7 +5089,7 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
         self.assertTrue(info.readonly)
         self.assertTrue(info.imported)
 
-    @skipIf(is_pypy)
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_buffer_import_writable(self):
         c = bytearray([15, 95])
         self.assertRaisesMessage(
