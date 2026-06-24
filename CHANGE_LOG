@@ -7,6 +7,8 @@
   * clarity/wording improvements throughout project
   * add `new_allocation()` to simplify `resize()`
   * drop Python 3.6 support
+  * expose the `decodeiterator` class, and add the `skipbits` method and `index`
+    data descriptor
 
 
 2026-04-02   3.8.1:
