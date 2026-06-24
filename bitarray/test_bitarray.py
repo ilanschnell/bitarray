@@ -408,7 +408,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         for n in range(10):
             a = bitarray(n)
             b = bitarray(a, endian=None)
-            self.assertFalse(a is b)
+            self.assertIsNot(a, b)
             self.assertEQUAL(a, b)
 
     def test_bitarray_endian(self):
@@ -417,7 +417,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         for endian in 'little', 'big':
             a = bitarray(endian=endian)
             b = bitarray(a)
-            self.assertFalse(a is b)
+            self.assertIsNot(a, b)
             self.assertEQUAL(a, b)
 
             endian2 = self.opposite_endian(endian)
@@ -636,7 +636,7 @@ class GetSliceTests(unittest.TestCase, Util):
     def test_slice(self):
         a = bitarray('01001111 00001')
         self.assertEQUAL(a[:], a)
-        self.assertFalse(a[:] is a)
+        self.assertIsNot(a[:], a)
         self.assertEQUAL(a[13:2:-3], bitarray('1010'))
         self.assertEQUAL(a[2:-1:4], bitarray('010'))
         self.assertEQUAL(a[::2], bitarray('0011001'))
@@ -682,12 +682,12 @@ class SetSliceTests(unittest.TestCase, Util):
             b = bitarray(n)
             b[0:n] = bitarray(a)
             self.assertEqual(a, b)
-            self.assertFalse(a is b)
+            self.assertIsNot(a, b)
 
             b = bitarray(n)
             b[:] = bitarray(a)
             self.assertEqual(a, b)
-            self.assertFalse(a is b)
+            self.assertIsNot(a, b)
 
             b = bitarray(n)
             b[::-1] = a
@@ -1815,7 +1815,7 @@ class PickleTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             b = pickle.loads(pickle.dumps(a))
             self.assertFalse(b.readonly)
-            self.assertFalse(b is a)
+            self.assertIsNot(b, a)
             self.assertEQUAL(a, b)
             self.check_obj(b)
 
@@ -1930,23 +1930,23 @@ class SpecialMethodTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             self.assertEqual(repr(a), str(a))
             b = eval(repr(a))
-            self.assertFalse(b is a)
-            self.assertEqual(a, b)
+            self.assertIsNot(b, a)
+            self.assertEqual(b, a)
             self.check_obj(b)
 
     def test_copy(self):
         for a in self.randombitarrays():
             b = a.copy()
-            self.assertFalse(b is a)
-            self.assertEQUAL(a, b)
+            self.assertIsNot(b, a)
+            self.assertEQUAL(b, a)
 
             b = copy.copy(a)
-            self.assertFalse(b is a)
-            self.assertEQUAL(a, b)
+            self.assertIsNot(b, a)
+            self.assertEQUAL(b, a)
 
             b = copy.deepcopy(a)
-            self.assertFalse(b is a)
-            self.assertEQUAL(a, b)
+            self.assertIsNot(b, a)
+            self.assertEQUAL(b, a)
 
     @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_sizeof(self):
@@ -2253,7 +2253,6 @@ class NumberTests(unittest.TestCase, Util):
         b = ~a
         self.assertEQUAL(b, bitarray('00100'))
         self.assertEQUAL(a, bitarray('11011'))
-        self.assertFalse(a is b)
         self.check_obj(b)
 
         for a in self.randombitarrays():
@@ -3876,7 +3875,7 @@ class BytesTests(unittest.TestCase, Util):
             a.frombytes(b'')
             a.frombytes(bytearray())
             self.assertEQUAL(a, b)
-            self.assertFalse(a is b)
+            self.assertIsNot(a, b)
             self.check_obj(a)
 
     def test_frombytes_errors(self):
@@ -4692,7 +4691,7 @@ class BufferImportTests(unittest.TestCase, Util):
         a = urandom_2(10000, 'little')
         b = bitarray(endian='little', buffer=a)
         # a and b are two distinct bitarrays that share the same buffer now
-        self.assertFalse(a is b)
+        self.assertIsNot(a, b)
 
         a_info = a.buffer_info()
         self.assertFalse(a_info.imported)
@@ -4703,7 +4702,7 @@ class BufferImportTests(unittest.TestCase, Util):
         # buffer address is the same
         self.assertEqual(a_info.address, b_info.address)
 
-        self.assertFalse(a is b)
+        self.assertIsNot(a, b)
         self.assertEqual(a, b)
         b[437:461] = 0
         self.assertEqual(a, b)
@@ -4995,10 +4994,10 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
     def test_init_from_bitarray(self):
         for a in self.randombitarrays():
             b = frozenbitarray(a)
-            self.assertFalse(b is a)
+            self.assertIsNot(b, a)
             self.assertEQUAL(b, a)
             c = frozenbitarray(b)
-            self.assertFalse(c is b)
+            self.assertIsNot(c, b)
             self.assertEQUAL(c, b)
             self.assertEqual(hash(c), hash(b))
             self.check_obj(b)
