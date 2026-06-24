@@ -209,7 +209,7 @@ class TestPuff(unittest.TestCase):
 
     def test_constants(self):
         for x in MAXDCODES, MAXLCODES, FIXLCODES:
-            self.assertEqual(type(x), int)
+            self.assertIs(type(x), int)
         self.assertEqual(len(FIXED_LENGTHS), FIXLCODES + MAXDCODES)
 
     def test_align_byte_boundary(self):
