@@ -60,6 +60,7 @@ NEW_IN = {
     'util.urandom':           '1.7',
     'util.random_k':          '3.6',
     'util.random_p':          '3.5',
+    'util.rotate':            '3.9',
     'util.gen_primes':        '3.7',
     'util.sc_encode':         '2.7',
     'util.sc_decode':         '2.7',

@@ -404,6 +404,24 @@ Allowed values for mode are the strings: `left`, `right`, `both`
     return __a[start:stop]
 
 
+def rotate(__a, k=1):
+    """rotate(bitarray, /, k=1)
+
+Rotate bitarray in-place by `k` positions.
+Positive `k` rotates right, negative `k` rotates left.
+"""
+    if not isinstance(k, int):
+        raise TypeError("int expected, got '%s'" % type(k).__name__)
+
+    n = len(__a)
+    if n < 2:
+        return
+
+    k %= n
+    if k:
+        __a[:] = __a[-k:] + __a[:-k]
+
+
 def intervals(__a):
     """intervals(bitarray, /) -> iterator
 

@@ -20,7 +20,7 @@ from functools import reduce
 from random import (choice, choices, getrandbits, randrange, randint, random,
                     sample, seed)
 from string import hexdigits, whitespace
-from collections import Counter
+from collections import Counter, deque
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       get_default_endian)
@@ -30,7 +30,7 @@ from bitarray.util import (
     zeros, ones, urandom, random_k, random_p, pprint, strip, count_n,
     parity, gen_primes, sum_indices, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
-    correspond_all, byteswap, intervals,
+    correspond_all, byteswap, rotate, intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
     ba2int, int2ba,
     sc_encode, sc_decode, vl_encode, vl_decode,
@@ -1297,6 +1297,91 @@ class XoredIndicesTests(unittest.TestCase, Util):
             self.assertEqual(xor_indices(a), i)  # index of the flipped bit!
             a.invert(i)
 
+
+class RotateTests(unittest.TestCase, Util):
+
+    def test_explicit(self):
+        for endian in ENDIANS:
+            a = bitarray('1001', endian)
+            rotate(a)  # default shift k=1
+            self.assertEQUAL(a, bitarray('1100', endian))
+            rotate(a, -1)
+            self.assertEQUAL(a, bitarray('1001', endian))
+            rotate(a, k=2)
+            self.assertEQUAL(a, bitarray('0110', endian))
+            rotate(a, 0)
+            self.assertEQUAL(a, bitarray('0110', endian))
+
+    def test_empty(self):
+        a = bitarray()
+        self.assertIsNone(rotate(a, 0))
+        self.assertEqual(a, bitarray())
+
+        self.assertIsNone(rotate(a, 123))
+        self.assertEqual(a, bitarray())
+
+    def test_pop(self):
+        a = urandom(randint(1, 20), choice(OPT_ENDIANS))
+        b = a.copy()
+        a.insert(0, a.pop())  # shift 1 to right
+        rotate(b, 1)
+        self.assertEqual(a, b)
+        a.append(a.pop(0))    # shift 1 to left
+        rotate(b, -1)
+        self.assertEqual(a, b)
+
+    def test_deque(self):
+        a = urandom(randint(1, 20), choice(OPT_ENDIANS))
+        b = deque(a)
+        c = list(a)  # rotate() may be used on list
+        k = randrange(-30, 30)
+        rotate(a, k)
+        b.rotate(k)
+        rotate(c, k)
+        self.assertEqual(a, bitarray(b))
+        self.assertEqual(c, list(b))
+
+    def test_modulo(self):
+        a = bitarray('1001011')
+        b = a.copy()
+
+        rotate(a, len(a))
+        self.assertEqual(a, b)
+
+        rotate(a, len(a) + 2)
+        rotate(b, 2)
+        self.assertEqual(a, b)
+
+        rotate(a, -2)
+        self.assertEqual(a, bitarray('1001011'))
+
+    def test_random(self):
+        for a in self.randombitarrays():
+            b = a.copy()
+            k = randrange(-2 * len(a) - 2, 2 * len(a) + 3)
+            self.assertIsNone(rotate(b, k))
+
+            lst = a.tolist()
+            if lst:
+                k %= len(lst)
+                lst = lst[-k:] + lst[:-k]
+
+            self.assertEqual(b.tolist(), lst)
+            self.assertEqual(b.endian, a.endian)
+            self.check_obj(b)
+
+    def test_errors(self):
+        self.assertRaises(TypeError, rotate)
+        self.assertRaises(TypeError, rotate, bitarray(), 1.0)
+        self.assertRaises(TypeError, rotate, bitarray(), '1')
+        self.assertRaises(TypeError, rotate, '101', 1)
+
+    def test_readonly(self):
+        for a in bitarray(buffer=b'\x80'), frozenbitarray('10001'):
+            self.assertTrue(a.readonly)
+            self.assertRaises(TypeError, rotate, a, 1)
+
+
 # ------------------   intervals of uninterrupted runs   --------------------
 
 def runs(a):
@@ -1332,7 +1417,7 @@ class IntervalsTests(unittest.TestCase, Util):
             n = len(a)
             b = urandom(n)
             for value, start, stop in intervals(a):
-                self.assertFalse(isinstance(value, bool))
+                self.assertIs(type(value), int)
                 self.assertTrue(0 <= start < stop <= n)
                 b[start:stop] = value
             self.assertEqual(a, b)
