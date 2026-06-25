@@ -1,5 +1,6 @@
 2026-XX-XX   3.8.3:
 -------------------
+  * improve testing - use more of `unittest`'s functionality
 
 
 2026-06-17   3.8.2:
