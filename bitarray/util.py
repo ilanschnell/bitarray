@@ -9,6 +9,7 @@ import os
 import sys
 import math
 import random
+import operator
 
 from bitarray import bitarray, bits2bytes
 
@@ -60,9 +61,7 @@ The random bitarrays are reproducible when giving Python's `random.seed()`
 a specific seed value.
 """
     r = _Random(__n, endian)
-    if not isinstance(k, int):
-        raise TypeError("int expected, got '%s'" % type(k).__name__)
-
+    k = operator.index(k)
     return r.random_k(k)
 
 
@@ -405,14 +404,12 @@ Allowed values for mode are the strings: `left`, `right`, `both`
 
 
 def rotate(__a, k=1):
-    """rotate(bitarray, /, k=1)
+    """rotate(a, /, k=1)
 
-Rotate bitarray in-place by `k` positions.
+Rotate mutable sequence `a` in-place by `k` positions.
 Positive `k` rotates right, negative `k` rotates left.
 """
-    if not isinstance(k, int):
-        raise TypeError("int expected, got '%s'" % type(k).__name__)
-
+    k = operator.index(k)
     n = len(__a)
     if n < 2:
         return
