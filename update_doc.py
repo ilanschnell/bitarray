@@ -117,14 +117,14 @@ NOTES = {
    testing, as it provides a simple way to create a well-defined bitarray
    of any length.""",
 
-    'util.count_xor': "   This is also known as the Hamming distance."
+    'util.count_xor': "   This is also known as the Hamming distance.",
 
     'util.rotate': """\
-    When the sequence is not empty, rotating one step to the right is
-    equivalent to ``a.insert(0, a.pop())``, and rotating one step to the left
-    is equivalent to ``a.append(a.pop(0))``.
-    The same convention is used by the ``.rotate()`` method of
-    the ``collections.deque`` object.""",
+   When the sequence is not empty, rotating one step to the right is
+   equivalent to ``a.insert(0, a.pop())``, and rotating one step to the left
+   is equivalent to ``a.append(a.pop(0))``.
+   The same convention is used by the ``.rotate()`` method of
+   the ``collections.deque`` object.""",
 }
 
 GETSET = {
