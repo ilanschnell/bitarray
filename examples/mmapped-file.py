@@ -21,6 +21,7 @@ with open(filename, 'r+b') as f:
 
     assert len(a) == 8 * filesize
     assert not a.any()  # no bits 1
+    assert not a.readonly
     a[-1] = 1           # set the last bit in the array to 1
 
 # open in binary read-only mode
@@ -31,6 +32,7 @@ with open(filename, 'rb') as fi:
     assert len(b) == 8 * filesize
     assert b.count() == 1  # only one bit is set
     assert b[-1] == 1      # the last one
+    assert b.readonly
     try:
         b[0] = 1           # TypeError: cannot modify read-only memory
     except TypeError:
