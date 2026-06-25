@@ -2612,37 +2612,49 @@ class ExtendTests(unittest.TestCase, Util):
 
 # ------------------------ Tests for bitarray methods -----------------------
 
-class AllAnyTests(unittest.TestCase, Util):
+class AllTests(unittest.TestCase, Util):
 
-    def test_all(self):
-        a = bitarray()
-        self.assertTrue(a.all())
-        for s, r in ('0', False), ('1', True), ('01', False):
+    def test_simple(self):
+        for s, r in ('', True), ('0', False), ('1', True), ('01', False):
             self.assertIs(bitarray(s).all(), r)
 
+    def test_random(self):
         for a in self.randombitarrays():
             self.assertIs(a.all(), all(a))
 
+    def test_large(self):
         N = randint(1000, 2000)
         a = ones(N)
         self.assertTrue(a.all())
         a[N - 1] = 0
         self.assertFalse(a.all())
 
-    def test_any(self):
+    def test_wrong_args(self):
         a = bitarray()
-        self.assertFalse(a.any())
-        for s, r in ('0', False), ('1', True), ('01', True):
+        self.assertIs(a.all(), True)
+        self.assertRaises(TypeError, a.all, 3)
+
+class AnyTests(unittest.TestCase, Util):
+
+    def test_any(self):
+        for s, r in ('', False), ('0', False), ('1', True), ('01', True):
             self.assertIs(bitarray(s).any(), r)
 
+    def test_random(self):
         for a in self.randombitarrays():
             self.assertIs(a.any(), any(a))
 
+    def test_large(self):
         N = randint(1000, 2000)
         a = zeros(N)
         self.assertFalse(a.any())
         a[N - 1] = 1
         self.assertTrue(a.any())
+
+    def test_wrong_args(self):
+        a = bitarray()
+        self.assertIs(a.any(), False)
+        self.assertRaises(TypeError, a.any, 3)
 
 class AppendTests(unittest.TestCase, Util):
 
