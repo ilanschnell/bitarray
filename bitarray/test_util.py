@@ -1301,27 +1301,36 @@ class XoredIndicesTests(unittest.TestCase, Util):
 class RotateTests(unittest.TestCase, Util):
 
     def test_explicit(self):
-        for endian in ENDIANS:
-            a = bitarray('1001', endian)
-            rotate(a)  # default shift k=1
-            self.assertEQUAL(a, bitarray('1100', endian))
-            rotate(a, -1)
-            self.assertEQUAL(a, bitarray('1001', endian))
-            rotate(a, k=2)
-            self.assertEQUAL(a, bitarray('0110', endian))
-            rotate(a, 0)
-            self.assertEQUAL(a, bitarray('0110', endian))
+        for items in [
+                ("", 0, "", 1, "", 123, ""),
+                ("1", 0, "1", 1, "1", 123, "1"),
+                ("10", 1, "01", -1, "10", 98, "10"),
+                ("001", 1, "100", 2, "001", 6, "001", -1, "010", -3, "010"),
+                ("1001", 1, "1100", -1, "1001", 2, "0110", 0, "0110"),
+                ("11010", 25, -15, 7, 8, "11010", -3, 3, "11010"),
+                ("1001011", 7, "1001011", 2, "1110010", -2, "1001011"),
+        ]:
+            endian = choice(ENDIANS)
+            a = bitarray(items[0], endian)
+            for x in items[1:]:
+                if isinstance(x, int):
+                    rotate(a, x)
+                elif isinstance(x, str):
+                    self.assertEQUAL(a, bitarray(x, endian))
+                else:
+                    self.fail(x)
 
-    def test_empty(self):
-        a = bitarray()
-        self.assertIsNone(rotate(a, 0))
-        self.assertEqual(a, bitarray())
-
-        self.assertIsNone(rotate(a, 123))
-        self.assertEqual(a, bitarray())
+    def test_sum(self):
+        a = urandom(randint(1, 50), choice(ENDIANS))
+        b = a.copy()
+        ks = [randint(-20, 20) for _ in range(100)]
+        for k in ks:
+            rotate(a, k)
+        rotate(b, sum(ks))
+        self.assertEQUAL(a, b)
 
     def test_pop(self):
-        a = urandom(randint(1, 20), choice(OPT_ENDIANS))
+        a = urandom(randint(1, 20), choice(ENDIANS))
         b = a.copy()
         a.insert(0, a.pop())  # shift 1 to right
         rotate(b, 1)
@@ -1331,7 +1340,7 @@ class RotateTests(unittest.TestCase, Util):
         self.assertEqual(a, b)
 
     def test_deque(self):
-        a = urandom(randint(1, 20), choice(OPT_ENDIANS))
+        a = urandom(randint(1, 20), choice(ENDIANS))
         b = deque(a)
         c = list(a)  # rotate() may be used on list
         k = randrange(-30, 30)
@@ -1340,20 +1349,6 @@ class RotateTests(unittest.TestCase, Util):
         rotate(c, k)
         self.assertEqual(a, bitarray(b))
         self.assertEqual(c, list(b))
-
-    def test_modulo(self):
-        a = bitarray('1001011')
-        b = a.copy()
-
-        rotate(a, len(a))
-        self.assertEqual(a, b)
-
-        rotate(a, len(a) + 2)
-        rotate(b, 2)
-        self.assertEqual(a, b)
-
-        rotate(a, -2)
-        self.assertEqual(a, bitarray('1001011'))
 
     def test_random(self):
         for a in self.randombitarrays():
@@ -1375,6 +1370,7 @@ class RotateTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, rotate, bitarray(), 1.0)
         self.assertRaises(TypeError, rotate, bitarray(), '1')
         self.assertRaises(TypeError, rotate, '101', 1)
+        self.assertRaises(TypeError, rotate, b"AB")
 
     def test_readonly(self):
         for a in bitarray(buffer=b'\x80'), frozenbitarray('10001'):
