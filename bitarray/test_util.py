@@ -1320,6 +1320,13 @@ class RotateTests(unittest.TestCase, Util):
                 else:
                     self.fail(x)
 
+    def test_shift_arg(self):
+        a = bitarray('1001')
+        rotate(a)  # default
+        self.assertEqual(a, bitarray('1100'))
+        rotate(a, k=-1)  # keyword argument
+        self.assertEqual(a, bitarray('1001'))
+
     def test_sum(self):
         a = urandom(randint(1, 50), choice(ENDIANS))
         b = a.copy()
