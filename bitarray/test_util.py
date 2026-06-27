@@ -1302,6 +1302,7 @@ class RotateTests(unittest.TestCase, Util):
 
     def test_explicit(self):
         for items in [
+                # integers are applied - strings are tested for equality
                 ("", 0, "", 1, "", 123, ""),
                 ("1", 0, "1", 1, "1", 123, "1"),
                 ("10", 1, "01", -1, "10", 98, "10"),
@@ -1314,7 +1315,8 @@ class RotateTests(unittest.TestCase, Util):
             a = bitarray(items[0], endian)
             for x in items[1:]:
                 if isinstance(x, int):
-                    rotate(a, x)
+                    ret = rotate(a, x)
+                    self.assertIsNone(ret)
                 elif isinstance(x, str):
                     self.assertEQUAL(a, bitarray(x, endian))
                 else:
@@ -1322,10 +1324,12 @@ class RotateTests(unittest.TestCase, Util):
 
     def test_shift_arg(self):
         a = bitarray('1001')
-        rotate(a)  # default
+        rotate(a)  # default k=1 - shift 1 to right
         self.assertEqual(a, bitarray('1100'))
         rotate(a, k=-1)  # keyword argument
         self.assertEqual(a, bitarray('1001'))
+        rotate(a, 2)  # positional argument
+        self.assertEqual(a, bitarray('0110'))
 
     def test_sum(self):
         a = urandom(randint(1, 50), choice(ENDIANS))
