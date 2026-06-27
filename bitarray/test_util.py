@@ -1331,50 +1331,39 @@ class RotateTests(unittest.TestCase, Util):
         rotate(a, 2)  # positional argument
         self.assertEqual(a, bitarray('0110'))
 
-    def test_sum(self):
-        a = urandom(randint(1, 50), choice(ENDIANS))
-        b = a.copy()
-        ks = [randint(-20, 20) for _ in range(100)]
-        for k in ks:
-            rotate(a, k)
-        rotate(b, sum(ks))
-        self.assertEQUAL(a, b)
-
     def test_pop(self):
-        a = urandom(randint(1, 20), choice(ENDIANS))
-        b = a.copy()
-        a.insert(0, a.pop())  # shift 1 to right
-        rotate(b, 1)
-        self.assertEqual(a, b)
-        a.append(a.pop(0))    # shift 1 to left
-        rotate(b, -1)
-        self.assertEqual(a, b)
+        for a in self.randombitarrays(start=1):
+            b = a.copy()
+            a.insert(0, a.pop())  # shift 1 to right
+            rotate(b, 1)
+            self.assertEQUAL(a, b)
+            a.append(a.pop(0))    # shift 1 to left
+            rotate(b, -1)
+            self.assertEQUAL(a, b)
+
+    def test_sum(self):
+        for _ in range(10):
+            n = randrange(1, 1000)
+            a = urandom(n, choice(ENDIANS))
+            b = a.copy()
+            ks = [randint(-2 * n, 3 * n) for _ in range(100)]
+            for k in ks:
+                rotate(a, k)
+            rotate(b, sum(ks))
+            self.assertEQUAL(a, b)
+            self.check_obj(a)
 
     def test_deque(self):
-        a = urandom(randint(1, 20), choice(ENDIANS))
-        b = deque(a)
-        c = list(a)  # rotate() may be used on list
-        k = randrange(-30, 30)
-        rotate(a, k)
-        b.rotate(k)
-        rotate(c, k)
-        self.assertEqual(a, bitarray(b))
-        self.assertEqual(c, list(b))
-
-    def test_random(self):
-        for a in self.randombitarrays():
-            b = a.copy()
-            k = randrange(-2 * len(a) - 2, 2 * len(a) + 3)
-            self.assertIsNone(rotate(b, k))
-
-            lst = a.tolist()
-            if lst:
-                k %= len(lst)
-                lst = lst[-k:] + lst[:-k]
-
-            self.assertEqual(b.tolist(), lst)
-            self.assertEqual(b.endian, a.endian)
-            self.check_obj(b)
+        for n in range(1, 50):
+            a = urandom(n, choice(ENDIANS))
+            b = deque(a)
+            c = list(a)  # rotate() may be used on list
+            k = randint(-2 * n - 2, 2 * n + 2)
+            rotate(a, k)
+            b.rotate(k)
+            rotate(c, k)
+            self.assertEqual(a, bitarray(b))
+            self.assertEqual(c, list(b))
 
     def test_errors(self):
         self.assertRaises(TypeError, rotate)
