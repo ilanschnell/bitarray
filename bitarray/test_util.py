@@ -1346,7 +1346,7 @@ class RotateTests(unittest.TestCase, Util):
             n = randrange(1, 1000)
             a = urandom(n, choice(ENDIANS))
             b = a.copy()
-            ks = [randint(-2 * n, 3 * n) for _ in range(100)]
+            ks = [randint(-2 * n, 2 * n) for _ in range(100)]
             for k in ks:
                 rotate(a, k)
             rotate(b, sum(ks))
@@ -1364,6 +1364,15 @@ class RotateTests(unittest.TestCase, Util):
             rotate(c, k)
             self.assertEqual(a, bitarray(b))
             self.assertEqual(c, list(b))
+
+    def test_shift(self):
+        for n in range(1, 100):
+            a = zeros(n)
+            a[0] = 1
+            b = a.copy()
+            k = randrange(2 * n)
+            rotate(a, k)
+            self.assertEqual(a, b >> k % n)
 
     def test_errors(self):
         self.assertRaises(TypeError, rotate)
