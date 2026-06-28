@@ -406,7 +406,7 @@ Allowed values for mode are the strings: `left`, `right`, `both`
 def rotate(__a, k=1):
     """rotate(a, /, k=1)
 
-Rotate mutable sequence `a` in-place by `k` positions.
+Rotate bitarray `a` in-place by `k` positions.
 Positive `k` rotates right, negative `k` rotates left.
 """
     k = operator.index(k)
@@ -415,8 +415,19 @@ Positive `k` rotates right, negative `k` rotates left.
         return
 
     k %= n
-    if k:
-        __a[:] = __a[-k:] + __a[:-k]
+    if k == 0:
+        return
+
+    if k <= n // 2:  # tail (of size k) is smaller
+        # Save tail, shift whole array right by k, restore tail at front.
+        tail = __a[-k:]
+        __a >>= k
+        __a[:k] = tail
+    else:  # head (of size n - k) is smaller
+        # Save head, shift array left by n - k, restore head at end.
+        head = __a[:-k]
+        __a <<= n - k
+        __a[k:] = head
 
 
 def intervals(__a):

@@ -1357,13 +1357,10 @@ class RotateTests(unittest.TestCase, Util):
         for n in range(1, 50):
             a = urandom(n, choice(ENDIANS))
             b = deque(a)
-            c = list(a)  # rotate() may be used on list
             k = randint(-2 * n - 2, 2 * n + 2)
             rotate(a, k)
             b.rotate(k)
-            rotate(c, k)
             self.assertEqual(a, bitarray(b))
-            self.assertEqual(c, list(b))
 
     def test_shift(self):
         for n in range(1, 100):
