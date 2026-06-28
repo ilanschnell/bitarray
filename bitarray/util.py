@@ -391,7 +391,7 @@ Allowed values for mode are the strings: `left`, `right`, `both`
 """
     if not isinstance(mode, str):
         raise TypeError("str expected for mode, got '%s'" %
-                        type(__a).__name__)
+                        type(mode).__name__)
     if mode not in ('left', 'right', 'both'):
         raise ValueError("mode must be 'left', 'right' or 'both', got %r" %
                          mode)
@@ -478,11 +478,9 @@ if the integer is not representable with the given number of bits.
 `signed` determines whether two's complement is used to represent the integer,
 and requires `length` to be provided.
 """
-    if not isinstance(__i, int):
-        raise TypeError("int expected, got '%s'" % type(__i).__name__)
+    __i = operator.index(__i)
     if length is not None:
-        if not isinstance(length, int):
-            raise TypeError("int expected for argument 'length'")
+        length = operator.index(length)
         if length <= 0:
             raise ValueError("length must be > 0")
 
@@ -525,9 +523,9 @@ and return its root node.
 """
     from heapq import heappush, heappop
 
-    class Node(object):
+    class Node:
         """
-        There are to tyes of Node instances (both have 'freq' attribute):
+        There are two types of Node instances (both have 'freq' attribute):
           * leaf node: has 'symbol' attribute
           * parent node: has 'child' attribute (tuple with both children)
         """
@@ -581,7 +579,10 @@ to being strings.  Symbols may be any hashable object.
 
     result = {}
 
-    def traverse(nd, prefix=bitarray(0, endian)):
+    def traverse(nd, prefix=None):
+        if prefix is None:
+            prefix = bitarray(0, endian)
+
         try:                    # leaf
             result[nd.symbol] = prefix
         except AttributeError:  # parent, so traverse each child
