@@ -195,7 +195,7 @@ class _Random:
 
     def random_p(self, p):
         # error check inputs and handle edge cases
-        if p <= 0.0 or p == 0.5 or p >= 1.0:
+        if p <= 0.0 or p == 0.5 or p >= 1.0 or not math.isfinite(p):
             if p == 0.0:
                 return zeros(self.n, self.endian)
             if p == 0.5:
@@ -425,7 +425,7 @@ Positive `k` rotates right, negative `k` rotates left.
     else:            # head is smaller
         head = __a[:-k]  # copy head of size n - k
         __a <<= n - k    # shift whole array left by n - k
-        __a[k:] = head   # copt stored head at end
+        __a[k:] = head   # copy stored head at end
 
 
 def intervals(__a):

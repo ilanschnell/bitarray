@@ -304,10 +304,11 @@ class Random_P_Tests(unittest.TestCase):
         self.assertRaises(ValueError, R, 1, 0.15, 'foo')
         self.assertRaises(ValueError, R, 10, 0.5, endian='foo')
         self.assertEqual(R(0), bitarray())
-        for n in range(20):
+        for n in range(30):
             self.assertEqual(R(n, 0), zeros(n))
             self.assertEqual(len(R(n, 0.5)), n)
             self.assertEqual(R(n, p=1), ones(n))
+            self.assertRaises(ValueError, R, n, math.nan)
 
     def test_default(self):
         a = random_p(10_000_000)  # p defaults to 0.5
@@ -375,6 +376,7 @@ class PrimeTests(unittest.TestCase):
     def test_errors(self):
         P = gen_primes
         self.assertRaises(TypeError, P, 3, 1)
+        self.assertRaises(TypeError, P, "1")
         self.assertRaises(TypeError, P, "1.0")
         self.assertRaises(ValueError, P, -1)
         self.assertRaises(TypeError, P, 8, 4)
