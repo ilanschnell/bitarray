@@ -375,7 +375,7 @@ class PrimeTests(unittest.TestCase):
     def test_errors(self):
         P = gen_primes
         self.assertRaises(TypeError, P, 3, 1)
-        self.assertRaises(ValueError, P, "1.0")
+        self.assertRaises(TypeError, P, "1.0")
         self.assertRaises(ValueError, P, -1)
         self.assertRaises(TypeError, P, 8, 4)
         self.assertRaises(TypeError, P, 8, foo="big")

@@ -87,7 +87,7 @@ when Python version is too low.
 
 class _Random:
 
-    # The main reason for this class it to enable testing functionality
+    # The main reason for this class is to enable testing functionality
     # individually in the test class Random_P_Tests in 'test_util.py'.
     # The test class also contains many comments and explanations.
     # To better understand how the algorithm works, see ./doc/random_p.rst
@@ -221,7 +221,7 @@ class _Random:
 
         # calculate operator sequence
         i = int(p * self.K)
-        if p * (self.K + 1) > i + 1: # see devel/test_random.py
+        if p * (self.K + 1) > i + 1:  # see devel/test_random.py
             i += 1
         seq = self.op_seq(i)
         q = i / self.K
@@ -251,7 +251,7 @@ By default (`odd=False`), active indices correspond to prime numbers directly.
 When `odd=True`, only odd prime numbers are represented in the resulting
 bitarray `a`, and `a[i]` corresponds to `2*i+1` being prime or not.
 """
-    n = int(__n)
+    n = operator.index(__n)
     if n < 0:
         raise ValueError("bitarray length must be >= 0")
 
@@ -344,13 +344,13 @@ Non-bitarray objects are printed using `pprint.pprint()`.
         _pprint.pprint(__a, stream=stream, indent=indent, width=width)
         return
 
-    group = int(group)
+    group = operator.index(group)
     if group < 1:
         raise ValueError('group must be >= 1')
-    indent = int(indent)
+    indent = operator.index(indent)
     if indent < 0:
         raise ValueError('indent must be >= 0')
-    width = int(width)
+    width = operator.index(width)
     if width <= indent:
         raise ValueError('width must be > %d (indent)' % indent)
 
@@ -418,16 +418,14 @@ Positive `k` rotates right, negative `k` rotates left.
     if k == 0:
         return
 
-    if k <= n // 2:  # tail (of size k) is smaller
-        # Save tail, shift whole array right by k, restore tail at front.
-        tail = __a[-k:]
-        __a >>= k
-        __a[:k] = tail
-    else:  # head (of size n - k) is smaller
-        # Save head, shift array left by n - k, restore head at end.
-        head = __a[:-k]
-        __a <<= n - k
-        __a[k:] = head
+    if k <= n // 2:  # tail is smaller
+        tail = __a[-k:]  # copy tail of size k
+        __a >>= k        # shift whole array right by k
+        __a[:k] = tail   # copy stored tail at front
+    else:            # head is smaller
+        head = __a[:-k]  # copy head of size n - k
+        __a <<= n - k    # shift whole array left by n - k
+        __a[k:] = head   # copt stored head at end
 
 
 def intervals(__a):
