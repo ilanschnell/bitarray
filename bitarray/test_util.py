@@ -135,6 +135,8 @@ class Random_K_Tests(unittest.TestCase):
         self.assertRaises(TypeError, R)
         self.assertRaises(TypeError, R, 4)
         self.assertRaises(TypeError, R, 1, "0.5")
+        self.assertRaises(TypeError, R, 10, 4.0)
+        self.assertRaises(TypeError, R, 10.0, 4)
         self.assertRaises(TypeError, R, 1, p=1)
         self.assertRaises(TypeError, R, 11, 5.5)  # see issue #239
         self.assertRaises(ValueError, R, -1, 0)
@@ -378,6 +380,7 @@ class PrimeTests(unittest.TestCase):
         self.assertRaises(TypeError, P, 3, 1)
         self.assertRaises(TypeError, P, "1")
         self.assertRaises(TypeError, P, "1.0")
+        self.assertRaises(TypeError, P, 123.0)
         self.assertRaises(ValueError, P, -1)
         self.assertRaises(TypeError, P, 8, 4)
         self.assertRaises(TypeError, P, 8, foo="big")
@@ -511,6 +514,12 @@ class PPrintTests(unittest.TestCase):
             with open(tmpfile, 'r') as fi:
                 b = eval(fi.read())
             self.assertEqual(a, b)
+
+    def test_errors(self):
+        a = urandom(60)
+        self.assertRaises(TypeError, pprint, a, group=6.0)
+        self.assertRaises(TypeError, pprint, a, indent=0.0)
+        self.assertRaises(TypeError, pprint, a, width=60.0)
 
 # -----------------------------  strip()  -----------------------------------
 
@@ -1519,7 +1528,7 @@ class HexlifyTests(unittest.TestCase, Util):
     def test_random(self):
         for _ in range(100):
             endian = choice(OPT_ENDIANS)
-            a = urandom_2(4 * randrange(100), endian)
+            a = urandom(4 * randrange(100), endian)
             s = ba2hex(a, group=randrange(10), sep=choice(whitespace))
             b = hex2ba(s, endian)
             self.assertEqual(b.endian, endian or get_default_endian())
@@ -2233,6 +2242,8 @@ class IntegerizationTests(unittest.TestCase, Util):
         self.assertEQUAL(int2ba(6, endian='big'), bitarray('110', 'big'))
         self.assertEQUAL(int2ba(6, endian='little'),
                          bitarray('011', 'little'))
+
+    def test_errors(self):
         self.assertRaises(TypeError, int2ba, 1.0)
         self.assertRaises(TypeError, int2ba, 1, 3.0)
         self.assertRaises(ValueError, int2ba, 1, 0)
@@ -2240,6 +2251,8 @@ class IntegerizationTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, int2ba, 1, 10, 'asd')
         # signed integer requires length
         self.assertRaises(TypeError, int2ba, 100, signed=True)
+        # argument cannot be float
+        self.assertRaises(TypeError, int2ba, 123.0)
 
     def test_signed(self):
         for s, i in [

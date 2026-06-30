@@ -41,13 +41,13 @@ __all__ = [
 ]
 
 
-def urandom(__length, endian=None):
+def urandom(__n, endian=None):
     """urandom(n, /, endian=None) -> bitarray
 
 Return random bitarray of length `n` (uses `os.urandom()`).
 """
-    a = bitarray(os.urandom(bits2bytes(__length)), endian)
-    del a[__length:]
+    a = bitarray(os.urandom(bits2bytes(__n)), endian)
+    del a[__n:]
     return a
 
 
@@ -487,7 +487,7 @@ if the integer is not representable with the given number of bits.
 `signed` determines whether two's complement is used to represent the integer,
 and requires `length` to be provided.
 """
-    __i = operator.index(__i)
+    i = operator.index(__i)
     if length is not None:
         length = operator.index(length)
         if length <= 0:
@@ -497,18 +497,18 @@ and requires `length` to be provided.
         if length is None:
             raise TypeError("signed requires argument 'length'")
         m = 1 << length - 1
-        if not (-m <= __i < m):
+        if not (-m <= i < m):
             raise OverflowError("signed integer not in range(%d, %d), "
-                                "got %d" % (-m, m, __i))
-        if __i < 0:
-            __i += 1 << length
+                                "got %d" % (-m, m, i))
+        if i < 0:
+            i += 1 << length
     else:  # unsigned
-        if length and __i >> length:
+        if length and i >> length:
             raise OverflowError("unsigned integer not in range(0, %d), "
-                                "got %d" % (1 << length, __i))
+                                "got %d" % (1 << length, i))
 
     a = bitarray(0, endian)
-    b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian)
+    b = i.to_bytes(bits2bytes(i.bit_length()), byteorder=a.endian)
     a.frombytes(b)
     le = a.endian == 'little'
     if length is None:
