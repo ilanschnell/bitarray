@@ -451,6 +451,16 @@ class PrimeTests(unittest.TestCase):
 
 class PPrintTests(unittest.TestCase):
 
+    def test_example(self):
+        a = gen_primes(100)
+        f = StringIO()
+        pprint(a, f, indent=3, group=10, width=60)
+        self.assertEqual(
+            f.getvalue(), "bitarray('''\n"
+            "   0011010100 0101000101 0001000001 0100000100 0101000100\n"
+            "   0001000001 0100000100 0101000001 0001000001 0000000100\n"
+            "''')\n")
+
     @staticmethod
     def get_code_string(a):
         f = StringIO()
