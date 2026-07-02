@@ -3167,12 +3167,19 @@ class RotateTests(unittest.TestCase, Util):
                 else:
                     self.fail(x)
 
-    def test_shift_arg(self):
-        a = bitarray('1001')
-        a.rotate()    # default k=1 - shift 1 to right
-        self.assertEqual(a, bitarray('1100'))
+    def test_args(self):
+        a = bitarray('10001')
+        a.rotate()    # default - shift 1 to right
+        self.assertEqual(a, bitarray('11000'))
         a.rotate(-1)  # positional argument
-        self.assertEqual(a, bitarray('1001'))
+        self.assertEqual(a, bitarray('10001'))
+        a.rotate(True)
+        self.assertEqual(a, bitarray('11000'))
+
+        self.assertRaises(TypeError, a.rotate, 1.0)
+        self.assertRaises(TypeError, a.rotate, '1')
+        self.assertRaises(TypeError, a.rotate, k=1)
+        self.assertRaises(TypeError, a.rotate, 1, 2)
 
     def test_pop(self):
         for a in self.randombitarrays(start=1):
@@ -3214,12 +3221,7 @@ class RotateTests(unittest.TestCase, Util):
             a.rotate(k)
             self.assertEqual(a, b >> k % n)
 
-    def test_errors(self):
-        a = bitarray("101")
-        self.assertRaises(TypeError, a.rotate, 1.0)
-        self.assertRaises(TypeError, a.rotate, '1')
-
-        # readonly
+    def test_readonly(self):
         for a in bitarray(buffer=b'\x80'), frozenbitarray('10001'):
             self.assertTrue(a.readonly)
             self.assertRaises(TypeError, a.rotate, 1)
