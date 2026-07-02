@@ -277,7 +277,7 @@ class CreateObjectTests(unittest.TestCase, Util):
         # buffer requires no initial argument
         self.assertRaises(TypeError, bitarray, 5, buffer=b'DATA\0')
 
-        # positinal arguments
+        # positional arguments
         a = bitarray(None, 'big', bytearray([15]))
         self.assertEQUAL(a, bitarray('00001111', 'big'))
         a = bitarray(None, 'little', None)
@@ -3171,7 +3171,7 @@ class RotateTests(unittest.TestCase, Util):
         a = bitarray('1001')
         a.rotate()    # default k=1 - shift 1 to right
         self.assertEqual(a, bitarray('1100'))
-        a.rotate(-1)  # positinal argument
+        a.rotate(-1)  # positional argument
         self.assertEqual(a, bitarray('1001'))
 
     def test_pop(self):
