@@ -1892,6 +1892,48 @@ Raises `ValueError` if value is not present.");
 
 
 static PyObject *
+bitarray_rotate(bitarrayobject *self, PyObject *args)
+{
+    bitarrayobject *tmp;
+    Py_ssize_t n = self->nbits, k = 1;
+
+    RAISE_IF_READONLY(self, NULL);
+    if (!PyArg_ParseTuple(args, "|n:rotate", &k))
+        return NULL;
+
+    if (n < 2)
+        Py_RETURN_NONE;
+
+    k %= n;
+    if (k < 0)
+        k += n;
+    if (k == 0)
+        Py_RETURN_NONE;
+
+    tmp = newbitarrayobject(&Bitarray_Type, Py_MIN(k, n - k), self->endian);
+    if (tmp->nbits == k) {      /* tail is smaller */
+        copy_n(tmp, 0, self, n - k, k);   /* save tail */
+        copy_n(self, k, self, 0, n - k);  /* shift whole array right by k */
+        copy_n(self, 0, tmp, 0, k);       /* copy stored tail at front */
+    }
+    else {                      /* head is smaller */
+        assert(tmp->nbits == n - k);
+        copy_n(tmp, 0, self, 0, n - k);   /* save head */
+        copy_n(self, 0, self, n - k, k);  /* shift whole array left by n-k */
+        copy_n(self, k, tmp, 0, n - k);   /* copy stored head at end */
+    }
+    Py_DECREF(tmp);
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(rotate_doc,
+"rotate(k=1, /)\n\
+\n\
+Rotate bitarray in-place by `k` positions.\n\
+Positive `k` rotates right, negative `k` rotates left.");
+
+
+static PyObject *
 bitarray_sizeof(bitarrayobject *self)
 {
     Py_ssize_t res;
@@ -3603,6 +3645,8 @@ static PyMethodDef bitarray_methods[] = {
      remove_doc},
     {"reverse",      (PyCFunction) bitarray_reverse,     METH_NOARGS,
      reverse_doc},
+    {"rotate",       (PyCFunction) bitarray_rotate,      METH_VARARGS,
+     rotate_doc},
     {"search",       (PyCFunction) bitarray_search,      METH_VARARGS |
                                                          METH_KEYWORDS,
      search_doc},

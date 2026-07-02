@@ -34,6 +34,7 @@ NEW_IN = {
                               '3.0: returns iterator (equivalent to past '
                                    '`.itersearch()`)'],
     'bitarray.to01':          '3.3: optional `group` and `sep` arguments',
+    'bitarray.rotate':        '3.9',
     'decodetree':             '1.6',
     'frozenbitarray':         '1.1',
     'get_default_endian':     '1.3',
@@ -60,7 +61,6 @@ NEW_IN = {
     'util.urandom':           '1.7',
     'util.random_k':          '3.6',
     'util.random_p':          '3.5',
-    'util.rotate':            '3.9',
     'util.gen_primes':        '3.7',
     'util.sc_encode':         '2.7',
     'util.sc_decode':         '2.7',
@@ -101,6 +101,13 @@ NOTES = {
    transfer of data between bitarray objects to other Python objects (for
    example NumPy's ndarray object) which have a different memory view.""",
 
+    'bitarray.rotate': """\
+   When bitarray is not empty, rotating one step to the right is
+   equivalent to ``a.insert(0, a.pop())``, and rotating one step to the left
+   is equivalent to ``a.append(a.pop(0))``.
+   The same convention is used by the ``.rotate()`` method of
+   the ``collections.deque`` object.""",
+
     'bitarray.tolist': """\
    Note that the list object being created will require 32 or 64 times more
    memory (depending on the machine architecture) than the bitarray object,
@@ -118,13 +125,6 @@ NOTES = {
    of any length.""",
 
     'util.count_xor': "   This is also known as the Hamming distance.",
-
-    'util.rotate': """\
-   When the sequence is not empty, rotating one step to the right is
-   equivalent to ``a.insert(0, a.pop())``, and rotating one step to the left
-   is equivalent to ``a.append(a.pop(0))``.
-   The same convention is used by the ``.rotate()`` method of
-   the ``collections.deque`` object.""",
 }
 
 GETSET = {

@@ -30,7 +30,7 @@ __all__ = [
     'pprint', 'strip', 'count_n',
     'parity', 'sum_indices', 'xor_indices',
     'count_and', 'count_or', 'count_xor', 'any_and', 'subset',
-    'correspond_all', 'byteswap', 'rotate', 'intervals',
+    'correspond_all', 'byteswap', 'intervals',
     'ba2hex', 'hex2ba',
     'ba2base', 'base2ba',
     'ba2int', 'int2ba',
@@ -401,31 +401,6 @@ Allowed values for mode are the strings: `left`, `right`, `both`
         return __a[:0]
     stop = None if mode == 'left' else __a.find(1, right=1) + 1
     return __a[start:stop]
-
-
-def rotate(__a, k=1):
-    """rotate(a, /, k=1)
-
-Rotate bitarray `a` in-place by `k` positions.
-Positive `k` rotates right, negative `k` rotates left.
-"""
-    k = operator.index(k)
-    n = len(__a)
-    if n < 2:
-        return
-
-    k %= n
-    if k == 0:
-        return
-
-    if k <= n // 2:  # tail is smaller
-        tail = __a[-k:]  # copy tail of size k
-        __a >>= k        # shift whole array right by k
-        __a[:k] = tail   # copy stored tail at front
-    else:            # head is smaller
-        head = __a[:-k]  # copy head of size n - k
-        __a <<= n - k    # shift whole array left by n - k
-        __a[k:] = head   # copy stored head at end
 
 
 def intervals(__a):

@@ -17,6 +17,7 @@ import tempfile
 from io import BytesIO, UnsupportedOperation
 from random import choice, choices, getrandbits, randrange, randint, shuffle
 from string import whitespace
+from collections import deque
 
 # imports needed inside tests
 import array
@@ -3142,6 +3143,88 @@ class RemoveTests(unittest.TestCase, Util):
             self.assertEqual(a.tolist(), b)
             self.check_obj(a)
 
+class RotateTests(unittest.TestCase, Util):
+
+    def test_explicit(self):
+        for items in [
+                # integers are applied - strings are tested for equality
+                ("", 0, "", 1, "", 123, ""),
+                ("1", 0, "1", 1, "1", 123, "1"),
+                ("10", 1, "01", -1, "10", 98, "10"),
+                ("001", 1, "100", 2, "001", 6, "001", -1, "010", -3, "010"),
+                ("1001", 1, "1100", -1, "1001", 2, "0110", 0, "0110"),
+                ("11010", 25, -15, 7, 8, "11010", -3, 3, "11010"),
+                ("1001011", 7, "1001011", 2, "1110010", -2, "1001011"),
+        ]:
+            endian = self.random_endian()
+            a = bitarray(items[0], endian)
+            for x in items[1:]:
+                if isinstance(x, int):
+                    ret = a.rotate(x)
+                    self.assertIsNone(ret)
+                elif isinstance(x, str):
+                    self.assertEQUAL(a, bitarray(x, endian))
+                else:
+                    self.fail(x)
+
+    def test_shift_arg(self):
+        a = bitarray('1001')
+        a.rotate()    # default k=1 - shift 1 to right
+        self.assertEqual(a, bitarray('1100'))
+        a.rotate(-1)  # positinal argument
+        self.assertEqual(a, bitarray('1001'))
+
+    def test_pop(self):
+        for a in self.randombitarrays(start=1):
+            b = a.copy()
+            a.insert(0, a.pop())  # shift 1 to right
+            b.rotate(1)
+            self.assertEQUAL(a, b)
+            a.append(a.pop(0))    # shift 1 to left
+            b.rotate(-1)
+            self.assertEQUAL(a, b)
+
+    def test_sum(self):
+        for _ in range(10):
+            n = randrange(1, 1000)
+            a = urandom_2(n)
+            b = a.copy()
+            ks = [randint(-2 * n, 2 * n) for _ in range(100)]
+            for k in ks:
+                a.rotate(k)
+            b.rotate(sum(ks))
+            self.assertEQUAL(a, b)
+            self.check_obj(a)
+
+    def test_deque(self):
+        for n in range(1, 50):
+            a = urandom_2(n)
+            b = deque(a)
+            k = randint(-2 * n - 2, 2 * n + 2)
+            a.rotate(k)
+            b.rotate(k)
+            self.assertEqual(a, bitarray(b))
+
+    def test_shift(self):
+        for n in range(1, 100):
+            a = zeros(n)
+            a[0] = 1
+            b = a.copy()
+            k = randrange(2 * n)
+            a.rotate(k)
+            self.assertEqual(a, b >> k % n)
+
+    def test_errors(self):
+        a = bitarray("101")
+        self.assertRaises(TypeError, a.rotate, 1.0)
+        self.assertRaises(TypeError, a.rotate, '1')
+
+        # readonly
+        for a in bitarray(buffer=b'\x80'), frozenbitarray('10001'):
+            self.assertTrue(a.readonly)
+            self.assertRaises(TypeError, a.rotate, 1)
+
+
 class SetAllTests(unittest.TestCase, Util):
 
     def test_explicit(self):
@@ -4831,6 +4914,7 @@ class BufferImportTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.pack, b'\0\0\xff')
         self.assertRaises(TypeError, a.pop)
         self.assertRaises(TypeError, a.remove, 1)
+        self.assertRaises(TypeError, a.rotate)
         self.assertRaises(TypeError, a.reverse)
         self.assertRaises(TypeError, a.setall, 0)
         self.assertRaises(TypeError, a.sort)
@@ -5055,6 +5139,7 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.pack, b'\0\0\xff')
         self.assertRaises(TypeError, a.pop)
         self.assertRaises(TypeError, a.remove, 1)
+        self.assertRaises(TypeError, a.rotate)
         self.assertRaises(TypeError, a.reverse)
         self.assertRaises(TypeError, a.setall, 0)
         self.assertRaises(TypeError, a.sort)

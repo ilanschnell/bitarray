@@ -20,7 +20,7 @@ from functools import reduce
 from random import (choice, choices, getrandbits, randrange, randint, random,
                     sample, seed)
 from string import hexdigits, whitespace
-from collections import Counter, deque
+from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       get_default_endian)
@@ -30,7 +30,7 @@ from bitarray.util import (
     zeros, ones, urandom, random_k, random_p, pprint, strip, count_n,
     parity, gen_primes, sum_indices, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
-    correspond_all, byteswap, rotate, intervals,
+    correspond_all, byteswap, intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
     ba2int, int2ba,
     sc_encode, sc_decode, vl_encode, vl_decode,
@@ -1317,92 +1317,6 @@ class XoredIndicesTests(unittest.TestCase, Util):
             a.invert(i)
             self.assertEqual(xor_indices(a), i)  # index of the flipped bit!
             a.invert(i)
-
-
-class RotateTests(unittest.TestCase, Util):
-
-    def test_explicit(self):
-        for items in [
-                # integers are applied - strings are tested for equality
-                ("", 0, "", 1, "", 123, ""),
-                ("1", 0, "1", 1, "1", 123, "1"),
-                ("10", 1, "01", -1, "10", 98, "10"),
-                ("001", 1, "100", 2, "001", 6, "001", -1, "010", -3, "010"),
-                ("1001", 1, "1100", -1, "1001", 2, "0110", 0, "0110"),
-                ("11010", 25, -15, 7, 8, "11010", -3, 3, "11010"),
-                ("1001011", 7, "1001011", 2, "1110010", -2, "1001011"),
-        ]:
-            endian = choice(ENDIANS)
-            a = bitarray(items[0], endian)
-            for x in items[1:]:
-                if isinstance(x, int):
-                    ret = rotate(a, x)
-                    self.assertIsNone(ret)
-                elif isinstance(x, str):
-                    self.assertEQUAL(a, bitarray(x, endian))
-                else:
-                    self.fail(x)
-
-    def test_shift_arg(self):
-        a = bitarray('1001')
-        rotate(a)  # default k=1 - shift 1 to right
-        self.assertEqual(a, bitarray('1100'))
-        rotate(a, k=-1)  # keyword argument
-        self.assertEqual(a, bitarray('1001'))
-        rotate(a, 2)  # positional argument
-        self.assertEqual(a, bitarray('0110'))
-
-    def test_pop(self):
-        for a in self.randombitarrays(start=1):
-            b = a.copy()
-            a.insert(0, a.pop())  # shift 1 to right
-            rotate(b, 1)
-            self.assertEQUAL(a, b)
-            a.append(a.pop(0))    # shift 1 to left
-            rotate(b, -1)
-            self.assertEQUAL(a, b)
-
-    def test_sum(self):
-        for _ in range(10):
-            n = randrange(1, 1000)
-            a = urandom(n, choice(ENDIANS))
-            b = a.copy()
-            ks = [randint(-2 * n, 2 * n) for _ in range(100)]
-            for k in ks:
-                rotate(a, k)
-            rotate(b, sum(ks))
-            self.assertEQUAL(a, b)
-            self.check_obj(a)
-
-    def test_deque(self):
-        for n in range(1, 50):
-            a = urandom(n, choice(ENDIANS))
-            b = deque(a)
-            k = randint(-2 * n - 2, 2 * n + 2)
-            rotate(a, k)
-            b.rotate(k)
-            self.assertEqual(a, bitarray(b))
-
-    def test_shift(self):
-        for n in range(1, 100):
-            a = zeros(n)
-            a[0] = 1
-            b = a.copy()
-            k = randrange(2 * n)
-            rotate(a, k)
-            self.assertEqual(a, b >> k % n)
-
-    def test_errors(self):
-        self.assertRaises(TypeError, rotate)
-        self.assertRaises(TypeError, rotate, bitarray(), 1.0)
-        self.assertRaises(TypeError, rotate, bitarray(), '1')
-        self.assertRaises(TypeError, rotate, '101', 1)
-        self.assertRaises(TypeError, rotate, b"AB")
-
-    def test_readonly(self):
-        for a in bitarray(buffer=b'\x80'), frozenbitarray('10001'):
-            self.assertTrue(a.readonly)
-            self.assertRaises(TypeError, rotate, a, 1)
 
 
 # ------------------   intervals of uninterrupted runs   --------------------
