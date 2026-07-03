@@ -5129,30 +5129,35 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
 
     def test_immutable(self):
         a = frozenbitarray('111')
-        self.assertRaises(TypeError, a.append, True)
-        self.assertRaises(TypeError, a.bytereverse)
-        self.assertRaises(TypeError, a.clear)
-        self.assertRaises(TypeError, a.encode, {'a': bitarray('0')}, 'aa')
-        self.assertRaises(TypeError, a.extend, [0, 1, 0])
-        self.assertRaises(TypeError, a.fill)
-        self.assertRaises(TypeError, a.frombytes, b'')
-        self.assertRaises(TypeError, a.insert, 0, 1)
-        self.assertRaises(TypeError, a.invert)
-        self.assertRaises(TypeError, a.pack, b'\0\0\xff')
-        self.assertRaises(TypeError, a.pop)
-        self.assertRaises(TypeError, a.remove, 1)
-        self.assertRaises(TypeError, a.rotate)
-        self.assertRaises(TypeError, a.reverse)
-        self.assertRaises(TypeError, a.setall, 0)
-        self.assertRaises(TypeError, a.sort)
-        self.assertRaises(TypeError, a.__delitem__, 0)
-        self.assertRaises(TypeError, a.__delitem__, slice(None, None, 2))
-        self.assertRaises(TypeError, a.__setitem__, 0, 0)
-        self.assertRaises(TypeError, a.__iadd__, bitarray('010'))
-        self.assertRaises(TypeError, a.__ior__, bitarray('100'))
-        self.assertRaises(TypeError, a.__ixor__, bitarray('110'))
-        self.assertRaises(TypeError, a.__irshift__, 1)
-        self.assertRaises(TypeError, a.__ilshift__, 1)
+        for args in [
+                (a.append, True),
+                (a.bytereverse, ),
+                (a.clear, ),
+                (a.encode, {'a': bitarray('0')}, 'aa'),
+                (a.extend, [0, 1, 0]),
+                (a.fill, ),
+                (a.frombytes, b''),
+                (a.insert, 0, 1),
+                (a.invert, ),
+                (a.pack, b'\0\0\xff'),
+                (a.pop, ),
+                (a.remove, 1),
+                (a.reverse, ),
+                (a.rotate, ),
+                (a.setall, 0),
+                (a.sort, ),
+                (a.__delitem__, 0),
+                (a.__delitem__, slice(None, None, 2)),
+                (a.__setitem__, 0, 0),
+                (a.__iadd__, bitarray('010')),
+                (a.__ior__, bitarray('100')),
+                (a.__ixor__, bitarray('110')),
+                (a.__irshift__, 1),
+                (a.__ilshift__, 1),
+        ]:
+            self.assertRaisesMessage(TypeError, "frozenbitarray is immutable",
+                                     *args)
+
         self.check_obj(a)
 
     def test_copy(self):
