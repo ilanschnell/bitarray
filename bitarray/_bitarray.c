@@ -1910,13 +1910,16 @@ bitarray_rotate(bitarrayobject *self, PyObject *args)
     if (k == 0)
         Py_RETURN_NONE;
 
+    assert(0 < k && k < n);
+
     /* temporary bitarray to store head or tail (whichever is smaller) */
     tmp = newbitarrayobject(&Bitarray_Type, Py_MIN(k, n - k), self->endian);
     if (tmp == NULL)
         return NULL;
 
+    assert(tmp->nbits <= n / 2);  /* at most half size */
+
     if (tmp->nbits == k) {      /* tail is smaller */
-        assert(k <= n / 2);
         copy_n(tmp, 0, self, n - k, k);   /* save tail */
         copy_n(self, k, self, 0, n - k);  /* shift whole array right by k */
         copy_n(self, 0, tmp, 0, k);       /* copy stored tail at front */
