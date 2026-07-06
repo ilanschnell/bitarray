@@ -2,6 +2,7 @@
 #
 # This stub, as well as util.pyi, are tested with Python 3.10 and mypy 1.11.2
 
+from abc import ABCMeta
 from collections.abc import Iterable, Iterator, Sequence
 from unittest.runner import TextTestResult
 
@@ -31,10 +32,9 @@ class decodetree:
     def todict(self) -> CodeDict: ...
 
 
-class decodeiterator(Iterator):
+class decodeiterator(Iterator, metaclass=ABCMeta):
     @property
     def index(self) -> int: ...
-
     def skipbits(self, count: int = ...) -> bitarray: ...
 
 
