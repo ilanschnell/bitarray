@@ -34,10 +34,9 @@ NEW_IN = {
                               '3.0: returns iterator (equivalent to past '
                                    '`.itersearch()`)'],
     'bitarray.to01':          '3.3: optional `group` and `sep` arguments',
-
     'bitarray.rotate':        '3.9',
-    'decodeiterator.index':   '3.8.2',
-    'decodeiterator.skipbits':'3.8.2',
+    'decodeiterator.index':   '3.9',
+    'decodeiterator.skipbits':'3.9',
     'decodetree':             '1.6',
     'frozenbitarray':         '1.1',
     'get_default_endian':     '1.3',
