@@ -1,0 +1,21 @@
+The correspondence between bytecode and the sc format is unusually clean:
+
+instruction byte     -> block head
+opcode               -> block type
+instruction operands -> count and indices, or raw bytes
+machine state        -> current output position / output bitarray
+halt instruction     -> stop byte 0x00
+
+And like a bytecode interpreter, the decoder trusts the instruction stream
+only conditionally: it validates block heads, lengths, and index bounds as
+it executes.
+
+The encoder is then analogous to a tiny compiler or optimizer: inspect
+the source bitarray, calculate representation costs, and emit an efficient
+instruction stream for the decoder to execute.
+
+That is a nice way to teach the format because it makes
+the asymmetry intuitive:
+
+sc_encode() -> planner / compiler
+sc_decode() -> interpreter / virtual machine

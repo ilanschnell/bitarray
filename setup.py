@@ -3,14 +3,6 @@ import sys
 import platform
 
 
-if sys.version_info[:3] < (3, 7):
-    sys.exit("""\
-****************************************************************************
-*   bitarray requires Python 3.7 or later.
-*   The last bitarray version supporting Python 2.7 is bitarray 2.9.3.
-****************************************************************************
-""")
-
 if "test" in sys.argv:
     import bitarray
     # when test was successful, return 0 (hence not)
@@ -41,6 +33,7 @@ setup(
     author_email = "ilanschnell@gmail.com",
     url = "https://github.com/ilanschnell/bitarray",
     license = "PSF-2.0",
+    python_requires = ">=3.7",
     classifiers = [
         "Development Status :: 6 - Mature",
         "Intended Audience :: Developers",

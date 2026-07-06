@@ -1,5 +1,15 @@
-2026-XX-XX   3.8.2:
+2026-XX-XX   3.9.0:
 -------------------
+  * add `.rotate()` method, rotate bitarray in-place by `k` positions
+  * fix `random_p()` silently producing all-zero bitarrays for small `n`
+    when `p=float("nan")`
+  * improve testing - use more of `unittest`'s functionality
+
+
+2026-06-17   3.8.2:
+-------------------
+  * clarity/wording improvements throughout project
+  * add `new_allocation()` to simplify `resize()`
   * drop Python 3.6 support
   * expose the `decodeiterator` class, and add the `skipbits` method and `index`
     data descriptor

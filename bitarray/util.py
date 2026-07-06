@@ -9,6 +9,7 @@ import os
 import sys
 import math
 import random
+import operator
 
 from bitarray import bitarray, bits2bytes
 
@@ -40,13 +41,13 @@ __all__ = [
 ]
 
 
-def urandom(__length, endian=None):
+def urandom(__n, endian=None):
     """urandom(n, /, endian=None) -> bitarray
 
 Return random bitarray of length `n` (uses `os.urandom()`).
 """
-    a = bitarray(os.urandom(bits2bytes(__length)), endian)
-    del a[__length:]
+    a = bitarray(os.urandom(bits2bytes(__n)), endian)
+    del a[__n:]
     return a
 
 
@@ -60,9 +61,7 @@ The random bitarrays are reproducible when giving Python's `random.seed()`
 a specific seed value.
 """
     r = _Random(__n, endian)
-    if not isinstance(k, int):
-        raise TypeError("int expected, got '%s'" % type(k).__name__)
-
+    k = operator.index(k)
     return r.random_k(k)
 
 
@@ -88,7 +87,7 @@ when Python version is too low.
 
 class _Random:
 
-    # The main reason for this class it to enable testing functionality
+    # The main reason for this class is to enable testing functionality
     # individually in the test class Random_P_Tests in 'test_util.py'.
     # The test class also contains many comments and explanations.
     # To better understand how the algorithm works, see ./doc/random_p.rst
@@ -196,7 +195,7 @@ class _Random:
 
     def random_p(self, p):
         # error check inputs and handle edge cases
-        if p <= 0.0 or p == 0.5 or p >= 1.0:
+        if p <= 0.0 or p == 0.5 or p >= 1.0 or not math.isfinite(p):
             if p == 0.0:
                 return zeros(self.n, self.endian)
             if p == 0.5:
@@ -222,7 +221,7 @@ class _Random:
 
         # calculate operator sequence
         i = int(p * self.K)
-        if p * (self.K + 1) > i + 1: # see devel/test_random.py
+        if p * (self.K + 1) > i + 1:  # see devel/test_random.py
             i += 1
         seq = self.op_seq(i)
         q = i / self.K
@@ -252,7 +251,7 @@ By default (`odd=False`), active indices correspond to prime numbers directly.
 When `odd=True`, only odd prime numbers are represented in the resulting
 bitarray `a`, and `a[i]` corresponds to `2*i+1` being prime or not.
 """
-    n = int(__n)
+    n = operator.index(__n)
     if n < 0:
         raise ValueError("bitarray length must be >= 0")
 
@@ -345,13 +344,13 @@ Non-bitarray objects are printed using `pprint.pprint()`.
         _pprint.pprint(__a, stream=stream, indent=indent, width=width)
         return
 
-    group = int(group)
+    group = operator.index(group)
     if group < 1:
         raise ValueError('group must be >= 1')
-    indent = int(indent)
+    indent = operator.index(indent)
     if indent < 0:
         raise ValueError('indent must be >= 0')
-    width = int(width)
+    width = operator.index(width)
     if width <= indent:
         raise ValueError('width must be > %d (indent)' % indent)
 
@@ -392,7 +391,7 @@ Allowed values for mode are the strings: `left`, `right`, `both`
 """
     if not isinstance(mode, str):
         raise TypeError("str expected for mode, got '%s'" %
-                        type(__a).__name__)
+                        type(mode).__name__)
     if mode not in ('left', 'right', 'both'):
         raise ValueError("mode must be 'left', 'right' or 'both', got %r" %
                          mode)
@@ -463,11 +462,9 @@ if the integer is not representable with the given number of bits.
 `signed` determines whether two's complement is used to represent the integer,
 and requires `length` to be provided.
 """
-    if not isinstance(__i, int):
-        raise TypeError("int expected, got '%s'" % type(__i).__name__)
+    i = operator.index(__i)
     if length is not None:
-        if not isinstance(length, int):
-            raise TypeError("int expected for argument 'length'")
+        length = operator.index(length)
         if length <= 0:
             raise ValueError("length must be > 0")
 
@@ -475,18 +472,18 @@ and requires `length` to be provided.
         if length is None:
             raise TypeError("signed requires argument 'length'")
         m = 1 << length - 1
-        if not (-m <= __i < m):
+        if not (-m <= i < m):
             raise OverflowError("signed integer not in range(%d, %d), "
-                                "got %d" % (-m, m, __i))
-        if __i < 0:
-            __i += 1 << length
+                                "got %d" % (-m, m, i))
+        if i < 0:
+            i += 1 << length
     else:  # unsigned
-        if length and __i >> length:
+        if length and i >> length:
             raise OverflowError("unsigned integer not in range(0, %d), "
-                                "got %d" % (1 << length, __i))
+                                "got %d" % (1 << length, i))
 
     a = bitarray(0, endian)
-    b = __i.to_bytes(bits2bytes(__i.bit_length()), byteorder=a.endian)
+    b = i.to_bytes(bits2bytes(i.bit_length()), byteorder=a.endian)
     a.frombytes(b)
     le = a.endian == 'little'
     if length is None:
@@ -510,9 +507,9 @@ and return its root node.
 """
     from heapq import heappush, heappop
 
-    class Node(object):
+    class Node:
         """
-        There are to tyes of Node instances (both have 'freq' attribute):
+        There are two types of Node instances (both have 'freq' attribute):
           * leaf node: has 'symbol' attribute
           * parent node: has 'child' attribute (tuple with both children)
         """
@@ -566,7 +563,10 @@ to being strings.  Symbols may be any hashable object.
 
     result = {}
 
-    def traverse(nd, prefix=bitarray(0, endian)):
+    def traverse(nd, prefix=None):
+        if prefix is None:
+            prefix = bitarray(0, endian)
+
         try:                    # leaf
             result[nd.symbol] = prefix
         except AttributeError:  # parent, so traverse each child

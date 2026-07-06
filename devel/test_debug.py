@@ -6,7 +6,7 @@ from random import randint, randrange
 from bitarray import bitarray, _sysinfo
 from bitarray.util import zeros, ones, int2ba, parity
 
-from bitarray.test_bitarray import Util, urandom_2, skipIf, PTRSIZE
+from bitarray.test_bitarray import Util, urandom_2, PTRSIZE
 
 # --------------------- internal C-level debug tests ------------------------
 
@@ -23,7 +23,7 @@ class SetupTableTests(unittest.TestCase):
     def test_common(self):
         for kop in 'aAsSxXcpr':
             table = _setup_table(kop)
-            self.assertEqual(type(table), bytes)
+            self.assertIs(type(table), bytes)
             self.assertEqual(len(table), 256)
             self.assertEqual(table[0], 0)  # all tables start with 0
 
@@ -386,7 +386,7 @@ class RTS_Tests(unittest.TestCase):
     # _sc_rts()   (running totals debug test)
 
     def test_segsize(self):
-        self.assertEqual(type(_SEGSIZE), int)
+        self.assertIs(type(_SEGSIZE), int)
         self.assertTrue(_SEGSIZE in [8, 16, 32])
 
     def test_empty(self):
@@ -394,14 +394,14 @@ class RTS_Tests(unittest.TestCase):
         self.assertEqual(len(rts), 1)
         self.assertEqual(rts, [0])
 
-    @skipIf(SEGBITS != 256)
+    @unittest.skipIf(SEGBITS != 256, "SEGBITS mismatch")
     def test_example(self):
         # see example before sc_calc_rts() in _util.c
         a = zeros(987)
         a[[0, 17, 31, 149, 255, 512, 637, 767, 768, 813, 899, 986]] = 1
         self.assertEqual(a.count(), 12)
         rts = _sc_rts(a)
-        self.assertEqual(type(rts), list)
+        self.assertIs(type(rts), list)
         self.assertEqual(len(rts), 5)
         self.assertEqual(rts, [0, 5, 5, 8, 12])
 

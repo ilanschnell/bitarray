@@ -1,16 +1,17 @@
 Compression of sparse bitarrays
 ===============================
 
-In a ``bitarray`` object each byte in memory represents eight bits.
+In a ``bitarray`` object, each byte in memory represents eight bits.
 While this representation is very compact and efficient when dealing with
 most data, there are situations when this representation is inefficient.
-One such situation are sparsely populated bitarray.
-That is, bitarray in which only a few bits are 1, but most bits are 0.
+One such situation is a sparsely populated bitarray.
+That is, a bitarray in which only a few bits are 1, but most bits are 0.
 In this situation, one might consider using a data structure which stores
 the indices of the 1 bits and not use the ``bitarray`` object at all.
 However, having all of bitarray's functionality is very convenient.
-It may be desired to convert ``bitarray`` objects into a more compact (index
-based) format when storing objects on disk or sending them over the network.
+It may be desirable to convert ``bitarray`` objects into a more compact
+(index-based) format when storing objects on disk or sending them over the
+network.
 This is the use case of the utility functions ``sc_encode()``
 and ``sc_decode()``.
 The lower the population count, the more efficient the compression will be:
@@ -31,8 +32,8 @@ How it works
 ------------
 
 Consider a ``bitarray`` of length 256, that is 32 bytes of memory.
-If we represent this object by the indices of 1 bits as one byte each,
-the object will be represent more efficiently when the population (number
+If we represent this object by the indices of 1 bits, using one byte each,
+the object will be represented more efficiently when the population (number
 of 1 bits) is less than 32.  Based on the population, the
 function ``sc_encode()`` chooses to represent the object as either raw bytes
 or as bytes of indices of 1 bits.  These are the block types 0 and 1.

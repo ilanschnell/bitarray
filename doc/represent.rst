@@ -9,7 +9,7 @@ advantages and disadvantages.
 Binary representation
 ---------------------
 
-The most common representation of bitarrays is its native binary string
+The most common representation of bitarrays is their native binary string
 representation, which is great for interactively analyzing bitarray objects:
 
 .. code-block:: python
@@ -22,7 +22,7 @@ representation, which is great for interactively analyzing bitarray objects:
     '11001'
 
 However, this representation is very large compared to the bitarray object
-itself, and it not efficient for large bitarrays.
+itself, and it is not efficient for large bitarrays.
 
 
 Byte representation
@@ -69,7 +69,7 @@ empty (``x`` only consists of a single byte - the header byte), the
 only valid values for the header are 0 or 16 (corresponding to a
 little-endian and big-endian empty bitarray).
 The functions ``serialize()`` and ``deserialize()`` are the recommended and
-fasted way to (de-) serialize bitarray objects to bytes objects (and vice
+fastest way to (de-) serialize bitarray objects to ``bytes`` objects (and vice
 versa).  The exact format of this representation is guaranteed to not
 change in future releases.
 
@@ -113,7 +113,7 @@ Base 2, 4, 8, 16, 32 and 64 representation
 
 The utility function ``ba2base()`` allows representing bitarrays by
 base ``n``, with possible bases 2, 4, 8, 16, 32 and 64.
-The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively:
+The bitarray length has to be a multiple of 1, 2, 3, 4, 5 or 6 respectively:
 
 .. code-block:: python
 
@@ -145,7 +145,7 @@ Variable length representation
 ------------------------------
 
 In some cases, it is useful to represent bitarrays in a binary format that
-is "self terminating" (in the same way that C strings are NUL terminated).
+is "self-terminating" (in the same way that C strings are NUL terminated).
 That is, when an encoded bitarray of unknown length is encountered in a
 stream of binary data, the format lets us know when the end of the encoded
 bitarray is reached.
@@ -157,9 +157,9 @@ Compressed sparse bitarrays
 
 Another representation
 is `compressed sparse bitarrays <./sparse_compression.rst>`__,
-whose format is also "self terminating".  This, format actually uses different
-representations dependent on how sparsely the population of the bitarray (even
-sections of the bitarray) is.
+whose format is also "self-terminating".  This format actually uses different
+representations depending on how sparse the bitarray (or even sections of the
+bitarray) is.
 For large sparse bitarrays, the format reduces (compresses) the amount of data
 very efficiently, while only requiring a very tiny overhead for non-sparsely
 populated bitarrays.

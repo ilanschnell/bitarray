@@ -9,7 +9,7 @@ map in the bitarray library itself: bitarray.util.huffman_code()
 from bitarray import bitarray
 
 
-class Node(object):
+class Node:
     def __init__(self):
         self.child = [None, None]
         self.freq = None

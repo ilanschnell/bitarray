@@ -34,8 +34,12 @@ NEW_IN = {
                               '3.0: returns iterator (equivalent to past '
                                    '`.itersearch()`)'],
     'bitarray.to01':          '3.3: optional `group` and `sep` arguments',
+<<<<<<< decodeiterator_skipbits
     'decodeiterator.index':   '3.8.2',
     'decodeiterator.skipbits':'3.8.2',
+=======
+    'bitarray.rotate':        '3.9',
+>>>>>>> master
     'decodetree':             '1.6',
     'frozenbitarray':         '1.1',
     'get_default_endian':     '1.3',
@@ -102,6 +106,13 @@ NOTES = {
    transfer of data between bitarray objects to other Python objects (for
    example NumPy's ndarray object) which have a different memory view.""",
 
+    'bitarray.rotate': """\
+   When bitarray is not empty, rotating one step to the right is
+   equivalent to ``a.insert(0, a.pop())``, and rotating one step to the left
+   is equivalent to ``a.append(a.pop(0))``.
+   The same convention is used by the ``.rotate()`` method of
+   the ``collections.deque`` object.""",
+
     'bitarray.tolist': """\
    Note that the list object being created will require 32 or 64 times more
    memory (depending on the machine architecture) than the bitarray object,
@@ -118,7 +129,7 @@ NOTES = {
    testing, as it provides a simple way to create a well-defined bitarray
    of any length.""",
 
-    'util.count_xor': "   This is also known as the Hamming distance."
+    'util.count_xor': "   This is also known as the Hamming distance.",
 }
 
 GETSET = {

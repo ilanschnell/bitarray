@@ -25,6 +25,34 @@ static PyTypeObject Bitarray_Type;
 #define bitarray_Check(obj)  PyObject_TypeCheck((obj), &Bitarray_Type)
 
 
+static size_t
+new_allocation(size_t size, size_t allocated, size_t newsize)
+{
+    assert(allocated >= size);
+    assert(newsize > 0);
+
+    if (allocated >= newsize) {
+        /* current buffer is large enough to host the requested size */
+        if (newsize >= allocated / 2)
+            return allocated;  /* minor downsize - keep current allocation */
+
+        return newsize;  /* major downsize - shrink to exact size */
+    }
+    else {
+          /* need to grow buffer */
+          size_t new_alloc = newsize;
+          /* overallocate when previous size isn't zero and when growth
+             is moderate */
+          if (size != 0 && newsize / 2 <= allocated) {
+              /* overallocate proportional to the bitarray size and
+                 add padding to make the allocated size multiple of 4 */
+              new_alloc += (newsize >> 4) + (newsize < 8 ? 3 : 7);
+              new_alloc &= ~(size_t) 3;
+          }
+          return new_alloc;
+    }
+}
+
 static int
 resize(bitarrayobject *self, Py_ssize_t nbits)
 {
@@ -70,28 +98,13 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
         return 0;
     }
 
-    if (allocated >= newsize) {
-        /* current buffer is large enough to host the requested size */
-        if (newsize >= allocated / 2) {
-            /* minor downsize, bypass reallocation */
-            Py_SET_SIZE(self, newsize);
-            self->nbits = nbits;
-            return 0;
-        }
-        /* major downsize, resize down to exact size */
-        new_allocated = newsize;
-    }
-    else {
-        /* need to grow buffer */
-        new_allocated = newsize;
-        /* overallocate when previous size isn't zero and when growth
-           is moderate */
-        if (size != 0 && newsize / 2 <= allocated) {
-            /* overallocate proportional to the bitarray size and
-               add padding to make the allocated size multiple of 4 */
-            new_allocated += (newsize >> 4) + (newsize < 8 ? 3 : 7);
-            new_allocated &= ~(size_t) 3;
-        }
+    new_allocated = new_allocation(size, allocated, newsize);
+
+    if (new_allocated == allocated) {
+        /* bypass reallocation */
+        Py_SET_SIZE(self, newsize);
+        self->nbits = nbits;
+        return 0;
     }
 
     assert(new_allocated >= newsize);
@@ -204,7 +217,7 @@ bytereverse(char *p, Py_ssize_t n)
 /* The following two functions operate on first n bytes in buffer.
    Within this region, they shift all bits by k positions to right,
    i.e. towards higher addresses.
-   They operate on little-endian and bit-endian bitarrays respectively.
+   They operate on little-endian and big-endian bitarrays respectively.
    As we shift right, we need to start with the highest address and loop
    downwards such that lower bytes are still unaltered.
    See also devel/shift_r8.c
@@ -598,10 +611,77 @@ count_range(bitarrayobject *self,
 /* return first (or rightmost in case right=1) occurrence
    of vi in self[a:b], -1 when not found */
 static Py_ssize_t
+find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right);
+
+static Py_ssize_t
+find_bit_words(bitarrayobject *self, int vi,
+               Py_ssize_t a, Py_ssize_t b, int right)
+{
+    const Py_ssize_t wa = (a + 63) / 64;  /* word-range(wa, wb) */
+    const Py_ssize_t wb = b / 64;
+    const uint64_t *wbuff = WBUFF(self);
+    const uint64_t w = vi ? 0 : ~0;
+    Py_ssize_t res, i;
+
+    if (right) {
+        if ((res = find_bit(self, vi, 64 * wb, b, 1)) >= 0)
+            return res;
+
+        for (i = wb - 1; i >= wa; i--) {  /* skip uint64 words */
+            if (w ^ wbuff[i])
+                return find_bit(self, vi, 64 * i, 64 * i + 64, 1);
+        }
+        return find_bit(self, vi, a, 64 * wa, 1);
+    }
+    else {
+        if ((res = find_bit(self, vi, a, 64 * wa, 0)) >= 0)
+            return res;
+
+        for (i = wa; i < wb; i++) {       /* skip uint64 words */
+            if (w ^ wbuff[i])
+                return find_bit(self, vi, 64 * i, 64 * i + 64, 0);
+        }
+        return find_bit(self, vi, 64 * wb, b, 0);
+    }
+}
+
+static Py_ssize_t
+find_bit_bytes(bitarrayobject *self, int vi,
+               Py_ssize_t a, Py_ssize_t b, int right)
+{
+    const Py_ssize_t ca = BYTES(a);  /* char-range(ca, cb) */
+    const Py_ssize_t cb = b / 8;
+    const char *buff = self->ob_item;
+    const char c = vi ? 0 : ~0;
+    Py_ssize_t res, i;
+
+    if (right) {
+        if ((res = find_bit(self, vi, 8 * cb, b, 1)) >= 0)
+            return res;
+
+        for (i = cb - 1; i >= ca; i--) {  /* skip bytes */
+            if (c ^ buff[i])
+                return find_bit(self, vi, 8 * i, 8 * i + 8, 1);
+        }
+        return find_bit(self, vi, a, 8 * ca, 1);
+    }
+    else {
+        if ((res = find_bit(self, vi, a, 8 * ca, 0)) >= 0)
+            return res;
+
+        for (i = ca; i < cb; i++) {       /* skip bytes */
+            if (c ^ buff[i])
+                return find_bit(self, vi, 8 * i, 8 * i + 8, 0);
+        }
+        return find_bit(self, vi, 8 * cb, b, 0);
+    }
+}
+
+static Py_ssize_t
 find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
 {
     const Py_ssize_t n = b - a;
-    Py_ssize_t res, i;
+    Py_ssize_t i;
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
@@ -612,63 +692,13 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
     /* When the search range is greater than 64 bits, we skip uint64 words.
        Note that we cannot check for n >= 64 here as the function could then
        go into an infinite recursive loop when a word is found. */
-    if (n > 64) {
-        const Py_ssize_t wa = (a + 63) / 64;  /* word-range(wa, wb) */
-        const Py_ssize_t wb = b / 64;
-        const uint64_t *wbuff = WBUFF(self);
-        const uint64_t w = vi ? 0 : ~0;
+    if (n > 64)
+        return find_bit_words(self, vi, a, b, right);
 
-        if (right) {
-            if ((res = find_bit(self, vi, 64 * wb, b, 1)) >= 0)
-                return res;
-
-            for (i = wb - 1; i >= wa; i--) {  /* skip uint64 words */
-                if (w ^ wbuff[i])
-                    return find_bit(self, vi, 64 * i, 64 * i + 64, 1);
-            }
-            return find_bit(self, vi, a, 64 * wa, 1);
-        }
-        else {
-            if ((res = find_bit(self, vi, a, 64 * wa, 0)) >= 0)
-                return res;
-
-            for (i = wa; i < wb; i++) {       /* skip uint64 words */
-                if (w ^ wbuff[i])
-                    return find_bit(self, vi, 64 * i, 64 * i + 64, 0);
-            }
-            return find_bit(self, vi, 64 * wb, b, 0);
-        }
-    }
     /* For the same reason as above, we cannot check for n >= 8 here. */
-    if (n > 8) {
-        const Py_ssize_t ca = BYTES(a);  /* char-range(ca, cb) */
-        const Py_ssize_t cb = b / 8;
-        const char *buff = self->ob_item;
-        const char c = vi ? 0 : ~0;
+    if (n > 8)
+        return find_bit_bytes(self, vi, a, b, right);
 
-        if (right) {
-            if ((res = find_bit(self, vi, 8 * cb, b, 1)) >= 0)
-                return res;
-
-            for (i = cb - 1; i >= ca; i--) {  /* skip bytes */
-                assert_byte_in_range(self, i);
-                if (c ^ buff[i])
-                    return find_bit(self, vi, 8 * i, 8 * i + 8, 1);
-            }
-            return find_bit(self, vi, a, 8 * ca, 1);
-        }
-        else {
-            if ((res = find_bit(self, vi, a, 8 * ca, 0)) >= 0)
-                return res;
-
-            for (i = ca; i < cb; i++) {       /* skip bytes */
-                assert_byte_in_range(self, i);
-                if (c ^ buff[i])
-                    return find_bit(self, vi, 8 * i, 8 * i + 8, 0);
-            }
-            return find_bit(self, vi, 8 * cb, b, 0);
-        }
-    }
     /* finally, search for the desired bit by stepping one-by-one */
     for (i = right ? b - 1 : a; a <= i && i < b; i += right ? -1 : 1)
         if (getbit(self, i) == vi)
@@ -1195,7 +1225,7 @@ bitarray_extend(bitarrayobject *self, PyObject *obj)
 PyDoc_STRVAR(extend_doc,
 "extend(iterable, /)\n\
 \n\
-Append items from to the end of the bitarray.\n\
+Append items from iterable to the end of the bitarray.\n\
 If `iterable` is a (Unicode) string, each `0` and `1` are appended as\n\
 bits (ignoring whitespace and underscore).");
 
@@ -1347,7 +1377,8 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
         invert_span(self, 0, self->nbits);
     }
     else {
-        return PyErr_Format(PyExc_TypeError, "index expect, not '%s' object",
+        return PyErr_Format(PyExc_TypeError,
+                            "index expected, not '%s' object",
                             Py_TYPE(arg)->tp_name);
     }
     Py_RETURN_NONE;
@@ -1356,8 +1387,9 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
 PyDoc_STRVAR(invert_doc,
 "invert(index=<all bits>, /)\n\
 \n\
-Invert all bits in bitarray (in-place).\n\
-When the optional `index` is given, only invert the single bit at `index`.");
+Invert bits in-place.  When `index` is omitted, invert all bits.\n\
+When `index` is an integer, invert the single bit at index.\n\
+When `index` is a slice, invert the selected bits.");
 
 
 static PyObject *
@@ -1558,7 +1590,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
     assert(Py_SIZE(self) == n + view.len);
     memcpy(self->ob_item + n, (char *) view.buf, (size_t) view.len);
 
-    /* remove pad bits staring at previous bit length (8 * n - p) */
+    /* remove pad bits starting at previous bit length (8 * n - p) */
     if (delete_n(self, 8 * n - p, p) < 0)
         goto error;
 
@@ -1655,7 +1687,7 @@ PyDoc_STRVAR(fromfile_doc,
 "fromfile(f, n=-1, /)\n\
 \n\
 Extend bitarray with up to `n` bytes read from file object `f` (or any\n\
-other binary stream what supports a `.read()` method, e.g. `io.BytesIO`).\n\
+other binary stream that supports a `.read()` method, e.g. `io.BytesIO`).\n\
 Each read byte will add eight bits to the bitarray.  When `n` is omitted\n\
 or negative, reads and extends all data until EOF.\n\
 When `n` is non-negative but exceeds the available data, `EOFError` is\n\
@@ -1674,7 +1706,7 @@ bitarray_tofile(bitarrayobject *self, PyObject *f)
         Py_ssize_t size = Py_MIN(nbytes - offset, BLOCKSIZE);
 
         assert(size >= 0 && offset + size <= nbytes);
-        /* basically: f.write(memoryview(self)[offset:offset + size] */
+        /* basically: f.write(memoryview(self)[offset:offset + size]) */
         ret = PyObject_CallMethod(f, "write", "y#",
                                   self->ob_item + offset, size);
         if (ret == NULL)
@@ -1764,7 +1796,7 @@ PyDoc_STRVAR(unpack_doc,
 "unpack(zero=b'\\x00', one=b'\\x01') -> bytes\n\
 \n\
 Return bytes that contain one byte for each bit in the bitarray,\n\
-using specified mapping.");
+using the specified mapping.");
 
 
 static PyObject *
@@ -1858,6 +1890,56 @@ PyDoc_STRVAR(remove_doc,
 \n\
 Remove the first occurrence of `value`.\n\
 Raises `ValueError` if value is not present.");
+
+
+static PyObject *
+bitarray_rotate(bitarrayobject *self, PyObject *args)
+{
+    bitarrayobject *tmp;
+    Py_ssize_t n = self->nbits, k = 1;
+
+    RAISE_IF_READONLY(self, NULL);
+    if (!PyArg_ParseTuple(args, "|n:rotate", &k))
+        return NULL;
+
+    if (n < 2)
+        Py_RETURN_NONE;
+
+    k %= n;
+    if (k < 0)
+        k += n;
+    if (k == 0)
+        Py_RETURN_NONE;
+
+    assert(0 < k && k < n);
+
+    /* temporary bitarray to store head or tail (whichever is smaller) */
+    tmp = newbitarrayobject(&Bitarray_Type, Py_MIN(k, n - k), self->endian);
+    if (tmp == NULL)
+        return NULL;
+
+    assert(tmp->nbits <= n / 2);  /* at most half size */
+
+    if (tmp->nbits == k) {      /* tail is smaller */
+        copy_n(tmp, 0, self, n - k, k);   /* save tail */
+        copy_n(self, k, self, 0, n - k);  /* shift whole array right by k */
+        copy_n(self, 0, tmp, 0, k);       /* copy stored tail at front */
+    }
+    else {                      /* head is smaller */
+        assert(tmp->nbits == n - k);
+        copy_n(tmp, 0, self, 0, n - k);   /* save head */
+        copy_n(self, 0, self, n - k, k);  /* shift whole array left by n-k */
+        copy_n(self, k, tmp, 0, n - k);   /* copy stored head at end */
+    }
+    Py_DECREF(tmp);
+    Py_RETURN_NONE;
+}
+
+PyDoc_STRVAR(rotate_doc,
+"rotate(k=1, /)\n\
+\n\
+Rotate bitarray in-place by `k` positions.\n\
+Positive `k` rotates right, negative `k` rotates left.");
 
 
 static PyObject *
@@ -3177,7 +3259,7 @@ PyDoc_STRVAR(complete_doc,
 "complete() -> bool\n\
 \n\
 Return whether tree is complete.  That is, whether or not all\n\
-nodes have both children (unless they are symbols nodes).");
+nodes have both children (unless they are symbol nodes).");
 
 
 static PyObject *
@@ -3342,7 +3424,7 @@ decodeiter_next(decodeiterobject *it)
     PyObject *symbol;
 
     symbol = binode_traverse(it->tree, it->self, &(it->index));
-    if (symbol == NULL)  /* stop iteration OR error occured */
+    if (symbol == NULL)  /* stop iteration OR error occurred */
         return NULL;
     Py_INCREF(symbol);
     return symbol;
@@ -3628,6 +3710,8 @@ static PyMethodDef bitarray_methods[] = {
      remove_doc},
     {"reverse",      (PyCFunction) bitarray_reverse,     METH_NOARGS,
      reverse_doc},
+    {"rotate",       (PyCFunction) bitarray_rotate,      METH_VARARGS,
+     rotate_doc},
     {"search",       (PyCFunction) bitarray_search,      METH_VARARGS |
                                                          METH_KEYWORDS,
      search_doc},
@@ -3780,9 +3864,9 @@ newbitarray_from_bytes(PyTypeObject *type, PyObject *buffer, int endian)
 }
 
 /* As of bitarray version 2.9.0, "bitarray(nbits)" will initialize all items
-   to 0 (previously, the buffer was be uninitialized).
+   to 0 (previously, the buffer was uninitialized).
    However, for speed, one might want to create an uninitialized bitarray.
-   In 2.9.1, we added the ability to created uninitialized bitarrays again,
+   In 2.9.1, we added the ability to create uninitialized bitarrays again,
    using "bitarray(nbits, endian, Ellipsis)".
 */
 static PyObject *
@@ -4060,7 +4144,7 @@ Optional keyword arguments:\n\
 \n\
 `endian`: Specifies the bit-endianness of the created bitarray object.\n\
 Allowed values are `big` and `little` (the default is `big`).\n\
-The bit-endianness effects the buffer representation of the bitarray.\n\
+The bit-endianness affects the buffer representation of the bitarray.\n\
 \n\
 `buffer`: Any object which exposes a buffer.  When provided, `initializer`\n\
 cannot be present (or has to be `None`).  The imported buffer may be\n\
@@ -4260,7 +4344,7 @@ sysinfo(PyObject *module, PyObject *args)
 PyDoc_STRVAR(sysinfo_doc,
 "_sysinfo(key) -> int\n\
 \n\
-Return system and compile specific information given a key.");
+Return system- and compile-specific information given a key.");
 
 
 static PyMethodDef module_functions[] = {

@@ -195,7 +195,7 @@ class LexicoTests(unittest.TestCase):
         cnt = 0
         coll = set()
         for a in lexico_all(n, k, endian):
-            self.assertEqual(type(a), bitarray)
+            self.assertIs(type(a), bitarray)
             self.assertEqual(len(a), n)
             self.assertEqual(a.count(), k)
             self.assertEqual(a.endian, endian)

@@ -6,7 +6,7 @@ the buffer directly, using ``.tobytes()``, ``.frombytes()``, ``.tofile()``
 or ``.fromfile()``, as well as using ``memoryview()``, the bit-endianness
 will have no effect on any computation, and one can skip this section.
 
-Since bitarrays allows addressing individual bits, where the machine
+Since bitarrays allow addressing individual bits, where the machine
 represents 8 bits in one byte, there are two obvious choices for this
 mapping: little-endian and big-endian.
 
@@ -70,7 +70,7 @@ operators act on the machine representation of the bitarray objects.
 Therefore, it is not possible to perform bitwise operators on bitarrays
 with different endianness.
 
-As mentioned above, the endianness can not be changed once an object is
+As mentioned above, the endianness cannot be changed once an object is
 created.  However, you can create a new bitarray with different endianness:
 
 .. code-block:: python
@@ -86,7 +86,7 @@ created.  However, you can create a new bitarray with different endianness:
 Utility functions
 -----------------
 
-A number of utility functions take into the bit-endianness into account.
+A number of utility functions take the bit-endianness into account.
 For example consider:
 
 .. code-block:: python

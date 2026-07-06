@@ -31,7 +31,7 @@ ensure_bitarray(PyObject *obj)
 
 /* Return new bitarray of length 'nbits', endianness given by the PyObject
    'endian' (which may be Py_None).
-   Unless -1, 'c' is placed into all characters of buffer. */
+   Unless -1, 'c' is written to all bytes of the buffer. */
 static bitarrayobject *
 new_bitarray(Py_ssize_t nbits, PyObject *endian, int c)
 {
@@ -494,7 +494,7 @@ correspond_all(PyObject *module, PyObject *args)
         v = zlw(b);
         not_u = ~u;
         not_v = ~v;
-        /* for nff we need to substract the number of unused 1 bits */
+        /* for nff we need to subtract the number of unused 1 bits */
         nff += popcnt_64(not_u & not_v) - (64 - rbits);
         nft += popcnt_64(not_u & v);
         ntf += popcnt_64(u & not_v);
@@ -552,7 +552,7 @@ byteswap(PyObject *module, PyObject *args)
 
     if (n < 0)
         return PyErr_Format(PyExc_ValueError,
-                            "positive int expect, got %zd", n);
+                            "positive int expected, got %zd", n);
 
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE | PyBUF_WRITABLE) < 0)
         return NULL;
@@ -839,7 +839,7 @@ static const char base64_alphabet[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 /* Given the length of the base m in [1..6] and a character c, return
-   its index in the base 2**m alphabet , or -1 if when c is not included.
+   its index in the base 2**m alphabet, or -1 if c is not included.
    Note: i >> m is true when i is not in range(0, 2**m) */
 static int
 digit_to_int(int m, char c)
@@ -981,7 +981,8 @@ PyDoc_STRVAR(ba2base_doc,
 \n\
 Return a string containing the base `n` ASCII representation of\n\
 the bitarray.  Allowed values for `n` are 2, 4, 8, 16, 32 and 64.\n\
-The bitarray has to be multiple of length 1, 2, 3, 4, 5 or 6 respectively.\n\
+The bitarray has to have a length divisible by 1, 2, 3, 4, 5 or 6\n\
+respectively.\n\
 For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the\n\
 standard base 64 alphabet is used.\n\
 When grouped, the string `sep` is inserted between groups\n\
@@ -1200,7 +1201,7 @@ byte_length(Py_ssize_t i)
      * The last element rts[NSEG(self)] is always the total count.
        Here: rts[NSEG(self)] = rts[4] = 12
 
-     * The last segment may be partial.  In that case, its size it given
+     * The last segment may be partial.  In that case, its size is given
        by nbits % 256.  Here: nbits % 256 = 987 % 256 = 219
 
    As each segment (at large) covers 256 bits (32 bytes), and each element
@@ -1284,7 +1285,7 @@ module_sc_rts(PyObject *module, PyObject *obj)
 
       a.count(1, 8 * offset, 8 * offset + (1 << (8 * n)))
 
-   The offset must be divisible by SEGSIZE, as this functions makes use of
+   The offset must be divisible by SEGSIZE, as this function makes use of
    running totals, stored in rts[].
    Here, and in the following, 'offset' is in units of bytes. */
 static Py_ssize_t
@@ -1301,7 +1302,7 @@ sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
 /* Write a raw block, and return number of bytes copied.
    Note that the encoded block size is the return value + 1 (the head byte).
 
-   The header byte is in range(0x01, 0xa0).
+   The head byte is in range(0x01, 0xa0).
      * range(0x01, 0x20) number of raw bytes
      * range(0x20, 0xa0) number of 32-byte segments */
 static int
@@ -1341,7 +1342,6 @@ static void
 sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
                  Py_ssize_t offset, int n, int k)
 {
-    const char *str_stop = str + n * k;  /* stop position in buffer 'str' */
     const char *buff = a->ob_item + offset;
     Py_ssize_t m;
 
@@ -1370,12 +1370,13 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
                 if (buff[i] & BITMASK(a, j)) {
                     write_n(str, n, 8 * i + j);
                     str += n;
-                    if (--ni == 0) {
+                    if (--k == 0)
+                        /* we have encountered all indices in this block */
+                        return;
+
+                    if (--ni == 0)
                         /* we have encountered all indices in this segment */
-                        if (str == str_stop)
-                            return;
                         goto next_segment;
-                    }
                 }
             }
         }
@@ -1407,7 +1408,7 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
         str[len++] = (char) (0xc0 + n);  /* block type */
         str[len++] = (char) k;           /* index count */
     }
-    if (k == 0)  /* no index bytes - sc_write_sparse() does not allow k = 0 */
+    if (k == 0)  /* no index bytes to write */
         return len;
 
     /* write block data - k indices, n bytes per index */
@@ -1423,7 +1424,7 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
    - 32 index bytes take up as much space as a raw buffer of 32 bytes.
      Hence, if the bit count of the first 32 bytes of the bitarray buffer
-     is greater or equal to 32, we choose a raw block (type 0).
+     is greater than or equal to 32, we choose a raw block (type 0).
 
    - Arguably, n index bytes always take up as much space as n raw bytes.
      So what makes 32 special here?  A bitarray with a 32 byte buffer has
@@ -1459,7 +1460,7 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
              header_size   +   (n + 1)  *  population
 
-         As n >= 1, the header_size will is always 2 bytes here.
+         As n >= 1, the header_size is always 2 bytes here.
 
    - As we only need to know which of these sizes is bigger, we can
      subtract (n * population) from both sizes.  Hence, the costs are:
@@ -1480,7 +1481,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
     assert(nbytes > 0);
 
     count = (int) sc_count(a, rts, offset, 1);
-    /* the number of index bytes exceeds the number of raw bytes */
+    /* the number of index bytes is no smaller than the number of raw bytes */
     if (count >= Py_MIN(32, nbytes)) {           /* type 0 - raw bytes */
         int k = sc_write_raw(str + *len, a, rts, offset);
         *len += 1 + k;
@@ -1515,7 +1516,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
     return BSI(n);
 }
 
-/* write header and return number or bytes written to buffer 'str' */
+/* write header and return number of bytes written to buffer 'str' */
 static int
 sc_encode_header(char *str, bitarrayobject *a)
 {
@@ -1565,7 +1566,7 @@ sc_encode(PyObject *module, PyObject *obj)
 
         /* Make sure we have enough memory in output buffer for next block.
            The largest block possible is a type 0 block with 128 segments.
-           Its size is: 1 head bytes + 128 * 32 raw bytes.
+           Its size is: 1 head byte + 128 * 32 raw bytes.
            Plus, we also may have the stop byte. */
         if (allocated < len + 1 + 128 * 32 + 1) {
             if (_PyBytes_Resize(&out, allocated + ALLOC_SIZE) < 0)
@@ -1597,7 +1598,7 @@ Use `sc_decode()` for decompressing (decoding).");
 
 
 /* read header from 'iter' and set 'endian' and 'nbits', return 0 on success
-   and -1 of failure (after setting exception) */
+   and -1 on failure (after setting exception) */
 static int
 sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
 {
@@ -1759,12 +1760,12 @@ untouched.  Use `sc_encode()` for compressing (encoding).");
    'padding' refers to the pad bits within the variable length format.
    This is not the same as the pad bits of the actual bitarray.
    For example, b'\x10' has padding = 1, and decodes to bitarray('000'),
-   which has 5 pad bits.  'padding' can take values to up 6.
+   which has 5 pad bits.  'padding' can take values up to 6.
  */
 #define LEN_PAD_BITS  3
 
 /* initial number of bits we allocate in vl_decode(), and amount by which
-   we increase our allocation by in vl_decode_core() if we run out */
+   we increase the allocation in vl_decode_core() */
 #define ALLOC_BITS  1024
 
 /* Consume 'iter' while extending bitarray 'a'.
