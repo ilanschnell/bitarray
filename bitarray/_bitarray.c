@@ -3454,24 +3454,27 @@ decodeiter_traverse(decodeiterobject *it, visitproc visit, void *arg)
 static PyObject *
 decodeiter_skipbits(decodeiterobject *it, PyObject *args)
 {
+    PyObject *skipped;
     Py_ssize_t count = 1;
+
     if (!PyArg_ParseTuple(args, "|n:skipbits", &count)) {
         return NULL;
     }
 
     if (count < 0) {
-        return PyErr_Format(PyExc_ValueError, "negative skip count %zd", count);
+        return PyErr_Format(PyExc_ValueError, "negative skip count %zd",
+                            count);
+    }
+    if (count > it->self->nbits - it->index) {
+        return PyErr_Format(PyExc_ValueError, "new index out of range %zd",
+                            it->self->nbits);
     }
 
-    Py_ssize_t new_index = it->index + count;
-    if (new_index > it->self->nbits) {
-        return PyErr_Format(PyExc_ValueError,
-                            "new index %zd out of range %zd",
-                            new_index, it->self->nbits);
-    }
+    skipped = getslice_indices(it->self, it->index, 1, count);
+    if (skipped == NULL)
+        return NULL;
 
-    PyObject *skipped = getslice_indices(it->self, it->index, 1, count);
-    it->index = new_index;
+    it->index += count;
     return skipped;
 }
 
@@ -3480,6 +3483,7 @@ PyDoc_STRVAR(decodeiter_skipbits_doc,
 \n\
 Skips over the next `count` bits (default 1) and returns them.\n\
 Raises `ValueError` if count is out of range.");
+
 
 static PyMethodDef decodeiter_methods[] = {
     {"skipbits",    (PyCFunction) decodeiter_skipbits, METH_VARARGS,
