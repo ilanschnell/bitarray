@@ -4783,11 +4783,15 @@ class DecodeIteratorTests(unittest.TestCase, Util):
             self.assertIs(type(i), int)
             self.assertEqual(i, n)
             next(it)
+        self.assertEqual(it.index, 15)
+        self.assertRaises(StopIteration, next, it)
 
     def test_random(self):
         for _ in range(50):
             N = randrange(1000)
             a = urandom_2(N)
+            if getrandbits(1) == 0:
+                a = frozenbitarray(a)
             it = a.decode(alphabet_code)
             i = 0  # current index
             while i < N:
@@ -4797,6 +4801,8 @@ class DecodeIteratorTests(unittest.TestCase, Util):
                 self.assertEqual(it.index, i)
                 b = it.skipbits(n)
                 self.assertEqual(b, a[i:i + n])
+                self.assertEqual(b.endian, a.endian)
+                self.assertIs(type(b), type(a))
                 i += n
             self.assertEqual(i, N)
             self.assertEqual(it.index, N)
