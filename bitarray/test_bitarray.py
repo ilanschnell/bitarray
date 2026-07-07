@@ -34,7 +34,7 @@ is_pypy = bool(platform.python_implementation() == 'PyPy')
 
 
 from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
-                      get_default_endian,
+                      decodeiterator, get_default_endian,
                       _bitarray_reconstructor, _sysinfo as sysinfo,
                       BufferInfo, __version__)
 
@@ -4699,7 +4699,7 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(it.index, 1)
         self.assertEqual(next(it), 'b')
         self.assertEqual(it.index, 3)
-        self.assertEqual(it.skipbits(), bitarray('0'))
+        self.assertEqual(it.skipbits(1), bitarray('0'))
         self.assertEqual(it.index, 4)
         self.assertEqual(next(it), 'c')
         self.assertEqual(it.index, 6)
@@ -4751,6 +4751,56 @@ class PrefixCodeTests(unittest.TestCase, Util):
         t = decodetree(alphabet_code)
         self.assertEqual(''.join(a.decode(t)), message)
         self.check_obj(a)
+
+class DecodeIteratorTests(unittest.TestCase, Util):
+
+    def test_type(self):
+        a = bitarray("0100 00000 111")
+        it = a.decode(alphabet_code)
+        self.assertIs(type(it), decodeiterator)
+
+    def test_skipbits(self):
+        a = bitarray("0100 00000 111")
+        it = a.decode(alphabet_code)
+        b = it.skipbits(4)
+        self.assertIs(type(b), bitarray)
+        self.assertEqual(b.to01(), "0100")
+        self.assertEqual(next(it), 'h')
+        self.assertRaises(TypeError, it.skipbits)
+        self.assertRaises(TypeError, it.skipbits, 2.0)
+        self.assertRaises(TypeError, it.skipbits, "1")
+        self.assertRaises(ValueError, it.skipbits, -1)
+        self.assertRaises(ValueError, it.skipbits, 100)
+        self.assertEqual(next(it), 'e')
+        self.assertEqual(len(it.skipbits(0)), 0)
+        self.assertRaises(StopIteration, next, it)
+
+    def test_index(self):
+        a = bitarray("0100 00000 111 001")
+        it = a.decode(alphabet_code)
+        for n in 0, 4, 9, 12:
+            i = it.index
+            self.assertIs(type(i), int)
+            self.assertEqual(i, n)
+            next(it)
+
+    def test_random(self):
+        for _ in range(50):
+            N = randrange(1000)
+            a = urandom_2(N)
+            it = a.decode(alphabet_code)
+            i = 0  # current index
+            while i < N:
+                n = randrange(20)
+                if i + n > N:
+                    n = N - i
+                self.assertEqual(it.index, i)
+                b = it.skipbits(n)
+                self.assertEqual(b, a[i:i + n])
+                i += n
+            self.assertEqual(i, N)
+            self.assertEqual(it.index, N)
+            self.assertRaises(StopIteration, next, it)
 
 # --------------------------- Buffer Import ---------------------------------
 

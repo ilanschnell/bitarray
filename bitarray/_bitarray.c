@@ -3455,33 +3455,32 @@ static PyObject *
 decodeiter_skipbits(decodeiterobject *it, PyObject *args)
 {
     PyObject *skipped;
-    Py_ssize_t count = 1;
+    Py_ssize_t n;  /* number of bits to skip */
 
-    if (!PyArg_ParseTuple(args, "|n:skipbits", &count)) {
+    if (!PyArg_ParseTuple(args, "n:skipbits", &n))
         return NULL;
-    }
 
-    if (count < 0) {
-        return PyErr_Format(PyExc_ValueError, "negative skip count %zd",
-                            count);
-    }
-    if (count > it->self->nbits - it->index) {
-        return PyErr_Format(PyExc_ValueError, "new index out of range %zd",
-                            it->self->nbits);
-    }
+    if (n < 0)
+        return PyErr_Format(PyExc_ValueError, "skip count cannot be "
+                            "negative, got %zd", n);
 
-    skipped = getslice_indices(it->self, it->index, 1, count);
+    if (n > it->self->nbits - it->index)
+        return PyErr_Format(PyExc_ValueError, "skip count %zd cannot be "
+                            "larger than remaining bits %zd",
+                            n, it->self->nbits - it->index);
+
+    skipped = getslice_indices(it->self, it->index, 1, n);
     if (skipped == NULL)
         return NULL;
 
-    it->index += count;
+    it->index += n;
     return skipped;
 }
 
 PyDoc_STRVAR(decodeiter_skipbits_doc,
-"skipbits(count=1, /) -> bitarray\n\
+"skipbits(n, /) -> bitarray\n\
 \n\
-Skips over the next `count` bits (default 1) and returns them.\n\
+Skip over the next `n` bits and return them.\n\
 Raises `ValueError` if count is out of range.");
 
 
