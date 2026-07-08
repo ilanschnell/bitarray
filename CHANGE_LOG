@@ -2,7 +2,7 @@
 -------------------
   * add `.rotate()` method, rotate bitarray in-place by `k` positions
   * expose the `decodeiterator` class, and add `.skipbits()` method
-    and `index` data descriptor, see #252
+    as well as `.index` data descriptor, see #252
   * fix `random_p()` silently producing all-zero bitarrays for small `n`
     when `p=float("nan")`
   * improve testing - use more of `unittest`'s functionality

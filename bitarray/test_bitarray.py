@@ -4771,6 +4771,7 @@ class DecodeIteratorTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, it.skipbits, "1")
         self.assertRaises(ValueError, it.skipbits, -1)
         self.assertRaises(ValueError, it.skipbits, 100)
+        self.assertRaises(ValueError, it.skipbits, sys.maxsize)
         self.assertEqual(next(it), 'e')
         self.assertEqual(len(it.skipbits(0)), 0)
         self.assertRaises(StopIteration, next, it)
@@ -4779,6 +4780,8 @@ class DecodeIteratorTests(unittest.TestCase, Util):
         a = bitarray("0100 00000 111 001")
         it = a.decode(alphabet_code)
         for n in 0, 4, 9, 12:
+            self.assertRaises(AttributeError, setattr, it, "index", 0)
+            self.assertRaises(AttributeError, delattr, it, "index")
             i = it.index
             self.assertIs(type(i), int)
             self.assertEqual(i, n)
@@ -4790,7 +4793,7 @@ class DecodeIteratorTests(unittest.TestCase, Util):
         for _ in range(50):
             N = randrange(1000)
             a = urandom_2(N)
-            if getrandbits(1) == 0:
+            if getrandbits(1):
                 a = frozenbitarray(a)
             it = a.decode(alphabet_code)
             i = 0  # current index
