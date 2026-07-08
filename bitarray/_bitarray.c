@@ -3490,13 +3490,9 @@ static PyMethodDef decodeiter_methods[] = {
     {NULL}
 };
 
-PyDoc_STRVAR(decodeiter_index_doc,
-"The position in the underlying bitarray to be decoded by the subsequent\n"
-"call to `next`.");
-
 static PyMemberDef decodeiter_members[] = {
     {"index", Py_T_PYSSIZET, offsetof(decodeiterobject, index), Py_READONLY,
-     decodeiter_index_doc},
+     PyDoc_STR("current bit position to be decoded by subsequent `next`")},
     {NULL}
 };
 
