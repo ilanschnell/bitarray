@@ -1,10 +1,13 @@
-2026-XX-XX   3.9.0:
+2026-07-XX   3.9.0:
 -------------------
   * add `.rotate()` method, rotate bitarray in-place by `k` positions
   * expose the `decodeiterator` class, and add `.skipbits()` method
     as well as `.index` data descriptor, see #252
   * fix `random_p()` silently producing all-zero bitarrays for small `n`
     when `p=float("nan")`
+  * improve integer argument handling in `util.random_k()`,
+    `util.gen_primes()`, `util.pprint()` and `util.int2ba()`
+  * add `python_requires >= 3.7` to package metadata
   * improve testing - use more of `unittest`'s functionality
 
 
