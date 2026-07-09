@@ -93,6 +93,10 @@ puff/
     https://github.com/madler/zlib/blob/master/contrib/puff/puff.c
 
 
+rule90.py
+    1-D cellular automaton with periodic boundary conditions
+
+
 sieve.py
     Demonstrates the "Sieve of Eratosthenes" algorithm for finding all prime
     numbers up to a specified integer.
