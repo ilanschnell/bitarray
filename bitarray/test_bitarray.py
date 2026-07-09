@@ -4028,6 +4028,8 @@ class DescriptorTests(unittest.TestCase, Util):
             a = bitarray('1101100', endian)
             self.assertEqual(a.endian, endian)
             self.assertIs(type(a.endian), str)
+            self.assertRaises(AttributeError, setattr, a, "endian", "little")
+            self.assertRaises(AttributeError, delattr, a, "endian")
 
     def test_nbytes_padbits(self):
         for n in range(50):
@@ -4035,15 +4037,21 @@ class DescriptorTests(unittest.TestCase, Util):
             # .nbytes
             self.assertEqual(a.nbytes, bits2bytes(n))
             self.assertIs(type(a.nbytes), int)
+            self.assertRaises(AttributeError, setattr, a, "nbytes", 0)
+            self.assertRaises(AttributeError, delattr, a, "nbytes")
             # .padbits
             self.assertEqual(a.padbits, 8 * a.nbytes - n)
             self.assertTrue(0 <= a.padbits < 8)
             self.assertIs(type(a.padbits), int)
+            self.assertRaises(AttributeError, setattr, a, "padbits", 0)
+            self.assertRaises(AttributeError, delattr, a, "padbits")
 
     def test_readonly(self):
         a = bitarray('110')
         self.assertFalse(a.readonly)
         self.assertIs(type(a.readonly), bool)
+        self.assertRaises(AttributeError, setattr, a, "readonly", True)
+        self.assertRaises(AttributeError, delattr, a, "readonly")
 
         b = frozenbitarray(a)
         self.assertTrue(b.readonly)
