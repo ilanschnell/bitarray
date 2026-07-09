@@ -19,8 +19,9 @@ NEW_IN = {
     'bitarray.count':        ['1.1.0: optional start and stop arguments',
                               '2.3.7: optional step argument',
                               '2.9: add non-overlapping sub-bitarray count'],
-    'bitarray.decode':        '3.0: returns iterator (equivalent to past '
+    'bitarray.decode':       ['3.0: returns iterator (equivalent to past '
                                    '`.iterdecode()`)',
+                              '3.9: returns public `decodeiterator` object'],
     'bitarray.endian':        '3.4: replaces former `.endian()` method',
     'bitarray.extend':        '3.4: allow `bytes` object',
     'bitarray.find':         ['2.1',
@@ -130,11 +131,11 @@ NOTES = {
 }
 
 GETSET = {
-    'bitarray.endian':     'str',
-    'bitarray.nbytes':     'int',
-    'bitarray.padbits':    'int',
-    'bitarray.readonly':   'bool',
-    'decodeiterator.index':'int',
+    'bitarray.endian': 'str',
+    'bitarray.nbytes': 'int',
+    'bitarray.padbits': 'int',
+    'bitarray.readonly': 'bool',
+    'decodeiterator.index': 'int',
 }
 
 _NAMES = set()
@@ -213,7 +214,7 @@ def write_reference_for_class(fo, cl):
     fo.write("%s\n%s\n\n" % (heading, '-' * len(heading)))
     if class_name == "bitarray":
         fo.write("Data descriptors were added in version 2.6.\n\n")
-    for getset in sorted(dir(bitarray.bitarray)):
+    for getset in sorted(dir(cl)):
         name = '%s.%s' % (class_name, getset)
         if name in GETSET:
             write_doc(fo, name)
