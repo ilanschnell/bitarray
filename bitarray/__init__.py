@@ -17,7 +17,7 @@ from bitarray._bitarray import (
     BITARRAY_VERSION as __version__
 )
 
-__all__ = ['bitarray', 'frozenbitarray', 'decodetree', 'decodeiterator'
+__all__ = ['bitarray', 'frozenbitarray', 'decodetree', 'decodeiterator',
            'bits2bytes']
 
 BufferInfo = namedtuple('BufferInfo',
