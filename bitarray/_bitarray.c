@@ -1905,9 +1905,9 @@ bitarray_rotate(bitarrayobject *self, PyObject *args)
     if (n < 2)
         Py_RETURN_NONE;
 
-    k %= n;
+    k %= n;  /* C remainder may be negative, as it preserves the sign of k */
     if (k < 0)
-        k += n;
+        k += n;  /* make it equivalent to Python's k %= n */
     if (k == 0)
         Py_RETURN_NONE;
 
