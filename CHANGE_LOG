@@ -1,3 +1,7 @@
+2026-XX-XX   3.9.1:
+-------------------
+
+
 2026-07-10   3.9.0:
 -------------------
   * add `.rotate()` method, rotate bitarray in-place by `k` positions
