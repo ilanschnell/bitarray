@@ -204,8 +204,7 @@ def get_names(cl, method=True):
         if name.startswith('_'):
             continue
         name = '%s.%s' % (cl.__name__, name)
-        if ((method and name not in GETSET) or
-            (not method and name in GETSET)):
+        if method ^ (name in GETSET):
             yield name
 
 def write_reference_for_class(fo, cl):
