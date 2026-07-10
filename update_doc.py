@@ -210,6 +210,10 @@ def write_reference_for_class(fo, cl):
         if name not in GETSET:
             write_doc(fo, name)
 
+    if not any('%s.%s' % (class_name, getset) in GETSET
+               for getset in dir(cl)):
+        return
+
     heading = "%s data descriptors:" % class_name
     fo.write("%s\n%s\n\n" % (heading, '-' * len(heading)))
     if class_name == "bitarray":
