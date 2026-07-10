@@ -131,10 +131,10 @@ NOTES = {
 }
 
 GETSET = {
-    'bitarray.endian': 'str',
-    'bitarray.nbytes': 'int',
-    'bitarray.padbits': 'int',
-    'bitarray.readonly': 'bool',
+    'bitarray.endian':      'str',
+    'bitarray.nbytes':      'int',
+    'bitarray.padbits':     'int',
+    'bitarray.readonly':    'bool',
     'decodeiterator.index': 'int',
 }
 
@@ -199,23 +199,23 @@ def write_doc(fo, name):
     fo.write('\n\n')
 
 
+def get_names(cl, method=True):
+    for name in sorted(dir(cl)):
+        if name.startswith('_'):
+            continue
+        name = '%s.%s' % (cl.__name__, name)
+        if ((method and name not in GETSET) or
+            (not method and name in GETSET)):
+            yield name
+
 def write_reference_for_class(fo, cl):
     class_name = cl.__name__
     heading = "%s methods:" % class_name
     fo.write("%s\n%s\n\n" % (heading, '-' * len(heading)))
-    for method in sorted(dir(cl)):
-        if method.startswith('_'):
-            continue
-        name = '%s.%s' % (class_name, method)
-        if name not in GETSET:
-            write_doc(fo, name)
+    for name in get_names(cl, True):
+        write_doc(fo, name)
 
-    getset_names = []
-    for getset in sorted(dir(cl)):
-        name = '%s.%s' % (class_name, getset)
-        if name in GETSET:
-            getset_names.append(name)
-
+    getset_names = list(get_names(cl, False))
     if getset_names:
         heading = "%s data descriptors:" % class_name
         fo.write("%s\n%s\n\n" % (heading, '-' * len(heading)))
