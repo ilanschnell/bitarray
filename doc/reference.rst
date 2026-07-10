@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 3.8.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.9.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -103,7 +103,7 @@ bitarray methods:
    New in version 2.9: add non-overlapping sub-bitarray count
 
 
-``decode(code, /)`` -> iterator
+``decode(code, /)`` -> decodeiterator
    Given a prefix code (a dict mapping symbols to bitarrays, or ``decodetree``
    object), decode content of bitarray and return an iterator over
    corresponding symbols.
@@ -111,6 +111,8 @@ bitarray methods:
    See also: `Bitarray 3 transition <https://github.com/ilanschnell/bitarray/blob/master/doc/bitarray3.rst>`__
 
    New in version 3.0: returns iterator (equivalent to past ``.iterdecode()``)
+
+   New in version 3.9: returns public ``decodeiterator`` object
 
 
 ``encode(code, iterable, /)``
@@ -204,6 +206,19 @@ bitarray methods:
    Reverse all bits in bitarray (in-place).
 
 
+``rotate(k=1, /)``
+   Rotate bitarray in-place by ``k`` positions.
+   Positive ``k`` rotates right, negative ``k`` rotates left.
+
+   When bitarray is not empty, rotating one step to the right is
+   equivalent to ``a.insert(0, a.pop())``, and rotating one step to the left
+   is equivalent to ``a.append(a.pop(0))``.
+   The same convention is used by the ``.rotate()`` method of
+   the ``collections.deque`` object.
+
+   New in version 3.9
+
+
 ``search(sub_bitarray, start=0, stop=<end>, /, right=False)`` -> iterator
    Return iterator over indices where sub_bitarray is found, such that
    sub_bitarray is contained within ``[start:stop]``.
@@ -280,6 +295,25 @@ Data descriptors were added in version 2.6.
 
 ``readonly`` -> bool
    bool indicating whether buffer is read-only
+
+
+decodeiterator methods:
+-----------------------
+
+``skipbits(n, /)`` -> bitarray
+   Skip over the next ``n`` bits and return them.
+   Raises ``ValueError`` if count is out of range.
+
+   New in version 3.9
+
+
+decodeiterator data descriptors:
+--------------------------------
+
+``index`` -> int
+   current bit position to be decoded by subsequent ``next``
+
+   New in version 3.9
 
 
 Other objects:

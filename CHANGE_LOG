@@ -1,4 +1,4 @@
-2026-07-XX   3.9.0:
+2026-07-10   3.9.0:
 -------------------
   * add `.rotate()` method, rotate bitarray in-place by `k` positions
   * expose the `decodeiterator` class, and add `.skipbits()` method
@@ -9,6 +9,7 @@
     `util.gen_primes()`, `util.pprint()` and `util.int2ba()`
   * add `python_requires >= 3.7` to package metadata
   * improve testing - use more of `unittest`'s functionality
+  * add [Rule 90 example](../examples/rule90.py)
 
 
 2026-06-17   3.8.2:

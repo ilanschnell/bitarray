@@ -1,6 +1,20 @@
 Change log
 ==========
 
+**3.9.0** (2026-07-10):
+
+* add ``.rotate()`` method, rotate bitarray in-place by ``k`` positions
+* expose the ``decodeiterator`` class, and add ``.skipbits()`` method
+  as well as ``.index`` data descriptor, see `#252 <https://github.com/ilanschnell/bitarray/issues/252>`__
+* fix ``random_p()`` silently producing all-zero bitarrays for small ``n``
+  when ``p=float("nan")``
+* improve integer argument handling in ``util.random_k()``,
+  ``util.gen_primes()``, ``util.pprint()`` and ``util.int2ba()``
+* add ``python_requires >= 3.7`` to package metadata
+* improve testing - use more of ``unittest``'s functionality
+* add `Rule 90 example <../examples/rule90.py>`__
+
+
 **3.8.2** (2026-06-17):
 
 * clarity/wording improvements throughout project

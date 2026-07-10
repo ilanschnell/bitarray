@@ -57,8 +57,8 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 3.8.2
-    sys.version: 3.13.5 (main, Jun 16 2025) [Clang 18.1.8]
+    bitarray version: 3.9.0
+    sys.version: 3.14.5 (main, May 20 2026) [Clang 20.1.8]
     sys.prefix: /Users/ilan/miniforge
     pointer size: 64 bit
     sizeof(size_t): 8
@@ -70,12 +70,12 @@ Once you have installed the package, you may want to test it:
     Py_DEBUG: 0
     DEBUG: 0
     .........................................................................
-    .........................................................................
-    ................................................................
+    ................................................s........................
+    ......s.........................................................
     ----------------------------------------------------------------------
-    Ran 598 tests in 0.165s
+    Ran 622 tests in 0.191s
 
-    OK
+    OK (skipped=2)
 
 The ``test()`` function is part of the API.  It will return
 a ``unittest.runner.TextTestResult`` object, such that one can verify that
@@ -320,7 +320,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.8.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.9.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -422,7 +422,7 @@ bitarray methods:
    New in version 2.9: add non-overlapping sub-bitarray count
 
 
-``decode(code, /)`` -> iterator
+``decode(code, /)`` -> decodeiterator
    Given a prefix code (a dict mapping symbols to bitarrays, or ``decodetree``
    object), decode content of bitarray and return an iterator over
    corresponding symbols.
@@ -430,6 +430,8 @@ bitarray methods:
    See also: `Bitarray 3 transition <https://github.com/ilanschnell/bitarray/blob/master/doc/bitarray3.rst>`__
 
    New in version 3.0: returns iterator (equivalent to past ``.iterdecode()``)
+
+   New in version 3.9: returns public ``decodeiterator`` object
 
 
 ``encode(code, iterable, /)``
@@ -523,6 +525,19 @@ bitarray methods:
    Reverse all bits in bitarray (in-place).
 
 
+``rotate(k=1, /)``
+   Rotate bitarray in-place by ``k`` positions.
+   Positive ``k`` rotates right, negative ``k`` rotates left.
+
+   When bitarray is not empty, rotating one step to the right is
+   equivalent to ``a.insert(0, a.pop())``, and rotating one step to the left
+   is equivalent to ``a.append(a.pop(0))``.
+   The same convention is used by the ``.rotate()`` method of
+   the ``collections.deque`` object.
+
+   New in version 3.9
+
+
 ``search(sub_bitarray, start=0, stop=<end>, /, right=False)`` -> iterator
    Return iterator over indices where sub_bitarray is found, such that
    sub_bitarray is contained within ``[start:stop]``.
@@ -599,6 +614,25 @@ Data descriptors were added in version 2.6.
 
 ``readonly`` -> bool
    bool indicating whether buffer is read-only
+
+
+decodeiterator methods:
+-----------------------
+
+``skipbits(n, /)`` -> bitarray
+   Skip over the next ``n`` bits and return them.
+   Raises ``ValueError`` if count is out of range.
+
+   New in version 3.9
+
+
+decodeiterator data descriptors:
+--------------------------------
+
+``index`` -> int
+   current bit position to be decoded by subsequent ``next``
+
+   New in version 3.9
 
 
 Other objects:
