@@ -105,7 +105,7 @@ NOTES = {
    example NumPy's ndarray object) which have a different memory view.""",
 
     'bitarray.rotate': """\
-   When bitarray is not empty, rotating one step to the right is
+   When bitarray ``a`` is not empty, rotating one step to the right is
    equivalent to ``a.insert(0, a.pop())``, and rotating one step to the left
    is equivalent to ``a.append(a.pop(0))``.
    The same convention is used by the ``.rotate()`` method of
@@ -210,17 +210,18 @@ def write_reference_for_class(fo, cl):
         if name not in GETSET:
             write_doc(fo, name)
 
-    if not any('%s.%s' % (class_name, getset) in GETSET
-               for getset in dir(cl)):
-        return
-
-    heading = "%s data descriptors:" % class_name
-    fo.write("%s\n%s\n\n" % (heading, '-' * len(heading)))
-    if class_name == "bitarray":
-        fo.write("Data descriptors were added in version 2.6.\n\n")
+    getset_names = []
     for getset in sorted(dir(cl)):
         name = '%s.%s' % (class_name, getset)
         if name in GETSET:
+            getset_names.append(name)
+
+    if getset_names:
+        heading = "%s data descriptors:" % class_name
+        fo.write("%s\n%s\n\n" % (heading, '-' * len(heading)))
+        if class_name == "bitarray":
+            fo.write("Data descriptors were added in version 2.6.\n\n")
+        for name in getset_names:
             write_doc(fo, name)
 
 
