@@ -199,22 +199,22 @@ def write_doc(fo, name):
     fo.write('\n\n')
 
 
-def get_names(cl, method=True):
+def get_names(cl, getset=False):
     for name in sorted(dir(cl)):
         if name.startswith('_'):
             continue
         name = '%s.%s' % (cl.__name__, name)
-        if method ^ (name in GETSET):
+        if getset == (name in GETSET):
             yield name
 
 def write_reference_for_class(fo, cl):
     class_name = cl.__name__
     heading = "%s methods:" % class_name
     fo.write("%s\n%s\n\n" % (heading, '-' * len(heading)))
-    for name in get_names(cl, True):
+    for name in get_names(cl):
         write_doc(fo, name)
 
-    getset_names = list(get_names(cl, False))
+    getset_names = list(get_names(cl, True))
     if getset_names:
         heading = "%s data descriptors:" % class_name
         fo.write("%s\n%s\n\n" % (heading, '-' * len(heading)))
