@@ -1850,13 +1850,13 @@ class RichCompareTests(unittest.TestCase, Util):
         ]:
             a = bitarray(sa, self.random_endian())
             b = bitarray(sb, self.random_endian())
-            r = bitarray(res)
-            self.assertEqual(a == b, r[0])
-            self.assertEqual(a != b, r[1])
-            self.assertEqual(a >= b, r[2])
-            self.assertEqual(a >  b, r[3])
-            self.assertEqual(a <= b, r[4])
-            self.assertEqual(a <  b, r[5])
+            r = [bool(x) for x in bitarray(res)]
+            self.assertIs(a == b, r[0])
+            self.assertIs(a != b, r[1])
+            self.assertIs(a >= b, r[2])
+            self.assertIs(a >  b, r[3])
+            self.assertIs(a <= b, r[4])
+            self.assertIs(a <  b, r[5])
 
     def test_eq_ne(self):
         for _ in range(5):
