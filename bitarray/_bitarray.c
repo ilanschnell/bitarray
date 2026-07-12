@@ -3954,7 +3954,7 @@ richcompare(PyObject *v, PyObject *w, int op)
         }
         else if (va->endian == wa->endian) {
             /* sizes and endianness are the same - use memcmp() */
-            int cmp = memcmp(vb, wb, (size_t) vs / 8);
+            int cmp = vs >= 8 ? memcmp(vb, wb, (size_t) vs / 8) : 0;
 
             if (cmp == 0 && vs % 8)  /* if equal, compare remaining bits */
                 cmp = zlc(va) != zlc(wa);
