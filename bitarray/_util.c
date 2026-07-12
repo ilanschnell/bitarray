@@ -1594,9 +1594,9 @@ sc_encode(PyObject *module, PyObject *obj)
 PyDoc_STRVAR(sc_encode_doc,
 "sc_encode(bitarray, /) -> bytes\n\
 \n\
-Compress a sparse bitarray and return its binary representation.\n\
-This representation is useful for efficiently storing sparse bitarrays.\n\
-Use `sc_decode()` for decompressing (decoding).");
+Compress a bitarray using sparse encoding and return its binary\n\
+representation.  This representation is useful for efficiently storing\n\
+sparse bitarrays.  Use `sc_decode()` for decompressing (decoding).");
 
 
 /* read header from 'iter' and set 'endian' and 'nbits', return 0 on success
