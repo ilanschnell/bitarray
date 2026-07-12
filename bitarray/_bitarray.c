@@ -167,7 +167,8 @@ bitarray_cp(bitarrayobject *self)
     res = newbitarrayobject(Py_TYPE(self), self->nbits, self->endian);
     if (res == NULL)
         return NULL;
-    memcpy(res->ob_item, self->ob_item, (size_t) Py_SIZE(self));
+    if (Py_SIZE(self))
+        memcpy(res->ob_item, self->ob_item, (size_t) Py_SIZE(self));
     return res;
 }
 
@@ -557,7 +558,7 @@ count_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     assert(0 <= b && b <= self->nbits);
 
     if (n >= 64) {
-        Py_ssize_t p = BYTES(a), w;  /* first full byte  */
+        Py_ssize_t p = BYTES(a), w;  /* first full byte */
         p += to_aligned((void *) (self->ob_item + p));  /* align pointer */
         w = (b / 8 - p) / 8;         /* number of (full) words to count */
 
@@ -880,7 +881,7 @@ extend_unicode01(bitarrayobject *self, PyObject *unicode)
 {
     const Py_ssize_t nbits = self->nbits;
     const Py_ssize_t length = PyUnicode_GET_LENGTH(unicode);
-    Py_ssize_t i = nbits, j;  /* i is the current index in self */
+    Py_ssize_t i = nbits, j;  /* i is the current write index in self */
 
     if (resize(self, nbits + length) < 0)
         return -1;
@@ -1588,7 +1589,8 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
         goto error;
 
     assert(Py_SIZE(self) == n + view.len);
-    memcpy(self->ob_item + n, (char *) view.buf, (size_t) view.len);
+    if (view.len)
+        memcpy(self->ob_item + n, (char *) view.buf, (size_t) view.len);
 
     /* remove pad bits starting at previous bit length (8 * n - p) */
     if (delete_n(self, 8 * n - p, p) < 0)
@@ -3856,7 +3858,8 @@ newbitarray_from_bytes(PyTypeObject *type, PyObject *buffer, int endian)
         return NULL;
     }
     assert(Py_SIZE(res) == view.len);
-    memcpy(res->ob_item, (char *) view.buf, (size_t) view.len);
+    if (view.len)
+        memcpy(res->ob_item, (char *) view.buf, (size_t) view.len);
 
     PyBuffer_Release(&view);
     return (PyObject *) res;
@@ -4257,7 +4260,7 @@ reconstructor(PyObject *module, PyObject *args)
         return NULL;
 
     nbytes = PyBytes_GET_SIZE(bytes);
-    if (padbits >> 3 || (nbytes == 0 && padbits))
+    if (padbits < 0 || padbits > 7 || (nbytes == 0 && padbits))
         return PyErr_Format(PyExc_ValueError,
                             "invalid number of pad bits: %d", padbits);
 
@@ -4265,7 +4268,8 @@ reconstructor(PyObject *module, PyObject *args)
     if (res == NULL)
         return NULL;
     assert(Py_SIZE(res) == nbytes);
-    memcpy(res->ob_item, PyBytes_AS_STRING(bytes), (size_t) nbytes);
+    if (nbytes)
+        memcpy(res->ob_item, PyBytes_AS_STRING(bytes), (size_t) nbytes);
     if (readonly) {
         set_padbits(res);
         res->readonly = 1;

@@ -142,7 +142,8 @@ zlw(bitarrayobject *self)       /* zlw = zeroed last word */
     uint64_t res = 0;
 
     assert(nw + nr == nbits / 8 && 8 * (nw + nr) + nbits % 8 == nbits);
-    memcpy((char *) &res, self->ob_item + nw, nr);
+    if (nr)
+        memcpy((char *) &res, self->ob_item + nw, nr);
     if (nbits % 8)
         *(((char *) &res) + nr) = zlc(self);
 
@@ -308,7 +309,7 @@ conv_pybit(PyObject *value, int *vi)
     if (n == -1 && PyErr_Occurred())
         return 0;
 
-    if (n >> 1) {
+    if (n < 0 || n > 1) {
         PyErr_Format(PyExc_ValueError, "bit must be 0 or 1, got %zd", n);
         return 0;
     }

@@ -612,7 +612,8 @@ serialize(PyObject *module, PyObject *obj)
     str = PyBytes_AsString(result);
     set_padbits(a);
     *str = (IS_BE(a) ? 0x10 : 0x00) | ((char) PADBITS(a));
-    memcpy(str + 1, a->ob_item, (size_t) nbytes);
+    if (nbytes)
+        memcpy(str + 1, a->ob_item, (size_t) nbytes);
     return result;
 }
 
@@ -654,7 +655,8 @@ deserialize(PyObject *module, PyObject *buffer)
     /* set bit-endianness and buffer */
     a->endian = head & 0x10 ? ENDIAN_BIG : ENDIAN_LITTLE;
     assert(Py_SIZE(a) == view.len - 1);
-    memcpy(a->ob_item, ((char *) view.buf) + 1, (size_t) view.len - 1);
+    if (Py_SIZE(a))
+        memcpy(a->ob_item, ((char *) view.buf) + 1, (size_t) view.len - 1);
 
     PyBuffer_Release(&view);
     return (PyObject *) a;
