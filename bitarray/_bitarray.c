@@ -3928,19 +3928,6 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     return (PyObject *) res;
 }
 
-static int
-ssize_richcompare(Py_ssize_t v, Py_ssize_t w, int op)
-{
-    switch (op) {
-    case Py_LT: return v <  w;
-    case Py_LE: return v <= w;
-    case Py_EQ: return v == w;
-    case Py_NE: return v != w;
-    case Py_GT: return v >  w;
-    case Py_GE: return v >= w;
-    default: Py_UNREACHABLE();
-    }
-}
 
 static PyObject *
 richcompare(PyObject *v, PyObject *w, int op)
@@ -3997,11 +3984,11 @@ richcompare(PyObject *v, PyObject *w, int op)
 
         if (vi != wi)
             /* we have an item that differs */
-            return PyBool_FromLong(ssize_richcompare(vi, wi, op));
+            Py_RETURN_RICHCOMPARE(vi, wi, op);
     }
 
     /* no more items to compare -- compare sizes */
-    return PyBool_FromLong(ssize_richcompare(vs, ws, op));
+    Py_RETURN_RICHCOMPARE(vs, ws, op);
 }
 
 /***************************** bitarray iterator **************************/
