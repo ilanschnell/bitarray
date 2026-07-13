@@ -159,7 +159,7 @@ bit-endianness (`little` or `big`).");
 
 /* ------------------------------- count_n ----------------------------- */
 
-/* Return smallest index i for which a.count(vi, 0, i) == n.  When n exceeds
+/* Return smallest index i for which a[:i].count(vi) == n.  When n exceeds
    the total count, the result is a negative number; the negative of the
    total count + 1, which is useful for displaying error messages. */
 static Py_ssize_t
@@ -840,14 +840,26 @@ static const char base32_alphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 static const char base64_alphabet[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
+static signed char digit_table[2][128];
+
+static void
+setup_digit_table(void)
+{
+    int i;
+
+    memset(digit_table, 0xff, sizeof digit_table);  /* 0xff -> -1 */
+    for (i = 0; i < 32; i++)
+        digit_table[0][(unsigned char) base32_alphabet[i]] = i;
+    for (i = 0; i < 64; i++)
+        digit_table[1][(unsigned char) base64_alphabet[i]] = i;
+}
+
 /* Given the length of the base m in [1..6] and a character c, return
    its index in the base 2**m alphabet, or -1 if c is not included.
    Note: i >> m is true when i is not in range(0, 2**m) */
 static int
 digit_to_int(int m, char c)
 {
-    static signed char table[2][128];
-    static int setup = 0;
     int i;
 
     assert(1 <= m && m <= 6);
@@ -859,15 +871,7 @@ digit_to_int(int m, char c)
     if (0x80 & c)  /* non-ASCII */
         return -1;
 
-    if (!setup) {
-        memset(table, 0xff, sizeof table);  /* (signed char) 0xff -> -1 */
-        for (i = 0; i < 32; i++)
-            table[0][(unsigned char) base32_alphabet[i]] = i;
-        for (i = 0; i < 64; i++)
-            table[1][(unsigned char) base64_alphabet[i]] = i;
-        setup = 1;
-    }
-    return table[m - 5][(unsigned char) c];      /* base 32, 64 */
+    return digit_table[m - 5][(unsigned char) c];      /* base 32, 64 */
 }
 
 /* return m = log2(n) for m in [1..6] */
@@ -1085,7 +1089,7 @@ next_char(PyObject *iter)
     if (v == -1 && PyErr_Occurred())
         return -1;
 
-    if (v >> 8) {
+    if (v < 0 || v > 255) {
         PyErr_Format(PyExc_ValueError,
                      "byte must be in range(0, 256), got: %zd", v);
         return -1;
@@ -2251,6 +2255,8 @@ PyMODINIT_FUNC
 PyInit__util(void)
 {
     PyObject *m;
+
+    setup_digit_table();
 
     bitarray_type = (PyTypeObject *) bitarray_module_attr("bitarray");
     if (bitarray_type == NULL)
