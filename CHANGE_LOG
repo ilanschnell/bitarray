@@ -1,5 +1,8 @@
 2026-XX-XX   3.9.1:
 -------------------
+  * towards free-threading:
+      - initialize tables at module import, not lazily
+      - remove caching imported Python objects (which are already caches)
 
 
 2026-07-10   3.9.0:
