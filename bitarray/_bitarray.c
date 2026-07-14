@@ -1130,7 +1130,7 @@ freeze_if_frozen(bitarrayobject *self)
 
     assert(self->ob_exports == 0 && self->buffer == NULL);
 
-    if (Py_TYPE(self) == &Bitarray_Type)
+    if (Py_TYPE(self) == &Bitarray_Type)  /* shortcut for common case */
         return (PyObject *) self;
 
     frozen = bitarray_module_attr("frozenbitarray");

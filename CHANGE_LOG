@@ -1,8 +1,9 @@
 2026-XX-XX   3.9.1:
 -------------------
-  * towards free-threading:
+  * improving free-threading readiness;
       - initialize tables at module import, not lazily
       - remove caching imported Python objects (which are already caches)
+  * remove `ssize_richcompare()` in favor of `Py_RETURN_RICHCOMPARE` macro
 
 
 2026-07-10   3.9.0:
