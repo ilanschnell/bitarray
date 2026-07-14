@@ -20,12 +20,16 @@ SEGBITS = 8 * _SEGSIZE
 
 class SetupTableTests(unittest.TestCase):
 
+    max_char = {'a': 28, 'A': 28, 's': 140, 'S': 140, 'x': 7, 'X': 7,
+                'c': 8, 'p': 1, 'r': 255}
+
     def test_common(self):
         for kop in 'aAsSxXcpr':
             table = _setup_table(kop)
             self.assertIs(type(table), bytes)
             self.assertEqual(len(table), 256)
             self.assertEqual(table[0], 0)  # all tables start with 0
+            self.assertEqual(max(table), self.max_char[kop])
 
     def test_add(self):
         table = _setup_table('a')
