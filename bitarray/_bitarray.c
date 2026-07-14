@@ -1050,14 +1050,11 @@ that two consecutive calls will always leave the bitarray unchanged.");
 static PyObject *
 bitarray_buffer_info(bitarrayobject *self)
 {
-    static PyObject *info = NULL;   /* BufferInfo object */
-    PyObject *res, *args, *address, *readonly, *imported;
+    PyObject *info, *res, *args, *address, *readonly, *imported;
 
-    if (info == NULL) {
-        info = bitarray_module_attr("BufferInfo");
-        if (info == NULL)
-            return NULL;
-    }
+    info = bitarray_module_attr("BufferInfo");
+    if (info == NULL)
+        return NULL;
 
     address = PyLong_FromVoidPtr((void *) self->ob_item);
     readonly = PyBool_FromLong(self->readonly);
@@ -1082,12 +1079,14 @@ bitarray_buffer_info(bitarrayobject *self)
     Py_DECREF(imported);
     res = PyObject_CallObject(info, args);
     Py_DECREF(args);
+    Py_DECREF(info);
     return res;
 
  error:
     Py_XDECREF(address);
     Py_XDECREF(readonly);
     Py_XDECREF(imported);
+    Py_DECREF(info);
     return NULL;
 }
 
@@ -1126,16 +1125,17 @@ Remove all items from bitarray.");
 static PyObject *
 freeze_if_frozen(bitarrayobject *self)
 {
-    static PyObject *frozen = NULL;  /* frozenbitarray class object */
+    PyObject *frozen;  /* frozenbitarray class object */
     int is_frozen;
 
     assert(self->ob_exports == 0 && self->buffer == NULL);
-    if (frozen == NULL) {
-        frozen = bitarray_module_attr("frozenbitarray");
-        if (frozen == NULL)
-            return NULL;
-    }
-    if ((is_frozen = PyObject_IsInstance((PyObject *) self, frozen)) < 0)
+    frozen = bitarray_module_attr("frozenbitarray");
+    if (frozen == NULL)
+        return NULL;
+
+    is_frozen = PyObject_IsInstance((PyObject *) self, frozen);
+    Py_DECREF(frozen);
+    if (is_frozen < 0)
         return NULL;
 
     if (is_frozen) {
@@ -1396,14 +1396,12 @@ When `index` is a slice, invert the selected bits.");
 static PyObject *
 bitarray_reduce(bitarrayobject *self)
 {
-    static PyObject *reconstructor = NULL;
+    PyObject *reconstructor;
     PyObject *dict, *bytes, *result;
 
-    if (reconstructor == NULL) {
-        reconstructor = bitarray_module_attr("_bitarray_reconstructor");
-        if (reconstructor == NULL)
-            return NULL;
-    }
+    reconstructor = bitarray_module_attr("_bitarray_reconstructor");
+    if (reconstructor == NULL)
+        return NULL;
 
     dict = PyObject_GetAttrString((PyObject *) self, "__dict__");
     if (dict == NULL) {
@@ -1416,6 +1414,7 @@ bitarray_reduce(bitarrayobject *self)
     bytes = PyBytes_FromStringAndSize(self->ob_item, Py_SIZE(self));
     if (bytes == NULL) {
         Py_DECREF(dict);
+        Py_DECREF(reconstructor);
         return NULL;
     }
 
@@ -1423,6 +1422,7 @@ bitarray_reduce(bitarrayobject *self)
                            ENDIAN_STR(self->endian), (int) PADBITS(self),
                            self->readonly, dict);
     Py_DECREF(dict);
+    Py_DECREF(reconstructor);
     Py_DECREF(bytes);
     return result;
 }
