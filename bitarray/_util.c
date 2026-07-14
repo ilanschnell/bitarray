@@ -268,14 +268,30 @@ Return parity of bitarray `a`.\n\
 `parity(a)` is equivalent to `a.count() % 2` but more efficient.");
 
 
+static char count_table[256];
+static char parity_table[256];
+static char sum_table[2][256];
+static char sum_sqr_table[2][256];
+static char xor_table[2][256];
+
+static void
+setup_misc_tables(void) {
+    setup_table(count_table, 'c');
+    setup_table(parity_table, 'p');
+    setup_table(sum_table[0], 'a');
+    setup_table(sum_table[1], 'A');
+    setup_table(sum_sqr_table[0], 's');
+    setup_table(sum_sqr_table[1], 'S');
+    setup_table(xor_table[0], 'x');
+    setup_table(xor_table[1], 'X');
+}
+
 /* Internal functions, like sum_indices(), but bitarrays are limited in
    size.  For details see: devel/test_sum_indices.py
 */
 static PyObject *
 ssqi(PyObject *module, PyObject *args)
 {
-    static char count_table[256], sum_table[256], sum_sqr_table[256];
-    static int setup = -1;      /* endianness of tables */
     bitarrayobject *a;
     uint64_t nbytes, i;
     uint64_t sm = 0;            /* accumulated sum */
@@ -289,24 +305,17 @@ ssqi(PyObject *module, PyObject *args)
     if (((uint64_t) a->nbits) > (mode == 1 ? 6074001000LLU : 3810778LLU))
         return PyErr_Format(PyExc_OverflowError, "ssqi %zd", a->nbits);
 
-    if (setup != a->endian) {
-        setup_table(count_table, 'c');
-        setup_table(sum_table, IS_LE(a) ? 'a' : 'A');
-        setup_table(sum_sqr_table, IS_LE(a) ? 's' : 'S');
-        setup = a->endian;
-    }
-
     nbytes = Py_SIZE(a);
     set_padbits(a);
     for (i = 0; i < nbytes; i++) {
         unsigned char c = a->ob_item[i];
         if (c) {
-            uint64_t k = count_table[c], z1 = sum_table[c];
+            uint64_t k = count_table[c], z1 = sum_table[IS_BE(a)][c];
             if (mode == 1) {
                 sm += k * 8LLU * i + z1;
             }
             else {
-                uint64_t z2 = (unsigned char) sum_sqr_table[c];
+                uint64_t z2 = (unsigned char) sum_sqr_table[IS_BE(a)][c];
                 sm += (k * 64LLU * i + 16LLU * z1) * i + z2;
             }
         }
@@ -318,8 +327,6 @@ ssqi(PyObject *module, PyObject *args)
 static PyObject *
 xor_indices(PyObject *module, PyObject *obj)
 {
-    static char parity_table[256], xor_table[256];
-    static int setup = -1;      /* endianness of xor_table */
     bitarrayobject *a;
     Py_ssize_t res = 0, nbytes, i;
 
@@ -330,17 +337,11 @@ xor_indices(PyObject *module, PyObject *obj)
     nbytes = Py_SIZE(a);
     set_padbits(a);
 
-    if (setup != a->endian) {
-        setup_table(xor_table, IS_LE(a) ? 'x' : 'X');
-        setup_table(parity_table, 'p');
-        setup = a->endian;
-    }
-
     for (i = 0; i < nbytes; i++) {
         unsigned char c = a->ob_item[i];
         if (parity_table[c])
             res ^= i << 3;
-        res ^= xor_table[c];
+        res ^= xor_table[IS_BE(a)][c];
     }
     return PyLong_FromSsize_t(res);
 }
@@ -2256,6 +2257,7 @@ PyInit__util(void)
 {
     PyObject *m;
 
+    setup_misc_tables();
     setup_digit_table();
 
     bitarray_type = (PyTypeObject *) bitarray_module_attr("bitarray");
