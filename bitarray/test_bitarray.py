@@ -5452,6 +5452,7 @@ def run(verbosity=1):
     print('bitarray version: %s' % __version__)
     print('sys.version: %s' % sys.version)
     print('sys.prefix: %s' % sys.prefix)
+    print('sys.abiflags: %r' % sys.abiflags)
     if sys.version_info[:2] >= (3, 14):
         print('sys._is_gil_enabled(): %s' % sys._is_gil_enabled())
     print('pointer size: %d bit' % (8 * PTRSIZE))
