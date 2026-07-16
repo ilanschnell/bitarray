@@ -3,6 +3,7 @@
   * improving free-threading readiness, see also #251:
       - initialize tables at module import, not lazily
       - remove caching imported Python objects (which are already caches)
+      - wrap many Python-facing operations in CPython critical sections
   * remove `ssize_richcompare()` in favor of `Py_RETURN_RICHCOMPARE` macro
   * add tests for frozenbitarrays created by methods when `self` is a
     frozenbitarray, e.g. slicing a frozenbitarray
