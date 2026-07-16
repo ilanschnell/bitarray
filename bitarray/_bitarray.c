@@ -1390,30 +1390,42 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
 
     if (PyIndex_Check(arg)) {
         Py_ssize_t i;
+        int err = 0;
 
         i = PyNumber_AsSsize_t(arg, NULL);
         if (i == -1 && PyErr_Occurred())
             return NULL;
 
+        Py_BEGIN_CRITICAL_SECTION(self);
         if (i < 0)
             i += self->nbits;
         if (i < 0 || i >= self->nbits) {
             PyErr_SetString(PyExc_IndexError, "index out of range");
-            return NULL;
+            err = 1;
         }
-        self->ob_item[i / 8] ^= BITMASK(self, i);
+        else {
+            self->ob_item[i / 8] ^= BITMASK(self, i);
+        }
+        Py_END_CRITICAL_SECTION();
+        if (err)
+            return NULL;
     }
     else if (PySlice_Check(arg)) {
         Py_ssize_t start, stop, step, slicelength;
 
-        if (PySlice_GetIndicesEx(arg, self->nbits,
-                                 &start, &stop, &step, &slicelength) < 0)
+        if (PySlice_Unpack(arg, &start, &stop, &step) < 0)
             return NULL;
+
+        Py_BEGIN_CRITICAL_SECTION(self);
+        slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
         adjust_step_positive(slicelength, &start, &stop, &step);
         invert_range(self, start, stop, step);
+        Py_END_CRITICAL_SECTION();
     }
     else if (arg == Py_None) {
+        Py_BEGIN_CRITICAL_SECTION(self);
         invert_span(self, 0, self->nbits);
+        Py_END_CRITICAL_SECTION();
     }
     else {
         return PyErr_Format(PyExc_TypeError,
