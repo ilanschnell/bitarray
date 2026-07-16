@@ -1108,8 +1108,15 @@ Return named tuple with following fields:\n\
 static PyObject *
 bitarray_clear(bitarrayobject *self)
 {
+    int ret;
+
     RAISE_IF_READONLY(self, NULL);
-    if (resize(self, 0) < 0)
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    ret = resize(self, 0);
+    Py_END_CRITICAL_SECTION();
+
+    if (ret < 0)
         return NULL;
     Py_RETURN_NONE;
 }
@@ -1318,13 +1325,15 @@ Raises `ValueError` when sub_bitarray is not present.");
 static PyObject *
 bitarray_insert(bitarrayobject *self, PyObject *args)
 {
-    Py_ssize_t n = self->nbits, i;
-    int vi;
+    Py_ssize_t n, i;
+    int vi, ret;
 
     RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "nO&:insert", &i, conv_pybit, &vi))
         return NULL;
 
+    Py_BEGIN_CRITICAL_SECTION(self);
+    n = self->nbits;
     if (i < 0) {
         i += n;
         if (i < 0)
@@ -1333,9 +1342,13 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
     if (i > n)
         i = n;
 
-    if (insert_n(self, i, 1) < 0)
+    ret = insert_n(self, i, 1);
+    if (ret == 0)
+        setbit(self, i, vi);
+    Py_END_CRITICAL_SECTION();
+
+    if (ret < 0)
         return NULL;
-    setbit(self, i, vi);
     Py_RETURN_NONE;
 }
 
@@ -1464,10 +1477,13 @@ bitarray_repr(bitarrayobject *self)
 static PyObject *
 bitarray_reverse(bitarrayobject *self)
 {
-    const Py_ssize_t p = PADBITS(self);  /* number of pad bits */
-    char *buff = self->ob_item;
+    Py_ssize_t p;
+    char *buff;
 
     RAISE_IF_READONLY(self, NULL);
+    Py_BEGIN_CRITICAL_SECTION(self);
+    p = PADBITS(self);  /* number of pad bits */
+    buff = self->ob_item;
 
     /* Increase self->nbits to full buffer size.  The p pad bits will
        later be the leading p bits.  To remove those p leading bits, we
@@ -1488,6 +1504,7 @@ bitarray_reverse(bitarrayobject *self)
     copy_n(self, 0, self, p, self->nbits - p);
     self->nbits -= p;
 
+    Py_END_CRITICAL_SECTION();
     Py_RETURN_NONE;
 }
 
@@ -1506,9 +1523,10 @@ bitarray_setall(bitarrayobject *self, PyObject *value)
     if (!conv_pybit(value, &vi))
         return NULL;
 
+    Py_BEGIN_CRITICAL_SECTION(self);
     if (self->ob_item)
         memset(self->ob_item, vi ? 0xff : 0x00, (size_t) Py_SIZE(self));
-
+    Py_END_CRITICAL_SECTION();
     Py_RETURN_NONE;
 }
 
@@ -1523,13 +1541,15 @@ static PyObject *
 bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"reverse", NULL};
-    Py_ssize_t nbits = self->nbits, cnt1;
+    Py_ssize_t nbits, cnt1;
     int reverse = 0;
 
     RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:sort", kwlist, &reverse))
         return NULL;
 
+    Py_BEGIN_CRITICAL_SECTION(self);
+    nbits = self->nbits;
     cnt1 = count_span(self, 0, nbits);
     if (reverse) {
         set_span(self, 0, cnt1, 1);
@@ -1540,6 +1560,7 @@ bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
         set_span(self, 0, cnt0, 0);
         set_span(self, cnt0, nbits, 1);
     }
+    Py_END_CRITICAL_SECTION();
     Py_RETURN_NONE;
 }
 
@@ -1617,8 +1638,13 @@ Each added byte will add eight bits to the bitarray.");
 static PyObject *
 bitarray_tobytes(bitarrayobject *self)
 {
+    PyObject *res;
+
+    Py_BEGIN_CRITICAL_SECTION(self);
     set_padbits(self);
-    return PyBytes_FromStringAndSize(self->ob_item, Py_SIZE(self));
+    res = PyBytes_FromStringAndSize(self->ob_item, Py_SIZE(self));
+    Py_END_CRITICAL_SECTION();
+    return res;
 }
 
 PyDoc_STRVAR(tobytes_doc,
