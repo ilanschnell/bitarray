@@ -1033,24 +1033,20 @@ Append `item` to the end of the bitarray.");
 static PyObject *
 bitarray_bytereverse(bitarrayobject *self, PyObject *args)
 {
-    const Py_ssize_t nbytes = Py_SIZE(self);
-    Py_ssize_t start = 0, stop = nbytes;
+    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX;
 
     RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|nn:bytereverse", &start, &stop))
         return NULL;
 
-    if (start < 0)
-        start += nbytes;
-    if (stop < 0)
-        stop += nbytes;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    if (stop == PY_SSIZE_T_MAX)
+        stop = Py_SIZE(self);
 
-    if (start < 0 || start > nbytes || stop < 0 || stop > nbytes) {
-        PyErr_SetString(PyExc_IndexError, "byte index out of range");
-        return NULL;
-    }
-    if (stop > start)
+    if (PySlice_AdjustIndices(Py_SIZE(self), &start, &stop, 1) > 0)
         bytereverse(self->ob_item + start, stop - start);
+
+    Py_END_CRITICAL_SECTION();
     Py_RETURN_NONE;
 }
 
@@ -1058,7 +1054,8 @@ PyDoc_STRVAR(bytereverse_doc,
 "bytereverse(start=0, stop=<end of buffer>, /)\n\
 \n\
 For each byte in byte-range(`start`, `stop`) reverse bits in-place.\n\
-The start and stop indices are given in terms of bytes (not bits).\n\
+The start and stop indices are given in terms of bytes (not bits) and\n\
+are interpreted like slice bounds and clipped to the buffer size.\n\
 Also note that this method only changes the buffer; it does not change the\n\
 bit-endianness of the bitarray object.  Pad bits are left unchanged such\n\
 that two consecutive calls will always leave the bitarray unchanged.");
