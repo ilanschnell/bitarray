@@ -968,7 +968,13 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
 static PyObject *
 bitarray_all(bitarrayobject *self)
 {
-    return PyBool_FromLong(find_bit(self, 0, 0, self->nbits, 0) == -1);
+    Py_ssize_t pos;
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    pos = find_bit(self, 0, 0, self->nbits, 0);
+    Py_END_CRITICAL_SECTION();
+
+    return PyBool_FromLong(pos == -1);
 }
 
 PyDoc_STRVAR(all_doc,
@@ -981,7 +987,13 @@ Return `True` when all bits in bitarray are 1.\n\
 static PyObject *
 bitarray_any(bitarrayobject *self)
 {
-    return PyBool_FromLong(find_bit(self, 1, 0, self->nbits, 0) >= 0);
+    Py_ssize_t pos;
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    pos = find_bit(self, 1, 0, self->nbits, 0);
+    Py_END_CRITICAL_SECTION();
+
+    return PyBool_FromLong(pos >= 0);
 }
 
 PyDoc_STRVAR(any_doc,
@@ -2107,11 +2119,17 @@ static PyObject *
 bitarray_concat(bitarrayobject *self, PyObject *other)
 {
     bitarrayobject *res;
+    int ret;
 
-    if ((res = bitarray_cp(self)) == NULL)
+    Py_BEGIN_CRITICAL_SECTION(self);
+    res = bitarray_cp(self);
+    Py_END_CRITICAL_SECTION();
+
+    if (res == NULL)
         return NULL;
 
-    if (extend_dispatch(res, other) < 0) {
+    ret = extend_dispatch(res, other);
+    if (ret < 0) {
         Py_DECREF(res);
         return NULL;
     }
@@ -2123,7 +2141,11 @@ bitarray_repeat(bitarrayobject *self, Py_ssize_t n)
 {
     bitarrayobject *res;
 
-    if ((res = bitarray_cp(self)) == NULL)
+    Py_BEGIN_CRITICAL_SECTION(self);
+    res = bitarray_cp(self);
+    Py_END_CRITICAL_SECTION();
+
+    if (res == NULL)
         return NULL;
 
     if (repeat(res, n) < 0) {
@@ -2186,8 +2208,14 @@ bitarray_inplace_concat(bitarrayobject *self, PyObject *other)
 static PyObject *
 bitarray_inplace_repeat(bitarrayobject *self, Py_ssize_t n)
 {
+    int ret;
+
     RAISE_IF_READONLY(self, NULL);
-    if (repeat(self, n) < 0)
+    Py_BEGIN_CRITICAL_SECTION(self);
+    ret = repeat(self, n);
+    Py_END_CRITICAL_SECTION();
+
+    if (ret < 0)
         return NULL;
     Py_INCREF(self);
     return (PyObject *) self;
