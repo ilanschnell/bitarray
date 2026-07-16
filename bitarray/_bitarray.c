@@ -1930,19 +1930,24 @@ static PyObject *
 bitarray_remove(bitarrayobject *self, PyObject *value)
 {
     Py_ssize_t i;
-    int vi;
+    int ret = -1, vi;
 
     RAISE_IF_READONLY(self, NULL);
     if (!conv_pybit(value, &vi))
         return NULL;
 
+    Py_BEGIN_CRITICAL_SECTION(self);
     i = find_bit(self, vi, 0, self->nbits, 0);
-    if (i < 0)
-        return PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
+    if (i < 0) {
+        PyErr_Format(PyExc_ValueError, "%d not in bitarray", vi);
+    }
+    else {
+        ret = delete_n(self, i, 1);
+    }
+    Py_END_CRITICAL_SECTION();
 
-    if (delete_n(self, i, 1) < 0)
+    if (ret < 0)
         return NULL;
-
     Py_RETURN_NONE;
 }
 
