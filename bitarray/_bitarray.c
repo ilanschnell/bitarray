@@ -1885,29 +1885,37 @@ map to bit 1.");
 static PyObject *
 bitarray_pop(bitarrayobject *self, PyObject *args)
 {
-    Py_ssize_t n = self->nbits, i = -1;
-    long vi;
+    Py_ssize_t n, i = -1;
+    long vi = -1;
+    int ret = -1;
 
     RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|n:pop", &i))
         return NULL;
 
+    Py_BEGIN_CRITICAL_SECTION(self);
+    n = self->nbits;
     if (n == 0) {
         /* special case -- most common failure cause */
         PyErr_SetString(PyExc_IndexError, "pop from empty bitarray");
-        return NULL;
     }
-    if (i < 0)
-        i += n;
+    else {
+        if (i < 0)
+            i += n;
 
-    if (i < 0 || i >= n) {
-        PyErr_SetString(PyExc_IndexError, "pop index out of range");
-        return NULL;
+        if (i < 0 || i >= n) {
+            PyErr_SetString(PyExc_IndexError, "pop index out of range");
+        }
+        else {
+            vi = getbit(self, i);
+            ret = delete_n(self, i, 1);
+        }
     }
-    vi = getbit(self, i);
-    if (delete_n(self, i, 1) < 0)
-        return NULL;
+    Py_END_CRITICAL_SECTION();
 
+    if (ret < 0)
+        return NULL;
+    assert(vi == 0 || vi == 1);
     return PyLong_FromLong(vi);
 }
 
