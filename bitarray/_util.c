@@ -226,7 +226,9 @@ count_n(PyObject *module, PyObject *args)
         return PyErr_Format(PyExc_ValueError, "n = %zd larger than bitarray "
                             "length %zd", n, a->nbits);
 
+    Py_BEGIN_CRITICAL_SECTION(a);
     i = count_n_core(a, n, vi);        /* do actual work here */
+    Py_END_CRITICAL_SECTION();
     if (i < 0)
         return PyErr_Format(PyExc_ValueError, "n = %zd exceeds total count "
                             "(a.count(%d) = %zd)", n, vi, -(i + 1));
@@ -253,11 +255,13 @@ parity(PyObject *module, PyObject *obj)
         return NULL;
 
     a = (bitarrayobject *) obj;
+    Py_BEGIN_CRITICAL_SECTION(a);
     wbuff = WBUFF(a);
     x = zlw(a);
     i = a->nbits / 64;
     while (i--)
         x ^= *wbuff++;
+    Py_END_CRITICAL_SECTION();
     return PyLong_FromLong(parity_64(x));
 }
 
@@ -305,6 +309,7 @@ ssqi(PyObject *module, PyObject *args)
     if (((uint64_t) a->nbits) > (mode == 1 ? 6074001000LLU : 3810778LLU))
         return PyErr_Format(PyExc_OverflowError, "ssqi %zd", a->nbits);
 
+    Py_BEGIN_CRITICAL_SECTION(a);
     nbytes = Py_SIZE(a);
     set_padbits(a);
     for (i = 0; i < nbytes; i++) {
@@ -320,6 +325,7 @@ ssqi(PyObject *module, PyObject *args)
             }
         }
     }
+    Py_END_CRITICAL_SECTION();
     return PyLong_FromUnsignedLongLong(sm);
 }
 
@@ -334,6 +340,7 @@ xor_indices(PyObject *module, PyObject *obj)
         return NULL;
 
     a = (bitarrayobject *) obj;
+    Py_BEGIN_CRITICAL_SECTION(a);
     nbytes = Py_SIZE(a);
     set_padbits(a);
 
@@ -343,6 +350,7 @@ xor_indices(PyObject *module, PyObject *obj)
             res ^= i << 3;
         res ^= xor_table[IS_BE(a)][c];
     }
+    Py_END_CRITICAL_SECTION();
     return PyLong_FromSsize_t(res);
 }
 
@@ -467,40 +475,47 @@ correspond_all(PyObject *module, PyObject *args)
     Py_ssize_t nff = 0, nft = 0, ntf = 0, ntt = 0, cwords, i;
     bitarrayobject *a, *b;
     uint64_t u, v, not_u, not_v;
-    int rbits;
+    int ret, rbits;
 
     if (!PyArg_ParseTuple(args, "O!O!:correspond_all",
                           bitarray_type, (PyObject *) &a,
                           bitarray_type, (PyObject *) &b))
         return NULL;
-    if (ensure_eq_size_endian(a, b) < 0)
+
+    Py_BEGIN_CRITICAL_SECTION2(a, b);
+    ret = ensure_eq_size_endian(a, b);
+    if (ret == 0) {
+        cwords = a->nbits / 64;     /* complete 64-bit words */
+        rbits = a->nbits % 64;      /* remaining bits */
+
+        for (i = 0; i < cwords; i++) {
+            u = WBUFF(a)[i];
+            v = WBUFF(b)[i];
+            not_u = ~u;
+            not_v = ~v;
+            nff += popcnt_64(not_u & not_v);
+            nft += popcnt_64(not_u & v);
+            ntf += popcnt_64(u & not_v);
+            ntt += popcnt_64(u & v);
+        }
+
+        if (rbits) {
+            u = zlw(a);
+            v = zlw(b);
+            not_u = ~u;
+            not_v = ~v;
+            /* for nff we need to subtract the number of unused 1 bits */
+            nff += popcnt_64(not_u & not_v) - (64 - rbits);
+            nft += popcnt_64(not_u & v);
+            ntf += popcnt_64(u & not_v);
+            ntt += popcnt_64(u & v);
+        }
+    }
+    Py_END_CRITICAL_SECTION2();
+
+    if (ret < 0)
         return NULL;
 
-    cwords = a->nbits / 64;     /* complete 64-bit words */
-    rbits = a->nbits % 64;      /* remaining bits */
-
-    for (i = 0; i < cwords; i++) {
-        u = WBUFF(a)[i];
-        v = WBUFF(b)[i];
-        not_u = ~u;
-        not_v = ~v;
-        nff += popcnt_64(not_u & not_v);
-        nft += popcnt_64(not_u & v);
-        ntf += popcnt_64(u & not_v);
-        ntt += popcnt_64(u & v);
-    }
-
-    if (rbits) {
-        u = zlw(a);
-        v = zlw(b);
-        not_u = ~u;
-        not_v = ~v;
-        /* for nff we need to subtract the number of unused 1 bits */
-        nff += popcnt_64(not_u & not_v) - (64 - rbits);
-        nft += popcnt_64(not_u & v);
-        ntf += popcnt_64(u & not_v);
-        ntt += popcnt_64(u & v);
-    }
     return Py_BuildValue("nnnn", nff, nft, ntf, ntt);
 }
 
@@ -747,7 +762,9 @@ ba2hex(PyObject *module, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
+    Py_BEGIN_CRITICAL_SECTION(a);
     str = ba2hex_core(a, group, sep);
+    Py_END_CRITICAL_SECTION();
     if (str == NULL)
         return NULL;
 
@@ -970,10 +987,12 @@ ba2base(PyObject *module, PyObject *args, PyObject *kwds)
         return NULL;
     }
 
+    Py_BEGIN_CRITICAL_SECTION(a);
     if (m == 4)
         str = ba2hex_core(a, group, sep);
     else
         str = ba2base_core(a, m, group, sep);
+    Py_END_CRITICAL_SECTION();
 
     if (str == NULL)
         return NULL;
