@@ -994,16 +994,21 @@ Return `True` when any bit in bitarray is 1.\n\
 static PyObject *
 bitarray_append(bitarrayobject *self, PyObject *value)
 {
-    int vi;
+    int ret, vi;
 
     RAISE_IF_READONLY(self, NULL);
 
     if (!conv_pybit(value, &vi))
         return NULL;
 
-    if (resize(self, self->nbits + 1) < 0)
+    Py_BEGIN_CRITICAL_SECTION(self);
+    ret = resize(self, self->nbits + 1);
+    if (ret == 0)
+        setbit(self, self->nbits - 1, vi);
+    Py_END_CRITICAL_SECTION();
+
+    if (ret < 0)
         return NULL;
-    setbit(self, self->nbits - 1, vi);
     Py_RETURN_NONE;
 }
 
@@ -1162,7 +1167,11 @@ bitarray_copy(bitarrayobject *self)
 {
     bitarrayobject *res;
 
-    if ((res = bitarray_cp(self)) == NULL)
+    Py_BEGIN_CRITICAL_SECTION(self);
+    res = bitarray_cp(self);
+    Py_END_CRITICAL_SECTION();
+
+    if (res == NULL)
         return NULL;
 
     return freeze_if_frozen(res);
@@ -1245,13 +1254,16 @@ bits (ignoring whitespace and underscore).");
 static PyObject *
 bitarray_fill(bitarrayobject *self)
 {
-    const Py_ssize_t p = PADBITS(self);  /* number of pad bits */
+    Py_ssize_t p;
 
     RAISE_IF_READONLY(self, NULL);
+    Py_BEGIN_CRITICAL_SECTION(self);
+    p = PADBITS(self);  /* number of pad bits */
     set_padbits(self);
     /* there is no reason to call resize() - .fill() will not raise
        BufferError when buffer is imported or exported */
     self->nbits += p;
+    Py_END_CRITICAL_SECTION();
 
     return PyLong_FromSsize_t(p);
 }
@@ -2722,7 +2734,11 @@ bitarray_cpinvert(bitarrayobject *self)
 {
     bitarrayobject *res;
 
-    if ((res = bitarray_cp(self)) == NULL)
+    Py_BEGIN_CRITICAL_SECTION(self);
+    res = bitarray_cp(self);
+    Py_END_CRITICAL_SECTION();
+
+    if (res == NULL)
         return NULL;
 
     invert_span(res, 0, res->nbits);
