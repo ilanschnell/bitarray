@@ -1662,22 +1662,47 @@ Sort all bits in bitarray (in-place).");
 static PyObject *
 bitarray_tolist(bitarrayobject *self)
 {
+    PyObject *zero = Py_GetConstant(Py_CONSTANT_ZERO);
+    PyObject *one = Py_GetConstant(Py_CONSTANT_ONE);
     PyObject *list;
-    Py_ssize_t i;
+    Py_ssize_t nbits, i;
+    int err = 0;  /* bitarray changed size */
 
-    list = PyList_New(self->nbits);
+    if (zero == NULL || one == NULL)
+        goto error;
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    nbits = self->nbits;
+    Py_END_CRITICAL_SECTION();
+
+    list = PyList_New(nbits);
     if (list == NULL)
-        return NULL;
+        goto error;
 
-    for (i = 0; i < self->nbits; i++) {
-        PyObject *item = PyLong_FromLong(getbit(self, i));
-        if (item == NULL) {
-            Py_DECREF(list);
-            return NULL;
-        }
-        PyList_SET_ITEM(list, i, item);
+    Py_BEGIN_CRITICAL_SECTION(self);
+    if (self->nbits == nbits) {
+        for (i = 0; i < nbits; i++)
+            PyList_SET_ITEM(list, i,
+                            Py_NewRef(getbit(self, i) ? one : zero));
+    }
+    else {
+        err = 1;
+    }
+    Py_END_CRITICAL_SECTION();
+    Py_DECREF(zero);
+    Py_DECREF(one);
+
+    if (err) {
+        Py_DECREF(list);
+        PyErr_SetString(PyExc_RuntimeError,
+                        "bitarray changed size during .tolist()");
+        return NULL;
     }
     return list;
+ error:
+    Py_XDECREF(zero);
+    Py_XDECREF(one);
+    return NULL;
 }
 
 PyDoc_STRVAR(tolist_doc,
@@ -4386,10 +4411,11 @@ bits2bytes(PyObject *module, PyObject *n)
         return PyErr_Format(PyExc_TypeError, "'int' object expected, "
                             "got '%s'", Py_TYPE(n)->tp_name);
 
-    if ((zero = PyLong_FromLong(0)) == NULL)
+    if ((zero = Py_GetConstant(Py_CONSTANT_ZERO)) == NULL)
         return NULL;
     cmp_res = PyObject_RichCompareBool(n, zero, Py_LT);
     Py_DECREF(zero);
+
     if (cmp_res < 0)
         return NULL;
     if (cmp_res) {
