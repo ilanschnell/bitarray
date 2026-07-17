@@ -2094,11 +2094,16 @@ static PyObject *
 bitarray_rotate(bitarrayobject *self, PyObject *args)
 {
     bitarrayobject *tmp;
-    Py_ssize_t n = self->nbits, k = 1;
+    Py_ssize_t n, k = 1;
+    int err = 0;
 
     RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|n:rotate", &k))
         return NULL;
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    n = self->nbits;
+    Py_END_CRITICAL_SECTION();
 
     if (n < 2)
         Py_RETURN_NONE;
@@ -2118,18 +2123,31 @@ bitarray_rotate(bitarrayobject *self, PyObject *args)
 
     assert(tmp->nbits <= n / 2);  /* at most half size */
 
-    if (tmp->nbits == k) {      /* tail is smaller */
-        copy_n(tmp, 0, self, n - k, k);   /* save tail */
-        copy_n(self, k, self, 0, n - k);  /* shift whole array right by k */
-        copy_n(self, 0, tmp, 0, k);       /* copy stored tail at front */
+    Py_BEGIN_CRITICAL_SECTION(self);
+    if (self->nbits == n) {
+        if (tmp->nbits == k) {      /* tail is smaller */
+            copy_n(tmp, 0, self, n - k, k);   /* save tail */
+            copy_n(self, k, self, 0, n - k);  /* shift array right by k */
+            copy_n(self, 0, tmp, 0, k);       /* copy stored tail at front */
+        }
+        else {                      /* head is smaller */
+            assert(tmp->nbits == n - k);
+            copy_n(tmp, 0, self, 0, n - k);   /* save head */
+            copy_n(self, 0, self, n - k, k);  /* shift array left by n-k */
+            copy_n(self, k, tmp, 0, n - k);   /* copy stored head at end */
+        }
     }
-    else {                      /* head is smaller */
-        assert(tmp->nbits == n - k);
-        copy_n(tmp, 0, self, 0, n - k);   /* save head */
-        copy_n(self, 0, self, n - k, k);  /* shift whole array left by n-k */
-        copy_n(self, k, tmp, 0, n - k);   /* copy stored head at end */
+    else {
+        err = 1;
     }
+    Py_END_CRITICAL_SECTION();
     Py_DECREF(tmp);
+
+    if (err) {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "bitarray changed size during .rotate()");
+        return NULL;
+    }
     Py_RETURN_NONE;
 }
 
@@ -4169,7 +4187,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
 
 static PyObject *
-richcompare_locked(bitarrayobject *va, bitarrayobject *wa, int op)
+richcompare_lock_held(bitarrayobject *va, bitarrayobject *wa, int op)
 {
     Py_ssize_t vs = va->nbits, ws = wa->nbits, i, c;
     char *vb = va->ob_item, *wb = wa->ob_item;
@@ -4228,8 +4246,8 @@ richcompare(PyObject *v, PyObject *w, int op)
         return Py_NewRef(Py_NotImplemented);
 
     Py_BEGIN_CRITICAL_SECTION2(v, w);
-    result = richcompare_locked((bitarrayobject *) v,
-                                (bitarrayobject *) w, op);
+    result = richcompare_lock_held((bitarrayobject *) v,
+                                   (bitarrayobject *) w, op);
     Py_END_CRITICAL_SECTION2();
 
     return result;
