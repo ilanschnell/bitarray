@@ -613,23 +613,42 @@ serialize(PyObject *module, PyObject *obj)
 {
     bitarrayobject *a;
     PyObject *result;
-    Py_ssize_t nbytes;
+    Py_ssize_t nbits;
     char *str;
+    int err = 0;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
     a = (bitarrayobject *) obj;
-    nbytes = Py_SIZE(a);
-    result = PyBytes_FromStringAndSize(NULL, nbytes + 1);
+
+    Py_BEGIN_CRITICAL_SECTION(a);
+    nbits = a->nbits;
+    Py_END_CRITICAL_SECTION();
+
+    result = PyBytes_FromStringAndSize(NULL, BYTES(nbits) + 1);
     if (result == NULL)
         return NULL;
 
-    str = PyBytes_AsString(result);
-    set_padbits(a);
-    *str = (IS_BE(a) ? 0x10 : 0x00) | ((char) PADBITS(a));
-    if (nbytes)
-        memcpy(str + 1, a->ob_item, (size_t) nbytes);
+    Py_BEGIN_CRITICAL_SECTION(a);
+    if (a->nbits == nbits) {
+        str = PyBytes_AsString(result);
+        set_padbits(a);
+        *str = (IS_BE(a) ? 0x10 : 0x00) | ((char) PADBITS(a));
+        if (nbits)
+            memcpy(str + 1, a->ob_item, (size_t) BYTES(nbits));
+    }
+    else {
+        err = 1;
+    }
+    Py_END_CRITICAL_SECTION();
+
+    if (err) {
+        Py_DECREF(result);
+        PyErr_SetString(PyExc_RuntimeError,
+                        "bitarray changed size during serialize()");
+        return NULL;
+    }
     return result;
 }
 
