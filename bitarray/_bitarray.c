@@ -2199,27 +2199,47 @@ bitarray_repeat(bitarrayobject *self, Py_ssize_t n)
 static PyObject *
 bitarray_item(bitarrayobject *self, Py_ssize_t i)
 {
+    long vi;
+
+    Py_BEGIN_CRITICAL_SECTION(self);
     if (i < 0 || i >= self->nbits) {
         PyErr_SetString(PyExc_IndexError, "bitarray index out of range");
-        return NULL;
+        vi = -1;
     }
-    return PyLong_FromLong(getbit(self, i));
+    else {
+        vi = getbit(self, i);
+    }
+    Py_END_CRITICAL_SECTION();
+
+    if (vi < 0)
+        return NULL;
+    return PyLong_FromLong(vi);
 }
 
 static int
 bitarray_ass_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
 {
-    RAISE_IF_READONLY(self, -1);
+    int vi = 0, res;
 
+    RAISE_IF_READONLY(self, -1);
+    if (value != NULL && !conv_pybit(value, &vi))
+        return -1;
+
+    Py_BEGIN_CRITICAL_SECTION(self);
     if (i < 0 || i >= self->nbits) {
         PyErr_SetString(PyExc_IndexError,
                         "bitarray assignment index out of range");
-        return -1;
+        res = -1;
     }
-    if (value == NULL)
-        return delete_n(self, i, 1);
-    else
-        return set_item(self, i, value);
+    else if (value == NULL) {
+        res = delete_n(self, i, 1);
+    }
+    else {
+        setbit(self, i, vi);
+        res = 0;
+    }
+    Py_END_CRITICAL_SECTION();
+    return res;
 }
 
 /* return 1 if value (which can be an int or bitarray) is in self,
