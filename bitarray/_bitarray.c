@@ -2639,7 +2639,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
         src = copy;
     }
     if (src == NULL)
-        res = -1;               /* bitarray_cp() failed */
+        res = -1;  /* bitarray_cp() failed */
     else
         res = setslice_lock_held(self, src, start, stop, step);
     Py_END_CRITICAL_SECTION2();
@@ -2811,10 +2811,15 @@ assign_mask(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
 static int
 setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
 {
-    Py_ssize_t n, i, j;
-    int other_copied = 0, res = -1;
+    bitarrayobject *copy = NULL;
+    bitarrayobject *src = other;
+    Py_ssize_t n;
+    int res = 0;
 
     n = PySequence_Size(seq);
+    if (n < 0)
+        return -1;
+
     if (n != other->nbits) {
         PyErr_Format(PyExc_ValueError, "attempt to assign sequence of "
                      "size %zd to bitarray of size %zd", n, other->nbits);
@@ -2822,20 +2827,24 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
     }
     /* Make a copy of other, see comment in setslice_bitarray(). */
     if (buffers_overlap(self, other)) {
-        if ((other = bitarray_cp(other)) == NULL)
-            return -1;
-        other_copied = 1;
+        copy = bitarray_cp(other);
+        src = copy;
     }
+    if (src == NULL) {
+        res = -1;  /* bitarray_cp() failed */
+    }
+    else {
+        Py_ssize_t i, j;
 
-    for (j = 0; j < n; j++) {
-        if ((i = index_from_seq(seq, j, self->nbits)) < 0)
-            goto finish;
-        setbit(self, i, getbit(other, j));
+        for (j = 0; j < n; j++) {
+            if ((i = index_from_seq(seq, j, self->nbits)) < 0) {
+                res = -1;
+                break;
+            }
+            setbit(self, i, getbit(src, j));
+        }
     }
-    res = 0;
- finish:
-    if (other_copied)
-        Py_DECREF(other);
+    Py_XDECREF(copy);
     return res;
 }
 
@@ -2850,6 +2859,9 @@ setseq_bool(bitarrayobject *self, PyObject *seq, PyObject *value)
         return -1;
 
     n = PySequence_Size(seq);
+    if (n < 0)
+        return -1;
+
     for (j = 0; j < n; j++) {
         if ((i = index_from_seq(seq, j, self->nbits)) < 0)
             return -1;
