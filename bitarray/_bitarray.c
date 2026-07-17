@@ -1272,9 +1272,7 @@ extend_thread_safe(bitarrayobject *self, PyObject *obj)
     res2 = extend_bitarray(self, tmp);
     Py_END_CRITICAL_SECTION();
     Py_DECREF(tmp);
-    if (res2 < 0)
-        return res2;
-    return res1;
+    return (res1 < 0 || res2 < 0) ? -1 : 0;
 #else
     return extend_dispatch(self, obj);
 #endif
