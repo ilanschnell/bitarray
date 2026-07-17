@@ -1519,8 +1519,13 @@ static PyObject *
 bitarray_repr(bitarrayobject *self)
 {
     PyObject *result;
-    size_t nbits = self->nbits, strsize, i;
+    Py_ssize_t nbits, strsize, i;
     char *str;
+    int err = 0;
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    nbits = self->nbits;
+    Py_END_CRITICAL_SECTION();
 
     if (nbits == 0)
         return PyUnicode_FromString("bitarray()");
@@ -1531,8 +1536,24 @@ bitarray_repr(bitarrayobject *self)
         return PyErr_NoMemory();
 
     strcpy(str, "bitarray('");  /* has length 10 */
-    for (i = 0; i < nbits; i++)
-        str[i + 10] = getbit(self, i) + '0';
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    if (self->nbits == nbits) {
+        for (i = 0; i < nbits; i++)
+            str[i + 10] = getbit(self, i) + '0';
+    }
+    else {
+        err = 1;
+    }
+    Py_END_CRITICAL_SECTION();
+
+    if (err) {
+        PyMem_Free((void *) str);
+        PyErr_SetString(PyExc_RuntimeError,
+                        "bitarray changed size during repr()");
+        return NULL;
+    }
+
     str[strsize - 2] = '\'';
     str[strsize - 1] = ')';
     /* we know the string length beforehand - not null-terminated */
