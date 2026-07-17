@@ -4112,9 +4112,11 @@ newbitarray_from_bytes(PyTypeObject *type, PyObject *buffer, int endian)
         return NULL;
     }
     assert(Py_SIZE(res) == view.len);
-    if (view.len)
+    if (view.len) {
+        Py_BEGIN_CRITICAL_SECTION(buffer);
         memcpy(res->ob_item, (char *) view.buf, (size_t) view.len);
-
+        Py_END_CRITICAL_SECTION();
+    }
     PyBuffer_Release(&view);
     return (PyObject *) res;
 }
@@ -4132,7 +4134,7 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     PyObject *initializer = Py_None, *buffer = Py_None;
     bitarrayobject *res;
     char *endian_str = NULL;
-    int endian;
+    int endian, ret;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OzO:bitarray", kwlist,
                                      &initializer, &endian_str, &buffer))
@@ -4175,10 +4177,20 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (bitarray_Check(initializer) && endian_str == NULL)
         endian = ((bitarrayobject *) initializer)->endian;
 
-    /* leave remaining type dispatch to extend method */
+    /* empty bitarray to be extended below */
     if ((res = newbitarrayobject(type, 0, endian)) == NULL)
         return NULL;
-    if (extend_dispatch(res, initializer) < 0) {
+
+    if (bitarray_Check(initializer)) {
+        Py_BEGIN_CRITICAL_SECTION(initializer);
+        ret = extend_bitarray(res, (bitarrayobject *) initializer);
+        Py_END_CRITICAL_SECTION();
+    }
+    else {  /* leave remaining type dispatch to extend method */
+        ret = extend_dispatch(res, initializer);
+    }
+
+    if (ret < 0) {
         Py_DECREF(res);
         return NULL;
     }
