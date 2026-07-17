@@ -1841,19 +1841,38 @@ bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
     static char *kwlist[] = {"zero", "one", NULL};
     PyObject *res;
     char zero = 0x00, one = 0x01, *str;
-    Py_ssize_t i;
+    Py_ssize_t nbits, i;
+    int err = 0;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|cc:unpack", kwlist,
                                      &zero, &one))
         return NULL;
 
-    res = PyBytes_FromStringAndSize(NULL, self->nbits);
+    Py_BEGIN_CRITICAL_SECTION(self);
+    nbits = self->nbits;
+    Py_END_CRITICAL_SECTION();
+
+    res = PyBytes_FromStringAndSize(NULL, nbits);
     if (res == NULL)
         return NULL;
 
-    str = PyBytes_AsString(res);
-    for (i = 0; i < self->nbits; i++)
-        str[i] = getbit(self, i) ? one : zero;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    if (self->nbits == nbits) {
+        str = PyBytes_AsString(res);
+        for (i = 0; i < nbits; i++)
+            str[i] = getbit(self, i) ? one : zero;
+    }
+    else {
+        err = 1;
+    }
+    Py_END_CRITICAL_SECTION();
+
+    if (err) {
+        Py_DECREF(res);
+        PyErr_SetString(PyExc_RuntimeError,
+                        "bitarray changed size during .unpack()");
+        return NULL;
+    }
     return res;
 }
 
