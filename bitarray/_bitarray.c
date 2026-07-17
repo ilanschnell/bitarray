@@ -2578,39 +2578,25 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
 
 /* The following functions are called from assign_slice(). */
 
-/* set items in self, specified by slice, to other bitarray */
 static int
-setslice_bitarray(bitarrayobject *self, PyObject *slice,
-                  bitarrayobject *other)
+setslice_lock_held(bitarrayobject *self, bitarrayobject *other,
+                   Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 {
-    Py_ssize_t start, stop, step, slicelength, increase;
-    int other_copied = 0, res = -1;
+    Py_ssize_t slicelength, increase;
 
-    assert(PySlice_Check(slice));
-    if (PySlice_GetIndicesEx(slice, self->nbits,
-                             &start, &stop, &step, &slicelength) < 0)
-        return -1;
+    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
 
     /* number of bits by which self has to be increased (decreased) */
     increase = other->nbits - slicelength;
 
-    /* Make a copy of other, in case the buffers overlap.  This is obviously
-       the case when self and other are the same object, but can also happen
-       when the two bitarrays share memory. */
-    if (buffers_overlap(self, other)) {
-        if ((other = bitarray_cp(other)) == NULL)
-            return -1;
-        other_copied = 1;
-    }
-
     if (step == 1) {
         if (increase > 0) {        /* increase self */
             if (insert_n(self, start + slicelength, increase) < 0)
-                goto finish;
+                return -1;
         }
         if (increase < 0) {        /* decrease self */
             if (delete_n(self, start + other->nbits, -increase) < 0)
-                goto finish;
+                return -1;
         }
         /* copy new values into self */
         copy_n(self, start, other, 0, other->nbits);
@@ -2622,16 +2608,43 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
             PyErr_Format(PyExc_ValueError, "attempt to assign sequence of "
                          "size %zd to extended slice of size %zd",
                          other->nbits, slicelength);
-            goto finish;
+            return -1;
         }
         for (i = 0, j = start; i < slicelength; i++, j += step)
             setbit(self, j, getbit(other, i));
     }
+    return 0;
+}
 
-    res = 0;
- finish:
-    if (other_copied)
-        Py_DECREF(other);
+/* set items in self, specified by slice, to other bitarray */
+static int
+setslice_bitarray(bitarrayobject *self, PyObject *slice,
+                  bitarrayobject *other)
+{
+    bitarrayobject *copy = NULL;
+    bitarrayobject *src = other;
+    Py_ssize_t start, stop, step;
+    int res;
+
+    assert(PySlice_Check(slice));
+    if (PySlice_Unpack(slice, &start, &stop, &step) < 0)
+        return -1;
+
+    Py_BEGIN_CRITICAL_SECTION2(self, other);
+    /* Make a copy of other, in case the buffers overlap.  This is obviously
+       the case when self and other are the same object, but can also happen
+       when the two bitarrays share memory. */
+    if (buffers_overlap(self, other)) {
+        copy = bitarray_cp(other);
+        src = copy;
+    }
+    if (src == NULL)
+        res = -1;               /* bitarray_cp() failed */
+    else
+        res = setslice_lock_held(self, src, start, stop, step);
+    Py_END_CRITICAL_SECTION2();
+
+    Py_XDECREF(copy);
     return res;
 }
 
