@@ -2646,12 +2646,14 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     if (!conv_pybit(value, &vi))
         return -1;
 
-    if (PySlice_GetIndicesEx(slice, self->nbits,
-                             &start, &stop, &step, &slicelength) < 0)
+    if (PySlice_Unpack(slice, &start, &stop, &step) < 0)
         return -1;
-    adjust_step_positive(slicelength, &start, &stop, &step);
 
+    Py_BEGIN_CRITICAL_SECTION(self);
+    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
+    adjust_step_positive(slicelength, &start, &stop, &step);
     set_range(self, start, stop, step, vi);
+    Py_END_CRITICAL_SECTION();
     return 0;
 }
 
@@ -2660,13 +2662,14 @@ static int
 delslice(bitarrayobject *self, PyObject *slice)
 {
     Py_ssize_t start, stop, step, slicelength;
+    int ret;
 
-    assert(PySlice_Check(slice));
-    if (PySlice_GetIndicesEx(slice, self->nbits,
-                             &start, &stop, &step, &slicelength) < 0)
+    if (PySlice_Unpack(slice, &start, &stop, &step) < 0)
         return -1;
-    adjust_step_positive(slicelength, &start, &stop, &step);
 
+    Py_BEGIN_CRITICAL_SECTION(self);
+    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
+    adjust_step_positive(slicelength, &start, &stop, &step);
     if (step > 1) {
         /* set items not to be removed (up to stop) */
         Py_ssize_t i = start + 1, j = start;
@@ -2686,7 +2689,9 @@ delslice(bitarrayobject *self, PyObject *slice)
         }
         assert(slicelength == 0 || j == stop - slicelength);
     }
-    return delete_n(self, stop - slicelength, slicelength);
+    ret = delete_n(self, stop - slicelength, slicelength);
+    Py_END_CRITICAL_SECTION();
+    return ret;
 }
 
 /* assign slice of bitarray self to value */
@@ -3204,6 +3209,8 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
 
     /* extend self with the bitarrays from codedict */
     while ((symbol = PyIter_Next(iter))) {
+        int ret;
+
         if (PyDict_GetItemRef(codedict, symbol, &value) < 0)
             goto error;
 
@@ -3212,8 +3219,12 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
                          "symbol not defined in prefix code: %A", symbol);
             goto error;
         }
-        if (check_value(value) < 0 ||
-                extend_bitarray(self, (bitarrayobject *) value) < 0)
+        Py_BEGIN_CRITICAL_SECTION2(self, value);
+        ret = check_value(value);
+        if (ret == 0)
+            ret = extend_bitarray(self, (bitarrayobject *) value);
+        Py_END_CRITICAL_SECTION2();
+        if (ret < 0)
             goto error;
 
         Py_DECREF(symbol);
