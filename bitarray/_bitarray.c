@@ -1872,10 +1872,11 @@ static PyObject *
 bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"group", "sep", NULL};
-    size_t strsize = self->nbits, j, nsep;
-    Py_ssize_t group = 0, i;
+    size_t strsize, j, nsep;
+    Py_ssize_t group = 0, nbits, i;
     PyObject *result;
     char *sep = " ", *str;
+    int err = 0;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ns:to01", kwlist,
                                      &group, &sep))
@@ -1885,6 +1886,11 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
         return PyErr_Format(PyExc_ValueError, "non-negative integer "
                             "expected, got: %zd", group);
 
+    Py_BEGIN_CRITICAL_SECTION(self);
+    nbits = self->nbits;
+    Py_END_CRITICAL_SECTION();
+
+    strsize = nbits;
     nsep = (group && strsize) ? strlen(sep) : 0;  /* 0 means no grouping */
     if (nsep)
         strsize += nsep * ((strsize - 1) / group);
@@ -1893,14 +1899,28 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
     if (str == NULL)
         return PyErr_NoMemory();
 
-    for (i = j = 0; i < self->nbits; i++) {
-        if (nsep && i && i % group == 0) {
-            memcpy(str + j, sep, nsep);
-            j += nsep;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    if (self->nbits == nbits) {
+        for (i = j = 0; i < nbits; i++) {
+            if (nsep && i && i % group == 0) {
+                memcpy(str + j, sep, nsep);
+                j += nsep;
+            }
+            str[j++] = getbit(self, i) + '0';
         }
-        str[j++] = getbit(self, i) + '0';
+        assert(j == strsize);
     }
-    assert(j == strsize);
+    else {
+        err = 1;
+    }
+    Py_END_CRITICAL_SECTION();
+
+    if (err) {
+        PyMem_Free((void *) str);
+        PyErr_SetString(PyExc_RuntimeError,
+                        "bitarray changed size during .to01()");
+        return NULL;
+    }
 
     result = PyUnicode_FromStringAndSize(str, strsize);
     PyMem_Free((void *) str);
