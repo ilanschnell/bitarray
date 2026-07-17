@@ -1243,11 +1243,48 @@ The `value` may also be a sub-bitarray.  In this case non-overlapping\n\
 occurrences are counted within `[start:stop]` (`step` must be 1).");
 
 
+/* Extend self without running arbitrary Python code while self is locked. */
+static int
+extend_thread_safe(bitarrayobject *self, PyObject *obj)
+{
+#ifdef Py_GIL_DISABLED
+    int res1, res2;
+    bitarrayobject *tmp;
+
+    if (bitarray_Check(obj)) {
+        Py_BEGIN_CRITICAL_SECTION2(self, obj);
+        res1 = extend_bitarray(self, (bitarrayobject *) obj);
+        Py_END_CRITICAL_SECTION2();
+        return res1;
+    }
+
+    /* Build input into a temporary bitarray first, so arbitrary iteration
+       and Python conversions happen outside self's critical section. */
+    tmp = newbitarrayobject(&Bitarray_Type, 0, self->endian);
+    if (tmp == NULL)
+        return -1;
+    /* Even on failure, tmp may contain successfully consumed prefix bits.
+       Append them below to preserve partial-extension behavior. */
+    res1 = extend_dispatch(tmp, obj);
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    /* Append accumulated bits to self in one protected operation. */
+    res2 = extend_bitarray(self, tmp);
+    Py_END_CRITICAL_SECTION();
+    Py_DECREF(tmp);
+    if (res2 < 0)
+        return res2;
+    return res1;
+#else
+    return extend_dispatch(self, obj);
+#endif
+}
+
 static PyObject *
 bitarray_extend(bitarrayobject *self, PyObject *obj)
 {
     RAISE_IF_READONLY(self, NULL);
-    if (extend_dispatch(self, obj) < 0)
+    if (extend_thread_safe(self, obj) < 0)
         return NULL;
     Py_RETURN_NONE;
 }
@@ -2260,7 +2297,7 @@ static PyObject *
 bitarray_inplace_concat(bitarrayobject *self, PyObject *other)
 {
     RAISE_IF_READONLY(self, NULL);
-    if (extend_dispatch(self, other) < 0)
+    if (extend_thread_safe(self, other) < 0)
         return NULL;
     Py_INCREF(self);
     return (PyObject *) self;
