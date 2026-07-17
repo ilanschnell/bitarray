@@ -4149,22 +4149,11 @@ bitarray_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
 
 static PyObject *
-richcompare(PyObject *v, PyObject *w, int op)
+richcompare_locked(bitarrayobject *va, bitarrayobject *wa, int op)
 {
-    Py_ssize_t i, vs, ws, c;
-    bitarrayobject *va, *wa;
-    char *vb, *wb;
+    Py_ssize_t vs = va->nbits, ws = wa->nbits, i, c;
+    char *vb = va->ob_item, *wb = wa->ob_item;
 
-    if (!bitarray_Check(v) || !bitarray_Check(w)) {
-        Py_INCREF(Py_NotImplemented);
-        return Py_NotImplemented;
-    }
-    va = (bitarrayobject *) v;
-    wa = (bitarrayobject *) w;
-    vs = va->nbits;
-    ws = wa->nbits;
-    vb = va->ob_item;
-    wb = wa->ob_item;
     if (op == Py_EQ || op == Py_NE) {
         /* shortcuts for EQ/NE */
         if (vs != ws) {
@@ -4208,6 +4197,22 @@ richcompare(PyObject *v, PyObject *w, int op)
 
     /* no more items to compare -- compare sizes */
     Py_RETURN_RICHCOMPARE(vs, ws, op);
+}
+
+static PyObject *
+richcompare(PyObject *v, PyObject *w, int op)
+{
+    PyObject *result;
+
+    if (!bitarray_Check(v) || !bitarray_Check(w))
+        return Py_NewRef(Py_NotImplemented);
+
+    Py_BEGIN_CRITICAL_SECTION2(v, w);
+    result = richcompare_locked((bitarrayobject *) v,
+                                (bitarrayobject *) w, op);
+    Py_END_CRITICAL_SECTION2();
+
+    return result;
 }
 
 /***************************** bitarray iterator **************************/
