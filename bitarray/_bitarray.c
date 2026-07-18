@@ -2520,7 +2520,9 @@ getsequence(bitarrayobject *self, PyObject *seq)
     bitarrayobject *res;
     Py_ssize_t i, j, n;
 
-    n = PySequence_Size(seq);
+    if ((n = PySequence_Size(seq)) < 0)
+        return NULL;
+
     res = newbitarrayobject(Py_TYPE(self), n, self->endian);
     if (res == NULL)
         return NULL;
@@ -2875,10 +2877,13 @@ static int
 delsequence(bitarrayobject *self, PyObject *seq)
 {
     const Py_ssize_t nbits = self->nbits;
-    const Py_ssize_t nseq = PySequence_Size(seq);
+    Py_ssize_t nseq;
     bitarrayobject *mask;  /* temporary bitarray masking items to remove */
     Py_ssize_t i, j;
     int res = -1;
+
+    if ((nseq = PySequence_Size(seq)) < 0)
+        return -1;
 
     /* shortcuts for removing 0 or 1 items to avoid creating mask */
     if (nseq < 2) {
