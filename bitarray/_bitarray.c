@@ -1764,9 +1764,9 @@ extend_fread(bitarrayobject *self, PyObject *f, Py_ssize_t n)
     if (bytes == NULL)
         return -1;
     if (!PyBytes_Check(bytes)) {
-        Py_DECREF(bytes);
         PyErr_Format(PyExc_TypeError, ".read() did not return 'bytes', "
                      "got '%s'", Py_TYPE(bytes)->tp_name);
+        Py_DECREF(bytes);
         return -1;
     }
     res = PyBytes_GET_SIZE(bytes);
@@ -1776,6 +1776,7 @@ extend_fread(bitarrayobject *self, PyObject *f, Py_ssize_t n)
     Py_DECREF(bytes);
     if (ret == NULL)
         return -1;
+
     Py_DECREF(ret);
     return res;
 }
