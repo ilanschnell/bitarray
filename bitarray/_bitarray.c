@@ -1332,7 +1332,7 @@ static PyObject *
 bitarray_find(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "", "", "right", NULL};
-    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, pos;
+    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, pos = -1;
     int right = 0;
     PyObject *sub;
 
@@ -1340,17 +1340,31 @@ bitarray_find(bitarrayobject *self, PyObject *args, PyObject *kwds)
                                      &sub, &start, &stop, &right))
         return NULL;
 
-    if (start > self->nbits)
-        /* cannot find anything (including empty sub-bitarray) */
-        return PyLong_FromSsize_t(-1);
+    if (PyIndex_Check(sub)) {
+        int vi;
 
-    PySlice_AdjustIndices(self->nbits, &start, &stop, 1);
+        if (!conv_pybit(sub, &vi))
+            return NULL;
 
-    pos = find_obj(self, sub, start, stop, right);
-    if (pos == -2)
-        return NULL;
+        Py_BEGIN_CRITICAL_SECTION(self);
+        PySlice_AdjustIndices(self->nbits, &start, &stop, 1);
+        pos = find_bit(self, vi, start, stop, right);
+        Py_END_CRITICAL_SECTION();
+        return PyLong_FromSsize_t(pos);
+    }
 
-    return PyLong_FromSsize_t(pos);
+    if (bitarray_Check(sub)) {   /* find sub-bitarray */
+        Py_BEGIN_CRITICAL_SECTION2(self, sub);
+        if (start <= self->nbits) {
+            PySlice_AdjustIndices(self->nbits, &start, &stop, 1);
+            pos = find_sub(self, (bitarrayobject *) sub, start, stop, right);
+        }
+        Py_END_CRITICAL_SECTION2();
+        return PyLong_FromSsize_t(pos);
+    }
+
+    return PyErr_Format(PyExc_TypeError, "sub_bitarray must be bitarray or "
+                        "int, not '%s'", Py_TYPE(sub)->tp_name);
 }
 
 PyDoc_STRVAR(find_doc,
