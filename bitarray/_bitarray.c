@@ -2399,10 +2399,26 @@ bitarray_contains(bitarrayobject *self, PyObject *value)
 {
     Py_ssize_t pos;
 
-    pos = find_obj(self, value, 0, self->nbits, 0);
-    if (pos == -2)
-        return -1;
+    if (PyIndex_Check(value)) {
+        int vi;
 
+        if (!conv_pybit(value, &vi))
+            return -1;
+
+        Py_BEGIN_CRITICAL_SECTION(self);
+        pos = find_bit(self, vi, 0, self->nbits, 0);
+        Py_END_CRITICAL_SECTION();
+    }
+    else if (bitarray_Check(value)) {
+        Py_BEGIN_CRITICAL_SECTION2(self, value);
+        pos = find_sub(self, (bitarrayobject *) value, 0, self->nbits, 0);
+        Py_END_CRITICAL_SECTION2();
+    }
+    else {
+        PyErr_Format(PyExc_TypeError, "sub_bitarray must be bitarray or "
+                     "int, not '%s'", Py_TYPE(value)->tp_name);
+        return -1;
+    }
     return pos >= 0;
 }
 
