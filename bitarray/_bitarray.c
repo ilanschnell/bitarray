@@ -3910,26 +3910,48 @@ rightmost match).");
 static PyObject *
 searchiter_next(searchiterobject *it)
 {
-    Py_ssize_t nbits = it->self->nbits, pos;
+    Py_ssize_t start, stop, pos, width = 1;
+    int right;
 
-    /* range checks necessary in case self changed during iteration */
+    Py_BEGIN_CRITICAL_SECTION(it);
+    start = it->start;
+    stop = it->stop;
+    right = it->right;
+    Py_END_CRITICAL_SECTION();
+
     assert(it->start >= 0);
-    if (it->start > nbits || it->stop < 0 || it->stop > nbits)
-        return NULL;        /* stop iteration */
-
-    if (it->sub)
-        pos = find_sub(it->self, it->sub, it->start, it->stop, it->right);
-    else
-        pos = find_bit(it->self, it->vi, it->start, it->stop, it->right);
+    if (it->sub) {
+        Py_BEGIN_CRITICAL_SECTION2(it->self, it->sub);
+        if (start > it->self->nbits || stop < 0 || stop > it->self->nbits) {
+            pos = -1;
+        }
+        else {
+            width = it->sub->nbits;
+            pos = find_sub(it->self, it->sub, start, stop, right);
+        }
+        Py_END_CRITICAL_SECTION2();
+    }
+    else {
+        Py_BEGIN_CRITICAL_SECTION(it->self);
+        if (start > it->self->nbits || stop < 0 || stop > it->self->nbits) {
+            pos = -1;
+        }
+        else {
+            pos = find_bit(it->self, it->vi, start, stop, right);
+        }
+        Py_END_CRITICAL_SECTION();
+    }
 
     if (pos < 0)  /* no more positions -- stop iteration */
         return NULL;
 
     /* update start / stop for next iteration */
-    if (it->right)
-        it->stop = pos + (it->sub ? it->sub->nbits : 1) - 1;
+    Py_BEGIN_CRITICAL_SECTION(it);
+    if (right)
+        it->stop = pos + width - 1;
     else
         it->start = pos + 1;
+    Py_END_CRITICAL_SECTION();
 
     return PyLong_FromSsize_t(pos);
 }
