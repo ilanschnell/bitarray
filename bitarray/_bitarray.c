@@ -3732,10 +3732,12 @@ decodeiter_next(decodeiterobject *it)
 {
     PyObject *symbol;
 
+    Py_BEGIN_CRITICAL_SECTION2(it, it->self);
+    /* may be NULL when stop iteration OR error occurred */
     symbol = binode_traverse(it->tree, it->self, &(it->index));
-    if (symbol == NULL)  /* stop iteration OR error occurred */
-        return NULL;
-    Py_INCREF(symbol);
+    Py_END_CRITICAL_SECTION2();
+
+    Py_XINCREF(symbol);
     return symbol;
 }
 
@@ -3763,7 +3765,7 @@ decodeiter_traverse(decodeiterobject *it, visitproc visit, void *arg)
 static PyObject *
 decodeiter_skipbits(decodeiterobject *it, PyObject *args)
 {
-    PyObject *skipped;
+    PyObject *skipped = NULL;
     Py_ssize_t n;  /* number of bits to skip */
 
     if (!PyArg_ParseTuple(args, "n:skipbits", &n))
@@ -3773,16 +3775,19 @@ decodeiter_skipbits(decodeiterobject *it, PyObject *args)
         return PyErr_Format(PyExc_ValueError, "skip count cannot be "
                             "negative, got %zd", n);
 
-    if (n > it->self->nbits - it->index)
-        return PyErr_Format(PyExc_ValueError, "skip count %zd cannot be "
-                            "larger than remaining bits %zd",
-                            n, it->self->nbits - it->index);
+    Py_BEGIN_CRITICAL_SECTION2(it, it->self);
+    if (n <= it->self->nbits - it->index) {
+        skipped = getslice_indices(it->self, it->index, 1, n);
+        if (skipped)
+            it->index += n;
+    }
+    else {
+        PyErr_Format(PyExc_ValueError, "skip count %zd cannot be "
+                     "larger than remaining bits %zd",
+                     n, it->self->nbits - it->index);
+    }
+    Py_END_CRITICAL_SECTION2();
 
-    skipped = getslice_indices(it->self, it->index, 1, n);
-    if (skipped == NULL)
-        return NULL;
-
-    it->index += n;
     return skipped;
 }
 
