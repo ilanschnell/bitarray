@@ -1196,40 +1196,49 @@ static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
     PyObject *sub = Py_None;
-    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, step = 1, slicelength, cnt;
-    int vi;
+    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, step = 1, slicelength;
+    Py_ssize_t cnt = 0;
 
     if (!PyArg_ParseTuple(args, "|Onnn:count",
                           &sub , &start, &stop, &step))
-        return NULL;
-
-    vi = (sub == Py_None) ? 1 : value_sub(sub);
-    if (vi < 0)
         return NULL;
 
     if (step == 0) {
         PyErr_SetString(PyExc_ValueError, "step cannot be zero");
         return NULL;
     }
-    if (step > 0 && start > self->nbits)
-        return PyLong_FromSsize_t(0);
 
-    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
+    if (PyIndex_Check(sub) || sub == Py_None) {
+        int vi = 1;
 
-    if (vi < 2) {                            /* value count */
+        if (PyIndex_Check(sub) && !conv_pybit(sub, &vi))
+            return NULL;
+
+        Py_BEGIN_CRITICAL_SECTION(self);
+        slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
         adjust_step_positive(slicelength, &start, &stop, &step);
         cnt = count_range(self, start, stop, step);
+        Py_END_CRITICAL_SECTION();
         return PyLong_FromSsize_t(vi ? cnt : slicelength - cnt);
     }
 
-    assert(bitarray_Check(sub) && vi == 2);  /* sub-bitarray count */
-    if (step != 1) {
-        PyErr_SetString(PyExc_ValueError,
-                        "step must be 1 for sub-bitarray count");
-        return NULL;
+    if (bitarray_Check(sub)) {   /* sub-bitarray count */
+        if (step != 1) {
+            PyErr_SetString(PyExc_ValueError,
+                            "step must be 1 for sub-bitarray count");
+            return NULL;
+        }
+        Py_BEGIN_CRITICAL_SECTION2(self, sub);
+        if (start <= self->nbits) {
+            PySlice_AdjustIndices(self->nbits, &start, &stop, 1);
+            cnt = count_sub(self, (bitarrayobject *) sub, start, stop);
+        }
+        Py_END_CRITICAL_SECTION2();
+        return PyLong_FromSsize_t(cnt);
     }
-    cnt = count_sub(self, (bitarrayobject *) sub, start, stop);
-    return PyLong_FromSsize_t(cnt);
+
+    return PyErr_Format(PyExc_TypeError, "sub_bitarray must be bitarray or "
+                        "int, not '%s'", Py_TYPE(sub)->tp_name);
 }
 
 PyDoc_STRVAR(count_doc,

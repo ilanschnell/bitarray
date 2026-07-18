@@ -3546,6 +3546,9 @@ class CountTests(unittest.TestCase, Util):
         a = bitarray('10011000 1110000')
         self.assertEqual(len(a), 15)
         self.assertEqual(a.count(bitarray('')), 16)
+        self.assertEqual(a.count(bitarray(''), 16), 0)  # start > len(a)
+        self.assertEqual(a.count(bitarray('0')), 9)
+        self.assertEqual(a.count(bitarray('1')), 6)
         self.assertEqual(a.count(bitarray('00')), 4)
         self.assertEqual(a.count(bitarray('11')), 2)
         self.assertEqual(a.count(bitarray('000')), 2)
@@ -3556,6 +3559,7 @@ class CountTests(unittest.TestCase, Util):
         self.assertEqual(a.count(bitarray('00'), -3), 1)
         self.assertEqual(a.count(bitarray('00'), -4), 2)
         self.assertRaises(ValueError, a.count, bitarray(''), 0, 15, 2)
+        self.assertRaises(ValueError, a.count, bitarray('0'), 0, 15, 2)
         self.assertRaises(ValueError, a.count, bitarray('11'), 0, 15, 2)
         self.assertRaises(ValueError, a.count, bitarray('11'), 15, 0, -1)
 
