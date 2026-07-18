@@ -3169,29 +3169,36 @@ shift_check(PyObject *self, PyObject *other, const char *ostr)
     return n;
 }
 
-#define SHIFT_FUNC(name, inplace, ostr)                \
-static PyObject *                                      \
-bitarray_ ## name (PyObject *self, PyObject *other)    \
-{                                                      \
-    bitarrayobject *res;                               \
-    Py_ssize_t n;                                      \
-                                                       \
-    if ((n = shift_check(self, other, ostr)) < 0)      \
-        return NULL;                                   \
-    if (inplace) {                                     \
-        RAISE_IF_READONLY(self, NULL);                 \
-        res = (bitarrayobject *) self;                 \
-        Py_INCREF(res);                                \
-    }                                                  \
-    else {                                             \
-        res = bitarray_cp((bitarrayobject *) self);    \
-        if (res == NULL)                               \
-            return NULL;                               \
-    }                                                  \
-    shift((bitarrayobject *) res, n, *ostr == '>');    \
-    if (!inplace)                                      \
-        return freeze_if_frozen(res);                  \
-    return (PyObject *) res;                           \
+#define SHIFT_FUNC(name, inplace, ostr)                     \
+static PyObject *                                           \
+bitarray_ ## name (PyObject *self, PyObject *other)         \
+{                                                           \
+    bitarrayobject *res;                                    \
+    Py_ssize_t n;                                           \
+                                                            \
+    if ((n = shift_check(self, other, ostr)) < 0)           \
+        return NULL;                                        \
+                                                            \
+    if (inplace)                                            \
+        RAISE_IF_READONLY(self, NULL);                      \
+                                                            \
+    Py_BEGIN_CRITICAL_SECTION(self);                        \
+    if (inplace) {                                          \
+        res = (bitarrayobject *) self;                      \
+        Py_INCREF(res);                                     \
+    }                                                       \
+    else {                                                  \
+        res = bitarray_cp((bitarrayobject *) self);         \
+    }                                                       \
+    if (res)                                                \
+        shift((bitarrayobject *) res, n, *ostr == '>');     \
+    Py_END_CRITICAL_SECTION();                              \
+                                                            \
+    if (n < 0)                                              \
+        return NULL;                                        \
+    if (!inplace)                                           \
+        return freeze_if_frozen(res);                       \
+    return (PyObject *) res;                                \
 }
 
 SHIFT_FUNC(lshift,  0, "<<")  /* bitarray_lshift */
