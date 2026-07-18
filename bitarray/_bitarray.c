@@ -3406,19 +3406,37 @@ binode_make_tree(PyObject *codedict)
     binode *tree;
     PyObject *symbol, *value;
     Py_ssize_t pos = 0;
+    int ret = 0;
 
     tree = binode_new();
     if (tree == NULL)
         return NULL;
 
+    Py_BEGIN_CRITICAL_SECTION(codedict);
     while (PyDict_Next(codedict, &pos, &symbol, &value)) {
-        if (check_value(value) < 0 ||
-            binode_insert_symbol(tree, (bitarrayobject *) value, symbol) < 0)
-            {
-                binode_delete(tree);
-                return NULL;
-            }
+        /* Keep the current borrowed references alive if a helper suspends
+         * the critical section. */
+        Py_INCREF(symbol);
+        Py_INCREF(value);
+
+        ret = check_value(value);
+        if (ret == 0) {
+            ret = binode_insert_symbol(
+                tree, (bitarrayobject *) value, symbol);
+        }
+        Py_DECREF(value);
+        Py_DECREF(symbol);
+
+        if (ret < 0)
+            break;
     }
+    Py_END_CRITICAL_SECTION();
+
+    if (ret < 0) {
+        binode_delete(tree);
+        return NULL;
+    }
+
     /* as we require the codedict to be non-empty the tree cannot be empty */
     assert(tree);
     return tree;
@@ -3877,6 +3895,7 @@ static PyTypeObject DecodeIter_Type = {
 
 /*********************** (Bitarray) Search Iterator ***********************/
 
+/* Note: when .sub is NULL search for single bit value in member .vi */
 typedef struct {
     PyObject_HEAD
     bitarrayobject *self;   /* bitarray we're searching in */
