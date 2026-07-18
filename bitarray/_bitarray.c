@@ -1828,22 +1828,47 @@ raised.  However, the available data is still read and extended.");
 static PyObject *
 bitarray_tofile(bitarrayobject *self, PyObject *f)
 {
-    const Py_ssize_t nbytes = Py_SIZE(self);
-    Py_ssize_t offset;
+    Py_ssize_t nbits, nbytes, offset;
 
+    Py_BEGIN_CRITICAL_SECTION(self);
+    nbits = self->nbits;
+    nbytes = Py_SIZE(self);
     set_padbits(self);
-    for (offset = 0; offset < nbytes; offset += BLOCKSIZE) {
-        PyObject *ret;          /* return object from write call */
-        Py_ssize_t size = Py_MIN(nbytes - offset, BLOCKSIZE);
+    Py_END_CRITICAL_SECTION();
 
-        assert(size >= 0 && offset + size <= nbytes);
-        /* basically: f.write(memoryview(self)[offset:offset + size]) */
-        ret = PyObject_CallMethod(f, "write", "y#",
-                                  self->ob_item + offset, size);
+    for (offset = 0; offset < nbytes; offset += BLOCKSIZE) {
+        Py_ssize_t size = Py_MIN(nbytes - offset, BLOCKSIZE);
+        PyObject *block, *ret;
+        char *dst;
+        int err = 0;
+
+        /* allocate before locking self - block object will stay private */
+        block = PyBytes_FromStringAndSize(NULL, size);
+        if (block == NULL)
+            return NULL;
+        dst = PyBytes_AS_STRING(block);
+
+        Py_BEGIN_CRITICAL_SECTION(self);
+        if (self->nbits != nbits)
+            err = 1;
+        else
+            memcpy(dst, self->ob_item + offset, (size_t) size);
+        Py_END_CRITICAL_SECTION();
+
+        if (err) {
+            Py_DECREF(block);
+            PyErr_SetString(PyExc_RuntimeError,
+                            "bitarray changed size during .tofile()");
+            return NULL;
+        }
+
+        ret = PyObject_CallMethod(f, "write", "O", block);
+        Py_DECREF(block);
         if (ret == NULL)
             return NULL;
-        Py_DECREF(ret);  /* drop write result */
+        Py_DECREF(ret);
     }
+
     Py_RETURN_NONE;
 }
 
