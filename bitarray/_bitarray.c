@@ -2680,19 +2680,15 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     return 0;
 }
 
-/* delete items in self, specified by slice */
 static int
-delslice(bitarrayobject *self, PyObject *slice)
+delslice_lock_held(bitarrayobject *self,
+                   Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 {
-    Py_ssize_t start, stop, step, slicelength;
-    int ret;
+    Py_ssize_t slicelength;
 
-    if (PySlice_Unpack(slice, &start, &stop, &step) < 0)
-        return -1;
-
-    Py_BEGIN_CRITICAL_SECTION(self);
     slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
     adjust_step_positive(slicelength, &start, &stop, &step);
+
     if (step > 1) {
         /* set items not to be removed (up to stop) */
         Py_ssize_t i = start + 1, j = start;
@@ -2712,7 +2708,21 @@ delslice(bitarrayobject *self, PyObject *slice)
         }
         assert(slicelength == 0 || j == stop - slicelength);
     }
-    ret = delete_n(self, stop - slicelength, slicelength);
+    return delete_n(self, stop - slicelength, slicelength);
+}
+
+/* delete items in self, specified by slice */
+static int
+delslice(bitarrayobject *self, PyObject *slice)
+{
+    Py_ssize_t start, stop, step;
+    int ret;
+
+    if (PySlice_Unpack(slice, &start, &stop, &step) < 0)
+        return -1;
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    ret = delslice_lock_held(self, start, stop, step);
     Py_END_CRITICAL_SECTION();
     return ret;
 }
