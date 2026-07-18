@@ -708,29 +708,6 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
     return -1;
 }
 
-/* Given sub-bitarray, return:
-   -1: on error (after setting exception)
- 0, 1: value of integer sub or sub[0] if sub-bitarray has length 1
-    2: when sub is bitarray of length 0, 2, 3, ...
- */
-static int
-value_sub(PyObject *sub)
-{
-    if (PyIndex_Check(sub)) {
-        int vi;
-        return conv_pybit(sub, &vi) ? vi : -1;
-    }
-
-    if (bitarray_Check(sub)) {
-        bitarrayobject *s = (bitarrayobject *) sub;
-        return (s->nbits == 1) ? getbit(s, 0) : 2;
-    }
-
-    PyErr_Format(PyExc_TypeError, "sub_bitarray must be bitarray or int, "
-                 "not '%s'", Py_TYPE(sub)->tp_name);
-    return -1;
-}
-
 /* Return first/rightmost occurrence of sub-bitarray (in self), such that
    sub is contained within self[start:stop], or -1 when sub is not found. */
 static Py_ssize_t
@@ -754,28 +731,6 @@ find_sub(bitarrayobject *self, bitarrayobject *sub,
         i += step;
     }
     return -1;
-}
-
-/* Return first/rightmost occurrence of bit or sub-bitarray (depending
-   on type of sub) contained within self[start:stop], or -1 when not found.
-   On Error, set exception and return -2. */
-static Py_ssize_t
-find_obj(bitarrayobject *self, PyObject *sub,
-         Py_ssize_t start, Py_ssize_t stop, int right)
-{
-    int vi;
-
-    assert(0 <= start && start <= self->nbits);
-    assert(0 <= stop && stop <= self->nbits);
-
-    if ((vi = value_sub(sub)) < 0)
-        return -2;
-
-    if (vi < 2)
-        return find_bit(self, vi, start, stop, right);
-
-    assert(bitarray_Check(sub) && vi == 2);
-    return find_sub(self, (bitarrayobject *) sub, start, stop, right);
 }
 
 /* return the number of non-overlapping occurrences of sub-bitarray within
@@ -3888,7 +3843,8 @@ static PyTypeObject DecodeIter_Type = {
 typedef struct {
     PyObject_HEAD
     bitarrayobject *self;   /* bitarray we're searching in */
-    PyObject *sub;          /* object (bitarray or int) being searched for */
+    bitarrayobject *sub;    /* bitarray being searched for */
+    int vi;                 /* single bit being searched for */
     Py_ssize_t start;
     Py_ssize_t stop;
     int right;
@@ -3902,7 +3858,7 @@ bitarray_search(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "", "", "right", NULL};
     Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX;
-    int right = 0;
+    int vi = -1, right = 0;
     PyObject *sub;
     searchiterobject *it;  /* iterator to be returned */
 
@@ -3910,8 +3866,14 @@ bitarray_search(bitarrayobject *self, PyObject *args, PyObject *kwds)
                                      &sub, &start, &stop, &right))
         return NULL;
 
-    if (value_sub(sub) < 0)
-        return NULL;
+    if (PyIndex_Check(sub)) {
+        if (!conv_pybit(sub, &vi))
+            return NULL;
+    }
+    else if (!bitarray_Check(sub)) {
+        return PyErr_Format(PyExc_TypeError, "sub_bitarray must be bitarray "
+                            "or int, not '%s'", Py_TYPE(sub)->tp_name);
+    }
 
     PySlice_AdjustIndices(self->nbits, &start, &stop, 1);
 
@@ -3919,13 +3881,18 @@ bitarray_search(bitarrayobject *self, PyObject *args, PyObject *kwds)
     if (it == NULL)
         return NULL;
 
-    Py_INCREF(self);
     it->self = self;
-    Py_INCREF(sub);
-    it->sub = sub;
+    it->sub = NULL;
+    it->vi = vi;
     it->start = start;
     it->stop = stop;
     it->right = right;
+
+    if (bitarray_Check(sub)) {
+        Py_INCREF(sub);
+        it->sub = (bitarrayobject *) sub;
+    }
+    Py_INCREF(self);
     PyObject_GC_Track(it);
     return (PyObject *) it;
 }
@@ -3950,15 +3917,17 @@ searchiter_next(searchiterobject *it)
     if (it->start > nbits || it->stop < 0 || it->stop > nbits)
         return NULL;        /* stop iteration */
 
-    pos = find_obj(it->self, it->sub, it->start, it->stop, it->right);
-    assert(pos > -2);  /* pos cannot be -2 as we called value_sub() before */
+    if (it->sub)
+        pos = find_sub(it->self, it->sub, it->start, it->stop, it->right);
+    else
+        pos = find_bit(it->self, it->vi, it->start, it->stop, it->right);
+
     if (pos < 0)  /* no more positions -- stop iteration */
         return NULL;
 
     /* update start / stop for next iteration */
     if (it->right)
-        it->stop = pos + (bitarray_Check(it->sub) ?
-                          ((bitarrayobject *) it->sub)->nbits : 1) - 1;
+        it->stop = pos + (it->sub ? it->sub->nbits : 1) - 1;
     else
         it->start = pos + 1;
 
@@ -3970,7 +3939,7 @@ searchiter_dealloc(searchiterobject *it)
 {
     PyObject_GC_UnTrack(it);
     Py_DECREF(it->self);
-    Py_DECREF(it->sub);
+    Py_XDECREF(it->sub);
     PyObject_GC_Del(it);
 }
 
