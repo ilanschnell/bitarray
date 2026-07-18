@@ -1705,11 +1705,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
     n = Py_SIZE(self);  /* nbytes before extending */
     p = PADBITS(self);  /* number of pad bits */
 
-    if (self->readonly) {
-        PyErr_SetString(PyExc_TypeError, "cannot modify read-only memory");
-        ret = -1;
-    }
-    else if (resize(self, 8 * (n + view.len)) < 0) {
+    if (resize(self, 8 * (n + view.len)) < 0) {
         ret = -1;
     }
     else {
@@ -3088,28 +3084,37 @@ bitwise_check(PyObject *a, PyObject *b, const char *ostr)
     return ensure_eq_size_endian((bitarrayobject *) a, (bitarrayobject *) b);
 }
 
-#define BITWISE_FUNC(name, inplace, ostr)              \
-static PyObject *                                      \
-bitarray_ ## name (PyObject *self, PyObject *other)    \
-{                                                      \
-    bitarrayobject *res;                               \
-                                                       \
-    if (bitwise_check(self, other, ostr) < 0)          \
-        return NULL;                                   \
-    if (inplace) {                                     \
-        RAISE_IF_READONLY(self, NULL);                 \
-        res = (bitarrayobject *) self;                 \
-        Py_INCREF(res);                                \
-    }                                                  \
-    else {                                             \
-        res = bitarray_cp((bitarrayobject *) self);    \
-        if (res == NULL)                               \
-            return NULL;                               \
-    }                                                  \
-    bitwise(res, (bitarrayobject *) other, *ostr);     \
-    if (!inplace)                                      \
-        return freeze_if_frozen(res);                  \
-    return (PyObject *) res;                           \
+#define BITWISE_FUNC(name, inplace, ostr)                   \
+static PyObject *                                           \
+bitarray_ ## name (PyObject *self, PyObject *other)         \
+{                                                           \
+    bitarrayobject *res;                                    \
+    int ret = 0;                                            \
+                                                            \
+    if (inplace)                                            \
+        RAISE_IF_READONLY(self, NULL);                      \
+                                                            \
+    Py_BEGIN_CRITICAL_SECTION2(self, other);                \
+    ret = bitwise_check(self, other, ostr);                 \
+    if (ret == 0) {                                         \
+        if (inplace) {                                      \
+            res = (bitarrayobject *) self;                  \
+            Py_INCREF(res);                                 \
+        }                                                   \
+        else {                                              \
+            res = bitarray_cp((bitarrayobject *) self);     \
+            if (res == NULL)                                \
+                ret = -1;                                   \
+        }                                                   \
+        if (ret == 0)                                       \
+            bitwise(res, (bitarrayobject *) other, *ostr);  \
+    }                                                       \
+    Py_END_CRITICAL_SECTION2();                             \
+    if (ret < 0)                                            \
+        return NULL;                                        \
+    if (!inplace)                                           \
+        return freeze_if_frozen(res);                       \
+    return (PyObject *) res;                                \
 }
 
 BITWISE_FUNC(and,  0, "&")   /* bitarray_and */
