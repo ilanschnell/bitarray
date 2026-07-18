@@ -1693,31 +1693,37 @@ Return bitarray as list of integers.\n\
 static PyObject *
 bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
 {
-    const Py_ssize_t n = Py_SIZE(self);  /* nbytes before extending */
-    const Py_ssize_t p = PADBITS(self);  /* number of pad bits */
+    Py_ssize_t n, p;
     Py_buffer view;
+    int ret;
 
     RAISE_IF_READONLY(self, NULL);
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
         return NULL;
 
-    /* resize to accommodate new bytes */
-    if (resize(self, 8 * (n + view.len)) < 0)
-        goto error;
+    Py_BEGIN_CRITICAL_SECTION2(self, view.obj);
+    n = Py_SIZE(self);  /* nbytes before extending */
+    p = PADBITS(self);  /* number of pad bits */
 
-    assert(Py_SIZE(self) == n + view.len);
-    if (view.len)
-        memcpy(self->ob_item + n, (char *) view.buf, (size_t) view.len);
-
-    /* remove pad bits starting at previous bit length (8 * n - p) */
-    if (delete_n(self, 8 * n - p, p) < 0)
-        goto error;
-
+    if (self->readonly) {
+        PyErr_SetString(PyExc_TypeError, "cannot modify read-only memory");
+        ret = -1;
+    }
+    else if (resize(self, 8 * (n + view.len)) < 0) {
+        ret = -1;
+    }
+    else {
+        if (view.len)
+            memcpy(self->ob_item + n, (char *) view.buf, (size_t) view.len);
+        /* remove pad bits starting at previous bit length (8 * n - p) */
+        ret = delete_n(self, 8 * n - p, p);
+    }
+    Py_END_CRITICAL_SECTION2();
     PyBuffer_Release(&view);
+
+    if (ret < 0)
+        return NULL;
     Py_RETURN_NONE;
- error:
-    PyBuffer_Release(&view);
-    return NULL;
 }
 
 PyDoc_STRVAR(frombytes_doc,
