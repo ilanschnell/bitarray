@@ -2090,6 +2090,28 @@ Remove the first occurrence of `value`.\n\
 Raises `ValueError` if value is not present.");
 
 
+static void
+rotate_lock_held(bitarrayobject *self, bitarrayobject *tmp, Py_ssize_t k)
+{
+    Py_ssize_t n = self->nbits;
+
+    assert(tmp->nbits <= n / 2);  /* at most half size */
+
+    if (tmp->nbits == k) {           /* tail is smaller */
+        copy_n(tmp, 0, self, n - k, k);   /* save tail */
+        copy_n(self, k, self, 0, n - k);  /* shift array right by k */
+        copy_n(self, 0, tmp, 0, k);       /* copy stored tail at front */
+    }
+    else if (tmp->nbits == n - k) {  /* head is smaller */
+        copy_n(tmp, 0, self, 0, n - k);   /* save head */
+        copy_n(self, 0, self, n - k, k);  /* shift array left by n-k */
+        copy_n(self, k, tmp, 0, n - k);   /* copy stored head at end */
+    }
+    else {
+        Py_UNREACHABLE();
+    }
+}
+
 static PyObject *
 bitarray_rotate(bitarrayobject *self, PyObject *args)
 {
@@ -2121,25 +2143,11 @@ bitarray_rotate(bitarrayobject *self, PyObject *args)
     if (tmp == NULL)
         return NULL;
 
-    assert(tmp->nbits <= n / 2);  /* at most half size */
-
     Py_BEGIN_CRITICAL_SECTION(self);
-    if (self->nbits == n) {
-        if (tmp->nbits == k) {      /* tail is smaller */
-            copy_n(tmp, 0, self, n - k, k);   /* save tail */
-            copy_n(self, k, self, 0, n - k);  /* shift array right by k */
-            copy_n(self, 0, tmp, 0, k);       /* copy stored tail at front */
-        }
-        else {                      /* head is smaller */
-            assert(tmp->nbits == n - k);
-            copy_n(tmp, 0, self, 0, n - k);   /* save head */
-            copy_n(self, 0, self, n - k, k);  /* shift array left by n-k */
-            copy_n(self, k, tmp, 0, n - k);   /* copy stored head at end */
-        }
-    }
-    else {
+    if (self->nbits == n)
+        rotate_lock_held(self, tmp, k);
+    else
         err = 1;
-    }
     Py_END_CRITICAL_SECTION();
     Py_DECREF(tmp);
 
