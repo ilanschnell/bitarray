@@ -4394,10 +4394,18 @@ bitarray_iter(bitarrayobject *self)
 static PyObject *
 bitarrayiter_next(bitarrayiterobject *it)
 {
-    if (it->index < it->self->nbits)
-        return PyLong_FromLong(getbit(it->self, it->index++));
+    int vi;
 
-    return NULL;  /* stop iteration */
+    Py_BEGIN_CRITICAL_SECTION2(it, it->self);
+    if (it->index < it->self->nbits) {
+        vi = getbit(it->self, it->index++);
+    }
+    else {
+        vi = -1;  /* stop iteration */
+    }
+    Py_END_CRITICAL_SECTION2();
+
+    return vi < 0 ? NULL : PyLong_FromLong(vi);
 }
 
 static void
