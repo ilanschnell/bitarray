@@ -1993,22 +1993,27 @@ using the specified mapping.");
 static PyObject *
 bitarray_pack(bitarrayobject *self, PyObject *buffer)
 {
-    const Py_ssize_t nbits = self->nbits;
+    Py_ssize_t nbits, i;
     Py_buffer view;
-    Py_ssize_t i;
+    int ret;
 
     RAISE_IF_READONLY(self, NULL);
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
         return NULL;
 
-    if (resize(self, nbits + view.len) < 0) {
-        PyBuffer_Release(&view);
-        return NULL;
+    Py_BEGIN_CRITICAL_SECTION2(self, view.obj);
+    nbits = self->nbits;
+    ret = resize(self, nbits + view.len);
+    if (ret == 0) {
+        for (i = 0; i < view.len; i++)
+            setbit(self, nbits + i, ((char *) view.buf)[i]);
     }
-    for (i = 0; i < view.len; i++)
-        setbit(self, nbits + i, ((char *) view.buf)[i]);
+    Py_END_CRITICAL_SECTION2();
 
     PyBuffer_Release(&view);
+    if (ret < 0)
+        return NULL;
+
     Py_RETURN_NONE;
 }
 
@@ -2302,7 +2307,15 @@ bitarray_concat(bitarrayobject *self, PyObject *other)
     if (res == NULL)
         return NULL;
 
-    ret = extend_dispatch(res, other);
+    if (bitarray_Check(other)) {
+        Py_BEGIN_CRITICAL_SECTION(other);
+        ret = extend_bitarray(res, (bitarrayobject *) other);
+        Py_END_CRITICAL_SECTION();
+    }
+    else {
+        ret = extend_dispatch(res, other);
+    }
+
     if (ret < 0) {
         Py_DECREF(res);
         return NULL;
