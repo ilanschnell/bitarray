@@ -1,6 +1,19 @@
 Change log
 ==========
 
+**3.9.1** (2026-07-19):
+
+* improving free-threading readiness, see also `#251 <https://github.com/ilanschnell/bitarray/issues/251>`__:
+    - initialize tables at module import, not lazily
+    - remove caching imported Python objects (which are already caches)
+    - added 75 critial sections in Python-facing operations
+    - updated Trove Classifier to ``Free Threading :: 2 - Beta``
+* clip arguments in ``.bytereverse()`` instead of raising ``IndexError``
+* remove ``ssize_richcompare()`` in favor of ``Py_RETURN_RICHCOMPARE`` macro
+* add tests for frozenbitarrays created by methods when ``self`` is a
+  frozenbitarray, e.g. slicing a frozenbitarray
+
+
 **3.9.0** (2026-07-10):
 
 * add ``.rotate()`` method, rotate bitarray in-place by ``k`` positions

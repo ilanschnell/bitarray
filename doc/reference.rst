@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 3.9.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.9.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -70,12 +70,15 @@ bitarray methods:
 
 ``bytereverse(start=0, stop=<end of buffer>, /)``
    For each byte in byte-range(``start``, ``stop``) reverse bits in-place.
-   The start and stop indices are given in terms of bytes (not bits).
+   The start and stop indices are given in terms of bytes (not bits) and
+   are interpreted like slice bounds and clipped to the buffer size.
    Also note that this method only changes the buffer; it does not change the
    bit-endianness of the bitarray object.  Pad bits are left unchanged such
    that two consecutive calls will always leave the bitarray unchanged.
 
    New in version 2.2.5: optional start and stop arguments
+
+   New in version 3.9.1: clip arguments instead of raising ``IndexError``
 
 
 ``clear()``
@@ -210,7 +213,7 @@ bitarray methods:
    Rotate bitarray in-place by ``k`` positions.
    Positive ``k`` rotates right, negative ``k`` rotates left.
 
-   When bitarray is not empty, rotating one step to the right is
+   When bitarray ``a`` is not empty, rotating one step to the right is
    equivalent to ``a.insert(0, a.pop())``, and rotating one step to the left
    is equivalent to ``a.append(a.pop(0))``.
    The same convention is used by the ``.rotate()`` method of
@@ -593,9 +596,9 @@ This sub-module was added in version 1.2.
 
 
 ``sc_encode(bitarray, /)`` -> bytes
-   Compress a sparse bitarray and return its binary representation.
-   This representation is useful for efficiently storing sparse bitarrays.
-   Use ``sc_decode()`` for decompressing (decoding).
+   Compress a bitarray using sparse encoding and return its binary
+   representation.  This representation is useful for efficiently storing
+   sparse bitarrays.  Use ``sc_decode()`` for decompressing (decoding).
 
    See also: `Compression of sparse bitarrays <https://github.com/ilanschnell/bitarray/blob/master/doc/sparse_compression.rst>`__
 
