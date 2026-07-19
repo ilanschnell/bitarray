@@ -449,9 +449,8 @@ binary_func_lock_held(bitarrayobject *a, bitarrayobject *b, const char oper)
 static PyObject *
 binary_function(PyObject *args, const char *format, const char oper)
 {
-    PyObject *res;
+    PyObject *res = NULL;
     bitarrayobject *a, *b;
-    int ret;
 
     if (!PyArg_ParseTuple(args, format,
                           bitarray_type, (PyObject *) &a,
@@ -459,13 +458,10 @@ binary_function(PyObject *args, const char *format, const char oper)
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION2(a, b);
-    ret = ensure_eq_size_endian(a, b);
-    if (ret == 0)
+    if (ensure_eq_size_endian(a, b) == 0)
         res = binary_func_lock_held(a, b, oper);
     Py_END_CRITICAL_SECTION2();
 
-    if (ret < 0)
-        return NULL;
     return res;
 }
 
