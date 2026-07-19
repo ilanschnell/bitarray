@@ -550,7 +550,7 @@ Return tuple with counts of: ~a & ~b, ~a & b, a & ~b, a & b");
 
 
 static void
-byteswap_core(Py_buffer view, Py_ssize_t n)
+byteswap_lock_held(Py_buffer view, Py_ssize_t n)
 {
     char *buff = view.buf;
     Py_ssize_t m = view.len / n, k;
@@ -608,7 +608,9 @@ byteswap(PyObject *module, PyObject *args)
         return NULL;
     }
 
-    byteswap_core(view, n);
+    Py_BEGIN_CRITICAL_SECTION(view.obj);
+    byteswap_lock_held(view, n);
+    Py_END_CRITICAL_SECTION();
 
     PyBuffer_Release(&view);
     Py_RETURN_NONE;
