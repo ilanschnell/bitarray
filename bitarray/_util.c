@@ -296,16 +296,40 @@ setup_misc_tables(void) {
     setup_table(xor_table[1], 'X');
 }
 
-/* Internal functions, like sum_indices(), but bitarrays are limited in
-   size.  For details see: devel/test_sum_indices.py
+/* Internal function, similar to sum_indices(), but bitarrays are limited
+   in size.  For details see: devel/test_sum_indices.py
 */
+static uint64_t
+ssqi_lock_held(bitarrayobject *a, int mode)
+{
+    uint64_t nbytes = Py_SIZE(a), i;
+    uint64_t sm = 0;            /* accumulated sum */
+
+    assert(mode >= 1 && mode <= 2);
+    set_padbits(a);
+
+    for (i = 0; i < nbytes; i++) {
+        unsigned char c = a->ob_item[i];
+        if (c) {
+            uint64_t k = count_table[c], z1 = sum_table[IS_BE(a)][c];
+            if (mode == 1) {
+                sm += k * 8LLU * i + z1;
+            }
+            else {
+                uint64_t z2 = (unsigned char) sum_sqr_table[IS_BE(a)][c];
+                sm += (k * 64LLU * i + 16LLU * z1) * i + z2;
+            }
+        }
+    }
+    return sm;
+}
+
 static PyObject *
 ssqi(PyObject *module, PyObject *args)
 {
     bitarrayobject *a;
     Py_ssize_t nbits;
-    uint64_t nbytes, i;
-    uint64_t sm = 0;            /* accumulated sum */
+    uint64_t res;
     int mode = 1;
     int overflow = 0;
 
@@ -319,32 +343,16 @@ ssqi(PyObject *module, PyObject *args)
     Py_BEGIN_CRITICAL_SECTION(a);
     nbits = a->nbits;
 
-    if ((uint64_t) nbits <= (mode == 1 ? 6074001000LLU : 3810778LLU)) {
-        nbytes = Py_SIZE(a);
-        set_padbits(a);
-        for (i = 0; i < nbytes; i++) {
-            unsigned char c = a->ob_item[i];
-            if (c) {
-                uint64_t k = count_table[c], z1 = sum_table[IS_BE(a)][c];
-                if (mode == 1) {
-                    sm += k * 8LLU * i + z1;
-                }
-                else {
-                    uint64_t z2 = (unsigned char) sum_sqr_table[IS_BE(a)][c];
-                    sm += (k * 64LLU * i + 16LLU * z1) * i + z2;
-                }
-            }
-        }
-    }
-    else {
+    if ((uint64_t) nbits <= (mode == 1 ? 6074001000LLU : 3810778LLU))
+        res = ssqi_lock_held(a, mode);
+    else
         overflow = 1;
-    }
     Py_END_CRITICAL_SECTION();
 
     if (overflow)
         return PyErr_Format(PyExc_OverflowError, "ssqi %zd", nbits);
 
-    return PyLong_FromUnsignedLongLong(sm);
+    return PyLong_FromUnsignedLongLong(res);
 }
 
 
