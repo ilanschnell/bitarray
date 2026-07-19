@@ -1941,29 +1941,35 @@ vl_encode(PyObject *module, PyObject *obj)
         return NULL;
 
     a = (bitarrayobject *) obj;
+
+    Py_BEGIN_CRITICAL_SECTION(a);
     nbits = a->nbits;
     n = (nbits + LEN_PAD_BITS + 6) / 7;  /* number of resulting bytes */
     padding = (int) (7 * n - LEN_PAD_BITS - nbits);
 
     result = PyBytes_FromStringAndSize(NULL, n);
+    if (result) {
+        str = PyBytes_AsString(result);
+        str[0] = nbits > 4 ? 0x80 : 0x00;  /* lead bit */
+        str[0] |= padding << 4;            /* encode padding */
+        for (i = 0; i < 4 && i < nbits; i++)
+            str[0] |= (0x08 >> i) * getbit(a, i);
+
+        for (i = 4; i < nbits; i++) {
+            int k = (i - 4) % 7;
+
+            if (k == 0) {
+                j++;
+                str[j] = j < n - 1 ? 0x80 : 0x00;  /* lead bit */
+            }
+            str[j] |= (0x40 >> k) * getbit(a, i);
+        }
+    }
+    Py_END_CRITICAL_SECTION();
+
     if (result == NULL)
         return NULL;
 
-    str = PyBytes_AsString(result);
-    str[0] = nbits > 4 ? 0x80 : 0x00;  /* lead bit */
-    str[0] |= padding << 4;            /* encode padding */
-    for (i = 0; i < 4 && i < nbits; i++)
-        str[0] |= (0x08 >> i) * getbit(a, i);
-
-    for (i = 4; i < nbits; i++) {
-        int k = (i - 4) % 7;
-
-        if (k == 0) {
-            j++;
-            str[j] = j < n - 1 ? 0x80 : 0x00;  /* lead bit */
-        }
-        str[j] |= (0x40 >> k) * getbit(a, i);
-    }
     assert(j == n - 1);
 
     return result;
