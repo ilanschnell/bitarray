@@ -303,35 +303,47 @@ static PyObject *
 ssqi(PyObject *module, PyObject *args)
 {
     bitarrayobject *a;
+    Py_ssize_t nbits;
     uint64_t nbytes, i;
     uint64_t sm = 0;            /* accumulated sum */
     int mode = 1;
+    int overflow = 0;
 
     if (!PyArg_ParseTuple(args, "O!|i", bitarray_type,
                           (PyObject *) &a, &mode))
         return NULL;
+
     if (mode < 1 || mode > 2)
         return PyErr_Format(PyExc_ValueError, "unexpected mode %d", mode);
-    if (((uint64_t) a->nbits) > (mode == 1 ? 6074001000LLU : 3810778LLU))
-        return PyErr_Format(PyExc_OverflowError, "ssqi %zd", a->nbits);
 
     Py_BEGIN_CRITICAL_SECTION(a);
-    nbytes = Py_SIZE(a);
-    set_padbits(a);
-    for (i = 0; i < nbytes; i++) {
-        unsigned char c = a->ob_item[i];
-        if (c) {
-            uint64_t k = count_table[c], z1 = sum_table[IS_BE(a)][c];
-            if (mode == 1) {
-                sm += k * 8LLU * i + z1;
-            }
-            else {
-                uint64_t z2 = (unsigned char) sum_sqr_table[IS_BE(a)][c];
-                sm += (k * 64LLU * i + 16LLU * z1) * i + z2;
+    nbits = a->nbits;
+
+    if ((uint64_t) nbits <= (mode == 1 ? 6074001000LLU : 3810778LLU)) {
+        nbytes = Py_SIZE(a);
+        set_padbits(a);
+        for (i = 0; i < nbytes; i++) {
+            unsigned char c = a->ob_item[i];
+            if (c) {
+                uint64_t k = count_table[c], z1 = sum_table[IS_BE(a)][c];
+                if (mode == 1) {
+                    sm += k * 8LLU * i + z1;
+                }
+                else {
+                    uint64_t z2 = (unsigned char) sum_sqr_table[IS_BE(a)][c];
+                    sm += (k * 64LLU * i + 16LLU * z1) * i + z2;
+                }
             }
         }
     }
+    else {
+        overflow = 1;
+    }
     Py_END_CRITICAL_SECTION();
+
+    if (overflow)
+        return PyErr_Format(PyExc_OverflowError, "ssqi %zd", nbits);
+
     return PyLong_FromUnsignedLongLong(sm);
 }
 
