@@ -1153,12 +1153,8 @@ class SumIndicesUtil(unittest.TestCase):
         self.assertEqual(S(a, 2), sum(i * i for i, v in enumerate(a) if v))
 
     def check_sparse(self, S, n, k, mode=1, freeze=False, inv=False):
-        a = zeros(n, choice(ENDIANS))
-        self.assertEqual(S(a, mode), 0)
-        self.assertFalse(a.any())
-
-        indices = sample(range(n), k)
-        a[indices] = 1
+        a = random_k(n, k, choice(ENDIANS))
+        indices = a.search(1)
         res = sum(indices) if mode == 1 else sum(i * i for i in indices)
 
         if inv:
