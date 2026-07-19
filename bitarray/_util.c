@@ -804,7 +804,7 @@ ba2hex(PyObject *module, PyObject *args, PyObject *kwds)
     static char *kwlist[] = {"", "group", "sep", NULL};
     PyObject *result;
     bitarrayobject *a;
-    Py_ssize_t group = 0;
+    Py_ssize_t nbits, group = 0;
     char *sep = " ", *str;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O!|ns:ba2hex", kwlist,
@@ -812,11 +812,6 @@ ba2hex(PyObject *module, PyObject *args, PyObject *kwds)
                                      &group, &sep))
         return NULL;
 
-    if (a->nbits % 4) {
-        PyErr_Format(PyExc_ValueError, "bitarray length %zd not "
-                     "multiple of 4", a->nbits);
-        return NULL;
-    }
     if (group < 0) {
         PyErr_Format(PyExc_ValueError, "non-negative integer "
                      "expected for group, got: %zd", group);
@@ -824,8 +819,16 @@ ba2hex(PyObject *module, PyObject *args, PyObject *kwds)
     }
 
     Py_BEGIN_CRITICAL_SECTION(a);
-    str = ba2hex_lock_held(a, group, sep);
+    nbits = a->nbits;
+    if (nbits % 4 == 0)
+        str = ba2hex_lock_held(a, group, sep);
     Py_END_CRITICAL_SECTION();
+
+    if (nbits % 4) {
+        PyErr_Format(PyExc_ValueError, "bitarray length %zd not "
+                     "multiple of 4", nbits);
+        return NULL;
+    }
     if (str == NULL)
         return NULL;
 
@@ -1025,7 +1028,7 @@ ba2base(PyObject *module, PyObject *args, PyObject *kwds)
     static char *kwlist[] = {"", "", "group", "sep", NULL};
     bitarrayobject *a;
     PyObject *result;
-    Py_ssize_t group = 0;
+    Py_ssize_t nbits, group = 0;
     char *sep = " ", *str;
     int n, m;
 
@@ -1037,11 +1040,6 @@ ba2base(PyObject *module, PyObject *args, PyObject *kwds)
     if ((m = base_to_length(n)) < 0)
         return NULL;
 
-    if (a->nbits % m) {
-        PyErr_Format(PyExc_ValueError, "bitarray length %zd not "
-                     "multiple of %d", a->nbits, m);
-        return NULL;
-    }
     if (group < 0) {
         PyErr_Format(PyExc_ValueError, "non-negative integer "
                      "expected for group, got: %zd", group);
@@ -1049,12 +1047,20 @@ ba2base(PyObject *module, PyObject *args, PyObject *kwds)
     }
 
     Py_BEGIN_CRITICAL_SECTION(a);
-    if (m == 4)
-        str = ba2hex_lock_held(a, group, sep);
-    else
-        str = ba2base_lock_held(a, m, group, sep);
+    nbits = a->nbits;
+    if (nbits % m == 0) {
+        if (m == 4)
+            str = ba2hex_lock_held(a, group, sep);
+        else
+            str = ba2base_lock_held(a, m, group, sep);
+    }
     Py_END_CRITICAL_SECTION();
 
+    if (nbits % m) {
+        PyErr_Format(PyExc_ValueError, "bitarray length %zd not "
+                     "multiple of %d", nbits, m);
+        return NULL;
+    }
     if (str == NULL)
         return NULL;
 
