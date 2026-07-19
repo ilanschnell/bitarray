@@ -3101,29 +3101,22 @@ bitwise_check(PyObject *a, PyObject *b, const char *ostr)
 static PyObject *                                           \
 bitarray_ ## name (PyObject *self, PyObject *other)         \
 {                                                           \
-    bitarrayobject *res;                                    \
-    int ret = 0;                                            \
+    bitarrayobject *res = NULL;                             \
                                                             \
     if (inplace)                                            \
         RAISE_IF_READONLY(self, NULL);                      \
                                                             \
     Py_BEGIN_CRITICAL_SECTION2(self, other);                \
-    ret = bitwise_check(self, other, ostr);                 \
-    if (ret == 0) {                                         \
-        if (inplace) {                                      \
-            res = (bitarrayobject *) self;                  \
-            Py_INCREF(res);                                 \
-        }                                                   \
-        else {                                              \
-            res = bitarray_cp((bitarrayobject *) self);     \
-            if (res == NULL)                                \
-                ret = -1;                                   \
-        }                                                   \
-        if (ret == 0)                                       \
+    if (bitwise_check(self, other, ostr) == 0) {            \
+        res = inplace                                       \
+            ? (bitarrayobject *) Py_NewRef(self)            \
+            : bitarray_cp((bitarrayobject *) self);         \
+                                                            \
+        if (res)                                            \
             bitwise(res, (bitarrayobject *) other, *ostr);  \
     }                                                       \
     Py_END_CRITICAL_SECTION2();                             \
-    if (ret < 0)                                            \
+    if (res == NULL)                                        \
         return NULL;                                        \
     if (!inplace)                                           \
         return freeze_if_frozen(res);                       \
@@ -3186,7 +3179,7 @@ shift_check(PyObject *self, PyObject *other, const char *ostr)
 static PyObject *                                           \
 bitarray_ ## name (PyObject *self, PyObject *other)         \
 {                                                           \
-    bitarrayobject *res;                                    \
+    bitarrayobject *res = NULL;                             \
     Py_ssize_t n;                                           \
                                                             \
     if ((n = shift_check(self, other, ostr)) < 0)           \
@@ -3196,18 +3189,15 @@ bitarray_ ## name (PyObject *self, PyObject *other)         \
         RAISE_IF_READONLY(self, NULL);                      \
                                                             \
     Py_BEGIN_CRITICAL_SECTION(self);                        \
-    if (inplace) {                                          \
-        res = (bitarrayobject *) self;                      \
-        Py_INCREF(res);                                     \
-    }                                                       \
-    else {                                                  \
-        res = bitarray_cp((bitarrayobject *) self);         \
-    }                                                       \
+    res = inplace                                           \
+        ? (bitarrayobject *) Py_NewRef(self)                \
+        : bitarray_cp((bitarrayobject *) self);             \
+                                                            \
     if (res)                                                \
-        shift((bitarrayobject *) res, n, *ostr == '>');     \
+        shift(res, n, *ostr == '>');                        \
     Py_END_CRITICAL_SECTION();                              \
                                                             \
-    if (n < 0)                                              \
+    if (res == NULL)                                        \
         return NULL;                                        \
     if (!inplace)                                           \
         return freeze_if_frozen(res);                       \

@@ -213,7 +213,7 @@ count_n(PyObject *module, PyObject *args)
 {
     bitarrayobject *a;
     Py_ssize_t nbits, n, i;
-    int vi = 1, err = 0;
+    int vi = 1;
 
     if (!PyArg_ParseTuple(args, "O!n|O&:count_n", bitarray_type,
                           (PyObject *) &a, &n, conv_pybit, &vi))
@@ -225,13 +225,11 @@ count_n(PyObject *module, PyObject *args)
 
     Py_BEGIN_CRITICAL_SECTION(a);
     nbits = a->nbits;
-    if (n > nbits)
-        err = 1;
-    else
+    if (n <= nbits)
         i = count_n_lock_held(a, n, vi);
     Py_END_CRITICAL_SECTION();
 
-    if (err)
+    if (n > nbits)
         return PyErr_Format(PyExc_ValueError, "n = %zd larger than bitarray "
                             "length %zd", n, nbits);
 
@@ -329,9 +327,8 @@ ssqi(PyObject *module, PyObject *args)
 {
     bitarrayobject *a;
     Py_ssize_t nbits;
-    uint64_t res;
+    uint64_t limit, res;
     int mode = 1;
-    int overflow = 0;
 
     if (!PyArg_ParseTuple(args, "O!|i", bitarray_type,
                           (PyObject *) &a, &mode))
@@ -340,16 +337,15 @@ ssqi(PyObject *module, PyObject *args)
     if (mode < 1 || mode > 2)
         return PyErr_Format(PyExc_ValueError, "unexpected mode %d", mode);
 
+    limit = (mode == 1) ? 6074001000LLU : 3810778LLU;
+
     Py_BEGIN_CRITICAL_SECTION(a);
     nbits = a->nbits;
-
-    if ((uint64_t) nbits <= (mode == 1 ? 6074001000LLU : 3810778LLU))
+    if ((uint64_t) nbits <= limit)
         res = ssqi_lock_held(a, mode);
-    else
-        overflow = 1;
     Py_END_CRITICAL_SECTION();
 
-    if (overflow)
+    if ((uint64_t) nbits > limit)
         return PyErr_Format(PyExc_OverflowError, "ssqi %zd", nbits);
 
     return PyLong_FromUnsignedLongLong(res);
