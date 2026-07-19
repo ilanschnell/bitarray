@@ -703,7 +703,9 @@ deserialize(PyObject *module, PyObject *buffer)
         goto error;
     }
 
+    Py_BEGIN_CRITICAL_SECTION(view.obj);
     head = *((unsigned char *) view.buf);
+    Py_END_CRITICAL_SECTION();
 
     if (head & 0xe8 || (view.len == 1 && head & 0xef)) {
         PyErr_Format(PyExc_ValueError, "invalid header byte: 0x%02x", head);
@@ -716,9 +718,11 @@ deserialize(PyObject *module, PyObject *buffer)
     /* set bit-endianness and buffer */
     a->endian = head & 0x10 ? ENDIAN_BIG : ENDIAN_LITTLE;
     assert(Py_SIZE(a) == view.len - 1);
-    if (Py_SIZE(a))
+    if (Py_SIZE(a)) {
+        Py_BEGIN_CRITICAL_SECTION(view.obj);
         memcpy(a->ob_item, ((char *) view.buf) + 1, (size_t) view.len - 1);
-
+        Py_END_CRITICAL_SECTION();
+    }
     PyBuffer_Release(&view);
     return (PyObject *) a;
 
