@@ -851,7 +851,7 @@ of `group` characters, default is a space.");
    Each digit corresponds to 4 bits in the bitarray.
    Note that the number of hexadecimal digits may be odd. */
 static int
-hex2ba_core(bitarrayobject *a, Py_buffer hexstr)
+hex2ba_lock_held(bitarrayobject *a, Py_buffer hexstr)
 {
     const int be = IS_BE(a);
     const char *str = hexstr.buf;
@@ -885,6 +885,7 @@ hex2ba(PyObject *module, PyObject *args, PyObject *kwds)
     PyObject *endian = Py_None;
     Py_buffer hexstr;
     bitarrayobject *a;
+    int ret;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s*|O:hex2ba", kwlist,
                                      &hexstr, &endian))
@@ -894,7 +895,11 @@ hex2ba(PyObject *module, PyObject *args, PyObject *kwds)
     if (a == NULL)
         goto error;
 
-    if (hex2ba_core(a, hexstr) < 0)
+    Py_BEGIN_CRITICAL_SECTION(hexstr.obj);
+    ret = hex2ba_lock_held(a, hexstr);
+    Py_END_CRITICAL_SECTION();
+
+    if (ret < 0)
         goto error;
 
     PyBuffer_Release(&hexstr);
@@ -1084,7 +1089,7 @@ of `group` characters, default is a space.");
 
 /* translate ASCII digits (with base length m) into bitarray buffer */
 static int
-base2ba_core(bitarrayobject *a, Py_buffer asciistr, int m)
+base2ba_lock_held(bitarrayobject *a, Py_buffer asciistr, int m)
 {
     const char *str = asciistr.buf;
     const int le = IS_LE(a);
@@ -1120,7 +1125,7 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
     PyObject *endian = Py_None;
     Py_buffer asciistr;
     bitarrayobject *a = NULL;
-    int m, n, t;                   /* n = 2**m */
+    int m, n, ret;                   /* n = 2**m */
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "is*|O:base2ba", kwlist,
                                      &n, &asciistr, &endian))
@@ -1133,8 +1138,12 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
     if (a == NULL)
         goto error;
 
-    t = (m == 4) ? hex2ba_core(a, asciistr) : base2ba_core(a, asciistr, m);
-    if (t < 0)
+    Py_BEGIN_CRITICAL_SECTION(asciistr.obj);
+    ret = (m == 4) ? hex2ba_lock_held(a, asciistr) :
+                     base2ba_lock_held(a, asciistr, m);
+    Py_END_CRITICAL_SECTION();
+
+    if (ret < 0)
         goto error;
 
     PyBuffer_Release(&asciistr);
