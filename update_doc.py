@@ -113,6 +113,10 @@ NOTES = {
    The same convention is used by the ``.rotate()`` method of
    the ``collections.deque`` object.""",
 
+    'bitarray.search': """\
+   For example, ``a.search(1)`` returns an iterator over all active indices
+   in ``a``."""
+
     'bitarray.tolist': """\
    Note that the list object being created will require 32 or 64 times more
    memory (depending on the machine architecture) than the bitarray object,
