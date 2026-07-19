@@ -750,7 +750,7 @@ hex_to_int(char c)
 /* return hexadecimal string from bitarray,
    on failure set exception and return NULL */
 static char *
-ba2hex_core(bitarrayobject *a, Py_ssize_t group, char *sep)
+ba2hex_lock_held(bitarrayobject *a, Py_ssize_t group, char *sep)
 {
     const int be = IS_BE(a);
     size_t strsize = a->nbits / 4, j, nsep;
@@ -806,7 +806,7 @@ ba2hex(PyObject *module, PyObject *args, PyObject *kwds)
     }
 
     Py_BEGIN_CRITICAL_SECTION(a);
-    str = ba2hex_core(a, group, sep);
+    str = ba2hex_lock_held(a, group, sep);
     Py_END_CRITICAL_SECTION();
     if (str == NULL)
         return NULL;
@@ -957,7 +957,7 @@ base_to_length(int n)
 /* return ASCII string from bitarray and base length m,
    on failure set exception and return NULL */
 static char *
-ba2base_core(bitarrayobject *a, int m, Py_ssize_t group, char *sep)
+ba2base_lock_held(bitarrayobject *a, int m, Py_ssize_t group, char *sep)
 {
     const int le = IS_LE(a);
     const char *alphabet;
@@ -1032,9 +1032,9 @@ ba2base(PyObject *module, PyObject *args, PyObject *kwds)
 
     Py_BEGIN_CRITICAL_SECTION(a);
     if (m == 4)
-        str = ba2hex_core(a, group, sep);
+        str = ba2hex_lock_held(a, group, sep);
     else
-        str = ba2base_core(a, m, group, sep);
+        str = ba2base_lock_held(a, m, group, sep);
     Py_END_CRITICAL_SECTION();
 
     if (str == NULL)
