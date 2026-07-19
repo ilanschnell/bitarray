@@ -514,12 +514,49 @@ iteration is stopped as soon as one mismatch is found.");
 
 
 static PyObject *
-correspond_all(PyObject *module, PyObject *args)
+correspond_all_lock_held(bitarrayobject *a, bitarrayobject *b)
 {
     Py_ssize_t nff = 0, nft = 0, ntf = 0, ntt = 0, cwords, i;
-    bitarrayobject *a, *b;
     uint64_t u, v, not_u, not_v;
-    int ret, rbits;
+    int rbits;
+
+    assert(a->nbits == b->nbits);
+    assert(a->endian == b->endian);
+
+    cwords = a->nbits / 64;     /* complete 64-bit words */
+    rbits = a->nbits % 64;      /* remaining bits */
+
+    for (i = 0; i < cwords; i++) {
+        u = WBUFF(a)[i];
+        v = WBUFF(b)[i];
+        not_u = ~u;
+        not_v = ~v;
+        nff += popcnt_64(not_u & not_v);
+        nft += popcnt_64(not_u & v);
+        ntf += popcnt_64(u & not_v);
+        ntt += popcnt_64(u & v);
+    }
+
+    if (rbits) {
+        u = zlw(a);
+        v = zlw(b);
+        not_u = ~u;
+        not_v = ~v;
+        /* for nff we need to subtract the number of unused 1 bits */
+        nff += popcnt_64(not_u & not_v) - (64 - rbits);
+        nft += popcnt_64(not_u & v);
+        ntf += popcnt_64(u & not_v);
+        ntt += popcnt_64(u & v);
+    }
+
+    return Py_BuildValue("nnnn", nff, nft, ntf, ntt);
+}
+
+static PyObject *
+correspond_all(PyObject *module, PyObject *args)
+{
+    PyObject *res = NULL;
+    bitarrayobject *a, *b;
 
     if (!PyArg_ParseTuple(args, "O!O!:correspond_all",
                           bitarray_type, (PyObject *) &a,
@@ -527,40 +564,11 @@ correspond_all(PyObject *module, PyObject *args)
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION2(a, b);
-    ret = ensure_eq_size_endian(a, b);
-    if (ret == 0) {
-        cwords = a->nbits / 64;     /* complete 64-bit words */
-        rbits = a->nbits % 64;      /* remaining bits */
-
-        for (i = 0; i < cwords; i++) {
-            u = WBUFF(a)[i];
-            v = WBUFF(b)[i];
-            not_u = ~u;
-            not_v = ~v;
-            nff += popcnt_64(not_u & not_v);
-            nft += popcnt_64(not_u & v);
-            ntf += popcnt_64(u & not_v);
-            ntt += popcnt_64(u & v);
-        }
-
-        if (rbits) {
-            u = zlw(a);
-            v = zlw(b);
-            not_u = ~u;
-            not_v = ~v;
-            /* for nff we need to subtract the number of unused 1 bits */
-            nff += popcnt_64(not_u & not_v) - (64 - rbits);
-            nft += popcnt_64(not_u & v);
-            ntf += popcnt_64(u & not_v);
-            ntt += popcnt_64(u & v);
-        }
-    }
+    if (ensure_eq_size_endian(a, b) == 0)
+        res = correspond_all_lock_held(a, b);
     Py_END_CRITICAL_SECTION2();
 
-    if (ret < 0)
-        return NULL;
-
-    return Py_BuildValue("nnnn", nff, nft, ntf, ntt);
+    return res;
 }
 
 PyDoc_STRVAR(correspond_all_doc,
