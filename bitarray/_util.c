@@ -1602,10 +1602,14 @@ sc_encode_header(char *str, bitarrayobject *a)
    allocation if we run out */
 #define ALLOC_SIZE  32768
 
-static PyObject *
-sc_encode_lock_held(bitarrayobject *a)
+/* Encode bitarray `a` into the private bytes object referenced by `*out`.
+   The lock for `a` must be held by the caller.  The output may be resized,
+   so `out` is passed as `PyObject **` to propagate a possibly changed
+   pointer back to the caller.
+   Return the encoded length, or -1 on error. */
+static Py_ssize_t
+sc_encode_lock_held(bitarrayobject *a, PyObject **out)
 {
-    PyObject *out;
     char *str;                  /* output buffer */
     Py_ssize_t len = 0;         /* bytes written into output buffer */
     Py_ssize_t offset = 0;      /* block offset into bitarray a in bytes */
@@ -1614,57 +1618,57 @@ sc_encode_lock_held(bitarrayobject *a)
 
     set_padbits(a);
     if ((rts = sc_rts(a)) == NULL)
-        return NULL;
+        return -1;
 
-    if ((out = PyBytes_FromStringAndSize(NULL, ALLOC_SIZE)) == NULL)
-        goto error;
-
-    str = PyBytes_AS_STRING(out);
+    str = PyBytes_AS_STRING(*out);
     len += sc_encode_header(str, a);
 
     total = rts[NSEG(a)];
     /* encode blocks as long as we haven't reached the end of the bitarray
        and haven't reached the total population count yet */
     while (offset < Py_SIZE(a) && rts[offset / SEGSIZE] != total) {
-        Py_ssize_t allocated = PyBytes_GET_SIZE(out);
+        Py_ssize_t allocated = PyBytes_GET_SIZE(*out);
 
         /* Make sure we have enough memory in output buffer for next block.
            The largest block possible is a type 0 block with 128 segments.
            Its size is: 1 head byte + 128 * 32 raw bytes.
            Plus, we also may have the stop byte. */
         if (allocated < len + 1 + 128 * 32 + 1) {
-            if (_PyBytes_Resize(&out, allocated + ALLOC_SIZE) < 0)
-                goto error;
-            str = PyBytes_AS_STRING(out);
+            if (_PyBytes_Resize(out, allocated + ALLOC_SIZE) < 0) {
+                PyMem_Free(rts);
+                return -1;
+            }
+            str = PyBytes_AS_STRING(*out);
         }
         offset += sc_encode_block(str, &len, a, rts, offset);
     }
     PyMem_Free(rts);
     str[len++] = 0x00;          /* add stop byte */
 
-    if (_PyBytes_Resize(&out, len) < 0)
-        return NULL;
-
-    return out;
-
- error:
-    PyMem_Free(rts);
-    return NULL;
+    return len;
 }
 
 static PyObject *
 sc_encode(PyObject *module, PyObject *obj)
 {
-    PyObject *res;
+    PyObject *out;
+    Py_ssize_t len;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
+    if ((out = PyBytes_FromStringAndSize(NULL, ALLOC_SIZE)) == NULL)
+        return NULL;
+
     Py_BEGIN_CRITICAL_SECTION(obj);
-    res = sc_encode_lock_held((bitarrayobject *) obj);
+    len = sc_encode_lock_held((bitarrayobject *) obj, &out);
     Py_END_CRITICAL_SECTION();
 
-    return res;
+    if (len < 0 ||_PyBytes_Resize(&out, len) < 0) {
+        Py_XDECREF(out);
+        return NULL;
+    }
+    return out;
 }
 
 #undef ALLOC_SIZE
