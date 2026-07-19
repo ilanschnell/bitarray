@@ -1603,20 +1603,15 @@ sc_encode_header(char *str, bitarrayobject *a)
 #define ALLOC_SIZE  32768
 
 static PyObject *
-sc_encode(PyObject *module, PyObject *obj)
+sc_encode_lock_held(bitarrayobject *a)
 {
     PyObject *out;
     char *str;                  /* output buffer */
     Py_ssize_t len = 0;         /* bytes written into output buffer */
-    bitarrayobject *a;
     Py_ssize_t offset = 0;      /* block offset into bitarray a in bytes */
     Py_ssize_t *rts;            /* running totals of segments */
     Py_ssize_t total;           /* total population count of bitarray */
 
-    if (ensure_bitarray(obj) < 0)
-        return NULL;
-
-    a = (bitarrayobject *) obj;
     set_padbits(a);
     if ((rts = sc_rts(a)) == NULL)
         return NULL;
@@ -1656,6 +1651,22 @@ sc_encode(PyObject *module, PyObject *obj)
     PyMem_Free(rts);
     return NULL;
 }
+
+static PyObject *
+sc_encode(PyObject *module, PyObject *obj)
+{
+    PyObject *res;
+
+    if (ensure_bitarray(obj) < 0)
+        return NULL;
+
+    Py_BEGIN_CRITICAL_SECTION(obj);
+    res = sc_encode_lock_held((bitarrayobject *) obj);
+    Py_END_CRITICAL_SECTION();
+
+    return res;
+}
+
 #undef ALLOC_SIZE
 
 PyDoc_STRVAR(sc_encode_doc,
