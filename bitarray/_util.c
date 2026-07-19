@@ -163,7 +163,7 @@ bit-endianness (`little` or `big`).");
    the total count, the result is a negative number; the negative of the
    total count + 1, which is useful for displaying error messages. */
 static Py_ssize_t
-count_n_core(bitarrayobject *a, Py_ssize_t n, int vi)
+count_n_lock_held(bitarrayobject *a, Py_ssize_t n, int vi)
 {
     const Py_ssize_t nbits = a->nbits;
     uint64_t *wbuff = WBUFF(a);
@@ -212,8 +212,8 @@ static PyObject *
 count_n(PyObject *module, PyObject *args)
 {
     bitarrayobject *a;
-    Py_ssize_t n, i;
-    int vi = 1;
+    Py_ssize_t nbits, n, i;
+    int vi = 1, err = 0;
 
     if (!PyArg_ParseTuple(args, "O!n|O&:count_n", bitarray_type,
                           (PyObject *) &a, &n, conv_pybit, &vi))
@@ -222,13 +222,19 @@ count_n(PyObject *module, PyObject *args)
         PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
         return NULL;
     }
-    if (n > a->nbits)
-        return PyErr_Format(PyExc_ValueError, "n = %zd larger than bitarray "
-                            "length %zd", n, a->nbits);
 
     Py_BEGIN_CRITICAL_SECTION(a);
-    i = count_n_core(a, n, vi);        /* do actual work here */
+    nbits = a->nbits;
+    if (n > nbits)
+        err = 1;
+    else
+        i = count_n_lock_held(a, n, vi);
     Py_END_CRITICAL_SECTION();
+
+    if (err)
+        return PyErr_Format(PyExc_ValueError, "n = %zd larger than bitarray "
+                            "length %zd", n, nbits);
+
     if (i < 0)
         return PyErr_Format(PyExc_ValueError, "n = %zd exceeds total count "
                             "(a.count(%d) = %zd)", n, vi, -(i + 1));
@@ -364,19 +370,14 @@ This is essentially equivalent to\n\
 /* --------------------------- binary functions ------------------------ */
 
 static PyObject *
-binary_function(PyObject *args, const char *format, const char oper)
+binary_func_lock_held(bitarrayobject *a, bitarrayobject *b, const char oper)
 {
     Py_ssize_t cnt = 0, cwords, i;
-    bitarrayobject *a, *b;
     uint64_t *wbuff_a, *wbuff_b;
     int rbits;
 
-    if (!PyArg_ParseTuple(args, format,
-                          bitarray_type, (PyObject *) &a,
-                          bitarray_type, (PyObject *) &b))
-        return NULL;
-    if (ensure_eq_size_endian(a, b) < 0)
-        return NULL;
+    assert(a->nbits == b->nbits);
+    assert(a->endian == b->endian);
 
     wbuff_a = WBUFF(a);
     wbuff_b = WBUFF(b);
@@ -423,6 +424,29 @@ binary_function(PyObject *args, const char *format, const char oper)
         Py_UNREACHABLE();
     }
     return PyLong_FromSsize_t(cnt);
+}
+
+static PyObject *
+binary_function(PyObject *args, const char *format, const char oper)
+{
+    PyObject *res;
+    bitarrayobject *a, *b;
+    int ret;
+
+    if (!PyArg_ParseTuple(args, format,
+                          bitarray_type, (PyObject *) &a,
+                          bitarray_type, (PyObject *) &b))
+        return NULL;
+
+    Py_BEGIN_CRITICAL_SECTION2(a, b);
+    ret = ensure_eq_size_endian(a, b);
+    if (ret == 0)
+        res = binary_func_lock_held(a, b, oper);
+    Py_END_CRITICAL_SECTION2();
+
+    if (ret < 0)
+        return NULL;
+    return res;
 }
 
 #define COUNT_FUNC(oper, ostr)                                          \
