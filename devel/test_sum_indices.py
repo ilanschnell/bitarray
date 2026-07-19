@@ -143,10 +143,12 @@ class SSQI_Tests(SumIndicesUtil):
     # The public Python function sum_indices() does NOT impose any limits
     # on the size of bitarrays it can compute.
 
+    limits = [(1, sum_range, 6_074_001_000),
+              (2, sum_sqr_range, 3_810_778)]
+
     def test_calculate_limits(self):
         # calculation of limits used in ssqi() (in _util.c)
-        for f, limit in [(sum_range, 6_074_001_000),
-                         (sum_sqr_range, 3_810_778)]:
+        for _, f, limit in self.limits:
             lo = 0
             hi = MAX_UINT64
             while hi > lo + 1:
@@ -163,8 +165,7 @@ class SSQI_Tests(SumIndicesUtil):
         # _ssqi() is limited to bitarrays of about 6 Gbit (4 Mbit mode=2).
         # This limit is never reached because sum_indices() uses
         # a much smaller block size for practical reasons.
-        for mode, f, n in [(1, sum_range, 6_074_001_000),
-                           (2, sum_sqr_range, 3_810_778)]:
+        for mode, f, n in self.limits:
             a = ones(n)
             self.assertTrue(f(len(a)) <= MAX_UINT64)
             self.assertEqual(_ssqi(a, mode), f(n))
