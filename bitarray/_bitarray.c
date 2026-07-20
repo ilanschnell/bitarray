@@ -2580,6 +2580,40 @@ index_from_seq(PyObject *sequence, Py_ssize_t j, Py_ssize_t length)
     }
     return i;
 }
+/* Materialize 'seq' into indices normalized to 'length'.
+   Return 0 on success and -1 with an exception set on error. */
+static int
+materialize_sequence(PyObject *seq, Py_ssize_t length,
+                     Py_ssize_t **indices, Py_ssize_t *size)
+{
+    Py_ssize_t *p = NULL;
+    Py_ssize_t n, j;
+
+    n = PySequence_Size(seq);  /* may execute arbitrary Python code */
+    if (n < 0)
+        return -1;
+
+    if (n != 0) {
+        p = PyMem_New(Py_ssize_t, n);
+        if (p == NULL) {
+            PyErr_NoMemory();
+            return -1;
+        }
+    }
+
+    for (j = 0; j < n; j++) {
+        Py_ssize_t i = index_from_seq(seq, j, length);
+        if (i < 0) {
+            PyMem_Free(p);
+            return -1;
+        }
+        p[j] = i;
+    }
+
+    *indices = p;
+    *size = n;
+    return 0;
+}
 
 /* return a new bitarray with items from 'self' listed by
    sequence (of indices) 'seq' */
@@ -2589,30 +2623,14 @@ getsequence(bitarrayobject *self, PyObject *seq)
     bitarrayobject *res;
     Py_ssize_t *indices = NULL;
     Py_ssize_t nbits, n, j;
-    int changed = 0;
-
-    n = PySequence_Size(seq);  /* may execute arbitrary Python code */
-    if (n < 0)
-        return NULL;
+    int changed = 1;
 
     Py_BEGIN_CRITICAL_SECTION(self);
     nbits = self->nbits;
     Py_END_CRITICAL_SECTION();
 
-    if (n) {
-        indices = PyMem_New(Py_ssize_t, n);
-        if (indices == NULL)
-            return PyErr_NoMemory();
-    }
-
-    /* Materialize the indices without holding self's lock.
-       index_from_seq() may execute arbitrary Python code. */
-    for (j = 0; j < n; j++) {
-        Py_ssize_t i = index_from_seq(seq, j, nbits);
-        if (i < 0)
-            goto error;
-        indices[j] = i;
-    }
+    if (materialize_sequence(seq, nbits, &indices, &n) < 0)
+        return NULL;
 
     if ((res = newbitarrayobject(Py_TYPE(self), n, self->endian)) == NULL)
         goto error;
@@ -2621,9 +2639,7 @@ getsequence(bitarrayobject *self, PyObject *seq)
     if (self->nbits == nbits) {
         for (j = 0; j < n; j++)
             setbit(res, j, getbit(self, indices[j]));
-    }
-    else {
-        changed = 1;
+        changed = 0;
     }
     Py_END_CRITICAL_SECTION();
 
