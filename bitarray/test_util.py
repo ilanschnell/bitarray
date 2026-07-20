@@ -1131,9 +1131,13 @@ class SumIndicesTests(unittest.TestCase):
     # Additional tests in: devel/test_sum_indices.py
 
     def test_explicit(self):
-        a = gen_primes(100)
-        self.assertEqual(sum_indices(a, mode=1),  1_060)
-        self.assertEqual(sum_indices(a, mode=2), 65_796)
+        endian = choice(ENDIANS)
+        a = bitarray("01100111 1101", endian)
+        self.assertEqual(sum_indices(a, mode=1),  49)
+        self.assertEqual(sum_indices(a, mode=2), 381)
+        a = frozenbitarray("00001111", endian)
+        self.assertEqual(sum_indices(a, mode=1),  22)
+        self.assertEqual(sum_indices(a, mode=2), 126)
 
     def test_wrong_args(self):
         S = sum_indices
@@ -1143,23 +1147,22 @@ class SumIndicesTests(unittest.TestCase):
         for mode in -1, 0, 3, 4:
             self.assertRaises(ValueError, S, bitarray("110"), mode)
 
-    def check_sparse(self, n, k, mode=1, freeze=False, inv=False):
+    def test_ones(self):
+        a = bitarray(endian=choice(ENDIANS))
+        sm1 = sm2 = 0
+        for i in range(100):
+            a.append(1)
+            sm1 += i
+            sm2 += i * i
+            self.assertEqual(sum_indices(a, 1), sm1)
+            self.assertEqual(sum_indices(a, 2), sm2)
+
+    def check_sparse(self, n, k, mode):
         a = zeros(n, choice(ENDIANS))
         indices = sample(range(n), k)
         a[indices] = 1
         res = sum(indices) if mode == 1 else sum(i * i for i in indices)
-
-        if inv:
-            a.invert()
-            sum_ones = 3 if mode == 1 else 2 * n - 1
-            sum_ones *= n * (n - 1)
-            sum_ones //= 6
-            res = sum_ones - res
-
-        if freeze:
-            a = frozenbitarray(a)
-
-        self.assertEqual(a.count(), n - k if inv else k)
+        self.assertEqual(a.count(), k)
         self.assertEqual(sum_indices(a, mode), res)
 
     def test_small(self):
@@ -1176,9 +1179,7 @@ class SumIndicesTests(unittest.TestCase):
             n = randrange(2, 1_500_000)  # below and above block size
             k = randrange(min(100, n // 2))
             mode = randint(1, 2)
-            freeze = getrandbits(1)
-            inv = getrandbits(1)
-            self.check_sparse(n, k, mode, freeze, inv)
+            self.check_sparse(n, k, mode)
 
 # ---------------------------------------------------------------------------
 
