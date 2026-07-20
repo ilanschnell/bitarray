@@ -2980,37 +2980,42 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
 {
     bitarrayobject *copy = NULL;
     bitarrayobject *src = other;
-    Py_ssize_t n;
-    int res = 0;
+    Py_ssize_t *indices = NULL;
+    Py_ssize_t nbits, n;
+    int res = -1;
 
-    n = PySequence_Size(seq);
-    if (n < 0)
+    Py_BEGIN_CRITICAL_SECTION(self);
+    nbits = self->nbits;
+    Py_END_CRITICAL_SECTION();
+
+    if (materialize_sequence(seq, nbits, &indices, &n) < 0)
         return -1;
 
+    Py_BEGIN_CRITICAL_SECTION2(self, other);
     if (n != other->nbits) {
         PyErr_Format(PyExc_ValueError, "attempt to assign sequence of "
                      "size %zd to bitarray of size %zd", n, other->nbits);
-        return -1;
     }
-    /* Make a copy of other, see comment in setslice_bitarray(). */
-    if (buffers_overlap(self, other)) {
-        copy = bitarray_cp(other);
-        src = copy;
-    }
-    if (src == NULL) {
-        res = -1;  /* bitarray_cp() failed */
+    else if (self->nbits != nbits) {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "bitarray changed size during sequence indexing");
     }
     else {
-        Py_ssize_t i, j;
-
-        for (j = 0; j < n; j++) {
-            if ((i = index_from_seq(seq, j, self->nbits)) < 0) {
-                res = -1;
-                break;
-            }
-            setbit(self, i, getbit(src, j));
+        /* Make a copy of other, see comment in setslice_bitarray(). */
+        if (buffers_overlap(self, other)) {
+            copy = bitarray_cp(other);
+            src = copy;
+        }
+        if (src) {
+            Py_ssize_t j;
+            for (j = 0; j < n; j++)
+                setbit(self, indices[j], getbit(src, j));
+            res = 0;
         }
     }
+    Py_END_CRITICAL_SECTION2();
+
+    PyMem_Free(indices);
     Py_XDECREF(copy);
     return res;
 }
