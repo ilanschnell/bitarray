@@ -2372,29 +2372,40 @@ bitarray_item(bitarrayobject *self, Py_ssize_t i)
     return vi < 0 ? NULL : PyLong_FromLong(vi);
 }
 
+/* vi is 0 or 1 for assignment, and 2 for deletion. */
+static int
+bitarray_ass_item_lock_held(bitarrayobject *self, Py_ssize_t i, int vi)
+{
+    if (i < 0 || i >= self->nbits) {
+        PyErr_SetString(PyExc_IndexError,
+                        "bitarray assignment index out of range");
+        return -1;
+    }
+
+    if (vi == 2) {
+        return delete_n(self, i, 1);
+    }
+
+    setbit(self, i, vi);
+    return 0;
+}
+
 static int
 bitarray_ass_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
 {
-    int vi = 0, res;
+    int vi, res;
 
     RAISE_IF_READONLY(self, -1);
     if (value != NULL && !conv_pybit(value, &vi))
         return -1;
 
+    if (value == NULL)  /* delete item */
+        vi = 2;
+
     Py_BEGIN_CRITICAL_SECTION(self);
-    if (i < 0 || i >= self->nbits) {
-        PyErr_SetString(PyExc_IndexError,
-                        "bitarray assignment index out of range");
-        res = -1;
-    }
-    else if (value == NULL) {
-        res = delete_n(self, i, 1);
-    }
-    else {
-        setbit(self, i, vi);
-        res = 0;
-    }
+    res = bitarray_ass_item_lock_held(self, i, vi);
     Py_END_CRITICAL_SECTION();
+
     return res;
 }
 
@@ -3143,13 +3154,25 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject *item, PyObject *value)
 
     if (PyIndex_Check(item)) {
         Py_ssize_t i;
+        int vi, res;
 
         i = PyNumber_AsSsize_t(item, PyExc_IndexError);
         if (i == -1 && PyErr_Occurred())
             return -1;
+
+        if (value != NULL && !conv_pybit(value, &vi))
+            return -1;
+
+        if (value == NULL)  /* delete item */
+            vi = 2;
+
+        Py_BEGIN_CRITICAL_SECTION(self);
         if (i < 0)
             i += self->nbits;
-        return bitarray_ass_item(self, i, value);
+        res = bitarray_ass_item_lock_held(self, i, vi);
+        Py_END_CRITICAL_SECTION();
+
+        return res;
     }
 
     if (PySlice_Check(item))
