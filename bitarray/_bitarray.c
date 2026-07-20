@@ -1461,6 +1461,7 @@ bitarray_reduce(bitarrayobject *self)
 {
     PyObject *reconstructor;
     PyObject *dict, *bytes, *result;
+    int padbits;
 
     reconstructor = bitarray_module_attr("_bitarray_reconstructor");
     if (reconstructor == NULL)
@@ -1473,8 +1474,12 @@ bitarray_reduce(bitarrayobject *self)
         Py_INCREF(dict);
     }
 
+    Py_BEGIN_CRITICAL_SECTION(self);
     set_padbits(self);
+    padbits = (int) PADBITS(self);
     bytes = PyBytes_FromStringAndSize(self->ob_item, Py_SIZE(self));
+    Py_END_CRITICAL_SECTION();
+
     if (bytes == NULL) {
         Py_DECREF(dict);
         Py_DECREF(reconstructor);
@@ -1482,7 +1487,7 @@ bitarray_reduce(bitarrayobject *self)
     }
 
     result = Py_BuildValue("O(OOsii)O", reconstructor, Py_TYPE(self), bytes,
-                           ENDIAN_STR(self->endian), (int) PADBITS(self),
+                           ENDIAN_STR(self->endian), padbits,
                            self->readonly, dict);
     Py_DECREF(dict);
     Py_DECREF(reconstructor);
@@ -2472,8 +2477,8 @@ static PySequenceMethods bitarray_as_sequence = {
 
 /* return new bitarray with item in self, specified by slice indices */
 static PyObject *
-getslice_indices(bitarrayobject *self, Py_ssize_t start, Py_ssize_t step,
-                 Py_ssize_t slicelength)
+getslice_indices_lock_held(bitarrayobject *self, Py_ssize_t start,
+                           Py_ssize_t step, Py_ssize_t slicelength)
 {
     bitarrayobject *res;
 
@@ -2497,14 +2502,19 @@ getslice_indices(bitarrayobject *self, Py_ssize_t start, Py_ssize_t step,
 static PyObject *
 getslice(bitarrayobject *self, PyObject *slice)
 {
+    PyObject *res;
     Py_ssize_t start, stop, step, slicelength;
 
     assert(PySlice_Check(slice));
-    if (PySlice_GetIndicesEx(slice, self->nbits,
-                             &start, &stop, &step, &slicelength) < 0)
+    if (PySlice_Unpack(slice, &start, &stop, &step) < 0)
         return NULL;
 
-    return getslice_indices(self, start, step, slicelength);
+    Py_BEGIN_CRITICAL_SECTION(self);
+    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
+    res = getslice_indices_lock_held(self, start, step, slicelength);
+    Py_END_CRITICAL_SECTION();
+
+    return res;
 }
 
 static int
@@ -3853,7 +3863,7 @@ decodeiter_skipbits(decodeiterobject *it, PyObject *args)
 
     Py_BEGIN_CRITICAL_SECTION2(it, it->self);
     if (n <= it->self->nbits - it->index) {
-        skipped = getslice_indices(it->self, it->index, 1, n);
+        skipped = getslice_indices_lock_held(it->self, it->index, 1, n);
         if (skipped)
             it->index += n;
     }
