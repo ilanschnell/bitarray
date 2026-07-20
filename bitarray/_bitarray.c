@@ -3024,22 +3024,35 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
 static int
 setseq_bool(bitarrayobject *self, PyObject *seq, PyObject *value)
 {
-    Py_ssize_t n, i, j;
-    int vi;
+    Py_ssize_t *indices = NULL;
+    Py_ssize_t nbits, n;
+    int res = -1, vi;
 
     if (!conv_pybit(value, &vi))
         return -1;
 
-    n = PySequence_Size(seq);
-    if (n < 0)
+    Py_BEGIN_CRITICAL_SECTION(self);
+    nbits = self->nbits;
+    Py_END_CRITICAL_SECTION();
+
+    if (materialize_sequence(seq, nbits, &indices, &n) < 0)
         return -1;
 
-    for (j = 0; j < n; j++) {
-        if ((i = index_from_seq(seq, j, self->nbits)) < 0)
-            return -1;
-        setbit(self, i, vi);
+    Py_BEGIN_CRITICAL_SECTION(self);
+    if (self->nbits != nbits) {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "bitarray changed size during sequence indexing");
     }
-    return 0;
+    else {
+        Py_ssize_t j;
+        for (j = 0; j < n; j++)
+            setbit(self, indices[j], vi);
+        res = 0;
+    }
+    Py_END_CRITICAL_SECTION();
+
+    PyMem_Free(indices);
+    return res;
 }
 
 /* delete items in self, specified by sequence of indices */
