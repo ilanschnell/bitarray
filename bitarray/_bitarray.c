@@ -3455,11 +3455,13 @@ binode_make_tree(PyObject *codedict)
         Py_INCREF(symbol);
         Py_INCREF(value);
 
+        Py_BEGIN_CRITICAL_SECTION(value);
         ret = check_value(value);
         if (ret == 0) {
             ret = binode_insert_symbol(
                 tree, (bitarrayobject *) value, symbol);
         }
+        Py_END_CRITICAL_SECTION();
         Py_DECREF(value);
         Py_DECREF(symbol);
 
@@ -4550,9 +4552,13 @@ bitarray_getbuffer(bitarrayobject *self, Py_buffer *view, int flags)
     int ret;
 
     if (view == NULL) {
+        Py_BEGIN_CRITICAL_SECTION(self);
         self->ob_exports++;
+        Py_END_CRITICAL_SECTION();
         return 0;
     }
+
+    Py_BEGIN_CRITICAL_SECTION(self);
     ret = PyBuffer_FillInfo(view,
                             (PyObject *) self,  /* exporter */
                             (void *) self->ob_item,
@@ -4562,13 +4568,17 @@ bitarray_getbuffer(bitarrayobject *self, Py_buffer *view, int flags)
     if (ret >= 0)
         self->ob_exports++;
 
+    Py_END_CRITICAL_SECTION();
+
     return ret;
 }
 
 static void
 bitarray_releasebuffer(bitarrayobject *self, Py_buffer *view)
 {
+    Py_BEGIN_CRITICAL_SECTION(self);
     self->ob_exports--;
+    Py_END_CRITICAL_SECTION();
 }
 
 static PyBufferProcs bitarray_as_buffer = {
