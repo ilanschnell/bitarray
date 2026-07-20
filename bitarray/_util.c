@@ -661,7 +661,7 @@ serialize(PyObject *module, PyObject *obj)
     PyObject *result;
     Py_ssize_t nbits;
     char *str;
-    int err = 0;
+    int err = 1;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
@@ -683,9 +683,7 @@ serialize(PyObject *module, PyObject *obj)
         *str = (IS_BE(a) ? 0x10 : 0x00) | ((char) PADBITS(a));
         if (nbits)
             memcpy(str + 1, a->ob_item, (size_t) BYTES(nbits));
-    }
-    else {
-        err = 1;
+        err = 0;
     }
     Py_END_CRITICAL_SECTION();
 
