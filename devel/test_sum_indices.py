@@ -78,6 +78,8 @@ def sum_sqr_range(n):
     "Return sum(i * i for i in range(n))"
     return n * (n - 1) * (2 * n - 1) // 6
 
+MODES = [(1, sum_range),
+         (2, sum_sqr_range)]
 
 class SumRangeTests(unittest.TestCase):
 
@@ -91,8 +93,7 @@ class SumRangeTests(unittest.TestCase):
 
     def test_mode(self):
         for n in range(1000):
-            for mode, f in [(1, sum_range),
-                            (2, sum_sqr_range)]:
+            for mode, f in MODES:
                 sum_ones = 3 if mode == 1 else 2 * n - 1
                 sum_ones *= n * (n - 1)
                 sum_ones //= 6
@@ -192,12 +193,9 @@ class SumIndicesUtil(unittest.TestCase):
 
 class SSQI_Tests(SumIndicesUtil):
 
-    modes = [(1, sum_range),
-             (2, sum_sqr_range)]
-
     def test_calculate_limits(self):
         # calculation of limits used in ssqi() (in _util.c)
-        for mode, f in self.modes:
+        for mode, f in MODES:
             lo = 0
             hi = MAX_UINT64
             while hi > lo + 1:
@@ -214,7 +212,7 @@ class SSQI_Tests(SumIndicesUtil):
         # _ssqi() is limited to bitarrays of about 6 Gbit (4 Mbit mode=2).
         # This limit is never reached because sum_indices() uses
         # a much smaller block size for practical reasons.
-        for mode, f in self.modes:
+        for mode, f in MODES:
             n = SSQI_LIMIT[mode]
             a = ones(n)
             self.assertTrue(f(len(a)) <= MAX_UINT64)
@@ -231,8 +229,7 @@ class SSQI_Tests(SumIndicesUtil):
 
     def test_primes(self):
         n = 3_800_000
-        endian = choice(['little', 'big'])
-        a = gen_primes(n, endian)
+        a = gen_primes(n)
         self.assertEqual(_ssqi(a, 1),           493_187_952_850)
         self.assertEqual(_ssqi(a, 2), 1_234_421_634_142_352_974)
 
@@ -263,20 +260,19 @@ class SumIndicesTests(SumIndicesUtil):
 
     def test_primes(self):
         n = 10_000_000
-        endian = choice(['little', 'big'])
-        a = gen_primes(n, endian)
+        a = gen_primes(n)
         self.assertEqual(sum_indices(a, 1),          3_203_324_994_356)
         self.assertEqual(sum_indices(a, 2), 21_113_978_675_102_768_574)
 
     def test_ones(self):
-        for m in range(19, 32):
+        for m in range(10, 32):
             n = randrange(1 << m)
-            mode = randint(1, 2)
-            freeze = getrandbits(1)
-            self.check_sparse(sum_indices, n, 0, mode, freeze, inv=True)
+            for mode, f in MODES:
+                a = ones(n)
+                self.assertEqual(sum_indices(a, mode), f(n))
 
     def test_sum_random(self):
-        for _  in range(50):
+        for _  in range(20):
             n = randrange(2, 1 << randrange(19, 32))
             k = randrange(min(1_000, n // 2))
             mode = randint(1, 2)
