@@ -4087,24 +4087,26 @@ bitarray_search(bitarrayobject *self, PyObject *args, PyObject *kwds)
                             "or int, not '%s'", Py_TYPE(sub)->tp_name);
     }
 
-    PySlice_AdjustIndices(self->nbits, &start, &stop, 1);
-
     it = PyObject_GC_New(searchiterobject, &SearchIter_Type);
     if (it == NULL)
         return NULL;
 
-    it->self = self;
-    it->sub = NULL;
-    it->vi = vi;
+    Py_INCREF(self);
+    Py_BEGIN_CRITICAL_SECTION(self);
+    PySlice_AdjustIndices(self->nbits, &start, &stop, 1);
     it->start = start;
     it->stop = stop;
+    it->self = self;
+    Py_END_CRITICAL_SECTION();
+
+    it->sub = NULL;
+    it->vi = vi;
     it->right = right;
 
     if (bitarray_Check(sub)) {
         Py_INCREF(sub);
         it->sub = (bitarrayobject *) sub;
     }
-    Py_INCREF(self);
     PyObject_GC_Track(it);
     return (PyObject *) it;
 }
@@ -4131,7 +4133,7 @@ searchiter_next(searchiterobject *it)
     right = it->right;
     Py_END_CRITICAL_SECTION();
 
-    assert(it->start >= 0);
+    assert(start >= 0);
     if (it->sub) {
         Py_BEGIN_CRITICAL_SECTION2(it->self, it->sub);
         if (start > it->self->nbits || stop < 0 || stop > it->self->nbits) {
