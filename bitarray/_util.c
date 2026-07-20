@@ -2144,8 +2144,8 @@ and `symbol` is a sequence of symbols in canonical order.");
 
 /* This function is based on the function decode() in:
    https://github.com/madler/zlib/blob/master/contrib/puff/puff.c */
-static PyObject *
-chdi_next(chdi_obj *it)
+static Py_ssize_t
+chdi_next_lock_held(chdi_obj *it)
 {
     Py_ssize_t nbits = it->array->nbits;
     int len;    /* current number of bits in code */
@@ -2155,7 +2155,7 @@ chdi_next(chdi_obj *it)
     int index;  /* index of first code of length len in symbol list */
 
     if (it->index >= nbits)           /* no bits - stop iteration */
-        return NULL;
+        return -1;
 
     code = first = index = 0;
     for (len = 1; len <= MAXBITS; len++) {
@@ -2163,7 +2163,7 @@ chdi_next(chdi_obj *it)
         count = it->count[len];
         assert(code - first >= 0);
         if (code - first < count) {   /* if length len, return symbol */
-            return PySequence_ITEM(it->symbol, index + (code - first));
+            return index + (code - first);
         }
         index += count;               /* else update for next length */
         first += count;
@@ -2172,11 +2172,26 @@ chdi_next(chdi_obj *it)
 
         if (it->index >= nbits && len != MAXBITS) {
             PyErr_SetString(PyExc_ValueError, "reached end of bitarray");
-            return NULL;
+            return -1;
         }
     }
     PyErr_SetString(PyExc_ValueError, "ran out of codes");
-    return NULL;
+    return -1;
+}
+
+static PyObject *
+chdi_next(chdi_obj *it)
+{
+    Py_ssize_t symbol_index;
+
+    Py_BEGIN_CRITICAL_SECTION2(it, it->array);
+    symbol_index = chdi_next_lock_held(it);
+    Py_END_CRITICAL_SECTION2();
+
+    if (symbol_index < 0)
+        return NULL;
+
+    return PySequence_GetItem(it->symbol, symbol_index);
 }
 
 static void
