@@ -1,5 +1,7 @@
 2026-XX-XX   3.9.2:
 -------------------
+  * add more critical sections in Python-facing operations
+  * move tests for internal `_ssqi()` to `devel/test_sum_indices.py`
 
 
 2026-07-19   3.9.1:
@@ -7,7 +9,7 @@
   * improving free-threading readiness, see also #251:
       - initialize tables at module import, not lazily
       - remove caching imported Python objects (which are already caches)
-      - added 75 critial sections in Python-facing operations
+      - added 75 critical sections in Python-facing operations
       - updated Trove Classifier to `Free Threading :: 2 - Beta`
   * clip arguments in `.bytereverse()` instead of raising `IndexError`
   * remove `ssize_richcompare()` in favor of `Py_RETURN_RICHCOMPARE` macro
