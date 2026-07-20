@@ -3055,46 +3055,63 @@ setseq_bool(bitarrayobject *self, PyObject *seq, PyObject *value)
     return res;
 }
 
+/* Materialize 'seq' into indices normalized to 'length' as
+   a bitarray of 'length'. */
+static bitarrayobject *
+sequence_as_bitarray(PyObject *seq, Py_ssize_t length)
+{
+    bitarrayobject *res;
+    Py_ssize_t n, j;
+
+    n = PySequence_Size(seq);  /* may execute arbitrary Python code */
+    if (n < 0)
+        return NULL;
+
+    res = newbitarrayobject(&Bitarray_Type, length, ENDIAN_DEFAULT);
+    if (res == NULL)
+        return NULL;
+
+    if (res->ob_item)
+        memset(res->ob_item, 0x00, (size_t) Py_SIZE(res));
+
+    /* set indices from sequence */
+    for (j = 0; j < n; j++) {
+        Py_ssize_t i = index_from_seq(seq, j, length);
+        if (i < 0) {
+            Py_DECREF(res);
+            return NULL;
+        }
+        setbit(res, i, 1);
+    }
+    return res;
+}
+
 /* delete items in self, specified by sequence of indices */
 static int
 delsequence(bitarrayobject *self, PyObject *seq)
 {
-    const Py_ssize_t nbits = self->nbits;
-    Py_ssize_t nseq;
+    Py_ssize_t nbits;
     bitarrayobject *mask;  /* temporary bitarray masking items to remove */
-    Py_ssize_t i, j;
     int res = -1;
 
-    if ((nseq = PySequence_Size(seq)) < 0)
-        return -1;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    nbits = self->nbits;
+    Py_END_CRITICAL_SECTION();
 
-    /* shortcuts for removing 0 or 1 items to avoid creating mask */
-    if (nseq < 2) {
-        if (nseq == 0)
-            /* use resize to check for BufferError */
-            return resize(self, nbits);
-
-        assert(nseq == 1);
-        if ((i = index_from_seq(seq, 0, nbits)) < 0)
-            return -1;
-        return delete_n(self, i, 1);
-    }
-
-    /* create mask bitarray - note that its bit-endianness is irrelevant */
-    mask = newbitarrayobject(&Bitarray_Type, nbits, ENDIAN_LITTLE);
+    mask = sequence_as_bitarray(seq, nbits);
     if (mask == NULL)
         return -1;
-    if (self->ob_item)
-        memset(mask->ob_item, 0x00, (size_t) Py_SIZE(mask));
 
-    /* set indices from sequence in mask */
-    for (j = 0; j < nseq; j++) {
-        if ((i = index_from_seq(seq, j, nbits)) < 0)
-            goto finish;
-        setbit(mask, i, 1);
+    Py_BEGIN_CRITICAL_SECTION(self);
+    if (self->nbits != nbits) {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "bitarray changed size during sequence indexing");
     }
-    res = delmask(self, mask);  /* do actual work here */
- finish:
+    else {
+        res = delmask_lock_held(self, mask);  /* do actual work here */
+    }
+    Py_END_CRITICAL_SECTION();
+
     Py_DECREF(mask);
     return res;
 }
