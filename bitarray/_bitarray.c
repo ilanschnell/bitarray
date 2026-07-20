@@ -2846,12 +2846,13 @@ assign_slice(bitarrayobject *self, PyObject *slice, PyObject *value)
 
 /* assign mask of bitarray self to bitarray other */
 static int
-setmask_bitarray(bitarrayobject *self, bitarrayobject *mask,
-                 bitarrayobject *other)
+setmask_bitarray_lock_held(bitarrayobject *self, bitarrayobject *mask,
+                           bitarrayobject *other)
 {
     Py_ssize_t n, i, j;
 
     assert(self->nbits == mask->nbits);
+
     n = count_span(mask, 0, mask->nbits);  /* mask size */
     if (n != other->nbits) {
         PyErr_Format(PyExc_IndexError, "attempt to assign mask of size %zd "
@@ -2865,6 +2866,29 @@ setmask_bitarray(bitarrayobject *self, bitarrayobject *mask,
     }
     assert(j == n);
     return 0;
+}
+
+static int
+setmask_bitarray(bitarrayobject *self, bitarrayobject *mask,
+                 bitarrayobject *other)
+{
+    bitarrayobject *src;
+    int res = -1;
+
+    Py_BEGIN_CRITICAL_SECTION(other);
+    src = bitarray_cp(other);
+    Py_END_CRITICAL_SECTION();
+
+    if (src == NULL)
+        return -1;
+
+    Py_BEGIN_CRITICAL_SECTION2(self, mask);
+    if (ensure_mask_size(self, mask) == 0)
+        res = setmask_bitarray_lock_held(self, mask, src);
+    Py_END_CRITICAL_SECTION2();
+
+    Py_DECREF(src);
+    return res;
 }
 
 /* assign mask of bitarray self to boolean value */
@@ -2886,7 +2910,7 @@ setmask_bool(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
 
 /* delete items in self, specified by mask */
 static int
-delmask(bitarrayobject *self, bitarrayobject *mask)
+delmask_lock_held(bitarrayobject *self, bitarrayobject *mask)
 {
     Py_ssize_t n = 0, i;
 
@@ -2901,13 +2925,23 @@ delmask(bitarrayobject *self, bitarrayobject *mask)
     return resize(self, n);
 }
 
+static int
+delmask(bitarrayobject *self, bitarrayobject *mask)
+{
+    int res = -1;
+
+    Py_BEGIN_CRITICAL_SECTION2(self, mask);
+    if (ensure_mask_size(self, mask) == 0)
+        res = delmask_lock_held(self, mask);
+    Py_END_CRITICAL_SECTION2();
+
+    return res;
+}
+
 /* assign mask of bitarray self to value */
 static int
 assign_mask(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
 {
-    if (ensure_mask_size(self, mask) < 0)
-        return -1;
-
     if (value == NULL)
         return delmask(self, mask);
 
