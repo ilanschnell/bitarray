@@ -2532,23 +2532,28 @@ ensure_mask_size(bitarrayobject *self, bitarrayobject *mask)
 static PyObject *
 getmask(bitarrayobject *self, bitarrayobject *mask)
 {
-    bitarrayobject *res;
-    Py_ssize_t i, j, n;
+    PyObject *result = NULL;
 
-    if (ensure_mask_size(self, mask) < 0)
-        return NULL;
+    Py_BEGIN_CRITICAL_SECTION2(self, mask);
+    if (ensure_mask_size(self, mask) == 0) {
+        bitarrayobject *res;
+        Py_ssize_t n = count_span(mask, 0, mask->nbits), i, j;
 
-    n = count_span(mask, 0, mask->nbits);
-    res = newbitarrayobject(Py_TYPE(self), n, self->endian);
-    if (res == NULL)
-        return NULL;
-
-    for (i = j = 0; i < mask->nbits; i++) {
-        if (getbit(mask, i))
-            setbit(res, j++, getbit(self, i));
+        res = newbitarrayobject(Py_TYPE(self), n, self->endian);
+        if (res != NULL) {
+            for (i = j = 0; i < mask->nbits; i++) {
+                if (getbit(mask, i))
+                    setbit(res, j++, getbit(self, i));
+            }
+            result = (PyObject *) res;
+            assert(j == n);
+        }
     }
-    assert(j == n);
-    return freeze_if_frozen(res);
+    Py_END_CRITICAL_SECTION2();
+
+    if (result == NULL)
+        return NULL;
+    return freeze_if_frozen((bitarrayobject *) result);
 }
 
 /* Return j-th item from sequence.  The item is considered an index into
@@ -2582,23 +2587,59 @@ static PyObject *
 getsequence(bitarrayobject *self, PyObject *seq)
 {
     bitarrayobject *res;
-    Py_ssize_t i, j, n;
+    Py_ssize_t *indices = NULL;
+    Py_ssize_t nbits, n, j;
+    int changed = 0;
 
-    if ((n = PySequence_Size(seq)) < 0)
+    n = PySequence_Size(seq);  /* may execute arbitrary Python code */
+    if (n < 0)
         return NULL;
 
-    res = newbitarrayobject(Py_TYPE(self), n, self->endian);
-    if (res == NULL)
-        return NULL;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    nbits = self->nbits;
+    Py_END_CRITICAL_SECTION();
 
+    if (n) {
+        indices = PyMem_New(Py_ssize_t, n);
+        if (indices == NULL)
+            return PyErr_NoMemory();
+    }
+
+    /* Materialize the indices without holding self's lock.
+       index_from_seq() may execute arbitrary Python code. */
     for (j = 0; j < n; j++) {
-        if ((i = index_from_seq(seq, j, self->nbits)) < 0) {
-            Py_DECREF(res);
-            return NULL;
-        }
-        setbit(res, j, getbit(self, i));
+        Py_ssize_t i = index_from_seq(seq, j, nbits);
+        if (i < 0)
+            goto error;
+        indices[j] = i;
+    }
+
+    if ((res = newbitarrayobject(Py_TYPE(self), n, self->endian)) == NULL)
+        goto error;
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    if (self->nbits == nbits) {
+        for (j = 0; j < n; j++)
+            setbit(res, j, getbit(self, indices[j]));
+    }
+    else {
+        changed = 1;
+    }
+    Py_END_CRITICAL_SECTION();
+
+    PyMem_Free(indices);
+
+    if (changed) {
+        Py_DECREF(res);
+        PyErr_SetString(PyExc_RuntimeError,
+                        "bitarray changed size during sequence indexing");
+        return NULL;
     }
     return freeze_if_frozen(res);
+
+ error:
+    PyMem_Free(indices);
+    return NULL;
 }
 
 static int
