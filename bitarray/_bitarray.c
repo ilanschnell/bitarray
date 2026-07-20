@@ -2350,24 +2350,26 @@ bitarray_repeat(bitarrayobject *self, Py_ssize_t n)
     return freeze_if_frozen(res);
 }
 
+static int
+bitarray_item_lock_held(bitarrayobject *self, Py_ssize_t i)
+{
+    if (i < 0 || i >= self->nbits) {
+        PyErr_SetString(PyExc_IndexError, "bitarray index out of range");
+        return -1;
+    }
+    return getbit(self, i);
+}
+
 static PyObject *
 bitarray_item(bitarrayobject *self, Py_ssize_t i)
 {
-    long vi;
+    int vi;
 
     Py_BEGIN_CRITICAL_SECTION(self);
-    if (i < 0 || i >= self->nbits) {
-        PyErr_SetString(PyExc_IndexError, "bitarray index out of range");
-        vi = -1;
-    }
-    else {
-        vi = getbit(self, i);
-    }
+    vi = bitarray_item_lock_held(self, i);
     Py_END_CRITICAL_SECTION();
 
-    if (vi < 0)
-        return NULL;
-    return PyLong_FromLong(vi);
+    return vi < 0 ? NULL : PyLong_FromLong(vi);
 }
 
 static int
@@ -2670,13 +2672,19 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
 {
     if (PyIndex_Check(item)) {
         Py_ssize_t i;
+        int vi;
 
         i = PyNumber_AsSsize_t(item, PyExc_IndexError);
         if (i == -1 && PyErr_Occurred())
             return NULL;
+
+        Py_BEGIN_CRITICAL_SECTION(self);
         if (i < 0)
             i += self->nbits;
-        return bitarray_item(self, i);
+        vi = bitarray_item_lock_held(self, i);
+        Py_END_CRITICAL_SECTION();
+
+        return vi < 0 ? NULL : PyLong_FromLong(vi);
     }
 
     if (PySlice_Check(item))
