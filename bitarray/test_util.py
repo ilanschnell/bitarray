@@ -37,7 +37,7 @@ from bitarray.util import (
     _huffman_tree, huffman_code, canonical_huffman, canonical_decode,
 )
 
-from bitarray.util import _Random, _ssqi  # type: ignore
+from bitarray.util import _Random  # type: ignore
 
 
 ENDIANS = ('little', 'big')
@@ -1126,35 +1126,27 @@ class ParityTests(unittest.TestCase):
 
 # ----------------------------  sum_indices()  ------------------------------
 
-class SumIndicesUtil(unittest.TestCase):
+class SumIndicesTests(unittest.TestCase):
 
-    def check_explicit(self, S):
-        for s, r1, r2 in [
-                ("", 0, 0), ("0", 0, 0), ("1", 0, 0), ("11", 1, 1),
-                ("011", 3, 5), ("001", 2, 4), ("0001100", 7, 25),
-                ("00001111", 22, 126), ("01100111 1101", 49, 381),
-        ]:
-            for a in [bitarray(s, choice(ENDIANS)),
-                      frozenbitarray(s, choice(ENDIANS))]:
-                self.assertEqual(S(a, 1), r1)
-                self.assertEqual(S(a, 2), r2)
-                self.assertEqual(a, bitarray(s))
+    # Additional tests in: devel/test_sum_indices.py
 
-    def check_wrong_args(self, S):
+    def test_explicit(self):
+        a = gen_primes(100)
+        self.assertEqual(sum_indices(a, mode=1),  1_060)
+        self.assertEqual(sum_indices(a, mode=2), 65_796)
+
+    def test_wrong_args(self):
+        S = sum_indices
         self.assertRaises(TypeError, S, '')
         self.assertRaises(TypeError, S, 1.0)
         self.assertRaises(TypeError, S)
         for mode in -1, 0, 3, 4:
             self.assertRaises(ValueError, S, bitarray("110"), mode)
 
-    def check_urandom(self, S, n):
-        a = urandom_2(n)
-        self.assertEqual(S(a, 1), sum(i for i, v in enumerate(a) if v))
-        self.assertEqual(S(a, 2), sum(i * i for i, v in enumerate(a) if v))
-
-    def check_sparse(self, S, n, k, mode=1, freeze=False, inv=False):
-        a = random_k(n, k, choice(ENDIANS))
-        indices = a.search(1)
+    def check_sparse(self, n, k, mode=1, freeze=False, inv=False):
+        a = zeros(n, choice(ENDIANS))
+        indices = sample(range(n), k)
+        a[indices] = 1
         res = sum(indices) if mode == 1 else sum(i * i for i in indices)
 
         if inv:
@@ -1167,72 +1159,26 @@ class SumIndicesUtil(unittest.TestCase):
         if freeze:
             a = frozenbitarray(a)
 
-        c = a.copy()
         self.assertEqual(a.count(), n - k if inv else k)
-        self.assertEqual(S(a, mode), res)
-        self.assertEqual(a, c)
-
-
-class SSQI_Tests(SumIndicesUtil):
-
-    # Additional tests for _ssqi() in: devel/test_sum_indices.py
-
-    def test_explicit(self):
-        self.check_explicit(_ssqi)
-
-    def test_wrong_args(self):
-        self.check_wrong_args(_ssqi)
+        self.assertEqual(sum_indices(a, mode), res)
 
     def test_small(self):
-        a = bitarray()
-        sm1 = sm2 = 0
-        for i in range(100):
-            v = getrandbits(1)
-            a.append(v)
-            if v:
-                sm1 += i
-                sm2 += i * i
-            self.assertEqual(_ssqi(a, 1), sm1)
-            self.assertEqual(_ssqi(a, 2), sm2)
-
-    def test_urandom(self):
-        self.check_urandom(_ssqi, 10_037)
-
-    def test_sparse(self):
-        for _ in range(5):
-            mode = randint(1, 2)
-            freeze = getrandbits(1)
-            inv = getrandbits(1)
-            self.check_sparse(_ssqi, n=1_000_003, k=400,
-                              mode=mode, freeze=freeze, inv=inv)
-
-
-class SumIndicesTests(SumIndicesUtil):
-
-    # Additional tests in: devel/test_sum_indices.py
-
-    def test_explicit(self):
-        self.check_explicit(sum_indices)
-        a = gen_primes(100)
-        self.assertEqual(sum_indices(a, mode=1),  1_060)
-        self.assertEqual(sum_indices(a, mode=2), 65_796)
-
-    def test_wrong_args(self):
-        self.check_wrong_args(sum_indices)
-
-    def test_ones(self):
         for mode in 1, 2:
-            self.check_sparse(sum_indices, n=1_600_037, k=0,
-                              mode=mode, freeze=True, inv=True)
+            for a in bitarray(), bitarray("0"), bitarray("1"):
+                self.assertEqual(sum_indices(a, mode), 0)
+
+            for n in range(2, 50):
+                k = randrange(n // 2)
+                self.check_sparse(n, k, mode)
 
     def test_sparse(self):
-        for _ in range(20):
-            n = choice([500_029, 600_011])  # below and above block size
-            k = randrange(1_000)
+        for _ in range(10):
+            n = randrange(2, 1_500_000)  # below and above block size
+            k = randrange(min(100, n // 2))
             mode = randint(1, 2)
             freeze = getrandbits(1)
             inv = getrandbits(1)
-            self.check_sparse(sum_indices, n, k, mode, freeze, inv)
+            self.check_sparse(n, k, mode, freeze, inv)
 
 # ---------------------------------------------------------------------------
 

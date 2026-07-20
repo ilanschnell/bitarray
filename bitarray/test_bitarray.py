@@ -5353,6 +5353,9 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
         self.assertFalse(a.readonly)  # not readonly
         a._freeze()
         self.assertTrue(a.readonly)   # readonly
+        # This is a test for .check_obj() as a bitarray (unless created
+        # by importing a readonly buffer) is always writable.
+        self.assertRaises(AssertionError, self.check_obj, a)
 
     def test_memoryview(self):
         a = frozenbitarray('01000001 01000010', 'big')

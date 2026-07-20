@@ -238,7 +238,7 @@ class SSQI_Tests(SumIndicesUtil):
 
     def test_sparse(self):
         for _  in range(100):
-            n = randint(2, 3_810_778)
+            n = randint(2, SSQI_LIMIT[2])
             k = randrange(min(1_000, n // 2))
             mode = randint(1, 2)
             freeze = getrandbits(1)
@@ -255,12 +255,11 @@ class SumIndicesTests(SumIndicesUtil):
         self.check_wrong_args(sum_indices)
 
     def test_random_sample(self):
-        n = N31
         for k in 1, 31, 503:
             mode = randint(1, 2)
             freeze = getrandbits(1)
             inv = getrandbits(1)
-            self.check_sparse(sum_indices, n, k, mode, freeze, inv)
+            self.check_sparse(sum_indices, N31, k, mode, freeze, inv)
 
     def test_primes(self):
         n = 10_000_000
@@ -278,7 +277,7 @@ class SumIndicesTests(SumIndicesUtil):
 
     def test_sum_random(self):
         for _  in range(50):
-            n = randrange(1 << randrange(19, 32))
+            n = randrange(2, 1 << randrange(19, 32))
             k = randrange(min(1_000, n // 2))
             mode = randint(1, 2)
             freeze = getrandbits(1)
