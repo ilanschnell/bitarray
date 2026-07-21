@@ -115,7 +115,7 @@ NOTES = {
 
     'bitarray.search': """\
    For example, ``a.search(1)`` is the easiest (and most efficient) way
-   to create an iterator over all active indices in ``a``."""
+   to create an iterator over all active indices in ``a``.""",
 
     'bitarray.tolist': """\
    Note that the list object being created will require 32 or 64 times more
