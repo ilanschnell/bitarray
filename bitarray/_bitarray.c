@@ -2585,11 +2585,16 @@ index_from_seq(PyObject *sequence, Py_ssize_t j, Py_ssize_t length)
     }
     return i;
 }
-/* Materialize 'seq' into indices normalized to 'length'.
-   Return 0 on success and -1 with an exception set on error. */
+
+/* Convert 'seq' to an array of indices normalized to 'length'.
+   On success, store the allocated array in '*indices', its number of
+   elements in '*size', and return 0.  The array may be NULL when
+   '*size' is zero and must be freed with PyMem_Free().
+   On error, leave the output arguments unchanged and return -1 with
+   an exception set. */
 static int
-materialize_sequence(PyObject *seq, Py_ssize_t length,
-                     Py_ssize_t **indices, Py_ssize_t *size)
+sequence_as_array(PyObject *seq, Py_ssize_t length,
+                  Py_ssize_t **indices, Py_ssize_t *size)
 {
     Py_ssize_t *p = NULL;
     Py_ssize_t n, j;
@@ -2634,7 +2639,7 @@ getsequence(bitarrayobject *self, PyObject *seq)
     nbits = self->nbits;
     Py_END_CRITICAL_SECTION();
 
-    if (materialize_sequence(seq, nbits, &indices, &n) < 0)
+    if (sequence_as_array(seq, nbits, &indices, &n) < 0)
         return NULL;
 
     if ((res = newbitarrayobject(Py_TYPE(self), n, self->endian)) == NULL)
@@ -2999,7 +3004,7 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
     nbits = self->nbits;
     Py_END_CRITICAL_SECTION();
 
-    if (materialize_sequence(seq, nbits, &indices, &n) < 0)
+    if (sequence_as_array(seq, nbits, &indices, &n) < 0)
         return -1;
 
     Py_BEGIN_CRITICAL_SECTION2(self, other);
@@ -3046,7 +3051,7 @@ setseq_bool(bitarrayobject *self, PyObject *seq, PyObject *value)
     nbits = self->nbits;
     Py_END_CRITICAL_SECTION();
 
-    if (materialize_sequence(seq, nbits, &indices, &n) < 0)
+    if (sequence_as_array(seq, nbits, &indices, &n) < 0)
         return -1;
 
     Py_BEGIN_CRITICAL_SECTION(self);
