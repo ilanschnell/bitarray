@@ -655,14 +655,33 @@ Nothing about this function is specific to bitarray objects.");
   blob does not.
 */
 
+static int
+serialize_lock_held(bitarrayobject *a, PyObject *bytes, Py_ssize_t nbits)
+{
+    char *str;
+
+    if (a->nbits != nbits) {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "bitarray changed size during serialize()");
+        return -1;
+    }
+
+    str = PyBytes_AsString(bytes);
+    set_padbits(a);
+    *str = (IS_BE(a) ? 0x10 : 0x00) | ((char) PADBITS(a));
+    if (nbits)
+        memcpy(str + 1, a->ob_item, (size_t) BYTES(nbits));
+
+    return 0;
+}
+
 static PyObject *
 serialize(PyObject *module, PyObject *obj)
 {
     bitarrayobject *a;
     PyObject *result;
     Py_ssize_t nbits;
-    char *str;
-    int err = 1;
+    int ret;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
@@ -678,20 +697,11 @@ serialize(PyObject *module, PyObject *obj)
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION(a);
-    if (a->nbits == nbits) {
-        str = PyBytes_AsString(result);
-        set_padbits(a);
-        *str = (IS_BE(a) ? 0x10 : 0x00) | ((char) PADBITS(a));
-        if (nbits)
-            memcpy(str + 1, a->ob_item, (size_t) BYTES(nbits));
-        err = 0;
-    }
+    ret = serialize_lock_held(a, result, nbits);
     Py_END_CRITICAL_SECTION();
 
-    if (err) {
+    if (ret < 0) {
         Py_DECREF(result);
-        PyErr_SetString(PyExc_RuntimeError,
-                        "bitarray changed size during serialize()");
         return NULL;
     }
     return result;
