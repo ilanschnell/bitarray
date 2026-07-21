@@ -46,7 +46,7 @@ new_allocation(size_t size, size_t allocated, size_t newsize)
           if (size != 0 && newsize / 2 <= allocated) {
               /* overallocate proportional to the bitarray size and
                  add padding to make the allocated size multiple of 4 */
-              new_alloc += (newsize >> 4) + (newsize < 8 ? 3 : 7);
+              new_alloc += (newsize >> 4) + ((newsize < 8) ? 3 : 7);
               new_alloc &= ~(size_t) 3;
           }
           return new_alloc;
@@ -746,7 +746,7 @@ count_sub(bitarrayobject *self, bitarrayobject *sub,
     assert(0 <= stop && stop <= self->nbits);
 
     if (sbits == 0)
-        return start <= stop ? stop - start + 1 : 0;
+        return (start <= stop) ? stop - start + 1 : 0;
 
     while ((pos = find_sub(self, sub, start, stop, 0)) >= 0) {
         start = pos + sbits;
@@ -2403,7 +2403,7 @@ bitarray_item(bitarrayobject *self, Py_ssize_t i)
     vi = bitarray_item_lock_held(self, i);
     Py_END_CRITICAL_SECTION();
 
-    return vi < 0 ? NULL : PyLong_FromLong(vi);
+    return (vi < 0) ? NULL : PyLong_FromLong(vi);
 }
 
 /* vi is 0 or 1 for assignment, and 2 for deletion. */
@@ -2743,7 +2743,7 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
         vi = bitarray_item_lock_held(self, i);
         Py_END_CRITICAL_SECTION();
 
-        return vi < 0 ? NULL : PyLong_FromLong(vi);
+        return (vi < 0) ? NULL : PyLong_FromLong(vi);
     }
 
     if (PySlice_Check(item))
@@ -4599,7 +4599,7 @@ richcompare_lock_held(bitarrayobject *va, bitarrayobject *wa, int op)
         }
         else if (va->endian == wa->endian) {
             /* sizes and endianness are the same - use memcmp() */
-            int cmp = vs >= 8 ? memcmp(vb, wb, (size_t) vs / 8) : 0;
+            int cmp = (vs >= 8) ? memcmp(vb, wb, (size_t) vs / 8) : 0;
 
             if (cmp == 0 && vs % 8)  /* if equal, compare remaining bits */
                 cmp = zlc(va) != zlc(wa);
@@ -4694,7 +4694,7 @@ bitarrayiter_next(bitarrayiterobject *it)
     }
     Py_END_CRITICAL_SECTION2();
 
-    return vi < 0 ? NULL : PyLong_FromLong(vi);
+    return (vi < 0) ? NULL : PyLong_FromLong(vi);
 }
 
 static void

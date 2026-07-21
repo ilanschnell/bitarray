@@ -735,7 +735,7 @@ deserialize(PyObject *module, PyObject *buffer)
     if ((a = new_bitarray(nbits, Py_None, -1)) == NULL)
         goto error;
     /* set bit-endianness and buffer */
-    a->endian = head & 0x10 ? ENDIAN_BIG : ENDIAN_LITTLE;
+    a->endian = (head & 0x10) ? ENDIAN_BIG : ENDIAN_LITTLE;
     assert(Py_SIZE(a) == view.len - 1);
     if (Py_SIZE(a)) {
         Py_BEGIN_CRITICAL_SECTION(view.obj);
@@ -959,7 +959,7 @@ digit_to_int(int m, char c)
     assert(1 <= m && m <= 6);
     if (m < 5) {                                 /* base 2, 4, 8, 16 */
         i = hex_to_int(c);
-        return i >> m ? -1 : i;
+        return (i >> m) ? -1 : i;
     }
 
     if (0x80 & c)  /* non-ASCII */
@@ -1141,13 +1141,14 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
     if ((m = base_to_length(n)) < 0)
         goto error;
 
-    a = new_bitarray(m * asciistr.len, endian, m == 4 ? 0 : -1);
+    a = new_bitarray(m * asciistr.len, endian, (m == 4) ? 0 : -1);
     if (a == NULL)
         goto error;
 
     Py_BEGIN_CRITICAL_SECTION(asciistr.obj);
-    ret = (m == 4) ? hex2ba_lock_held(a, asciistr) :
-                     base2ba_lock_held(a, asciistr, m);
+    ret = (m == 4)
+        ? hex2ba_lock_held(a, asciistr)
+        : base2ba_lock_held(a, asciistr, m);
     Py_END_CRITICAL_SECTION();
 
     if (ret < 0)
@@ -1440,7 +1441,7 @@ sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
     assert(k <= 32 || k % 32 == 0);
 
     /* block header */
-    *str = (char) (k <= 32 ? k : k / 32 + 31);
+    *str = (char) ((k <= 32) ? k : k / 32 + 31);
 
     /* block data */
     assert(offset + k <= Py_SIZE(a));
@@ -1616,7 +1617,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
         /* number of blocks of type n */
         nblocks = Py_MIN(256, (nbytes - 1) / BSI(n) + 1);
         /* cost of nblocks blocks of type n */
-        cost_a = (n == 1 ? 1 : 2) * nblocks;
+        cost_a = ((n == 1) ? 1 : 2) * nblocks;
         /* cost of a single block of type n+1 */
         cost_b = 2 + next_count;
 
@@ -1743,7 +1744,7 @@ sc_decode_header(PyObject *iter, int *endian, Py_ssize_t *nbits)
         return -1;
     }
 
-    *endian = head & 0x10 ? ENDIAN_BIG : ENDIAN_LITTLE;
+    *endian = (head & 0x10) ? ENDIAN_BIG : ENDIAN_LITTLE;
     len = head & 0x0f;
 
     if (len > (int) sizeof(Py_ssize_t)) {
@@ -1818,7 +1819,7 @@ sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
         if (head == 0)  /* stop byte */
             return 0;
 
-        k = head <= 0x20 ? head : 32 * (head - 31);
+        k = (head <= 0x20) ? head : 32 * (head - 31);
         return sc_read_raw(a, offset, iter, k);
     }
 
@@ -1992,8 +1993,8 @@ vl_encode_lock_held(bitarrayobject *a)
         return NULL;
 
     str = PyBytes_AsString(bytes);
-    str[0] = nbits > 4 ? 0x80 : 0x00;  /* lead bit */
-    str[0] |= padding << 4;            /* encode padding */
+    str[0] = (nbits > 4) ? 0x80 : 0x00;  /* lead bit */
+    str[0] |= padding << 4;              /* encode padding */
     for (i = 0; i < 4 && i < nbits; i++)
         str[0] |= (0x08 >> i) * getbit(a, i);
 
@@ -2002,7 +2003,7 @@ vl_encode_lock_held(bitarrayobject *a)
 
         if (k == 0) {
             j++;
-            str[j] = j < n - 1 ? 0x80 : 0x00;  /* lead bit */
+            str[j] = (j < n - 1) ? 0x80 : 0x00;  /* lead bit */
         }
         str[j] |= (0x40 >> k) * getbit(a, i);
     }
