@@ -2266,13 +2266,19 @@ module_zlw(PyObject *module, PyObject *obj)
 {
     bitarrayobject *a, *res;
     uint64_t w;
+    int endian;
 
     assert(bitarray_Check(obj));
     a = (bitarrayobject *) obj;
+
+    Py_BEGIN_CRITICAL_SECTION(a);
     w = zlw(a);
+    endian = a->endian;
+    Py_END_CRITICAL_SECTION();
+
     if ((res = new_bitarray(64, Py_None, -1)) == NULL)
         return NULL;
-    res->endian = a->endian;
+    res->endian = endian;
     memcpy(res->ob_item, &w, 8);
     return (PyObject *) res;
 }
@@ -2281,11 +2287,16 @@ static PyObject *
 module_cfw(PyObject *module, PyObject *args)  /* count_from_word() */
 {
     bitarrayobject *a;
-    Py_ssize_t i;
+    Py_ssize_t res, i;
 
     if (!PyArg_ParseTuple(args, "O!n", bitarray_type, (PyObject *) &a, &i))
         return NULL;
-    return PyLong_FromSsize_t(count_from_word(a, i));
+
+    Py_BEGIN_CRITICAL_SECTION(a);
+    res = count_from_word(a, i);
+    Py_END_CRITICAL_SECTION();
+
+    return PyLong_FromSsize_t(res);
 }
 
 static PyObject *
