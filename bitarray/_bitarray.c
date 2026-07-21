@@ -2907,9 +2907,14 @@ setmask_bitarray(bitarrayobject *self, bitarrayobject *mask,
     bitarrayobject *src;
     int res = -1;
 
+#ifdef Py_GIL_DISABLED
+    /* copy other so the operation below only needs to lock self and mask */
     Py_BEGIN_CRITICAL_SECTION(other);
     src = bitarray_cp(other);
     Py_END_CRITICAL_SECTION();
+#else
+    src = (bitarrayobject *) Py_NewRef(other);
+#endif
 
     if (src == NULL)
         return -1;
