@@ -1356,18 +1356,11 @@ is found, such that sub_bitarray is contained within `[start:stop]`.\n\
 Raises `ValueError` when sub_bitarray is not present.");
 
 
-static PyObject *
-bitarray_insert(bitarrayobject *self, PyObject *args)
+static int
+insert_lock_held(bitarrayobject *self, Py_ssize_t i, int vi)
 {
-    Py_ssize_t n, i;
-    int vi, ret;
+    const Py_ssize_t n = self->nbits;
 
-    RAISE_IF_READONLY(self, NULL);
-    if (!PyArg_ParseTuple(args, "nO&:insert", &i, conv_pybit, &vi))
-        return NULL;
-
-    Py_BEGIN_CRITICAL_SECTION(self);
-    n = self->nbits;
     if (i < 0) {
         i += n;
         if (i < 0)
@@ -1376,9 +1369,25 @@ bitarray_insert(bitarrayobject *self, PyObject *args)
     if (i > n)
         i = n;
 
-    ret = insert_n(self, i, 1);
-    if (ret == 0)
-        setbit(self, i, vi);
+    if (insert_n(self, i, 1) < 0)
+        return -1;
+
+    setbit(self, i, vi);
+    return 0;
+}
+
+static PyObject *
+bitarray_insert(bitarrayobject *self, PyObject *args)
+{
+    Py_ssize_t i;
+    int vi, ret;
+
+    RAISE_IF_READONLY(self, NULL);
+    if (!PyArg_ParseTuple(args, "nO&:insert", &i, conv_pybit, &vi))
+        return NULL;
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    ret = insert_lock_held(self, i, vi);
     Py_END_CRITICAL_SECTION();
 
     if (ret < 0)
@@ -1544,16 +1553,11 @@ bitarray_repr(bitarrayobject *self)
 }
 
 
-static PyObject *
-bitarray_reverse(bitarrayobject *self)
+static void
+reverse_lock_held(bitarrayobject *self)
 {
-    Py_ssize_t p;
-    char *buff;
-
-    RAISE_IF_READONLY(self, NULL);
-    Py_BEGIN_CRITICAL_SECTION(self);
-    p = PADBITS(self);  /* number of pad bits */
-    buff = self->ob_item;
+    Py_ssize_t p = PADBITS(self);  /* number of pad bits */
+    char *buff = self->ob_item;
 
     /* Increase self->nbits to full buffer size.  The p pad bits will
        later be the leading p bits.  To remove those p leading bits, we
@@ -1573,7 +1577,14 @@ bitarray_reverse(bitarrayobject *self)
        writable buffer. */
     copy_n(self, 0, self, p, self->nbits - p);
     self->nbits -= p;
+}
 
+static PyObject *
+bitarray_reverse(bitarrayobject *self)
+{
+    RAISE_IF_READONLY(self, NULL);
+    Py_BEGIN_CRITICAL_SECTION(self);
+    reverse_lock_held(self);
     Py_END_CRITICAL_SECTION();
     Py_RETURN_NONE;
 }
@@ -1607,19 +1618,11 @@ Set all elements in bitarray to `value`.\n\
 Note that `a.setall(value)` is equivalent to `a[:] = value`.");
 
 
-static PyObject *
-bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
+static void
+sort_lock_held(bitarrayobject *self, int reverse)
 {
-    static char *kwlist[] = {"reverse", NULL};
-    Py_ssize_t nbits, cnt1;
-    int reverse = 0;
+    Py_ssize_t nbits = self->nbits, cnt1;
 
-    RAISE_IF_READONLY(self, NULL);
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:sort", kwlist, &reverse))
-        return NULL;
-
-    Py_BEGIN_CRITICAL_SECTION(self);
-    nbits = self->nbits;
     cnt1 = count_span(self, 0, nbits);
     if (reverse) {
         set_span(self, 0, cnt1, 1);
@@ -1630,6 +1633,20 @@ bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
         set_span(self, 0, cnt0, 0);
         set_span(self, cnt0, nbits, 1);
     }
+}
+
+static PyObject *
+bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"reverse", NULL};
+    int reverse = 0;
+
+    RAISE_IF_READONLY(self, NULL);
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i:sort", kwlist, &reverse))
+        return NULL;
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    sort_lock_held(self, reverse);
     Py_END_CRITICAL_SECTION();
     Py_RETURN_NONE;
 }
@@ -1691,10 +1708,25 @@ Return bitarray as list of integers.\n\
 `a.tolist()` equals `list(a)`.");
 
 
+static int
+frombytes_lock_held(bitarrayobject *self, const Py_buffer *view)
+{
+    Py_ssize_t n = Py_SIZE(self);  /* nbytes before extending */
+    Py_ssize_t p = PADBITS(self);  /* number of pad bits */
+
+    if (resize(self, 8 * (n + view->len)) < 0)
+        return -1;
+
+    if (view->len)
+        memcpy(self->ob_item + n, (char *) view->buf, (size_t) view->len);
+
+    /* remove pad bits starting at previous bit length (8 * n - p) */
+    return delete_n(self, 8 * n - p, p);
+}
+
 static PyObject *
 bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
 {
-    Py_ssize_t n, p;
     Py_buffer view;
     int ret;
 
@@ -1703,18 +1735,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION2(self, view.obj);
-    n = Py_SIZE(self);  /* nbytes before extending */
-    p = PADBITS(self);  /* number of pad bits */
-
-    if (resize(self, 8 * (n + view.len)) < 0) {
-        ret = -1;
-    }
-    else {
-        if (view.len)
-            memcpy(self->ob_item + n, (char *) view.buf, (size_t) view.len);
-        /* remove pad bits starting at previous bit length (8 * n - p) */
-        ret = delete_n(self, 8 * n - p, p);
-    }
+    ret = frombytes_lock_held(self, &view);
     Py_END_CRITICAL_SECTION2();
     PyBuffer_Release(&view);
 
@@ -2546,32 +2567,41 @@ ensure_mask_size(bitarrayobject *self, bitarrayobject *mask)
     return 0;
 }
 
+static PyObject *
+getmask_lock_held(bitarrayobject *self, bitarrayobject *mask)
+{
+    bitarrayobject *res;
+    Py_ssize_t n, i, j;
+
+    if (ensure_mask_size(self, mask) < 0)
+        return NULL;
+
+    n = count_span(mask, 0, mask->nbits);
+    res = newbitarrayobject(Py_TYPE(self), n, self->endian);
+    if (res == NULL)
+        return NULL;
+
+    for (i = j = 0; i < mask->nbits; i++) {
+        if (getbit(mask, i))
+            setbit(res, j++, getbit(self, i));
+    }
+    assert(j == n);
+    return (PyObject *) res;
+}
+
 /* return a new bitarray with items from 'self' masked by bitarray 'mask' */
 static PyObject *
 getmask(bitarrayobject *self, bitarrayobject *mask)
 {
-    PyObject *result = NULL;
+    PyObject *res = NULL;
 
     Py_BEGIN_CRITICAL_SECTION2(self, mask);
-    if (ensure_mask_size(self, mask) == 0) {
-        bitarrayobject *res;
-        Py_ssize_t n = count_span(mask, 0, mask->nbits), i, j;
-
-        res = newbitarrayobject(Py_TYPE(self), n, self->endian);
-        if (res != NULL) {
-            for (i = j = 0; i < mask->nbits; i++) {
-                if (getbit(mask, i))
-                    setbit(res, j++, getbit(self, i));
-            }
-            result = (PyObject *) res;
-            assert(j == n);
-        }
-    }
+    res = getmask_lock_held(self, mask);
     Py_END_CRITICAL_SECTION2();
 
-    if (result == NULL)
+    if (res == NULL)
         return NULL;
-    return freeze_if_frozen((bitarrayobject *) result);
+    return freeze_if_frozen((bitarrayobject *) res);
 }
 
 /* Return j-th item from sequence.  The item is considered an index into
