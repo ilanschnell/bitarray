@@ -2190,9 +2190,11 @@ bitarray_sizeof(bitarrayobject *self)
 {
     Py_ssize_t res;
 
+    Py_BEGIN_CRITICAL_SECTION(self);
     res = sizeof(bitarrayobject) + self->allocated;
     if (self->buffer)
         res += sizeof(Py_buffer);
+    Py_END_CRITICAL_SECTION();
     return PyLong_FromSsize_t(res);
 }
 
@@ -2230,7 +2232,9 @@ bitarray_shift_r8(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "nni", &a, &b, &n))
         return NULL;
 
+    Py_BEGIN_CRITICAL_SECTION(self);
     shift_r8(self, a, b, n);
+    Py_END_CRITICAL_SECTION();
     Py_RETURN_NONE;
 }
 
@@ -2243,15 +2247,24 @@ bitarray_copy_n(bitarrayobject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "nO!nn", &a, &Bitarray_Type, &other, &b, &n))
         return NULL;
 
+    Py_BEGIN_CRITICAL_SECTION2(self, other);
     copy_n(self, a, (bitarrayobject *) other, b, n);
+    Py_END_CRITICAL_SECTION2();
     Py_RETURN_NONE;
 }
 
 static PyObject *
 bitarray_overlap(bitarrayobject *self, PyObject *other)
 {
+    int res;
+
     assert(bitarray_Check(other));
-    return PyBool_FromLong(buffers_overlap(self, (bitarrayobject *) other));
+
+    Py_BEGIN_CRITICAL_SECTION2(self, other);
+    res = buffers_overlap(self, (bitarrayobject *) other);
+    Py_END_CRITICAL_SECTION2();
+
+    return PyBool_FromLong(res);
 }
 
 #endif  /* NDEBUG */
