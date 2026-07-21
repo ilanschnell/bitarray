@@ -303,7 +303,8 @@ ssqi_lock_held(bitarrayobject *a, int mode)
     uint64_t nbytes = Py_SIZE(a), i;
     uint64_t sm = 0;            /* accumulated sum */
 
-    assert(mode >= 1 && mode <= 2);
+    assert(mode == 1 || mode == 2);
+
     set_padbits(a);
 
     for (i = 0; i < nbytes; i++) {
@@ -1362,17 +1363,24 @@ module_sc_rts(PyObject *module, PyObject *obj)
 {
     PyObject *list;
     bitarrayobject *a;
-    Py_ssize_t *rts, i;
+    Py_ssize_t *rts, nseg, i;
 
     assert(bitarray_Check(obj));
     a = (bitarrayobject *) obj;
-    if ((rts = sc_rts(a)) == NULL)
+
+    Py_BEGIN_CRITICAL_SECTION(a);
+    nseg = NSEG(a);
+    rts = sc_rts(a);
+    Py_END_CRITICAL_SECTION();
+
+    if (rts == NULL)
         return NULL;
 
-    if ((list = PyList_New(NSEG(a) + 1)) == NULL)
+    list = PyList_New(nseg + 1);
+    if (list == NULL)
         goto error;
 
-    for (i = 0; i <= NSEG(a); i++) {
+    for (i = 0; i <= nseg; i++) {
         PyObject *item = PyLong_FromSsize_t(rts[i]);
         if (item == NULL)
             goto error;
