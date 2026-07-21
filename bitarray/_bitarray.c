@@ -2613,7 +2613,8 @@ index_from_seq(PyObject *sequence, Py_ssize_t j, Py_ssize_t length)
     PyObject *item;
     Py_ssize_t i;
 
-    if ((item = PySequence_GetItem(sequence, j)) == NULL)
+    item = PySequence_GetItem(sequence, j);
+    if (item == NULL)
         return -1;
 
     i = PyNumber_AsSsize_t(item, PyExc_IndexError);
@@ -2685,7 +2686,8 @@ getsequence(bitarrayobject *self, PyObject *seq)
     if (sequence_as_array(seq, nbits, &indices, &n) < 0)
         return NULL;
 
-    if ((res = newbitarrayobject(Py_TYPE(self), n, self->endian)) == NULL)
+    res = newbitarrayobject(Py_TYPE(self), n, self->endian);
+    if (res == NULL)
         goto error;
 
     Py_BEGIN_CRITICAL_SECTION(self);
@@ -3515,7 +3517,8 @@ bitarray_encode(bitarrayobject *self, PyObject *args)
     if (check_codedict(codedict) < 0)
         return NULL;
 
-    if ((iter = PyObject_GetIter(iterable)) == NULL)
+    iter = PyObject_GetIter(iterable);
+    if (iter == NULL)
         return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
                             Py_TYPE(iterable)->tp_name);
 
@@ -3656,12 +3659,11 @@ binode_make_tree(PyObject *codedict)
          * the critical section. */
         Py_INCREF(symbol);
         Py_INCREF(value);
-
         Py_BEGIN_CRITICAL_SECTION(value);
         ret = check_value(value);
         if (ret == 0) {
-            ret = binode_insert_symbol(
-                tree, (bitarrayobject *) value, symbol);
+            ret = binode_insert_symbol(tree, (bitarrayobject *) value,
+                                       symbol);
         }
         Py_END_CRITICAL_SECTION();
         Py_DECREF(value);
@@ -3730,7 +3732,8 @@ binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
         bitarrayobject *t;      /* prefix of the two child nodes */
         int ret;
 
-        if ((t = bitarray_cp(prefix)) == NULL)
+        t = bitarray_cp(prefix);
+        if (t == NULL)
             return -1;
         if (resize(t, t->nbits + 1) < 0) {
             Py_DECREF(t);
@@ -3822,7 +3825,8 @@ decodetree_todict(decodetreeobject *self)
     PyObject *dict;
     bitarrayobject *prefix;
 
-    if ((dict = PyDict_New()) == NULL)
+    dict = PyDict_New();
+    if (dict == NULL)
         return NULL;
 
     prefix = newbitarrayobject(&Bitarray_Type, 0, ENDIAN_DEFAULT);
@@ -3989,7 +3993,8 @@ bitarray_decode(bitarrayobject *self, PyObject *obj)
     decodeiterobject *it;       /* iterator to be returned */
     binode *tree;
 
-    if ((tree = get_tree(obj)) == NULL)
+    tree = get_tree(obj);
+    if (tree == NULL)
         return NULL;
 
     it = PyObject_GC_New(decodeiterobject, &DecodeIter_Type);
@@ -4474,7 +4479,8 @@ newbitarray_from_index(PyTypeObject *type, PyObject *index,
         return NULL;
     }
 
-    if ((res = newbitarrayobject(type, nbits, endian)) == NULL)
+    res = newbitarrayobject(type, nbits, endian);
+    if (res == NULL)
         return NULL;
 
     if (init_zero && nbits)
@@ -5033,7 +5039,8 @@ register_abc(void)
 {
     PyObject *abc_module, *mutablesequence, *res;
 
-    if ((abc_module = PyImport_ImportModule("collections.abc")) == NULL)
+    abc_module = PyImport_ImportModule("collections.abc");
+    if (abc_module == NULL)
         return -1;
 
     mutablesequence = PyObject_GetAttrString(abc_module, "MutableSequence");

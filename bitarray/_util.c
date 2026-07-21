@@ -742,8 +742,10 @@ deserialize(PyObject *module, PyObject *buffer)
     }
     /* create bitarray of desired length */
     nbits = 8 * (view.len - 1) - ((Py_ssize_t) (head & 0x07));
-    if ((a = new_bitarray(nbits, Py_None, -1)) == NULL)
+    a = new_bitarray(nbits, Py_None, -1);
+    if (a == NULL)
         goto error;
+
     /* set bit-endianness and buffer */
     a->endian = (head & 0x10) ? ENDIAN_BIG : ENDIAN_LITTLE;
     assert(Py_SIZE(a) == view.len - 1);
@@ -1059,7 +1061,8 @@ ba2base(PyObject *module, PyObject *args, PyObject *kwds)
                                      &group, &sep))
         return NULL;
 
-    if ((m = base_to_length(n)) < 0)
+    m = base_to_length(n);
+    if (m < 0)
         return NULL;
 
     if (group < 0) {
@@ -1148,7 +1151,8 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
                                      &n, &asciistr, &endian))
         return NULL;
 
-    if ((m = base_to_length(n)) < 0)
+    m = base_to_length(n);
+    if (m < 0)
         goto error;
 
     a = new_bitarray(m * asciistr.len, endian, (m == 4) ? 0 : -1);
@@ -1191,7 +1195,8 @@ next_char(PyObject *iter)
     PyObject *item;
     Py_ssize_t v;
 
-    if ((item = PyIter_Next(iter)) == NULL) {
+    item = PyIter_Next(iter);
+    if (item == NULL) {
         if (PyErr_Occurred())   /* from PyIter_Next() */
             return -1;
         PyErr_SetString(PyExc_StopIteration, "unexpected end of stream");
@@ -1237,7 +1242,8 @@ read_n(PyObject *iter, int n)
     assert(PyIter_Check(iter));
     assert(n <= 8);
     for (j = 0; j < n; j++) {
-        if ((c = next_char(iter)) < 0)
+        c = next_char(iter);
+        if (c < 0)
             return -1;
         i |= ((Py_ssize_t) c) << (8 * j);
     }
@@ -1482,7 +1488,8 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
         assert(m + offset / SEGSIZE < NSEG(a));
         /* number of indices in this segment, i.e. the segment population */
-        if ((ni = rts[m + 1] - rts[m]) == 0)
+        ni = rts[m + 1] - rts[m];
+        if (ni == 0)
             goto next_segment;
 
         for (i = m * SEGSIZE;; i++) {  /* loop bytes in segment */
@@ -1715,7 +1722,8 @@ sc_encode(PyObject *module, PyObject *obj)
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
-    if ((out = PyBytes_FromStringAndSize(NULL, ALLOC_SIZE)) == NULL)
+    out = PyBytes_FromStringAndSize(NULL, ALLOC_SIZE);
+    if (out == NULL)
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION(obj);
@@ -1774,7 +1782,7 @@ static Py_ssize_t
 sc_read_raw(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int k)
 {
     char *buff = a->ob_item + offset;
-    int i, c;
+    int i;
 
     assert(1 <= k && k <= 32 * 128);
     if (offset + k > Py_SIZE(a)) {
@@ -1783,7 +1791,8 @@ sc_read_raw(bitarrayobject *a, Py_ssize_t offset, PyObject *iter, int k)
         return -1;
     }
     for (i = 0; i < k; i++) {
-        if ((c = next_char(iter)) < 0)
+        int c = next_char(iter);
+        if (c < 0)
             return -1;
         buff[i] = (char) c;
     }
@@ -1800,7 +1809,8 @@ sc_read_sparse(bitarrayobject *a, Py_ssize_t offset, PyObject *iter,
     while (k--) {
         Py_ssize_t i;
 
-        if ((i = read_n(iter, n)) < 0)
+        i = read_n(iter, n);
+        if (i < 0)
             return -1;
 
         i += 8 * offset;
@@ -1855,7 +1865,8 @@ sc_decode(PyObject *module, PyObject *obj)
     Py_ssize_t offset = 0, increase, nbits;
     int endian;
 
-    if ((iter = PyObject_GetIter(obj)) == NULL)
+    iter = PyObject_GetIter(obj);
+    if (iter == NULL)
         return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
                             Py_TYPE(obj)->tp_name);
 
@@ -1863,7 +1874,8 @@ sc_decode(PyObject *module, PyObject *obj)
         goto error;
 
     /* create bitarray of length nbits */
-    if ((a = new_bitarray(nbits, Py_None, 0)) == NULL)
+    a = new_bitarray(nbits, Py_None, 0);
+    if (a == NULL)
         goto error;
     a->endian = endian;
 
@@ -2078,7 +2090,8 @@ set_count(int *count, PyObject *sequence)
     Py_ssize_t n, res = 0;
     int i;
 
-    if ((n = PySequence_Size(sequence)) < 0)
+    n = PySequence_Size(sequence);
+    if (n < 0)
         return -1;
 
     if (n > MAXBITS + 1) {
@@ -2092,12 +2105,15 @@ set_count(int *count, PyObject *sequence)
         PyObject *item;
         Py_ssize_t c;
 
-        if ((item = PySequence_GetItem(sequence, i)) == NULL)
+        item = PySequence_GetItem(sequence, i);
+        if (item == NULL)
             return -1;
+
         c = PyNumber_AsSsize_t(item, PyExc_OverflowError);
         Py_DECREF(item);
         if (c == -1 && PyErr_Occurred())
             return -1;
+
         if (c >> i && (c - 1) >> i) {
             PyErr_Format(PyExc_ValueError, "count[%d] not in [0..%zu], "
                          "got %zd", i, ((size_t) 1) << i, c);
@@ -2134,7 +2150,8 @@ chdi_new(PyObject *module, PyObject *args)
         return NULL;
     }
 
-    if ((count_sum = set_count(it->count, count)) < 0)
+    count_sum = set_count(it->count, count);
+    if (count_sum < 0)
         goto error;
 
     if (count_sum != PySequence_Size(symbol)) {
@@ -2360,7 +2377,8 @@ module_write_n(PyObject *module, PyObject *args)
 
     if (!PyArg_ParseTuple(args, "in", &n, &i))
         return NULL;
-    if ((result = PyBytes_FromStringAndSize(NULL, n)) == NULL)
+    result = PyBytes_FromStringAndSize(NULL, n);
+    if (result == NULL)
         return NULL;
     str = PyBytes_AsString(result);
     write_n(str, n, i);
