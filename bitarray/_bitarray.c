@@ -2032,7 +2032,6 @@ bitarray_pack(bitarrayobject *self, PyObject *buffer)
     PyBuffer_Release(&view);
     if (ret < 0)
         return NULL;
-
     Py_RETURN_NONE;
 }
 
@@ -3119,17 +3118,15 @@ setseq_bool(bitarrayobject *self, PyObject *seq, PyObject *value)
     return res;
 }
 
-/* Materialize 'seq' into indices normalized to 'length' as
+/* Materialize 'seq' (of size 'n') into indices normalized to 'length' as
    a bitarray of 'length'. */
 static bitarrayobject *
-sequence_as_bitarray(PyObject *seq, Py_ssize_t length)
+sequence_as_bitarray(PyObject *seq, Py_ssize_t n, Py_ssize_t length)
 {
     bitarrayobject *res;
-    Py_ssize_t n, j;
+    Py_ssize_t j;
 
-    n = PySequence_Size(seq);  /* may execute arbitrary Python code */
-    if (n < 0)
-        return NULL;
+    assert(n >= 0);
 
     res = newbitarrayobject(&Bitarray_Type, length, ENDIAN_DEFAULT);
     if (res == NULL)
@@ -3154,15 +3151,27 @@ sequence_as_bitarray(PyObject *seq, Py_ssize_t length)
 static int
 delsequence(bitarrayobject *self, PyObject *seq)
 {
-    Py_ssize_t nbits;
+    Py_ssize_t nbits, nseq;
     bitarrayobject *mask;  /* temporary bitarray masking items to remove */
     int res = -1;
+
+    nseq = PySequence_Size(seq);  /* may execute arbitrary Python code */
+    if (nseq < 0)
+        return -1;
+
+    if (nseq == 0) {  /* shortcut */
+        Py_BEGIN_CRITICAL_SECTION(self);
+        /* use resize to check for BufferError */
+        res = resize(self, self->nbits);
+        Py_END_CRITICAL_SECTION();
+        return res;
+    }
 
     Py_BEGIN_CRITICAL_SECTION(self);
     nbits = self->nbits;
     Py_END_CRITICAL_SECTION();
 
-    mask = sequence_as_bitarray(seq, nbits);
+    mask = sequence_as_bitarray(seq, nseq, nbits);
     if (mask == NULL)
         return -1;
 
