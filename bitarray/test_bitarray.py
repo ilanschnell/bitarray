@@ -1366,10 +1366,10 @@ class CommonSequenceIndexTests(unittest.TestCase, Util):
     def test_type_messages(self):
         for item, msg in [
                 (tuple([1, 2]), "multiple dimensions not supported"),
-                (None, "bitarray indices must be integers, slices or "
-                       "sequences, not 'NoneType'"),
-                (0.12, "bitarray indices must be integers, slices or "
-                       "sequences, not 'float'"),
+                (None, "bitarray subscript must be an index, slice or "
+                       "sequence, not 'NoneType'"),
+                (0.12, "bitarray subscript must be an index, slice or "
+                       "sequence, not 'float'"),
         ]:
             a = bitarray('10111')
             self.assertRaisesMessage(TypeError, msg, a.__getitem__, item)

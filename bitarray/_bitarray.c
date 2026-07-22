@@ -2720,8 +2720,9 @@ subscr_seq_check(PyObject *item)
     if (PySequence_Check(item))
         return 0;
 
-    PyErr_Format(PyExc_TypeError, "bitarray indices must be integers, "
-                 "slices or sequences, not '%s'", Py_TYPE(item)->tp_name);
+    PyErr_Format(PyExc_TypeError, "bitarray subscript must be an index, "
+                 "slice or sequence, not '%s'",
+                 Py_TYPE(item)->tp_name);
     return -1;
 }
 
@@ -2991,15 +2992,23 @@ setmask_bool(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
 static int
 delmask_lock_held(bitarrayobject *self, bitarrayobject *mask)
 {
+    Py_ssize_t nbits = self->nbits, cnt;
     Py_ssize_t n = 0, i;
 
-    assert(self->nbits == mask->nbits);
-    for (i = 0; i < mask->nbits; i++) {
+    assert(nbits == mask->nbits);
+
+    cnt = count_span(mask, 0, nbits);
+    if (cnt == 0)        /* no bits in mask are 1 - do nothing */
+        return resize(self, nbits);  /* check for BufferError */
+
+    if (cnt == nbits)    /* all bits in mask are 1 - remove everything */
+        return resize(self, 0);      /* clear */
+
+    for (i = 0; i < nbits; i++) {
         if (getbit(mask, i) == 0)  /* set items we want to keep */
             setbit(self, n++, getbit(self, i));
     }
-    assert(self == mask ||
-           n == mask->nbits - count_span(mask, 0, mask->nbits));
+    assert(n == nbits - cnt);
 
     return resize(self, n);
 }
@@ -3118,15 +3127,17 @@ setseq_bool(bitarrayobject *self, PyObject *seq, PyObject *value)
     return res;
 }
 
-/* Materialize 'seq' (of size 'n') into indices normalized to 'length' as
+/* Materialize 'seq' into indices normalized to 'length' as
    a bitarray of 'length'. */
 static bitarrayobject *
-sequence_as_bitarray(PyObject *seq, Py_ssize_t n, Py_ssize_t length)
+sequence_as_bitarray(PyObject *seq, Py_ssize_t length)
 {
     bitarrayobject *res;
-    Py_ssize_t j;
+    Py_ssize_t n, j;
 
-    assert(n >= 0);
+    n = PySequence_Size(seq);  /* may execute arbitrary Python code */
+    if (n < 0)
+        return NULL;
 
     res = newbitarrayobject(&Bitarray_Type, length, ENDIAN_DEFAULT);
     if (res == NULL)
@@ -3151,27 +3162,15 @@ sequence_as_bitarray(PyObject *seq, Py_ssize_t n, Py_ssize_t length)
 static int
 delsequence(bitarrayobject *self, PyObject *seq)
 {
-    Py_ssize_t nbits, nseq;
+    Py_ssize_t nbits;
     bitarrayobject *mask;  /* temporary bitarray masking items to remove */
     int res = -1;
-
-    nseq = PySequence_Size(seq);  /* may execute arbitrary Python code */
-    if (nseq < 0)
-        return -1;
-
-    if (nseq == 0) {  /* shortcut */
-        Py_BEGIN_CRITICAL_SECTION(self);
-        /* use resize to check for BufferError */
-        res = resize(self, self->nbits);
-        Py_END_CRITICAL_SECTION();
-        return res;
-    }
 
     Py_BEGIN_CRITICAL_SECTION(self);
     nbits = self->nbits;
     Py_END_CRITICAL_SECTION();
 
-    mask = sequence_as_bitarray(seq, nseq, nbits);
+    mask = sequence_as_bitarray(seq, nbits);
     if (mask == NULL)
         return -1;
 
