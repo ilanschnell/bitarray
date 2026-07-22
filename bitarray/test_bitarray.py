@@ -630,7 +630,7 @@ class DelItemTests(unittest.TestCase, Util):
         self.assertFalse(b.readonly)
         self.assertRaises(BufferError, b.__delitem__, 13)
 
-# -------------------------- Slice index tests ------------------------------
+# ------------------------ Slice subscript tests ----------------------------
 
 class GetSliceTests(unittest.TestCase, Util):
 
@@ -1154,9 +1154,9 @@ class DelSliceTests(unittest.TestCase, Util):
         # even though we don't delete anything, raise error
         self.assertRaises(BufferError, b.__delitem__, slice(3, 3))
 
-# ----------------------------- Masked index tests --------------------------
+# ---------------------------- Mask subscript tests -------------------------
 
-class GetMaskedIndexTests(unittest.TestCase, Util):
+class GetMaskTests(unittest.TestCase, Util):
 
     def test_basic(self):
         a =    bitarray('1001001')
@@ -1199,7 +1199,7 @@ class GetMaskedIndexTests(unittest.TestCase, Util):
             mask[s] = 1
             self.assertEQUAL(a[mask], a[s])
 
-class SetMaskedIndexTests(unittest.TestCase, Util):
+class SetMaskTests(unittest.TestCase, Util):
 
     def test_basic(self):
         a =    bitarray('1001001')
@@ -1295,7 +1295,7 @@ class SetMaskedIndexTests(unittest.TestCase, Util):
         b[c] = bitarray(' 1001   01  10')
         self.assertEqual(a, bytearray([0b00001001, 0b11011110]))
 
-class DelMaskedIndexTests(unittest.TestCase, Util):
+class DelMaskTests(unittest.TestCase, Util):
 
     def test_basic(self):
         a =    bitarray('1001001')
@@ -1359,9 +1359,9 @@ class DelMaskedIndexTests(unittest.TestCase, Util):
         # even though we don't delete anything, raise error
         self.assertRaises(BufferError, b.__delitem__, bitarray(16))
 
-# ------------------------- Sequence index tests ----------------------------
+# ----------------------- Sequence subscript tests --------------------------
 
-class CommonSequenceIndexTests(unittest.TestCase, Util):
+class CommonSubscritsTests(unittest.TestCase, Util):
 
     def test_type_messages(self):
         for item, msg in [
@@ -1376,7 +1376,7 @@ class CommonSequenceIndexTests(unittest.TestCase, Util):
             self.assertRaisesMessage(TypeError, msg, a.__setitem__, item, 1)
             self.assertRaisesMessage(TypeError, msg, a.__delitem__, item)
 
-class GetSequenceIndexTests(unittest.TestCase, Util):
+class GetSequenceTests(unittest.TestCase, Util):
 
     def test_basic(self):
         a = bitarray('00110101 00')
@@ -1423,7 +1423,7 @@ class GetSequenceIndexTests(unittest.TestCase, Util):
             a = urandom_2(n)
             self.assertEQUAL(a[r], a[s])
 
-class SetSequenceIndexTests(unittest.TestCase, Util):
+class SetSequenceTests(unittest.TestCase, Util):
 
     def test_bool_basic(self):
         a = zeros(10)
@@ -1520,7 +1520,7 @@ class SetSequenceIndexTests(unittest.TestCase, Util):
         b[range(0, 10)] = bitarray("00001111 01", "little")
         self.assertEqual(a, bytearray([0x0f, 0x41, 0x82, 0x83]))
 
-class DelSequenceIndexTests(unittest.TestCase, Util):
+class DelSequenceTests(unittest.TestCase, Util):
 
     def test_basic(self):
         a = bitarray('00110101 00')
