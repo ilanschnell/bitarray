@@ -2998,11 +2998,17 @@ delmask_lock_held(bitarrayobject *self, bitarrayobject *mask)
     assert(nbits == mask->nbits);
 
     cnt = count_span(mask, 0, nbits);
-    if (cnt == 0)        /* no bits in mask are 1 - do nothing */
+    if (cnt == 0)      /* no bits in mask are 1 - do nothing */
         return resize(self, nbits);  /* check for BufferError */
 
-    if (cnt == nbits)    /* all bits in mask are 1 - remove everything */
+    if (cnt == nbits)  /* all bits in mask are 1 - remove everything */
         return resize(self, 0);      /* clear */
+
+    if (cnt == 1) {    /* mask has one bit 1 - find its position and delete */
+        i = find_bit(mask, 1, 0, nbits, 0);
+        assert(i >= 0);
+        return delete_n(self, i, 1);
+    }
 
     for (i = 0; i < nbits; i++) {
         if (getbit(mask, i) == 0)  /* set items we want to keep */
