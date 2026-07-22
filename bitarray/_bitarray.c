@@ -547,7 +547,7 @@ set_range(bitarrayobject *self,
     }
 }
 
-/* return number of 1 bits in self[a:b] */
+/* Return number of 1 bits in self[a:b]; cannot fail. */
 static Py_ssize_t
 count_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
