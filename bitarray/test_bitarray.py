@@ -1349,6 +1349,20 @@ class DelMaskTests(unittest.TestCase, Util):
             del a[mask], b[s]
             self.assertEQUAL(a, b)
 
+    def test_random_sparse_mask(self):
+        for k in range(50):
+            n = randrange(1000, 10_000)
+            a = urandom_2(n)
+            b = a.copy()
+            mask = zeros(n)
+            mask[choices(range(n), k=k)] = 1
+            self.assertTrue(mask.count() <= k)
+            del a[mask]
+            for i, j in enumerate(mask.search(1)):
+                # remove j - i as previous deletions shift locations
+                del b[j - i]
+            self.assertEQUAL(a, b)
+
     @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
         a = bytearray([5, 3])
@@ -1554,6 +1568,19 @@ class DelSequenceTests(unittest.TestCase, Util):
             del a[lst]
             self.assertEqual(len(a), n - len(set(lst)))
             for i in sorted(set(lst), reverse=True):
+                del b[i]
+            self.assertEqual(a, b)
+
+    def test_random_sparse(self):
+        for k in range(50):
+            n = randrange(1000, 10_000)
+            a = urandom_2(n)
+            lst = choices(range(n), k=k)
+            indices = set(lst)
+            b = a.copy()
+            del a[lst]
+            self.assertEqual(len(a), n - len(indices))
+            for i in sorted(indices, reverse=True):
                 del b[i]
             self.assertEqual(a, b)
 
