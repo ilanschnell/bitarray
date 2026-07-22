@@ -656,7 +656,7 @@ Nothing about this function is specific to bitarray objects.");
 */
 
 static int
-serialize_lock_held(bitarrayobject *a, PyObject *bytes, Py_ssize_t nbits)
+serialize_lock_held(bitarrayobject *a, Py_ssize_t nbits, PyObject *bytes)
 {
     char *str;
 
@@ -697,7 +697,7 @@ serialize(PyObject *module, PyObject *obj)
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION(a);
-    ret = serialize_lock_held(a, result, nbits);
+    ret = serialize_lock_held(a, nbits, result);
     Py_END_CRITICAL_SECTION();
 
     if (ret < 0) {
@@ -1074,10 +1074,9 @@ ba2base(PyObject *module, PyObject *args, PyObject *kwds)
     Py_BEGIN_CRITICAL_SECTION(a);
     nbits = a->nbits;
     if (nbits % m == 0) {
-        if (m == 4)
-            str = ba2hex_lock_held(a, group, sep);
-        else
-            str = ba2base_lock_held(a, m, group, sep);
+        str = (m == 4)
+            ? ba2hex_lock_held(a, group, sep)
+            : ba2base_lock_held(a, m, group, sep);
     }
     Py_END_CRITICAL_SECTION();
 
@@ -1237,12 +1236,12 @@ static Py_ssize_t
 read_n(PyObject *iter, int n)
 {
     Py_ssize_t i = 0;
-    int j, c;
+    int j;
 
     assert(PyIter_Check(iter));
     assert(n <= 8);
     for (j = 0; j < n; j++) {
-        c = next_char(iter);
+        int c = next_char(iter);
         if (c < 0)
             return -1;
         i |= ((Py_ssize_t) c) << (8 * j);
@@ -2037,7 +2036,7 @@ vl_encode_lock_held(bitarrayobject *a)
 static PyObject *
 vl_encode(PyObject *module, PyObject *obj)
 {
-    PyObject *result;
+    PyObject *res;
     bitarrayobject *a;
 
     if (ensure_bitarray(obj) < 0)
@@ -2046,10 +2045,10 @@ vl_encode(PyObject *module, PyObject *obj)
     a = (bitarrayobject *) obj;
 
     Py_BEGIN_CRITICAL_SECTION(a);
-    result = vl_encode_lock_held(a);
+    res = vl_encode_lock_held(a);
     Py_END_CRITICAL_SECTION();
 
-    return result;
+    return res;
 }
 
 PyDoc_STRVAR(vl_encode_doc,

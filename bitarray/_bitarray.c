@@ -1151,7 +1151,7 @@ static PyObject *
 bitarray_count(bitarrayobject *self, PyObject *args)
 {
     PyObject *sub = Py_None;
-    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, step = 1, slicelength;
+    Py_ssize_t start = 0, stop = PY_SSIZE_T_MAX, step = 1;
     Py_ssize_t cnt = 0;
 
     if (!PyArg_ParseTuple(args, "|Onnn:count",
@@ -1164,6 +1164,7 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     }
 
     if (PyIndex_Check(sub) || sub == Py_None) {
+        Py_ssize_t slicelength;
         int vi = 1;
 
         if (PyIndex_Check(sub) && !conv_pybit(sub, &vi))
@@ -2045,7 +2046,7 @@ map to bit 1.");
 
 /* Pop and return bit 0 or 1 while self is locked; return -1 on error. */
 static int
-bitarray_pop_lock_held(bitarrayobject *self, Py_ssize_t i)
+pop_lock_held(bitarrayobject *self, Py_ssize_t i)
 {
     Py_ssize_t n = self->nbits;
     int vi;
@@ -2082,13 +2083,10 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION(self);
-    vi = bitarray_pop_lock_held(self, i);
+    vi = pop_lock_held(self, i);
     Py_END_CRITICAL_SECTION();
 
-    if (vi < 0)
-        return NULL;
-
-    return PyLong_FromLong(vi);
+    return vi < 0 ? NULL : PyLong_FromLong(vi);
 }
 
 PyDoc_STRVAR(pop_doc,
@@ -2384,26 +2382,26 @@ bitarray_repeat(bitarrayobject *self, Py_ssize_t n)
     return freeze_if_frozen(res);
 }
 
-static int
+static PyObject *
 bitarray_item_lock_held(bitarrayobject *self, Py_ssize_t i)
 {
     if (i < 0 || i >= self->nbits) {
         PyErr_SetString(PyExc_IndexError, "bitarray index out of range");
-        return -1;
+        return NULL;
     }
-    return getbit(self, i);
+    return PyLong_FromLong(getbit(self, i));
 }
 
 static PyObject *
 bitarray_item(bitarrayobject *self, Py_ssize_t i)
 {
-    int vi;
+    PyObject *res;
 
     Py_BEGIN_CRITICAL_SECTION(self);
-    vi = bitarray_item_lock_held(self, i);
+    res = bitarray_item_lock_held(self, i);
     Py_END_CRITICAL_SECTION();
 
-    return (vi < 0) ? NULL : PyLong_FromLong(vi);
+    return res;
 }
 
 /* vi is 0 or 1 for assignment, and 2 for deletion. */
@@ -2732,8 +2730,8 @@ static PyObject *
 bitarray_subscr(bitarrayobject *self, PyObject *item)
 {
     if (PyIndex_Check(item)) {
+        PyObject *res;
         Py_ssize_t i;
-        int vi;
 
         i = PyNumber_AsSsize_t(item, PyExc_IndexError);
         if (i == -1 && PyErr_Occurred())
@@ -2742,10 +2740,10 @@ bitarray_subscr(bitarrayobject *self, PyObject *item)
         Py_BEGIN_CRITICAL_SECTION(self);
         if (i < 0)
             i += self->nbits;
-        vi = bitarray_item_lock_held(self, i);
+        res = bitarray_item_lock_held(self, i);
         Py_END_CRITICAL_SECTION();
 
-        return (vi < 0) ? NULL : PyLong_FromLong(vi);
+        return res;
     }
 
     if (PySlice_Check(item))
@@ -4645,17 +4643,17 @@ richcompare_lock_held(bitarrayobject *va, bitarrayobject *wa, int op)
 static PyObject *
 richcompare(PyObject *v, PyObject *w, int op)
 {
-    PyObject *result;
+    PyObject *res;
 
     if (!bitarray_Check(v) || !bitarray_Check(w))
         return Py_NewRef(Py_NotImplemented);
 
     Py_BEGIN_CRITICAL_SECTION2(v, w);
-    result = richcompare_lock_held((bitarrayobject *) v,
-                                   (bitarrayobject *) w, op);
+    res = richcompare_lock_held((bitarrayobject *) v,
+                                (bitarrayobject *) w, op);
     Py_END_CRITICAL_SECTION2();
 
-    return result;
+    return res;
 }
 
 /***************************** bitarray iterator **************************/

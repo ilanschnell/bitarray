@@ -2,6 +2,8 @@
 -------------------
   * add more critical sections in Python-facing operations
   * move tests for internal `_ssqi()` to `devel/test_sum_indices.py`
+  * remove all occurrences of `PySlice_GetIndicesEx` (deprecated since
+    Python 3.6.1)
 
 
 2026-07-19   3.9.1:
