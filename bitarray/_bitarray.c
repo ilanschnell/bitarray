@@ -191,7 +191,11 @@ bitarray_dealloc(bitarrayobject *self)
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-/* return 1 when buffers overlap, 0 otherwise */
+/* Return 1 if buffers overlap, 0 otherwise.
+
+   'other' may be 'self'.  In that case the buffers overlap unless the
+   bitarray is empty.  Empty buffers never overlap.
+*/
 static int
 buffers_overlap(bitarrayobject *self, bitarrayobject *other)
 {
@@ -2957,7 +2961,7 @@ setmask_bitarray_lock_held(bitarrayobject *self, bitarrayobject *mask,
     const Py_ssize_t nbits = self->nbits;
     Py_ssize_t i = 0, j = 0, k;
 
-    assert(self != other && !buffers_overlap(self, other));
+    assert(!buffers_overlap(self, other));
     assert(nbits == mask->nbits);
 
     k = count_span(mask, 0, nbits);  /* active mask size */
@@ -3018,7 +3022,7 @@ setmask_bitarray(bitarrayobject *self, bitarrayobject *mask,
     src = bitarray_cp(other);
     Py_END_CRITICAL_SECTION();
 #else
-    if (self == other || buffers_overlap(self, other))
+    if (buffers_overlap(self, other))
         src = bitarray_cp(other);
     else
         src = (bitarrayobject *) Py_NewRef(other);
