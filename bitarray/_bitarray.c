@@ -2940,6 +2940,11 @@ setmask_bitarray_lock_held(bitarrayobject *self, bitarrayobject *mask,
         /* avoid calling find_bit() only to discover no bits set */
         return 0;
 
+    if (k == nbits) {  /* shortcut */
+        copy_n(self, 0, other, 0, nbits);
+        return 0;
+    }
+
     if (k <= nbits / 64) {
         /* find set bits directly for sparse masks */
         while ((i = find_bit(mask, 1, i, nbits, 0)) >= 0)
