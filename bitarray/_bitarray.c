@@ -11,7 +11,6 @@
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
 #include "pythoncapi_compat.h"
-#include "structmember.h"
 #include "bitarray.h"
 
 /* size used when reading / writing blocks from files (in bytes) */
@@ -2296,35 +2295,45 @@ bitarray_overlap(bitarrayobject *self, PyObject *other)
 static PyObject *
 bitarray_get_endian(bitarrayobject *self, void *Py_UNUSED(ignored))
 {
+    /* .endian is immutable - no need to lock */
     return PyUnicode_FromString(ENDIAN_STR(self->endian));
 }
 
 static PyObject *
 bitarray_get_nbytes(bitarrayobject *self, void *Py_UNUSED(ignored))
 {
-    return PyLong_FromSsize_t(Py_SIZE(self));
+    Py_ssize_t nbytes;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    nbytes = Py_SIZE(self);
+    Py_END_CRITICAL_SECTION();
+    return PyLong_FromSsize_t(nbytes);
 }
 
 static PyObject *
 bitarray_get_padbits(bitarrayobject *self, void *Py_UNUSED(ignored))
 {
-    return PyLong_FromSsize_t(PADBITS(self));
+    Py_ssize_t padbits;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    padbits = PADBITS(self);
+    Py_END_CRITICAL_SECTION();
+    return PyLong_FromSsize_t(padbits);
 }
 
 static PyObject *
 bitarray_get_readonly(bitarrayobject *self, void *Py_UNUSED(ignored))
 {
+    /* .readonly is immutable (except for ._freeze()) - no need to lock */
     return PyBool_FromLong(self->readonly);
 }
 
-static PyGetSetDef bitarray_getsets[] = {
-    {"endian", (getter) bitarray_get_endian, NULL,
+static PyGetSetDef bitarray_getset[] = {
+    {"endian",      (getter) bitarray_get_endian,       NULL,
      PyDoc_STR("bit-endianness as Unicode string")},
-    {"nbytes", (getter) bitarray_get_nbytes, NULL,
+    {"nbytes",      (getter) bitarray_get_nbytes,       NULL,
      PyDoc_STR("buffer size in bytes")},
-    {"padbits", (getter) bitarray_get_padbits, NULL,
+    {"padbits",     (getter) bitarray_get_padbits,      NULL,
      PyDoc_STR("number of pad bits")},
-    {"readonly", (getter) bitarray_get_readonly, NULL,
+    {"readonly",    (getter) bitarray_get_readonly,     NULL,
      PyDoc_STR("bool indicating whether buffer is read-only")},
     {NULL, NULL, NULL, NULL}
 };
@@ -2334,7 +2343,11 @@ static PyGetSetDef bitarray_getsets[] = {
 static Py_ssize_t
 bitarray_len(bitarrayobject *self)
 {
-    return self->nbits;
+    Py_ssize_t res;
+    Py_BEGIN_CRITICAL_SECTION(self);
+    res = self->nbits;
+    Py_END_CRITICAL_SECTION();
+    return res;
 }
 
 static PyObject *
@@ -4193,10 +4206,21 @@ static PyMethodDef decodeiter_methods[] = {
     {NULL}
 };
 
-static PyMemberDef decodeiter_members[] = {
-    {"index", Py_T_PYSSIZET, offsetof(decodeiterobject, index), Py_READONLY,
+
+static PyObject *
+decodeiter_index(decodeiterobject *it, void *Py_UNUSED(ignored))
+{
+    Py_ssize_t index;
+    Py_BEGIN_CRITICAL_SECTION(it);
+    index = it->index;
+    Py_END_CRITICAL_SECTION();
+    return PyLong_FromSsize_t(index);
+}
+
+static PyGetSetDef decodeiter_getset[] = {
+    {"index",       (getter) decodeiter_index,         NULL,
      PyDoc_STR("current bit position to be decoded by subsequent `next`")},
-    {NULL}
+    {NULL, NULL, NULL, NULL}
 };
 
 static PyTypeObject DecodeIter_Type = {
@@ -4229,7 +4253,9 @@ static PyTypeObject DecodeIter_Type = {
     PyObject_SelfIter,                        /* tp_iter */
     (iternextfunc) decodeiter_next,           /* tp_iternext */
     decodeiter_methods,                       /* tp_methods */
-    decodeiter_members,                       /* tp_members */
+    0,                                        /* tp_members */
+    decodeiter_getset,                        /* tp_getset */
+
 };
 
 /*********************** (Bitarray) Search Iterator ***********************/
@@ -4945,7 +4971,7 @@ static PyTypeObject Bitarray_Type = {
     0,                                        /* tp_iternext */
     bitarray_methods,                         /* tp_methods */
     0,                                        /* tp_members */
-    bitarray_getsets,                         /* tp_getset */
+    bitarray_getset,                          /* tp_getset */
     0,                                        /* tp_base */
     0,                                        /* tp_dict */
     0,                                        /* tp_descr_get */
