@@ -2925,18 +2925,18 @@ setmask_bitarray_lock_held(bitarrayobject *self, bitarrayobject *mask,
                            bitarrayobject *other)
 {
     const Py_ssize_t nbits = self->nbits;
-    Py_ssize_t n, i = 0, j = 0;
+    Py_ssize_t k, i = 0, j = 0;
 
     assert(nbits == mask->nbits);
 
-    n = count_span(mask, 0, nbits);  /* active mask size */
-    if (n != other->nbits) {
+    k = count_span(mask, 0, nbits);  /* active mask size */
+    if (k != other->nbits) {
         PyErr_Format(PyExc_IndexError, "attempt to assign mask of size %zd "
-                     "to bitarray of size %zd", n, other->nbits);
+                     "to bitarray of size %zd", k, other->nbits);
         return -1;
     }
 
-    if (n < 10) {
+    if (k <= nbits / 64) {
         /* find set bits directly for sparse masks */
         while ((i = find_bit(mask, 1, i, nbits, 0)) >= 0)
             setbit(self, i++, getbit(other, j++));
@@ -2948,7 +2948,7 @@ setmask_bitarray_lock_held(bitarrayobject *self, bitarrayobject *mask,
                 setbit(self, i, getbit(other, j++));
         }
     }
-    assert(j == n);
+    assert(j == k);
     return 0;
 }
 
