@@ -2925,7 +2925,7 @@ setmask_bitarray_lock_held(bitarrayobject *self, bitarrayobject *mask,
                            bitarrayobject *other)
 {
     const Py_ssize_t nbits = self->nbits;
-    Py_ssize_t k, i = 0, j = 0;
+    Py_ssize_t i = 0, j = 0, k;
 
     assert(nbits == mask->nbits);
 
@@ -3010,31 +3010,30 @@ setmask_bool(bitarrayobject *self, bitarrayobject *mask, PyObject *value)
 static int
 delmask_lock_held(bitarrayobject *self, bitarrayobject *mask)
 {
-    Py_ssize_t nbits = self->nbits, cnt;
-    Py_ssize_t n = 0, i;
+    Py_ssize_t nbits = self->nbits;
+    Py_ssize_t i, j, k;
 
     assert(nbits == mask->nbits);
 
-    cnt = count_span(mask, 0, nbits);
-    if (cnt == 0)      /* no bits in mask are 1 - do nothing */
+    k = count_span(mask, 0, nbits);
+    if (k == 0)      /* no bits in mask are 1 - do nothing */
         return resize(self, nbits);  /* check for BufferError */
 
-    if (cnt == nbits)  /* all bits in mask are 1 - remove everything */
+    if (k == nbits)  /* all bits in mask are 1 - remove everything */
         return resize(self, 0);      /* clear */
 
-    if (cnt == 1) {    /* mask has one bit 1 - find its position and delete */
+    if (k == 1) {    /* mask has one bit 1 - find its position and delete */
         i = find_bit(mask, 1, 0, nbits, 0);
         assert(i >= 0);
         return delete_n(self, i, 1);
     }
 
-    for (i = 0; i < nbits; i++) {
+    for (i = j = 0; i < nbits; i++) {
         if (getbit(mask, i) == 0)  /* set items we want to keep */
-            setbit(self, n++, getbit(self, i));
+            setbit(self, j++, getbit(self, i));
     }
-    assert(n == nbits - cnt);
-
-    return resize(self, n);
+    assert(j == nbits - k);
+    return resize(self, j);
 }
 
 static int
