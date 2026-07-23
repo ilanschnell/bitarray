@@ -1,7 +1,7 @@
 2026-XX-XX   3.9.2:
 -------------------
   * add more critical sections in Python-facing operations
-  * optimize mask subscript operations for sparse masks
+  * optimize mask indexing operations for sparse and dense masks
   * move tests for internal `_ssqi()` to `devel/test_sum_indices.py`
   * remove all occurrences of `PySlice_GetIndicesEx` (deprecated since
     Python 3.6.1)

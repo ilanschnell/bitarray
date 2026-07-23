@@ -2588,9 +2588,22 @@ getmask_lock_held(bitarrayobject *self, bitarrayobject *mask)
     }
 
     if (k <= nbits / 64) {
-        /* find set bits directly for sparse masks */
+        /* sparse mask - find set bits directly */
         while ((i = find_bit(mask, 1, i, nbits, 0)) >= 0)
             setbit(res, j++, getbit(self, i++));
+    }
+    else if (nbits - k <= nbits / 64) {
+        /* dense mask - copy runs between unset mask bits */
+        Py_ssize_t start = 0;
+
+        while ((i = find_bit(mask, 0, start, nbits, 0)) >= 0) {
+            Py_ssize_t len = i - start;
+            copy_n(res, j, self, start, len);
+            j += len;
+            start = i + 1;
+        }
+        copy_n(res, j, self, start, nbits - start);
+        j += nbits - start;
     }
     else {
         /* otherwise step through mask bit by bit */
@@ -2944,6 +2957,7 @@ setmask_bitarray_lock_held(bitarrayobject *self, bitarrayobject *mask,
     const Py_ssize_t nbits = self->nbits;
     Py_ssize_t i = 0, j = 0, k;
 
+    assert(self != other && !buffers_overlap(self, other));
     assert(nbits == mask->nbits);
 
     k = count_span(mask, 0, nbits);  /* active mask size */
@@ -2963,9 +2977,22 @@ setmask_bitarray_lock_held(bitarrayobject *self, bitarrayobject *mask,
     }
 
     if (k <= nbits / 64) {
-        /* find set bits directly for sparse masks */
+        /* sparse mask - find set bits directly */
         while ((i = find_bit(mask, 1, i, nbits, 0)) >= 0)
             setbit(self, i++, getbit(other, j++));
+    }
+    else if (nbits - k <= nbits / 64) {
+        /* dense mask - copy runs between unset mask bits */
+        Py_ssize_t start = 0;
+
+        while ((i = find_bit(mask, 0, start, nbits, 0)) >= 0) {
+            Py_ssize_t len = i - start;
+            copy_n(self, start, other, j, len);
+            j += len;
+            start = i + 1;
+        }
+        copy_n(self, start, other, j, nbits - start);
+        j += nbits - start;
     }
     else {
         /* otherwise step through mask bit by bit */
@@ -2991,7 +3018,10 @@ setmask_bitarray(bitarrayobject *self, bitarrayobject *mask,
     src = bitarray_cp(other);
     Py_END_CRITICAL_SECTION();
 #else
-    src = (bitarrayobject *) Py_NewRef(other);
+    if (self == other || buffers_overlap(self, other))
+        src = bitarray_cp(other);
+    else
+        src = (bitarrayobject *) Py_NewRef(other);
 #endif
 
     if (src == NULL)
@@ -3028,7 +3058,7 @@ static int
 delmask_lock_held(bitarrayobject *self, bitarrayobject *mask)
 {
     Py_ssize_t nbits = self->nbits;
-    Py_ssize_t i, j, k;
+    Py_ssize_t i = 0, j = 0, k;
 
     assert(nbits == mask->nbits);
 
@@ -3039,15 +3069,29 @@ delmask_lock_held(bitarrayobject *self, bitarrayobject *mask)
     if (k == nbits)  /* all bits in mask are 1 - remove everything */
         return resize(self, 0);      /* clear */
 
-    if (k == 1) {    /* mask has one bit 1 - find its position and delete */
-        i = find_bit(mask, 1, 0, nbits, 0);
-        assert(i >= 0);
-        return delete_n(self, i, 1);
-    }
+    if (k <= nbits / 64) {
+        /* sparse mask - copy runs between set mask bits */
+        Py_ssize_t start = 0;
 
-    for (i = j = 0; i < nbits; i++) {
-        if (getbit(mask, i) == 0)  /* set items we want to keep */
-            setbit(self, j++, getbit(self, i));
+        while ((i = find_bit(mask, 1, start, nbits, 0)) >= 0) {
+            Py_ssize_t len = i - start;
+            copy_n(self, j, self, start, len);
+            j += len;
+            start = i + 1;
+        }
+        copy_n(self, j, self, start, nbits - start);
+        j += nbits - start;
+    }
+    else if (nbits - k <= nbits / 64) {
+        /* dense mask - copy unset bits directly */
+        while ((i = find_bit(mask, 0, i, nbits, 0)) >= 0)
+            setbit(self, j++, getbit(self, i++));
+    }
+    else {
+        for (; i < nbits; i++) {
+            if (getbit(mask, i) == 0)  /* set items we want to keep */
+                setbit(self, j++, getbit(self, i));
+        }
     }
     assert(j == nbits - k);
     return resize(self, j);

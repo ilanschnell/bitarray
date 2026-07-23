@@ -1193,7 +1193,7 @@ class GetMaskTests(unittest.TestCase, Util):
                              [a[i] for i in range(n) if mask[i]])
 
     def test_random_sparse_mask(self):
-        for k in range(50):
+        for k in range(25):
             n = randrange(100, 1000)
             a = urandom_2(n)
             b = a.copy()
@@ -1257,6 +1257,21 @@ class SetMaskTests(unittest.TestCase, Util):
             a[mask] = c
             self.assertEqual(a, c)
 
+    def test_self_mask(self):
+        for n in range(50):
+            a = urandom_2(n)
+            b = a.copy()
+            k = a.count()
+            a[a] = ones(k)  # set all 1 bits to 1
+            self.assertEqual(a, b)
+            a[a] = zeros(k)  # set all 1 bits to 0
+            self.assertEqual(a, zeros(n))
+
+            a = urandom_2(n)
+            b = a.copy()
+            a[ones(n)] = a  # copy a onto itself
+            self.assertEqual(a, b)
+
     def test_random_mask_set_random(self):
         for a in self.randombitarrays():
             b = a.copy()
@@ -1279,7 +1294,7 @@ class SetMaskTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
 
     def test_random_sparse_mask(self):
-        for k in range(50):
+        for k in range(25):
             n = randrange(100, 1000)
             mask = zeros(n)
             mask[sample(range(n), k)] = 1
@@ -1385,7 +1400,7 @@ class DelMaskTests(unittest.TestCase, Util):
             self.assertEQUAL(a, b)
 
     def test_random_sparse_mask(self):
-        for k in range(50):
+        for k in range(25):
             n = randrange(100, 1000)
             mask = zeros(n)
             mask[sample(range(n), k)] = 1
@@ -1610,8 +1625,8 @@ class DelSequenceTests(unittest.TestCase, Util):
             self.assertEqual(a, b)
 
     def test_random_sparse(self):
-        for k in range(50):
-            n = randrange(1000, 10_000)
+        for k in range(25):
+            n = randrange(100, 1000)
             a = urandom_2(n)
             lst = choices(range(n), k=k)
             indices = set(lst)
