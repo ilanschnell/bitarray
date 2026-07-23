@@ -2924,20 +2924,29 @@ static int
 setmask_bitarray_lock_held(bitarrayobject *self, bitarrayobject *mask,
                            bitarrayobject *other)
 {
-    Py_ssize_t n, i, j;
+    const Py_ssize_t nbits = self->nbits;
+    Py_ssize_t n, i = 0, j = 0;
 
-    assert(self->nbits == mask->nbits);
+    assert(nbits == mask->nbits);
 
-    n = count_span(mask, 0, mask->nbits);  /* mask size */
+    n = count_span(mask, 0, nbits);  /* active mask size */
     if (n != other->nbits) {
         PyErr_Format(PyExc_IndexError, "attempt to assign mask of size %zd "
                      "to bitarray of size %zd", n, other->nbits);
         return -1;
     }
 
-    for (i = j = 0; i < mask->nbits; i++) {
-        if (getbit(mask, i))
-            setbit(self, i, getbit(other, j++));
+    if (n < 10) {
+        /* find set bits directly for sparse masks */
+        while ((i = find_bit(mask, 1, i, nbits, 0)) >= 0)
+            setbit(self, i++, getbit(other, j++));
+    }
+    else {
+        /* otherwise step through mask bit by bit */
+        for (; i < nbits; i++) {
+            if (getbit(mask, i))
+                setbit(self, i, getbit(other, j++));
+        }
     }
     assert(j == n);
     return 0;
