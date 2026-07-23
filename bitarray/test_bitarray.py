@@ -1192,6 +1192,23 @@ class GetMaskTests(unittest.TestCase, Util):
             self.assertEqual(list(a[mask]),
                              [a[i] for i in range(n) if mask[i]])
 
+    def test_random_sparse_mask(self):
+        for k in range(50):
+            n = randrange(1000, 10_000)
+            a = urandom_2(n)
+            b = a.copy()
+            for inv in 0, 1:
+                mask = zeros(n)
+                mask[sample(range(n), k)] = 1
+                if inv:
+                    mask = ~mask
+                self.assertEqual(mask.count(), n - k if inv else k)
+                res = bitarray(mask.count())
+                for i, j in enumerate(mask.search(1)):
+                    res[i] = a[j]
+                self.assertEqual(a[mask], res)
+            self.assertEQUAL(a, b)
+
     def test_random_slice_mask(self):
         for n in range(100):
             s = self.random_slice(n, step=randint(1, 5))

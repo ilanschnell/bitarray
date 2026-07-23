@@ -2568,21 +2568,38 @@ static PyObject *
 getmask_lock_held(bitarrayobject *self, bitarrayobject *mask)
 {
     bitarrayobject *res;
-    Py_ssize_t n, i, j;
+    Py_ssize_t nbits = self->nbits;
+    Py_ssize_t i = 0, j = 0, k;
 
     if (ensure_mask_size(self, mask) < 0)
         return NULL;
 
-    n = count_span(mask, 0, mask->nbits);
-    res = newbitarrayobject(Py_TYPE(self), n, self->endian);
+    k = count_span(mask, 0, nbits);
+    res = newbitarrayobject(Py_TYPE(self), k, self->endian);
     if (res == NULL)
         return NULL;
 
-    for (i = j = 0; i < mask->nbits; i++) {
-        if (getbit(mask, i))
-            setbit(res, j++, getbit(self, i));
+    if (k == 0)
+        return (PyObject *) res;
+
+    if (k == nbits) {
+        copy_n(res, 0, self, 0, nbits);
+        return (PyObject *) res;
     }
-    assert(j == n);
+
+    if (k <= nbits / 64) {
+        /* find set bits directly for sparse masks */
+        while ((i = find_bit(mask, 1, i, nbits, 0)) >= 0)
+            setbit(res, j++, getbit(self, i++));
+    }
+    else {
+        /* otherwise step through mask bit by bit */
+        for (; i < nbits; i++) {
+            if (getbit(mask, i))
+                setbit(res, j++, getbit(self, i));
+        }
+    }
+    assert(j == k);
     return (PyObject *) res;
 }
 
