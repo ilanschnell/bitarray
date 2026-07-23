@@ -15,7 +15,8 @@ import unittest
 import shutil
 import tempfile
 from io import BytesIO, UnsupportedOperation
-from random import choice, choices, getrandbits, randrange, randint, shuffle
+from random import (choice, choices, getrandbits, randrange, randint,
+                    sample, shuffle)
 from string import whitespace
 from collections import deque
 
@@ -1258,6 +1259,20 @@ class SetMaskTests(unittest.TestCase, Util):
             mask[s] = 1
             other = urandom_2(slicelength)
             a[mask] = b[s] = other
+            self.assertEQUAL(a, b)
+
+    def test_random_sparse_mask(self):
+        for k in range(50):
+            n = randrange(1000, 10_000)
+            a = urandom_2(n)
+            b = a.copy()
+            mask = zeros(n)
+            mask[sample(range(n), k)] = 1
+            self.assertEqual(mask.count(), k)
+            other = urandom_2(k)
+            a[mask] = other
+            for i, j in enumerate(mask.search(1)):
+                b[j] = other[i]
             self.assertEQUAL(a, b)
 
     def test_random_mask_set_zeros(self):
