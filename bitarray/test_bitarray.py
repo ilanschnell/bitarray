@@ -1194,14 +1194,14 @@ class GetMaskTests(unittest.TestCase, Util):
 
     def test_random_sparse_mask(self):
         for k in range(50):
-            n = randrange(1000, 10_000)
+            n = randrange(100, 1000)
             a = urandom_2(n)
             b = a.copy()
+            mask = zeros(n)
+            mask[sample(range(n), k)] = 1
             for inv in 0, 1:
-                mask = zeros(n)
-                mask[sample(range(n), k)] = 1
                 if inv:
-                    mask = ~mask
+                    mask.invert()
                 self.assertEqual(mask.count(), n - k if inv else k)
                 res = bitarray(mask.count())
                 for i, j in enumerate(mask.search(1)):
@@ -1280,17 +1280,20 @@ class SetMaskTests(unittest.TestCase, Util):
 
     def test_random_sparse_mask(self):
         for k in range(50):
-            n = randrange(1000, 10_000)
-            a = urandom_2(n)
-            b = a.copy()
+            n = randrange(100, 1000)
             mask = zeros(n)
             mask[sample(range(n), k)] = 1
-            self.assertEqual(mask.count(), k)
-            other = urandom_2(k)
-            a[mask] = other
-            for i, j in enumerate(mask.search(1)):
-                b[j] = other[i]
-            self.assertEQUAL(a, b)
+            for inv in 0, 1:
+                if inv:
+                    mask.invert()
+                a = urandom_2(n)
+                b = a.copy()
+                self.assertEqual(mask.count(), n - k if inv else k)
+                other = urandom_2(mask.count())
+                a[mask] = other
+                for i, j in enumerate(mask.search(1)):
+                    b[j] = other[i]
+                self.assertEQUAL(a, b)
 
     def test_random_mask_set_zeros(self):
         for a in self.randombitarrays():
@@ -1383,17 +1386,20 @@ class DelMaskTests(unittest.TestCase, Util):
 
     def test_random_sparse_mask(self):
         for k in range(50):
-            n = randrange(1000, 10_000)
-            a = urandom_2(n)
-            b = a.copy()
+            n = randrange(100, 1000)
             mask = zeros(n)
-            mask[choices(range(n), k=k)] = 1
-            self.assertTrue(mask.count() <= k)
-            del a[mask]
-            for i, j in enumerate(mask.search(1)):
-                # remove j - i as previous deletions shift locations
-                del b[j - i]
-            self.assertEQUAL(a, b)
+            mask[sample(range(n), k)] = 1
+            for inv in 0, 1:
+                if inv:
+                    mask.invert()
+                a = urandom_2(n)
+                b = a.copy()
+                self.assertEqual(mask.count(), n - k if inv else k)
+                del a[mask]
+                for i, j in enumerate(mask.search(1)):
+                    # remove j - i as previous deletions shift locations
+                    del b[j - i]
+                self.assertEQUAL(a, b)
 
     @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
