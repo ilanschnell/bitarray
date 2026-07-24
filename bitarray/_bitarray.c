@@ -3152,9 +3152,8 @@ static int
 setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
 {
     bitarrayobject *copy = NULL;
-    bitarrayobject *src = other;
     Py_ssize_t *indices = NULL;
-    Py_ssize_t nbits, n;
+    Py_ssize_t nbits, n, j;
     int res = -1;
 
     Py_BEGIN_CRITICAL_SECTION(self);
@@ -3164,30 +3163,31 @@ setseq_bitarray(bitarrayobject *self, PyObject *seq, bitarrayobject *other)
     if (sequence_as_array(seq, nbits, &indices, &n) < 0)
         return -1;
 
-    Py_BEGIN_CRITICAL_SECTION2(self, other);
-    if (n != other->nbits) {
+    Py_BEGIN_CRITICAL_SECTION(other);
+    copy = bitarray_cp(other);
+    Py_END_CRITICAL_SECTION();
+
+    if (copy == NULL)
+        goto done;
+
+    if (n != copy->nbits) {
         PyErr_Format(PyExc_ValueError, "attempt to assign sequence of "
-                     "size %zd to bitarray of size %zd", n, other->nbits);
+                     "size %zd to bitarray of size %zd", n, copy->nbits);
+        goto done;
     }
-    else if (self->nbits != nbits) {
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    if (self->nbits == nbits) {
+        for (j = 0; j < n; j++)
+            setbit(self, indices[j], getbit(copy, j));
+        res = 0;
+    }
+    Py_END_CRITICAL_SECTION();
+
+    if (res < 0)
         PyErr_SetString(PyExc_RuntimeError,
                         "bitarray changed size during sequence indexing");
-    }
-    else {
-        /* Make a copy of other, see comment in setslice_bitarray(). */
-        if (buffers_overlap(self, other)) {
-            copy = bitarray_cp(other);
-            src = copy;
-        }
-        if (src) {
-            Py_ssize_t j;
-            for (j = 0; j < n; j++)
-                setbit(self, indices[j], getbit(src, j));
-            res = 0;
-        }
-    }
-    Py_END_CRITICAL_SECTION2();
-
+ done:
     PyMem_Free(indices);
     Py_XDECREF(copy);
     return res;
@@ -5195,7 +5195,8 @@ PyInit__bitarray(void)
         return NULL;
 
 #ifdef Py_GIL_DISABLED
-    PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED);
+    if (PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED) < 0)
+        return NULL;
 #endif
 
     if (PyType_Ready(&Bitarray_Type) < 0)
