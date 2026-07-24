@@ -438,10 +438,23 @@ repeat(bitarrayobject *self, Py_ssize_t m)
     return 0;
 }
 
-/* the following functions xyz_span, xyz_range operate on bitarray items:
-     - xyz_span: contiguous bits - self[a:b] (step=1)
-     - xyz_range: self[start:stop:step]      (step > 0 is required)
- */
+/* invert self[i] in-place */
+static int
+invert_index(bitarrayobject *self, Py_ssize_t i)
+{
+    assert(self->readonly == 0);
+
+    if (i < 0)
+        i += self->nbits;
+
+    if (i < 0 || i >= self->nbits) {
+        PyErr_SetString(PyExc_IndexError, "index out of range");
+        return -1;
+    }
+
+    self->ob_item[i / 8] ^= BITMASK(self, i);
+    return 0;
+}
 
 /* invert bits self[a:b] in-place */
 static void
@@ -485,7 +498,13 @@ static void
 invert_range(bitarrayobject *self,
              Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 {
-    assert(step > 0);
+    Py_ssize_t slicelength;
+
+    assert(self->readonly == 0);
+    assert(step != 0);
+
+    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
+    adjust_step_positive(slicelength, &start, &stop, &step);
 
     if (step == 1) {
         invert_span(self, start, stop);
@@ -1422,35 +1441,26 @@ bitarray_invert(bitarrayobject *self, PyObject *args)
 
     if (PyIndex_Check(arg)) {
         Py_ssize_t i;
-        int err = 0;
+        int ret;
 
         i = PyNumber_AsSsize_t(arg, NULL);
         if (i == -1 && PyErr_Occurred())
             return NULL;
 
         Py_BEGIN_CRITICAL_SECTION(self);
-        if (i < 0)
-            i += self->nbits;
-        if (i < 0 || i >= self->nbits) {
-            PyErr_SetString(PyExc_IndexError, "index out of range");
-            err = 1;
-        }
-        else {
-            self->ob_item[i / 8] ^= BITMASK(self, i);
-        }
+        ret = invert_index(self, i);
         Py_END_CRITICAL_SECTION();
-        if (err)
+
+        if (ret < 0)
             return NULL;
     }
     else if (PySlice_Check(arg)) {
-        Py_ssize_t start, stop, step, slicelength;
+        Py_ssize_t start, stop, step;
 
         if (PySlice_Unpack(arg, &start, &stop, &step) < 0)
             return NULL;
 
         Py_BEGIN_CRITICAL_SECTION(self);
-        slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
-        adjust_step_positive(slicelength, &start, &stop, &step);
         invert_range(self, start, stop, step);
         Py_END_CRITICAL_SECTION();
     }
