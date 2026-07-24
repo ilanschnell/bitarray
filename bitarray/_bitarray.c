@@ -1003,8 +1003,8 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
 
     if (PySlice_AdjustIndices(Py_SIZE(self), &start, &stop, 1) > 0)
         bytereverse(self->ob_item + start, stop - start);
-
     Py_END_CRITICAL_SECTION();
+
     Py_RETURN_NONE;
 }
 
@@ -1584,9 +1584,11 @@ static PyObject *
 bitarray_reverse(bitarrayobject *self)
 {
     RAISE_IF_READONLY(self, NULL);
+
     Py_BEGIN_CRITICAL_SECTION(self);
     reverse_lock_held(self);
     Py_END_CRITICAL_SECTION();
+
     Py_RETURN_NONE;
 }
 
@@ -1609,6 +1611,7 @@ bitarray_setall(bitarrayobject *self, PyObject *value)
     if (self->ob_item)
         memset(self->ob_item, vi ? 0xff : 0x00, (size_t) Py_SIZE(self));
     Py_END_CRITICAL_SECTION();
+
     Py_RETURN_NONE;
 }
 
@@ -1649,6 +1652,7 @@ bitarray_sort(bitarrayobject *self, PyObject *args, PyObject *kwds)
     Py_BEGIN_CRITICAL_SECTION(self);
     sort_lock_held(self, reverse);
     Py_END_CRITICAL_SECTION();
+
     Py_RETURN_NONE;
 }
 
@@ -1731,6 +1735,7 @@ bitarray_frombytes(bitarrayobject *self, PyObject *buffer)
     Py_BEGIN_CRITICAL_SECTION2(self, view.obj);
     ret = frombytes_lock_held(self, &view);
     Py_END_CRITICAL_SECTION2();
+
     PyBuffer_Release(&view);
 
     if (ret < 0)
@@ -1754,6 +1759,7 @@ bitarray_tobytes(bitarrayobject *self)
     set_padbits(self);
     res = PyBytes_FromStringAndSize(self->ob_item, Py_SIZE(self));
     Py_END_CRITICAL_SECTION();
+
     return res;
 }
 
@@ -2072,7 +2078,9 @@ bitarray_pop(bitarrayobject *self, PyObject *args)
     vi = pop_lock_held(self, i);
     Py_END_CRITICAL_SECTION();
 
-    return vi < 0 ? NULL : PyLong_FromLong(vi);
+    if (vi < 0)
+        return NULL;
+    return PyLong_FromLong(vi);
 }
 
 PyDoc_STRVAR(pop_doc,
@@ -2193,6 +2201,7 @@ bitarray_sizeof(bitarrayobject *self)
     if (self->buffer)
         res += sizeof(Py_buffer);
     Py_END_CRITICAL_SECTION();
+
     return PyLong_FromSsize_t(res);
 }
 
@@ -2233,6 +2242,7 @@ bitarray_shift_r8(bitarrayobject *self, PyObject *args)
     Py_BEGIN_CRITICAL_SECTION(self);
     shift_r8(self, a, b, n);
     Py_END_CRITICAL_SECTION();
+
     Py_RETURN_NONE;
 }
 
@@ -2248,6 +2258,7 @@ bitarray_copy_n(bitarrayobject *self, PyObject *args)
     Py_BEGIN_CRITICAL_SECTION2(self, other);
     copy_n(self, a, (bitarrayobject *) other, b, n);
     Py_END_CRITICAL_SECTION2();
+
     Py_RETURN_NONE;
 }
 
@@ -2280,9 +2291,11 @@ static PyObject *
 bitarray_get_nbytes(bitarrayobject *self, void *Py_UNUSED(ignored))
 {
     Py_ssize_t nbytes;
+
     Py_BEGIN_CRITICAL_SECTION(self);
     nbytes = Py_SIZE(self);
     Py_END_CRITICAL_SECTION();
+
     return PyLong_FromSsize_t(nbytes);
 }
 
@@ -2290,9 +2303,11 @@ static PyObject *
 bitarray_get_padbits(bitarrayobject *self, void *Py_UNUSED(ignored))
 {
     Py_ssize_t padbits;
+
     Py_BEGIN_CRITICAL_SECTION(self);
     padbits = PADBITS(self);
     Py_END_CRITICAL_SECTION();
+
     return PyLong_FromSsize_t(padbits);
 }
 
@@ -2321,9 +2336,11 @@ static Py_ssize_t
 bitarray_len(bitarrayobject *self)
 {
     Py_ssize_t res;
+
     Py_BEGIN_CRITICAL_SECTION(self);
     res = self->nbits;
     Py_END_CRITICAL_SECTION();
+
     return res;
 }
 
@@ -2873,6 +2890,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     adjust_step_positive(slicelength, &start, &stop, &step);
     set_range(self, start, stop, step, vi);
     Py_END_CRITICAL_SECTION();
+
     return 0;
 }
 
@@ -2920,6 +2938,7 @@ delslice(bitarrayobject *self, PyObject *slice)
     Py_BEGIN_CRITICAL_SECTION(self);
     ret = delslice_lock_held(self, start, stop, step);
     Py_END_CRITICAL_SECTION();
+
     return ret;
 }
 
@@ -3425,6 +3444,7 @@ bitarray_ ## name (PyObject *self, PyObject *other)         \
             bitwise(res, (bitarrayobject *) other, *ostr);  \
     }                                                       \
     Py_END_CRITICAL_SECTION2();                             \
+                                                            \
     if (res == NULL)                                        \
         return NULL;                                        \
     if (!inplace)                                           \
@@ -4188,9 +4208,11 @@ static PyObject *
 decodeiter_index(decodeiterobject *it, void *Py_UNUSED(ignored))
 {
     Py_ssize_t index;
+
     Py_BEGIN_CRITICAL_SECTION(it);
     index = it->index;
     Py_END_CRITICAL_SECTION();
+
     return PyLong_FromSsize_t(index);
 }
 
