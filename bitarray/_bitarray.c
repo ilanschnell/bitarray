@@ -2121,13 +2121,29 @@ Remove the first occurrence of `value`.\n\
 Raises `ValueError` if value is not present.");
 
 
-static void
-rotate_lock_held(bitarrayobject *self, bitarrayobject *tmp, Py_ssize_t k)
+static int
+rotate_lock_held(bitarrayobject *self, Py_ssize_t k)
 {
-    Py_ssize_t n = self->nbits;
+    const Py_ssize_t n = self->nbits;
+    bitarrayobject *tmp;
+
+    if (n < 2)
+        return 0;
+
+    k %= n;  /* C remainder may be negative, as it preserves the sign of k */
+    if (k < 0)
+        k += n;  /* make it equivalent to Python's k %= n */
+    if (k == 0)
+        return 0;
+
+    assert(0 < k && k < n);
+
+    /* temporary bitarray to store head or tail (whichever is smaller) */
+    tmp = newbitarrayobject(&Bitarray_Type, Py_MIN(k, n - k), self->endian);
+    if (tmp == NULL)
+        return -1;
 
     assert(tmp->nbits <= n / 2);  /* at most half size */
-
     if (tmp->nbits == k) {           /* tail is smaller */
         copy_n(tmp, 0, self, n - k, k);   /* save tail */
         copy_n(self, k, self, 0, n - k);  /* shift array right by k */
@@ -2141,52 +2157,29 @@ rotate_lock_held(bitarrayobject *self, bitarrayobject *tmp, Py_ssize_t k)
     else {
         Py_UNREACHABLE();
     }
+
+    /* tmp is a private exact bitarray; deallocation cannot run Python */
+    Py_DECREF(tmp);
+
+    return 0;
 }
 
 static PyObject *
 bitarray_rotate(bitarrayobject *self, PyObject *args)
 {
-    bitarrayobject *tmp;
-    Py_ssize_t n, k = 1;
-    int err = 1;
+    Py_ssize_t k = 1;
+    int ret;
 
     RAISE_IF_READONLY(self, NULL);
     if (!PyArg_ParseTuple(args, "|n:rotate", &k))
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION(self);
-    n = self->nbits;
+    ret = rotate_lock_held(self, k);
     Py_END_CRITICAL_SECTION();
 
-    if (n < 2)
-        Py_RETURN_NONE;
-
-    k %= n;  /* C remainder may be negative, as it preserves the sign of k */
-    if (k < 0)
-        k += n;  /* make it equivalent to Python's k %= n */
-    if (k == 0)
-        Py_RETURN_NONE;
-
-    assert(0 < k && k < n);
-
-    /* temporary bitarray to store head or tail (whichever is smaller) */
-    tmp = newbitarrayobject(&Bitarray_Type, Py_MIN(k, n - k), self->endian);
-    if (tmp == NULL)
+    if (ret < 0)
         return NULL;
-
-    Py_BEGIN_CRITICAL_SECTION(self);
-    if (self->nbits == n) {
-        rotate_lock_held(self, tmp, k);
-        err = 0;
-    }
-    Py_END_CRITICAL_SECTION();
-    Py_DECREF(tmp);
-
-    if (err) {
-        PyErr_SetString(PyExc_RuntimeError,
-                        "bitarray changed size during .rotate()");
-        return NULL;
-    }
     Py_RETURN_NONE;
 }
 
