@@ -529,7 +529,12 @@ static void
 set_range(bitarrayobject *self,
           Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step, int vi)
 {
-    assert(step > 0);
+    Py_ssize_t slicelength;
+
+    assert(step != 0);
+
+    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
+    adjust_step_positive(slicelength, &start, &stop, &step);
 
     if (step == 1) {
         set_span(self, start, stop, vi);
@@ -593,23 +598,27 @@ count_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     return cnt;
 }
 
-/* return number of 1 bits in self[start:stop:step] */
+/* return number of bits 'vi' in self[start:stop:step] */
 static Py_ssize_t
 count_range(bitarrayobject *self,
-            Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
+            Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step, int vi)
 {
-    assert(step > 0);
+    Py_ssize_t slicelength, cnt = 0;
+
+    assert(step != 0);
+    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
+    adjust_step_positive(slicelength, &start, &stop, &step);
 
     if (step == 1) {
-        return count_span(self, start, stop);
+        cnt = count_span(self, start, stop);
     }
     else {
-        Py_ssize_t cnt = 0, i;
+        Py_ssize_t i;
 
         for (i = start; i < stop; i += step)
             cnt += getbit(self, i);
-        return cnt;
     }
+    return vi ? cnt : slicelength - cnt;
 }
 
 /* return first (or rightmost in case right=1) occurrence
@@ -1167,18 +1176,15 @@ bitarray_count(bitarrayobject *self, PyObject *args)
     }
 
     if (PyIndex_Check(sub) || sub == Py_None) {
-        Py_ssize_t slicelength;
         int vi = 1;
 
         if (PyIndex_Check(sub) && !conv_pybit(sub, &vi))
             return NULL;
 
         Py_BEGIN_CRITICAL_SECTION(self);
-        slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
-        adjust_step_positive(slicelength, &start, &stop, &step);
-        cnt = count_range(self, start, stop, step);
+        cnt = count_range(self, start, stop, step, vi);
         Py_END_CRITICAL_SECTION();
-        return PyLong_FromSsize_t(vi ? cnt : slicelength - cnt);
+        return PyLong_FromSsize_t(cnt);
     }
 
     if (bitarray_Check(sub)) {   /* sub-bitarray count */
@@ -2875,7 +2881,7 @@ setslice_bitarray(bitarrayobject *self, PyObject *slice,
 static int
 setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
 {
-    Py_ssize_t start, stop, step, slicelength;
+    Py_ssize_t start, stop, step;
     int vi;
 
     assert(PySlice_Check(slice) && PyIndex_Check(value));
@@ -2886,8 +2892,6 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
         return -1;
 
     Py_BEGIN_CRITICAL_SECTION(self);
-    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
-    adjust_step_positive(slicelength, &start, &stop, &step);
     set_range(self, start, stop, step, vi);
     Py_END_CRITICAL_SECTION();
 
