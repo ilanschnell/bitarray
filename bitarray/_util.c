@@ -353,18 +353,12 @@ ssqi(PyObject *module, PyObject *args)
 }
 
 
-static PyObject *
-xor_indices(PyObject *module, PyObject *obj)
+static Py_ssize_t
+xor_indices_lock_held(bitarrayobject *a)
 {
-    bitarrayobject *a;
-    Py_ssize_t res = 0, nbytes, i;
+    const Py_ssize_t nbytes = Py_SIZE(a);
+    Py_ssize_t res = 0, i;
 
-    if (ensure_bitarray(obj) < 0)
-        return NULL;
-
-    a = (bitarrayobject *) obj;
-    Py_BEGIN_CRITICAL_SECTION(a);
-    nbytes = Py_SIZE(a);
     set_padbits(a);
 
     for (i = 0; i < nbytes; i++) {
@@ -373,7 +367,21 @@ xor_indices(PyObject *module, PyObject *obj)
             res ^= i << 3;
         res ^= xor_table[IS_BE(a)][c];
     }
+    return res;
+}
+
+static PyObject *
+xor_indices(PyObject *module, PyObject *obj)
+{
+    Py_ssize_t res;
+
+    if (ensure_bitarray(obj) < 0)
+        return NULL;
+
+    Py_BEGIN_CRITICAL_SECTION(obj);
+    res = xor_indices_lock_held((bitarrayobject *) obj);
     Py_END_CRITICAL_SECTION();
+
     return PyLong_FromSsize_t(res);
 }
 
@@ -2019,15 +2027,12 @@ static PyObject *
 vl_encode(PyObject *module, PyObject *obj)
 {
     PyObject *res;
-    bitarrayobject *a;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
-    a = (bitarrayobject *) obj;
-
-    Py_BEGIN_CRITICAL_SECTION(a);
-    res = vl_encode_lock_held(a);
+    Py_BEGIN_CRITICAL_SECTION(obj);
+    res = vl_encode_lock_held((bitarrayobject *) obj);
     Py_END_CRITICAL_SECTION();
 
     return res;
