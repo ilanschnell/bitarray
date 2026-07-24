@@ -655,24 +655,18 @@ Nothing about this function is specific to bitarray objects.");
   blob does not.
 */
 
-static int
-serialize_lock_held(bitarrayobject *a, Py_ssize_t nbits, PyObject *bytes)
+static void
+serialize_lock_held(bitarrayobject *a, PyObject *bytes)
 {
     char *str;
 
-    if (a->nbits != nbits) {
-        PyErr_SetString(PyExc_RuntimeError,
-                        "bitarray changed size during serialize()");
-        return -1;
-    }
+    assert(PyBytes_GET_SIZE(bytes) == Py_SIZE(a) + 1);
 
     str = PyBytes_AsString(bytes);
     set_padbits(a);
     *str = (IS_BE(a) ? 0x10 : 0x00) | ((char) PADBITS(a));
-    if (nbits)
-        memcpy(str + 1, a->ob_item, (size_t) BYTES(nbits));
-
-    return 0;
+    if (a->nbits)
+        memcpy(str + 1, a->ob_item, (size_t) Py_SIZE(a));
 }
 
 static PyObject *
@@ -681,7 +675,7 @@ serialize(PyObject *module, PyObject *obj)
     bitarrayobject *a;
     PyObject *result;
     Py_ssize_t nbits;
-    int ret;
+    int err = 1;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
@@ -697,10 +691,15 @@ serialize(PyObject *module, PyObject *obj)
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION(a);
-    ret = serialize_lock_held(a, nbits, result);
+    if (a->nbits == nbits) {
+        serialize_lock_held(a, result);
+        err = 0;
+    }
     Py_END_CRITICAL_SECTION();
 
-    if (ret < 0) {
+    if (err) {
+        PyErr_SetString(PyExc_RuntimeError,
+                        "bitarray changed size during serialize()");
         Py_DECREF(result);
         return NULL;
     }
@@ -2459,7 +2458,8 @@ PyInit__util(void)
         return NULL;
 
 #ifdef Py_GIL_DISABLED
-    PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED);
+    if (PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED) < 0)
+        return NULL;
 #endif
 
     if (PyType_Ready(&CHDI_Type) < 0)
