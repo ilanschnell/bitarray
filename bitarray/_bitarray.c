@@ -1961,41 +1961,38 @@ of `group` characters, default is a space.");
 
 
 static PyObject *
+unpack_lock_held(bitarrayobject *self, char zero, char one)
+{
+    PyObject *bytes;
+    Py_ssize_t nbits = self->nbits, i;
+    char *str;
+
+    bytes = PyBytes_FromStringAndSize(NULL, nbits);
+    if (bytes == NULL)
+        return NULL;
+
+    str = PyBytes_AsString(bytes);
+    for (i = 0; i < nbits; i++)
+        str[i] = getbit(self, i) ? one : zero;
+
+    return bytes;
+}
+
+static PyObject *
 bitarray_unpack(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"zero", "one", NULL};
     PyObject *res;
-    char zero = 0x00, one = 0x01, *str;
-    Py_ssize_t nbits, i;
-    int err = 1;
+    char zero = 0x00, one = 0x01;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|cc:unpack", kwlist,
                                      &zero, &one))
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION(self);
-    nbits = self->nbits;
+    res = unpack_lock_held(self, zero, one);
     Py_END_CRITICAL_SECTION();
 
-    res = PyBytes_FromStringAndSize(NULL, nbits);
-    if (res == NULL)
-        return NULL;
-
-    Py_BEGIN_CRITICAL_SECTION(self);
-    if (self->nbits == nbits) {
-        str = PyBytes_AsString(res);
-        for (i = 0; i < nbits; i++)
-            str[i] = getbit(self, i) ? one : zero;
-        err = 0;
-    }
-    Py_END_CRITICAL_SECTION();
-
-    if (err) {
-        Py_DECREF(res);
-        PyErr_SetString(PyExc_RuntimeError,
-                        "bitarray changed size during .unpack()");
-        return NULL;
-    }
     return res;
 }
 
