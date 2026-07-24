@@ -1512,16 +1512,13 @@ PyDoc_STRVAR(reduce_doc, "Internal. Used for pickling support.");
 
 
 static PyObject *
-bitarray_repr(bitarrayobject *self)
+repr_lock_held(bitarrayobject *self)
 {
     PyObject *result;
     Py_ssize_t nbits, strsize, i;
     char *str;
-    int err = 1;
 
-    Py_BEGIN_CRITICAL_SECTION(self);
     nbits = self->nbits;
-    Py_END_CRITICAL_SECTION();
 
     if (nbits == 0)
         return PyUnicode_FromString("bitarray()");
@@ -1533,20 +1530,8 @@ bitarray_repr(bitarrayobject *self)
 
     strcpy(str, "bitarray('");  /* has length 10 */
 
-    Py_BEGIN_CRITICAL_SECTION(self);
-    if (self->nbits == nbits) {
-        for (i = 0; i < nbits; i++)
-            str[i + 10] = getbit(self, i) + '0';
-        err = 0;
-    }
-    Py_END_CRITICAL_SECTION();
-
-    if (err) {
-        PyMem_Free((void *) str);
-        PyErr_SetString(PyExc_RuntimeError,
-                        "bitarray changed size during repr()");
-        return NULL;
-    }
+    for (i = 0; i < nbits; i++)
+        str[i + 10] = getbit(self, i) + '0';
 
     str[strsize - 2] = '\'';
     str[strsize - 1] = ')';
@@ -1554,6 +1539,18 @@ bitarray_repr(bitarrayobject *self)
     result = PyUnicode_FromStringAndSize(str, strsize);
     PyMem_Free((void *) str);
     return result;
+}
+
+static PyObject *
+bitarray_repr(bitarrayobject *self)
+{
+    PyObject *res;
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    res = repr_lock_held(self);
+    Py_END_CRITICAL_SECTION();
+
+    return res;
 }
 
 
@@ -1901,26 +1898,12 @@ Write bitarray buffer to file object `f`.");
 
 
 static PyObject *
-bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
+to01_lock_held(bitarrayobject *self, Py_ssize_t group, const char *sep)
 {
-    static char *kwlist[] = {"group", "sep", NULL};
-    size_t strsize, j, nsep;
-    Py_ssize_t group = 0, nbits, i;
     PyObject *result;
-    char *sep = " ", *str;
-    int err = 1;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ns:to01", kwlist,
-                                     &group, &sep))
-        return NULL;
-
-    if (group < 0)
-        return PyErr_Format(PyExc_ValueError, "non-negative integer "
-                            "expected, got: %zd", group);
-
-    Py_BEGIN_CRITICAL_SECTION(self);
-    nbits = self->nbits;
-    Py_END_CRITICAL_SECTION();
+    Py_ssize_t nbits = self->nbits, i;
+    size_t strsize, j, nsep;
+    char *str;
 
     strsize = nbits;
     nsep = (group && strsize) ? strlen(sep) : 0;  /* 0 means no grouping */
@@ -1931,30 +1914,41 @@ bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
     if (str == NULL)
         return PyErr_NoMemory();
 
-    Py_BEGIN_CRITICAL_SECTION(self);
-    if (self->nbits == nbits) {
-        for (i = j = 0; i < nbits; i++) {
-            if (nsep && i && i % group == 0) {
-                memcpy(str + j, sep, nsep);
-                j += nsep;
-            }
-            str[j++] = getbit(self, i) + '0';
+    for (i = j = 0; i < nbits; i++) {
+        if (nsep && i && i % group == 0) {
+            memcpy(str + j, sep, nsep);
+            j += nsep;
         }
-        assert(j == strsize);
-        err = 0;
+        str[j++] = getbit(self, i) + '0';
     }
-    Py_END_CRITICAL_SECTION();
-
-    if (err) {
-        PyMem_Free((void *) str);
-        PyErr_SetString(PyExc_RuntimeError,
-                        "bitarray changed size during .to01()");
-        return NULL;
-    }
+    assert(j == strsize);
 
     result = PyUnicode_FromStringAndSize(str, strsize);
     PyMem_Free((void *) str);
     return result;
+}
+
+static PyObject *
+bitarray_to01(bitarrayobject *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"group", "sep", NULL};
+    Py_ssize_t group = 0;
+    PyObject *res;
+    char *sep = " ";
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ns:to01", kwlist,
+                                     &group, &sep))
+        return NULL;
+
+    if (group < 0)
+        return PyErr_Format(PyExc_ValueError, "non-negative integer "
+                            "expected, got: %zd", group);
+
+    Py_BEGIN_CRITICAL_SECTION(self);
+    res = to01_lock_held(self, group, sep);
+    Py_END_CRITICAL_SECTION();
+
+    return res;
 }
 
 PyDoc_STRVAR(to01_doc,
