@@ -2533,10 +2533,13 @@ static PySequenceMethods bitarray_as_sequence = {
 
 /* return new bitarray with item in self, specified by slice indices */
 static PyObject *
-getslice_indices_lock_held(bitarrayobject *self, Py_ssize_t start,
-                           Py_ssize_t step, Py_ssize_t slicelength)
+getslice_lock_held(bitarrayobject *self,
+                   Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 {
     bitarrayobject *res;
+    Py_ssize_t slicelength;
+
+    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
 
     res = newbitarrayobject(Py_TYPE(self), slicelength, self->endian);
     if (res == NULL)
@@ -2559,15 +2562,14 @@ static PyObject *
 getslice(bitarrayobject *self, PyObject *slice)
 {
     PyObject *res;
-    Py_ssize_t start, stop, step, slicelength;
+    Py_ssize_t start, stop, step;
 
     assert(PySlice_Check(slice));
     if (PySlice_Unpack(slice, &start, &stop, &step) < 0)
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION(self);
-    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
-    res = getslice_indices_lock_held(self, start, step, slicelength);
+    res = getslice_lock_held(self, start, stop, step);
     Py_END_CRITICAL_SECTION();
 
     return res;
@@ -4180,7 +4182,7 @@ decodeiter_skipbits(decodeiterobject *it, PyObject *args)
 
     Py_BEGIN_CRITICAL_SECTION2(it, it->self);
     if (n <= it->self->nbits - it->index) {
-        skipped = getslice_indices_lock_held(it->self, it->index, 1, n);
+        skipped = getslice_lock_held(it->self, it->index, it->index + n, 1);
         if (skipped)
             it->index += n;
     }
