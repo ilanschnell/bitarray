@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 3.9.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.9.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -229,6 +229,9 @@ bitarray methods:
    unless ``right=True``, which will iterate in descending order (starting with
    rightmost match).
 
+   For example, ``a.search(1)`` is the easiest (and most efficient) way
+   to create an iterator over all active indices in ``a``.
+
    See also: `Bitarray 3 transition <https://github.com/ilanschnell/bitarray/blob/master/doc/bitarray3.rst>`__
 
    New in version 2.9: optional start and stop arguments - add optional keyword argument ``right``
@@ -412,8 +415,8 @@ This sub-module was added in version 1.2.
 
 ``byteswap(a, n=<buffer size>, /)``
    Reverse every ``n`` consecutive bytes of ``a`` in-place.
-   By default, all bytes are reversed.  Note that ``n`` is not limited to 2, 4
-   or 8, but can be any positive integer.
+   By default, all bytes are reversed.  Note that ``n`` is **not** limited
+   to 2, 4 or 8, but can be any positive integer.
    Also, ``a`` may be any object that exposes a writable buffer.
    Nothing about this function is specific to bitarray objects.
 
