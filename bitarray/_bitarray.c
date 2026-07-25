@@ -1695,8 +1695,7 @@ tolist_lock_held(bitarrayobject *self, PyObject *zero, PyObject *one)
         return NULL;
 
     for (i = 0; i < nbits; i++)
-        PyList_SET_ITEM(list, i,
-                        Py_NewRef(getbit(self, i) ? one : zero));
+        PyList_SET_ITEM(list, i, Py_NewRef(getbit(self, i) ? one : zero));
 
     return list;
 }
@@ -2440,6 +2439,8 @@ bitarray_item(bitarrayobject *self, Py_ssize_t i)
 static int
 bitarray_ass_item_lock_held(bitarrayobject *self, Py_ssize_t i, int vi)
 {
+    assert(0 <= vi && vi <= 2);
+
     if (i < 0 || i >= self->nbits) {
         PyErr_SetString(PyExc_IndexError,
                         "bitarray assignment index out of range");
@@ -2460,11 +2461,11 @@ bitarray_ass_item(bitarrayobject *self, Py_ssize_t i, PyObject *value)
     int vi, res;
 
     RAISE_IF_READONLY(self, -1);
-    if (value != NULL && !conv_pybit(value, &vi))
-        return -1;
 
-    if (value == NULL)  /* delete item */
-        vi = 2;
+    if (value == NULL)
+        vi = 2;  /* delete item */
+    else if (!conv_pybit(value, &vi))
+        return -1;
 
     Py_BEGIN_CRITICAL_SECTION(self);
     res = bitarray_ass_item_lock_held(self, i, vi);
@@ -2901,6 +2902,7 @@ setslice_bool(bitarrayobject *self, PyObject *slice, PyObject *value)
     int vi;
 
     assert(PySlice_Check(slice) && PyIndex_Check(value));
+
     if (!conv_pybit(value, &vi))
         return -1;
 
@@ -3335,11 +3337,10 @@ bitarray_ass_subscr(bitarrayobject *self, PyObject *item, PyObject *value)
         if (i == -1 && PyErr_Occurred())
             return -1;
 
-        if (value != NULL && !conv_pybit(value, &vi))
+        if (value == NULL)
+            vi = 2;  /* delete item */
+        else if (!conv_pybit(value, &vi))
             return -1;
-
-        if (value == NULL)  /* delete item */
-            vi = 2;
 
         Py_BEGIN_CRITICAL_SECTION(self);
         if (i < 0)
