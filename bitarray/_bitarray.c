@@ -411,6 +411,7 @@ repeat(bitarrayobject *self, Py_ssize_t m)
     Py_ssize_t q, k = self->nbits;
 
     assert(self->readonly == 0);
+
     if (k == 0 || m == 1)       /* nothing to do */
         return 0;
 
@@ -436,6 +437,20 @@ repeat(bitarrayobject *self, Py_ssize_t m)
 
     copy_n(self, k, self, 0, q - k);  /* copy remaining bits */
     return 0;
+}
+
+/* Adjust slice indices to length and make step positive. */
+static Py_ssize_t
+adjust_slice(Py_ssize_t length,
+             Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
+{
+    Py_ssize_t slicelength;
+
+    assert(*step != 0);
+
+    slicelength = PySlice_AdjustIndices(length, start, stop, *step);
+    adjust_step_positive(slicelength, start, stop, step);
+    return slicelength;
 }
 
 /* invert self[i] in-place */
@@ -498,13 +513,9 @@ static void
 invert_range(bitarrayobject *self,
              Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 {
-    Py_ssize_t slicelength;
-
     assert(self->readonly == 0);
-    assert(step != 0);
 
-    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
-    adjust_step_positive(slicelength, &start, &stop, &step);
+    adjust_slice(self->nbits, &start, &stop, &step);
 
     if (step == 1) {
         invert_span(self, start, stop);
@@ -548,12 +559,9 @@ static void
 set_range(bitarrayobject *self,
           Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step, int vi)
 {
-    Py_ssize_t slicelength;
+    assert(self->readonly == 0);
 
-    assert(step != 0);
-
-    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
-    adjust_step_positive(slicelength, &start, &stop, &step);
+    adjust_slice(self->nbits, &start, &stop, &step);
 
     if (step == 1) {
         set_span(self, start, stop, vi);
@@ -624,9 +632,7 @@ count_range(bitarrayobject *self,
 {
     Py_ssize_t slicelength, cnt = 0;
 
-    assert(step != 0);
-    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
-    adjust_step_positive(slicelength, &start, &stop, &step);
+    slicelength = adjust_slice(self->nbits, &start, &stop, &step);
 
     if (step == 1) {
         cnt = count_span(self, start, stop);
@@ -717,7 +723,7 @@ find_bit(bitarrayobject *self, int vi, Py_ssize_t a, Py_ssize_t b, int right)
 
     assert(0 <= a && a <= self->nbits);
     assert(0 <= b && b <= self->nbits);
-    assert(0 <= vi && vi <= 1);
+    assert(vi == 0 || vi == 1);
     if (n <= 0)
         return -1;
 
@@ -2912,10 +2918,7 @@ static int
 delslice_lock_held(bitarrayobject *self,
                    Py_ssize_t start, Py_ssize_t stop, Py_ssize_t step)
 {
-    Py_ssize_t slicelength;
-
-    slicelength = PySlice_AdjustIndices(self->nbits, &start, &stop, step);
-    adjust_step_positive(slicelength, &start, &stop, &step);
+    Py_ssize_t slicelength = adjust_slice(self->nbits, &start, &stop, &step);
 
     if (step > 1) {
         /* set items not to be removed (up to stop) */
