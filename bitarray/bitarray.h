@@ -291,11 +291,13 @@ adjust_step_positive(Py_ssize_t slicelength,
         *start = *stop + *step * (slicelength - 1) - 1;
         *step = -(*step);
     }
+#ifndef NDEBUG
     assert(*start >= 0 && *stop >= 0 && *step > 0 && slicelength >= 0);
-    /* slicelength == 0 implies stop <= start */
-    assert(slicelength != 0 || *stop <= *start);
-    /* step == 1 and slicelength != 0 implies stop - start == slicelength */
-    assert(*step != 1 || slicelength == 0 || *stop - *start == slicelength);
+    if (slicelength == 0)
+        assert(*stop <= *start);
+    else if (*step == 1)
+        assert(*stop - *start == slicelength);
+#endif
 }
 
 /* convert Python object to C int at address *vi -
