@@ -1018,9 +1018,6 @@ bitarray_bytereverse(bitarrayobject *self, PyObject *args)
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION(self);
-    if (stop == PY_SSIZE_T_MAX)
-        stop = Py_SIZE(self);
-
     if (PySlice_AdjustIndices(Py_SIZE(self), &start, &stop, 1) > 0)
         bytereverse(self->ob_item + start, stop - start);
     Py_END_CRITICAL_SECTION();
@@ -1616,7 +1613,7 @@ bitarray_setall(bitarrayobject *self, PyObject *value)
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION(self);
-    if (self->ob_item)
+    if (self->nbits)
         memset(self->ob_item, vi ? 0xff : 0x00, (size_t) Py_SIZE(self));
     Py_END_CRITICAL_SECTION();
 
@@ -4308,11 +4305,11 @@ bitarray_search(bitarrayobject *self, PyObject *args, PyObject *kwds)
     Py_INCREF(self);
     Py_BEGIN_CRITICAL_SECTION(self);
     PySlice_AdjustIndices(self->nbits, &start, &stop, 1);
+    Py_END_CRITICAL_SECTION();
+
     it->start = start;
     it->stop = stop;
     it->self = self;
-    Py_END_CRITICAL_SECTION();
-
     it->sub = NULL;
     it->vi = vi;
     it->right = right;
@@ -4338,10 +4335,12 @@ rightmost match).");
 static PyObject *
 searchiter_next(searchiterobject *it)
 {
+    bitarrayobject *self;
     Py_ssize_t start, stop, pos, width = 1;
     int right;
 
     Py_BEGIN_CRITICAL_SECTION(it);
+    self = it->self;
     start = it->start;
     stop = it->stop;
     right = it->right;
@@ -4349,23 +4348,23 @@ searchiter_next(searchiterobject *it)
 
     assert(start >= 0);
     if (it->sub) {
-        Py_BEGIN_CRITICAL_SECTION2(it->self, it->sub);
-        if (start > it->self->nbits || stop < 0 || stop > it->self->nbits) {
+        Py_BEGIN_CRITICAL_SECTION2(self, it->sub);
+        if (start > self->nbits || stop < 0 || stop > self->nbits) {
             pos = -1;
         }
         else {
             width = it->sub->nbits;
-            pos = find_sub(it->self, it->sub, start, stop, right);
+            pos = find_sub(self, it->sub, start, stop, right);
         }
         Py_END_CRITICAL_SECTION2();
     }
     else {
-        Py_BEGIN_CRITICAL_SECTION(it->self);
-        if (start > it->self->nbits || stop < 0 || stop > it->self->nbits) {
+        Py_BEGIN_CRITICAL_SECTION(self);
+        if (start > self->nbits || stop < 0 || stop > self->nbits) {
             pos = -1;
         }
         else {
-            pos = find_bit(it->self, it->vi, start, stop, right);
+            pos = find_bit(self, it->vi, start, stop, right);
         }
         Py_END_CRITICAL_SECTION();
     }

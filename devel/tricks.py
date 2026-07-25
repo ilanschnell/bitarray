@@ -44,7 +44,7 @@ class RangeTests(unittest.TestCase):
 
 def adjust_step_positive(slicelength, start, stop, step):
     """
-    This is the adjust_step_positive() implementation from bitarray.h.
+    This is inside the adjust_slice() implementation in bitarray.h.
     """
     if step < 0:
         stop = start + 1
