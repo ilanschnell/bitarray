@@ -439,20 +439,6 @@ repeat(bitarrayobject *self, Py_ssize_t m)
     return 0;
 }
 
-/* Adjust slice indices to length and make step positive. */
-static Py_ssize_t
-adjust_slice(Py_ssize_t length,
-             Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
-{
-    Py_ssize_t slicelength;
-
-    assert(*step != 0);
-
-    slicelength = PySlice_AdjustIndices(length, start, stop, *step);
-    adjust_step_positive(slicelength, start, stop, step);
-    return slicelength;
-}
-
 /* invert self[i] in-place */
 static int
 invert_index(bitarrayobject *self, Py_ssize_t i)

@@ -277,16 +277,22 @@ popcnt_words(uint64_t *w, Py_ssize_t n)
     return cnt;
 }
 
-/* Adjust slice parameters such that step is always positive.
-   This produces simpler loops over elements when their order is irrelevant.
-   Moreover, for step = -1, we can now use set_span() in set_range() and
-   count_span() in count_range().
+/* Adjust slice indices to length and make step positive.
+   A positive step will produce simpler loops over items when their
+   order is irrelevant.  Also, for example, for step = -1, we can now
+   use set_span() in set_range().
 */
-static inline void
-adjust_step_positive(Py_ssize_t slicelength,
-                     Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
+static inline Py_ssize_t
+adjust_slice(Py_ssize_t length,
+             Py_ssize_t *start, Py_ssize_t *stop, Py_ssize_t *step)
 {
-    if (*step < 0) {
+    Py_ssize_t slicelength;
+
+    assert(*step != 0);
+
+    slicelength = PySlice_AdjustIndices(length, start, stop, *step);
+
+    if (*step < 0) {  /* make step positive */
         *stop = *start + 1;
         *start = *stop + *step * (slicelength - 1) - 1;
         *step = -(*step);
@@ -298,6 +304,8 @@ adjust_step_positive(Py_ssize_t slicelength,
     else if (*step == 1)
         assert(*stop - *start == slicelength);
 #endif
+
+    return slicelength;
 }
 
 /* convert Python object to C int at address *vi -
