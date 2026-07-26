@@ -4928,20 +4928,47 @@ class DecodeIteratorTests(unittest.TestCase, Util):
         self.assertIs(type(it), decodeiterator)
 
     def test_skipbits(self):
-        a = bitarray("0100 00000 111")
+        a = bitarray("0100 00000 111 0")
         it = a.decode(alphabet_code)
-        b = it.skipbits(4)
-        self.assertIs(type(b), bitarray)
-        self.assertEqual(b.to01(), "0100")
+        skipped = it.skipbits(4)
+        self.assertIs(type(skipped), bitarray)
+        self.assertEqual(skipped.to01(), "0100")
         self.assertEqual(next(it), 'h')
+        self.assertEqual(len(it.skipbits(0)), 0)
+        self.assertEqual(next(it), 'e')
+        self.assertEqual(len(it.skipbits(1)), 1)
+        self.assertRaises(StopIteration, next, it)
+
+    def test_skipbits_empty(self):
+        a = bitarray()
+        it = a.decode(alphabet_code)
+        for _ in range(20):
+            skipped = it.skipbits(0)
+            self.assertIs(type(skipped), bitarray)
+            self.assertEqual(len(skipped), 0)
+        self.assertRaises(StopIteration, next, it)
+
+    def test_skipbits_frozenbitarray(self):
+        a = frozenbitarray("111 1111001111 0100")
+        it = a.decode(alphabet_code)
+        self.assertEqual(next(it), 'e')
+        skipped = it.skipbits(10)
+        self.assertIs(type(skipped), frozenbitarray)
+        self.assertEqual(skipped.to01(), "1111001111")
+        self.assertEqual(next(it), 't')
+        self.assertRaises(StopIteration, next, it)
+
+    def test_skipbits_errors(self):
+        a = bitarray("0100")
+        it = a.decode(alphabet_code)
         self.assertRaises(TypeError, it.skipbits)
         self.assertRaises(TypeError, it.skipbits, 2.0)
         self.assertRaises(TypeError, it.skipbits, "1")
         self.assertRaises(ValueError, it.skipbits, -1)
         self.assertRaises(ValueError, it.skipbits, 100)
         self.assertRaises(ValueError, it.skipbits, sys.maxsize)
-        self.assertEqual(next(it), 'e')
-        self.assertEqual(len(it.skipbits(0)), 0)
+        self.assertEqual(next(it), 't')
+        self.assertRaises(ValueError, it.skipbits, 1)
         self.assertRaises(StopIteration, next, it)
 
     def test_index(self):
@@ -4968,7 +4995,7 @@ class DecodeIteratorTests(unittest.TestCase, Util):
             while i < N:
                 n = randrange(20)
                 if i + n > N:
-                    n = N - i
+                    n = N - i  # avoid skipping beyond end of bitarray
                 self.assertEqual(it.index, i)
                 b = it.skipbits(n)
                 self.assertEqual(b, a[i:i + n])
