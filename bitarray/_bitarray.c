@@ -4168,25 +4168,25 @@ static PyObject *
 decodeiter_skipbits(decodeiterobject *it, PyObject *args)
 {
     PyObject *skipped = NULL;
-    Py_ssize_t n;  /* number of bits to skip */
+    Py_ssize_t i, n;  /* n is number of bits to skip */
 
     if (!PyArg_ParseTuple(args, "n:skipbits", &n))
         return NULL;
 
     if (n < 0)
-        return PyErr_Format(PyExc_ValueError, "skip count cannot be "
-                            "negative, got %zd", n);
+        return PyErr_Format(PyExc_ValueError,
+                            "skip count cannot be negative, got %zd", n);
 
     Py_BEGIN_CRITICAL_SECTION2(it, it->self);
-    if (n <= it->self->nbits - it->index) {
-        skipped = getslice_lock_held(it->self, it->index, it->index + n, 1);
+    i = it->index;
+    if (n <= it->self->nbits - i) {
+        skipped = getslice_lock_held(it->self, i, i + n, 1);
         if (skipped)
             it->index += n;
     }
     else {
-        PyErr_Format(PyExc_ValueError, "skip count %zd cannot be "
-                     "larger than remaining bits %zd",
-                     n, it->self->nbits - it->index);
+        PyErr_Format(PyExc_ValueError, "skip count %zd cannot be larger "
+                     "than remaining bits %zd", n, it->self->nbits - i);
     }
     Py_END_CRITICAL_SECTION2();
 
