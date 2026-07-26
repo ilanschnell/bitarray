@@ -3782,13 +3782,19 @@ binode_make_tree(PyObject *codedict)
     }
     Py_END_CRITICAL_SECTION();
 
+    if (ret == 0 && tree->symbol == NULL &&
+            tree->child[0] == NULL && tree->child[1] == NULL) {
+        /* This happens when check_codedict() observes a non-empty dict,
+           but another thread clears it. */
+        PyErr_SetString(PyExc_ValueError, "non-empty dict expected");
+        ret = -1;
+    }
+
     if (ret < 0) {
         binode_delete(tree);
         return NULL;
     }
 
-    /* as we require the codedict to be non-empty the tree cannot be empty */
-    assert(tree);
     return tree;
 }
 
