@@ -2149,18 +2149,16 @@ rotate_lock_held(bitarrayobject *self, Py_ssize_t k)
         return -1;
 
     assert(tmp->nbits <= n / 2);  /* at most half size */
-    if (tmp->nbits == k) {           /* tail is smaller */
+    if (tmp->nbits == k) {  /* tail is smaller */
         copy_n(tmp, 0, self, n - k, k);   /* save tail */
         copy_n(self, k, self, 0, n - k);  /* shift array right by k */
         copy_n(self, 0, tmp, 0, k);       /* copy stored tail at front */
     }
-    else if (tmp->nbits == n - k) {  /* head is smaller */
+    else {                  /* head is smaller */
+        assert(tmp->nbits == n - k);
         copy_n(tmp, 0, self, 0, n - k);   /* save head */
         copy_n(self, 0, self, n - k, k);  /* shift array left by n-k */
         copy_n(self, k, tmp, 0, n - k);   /* copy stored head at end */
-    }
-    else {
-        Py_UNREACHABLE();
     }
 
     /* tmp is a private exact bitarray; deallocation cannot run Python */
@@ -3372,9 +3370,10 @@ bitarray_cpinvert(bitarrayobject *self)
     return freeze_if_frozen(res);
 }
 
-/* perform bitwise in-place operation */
+/* Perform bitwise in-place operation specified by 'oper'. */
 static void
-bitwise(bitarrayobject *self, bitarrayobject *other, const char oper)
+bitwise_lock_held(bitarrayobject *self,
+                  bitarrayobject *other, const char oper)
 {
     const Py_ssize_t nbytes = Py_SIZE(self);
     const Py_ssize_t cwords = nbytes / 8;      /* complete 64-bit words */
@@ -3444,7 +3443,9 @@ bitarray_ ## name (PyObject *self, PyObject *other)         \
             : bitarray_cp((bitarrayobject *) self);         \
                                                             \
         if (res)                                            \
-            bitwise(res, (bitarrayobject *) other, *ostr);  \
+            bitwise_lock_held(res,                          \
+                              (bitarrayobject *) other,     \
+                              *ostr);                       \
     }                                                       \
     Py_END_CRITICAL_SECTION2();                             \
                                                             \
@@ -3463,24 +3464,24 @@ BITWISE_FUNC(ior,  1, "|=")  /* bitarray_ior  */
 BITWISE_FUNC(ixor, 1, "^=")  /* bitarray_ixor */
 
 
-/* shift bitarray n positions to left (right=0) or right (right=1) */
+/* shift bitarray k positions to left (right=0) or right (right=1) */
 static void
-shift(bitarrayobject *self, Py_ssize_t n, int right)
+shift_lock_held(bitarrayobject *self, Py_ssize_t k, int right)
 {
-    const Py_ssize_t nbits = self->nbits;
+    const Py_ssize_t n = self->nbits;
 
-    assert(n >= 0 && self->readonly == 0);
-    if (n > nbits)
-        n = nbits;
+    assert(k >= 0 && self->readonly == 0);
+    if (k > n)
+        k = n;
 
-    assert(n <= nbits);
+    assert(k <= n);
     if (right) {                /* rshift */
-        copy_n(self, n, self, 0, nbits - n);
-        set_span(self, 0, n, 0);
+        copy_n(self, k, self, 0, n - k);
+        set_span(self, 0, k, 0);
     }
     else {                      /* lshift */
-        copy_n(self, 0, self, n, nbits - n);
-        set_span(self, nbits - n, nbits, 0);
+        copy_n(self, 0, self, k, n - k);
+        set_span(self, n - k, n, 0);
     }
 }
 
@@ -3488,7 +3489,7 @@ shift(bitarrayobject *self, Py_ssize_t n, int right)
 static Py_ssize_t
 shift_check(PyObject *self, PyObject *other, const char *ostr)
 {
-    Py_ssize_t n;
+    Py_ssize_t k;
 
     if (!bitarray_Check(self) || !PyIndex_Check(other)) {
         PyErr_Format(PyExc_TypeError,
@@ -3496,15 +3497,15 @@ shift_check(PyObject *self, PyObject *other, const char *ostr)
                      ostr, Py_TYPE(self)->tp_name, Py_TYPE(other)->tp_name);
         return -1;
     }
-    n = PyNumber_AsSsize_t(other, PyExc_OverflowError);
-    if (n == -1 && PyErr_Occurred())
+    k = PyNumber_AsSsize_t(other, PyExc_OverflowError);
+    if (k == -1 && PyErr_Occurred())
         return -1;
 
-    if (n < 0) {
+    if (k < 0) {
         PyErr_SetString(PyExc_ValueError, "negative shift count");
         return -1;
     }
-    return n;
+    return k;
 }
 
 #define SHIFT_FUNC(name, inplace, ostr)                     \
@@ -3512,9 +3513,9 @@ static PyObject *                                           \
 bitarray_ ## name (PyObject *self, PyObject *other)         \
 {                                                           \
     bitarrayobject *res = NULL;                             \
-    Py_ssize_t n;                                           \
+    Py_ssize_t k;                                           \
                                                             \
-    if ((n = shift_check(self, other, ostr)) < 0)           \
+    if ((k = shift_check(self, other, ostr)) < 0)           \
         return NULL;                                        \
                                                             \
     if (inplace)                                            \
@@ -3526,7 +3527,7 @@ bitarray_ ## name (PyObject *self, PyObject *other)         \
         : bitarray_cp((bitarrayobject *) self);             \
                                                             \
     if (res)                                                \
-        shift(res, n, *ostr == '>');                        \
+        shift_lock_held(res, k, *ostr == '>');              \
     Py_END_CRITICAL_SECTION();                              \
                                                             \
     if (res == NULL)                                        \
