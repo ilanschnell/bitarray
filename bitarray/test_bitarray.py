@@ -2406,6 +2406,63 @@ class NumberTests(unittest.TestCase, Util):
         self.assertTrue(b.readonly)
         self.check_obj(b)
 
+    @unittest.skipIf(is_pypy, "skip test on PyPy")
+    def test_imported(self):
+        a = bytearray([0xf0, 0x08, 0x10, 0x0f])
+        b = bitarray(buffer=a, endian='big')
+        self.assertFalse(b.readonly)
+        # operate on imported (writable) buffer
+        b[0:9] |= bitarray("0000 1100 1", 'big')
+        self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0x0f]))
+        b[23:] ^= bitarray("1 1110 1110", 'big')
+        self.assertEqual(a, bytearray([0xfc, 0x88, 0x11, 0xe1]))
+        b[16:] &= bitarray("1111 0000 1111 0000", 'big')
+        self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0xe0]))
+
+
+class ShiftTests(unittest.TestCase, Util):
+
+    def test_bitarray(self):
+        a = bitarray('11001011 01')
+        b = a >> 2
+        self.assertIs(type(b), bitarray)
+        self.assertEqual(b, bitarray('00 11001011'))
+        self.assertFalse(b.readonly)
+        b <<= 4
+        b >>= 3
+        self.assertEqual(b, bitarray('000001011 0'))
+        self.check_obj(b)
+        b = a << 2
+        self.assertIs(type(b), bitarray)
+        self.assertEqual(b, bitarray('00101101 00'))
+        self.assertFalse(b.readonly)
+        self.check_obj(b)
+
+    def test_frozenbitarray(self):
+        a = frozenbitarray('11011010011')
+        b = a >> 3
+        self.assertIs(type(b), frozenbitarray)
+        self.assertEqual(b, bitarray('00011011010'))
+        self.assertTrue(b.readonly)
+        self.assertRaises(TypeError, a.__ilshift__, 4)
+        self.assertRaises(TypeError, a.__irshift__, 1)
+        self.check_obj(b)
+        b = a << 2
+        self.assertIs(type(b), frozenbitarray)
+        self.assertEqual(b, bitarray('01101001100'))
+        self.assertTrue(b.readonly)
+        self.check_obj(b)
+
+    def test_errors(self):
+        a = bitarray('1101101')
+        for x in a.__lshift__, a.__rshift__, a.__ilshift__, a.__irshift__:
+            self.assertRaises(ValueError, x, -1)
+            self.assertRaises(ValueError, x, -2)
+            self.assertRaises(TypeError, x, 1.0)
+            self.assertRaises(OverflowError, x, sys.maxsize + 1)
+            self.assertRaises(ValueError, x, -sys.maxsize - 1)
+            self.assertRaises(OverflowError, x, -sys.maxsize - 2)
+
     @staticmethod
     def shift(a, n, direction):
         if n >= len(a):
@@ -2422,10 +2479,7 @@ class NumberTests(unittest.TestCase, Util):
         a = bitarray('11011')
         b = a << 2
         self.assertEQUAL(b, bitarray('01100'))
-        self.assertRaises(TypeError, lambda: a << 1.2)
-        self.assertRaises(TypeError, a.__lshift__, 1.2)
         self.assertRaises(ValueError, lambda: a << -1)
-        self.assertRaises(OverflowError, a.__lshift__, 1 << 63)
 
         for a in self.randombitarrays():
             c = a.copy()
@@ -2439,8 +2493,6 @@ class NumberTests(unittest.TestCase, Util):
         a = bitarray('1101101')
         b = a >> 1
         self.assertEQUAL(b, bitarray('0110110'))
-        self.assertRaises(TypeError, lambda: a >> 1.2)
-        self.assertRaises(TypeError, a.__rshift__, 1.2)
         self.assertRaises(ValueError, lambda: a >> -1)
 
         for a in self.randombitarrays():
@@ -2451,26 +2503,7 @@ class NumberTests(unittest.TestCase, Util):
             self.assertEQUAL(b, self.shift(a, n, 'right'))
             self.assertEQUAL(a, c)
 
-    def test_shift_frozenbitarray(self):
-        a = frozenbitarray('11011010011')
-        b = a >> 3
-        self.assertIs(type(b), frozenbitarray)
-        self.assertEqual(b, bitarray('00011011010'))
-        self.assertTrue(b.readonly)
-        self.check_obj(b)
-        b = a << 2
-        self.assertIs(type(b), frozenbitarray)
-        self.assertEqual(b, bitarray('01101001100'))
-        self.assertTrue(b.readonly)
-        self.check_obj(b)
-
     def test_ilshift(self):
-        a = bitarray('110110101')
-        a <<= 7
-        self.assertEQUAL(a, bitarray('010000000'))
-        self.assertRaises(TypeError, a.__ilshift__, 1.2)
-        self.assertRaises(ValueError, a.__ilshift__, -3)
-
         for a in self.randombitarrays():
             b = a.copy()
             n = randrange(len(a) + 4)
@@ -2479,12 +2512,6 @@ class NumberTests(unittest.TestCase, Util):
             self.assertEQUAL(b, self.shift(a, n, 'left'))
 
     def test_irshift(self):
-        a = bitarray('110110111')
-        a >>= 3
-        self.assertEQUAL(a, bitarray('000110110'))
-        self.assertRaises(TypeError, a.__irshift__, 1.2)
-        self.assertRaises(ValueError, a.__irshift__, -4)
-
         for a in self.randombitarrays():
             b = a.copy()
             n = randrange(len(a) + 4)
@@ -2527,7 +2554,7 @@ class NumberTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             c = a.copy()
             z = zeros(len(a), a.endian)
-            n = randint(len(a), len(a) + 10)
+            n = choice([len(a), len(a) + 1, sys.maxsize])
             self.assertEQUAL(a << n, z)
             self.assertEQUAL(a >> n, z)
             self.assertEQUAL(a, c)
@@ -2536,19 +2563,6 @@ class NumberTests(unittest.TestCase, Util):
             a = bitarray(c)
             a >>= n
             self.assertEQUAL(a, z)
-
-    def test_shift_example(self):
-        a = bitarray('0010011')
-        self.assertEqual(a << 3, bitarray('0011000'))
-        a >>= 4
-        self.assertEqual(a, bitarray('0000001'))
-
-    def test_frozenbitarray(self):
-        a = frozenbitarray('0010011')
-        b = a << 3
-        self.assertEqual(b, bitarray('0011000'))
-        self.assertIs(type(b), frozenbitarray)
-        self.assertRaises(TypeError, a.__ilshift__, 4)
 
     @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_imported(self):
