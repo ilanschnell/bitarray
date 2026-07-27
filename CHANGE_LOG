@@ -1,5 +1,7 @@
 2026-XX-XX   3.9.3:
 -------------------
+  * add `bitarray/test_free_threading.py` - these free-threading tests are
+    imported when Python was compiled using `--disable-gil`
 
 
 2026-07-25   3.9.2:

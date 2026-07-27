@@ -1,6 +1,13 @@
 """
 Stress tests for bitarray on a free-threaded CPython build.
 
+This module is only imported (and its tests only added to the suite) when
+Python was configured using --disable-gil.  That is:
+
+    sysconfig.get_config_var("Py_GIL_DISABLED")
+
+returns 1.
+
 BITARRAY_TD_ROUNDS, BITARRAY_TD_NBITS, and BITARRAY_TD_TIMEOUT may be used
 to increase the workload or timeout for longer stress runs.
 """
@@ -10,11 +17,14 @@ import operator
 import os
 import queue
 import sys
+import sysconfig
 import threading
 import time
 import traceback
 import unittest
 import weakref
+
+assert sysconfig.get_config_var("Py_GIL_DISABLED")
 
 from bitarray import bitarray, decodetree, frozenbitarray
 from bitarray.util import _ssqi  # type: ignore
