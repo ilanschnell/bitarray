@@ -18,6 +18,7 @@ from io import BytesIO, UnsupportedOperation
 from random import (choice, choices, getrandbits, randrange, randint,
                     sample, shuffle)
 from string import whitespace
+from sysconfig import get_config_var
 from collections import deque
 
 # imports needed inside tests
@@ -147,41 +148,6 @@ class ModuleFunctionsTests(unittest.TestCase):
         # the version string is not a function, but test it here anyway
         self.assertIs(type(__version__), str)
 
-    def test_sysinfo(self):
-        for key in ["void*", "size_t", "bitarrayobject", "decodetreeobject",
-                    "binode", "HAVE_BUILTIN_BSWAP64",
-                    "PY_LITTLE_ENDIAN", "PY_BIG_ENDIAN",
-                    "Py_GIL_DISABLED", "Py_DEBUG", "DEBUG"]:
-            res = sysinfo(key)
-            self.assertIs(type(res), int)
-
-    @unittest.skipIf(sys.version_info[:2] < (3, 14),
-                     "free-threading not supported")
-    def test_gil_disabled(self):
-        self.assertEqual(sysinfo("Py_GIL_DISABLED"),
-                         "free-threading" in sys.version)
-        # see if GIL is actually disabled in free-threading build
-        if sysinfo("Py_GIL_DISABLED"):
-            self.assertFalse(sys._is_gil_enabled())
-
-    def test_sysinfo_errors(self):
-        self.assertRaises(TypeError, sysinfo)
-        self.assertRaises(TypeError, sysinfo, b"void*")
-        self.assertRaises(KeyError, sysinfo, "foo")
-
-    def test_sysinfo_pointer_size(self):
-        self.assertEqual(sysinfo("void*"), PTRSIZE)
-        self.assertEqual(sysinfo("size_t"), PTRSIZE)
-        self.assertEqual(sys.maxsize, 2 ** (8 * PTRSIZE - 1) - 1)
-        if not is_pypy:  # PyPy doesn't have tuple.__itemsize__
-            self.assertEqual(PTRSIZE, tuple.__itemsize__)
-
-    def test_sysinfo_byteorder(self):
-        self.assertEqual(sys.byteorder == "little",
-                         sysinfo("PY_LITTLE_ENDIAN"))
-        self.assertEqual(sys.byteorder == "big",
-                         sysinfo("PY_BIG_ENDIAN"))
-
     def test_get_default_endian(self):
         endian = get_default_endian()
         self.assertTrue(endian in ('little', 'big'))
@@ -214,6 +180,49 @@ class ModuleFunctionsTests(unittest.TestCase):
 
         self.assertRaises(ValueError, bits2bytes, -1)
         self.assertRaises(ValueError, bits2bytes, -924)
+
+class SysinfoTests(unittest.TestCase):
+
+    def test_keys(self):
+        for key in ["void*", "size_t", "bitarrayobject", "decodetreeobject",
+                    "binode", "HAVE_BUILTIN_BSWAP64",
+                    "PY_LITTLE_ENDIAN", "PY_BIG_ENDIAN",
+                    "Py_GIL_DISABLED", "Py_DEBUG", "DEBUG"]:
+            res = sysinfo(key)
+            self.assertIs(type(res), int)
+
+    def test_errors(self):
+        self.assertRaises(TypeError, sysinfo)
+        self.assertRaises(TypeError, sysinfo, b"void*")
+        self.assertRaises(KeyError, sysinfo, "foo")
+
+    @unittest.skipIf(sys.version_info[:2] < (3, 14),
+                     "free-threading not supported")
+    def test_gil_disabled(self):
+        gil_disabled = sysinfo("Py_GIL_DISABLED")
+        self.assertEqual(gil_disabled, "free-threading" in sys.version)
+        self.assertEqual(gil_disabled,
+                         get_config_var("Py_GIL_DISABLED") in (1, "1"))
+        # see if GIL is actually disabled in free-threading build
+        if gil_disabled:
+            self.assertFalse(sys._is_gil_enabled())
+
+    def test_py_debug(self):
+        self.assertEqual(sysinfo("Py_DEBUG"),
+                         get_config_var("Py_DEBUG") in (1, "1"))
+
+    def test_pointer_size(self):
+        self.assertEqual(sysinfo("void*"), PTRSIZE)
+        self.assertEqual(sysinfo("size_t"), PTRSIZE)
+        self.assertEqual(sys.maxsize, 2 ** (8 * PTRSIZE - 1) - 1)
+        if not is_pypy:  # PyPy doesn't have tuple.__itemsize__
+            self.assertEqual(PTRSIZE, tuple.__itemsize__)
+
+    def test_byteorder(self):
+        self.assertEqual(sys.byteorder == "little",
+                         sysinfo("PY_LITTLE_ENDIAN"))
+        self.assertEqual(sys.byteorder == "big",
+                         sysinfo("PY_BIG_ENDIAN"))
 
 # ---------------------------------------------------------------------------
 
