@@ -92,7 +92,7 @@ class Util:
         self.assertIsInstance(a, bitarray)
 
         self.assertEqual(a.nbytes, bits2bytes(len(a)))
-        self.assertTrue(0 <= a.padbits < 8)
+        self.assertIn(a.padbits, range(8))
         self.assertEqual(len(a) + a.padbits, 8 * a.nbytes)
 
         info = a.buffer_info()
@@ -150,7 +150,7 @@ class ModuleFunctionsTests(unittest.TestCase):
 
     def test_get_default_endian(self):
         endian = get_default_endian()
-        self.assertTrue(endian in ('little', 'big'))
+        self.assertIn(endian, ('little', 'big'))
         self.assertIs(type(endian), str)
         a = bitarray()
         self.assertEqual(a.endian, endian)
@@ -2968,7 +2968,8 @@ class FillTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             b = a.copy()
             res = b.fill()
-            self.assertTrue(0 <= res < 8)
+            self.assertTrue(type(res), int)
+            self.assertIn(res, range(8))
             self.assertEqual(b.padbits, 0)
             self.assertEqual(len(b) % 8, 0)
             self.assertEqual(b, a + zeros(res))
@@ -3925,7 +3926,7 @@ class IndexTests(unittest.TestCase, Util):
 
             if len(b) == 1:  # test finding int
                 v = b[0]
-                self.assertTrue(v in range(2))
+                self.assertIn(v, range(2))
                 self.assertEqual(a.find(v, i, j, 0), ref_l)
                 self.assertEqual(a.find(v, i, j, 1), ref_r)
 
@@ -4224,8 +4225,8 @@ class DescriptorTests(unittest.TestCase, Util):
             self.assertRaises(AttributeError, delattr, a, "nbytes")
             # .padbits
             self.assertEqual(a.padbits, 8 * a.nbytes - n)
-            self.assertTrue(0 <= a.padbits < 8)
             self.assertIs(type(a.padbits), int)
+            self.assertIn(a.padbits, range(8))
             self.assertRaises(AttributeError, setattr, a, "padbits", 0)
             self.assertRaises(AttributeError, delattr, a, "padbits")
 
@@ -5516,8 +5517,8 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
         d = frozenbitarray('011')
         s = set([a, b, c, d])
         self.assertEqual(len(s), 4)
-        self.assertTrue(d in s)
-        self.assertFalse(frozenbitarray('0') in s)
+        self.assertIn(d, s)
+        self.assertNotIn(frozenbitarray('0'), s)
 
     def test_as_dictkey(self):
         a = frozenbitarray('01')
@@ -5612,8 +5613,7 @@ def run(verbosity=1):
         suite.addTests(loader.loadTestsFromModule(test_free_threading))
 
     runner = unittest.TextTestRunner(verbosity=verbosity)
-    result = runner.run(suite)
-    return result
+    return runner.run(suite)
 
 if __name__ == '__main__':
     unittest.main()
