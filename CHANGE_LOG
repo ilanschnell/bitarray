@@ -1,5 +1,7 @@
 2026-XX-XX   3.9.3:
 -------------------
+  * add well tested free-threading support,
+    see: [free threading](free_threading.rst)
   * add `bitarray/test_free_threading.py` - these free-threading tests are
     imported when Python was compiled using `--disable-gil`
 
