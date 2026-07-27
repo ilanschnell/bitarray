@@ -212,7 +212,8 @@ static PyObject *
 count_n(PyObject *module, PyObject *args)
 {
     bitarrayobject *a;
-    Py_ssize_t nbits, n, i;
+    Py_ssize_t nbits, n;
+    Py_ssize_t i = 0;  /* silence uninitialized warning on some compilers */
     int vi = 1;
 
     if (!PyArg_ParseTuple(args, "O!n|O&:count_n", bitarray_type,
