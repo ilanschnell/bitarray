@@ -5607,6 +5607,9 @@ def run(verbosity=1):
     suite = unittest.TestSuite()
     suite.addTests(loader.loadTestsFromModule(sys.modules[__name__]))
     suite.addTests(loader.loadTestsFromModule(bitarray.test_util))
+    if sysinfo("Py_GIL_DISABLED"):
+        import bitarray.test_free_threading as test_free_threading
+        suite.addTests(loader.loadTestsFromModule(test_free_threading))
 
     runner = unittest.TextTestRunner(verbosity=verbosity)
     result = runner.run(suite)
