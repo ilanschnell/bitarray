@@ -65,22 +65,22 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
                         "cannot resize bitarray that is exporting buffers");
         return -1;
     }
-
     if (self->buffer) {
         PyErr_SetString(PyExc_BufferError, "cannot resize imported buffer");
         return -1;
     }
-
     if (nbits < 0) {
         PyErr_Format(PyExc_OverflowError, "bitarray resize %zd", nbits);
         return -1;
     }
 
-    assert(allocated >= size && size == BYTES((size_t) self->nbits));
-    /* ob_item == NULL implies ob_size == allocated == 0 */
-    assert(self->ob_item != NULL || (size == 0 && allocated == 0));
-    /* resize() is never called on read-only memory */
+#ifndef NDEBUG
     assert(self->readonly == 0);
+    assert(allocated >= size && size == BYTES((size_t) self->nbits));
+    if (self->ob_item == NULL)
+        assert(size == 0 && allocated == 0);
+    assert(self->readonly == 0);
+#endif
 
     /* bypass everything when buffer size hasn't changed */
     if (newsize == size) {
@@ -1351,19 +1351,19 @@ Return -1 when sub_bitarray is not found.");
 static PyObject *
 bitarray_index(bitarrayobject *self, PyObject *args, PyObject *kwds)
 {
-    PyObject *result;
+    PyObject *res;
 
-    result = bitarray_find(self, args, kwds);
-    if (result == NULL)
+    res = bitarray_find(self, args, kwds);
+    if (res == NULL)
         return NULL;
 
-    assert(PyLong_Check(result));
-    if (PyLong_AsSsize_t(result) < 0) {
-        Py_DECREF(result);
+    assert(PyLong_Check(res));
+    if (PyLong_AsSsize_t(res) < 0) {
+        Py_DECREF(res);
         return PyErr_Format(PyExc_ValueError, "%A not in bitarray",
                             PyTuple_GET_ITEM(args, 0));
     }
-    return result;
+    return res;
 }
 
 PyDoc_STRVAR(index_doc,
@@ -1478,7 +1478,7 @@ static PyObject *
 bitarray_reduce(bitarrayobject *self)
 {
     PyObject *reconstructor;
-    PyObject *dict, *bytes, *result;
+    PyObject *dict, *bytes, *res;
     int padbits;
 
     reconstructor = bitarray_module_attr("_bitarray_reconstructor");
@@ -1504,13 +1504,13 @@ bitarray_reduce(bitarrayobject *self)
         return NULL;
     }
 
-    result = Py_BuildValue("O(OOsii)O", reconstructor, Py_TYPE(self), bytes,
-                           ENDIAN_STR(self->endian), padbits,
-                           self->readonly, dict);
+    res = Py_BuildValue("O(OOsii)O", reconstructor, Py_TYPE(self), bytes,
+                        ENDIAN_STR(self->endian), padbits,
+                        self->readonly, dict);
     Py_DECREF(dict);
     Py_DECREF(reconstructor);
     Py_DECREF(bytes);
-    return result;
+    return res;
 }
 
 PyDoc_STRVAR(reduce_doc, "Internal. Used for pickling support.");
@@ -1519,7 +1519,7 @@ PyDoc_STRVAR(reduce_doc, "Internal. Used for pickling support.");
 static PyObject *
 repr_lock_held(bitarrayobject *self)
 {
-    PyObject *result;
+    PyObject *res;
     Py_ssize_t nbits, strsize, i;
     char *str;
 
@@ -1541,9 +1541,9 @@ repr_lock_held(bitarrayobject *self)
     str[strsize - 2] = '\'';
     str[strsize - 1] = ')';
     /* we know the string length beforehand - not null-terminated */
-    result = PyUnicode_FromStringAndSize(str, strsize);
+    res = PyUnicode_FromStringAndSize(str, strsize);
     PyMem_Free((void *) str);
-    return result;
+    return res;
 }
 
 static PyObject *
@@ -1903,7 +1903,7 @@ Write bitarray buffer to file object `f`.");
 static PyObject *
 to01_lock_held(bitarrayobject *self, Py_ssize_t group, const char *sep)
 {
-    PyObject *result;
+    PyObject *res;
     Py_ssize_t nbits = self->nbits, i;
     size_t strsize, j, nsep;
     char *str;
@@ -1926,9 +1926,9 @@ to01_lock_held(bitarrayobject *self, Py_ssize_t group, const char *sep)
     }
     assert(j == strsize);
 
-    result = PyUnicode_FromStringAndSize(str, strsize);
+    res = PyUnicode_FromStringAndSize(str, strsize);
     PyMem_Free((void *) str);
-    return result;
+    return res;
 }
 
 static PyObject *
@@ -4174,7 +4174,7 @@ decodeiter_traverse(decodeiterobject *it, visitproc visit, void *arg)
 static PyObject *
 decodeiter_skipbits(decodeiterobject *it, PyObject *args)
 {
-    PyObject *skipped = NULL;
+    PyObject *res = NULL;
     Py_ssize_t i, n;  /* n is number of bits to skip */
 
     if (!PyArg_ParseTuple(args, "n:skipbits", &n))
@@ -4187,8 +4187,8 @@ decodeiter_skipbits(decodeiterobject *it, PyObject *args)
     Py_BEGIN_CRITICAL_SECTION2(it, it->self);
     i = it->index;
     if (n <= it->self->nbits - i) {
-        skipped = getslice_lock_held(it->self, i, i + n, 1);
-        if (skipped)
+        res = getslice_lock_held(it->self, i, i + n, 1);
+        if (res)
             it->index += n;
     }
     else {
@@ -4197,7 +4197,7 @@ decodeiter_skipbits(decodeiterobject *it, PyObject *args)
     }
     Py_END_CRITICAL_SECTION2();
 
-    return skipped;
+    return res;
 }
 
 PyDoc_STRVAR(decodeiter_skipbits_doc,

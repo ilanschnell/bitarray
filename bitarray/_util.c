@@ -686,16 +686,16 @@ serialize_lock_held(bitarrayobject *a)
 static PyObject *
 serialize(PyObject *module, PyObject *obj)
 {
-    PyObject *result;
+    PyObject *res;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION(obj);
-    result = serialize_lock_held((bitarrayobject *) obj);
+    res = serialize_lock_held((bitarrayobject *) obj);
     Py_END_CRITICAL_SECTION();
 
-    return result;
+    return res;
 }
 
 PyDoc_STRVAR(serialize_doc,
@@ -812,7 +812,7 @@ static PyObject *
 ba2hex(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "group", "sep", NULL};
-    PyObject *result;
+    PyObject *res;
     bitarrayobject *a;
     Py_ssize_t nbits, group = 0;
     char *sep = " ", *str;
@@ -842,9 +842,9 @@ ba2hex(PyObject *module, PyObject *args, PyObject *kwds)
     if (str == NULL)
         return NULL;
 
-    result = PyUnicode_FromString(str);
+    res = PyUnicode_FromString(str);
     PyMem_Free((void *) str);
-    return result;
+    return res;
 }
 
 PyDoc_STRVAR(ba2hex_doc,
@@ -1042,7 +1042,7 @@ ba2base(PyObject *module, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"", "", "group", "sep", NULL};
     bitarrayobject *a;
-    PyObject *result;
+    PyObject *res;
     Py_ssize_t nbits, group = 0;
     char *sep = " ", *str;
     int n, m;
@@ -1079,9 +1079,9 @@ ba2base(PyObject *module, PyObject *args, PyObject *kwds)
     if (str == NULL)
         return NULL;
 
-    result = PyUnicode_FromString(str);
+    res = PyUnicode_FromString(str);
     PyMem_Free((void *) str);
-    return result;
+    return res;
 }
 
 PyDoc_STRVAR(ba2base_doc,
@@ -2357,19 +2357,19 @@ module_read_n(PyObject *module, PyObject *args)
 static PyObject *
 module_write_n(PyObject *module, PyObject *args)
 {
-    PyObject *result;
+    PyObject *res;
     char *str;
     Py_ssize_t i;
     int n;
 
     if (!PyArg_ParseTuple(args, "in", &n, &i))
         return NULL;
-    result = PyBytes_FromStringAndSize(NULL, n);
-    if (result == NULL)
+    res = PyBytes_FromStringAndSize(NULL, n);
+    if (res == NULL)
         return NULL;
-    str = PyBytes_AsString(result);
+    str = PyBytes_AsString(res);
     write_n(str, n, i);
-    return result;
+    return res;
 }
 
 #endif  /* NDEBUG */
