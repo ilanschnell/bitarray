@@ -216,14 +216,14 @@ class FreeThreadedStressTests(unittest.TestCase):
         def mutator():
             operations = (
                 lambda: a.append(1),
-                lambda: a.pop(),
+                a.pop,
                 lambda: a.insert(0, 1),
                 lambda: a.remove(1),
                 lambda: a.extend(source),
-                lambda: a.clear(),
-                lambda: a.fill(),
-                lambda: a.invert(),
-                lambda: a.reverse(),
+                a.clear,
+                a.fill,
+                a.invert,
+                a.reverse,
                 lambda: a.rotate(17),
                 lambda: a.setall(0),
                 lambda: a.sort(reverse=True),
@@ -242,16 +242,16 @@ class FreeThreadedStressTests(unittest.TestCase):
         def reader():
             operations = (
                 lambda: len(a),
-                lambda: a.all(),
-                lambda: a.any(),
-                lambda: a.count(),
+                a.all,
+                a.any,
+                a.count,
                 lambda: a.find(1),
                 lambda: a.index(1),
-                lambda: a.tobytes(),
+                a.tobytes,
                 lambda: bytes(a),
-                lambda: a.to01(),
-                lambda: a.tolist(),
-                lambda: a.unpack(),
+                a.to01,
+                a.tolist,
+                a.unpack,
                 lambda: repr(a),
                 lambda: a.copy(),
                 lambda: a.__reduce__(),
@@ -448,7 +448,7 @@ class FreeThreadedStressTests(unittest.TestCase):
         def resizer():
             operations = (
                 lambda: a.append(1),
-                lambda: a.pop(),
+                a.pop,
                 a.clear,
                 lambda: a.extend(base),
                 lambda: a.frombytes(b"\xaa\x55"),
@@ -784,7 +784,7 @@ class FreeThreadedStressTests(unittest.TestCase):
                 for a in objects:
                     operations = (
                         lambda: a.setall(0),
-                        lambda: a.invert(),
+                        a.invert,
                         lambda: a.append(0),
                         lambda: operator.setitem(a, 0, 1),
                     )
