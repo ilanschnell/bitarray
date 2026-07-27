@@ -2,6 +2,8 @@ import re
 import sys
 from doctest import testfile
 from glob import glob
+from os.path import basename
+from sysconfig import get_config_var
 from io import StringIO
 
 import bitarray.util
@@ -340,6 +342,9 @@ def main():
 
     testfile('./README.rst')
     for path in glob("./doc/*.rst"):
+        if (basename(path) == 'free_threading.rst' and
+            not get_config_var("Py_GIL_DISABLED")):
+            continue
         testfile(path)
     for path in glob("./examples/*.rst"):
         testfile(path)
