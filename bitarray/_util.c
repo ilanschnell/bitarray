@@ -658,10 +658,10 @@ Nothing about this function is specific to bitarray objects.");
 /* ---------------------------- serialization -------------------------- */
 
 /*
-  The binary format used here is similar to the one used for pickling
-  bitarray objects.  However, this format has a head byte which encodes both
-  the bit-endianness and the number of pad bits, whereas the binary pickle
-  blob does not.
+   The binary format used here is similar to the one used for pickling
+   bitarray objects.  However, this format has a head byte which encodes both
+   the bit-endianness and the number of pad bits, whereas the binary pickle
+   blob does not.
 */
 
 static PyObject *

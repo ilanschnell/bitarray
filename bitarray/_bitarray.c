@@ -38,17 +38,17 @@ new_allocation(size_t size, size_t allocated, size_t newsize)
         return newsize;  /* major downsize - shrink to exact size */
     }
     else {
-          /* need to grow buffer */
-          size_t new_alloc = newsize;
-          /* overallocate when previous size isn't zero and when growth
-             is moderate */
-          if (size != 0 && newsize / 2 <= allocated) {
-              /* overallocate proportional to the bitarray size and
-                 add padding to make the allocated size multiple of 4 */
-              new_alloc += (newsize >> 4) + ((newsize < 8) ? 3 : 7);
-              new_alloc &= ~(size_t) 3;
-          }
-          return new_alloc;
+        /* need to grow buffer */
+        size_t new_alloc = newsize;
+        /* overallocate when previous size isn't zero and when growth
+           is moderate */
+        if (size != 0 && newsize / 2 <= allocated) {
+            /* overallocate proportional to the bitarray size and
+               add padding to make the allocated size multiple of 4 */
+            new_alloc += (newsize >> 4) + ((newsize < 8) ? 3 : 7);
+            new_alloc &= ~(size_t) 3;
+        }
+        return new_alloc;
     }
 }
 
@@ -3602,15 +3602,15 @@ check_codedict(PyObject *codedict)
 static int
 check_value(PyObject *value)
 {
-     if (!bitarray_Check(value)) {
-         PyErr_SetString(PyExc_TypeError, "bitarray expected for dict value");
-         return -1;
-     }
-     if (((bitarrayobject *) value)->nbits == 0) {
-         PyErr_SetString(PyExc_ValueError, "non-empty bitarray expected");
-         return -1;
-     }
-     return 0;
+    if (!bitarray_Check(value)) {
+        PyErr_SetString(PyExc_TypeError, "bitarray expected for dict value");
+        return -1;
+    }
+    if (((bitarrayobject *) value)->nbits == 0) {
+        PyErr_SetString(PyExc_ValueError, "non-empty bitarray expected");
+        return -1;
+    }
+    return 0;
 }
 
 static PyObject *

@@ -31,17 +31,17 @@ size_t new_allocation(size_t size, size_t allocated, size_t newsize)
         return newsize;  /* major downsize - shrink to exact size */
     }
     else {
-          /* need to grow buffer */
-          size_t new_alloc = newsize;
-          /* overallocate when previous size isn't zero and when growth
-             is moderate */
-          if (size != 0 && newsize / 2 <= allocated) {
-              /* overallocate proportional to the bitarray size and
-                 add padding to make the allocated size multiple of 4 */
-              new_alloc += (newsize >> 4) + (newsize < 8 ? 3 : 7);
-              new_alloc &= ~(size_t) 3;
-          }
-          return new_alloc;
+        /* need to grow buffer */
+        size_t new_alloc = newsize;
+        /* overallocate when previous size isn't zero and when growth
+           is moderate */
+        if (size != 0 && newsize / 2 <= allocated) {
+            /* overallocate proportional to the bitarray size and
+               add padding to make the allocated size multiple of 4 */
+            new_alloc += (newsize >> 4) + (newsize < 8 ? 3 : 7);
+            new_alloc &= ~(size_t) 3;
+        }
+        return new_alloc;
     }
 }
 
