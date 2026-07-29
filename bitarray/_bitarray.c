@@ -916,6 +916,55 @@ extend_dispatch(bitarrayobject *self, PyObject *obj)
     return -1;
 }
 
+static PyTypeObject *
+import_frozen_type(void)
+{
+    PyTypeObject *frozen;
+
+    frozen = (PyTypeObject *) bitarray_module_attr("frozenbitarray");
+    if (frozen == NULL)
+        return NULL;
+
+    /* in case user changes bitarray.frozenbitarray */
+    if (!PyType_Check(frozen) || !PyType_IsSubtype(frozen, &Bitarray_Type)) {
+        PyErr_SetString(PyExc_TypeError,
+                        "frozenbitarray is not a bitarray type");
+        Py_DECREF(frozen);
+        return NULL;
+    }
+    return frozen;
+}
+
+/* Set readonly member to 1 if self is an instance of frozenbitarray.
+   Return PyObject of self.  On error, set exception and return NULL. */
+static PyObject *
+freeze_if_frozen(bitarrayobject *self)
+{
+    PyTypeObject *frozen;
+    int is_frozen;
+
+    assert(self->ob_exports == 0 && self->buffer == NULL);
+
+    if (Py_TYPE(self) == &Bitarray_Type)  /* shortcut for common case */
+        return (PyObject *) self;
+
+    frozen = import_frozen_type();
+    if (frozen == NULL)
+        return NULL;
+
+    is_frozen = PyObject_IsInstance((PyObject *) self,
+                                    (PyObject *) frozen);
+    Py_DECREF(frozen);
+    if (is_frozen < 0)
+        return NULL;
+
+    if (is_frozen) {
+        set_padbits(self);
+        self->readonly = 1;
+    }
+    return (PyObject *) self;
+}
+
 /**************************************************************************
                      Implementation of bitarray methods
  **************************************************************************/
@@ -1114,36 +1163,6 @@ PyDoc_STRVAR(clear_doc,
 "clear()\n\
 \n\
 Remove all items from bitarray.");
-
-
-/* Set readonly member to 1 if self is an instance of frozenbitarray.
-   Return PyObject of self.  On error, set exception and return NULL. */
-static PyObject *
-freeze_if_frozen(bitarrayobject *self)
-{
-    PyObject *frozen;  /* frozenbitarray class object */
-    int is_frozen;
-
-    assert(self->ob_exports == 0 && self->buffer == NULL);
-
-    if (Py_TYPE(self) == &Bitarray_Type)  /* shortcut for common case */
-        return (PyObject *) self;
-
-    frozen = bitarray_module_attr("frozenbitarray");
-    if (frozen == NULL)
-        return NULL;
-
-    is_frozen = PyObject_IsInstance((PyObject *) self, frozen);
-    Py_DECREF(frozen);
-    if (is_frozen < 0)
-        return NULL;
-
-    if (is_frozen) {
-        set_padbits(self);
-        self->readonly = 1;
-    }
-    return (PyObject *) self;
-}
 
 
 static PyObject *
@@ -3935,25 +3954,6 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     ((decodetreeobject *) obj)->tree = tree;
 
     return obj;
-}
-
-static PyTypeObject *
-import_frozen_type(void)
-{
-    PyTypeObject *frozen;
-
-    frozen = (PyTypeObject *) bitarray_module_attr("frozenbitarray");
-    if (frozen == NULL)
-        return NULL;
-
-    /* in case user changes bitarray.frozenbitarray */
-    if (!PyType_Check(frozen) || !PyType_IsSubtype(frozen, &Bitarray_Type)) {
-        PyErr_SetString(PyExc_TypeError,
-                        "frozenbitarray is not a bitarray type");
-        Py_DECREF(frozen);
-        return NULL;
-    }
-    return frozen;
 }
 
 static PyObject *
