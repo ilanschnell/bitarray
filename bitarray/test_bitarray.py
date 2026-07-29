@@ -4631,9 +4631,24 @@ class DecodeTreeTests(unittest.TestCase, Util):
 
     def test_todict(self):
         t = decodetree(alphabet_code)
+        self.assertIs(type(t), decodetree)
         d = t.todict()
         self.assertIs(type(d), dict)
         self.assertEqual(d, alphabet_code)
+        for value in d.values():
+            self.assertIs(type(value), frozenbitarray)
+            self.check_obj(value)
+
+    def test_todict_small(self):
+        code = dict(a=bitarray('1'))
+        t = decodetree(code)
+        self.assertIs(type(t), decodetree)
+        code2 = t.todict()
+        self.assertEqual(code2, code)
+        self.assertEqual(code2['a'], bitarray('1'))
+        value = code2['a']
+        self.assertIs(type(value), frozenbitarray)
+        self.check_obj(value)
 
     def test_decode(self):
         t = decodetree(alphabet_code)

@@ -4,6 +4,7 @@
   * add `bitarray/test_free_threading.py` - these free-threading tests are
     imported when Python was compiled using `--disable-gil`
   * fix free-threading bug in `binode_make_tree()`
+  * unofficial `decodetree.todict()` now returns mapping to `frozenbitarray`s
   * make C code more cohesive
 
 

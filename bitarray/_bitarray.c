@@ -3587,7 +3587,11 @@ static PyNumberMethods bitarray_as_number = {
 static int
 check_codedict(PyObject *codedict)
 {
+#if PY_VERSION_HEX >= 0x030F0000
+    if (!PyAnyDict_Check(codedict)) {
+#else
     if (!PyDict_Check(codedict)) {
+#endif
         PyErr_Format(PyExc_TypeError, "dict expected, got '%s'",
                      Py_TYPE(codedict)->tp_name);
         return -1;
@@ -3936,33 +3940,56 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static PyObject *
 decodetree_todict(decodetreeobject *self)
 {
-    PyObject *dict;
-    bitarrayobject *prefix;
+    PyObject *dict, *frozen = NULL, *key, *value;
+    bitarrayobject *prefix = NULL;
+    Py_ssize_t pos = 0;
 
     dict = PyDict_New();
     if (dict == NULL)
         return NULL;
 
-    prefix = newbitarrayobject(&Bitarray_Type, 0, ENDIAN_DEFAULT);
+    frozen = bitarray_module_attr("frozenbitarray");
+    if (frozen == NULL)
+        goto error;
+
+    /* in case user changes bitarray.frozenbitarray */
+    if (!PyType_Check(frozen) ||
+            !PyType_IsSubtype((PyTypeObject *) frozen, &Bitarray_Type)) {
+        PyErr_SetString(PyExc_TypeError,
+                        "frozenbitarray is not a bitarray type");
+        goto error;
+    }
+
+    prefix = newbitarrayobject((PyTypeObject *) frozen, 0, ENDIAN_DEFAULT);
     if (prefix == NULL)
         goto error;
+
+    Py_DECREF(frozen);
+    frozen = NULL;  /* prevent double decrement on error */
 
     if (binode_to_dict(self->tree, dict, prefix) < 0)
         goto error;
 
     Py_DECREF(prefix);
-    return dict;
 
+    /* freeze values of dict */
+    while (PyDict_Next(dict, &pos, &key, &value)) {
+        bitarrayobject *a = (bitarrayobject *) value;
+        set_padbits(a);
+        a->readonly = 1;
+    }
+    return dict;
  error:
     Py_DECREF(dict);
     Py_XDECREF(prefix);
+    Py_XDECREF(frozen);
     return NULL;
 }
 
 PyDoc_STRVAR(todict_doc,
 "todict() -> dict\n\
 \n\
-Return a dict mapping the symbols to bitarrays.  This dict is a\n\
+Return a dict mapping the symbols to frozenbitarrays.  This dict is a\n\
 reconstruction of the code dict which the object was created with.");
 
 
@@ -4008,9 +4035,9 @@ decodetree_dealloc(decodetreeobject *self)
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-/* These methods are mostly useful for debugging and testing.  We provide
-   docstrings, but they are not mentioned in the documentation, and are not
-   part of the API */
+/* These methods are mostly useful for debugging and testing.
+   We provide docstrings, but they are not mentioned in the documentation.
+   They are not part of the official API and unsupported. */
 static PyMethodDef decodetree_methods[] = {
     {"complete",   (PyCFunction) decodetree_complete, METH_NOARGS,
      complete_doc},
