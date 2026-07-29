@@ -2516,10 +2516,12 @@ class HuffmanTests(unittest.TestCase):
         n = len(code)
         tree = decodetree(code)
         self.assertEqual(tree.todict(), code)
+        nodes = tree.nodes()
+        self.assertEqual(nodes[2], n)
         # ensure tree has 2n-1 nodes (n symbol nodes and n-1 internal nodes)
-        self.assertEqual(tree.nodes(), 2 * n - 1)
+        self.assertEqual(sum(nodes), 2 * n - 1)
         # a proper Huffman tree is complete
-        self.assertTrue(tree.complete())
+        self.assertEqual(nodes[0], 0)
 
     def test_balanced(self):
         n = 6
@@ -2796,7 +2798,7 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
     def ensure_complete_2(self, chc):
         # ensure code is complete
         dt = decodetree(chc)
-        self.assertTrue(dt.complete())
+        self.assertEqual(dt.nodes()[0], 0)
 
     def ensure_round_trip(self, chc, count, symbol):
         # create a short test message, encode and decode

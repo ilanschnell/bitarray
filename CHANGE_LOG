@@ -1,10 +1,10 @@
-2026-XX-XX   3.9.3:
+2026-XX-XX  3.10.0:
 -------------------
   * add [free threading support](free_threading.rst)
   * add `bitarray/test_free_threading.py` - these free-threading tests are
     imported when Python was compiled using `--disable-gil`
+  * add official support for `decodetree` methods `.nodes()` and `.todict()`
   * fix free-threading bug in `binode_make_tree()`
-  * unofficial `decodetree.todict()` now returns mapping to `frozenbitarray`s
   * use a private capsule to safely share the `bitarray` type between
     the `_bitarray` and `_util` extension modules
   * make C code more cohesive

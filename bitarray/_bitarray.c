@@ -3885,41 +3885,28 @@ binode_to_dict(binode *nd, PyObject *dict, bitarrayobject *prefix)
     return 0;
 }
 
-/* return whether node is complete (has both children or is a symbol node) */
-static int
-binode_complete(binode *nd)
+static void
+binode_nodes(binode *nd, Py_ssize_t *n1, Py_ssize_t *n2, Py_ssize_t *ns)
 {
     if (nd == NULL)
-        return 0;
+        return;
 
-    if (nd->symbol) {
-        /* symbol node cannot have children */
-        assert(nd->child[0] == NULL && nd->child[1] == NULL);
-        return 1;
+    if (nd->symbol) { /* symbol node */
+        (*ns)++;
+        assert(!nd->child[0] && !nd->child[1]);  /* no children */
+    }
+    else if (nd->child[0] && nd->child[1]) {  /* two child node */
+        (*n2)++;
+        assert(!nd->symbol);  /* no symbol */
+    }
+    else {  /* one child */
+        (*n1)++;
+        assert(!nd->symbol);                    /* no symbol */
+        assert(!nd->child[0] ^ !nd->child[1]);  /* one child */
     }
 
-    return (binode_complete(nd->child[0]) &&
-            binode_complete(nd->child[1]));
-}
-
-/* return number of nodes */
-static Py_ssize_t
-binode_nodes(binode *nd)
-{
-    Py_ssize_t res;
-
-    if (nd == NULL)
-        return 0;
-
-    /* a node cannot have a symbol and children */
-    assert(!(nd->symbol && (nd->child[0] || nd->child[1])));
-    /* a node must have a symbol or children */
-    assert(nd->symbol || nd->child[0] || nd->child[1]);
-
-    res = 1;
-    res += binode_nodes(nd->child[0]);
-    res += binode_nodes(nd->child[1]);
-    return res;
+    binode_nodes(nd->child[0], n1, n2, ns);
+    binode_nodes(nd->child[1], n1, n2, ns);
 }
 
 /******************************** decodetree ******************************/
@@ -4015,37 +4002,30 @@ reconstruction of the code dict which the object was created with.");
 
 
 static PyObject *
-decodetree_complete(decodetreeobject *self)
-{
-    return PyBool_FromLong(binode_complete(self->tree));
-}
-
-PyDoc_STRVAR(complete_doc,
-"complete() -> bool\n\
-\n\
-Return whether tree is complete.  That is, whether or not all\n\
-nodes have both children (unless they are symbol nodes).");
-
-
-static PyObject *
 decodetree_nodes(decodetreeobject *self)
 {
-    return PyLong_FromSsize_t(binode_nodes(self->tree));
+    Py_ssize_t n1 = 0, n2 = 0, ns = 0;
+    binode_nodes(self->tree, &n1, &n2, &ns);
+    return Py_BuildValue("nnn", n1, n2, ns);
 }
 
 PyDoc_STRVAR(nodes_doc,
-"nodes() -> int\n\
+"nodes() -> tuple\n\
 \n\
-Return number of nodes in tree (internal and symbol nodes).");
+Return tuple with number of:\n\n\
+0. incomplete nodes (pointing to a single child node)\n\
+1. complete nodes (pointing to two child nodes)\n\
+2. symbol nodes (pointing to a symbol)\n");
 
 
 static PyObject *
 decodetree_sizeof(decodetreeobject *self)
 {
-    Py_ssize_t res;
+    Py_ssize_t res, nodes = 0;
 
+    binode_nodes(self->tree, &nodes, &nodes, &nodes);
     res = sizeof(decodetreeobject);
-    res += sizeof(binode) * binode_nodes(self->tree);
+    res += sizeof(binode) * nodes;
     return PyLong_FromSsize_t(res);
 }
 
@@ -4056,12 +4036,7 @@ decodetree_dealloc(decodetreeobject *self)
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
-/* These methods are mostly useful for debugging and testing.
-   We provide docstrings, but they are not mentioned in the documentation.
-   They are not part of the official API and unsupported. */
 static PyMethodDef decodetree_methods[] = {
-    {"complete",   (PyCFunction) decodetree_complete, METH_NOARGS,
-     complete_doc},
     {"nodes",      (PyCFunction) decodetree_nodes,    METH_NOARGS,
      nodes_doc},
     {"todict",     (PyCFunction) decodetree_todict,   METH_NOARGS,

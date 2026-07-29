@@ -4602,32 +4602,36 @@ class DecodeTreeTests(unittest.TestCase, Util):
     def test_nodes(self):
         for n in range(1, 20):
             dt = decodetree({'a': zeros(n)})
-            self.assertEqual(dt.nodes(), n + 1)
-            self.assertFalse(dt.complete())
+            nodes = dt.nodes()
+            self.assertEqual(nodes[0], n)  # tree is incomplete
+            self.assertEqual(nodes[1], 0)  # no nodes with two children
+            self.assertEqual(nodes[2], 1)  # always one symbol
 
-        dt = decodetree({'I': bitarray('1'),   'l': bitarray('01'),
-                         'a': bitarray('001'), 'n': bitarray('000')})
-        self.assertEqual(dt.nodes(), 7)
         dt = decodetree(alphabet_code)
-        self.assertEqual(dt.nodes(), 70)
+        nodes = dt.nodes()
+        self.assertIs(type(nodes), tuple)
+        self.assertEqual(dt.nodes(), (15, 27, 28))
 
     def test_complete(self):
+
+        def is_complete(dt):
+            return dt.nodes()[0] == 0
+
         dt = decodetree({'.': bitarray('1')})
-        self.assertIs(type(dt.complete()), bool)
-        self.assertFalse(dt.complete())
+        self.assertFalse(is_complete(dt))
 
         dt = decodetree({'a': bitarray('0'),
                          'b': bitarray('1')})
-        self.assertTrue(dt.complete())
+        self.assertTrue(is_complete(dt))
 
         dt = decodetree({'a': bitarray('0'),
                          'b': bitarray('11')})
-        self.assertFalse(dt.complete())
+        self.assertFalse(is_complete(dt))
 
         dt = decodetree({'a': bitarray('0'),
                          'b': bitarray('11'),
                          'c': bitarray('10')})
-        self.assertTrue(dt.complete())
+        self.assertTrue(is_complete(dt))
 
     def test_todict(self):
         t = decodetree(alphabet_code)
@@ -4665,8 +4669,10 @@ class DecodeTreeTests(unittest.TestCase, Util):
              for i in range(1024)}
         t = decodetree(d)
         self.assertEqual(t.todict(), d)
-        self.assertEqual(t.nodes(), 2047)
-        self.assertTrue(t.complete())
+        nodes = t.nodes()
+        self.assertEqual(nodes[0], 0)  # no incomplete nodes
+        self.assertEqual(nodes[2], 1024)  # symbol nodes
+        self.assertEqual(sum(nodes), 2047)  # total number of nodes
         self.assertTrue(sys.getsizeof(t) > 10000)
 
 # ------------------ variable length encoding and decoding ------------------
