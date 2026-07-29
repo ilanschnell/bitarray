@@ -3,7 +3,7 @@ Free-threading support
 
 Bitarray (as of version 3.10.0) supports free-threaded CPython 3.14 and later.
 On a Python interpreter configured using ``--disable-gil``,
-importing :mod:`bitarray` does not enable the global interpreter lock (GIL).
+importing `bitarray` does not enable the global interpreter lock (GIL).
 
 Free-threading support is classified as beta.  The regular test suite and a
 separate set of concurrent stress tests are used to exercise the extension

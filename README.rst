@@ -19,6 +19,7 @@ Key features
   operations ``+``, ``*``, ``+=``, ``*=``, the ``in`` operator, ``len()``
 * Bitwise operations: ``~``, ``&``, ``|``, ``^``, ``<<``, ``>>`` (as well as
   their in-place versions ``&=``, ``|=``, ``^=``, ``<<=``, ``>>=``).
+* Free-threading support (for GIL disabled CPython 3.14 and later)
 * Fast methods for encoding and decoding variable bit length prefix codes.
 * Bitarray objects support the buffer protocol (both importing and
   exporting buffers).
