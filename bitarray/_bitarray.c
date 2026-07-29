@@ -3972,9 +3972,11 @@ decodetree_todict(decodetreeobject *self)
 
     Py_DECREF(prefix);
 
-    /* freeze values of dict */
+    /* freeze all bitarray values in dict */
     while (PyDict_Next(dict, &pos, &key, &value)) {
-        bitarrayobject *a = (bitarrayobject *) value;
+        bitarrayobject *a;
+        assert(bitarray_Check(value));
+        a = (bitarrayobject *) value;
         set_padbits(a);
         a->readonly = 1;
     }
