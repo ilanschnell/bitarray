@@ -3937,10 +3937,30 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     return obj;
 }
 
+static PyTypeObject *
+import_frozen_type(void)
+{
+    PyTypeObject *frozen;
+
+    frozen = (PyTypeObject *) bitarray_module_attr("frozenbitarray");
+    if (frozen == NULL)
+        return NULL;
+
+    /* in case user changes bitarray.frozenbitarray */
+    if (!PyType_Check(frozen) || !PyType_IsSubtype(frozen, &Bitarray_Type)) {
+        PyErr_SetString(PyExc_TypeError,
+                        "frozenbitarray is not a bitarray type");
+        Py_DECREF(frozen);
+        return NULL;
+    }
+    return frozen;
+}
+
 static PyObject *
 decodetree_todict(decodetreeobject *self)
 {
-    PyObject *dict, *frozen = NULL, *key, *value;
+    PyTypeObject *frozen = NULL;
+    PyObject *dict, *key, *value;
     bitarrayobject *prefix = NULL;
     Py_ssize_t pos = 0;
 
@@ -3948,19 +3968,11 @@ decodetree_todict(decodetreeobject *self)
     if (dict == NULL)
         return NULL;
 
-    frozen = bitarray_module_attr("frozenbitarray");
+    frozen = import_frozen_type();
     if (frozen == NULL)
         goto error;
 
-    /* in case user changes bitarray.frozenbitarray */
-    if (!PyType_Check(frozen) ||
-            !PyType_IsSubtype((PyTypeObject *) frozen, &Bitarray_Type)) {
-        PyErr_SetString(PyExc_TypeError,
-                        "frozenbitarray is not a bitarray type");
-        goto error;
-    }
-
-    prefix = newbitarrayobject((PyTypeObject *) frozen, 0, ENDIAN_DEFAULT);
+    prefix = newbitarrayobject(frozen, 0, ENDIAN_DEFAULT);
     if (prefix == NULL)
         goto error;
 

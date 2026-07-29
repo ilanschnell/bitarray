@@ -284,7 +284,8 @@ static char sum_sqr_table[2][256];
 static char xor_table[2][256];
 
 static void
-setup_misc_tables(void) {
+setup_misc_tables(void)
+{
     setup_table(count_table, 'c');
     setup_table(parity_table, 'p');
     setup_table(sum_table[0], 'a');
