@@ -3956,10 +3956,25 @@ decodetree_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     return obj;
 }
 
+/* Return an empty, writable object of frozenbitarray type. */
+static bitarrayobject *
+new_empty_frozen(void)
+{
+    PyTypeObject *frozen;
+    bitarrayobject *res;
+
+    frozen = import_frozen_type();
+    if (frozen == NULL)
+        return NULL;
+
+    res = newbitarrayobject(frozen, 0, ENDIAN_DEFAULT);
+    Py_DECREF(frozen);
+    return res;
+}
+
 static PyObject *
 decodetree_todict(decodetreeobject *self)
 {
-    PyTypeObject *frozen = NULL;
     PyObject *dict, *key, *value;
     bitarrayobject *prefix = NULL;
     Py_ssize_t pos = 0;
@@ -3968,16 +3983,9 @@ decodetree_todict(decodetreeobject *self)
     if (dict == NULL)
         return NULL;
 
-    frozen = import_frozen_type();
-    if (frozen == NULL)
-        goto error;
-
-    prefix = newbitarrayobject(frozen, 0, ENDIAN_DEFAULT);
+    prefix = new_empty_frozen();
     if (prefix == NULL)
         goto error;
-
-    Py_DECREF(frozen);
-    frozen = NULL;  /* prevent double decrement on error */
 
     if (binode_to_dict(self->tree, dict, prefix) < 0)
         goto error;
@@ -3996,7 +4004,6 @@ decodetree_todict(decodetreeobject *self)
  error:
     Py_DECREF(dict);
     Py_XDECREF(prefix);
-    Py_XDECREF(frozen);
     return NULL;
 }
 
