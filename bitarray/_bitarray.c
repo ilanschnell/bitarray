@@ -3633,6 +3633,19 @@ check_value(PyObject *value)
         PyErr_SetString(PyExc_ValueError, "non-empty bitarray expected");
         return -1;
     }
+
+    /* TODO: Remove this arbitrary recursion limit once recursively calls
+       in binode_delete(), binode_to_dict() and binode_nodes() have been
+       rewritten iteratively. */
+#define RECUR_LIMIT  1000
+    if (((bitarrayobject *) value)->nbits > RECUR_LIMIT) {
+        PyErr_Format(PyExc_OverflowError,
+                     "cannot create decodetree objects as bitarray has "
+                     "length %zd which exceeds the recursion limit of %d",
+                     ((bitarrayobject *) value)->nbits, RECUR_LIMIT);
+        return -1;
+    }
+#undef RECUR_LIMIT
     return 0;
 }
 
