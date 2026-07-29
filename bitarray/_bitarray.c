@@ -5191,6 +5191,24 @@ static PyMethodDef module_functions[] = {
 
 /******************************* Install Module ***************************/
 
+/* Provide the exact Bitarray_Type pointer using a PyCapsule. */
+static int
+add_capsule(PyObject *module)
+{
+    PyObject *capsule;
+
+    capsule = PyCapsule_New((void *) &Bitarray_Type,
+                            "bitarray._bitarray._C_API", NULL);
+    if (capsule == NULL)
+        return -1;
+
+    if (PyModule_AddObject(module, "_C_API", capsule) < 0) {
+        Py_DECREF(capsule);
+        return -1;
+    }
+    return 0;
+}
+
 /* register bitarray as collections.abc.MutableSequence */
 static int
 register_abc(void)
@@ -5242,6 +5260,9 @@ PyInit__bitarray(void)
     Py_SET_TYPE(&Bitarray_Type, &PyType_Type);
     Py_INCREF((PyObject *) &Bitarray_Type);
     PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type);
+
+    if (add_capsule(m) < 0)
+        return NULL;
 
     if (register_abc() < 0)
         return NULL;

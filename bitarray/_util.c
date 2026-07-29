@@ -2439,7 +2439,8 @@ PyInit__util(void)
     setup_misc_tables();
     setup_digit_table();
 
-    bitarray_type = (PyTypeObject *) bitarray_module_attr("bitarray");
+    bitarray_type = (PyTypeObject *)
+            PyCapsule_Import("bitarray._bitarray._C_API", 0);
     if (bitarray_type == NULL)
         return NULL;
 
