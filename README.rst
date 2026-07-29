@@ -57,9 +57,9 @@ Once you have installed the package, you may want to test it:
 
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
-    bitarray version: 3.9.2
-    sys.version: 3.14.5 (main, May 20 2026) [Clang 20.1.8]
     sys.prefix: /Users/ilan/miniforge
+    bitarray version: 3.10.0
+    sys.version: 3.14.5 (main, May 20 2026) [Clang 20.1.8]
     sys.abiflags: ''
     sys._is_gil_enabled(): True
     pointer size: 64 bit
@@ -75,7 +75,7 @@ Once you have installed the package, you may want to test it:
     ................................................s........................
     ......s.........................................................
     ----------------------------------------------------------------------
-    Ran 633 tests in 0.191s
+    Ran 639 tests in 0.189s
 
     OK (skipped=2)
 
@@ -322,7 +322,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.9.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.10.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -658,7 +658,20 @@ Other objects:
    Given a prefix code (a dict mapping symbols to bitarrays),
    create a binary tree object to be passed to ``.decode()``.
 
-   New in version 1.6
+   New in version 1.6, with the following methods added in 3.10:
+
+
+``nodes()`` -> tuple
+   Return tuple with number of:
+
+   0. incomplete nodes (pointing to a single child node)
+   1. complete nodes (pointing to two child nodes)
+   2. symbol nodes (pointing to a symbol)
+
+
+``todict()`` -> dict
+   Return a dict mapping the symbols to frozenbitarrays.  This dict is a
+   reconstruction of the code dict which the object was created with.
 
 
 Functions defined in the `bitarray` module:
