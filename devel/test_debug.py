@@ -6,7 +6,7 @@ from random import randint, randrange
 from bitarray import bitarray, _sysinfo
 from bitarray.util import zeros, ones, int2ba, parity
 
-from bitarray.test_bitarray import Util, urandom_2, PTRSIZE
+from bitarray.test_bitarray import Util, urandom_2, PTRSIZE, show_info
 
 # --------------------- internal C-level debug tests ------------------------
 
@@ -494,4 +494,5 @@ class ReadN_WriteN_Tests(unittest.TestCase, Util):
 # ---------------------------------------------------------------------------
 
 if __name__ == '__main__':
+    show_info()
     unittest.main()

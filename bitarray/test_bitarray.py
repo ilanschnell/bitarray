@@ -5599,26 +5599,36 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
 
 # ---------------------------------------------------------------------------
 
+def show_info(verbosity=1):
+    if verbosity >= 1:
+        print('bitarray installed in: %s' % os.path.dirname(__file__))
+        print('sys.prefix: %s' % sys.prefix)
+
+    if verbosity >= 2:
+        print('bitarray version: %s' % __version__)
+        print('sys.version: %s' % sys.version)
+        if os.name == "posix":
+            print('sys.abiflags: %r' % sys.abiflags)
+        if sys.version_info[:2] >= (3, 14):
+            print('sys._is_gil_enabled(): %s' % sys._is_gil_enabled())
+        print('pointer size: %d bit' % (8 * PTRSIZE))
+        print('sizeof(size_t): %d' % sysinfo("size_t"));
+        print('sizeof(bitarrayobject): %d' % sysinfo("bitarrayobject"))
+        print('HAVE_BUILTIN_BSWAP64: %d' % sysinfo("HAVE_BUILTIN_BSWAP64"))
+        print('default bit-endianness: %s' % get_default_endian())
+        print('machine byte-order: %s' % sys.byteorder)
+
+    if verbosity >= 1:
+        print('Py_GIL_DISABLED: %s' % sysinfo("Py_GIL_DISABLED"))
+        print('Py_DEBUG: %s' % sysinfo("Py_DEBUG"))
+        print('DEBUG: %s' % sysinfo("DEBUG"))
+
 def run(verbosity=1):
     import bitarray.test_util
 
-    print('bitarray is installed in: %s' % os.path.dirname(__file__))
-    print('bitarray version: %s' % __version__)
-    print('sys.version: %s' % sys.version)
-    print('sys.prefix: %s' % sys.prefix)
-    if os.name == "posix":
-        print('sys.abiflags: %r' % sys.abiflags)
-    if sys.version_info[:2] >= (3, 14):
-        print('sys._is_gil_enabled(): %s' % sys._is_gil_enabled())
-    print('pointer size: %d bit' % (8 * PTRSIZE))
-    print('sizeof(size_t): %d' % sysinfo("size_t"));
-    print('sizeof(bitarrayobject): %d' % sysinfo("bitarrayobject"))
-    print('HAVE_BUILTIN_BSWAP64: %d' % sysinfo("HAVE_BUILTIN_BSWAP64"))
-    print('default bit-endianness: %s' % get_default_endian())
-    print('machine byte-order: %s' % sys.byteorder)
-    print('Py_GIL_DISABLED: %s' % sysinfo("Py_GIL_DISABLED"))
-    print('Py_DEBUG: %s' % sysinfo("Py_DEBUG"))
-    print('DEBUG: %s' % sysinfo("DEBUG"))
+    if verbosity:
+        show_info(verbosity=2)
+
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
     suite.addTests(loader.loadTestsFromModule(sys.modules[__name__]))
