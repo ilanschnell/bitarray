@@ -3603,6 +3603,8 @@ static PyNumberMethods bitarray_as_number = {
                     variable length encoding and decoding
  **************************************************************************/
 
+/* Prefix-code trees are traversed and destroyed recursively.
+   Limit their depth to avoid overflowing the C stack. */
 #define MAX_CODE_LENGTH  256
 
 static int
