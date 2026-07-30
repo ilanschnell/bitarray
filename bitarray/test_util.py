@@ -2471,14 +2471,8 @@ class HuffmanTreeTests(unittest.TestCase):  # tests for _huffman_tree()
         self.assertEqual(tree.child[1].symbol, "B")
         self.assertEqual(tree.child[1].freq, 1)
 
-class CommonHuffmanTests(unittest.TestCase):
 
-    # tests for both huffman_code() and canonical_decode()
-
-    @staticmethod
-    def create_codes(freq):
-        yield huffman_code(freq)
-        yield canonical_huffman(freq)[0]
+class HuffmanAssertions:
 
     def check_code(self, code):
         self.assertIs(type(code), dict)
@@ -2496,6 +2490,15 @@ class CommonHuffmanTests(unittest.TestCase):
         else:
             # proper Huffman tree is complete
             self.assertEqual(nodes, (0, n - 1, n))
+
+class CommonHuffmanTests(HuffmanAssertions, unittest.TestCase):
+
+    # tests for both huffman_code() and canonical_huffman()
+
+    @staticmethod
+    def create_codes(freq):
+        yield huffman_code(freq)
+        yield canonical_huffman(freq)[0]
 
     def test_small_range(self):
         for n in range(1, 10):
@@ -2533,8 +2536,16 @@ class CommonHuffmanTests(unittest.TestCase):
                 self.assertEqual(len(code[i]), n - max(1, i))
             self.check_code(code)
 
+    def test_random_list(self):
+        plain = choices(range(100), k=500)
+        for code in self.create_codes(Counter(plain)):
+            a = bitarray()
+            a.encode(code, plain)
+            self.assertEqual(list(a.decode(code)), plain)
+            self.check_code(code)
 
-class HuffmanTests(CommonHuffmanTests):
+
+class HuffmanTests(HuffmanAssertions, unittest.TestCase):
 
     def test_simple(self):
         freq = {0: 10, 'as': 2, None: 1.6}
@@ -2587,17 +2598,9 @@ class HuffmanTests(CommonHuffmanTests):
         self.assertEqual(''.join(a.decode(code)), message)
         self.check_code(code)
 
-    def test_random_list(self):
-        plain = choices(range(100), k=500)
-        code = huffman_code(Counter(plain))
-        a = bitarray()
-        a.encode(code, plain)
-        self.assertEqual(list(a.decode(code)), plain)
-        self.check_code(code)
-
 # ---------------------------------------------------------------------------
 
-class CanonicalHuffmanTests(Util, CommonHuffmanTests):
+class CanonicalHuffmanTests(Util, HuffmanAssertions, unittest.TestCase):
 
     def test_basic(self):
         plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
