@@ -3904,7 +3904,7 @@ binode_nodes(binode *nd, Py_ssize_t *n1, Py_ssize_t *n2, Py_ssize_t *ns)
     if (nd == NULL)
         return;
 
-    if (nd->symbol) { /* symbol node */
+    if (nd->symbol) { /* leaf node - pointing to symbol */
         (*ns)++;
         assert(!nd->child[0] && !nd->child[1]);  /* no children */
     }
@@ -4028,7 +4028,7 @@ PyDoc_STRVAR(nodes_doc,
 Return tuple with number of:\n\n\
 0. incomplete nodes (pointing to a single child node)\n\
 1. complete nodes (pointing to two child nodes)\n\
-2. symbol nodes (pointing to a symbol)\n");
+2. leaf nodes (pointing to a symbol)\n");
 
 
 static PyObject *
