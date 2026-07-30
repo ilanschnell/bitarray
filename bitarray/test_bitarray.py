@@ -4591,6 +4591,20 @@ class DecodeTreeTests(unittest.TestCase, Util):
         ]:
             self.assertRaises(ValueError, decodetree, d)
 
+    def test_max_code_length(self):
+        d = {'x': ones(256)}  # MAX_CODE_LENGTH = 256
+        t = decodetree(d)
+        self.assertEqual(t.nodes(), (256, 0, 1))
+        self.assertEqual(t.todict(), d)
+        a = ones(256)
+        it = a.decode(t)
+        self.assertEqual(next(it), 'x')
+        self.assertRaises(StopIteration, next, it)
+
+        d = {'x': ones(257)}
+        msg = "bitarray length 257 exceeds maximum prefix code length of 256"
+        self.assertRaisesMessage(ValueError, msg, decodetree, d)
+
     @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_sizeof(self):
         dt = decodetree({'.': bitarray('1')})
@@ -4653,6 +4667,14 @@ class DecodeTreeTests(unittest.TestCase, Util):
         value = code2['a']
         self.assertIs(type(value), frozenbitarray)
         self.check_obj(value)
+
+    def test_endian(self):
+        # values may have arbitrary endianness
+        code = {sym: bitarray(a, endian=choice(['little', 'big']))
+                for sym, a in alphabet_code.items()}
+        t = decodetree(code)
+        d = t.todict()
+        self.assertEqual(d, code)
 
     def test_decode(self):
         t = decodetree(alphabet_code)
@@ -4806,6 +4828,18 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(list(a.decode(d)), [])
         self.assertEqual(d, {'a': bitarray('1')})
         self.assertEqual(len(a), 0)
+
+    def test_decode_max_code_length(self):
+        d = {'y': ones(256)}  # MAX_CODE_LENGTH = 256
+        a = ones(256)
+        it = a.decode(d)
+        self.assertEqual(next(it), 'y')
+        self.assertRaises(StopIteration, next, it)
+
+        d = {'a': ones(257)}
+        a = ones(257)
+        msg = "bitarray length 257 exceeds maximum prefix code length of 256"
+        self.assertRaisesMessage(ValueError, msg, a.decode, d)
 
     def test_decode_incomplete(self):
         d = {'a': bitarray('0'), 'b': bitarray('111')}

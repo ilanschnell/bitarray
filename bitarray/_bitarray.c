@@ -3603,6 +3603,8 @@ static PyNumberMethods bitarray_as_number = {
                     variable length encoding and decoding
  **************************************************************************/
 
+#define MAX_CODE_LENGTH  256
+
 static int
 check_codedict(PyObject *codedict)
 {
@@ -3633,19 +3635,6 @@ check_value(PyObject *value)
         PyErr_SetString(PyExc_ValueError, "non-empty bitarray expected");
         return -1;
     }
-
-    /* TODO: Remove this arbitrary recursion limit once recursively calls
-       in binode_delete(), binode_to_dict() and binode_nodes() have been
-       rewritten iteratively. */
-#define RECUR_LIMIT  1000
-    if (((bitarrayobject *) value)->nbits > RECUR_LIMIT) {
-        PyErr_Format(PyExc_OverflowError,
-                     "cannot create decodetree objects as bitarray has "
-                     "length %zd which exceeds the recursion limit of %d",
-                     ((bitarrayobject *) value)->nbits, RECUR_LIMIT);
-        return -1;
-    }
-#undef RECUR_LIMIT
     return 0;
 }
 
@@ -3746,12 +3735,18 @@ binode_delete(binode *nd)
     PyMem_Free((void *) nd);
 }
 
-/* insert symbol (mapping to bitarray a) into tree */
+/* Insert symbol into tree using bitarray a.  The caller must lock a. */
 static int
 binode_insert_symbol(binode *tree, bitarrayobject *a, PyObject *symbol)
 {
     binode *nd = tree, *prev;
     Py_ssize_t i;
+
+    if (a->nbits > MAX_CODE_LENGTH) {
+        PyErr_Format(PyExc_ValueError, "bitarray length %zd exceeds maximum "
+                     "prefix code length of %d", a->nbits, MAX_CODE_LENGTH);
+        return -1;
+    }
 
     for (i = 0; i < a->nbits; i++) {
         int k = getbit(a, i);
@@ -4062,7 +4057,8 @@ PyDoc_STRVAR(decodetree_doc,
 "decodetree(code, /) -> decodetree\n\
 \n\
 Given a prefix code (a dict mapping symbols to bitarrays),\n\
-create a binary tree object to be passed to `.decode()`.");
+create a binary tree object to be passed to `.decode()`.\n\
+The prefix code length cannot exceed 256 bits.");
 
 static PyTypeObject DecodeTree_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
@@ -4169,7 +4165,8 @@ PyDoc_STRVAR(decode_doc,
 \n\
 Given a prefix code (a dict mapping symbols to bitarrays, or `decodetree`\n\
 object), decode content of bitarray and return an iterator over\n\
-corresponding symbols.");
+corresponding symbols.\n\
+The prefix code length cannot exceed 256 bits.");
 
 
 static PyObject *

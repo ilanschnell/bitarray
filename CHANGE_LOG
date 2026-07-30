@@ -7,7 +7,8 @@
   * fix free-threading bug in `binode_make_tree()`
   * use a private capsule to safely share the `bitarray` type between
     the `_bitarray` and `_util` extension modules
-  * add arbitrary limit for code length in `check_value()`, see comment
+  * bitarrays in prefix codes passed to `.decode()` or `decodetree()` cannot
+    exceed 256 bits
   * make C code more cohesive
 
 
