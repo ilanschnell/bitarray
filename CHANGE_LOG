@@ -4,6 +4,8 @@
   * add `bitarray/test_free_threading.py` - these free-threading tests are
     imported when Python was compiled using `--disable-gil`
   * add official support for `decodetree` methods `.nodes()` and `.todict()`
+  * `util.huffman_code()` and `util.canonical_huffman()` return codedict
+    mapping to `frozenbitarray`s
   * fix free-threading bug in `binode_make_tree()`
   * use a private capsule to safely share the `bitarray` type between
     the `_bitarray` and `_util` extension modules

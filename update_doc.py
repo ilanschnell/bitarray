@@ -73,7 +73,11 @@ NEW_IN = {
     'util.sc_decode':         '2.7',
     'util.vl_decode':         '2.2',
     'util.vl_encode':         '2.2',
-    'util.canonical_huffman': '2.5',
+    'util.huffman_code':     ['3.10: return a codedict mapping to '
+                                    '`frozenbitarray`s'],
+    'util.canonical_huffman':['2.5',
+                              '3.10: return a codedict mapping to '
+                                    '`frozenbitarray`s'],
     'util.canonical_decode':  '2.5',
 }
 

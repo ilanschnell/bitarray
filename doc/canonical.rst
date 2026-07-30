@@ -16,11 +16,11 @@ We can now use ``canonical_huffman()`` to create a canonical Huffman code:
     >>> from bitarray.util import canonical_huffman
     >>> codedict, count, symbol = canonical_huffman(cnt)
     >>> pprint(codedict)
-    {'a': bitarray('0'),
-     'b': bitarray('10'),
-     'c': bitarray('1110'),
-     'd': bitarray('1111'),
-     'r': bitarray('110')}
+    {'a': frozenbitarray('0'),
+     'b': frozenbitarray('10'),
+     'c': frozenbitarray('1110'),
+     'd': frozenbitarray('1111'),
+     'r': frozenbitarray('110')}
     >>> count
     [0, 1, 1, 1, 2]
     >>> symbol
@@ -28,9 +28,9 @@ We can now use ``canonical_huffman()`` to create a canonical Huffman code:
 
 The output is a tuple with the following elements:
 
-* A dictionary mapping each symbol to a ``bitarray``
+* A dictionary mapping each symbol to a ``frozenbitarray``
 * A list containing the number of symbols for each code length,
-  e.g. `count[3] = 1` because there is one symbol (``r``) with
+  e.g. ``count[3] = 1`` because there is one symbol (``r``) with
   code length ``3``.
 * A list of symbols in canonical order
 

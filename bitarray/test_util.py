@@ -2482,13 +2482,14 @@ class HuffmanTests(unittest.TestCase):
         self.assertEqual(len(code['as']), 2)
         self.assertEqual(len(code[None]), 2)
 
-    def test_endianness(self):
+    def test_endianness_and_type(self):
         freq = {'A': 10, 'B': 2, 'C': 5}
         for endian in 'big', 'little':
             code = huffman_code(freq, endian)
             self.assertEqual(len(code), 3)
             for v in code.values():
                 self.assertEqual(v.endian, endian)
+                self.assertIs(type(v), frozenbitarray)
 
     def test_wrong_arg(self):
         self.assertRaises(TypeError, huffman_code, [('a', 1)])
@@ -2501,8 +2502,13 @@ class HuffmanTests(unittest.TestCase):
 
     def test_one_symbol(self):
         cnt = {'a': 1}
-        code = huffman_code(cnt)
+        endian = choice(ENDIANS)
+        code = huffman_code(cnt, endian)
         self.assertEqual(code, {'a': bitarray('0')})
+        v = code['a']
+        self.assertEqual(v.endian, endian)
+        self.assertIs(type(v), frozenbitarray)
+
         for n in range(4):
             msg = n * ['a']
             a = bitarray()
@@ -2574,6 +2580,8 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
         chc, count, symbol = canonical_huffman(Counter(plain))
         self.assertIs(type(chc), dict)
+        for v in chc.values():
+            self.assertIs(type(v), frozenbitarray)
         self.assertIs(type(count), list)
         self.assertIs(type(symbol), list)
         a = bitarray()
@@ -2608,6 +2616,7 @@ class CanonicalHuffmanTests(unittest.TestCase, Util):
         cnt = {'a': 1}
         chc, count, symbol = canonical_huffman(cnt)
         self.assertEqual(chc, {'a': bitarray('0')})
+        self.assertIs(type(chc['a']), frozenbitarray)
         self.assertEqual(count, [0, 1])
         self.assertEqual(symbol, ['a'])
         for n in range(4):

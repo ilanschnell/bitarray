@@ -11,7 +11,7 @@ import math
 import random
 import operator
 
-from bitarray import bitarray, bits2bytes
+from bitarray import bitarray, frozenbitarray, bits2bytes
 
 from bitarray._util import (
     zeros, ones, count_n, parity, _ssqi, xor_indices,
@@ -543,8 +543,8 @@ def huffman_code(__freq_map, endian=None):
 
 Given a frequency map, a dictionary mapping symbols to their frequency,
 calculate the Huffman code, i.e. a dict mapping those symbols to
-bitarrays (with given bit-endianness).  Note that the symbols are not limited
-to being strings.  Symbols may be any hashable object.
+frozenbitarrays (with given bit-endianness).  Note that the symbols are not
+limited to being strings.  Symbols may be any hashable object.
 """
     if not isinstance(__freq_map, dict):
         raise TypeError("dict expected, got '%s'" % type(__freq_map).__name__)
@@ -559,13 +559,13 @@ to being strings.  Symbols may be any hashable object.
         # particular one 0 bit.  This is an incomplete code, since if a 1 bit
         # is received, it has no meaning and will result in an error.
         sym = list(__freq_map)[0]
-        return {sym: bitarray('0', endian)}
+        return {sym: frozenbitarray('0', endian)}
 
     result = {}
 
     def traverse(nd, prefix=None):
         if prefix is None:
-            prefix = bitarray(0, endian)
+            prefix = frozenbitarray(0, endian)
 
         try:                    # leaf
             result[nd.symbol] = prefix
@@ -583,7 +583,7 @@ def canonical_huffman(__freq_map):
 Given a frequency map, a dictionary mapping symbols to their frequency,
 calculate the canonical Huffman code.  Returns a tuple containing:
 
-0. the canonical Huffman code as a dict mapping symbols to bitarrays
+0. the canonical Huffman code as a dict mapping symbols to frozenbitarrays
 1. a list containing the number of symbols of each code length
 2. a list of symbols in canonical order
 
@@ -597,7 +597,7 @@ Note: the two lists may be used as input for `canonical_decode()`.
             raise ValueError("cannot create Huffman code with no symbols")
         # Only one symbol: see note above in huffman_code()
         sym = list(__freq_map)[0]
-        return {sym: bitarray('0', 'big')}, [0, 1], [sym]
+        return {sym: frozenbitarray('0', 'big')}, [0, 1], [sym]
 
     code_length = {}  # map symbols to their code length
 
@@ -623,7 +623,7 @@ Note: the two lists may be used as input for `canonical_decode()`.
 
     code = 0
     for i, (sym, length) in enumerate(table):
-        codedict[sym] = int2ba(code, length, 'big')
+        codedict[sym] = frozenbitarray(int2ba(code, length, 'big'))
         count[length] += 1
         if i + 1 < len(table):
             code += 1
