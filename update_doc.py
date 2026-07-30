@@ -76,10 +76,10 @@ NEW_IN = {
     'util.vl_decode':         '2.2',
     'util.vl_encode':         '2.2',
     'util.huffman_code':     ['3.10: return a codedict mapping to '
-                                    '`frozenbitarray`s'],
+                                    'frozenbitarrays'],
     'util.canonical_huffman':['2.5',
                               '3.10: return a codedict mapping to '
-                                    '`frozenbitarray`s'],
+                                    'frozenbitarrays'],
     'util.canonical_decode':  '2.5',
 }
 

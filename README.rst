@@ -76,7 +76,7 @@ Once you have installed the package, you may want to test it:
     ................................................s........................
     ......s.........................................................
     ----------------------------------------------------------------------
-    Ran 639 tests in 0.189s
+    Ran 642 tests in 0.189s
 
     OK (skipped=2)
 
@@ -432,6 +432,7 @@ bitarray methods:
    Given a prefix code (a dict mapping symbols to bitarrays, or ``decodetree``
    object), decode content of bitarray and return an iterator over
    corresponding symbols.
+   The prefix code length cannot exceed 256 bits.
 
    See also: `Bitarray 3 transition <https://github.com/ilanschnell/bitarray/blob/master/doc/bitarray3.rst>`__
 
@@ -644,6 +645,26 @@ decodeiterator data descriptors:
    New in version 3.9
 
 
+decodetree methods:
+-------------------
+
+``nodes()`` -> tuple
+   Return tuple with number of:
+
+   0. incomplete nodes (pointing to a single child node)
+   1. complete nodes (pointing to two child nodes)
+   2. leaf nodes (pointing to a symbol)
+
+   New in version 3.10
+
+
+``todict()`` -> dict
+   Return a dict mapping the symbols to frozenbitarrays.  This dict is a
+   reconstruction of the code dict which the object was created with.
+
+   New in version 3.10
+
+
 Other objects:
 --------------
 
@@ -658,21 +679,9 @@ Other objects:
 ``decodetree(code, /)`` -> decodetree
    Given a prefix code (a dict mapping symbols to bitarrays),
    create a binary tree object to be passed to ``.decode()``.
+   The prefix code length cannot exceed 256 bits.
 
-   New in version 1.6, with the following methods added in 3.10:
-
-
-``nodes()`` -> tuple
-   Return tuple with number of:
-
-   0. incomplete nodes (pointing to a single child node)
-   1. complete nodes (pointing to two child nodes)
-   2. symbol nodes (pointing to a symbol)
-
-
-``todict()`` -> dict
-   Return a dict mapping the symbols to frozenbitarrays.  This dict is a
-   reconstruction of the code dict which the object was created with.
+   New in version 1.6
 
 
 Functions defined in the `bitarray` module:
@@ -777,7 +786,7 @@ This sub-module was added in version 1.2.
    Given a frequency map, a dictionary mapping symbols to their frequency,
    calculate the canonical Huffman code.  Returns a tuple containing:
 
-   0. the canonical Huffman code as a dict mapping symbols to bitarrays
+   0. the canonical Huffman code as a dict mapping symbols to frozenbitarrays
    1. a list containing the number of symbols of each code length
    2. a list of symbols in canonical order
 
@@ -786,6 +795,8 @@ This sub-module was added in version 1.2.
    See also: `Canonical Huffman Coding <https://github.com/ilanschnell/bitarray/blob/master/doc/canonical.rst>`__
 
    New in version 2.5
+
+   New in version 3.10: return a codedict mapping to frozenbitarrays
 
 
 ``correspond_all(a, b, /)`` -> tuple
@@ -853,8 +864,10 @@ This sub-module was added in version 1.2.
 ``huffman_code(dict, /, endian=None)`` -> dict
    Given a frequency map, a dictionary mapping symbols to their frequency,
    calculate the Huffman code, i.e. a dict mapping those symbols to
-   bitarrays (with given bit-endianness).  Note that the symbols are not limited
-   to being strings.  Symbols may be any hashable object.
+   frozenbitarrays (with given bit-endianness).  Note that the symbols are not
+   limited to being strings.  Symbols may be any hashable object.
+
+   New in version 3.10: return a codedict mapping to frozenbitarrays
 
 
 ``int2ba(int, /, length=None, endian=None, signed=False)`` -> bitarray
