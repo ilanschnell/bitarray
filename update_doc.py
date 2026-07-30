@@ -42,7 +42,9 @@ NEW_IN = {
     'bitarray.rotate':        '3.9',
     'decodeiterator.index':   '3.9',
     'decodeiterator.skipbits':'3.9',
-    'decodetree':             '1.6, with the following methods added in 3.10:',
+    'decodetree':             '1.6',
+    'decodetree.nodes':      '3.10',
+    'decodetree.todict':     '3.10',
     'frozenbitarray':         '1.1',
     'get_default_endian':     '1.3',
     'util.any_and':           '2.7',
@@ -221,9 +223,8 @@ def get_names(cl, getset=False):
 
 def write_reference_for_class(fo, cl):
     class_name = cl.__name__
-    if class_name != 'decodetree':
-        heading = "%s methods:" % class_name
-        fo.write("%s\n%s\n\n" % (heading, '-' * len(heading)))
+    heading = "%s methods:" % class_name
+    fo.write("%s\n%s\n\n" % (heading, '-' * len(heading)))
     for name in get_names(cl):
         write_doc(fo, name)
 
@@ -258,12 +259,12 @@ The bitarray object:
 
     write_reference_for_class(fo, bitarray.bitarray)
     write_reference_for_class(fo, bitarray.decodeiterator)
+    write_reference_for_class(fo, bitarray.decodetree)
 
     fo.write("Other objects:\n"
              "--------------\n\n")
     write_doc(fo, 'frozenbitarray')
     write_doc(fo, 'decodetree')
-    write_reference_for_class(fo, bitarray.decodetree)
 
     fo.write("Functions defined in the `bitarray` module:\n"
              "-------------------------------------------\n\n")
