@@ -4061,16 +4061,43 @@ Return tuple with number of:\n\n\
 
 #ifndef NDEBUG
 static PyObject *
+make_node_dict(binode *nd)
+{
+    const char *keys[] = {"left", "right"};
+    PyObject *dict = PyDict_New();
+    int k;
+
+    assert(nd->symbol == NULL);
+
+    if (dict == NULL)
+        return NULL;
+
+    for (k = 0; k < 2; k++) {
+        binode *child = nd->child[k];
+
+        if (child) {
+            PyObject *nodes = binode_tuple_nodes(child);
+
+            if (!nodes || PyDict_SetItemString(dict, keys[k], nodes) < 0) {
+                Py_DECREF(dict);
+                Py_XDECREF(nodes);
+                return NULL;
+            }
+            Py_DECREF(nodes);
+        }
+    }
+    return dict;
+}
+
+static PyObject *
 decodetree_getnode(decodetreeobject *self, PyObject *obj)
 {
-    bitarrayobject *a;
     binode *nd;
 
     assert(bitarray_Check(obj));
-    a = (bitarrayobject *) obj;
 
-    Py_BEGIN_CRITICAL_SECTION(a);
-    nd = binode_getnode(self->tree, a);
+    Py_BEGIN_CRITICAL_SECTION(obj);
+    nd = binode_getnode(self->tree, (bitarrayobject *) obj);
     Py_END_CRITICAL_SECTION();
 
     if (nd == NULL)
@@ -4081,27 +4108,7 @@ decodetree_getnode(decodetreeobject *self, PyObject *obj)
         return Py_NewRef(nd->symbol);
     }
     else {
-        const char *keys[] = {"left", "right"};
-        PyObject *dict = PyDict_New();
-        int k;
-
-        if (dict == NULL)
-            return NULL;
-
-        for (k = 0; k < 2; k++) {
-            if (nd->child[k]) {
-                PyObject *node = binode_tuple_nodes(nd->child[k]);
-
-                if (node == NULL ||
-                        PyDict_SetItemString(dict, keys[k], node) < 0) {
-                    Py_DECREF(dict);
-                    Py_XDECREF(node);
-                    return NULL;
-                }
-                Py_DECREF(node);
-            }
-        }
-        return dict;
+        return make_node_dict(nd);
     }
 }
 #endif  /* NDEBUG */

@@ -349,14 +349,16 @@ class Decodetree_Tests(unittest.TestCase):
     def test_mortal_symbol(self):
         symbol = object()
         tree = decodetree({symbol: bitarray('0')})
+        n = sys.getrefcount(symbol)
         self.assertIs(tree._getnode(bitarray('0')), symbol)
+        self.assertEqual(sys.getrefcount(symbol), n)
 
     def test_alphabet_code(self):
         tree = decodetree(alphabet_code)
         for sym, word in alphabet_code.items():
             self.assertEqual(tree._getnode(word), sym)
             for i in range(len(word)):
-                p = word[:i]
+                p = word[:i]  # partial word
                 nd = tree._getnode(p)
                 self.assertIs(type(nd), dict)
                 self.assertIn(len(nd), (1, 2))
