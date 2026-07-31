@@ -3757,6 +3757,8 @@ binode_insert_symbol(binode *tree, bitarrayobject *a, PyObject *symbol)
         if (next) {
             if (next->symbol)  /* an existing code ends here */
                 goto ambiguity;
+            /* existing node without a symbol must be an internal node */
+            assert(next->child[0] || next->child[1]);
         }
         else {            /* if node does not exist, create new one */
             next = binode_new();

@@ -4571,6 +4571,21 @@ alphabet_code = {
     'y': bitarray('101010'),      'z': bitarray('00011011110')
 }
 
+ambiguous_codes = [
+    # duplicate codes
+    {'a': bitarray('0'), 'b': bitarray('0'), 'c': bitarray('1')},
+    {'a': bitarray('011'), 'b': bitarray('011'), 'c': bitarray('10')},
+    {'a': bitarray('01011'), 'b': bitarray('01011')},
+    # longer ambiguous code after shorter one
+    {'a': bitarray('0'), 'b': bitarray('01')},
+    {'a': bitarray('111101'), 'b': bitarray('11110111')},
+    {'a': bitarray('0'), 'b': bitarray('11'), 'c': bitarray('111')},
+    # shorter ambiguous code after longer one
+    {'a': bitarray('00'), 'b': bitarray('0')},
+    {'a': bitarray('111'), 'b': bitarray('11')},
+    {'a': bitarray('110110'), 'b': bitarray('01'), 'c': bitarray('1101')},
+]
+
 class DecodeTreeTests(unittest.TestCase, Util):
 
     def test_create(self):
@@ -4594,13 +4609,8 @@ class DecodeTreeTests(unittest.TestCase, Util):
         hash(d3)
 
     def test_ambiguous_code(self):
-        for d in [
-            {'a': bitarray('0'), 'b': bitarray('0'), 'c': bitarray('1')},
-            {'a': bitarray('01'), 'b': bitarray('01'), 'c': bitarray('1')},
-            {'a': bitarray('0'), 'b': bitarray('01')},
-            {'a': bitarray('0'), 'b': bitarray('11'), 'c': bitarray('111')},
-        ]:
-            self.assertRaises(ValueError, decodetree, d)
+        for code in ambiguous_codes:
+            self.assertRaises(ValueError, decodetree, code)
 
     def test_max_code_length(self):
         d = {'x': ones(256)}  # MAX_CODE_LENGTH = 256
@@ -4945,14 +4955,9 @@ class PrefixCodeTests(unittest.TestCase, Util):
                 a[:i].decode(t)
 
     def test_decode_ambiguous_code(self):
-        for d in [
-            {'a': bitarray('0'), 'b': bitarray('0'), 'c': bitarray('1')},
-            {'a': bitarray('01'), 'b': bitarray('01'), 'c': bitarray('1')},
-            {'a': bitarray('0'), 'b': bitarray('01')},
-            {'a': bitarray('0'), 'b': bitarray('11'), 'c': bitarray('111')},
-        ]:
+        for code in ambiguous_codes:
             a = bitarray()
-            self.assertRaises(ValueError, a.decode, d)
+            self.assertRaises(ValueError, a.decode, code)
             self.check_obj(a)
 
     def test_decode_skipbits(self):
