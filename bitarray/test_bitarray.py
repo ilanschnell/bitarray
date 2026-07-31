@@ -4716,8 +4716,12 @@ class PrefixCodeTests(unittest.TestCase, Util):
         a = bitarray()
         a.encode(alphabet_code, '')
         self.assertEqual(a, bitarray())
-        a.encode(alphabet_code, 'a')
-        self.assertEqual(a, bitarray('0110'))
+        a.encode(alphabet_code, 'ab')
+        self.assertEqual(a, bitarray('0110 0001100'))
+        if sys.version_info[:2] >= (3, 15):
+            a = bitarray()
+            a.encode(frozendict(alphabet_code), 'nu')
+            self.assertEqual(a, bitarray('1001 000100'))
 
     def test_encode_list(self):
         a = bitarray()

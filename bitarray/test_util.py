@@ -2472,6 +2472,19 @@ class CommonHuffmanTests(HuffmanUtil, unittest.TestCase):
 
     # tests for both huffman_code() and canonical_huffman()
 
+    def test_wrong_arg(self):
+        for F in huffman_code, canonical_huffman:
+            self.assertRaises(TypeError, F)
+            self.assertRaises(TypeError, F, [('a', 1)])
+            self.assertRaises(TypeError, F, 123)
+            self.assertRaises(TypeError, F, None)
+            # cannot compare 'a' with 1
+            self.assertRaises(TypeError, F, {'A': 'a', 'B': 1})
+            # frequency map cannot be empty
+            self.assertRaises(ValueError, F, {})
+            # wrong endianness type / extra argument
+            self.assertRaises(TypeError, F, {'A': 2, 'B': 1}, 1)
+
     @staticmethod
     def create_codes(freq):
         yield huffman_code(freq)
@@ -2483,6 +2496,20 @@ class CommonHuffmanTests(HuffmanUtil, unittest.TestCase):
             for code in self.create_codes(f):
                 self.assertEqual(len(code), n)
                 self.check_code(code)
+
+    @unittest.skipIf(sys.version_info[:2] < (3, 15),
+                     "frozendict introduced in Python 3.15")
+    def test_from_frozendict(self):
+        for n in range(1, 10):
+            f = frozendict({i: random() for i in range(n)})
+            for code in self.create_codes(f):
+                self.assertEqual(len(code), n)
+                self.check_code(code)
+
+    def test_from_counter(self):
+        c = Counter("abracadabra")
+        for code in self.create_codes(c):
+            self.check_code(code)
 
     def test_large(self):
         N = randrange(1000, 2000)
@@ -2541,15 +2568,6 @@ class HuffmanTests(HuffmanUtil, unittest.TestCase):
                 self.assertEqual(v.endian, endian)
                 self.assertIs(type(v), frozenbitarray)
 
-    def test_wrong_arg(self):
-        self.assertRaises(TypeError, huffman_code, [('a', 1)])
-        self.assertRaises(TypeError, huffman_code, 123)
-        self.assertRaises(TypeError, huffman_code, None)
-        # cannot compare 'a' with 1
-        self.assertRaises(TypeError, huffman_code, {'A': 'a', 'B': 1})
-        # frequency map cannot be empty
-        self.assertRaises(ValueError, huffman_code, {})
-
     def test_one_symbol(self):
         cnt = {'a': 1}
         endian = choice(ENDIANS)
@@ -2605,14 +2623,6 @@ class CanonicalHuffmanTests(Util, HuffmanUtil, unittest.TestCase):
         msg = "abracadabra"
         self.assertEqual(''.join(a.decode(codedict)), msg)
         self.assertEqual(''.join(canonical_decode(a, count, symbol)), msg)
-
-    def test_canonical_huffman_errors(self):
-        self.assertRaises(TypeError, canonical_huffman, [])
-        # frequency map cannot be empty
-        self.assertRaises(ValueError, canonical_huffman, {})
-        self.assertRaises(TypeError, canonical_huffman)
-        cnt = huffman_code(Counter('aabc'))
-        self.assertRaises(TypeError, canonical_huffman, cnt, 'a')
 
     def test_one_symbol(self):
         cnt = {'a': 1}

@@ -538,6 +538,12 @@ and return its root node.
     return minheap[0]
 
 
+def _ensure_anydict(d):
+    types = dict if sys.version_info[:2] < (3, 15) else (dict, frozendict)
+    if not isinstance(d, types):
+        raise TypeError("dict expected, got '%s'" % type(d).__name__)
+
+
 def huffman_code(__freq_map, endian=None):
     """huffman_code(dict, /, endian=None) -> dict
 
@@ -546,8 +552,7 @@ calculate the Huffman code, i.e. a dict mapping those symbols to
 frozenbitarrays (with given bit-endianness).  Note that the symbols are not
 limited to being strings.  Symbols may be any hashable object.
 """
-    if not isinstance(__freq_map, dict):
-        raise TypeError("dict expected, got '%s'" % type(__freq_map).__name__)
+    _ensure_anydict(__freq_map)
 
     if len(__freq_map) < 2:
         if len(__freq_map) == 0:
@@ -589,8 +594,7 @@ calculate the canonical Huffman code.  Returns a tuple containing:
 
 Note: the two lists may be used as input for `canonical_decode()`.
 """
-    if not isinstance(__freq_map, dict):
-        raise TypeError("dict expected, got '%s'" % type(__freq_map).__name__)
+    _ensure_anydict(__freq_map)
 
     if len(__freq_map) < 2:
         if len(__freq_map) == 0:
