@@ -3,10 +3,11 @@ import sys
 import unittest
 from random import randint, randrange
 
-from bitarray import bitarray, _sysinfo
+from bitarray import bitarray, decodetree, _sysinfo
 from bitarray.util import zeros, ones, int2ba, parity
 
-from bitarray.test_bitarray import Util, urandom_2, PTRSIZE, show_info
+from bitarray.test_bitarray import (Util, urandom_2, PTRSIZE, show_info,
+                                    alphabet_code)
 
 # --------------------- internal C-level debug tests ------------------------
 
@@ -331,6 +332,34 @@ class Overlap_Tests(unittest.TestCase, Util):
             r1, r2 = range(i1, j1), range(i2, j2)
             res = bool(r1) and bool(r2) and (i2 in r1 or i1 in r2)
             self.check_overlap(b1, b2, res)
+
+
+class Decodetree_Tests(unittest.TestCase):
+
+    def test_getnode(self):
+        code = {'a': bitarray('0'), 'b': bitarray('1')}
+        tree = decodetree(code)
+        self.assertEqual(tree.nodes(), (0, 1, 2))
+        self.assertEqual(tree._getnode(bitarray()),
+                         {'left': (0, 0, 1), 'right': (0, 0, 1)})
+        self.assertEqual(tree._getnode(bitarray('0')), 'a')
+        self.assertEqual(tree._getnode(bitarray('1')), 'b')
+        self.assertRaises(ValueError, tree._getnode, bitarray('00'))
+
+    def test_mortal_symbol(self):
+        symbol = object()
+        tree = decodetree({symbol: bitarray('0')})
+        self.assertIs(tree._getnode(bitarray('0')), symbol)
+
+    def test_alphabet_code(self):
+        tree = decodetree(alphabet_code)
+        for sym, word in alphabet_code.items():
+            self.assertEqual(tree._getnode(word), sym)
+            for i in range(len(word)):
+                p = word[:i]
+                nd = tree._getnode(p)
+                self.assertIs(type(nd), dict)
+                self.assertIn(len(nd), (1, 2))
 
 
 # -------------------------------- _util.c ----------------------------------
