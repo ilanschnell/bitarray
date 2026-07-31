@@ -34,7 +34,7 @@ from bitarray.util import (
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
     ba2int, int2ba,
     sc_encode, sc_decode, vl_encode, vl_decode,
-    _huffman_tree, huffman_code, canonical_huffman, canonical_decode,
+    huffman_code, canonical_huffman, canonical_decode,
 )
 
 from bitarray.util import _Random  # type: ignore
@@ -2446,33 +2446,9 @@ class SerializationTests(unittest.TestCase, Util):
             self.assertEqual(a.endian, c.endian)
             self.check_obj(c)
 
-# ---------------------------------------------------------------------------
+# ------------------------------  Huffman coding  ---------------------------
 
-class HuffmanTreeTests(unittest.TestCase):  # tests for _huffman_tree()
-
-    def test_empty(self):
-        freq = {}
-        self.assertRaises(IndexError, _huffman_tree, freq)
-
-    def test_one_symbol(self):
-        freq = {"A": 1}
-        tree = _huffman_tree(freq)
-        self.assertEqual(tree.symbol, "A")
-        self.assertEqual(tree.freq, 1)
-        self.assertRaises(AttributeError, getattr, tree, 'child')
-
-    def test_two_symbols(self):
-        freq = {"A": 1, "B": 1}
-        tree = _huffman_tree(freq)
-        self.assertRaises(AttributeError, getattr, tree, 'symbol')
-        self.assertEqual(tree.freq, 2)
-        self.assertEqual(tree.child[0].symbol, "A")
-        self.assertEqual(tree.child[0].freq, 1)
-        self.assertEqual(tree.child[1].symbol, "B")
-        self.assertEqual(tree.child[1].freq, 1)
-
-
-class HuffmanAssertions:
+class HuffmanUtil:
 
     def check_code(self, code):
         self.assertIs(type(code), dict)
@@ -2480,10 +2456,10 @@ class HuffmanAssertions:
             self.assertIs(type(v), frozenbitarray)
             self.assertGreater(len(v), 0)
 
-        t = decodetree(code)
-        self.assertEqual(t.todict(), code)
+        tree = decodetree(code)
+        self.assertEqual(tree.todict(), code)
         n = len(code)
-        nodes = t.nodes()
+        nodes = tree.nodes()
         if n == 1:
             # one-symbol code is incomplete
             self.assertEqual(nodes, (1, 0, 1))
@@ -2491,7 +2467,8 @@ class HuffmanAssertions:
             # proper Huffman tree is complete
             self.assertEqual(nodes, (0, n - 1, n))
 
-class CommonHuffmanTests(HuffmanAssertions, unittest.TestCase):
+
+class CommonHuffmanTests(HuffmanUtil, unittest.TestCase):
 
     # tests for both huffman_code() and canonical_huffman()
 
@@ -2545,7 +2522,7 @@ class CommonHuffmanTests(HuffmanAssertions, unittest.TestCase):
             self.check_code(code)
 
 
-class HuffmanTests(HuffmanAssertions, unittest.TestCase):
+class HuffmanTests(HuffmanUtil, unittest.TestCase):
 
     def test_simple(self):
         freq = {0: 10, 'as': 2, None: 1.6}
@@ -2598,9 +2575,8 @@ class HuffmanTests(HuffmanAssertions, unittest.TestCase):
         self.assertEqual(''.join(a.decode(code)), message)
         self.check_code(code)
 
-# ---------------------------------------------------------------------------
 
-class CanonicalHuffmanTests(Util, HuffmanAssertions, unittest.TestCase):
+class CanonicalHuffmanTests(Util, HuffmanUtil, unittest.TestCase):
 
     def test_basic(self):
         plain = bytearray(b'the quick brown fox jumps over the lazy dog.')
@@ -2847,9 +2823,11 @@ class CanonicalHuffmanTests(Util, HuffmanAssertions, unittest.TestCase):
         self.assertEqual(count[0], 0)  # no codes have length 0
         self.assertEqual(set(chc), set(symbol))
         # the code of the last symbol has all 1 bits
-        self.assertTrue(chc[symbol[-1]].all())
+        last = chc[symbol[-1]]
+        self.assertTrue(last.all())
         # the code of the first symbol starts with bit 0
-        self.assertFalse(chc[symbol[0]][0])
+        first = chc[symbol[0]]
+        self.assertEqual(first[0], 0)
 
         self.ensure_sorted(chc, symbol)
         self.ensure_consecutive(chc, count, symbol)
