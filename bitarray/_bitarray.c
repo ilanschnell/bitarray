@@ -3741,7 +3741,7 @@ binode_delete(binode *nd)
 static int
 binode_insert_symbol(binode *tree, bitarrayobject *a, PyObject *symbol)
 {
-    binode *nd = tree, *prev;
+    binode *nd = tree;
     Py_ssize_t i;
 
     if (a->nbits > MAX_CODE_LENGTH) {
@@ -3752,20 +3752,19 @@ binode_insert_symbol(binode *tree, bitarrayobject *a, PyObject *symbol)
 
     for (i = 0; i < a->nbits; i++) {
         int k = getbit(a, i);
+        binode *next = nd->child[k];
 
-        prev = nd;
-        nd = nd->child[k];
-
-        if (nd) {
-            if (nd->symbol)     /* we cannot have already a symbol */
+        if (next) {
+            if (next->symbol)  /* an existing code ends here */
                 goto ambiguity;
         }
         else {            /* if node does not exist, create new one */
-            nd = binode_new();
-            if (nd == NULL)
+            next = binode_new();
+            if (next == NULL)
                 return -1;
-            prev->child[k] = nd;
+            nd->child[k] = next;
         }
+        nd = next;  /* descend to the selected child */
     }
     /* the new leaf node cannot already have a symbol or children */
     if (nd->symbol || nd->child[0] || nd->child[1])
