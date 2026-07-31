@@ -72,13 +72,13 @@ Once you have installed the package, you may want to test it:
     Py_GIL_DISABLED: 0
     Py_DEBUG: 0
     DEBUG: 0
-    .........................................................................
-    ................................................s........................
+    .....................................s...................................
+    ..........s.....................................s........................
     ......s.........................................................
     ----------------------------------------------------------------------
-    Ran 642 tests in 0.189s
+    Ran 641 tests in 0.196s
 
-    OK (skipped=2)
+    OK (skipped=4)
 
 The ``test()`` function is part of the API.  It will return
 a ``unittest.runner.TextTestResult`` object, such that one can verify that

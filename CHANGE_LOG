@@ -1,4 +1,4 @@
-2026-XX-XX  3.10.0:
+2026-07-31  3.10.0:
 -------------------
   * add [free threading support](free_threading.rst)
   * add `bitarray/test_free_threading.py` - these free-threading tests are

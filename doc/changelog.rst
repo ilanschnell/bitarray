@@ -1,6 +1,25 @@
 Change log
 ==========
 
+**3.10.0** (2026-07-31):
+
+* add `free threading support <free_threading.rst>`__
+* add ``bitarray/test_free_threading.py`` - these free-threading tests are
+  imported when Python was compiled using ``--disable-gil``
+* add official support for ``decodetree`` methods ``.nodes()`` and ``.todict()``
+* ``util.huffman_code()`` and ``util.canonical_huffman()`` return codedicts
+  mapping symbols to frozenbitarrays
+* fix free-threading bug in ``binode_make_tree()``
+* use a private capsule to safely share the ``bitarray`` type between
+  the ``_bitarray`` and ``_util`` extension modules
+* bitarrays in prefix codes passed to ``.decode()`` or ``decodetree()`` cannot
+  exceed 256 bits
+* the following methods/functions also accept a ``frozendict`` (added in
+  Python 3.15): ``.decode()``, ``decodetree()``, ``.encode()``,
+  ``util.huffman_code()`` and ``util.canonical_huffman()``
+* make C code more cohesive
+
+
 **3.9.2** (2026-07-25):
 
 * add more critical sections in Python-facing operations
