@@ -4582,6 +4582,17 @@ class DecodeTreeTests(unittest.TestCase, Util):
         d['-'] = bitarray()
         self.assertRaises(ValueError, decodetree, d)
 
+    @unittest.skipIf(sys.version_info[:2] < (3, 15),
+                     "frozendict introduced in Python 3.15")
+    def test_create_from_frozendict(self):
+        d1 = frozendict(alphabet_code)
+        t = decodetree(d1)
+        d2 = t.todict()
+        self.assertEqual(d2, d1)
+        # as d2 is a dict we cannot hash it, but:
+        d3 = frozendict(d2)
+        hash(d3)
+
     def test_ambiguous_code(self):
         for d in [
             {'a': bitarray('0'), 'b': bitarray('0'), 'c': bitarray('1')},
@@ -4800,6 +4811,9 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(list(a.decode(d)), res)
         self.assertEqual(d, dcopy)
         self.assertEqual(a, bitarray('101001000'))
+        if sys.version_info[:2] >= (3, 15):
+            fd = frozendict(d)
+            self.assertEqual(list(a.decode(fd)), res)
 
     def test_decode_type(self):
         a = bitarray('0110')

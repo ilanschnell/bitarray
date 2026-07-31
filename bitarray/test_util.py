@@ -1028,7 +1028,7 @@ class ByteSwapTests(unittest.TestCase):
         r = os.urandom(64)
         for typecode in array.typecodes:
             # type code 'u' is deprecated and will be removed in Python 3.16
-            if typecode == 'u':
+            if typecode in ('u', 'Zf', 'Zd'):
                 continue
             a = array.array(typecode, r)
             self.assertEqual(len(a) * a.itemsize, 64)
