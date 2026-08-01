@@ -336,6 +336,8 @@ class Overlap_Tests(unittest.TestCase, Util):
 
 class Decodetree_Tests(unittest.TestCase):
 
+    child_names = ("left", "right")
+
     def test_getnode(self):
         code = {'a': bitarray('0'), 'b': bitarray('1')}
         tree = decodetree(code)
@@ -360,8 +362,21 @@ class Decodetree_Tests(unittest.TestCase):
             for i in range(len(word)):
                 p = word[:i]  # partial word
                 nd = tree._getnode(p)
-                self.assertIs(type(nd), dict)
+                self.assertIs(type(nd), dict)  # internal node
                 self.assertIn(len(nd), (1, 2))
+
+    def test_max_chain(self):
+        word = urandom_2(256)
+        code = {None: word}
+        tree = decodetree(code)
+        self.assertIs(tree._getnode(word), None)
+        for i in range(256):
+            nd = tree._getnode(word[:i])
+            self.assertIs(type(nd), dict)  # internal node
+            self.assertEqual(len(nd), 1)
+            key, value = nd.popitem()
+            self.assertEqual(key, self.child_names[word[i]])
+            self.assertEqual(value, (255 - i, 0, 1))
 
 
 # -------------------------------- _util.c ----------------------------------
