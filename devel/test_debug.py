@@ -1,10 +1,10 @@
 import os
 import sys
 import unittest
-from random import randint, randrange
+from random import randint, randrange, random
 
 from bitarray import bitarray, decodetree, _sysinfo
-from bitarray.util import zeros, ones, int2ba, parity
+from bitarray.util import zeros, ones, int2ba, parity, huffman_code
 
 from bitarray.test_bitarray import (Util, urandom_2, PTRSIZE, show_info,
                                     alphabet_code)
@@ -377,6 +377,29 @@ class Decodetree_Tests(unittest.TestCase):
             key, value = nd.popitem()
             self.assertEqual(key, self.child_names[word[i]])
             self.assertEqual(value, (255 - i, 0, 1))
+
+    def test_huffman(self):
+        N = 1003
+        freq = {i: random() ** 3 for i in range(N)}
+        code = huffman_code(freq)
+        tree = decodetree(code)
+        self.assertEqual(tree.nodes(), (0, N - 1, N))
+        nd = tree._getnode(bitarray())  # root
+        self.assertTrue(all(nd[k][0] == 0 for k in self.child_names))
+        # excluding the root, full tree with N leaves has N-2 internal nodes
+        self.assertEqual(sum(nd[k][1] for k in self.child_names), N - 2)
+        self.assertEqual(sum(nd[k][2] for k in self.child_names), N)
+
+        for sym, word in code.items():
+            self.assertEqual(tree._getnode(word), sym)
+            n = len(word)
+            p = word[:randrange(n)]
+            nd = tree._getnode(p)
+            for key in self.child_names:
+                n1, n2, ns = nd[key]
+                # every subtree of a complete prefix tree satisfies:
+                self.assertEqual(n1, 0)
+                self.assertEqual(n2, ns - 1)
 
 
 # -------------------------------- _util.c ----------------------------------
