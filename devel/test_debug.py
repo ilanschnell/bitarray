@@ -1,7 +1,7 @@
 import os
 import sys
 import unittest
-from random import randint, randrange, random
+from random import getrandbits, randint, randrange, random
 
 from bitarray import bitarray, decodetree, _sysinfo
 from bitarray.util import zeros, ones, int2ba, parity, huffman_code
@@ -334,16 +334,53 @@ class Overlap_Tests(unittest.TestCase, Util):
             self.check_overlap(b1, b2, res)
 
 
-class Decodetree_Tests(unittest.TestCase):
+class Decodetree_Getnode_Tests(unittest.TestCase):
 
     child_names = ("left", "right")
 
-    def test_getnode(self):
+    def check_internal_node(self, nd):
+        self.assertIs(type(nd), dict)
+        self.assertIn(len(nd), (1, 2))
+        for key, values in nd.items():
+            self.assertIs(type(key), str)
+            self.assertIn(key, self.child_names)
+            self.assertIs(type(values), tuple)
+            self.assertEqual(len(values), 3)
+
+    def check_subtree(self, tree, code, prefix):
+        nd = tree._getnode(prefix)
+        if type(nd) is not dict:  # leaf node
+            self.assertIn(nd, code)
+            self.assertEqual(prefix, code[nd])
+            return 0, 0, 1
+
+        self.check_internal_node(nd)
+        counts = [0, 0, 0]
+        counts[len(nd) - 1] = 1  # count this one- or two-child node
+        for k, key in enumerate(self.child_names):
+            if key in nd:
+                child_prefix = prefix + bitarray([k])
+                child_counts = self.check_subtree(tree, code, child_prefix)
+                self.assertEqual(nd[key], child_counts)
+                for i in range(3):
+                    counts[i] += child_counts[i]
+        return tuple(counts)
+
+    def test_recursive_node_counts(self):
+        tree = decodetree(alphabet_code)
+        counts = self.check_subtree(tree, alphabet_code, bitarray())
+        self.assertEqual(counts, tree.nodes())
+
+    def test_simple(self):
         code = {'a': bitarray('0'), 'b': bitarray('1')}
         tree = decodetree(code)
         self.assertEqual(tree.nodes(), (0, 1, 2))
-        self.assertEqual(tree._getnode(bitarray()),
-                         {'left': (0, 0, 1), 'right': (0, 0, 1)})
+
+        root = tree._getnode(bitarray())
+        self.assertIs(type(root), dict)
+        self.assertEqual(root, {'left': (0, 0, 1), 'right': (0, 0, 1)})
+        self.check_internal_node(root)
+
         self.assertEqual(tree._getnode(bitarray('0')), 'a')
         self.assertEqual(tree._getnode(bitarray('1')), 'b')
         self.assertRaises(ValueError, tree._getnode, bitarray('00'))
@@ -361,9 +398,7 @@ class Decodetree_Tests(unittest.TestCase):
             self.assertEqual(tree._getnode(word), sym)
             for i in range(len(word)):
                 p = word[:i]  # partial word
-                nd = tree._getnode(p)
-                self.assertIs(type(nd), dict)  # internal node
-                self.assertIn(len(nd), (1, 2))
+                self.check_internal_node(tree._getnode(p))
 
     def test_max_chain(self):
         word = urandom_2(256)
@@ -378,8 +413,17 @@ class Decodetree_Tests(unittest.TestCase):
             self.assertEqual(key, self.child_names[word[i]])
             self.assertEqual(value, (255 - i, 0, 1))
 
+        # invert any bit and we get off the chain
+        for i in range(256):
+            a = word.copy()
+            a.invert(i)
+            self.assertRaises(ValueError, tree._getnode, a)
+
+        counts = self.check_subtree(tree, code, bitarray())
+        self.assertEqual(counts, tree.nodes())
+
     def test_huffman(self):
-        N = 1003
+        N = randrange(1000, 2000)
         freq = {i: random() ** 3 for i in range(N)}
         code = huffman_code(freq)
         tree = decodetree(code)
@@ -400,6 +444,13 @@ class Decodetree_Tests(unittest.TestCase):
                 # every subtree of a complete prefix tree satisfies:
                 self.assertEqual(n1, 0)
                 self.assertEqual(n2, ns - 1)
+
+            a = bitarray(word)
+            a.append(getrandbits(1))  # make code too long
+            self.assertRaises(ValueError, tree._getnode, a)
+
+        counts = self.check_subtree(tree, code, bitarray())
+        self.assertEqual(counts, tree.nodes())
 
 
 # -------------------------------- _util.c ----------------------------------
