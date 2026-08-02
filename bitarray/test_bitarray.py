@@ -645,17 +645,18 @@ class DelItemTests(unittest.TestCase, Util):
 class GetSliceTests(unittest.TestCase, Util):
 
     def test_slice(self):
-        a = bitarray('01001111 00001')
+        B = bitarray
+        a = B('01001111 00001')
         self.assertEQUAL(a[:], a)
         self.assertIsNot(a[:], a)
-        self.assertEQUAL(a[13:2:-3], bitarray('1010'))
-        self.assertEQUAL(a[2:-1:4], bitarray('010'))
-        self.assertEQUAL(a[::2], bitarray('0011001'))
-        self.assertEQUAL(a[8:], bitarray('00001'))
-        self.assertEQUAL(a[7:], bitarray('100001'))
-        self.assertEQUAL(a[:8], bitarray('01001111'))
-        self.assertEQUAL(a[::-1], bitarray('10000111 10010'))
-        self.assertEQUAL(a[:8:-1], bitarray('1000'))
+        self.assertEQUAL(a[13:2:-3], B('1010'))
+        self.assertEQUAL(a[2:-1:4], B('010'))
+        self.assertEQUAL(a[::2], B('0011001'))
+        self.assertEQUAL(a[8:], B('00001'))
+        self.assertEQUAL(a[7:], B('100001'))
+        self.assertEQUAL(a[:8], B('01001111'))
+        self.assertEQUAL(a[::-1], B('10000111 10010'))
+        self.assertEQUAL(a[:8:-1], B('1000'))
         self.assertRaises(ValueError, a.__getitem__, slice(None, None, 0))
 
     def test_frozenbitarray(self):
@@ -965,29 +966,30 @@ class SetSliceTests(unittest.TestCase, Util):
                 self.check_obj(a)
 
     def test_bool_explicit(self):
-        a = bitarray('11111111')
+        B = bitarray
+        a = B('11111111')
         a[::2] = False
-        self.assertEqual(a, bitarray('01010101'))
+        self.assertEqual(a, B('01010101'))
         a[4::] = True #                   ^^^^
-        self.assertEqual(a, bitarray('01011111'))
+        self.assertEqual(a, B('01011111'))
         a[-2:] = False #                    ^^
-        self.assertEqual(a, bitarray('01011100'))
+        self.assertEqual(a, B('01011100'))
         a[:2:] = True #               ^^
-        self.assertEqual(a, bitarray('11011100'))
+        self.assertEqual(a, B('11011100'))
         a[:] = True #                 ^^^^^^^^
-        self.assertEqual(a, bitarray('11111111'))
+        self.assertEqual(a, B('11111111'))
         a[2:5] = False #                ^^^
-        self.assertEqual(a, bitarray('11000111'))
+        self.assertEqual(a, B('11000111'))
         a[1::3] = False #              ^  ^  ^
-        self.assertEqual(a, bitarray('10000110'))
+        self.assertEqual(a, B('10000110'))
         a[1:6:2] = True #              ^ ^ ^
-        self.assertEqual(a, bitarray('11010110'))
+        self.assertEqual(a, B('11010110'))
         a[3:3] = False # zero slicelength
-        self.assertEqual(a, bitarray('11010110'))
+        self.assertEqual(a, B('11010110'))
         a[:] = False #                ^^^^^^^^
-        self.assertEqual(a, bitarray('00000000'))
+        self.assertEqual(a, B('00000000'))
         a[-2:2:-1] = 1 #                 ^^^^
-        self.assertEqual(a, bitarray('00011110'))
+        self.assertEqual(a, B('00011110'))
 
     def test_bool_step1(self):
         for _ in range(100):
@@ -3512,27 +3514,28 @@ class ByteReverseTests(unittest.TestCase, Util):
             self.assertEqual(a, bitarray(y))
 
     def test_explicit_range(self):
-        a = bitarray('11100000 00000011 00111111 11111000')
+        B = bitarray
+        a = B('11100000 00000011 00111111 11111000')
         a.bytereverse(0, 1)  # reverse byte 0
-        self.assertEqual(a, bitarray('00000111 00000011 00111111 11111000'))
+        self.assertEqual(a, B('00000111 00000011 00111111 11111000'))
         a.bytereverse(1, -1)  # reverse bytes 1 and 2
-        self.assertEqual(a, bitarray('00000111 11000000 11111100 11111000'))
+        self.assertEqual(a, B('00000111 11000000 11111100 11111000'))
         a.bytereverse(2)  # reverse bytes 2 till end of buffer
-        self.assertEqual(a, bitarray('00000111 11000000 00111111 00011111'))
+        self.assertEqual(a, B('00000111 11000000 00111111 00011111'))
         a.bytereverse(-1)  # reverse last byte
-        self.assertEqual(a, bitarray('00000111 11000000 00111111 11111000'))
+        self.assertEqual(a, B('00000111 11000000 00111111 11111000'))
         a.bytereverse(3, 1)  # start > stop (nothing to reverse)
-        self.assertEqual(a, bitarray('00000111 11000000 00111111 11111000'))
+        self.assertEqual(a, B('00000111 11000000 00111111 11111000'))
         a.bytereverse(0, 4)  # reverse all bytes
-        self.assertEqual(a, bitarray('11100000 00000011 11111100 00011111'))
+        self.assertEqual(a, B('11100000 00000011 11111100 00011111'))
         a.bytereverse(-2)  # last two bytes
-        self.assertEqual(a, bitarray('11100000 00000011 00111111 11111000'))
+        self.assertEqual(a, B('11100000 00000011 00111111 11111000'))
         a.bytereverse()  # reverse all bytes
-        self.assertEqual(a, bitarray('00000111 11000000 11111100 00011111'))
+        self.assertEqual(a, B('00000111 11000000 11111100 00011111'))
         a.bytereverse(-100, 100)  # reverse all bytes
-        self.assertEqual(a, bitarray('11100000 00000011 00111111 11111000'))
+        self.assertEqual(a, B('11100000 00000011 00111111 11111000'))
         a.bytereverse(-5)  # reverse all bytes
-        self.assertEqual(a, bitarray('00000111 11000000 11111100 00011111'))
+        self.assertEqual(a, B('00000111 11000000 11111100 00011111'))
 
     def test_byte(self):
         for i in range(256):
@@ -4645,6 +4648,8 @@ class DecodeTreeTests(unittest.TestCase, Util):
         dt = decodetree(alphabet_code)
         nodes = dt.nodes()
         self.assertIs(type(nodes), tuple)
+        for i in range(3):
+            self.assertIs(type(nodes[i]), int)
         self.assertEqual(dt.nodes(), (15, 27, 28))
 
     def test_complete(self):
@@ -4652,21 +4657,17 @@ class DecodeTreeTests(unittest.TestCase, Util):
         def is_complete(dt):
             return dt.nodes()[0] == 0
 
-        dt = decodetree({'.': bitarray('1')})
-        self.assertFalse(is_complete(dt))
+        B = bitarray
+        codes = [
+            ({'.': B('1')}, False),
+            ({'a': B('0'), 'b': B('1')}, True),
+            ({'a': B('0'), 'b': B('11')}, False),
+            ({'a': B('0'), 'b': B('11'), 'c': B('10')}, True),
+        ]
 
-        dt = decodetree({'a': bitarray('0'),
-                         'b': bitarray('1')})
-        self.assertTrue(is_complete(dt))
-
-        dt = decodetree({'a': bitarray('0'),
-                         'b': bitarray('11')})
-        self.assertFalse(is_complete(dt))
-
-        dt = decodetree({'a': bitarray('0'),
-                         'b': bitarray('11'),
-                         'c': bitarray('10')})
-        self.assertTrue(is_complete(dt))
+        for code, result in codes:
+            tree = decodetree(code)
+            self.assertEqual(is_complete(tree), result)
 
     def test_todict(self):
         t = decodetree(alphabet_code)
@@ -4984,11 +4985,12 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertEqual(it.index, 15)
 
     def test_miscitems(self):
-        d = {None : bitarray('00'),
-             0    : bitarray('110'),
-             1    : bitarray('111'),
-             ''   : bitarray('010'),
-             2    : bitarray('011')}
+        F = frozenbitarray
+        d = {None : F('00'),
+             0    : F('110'),
+             1    : F('111'),
+             ''   : F('010'),
+             2    : F('011')}
         a = bitarray()
         a.encode(d, [None, 0, 1, '', 2])
         self.assertEqual(a, bitarray('00110111010011'))
@@ -5589,21 +5591,23 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
             frozenbitarray, buffer=c)
 
     def test_as_set(self):
-        a = frozenbitarray('1')
-        b = frozenbitarray('11')
-        c = frozenbitarray('01')
-        d = frozenbitarray('011')
+        F = frozenbitarray
+        a = F('1')
+        b = F('11')
+        c = F('01')
+        d = F('011')
         s = set([a, b, c, d])
         self.assertEqual(len(s), 4)
         self.assertIn(d, s)
-        self.assertNotIn(frozenbitarray('0'), s)
+        self.assertNotIn(F('0'), s)
 
     def test_as_dictkey(self):
-        a = frozenbitarray('01')
-        b = frozenbitarray('1001')
+        F = frozenbitarray
+        a = F('01')
+        b = F('1001')
         d = {a: 123, b: 345}
-        self.assertEqual(d[frozenbitarray('01')], 123)
-        self.assertEqual(d[frozenbitarray(b)], 345)
+        self.assertEqual(d[F('01')], 123)
+        self.assertEqual(d[F(b)], 345)
 
     def test_as_dictkey2(self):  # taken slightly modified from issue #74
         a1 = frozenbitarray("10")

@@ -2610,13 +2610,14 @@ class CanonicalHuffmanTests(Util, HuffmanUtil, unittest.TestCase):
         self.assertEqual(bytearray(canonical_decode(a, count, symbol)), plain)
 
     def test_example(self):
+        F = frozenbitarray
         cnt = {'a': 5, 'b': 3, 'c': 1, 'd': 1, 'r': 2}
         codedict, count, symbol = canonical_huffman(cnt)
-        self.assertEqual(codedict, {'a': frozenbitarray('0'),
-                                    'b': frozenbitarray('10'),
-                                    'c': frozenbitarray('1110'),
-                                    'd': frozenbitarray('1111'),
-                                    'r': frozenbitarray('110')})
+        self.assertEqual(codedict, {'a': F('0'),
+                                    'b': F('10'),
+                                    'c': F('1110'),
+                                    'd': F('1111'),
+                                    'r': F('110')})
         self.assertEqual(count, [0, 1, 1, 1, 2])
         self.assertEqual(symbol, ['a', 'b', 'r', 'c', 'd'])
         a = bitarray('01011001110011110101100')
@@ -2642,28 +2643,29 @@ class CanonicalHuffmanTests(Util, HuffmanUtil, unittest.TestCase):
                               canonical_decode(a, count, symbol))
 
     def test_canonical_decode_errors(self):
+        C = canonical_decode
         a = bitarray('1101')
         s = ['a']
         # bitarray not of bitarray type
-        self.assertRaises(TypeError, canonical_decode, '11', [0, 1], s)
+        self.assertRaises(TypeError, C, '11', [0, 1], s)
         # count not sequence
-        self.assertRaises(TypeError, canonical_decode, a, {0, 1}, s)
+        self.assertRaises(TypeError, C, a, {0, 1}, s)
         # count element not an int
-        self.assertRaises(TypeError, canonical_decode, a, [0, 1.0], s)
+        self.assertRaises(TypeError, C, a, [0, 1.0], s)
         # count element overflow
-        self.assertRaises(OverflowError, canonical_decode, a, [0, 1 << 65], s)
+        self.assertRaises(OverflowError, C, a, [0, 1 << 65], s)
         # symbol not sequence
-        self.assertRaises(TypeError, canonical_decode, a, [0, 1], 43)
+        self.assertRaises(TypeError, C, a, [0, 1], 43)
 
         symbol = ['a', 'b', 'c', 'd']
         # sum(count) != len(symbol)
         self.assertRaisesMessage(ValueError,
                                  "sum(count) = 3, but len(symbol) = 4",
-                                 canonical_decode, a, [0, 1, 2], symbol)
+                                 C, a, [0, 1, 2], symbol)
         # count list too long
         self.assertRaisesMessage(ValueError,
                                  "len(count) cannot be larger than 32",
-                                 canonical_decode, a, 33 * [0], symbol)
+                                 C, a, 33 * [0], symbol)
 
     def test_canonical_decode_count_range(self):
         a = bitarray()
@@ -2694,29 +2696,30 @@ class CanonicalHuffmanTests(Util, HuffmanUtil, unittest.TestCase):
         self.assertEqual(list(iter), [])
 
     def test_canonical_decode_simple(self):
+        C = canonical_decode
         # symbols can be anything, they do not even have to be hashable here
         cnt = [0, 0, 4]
         s = ['A', 42, [1.2-3.7j, 4j], {'B': 6}]
         a = bitarray('00 01 10 11')
         # count can be a list
-        self.assertEqual(list(canonical_decode(a, cnt, s)), s)
+        self.assertEqual(list(C(a, cnt, s)), s)
         # count can also be a tuple (any sequence object in fact)
-        self.assertEqual(list(canonical_decode(a, (0, 0, 4), s)), s)
-        self.assertEqual(list(canonical_decode(7 * a, cnt, s)), 7 * s)
+        self.assertEqual(list(C(a, (0, 0, 4), s)), s)
+        self.assertEqual(list(C(7 * a, cnt, s)), 7 * s)
         # the count list may have extra 0's at the end (but not too many)
         count = [0, 0, 4, 0, 0, 0, 0, 0]
-        self.assertEqual(list(canonical_decode(a, count, s)), s)
+        self.assertEqual(list(C(a, count, s)), s)
         # the element count[0] is unused
-        self.assertEqual(list(canonical_decode(a, [-47, 0, 4], s)), s)
+        self.assertEqual(list(C(a, [-47, 0, 4], s)), s)
         # in fact it can be anything, as it is entirely ignored
-        self.assertEqual(list(canonical_decode(a, [None, 0, 4], s)), s)
+        self.assertEqual(list(C(a, [None, 0, 4], s)), s)
 
         # the symbol argument can be any sequence object
         s = [65, 66, 67, 98]
-        self.assertEqual(list(canonical_decode(a, cnt, s)), s)
-        self.assertEqual(list(canonical_decode(a, cnt, bytearray(s))), s)
-        self.assertEqual(list(canonical_decode(a, cnt, tuple(s))), s)
-        self.assertEqual(list(canonical_decode(a, cnt, bytes(s))), s)
+        self.assertEqual(list(C(a, cnt, s)), s)
+        self.assertEqual(list(C(a, cnt, bytearray(s))), s)
+        self.assertEqual(list(C(a, cnt, tuple(s))), s)
+        self.assertEqual(list(C(a, cnt, bytes(s))), s)
         # Implementation Note:
         #   The symbol can even be an iterable.  This was done because we
         #   want to use PySequence_Fast in order to convert sequence
@@ -2724,7 +2727,7 @@ class CanonicalHuffmanTests(Util, HuffmanUtil, unittest.TestCase):
         #   as all objects are now elements in an array of pointers (as
         #   opposed to having the object's __getitem__ method called on
         #   every iteration).
-        self.assertEqual(list(canonical_decode(a, cnt, iter(s))), s)
+        self.assertEqual(list(C(a, cnt, iter(s))), s)
 
     def test_canonical_decode_empty(self):
         a = bitarray()

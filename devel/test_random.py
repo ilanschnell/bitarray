@@ -130,17 +130,18 @@ def create_masks(m):
 class CreateMasksTests(unittest.TestCase):
 
     def test_explict(self):
+        B = bitarray
         C = create_masks
         self.assertEqual(C(0), [])
 
-        self.assertEqual(C(1), [bitarray("01")])
+        self.assertEqual(C(1), [B("01")])
 
-        self.assertEqual(C(2), [bitarray("0101"),
-                                bitarray("0011")])
+        self.assertEqual(C(2), [B("0101"),
+                                B("0011")])
 
-        self.assertEqual(C(3), [bitarray("01010101"),
-                                bitarray("00110011"),
-                                bitarray("00001111")])
+        self.assertEqual(C(3), [B("01010101"),
+                                B("00110011"),
+                                B("00001111")])
 
     def test_11(self):
         m = 11

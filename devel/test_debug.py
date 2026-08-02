@@ -341,13 +341,15 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
     def check_internal_node(self, nd):
         self.assertIs(type(nd), dict)
         self.assertIn(len(nd), (1, 2))
-        for key, values in nd.items():
+        for key, counts in nd.items():
             self.assertIs(type(key), str)
             self.assertIn(key, self.child_names)
-            self.assertIs(type(values), tuple)
-            self.assertEqual(len(values), 3)
+            self.assertIs(type(counts), tuple)
+            self.assertEqual(len(counts), 3)
+            for i in range(3):
+                self.assertIs(type(counts[i]), int)
             # every binary tree has one fewer two-child nodes than leaf nodes
-            self.assertEqual(values[1], values[2] - 1)
+            self.assertEqual(counts[1], counts[2] - 1)
 
     def check_subtree(self, tree, code, prefix):
         nd = tree._getnode(prefix)
