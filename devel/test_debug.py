@@ -1,7 +1,7 @@
 import os
 import sys
 import unittest
-from random import getrandbits, randint, randrange, random
+from random import getrandbits, randint, randrange, random, sample
 
 from bitarray import bitarray, decodetree, _sysinfo
 from bitarray.util import zeros, ones, int2ba, parity, huffman_code
@@ -366,11 +366,6 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
                     counts[i] += child_counts[i]
         return tuple(counts)
 
-    def test_recursive_node_counts(self):
-        tree = decodetree(alphabet_code)
-        counts = self.check_subtree(tree, alphabet_code, bitarray())
-        self.assertEqual(counts, tree.nodes())
-
     def test_simple(self):
         code = {'a': bitarray('0'), 'b': bitarray('1')}
         tree = decodetree(code)
@@ -394,6 +389,9 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
 
     def test_alphabet_code(self):
         tree = decodetree(alphabet_code)
+        counts = self.check_subtree(tree, alphabet_code, bitarray())
+        self.assertEqual(counts, tree.nodes())
+
         for sym, word in alphabet_code.items():
             self.assertEqual(tree._getnode(word), sym)
             for i in range(len(word)):
@@ -451,6 +449,24 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
 
         counts = self.check_subtree(tree, code, bitarray())
         self.assertEqual(counts, tree.nodes())
+
+    def test_random_tree(self):
+        for _ in range(100):
+            N = randrange(5, 100)
+            freq = {i: random() ** 3 for i in range(N)}
+            code = huffman_code(freq)
+
+            # keep sample of the original prefixes
+            prefixes = sample(list(code.values()), randrange(1, N))
+            code = dict(enumerate(prefixes))
+
+            tree = decodetree(code)
+            n1, n2, ns = tree.nodes()
+            self.assertGreater(n1, 0)
+            self.assertEqual(ns, len(code))
+
+            counts = self.check_subtree(tree, code, bitarray())
+            self.assertEqual(counts, tree.nodes())
 
 
 # -------------------------------- _util.c ----------------------------------
