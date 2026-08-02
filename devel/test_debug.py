@@ -388,10 +388,16 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
 
     def test_mortal_symbol(self):
         symbol = object()
-        tree = decodetree({symbol: bitarray('0')})
+        bit = urandom_2(1)
+        self.assertEqual(len(bit), 1)
+        code = {symbol: bit}
+        tree = decodetree(code)
         n = sys.getrefcount(symbol)
-        self.assertIs(tree._getnode(bitarray('0')), symbol)
+        self.assertIs(tree._getnode(bit), symbol)
         self.assertEqual(sys.getrefcount(symbol), n)
+
+        counts = self.check_subtree(tree, code, bitarray())
+        self.assertEqual(counts, tree.nodes())
 
     def test_alphabet_code(self):
         tree = decodetree(alphabet_code)
@@ -406,9 +412,9 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
 
     def test_max_chain(self):
         word = urandom_2(256)
-        code = {None: word}
+        code = {123: word}
         tree = decodetree(code)
-        self.assertIs(tree._getnode(word), None)
+        self.assertIs(tree._getnode(word), 123)
         for i in range(256):
             nd = tree._getnode(word[:i])
             self.assertIs(type(nd), dict)  # internal node
@@ -422,6 +428,8 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
             a = word.copy()
             a.invert(i)
             self.assertRaises(ValueError, tree._getnode, a)
+            a.invert(i)
+            self.assertIs(tree._getnode(a), 123)
 
         counts = self.check_subtree(tree, code, bitarray())
         self.assertEqual(counts, tree.nodes())
