@@ -249,7 +249,7 @@ class Random_K_Tests(unittest.TestCase):
 
         for i in range(1, K):
             seq = G(i)
-            self.assertTrue(0 <= len(s) < M)
+            self.assertTrue(0 <= len(seq) < M)
             q = 0.5                        # a = random_half()
             for k in seq:
                 # k=0: AND    k=1: OR
