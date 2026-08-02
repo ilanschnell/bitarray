@@ -346,6 +346,8 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
             self.assertIn(key, self.child_names)
             self.assertIs(type(values), tuple)
             self.assertEqual(len(values), 3)
+            # every binary tree has one fewer two-child nodes than leaf nodes
+            self.assertEqual(values[1], values[2] - 1)
 
     def check_subtree(self, tree, code, prefix):
         nd = tree._getnode(prefix)
@@ -369,7 +371,9 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
     def test_simple(self):
         code = {'a': bitarray('0'), 'b': bitarray('1')}
         tree = decodetree(code)
+        counts = self.check_subtree(tree, code, bitarray())
         self.assertEqual(tree.nodes(), (0, 1, 2))
+        self.assertEqual(counts, tree.nodes())
 
         root = tree._getnode(bitarray())
         self.assertIs(type(root), dict)
@@ -425,6 +429,7 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
         freq = {i: random() ** 3 for i in range(N)}
         code = huffman_code(freq)
         tree = decodetree(code)
+        # the following is true for every complete tree
         self.assertEqual(tree.nodes(), (0, N - 1, N))
         nd = tree._getnode(bitarray())  # root
         self.assertTrue(all(nd[k][0] == 0 for k in self.child_names))
@@ -437,11 +442,9 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
             n = len(word)
             p = word[:randrange(n)]
             nd = tree._getnode(p)
+            self.check_internal_node(nd)
             for key in self.child_names:
-                n1, n2, ns = nd[key]
-                # every subtree of a complete prefix tree satisfies:
-                self.assertEqual(n1, 0)
-                self.assertEqual(n2, ns - 1)
+                self.assertEqual(nd[key][0], 0)  # completeness
 
             a = bitarray(word)
             a.append(getrandbits(1))  # make code too long
@@ -456,13 +459,19 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
             freq = {i: random() ** 3 for i in range(N)}
             code = huffman_code(freq)
 
-            # keep sample of the original prefixes
+            # retain a random sample of the original prefixes
             prefixes = sample(list(code.values()), randrange(1, N))
             code = dict(enumerate(prefixes))
 
+            self.assertTrue(1 <= len(code) < N)
+
             tree = decodetree(code)
             n1, n2, ns = tree.nodes()
+            # the sampled code is incomplete
             self.assertGreater(n1, 0)
+            # every binary tree has one fewer two-child nodes than leaf nodes
+            self.assertEqual(n2, ns - 1)
+            # every retained prefix produces one leaf
             self.assertEqual(ns, len(code))
 
             counts = self.check_subtree(tree, code, bitarray())
