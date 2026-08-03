@@ -109,7 +109,9 @@ class _Random:
         Return bitarray with each bit having probability p = 1/2 of being 1.
         """
         nbytes = self.nbytes
-        # use random module function for reproducibility (not urandom())
+        # Use random module function for reproducibility (not urandom()).
+        # random.randbytes() can be used once Python 3.9 is the minimum
+        # supported version.
         b = random.getrandbits(8 * nbytes).to_bytes(nbytes, 'little')
         a = bitarray(b, self.endian)
         del a[self.n:]
