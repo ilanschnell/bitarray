@@ -2,50 +2,6 @@ from itertools import islice
 from bitarray import bitarray
 
 
-def sc_decode_header(stream):
-    head = next(stream)
-    if head & 0xe0:
-        raise ValueError("invalid header: 0x%02x" % head)
-    endian = 'big' if head & 0x10 else 'little'
-    length = head & 0x0f  # number of bytes representing nbits
-    nbits = 0
-    for j in range(length):
-        nbits |= next(stream) << 8 * j
-    return endian, nbits
-
-def sc_scan_block(stream, stats):
-    head = next(stream)
-
-    if head < 0xa0:                          # type 0 - 0x00 -- 0x9f
-        if head == 0:  # stop byte
-            return False
-        n = 0
-        k = head if head <= 32 else 32 * (head - 31)
-    elif head < 0xc0:                        # type 1 - 0xa0 .. 0xbf
-        n = 1
-        k = head - 0xa0
-    elif 0xc2 <= head <= 0xc4:               # type 2 .. 4 - 0xc2 .. 0xc4
-        n = head - 0xc0
-        k = next(stream)                     # index count byte
-    else:
-        raise ValueError("Invalid block head: 0x%02x" % head)
-
-    stats['blocks'][n] += 1
-
-    # consume block data
-    nconsume = max(1, n) * k   # size of block data to consume below
-    if stats.get('count'):
-        if n == 0:
-            data = bytes(islice(stream, k))
-            stats['count'][0] += bitarray(buffer=data).count()
-            nconsume = 0
-        else:
-            stats['count'][n] += k
-
-    next(islice(stream, nconsume, nconsume), None)
-
-    return True
-
 def sc_stat(stream, count=False):
     """sc_stat(stream, count=False) -> dict
 
@@ -56,16 +12,56 @@ containing the number of blocks of each type.
 When `count` is true, the `count` entry contains the number of
 represented one-bits in blocks of each type.
 """
-    stream = iter(stream)
-    endian, nbits = sc_decode_header(stream)
+    def decode_header(stream):
+        head = next(stream)
+        if head & 0xe0:
+            raise ValueError("invalid header: 0x%02x" % head)
+        endian = 'big' if head & 0x10 else 'little'
+        length = head & 0x0f  # number of bytes representing nbits
+        nbits = 0
+        for j in range(length):
+            nbits |= next(stream) << 8 * j
+        return dict(endian=endian, nbits=nbits)
 
-    stats = {'endian': endian,
-             'nbits': nbits,
-             'blocks': 5 * [0]}
+    def scan_block(stream, stats):
+        head = next(stream)
+
+        if head < 0xa0:                          # type 0 - 0x00 -- 0x9f
+            if head == 0:  # stop byte
+                return False
+            n = 0
+            k = head if head <= 32 else 32 * (head - 31)
+        elif head < 0xc0:                        # type 1 - 0xa0 .. 0xbf
+            n = 1
+            k = head - 0xa0
+        elif 0xc2 <= head <= 0xc4:               # type 2 .. 4 - 0xc2 .. 0xc4
+            n = head - 0xc0
+            k = next(stream)                     # index count byte
+        else:
+            raise ValueError("Invalid block head: 0x%02x" % head)
+
+        stats['blocks'][n] += 1
+
+        # consume block data
+        nconsume = max(1, n) * k   # size of block data to consume below
+        if stats.get('count'):
+            if n == 0:
+                data = bytes(islice(stream, k))
+                stats['count'][0] += bitarray(buffer=data).count()
+                nconsume = 0
+            else:
+                stats['count'][n] += k
+
+        next(islice(stream, nconsume, nconsume), None)
+        return True
+
+    stream = iter(stream)
+    stats = decode_header(stream)
+    stats['blocks'] = 5 * [0]
     if count:
         stats['count'] = 5 * [0]
 
-    while sc_scan_block(stream, stats):
+    while scan_block(stream, stats):
         pass
 
     return stats
