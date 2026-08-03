@@ -87,9 +87,6 @@ when Python version is too low.
 
 class _Random:
 
-    # The main reason for this class is to enable testing functionality
-    # individually in the test class Random_P_Tests in 'test_util.py'.
-    # The test class also contains many comments and explanations.
     # To better understand how the algorithm works, see ./doc/random_p.rst
     # See also, Internal_Tests and VerificationTests in devel/test_random.py
 
