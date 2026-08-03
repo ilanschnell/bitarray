@@ -3940,9 +3940,10 @@ binode_getnode(binode *tree, bitarrayobject *a)
 
     for (i = 0; i < a->nbits; i++) {
         int k = getbit(a, i);
-        binode *next = nd->child[k];
+        binode *next;
 
-        if (!next) {
+        next = nd->child[k];
+        if (next == NULL) {
             PyErr_SetString(PyExc_ValueError, "node does not exist");
             return NULL;
         }
@@ -4064,11 +4065,12 @@ static PyObject *
 make_node_dict(binode *nd)
 {
     const char *keys[] = {"left", "right"};
-    PyObject *dict = PyDict_New();
+    PyObject *dict;
     int k;
 
     assert(nd->symbol == NULL);
 
+    dict = PyDict_New();
     if (dict == NULL)
         return NULL;
 

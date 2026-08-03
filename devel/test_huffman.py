@@ -1,14 +1,12 @@
 import unittest
 from random import random
 
-from bitarray import decodetree
-from bitarray.test_bitarray import show_info
 from bitarray.util import _huffman_tree, huffman_code
 
 
-class HuffmanTreeTests(unittest.TestCase):
+class HuffmanTree_Tests(unittest.TestCase):
 
-    # tests for _huffman_tree()
+    # tests for util._huffman_tree()
 
     def test_empty(self):
         freq = {}
@@ -31,17 +29,20 @@ class HuffmanTreeTests(unittest.TestCase):
         self.assertEqual(tree.child[1].symbol, "B")
         self.assertEqual(tree.child[1].freq, 1)
 
-
-class DecodetreeTests(unittest.TestCase):
-
-    def test_decodetree_large(self):
-        N = 100_000
+    def test_code_matches_tree(self):
+        N = 567
         freq = {i: random() ** 3 for i in range(N)}
+        tree = _huffman_tree(freq)
         code = huffman_code(freq)
-        tree = decodetree(code)
-        self.assertEqual(tree.nodes(), (0, N - 1, N))
+        self.assertEqual(set(code), set(freq))
+        for sym, a in code.items():
+            nd = tree
+            for k in a:
+                self.assertRaises(AttributeError, getattr, nd, 'symbol')
+                nd = nd.child[k]
+            self.assertEqual(sym, nd.symbol)
+            self.assertRaises(AttributeError, getattr, nd, 'child')
 
 
 if __name__ == '__main__':
-    show_info()
     unittest.main()
