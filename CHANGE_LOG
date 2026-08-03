@@ -1,5 +1,6 @@
 2026-XX-XX  3.10.1:
 -------------------
+  * move internal tests for `util._Random` class into `devel/test_random.py`
 
 
 2026-07-31  3.10.0:

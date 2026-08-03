@@ -91,9 +91,9 @@ class _Random:
     # individually in the test class Random_P_Tests in 'test_util.py'.
     # The test class also contains many comments and explanations.
     # To better understand how the algorithm works, see ./doc/random_p.rst
-    # See also, VerificationTests in devel/test_random.py
+    # See also, Internal_Tests and VerificationTests in devel/test_random.py
 
-    # maximal number of calls to .random_half() in .combine()
+    # maximal number of calls to .random_half() in .combine_half()
     M = 8
 
     # number of resulting probability intervals

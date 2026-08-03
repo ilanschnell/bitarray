@@ -58,7 +58,7 @@ def count_each_index(arrays):
     return Counter(b.count(1, i, len(b), n) for i in range(n))
 
 
-class CountEachIndexTests(unittest.TestCase):
+class CountEachIndex_Tests(unittest.TestCase):
 
     def test_example(self):
         arrays = [bitarray("0011101"),
@@ -127,7 +127,7 @@ def create_masks(m):
     return masks
 
 
-class CreateMasksTests(unittest.TestCase):
+class CreateMasks_Tests(unittest.TestCase):
 
     def test_explict(self):
         B = bitarray
@@ -180,7 +180,7 @@ class Util(unittest.TestCase):
             self.check_binomial_dist(n, p, c)
 
 
-class UtilTests(Util):
+class Util_Tests(Util):
 
     def test_check_probability(self):
         C = self.check_probability
@@ -200,7 +200,7 @@ class UtilTests(Util):
         self.assertRaises(AssertionError, C, a, 0.494)
 
 
-class URandomTests(Util):
+class URandom_Tests(Util):
 
     def test_count(self):
         a = urandom(10_000_000)
@@ -532,6 +532,62 @@ class Random_P_Tests(Util):
 
             a = random_p(n, p)
             self.check_probability(a, p)
+
+
+class Internal_Tests(unittest.TestCase):
+
+    # internal tests for util._Random class
+
+    def test_op_seq_special(self):
+        G = _r.op_seq
+        # special cases
+        self.assertRaises(ValueError, G, 0)
+        self.assertEqual(G(1), zeros(M - 1))
+        self.assertEqual(G(K // 2), bitarray())
+        self.assertEqual(G(K - 1), ones(M - 1))
+        self.assertRaises(ValueError, G, K)
+
+    def test_op_seq_examples(self):
+        for p, s in [
+                (0.15625, '0100'),
+                (0.25,       '0'),  # 1/2   AND ->   1/4
+                (0.375,     '10'),  # 1/2   OR ->   3/4   AND ->   3/8
+                (0.5,         ''),
+                (0.625,     '01'),  # 1/2   AND ->   1/4   OR ->   5/8
+                (0.6875,   '101'),
+                (0.75,       '1'),  # 1/2   OR ->   3/4
+        ]:
+            seq = _r.op_seq(int(p * K))
+            self.assertEqual(seq.to01(), s)
+
+    def test_op_seq_range(self):
+        for i in range(1, K):
+            seq = _r.op_seq(i)
+            self.assertIn(len(seq), range(M))
+            q = 0.5                        # a = random_half()
+            for k in seq:
+                # k=0: AND    k=1: OR
+                if k:
+                    q += 0.5 * (1.0 - q)   # a |= random_half()
+                else:
+                    q *= 0.5               # a &= random_half()
+            self.assertEqual(q, i / K)
+
+    def test_combine_half(self):
+        r = _Random(1_000_000)
+        for seq, mean in [
+                ([],     500_000),  # .random_half() itself
+                ([0],    250_000),  # AND
+                ([1],    750_000),  # OR
+                ([1, 0], 375_000),  # OR followed by AND
+        ]:
+            a = r.combine_half(seq)
+            self.assertTrue(abs(a.count() - mean) < 5_000)
+
+    def test_small_p_limit(self):
+        # For understanding how the algorithm works, see ./doc/random_p.rst
+        # Also, see VerificationTests below.
+        self.assertTrue(SMALL_P > limit)
 
 
 class VerificationTests(Util):
