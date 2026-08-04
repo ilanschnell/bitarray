@@ -534,7 +534,7 @@ class Random_P_Tests(Util):
             self.check_probability(a, p)
 
 
-class Internal_Tests(unittest.TestCase):
+class Internal_Tests(Util):
 
     # internal tests for util._Random class
 
@@ -574,15 +574,20 @@ class Internal_Tests(unittest.TestCase):
             self.assertEqual(q, i / K)
 
     def test_combine_half(self):
-        r = _Random(1_000_000)
-        for seq, mean in [
-                ([],     500_000),  # .random_half() itself
-                ([0],    250_000),  # AND
-                ([1],    750_000),  # OR
-                ([1, 0], 375_000),  # OR followed by AND
+        r = _Random(100_000_000)
+        for seq, p in [
+                ([],     0.5  ),  # .random_half() itself
+                ([0],    0.25 ),  # AND
+                ([1],    0.750),  # OR
+                ([1, 0], 0.375),  # OR followed by AND
         ]:
             a = r.combine_half(seq)
-            self.assertTrue(abs(a.count() - mean) < 5_000)
+            self.check_probability(a, p)
+
+    def test_random_half(self):
+        r = _Random(100_000_000)
+        a = r.random_half()
+        self.check_probability(a, 0.5)
 
     def test_small_p_limit(self):
         # For understanding how the algorithm works, see ./doc/random_p.rst
