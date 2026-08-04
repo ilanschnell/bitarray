@@ -28,7 +28,13 @@ from bitarray.util import (
 from bitarray.util import _Random  # type: ignore
 
 
-HEAVY = False   # set True for heavy testing
+if "--heavy" in sys.argv:
+    sys.argv.remove("--heavy")
+    HEAVY = True
+    LARGE_N = 100_000_000
+else:
+    HEAVY = False
+    LARGE_N = 1_000_000
 
 
 _r = _Random()
@@ -203,7 +209,7 @@ class Util_Tests(Util):
 class URandom_Tests(Util):
 
     def test_count(self):
-        a = urandom(10_000_000)
+        a = urandom(LARGE_N)
         self.check_probability(a, 0.5)
 
     def test_stat(self):
@@ -239,6 +245,7 @@ class Random_K_Tests(Util):
         self.assertTrue(abs(C[2] - 11_275) <= 1_000)  # p = 0.112747
         self.assertTrue(abs(C[3] -  1_240) <=   350)  # p = 0.012399
 
+    @unittest.skipIf(not HEAVY, "takes too long")
     def test_mean_2(self):
         M = 100_000  # number of trails
         N = 500      # bitarray length
@@ -516,7 +523,6 @@ class Random_P_Tests(Util):
         self.assertTrue(abs(x -  9_972) <=    774)  # p = 0.398876
 
     def test_probabilities(self):
-        n = 100_000_000
         special_p = [
             65 / 257 - 1e-9,  # largest x for OR
             65 / 257 + 1e-9,  # smallest x for AND
@@ -530,7 +536,7 @@ class Random_P_Tests(Util):
             except IndexError:
                 p = random()
 
-            a = random_p(n, p)
+            a = random_p(LARGE_N, p)
             self.check_probability(a, p)
 
 
@@ -574,7 +580,7 @@ class Internal_Tests(Util):
             self.assertEqual(q, i / K)
 
     def test_combine_half(self):
-        r = _Random(100_000_000)
+        r = _Random(LARGE_N)
         for seq, p in [
                 ([],     0.5  ),  # .random_half() itself
                 ([0],    0.25 ),  # AND
@@ -585,7 +591,7 @@ class Internal_Tests(Util):
             self.check_probability(a, p)
 
     def test_random_half(self):
-        r = _Random(100_000_000)
+        r = _Random(LARGE_N)
         a = r.random_half()
         self.check_probability(a, 0.5)
 
@@ -921,7 +927,4 @@ if __name__ == '__main__':
     if '--disp' in sys.argv:
         disp()
         sys.exit()
-    if "--heavy" in sys.argv:
-        HEAVY = True
-        sys.argv.remove("--heavy")
     unittest.main()
