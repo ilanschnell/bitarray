@@ -263,7 +263,7 @@ class CopyN_Tests(unittest.TestCase, Util):
 
     @staticmethod
     def getslice(a, start, slicelength):
-        # this is the Python eqivalent of __getitem__ for slices with step=1
+        # this is the Python equivalent of __getitem__ for slices with step=1
         b = bitarray(slicelength, a.endian)
         b._copy_n(0, a, start, slicelength)
         return b
@@ -282,9 +282,8 @@ class CopyN_Tests(unittest.TestCase, Util):
 class Overlap_Tests(unittest.TestCase, Util):
 
     def check_overlap(self, a, b, res):
-        r1 = a._overlap(b)
-        r2 = b._overlap(a)
-        self.assertTrue(r1 is r2 is res)
+        self.assertIs(a._overlap(b), res)
+        self.assertIs(b._overlap(a), res)  # symmetry
         self.check_obj(a)
         self.check_obj(b)
 
@@ -296,7 +295,7 @@ class Overlap_Tests(unittest.TestCase, Util):
 
     def test_distinct(self):
         for a in self.randombitarrays():
-            # buffers overlaps with itself, unless buffer is NULL
+            # buffer overlaps with itself, unless buffer is NULL
             self.check_overlap(a, a, bool(a))
             b = a.copy()
             self.check_overlap(a, b, False)
@@ -374,13 +373,12 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
         code = {'a': bitarray('0'), 'b': bitarray('1')}
         tree = decodetree(code)
         counts = self.check_subtree(tree, code, bitarray())
-        self.assertEqual(tree.nodes(), (0, 1, 2))
         self.assertEqual(counts, tree.nodes())
+        self.assertEqual(counts, (0, 1, 2))
 
         root = tree._getnode(bitarray())
-        self.assertIs(type(root), dict)
-        self.assertEqual(root, {'left': (0, 0, 1), 'right': (0, 0, 1)})
         self.check_internal_node(root)
+        self.assertEqual(root, {'left': (0, 0, 1), 'right': (0, 0, 1)})
 
         self.assertEqual(tree._getnode(bitarray('0')), 'a')
         self.assertEqual(tree._getnode(bitarray('1')), 'b')
@@ -418,10 +416,8 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
         for i in range(256):
             nd = tree._getnode(word[:i])
             self.assertIs(type(nd), dict)  # internal node
-            self.assertEqual(len(nd), 1)
-            key, value = nd.popitem()
-            self.assertEqual(key, self.child_names[word[i]])
-            self.assertEqual(value, (255 - i, 0, 1))
+            self.assertEqual(nd, {self.child_names[word[i]]:
+                                  (255 - i, 0, 1)})
 
         # invert any bit and we get off the chain
         for i in range(256):
@@ -546,7 +542,7 @@ class RTS_Tests(unittest.TestCase):
 
     def test_segsize(self):
         self.assertIs(type(_SEGSIZE), int)
-        self.assertTrue(_SEGSIZE in [8, 16, 32])
+        self.assertIn(_SEGSIZE, (8, 16, 32))
 
     def test_empty(self):
         rts = _sc_rts(bitarray())
@@ -607,7 +603,7 @@ class ReadN_WriteN_Tests(unittest.TestCase, Util):
             self.assertEqual(_write_n(n, x), blob)
 
     def test_zeros(self):
-        for n in range(PTRSIZE):
+        for n in range(PTRSIZE + 1):
             blob = n * b"\x00"
             self.assertEqual(_read_n(iter(blob), n), 0)
             self.assertEqual(_write_n(n, 0), blob)
@@ -619,7 +615,7 @@ class ReadN_WriteN_Tests(unittest.TestCase, Util):
 
     def test_round_trip_random(self):
         for _ in range(1000):
-            n = randint(1, PTRSIZE - 1);
+            n = randint(1, PTRSIZE - 1)
             blob = os.urandom(n)
             i = _read_n(iter(blob), n)
             self.assertEqual(_write_n(n, i), blob)
