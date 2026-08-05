@@ -2397,6 +2397,9 @@ class HuffmanUtil:
             self.assertIs(type(v), frozenbitarray)
             self.assertGreater(len(v), 0)
 
+        if sys.version_info[:2] >= (3, 15):
+            hash(frozendict(code))
+
         tree = decodetree(code)
         self.assertEqual(tree.todict(), code)
         n = len(code)
