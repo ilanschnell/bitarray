@@ -3832,32 +3832,33 @@ binode_make_tree(PyObject *codedict)
     return tree;
 }
 
-/* Starting at *indexp, follow bits from a through tree until reaching a leaf.
-   Update *indexp as bits are consumed and return the leaf's symbol as a
-   borrowed reference.  Return NULL without an exception when called at the
-   end of a; return NULL with an exception for an invalid or incomplete code.
+/* Starting at *index, follow bits from a through tree until reaching a leaf.
+   Advance *index as valid tree edges are traversed, including when traversal
+   ultimately fails, and return the leaf's symbol as a borrowed reference.
+   Return NULL without an exception when called at the end of a; return NULL
+   with an exception for an invalid or incomplete code.
 */
 static PyObject *
-binode_traverse(binode *tree, bitarrayobject *a, Py_ssize_t *indexp)
+binode_traverse(binode *tree, bitarrayobject *a, Py_ssize_t *index)
 {
     binode *nd = tree;
-    Py_ssize_t start = *indexp;
+    Py_ssize_t start = *index;
 
-    while (*indexp < a->nbits) {
+    while (*index < a->nbits) {
         assert(nd);
-        nd = nd->child[getbit(a, *indexp)];
+        nd = nd->child[getbit(a, *index)];
         if (nd == NULL)
             return PyErr_Format(PyExc_ValueError,
-                                "prefix code unrecognized in bitarray "
-                                "at position %zd .. %zd", start, *indexp);
-        (*indexp)++;
+                                "prefix code unrecognized in bitarray at "
+                                "position %zd .. %zd", start, *index);
+        (*index)++;
         if (nd->symbol) {  /* leaf */
             assert(nd->child[0] == NULL && nd->child[1] == NULL);
             return nd->symbol;
         }
     }
 
-    if (*indexp == start)
+    if (*index == start)
         return NULL;  /* stop iteration */
 
     return PyErr_Format(PyExc_ValueError,

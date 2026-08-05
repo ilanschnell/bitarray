@@ -4874,7 +4874,11 @@ class PrefixCodeTests(unittest.TestCase, Util):
         self.assertRaisesMessage(ValueError, msg, list, a.decode(d))
         it = a.decode(d)
         self.assertIsType(it, 'decodeiterator')
+        self.assertEqual(it.index, 0)
         self.assertRaisesMessage(ValueError, msg, list, it)
+        self.assertEqual(it.index, 5)
+        self.assertRaises(StopIteration, next, it)
+
         t = decodetree(d)
         self.assertRaisesMessage(ValueError, msg, list, a.decode(t))
 
@@ -4896,19 +4900,27 @@ class PrefixCodeTests(unittest.TestCase, Util):
         a = bitarray('011')
         it = a.decode(d)
         self.assertEqual(next(it), 'a')
-        self.assertRaisesMessage(ValueError,
-                                 "incomplete prefix code at position 1",
-                                 next, it)
+        self.assertRaisesMessage(ValueError, "incomplete prefix code at "
+                                 "position 1", next, it)
+        self.assertEqual(it.index, 3)
         self.assertEqual(a, bitarray('011'))
+        self.assertRaises(StopIteration, next, it)
 
     def test_decode_buggybitarray(self):
         d = dict(alphabet_code)
         #             i    s    t
-        a = bitarray('1011 1100 0100 011110111001101001')
+        a = bitarray('1011 1100 0100 011110111 001 101001')
         msg = "prefix code unrecognized in bitarray at position 12 .. 21"
         self.assertRaisesMessage(ValueError, msg, list, a.decode(d))
         t = decodetree(d)
         self.assertRaisesMessage(ValueError, msg, list, a.decode(t))
+        it = a.decode(alphabet_code)
+        for c in 'ist':
+            self.assertEqual(next(it), c)
+        self.assertEqual(it.index, 12)
+        self.assertRaisesMessage(ValueError, msg, next, it)
+        self.assertEqual(it.index, 21)
+        self.assertEqual(next(it), ' ')
 
         self.check_obj(a)
         self.assertEqual(t.todict(), d)
@@ -5070,6 +5082,7 @@ class DecodeIteratorTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, it.skipbits, -1)
         self.assertRaises(ValueError, it.skipbits, 100)
         self.assertRaises(ValueError, it.skipbits, sys.maxsize)
+        self.assertEqual(it.index, 0)
         self.assertEqual(next(it), 't')
         self.assertRaises(ValueError, it.skipbits, 1)
         self.assertRaises(StopIteration, next, it)
