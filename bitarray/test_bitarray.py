@@ -1752,7 +1752,7 @@ class MiscTests(unittest.TestCase, Util):
         for i in 0, 1:
             self.assertRaises(OverflowError, bitarray, (1 << 31) + i)
         try:
-            a = bitarray((1 << 31) - 1);
+            a = bitarray((1 << 31) - 1)
         except MemoryError:
             return
         self.assertRaises(OverflowError, bitarray.append, a, True)
@@ -2896,8 +2896,8 @@ class BufferInfoTests(unittest.TestCase):
     def test_types(self):
         a = urandom_2(57)
         info = a.buffer_info()
-        self.assertTrue(isinstance(info, tuple))
         self.assertIs(type(info), BufferInfo)
+        self.assertIsInstance(info, tuple)
         self.assertEqual(len(info), 8)
 
         for i, (item, tp) in enumerate([
@@ -2970,7 +2970,7 @@ class FillTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             b = a.copy()
             res = b.fill()
-            self.assertTrue(type(res), int)
+            self.assertIs(type(res), int)
             self.assertIn(res, range(8))
             self.assertEqual(b.padbits, 0)
             self.assertEqual(len(b) % 8, 0)
@@ -4942,18 +4942,19 @@ class PrefixCodeTests(unittest.TestCase, Util):
         t = decodetree(alphabet_code)
         for a in self.randombitarrays():
             try:
-                a.decode(t)
+                list(a.decode(t))
             except ValueError as e:
                 msg = str(e)
                 m1 = pat1.match(msg)
                 m2 = pat2.match(msg)
-                self.assertFalse(m1 and m2)
                 if m1:
                     i = int(m1.group(1))
-                if m2:
+                elif m2:
                     i, j = int(m2.group(1)), int(m2.group(2))
-                    self.assertFalse(a[i:j] in alphabet_code.values())
-                a[:i].decode(t)
+                    self.assertNotIn(a[i:j], alphabet_code.values())
+                else:
+                    self.fail("unexpected error message")
+                list(a[:i].decode(t))
 
     def test_decode_ambiguous_code(self):
         for code in ambiguous_codes:
@@ -5679,7 +5680,7 @@ def show_info(verbosity=1):
         if sys.version_info[:2] >= (3, 14):
             print('sys._is_gil_enabled(): %s' % sys._is_gil_enabled())
         print('pointer size: %d bit' % (8 * PTRSIZE))
-        print('sizeof(size_t): %d' % sysinfo("size_t"));
+        print('sizeof(size_t): %d' % sysinfo("size_t"))
         print('sizeof(bitarrayobject): %d' % sysinfo("bitarrayobject"))
         print('HAVE_BUILTIN_BSWAP64: %d' % sysinfo("HAVE_BUILTIN_BSWAP64"))
         print('default bit-endianness: %s' % get_default_endian())
