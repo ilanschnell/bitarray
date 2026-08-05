@@ -24,7 +24,7 @@ from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       get_default_endian)
-from bitarray.test_bitarray import Util, is_pypy, urandom_2, PTRSIZE
+from bitarray.test_bitarray import Util, is_pypy, urandom_2, ENDIANS, PTRSIZE
 
 from bitarray.util import (
     zeros, ones, urandom, random_k, random_p, pprint, strip, count_n,
@@ -38,7 +38,6 @@ from bitarray.util import (
 )
 
 
-ENDIANS = ('little', 'big')
 OPT_ENDIANS = ENDIANS + (None,)
 
 # ---------------------------  zeros()  ones()  -----------------------------
@@ -1131,8 +1130,8 @@ class XoredIndicesTests(unittest.TestCase, Util):
         for s, r in [("", 0), ("0", 0), ("1", 0), ("11", 1),
                      ("011", 3), ("001", 2), ("0001100", 7),
                      ("01100111 1101", 13)]:
-            for a in [bitarray(s, self.random_endian()),
-                      frozenbitarray(s, self.random_endian())]:
+            for a in [bitarray(s, choice(ENDIANS)),
+                      frozenbitarray(s, choice(ENDIANS))]:
                 self.assertEqual(xor_indices(a), r)
 
     def test_wrong_args(self):
@@ -1230,7 +1229,7 @@ class IntervalsTests(unittest.TestCase, Util):
     def test_uniform(self):
         for n in range(1, 100):
             for v in 0, 1:
-                a = n * bitarray([v], self.random_endian())
+                a = n * bitarray([v], choice(ENDIANS))
                 self.assertEqual(list(intervals(a)), [(v, 0, n)])
                 self.assertEqual(runs(a), 1)
 
@@ -1474,7 +1473,7 @@ class BaseTests(unittest.TestCase, Util):
 
         for n in range(50):
             s = ''.join(choices(hexdigits, k=n))
-            endian = self.random_endian()
+            endian = choice(ENDIANS)
             a = base2ba(16, s, endian)
             self.assertEQUAL(a, hex2ba(s, endian))
             self.assertEqual(ba2base(16, a), ba2hex(a))
@@ -1538,7 +1537,7 @@ class BaseTests(unittest.TestCase, Util):
             self.assertEqual(1 << m, n)
             self.assertEqual(len(alphabet), n)
             for i, c in enumerate(alphabet):
-                endian = self.random_endian()
+                endian = choice(ENDIANS)
                 self.assertEqual(ba2int(base2ba(n, c, endian)), i)
                 if m == 4 and c in "ABCDEF":
                     c = chr(ord(c) + 32)
@@ -1848,7 +1847,7 @@ class SC_Tests(unittest.TestCase, Util):
     def test_random(self):
         for _ in range(10):
             n = randrange(100_000)
-            endian = self.random_endian()
+            endian = choice(ENDIANS)
             a = ones(n, endian)
             while a.count():
                 a &= urandom(n, endian)
@@ -1901,7 +1900,7 @@ class VLFTests(unittest.TestCase, Util):
         blob = b'\xd3\x20'
         for s in (blob, iter(blob), memoryview(blob), iter([0xd3, 0x20]),
                   bytearray(blob)):
-            a = vl_decode(s, endian=self.random_endian())
+            a = vl_decode(s, endian=choice(ENDIANS))
             self.assertIs(type(a), bitarray)
             self.assertEqual(a, bitarray('0011 01'))
 

@@ -1,13 +1,13 @@
 import os
 import sys
 import unittest
-from random import getrandbits, randint, randrange, random, sample
+from random import getrandbits, randint, randrange, random, sample, choice
 
 from bitarray import bitarray, decodetree, _sysinfo
 from bitarray.util import zeros, ones, int2ba, parity, huffman_code
 
-from bitarray.test_bitarray import (Util, urandom_2, PTRSIZE, show_info,
-                                    alphabet_code)
+from bitarray.test_bitarray import (Util, urandom_2, ENDIANS, PTRSIZE,
+                                    show_info, alphabet_code)
 
 # --------------------- internal C-level debug tests ------------------------
 
@@ -123,12 +123,12 @@ class ZLW_Tests(unittest.TestCase, Util):
 
     def test_zeros(self):
         for n in range(200):
-            a = zeros(n, self.random_endian())
+            a = zeros(n, choice(ENDIANS))
             self.assertEqual(_zlw(a), zeros(64))
 
     def test_ones(self):
         for n in range(200):
-            a = ones(n, self.random_endian())
+            a = ones(n, choice(ENDIANS))
             b = _zlw(a)
             self.assertEqual(len(b), 64)
             self.assertEqual(b.endian, a.endian)
