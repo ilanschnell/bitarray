@@ -4950,7 +4950,8 @@ class PrefixCodeTests(unittest.TestCase, Util):
                     i, j = int(m2.group(1)), int(m2.group(2))
                     self.assertNotIn(a[i:j], alphabet_code.values())
                 else:
-                    self.fail("unexpected error message")
+                    self.fail(msg)
+                # decode right up to the point where it failed
                 list(a[:i].decode(t))
 
     def test_decode_ambiguous_code(self):
