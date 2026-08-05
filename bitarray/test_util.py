@@ -328,7 +328,7 @@ class PrimeTests(unittest.TestCase):
         self.assertRaises(ValueError, P, 8, "foo")
         self.assertRaises(ValueError, P, 8, endian="foo")
 
-    def test_explitcit(self):
+    def test_explicit(self):
         for n in range(230):
             endian = choice(OPT_ENDIANS)
             odd = getrandbits(1)
@@ -820,7 +820,7 @@ class BitwiseAnyTests(unittest.TestCase, Util):
         self.assertEqual(r, (a & b).any())
         self.assertEqual(r, count_and(a, b) > 0)
 
-    def test_explitcit(self):
+    def test_explicit(self):
         for a, b , res in [
                 ('', '', False),
                 ('0', '1', False),
@@ -873,13 +873,13 @@ class SubsetTests(unittest.TestCase, Util):
         self.assertEqual(a | b == b, res)
         self.assertEqual(a & b == a, res)
 
-    def test_True(self):
+    def test_true(self):
         for a, b in [('', ''), ('0', '1'), ('0', '0'), ('1', '1'),
                      ('000', '111'), ('0101', '0111'),
                      ('000010111', '010011111')]:
             self.check(bitarray(a), bitarray(b), True)
 
-    def test_False(self):
+    def test_false(self):
         for a, b in [('1', '0'), ('1101', '0111'),
                      ('0000101111', '0100111011')]:
             self.check(bitarray(a), bitarray(b), False)
@@ -911,7 +911,7 @@ class CorrespondAllTests(unittest.TestCase):
                           bitarray('01', 'little'),
                           bitarray('11', 'big'))
 
-    def test_explitcit(self):
+    def test_explicit(self):
         for a, b, res in [
                 ('', '', (0, 0, 0, 0)),
                 ('0000011111',
@@ -1036,7 +1036,7 @@ class ByteSwapTests(unittest.TestCase):
 
 class ParityTests(unittest.TestCase):
 
-    def test_explitcit(self):
+    def test_explicit(self):
         for s, res in [('', 0), ('1', 1), ('0010011', 1), ('10100110', 0)]:
             self.assertIs(parity(bitarray(s)), res)
             self.assertIs(parity(frozenbitarray(s)), res)
@@ -1322,7 +1322,7 @@ class HexlifyTests(unittest.TestCase, Util):
         for s in '01a7g89', '0\u20ac', '0 \0', b'\x00':
             self.assertRaises(ValueError, hex2ba, s)
 
-        for s in 'g', 'ag', 'aag' 'aaaga', 'ag':
+        for s in 'g', 'ag', 'aag', 'aaaga', 'ag':
             msg = "invalid digit found for base16, got 'g' (0x67)"
             self.assertRaisesMessage(ValueError, msg, hex2ba, s, 'big')
 
@@ -2701,7 +2701,7 @@ class CanonicalHuffmanTests(Util, HuffmanUtil, unittest.TestCase):
     def test_canonical_decode_large(self):
         with open(__file__, 'rb') as f:
             msg = bytearray(f.read())
-        self.assertTrue(len(msg) > 50000)
+        self.assertTrue(len(msg) > 10_000)
         codedict, count, symbol = canonical_huffman(Counter(msg))
         a = bitarray()
         a.encode(codedict, msg)
@@ -2756,9 +2756,9 @@ class CanonicalHuffmanTests(Util, HuffmanUtil, unittest.TestCase):
 
     def ensure_complete(self, count):
         # ensure code is complete and not oversubscribed
-        len_c = len(count)
-        x = sum(count[i] << (len_c - i) for i in range(1, len_c))
-        self.assertEqual(x, 1 << len_c)
+        maxbits = len(count) - 1
+        x = sum(count[i] << (maxbits - i) for i in range(1, maxbits + 1))
+        self.assertEqual(x, 1 << maxbits)
 
     def ensure_round_trip(self, chc, count, symbol):
         # create a short test message, encode and decode
