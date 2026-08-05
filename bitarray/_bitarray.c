@@ -3940,15 +3940,9 @@ binode_getnode(binode *tree, bitarrayobject *a)
     Py_ssize_t i;
 
     for (i = 0; i < a->nbits; i++) {
-        int k = getbit(a, i);
-        binode *next;
-
-        next = nd->child[k];
-        if (next == NULL) {
-            PyErr_SetString(PyExc_ValueError, "node does not exist");
+        nd = nd->child[getbit(a, i)];
+        if (nd == NULL)
             return NULL;
-        }
-        nd = next;  /* descend to the selected child */
     }
     return nd;
 }
@@ -4103,8 +4097,10 @@ decodetree_getnode(decodetreeobject *self, PyObject *obj)
     nd = binode_getnode(self->tree, (bitarrayobject *) obj);
     Py_END_CRITICAL_SECTION();
 
-    if (nd == NULL)
+    if (nd == NULL) {
+        PyErr_SetString(PyExc_ValueError, "node does not exist");
         return NULL;
+    }
 
     if (nd->symbol) {
         assert(nd->child[0] == NULL && nd->child[1] == NULL);
