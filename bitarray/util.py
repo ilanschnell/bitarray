@@ -537,10 +537,12 @@ and return its root node.
     return minheap[0]
 
 
-def _ensure_anydict(d):
+def _check_anydict(d):
     types = dict if sys.version_info[:2] < (3, 15) else (dict, frozendict)
     if not isinstance(d, types):
         raise TypeError("dict expected, got '%s'" % type(d).__name__)
+    if len(d) == 0:
+        raise ValueError("cannot create Huffman code with no symbols")
 
 
 def huffman_code(__freq_map, endian=None):
@@ -551,18 +553,16 @@ calculate the Huffman code, i.e. a dict mapping those symbols to
 frozenbitarrays (with given bit-endianness).  Note that the symbols are not
 limited to being strings.  Symbols may be any hashable object.
 """
-    _ensure_anydict(__freq_map)
+    _check_anydict(__freq_map)
 
-    if len(__freq_map) < 2:
-        if len(__freq_map) == 0:
-            raise ValueError("cannot create Huffman code with no symbols")
+    if len(__freq_map) == 1:
         # Only one symbol: Normally if only one symbol is given, the code
         # could be represented with zero bits.  However here, the code should
         # be at least one bit for the .encode() and .decode() methods to work.
         # So we represent the symbol by a single code of length one, in
         # particular one 0 bit.  This is an incomplete code, since if a 1 bit
         # is received, it has no meaning and will result in an error.
-        sym = list(__freq_map)[0]
+        sym = next(iter(__freq_map))
         return {sym: frozenbitarray('0', endian)}
 
     result = {}
@@ -590,13 +590,11 @@ calculate the canonical Huffman code.  Returns a tuple containing:
 
 Note: the two lists may be used as input for `canonical_decode()`.
 """
-    _ensure_anydict(__freq_map)
+    _check_anydict(__freq_map)
 
-    if len(__freq_map) < 2:
-        if len(__freq_map) == 0:
-            raise ValueError("cannot create Huffman code with no symbols")
+    if len(__freq_map) == 1:
         # Only one symbol: see note above in huffman_code()
-        sym = list(__freq_map)[0]
+        sym = next(iter(__freq_map))
         return {sym: frozenbitarray('0', 'big')}, [0, 1], [sym]
 
     code_length = {}  # map symbols to their code length

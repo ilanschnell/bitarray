@@ -2425,7 +2425,9 @@ class CommonHuffmanTests(HuffmanUtil, unittest.TestCase):
             # cannot compare 'a' with 1
             self.assertRaises(TypeError, F, {'A': 'a', 'B': 1})
             # frequency map cannot be empty
-            self.assertRaises(ValueError, F, {})
+            d = {}
+            self.assertRaises(ValueError, F, d)
+            self.assertEqual(d, {})  # d wasn't changed by F
             # wrong endianness type / extra argument
             self.assertRaises(TypeError, F, {'A': 2, 'B': 1}, 1)
 
@@ -2436,10 +2438,13 @@ class CommonHuffmanTests(HuffmanUtil, unittest.TestCase):
 
     def test_small_range(self):
         for n in range(1, 10):
-            f = {i: random() for i in range(n)}
+            f = {i: randrange(10) for i in range(n)}
+            f2 = dict(f)
             for code in self.create_codes(f):
                 self.assertEqual(len(code), n)
                 self.check_code(code)
+            # make sure frequency map wasn't changed
+            self.assertEqual(f, f2)
 
     @unittest.skipIf(sys.version_info[:2] < (3, 15),
                      "frozendict introduced in Python 3.15")
