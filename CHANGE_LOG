@@ -2,6 +2,7 @@
 -------------------
   * move internal tests for `util._Random` class into `devel/test_random.py`
   * add debug-mode introspection and tests for `decodetree` structure
+  * fix `util.pprint()` for very narrow output widths
 
 
 2026-07-31  3.10.0:
