@@ -567,17 +567,14 @@ limited to being strings.  Symbols may be any hashable object.
 
     result = {}
 
-    def traverse(nd, prefix=None):
-        if prefix is None:
-            prefix = frozenbitarray(0, endian)
-
+    def traverse(nd, prefix):
         try:                    # leaf
             result[nd.symbol] = prefix
         except AttributeError:  # parent, so traverse each child
             traverse(nd.child[0], prefix + '0')
             traverse(nd.child[1], prefix + '1')
 
-    traverse(_huffman_tree(__freq_map))
+    traverse(_huffman_tree(__freq_map), frozenbitarray(0, endian))
     return result
 
 
@@ -604,7 +601,7 @@ Note: the two lists may be used as input for `canonical_decode()`.
 
     code_length = {}  # map symbols to their code length
 
-    def traverse(nd, length=0):
+    def traverse(nd, length):
         # traverse the Huffman tree, but (unlike in huffman_code() above) we
         # now just simply record the length for reaching each symbol
         try:                    # leaf
@@ -613,7 +610,7 @@ Note: the two lists may be used as input for `canonical_decode()`.
             traverse(nd.child[0], length + 1)
             traverse(nd.child[1], length + 1)
 
-    traverse(_huffman_tree(__freq_map))
+    traverse(_huffman_tree(__freq_map), 0)
 
     # We now have a mapping of symbols to their code length, which is all we
     # need to construct a list of tuples (symbol, code length) sorted by
