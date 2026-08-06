@@ -437,6 +437,12 @@ class PPrintTests(unittest.TestCase):
                 for line in s.split('\n'):
                     self.assertTrue(len(line) < width)
 
+    def test_narrow_width(self):
+        a = bitarray('101')
+        f = StringIO()
+        pprint(a, stream=f, width=6)
+        self.assertEqual(eval(f.getvalue()), a)
+
     def test_fallback(self):
         for a in None, 'asd', [1, 2], bitarray(), frozenbitarray('1'):
             self.round_trip(a)
@@ -2796,6 +2802,11 @@ class CanonicalHuffmanTests(Util, HuffmanUtil, unittest.TestCase):
         self.ensure_count(chc, count)
         self.ensure_complete(count)
         self.ensure_round_trip(chc, count, symbol)
+
+    def test_small_range(self):
+        for n in range(2, 10):
+            freq = {i: randrange(10) for i in range(n)}
+            self.check_canonical_code(*canonical_huffman(freq))
 
     def test_simple_counter(self):
         plain = bytearray(b'the quick brown fox jumps over the lazy dog.')

@@ -57,8 +57,8 @@ def random_k(__n, k, endian=None):
 Return (pseudo-) random bitarray of length `n` with `k` elements
 set to one.  Mathematically equivalent to setting (in a bitarray of
 length `n`) all bits at indices `random.sample(range(n), k)` to one.
-The random bitarrays are reproducible when giving Python's `random.seed()`
-a specific seed value.
+The random bitarrays are reproducible when calling Python's `random.seed()`
+with a specific seed value.
 """
     r = _Random(__n, endian)
     k = operator.index(k)
@@ -71,7 +71,7 @@ def random_p(__n, p=0.5, endian=None):
 Return (pseudo-) random bitarray of length `n`, where each bit has
 probability `p` of being one (independent of any other bits).  Mathematically
 equivalent to `bitarray((random() < p for _ in range(n)), endian)`, but much
-faster for large `n`.  The random bitarrays are reproducible when giving
+faster for large `n`.  The random bitarrays are reproducible when calling
 Python's `random.seed()` with a specific seed value.
 
 This function requires Python 3.12 or higher, as it depends on the standard
@@ -331,7 +331,7 @@ Equivalent to `sum(i for i, v in enumerate(a) if v)`.
 def pprint(__a, stream=None, group=8, indent=4, width=80):
     """pprint(bitarray, /, stream=None, group=8, indent=4, width=80)
 
-Pretty-print bitarray object to `stream`, defaults is `sys.stdout`.
+Pretty-print bitarray object to `stream`, defaults to `sys.stdout`.
 By default, bits are grouped in bytes (8 bits), and 64 bits per line.
 Non-bitarray objects are printed using `pprint.pprint()`.
 """
@@ -356,10 +356,12 @@ Non-bitarray objects are printed using `pprint.pprint()`.
     gpl = (width - indent) // (group + 1)  # groups per line
     epl = group * gpl                      # elements per line
     if epl == 0:
-        epl = width - indent - 2
+        epl = max(1, width - indent - 2)
     type_name = type(__a).__name__
-    # here 4 is len("'()'")
-    multiline = len(type_name) + 4 + len(__a) + len(__a) // group >= width
+    n = len(__a)
+    multiline = bool(n) and (  # here 4 is len("'()'")
+        len(type_name) + 4 + n + (n - 1) // group >= width
+    )
     if multiline:
         quotes = "'''"
     elif __a:
@@ -419,9 +421,9 @@ to be in order, and their size is always non-zero (`stop - start > 0`).
     while stop < n:
         start = stop
         # assert __a[start] == value
-        try:  # find next occurrence of opposite value
-            stop = __a.index(not value, start)
-        except ValueError:
+        # find next occurrence of opposite value
+        stop = __a.find(not value, start)
+        if stop < 0:
             stop = n
         yield int(value), start, stop
         value = not value  # next interval has opposite value
@@ -446,7 +448,7 @@ The bit-endianness of the bitarray is respected.
 
     res = int.from_bytes(__a.tobytes(), byteorder=__a.endian)
 
-    if signed and res >> length - 1:
+    if signed and res >> (length - 1):
         res -= 1 << length
     return res
 
@@ -470,7 +472,7 @@ and requires `length` to be provided.
     if signed:
         if length is None:
             raise TypeError("signed requires argument 'length'")
-        m = 1 << length - 1
+        m = 1 << (length - 1)
         if not (-m <= i < m):
             raise OverflowError("signed integer not in range(%d, %d), "
                                 "got %d" % (-m, m, i))
@@ -541,7 +543,7 @@ def _check_anydict(d):
     types = dict if sys.version_info[:2] < (3, 15) else (dict, frozendict)
     if not isinstance(d, types):
         raise TypeError("dict expected, got '%s'" % type(d).__name__)
-    if len(d) == 0:
+    if not d:
         raise ValueError("cannot create Huffman code with no symbols")
 
 
@@ -556,12 +558,10 @@ limited to being strings.  Symbols may be any hashable object.
     _check_anydict(__freq_map)
 
     if len(__freq_map) == 1:
-        # Only one symbol: Normally if only one symbol is given, the code
-        # could be represented with zero bits.  However here, the code should
-        # be at least one bit for the .encode() and .decode() methods to work.
-        # So we represent the symbol by a single code of length one, in
-        # particular one 0 bit.  This is an incomplete code, since if a 1 bit
-        # is received, it has no meaning and will result in an error.
+        # With one symbol, Huffman coding would normally assign it an empty
+        # code.  Here the code must be nonempty, so that .encode() represents
+        # each occurrence and .decode() can recover their number.  We use 0,
+        # leaving 1 unassigned; therefore the prefix code is incomplete.
         sym = next(iter(__freq_map))
         return {sym: frozenbitarray('0', endian)}
 
@@ -601,7 +601,7 @@ Note: the two lists may be used as input for `canonical_decode()`.
 
     def traverse(nd, length):
         # traverse the Huffman tree, but (unlike in huffman_code() above) we
-        # now just simply record the length for reaching each symbol
+        # simply record the length for reaching each symbol
         try:                    # leaf
             code_length[nd.symbol] = length
         except AttributeError:  # parent, so traverse each child
