@@ -433,18 +433,20 @@ The bit-endianness of the bitarray is respected.
 """
     if not isinstance(__a, bitarray):
         raise TypeError("bitarray expected, got '%s'" % type(__a).__name__)
+
     length = len(__a)
     if length == 0:
         raise ValueError("non-empty bitarray expected")
 
-    if __a.padbits:
-        pad = zeros(__a.padbits, __a.endian)
-        __a = __a + pad if __a.endian == "little" else pad + __a
-
     res = int.from_bytes(__a.tobytes(), byteorder=__a.endian)
 
-    if signed and res >> (length - 1):
+    # Big-endian pad bits are on the right and must be shifted away.
+    if __a.endian == 'big':
+        res >>= __a.padbits
+
+    if signed and res & (1 << (length - 1)):
         res -= 1 << length
+
     return res
 
 
@@ -473,25 +475,21 @@ and requires `length` to be provided.
                                 "got %d" % (-m, m, i))
         if i < 0:
             i += 1 << length
-    else:  # unsigned
-        if length and i >> length:
-            raise OverflowError("unsigned integer not in range(0, %d), "
-                                "got %d" % (1 << length, i))
+    elif length and i >> length:
+        raise OverflowError("unsigned integer not in range(0, %d), "
+                            "got %d" % (1 << length, i))
+
+    if length is None:
+        length = max(1, i.bit_length())
 
     a = bitarray(0, endian)
-    b = i.to_bytes(bits2bytes(i.bit_length()), byteorder=a.endian)
-    a.frombytes(b)
-    le = a.endian == 'little'
-    if length is None:
-        return strip(a, 'right' if le else 'left') if a else a + '0'
+    a.frombytes(i.to_bytes(bits2bytes(length), byteorder=a.endian))
 
-    if len(a) > length:
-        return a[:length] if le else a[-length:]
-    if len(a) == length:
-        return a
-    # len(a) < length, we need padding
-    pad = zeros(length - len(a), a.endian)
-    return a + pad if le else pad + a
+    if a.endian == 'little':
+        del a[length:]
+    else:
+        del a[:-length]
+    return a
 
 # ------------------------------ Huffman coding -----------------------------
 
