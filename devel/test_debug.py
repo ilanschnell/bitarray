@@ -352,12 +352,15 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
 
     def check_subtree(self, tree, code, prefix):
         nd = tree._getnode(prefix)
+        it = prefix.decode(tree)
         if type(nd) is not dict:  # leaf node
             self.assertIn(nd, code)
             self.assertEqual(prefix, code[nd])
+            self.assertEqual(list(it), [nd])
             return 0, 0, 1
 
         self.check_internal_node(nd)
+        self.assertRaises(ValueError if prefix else StopIteration, next, it)
         counts = [0, 0, 0]
         counts[len(nd) - 1] = 1  # count this one- or two-child node
         for k, key in enumerate(self.child_names):
