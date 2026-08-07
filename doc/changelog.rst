@@ -1,6 +1,14 @@
 Change log
 ==========
 
+**3.10.1** (2026-08-07):
+
+* move internal tests for ``util._Random`` class into ``devel/test_random.py``
+* add debug-mode introspection and tests for ``decodetree`` structure
+* fix ``util.pprint()`` for very narrow output widths
+* substantially simplify ``util.ba2int()`` and ``util.int2ba()``
+
+
 **3.10.0** (2026-07-31):
 
 * add `free threading support <free_threading.rst>`__
@@ -88,7 +96,7 @@ Change log
 
 * fix type hinting for memoryviews, see `#241 <https://github.com/ilanschnell/bitarray/issues/241>`__
 * add `bit-endianness <endianness.rst>`__ documentation
-* improve testing, including debug mode test for ``digit_to_int()``
+* improve testing, including debug-mode test for ``digit_to_int()``
 
 
 **3.7.0** (2025-08-24):
@@ -160,7 +168,7 @@ Change log
   `compression of sparse bitarrays <sparse_compression.rst>`__
 * ``util.sc_decode()`` and ``util.vl_decode()`` now raise ``StopIteration``
   instead of ``ValueError`` when unexpected end of stream is encountered
-* add debug mode tests for ``read_n()``, ``write_n()`` and ``count_from_word()``
+* add debug-mode tests for ``read_n()``, ``write_n()`` and ``count_from_word()``
 
 
 **3.4.1** (2025-05-15):
@@ -170,7 +178,7 @@ Change log
 * optimize ``delslice()`` when ``step`` is larger than about 5
 * consistently name ``*_span()`` and ``*_range()`` in C for
   invert, set and count
-* organize and add tests (including debug mode tests for ``zlw()``)
+* organize and add tests (including debug-mode tests for ``zlw()``)
 
 
 **3.4.0** (2025-05-06):
@@ -515,7 +523,7 @@ Change log
 
 * fix slice assignment for shared buffer with offset case, see `#3ba05687 <https://github.com/ilanschnell/bitarray/commit/3ba05687>`__
   and `#73081e98 <https://github.com/ilanschnell/bitarray/commit/73081e98>`__
-* add tests (including internal debug mode tests for ``buffers_overlap()``)
+* add tests (including internal debug-mode tests for ``buffers_overlap()``)
 
 
 **2.3.1** (2021-08-20):

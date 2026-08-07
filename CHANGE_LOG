@@ -1,8 +1,9 @@
-2026-XX-XX  3.10.1:
+2026-08-07  3.10.1:
 -------------------
   * move internal tests for `util._Random` class into `devel/test_random.py`
   * add debug-mode introspection and tests for `decodetree` structure
   * fix `util.pprint()` for very narrow output widths
+  * substantially simplify `util.ba2int()` and `util.int2ba()`
 
 
 2026-07-31  3.10.0:

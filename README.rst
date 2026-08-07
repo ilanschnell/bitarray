@@ -59,7 +59,7 @@ Once you have installed the package, you may want to test it:
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
     sys.prefix: /Users/ilan/miniforge
-    bitarray version: 3.10.0
+    bitarray version: 3.10.1
     sys.version: 3.14.5 (main, May 20 2026) [Clang 20.1.8]
     sys.abiflags: ''
     sys._is_gil_enabled(): True
@@ -76,7 +76,7 @@ Once you have installed the package, you may want to test it:
     ..........s.....................................s........................
     ......s.........................................................
     ----------------------------------------------------------------------
-    Ran 641 tests in 0.196s
+    Ran 640 tests in 0.192s
 
     OK (skipped=4)
 
@@ -323,7 +323,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.10.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.10.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -902,7 +902,7 @@ This sub-module was added in version 1.2.
 
 
 ``pprint(bitarray, /, stream=None, group=8, indent=4, width=80)``
-   Pretty-print bitarray object to ``stream``, defaults is ``sys.stdout``.
+   Pretty-print bitarray object to ``stream``, defaults to ``sys.stdout``.
    By default, bits are grouped in bytes (8 bits), and 64 bits per line.
    Non-bitarray objects are printed using ``pprint.pprint()``.
 
@@ -913,8 +913,8 @@ This sub-module was added in version 1.2.
    Return (pseudo-) random bitarray of length ``n`` with ``k`` elements
    set to one.  Mathematically equivalent to setting (in a bitarray of
    length ``n``) all bits at indices ``random.sample(range(n), k)`` to one.
-   The random bitarrays are reproducible when giving Python's ``random.seed()``
-   a specific seed value.
+   The random bitarrays are reproducible when calling Python's ``random.seed()``
+   with a specific seed value.
 
    New in version 3.6
 
@@ -923,7 +923,7 @@ This sub-module was added in version 1.2.
    Return (pseudo-) random bitarray of length ``n``, where each bit has
    probability ``p`` of being one (independent of any other bits).  Mathematically
    equivalent to ``bitarray((random() < p for _ in range(n)), endian)``, but much
-   faster for large ``n``.  The random bitarrays are reproducible when giving
+   faster for large ``n``.  The random bitarrays are reproducible when calling
    Python's ``random.seed()`` with a specific seed value.
 
    This function requires Python 3.12 or higher, as it depends on the standard
