@@ -359,15 +359,10 @@ Non-bitarray objects are printed using `pprint.pprint()`.
         epl = max(1, width - indent - 2)
     type_name = type(__a).__name__
     n = len(__a)
-    multiline = bool(n) and (  # here 4 is len("'()'")
+    multiline = n > 0 and (  # here 4 is len("('')")
         len(type_name) + 4 + n + (n - 1) // group >= width
     )
-    if multiline:
-        quotes = "'''"
-    elif __a:
-        quotes = "'"
-    else:
-        quotes = ""
+    quotes = "'''" if multiline else ("'" if __a else "")
 
     stream.write("%s(%s" % (type_name, quotes))
     for i, b in enumerate(__a):
