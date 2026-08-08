@@ -188,19 +188,10 @@ class Adjust_Slice_Tests(unittest.TestCase):
             slicelength, start, stop, step = res
 
             self.assertEqual(slicelength, len(r))
-            self.assertGreaterEqual(start, 0)
-            self.assertGreaterEqual(stop, 0)
-            if slicelength:
-                self.assertLessEqual(start, n)
-                self.assertLessEqual(stop, n)
             # Unlike PySlice_AdjustIndices(), _adjust_slice() also
             # adjusts the step to be positive.  It preserves selected
             # indices but may reverse their order.
             self.assertGreater(step, 0)
-            if slicelength == 0:
-                self.assertLessEqual(stop, start)
-            elif step == 1:
-                self.assertEqual(stop - start, slicelength)
 
             r2 = range(start, stop, step)
             self.assertEqual(r2, r if r.step > 0 else r[::-1])

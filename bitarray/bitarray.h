@@ -288,7 +288,7 @@ adjust_slice(Py_ssize_t length,
 {
     Py_ssize_t slicelength;
 
-    assert(*step != 0);
+    assert(*step != 0 && length >= 0);
 
     slicelength = PySlice_AdjustIndices(length, start, stop, *step);
 
@@ -299,10 +299,12 @@ adjust_slice(Py_ssize_t length,
     }
 #ifndef NDEBUG
     assert(*start >= 0 && *stop >= 0 && *step > 0 && slicelength >= 0);
-    if (slicelength == 0)
-        assert(*stop <= *start);
-    else if (*step == 1)
-        assert(*stop - *start == slicelength);
+    assert((slicelength == 0) == (*stop <= *start));
+    if (slicelength) {
+        assert(*start <= length && *stop <= length);
+        if (*step == 1)
+            assert(*stop - *start == slicelength);
+    }
 #endif
 
     return slicelength;
