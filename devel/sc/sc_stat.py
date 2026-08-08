@@ -1,16 +1,17 @@
-from itertools import islice
+import itertools
 from bitarray import bitarray
 
 
-def sc_stat(stream, count=False):
-    """sc_stat(stream, count=False) -> dict
+def sc_stat(stream):
+    """sc_stat(stream) -> dict
 
-Scan a byte stream produced by `sc_encode()` and return statistics
-about its encoded blocks.  The `blocks` entry is a list of length 5
-containing the number of blocks of each type.
+Scan a stream produced by `sc_encode()` and return a dictionary containing
+its bit-endianness (`endian`), length (`nbits`), and the number of blocks
+of each type (`blocks`).  `blocks` is a list such that `blocks[i]` is the
+number of blocks of type `i`.
 
-When `count` is true, the `count` entry contains the number of
-represented one-bits in blocks of each type.
+Except for returning statistics instead of a bitarray, this function
+behaves like `sc_decode()`.
 """
     def decode_header(stream):
         head = next(stream)
@@ -42,24 +43,13 @@ represented one-bits in blocks of each type.
 
         stats['blocks'][n] += 1
 
-        # consume block data
-        nconsume = max(1, n) * k   # size of block data to consume below
-        if stats.get('count'):
-            if n == 0:
-                data = bytes(islice(stream, k))
-                stats['count'][0] += bitarray(buffer=data).count()
-                nconsume = 0
-            else:
-                stats['count'][n] += k
-
-        next(islice(stream, nconsume, nconsume), None)
+        nc = max(1, n) * k   # size of block data to consume below
+        next(itertools.islice(stream, nc, nc), None)
         return True
 
     stream = iter(stream)
     stats = decode_header(stream)
     stats['blocks'] = 5 * [0]
-    if count:
-        stats['count'] = 5 * [0]
 
     while scan_block(stream, stats):
         pass
@@ -69,19 +59,18 @@ represented one-bits in blocks of each type.
 # ---------------------------------------------------------------------------
 
 import unittest
-from random import choice
 
-from bitarray.util import sc_encode, sc_decode, ones, random_k, random_p
+from bitarray.util import sc_encode, sc_decode, urandom
+from bitarray.test_bitarray import ENDIANS
 
 
 class Tests(unittest.TestCase):
 
     def test_empty(self):
         blob = b"\x01\x00\0"
-        self.assertEqual(sc_stat(blob),
-                         {'endian': 'little',
-                          'nbits': 0,
-                          'blocks': [0, 0, 0, 0, 0]})
+        self.assertEqual(sc_stat(blob), {'endian': 'little',
+                                         'nbits': 0,
+                                         'blocks': [0, 0, 0, 0, 0]})
         self.assertEqual(sc_decode(blob), bitarray())
 
     def test_zeros_explicit(self):
@@ -93,54 +82,37 @@ class Tests(unittest.TestCase):
                 (b"\x11\x08\xc3\x00\0", [0, 0, 0, 1, 0]),
                 (b"\x11\x08\xc4\x00\0", [0, 0, 0, 0, 1]),
         ]:
-            stat = sc_stat(blob, count=True)
-            self.assertEqual(stat['blocks'], blocks)
-            self.assertEqual(stat['count'], 5 * [0])
-            self.assertEqual(sc_decode(blob), bitarray(8))
+            stat = sc_stat(blob)
+            self.assertEqual(stat, {'endian': 'big',
+                                    'nbits': 8,
+                                    'blocks': blocks})
+            a = sc_decode(blob)
+            self.assertEqual(a.endian, 'big')
+            self.assertEqual(len(a), 8)
+            self.assertFalse(a.any())
 
     def test_untouch(self):
         blob = b"\x01\x07\x01\x73\0XYZ"
         stream = iter(blob)
-        stat = sc_stat(stream, count=True)
-        self.assertEqual(stat,
-                         {'endian': 'little',
-                          'nbits': 7,
-                          'blocks': [1, 0, 0, 0, 0],
-                          'count': [5, 0, 0, 0, 0]})
+        stat = sc_stat(stream)
+        self.assertEqual(stat, {'endian': 'little',
+                                'nbits': 7,
+                                'blocks': [1, 0, 0, 0, 0]})
         self.assertEqual(next(stream), ord('X'))
         stream = iter(blob)
         self.assertEqual(sc_decode(stream), bitarray("1100111"))
         self.assertEqual(next(stream), ord('X'))
 
-    def test_ones(self):
-        for n in range(500):
-            a = ones(n)
+    def test_endian(self):
+        for endian in ENDIANS:
+            a = urandom(400, endian)
             blob = sc_encode(a)
-            stat = sc_stat(blob, count=True)
-            self.assertEqual(stat['nbits'], n)
-            self.assertEqual(stat['count'][0], n)
+            stat = sc_stat(blob)
+            self.assertEqual(stat, {'nbits': len(a),
+                                    'endian': endian,
+                                    'blocks': [2, 0, 0, 0, 0]})
 
-    def test_random_raw(self):
-        for n in range(500):
-            a = random_p(n, endian=choice(['little', 'big']))
-            cnt = a.count()
-            blob = sc_encode(a)
-            stat = sc_stat(blob, count=True)
-            self.assertEqual(stat['nbits'], n)
-            self.assertEqual(stat['count'][0], cnt)
-
-    def test_random_large(self):
-        n = 20_000_000
-        k = 1
-        for _ in range(13):
-            a = random_k(n, k)
-            self.assertEqual(a.count(), k)
-            stat = sc_stat(sc_encode(a), count=True)
-            #print(len(a), k, stat['blocks'])
-            self.assertEqual(sum(stat['count']), k)
-            k *= 4
-
-    def test_end_of_stream(self):
+    def test_stop_iteration(self):
         for blob in [b'', b'\x00', b'\x01', b'\x02\x77',
                      b'\x01\x04\x01', b'\x01\x04\xa1', b'\x01\x04\xa0']:
             self.assertRaises(StopIteration, sc_stat, blob)
@@ -166,9 +138,10 @@ class Tests(unittest.TestCase):
         for i in range(2, 1 << 16):
             a[n // i] = 1
         b = sc_encode(a)
-        stat = sc_stat(b, True)
-        self.assertEqual(stat['blocks'], [2, 147, 3, 1, 1])
-        self.assertEqual(stat['count'], [1 << 16, 374, 427, 220, 2])
+        stat = sc_stat(b)
+        self.assertEqual(stat, {'endian': 'little',
+                                'nbits': n,
+                                'blocks': [2, 147, 3, 1, 1]})
         self.assertEqual(a, sc_decode(b))
 
         a.reverse()
