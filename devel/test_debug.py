@@ -152,6 +152,9 @@ class Adjust_Slice_Tests(unittest.TestCase):
         # already normalized, slice all elements, step = 1: do nothing
         self.assertEqual(_adjust_slice(19, 0, 19, 1), (19, 0, 19, 1))
 
+        # only normalize start and stop
+        self.assertEqual(_adjust_slice(20, -99, 99, 1), (20, 0, 20, 1))
+
         # already normalized, but slice selects only 6 elements
         self.assertEqual(_adjust_slice(19, 1, 17, 3), (6, 1, 17, 3))
 
@@ -200,8 +203,7 @@ class Adjust_Slice_Tests(unittest.TestCase):
                 self.assertEqual(stop - start, slicelength)
 
             r2 = range(start, stop, step)
-            if r.step > 0:
-                self.assertEqual(r, r2)
+            self.assertEqual(r2, r if r.step > 0 else r[::-1])
             self.assertEqual(set(r), set(r2))
 
 
