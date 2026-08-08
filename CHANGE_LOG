@@ -1,5 +1,6 @@
 2026-XX-XX  3.10.2:
 -------------------
+  * add debug-mode tests for slice adjustment `adjust_slice()`
 
 
 2026-08-07  3.10.1:

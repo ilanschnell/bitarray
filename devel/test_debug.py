@@ -12,8 +12,8 @@ from bitarray.test_bitarray import (Util, urandom_2, ENDIANS, PTRSIZE,
 # --------------------- internal C-level debug tests ------------------------
 
 from bitarray._util import (
-    _setup_table, _zlw,                          # defined in bitarray.h
-    _cfw, _d2i, _read_n, _write_n, _sc_rts, _SEGSIZE,       # _util.h
+    _setup_table, _zlw, _adjust_slice,                 # in bitarray.h
+    _cfw, _d2i, _read_n, _write_n, _sc_rts, _SEGSIZE,  # in _util.h
 )
 SEGBITS = 8 * _SEGSIZE
 
@@ -144,6 +144,66 @@ class ZLW_Tests(unittest.TestCase, Util):
             self.assertEqual(b[63], 0)  # last bit is always 0
             q, r = divmod(n, 64)
             self.assertEqual(b, a[64 * q:] + zeros(64 - r))
+
+
+class Adjust_Slice_Tests(unittest.TestCase):
+
+    def test_explicit(self):
+        # already normalized, slice all elements, step = 1: do nothing
+        self.assertEqual(_adjust_slice(19, 0, 19, 1), (19, 0, 19, 1))
+
+        # already normalized, but slice selects only 6 elements
+        self.assertEqual(_adjust_slice(19, 1, 17, 3), (6, 1, 17, 3))
+
+        # stop not normalized, slice selects 6 elements again
+        self.assertEqual(_adjust_slice(19, 1, -2, 3), (6, 1, 17, 3))
+
+        # general case, negative step
+        self.assertEqual(list(range(10)[-2:3:-2]), [8, 6, 4])
+        self.assertEqual(_adjust_slice(10, -2, 3, -2), (3, 4, 9, 2))
+
+        # slicelength = 0
+        self.assertEqual(_adjust_slice(23, 17, 3, 1), (0, 17, 3, 1))
+        self.assertEqual(_adjust_slice(27, -1, 4, 2), (0, 26, 4, 2))
+        self.assertEqual(_adjust_slice(19, 0, 19, -1), (0, 1, 1, 1))
+        self.assertEqual(_adjust_slice(21, 0, 17, -3), (0, 3, 1, 3))
+
+    def test_random(self):
+        for _ in range(10_000):
+            n = randrange(0, 100)  # length
+            s = slice(randint(-n - 3, n + 3),
+                      randint(-n - 3, n + 3),
+                      randint(-5, 5) or -1)
+            r = range(n)[s]
+
+            # test Python's own behavior
+            self.assertEqual(r, range(*s.indices(n)))
+            self.assertEqual(r, range(r.start, r.stop, r.step))
+            self.assertEqual(s.indices(n), (r.start, r.stop, r.step))
+
+            res = _adjust_slice(n, s.start, s.stop, s.step)
+            slicelength, start, stop, step = res
+
+            self.assertEqual(slicelength, len(r))
+            self.assertGreaterEqual(start, 0)
+            self.assertGreaterEqual(stop, 0)
+            if slicelength:
+                self.assertLessEqual(start, n)
+                self.assertLessEqual(stop, n)
+            # Unlike PySlice_AdjustIndices(), _adjust_slice() also
+            # adjusts the step to be positive.  It preserves selected
+            # indices but may reverse their order.
+            self.assertGreater(step, 0)
+            if slicelength == 0:
+                self.assertLessEqual(stop, start)
+            elif step == 1:
+                self.assertEqual(stop - start, slicelength)
+
+            r2 = range(start, stop, step)
+            if r.step > 0:
+                self.assertEqual(r, r2)
+            self.assertEqual(set(r), set(r2))
+
 
 # ----------------------------  _bitarray.c  --------------------------------
 

@@ -2315,6 +2315,17 @@ module_zlw(PyObject *module, PyObject *obj)
 }
 
 static PyObject *
+module_adjust_slice(PyObject *module, PyObject *args)
+{
+    Py_ssize_t length, slicelength, start, stop, step;
+
+    if (!PyArg_ParseTuple(args, "nnnn", &length, &start, &stop, &step))
+        return NULL;
+    slicelength = adjust_slice(length, &start, &stop, &step);
+    return Py_BuildValue("nnnn", slicelength, start, stop, step);
+}
+
+static PyObject *
 module_cfw(PyObject *module, PyObject *args)  /* count_from_word() */
 {
     bitarrayobject *a;
@@ -2414,16 +2425,17 @@ static PyMethodDef module_functions[] = {
 
 #ifndef NDEBUG
     /* functions exposed in debug mode for testing */
-    {"_setup_table", (PyCFunction) module_setup_table, METH_O,       0},
-    {"_zlw",         (PyCFunction) module_zlw,         METH_O,       0},
-    {"_cfw",         (PyCFunction) module_cfw,         METH_VARARGS, 0},
-    {"_d2i",         (PyCFunction) module_d2i,         METH_VARARGS, 0},
-    {"_read_n",      (PyCFunction) module_read_n,      METH_VARARGS, 0},
-    {"_write_n",     (PyCFunction) module_write_n,     METH_VARARGS, 0},
-    {"_sc_rts",      (PyCFunction) module_sc_rts,      METH_O,       0},
+    {"_setup_table",  (PyCFunction) module_setup_table,  METH_O,       0},
+    {"_zlw",          (PyCFunction) module_zlw,          METH_O,       0},
+    {"_adjust_slice", (PyCFunction) module_adjust_slice, METH_VARARGS, 0},
+    {"_cfw",          (PyCFunction) module_cfw,          METH_VARARGS, 0},
+    {"_d2i",          (PyCFunction) module_d2i,          METH_VARARGS, 0},
+    {"_read_n",       (PyCFunction) module_read_n,       METH_VARARGS, 0},
+    {"_write_n",      (PyCFunction) module_write_n,      METH_VARARGS, 0},
+    {"_sc_rts",       (PyCFunction) module_sc_rts,       METH_O,       0},
 #endif
 
-    {NULL,        NULL}  /* sentinel */
+    {NULL}  /* sentinel */
 };
 
 /******************************* Install Module ***************************/
