@@ -27,23 +27,23 @@ behaves like `sc_decode()`.
     def scan_block(stream, stats):
         head = next(stream)
 
-        if head < 0xa0:                          # type 0 - 0x00 -- 0x9f
+        if head < 0xa0:                  # type 0 - 0x00 -- 0x9f
             if head == 0:  # stop byte
                 return False
             n = 0
             k = head if head <= 32 else 32 * (head - 31)
-        elif head < 0xc0:                        # type 1 - 0xa0 .. 0xbf
+        elif head < 0xc0:                # type 1 - 0xa0 .. 0xbf
             n = 1
             k = head - 0xa0
-        elif 0xc2 <= head <= 0xc4:               # type 2 .. 4 - 0xc2 .. 0xc4
+        elif 0xc2 <= head <= 0xc4:       # type 2 .. 4 - 0xc2 .. 0xc4
             n = head - 0xc0
-            k = next(stream)                     # index count byte
+            k = next(stream)             # index count byte
         else:
             raise ValueError("Invalid block head: 0x%02x" % head)
 
         stats['blocks'][n] += 1
 
-        nc = max(1, n) * k   # size of block data to consume below
+        nc = max(1, n) * k   # size of block data to consume
         next(itertools.islice(stream, nc, nc), None)
         return True
 
@@ -118,7 +118,7 @@ class Tests(unittest.TestCase):
             self.assertRaises(StopIteration, sc_stat, blob)
             self.assertRaises(StopIteration, sc_decode, blob)
 
-    def test_values(self):
+    def test_argument(self):
         b = [0x11, 3, 1, 32, 0]
         self.assertEqual(sc_decode(b), bitarray("001"))
         self.assertEqual(sc_stat(b), {'endian': 'big',

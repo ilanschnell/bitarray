@@ -1816,8 +1816,8 @@ sc_read_sparse(bitarrayobject *a, Py_ssize_t offset, PyObject *iter,
     return BSI(n);
 }
 
-/* Decode one block: consume iter and set bitarray buffer starting at
-   offset.  Return decoded block size, or -1 on failure. */
+/* Consume iter and set bitarray buffer starting at offset.
+   Return size of offset increment in bytes, or -1 on failure. */
 static Py_ssize_t
 sc_decode_block(bitarrayobject *a, Py_ssize_t offset, PyObject *iter)
 {
