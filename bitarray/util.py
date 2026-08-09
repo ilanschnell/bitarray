@@ -515,7 +515,7 @@ input untouched.
             nbits |= next(stream) << 8 * j
         return dict(endian=endian, nbits=nbits)
 
-    def scan_block(stream, stats):
+    def scan_block(stream, blocks):
         head = next(stream)
 
         if head < 0xa0:                  # type 0 - 0x00 -- 0x9f
@@ -532,7 +532,7 @@ input untouched.
         else:
             raise ValueError("invalid block head: 0x%02x" % head)
 
-        stats['blocks'][n] += 1
+        blocks[n] += 1
 
         nc = max(1, n) * k   # size of block data to consume
         next(itertools.islice(stream, nc, nc), None)
@@ -540,11 +540,12 @@ input untouched.
 
     stream = iter(stream)
     stats = decode_header(stream)
-    stats['blocks'] = 5 * [0]
 
-    while scan_block(stream, stats):
+    blocks = 5 * [0]
+    while scan_block(stream, blocks):
         pass
 
+    stats['blocks'] = blocks
     return stats
 
 # ------------------------------ Huffman coding -----------------------------
