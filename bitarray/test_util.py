@@ -1866,10 +1866,13 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(len(a), 1024)
             self.assertEqual(a.endian, 'little')
 
-    def check_blob_length(self, a, m):
+    def check_blob_length(self, a, m, blocks):
         blob = sc_encode(a)
         self.assertEqual(len(blob), m)
         self.assertEqual(sc_decode(blob), a)
+        stat = sc_stat(blob)
+        self.assertEqual(stat['nbits'], len(a))
+        self.assertEqual(stat['blocks'], blocks)
 
     def test_encode_zeros(self):
         for i in range(26):
@@ -1877,14 +1880,27 @@ class SC_Tests(unittest.TestCase, Util):
             a = zeros(n)
             m = 2                            # head byte and stop byte
             m += bits2bytes(n.bit_length())  # size of n in bytes
-            self.check_blob_length(a, m)
+            self.check_blob_length(a, m, [0, 0, 0, 0, 0])
 
             a[0] = 1
-            m += 2                  # block head byte and one index byte
-            m += 2 * bool(i > 9)    # count byte and second index byte
-            m += bool(i > 16)       # third index byte
-            m += bool(i > 24)       # fourth index byte
-            self.check_blob_length(a, m)
+            block_type = (
+                bool(i > 3) +
+                bool(i > 9) +
+                bool(i > 16) +
+                bool(i > 24)
+            )
+            m += 1  # block head byte
+            if block_type < 2:
+                # block type 0: raw data byte
+                # block type 1: index byte
+                m += 1
+            else:
+                # count byte and number of index bytes
+                m += 1 + block_type
+
+            blocks = 5 * [0]
+            blocks[block_type] = 1
+            self.check_blob_length(a, m, blocks)
 
     def test_encode_ones(self):
         for _ in range(10):
@@ -1893,11 +1909,14 @@ class SC_Tests(unittest.TestCase, Util):
             m = 2                                # head byte and stop byte
             m += bits2bytes(nbits.bit_length())  # size bytes
             nbytes = bits2bytes(nbits)
-            m += nbytes                       # actual raw bytes
-            # number of head bytes, all of block type 0:
-            m += bool(nbytes % 32)            # number in 0x01 .. 0x1f
-            m += (nbytes // 32 + 127) // 128  # number in 0x20 .. 0xbf
-            self.check_blob_length(a, m)
+            m += nbytes                          # actual raw bytes
+            # number of raw blocks:
+            raw_blocks = (
+                bool(nbytes % 32) +              # number in 0x01 .. 0x1f
+                (nbytes // 32 + 127) // 128)     # number in 0x20 .. 0xbf
+            # number of head bytes
+            m += raw_blocks
+            self.check_blob_length(a, m, [raw_blocks, 0, 0, 0, 0])
 
     def round_trip(self, a):
         c = a.copy()
@@ -1914,7 +1933,7 @@ class SC_Tests(unittest.TestCase, Util):
             n = randrange(100_000)
             endian = choice(ENDIANS)
             a = ones(n, endian)
-            while a.count():
+            while a.any():
                 a &= urandom(n, endian)
                 self.round_trip(a)
 
