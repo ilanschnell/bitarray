@@ -149,27 +149,28 @@ class ZLW_Tests(unittest.TestCase, Util):
 class Adjust_Slice_Tests(unittest.TestCase):
 
     def test_explicit(self):
+        A = _adjust_slice
         # already normalized, slice all elements, step = 1: do nothing
-        self.assertEqual(_adjust_slice(19, 0, 19, 1), (19, 0, 19, 1))
+        self.assertEqual(A(19, 0, 19, 1), (19, 0, 19, 1))
 
         # only normalize start and stop
-        self.assertEqual(_adjust_slice(20, -99, 99, 1), (20, 0, 20, 1))
+        self.assertEqual(A(20, -99, 99, 1), (20, 0, 20, 1))
 
         # already normalized, but slice selects only 6 elements
-        self.assertEqual(_adjust_slice(19, 1, 17, 3), (6, 1, 17, 3))
+        self.assertEqual(A(19, 1, 17, 3), (6, 1, 17, 3))
 
         # stop not normalized, slice selects 6 elements again
-        self.assertEqual(_adjust_slice(19, 1, -2, 3), (6, 1, 17, 3))
+        self.assertEqual(A(19, 1, -2, 3), (6, 1, 17, 3))
 
         # general case, negative step
         self.assertEqual(list(range(10)[-2:3:-2]), [8, 6, 4])
-        self.assertEqual(_adjust_slice(10, -2, 3, -2), (3, 4, 9, 2))
+        self.assertEqual(A(10, -2, 3, -2), (3, 4, 9, 2))
 
         # slicelength = 0
-        self.assertEqual(_adjust_slice(23, 17, 3, 1), (0, 17, 3, 1))
-        self.assertEqual(_adjust_slice(27, -1, 4, 2), (0, 26, 4, 2))
-        self.assertEqual(_adjust_slice(19, 0, 19, -1), (0, 1, 1, 1))
-        self.assertEqual(_adjust_slice(21, 0, 17, -3), (0, 3, 1, 3))
+        self.assertEqual(A(23, 17, 3, 1), (0, 17, 3, 1))
+        self.assertEqual(A(27, -1, 4, 2), (0, 26, 4, 2))
+        self.assertEqual(A(19, 0, 19, -1), (0, 1, 1, 1))
+        self.assertEqual(A(21, 0, 17, -3), (0, 3, 1, 3))
 
     def test_random(self):
         for _ in range(10_000):
