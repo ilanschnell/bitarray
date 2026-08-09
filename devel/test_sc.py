@@ -47,6 +47,35 @@ class SC_Tests(unittest.TestCase):
         self.assertEqual(sc_stat(b)['blocks'], [2, 256, 254, 3, 0])
         self.assertEqual(a, sc_decode(b))
 
+    def test_random(self):
+        block_type = {0: 0, 1: 1, 2: 2, 3: 2, 4: 3, 5: 3}
+        count_exponent = {0: 12, 1: 19, 2: 11, 3: 3, 4: 0}
+
+        state = random.getstate()
+        self.addCleanup(random.setstate, state)
+        random.seed(4567)
+        n = 1 << 27
+
+        a = random_p(n)
+        i = 0
+        # At iteration i, each bit has probability (1 / 2) * (1 / 16) ** i.
+        while a.any():
+            blob = sc_encode(a)
+            b = sc_decode(blob)
+            self.assertEqual(a, b)
+
+            stat = sc_stat(blob)
+            self.assertEqual(stat['nbits'], len(a))
+            blocks = 5 * [0]
+            k = block_type.get(i, 4)
+            blocks[k] = 1 << count_exponent[k]
+            self.assertEqual(stat['blocks'], blocks)
+
+            a &= random_p(n, 1 / 16)
+            i += 1
+
+
+# ---------------------------------------------------------------------------
 
 def p_range():
     n = 1 << 28
