@@ -10,6 +10,7 @@ import sys
 import math
 import random
 import operator
+import itertools
 
 from bitarray import bitarray, frozenbitarray, bits2bytes
 
@@ -35,7 +36,7 @@ __all__ = [
     'ba2base', 'base2ba',
     'ba2int', 'int2ba',
     'serialize', 'deserialize',
-    'sc_encode', 'sc_decode',
+    'sc_encode', 'sc_decode', 'sc_stat',
     'vl_encode', 'vl_decode',
     'huffman_code', 'canonical_huffman', 'canonical_decode',
 ]
@@ -490,6 +491,61 @@ and requires `length` to be provided.
     else:
         del a[:-length]
     return a
+
+
+def sc_stat(stream):
+    """sc_stat(stream) -> dict
+
+Scan a stream produced by `sc_encode()` and return a dictionary containing
+its bit-endianness (`endian`), length (`nbits`), and the number of blocks
+of each type (`blocks`).  `blocks` is a list such that `blocks[i]` is the
+number of blocks of type `i`.
+
+Like `sc_decode()`, it consumes one encoded bitarray and leaves remaining
+input untouched.
+"""
+    def decode_header(stream):
+        head = next(stream)
+        if head & 0xe0:
+            raise ValueError("invalid header: 0x%02x" % head)
+        endian = 'big' if head & 0x10 else 'little'
+        length = head & 0x0f  # number of bytes representing nbits
+        nbits = 0
+        for j in range(length):
+            nbits |= next(stream) << 8 * j
+        return dict(endian=endian, nbits=nbits)
+
+    def scan_block(stream, stats):
+        head = next(stream)
+
+        if head < 0xa0:                  # type 0 - 0x00 -- 0x9f
+            if head == 0:  # stop byte
+                return False
+            n = 0
+            k = head if head <= 32 else 32 * (head - 31)
+        elif head < 0xc0:                # type 1 - 0xa0 .. 0xbf
+            n = 1
+            k = head - 0xa0
+        elif 0xc2 <= head <= 0xc4:       # type 2 .. 4 - 0xc2 .. 0xc4
+            n = head - 0xc0
+            k = next(stream)             # index count byte
+        else:
+            raise ValueError("invalid block head: 0x%02x" % head)
+
+        stats['blocks'][n] += 1
+
+        nc = max(1, n) * k   # size of block data to consume
+        next(itertools.islice(stream, nc, nc), None)
+        return True
+
+    stream = iter(stream)
+    stats = decode_header(stream)
+    stats['blocks'] = 5 * [0]
+
+    while scan_block(stream, stats):
+        pass
+
+    return stats
 
 # ------------------------------ Huffman coding -----------------------------
 

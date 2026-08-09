@@ -73,6 +73,7 @@ NEW_IN = {
     'util.gen_primes':        '3.7',
     'util.sc_encode':         '2.7',
     'util.sc_decode':         '2.7',
+    'util.sc_stat':          '3.11',
     'util.vl_decode':         '2.2',
     'util.vl_encode':         '2.2',
     'util.huffman_code':     ['3.10: return a codedict mapping to '
@@ -104,6 +105,7 @@ DOC_LINKS = {
     'util.serialize':          'rep',
     'util.sc_decode':          'sc',
     'util.sc_encode':          'sc',
+    'util.sc_stat':            'sc',
     'util.vl_decode':          'vlf',
     'util.vl_encode':          'vlf',
 }

@@ -6,11 +6,9 @@ from time import perf_counter
 from bitarray.util import (
     ones, random_p,
     serialize, deserialize,
-    sc_encode, sc_decode,
+    sc_encode, sc_decode, sc_stat,
     vl_encode, vl_decode,
 )
-
-from sc_stat import sc_stat
 
 
 def p_range():

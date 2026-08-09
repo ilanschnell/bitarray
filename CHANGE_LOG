@@ -1,5 +1,6 @@
-2026-XX-XX  3.10.2:
+2026-XX-XX  3.11.0:
 -------------------
+  * add `util.sc_stat()`
   * add debug-mode tests for slice adjustment `adjust_slice()`
 
 

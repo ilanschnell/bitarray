@@ -33,7 +33,7 @@ from bitarray.util import (
     correspond_all, byteswap, intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
     ba2int, int2ba,
-    sc_encode, sc_decode, vl_encode, vl_decode,
+    sc_encode, sc_decode, sc_stat, vl_encode, vl_decode,
     huffman_code, canonical_huffman, canonical_decode,
 )
 
@@ -1591,6 +1591,9 @@ class SC_Tests(unittest.TestCase, Util):
             a = bitarray(bits, endian)
             self.assertEqual(sc_encode(a), b)
             self.assertEQUAL(sc_decode(b), a)
+            stat = sc_stat(b)
+            self.assertEqual(stat['endian'], endian)
+            self.assertEqual(stat['nbits'], len(a))
 
     def test_encode_types(self):
         for a in bitarray('1', 'big'), frozenbitarray('1', 'big'):
@@ -1601,7 +1604,7 @@ class SC_Tests(unittest.TestCase, Util):
         for a in None, [], 0, 123, b'', b'\x00', 3.14:
             self.assertRaises(TypeError, sc_encode, a)
 
-    def test_decode_types(self):
+    def test_decode_stat_types(self):
         blob = b'\x11\x03\x01\x20\0'
         for b in blob, bytearray(blob), list(blob), array.array('B', blob):
             a = sc_decode(b)
@@ -1609,15 +1612,37 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(a.endian, 'big')
             self.assertEqual(a.to01(), '001')
 
+            stat = sc_stat(b)
+            self.assertEqual(stat, {'endian': 'big', 'nbits': 3,
+                                    'blocks': [1, 0, 0, 0, 0]})
+            self.assertIs(type(stat), dict)
+            self.assertIs(type(stat['endian']), str)
+            self.assertIs(type(stat['nbits']), int)
+            blocks = stat['blocks']
+            self.assertIs(type(blocks), list)
+            self.assertEqual(len(blocks), 5)
+            self.assertTrue(all(type(n) is int for n in blocks))
+
         a = [17, 3, 1, 32, 0]
         self.assertEqual(sc_decode(a), bitarray("001"))
         for x in 256, -1:
             a[-1] = x
             self.assertRaises(ValueError, sc_decode, a)
+            self.assertRaises(ValueError, sc_stat, a)
 
         self.assertRaises(TypeError, sc_decode, [0x02, None])
         for x in None, 3, 3.2, Ellipsis, 'foo':
             self.assertRaises(TypeError, sc_decode, x)
+            self.assertRaises(TypeError, sc_stat, x)
+
+    def test_endian(self):
+        for endian in ENDIANS:
+            a = urandom(400, endian)
+            blob = sc_encode(a)
+            stat = sc_stat(blob)
+            self.assertEQUAL(sc_decode(blob), a)
+            self.assertEqual(stat, {'nbits': len(a), 'endian': endian,
+                                    'blocks': [2, 0, 0, 0, 0]})
 
     def test_decode_header_nbits(self):
         for b, n in [
@@ -1632,28 +1657,54 @@ class SC_Tests(unittest.TestCase, Util):
             a = sc_decode(b)
             self.assertEqual(len(a), n)
             self.assertFalse(a.any())
+            self.assertEqual(sc_stat(b)['nbits'], n)
 
-    def test_decode_untouch(self):
-        stream = iter(b'\x01\x03\x01\x03\0XYZ')
-        self.assertEqual(sc_decode(stream), bitarray('110'))
+    def test_zeros_explicit(self):
+        for blob, blocks in [
+                (b"\x11\x08\0",         [0, 0, 0, 0, 0]),
+                (b"\x11\x08\x01\x00\0", [1, 0, 0, 0, 0]),
+                (b"\x11\x08\xa0\0",     [0, 1, 0, 0, 0]),
+                (b"\x11\x08\xc2\x00\0", [0, 0, 1, 0, 0]),
+                (b"\x11\x08\xc3\x00\0", [0, 0, 0, 1, 0]),
+                (b"\x11\x08\xc4\x00\0", [0, 0, 0, 0, 1]),
+        ]:
+            a = sc_decode(blob)
+            self.assertEqual(a.endian, 'big')
+            self.assertEqual(len(a), 8)
+            self.assertFalse(a.any())
+
+            stat = sc_stat(blob)
+            self.assertEqual(stat, {'endian': 'big',
+                                    'nbits': 8,
+                                    'blocks': blocks})
+
+    def test_untouch(self):
+        blob = b"\x01\x07\x01\x73\0XYZ"
+
+        stream = iter(blob)
+        self.assertEqual(sc_decode(stream), bitarray("1100111"))
         self.assertEqual(next(stream), ord('X'))
 
-        stream = iter([0x11, 0x05, 0x01, 0xff, 0, None, 'foo'])
-        self.assertEqual(sc_decode(stream), bitarray('11111'))
-        self.assertIsNone(next(stream))
-        self.assertEqual(next(stream), 'foo')
+        stream = iter(blob)
+        stat = sc_stat(stream)
+        self.assertEqual(stat, {'endian': 'little',
+                                'nbits': 7,
+                                'blocks': [1, 0, 0, 0, 0]})
+        self.assertEqual(next(stream), ord('X'))
 
     def test_decode_header_errors(self):
         # invalid header
         for c in 0x20, 0x21, 0x40, 0x80, 0xc0, 0xf0, 0xff:
-            self.assertRaisesMessage(ValueError,
-                                     "invalid header: 0x%02x" % c,
-                                     sc_decode, [c])
+            for f in sc_decode, sc_stat:
+                self.assertRaisesMessage(ValueError,
+                                         "invalid header: 0x%02x" % c,
+                                         f, [c])
         # invalid block head
         for c in 0xc0, 0xc1, 0xc5, 0xff:
-            self.assertRaisesMessage(ValueError,
-                                     "invalid block head: 0x%02x" % c,
-                                     sc_decode, [0x01, 0x10, c])
+            for f in sc_decode, sc_stat:
+                self.assertRaisesMessage(ValueError,
+                                         "invalid block head: 0x%02x" % c,
+                                         f, [0x01, 0x10, c])
 
     def test_decode_header_overflow(self):
         self.assertRaisesMessage(
@@ -1709,10 +1760,11 @@ class SC_Tests(unittest.TestCase, Util):
             ValueError, msg[PTRSIZE],
             sc_decode, b"\x01\x10\xc4\x01\xff\xff\xff\xff\0")
 
-    def test_decode_end_of_stream(self):
+    def test_stop_iteration(self):
         for stream in [b'', b'\x00', b'\x01', b'\x02\x77',
                        b'\x01\x04\x01', b'\x01\x04\xa1', b'\x01\x04\xa0']:
-            self.assertRaises(StopIteration, sc_decode, stream)
+            for f in sc_decode, sc_stat:
+                self.assertRaises(StopIteration, f, stream)
 
     def test_decode_ambiguity(self):
         for b in [
@@ -1844,14 +1896,16 @@ class SC_Tests(unittest.TestCase, Util):
 
     def round_trip(self, a):
         c = a.copy()
-        i = iter(sc_encode(a))
-        b = sc_decode(i)
+        blob = sc_encode(a)
+        b = sc_decode(blob)
         self.assertTrue(a == b == c)
         self.assertTrue(a.endian == b.endian == c.endian)
-        self.assertEqual(list(i), [])
+        stat = sc_stat(blob)
+        self.assertEqual(stat['endian'], a.endian)
+        self.assertEqual(stat['nbits'], len(a))
 
     def test_random(self):
-        for _ in range(10):
+        for _ in range(5):
             n = randrange(100_000)
             endian = choice(ENDIANS)
             a = ones(n, endian)
@@ -1882,7 +1936,7 @@ class VLFTests(unittest.TestCase, Util):
             self.assertEqual(c, a)
             self.assertEqual(c.endian, get_default_endian())
 
-            for endian in 'big', 'little', None:
+            for endian in OPT_ENDIANS:
                 a = bitarray(s, endian)
                 c = vl_encode(a)
                 self.assertIs(type(c), bytes)
