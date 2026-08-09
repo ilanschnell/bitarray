@@ -19,13 +19,21 @@ The lower the population count, the more efficient the compression will be:
 .. code-block:: python
 
     >>> from bitarray import bitarray
-    >>> from bitarray.util import zeros, sc_encode, sc_decode
+    >>> from bitarray.util import zeros, sc_encode, sc_decode, sc_stat
     >>> a = zeros(1 << 24, 'little')  # 16 mbits
     >>> a[0xaa] = a[0xbbcc] = a[0xddeeff] = 1
     >>> blob = sc_encode(a)
     >>> blob
     b'\x04\x00\x00\x00\x01\xc3\x03\xaa\x00\x00\xcc\xbb\x00\xff\xee\xdd\x00'
     >>> assert sc_decode(blob) == a
+    >>> sc_stat(blob)
+    {'endian': 'little', 'nbits': 16777216, 'blocks': [0, 0, 0, 1, 0]}
+
+The function ``sc_stat()`` (added in bitarray 3.11.0) scans a
+sparse-compressed stream and returns a dictionary containing its
+bit-endianness, length, and the number of blocks of each type.
+The ``blocks`` entry is a list such that ``blocks[i]`` is the number of
+type ``i`` blocks.  In this example, there is one block of type 3.
 
 
 How it works
