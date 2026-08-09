@@ -1,14 +1,51 @@
 import bz2
+import sys
 import gzip
 import random
+import unittest
 from time import perf_counter
 
+from bitarray import bitarray
 from bitarray.util import (
     ones, random_p,
     serialize, deserialize,
     sc_encode, sc_decode, sc_stat,
     vl_encode, vl_decode,
 )
+
+
+class SC_Tests(unittest.TestCase):
+
+    def test_argument(self):
+        b = [0x11, 3, 1, 32, 0]
+        self.assertEqual(sc_decode(b), bitarray("001"))
+        self.assertEqual(sc_stat(b), {'endian': 'big',
+                                      'nbits': 3,
+                                      'blocks': [1, 0, 0, 0, 0]})
+        for x in -1, 256:
+            b[-1] = x
+            self.assertRaises(ValueError, sc_stat, b)
+        for x in None, "F", Ellipsis, []:
+            b[-1] = x
+            self.assertRaises(TypeError, sc_stat, b)
+
+    def test_example(self):
+        n = 1 << 26
+        a = bitarray(n, 'little')
+        a[:1 << 16] = 1
+        for i in range(2, 1 << 16):
+            a[n // i] = 1
+        b = sc_encode(a)
+        stat = sc_stat(b)
+        self.assertEqual(stat, {'endian': 'little',
+                                'nbits': n,
+                                'blocks': [2, 147, 3, 1, 1]})
+        self.assertEqual(a, sc_decode(b))
+
+        a.reverse()
+        b = sc_encode(a)
+        self.assertEqual(sc_stat(b)['blocks'], [2, 256, 254, 3, 0])
+        self.assertEqual(a, sc_decode(b))
 
 
 def p_range():
@@ -50,7 +87,11 @@ def compare():
               (name, 1000 * (t1 - t0), 1000 * (t2 - t1), len(b) / len(raw)))
         assert c == x
 
+
 if __name__ == '__main__':
-    random.seed(123)
-    compare()
-    p_range()
+    if '--disp' in sys.argv:
+        random.seed(123)
+        compare()
+        p_range()
+        sys.exit(0)
+    unittest.main()
