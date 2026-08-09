@@ -1591,6 +1591,7 @@ class SC_Tests(unittest.TestCase, Util):
             a = bitarray(bits, endian)
             self.assertEqual(sc_encode(a), b)
             self.assertEQUAL(sc_decode(b), a)
+
             stat = sc_stat(b)
             self.assertEqual(stat['endian'], endian)
             self.assertEqual(stat['nbits'], len(a))
@@ -1693,15 +1694,14 @@ class SC_Tests(unittest.TestCase, Util):
         self.assertEqual(next(stream), ord('X'))
 
     def test_decode_header_errors(self):
-        # invalid header
-        for c in 0x20, 0x21, 0x40, 0x80, 0xc0, 0xf0, 0xff:
-            for f in sc_decode, sc_stat:
+        for f in sc_decode, sc_stat:
+            # invalid header
+            for c in 0x20, 0x21, 0x40, 0x80, 0xc0, 0xf0, 0xff:
                 self.assertRaisesMessage(ValueError,
                                          "invalid header: 0x%02x" % c,
                                          f, [c])
-        # invalid block head
-        for c in 0xc0, 0xc1, 0xc5, 0xff:
-            for f in sc_decode, sc_stat:
+            # invalid block head
+            for c in 0xc0, 0xc1, 0xc5, 0xff:
                 self.assertRaisesMessage(ValueError,
                                          "invalid block head: 0x%02x" % c,
                                          f, [0x01, 0x10, c])
@@ -1767,18 +1767,23 @@ class SC_Tests(unittest.TestCase, Util):
                 self.assertRaises(StopIteration, f, stream)
 
     def test_decode_ambiguity(self):
-        for b in [
+        for n, blob in [
                 # raw:
-                b'\x11\x03\x01\x20\0',    # this is what sc_encode gives us
-                b'\x11\x03\x01\x3f\0',    # but we can set the pad bits to 1
+                (0, b'\x11\x03\x01\x20\0'), # this is what sc_encode gives us
+                (0, b'\x11\x03\x01\x3f\0'), # but we can set the pad bits to 1
                 # sparse:
-                b'\x11\x03\xa1\x02\0',                  # block type 1
-                b'\x11\x03\xc2\x01\x02\x00\0',          # block type 2
-                b'\x11\x03\xc3\x01\x02\x00\x00\0',      # block type 3
-                b'\x11\x03\xc4\x01\x02\x00\x00\x00\0',  # block type 4
+                (1, b'\x11\x03\xa1\x02\0'),
+                (2, b'\x11\x03\xc2\x01\x02\x00\0'),
+                (3, b'\x11\x03\xc3\x01\x02\x00\x00\0'),
+                (4, b'\x11\x03\xc4\x01\x02\x00\x00\x00\0'),
         ]:
-            a = sc_decode(b)
+            a = sc_decode(blob)
             self.assertEqual(a.to01(), '001')
+            blocks = 5 * [0]
+            blocks[n] += 1
+            stat = sc_stat(blob)
+            self.assertEqual(stat['nbits'], 3)
+            self.assertEqual(stat['blocks'], blocks)
 
     def test_block_type0(self):
         for k in range(0x01, 0xa0):
@@ -1793,6 +1798,7 @@ class SC_Tests(unittest.TestCase, Util):
 
             self.assertEqual(sc_decode(b), a)
             self.assertEqual(sc_encode(a), b)
+            self.assertEqual(sc_stat(b)['blocks'], [1, 0, 0, 0, 0])
 
     def test_block_type1(self):
         a = bitarray(256, 'little')
@@ -1805,9 +1811,10 @@ class SC_Tests(unittest.TestCase, Util):
 
             self.assertEqual(sc_decode(b), a)
             self.assertEqual(sc_encode(a), b)
+            self.assertEqual(sc_stat(b)['blocks'], [0, 1, 0, 0, 0])
 
     def test_block_type2(self):
-        a = bitarray(65536, 'little')
+        a = bitarray(1 << 16, 'little')
         for n in range(1, 256):
             a[getrandbits(16)] = 1
 
@@ -1816,23 +1823,20 @@ class SC_Tests(unittest.TestCase, Util):
                 b.extend(struct.pack("<H", i))
             b.append(0)  # stop byte
             self.assertEqual(sc_decode(b), a)
-            if n < 250:
-                # We cannot compare for the highest populations, as for
-                # such high values sc_encode() may find better compression
-                # with type 1 blocks.
+            if n < 254:
+                # sc_encode() may find better compression with type 1 blocks
                 self.assertEqual(sc_encode(a), b)
-            else:
-                self.assertTrue(len(sc_encode(a)) <= len(b))
+            self.assertEqual(sc_stat(b)['blocks'], [0, 0, 1, 0, 0])
 
     def test_block_type3(self):
-        a = bitarray(16_777_216, 'little')
-        a[choices(range(1 << 24), k=255)] = 1
+        a = random_k(1 << 24, 255, 'little')
         b = bytearray([0x04, 0x00, 0x00, 0x00, 0x01, 0xc3, a.count()])
         for i in a.search(1):
             b.extend(struct.pack("<I", i)[:3])
         b.append(0)  # stop byte
         self.assertEqual(sc_decode(b), a)
         self.assertEqual(sc_encode(a), b)
+        self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 1, 0])
 
     def test_block_type4(self):
         a = bitarray(1 << 26, 'little')
@@ -1848,6 +1852,7 @@ class SC_Tests(unittest.TestCase, Util):
         b.append(0)  # stop byte
         self.assertEqual(sc_decode(b), a)
         self.assertEqual(sc_encode(a), b)
+        self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 0, 1])
 
     def test_decode_random_bytes(self):
         # ensure random input doesn't crash the decoder
