@@ -1883,12 +1883,7 @@ class SC_Tests(unittest.TestCase, Util):
             self.check_blob_length(a, m, [0, 0, 0, 0, 0])
 
             a[0] = 1
-            block_type = (
-                bool(i > 3) +
-                bool(i > 9) +
-                bool(i > 16) +
-                bool(i > 24)
-            )
+            block_type = sum(i > k for k in (3, 9, 16, 24))
             m += 1  # block head byte
             if block_type < 2:
                 # block type 0: raw data byte
