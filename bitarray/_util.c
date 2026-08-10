@@ -1407,7 +1407,7 @@ module_sc_rts(PyObject *module, PyObject *obj)
 /* Return population count for the decoded block size of type n.
    Roughly equivalent to the Python expression:
 
-      a.count(1, 8 * offset, 8 * offset + (1 << (8 * n)))
+      a[8 * offset : 8 * offset + (1 << (8 * n))].count()
 
    The offset must be divisible by SEGSIZE, as this function makes use of
    running totals, stored in rts[].
@@ -1421,6 +1421,17 @@ sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
     assert(offset % SEGSIZE == 0 && 1 <= n && n <= 4);
     assert(0 <= i && i <= j && j <= NSEG(a));
     return rts[j] - rts[i];
+}
+
+/* Return entire remaining population:   a[8 * offset :].count() */
+static Py_ssize_t
+sc_count_remain(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
+{
+    const Py_ssize_t i = offset / SEGSIZE;     /* index into rts[] */
+
+    assert(offset % SEGSIZE == 0);
+    assert(0 <= i && i <= NSEG(a));
+    return rts[NSEG(a)] - rts[i];
 }
 
 /* Write a raw block, and return number of bytes copied.
@@ -1523,6 +1534,7 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
     assert(1 <= n && n <= 4);
     assert(0 <= k && k < 256);
+    assert(k == sc_count(a, rts, offset, n));
 
     /* write block header */
     if (n == 1) {                        /* type 1 - one header byte */
@@ -1566,6 +1578,9 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
      representation to use.  Starting at type n = 1, we do this by first
      calculating the population count for the decoded block size of
      the *next* block type n+1.
+     When the current block already accounts for the entire remaining
+     population, we use it without considering a larger block.  Any trailing
+     zeros do not need to be encoded.
      If this population is larger than 255 (too large for the count byte) we
      have to stick with type n.
      Otherwise we compare the encoded sizes of (a) sticking with
@@ -1600,10 +1615,12 @@ static Py_ssize_t
 sc_encode_block(char *str, Py_ssize_t *len,
                 bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
 {
+    /* entire remaining population */
+    const Py_ssize_t remaining = sc_count_remain(a, rts, offset);
     const Py_ssize_t nbytes = Py_SIZE(a) - offset;  /* remaining bytes */
     int count, n;
 
-    assert(nbytes > 0);
+    assert(nbytes > 0 && remaining > 0);
 
     count = (int) sc_count(a, rts, offset, 1);
     /* the number of index bytes is no smaller than the number of raw bytes */
@@ -1615,6 +1632,10 @@ sc_encode_block(char *str, Py_ssize_t *len,
 
     for (n = 1; n < 4; n++) {
         Py_ssize_t next_count, nblocks, cost_a, cost_b;
+
+        if (count == remaining)
+            /* current block accounts for all remaining 1 bits */
+            break;
 
         /* population for next block type n+1 */
         next_count = sc_count(a, rts, offset, n + 1);
@@ -1670,7 +1691,6 @@ sc_encode_lock_held(bitarrayobject *a, PyObject **out)
     Py_ssize_t len = 0;         /* bytes written into output buffer */
     Py_ssize_t offset = 0;      /* block offset into bitarray a in bytes */
     Py_ssize_t *rts;            /* running totals of segments */
-    Py_ssize_t total;           /* total population count of bitarray */
 
     set_padbits(a);
     if ((rts = sc_rts(a)) == NULL)
@@ -1679,10 +1699,9 @@ sc_encode_lock_held(bitarrayobject *a, PyObject **out)
     str = PyBytes_AS_STRING(*out);
     len += sc_encode_header(str, a);
 
-    total = rts[NSEG(a)];
     /* encode blocks as long as we haven't reached the end of the bitarray
        and haven't reached the total population count yet */
-    while (offset < Py_SIZE(a) && rts[offset / SEGSIZE] != total) {
+    while (offset < Py_SIZE(a) && sc_count_remain(a, rts, offset) != 0) {
         Py_ssize_t allocated = PyBytes_GET_SIZE(*out);
 
         /* Make sure we have enough memory in output buffer for next block.

@@ -1896,19 +1896,25 @@ class SC_Tests(unittest.TestCase, Util):
             self.check_blob_length(a, m, [0, 0, 0, 0, 0])
 
             a[0] = 1
-            block_type = sum(i > k for k in (3, 9, 16, 24))
-            m += 1  # block head byte
-            if block_type < 2:
-                # block type 0: raw data byte
-                # block type 1: index byte
-                m += 1
-            else:
-                # count byte and number of index bytes
-                m += 1 + block_type
+            # As the first block accounts for the entire population, trailing
+            # zeros do not cause the block type to increase with array size.
+            block_type = int(i > 3)
+            m += 2  # block head and raw byte (type 0) or index (type 1)
 
             blocks = 5 * [0]
             blocks[block_type] = 1
             self.check_blob_length(a, m, blocks)
+
+    def test_encode_trailing_zeros(self):
+        for block_type in range(1, 4):
+            a = zeros(1 << (8 * block_type + 1))
+            index = 0 if block_type == 1 else 1 << (8 * (block_type - 1))
+            a[index] = 1
+            blob = sc_encode(a)
+            blocks = 5 * [0]
+            blocks[block_type] = 1
+            self.assertEqual(sc_stat(blob)['blocks'], blocks)
+            self.assertEqual(sc_decode(blob), a)
 
     def test_encode_ones(self):
         for _ in range(10):
