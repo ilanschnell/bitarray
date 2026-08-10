@@ -1827,19 +1827,28 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(sc_stat(b)['blocks'], [0, 1, 0, 0, 0])
 
     def test_block_type2(self):
-        a = bitarray(1 << 16, 'little')
-        for n in range(1, 256):
-            a[getrandbits(16)] = 1
+        a = bitarray(65_536, 'little')
+        indices = sample(range(65_536), 255)
+        for n, index in enumerate(indices, 1):
+            a[index] = 1
+            self.assertEqual(a.count(), n)
 
             b = bytearray([0x03, 0x00, 0x00, 0x01, 0xc2, a.count()])
             for i in a.search(1):
                 b.extend(struct.pack("<H", i))
             b.append(0)  # stop byte
-            self.assertEqual(sc_decode(b), a)
-            if n < 254:
-                # sc_encode() may find better compression with type 1 blocks
-                self.assertEqual(sc_encode(a), b)
             self.assertEqual(sc_stat(b)['blocks'], [0, 0, 1, 0, 0])
+            self.assertEqual(sc_decode(b), a)
+            c = sc_encode(a)
+            if a.count(1, 0, 256) == n:
+                # All random indices land in the first type 1 block.
+                self.assertEqual(sc_stat(c)['blocks'], [0, 1, 0, 0, 0])
+            elif n >= 254:
+                # At population 254, type 1 and type 2 tie.
+                # Type 1 may produce a smaller encoding.
+                pass
+            else:
+                self.assertEqual(c, b)
 
     def test_block_type3(self):
         a = random_k(1 << 24, 255, 'little')
@@ -1853,19 +1862,25 @@ class SC_Tests(unittest.TestCase, Util):
 
     def test_block_type4(self):
         a = bitarray(1 << 26, 'little')
-        # To understand why we cannot have a population larger than 5 for
-        # an array size 4 times the size of a type 3 block, take a look
-        # at the cost comparison in sc_encode_block().  (2 + 6 >= 2 * 4)
-        indices = sorted(set(choices(range(len(a)), k=5)))
+        # Four type 3 blocks require 8 header bytes.  A type 4 block requires
+        # only a 2-byte header, but adds one byte per index.  It is therefore
+        # smaller only below population 6; at 6, the costs tie and type 3
+        # wins.
+        indices = sorted(sample(range(len(a)), k=5))
         a[indices] = 1
         b = bytearray(b'\x04\x00\x00\x00\x04\xc4')
         b.append(len(indices))
         for i in indices:
             b.extend(struct.pack("<I", i))
         b.append(0)  # stop byte
-        self.assertEqual(sc_decode(b), a)
-        self.assertEqual(sc_encode(a), b)
         self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 0, 1])
+        self.assertEqual(sc_decode(b), a)
+        c = sc_encode(a)
+        if all(i < (1 << 24) for i in indices):
+            # All random indices land in the first type 3 block.
+            self.assertEqual(sc_stat(c)['blocks'], [0, 0, 0, 1, 0])
+        else:
+            self.assertEqual(c, b)
 
     def test_decode_random_bytes(self):
         # ensure random input doesn't crash the decoder
