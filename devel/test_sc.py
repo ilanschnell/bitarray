@@ -18,15 +18,18 @@ from bitarray.util import (
 class SC_Tests(unittest.TestCase):
 
     def test_block_type4(self):
-        a = bitarray(1 << 27, 'little')
-        # Eight type 3 blocks require 16 header bytes.  A type 4 block requires
-        # only a 2-byte header, but adds one byte per index.  It is therefore
-        # smaller only below population 14; at 14, the costs tie and type 3
-        # wins.
-        indices = sorted(random.sample(range(1 << 24, len(a)), k=13))
+        a = bitarray(1 << 28, 'little')
+        # 16 type 3 blocks require 32 header bytes.  A type 4 block
+        # requires only a 2-byte header, but adds one byte per index.
+        # So for population k, we have a tie when:
+        #
+        #    32 + 3k = 2 + 4k   ->   k = 30
+        #
+        # At the tie (population 30), the encoder prefers type 3.
+        indices = sorted(random.sample(range(1 << 24, len(a)), k=29))
         for n, index in enumerate(indices, 1):
             a[index] = 1
-            b = bytearray(b'\x04\x00\x00\x00\x08\xc4')
+            b = bytearray(b'\x04\x00\x00\x00\x10\xc4')
             b.append(n)
             for i in indices[:n]:
                 b.extend(struct.pack("<I", i))

@@ -1862,10 +1862,13 @@ class SC_Tests(unittest.TestCase, Util):
 
     def test_block_type4(self):
         a = bitarray(1 << 26, 'little')
-        # Four type 3 blocks require 8 header bytes.  A type 4 block requires
-        # only a 2-byte header, but adds one byte per index.  It is therefore
-        # smaller only below population 6; at 6, the costs tie and type 3
-        # wins.
+        # Four type 3 blocks require 8 header bytes.  A type 4 block
+        # requires only a 2-byte header, but adds one byte per index.
+        # So for population k, we have a tie when:
+        #
+        #    8 + 3k = 2 + 4k   ->   k = 6
+        #
+        # At the tie (population 6), the encoder prefers type 3.
         indices = sorted(sample(range(len(a)), k=5))
         a[indices] = 1
         b = bytearray(b'\x04\x00\x00\x00\x04\xc4')
