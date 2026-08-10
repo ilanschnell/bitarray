@@ -2,6 +2,7 @@ import bz2
 import sys
 import gzip
 import random
+import struct
 import unittest
 from time import perf_counter
 
@@ -15,6 +16,24 @@ from bitarray.util import (
 
 
 class SC_Tests(unittest.TestCase):
+
+    def test_block_type4(self):
+        a = bitarray(1 << 27, 'little')
+        # Eight type 3 blocks require 16 header bytes.  A type 4 block requires
+        # only a 2-byte header, but adds one byte per index.  It is therefore
+        # smaller only below population 14; at 14, the costs tie and type 3
+        # wins.
+        indices = sorted(random.sample(range(1 << 24, len(a)), k=13))
+        for n, index in enumerate(indices, 1):
+            a[index] = 1
+            b = bytearray(b'\x04\x00\x00\x00\x08\xc4')
+            b.append(n)
+            for i in indices[:n]:
+                b.extend(struct.pack("<I", i))
+            b.append(0)  # stop byte
+            self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 0, 1])
+            self.assertEqual(sc_decode(b), a)
+            self.assertEqual(sc_encode(a), b)
 
     def test_example(self):
         n = 1 << 28

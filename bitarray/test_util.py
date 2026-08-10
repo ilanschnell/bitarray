@@ -1833,7 +1833,7 @@ class SC_Tests(unittest.TestCase, Util):
             a[index] = 1
             self.assertEqual(a.count(), n)
 
-            b = bytearray([0x03, 0x00, 0x00, 0x01, 0xc2, a.count()])
+            b = bytearray([0x03, 0x00, 0x00, 0x01, 0xc2, n])
             for i in a.search(1):
                 b.extend(struct.pack("<H", i))
             b.append(0)  # stop byte
