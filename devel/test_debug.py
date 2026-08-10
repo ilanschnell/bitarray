@@ -640,7 +640,7 @@ class RTS_Tests(unittest.TestCase):
             self.assertEqual(rts[-1], a.count())
             for i in range(self.nseg(a)):
                 self.assertEqual(rts[i + 1] - rts[i],
-                                 a.count(1, SEGBITS * i, SEGBITS * (i + 1)))
+                                 a[SEGBITS * i : SEGBITS * (i + 1)].count())
 
 
 class ReadN_WriteN_Tests(unittest.TestCase, Util):
