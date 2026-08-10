@@ -16,19 +16,6 @@ from bitarray.util import (
 
 class SC_Tests(unittest.TestCase):
 
-    def test_argument(self):
-        b = [0x11, 3, 1, 32, 0]
-        self.assertEqual(sc_decode(b), bitarray("001"))
-        self.assertEqual(sc_stat(b), {'endian': 'big',
-                                      'nbits': 3,
-                                      'blocks': [1, 0, 0, 0, 0]})
-        for x in -1, 256:
-            b[-1] = x
-            self.assertRaises(ValueError, sc_stat, b)
-        for x in None, "F", Ellipsis, []:
-            b[-1] = x
-            self.assertRaises(TypeError, sc_stat, b)
-
     def test_example(self):
         n = 1 << 26
         a = bitarray(n, 'little')

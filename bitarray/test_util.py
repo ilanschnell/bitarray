@@ -1596,6 +1596,15 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertEqual(stat['endian'], endian)
             self.assertEqual(stat['nbits'], len(a))
 
+    def test_skip_block_data(self):
+        b = [0x01, 197, 0xa3, None, None, None, 0x00]
+        # sc_stat() skips the block data without inspecting its items.
+        self.assertEqual(sc_stat(b), {'endian': 'little',
+                                      'nbits': 197,
+                                      'blocks': [0, 1, 0, 0, 0]})
+        # sc_decode() must process the block data.
+        self.assertRaises(TypeError, sc_decode, b)
+
     def test_encode_types(self):
         for a in bitarray('1', 'big'), frozenbitarray('1', 'big'):
             b = sc_encode(a)
@@ -1623,18 +1632,6 @@ class SC_Tests(unittest.TestCase, Util):
             self.assertIs(type(blocks), list)
             self.assertEqual(len(blocks), 5)
             self.assertTrue(all(type(n) is int for n in blocks))
-
-        a = [17, 3, 1, 32, 0]
-        self.assertEqual(sc_decode(a), bitarray("001"))
-        for x in 256, -1:
-            a[-1] = x
-            self.assertRaises(ValueError, sc_decode, a)
-            self.assertRaises(ValueError, sc_stat, a)
-
-        self.assertRaises(TypeError, sc_decode, [0x02, None])
-        for x in None, 3, 3.2, Ellipsis, 'foo':
-            self.assertRaises(TypeError, sc_decode, x)
-            self.assertRaises(TypeError, sc_stat, x)
 
     def test_endian(self):
         for endian in ENDIANS:
@@ -1692,6 +1689,22 @@ class SC_Tests(unittest.TestCase, Util):
                                 'nbits': 7,
                                 'blocks': [1, 0, 0, 0, 0]})
         self.assertEqual(next(stream), ord('X'))
+
+    def test_decode_stat_errors(self):
+        for f in sc_decode, sc_stat:
+            a = [17, 3, 1, 32, 0]
+
+            self.assertRaises(TypeError, f)  # no argument
+            self.assertRaises(TypeError, f, a, None)  # extra argument
+            f(a)  # no error
+            for x in 256, -1:
+                a[-1] = x
+                self.assertRaises(ValueError, f, a)
+
+            a = [0x02, None]
+            self.assertRaises(TypeError, f, a)
+            for x in None, 3, 3.2, Ellipsis, 'foo':
+                self.assertRaises(TypeError, f, x)
 
     def test_decode_header_errors(self):
         for f in sc_decode, sc_stat:
