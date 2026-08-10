@@ -2,6 +2,16 @@ This directory contains files that are relevant for development
 of bitarray, as well as additional tests and verifications.
 
 
+test_*.py
+    The standard tests in bitarray/test_*.py are fast and cover public,
+    externally observable behavior.  Additional tests in this directory
+    include:
+      * slow tests and stress tests
+      * tests requiring a debug build
+      * tests of internal implementation details
+      * experiments verifying design assumptions
+
+
 copy_n.py
     Illustrate how copy_n() in _bitarray.c works.  This is essentially
     a Python implementation of copy_n() with output of the different stages
@@ -19,22 +29,6 @@ resize/
 
 shift_r8.c
     C program is to illustrate and document shift_r8()
-
-
-test_debug.py
-    Tests for internal C code which is exposed in debug builds.
-    These tests will only work when bitarray is compiled in debug mode.
-
-
-test_sum_indices.py
-    Additional tests for util.sum_indices() for very large n, as well as
-    some verifications and test for the internal function _ssqi().
-
-
-test_random.py
-    * statistical tests for random functions in bitarray.util
-    * verification of some statistical equations
-    * verification of code used in random_k() and random_p()
 
 
 tricks.py
