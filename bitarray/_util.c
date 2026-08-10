@@ -1633,6 +1633,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
     for (n = 1; n < 4; n++) {
         Py_ssize_t next_count, nblocks, cost_a, cost_b;
 
+        assert((n == 1 && count < 32) || (n > 1 && count <= 255));
         if (count == remaining)
             /* current block accounts for all remaining 1 bits */
             break;
