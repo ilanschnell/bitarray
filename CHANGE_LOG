@@ -1,6 +1,7 @@
 2026-XX-XX  3.11.0:
 -------------------
   * add `util.sc_stat()`
+  * optimize sparse encoding for trailing zeros
   * add debug-mode tests for slice adjustment `adjust_slice()`
 
 

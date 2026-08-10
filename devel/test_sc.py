@@ -17,21 +17,21 @@ from bitarray.util import (
 class SC_Tests(unittest.TestCase):
 
     def test_example(self):
-        n = 1 << 26
+        n = 1 << 28
         a = bitarray(n, 'little')
         a[:1 << 16] = 1
-        for i in range(2, 1 << 16):
+        for i in range(2, 1 << 17):
             a[n // i] = 1
         b = sc_encode(a)
         stat = sc_stat(b)
         self.assertEqual(stat, {'endian': 'little',
                                 'nbits': n,
-                                'blocks': [2, 147, 3, 1, 1]})
+                                'blocks': [2, 653, 12, 1, 1]})
         self.assertEqual(a, sc_decode(b))
 
         a.reverse()
         b = sc_encode(a)
-        self.assertEqual(sc_stat(b)['blocks'], [2, 256, 254, 3, 0])
+        self.assertEqual(sc_stat(b)['blocks'], [2, 768, 252, 15, 0])
         self.assertEqual(a, sc_decode(b))
 
     def test_random(self):
