@@ -1586,9 +1586,10 @@ class SC_Util:
         return indices
 
     def make_blob(self, nbits, n, indices):
-        "little-endian streams useing 32-bit struct.pack() for nbits"
+        "little-endian streams using 32-bit struct.pack() for nbits"
         self.assertIn(n, (2, 3, 4))
         self.assertIn(len(indices), range(256))
+
         length = bits2bytes(nbits.bit_length())
         b = bytearray([length])
         b.extend(struct.pack("<I", nbits)[:length])
@@ -1598,6 +1599,14 @@ class SC_Util:
             b.extend(struct.pack("<I", i)[:n])
         b.append(0)  # stop byte
         return bytes(b)
+
+    def check_stat(self, a, b, n, check_encode=True):
+        blocks = 5 * [0]
+        blocks[n] = 1
+        self.assertEqual(sc_stat(b)['blocks'], blocks)
+        self.assertEqual(sc_decode(b), a)
+        if check_encode:
+            self.assertEqual(sc_encode(a), b)
 
 
 class SC_Tests(unittest.TestCase, Util, SC_Util):
@@ -1863,19 +1872,14 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
         indices = self.sample_with_highest(65_536, k=k)
         a[indices] = 1
         b = self.make_blob(len(a), 2, indices)
-        self.assertEqual(sc_stat(b)['blocks'], [0, 0, 1, 0, 0])
-        self.assertEqual(sc_decode(b), a)
-        self.assertEqual(sc_encode(a), b)
+        self.check_stat(a, b, 2)
 
     def test_block_type3(self):
         a = bitarray(1 << 24, 'little')
         indices = self.sample_with_highest(len(a), 255)
-
         a[indices] = 1
         b = self.make_blob(len(a), 3, indices)
-        self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 1, 0])
-        self.assertEqual(sc_decode(b), a)
-        self.assertEqual(sc_encode(a), b)
+        self.check_stat(a, b, 3)
 
     def test_block_type4(self):
         a = bitarray(1 << 26, 'little')
@@ -1888,12 +1892,9 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
         # At the tie (population 6), the encoder prefers type 3.
         # Include the largest index so the population requires type 4.
         indices = self.sample_with_highest(len(a), k=5)
-
         a[indices] = 1
         b = self.make_blob(len(a), 4, indices)
-        self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 0, 1])
-        self.assertEqual(sc_decode(b), a)
-        self.assertEqual(sc_encode(a), b)
+        self.check_stat(a, b, 4)
 
     def test_decode_random_bytes(self):
         # ensure random input doesn't crash the decoder

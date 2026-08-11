@@ -26,18 +26,14 @@ class SC_Tests(unittest.TestCase, SC_Util):
 
         for k, index in enumerate(indices, 1):
             a[index] = 1
-
             b = self.make_blob(len(a), 2, indices[:k])
-            self.assertEqual(sc_stat(b)['blocks'], [0, 0, 1, 0, 0])
-            self.assertEqual(sc_decode(b), a)
             # 256 type 1 blocks require 256 header bytes.  A type 2 block
             # requires only a 2-byte header, but adds one byte per index:
             #
             #    256 + k = 2 + 2k   ->   k = 254
             #
             # At the tie (population 254), the encoder prefers type 1.
-            if k < 254:
-                self.assertEqual(sc_encode(a), b)
+            self.check_stat(a, b, 2, check_encode=(k < 254))
 
     def test_block_type3(self):
         a = bitarray(1 << 24, 'little')
@@ -48,9 +44,7 @@ class SC_Tests(unittest.TestCase, SC_Util):
         for k, index in enumerate(indices, 1):
             a[index] = 1
             b = self.make_blob(len(a), 3, indices[:k])
-            self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 1, 0])
-            self.assertEqual(sc_decode(b), a)
-            self.assertEqual(sc_encode(a), b)
+            self.check_stat(a, b, 3)
 
     def test_block_type4(self):
         a = bitarray(1 << 28, 'little')
@@ -61,16 +55,14 @@ class SC_Tests(unittest.TestCase, SC_Util):
         #    32 + 3k = 2 + 4k   ->   k = 30
         #
         # At the tie (population 30), the encoder prefers type 3.
-        # Start with the largest type 4 index so every population requires
-        # type 4.
-        indices = self.sample_with_highest(len(a), k=29)
+        # Start with the largest type 4 index so all 16 type 3 blocks are
+        # needed.
+        indices = self.sample_with_highest(len(a), k=255)
 
         for k, index in enumerate(indices, 1):
             a[index] = 1
             b = self.make_blob(len(a), 4, indices[:k])
-            self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 0, 1])
-            self.assertEqual(sc_decode(b), a)
-            self.assertEqual(sc_encode(a), b)
+            self.check_stat(a, b, 4, check_encode=(k < 30))
 
     def test_example(self):
         n = 1 << 28
