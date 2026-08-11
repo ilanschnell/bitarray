@@ -1579,28 +1579,28 @@ class SC_Util:
 
     def get_max_pop(self, n, m=256):
         """
-        Return maximal population for which one type `n` block is preferred
-        over `m` blocks of type `n-1`.
+        Return the maximal population for which one type `n` block is
+        preferred over `m` blocks of type `n-1`, or 0 if there is none.
         """
         self.assertIn(n, (2, 3, 4))
         self.assertTrue(1 <= m <= 256)
         h = 1 if n == 2 else 2  # header size for type n-1 block
         # After cancelling the index bytes common to both alternatives,
-        # `m` type `n - 1` blocks cost `h * m` bytes, while one type `n`
+        # `m` type `n-1` blocks cost `h * m` bytes, while one type `n`
         # block costs `2 + k` bytes.
         #
-        #            h * m = 2 + k   ->   k = h * m - 2
+        #     h * m = 2 + k   ->   k = h * m - 2
         #
         k = h * m - 2  # population where type n-1 and type n tie
         # At the tie (k), the encoder prefers type n-1.
         return max(0, min(255, k - 1))
 
     def sample_with_highest(self, n, k):
-        "Return k samples from range(n), with n - 1 first."
+        "Return `k` samples from `range(n)`, with `n-1` first."
         self.assertGreater(n, 0)
         self.assertGreater(k, 0)
         indices = [n - 1]
-        indices.extend(sample(range(n - 1), k=k - 1))
+        indices.extend(sample(range(n - 1), k - 1))
         return indices
 
     def make_blob(self, nbits, n, indices):
@@ -1890,7 +1890,7 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
             self.assertEqual(prev_size * m, nbits)
             a = bitarray(nbits, 'little')
             self.assertEqual(self.get_max_pop(n, m), k)
-            indices = self.sample_with_highest(nbits, k=k)
+            indices = self.sample_with_highest(nbits, k)
             a[indices] = 1
             b = self.make_blob(nbits, n, indices)
             self.check_stat(a, b, n)

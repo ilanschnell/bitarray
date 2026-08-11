@@ -17,11 +17,42 @@ from bitarray.test_util import SC_Util
 
 class SC_Tests(unittest.TestCase, SC_Util):
 
+    def test_get_max_pop(self):
+        for n, m, k in [
+                # type 1 headers have size 1
+                (2,   3,   0),  # type 2 is never preferred
+                (2,   4,   1),  # type 2 is preferred only at 1
+                (2,  16,  13),
+                (2,  32,  29),
+                (2, 256, 253),  # type 2 is preferred through 253
+                # Type 2 never reaches its population limit, because
+                # the type 1 header is smaller.
+
+                # type 2 and 3 headers have size 2
+                (3,   1,   0),
+                (3,   2,   1),
+                (3,  16,  29),
+                (3, 128, 253),
+                (3, 129, 255),  # population-byte limit reached
+                (3, 256, 255),
+
+                (4,   1,   0),
+                (4,   2,   1),
+                (4,   4,   5),
+                (4,   8,  13),
+                (4,  16,  29),
+                (4,  32,  61),
+                (4, 128, 253),
+                (4, 129, 255),  # population-byte limit reached
+                (4, 256, 255),
+        ]:
+            self.assertEqual(self.get_max_pop(n, m), k)
+
     def test_block_type2(self):
         a = bitarray(65_536, 'little')
         # Start with the largest type 2 index so all 256 type 1 blocks are
         # needed.
-        indices = self.sample_with_highest(65_536, k=255)
+        indices = self.sample_with_highest(len(a), 255)
         k_max = self.get_max_pop(2)
         self.assertEqual(k_max, 253)
 
@@ -34,7 +65,7 @@ class SC_Tests(unittest.TestCase, SC_Util):
         a = bitarray(1 << 24, 'little')
         # Start with the largest type 3 index so every population requires
         # type 3.
-        indices = self.sample_with_highest(len(a), k=255)
+        indices = self.sample_with_highest(len(a), 255)
         k_max = self.get_max_pop(3)
         self.assertEqual(k_max, 255)
 
@@ -47,7 +78,7 @@ class SC_Tests(unittest.TestCase, SC_Util):
         a = bitarray(1 << 28, 'little')
         # Start with the largest type 4 index so all 16 type 3 blocks are
         # needed.
-        indices = self.sample_with_highest(len(a), k=255)
+        indices = self.sample_with_highest(len(a), 255)
         k_max = self.get_max_pop(4, 16)
         self.assertEqual(k_max, 29)
 
