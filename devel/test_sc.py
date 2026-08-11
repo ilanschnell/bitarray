@@ -18,6 +18,27 @@ from bitarray.test_util import SC_Util
 
 class SC_Tests(unittest.TestCase, SC_Util):
 
+    def test_block_type2(self):
+        a = bitarray(65_536, 'little')
+        # Start with the largest type 2 index so all 256 type 1 blocks are
+        # needed.
+        indices = self.sample_with_highest(65_536, k=255)
+
+        for k, index in enumerate(indices, 1):
+            a[index] = 1
+
+            b = self.make_blob(len(a), 2, indices[:k])
+            self.assertEqual(sc_stat(b)['blocks'], [0, 0, 1, 0, 0])
+            self.assertEqual(sc_decode(b), a)
+            # 256 type 1 blocks require 256 header bytes.  A type 2 block
+            # requires only a 2-byte header, but adds one byte per index:
+            #
+            #    256 + k = 2 + 2k   ->   k = 254
+            #
+            # At the tie (population 254), the encoder prefers type 1.
+            if k < 254:
+                self.assertEqual(sc_encode(a), b)
+
     def test_block_type3(self):
         a = bitarray(1 << 24, 'little')
         # Start with the largest type 3 index so every population requires
@@ -26,11 +47,7 @@ class SC_Tests(unittest.TestCase, SC_Util):
 
         for k, index in enumerate(indices, 1):
             a[index] = 1
-            b = bytearray(b'\x04\x00\x00\x00\x01\xc3')
-            b.append(k)
-            for i in sorted(indices[:k]):
-                b.extend(struct.pack("<I", i)[:3])
-            b.append(0)  # stop byte
+            b = self.make_blob(len(a), 3, indices[:k])
             self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 1, 0])
             self.assertEqual(sc_decode(b), a)
             self.assertEqual(sc_encode(a), b)
@@ -50,11 +67,7 @@ class SC_Tests(unittest.TestCase, SC_Util):
 
         for k, index in enumerate(indices, 1):
             a[index] = 1
-            b = bytearray(b'\x04\x00\x00\x00\x10\xc4')
-            b.append(k)
-            for i in sorted(indices[:k]):
-                b.extend(struct.pack("<I", i))
-            b.append(0)  # stop byte
+            b = self.make_blob(len(a), 4, indices[:k])
             self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 0, 1])
             self.assertEqual(sc_decode(b), a)
             self.assertEqual(sc_encode(a), b)

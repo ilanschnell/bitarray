@@ -1585,6 +1585,20 @@ class SC_Util:
         indices.extend(sample(range(n - 1), k=k - 1))
         return indices
 
+    def make_blob(self, nbits, n, indices):
+        "little-endian streams useing 32-bit struct.pack() for nbits"
+        self.assertIn(n, (2, 3, 4))
+        self.assertIn(len(indices), range(256))
+        length = bits2bytes(nbits.bit_length())
+        b = bytearray([length])
+        b.extend(struct.pack("<I", nbits)[:length])
+        b.append(0xc0 + n)
+        b.append(len(indices))
+        for i in sorted(indices):
+            b.extend(struct.pack("<I", i)[:n])
+        b.append(0)  # stop byte
+        return bytes(b)
+
 
 class SC_Tests(unittest.TestCase, Util, SC_Util):
 
@@ -1839,37 +1853,26 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
 
     def test_block_type2(self):
         a = bitarray(65_536, 'little')
-        # Start with the largest type 2 index so all 256 type 1 blocks are
-        # needed.
-        indices = self.sample_with_highest(65_536, k=255)
-
-        for k, index in enumerate(indices, 1):
-            a[index] = 1
-
-            b = bytearray([0x03, 0x00, 0x00, 0x01, 0xc2, k])
-            for i in a.search(1):
-                b.extend(struct.pack("<H", i))
-            b.append(0)  # stop byte
-            self.assertEqual(sc_stat(b)['blocks'], [0, 0, 1, 0, 0])
-            self.assertEqual(sc_decode(b), a)
-            # 256 type 1 blocks require 256 header bytes.  A type 2 block
-            # requires only a 2-byte header, but adds one byte per index:
-            #
-            #    256 + k = 2 + 2k   ->   k = 254
-            #
-            # At the tie (population 254), the encoder prefers type 1.
-            if k < 254:
-                self.assertEqual(sc_encode(a), b)
+        # 256 type 1 blocks require 256 header bytes.  A type 2 block
+        # requires only a 2-byte header, but adds one byte per index:
+        #
+        #    256 + k = 2 + 2k   ->   k = 254
+        #
+        # At the tie (population 254), the encoder prefers type 1.
+        k = 253
+        indices = self.sample_with_highest(65_536, k=k)
+        a[indices] = 1
+        b = self.make_blob(len(a), 2, indices)
+        self.assertEqual(sc_stat(b)['blocks'], [0, 0, 1, 0, 0])
+        self.assertEqual(sc_decode(b), a)
+        self.assertEqual(sc_encode(a), b)
 
     def test_block_type3(self):
         a = bitarray(1 << 24, 'little')
         indices = self.sample_with_highest(len(a), 255)
-        indices.sort()
+
         a[indices] = 1
-        b = bytearray([0x04, 0x00, 0x00, 0x00, 0x01, 0xc3, a.count()])
-        for i in indices:
-            b.extend(struct.pack("<I", i)[:3])
-        b.append(0)  # stop byte
+        b = self.make_blob(len(a), 3, indices)
         self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 1, 0])
         self.assertEqual(sc_decode(b), a)
         self.assertEqual(sc_encode(a), b)
@@ -1885,13 +1888,9 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
         # At the tie (population 6), the encoder prefers type 3.
         # Include the largest index so the population requires type 4.
         indices = self.sample_with_highest(len(a), k=5)
-        indices.sort()
 
         a[indices] = 1
-        b = bytearray(b'\x04\x00\x00\x00\x04\xc4\x05')
-        for i in indices:
-            b.extend(struct.pack("<I", i))
-        b.append(0)  # stop byte
+        b = self.make_blob(len(a), 4, indices)
         self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 0, 1])
         self.assertEqual(sc_decode(b), a)
         self.assertEqual(sc_encode(a), b)
@@ -1935,13 +1934,16 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
             self.check_blob_length(a, m, blocks)
 
     def test_encode_trailing_zeros(self):
-        for block_type in range(1, 4):
-            a = zeros(1 << (8 * block_type + 1))
-            index = 0 if block_type == 1 else 1 << (8 * (block_type - 1))
+        for n in range(1, 4):
+            # The bitarray is 4 times the decoded size of a type n block.
+            a = bitarray(4 << (8 * n))
+            # Use smallest index requiring each sparse block type.
+            index = 0 if n == 1 else (1 << (8 * (n - 1)))
             a[index] = 1
             blob = sc_encode(a)
             blocks = 5 * [0]
-            blocks[block_type] = 1
+            blocks[n] = 1
+            # Trailing zeros must not widen the encoding.
             self.assertEqual(sc_stat(blob)['blocks'], blocks)
             self.assertEqual(sc_decode(blob), a)
 
