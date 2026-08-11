@@ -2,7 +2,6 @@ import bz2
 import sys
 import gzip
 import random
-import struct
 import unittest
 from time import perf_counter
 
@@ -23,23 +22,21 @@ class SC_Tests(unittest.TestCase, SC_Util):
         # Start with the largest type 2 index so all 256 type 1 blocks are
         # needed.
         indices = self.sample_with_highest(65_536, k=255)
+        k_max = self.get_max_pop(2)
+        self.assertEqual(k_max, 253)
 
         for k, index in enumerate(indices, 1):
             a[index] = 1
             b = self.make_blob(len(a), 2, indices[:k])
-            # 256 type 1 blocks require 256 header bytes.  A type 2 block
-            # requires only a 2-byte header, but adds one byte per index:
-            #
-            #    256 + k = 2 + 2k   ->   k = 254
-            #
-            # At the tie (population 254), the encoder prefers type 1.
-            self.check_stat(a, b, 2, check_encode=(k < 254))
+            self.check_stat(a, b, 2, check_encode=(k <= k_max))
 
     def test_block_type3(self):
         a = bitarray(1 << 24, 'little')
         # Start with the largest type 3 index so every population requires
         # type 3.
         indices = self.sample_with_highest(len(a), k=255)
+        k_max = self.get_max_pop(3)
+        self.assertEqual(k_max, 255)
 
         for k, index in enumerate(indices, 1):
             a[index] = 1
@@ -48,21 +45,16 @@ class SC_Tests(unittest.TestCase, SC_Util):
 
     def test_block_type4(self):
         a = bitarray(1 << 28, 'little')
-        # 16 type 3 blocks require 32 header bytes.  A type 4 block
-        # requires only a 2-byte header, but adds one byte per index.
-        # So for population k, we have a tie when:
-        #
-        #    32 + 3k = 2 + 4k   ->   k = 30
-        #
-        # At the tie (population 30), the encoder prefers type 3.
         # Start with the largest type 4 index so all 16 type 3 blocks are
         # needed.
         indices = self.sample_with_highest(len(a), k=255)
+        k_max = self.get_max_pop(4, 16)
+        self.assertEqual(k_max, 29)
 
         for k, index in enumerate(indices, 1):
             a[index] = 1
             b = self.make_blob(len(a), 4, indices[:k])
-            self.check_stat(a, b, 4, check_encode=(k < 30))
+            self.check_stat(a, b, 4, check_encode=(k <= k_max))
 
     def test_example(self):
         n = 1 << 28
