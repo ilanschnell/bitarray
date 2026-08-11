@@ -1577,6 +1577,24 @@ class BaseTests(unittest.TestCase, Util):
 
 class SC_Util:
 
+    def get_max_pop(self, n, m=256):
+        """
+        Return maximal population for which one type `n` block is preferred
+        over `m` blocks of type `n-1`.
+        """
+        self.assertIn(n, (2, 3, 4))
+        self.assertTrue(1 <= m <= 256)
+        h = 1 if n == 2 else 2  # header size for type n-1 block
+        # After cancelling the index bytes common to both alternatives,
+        # `m` type `n - 1` blocks cost `h * m` bytes, while one type `n`
+        # block costs `2 + k` bytes.
+        #
+        #            h * m = 2 + k   ->   k = h * m - 2
+        #
+        k = h * m - 2  # population where type n-1 and type n tie
+        # At the tie (k), the encoder prefers type n-1.
+        return max(0, min(255, k - 1))
+
     def sample_with_highest(self, n, k):
         "Return k samples from range(n), with n - 1 first."
         self.assertGreater(n, 0)
@@ -1860,41 +1878,22 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
             self.assertEqual(sc_encode(a), b)
             self.assertEqual(sc_stat(b)['blocks'], [0, 1, 0, 0, 0])
 
-    def test_block_type2(self):
-        a = bitarray(65_536, 'little')
-        # 256 type 1 blocks require 256 header bytes.  A type 2 block
-        # requires only a 2-byte header, but adds one byte per index:
-        #
-        #    256 + k = 2 + 2k   ->   k = 254
-        #
-        # At the tie (population 254), the encoder prefers type 1.
-        k = 253
-        indices = self.sample_with_highest(65_536, k=k)
-        a[indices] = 1
-        b = self.make_blob(len(a), 2, indices)
-        self.check_stat(a, b, 2)
-
-    def test_block_type3(self):
-        a = bitarray(1 << 24, 'little')
-        indices = self.sample_with_highest(len(a), 255)
-        a[indices] = 1
-        b = self.make_blob(len(a), 3, indices)
-        self.check_stat(a, b, 3)
-
-    def test_block_type4(self):
-        a = bitarray(1 << 26, 'little')
-        # Four type 3 blocks require 8 header bytes.  A type 4 block
-        # requires only a 2-byte header, but adds one byte per index.
-        # So for population k, we have a tie when:
-        #
-        #    8 + 3k = 2 + 4k   ->   k = 6
-        #
-        # At the tie (population 6), the encoder prefers type 3.
-        # Include the largest index so the population requires type 4.
-        indices = self.sample_with_highest(len(a), k=5)
-        a[indices] = 1
-        b = self.make_blob(len(a), 4, indices)
-        self.check_stat(a, b, 4)
+    def test_block_type234(self):
+        # nbits and k are redundant, but make the expected values explicit;
+        # k also tests get_max_pop().
+        for n, m, nbits, k in [
+                (2, 256, 1 << 16, 253),
+                (3, 256, 1 << 24, 255),
+                (4,   4, 1 << 26,   5),
+        ]:
+            prev_size = 1 << ((n - 1) * 8)  # size of type n-1 block
+            self.assertEqual(prev_size * m, nbits)
+            a = bitarray(nbits, 'little')
+            self.assertEqual(self.get_max_pop(n, m), k)
+            indices = self.sample_with_highest(nbits, k=k)
+            a[indices] = 1
+            b = self.make_blob(nbits, n, indices)
+            self.check_stat(a, b, n)
 
     def test_decode_random_bytes(self):
         # ensure random input doesn't crash the decoder
