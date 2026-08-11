@@ -13,9 +13,27 @@ from bitarray.util import (
     sc_encode, sc_decode, sc_stat,
     vl_encode, vl_decode,
 )
+from bitarray.test_util import SC_Util
 
 
-class SC_Tests(unittest.TestCase):
+class SC_Tests(unittest.TestCase, SC_Util):
+
+    def test_block_type3(self):
+        a = bitarray(1 << 24, 'little')
+        # Start with the largest type 3 index so every population requires
+        # type 3.
+        indices = self.sample_with_highest(len(a), k=255)
+
+        for k, index in enumerate(indices, 1):
+            a[index] = 1
+            b = bytearray(b'\x04\x00\x00\x00\x01\xc3')
+            b.append(k)
+            for i in sorted(indices[:k]):
+                b.extend(struct.pack("<I", i)[:3])
+            b.append(0)  # stop byte
+            self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 1, 0])
+            self.assertEqual(sc_decode(b), a)
+            self.assertEqual(sc_encode(a), b)
 
     def test_block_type4(self):
         a = bitarray(1 << 28, 'little')
@@ -26,12 +44,15 @@ class SC_Tests(unittest.TestCase):
         #    32 + 3k = 2 + 4k   ->   k = 30
         #
         # At the tie (population 30), the encoder prefers type 3.
-        indices = sorted(random.sample(range(1 << 24, len(a)), k=29))
-        for n, index in enumerate(indices, 1):
+        # Start with the largest type 4 index so every population requires
+        # type 4.
+        indices = self.sample_with_highest(len(a), k=29)
+
+        for k, index in enumerate(indices, 1):
             a[index] = 1
             b = bytearray(b'\x04\x00\x00\x00\x10\xc4')
-            b.append(n)
-            for i in indices[:n]:
+            b.append(k)
+            for i in sorted(indices[:k]):
                 b.extend(struct.pack("<I", i))
             b.append(0)  # stop byte
             self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 0, 1])

@@ -1575,7 +1575,18 @@ class BaseTests(unittest.TestCase, Util):
 
 # --------------------------- sparse compression ----------------------------
 
-class SC_Tests(unittest.TestCase, Util):
+class SC_Util:
+
+    def sample_with_highest(self, n, k):
+        "Return k samples from range(n), with n - 1 first."
+        self.assertGreater(n, 0)
+        self.assertGreater(k, 0)
+        indices = [n - 1]
+        indices.extend(sample(range(n - 1), k=k - 1))
+        return indices
+
+
+class SC_Tests(unittest.TestCase, Util, SC_Util):
 
     def test_explicit(self):
         for b, bits, endian in [
@@ -1828,37 +1839,40 @@ class SC_Tests(unittest.TestCase, Util):
 
     def test_block_type2(self):
         a = bitarray(65_536, 'little')
-        indices = sample(range(65_536), 255)
-        for n, index in enumerate(indices, 1):
-            a[index] = 1
-            self.assertEqual(a.count(), n)
+        # Start with the largest type 2 index so all 256 type 1 blocks are
+        # needed.
+        indices = self.sample_with_highest(65_536, k=255)
 
-            b = bytearray([0x03, 0x00, 0x00, 0x01, 0xc2, n])
+        for k, index in enumerate(indices, 1):
+            a[index] = 1
+
+            b = bytearray([0x03, 0x00, 0x00, 0x01, 0xc2, k])
             for i in a.search(1):
                 b.extend(struct.pack("<H", i))
             b.append(0)  # stop byte
             self.assertEqual(sc_stat(b)['blocks'], [0, 0, 1, 0, 0])
             self.assertEqual(sc_decode(b), a)
-            c = sc_encode(a)
-            if a.count(1, 0, 256) == n:
-                # All random indices land in the first type 1 block.
-                self.assertEqual(sc_stat(c)['blocks'], [0, 1, 0, 0, 0])
-            elif n >= 254:
-                # At population 254, type 1 and type 2 tie.
-                # Type 1 may produce a smaller encoding.
-                pass
-            else:
-                self.assertEqual(c, b)
+            # 256 type 1 blocks require 256 header bytes.  A type 2 block
+            # requires only a 2-byte header, but adds one byte per index:
+            #
+            #    256 + k = 2 + 2k   ->   k = 254
+            #
+            # At the tie (population 254), the encoder prefers type 1.
+            if k < 254:
+                self.assertEqual(sc_encode(a), b)
 
     def test_block_type3(self):
-        a = random_k(1 << 24, 255, 'little')
+        a = bitarray(1 << 24, 'little')
+        indices = self.sample_with_highest(len(a), 255)
+        indices.sort()
+        a[indices] = 1
         b = bytearray([0x04, 0x00, 0x00, 0x00, 0x01, 0xc3, a.count()])
-        for i in a.search(1):
+        for i in indices:
             b.extend(struct.pack("<I", i)[:3])
         b.append(0)  # stop byte
+        self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 1, 0])
         self.assertEqual(sc_decode(b), a)
         self.assertEqual(sc_encode(a), b)
-        self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 1, 0])
 
     def test_block_type4(self):
         a = bitarray(1 << 26, 'little')
@@ -1869,21 +1883,18 @@ class SC_Tests(unittest.TestCase, Util):
         #    8 + 3k = 2 + 4k   ->   k = 6
         #
         # At the tie (population 6), the encoder prefers type 3.
-        indices = sorted(sample(range(len(a)), k=5))
+        # Include the largest index so the population requires type 4.
+        indices = self.sample_with_highest(len(a), k=5)
+        indices.sort()
+
         a[indices] = 1
-        b = bytearray(b'\x04\x00\x00\x00\x04\xc4')
-        b.append(len(indices))
+        b = bytearray(b'\x04\x00\x00\x00\x04\xc4\x05')
         for i in indices:
             b.extend(struct.pack("<I", i))
         b.append(0)  # stop byte
         self.assertEqual(sc_stat(b)['blocks'], [0, 0, 0, 0, 1])
         self.assertEqual(sc_decode(b), a)
-        c = sc_encode(a)
-        if all(i < (1 << 24) for i in indices):
-            # All random indices land in the first type 3 block.
-            self.assertEqual(sc_stat(c)['blocks'], [0, 0, 0, 1, 0])
-        else:
-            self.assertEqual(c, b)
+        self.assertEqual(sc_encode(a), b)
 
     def test_decode_random_bytes(self):
         # ensure random input doesn't crash the decoder
