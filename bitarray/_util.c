@@ -1296,8 +1296,6 @@ byte_length(Py_ssize_t i)
 /* Calculate an array with the running totals (rts) for 256 bit segments.
    Note that we call these "segments", as opposed to "blocks", in order to
    avoid confusion with encode blocks.
-   In addition, the last populated segment is calculated.  When no segments
-   are populated (the total count is zero), last_pop_seg is set to -1.
 
    0           1           2           3           4   index in rts array, i
    +-----------+-----------+-----------+-----------+
@@ -1323,8 +1321,6 @@ byte_length(Py_ssize_t i)
      * The last segment may be partial.  In that case, its size is given
        by nbits % 256.  Here: nbits % 256 = 987 % 256 = 219
 
-     * The last populated segment is 3, as:  rts[3 + 1] - rts[3] = 4 > 0
-
    As each segment (at large) covers 256 bits (32 bytes), and each element
    in the running totals array takes up 8 bytes (on a 64-bit machine) the
    additional memory to accommodate the rts array is therefore 1/4 of the
@@ -1338,14 +1334,13 @@ byte_length(Py_ssize_t i)
    soon as the index count (population) of the current segment is reached.
 */
 static Py_ssize_t *
-sc_rts(bitarrayobject *a, Py_ssize_t *last_pop_seg)
+sc_rts(bitarrayobject *a)
 {
     const Py_ssize_t n_seg = NSEG(a);         /* total number of segments */
     const Py_ssize_t c_seg = a->nbits / (8 * SEGSIZE); /* complete segments */
     char zeros[SEGSIZE];                      /* segment with only zeros */
     char *buff = a->ob_item;                  /* buffer in current segment */
     Py_ssize_t cnt = 0;                       /* current count */
-    Py_ssize_t last = -1;                     /* last populated segment */
     Py_ssize_t *res, m;
 
     memset(zeros, 0x00, SEGSIZE);
@@ -1357,21 +1352,38 @@ sc_rts(bitarrayobject *a, Py_ssize_t *last_pop_seg)
     for (m = 0; m < c_seg; m++, buff += SEGSIZE) {  /* complete segments */
         res[m] = cnt;
         assert(buff + SEGSIZE <= a->ob_item + Py_SIZE(a));
-        if (memcmp(buff, zeros, SEGSIZE)) {  /* segment has not only zeros */
+        if (memcmp(buff, zeros, SEGSIZE))  /* segment has not only zeros */
             cnt += popcnt_words((uint64_t *) buff, SEGSIZE / 8);
-            last = m;
-        }
     }
     res[c_seg] = cnt;
 
     if (n_seg > c_seg) {           /* we have a final partial segment */
         cnt += count_from_word(a, c_seg * SEGSIZE / 8);
-        if (cnt > res[c_seg])
-            last = c_seg;
         res[n_seg] = cnt;
     }
-    *last_pop_seg = last;
     return res;
+}
+
+/* Return the last populated segment, or -1 when the population is zero. */
+static Py_ssize_t
+sc_last_pop_seg(const Py_ssize_t *rts, Py_ssize_t nseg)
+{
+    const Py_ssize_t total = rts[nseg];
+    Py_ssize_t lo = 0, hi = nseg;
+
+    if (total == 0)
+        return -1;
+
+    /* Find the largest index i for which rts[i] < total. */
+    while (lo < hi) {
+        Py_ssize_t mid = lo + (hi - lo + 1) / 2;
+
+        if (rts[mid] < total)
+            lo = mid;
+        else
+            hi = mid - 1;
+    }
+    return lo;
 }
 
 /* expose sc_rts() to Python during debug mode for testing */
@@ -1388,7 +1400,7 @@ module_sc_rts(PyObject *module, PyObject *obj)
 
     Py_BEGIN_CRITICAL_SECTION(a);
     nseg = NSEG(a);
-    rts = sc_rts(a, &last);
+    rts = sc_rts(a);
     Py_END_CRITICAL_SECTION();
 
     if (rts == NULL)
@@ -1404,6 +1416,7 @@ module_sc_rts(PyObject *module, PyObject *obj)
             goto error;
         PyList_SET_ITEM(list, i, item);
     }
+    last = sc_last_pop_seg(rts, nseg);
     PyMem_Free(rts);
     return Py_BuildValue("Nn", list, last);
  error:
@@ -1629,8 +1642,6 @@ sc_encode_block(char *str, Py_ssize_t *len,
     for (n = 1; n < 4; n++) {
         Py_ssize_t next_count, nblocks, cost_a, cost_b;
 
-        assert((n == 1 && count < 32) || (n > 1 && count <= 255));
-
         /* population for next block type n+1 */
         next_count = sc_count(a, rts, offset, n + 1);
         if (next_count > 255)
@@ -1690,8 +1701,10 @@ sc_encode_lock_held(bitarrayobject *a, PyObject **out)
     Py_ssize_t last;            /* last populated segment */
 
     set_padbits(a);
-    if ((rts = sc_rts(a, &last)) == NULL)
+    if ((rts = sc_rts(a)) == NULL)
         return -1;
+
+    last = sc_last_pop_seg(rts, NSEG(a));
 
     str = PyBytes_AS_STRING(*out);
     len += sc_encode_header(str, a);
