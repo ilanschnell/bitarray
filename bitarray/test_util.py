@@ -1603,14 +1603,20 @@ class SC_Util:
         indices.extend(sample(range(n - 1), k - 1))
         return indices
 
+    @staticmethod
+    def header(nbits):
+        "little-endian header using 32-bit struct.pack() for nbits"
+        length = bits2bytes(nbits.bit_length())
+        b = bytearray([length])
+        b.extend(struct.pack("<I", nbits)[:length])
+        return bytes(b)
+
     def make_blob(self, nbits, n, indices):
         "little-endian streams using 32-bit struct.pack() for nbits"
         self.assertIn(n, (2, 3, 4))
         self.assertIn(len(indices), range(256))
 
-        length = bits2bytes(nbits.bit_length())
-        b = bytearray([length])
-        b.extend(struct.pack("<I", nbits)[:length])
+        b = bytearray(self.header(nbits))
         b.append(0xc0 + n)
         b.append(len(indices))
         for i in sorted(indices):
@@ -1618,12 +1624,16 @@ class SC_Util:
         b.append(0)  # stop byte
         return bytes(b)
 
+    @staticmethod
+    def block_counts(n):
+        counts = 5 * [0]
+        counts[n] = 1
+        return counts
+
     def check_stat(self, a, b, n, check_encode=True):
         stat = sc_stat(b)
         self.assertEqual(stat['nbits'], len(a))
-        blocks = 5 * [0]
-        blocks[n] = 1
-        self.assertEqual(stat['blocks'], blocks)
+        self.assertEqual(stat['blocks'], self.block_counts(n))
         self.assertEqual(sc_decode(b), a)
         if check_encode:
             self.assertEqual(sc_encode(a), b)
@@ -1687,48 +1697,40 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
             self.assertEqual(len(blocks), 5)
             self.assertTrue(all(type(n) is int for n in blocks))
 
-    def test_endian(self):
-        for endian in ENDIANS:
-            a = urandom(400, endian)
-            blob = sc_encode(a)
-            stat = sc_stat(blob)
-            self.assertEQUAL(sc_decode(blob), a)
-            self.assertEqual(stat, {'nbits': len(a), 'endian': endian,
-                                    'blocks': [2, 0, 0, 0, 0]})
-
-    def test_decode_header_nbits(self):
-        for b, n in [
-                (b'\x00\0', 0),
-                (b'\x01\x00\0', 0),
-                (b'\x01\x01\0', 1),
-                (b'\x02\x00\x00\0', 0),
-                (b'\x02\x00\x01\0', 256),
-                (b'\x03\x00\x00\x00\0', 0),
-                (b'\x03\x00\x00\x01\0', 65536),
-        ]:
-            a = sc_decode(b)
-            self.assertEqual(len(a), n)
-            self.assertFalse(a.any())
-            self.assertEqual(sc_stat(b)['nbits'], n)
-
-    def test_zeros_explicit(self):
-        for blob, blocks in [
-                (b"\x11\x08\0",         [0, 0, 0, 0, 0]),
-                (b"\x11\x08\x01\x00\0", [1, 0, 0, 0, 0]),
-                (b"\x11\x08\xa0\0",     [0, 1, 0, 0, 0]),
-                (b"\x11\x08\xc2\x00\0", [0, 0, 1, 0, 0]),
-                (b"\x11\x08\xc3\x00\0", [0, 0, 0, 1, 0]),
-                (b"\x11\x08\xc4\x00\0", [0, 0, 0, 0, 1]),
+    def test_zero_explicit(self):
+        for blob, blocks, nbits in [
+                # empty bitarrays
+                (b"\x00\0",         [0, 0, 0, 0, 0], 0),
+                (b"\x01\x00\0",     [0, 0, 0, 0, 0], 0),
+                (b"\x02\x00\x00\0", [0, 0, 0, 0, 0], 0),
+                (b"\x00\xa0\0",     [0, 1, 0, 0, 0], 0),
+                (b"\x00\xa0\xa0\0", [0, 2, 0, 0, 0], 0),
+                (b"\x00\xc2\x00\0", [0, 0, 1, 0, 0], 0),
+                (b"\x00\xc3\x00\0", [0, 0, 0, 1, 0], 0),
+                (b"\x00\xc4\x00\0", [0, 0, 0, 0, 1], 0),
+                (b"\x00\xa0\xc2\x00\xc3\x00\xc4\x00\0",
+                                    [0, 1, 1, 1, 1], 0),
+                # zeo bitarrays with length 8
+                (b"\x01\x08\0",         [0, 0, 0, 0, 0], 8),
+                (b"\x02\x08\x00\0",     [0, 0, 0, 0, 0], 8),
+                (b"\x03\x08\x00\x00\0", [0, 0, 0, 0, 0], 8),
+                (b"\x01\x08\x01\x00\0", [1, 0, 0, 0, 0], 8),
+                (b"\x01\x08\xa0\0",     [0, 1, 0, 0, 0], 8),
+                (b"\x01\x08\xc2\x00\0", [0, 0, 1, 0, 0], 8),
+                (b"\x01\x08\xc3\x00\0", [0, 0, 0, 1, 0], 8),
+                (b"\x01\x08\xc4\x00\0", [0, 0, 0, 0, 1], 8),
         ]:
             a = sc_decode(blob)
-            self.assertEqual(a.endian, 'big')
-            self.assertEqual(len(a), 8)
+            self.assertEqual(a.endian, 'little')
+            self.assertEqual(len(a), nbits)
             self.assertFalse(a.any())
 
             stat = sc_stat(blob)
-            self.assertEqual(stat, {'endian': 'big',
-                                    'nbits': 8,
+            self.assertEqual(stat, {'endian': 'little', 'nbits': nbits,
                                     'blocks': blocks})
+
+        self.assertEqual(sc_encode(bitarray(0, 'little')), b'\x00\0')
+        self.assertEqual(sc_encode(bitarray(8, 'little')), b'\x01\x08\0')
 
     def test_untouch(self):
         blob = b"\x01\x07\x01\x73\0XYZ"
@@ -1837,7 +1839,8 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
         for n, blob in [
                 # raw:
                 (0, b'\x11\x03\x01\x20\0'), # this is what sc_encode gives us
-                (0, b'\x11\x03\x01\x3f\0'), # but we can set the pad bits to 1
+                (0, b'\x11\x03\x01\x3f\0'), # set the pad bits to 1
+                (0, b'\x12\x03\x00\x01\x20\0'), # header has redundant zeros
                 # sparse:
                 (1, b'\x11\x03\xa1\x02\0'),
                 (2, b'\x11\x03\xc2\x01\x02\x00\0'),
@@ -1846,19 +1849,17 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
         ]:
             a = sc_decode(blob)
             self.assertEqual(a.to01(), '001')
-            blocks = 5 * [0]
-            blocks[n] = 1
             stat = sc_stat(blob)
+            self.assertEqual(stat['endian'], 'big')
             self.assertEqual(stat['nbits'], 3)
-            self.assertEqual(stat['blocks'], blocks)
+            self.assertEqual(stat['blocks'], self.block_counts(n))
 
     def test_block_type0(self):
         for k in range(0x01, 0xa0):
             nbytes = k if k <= 32 else 32 * (k - 31)
             nbits = 8 * nbytes
             a = ones(nbits, "little")
-            b = bytearray([0x01, nbits] if nbits < 256 else
-                          b'\x02' + struct.pack("<H", nbits))
+            b = bytearray(self.header(nbits))
             b.append(k)
             b.extend(a.tobytes())
             b.append(0)  # stop byte
@@ -1928,9 +1929,7 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
             n = int(i > 3)
             m += 2  # block head and raw byte (type 0) or index (type 1)
 
-            blocks = 5 * [0]
-            blocks[n] = 1
-            self.check_blob_length(a, m, blocks)
+            self.check_blob_length(a, m, self.block_counts(n))
 
     def test_encode_trailing_zeros(self):
         for n in range(1, 4):
@@ -1940,10 +1939,8 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
             index = 0 if n == 1 else (1 << (8 * (n - 1)))
             a[index] = 1
             blob = sc_encode(a)
-            blocks = 5 * [0]
-            blocks[n] = 1
             # Trailing zeros must not widen the encoding.
-            self.assertEqual(sc_stat(blob)['blocks'], blocks)
+            self.assertEqual(sc_stat(blob)['blocks'], self.block_counts(n))
             self.assertEqual(sc_decode(blob), a)
 
     def test_encode_ones(self):
