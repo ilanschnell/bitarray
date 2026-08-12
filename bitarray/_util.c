@@ -1334,7 +1334,7 @@ byte_length(Py_ssize_t i)
    soon as the index count (population) of the current segment is reached.
 */
 static Py_ssize_t *
-sc_rts(bitarrayobject *a, Py_ssize_t *last_populated)
+sc_rts(bitarrayobject *a, Py_ssize_t *last_pop_seg)
 {
     const Py_ssize_t n_seg = NSEG(a);         /* total number of segments */
     const Py_ssize_t c_seg = a->nbits / (8 * SEGSIZE); /* complete segments */
@@ -1366,7 +1366,7 @@ sc_rts(bitarrayobject *a, Py_ssize_t *last_populated)
             last = c_seg;
         res[n_seg] = cnt;
     }
-    *last_populated = last;
+    *last_pop_seg = last;
     return res;
 }
 
@@ -1377,14 +1377,14 @@ module_sc_rts(PyObject *module, PyObject *obj)
 {
     PyObject *list;
     bitarrayobject *a;
-    Py_ssize_t *rts, nseg, last_populated, i;
+    Py_ssize_t *rts, nseg, last, i;
 
     assert(bitarray_Check(obj));
     a = (bitarrayobject *) obj;
 
     Py_BEGIN_CRITICAL_SECTION(a);
     nseg = NSEG(a);
-    rts = sc_rts(a, &last_populated);
+    rts = sc_rts(a, &last);
     Py_END_CRITICAL_SECTION();
 
     if (rts == NULL)
@@ -1401,7 +1401,7 @@ module_sc_rts(PyObject *module, PyObject *obj)
         PyList_SET_ITEM(list, i, item);
     }
     PyMem_Free(rts);
-    return Py_BuildValue("Nn", list, last_populated);
+    return Py_BuildValue("Nn", list, last);
  error:
     Py_XDECREF(list);
     PyMem_Free(rts);
@@ -1606,11 +1606,10 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
  */
 static Py_ssize_t
 sc_encode_block(char *str, Py_ssize_t *len,
-                bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t last_pop,
+                bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t last_pop_seg,
                 Py_ssize_t offset)
 {
     const Py_ssize_t nbytes = Py_SIZE(a) - offset;  /* remaining bytes */
-    const Py_ssize_t current_seg = offset / SEGSIZE;
     int count, n;
 
     assert(nbytes > 0);
@@ -1624,7 +1623,6 @@ sc_encode_block(char *str, Py_ssize_t *len,
     }
 
     for (n = 1; n < 4; n++) {
-        const Py_ssize_t segs_per_block = BSI(n) / SEGSIZE;
         Py_ssize_t next_count, nblocks, cost_a, cost_b;
 
         assert((n == 1 && count < 32) || (n > 1 && count <= 255));
@@ -1636,7 +1634,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
             break;
 
         /* number of blocks of type n */
-        nblocks = (last_pop - current_seg) / segs_per_block + 1;
+        nblocks = (last_pop_seg * SEGSIZE - offset) / BSI(n) + 1;
         nblocks = Py_MIN(256, nblocks);
         /* cost of nblocks blocks of type n */
         cost_a = ((n == 1) ? 1 : 2) * nblocks;

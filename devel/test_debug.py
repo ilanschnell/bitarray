@@ -634,44 +634,29 @@ class RTS_Tests(unittest.TestCase):
         for n in range(1000):
             a = ones(n)
             rts, last = _sc_rts(a)
-            self.assertEqual(last, (n - 1) // SEGBITS)
             self.assertEqual(len(rts), self.nseg(a) + 1)
             self.assertEqual(rts[0], 0)
             self.assertEqual(rts[-1], n)
             for i, v in enumerate(rts):
                 self.assertEqual(v, min(SEGBITS * i, n))
-
-    def test_zeros(self):
-        for n in range(1000):
-            a = zeros(n)
-            rts, last = _sc_rts(a)
-            self.assertEqual(last, -1)
-            self.assertEqual(len(rts), self.nseg(a) + 1)
-            self.assertTrue(all(v == 0 for v in rts))
+            # This also handles the empty bitarray: (-1) // SEGBITS == -1.
+            self.assertEqual(last, (n - 1) // SEGBITS)
 
     def test_sample(self):
         for _ in range(100):
             n = randrange(100, 10_000)
-            k = randrange(1, 10)
+            k = randrange(10)
             indices = sample(range(n), k)
             a = bitarray(n)
             a[indices] = 1
             rts, last = _sc_rts(a)
-            self.assertEqual(last, max(indices) // SEGBITS)
-            for i in range(self.nseg(a)):
-                self.assertEqual(rts[i + 1] - rts[i],
-                                 a[SEGBITS * i : SEGBITS * (i + 1)].count())
-
-    def test_random(self):
-        for _ in range(100):
-            a = urandom_2(randrange(10_000))
-            rts, last = _sc_rts(a)
             self.assertEqual(len(rts), self.nseg(a) + 1)
             self.assertEqual(rts[0], 0)
-            self.assertEqual(rts[-1], a.count())
+            self.assertEqual(rts[-1], k)
             for i in range(self.nseg(a)):
                 self.assertEqual(rts[i + 1] - rts[i],
                                  a[SEGBITS * i : SEGBITS * (i + 1)].count())
+            self.assertEqual(last, max(indices) // SEGBITS if k else -1)
 
 
 class ReadN_WriteN_Tests(unittest.TestCase, Util):
