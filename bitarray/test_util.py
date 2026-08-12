@@ -1699,33 +1699,26 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
 
     def test_zero_explicit(self):
         for blob, blocks, nbits in [
-                # empty bitarrays
+                # empty bitarray
                 (b"\x00\0",         [0, 0, 0, 0, 0], 0),
-                (b"\x01\x00\0",     [0, 0, 0, 0, 0], 0),
-                (b"\x02\x00\x00\0", [0, 0, 0, 0, 0], 0),
-                (b"\x00\xa0\0",     [0, 1, 0, 0, 0], 0),
-                (b"\x00\xa0\xa0\0", [0, 2, 0, 0, 0], 0),
-                (b"\x00\xc2\x00\0", [0, 0, 1, 0, 0], 0),
-                (b"\x00\xc3\x00\0", [0, 0, 0, 1, 0], 0),
-                (b"\x00\xc4\x00\0", [0, 0, 0, 0, 1], 0),
-                (b"\x00\xa0\xc2\x00\xc3\x00\xc4\x00\0",
-                                    [0, 1, 1, 1, 1], 0),
-                # zeo bitarrays with length 8
+                (b"\x02\x00\x00\xa0\xc2\x00\xc3\x00\xc4\x00\xa0\0",
+                                    [0, 2, 1, 1, 1], 0),
+                # zero bitarray with length 8
                 (b"\x01\x08\0",         [0, 0, 0, 0, 0], 8),
-                (b"\x02\x08\x00\0",     [0, 0, 0, 0, 0], 8),
                 (b"\x03\x08\x00\x00\0", [0, 0, 0, 0, 0], 8),
-                (b"\x01\x08\x01\x00\0", [1, 0, 0, 0, 0], 8),
-                (b"\x01\x08\xa0\0",     [0, 1, 0, 0, 0], 8),
-                (b"\x01\x08\xc2\x00\0", [0, 0, 1, 0, 0], 8),
-                (b"\x01\x08\xc3\x00\0", [0, 0, 0, 1, 0], 8),
-                (b"\x01\x08\xc4\x00\0", [0, 0, 0, 0, 1], 8),
+                (b"\x01\x08\x01\x00\xa0\xc2\x00\xc3\x00\xc4\x00\xa0\xa0\0",
+                                        [1, 3, 1, 1, 1], 8),
         ]:
-            a = sc_decode(blob)
+            it = iter(blob)
+            a = sc_decode(it)
+            self.assertRaises(StopIteration, next, it)
             self.assertEqual(a.endian, 'little')
             self.assertEqual(len(a), nbits)
             self.assertFalse(a.any())
 
-            stat = sc_stat(blob)
+            it = iter(blob)
+            stat = sc_stat(it)
+            self.assertRaises(StopIteration, next, it)
             self.assertEqual(stat, {'endian': 'little', 'nbits': nbits,
                                     'blocks': blocks})
 
