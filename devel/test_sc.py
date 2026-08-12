@@ -7,7 +7,7 @@ from time import perf_counter
 
 from bitarray import bitarray
 from bitarray.util import (
-    ones, random_p,
+    ones, zeros, random_p,
     serialize, deserialize,
     sc_encode, sc_decode, sc_stat,
     vl_encode, vl_decode,
@@ -53,6 +53,30 @@ class SC_Tests(unittest.TestCase, SC_Util):
             self.assertEqual(self.get_max_pop(3, m),
                              self.get_max_pop(4, m))
 
+    def test_header(self):
+        # test self.header() utility
+        for n in [
+                0, 1,
+                255, 256,
+                65535, 65536,
+                (1 << 24) - 1, 1 << 24,
+        ]:
+            blob = self.header(n) + b'\0'
+            a = sc_decode(blob)
+            self.assertEqual(len(a), n)
+            self.assertEqual(a.endian, 'little')
+            self.assertEqual(blob, sc_encode(a))
+
+    def test_alternate(self):
+        a = 8 * (zeros(256, 'little') + ones(256, 'little'))
+        blob = sc_encode(a)
+        self.assertEqual(
+            blob,
+            b'\x02\x00\x10' + 8 * (b'\xa0' + b'\x20' + 32*b'\xff') + b'\0')
+        self.assertEqual(sc_decode(blob), a)
+        stat = sc_stat(blob)
+        self.assertEqual(stat['blocks'], [8, 8, 0, 0, 0])
+
     def test_block_type2(self):
         a = bitarray(65_536, 'little')
         # Start with the largest type 2 index so all 256 type 1 blocks are
@@ -64,6 +88,8 @@ class SC_Tests(unittest.TestCase, SC_Util):
         for k, index in enumerate(indices, 1):
             a[index] = 1
             b = self.make_blob(len(a), 2, indices[:k])
+            # The index count byte of a type 2 block produced by sc_encode()
+            # is never 254 or 255, because the type 1 header is smaller.
             self.check_stat(a, b, 2, check_encode=(k <= k_max))
 
     def test_block_type3(self):
