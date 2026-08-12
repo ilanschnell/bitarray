@@ -1296,6 +1296,8 @@ byte_length(Py_ssize_t i)
 /* Calculate an array with the running totals (rts) for 256 bit segments.
    Note that we call these "segments", as opposed to "blocks", in order to
    avoid confusion with encode blocks.
+   In addition, the last populated segment is calculated.  When no segments
+   are populated (the total count is zero), last_pop_seg is set to -1.
 
    0           1           2           3           4   index in rts array, i
    +-----------+-----------+-----------+-----------+
@@ -1320,6 +1322,8 @@ byte_length(Py_ssize_t i)
 
      * The last segment may be partial.  In that case, its size is given
        by nbits % 256.  Here: nbits % 256 = 987 % 256 = 219
+
+     * The last populated segment is 3, as:  rts[3 + 1] - rts[3] = 4 > 0
 
    As each segment (at large) covers 256 bits (32 bytes), and each element
    in the running totals array takes up 8 bytes (on a 64-bit machine) the
