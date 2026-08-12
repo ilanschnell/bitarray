@@ -48,6 +48,11 @@ class SC_Tests(unittest.TestCase, SC_Util):
         ]:
             self.assertEqual(self.get_max_pop(n, m), k)
 
+        for m in range(1, 257):
+            # Type 3 and 4 maximal population behave the same way.
+            self.assertEqual(self.get_max_pop(3, m),
+                             self.get_max_pop(4, m))
+
     def test_block_type2(self):
         a = bitarray(65_536, 'little')
         # Start with the largest type 2 index so all 256 type 1 blocks are
@@ -111,9 +116,9 @@ class SC_Tests(unittest.TestCase, SC_Util):
         state = random.getstate()
         self.addCleanup(random.setstate, state)
         random.seed(4567)
-        n = 1 << 27
+        nbits = 1 << 27
 
-        a = random_p(n)
+        a = random_p(nbits)
         i = 1
         # Each bit has probability (1 / 2) ** i.
         while a.any():
@@ -124,11 +129,11 @@ class SC_Tests(unittest.TestCase, SC_Util):
             stat = sc_stat(blob)
             self.assertEqual(stat['nbits'], len(a))
             blocks = 5 * [0]
-            block_type = sum(i > j for j in (4, 8, 16, 24))
-            blocks[block_type] = 1 << count_exponent[block_type]
+            n = sum(i > j for j in (4, 8, 16, 24))
+            blocks[n] = 1 << count_exponent[n]
             self.assertEqual(stat['blocks'], blocks)
 
-            a &= random_p(n, 1 / 16)
+            a &= random_p(nbits, 1 / 16)
             i += 4
 
 

@@ -1619,9 +1619,11 @@ class SC_Util:
         return bytes(b)
 
     def check_stat(self, a, b, n, check_encode=True):
+        stat = sc_stat(b)
+        self.assertEqual(stat['nbits'], len(a))
         blocks = 5 * [0]
         blocks[n] = 1
-        self.assertEqual(sc_stat(b)['blocks'], blocks)
+        self.assertEqual(stat['blocks'], blocks)
         self.assertEqual(sc_decode(b), a)
         if check_encode:
             self.assertEqual(sc_encode(a), b)
@@ -1845,7 +1847,7 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
             a = sc_decode(blob)
             self.assertEqual(a.to01(), '001')
             blocks = 5 * [0]
-            blocks[n] += 1
+            blocks[n] = 1
             stat = sc_stat(blob)
             self.assertEqual(stat['nbits'], 3)
             self.assertEqual(stat['blocks'], blocks)
@@ -1856,27 +1858,24 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
             nbits = 8 * nbytes
             a = ones(nbits, "little")
             b = bytearray([0x01, nbits] if nbits < 256 else
-                          [0x02, nbits % 256, nbits // 256])
+                          b'\x02' + struct.pack("<H", nbits))
             b.append(k)
             b.extend(a.tobytes())
             b.append(0)  # stop byte
 
-            self.assertEqual(sc_decode(b), a)
-            self.assertEqual(sc_encode(a), b)
-            self.assertEqual(sc_stat(b)['blocks'], [1, 0, 0, 0, 0])
+            self.check_stat(a, b, 0)
 
     def test_block_type1(self):
         a = bitarray(256, 'little')
-        for n in range(1, 32):
-            a[getrandbits(8)] = 1
+        indices = sample(range(256), 31)
 
-            b = bytearray([0x02, 0x00, 0x01, 0xa0 + a.count()])
-            b.extend(list(a.search(1)))  # sorted indices with no duplicates
+        for k, index in enumerate(indices, 1):
+            a[index] = 1
+            b = bytearray([0x02, 0x00, 0x01, 0xa0 + k])
+            b.extend(sorted(indices[:k]))
             b.append(0)  # stop byte
 
-            self.assertEqual(sc_decode(b), a)
-            self.assertEqual(sc_encode(a), b)
-            self.assertEqual(sc_stat(b)['blocks'], [0, 1, 0, 0, 0])
+            self.check_stat(a, b, 1)
 
     def test_block_type234(self):
         # nbits and k are redundant, but make the expected values explicit;
@@ -1917,20 +1916,20 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
 
     def test_encode_zeros(self):
         for i in range(26):
-            n = 1 << i
-            a = zeros(n)
-            m = 2                            # head byte and stop byte
-            m += bits2bytes(n.bit_length())  # size of n in bytes
+            nbits = 1 << i
+            a = zeros(nbits)
+            m = 2                                # head byte and stop byte
+            m += bits2bytes(nbits.bit_length())  # size of nbits in bytes
             self.check_blob_length(a, m, [0, 0, 0, 0, 0])
 
             a[0] = 1
             # As the first block accounts for the entire population, trailing
             # zeros do not cause the block type to increase with array size.
-            block_type = int(i > 3)
+            n = int(i > 3)
             m += 2  # block head and raw byte (type 0) or index (type 1)
 
             blocks = 5 * [0]
-            blocks[block_type] = 1
+            blocks[n] = 1
             self.check_blob_length(a, m, blocks)
 
     def test_encode_trailing_zeros(self):
@@ -1958,7 +1957,7 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
             # number of raw blocks:
             raw_blocks = (
                 bool(nbytes % 32) +              # number in 0x01 .. 0x1f
-                (nbytes // 32 + 127) // 128)     # number in 0x20 .. 0xbf
+                (nbytes // 32 + 127) // 128)     # number in 0x20 .. 0x9f
             # number of head bytes
             m += raw_blocks
             self.check_blob_length(a, m, [raw_blocks, 0, 0, 0, 0])
