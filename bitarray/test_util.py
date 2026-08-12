@@ -1925,15 +1925,18 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
             self.check_blob_length(a, m, self.block_counts(n))
 
     def test_encode_trailing_zeros(self):
-        for n in range(1, 4):
+        for n, index, blocks in [
+                (1, 0,       self.block_counts(1)),
+                (2, 1 << 8,  [0, 2, 0, 0, 0]),  # 2 type 1 blocks are smaller
+                (2, 3 << 8,  self.block_counts(2)),
+                (3, 1 << 16, self.block_counts(3)),
+        ]:
             # The bitarray is 4 times the decoded size of a type n block.
             a = bitarray(4 << (8 * n))
-            # Use smallest index requiring each sparse block type.
-            index = 0 if n == 1 else (1 << (8 * (n - 1)))
             a[index] = 1
             blob = sc_encode(a)
             # Trailing zeros must not widen the encoding.
-            self.assertEqual(sc_stat(blob)['blocks'], self.block_counts(n))
+            self.assertEqual(sc_stat(blob)['blocks'], blocks)
             self.assertEqual(sc_decode(blob), a)
 
     def test_encode_ones(self):

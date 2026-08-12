@@ -128,7 +128,7 @@ class SC_Tests(unittest.TestCase, SC_Util):
         stat = sc_stat(b)
         self.assertEqual(stat, {'endian': 'little',
                                 'nbits': n,
-                                'blocks': [2, 653, 12, 1, 1]})
+                                'blocks': [2, 653, 12, 2, 1]})
         self.assertEqual(a, sc_decode(b))
 
         a.reverse()

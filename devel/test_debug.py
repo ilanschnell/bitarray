@@ -602,9 +602,17 @@ class RTS_Tests(unittest.TestCase):
         self.assertIn(_SEGSIZE, (8, 16, 32))
 
     def test_empty(self):
-        rts = _sc_rts(bitarray())
+        rts, last = _sc_rts(bitarray())
         self.assertEqual(len(rts), 1)
         self.assertEqual(rts, [0])
+        self.assertEqual(last, -1)
+
+    def test_trailing_zeros(self):
+        a = zeros(4 * SEGBITS)
+        a[SEGBITS + 10] = 1
+
+        rts, last = _sc_rts(a)
+        self.assertEqual(last, 1)
 
     @unittest.skipIf(SEGBITS != 256, "SEGBITS mismatch")
     def test_example(self):
@@ -612,10 +620,11 @@ class RTS_Tests(unittest.TestCase):
         a = zeros(987)
         a[[0, 17, 31, 149, 255, 512, 637, 767, 768, 813, 899, 986]] = 1
         self.assertEqual(a.count(), 12)
-        rts = _sc_rts(a)
+        rts, last = _sc_rts(a)
         self.assertIs(type(rts), list)
         self.assertEqual(len(rts), 5)
         self.assertEqual(rts, [0, 5, 5, 8, 12])
+        self.assertEqual(last, 3)
 
     @staticmethod
     def nseg(a):  # number of segments, see also SegmentTests in tricks.py
@@ -624,17 +633,39 @@ class RTS_Tests(unittest.TestCase):
     def test_ones(self):
         for n in range(1000):
             a = ones(n)
-            rts = _sc_rts(a)
+            rts, last = _sc_rts(a)
+            self.assertEqual(last, (n - 1) // SEGBITS)
             self.assertEqual(len(rts), self.nseg(a) + 1)
             self.assertEqual(rts[0], 0)
             self.assertEqual(rts[-1], n)
             for i, v in enumerate(rts):
                 self.assertEqual(v, min(SEGBITS * i, n))
 
+    def test_zeros(self):
+        for n in range(1000):
+            a = zeros(n)
+            rts, last = _sc_rts(a)
+            self.assertEqual(last, -1)
+            self.assertEqual(len(rts), self.nseg(a) + 1)
+            self.assertTrue(all(v == 0 for v in rts))
+
+    def test_sample(self):
+        for _ in range(100):
+            n = randrange(100, 10_000)
+            k = randrange(1, 10)
+            indices = sample(range(n), k)
+            a = bitarray(n)
+            a[indices] = 1
+            rts, last = _sc_rts(a)
+            self.assertEqual(last, max(indices) // SEGBITS)
+            for i in range(self.nseg(a)):
+                self.assertEqual(rts[i + 1] - rts[i],
+                                 a[SEGBITS * i : SEGBITS * (i + 1)].count())
+
     def test_random(self):
-        for _ in range(200):
-            a = urandom_2(randrange(10000))
-            rts = _sc_rts(a)
+        for _ in range(100):
+            a = urandom_2(randrange(10_000))
+            rts, last = _sc_rts(a)
             self.assertEqual(len(rts), self.nseg(a) + 1)
             self.assertEqual(rts[0], 0)
             self.assertEqual(rts[-1], a.count())

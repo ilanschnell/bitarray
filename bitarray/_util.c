@@ -1334,13 +1334,14 @@ byte_length(Py_ssize_t i)
    soon as the index count (population) of the current segment is reached.
 */
 static Py_ssize_t *
-sc_rts(bitarrayobject *a)
+sc_rts(bitarrayobject *a, Py_ssize_t *last_populated)
 {
     const Py_ssize_t n_seg = NSEG(a);         /* total number of segments */
     const Py_ssize_t c_seg = a->nbits / (8 * SEGSIZE); /* complete segments */
     char zeros[SEGSIZE];                      /* segment with only zeros */
     char *buff = a->ob_item;                  /* buffer in current segment */
     Py_ssize_t cnt = 0;                       /* current count */
+    Py_ssize_t last = -1;                     /* last populated segment */
     Py_ssize_t *res, m;
 
     memset(zeros, 0x00, SEGSIZE);
@@ -1352,15 +1353,20 @@ sc_rts(bitarrayobject *a)
     for (m = 0; m < c_seg; m++, buff += SEGSIZE) {  /* complete segments */
         res[m] = cnt;
         assert(buff + SEGSIZE <= a->ob_item + Py_SIZE(a));
-        if (memcmp(buff, zeros, SEGSIZE))  /* segment has not only zeros */
+        if (memcmp(buff, zeros, SEGSIZE)) {  /* segment has not only zeros */
             cnt += popcnt_words((uint64_t *) buff, SEGSIZE / 8);
+            last = m;
+        }
     }
     res[c_seg] = cnt;
 
     if (n_seg > c_seg) {           /* we have a final partial segment */
         cnt += count_from_word(a, c_seg * SEGSIZE / 8);
+        if (cnt > res[c_seg])
+            last = c_seg;
         res[n_seg] = cnt;
     }
+    *last_populated = last;
     return res;
 }
 
@@ -1371,14 +1377,14 @@ module_sc_rts(PyObject *module, PyObject *obj)
 {
     PyObject *list;
     bitarrayobject *a;
-    Py_ssize_t *rts, nseg, i;
+    Py_ssize_t *rts, nseg, last_populated, i;
 
     assert(bitarray_Check(obj));
     a = (bitarrayobject *) obj;
 
     Py_BEGIN_CRITICAL_SECTION(a);
     nseg = NSEG(a);
-    rts = sc_rts(a);
+    rts = sc_rts(a, &last_populated);
     Py_END_CRITICAL_SECTION();
 
     if (rts == NULL)
@@ -1395,7 +1401,7 @@ module_sc_rts(PyObject *module, PyObject *obj)
         PyList_SET_ITEM(list, i, item);
     }
     PyMem_Free(rts);
-    return list;
+    return Py_BuildValue("Nn", list, last_populated);
  error:
     Py_XDECREF(list);
     PyMem_Free(rts);
@@ -1593,7 +1599,8 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
 
          Regardless of the exact index count for each block, the total size
          of the index bytes is (n * population), as all blocks are of type n.
-         The number_of_blocks is 256 (unless limited by the bitarray size).
+         The number_of_blocks is the number of type-n blocks needed to reach
+         the last populated segment, capped at 256.
          The header_size is only 1 byte for type 1 and 2 bytes otherwise.
 
      (b) The encoded size of a single block of type n+1 is:
@@ -1613,11 +1620,13 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
  */
 static Py_ssize_t
 sc_encode_block(char *str, Py_ssize_t *len,
-                bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
+                bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t last_pop,
+                Py_ssize_t offset)
 {
     /* entire remaining population */
     const Py_ssize_t remaining = sc_count_remain(a, rts, offset);
     const Py_ssize_t nbytes = Py_SIZE(a) - offset;  /* remaining bytes */
+    const Py_ssize_t current_seg = offset / SEGSIZE;
     int count, n;
 
     assert(nbytes > 0 && remaining > 0);
@@ -1631,6 +1640,7 @@ sc_encode_block(char *str, Py_ssize_t *len,
     }
 
     for (n = 1; n < 4; n++) {
+        const Py_ssize_t segs_per_block = BSI(n) / SEGSIZE;
         Py_ssize_t next_count, nblocks, cost_a, cost_b;
 
         assert((n == 1 && count < 32) || (n > 1 && count <= 255));
@@ -1645,7 +1655,8 @@ sc_encode_block(char *str, Py_ssize_t *len,
             break;
 
         /* number of blocks of type n */
-        nblocks = Py_MIN(256, (nbytes - 1) / BSI(n) + 1);
+        nblocks = (last_pop - current_seg) / segs_per_block + 1;
+        nblocks = Py_MIN(256, nblocks);
         /* cost of nblocks blocks of type n */
         cost_a = ((n == 1) ? 1 : 2) * nblocks;
         /* cost of a single block of type n+1 */
@@ -1692,9 +1703,10 @@ sc_encode_lock_held(bitarrayobject *a, PyObject **out)
     Py_ssize_t len = 0;         /* bytes written into output buffer */
     Py_ssize_t offset = 0;      /* block offset into bitarray a in bytes */
     Py_ssize_t *rts;            /* running totals of segments */
+    Py_ssize_t last;
 
     set_padbits(a);
-    if ((rts = sc_rts(a)) == NULL)
+    if ((rts = sc_rts(a, &last)) == NULL)
         return -1;
 
     str = PyBytes_AS_STRING(*out);
@@ -1716,7 +1728,7 @@ sc_encode_lock_held(bitarrayobject *a, PyObject **out)
             }
             str = PyBytes_AS_STRING(*out);
         }
-        offset += sc_encode_block(str, &len, a, rts, offset);
+        offset += sc_encode_block(str, &len, a, rts, last, offset);
     }
     PyMem_Free(rts);
     str[len++] = 0x00;          /* add stop byte */
