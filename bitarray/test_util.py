@@ -1459,9 +1459,8 @@ class BaseTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, base2ba, 32, None)
 
         for values, msg in [
-                ([-1023, -16, -1, 0, 3, 5, 31, 48, 63, 129, 511, 4123],
-                 "base must be a power of 2"),
-                ([1, 128, 256, 512, 1024, 2048, 4096, 8192],
+                ([-1023, -16, -1, 0, 3, 5, 31, 48, 63, 129, 511, 4123,
+                  1, 128, 256, 512, 1024, 2048, 4096, 8192],
                  "base must be 2, 4, 8, 16, 32 or 64")]:
             for i in values:
                 self.assertRaisesMessage(ValueError, msg, ba2base, i, a)
