@@ -1485,35 +1485,32 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
                  Py_ssize_t offset, int n, int k)
 {
     const char *buff = a->ob_item + offset;
-    const Py_ssize_t nbytes = Py_SIZE(a) - offset;  /* remaining bytes */
-    const Py_ssize_t first_seg = offset / SEGSIZE;
-    const Py_ssize_t nseg = Py_MIN(BSI(n) / SEGSIZE, NSEG(a) - first_seg);
     Py_ssize_t m;
 
     assert(0 <= k && k < 256);
     assert(k == sc_count(a, rts, offset, n));
 
-    rts += first_seg;
+    rts += offset / SEGSIZE;
 
     /* loop segments in this block */
-    for (m = 0; m < nseg && k; m++) {
-        const Py_ssize_t end = Py_MIN((m + 1) * SEGSIZE, nbytes);
+    for (m = 0; k; m++) {
         Py_ssize_t ni = rts[m + 1] - rts[m];  /* segment population */
         Py_ssize_t i;
 
+        assert(0 <= ni && ni <= k);
+        k -= ni;
         /* loop bytes in this segment */
-        for (i = m * SEGSIZE; i < end && ni && k; i++) {
+        for (i = m * SEGSIZE; ni; i++) {
             int j;
 
             if (buff[i] == 0x00)
                 continue;
 
-            for (j = 0; j < 8 && ni && k; j++) {
+            for (j = 0; j < 8 && ni; j++) {
                 if (buff[i] & BITMASK(a, j)) {
                     write_n(str, n, 8 * i + j);
                     str += n;
                     ni--;
-                    k--;
                 }
             }
         }
