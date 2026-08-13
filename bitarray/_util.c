@@ -1364,7 +1364,12 @@ sc_rts(bitarrayobject *a)
     return res;
 }
 
-/* Return the last populated segment, or -1 when the population is zero. */
+/* Return the last populated segment, or -1 when the population is zero.
+
+   For the example above, the last populated segment is 3, because:
+
+       rts[3 + 1] - rts[3] = 12 - 8 = 4 > 0
+ */
 static Py_ssize_t
 sc_last_pop_seg(const Py_ssize_t *rts, Py_ssize_t nseg)
 {
@@ -1376,7 +1381,7 @@ sc_last_pop_seg(const Py_ssize_t *rts, Py_ssize_t nseg)
 
     /* Find the largest index i for which rts[i] < total. */
     while (lo < hi) {
-        Py_ssize_t mid = lo + (hi - lo + 1) / 2;
+        Py_ssize_t mid = (hi + lo + 1) / 2;
 
         if (rts[mid] < total)
             lo = mid;
