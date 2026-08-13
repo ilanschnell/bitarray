@@ -1484,60 +1484,47 @@ sc_write_raw(char *str, bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset)
     return (int) k;
 }
 
-/* Write 'k' indices (of 'n' bytes each) into buffer 'str'.
-   Note that 'n' (which is also the block type) has been selected
-   (in sc_encode_block()) such that:
-
-       k = sc_count(a, rts, offset, n) < 256
-*/
+/* Write `k` indices (of `n` bytes each) into buffer `str`. */
 static void
 sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
                  Py_ssize_t offset, int n, int k)
 {
     const char *buff = a->ob_item + offset;
+    const Py_ssize_t nbytes = Py_SIZE(a) - offset;  /* remaining bytes */
+    const Py_ssize_t first_seg = offset / SEGSIZE;
+    const Py_ssize_t nseg = Py_MIN(BSI(n) / SEGSIZE, NSEG(a) - first_seg);
     Py_ssize_t m;
 
-    assert(0 < k && k < 256);  /* note that k cannot be 0 in this function */
-    assert(k == sc_count(a, rts, offset, n));   /* see above */
+    assert(0 <= k && k < 256);
+    assert(k == sc_count(a, rts, offset, n));
 
-    rts += offset / SEGSIZE;   /* rts index relative to offset now */
+    rts += first_seg;
 
-    for (m = 0;;) {  /* loop segments */
-        Py_ssize_t i, ni;
+    /* loop segments in this block */
+    for (m = 0; m < nseg && k; m++) {
+        const Py_ssize_t end = Py_MIN((m + 1) * SEGSIZE, nbytes);
+        Py_ssize_t ni = rts[m + 1] - rts[m];  /* segment population */
+        Py_ssize_t i;
 
-        assert(m + offset / SEGSIZE < NSEG(a));
-        /* number of indices in this segment, i.e. the segment population */
-        ni = rts[m + 1] - rts[m];
-        if (ni == 0)
-            goto next_segment;
-
-        for (i = m * SEGSIZE;; i++) {  /* loop bytes in segment */
+        /* loop bytes in this segment */
+        for (i = m * SEGSIZE; i < end && ni && k; i++) {
             int j;
 
-            assert(i < (m + 1) * SEGSIZE && i + offset < Py_SIZE(a));
             if (buff[i] == 0x00)
                 continue;
 
-            for (j = 0; j < 8; j++) {  /* loop bits */
-                assert(8 * (offset + i) + j < a->nbits);
+            for (j = 0; j < 8 && ni && k; j++) {
                 if (buff[i] & BITMASK(a, j)) {
                     write_n(str, n, 8 * i + j);
                     str += n;
-                    if (--k == 0)
-                        /* we have encountered all indices in this block */
-                        return;
-
-                    if (--ni == 0)
-                        /* we have encountered all indices in this segment */
-                        goto next_segment;
+                    ni--;
+                    k--;
                 }
             }
         }
-        Py_UNREACHABLE();
-    next_segment:
-        m++;
+        assert(ni == 0);
     }
-    Py_UNREACHABLE();
+    assert(k == 0);
 }
 
 /* Write a sparse block of type 'n' with 'k' indices.
@@ -1562,10 +1549,10 @@ sc_write_sparse(char *str, bitarrayobject *a, Py_ssize_t *rts,
         str[len++] = (char) (0xc0 + n);  /* block type */
         str[len++] = (char) k;           /* index count */
     }
-    if (k == 0)  /* no index bytes to write */
+    if (k == 0)  /* shortcut: skip index-writing setup */
         return len;
 
-    /* write block data - k indices, n bytes per index */
+    /* write block data: k indices, n bytes per index */
     sc_write_indices(str + len, a, rts, offset, n, k);
     return len + n * k;
 }
@@ -1698,23 +1685,21 @@ sc_encode_header(char *str, bitarrayobject *a)
 static Py_ssize_t
 sc_encode_lock_held(bitarrayobject *a, PyObject **out)
 {
-    char *str;                  /* output buffer */
-    Py_ssize_t len = 0;         /* bytes written into output buffer */
-    Py_ssize_t offset = 0;      /* block offset into bitarray a in bytes */
-    Py_ssize_t *rts;            /* running totals of segments */
-    Py_ssize_t total;           /* total population count of bitarray */
-    Py_ssize_t last;            /* last populated segment */
+    char *str;              /* output buffer */
+    Py_ssize_t len = 0;     /* bytes written into output buffer */
+    Py_ssize_t offset = 0;  /* block offset into bitarray a in bytes */
+    Py_ssize_t *rts;        /* running totals of segments */
+    Py_ssize_t total;       /* total population count of bitarray */
+    Py_ssize_t last;        /* last populated segment */
 
     set_padbits(a);
     if ((rts = sc_rts(a)) == NULL)
         return -1;
-
+    total = rts[NSEG(a)];
     last = sc_last_pop_seg(rts, NSEG(a));
 
     str = PyBytes_AS_STRING(*out);
     len += sc_encode_header(str, a);
-
-    total = rts[NSEG(a)];
     /* encode blocks as long as we haven't reached the end of the bitarray
        and haven't reached the total population count yet */
     while (offset < Py_SIZE(a) && rts[offset / SEGSIZE] != total) {
