@@ -1888,6 +1888,17 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
             b = self.make_blob(nbits, n, indices)
             self.check_stat(a, b, n)
 
+    def test_sparse_population_limit(self):
+        a = zeros(1 << 24)
+        a[::1 << 16] = 1  # 256 populated type-2 blocks
+        b = sc_encode(a)
+        self.assertEqual(sc_decode(b), a)
+        # The index count byte can represent at most 255 indices (0xff), so
+        # the 256 indices do not fit in one type-3 block.  The encoder first
+        # uses one type-2 block, leaving 255 indices which fit in one type-3
+        # block.
+        self.assertEqual(sc_stat(b)['blocks'], [0, 0, 1, 1, 0])
+
     def test_decode_random_bytes(self):
         # ensure random input doesn't crash the decoder
         for _ in range(100):
