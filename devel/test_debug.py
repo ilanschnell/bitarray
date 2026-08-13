@@ -610,7 +610,6 @@ class RTS_Tests(unittest.TestCase):
     def test_trailing_zeros(self):
         a = zeros(4 * SEGBITS)
         a[SEGBITS + 10] = 1
-
         rts, last = _sc_rts(a)
         self.assertEqual(last, 1)
 
@@ -622,7 +621,6 @@ class RTS_Tests(unittest.TestCase):
         self.assertEqual(a.count(), 12)
         rts, last = _sc_rts(a)
         self.assertIs(type(rts), list)
-        self.assertEqual(len(rts), 5)
         self.assertEqual(rts, [0, 5, 5, 8, 12])
         self.assertEqual(last, 3)
 
@@ -630,17 +628,19 @@ class RTS_Tests(unittest.TestCase):
     def nseg(a):  # number of segments, see also SegmentTests in tricks.py
         return (a.nbytes + _SEGSIZE - 1) // _SEGSIZE
 
-    def test_ones(self):
+    def test_zeros_ones(self):
         for n in range(1000):
-            a = ones(n)
-            rts, last = _sc_rts(a)
-            self.assertEqual(len(rts), self.nseg(a) + 1)
-            self.assertEqual(rts[0], 0)
-            self.assertEqual(rts[-1], n)
-            for i, v in enumerate(rts):
-                self.assertEqual(v, min(SEGBITS * i, n))
-            # This also handles the empty bitarray: (-1) // SEGBITS == -1.
-            self.assertEqual(last, (n - 1) // SEGBITS)
+            a = bitarray(n)
+            for v in range(2):
+                a.setall(v)
+                rts, last = _sc_rts(a)
+                self.assertEqual(len(rts), self.nseg(a) + 1)
+                self.assertEqual(rts[0], 0)
+                self.assertEqual(rts[-1], n * v)
+                for i, w in enumerate(rts):
+                    self.assertEqual(w, min(SEGBITS * i, n * v))
+                # This also handles zero population: (-1) // SEGBITS = -1
+                self.assertEqual(last, (n * v - 1) // SEGBITS)
 
     def test_sample(self):
         for _ in range(100):
