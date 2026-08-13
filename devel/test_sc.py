@@ -12,6 +12,7 @@ from bitarray.util import (
     sc_encode, sc_decode, sc_stat,
     vl_encode, vl_decode,
 )
+from bitarray.test_bitarray import show_info
 from bitarray.test_util import SC_Util
 
 
@@ -211,4 +212,5 @@ if __name__ == '__main__':
         compare()
         p_range()
         sys.exit(0)
+    show_info()
     unittest.main()
