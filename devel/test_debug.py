@@ -597,6 +597,22 @@ class RTS_Tests(unittest.TestCase):
 
     # _sc_rts()   (running totals debug test)
 
+    @unittest.skipIf(SEGBITS != 256, "SEGBITS mismatch")
+    def test_example(self):
+        # see example before sc_rts() in _util.c
+        a = zeros(987)
+        a[[0, 17, 31, 149, 255, 512, 637, 767, 768, 813, 899, 986]] = 1
+        self.assertEqual(a.count(), 12)
+        rts, last = _sc_rts(a)
+        self.assertIs(type(rts), list)
+        # running totals
+        self.assertEqual(rts, [0, 5, 5, 8, 12])
+        # segment population
+        self.assertEqual([rts[i + 1] - rts[i] for i in range(len(rts) - 1)],
+                         [5, 0, 3, 4])
+        # last populated segment
+        self.assertEqual(last, 3)
+
     def test_segsize(self):
         self.assertIs(type(_SEGSIZE), int)
         self.assertIn(_SEGSIZE, (8, 16, 32))
@@ -611,18 +627,8 @@ class RTS_Tests(unittest.TestCase):
         a = zeros(4 * SEGBITS)
         a[SEGBITS + 10] = 1
         rts, last = _sc_rts(a)
+        self.assertEqual(rts, [0, 0, 1, 1, 1])
         self.assertEqual(last, 1)
-
-    @unittest.skipIf(SEGBITS != 256, "SEGBITS mismatch")
-    def test_example(self):
-        # see example before sc_calc_rts() in _util.c
-        a = zeros(987)
-        a[[0, 17, 31, 149, 255, 512, 637, 767, 768, 813, 899, 986]] = 1
-        self.assertEqual(a.count(), 12)
-        rts, last = _sc_rts(a)
-        self.assertIs(type(rts), list)
-        self.assertEqual(rts, [0, 5, 5, 8, 12])
-        self.assertEqual(last, 3)
 
     @staticmethod
     def nseg(a):  # number of segments, see also SegmentTests in tricks.py
