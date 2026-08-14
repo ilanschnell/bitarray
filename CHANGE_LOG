@@ -2,7 +2,8 @@
 -------------------
   * add `util.sc_stat()`
   * optimize sparse block selection for trailing zeros
-  * add debug-mode tests for slice adjustment `adjust_slice()`
+  * improve sparse-compression and debug-mode tests, including new tests
+    for slice adjustment `adjust_slice()`
 
 
 2026-08-07  3.10.1:
