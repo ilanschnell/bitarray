@@ -1906,17 +1906,19 @@ untouched.  Use `sc_encode()` for compressing (encoding).");
 
 /* ------------------- variable length bitarray format ----------------- */
 
-/* LEN_PAD_BITS is always 3 - the number of bits (length) that is necessary
-   to represent the number of pad bits.  The number of padding bits itself is
-   called 'padding' below.
+/* LEN_PAD_BITS is the number of bits in the head byte used to encode
+   'padding': the number of unused payload bits in the final encoded byte.
+   This format padding is unrelated to the pad bits in the bitarray's final
+   storage byte.  For example, b'\x10' has padding = 1 and decodes to
+   bitarray('000'), which has 5 pad bits.
 
-   'padding' refers to the pad bits within the variable length format.
-   This is not the same as the pad bits of the actual bitarray.
-   For example, b'\x10' has padding = 1, and decodes to bitarray('000'),
-   which has 5 pad bits.
-   'padding' can take values up to 6, except for one-byte encodings where
-   it is limited to 4.
+   The variable 'padding' can range from 0 to 6.  A value of 7 is not
+   allowed, as the final byte would then contribute no payload bits.
+   In single-byte encodings, 'padding' is limited to 4, the number of
+   payload bits in the head byte; b'\x40' therefore represents an empty
+   bitarray.
  */
+
 #define LEN_PAD_BITS  3
 
 /* initial number of bits we allocate in vl_decode(), and amount by which
@@ -1928,19 +1930,19 @@ untouched.  Use `sc_encode()` for compressing (encoding).");
 static int
 vl_decode_core(bitarrayobject *a, PyObject *iter)
 {
-    Py_ssize_t i = 0;        /* bit counter */
+    Py_ssize_t i = 0;      /* index of next output bit */
     int padding, k, c;
 
-    if ((c = next_char(iter)) < 0)           /* head byte */
+    if ((c = next_char(iter)) < 0)        /* head byte */
         return -1;
 
-    padding = (c >> 4) & 7;
+    padding = (c & 0x70) >> 4;
     if (padding > ((c & 0x80) ? 6 : 4)) {
         PyErr_Format(PyExc_ValueError, "invalid head byte: 0x%02x", c);
         return -1;
     }
-    for (k = 0; k < 4; k++)
-        setbit(a, i++, (0x08 >> k) & c);
+    for (k = 0; k < 4; k++, i++)
+        setbit(a, i, (0x08 >> k) & c);
 
     while (c & 0x80) {
         if ((c = next_char(iter)) < 0)
@@ -1951,8 +1953,8 @@ vl_decode_core(bitarrayobject *a, PyObject *iter)
             return -1;
         assert(i + 6 < a->nbits);
 
-        for (k = 0; k < 7; k++)
-            setbit(a, i++, (0x40 >> k) & c);
+        for (k = 0; k < 7; k++, i++)
+            setbit(a, i, (0x40 >> k) & c);
     }
     /* set final length of bitarray */
     return resize_lite(a, i - padding);
@@ -2023,12 +2025,11 @@ vl_encode_lock_held(bitarrayobject *a)
         int k;
 
         str[j] = (j < nbytes - 1) ? 0x80 : 0x00;  /* continuation bit */
-        if (j == 0)
-            str[0] |= padding << 4;  /* first byte */
 
-        for (k = 0; k < width && i < nbits; k++, i++)
-            str[j] |= getbit(a, i) << (width - k - 1);
+        for (k = width - 1; k >= 0 && i < nbits; k--, i++)
+            str[j] |= getbit(a, i) << k;
     }
+    str[0] |= padding << 4;  /* add padding to first byte */
     assert(i == nbits);
     return bytes;
 }
