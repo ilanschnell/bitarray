@@ -2,6 +2,7 @@
 -------------------
   * add `util.sc_stat()`
   * optimize sparse block selection for trailing zeros
+  * preserve bitarrays when buffer reallocation fails
   * improve sparse-compression and debug-mode tests, including new tests
     for slice adjustment `adjust_slice()`
 
