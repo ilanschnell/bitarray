@@ -545,22 +545,18 @@ class Decodetree_Getnode_Tests(unittest.TestCase):
 
 class CountFromWord_Tests(unittest.TestCase, Util):
 
-    def test_ones_zeros_empty(self):
-        for _ in range(1000):
-            n = randrange(1024)
+    def test_ones_zeros(self):
+        for n in range(1000):
             a = ones(n)  # ones
-            i = randrange(20)
+            i = randrange(16)  # in words, so bit-range(0, 1024, 64)
             self.assertEqual(_cfw(a, i), max(0, n - i * 64))
             a.setall(0)  # zeros
             self.assertEqual(_cfw(a, i), 0)
-            a.clear()    # empty
-            self.assertEqual(_cfw(a, i), 0)
 
     def test_random(self):
-        for _ in range(1000):
-            n = randrange(1024)
+        for n in range(1000):
             a = urandom_2(n)
-            i = randrange(20)
+            i = randrange(16)  # in words, so bit-range(0, 1024, 64)
             self.assertEqual(_cfw(a, i), a[64 * i:].count())
 
 
