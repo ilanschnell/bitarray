@@ -29,8 +29,8 @@ is implemented in ``vl_encode()`` and ``vl_decode()``:
 The variable-length format is similar to LEB128.  A single byte can store
 bitarrays up to 4 elements; every additional byte stores up to 7 more elements.
 The most significant bit of each byte indicates whether more bytes follow.
-In addition, the first byte contains 3 bits which indicate the number of
-padding bits at the end of the stream.  Here is an example of
+In addition, the first byte contains 3 bits indicating the number of unused
+payload bits in the final encoded byte.  Here is an example of
 encoding ``bitarray('01010110111001110')``:
 
 .. code-block::
