@@ -1913,7 +1913,9 @@ untouched.  Use `sc_encode()` for compressing (encoding).");
    'padding' refers to the pad bits within the variable length format.
    This is not the same as the pad bits of the actual bitarray.
    For example, b'\x10' has padding = 1, and decodes to bitarray('000'),
-   which has 5 pad bits.  'padding' can take values up to 6.
+   which has 5 pad bits.
+   'padding' can take values up to 6, except for one-byte encodings where
+   it is limited to 4.
  */
 #define LEN_PAD_BITS  3
 
@@ -1932,8 +1934,8 @@ vl_decode_core(bitarrayobject *a, PyObject *iter)
     if ((c = next_char(iter)) < 0)           /* head byte */
         return -1;
 
-    padding = (c & 0x70) >> 4;
-    if (padding == 7 || ((c & 0x80) == 0 && padding > 4)) {
+    padding = (c >> 4) & 7;
+    if (padding > ((c & 0x80) ? 6 : 4)) {
         PyErr_Format(PyExc_ValueError, "invalid head byte: 0x%02x", c);
         return -1;
     }
@@ -1945,7 +1947,7 @@ vl_decode_core(bitarrayobject *a, PyObject *iter)
             return -1;
 
         /* ensure bitarray is large enough to accommodate seven more bits */
-        if (a->nbits < i + 7 && resize_lite(a, a->nbits + ALLOC_BITS) < 0)
+        if (i + 7 > a->nbits && resize_lite(a, a->nbits + ALLOC_BITS) < 0)
             return -1;
         assert(i + 6 < a->nbits);
 
@@ -2000,36 +2002,34 @@ leaves the remaining stream untouched.  Use `vl_encode()` for encoding.");
 static PyObject *
 vl_encode_lock_held(bitarrayobject *a)
 {
+    const Py_ssize_t nbits = a->nbits;
+    const Py_ssize_t nbytes = (nbits + LEN_PAD_BITS + 6) / 7;  /* output */
+    const int padding = (int) (7 * nbytes - LEN_PAD_BITS - nbits);
     PyObject *bytes;
-    Py_ssize_t nbits, n, i, j = 0;  /* j: byte counter */
-    int padding;
+    Py_ssize_t i = 0, j;
     char *str;
 
-    nbits = a->nbits;
-    n = (nbits + LEN_PAD_BITS + 6) / 7;  /* number of resulting bytes */
-    padding = (int) (7 * n - LEN_PAD_BITS - nbits);
+    assert(nbytes >= 1);
+    assert(0 <= padding && padding <= (nbytes == 1 ? 4 : 6));
 
-    bytes = PyBytes_FromStringAndSize(NULL, n);
+    bytes = PyBytes_FromStringAndSize(NULL, nbytes);
     if (bytes == NULL)
         return NULL;
 
-    str = PyBytes_AsString(bytes);
-    str[0] = (nbits > 4) ? 0x80 : 0x00;  /* lead bit */
-    str[0] |= padding << 4;              /* encode padding */
-    for (i = 0; i < 4 && i < nbits; i++)
-        str[0] |= (0x08 >> i) * getbit(a, i);
+    str = PyBytes_AS_STRING(bytes);
 
-    for (i = 4; i < nbits; i++) {
-        int k = (i - 4) % 7;
+    for (j = 0; j < nbytes; j++) {
+        const int width = j ? 7 : 4;
+        int k;
 
-        if (k == 0) {
-            j++;
-            str[j] = (j < n - 1) ? 0x80 : 0x00;  /* lead bit */
-        }
-        str[j] |= (0x40 >> k) * getbit(a, i);
+        str[j] = (j < nbytes - 1) ? 0x80 : 0x00;  /* continuation bit */
+        if (j == 0)
+            str[0] |= padding << 4;  /* first byte */
+
+        for (k = 0; k < width && i < nbits; k++, i++)
+            str[j] |= getbit(a, i) << (width - k - 1);
     }
-    assert(j == n - 1);
-
+    assert(i == nbits);
     return bytes;
 }
 
