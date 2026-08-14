@@ -79,35 +79,30 @@ static int
 resize_lite(bitarrayobject *self, Py_ssize_t nbits)
 {
     const Py_ssize_t newsize = BYTES(nbits);
+    char *item = NULL;
 
     assert(self->allocated >= Py_SIZE(self));
     assert(self->readonly == 0);
     assert(self->ob_exports == 0);
     assert(self->buffer == NULL);
 
-    /* bypass everything when buffer size hasn't changed */
-    if (newsize == Py_SIZE(self)) {
-        self->nbits = nbits;
-        return 0;
-    }
+    if (newsize == Py_SIZE(self))
+        goto done;
 
     if (newsize == 0) {
         PyMem_Free(self->ob_item);
-        self->ob_item = NULL;
-        goto done;
     }
-
-    self->ob_item = PyMem_Realloc(self->ob_item, newsize);
-    if (self->ob_item == NULL) {
-        PyErr_NoMemory();
-        Py_SET_SIZE(self, 0);
-        self->allocated = 0;
-        self->nbits = 0;
-        return -1;
+    else {
+        item = PyMem_Realloc(self->ob_item, newsize);
+        if (item == NULL) {
+            PyErr_NoMemory();
+            return -1;
+        }
     }
- done:
+    self->ob_item = item;
     Py_SET_SIZE(self, newsize);
     self->allocated = newsize;
+ done:
     self->nbits = nbits;
     return 0;
 }

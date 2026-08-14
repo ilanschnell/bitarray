@@ -27,21 +27,19 @@ class Tests(unittest.TestCase):
 
     def test_finding9(self):
         got_here = False
-        a = bitarray('1' * 1000)
-        self.assertEqual(len(a), 1000)
-        _testcapi.set_nomemory(5, 0)  # fail from 5th allocation
+        a = 1000 * bitarray('1')
+        b = 10_000_000 * bitarray('0')
+
+        _testcapi.set_nomemory(1, 0)
         try:
-            a.extend(bitarray('0' * 10_000_000))
-            _testcapi.remove_mem_hooks()
+            a.extend(b)
         except MemoryError:
+            got_here = True
+        finally:
             _testcapi.remove_mem_hooks()
-            try:
-                a[0]  # used to segfault — ob_item is NULL
-            except IndexError:
-                got_here = True
 
         self.assertTrue(got_here)
-        self.assertEqual(len(a), 0)
+        self.assertEqual(a, 1000 * bitarray('1'))
 
 # ---------------------------------------------------------------------------
 

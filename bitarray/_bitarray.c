@@ -59,6 +59,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
     const size_t allocated = self->allocated;
     const size_t newsize = BYTES((size_t) nbits);
     size_t new_allocated;
+    char *item;
 
     if (self->ob_exports > 0) {
         PyErr_SetString(PyExc_BufferError,
@@ -83,40 +84,34 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
 #endif
 
     /* bypass everything when buffer size hasn't changed */
-    if (newsize == size) {
-        self->nbits = nbits;
-        return 0;
-    }
+    if (newsize == size)
+        goto done;
 
     if (newsize == 0) {
         PyMem_Free(self->ob_item);
         self->ob_item = NULL;
         Py_SET_SIZE(self, 0);
         self->allocated = 0;
-        self->nbits = 0;
-        return 0;
+        goto done;
     }
 
     new_allocated = new_allocation(size, allocated, newsize);
-
     if (new_allocated == allocated) {
         /* bypass reallocation */
         Py_SET_SIZE(self, newsize);
-        self->nbits = nbits;
-        return 0;
+        goto done;
     }
 
     assert(new_allocated >= newsize);
-    self->ob_item = PyMem_Realloc(self->ob_item, new_allocated);
-    if (self->ob_item == NULL) {
-        Py_SET_SIZE(self, 0);
-        self->allocated = 0;
-        self->nbits = 0;
+    item = PyMem_Realloc(self->ob_item, new_allocated);
+    if (item == NULL) {
         PyErr_NoMemory();
         return -1;
     }
+    self->ob_item = item;
     Py_SET_SIZE(self, newsize);
     self->allocated = new_allocated;
+ done:
     self->nbits = nbits;
     return 0;
 }
