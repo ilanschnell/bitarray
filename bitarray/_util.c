@@ -94,20 +94,18 @@ resize_lite(bitarrayobject *self, Py_ssize_t nbits)
     if (newsize == 0) {
         PyMem_Free(self->ob_item);
         self->ob_item = NULL;
-        Py_SET_SIZE(self, 0);
-        self->allocated = 0;
-        self->nbits = 0;
-        return 0;
+        goto done;
     }
 
     self->ob_item = PyMem_Realloc(self->ob_item, newsize);
     if (self->ob_item == NULL) {
+        PyErr_NoMemory();
         Py_SET_SIZE(self, 0);
         self->allocated = 0;
         self->nbits = 0;
-        PyErr_NoMemory();
         return -1;
     }
+ done:
     Py_SET_SIZE(self, newsize);
     self->allocated = newsize;
     self->nbits = nbits;
@@ -172,6 +170,7 @@ count_n_lock_held(bitarrayobject *a, Py_ssize_t n, int vi)
     Py_ssize_t m;             /* popcount in each block */
 
     assert(0 <= n && n <= nbits);
+    assert(vi == 0 || vi == 1);
 
     /* by counting big blocks we save comparisons and updates */
 #define BLOCK_BITS  4096      /* block size: 4096 bits = 64 words */
@@ -978,10 +977,10 @@ base_to_length(int n)
 {
     int m;
 
-    for (m = 1; m <= 6; m++)
+    for (m = 1; m <= 6; m++) {
         if (n == 1 << m)
             return m;
-
+    }
     PyErr_SetString(PyExc_ValueError, "base must be 2, 4, 8, 16, 32 or 64");
     return -1;
 }
@@ -1681,20 +1680,17 @@ sc_encode_lock_held(bitarrayobject *a, PyObject **out)
     Py_ssize_t len = 0;     /* bytes written into output buffer */
     Py_ssize_t offset = 0;  /* block offset into bitarray a in bytes */
     Py_ssize_t *rts;        /* running totals of segments */
-    Py_ssize_t total;       /* total population count of bitarray */
     Py_ssize_t last;        /* last populated segment */
 
     set_padbits(a);
     if ((rts = sc_rts(a)) == NULL)
         return -1;
-    total = rts[NSEG(a)];
     last = sc_last_pop_seg(rts, NSEG(a));
 
     str = PyBytes_AS_STRING(*out);
     len += sc_encode_header(str, a);
-    /* encode blocks as long as we haven't reached the end of the bitarray
-       and haven't reached the total population count yet */
-    while (offset < Py_SIZE(a) && rts[offset / SEGSIZE] != total) {
+    /* encode blocks through the last populated segment */
+    while (offset <= last * SEGSIZE) {
         Py_ssize_t allocated = PyBytes_GET_SIZE(*out);
 
         /* Make sure we have enough memory in output buffer for next block.
