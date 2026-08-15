@@ -2,9 +2,10 @@ import sys
 import unittest
 from random import randrange
 
-from bitarray import bitarray
-from bitarray.util import zeros, urandom
+from bitarray import bitarray, get_default_endian
+from bitarray.util import zeros, urandom, intervals
 from bitarray._util import leb128_encode, leb128_decode, rl_encode, rl_decode
+from bitarray.test_util import OPT_ENDIANS
 
 
 class LEB128_Tests(unittest.TestCase):
@@ -34,6 +35,13 @@ class LEB128_Tests(unittest.TestCase):
         self.assertRaises(OverflowError, E, sys.maxsize + 1)
         self.assertRaises(OverflowError, E, -sys.maxsize - 2)
         self.assertRaises(TypeError, E, 1.0)
+
+    def test_decode_ambiguity(self):
+        # ULEB128 permits overlong representations.
+        for b in b'\x00', b'\x80\x00':
+            self.assertEqual(leb128_decode(b), 0)
+        for b in b'\x0a', b'\x8a\x00', b'\x8a\x80\x00':
+            self.assertEqual(leb128_decode(b), 10)
 
     def test_decode_types(self):
         lst = [0xe5, 0x8e, 0x26]
@@ -105,6 +113,50 @@ class RL_Tests(unittest.TestCase):
         # sequence of 1s at [0x01 : 0x41] exceeds nbits
         b = b'\x400\x01\x40'
         self.assertRaises(ValueError, rl_decode, b)
+
+    def test_decode_ambiguity(self):
+        # For an empty bitarray either first-bit byte works.
+        for b in b'\x000', b'\x001':
+            self.assertEqual(rl_decode(b), bitarray())
+
+        # For an all-zero bitarray, either first-bit byte works when
+        # immediately followed by the zero terminator.
+        for b in b'\x010\x00', b'\x011\x00':
+            self.assertEqual(rl_decode(b), bitarray('0'))
+
+        # Trailing zeros may be represented by the zero terminator or
+        # by an explicit final zero-run length.
+        for b in b'\x021\x01\x00', b'\x021\x01\x01':
+            self.assertEqual(rl_decode(b), bitarray('10'))
+
+        # Partial trailing-zero run followed by the zero terminator.
+        for b in [
+                b'\x031\x01\x00',      # canonical
+                b'\x031\x01\x02',      # complete trailing-zero run
+                b'\x031\x01\x01\x00',  # partial zero run, then terminator
+        ]:
+            self.assertEqual(rl_decode(b), bitarray('100'))
+
+        # ULEB128 permits overlong representations.
+        for b in b'\x000', b'\x80\x000':
+            self.assertEqual(rl_decode(b), bitarray())
+
+    def test_decode_endian(self):
+        b = b'\x020\x01\x01'
+        for endian in OPT_ENDIANS:
+            a = rl_decode(b, endian)
+            self.assertEqual(a.endian, endian or get_default_endian())
+            self.assertEqual(a, bitarray("01"))
+
+    def test_intervals(self):
+        a = bitarray("00000011111111111111110000000111000000")
+        b = bytearray(leb128_encode(len(a)))
+        b.append(ord("0"))
+        for unused_value, start, stop in intervals(a):
+            b.extend(leb128_encode(stop - start))
+        self.assertEqual(rl_decode(b), a)
+        # Because `a` has trailing zeros, this is not the canonical code
+        self.assertNotEqual(b, rl_encode(a))
 
     def test_alternate(self):
         a = zeros(1024)
