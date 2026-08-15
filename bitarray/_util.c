@@ -1435,12 +1435,12 @@ module_sc_rts(PyObject *module, PyObject *obj)
 static Py_ssize_t
 sc_count(bitarrayobject *a, Py_ssize_t *rts, Py_ssize_t offset, int n)
 {
-    const Py_ssize_t i = offset / SEGSIZE;     /* indices into rts[] */
-    const Py_ssize_t j = Py_MIN(i + BSI(n) / SEGSIZE, NSEG(a));
+    const Py_ssize_t start = offset / SEGSIZE;  /* indices into rts[] */
+    const Py_ssize_t stop = Py_MIN(start + BSI(n) / SEGSIZE, NSEG(a));
 
     assert(offset % SEGSIZE == 0 && 1 <= n && n <= 4);
-    assert(0 <= i && i <= j && j <= NSEG(a));
-    return rts[j] - rts[i];
+    assert(0 <= start && start <= stop && stop <= NSEG(a));
+    return rts[stop] - rts[start];
 }
 
 /* Write a raw block, and return number of bytes copied.
@@ -1734,8 +1734,6 @@ sc_encode(PyObject *module, PyObject *obj)
     return out;
 }
 
-#undef ALLOC_SIZE
-
 PyDoc_STRVAR(sc_encode_doc,
 "sc_encode(bitarray, /) -> bytes\n\
 \n\
@@ -1904,6 +1902,218 @@ untouched.  Use `sc_encode()` for compressing (encoding).");
 
 /* --------------------------- run-length codec ------------------------ */
 
+static int
+rl_leb128_encode(char *str, Py_ssize_t i);
+
+static Py_ssize_t
+rl_find(bitarrayobject *a, int vi, Py_ssize_t start)
+{
+    PyObject *res;
+    Py_ssize_t index;
+
+    assert(vi == 0 || vi == 1);
+    assert(0 <= start && start <= a->nbits);
+
+    /* bitarray.find(a, vi, start) */
+    res = PyObject_CallMethod((PyObject *) bitarray_type, "find", "Oin",
+                              (PyObject *) a, vi, start);
+    if (res == NULL)
+        return -1;
+
+    index = PyLong_AsSsize_t(res);
+    Py_DECREF(res);
+    return index;
+}
+
+/* write RL header */
+static int
+rl_encode_lock_held(bitarrayobject *a, PyObject **out)
+{
+    char *str;              /* output buffer */
+    Py_ssize_t len;         /* bytes written into output buffer */
+    Py_ssize_t i = 0;       /* current index */
+    int vi = 0;             /* current bit value */
+
+    str = PyBytes_AS_STRING(*out);
+    len = rl_leb128_encode(str, a->nbits);  /* nbits */
+    if (a->nbits && getbit(a, 0))
+        vi = 1;
+    str[len++] = (char) vi;                 /* first bit */
+
+    while (i < a->nbits) {
+        Py_ssize_t allocated = PyBytes_GET_SIZE(*out);
+        Py_ssize_t next = rl_find(a, !vi, i);
+
+        if (next < 0) {
+            if (PyErr_Occurred())
+                return -1;
+            next = vi ? a->nbits : i;
+        }
+
+        if (allocated < len + 10) {
+            if (_PyBytes_Resize(out, allocated + ALLOC_SIZE) < 0)
+                return -1;
+            str = PyBytes_AS_STRING(*out);
+        }
+
+        len += rl_leb128_encode(str + len, next - i);
+        if (next == i)  /* zero terminator: remainder is all zeros */
+            break;
+
+        i = next;
+        vi = !vi;
+    }
+
+    return len;
+}
+
+static PyObject *
+rl_encode(PyObject *module, PyObject *obj)
+{
+    PyObject *out;   /* bytes object to be returned */
+    Py_ssize_t len;  /* bytes written into output bytes buffer */
+
+    if (ensure_bitarray(obj) < 0)
+        return NULL;
+
+    out = PyBytes_FromStringAndSize(NULL, ALLOC_SIZE);
+    if (out == NULL)
+        return NULL;
+
+    Py_BEGIN_CRITICAL_SECTION(obj);
+    len = rl_encode_lock_held((bitarrayobject *) obj, &out);
+    Py_END_CRITICAL_SECTION();
+
+    if (len < 0 || _PyBytes_Resize(&out, len) < 0) {
+        Py_XDECREF(out);
+        return NULL;
+    }
+    return out;
+}
+
+#undef ALLOC_SIZE
+
+PyDoc_STRVAR(rl_encode_doc,
+"rl_encode(bitarray, /) -> bytes\n\
+\n\
+XXX");
+
+static Py_ssize_t
+rl_leb128_decode(PyObject *iter);
+
+/* set bits self[a:b]=1 */
+static void
+set_span_1(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
+{
+    assert(0 <= a && a <= self->nbits);
+    assert(0 <= b && b <= self->nbits);
+    assert(self->readonly == 0);
+
+    if (b >= a + 8) {
+        const Py_ssize_t ca = BYTES(a);  /* char-range(ca, cb) */
+        const Py_ssize_t cb = b / 8;
+
+        assert(a + 8 > 8 * ca && 8 * cb + 8 > b);
+
+        set_span_1(self, a, 8 * ca);
+        memset(self->ob_item + ca, 0xff, (size_t) (cb - ca));
+        set_span_1(self, 8 * cb, b);
+    }
+    else {                               /* (bit-) range(a, b) */
+        while (a < b)
+            setbit(self, a++, 1);
+    }
+}
+
+static int
+rl_decode_header(PyObject *iter, Py_ssize_t *nbits, int *vi)
+{
+    if ((*nbits = rl_leb128_decode(iter)) < 0)
+        return -1;
+
+    if ((*vi = next_char(iter)) < 0)
+        return -1;
+
+    if (*vi > 1) {
+        PyErr_Format(PyExc_ValueError, "invalid first bit: %d", *vi);
+        return -1;
+    }
+    return 0;
+}
+
+static int
+rl_decode_core(bitarrayobject *a, PyObject *iter, int vi)
+{
+    const Py_ssize_t nbits = a->nbits;
+    Py_ssize_t i = 0;           /* current index */
+    Py_ssize_t n;
+
+    while (i < nbits) {
+        if ((n = rl_leb128_decode(iter)) < 0)
+            return -1;
+
+        if (n == 0)             /* remainder is all zeros */
+            return 0;
+
+        if (n > nbits - i) {
+            PyErr_Format(PyExc_ValueError,
+                         "run length %zd exceeds remaining length %zd",
+                         n, nbits - i);
+            return -1;
+        }
+        if (vi)
+            set_span_1(a, i, i + n);
+
+        i += n;
+        vi = !vi;
+    }
+    return 0;
+}
+
+static PyObject *
+rl_decode(PyObject *module, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {"", "endian", NULL};
+    PyObject *obj, *iter, *endian = Py_None;
+    bitarrayobject *a = NULL;
+    Py_ssize_t nbits;
+    int vi;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O:rl_decode", kwlist,
+                                     &obj, &endian))
+        return NULL;
+
+    iter = PyObject_GetIter(obj);
+    if (iter == NULL)
+        return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
+                            Py_TYPE(obj)->tp_name);
+
+    if (rl_decode_header(iter, &nbits, &vi) < 0)
+        goto error;
+
+    a = new_bitarray(nbits, endian, 0);
+    if (a == NULL)
+        goto error;
+
+    if (rl_decode_core(a, iter, vi) < 0)
+        goto error;
+
+    Py_DECREF(iter);
+    return (PyObject *) a;
+
+ error:
+    Py_DECREF(iter);
+    Py_XDECREF((PyObject *) a);
+    return NULL;
+}
+
+PyDoc_STRVAR(rl_decode_doc,
+"rl_decode(stream, /, endian=None) -> bitarray\n\
+\n\
+XXX");
+
+/* --------------------------------- LEB128 ---------------------------- */
+
 /* Write (unsigned) LEB128 representation of i to str and return number
    of bytes written. */
 static int
@@ -1954,9 +2164,6 @@ rl_leb128_decode(PyObject *iter)
                     "LEB128 value does not fit in Py_ssize_t");
     return -1;
 }
-
-
-/* --------------------- Python interface for LEB128 ------------------- */
 
 static PyObject *
 leb128_encode(PyObject *module, PyObject *obj)
@@ -2531,6 +2738,9 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, base2ba_doc},
     {"leb128_encode", (PyCFunction) leb128_encode, METH_O, leb128_encode_doc},
     {"leb128_decode", (PyCFunction) leb128_decode, METH_O, leb128_decode_doc},
+    {"rl_encode",     (PyCFunction) rl_encode,     METH_O, rl_encode_doc},
+    {"rl_decode",     (PyCFunction) rl_decode,     METH_KEYWORDS |
+                                           METH_VARARGS, rl_decode_doc},
     {"sc_encode", (PyCFunction) sc_encode, METH_O,       sc_encode_doc},
     {"sc_decode", (PyCFunction) sc_decode, METH_O,       sc_decode_doc},
     {"vl_encode", (PyCFunction) vl_encode, METH_O,       vl_encode_doc},

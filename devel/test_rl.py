@@ -2,7 +2,9 @@ import sys
 import unittest
 from random import randrange
 
-from bitarray._util import leb128_encode, leb128_decode
+from bitarray import bitarray
+from bitarray.util import zeros, urandom
+from bitarray._util import leb128_encode, leb128_decode, rl_encode, rl_decode
 
 
 class LEB128_Tests(unittest.TestCase):
@@ -67,6 +69,32 @@ class LEB128_Tests(unittest.TestCase):
             i = randrange(1_000_000_000)
             b = leb128_encode(i)
             self.assertEqual(leb128_decode(b), i)
+
+
+class RL_Tests(unittest.TestCase):
+
+    def test_explicit(self):
+        a = zeros(1024)
+        a[:512] = 1
+        a *= 8
+        b = rl_encode(a)
+        self.assertEqual(rl_decode(b), a)
+
+    def test_ones_zeros(self):
+        for n in range(1000):
+            a = bitarray(n)
+            for v in 0, 1:
+                a.setall(v)
+                b = rl_encode(a)
+                self.assertEqual(rl_decode(b), a)
+
+    def test_random(self):
+        for _ in range(10):
+            n = randrange(1000)
+            a = urandom(n)
+            b = rl_encode(a)
+            self.assertEqual(rl_decode(b), a)
+
 
 # ---------------------------------------------------------------------------
 
