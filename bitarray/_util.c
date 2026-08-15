@@ -1930,15 +1930,15 @@ static int
 rl_encode_lock_held(bitarrayobject *a, PyObject **out)
 {
     char *str;              /* output buffer */
-    Py_ssize_t len;         /* bytes written into output buffer */
+    Py_ssize_t len = 0;     /* bytes written into output buffer */
     Py_ssize_t i = 0;       /* current index */
     int vi = 0;             /* current bit value */
 
     str = PyBytes_AS_STRING(*out);
-    len = rl_leb128_encode(str, a->nbits);  /* nbits */
     if (a->nbits && getbit(a, 0))
         vi = 1;
-    str[len++] = (char) '0' + vi;           /* first bit */
+    str[len++] = (char) '0' + vi;                  /* first bit */
+    len += rl_leb128_encode(str + len, a->nbits);  /* nbits */
 
     while (i < a->nbits) {
         Py_ssize_t allocated = PyBytes_GET_SIZE(*out);
@@ -2030,19 +2030,18 @@ rl_decode_header(PyObject *iter, Py_ssize_t *nbits, int *vi)
 {
     int c;
 
+    if ((c = next_char(iter)) < 0)
+        return -1;
+    if (c != '0' && c != '1') {
+        PyErr_Format(PyExc_ValueError, "invalid first bit: 0x%02x", c);
+        return -1;
+    }
+    *vi = c - '0';
+
     if ((*nbits = rl_leb128_decode(iter)) < 0)
         return -1;
 
-    if ((c = next_char(iter)) < 0)
-        return -1;
-
-    if (c == '0' || c == '1') {
-        *vi = c - '0';
-        return 0;
-    }
-
-    PyErr_Format(PyExc_ValueError, "invalid first bit: 0x%02x", c);
-    return -1;
+    return 0;
 }
 
 static int

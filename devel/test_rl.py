@@ -83,13 +83,13 @@ class RL_Tests(unittest.TestCase):
 
     def test_explicit(self):
         for s, b in [
-                ("",    b'\x000'),
-                ("0",   b'\x010\x00'),
-                ("1",   b'\x011\x01'),
-                ("10",  b'\x021\x01\x00'),
-                ("01",  b'\x020\x01\x01'),
-                ("1" + 63 * "0", b'\x401\x01\x00'),
-                ("0" + 63 * "1", b'\x400\x01\x3f'),
+                ("",    b'0\x00'),
+                ("0",   b'0\x01\x00'),
+                ("1",   b'1\x01\x01'),
+                ("10",  b'1\x02\x01\x00'),
+                ("01",  b'0\x02\x01\x01'),
+                ("1" + 63 * "0", b'1\x40\x01\x00'),
+                ("0" + 63 * "1", b'0\x40\x01\x3f'),
         ]:
             a = bitarray(s)
             self.assertEqual(rl_encode(a), b)
@@ -103,46 +103,46 @@ class RL_Tests(unittest.TestCase):
 
     def test_decode_errors(self):
         # incomplete stream
-        for b in b'', b'\x00', b'\x020\x01', :
+        for b in b'', b'0', b'0\x01', :
             self.assertRaises(StopIteration, rl_decode, b)
 
         # invalid first bit
-        for b in b'\x01\x00', b'\x01\x01', b'\x012':
+        for b in b'\x00', b'\x01', b'2':
             self.assertRaises(ValueError, rl_decode, b)
 
         # sequence of 1s at [0x01 : 0x41] exceeds nbits
-        b = b'\x400\x01\x40'
+        b = b'0\x40\x01\x40'
         self.assertRaises(ValueError, rl_decode, b)
 
     def test_decode_ambiguity(self):
         # For an empty bitarray either first-bit byte works.
-        for b in b'\x000', b'\x001':
+        for b in b'0\x00', b'1\x00':
             self.assertEqual(rl_decode(b), bitarray())
 
         # For an all-zero bitarray, either first-bit byte works when
         # immediately followed by the zero terminator.
-        for b in b'\x010\x00', b'\x011\x00':
+        for b in b'0\x01\x00', b'1\x01\x00':
             self.assertEqual(rl_decode(b), bitarray('0'))
 
         # Trailing zeros may be represented by the zero terminator or
         # by an explicit final zero-run length.
-        for b in b'\x021\x01\x00', b'\x021\x01\x01':
+        for b in b'1\x02\x01\x00', b'1\x02\x01\x01':
             self.assertEqual(rl_decode(b), bitarray('10'))
 
         # Partial trailing-zero run followed by the zero terminator.
         for b in [
-                b'\x031\x01\x00',      # canonical
-                b'\x031\x01\x02',      # complete trailing-zero run
-                b'\x031\x01\x01\x00',  # partial zero run, then terminator
+                b'1\x03\x01\x00',      # canonical
+                b'1\x03\x01\x02',      # complete trailing-zero run
+                b'1\x03\x01\x01\x00',  # partial zero run, then terminator
         ]:
             self.assertEqual(rl_decode(b), bitarray('100'))
 
         # ULEB128 permits overlong representations.
-        for b in b'\x000', b'\x80\x000':
+        for b in b'0\x00', b'0\x80\x00':
             self.assertEqual(rl_decode(b), bitarray())
 
     def test_decode_endian(self):
-        b = b'\x020\x01\x01'
+        b = b'0\x02\x01\x01'
         for endian in OPT_ENDIANS:
             a = rl_decode(b, endian)
             self.assertEqual(a.endian, endian or get_default_endian())
@@ -150,8 +150,8 @@ class RL_Tests(unittest.TestCase):
 
     def test_intervals(self):
         a = bitarray("00000011111111111111110000000111000000")
-        b = bytearray(leb128_encode(len(a)))
-        b.append(ord("0"))
+        b = bytearray([ord("0")])
+        b.extend(leb128_encode(len(a)))
         for unused_value, start, stop in intervals(a):
             b.extend(leb128_encode(stop - start))
         self.assertEqual(rl_decode(b), a)
