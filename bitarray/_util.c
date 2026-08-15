@@ -1913,18 +1913,56 @@ rl_leb128_encode(char *str, Py_ssize_t i)
 
     assert(i >= 0);
     while (i >= 0x80) {
+        /* 7 payload bits and continuation bit */
         str[len++] = (char) ((i & 0x7f) | 0x80);
         i >>= 7;
     }
-    str[len++] = (char) i;
+    assert(i <= 0x7f);
+    str[len++] = (char) i;  /* no continuation bit */
     return len;
 }
+
+static Py_ssize_t
+rl_leb128_decode(PyObject *iter)
+{
+    Py_ssize_t i = 0;
+    int shift = 0;
+    int c;
+
+    assert(PyIter_Check(iter));
+    while (1) {
+        if ((c = next_char(iter)) < 0)
+            return -1;
+
+        if ((c & 0x7f) > (PY_SSIZE_T_MAX >> shift))
+            /* payload does not fit in the remaining bits */
+            goto overflow;
+
+        i |= ((Py_ssize_t) (c & 0x7f)) << shift;
+        if ((c & 0x80) == 0)
+            return i;
+
+        if (shift + 7 >= 8 * (int) sizeof(Py_ssize_t) - 1)
+            /* continuation would exceed the available bits */
+            goto overflow;
+
+        shift += 7;
+    }
+
+ overflow:
+    PyErr_SetString(PyExc_OverflowError,
+                    "LEB128 value does not fit in Py_ssize_t");
+    return -1;
+}
+
+
+/* --------------------- Python interface for LEB128 ------------------- */
 
 static PyObject *
 leb128_encode(PyObject *module, PyObject *obj)
 {
     Py_ssize_t i;
-    char str[16];
+    char str[16];  /* buffer is large enough for PY_SSIZE_T_MAX */
     int len;
 
     i = PyNumber_AsSsize_t(obj, PyExc_OverflowError);
@@ -1940,32 +1978,11 @@ leb128_encode(PyObject *module, PyObject *obj)
     return PyBytes_FromStringAndSize(str, len);
 }
 
-static Py_ssize_t
-rl_leb128_decode(PyObject *iter)
-{
-    Py_ssize_t i = 0;
-    int shift = 0;
-    int c;
+PyDoc_STRVAR(leb128_encode_doc,
+"leb128_encode(i, /) -> bytes\n\
+\n\
+Return the unsigned LEB128 representation of non-negative integer `i`.");
 
-    assert(PyIter_Check(iter));
-    while (1) {
-        if ((c = next_char(iter)) < 0)
-            return -1;
-        if ((c & 0x7f) > (PY_SSIZE_T_MAX >> shift))
-            goto overflow;
-        i |= ((Py_ssize_t) (c & 0x7f)) << shift;
-        if ((c & 0x80) == 0)
-            return i;
-        if (shift + 7 >= 8 * (int) sizeof(Py_ssize_t) - 1)
-            goto overflow;
-        shift += 7;
-    }
-
- overflow:
-    PyErr_SetString(PyExc_OverflowError,
-                    "LEB128 value does not fit in Py_ssize_t");
-    return -1;
-}
 
 static PyObject *
 leb128_decode(PyObject *module, PyObject *obj)
@@ -1982,8 +1999,15 @@ leb128_decode(PyObject *module, PyObject *obj)
     Py_DECREF(iter);
     if (i < 0)
         return NULL;
+
     return PyLong_FromSsize_t(i);
 }
+
+PyDoc_STRVAR(leb128_decode_doc,
+"leb128_decode(stream, /) -> int\n\
+\n\
+Decode one unsigned LEB128 integer from a binary stream (an integer\n\
+iterator, or bytes-like object).  The remaining stream is left untouched.");
 
 /* ------------------- variable length bitarray format ----------------- */
 
@@ -2505,8 +2529,8 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, ba2base_doc},
     {"base2ba",   (PyCFunction) base2ba,   METH_KEYWORDS |
                                            METH_VARARGS, base2ba_doc},
-    {"leb128_encode", (PyCFunction) leb128_encode, METH_O, 0},
-    {"leb128_decode", (PyCFunction) leb128_decode, METH_O, 0},
+    {"leb128_encode", (PyCFunction) leb128_encode, METH_O, leb128_encode_doc},
+    {"leb128_decode", (PyCFunction) leb128_decode, METH_O, leb128_decode_doc},
     {"sc_encode", (PyCFunction) sc_encode, METH_O,       sc_encode_doc},
     {"sc_decode", (PyCFunction) sc_decode, METH_O,       sc_decode_doc},
     {"vl_encode", (PyCFunction) vl_encode, METH_O,       vl_encode_doc},
