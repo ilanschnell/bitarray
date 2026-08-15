@@ -1938,7 +1938,7 @@ rl_encode_lock_held(bitarrayobject *a, PyObject **out)
     len = rl_leb128_encode(str, a->nbits);  /* nbits */
     if (a->nbits && getbit(a, 0))
         vi = 1;
-    str[len++] = (char) vi;                 /* first bit */
+    str[len++] = (char) '0' + vi;           /* first bit */
 
     while (i < a->nbits) {
         Py_ssize_t allocated = PyBytes_GET_SIZE(*out);
@@ -2028,17 +2028,21 @@ set_span_1(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 static int
 rl_decode_header(PyObject *iter, Py_ssize_t *nbits, int *vi)
 {
+    int c;
+
     if ((*nbits = rl_leb128_decode(iter)) < 0)
         return -1;
 
-    if ((*vi = next_char(iter)) < 0)
+    if ((c = next_char(iter)) < 0)
         return -1;
 
-    if (*vi > 1) {
-        PyErr_Format(PyExc_ValueError, "invalid first bit: %d", *vi);
-        return -1;
+    if (c == '0' || c == '1') {
+        *vi = c - '0';
+        return 0;
     }
-    return 0;
+
+    PyErr_Format(PyExc_ValueError, "invalid first bit: 0x%02x", c);
+    return -1;
 }
 
 static int

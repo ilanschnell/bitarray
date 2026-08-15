@@ -74,6 +74,39 @@ class LEB128_Tests(unittest.TestCase):
 class RL_Tests(unittest.TestCase):
 
     def test_explicit(self):
+        for s, b in [
+                ("",    b'\x000'),
+                ("0",   b'\x010\x00'),
+                ("1",   b'\x011\x01'),
+                ("10",  b'\x021\x01\x00'),
+                ("01",  b'\x020\x01\x01'),
+                ("1" + 63 * "0", b'\x401\x01\x00'),
+                ("0" + 63 * "1", b'\x400\x01\x3f'),
+        ]:
+            a = bitarray(s)
+            self.assertEqual(rl_encode(a), b)
+            self.assertEqual(rl_decode(b), a)
+            it = iter(b)
+            self.assertEqual(rl_decode(it), a)
+            self.assertRaises(StopIteration, next, it)
+            it = iter(b + b'XYZ')
+            self.assertEqual(rl_decode(it), a)
+            self.assertEqual(next(it), ord(b'X'))
+
+    def test_decode_errors(self):
+        # incomplete stream
+        for b in b'', b'\x00', b'\x020\x01', :
+            self.assertRaises(StopIteration, rl_decode, b)
+
+        # invalid first bit
+        for b in b'\x01\x00', b'\x01\x01', b'\x012':
+            self.assertRaises(ValueError, rl_decode, b)
+
+        # sequence of 1s at [0x01 : 0x41] exceeds nbits
+        b = b'\x400\x01\x40'
+        self.assertRaises(ValueError, rl_decode, b)
+
+    def test_alternate(self):
         a = zeros(1024)
         a[:512] = 1
         a *= 8
