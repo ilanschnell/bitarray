@@ -1251,9 +1251,10 @@ byte_length(Py_ssize_t i)
     }
     return n;
 }
-/* -------------------------------- ULEB128 ---------------------------- */
 
-/* Write ULEB128 representation of i to str and return number
+/*************  ULEB128  (Unsigned Little Endian Base 128)  **************/
+
+/* Write ULEB128 representation of `i` to str and return number
    of bytes written. */
 static int
 uleb128_encode(char *str, Py_ssize_t i)
@@ -1271,6 +1272,8 @@ uleb128_encode(char *str, Py_ssize_t i)
     return len;
 }
 
+/* Decode one ULEB128 integer from `iter` and return its value.
+   Return -1 on failure after setting an exception. */
 static Py_ssize_t
 uleb128_decode(PyObject *iter)
 {
@@ -2026,7 +2029,9 @@ rl_find(bitarrayobject *a, int vi, Py_ssize_t start)
     return index;
 }
 
-/* write RL header */
+/* Encode bitarray `a` into the bytes object referenced by `*out`.
+   The lock for `a` must be held by the caller.
+   Return encoded length, or -1 on error. */
 static int
 rl_encode_lock_held(bitarrayobject *a, PyObject **out)
 {
@@ -2096,9 +2101,11 @@ rl_encode(PyObject *module, PyObject *obj)
 PyDoc_STRVAR(rl_encode_doc,
 "rl_encode(bitarray, /) -> bytes\n\
 \n\
-XXX");
+Return the run-length encoded binary representation of a bitarray.\n\
+This representation may be useful for bitarrays with long runs of\n\
+identical bits.  Use `rl_decode()` for decoding.");
 
-/* set bits self[a:b]=1 */
+/* self[a:b] = 1 */
 static void
 set_span_1(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 {
@@ -2210,7 +2217,10 @@ rl_decode(PyObject *module, PyObject *args, PyObject *kwds)
 PyDoc_STRVAR(rl_decode_doc,
 "rl_decode(stream, /, endian=None) -> bitarray\n\
 \n\
-XXX");
+Decode a run-length encoded bitarray from a binary stream (an integer\n\
+iterator, or bytes-like object), and return the decoded bitarray.\n\
+This function consumes only one bitarray and leaves the remaining stream\n\
+untouched.  Use `rl_encode()` for encoding.");
 
 
 /* ------------------- variable length bitarray format ----------------- */
