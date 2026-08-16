@@ -1252,6 +1252,30 @@ byte_length(Py_ssize_t i)
     return n;
 }
 
+/* self[a:b] = 1 */
+static void
+set_span_1(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
+{
+    assert(0 <= a && a <= self->nbits);
+    assert(0 <= b && b <= self->nbits);
+    assert(self->readonly == 0);
+
+    if (b >= a + 8) {
+        const Py_ssize_t ca = BYTES(a);  /* char-range(ca, cb) */
+        const Py_ssize_t cb = b / 8;
+
+        assert(a + 8 > 8 * ca && 8 * cb + 8 > b);
+
+        set_span_1(self, a, 8 * ca);
+        memset(self->ob_item + ca, 0xff, (size_t) (cb - ca));
+        set_span_1(self, 8 * cb, b);
+    }
+    else {                               /* (bit-) range(a, b) */
+        while (a < b)
+            setbit(self, a++, 1);
+    }
+}
+
 /*************  ULEB128  (Unsigned Little Endian Base 128)  **************/
 
 /* Write ULEB128 representation of `i` to str and return number
@@ -1389,8 +1413,8 @@ or bytes-like object).  The remaining stream is left untouched.");
    SEGSIZE must also be divisible by the word size sizeof(uint64_t) = 8. */
 #define SEGSIZE  32
 
-/* number of segments for given bitarray */
-#define NSEG(self)  ((Py_SIZE(self) + SEGSIZE - 1) / SEGSIZE)
+/* number of segments for given bitarray `a` */
+#define NSEG(a)  ((Py_SIZE(a) + SEGSIZE - 1) / SEGSIZE)
 
 /* Calculate an array with the running totals (rts) for 256 bit segments.
    Note that we call these "segments", as opposed to "blocks", in order to
@@ -1404,18 +1428,18 @@ or bytes-like object).  The remaining stream is left untouched.");
    +-----------+-----------+-----------+-----------+
    0           5           5           8          12   running totals, rts[i]
 
-   In this example we have a bitarray of length nbits = 987.  Note that:
+   In this example we have a bitarray 'a' of length nbits = 987.  Note that:
 
-     * The number of segments is given by NSEG(self).
-       Here we have 4 segments: NSEG(self) = 4
+     * The number of segments is given by NSEG(a).
+       Here we have 4 segments: NSEG(a) = 4
 
-     * The rts array has always NSEG(self) + 1 elements, such that
-       last element is always indexed by NSEG(self).
+     * The rts array has always NSEG(a) + 1 elements, such that
+       last element is always indexed by NSEG(a).
 
      * The element rts[0] is always zero.
 
-     * The last element rts[NSEG(self)] is always the total count.
-       Here: rts[NSEG(self)] = rts[4] = 12
+     * The last element rts[NSEG(a)] is always the total count.
+       Here: rts[NSEG(a)] = rts[4] = 12
 
      * The last segment may be partial.  In that case, its size is given
        by nbits % 256.  Here: nbits % 256 = 987 % 256 = 219
@@ -2104,30 +2128,6 @@ PyDoc_STRVAR(rl_encode_doc,
 Return the run-length encoded binary representation of a bitarray.\n\
 This representation may be useful for bitarrays with long runs of\n\
 identical bits.  Use `rl_decode()` for decoding.");
-
-/* self[a:b] = 1 */
-static void
-set_span_1(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
-{
-    assert(0 <= a && a <= self->nbits);
-    assert(0 <= b && b <= self->nbits);
-    assert(self->readonly == 0);
-
-    if (b >= a + 8) {
-        const Py_ssize_t ca = BYTES(a);  /* char-range(ca, cb) */
-        const Py_ssize_t cb = b / 8;
-
-        assert(a + 8 > 8 * ca && 8 * cb + 8 > b);
-
-        set_span_1(self, a, 8 * ca);
-        memset(self->ob_item + ca, 0xff, (size_t) (cb - ca));
-        set_span_1(self, 8 * cb, b);
-    }
-    else {                               /* (bit-) range(a, b) */
-        while (a < b)
-            setbit(self, a++, 1);
-    }
-}
 
 static int
 rl_decode_header(PyObject *iter, Py_ssize_t *nbits, int *vi)
