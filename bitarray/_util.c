@@ -1251,6 +1251,110 @@ byte_length(Py_ssize_t i)
     }
     return n;
 }
+/* -------------------------------- ULEB128 ---------------------------- */
+
+/* Write ULEB128 representation of i to str and return number
+   of bytes written. */
+static int
+uleb128_encode(char *str, Py_ssize_t i)
+{
+    int len = 0;
+
+    assert(i >= 0);
+    while (i >= 0x80) {
+        /* 7 payload bits and continuation bit */
+        str[len++] = (char) ((i & 0x7f) | 0x80);
+        i >>= 7;
+    }
+    assert(i <= 0x7f);
+    str[len++] = (char) i;  /* no continuation bit */
+    return len;
+}
+
+static Py_ssize_t
+uleb128_decode(PyObject *iter)
+{
+    Py_ssize_t i = 0;
+    int shift = 0;
+    int c;
+
+    assert(PyIter_Check(iter));
+    while (1) {
+        if ((c = next_char(iter)) < 0)
+            return -1;
+
+        if ((c & 0x7f) > (PY_SSIZE_T_MAX >> shift))
+            /* payload does not fit in the remaining bits */
+            goto overflow;
+
+        i |= ((Py_ssize_t) (c & 0x7f)) << shift;
+        if ((c & 0x80) == 0)
+            return i;
+
+        if (shift + 7 >= 8 * (int) sizeof(Py_ssize_t) - 1)
+            /* continuation would exceed the available bits */
+            goto overflow;
+
+        shift += 7;
+    }
+
+ overflow:
+    PyErr_SetString(PyExc_OverflowError,
+                    "ULEB128 value does not fit in Py_ssize_t");
+    return -1;
+}
+
+static PyObject *
+mod_uleb128_encode(PyObject *module, PyObject *obj)
+{
+    Py_ssize_t i;
+    char str[16];  /* buffer is large enough for PY_SSIZE_T_MAX */
+    int len;
+
+    i = PyNumber_AsSsize_t(obj, PyExc_OverflowError);
+    if (i == -1 && PyErr_Occurred())
+        return NULL;
+    if (i < 0) {
+        PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
+        return NULL;
+    }
+
+    len = uleb128_encode(str, i);
+    assert(len <= 16);
+    return PyBytes_FromStringAndSize(str, len);
+}
+
+PyDoc_STRVAR(uleb128_encode_doc,
+"uleb128_encode(i, /) -> bytes\n\
+\n\
+Return the ULEB128 representation of non-negative integer `i`.");
+
+
+static PyObject *
+mod_uleb128_decode(PyObject *module, PyObject *obj)
+{
+    PyObject *iter;
+    Py_ssize_t i;
+
+    iter = PyObject_GetIter(obj);
+    if (iter == NULL)
+        return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
+                            Py_TYPE(obj)->tp_name);
+
+    i = uleb128_decode(iter);
+    Py_DECREF(iter);
+    if (i < 0)
+        return NULL;
+
+    return PyLong_FromSsize_t(i);
+}
+
+PyDoc_STRVAR(uleb128_decode_doc,
+"uleb128_decode(stream, /) -> int\n\
+\n\
+Decode one ULEB128 integer from a binary stream (an integer iterator,\n\
+or bytes-like object).  The remaining stream is left untouched.");
+
 
 /***********************  sparse bitarray compression  *****************
  *
@@ -1902,9 +2006,6 @@ untouched.  Use `sc_encode()` for compressing (encoding).");
 
 /* --------------------------- run-length codec ------------------------ */
 
-static int
-rl_leb128_encode(char *str, Py_ssize_t i);
-
 static Py_ssize_t
 rl_find(bitarrayobject *a, int vi, Py_ssize_t start)
 {
@@ -1932,13 +2033,12 @@ rl_encode_lock_held(bitarrayobject *a, PyObject **out)
     char *str;              /* output buffer */
     Py_ssize_t len = 0;     /* bytes written into output buffer */
     Py_ssize_t i = 0;       /* current index */
-    int vi = 0;             /* current bit value */
+    int vi;                 /* current bit value */
 
     str = PyBytes_AS_STRING(*out);
-    if (a->nbits && getbit(a, 0))
-        vi = 1;
+    vi = a->nbits && getbit(a, 0);
     str[len++] = (char) '0' + vi;                  /* first bit */
-    len += rl_leb128_encode(str + len, a->nbits);  /* nbits */
+    len += uleb128_encode(str + len, a->nbits);  /* nbits */
 
     while (i < a->nbits) {
         Py_ssize_t allocated = PyBytes_GET_SIZE(*out);
@@ -1956,7 +2056,7 @@ rl_encode_lock_held(bitarrayobject *a, PyObject **out)
             str = PyBytes_AS_STRING(*out);
         }
 
-        len += rl_leb128_encode(str + len, next - i);
+        len += uleb128_encode(str + len, next - i);
         if (next == i)  /* zero terminator: remainder is all zeros */
             break;
 
@@ -1998,9 +2098,6 @@ PyDoc_STRVAR(rl_encode_doc,
 \n\
 XXX");
 
-static Py_ssize_t
-rl_leb128_decode(PyObject *iter);
-
 /* set bits self[a:b]=1 */
 static void
 set_span_1(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
@@ -2038,7 +2135,7 @@ rl_decode_header(PyObject *iter, Py_ssize_t *nbits, int *vi)
     }
     *vi = c - '0';
 
-    if ((*nbits = rl_leb128_decode(iter)) < 0)
+    if ((*nbits = uleb128_decode(iter)) < 0)
         return -1;
 
     return 0;
@@ -2052,7 +2149,7 @@ rl_decode_core(bitarrayobject *a, PyObject *iter, int vi)
     Py_ssize_t n;
 
     while (i < nbits) {
-        if ((n = rl_leb128_decode(iter)) < 0)
+        if ((n = uleb128_decode(iter)) < 0)
             return -1;
 
         if (n == 0)             /* remainder is all zeros */
@@ -2115,109 +2212,6 @@ PyDoc_STRVAR(rl_decode_doc,
 \n\
 XXX");
 
-/* --------------------------------- LEB128 ---------------------------- */
-
-/* Write (unsigned) LEB128 representation of i to str and return number
-   of bytes written. */
-static int
-rl_leb128_encode(char *str, Py_ssize_t i)
-{
-    int len = 0;
-
-    assert(i >= 0);
-    while (i >= 0x80) {
-        /* 7 payload bits and continuation bit */
-        str[len++] = (char) ((i & 0x7f) | 0x80);
-        i >>= 7;
-    }
-    assert(i <= 0x7f);
-    str[len++] = (char) i;  /* no continuation bit */
-    return len;
-}
-
-static Py_ssize_t
-rl_leb128_decode(PyObject *iter)
-{
-    Py_ssize_t i = 0;
-    int shift = 0;
-    int c;
-
-    assert(PyIter_Check(iter));
-    while (1) {
-        if ((c = next_char(iter)) < 0)
-            return -1;
-
-        if ((c & 0x7f) > (PY_SSIZE_T_MAX >> shift))
-            /* payload does not fit in the remaining bits */
-            goto overflow;
-
-        i |= ((Py_ssize_t) (c & 0x7f)) << shift;
-        if ((c & 0x80) == 0)
-            return i;
-
-        if (shift + 7 >= 8 * (int) sizeof(Py_ssize_t) - 1)
-            /* continuation would exceed the available bits */
-            goto overflow;
-
-        shift += 7;
-    }
-
- overflow:
-    PyErr_SetString(PyExc_OverflowError,
-                    "LEB128 value does not fit in Py_ssize_t");
-    return -1;
-}
-
-static PyObject *
-leb128_encode(PyObject *module, PyObject *obj)
-{
-    Py_ssize_t i;
-    char str[16];  /* buffer is large enough for PY_SSIZE_T_MAX */
-    int len;
-
-    i = PyNumber_AsSsize_t(obj, PyExc_OverflowError);
-    if (i == -1 && PyErr_Occurred())
-        return NULL;
-    if (i < 0) {
-        PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
-        return NULL;
-    }
-
-    len = rl_leb128_encode(str, i);
-    assert(len <= 16);
-    return PyBytes_FromStringAndSize(str, len);
-}
-
-PyDoc_STRVAR(leb128_encode_doc,
-"leb128_encode(i, /) -> bytes\n\
-\n\
-Return the unsigned LEB128 representation of non-negative integer `i`.");
-
-
-static PyObject *
-leb128_decode(PyObject *module, PyObject *obj)
-{
-    PyObject *iter;
-    Py_ssize_t i;
-
-    iter = PyObject_GetIter(obj);
-    if (iter == NULL)
-        return PyErr_Format(PyExc_TypeError, "'%s' object is not iterable",
-                            Py_TYPE(obj)->tp_name);
-
-    i = rl_leb128_decode(iter);
-    Py_DECREF(iter);
-    if (i < 0)
-        return NULL;
-
-    return PyLong_FromSsize_t(i);
-}
-
-PyDoc_STRVAR(leb128_decode_doc,
-"leb128_decode(stream, /) -> int\n\
-\n\
-Decode one unsigned LEB128 integer from a binary stream (an integer\n\
-iterator, or bytes-like object).  The remaining stream is left untouched.");
 
 /* ------------------- variable length bitarray format ----------------- */
 
@@ -2739,10 +2733,12 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, ba2base_doc},
     {"base2ba",   (PyCFunction) base2ba,   METH_KEYWORDS |
                                            METH_VARARGS, base2ba_doc},
-    {"leb128_encode", (PyCFunction) leb128_encode, METH_O, leb128_encode_doc},
-    {"leb128_decode", (PyCFunction) leb128_decode, METH_O, leb128_decode_doc},
-    {"rl_encode",     (PyCFunction) rl_encode,     METH_O, rl_encode_doc},
-    {"rl_decode",     (PyCFunction) rl_decode,     METH_KEYWORDS |
+    {"uleb128_encode", (PyCFunction) mod_uleb128_encode,
+                                           METH_O, uleb128_encode_doc},
+    {"uleb128_decode", (PyCFunction) mod_uleb128_decode,
+                                           METH_O, uleb128_decode_doc},
+    {"rl_encode", (PyCFunction) rl_encode, METH_O, rl_encode_doc},
+    {"rl_decode", (PyCFunction) rl_decode, METH_KEYWORDS |
                                            METH_VARARGS, rl_decode_doc},
     {"sc_encode", (PyCFunction) sc_encode, METH_O,       sc_encode_doc},
     {"sc_decode", (PyCFunction) sc_decode, METH_O,       sc_decode_doc},

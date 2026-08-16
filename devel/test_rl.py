@@ -4,11 +4,11 @@ from random import randrange
 
 from bitarray import bitarray, get_default_endian
 from bitarray.util import zeros, urandom, intervals
-from bitarray._util import leb128_encode, leb128_decode, rl_encode, rl_decode
+from bitarray._util import uleb128_encode, uleb128_decode, rl_encode, rl_decode
 from bitarray.test_util import OPT_ENDIANS
 
 
-class LEB128_Tests(unittest.TestCase):
+class ULEB128_Tests(unittest.TestCase):
 
     def test_explicit(self):
         for i, b in [
@@ -19,17 +19,17 @@ class LEB128_Tests(unittest.TestCase):
                 ( 16_384, b'\x80\x80\x01'),
                 (624_485, b'\xe5\x8e\x26'),  # wikipedia LEB128
         ]:
-            self.assertEqual(leb128_encode(i), b)
-            self.assertEqual(leb128_decode(b), i)
+            self.assertEqual(uleb128_encode(i), b)
+            self.assertEqual(uleb128_decode(b), i)
             it = iter(b)
-            self.assertEqual(leb128_decode(it), i)
+            self.assertEqual(uleb128_decode(it), i)
             self.assertRaises(StopIteration, next, it)
             it = iter(b + b'XYZ')
-            self.assertEqual(leb128_decode(it), i)
+            self.assertEqual(uleb128_decode(it), i)
             self.assertEqual(next(it), ord(b'X'))
 
     def test_encode_errors(self):
-        E = leb128_encode
+        E = uleb128_encode
         self.assertRaises(ValueError, E, -1)
         self.assertRaises(ValueError, E, -123)
         self.assertRaises(OverflowError, E, sys.maxsize + 1)
@@ -39,17 +39,17 @@ class LEB128_Tests(unittest.TestCase):
     def test_decode_ambiguity(self):
         # ULEB128 permits overlong representations.
         for b in b'\x00', b'\x80\x00':
-            self.assertEqual(leb128_decode(b), 0)
+            self.assertEqual(uleb128_decode(b), 0)
         for b in b'\x0a', b'\x8a\x00', b'\x8a\x80\x00':
-            self.assertEqual(leb128_decode(b), 10)
+            self.assertEqual(uleb128_decode(b), 10)
 
     def test_decode_types(self):
         lst = [0xe5, 0x8e, 0x26]
         for b in lst, bytes(lst), bytearray(lst), iter(lst):
-            self.assertEqual(leb128_decode(b), 624_485)
+            self.assertEqual(uleb128_decode(b), 624_485)
 
     def test_decode_errors(self):
-        D = leb128_decode
+        D = uleb128_decode
         self.assertRaises(ValueError, D, [-1])
         self.assertRaises(ValueError, D, [0xff, 256])
         self.assertRaises(TypeError, D, "String")
@@ -64,19 +64,19 @@ class LEB128_Tests(unittest.TestCase):
             b = 8 * b'\xff' + b'\x7f'
         elif width == 32:
             b = 4 * b'\xff' + b'\x07'
-        self.assertEqual(leb128_encode(i), b)
-        self.assertEqual(leb128_decode(b), i)
+        self.assertEqual(uleb128_encode(i), b)
+        self.assertEqual(uleb128_decode(b), i)
 
     def test_range(self):
         for i in range(1000):
-            b = leb128_encode(i)
-            self.assertEqual(leb128_decode(b), i)
+            b = uleb128_encode(i)
+            self.assertEqual(uleb128_decode(b), i)
 
     def test_random(self):
         for _ in range(10000):
             i = randrange(1_000_000_000)
-            b = leb128_encode(i)
-            self.assertEqual(leb128_decode(b), i)
+            b = uleb128_encode(i)
+            self.assertEqual(uleb128_decode(b), i)
 
 
 class RL_Tests(unittest.TestCase):
@@ -151,9 +151,9 @@ class RL_Tests(unittest.TestCase):
     def test_intervals(self):
         a = bitarray("00000011111111111111110000000111000000")
         b = bytearray([ord("0")])
-        b.extend(leb128_encode(len(a)))
+        b.extend(uleb128_encode(len(a)))
         for unused_value, start, stop in intervals(a):
-            b.extend(leb128_encode(stop - start))
+            b.extend(uleb128_encode(stop - start))
         self.assertEqual(rl_decode(b), a)
         # Because `a` has trailing zeros, this is not the canonical code
         self.assertNotEqual(b, rl_encode(a))
