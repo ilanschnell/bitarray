@@ -407,21 +407,18 @@ Compute all uninterrupted intervals of 1s and 0s, and return an
 iterator over tuples `(value, start, stop)`.  The intervals are guaranteed
 to be in order, and their size is always non-zero (`stop - start > 0`).
 """
-    try:
-        value = __a[0]  # value of current interval
-    except IndexError:
-        return
     n = len(__a)
-    stop = 0  # "previous" stop - becomes next start
+    if n == 0:
+        return
 
-    while stop < n:
-        start = stop
-        # assert __a[start] == value
-        # find next occurrence of opposite value
+    value = __a[0]  # value of current interval
+    start = 0
+    while start < n:
         stop = __a.find(not value, start)
         if stop < 0:
             stop = n
         yield int(value), start, stop
+        start = stop
         value = not value  # next interval has opposite value
 
 
