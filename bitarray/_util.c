@@ -2059,24 +2059,25 @@ rl_find(bitarrayobject *a, int vi, Py_ssize_t start)
 static int
 rl_encode_lock_held(bitarrayobject *a, PyObject **out)
 {
-    char *str;              /* output buffer */
-    Py_ssize_t len = 0;     /* bytes written into output buffer */
-    Py_ssize_t i = 0;       /* current index */
-    int vi;                 /* current bit value */
+    char *str;                          /* output buffer */
+    Py_ssize_t len = 0;                 /* bytes written into output buffer */
+    Py_ssize_t start = 0;               /* start index */
+    int vi = a->nbits && getbit(a, 0);  /* current bit value */
 
     str = PyBytes_AS_STRING(*out);
-    vi = a->nbits && getbit(a, 0);
-    str[len++] = (char) '0' + vi;                  /* first bit */
+
+    /* write RL header */
+    str[len++] = (char) '0' + vi;                /* first bit */
     len += uleb128_encode(str + len, a->nbits);  /* nbits */
 
-    while (i < a->nbits) {
+    while (start < a->nbits) {
         Py_ssize_t allocated = PyBytes_GET_SIZE(*out);
-        Py_ssize_t next = rl_find(a, !vi, i);
+        Py_ssize_t stop = rl_find(a, !vi, start);
 
-        if (next < 0) {
+        if (stop < 0) {
             if (PyErr_Occurred())
                 return -1;
-            next = vi ? a->nbits : i;
+            stop = vi ? a->nbits : start;
         }
 
         if (allocated < len + 10) {
@@ -2085,11 +2086,11 @@ rl_encode_lock_held(bitarrayobject *a, PyObject **out)
             str = PyBytes_AS_STRING(*out);
         }
 
-        len += uleb128_encode(str + len, next - i);
-        if (next == i)  /* zero terminator: remainder is all zeros */
+        len += uleb128_encode(str + len, stop - start);
+        if (stop == start)  /* zero terminator: remainder is all zeros */
             break;
 
-        i = next;
+        start = stop;
         vi = !vi;
     }
 
@@ -2154,6 +2155,9 @@ rl_decode_core(bitarrayobject *a, PyObject *iter, int vi)
     const Py_ssize_t nbits = a->nbits;
     Py_ssize_t i = 0;           /* current index */
     Py_ssize_t n;
+
+    assert(PyIter_Check(iter));
+    assert(vi == 0 || vi == 1);
 
     while (i < nbits) {
         if ((n = uleb128_decode(iter)) < 0)
