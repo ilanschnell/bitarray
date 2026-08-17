@@ -37,8 +37,8 @@ is_pypy = bool(platform.python_implementation() == 'PyPy')
 
 from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
                       decodeiterator, get_default_endian,
-                      _bitarray_reconstructor, _sysinfo as sysinfo,
-                      BufferInfo, __version__)
+                      _bitarray_reconstructor, BufferInfo, __version__)
+from bitarray._bitarray import sysinfo  # type: ignore
 
 
 ENDIANS = ('little', 'big')

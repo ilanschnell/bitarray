@@ -3,7 +3,8 @@ import sys
 import unittest
 from random import getrandbits, randint, randrange, random, sample, choice
 
-from bitarray import bitarray, decodetree, _sysinfo
+from bitarray import bitarray, decodetree
+from bitarray._bitarray import sysinfo
 from bitarray.util import zeros, ones, int2ba, parity, huffman_code
 
 from bitarray.test_bitarray import (Util, urandom_2, ENDIANS, PTRSIZE,
@@ -204,7 +205,7 @@ class Adjust_Slice_Tests(unittest.TestCase):
 class SysInfo_Tests(unittest.TestCase):
 
     def test_debug(self):
-        self.assertTrue(_sysinfo("DEBUG"))
+        self.assertTrue(sysinfo("DEBUG"))
 
 
 class ShiftR8_Tests(unittest.TestCase, Util):

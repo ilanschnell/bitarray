@@ -5223,7 +5223,7 @@ sysinfo(PyObject *module, PyObject *args)
 {
     char *key;
 
-    if (!PyArg_ParseTuple(args, "s:_sysinfo", &key))
+    if (!PyArg_ParseTuple(args, "s:sysinfo", &key))
         return NULL;
 
 #define R(k, v)                             \
@@ -5260,20 +5260,20 @@ sysinfo(PyObject *module, PyObject *args)
 }
 
 PyDoc_STRVAR(sysinfo_doc,
-"_sysinfo(key) -> int\n\
+"sysinfo(key) -> int\n\
 \n\
 Return system- and compile-specific information given a key.");
 
 
 static PyMethodDef module_functions[] = {
-    {"bits2bytes",          (PyCFunction) bits2bytes,         METH_O,
+    {"bits2bytes",         (PyCFunction) bits2bytes,         METH_O,
      bits2bytes_doc},
     {"_bitarray_reconstructor",
-                            (PyCFunction) reconstructor,      METH_VARARGS,
+                           (PyCFunction) reconstructor,      METH_VARARGS,
      reduce_doc},
-    {"get_default_endian",  (PyCFunction) get_default_endian, METH_NOARGS,
+    {"get_default_endian", (PyCFunction) get_default_endian, METH_NOARGS,
      get_default_endian_doc},
-    {"_sysinfo",            (PyCFunction) sysinfo,            METH_VARARGS,
+    {"sysinfo",            (PyCFunction) sysinfo,            METH_VARARGS,
      sysinfo_doc},
     {NULL}  /* sentinel */
 };
