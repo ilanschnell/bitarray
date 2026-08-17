@@ -6,6 +6,7 @@
   * preserve bitarrays when buffer reallocation fails
   * improve sparse-compression and debug-mode tests, including new tests
     for slice adjustment `adjust_slice()`
+  * move private `sysinfo()` out of the top-level namespace
 
 
 2026-08-07  3.10.1:
