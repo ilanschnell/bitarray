@@ -22,6 +22,7 @@ from bitarray._util import (
     ba2hex, hex2ba,
     ba2base, base2ba,
     sc_encode, sc_decode,
+    rl_encode, rl_decode,
     vl_encode, vl_decode,
     canonical_decode,
 )
@@ -37,6 +38,7 @@ __all__ = [
     'ba2int', 'int2ba',
     'serialize', 'deserialize',
     'sc_encode', 'sc_decode', 'sc_stat',
+    'rl_encode', 'rl_decode',
     'vl_encode', 'vl_decode',
     'huffman_code', 'canonical_huffman', 'canonical_decode',
 ]

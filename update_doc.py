@@ -74,6 +74,8 @@ NEW_IN = {
     'util.sc_encode':         '2.7',
     'util.sc_decode':         '2.7',
     'util.sc_stat':          '3.11',
+    'util.rl_decode':        '3.11',
+    'util.rl_encode':        '3.11',
     'util.vl_decode':         '2.2',
     'util.vl_encode':         '2.2',
     'util.huffman_code':     ['3.10: return a codedict mapping to '

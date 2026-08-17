@@ -1,11 +1,11 @@
 import sys
 import unittest
-from random import randrange
+from random import randint, randrange
 
 from bitarray import bitarray, get_default_endian
-from bitarray.util import zeros, urandom, intervals
+from bitarray.util import intervals
 from bitarray._util import uleb128_encode, uleb128_decode, rl_encode, rl_decode
-from bitarray.test_util import OPT_ENDIANS
+from bitarray.test_util import OPT_ENDIANS, RL_Util
 
 
 class ULEB128_Tests(unittest.TestCase):
@@ -79,106 +79,40 @@ class ULEB128_Tests(unittest.TestCase):
             self.assertEqual(uleb128_decode(b), i)
 
 
-class RL_Tests(unittest.TestCase):
+class RL_Tests(unittest.TestCase, RL_Util):
 
-    def test_explicit(self):
-        for s, b in [
-                ("",    b'0\x00'),
-                ("0",   b'0\x01\x00'),
-                ("1",   b'1\x01\x01'),
-                ("10",  b'1\x02\x01\x00'),
-                ("01",  b'0\x02\x01\x01'),
-                ("1" + 63 * "0", b'1\x40\x01\x00'),
-                ("0" + 63 * "1", b'0\x40\x01\x3f'),
-        ]:
-            a = bitarray(s)
-            self.assertEqual(rl_encode(a), b)
-            self.assertEqual(rl_decode(b), a)
-            it = iter(b)
-            self.assertEqual(rl_decode(it), a)
-            self.assertRaises(StopIteration, next, it)
-            it = iter(b + b'XYZ')
-            self.assertEqual(rl_decode(it), a)
-            self.assertEqual(next(it), ord(b'X'))
-
-    def test_decode_errors(self):
-        # incomplete stream
-        for b in b'', b'0', b'0\x01', :
-            self.assertRaises(StopIteration, rl_decode, b)
-
-        # invalid first bit
-        for b in b'\x00', b'\x01', b'2':
-            self.assertRaises(ValueError, rl_decode, b)
-
-        # sequence of 1s at [0x01 : 0x41] exceeds nbits
-        b = b'0\x40\x01\x40'
-        self.assertRaises(ValueError, rl_decode, b)
-
-    def test_decode_ambiguity(self):
-        # For an empty bitarray either first-bit byte works.
-        for b in b'0\x00', b'1\x00':
-            self.assertEqual(rl_decode(b), bitarray())
-
-        # For an all-zero bitarray, either first-bit byte works when
-        # immediately followed by the zero terminator.
-        for b in b'0\x01\x00', b'1\x01\x00':
-            self.assertEqual(rl_decode(b), bitarray('0'))
-
-        # Trailing zeros may be represented by the zero terminator or
-        # by an explicit final zero-run length.
-        for b in b'1\x02\x01\x00', b'1\x02\x01\x01':
-            self.assertEqual(rl_decode(b), bitarray('10'))
-
-        # Partial trailing-zero run followed by the zero terminator.
-        for b in [
-                b'1\x03\x01\x00',      # canonical
-                b'1\x03\x01\x02',      # complete trailing-zero run
-                b'1\x03\x01\x01\x00',  # partial zero run, then terminator
-        ]:
-            self.assertEqual(rl_decode(b), bitarray('100'))
-
-        # ULEB128 permits overlong representations.
-        for b in b'0\x00', b'0\x80\x00':
-            self.assertEqual(rl_decode(b), bitarray())
-
-    def test_decode_endian(self):
-        b = b'0\x02\x01\x01'
-        for endian in OPT_ENDIANS:
-            a = rl_decode(b, endian)
-            self.assertEqual(a.endian, endian or get_default_endian())
-            self.assertEqual(a, bitarray("01"))
-
-    def test_intervals(self):
-        a = bitarray("00000011111111111111110000000111000000")
-        b = bytearray([ord("0")])
-        b.extend(uleb128_encode(len(a)))
-        for unused_value, start, stop in intervals(a):
-            b.extend(uleb128_encode(stop - start))
-        self.assertEqual(rl_decode(b), a)
-        # Because `a` has trailing zeros, this is not the canonical code
-        self.assertNotEqual(b, rl_encode(a))
-
-    def test_alternate(self):
-        a = zeros(1024)
-        a[:512] = 1
-        a *= 8
-        b = rl_encode(a)
-        self.assertEqual(rl_decode(b), a)
-
-    def test_ones_zeros(self):
-        for n in range(1000):
-            a = bitarray(n)
-            for v in 0, 1:
-                a.setall(v)
-                b = rl_encode(a)
-                self.assertEqual(rl_decode(b), a)
+    def test_random_runs(self):
+        # only tests RL_Util itself
+        for n in range(1, 20):
+            for k in range(1, n + 1):
+                a = self.random_runs(n, k)
+                self.assertEqual(len(a), n)
+                self.assertEqual(self.runs(a), k)
+                self.assertEqual(a[0] ^ a[-1], not k % 2, n)
+                #print(a)
 
     def test_random(self):
-        for _ in range(10):
-            n = randrange(1000)
-            a = urandom(n)
-            b = rl_encode(a)
+        for _ in range(1, 1000):
+            n = randrange(1, 100)
+            k = randint(1, max(1, n // 2))
+            a = self.random_runs(n, k)
+
+            b = bytearray([ord("0") + a[0]])
+            b.extend(uleb128_encode(len(a)))
+            for value, start, stop in intervals(a):
+                if value == 0 and stop == n:
+                    self.assertEqual(a[-1], 0)  # trailing zeros
+                    b.append(0)
+                else:
+                    b.extend(uleb128_encode(stop - start))
             self.assertEqual(rl_decode(b), a)
+            self.assertEqual(b, rl_encode(a))
+
+    def test_large(self):
+        a = self.random_runs(1 << 24, 1 << 16)
+        b = rl_encode(a)
+        self.assertEqual(rl_decode(b), a)
+        #print(len(a.tobytes()), len(b))
 
 
 # ---------------------------------------------------------------------------

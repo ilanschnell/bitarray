@@ -1,5 +1,6 @@
 2026-XX-XX  3.11.0:
 -------------------
+  * add run-length codec: `util.rl_encode()` and `util.rl_decode()`
   * add `util.sc_stat()`
   * optimize sparse block selection for trailing zeros
   * preserve bitarrays when buffer reallocation fails

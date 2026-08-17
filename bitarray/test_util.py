@@ -33,9 +33,10 @@ from bitarray.util import (
     correspond_all, byteswap, intervals,
     serialize, deserialize, ba2hex, hex2ba, ba2base, base2ba,
     ba2int, int2ba,
-    sc_encode, sc_decode, sc_stat, vl_encode, vl_decode,
+    sc_encode, sc_decode, sc_stat, rl_encode, rl_decode, vl_encode, vl_decode,
     huffman_code, canonical_huffman, canonical_decode,
 )
+from bitarray._util import uleb128_encode  # type: ignore
 
 
 OPT_ENDIANS = ENDIANS + (None,)
@@ -1209,16 +1210,137 @@ class XoredIndicesTests(unittest.TestCase, Util):
             a.invert(i)
 
 
+# -------------------------   run-length codec   ----------------------------
+
+class RL_Util:
+
+    @staticmethod
+    def runs(a):
+        "return number of uninterrupted intervals of 1s and 0s"
+        n = len(a)
+        if n < 2:
+            return n
+        return count_xor(a[:-1], a[1:]) + 1
+
+    def random_runs(self, n, k):
+        "generate random bitarray of length `n` with `k` runs."
+        self.assertTrue(bool(n) <= k <= n)
+        a = bitarray(n)
+        if n == 0:
+            return a
+        vi = getrandbits(1)
+
+        # Create sorted sample from `range(1, n)`, with `n` last and
+        # with a total of `k` items.
+        lst = sample(range(1, n), k - 1)
+        lst.append(n)
+        lst.sort()
+
+        start = 0
+        for stop in lst:
+            a[start:stop] = vi
+            vi = not vi
+            start = stop
+        return a
+
+
+class RL_Tests(unittest.TestCase, RL_Util):
+
+    def test_explicit(self):
+        for s, b in [
+                ("",    b'0\x00'),
+                ("0",   b'0\x01\x00'),
+                ("1",   b'1\x01\x01'),
+                ("10",  b'1\x02\x01\x00'),
+                ("01",  b'0\x02\x01\x01'),
+                ("1" + 63 * "0", b'1\x40\x01\x00'),
+                ("0" + 63 * "1", b'0\x40\x01\x3f'),
+        ]:
+            a = bitarray(s)
+            self.assertEqual(rl_encode(a), b)
+            self.assertEqual(rl_decode(b), a)
+            it = iter(b)
+            self.assertEqual(rl_decode(it), a)
+            self.assertRaises(StopIteration, next, it)
+            it = iter(b + b'XYZ')
+            self.assertEqual(rl_decode(it), a)
+            self.assertEqual(next(it), ord(b'X'))
+
+    def test_decode_errors(self):
+        # incomplete stream
+        for b in b'', b'0', b'0\x01', :
+            self.assertRaises(StopIteration, rl_decode, b)
+
+        # invalid first bit
+        for b in b'\x00', b'\x01', b'2':
+            self.assertRaises(ValueError, rl_decode, b)
+
+        # sequence of 1s at [0x01 : 0x41] exceeds nbits
+        b = b'0\x40\x01\x40'
+        self.assertRaises(ValueError, rl_decode, b)
+
+    def test_decode_ambiguity(self):
+        # For an empty bitarray either first-bit byte works.
+        for b in b'0\x00', b'1\x00':
+            self.assertEqual(rl_decode(b), bitarray())
+
+        # For an all-zero bitarray, either first-bit byte works when
+        # immediately followed by the zero terminator.
+        for b in b'0\x01\x00', b'1\x01\x00':
+            self.assertEqual(rl_decode(b), bitarray('0'))
+
+        # Trailing zeros may be represented by the zero terminator or
+        # by an explicit final zero-run length.
+        for b in b'1\x02\x01\x00', b'1\x02\x01\x01':
+            self.assertEqual(rl_decode(b), bitarray('10'))
+
+        # Partial trailing-zero run followed by the zero terminator.
+        for b in [
+                b'1\x03\x01\x00',      # canonical
+                b'1\x03\x01\x02',      # complete trailing-zero run
+                b'1\x03\x01\x01\x00',  # partial zero run, then terminator
+        ]:
+            self.assertEqual(rl_decode(b), bitarray('100'))
+
+        # ULEB128 permits overlong representations.
+        for b in b'0\x00', b'0\x80\x00':
+            self.assertEqual(rl_decode(b), bitarray())
+
+    def test_decode_endian(self):
+        b = b'0\x02\x01\x01'
+        for endian in OPT_ENDIANS:
+            a = rl_decode(b, endian=endian)
+            self.assertEqual(a.endian, endian or get_default_endian())
+            self.assertEqual(a, bitarray("01"))
+
+    def test_decode_types(self):
+        b = b'0\x02\x01\x01'
+        for c in b, bytearray(b), list(b), iter(b):
+            a = rl_decode(c)
+            self.assertIs(type(a), bitarray)
+            self.assertEqual(a.to01(), '01')
+
+    def test_encode_types(self):
+        a = frozenbitarray("00001111 11111111 11110000 000")
+        self.assertEqual(len(a), 0x1b)
+        b = rl_encode(a)
+        self.assertIs(type(b), bytes)
+        self.assertEqual(b, b'0\x1b\x04\x10\x00')
+
+    def test_intervals(self):
+        a = bitarray("00000011111111111111110000000111000000")
+        b = bytearray([ord("0")])
+        b.extend(uleb128_encode(len(a)))
+        for unused_value, start, stop in intervals(a):
+            b.extend(uleb128_encode(stop - start))
+        self.assertEqual(rl_decode(b), a)
+        # Because `a` has trailing zeros, this is not the canonical code
+        self.assertNotEqual(b, rl_encode(a))
+
+
 # ------------------   intervals of uninterrupted runs   --------------------
 
-def runs(a):
-    "return number of uninterrupted intervals of 1s and 0s"
-    n = len(a)
-    if n < 2:
-        return n
-    return 1 + count_xor(a[:-1], a[1:])
-
-class IntervalsTests(unittest.TestCase, Util):
+class IntervalsTests(unittest.TestCase, Util, RL_Util):
 
     def test_explicit(self):
         for s, lst in [
@@ -1230,18 +1352,24 @@ class IntervalsTests(unittest.TestCase, Util):
             ]:
             a = bitarray(s)
             self.assertEqual(list(intervals(a)), lst)
-            self.assertEqual(runs(a), len(lst))
+            self.assertEqual(self.runs(a), len(lst))
 
     def test_uniform(self):
         for n in range(1, 100):
+            a = bitarray(n, choice(ENDIANS))
             for v in 0, 1:
-                a = n * bitarray([v], choice(ENDIANS))
+                a.setall(v)
                 self.assertEqual(list(intervals(a)), [(v, 0, n)])
-                self.assertEqual(runs(a), 1)
+                self.assertEqual(self.runs(a), 1)
 
     def test_random(self):
-        for a in self.randombitarrays():
-            n = len(a)
+        for _ in range(10):
+            n = randrange(2, 500)
+            k = randint(1, n // 2)
+            a = self.random_runs(n, k)
+            self.assertEqual(len(a), n)
+            self.assertEqual(self.runs(a), k)
+            self.assertEqual(a[0] ^ a[-1], not k % 2, n)
             b = urandom(n)
             for value, start, stop in intervals(a):
                 self.assertIs(type(value), int)
@@ -1253,7 +1381,7 @@ class IntervalsTests(unittest.TestCase, Util):
         for a in self.randombitarrays():
             # list of length of runs of alternating bits
             alt_runs = [stop - start for _, start, stop in intervals(a)]
-            self.assertEqual(len(alt_runs), runs(a))
+            self.assertEqual(len(alt_runs), self.runs(a))
 
             b = bitarray()
             v = a[0] if a else None  # value of first run
@@ -1262,6 +1390,7 @@ class IntervalsTests(unittest.TestCase, Util):
                 b.extend(length * bitarray([v]))
                 v = not v
             self.assertEqual(a, b)
+
 
 # --------------------------  ba2hex()  hex2ba()  ---------------------------
 
