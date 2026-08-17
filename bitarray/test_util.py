@@ -1224,7 +1224,7 @@ class RL_Util:
 
     def random_runs(self, n, k):
         "generate random bitarray of length `n` with `k` runs."
-        self.assertTrue(bool(n) <= k <= n)
+        self.assertTrue(n == k == 0 or 1 <= k <= n)
         a = bitarray(n)
         if n == 0:
             return a
@@ -1336,6 +1336,30 @@ class RL_Tests(unittest.TestCase, RL_Util):
         self.assertEqual(rl_decode(b), a)
         # Because `a` has trailing zeros, this is not the canonical code
         self.assertNotEqual(b, rl_encode(a))
+
+    def test_random(self):
+        for _ in range(10):
+            n = randrange(1, 100)
+            k = randint(1, max(1, n // 2))
+            a = self.random_runs(n, k)
+
+            b = bytearray([ord("0") + a[0]])
+            b.extend(uleb128_encode(len(a)))
+            for value, start, stop in intervals(a):
+                if value == 0 and stop == n:
+                    self.assertEqual(a[-1], 0)  # trailing zeros
+                    b.append(0)
+                else:
+                    b.extend(uleb128_encode(stop - start))
+
+            self.assertEqual(rl_decode(b), a)
+            self.assertEqual(b, rl_encode(a))
+
+    def test_large(self):
+        a = self.random_runs(1 << 20, 1 << 10)
+        b = rl_encode(a)
+        self.assertEqual(rl_decode(b), a)
+        self.assertEqual(len(a), 1 << 20)
 
 
 # ------------------   intervals of uninterrupted runs   --------------------

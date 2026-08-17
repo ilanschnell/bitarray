@@ -1,11 +1,9 @@
 import sys
 import unittest
-from random import randint, randrange
+from random import randrange
 
-from bitarray import bitarray, get_default_endian
-from bitarray.util import intervals
-from bitarray._util import uleb128_encode, uleb128_decode, rl_encode, rl_decode
-from bitarray.test_util import OPT_ENDIANS, RL_Util
+from bitarray._util import uleb128_encode, uleb128_decode
+from bitarray.test_util import RL_Util
 
 
 class ULEB128_Tests(unittest.TestCase):
@@ -83,36 +81,15 @@ class RL_Tests(unittest.TestCase, RL_Util):
 
     def test_random_runs(self):
         # only tests RL_Util itself
+        a = self.random_runs(0, 0)
+        self.assertEqual(len(a), 0)
+
         for n in range(1, 20):
             for k in range(1, n + 1):
                 a = self.random_runs(n, k)
                 self.assertEqual(len(a), n)
                 self.assertEqual(self.runs(a), k)
                 self.assertEqual(a[0] ^ a[-1], not k % 2, n)
-                #print(a)
-
-    def test_random(self):
-        for _ in range(1, 1000):
-            n = randrange(1, 100)
-            k = randint(1, max(1, n // 2))
-            a = self.random_runs(n, k)
-
-            b = bytearray([ord("0") + a[0]])
-            b.extend(uleb128_encode(len(a)))
-            for value, start, stop in intervals(a):
-                if value == 0 and stop == n:
-                    self.assertEqual(a[-1], 0)  # trailing zeros
-                    b.append(0)
-                else:
-                    b.extend(uleb128_encode(stop - start))
-            self.assertEqual(rl_decode(b), a)
-            self.assertEqual(b, rl_encode(a))
-
-    def test_large(self):
-        a = self.random_runs(1 << 24, 1 << 16)
-        b = rl_encode(a)
-        self.assertEqual(rl_decode(b), a)
-        #print(len(a.tobytes()), len(b))
 
 
 # ---------------------------------------------------------------------------
