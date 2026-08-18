@@ -2,6 +2,7 @@ import sys
 import unittest
 from random import randrange
 
+from bitarray import bitarray
 from bitarray._util import (uleb128_encode, uleb128_decode,
                             rl_encode, rl_decode)
 from bitarray.test_util import RL_Util
@@ -101,6 +102,11 @@ class RL_Tests(unittest.TestCase, RL_Util):
         self.assertEqual(rl_decode(b), a)
         self.assertEqual(len(a), n)
         self.assertGreater(len(b), 32768)
+
+    def test_worst_case(self):
+        a = bitarray('01') * 100_000
+        b = rl_encode(a)
+        self.assertEqual(rl_decode(b), a)
 
 
 # ---------------------------------------------------------------------------

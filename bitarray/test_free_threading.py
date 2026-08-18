@@ -32,6 +32,7 @@ from bitarray.util import (
     any_and, ba2base, ba2hex, base2ba, byteswap,
     canonical_decode, correspond_all, count_and, count_n,
     count_or, count_xor, deserialize, hex2ba, parity,
+    rl_encode, rl_decode,
     sc_decode, sc_encode, serialize, subset,
     vl_decode, vl_encode, xor_indices,
 )
@@ -156,6 +157,7 @@ class FreeThreadedStressTests(unittest.TestCase):
         def reader():
             codecs = (
                 (serialize, deserialize),
+                (rl_encode, rl_decode),
                 (sc_encode, sc_decode),
                 (vl_encode, vl_decode),
             )
@@ -264,6 +266,7 @@ class FreeThreadedStressTests(unittest.TestCase):
                 lambda: a.buffer_info(),
                 lambda: serialize(a),
                 lambda: sc_encode(a),
+                lambda: rl_encode(a),
                 lambda: vl_encode(a),
             )
             for i in range(ROUNDS * 3):
