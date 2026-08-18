@@ -1355,12 +1355,6 @@ class RL_Tests(unittest.TestCase, RL_Util):
             self.assertEqual(rl_decode(b), a)
             self.assertEqual(b, rl_encode(a))
 
-    def test_large(self):
-        a = self.random_runs(1 << 20, 1 << 10)
-        b = rl_encode(a)
-        self.assertEqual(rl_decode(b), a)
-        self.assertEqual(len(a), 1 << 20)
-
 
 # ------------------   intervals of uninterrupted runs   --------------------
 
@@ -1391,9 +1385,8 @@ class IntervalsTests(unittest.TestCase, Util, RL_Util):
             n = randrange(2, 500)
             k = randint(1, n // 2)
             a = self.random_runs(n, k)
-            self.assertEqual(len(a), n)
-            self.assertEqual(self.runs(a), k)
-            self.assertEqual(a[0] ^ a[-1], not k % 2, n)
+
+            # Reconstruct `a` from its intervals, starting with random data.
             b = urandom(n)
             for value, start, stop in intervals(a):
                 self.assertIs(type(value), int)

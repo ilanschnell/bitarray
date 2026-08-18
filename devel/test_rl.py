@@ -2,7 +2,8 @@ import sys
 import unittest
 from random import randrange
 
-from bitarray._util import uleb128_encode, uleb128_decode
+from bitarray._util import (uleb128_encode, uleb128_decode,
+                            rl_encode, rl_decode)
 from bitarray.test_util import RL_Util
 
 
@@ -89,7 +90,17 @@ class RL_Tests(unittest.TestCase, RL_Util):
                 a = self.random_runs(n, k)
                 self.assertEqual(len(a), n)
                 self.assertEqual(self.runs(a), k)
-                self.assertEqual(a[0] ^ a[-1], not k % 2, n)
+                self.assertEqual(a[0] ^ a[-1], not k % 2)
+
+    def test_output_resize(self):
+        # tests resizig output buffer
+        n = 10_000_000
+        k = randrange(500_000, 1000_000)
+        a = self.random_runs(n, k)
+        b = rl_encode(a)
+        self.assertEqual(rl_decode(b), a)
+        self.assertEqual(len(a), n)
+        self.assertGreater(len(b), 32768)
 
 
 # ---------------------------------------------------------------------------
