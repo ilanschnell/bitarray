@@ -1891,6 +1891,7 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
                                 'blocks': [1, 0, 0, 0, 0]})
         self.assertEqual(next(stream), ord('X'))
 
+    @unittest.skipIf(not HAVE_BINOMIALVARIATE, "Python 3.12+ required")
     def test_concatenate(self):
         N = 100
         arrays = [random_p(randrange(500), 1/8) for _ in range(N)]
