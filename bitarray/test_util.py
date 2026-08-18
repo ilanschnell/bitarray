@@ -1268,7 +1268,13 @@ class RL_Tests(unittest.TestCase, Util, RL_Util):
 
     def test_decode_errors(self):
         # incomplete stream
-        for b in b'', b'0', b'0\x01', b'1\x02\x01':
+        for b in [
+                b'',           # no first bit
+                b'0',          # no uleb128 encoded nbits
+                b'1\x80',      # nbits uleb128 encoding incomplete
+                b'0\x01',      # run length incomplete
+                b'1\x02\x01',  # run length incomplete
+        ]:
             self.assertRaises(StopIteration, rl_decode, b)
 
         # invalid first bit
@@ -1284,6 +1290,7 @@ class RL_Tests(unittest.TestCase, Util, RL_Util):
         # sequence exceeds nbits
         for b, nrun, nrem in [
                 (b'1\x01\x02',      2,  1),
+                (b'1\x30\x2f\x02',  2,  1),
                 (b'0\x40\x01\x40', 64, 63),
         ]:
             msg = "run length %d exceeds remaining length %d" % (nrun, nrem)
