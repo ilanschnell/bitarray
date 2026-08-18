@@ -1337,6 +1337,13 @@ class RL_Tests(unittest.TestCase, RL_Util):
         # Because `a` has trailing zeros, this is not the canonical code
         self.assertNotEqual(b, rl_encode(a))
 
+    def test_concatenate(self):
+        N = 100
+        arrays = [urandom(randrange(5)) for _ in range(N)]
+        it = iter(b''.join(rl_encode(a) for a in arrays))
+        self.assertEqual([rl_decode(it) for _ in range(N)], arrays)
+        self.assertRaises(StopIteration, next, it)
+
     def test_random(self):
         for _ in range(10):
             n = randrange(1, 100)
@@ -1884,6 +1891,13 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
                                 'blocks': [1, 0, 0, 0, 0]})
         self.assertEqual(next(stream), ord('X'))
 
+    def test_concatenate(self):
+        N = 100
+        arrays = [random_p(randrange(500), 1/8) for _ in range(N)]
+        it = iter(b''.join(sc_encode(a) for a in arrays))
+        self.assertEqual([sc_decode(it) for _ in range(N)], arrays)
+        self.assertRaises(StopIteration, next, it)
+
     def test_decode_stat_errors(self):
         for f in sc_decode, sc_stat:
             a = [17, 3, 1, 32, 0]
@@ -2130,9 +2144,10 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
                 a &= urandom(n, endian)
                 self.round_trip(a)
 
-# ---------------------------------------------------------------------------
 
-class VLFTests(unittest.TestCase, Util):
+# ------------------------   variable length codec   ------------------------
+
+class VL_Tests(unittest.TestCase, Util):
 
     def test_explicit(self):
         for blob, s in [
@@ -2256,6 +2271,13 @@ class VLFTests(unittest.TestCase, Util):
             s = n * b'\x80' + b'\x00'
             self.assertEqual(vl_encode(a), s)
             self.assertEqual(vl_decode(s), a)
+
+    def test_concatenate(self):
+        N = 100
+        arrays = [urandom(randrange(20)) for _ in range(N)]
+        it = iter(b''.join(vl_encode(a) for a in arrays))
+        self.assertEqual([vl_decode(it) for _ in range(N)], arrays)
+        self.assertRaises(StopIteration, next, it)
 
     def round_trip(self, a):
         c = a.copy()
