@@ -78,6 +78,15 @@ class SC_Tests(unittest.TestCase, SC_Util):
         stat = sc_stat(blob)
         self.assertEqual(stat['blocks'], [8, 8, 0, 0, 0])
 
+    def test_output_resize(self):
+        # tests resizing output buffer
+        n = random.randrange(500_000, 1000_000)
+        a = random_p(n, 0.25)
+        b = sc_encode(a)
+        self.assertEqual(sc_decode(b), a)
+        self.assertEqual(len(a), n)
+        self.assertGreater(len(b), 32768)
+
     def test_block_type2(self):
         a = bitarray(65_536, 'little')
         # Start with the largest type 2 index so all 256 type 1 blocks are

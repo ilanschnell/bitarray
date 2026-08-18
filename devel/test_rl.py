@@ -93,7 +93,7 @@ class RL_Tests(unittest.TestCase, RL_Util):
                 self.assertEqual(a[0] ^ a[-1], not k % 2)
 
     def test_output_resize(self):
-        # tests resizig output buffer
+        # tests resizing output buffer
         n = 10_000_000
         k = randrange(500_000, 1000_000)
         a = self.random_runs(n, k)
