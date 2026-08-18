@@ -123,8 +123,7 @@ class RL_Tests(unittest.TestCase, RL_Util):
         for v in 0, 1:
             a.setall(v)
             b = bytearray([ord("0") + v])
-            b.extend(uleb128_encode(n))  # nbits
-            b.extend(uleb128_encode(n if v else 0))
+            b.extend(2 * uleb128_encode(n))  # nbits, run
 
             self.assertEqual(rl_encode(a), b)
             self.assertEqual(rl_decode(b), a)

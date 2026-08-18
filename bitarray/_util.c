@@ -2077,7 +2077,7 @@ rl_encode_lock_held(bitarrayobject *a, PyObject **out)
         if (stop < 0) {
             if (PyErr_Occurred())
                 return -1;
-            stop = vi ? a->nbits : start;
+            stop = a->nbits;
         }
 
         if (allocated < len + 10) {
@@ -2086,9 +2086,8 @@ rl_encode_lock_held(bitarrayobject *a, PyObject **out)
             str = PyBytes_AS_STRING(*out);
         }
 
+        assert(start < stop && stop <= a->nbits);
         len += uleb128_encode(str + len, stop - start);
-        if (stop == start)  /* zero terminator: remainder is all zeros */
-            break;
 
         start = stop;
         vi = !vi;
@@ -2163,8 +2162,10 @@ rl_decode_core(bitarrayobject *a, PyObject *iter, int vi)
         if ((n = uleb128_decode(iter)) < 0)
             return -1;
 
-        if (n == 0)             /* remainder is all zeros */
-            return 0;
+        if (n == 0) {
+            PyErr_SetString(PyExc_ValueError, "run length cannot be zero");
+            return -1;
+        }
 
         if (n > nbits - i) {
             PyErr_Format(PyExc_ValueError,
