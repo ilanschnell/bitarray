@@ -3,8 +3,8 @@ import unittest
 from random import randrange
 
 from bitarray import bitarray
-from bitarray._util import (uleb128_encode, uleb128_decode,
-                            rl_encode, rl_decode)
+from bitarray.util import rl_encode, rl_decode
+from bitarray._util import uleb128_encode, uleb128_decode
 from bitarray.test_util import RL_Util
 
 
@@ -67,6 +67,13 @@ class ULEB128_Tests(unittest.TestCase):
         self.assertEqual(uleb128_encode(i), b)
         self.assertEqual(uleb128_decode(b), i)
 
+    def test_concatenate(self):
+        N = 1000
+        lst = [randrange(1000) for _ in range(N)]
+        it = iter(b''.join(uleb128_encode(i) for i in lst))
+        self.assertEqual([uleb128_decode(it) for _ in range(N)], lst)
+        self.assertRaises(StopIteration, next, it)
+
     def test_range(self):
         for i in range(1000):
             b = uleb128_encode(i)
@@ -96,7 +103,7 @@ class RL_Tests(unittest.TestCase, RL_Util):
     def test_output_resize(self):
         # tests resizing output buffer
         n = 10_000_000
-        k = randrange(500_000, 1000_000)
+        k = randrange(500_000, 1_000_000)
         a = self.random_runs(n, k)
         b = rl_encode(a)
         self.assertEqual(rl_decode(b), a)
@@ -104,9 +111,23 @@ class RL_Tests(unittest.TestCase, RL_Util):
         self.assertGreater(len(b), 32768)
 
     def test_worst_case(self):
-        a = bitarray('01') * 100_000
-        b = rl_encode(a)
+        N = 100_000
+        a = N * bitarray('01')
+        b = b'0' + uleb128_encode(2 * N) + 2 * N * b'\x01'
+        self.assertEqual(rl_encode(a), b)
         self.assertEqual(rl_decode(b), a)
+
+    def test_zeros_ones(self):
+        n = randrange(1_000_000, 10_000_000)
+        a = bitarray(n)
+        for v in 0, 1:
+            a.setall(v)
+            b = bytearray([ord("0") + v])
+            b.extend(uleb128_encode(n))  # nbits
+            b.extend(uleb128_encode(n if v else 0))
+
+            self.assertEqual(rl_encode(a), b)
+            self.assertEqual(rl_decode(b), a)
 
 
 # ---------------------------------------------------------------------------
