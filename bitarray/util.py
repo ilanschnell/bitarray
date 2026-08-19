@@ -15,7 +15,7 @@ import itertools
 from bitarray import bitarray, frozenbitarray, bits2bytes
 
 from bitarray._util import (
-    zeros, ones, count_n, parity, _ssqi, xor_indices,
+    zeros, ones, count_n, parity, xor_indices,
     count_and, count_or, count_xor, any_and, subset,
     correspond_all, byteswap,
     serialize, deserialize,
@@ -26,6 +26,7 @@ from bitarray._util import (
     vl_encode, vl_decode,
     canonical_decode,
 )
+import bitarray._util as _util
 
 __all__ = [
     'zeros', 'ones', 'urandom', 'random_k', 'random_p', 'gen_primes',
@@ -299,7 +300,7 @@ Equivalent to `sum(i for i, v in enumerate(a) if v)`.
     # For details see: devel/test_sum_indices.py
     n = 1 << 19  # block size  512 Kbits
     if len(__a) <= n:  # shortcut for single block
-        return _ssqi(__a, mode)
+        return _util.ssqi(__a, mode)
 
     # Constants
     m = n // 8  # block size in bytes
@@ -321,11 +322,11 @@ Equivalent to `sum(i for i, v in enumerate(a) if v)`.
         k = block.count()
         if k:
             y = n * i
-            z1 = o1 if k == n else _ssqi(block)
+            z1 = o1 if k == n else _util.ssqi(block)
             if mode == 1:
                 sm += k * y + z1
             else:
-                z2 = o2 if k == n else _ssqi(block, 2)
+                z2 = o2 if k == n else _util.ssqi(block, 2)
                 sm += (k * y + 2 * z1) * y + z2
 
     return sm

@@ -330,7 +330,7 @@ ssqi(PyObject *module, PyObject *args)
     uint64_t limit, res;
     int mode = 1;
 
-    if (!PyArg_ParseTuple(args, "O!|i", bitarray_type,
+    if (!PyArg_ParseTuple(args, "O!|i:ssqi", bitarray_type,
                           (PyObject *) &a, &mode))
         return NULL;
 
@@ -2727,7 +2727,7 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, ones_doc},
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
     {"parity",    (PyCFunction) parity,    METH_O,       parity_doc},
-    {"_ssqi",     (PyCFunction) ssqi,      METH_VARARGS, 0},
+    {"ssqi",      (PyCFunction) ssqi,      METH_VARARGS, 0},
     {"xor_indices", (PyCFunction) xor_indices, METH_O,       xor_indices_doc},
     {"count_and", (PyCFunction) count_and, METH_VARARGS, count_and_doc},
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},

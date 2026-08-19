@@ -34,22 +34,22 @@ block size         8                    n
 i                  byte index           block index
 y                  8 * i                n * i
 k                  count_table[c]       block.count()
-z1 = sum z_j       sum_table[c]         _ssqi(block)
-z2 = sum z_j**2    sum_sqr_table[c]     _ssqi(block, 2)
+z1 = sum z_j       sum_table[c]         ssqi(block)
+z2 = sum z_j**2    sum_sqr_table[c]     ssqi(block, 2)
 """
 import math
 import unittest
 from random import choice, getrandbits, randint, randrange, sample
 
 from bitarray import bitarray, frozenbitarray
-from bitarray.util import (zeros, ones, gen_primes, urandom,
-                           _ssqi, sum_indices)
+from bitarray.util import zeros, ones, gen_primes, urandom, sum_indices
+from bitarray._util import ssqi
 
 
-# Limits of bitarray size in _ssqi()
-# ----------------------------------
+# Limits of bitarray size in ssqi()
+# ---------------------------------
 # These limits are calculated and tested in SSQI_Tests below.
-# They are used in the C implementation of the internal function _ssqi().
+# They are used in the C implementation of the internal function ssqi().
 # The public Python function sum_indices() does NOT impose any limits
 # on the size of bitarrays it can compute.
 SSQI_LIMIT = (None, 6_074_001_000, 3_810_778)
@@ -118,7 +118,7 @@ class ExampleImplementationTests(unittest.TestCase):
             block = a[y : y + n]
 
             k = block.count()
-            z1 = _ssqi(block)
+            z1 = ssqi(block)
             self.assertEqual(
                 # Note that j are indices within each block.
                 # Also note that we use len(block) instead of block_size,
@@ -128,7 +128,7 @@ class ExampleImplementationTests(unittest.TestCase):
             if mode == 1:
                 x = k * y + z1
             else:
-                z2 = _ssqi(block, 2)
+                z2 = ssqi(block, 2)
                 x = (k * y + 2 * z1) * y + z2
 
             # x is the sum [of squares] of indices for each block
@@ -209,29 +209,29 @@ class SSQI_Tests(SumIndicesUtil):
             self.assertEqual(n, SSQI_LIMIT[mode])
 
     def test_overflow(self):
-        # _ssqi() is limited to bitarrays of about 6 Gbit (4 Mbit mode=2).
+        # ssqi() is limited to bitarrays of about 6 Gbit (4 Mbit mode=2).
         # This limit is never reached because sum_indices() uses
         # a much smaller block size for practical reasons.
         for mode, f in MODES:
             n = SSQI_LIMIT[mode]
             a = ones(n)
             self.assertTrue(f(len(a)) <= MAX_UINT64)
-            self.assertEqual(_ssqi(a, mode), f(n))
+            self.assertEqual(ssqi(a, mode), f(n))
             a.append(1)
             self.assertTrue(f(len(a)) > MAX_UINT64)
-            self.assertRaises(OverflowError, _ssqi, a, mode)
+            self.assertRaises(OverflowError, ssqi, a, mode)
 
     def test_explicit(self):
-        self.check_explicit(_ssqi)
+        self.check_explicit(ssqi)
 
     def test_wrong_args(self):
-        self.check_wrong_args(_ssqi)
+        self.check_wrong_args(ssqi)
 
     def test_primes(self):
         n = 3_800_000
         a = gen_primes(n)
-        self.assertEqual(_ssqi(a, 1),           493_187_952_850)
-        self.assertEqual(_ssqi(a, 2), 1_234_421_634_142_352_974)
+        self.assertEqual(ssqi(a, 1),           493_187_952_850)
+        self.assertEqual(ssqi(a, 2), 1_234_421_634_142_352_974)
 
     def test_sparse(self):
         for _  in range(100):
@@ -240,7 +240,7 @@ class SSQI_Tests(SumIndicesUtil):
             mode = randint(1, 2)
             freeze = getrandbits(1)
             inv = getrandbits(1)
-            self.check_sparse(_ssqi, n, k, mode, freeze, inv)
+            self.check_sparse(ssqi, n, k, mode, freeze, inv)
 
 
 class SumIndicesTests(SumIndicesUtil):
