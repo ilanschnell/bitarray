@@ -172,7 +172,7 @@ def print_code(freq, codedict):
 
 
 def test():
-    from bitarray.util import _huffman_tree
+    from bitarray.util import _huffman_tree  # type: ignore
 
     freq = {'a': 10, 'b': 2, 'c': 1}
     tree = _huffman_tree(freq)

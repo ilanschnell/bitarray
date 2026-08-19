@@ -3,7 +3,7 @@ from time import perf_counter
 from collections import Counter
 
 from bitarray import bitarray
-from bitarray.util import _huffman_tree
+from bitarray.util import _huffman_tree  # type: ignore
 
 from huffman import (huff_code, write_dot, print_code,
                      make_tree, iterdecode)
