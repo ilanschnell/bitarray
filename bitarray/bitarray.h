@@ -65,7 +65,7 @@ typedef struct {
 #define PADBITS(self)  ((8 - (self)->nbits % 8) % 8)
 
 /* number of bytes necessary to store given number of bits */
-#define BYTES(bits)  (((bits) + 7) >> 3)
+#define BYTES(bits)  (((size_t) (bits) + 7) >> 3)
 
 /* we're not using bitmask_table here, as it is actually slower */
 #define BITMASK(self, i)  (((char) 1) << ((self)->endian == ENDIAN_LITTLE ? \

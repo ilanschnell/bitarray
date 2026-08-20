@@ -57,7 +57,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
 {
     const size_t size = Py_SIZE(self);
     const size_t allocated = self->allocated;
-    const size_t newsize = BYTES((size_t) nbits);
+    const size_t newsize = BYTES(nbits);
     size_t new_allocated;
     char *item;
 
@@ -77,7 +77,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
 
 #ifndef NDEBUG
     assert(self->readonly == 0);
-    assert(allocated >= size && size == BYTES((size_t) self->nbits));
+    assert(allocated >= size && size == BYTES(self->nbits));
     if (self->ob_item == NULL)
         assert(size == 0 && allocated == 0);
     assert(self->readonly == 0);
@@ -120,7 +120,7 @@ resize(bitarrayobject *self, Py_ssize_t nbits)
 static bitarrayobject *
 newbitarrayobject(PyTypeObject *type, Py_ssize_t nbits, int endian)
 {
-    const size_t nbytes = BYTES((size_t) nbits);
+    const size_t nbytes = BYTES(nbits);
     bitarrayobject *obj;
 
     assert(nbits >= 0);
