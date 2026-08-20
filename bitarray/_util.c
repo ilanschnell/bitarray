@@ -2727,7 +2727,6 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, ones_doc},
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
     {"parity",    (PyCFunction) parity,    METH_O,       parity_doc},
-    {"ssqi",      (PyCFunction) ssqi,      METH_VARARGS, 0},
     {"xor_indices", (PyCFunction) xor_indices, METH_O,       xor_indices_doc},
     {"count_and", (PyCFunction) count_and, METH_VARARGS, count_and_doc},
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
@@ -2748,10 +2747,6 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, ba2base_doc},
     {"base2ba",   (PyCFunction) base2ba,   METH_KEYWORDS |
                                            METH_VARARGS, base2ba_doc},
-    {"uleb128_encode", (PyCFunction) mod_uleb128_encode,
-                                           METH_O, uleb128_encode_doc},
-    {"uleb128_decode", (PyCFunction) mod_uleb128_decode,
-                                           METH_O, uleb128_decode_doc},
     {"rl_encode", (PyCFunction) rl_encode, METH_O, rl_encode_doc},
     {"rl_decode", (PyCFunction) rl_decode, METH_KEYWORDS |
                                            METH_VARARGS, rl_decode_doc},
@@ -2762,6 +2757,13 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, vl_decode_doc},
     {"canonical_decode",
                   (PyCFunction) chdi_new,  METH_VARARGS, chdi_doc},
+
+    /* The following functions are private */
+    {"ssqi",           (PyCFunction) ssqi,    METH_VARARGS, 0},
+    {"uleb128_encode", (PyCFunction) mod_uleb128_encode,
+                                              METH_O, uleb128_encode_doc},
+    {"uleb128_decode", (PyCFunction) mod_uleb128_decode,
+                                              METH_O, uleb128_decode_doc},
 
 #ifndef NDEBUG
     /* functions exposed in debug mode for testing */
