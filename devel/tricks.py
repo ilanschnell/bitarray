@@ -42,26 +42,6 @@ class RangeTests(unittest.TestCase):
 
 # ------------------------------ Slicing ------------------------------------
 
-def adjust_step_positive(slicelength, start, stop, step):
-    """
-    This is inside the adjust_slice() implementation in bitarray.h.
-    """
-    if step < 0:
-        stop = start + 1
-        start = stop + step * (slicelength - 1) - 1
-        step = -step
-
-    assert start >= 0 and stop >= 0
-    assert step > 0
-    assert slicelength >= 0
-    if slicelength == 0:
-        assert stop <= start
-    elif step == 1:
-        assert stop - start == slicelength
-
-    return start, stop, step
-
-
 def slicelength(start, stop, step):
     """
     This is the slicelength implementation from PySlice_AdjustIndices().
@@ -134,19 +114,6 @@ class ListSliceTests(unittest.TestCase):
             for i in sorted(r, reverse=True):
                 del b[i]
             self.assertEqual(a, b)
-
-    def test_adjust_step_positive(self):
-        for n, s, r in self.random_slices():
-            if s.step < 0:
-                r = r[::-1]
-
-            start, stop, step = adjust_step_positive(len(r), *s.indices(n))
-
-            self.assertEqual(range(start, stop, step), r)
-            self.assertTrue(step > 0)
-            if r:
-                self.assertTrue(0 <= start < n)
-                self.assertTrue(0 < stop <= n)
 
     def test_slicelength(self):
         for n, s, r in self.random_slices():
