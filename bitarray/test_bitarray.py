@@ -211,7 +211,8 @@ class SysinfoTests(unittest.TestCase):
     def test_pointer_size(self):
         self.assertEqual(sysinfo("void*"), PTRSIZE)
         self.assertEqual(sysinfo("size_t"), PTRSIZE)
-        self.assertEqual(sys.maxsize, 2 ** (8 * PTRSIZE - 1) - 1)
+        self.assertEqual(sys.maxsize + 1, 1 << (8 * PTRSIZE - 1))
+        self.assertEqual(sys.maxsize.bit_length(), 8 * PTRSIZE - 1)
         if not is_pypy:  # PyPy doesn't have tuple.__itemsize__
             self.assertEqual(PTRSIZE, tuple.__itemsize__)
 
