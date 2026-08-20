@@ -2610,7 +2610,6 @@ static PyTypeObject CHDI_Type = {
 /* ---------- module functions exposed in debug mode for testing ------- */
 
 #ifndef NDEBUG
-
 static PyObject *
 module_setup_table(PyObject *module, PyObject *obj)
 {
@@ -2716,7 +2715,6 @@ module_write_n(PyObject *module, PyObject *args)
     write_n(str, n, i);
     return res;
 }
-
 #endif  /* NDEBUG */
 
 
@@ -2727,7 +2725,7 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, ones_doc},
     {"count_n",   (PyCFunction) count_n,   METH_VARARGS, count_n_doc},
     {"parity",    (PyCFunction) parity,    METH_O,       parity_doc},
-    {"xor_indices", (PyCFunction) xor_indices, METH_O,       xor_indices_doc},
+    {"xor_indices", (PyCFunction) xor_indices, METH_O,   xor_indices_doc},
     {"count_and", (PyCFunction) count_and, METH_VARARGS, count_and_doc},
     {"count_or",  (PyCFunction) count_or,  METH_VARARGS, count_or_doc},
     {"count_xor", (PyCFunction) count_xor, METH_VARARGS, count_xor_doc},
@@ -2747,7 +2745,7 @@ static PyMethodDef module_functions[] = {
                                            METH_VARARGS, ba2base_doc},
     {"base2ba",   (PyCFunction) base2ba,   METH_KEYWORDS |
                                            METH_VARARGS, base2ba_doc},
-    {"rl_encode", (PyCFunction) rl_encode, METH_O, rl_encode_doc},
+    {"rl_encode", (PyCFunction) rl_encode, METH_O,       rl_encode_doc},
     {"rl_decode", (PyCFunction) rl_decode, METH_KEYWORDS |
                                            METH_VARARGS, rl_decode_doc},
     {"sc_encode", (PyCFunction) sc_encode, METH_O,       sc_encode_doc},
@@ -2759,11 +2757,11 @@ static PyMethodDef module_functions[] = {
                   (PyCFunction) chdi_new,  METH_VARARGS, chdi_doc},
 
     /* The following functions are private */
-    {"ssqi",           (PyCFunction) ssqi,    METH_VARARGS, 0},
-    {"uleb128_encode", (PyCFunction) mod_uleb128_encode,
-                                              METH_O, uleb128_encode_doc},
-    {"uleb128_decode", (PyCFunction) mod_uleb128_decode,
-                                              METH_O, uleb128_decode_doc},
+    {"ssqi",           (PyCFunction) ssqi,               METH_VARARGS, 0},
+    {"uleb128_encode", (PyCFunction) mod_uleb128_encode, METH_O,
+     uleb128_encode_doc},
+    {"uleb128_decode", (PyCFunction) mod_uleb128_decode, METH_O,
+     uleb128_decode_doc},
 
 #ifndef NDEBUG
     /* functions exposed in debug mode for testing */
