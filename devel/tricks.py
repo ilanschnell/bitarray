@@ -196,20 +196,21 @@ class SegmentTests(unittest.TestCase):
 
 # ------------------------ Variable Length Format ---------------------------
 
-class VLFTests(unittest.TestCase):
+class VL_Tests(unittest.TestCase):
 
     def test_padding(self):
         LEN_PAD_BITS = 3
+        HEAD_WIDTH = 7 - LEN_PAD_BITS  # number of payload bits in head byte
         for nbits in range(1000):
-            n = (nbits + LEN_PAD_BITS + 6) // 7  # number of resulting bytes
-            padding = 7 * n - LEN_PAD_BITS - nbits
+            nbytes = (nbits + LEN_PAD_BITS + 6) // 7  # encoded size
+            padding = 7 * nbytes - LEN_PAD_BITS - nbits
             self.assertTrue(0 <= padding < 7)
             self.assertEqual(divmod(nbits + padding + LEN_PAD_BITS, 7),
-                             (n, 0))
-
-            # alternative equation for padding
-            padding_2 = (7 - (nbits + LEN_PAD_BITS) % 7) % 7
-            self.assertEqual(padding_2, padding)
+                             (nbytes, 0))
+            # implementation in _util.c
+            r = nbits % 7
+            self.assertEqual(nbits // 7 + 1 + (r > HEAD_WIDTH), nbytes)
+            self.assertEqual((HEAD_WIDTH - r + 7) % 7, padding)
 
 
 if __name__ == '__main__':
