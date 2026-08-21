@@ -2247,8 +2247,8 @@ untouched.  Use `rl_encode()` for encoding.");
    payload bits in the head byte; b'\x40' therefore represents an empty
    bitarray.
  */
-
 #define LEN_PAD_BITS  3
+#define HEAD_WIDTH  (7 - LEN_PAD_BITS)
 
 /* initial number of bits we allocate in vl_decode(), and amount by which
    we increase the allocation in vl_decode_core() */
@@ -2265,12 +2265,12 @@ vl_decode_core(bitarrayobject *a, PyObject *iter)
     if ((c = next_char(iter)) < 0)        /* head byte */
         return -1;
 
-    padding = (c & 0x70) >> 4;
-    if (padding > ((c & 0x80) ? 6 : 4)) {
+    padding = (c & 0x70) >> HEAD_WIDTH;
+    if (padding > ((c & 0x80) ? 6 : HEAD_WIDTH)) {
         PyErr_Format(PyExc_ValueError, "invalid head byte: 0x%02x", c);
         return -1;
     }
-    for (k = 0; k < 4; k++, i++)
+    for (k = 0; k < HEAD_WIDTH; k++, i++)
         setbit(a, i, (0x08 >> k) & c);
 
     while (c & 0x80) {
@@ -2334,10 +2334,9 @@ static PyObject *
 vl_encode_lock_held(bitarrayobject *a)
 {
     const Py_ssize_t nbits = a->nbits;
-    const int head_width = 7 - LEN_PAD_BITS;
     const int r = (int) (nbits % 7);
-    const Py_ssize_t nbytes = nbits / 7 + 1 + (r > head_width);
-    const int padding = (head_width - r + 7) % 7;
+    const Py_ssize_t nbytes = nbits / 7 + 1 + (r > HEAD_WIDTH);
+    const int padding = (HEAD_WIDTH - r + 7) % 7;
     PyObject *bytes;
     Py_ssize_t i = 0, j;
     char *str;
@@ -2352,7 +2351,7 @@ vl_encode_lock_held(bitarrayobject *a)
     str = PyBytes_AS_STRING(bytes);
 
     for (j = 0; j < nbytes; j++) {
-        const int width = j ? 7 : 4;
+        const int width = j ? 7 : HEAD_WIDTH;
         int k;
 
         str[j] = (j < nbytes - 1) ? 0x80 : 0x00;  /* continuation bit */
@@ -2360,10 +2359,13 @@ vl_encode_lock_held(bitarrayobject *a)
         for (k = width - 1; k >= 0 && i < nbits; k--, i++)
             str[j] |= getbit(a, i) << k;
     }
-    str[0] |= padding << 4;  /* add padding to first byte */
+    str[0] |= padding << HEAD_WIDTH;  /* add padding to first byte */
     assert(i == nbits);
     return bytes;
 }
+
+#undef LEN_PAD_BITS
+#undef HEAD_WIDTH
 
 static PyObject *
 vl_encode(PyObject *module, PyObject *obj)
@@ -2387,7 +2389,6 @@ Return variable length binary representation of bitarray.\n\
 This representation is useful for efficiently storing small bitarray\n\
 in a binary stream.  Use `vl_decode()` for decoding.");
 
-#undef LEN_PAD_BITS
 
 /* ----------------------- canonical Huffman decoder ------------------- */
 
