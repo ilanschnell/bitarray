@@ -2056,7 +2056,7 @@ rl_find(bitarrayobject *a, int vi, Py_ssize_t start)
 /* Encode bitarray `a` into the bytes object referenced by `*out`.
    The lock for `a` must be held by the caller.
    Return encoded length, or -1 on error. */
-static int
+static Py_ssize_t
 rl_encode_lock_held(bitarrayobject *a, PyObject **out)
 {
     char *str;                          /* output buffer */
@@ -2080,7 +2080,12 @@ rl_encode_lock_held(bitarrayobject *a, PyObject **out)
             stop = a->nbits;
         }
 
-        if (allocated < len + 10) {
+        if (allocated - 10 < len) {
+            if (allocated > PY_SSIZE_T_MAX - ALLOC_SIZE) {
+                PyErr_SetString(PyExc_OverflowError,
+                                "run-length encoding too large");
+                return -1;
+            }
             if (_PyBytes_Resize(out, allocated + ALLOC_SIZE) < 0)
                 return -1;
             str = PyBytes_AS_STRING(*out);
@@ -2329,8 +2334,10 @@ static PyObject *
 vl_encode_lock_held(bitarrayobject *a)
 {
     const Py_ssize_t nbits = a->nbits;
-    const Py_ssize_t nbytes = (nbits + LEN_PAD_BITS + 6) / 7;  /* output */
-    const int padding = (int) (7 * nbytes - LEN_PAD_BITS - nbits);
+    const int head_width = 7 - LEN_PAD_BITS;
+    const int r = (int) (nbits % 7);
+    const Py_ssize_t nbytes = nbits / 7 + 1 + (r > head_width);
+    const int padding = (head_width - r + 7) % 7;
     PyObject *bytes;
     Py_ssize_t i = 0, j;
     char *str;
