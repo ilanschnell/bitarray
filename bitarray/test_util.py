@@ -2267,6 +2267,31 @@ class VL_Tests(unittest.TestCase, Util):
             self.assertEqual(vl_encode(a), s)
             self.assertEqual(vl_decode(s), a)
 
+    @unittest.skipIf(PTRSIZE != 8, 'requires 64 bit machine')
+    def test_leb128(self):
+        LEN_PAD_BITS = 3
+        HEAD_WIDTH = 7 - LEN_PAD_BITS
+        for n in range(1, 61):
+            a = urandom(n, 'little')
+            a[-1] = 1  # avoid overlong ULEB128 representation
+            b = vl_encode(a)
+            # Treat the VL bytes as canonical ULEB128.
+            payload = bitarray(b, endian='little')
+            del payload[7::8]  # remove each byte's continuation bit
+            i = ba2int(payload)
+            self.assertEqual(uleb128_encode(i), b)
+
+            # Remove continuation bits, padding metadata, and actual padding
+            # to recover the original bitarray.
+            c = bitarray(b, 'big')
+            del c[::8]  # remove each byte's continuation bit
+            padding = ba2int(c[:LEN_PAD_BITS])
+            r = n % 7
+            self.assertEqual((HEAD_WIDTH - r + 7) % 7, padding)
+            del c[:LEN_PAD_BITS]    # remove padding metadata
+            del c[len(c) - padding:]  # remove actual padding
+            self.assertEqual(c, a)
+
     def test_concatenate(self):
         N = 100
         arrays = [urandom(randrange(20)) for _ in range(N)]
