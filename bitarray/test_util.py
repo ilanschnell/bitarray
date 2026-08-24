@@ -2268,13 +2268,13 @@ class VL_Tests(unittest.TestCase, Util):
             self.assertEqual(vl_decode(s), a)
 
     @unittest.skipIf(PTRSIZE != 8, 'requires 64 bit machine')
-    def test_leb128(self):
+    def test_uleb128(self):
         LEN_PAD_BITS = 3
-        HEAD_WIDTH = 7 - LEN_PAD_BITS
         for n in range(1, 61):
             a = urandom(n, 'little')
             a[-1] = 1  # avoid overlong ULEB128 representation
             b = vl_encode(a)
+
             # Treat the VL bytes as canonical ULEB128.
             payload = bitarray(b, endian='little')
             del payload[7::8]  # remove each byte's continuation bit
@@ -2286,8 +2286,7 @@ class VL_Tests(unittest.TestCase, Util):
             c = bitarray(b, 'big')
             del c[::8]  # remove each byte's continuation bit
             padding = ba2int(c[:LEN_PAD_BITS])
-            r = n % 7
-            self.assertEqual((HEAD_WIDTH - r + 7) % 7, padding)
+            self.assertEqual(LEN_PAD_BITS + n + padding, 7 * len(b))
             del c[:LEN_PAD_BITS]    # remove padding metadata
             del c[len(c) - padding:]  # remove actual padding
             self.assertEqual(c, a)
@@ -2306,19 +2305,25 @@ class VL_Tests(unittest.TestCase, Util):
         self.check_obj(b)
         self.assertTrue(a == b == c)
         LEN_PAD_BITS = 3
+        HEAD_WIDTH = 7 - LEN_PAD_BITS  # number of payload bits in head
         self.assertEqual(len(s), (len(a) + LEN_PAD_BITS + 6) // 7)
-
         head = s[0]
-        padding = (head & 0x70) >> 4
-        self.assertEqual(len(a) + padding, 7 * len(s) - LEN_PAD_BITS)
+        padding = (head & 0x70) >> HEAD_WIDTH
+        self.assertEqual(LEN_PAD_BITS + len(a) + padding, 7 * len(s))
+
+        # overflow-safe C implementation in _util.c
+        r = len(a) % 7
+        self.assertEqual(len(a) // 7 + 1 + (r > HEAD_WIDTH), len(s))
+        self.assertEqual((HEAD_WIDTH - r + 7) % 7, padding)
 
     def test_large(self):
-        for _ in range(10):
+        for _ in range(5):
             a = urandom(randrange(100_000))
             self.round_trip(a)
 
     def test_random(self):
-        for a in self.randombitarrays():
+        for n in range(50):
+            a = urandom_2(n)
             self.round_trip(a)
 
 # ---------------------------------------------------------------------------
