@@ -19,16 +19,17 @@ Key features
   operations ``+``, ``*``, ``+=``, ``*=``, the ``in`` operator, ``len()``
 * Bitwise operations: ``~``, ``&``, ``|``, ``^``, ``<<``, ``>>`` (as well as
   their in-place versions ``&=``, ``|=``, ``^=``, ``<<=``, ``>>=``).
-* Free-threading support (for GIL disabled CPython 3.14 and later)
-* Fast methods for encoding and decoding variable bit length prefix codes.
+* Free-threading support (for GIL-disabled CPython 3.14 and later)
+* Fast methods for encoding and decoding variable-length prefix codes.
 * Bitarray objects support the buffer protocol (both importing and
   exporting buffers).
-* Packing and unpacking to other binary data formats, e.g. ``numpy.ndarray``.
+* Efficient packing and unpacking for interoperability with byte-oriented
+  objects such as NumPy arrays.
 * Pickling and unpickling of bitarray objects.
 * Immutable ``frozenbitarray`` objects which are hashable
-* Sequential search
+* Fast searching for bits and bit patterns
 * Type hinting
-* Extensive test suite with about 600 unittests
+* Extensive test suite with over 600 unit tests
 * Utility module ``bitarray.util``:
 
   * conversion to and from hexadecimal strings
@@ -37,7 +38,8 @@ Key features
   * conversion to and from integers
   * creating Huffman codes
   * compression of sparse bitarrays
-  * (de-) serialization
+  * run-length encoding
+  * serialization and deserialization
   * various count functions
   * other helpful functions
 
@@ -76,7 +78,7 @@ Once you have installed the package, you may want to test it:
     ..........s.....................................s........................
     ......s.........................................................
     ----------------------------------------------------------------------
-    Ran 640 tests in 0.192s
+    Ran 654 tests in 0.192s
 
     OK (skipped=4)
 
@@ -248,8 +250,8 @@ this topic, please read `buffer protocol <https://github.com/ilanschnell/bitarra
 to memory-map a file to a bitarray: `mmapped-file.py <https://github.com/ilanschnell/bitarray/blob/master/examples/mmapped-file.py>`__
 
 
-Variable bit length prefix codes
---------------------------------
+Variable-length prefix codes
+----------------------------
 
 The ``.encode()`` method takes a dictionary mapping symbols to bitarrays
 and an iterable, and extends the bitarray object with the encoded symbols
