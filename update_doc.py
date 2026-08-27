@@ -88,6 +88,7 @@ NEW_IN = {
 
 DOCS = {
     'ba3': ('Bitarray 3 transition', 'bitarray3.rst'),
+    'cds': ('Comparison of bitarray codecs', 'codecs.rst'),
     'chc': ('Canonical Huffman Coding', 'canonical.rst'),
     'rep': ('Bitarray representations', 'represent.rst'),
     'rnd': ('Random Bitarrays', 'random_p.rst'),
@@ -105,11 +106,13 @@ DOC_LINKS = {
     'util.deserialize':        'rep',
     'util.random_p':           'rnd',
     'util.serialize':          'rep',
-    'util.sc_decode':          'sc',
-    'util.sc_encode':          'sc',
+    'util.sc_decode':          'sc cds',
+    'util.sc_encode':          'sc cds',
     'util.sc_stat':            'sc',
-    'util.vl_decode':          'vlf',
-    'util.vl_encode':          'vlf',
+    'util.rl_decode':          'cds',
+    'util.rl_encode':          'cds',
+    'util.vl_decode':          'vlf cds',
+    'util.vl_encode':          'vlf cds',
 }
 
 NOTES = {
@@ -203,11 +206,13 @@ def write_doc(fo, name):
     if note:
         fo.write("\n%s\n" % note)
 
-    link = DOC_LINKS.get(name)
-    if link:
-        title, filename = DOCS[link]
-        url = BASE_URL + '/blob/master/doc/' + filename
-        fo.write("\n   See also: `%s <%s>`__\n" % (title, url))
+    links = DOC_LINKS.get(name)
+    if links:
+        fo.write("\n   See also: ")
+        fo.write(", ".join("`%s <%s/blob/master/doc/%s>`__" %
+                           (DOCS[short][0], BASE_URL, DOCS[short][1])
+                           for short in links.split()))
+        fo.write("\n")
 
     new_in = NEW_IN.get(name)
     if new_in:
