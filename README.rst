@@ -61,7 +61,7 @@ Once you have installed the package, you may want to test it:
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
     sys.prefix: /Users/ilan/miniforge
-    bitarray version: 3.10.1
+    bitarray version: 3.11.0
     sys.version: 3.14.5 (main, May 20 2026) [Clang 20.1.8]
     sys.abiflags: ''
     sys._is_gil_enabled(): True
@@ -325,7 +325,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.10.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.11.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -937,13 +937,34 @@ This sub-module was added in version 1.2.
    New in version 3.5
 
 
+``rl_decode(stream, /, endian=None)`` -> bitarray
+   Decode a run-length encoded bitarray from a binary stream (an integer
+   iterator, or bytes-like object), and return the decoded bitarray.
+   This function consumes only one bitarray and leaves the remaining stream
+   untouched.  Use ``rl_encode()`` for encoding.
+
+   See also: `Comparison of bitarray codecs <https://github.com/ilanschnell/bitarray/blob/master/doc/codecs.rst>`__
+
+   New in version 3.11
+
+
+``rl_encode(bitarray, /)`` -> bytes
+   Return the run-length encoded binary representation of a bitarray.
+   This representation may be useful for bitarrays with long runs of
+   identical bits.  Use ``rl_decode()`` for decoding.
+
+   See also: `Comparison of bitarray codecs <https://github.com/ilanschnell/bitarray/blob/master/doc/codecs.rst>`__
+
+   New in version 3.11
+
+
 ``sc_decode(stream, /)`` -> bitarray
    Decompress binary stream (an integer iterator, or bytes-like object) of a
    sparse compressed (``sc``) bitarray, and return the decoded  bitarray.
    This function consumes only one bitarray and leaves the remaining stream
    untouched.  Use ``sc_encode()`` for compressing (encoding).
 
-   See also: `Compression of sparse bitarrays <https://github.com/ilanschnell/bitarray/blob/master/doc/sparse_compression.rst>`__
+   See also: `Compression of sparse bitarrays <https://github.com/ilanschnell/bitarray/blob/master/doc/sparse_compression.rst>`__, `Comparison of bitarray codecs <https://github.com/ilanschnell/bitarray/blob/master/doc/codecs.rst>`__
 
    New in version 2.7
 
@@ -953,9 +974,23 @@ This sub-module was added in version 1.2.
    representation.  This representation is useful for efficiently storing
    sparse bitarrays.  Use ``sc_decode()`` for decompressing (decoding).
 
-   See also: `Compression of sparse bitarrays <https://github.com/ilanschnell/bitarray/blob/master/doc/sparse_compression.rst>`__
+   See also: `Compression of sparse bitarrays <https://github.com/ilanschnell/bitarray/blob/master/doc/sparse_compression.rst>`__, `Comparison of bitarray codecs <https://github.com/ilanschnell/bitarray/blob/master/doc/codecs.rst>`__
 
    New in version 2.7
+
+
+``sc_stat(stream)`` -> dict
+   Scan a stream produced by ``sc_encode()`` and return a dictionary containing
+   its bit-endianness (``endian``), length (``nbits``), and the number of blocks
+   of each type (``blocks``).  ``blocks`` is a list such that ``blocks[i]`` is the
+   number of blocks of type ``i``.
+
+   Like ``sc_decode()``, it consumes one encoded bitarray and leaves remaining
+   input untouched.
+
+   See also: `Compression of sparse bitarrays <https://github.com/ilanschnell/bitarray/blob/master/doc/sparse_compression.rst>`__
+
+   New in version 3.11
 
 
 ``serialize(bitarray, /)`` -> bytes
@@ -1001,7 +1036,7 @@ This sub-module was added in version 1.2.
    return the decoded bitarray.  This function consumes only one bitarray and
    leaves the remaining stream untouched.  Use ``vl_encode()`` for encoding.
 
-   See also: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__
+   See also: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__, `Comparison of bitarray codecs <https://github.com/ilanschnell/bitarray/blob/master/doc/codecs.rst>`__
 
    New in version 2.2
 
@@ -1011,7 +1046,7 @@ This sub-module was added in version 1.2.
    This representation is useful for efficiently storing small bitarray
    in a binary stream.  Use ``vl_decode()`` for decoding.
 
-   See also: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__
+   See also: `Variable length bitarray format <https://github.com/ilanschnell/bitarray/blob/master/doc/variable_length.rst>`__, `Comparison of bitarray codecs <https://github.com/ilanschnell/bitarray/blob/master/doc/codecs.rst>`__
 
    New in version 2.2
 

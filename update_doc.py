@@ -208,10 +208,9 @@ def write_doc(fo, name):
 
     links = DOC_LINKS.get(name)
     if links:
+        tmpl = "`%s <" + BASE_URL + "/blob/master/doc/%s>`__"
         fo.write("\n   See also: ")
-        fo.write(", ".join("`%s <%s/blob/master/doc/%s>`__" %
-                           (DOCS[short][0], BASE_URL, DOCS[short][1])
-                           for short in links.split()))
+        fo.write(", ".join(tmpl % DOCS[s] for s in links.split()))
         fo.write("\n")
 
     new_in = NEW_IN.get(name)
