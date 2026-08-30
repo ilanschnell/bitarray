@@ -1801,7 +1801,7 @@ sc_encode_header(char *str, bitarrayobject *a)
    The lock for `a` must be held by the caller.  The output may be resized,
    so `out` is passed as `PyObject **` to propagate a possibly changed
    pointer back to the caller.
-   Return encoded length (bytes written into `out`), or -1 on error. */
+   Return encoded length (bytes written into `*out`), or -1 on error. */
 static Py_ssize_t
 sc_encode_lock_held(bitarrayobject *a, PyObject **out)
 {
@@ -1810,6 +1810,8 @@ sc_encode_lock_held(bitarrayobject *a, PyObject **out)
     Py_ssize_t offset = 0;  /* block offset into bitarray a in bytes */
     Py_ssize_t *rts;        /* running totals of segments */
     Py_ssize_t last;        /* last populated segment */
+
+    assert(PyBytes_Check(*out));
 
     set_padbits(a);
     if ((rts = sc_rts(a)) == NULL)
