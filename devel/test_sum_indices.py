@@ -162,12 +162,18 @@ class SumIndicesUtil(unittest.TestCase):
                 self.assertEqual(S(a, 2), r2)
                 self.assertEqual(a, bitarray(s))
 
-    def check_wrong_args(self, S):
+    def check_wrong_args(self, S, n=100):
         self.assertRaises(TypeError, S, '')
         self.assertRaises(TypeError, S, 1.0)
         self.assertRaises(TypeError, S)
+        a = bitarray(n)
         for mode in -1, 0, 3, 4:
-            self.assertRaises(ValueError, S, bitarray("110"), mode)
+            self.assertRaises(ValueError, S, a, mode)
+        for mode in 1.0, 2.0, "1":
+            self.assertRaises(TypeError, S, a, mode)
+        s = n * "1"
+        for mode in 1, 2:
+            self.assertRaises(TypeError, S, s, mode)
 
     def check_sparse(self, S, n, k, mode=1, freeze=False, inv=False):
         a = zeros(n, choice(ENDIANS))
@@ -250,6 +256,7 @@ class SumIndicesTests(SumIndicesUtil):
 
     def test_wrong_args(self):
         self.check_wrong_args(sum_indices)
+        self.check_wrong_args(sum_indices, 1_000_000)
 
     def test_random_sample(self):
         for k in 1, 31, 503:

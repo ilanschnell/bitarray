@@ -294,13 +294,16 @@ Return sum of indices of all active bits in bitarray `a`.
 Equivalent to `sum(i for i, v in enumerate(a) if v)`.
 `mode=2` sums square of indices.
 """
-    if mode not in (1, 2):
-        raise ValueError("unexpected mode %r" % mode)
-
     # For details see: devel/test_sum_indices.py
     n = 1 << 19  # block size  512 Kbits
     if len(__a) <= n:  # shortcut for single block
         return _util.ssqi(__a, mode)
+
+    if not isinstance(__a, bitarray):
+        raise TypeError("bitarray expected, got '%s'" % type(__a).__name__)
+    mode = operator.index(mode)
+    if mode not in (1, 2):
+        raise ValueError("unexpected mode %r" % mode)
 
     # Constants
     m = n // 8  # block size in bytes
