@@ -1626,7 +1626,7 @@ sc_write_indices(char *str, bitarrayobject *a, Py_ssize_t *rts,
         Py_ssize_t i;
 
         assert(0 <= ni && ni <= k);
-        k -= ni;
+        k -= (int) ni;
         /* loop bytes in this segment */
         for (i = m * SEGSIZE; ni; i++) {
             int j;
