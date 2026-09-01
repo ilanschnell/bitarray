@@ -1,13 +1,14 @@
-2026-XX-XX  3.11.0:
+2026-09-01  3.11.0:
 -------------------
   * add run-length codec: `util.rl_encode()` and `util.rl_decode()`
   * add `util.sc_stat()`
   * add [Comparison of bitarray codecs](codecs.rst) documentation
   * optimize sparse block selection for trailing zeros
   * preserve bitarrays when buffer reallocation fails
+  * consistent input validation for large `util.sum_indices()` inputs
   * improve sparse-compression and debug-mode tests, including new tests
     for slice adjustment `adjust_slice()`
-  * move private `sysinfo()` out of the top-level namespace
+  * move private `sysinfo()` and `ssqi()` out of the top-level namespace
 
 
 2026-08-07  3.10.1:

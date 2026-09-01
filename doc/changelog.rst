@@ -1,6 +1,19 @@
 Change log
 ==========
 
+**3.11.0** (2026-09-01):
+
+* add run-length codec: ``util.rl_encode()`` and ``util.rl_decode()``
+* add ``util.sc_stat()``
+* add `Comparison of bitarray codecs <codecs.rst>`__ documentation
+* optimize sparse block selection for trailing zeros
+* preserve bitarrays when buffer reallocation fails
+* consistent input validation for large ``util.sum_indices()`` inputs
+* improve sparse-compression and debug-mode tests, including new tests
+  for slice adjustment ``adjust_slice()``
+* move private ``sysinfo()`` and ``ssqi()`` out of the top-level namespace
+
+
 **3.10.1** (2026-08-07):
 
 * move internal tests for ``util._Random`` class into ``devel/test_random.py``
@@ -32,7 +45,7 @@ Change log
 
 * add more critical sections in Python-facing operations
 * optimize mask indexing operations for sparse and dense masks
-* move tests for internal ``_ssqi()`` to ``devel/test_sum_indices.py``
+* move tests for internal ``ssqi()`` to ``devel/test_sum_indices.py``
 * remove all occurrences of ``PySlice_GetIndicesEx`` (deprecated since
   Python 3.6.1)
 
