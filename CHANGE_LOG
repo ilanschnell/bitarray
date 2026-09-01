@@ -1,3 +1,7 @@
+2026-XX-XX  3.11.1:
+-------------------
+
+
 2026-09-01  3.11.0:
 -------------------
   * add run-length codec: `util.rl_encode()` and `util.rl_decode()`
