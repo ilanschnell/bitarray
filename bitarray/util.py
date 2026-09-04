@@ -148,6 +148,31 @@ class _Random:
                 a &= self.random_half()
         return a
 
+    def adjust_count(self, a, curr_k, new_k):
+        """
+        Adjust bitarray `a` from `curr_k` to `new_k` set bits.  The length
+        of `a` must equal `self.n`, `curr_k` must equal `a.count()`, and
+        `new_k` must be in the range `0 <= new_k <= self.n`.  The bitarray
+        is modified in place by setting or clearing bits selected uniformly
+        at random.
+        """
+        randrange = random.randrange
+        n = self.n
+        diff = curr_k - new_k
+
+        if diff < 0:  # not enough 1 bits - increase count
+            for _ in range(-diff):
+                i = randrange(n)
+                while a[i]:
+                    i = randrange(n)
+                a[i] = 1
+        elif diff > 0:  # too many 1 bits - decrease count
+            for _ in range(diff):
+                i = randrange(n)
+                while not a[i]:
+                    i = randrange(n)
+                a[i] = 0
+
     def random_k(self, k):
         n = self.n
         # error check inputs and handle edge cases
@@ -175,42 +200,29 @@ class _Random:
         # combine random bitarrays using bitwise AND and OR operations
         if i < 3:
             a = zeros(n, self.endian)
-            diff = -k
+            self.adjust_count(a, 0, k)
         else:
             a = self.combine_half(self.op_seq(i))
-            diff = a.count() - k
-
-        randrange = random.randrange
-        if diff < 0:  # not enough 1 bits - increase count
-            for _ in range(-diff):
-                i = randrange(n)
-                while a[i]:
-                    i = randrange(n)
-                a[i] = 1
-        elif diff > 0:  # too many 1 bits - decrease count
-            for _ in range(diff):
-                i = randrange(n)
-                while not a[i]:
-                    i = randrange(n)
-                a[i] = 0
+            self.adjust_count(a, a.count(), k)
 
         return a
 
     def random_p(self, p):
+        n = self.n
+        endian = self.endian
         # error check inputs and handle edge cases
         if p <= 0.0 or p == 0.5 or p >= 1.0 or not math.isfinite(p):
             if p == 0.0:
-                return zeros(self.n, self.endian)
+                return zeros(n, endian)
             if p == 0.5:
                 return self.random_half()
             if p == 1.0:
-                return ones(self.n, self.endian)
+                return ones(n, endian)
             raise ValueError("p must be in range 0.0 <= p <= 1.0, got %s" % p)
 
         # for small n, use literal definition
-        if self.n < 16:
-            return bitarray((random.random() < p for _ in range(self.n)),
-                            self.endian)
+        if n < 16:
+            return bitarray((random.random() < p for _ in range(n)), endian)
 
         # exploit symmetry to establish: p < 0.5
         if p > 0.5:
@@ -220,7 +232,10 @@ class _Random:
 
         # for small p, set randomly individual bits
         if p < self.SMALL_P:
-            return self.random_k(random.binomialvariate(self.n, p))
+            k = random.binomialvariate(n, p)
+            a = zeros(n, endian)
+            self.adjust_count(a, 0, k)
+            return a
 
         # calculate operator sequence
         i = int(p * self.K)
@@ -230,9 +245,8 @@ class _Random:
         q = i / self.K
 
         # when n is small compared to number of operations, also use literal
-        if self.n < 100 and self.nbytes <= len(seq) + 3 * bool(q != p):
-            return bitarray((random.random() < p for _ in range(self.n)),
-                            self.endian)
+        if n < 100 and self.nbytes <= len(seq) + 3 * (q != p):
+            return bitarray((random.random() < p for _ in range(n)), endian)
 
         # combine random bitarrays using bitwise AND and OR operations
         a = self.combine_half(seq)

@@ -22,7 +22,7 @@ from random import choices, randint, randrange, random, binomialvariate
 
 from bitarray import bitarray, frozenbitarray
 from bitarray.util import (
-    zeros, ones, urandom, random_k, random_p, sum_indices,
+    zeros, ones, urandom, random_k, random_p, sum_indices, subset,
     int2ba, count_and, count_or, count_xor, parity,
 )
 from bitarray.util import _Random  # type: ignore
@@ -594,6 +594,25 @@ class Internal_Tests(Util):
         r = _Random(LARGE_N)
         a = r.random_half()
         self.check_probability(a, 0.5)
+
+    def test_adjust_count(self):
+        for _ in range(1_000):
+            n = randrange(100)
+            r = _Random(n)
+            k = randint(0, n)
+            a = r.random_k(k)
+            self.assertEqual(a.count(), k)
+            new_k = randint(0, n)
+            b = a.copy()
+            r.adjust_count(b, k, new_k)
+            self.assertEqual(b.count(), new_k)
+
+            if new_k == k:
+                self.assertEqual(a, b)
+            elif new_k < k:
+                self.assertTrue(subset(b, a))
+            elif new_k > k:
+                self.assertTrue(subset(a, b))
 
     def test_small_p_limit(self):
         # For understanding how the algorithm works, see ./doc/random_p.rst
