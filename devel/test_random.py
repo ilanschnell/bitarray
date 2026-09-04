@@ -599,19 +599,19 @@ class Internal_Tests(Util):
         for _ in range(1_000):
             n = randrange(100)
             r = _Random(n)
-            k = randint(0, n)
-            a = r.random_k(k)
-            self.assertEqual(a.count(), k)
+            old_k = randint(0, n)
+            a = r.random_k(old_k)
+            self.assertEqual(a.count(), old_k)
             new_k = randint(0, n)
             b = a.copy()
-            r.adjust_count(b, k, new_k)
+            r.adjust_count(b, new_k - old_k)
             self.assertEqual(b.count(), new_k)
 
-            if new_k == k:
+            if new_k == old_k:
                 self.assertEqual(a, b)
-            elif new_k < k:
+            elif new_k < old_k:
                 self.assertTrue(subset(b, a))
-            elif new_k > k:
+            elif new_k > old_k:
                 self.assertTrue(subset(a, b))
 
     def test_small_p_limit(self):

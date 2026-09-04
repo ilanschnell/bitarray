@@ -148,26 +148,25 @@ class _Random:
                 a &= self.random_half()
         return a
 
-    def adjust_count(self, a, curr_k, new_k):
+    def adjust_count(self, a, increase):
         """
-        Adjust bitarray `a` from `curr_k` to `new_k` set bits.  The length
-        of `a` must equal `self.n`, `curr_k` must equal `a.count()`, and
-        `new_k` must be in the range `0 <= new_k <= self.n`.  The bitarray
-        is modified in place by setting or clearing bits selected uniformly
+        Adjust the number of set bits in bitarray `a` by `increase`.
+        The length of `a` must equal `self.n`, and `increase` must be in the
+        range `-a.count() <= increase <= self.n - a.count()`.  The bitarray
+        is modified in-place by setting or clearing bits selected uniformly
         at random.
         """
         randrange = random.randrange
         n = self.n
-        diff = curr_k - new_k
 
-        if diff < 0:  # not enough 1 bits - increase count
-            for _ in range(-diff):
+        if increase > 0:  # not enough 1 bits - increase count
+            for _ in range(increase):
                 i = randrange(n)
                 while a[i]:
                     i = randrange(n)
                 a[i] = 1
-        elif diff > 0:  # too many 1 bits - decrease count
-            for _ in range(diff):
+        elif increase < 0:  # too many 1 bits - decrease count
+            for _ in range(-increase):
                 i = randrange(n)
                 while not a[i]:
                     i = randrange(n)
@@ -200,10 +199,10 @@ class _Random:
         # combine random bitarrays using bitwise AND and OR operations
         if i < 3:
             a = zeros(n, self.endian)
-            self.adjust_count(a, 0, k)
+            self.adjust_count(a, k)
         else:
             a = self.combine_half(self.op_seq(i))
-            self.adjust_count(a, a.count(), k)
+            self.adjust_count(a, k - a.count())
 
         return a
 
@@ -234,7 +233,7 @@ class _Random:
         if p < self.SMALL_P:
             k = random.binomialvariate(n, p)
             a = zeros(n, endian)
-            self.adjust_count(a, 0, k)
+            self.adjust_count(a, k)
             return a
 
         # calculate operator sequence
