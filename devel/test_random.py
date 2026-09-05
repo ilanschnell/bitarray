@@ -40,8 +40,9 @@ else:
 _r = _Random()
 M = _r.M
 K = _r.K
-limit = 1.0 / (K + 1)  # lower limit for p
 SMALL_P = _r.SMALL_P
+# maximum probability needed for final correction in random_p()
+limit = 1.0 / (K + 1)
 
 
 def count_each_index(arrays):
@@ -857,7 +858,7 @@ class VerificationTests(Util):
         self.assertEqual(i, 0)  # as K / (K + 1) < 1
         if p * (K + 1) > i + 1:
             i += 1
-        # So for i be non-zero we must have:
+        # So for i to be non-zero we must have:
         #     p * (K + 1) > 1
         # or
         #     p > 1 / (K + 1) = limit        q.e.d.
@@ -884,7 +885,7 @@ class VerificationTests(Util):
 
         # for small p set randomly individual bits, which is much faster
         if p < SMALL_P:
-            return p  # random.binomialvariate() and .random_k()
+            return p  # .adjust_count(a, random.binomialvariate(n, p))
 
         # calculate operator sequence
         i = int(p * K)

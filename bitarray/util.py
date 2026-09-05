@@ -153,8 +153,7 @@ class _Random:
         Adjust the number of set bits in bitarray `a` by `increase`.
         The length of `a` must equal `self.n`, and `increase` must be in the
         range `-a.count() <= increase <= self.n - a.count()`.  The bitarray
-        is modified in-place by setting or clearing bits selected uniformly
-        at random.
+        is modified in-place at positions selected uniformly at random.
         """
         randrange = random.randrange
         n = self.n
@@ -231,9 +230,8 @@ class _Random:
 
         # for small p, set randomly individual bits
         if p < self.SMALL_P:
-            k = random.binomialvariate(n, p)
             a = zeros(n, endian)
-            self.adjust_count(a, k)
+            self.adjust_count(a, random.binomialvariate(n, p))
             return a
 
         # calculate operator sequence
