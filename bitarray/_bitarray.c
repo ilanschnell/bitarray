@@ -1291,28 +1291,66 @@ If `iterable` is a (Unicode) string, each `0` and `1` are appended as\n\
 bits (ignoring whitespace and underscore).");
 
 
-static PyObject *
-bitarray_fill(bitarrayobject *self)
+static Py_ssize_t
+bitarray_fill_lock_held(bitarrayobject *self, Py_ssize_t m)
 {
+    const Py_ssize_t nbits = self->nbits;
     Py_ssize_t p;
 
+    assert(m > 0);
+    assert(self->readonly == 0);
+
+    p = nbits % m;
+    if (p)
+        p = m - p;
+
+    if (p > PY_SSIZE_T_MAX - nbits) {
+        PyErr_SetString(PyExc_OverflowError, "bitarray size overflow");
+        return -1;
+    }
+    if (p > PADBITS(self)) {
+        if (resize(self, nbits + p) < 0)
+            return -1;
+        set_span(self, nbits, nbits + p, 0);
+    }
+    else if (p) {
+        /* Extending into existing pad bits does not require resize().
+           Avoiding it allows fill() to work on imported or exported buffers
+           when the buffer size remains unchanged. */
+        set_padbits(self);
+        self->nbits += p;
+    }
+    return p;
+}
+
+static PyObject *
+bitarray_fill(bitarrayobject *self, PyObject *args)
+{
+    Py_ssize_t m = 8, p;
+
     RAISE_IF_READONLY(self, NULL);
+    if (!PyArg_ParseTuple(args, "|n:fill", &m))
+        return NULL;
+    if (m <= 0) {
+        PyErr_SetString(PyExc_ValueError, "m must be a positive integer");
+        return NULL;
+    }
+
     Py_BEGIN_CRITICAL_SECTION(self);
-    p = PADBITS(self);  /* number of pad bits */
-    set_padbits(self);
-    /* there is no reason to call resize() - .fill() will not raise
-       BufferError when buffer is imported or exported */
-    self->nbits += p;
+    p = bitarray_fill_lock_held(self, m);
     Py_END_CRITICAL_SECTION();
 
+    if (p < 0)
+        return NULL;
     return PyLong_FromSsize_t(p);
 }
 
 PyDoc_STRVAR(fill_doc,
-"fill() -> int\n\
+"fill(m=8, /) -> int\n\
 \n\
 Add zeros to the end of the bitarray, such that the length will be\n\
-a multiple of 8, and return the number of bits added [0..7].");
+a multiple of the positive integer `m`, and return the number of bits\n\
+added (in `range(m)`).");
 
 
 static PyObject *
@@ -4580,7 +4618,7 @@ static PyMethodDef bitarray_methods[] = {
      encode_doc},
     {"extend",       (PyCFunction) bitarray_extend,      METH_O,
      extend_doc},
-    {"fill",         (PyCFunction) bitarray_fill,        METH_NOARGS,
+    {"fill",         (PyCFunction) bitarray_fill,        METH_VARARGS,
      fill_doc},
     {"find",         (PyCFunction) bitarray_find,        METH_VARARGS |
                                                          METH_KEYWORDS,

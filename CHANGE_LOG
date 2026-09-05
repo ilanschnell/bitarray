@@ -1,5 +1,6 @@
 2026-XX-XX  3.11.1:
 -------------------
+  * add optional alignment argument to `bitarray.fill()`
 
 
 2026-09-01  3.11.0:

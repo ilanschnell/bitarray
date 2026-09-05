@@ -2944,6 +2944,20 @@ class InsertTests(unittest.TestCase, Util):
 
 class FillTests(unittest.TestCase, Util):
 
+    def test_explicit(self):
+        for s, m, r, t in [
+                ('1011001', 1, 0, '1011001'),
+                ('1111001', 2, 1, '11110010'),
+                ('1111 0000 0011',    4, 0, '1111 0000 0011'),
+                ('1111 0000 0011 10', 4, 2, '1111 0000 0011 1000'),
+                ('1111000 0011', 7, 3, '1111000 0011000'),
+                ('00110000 011', 8, 5, '00110000 01100000'),
+                ('001100001 010', 9, 6, '001100001 010000000'),
+        ]:
+            a = bitarray(s)
+            self.assertEqual(a.fill(m), r)
+            self.assertEqual(a, bitarray(t))
+
     def test_simple(self):
         a = bitarray(endian=choice(ENDIANS))
         self.assertEqual(a.fill(), 0)
@@ -2975,6 +2989,51 @@ class FillTests(unittest.TestCase, Util):
             self.assertEqual(b, a + zeros(res))
             self.assertEqual(b.endian, a.endian)
             self.check_obj(b)
+
+            b = a.copy()
+            self.assertEqual(b.fill(1), 0)  # alignment 1 doesn't do anything
+            self.assertEqual(b, a)
+
+    def test_m(self):
+        for endian in ENDIANS:
+            for n in range(20):
+                for m in range(1, 20):
+                    a = ones(n, endian)
+                    p = (-n) % m
+                    self.assertEqual(a.fill(m), p)
+                    self.assertEqual(a, ones(n, endian) + zeros(p, endian))
+                    self.assertEqual(len(a) % m, 0)
+                    self.assertEqual(a.endian, endian)
+                    self.check_obj(a)
+
+    def test_m_exported(self):
+        a = bitarray('101')
+        v = memoryview(a)
+
+        # exposing existing pad bits does not resize the buffer
+        self.assertEqual(a.fill(7), 4)
+        self.assertEqual(a, bitarray('1010000'))
+        self.assertEqual(v.nbytes, 1)
+        self.assertEqual(a.fill(7), 0)
+
+        # extending beyond the existing byte requires resize()
+        self.assertRaisesMessage(
+            BufferError, "cannot resize bitarray that is exporting buffers",
+            a.fill, 9)
+        self.assertEqual(a, bitarray('1010000'))
+
+    def test_m_errors(self):
+        a = bitarray()
+        for m in 0, -1, -100:
+            self.assertRaisesMessage(
+                ValueError, "m must be a positive integer", a.fill, m)
+
+        for m in None, 1.0, '8', [], {}:
+            self.assertRaises(TypeError, a.fill, m)
+
+        self.assertRaises(TypeError, a.fill, 1, 2)
+        self.assertRaises(TypeError, a.fill, m=8)
+
 
 class InvertTests(unittest.TestCase, Util):
 
