@@ -145,6 +145,9 @@ class ZLW_Tests(unittest.TestCase, Util):
             self.assertEqual(b[63], 0)  # last bit is always 0
             q, r = divmod(n, 64)
             self.assertEqual(b, a[64 * q:] + zeros(64 - r))
+            if r:
+                a.fill(64)
+                self.assertEqual(b, a[-64:])
 
 
 class Adjust_Slice_Tests(unittest.TestCase):
