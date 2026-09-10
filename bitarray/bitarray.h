@@ -26,13 +26,6 @@
 #include <intrin.h>    /* For _byteswap_uint64() */
 #endif
 
-/* --- definitions specific to Python --- */
-
-/* Py_UNREACHABLE was introduced in Python 3.7 */
-#ifndef Py_UNREACHABLE
-#define Py_UNREACHABLE()  assert(0)
-#endif
-
 /* --- bitarrayobject --- */
 
 /* .ob_size is the buffer size (in bytes), not the number of elements.
