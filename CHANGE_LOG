@@ -1,6 +1,7 @@
 2026-XX-XX  3.11.1:
 -------------------
   * add optional alignment argument to `bitarray.fill()`
+  * add [IEEE Float 16, 32, 64 example](../examples/float.py)
 
 
 2026-09-01  3.11.0:
