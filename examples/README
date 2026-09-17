@@ -14,11 +14,6 @@ distance.py
     corresponding functions in the scipy.spatial.distance module.
 
 
-double.py
-    Functionality to analyze double precision floating point numbers
-    (IEEE 754 binary64).
-
-
 dubner.rst
     We show how bitarrays can be used to calculate twin primes
     and "middle numbers" very efficiently, and verify the some
@@ -34,6 +29,10 @@ extend_json.py
     Demonstrates how to construct a json encoder and decoder (using the
     'json' standard library) which can handle extended Python data structures
     containing bitarrays.
+
+
+float.py
+    Functionality to analyze IEEE 754 floating point numbers (16, 32, 64).
 
 
 gene.py
