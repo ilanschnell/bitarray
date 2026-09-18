@@ -32,7 +32,8 @@ extend_json.py
 
 
 float.py
-    Functionality to analyze IEEE 754 floating point numbers (16, 32, 64).
+    Functionality to analyze IEEE 754 floating point numbers (binary16,
+    binary16, binary64).
 
 
 gene.py
