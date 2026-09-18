@@ -345,6 +345,7 @@ if __name__ == '__main__':
     if len(sys.argv) > 1:
         for arg in sys.argv[1:]:
             o = eval(arg)
+            x: IEEEFloat
             if isinstance(o, str):
                 nbits = len(bitarray(o))
                 if nbits == 16:
