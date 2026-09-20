@@ -145,16 +145,16 @@ class PaddingField(Field):
     def code(self):
         return "X" if self.value else "x"
 
-    def _bits(self):
+    def pad_bits(self):
         return self.width * bitarray("1" if self.value else "0")
 
     def pack(self, value, endian):
-        return self._bits()
+        return self.pad_bits()
 
     def unpack(self, a):
-        if a != self._bits():
+        if a != self.pad_bits():
             raise ValueError("'%s' padding expected, got '%s'" %
-                             (self._bits().to01(), a.to01()))
+                             (self.pad_bits().to01(), a.to01()))
 
 
 class Struct:
