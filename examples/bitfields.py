@@ -200,16 +200,14 @@ class Struct:
         if len(values) != self.values():
             raise ValueError("expected %d values to pack, got %d" %
                              (self.values(), len(values)))
-        a = bitarray(self.width(), endian)  # preallocate bitarray
+        a = bitarray(0, endian)
         i = 0  # value index
-        j = 0  # start bit position
         for field in self.fields:
             value = None
             if field.consumes_value:
                 value = values[i]
                 i += 1
-            a[j:j + field.width] = field.pack(value, a.endian)
-            j += field.width
+            a.extend(field.pack(value, a.endian))
         return a
 
     def unpack(self, a):
@@ -334,8 +332,11 @@ class StructTests(unittest.TestCase):
         a = cf.pack(0.0, endian="big")
         self.assertEqual(a, 64 * bitarray("0"))
 
-    def test_float_inf(self):
-        for nbits, exp_bits in (16, 5), (32, 8), (64, 11):
+    # list of (nbits, exponent bits)
+    float_sizes = [(16, 5), (32, 8), (64, 11)]
+
+    def test_float_special(self):
+        for nbits, exp_bits in self.float_sizes:
             cf = compile("f%d" % nbits)
             self.assertEqual(cf.width(), nbits)
             self.assertEqual(cf.values(), 1)
@@ -359,7 +360,10 @@ class StructTests(unittest.TestCase):
             s = "0 %s 1%s" % (exp_bits * "1", (nbits - exp_bits - 2) * "0")
             self.assertEqual(a, bitarray(s))
             self.assertTrue(math.isnan(cf.unpack(a)[0]))
-            # 1.5
+
+    def test_float_1_5(self):
+        for nbits, exp_bits in self.float_sizes:
+            cf = compile("f%d" % nbits)
             for endian in "little", "big":
                 a = cf.pack(1.5, endian=endian)
                 self.assertEqual(len(a), nbits)
