@@ -4,6 +4,10 @@ While bitarray itself supports Python 3.7+, some examples may require
 higher Python versions.
 
 
+bitfields.py
+    Pack and unpack bit-level structures using `bitarray`.
+
+
 bloom.py
     Demonstrates the implementation of a "Bloom filter", see:
     http://en.wikipedia.org/wiki/Bloom_filter
