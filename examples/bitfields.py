@@ -160,20 +160,6 @@ class PaddingField(Field):
                              (self._bits().to01(), a.to01()))
 
 
-def field_from_code(code, width):
-    if code in "us":
-        return IntField(width, signed=(code == "s"))
-    if code == "f":
-        return FloatField(width)
-    if code == "b":
-        return BitsField(width)
-    if code == "B":
-        return BytesField(width)
-    if code in "xX":
-        return PaddingField(width, value=(code == "X"))
-    raise ValueError("Not a valid code: %r" % code)
-
-
 class Struct:
 
     pat = re.compile(r"(\d*)(\w)(\d*)")
@@ -187,8 +173,22 @@ class Struct:
             n = int(match.group(1) or 1)
             c = match.group(2)
             m = int(match.group(3) or 1)
-            fields.extend(field_from_code(c, m) for _ in range(n))
+            fields.extend(self.field_from_code(c, m) for _ in range(n))
         self.fields = tuple(fields)
+
+    @staticmethod
+    def field_from_code(code, width):
+        if code in "us":
+            return IntField(width, signed=(code == "s"))
+        if code == "f":
+            return FloatField(width)
+        if code == "b":
+            return BitsField(width)
+        if code == "B":
+            return BytesField(width)
+        if code in "xX":
+            return PaddingField(width, value=(code == "X"))
+        raise ValueError("Not a valid code: %r" % code)
 
     def width(self):
         return sum(field.width for field in self.fields)
