@@ -23,8 +23,7 @@ u   An unsigned integer stored in the field width.
 s   A signed integer stored in the field width using two's-complement
     representation.
 f   An IEEE floating-point value.  The width must be 16, 32, or 64.
-b   A bitarray matching the field width.  Its endian must match the packed
-    output.
+b   A bitarray matching the field width.
 B   A bytes or bytearray value occupying the field width.  The width must be
     a multiple of eight; unpacking always returns `bytes`.
 x   Zero-padding bits.  Padding is checked while unpacking.
@@ -111,8 +110,6 @@ class BitsField(Field):
             raise TypeError("bitarray expected, got %r" % type(a).__name__)
         if len(a) != self.width:
             raise ValueError("bitarray of length %d expected" % self.width)
-        if a.endian != endian:
-            raise ValueError("%s-endian bitarray expected" % endian)
         return a
 
     def unpack(self, a):
@@ -386,14 +383,12 @@ class StructTests(unittest.TestCase):
         cf = compile("b11")
         self.assertEqual(cf.width(), 11)
         self.assertEqual(cf.values(), 1)
-        a = cf.pack(bitarray("00001111 000", "big"), endian="big")
-        self.assertEqual(a.endian, "big")
+        a = cf.pack(bitarray("00001111 000", "big"), endian="little")
+        self.assertEqual(a.endian, "little")
         self.assertEqual(a, bitarray("00001111 000"))
         self.assertEqual(cf.unpack(a), (bitarray("00001111 000"), ))
         self.assertRaises(TypeError, cf.pack, 12)
         self.assertRaises(ValueError, cf.pack, bitarray(10))
-        self.assertRaises(ValueError, compile("b3").pack,
-                          bitarray("101", endian="little"), endian="big")
 
     def test_bytes(self):
         self.assertRaises(ValueError, compile, "B7")
