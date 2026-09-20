@@ -86,18 +86,15 @@ class FloatField(Field):
             raise ValueError("float must have width 16, 32 or 64, got %d" %
                              self.width)
 
-    @property
-    def struct_format(self):
-        return self.formats[self.width]
+    def struct_format(self, endian):
+        return ("<" if endian == "little" else ">") + self.formats[self.width]
 
     def pack(self, value, endian):
-        return bitarray(struct.pack(("<" if endian == "little" else ">") +
-                                    self.struct_format, value),
+        return bitarray(struct.pack(self.struct_format(endian), value),
                         endian=endian)
 
     def unpack(self, a):
-        return struct.unpack(("<" if a.endian == "little" else ">") +
-                             self.struct_format, bytes(a))[0]
+        return struct.unpack(self.struct_format(a.endian), bytes(a))[0]
 
 
 @dataclass(frozen=True)
