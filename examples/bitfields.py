@@ -14,7 +14,7 @@ or unpack a bitarray into a tuple::
     assert cf.unpack(a) == values
 
 Padding fields do not consume or produce values.  The input to `unpack()`
-must have exactly `cf.width()` bits.  `cf.values()` gives the number of
+must have exactly `cf.width` bits.  `cf.values` gives the number of
 values consumed by `pack()` and returned by `unpack()`.
 
 The supported field codes are:
@@ -34,7 +34,6 @@ repeat count: for example, `3u2` is equivalent to `u2 u2 u2`.  The
 `endian` argument to `pack()` controls the bit order and the numeric byte
 order of integer and floating-point fields.
 """
-
 import re
 import struct
 import functools
@@ -42,6 +41,9 @@ from dataclasses import dataclass
 
 from bitarray import bitarray
 from bitarray.util import int2ba, ba2int
+
+
+__all__ = ["compile", "pack", "unpack"]
 
 
 @dataclass(frozen=True)
@@ -127,7 +129,8 @@ class BytesField(Field):
         if not isinstance(value, (bytes, bytearray)):
             raise TypeError("bytes expected, got %r" % type(value).__name__)
         if len(value) != self.width // 8:
-            raise ValueError("bytes of length %d expected" % (self.width // 8))
+            raise ValueError("bytes of length %d expected" %
+                             (self.width // 8))
         a = bitarray(0, endian)
         a.frombytes(value)
         return a
@@ -157,6 +160,8 @@ class PaddingField(Field):
 class Struct:
 
     fields: tuple
+    width: int
+    values: int
     pat = re.compile(r"(\d*)(\w)(\d*)")
 
     def __init__(self, format=""):
@@ -168,8 +173,12 @@ class Struct:
             n = int(match.group(1) or 1)
             c = match.group(2)
             m = int(match.group(3) or 1)
-            fields.extend(self.field_from_code(c, m) for _ in range(n))
+            fields.extend(n * [self.field_from_code(c, m)])
+
         object.__setattr__(self, "fields", tuple(fields))
+        object.__setattr__(self, "width", sum(f.width for f in fields))
+        object.__setattr__(self, "values", sum(f.consumes_value
+                                               for f in fields))
 
     @staticmethod
     def field_from_code(code, width):
@@ -185,19 +194,13 @@ class Struct:
             return PaddingField(width, value=(code == "X"))
         raise ValueError("Not a valid code: %r" % code)
 
-    def width(self):
-        return sum(field.width for field in self.fields)
-
-    def values(self):
-        return sum(field.consumes_value for field in self.fields)
-
     def format(self):
         return " ".join(field.format() for field in self.fields)
 
     def pack(self, *values, endian=None):
-        if len(values) != self.values():
+        if len(values) != self.values:
             raise ValueError("expected %d values to pack, got %d" %
-                             (self.values(), len(values)))
+                             (self.values, len(values)))
         a = bitarray(0, endian)
         i = 0  # value index
         for field in self.fields:
@@ -211,9 +214,9 @@ class Struct:
     def unpack(self, a):
         if not isinstance(a, bitarray):
             raise TypeError("bitarray expected, got %r" % type(a).__name__)
-        if len(a) != self.width():
+        if len(a) != self.width:
             raise ValueError("expected bitarray of length %d, got %d" %
-                             (self.width(), len(a)))
+                             (self.width, len(a)))
         i = 0
         res = []
         for field in self.fields:
@@ -242,20 +245,39 @@ def unpack(format, a):
 
 import math
 import unittest
+import dataclasses
 
 
 class StructTests(unittest.TestCase):
 
-    def test_example(self):
+    def test_example1(self):
+        fmt = "u3 s5 x2 b4 B16 f32"
+        values = (5, -3, bitarray("1010"), b"AB", 1.5)
+        a = pack(fmt, *values, endian="little")
+        self.assertEqual(unpack(fmt, a), values)
+
+    def test_example2(self):
         cf = compile("3u2 4x s7 3x X3 u b5 B16 f16")
-        self.assertEqual(cf.width(), 61)
-        self.assertEqual(cf.values(), 8)
+        self.assertEqual(cf.width, 61)
+        self.assertEqual(cf.values, 8)
         self.assertEqual(cf.format(),
                          "u2 u2 u2 x1 x1 x1 x1 s7 x1 x1 x1 X3 u1 b5 B16 f16")
         values = 1, 2, 3, -2, 1, bitarray("01110"), b"A\xff", -29.0
         a = cf.pack(*values, endian="big")
         self.assertEqual(len(a), 61)
         self.assertEqual(cf.unpack(a), values)
+
+    def test_struct_read_only(self):
+        cf = compile("3u2 4x s7 3x X3 u b5")
+        self.assertEqual(len(cf.fields), 14)
+        self.assertEqual(cf.width, 29)
+        self.assertEqual(cf.values, 6)
+        self.assertRaises(dataclasses.FrozenInstanceError,
+                          setattr, cf, "fields", tuple())
+        self.assertRaises(dataclasses.FrozenInstanceError,
+                          setattr, cf, "width", 0)
+        self.assertRaises(dataclasses.FrozenInstanceError,
+                          setattr, cf, "values", 0)
 
     def test_format(self):
         self.assertRaises(ValueError, compile, "u8junk")
@@ -266,8 +288,8 @@ class StructTests(unittest.TestCase):
 
     def test_format_empty(self):
         cf = compile("")
-        self.assertEqual(cf.width(), 0)
-        self.assertEqual(cf.values(), 0)
+        self.assertEqual(cf.width, 0)
+        self.assertEqual(cf.values, 0)
         self.assertEqual(cf.pack(), bitarray())
         self.assertEqual(cf.unpack(bitarray()), ())
 
@@ -285,8 +307,8 @@ class StructTests(unittest.TestCase):
 
     def test_unsigned_int(self):
         cf = compile("u20")
-        self.assertEqual(cf.width(), 20)
-        self.assertEqual(cf.values(), 1)
+        self.assertEqual(cf.width, 20)
+        self.assertEqual(cf.values, 1)
         a = cf.pack(1 << 19, endian="little")
         self.assertEqual(a.endian, "little")
         self.assertEqual(len(a), 20)
@@ -300,8 +322,8 @@ class StructTests(unittest.TestCase):
 
     def test_signed_int(self):
         cf = compile("s10")
-        self.assertEqual(cf.width(), 10)
-        self.assertEqual(cf.values(), 1)
+        self.assertEqual(cf.width, 10)
+        self.assertEqual(cf.values, 1)
         a = cf.pack(-1, endian="little")
         self.assertEqual(a.endian, "little")
         self.assertEqual(a.to01(), 10 * "1")
@@ -313,8 +335,8 @@ class StructTests(unittest.TestCase):
 
     def test_float16(self):
         cf = compile("f16")
-        self.assertEqual(cf.width(), 16)
-        self.assertEqual(cf.values(), 1)
+        self.assertEqual(cf.width, 16)
+        self.assertEqual(cf.values, 1)
         a = cf.pack(1.25, endian="little")
         self.assertEqual(a.endian, "little")
         self.assertEqual(a, bitarray("0000000010 11110 0"))
@@ -326,15 +348,15 @@ class StructTests(unittest.TestCase):
 
     def test_float32(self):
         cf = compile("f32")
-        self.assertEqual(cf.width(), 32)
-        self.assertEqual(cf.values(), 1)
+        self.assertEqual(cf.width, 32)
+        self.assertEqual(cf.values, 1)
         a = cf.pack(1.0, endian="big")
         self.assertEqual(a, bitarray("0 01111111 00000000000000000000000"))
 
     def test_float64(self):
         cf = compile("f64")
-        self.assertEqual(cf.width(), 64)
-        self.assertEqual(cf.values(), 1)
+        self.assertEqual(cf.width, 64)
+        self.assertEqual(cf.values, 1)
         a = cf.pack(0.0, endian="big")
         self.assertEqual(a, 64 * bitarray("0"))
 
@@ -344,8 +366,8 @@ class StructTests(unittest.TestCase):
     def test_float_special(self):
         for nbits, exp_bits in self.float_sizes:
             cf = compile("f%d" % nbits)
-            self.assertEqual(cf.width(), nbits)
-            self.assertEqual(cf.values(), 1)
+            self.assertEqual(cf.width, nbits)
+            self.assertEqual(cf.values, 1)
             # -0.0
             a = cf.pack(-0.0, endian="big")
             self.assertEqual(len(a), nbits)
@@ -388,8 +410,8 @@ class StructTests(unittest.TestCase):
 
     def test_bits(self):
         cf = compile("b11")
-        self.assertEqual(cf.width(), 11)
-        self.assertEqual(cf.values(), 1)
+        self.assertEqual(cf.width, 11)
+        self.assertEqual(cf.values, 1)
         a = cf.pack(bitarray("00001111 000", "big"), endian="little")
         self.assertEqual(a.endian, "little")
         self.assertEqual(a, bitarray("00001111 000"))
@@ -400,8 +422,8 @@ class StructTests(unittest.TestCase):
     def test_bytes(self):
         self.assertRaises(ValueError, compile, "B7")
         cf = compile("B24")
-        self.assertEqual(cf.width(), 24)
-        self.assertEqual(cf.values(), 1)
+        self.assertEqual(cf.width, 24)
+        self.assertEqual(cf.values, 1)
         a = cf.pack(b"ABC", endian="big")
         self.assertEqual(a.endian, "big")
         self.assertEqual(bytes(a), b"ABC")
@@ -414,8 +436,8 @@ class StructTests(unittest.TestCase):
 
     def test_padding(self):
         cf = compile("x3 X2")
-        self.assertEqual(cf.width(), 5)
-        self.assertEqual(cf.values(), 0)
+        self.assertEqual(cf.width, 5)
+        self.assertEqual(cf.values, 0)
         a = cf.pack()
         self.assertEqual(a.to01(), "00011")
         res = cf.unpack(a)
