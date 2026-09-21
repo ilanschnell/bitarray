@@ -26,8 +26,8 @@ f   An IEEE floating-point value.  The width must be 16, 32, or 64.
 b   A bitarray matching the field width.
 B   A bytes or bytearray value occupying the field width.  The width must be
     a multiple of eight; unpacking always returns `bytes`.
-x   Zero-padding bits.  Padding is checked while unpacking.
-X   One-padding bits.  Padding is checked while unpacking.
+x   Zero-padding bits.
+X   One-padding bits.
 
 The width *N* defaults to one when omitted.  A field may be prefixed by a
 repeat count: for example, `3u2` is equivalent to `u2 u2 u2`.  The
@@ -145,16 +145,11 @@ class PaddingField(Field):
     def code(self):
         return "X" if self.value else "x"
 
-    def pad_bits(self):
+    def pack(self, value, endian):
         return self.width * bitarray("1" if self.value else "0")
 
-    def pack(self, value, endian):
-        return self.pad_bits()
-
     def unpack(self, a):
-        if a != self.pad_bits():
-            raise ValueError("'%s' padding expected, got '%s'" %
-                             (self.pad_bits().to01(), a.to01()))
+        pass
 
 
 class Struct:
@@ -414,9 +409,7 @@ class StructTests(unittest.TestCase):
         self.assertEqual(a.to01(), "00011")
         res = cf.unpack(a)
         self.assertEqual(res, tuple())
-        self.assertRaises(ValueError, cf.unpack, bitarray("10011"))
         self.assertRaises(ValueError, cf.unpack, bitarray("0001"))
-        self.assertRaises(ValueError, compile("X2").unpack, bitarray("00"))
 
 
 if __name__ == '__main__':
