@@ -8,8 +8,8 @@ or unpack a bitarray into a tuple::
     from bitarray import bitarray
     from bitfields import compile
 
-    cf = compile("u3 s5 x2 b4 B16 f32")
-    values = (5, -3, bitarray("1010", endian="big"), b"AB", 1.5)
+    cf = compile("u3 s5 ? x2 b4 B16 f32")
+    values = (5, -3, False, bitarray("1010", endian="big"), b"AB", 1.5)
     a = cf.pack(*values, endian="big")
     assert cf.unpack(a) == values
 
@@ -20,6 +20,8 @@ values consumed by `pack()` and returned by `unpack()`.
 The supported field codes are:
 
 u   An unsigned integer stored in the field width.
+?   A bool stored in field width one.  Packing uses normal Python truth-value
+    testing.  Unpacking returns `bool`.
 s   A signed integer stored in the field width using two's-complement
     representation.
 f   An IEEE floating-point value.  The width must be 16, 32, or 64.
@@ -76,6 +78,22 @@ class IntField(Field):
 
     def unpack(self, a):
         return ba2int(a, signed=self.signed)
+
+
+@dataclass(frozen=True)
+class BoolField(Field):
+
+    code = "?"
+
+    def __post_init__(self):
+        if self.width != 1:
+            raise ValueError("bool width must be 1")
+
+    def pack(self, value, endian):
+        return bitarray("1" if value else "0")
+
+    def unpack(self, a):
+        return bool(a[0])
 
 
 @dataclass(frozen=True)
@@ -162,7 +180,7 @@ class Struct:
     fields: tuple
     width: int
     values: int
-    pat = re.compile(r"(\d*)(\w)(\d*)")
+    pat = re.compile(r"(\d*)([\w?])(\d*)")
 
     def __init__(self, format=""):
         fields = []
@@ -184,6 +202,8 @@ class Struct:
     def field_from_code(code, width):
         if code in "us":
             return IntField(width, signed=(code == "s"))
+        if code == "?":
+            return BoolField(width)
         if code == "f":
             return FloatField(width)
         if code == "b":
@@ -251,8 +271,8 @@ import dataclasses
 class StructTests(unittest.TestCase):
 
     def test_example1(self):
-        fmt = "u3 s5 x2 b4 B16 f32"
-        values = (5, -3, bitarray("1010"), b"AB", 1.5)
+        fmt = "u3 s5 ? x2 b4 B16 f32"
+        values = (5, -3, True, bitarray("1010"), b"AB", 1.5)
         a = pack(fmt, *values, endian="little")
         self.assertEqual(unpack(fmt, a), values)
 
@@ -332,6 +352,20 @@ class StructTests(unittest.TestCase):
         self.assertRaises(OverflowError, cf.pack, 512)
         self.assertRaises(TypeError, cf.pack, -2.0)
         self.assertRaises(ValueError, compile, "s0")
+
+    def test_bool(self):
+        cf = compile("?")
+        self.assertEqual(cf.width, 1)
+        self.assertEqual(cf.values, 1)
+        for value in False, True, 0, 1, 2, "", "ya":
+            a = cf.pack(value, endian="little")
+            self.assertEqual(a.endian, "little")
+            self.assertEqual(len(a), 1)
+            self.assertEqual(a[0], bool(value))
+            v = cf.unpack(a)[0]
+            self.assertEqual(type(v), bool)
+            self.assertIs(v, bool(value))
+        self.assertRaises(ValueError, compile, "?0")
 
     def test_float16(self):
         cf = compile("f16")
