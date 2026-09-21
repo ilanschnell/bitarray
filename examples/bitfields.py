@@ -119,7 +119,7 @@ class FloatField(Field):
 
 
 @dataclass(frozen=True)
-class BitsField(Field):
+class BitarrayField(Field):
 
     code = "b"
 
@@ -207,7 +207,7 @@ class Struct:
         if code == "f":
             return FloatField(width)
         if code == "b":
-            return BitsField(width)
+            return BitarrayField(width)
         if code == "B":
             return BytesField(width)
         if code in "xX":
@@ -292,17 +292,13 @@ class StructTests(unittest.TestCase):
         self.assertEqual(len(cf.fields), 14)
         self.assertEqual(cf.width, 29)
         self.assertEqual(cf.values, 6)
-        self.assertRaises(dataclasses.FrozenInstanceError,
-                          setattr, cf, "fields", tuple())
-        self.assertRaises(dataclasses.FrozenInstanceError,
-                          setattr, cf, "width", 0)
-        self.assertRaises(dataclasses.FrozenInstanceError,
-                          setattr, cf, "values", 0)
+        for name in "fields", "width", "values":
+            self.assertRaises(dataclasses.FrozenInstanceError,
+                              setattr, cf, name, 0)
 
     def test_format(self):
-        self.assertRaises(ValueError, compile, "u8junk")
-        self.assertRaises(ValueError, compile, "!")
-        self.assertRaises(ValueError, compile, "q8")
+        for format in "u8junk", "!", "q8", "1", "0z":
+            self.assertRaises(ValueError, compile, format)
         self.assertEqual(compile("3u2").format(), "u2 u2 u2")
         self.assertEqual(compile("u").format(), "u1")
 
@@ -366,6 +362,7 @@ class StructTests(unittest.TestCase):
             self.assertEqual(type(v), bool)
             self.assertIs(v, bool(value))
         self.assertRaises(ValueError, compile, "?0")
+        self.assertRaises(ValueError, compile, "?2")
 
     def test_float16(self):
         cf = compile("f16")
@@ -442,14 +439,15 @@ class StructTests(unittest.TestCase):
         self.assertRaises(struct.error, cf.pack, b"AB")
         self.assertRaises(ValueError, compile, "f8")
 
-    def test_bits(self):
+    def test_bitarray(self):
         cf = compile("b11")
         self.assertEqual(cf.width, 11)
         self.assertEqual(cf.values, 1)
-        a = cf.pack(bitarray("00001111 000", "big"), endian="little")
+        s = "00001111 000"
+        a = cf.pack(bitarray(s, "big"), endian="little")
         self.assertEqual(a.endian, "little")
-        self.assertEqual(a, bitarray("00001111 000"))
-        self.assertEqual(cf.unpack(a), (bitarray("00001111 000"), ))
+        self.assertEqual(a, bitarray(s))
+        self.assertEqual(cf.unpack(a), (bitarray(s), ))
         self.assertRaises(TypeError, cf.pack, 12)
         self.assertRaises(ValueError, cf.pack, bitarray(10))
 
