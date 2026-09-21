@@ -37,6 +37,7 @@ order of integer and floating-point fields.
 
 import re
 import struct
+import functools
 from dataclasses import dataclass
 
 from bitarray import bitarray
@@ -152,8 +153,10 @@ class PaddingField(Field):
         pass
 
 
+@dataclass(frozen=True)
 class Struct:
 
+    fields: tuple
     pat = re.compile(r"(\d*)(\w)(\d*)")
 
     def __init__(self, format=""):
@@ -166,7 +169,7 @@ class Struct:
             c = match.group(2)
             m = int(match.group(3) or 1)
             fields.extend(self.field_from_code(c, m) for _ in range(n))
-        self.fields = tuple(fields)
+        object.__setattr__(self, "fields", tuple(fields))
 
     @staticmethod
     def field_from_code(code, width):
@@ -223,9 +226,17 @@ class Struct:
         return tuple(res)
 
 
+@functools.lru_cache()
 def compile(format):
     return Struct(format)
 
+def pack(format, *values, endian=None):
+    cf = compile(format)
+    return cf.pack(*values, endian=endian)
+
+def unpack(format, a):
+    cf = compile(format)
+    return cf.unpack(a)
 
 # ---------------------------------------------------------------------------
 
