@@ -20,10 +20,10 @@ values consumed by `pack()` and returned by `unpack()`.
 The supported field codes are:
 
 u   An unsigned integer stored in the field width.
-?   A bool stored in field width one.  Packing uses normal Python truth-value
-    testing.  Unpacking returns `bool`.
 s   A signed integer stored in the field width using two's-complement
     representation.
+?   A bool stored in field width one.  Packing uses normal Python truth-value
+    testing.  Unpacking returns `bool`.
 f   An IEEE floating-point value.  The width must be 16, 32, or 64.
 b   A bitarray matching the field width.
 B   A bytes or bytearray value occupying the field width.  The width must be
@@ -321,15 +321,44 @@ class StructTests(unittest.TestCase):
         self.assertRaises(ValueError, cf.unpack, bitarray(9))
         self.assertRaises(TypeError, cf.unpack, [0, 1, 0, 0, 1, 1, 1, 1])
 
+
+class FieldTests(unittest.TestCase):
+
+    def test_misc(self):
+        for fmt, value, tp, s in [
+                ("u7",              91, int,      "1101101"),
+                ("s5",             -13, int,      "11001"),
+                ("?",             True, bool,     "1"),
+                ("f16",           -1.5, float,    "0000000001 11110 1"),
+                ("b3", bitarray("110"), bitarray, "110"),
+                ("B16",          b"AB", bytes,    "10000010 01000010"),
+                ("x3",            None, None,     "000"),
+                ("X5",            None, None,     "11111"),
+        ]:
+            if value is None:
+                values = []
+            else:
+                self.assertIs(type(value), tp)
+                values = [value]
+            a = pack(fmt, *values, endian="little")
+            self.assertEqual(a.endian, "little")
+            self.assertEqual(a, bitarray(s))
+            b = unpack(fmt, a)
+            self.assertIs(type(b), tuple)
+            if value is None:
+                self.assertEqual(len(b), 0)
+            else:
+                self.assertEqual(len(b), 1)
+                self.assertIs(type(b[0]), tp)
+                self.assertEqual(b[0], value)
+
     def test_unsigned_int(self):
         cf = compile("u20")
         self.assertEqual(cf.width, 20)
         self.assertEqual(cf.values, 1)
         a = cf.pack(1 << 19, endian="little")
         self.assertEqual(a.endian, "little")
-        self.assertEqual(len(a), 20)
-        self.assertEqual(a.count(), 1)
-        self.assertEqual(a[19], 1)
+        self.assertEqual(a.to01(), "00000000000000000001")
         self.assertEqual(cf.unpack(a), (1 << 19, ))
         self.assertRaises(OverflowError, cf.pack, -1)
         self.assertRaises(OverflowError, cf.pack, 1 << 20)
@@ -342,7 +371,7 @@ class StructTests(unittest.TestCase):
         self.assertEqual(cf.values, 1)
         a = cf.pack(-1, endian="little")
         self.assertEqual(a.endian, "little")
-        self.assertEqual(a.to01(), 10 * "1")
+        self.assertEqual(a.to01(), "1111111111")
         self.assertEqual(cf.unpack(a), (-1, ))
         self.assertRaises(OverflowError, cf.pack, -513)
         self.assertRaises(OverflowError, cf.pack, 512)
