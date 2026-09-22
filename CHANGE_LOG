@@ -1,6 +1,7 @@
 2026-XX-XX  3.11.1:
 -------------------
   * add optional alignment argument to `bitarray.fill()`
+  * fix compliation problems on pypy 3.12, see #255
   * add [IEEE Float 16, 32 and 64-bit example](../examples/float.py)
   * add [example](../examples/bitfields.py) for packing and unpacking
     bit-level structures
