@@ -147,7 +147,7 @@ static inline void _Py_SET_SIZE(PyVarObject *ob, Py_ssize_t size)
 
 // bpo-40421 added PyFrame_GetCode() to Python 3.9.0b1
 #if PY_VERSION_HEX < 0x030900B1 || defined(PYPY_VERSION)
-static inline PyCodeObject* PyFrame_GetCode(PyFrameObject *frame)
+inline PyCodeObject* PyFrame_GetCode(PyFrameObject *frame)
 {
     assert(frame != _Py_NULL);
     assert(frame->f_code != _Py_NULL);
@@ -322,7 +322,7 @@ _PyThreadState_GetFrameBorrow(PyThreadState *tstate)
 
 // bpo-39947 added PyInterpreterState_Get() to Python 3.9.0a5
 #if PY_VERSION_HEX < 0x030900A5 || defined(PYPY_VERSION)
-static inline PyInterpreterState* PyInterpreterState_Get(void)
+inline PyInterpreterState* PyInterpreterState_Get(void)
 {
     PyThreadState *tstate;
     PyInterpreterState *interp;
