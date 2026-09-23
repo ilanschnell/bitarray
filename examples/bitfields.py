@@ -32,10 +32,9 @@ x   Zero-padding bits.
 X   One-padding bits.
 
 The width *N* defaults to one when omitted.  A field may be prefixed by a
-repeat count: for example, `3u2` is equivalent to `u2 u2 u2`.  The
-`endian` argument to `compile()`, `pack()` and `unpack()` controls the bit
-order and the numeric byte order of integer and floating-point fields,
-it defaults to little-endian.
+repeat count: for example, `3u2` is equivalent to `u2 u2 u2`.  The format
+may be prefixed with `<` or or `>`.  A leading `<` selects little-endian
+bit and byte order; `>` selects big-endian. When omitted, `<` is assumed.
 """
 import re
 import struct
@@ -187,9 +186,12 @@ class Struct:
     endian: str
     pat = re.compile(r"(\d*)([\w?])(\d*)")
 
-    def __init__(self, format="", endian=DEFAULT_ENDIAN):
-        if endian not in ("little", "big"):
-            raise ValueError("invalid endianness: %r" % endian)
+    def __init__(self, format=""):
+        if format.startswith(("<", ">")):
+            endian = "little" if format[0] == "<" else "big"
+            format = format[1:]
+        else:
+            endian = DEFAULT_ENDIAN
         object.__setattr__(self, "endian", endian)
         fields = []
         for s in format.split():
@@ -224,7 +226,8 @@ class Struct:
         raise ValueError("Not a valid code: %r" % code)
 
     def format(self):
-        return " ".join(field.format() for field in self.fields)
+        return ((">" if self.endian == "big" else "<") +
+                " ".join(field.format() for field in self.fields))
 
     def pack(self, *values):
         if len(values) != self.values:
@@ -261,17 +264,17 @@ class Struct:
 
 
 @functools.lru_cache()
-def compile(format, endian=DEFAULT_ENDIAN):
-    return Struct(format, endian)
+def compile(format):
+    return Struct(format)
 
-def pack(format, *values, endian=DEFAULT_ENDIAN):
-    cf = compile(format, endian)
+def pack(format, *values):
+    cf = compile(format)
     return cf.pack(*values)
 
-def unpack(format, a, endian=DEFAULT_ENDIAN):
+def unpack(format, a):
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected, got %r" % type(a).__name__)
-    cf = compile(format, endian)
+    cf = compile(format)
     return cf.unpack(a)
 
 # ---------------------------------------------------------------------------
@@ -290,11 +293,11 @@ class StructTests(unittest.TestCase):
         self.assertEqual(unpack(fmt, a), values)
 
     def test_example2(self):
-        cf = compile("3u2 4x s7 3x X3 u b5 B16 f16", endian="big")
+        cf = compile(">3u2 4x s7 3x X3 u b5 B16 f16")
         self.assertEqual(cf.width, 61)
         self.assertEqual(cf.values, 8)
         self.assertEqual(cf.format(),
-                         "u2 u2 u2 x1 x1 x1 x1 s7 x1 x1 x1 X3 u1 b5 B16 f16")
+                         ">u2 u2 u2 x1 x1 x1 x1 s7 x1 x1 x1 X3 u1 b5 B16 f16")
         values = 1, 2, 3, -2, 1, bitarray("01110"), b"A\xff", -29.0
         a = cf.pack(*values)
         self.assertEqual(len(a), 61)
@@ -312,25 +315,30 @@ class StructTests(unittest.TestCase):
     def test_format(self):
         for format in "u8junk", "!", "q8", "1", "0z":
             self.assertRaises(ValueError, compile, format)
-        self.assertEqual(compile("3u2").format(), "u2 u2 u2")
-        self.assertEqual(compile("u").format(), "u1")
+        self.assertEqual(compile("3u2").format(), "<u2 u2 u2")
+        self.assertEqual(compile(">u").format(), ">u1")
 
     def test_endian(self):
-        for endian in "little", "big":
-            cf = compile("u4", endian)
+        for fmt, endian in [("<u4", "little"), (">u4", "big"),
+                            ("u4", DEFAULT_ENDIAN)]:
+            cf = compile(fmt)
             self.assertEqual(cf.endian, endian)
+            self.assertEqual(compile(cf.format()), cf)
             value = 11
             self.assertEqual(cf.unpack(cf.pack(value)), (value,))
 
-        for endian in "foo", None:
-            self.assertRaises(ValueError, compile, "u3 s7", endian)
-
     def test_format_empty(self):
         cf = compile("")
+        self.assertEqual(cf.endian, DEFAULT_ENDIAN)
         self.assertEqual(cf.width, 0)
         self.assertEqual(cf.values, 0)
         self.assertEqual(cf.pack(), bitarray())
         self.assertEqual(cf.unpack(bitarray(endian="little")), ())
+        for fmt, endian in [("<", "little"), (">", "big"),
+                            ("", DEFAULT_ENDIAN)]:
+            cf = compile(fmt)
+            self.assertEqual(cf.endian, endian)
+            self.assertEqual(compile(cf.format()), cf)
 
     def test_pack_value_count(self):
         cf = compile("u8 s8")
@@ -340,7 +348,7 @@ class StructTests(unittest.TestCase):
 
     def test_unpack_errors(self):
         lst = [0, 1, 0, 0, 1, 1, 1, 1]
-        cf = compile("u8", "big")
+        cf = compile(">u8")
         self.assertRaises(ValueError, cf.unpack, bitarray(7))
         self.assertRaises(ValueError, cf.unpack, bitarray(9))
         self.assertRaises(TypeError, cf.unpack, lst)
@@ -352,16 +360,16 @@ class StructTests(unittest.TestCase):
 
 class FieldTests(unittest.TestCase):
 
-    #    format value            type      bitarray
+    #    format  value            type      bitarray
     data = [
-        ("u11", 91,              int,      "11011010000"),
-        ("s9",  -13,             int,      "110011111"),
-        ("?1",  True,            bool,     "1"),
-        ("f16", -1.5,            float,    "0000000001 11110 1"),
-        ("b3",  bitarray("110"), bitarray, "110"),
-        ("B16", b"AC",           bytes,    "10000010 11000010"),
-        ("x3",  None,            None,     "000"),
-        ("X5",  None,            None,     "11111"),
+        ("<u11", 91,              int,      "11011010000"),
+        ("<s9",  -13,             int,      "110011111"),
+        ("<?1",  True,            bool,     "1"),
+        ("<f16", -1.5,            float,    "0000000001 11110 1"),
+        ("<b3",  bitarray("110"), bitarray, "110"),
+        ("<B16", b"AC",           bytes,    "10000010 11000010"),
+        ("<x3",  None,            None,     "000"),
+        ("<X5",  None,            None,     "11111"),
     ]
 
     def test_compile(self):
@@ -378,7 +386,7 @@ class FieldTests(unittest.TestCase):
             else:
                 self.assertIs(type(value), tp)
                 values = [value]
-            a = pack(fmt, *values, endian="little")
+            a = pack(fmt, *values)
             self.assertEqual(a.endian, "little")
             self.assertEqual(a, bitarray(s))
 
@@ -395,7 +403,7 @@ class FieldTests(unittest.TestCase):
                 self.assertEqual(b[0], value)
 
     def test_unsigned_int(self):
-        cf = compile("u20", "little")
+        cf = compile("<u20")
         self.assertEqual(cf.width, 20)
         self.assertEqual(cf.values, 1)
         a = cf.pack(1 << 19)
@@ -408,7 +416,7 @@ class FieldTests(unittest.TestCase):
         self.assertRaises(ValueError, compile, "u0")
 
     def test_signed_int(self):
-        cf = compile("s10", "little")
+        cf = compile("<s10")
         self.assertEqual(cf.width, 10)
         self.assertEqual(cf.values, 1)
         a = cf.pack(-1)
@@ -437,28 +445,28 @@ class FieldTests(unittest.TestCase):
         self.assertRaises(ValueError, compile, "?2")
 
     def test_float16(self):
-        cf = compile("f16", endian="little")
+        cf = compile("<f16")
         self.assertEqual(cf.width, 16)
         self.assertEqual(cf.values, 1)
         a = cf.pack(1.25)
         self.assertEqual(a.endian, "little")
         self.assertEqual(a, bitarray("0000000010 11110 0"))
         self.assertEqual(cf.unpack(a), (1.25, ))
-        cf = compile("f16", endian="big")
+        cf = compile(">f16")
         a = cf.pack(-3.0)
         self.assertEqual(a.endian, "big")
         self.assertEqual(a, bitarray("1 10000 1000000000"))
         self.assertEqual(cf.unpack(a), (-3.0, ))
 
     def test_float32(self):
-        cf = compile("f32", "big")
+        cf = compile(">f32")
         self.assertEqual(cf.width, 32)
         self.assertEqual(cf.values, 1)
         a = cf.pack(1.0)
         self.assertEqual(a, bitarray("0 01111111 00000000000000000000000"))
 
     def test_float64(self):
-        cf = compile("f64", "big")
+        cf = compile(">f64")
         self.assertEqual(cf.width, 64)
         self.assertEqual(cf.values, 1)
         a = cf.pack(0.0)
@@ -469,7 +477,7 @@ class FieldTests(unittest.TestCase):
 
     def test_float_special(self):
         for nbits, exp_bits in self.float_sizes:
-            cf = compile("f%d" % nbits, "big")
+            cf = compile(">f%d" % nbits)
             self.assertEqual(cf.width, nbits)
             self.assertEqual(cf.values, 1)
             # -0.0
@@ -495,8 +503,8 @@ class FieldTests(unittest.TestCase):
 
     def test_float_1_5(self):
         for nbits, exp_bits in self.float_sizes:
-            for endian in "little", "big":
-                cf = compile("f%d" % nbits, endian)
+            for ef, endian in ("<", "little"), (">", "big"):
+                cf = compile("%sf%d" % (ef, nbits))
                 a = cf.pack(1.5)
                 self.assertEqual(len(a), nbits)
                 self.assertEqual(a.endian, endian)
@@ -526,7 +534,7 @@ class FieldTests(unittest.TestCase):
 
     def test_bytes(self):
         self.assertRaises(ValueError, compile, "B7")
-        cf = compile("B24", "big")
+        cf = compile(">B24")
         self.assertEqual(cf.width, 24)
         self.assertEqual(cf.values, 1)
         a = cf.pack(b"ABC")
