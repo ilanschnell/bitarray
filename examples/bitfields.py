@@ -33,7 +33,7 @@ X   One-padding bits.
 
 The width *N* defaults to one when omitted.  A field may be prefixed by a
 repeat count: for example, `3u2` is equivalent to `u2 u2 u2`.  The format
-may be prefixed with `<` or or `>`.  A leading `<` selects little-endian
+may be prefixed with `<` or `>`.  A leading `<` selects little-endian
 bit and byte order; `>` selects big-endian. When omitted, `<` is assumed.
 """
 import re
@@ -55,6 +55,7 @@ DEFAULT_ENDIAN = "little"
 class Field:
 
     width: int
+    endian: str
     consumes_value = True
     code = ""
 
@@ -75,8 +76,8 @@ class IntField(Field):
     def code(self):
         return "s" if self.signed else "u"
 
-    def pack(self, value, endian):
-        return int2ba(value, length=self.width, endian=endian,
+    def pack(self, value):
+        return int2ba(value, length=self.width, endian=self.endian,
                       signed=self.signed)
 
     def unpack(self, a):
@@ -92,7 +93,7 @@ class BoolField(Field):
         if self.width != 1:
             raise ValueError("bool width must be 1")
 
-    def pack(self, value, endian):
+    def pack(self, value):
         return bitarray("1" if value else "0")
 
     def unpack(self, a):
@@ -110,15 +111,16 @@ class FloatField(Field):
             raise ValueError("float must have width 16, 32 or 64, got %d" %
                              self.width)
 
-    def struct_format(self, endian):
-        return ("<" if endian == "little" else ">") + self.formats[self.width]
+    def struct_format(self):
+        return (("<" if self.endian == "little" else ">") +
+                self.formats[self.width])
 
-    def pack(self, value, endian):
-        return bitarray(struct.pack(self.struct_format(endian), value),
-                        endian=endian)
+    def pack(self, value):
+        return bitarray(struct.pack(self.struct_format(), value),
+                        endian=self.endian)
 
     def unpack(self, a):
-        return struct.unpack(self.struct_format(a.endian), bytes(a))[0]
+        return struct.unpack(self.struct_format(), bytes(a))[0]
 
 
 @dataclass(frozen=True)
@@ -126,7 +128,7 @@ class BitarrayField(Field):
 
     code = "b"
 
-    def pack(self, a, endian):
+    def pack(self, a):
         if not isinstance(a, bitarray):
             raise TypeError("bitarray expected, got %r" % type(a).__name__)
         if len(a) != self.width:
@@ -146,13 +148,13 @@ class BytesField(Field):
         if self.width % 8:
             raise ValueError("width not a multiple of 8")
 
-    def pack(self, value, endian):
+    def pack(self, value):
         if not isinstance(value, (bytes, bytearray)):
             raise TypeError("bytes expected, got %r" % type(value).__name__)
         if len(value) != self.width // 8:
             raise ValueError("bytes of length %d expected" %
                              (self.width // 8))
-        a = bitarray(0, endian)
+        a = bitarray(endian=self.endian)
         a.frombytes(value)
         return a
 
@@ -170,7 +172,7 @@ class PaddingField(Field):
     def code(self):
         return "X" if self.value else "x"
 
-    def pack(self, value, endian):
+    def pack(self, value):
         return self.width * bitarray("1" if self.value else "0")
 
     def unpack(self, a):
@@ -201,7 +203,7 @@ class Struct:
             n = int(match.group(1) or 1)
             c = match.group(2)
             m = int(match.group(3) or 1)
-            fields.extend(n * [self.field_from_code(c, m)])
+            fields.extend(n * [self.field_from_code(c, m, endian)])
 
         object.__setattr__(self, "fields", tuple(fields))
         object.__setattr__(self, "width", sum(f.width for f in fields))
@@ -210,19 +212,19 @@ class Struct:
 
 
     @staticmethod
-    def field_from_code(code, width):
+    def field_from_code(code, width, endian):
         if code in "us":
-            return IntField(width, signed=(code == "s"))
+            return IntField(width, endian, signed=(code == "s"))
         if code == "?":
-            return BoolField(width)
+            return BoolField(width, endian)
         if code == "f":
-            return FloatField(width)
+            return FloatField(width, endian)
         if code == "b":
-            return BitarrayField(width)
+            return BitarrayField(width, endian)
         if code == "B":
-            return BytesField(width)
+            return BytesField(width, endian)
         if code in "xX":
-            return PaddingField(width, value=(code == "X"))
+            return PaddingField(width, endian, value=(code == "X"))
         raise ValueError("Not a valid code: %r" % code)
 
     def format(self):
@@ -240,7 +242,7 @@ class Struct:
             if field.consumes_value:
                 value = values[i]
                 i += 1
-            a.extend(field.pack(value, a.endian))
+            a.extend(field.pack(value))
         return a
 
     def unpack(self, a):
