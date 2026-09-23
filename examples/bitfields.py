@@ -31,8 +31,7 @@ B   A bytes or bytearray value occupying the field width.  The width must be
 x   Zero-padding bits.
 X   One-padding bits.
 
-The width *N* defaults to one when omitted.  A field may be prefixed by a
-repeat count: for example, `3u2` is equivalent to `u2 u2 u2`.  The format
+The width *N* defaults to one when omitted.  The format
 may be prefixed with `<` or `>`.  A leading `<` selects little-endian
 bit and byte order; `>` selects big-endian. When omitted, `<` is assumed.
 """
@@ -154,9 +153,7 @@ class BytesField(Field):
         if len(value) != self.width // 8:
             raise ValueError("bytes of length %d expected" %
                              (self.width // 8))
-        a = bitarray(endian=self.endian)
-        a.frombytes(value)
-        return a
+        return bitarray(value, endian=self.endian)
 
     def unpack(self, a):
         return bytes(a)
@@ -186,7 +183,7 @@ class Struct:
     width: int
     values: int
     endian: str
-    pat = re.compile(r"(\d*)([\w?])(\d*)")
+    pat = re.compile(r"([\w?])(\d*)")
 
     def __init__(self, format=""):
         if format.startswith(("<", ">")):
@@ -200,10 +197,9 @@ class Struct:
             match = self.pat.fullmatch(s)
             if match is None:
                 raise ValueError("invalid format %r" % s)
-            n = int(match.group(1) or 1)
-            c = match.group(2)
-            m = int(match.group(3) or 1)
-            fields.extend(n * [self.field_from_code(c, m, endian)])
+            c = match.group(1)
+            m = int(match.group(2) or 1)
+            fields.append(self.field_from_code(c, m, endian))
 
         object.__setattr__(self, "fields", tuple(fields))
         object.__setattr__(self, "width", sum(f.width for f in fields))
@@ -295,29 +291,29 @@ class StructTests(unittest.TestCase):
         self.assertEqual(unpack(fmt, a), values)
 
     def test_example2(self):
-        cf = compile(">3u2 4x s7 3x X3 u b5 B16 f16")
-        self.assertEqual(cf.width, 61)
-        self.assertEqual(cf.values, 8)
+        cf = compile(">u2 x4 s7 x3 X3 u b5 B16 f16")
+        self.assertEqual(cf.width, 57)
+        self.assertEqual(cf.values, 6)
         self.assertEqual(cf.format(),
-                         ">u2 u2 u2 x1 x1 x1 x1 s7 x1 x1 x1 X3 u1 b5 B16 f16")
-        values = 1, 2, 3, -2, 1, bitarray("01110"), b"A\xff", -29.0
+                         ">u2 x4 s7 x3 X3 u1 b5 B16 f16")
+        values = 3, -2, 1, bitarray("01110"), b"A\xff", -29.0
         a = cf.pack(*values)
-        self.assertEqual(len(a), 61)
+        self.assertEqual(len(a), 57)
         self.assertEqual(cf.unpack(a), values)
 
     def test_struct_read_only(self):
-        cf = compile("3u2 4x s7 3x X3 u b5")
-        self.assertEqual(len(cf.fields), 14)
-        self.assertEqual(cf.width, 29)
-        self.assertEqual(cf.values, 6)
+        cf = compile("u2 x s7 x X3 u b5")
+        self.assertEqual(len(cf.fields), 7)
+        self.assertEqual(cf.width, 20)
+        self.assertEqual(cf.values, 4)
         for name in "endian", "fields", "width", "values":
             self.assertRaises(dataclasses.FrozenInstanceError,
                               setattr, cf, name, 0)
 
     def test_format(self):
-        for format in "u8junk", "!", "q8", "1", "0z":
+        for format in "3x", "u8junk", "!", "q8", "1", "0z":
             self.assertRaises(ValueError, compile, format)
-        self.assertEqual(compile("3u2").format(), "<u2 u2 u2")
+        self.assertEqual(compile("u2").format(), "<u2")
         self.assertEqual(compile(">u").format(), ">u1")
 
     def test_endian(self):
@@ -346,7 +342,7 @@ class StructTests(unittest.TestCase):
         cf = compile("u8 s8")
         self.assertRaises(ValueError, cf.pack, 1)
         self.assertRaises(ValueError, cf.pack, 1, 2, 3)
-        self.assertRaises(ValueError, compile("3x").pack, 1)
+        self.assertRaises(ValueError, compile("x").pack, 1)
 
     def test_unpack_errors(self):
         lst = [0, 1, 0, 0, 1, 1, 1, 1]
