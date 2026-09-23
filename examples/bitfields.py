@@ -184,7 +184,6 @@ class Struct:
     fields: tuple
     width: int
     values: int
-    endian: str
     pat = re.compile(r"([<>])?([\w?])(\d*)\s*")
     emap = {"<": "little", ">": "big"}
 
@@ -208,8 +207,6 @@ class Struct:
         object.__setattr__(self, "width", sum(f.width for f in fields))
         object.__setattr__(self, "values", sum(f.consumes_value
                                                for f in fields))
-        object.__setattr__(self, "endian",
-                           fields[0].endian if fields else DEFAULT_ENDIAN)
 
     @staticmethod
     def field_from_code(code, width, endian):
@@ -234,9 +231,10 @@ class Struct:
         if len(values) != self.values:
             raise ValueError("expected %d values to pack, got %d" %
                              (self.values, len(values)))
-        a = bitarray(endian=self.endian)
+        fields = self.fields
+        a = bitarray(0, fields[0].endian if fields else DEFAULT_ENDIAN)
         i = 0  # value index
-        for field in self.fields:
+        for field in fields:
             value = None
             if field.consumes_value:
                 value = values[i]
@@ -307,19 +305,18 @@ class StructTests(unittest.TestCase):
         self.assertEqual(len(cf.fields), 7)
         self.assertEqual(cf.width, 20)
         self.assertEqual(cf.values, 4)
-        for name in "endian", "fields", "width", "values":
+        for name in "fields", "width", "values":
             self.assertRaises(dataclasses.FrozenInstanceError,
                               setattr, cf, name, 0)
 
     def test_format(self):
         cf = compile("u3 s5 >? x2 <b4 B16 f32")
         self.assertEqual(cf.format(), "<u3 <s5 >?1 >x2 <b4 <B16 <f32")
-        self.assertEqual(cf.endian, DEFAULT_ENDIAN)
 
         for fmt in ">u3 <x1 b4", ">u3<xb4", ">u3<x<b4", " >u3 <x b4 ":
             cf = compile(fmt)
             self.assertEqual(cf.format(), ">u3 <x1 <b4")
-            self.assertEqual(cf.endian, "big")
+            self.assertEqual(cf.pack(3, bitarray("0110")).endian, "big")
 
         for format in "3x", "u8junk", "!", "q8", "1", "0z":
             self.assertRaises(ValueError, compile, format)
@@ -329,17 +326,20 @@ class StructTests(unittest.TestCase):
     def test_format_empty(self):
         for fmt in "", "  ":
             cf = compile(fmt)
-            self.assertEqual(cf.endian, DEFAULT_ENDIAN)
             self.assertEqual(cf.width, 0)
             self.assertEqual(cf.values, 0)
-            self.assertEqual(cf.pack(), bitarray())
             self.assertEqual(cf.unpack(bitarray(endian="big")), ())
+            a = cf.pack()
+            self.assertEqual(a, bitarray())
+            self.assertEqual(a.endian, DEFAULT_ENDIAN)
 
     def test_endian(self):
         for fmt, endian in [("<u4", "little"), (">u4", "big"),
                             ("u4", DEFAULT_ENDIAN)]:
             cf = compile(fmt)
-            self.assertEqual(cf.endian, endian)
+            a = cf.pack(11)
+            self.assertEqual(len(a), 4)
+            self.assertEqual(a.endian, endian)
             self.assertEqual(compile(cf.format()), cf)
             value = 11
             self.assertEqual(cf.unpack(cf.pack(value)), (value,))
@@ -452,7 +452,7 @@ class FieldTests(unittest.TestCase):
 
     def test_bool(self):
         cf = compile("?")
-        self.assertEqual(cf.endian, "little")
+        self.assertEqual(cf.pack(True).endian, "little")
         self.assertEqual(cf.width, 1)
         self.assertEqual(cf.values, 1)
         for value in False, True, 0, 1, 2, "", "ya":
