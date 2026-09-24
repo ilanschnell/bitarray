@@ -72,10 +72,6 @@ class IntField(Field):
 
     signed: bool
 
-    def __post_init__(self):
-        if self.width == 0:
-            raise ValueError("integer width cannot be zero")
-
     @property
     def code(self):
         return "s" if self.signed else "u"
@@ -200,13 +196,15 @@ class Struct:
         while format:
             m = self.pat.match(format)
             if m is None:
-                raise ValueError("invalid format %r" % format)
+                raise ValueError("invalid format: %r" % format)
             pre = m.group(1)
             if pre is not None:
                 endian = _ENDIAN_FROM_PREFIX[pre]
             c = m.group(2)
-            n = int(m.group(3) or 1)
-            fields.append(self.field_from_code(c, n, endian))
+            w = int(m.group(3) or 1)
+            if w == 0:
+                raise ValueError("field width cannot be zero: %r" % format)
+            fields.append(self.field_from_code(c, w, endian))
             format = format[m.end():]
 
         object.__setattr__(self, "fields", tuple(fields))
@@ -306,6 +304,10 @@ class StructTests(unittest.TestCase):
         self.assertEqual(len(a), 57)
         self.assertEqual(cf.unpack(a), values)
 
+    def test_mixed_format_roundtrip(self):
+        cf = compile("u3 >s5 <B16")
+        self.assertEqual(compile(cf.format()), cf)
+
     def test_struct_read_only(self):
         cf = compile("u2 x s7 x X3 u b5")
         self.assertEqual(len(cf.fields), 7)
@@ -314,6 +316,11 @@ class StructTests(unittest.TestCase):
         for name in "fields", "width", "values":
             self.assertRaises(dataclasses.FrozenInstanceError,
                               setattr, cf, name, 0)
+
+    def test_zero_width(self):
+        for c in "us?fbBxX":
+            # zero width is consistently rejected
+            self.assertRaises(ValueError, compile, c + "0")
 
     def test_format(self):
         cf = compile("u3 s5 >? x2 <b4 B16 f32")
@@ -452,7 +459,6 @@ class FieldTests(unittest.TestCase):
         self.assertRaises(OverflowError, cf.pack, -1)
         self.assertRaises(OverflowError, cf.pack, 1 << 20)
         self.assertRaises(TypeError, cf.pack, 1.0)
-        self.assertRaises(ValueError, compile, "u0")
 
     def test_signed_int(self):
         cf = compile("<s10")
@@ -465,7 +471,6 @@ class FieldTests(unittest.TestCase):
         self.assertRaises(OverflowError, cf.pack, -513)
         self.assertRaises(OverflowError, cf.pack, 512)
         self.assertRaises(TypeError, cf.pack, -2.0)
-        self.assertRaises(ValueError, compile, "s0")
 
     def test_bool(self):
         cf = compile("?")
@@ -480,36 +485,7 @@ class FieldTests(unittest.TestCase):
             v = cf.unpack(a)[0]
             self.assertEqual(type(v), bool)
             self.assertIs(v, bool(value))
-        self.assertRaises(ValueError, compile, "?0")
         self.assertRaises(ValueError, compile, "?2")
-
-    def test_float16(self):
-        cf = compile("<f16")
-        self.assertEqual(cf.width, 16)
-        self.assertEqual(cf.values, 1)
-        a = cf.pack(1.25)
-        self.assertEqual(a.endian, "little")
-        self.assertEqual(a, bitarray("0000000010 11110 0"))
-        self.assertEqual(cf.unpack(a), (1.25, ))
-        cf = compile(">f16")
-        a = cf.pack(-3.0)
-        self.assertEqual(a.endian, "big")
-        self.assertEqual(a, bitarray("1 10000 1000000000"))
-        self.assertEqual(cf.unpack(a), (-3.0, ))
-
-    def test_float32(self):
-        cf = compile(">f32")
-        self.assertEqual(cf.width, 32)
-        self.assertEqual(cf.values, 1)
-        a = cf.pack(1.0)
-        self.assertEqual(a, bitarray("0 01111111 00000000000000000000000"))
-
-    def test_float64(self):
-        cf = compile(">f64")
-        self.assertEqual(cf.width, 64)
-        self.assertEqual(cf.values, 1)
-        a = cf.pack(0.0)
-        self.assertEqual(a, 64 * bitarray("0"))
 
     # list of (nbits, exponent bits)
     float_sizes = [(16, 5), (32, 8), (64, 11)]
@@ -594,6 +570,8 @@ class FieldTests(unittest.TestCase):
         res = cf.unpack(a)
         self.assertEqual(res, tuple())
         self.assertRaises(ValueError, cf.unpack, bitarray("0001"))
+        # padding bits are ignored rather than validated
+        self.assertEqual(unpack("x3 X3", bitarray("111000")), ())
 
 
 if __name__ == '__main__':
