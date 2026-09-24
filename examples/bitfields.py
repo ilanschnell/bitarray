@@ -46,7 +46,7 @@ from bitarray import bitarray
 from bitarray.util import int2ba, ba2int
 
 
-__all__ = ["compile", "pack", "unpack"]
+__all__ = ["Struct", "compile", "pack", "unpack"]
 
 
 DEFAULT_ENDIAN = "little"
@@ -181,7 +181,7 @@ class PaddingField(Field):
 class Struct:
     "Struct(format) -> compiled struct object"
 
-    fields: tuple
+    _fields: tuple
     width: int
     values: int
     pat = re.compile(r"""
@@ -209,7 +209,7 @@ class Struct:
             fields.append(self.field_from_code(c, w, endian))
             format = format[m.end():]
 
-        object.__setattr__(self, "fields", tuple(fields))
+        object.__setattr__(self, "_fields", tuple(fields))
         object.__setattr__(self, "width", sum(f.width for f in fields))
         object.__setattr__(self, "values", sum(f.consumes_value
                                                for f in fields))
@@ -235,7 +235,10 @@ class Struct:
 
 Return the canonical format string reconstructed from this compiled format.
 """
-        return " ".join(field.format() for field in self.fields)
+        return " ".join(field.format() for field in self._fields)
+
+    def __repr__(self):
+        return "Struct(%r)" % self.format()
 
     def pack(self, *values: Any) -> bitarray:
         """pack(v1, v2, ...) -> bitarray
@@ -246,7 +249,7 @@ compiled format.
         if len(values) != self.values:
             raise ValueError("expected %d values to pack, got %d" %
                              (self.values, len(values)))
-        fields = self.fields
+        fields = self._fields
         a = bitarray(0, fields[0].endian if fields else DEFAULT_ENDIAN)
         i = 0  # value index
         for field in fields:
@@ -269,7 +272,7 @@ Return a tuple containing values unpacked according to this compiled format.
                              (self.width, len(a)))
         i = 0
         res = []
-        for field in self.fields:
+        for field in self._fields:
             j = i + field.width
             b = bitarray(a[i:j], field.endian)
             value = field.unpack(b)
@@ -335,16 +338,19 @@ class StructTests(unittest.TestCase):
         self.assertEqual(len(a), 57)
         self.assertEqual(cf.unpack(a), values)
 
+    def test_cached(self):
+        self.assertIs(compile("u8"), compile("u8"))
+
     def test_mixed_format_roundtrip(self):
         cf = compile("u3 >s5 <B16")
         self.assertEqual(compile(cf.format()), cf)
 
     def test_struct_read_only(self):
         cf = compile("u2 x s7 x X3 u b5")
-        self.assertEqual(len(cf.fields), 7)
+        self.assertEqual(len(cf._fields), 7)
         self.assertEqual(cf.width, 20)
         self.assertEqual(cf.values, 4)
-        for name in "fields", "width", "values":
+        for name in "_fields", "width", "values":
             self.assertRaises(dataclasses.FrozenInstanceError,
                               setattr, cf, name, 0)
 
@@ -385,6 +391,9 @@ class StructTests(unittest.TestCase):
             a = cf.pack()
             self.assertEqual(len(a), 0)
             self.assertEqual(a.endian, DEFAULT_ENDIAN)
+
+    def test_repr(self):
+        self.assertEqual(repr(compile("u2 >s7 x")), "Struct('<u2 >s7 >x1')")
 
     def test_endian(self):
         for fmt, endian in [("<u4", "little"), (">u4", "big"),
