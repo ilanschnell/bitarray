@@ -179,6 +179,7 @@ class PaddingField(Field):
 
 @dataclass(frozen=True)
 class Struct:
+    "Struct(format) -> compiled struct object"
 
     fields: tuple
     width: int
@@ -230,9 +231,18 @@ class Struct:
         raise ValueError("Not a valid code: %r" % code)
 
     def format(self) -> str:
+        """format() -> str
+
+Return the canonical format string reconstructed from this compiled format.
+"""
         return " ".join(field.format() for field in self.fields)
 
     def pack(self, *values: Any) -> bitarray:
+        """pack(v1, v2, ...) -> bitarray
+
+Return a bitarray containing the values v1, v2, ... packed according to this
+compiled format.
+"""
         if len(values) != self.values:
             raise ValueError("expected %d values to pack, got %d" %
                              (self.values, len(values)))
@@ -248,6 +258,10 @@ class Struct:
         return a
 
     def unpack(self, a: bitarray) -> Tuple[Any, ...]:
+        """unpack(bitarray) -> tuple
+
+Return a tuple containing values unpacked according to this compiled format.
+"""
         if not isinstance(a, bitarray):
             raise TypeError("bitarray expected, got %r" % type(a).__name__)
         if len(a) != self.width:
@@ -267,13 +281,27 @@ class Struct:
 
 @functools.lru_cache()
 def compile(format: str) -> Struct:
+    """compile(format) -> Struct
+
+Compile given format string and return a compiled format object that
+can be used to pack and/or unpack data multiple times.
+"""
     return Struct(format)
 
 def pack(format: str, *values: Any) -> bitarray:
+    """pack(format, v1, v2, ...) -> bitarray
+
+Return a bitarray containing the values v1, v2, ... packed according
+to the format string.
+"""
     cf = compile(format)
     return cf.pack(*values)
 
 def unpack(format: str, a: bitarray) -> Tuple[Any, ...]:
+    """unpack(format, bitarray) -> tuple
+
+Return a tuple containing values unpacked according to the format string.
+"""
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected, got %r" % type(a).__name__)
     cf = compile(format)
