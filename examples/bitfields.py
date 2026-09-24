@@ -50,6 +50,9 @@ __all__ = ["compile", "pack", "unpack"]
 
 DEFAULT_ENDIAN = "little"
 
+_ENDIAN_FROM_PREFIX = {"<": "little", ">": "big"}
+_PREFIX_FROM_ENDIAN = {v: k for k, v in _ENDIAN_FROM_PREFIX.items()}
+
 
 @dataclass(frozen=True)
 class Field:
@@ -60,7 +63,7 @@ class Field:
     code = ""
 
     def format(self):
-        return "%s%s%d" % ("<" if self.endian == "little" else ">",
+        return "%s%s%d" % (_PREFIX_FROM_ENDIAN[self.endian],
                            self.code, self.width)
 
 
@@ -113,8 +116,7 @@ class FloatField(Field):
                              self.width)
 
     def struct_format(self):
-        return (("<" if self.endian == "little" else ">") +
-                self.formats[self.width])
+        return _PREFIX_FROM_ENDIAN[self.endian] + self.formats[self.width]
 
     def pack(self, value):
         return bitarray(struct.pack(self.struct_format(), value),
@@ -184,8 +186,12 @@ class Struct:
     fields: tuple
     width: int
     values: int
-    pat = re.compile(r"([<>])?([\w?])(\d*)\s*")
-    emap = {"<": "little", ">": "big"}
+    pat = re.compile(r"""
+        ([<>])?   # optional prefix; < or >
+        ([\w?])   # code character
+        (\d*)     # optional bit width; defaults to 1
+        \s*       # optional whitespace
+    """, re.VERBOSE)
 
     def __init__(self, format=""):
         endian = DEFAULT_ENDIAN
@@ -195,9 +201,9 @@ class Struct:
             m = self.pat.match(format)
             if m is None:
                 raise ValueError("invalid format %r" % format)
-            e = m.group(1)
-            if e is not None:
-                endian = self.emap[e]
+            pre = m.group(1)
+            if pre is not None:
+                endian = _ENDIAN_FROM_PREFIX[pre]
             c = m.group(2)
             n = int(m.group(3) or 1)
             fields.append(self.field_from_code(c, n, endian))
@@ -330,7 +336,7 @@ class StructTests(unittest.TestCase):
             self.assertEqual(cf.values, 0)
             self.assertEqual(cf.unpack(bitarray(endian="big")), ())
             a = cf.pack()
-            self.assertEqual(a, bitarray())
+            self.assertEqual(len(a), 0)
             self.assertEqual(a.endian, DEFAULT_ENDIAN)
 
     def test_endian(self):
@@ -383,12 +389,12 @@ class FieldTests(unittest.TestCase):
 
     def test_pack(self):
         for fmt, value, tp, s in self.data:
-            if value is None:
-                values = []
-            else:
+            values = []
+            if value is not None:
                 self.assertIs(type(value), tp)
-                values = [value]
+                values.append(value)
             a = pack(fmt, *values)
+            self.assertIs(type(a), bitarray)
             self.assertEqual(a.endian, "little")
             self.assertEqual(a, bitarray(s))
 
@@ -405,6 +411,17 @@ class FieldTests(unittest.TestCase):
                     self.assertIs(type(b[0]), tp)
                     self.assertEqual(b[0], value)
 
+    def test_roundtrip(self):
+        for fmt, value, tp, s in self.data:
+            fmt = ">u3%s>u3" % fmt
+            values = [1, 3]
+            if value is not None:
+                values.insert(1, value)
+            a = pack(fmt, *values)
+            self.assertEqual(a.endian, "big")
+            self.assertEqual(a, bitarray("001" + s + "011"))
+            self.assertEqual(unpack(fmt, a), tuple(values))
+
     def test_mixed(self):
         cf = compile("<u8>u8")
         self.assertEqual(cf.unpack(cf.pack(1, 1)), (1, 1))
@@ -420,8 +437,8 @@ class FieldTests(unittest.TestCase):
         packed = cf.pack(a, b)
         self.assertEqual(packed.endian, "little")
         self.assertEqual(packed, a + b)
-        self.assertEqual(cf.unpack(packed), (a, b))
         x, y = cf.unpack(packed)
+        self.assertEqual((x, y), (a, b))
         self.assertEqual((x.endian, y.endian), ("little", "big"))
 
     def test_unsigned_int(self):
