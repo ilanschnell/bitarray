@@ -40,6 +40,7 @@ import re
 import struct
 import functools
 from dataclasses import dataclass
+from typing import Any, Tuple
 
 from bitarray import bitarray
 from bitarray.util import int2ba, ba2int
@@ -189,7 +190,7 @@ class Struct:
         \s*       # optional whitespace
     """, re.VERBOSE)
 
-    def __init__(self, format=""):
+    def __init__(self, format: str = "") -> None:
         endian = DEFAULT_ENDIAN
         fields = []
         format = format.lstrip()
@@ -228,10 +229,10 @@ class Struct:
             return PaddingField(width, endian, value=(code == "X"))
         raise ValueError("Not a valid code: %r" % code)
 
-    def format(self):
+    def format(self) -> str:
         return " ".join(field.format() for field in self.fields)
 
-    def pack(self, *values):
+    def pack(self, *values: Any) -> bitarray:
         if len(values) != self.values:
             raise ValueError("expected %d values to pack, got %d" %
                              (self.values, len(values)))
@@ -246,7 +247,7 @@ class Struct:
             a.extend(field.pack(value))
         return a
 
-    def unpack(self, a):
+    def unpack(self, a: bitarray) -> Tuple[Any, ...]:
         if not isinstance(a, bitarray):
             raise TypeError("bitarray expected, got %r" % type(a).__name__)
         if len(a) != self.width:
@@ -265,14 +266,14 @@ class Struct:
 
 
 @functools.lru_cache()
-def compile(format):
+def compile(format: str) -> Struct:
     return Struct(format)
 
-def pack(format, *values):
+def pack(format: str, *values: Any) -> bitarray:
     cf = compile(format)
     return cf.pack(*values)
 
-def unpack(format, a):
+def unpack(format: str, a: bitarray) -> Tuple[Any, ...]:
     if not isinstance(a, bitarray):
         raise TypeError("bitarray expected, got %r" % type(a).__name__)
     cf = compile(format)
@@ -286,6 +287,8 @@ import dataclasses
 
 
 class StructTests(unittest.TestCase):
+
+    all_codes = "us?fbBxX"
 
     def test_example1(self):
         fmt = "u3 s5 ? x2 b4 B16 f32"
@@ -318,9 +321,18 @@ class StructTests(unittest.TestCase):
                               setattr, cf, name, 0)
 
     def test_zero_width(self):
-        for c in "us?fbBxX":
+        for c in self.all_codes:
             # zero width is consistently rejected
             self.assertRaises(ValueError, compile, c + "0")
+
+    def test_default_width(self):
+        for c in self.all_codes:
+            if c in "fB":
+                self.assertRaises(ValueError, compile, c)
+                continue
+            cf = compile(c)
+            self.assertEqual(cf.width, 1)
+            self.assertEqual(cf.format(), "<%s1" % c)
 
     def test_format(self):
         cf = compile("u3 s5 >? x2 <b4 B16 f32")
@@ -331,7 +343,7 @@ class StructTests(unittest.TestCase):
             self.assertEqual(cf.format(), ">u3 <x1 <b4")
             self.assertEqual(cf.pack(3, bitarray("0110")).endian, "big")
 
-        for format in "3x", "u8junk", "!", "q8", "1", "0z":
+        for format in "<", "<<u8", "3x", "u8junk", "!", "q8", "1", ">0z":
             self.assertRaises(ValueError, compile, format)
         self.assertEqual(compile("u2").format(), "<u2")
         self.assertEqual(compile(">u").format(), ">u1")
