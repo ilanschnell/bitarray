@@ -7,8 +7,8 @@ values into a bitarray or unpack a bitarray into a tuple::
 
     from bitfields import compile
 
-    cf = compile("u3 s5 ? x2 B16 f32")
-    values = (5, -3, False, b"AB", 1.5)
+    cf = compile("u3 s5 ? x2 h12 B16 f32")
+    values = (5, -3, False, "1fa", b"AB", 1.5)
     a = cf.pack(*values)
     assert cf.unpack(a) == values
 
@@ -24,6 +24,9 @@ s   A signed integer stored in the field width using two's-complement
 ?   A bool stored in field width one.  Packing uses normal Python truth-value
     testing.  Unpacking returns `bool`.
 f   An IEEE floating-point value.  The width must be 16, 32, or 64.
+h   A hexadecimal string occupying the field width.  The width must be a
+    multiple of four; packing is case-insensitive and ignores whitespace;
+    unpacking returns lowercase.
 b   A bitarray matching the field width.
 B   A bytes or bytearray value occupying the field width.  The width must be
     a multiple of eight; unpacking always returns `bytes`.
@@ -42,7 +45,7 @@ from dataclasses import dataclass
 from typing import Any, Tuple
 
 from bitarray import bitarray
-from bitarray.util import int2ba, ba2int
+from bitarray.util import int2ba, ba2int, hex2ba, ba2hex
 
 
 __all__ = ["Struct", "compile", "pack", "unpack"]
@@ -120,6 +123,28 @@ class _FloatField(_Field):
 
     def unpack(self, a):
         return struct.unpack(self.struct_format(), bytes(a))[0]
+
+
+@dataclass(frozen=True)
+class _HexField(_Field):
+
+    code = "h"
+
+    def __post_init__(self):
+        if self.width % 4:
+            raise ValueError("width not a multiple of 4")
+
+    def pack(self, value):
+        if not isinstance(value, str):
+            raise TypeError("str expected, got %r" % type(value).__name__)
+        a = hex2ba(value, self.endian)
+        if len(a) != self.width:
+            raise ValueError("hex string with %d digits expected" %
+                             (self.width // 4))
+        return a
+
+    def unpack(self, a):
+        return ba2hex(a)
 
 
 @dataclass(frozen=True)
@@ -226,6 +251,8 @@ class Struct:
             return _BoolField(width, endian)
         if code == "f":
             return _FloatField(width, endian)
+        if code == "h":
+            return _HexField(width, endian)
         if code == "b":
             return _BitarrayField(width, endian)
         if code == "B":
@@ -323,7 +350,7 @@ import dataclasses
 
 class StructTests(unittest.TestCase):
 
-    all_codes = "us?fbBxX"
+    all_codes = "us?fhbBxX"
 
     def test_example1(self):
         fmt = "u3 s5 ? x2 B16 f32"
@@ -332,16 +359,16 @@ class StructTests(unittest.TestCase):
         self.assertEqual(unpack(fmt, a), values)
 
     def test_example2(self):
-        cf = compile(">u2 s7 x3 X3 <u b5 B16 f16")
-        self.assertEqual(cf.width, 53)
-        self.assertEqual(cf.values, 6)
+        cf = compile(">u2 s7 x3 X3 <u h4 b5 B16 f16")
+        self.assertEqual(cf.width, 57)
+        self.assertEqual(cf.values, 7)
         self.assertEqual(cf.format(),
-                         ">u2 >s7 >x3 >X3 <u1 <b5 <B16 <f16")
-        values = 2, -8, 1, bitarray("01110"), b"A\xff", -29.0
+                         ">u2 >s7 >x3 >X3 <u1 <h4 <b5 <B16 <f16")
+        values = 2, -8, 1, "e", bitarray("01110"), b"A\xff", -29.0
         a = cf.pack(*values)
-        self.assertEqual(len(a), 53)
+        self.assertEqual(len(a), 57)
         self.assertEqual(a.endian, "big")
-        self.assertEqual(a, bitarray("10 1111000 000 111 1 01110 "
+        self.assertEqual(a, bitarray("10 1111000 000 111 1 0111 01110 "
                                      "10000010 11111111 0000001011110011"))
         self.assertEqual(cf.unpack(a), values)
 
@@ -368,7 +395,7 @@ class StructTests(unittest.TestCase):
 
     def test_default_width(self):
         for c in self.all_codes:
-            if c in "fB":
+            if c in "fhB":
                 self.assertRaises(ValueError, compile, c)
                 continue
             cf = compile(c)
@@ -437,6 +464,7 @@ class FieldTests(unittest.TestCase):
         ("<s9",  -13,             int,      "110011111"),
         ("<?1",  True,            bool,     "1"),
         ("<f16", -1.5,            float,    "0000000001 11110 1"),
+        ("<h12", "af1",           str,      "0101 1111 1000"),
         ("<b3",  bitarray("110"), bitarray, "110"),
         ("<B16", b"AC",           bytes,    "10000010 11000010"),
         ("<x3",  None,            None,     "000"),
@@ -490,6 +518,7 @@ class FieldTests(unittest.TestCase):
                           ("s8", -10, -9),
                           ("?", False, True),
                           ("f16", 1.0, -2.0),
+                          ("h8", "a1", "f0"),
                           ("B16", b"AB", b"CD")]:
             cf = compile("<%s>%s" % (c, c))
             self.assertEqual(cf.unpack(cf.pack(v1, v2)), (v1, v2))
@@ -590,6 +619,20 @@ class FieldTests(unittest.TestCase):
         cf = compile("f16")
         self.assertRaises(struct.error, cf.pack, b"AB")
         self.assertRaises(ValueError, compile, "f8")
+
+    def test_hex(self):
+        self.assertRaises(ValueError, compile, "h7")
+        cf = compile("<h20")
+        self.assertEqual(cf.width, 20)
+        self.assertEqual(cf.values, 1)
+        a = cf.pack("1fA73")
+        self.assertEqual(cf.pack("1f a73"), a)  # whitespace is ignored
+        self.assertEqual(a.endian, "little")
+        self.assertEqual(a, bitarray("1000 1111 0101 1110 1100"))
+        self.assertEqual(cf.unpack(a), ("1fa73", ))
+        self.assertRaises(TypeError, cf.pack, b"1fa73")
+        self.assertRaises(ValueError, cf.pack, "1fa7")
+        self.assertRaises(ValueError, cf.unpack, bitarray(19))
 
     def test_bitarray(self):
         cf = compile("b11")
