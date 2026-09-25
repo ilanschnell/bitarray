@@ -5,11 +5,10 @@ A format is a sequence of fields; whitespace between fields is optional.
 Compile the format once, then use the resulting `Struct` instance to pack
 values into a bitarray or unpack a bitarray into a tuple::
 
-    from bitarray import bitarray
     from bitfields import compile
 
-    cf = compile("u3 s5 ? x2 b4 B16 f32")
-    values = (5, -3, False, bitarray("1010"), b"AB", 1.5)
+    cf = compile("u3 s5 ? x2 B16 f32")
+    values = (5, -3, False, b"AB", 1.5)
     a = cf.pack(*values)
     assert cf.unpack(a) == values
 
@@ -327,20 +326,23 @@ class StructTests(unittest.TestCase):
     all_codes = "us?fbBxX"
 
     def test_example1(self):
-        fmt = "u3 s5 ? x2 b4 B16 f32"
-        values = (5, -3, True, bitarray("1010"), b"AB", 1.5)
+        fmt = "u3 s5 ? x2 B16 f32"
+        values = (5, -3, True, b"AB", 1.5)
         a = pack(fmt, *values)
         self.assertEqual(unpack(fmt, a), values)
 
     def test_example2(self):
-        cf = compile(">u2 x4 s7 x3 X3 u b5 B16 f16")
-        self.assertEqual(cf.width, 57)
+        cf = compile(">u2 s7 x3 X3 <u b5 B16 f16")
+        self.assertEqual(cf.width, 53)
         self.assertEqual(cf.values, 6)
         self.assertEqual(cf.format(),
-                         ">u2 >x4 >s7 >x3 >X3 >u1 >b5 >B16 >f16")
-        values = 3, -2, 1, bitarray("01110"), b"A\xff", -29.0
+                         ">u2 >s7 >x3 >X3 <u1 <b5 <B16 <f16")
+        values = 2, -8, 1, bitarray("01110"), b"A\xff", -29.0
         a = cf.pack(*values)
-        self.assertEqual(len(a), 57)
+        self.assertEqual(len(a), 53)
+        self.assertEqual(a.endian, "big")
+        self.assertEqual(a, bitarray("10 1111000 000 111 1 01110 "
+                                     "10000010 11111111 0000001011110011"))
         self.assertEqual(cf.unpack(a), values)
 
     def test_cached(self):
@@ -484,14 +486,14 @@ class FieldTests(unittest.TestCase):
             self.assertEqual(unpack(fmt, a), tuple(values))
 
     def test_mixed(self):
-        cf = compile("<u8>u8")
-        self.assertEqual(cf.unpack(cf.pack(1, 1)), (1, 1))
-        cf = compile("<s6>s8")
-        self.assertEqual(cf.unpack(cf.pack(-10, -9)), (-10, -9))
-        cf = compile("<f16>f16")
-        self.assertEqual(cf.unpack(cf.pack(1.0, -2.0)), (1.0, -2.0))
-        cf = compile("<B16>B16")
-        self.assertEqual(cf.unpack(cf.pack(b"AB", b"CD")), (b"AB", b"CD"))
+        for c, v1, v2 in [("u8", 1, 2),
+                          ("s8", -10, -9),
+                          ("?", False, True),
+                          ("f16", 1.0, -2.0),
+                          ("B16", b"AB", b"CD")]:
+            cf = compile("<%s>%s" % (c, c))
+            self.assertEqual(cf.unpack(cf.pack(v1, v2)), (v1, v2))
+
         cf = compile("<b4>b4")
         a = bitarray("0110", "big")
         b = bitarray("1100", "little")
