@@ -5764,6 +5764,7 @@ def show_info(verbosity=1):
 
 def run(verbosity=1):
     import bitarray.test_util
+    import bitarray.test_bitfields
 
     if verbosity:
         show_info(verbosity=2)
@@ -5772,6 +5773,7 @@ def run(verbosity=1):
     suite = unittest.TestSuite()
     suite.addTests(loader.loadTestsFromModule(sys.modules[__name__]))
     suite.addTests(loader.loadTestsFromModule(bitarray.test_util))
+    suite.addTests(loader.loadTestsFromModule(bitarray.test_bitfields))
     if sysinfo("Py_GIL_DISABLED"):
         import bitarray.test_free_threading as test_free_threading
         suite.addTests(loader.loadTestsFromModule(test_free_threading))
