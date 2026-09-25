@@ -178,9 +178,8 @@ class FieldTests(unittest.TestCase):
                     self.assertEqual(b[0], value)
 
     def test_roundtrip(self):
-        pres = "<", ">"
         for fmt, value, tp, s in self.data:
-            for pre1, pre2 in product(pres, repeat=2):
+            for pre1, pre2 in product("<>", repeat=2):
                 mixed_fmt = "%su3 %s %su3" % (pre1, fmt, pre2)
                 values = [1, 3]
                 if value is not None:
@@ -293,6 +292,17 @@ class FieldTests(unittest.TestCase):
                     s = s[::-1]
                 self.assertEqual(a, bitarray(s))
                 self.assertEqual(cf.unpack(a), (1.5, ))
+
+    def test_struct_bytes(self):
+        x = 1.875
+        for nbits, struct_format in (16, "e"), (32, "f"), (64, "d"):
+            for pre, endian in ("<", "little"), (">", "big"):
+                bf = "%sf%d" % (pre, nbits)
+                sf = pre + struct_format
+                b = struct.pack(sf, x)
+                self.assertEqual(bytes(pack(bf, x)), b)
+                self.assertEqual(unpack(bf, bitarray(b, endian))[0], x)
+                self.assertEqual(struct.unpack(sf, b)[0], x)
 
     def test_float_errors(self):
         cf = compile("f16")
