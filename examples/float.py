@@ -1,9 +1,9 @@
+import struct
 from math import inf, nan, ldexp
-from struct import pack, unpack
 
 from bitarray import bitarray
 from bitarray.util import ba2int, int2ba
-from bitarray.bitfields import compile
+import bitarray.bitfields as bitfields
 
 
 class IEEEFloat:
@@ -18,7 +18,7 @@ class IEEEFloat:
 
     def __float__(self):
         a = self.to_bitarray()
-        return unpack("<" + self.struct_format, a)[0]
+        return struct.unpack("<" + self.struct_format, a)[0]
 
     def __str__(self):
         a = self.to_bitarray()
@@ -31,17 +31,18 @@ class IEEEFloat:
         return '%s("%s")' % (type(self).__name__, self)
 
     def from_float(self, x):
-        a = bitarray(pack("<" + self.struct_format, x), endian="little")
+        a = bitarray(struct.pack("<" + self.struct_format, x), endian="little")
         self.from_bitarray(a)
 
     def from_string(self, s):
-        a = bitarray(s, endian="little")
+        a = bitarray(s)
         a.reverse()
         self.from_bitarray(a)
 
     @property
     def cf(self):
-        return compile("<b%d u%d u" % (self.fraction_bits, self.exponent_bits))
+        return bitfields.compile("<b%d u%d u" %
+                                 (self.fraction_bits, self.exponent_bits))
 
     def from_bitarray(self, a):
         self.fraction, self.exponent, self.sign = self.cf.unpack(a)
@@ -51,7 +52,7 @@ class IEEEFloat:
         return self.cf.pack(self.fraction,
                             self.exponent + self.exponent_bias, self.sign)
 
-    def unpack(self):
+    def to_float(self):
         if self.exponent == self.exponent_bias + 1:
             if self.fraction.any():
                 return nan
@@ -78,7 +79,7 @@ class IEEEFloat:
 
         if self.exponent == self.exponent_bias + 1:
             print("fraction = %s" % self.fraction[::-1].to01())
-            print("  --> %s" % self.unpack())
+            print("  --> %s" % self.to_float())
             return
 
         x = ba2int(self.fraction) / (1 << self.fraction_bits)
@@ -86,7 +87,7 @@ class IEEEFloat:
             x += 1
 
         print("fraction = %.*f" % (self.decimal_digits, x))
-        print("  --> %s" % self.unpack())
+        print("  --> %s" % self.to_float())
 
 
 class Half(IEEEFloat):
@@ -249,7 +250,7 @@ class IEEEFloatTests(unittest.TestCase):
                 if isnan(x):
                     continue
                 self.assertEqual(str(cls(x)), s)
-                self.assertEqual(f.unpack(), x)
+                self.assertEqual(f.to_float(), x)
 
     def test_examples(self):
         for cls, examples in [
@@ -262,7 +263,7 @@ class IEEEFloatTests(unittest.TestCase):
                     s = s[:-3].ljust(cls.nbits + 2, s[-4])
                 for x in cls(value), cls(s):
                     self.assertEqual(float(x), value)
-                    self.assertEqual(x.unpack(), value)
+                    self.assertEqual(x.to_float(), value)
                     self.assertEqual(str(x), s)
 
     def test_numberphile(self):
@@ -281,7 +282,7 @@ class IEEEFloatTests(unittest.TestCase):
                 for value in nan, s:
                     x = cls(value)
                     self.assertTrue(isnan(float(x)))
-                    self.assertTrue(isnan(x.unpack()))
+                    self.assertTrue(isnan(x.to_float()))
 
     def test_nan_msg(self):
         msg = urandom(Double.fraction_bits)
@@ -305,7 +306,7 @@ class IEEEFloatTests(unittest.TestCase):
                 for value in expected, s:
                     f = cls(value)
                     self.assertEqual(float(f), expected)
-                    self.assertEqual(f.unpack(), expected)
+                    self.assertEqual(f.to_float(), expected)
 
     def test_exact_ints(self):
         for cls in FLOAT_TYPES:
@@ -319,7 +320,7 @@ class IEEEFloatTests(unittest.TestCase):
                 if x.sign:
                     value = -value
                 self.assertEqual(float(x), value)
-                self.assertEqual(x.unpack(), value)
+                self.assertEqual(x.to_float(), value)
 
             for _ in range(1000):
                 value = getrandbits(randint(1, fb + 1))
