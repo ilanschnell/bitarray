@@ -28,6 +28,7 @@ class StructTests(unittest.TestCase):
 
     def test_example2(self):
         cf = compile(">u2 s7 x3 X3 <u h4 b5 B16 f16")
+        self.assertIsInstance(cf, Struct)
         self.assertEqual(cf.width, 57)
         self.assertEqual(cf.values, 7)
         self.assertEqual(cf.format(),
@@ -42,10 +43,12 @@ class StructTests(unittest.TestCase):
 
     def test_cached(self):
         self.assertIs(compile("u8"), compile("u8"))
+        self.assertIsNot(Struct("u8"), compile("u8"))
 
     def test_mixed_format_roundtrip(self):
         cf = compile("u3 >s5 <B16")
         self.assertEqual(compile(cf.format()), cf)
+        self.assertEqual(Struct(cf.format()), cf)
 
     def test_struct_read_only(self):
         cf = compile("u2 x s7 x X3 u b5")
