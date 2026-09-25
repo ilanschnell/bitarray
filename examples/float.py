@@ -3,6 +3,7 @@ from struct import pack, unpack
 
 from bitarray import bitarray
 from bitarray.util import ba2int, int2ba
+from bitarray.bitfields import compile
 
 
 class IEEEFloat:
@@ -35,29 +36,20 @@ class IEEEFloat:
 
     def from_string(self, s):
         a = bitarray(s, endian="little")
-        if len(a) != self.nbits:
-            raise ValueError("%d bits expected, got %d" % (self.nbits, len(a)))
         a.reverse()
         self.from_bitarray(a)
 
+    @property
+    def cf(self):
+        return compile("<b%d u%d u" % (self.fraction_bits, self.exponent_bits))
+
     def from_bitarray(self, a):
-        if len(a) != self.nbits or a.endian != "little":
-            raise ValueError("little endian bitarray of length %d expected" %
-                             self.nbits)
-        fb = self.fraction_bits
-        self.fraction = a[:fb]
-        self.exponent = ba2int(a[fb:-1]) - self.exponent_bias
-        self.sign = a[-1]
+        self.fraction, self.exponent, self.sign = self.cf.unpack(a)
+        self.exponent -= self.exponent_bias
 
     def to_bitarray(self):
-        if len(self.fraction) != self.fraction_bits:
-            raise ValueError("fraction must be a bitarray of length %d" %
-                             self.fraction_bits)
-        a = bitarray(self.fraction, endian="little")
-        a.extend(int2ba(self.exponent + self.exponent_bias,
-                        length=self.exponent_bits, endian="little"))
-        a.append(self.sign)
-        return a
+        return self.cf.pack(self.fraction,
+                            self.exponent + self.exponent_bias, self.sign)
 
     def unpack(self):
         if self.exponent == self.exponent_bias + 1:
@@ -238,6 +230,7 @@ class IEEEFloatTests(unittest.TestCase):
         for cls in FLOAT_TYPES:
             with self.subTest(cls=cls.__name__):
                 x = cls()
+                self.assertEqual(x.cf.width, x.nbits)
                 self.assertEqual(float(x), 0.0)
                 self.assertEqual(x.sign, 0)
                 self.assertEqual(x.exponent, -cls.exponent_bias)
@@ -248,7 +241,8 @@ class IEEEFloatTests(unittest.TestCase):
         for cls in FLOAT_TYPES:
             for _ in range(1000):
                 f = cls()
-                f.from_bitarray(urandom(cls.nbits, "little"))
+                f.from_bitarray(urandom(cls.nbits,
+                                        ["little", "big"][getrandbits(1)]))
                 s = str(f)
                 self.assertEqual(str(cls(s)), s)
                 x = float(f)
