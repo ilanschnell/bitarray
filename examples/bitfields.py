@@ -346,6 +346,7 @@ Return a tuple containing values unpacked according to the format string.
 import math
 import unittest
 import dataclasses
+from itertools import product
 
 
 class StructTests(unittest.TestCase):
@@ -461,14 +462,18 @@ class FieldTests(unittest.TestCase):
     #    format  value            type      bitarray
     data = [
         ("<u11", 91,              int,      "11011010000"),
+        (">u12", 1,               int,      "000000000001"),
         ("<s9",  -13,             int,      "110011111"),
         ("<?1",  True,            bool,     "1"),
         ("<f16", -1.5,            float,    "0000000001 11110 1"),
+        (">f16",  1.875,          float,    "0 01111 1110000000"),
         ("<h12", "af1",           str,      "0101 1111 1000"),
+        (">h12", "2c3",           str,      "0010 1100 0011"),
         ("<b3",  bitarray("110"), bitarray, "110"),
         ("<B16", b"AC",           bytes,    "10000010 11000010"),
+        (">B16", b"A ",           bytes,    "01000001 00100000"),
         ("<x3",  None,            None,     "000"),
-        ("<X5",  None,            None,     "11111"),
+        (">X5",  None,            None,     "11111"),
     ]
 
     def test_compile(self):
@@ -486,7 +491,7 @@ class FieldTests(unittest.TestCase):
                 values.append(value)
             a = pack(fmt, *values)
             self.assertIs(type(a), bitarray)
-            self.assertEqual(a.endian, "little")
+            self.assertEqual(a.endian, _ENDIAN_FROM_PREFIX[fmt[0]])
             self.assertEqual(a, bitarray(s))
 
     def test_unpack(self):
@@ -503,25 +508,29 @@ class FieldTests(unittest.TestCase):
                     self.assertEqual(b[0], value)
 
     def test_roundtrip(self):
+        pres = "<", ">"
         for fmt, value, tp, s in self.data:
-            fmt = ">u3%s>u3" % fmt
-            values = [1, 3]
-            if value is not None:
-                values.insert(1, value)
-            a = pack(fmt, *values)
-            self.assertEqual(a.endian, "big")
-            self.assertEqual(a, bitarray("001" + s + "011"))
-            self.assertEqual(unpack(fmt, a), tuple(values))
+            for pre1, pre2 in product(pres, repeat=2):
+                mixed_fmt = "%su3 %s %su3" % (pre1, fmt, pre2)
+                values = [1, 3]
+                if value is not None:
+                    values.insert(1, value)
+                a = pack(mixed_fmt, *values)
+                self.assertEqual(a.endian, _ENDIAN_FROM_PREFIX[pre1])
+                self.assertEqual(a[3:-3], bitarray(s))
+                self.assertEqual(unpack(mixed_fmt, a), tuple(values))
 
     def test_mixed(self):
-        for c, v1, v2 in [("u8", 1, 2),
-                          ("s8", -10, -9),
-                          ("?", False, True),
-                          ("f16", 1.0, -2.0),
-                          ("h8", "a1", "f0"),
-                          ("B16", b"AB", b"CD")]:
+        for c, v in [("u8", 1),
+                     ("s8", -10),
+                     ("?", True),
+                     ("f16", -2.0),
+                     ("h4", "c"),
+                     ("B8", b"A")]:
             cf = compile("<%s>%s" % (c, c))
-            self.assertEqual(cf.unpack(cf.pack(v1, v2)), (v1, v2))
+            a = cf.pack(v, v)
+            self.assertEqual(cf.unpack(a), (v, v))
+            self.assertEqual(a[::-1], a)
 
         cf = compile("<b4>b4")
         a = bitarray("0110", "big")
