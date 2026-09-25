@@ -55,7 +55,7 @@ _PREFIX_FROM_ENDIAN = {v: k for k, v in _ENDIAN_FROM_PREFIX.items()}
 
 
 @dataclass(frozen=True)
-class Field:
+class _Field:
 
     width: int
     endian: str
@@ -68,7 +68,7 @@ class Field:
 
 
 @dataclass(frozen=True)
-class IntField(Field):
+class _IntField(_Field):
 
     signed: bool
 
@@ -85,7 +85,7 @@ class IntField(Field):
 
 
 @dataclass(frozen=True)
-class BoolField(Field):
+class _BoolField(_Field):
 
     code = "?"
 
@@ -101,7 +101,7 @@ class BoolField(Field):
 
 
 @dataclass(frozen=True)
-class FloatField(Field):
+class _FloatField(_Field):
 
     code = "f"
     formats = {16: "e", 32: "f", 64: "d"}
@@ -123,7 +123,7 @@ class FloatField(Field):
 
 
 @dataclass(frozen=True)
-class BitarrayField(Field):
+class _BitarrayField(_Field):
 
     code = "b"
 
@@ -139,7 +139,7 @@ class BitarrayField(Field):
 
 
 @dataclass(frozen=True)
-class BytesField(Field):
+class _BytesField(_Field):
 
     code = "B"
 
@@ -160,7 +160,7 @@ class BytesField(Field):
 
 
 @dataclass(frozen=True)
-class PaddingField(Field):
+class _PaddingField(_Field):
 
     value: bool
     consumes_value = False
@@ -221,17 +221,17 @@ class Struct:
     @staticmethod
     def _field_from_code(code, width, endian):
         if code in "us":
-            return IntField(width, endian, signed=(code == "s"))
+            return _IntField(width, endian, signed=(code == "s"))
         if code == "?":
-            return BoolField(width, endian)
+            return _BoolField(width, endian)
         if code == "f":
-            return FloatField(width, endian)
+            return _FloatField(width, endian)
         if code == "b":
-            return BitarrayField(width, endian)
+            return _BitarrayField(width, endian)
         if code == "B":
-            return BytesField(width, endian)
+            return _BytesField(width, endian)
         if code in "xX":
-            return PaddingField(width, endian, value=(code == "X"))
+            return _PaddingField(width, endian, value=(code == "X"))
         raise ValueError("Not a valid code: %r" % code)
 
     def format(self) -> str:
