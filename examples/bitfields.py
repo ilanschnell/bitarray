@@ -184,6 +184,14 @@ class Struct:
     _fields: tuple
     width: int
     values: int
+
+    def __init__(self, format: str = "") -> None:
+        fields = self._fields_from_format(format)
+        object.__setattr__(self, "_fields", tuple(fields))
+        object.__setattr__(self, "width", sum(f.width for f in fields))
+        object.__setattr__(self, "values", sum(f.consumes_value
+                                               for f in fields))
+
     pat = re.compile(r"""
         ([<>])?   # optional prefix; < or >
         ([\w?])   # code character
@@ -191,7 +199,7 @@ class Struct:
         \s*       # optional whitespace
     """, re.VERBOSE)
 
-    def __init__(self, format: str = "") -> None:
+    def _fields_from_format(self, format):
         endian = DEFAULT_ENDIAN
         fields = []
         format = format.lstrip()
@@ -206,16 +214,13 @@ class Struct:
             w = int(m.group(3) or 1)
             if w == 0:
                 raise ValueError("field width cannot be zero: %r" % format)
-            fields.append(self.field_from_code(c, w, endian))
+            fields.append(self._field_from_code(c, w, endian))
             format = format[m.end():]
 
-        object.__setattr__(self, "_fields", tuple(fields))
-        object.__setattr__(self, "width", sum(f.width for f in fields))
-        object.__setattr__(self, "values", sum(f.consumes_value
-                                               for f in fields))
+        return fields
 
     @staticmethod
-    def field_from_code(code, width, endian):
+    def _field_from_code(code, width, endian):
         if code in "us":
             return IntField(width, endian, signed=(code == "s"))
         if code == "?":
