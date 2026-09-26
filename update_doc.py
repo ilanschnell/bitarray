@@ -12,6 +12,8 @@ import bitarray.bitfields
 
 BASE_URL = "https://github.com/ilanschnell/bitarray"
 
+DOC_LINK_TMPL = "`%s <" + BASE_URL + "/blob/master/doc/%s>`__"
+
 NEW_IN = {
     'bitarray':              ['2.3: optional `buffer` argument',
                               '3.4: allow initializer `bytes` or `bytearray` '
@@ -96,6 +98,7 @@ DOCS = {
     'random': ('Random Bitarrays', 'random_p.rst'),
     'sc':     ('Compression of sparse bitarrays', 'sparse_compression.rst'),
     'vl':     ('Variable length bitarray format', 'variable_length.rst'),
+    'fields': ('Bit-field structures', 'bitfields.rst'),
 }
 
 DOC_LINKS = {
@@ -210,9 +213,8 @@ def write_doc(fo, name):
 
     links = DOC_LINKS.get(name)
     if links:
-        tmpl = "`%s <" + BASE_URL + "/blob/master/doc/%s>`__"
         fo.write("\n   See also: ")
-        fo.write(", ".join(tmpl % DOCS[s] for s in links.split()))
+        fo.write(", ".join(DOC_LINK_TMPL % DOCS[s] for s in links.split()))
         fo.write("\n")
 
     new_in = NEW_IN.get(name)
@@ -287,9 +289,11 @@ The bitarray object:
     for func in sorted(bitarray.util.__all__):
         write_doc(fo, 'util.%s' % func)
 
+    link = DOC_LINK_TMPL % DOCS['fields']
     fo.write("The `bitarray.bitfields` module:\n"
              "--------------------------------\n\n"
-             "This sub-module was added in version 3.12.\n\n")
+             "This sub-module was added in version 3.12.\n"
+             "For a detailed description, see: %s\n\n" % link)
     for func in sorted(bitarray.bitfields.__all__):
         write_doc(fo, 'bitfields.%s' % func)
     write_reference_for_class(fo, bitarray.bitfields.Struct)
