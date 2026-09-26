@@ -207,7 +207,10 @@ class _PaddingField(_Field):
 
 @dataclass(frozen=True)
 class Struct:
-    "Struct(format) -> compiled struct object"
+    """Struct(format: str) -> compiled struct object
+
+Central class for packing and unpacking bit-level structures.
+"""
 
     _fields: tuple
     width: int

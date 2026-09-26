@@ -7,6 +7,7 @@ from sysconfig import get_config_var
 from io import StringIO
 
 import bitarray.util
+import bitarray.bitfields
 
 
 BASE_URL = "https://github.com/ilanschnell/bitarray"
@@ -174,7 +175,7 @@ sig_pat = re.compile(r"""
 
 def get_doc(name):
     parts = name.split('.')
-    obj = bitarray
+    obj = bitarray.bitfields if parts[0] == "Struct" else bitarray
     while parts:
         obj = getattr(obj, parts.pop(0))
 
@@ -285,6 +286,23 @@ The bitarray object:
              "This sub-module was added in version 1.2.\n\n")
     for func in sorted(bitarray.util.__all__):
         write_doc(fo, 'util.%s' % func)
+
+    fo.write("The `bitarray.bitfields` module:\n"
+             "--------------------------------\n\n"
+             "This sub-module was added in version 3.12.\n\n")
+    for func in sorted(bitarray.bitfields.__all__):
+        write_doc(fo, 'bitfields.%s' % func)
+    write_reference_for_class(fo, bitarray.bitfields.Struct)
+    fo.write("""\
+Struct attributes:
+------------------
+
+``width`` -> int
+   Total number of bits in the compiled structure.
+
+``values`` -> int
+   Number of values consumed by ``pack()`` and returned by ``unpack()``.
+""")
 
     for name in list(NEW_IN) + list(DOC_LINKS):
         assert name in _NAMES, name
