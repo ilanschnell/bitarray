@@ -28,6 +28,8 @@ Key features
 * Pickling and unpickling of bitarray objects.
 * Immutable ``frozenbitarray`` objects which are hashable
 * Fast searching for bits and bit patterns
+* ``bitfields`` sub-module for packing and unpacking fixed-width,
+  bit-level structures
 * Type hinting
 * Extensive test suite with over 600 unit tests
 * Utility module ``bitarray.util``:
@@ -78,7 +80,7 @@ Once you have installed the package, you may want to test it:
     ..........s.....................................s........................
     ......s.........................................................
     ----------------------------------------------------------------------
-    Ran 654 tests in 0.192s
+    Ran 687 tests in 0.192s
 
     OK (skipped=4)
 

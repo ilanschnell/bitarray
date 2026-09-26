@@ -7,9 +7,12 @@ from sysconfig import get_config_var
 from io import StringIO
 
 import bitarray.util
+import bitarray.bitfields
 
 
 BASE_URL = "https://github.com/ilanschnell/bitarray"
+
+DOC_LINK_TMPL = "`%s <" + BASE_URL + "/blob/master/doc/%s>`__"
 
 NEW_IN = {
     'bitarray':              ['2.3: optional `buffer` argument',
@@ -28,7 +31,7 @@ NEW_IN = {
                               '3.9: returns public `decodeiterator` object'],
     'bitarray.endian':        '3.4: replaces former `.endian()` method',
     'bitarray.extend':        '3.4: allow `bytes` object',
-    'bitarray.fill':          '3.11.1: add optional alignment argument',
+    'bitarray.fill':         '3.12: add optional alignment argument',
     'bitarray.find':         ['2.1',
                               '2.9: add optional keyword argument `right`'],
     'bitarray.frombytes':     '2.5.0: allow bytes-like argument',
@@ -95,6 +98,7 @@ DOCS = {
     'random': ('Random Bitarrays', 'random_p.rst'),
     'sc':     ('Compression of sparse bitarrays', 'sparse_compression.rst'),
     'vl':     ('Variable length bitarray format', 'variable_length.rst'),
+    'fields': ('Bit-field structures', 'bitfields.rst'),
 }
 
 DOC_LINKS = {
@@ -174,7 +178,7 @@ sig_pat = re.compile(r"""
 
 def get_doc(name):
     parts = name.split('.')
-    obj = bitarray
+    obj = bitarray.bitfields if parts[0] == "Struct" else bitarray
     while parts:
         obj = getattr(obj, parts.pop(0))
 
@@ -209,9 +213,8 @@ def write_doc(fo, name):
 
     links = DOC_LINKS.get(name)
     if links:
-        tmpl = "`%s <" + BASE_URL + "/blob/master/doc/%s>`__"
         fo.write("\n   See also: ")
-        fo.write(", ".join(tmpl % DOCS[s] for s in links.split()))
+        fo.write(", ".join(DOC_LINK_TMPL % DOCS[s] for s in links.split()))
         fo.write("\n")
 
     new_in = NEW_IN.get(name)
@@ -285,6 +288,25 @@ The bitarray object:
              "This sub-module was added in version 1.2.\n\n")
     for func in sorted(bitarray.util.__all__):
         write_doc(fo, 'util.%s' % func)
+
+    link = DOC_LINK_TMPL % DOCS['fields']
+    fo.write("The `bitarray.bitfields` module:\n"
+             "--------------------------------\n\n"
+             "This sub-module was added in version 3.12.\n"
+             "For a detailed description, see: %s\n\n" % link)
+    for func in sorted(bitarray.bitfields.__all__):
+        write_doc(fo, 'bitfields.%s' % func)
+    write_reference_for_class(fo, bitarray.bitfields.Struct)
+    fo.write("""\
+Struct attributes:
+------------------
+
+``width`` -> int
+   Total number of bits in the compiled structure.
+
+``values`` -> int
+   Number of values consumed by ``pack()`` and returned by ``unpack()``.
+""")
 
     for name in list(NEW_IN) + list(DOC_LINKS):
         assert name in _NAMES, name
