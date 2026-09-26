@@ -3,6 +3,9 @@ Bit-field structures
 
 Bitarray 3.12 added the ``bitarray.bitfields`` module, for packing and
 unpacking fixed-width, bit-level structures.
+The functionality of this module is similar to the ``struct`` module in
+Python's standard library and the ``bitstruct`` package, with the main
+difference that the ``bitfields`` module operates on ``bitarray`` objects.
 A format string describes a sequence of fields.  Values can be
 packed into a bitarray and unpacked again without requiring byte alignment.
 
