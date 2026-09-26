@@ -1,8 +1,9 @@
 Bit-field structures
 ====================
 
-The ``bitarray.bitfields`` module packs and unpacks fixed-width, bit-level
-structures.  A format string describes a sequence of fields.  Values can be
+Bitarray 3.12 added the ``bitarray.bitfields`` module, for packing and
+unpacking fixed-width, bit-level structures.
+A format string describes a sequence of fields.  Values can be
 packed into a bitarray and unpacked again without requiring byte alignment.
 
 
@@ -14,9 +15,11 @@ Use ``compile()`` to create an immutable, reusable ``Struct`` object:
 .. code-block:: python
 
     >>> from bitarray.bitfields import compile
-    >>> cf = compile("u3 s5 ? x2 h12 B16 f32")
-    >>> values = (5, -3, False, "1fa", b"AB", 1.5)
+    >>> cf = compile("u3 s5 ? x2 h12 B16 f16")
+    >>> values = (5, -3, False, "1fa", b"A\xff", 1.5)
     >>> a = cf.pack(*values)
+    >>> a
+    bitarray('1011011100010001111010110000010111111110000000001111100')
     >>> len(a) == cf.width
     True
     >>> cf.unpack(a) == values
@@ -32,10 +35,10 @@ The module-level functions may be used without explicitly compiling a format:
 .. code-block:: python
 
     >>> from bitarray.bitfields import pack, unpack
-    >>> a = pack(">u4 s4", 10, -2)
+    >>> a = pack(">u4 s5", 10, -2)
     >>> a
-    bitarray('10101110')
-    >>> unpack(">u4 s4", a)
+    bitarray('101011110')
+    >>> unpack(">u4 s5", a)
     (10, -2)
 
 Compiled versions of the most recent format strings passed to the module-level
