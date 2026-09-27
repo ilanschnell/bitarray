@@ -99,6 +99,11 @@ class StructTests(unittest.TestCase):
         # Non-breaking space
         self.assertRaises(ValueError, compile, "s8\u00a0s8")
 
+    def test_format_canonical(self):
+        for fmt in [">u7", "<f16{value}", ">x2 <u3{foo}", "<s1{a} >s7{b}",
+                    ">?1{switch} >B80{raw} <b15{array}"]:
+            self.assertEqual(compile(fmt).format(), fmt)
+
     def test_format_comments(self):
         # Note that unlike the format string itself, comments may contain
         # non-ASCII characters.
@@ -128,16 +133,18 @@ class StructTests(unittest.TestCase):
         self.assertEqual(cf.format(), fmt)
         a = cf.pack(1, 2, 3)
         values = cf.unpack(a)
+        self.assertIsInstance(values, tuple)
         self.assertEqual(values.red, 1)
         self.assertEqual(values.green, 2)
         self.assertEqual(values.blue, 3)
 
     def test_format_empty(self):
-        for fmt in "", "  ":
+        for fmt in "", " ", "  ", "\n\r\t\v":
             cf = compile(fmt)
             self.assertEqual(cf.width, 0)
             self.assertEqual(cf.values, 0)
             self.assertEqual(cf.unpack(bitarray(endian="big")), ())
+            self.assertEqual(cf.format(), "")
             a = cf.pack()
             self.assertEqual(len(a), 0)
             self.assertEqual(a.endian, DEFAULT_ENDIAN)

@@ -53,7 +53,6 @@ little-endian.
 """
 import re
 import struct
-import keyword
 import functools
 import collections
 from dataclasses import dataclass
@@ -66,7 +65,6 @@ from bitarray.util import int2ba, ba2int, hex2ba, ba2hex
 __all__ = ["Struct", "compile", "pack", "unpack"]
 
 
-KWSET = set(keyword.kwlist)
 DEFAULT_ENDIAN = "little"
 
 _ENDIAN_FROM_PREFIX = {"<": "little", ">": "big"}
@@ -252,7 +250,7 @@ Central class for packing and unpacking bit-level structures.
             return tuple()
         if not all(names):
             raise ValueError("Not all fields have a name")
-        _result_type(names)  # also validates and warms cache
+        _result_type(names)  # validate and warm cache
         return names
 
     _pat = re.compile(r"""
@@ -275,12 +273,12 @@ Central class for packing and unpacking bit-level structures.
             pre = m.group(1)
             if pre:
                 endian = _ENDIAN_FROM_PREFIX[pre]
-            c = m.group(2)
-            w = int(m.group(3) or 1)
-            name = m.group(4) or ""
-            if w == 0:
+            code = m.group(2)
+            width = int(m.group(3) or 1)
+            if width == 0:
                 raise ValueError("field width cannot be zero: %r" % format)
-            fields.append(self._field_from_code(c, w, endian, name))
+            name = m.group(4) or ""
+            fields.append(self._field_from_code(code, width, endian, name))
             format = format[m.end():]
 
         return fields
@@ -325,14 +323,11 @@ compiled format.
         if len(values) != self.values:
             raise ValueError("expected %d values to pack, got %d" %
                              (self.values, len(values)))
+        value_iter = iter(values)
         fields = self._fields
         a = bitarray(0, fields[0].endian if fields else DEFAULT_ENDIAN)
-        i = 0  # value index
-        value = None
         for field in fields:
-            if field.has_value:
-                value = values[i]
-                i += 1
+            value = next(value_iter) if field.has_value else None
             a.extend(field.pack(value))
         return a
 
@@ -351,8 +346,7 @@ Return a tuple containing values unpacked according to this compiled format.
         for field in self._fields:
             j = i + field.width
             if field.has_value:
-                b = bitarray(a[i:j], field.endian)
-                values.append(field.unpack(b))
+                values.append(field.unpack(bitarray(a[i:j], field.endian)))
             i = j
         if self._names:
             return _result_type(self._names)(*values)
