@@ -93,6 +93,12 @@ class StructTests(unittest.TestCase):
         self.assertEqual(compile("u2").format(), "<u2")
         self.assertEqual(compile(">u").format(), ">u1")
 
+    def test_format_ascii(self):
+        # Arabic-Indic digit two
+        self.assertRaises(ValueError, compile, "s\u0662")
+        # Non-breaking space
+        self.assertRaises(ValueError, compile, "s8\u00a0s8")
+
     def test_format_names(self):
         self.assertRaises(ValueError, compile, "u{}")
         # padding cannot have name
@@ -103,8 +109,6 @@ class StructTests(unittest.TestCase):
         self.assertRaises(ValueError, compile, "u{_a}")
         # name is keyword
         self.assertRaises(ValueError, compile, "u{elif}")
-        # name contains non-ASCII character
-        self.assertRaises(ValueError, compile, "u{naïve}")
         # not all fields have names
         self.assertRaises(ValueError, compile, "u{a} s")
         fmt = ">x2 <u3{red} >s5{green} <u4{blue} <x3"

@@ -20,9 +20,10 @@ Padding fields do not consume or produce values.  The input to `unpack()`
 must have exactly `cf.width` bits.  `cf.values` gives the number of
 values consumed by `pack()` and returned by `unpack()`.
 
+Format strings are restricted to ASCII.
 A value-producing field may be named by appending `{name}` to it.  If one
 field is named, all value-producing fields must be named.  Names must be
-unique ASCII identifiers, cannot be Python keywords, and cannot begin with an
+unique identifiers, cannot be Python keywords, and cannot begin with an
 underscore.  Padding fields cannot be named.  For a named format, `unpack()`
 returns a named tuple; `pack()` continues to accept values positionally.
 
@@ -269,7 +270,7 @@ Central class for packing and unpacking bit-level structures.
     (\d*)                    # optional bit width; defaults to 1
     (?:\{([A-Za-z_][A-Za-z0-9_]*)\})?  # optional ASCII name
     \s*                      # optional whitespace
-    """, re.VERBOSE)
+    """, re.VERBOSE | re.ASCII)
 
     def _fields_from_format(self, format):
         endian = DEFAULT_ENDIAN

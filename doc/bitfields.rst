@@ -52,6 +52,7 @@ need not retain and reuse a single ``Struct`` instance.
 Format strings
 --------------
 
+Format strings are restricted to ASCII.
 A format is a sequence of field codes with optional widths.  Whitespace
 between fields is optional.  The width defaults to one when omitted.
 
@@ -97,7 +98,7 @@ Named fields
 
 Value-producing fields may be named by appending ``{name}``, for example
 ``u4{version}``.  If one field is named, all value-producing fields must be
-named, and the names must be unique ASCII identifiers that are not Python
+named, and the names must be unique identifiers that are not Python
 keywords and do not begin with an underscore.  Padding fields cannot be
 named.  For a named format, ``unpack()`` returns a named tuple whose values are
 also accessible as attributes; ``pack()`` continues to accept values
