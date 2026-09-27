@@ -5,51 +5,7 @@
 """
 Pack and unpack bit-level structures using `bitarray`.
 
-A format is a sequence of fields; whitespace between fields is optional.
-Compile the format once, then use the resulting `Struct` instance to pack
-values into a bitarray or unpack a bitarray into a tuple::
-
-    from bitarray.bitfields import compile
-
-    cf = compile("u3 s5 ? x2 h12 B16 f32")
-    values = (5, -3, False, "1fa", b"AB", 1.5)
-    a = cf.pack(*values)
-    assert cf.unpack(a) == values
-
-Padding fields do not consume or produce values.  The input to `unpack()`
-must have exactly `cf.width` bits.  `cf.values` gives the number of
-values consumed by `pack()` and returned by `unpack()`.
-
-Except for comments, format strings are restricted to ASCII.
-A `#` starts a comment extending to the end of the line;
-comment text may contain non-ASCII characters.
-A value-producing field may be named by appending `{name}` to it.  If one
-field is named, all value-producing fields must be named.  Names must be
-unique identifiers, cannot be Python keywords, and cannot begin with an
-underscore.  Padding fields cannot be named.  For a named format, `unpack()`
-returns a named tuple; `pack()` continues to accept values positionally.
-
-The supported field codes are:
-
-u   An unsigned integer stored in the field width.
-s   A signed integer stored in the field width using two's-complement
-    representation.
-?   A bool stored in field width one.  Packing uses normal Python truth-value
-    testing.  Unpacking returns `bool`.
-f   An IEEE floating-point value.  The width must be 16, 32, or 64.
-h   A hexadecimal string occupying the field width.  The width must be a
-    multiple of four; packing is case-insensitive and ignores whitespace;
-    unpacking returns lowercase.
-b   A bitarray matching the field width.
-B   A bytes or bytearray value occupying the field width.  The width must be
-    a multiple of eight; unpacking always returns `bytes`.
-x   Zero-padding bits.
-X   One-padding bits.
-
-The width *N* defaults to one when omitted.  Each field may be prefixed
-with `<` for little-endian or `>` for big-endian bit and byte order.  The
-selected order applies to subsequent fields until changed; initially it is
-little-endian.
+https://github.com/ilanschnell/bitarray/blob/master/doc/bitfields.rst
 """
 import re
 import struct
