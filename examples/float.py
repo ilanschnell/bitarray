@@ -1,8 +1,9 @@
+import struct
 from math import inf, nan, ldexp
-from struct import pack, unpack
 
 from bitarray import bitarray
 from bitarray.util import ba2int, int2ba
+import bitarray.bitfields as bitfields
 
 
 class IEEEFloat:
@@ -17,7 +18,7 @@ class IEEEFloat:
 
     def __float__(self):
         a = self.to_bitarray()
-        return unpack("<" + self.struct_format, a)[0]
+        return struct.unpack("<" + self.struct_format, a)[0]
 
     def __str__(self):
         a = self.to_bitarray()
@@ -30,36 +31,28 @@ class IEEEFloat:
         return '%s("%s")' % (type(self).__name__, self)
 
     def from_float(self, x):
-        a = bitarray(pack("<" + self.struct_format, x), endian="little")
+        a = bitarray(struct.pack("<" + self.struct_format, x), endian="little")
         self.from_bitarray(a)
 
     def from_string(self, s):
-        a = bitarray(s, endian="little")
-        if len(a) != self.nbits:
-            raise ValueError("%d bits expected, got %d" % (self.nbits, len(a)))
+        a = bitarray(s)
         a.reverse()
         self.from_bitarray(a)
 
+    @property
+    def cf(self):
+        return bitfields.compile("<b%d u%d u" %
+                                 (self.fraction_bits, self.exponent_bits))
+
     def from_bitarray(self, a):
-        if len(a) != self.nbits or a.endian != "little":
-            raise ValueError("little endian bitarray of length %d expected" %
-                             self.nbits)
-        fb = self.fraction_bits
-        self.fraction = a[:fb]
-        self.exponent = ba2int(a[fb:-1]) - self.exponent_bias
-        self.sign = a[-1]
+        self.fraction, self.exponent, self.sign = self.cf.unpack(a)
+        self.exponent -= self.exponent_bias
 
     def to_bitarray(self):
-        if len(self.fraction) != self.fraction_bits:
-            raise ValueError("fraction must be a bitarray of length %d" %
-                             self.fraction_bits)
-        a = bitarray(self.fraction, endian="little")
-        a.extend(int2ba(self.exponent + self.exponent_bias,
-                        length=self.exponent_bits, endian="little"))
-        a.append(self.sign)
-        return a
+        return self.cf.pack(self.fraction,
+                            self.exponent + self.exponent_bias, self.sign)
 
-    def unpack(self):
+    def to_float(self):
         if self.exponent == self.exponent_bias + 1:
             if self.fraction.any():
                 return nan
@@ -86,7 +79,7 @@ class IEEEFloat:
 
         if self.exponent == self.exponent_bias + 1:
             print("fraction = %s" % self.fraction[::-1].to01())
-            print("  --> %s" % self.unpack())
+            print("  --> %s" % self.to_float())
             return
 
         x = ba2int(self.fraction) / (1 << self.fraction_bits)
@@ -94,7 +87,7 @@ class IEEEFloat:
             x += 1
 
         print("fraction = %.*f" % (self.decimal_digits, x))
-        print("  --> %s" % self.unpack())
+        print("  --> %s" % self.to_float())
 
 
 class Half(IEEEFloat):
@@ -238,6 +231,7 @@ class IEEEFloatTests(unittest.TestCase):
         for cls in FLOAT_TYPES:
             with self.subTest(cls=cls.__name__):
                 x = cls()
+                self.assertEqual(x.cf.width, x.nbits)
                 self.assertEqual(float(x), 0.0)
                 self.assertEqual(x.sign, 0)
                 self.assertEqual(x.exponent, -cls.exponent_bias)
@@ -248,14 +242,15 @@ class IEEEFloatTests(unittest.TestCase):
         for cls in FLOAT_TYPES:
             for _ in range(1000):
                 f = cls()
-                f.from_bitarray(urandom(cls.nbits, "little"))
+                f.from_bitarray(urandom(cls.nbits,
+                                        ["little", "big"][getrandbits(1)]))
                 s = str(f)
                 self.assertEqual(str(cls(s)), s)
                 x = float(f)
                 if isnan(x):
                     continue
                 self.assertEqual(str(cls(x)), s)
-                self.assertEqual(f.unpack(), x)
+                self.assertEqual(f.to_float(), x)
 
     def test_examples(self):
         for cls, examples in [
@@ -268,7 +263,7 @@ class IEEEFloatTests(unittest.TestCase):
                     s = s[:-3].ljust(cls.nbits + 2, s[-4])
                 for x in cls(value), cls(s):
                     self.assertEqual(float(x), value)
-                    self.assertEqual(x.unpack(), value)
+                    self.assertEqual(x.to_float(), value)
                     self.assertEqual(str(x), s)
 
     def test_numberphile(self):
@@ -287,7 +282,7 @@ class IEEEFloatTests(unittest.TestCase):
                 for value in nan, s:
                     x = cls(value)
                     self.assertTrue(isnan(float(x)))
-                    self.assertTrue(isnan(x.unpack()))
+                    self.assertTrue(isnan(x.to_float()))
 
     def test_nan_msg(self):
         msg = urandom(Double.fraction_bits)
@@ -311,7 +306,7 @@ class IEEEFloatTests(unittest.TestCase):
                 for value in expected, s:
                     f = cls(value)
                     self.assertEqual(float(f), expected)
-                    self.assertEqual(f.unpack(), expected)
+                    self.assertEqual(f.to_float(), expected)
 
     def test_exact_ints(self):
         for cls in FLOAT_TYPES:
@@ -325,7 +320,7 @@ class IEEEFloatTests(unittest.TestCase):
                 if x.sign:
                     value = -value
                 self.assertEqual(float(x), value)
-                self.assertEqual(x.unpack(), value)
+                self.assertEqual(x.to_float(), value)
 
             for _ in range(1000):
                 value = getrandbits(randint(1, fb + 1))
