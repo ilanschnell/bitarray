@@ -79,13 +79,13 @@ class _Field:
     width: int
     endian: str
     name: str
-    consumes_value = True
+    has_value = True
     code = ""
 
-    def format(self, with_name=False):
+    def format(self):
         res = "%s%s%d" % (_PREFIX_FROM_ENDIAN[self.endian],
                           self.code, self.width)
-        if with_name and self.consumes_value:
+        if self.name:
             res += "{%s}" % self.name
         return res
 
@@ -208,7 +208,7 @@ class _BytesField(_Field):
 class _PaddingField(_Field):
 
     value: bool
-    consumes_value = False
+    has_value = False
 
     def __post_init__(self):
         if self.name:
@@ -218,7 +218,7 @@ class _PaddingField(_Field):
     def code(self):
         return "X" if self.value else "x"
 
-    def pack(self, value):
+    def pack(self, unused_value):
         return self.width * bitarray("1" if self.value else "0")
 
 
@@ -243,35 +243,24 @@ Central class for packing and unpacking bit-level structures.
         fields = self._fields_from_format(format)
         object.__setattr__(self, "_fields", tuple(fields))
         object.__setattr__(self, "width", sum(f.width for f in fields))
-        object.__setattr__(self, "values", sum(f.consumes_value
-                                               for f in fields))
+        object.__setattr__(self, "values", sum(f.has_value for f in fields))
         object.__setattr__(self, "_names", self._get_names())
 
     def _get_names(self):
-        names = tuple(f.name for f in self._fields if f.consumes_value)
+        names = tuple(f.name for f in self._fields if f.has_value)
         if not any(names):
             return tuple()
         if not all(names):
             raise ValueError("Not all fields have a name")
-        if len(set(names)) < len(names):
-            raise ValueError("Duplicate field names are not permitted")
+        _result_type(names)  # also validates and warms cache
         return names
 
-    @staticmethod
-    def _check_name(name):
-        if not name.isidentifier():
-            raise ValueError("name not an identifier: %r" % name)
-        if name.startswith("_"):
-            raise ValueError("name cannot start with '_': %r" % name)
-        if name in KWSET:
-            raise ValueError("name cannot be a reserved keyword: %r" % name)
-
     _pat = re.compile(r"""
-    ([<>])?                  # optional prefix; < or >
-    ([\w?])                  # code character
-    (\d*)                    # optional bit width; defaults to 1
-    (?:\{([A-Za-z_][A-Za-z0-9_]*)\})?  # optional ASCII name
-    \s*                      # optional whitespace
+    ([<>])?         # optional prefix; < or >
+    ([\w?])         # code character
+    (\d*)           # optional bit width; defaults to 1
+    (?:\{(\w+)\})?  # optional name
+    \s*             # optional whitespace
     """, re.VERBOSE | re.ASCII)
 
     def _fields_from_format(self, format):
@@ -284,13 +273,11 @@ Central class for packing and unpacking bit-level structures.
             if m is None:
                 raise ValueError("invalid format: %r" % format)
             pre = m.group(1)
-            if pre is not None:
+            if pre:
                 endian = _ENDIAN_FROM_PREFIX[pre]
             c = m.group(2)
             w = int(m.group(3) or 1)
             name = m.group(4) or ""
-            if name:
-                self._check_name(name)
             if w == 0:
                 raise ValueError("field width cannot be zero: %r" % format)
             fields.append(self._field_from_code(c, w, endian, name))
@@ -321,8 +308,7 @@ Central class for packing and unpacking bit-level structures.
 
 Return the canonical format string reconstructed from this compiled format.
 """
-        with_name = any(f.name for f in self._fields)
-        return " ".join(field.format(with_name) for field in self._fields)
+        return " ".join(field.format() for field in self._fields)
 
     def __repr__(self):
         return "Struct(%r)" % self.format()
@@ -342,9 +328,9 @@ compiled format.
         fields = self._fields
         a = bitarray(0, fields[0].endian if fields else DEFAULT_ENDIAN)
         i = 0  # value index
+        value = None
         for field in fields:
-            value = None
-            if field.consumes_value:
+            if field.has_value:
                 value = values[i]
                 i += 1
             a.extend(field.pack(value))
@@ -364,8 +350,8 @@ Return a tuple containing values unpacked according to this compiled format.
         values = []
         for field in self._fields:
             j = i + field.width
-            b = bitarray(a[i:j], field.endian)
-            if field.consumes_value:
+            if field.has_value:
+                b = bitarray(a[i:j], field.endian)
                 values.append(field.unpack(b))
             i = j
         if self._names:
@@ -388,15 +374,11 @@ def pack(format: str, *values: Any) -> bitarray:
 Return a bitarray containing the values v1, v2, ... packed according
 to the format string.
 """
-    cf = compile(format)
-    return cf.pack(*values)
+    return compile(format).pack(*values)
 
 def unpack(format: str, a: bitarray) -> Tuple[Any, ...]:
     """unpack(format, bitarray) -> tuple
 
 Return a tuple containing values unpacked according to the format string.
 """
-    if not isinstance(a, bitarray):
-        raise TypeError("bitarray expected, got %r" % type(a).__name__)
-    cf = compile(format)
-    return cf.unpack(a)
+    return compile(format).unpack(a)
