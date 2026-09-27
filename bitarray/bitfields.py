@@ -20,7 +20,9 @@ Padding fields do not consume or produce values.  The input to `unpack()`
 must have exactly `cf.width` bits.  `cf.values` gives the number of
 values consumed by `pack()` and returned by `unpack()`.
 
-Format strings are restricted to ASCII.
+Except for comments, format strings are restricted to ASCII.
+A `#` starts a comment extending to the end of the line;
+comment text may contain non-ASCII characters.
 A value-producing field may be named by appending `{name}` to it.  If one
 field is named, all value-producing fields must be named.  Names must be
 unique identifiers, cannot be Python keywords, and cannot begin with an
@@ -275,6 +277,7 @@ Central class for packing and unpacking bit-level structures.
     def _fields_from_format(self, format):
         endian = DEFAULT_ENDIAN
         fields = []
+        format = re.sub(r"#[^\r\n]*", "", format)  # strip comments
         format = format.lstrip()
         while format:
             m = self._pat.match(format)

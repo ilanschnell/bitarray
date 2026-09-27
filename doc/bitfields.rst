@@ -52,7 +52,10 @@ need not retain and reuse a single ``Struct`` instance.
 Format strings
 --------------
 
-Format strings are restricted to ASCII.
+Except for comments, format strings are restricted to ASCII.
+A ``#`` starts a comment that extends to the end of the line.
+Comments may appear on their own line or after a field and may contain
+non-ASCII characters.
 A format is a sequence of field codes with optional widths.  Whitespace
 between fields is optional.  The width defaults to one when omitted.
 

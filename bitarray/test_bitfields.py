@@ -99,6 +99,17 @@ class StructTests(unittest.TestCase):
         # Non-breaking space
         self.assertRaises(ValueError, compile, "s8\u00a0s8")
 
+    def test_format_comments(self):
+        # Note that unlike the format string itself, comments may contain
+        # non-ASCII characters.
+        cf = compile("""
+        # IPv4 header format
+        >u4     # version  (\u0662)
+        u4      # header length
+        u6 u2   # DSCP, ECN
+        """)
+        self.assertEqual(cf.format(), ">u4 >u4 >u6 >u2")
+
     def test_format_names(self):
         self.assertRaises(ValueError, compile, "u{}")
         # padding cannot have name
