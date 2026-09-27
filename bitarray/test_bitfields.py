@@ -6,6 +6,7 @@
 Tests for bitarray.bitfields module
 """
 import math
+import pickle
 import struct
 import unittest
 import dataclasses
@@ -73,6 +74,11 @@ class StructTests(unittest.TestCase):
             self.assertEqual(cf.width, 1)
             self.assertEqual(cf.format(), "<%s1" % c)
 
+    def test_pickle(self):
+        fmt = ">x2 <u3{red} >s5{green} <u4{blue} <x3"
+        cf = compile(fmt)
+        self.assertEqual(pickle.loads(pickle.dumps(cf)), cf)
+
     def test_format(self):
         cf = compile("u3 s5 >? x2 <b4 B16 f32")
         self.assertEqual(cf.format(), "<u3 <s5 >?1 >x2 <b4 <B16 <f32")
@@ -86,6 +92,30 @@ class StructTests(unittest.TestCase):
             self.assertRaises(ValueError, compile, format)
         self.assertEqual(compile("u2").format(), "<u2")
         self.assertEqual(compile(">u").format(), ">u1")
+
+    def test_format_names(self):
+        self.assertRaises(ValueError, compile, "u{}")
+        # padding cannot have name
+        self.assertRaises(ValueError, compile, "x{pad}")
+        # duplicate names
+        self.assertRaises(ValueError, compile, "u{a} s{a}")
+        # name starts with '_'
+        self.assertRaises(ValueError, compile, "u{_a}")
+        # name is keyword
+        self.assertRaises(ValueError, compile, "u{elif}")
+        # name contains non-ASCII character
+        self.assertRaises(ValueError, compile, "u{naïve}")
+        # not all fields have names
+        self.assertRaises(ValueError, compile, "u{a} s")
+        fmt = ">x2 <u3{red} >s5{green} <u4{blue} <x3"
+        cf = compile(fmt)
+        self.assertEqual(len(cf._names), cf.values)
+        self.assertEqual(cf.format(), fmt)
+        a = cf.pack(1, 2, 3)
+        values = cf.unpack(a)
+        self.assertEqual(values.red, 1)
+        self.assertEqual(values.green, 2)
+        self.assertEqual(values.blue, 3)
 
     def test_format_empty(self):
         for fmt in "", "  ":

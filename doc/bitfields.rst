@@ -92,6 +92,27 @@ exactly the compiled width.  Padding bits are skipped during unpacking and are
 not validated.
 
 
+Named fields
+------------
+
+Value-producing fields may be named by appending ``{name}``, for example
+``u4{version}``.  If one field is named, all value-producing fields must be
+named, and the names must be unique ASCII identifiers that are not Python
+keywords and do not begin with an underscore.  Padding fields cannot be
+named.  For a named format, ``unpack()`` returns a named tuple whose values are
+also accessible as attributes; ``pack()`` continues to accept values
+positionally.
+
+.. code-block:: python
+
+    >>> cf = compile(">u4{version} u4{header_length}")
+    >>> fields = cf.unpack(cf.pack(4, 5))
+    >>> fields
+    Result(version=4, header_length=5)
+    >>> fields.version
+    4
+
+
 Endianness
 ----------
 
