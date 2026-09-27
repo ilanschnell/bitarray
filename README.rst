@@ -63,7 +63,7 @@ Once you have installed the package, you may want to test it:
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
     sys.prefix: /Users/ilan/miniforge
-    bitarray version: 3.11.0
+    bitarray version: 3.12.0
     sys.version: 3.14.5 (main, May 20 2026) [Clang 20.1.8]
     sys.abiflags: ''
     sys._is_gil_enabled(): True
@@ -80,7 +80,7 @@ Once you have installed the package, you may want to test it:
     ..........s.....................................s........................
     ......s.........................................................
     ----------------------------------------------------------------------
-    Ran 687 tests in 0.192s
+    Ran 692 tests in 0.192s
 
     OK (skipped=4)
 
@@ -327,7 +327,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.11.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.12.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -459,9 +459,12 @@ bitarray methods:
    New in version 3.4: allow ``bytes`` object
 
 
-``fill()`` -> int
+``fill(m=8, /)`` -> int
    Add zeros to the end of the bitarray, such that the length will be
-   a multiple of 8, and return the number of bits added [0..7].
+   a multiple of the positive integer ``m``, and return the number of bits
+   added (in ``range(m)``).
+
+   New in version 3.12: add optional alignment argument
 
 
 ``find(sub_bitarray, start=0, stop=<end>, /, right=False)`` -> int
@@ -1066,3 +1069,51 @@ This sub-module was added in version 1.2.
    bit-endianness (``little`` or ``big``).
 
 
+The `bitarray.bitfields` module:
+--------------------------------
+
+This sub-module was added in version 3.12.
+For a detailed description, see: `Bit-field structures <https://github.com/ilanschnell/bitarray/blob/master/doc/bitfields.rst>`__
+
+``Struct(format: str)`` -> compiled struct object
+   Central class for packing and unpacking bit-level structures.
+
+
+``compile(format)`` -> Struct
+   Compile given format string and return a compiled format object that
+   can be used to pack and/or unpack data multiple times.
+
+
+``pack(format, v1, v2, ...)`` -> bitarray
+   Return a bitarray containing the values v1, v2, ... packed according
+   to the format string.
+
+
+``unpack(format, bitarray)`` -> tuple
+   Return a tuple containing values unpacked according to the format string.
+
+
+Struct methods:
+---------------
+
+``format()`` -> str
+   Return the canonical format string reconstructed from this compiled format.
+
+
+``pack(v1, v2, ...)`` -> bitarray
+   Return a bitarray containing the values v1, v2, ... packed according to this
+   compiled format.
+
+
+``unpack(bitarray)`` -> tuple
+   Return a tuple containing values unpacked according to this compiled format.
+
+
+Struct attributes:
+------------------
+
+``width`` -> int
+   Total number of bits in the compiled structure.
+
+``values`` -> int
+   Number of values consumed by ``pack()`` and returned by ``unpack()``.
