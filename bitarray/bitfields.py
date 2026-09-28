@@ -212,7 +212,7 @@ Central class for packing and unpacking bit-level structures.
     _pat = re.compile(r"""
     ([<>])?         # optional prefix; < or >
     ([\w?])         # code character
-    (\d*)           # optional bit width; defaults to 1
+    (\d+)?          # optional bit width; defaults to 1
     (?:\{(\w+)\})?  # optional name
     \s*             # optional whitespace
     """, re.VERBOSE | re.ASCII)
