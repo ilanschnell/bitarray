@@ -205,7 +205,7 @@ Central class for packing and unpacking bit-level structures.
         if not any(names):
             return tuple()
         if not all(names):
-            raise ValueError("Not all fields have a name")
+            raise ValueError("Some but not all fields have a name")
         _result_type(names)  # validate and warm cache
         return names
 

@@ -10,7 +10,6 @@ import pickle
 import struct
 import unittest
 import dataclasses
-from itertools import product
 
 from bitarray import bitarray
 from bitarray.bitfields import (Struct, compile, pack, unpack,
@@ -116,20 +115,10 @@ class StructTests(unittest.TestCase):
         self.assertEqual(cf.format(), ">u4 >u4 >u6 >u2")
 
     def test_format_names(self):
-        self.assertRaises(ValueError, compile, "u{}")
-        # padding cannot have name
-        self.assertRaises(ValueError, compile, "x{pad}")
-        # duplicate names
-        self.assertRaises(ValueError, compile, "u{a} s{a}")
-        # name starts with '_'
-        self.assertRaises(ValueError, compile, "u{_a}")
-        # name is keyword
-        self.assertRaises(ValueError, compile, "u{elif}")
-        # not all fields have names
-        self.assertRaises(ValueError, compile, "u{a} s")
         fmt = ">x2 <u3{red} >s5{green} <u4{blue} <x3"
         cf = compile(fmt)
         self.assertEqual(len(cf._names), cf.values)
+        self.assertEqual(cf._names, ("red", "green", "blue"))
         self.assertEqual(cf.format(), fmt)
         a = cf.pack(1, 2, 3)
         values = cf.unpack(a)
@@ -137,6 +126,20 @@ class StructTests(unittest.TestCase):
         self.assertEqual(values.red, 1)
         self.assertEqual(values.green, 2)
         self.assertEqual(values.blue, 3)
+
+    def test_format_name_errors(self):
+        # invalid format: '{}'
+        self.assertRaises(ValueError, compile, "u{}")
+        # pad-bits cannot be named
+        self.assertRaises(ValueError, compile, "x{pad}")
+        # duplicate field name
+        self.assertRaises(ValueError, compile, "u{a} s{a}")
+        # name starts with '_'
+        self.assertRaises(ValueError, compile, "u{_a}")
+        # name is keyword
+        self.assertRaises(ValueError, compile, "u{elif}")
+        # some but not all fields have names
+        self.assertRaises(ValueError, compile, "u{a} s")
 
     def test_format_empty(self):
         for fmt in "", " ", "  ", "\n\r\t\v":
@@ -165,6 +168,7 @@ class StructTests(unittest.TestCase):
 
     def test_pack_value_count(self):
         cf = compile("u8 s8")
+        self.assertEqual(cf.values, 2)
         self.assertRaises(ValueError, cf.pack, 1)
         self.assertRaises(ValueError, cf.pack, 1, 2, 3)
         self.assertRaises(ValueError, compile("x").pack, 1)
@@ -231,7 +235,7 @@ class FieldTests(unittest.TestCase):
 
     def test_roundtrip(self):
         for fmt, value, tp, s in self.data:
-            for pre1, pre2 in product("<>", repeat=2):
+            for pre1, pre2 in "<<", "<>", "><", ">>":
                 mixed_fmt = "%su3 %s %su3" % (pre1, fmt, pre2)
                 values = [1, 3]
                 if value is not None:
