@@ -162,6 +162,7 @@ class _BytesField(_Field):
 class _PaddingField(_Field):
 
     value: bool
+    validate: bool
     has_value = False
 
     def __post_init__(self):
@@ -170,10 +171,19 @@ class _PaddingField(_Field):
 
     @property
     def code(self):
-        return "X" if self.value else "x"
+        return ("pP" if self.validate else "xX")[self.value]
+
+    @property
+    def bits(self):
+        return self.width * bitarray("1" if self.value else "0")
 
     def pack(self, unused_value):
-        return self.width * bitarray("1" if self.value else "0")
+        return self.bits
+
+    def unpack(self, a):
+        if self.validate and a != self.bits:
+            raise ValueError("pad-bits mismatch: %s != %s" %
+                             (a.to01(), self.bits.to01()))
 
 
 @functools.lru_cache()
@@ -253,8 +263,10 @@ Central class for packing and unpacking bit-level structures.
             return _BitarrayField(width, endian, name)
         if code == "B":
             return _BytesField(width, endian, name)
-        if code in "xX":
-            return _PaddingField(width, endian, name, value=(code == "X"))
+        if code in "pPxX":
+            return _PaddingField(width, endian, name,
+                                 validate=(code in "pP"),
+                                 value=(code in "PX"))
         raise ValueError("Not a valid code: %r" % code)
 
     def format(self) -> str:
@@ -301,8 +313,9 @@ Return a tuple containing values unpacked according to this compiled format.
         values = []
         for field in self._fields:
             j = i + field.width
+            value = field.unpack(bitarray(a[i:j], field.endian))
             if field.has_value:
-                values.append(field.unpack(bitarray(a[i:j], field.endian)))
+                values.append(value)
             i = j
         if self._names:
             return _result_type(self._names)(*values)

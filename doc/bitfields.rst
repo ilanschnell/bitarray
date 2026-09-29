@@ -18,7 +18,7 @@ Use ``compile()`` to create an immutable, reusable ``Struct`` object:
 .. code-block:: python
 
     >>> from bitarray.bitfields import compile
-    >>> cf = compile("u3 s5 ? x2 h12 B16 f16")
+    >>> cf = compile("u3 s5 ? p2 h12 B16 f16")
     >>> values = (5, -3, False, "1fa", b"A\xff", 1.5)
     >>> a = cf.pack(*values)
     >>> a
@@ -85,15 +85,14 @@ between fields is optional.  The width defaults to one when omitted.
    A ``bytes`` or ``bytearray`` value occupying the field width.  The width
    must be a multiple of eight; unpacking always returns ``bytes``.
 
-``x``
-   Zero-padding bits.
+``p`` / ``P``
+   Padding bits (``p`` zero / ``P`` one) validated during unpacking.
 
-``X``
-   One-padding bits.
+``x`` / ``X``
+   Padding bits (``x`` zero / ``X`` one) not validated.
 
 All fields must have a positive width.  The input to ``unpack()`` must have
-exactly the compiled width.  Padding bits are skipped during unpacking and are
-not validated.
+exactly the compiled width.
 
 
 Named fields
