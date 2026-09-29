@@ -198,8 +198,10 @@ class FieldTests(unittest.TestCase):
         ("<b3",  bitarray("110"), bitarray, "110"),
         ("<B16", b"AC",           bytes,    "10000010 11000010"),
         (">B16", b"A ",           bytes,    "01000001 00100000"),
-        ("<x3",  None,            None,     "000"),
+        ("<p3",  None,            None,     "000"),
         (">P5",  None,            None,     "11111"),
+        (">x4",  None,            None,     "0000"),
+        ("<X2",  None,            None,     "11"),
     ]
 
     def test_compile(self):
@@ -406,21 +408,22 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(cf.pack(bytearray(b"XYZ")), bitarray(b"XYZ", "big"))
 
     def test_padding(self):
-        cf = compile("p3 P2 x4 X2")
-        self.assertEqual(cf.width, 11)
+        cf = compile("p3 P x4 X2")
+        self.assertEqual(cf.width, 10)
         self.assertEqual(cf.values, 0)
+        self.assertEqual(cf.format(), "<p3 <P1 <x4 <X2")
         a = cf.pack()
-        self.assertEqual(a, bitarray("000 11 0000 11"))
+        self.assertEqual(a, bitarray("000 1 0000 11"))
         res = cf.unpack(a)
         self.assertEqual(res, tuple())
         # p / P padding bits are validated
-        self.assertRaises(ValueError, cf.unpack, bitarray("010 11 0000 11"))
-        self.assertRaises(ValueError, cf.unpack, bitarray("000 01 0000 11"))
+        self.assertRaises(ValueError, cf.unpack, bitarray("010 1 0000 11"))
+        self.assertRaises(ValueError, cf.unpack, bitarray("000 0 0000 11"))
         # x / X padding bits are ignored rather than validated
-        cf.unpack(bitarray("000 11 0000 10"))
-        cf.unpack(bitarray("000 11 0010 11"))
+        cf.unpack(bitarray("000 1 0000 10"))
+        cf.unpack(bitarray("000 1 0010 11"))
         # wrong length
-        self.assertRaises(ValueError, cf.unpack, bitarray("000 11 0000 1"))
+        self.assertRaises(ValueError, cf.unpack, bitarray("000 1 0000 111"))
 
 
 if __name__ == '__main__':
