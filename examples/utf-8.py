@@ -27,8 +27,10 @@ def code_point(u):
 
     # The payload can be extracted more efficiently using a mask, but this
     # does not validate the fixed prefix bits.
-    mask = bitarray(fmt.replace("1", "0").replace('x', "1"))
+    mask = bitarray(fmt.replace("1", "0").replace("x", "1"))
     assert a[mask] == payload
+    # Validate prefix bits using inverse mask.
+    assert a[~mask] == bitarray(fmt.replace("x", ""))
 
 
 for u in '\u0024 \u00a2 \u20ac \ud55c \U00010348 \U0010ffff'.split():
