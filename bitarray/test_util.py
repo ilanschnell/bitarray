@@ -1703,7 +1703,7 @@ class BaseTests(unittest.TestCase, Util):
         for m, n, alphabet in self.alphabets:
             for i in range(256):
                 c = chr(i)
-                if c in alphabet or c.isspace():
+                if c in alphabet or c in whitespace:
                     continue
                 if n == 16 and c in hexdigits:
                     continue
