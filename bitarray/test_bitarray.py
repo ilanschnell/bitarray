@@ -4399,7 +4399,7 @@ class FileTests(unittest.TestCase, Util):
 
     def test_fromfile_exported_buffer(self):
         a = bitarray()
-        v = memoryview(a)  # export buffer — prevents resize/frombytes
+        v = memoryview(a)  # export buffer - prevents resize/frombytes
         f = BytesIO(b'\x00' * 100)
         msg = "cannot resize bitarray that is exporting buffers"
         self.assertRaisesMessage(BufferError, msg, a.fromfile, f)
