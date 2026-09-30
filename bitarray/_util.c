@@ -872,7 +872,7 @@ hex2ba_lock_held(bitarrayobject *a, Py_buffer hexstr)
         int x = hex_to_int(c);
 
         if (x < 0) {
-            if (Py_UNICODE_ISSPACE(c))
+            if (Py_ISSPACE(c))  /* ASCII whitespace */
                 continue;
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
                          "base16, got '%c' (0x%02x)", c, c);
@@ -924,7 +924,7 @@ PyDoc_STRVAR(hex2ba_doc,
 \n\
 Bitarray of hexadecimal representation.  hexstr may contain any number\n\
 (including odd numbers) of hex digits (upper or lower case).\n\
-Whitespace is ignored.");
+ASCII whitespace is ignored.");
 
 /* ----------------------- base 2, 4, 8, 16, 32, 64 -------------------- */
 
@@ -1105,7 +1105,7 @@ base2ba_lock_held(bitarrayobject *a, Py_buffer asciistr, int m)
         int k, x = digit_to_int(m, c);
 
         if (x < 0) {
-            if (Py_UNICODE_ISSPACE(c))
+            if (Py_ISSPACE(c))  /* ASCII whitespace */
                 continue;
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
                          "base%d, got '%c' (0x%02x)", 1 << m, c, c);
@@ -1166,7 +1166,7 @@ PyDoc_STRVAR(base2ba_doc,
 Bitarray of base `n` ASCII representation.\n\
 Allowed values for `n` are 2, 4, 8, 16, 32 and 64.\n\
 For `n=32` the RFC 4648 Base32 alphabet is used, and for `n=64` the\n\
-standard base 64 alphabet is used.  Whitespace is ignored.");
+standard base 64 alphabet is used.  ASCII whitespace is ignored.");
 
 /* ------------------------ utility C functions ------------------------ */
 

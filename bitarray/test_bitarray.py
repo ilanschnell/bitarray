@@ -389,6 +389,9 @@ class CreateObjectTests(unittest.TestCase, Util):
 
         a = bitarray(' 0\n1\r0\t1\v0 ')
         self.assertEqual(a, bitarray('01010'))
+        # no-break space
+        a = bitarray('00\u00a011')
+        self.assertEqual(a, bitarray('0011'))
 
     def test_bytes_bytearray(self):
         for x in b'\x80', bytearray(b'\x80'):

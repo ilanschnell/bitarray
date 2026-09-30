@@ -1466,6 +1466,8 @@ class HexlifyTests(unittest.TestCase, Util):
                          bitarray('1010 1111', 'big'))
         self.assertEQUAL(hex2ba(860 * " " + '0  1D' + 590 * " ", 'little'),
                          bitarray('0000 1000 1011', 'little'))
+        self.assertRaises(ValueError, hex2ba, "f3\u00a0")  # no-break space
+        self.assertRaises(ValueError, hex2ba, b"f3\xa0")
 
     def test_hex2ba_errors(self):
         self.assertRaises(TypeError, hex2ba, 0)
@@ -1556,6 +1558,8 @@ class BaseTests(unittest.TestCase, Util):
                 c.insert(randint(0, len(c)), choice(whitespace))
             s = ''.join(c)
             self.assertEqual(base2ba(n, s), a)
+        self.assertRaises(ValueError, base2ba, 8, "3\u00a0")  # no-break space
+        self.assertRaises(ValueError, base2ba, 8, b"3\xa0")
 
     def test_ba2base_group(self):
         a = bitarray("001 011 100 111", "little")
