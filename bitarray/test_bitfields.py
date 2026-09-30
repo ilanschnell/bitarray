@@ -303,7 +303,7 @@ class FieldTests(unittest.TestCase):
             self.assertEqual(a.endian, "little")
             self.assertEqual(len(a), 1)
             self.assertEqual(a[0], bool(value))
-            v = cf.unpack(a)[0]
+            v, = cf.unpack(a)
             self.assertEqual(type(v), bool)
             self.assertIs(v, bool(value))
         self.assertRaises(ValueError, compile, "?2")
@@ -321,7 +321,7 @@ class FieldTests(unittest.TestCase):
             self.assertEqual(len(a), nbits)
             s = "1 %s" % ((nbits - 1) * "0")
             self.assertEqual(a, bitarray(s))
-            x = cf.unpack(a)[0]
+            x, = cf.unpack(a)
             self.assertEqual(x, 0.0)
             self.assertEqual(math.copysign(1.0, x), -1.0)
             # infinity
@@ -403,7 +403,7 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(bytes(a), b"ABC")
         self.assertRaises(TypeError, cf.pack, 12)
         self.assertRaises(ValueError, cf.pack, b"AB")
-        b = cf.unpack(a)[0]
+        b, = cf.unpack(a)
         self.assertIs(type(b), bytes)
         self.assertEqual(cf.pack(bytearray(b"XYZ")), bitarray(b"XYZ", "big"))
 
