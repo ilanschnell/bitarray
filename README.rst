@@ -80,7 +80,7 @@ Once you have installed the package, you may want to test it:
     ..........s.....................................s........................
     ......s.........................................................
     ----------------------------------------------------------------------
-    Ran 692 tests in 0.192s
+    Ran 693 tests in 0.192s
 
     OK (skipped=4)
 
@@ -755,7 +755,7 @@ This sub-module was added in version 1.2.
    Bitarray of base ``n`` ASCII representation.
    Allowed values for ``n`` are 2, 4, 8, 16, 32 and 64.
    For ``n=32`` the RFC 4648 Base32 alphabet is used, and for ``n=64`` the
-   standard base 64 alphabet is used.  Whitespace is ignored.
+   standard base 64 alphabet is used.  ASCII whitespace is ignored.
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
@@ -863,7 +863,7 @@ This sub-module was added in version 1.2.
 ``hex2ba(hexstr, /, endian=None)`` -> bitarray
    Bitarray of hexadecimal representation.  hexstr may contain any number
    (including odd numbers) of hex digits (upper or lower case).
-   Whitespace is ignored.
+   ASCII whitespace is ignored.
 
    New in version 3.3: ignore whitespace
 
