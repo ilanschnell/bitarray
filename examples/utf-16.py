@@ -6,7 +6,7 @@ from bitarray.bitfields import unpack
 
 #         high surrogate       low surrogate
 FORMAT = "110110xx xxxxxxxx    110111xx xxxxxxxx"
-FIELDS = ">P2 p P2 p u10{high} P2 p P3 u10{low}"
+FIELDS = ">p{110110} u10{high} p{110111} u10{low}"
 
 
 def code_point(u):
