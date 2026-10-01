@@ -57,7 +57,8 @@ A ``#`` starts a comment that extends to the end of the line.
 Comments may appear on their own line or after a field and may contain
 non-ASCII characters.
 A format is a sequence of field codes with optional widths.  Whitespace
-between fields is optional.  The width defaults to one when omitted.
+between fields is optional.  The width defaults to one when omitted, except
+when it is inferred from an explicit padding bitarray.
 
 ``u``
    An unsigned integer stored in the field width.
@@ -86,10 +87,18 @@ between fields is optional.  The width defaults to one when omitted.
    must be a multiple of eight; unpacking always returns ``bytes``.
 
 ``p`` / ``P``
-   Padding bits (``p`` zero / ``P`` one) validated during unpacking.
+   Padding bits (``p`` zero / ``P`` one) validated during unpacking.  An
+   explicit bitarray may be given in braces, for example ``p{110110}``.
 
 ``x`` / ``X``
-   Padding bits (``x`` zero / ``X`` one) not validated.
+   Padding bits (``x`` zero / ``X`` one) not validated.  These codes also
+   accept an explicit bitarray in braces.
+
+For an explicit padding bitarray, the width may be omitted and is then
+inferred from the number of bits.  If supplied, the width must match.  The
+explicit bits override the zero or one selected by the case of the code.
+Thus, ``P{11011}`` and ``p5{110_11}`` are equivalent.  Their canonical format
+is ``p5{11011}``; nonvalidating padding is similarly canonicalized to ``x``.
 
 All fields must have a positive width.  The input to ``unpack()`` must have
 exactly the compiled width.

@@ -27,12 +27,12 @@ class StructTests(unittest.TestCase):
         self.assertEqual(unpack(fmt, a), values)
 
     def test_example2(self):
-        cf = compile(">u2 s7 x3 X3 <u h4 b5 B16 f16")
+        cf = compile(">u2 s7 x{000111} <u h4 b5 B16 f16")
         self.assertIsInstance(cf, Struct)
         self.assertEqual(cf.width, 57)
         self.assertEqual(cf.values, 7)
         self.assertEqual(cf.format(),
-                         ">u2 >s7 >x3 >X3 <u1 <h4 <b5 <B16 <f16")
+                         ">u2 >s7 >x6{000111} <u1 <h4 <b5 <B16 <f16")
         values = 2, -8, 1, "e", bitarray("01110"), b"A\xff", -29.0
         a = cf.pack(*values)
         self.assertEqual(len(a), 57)
@@ -100,7 +100,8 @@ class StructTests(unittest.TestCase):
 
     def test_format_canonical(self):
         for fmt in [">u7", "<f16{value}", ">x2 <u3{foo}", "<s1{a} >s7{b}",
-                    ">?1{switch} >B80{raw} <b15{array}"]:
+                    ">?1{switch} >B80{raw} <b15{array}",
+                    "<p5{11011} >x4{1010}"]:
             self.assertEqual(compile(fmt).format(), fmt)
 
     def test_format_comments(self):
@@ -127,10 +128,15 @@ class StructTests(unittest.TestCase):
         self.assertEqual(values.green, 2)
         self.assertEqual(values.blue, 3)
 
+    def test_format_names_with_padding(self):
+        cf = compile("u3{a} p{101} u3{b}")
+        values = cf.unpack(cf.pack(2, 5))
+        self.assertEqual((values.a, values.b), (2, 5))
+
     def test_format_name_errors(self):
         # invalid format: '{}'
         self.assertRaises(ValueError, compile, "u{}")
-        # pad-bits cannot be named
+        # padding literal must contain only zeros and ones
         self.assertRaises(ValueError, compile, "x{pad}")
         # duplicate field name
         self.assertRaises(ValueError, compile, "u{a} s{a}")
@@ -424,6 +430,27 @@ class FieldTests(unittest.TestCase):
         cf.unpack(bitarray("000 1 0010 11"))
         # wrong length
         self.assertRaises(ValueError, cf.unpack, bitarray("000 1 0000 111"))
+
+    def test_padding_pattern(self):
+        for code in "pPxX":
+            cf = compile(code + "{11011}")
+            self.assertEqual(cf.width, 5)
+            self.assertEqual(cf.format(), "<%s5{11011}" % code.lower())
+            self.assertEqual(compile(cf.format()), cf)
+            self.assertEqual(cf.pack(), bitarray("11011"))
+            self.assertEqual(cf.unpack(bitarray("11011")), ())
+            if code in "pP":
+                self.assertRaises(ValueError, cf.unpack, bitarray("11001"))
+            else:
+                self.assertEqual(cf.unpack(bitarray("00100")), ())
+
+        cf = compile("P{110_11}")
+        self.assertEqual(cf.format(), "<p5{11011}")
+        self.assertEqual(cf.pack(), bitarray("11011"))
+
+    def test_padding_pattern_errors(self):
+        for fmt in "p4{11011}", "P6{11011}", "x{102}", "X{abc}", "x{_}":
+            self.assertRaises(ValueError, compile, fmt)
 
 
 if __name__ == '__main__':

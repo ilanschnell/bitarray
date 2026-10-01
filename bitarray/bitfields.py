@@ -165,17 +165,14 @@ class _PaddingField(_Field):
     validate: bool
     has_value = False
 
-    def __post_init__(self):
-        if self.name:
-            raise ValueError("pad-bits cannot be named")
-
     @property
     def code(self):
-        return ("pP" if self.validate else "xX")[self.value]
+        v = 0 if self.name else self.value
+        return ("pP" if self.validate else "xX")[v]
 
     @property
     def bits(self):
-        return self.width * bitarray("1" if self.value else "0")
+        return bitarray(self.name or self.width * ("01"[self.value]))
 
     def pack(self, unused_value):
         return self.bits
@@ -241,9 +238,17 @@ Central class for packing and unpacking bit-level structures.
                 endian = _ENDIAN_FROM_PREFIX[pre]
             code = m.group(2)
             width = int(m.group(3) or 1)
+            name = m.group(4) or ""
+            if code in "pPxX" and name:
+                name = name.replace("_", "")
+                n = len(bitarray(name))  # validates sequence of 0s and 1s
+                if m.group(3) is None:
+                    width = n
+                elif width != n:
+                    raise ValueError("pad-bits width mismatch: %d != %d" %
+                                     (width, n))
             if width == 0:
                 raise ValueError("field width cannot be zero: %r" % format)
-            name = m.group(4) or ""
             fields.append(self._field_from_code(code, width, endian, name))
             format = format[m.end():]
 
@@ -266,7 +271,7 @@ Central class for packing and unpacking bit-level structures.
         if code in "pPxX":
             return _PaddingField(width, endian, name,
                                  validate=(code in "pP"),
-                                 value=(code in "PX"))
+                                 value=(not name and code in "PX"))
         raise ValueError("Not a valid code: %r" % code)
 
     def format(self) -> str:
