@@ -107,6 +107,8 @@ class StructTests(unittest.TestCase):
     def test_format_equivalence(self):
         for fmts in [  # canonical format first
                 ("<u1", "u", "<u", "u1"),
+                ("<u1{a} <P3 <p2 <u2{b}", "u{a}P3p2u2{b}"),
+                ("<u1 <p3{101} <p2", "up3{101}p2"),
                 ("<p3{100}", "p{100}", "P3{100}", "P{1_00}", "p{_100_}"),
                 ("<x3{110}", "x{110}", "X3{110}", "X{11_0}", "x{_110_}"),
         ]:
@@ -139,6 +141,7 @@ class StructTests(unittest.TestCase):
         self.assertEqual(values.red, 1)
         self.assertEqual(values.green, 2)
         self.assertEqual(values.blue, 3)
+        self.assertNotEqual(compile("u{a}"), compile("u{b}"))
 
     def test_format_padding(self):
         cf = compile("u3{a} p{101} u3{b}")

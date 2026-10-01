@@ -219,7 +219,7 @@ Central class for packing and unpacking bit-level structures.
     ([<>])?         # optional prefix; < or >
     ([\w?])         # code character
     (\d+)?          # optional bit width; defaults to 1
-    (?:\{(\w+)\})?  # optional name
+    (?:\{(\w+)\})?  # optional name (or padding bit pattern)
     \s*             # optional whitespace
     """, re.VERBOSE | re.ASCII)
 
@@ -239,7 +239,7 @@ Central class for packing and unpacking bit-level structures.
             width = int(m.group(3) or 1)
             name = m.group(4) or ""
             if code in "pPxX" and name:
-                name = bitarray(name).to01()  # validates 0s and 1s
+                name = bitarray(name).to01()  # validate and remove '_'
                 if m.group(3) is None:
                     width = len(name)
                 elif width != len(name):
