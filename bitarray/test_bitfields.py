@@ -128,10 +128,13 @@ class StructTests(unittest.TestCase):
         self.assertEqual(values.green, 2)
         self.assertEqual(values.blue, 3)
 
-    def test_format_names_with_padding(self):
+    def test_format_padding(self):
         cf = compile("u3{a} p{101} u3{b}")
         values = cf.unpack(cf.pack(2, 5))
         self.assertEqual((values.a, values.b), (2, 5))
+
+        for fmt in "p{100}", "P3{100}", "P{10_0}", "p{_100_}":
+            self.assertEqual(compile(fmt).format(), "<p3{100}")
 
     def test_format_name_errors(self):
         # invalid format: '{}'
