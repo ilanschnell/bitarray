@@ -104,6 +104,18 @@ class StructTests(unittest.TestCase):
                     "<p5{11011} >x4{1010}"]:
             self.assertEqual(compile(fmt).format(), fmt)
 
+    def test_format_equivalence(self):
+        for fmts in [  # canonical format first
+                ("<u1", "u", "<u", "u1"),
+                ("<p3{100}", "p{100}", "P3{100}", "P{1_00}", "p{_100_}"),
+                ("<x3{110}", "x{110}", "X3{110}", "X{11_0}", "x{_110_}"),
+        ]:
+            canon_format = fmts[0]
+            cf = compile(canon_format)
+            for fmt in fmts:
+                self.assertEqual(compile(fmt).format(), canon_format)
+                self.assertEqual(compile(fmt), cf)
+
     def test_format_comments(self):
         # Note that unlike the format string itself, comments may contain
         # non-ASCII characters.
@@ -131,10 +143,8 @@ class StructTests(unittest.TestCase):
     def test_format_padding(self):
         cf = compile("u3{a} p{101} u3{b}")
         values = cf.unpack(cf.pack(2, 5))
+        self.assertEqual(values, (2, 5))
         self.assertEqual((values.a, values.b), (2, 5))
-
-        for fmt in "p{100}", "P3{100}", "P{10_0}", "p{_100_}":
-            self.assertEqual(compile(fmt).format(), "<p3{100}")
 
     def test_format_name_errors(self):
         # invalid format: '{}'
@@ -165,7 +175,8 @@ class StructTests(unittest.TestCase):
         self.assertEqual(repr(compile("u2 >s7 x")), "Struct('<u2 >s7 >x1')")
 
     def test_endian(self):
-        for fmt, endian in [("<u4", "little"), (">u4", "big"),
+        for fmt, endian in [("<u4", "little"),
+                            (">u4", "big"),
                             ("u4", DEFAULT_ENDIAN)]:
             cf = compile(fmt)
             a = cf.pack(11)
