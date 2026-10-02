@@ -20,6 +20,7 @@ doc: bitarray/_bitarray.so
 
 
 mypy:
+	mypy bitarray/bitfields.py
 	mypy bitarray/*.pyi
 	mypy bitarray/test_*.py
 	mypy examples/*.py
