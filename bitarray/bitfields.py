@@ -287,9 +287,9 @@ Central class for packing and unpacking bit-level structures.
             else:
                 value, name = False, a.to01()
         else:
-            value = (code in "PX")
+            value = code.isupper()
         return _PaddingField(width, endian, name, value=value,
-                             validate=(code in "pP"))
+                             validate=(code.lower() == "p"))
 
     def format(self) -> str:
         """format() -> str
