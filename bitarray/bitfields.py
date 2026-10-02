@@ -258,8 +258,7 @@ Central class for packing and unpacking bit-level structures.
 
         return {"h": 4, "B": 8}.get(code, 1)
 
-    @staticmethod
-    def _field_from_code(code, width, endian, name):
+    def _field_from_code(self, code, width, endian, name):
         if code in "us":
             return _IntField(width, endian, name, signed=(code == "s"))
         if code == "?":
@@ -273,20 +272,24 @@ Central class for packing and unpacking bit-level structures.
         if code == "B":
             return _BytesField(width, endian, name)
         if code in "pPxX":
-            if name:
-                a = bitarray(name)  # ignores _ in name
-                if width != len(a):
-                    raise ValueError("pad-bits width mismatch: %d != %d" %
-                                     (width, len(a)))
-                if a.count() in (0, width):
-                    value, name = bool(a[0]), ""
-                else:
-                    value, name = False, a.to01()
-            else:
-                value = (code in "PX")
-            return _PaddingField(width, endian, name, value=value,
-                                 validate=(code in "pP"))
+            return self._get_padding_field(code, width, endian, name)
         raise ValueError("invalid code: %r" % code)
+
+    @staticmethod
+    def _get_padding_field(code, width, endian, name):
+        if name:
+            a = bitarray(name)  # ignores _ in name
+            if width != len(a):
+                raise ValueError("pad-bits width mismatch: %d != %d" %
+                                 (width, len(a)))
+            if a.count() in (0, width):
+                value, name = bool(a[0]), ""
+            else:
+                value, name = False, a.to01()
+        else:
+            value = (code in "PX")
+        return _PaddingField(width, endian, name, value=value,
+                             validate=(code in "pP"))
 
     def format(self) -> str:
         """format() -> str
