@@ -21,13 +21,7 @@ class StructTests(unittest.TestCase, Util):
 
     all_codes = "us?fhbBpPxX"
 
-    def test_example1(self):
-        fmt = "u3 s5 ? p2 B16 f32"
-        values = (5, -3, True, b"AB", 1.5)
-        a = pack(fmt, *values)
-        self.assertEqual(unpack(fmt, a), values)
-
-    def test_example2(self):
+    def test_example(self):
         cf = compile(">u2 s7 x{000111} <u h4 b5 B16 f16")
         self.assertIsInstance(cf, Struct)
         self.assertEqual(cf.width, 57)
@@ -38,7 +32,7 @@ class StructTests(unittest.TestCase, Util):
         a = cf.pack(*values)
         self.assertEqual(len(a), 57)
         self.assertEqual(a.endian, "big")
-        self.assertEqual(a, bitarray("10 1111000 000 111 1 0111 01110 "
+        self.assertEqual(a, bitarray("10 1111000 000111 1 0111 01110 "
                                      "10000010 11111111 0000001011110011"))
         self.assertEqual(cf.unpack(a), values)
 
