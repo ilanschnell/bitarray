@@ -14,9 +14,10 @@ import dataclasses
 from bitarray import bitarray
 from bitarray.bitfields import (Struct, compile, pack, unpack,
                                 DEFAULT_ENDIAN, _ENDIAN_FROM_PREFIX)
+from bitarray.test_bitarray import Util
 
 
-class StructTests(unittest.TestCase):
+class StructTests(unittest.TestCase, Util):
 
     all_codes = "us?fhbBpPxX"
 
@@ -61,13 +62,18 @@ class StructTests(unittest.TestCase):
 
     def test_zero_width(self):
         for c in self.all_codes:
-            # zero width is consistently rejected
-            self.assertRaises(ValueError, compile, c + "0")
+            msg = "field width cannot be zero: '%s0'" % c
+            self.assertRaisesMessage(ValueError, msg, compile, c + "0")
 
     def test_default_width(self):
+        msgs = {
+            'f': "float field width must be 16, 32 or 64, got 1",
+            'h': "hexadecimal field width must be a multiple of 4, got 1",
+            'B': "bytes field width must be a multiple of 8, got 1",
+        }
         for c in self.all_codes:
-            if c in "fhB":
-                self.assertRaises(ValueError, compile, c)
+            if c in msgs:
+                self.assertRaisesMessage(ValueError, msgs[c], compile, c)
                 continue
             cf = compile(c)
             self.assertEqual(cf.width, 1)
@@ -149,19 +155,29 @@ class StructTests(unittest.TestCase):
         self.assertEqual(values, (2, 5))
         self.assertEqual((values.a, values.b), (2, 5))
 
-    def test_format_name_errors(self):
-        # invalid format: '{}'
-        self.assertRaises(ValueError, compile, "u{}")
-        # padding literal must contain only zeros and ones
-        self.assertRaises(ValueError, compile, "x{pad}")
-        # duplicate field name
-        self.assertRaises(ValueError, compile, "u{a} s{a}")
-        # name starts with '_'
-        self.assertRaises(ValueError, compile, "u{_a}")
-        # name is keyword
-        self.assertRaises(ValueError, compile, "u{elif}")
-        # some but not all fields have names
-        self.assertRaises(ValueError, compile, "u{a} s")
+    def test_format_errors(self):
+        for fmt, msg in [
+                ("=u8", "invalid format: '=u8'"),
+                ("1", "invalid format: '1'"),
+                ("?A", "invalid code: 'A'"),
+                ("u8j", "invalid code: 'j'"),
+                ("u{}", "invalid format: '{}'"),
+                ("?2", "bool field width must be 1, got 2"),
+                # padding literal errors
+                ("X{10p}", "expected '0' or '1' (or whitespace or "
+                           "underscore), got 'p' (0x70)"),
+                ("x{102}", "expected '0' or '1' (or whitespace or "
+                           "underscore), got '2' (0x32)"),
+                ("p3{10}", "pad-bits width mismatch: 3 != 2"),
+                ("x{_}", "field width cannot be zero: 'x{_}'"),
+                # name field errors
+                ("u{a} s{a}", "Encountered duplicate field name: 'a'"),
+                ("u{_a}", "Field names cannot start with an underscore: '_a'"),
+                ("u{if}", "Type names and field names cannot be a "
+                          "keyword: 'if'"),
+                ("u{a} s", "Some but not all fields have a name"),
+        ]:
+            self.assertRaisesMessage(ValueError, msg, compile, fmt)
 
     def test_format_empty(self):
         for fmt in "", " ", "  ", "\n\r\t\v":
@@ -461,13 +477,15 @@ class FieldTests(unittest.TestCase):
             else:
                 self.assertEqual(cf.unpack(bitarray("00100")), ())
 
-        cf = compile("P{110_11}")
-        self.assertEqual(cf.format(), "<p5{11011}")
-        self.assertEqual(cf.pack(), bitarray("11011"))
-
-    def test_padding_pattern_errors(self):
-        for fmt in "p4{11011}", "P6{11011}", "x{102}", "X{abc}", "x{_}":
-            self.assertRaises(ValueError, compile, fmt)
+        for pre in "<>":
+            cf = compile("%sP{1000_0111}" % pre)
+            self.assertEqual(cf.format(), "%sp8{10000111}" % pre)
+            a = bitarray("1000_0111")
+            b = cf.pack()
+            # Equality is independent of the bitarrays' endianness.
+            self.assertEqual(b, a)
+            self.assertEqual(b.endian, _ENDIAN_FROM_PREFIX[pre])
+            self.assertEqual(cf.unpack(a), ())
 
 
 if __name__ == '__main__':

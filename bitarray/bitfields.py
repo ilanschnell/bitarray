@@ -68,7 +68,8 @@ class _BoolField(_Field):
 
     def __post_init__(self):
         if self.width != 1:
-            raise ValueError("bool width must be 1")
+            raise ValueError("bool field width must be 1, "
+                             "got %d" % self.width)
 
     def pack(self, value):
         return bitarray("1" if value else "0")
@@ -85,8 +86,8 @@ class _FloatField(_Field):
 
     def __post_init__(self):
         if self.width not in self.formats:
-            raise ValueError("float must have width 16, 32 or 64, got %d" %
-                             self.width)
+            raise ValueError("float field width must be 16, 32 or 64, "
+                             "got %d" % self.width)
 
     def struct_format(self):
         return _PREFIX_FROM_ENDIAN[self.endian] + self.formats[self.width]
@@ -106,7 +107,8 @@ class _HexField(_Field):
 
     def __post_init__(self):
         if self.width % 4:
-            raise ValueError("width not a multiple of 4")
+            raise ValueError("hexadecimal field width must be a "
+                             "multiple of 4, got %d" % self.width)
 
     def pack(self, value):
         if not isinstance(value, str):
@@ -144,7 +146,8 @@ class _BytesField(_Field):
 
     def __post_init__(self):
         if self.width % 8:
-            raise ValueError("width not a multiple of 8")
+            raise ValueError("bytes field width must be a "
+                             "multiple of 8, got %d" % self.width)
 
     def pack(self, value):
         if not isinstance(value, (bytes, bytearray)):
@@ -270,7 +273,7 @@ Central class for packing and unpacking bit-level structures.
             return _PaddingField(width, endian, name,
                                  validate=(code in "pP"),
                                  value=(code in "PX" and not name))
-        raise ValueError("Not a valid code: %r" % code)
+        raise ValueError("invalid code: %r" % code)
 
     def format(self) -> str:
         """format() -> str
