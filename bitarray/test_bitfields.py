@@ -106,6 +106,10 @@ class StructTests(unittest.TestCase, Util):
                 ("<u1", "u", "<u", "u1"),
                 ("<u1{a} <P3 <p2 <u2{b}", "u{a}P3p2u2{b}"),
                 ("<u1 <p3{101} <p2", "up3{101}p2"),
+                ("<p1", "p1{0}", "p1{_0}", "P{0__}"),
+                ("<X1", "x1{1}", "x1{1_}", "X{_1_}"),
+                ("<p3", "p{000}", "P{000}", "P3{0_00}"),
+                ("<P3", "p{11_1}", "P{111}", "P3{111}"),
                 ("<p3{100}", "p{100}", "P3{100}", "P{1_00}", "p{_100_}"),
                 ("<x3{110}", "x{110}", "X3{110}", "X{11_0}", "x{_110_}"),
         ]:
@@ -155,8 +159,6 @@ class StructTests(unittest.TestCase, Util):
                 ("u{}", "invalid format: '{}'"),
                 ("?2", "bool field width must be 1, got 2"),
                 # padding literal errors
-                ("X{10p}", "expected '0' or '1' (or whitespace or "
-                           "underscore), got 'p' (0x70)"),
                 ("x{102}", "expected '0' or '1' (or whitespace or "
                            "underscore), got '2' (0x32)"),
                 ("p3{10}", "pad-bits width mismatch: 3 != 2"),

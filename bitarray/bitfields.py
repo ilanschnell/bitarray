@@ -245,11 +245,6 @@ Central class for packing and unpacking bit-level structures.
             width = int(m.group(3) or self._default_width(code, name))
             if width == 0:
                 raise ValueError("field width cannot be zero: %r" % format)
-            if code in "pPxX" and name:
-                name = bitarray(name).to01()  # validate and remove _
-                if width != len(name):
-                    raise ValueError("pad-bits width mismatch: %d != %d" %
-                                     (width, len(name)))
             fields.append(self._field_from_code(code, width, endian, name))
             format = format[m.end():]
 
@@ -278,12 +273,19 @@ Central class for packing and unpacking bit-level structures.
         if code == "B":
             return _BytesField(width, endian, name)
         if code in "pPxX":
-            # With an explicit pattern, case is irrelevant; canonicalize
-            # to p or x.
-            value = (code in "PX" and not name)
+            if name:
+                a = bitarray(name)  # ignores _ in name
+                if width != len(a):
+                    raise ValueError("pad-bits width mismatch: %d != %d" %
+                                     (width, len(a)))
+                if a.count() in (0, width):
+                    value, name = bool(a[0]), ""
+                else:
+                    value, name = False, a.to01()
+            else:
+                value = (code in "PX")
             return _PaddingField(width, endian, name, value=value,
                                  validate=(code in "pP"))
-
         raise ValueError("invalid code: %r" % code)
 
     def format(self) -> str:
