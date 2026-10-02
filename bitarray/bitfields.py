@@ -219,9 +219,9 @@ Central class for packing and unpacking bit-level structures.
         return names
 
     _pat = re.compile(r"""
-    ([<>])?         # optional prefix; < or >
+    ([<>])?         # optional prefix
     ([a-zA-Z?])     # code character
-    (\d+)?          # optional bit width; defaults to 1
+    (\d+)?          # optional bit width
     (?:\{(\w+)\})?  # optional name (or padding bit pattern)
     \s*             # optional whitespace
     """, re.VERBOSE | re.ASCII)
@@ -239,21 +239,25 @@ Central class for packing and unpacking bit-level structures.
             if pre:
                 endian = _ENDIAN_FROM_PREFIX[pre]
             code = m.group(2)
-            width = int(m.group(3) or 1)
             name = m.group(4) or ""
-            if code in "pPxX" and name:
-                name = bitarray(name).to01()  # validate and remove '_'
-                if m.group(3) is None:
-                    width = len(name)
-                elif width != len(name):
-                    raise ValueError("pad-bits width mismatch: %d != %d" %
-                                     (width, len(name)))
+            width = int(m.group(3) or self._default_width(code, name))
             if width == 0:
                 raise ValueError("field width cannot be zero: %r" % format)
+            if code in "pPxX" and name:
+                name = bitarray(name).to01()  # validate and remove _
+                if width != len(name):
+                    raise ValueError("pad-bits width mismatch: %d != %d" %
+                                     (width, len(name)))
             fields.append(self._field_from_code(code, width, endian, name))
             format = format[m.end():]
 
         return fields
+
+    @staticmethod
+    def _default_width(code, name):
+        if code in "pPxX" and name:
+            return len(name) - name.count("_")
+        return 1
 
     @staticmethod
     def _field_from_code(code, width, endian, name):
