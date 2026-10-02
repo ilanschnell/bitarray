@@ -163,6 +163,8 @@ class _BytesField(_Field):
 
 @dataclass(frozen=True)
 class _PaddingField(_Field):
+    # For padding fields, the inherited name attribute stores the canonical
+    # explicit bit pattern, or "" when the field uses repeated padding.
 
     value: bool
     validate: bool
@@ -256,9 +258,10 @@ Central class for packing and unpacking bit-level structures.
     @staticmethod
     def _default_width(code, name):
         if code in "pPxX" and name:
+            # Underscores do not contribute to the width.
             return len(name) - name.count("_")
-        d = {"h": 4, "B": 8}
-        return d.get(code, 1)
+
+        return {"h": 4, "B": 8}.get(code, 1)
 
     @staticmethod
     def _field_from_code(code, width, endian, name):
@@ -275,9 +278,12 @@ Central class for packing and unpacking bit-level structures.
         if code == "B":
             return _BytesField(width, endian, name)
         if code in "pPxX":
-            return _PaddingField(width, endian, name,
-                                 validate=(code in "pP"),
-                                 value=(code in "PX" and not name))
+            # With an explicit pattern, case is irrelevant; canonicalize
+            # to p or x.
+            value = (code in "PX" and not name)
+            return _PaddingField(width, endian, name, value=value,
+                                 validate=(code in "pP"))
+
         raise ValueError("invalid code: %r" % code)
 
     def format(self) -> str:
@@ -324,6 +330,7 @@ Return a tuple containing values unpacked according to this compiled format.
         values = []
         for field in self._fields:
             j = i + field.width
+            # Copy logical bits into endianness required by this field.
             value = field.unpack(bitarray(a[i:j], field.endian))
             if field.has_value:
                 values.append(value)
