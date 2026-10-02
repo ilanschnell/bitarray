@@ -57,8 +57,11 @@ A ``#`` starts a comment that extends to the end of the line.
 Comments may appear on their own line or after a field and may contain
 non-ASCII characters.
 A format is a sequence of field codes with optional widths.  Whitespace
-between fields is optional.  The width defaults to one when omitted, except
-when it is inferred from an explicit padding bitarray.
+between fields is optional.
+The width defaults to one when omitted.  For ``h`` and ``B``,
+it defaults to 4 and 8, respectively.
+For a padding field with an explicit bit pattern, the width is inferred
+from that pattern.
 
 ``u``
    An unsigned integer stored in the field width.

@@ -22,7 +22,7 @@ class StructTests(unittest.TestCase, Util):
     all_codes = "us?fhbBpPxX"
 
     def test_example(self):
-        cf = compile(">u2 s7 x{000111} <u h4 b5 B16 f16")
+        cf = compile(">u2 s7 x{000111} <u h b5 B16 f16")
         self.assertIsInstance(cf, Struct)
         self.assertEqual(cf.width, 57)
         self.assertEqual(cf.values, 7)
@@ -60,18 +60,15 @@ class StructTests(unittest.TestCase, Util):
             self.assertRaisesMessage(ValueError, msg, compile, c + "0")
 
     def test_default_width(self):
-        msgs = {
-            'f': "float field width must be 16, 32 or 64, got 1",
-            'h': "hexadecimal field width must be a multiple of 4, got 1",
-            'B': "bytes field width must be a multiple of 8, got 1",
-        }
         for c in self.all_codes:
-            if c in msgs:
-                self.assertRaisesMessage(ValueError, msgs[c], compile, c)
+            if c == "f":
+                msg = "float field width must be 16, 32 or 64, got 1"
+                self.assertRaisesMessage(ValueError, msg, compile, c)
                 continue
             cf = compile(c)
-            self.assertEqual(cf.width, 1)
-            self.assertEqual(cf.format(), "<%s1" % c)
+            width = {"h": 4, "B": 8}.get(c, 1)
+            self.assertEqual(cf.width, width)
+            self.assertEqual(cf.format(), "<%s%d" % (c, width))
 
     def test_pickle(self):
         fmt = ">x2 <u3{red} >s5{green} <u4{blue} <x3"
@@ -163,6 +160,7 @@ class StructTests(unittest.TestCase, Util):
                 ("x{102}", "expected '0' or '1' (or whitespace or "
                            "underscore), got '2' (0x32)"),
                 ("p3{10}", "pad-bits width mismatch: 3 != 2"),
+                ("p0{1}", "field width cannot be zero: 'p0{1}'"),
                 ("x{_}", "field width cannot be zero: 'x{_}'"),
                 # name field errors
                 ("u{a} s{a}", "Encountered duplicate field name: 'a'"),
@@ -413,6 +411,7 @@ class FieldTests(unittest.TestCase):
         self.assertRaises(TypeError, cf.pack, b"1fa73")
         self.assertRaises(ValueError, cf.pack, "1fa7")
         self.assertRaises(ValueError, cf.unpack, bitarray(19))
+        self.assertEqual(compile("h").format(), "<h4")
 
     def test_bitarray(self):
         cf = compile("b11")
@@ -439,6 +438,7 @@ class FieldTests(unittest.TestCase):
         b, = cf.unpack(a)
         self.assertIs(type(b), bytes)
         self.assertEqual(cf.pack(bytearray(b"XYZ")), bitarray(b"XYZ", "big"))
+        self.assertEqual(compile("B").format(), "<B8")
 
     def test_padding(self):
         cf = compile("p3 P x4 X2")

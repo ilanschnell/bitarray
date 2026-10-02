@@ -257,7 +257,8 @@ Central class for packing and unpacking bit-level structures.
     def _default_width(code, name):
         if code in "pPxX" and name:
             return len(name) - name.count("_")
-        return 1
+        d = {"h": 4, "B": 8}
+        return d.get(code, 1)
 
     @staticmethod
     def _field_from_code(code, width, endian, name):
