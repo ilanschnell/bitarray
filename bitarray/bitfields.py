@@ -217,7 +217,7 @@ Central class for packing and unpacking bit-level structures.
 
     _pat = re.compile(r"""
     ([<>])?         # optional prefix; < or >
-    ([\w?])         # code character
+    ([a-zA-Z?])     # code character
     (\d+)?          # optional bit width; defaults to 1
     (?:\{(\w+)\})?  # optional name (or padding bit pattern)
     \s*             # optional whitespace
