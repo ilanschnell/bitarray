@@ -1,7 +1,6 @@
-2026-XX-XX  3.12.0:
+2026-10-XX  3.12.0:
 -------------------
   * add `bitfields` sub-module, see [Bit-field structures](bitfields.rst)
-    and #256
   * add optional alignment argument to `bitarray.fill()`
   * fix compliation problems on pypy 3.12, see #255
   * add [IEEE Float 16, 32 and 64-bit example](../examples/float.py)
