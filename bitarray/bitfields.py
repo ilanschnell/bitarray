@@ -203,11 +203,6 @@ class _PaddingField(_Field):
                              (a.to01(), self.bits.to01()))
 
 
-@functools.lru_cache()
-def _result_type(names):
-    return collections.namedtuple("Unpacked", names)
-
-
 @dataclass(frozen=True)
 class Struct:
     """Struct(format: str) -> compiled struct object
@@ -233,8 +228,13 @@ Central class for packing and unpacking bit-level structures.
             return ()
         if not all(names):
             raise ValueError("Some but not all fields have a name")
-        _result_type(names)  # validate and warm cache
+        self._result_type(names)  # validate and warm cache
         return names
+
+    @staticmethod
+    @functools.lru_cache()
+    def _result_type(names):
+        return collections.namedtuple("Unpacked", names)
 
     _pat = re.compile(r"""
     ([<>])?         # optional prefix
@@ -341,7 +341,7 @@ Return a tuple containing values unpacked according to this compiled format.
                 values.append(value)
             i = j
         if self._names:
-            return _result_type(self._names)(*values)
+            return self._result_type(self._names)(*values)
         return tuple(values)
 
 
