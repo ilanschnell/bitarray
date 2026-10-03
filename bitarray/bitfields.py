@@ -170,6 +170,22 @@ class _PaddingField(_Field):
     validate: bool
     has_value = False
 
+    @classmethod
+    def from_code(cls, code, width, endian, name):
+        if name:
+            a = bitarray(name)  # validates and ignores underscores
+            if width != len(a):
+                raise ValueError("pad-bits width mismatch: %d != %d" %
+                                 (width, len(a)))
+            if a.count() in (0, width):
+                value, name = bool(a[0]), ""
+            else:
+                value, name = False, a.to01()
+        else:
+            value = code.isupper()
+        return cls(width, endian, name, value=value,
+                   validate=(code.lower() == "p"))
+
     @property
     def code(self):
         return ("pP" if self.validate else "xX")[self.value]
@@ -255,10 +271,10 @@ Central class for packing and unpacking bit-level structures.
         if code in "pPxX" and name:
             # Underscores do not contribute to the width.
             return len(name) - name.count("_")
-
         return {"h": 4, "B": 8}.get(code, 1)
 
-    def _field_from_code(self, code, width, endian, name):
+    @staticmethod
+    def _field_from_code(code, width, endian, name):
         if code in "us":
             return _IntField(width, endian, name, signed=(code == "s"))
         if code == "?":
@@ -272,24 +288,8 @@ Central class for packing and unpacking bit-level structures.
         if code == "B":
             return _BytesField(width, endian, name)
         if code in "pPxX":
-            return self._get_padding_field(code, width, endian, name)
+            return _PaddingField.from_code(code, width, endian, name)
         raise ValueError("invalid code: %r" % code)
-
-    @staticmethod
-    def _get_padding_field(code, width, endian, name):
-        if name:
-            a = bitarray(name)  # ignores _ in name
-            if width != len(a):
-                raise ValueError("pad-bits width mismatch: %d != %d" %
-                                 (width, len(a)))
-            if a.count() in (0, width):
-                value, name = bool(a[0]), ""
-            else:
-                value, name = False, a.to01()
-        else:
-            value = code.isupper()
-        return _PaddingField(width, endian, name, value=value,
-                             validate=(code.lower() == "p"))
 
     def format(self) -> str:
         """format() -> str
