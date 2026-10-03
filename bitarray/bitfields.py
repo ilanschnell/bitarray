@@ -205,7 +205,7 @@ class _PaddingField(_Field):
 
 @functools.lru_cache()
 def _result_type(names):
-    return collections.namedtuple("Result", names)
+    return collections.namedtuple("Unpacked", names)
 
 
 @dataclass(frozen=True)
@@ -230,7 +230,7 @@ Central class for packing and unpacking bit-level structures.
     def _get_names(self):
         names = tuple(f.name for f in self._fields if f.has_value)
         if not any(names):
-            return tuple()
+            return ()
         if not all(names):
             raise ValueError("Some but not all fields have a name")
         _result_type(names)  # validate and warm cache

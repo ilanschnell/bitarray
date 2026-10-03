@@ -123,7 +123,7 @@ positionally.
     >>> cf = compile(">u4{version} u4{header_length}")
     >>> fields = cf.unpack(cf.pack(4, 5))
     >>> fields
-    Result(version=4, header_length=5)
+    Unpacked(version=4, header_length=5)
     >>> fields.version
     4
 

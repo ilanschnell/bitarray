@@ -108,9 +108,9 @@ class StructTests(unittest.TestCase, Util):
                 ("<u1 <p3{101} <p2", "up3{101}p2"),
                 ("<p1", "p1{0}", "p1{_0}", "P{0__}"),
                 ("<X1", "x1{1}", "x1{1_}", "X{_1_}"),
-                ("<p3", "p{000}", "P{000}", "P3{0_00}"),
-                ("<P3", "p{11_1}", "P{111}", "P3{111}"),
-                ("<p3{100}", "p{100}", "P3{100}", "P{1_00}", "p{_100_}"),
+                ("<p2", "p{00}", "P{00}", "P2{00}", "P{0_0}", "P2{_00_}"),
+                ("<P3", "p{11_1}", "P{111}", "p3{111}", "P3{111_}"),
+                ("<p2{10}", "p{10}", "P2{10}", "p{1_0}", "P{_10_}"),
                 ("<x3{110}", "x{110}", "X3{110}", "X{11_0}", "x{_110_}"),
         ]:
             canon_format = fmts[0]
@@ -139,6 +139,7 @@ class StructTests(unittest.TestCase, Util):
         a = cf.pack(1, 2, 3)
         values = cf.unpack(a)
         self.assertIsInstance(values, tuple)
+        self.assertEqual(type(values).__name__, "Unpacked")
         self.assertEqual(values.red, 1)
         self.assertEqual(values.green, 2)
         self.assertEqual(values.blue, 3)
