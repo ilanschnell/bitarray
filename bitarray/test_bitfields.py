@@ -150,10 +150,10 @@ class StructTests(unittest.TestCase, Util):
         self.assertNotEqual(compile("u{a}"), compile("u{b}"))
 
     def test_format_padding(self):
-        cf = compile("u3{a} p{101} u3{b}")
+        cf = compile("u3{a} p{101} u3{A}")
         values = cf.unpack(cf.pack(2, 5))
         self.assertEqual(values, (2, 5))
-        self.assertEqual((values.a, values.b), (2, 5))
+        self.assertEqual((values.a, values.A), (2, 5))
 
     def test_format_errors(self):
         for fmt, msg in [
@@ -172,6 +172,8 @@ class StructTests(unittest.TestCase, Util):
                 # name field errors
                 ("u{a} s{a}", "Encountered duplicate field name: 'a'"),
                 ("u{_a}", "Field names cannot start with an underscore: '_a'"),
+                ("u{01}", "Type names and field names must be valid "
+                          "identifiers: '01'"),
                 ("u{if}", "Type names and field names cannot be a "
                           "keyword: 'if'"),
                 ("u{a} s", "Some but not all fields have a name"),
@@ -272,6 +274,18 @@ class FieldTests(unittest.TestCase):
                     self.assertEqual(len(b), 1)
                     self.assertIs(type(b[0]), tp)
                     self.assertEqual(b[0], value)
+
+    def test_unpack_named(self):
+        for fmt, value, tp, s in self.data:
+            if tp is None:
+                continue
+            a = bitarray(s)
+            b = unpack(fmt + "{Foo}", a)
+            self.assertIsInstance(b, tuple)
+            self.assertEqual(len(b), 1)
+            self.assertIs(b[0], b.Foo)
+            self.assertIs(type(b.Foo), tp)
+            self.assertEqual(b.Foo, value)
 
     def test_roundtrip(self):
         for fmt, value, tp, s in self.data:
