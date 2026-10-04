@@ -68,6 +68,9 @@ class StructTests(unittest.TestCase, Util):
             cf = compile(c)
             width = {"h": 4, "B": 8}.get(c, 1)
             self.assertEqual(cf.width, width)
+            if c == "?":
+                self.assertEqual(cf.format(), "<?")
+                continue
             self.assertEqual(cf.format(), "<%s%d" % (c, width))
 
     def test_pickle(self):
@@ -77,7 +80,7 @@ class StructTests(unittest.TestCase, Util):
 
     def test_format(self):
         cf = compile("u3 s5 >? x2 <b4 B16 f32")
-        self.assertEqual(cf.format(), "<u3 <s5 >?1 >x2 <b4 <B16 <f32")
+        self.assertEqual(cf.format(), "<u3 <s5 >? >x2 <b4 <B16 <f32")
 
         for fmt in ">u3 <x1 b4", ">u3<xb4", ">u3<x<b4", " >u3 <x b4 ":
             cf = compile(fmt)
@@ -97,13 +100,14 @@ class StructTests(unittest.TestCase, Util):
 
     def test_format_canonical(self):
         for fmt in [">u7", "<f16{value}", ">x2 <u3{foo}", "<s1{a} >s7{b}",
-                    ">?1{switch} >B80{raw} <b15{array}",
+                    ">?{switch} >B80{raw} <b15{array}",
                     "<p5{11011} >x4{1010}"]:
             self.assertEqual(compile(fmt).format(), fmt)
 
     def test_format_equivalence(self):
         for fmts in [  # canonical format first
                 ("<u1", "u", "<u", "u1"),
+                ("<u1 <?", "u?", "\tu\v?\n", " u\r?1"),
                 ("<u1{a} <P3 <p2 <u2{b}", "u{a}P3p2u2{b}"),
                 ("<u1 <p3{101} <p2", "up3{101}p2"),
                 ("<p1", "p1{0}", "p1{_0}", "P{0__}"),
@@ -224,7 +228,7 @@ class FieldTests(unittest.TestCase):
         ("<u11", 91,              int,      "11011010000"),
         (">u12", 1,               int,      "000000000001"),
         ("<s9",  -13,             int,      "110011111"),
-        ("<?1",  True,            bool,     "1"),
+        ("<?",   True,            bool,     "1"),
         ("<f16", -1.5,            float,    "0000000001 11110 1"),
         (">f16",  1.875,          float,    "0 01111 1110000000"),
         ("<h12", "af1",           str,      "0101 1111 1000"),
@@ -373,8 +377,8 @@ class FieldTests(unittest.TestCase):
 
     def test_float_1_5(self):
         for nbits, exp_bits in self.float_sizes:
-            for ef, endian in ("<", "little"), (">", "big"):
-                cf = compile("%sf%d" % (ef, nbits))
+            for pre, endian in _ENDIAN_FROM_PREFIX.items():
+                cf = compile("%sf%d" % (pre, nbits))
                 a = cf.pack(1.5)
                 self.assertEqual(len(a), nbits)
                 self.assertEqual(a.endian, endian)
@@ -474,14 +478,14 @@ class FieldTests(unittest.TestCase):
             else:
                 self.assertEqual(cf.unpack(bitarray("00100")), ())
 
-        for pre in "<>":
+        for pre, endian in _ENDIAN_FROM_PREFIX.items():
             cf = compile("%sP{1000_0111}" % pre)
             self.assertEqual(cf.format(), "%sp8{10000111}" % pre)
             a = bitarray("1000_0111")
             b = cf.pack()
             # Equality is independent of the bitarrays' endianness.
             self.assertEqual(b, a)
-            self.assertEqual(b.endian, _ENDIAN_FROM_PREFIX[pre])
+            self.assertEqual(b.endian, endian)
             self.assertEqual(cf.unpack(a), ())
 
 

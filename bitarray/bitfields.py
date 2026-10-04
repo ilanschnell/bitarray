@@ -37,8 +37,8 @@ class _Field:
     code = ""
 
     def format(self):
-        res = "%s%s%d" % (_PREFIX_FROM_ENDIAN[self.endian],
-                          self.code, self.width)
+        res = "%s%s%s" % (_PREFIX_FROM_ENDIAN[self.endian],
+                          self.code, "" if self.code == "?" else self.width)
         if self.name:
             res += "{%s}" % self.name
         return res

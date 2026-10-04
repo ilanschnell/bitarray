@@ -151,11 +151,12 @@ Canonical formats
 -----------------
 
 ``Struct.format()`` returns a canonical representation in which every field
-has an explicit endian prefix and width:
+has an explicit endian prefix; widths are explicit except for ``?``, whose
+width is always one:
 
 .. code-block:: python
 
-    >>> compile("u3 >s5 x").format()
-    '<u3 >s5 >x1'
+    >>> compile("u3 >s5 x ?").format()
+    '<u3 >s5 >x1 >?'
 
 Compiling a canonical format produces an equal ``Struct`` object.
