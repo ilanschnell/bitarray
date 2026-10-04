@@ -108,6 +108,8 @@ class StructTests(unittest.TestCase, Util):
                 ("<?", "?", "?1", "<?1"),
                 ("<u1 <?", "u?", "\tu\v?\n", " u\r?1"),
                 ("<u1{a} <P3 <p2 <u2{b}", "u{a}P3p2u2{b}"),
+                ("<u9 <u9", "u9u9"),
+                ("<u22 <u1", "u22u"),
                 ("<u1 <p3{101} <p2", "up3{101}p2"),
                 ("<p1", "p1{0}", "p1{_0}", "P{0__}"),
                 ("<X1", "x1{1}", "x1{1_}", "X{_1_}"),
@@ -158,6 +160,7 @@ class StructTests(unittest.TestCase, Util):
     def test_format_errors(self):
         for fmt, msg in [
                 ("=u8", "invalid format: '=u8'"),
+                ("u 9u9", "invalid format: '9u9'"),
                 ("1", "invalid format: '1'"),
                 ("?A", "invalid code: 'A'"),
                 ("u8j", "invalid code: 'j'"),
@@ -181,8 +184,9 @@ class StructTests(unittest.TestCase, Util):
             self.assertRaisesMessage(ValueError, msg, compile, fmt)
 
     def test_format_empty(self):
-        for fmt in "", " ", "  ", "\n\r\t\v":
+        for fmt in "", " ", "  ", "\n\r\t\v", "# comment", "#":
             cf = compile(fmt)
+            self.assertEqual(cf, Struct())
             self.assertEqual(cf.width, 0)
             self.assertEqual(cf.values, 0)
             self.assertEqual(cf.unpack(bitarray(endian="big")), ())
@@ -326,28 +330,46 @@ class FieldTests(unittest.TestCase):
         self.assertEqual((x.endian, y.endian), ("little", "big"))
 
     def test_unsigned_int(self):
-        cf = compile("<u20")
-        self.assertEqual(cf.width, 20)
-        self.assertEqual(cf.values, 1)
-        a = cf.pack(1 << 19)
-        self.assertEqual(a.endian, "little")
-        self.assertEqual(a.to01(), "00000000000000000001")
-        self.assertEqual(cf.unpack(a), (1 << 19, ))
-        self.assertRaises(OverflowError, cf.pack, -1)
-        self.assertRaises(OverflowError, cf.pack, 1 << 20)
-        self.assertRaises(TypeError, cf.pack, 1.0)
+        cf = compile("<u9")
+        self.assertRaises(TypeError, cf.pack, -1.0)
+        for nbits in range(1, 20):
+            for pre, endian in _ENDIAN_FROM_PREFIX.items():
+                cf = compile("%su%d" % (pre, nbits))
+                self.assertEqual(cf.width, nbits)
+                self.assertEqual(cf.values, 1)
+                limit = 1 << nbits
+                for v, s in [(0, nbits * "0"),
+                             (1, "1" + (nbits - 1) * "0"),
+                             (limit - 1, nbits * "1")]:
+                    a = cf.pack(v)
+                    self.assertEqual(a.endian, endian)
+                    self.assertEqual(a.to01(), s if pre == "<" else s[::-1])
+                    self.assertEqual(cf.unpack(a), (v, ))
+                self.assertRaises(OverflowError, cf.pack, -1)
+                self.assertRaises(OverflowError, cf.pack, limit)
 
     def test_signed_int(self):
         cf = compile("<s10")
-        self.assertEqual(cf.width, 10)
-        self.assertEqual(cf.values, 1)
-        a = cf.pack(-1)
-        self.assertEqual(a.endian, "little")
-        self.assertEqual(a.to01(), "1111111111")
-        self.assertEqual(cf.unpack(a), (-1, ))
-        self.assertRaises(OverflowError, cf.pack, -513)
-        self.assertRaises(OverflowError, cf.pack, 512)
         self.assertRaises(TypeError, cf.pack, -2.0)
+        for nbits in range(1, 20):
+            for pre, endian in _ENDIAN_FROM_PREFIX.items():
+                cf = compile("%ss%d" % (pre, nbits))
+                self.assertEqual(cf.width, nbits)
+                self.assertEqual(cf.values, 1)
+                limit = 1 << (nbits - 1)
+                for v, s in [(0, nbits * "0"),
+                             (1, "1" + (nbits - 1) * "0"),
+                             (-1, nbits * "1"),
+                             (limit - 1, (nbits - 1) * "1" + "0"),
+                             (-limit, (nbits - 1) * "0" + "1")]:
+                    if nbits == 1 and v == 1:
+                        continue
+                    a = cf.pack(v)
+                    self.assertEqual(a.endian, endian)
+                    self.assertEqual(a.to01(), s if pre == "<" else s[::-1])
+                    self.assertEqual(cf.unpack(a), (v, ))
+                self.assertRaises(OverflowError, cf.pack, -limit - 1)
+                self.assertRaises(OverflowError, cf.pack, limit)
 
     def test_bool(self):
         cf = compile("?")
