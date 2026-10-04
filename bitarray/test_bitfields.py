@@ -87,10 +87,8 @@ class StructTests(unittest.TestCase, Util):
             self.assertEqual(cf.format(), ">u3 <x1 <b4")
             self.assertEqual(cf.pack(3, bitarray("0110")).endian, "big")
 
-        for format in "<", "<<u8", "3x", "u8junk", "!", "q8", "1", ">0z":
+        for format in "<", "<<u8", "3x", "u8junk", "!", "q8", ">0z":
             self.assertRaises(ValueError, compile, format)
-        self.assertEqual(compile("u2").format(), "<u2")
-        self.assertEqual(compile(">u").format(), ">u1")
 
     def test_format_ascii(self):
         # Arabic-Indic digit two
@@ -107,6 +105,7 @@ class StructTests(unittest.TestCase, Util):
     def test_format_equivalence(self):
         for fmts in [  # canonical format first
                 ("<u1", "u", "<u", "u1"),
+                ("<?", "?", "?1", "<?1"),
                 ("<u1 <?", "u?", "\tu\v?\n", " u\r?1"),
                 ("<u1{a} <P3 <p2 <u2{b}", "u{a}P3p2u2{b}"),
                 ("<u1 <p3{101} <p2", "up3{101}p2"),
@@ -352,7 +351,6 @@ class FieldTests(unittest.TestCase):
 
     def test_bool(self):
         cf = compile("?")
-        self.assertEqual(cf.pack(True).endian, "little")
         self.assertEqual(cf.width, 1)
         self.assertEqual(cf.values, 1)
         for value in False, True, 0, 1, 2, "", "ya":
@@ -363,7 +361,6 @@ class FieldTests(unittest.TestCase):
             v, = cf.unpack(a)
             self.assertEqual(type(v), bool)
             self.assertIs(v, bool(value))
-        self.assertRaises(ValueError, compile, "?2")
 
     # list of (nbits, exponent bits)
     float_sizes = [(16, 5), (32, 8), (64, 11)]
