@@ -147,6 +147,7 @@ class StructTests(unittest.TestCase, Util):
         self.assertEqual(values.red, 1)
         self.assertEqual(values.green, 2)
         self.assertEqual(values.blue, 3)
+        self.assertEqual(values._fields, ("red", "green", "blue"))
         self.assertNotEqual(compile("u{a}"), compile("u{b}"))
 
     def test_format_padding(self):
@@ -246,10 +247,13 @@ class FieldTests(unittest.TestCase):
 
     def test_compile(self):
         for fmt, value, tp, s in self.data:
-            cf = compile(fmt)
-            self.assertEqual(cf.width, len(bitarray(s)))
-            self.assertEqual(cf.values, 0 if value is None else 1)
-            self.assertEqual(cf.format(), fmt)
+            for optname in "", "{Foo}", "{bar_}":
+                if optname and value is None:
+                    continue
+                cf = compile(fmt + optname)
+                self.assertEqual(cf.width, len(bitarray(s)))
+                self.assertEqual(cf.values, 0 if value is None else 1)
+                self.assertEqual(cf.format(), fmt + optname)
 
     def test_pack(self):
         for fmt, value, tp, s in self.data:
@@ -277,12 +281,13 @@ class FieldTests(unittest.TestCase):
 
     def test_unpack_named(self):
         for fmt, value, tp, s in self.data:
-            if tp is None:
+            if value is None:
                 continue
             a = bitarray(s)
             b = unpack(fmt + "{Foo}", a)
             self.assertIsInstance(b, tuple)
             self.assertEqual(len(b), 1)
+            self.assertEqual(b._fields, ("Foo", ))
             self.assertIs(b[0], b.Foo)
             self.assertIs(type(b.Foo), tp)
             self.assertEqual(b.Foo, value)
@@ -492,6 +497,7 @@ class FieldTests(unittest.TestCase):
             else:
                 self.assertEqual(cf.unpack(bitarray("00100")), ())
 
+    def test_padding_pattern_endianness(self):
         for pre, endian in _ENDIAN_FROM_PREFIX.items():
             cf = compile("%sP{1000_0111}" % pre)
             self.assertEqual(cf.format(), "%sp8{10000111}" % pre)
