@@ -28,10 +28,10 @@ Use ``compile()`` to create an immutable, reusable ``Struct`` object:
     >>> cf.unpack(a) == values
     True
 
-The compiled ``Struct`` object is immutable.  Its ``width`` attribute is the
-total number of bits in the structure, and ``values`` is the number of values
-consumed by ``pack()`` and returned by ``unpack()``.  Padding fields contribute
-to ``width`` but not to ``values``.
+The compiled ``Struct`` object is immutable and picklable.
+Its ``width`` attribute is the total number of bits in the structure,
+and ``values`` is the number of values consumed by ``pack()`` and returned
+by ``unpack()``.  Padding fields contribute to ``width`` but not to ``values``.
 
 The module-level functions may be used without explicitly compiling a format:
 
