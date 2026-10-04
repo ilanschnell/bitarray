@@ -36,9 +36,12 @@ class _Field:
     has_value = True
     code = ""
 
+    @property
+    def prefix(self):
+        return _PREFIX_FROM_ENDIAN[self.endian]
+
     def format(self):
-        res = "%s%s%s" % (_PREFIX_FROM_ENDIAN[self.endian],
-                          self.code, "" if self.code == "?" else self.width)
+        res = "%s%s%s" % (self.prefix, self.code, self.width)
         if self.name:
             res += "{%s}" % self.name
         return res
@@ -77,6 +80,12 @@ class _BoolField(_Field):
     def unpack(self, a):
         return bool(a[0])
 
+    def format(self):
+        res = "%s?" % self.prefix
+        if self.name:
+            res += "{%s}" % self.name
+        return res
+
 
 @dataclass(frozen=True)
 class _FloatField(_Field):
@@ -90,7 +99,7 @@ class _FloatField(_Field):
                              "got %d" % self.width)
 
     def struct_format(self):
-        return _PREFIX_FROM_ENDIAN[self.endian] + self.formats[self.width]
+        return self.prefix + self.formats[self.width]
 
     def pack(self, value):
         return bitarray(struct.pack(self.struct_format(), value),
