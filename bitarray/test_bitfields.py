@@ -5,6 +5,7 @@
 """
 Tests for bitarray.bitfields module
 """
+import os
 import math
 import pickle
 import struct
@@ -12,6 +13,7 @@ import unittest
 import dataclasses
 
 from bitarray import bitarray
+from bitarray.util import urandom
 from bitarray.bitfields import (Struct, compile, pack, unpack,
                                 DEFAULT_ENDIAN, _ENDIAN_FROM_PREFIX)
 from bitarray.test_bitarray import Util
@@ -50,7 +52,7 @@ class StructTests(unittest.TestCase, Util):
         self.assertEqual(len(cf._fields), 7)
         self.assertEqual(cf.width, 20)
         self.assertEqual(cf.values, 4)
-        for name in "_fields", "width", "values":
+        for name in "_fields", "width", "values", "_names":
             self.assertRaises(dataclasses.FrozenInstanceError,
                               setattr, cf, name, 0)
 
@@ -231,9 +233,10 @@ class FieldTests(unittest.TestCase):
 
     #    format  value            type      bitarray
     data = [
-        ("<u11", 91,              int,      "11011010000"),
-        (">u12", 1,               int,      "000000000001"),
-        ("<s9",  -13,             int,      "110011111"),
+        ("<u11",  5,              int,      "10100000000"),
+        (">u12",  6,              int,      "000000000110"),
+        ("<s11", -2,              int,      "01111111111"),
+        (">s12", -4,              int,      "111111111100"),
         ("<?",   True,            bool,     "1"),
         ("<f16", -1.5,            float,    "0000000001 11110 1"),
         (">f16",  1.875,          float,    "0 01111 1110000000"),
@@ -246,6 +249,7 @@ class FieldTests(unittest.TestCase):
         (">P5",  None,            None,     "11111"),
         (">x4",  None,            None,     "0000"),
         ("<X2",  None,            None,     "11"),
+        ("<p2{10}", None,         None,     "10"),
     ]
 
     def test_compile(self):
@@ -339,11 +343,12 @@ class FieldTests(unittest.TestCase):
                 self.assertEqual(cf.values, 1)
                 limit = 1 << nbits
                 for v, s in [(0, nbits * "0"),
-                             (1, "1" + (nbits - 1) * "0"),
+                             (1, (nbits - 1) * "0" + "1"),
+                             (limit // 2, "1" + (nbits - 1) * "0"),
                              (limit - 1, nbits * "1")]:
                     a = cf.pack(v)
                     self.assertEqual(a.endian, endian)
-                    self.assertEqual(a.to01(), s if pre == "<" else s[::-1])
+                    self.assertEqual(a.to01(), s[::-1] if pre == "<" else s)
                     self.assertEqual(cf.unpack(a), (v, ))
                 self.assertRaises(OverflowError, cf.pack, -1)
                 self.assertRaises(OverflowError, cf.pack, limit)
@@ -358,15 +363,15 @@ class FieldTests(unittest.TestCase):
                 self.assertEqual(cf.values, 1)
                 limit = 1 << (nbits - 1)
                 for v, s in [(0, nbits * "0"),
-                             (1, "1" + (nbits - 1) * "0"),
+                             (1, (nbits - 1) * "0" + "1"),
                              (-1, nbits * "1"),
-                             (limit - 1, (nbits - 1) * "1" + "0"),
-                             (-limit, (nbits - 1) * "0" + "1")]:
+                             (limit - 1, "0" + (nbits - 1) * "1"),
+                             (-limit, "1" + (nbits - 1) * "0")]:
                     if nbits == 1 and v == 1:
                         continue
                     a = cf.pack(v)
                     self.assertEqual(a.endian, endian)
-                    self.assertEqual(a.to01(), s if pre == "<" else s[::-1])
+                    self.assertEqual(a.to01(), s[::-1] if pre == "<" else s)
                     self.assertEqual(cf.unpack(a), (v, ))
                 self.assertRaises(OverflowError, cf.pack, -limit - 1)
                 self.assertRaises(OverflowError, cf.pack, limit)
@@ -459,29 +464,35 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(compile("h").format(), "<h4")
 
     def test_bitarray(self):
+        for n in range(1, 20):
+            cf = compile("<b%d" % n)
+            self.assertEqual(cf.width, n)
+            self.assertEqual(cf.values, 1)
+            a = urandom(n, "big")
+            b = cf.pack(a)
+            self.assertEqual(b.endian, "little")
+            self.assertEqual(b, a)
+            self.assertEqual(cf.unpack(b), (a, ))
         cf = compile("b11")
-        self.assertEqual(cf.width, 11)
-        self.assertEqual(cf.values, 1)
-        s = "00001111 000"
-        a = cf.pack(bitarray(s, "big"))
-        self.assertEqual(a.endian, "little")
-        self.assertEqual(a, bitarray(s))
-        self.assertEqual(cf.unpack(a), (bitarray(s), ))
         self.assertRaises(TypeError, cf.pack, 12)
         self.assertRaises(ValueError, cf.pack, bitarray(10))
 
     def test_bytes(self):
         self.assertRaises(ValueError, compile, "B7")
+        for n in range(1, 10):
+            cf = compile("<B%d" % (8 * n))
+            self.assertEqual(cf.width, 8 * n)
+            self.assertEqual(cf.values, 1)
+            b = os.urandom(n)
+            a = cf.pack(b)
+            self.assertEqual(a.endian, "little")
+            self.assertEqual(bytes(a), b)
+            c, = cf.unpack(a)
+            self.assertIs(type(c), bytes)
+            self.assertEqual(c, b)
         cf = compile(">B24")
-        self.assertEqual(cf.width, 24)
-        self.assertEqual(cf.values, 1)
-        a = cf.pack(b"ABC")
-        self.assertEqual(a.endian, "big")
-        self.assertEqual(bytes(a), b"ABC")
         self.assertRaises(TypeError, cf.pack, 12)
         self.assertRaises(ValueError, cf.pack, b"AB")
-        b, = cf.unpack(a)
-        self.assertIs(type(b), bytes)
         self.assertEqual(cf.pack(bytearray(b"XYZ")), bitarray(b"XYZ", "big"))
         self.assertEqual(compile("B").format(), "<B8")
 
