@@ -186,7 +186,7 @@ class _PaddingField(_Field):
             if width != len(a):
                 raise ValueError("pad-bits width mismatch: %d != %d" %
                                  (width, len(a)))
-            if a.count() in (0, width):
+            if a.find(not a[0]) < 0:
                 value, name = bool(a[0]), ""
             else:
                 value, name = False, a.to01()

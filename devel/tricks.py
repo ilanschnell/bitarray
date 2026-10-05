@@ -212,6 +212,23 @@ class VL_Tests(unittest.TestCase):
             self.assertEqual(nbits // 7 + 1 + (r > HEAD_WIDTH), nbytes)
             self.assertEqual((HEAD_WIDTH - r + 7) % 7, padding)
 
+# ------------------------- Bitarray is uniform -----------------------------
+
+class Uniform_Tests(unittest.TestCase):
+
+    data = ["", "0", "1", "00", "11", "01", "10", "111", "000001", 20 * "0"]
+
+    def test_uniform(self):
+        from bitarray import bitarray
+
+        for s in self.data:
+            a = bitarray(s)
+            uniform = (a.count() in (0, len(a)))
+            if a:
+                self.assertIs(a.find(not a[0]) < 0, uniform)  # early return
+                self.assertIs(len(set(a)) == 1, uniform)      # slow
+            self.assertIs(a.all() or not a.any(), uniform)
+
 
 if __name__ == '__main__':
     unittest.main()
