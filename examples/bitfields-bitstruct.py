@@ -1,4 +1,5 @@
-"""Compare `bitarray.bitfields` with the third-party `bitstruct` package.
+"""
+Compare `bitarray.bitfields` with the third-party `bitstruct` package.
 
 Run this example with::
 
@@ -31,19 +32,19 @@ from bitarray import bitarray, bitfields
 class Similarities(unittest.TestCase):
 
     def test_common_fields(self):
-        # u, s, f, p and P have the same basic meaning.  bitstruct uses b for
-        # Boolean and r for raw bytes; bitfields uses ? and B, respectively.
-        struct_format = ">u3s5f16b1p3P2r16"
-        fields_format = ">u3s5f16? p3P2B16"
-        values = (5, -3, 1.5, True, b"OK")
+        # u, s, f16, f32, f64, p and P have the same basic meaning.
+        # bitstruct uses b for Boolean and r for raw bytes;
+        # bitfields uses ? and B, respectively.
+        struct_format = ">u3s5f16f32f64b1p3P2r16"
+        fields_format = ">u3s5f16f32f64?1p3P2B16"
+        values = (5, -3, 1.5, 1.875, -1.0, True, b"OK")
 
         packed_struct = bitstruct.pack(struct_format, *values)
         packed_fields = bitfields.pack(fields_format, *values)
 
-        self.assertEqual(bitstruct.calcsize(struct_format), 46)
-        self.assertEqual(len(packed_fields), 46)
-        self.assertEqual(packed_struct,
-                         packed_fields.tobytes())
+        self.assertEqual(bitstruct.calcsize(struct_format), 142)
+        self.assertEqual(len(packed_fields), 142)
+        self.assertEqual(packed_struct, bytes(packed_fields))
         self.assertEqual(bitstruct.unpack(struct_format, packed_struct),
                          values)
         self.assertEqual(bitfields.unpack(fields_format, packed_fields),
@@ -55,7 +56,7 @@ class Similarities(unittest.TestCase):
 
         packed_struct = struct_format.pack(10, -2)
         packed_fields = fields_format.pack(10, -2)
-        self.assertEqual(packed_struct, packed_fields.tobytes())
+        self.assertEqual(packed_struct, bytes(packed_fields))
         self.assertEqual(struct_format.unpack(packed_struct), (10, -2))
         self.assertEqual(fields_format.unpack(packed_fields), (10, -2))
 
@@ -149,8 +150,8 @@ class Differences(unittest.TestCase):
         self.assertEqual(bitstruct.unpack_dict("u4u4", names, packed_struct),
                          values)
 
-        # bitfields embeds names and returns a named tuple.  Packing remains
-        # positional.
+        # bitfields embeds names and returns a named tuple.
+        # Packing remains positional.
         cf = bitfields.compile(">u4{version} u4{length}")
         packed_fields = cf.pack(4, 5)
         fields = cf.unpack(packed_fields)
@@ -176,8 +177,8 @@ class Differences(unittest.TestCase):
             bitfields.unpack(">u8 u8", bitarray(b"\x12", endian="big"))
 
     def test_bitfields_format_extensions(self):
-        # Comments, embedded names and literal padding make larger formats
-        # self-documenting.
+        # Comments, embedded names and literal padding make larger bitfields
+        # formats self-documenting.  bitstruct does not support comments.
         cf = bitfields.compile("""
             >h8{tag}       # hexadecimal tag
              b3{flags}     # exact bitarray value
