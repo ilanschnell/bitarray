@@ -311,7 +311,7 @@ Return the canonical format string reconstructed from this compiled format.
         return "Struct(%r)" % self.format()
 
     def __reduce__(self):
-        return Struct, (self.format(), )
+        return Struct, (self.format(),)
 
     def pack(self, *values: Any) -> bitarray:
         """pack(v1, v2, ...) -> bitarray

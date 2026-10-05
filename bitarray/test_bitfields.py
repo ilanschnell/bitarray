@@ -130,10 +130,10 @@ class StructTests(unittest.TestCase, Util):
         # Note that unlike the format string itself, comments may contain
         # non-ASCII characters.
         cf = compile("""
-        # IPv4 header format
-        >u4     # version  (\u0662)
-        u4      # header length
-        u6 u2   # DSCP, ECN
+            # IPv4 header format
+            >u4      # version  (\u0662)
+             u4      # header length
+             u6 u2   # DSCP, ECN
         """)
         self.assertEqual(cf.format(), ">u4 >u4 >u6 >u2")
 
@@ -294,7 +294,7 @@ class FieldTests(unittest.TestCase):
             b = unpack(fmt + "{Foo}", a)
             self.assertIsInstance(b, tuple)
             self.assertEqual(len(b), 1)
-            self.assertEqual(b._fields, ("Foo", ))
+            self.assertEqual(b._fields, ("Foo",))
             self.assertIs(b[0], b.Foo)
             self.assertIs(type(b.Foo), tp)
             self.assertEqual(b.Foo, value)
@@ -335,7 +335,7 @@ class FieldTests(unittest.TestCase):
 
     def test_unsigned_int(self):
         cf = compile("<u9")
-        self.assertRaises(TypeError, cf.pack, -1.0)
+        self.assertRaises(TypeError, cf.pack, 1.0)
         for nbits in range(1, 20):
             for pre, endian in _ENDIAN_FROM_PREFIX.items():
                 cf = compile("%su%d" % (pre, nbits))
@@ -349,7 +349,7 @@ class FieldTests(unittest.TestCase):
                     a = cf.pack(v)
                     self.assertEqual(a.endian, endian)
                     self.assertEqual(a.to01(), s[::-1] if pre == "<" else s)
-                    self.assertEqual(cf.unpack(a), (v, ))
+                    self.assertEqual(cf.unpack(a), (v,))
                 self.assertRaises(OverflowError, cf.pack, -1)
                 self.assertRaises(OverflowError, cf.pack, limit)
 
@@ -372,7 +372,7 @@ class FieldTests(unittest.TestCase):
                     a = cf.pack(v)
                     self.assertEqual(a.endian, endian)
                     self.assertEqual(a.to01(), s[::-1] if pre == "<" else s)
-                    self.assertEqual(cf.unpack(a), (v, ))
+                    self.assertEqual(cf.unpack(a), (v,))
                 self.assertRaises(OverflowError, cf.pack, -limit - 1)
                 self.assertRaises(OverflowError, cf.pack, limit)
 
@@ -410,7 +410,7 @@ class FieldTests(unittest.TestCase):
             self.assertEqual(len(a), nbits)
             s = "0 %s %s" % (exp_bits * "1", (nbits - exp_bits - 1) * "0")
             self.assertEqual(a, bitarray(s))
-            self.assertEqual(cf.unpack(a), (float('inf'), ))
+            self.assertEqual(cf.unpack(a), (float('inf'),))
             # nan
             a = cf.pack(float("nan"))
             self.assertEqual(len(a), nbits)
@@ -430,7 +430,7 @@ class FieldTests(unittest.TestCase):
                 if endian == "little":
                     s = s[::-1]
                 self.assertEqual(a, bitarray(s))
-                self.assertEqual(cf.unpack(a), (1.5, ))
+                self.assertEqual(cf.unpack(a), (1.5,))
 
     def test_struct_bytes(self):
         x = 1.875
@@ -457,7 +457,7 @@ class FieldTests(unittest.TestCase):
         self.assertEqual(cf.pack("1f a73"), a)  # whitespace is ignored
         self.assertEqual(a.endian, "little")
         self.assertEqual(a, bitarray("1000 1111 0101 1110 1100"))
-        self.assertEqual(cf.unpack(a), ("1fa73", ))
+        self.assertEqual(cf.unpack(a), ("1fa73",))
         self.assertRaises(TypeError, cf.pack, b"1fa73")
         self.assertRaises(ValueError, cf.pack, "1fa7")
         self.assertRaises(ValueError, cf.unpack, bitarray(19))
@@ -472,7 +472,7 @@ class FieldTests(unittest.TestCase):
             b = cf.pack(a)
             self.assertEqual(b.endian, "little")
             self.assertEqual(b, a)
-            self.assertEqual(cf.unpack(b), (a, ))
+            self.assertEqual(cf.unpack(b), (a,))
         cf = compile("b11")
         self.assertRaises(TypeError, cf.pack, 12)
         self.assertRaises(ValueError, cf.pack, bitarray(10))

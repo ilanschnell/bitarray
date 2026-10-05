@@ -45,7 +45,7 @@ bytes; ``bitfields`` uses ``?`` and ``B``, respectively:
 
     >>> struct_format = ">u3s5f16f32f64b1p3P2r16"
     >>> fields_format = ">u3s5f16f32f64?1p3P2B16"
-    >>> values = (5, -3, 1.5, 1.875, -1.0, True, b"OK")
+    >>> values = (5, -3, 1.5, 1.875, -2.5, True, b"OK")
     >>> packed_struct = bitstruct.pack(struct_format, *values)
     >>> packed_fields = bitfields.pack(fields_format, *values)
     >>> bitstruct.calcsize(struct_format)
@@ -101,7 +101,7 @@ format:
     b'\xa0'
     >>> packed_fields
     bitarray('101')
-    >>> packed_fields.tobytes() == packed_struct
+    >>> bytes(packed_fields) == packed_struct
     True
 
 ``bitstruct`` ignores the five byte-padding bits when unpacking.  In contrast,
@@ -256,7 +256,7 @@ positional:
     >>> cf = bitfields.compile(">u4{version} u4{length}")
     >>> packed_fields = cf.pack(4, 5)
     >>> fields = cf.unpack(packed_fields)
-    >>> packed_fields.tobytes() == packed_struct
+    >>> bytes(packed_fields) == packed_struct
     True
     >>> fields
     Unpacked(version=4, length=5)
@@ -299,7 +299,7 @@ Bitfields format extensions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Comments, embedded names and literal padding make larger ``bitfields``
-formats self-documenting.  ``bitstruct`` does not support comments:
+formats self-documenting:
 
 .. code-block:: python
 
@@ -314,3 +314,5 @@ formats self-documenting.  ``bitstruct`` does not support comments:
     '10101111010101'
     >>> cf.unpack(packed) == values
     True
+
+``bitstruct`` does not support comments in its format strings.
