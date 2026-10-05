@@ -1,5 +1,4 @@
 import re
-import sys
 from doctest import testfile
 from glob import glob
 from os.path import basename
@@ -369,14 +368,19 @@ def write_changelog(fo):
 
 
 def main():
-    if len(sys.argv) > 1:
-        sys.exit("no arguments expected")
+    from argparse import ArgumentParser
 
-    update_readme('./README.rst')
-    with open('./doc/reference.rst', 'w') as fo:
-        write_reference(fo)
-    with open('./doc/changelog.rst', 'w') as fo:
-        write_changelog(fo)
+    p = ArgumentParser(description=("build documentation"))
+    p.add_argument('-t', "--test", action="store_true",
+                   help="only run doctests")
+    args = p.parse_args()
+
+    if not args.test:
+        update_readme('./README.rst')
+        with open('./doc/reference.rst', 'w') as fo:
+            write_reference(fo)
+        with open('./doc/changelog.rst', 'w') as fo:
+            write_changelog(fo)
 
     testfile('./README.rst')
     for path in glob("./doc/*.rst"):
