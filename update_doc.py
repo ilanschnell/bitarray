@@ -236,16 +236,16 @@ def get_names(cl, getset=False):
 def write_reference_for_class(fo, cl):
     class_name = cl.__name__
     heading = "%s methods:" % class_name
-    fo.write("%s\n%s\n\n" % (heading, '-' * len(heading)))
+    fo.write("%s\n%s\n\n" % (heading, '^' * len(heading)))
     for name in get_names(cl):
         write_doc(fo, name)
 
     getset_names = list(get_names(cl, True))
     if getset_names:
-        heading = "%s data descriptors:" % class_name
-        fo.write("%s\n%s\n\n" % (heading, '-' * len(heading)))
+        heading = "%s attributes:" % class_name
+        fo.write("%s\n%s\n\n" % (heading, '^' * len(heading)))
         if class_name == "bitarray":
-            fo.write("Data descriptors were added in version 2.6.\n\n")
+            fo.write("Attributes were added in version 2.6.\n\n")
         for name in getset_names:
             write_doc(fo, name)
 
@@ -299,7 +299,7 @@ The bitarray object:
     write_reference_for_class(fo, bitarray.bitfields.Struct)
     fo.write("""\
 Struct attributes:
-------------------
+^^^^^^^^^^^^^^^^^^
 
 ``width`` -> int
    Total number of bits in the compiled structure.

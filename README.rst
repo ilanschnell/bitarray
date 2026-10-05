@@ -363,7 +363,7 @@ The bitarray object:
 
 
 bitarray methods:
------------------
+^^^^^^^^^^^^^^^^^
 
 ``all()`` -> bool
    Return ``True`` when all bits in bitarray are 1.
@@ -610,10 +610,10 @@ bitarray methods:
    using the specified mapping.
 
 
-bitarray data descriptors:
---------------------------
+bitarray attributes:
+^^^^^^^^^^^^^^^^^^^^
 
-Data descriptors were added in version 2.6.
+Attributes were added in version 2.6.
 
 ``endian`` -> str
    bit-endianness as Unicode string
@@ -634,7 +634,7 @@ Data descriptors were added in version 2.6.
 
 
 decodeiterator methods:
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 ``skipbits(n, /)`` -> bitarray
    Skip over the next ``n`` bits and return them.
@@ -643,8 +643,8 @@ decodeiterator methods:
    New in version 3.9
 
 
-decodeiterator data descriptors:
---------------------------------
+decodeiterator attributes:
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``index`` -> int
    current bit position to be decoded by subsequent ``next``
@@ -653,7 +653,7 @@ decodeiterator data descriptors:
 
 
 decodetree methods:
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 ``nodes()`` -> tuple
    Return tuple with number of:
@@ -1094,7 +1094,7 @@ For a detailed description, see: `Bit-field structures <https://github.com/ilans
 
 
 Struct methods:
----------------
+^^^^^^^^^^^^^^^
 
 ``format()`` -> str
    Return the canonical format string reconstructed from this compiled format.
@@ -1110,7 +1110,7 @@ Struct methods:
 
 
 Struct attributes:
-------------------
+^^^^^^^^^^^^^^^^^^
 
 ``width`` -> int
    Total number of bits in the compiled structure.
