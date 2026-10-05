@@ -226,7 +226,7 @@ class Uniform_Tests(unittest.TestCase):
             uniform = (a.count() in (0, len(a)))
             if a:
                 self.assertIs((not a[0]) not in a, uniform)  # early return
-                self.assertIs(len(set(a)) == 1, uniform)     # slow
+            self.assertIs(len(set(a)) <= 1, uniform)  # slow
             self.assertIs(a.all() or not a.any(), uniform)
 
 
