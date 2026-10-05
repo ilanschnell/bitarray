@@ -6,6 +6,7 @@ unpacking fixed-width, bit-level structures.
 The functionality of this module is similar to the ``struct`` module in
 Python's standard library and the ``bitstruct`` package, with the main
 difference that the ``bitfields`` module operates on ``bitarray`` objects.
+Here is a detailed `comparison with bitstruct <./bitfields-bitstruct.rst>`__.
 A format string describes a sequence of fields.  Values can be
 packed into a bitarray and unpacked again without requiring byte alignment.
 

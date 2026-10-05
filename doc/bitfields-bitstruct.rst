@@ -1,9 +1,9 @@
 Comparison with bitstruct
 =========================
 
-This document compares :mod:`bitarray.bitfields` with the third-party
-`bitstruct <https://pypi.org/project/bitstruct/>`__ package.  To run the
-examples, first install ``bitstruct``::
+This document compares `bitarray.bitfields <./bitfields.rst>`__ with the
+third-party `bitstruct <https://pypi.org/project/bitstruct/>`__ package.
+To run the examples, first install ``bitstruct``::
 
     python -m pip install bitstruct
 
@@ -111,11 +111,10 @@ format:
 
     >>> bitstruct.unpack("u3", packed_struct)
     (5,)
-    >>> try:
-    ...     bitfields.unpack(">u3", bitarray(packed_struct, endian="big"))
-    ... except ValueError:
-    ...     print("wrong input length")
-    wrong input length
+    >>> bitfields.unpack(">u3", bitarray(packed_struct, endian="big"))
+    Traceback (most recent call last):
+        ...
+    ValueError: expected bitarray of length 3, got 8
 
 
 Format defaults
@@ -126,11 +125,10 @@ Format defaults
 
 .. code-block:: python
 
-    >>> try:
-    ...     bitstruct.compile("u")
-    ... except bitstruct.Error:
-    ...     print("width required")
-    width required
+    >>> bitstruct.compile("u")
+    Traceback (most recent call last):
+        ...
+    bitstruct.Error: bad format 'u'
     >>> bitfields.compile("u").format()
     '<u1'
     >>> bitstruct.pack("u3", 3)
@@ -219,11 +217,10 @@ The ``p`` and ``P`` fields in ``bitfields`` are validated, while ``x`` and
 .. code-block:: python
 
     >>> bits = bitarray(data, endian="big")
-    >>> try:
-    ...     bitfields.unpack(">p4 u4", bits)
-    ... except ValueError:
-    ...     print("padding mismatch")
-    padding mismatch
+    >>> bitfields.unpack(">p4 u4", bits)
+    Traceback (most recent call last):
+        ...
+    ValueError: pad-bits mismatch: 1111 != 0000
     >>> bitfields.unpack(">x4 u4", bits)
     (5,)
 
@@ -292,11 +289,10 @@ always requires exactly the compiled number of bits:
     >>> bits = bitarray(buf, endian="big")
     >>> bitfields.unpack(">u4 u4", bits[4:12])
     (10, 11)
-    >>> try:
-    ...     bitfields.unpack(">u8 u8", bitarray(b"\x12", endian="big"))
-    ... except ValueError:
-    ...     print("wrong input length")
-    wrong input length
+    >>> bitfields.unpack(">u8 u8", bitarray(b"\x12", endian="big"))
+    Traceback (most recent call last):
+        ...
+    ValueError: expected bitarray of length 16, got 8
 
 
 Bitfields format extensions
