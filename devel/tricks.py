@@ -225,8 +225,8 @@ class Uniform_Tests(unittest.TestCase):
             a = bitarray(s)
             uniform = (a.count() in (0, len(a)))
             if a:
-                self.assertIs(a.find(not a[0]) < 0, uniform)  # early return
-                self.assertIs(len(set(a)) == 1, uniform)      # slow
+                self.assertIs((not a[0]) not in a, uniform)  # early return
+                self.assertIs(len(set(a)) == 1, uniform)     # slow
             self.assertIs(a.all() or not a.any(), uniform)
 
 
