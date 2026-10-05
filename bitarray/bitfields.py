@@ -41,7 +41,7 @@ class _Field:
         return _PREFIX_FROM_ENDIAN[self.endian]
 
     def format(self):
-        res = "%s%s%s" % (self.prefix, self.code, self.width)
+        res = "%s%s%d" % (self.prefix, self.code, self.width)
         if self.name:
             res += "{%s}" % self.name
         return res
@@ -186,7 +186,7 @@ class _PaddingField(_Field):
             if width != len(a):
                 raise ValueError("pad-bits width mismatch: %d != %d" %
                                  (width, len(a)))
-            if (not a[0]) in a:
+            if (not a[0]) in a:  # we have both 0 and 1 in a
                 value, name = False, a.to01()
             else:
                 value, name = bool(a[0]), ""
