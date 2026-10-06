@@ -449,7 +449,9 @@ class FieldTests(unittest.TestCase):
 
     def test_float_endianness(self):
         for nbits in 16, 32, 64:
-            cf = compile("<f%d >f%d" % (nbits, nbits))
+            # Symmetric padding tests unaligned fields while preserving
+            # the palindrome.
+            cf = compile("p{100} <f%d p{1001} >f%d p{001}" % (nbits, nbits))
             for x in 0.0, -0.0, -985.5, 1.875, float("inf"), float("-inf"):
                 a = cf.pack(x, x)
                 for v in cf.unpack(a):
@@ -458,6 +460,10 @@ class FieldTests(unittest.TestCase):
                                      math.copysign(1.0, x))
                 # Little and big-endian encodings are reverses of each other.
                 self.assertEqual(a[::-1], a)
+            a = cf.pack(float("nan"), float("nan"))
+            for v in cf.unpack(a):
+                self.assertTrue(math.isnan(v))
+            self.assertEqual(a[::-1], a)
 
     def test_struct_bytes(self):
         for nbits, struct_code in (16, "e"), (32, "f"), (64, "d"):
