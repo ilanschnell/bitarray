@@ -31,7 +31,7 @@ Key features
 * ``bitfields`` sub-module for packing and unpacking fixed-width,
   bit-level structures
 * Type hinting
-* Extensive test suite with over 600 unit tests
+* Extensive test suite with around 700 unit tests
 * Utility module ``bitarray.util``:
 
   * conversion to and from hexadecimal strings
@@ -80,7 +80,7 @@ Once you have installed the package, you may want to test it:
     ..........s.....................................s........................
     ......s.........................................................
     ----------------------------------------------------------------------
-    Ran 697 tests in 0.194s
+    Ran 699 tests in 0.194s
 
     OK (skipped=4)
 
@@ -1075,7 +1075,7 @@ The `bitarray.bitfields` module:
 This sub-module was added in version 3.12.
 For a detailed description, see: `Bit-field structures <https://github.com/ilanschnell/bitarray/blob/master/doc/bitfields.rst>`__
 
-``Struct(format: str)`` -> compiled struct object
+``Struct(format: str = "")`` -> compiled struct object
    Central class for packing and unpacking bit-level structures.
 
 
