@@ -12,7 +12,7 @@ import struct
 import unittest
 import dataclasses
 
-from bitarray import bitarray
+from bitarray import bitarray, frozenbitarray
 from bitarray.util import urandom
 from bitarray.bitfields import (Struct, compile, pack, unpack,
                                 DEFAULT_ENDIAN, _ENDIAN_FROM_PREFIX)
@@ -290,12 +290,12 @@ class FieldTests(unittest.TestCase):
     def test_unpack(self):
         for fmt, value, tp, s in self.data:
             for endian in "little", "big":
-                a = bitarray(s, endian)
-                b = unpack(fmt, a)
-                self.assertIs(type(b), tuple)
-                if value is None:
-                    self.assertEqual(len(b), 0)
-                else:
+                for a in bitarray(s, endian), frozenbitarray(s, endian):
+                    b = unpack(fmt, a)
+                    self.assertIs(type(b), tuple)
+                    if value is None:
+                        self.assertEqual(len(b), 0)
+                        continue
                     self.assertEqual(len(b), 1)
                     self.assertIs(type(b[0]), tp)
                     self.assertEqual(b[0], value)
