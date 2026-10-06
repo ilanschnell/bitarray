@@ -1,5 +1,5 @@
 import re
-from doctest import testfile
+import doctest
 from glob import glob
 from os.path import basename
 from sysconfig import get_config_var
@@ -368,7 +368,7 @@ def write_changelog(fo):
 
 def have_bitstruct():
     try:
-        import bitstruct
+        __import__("bitstruct")
     except ImportError:
         return False
     return True
@@ -376,7 +376,7 @@ def have_bitstruct():
 def run_doctest(path, args):
     if args.verbose:
         print("testing:", path)
-    testfile(path)
+    doctest.testfile(path, verbose=False)
 
 def main():
     from argparse import ArgumentParser
@@ -384,7 +384,8 @@ def main():
     p = ArgumentParser(description=("build documentation"))
     p.add_argument('-t', "--test", action="store_true",
                    help="only run doctests")
-    p.add_argument('-v', "--verbose", action="store_true")
+    p.add_argument('-v', "--verbose", action="store_true",
+                   help="show which files are being doctested")
     args = p.parse_args()
 
     if not args.test:
@@ -401,7 +402,7 @@ def main():
         if ((fn == 'bitfields-bitstruct.rst' and not have_bitstruct()) or
             (fn == 'free_threading.rst' and
              not get_config_var("Py_GIL_DISABLED"))):
-            print("skipping:", path)
+            print("skip testing:", path)
             continue
         run_doctest(path, args)
 
