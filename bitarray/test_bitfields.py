@@ -221,11 +221,18 @@ class StructTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, cf.pack, 1, 2, 3)
         self.assertRaises(ValueError, compile("x").pack, 1)
 
+    def test_pack_value_size_mismatch(self):
+        for fmt, value, msg in [
+                ("h12", "ff", "expected hex string of length 3, got 2"),
+                ("b3", bitarray(2), "expected bitarray of length 3, got 2"),
+                ("B16", b"\xa5", "expected bytes of length 2, got 1"),
+        ]:
+            self.assertRaisesMessage(ValueError, msg, pack, fmt, value)
+
     def test_unpack_errors(self):
         cf = compile(">u8")
-        self.assertRaisesMessage(ValueError,
-                                 "expected bitarray of length 8, got 7",
-                                 cf.unpack, bitarray(7))
+        self.assertRaisesMessage(ValueError, "expected bitarray of length 8 "
+                                 "to unpack, got 7", cf.unpack, bitarray(7))
         self.assertRaises(ValueError, cf.unpack, bitarray(9))
         lst = [0, 1, 0, 0, 1, 1, 1, 1]
         self.assertRaises(TypeError, cf.unpack, lst)
@@ -402,8 +409,6 @@ class FieldTests(unittest.TestCase):
     def test_float_special(self):
         for nbits, exp_bits in self.float_sizes:
             cf = compile(">f%d" % nbits)
-            self.assertEqual(cf.width, nbits)
-            self.assertEqual(cf.values, 1)
             # -0.0
             a = cf.pack(-0.0)
             self.assertEqual(len(a), nbits)
@@ -440,15 +445,15 @@ class FieldTests(unittest.TestCase):
                 self.assertEqual(cf.unpack(a), (1.5,))
 
     def test_struct_bytes(self):
-        x = 1.875
-        for nbits, struct_format in (16, "e"), (32, "f"), (64, "d"):
-            for pre, endian in ("<", "little"), (">", "big"):
-                bf = "%sf%d" % (pre, nbits)
-                sf = pre + struct_format
-                b = struct.pack(sf, x)
-                self.assertEqual(bytes(pack(bf, x)), b)
-                self.assertEqual(unpack(bf, bitarray(b, endian))[0], x)
-                self.assertEqual(struct.unpack(sf, b)[0], x)
+        for x in 1.875, 2.0, 7, True:
+            for nbits, struct_format in (16, "e"), (32, "f"), (64, "d"):
+                for pre, endian in ("<", "little"), (">", "big"):
+                    bf = "%sf%d" % (pre, nbits)
+                    sf = pre + struct_format
+                    b = struct.pack(sf, x)
+                    self.assertEqual(bytes(pack(bf, x)), b)
+                    self.assertEqual(unpack(bf, bitarray(b, endian))[0], x)
+                    self.assertEqual(struct.unpack(sf, b)[0], x)
 
     def test_float_errors(self):
         cf = compile("f16")

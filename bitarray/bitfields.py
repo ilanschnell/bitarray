@@ -101,8 +101,8 @@ class _FloatField(_Field):
     def struct_format(self):
         return self.prefix + self.formats[self.width]
 
-    def pack(self, value):
-        return bitarray(struct.pack(self.struct_format(), value),
+    def pack(self, x):
+        return bitarray(struct.pack(self.struct_format(), x),
                         endian=self.endian)
 
     def unpack(self, a):
@@ -119,13 +119,13 @@ class _HexField(_Field):
             raise ValueError("hexadecimal field width must be a "
                              "multiple of 4, got %d" % self.width)
 
-    def pack(self, value):
-        if not isinstance(value, str):
-            raise TypeError("str expected, got %r" % type(value).__name__)
-        a = hex2ba(value, self.endian)
+    def pack(self, hexstr):
+        if not isinstance(hexstr, str):
+            raise TypeError("str expected, got %r" % type(hexstr).__name__)
+        a = hex2ba(hexstr, self.endian)
         if len(a) != self.width:
-            raise ValueError("hex string with %d digits expected" %
-                             (self.width // 4))
+            raise ValueError("expected hex string of length %d, got %d" %
+                             (self.width // 4, len(a) // 4))
         return a
 
     def unpack(self, a):
@@ -141,7 +141,8 @@ class _BitarrayField(_Field):
         if not isinstance(a, bitarray):
             raise TypeError("bitarray expected, got %r" % type(a).__name__)
         if len(a) != self.width:
-            raise ValueError("bitarray of length %d expected" % self.width)
+            raise ValueError("expected bitarray of length %d, got %d" %
+                             (self.width, len(a)))
         return a
 
     def unpack(self, a):
@@ -158,13 +159,13 @@ class _BytesField(_Field):
             raise ValueError("bytes field width must be a "
                              "multiple of 8, got %d" % self.width)
 
-    def pack(self, value):
-        if not isinstance(value, (bytes, bytearray)):
-            raise TypeError("bytes expected, got %r" % type(value).__name__)
-        if len(value) != self.width // 8:
-            raise ValueError("bytes of length %d expected" %
-                             (self.width // 8))
-        return bitarray(value, endian=self.endian)
+    def pack(self, b):
+        if not isinstance(b, (bytes, bytearray)):
+            raise TypeError("bytes expected, got %r" % type(b).__name__)
+        if len(b) != self.width // 8:
+            raise ValueError("expected bytes of length %d, got %d" %
+                             (self.width // 8, len(b)))
+        return bitarray(b, endian=self.endian)
 
     def unpack(self, a):
         return bytes(a)
@@ -214,11 +215,10 @@ class _PaddingField(_Field):
 
 @dataclass(frozen=True)
 class Struct:
-    """Struct(format: str) -> compiled struct object
+    """Struct(format: str = "") -> compiled struct object
 
 Central class for packing and unpacking bit-level structures.
 """
-
     _fields: tuple
     width: int
     values: int
@@ -338,8 +338,8 @@ Return a tuple containing values unpacked according to this compiled format.
         if not isinstance(a, bitarray):
             raise TypeError("bitarray expected, got %r" % type(a).__name__)
         if len(a) != self.width:
-            raise ValueError("expected bitarray of length %d, got %d" %
-                             (self.width, len(a)))
+            raise ValueError("expected bitarray of length %d to unpack, "
+                             "got %d" % (self.width, len(a)))
         i = 0
         values = []
         for field in self._fields:
