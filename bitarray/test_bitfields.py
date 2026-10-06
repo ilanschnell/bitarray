@@ -215,18 +215,25 @@ class StructTests(unittest.TestCase, Util):
     def test_pack_value_count(self):
         cf = compile("u8 s8")
         self.assertEqual(cf.values, 2)
-        self.assertRaises(ValueError, cf.pack, 1)
+        self.assertRaisesMessage(ValueError,
+                                 "expected 2 values to pack, got 1",
+                                 cf.pack, 1)
         self.assertRaises(ValueError, cf.pack, 1, 2, 3)
         self.assertRaises(ValueError, compile("x").pack, 1)
 
     def test_unpack_errors(self):
-        lst = [0, 1, 0, 0, 1, 1, 1, 1]
         cf = compile(">u8")
-        self.assertRaises(ValueError, cf.unpack, bitarray(7))
+        self.assertRaisesMessage(ValueError,
+                                 "expected bitarray of length 8, got 7",
+                                 cf.unpack, bitarray(7))
         self.assertRaises(ValueError, cf.unpack, bitarray(9))
+        lst = [0, 1, 0, 0, 1, 1, 1, 1]
         self.assertRaises(TypeError, cf.unpack, lst)
         # module level unpack
         self.assertRaises(TypeError, unpack, "u8", lst)
+        self.assertRaisesMessage(ValueError,
+                                 "pad-bits mismatch: 0110 != 0010",
+                                 unpack, "p{0010}", bitarray("0110"))
 
 
 class FieldTests(unittest.TestCase):
