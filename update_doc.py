@@ -366,6 +366,17 @@ def write_changelog(fo):
             line = link_pat.sub(r"`\1 <\2>`__", line)
         fo.write(line + '\n')
 
+def have_bitstruct():
+    try:
+        import bitstruct
+    except ImportError:
+        return False
+    return True
+
+def run_doctest(path, args):
+    if args.verbose:
+        print("testing:", path)
+    testfile(path)
 
 def main():
     from argparse import ArgumentParser
@@ -373,6 +384,7 @@ def main():
     p = ArgumentParser(description=("build documentation"))
     p.add_argument('-t', "--test", action="store_true",
                    help="only run doctests")
+    p.add_argument('-v', "--verbose", action="store_true")
     args = p.parse_args()
 
     if not args.test:
@@ -382,14 +394,19 @@ def main():
         with open('./doc/changelog.rst', 'w') as fo:
             write_changelog(fo)
 
-    testfile('./README.rst')
+    run_doctest('./README.rst', args)
+
     for path in glob("./doc/*.rst"):
-        if (basename(path) == 'free_threading.rst' and
-            not get_config_var("Py_GIL_DISABLED")):
+        fn = basename(path)
+        if ((fn == 'bitfields-bitstruct.rst' and not have_bitstruct()) or
+            (fn == 'free_threading.rst' and
+             not get_config_var("Py_GIL_DISABLED"))):
+            print("skipping:", path)
             continue
-        testfile(path)
+        run_doctest(path, args)
+
     for path in glob("./examples/*.rst"):
-        testfile(path)
+        run_doctest(path, args)
 
 
 if __name__ == '__main__':
