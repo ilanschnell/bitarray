@@ -366,9 +366,9 @@ def write_changelog(fo):
             line = link_pat.sub(r"`\1 <\2>`__", line)
         fo.write(line + '\n')
 
-def have_bitstruct():
+def can_import(name):
     try:
-        __import__("bitstruct")
+        __import__(name)
     except ImportError:
         return False
     return True
@@ -399,7 +399,8 @@ def main():
 
     for path in glob("./doc/*.rst"):
         fn = basename(path)
-        if ((fn == 'bitfields-bitstruct.rst' and not have_bitstruct()) or
+        if ((fn == 'bitfields-bitstruct.rst' and
+             not can_import("bitstruct")) or
             (fn == 'free_threading.rst' and
              not get_config_var("Py_GIL_DISABLED"))):
             print("skip testing:", path)
