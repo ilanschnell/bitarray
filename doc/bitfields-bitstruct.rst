@@ -114,7 +114,7 @@ format:
     >>> bitfields.unpack(">u3", bitarray(packed_struct, endian="big"))
     Traceback (most recent call last):
         ...
-    ValueError: expected bitarray of length 3, got 8
+    ValueError: expected bitarray of length 3 to unpack, got 8
 
 
 Format defaults
@@ -292,7 +292,7 @@ always requires exactly the compiled number of bits:
     >>> bitfields.unpack(">u8 u8", bitarray(b"\x12", endian="big"))
     Traceback (most recent call last):
         ...
-    ValueError: expected bitarray of length 16, got 8
+    ValueError: expected bitarray of length 16 to unpack, got 8
 
 
 Bitfields format extensions
