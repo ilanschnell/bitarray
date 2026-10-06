@@ -335,6 +335,7 @@ class FieldTests(unittest.TestCase):
             cf = compile("<%s>%s" % (c, c))
             a = cf.pack(v, v)
             self.assertEqual(cf.unpack(a), (v, v))
+            # Little and big-endian encodings are reverses of each other.
             self.assertEqual(a[::-1], a)
 
         cf = compile("<b4>b4")
@@ -448,18 +449,15 @@ class FieldTests(unittest.TestCase):
 
     def test_float_endianness(self):
         for nbits in 16, 32, 64:
-            fmt = "f%d" % nbits
-            for x in 0.0, -0.0, -5.5, 1.875, float("inf"), float("-inf"):
-                sign = math.copysign(1.0, x)
-                a = pack("<" + fmt, x)
-                v, = unpack("<" + fmt, a)
-                self.assertEqual(v, x)
-                self.assertEqual(math.copysign(1.0, v), sign)
-                a.reverse()
-                v, = unpack(">" + fmt, a)
-                self.assertEqual(v, x)
-                self.assertEqual(math.copysign(1.0, v), sign)
-                self.assertEqual(pack(">" + fmt, x), a)
+            cf = compile("<f%d >f%d" % (nbits, nbits))
+            for x in 0.0, -0.0, -985.5, 1.875, float("inf"), float("-inf"):
+                a = cf.pack(x, x)
+                for v in cf.unpack(a):
+                    self.assertEqual(v, x)
+                    self.assertEqual(math.copysign(1.0, v),
+                                     math.copysign(1.0, x))
+                # Little and big-endian encodings are reverses of each other.
+                self.assertEqual(a[::-1], a)
 
     def test_struct_bytes(self):
         for nbits, struct_code in (16, "e"), (32, "f"), (64, "d"):
