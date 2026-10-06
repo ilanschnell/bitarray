@@ -24,19 +24,21 @@ class StructTests(unittest.TestCase, Util):
     all_codes = "us?fhbBpPxX"
 
     def test_example(self):
-        cf = compile(">u2 s7 x{000111} <u h b5 B16 f16")
+        cf = compile(">u2 s7 x{000111} <u h b5 P ? B16 f16")
         self.assertIsInstance(cf, Struct)
-        self.assertEqual(cf.width, 57)
-        self.assertEqual(cf.values, 7)
+        self.assertEqual(cf.width, 59)
+        self.assertEqual(cf.values, 8)
         self.assertEqual(cf.format(),
-                         ">u2 >s7 >x6{000111} <u1 <h4 <b5 <B16 <f16")
-        values = 2, -8, 1, "e", bitarray("01110"), b"A\xff", -29.0
+                         ">u2 >s7 >x6{000111} <u1 <h4 <b5 <P1 <? <B16 <f16")
+        values = 2, -8, 1, "e", bitarray("01110"), False, b"A\xff", -29.0
         a = cf.pack(*values)
-        self.assertEqual(len(a), 57)
+        self.assertEqual(len(a), 59)
         self.assertEqual(a.endian, "big")
-        self.assertEqual(a, bitarray("10 1111000 000111 1 0111 01110 "
+        self.assertEqual(a, bitarray("10 1111000 000111 1 0111 01110 1 0 "
                                      "10000010 11111111 0000001011110011"))
+        a[9:15] = 1  # the 'x' pad-bits are not validated
         self.assertEqual(cf.unpack(a), values)
+        self.assertEqual(cf.unpack(frozenbitarray(a)), values)
 
     def test_cached(self):
         self.assertIs(compile("u8"), compile("u8"))
