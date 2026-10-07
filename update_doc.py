@@ -248,6 +248,26 @@ def write_reference_for_class(fo, cl):
         for name in getset_names:
             write_doc(fo, name)
 
+def write_reference_bitfields(fo):
+    link = DOC_LINK_TMPL % DOCS['fields']
+    fo.write("The `bitarray.bitfields` module:\n"
+             "--------------------------------\n\n"
+             "This sub-module was added in version 3.12.\n"
+             "For a detailed description, see: %s\n\n" % link)
+    for func in sorted(bitarray.bitfields.__all__):
+        write_doc(fo, 'bitfields.%s' % func)
+    write_reference_for_class(fo, bitarray.bitfields.Struct)
+    fo.write("""\
+Struct attributes:
+^^^^^^^^^^^^^^^^^^
+
+``width`` -> int
+   Total number of bits in the compiled structure.
+
+``values`` -> int
+   Number of values consumed by ``pack()`` and returned by ``unpack()``.
+""")
+
 
 def write_reference(fo):
     fo.write("""\
@@ -288,25 +308,7 @@ The bitarray object:
     for func in sorted(bitarray.util.__all__):
         write_doc(fo, 'util.%s' % func)
 
-    link = DOC_LINK_TMPL % DOCS['fields']
-    fo.write("The `bitarray.bitfields` module:\n"
-             "--------------------------------\n\n"
-             "This sub-module was added in version 3.12.\n"
-             "For a detailed description, see: %s\n\n" % link)
-    for func in sorted(bitarray.bitfields.__all__):
-        write_doc(fo, 'bitfields.%s' % func)
-    write_reference_for_class(fo, bitarray.bitfields.Struct)
-    fo.write("""\
-Struct attributes:
-^^^^^^^^^^^^^^^^^^
-
-``width`` -> int
-   Total number of bits in the compiled structure.
-
-``values`` -> int
-   Number of values consumed by ``pack()`` and returned by ``unpack()``.
-""")
-
+    write_reference_bitfields(fo)
     for name in list(NEW_IN) + list(DOC_LINKS):
         assert name in _NAMES, name
 
