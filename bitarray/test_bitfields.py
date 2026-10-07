@@ -45,6 +45,20 @@ class PackUnpackTests(unittest.TestCase, Util):
         self.assertEqual(cf.unpack(a), Example.values)
         self.assertEqual(cf.unpack(frozenbitarray(a)), Example.values)
 
+    def test_offset(self):
+        cf = compile(Example.format)
+        w = cf.width
+        for offset in 0, 357, 1000 - w, -611, -w:
+            a = urandom(1000)
+            b = a.copy()
+            cf.pack_into(a, offset, *Example.values)
+            self.assertEqual(cf.unpack_from(a, offset), Example.values)
+            start = offset if offset >= 0 else len(a) + offset
+            self.assertEqual(a[:start], b[:start])
+            self.assertEqual(a[start:start + w], Example.bits)
+            self.assertEqual(a[start + w:], b[start + w:])
+            self.assertEqual(len(a), len(b))
+
     def test_pack_value_count(self):
         cf = compile("u8 s8")
         self.assertEqual(cf.values, 2)
@@ -63,28 +77,6 @@ class PackUnpackTests(unittest.TestCase, Util):
             cf = compile(fmt)
             self.assertRaisesMessage(ValueError, msg, cf.pack, value)
 
-    def test_unpack_errors(self):
-        cf = compile(">u8")
-        self.assertRaisesMessage(ValueError, "expected bitarray of length 8 "
-                                 "to unpack, got 7", cf.unpack, bitarray(7))
-        self.assertRaises(ValueError, cf.unpack, bitarray(9))
-        lst = 8 * [0]
-        self.assertRaises(TypeError, cf.unpack, lst)
-
-    def test_offset(self):
-        cf = compile(Example.format)
-        w = cf.width
-        for offset in 0, 357, 1000 - w, -611, -w:
-            a = urandom(1000)
-            b = a.copy()
-            cf.pack_into(a, offset, *Example.values)
-            self.assertEqual(cf.unpack_from(a, offset), Example.values)
-            start = offset if offset >= 0 else len(a) + offset
-            self.assertEqual(a[:start], b[:start])
-            self.assertEqual(a[start:start + w], Example.bits)
-            self.assertEqual(a[start + w:], b[start + w:])
-            self.assertEqual(len(a), len(b))
-
     def test_pack_into_errors(self):
         cf = compile("u8")
         lst = 8 * [0]
@@ -99,6 +91,14 @@ class PackUnpackTests(unittest.TestCase, Util):
         self.assertEqual(cf.unpack_from(a), (123,))
         for offset in 1, -7, -9:
             self.assertRaises(ValueError, cf.pack_into, a, offset, 123)
+
+    def test_unpack_errors(self):
+        cf = compile(">u8")
+        self.assertRaisesMessage(ValueError, "expected bitarray of length 8 "
+                                 "to unpack, got 7", cf.unpack, bitarray(7))
+        self.assertRaises(ValueError, cf.unpack, bitarray(9))
+        lst = 8 * [0]
+        self.assertRaises(TypeError, cf.unpack, lst)
 
     def test_unpack_from_errors(self):
         cf = compile("u8")
