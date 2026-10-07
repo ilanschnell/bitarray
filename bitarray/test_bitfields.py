@@ -68,7 +68,7 @@ class PackUnpackTests(unittest.TestCase, Util):
         self.assertRaisesMessage(ValueError, "expected bitarray of length 8 "
                                  "to unpack, got 7", cf.unpack, bitarray(7))
         self.assertRaises(ValueError, cf.unpack, bitarray(9))
-        lst = [0, 1, 0, 0, 1, 1, 1, 1]
+        lst = 8 * [0]
         self.assertRaises(TypeError, cf.unpack, lst)
 
     def test_offset(self):
@@ -87,9 +87,13 @@ class PackUnpackTests(unittest.TestCase, Util):
 
     def test_pack_into_errors(self):
         cf = compile("u8")
-        self.assertRaises(TypeError, cf.pack_into, list(bitarray(8)), 0, 123)
+        lst = 8 * [0]
+        self.assertRaisesMessage(TypeError, "bitarray expected, got 'list'",
+                                 cf.pack_into, lst, 0, 123)
         a = frozenbitarray(8)
-        self.assertRaises(TypeError, cf.pack_into, a, 0, 123)
+        self.assertRaisesMessage(TypeError,
+                                 "cannot pack into read-only bitarray",
+                                 cf.pack_into, a, 0, 123)
         a = bitarray(8)
         self.assertIsNone(cf.pack_into(a, -8, 123))
         self.assertEqual(cf.unpack_from(a), (123,))
@@ -98,12 +102,16 @@ class PackUnpackTests(unittest.TestCase, Util):
 
     def test_unpack_from_errors(self):
         cf = compile("u8")
-        self.assertRaises(TypeError, cf.unpack_from, list(bitarray(8)))
+        self.assertRaisesMessage(TypeError, "bitarray expected, got 'list'",
+                                 cf.unpack_from, 8 * [0])
         a = frozenbitarray(cf.pack(123))
         self.assertEqual(cf.unpack_from(a), (123,))
         self.assertEqual(cf.unpack_from(a, -8), (123,))
-        for offset in 1, -7, -9:
-            self.assertRaises(ValueError, cf.unpack_from, a, offset)
+        for offset in 1, -7, -9, 9:
+            msg = ("offset out of range" if offset in (-9, 9) else
+                "bitarray is too short to unpack 8 bits starting at offset 1")
+            self.assertRaisesMessage(ValueError, msg,
+                                     cf.unpack_from, a, offset)
 
     def test_overlapping_view(self):
         a = bitarray("00000000 11111111")
@@ -111,6 +119,27 @@ class PackUnpackTests(unittest.TestCase, Util):
         y = bitarray(buffer=memoryview(a)[0:1], endian=a.endian)
         compile("b8 b8").pack_into(a, 0, x, y)
         self.assertEqual(a, bitarray("11111111 00000000"))
+
+    def test_empty_format(self):
+        cf = compile("")
+        self.assertEqual(cf.pack(), bitarray())
+        a = bitarray()
+        cf.pack_into(a, 0)
+        self.assertEqual(len(a), 0)
+        self.assertEqual(cf.unpack(a), ())
+        self.assertEqual(cf.unpack_from(a), ())
+        self.assertEqual(cf.unpack_from(a, 0), ())
+        for f in cf.pack_into, cf.unpack_from:
+            self.assertRaisesMessage(ValueError, "offset out of range",
+                                     f, a, 1)
+        a = bitarray("0")
+        cf.pack_into(a, 1)
+        self.assertEqual(a.to01(), "0")
+        for offset in 0, 1:
+            self.assertEqual(cf.unpack_from(a, offset), ())
+        for f in cf.pack_into, cf.unpack_from:
+            self.assertRaisesMessage(ValueError, "offset out of range",
+                                     f, a, 2)
 
 
 class StructTests(unittest.TestCase, Util):
@@ -266,7 +295,6 @@ class StructTests(unittest.TestCase, Util):
             self.assertEqual(cf, Struct())
             self.assertEqual(cf.width, 0)
             self.assertEqual(cf.values, 0)
-            self.assertEqual(cf.unpack(bitarray(endian="big")), ())
             self.assertEqual(cf.format(), "")
             a = cf.pack()
             self.assertEqual(len(a), 0)

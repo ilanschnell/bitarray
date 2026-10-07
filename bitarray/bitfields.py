@@ -319,7 +319,7 @@ Return the canonical format string reconstructed from this compiled format.
         offset = operator.index(offset)
         if offset < 0:
             offset += length
-        if offset < 0:
+        if not 0 <= offset <= length:
             raise ValueError("offset out of range")
         if offset > length - self.width:
             raise ValueError("bitarray is too short to %s %d bits starting "
