@@ -19,9 +19,9 @@ bit boundaries.  There are also important differences:
 * ``bitstruct`` has separate bit-order prefixes and a byte-order suffix.
   A ``bitfields`` prefix specifies the endianness of each field.
 
-* ``bitstruct`` supports text, dictionaries, offsets and truncated input.
-  ``bitfields`` supports named tuples, bitarrays, hexadecimal strings,
-  comments and validating or explicit padding patterns.
+* ``bitstruct`` supports text, dictionaries and truncated input.  ``bitfields``
+  supports named tuples, bitarrays, hexadecimal strings, comments and
+  validating or explicit padding patterns.
 
 The examples below use these imports:
 
@@ -31,11 +31,8 @@ The examples below use these imports:
     >>> from bitarray import bitarray, bitfields
 
 
-Similarities
+Format codes
 ------------
-
-Common fields
-^^^^^^^^^^^^^
 
 The ``u``, ``s``, ``f16``, ``f32``, ``f64``, ``p`` and ``P`` codes have the
 same basic meaning.  ``bitstruct`` uses ``b`` for Boolean and ``r`` for raw
@@ -61,7 +58,7 @@ bytes; ``bitfields`` uses ``?`` and ``B``, respectively:
 
 
 Compiled formats
-^^^^^^^^^^^^^^^^
+----------------
 
 Both modules can compile a format for repeated use:
 
@@ -79,11 +76,8 @@ Both modules can compile a format for repeated use:
     (10, -2)
 
 
-Differences
------------
-
 Output and byte padding
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 ``bitstruct`` returns ``bytes`` and pads the final byte.  ``bitfields``
 returns a ``bitarray`` whose length is exactly the number of bits in the
@@ -118,7 +112,7 @@ format:
 
 
 Format defaults
-^^^^^^^^^^^^^^^
+---------------
 
 ``bitstruct`` requires every width and defaults to MSB-first order.
 ``bitfields`` permits omitted widths and defaults to little endian:
@@ -140,7 +134,7 @@ Format defaults
 
 
 Endianness syntax
-^^^^^^^^^^^^^^^^^
+-----------------
 
 The trailing ``<`` in a ``bitstruct`` format is its little-endian byte-order
 suffix.  In ``bitfields``, ``<`` prefixes a field and selects its bit and byte
@@ -164,7 +158,7 @@ Prefixes persist for following fields in both format languages:
 
 
 Different field codes
-^^^^^^^^^^^^^^^^^^^^^
+---------------------
 
 Boolean fields use ``b`` in ``bitstruct`` and ``?`` in ``bitfields``:
 
@@ -201,7 +195,7 @@ Both can represent byte strings, using ``r`` in ``bitstruct`` and ``B`` in
 
 
 Padding
-^^^^^^^
+-------
 
 ``bitstruct`` padding is ignored during unpacking:
 
@@ -236,7 +230,7 @@ Explicit padding patterns are specific to ``bitfields``:
 
 
 Named values
-^^^^^^^^^^^^
+------------
 
 ``bitstruct`` keeps names outside its format and uses dictionaries:
 
@@ -264,11 +258,12 @@ positional:
     (4, 5)
 
 
-Offsets and truncated input
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Offsets
+-------
 
-``bitstruct`` directly supports offsets into byte buffers and optionally
-truncated input:
+Both modules provide ``pack_into()`` and ``unpack_from()``, both as
+module-level functions and on compiled formats.  Their offsets are measured
+in bits:
 
 .. code-block:: python
 
@@ -278,17 +273,42 @@ truncated input:
     bytearray(b'\n\xb0')
     >>> bitstruct.unpack_from("u4u4", buf, 4)
     (10, 11)
-    >>> bitstruct.unpack("u8u8", b"\x12", allow_truncated=True)
-    (18,)
 
-With ``bitfields``, normal bitarray slicing handles an offset, and unpacking
-always requires exactly the compiled number of bits:
+    >>> bits = bitarray(16)
+    >>> bitfields.pack_into(">u4 u4", bits, 4, 10, 11)
+    >>> bits
+    bitarray('0000101010110000')
+    >>> bitfields.unpack_from(">u4 u4", bits, 4)
+    (10, 11)
+    >>> bitfields.unpack_from(">u4 u4", bits, -12)
+    (10, 11)
+    >>> bytes(bits) == buf
+    True
+
+Negative ``bitfields`` offsets count from the end of the bitarray.
+Because ``bitfields`` operates directly on bitarrays, slicing is another way
+to unpack from an offset:
 
 .. code-block:: python
 
-    >>> bits = bitarray(buf, endian="big")
     >>> bitfields.unpack(">u4 u4", bits[4:12])
     (10, 11)
+
+
+Truncated input
+---------------
+
+``bitstruct`` can optionally unpack truncated input:
+
+.. code-block:: python
+
+    >>> bitstruct.unpack("u8u8", b"\x12", allow_truncated=True)
+    (18,)
+
+``bitfields.unpack()`` always requires exactly the compiled number of bits:
+
+.. code-block:: python
+
     >>> bitfields.unpack(">u8 u8", bitarray(b"\x12", endian="big"))
     Traceback (most recent call last):
         ...
@@ -296,7 +316,7 @@ always requires exactly the compiled number of bits:
 
 
 Bitfields format extensions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------
 
 Comments, embedded names and literal padding make larger ``bitfields``
 formats self-documenting:
