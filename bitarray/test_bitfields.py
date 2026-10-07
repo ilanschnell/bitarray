@@ -48,16 +48,17 @@ class PackUnpackTests(unittest.TestCase, Util):
     def test_offset(self):
         cf = compile(Example.format)
         w = cf.width
-        for offset in 0, 357, 1000 - w, -611, -w:
-            a = urandom(1000)
-            b = a.copy()
-            cf.pack_into(a, offset, *Example.values)
-            self.assertEqual(cf.unpack_from(a, offset), Example.values)
-            start = offset if offset >= 0 else len(a) + offset
-            self.assertEqual(a[:start], b[:start])
-            self.assertEqual(a[start:start + w], Example.bits)
-            self.assertEqual(a[start + w:], b[start + w:])
-            self.assertEqual(len(a), len(b))
+        for endian in _ENDIAN_FROM_PREFIX.values():
+            for offset in 0, 357, 1000 - w, -611, -w:
+                a = urandom(1000, endian)
+                b = a.copy()
+                cf.pack_into(a, offset, *Example.values)
+                self.assertEqual(len(a), 1000)  # pack_into does not resize
+                self.assertEqual(cf.unpack_from(a, offset), Example.values)
+                start = offset if offset >= 0 else len(a) + offset
+                self.assertEqual(a[:start], b[:start])
+                self.assertEqual(a[start:start + w], Example.bits)
+                self.assertEqual(a[start + w:], b[start + w:])
 
     def test_pack_value_count(self):
         cf = compile("u8 s8")
@@ -87,6 +88,7 @@ class PackUnpackTests(unittest.TestCase, Util):
                                  "cannot pack into read-only bitarray",
                                  cf.pack_into, a, 0, 123)
         a = bitarray(8)
+        self.assertRaises(TypeError, cf.pack_into, a, 0.0, 123)
         self.assertIsNone(cf.pack_into(a, -8, 123))
         self.assertEqual(cf.unpack_from(a), (123,))
         for offset in 1, -7, -9:
@@ -99,6 +101,10 @@ class PackUnpackTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, cf.unpack, bitarray(9))
         lst = 8 * [0]
         self.assertRaises(TypeError, cf.unpack, lst)
+        cf = compile("p{0010}")
+        self.assertRaisesMessage(ValueError,
+                                 "pad-bits mismatch: 0110 != 0010",
+                                 cf.unpack, bitarray("0110"))
 
     def test_unpack_from_errors(self):
         cf = compile("u8")
@@ -108,6 +114,7 @@ class PackUnpackTests(unittest.TestCase, Util):
         self.assertEqual(len(a), 8)
         self.assertEqual(cf.unpack_from(a), (123,))
         self.assertEqual(cf.unpack_from(a, -8), (123,))
+        self.assertRaises(TypeError, cf.unpack_from, a, 0.0)
         for offset in 1, -7, -9, 9:
             msg = ("offset out of range" if offset in (-9, 9) else
                    "bitarray (length 8) is too short to unpack 8 bits "
@@ -342,11 +349,6 @@ class ModuleFunctionTests(unittest.TestCase, Util):
         values = unpack(Example.format, Example.bits)
         self.assertIs(type(values), tuple)
         self.assertEqual(values, Example.values)
-        self.assertRaises(TypeError, unpack, Example.format,
-                          list(Example.bits))
-        self.assertRaisesMessage(ValueError,
-                                 "pad-bits mismatch: 0110 != 0010",
-                                 unpack, "p{0010}", bitarray("0110"))
 
     def test_unpack_from(self):
         a = urandom(1024)
