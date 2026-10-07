@@ -14,31 +14,108 @@ import dataclasses
 
 from bitarray import bitarray, frozenbitarray
 from bitarray.util import urandom
-from bitarray.bitfields import (Struct, compile, pack, unpack, calcsize,
+from bitarray.bitfields import (Struct, compile, pack, pack_into,
+                                unpack, unpack_from, calcsize,
                                 DEFAULT_ENDIAN, _ENDIAN_FROM_PREFIX)
 from bitarray.test_bitarray import Util
+
+
+class Example:
+    format = ">u2 s7 x{000111} <u h b5 p{11111} ? B16 f16"
+    canonical_format = ">u2 >s7 >x6{000111} <u1 <h4 <b5 <P5 <? <B16 <f16"
+    width = 63
+    values = 2, -8, 1, "e", bitarray("01110"), False, b"A\xff", -29.0
+    bits = bitarray("10 1111000 000111 1 0111 01110 11111 0 "
+                    "10000010_11111111 0000001011110011")
+
+
+class PackUnpackTests(unittest.TestCase, Util):
+
+    def test_example(self):
+        cf = compile(Example.format)
+        self.assertIsInstance(cf, Struct)
+        self.assertEqual(cf.width, Example.width)
+        self.assertEqual(cf.values, 8)
+        self.assertEqual(cf.format(), Example.canonical_format)
+        a = cf.pack(*Example.values)
+        self.assertEqual(len(a), Example.width)
+        self.assertEqual(a.endian, "big")
+        self.assertEqual(a, Example.bits)
+        a[9:15] = 1  # the 'x' pad-bits are not validated
+        self.assertEqual(cf.unpack(a), Example.values)
+        self.assertEqual(cf.unpack(frozenbitarray(a)), Example.values)
+
+    def test_pack_value_count(self):
+        cf = compile("u8 s8")
+        self.assertEqual(cf.values, 2)
+        self.assertRaisesMessage(ValueError,
+                                 "expected 2 values to pack, got 1",
+                                 cf.pack, 1)
+        self.assertRaises(ValueError, cf.pack, 1, 2, 3)
+        self.assertRaises(ValueError, compile("x").pack, 1)
+
+    def test_pack_value_size_mismatch(self):
+        for fmt, value, msg in [
+                ("h12", "ff", "expected hex string of length 3, got 2"),
+                ("b3", bitarray(2), "expected bitarray of length 3, got 2"),
+                ("B16", b"\xa5", "expected bytes of length 2, got 1"),
+        ]:
+            cf = compile(fmt)
+            self.assertRaisesMessage(ValueError, msg, cf.pack, value)
+
+    def test_unpack_errors(self):
+        cf = compile(">u8")
+        self.assertRaisesMessage(ValueError, "expected bitarray of length 8 "
+                                 "to unpack, got 7", cf.unpack, bitarray(7))
+        self.assertRaises(ValueError, cf.unpack, bitarray(9))
+        lst = [0, 1, 0, 0, 1, 1, 1, 1]
+        self.assertRaises(TypeError, cf.unpack, lst)
+
+    def test_offset(self):
+        cf = compile(Example.format)
+        w = cf.width
+        for offset in 0, 357, 1000 - w, -611, -w:
+            a = urandom(1000)
+            b = a.copy()
+            cf.pack_into(a, offset, *Example.values)
+            self.assertEqual(cf.unpack_from(a, offset), Example.values)
+            start = offset if offset >= 0 else len(a) + offset
+            self.assertEqual(a[:start], b[:start])
+            self.assertEqual(a[start:start + w], Example.bits)
+            self.assertEqual(a[start + w:], b[start + w:])
+            self.assertEqual(len(a), len(b))
+
+    def test_pack_into_errors(self):
+        cf = compile("u8")
+        self.assertRaises(TypeError, cf.pack_into, list(bitarray(8)), 0, 123)
+        a = frozenbitarray(8)
+        self.assertRaises(TypeError, cf.pack_into, a, 0, 123)
+        a = bitarray(8)
+        self.assertIsNone(cf.pack_into(a, -8, 123))
+        self.assertEqual(cf.unpack_from(a), (123,))
+        for offset in 1, -7, -9:
+            self.assertRaises(ValueError, cf.pack_into, a, offset, 123)
+
+    def test_unpack_from_errors(self):
+        cf = compile("u8")
+        self.assertRaises(TypeError, cf.unpack_from, list(bitarray(8)))
+        a = frozenbitarray(cf.pack(123))
+        self.assertEqual(cf.unpack_from(a), (123,))
+        self.assertEqual(cf.unpack_from(a, -8), (123,))
+        for offset in 1, -7, -9:
+            self.assertRaises(ValueError, cf.unpack_from, a, offset)
+
+    def test_overlapping_view(self):
+        a = bitarray("00000000 11111111")
+        x = bitarray(buffer=memoryview(a)[1:2], endian=a.endian)
+        y = bitarray(buffer=memoryview(a)[0:1], endian=a.endian)
+        compile("b8 b8").pack_into(a, 0, x, y)
+        self.assertEqual(a, bitarray("11111111 00000000"))
 
 
 class StructTests(unittest.TestCase, Util):
 
     all_codes = "us?fhbBpPxX"
-
-    def test_example(self):
-        cf = compile(">u2 s7 x{000111} <u h b5 P ? B16 f16")
-        self.assertIsInstance(cf, Struct)
-        self.assertEqual(cf.width, 59)
-        self.assertEqual(cf.values, 8)
-        self.assertEqual(cf.format(),
-                         ">u2 >s7 >x6{000111} <u1 <h4 <b5 <P1 <? <B16 <f16")
-        values = 2, -8, 1, "e", bitarray("01110"), False, b"A\xff", -29.0
-        a = cf.pack(*values)
-        self.assertEqual(len(a), 59)
-        self.assertEqual(a.endian, "big")
-        self.assertEqual(a, bitarray("10 1111000 000111 1 0111 01110 1 0 "
-                                     "10000010 11111111 0000001011110011"))
-        a[9:15] = 1  # the 'x' pad-bits are not validated
-        self.assertEqual(cf.unpack(a), values)
-        self.assertEqual(cf.unpack(frozenbitarray(a)), values)
 
     def test_cached(self):
         self.assertIs(compile("u8"), compile("u8"))
@@ -210,57 +287,54 @@ class StructTests(unittest.TestCase, Util):
             value = 11
             self.assertEqual(cf.unpack(cf.pack(value)), (value,))
 
-    def test_pack_value_count(self):
-        cf = compile("u8 s8")
-        self.assertEqual(cf.values, 2)
-        self.assertRaisesMessage(ValueError,
-                                 "expected 2 values to pack, got 1",
-                                 cf.pack, 1)
-        self.assertRaises(ValueError, cf.pack, 1, 2, 3)
-        self.assertRaises(ValueError, compile("x").pack, 1)
-
-    def test_pack_value_size_mismatch(self):
-        for fmt, value, msg in [
-                ("h12", "ff", "expected hex string of length 3, got 2"),
-                ("b3", bitarray(2), "expected bitarray of length 3, got 2"),
-                ("B16", b"\xa5", "expected bytes of length 2, got 1"),
-        ]:
-            self.assertRaisesMessage(ValueError, msg, pack, fmt, value)
-
-    def test_unpack_errors(self):
-        cf = compile(">u8")
-        self.assertRaisesMessage(ValueError, "expected bitarray of length 8 "
-                                 "to unpack, got 7", cf.unpack, bitarray(7))
-        self.assertRaises(ValueError, cf.unpack, bitarray(9))
-        lst = [0, 1, 0, 0, 1, 1, 1, 1]
-        self.assertRaises(TypeError, cf.unpack, lst)
-
 
 class ModuleFunctionTests(unittest.TestCase, Util):
 
-    format = ">u2 s7 x{000111} <u h b5 P ? B16 f16"
-    values = 2, -8, 1, "e", bitarray("01110"), False, b"A\xff", -29.0
-    bits = bitarray("10 1111000 000111 1 0111 01110 1 0 "
-                    "10000010 11111111 0000001011110011")
-
     def test_pack(self):
-        a = pack(self.format, *self.values)
+        a = pack(Example.format, *Example.values)
         self.assertIs(type(a), bitarray)
-        self.assertEqual(a, self.bits)
+        self.assertEqual(a, Example.bits)
+
+    def test_pack_into(self):
+        a = urandom(1024)
+        b = a.copy()
+        offset = 123
+        self.assertIsNone(pack_into(Example.format, a, offset,
+                                    *Example.values))
+        width = Example.width
+        self.assertEqual(a[:offset], b[:offset])
+        self.assertEqual(a[offset:offset + width], Example.bits)
+        self.assertEqual(a[offset + width:], b[offset + width:])
 
     def test_unpack(self):
-        values = unpack(self.format, self.bits)
+        values = unpack(Example.format, Example.bits)
         self.assertIs(type(values), tuple)
-        self.assertEqual(values, self.values)
-        self.assertRaises(TypeError, unpack, self.format, list(self.bits))
+        self.assertEqual(values, Example.values)
+        self.assertRaises(TypeError, unpack, Example.format,
+                          list(Example.bits))
         self.assertRaisesMessage(ValueError,
                                  "pad-bits mismatch: 0110 != 0010",
                                  unpack, "p{0010}", bitarray("0110"))
 
+    def test_unpack_from(self):
+        a = urandom(1024)
+        offset = 123
+        a[offset:offset + Example.width] = Example.bits
+        values = unpack_from(Example.format, a, offset)
+        self.assertIs(type(values), tuple)
+        self.assertEqual(values, Example.values)
+
+    def test_unpack_from_default_offset(self):
+        a = bitarray(Example.bits, "little")
+        a.fill(256)
+        values = unpack_from(Example.format, a)
+        self.assertIs(type(values), tuple)
+        self.assertEqual(values, Example.values)
+
     def test_calcsize(self):
-        size = calcsize(self.format)
+        size = calcsize(Example.format)
         self.assertIs(type(size), int)
-        self.assertEqual(size, 59)
+        self.assertEqual(size, Example.width)
 
 
 class FieldTests(unittest.TestCase):

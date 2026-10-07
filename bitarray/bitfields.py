@@ -9,6 +9,7 @@ https://github.com/ilanschnell/bitarray/blob/master/doc/bitfields.rst
 """
 import re
 import struct
+import operator
 import functools
 import collections
 from dataclasses import dataclass
@@ -18,7 +19,8 @@ from bitarray import bitarray
 from bitarray.util import int2ba, ba2int, hex2ba, ba2hex
 
 
-__all__ = ["Struct", "compile", "pack", "unpack", "calcsize"]
+__all__ = ["Struct", "compile", "pack", "pack_into", "unpack", "unpack_from",
+           "calcsize"]
 
 
 DEFAULT_ENDIAN = "little"
@@ -313,6 +315,17 @@ Return the canonical format string reconstructed from this compiled format.
     def __reduce__(self):
         return Struct, (self.format(),)
 
+    def _normalize_offset(self, length, offset, op):
+        offset = operator.index(offset)
+        if offset < 0:
+            offset += length
+        if offset < 0:
+            raise ValueError("offset out of range")
+        if offset > length - self.width:
+            raise ValueError("bitarray is too short to %s %d bits starting "
+                             "at offset %d" % (op, self.width, offset))
+        return offset
+
     def pack(self, *values: Any) -> bitarray:
         """pack(v1, v2, ...) -> bitarray
 
@@ -330,17 +343,20 @@ compiled format.
             a.extend(field.pack(value))
         return a
 
-    def unpack(self, a: bitarray) -> Tuple[Any, ...]:
-        """unpack(bitarray) -> tuple
+    def pack_into(self, a: bitarray, offset: int, *values: Any) -> None:
+        """pack_into(bitarray, offset, v1, v2, ...) -> None
 
-Return a tuple containing values unpacked according to this compiled format.
+Pack the values v1, v2, ... into the writable bitarray starting at bit
+offset `offset`.  A negative offset counts from the end of bitarray.
 """
         if not isinstance(a, bitarray):
             raise TypeError("bitarray expected, got %r" % type(a).__name__)
-        if len(a) != self.width:
-            raise ValueError("expected bitarray of length %d to unpack, "
-                             "got %d" % (self.width, len(a)))
-        i = 0
+        if a.readonly:
+            raise TypeError("cannot pack into read-only bitarray")
+        offset = self._normalize_offset(len(a), offset, "pack")
+        a[offset:offset + self.width] = self.pack(*values)
+
+    def _unpack(self, a, i=0):
         values = []
         for field in self._fields:
             j = i + field.width
@@ -352,6 +368,29 @@ Return a tuple containing values unpacked according to this compiled format.
         if self._names:
             return self._result_type(self._names)(*values)
         return tuple(values)
+
+    def unpack(self, a: bitarray) -> Tuple[Any, ...]:
+        """unpack(bitarray) -> tuple
+
+Return a tuple containing values unpacked according to this compiled format.
+"""
+        if not isinstance(a, bitarray):
+            raise TypeError("bitarray expected, got %r" % type(a).__name__)
+        if len(a) != self.width:
+            raise ValueError("expected bitarray of length %d to unpack, "
+                             "got %d" % (self.width, len(a)))
+        return self._unpack(a)
+
+    def unpack_from(self, a: bitarray, offset: int = 0) -> Tuple[Any, ...]:
+        """unpack_from(bitarray, offset=0) -> tuple
+
+Unpack values from bitarray starting at bit offset `offset`, and return a
+tuple.  A negative offset counts from the end of bitarray.
+"""
+        if not isinstance(a, bitarray):
+            raise TypeError("bitarray expected, got %r" % type(a).__name__)
+        offset = self._normalize_offset(len(a), offset, "unpack")
+        return self._unpack(a, offset)
 
 
 @functools.lru_cache()
@@ -371,12 +410,28 @@ to the format string.
 """
     return compile(format).pack(*values)
 
+def pack_into(format: str, a: bitarray, offset: int, *values: Any) -> None:
+    """pack_into(format, bitarray, offset, v1, v2, ...) -> None
+
+Pack the values v1, v2, ... into the writable bitarray starting at bit
+offset `offset`.  A negative offset counts from the end of bitarray.
+"""
+    return compile(format).pack_into(a, offset, *values)
+
 def unpack(format: str, a: bitarray) -> Tuple[Any, ...]:
     """unpack(format, bitarray) -> tuple
 
 Return a tuple containing values unpacked according to the format string.
 """
     return compile(format).unpack(a)
+
+def unpack_from(format: str, a: bitarray, offset: int = 0) -> Tuple[Any, ...]:
+    """unpack_from(format, bitarray, offset=0) -> tuple
+
+Unpack values from bitarray starting at bit offset `offset`, and return a
+tuple.  A negative offset counts from the end of bitarray.
+"""
+    return compile(format).unpack_from(a, offset)
 
 def calcsize(format: str) -> int:
     """calcsize(format: str) -> int
