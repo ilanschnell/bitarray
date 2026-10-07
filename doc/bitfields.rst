@@ -110,6 +110,32 @@ All fields must have a positive width.  The input to ``unpack()`` must have
 exactly the compiled width.
 
 
+Offsets
+-------
+
+The ``pack_into()`` and ``unpack_from()`` methods operate on a region of an
+existing bitarray.  The offset is measured in bits; a negative offset counts
+from the end of the bitarray.  ``pack_into()`` modifies a writable bitarray in
+place without changing its length or the bits outside the selected region:
+
+.. code-block:: python
+
+    >>> from bitarray import bitarray
+    >>> cf = compile(">u4 u4")
+    >>> a = bitarray(16)
+    >>> cf.pack_into(a, 4, 10, 11)
+    >>> a
+    bitarray('0000101010110000')
+    >>> cf.unpack_from(a, 4)
+    (10, 11)
+    >>> cf.unpack_from(a, -12)
+    (10, 11)
+
+The complete structure must fit in the bitarray starting at the given offset.
+The module-level ``pack_into()`` and ``unpack_from()`` functions provide the
+same operations without explicitly compiling the format.
+
+
 Named fields
 ------------
 
