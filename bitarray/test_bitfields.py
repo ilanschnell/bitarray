@@ -17,7 +17,7 @@ from bitarray.util import urandom
 from bitarray.bitfields import (Struct, compile, pack, pack_into,
                                 unpack, unpack_from, calcsize,
                                 DEFAULT_ENDIAN, _ENDIAN_FROM_PREFIX)
-from bitarray.test_bitarray import Util
+from bitarray.test_bitarray import Util, ENDIANS
 
 
 class Example:
@@ -48,17 +48,15 @@ class PackUnpackTests(unittest.TestCase, Util):
     def test_offset(self):
         cf = compile(Example.format)
         w = cf.width
-        for endian in _ENDIAN_FROM_PREFIX.values():
-            for offset in 0, 357, 1000 - w, -611, -w:
-                a = urandom(1000, endian)
-                b = a.copy()
-                self.assertIsNone(cf.pack_into(a, offset, *Example.values))
-                self.assertEqual(len(a), 1000)  # pack_into does not resize
-                self.assertEqual(cf.unpack_from(a, offset), Example.values)
-                start = offset if offset >= 0 else len(a) + offset
-                self.assertEqual(a[:start], b[:start])
-                self.assertEqual(a[start:start + w], Example.bits)
-                self.assertEqual(a[start + w:], b[start + w:])
+        for offset in 0, 357, 1000 - w, -611, -w:
+            a = urandom(1000)
+            b = a.copy()
+            cf.pack_into(a, offset, *Example.values)
+            self.assertEqual(cf.unpack_from(a, offset), Example.values)
+            start = offset if offset >= 0 else len(a) + offset
+            self.assertEqual(a[:start], b[:start])
+            self.assertEqual(a[start:start + w], Example.bits)
+            self.assertEqual(a[start + w:], b[start + w:])
 
     def test_pack_value_count(self):
         cf = compile("u8 s8")
@@ -78,6 +76,20 @@ class PackUnpackTests(unittest.TestCase, Util):
             cf = compile(fmt)
             self.assertRaisesMessage(ValueError, msg, cf.pack, value)
 
+    def test_pack_into(self):
+        cf = compile(Example.format)
+        w = cf.width
+        for endian in ENDIANS:
+            for offset in 0, 1, 357:
+                a = urandom(512, endian)
+                b = a.copy()
+                self.assertIsNone(cf.pack_into(a, offset, *Example.values))
+                self.assertEqual(len(a), 512)  # pack_into does not resize
+                self.assertEqual(a.endian, endian)
+                self.assertEqual(a[:offset], b[:offset])
+                self.assertEqual(a[offset:offset + w], Example.bits)
+                self.assertEqual(a[offset + w:], b[offset + w:])
+
     def test_pack_into_errors(self):
         cf = compile("u8")
         lst = 8 * [0]
@@ -89,7 +101,7 @@ class PackUnpackTests(unittest.TestCase, Util):
                                  cf.pack_into, a, 0, 123)
         a = bitarray(8)
         self.assertRaises(TypeError, cf.pack_into, a, 0.0, 123)
-        for offset in 1, -7, -9:
+        for offset in 1, -7, -9, 9:
             self.assertRaises(ValueError, cf.pack_into, a, offset, 123)
 
     def test_unpack_errors(self):
@@ -104,14 +116,22 @@ class PackUnpackTests(unittest.TestCase, Util):
                                  "pad-bits mismatch: 0110 != 0010",
                                  cf.unpack, bitarray("0110"))
 
+    def test_unpack_from(self):
+        cf = compile(Example.format)
+        for offset in 0, 1, 357:
+            a = urandom(512)
+            a[offset:offset + cf.width] = Example.bits
+            a = frozenbitarray(a)
+            if offset == 0:
+                self.assertEqual(cf.unpack_from(a), Example.values)
+            self.assertEqual(cf.unpack_from(a, offset), Example.values)
+
     def test_unpack_from_errors(self):
         cf = compile("u8")
         self.assertRaisesMessage(TypeError, "bitarray expected, got 'list'",
                                  cf.unpack_from, 8 * [0])
         a = frozenbitarray(cf.pack(123))
         self.assertEqual(len(a), 8)
-        self.assertEqual(cf.unpack_from(a), (123,))
-        self.assertEqual(cf.unpack_from(a, -8), (123,))
         self.assertRaises(TypeError, cf.unpack_from, a, 0.0)
         for offset in 1, -7, -9, 9:
             msg = ("offset out of range" if offset in (-9, 9) else
@@ -349,7 +369,7 @@ class ModuleFunctionTests(unittest.TestCase, Util):
 
     def test_unpack_from(self):
         a = urandom(1024)
-        offset = 123
+        offset = 129
         a[offset:offset + Example.width] = Example.bits
         values = unpack_from(Example.format, a, offset)
         self.assertIs(type(values), tuple)
