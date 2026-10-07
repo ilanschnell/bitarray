@@ -105,11 +105,13 @@ class PackUnpackTests(unittest.TestCase, Util):
         self.assertRaisesMessage(TypeError, "bitarray expected, got 'list'",
                                  cf.unpack_from, 8 * [0])
         a = frozenbitarray(cf.pack(123))
+        self.assertEqual(len(a), 8)
         self.assertEqual(cf.unpack_from(a), (123,))
         self.assertEqual(cf.unpack_from(a, -8), (123,))
         for offset in 1, -7, -9, 9:
             msg = ("offset out of range" if offset in (-9, 9) else
-                "bitarray is too short to unpack 8 bits starting at offset 1")
+                   "bitarray (length 8) is too short to unpack 8 bits "
+                   "starting at offset 1")
             self.assertRaisesMessage(ValueError, msg,
                                      cf.unpack_from, a, offset)
 
@@ -290,9 +292,10 @@ class StructTests(unittest.TestCase, Util):
             self.assertRaisesMessage(ValueError, msg, compile, fmt)
 
     def test_format_empty(self):
+        self.assertRaises(TypeError, Struct)
         for fmt in "", " ", "  ", "\n\r\t\v", "# comment", "#":
             cf = compile(fmt)
-            self.assertEqual(cf, Struct())
+            self.assertEqual(cf, Struct(""))
             self.assertEqual(cf.width, 0)
             self.assertEqual(cf.values, 0)
             self.assertEqual(cf.format(), "")
@@ -301,6 +304,7 @@ class StructTests(unittest.TestCase, Util):
             self.assertEqual(a.endian, DEFAULT_ENDIAN)
 
     def test_repr(self):
+        self.assertEqual(repr(compile("")), "Struct('')")
         self.assertEqual(repr(compile("u2 >s7 x")), "Struct('<u2 >s7 >x1')")
 
     def test_endian(self):
@@ -363,6 +367,7 @@ class ModuleFunctionTests(unittest.TestCase, Util):
         size = calcsize(Example.format)
         self.assertIs(type(size), int)
         self.assertEqual(size, Example.width)
+        self.assertEqual(calcsize(""), 0)
 
 
 class FieldTests(unittest.TestCase):

@@ -217,7 +217,7 @@ class _PaddingField(_Field):
 
 @dataclass(frozen=True)
 class Struct:
-    """Struct(format: str = "") -> compiled struct object
+    """Struct(format) -> compiled struct object
 
 Central class for packing and unpacking bit-level structures.
 """
@@ -226,7 +226,7 @@ Central class for packing and unpacking bit-level structures.
     values: int
     _names: tuple
 
-    def __init__(self, format: str = "") -> None:
+    def __init__(self, format: str) -> None:
         fields = self._fields_from_format(format)
         object.__setattr__(self, "_fields", tuple(fields))
         object.__setattr__(self, "width", sum(f.width for f in fields))
@@ -321,9 +321,10 @@ Return the canonical format string reconstructed from this compiled format.
             offset += length
         if not 0 <= offset <= length:
             raise ValueError("offset out of range")
-        if offset > length - self.width:
-            raise ValueError("bitarray is too short to %s %d bits starting "
-                             "at offset %d" % (op, self.width, offset))
+        if offset + self.width > length:
+            raise ValueError(
+                "bitarray (length %d) is too short to %s %d bits starting "
+                "at offset %d" % (length, op, self.width, offset))
         return offset
 
     def pack(self, *values: Any) -> bitarray:
@@ -434,7 +435,7 @@ tuple.  A negative offset counts from the end of bitarray.
     return compile(format).unpack_from(a, offset)
 
 def calcsize(format: str) -> int:
-    """calcsize(format: str) -> int
+    """calcsize(format) -> int
 
 Return the size (in bits) of the struct corresponding to the format string.
 """
