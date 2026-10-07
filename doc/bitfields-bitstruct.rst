@@ -45,13 +45,13 @@ bytes; ``bitfields`` uses ``?`` and ``B``, respectively:
 
     >>> struct_format = ">u3s5f16f32f64b1p3P2r16"
     >>> fields_format = ">u3s5f16f32f64?1p3P2B16"
+    >>> bitstruct.calcsize(struct_format)
+    142
+    >>> bitfields.calcsize(fields_format)
+    142
     >>> values = (5, -3, 1.5, 1.875, -2.5, True, b"OK")
     >>> packed_struct = bitstruct.pack(struct_format, *values)
     >>> packed_fields = bitfields.pack(fields_format, *values)
-    >>> bitstruct.calcsize(struct_format)
-    142
-    >>> len(packed_fields)
-    142
     >>> packed_struct == bytes(packed_fields)
     True
     >>> bitstruct.unpack(struct_format, packed_struct) == values

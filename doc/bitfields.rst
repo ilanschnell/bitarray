@@ -38,7 +38,9 @@ The module-level functions may be used without explicitly compiling a format:
 
 .. code-block:: python
 
-    >>> from bitarray.bitfields import pack, unpack
+    >>> from bitarray.bitfields import pack, unpack, calcsize
+    >>> calcsize(">u4 s5")  # total size in bits
+    9
     >>> a = pack(">u4 s5", 10, -2)
     >>> a
     bitarray('101011110')

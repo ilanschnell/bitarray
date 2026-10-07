@@ -14,7 +14,7 @@ import dataclasses
 
 from bitarray import bitarray, frozenbitarray
 from bitarray.util import urandom
-from bitarray.bitfields import (Struct, compile, pack, unpack,
+from bitarray.bitfields import (Struct, compile, pack, unpack, calcsize,
                                 DEFAULT_ENDIAN, _ENDIAN_FROM_PREFIX)
 from bitarray.test_bitarray import Util
 
@@ -43,11 +43,7 @@ class StructTests(unittest.TestCase, Util):
     def test_cached(self):
         self.assertIs(compile("u8"), compile("u8"))
         self.assertIsNot(Struct("u8"), compile("u8"))
-
-    def test_mixed_format_roundtrip(self):
-        cf = compile("u3 >s5 <B16")
-        self.assertEqual(compile(cf.format()), cf)
-        self.assertEqual(Struct(cf.format()), cf)
+        self.assertEqual(Struct("u8"), compile("u8"))
 
     def test_struct_read_only(self):
         cf = compile("u2 x s7 x X3 u b5")
@@ -238,11 +234,33 @@ class StructTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, cf.unpack, bitarray(9))
         lst = [0, 1, 0, 0, 1, 1, 1, 1]
         self.assertRaises(TypeError, cf.unpack, lst)
-        # module level unpack
-        self.assertRaises(TypeError, unpack, "u8", lst)
+
+
+class ModuleFunctionTests(unittest.TestCase, Util):
+
+    format = ">u2 s7 x{000111} <u h b5 P ? B16 f16"
+    values = 2, -8, 1, "e", bitarray("01110"), False, b"A\xff", -29.0
+    bits = bitarray("10 1111000 000111 1 0111 01110 1 0 "
+                    "10000010 11111111 0000001011110011")
+
+    def test_pack(self):
+        a = pack(self.format, *self.values)
+        self.assertIs(type(a), bitarray)
+        self.assertEqual(a, self.bits)
+
+    def test_unpack(self):
+        values = unpack(self.format, self.bits)
+        self.assertIs(type(values), tuple)
+        self.assertEqual(values, self.values)
+        self.assertRaises(TypeError, unpack, self.format, list(self.bits))
         self.assertRaisesMessage(ValueError,
                                  "pad-bits mismatch: 0110 != 0010",
                                  unpack, "p{0010}", bitarray("0110"))
+
+    def test_calcsize(self):
+        size = calcsize(self.format)
+        self.assertIs(type(size), int)
+        self.assertEqual(size, 59)
 
 
 class FieldTests(unittest.TestCase):

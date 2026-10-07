@@ -18,7 +18,7 @@ from bitarray import bitarray
 from bitarray.util import int2ba, ba2int, hex2ba, ba2hex
 
 
-__all__ = ["Struct", "compile", "pack", "unpack"]
+__all__ = ["Struct", "compile", "pack", "unpack", "calcsize"]
 
 
 DEFAULT_ENDIAN = "little"
@@ -377,3 +377,10 @@ def unpack(format: str, a: bitarray) -> Tuple[Any, ...]:
 Return a tuple containing values unpacked according to the format string.
 """
     return compile(format).unpack(a)
+
+def calcsize(format: str) -> int:
+    """calcsize(format: str) -> int
+
+Return the size (in bits) of the struct corresponding to the format string.
+"""
+    return compile(format).width
