@@ -52,7 +52,7 @@ class PackUnpackTests(unittest.TestCase, Util):
             for offset in 0, 357, 1000 - w, -611, -w:
                 a = urandom(1000, endian)
                 b = a.copy()
-                cf.pack_into(a, offset, *Example.values)
+                self.assertIsNone(cf.pack_into(a, offset, *Example.values))
                 self.assertEqual(len(a), 1000)  # pack_into does not resize
                 self.assertEqual(cf.unpack_from(a, offset), Example.values)
                 start = offset if offset >= 0 else len(a) + offset
@@ -89,8 +89,6 @@ class PackUnpackTests(unittest.TestCase, Util):
                                  cf.pack_into, a, 0, 123)
         a = bitarray(8)
         self.assertRaises(TypeError, cf.pack_into, a, 0.0, 123)
-        self.assertIsNone(cf.pack_into(a, -8, 123))
-        self.assertEqual(cf.unpack_from(a), (123,))
         for offset in 1, -7, -9:
             self.assertRaises(ValueError, cf.pack_into, a, offset, 123)
 
@@ -338,8 +336,7 @@ class ModuleFunctionTests(unittest.TestCase, Util):
         a = urandom(1024)
         b = a.copy()
         offset = 123
-        self.assertIsNone(pack_into(Example.format, a, offset,
-                                    *Example.values))
+        pack_into(Example.format, a, offset, *Example.values)
         width = Example.width
         self.assertEqual(a[:offset], b[:offset])
         self.assertEqual(a[offset:offset + width], Example.bits)
