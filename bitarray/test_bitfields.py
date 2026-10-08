@@ -134,9 +134,10 @@ class PackUnpackTests(unittest.TestCase, Util):
         self.assertEqual(len(a), 8)
         self.assertRaises(TypeError, cf.unpack_from, a, 0.0)
         for offset in 1, -7, -9, 9:
-            msg = ("offset out of range" if offset in (-9, 9) else
-                   "bitarray (length 8) is too short to unpack 8 bits "
-                   "starting at offset 1")
+            msg = ("offset %d out of range for bitarray size 8" % offset
+                   if offset in (-9, 9) else
+                   "bitarray of at least 9 bits required for unpacking 8 bits "
+                   "at offset 1 (actual bitarray size is 8)")
             self.assertRaisesMessage(ValueError, msg,
                                      cf.unpack_from, a, offset)
 
@@ -157,16 +158,16 @@ class PackUnpackTests(unittest.TestCase, Util):
         self.assertEqual(cf.unpack_from(a), ())
         self.assertEqual(cf.unpack_from(a, 0), ())
         for f in cf.pack_into, cf.unpack_from:
-            self.assertRaisesMessage(ValueError, "offset out of range",
-                                     f, a, 1)
+            msg = "offset 1 out of range for bitarray size 0"
+            self.assertRaisesMessage(ValueError, msg, f, a, 1)
         a = bitarray("0")
         cf.pack_into(a, 1)
         self.assertEqual(a.to01(), "0")
         for offset in 0, 1:
             self.assertEqual(cf.unpack_from(a, offset), ())
         for f in cf.pack_into, cf.unpack_from:
-            self.assertRaisesMessage(ValueError, "offset out of range",
-                                     f, a, 2)
+            msg = "offset 2 out of range for bitarray size 1"
+            self.assertRaisesMessage(ValueError, msg, f, a, 2)
 
 
 class StructTests(unittest.TestCase, Util):

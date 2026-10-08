@@ -248,11 +248,11 @@ Central class for packing and unpacking bit-level structures.
         return collections.namedtuple("Unpacked", names)
 
     _pat = re.compile(r"""
-    ([<>])?         # optional prefix
-    ([a-zA-Z?])     # code character
-    (\d+)?          # optional bit width
-    (?:\{(\w+)\})?  # optional name (or padding bit pattern)
-    \s*             # optional whitespace
+        ([<>])?         # optional prefix
+        ([a-zA-Z?])     # code character
+        (\d+)?          # optional bit width
+        (?:\{(\w+)\})?  # optional name (or padding bit pattern)
+        \s*             # optional whitespace
     """, re.VERBOSE | re.ASCII)
 
     def _fields_from_format(self, format):
@@ -274,7 +274,6 @@ Central class for packing and unpacking bit-level structures.
                 raise ValueError("field width cannot be zero: %r" % format)
             fields.append(self._field_from_code(code, width, endian, name))
             format = format[m.end():]
-
         return fields
 
     @staticmethod
@@ -316,16 +315,18 @@ Return the canonical format string reconstructed from this compiled format.
         return Struct, (self.format(),)
 
     def _normalize_offset(self, length, offset, op):
-        offset = operator.index(offset)
-        if offset < 0:
-            offset += length
-        if not 0 <= offset <= length:
-            raise ValueError("offset out of range")
-        if offset + self.width > length:
+        i = operator.index(offset)
+        if i < 0:
+            i += length
+        if not 0 <= i <= length:
+            raise ValueError("offset %d out of range for bitarray size %d" %
+                             (offset, length))
+        if i + self.width > length:
             raise ValueError(
-                "bitarray (length %d) is too short to %s %d bits starting "
-                "at offset %d" % (length, op, self.width, offset))
-        return offset
+                "bitarray of at least %d bits required for %sing %d bits "
+                "at offset %d (actual bitarray size is %d)" %
+                (i + self.width, op, self.width, i, length))
+        return i
 
     def pack(self, *values: Any) -> bitarray:
         """pack(v1, v2, ...) -> bitarray
