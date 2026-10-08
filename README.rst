@@ -31,7 +31,7 @@ Key features
 * ``bitfields`` sub-module for packing and unpacking fixed-width,
   bit-level structures
 * Type hinting
-* Extensive test suite with around 700 unit tests
+* Extensive test suite with over 700 unit tests
 * Utility module ``bitarray.util``:
 
   * conversion to and from hexadecimal strings
@@ -80,7 +80,7 @@ Once you have installed the package, you may want to test it:
     ..........s.....................................s........................
     ......s.........................................................
     ----------------------------------------------------------------------
-    Ran 699 tests in 0.194s
+    Ran 711 tests in 0.196s
 
     OK (skipped=4)
 
@@ -1075,8 +1075,12 @@ The `bitarray.bitfields` module:
 This sub-module was added in version 3.12.
 For a detailed description, see: `Bit-field structures <https://github.com/ilanschnell/bitarray/blob/master/doc/bitfields.rst>`__
 
-``Struct(format: str = "")`` -> compiled struct object
+``Struct(format)`` -> compiled struct object
    Central class for packing and unpacking bit-level structures.
+
+
+``calcsize(format)`` -> int
+   Return the size (in bits) of the struct corresponding to the format string.
 
 
 ``compile(format)`` -> Struct
@@ -1089,8 +1093,18 @@ For a detailed description, see: `Bit-field structures <https://github.com/ilans
    to the format string.
 
 
+``pack_into(format, bitarray, offset, v1, v2, ...)`` -> None
+   Pack the values v1, v2, ... into the writable bitarray starting at bit
+   offset ``offset``.  A negative offset counts from the end of bitarray.
+
+
 ``unpack(format, bitarray)`` -> tuple
    Return a tuple containing values unpacked according to the format string.
+
+
+``unpack_from(format, bitarray, offset=0)`` -> tuple
+   Unpack values from bitarray starting at bit offset ``offset``, and return a
+   tuple.  A negative offset counts from the end of bitarray.
 
 
 Struct methods:
@@ -1105,8 +1119,18 @@ Struct methods:
    compiled format.
 
 
+``pack_into(bitarray, offset, v1, v2, ...)`` -> None
+   Pack the values v1, v2, ... into the writable bitarray starting at bit
+   offset ``offset``.  A negative offset counts from the end of bitarray.
+
+
 ``unpack(bitarray)`` -> tuple
    Return a tuple containing values unpacked according to this compiled format.
+
+
+``unpack_from(bitarray, offset=0)`` -> tuple
+   Unpack values from bitarray starting at bit offset ``offset``, and return a
+   tuple.  A negative offset counts from the end of bitarray.
 
 
 Struct attributes:
