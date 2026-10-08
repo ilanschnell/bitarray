@@ -19,17 +19,18 @@ Key features
   operations ``+``, ``*``, ``+=``, ``*=``, the ``in`` operator, ``len()``
 * Bitwise operations: ``~``, ``&``, ``|``, ``^``, ``<<``, ``>>`` (as well as
   their in-place versions ``&=``, ``|=``, ``^=``, ``<<=``, ``>>=``).
-* Free-threading support (for GIL-disabled CPython 3.14 and later)
+* `Free-threading support <https://github.com/ilanschnell/bitarray/blob/master/doc/free_threading.rst>`__
+  (for GIL-disabled CPython 3.14 and later)
 * Fast methods for encoding and decoding variable-length prefix codes.
-* Bitarray objects support the buffer protocol (both importing and
-  exporting buffers).
+* Bitarray objects support the `buffer protocol <https://github.com/ilanschnell/bitarray/blob/master/doc/buffer.rst>`__
+  (both importing and exporting buffers).
 * Efficient packing and unpacking for interoperability with byte-oriented
   objects such as NumPy arrays.
 * Pickling and unpickling of bitarray objects.
 * Immutable ``frozenbitarray`` objects which are hashable
 * Fast searching for bits and bit patterns
-* ``bitfields`` sub-module for packing and unpacking fixed-width,
-  bit-level structures
+* ``bitfields`` sub-module for packing and unpacking fixed-width
+  `bit-field structures <https://github.com/ilanschnell/bitarray/blob/master/doc/bitfields.rst>`__
 * Type hinting
 * Extensive test suite with over 700 unit tests
 * Utility module ``bitarray.util``:
@@ -39,7 +40,7 @@ Key features
   * pretty printing
   * conversion to and from integers
   * creating Huffman codes
-  * compression of sparse bitarrays
+  * `compression of sparse bitarrays <https://github.com/ilanschnell/bitarray/blob/master/doc/sparse_compression.rst>`__
   * run-length encoding
   * serialization and deserialization
   * various count functions
