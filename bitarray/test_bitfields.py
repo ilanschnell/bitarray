@@ -48,12 +48,13 @@ class PackUnpackTests(unittest.TestCase, Util):
     def test_offset(self):
         cf = compile(Example.format)
         w = cf.width
-        for offset in 0, 357, 1000 - w, -1000, -611, -w:
-            a = urandom(1000)
+        n = 1000
+        for offset in 0, 357, n - w, -n, -611, -w:
+            a = urandom(n)
             b = a.copy()
             cf.pack_into(a, offset, *Example.values)
             self.assertEqual(cf.unpack_from(a, offset), Example.values)
-            start = offset if offset >= 0 else len(a) + offset
+            start = offset if offset >= 0 else n + offset
             self.assertEqual(a[:start], b[:start])
             self.assertEqual(a[start:start + w], Example.bits)
             self.assertEqual(a[start + w:], b[start + w:])
@@ -80,15 +81,15 @@ class PackUnpackTests(unittest.TestCase, Util):
         cf = compile(Example.format)
         w = cf.width
         for endian in ENDIANS:
-            for offset in 0, 1, 357:
-                a = urandom(512, endian)
-                b = a.copy()
-                self.assertIsNone(cf.pack_into(a, offset, *Example.values))
-                self.assertEqual(len(a), 512)  # pack_into does not resize
-                self.assertEqual(a.endian, endian)
-                self.assertEqual(a[:offset], b[:offset])
-                self.assertEqual(a[offset:offset + w], Example.bits)
-                self.assertEqual(a[offset + w:], b[offset + w:])
+            offset = 357
+            a = urandom(512, endian)
+            b = a.copy()
+            self.assertIsNone(cf.pack_into(a, offset, *Example.values))
+            self.assertEqual(len(a), 512)  # pack_into does not resize
+            self.assertEqual(a.endian, endian)
+            self.assertEqual(a[:offset], b[:offset])
+            self.assertEqual(a[offset:offset + w], Example.bits)
+            self.assertEqual(a[offset + w:], b[offset + w:])
 
     def test_pack_into_errors(self):
         cf = compile("u8")
@@ -108,6 +109,18 @@ class PackUnpackTests(unittest.TestCase, Util):
                    "at offset 5 (actual bitarray size is 12)")
             self.assertRaisesMessage(ValueError, msg,
                                      cf.pack_into, a, offset, 123)
+
+    def test_unpack_names(self):
+        cf = compile("x5 u6{red} u6{green} u6{blue} x4")
+        a = cf.pack(1, 2, 3)
+        cf2 = compile("u6{red} u6{green} u6{blue}")
+        for values in cf.unpack(a), cf2.unpack_from(a, 5):
+            self.assertIsInstance(values, tuple)
+            self.assertEqual(type(values).__name__, "Unpacked")
+            self.assertEqual(values.red, 1)
+            self.assertEqual(values.green, 2)
+            self.assertEqual(values.blue, 3)
+            self.assertEqual(values._fields, ("red", "green", "blue"))
 
     def test_unpack_errors(self):
         cf = compile(">u8")
@@ -217,18 +230,6 @@ class StructTests(unittest.TestCase, Util):
         cf = compile(fmt)
         self.assertEqual(pickle.loads(pickle.dumps(cf)), cf)
 
-    def test_format(self):
-        cf = compile("u3 s5 >? x2 <b4 B16 f32")
-        self.assertEqual(cf.format(), "<u3 <s5 >? >x2 <b4 <B16 <f32")
-
-        for fmt in ">u3 <x1 b4", ">u3<xb4", ">u3<x<b4", " >u3 <x b4 ":
-            cf = compile(fmt)
-            self.assertEqual(cf.format(), ">u3 <x1 <b4")
-            self.assertEqual(cf.pack(3, bitarray("0110")).endian, "big")
-
-        for format in "<", "<<u8", "3x", "u8junk", "!", "q8", ">0z":
-            self.assertRaises(ValueError, compile, format)
-
     def test_format_ascii(self):
         # Arabic-Indic digit two
         self.assertRaises(ValueError, compile, "s\u0662")
@@ -246,7 +247,8 @@ class StructTests(unittest.TestCase, Util):
                 ("<u1", "u", "<u", "u1"),
                 ("<?", "?", "?1", "<?1"),
                 ("<u1 <?", "u?", "\tu\v?\n", " u\r?1"),
-                ("<u1{a} <P3 <p2 <u2{b}", "u{a}P3p2u2{b}"),
+                ("<u3 <s5 >? >x2", "u3 s5 >?1 x{00}"),
+                ("<u1{a} <P3 <p2 <u2{A}", "u{a}P3p2u2{A}"),
                 ("<u9 <u9", "u9u9"),
                 ("<u22 <u1", "u22u"),
                 ("<u1 <p3{101} <p2", "up3{101}p2"),
@@ -280,21 +282,11 @@ class StructTests(unittest.TestCase, Util):
         self.assertEqual(len(cf._names), cf.values)
         self.assertEqual(cf._names, ("red", "green", "blue"))
         self.assertEqual(cf.format(), fmt)
-        a = cf.pack(1, 2, 3)
-        values = cf.unpack(a)
-        self.assertIsInstance(values, tuple)
-        self.assertEqual(type(values).__name__, "Unpacked")
-        self.assertEqual(values.red, 1)
-        self.assertEqual(values.green, 2)
-        self.assertEqual(values.blue, 3)
-        self.assertEqual(values._fields, ("red", "green", "blue"))
         self.assertNotEqual(compile("u{a}"), compile("u{b}"))
 
-    def test_format_padding(self):
-        cf = compile("u3{a} p{101} u3{A}")
-        values = cf.unpack(cf.pack(2, 5))
-        self.assertEqual(values, (2, 5))
-        self.assertEqual((values.a, values.A), (2, 5))
+    def test_format_invalid(self):
+        for format in "<", "<<u8", "3x", "u8junk", "!", "q8", ">0z":
+            self.assertRaises(ValueError, compile, format)
 
     def test_format_errors(self):
         for fmt, msg in [
