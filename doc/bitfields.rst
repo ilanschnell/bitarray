@@ -189,3 +189,73 @@ width is always one:
     '<u3 >s5 >x1 >?'
 
 Compiling a canonical format produces an equal ``Struct`` object.
+
+
+Reference
+=========
+``Struct(format)`` -> compiled struct object
+   Central class for packing and unpacking bit-level structures.
+
+
+``calcsize(format)`` -> int
+   Return the size (in bits) of the struct corresponding to the format string.
+
+
+``compile(format)`` -> Struct
+   Compile given format string and return a compiled format object that
+   can be used to pack and/or unpack data multiple times.
+
+
+``pack(format, v1, v2, ...)`` -> bitarray
+   Return a bitarray containing the values v1, v2, ... packed according
+   to the format string.
+
+
+``pack_into(format, bitarray, offset, v1, v2, ...)`` -> None
+   Pack the values v1, v2, ... into the writable bitarray starting at bit
+   offset ``offset``.  A negative offset counts from the end of bitarray.
+
+
+``unpack(format, bitarray)`` -> tuple
+   Return a tuple containing values unpacked according to the format string.
+
+
+``unpack_from(format, bitarray, offset=0)`` -> tuple
+   Unpack values from bitarray starting at bit offset ``offset``, and return a
+   tuple.  A negative offset counts from the end of bitarray.
+
+
+Struct methods:
+^^^^^^^^^^^^^^^
+
+``format()`` -> str
+   Return the canonical format string reconstructed from this compiled format.
+
+
+``pack(v1, v2, ...)`` -> bitarray
+   Return a bitarray containing the values v1, v2, ... packed according to this
+   compiled format.
+
+
+``pack_into(bitarray, offset, v1, v2, ...)`` -> None
+   Pack the values v1, v2, ... into the writable bitarray starting at bit
+   offset ``offset``.  A negative offset counts from the end of bitarray.
+
+
+``unpack(bitarray)`` -> tuple
+   Return a tuple containing values unpacked according to this compiled format.
+
+
+``unpack_from(bitarray, offset=0)`` -> tuple
+   Unpack values from bitarray starting at bit offset ``offset``, and return a
+   tuple.  A negative offset counts from the end of bitarray.
+
+
+Struct attributes:
+^^^^^^^^^^^^^^^^^^
+
+``width`` -> int
+   Total number of bits in the compiled structure.
+
+``values`` -> int
+   Number of values consumed by ``pack()`` and returned by ``unpack()``.

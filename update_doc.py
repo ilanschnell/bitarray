@@ -249,11 +249,6 @@ def write_reference_for_class(fo, cl):
             write_doc(fo, name)
 
 def write_reference_bitfields(fo):
-    link = DOC_LINK_TMPL % DOCS['fields']
-    fo.write("The `bitarray.bitfields` module:\n"
-             "--------------------------------\n\n"
-             "This sub-module was added in version 3.12.\n"
-             "For a detailed description, see: %s\n\n" % link)
     for func in sorted(bitarray.bitfields.__all__):
         write_doc(fo, 'bitfields.%s' % func)
     write_reference_for_class(fo, bitarray.bitfields.Struct)
@@ -308,9 +303,32 @@ The bitarray object:
     for func in sorted(bitarray.util.__all__):
         write_doc(fo, 'util.%s' % func)
 
+    link = DOC_LINK_TMPL % DOCS['fields']
+    fo.write("The `bitarray.bitfields` module:\n"
+             "--------------------------------\n\n"
+             "This sub-module was added in version 3.12.\n"
+             "For a detailed description, see: %s\n\n" % link)
     write_reference_bitfields(fo)
+
     for name in list(NEW_IN) + list(DOC_LINKS):
         assert name in _NAMES, name
+
+
+def update_bitfields(path):
+    with open(path, 'r') as fi:
+        data = fi.read()
+
+    with StringIO() as fo:
+        for line in data.splitlines():
+            fo.write("%s\n" % line.rstrip())
+            if line == 'Reference':
+                break
+        fo.write("=========\n")
+        write_reference_bitfields(fo)
+        new_data = fo.getvalue()
+
+    with open(path, 'w') as f:
+        f.write(new_data)
 
 
 def update_readme(path):
@@ -392,6 +410,7 @@ def main():
 
     if not args.test:
         update_readme('./README.rst')
+        update_bitfields('./doc/bitfields.rst')
         with open('./doc/reference.rst', 'w') as fo:
             write_reference(fo)
         with open('./doc/changelog.rst', 'w') as fo:
