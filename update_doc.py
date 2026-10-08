@@ -323,7 +323,7 @@ def update_bitfields(path):
             fo.write("%s\n" % line.rstrip())
             if line == 'Reference':
                 break
-        fo.write("=========\n\n")
+        fo.write("---------\n\n")
         write_reference_bitfields(fo)
         new_data = fo.getvalue()
 

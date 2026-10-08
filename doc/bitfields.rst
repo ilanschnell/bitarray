@@ -192,7 +192,7 @@ Compiling a canonical format produces an equal ``Struct`` object.
 
 
 Reference
-=========
+---------
 
 ``Struct(format)`` -> compiled struct object
    Central class for packing and unpacking bit-level structures.
