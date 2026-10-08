@@ -35,7 +35,7 @@ class PackUnpackTests(unittest.TestCase, Util):
         cf = compile(Example.format)
         self.assertIsInstance(cf, Struct)
         self.assertEqual(cf.width, Example.width)
-        self.assertEqual(cf.values, 8)
+        self.assertEqual(cf.values, len(Example.values))
         self.assertEqual(cf.format(), Example.canonical_format)
         a = cf.pack(*Example.values)
         self.assertEqual(len(a), Example.width)
@@ -48,7 +48,7 @@ class PackUnpackTests(unittest.TestCase, Util):
     def test_offset(self):
         cf = compile(Example.format)
         w = cf.width
-        for offset in 0, 357, 1000 - w, -611, -w:
+        for offset in 0, 357, 1000 - w, -1000, -611, -w:
             a = urandom(1000)
             b = a.copy()
             cf.pack_into(a, offset, *Example.values)
@@ -99,10 +99,15 @@ class PackUnpackTests(unittest.TestCase, Util):
         self.assertRaisesMessage(TypeError,
                                  "cannot pack into read-only bitarray",
                                  cf.pack_into, a, 0, 123)
-        a = bitarray(8)
+        a = bitarray(12)
         self.assertRaises(TypeError, cf.pack_into, a, 0.0, 123)
-        for offset in 1, -7, -9, 9:
-            self.assertRaises(ValueError, cf.pack_into, a, offset, 123)
+        for offset in 5, -7, -13, 13:
+            msg = ("offset %d out of range for bitarray size 12" % offset
+                   if offset in (-13, 13) else
+                   "bitarray of at least 13 bits required for packing 8 bits "
+                   "at offset 5 (actual bitarray size is 12)")
+            self.assertRaisesMessage(ValueError, msg,
+                                     cf.pack_into, a, offset, 123)
 
     def test_unpack_errors(self):
         cf = compile(">u8")
