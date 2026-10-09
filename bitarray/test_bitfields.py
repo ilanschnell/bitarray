@@ -131,7 +131,7 @@ class PackUnpackTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, cf.unpack, lst)
         cf = compile("p{0010}")
         self.assertRaisesMessage(ValueError,
-                                 "pad-bits mismatch: 0110 != 0010",
+                                 "expected pad-bits 0010, got 0110",
                                  cf.unpack, bitarray("0110"))
 
     def test_unpack_from(self):
@@ -300,7 +300,7 @@ class StructTests(unittest.TestCase, Util):
                 # padding literal errors
                 ("x{102}", "expected '0' or '1' (or whitespace or "
                            "underscore), got '2' (0x32)"),
-                ("p3{10}", "pad-bits width mismatch: 3 != 2"),
+                ("p2{0}", "pad-bits width 2 does not match pattern length 1"),
                 ("p0{1}", "field width cannot be zero: 'p0{1}'"),
                 ("x{_}", "field width cannot be zero: 'x{_}'"),
                 # name field errors

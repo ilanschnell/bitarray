@@ -187,8 +187,8 @@ class _PaddingField(_Field):
         if name:
             a = bitarray(name)  # validates and ignores underscores
             if width != len(a):
-                raise ValueError("pad-bits width mismatch: %d != %d" %
-                                 (width, len(a)))
+                raise ValueError("pad-bits width %d does not match pattern "
+                                 "length %d" % (width, len(a)))
             if (not a[0]) in a:  # we have both 0 and 1 in a
                 value, name = False, a.to01()
             else:
@@ -211,8 +211,8 @@ class _PaddingField(_Field):
 
     def unpack(self, a):
         if self.validate and a != self.bits:
-            raise ValueError("pad-bits mismatch: %s != %s" %
-                             (a.to01(), self.bits.to01()))
+            raise ValueError("expected pad-bits %s, got %s" %
+                             (self.bits.to01(), a.to01()))
 
 
 @dataclass(frozen=True)
