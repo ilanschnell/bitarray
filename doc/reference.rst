@@ -1,7 +1,7 @@
 Reference
 =========
 
-bitarray version: 3.11.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.12.0 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -37,7 +37,7 @@ The bitarray object:
 
 
 bitarray methods:
------------------
+^^^^^^^^^^^^^^^^^
 
 ``all()`` -> bool
    Return ``True`` when all bits in bitarray are 1.
@@ -133,9 +133,12 @@ bitarray methods:
    New in version 3.4: allow ``bytes`` object
 
 
-``fill()`` -> int
+``fill(m=8, /)`` -> int
    Add zeros to the end of the bitarray, such that the length will be
-   a multiple of 8, and return the number of bits added [0..7].
+   a multiple of the positive integer ``m``, and return the number of bits
+   added (in ``range(m)``).
+
+   New in version 3.12: add optional alignment argument
 
 
 ``find(sub_bitarray, start=0, stop=<end>, /, right=False)`` -> int
@@ -281,10 +284,10 @@ bitarray methods:
    using the specified mapping.
 
 
-bitarray data descriptors:
---------------------------
+bitarray attributes:
+^^^^^^^^^^^^^^^^^^^^
 
-Data descriptors were added in version 2.6.
+Attributes were added in version 2.6.
 
 ``endian`` -> str
    bit-endianness as Unicode string
@@ -305,7 +308,7 @@ Data descriptors were added in version 2.6.
 
 
 decodeiterator methods:
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 ``skipbits(n, /)`` -> bitarray
    Skip over the next ``n`` bits and return them.
@@ -314,8 +317,8 @@ decodeiterator methods:
    New in version 3.9
 
 
-decodeiterator data descriptors:
---------------------------------
+decodeiterator attributes:
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ``index`` -> int
    current bit position to be decoded by subsequent ``next``
@@ -324,7 +327,7 @@ decodeiterator data descriptors:
 
 
 decodetree methods:
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 ``nodes()`` -> tuple
    Return tuple with number of:
@@ -426,7 +429,7 @@ This sub-module was added in version 1.2.
    Bitarray of base ``n`` ASCII representation.
    Allowed values for ``n`` are 2, 4, 8, 16, 32 and 64.
    For ``n=32`` the RFC 4648 Base32 alphabet is used, and for ``n=64`` the
-   standard base 64 alphabet is used.  Whitespace is ignored.
+   standard base 64 alphabet is used.  ASCII whitespace is ignored.
 
    See also: `Bitarray representations <https://github.com/ilanschnell/bitarray/blob/master/doc/represent.rst>`__
 
@@ -534,7 +537,7 @@ This sub-module was added in version 1.2.
 ``hex2ba(hexstr, /, endian=None)`` -> bitarray
    Bitarray of hexadecimal representation.  hexstr may contain any number
    (including odd numbers) of hex digits (upper or lower case).
-   Whitespace is ignored.
+   ASCII whitespace is ignored.
 
    New in version 3.3: ignore whitespace
 
@@ -740,3 +743,75 @@ This sub-module was added in version 1.2.
    bit-endianness (``little`` or ``big``).
 
 
+The `bitarray.bitfields` module:
+--------------------------------
+
+This sub-module was added in version 3.12.
+For a detailed description, see: `Bit-field structures <https://github.com/ilanschnell/bitarray/blob/master/doc/bitfields.rst>`__
+
+``Struct(format)`` -> compiled struct object
+   Central class for packing and unpacking bit-level structures.
+
+
+``calcsize(format)`` -> int
+   Return the size (in bits) of the struct corresponding to the format string.
+
+
+``compile(format)`` -> Struct
+   Compile given format string and return a compiled format object that
+   can be used to pack and/or unpack data multiple times.
+
+
+``pack(format, v1, v2, ...)`` -> bitarray
+   Return a bitarray containing the values v1, v2, ... packed according
+   to the format string.
+
+
+``pack_into(format, bitarray, offset, v1, v2, ...)`` -> None
+   Pack the values v1, v2, ... into the writable bitarray starting at bit
+   offset ``offset``.  A negative offset counts from the end of bitarray.
+
+
+``unpack(format, bitarray)`` -> tuple
+   Return a tuple containing values unpacked according to the format string.
+
+
+``unpack_from(format, bitarray, offset=0)`` -> tuple
+   Unpack values from bitarray starting at bit offset ``offset``, and return a
+   tuple.  A negative offset counts from the end of bitarray.
+
+
+Struct methods:
+^^^^^^^^^^^^^^^
+
+``format()`` -> str
+   Return the canonical format string reconstructed from this compiled format.
+
+
+``pack(v1, v2, ...)`` -> bitarray
+   Return a bitarray containing the values v1, v2, ... packed according to this
+   compiled format.
+
+
+``pack_into(bitarray, offset, v1, v2, ...)`` -> None
+   Pack the values v1, v2, ... into the writable bitarray starting at bit
+   offset ``offset``.  A negative offset counts from the end of bitarray.
+
+
+``unpack(bitarray)`` -> tuple
+   Return a tuple containing values unpacked according to this compiled format.
+
+
+``unpack_from(bitarray, offset=0)`` -> tuple
+   Unpack values from bitarray starting at bit offset ``offset``, and return a
+   tuple.  A negative offset counts from the end of bitarray.
+
+
+Struct attributes:
+^^^^^^^^^^^^^^^^^^
+
+``width`` -> int
+   Total number of bits in the compiled structure.
+
+``values`` -> int
+   Number of values consumed by ``pack()`` and returned by ``unpack()``.

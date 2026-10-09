@@ -1,6 +1,18 @@
 Change log
 ==========
 
+**3.12.0** (2026-10-09):
+
+* add ``bitfields`` sub-module, see `Bit-field structures <bitfields.rst>`__
+* add optional alignment argument to ``bitarray.fill()``
+* add official Python 3.15 support
+* update cibuildwheel to 4.2.1
+* fix compilation problems on pypy 3.12, see `#255 <https://github.com/ilanschnell/bitarray/issues/255>`__
+* add `IEEE Float 16, 32 and 64-bit example <../examples/float.py>`__
+* add `IPv4 header example <../examples/ipv4.py>`__ for packing and unpacking
+  bit-level structures using ``bitarray.bitfields``
+
+
 **3.11.0** (2026-09-01):
 
 * add run-length codec: ``util.rl_encode()`` and ``util.rl_decode()``
