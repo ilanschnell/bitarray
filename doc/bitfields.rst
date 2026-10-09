@@ -95,6 +95,7 @@ from that pattern.
 ``p`` / ``P``
    Padding bits (``p`` zero / ``P`` one) validated during unpacking.  An
    explicit bitarray may be given in braces, for example ``p{110110}``.
+   Raises ``PaddingError`` on mismatch when unpacking.
 
 ``x`` / ``X``
    Padding bits (``x`` zero / ``X`` one) not validated.  These codes also

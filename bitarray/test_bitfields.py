@@ -15,7 +15,7 @@ import dataclasses
 from bitarray import bitarray, frozenbitarray
 from bitarray.util import urandom
 from bitarray.bitfields import (Struct, compile, pack, pack_into,
-                                unpack, unpack_from, calcsize,
+                                unpack, unpack_from, calcsize, PaddingError,
                                 DEFAULT_ENDIAN, _ENDIAN_FROM_PREFIX)
 from bitarray.test_bitarray import Util, ENDIANS
 
@@ -130,7 +130,7 @@ class PackUnpackTests(unittest.TestCase, Util):
         lst = 8 * [0]
         self.assertRaises(TypeError, cf.unpack, lst)
         cf = compile("p{0010}")
-        self.assertRaisesMessage(ValueError,
+        self.assertRaisesMessage(PaddingError,
                                  "expected pad-bits 0010, got 0110",
                                  cf.unpack, bitarray("0110"))
 
@@ -701,6 +701,7 @@ class FieldTests(unittest.TestCase):
             self.assertEqual(cf.unpack(bitarray("11011")), ())
             if code in "pP":
                 self.assertRaises(ValueError, cf.unpack, bitarray("11001"))
+                self.assertRaises(PaddingError, cf.unpack, bitarray("00000"))
             else:
                 self.assertEqual(cf.unpack(bitarray("00100")), ())
 

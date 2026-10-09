@@ -20,7 +20,7 @@ from bitarray.util import int2ba, ba2int, hex2ba, ba2hex
 
 
 __all__ = ["Struct", "compile", "pack", "pack_into", "unpack", "unpack_from",
-           "calcsize"]
+           "calcsize", "PaddingError"]
 
 
 DEFAULT_ENDIAN = "little"
@@ -173,6 +173,10 @@ class _BytesField(_Field):
         return bytes(a)
 
 
+class PaddingError(ValueError):
+    "Raised when validated padding bits do not match."
+
+
 @dataclass(frozen=True)
 class _PaddingField(_Field):
     # For padding fields, the inherited name attribute stores the canonical
@@ -211,8 +215,8 @@ class _PaddingField(_Field):
 
     def unpack(self, a):
         if self.validate and a != self.bits:
-            raise ValueError("expected pad-bits %s, got %s" %
-                             (self.bits.to01(), a.to01()))
+            raise PaddingError("expected pad-bits %s, got %s" %
+                               (self.bits.to01(), a.to01()))
 
 
 @dataclass(frozen=True)

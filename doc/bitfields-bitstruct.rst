@@ -214,7 +214,7 @@ The ``p`` and ``P`` fields in ``bitfields`` are validated, while ``x`` and
     >>> bitfields.unpack(">p4 u4", bits)
     Traceback (most recent call last):
         ...
-    ValueError: pad-bits mismatch: 1111 != 0000
+    bitarray.bitfields.PaddingError: expected pad-bits 0000, got 1111
     >>> bitfields.unpack(">x4 u4", bits)
     (5,)
 

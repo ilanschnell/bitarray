@@ -250,6 +250,8 @@ def write_reference_for_class(fo, cl):
 
 def write_reference_bitfields(fo):
     for func in sorted(bitarray.bitfields.__all__):
+        if func == 'PaddingError':  # already mentioned in bitfields.rst
+            continue
         write_doc(fo, 'bitfields.%s' % func)
     write_reference_for_class(fo, bitarray.bitfields.Struct)
     fo.write("""\
