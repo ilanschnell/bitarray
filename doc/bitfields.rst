@@ -192,6 +192,33 @@ width is always one:
 Compiling a canonical format produces an equal ``Struct`` object.
 
 
+Zero-copy buffer views
+----------------------
+
+A bitarray may be created as a zero-copy view of an object that exports a
+contiguous buffer.  This allows ``pack_into()`` and ``unpack_from()`` to
+operate directly on existing byte-oriented storage.  Packing requires a
+writable buffer, such as a ``bytearray``:
+
+.. code-block:: python
+
+    >>> cf = compile(">u4 u4")
+    >>> buf = bytearray(2)
+    >>> cf.pack_into(bitarray(buffer=buf, endian="big"), 4, 3, 9)
+    >>> buf
+    bytearray(b'\x03\x90')
+    >>> cf.unpack_from(bitarray(buffer=buf, endian="big"), 4)
+    (3, 9)
+
+Unpacking also works through a read-only view, for example one backed by
+``bytes``:
+
+.. code-block:: python
+
+    >>> cf.unpack_from(bitarray(buffer=b"\xa3\x9f", endian="big"), 4)
+    (3, 9)
+
+
 Reference
 ---------
 
