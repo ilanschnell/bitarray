@@ -65,7 +65,7 @@ Once you have installed the package, you may want to test it:
     bitarray is installed in: /Users/ilan/bitarray/bitarray
     sys.prefix: /Users/ilan/miniforge
     bitarray version: 3.12.0
-    sys.version: 3.14.5 (main, May 20 2026) [Clang 20.1.8]
+    sys.version: 3.15.0 (main, Oct  9 2026) [Clang 21.1.8]
     sys.abiflags: ''
     sys._is_gil_enabled(): True
     pointer size: 64 bit
@@ -81,7 +81,7 @@ Once you have installed the package, you may want to test it:
     ..........s.....................................s........................
     ......s.........................................................
     ----------------------------------------------------------------------
-    Ran 711 tests in 0.196s
+    Ran 711 tests in 0.161s
 
     OK (skipped=4)
 
