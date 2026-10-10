@@ -1,3 +1,7 @@
+2026-XX-XX  3.12.1:
+-------------------
+
+
 2026-10-09  3.12.0:
 -------------------
   * add `bitfields` sub-module, see [Bit-field structures](bitfields.rst)
