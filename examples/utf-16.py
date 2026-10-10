@@ -39,3 +39,6 @@ def code_point(u):
 
 for u in "\u0024 \u00a2 \u20ac \ud55c \U00010348 \U0001f603 \U0010ffff".split():
     code_point(u)
+
+# The highest Unicode code point is:
+assert 0x10ffff == 1114111 == 17 * 2**16 - 1 == (17 << 16) - 1
