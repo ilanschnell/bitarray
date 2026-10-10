@@ -42,8 +42,8 @@ class PackUnpackTests(unittest.TestCase, Util):
         self.assertEqual(a.endian, "big")
         self.assertEqual(a, Example.bits)
         a[9:15] = 1  # the 'x' pad-bits are not validated
-        self.assertEqual(cf.unpack(a), Example.values)
-        self.assertEqual(cf.unpack(frozenbitarray(a)), Example.values)
+        for b in a, frozenbitarray(a):
+            self.assertEqual(cf.unpack(b), Example.values)
 
     def test_offset(self):
         cf = compile(Example.format)
@@ -96,10 +96,10 @@ class PackUnpackTests(unittest.TestCase, Util):
         lst = 8 * [0]
         self.assertRaisesMessage(TypeError, "bitarray expected, got 'list'",
                                  cf.pack_into, lst, 0, 123)
-        a = frozenbitarray(8)
-        self.assertRaisesMessage(TypeError,
-                                 "cannot pack into read-only bitarray",
-                                 cf.pack_into, a, 0, 123)
+        for a in frozenbitarray(12), bitarray(buffer=b"AA"):
+            self.assertRaisesMessage(TypeError,
+                                     "cannot pack into read-only bitarray",
+                                     cf.pack_into, a, 0, 123)
         a = bitarray(12)
         self.assertRaises(TypeError, cf.pack_into, a, 0.0, 123)
         for offset in 5, -7, -13, 13:
@@ -148,7 +148,7 @@ class PackUnpackTests(unittest.TestCase, Util):
         cf = compile("u8")
         self.assertRaisesMessage(TypeError, "bitarray expected, got 'list'",
                                  cf.unpack_from, 8 * [0])
-        a = frozenbitarray(cf.pack(123))
+        a = cf.pack(123)
         self.assertEqual(len(a), 8)
         self.assertRaises(TypeError, cf.unpack_from, a, 0.0)
         for offset in 1, -7, -9, 9:
