@@ -37,5 +37,5 @@ header = IPv4Header.pack(*values)
 assert len(header) == 160
 
 fields = IPv4Header.unpack(header)
-print(inet_ntoa(fields.source_address))      # type: ignore
-print(inet_ntoa(fields.destination_address)) # type: ignore
+print(inet_ntoa(fields.source_address))       # type: ignore[attr-defined]
+print(inet_ntoa(fields.destination_address))  # type: ignore[attr-defined]
