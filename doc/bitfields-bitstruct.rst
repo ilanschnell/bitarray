@@ -335,4 +335,5 @@ formats self-documenting:
     >>> cf.unpack(packed) == values
     True
 
+Thanks to this, the `IPv4 example <../examples/ipv4.py>`__ is very readable.
 ``bitstruct`` does not support comments in its format strings.
