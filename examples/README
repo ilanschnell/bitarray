@@ -72,10 +72,6 @@ mandel.py
     Requires: numba
 
 
-masked.py
-    Illustrate masked indexing, i.e. using bitarrays to select indices
-
-
 mmapped-file.py
     Demonstrates how to memory map a file into a bitarray.
 
