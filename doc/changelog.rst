@@ -1,6 +1,13 @@
 Change log
 ==========
 
+**3.12.1** (2026-10-11):
+
+* fix ``bitarray.util`` import on PyPy, see issue `#257 <https://github.com/ilanschnell/bitarray/issues/257>`__
+* add `Bitarray and NumPy arrays <ndarray.rst>`__ documentation for NumPy
+  array interoperability
+
+
 **3.12.0** (2026-10-09):
 
 * add ``bitfields`` sub-module, see `Bit-field structures <bitfields.rst>`__
