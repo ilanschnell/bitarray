@@ -1,5 +1,7 @@
 2026-10-XX  3.12.2:
 -------------------
+  * update cibuildwheel to 4.3.1 and enable PyPy wheel builds
+  * update vendored `pythoncapi_compat.h`
 
 
 2026-10-11  3.12.1:
