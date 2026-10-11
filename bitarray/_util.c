@@ -12,12 +12,6 @@
 #include "pythoncapi_compat.h"
 #include "bitarray.h"
 
-static int
-ascii_isspace(unsigned char c)  /* Py_ISSPACE is not defined on PyPy */
-{
-    return c == ' ' || ('\t' <= c && c <= '\r');
-}
-
 /* set during module initialization */
 static PyTypeObject *bitarray_type;
 
@@ -859,6 +853,12 @@ the bitarray (which has to be multiple of 4 in length).\n\
 When grouped, the string `sep` is inserted between groups\n\
 of `group` characters, default is a space.");
 
+
+static int
+ascii_isspace(unsigned char c)  /* Py_ISSPACE is not defined on PyPy */
+{
+    return c == ' ' || ('\t' <= c && c <= '\r');
+}
 
 /* Translate hexadecimal digits from 'hexstr' into the bitarray 'a' buffer,
    which must be initialized to zeros.
