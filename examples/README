@@ -80,12 +80,6 @@ mmapped-file.py
     Demonstrates how to memory map a file into a bitarray.
 
 
-ndarray.py
-    Demonstrates how to efficiently convert boolean data from a bitarray
-    to a numpy.ndarray of dtype bool.
-    Requires: numpy
-
-
 pbm.py
     Defines a simple class called PBM (Portable Bit Map) which allows:
     - addressing pixels by their coordinates
