@@ -12,6 +12,12 @@
 #include "pythoncapi_compat.h"
 #include "bitarray.h"
 
+static int
+ascii_isspace(unsigned char c)  /* Py_ISSPACE is not defined on PyPy */
+{
+    return c == ' ' || ('\t' <= c && c <= '\r');
+}
+
 /* set during module initialization */
 static PyTypeObject *bitarray_type;
 
@@ -872,7 +878,7 @@ hex2ba_lock_held(bitarrayobject *a, Py_buffer hexstr)
         int x = hex_to_int(c);
 
         if (x < 0) {
-            if (Py_ISSPACE(c))  /* ASCII whitespace */
+            if (ascii_isspace(c))
                 continue;
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
                          "base16, got '%c' (0x%02x)", c, c);
@@ -1105,7 +1111,7 @@ base2ba_lock_held(bitarrayobject *a, Py_buffer asciistr, int m)
         int k, x = digit_to_int(m, c);
 
         if (x < 0) {
-            if (Py_ISSPACE(c))  /* ASCII whitespace */
+            if (ascii_isspace(c))
                 continue;
             PyErr_Format(PyExc_ValueError, "invalid digit found for "
                          "base%d, got '%c' (0x%02x)", 1 << m, c, c);
