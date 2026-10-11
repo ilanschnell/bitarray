@@ -424,6 +424,7 @@ def main():
         fn = basename(path)
         if ((fn == 'bitfields-bitstruct.rst' and
              not can_import("bitstruct")) or
+            (fn == 'ndarray.rst' and not can_import("numpy")) or
             (fn == 'free_threading.rst' and
              not get_config_var("Py_GIL_DISABLED"))):
             print("skip testing:", path)

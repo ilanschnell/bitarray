@@ -25,7 +25,7 @@ Key features
 * Bitarray objects support the `buffer protocol <https://github.com/ilanschnell/bitarray/blob/master/doc/buffer.rst>`__
   (both importing and exporting buffers).
 * Efficient packing and unpacking for interoperability with byte-oriented
-  objects such as NumPy arrays.
+  objects such as `NumPy arrays <https://github.com/ilanschnell/bitarray/blob/master/doc/ndarray.rst>`__.
 * Pickling and unpickling of bitarray objects.
 * Immutable ``frozenbitarray`` objects which are hashable
 * Fast searching for bits and bit patterns
