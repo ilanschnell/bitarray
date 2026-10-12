@@ -35,6 +35,23 @@ jobs:
           name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
           path: ./wheelhouse/*.whl
 
+  build_pyodide:
+    name: Build Pyodide wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build Pyodide wheel
+        uses: pypa/cibuildwheel@v4.3.1
+        env:
+          CIBW_PLATFORM: pyodide
+          CIBW_TEST_COMMAND: python -c "import bitarray; assert bitarray.test().wasSuccessful()"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-pyodide
+          path: ./wheelhouse/*.whl
+
   build_sdist:
     name: Build source distribution
     runs-on: ubuntu-latest
@@ -50,7 +67,7 @@ jobs:
           path: dist/*.tar.gz
 
   upload_pypi:
-    needs: [build_wheels, build_sdist]
+    needs: [build_wheels, build_pyodide, build_sdist]
     runs-on: ubuntu-latest
     environment: pypi
     permissions:
