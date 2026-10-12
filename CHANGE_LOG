@@ -2,6 +2,7 @@
 -------------------
   * update cibuildwheel to 4.3.1 and enable PyPy wheel builds
   * update vendored `pythoncapi_compat.h`
+  * disable some tests not only for wasm32 but also wasm64, see #258
 
 
 2026-10-11  3.12.1:

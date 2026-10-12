@@ -31,8 +31,8 @@ import shelve
 import weakref
 
 
-is_emscripten = bool(platform.machine() == 'wasm32') \
-            or bool(platform.machine() == 'wasm64')
+is_emscripten = bool(platform.machine() == 'wasm32' or
+                     platform.machine() == 'wasm64')
 is_pypy = bool(platform.python_implementation() == 'PyPy')
 
 
