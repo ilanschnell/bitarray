@@ -31,9 +31,8 @@ import shelve
 import weakref
 
 
-is_emscripten = bool(platform.machine() == 'wasm32' or
-                     platform.machine() == 'wasm64')
-is_pypy = bool(platform.python_implementation() == 'PyPy')
+is_emscripten = platform.machine() in ('wasm32', 'wasm64')
+is_pypy = platform.python_implementation() == 'PyPy'
 
 
 from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
