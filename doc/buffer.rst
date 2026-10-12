@@ -53,6 +53,10 @@ change its ``memoryview`` either:
         ...
     TypeError: cannot modify read-only memory
 
+When exporting a bitarray whose length is not a multiple of eight,
+the final byte includes the unused pad bits.  These pad bits are not
+necessarily zero.
+
 
 Importing buffers
 -----------------
@@ -72,6 +76,10 @@ from an object that exposes its buffer.  Here a ``bytearray`` object:
     >>> a[20:] = 1
     >>> a
     bitarray('000011111111100000001111')
+    >>> a.append(0)  # bitarrays with imported buffers cannot be resized
+    Traceback (most recent call last):
+        ...
+    BufferError: cannot resize imported buffer
 
 Again, the shared buffer can be represented and modified by either object
 ``a`` or ``c``.  When importing a buffer into a bitarray, the length of the
@@ -94,7 +102,7 @@ bitarrays ``a`` and ``b`` point to the same address:
 
     >>> def address(a):
     ...     info = a.buffer_info()
-    ...     return info[0]  # using bitarray 3.7, we can also: info.address
+    ...     return info.address
     >>> assert address(a) == address(b)
 
 As bitarrays expose their buffer, we can also directly create a bitarray
@@ -106,7 +114,6 @@ which imports the buffer from another bitarray:
     >>> b = bitarray(buffer=a)
     >>> # the buffer address is the same
     >>> assert address(a) == address(b)
-    >>> a.setall(0)
     >>> assert a == b
     >>> b[::7] = 1
     >>> assert a == b
@@ -120,12 +127,12 @@ of ``a``'s buffer:
 .. code-block:: python
 
     >>> a = bitarray(1 << 23)
-    >>> a.setall(0)
     >>> b = bitarray(buffer=memoryview(a)[0x10000:0x30000])
     >>> assert address(a) + 0x10000 == address(b)
     >>> c = bitarray(buffer=memoryview(a)[0x20000:0x50000])
     >>> assert address(a) + 0x20000 == address(c)
     >>> c[0] = 1
+    >>> # as memoryview slicing uses byte offsets, we need to multiply by 8
     >>> assert b[8 * 0x10000] == 1
     >>> assert a[8 * 0x20000] == 1
 
