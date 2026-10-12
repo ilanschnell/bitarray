@@ -10,10 +10,7 @@ class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
 
         if isinstance(obj, bitarray):
-            if len(obj) > 50:
-                return {'bitarray_b64': b64encode(serialize(obj)).decode()}
-            else:
-                return {'bitarray': obj.to01()}
+            return {'__bitarray__': b64encode(serialize(obj)).decode()}
 
         return json.JSONEncoder.default(self, obj)
 
@@ -25,22 +22,16 @@ class JSONDecoder(json.JSONDecoder):
                                   *args, **kwargs)
 
     def object_hook(self, obj):
-        if isinstance(obj, dict) and len(obj) == 1:
-            if 'bitarray_b64' in obj:
-                return deserialize(b64decode(obj['bitarray_b64']))
-
-            if 'bitarray' in obj:
-                return bitarray(obj['bitarray'])
+        if set(obj) == {"__bitarray__"}:
+            return deserialize(b64decode(obj["__bitarray__"]))
 
         return obj
 
 
 def test():
-    from random import getrandbits
     from bitarray.util import urandom
 
-    a = [urandom(n * n, endian=['little', 'big'][getrandbits(1)])
-         for n in range(12)]
+    a = [urandom(n * n, endian=['little', 'big'][n % 2]) for n in range(12)]
     a.append({'key1': bitarray('010'),
               'key2': 'value2',
               'key3': urandom(300)})
@@ -49,7 +40,8 @@ def test():
 
     b = JSONDecoder().decode(j)
     assert a == b
-    assert b[-1]['key1'] == bitarray('010')
+    for i in range(12):
+        assert a[i].endian == b[i].endian
 
 
 if __name__ == '__main__':
