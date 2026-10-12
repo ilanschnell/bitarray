@@ -31,7 +31,6 @@ and work as they do with single indices or slices.  For example:
 .. code-block:: python
 
     >>> a = bitarray(12)
-    >>> a.setall(0)
     >>> a[[1, 2, 5, 7]] = 1  # set elements 1, 2, 5, 7 to value 1
     >>> a
     bitarray('011001010000')
@@ -54,18 +53,19 @@ considered masks.  For example:
 .. code-block:: python
 
     >>> a =    bitarray('1001001')
-    >>> mask = bitarray('1010111')
+    >>> mask = bitarray('1010111')  # must have same length as `a`
     >>> a[mask]  # create bitarray with items from `a` whose mask is 1
     bitarray('10001')
     >>> del a[mask]  # delete items in `a` whose mask is 1
     >>> a
     bitarray('01')
 
-Note that ``del a[mask]`` is equivalent to the in-place version of
-selecting the reverse mask ``a = a[~mask]``.
+Note that ``del a[mask]`` modifies ``a`` in-place and produces the same
+bit sequence as ``a = a[~mask]``.
 
 As of bitarray version 3.1, masked assignment to bitarrays is also
-supported:
+supported.  For masked assignment, the assigned bitarray must contain
+exactly ``mask.count()`` bits.
 
 .. code-block:: python
 
@@ -75,6 +75,6 @@ supported:
     >>> a
     bitarray('1011100')
 
-However, masked assignment to Booleans is not implemented,
-as ``a[mask] = 1`` would be equivalent to the bitwise operation ``a |= mask``.
-And ``a[mask] = 0`` would be equivalent to ``a &= ~mask``.
+Masked assignment to a Boolean is not implemented: ``a[mask] = 1`` is
+equivalent to ``a |= mask``, while ``a[mask] = 0`` is equivalent
+to ``a &= ~mask``.
