@@ -21,7 +21,8 @@ Key features
   their in-place versions ``&=``, ``|=``, ``^=``, ``<<=``, ``>>=``).
 * `Free-threading support <https://github.com/ilanschnell/bitarray/blob/master/doc/free_threading.rst>`__
   (for GIL-disabled CPython 3.14 and later)
-* Fast methods for encoding and decoding variable-length prefix codes.
+* Fast methods for encoding and decoding variable-length
+  `prefix codes <https://github.com/ilanschnell/bitarray/blob/master/doc/prefix_codes.rst>`__.
 * Bitarray objects support the `buffer protocol <https://github.com/ilanschnell/bitarray/blob/master/doc/buffer.rst>`__
   (both importing and exporting buffers).
 * Efficient packing and unpacking for interoperability with byte-oriented
@@ -251,59 +252,6 @@ Bitarray objects support the buffer protocol.  They can both export their
 own buffer, as well as import another object's buffer.  To learn more about
 this topic, please read `buffer protocol <https://github.com/ilanschnell/bitarray/blob/master/doc/buffer.rst>`__.  There is also an example that shows how
 to memory-map a file to a bitarray: `mmapped-file.py <https://github.com/ilanschnell/bitarray/blob/master/examples/mmapped-file.py>`__
-
-
-Variable-length prefix codes
-----------------------------
-
-The ``.encode()`` method takes a dictionary mapping symbols to bitarrays
-and an iterable, and extends the bitarray object with the encoded symbols
-found while iterating.  For example:
-
-.. code-block:: python
-
-    >>> d = {'H':bitarray('111'), 'e':bitarray('0'),
-    ...      'l':bitarray('110'), 'o':bitarray('10')}
-    ...
-    >>> a = bitarray()
-    >>> a.encode(d, 'Hello')
-    >>> a
-    bitarray('111011011010')
-
-Note that the string ``'Hello'`` is an iterable, but the symbols are not
-limited to characters, in fact any immutable Python object can be a symbol.
-Taking the same dictionary, we can apply the ``.decode()`` method which will
-return an iterable of the symbols:
-
-.. code-block:: python
-
-    >>> list(a.decode(d))
-    ['H', 'e', 'l', 'l', 'o']
-    >>> ''.join(a.decode(d))
-    'Hello'
-
-Symbols are not limited to being characters.
-The above dictionary ``d`` can be efficiently constructed using the function
-``bitarray.util.huffman_code()``.  I also wrote `Huffman coding in Python
-using bitarray <http://ilan.schnell-web.net/prog/huffman/>`__ for more
-background information.
-
-When the codes are large, and you have many decode calls, most time will
-be spent creating the (same) internal decode tree objects.  In this case,
-it will be much faster to create a ``decodetree`` object, which can be
-passed to bitarray's ``.decode()`` method, instead of passing the prefix
-code dictionary to those methods itself:
-
-.. code-block:: python
-
-    >>> from bitarray import bitarray, decodetree
-    >>> t = decodetree({'a': bitarray('0'), 'b': bitarray('1')})
-    >>> a = bitarray('0110')
-    >>> list(a.decode(t))
-    ['a', 'b', 'b', 'a']
-
-The sole purpose of the immutable ``decodetree`` object is to be passed
-to bitarray's ``.decode()`` method.
 
 
 Frozenbitarrays

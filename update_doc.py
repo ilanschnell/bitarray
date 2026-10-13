@@ -93,6 +93,7 @@ DOCS = {
     'ba3':    ('Bitarray 3 transition', 'bitarray3.rst'),
     'codecs': ('Comparison of bitarray codecs', 'codecs.rst'),
     'chc':    ('Canonical Huffman Coding', 'canonical.rst'),
+    'prefix': ('Variable-length prefix codes', 'prefix_codes.rst'),
     'repr':   ('Bitarray representations', 'represent.rst'),
     'random': ('Random Bitarrays', 'random_p.rst'),
     'sc':     ('Compression of sparse bitarrays', 'sparse_compression.rst'),
@@ -101,13 +102,16 @@ DOCS = {
 }
 
 DOC_LINKS = {
-    'bitarray.decode':        'ba3',
+    'bitarray.encode':        'prefix',
+    'bitarray.decode':        'ba3 prefix',
     'bitarray.search':        'ba3',
+    'decodetree':             'prefix',
     'util.canonical_huffman': 'chc',
     'util.canonical_decode':  'chc',
     'util.ba2base':           'repr',
     'util.base2ba':           'repr',
     'util.deserialize':       'repr',
+    'util.huffman_code':      'prefix',
     'util.random_p':          'random',
     'util.serialize':         'repr',
     'util.sc_decode':         'sc codecs',
