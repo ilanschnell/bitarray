@@ -41,6 +41,11 @@ If we add up numbers in ``count``, we get the total number of symbols coded:
    >>> sum(count) == len(symbol)
    True
 
+In a canonical code, code words of the same length have consecutive values.
+Therefore, the code can be reconstructed from the number of symbols of each
+length and the symbols in canonical order, without storing the individual
+code words.
+
 The canonical Huffman code is:
 
 .. code-block::
@@ -58,15 +63,15 @@ Encode a message using this code:
 .. code-block:: python
 
     >>> from bitarray import bitarray
-    >>> msg = "abracadabra"
     >>> a = bitarray()
-    >>> a.encode(codedict, msg)
+    >>> a.encode(codedict, "abracadabra")
     >>> a
     bitarray('01011001110011110101100')
-    >>> assert ''.join(a.decode(codedict)) == msg
+    >>> "".join(a.decode(codedict))
+    'abracadabra'
 
-And now decode using the canonical decoding
-tables ``count`` and ``symbol`` instead:
+We can also decode using the canonical decoding tables ``count`` and
+``symbol``:
 
 .. code-block:: python
 
@@ -74,20 +79,21 @@ tables ``count`` and ``symbol`` instead:
     >>> ''.join(canonical_decode(a, count, symbol))
     'abracadabra'
 
+``canonical_decode()`` supports code lengths of up to 31 bits.  In contrast,
+the regular ``.decode()`` method supports prefix codes with lengths of up to
+256 bits.
 
-Notes on DEFLATE:
------------------
 
-DEFLATE is a lossless data compression file format that uses a combination
-of LZ77 and Huffman coding.  It is used by ``gzip`` and implemented
-in ``zlib``.  The format is organized in blocks, which contain Huffman
-encoded data (except for raw blocks).  In addition to symbols that represent
-bytes, there is a stop symbol and up to 29 LZ77 match length symbols.
-When a LZ77 symbol is encountered, more bits are read from the stream
-before continuing with decoding the next element in the stream.
-The fact that extra bits are taken from the stream makes our
-decode function (``canonical_decode()``) unsuitable for DEFLATE decompression,
-or at least inefficient as we would have to create a new iterator for
-decoding each symbol.  A more efficient implementation can be found
-in  `examples/puff
-<https://github.com/ilanschnell/bitarray/tree/master/examples/puff/>`__
+Notes on DEFLATE
+----------------
+
+DEFLATE is a lossless compressed-data format that combines LZ77 and Huffman
+coding.  It is used by the ``gzip`` and ``zlib`` formats and is organized into
+blocks.  Each block either stores literal bytes without compression or uses
+fixed or dynamically defined Huffman codes.
+
+DEFLATE interleaves literal/length Huffman symbols, raw extra bits, and
+distance Huffman symbols.  Because ``canonical_decode()`` expects one
+uninterrupted stream encoded with a single canonical code, it is not well
+suited to decoding DEFLATE blocks.  A more efficient implementation can be
+found in `examples/puff <../examples/puff/>`__
