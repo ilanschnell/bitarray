@@ -1,8 +1,9 @@
 2026-10-XX  3.12.2:
 -------------------
   * update cibuildwheel to 4.3.1 and enable PyPy and Pyodide wheel builds
-  * update vendored `pythoncapi_compat.h`
   * disable some tests not only for wasm32 but also wasm64, see #258
+  * update vendored `pythoncapi_compat.h`
+  * improve documentation
 
 
 2026-10-11  3.12.1:
