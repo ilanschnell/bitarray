@@ -236,7 +236,7 @@ shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
         if (n || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] >> (8 - k);
     }
-    assert(w == 0 || ((uintptr_t) buff) % 4 == 0);
+    assert(w == 0 || ((uintptr_t) buff) % 8 == 0);
     while (w--) {                 /* shift in word-range(0, w) */
         uint64_t *p = ((uint64_t *) buff) + w;
 #if HAVE_BUILTIN_BSWAP64 && PY_BIG_ENDIAN
@@ -266,7 +266,7 @@ shift_r8be(unsigned char *buff, Py_ssize_t n, int k)
         if (n || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] << (8 - k);
     }
-    assert(w == 0 || ((uintptr_t) buff) % 4 == 0);
+    assert(w == 0 || ((uintptr_t) buff) % 8 == 0);
     while (w--) {                 /* shift in word-range(0, w) */
         uint64_t *p = ((uint64_t *) buff) + w;
 #if HAVE_BUILTIN_BSWAP64 && PY_LITTLE_ENDIAN

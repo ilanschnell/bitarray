@@ -247,15 +247,15 @@ setup_table(char *table, char kop)
     }
 }
 
-/* Return distance [0..3] to next aligned pointer.
+/* Return distance [0..7] to next aligned pointer.
    While on modern compilers uint64_t pointers may be misaligned, it may
    cause problems on older ones.  Moreover, it may lead to slowdown (even
    on modern compilers). */
 static inline int
 to_aligned(void *p)
 {
-    int r = ((uintptr_t) p) % 4;
-    return (4 - r) % 4;
+    int r = ((uintptr_t) p) % 8;
+    return (8 - r) % 8;
 }
 
 /* population count of n words starting at uint64_t pointer w */
@@ -264,7 +264,8 @@ popcnt_words(uint64_t *w, Py_ssize_t n)
 {
     Py_ssize_t cnt = 0;
 
-    assert(n >= 0 && ((uintptr_t) w) % 4 == 0);
+    assert(n >= 0);
+    assert(n == 0 || ((uintptr_t) w) % 8 == 0);
     while (n--)
         cnt += popcnt_64(*w++);
     return cnt;
