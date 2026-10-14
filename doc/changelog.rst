@@ -1,6 +1,15 @@
 Change log
 ==========
 
+**3.12.2** (2026-10-14):
+
+* update cibuildwheel to 4.3.1 and enable PyPy and Pyodide wheel builds
+* fix ``uint64`` alignment on SPARC64, see `#247 <https://github.com/ilanschnell/bitarray/issues/247>`__
+* disable some tests not only for wasm32 but also wasm64, see `#258 <https://github.com/ilanschnell/bitarray/issues/258>`__
+* update vendored ``pythoncapi_compat.h``
+* improve documentation
+
+
 **3.12.1** (2026-10-11):
 
 * fix ``bitarray.util`` import on PyPy, see issue `#257 <https://github.com/ilanschnell/bitarray/issues/257>`__
@@ -232,7 +241,7 @@ Change log
   in ``util.canonical_decode()``
 * simplify ``util.int2ba()``
 * add tests
-* add `masked indexing example <../examples/masked.py>`__
+* add masked indexing example
 * add `tricks example <../devel/tricks.py>`__
 
 

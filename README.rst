@@ -65,7 +65,7 @@ Once you have installed the package, you may want to test it:
     $ python -c 'import bitarray; bitarray.test()'
     bitarray is installed in: /Users/ilan/bitarray/bitarray
     sys.prefix: /Users/ilan/miniforge
-    bitarray version: 3.12.1
+    bitarray version: 3.12.2
     sys.version: 3.15.0 (main, Oct  9 2026) [Clang 21.1.8]
     sys.abiflags: ''
     sys._is_gil_enabled(): True
@@ -276,7 +276,7 @@ and can therefore be used as a dictionary key:
 Reference
 =========
 
-bitarray version: 3.12.1 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
+bitarray version: 3.12.2 -- `change log <https://github.com/ilanschnell/bitarray/blob/master/doc/changelog.rst>`__
 
 In the following, ``item`` and ``value`` are usually a single bit -
 an integer 0 or 1.
@@ -387,7 +387,7 @@ bitarray methods:
    corresponding symbols.
    The prefix code length cannot exceed 256 bits.
 
-   See also: `Bitarray 3 transition <https://github.com/ilanschnell/bitarray/blob/master/doc/bitarray3.rst>`__
+   See also: `Bitarray 3 transition <https://github.com/ilanschnell/bitarray/blob/master/doc/bitarray3.rst>`__, `Variable-length prefix codes <https://github.com/ilanschnell/bitarray/blob/master/doc/prefix_codes.rst>`__
 
    New in version 3.0: returns iterator (equivalent to past ``.iterdecode()``)
 
@@ -398,6 +398,8 @@ bitarray methods:
    Given a prefix code (a dict mapping symbols to bitarrays),
    iterate over the iterable object with symbols, and extend bitarray
    with corresponding bitarray for each symbol.
+
+   See also: `Variable-length prefix codes <https://github.com/ilanschnell/bitarray/blob/master/doc/prefix_codes.rst>`__
 
 
 ``extend(iterable, /)``
@@ -637,6 +639,8 @@ Other objects:
    create a binary tree object to be passed to ``.decode()``.
    The prefix code length cannot exceed 256 bits.
 
+   See also: `Variable-length prefix codes <https://github.com/ilanschnell/bitarray/blob/master/doc/prefix_codes.rst>`__
+
    New in version 1.6
 
 
@@ -822,6 +826,8 @@ This sub-module was added in version 1.2.
    calculate the Huffman code, i.e. a dict mapping those symbols to
    frozenbitarrays (with given bit-endianness).  Note that the symbols are not
    limited to being strings.  Symbols may be any hashable object.
+
+   See also: `Variable-length prefix codes <https://github.com/ilanschnell/bitarray/blob/master/doc/prefix_codes.rst>`__
 
    New in version 3.10: return a codedict mapping to frozenbitarrays
 
