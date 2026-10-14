@@ -3813,7 +3813,7 @@ class CountTests(unittest.TestCase, Util):
             self.assertEqual(a.count(v, s.start, s.stop, s.step),
                              a[s].count(v))
 
-    def test_offest_buffer(self):
+    def test_offset_buffer(self):
         # this tests if words are aligned in popcnt_words()
         N = 1 << 16
         for i in range(20):
