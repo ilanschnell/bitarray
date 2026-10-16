@@ -1,8 +1,9 @@
 2026-10-XX  3.12.3:
 -------------------
-  * preserve bitarray subtypes in type hints for copying operations, see #175
-    and #260
+  * preserve bitarray subtypes in operation return type hints,
+    see #260 (closes #175)
   * fix unaligned buffer handling on sparc64, see #259
+  * fix Hashable detection on Windows, closes #232
 
 
 2026-10-14  3.12.2:
