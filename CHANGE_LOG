@@ -1,6 +1,7 @@
 2026-10-XX  3.12.3:
 -------------------
   * preserve bitarray subtypes in type hints for copying operations, see #175
+    and #260
   * fix unaligned buffer handling on sparc64, see #259
 
 
