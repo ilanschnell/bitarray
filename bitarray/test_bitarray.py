@@ -1753,6 +1753,20 @@ class MiscTests(unittest.TestCase, Util):
             for i in range(len(a)):
                 self.assertEqual(a[i], b[i + 1234])
 
+    def test_subclass_inplace(self) -> None:
+        class SubBitarray(bitarray):
+            pass
+
+        a: SubBitarray = SubBitarray('101')
+        a += bitarray()
+        a *= 1
+        a &= bitarray('110')
+        a |= bitarray('001')
+        a ^= bitarray('010')
+        a <<= 1
+        a >>= 1
+        self.assertIs(type(a), SubBitarray)
+
     @unittest.skipIf(is_pypy, "skip test on PyPy")
     def test_overflow(self):
         a = bitarray(1)
