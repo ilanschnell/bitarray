@@ -1805,8 +1805,7 @@ class MiscTests(unittest.TestCase, Util):
         self.assertIsInstance(a, abc.MutableSequence)
         if sys.version_info[:2] >= (3, 12):
             self.assertIsInstance(a, abc.Buffer)
-        if sys.platform != "win32":
-            self.assertFalse(isinstance(a, abc.Hashable))
+        self.assertFalse(isinstance(a, abc.Hashable))
 
 # ---------------------------------------------------------------------------
 
