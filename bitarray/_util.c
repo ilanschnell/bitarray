@@ -205,6 +205,21 @@ count_n_lock_held(bitarrayobject *a, Py_ssize_t n, int vi)
     return i;
 }
 
+static inline int
+check_aligned(bitarrayobject *a)
+{
+#ifdef __sparc__
+    if (((uintptr_t) a->ob_item) % 8) {
+        PyErr_SetString(PyExc_NotImplementedError, "unaligned buffers "
+                        "not supported on SPARC for this function");
+        return -1;
+    }
+#else
+    (void) a;  /* silence potential compiler warning about unused a */
+#endif
+    return 0;
+}
+
 static PyObject *
 count_n(PyObject *module, PyObject *args)
 {
@@ -220,6 +235,8 @@ count_n(PyObject *module, PyObject *args)
         PyErr_SetString(PyExc_ValueError, "non-negative integer expected");
         return NULL;
     }
+    if (check_aligned(a) < 0)
+        return NULL;
 
     Py_BEGIN_CRITICAL_SECTION(a);
     nbits = a->nbits;
@@ -250,19 +267,22 @@ static PyObject *
 parity(PyObject *module, PyObject *obj)
 {
     bitarrayobject *a;
-    uint64_t x, *wbuff;
-    Py_ssize_t i;
+    uint64_t x;
+    Py_ssize_t i, p, w;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
 
     a = (bitarrayobject *) obj;
     Py_BEGIN_CRITICAL_SECTION(a);
-    wbuff = WBUFF(a);
-    x = zlw(a);
-    i = a->nbits / 64;
-    while (i--)
-        x ^= *wbuff++;
+    x = (unsigned char) zlc(a);
+    w = aligned_words(a->ob_item, 0, a->nbits / 8, &p);
+    for (i = 0; i < p; i++)
+        x ^= (unsigned char) a->ob_item[i];
+    for (i = 0; i < w; i++)
+        x ^= ((uint64_t *) (a->ob_item + p))[i];
+    for (i = p + 8 * w; i < a->nbits / 8; i++)
+        x ^= (unsigned char) a->ob_item[i];
     Py_END_CRITICAL_SECTION();
     return PyLong_FromLong(parity_64(x));
 }
@@ -460,6 +480,8 @@ binary_function(PyObject *args, const char *format, const char oper)
                           bitarray_type, (PyObject *) &a,
                           bitarray_type, (PyObject *) &b))
         return NULL;
+    if (check_aligned(a) < 0 || check_aligned(b) < 0)
+        return NULL;
 
     Py_BEGIN_CRITICAL_SECTION2(a, b);
     if (ensure_eq_size_endian(a, b) == 0)
@@ -562,6 +584,8 @@ correspond_all(PyObject *module, PyObject *args)
                           bitarray_type, (PyObject *) &a,
                           bitarray_type, (PyObject *) &b))
         return NULL;
+    if (check_aligned(a) < 0 || check_aligned(b) < 0)
+        return NULL;
 
     Py_BEGIN_CRITICAL_SECTION2(a, b);
     if (ensure_eq_size_endian(a, b) == 0)
@@ -582,21 +606,22 @@ byteswap_lock_held(Py_buffer view, Py_ssize_t n)
 {
     char *buff = view.buf;
     Py_ssize_t m = view.len / n, k;
+    int is_aligned = ((uintptr_t) buff) % 8 == 0;
 
     assert(n >= 1 && n * m == view.len);
 
-    if (n == 8 && HAVE_BUILTIN_BSWAP64) {
+    if (is_aligned && n == 8 && HAVE_BUILTIN_BSWAP64) {
         uint64_t *w = (uint64_t *) buff;
         for (k = 0; k < m; k++)
             w[k] = builtin_bswap64(w[k]);
     }
 #if (defined(__clang__) || (defined(__GNUC__) && (__GNUC__ >= 5)))
-    else if (n == 4) {
+    else if (is_aligned && n == 4) {
         uint32_t *w = (uint32_t *) buff;
         for (k = 0; k < m; k++)
             w[k] = __builtin_bswap32(w[k]);
     }
-    else if (n == 2) {
+    else if (is_aligned && n == 2) {
         uint16_t *w = (uint16_t *) buff;
         for (k = 0; k < m; k++)
             w[k] = __builtin_bswap16(w[k]);
@@ -1856,6 +1881,8 @@ sc_encode(PyObject *module, PyObject *obj)
     Py_ssize_t len;  /* bytes written into output bytes buffer */
 
     if (ensure_bitarray(obj) < 0)
+        return NULL;
+    if (check_aligned((bitarrayobject *) obj) < 0)
         return NULL;
 
     out = PyBytes_FromStringAndSize(NULL, ALLOC_SIZE);
