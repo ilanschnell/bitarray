@@ -1,8 +1,6 @@
 name: Test on SPARC64
 
 on:
-  push:
-    branches: [sparc64]
   workflow_dispatch:
 
 permissions:
