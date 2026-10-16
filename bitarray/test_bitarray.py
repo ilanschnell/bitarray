@@ -5681,12 +5681,17 @@ class FrozenbitarrayTests(unittest.TestCase, Util):
 
         self.check_obj(a)
 
-    def test_copy(self):
+    def test_copy(self) -> None:
         a = frozenbitarray('101')
-        # not only .copy() creates new frozenbitarray which are read-only
-        for b in [a, a.copy(), 3 * a, 5 * a, a & bitarray('110'),
-                  a >> 2, ~a, a + bitarray(8*'1'),
-                  a[:], a[::2], a[[0, 1]], a[bitarray('011')]]:
+        # Check the stub return types as well as the runtime types.
+        copies: list[frozenbitarray] = [
+            a.copy(), 3 * a, a * 5, a & bitarray('110'),
+            a | bitarray('110'), a ^ bitarray('110'),
+            a & frozenbitarray('110'), a | frozenbitarray('110'),
+            a ^ frozenbitarray('110'), a >> 2, a << 1, ~a,
+            a + bitarray(8*'1'), a[:], a[::2], a[[0, 1]], a[bitarray('011')],
+        ]
+        for b in copies:
             self.assertIs(type(b), frozenbitarray)
             self.assertTrue(b.readonly)
             self.check_obj(b)
