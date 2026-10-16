@@ -86,6 +86,9 @@ class Util:
             self.assertEqual(a.buffer_info().address % 8, remainder)
             yield a
 
+            self.assertEqual(owner[:offset], bytearray(offset))
+            self.assertEqual(owner[offset + size:], bytearray(8 - offset))
+
     @staticmethod
     def is_unaligned(a):
         info = a.buffer_info()
@@ -3171,9 +3174,20 @@ class InvertTests(unittest.TestCase, Util):
         self.assertEqual(a, bytearray([255, 254, 253, 252, 223, 0]))
 
     def test_unaligned_buffers(self):
-        for a in self.unaligned_buffers():
-            a.invert()
-            self.assertEqual(a, ones(len(a)))
+        for n in range(20):
+            for endian in ENDIANS:
+                for a in self.unaligned_buffers(size=n, endian=endian):
+                    a.invert()
+                    self.assertEqual(a, ones(len(a)))
+                    if n == 0:
+                        continue
+                    i = randrange(len(a))
+                    a.invert(i)
+                    self.assertEqual(a.find(0), i)
+                    self.assertEqual(a.endian, endian)
+                    a.invert(slice(0, i))
+                    a.invert(slice(i + 1, None))
+                    self.assertEqual(a, zeros(8 * n))
 
 class SortTests(unittest.TestCase, Util):
 
@@ -3874,10 +3888,14 @@ class CountTests(unittest.TestCase, Util):
                              a[s].count(v))
 
     def test_unaligned_buffers(self):
-        # this tests if words are aligned in popcnt_words()
-        for a in self.unaligned_buffers():
-            a[128] = 1
-            self.assertEqual(a.count(), 1)
+        for n in range(20):
+            for endian in ENDIANS:
+                for a in self.unaligned_buffers(size=n, endian=endian):
+                    b = urandom_2(8 * n)
+                    expected = b.count()
+                    a[:] = b
+                    self.assertEqual(a.count(), expected)
+                    self.assertEqual(a.endian, endian)
 
 # -------------------------- .find() and .index() ---------------------------
 
@@ -4052,17 +4070,21 @@ class IndexTests(unittest.TestCase, Util):
                 self.assertEqual(a.find(v, i, j, 1), ref_r)
 
     def test_unaligned_buffers(self):
-        for a in self.unaligned_buffers():
-            self.assertEqual(a.find(1), -1)
-            a[193] = 1
-            self.assertEqual(a.find(1), 193)
-            self.assertEqual(a.find(1, right=1), 193)
-
-            a.setall(1)
-            self.assertEqual(a.find(0), -1)
-            a[193] = 0
-            self.assertEqual(a.find(0), 193)
-            self.assertEqual(a.find(0, right=1), 193)
+        for n in range(20):
+            for endian in ENDIANS:
+                for a in self.unaligned_buffers(size=n, endian=endian):
+                    self.assertEqual(a.find(1), -1)
+                    if n == 0:
+                        continue
+                    i = randrange(len(a))
+                    a[i] = 1
+                    self.assertEqual(a.find(1), i)
+                    self.assertEqual(a.find(1, right=1), i)
+                    a.setall(1)
+                    self.assertEqual(a.find(0), -1)
+                    a[i] = 0
+                    self.assertEqual(a.find(0), i)
+                    self.assertEqual(a.find(0, right=1), i)
 
 # ----------------------------- .search() -----------------------------------
 
@@ -5824,15 +5846,13 @@ def show_info(verbosity=1):
 
     if verbosity >= 2:
         print('bitarray version: %s' % __version__)
-        print('sys.version: %s' % sys.version)
         print('platform.machine(): %s' % platform.machine())
+        print('sys.version: %s' % sys.version)
         if os.name == "posix":
             print('sys.abiflags: %r' % sys.abiflags)
         if sys.version_info[:2] >= (3, 14):
             print('sys._is_gil_enabled(): %s' % sys._is_gil_enabled())
         print('pointer size: %d bit' % (8 * PTRSIZE))
-        print('sizeof(size_t): %d' % sysinfo("size_t"))
-        print('sizeof(bitarrayobject): %d' % sysinfo("bitarrayobject"))
         print('HAVE_BUILTIN_BSWAP64: %d' % sysinfo("HAVE_BUILTIN_BSWAP64"))
         print('default bit-endianness: %s' % get_default_endian())
         print('machine byte-order: %s' % sys.byteorder)
