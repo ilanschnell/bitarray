@@ -24,7 +24,8 @@ from collections import Counter
 
 from bitarray import (bitarray, frozenbitarray, decodetree, bits2bytes,
                       get_default_endian)
-from bitarray.test_bitarray import Util, is_pypy, urandom_2, ENDIANS, PTRSIZE
+from bitarray.test_bitarray import (Util, is_pypy, is_sparc, urandom_2,
+                                    ENDIANS, PTRSIZE)
 
 from bitarray.util import (
     zeros, ones, urandom, random_k, random_p, pprint, strip, count_n,
@@ -687,6 +688,15 @@ class CountN_Tests(unittest.TestCase, Util):
                 i = count_n(a, n, v)
                 self.check_result(a, n, i, v)
 
+    def test_unaligned_buffers(self):
+        # size=1000 means that 8000 bits > BLOCK_BITS 4096
+        for a in self.unaligned_buffers(size=1000):
+            a[-1] = 1
+            if is_sparc and self.is_unaligned(a):
+                self.assertRaises(NotImplementedError, count_n, a, 1)
+            else:
+                self.assertEqual(count_n(a, 1), len(a))
+
 # ---------------------------------------------------------------------------
 
 class BitwiseCountTests(unittest.TestCase, Util):
@@ -770,6 +780,16 @@ class BitwiseCountTests(unittest.TestCase, Util):
             # all xor
             self.assertEqual(all(a ^ b), count_xor(a, b) == n)
             self.assertEqual(all(a ^ b), a == ~b)
+
+    def test_unaligned_buffers(self):
+        for f in count_and, count_or, count_xor, any_and, subset:
+            for a in self.unaligned_buffers():
+                for b in self.unaligned_buffers():
+                    if is_sparc and (self.is_unaligned(a) or
+                                     self.is_unaligned(b)):
+                        self.assertRaises(NotImplementedError, f, a, b)
+                    else:
+                        self.assertEqual(f(a, b), f == subset)
 
 # ---------------------------  any_and()  -----------------------------------
 
@@ -905,7 +925,7 @@ class SubsetTests(unittest.TestCase, Util):
 
 # -------------------------  correspond_all()  ------------------------------
 
-class CorrespondAllTests(unittest.TestCase):
+class CorrespondAllTests(unittest.TestCase, Util):
 
     def test_basic(self):
         a = frozenbitarray('0101')
@@ -941,10 +961,20 @@ class CorrespondAllTests(unittest.TestCase):
             self.assertEqual(res[1] + res[2], count_xor(a, b))
             self.assertEqual(sum(res), n)
 
+    def test_unaligned_buffers(self):
+        for a in self.unaligned_buffers():
+            for b in self.unaligned_buffers():
+                if is_sparc and (self.is_unaligned(a) or
+                                 self.is_unaligned(b)):
+                    self.assertRaises(NotImplementedError,
+                                      correspond_all, a, b)
+                else:
+                    self.assertEqual(correspond_all(a, b), (len(a), 0, 0, 0))
+
 # -----------------------------  byteswap()  --------------------------------
 
 @unittest.skipIf(is_pypy, "skip test on PyPy")
-class ByteSwapTests(unittest.TestCase):
+class ByteSwapTests(unittest.TestCase, Util):
 
     def test_basic_bytearray(self):
         a = bytearray(b"ABCD")
@@ -1039,9 +1069,15 @@ class ByteSwapTests(unittest.TestCase):
             a.bytereverse()
             self.assertEqual(a, b[::-1])
 
+    def test_unaligned_buffers(self):
+        for n in 2, 4, 8, 16:
+            for a in self.unaligned_buffers():
+                byteswap(a, n)
+                self.assertEqual(a, zeros(256))
+
 # ------------------------------  parity()  ---------------------------------
 
-class ParityTests(unittest.TestCase):
+class ParityTests(unittest.TestCase, Util):
 
     def test_explicit(self):
         for s, res in [('', 0), ('1', 1), ('0010011', 1), ('10100110', 0)]:
@@ -1071,6 +1107,16 @@ class ParityTests(unittest.TestCase):
         self.assertRaises(TypeError, parity, 1)
         self.assertRaises(TypeError, parity)
         self.assertRaises(TypeError, parity, bitarray("110"), 1)
+
+    def test_unaligned_buffers(self):
+        for a in self.unaligned_buffers():
+            self.assertEqual(parity(a), 0)
+            a[0] = 1
+            self.assertEqual(parity(a), 1)
+            a[193] = 1
+            self.assertEqual(parity(a), 0)
+            a[-1] = 1
+            self.assertEqual(parity(a), 1)
 
 # ----------------------------  sum_indices()  ------------------------------
 
@@ -2143,6 +2189,12 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
                 a &= urandom(n, endian)
                 self.round_trip(a)
 
+    def test_unaligned_buffers(self):
+        for a in self.unaligned_buffers(size=1000):
+            if is_sparc and self.is_unaligned(a):
+                self.assertRaises(NotImplementedError, sc_encode, a)
+            else:
+                self.assertEqual(sc_decode(sc_encode(a)), a)
 
 # ------------------------   variable length codec   ------------------------
 

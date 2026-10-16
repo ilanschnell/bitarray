@@ -1,5 +1,6 @@
 2026-10-XX  3.12.3:
 -------------------
+  * fix unaligned buffer handling on sparc64, see #259
 
 
 2026-10-14  3.12.2:

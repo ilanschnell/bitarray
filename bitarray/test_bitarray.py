@@ -33,6 +33,7 @@ import weakref
 
 is_emscripten = platform.machine() in ('wasm32', 'wasm64')
 is_pypy = platform.python_implementation() == 'PyPy'
+is_sparc = platform.machine().lower().startswith("sparc")
 
 
 from bitarray import (bitarray, frozenbitarray, bits2bytes, decodetree,
@@ -72,6 +73,23 @@ class Util:
     def randomlists(self):
         for a in self.randombitarrays():
             yield a.tolist()
+
+    def unaligned_buffers(self, size=32, endian=None):
+        for remainder in range(8):
+            owner = bytearray(size + 8)
+            base = bitarray(buffer=owner).buffer_info().address
+            offset = (remainder - base) % 8
+            buffer = memoryview(owner)[offset:offset + size]
+            a = bitarray(buffer=buffer, endian=endian)
+
+            self.assertEqual(len(a), 8 * size)
+            self.assertEqual(a.buffer_info().address % 8, remainder)
+            yield a
+
+    @staticmethod
+    def is_unaligned(a):
+        info = a.buffer_info()
+        return info.address % 8 != 0
 
     @staticmethod
     def opposite_endian(endian):
@@ -2431,6 +2449,18 @@ class NumberTests(unittest.TestCase, Util):
         b[16:] &= bitarray("1111 0000 1111 0000", 'big')
         self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0xe0]))
 
+    def test_unaligned_buffers(self):
+        for a in self.unaligned_buffers():
+            for b in self.unaligned_buffers():
+                a.setall(0)
+                a[187] = a[193] = b[193] = b[194] = 1
+                a &= b
+                self.assertEqual(list(a.search(1)), [193])
+                a ^= b
+                self.assertEqual(list(a.search(1)), [194])
+                a |= b
+                self.assertEqual(list(a.search(1)), [193, 194])
+
 
 class ShiftTests(unittest.TestCase, Util):
 
@@ -2592,6 +2622,18 @@ class ShiftTests(unittest.TestCase, Util):
         self.assertEqual(a, bytearray([0xfc, 0x88, 0x10, 0xe0]))
         b >>= 8
         self.assertEqual(a, bytearray([0x00, 0xfc, 0x88, 0x10]))
+
+    def test_unaligned_buffers(self):
+        for endian in ENDIANS:
+            for a in self.unaligned_buffers(endian=endian):
+                a[0] = a[193] = a[-1] = 1
+                expected = self.shift(a, 3, 'left')
+                a <<= 3
+                self.assertEQUAL(a, expected)
+
+                expected = self.shift(a, 5, 'right')
+                a >>= 5
+                self.assertEQUAL(a, expected)
 
 # --------------------------------   .extend()   ----------------------------
 
@@ -3114,6 +3156,11 @@ class InvertTests(unittest.TestCase, Util):
         self.assertFalse(b.readonly)
         b.invert()
         self.assertEqual(a, bytearray([255, 254, 253, 252, 223, 0]))
+
+    def test_unaligned_buffers(self):
+        for a in self.unaligned_buffers():
+            a.invert()
+            self.assertEqual(a, ones(len(a)))
 
 class SortTests(unittest.TestCase, Util):
 
@@ -3813,13 +3860,11 @@ class CountTests(unittest.TestCase, Util):
             self.assertEqual(a.count(v, s.start, s.stop, s.step),
                              a[s].count(v))
 
-    def test_offset_buffer(self):
+    def test_unaligned_buffers(self):
         # this tests if words are aligned in popcnt_words()
-        N = 1 << 16
-        for i in range(20):
-            a = urandom_2(N, 'little')
-            b = bitarray(buffer=memoryview(a)[i:], endian='little')
-            self.assertEqual(b.count(), a.count(1, 8 * i))
+        for a in self.unaligned_buffers():
+            a[128] = 1
+            self.assertEqual(a.count(), 1)
 
 # -------------------------- .find() and .index() ---------------------------
 
@@ -3992,6 +4037,19 @@ class IndexTests(unittest.TestCase, Util):
                 self.assertIn(v, range(2))
                 self.assertEqual(a.find(v, i, j, 0), ref_l)
                 self.assertEqual(a.find(v, i, j, 1), ref_r)
+
+    def test_unaligned_buffers(self):
+        for a in self.unaligned_buffers():
+            self.assertEqual(a.find(1), -1)
+            a[193] = 1
+            self.assertEqual(a.find(1), 193)
+            self.assertEqual(a.find(1, right=1), 193)
+
+            a.setall(1)
+            self.assertEqual(a.find(0), -1)
+            a[193] = 0
+            self.assertEqual(a.find(0), 193)
+            self.assertEqual(a.find(0, right=1), 193)
 
 # ----------------------------- .search() -----------------------------------
 
@@ -5749,6 +5807,7 @@ def show_info(verbosity=1):
     if verbosity >= 2:
         print('bitarray version: %s' % __version__)
         print('sys.version: %s' % sys.version)
+        print('platform.machine(): %s' % platform.machine())
         if os.name == "posix":
             print('sys.abiflags: %r' % sys.abiflags)
         if sys.version_info[:2] >= (3, 14):

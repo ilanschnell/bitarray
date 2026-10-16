@@ -252,10 +252,30 @@ setup_table(char *table, char kop)
    cause problems on older ones.  Moreover, it may lead to slowdown (even
    on modern compilers). */
 static inline int
-to_aligned(void *p)
+to_aligned(const void *p)
 {
     int r = ((uintptr_t) p) % 8;
     return (8 - r) % 8;
+}
+
+/* Return number of complete aligned words in byte-range(start, stop).
+   Set *p to the byte offset of the first word. */
+static inline Py_ssize_t
+aligned_words(const char *buff, Py_ssize_t start, Py_ssize_t stop,
+              Py_ssize_t *p)
+{
+    assert(0 <= start && start <= stop);
+
+    if (start == stop) {
+        /* An empty buffer may be NULL, so avoid computing buff + start. */
+        *p = start;
+        return 0;
+    }
+    *p = start + to_aligned(buff + start);
+    if (*p > stop)
+        *p = stop;
+
+    return (stop - *p) / 8;
 }
 
 /* population count of n words starting at uint64_t pointer w */
@@ -265,7 +285,6 @@ popcnt_words(uint64_t *w, Py_ssize_t n)
     Py_ssize_t cnt = 0;
 
     assert(n >= 0);
-    assert(n == 0 || ((uintptr_t) w) % 8 == 0);
     while (n--)
         cnt += popcnt_64(*w++);
     return cnt;
