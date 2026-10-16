@@ -124,19 +124,22 @@ zlc(bitarrayobject *self)       /* zlc = zeroed last char */
 /* Return a uint64_t word representing the last (up to 63) remaining bits
    of the buffer.  All missing bytes (to complete the word) and padbits are
    treated as zeros.
+   The remaining bytes are copied, so the buffer need not be word-aligned.
+   The result does not, in general, correspond to an aligned 64-bit
+   word in the buffer.
    If the length of the bitarray is a multiple of 64 (which also includes
    an empty bitarray), 0 is returned. */
 static inline uint64_t
 zlw(bitarrayobject *self)       /* zlw = zeroed last word */
 {
     const size_t nbits = self->nbits;
-    const size_t nw = (nbits / 64) * 8;   /* bytes in complete words */
-    const size_t nr = (nbits % 64) / 8;   /* complete remaining bytes */
+    const size_t offset = (nbits / 64) * 8;   /* bytes in complete words */
+    const size_t nr = (nbits % 64) / 8;       /* complete remaining bytes */
     uint64_t res = 0;
 
-    assert(nw + nr == nbits / 8 && 8 * (nw + nr) + nbits % 8 == nbits);
+    assert(offset + nr == nbits / 8);
     if (nr)
-        memcpy((char *) &res, self->ob_item + nw, nr);
+        memcpy((char *) &res, self->ob_item + offset, nr);
     if (nbits % 8)
         *(((char *) &res) + nr) = zlc(self);
 
