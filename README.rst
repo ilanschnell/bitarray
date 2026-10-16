@@ -67,6 +67,7 @@ Once you have installed the package, you may want to test it:
     sys.prefix: /Users/ilan/miniforge
     bitarray version: 3.12.2
     sys.version: 3.15.0 (main, Oct  9 2026) [Clang 21.1.8]
+    platform.machine(): arm64
     sys.abiflags: ''
     sys._is_gil_enabled(): True
     pointer size: 64 bit
@@ -82,7 +83,7 @@ Once you have installed the package, you may want to test it:
     ................................................s........................
     ......s.........................................................
     ----------------------------------------------------------------------
-    Ran 711 tests in 0.161s
+    Ran 721 tests in 0.163s
 
     OK (skipped=2)
 
