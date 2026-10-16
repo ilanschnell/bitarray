@@ -1118,6 +1118,17 @@ class ParityTests(unittest.TestCase, Util):
             a[-1] = 1
             self.assertEqual(parity(a), 1)
 
+    def test_unaligned_buffers_random(self):
+        for n in range(20):
+            for endian in ENDIANS:
+                for a in self.unaligned_buffers(size=n, endian=endian):
+                    b = urandom(8 * n)
+                    expected = b.count() % 2
+                    a[:] = b
+                    self.assertEqual(len(a), 8 * n)
+                    self.assertEqual(a.endian, endian)
+                    self.assertEqual(parity(a), expected)
+
 # ----------------------------  sum_indices()  ------------------------------
 
 class SumIndicesTests(unittest.TestCase):
