@@ -268,21 +268,19 @@ static inline Py_ssize_t
 aligned_words(const char *buff, Py_ssize_t start, Py_ssize_t stop,
               Py_ssize_t *p1, Py_ssize_t *p2)
 {
-    Py_ssize_t n;
+    Py_ssize_t n = 0;
 
     assert(0 <= start && start <= stop);
 
-    if (start == stop) {
-        /* An empty buffer may be NULL, so avoid computing buff + start. */
-        *p1 = start;
-        *p2 = stop;
-        return 0;
+    if (start < stop) {
+        /* non-empty buffer cannot be NULL */
+        start += to_aligned(buff + start);
+        if (start > stop)
+            start = stop;
+        n = (stop - start) / 8;
     }
-    *p1 = start + to_aligned(buff + start);
-    if (*p1 > stop)
-        *p1 = stop;
-    n = (stop - *p1) / 8;
-    *p2 = *p1 + 8 * n;
+    *p1 = start;
+    *p2 = start + 8 * n;
     return n;
 }
 
