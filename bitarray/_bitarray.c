@@ -465,17 +465,17 @@ invert_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
 
     if (n >= 64) {
         uint64_t *words;
-        Py_ssize_t p, w;
+        Py_ssize_t p1, p2, w;
 
-        w = aligned_words(self->ob_item, BYTES(a), b / 8, &p);
+        w = aligned_words(self->ob_item, BYTES(a), b / 8, &p1, &p2);
 
-        invert_span(self, a, 8 * p);
+        invert_span(self, a, 8 * p1);
 
-        words = w ? (uint64_t *) (self->ob_item + p) : NULL;
+        words = w ? (uint64_t *) (self->ob_item + p1) : NULL;
         for (i = 0; i < w; i++)
             words[i] = ~words[i];
 
-        invert_span(self, 8 * (p + 8 * w), b);
+        invert_span(self, 8 * p2, b);
     }
     else if (n >= 8) {
         const Py_ssize_t ca = BYTES(a);       /* char-range(ca, cb) */
@@ -578,15 +578,15 @@ count_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
     assert(0 <= b && b <= self->nbits);
 
     if (n >= 64) {
-        Py_ssize_t p, w;
+        Py_ssize_t p1, p2, w;
 
-        w = aligned_words(self->ob_item, BYTES(a), b / 8, &p);
-        assert(8 * p - a < 64 && b - 8 * (p + 8 * w) < 64 && w >= 0);
+        w = aligned_words(self->ob_item, BYTES(a), b / 8, &p1, &p2);
+        assert(8 * p1 - a < 64 && b - 8 * p2 < 64 && w >= 0);
 
-        cnt += count_span(self, a, 8 * p);
+        cnt += count_span(self, a, 8 * p1);
         if (w)
-            cnt += popcnt_words((uint64_t *) (self->ob_item + p), w);
-        cnt += count_span(self, 8 * (p + 8 * w), b);
+            cnt += popcnt_words((uint64_t *) (self->ob_item + p1), w);
+        cnt += count_span(self, 8 * p2, b);
     }
     else if (n >= 8) {
         const Py_ssize_t ca = BYTES(a);   /* char-range(ca, cb) */
@@ -642,35 +642,35 @@ find_bit_words(bitarrayobject *self, int vi,
 {
     const uint64_t word = vi ? 0 : ~0;
     const uint64_t *words;
-    Py_ssize_t p, n, q, res, i;
+    Py_ssize_t p1, p2, n, q, res, i;
 
-    n = aligned_words(self->ob_item, BYTES(a), b / 8, &p);
-    assert(8 * p - a < 64 && b - 8 * (p + 8 * n) < 64 && n >= 0);
-    words = n ? (uint64_t *) (self->ob_item + p) : NULL;
+    n = aligned_words(self->ob_item, BYTES(a), b / 8, &p1, &p2);
+    assert(8 * p1 - a < 64 && b - 8 * p2 < 64 && n >= 0);
+    words = n ? (uint64_t *) (self->ob_item + p1) : NULL;
 
     if (right) {
-        if ((res = find_bit(self, vi, 8 * (p + 8 * n), b, 1)) >= 0)
+        if ((res = find_bit(self, vi, 8 * p2, b, 1)) >= 0)
             return res;
 
         for (i = n - 1; i >= 0; i--) {  /* skip uint64 words */
             if (word ^ words[i]) {
-                q = 8 * (p + 8 * i);
+                q = 8 * p1 + 64 * i;
                 return find_bit(self, vi, q, q + 64, 1);
             }
         }
-        return find_bit(self, vi, a, 8 * p, 1);
+        return find_bit(self, vi, a, 8 * p1, 1);
     }
     else {
-        if ((res = find_bit(self, vi, a, 8 * p, 0)) >= 0)
+        if ((res = find_bit(self, vi, a, 8 * p1, 0)) >= 0)
             return res;
 
         for (i = 0; i < n; i++) {       /* skip uint64 words */
             if (word ^ words[i]) {
-                q = 8 * (p + 8 * i);
+                q = 8 * p1 + 64 * i;
                 return find_bit(self, vi, q, q + 64, 0);
             }
         }
-        return find_bit(self, vi, 8 * (p + 8 * n), b, 0);
+        return find_bit(self, vi, 8 * p2, b, 0);
     }
 }
 

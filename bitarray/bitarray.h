@@ -262,23 +262,28 @@ to_aligned(const void *p)
 }
 
 /* Return number of complete aligned words in byte-range(start, stop).
-   Set *p to the byte offset of the first word. */
+   Set byte offsets *p1 and *p2 such that the aligned words are in
+   byte-range(*p1, *p2). */
 static inline Py_ssize_t
 aligned_words(const char *buff, Py_ssize_t start, Py_ssize_t stop,
-              Py_ssize_t *p)
+              Py_ssize_t *p1, Py_ssize_t *p2)
 {
+    Py_ssize_t n;
+
     assert(0 <= start && start <= stop);
 
     if (start == stop) {
         /* An empty buffer may be NULL, so avoid computing buff + start. */
-        *p = start;
+        *p1 = start;
+        *p2 = stop;
         return 0;
     }
-    *p = start + to_aligned(buff + start);
-    if (*p > stop)
-        *p = stop;
-
-    return (stop - *p) / 8;
+    *p1 = start + to_aligned(buff + start);
+    if (*p1 > stop)
+        *p1 = stop;
+    n = (stop - *p1) / 8;
+    *p2 = *p1 + 8 * n;
+    return n;
 }
 
 /* population count of n words starting at uint64_t pointer w */
