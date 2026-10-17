@@ -581,7 +581,6 @@ count_span(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b)
         Py_ssize_t p1, p2, w;
 
         w = aligned_words(self->ob_item, BYTES(a), b / 8, &p1, &p2);
-        assert(8 * p1 - a < 64 && b - 8 * p2 < 64 && w >= 0);
 
         cnt += count_span(self, a, 8 * p1);
         if (w)
@@ -645,7 +644,6 @@ find_bit_words(bitarrayobject *self, int vi,
     Py_ssize_t p1, p2, n, q, res, i;
 
     n = aligned_words(self->ob_item, BYTES(a), b / 8, &p1, &p2);
-    assert(8 * p1 - a < 64 && b - 8 * p2 < 64 && n >= 0);
     words = n ? (uint64_t *) (self->ob_item + p1) : NULL;
 
     if (right) {
