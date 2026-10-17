@@ -268,7 +268,7 @@ parity(PyObject *module, PyObject *obj)
 {
     bitarrayobject *a;
     uint64_t x;
-    Py_ssize_t i, p1, p2, w;
+    Py_ssize_t i, p1, p2;
 
     if (ensure_bitarray(obj) < 0)
         return NULL;
@@ -276,11 +276,11 @@ parity(PyObject *module, PyObject *obj)
     a = (bitarrayobject *) obj;
     Py_BEGIN_CRITICAL_SECTION(a);
     x = (unsigned char) zlc(a);
-    w = aligned_words(a->ob_item, 0, a->nbits / 8, &p1, &p2);
+    aligned_words(a->ob_item, 0, a->nbits / 8, &p1, &p2);
     for (i = 0; i < p1; i++)
         x ^= (unsigned char) a->ob_item[i];
-    for (i = 0; i < w; i++)
-        x ^= ((uint64_t *) (a->ob_item + p1))[i];
+    for (i = p1; i < p2; i += 8)
+        x ^= *((uint64_t *) (a->ob_item + i));
     for (i = p2; i < a->nbits / 8; i++)
         x ^= (unsigned char) a->ob_item[i];
     Py_END_CRITICAL_SECTION();
