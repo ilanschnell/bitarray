@@ -1,0 +1,29 @@
+name: Test on RISC-V
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build and test on RISC-V
+        uses: uraimo/run-on-arch-action@v3
+        with:
+          arch: riscv64
+          distro: ubuntu24.04
+          install: |
+            apt-get update
+            apt-get install -y \
+              build-essential python3-dev python3-setuptools
+          run: |
+            python3 setup.py build_ext --inplace
+            python3 -c \
+              'import bitarray; assert bitarray.test().wasSuccessful()'
