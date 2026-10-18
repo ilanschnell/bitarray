@@ -44,6 +44,7 @@ builtin_bswap64(uint64_t word)
 /* bit-endianness */
 #define ENDIAN_LITTLE  0
 #define ENDIAN_BIG     1
+#define ENDIAN_DEFAULT  ENDIAN_BIG
 
 #define BITMASK(endian, i)  (((char) 1) << (endian == ENDIAN_LITTLE ? \
                                             ((i) % 8) : (7 - (i) % 8)))
