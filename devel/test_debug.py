@@ -153,7 +153,7 @@ class Aligned_Words_Tests(unittest.TestCase, Util):
 
     def test_range(self):
         for a in self.unaligned_buffers():
-            base = a.buffer_info().address
+            ob_item = a.buffer_info().address
             for stop in range(33):
                 for start in range(stop + 1):
                     n, p1, p2 = _aligned_words(a, start, stop)
@@ -165,15 +165,17 @@ class Aligned_Words_Tests(unittest.TestCase, Util):
                     self.assertLess(p1 - start, 8)
                     self.assertLess(stop - p2, 8)
 
-                    # returned range stays within [start, stop)
+                    # [p1, p2) is contained in [start, stop)
                     self.assertTrue(start <= p1 <= p2 <= stop)
+
                     if start == stop:
                         # empty range has no words
                         self.assertEqual(n, 0)
                         self.assertTrue(p1 == p2 == start)
+
                     if n > 0:
                         # first word is aligned
-                        self.assertEqual((base + p1) % 8, 0)
+                        self.assertEqual((ob_item + p1) % 8, 0)
 
 class Adjust_Slice_Tests(unittest.TestCase):
 

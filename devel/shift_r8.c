@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <assert.h>
 
 #define Py_ssize_t  ssize_t
 
@@ -50,25 +51,26 @@ builtin_bswap64(uint64_t word)
 /* The following two functions operate on first n bytes in buffer.
    Within this region, they shift all bits by k positions to right,
    i.e. towards higher addresses.
-   They operate on little-endian and bit-endian bitarrays respectively.
+   They operate on little-endian and big-endian bitarrays respectively.
    As we shift right, we need to start with the highest address and loop
    downwards such that lower bytes are still unaltered.
 */
 static void
 shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
 {
-    Py_ssize_t w = 0;
+    Py_ssize_t w = 0, r = n;
 
 #if HAVE_BUILTIN_BSWAP64 || PY_LITTLE_ENDIAN   /* use shift word */
     w = n / 8;                    /* number of words used for shifting */
-    n %= 8;                       /* number of remaining bytes */
+    r = n % 8;                    /* number of remaining bytes */
 #endif
-    while (n--) {                 /* shift in byte-range(8 * w, n) */
-        Py_ssize_t i = n + 8 * w;
+    while (r--) {                 /* shift in byte-range(8 * w, n) */
+        Py_ssize_t i = r + 8 * w;
         buff[i] <<= k;            /* shift byte */
-        if (n || w)               /* add shifted next lower byte */
+        if (r || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] >> (8 - k);
     }
+    assert(w == 0 || ((uintptr_t) buff) % 8 == 0);
     while (w--) {                 /* shift in word-range(0, w) */
         uint64_t *p = ((uint64_t *) buff) + w;
 #if HAVE_BUILTIN_BSWAP64 && PY_BIG_ENDIAN
@@ -86,18 +88,19 @@ shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
 static void
 shift_r8be(unsigned char *buff, Py_ssize_t n, int k)
 {
-    Py_ssize_t w = 0;
+    Py_ssize_t w = 0, r = n;
 
 #if HAVE_BUILTIN_BSWAP64 || PY_BIG_ENDIAN      /* use shift word */
     w = n / 8;                    /* number of words used for shifting */
-    n %= 8;                       /* number of remaining bytes */
+    r = n % 8;                    /* number of remaining bytes */
 #endif
-    while (n--) {                 /* shift in byte-range(8 * w, n) */
-        Py_ssize_t i = n + 8 * w;
+    while (r--) {                 /* shift in byte-range(8 * w, n) */
+        Py_ssize_t i = r + 8 * w;
         buff[i] >>= k;            /* shift byte */
-        if (n || w)               /* add shifted next lower byte */
+        if (r || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] << (8 - k);
     }
+    assert(w == 0 || ((uintptr_t) buff) % 8 == 0);
     while (w--) {                 /* shift in word-range(0, w) */
         uint64_t *p = ((uint64_t *) buff) + w;
 #if HAVE_BUILTIN_BSWAP64 && PY_LITTLE_ENDIAN
@@ -124,7 +127,7 @@ void display(unsigned char *buffer, Py_ssize_t nbits, int endian)
     printf("\n");
 }
 
-int main()
+int main(void)
 {
 #define NBYTES  10
     unsigned char array[NBYTES] = {1, 15, 0, 131, 0, 255, 0, 7, 0, 1};
