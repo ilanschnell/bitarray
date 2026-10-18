@@ -224,16 +224,16 @@ bytereverse(char *p, Py_ssize_t n)
 static void
 shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
 {
-    Py_ssize_t w = 0;
+    Py_ssize_t w = 0, r = n;
 
 #if HAVE_BUILTIN_BSWAP64 || PY_LITTLE_ENDIAN   /* use shift word */
     w = n / 8;                    /* number of words used for shifting */
-    n %= 8;                       /* number of remaining bytes */
+    r = n % 8;                    /* number of remaining bytes */
 #endif
-    while (n--) {                 /* shift in byte-range(8 * w, n) */
-        Py_ssize_t i = n + 8 * w;
+    while (r--) {                 /* shift in byte-range(8 * w, n) */
+        Py_ssize_t i = r + 8 * w;
         buff[i] <<= k;            /* shift byte */
-        if (n || w)               /* add shifted next lower byte */
+        if (r || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] >> (8 - k);
     }
     assert(w == 0 || ((uintptr_t) buff) % 8 == 0);
@@ -254,16 +254,16 @@ shift_r8le(unsigned char *buff, Py_ssize_t n, int k)
 static void
 shift_r8be(unsigned char *buff, Py_ssize_t n, int k)
 {
-    Py_ssize_t w = 0;
+    Py_ssize_t w = 0, r = n;
 
 #if HAVE_BUILTIN_BSWAP64 || PY_BIG_ENDIAN      /* use shift word */
     w = n / 8;                    /* number of words used for shifting */
-    n %= 8;                       /* number of remaining bytes */
+    r = n % 8;                    /* number of remaining bytes */
 #endif
-    while (n--) {                 /* shift in byte-range(8 * w, n) */
-        Py_ssize_t i = n + 8 * w;
+    while (r--) {                 /* shift in byte-range(8 * w, n) */
+        Py_ssize_t i = r + 8 * w;
         buff[i] >>= k;            /* shift byte */
-        if (n || w)               /* add shifted next lower byte */
+        if (r || w)               /* add shifted next lower byte */
             buff[i] |= buff[i - 1] << (8 - k);
     }
     assert(w == 0 || ((uintptr_t) buff) % 8 == 0);
@@ -285,7 +285,7 @@ shift_r8be(unsigned char *buff, Py_ssize_t n, int k)
 static void
 shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int k)
 {
-    unsigned char *buff = (unsigned char *) self->ob_item + a;
+    unsigned char *buff;
     Py_ssize_t n = b - a;       /* number of bytes to be shifted */
     Py_ssize_t s = 0;           /* distance to next aligned pointer */
 
@@ -295,6 +295,9 @@ shift_r8(bitarrayobject *self, Py_ssize_t a, Py_ssize_t b, int k)
     assert(self->readonly == 0);
     if (k == 0 || n <= 0)
         return;
+
+    assert(Py_SIZE(self));
+    buff = (unsigned char *) self->ob_item + a;
 
     if (n >= 8) {
         s = to_aligned(buff);
