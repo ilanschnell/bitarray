@@ -4,6 +4,8 @@
     see #260 (closes #175)
   * fix unaligned buffer handling on sparc64, see #259
   * fix Hashable detection on Windows, closes #232
+  * add workflows to build and test on `SPARC64`, `RISC-V`
+    and `NetBSD 11` (`amd64`) (all successful)
 
 
 2026-10-14  3.12.2:

@@ -5847,6 +5847,7 @@ def show_info(verbosity=1):
     if verbosity >= 2:
         print('bitarray version: %s' % __version__)
         print('platform.machine(): %s' % platform.machine())
+        print('platform.platform(): %s' % platform.platform())
         print('sys.platform: %s' % sys.platform)
         print('sys.version: %s' % sys.version)
         if os.name == "posix":
