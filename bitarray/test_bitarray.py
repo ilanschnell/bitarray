@@ -2114,14 +2114,16 @@ class SpecialMethodTests(unittest.TestCase, Util):
 
 # -------------------------- Sequence methods tests -------------------------
 
-class SequenceTests(unittest.TestCase, Util):
+class SequenceTests(unittest.TestCase):
 
     def test_len(self):
         for n in range(100):
             a = bitarray(n)
             self.assertEqual(len(a), n)
 
-    def test_concat(self):
+class ConcatTests(unittest.TestCase, Util):
+
+    def test_simple(self):
         a = bitarray('001')
         b = a + bitarray('110')
         self.assertEQUAL(b, bitarray('001110'))
@@ -2137,7 +2139,7 @@ class SequenceTests(unittest.TestCase, Util):
         self.assertRaises(TypeError, a.__add__, 42)
         self.assertRaises(ValueError, a.__add__, b'1101')
 
-    def test_concat_random(self):
+    def test_random(self):
         for a in self.randombitarrays():
             aa = a.copy()
             for b in self.randombitarrays():
@@ -2150,7 +2152,7 @@ class SequenceTests(unittest.TestCase, Util):
                 self.assertEQUAL(a, aa)
                 self.assertEQUAL(b, bb)
 
-    def test_concat_frozenbitarray(self):
+    def test_frozenbitarray(self):
         a = frozenbitarray('001')
         b = a + bitarray('011')
         self.assertIs(type(b), frozenbitarray)
@@ -2158,7 +2160,7 @@ class SequenceTests(unittest.TestCase, Util):
         self.assertTrue(b.readonly)
         self.check_obj(b)
 
-    def test_inplace_concat(self):
+    def test_inplace(self):
         a = bitarray('001')
         a += bitarray('110')
         self.assertEqual(a, bitarray('001110'))
@@ -2185,7 +2187,9 @@ class SequenceTests(unittest.TestCase, Util):
                 self.assertIs(c, d)
                 self.check_obj(d)
 
-    def test_repeat_explicit(self):
+class RepeatTests(unittest.TestCase, Util):
+
+    def test_explicit(self):
         for m, s, r in [
                 ( 0,        '',      ''),
                 ( 0, '1001111',      ''),
@@ -2202,14 +2206,14 @@ class SequenceTests(unittest.TestCase, Util):
             c *= m
             self.assertEqual(c, bitarray(r))
 
-    def test_repeat_wrong_args(self):
+    def test_wrong_args(self):
         a = bitarray()
         self.assertRaises(TypeError, a.__mul__, None)
         self.assertRaises(TypeError, a.__mul__, 2.0)
         self.assertRaises(TypeError, a.__imul__, None)
         self.assertRaises(TypeError, a.__imul__, 3.0)
 
-    def test_repeat_frozenbitarray(self):
+    def test_frozenbitarray(self):
         a = frozenbitarray('001')
         b = 3 * a
         self.assertIs(type(b), frozenbitarray)
@@ -2217,7 +2221,7 @@ class SequenceTests(unittest.TestCase, Util):
         self.assertTrue(b.readonly)
         self.check_obj(b)
 
-    def test_repeat_random(self):
+    def test_random(self):
         for a in self.randombitarrays():
             b = a.copy()
             for m in list(range(-3, 5)) + [randint(5, 200)]:
@@ -2234,7 +2238,9 @@ class SequenceTests(unittest.TestCase, Util):
 
             self.assertEQUAL(a, b)
 
-    def test_contains_simple(self):
+class ContainsTests(unittest.TestCase):
+
+    def test_simple(self):
         a = bitarray()
         self.assertFalse(0 in a)
         self.assertFalse(1 in a)
@@ -2249,7 +2255,7 @@ class SequenceTests(unittest.TestCase, Util):
         self.assertTrue(0 in a)
         self.assertTrue(1 in a)
 
-    def test_contains_errors(self):
+    def test_errors(self):
         a = bitarray()
         self.assertFalse(a.__contains__(1))
         a.append(1)
@@ -2261,7 +2267,7 @@ class SequenceTests(unittest.TestCase, Util):
         self.assertRaises(ValueError, a.__contains__, 2)
         self.assertRaises(ValueError, a.__contains__, -1)
 
-    def test_contains_range(self):
+    def test_range(self):
         for n in range(2, 50):
             a = zeros(n)
             self.assertTrue(0 in a)
@@ -2276,7 +2282,7 @@ class SequenceTests(unittest.TestCase, Util):
             self.assertTrue(True in a)
             self.assertTrue(False in a)
 
-    def test_contains_explicit(self):
+    def test_explicit(self):
         a = bitarray('011010000001')
         for s, r in [('', True), # every bitarray contains an empty one
                      ('1', True), ('11', True), ('111', False),
