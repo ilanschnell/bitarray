@@ -1,0 +1,28 @@
+name: Test on NetBSD
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build and test on NetBSD 11
+        uses: vmactions/netbsd-vm@v1
+        with:
+          release: "11"
+          arch: x86_64
+          usesh: true
+          prepare: |
+            /usr/sbin/pkg_add python314 py314-setuptools
+          run: |
+            python3.14 setup.py build_ext --inplace
+            python3.14 -c \
+              'import bitarray; assert bitarray.test().wasSuccessful()'
