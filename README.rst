@@ -21,7 +21,7 @@ Key features
   their in-place versions ``&=``, ``|=``, ``^=``, ``<<=``, ``>>=``).
 * `Free-threading support <https://github.com/ilanschnell/bitarray/blob/master/doc/free_threading.rst>`__
   (for GIL-disabled CPython 3.14 and later)
-* Written to `support all platforms supported by CPython and PyPy <https://github.com/ilanschnell/bitarray/blob/master/doc/platforms.rst>`__.
+* Written to support all `platforms supported <https://github.com/ilanschnell/bitarray/blob/master/doc/platforms.rst>`__ by CPython and PyPy.
 * Fast methods for encoding and decoding variable-length
   `prefix codes <https://github.com/ilanschnell/bitarray/blob/master/doc/prefix_codes.rst>`__.
 * Bitarray objects support the `buffer protocol <https://github.com/ilanschnell/bitarray/blob/master/doc/buffer.rst>`__
