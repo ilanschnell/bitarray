@@ -1,0 +1,100 @@
+name: Test platforms
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Platform to test
+        type: choice
+        options:
+          - all
+          - netbsd
+          - riscv64
+          - sparc64
+        default: all
+
+permissions:
+  contents: read
+
+jobs:
+  netbsd:
+    if: inputs.platform == 'all' || inputs.platform == 'netbsd'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build and test on NetBSD 11
+        uses: vmactions/netbsd-vm@v1
+        with:
+          release: "11"
+          arch: x86_64
+          usesh: true
+          prepare: |
+            /usr/sbin/pkg_add python314 py314-setuptools
+          run: |
+            python3.14 setup.py build_ext --inplace
+            python3.14 -c \
+              'import bitarray; assert bitarray.test().wasSuccessful()'
+
+  riscv64:
+    if: inputs.platform == 'all' || inputs.platform == 'riscv64'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build and test on RISC-V
+        uses: uraimo/run-on-arch-action@v3
+        with:
+          arch: riscv64
+          distro: ubuntu24.04
+          install: |
+            apt-get update
+            apt-get install -y \
+              build-essential python3-dev python3-setuptools
+          run: |
+            python3 setup.py build_ext --inplace
+            python3 -c \
+              'import bitarray; assert bitarray.test().wasSuccessful()'
+
+  sparc64:
+    if: inputs.platform == 'all' || inputs.platform == 'sparc64'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install QEMU and debootstrap
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-user-static binfmt-support debootstrap
+
+          # Ubuntu 24.04 contains an old Debian Ports archive keyring.
+          curl -fsSLO https://deb.debian.org/debian/pool/main/d/debian-ports-archive-keyring/debian-ports-archive-keyring_2026.02.04_all.deb
+          sudo dpkg -i debian-ports-archive-keyring_2026.02.04_all.deb
+
+      - name: Create Debian SPARC64 environment
+        run: |
+          sudo qemu-debootstrap \
+            --arch=sparc64 \
+            --variant=minbase \
+            --keyring=/usr/share/keyrings/debian-ports-archive-keyring.gpg \
+            unstable /tmp/debian-sparc64 \
+            https://deb.debian.org/debian-ports/
+
+          sudo cp -a "$GITHUB_WORKSPACE" /tmp/debian-sparc64/project
+
+      - name: Build and test on SPARC64
+        run: |
+          sudo chroot /tmp/debian-sparc64 /bin/bash -ex <<'EOF'
+            apt-get update
+            DEBIAN_FRONTEND=noninteractive apt-get install -y \
+              build-essential python3-dev python3-setuptools
+            cd /project
+            python3 setup.py build_ext --inplace
+            python3 -c 'import bitarray; assert bitarray.test().wasSuccessful()'
+          EOF
