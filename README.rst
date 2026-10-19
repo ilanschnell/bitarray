@@ -21,6 +21,7 @@ Key features
   their in-place versions ``&=``, ``|=``, ``^=``, ``<<=``, ``>>=``).
 * `Free-threading support <https://github.com/ilanschnell/bitarray/blob/master/doc/free_threading.rst>`__
   (for GIL-disabled CPython 3.14 and later)
+* Written to `support all platforms supported by CPython and PyPy <https://github.com/ilanschnell/bitarray/blob/master/doc/platforms.rst>`__.
 * Fast methods for encoding and decoding variable-length
   `prefix codes <https://github.com/ilanschnell/bitarray/blob/master/doc/prefix_codes.rst>`__.
 * Bitarray objects support the `buffer protocol <https://github.com/ilanschnell/bitarray/blob/master/doc/buffer.rst>`__
@@ -56,7 +57,7 @@ versions.  Which means you can simply:
 
 .. code-block:: shell-session
 
-    $ pip install bitarray
+    $ python -m pip install bitarray
 
 Once you have installed the package, you may want to test it:
 
@@ -66,13 +67,13 @@ Once you have installed the package, you may want to test it:
     bitarray is installed in: /Users/ilan/bitarray/bitarray
     sys.prefix: /Users/ilan/miniforge
     bitarray version: 3.12.3
-    sys.version: 3.15.0 (main, Oct  9 2026) [Clang 21.1.8]
     platform.machine(): arm64
+    platform.platform(): macOS-14.3-arm64-arm-64bit-Mach-O
+    sys.platform: darwin
+    sys.version: 3.15.0 (main, Oct  9 2026) [Clang 21.1.8]
     sys.abiflags: ''
     sys._is_gil_enabled(): True
     pointer size: 64 bit
-    sizeof(size_t): 8
-    sizeof(bitarrayobject): 80
     HAVE_BUILTIN_BSWAP64: 1
     default bit-endianness: big
     machine byte-order: little
@@ -83,7 +84,7 @@ Once you have installed the package, you may want to test it:
     ................................................s........................
     ......s.........................................................
     ----------------------------------------------------------------------
-    Ran 722 tests in 0.163s
+    Ran 723 tests in 0.163s
 
     OK (skipped=2)
 
