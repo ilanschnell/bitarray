@@ -1,6 +1,17 @@
 Change log
 ==========
 
+**3.12.3** (2026-10-19):
+
+* fix unaligned buffer handling on sparc64, see `#259 <https://github.com/ilanschnell/bitarray/issues/259>`__
+* preserve bitarray subtypes in operation return type hints,
+  see `#260 <https://github.com/ilanschnell/bitarray/issues/260>`__ (closes `#175 <https://github.com/ilanschnell/bitarray/issues/175>`__)
+* fix Hashable detection on Windows, closes `#232 <https://github.com/ilanschnell/bitarray/issues/232>`__
+* add workflow to build and test on ``SPARC64``, ``RISC-V``
+  and ``NetBSD 11`` (``amd64``) (all successful)
+* add documentation for `platform support <platforms.rst>`__
+
+
 **3.12.2** (2026-10-14):
 
 * update cibuildwheel to 4.3.1 and enable PyPy and Pyodide wheel builds

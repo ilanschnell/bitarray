@@ -1,4 +1,4 @@
-2026-10-XX  3.12.3:
+2026-10-19  3.12.3:
 -------------------
   * fix unaligned buffer handling on sparc64, see #259
   * preserve bitarray subtypes in operation return type hints,
