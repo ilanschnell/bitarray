@@ -4,18 +4,36 @@ on: [push, pull_request]
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Build wheels on ${{ matrix.os }} (${{ matrix.arch }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        # macos-15-intel is an Intel runner, macos-14 is Apple silicon
-        os: [ubuntu-latest, ubuntu-24.04-arm, windows-latest, windows-11-arm, macos-15-intel, macos-14]
+        include:
+          - os: ubuntu-latest
+            arch: auto
+          - os: ubuntu-latest
+            arch: ppc64le
+          - os: ubuntu-latest
+            arch: riscv64
+          - os: ubuntu-latest
+            arch: s390x
+          - os: ubuntu-24.04-arm
+            arch: auto
+          - os: windows-latest
+            arch: auto
+          - os: windows-11-arm
+            arch: auto
+          # macos-15-intel is an Intel runner, macos-14 is Apple silicon
+          - os: macos-15-intel
+            arch: auto
+          - os: macos-14
+            arch: auto
 
     steps:
       - uses: actions/checkout@v5
 
       - name: Set up QEMU
-        if: runner.os == 'Linux' && runner.arch == 'X64'
+        if: runner.os == 'Linux' && matrix.arch != 'auto'
         uses: docker/setup-qemu-action@v3
         with:
           platforms: all
@@ -25,9 +43,7 @@ jobs:
         # to supply options, put them in 'env', like:
         env:
           CIBW_ENABLE: pypy
-          # configure cibuildwheel to build native archs ('auto'), and some
-          # emulated ones
-          CIBW_ARCHS_LINUX: ${{ runner.arch == 'X64' && 'auto ppc64le riscv64 s390x' || 'auto' }}
+          CIBW_ARCHS_LINUX: ${{ matrix.arch }}
           CIBW_TEST_COMMAND: python -c "import bitarray; assert bitarray.test().wasSuccessful()"
 
       - uses: actions/upload-artifact@v4
