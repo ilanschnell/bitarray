@@ -1,6 +1,7 @@
 2026-XX-XX  3.12.4:
 -------------------
   * require PyPy 7.3.23 or higher, see #261
+  * build Linux wheels in parallel and add `RISC-V` wheels
 
 
 2026-10-19  3.12.3:
