@@ -3,13 +3,6 @@ import sys
 import platform
 
 
-if hasattr(sys, "pypy_version_info"):
-    min_ver = (7, 3, 23)
-    pypy_ver = sys.pypy_version_info[:3]
-    if pypy_ver < min_ver:
-        sys.exit("Not supported: PyPy %s below %s" % ("%d.%d.%d" % pypy_ver,
-                                                      "%d.%d.%d" % min_ver))
-
 if "test" in sys.argv:
     import bitarray
     # when test was successful, return 0 (hence not)
@@ -31,6 +24,11 @@ kwds['version'] = pat.search(data).group(1)
 
 macros = []
 if platform.python_implementation() == 'PyPy':
+    min_ver = (7, 3, 23)
+    pypy_ver = sys.pypy_version_info[:3]
+    if pypy_ver < min_ver:
+        sys.exit("Not supported: PyPy %s or higher required, current PyPy "
+                 "version %s" % ("%d.%d.%d" % min_ver, "%d.%d.%d" % pypy_ver))
     macros.append(("PY_LITTLE_ENDIAN", str(int(sys.byteorder == 'little'))))
     macros.append(("PY_BIG_ENDIAN", str(int(sys.byteorder == 'big'))))
 
