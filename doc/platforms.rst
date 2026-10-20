@@ -7,12 +7,11 @@ closed list of supported operating systems or processor architectures.  Both
 32-bit and 64-bit systems, little-endian and big-endian machines, and systems
 with strict memory-alignment requirements are intended to work.
 
-The test suite is run on Linux, macOS and Windows, using ``x86``, ``x86_64``,
-``aarch64``, ``ppc64le``, ``s390x`` and Pyodide ``wasm32`` architectures and
-both CPython and PyPy.
-Additional workflows test NetBSD on ``amd64``, and Linux on ``riscv64``
-and ``sparc64``.  Platforms not exercised by these workflows are not
-necessarily unsupported.
+Wheel builds run the test suite on Linux, macOS and Windows, using ``x86``,
+``x86_64``, ``aarch64``, ``ppc64le``, ``riscv64`` and ``s390x``, and on
+Pyodide ``wasm32``.  Both CPython and PyPy wheels are built where available.
+Additional workflows test NetBSD on ``amd64`` and Linux on ``sparc64``.
+Platforms not exercised by these workflows are not necessarily unsupported.
 
 
 Wheels and source builds
