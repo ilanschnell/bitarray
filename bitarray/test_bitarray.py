@@ -3701,7 +3701,8 @@ class ByteReverseTests(unittest.TestCase, Util):
         t = bitarray(bytearray(range(256)), choice(ENDIANS))
         t.bytereverse()
         table = t.tobytes()  # translation table
-        self.assertEqual(table[:9], b'\x00\x80\x40\xc0\x20\xa0\x60\xe0\x10')
+        self.assertEqual(table[:9],
+                         bytes.fromhex("00 80 40 c0 20 a0 60 e0 10"))
 
         for n in range(100):
             a = urandom_2(8 * n)

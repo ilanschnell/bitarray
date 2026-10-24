@@ -1849,16 +1849,17 @@ class SC_Util:
 class SC_Tests(unittest.TestCase, Util, SC_Util):
 
     def test_explicit(self):
-        for b, bits, endian in [
-                (b'\x00\0',                 '',                  'little'),
-                (b'\x01\x03\x01\x03\0',     '110',               'little'),
-                (b'\x01\x07\x01\x40\0',     '0000001',           'little'),
-                (b'\x11\x07\x01\x02\0',     '0000001',           'big'),
-                (b'\x01\x10\x02\xf0\x0f\0', '00001111 11110000', 'little'),
-                (b'\x11\x10\xa1\x0c\0',     '00000000 00001000', 'big'),
-                (b'\x11\x09\xa1\x08\0',     '00000000 1',        'big'),
-                (b'\x01g\xa4abde\0',        97 * '0' + '110110', 'little'),
+        for hexstr, bits, endian in [
+                ('00 00',              '',                  'little'),
+                ('01 03 01 03 00',     '110',               'little'),
+                ('01 07 01 40 00',     '0000001',           'little'),
+                ('11 07 01 02 00',     '0000001',           'big'),
+                ('01 10 02 f0 0f 00',  '00001111 11110000', 'little'),
+                ('11 10 a1 0c 00',     '00000000 00001000', 'big'),
+                ('11 09 a1 08 00',     '00000000 1',        'big'),
+                ('01 67 a4 61 62 64 65 00', 97 * '0' + '110110', 'little'),
         ]:
+            b = bytes.fromhex(hexstr)
             a = bitarray(bits, endian)
             self.assertEqual(sc_encode(a), b)
             self.assertEQUAL(sc_decode(b), a)
@@ -1880,13 +1881,13 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
         for a in bitarray('1', 'big'), frozenbitarray('1', 'big'):
             b = sc_encode(a)
             self.assertIs(type(b), bytes)
-            self.assertEqual(b, b'\x11\x01\x01\x80\0')
+            self.assertEqual(b, bytes.fromhex("11 01 01 80 00"))
 
         for a in None, [], 0, 123, b'', b'\x00', 3.14:
             self.assertRaises(TypeError, sc_encode, a)
 
     def test_decode_stat_types(self):
-        blob = b'\x11\x03\x01\x20\0'
+        blob = bytes.fromhex("11 03 01 20 00")
         for b in blob, bytearray(blob), list(blob), array.array('B', blob):
             a = sc_decode(b)
             self.assertIs(type(a), bitarray)
@@ -1905,17 +1906,18 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
             self.assertTrue(all(type(n) is int for n in blocks))
 
     def test_zero_explicit(self):
-        for blob, blocks, nbits in [
+        for hexstr, blocks, nbits in [
                 # empty bitarray
-                (b"\x00\0",         [0, 0, 0, 0, 0], 0),
-                (b"\x02\x00\x00\xa0\xc2\x00\xc3\x00\xc4\x00\xa0\0",
-                                    [0, 2, 1, 1, 1], 0),
+                ("00 00",                  [0, 0, 0, 0, 0], 0),
+                ("02 00 00 a0 c2 00 c3 00 c4 00 a0 00",
+                                           [0, 2, 1, 1, 1], 0),
                 # zero bitarray with length 8
-                (b"\x01\x08\0",         [0, 0, 0, 0, 0], 8),
-                (b"\x03\x08\x00\x00\0", [0, 0, 0, 0, 0], 8),
-                (b"\x01\x08\x01\x00\xa0\xc2\x00\xc3\x00\xc4\x00\xa0\xa0\0",
-                                        [1, 3, 1, 1, 1], 8),
+                ("01 08 00",               [0, 0, 0, 0, 0], 8),
+                ("03 08 00 00 00",         [0, 0, 0, 0, 0], 8),
+                ("01 08 01 00 a0 c2 00 c3 00 c4 00 a0 a0 00",
+                                           [1, 3, 1, 1, 1], 8),
         ]:
+            blob = bytes.fromhex(hexstr)
             it = iter(blob)
             a = sc_decode(it)
             self.assertRaises(StopIteration, next, it)
@@ -2003,58 +2005,59 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
             self.assertRaisesMessage(
                 ValueError,
                 "read 4 bytes got negative value: -2147483648",
-                sc_decode, b'\x04\x00\x00\x00\x80')
+                sc_decode, bytes.fromhex('04 00 00 00 80'))
 
     def test_decode_errors(self):
         # too many raw bytes
         self.assertRaisesMessage(
             ValueError, "decode error (raw): 0 + 2 > 1",
-            sc_decode, b"\x01\x05\x02\xff\xff\0")
+            sc_decode, bytes.fromhex("01 05 02 ff ff 00"))
         self.assertRaisesMessage(
             ValueError, "decode error (raw): 32 + 3 > 34",
-            sc_decode, b"\x02\x0f\x01\xa0\x03\xff\xff\xff\0")
+            sc_decode, bytes.fromhex("02 0f 01 a0 03 ff ff ff 00"))
 
         # sparse index too high
         self.assertRaisesMessage(
             ValueError, "decode error (n=1): 128 >= 128",
-            sc_decode, b"\x01\x80\xa1\x80\0")
+            sc_decode, bytes.fromhex("01 80 a1 80 00"))
         self.assertRaisesMessage(
             ValueError, "decode error (n=2): 512 >= 512",
-            sc_decode, b"\x02\x00\x02\xc2\x01\x00\x02\0")
+            sc_decode, bytes.fromhex("02 00 02 c2 01 00 02 00"))
         self.assertRaisesMessage(
             ValueError, "decode error (n=3): 32768 >= 32768",
-            sc_decode, b"\x02\x00\x80\xc3\x01\x00\x80\x00\0")
+            sc_decode, bytes.fromhex("02 00 80 c3 01 00 80 00 00"))
 
         msg = {4: "read 4 bytes got negative value: -2147483648",
                8: "decode error (n=4): 2147483648 >= 16"}
         self.assertRaisesMessage(
             ValueError, msg[PTRSIZE],
-            sc_decode, b"\x01\x10\xc4\x01\x00\x00\x00\x80\0")
+            sc_decode, bytes.fromhex("01 10 c4 01 00 00 00 80 00"))
 
         msg = {4: "read 4 bytes got negative value: -1",
                8: "decode error (n=4): 4294967295 >= 16"}
         self.assertRaisesMessage(
             ValueError, msg[PTRSIZE],
-            sc_decode, b"\x01\x10\xc4\x01\xff\xff\xff\xff\0")
+            sc_decode, bytes.fromhex("01 10 c4 01 ff ff ff ff 00"))
 
     def test_stop_iteration(self):
-        for stream in [b'', b'\x00', b'\x01', b'\x02\x77',
-                       b'\x01\x04\x01', b'\x01\x04\xa1', b'\x01\x04\xa0']:
+        for hexstr in ['', '00', '01', '02 77',
+                       '01 04 01', '01 04 a1', '01 04 a0']:
             for f in sc_decode, sc_stat:
-                self.assertRaises(StopIteration, f, stream)
+                self.assertRaises(StopIteration, f, bytes.fromhex(hexstr))
 
     def test_decode_ambiguity(self):
-        for n, blob in [
+        for n, hexstr in [
                 # raw:
-                (0, b'\x11\x03\x01\x20\0'), # this is what sc_encode gives us
-                (0, b'\x11\x03\x01\x3f\0'), # set the pad bits to 1
-                (0, b'\x12\x03\x00\x01\x20\0'), # header has redundant zeros
+                (0, '11 03 01 20 00'), # this is what sc_encode gives us
+                (0, '11 03 01 3f 00'), # set the pad bits to 1
+                (0, '12 03 00 01 20 00'), # header has redundant zeros
                 # sparse:
-                (1, b'\x11\x03\xa1\x02\0'),
-                (2, b'\x11\x03\xc2\x01\x02\x00\0'),
-                (3, b'\x11\x03\xc3\x01\x02\x00\x00\0'),
-                (4, b'\x11\x03\xc4\x01\x02\x00\x00\x00\0'),
+                (1, '11 03 a1 02 00'),
+                (2, '11 03 c2 01 02 00 00'),
+                (3, '11 03 c3 01 02 00 00 00'),
+                (4, '11 03 c4 01 02 00 00 00 00'),
         ]:
+            blob = bytes.fromhex(hexstr)
             a = sc_decode(blob)
             self.assertEqual(a.to01(), '001')
             stat = sc_stat(blob)
@@ -2212,18 +2215,19 @@ class SC_Tests(unittest.TestCase, Util, SC_Util):
 class VL_Tests(unittest.TestCase, Util):
 
     def test_explicit(self):
-        for blob, s in [
-                (b'\x40', ''),
-                (b'\x30', '0'),
-                (b'\x38', '1'),
-                (b'\x00', '0000'),
-                (b'\x01', '0001'),
-                (b'\xd3\x20', '001101'),
-                (b'\xe0\x40', '0000 1'),
-                (b'\x90\x02', '0000 000001'),
-                (b'\xb5\xa7\x18', '0101 0100111 0011'),
-                (b'\x95\xb7\x1c', '0101 0110111 001110'),
+        for hexstr, s in [
+                ('40', ''),
+                ('30', '0'),
+                ('38', '1'),
+                ('00', '0000'),
+                ('01', '0001'),
+                ('d3 20', '001101'),
+                ('e0 40', '0000 1'),
+                ('90 02', '0000 000001'),
+                ('b5 a7 18', '0101 0100111 0011'),
+                ('95 b7 1c', '0101 0110111 001110'),
         ]:
+            blob = bytes.fromhex(hexstr)
             a = bitarray(s)
             self.assertEqual(vl_encode(a), blob)
             c = vl_decode(blob)
@@ -2286,7 +2290,7 @@ class VL_Tests(unittest.TestCase, Util):
             self.assertEqual(vl_decode(s), bitarray('111'))
 
     def test_decode_stream(self):
-        stream = iter(b'\x40\x30\x38\x40\x2c\xe0\x40\xd3\x20')
+        stream = iter(bytes.fromhex('40 30 38 40 2c e0 40 d3 20'))
         for bits in '', '0', '1', '', '11', '0000 1', '0011 01':
             self.assertEqual(vl_decode(stream), bitarray(bits))
 
@@ -2690,15 +2694,16 @@ class MixedTests(unittest.TestCase, Util):
 class SerializationTests(unittest.TestCase, Util):
 
     def test_explicit(self):
-        for blob, endian, bits in [
-                (b'\x00',         'little', ''),
-                (b'\x07\x01',     'little', '1'),
-                (b'\x17\x80',     'big',    '1'),
-                (b'\x13\xf8',     'big',    '11111'),
-                (b'\x00\x0f',     'little', '11110000'),
-                (b'\x10\xf0',     'big',    '11110000'),
-                (b'\x12\x87\xd8', 'big',    '10000111 110110')
+        for hexstr, endian, bits in [
+                ('00',       'little', ''),
+                ('07 01',    'little', '1'),
+                ('17 80',    'big',    '1'),
+                ('13 f8',    'big',    '11111'),
+                ('00 0f',    'little', '11110000'),
+                ('10 f0',    'big',    '11110000'),
+                ('12 87 d8', 'big',    '10000111 110110')
         ]:
+            blob = bytes.fromhex(hexstr)
             a = bitarray(bits, endian)
             s = serialize(a)
             self.assertEqual(blob, s)
@@ -2758,14 +2763,15 @@ class SerializationTests(unittest.TestCase, Util):
                 check_msg(b)
 
     def test_padbits_ignored(self):
-        for blob, endian in [
-                (b'\x07\x01', 'little'),
-                (b'\x07\x03', 'little'),
-                (b'\x07\xff', 'little'),
-                (b'\x17\x80', 'big'),
-                (b'\x17\xc0', 'big'),
-                (b'\x17\xff', 'big'),
+        for hexstr, endian in [
+                ('07 01', 'little'),
+                ('07 03', 'little'),
+                ('07 ff', 'little'),
+                ('17 80', 'big'),
+                ('17 c0', 'big'),
+                ('17 ff', 'big'),
         ]:
+            blob = bytes.fromhex(hexstr)
             a = deserialize(blob)
             self.assertEqual(a.to01(), '1')
             self.assertEqual(a.endian, endian)
