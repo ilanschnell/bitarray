@@ -1,6 +1,7 @@
 import re
 import sys
 import platform
+from sysconfig import get_config_var
 
 
 if "test" in sys.argv:
@@ -23,6 +24,9 @@ data = open('bitarray/bitarray.h').read()
 kwds['version'] = pat.search(data).group(1)
 
 macros = []
+if get_config_var("Py_GIL_DISABLED") in (1, "1"):
+    macros.append(("Py_GIL_DISABLED", "1"))
+
 if platform.python_implementation() == 'PyPy':
     min_ver = (7, 3, 23)
     pypy_ver = sys.pypy_version_info[:3]
@@ -54,7 +58,7 @@ setup(
         "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: 3.14",
         "Programming Language :: Python :: 3.15",
-        "Programming Language :: Python :: Free Threading :: 2 - Beta",
+        "Programming Language :: Python :: Free Threading :: 3 - Stable",
         "Topic :: Utilities",
     ],
     description = "efficient arrays of booleans -- C extension",
@@ -66,6 +70,7 @@ setup(
                              define_macros = macros,
                              sources = ["bitarray/_bitarray.c"]),
                    Extension(name = "bitarray._util",
+                             define_macros = macros,
                              sources = ["bitarray/_util.c"])],
     zip_safe = False,
     **kwds
