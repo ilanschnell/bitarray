@@ -1,5 +1,6 @@
 2026-XX-XX  3.12.4:
 -------------------
+  * Free-threaded CPython support is now considered stable
   * require PyPy 7.3.23 or higher, see #261
   * build Linux wheels in parallel and add `RISC-V` wheels
 
