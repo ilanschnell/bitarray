@@ -23,10 +23,10 @@ jobs:
             arch: auto
           - os: windows-11-arm
             arch: auto
-          # macos-15-intel is an Intel runner, macos-14 is Apple silicon
+          # macos-15-intel is Intel, macos-15 is Apple silicon (ARM64)
           - os: macos-15-intel
             arch: auto
-          - os: macos-14
+          - os: macos-15
             arch: auto
 
     steps:
