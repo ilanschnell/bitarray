@@ -68,7 +68,8 @@ typedef struct {
 #define WBUFF(self)  ((uint64_t *) (self)->ob_item)
 
 /* assert that .nbits is in agreement with .ob_size */
-#define assert_nbits(self)  assert(BYTES((self)->nbits) == Py_SIZE(self))
+#define assert_nbits(self)  assert((Py_ssize_t) BYTES((self)->nbits) == \
+                                   Py_SIZE(self))
 
 /* ------------ low level access to bits in bitarrayobject ------------- */
 
