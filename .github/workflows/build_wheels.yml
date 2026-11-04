@@ -23,9 +23,9 @@ jobs:
             arch: auto
           - os: windows-11-arm
             arch: auto
-          # macos-15-intel is Intel, macos-15 is Apple silicon (ARM64)
           - os: macos-15-intel
             arch: auto
+          # macos-15 is Apple silicon (ARM64)
           - os: macos-15
             arch: auto
 
@@ -72,7 +72,7 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Build sdist
         run: pipx run build --sdist

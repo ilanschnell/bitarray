@@ -2,22 +2,31 @@ name: Test platforms
 
 on:
   workflow_dispatch:
-    inputs:
-      platform:
-        description: Platform to test
-        type: choice
-        options:
-          - all
-          - netbsd
-          - sparc64
-        default: all
 
 permissions:
   contents: read
 
 jobs:
+  test-python37:
+    name: Self-tests on Python 3.7 with C assertions
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.7"
+
+      - name: Build with C assertions enabled
+        run: python -m pip install -v .
+        env:
+          CFLAGS: -UNDEBUG
+
+      - name: Run self-tests
+        working-directory: /tmp
+        run: python -c "import bitarray; assert bitarray.test().wasSuccessful()"
+
   netbsd:
-    if: inputs.platform == 'all' || inputs.platform == 'netbsd'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
 
@@ -38,7 +47,6 @@ jobs:
               'import bitarray; assert bitarray.test().wasSuccessful()'
 
   sparc64:
-    if: inputs.platform == 'all' || inputs.platform == 'sparc64'
     runs-on: ubuntu-24.04
     timeout-minutes: 90
 
