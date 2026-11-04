@@ -17,14 +17,13 @@ jobs:
         with:
           python-version: "3.7"
 
-      - name: Build with C assertions enabled
-        run: python -m pip install -v .
+      - name: Build and test with C assertions enabled
         env:
           CFLAGS: -UNDEBUG
-
-      - name: Run self-tests
-        working-directory: /tmp
-        run: python -c "import bitarray; assert bitarray.test().wasSuccessful()"
+        run: |
+          python setup.py build_ext --inplace
+          python -c "import bitarray; assert bitarray.test().wasSuccessful()"
+          python -m devel.test_debug
 
   netbsd:
     runs-on: ubuntu-24.04
