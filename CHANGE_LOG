@@ -1,4 +1,4 @@
-2026-10-XX  3.12.4:
+2026-11-15  3.12.4:
 -------------------
   * free-threaded CPython support now considered stable
   * require PyPy 7.3.23 or higher, see #261

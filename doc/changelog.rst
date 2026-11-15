@@ -1,6 +1,13 @@
 Change log
 ==========
 
+**3.12.4** (2026-11-15):
+
+* free-threaded CPython support now considered stable
+* require PyPy 7.3.23 or higher, see `#261 <https://github.com/ilanschnell/bitarray/issues/261>`__
+* build Linux wheels in parallel and add ``RISC-V`` wheels
+
+
 **3.12.3** (2026-10-19):
 
 * fix unaligned buffer handling on sparc64, see `#259 <https://github.com/ilanschnell/bitarray/issues/259>`__
