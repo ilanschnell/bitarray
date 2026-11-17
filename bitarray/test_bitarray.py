@@ -853,7 +853,7 @@ class SetSliceTests(unittest.TestCase, Util):
         #
         #   self->ob_item <= other->ob_item <= self->ob_item + Py_SIZE(self)
         #
-        # In words: Is the other buffer inside the self buffer (which inclues
+        # In words: Is the other buffer inside the self buffer (which includes
         #           the previous case)
         a = bitarray('11111111 11000000 00000000')
         b = bitarray(buffer=memoryview(a)[1:2])
@@ -1212,7 +1212,7 @@ class GetMaskTests(unittest.TestCase, Util):
     def test_random(self):
         for a in self.randombitarrays():
             n = len(a)
-            # select items from a wehre a is 1  ->  all 1 items
+            # select items from a where a is 1  ->  all 1 items
             self.assertEqual(a[a], a.count() * bitarray('1'))
 
             mask = zeros(n)
