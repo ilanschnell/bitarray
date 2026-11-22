@@ -36,6 +36,11 @@ if platform.python_implementation() == 'PyPy':
     macros.append(("PY_LITTLE_ENDIAN", str(int(sys.byteorder == 'little'))))
     macros.append(("PY_BIG_ENDIAN", str(int(sys.byteorder == 'big'))))
 
+headers = [
+    "bitarray/bitarray.h",
+    "bitarray/pythoncapi_compat.h",
+]
+
 setup(
     name = "bitarray",
     author = "Ilan Schnell",
@@ -66,12 +71,16 @@ setup(
     package_data = {"bitarray": ["*.h", "*.pickle",
                                  "py.typed",  # see PEP 561
                                  "*.pyi"]},
-    ext_modules = [Extension(name = "bitarray._bitarray",
-                             define_macros = macros,
-                             sources = ["bitarray/_bitarray.c"]),
-                   Extension(name = "bitarray._util",
-                             define_macros = macros,
-                             sources = ["bitarray/_util.c"])],
+    ext_modules = [
+        Extension(name = "bitarray._bitarray",
+                  define_macros = macros,
+                  sources = ["bitarray/_bitarray.c"],
+                  depends = headers),
+        Extension(name = "bitarray._util",
+                  define_macros = macros,
+                  sources = ["bitarray/_util.c"],
+                  depends = headers),
+    ],
     zip_safe = False,
     **kwds
 )
