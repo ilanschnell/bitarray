@@ -43,6 +43,8 @@ headers = [
 
 setup(
     name = "bitarray",
+    description = "efficient arrays of booleans -- C extension",
+    long_description_content_type = "text/x-rst",
     author = "Ilan Schnell",
     author_email = "ilanschnell@gmail.com",
     url = "https://github.com/ilanschnell/bitarray",
@@ -66,7 +68,6 @@ setup(
         "Programming Language :: Python :: Free Threading :: 3 - Stable",
         "Topic :: Utilities",
     ],
-    description = "efficient arrays of booleans -- C extension",
     packages = ["bitarray"],
     package_data = {"bitarray": ["*.h", "*.pickle",
                                  "py.typed",  # see PEP 561
