@@ -1,11 +1,13 @@
 PYTHON=python
 
+.PHONY: build test install doc mypy clean
 
-bitarray/_bitarray.so: bitarray/_bitarray.c
+
+build:
 	$(PYTHON) setup.py build_ext --inplace
 
 
-test: bitarray/_bitarray.so
+test: build
 	$(PYTHON) setup.py test
 
 
@@ -13,7 +15,7 @@ install:
 	$(PYTHON) -m pip install -vv .
 
 
-doc: bitarray/_bitarray.so
+doc: build
 	$(PYTHON) update_doc.py
 	$(PYTHON) setup.py sdist
 	twine check dist/*
