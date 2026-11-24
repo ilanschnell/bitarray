@@ -4760,6 +4760,11 @@ class DecodeTreeTests(unittest.TestCase, Util):
         d['-'] = bitarray()
         self.assertRaises(ValueError, decodetree, d)
 
+    def test_repr(self):
+        dt = decodetree(alphabet_code)
+        self.assertEqual(repr(dt),
+                         "<bitarray.decodetree (70 nodes, 28 symbols)>")
+
     @unittest.skipIf(sys.version_info[:2] < (3, 15),
                      "frozendict introduced in Python 3.15")
     def test_create_from_frozendict(self):

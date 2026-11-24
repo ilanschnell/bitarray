@@ -4167,6 +4167,17 @@ decodetree_getnode(decodetreeobject *self, PyObject *obj)
 
 
 static PyObject *
+decodetree_repr(decodetreeobject *self)
+{
+    Py_ssize_t ni = 0, ns = 0;  /* internal, leaf nodes */
+
+    binode_nodes(self->tree, &ni, &ni, &ns);
+    return PyUnicode_FromFormat(
+        "<bitarray.decodetree (%zd nodes, %zd symbols)>", ni + ns, ns);
+}
+
+
+static PyObject *
 decodetree_sizeof(decodetreeobject *self)
 {
     Py_ssize_t res, nodes = 0;
@@ -4212,7 +4223,7 @@ static PyTypeObject DecodeTree_Type = {
     0,                                        /* tp_getattr */
     0,                                        /* tp_setattr */
     0,                                        /* tp_compare */
-    0,                                        /* tp_repr */
+    (reprfunc) decodetree_repr,               /* tp_repr */
     0,                                        /* tp_as_number */
     0,                                        /* tp_as_sequence */
     0,                                        /* tp_as_mapping */
