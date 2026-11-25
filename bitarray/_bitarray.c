@@ -5413,41 +5413,41 @@ static PyModuleDef moduledef = {
 PyMODINIT_FUNC
 PyInit__bitarray(void)
 {
-    PyObject *m;
+    PyObject *module;
 
     /* setup translation table, which maps each byte to its reversed:
        reverse_trans = {0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, ..., 0xff} */
     setup_table(reverse_trans, 'r');
 
-    m = PyModule_Create(&moduledef);
-    if (m == NULL)
+    module = PyModule_Create(&moduledef);
+    if (module == NULL)
         return NULL;
 
 #ifdef Py_GIL_DISABLED
-    if (PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED) < 0)
+    if (PyUnstable_Module_SetGIL(module, Py_MOD_GIL_NOT_USED) < 0)
         goto error;
 #endif
 
-    if (add_type(m, "bitarray", &Bitarray_Type) < 0 ||
-        add_type(m, "decodetree", &DecodeTree_Type) < 0 ||
-        add_type(m, "decodeiterator", &DecodeIter_Type) < 0)
-        goto error;
-
-    if (add_capsule(m) < 0)
-        goto error;
-
-    if (register_abc() < 0)
+    if (add_type(module, "bitarray", &Bitarray_Type) < 0 ||
+        add_type(module, "decodetree", &DecodeTree_Type) < 0 ||
+        add_type(module, "decodeiterator", &DecodeIter_Type) < 0)
         goto error;
 
     if (PyType_Ready(&BitarrayIter_Type) < 0 ||
         PyType_Ready(&SearchIter_Type) < 0)
         goto error;
 
-    if (PyModule_AddStringMacro(m, BITARRAY_VERSION) < 0)
+    if (add_capsule(module) < 0)
         goto error;
 
-    return m;
+    if (register_abc() < 0)
+        goto error;
+
+    if (PyModule_AddStringMacro(module, BITARRAY_VERSION) < 0)
+        goto error;
+
+    return module;
  error:
-    Py_DECREF(m);
+    Py_DECREF(module);
     return NULL;
 }

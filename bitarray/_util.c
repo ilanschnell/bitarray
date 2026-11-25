@@ -2868,7 +2868,7 @@ static PyModuleDef moduledef = {
 PyMODINIT_FUNC
 PyInit__util(void)
 {
-    PyObject *m;
+    PyObject *module;
 
     setup_misc_tables();
     setup_digit_table();
@@ -2878,11 +2878,11 @@ PyInit__util(void)
     if (bitarray_type == NULL)
         return NULL;
 
-    if ((m = PyModule_Create(&moduledef)) == NULL)
+    if ((module = PyModule_Create(&moduledef)) == NULL)
         return NULL;
 
 #ifdef Py_GIL_DISABLED
-    if (PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED) < 0)
+    if (PyUnstable_Module_SetGIL(module, Py_MOD_GIL_NOT_USED) < 0)
         goto error;
 #endif
 
@@ -2890,12 +2890,12 @@ PyInit__util(void)
         goto error;
 
 #ifndef NDEBUG  /* expose segment size in debug mode for testing */
-    if (PyModule_AddIntConstant(m, "_SEGSIZE", SEGSIZE) < 0)
+    if (PyModule_AddIntConstant(module, "_SEGSIZE", SEGSIZE) < 0)
         goto error;
 #endif
 
-    return m;
+    return module;
  error:
-    Py_DECREF(m);
+    Py_DECREF(module);
     return NULL;
 }
