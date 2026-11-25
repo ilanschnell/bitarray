@@ -280,7 +280,7 @@ state_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         return NULL;
     }
     if (!PyByteArray_Check(out)) {
-        PyErr_SetString(PyExc_TypeError, "bytearary expected");
+        PyErr_SetString(PyExc_TypeError, "bytearray expected");
         return NULL;
     }
 
@@ -631,26 +631,43 @@ static PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT, "_puff", 0, -1,
 };
 
+static int
+add_type(PyObject *module, const char *name, PyTypeObject *type)
+{
+    if (PyType_Ready(type) < 0)
+        return -1;
+
+    Py_INCREF(type);
+    if (PyModule_AddObject(module, name, (PyObject *) type) < 0) {
+        Py_DECREF(type);
+        return -1;
+    }
+    return 0;
+}
+
 PyMODINIT_FUNC PyInit__puff(void)
 {
     PyObject *m;
 
-    bitarray_type = (PyTypeObject *) bitarray_module_attr("bitarray");
+    bitarray_type = (PyTypeObject *)
+        PyCapsule_Import("bitarray._bitarray._C_API", 0);
     if (bitarray_type == NULL)
         return NULL;
 
     if ((m = PyModule_Create(&moduledef)) == NULL)
         return NULL;
 
-    Py_SET_TYPE(&state_type, &PyType_Type);
-    Py_INCREF((PyObject *) &state_type);
-    PyModule_AddObject(m, "State", (PyObject *) &state_type);
+    if (add_type(m, "State", &state_type) < 0)
+        goto error;
 
-#define D(n)  if ((PyModule_AddIntConstant(m, #n, n) < 0)) return NULL
+#define D(n)  if ((PyModule_AddIntConstant(m, #n, n) < 0)) goto error
     D(MAXDCODES);
     D(MAXLCODES);
     D(FIXLCODES);
 #undef D
 
     return m;
+ error:
+    Py_DECREF(m);
+    return NULL;
 }
