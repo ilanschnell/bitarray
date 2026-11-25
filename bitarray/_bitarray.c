@@ -5428,7 +5428,9 @@ PyInit__bitarray(void)
         goto error;
 #endif
 
-    if (add_type(m, "bitarray", &Bitarray_Type) < 0)
+    if (add_type(m, "bitarray", &Bitarray_Type) < 0 ||
+        add_type(m, "decodetree", &DecodeTree_Type) < 0 ||
+        add_type(m, "decodeiterator", &DecodeIter_Type) < 0)
         goto error;
 
     if (add_capsule(m) < 0)
@@ -5437,16 +5439,8 @@ PyInit__bitarray(void)
     if (register_abc() < 0)
         goto error;
 
-    if (add_type(m, "decodetree", &DecodeTree_Type) < 0)
-        goto error;
-
-    if (add_type(m, "decodeiterator", &DecodeIter_Type) < 0)
-        goto error;
-
-    if (PyType_Ready(&BitarrayIter_Type) < 0)
-        goto error;
-
-    if (PyType_Ready(&SearchIter_Type) < 0)
+    if (PyType_Ready(&BitarrayIter_Type) < 0 ||
+        PyType_Ready(&SearchIter_Type) < 0)
         goto error;
 
     if (PyModule_AddStringMacro(m, BITARRAY_VERSION) < 0)
