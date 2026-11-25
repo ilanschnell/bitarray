@@ -5392,6 +5392,20 @@ register_abc(void)
     return 0;
 }
 
+static int
+add_type(PyObject *module, const char *name, PyTypeObject *type)
+{
+    if (PyType_Ready(type) < 0)
+        return -1;
+
+    Py_INCREF(type);
+    if (PyModule_AddObject(module, name, (PyObject *) type) < 0) {
+        Py_DECREF(type);
+        return -1;
+    }
+    return 0;
+}
+
 static PyModuleDef moduledef = {
     PyModuleDef_HEAD_INIT, "_bitarray", 0, -1, module_functions,
 };
@@ -5414,14 +5428,8 @@ PyInit__bitarray(void)
         goto error;
 #endif
 
-    if (PyType_Ready(&Bitarray_Type) < 0)
+    if (add_type(m, "bitarray", &Bitarray_Type) < 0)
         goto error;
-    Py_SET_TYPE(&Bitarray_Type, &PyType_Type);
-    Py_INCREF((PyObject *) &Bitarray_Type);
-    if (PyModule_AddObject(m, "bitarray", (PyObject *) &Bitarray_Type) < 0) {
-        Py_DECREF((PyObject *) &Bitarray_Type);
-        goto error;
-    }
 
     if (add_capsule(m) < 0)
         goto error;
@@ -5429,33 +5437,17 @@ PyInit__bitarray(void)
     if (register_abc() < 0)
         goto error;
 
-    if (PyType_Ready(&DecodeTree_Type) < 0)
+    if (add_type(m, "decodetree", &DecodeTree_Type) < 0)
         goto error;
-    Py_SET_TYPE(&DecodeTree_Type, &PyType_Type);
-    Py_INCREF((PyObject *) &DecodeTree_Type);
-    if (PyModule_AddObject(m, "decodetree",
-                           (PyObject *) &DecodeTree_Type) < 0) {
-        Py_DECREF((PyObject *) &DecodeTree_Type);
-        goto error;
-    }
 
-    if (PyType_Ready(&DecodeIter_Type) < 0)
+    if (add_type(m, "decodeiterator", &DecodeIter_Type) < 0)
         goto error;
-    Py_SET_TYPE(&DecodeIter_Type, &PyType_Type);
-    Py_INCREF((PyObject *) &DecodeIter_Type);
-    if (PyModule_AddObject(m, "decodeiterator",
-                           (PyObject *) &DecodeIter_Type) < 0) {
-        Py_DECREF((PyObject *) &DecodeIter_Type);
-        goto error;
-    }
 
     if (PyType_Ready(&BitarrayIter_Type) < 0)
         goto error;
-    Py_SET_TYPE(&BitarrayIter_Type, &PyType_Type);
 
     if (PyType_Ready(&SearchIter_Type) < 0)
         goto error;
-    Py_SET_TYPE(&SearchIter_Type, &PyType_Type);
 
     if (PyModule_AddStringMacro(m, BITARRAY_VERSION) < 0)
         goto error;
