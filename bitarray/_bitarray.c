@@ -1749,8 +1749,8 @@ tolist_lock_held(bitarrayobject *self, PyObject *zero, PyObject *one)
 static PyObject *
 bitarray_tolist(bitarrayobject *self)
 {
-    PyObject *zero = Py_GetConstant(Py_CONSTANT_ZERO);
-    PyObject *one = Py_GetConstant(Py_CONSTANT_ONE);
+    PyObject *zero = PyLong_FromLong(0);
+    PyObject *one = PyLong_FromLong(1);
     PyObject *res = NULL;
 
     if (zero == NULL || one == NULL)
@@ -5191,7 +5191,7 @@ bits2bytes(PyObject *module, PyObject *n)
         return PyErr_Format(PyExc_TypeError, "'int' object expected, "
                             "got '%s'", Py_TYPE(n)->tp_name);
 
-    if ((zero = Py_GetConstant(Py_CONSTANT_ZERO)) == NULL)
+    if ((zero = PyLong_FromLong(0)) == NULL)
         return NULL;
     cmp_res = PyObject_RichCompareBool(n, zero, Py_LT);
     Py_DECREF(zero);
