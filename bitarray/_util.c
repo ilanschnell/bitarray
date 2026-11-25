@@ -9,7 +9,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
-#include "pythoncapi_compat.h"
+#include "compat.h"
 #include "bitarray.h"
 
 /* set during module initialization */

@@ -38,7 +38,7 @@ if platform.python_implementation() == 'PyPy':
 
 headers = [
     "bitarray/bitarray.h",
-    "bitarray/pythoncapi_compat.h",
+    "bitarray/compat.h",
 ]
 
 setup(

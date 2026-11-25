@@ -1,5 +1,6 @@
 2026-XX-XX  3.12.5:
 -------------------
+  * remove vendored `pythoncapi_compat.h` in favor of minimal `compat.h`
   * add informative representation for decodetree object
 
 

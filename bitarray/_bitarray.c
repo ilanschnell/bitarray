@@ -10,7 +10,7 @@
 
 #define PY_SSIZE_T_CLEAN
 #include "Python.h"
-#include "pythoncapi_compat.h"
+#include "compat.h"
 #include "bitarray.h"
 
 /* size used when reading / writing blocks from files (in bytes) */
