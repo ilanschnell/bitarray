@@ -1,10 +1,6 @@
 from os.path import dirname
 
-try:
-    from setuptools import setup, Extension
-except ImportError:
-    from distutils.core import setup, Extension
-
+from setuptools import setup, Extension
 import bitarray
 
 
