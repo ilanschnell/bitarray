@@ -647,27 +647,26 @@ add_type(PyObject *module, const char *name, PyTypeObject *type)
 
 PyMODINIT_FUNC PyInit__puff(void)
 {
-    PyObject *m;
+    PyObject *module;
 
     bitarray_type = (PyTypeObject *)
         PyCapsule_Import("bitarray._bitarray._C_API", 0);
     if (bitarray_type == NULL)
         return NULL;
 
-    if ((m = PyModule_Create(&moduledef)) == NULL)
+    if ((module = PyModule_Create(&moduledef)) == NULL)
         return NULL;
 
-    if (add_type(m, "State", &state_type) < 0)
+    if (add_type(module, "State", &state_type) < 0)
         goto error;
 
-#define D(n)  if ((PyModule_AddIntConstant(m, #n, n) < 0)) goto error
-    D(MAXDCODES);
-    D(MAXLCODES);
-    D(FIXLCODES);
-#undef D
+    if (PyModule_AddIntMacro(module, MAXDCODES) < 0 ||
+        PyModule_AddIntMacro(module, MAXLCODES) < 0 ||
+        PyModule_AddIntMacro(module, FIXLCODES) < 0)
+        goto error;
 
-    return m;
+    return module;
  error:
-    Py_DECREF(m);
+    Py_DECREF(module);
     return NULL;
 }
