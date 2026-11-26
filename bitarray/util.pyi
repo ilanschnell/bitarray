@@ -24,7 +24,8 @@ def gen_primes(n: int,
                endian: Optional[str] = ...,
                odd: Optional[bool] = ...) -> bitarray: ...
 
-def pprint(a: Any, stream: TextIO = ...,
+def pprint(a: Any,
+           stream: Optional[TextIO] = ...,
            group: int = ...,
            indent: int = ...,
            width: int = ...) -> None: ...
