@@ -1776,17 +1776,27 @@ Return bitarray as list of integers.\n\
 static int
 frombytes_lock_held(bitarrayobject *self, const Py_buffer *view)
 {
-    Py_ssize_t n = Py_SIZE(self);  /* nbytes before extending */
-    Py_ssize_t p = PADBITS(self);  /* number of pad bits */
+    const Py_ssize_t nbytes = Py_SIZE(self);
+    const int padbits = PADBITS(self);
+    Py_ssize_t new_nbits;
 
-    if (resize(self, 8 * (n + view->len)) < 0)
+    if (view->len > PY_SSIZE_T_MAX - nbytes) {
+        PyErr_Format(PyExc_OverflowError, "cannot extend bitarray of length "
+                     "%zd with %zd bytes", self->nbits, view->len);
+        return -1;
+    }
+    new_nbits = bytes2bits(nbytes + view->len, 0);
+    if (new_nbits < 0)
+        return -1;
+
+    if (resize(self, new_nbits) < 0)
         return -1;
 
     if (view->len)
-        memcpy(self->ob_item + n, (char *) view->buf, (size_t) view->len);
+        memcpy(self->ob_item + nbytes, (char *) view->buf, (size_t) view->len);
 
-    /* remove pad bits starting at previous bit length (8 * n - p) */
-    return delete_n(self, 8 * n - p, p);
+    /* remove pad bits starting at previous bit length */
+    return delete_n(self, 8 * nbytes - padbits, padbits);
 }
 
 static PyObject *
@@ -4755,6 +4765,11 @@ newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
         PyBuffer_Release(&view);
         return NULL;
     }
+    if (bytes2bits(view.len, 0) < 0) {
+        PyObject_Del(obj);
+        PyBuffer_Release(&view);
+        return NULL;
+    }
 
     Py_SET_SIZE(obj, view.len);
     obj->ob_item = (char *) view.buf;
@@ -4809,23 +4824,26 @@ newbitarray_from_index(PyTypeObject *type, PyObject *index,
 static PyObject *
 newbitarray_from_bytes(PyTypeObject *type, PyObject *buffer, int endian)
 {
-    bitarrayobject *res;
+    bitarrayobject *res = NULL;
     Py_buffer view;
 
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
         return NULL;
 
+    if (bytes2bits(view.len, 0) < 0)
+        goto finish;
+
     res = newbitarrayobject(type, 8 * view.len, endian);
-    if (res == NULL) {
-        PyBuffer_Release(&view);
-        return NULL;
-    }
+    if (res == NULL)
+        goto finish;
+
     assert(Py_SIZE(res) == view.len);
     if (view.len) {
         Py_BEGIN_CRITICAL_SECTION(buffer);
         memcpy(res->ob_item, (char *) view.buf, (size_t) view.len);
         Py_END_CRITICAL_SECTION();
     }
+ finish:
     PyBuffer_Release(&view);
     return (PyObject *) res;
 }
@@ -5231,7 +5249,7 @@ static PyObject *
 reconstructor(PyObject *module, PyObject *args)
 {
     PyTypeObject *type;
-    Py_ssize_t nbytes;
+    Py_ssize_t nbytes, nbits;
     PyObject *bytes;
     bitarrayobject *res;
     char *endian_str;
@@ -5261,7 +5279,11 @@ reconstructor(PyObject *module, PyObject *args)
         return PyErr_Format(PyExc_ValueError,
                             "invalid number of pad bits: %d", padbits);
 
-    res = newbitarrayobject(type, 8 * nbytes - padbits, endian);
+    nbits = bytes2bits(nbytes, padbits);
+    if (nbits < 0)
+        return NULL;
+
+    res = newbitarrayobject(type, nbits, endian);
     if (res == NULL)
         return NULL;
     assert(Py_SIZE(res) == nbytes);

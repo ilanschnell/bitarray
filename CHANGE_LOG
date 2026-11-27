@@ -2,6 +2,8 @@
 -------------------
   * remove vendored `pythoncapi_compat.h` in favor of minimal `compat.h`
   * add informative representation for decodetree object
+  * prevent byte-to-bit size overflow when creating, extending, or
+    deserializing bitarrays from large buffers on 32-bit systems
   * minor type hinting fixes
 
 

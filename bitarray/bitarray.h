@@ -330,6 +330,19 @@ adjust_slice(Py_ssize_t length,
     return slicelength;
 }
 
+static inline Py_ssize_t
+bytes2bits(Py_ssize_t nbytes, int padbits)
+{
+    uint64_t nbits = 8 * (uint64_t) nbytes - padbits;
+
+    if (nbits > PY_SSIZE_T_MAX) {
+        PyErr_Format(PyExc_OverflowError,
+                     "cannot convert %zd bytes to bits", nbytes);
+        return -1;
+    }
+    return (Py_ssize_t) nbits;
+}
+
 /* convert Python object to C int at address *vi -
    return 1 on success, 0 on failure (and set exception) */
 static inline int
