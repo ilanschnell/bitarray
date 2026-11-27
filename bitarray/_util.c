@@ -926,12 +926,18 @@ hex2ba(PyObject *module, PyObject *args, PyObject *kwds)
     static char *kwlist[] = {"", "endian", NULL};
     PyObject *endian = Py_None;
     Py_buffer hexstr;
-    bitarrayobject *a;
+    bitarrayobject *a = NULL;
     int ret;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "s*|O:hex2ba", kwlist,
                                      &hexstr, &endian))
         return NULL;
+
+    if (hexstr.len > PY_SSIZE_T_MAX / 4) {
+        PyErr_Format(PyExc_OverflowError, "cannot convert %zd hexadecimal "
+                     "digits to bitarray", hexstr.len);
+        goto error;
+    }
 
     a = new_bitarray(4 * hexstr.len, endian, 0);
     if (a == NULL)
@@ -1171,6 +1177,12 @@ base2ba(PyObject *module, PyObject *args, PyObject *kwds)
     m = base_to_length(n);
     if (m < 0)
         goto error;
+
+    if (asciistr.len > PY_SSIZE_T_MAX / m) {
+        PyErr_Format(PyExc_OverflowError, "cannot convert ASCII string of "
+                     "size %zd to bitarray", asciistr.len);
+        goto error;
+    }
 
     a = new_bitarray(m * asciistr.len, endian, (m == 4) ? 0 : -1);
     if (a == NULL)
