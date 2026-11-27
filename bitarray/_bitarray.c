@@ -4765,11 +4765,8 @@ newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
         PyBuffer_Release(&view);
         return NULL;
     }
-    if (bytes2bits(view.len, 0) < 0) {
-        PyObject_Del(obj);
-        PyBuffer_Release(&view);
-        return NULL;
-    }
+    if (bytes2bits(view.len, 0) < 0)
+        goto error;
 
     Py_SET_SIZE(obj, view.len);
     obj->ob_item = (char *) view.buf;
@@ -4782,13 +4779,17 @@ newbitarray_from_buffer(PyTypeObject *type, PyObject *buffer, int endian)
 
     obj->buffer = PyMem_New(Py_buffer, 1);
     if (obj->buffer == NULL) {
-        PyObject_Del(obj);
-        PyBuffer_Release(&view);
-        return PyErr_NoMemory();
+        PyErr_NoMemory();
+        goto error;
     }
     memcpy(obj->buffer, &view, sizeof(Py_buffer));
 
     return (PyObject *) obj;
+
+ error:
+    PyObject_Del(obj);
+    PyBuffer_Release(&view);
+    return NULL;
 }
 
 /* return new bitarray of length 'index', 'endian', and

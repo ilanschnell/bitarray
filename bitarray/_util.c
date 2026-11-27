@@ -735,8 +735,7 @@ deserialize(PyObject *module, PyObject *buffer)
     Py_buffer view;
     bitarrayobject *a;
     unsigned char head;
-    Py_ssize_t nbytes, nbits;
-    int padbits;
+    Py_ssize_t nbits;
 
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
         return NULL;
@@ -755,9 +754,7 @@ deserialize(PyObject *module, PyObject *buffer)
         PyErr_Format(PyExc_ValueError, "invalid header byte: 0x%02x", head);
         goto error;
     }
-    nbytes = view.len - 1;
-    padbits = head & 0x07;
-    nbits = bytes2bits(nbytes, padbits);
+    nbits = bytes2bits(view.len - 1, head & 0x07);
     if (nbits < 0)
         goto error;
 
