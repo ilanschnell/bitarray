@@ -417,7 +417,7 @@ repeat(bitarrayobject *self, Py_ssize_t m)
         return resize(self, 0);
 
     assert(m > 1 && k > 0);
-    if (k >= PY_SSIZE_T_MAX / m) {
+    if (k > PY_SSIZE_T_MAX / m) {
         PyErr_Format(PyExc_OverflowError,
                      "cannot repeat bitarray (of size %zd) %zd times", k, m);
         return -1;
@@ -804,6 +804,12 @@ extend_bitarray(bitarrayobject *self, bitarrayobject *other)
        other may be self, we also need to store other->nbits. */
     const Py_ssize_t self_nbits = self->nbits;
     const Py_ssize_t other_nbits = other->nbits;
+
+    if (other_nbits > PY_SSIZE_T_MAX - self_nbits) {
+        PyErr_Format(PyExc_OverflowError, "cannot extend bitarray of length "
+                     "%zd with %zd bits", self_nbits, other_nbits);
+        return -1;
+    }
 
     if (resize(self, self_nbits + other_nbits) < 0)
         return -1;
