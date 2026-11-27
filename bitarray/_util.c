@@ -804,25 +804,18 @@ hex_to_int(char c)
 /* return hexadecimal string from bitarray,
    on failure set exception and return NULL */
 static char *
-ba2hex_lock_held(bitarrayobject *a, Py_ssize_t group, char *sep)
+ba2hex_lock_held(bitarrayobject *a, Py_ssize_t group, const char *sep)
 {
     const int be = IS_BE(a);
-    size_t strsize = a->nbits / 4, nsep, j;
-    Py_ssize_t i;
+    size_t nsep, j;
+    Py_ssize_t strsize, i;
     char *buff = a->ob_item, *str;
 
-    nsep = (group && strsize) ? strlen(sep) : 0;  /* 0 means no grouping */
-    if (nsep) {
-        size_t ngroup = (strsize - 1) / group;
-        if (ngroup > (PY_SSIZE_T_MAX - strsize) / nsep) {
-            PyErr_SetString(PyExc_OverflowError,
-                            "string representation too large");
-            return NULL;
-        }
-        strsize += nsep * ngroup;
-    }
+    strsize = strsize_with_sep(a->nbits / 4, group, sep, &nsep);
+    if (strsize < 0)
+        return NULL;
 
-    str = PyMem_New(char, strsize + 1);
+    str = PyMem_New(char, (size_t) strsize + 1);
     if (str == NULL) {
         PyErr_NoMemory();
         return NULL;
@@ -1033,12 +1026,12 @@ base_to_length(int n)
 /* return ASCII string from bitarray and base length m,
    on failure set exception and return NULL */
 static char *
-ba2base_lock_held(bitarrayobject *a, int m, Py_ssize_t group, char *sep)
+ba2base_lock_held(bitarrayobject *a, int m, Py_ssize_t group, const char *sep)
 {
     const int le = IS_LE(a);
     const char *alphabet;
-    size_t strsize = a->nbits / m, nsep, j;
-    Py_ssize_t i;
+    size_t nsep, j;
+    Py_ssize_t strsize, i;
     char *str;
 
     assert(1 <= m && m <= 6 && a->nbits % m == 0);
@@ -1049,18 +1042,11 @@ ba2base_lock_held(bitarrayobject *a, int m, Py_ssize_t group, char *sep)
     default: alphabet = hexdigits;
     }
 
-    nsep = (group && strsize) ? strlen(sep) : 0;  /* 0 means no grouping */
-    if (nsep) {
-        size_t ngroup = (strsize - 1) / group;
-        if (ngroup > (PY_SSIZE_T_MAX - strsize) / nsep) {
-            PyErr_SetString(PyExc_OverflowError,
-                            "string representation too large");
-            return NULL;
-        }
-        strsize += nsep * ngroup;
-    }
+    strsize = strsize_with_sep(a->nbits / m, group, sep, &nsep);
+    if (strsize < 0)
+        return NULL;
 
-    str = PyMem_New(char, strsize + 1);
+    str = PyMem_New(char, (size_t) strsize + 1);
     if (str == NULL) {
         PyErr_NoMemory();
         return NULL;

@@ -348,6 +348,24 @@ bytes2bits(Py_ssize_t nbytes, int padbits)
     return (Py_ssize_t) nbits;
 }
 
+static inline Py_ssize_t
+strsize_with_sep(Py_ssize_t strsize, Py_ssize_t group, const char *sep,
+                 size_t *nsep)
+{
+    *nsep = (group && strsize) ? strlen(sep) : 0;  /* 0 means no grouping */
+    if (*nsep) {
+        size_t ngroup = (strsize - 1) / group;
+
+        if (ngroup > (PY_SSIZE_T_MAX - strsize) / *nsep) {
+            PyErr_SetString(PyExc_OverflowError,
+                            "string representation too large");
+            return -1;
+        }
+        strsize += *nsep * ngroup;
+    }
+    return strsize;
+}
+
 /* convert Python object to C int at address *vi -
    return 1 on success, 0 on failure (and set exception) */
 static inline int

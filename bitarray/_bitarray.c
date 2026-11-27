@@ -1983,21 +1983,13 @@ static PyObject *
 to01_lock_held(bitarrayobject *self, Py_ssize_t group, const char *sep)
 {
     PyObject *res;
-    Py_ssize_t nbits = self->nbits, i;
-    size_t strsize, nsep, j;
+    Py_ssize_t strsize, nbits = self->nbits, i;
+    size_t nsep, j;
     char *str;
 
-    strsize = nbits;
-    nsep = (group && strsize) ? strlen(sep) : 0;  /* 0 means no grouping */
-    if (nsep) {
-        size_t ngroup = (strsize - 1) / group;
-        if (ngroup > (PY_SSIZE_T_MAX - strsize) / nsep) {
-            PyErr_SetString(PyExc_OverflowError,
-                            "string representation too large");
-            return NULL;
-        }
-        strsize += nsep * ngroup;
-    }
+    strsize = strsize_with_sep(nbits, group, sep, &nsep);
+    if (strsize < 0)
+        return NULL;
 
     str = PyMem_New(char, strsize);
     if (str == NULL)
