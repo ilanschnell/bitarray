@@ -333,8 +333,13 @@ adjust_slice(Py_ssize_t length,
 static inline Py_ssize_t
 bytes2bits(Py_ssize_t nbytes, int padbits)
 {
-    uint64_t nbits = 8 * (uint64_t) nbytes - padbits;
+    uint64_t nbits;
 
+    assert(nbytes >= 0 && 0 <= padbits && padbits < 8);
+    /* nbytes == 0 implies padbits == 0 */
+    assert(nbytes != 0 || padbits == 0);
+
+    nbits = 8 * (uint64_t) nbytes - padbits;
     if (nbits > PY_SSIZE_T_MAX) {
         PyErr_Format(PyExc_OverflowError,
                      "cannot convert %zd bytes to bits", nbytes);
