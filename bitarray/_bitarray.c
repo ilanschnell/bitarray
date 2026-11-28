@@ -1060,6 +1060,21 @@ Return `True` when any bit in bitarray is 1.\n\
 `a.any()` is a faster version of `any(a)`.");
 
 
+static int
+append_lock_held(bitarrayobject *self, int vi)
+{
+    if (self->nbits == PY_SSIZE_T_MAX) {
+        PyErr_Format(PyExc_OverflowError, "cannot append to bitarray of "
+                    "length %zd", self->nbits);
+        return -1;
+    }
+    if (resize(self, self->nbits + 1) < 0)
+        return -1;
+
+    setbit(self, self->nbits - 1, vi);
+    return 0;
+}
+
 static PyObject *
 bitarray_append(bitarrayobject *self, PyObject *value)
 {
@@ -1071,9 +1086,7 @@ bitarray_append(bitarrayobject *self, PyObject *value)
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION(self);
-    ret = resize(self, self->nbits + 1);
-    if (ret == 0)
-        setbit(self, self->nbits - 1, vi);
+    ret = append_lock_held(self, vi);
     Py_END_CRITICAL_SECTION();
 
     if (ret < 0)
@@ -2020,7 +2033,7 @@ to01_lock_held(bitarrayobject *self, Py_ssize_t group, const char *sep)
         }
         str[j++] = getbit(self, i) + '0';
     }
-    assert(j == strsize);
+    assert(j == (size_t) strsize);
 
     res = PyUnicode_FromStringAndSize(str, strsize);
     PyMem_Free((void *) str);
