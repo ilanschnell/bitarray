@@ -396,6 +396,12 @@ insert_n(bitarrayobject *self, Py_ssize_t start, Py_ssize_t n)
     assert(0 <= start && start <= nbits);
     assert(n >= 0);
 
+    if (n > PY_SSIZE_T_MAX - nbits) {
+        PyErr_Format(PyExc_OverflowError, "cannot insert %zd bits into "
+                     "bitarray of length %zd", n, nbits);
+        return -1;
+    }
+
     if (resize(self, nbits + n) < 0)
         return -1;
     copy_n(self, start + n, self, start, nbits - start);
@@ -851,6 +857,12 @@ extend_sequence(bitarrayobject *self, PyObject *sequence)
     if ((n = PySequence_Size(sequence)) < 0)
         return -1;
 
+    if (n > PY_SSIZE_T_MAX - nbits) {
+        PyErr_Format(PyExc_OverflowError, "cannot extend bitarray of length "
+                     "%zd with %zd bits", nbits, n);
+        return -1;
+    }
+
     if (resize(self, nbits + n) < 0)
         return -1;
 
@@ -872,6 +884,12 @@ extend_unicode01(bitarrayobject *self, PyObject *unicode)
     const Py_ssize_t nbits = self->nbits;
     const Py_ssize_t length = PyUnicode_GET_LENGTH(unicode);
     Py_ssize_t i = nbits, j;  /* i is the current write index in self */
+
+    if (length > PY_SSIZE_T_MAX - nbits) {
+        PyErr_Format(PyExc_OverflowError, "cannot extend bitarray of length "
+                     "%zd with %zd bits", nbits, length);
+        return -1;
+    }
 
     if (resize(self, nbits + length) < 0)
         return -1;
@@ -2089,7 +2107,7 @@ bitarray_pack(bitarrayobject *self, PyObject *buffer)
 {
     Py_ssize_t nbits, i;
     Py_buffer view;
-    int ret;
+    int ret = -1;
 
     RAISE_IF_READONLY(self, NULL);
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)
@@ -2097,7 +2115,12 @@ bitarray_pack(bitarrayobject *self, PyObject *buffer)
 
     Py_BEGIN_CRITICAL_SECTION2(self, view.obj);
     nbits = self->nbits;
-    ret = resize(self, nbits + view.len);
+    if (view.len > PY_SSIZE_T_MAX - nbits)
+        PyErr_Format(PyExc_OverflowError, "cannot extend bitarray of length "
+                     "%zd with %zd bits", nbits, view.len);
+    else
+        ret = resize(self, nbits + view.len);
+
     if (ret == 0) {
         for (i = 0; i < view.len; i++)
             setbit(self, nbits + i, ((char *) view.buf)[i]);
