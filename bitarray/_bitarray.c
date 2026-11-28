@@ -2102,10 +2102,28 @@ Return bytes that contain one byte for each bit in the bitarray,\n\
 using the specified mapping.");
 
 
+static int
+pack_lock_held(bitarrayobject *self, Py_buffer view)
+{
+    Py_ssize_t nbits = self->nbits, i;
+
+    if (view.len > PY_SSIZE_T_MAX - nbits) {
+        PyErr_Format(PyExc_OverflowError, "cannot extend bitarray of length "
+                     "%zd with %zd bits", nbits, view.len);
+        return -1;
+    }
+    if (resize(self, nbits + view.len) < 0)
+        return -1;
+
+    for (i = 0; i < view.len; i++)
+        setbit(self, nbits + i, ((char *) view.buf)[i]);
+
+    return 0;
+}
+
 static PyObject *
 bitarray_pack(bitarrayobject *self, PyObject *buffer)
 {
-    Py_ssize_t nbits, i;
     Py_buffer view;
     int ret = -1;
 
@@ -2114,17 +2132,7 @@ bitarray_pack(bitarrayobject *self, PyObject *buffer)
         return NULL;
 
     Py_BEGIN_CRITICAL_SECTION2(self, view.obj);
-    nbits = self->nbits;
-    if (view.len > PY_SSIZE_T_MAX - nbits)
-        PyErr_Format(PyExc_OverflowError, "cannot extend bitarray of length "
-                     "%zd with %zd bits", nbits, view.len);
-    else
-        ret = resize(self, nbits + view.len);
-
-    if (ret == 0) {
-        for (i = 0; i < view.len; i++)
-            setbit(self, nbits + i, ((char *) view.buf)[i]);
-    }
+    ret = pack_lock_held(self, view);
     Py_END_CRITICAL_SECTION2();
 
     PyBuffer_Release(&view);
