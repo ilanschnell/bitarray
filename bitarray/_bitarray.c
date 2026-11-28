@@ -2125,7 +2125,7 @@ static PyObject *
 bitarray_pack(bitarrayobject *self, PyObject *buffer)
 {
     Py_buffer view;
-    int ret = -1;
+    int ret;
 
     RAISE_IF_READONLY(self, NULL);
     if (PyObject_GetBuffer(buffer, &view, PyBUF_SIMPLE) < 0)

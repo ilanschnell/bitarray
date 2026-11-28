@@ -330,6 +330,8 @@ adjust_slice(Py_ssize_t length,
     return slicelength;
 }
 
+/* Return the number of bits in `nbytes` after removing `padbits`.
+   On overflow, set an exception and return -1. */
 static inline Py_ssize_t
 bytes2bits(Py_ssize_t nbytes, int padbits)
 {
@@ -348,6 +350,9 @@ bytes2bits(Py_ssize_t nbytes, int padbits)
     return (Py_ssize_t) nbits;
 }
 
+/* Return the string size after inserting `sep` between groups of `group`
+   characters, and store the separator length in `*nsep`.  `group = 0`
+   disables grouping.  On overflow, set an exception and return -1. */
 static inline Py_ssize_t
 strsize_with_sep(Py_ssize_t strsize, Py_ssize_t group, const char *sep,
                  size_t *nsep)
